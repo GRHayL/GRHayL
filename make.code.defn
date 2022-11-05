@@ -1,0 +1,27 @@
+# Main make.code.defn file for thorn Baikal
+
+# Source files in this directory that need compiled:
+SRCS = \
+       apply_tau_floor.c \
+       con2prim_loop_kernel.c \
+       con2prim_Noble2D.c \
+       con2prim_select.c \
+       con2prim_wrapper.c \
+       EOS_functions.c \
+       EOS_hybrid.c \
+       font_fix.c \
+       guess_primitives.c \
+       IGM_functions.c \
+       initialize_conservatives.c \
+       initialize_diagnostics.c \
+       initialize_eos.c \
+       initialize_metric.c \
+       initialize_parameters.c \
+       initialize_primitives.c \
+       prims_enforce_extrema_and_recompute.c \
+       return_conservatives.c \
+       return_primitives.c \
+       undensitize.c
+
+#con2prim_test.C                          
+       #font_fix_hybrid_EOS.C \

@@ -1,0 +1,288 @@
+#ifndef CON2PRIM_HEADER_H_
+#define CON2PRIM_HEADER_H_
+
+#include "EOS_header.h"
+
+//----------------- Ugly variables -----------------
+// TODO: These things should be gotten rid of if possible.
+
+static const int SMALLBT=0,SMALLBX=1,SMALLBY=2,SMALLBZ=3,SMALLB2=4,NUMVARS_SMALLB=5;
+static const int NPR =8;
+static const int NDIM=4;
+static const int MAX_NEWT_ITER       = 50;     /* Max. # of Newton-Raphson iterations for find_root_2D(); */
+static const int EXTRA_NEWT_ITER     = 0; /* ZACH SAYS: Original value = 2. But I don't think this parameter > 0 is warranted. Just slows the code for no reason, since our tolerances are fine. */
+static const double NEWT_TOL      = 5e-9;    /* Min. of tolerance allowed for Newton-Raphson iterations */
+static const double MIN_NEWT_TOL  = 5e-9;    /* Max. of tolerance allowed for Newton-Raphson iterations */
+
+static const double NEWT_TOL2     = 1.0e-15;      /* TOL of new 1D^*_{v^2} gnr2 method */
+static const double MIN_NEWT_TOL2 = 1.0e-10;  /* TOL of new 1D^*_{v^2} gnr2 method */
+
+static const double W_TOO_BIG     = 1.e20;    /* \gamma^2 (\rho_0 + u + p) is assumed
+                                                  to always be smaller than this.  This
+                                                  is used to detect solver failures */
+static const double UTSQ_TOO_BIG  = 1.e20;    /* \tilde{u}^2 is assumed to be smaller
+                                                  than this.  Used to detect solver
+                                                  failures */
+
+static const double FAIL_VAL      = 1.e30;    /* Generic value to which we set variables when a problem arises */
+
+static const double NUMEPSILON    = 2.2204460492503131e-16;
+
+enum con2prim_routines{None=-1, Noble2D, Noble1D, Noble1D_entropy, Noble1D_entropy2,
+                       CerdaDuran2D, CerdaDuran3D, Palenzuela1D, Palenzuela1D_entropy,
+                       Newman1D};
+//--------------------------------------------------
+
+//------------ Con2Prim structs --------------------
+/*
+   The struct con2prim_diagnostics contains variables for error-checking and
+   diagnostic feedback. The struct elements are detailed below:
+
+ --failures: TODO
+*/
+
+typedef struct con2prim_diagnostics {
+  int failures;
+  int failure_checker;
+  int font_fixes;
+  int vel_limited_ptcount;
+  int atm_resets;
+  int which_routine;
+  int rho_star_fix_applied;
+  int pointcount;
+  int failures_inhoriz;
+  int pointcount_inhoriz;
+  int backup[3];
+  int nan_found;
+  int c2p_fail_flag;
+  double error_int_numer;
+  double error_int_denom;
+} con2prim_diagnostics;
+
+/*
+   The struct primitive_quantities contains variables for storing the (point-wise)
+   primitive variable data. The struct elements are detailed below:
+
+ --rho: the baryonic density rho_b
+
+ --press: the pressure P
+
+ --v*: the 3-velocity v^i used in IllinoisGRMHD. This is defined as u^i/u^0. The other
+   commonly used choice is the Valencia 3-velocity Vv^i defined as
+   Vv^i = u^i/W + beta^i/lapse.
+   
+
+ --B*: the magnetic field TODO: give specific B definition
+
+ --entropy: the entropy S
+
+ --Y_e: the electron fraction Y_e
+
+ --temp: the temperature T
+
+ --u: this is the energy variable needed by HARM-type routines. It is currently not
+   possible to set this via the initialize_primitives function, as most code do not
+   have this. A guess is automatically generated for this quantity from the other
+   values.
+*/
+
+typedef struct primitive_quantities {
+  double rho, press, eps;
+  double vx, vy, vz;
+  double Bx, By, Bz;
+  double entropy, Y_e, temp;
+} primitive_quantities;
+
+/*
+   The struc conservative_quantities contains variables for storing the (point-wise)
+   conservative variable data. Since most of these variables are densitized, let's
+   define dens = sqrt(gamma). Then, the struct elements are detailed below:
+
+ --rho: the densitized baryonic density \tilde{D} = rho_star = dens * lapse * rho_b * u^0
+
+ --tau: the densitized energy density variable \tilde{tau} = dens * tau = dens * lapse^2 * T^{00} - rho_star
+
+ --S*: the densitized momentum density \tilde{S}_i = dens * S_i = dens * lapse * T_i^0
+
+ --Y_e: the densitized electron fraction \tilde{Y}_e = TODO
+
+ --entropy: the densitized entropy \tilde{S} = TODO
+*/
+
+typedef struct conservative_quantities {
+  double rho, tau, Y_e;
+  double S_x, S_y, S_z;
+  double entropy;
+} conservative_quantities;
+
+//--------------------------------------------------
+
+//------------- Misplaced functions ---------------
+/* TODO: These functions come from the IllinoisGRMHD_header, EOS_header,
+   or inlined_functions.h and
+   are used by functions outside of con2prim. As such, they should be
+   provided by something above c2p in the hierarchy. However, they use the
+   cons/prim structs. The cons and prims structs should therefore be
+   defined higher up in the code hierarchy. */
+
+void enforce_limits_on_primitives_and_recompute_conservs(
+             const GRMHD_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             primitive_quantities *restrict prims,
+             conservative_quantities *restrict cons,
+             double *TUPMUNU,double *TDNMUNU,
+             int *restrict speed_limit_applied);
+
+void prims_enforce_extrema_and_recompute(
+             const GRMHD_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             primitive_quantities *restrict prims);
+
+void reset_prims_to_atmosphere( const eos_parameters *restrict eos,
+                                primitive_quantities *restrict prims );
+
+//--------------------------------------------------
+
+//--------- Initialization routines ----------------
+
+void initialize_diagnostics(con2prim_diagnostics *restrict diagnostic);
+
+void initialize_primitives(
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             const double rho, const double press, const double epsilon,
+             const double vx, const double vy, const double vz,
+             const double Bx, const double By, const double Bz,
+             const double entropy, const double Y_e, const double temp,
+             primitive_quantities *restrict prims);
+
+void initialize_conservatives(
+             const GRMHD_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             const double rho, const double tau,
+             const double S_x, const double S_y, const double S_z,
+             const double Y_e, const double entropy,
+             conservative_quantities *restrict cons);
+
+//--------------------------------------------------
+
+void return_primitives(
+             const eos_parameters *restrict eos,
+             const primitive_quantities *restrict prims,
+             double *restrict rho, double *restrict press, double *restrict epsilon,
+             double *restrict vx, double *restrict vy, double *restrict vz,
+             double *restrict Bx, double *restrict By, double *restrict Bz,
+             double *restrict entropy, double *restrict Y_e, double *restrict temp);
+
+void return_conservatives(
+             const GRMHD_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             const conservative_quantities *restrict cons,
+             double *restrict rho, double *restrict tau,
+             double *restrict S_x, double *restrict S_y, double *restrict S_z,
+             double *restrict Y_e, double *restrict entropy);
+
+int con2prim_select(
+             const eos_parameters *restrict eos, const int c2p_key,
+             const metric_quantities *restrict metric,
+             const conservative_quantities *restrict cons,
+             primitive_quantities *restrict prims,
+             con2prim_diagnostics *restrict diagnostics);
+
+int con2prim_Noble2D(
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             const conservative_quantities *restrict cons,
+             primitive_quantities *restrict prim,
+             con2prim_diagnostics *restrict diagnostics);
+
+int con2prim(const GRMHD_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             conservative_quantities *restrict cons,
+             primitive_quantities *restrict prims,
+             con2prim_diagnostics *restrict diagnostics);
+
+int  apply_tau_floor(
+             const GRMHD_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             metric_quantities *restrict metric,
+             primitive_quantities *restrict prims,
+             conservative_quantities *restrict cons,
+             con2prim_diagnostics *restrict diagnostics);
+
+void undensitize(
+             const eos_parameters *restrict eos, const int c2p_key,
+             const metric_quantities *restrict metric,
+             const primitive_quantities *restrict prims,
+             const conservative_quantities *restrict cons,
+             conservative_quantities *restrict cons_undens);
+
+void guess_primitives(
+             const eos_parameters *restrict eos,
+             const int c2p_key, const int which_guess,
+             const metric_quantities *restrict metric,
+             const primitive_quantities *restrict prims,
+             const conservative_quantities *restrict cons,
+             primitive_quantities *restrict prims_guess);
+
+void limit_velocity_and_convert_utilde_to_v(
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             double *restrict utcon1_ptr, double *restrict utcon2_ptr,
+             double *restrict utcon3_ptr, const double rho_undens,
+             primitive_quantities *restrict prims,
+             con2prim_diagnostics *restrict diagnostics);
+  
+int font_fix(const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             const conservative_quantities *restrict cons_undens,
+             const primitive_quantities *restrict prims,
+             primitive_quantities *restrict prims_guess,
+             con2prim_diagnostics *restrict diagnostics,
+             double *restrict u0L_ptr);
+
+/*TODO: use code below as basis to abstract con2prim calls
+// A normal function with an int parameter
+// and void return type
+void fun(int a)
+{
+    printf("Value of a is %d\n", a);
+}
+  
+int main()
+{
+    // fun_ptr is a pointer to function fun() 
+    void (*fun_ptr)(int) = &fun;
+  
+    // The above line is equivalent of following two
+    // void (*fun_ptr)(int);
+    // fun_ptr = &fun; 
+    
+  
+    // Invoking fun() using fun_ptr
+    (*fun_ptr)(10);
+  
+    return 0;
+}
+*/
+
+// TODO: The following functions are inside the functions that call them because they are only used by one function in c2p. They are used elsewhere inIGM,
+// so we should consider a better solution.
+
+// In enforce_limits_on_primitives_and_recompute_conservs.c:
+//void __attribute__((unused)) impose_speed_limit_output_u0(const GRMHD_parameters *restrict params, const metric_quantities *restrict metric,
+//                                   primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics,
+//                                   double *restrict u0_out);
+//void __attribute__((unused)) compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
+//                                                    const double u0L, const double ONE_OVER_LAPSE_SQRT_4PI, double *restrict u_x_over_u0_psi4,
+//                                                    double *restrict u_y_over_u0_psi4, double *restrict u_z_over_u0_psi4, double *restrict smallb);
+
+// In apply_tau_floor.c:
+//void __attribute__((unused)) eigenvalues_3by3_real_sym_matrix(double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
+//                                      const double M11, const double M12, const double M13,
+//                                      const double M22, const double M23, const double M33); 
+
+#endif // CON2PRIM_HEADER_H
