@@ -16,7 +16,7 @@ void return_conservatives(
   *S_y = cons->S_y;
   *S_z = cons->S_z;
   *tau = cons->tau;
-  if( eos->type == 1) {
+  if( eos->eos_type == 1) {
     *Y_e = cons->Y_e;
   }
   if( params->evolve_entropy ) {

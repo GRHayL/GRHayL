@@ -1,5 +1,7 @@
 #include "con2prim_header.h"
 #include "EOS_hybrid_header.h"
+#include "harm_u2p_util.h"
+#include <stdio.h>
 
 /**********************************
  * Piecewise Polytropic EOS Patch *
@@ -27,7 +29,7 @@ int font_fix(const eos_parameters *restrict eos,
     /************************
      * New Font fix routine *
      ************************/
-    check = font_fix__hybrid_EOS(eos, metric, cons_undens, prims, u_xl, u_yl, u_zl);
+    check = font_fix_hybrid_EOS(eos, metric, cons_undens, prims, &u_xl, &u_yl, &u_zl);
 
     //Translate to HARM primitive now:
     utcon1 = metric->adm_gxx*u_xl + metric->adm_gxy*u_yl + metric->adm_gxz*u_zl;
@@ -41,7 +43,7 @@ int font_fix(const eos_parameters *restrict eos,
     }
   /*************************************************************/
   } else {
-    printf("Font fix is only implemented for Hybrid EOS!"); //TODO: make a better error message
+    printf("Font fix is only implemented for Hybrid EOS! The eos_type is set to %d.",eos->eos_type); //TODO: make a better error message
     return 1;
   } //EOS if
 

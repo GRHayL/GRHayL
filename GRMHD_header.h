@@ -30,9 +30,6 @@
  --calc_prim_guess: currently does nothing. However, some codes might be able to
    directly provide guesses for the initial primitive values for con2prim. If they
    can, this should be supported.
-
- --gamma_speed_limit: this should be in a higher-level struct, not con2prim. For now,
-   I'm putting it here.
 */
 
 typedef struct GRMHD_parameters {
@@ -40,9 +37,8 @@ typedef struct GRMHD_parameters {
   bool evolve_entropy;
   bool evolve_temp;
   bool calc_prim_guess;
-  double gamma_speed_limit;
   double psi6threshold;
-  double update_Tmunu;
+  bool update_Tmunu;
 } GRMHD_parameters;
 
 /* The struct metric_quantities contains variables for storing the (point-wise)
@@ -120,10 +116,9 @@ typedef struct metric_quantities {
 void initialize_parameters(GRMHD_parameters *restrict params,
              const int main, const int backup[3], const int evolve_entropy,
              const int evolve_temp, const int calc_prim_guess,
-             const double gamma_speed_limit, const double psi6threshold,
-             const int update_Tmunu);
+             const double psi6threshold, const int update_Tmunu);
 
-void initialize_metric(struct metric_quantities *restrict metric, 
+void initialize_metric(metric_quantities *restrict metric, 
              const double phi, const double psi, const double lapse,
              const double gxx, const double gxy, const double gxz,
              const double gyy, const double gyz, const double gzz,

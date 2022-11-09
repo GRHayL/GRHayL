@@ -3,7 +3,7 @@
 /* This function fills the struct metric_quantities with data. The phi, psi,
    and g** arguments are the BSSN variables. For more information on the
    arguments, see the definition of the struct in new_header.h. */
-void initialize_metric(struct metric_quantities *restrict metric, 
+void initialize_metric(metric_quantities *restrict metric, 
                 const double phi, const double psi, const double lapse,
                 const double gxx, const double gxy, const double gxz,
                 const double gyy, const double gyz, const double gzz,

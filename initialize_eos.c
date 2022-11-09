@@ -6,7 +6,7 @@
    should be called regardless of eos, as it contains the common parameters that are generally
    needed. For more information on the arguments, see the definition of the struct in new_header.h. */
 void initialize_general_eos(eos_parameters *restrict eos, const int type,
-                const double tau_atm, const double W_max, const double inv_W_max_squared,
+                const double tau_atm, const double W_max,
                 const double eps_atm, const double eps_min, const double eps_max,
                 const double press_atm, const double press_min, const double press_max,
                 const double entropy_atm, const double entropy_min, const double entropy_max,
@@ -14,7 +14,7 @@ void initialize_general_eos(eos_parameters *restrict eos, const int type,
   eos->eos_type = type;
   eos->tau_atm = tau_atm;
   eos->W_max = W_max;
-  eos->inv_W_max_squared = inv_W_max_squared;
+  eos->inv_W_max_squared = 1.0/W_max;
   eos->eps_atm = eps_atm;
   eos->eps_min = eps_min;
   eos->eps_max = eps_max;

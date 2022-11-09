@@ -1,5 +1,6 @@
 #include "con2prim_header.h"
 
+//TODO: this can also reset rho_b (prims->rho)
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
 void limit_velocity_and_convert_utilde_to_v( const eos_parameters *restrict eos,
@@ -11,9 +12,9 @@ void limit_velocity_and_convert_utilde_to_v( const eos_parameters *restrict eos,
                                              primitive_quantities *restrict prims,
                                              con2prim_diagnostics *restrict diagnostics ) {
   
-  utcon1 = *utcon1_ptr;
-  utcon2 = *utcon2_ptr;
-  utcon3 = *utcon3_ptr;
+  double utcon1 = *utcon1_ptr;
+  double utcon2 = *utcon2_ptr;
+  double utcon3 = *utcon3_ptr;
 
   //Velocity limiter:
   double gijuiuj = metric->adm_gxx*SQR(utcon1 ) +
@@ -33,7 +34,7 @@ void limit_velocity_and_convert_utilde_to_v( const eos_parameters *restrict eos,
     au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
     // Reset rho_b and u0
     u0L = (au0m1+1.0)*metric->lapseinv;
-    prims_guess.rho = rho_undens/(metric->lapse*u0L);
+    prims->rho = rho_undens/(metric->lapse*u0L);
     diagnostics->vel_limited_ptcount++;
     diagnostics->failure_checker+=1000;
   } //Finished limiting velocity

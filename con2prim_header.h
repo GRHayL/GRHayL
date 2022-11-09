@@ -1,3 +1,10 @@
+//#ifndef SMALLB_H_
+//#define SMALLB_H_
+//static const int SMALLBT=0,SMALLBX=1,SMALLBY=2,SMALLBZ=3,SMALLB2=4,NUMVARS_SMALLB=5;
+//#endif //SMALLB_H_
+
+#define smallb_defined = 1;
+
 #ifndef CON2PRIM_HEADER_H_
 #define CON2PRIM_HEADER_H_
 
@@ -28,9 +35,22 @@ static const double FAIL_VAL      = 1.e30;    /* Generic value to which we set v
 
 static const double NUMEPSILON    = 2.2204460492503131e-16;
 
-enum con2prim_routines{None=-1, Noble2D, Noble1D, Noble1D_entropy, Noble1D_entropy2,
-                       CerdaDuran2D, CerdaDuran3D, Palenzuela1D, Palenzuela1D_entropy,
-                       Newman1D};
+//TODO: This had an error and I don't feel like debugging it rn.
+//enum con2prim_routines{None=-1, Noble2D, Noble1D, Noble1D_entropy, Noble1D_entropy2,
+//                       CerdaDuran2D, CerdaDuran3D, Palenzuela1D, Palenzuela1D_entropy,
+//                       Newman1D};
+
+static const int None = -1;
+static const int Noble2D = 0;
+static const int Noble1D = 1;
+static const int Noble1D_entropy = 2;
+static const int Noble1D_entropy2 = 3;
+static const int CerdaDuran2D = 4;
+static const int CerdaDuran3D = 5;
+static const int Palenzuela1D = 6;
+static const int Palenzuela1D_entropy = 7;
+static const int Newman1D = 8;
+
 //--------------------------------------------------
 
 //------------ Con2Prim structs --------------------
@@ -168,6 +188,8 @@ void initialize_conservatives(
 
 //--------------------------------------------------
 
+//--------- C2P data return routines ---------------
+
 void return_primitives(
              const eos_parameters *restrict eos,
              const primitive_quantities *restrict prims,
@@ -183,6 +205,16 @@ void return_conservatives(
              double *restrict rho, double *restrict tau,
              double *restrict S_x, double *restrict S_y, double *restrict S_z,
              double *restrict Y_e, double *restrict entropy);
+
+//--------------------------------------------------
+
+void con2prim_loop_kernel(
+             const GRMHD_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             metric_quantities *restrict metric,
+             conservative_quantities *restrict cons,
+             primitive_quantities *restrict prims,
+             con2prim_diagnostics *restrict diagnostics);
 
 int con2prim_select(
              const eos_parameters *restrict eos, const int c2p_key,
@@ -235,6 +267,10 @@ void limit_velocity_and_convert_utilde_to_v(
              double *restrict utcon3_ptr, const double rho_undens,
              primitive_quantities *restrict prims,
              con2prim_diagnostics *restrict diagnostics);
+
+//--------------------------------------------------
+
+//-------------- Font Fix routines -----------------
   
 int font_fix(const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
@@ -243,6 +279,26 @@ int font_fix(const eos_parameters *restrict eos,
              primitive_quantities *restrict prims_guess,
              con2prim_diagnostics *restrict diagnostics,
              double *restrict u0L_ptr);
+
+int font_fix_hybrid_EOS(
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             const conservative_quantities *restrict cons_undens,
+             const primitive_quantities *restrict prims,
+             double *restrict u_x_ptr, double *restrict u_y_ptr,
+             double *restrict u_z_ptr );
+
+
+//TODO: this was formerly inline. Include inside font_fix_hybrid_EOS directly?
+int font_fix_rhob_loop(
+             const eos_parameters *restrict eos,
+             const int maxits, const double tol, const double W_in,
+             const double Sf2_in, const double Psim6, const double sdots,
+             const double BbardotS2, const double B2bar,
+             const conservative_quantities *restrict cons,
+             const double rhob_in, double *restrict rhob_out_ptr );
+
+//--------------------------------------------------
 
 /*TODO: use code below as basis to abstract con2prim calls
 // A normal function with an int parameter

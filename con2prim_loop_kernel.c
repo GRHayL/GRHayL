@@ -32,9 +32,9 @@
 #include "Symmetry.h"
 #include "con2prim_header.h"
 
-void con2prim_loop_kernel(const GRMHD_parameters *restrict params, con2prim_diagnostics *restrict diagnostics,
-                                     const eos_parameters *restrict eos, metric_quantities *restrict metric,
-                                     conservative_quantities *restrict cons, primitive_quantities *restrict prims) {
+void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
+                          metric_quantities *restrict metric, conservative_quantities *restrict cons,
+                          primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics) {
 
 
   // Only attempt a primitive recovery if this is the first

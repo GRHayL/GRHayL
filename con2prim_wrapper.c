@@ -93,7 +93,7 @@ int con2prim( const GRMHD_parameters *restrict params, const eos_parameters *res
     /*************************************************************/
 
     if(check!=0) {
-      check = font_fix(eos, metric, &cons_undens, prims, &prims_guess, &diagnostics, &u0L);
+      check = font_fix(eos, metric, &cons_undens, prims, &prims_guess, diagnostics, &u0L);
       diagnostics->font_fixes+=1;
     }
 

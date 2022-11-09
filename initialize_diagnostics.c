@@ -3,7 +3,7 @@
 /* This function fills the struct con2prim_diagnostics with data.
    For more information on the arguments, see the definition of the
    struct in new_header.h. */
-void __attribute__((unused)) initialize_diagnostics(con2prim_diagnostics *restrict diagnostic) {
+void initialize_diagnostics(con2prim_diagnostics *restrict diagnostic) {
   diagnostic->failures=0;
   diagnostic->font_fixes=0;
   diagnostic->vel_limited_ptcount=0;

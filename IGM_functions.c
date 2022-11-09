@@ -1,6 +1,6 @@
 #include "con2prim_header.h"
 
-static inline void impose_speed_limit_output_u0(const GRMHD_parameters *restrict params, const metric_quantities *restrict metric,
+static inline void impose_speed_limit_output_u0(const eos_parameters *restrict eos, const metric_quantities *restrict metric,
                                          primitive_quantities *restrict prims, int *restrict speed_limit_applied,
                                          double *restrict u0_out) {
 
@@ -18,7 +18,7 @@ static inline void impose_speed_limit_output_u0(const GRMHD_parameters *restrict
                                                    metric->adm_gzz * SQR(prims->vz + metric->betaz) )*metric->lapseinv2;
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
-  const double ONE_MINUS_ONE_OVER_GAMMA_SPEED_LIMIT_SQUARED = 1.0-1.0/SQR(params->gamma_speed_limit);
+  const double ONE_MINUS_ONE_OVER_GAMMA_SPEED_LIMIT_SQUARED = 1.0-1.0/SQR(eos->W_max);
   if(one_minus_one_over_alpha_u0_squared > ONE_MINUS_ONE_OVER_GAMMA_SPEED_LIMIT_SQUARED) {
     double correction_fac = sqrt(ONE_MINUS_ONE_OVER_GAMMA_SPEED_LIMIT_SQUARED/one_minus_one_over_alpha_u0_squared);
     prims->vx = (prims->vx + metric->betax)*correction_fac-metric->betax;
@@ -121,7 +121,7 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;
 
   double uUP[4];
-  impose_speed_limit_output_u0(params, metric, prims, speed_limit_applied, &uUP[0]);
+  impose_speed_limit_output_u0(eos, metric, prims, speed_limit_applied, &uUP[0]);
 
   // Compute u^i. We've already set uUP[0] in the lines above.
   uUP[1] = uUP[0]*prims->vx;

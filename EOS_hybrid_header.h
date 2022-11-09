@@ -1,6 +1,3 @@
-/* These functions are from IGM. I need to add the author and other
-   info once I figure out where they should really live. */
-
 #ifndef EOS_HYBRID_HEADER_H
 #define EOS_HYBRID_HEADER_H
 

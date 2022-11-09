@@ -81,16 +81,27 @@ extern "C" void con2prim_test(CCTK_ARGUMENTS) {
   }
 #endif
 
+  double poison = 1e200;
   main = Noble2D;
   backup_routines = {None,None,None};
 
-  struct GRMHD_parameters params;
-  initialiize_parameters(&params, main, backup[3], false, false, true, GAMMA_SPEED_LIMIT, Psi6threshold, update_Tmunu);
+  GRMHD_parameters params;
+  initialize_parameters(&params, main, backup[3], false, false, true, Psi6threshold, update_Tmunu);
 
-  struct eos_parameters eos;
-  initialiize_eos(&eos);
+  int eos_type = 0; // Hybrid=0, Tabulated=1;
+  eos_parameters eos;
+  initialize_general_eos(&eos, 0, tau_atm, GAMMA_SPEED_LIMIT,
+             poison, poison,poison, //epsilon
+             poison, poison, poison, //pressure
+             poison, poison, poison, //entropy
+             rho_b_atm, rho_atm, rho_max);
 
-  struct con2prim_diagnostics diagnostics;
+  initialize_hybrid_eos( &eos, 
+             neos, rho_ppoly_tab,
+             Gamma_ppoly_tab[], K_ppoly_tab[],
+             eps_integ_const[], gamma_th);
+
+  con2prim_diagnostics diagnostics;
   initialize_diagnostics(&diagnostics);
 
   int imin=0,imax=cctk_lsh[0];
