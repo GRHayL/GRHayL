@@ -1,3 +1,4 @@
+#include "cctk.h"
 #include "con2prim_header.h"
 
 static inline void impose_speed_limit_output_u0(const eos_parameters *restrict eos, const metric_quantities *restrict metric,

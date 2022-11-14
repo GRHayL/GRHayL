@@ -1,3 +1,4 @@
+#include "cctk.h"
 #include "con2prim_header.h"
 
 //TODO: this can also reset rho_b (prims->rho)
@@ -26,10 +27,12 @@ void limit_velocity_and_convert_utilde_to_v( const eos_parameters *restrict eos,
   
   // *** Limit velocity
   if (au0m1 > 0.9999999*(eos->W_max-1.0)) {
+CCTK_VINFO("Velocity limited: u=[%e,%e,%e]",utcon1,utcon2,utcon3);
     double fac = sqrt((SQR(eos->W_max)-1.0)/(SQR(1.0+au0m1) - 1.0));
     utcon1 *= fac;
     utcon2 *= fac;
     utcon3 *= fac;
+CCTK_VINFO("                 to [%e,%e,%e]",utcon1,utcon2,utcon3);
     gijuiuj = gijuiuj * SQR(fac);
     au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
     // Reset rho_b and u0

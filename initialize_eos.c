@@ -1,3 +1,4 @@
+#include "cctk.h"
 #include "con2prim_header.h"
 
 /* The functions initialize_general_eos, initialize_hybrid_eos, and initialize_tabulated_eos
@@ -43,6 +44,8 @@ void initialize_hybrid_eos(eos_parameters *restrict eos, const int neos,
   eos->Gamma_ppoly_tab[neos-1] = Gamma_ppoly_tab[neos-1];
   eos->K_ppoly_tab[neos-1] = K_ppoly_tab[neos-1];
   eos->eps_integ_const[neos-1] = eps_integ_const[neos-1];
+  if(neos==1)
+    eos->eps_integ_const[0] = 0.0;
   eos->Gamma_th = Gamma_th;
 }
 

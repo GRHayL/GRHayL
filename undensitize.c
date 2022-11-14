@@ -8,12 +8,12 @@
 
 #include "con2prim_header.h"
 
-void __attribute__((unused))  undensitize( const eos_parameters *restrict eos,
+void undensitize( const eos_parameters *restrict eos,
                   const int c2p_key,
                   const metric_quantities *restrict metric,
                   const primitive_quantities *restrict prims,
                   const conservative_quantities *restrict cons,
-                  conservative_quantities *restrict cons_harm ) {
+                  conservative_quantities *restrict cons_undens ) {
 
   // IllinoisGRMHD's variable is the "densitised" version of
   // the standard conservative variables (D,tau,S_{i}). In
@@ -52,11 +52,11 @@ void __attribute__((unused))  undensitize( const eos_parameters *restrict eos,
   //            = psi^{-6}
   const double psim6 = 1.0/metric->psi6;
 
-  cons_harm->rho = cons->rho * psim6;
-  cons_harm->S_x = cons->S_x * psim6;
-  cons_harm->S_y = cons->S_y * psim6;
-  cons_harm->S_z = cons->S_z * psim6;
-  cons_harm->tau = cons->tau * psim6;
-  cons_harm->Y_e = cons->Y_e * psim6;
-  cons_harm->entropy = cons->entropy * psim6;
+  cons_undens->rho = cons->rho * psim6;
+  cons_undens->S_x = cons->S_x * psim6;
+  cons_undens->S_y = cons->S_y * psim6;
+  cons_undens->S_z = cons->S_z * psim6;
+  cons_undens->tau = cons->tau * psim6;
+  cons_undens->Y_e = cons->Y_e * psim6;
+  cons_undens->entropy = cons->entropy * psim6;
 }

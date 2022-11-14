@@ -1,4 +1,5 @@
 #include "con2prim_header.h"
+#include "cctk.h"
 
 int con2prim( const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
               const metric_quantities *restrict metric, conservative_quantities *restrict cons,
@@ -54,18 +55,16 @@ int con2prim( const GRMHD_parameters *restrict params, const eos_parameters *res
     // Set the conserved variables required by the con2prim routine
     undensitize( eos, params->main_routine, metric, prims, cons, &cons_undens );
 
-    // Set primitive guesses
-    guess_primitives( eos, params->main_routine, which_guess, metric, prims, cons, &prims_guess );
-
     /************* Conservative-to-primitive recovery ************/
 
+    // Set primitive guesses
+    guess_primitives( eos, params->main_routine, which_guess, metric, prims, cons, &prims_guess );
     int check = con2prim_select(eos, params->main_routine, metric, &cons_undens, &prims_guess, diagnostics);
 
     if( (check != 0) && (params->backup_routine[0] != None) ) {
       // Backup 1 triggered
       diagnostics->backup[0] = 1;
       // Recompute guesses
-      undensitize( eos,params->backup_routine[0], metric, prims, cons, &cons_undens );
       guess_primitives( eos,params->backup_routine[0], which_guess, metric, prims, cons, &prims_guess );
       // Backup routine #1
       check = con2prim_select(eos, params->backup_routine[0], metric, &cons_undens, &prims_guess, diagnostics);
@@ -74,7 +73,6 @@ int con2prim( const GRMHD_parameters *restrict params, const eos_parameters *res
         // Backup 2 triggered
         diagnostics->backup[1] = 1;
         // Recompute guesses
-        undensitize( eos,params->backup_routine[1], metric, prims, cons, &cons_undens );
         guess_primitives( eos,params->backup_routine[1], which_guess, metric, prims, cons, &prims_guess );
         // Backup routine #2
         check = con2prim_select(eos, params->backup_routine[1], metric, &cons_undens, &prims_guess, diagnostics);
@@ -83,7 +81,6 @@ int con2prim( const GRMHD_parameters *restrict params, const eos_parameters *res
           // Backup 3 triggered
           diagnostics->backup[2] = 1;
           // Recompute guesses
-          undensitize( eos,params->backup_routine[2], metric, prims, cons, &cons_undens );
           guess_primitives( eos,params->backup_routine[2], which_guess, metric, prims, cons, &prims_guess );
           // Backup routine #3
           check = con2prim_select(eos, params->backup_routine[2], metric, &cons_undens, &prims_guess, diagnostics);
@@ -99,22 +96,26 @@ int con2prim( const GRMHD_parameters *restrict params, const eos_parameters *res
 
     if(check==0) {
 //TODO: set up errors
-      // Check for NAN!
-//      if( robust_isnan(prim[RHO]*prim[TEMP]*prim[YE]*prim[PRESS]*prim[EPS]*prim[ENT]*utx_new*uty_new*utz_new*u0L) ) {
-//        CCTK_VINFO("***********************************************************");
-//        CCTK_VINFO("NAN found in function %s (file: %s)",__func__,__FILE__);
-//        CCTK_VINFO("Input IllinoisGRMHD conserved variables:");
-//        CCTK_VINFO("rho_*, Ye_*, ~tau, ~S_{i}: %e %e %e %e %e %e",CONSERVS[RHOSTAR],CONSERVS[YESTAR],CONSERVS[TAUENERGY],CONSERVS[STILDEX],CONSERVS[STILDEY],CONSERVS[STILDEZ]);
-//        CCTK_VINFO("Input con2prim conserved variables:");
-//        CCTK_VINFO("D, DYe, tau, S_{i}: %e %e %e %e %e %e",cons[RHO],cons[YE],cons[TAU],cons[S1_cov],cons[S2_cov],cons[S3_cov]);
-//        CCTK_VINFO("Output primitive variables:");
-//        CCTK_VINFO("rho, T, Ye: %e %e %e",prim[RHO],prim[TEMP],prim[YE]);
-//        CCTK_VINFO("P, eps, S : %e %e %e",prim[PRESS],prim[EPS],prim[ENT]);
-//        CCTK_VINFO("u^{mu}    : %e %e %e %e",u0L,utx_new,uty_new,utz_new);
-//        CCTK_VINFO("***********************************************************");
-//      }
+//       Check for NAN!
+//      if( isnan(prims_guess.rho*prims_guess.temp*prims_guess.Y_e*prims_guess.press*prims_guess.eps*prims_guess.entropy*prims_guess.vx*prims_guess.vy*prims_guess.vz*u0L) ) {
+      if( isnan(prims_guess.rho*prims_guess.press*prims_guess.eps*prims_guess.vx*prims_guess.vy*prims_guess.vz*u0L) ) {
+        CCTK_VINFO("***********************************************************");
+        CCTK_VINFO("NAN found in function %s (file: %s)",__func__,__FILE__);
+        CCTK_VINFO("Input IllinoisGRMHD conserved variables:");
+        CCTK_VINFO("rho_*, Ye_*, ~tau, ~S_{i}: %e %e %e %e %e %e",cons->rho,cons->Y_e,cons->tau,cons->S_x,cons->S_y,cons->S_z);
+        CCTK_VINFO("Input con2prim conserved variables:");
+        CCTK_VINFO("D, DYe, tau, S_{i}: %e %e %e %e %e %e",cons_undens.rho,cons_undens.Y_e,cons_undens.tau,cons_undens.S_x,cons_undens.S_y,cons_undens.S_z);
+        CCTK_VINFO("Output primitive variables:");
+        CCTK_VINFO("rho, T, Ye: %e %e %e",prims_guess.rho,prims_guess.temp,prims_guess.Y_e);
+        CCTK_VINFO("P, eps, S : %e %e %e",prims_guess.press,prims_guess.eps,prims_guess.entropy);
+        CCTK_VINFO("u^{mu}    : %e %e %e %e",u0L,prims_guess.vx,prims_guess.vy,prims_guess.vz);
+        CCTK_VINFO("***********************************************************");
+      }
 
         *prims = prims_guess;
+CCTK_VINFO("cons: rho=%.16e, ~tau=%.16e, ~S=(%.16e, %.16e, %.16e),", cons->rho,cons->tau,cons->S_x,cons->S_y,cons->S_z);
+CCTK_VINFO("prims: rho=%.16e, press=%.16e, vx=%.16e, vy=%.16e, vz=%.16e",prims->rho,prims->press,prims->vx,prims->vy,prims->vz);
+CCTK_VINFO("      B=(%.16e, %.16e, %.16e)",prims->Bx,prims->By,prims->Bz);
 
 	return 0;
 //      }

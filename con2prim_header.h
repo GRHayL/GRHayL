@@ -4,6 +4,7 @@
 //#endif //SMALLB_H_
 
 #define smallb_defined = 1;
+#define harm_params_defined = 1;
 
 #ifndef CON2PRIM_HEADER_H_
 #define CON2PRIM_HEADER_H_

@@ -9,19 +9,13 @@ void return_primitives(const eos_parameters *restrict eos, const primitive_quant
                       double *restrict vx, double *restrict vy, double *restrict vz,
                       double *restrict Bx, double *restrict By, double *restrict Bz,
                       double *restrict entropy, double *restrict Y_e, double *restrict temp) {
-//  CCTK_VINFO("Setting rho=%f to prims->rho=%f",*rho,prims->rho);
-//  CCTK_VINFO("Setting press=%f to prims->press=%f",*press,prims->press);
-//  CCTK_VINFO("Setting vx=%f to prims->vx=%f",*vx,prims->vx);
-//  CCTK_VINFO("Setting vy=%f to prims->vy=%f",*vy,prims->vy);
-//  CCTK_VINFO("Setting vz=%f to prims->vz=%f",*vz,prims->vz);
-//  CCTK_VINFO("Setting epsilon=%f to prims->eps=%f",*epsilon,prims->eps);
 
   *rho = prims->rho;
   *press = prims->press;
   *vx = prims->vx;
   *vy = prims->vy;
   *vz = prims->vz;
-  *epsilon = prims->eps;
+//  *epsilon = prims->eps; Doesn't seem to get set in IGM?
   *entropy = prims->entropy;
   // Tabulated EOS quantities
   if( eos->eos_type == 1 ) {

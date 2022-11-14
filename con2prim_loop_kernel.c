@@ -36,7 +36,6 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
                           metric_quantities *restrict metric, conservative_quantities *restrict cons,
                           primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics) {
 
-
   // Only attempt a primitive recovery if this is the first
   // attempt at doing so or if the previous attempt failed.
 //  if( (loop_count == 0) || (diagnostics->c2p_fail_flag != 0) ) {
