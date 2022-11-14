@@ -218,7 +218,7 @@ CCTK_VINFO("prims: rho=%.16e, u=%.16e, utx=%.16e, uty=%.16e, utz=%.16e",new_prim
   //TODO: missing eps, entropy. Are these not used for this routine?
 
   prims->rho = new_prims[RHO];
-  \\Aditional tabulated code here
+  //Aditional tabulated code here
 
   limit_velocity_and_convert_utilde_to_v(eos, metric, &new_prims[UTCON1], &new_prims[UTCON2],
                                          &new_prims[UTCON3], cons_undens->rho, prims, diagnostics);
