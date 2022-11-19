@@ -1,0 +1,8 @@
+ActiveThorns = "Time"
+ActiveThorns = "Con2Prim"
+ActiveThorns = "Carpet Boundary SymBase CoordBase"
+Con2Prim::C2P_unit_test = "yes"
+
+cactus::cctk_show_schedule = "no"
+cactus::cctk_show_banners = "no"
+cactus::cctk_brief_output = "yes"

@@ -1,0 +1,118 @@
+implements: Con2Prim
+
+INCLUDE HEADER: con2prim_header.h in con2prim_header.h
+INCLUDE HEADER: EOS_header.h in EOS/EOS_header.h
+INCLUDE HEADER: EOS_hybrid_header.h in EOS/EOS_hybrid_header.h
+INCLUDE HEADER: GRMHD_header.h in GRMHD_header.h
+
+#CCTK_POINTER_TO_CONST IN cctkGH, \
+#CCTK_INT FUNCTION Con2Prim_ETK(CCTK_INT IN main_routine, CCTK_INT ARRAY IN backup_routines, CCTK_REAL IN Psi6threshold, \
+#                          CCTK_INT IN update_Tmunu, CCTK_REAL IN tau_atm, CCTK_REAL IN GAMMA_SPEED_LIMIT, \
+#                          CCTK_REAL IN rho_b_atm, CCTK_REAL IN rho_max, CCTK_INT IN neos, \
+#                          CCTK_REAL ARRAY IN rho_ppoly_tab, CCTK_REAL ARRAY IN Gamma_ppoly_tab, CCTK_REAL ARRAY IN K_ppoly_tab, \
+#                          CCTK_REAL ARRAY IN eps_integ_const, CCTK_REAL IN Gamma_th, CCTK_POINTER IN phi, CCTK_POINTER IN psi, CCTK_POINTER IN lapm1, \
+#                          CCTK_POINTER IN gxx, CCTK_POINTER IN gxy, CCTK_POINTER IN gxz, \
+#                          CCTK_POINTER IN gyy, CCTK_POINTER IN gyz, CCTK_POINTER IN gzz, \
+#                          CCTK_POINTER IN betax, CCTK_POINTER IN betay, CCTK_POINTER IN betaz, CCTK_POINTER INOUT rho, \
+#                          CCTK_POINTER INOUT press, CCTK_POINTER INOUT epsilon, \
+#                          CCTK_POINTER INOUT vx, CCTK_POINTER INOUT vy, CCTK_POINTER INOUT vz, \
+#                          CCTK_POINTER INOUT Bx, CCTK_POINTER INOUT By, CCTK_POINTER INOUT Bz, \
+#                          CCTK_POINTER INOUT temp, CCTK_POINTER INOUT tau, \
+#                          CCTK_POINTER INOUT S_x, CCTK_POINTER INOUT S_y, CCTK_POINTER INOUT S_z, \
+#                          CCTK_POINTER INOUT Y_e, CCTK_POINTER INOUT entropy)
+#PROVIDES FUNCTION Con2Prim_ETK WITH con2prim_ETKTest \
+#  LANGUAGE C
+
+void FUNCTION Con2Prim_Kernel(CCTK_POINTER_TO_CONST IN params,
+                     CCTK_POINTER_TO_CONST IN eos,
+                     CCTK_POINTER INOUT metric,
+                     CCTK_POINTER INOUT cons,
+                     CCTK_POINTER INOUT prims,
+                     CCTK_POINTER INOUT diagnostics,
+                     CCTK_POINTER INOUT Tmunu)
+PROVIDES FUNCTION Con2Prim_Kernel WITH con2prim_ETK_kernel
+  LANGUAGE C
+
+void FUNCTION initialize_conservatives_ETK(CCTK_POINTER_TO_CONST IN params,
+                     CCTK_POINTER_TO_CONST IN eos, CCTK_REAL IN rho, CCTK_REAL IN tau,
+                     CCTK_REAL IN S_x, CCTK_REAL IN S_y, CCTK_REAL IN S_z,
+                     CCTK_REAL IN Y_e, CCTK_REAL IN entropy, CCTK_POINTER OUT cons)
+PROVIDES FUNCTION initialize_conservatives_ETK WITH c2p_initialize_conservatives
+  LANGUAGE C
+
+void FUNCTION initialize_diagnostics_ETK(CCTK_POINTER OUT diagnostics)
+PROVIDES FUNCTION initialize_diagnostics_ETK WITH c2p_initialize_diagnostics
+  LANGUAGE C
+
+void FUNCTION initialize_general_eos_ETK(CCTK_POINTER OUT eos,
+                    CCTK_INT IN type, CCTK_REAL IN tau_atm, CCTK_REAL IN W_max,
+                    CCTK_REAL IN eps_atm, CCTK_REAL IN eps_min, CCTK_REAL IN eps_max,
+                    CCTK_REAL IN press_atm, CCTK_REAL IN press_min, CCTK_REAL IN press_max,
+                    CCTK_REAL IN entropy_atm, CCTK_REAL IN entropy_min, CCTK_REAL IN entropy_max,
+                    CCTK_REAL IN rho_atm, CCTK_REAL IN rho_min, CCTK_REAL IN rho_max)
+PROVIDES FUNCTION initialize_general_eos_ETK WITH c2p_initialize_general_eos
+  LANGUAGE C
+
+void FUNCTION initialize_hybrid_eos_ETK(CCTK_POINTER OUT eos,
+                    CCTK_INT IN neos, CCTK_REAL ARRAY IN rho_ppoly_tab,
+                    CCTK_REAL ARRAY IN Gamma_ppoly_tab, CCTK_REAL ARRAY IN K_ppoly_tab,
+                    CCTK_REAL ARRAY IN eps_integ_const, CCTK_REAL IN Gamma_th)
+PROVIDES FUNCTION initialize_hybrid_eos_ETK WITH c2p_initialize_hybrid_eos
+  LANGUAGE C
+
+void FUNCTION initialize_metric_ETK(CCTK_POINTER OUT metric,
+                     CCTK_REAL IN phi, CCTK_REAL IN psi, CCTK_REAL IN lapse,
+                     CCTK_REAL IN gxx, CCTK_REAL IN gxy, CCTK_REAL IN gxz,
+                     CCTK_REAL IN gyy, CCTK_REAL IN gyz, CCTK_REAL IN gzz,
+                     CCTK_REAL IN betax, CCTK_REAL IN betay, CCTK_REAL IN betaz)
+PROVIDES FUNCTION initialize_metric_ETK WITH c2p_initialize_metric
+  LANGUAGE C
+
+void FUNCTION initialize_parameters_ETK(CCTK_POINTER OUT params, CCTK_INT IN main, CCTK_INT ARRAY IN backup,
+                CCTK_INT IN evolve_entropy, CCTK_INT IN evolve_temp, CCTK_INT IN calc_prim_guess,
+                CCTK_REAL IN psi6threshold, CCTK_INT IN update_Tmunu)
+PROVIDES FUNCTION initialize_parameters_ETK WITH c2p_initialize_parameters
+  LANGUAGE C
+
+void FUNCTION initialize_primitives_ETK(CCTK_POINTER_TO_CONST IN eos,
+                CCTK_POINTER_TO_CONST IN metric,
+                CCTK_REAL IN rho, CCTK_REAL IN press, CCTK_REAL IN epsilon,
+                CCTK_REAL IN vx, CCTK_REAL IN vy, CCTK_REAL IN vz,
+                CCTK_REAL IN Bx, CCTK_REAL IN By, CCTK_REAL IN Bz,
+                CCTK_REAL IN entropy, CCTK_REAL IN Y_e, CCTK_REAL IN temp,
+                CCTK_POINTER OUT prims)
+PROVIDES FUNCTION initialize_primitives_ETK WITH c2p_initialize_primitives
+  LANGUAGE C
+
+void FUNCTION return_conservatives_ETK(
+             CCTK_POINTER_TO_CONST IN void_params,
+             CCTK_POINTER_TO_CONST IN void_eos,
+             CCTK_POINTER_TO_CONST IN void_cons,
+             CCTK_REAL OUT rho,
+             CCTK_REAL OUT tau,
+             CCTK_REAL OUT S_x,
+             CCTK_REAL OUT S_y,
+             CCTK_REAL OUT S_z,
+             CCTK_REAL OUT Y_e,
+             CCTK_REAL OUT entropy)
+PROVIDES FUNCTION return_conservatives_ETK WITH c2p_return_conservatives
+  LANGUAGE C
+
+void FUNCTION return_primitives_ETK(
+             CCTK_POINTER_TO_CONST IN void_eos,
+             CCTK_POINTER_TO_CONST IN void_prims,
+             CCTK_REAL OUT rho,
+             CCTK_REAL OUT press,
+             CCTK_REAL OUT epsilon,
+             CCTK_REAL OUT vx,
+             CCTK_REAL OUT vy,
+             CCTK_REAL OUT vz,
+             CCTK_REAL OUT Bx,
+             CCTK_REAL OUT By,
+             CCTK_REAL OUT Bz,
+             CCTK_REAL OUT entropy,
+             CCTK_REAL OUT Y_e,
+             CCTK_REAL OUT temp)
+PROVIDES FUNCTION return_primitives_ETK WITH c2p_return_primitives
+  LANGUAGE C
+
