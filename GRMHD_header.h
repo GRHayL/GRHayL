@@ -113,6 +113,14 @@ typedef struct metric_quantities {
   double g4dn[4][4],g4up[4][4];
 } metric_quantities;
 
+
+//TODO: comment/add to this
+typedef struct stress_energy {
+  double Ttt, Ttx, Tty, Ttz;
+  double Txx, Txy, Txz;
+  double Tyy, Tyz, Tzz;
+} stress_energy;
+
 void initialize_parameters(GRMHD_parameters *restrict params,
              const int main, const int backup[3], const int evolve_entropy,
              const int evolve_temp, const int calc_prim_guess,

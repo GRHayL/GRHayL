@@ -8,12 +8,12 @@
 
 #include "con2prim_header.h"
 
-void undensitize( const eos_parameters *restrict eos,
-                  const int c2p_key,
-                  const metric_quantities *restrict metric,
-                  const primitive_quantities *restrict prims,
-                  const conservative_quantities *restrict cons,
-                  conservative_quantities *restrict cons_undens ) {
+void undensitize_conservatives( const eos_parameters *restrict eos,
+                                const int c2p_key,
+                                const metric_quantities *restrict metric,
+                                const primitive_quantities *restrict prims,
+                                const conservative_quantities *restrict cons,
+                                conservative_quantities *restrict cons_undens ) {
 
   // IllinoisGRMHD's variable is the "densitised" version of
   // the standard conservative variables (D,tau,S_{i}). In

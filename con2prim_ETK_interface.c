@@ -2,7 +2,7 @@
 #include "con2prim_header.h"
 void con2prim_ETK_kernel( CCTK_POINTER_TO_CONST const void_params, CCTK_POINTER_TO_CONST const void_eos,
                           CCTK_POINTER *void_metric, CCTK_POINTER *void_cons,
-                          CCTK_POINTER *void_prims, CCTK_POINTER *void_diagnostics) {
+                          CCTK_POINTER *void_prims, CCTK_POINTER *void_diagnostics, CCTK_POINTER *void_Tmunu) {
 
   const GRMHD_parameters *params = (const GRMHD_parameters *)void_params;
   const eos_parameters *eos = (const eos_parameters *)void_eos;
@@ -10,8 +10,9 @@ void con2prim_ETK_kernel( CCTK_POINTER_TO_CONST const void_params, CCTK_POINTER_
   conservative_quantities *cons = *( (conservative_quantities **)void_cons );
   primitive_quantities *prims = *( (primitive_quantities **)void_prims );
   con2prim_diagnostics *diagnostics = *( (con2prim_diagnostics **)void_diagnostics );
+  stress_energy *Tmunu = *( (stress_energy **)void_Tmunu );
 
-  con2prim_loop_kernel(params, eos, metric, cons, prims, diagnostics);
+  con2prim_loop_kernel(params, eos, metric, cons, prims, diagnostics, Tmunu);
 }
 
 void c2p_initialize_conservatives(

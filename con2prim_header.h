@@ -153,7 +153,8 @@ void enforce_limits_on_primitives_and_recompute_conservs(
              primitive_quantities *restrict prims,
              conservative_quantities *restrict cons,
              double *TUPMUNU,double *TDNMUNU,
-             int *restrict speed_limit_applied);
+             stress_energy *restrict Tmunu,
+             con2prim_diagnostics *restrict diagnostics );
 
 void prims_enforce_extrema_and_recompute(
              const GRMHD_parameters *restrict params,
@@ -162,13 +163,14 @@ void prims_enforce_extrema_and_recompute(
              primitive_quantities *restrict prims);
 
 void reset_prims_to_atmosphere( const eos_parameters *restrict eos,
-                                primitive_quantities *restrict prims );
+                                primitive_quantities *restrict prims,
+                                con2prim_diagnostics *restrict diagnostics );
 
 //--------------------------------------------------
 
 //--------- Initialization routines ----------------
 
-void initialize_diagnostics(con2prim_diagnostics *restrict diagnostic);
+void initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
 
 void initialize_primitives(
              const eos_parameters *restrict eos,
@@ -215,38 +217,32 @@ void con2prim_loop_kernel(
              metric_quantities *restrict metric,
              conservative_quantities *restrict cons,
              primitive_quantities *restrict prims,
-             con2prim_diagnostics *restrict diagnostics);
+             con2prim_diagnostics *restrict diagnostics,
+             stress_energy *restrict Tmunu);
 
-int con2prim_select(
+int C2P_Select_Hybrid_Method(
              const eos_parameters *restrict eos, const int c2p_key,
              const metric_quantities *restrict metric,
              const conservative_quantities *restrict cons,
              primitive_quantities *restrict prims,
              con2prim_diagnostics *restrict diagnostics);
 
-int con2prim_Noble2D(
+int C2P_Hybrid_Noble2D(
              const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
              const conservative_quantities *restrict cons,
              primitive_quantities *restrict prim,
              con2prim_diagnostics *restrict diagnostics);
 
-int con2prim(const GRMHD_parameters *restrict params,
-             const eos_parameters *restrict eos,
-             const metric_quantities *restrict metric,
-             conservative_quantities *restrict cons,
-             primitive_quantities *restrict prims,
-             con2prim_diagnostics *restrict diagnostics);
-
 int  apply_tau_floor(
              const GRMHD_parameters *restrict params,
              const eos_parameters *restrict eos,
              metric_quantities *restrict metric,
-             primitive_quantities *restrict prims,
+             const primitive_quantities *restrict prims,
              conservative_quantities *restrict cons,
              con2prim_diagnostics *restrict diagnostics);
 
-void undensitize(
+void undensitize_conservatives(
              const eos_parameters *restrict eos, const int c2p_key,
              const metric_quantities *restrict metric,
              const primitive_quantities *restrict prims,
@@ -264,8 +260,8 @@ void guess_primitives(
 void limit_velocity_and_convert_utilde_to_v(
              const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
-             double *restrict utcon1_ptr, double *restrict utcon2_ptr,
-             double *restrict utcon3_ptr, const double rho_undens,
+             double *restrict utcon1_ptr, double *restrict u0_ptr,
+             double *restrict utcon2_ptr, double *restrict utcon3_ptr,
              primitive_quantities *restrict prims,
              con2prim_diagnostics *restrict diagnostics);
 
@@ -278,8 +274,7 @@ int font_fix(const eos_parameters *restrict eos,
              const conservative_quantities *restrict cons_undens,
              const primitive_quantities *restrict prims,
              primitive_quantities *restrict prims_guess,
-             con2prim_diagnostics *restrict diagnostics,
-             double *restrict u0L_ptr);
+             con2prim_diagnostics *restrict diagnostics);
 
 int font_fix_hybrid_EOS(
              const eos_parameters *restrict eos,
@@ -330,15 +325,15 @@ int main()
 // so we should consider a better solution.
 
 // In enforce_limits_on_primitives_and_recompute_conservs.c:
-//void __attribute__((unused)) impose_speed_limit_output_u0(const GRMHD_parameters *restrict params, const metric_quantities *restrict metric,
+// impose_speed_limit_output_u0(const GRMHD_parameters *restrict params, const metric_quantities *restrict metric,
 //                                   primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics,
 //                                   double *restrict u0_out);
-//void __attribute__((unused)) compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
+// compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
 //                                                    const double u0L, const double ONE_OVER_LAPSE_SQRT_4PI, double *restrict u_x_over_u0_psi4,
 //                                                    double *restrict u_y_over_u0_psi4, double *restrict u_z_over_u0_psi4, double *restrict smallb);
 
 // In apply_tau_floor.c:
-//void __attribute__((unused)) eigenvalues_3by3_real_sym_matrix(double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
+// eigenvalues_3by3_real_sym_matrix(double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
 //                                      const double M11, const double M12, const double M13,
 //                                      const double M22, const double M23, const double M33); 
 

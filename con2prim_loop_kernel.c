@@ -34,41 +34,106 @@
 
 void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
                           metric_quantities *restrict metric, conservative_quantities *restrict cons,
-                          primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics) {
+                          primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics, stress_energy *restrict Tmunu) {
 
-  // Only attempt a primitive recovery if this is the first
-  // attempt at doing so or if the previous attempt failed.
-//  if( (loop_count == 0) || (diagnostics->c2p_fail_flag != 0) ) {
-//TODO: if is in surrounding code rn
-
-//  //FIXME: might slow down the code.
-//  if(robust_isnan(cons->rho*cons->S_x*cons->S_y*cons->S_z*cons->tau*prims->Bx*prims->By*prims->Bz)) {
-//    CCTK_VWARN(CCTK_WARN_ALERT,"NAN FOUND: index = %d, x,y,z = %e %e %e , st_i = %e %e %e, rhostar = %e, tau = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
-//               i,j,k,x[i],y[i],z[i],index,
-//               cons->S_x,cons->S_y,cons->S_z,cons->rho,cons->tau,prims->Bx,prims->By,prims->Bz,
-//               metric->adm_gxx,metric->adm_gxy,metric->adm_gxz,metric->adm_gyy,metric->adm_gyy,metric->adm_gzz,metric->psi6);
-//    diagnostics->nan_found++;
-//  }
+  //FIXME: might slow down the code.
+  if(isnan(cons->rho*cons->S_x*cons->S_y*cons->S_z*cons->tau*prims->Bx*prims->By*prims->Bz)) {
+    CCTK_VWARN(CCTK_WARN_ALERT,"NaN found at start of C2P kernel: st_i = %e %e %e, rho_* = %e, ~tau = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
+               cons->S_x,cons->S_y,cons->S_z,cons->rho,cons->tau,prims->Bx,prims->By,prims->Bz,
+               metric->adm_gxx,metric->adm_gxy,metric->adm_gxz,metric->adm_gyy,metric->adm_gyy,metric->adm_gzz,metric->psi6);
+    diagnostics->nan_found++;
+  }
 
   // Here we save the original values of conservative variables in cons_orig for debugging purposes.
-  struct conservative_quantities cons_orig;
-  cons_orig = *cons;
+  conservative_quantities cons_orig = *cons;
 
   int check=0;
-  diagnostics->which_routine  = None;
   if(cons->rho>0.0) {
     // Apply the tau floor
     if( eos->eos_type == 0 )
       apply_tau_floor(params, eos, metric, prims, cons, diagnostics);
 
-    for(int ii=0;ii<3;ii++) {
-      check = con2prim(params, eos, metric, cons, prims, diagnostics);
-      if(check==0) ii=4;
-      else diagnostics->failure_checker+=100000;
+/*************************************************************************/
+    // declare some variables for the C2P routine.
+    conservative_quantities cons_undens;
+    primitive_quantities prims_guess;
+
+    // Set the conserved variables required by the con2prim routine
+    undensitize_conservatives( eos, params->main_routine, metric, prims, cons, &cons_undens );
+  
+    /************* Conservative-to-primitive recovery ************/
+
+    for(int which_guess=1;which_guess<3;which_guess++) {
+
+      // Set primitive guesses
+      guess_primitives( eos, params->main_routine, which_guess, metric, prims, cons, &prims_guess );
+      int check = C2P_Select_Hybrid_Method(eos, params->main_routine, metric, &cons_undens, &prims_guess, diagnostics);
+
+      if( (check != 0) && (params->backup_routine[0] != None) ) {
+        // Backup 1 triggered
+        diagnostics->backup[0] = 1;
+        // Recompute guesses
+        guess_primitives( eos,params->backup_routine[0], which_guess, metric, prims, cons, &prims_guess );
+        // Backup routine #1
+        check = C2P_Select_Hybrid_Method(eos, params->backup_routine[0], metric, &cons_undens, &prims_guess, diagnostics);
+
+        if( (check != 0) && (params->backup_routine[1] != None) ) {
+          // Backup 2 triggered
+          diagnostics->backup[1] = 1;
+          // Recompute guesses
+          guess_primitives( eos,params->backup_routine[1], which_guess, metric, prims, cons, &prims_guess );
+          // Backup routine #2
+          check = C2P_Select_Hybrid_Method(eos, params->backup_routine[1], metric, &cons_undens, &prims_guess, diagnostics);
+
+          if( (check != 0) && (params->backup_routine[2] != None) ) {
+            // Backup 3 triggered
+            diagnostics->backup[2] = 1;
+            // Recompute guesses
+            guess_primitives( eos,params->backup_routine[2], which_guess, metric, prims, cons, &prims_guess );
+            // Backup routine #3
+            check = C2P_Select_Hybrid_Method(eos, params->backup_routine[2], metric, &cons_undens, &prims_guess, diagnostics);
+          }
+        }
+      }
+      /*************************************************************/
+  
+      if(check!=0) {
+        check = font_fix(eos, metric, cons, prims, &prims_guess, diagnostics);
+//if(fabs(cons_orig.tau - 3.8712996396e-09) < 1.0e-18 ) {
+//  CCTK_VINFO("Font Fix final prims: %.16e %.16e\n  %.16e %.16e %.16e", prims_guess.rho, prims_guess.press, prims_guess.vx, prims_guess.vy, prims_guess.vz);
+//}
+        diagnostics->font_fixes++;
+      }
+  
+      if(check==0) {
+  //       Check for NAN!
+        if( isnan(prims_guess.rho*prims_guess.press*prims_guess.eps*prims_guess.vx*prims_guess.vy*prims_guess.vz) ) {
+          CCTK_VINFO("***********************************************************");
+          CCTK_VINFO("NAN found in function %s (file: %s)",__func__,__FILE__);
+          CCTK_VINFO("Input conserved variables:");
+          CCTK_VINFO("rho_*, ~tau, ~S_{i}: %e %e %e %e %e", cons->rho, cons->tau, cons->S_x, cons->S_y, cons->S_z);
+          CCTK_VINFO("Undensitized conserved variables:");
+          CCTK_VINFO("D, tau, S_{i}: %e %e %e %e %e", cons_undens.rho, cons_undens.tau, cons_undens.S_x, cons_undens.S_y, cons_undens.S_z);
+          CCTK_VINFO("Output primitive variables:");
+          CCTK_VINFO("rho, P: %e %e", prims_guess.rho, prims_guess.press);
+          CCTK_VINFO("v: %e %e %e", prims_guess.vx, prims_guess.vy, prims_guess.vz);
+          CCTK_VINFO("***********************************************************");
+        }
+  
+        *prims = prims_guess;
+  //CCTK_VINFO("cons: rho=%.16e, ~tau=%.16e, ~S=(%.16e, %.16e, %.16e),", cons->rho,cons->tau,cons->S_x,cons->S_y,cons->S_z);
+  //CCTK_VINFO("prims: rho=%.16e, press=%.16e, vx=%.16e, vy=%.16e, vz=%.16e",prims->rho,prims->press,prims->vx,prims->vy,prims->vz);
+  //CCTK_VINFO("      B=(%.16e, %.16e, %.16e)",prims->Bx,prims->By,prims->Bz);
+        which_guess=3;
+      } //If we didn't find a root, then try again with a different guess.
     }
+    diagnostics->failure_checker+=100000;
+
+/************************************************************************/
+//    check = con2prim(params, eos, metric, cons, prims, diagnostics);
   } else {
     diagnostics->failure_checker+=1;
-    reset_prims_to_atmosphere(eos, prims);
+    reset_prims_to_atmosphere(eos, prims, diagnostics);
     diagnostics->rho_star_fix_applied++;
   }
 
@@ -76,69 +141,38 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
     //--------------------------------------------------
     //----------- Primitive recovery failed ------------
     //--------------------------------------------------
-    // Increment the failure flag
-    diagnostics->c2p_fail_flag += 1;
-    if( diagnostics->c2p_fail_flag > 4 ) {
-      // Sigh, reset to atmosphere
-      reset_prims_to_atmosphere( eos, prims );
-      diagnostics->atm_resets++;
-      // Then flag this point as a "success"
-      check = 0;
-      diagnostics->c2p_fail_flag = 0;
+CCTK_VINFO("C2P and FF failures! Reseting to atm...");
+    // Sigh, reset to atmosphere
+    reset_prims_to_atmosphere( eos, prims, diagnostics);
+    diagnostics->atm_resets++;
+    // Then flag this point as a "success"
+    check = 0;
 //TODO: change to prinf
-//      if( eos->type == 0 ) {
-//        CCTK_VInfo(CCTK_THORNSTRING,"Couldn't find root from: %e %e %e %e %e, rhob approx=%e, rho_b_atm=%e, Bx=%e, By=%e, Bz=%e, gij_phys=%e %e %e %e %e %e, alpha=%e",
-//                   cons_orig.tau,cons_orig.rho,cons_orig.S_x,cons_orig.S_y,cons_orig.S_z,cons_orig.rho/metric->psi6,eos->rho_atm,prims->Bx,prims->By,prims->Bz,metric->adm_gxx,metric->adm_gxy,metric->adm_gxz,metric->adm_gyy,metric->adm_gyy,metric->adm_gzz,metric->lapse);
-//      }
-//      else if( eos->type == 1 ) {
-//        CCTK_VInfo(CCTK_THORNSTRING,"Couldn't find root from: %e %e %e %e %e %e %e, rhob approx=%e, rho_b_atm=%e, Bx=%e, By=%e, Bz=%e, gij_phys=%e %e %e %e %e %e, alpha=%e",
-//                   cons_orig.tau,cons_orig.rho,cons_orig.S_x,cons_orig.S_y,cons_orig.S_z,cons_orig.Y_e,cons_orig.entropy,cons_orig.rho/metric->psi6,eos->rho_atm,prims->Bx,prims->By,prims->Bz,metric->adm_gxx,metric->adm_gxy,metric->adm_gxz,metric->adm_gyy,metric->adm_gyy,metric->adm_gzz, metric->lapse);
-//      }
-    }
-//    else {
-//      // Increment the number of gridpoints which will need the average fix
-//      num_of_conservative_averagings_needed++;
-//    }
+    CCTK_VINFO("Couldn't find root from: %e %e %e %e %e, rhob approx=%e, rho_b_atm=%e, Bx=%e, By=%e, Bz=%e, gij_phys=%e %e %e %e %e %e, alpha=%e",
+               cons_orig.tau,cons_orig.rho,cons_orig.S_x,cons_orig.S_y,cons_orig.S_z,cons_orig.rho/metric->psi6,eos->rho_atm,
+               prims->Bx,prims->By,prims->Bz,metric->adm_gxx,metric->adm_gxy,metric->adm_gxz,metric->adm_gyy,metric->adm_gyy,metric->adm_gzz,metric->lapse);
   }
 
-  if( check == 0 ) {
-    //--------------------------------------------------
-    //---------- Primitive recovery succeeded ----------
-    //--------------------------------------------------
-    // Enforce limits on primitive variables and recompute conservatives.
-    double TUPMUNU[10],TDNMUNU[10];
-    enforce_limits_on_primitives_and_recompute_conservs(params, eos, metric, prims, cons, TUPMUNU, TDNMUNU, &diagnostics->failure_checker);
+  //--------------------------------------------------
+  //---------- Primitive recovery succeeded ----------
+  //--------------------------------------------------
+  // Enforce limits on primitive variables and recompute conservatives.
+  double TUPMUNU[10],TDNMUNU[10];
+  enforce_limits_on_primitives_and_recompute_conservs(params, eos, metric, prims, cons, TUPMUNU, TDNMUNU, Tmunu, diagnostics);
 
-//    if(update_Tmunu) {
-//      int ww=0;
-//      eTtt[i] = TDNMUNU[ww++];
-//      eTtx[i] = TDNMUNU[ww++];
-//      eTty[i] = TDNMUNU[ww++];
-//      eTtz[i] = TDNMUNU[ww++];
-//      eTxx[i] = TDNMUNU[ww++];
-//      eTxy[i] = TDNMUNU[ww++];
-//      eTxz[i] = TDNMUNU[ww++];
-//      eTyy[i] = TDNMUNU[ww++];
-//      eTyz[i] = TDNMUNU[ww++];
-//      eTzz[i] = TDNMUNU[ww  ];
-//    }
+  //Now we compute the difference between original & new conservatives, for diagnostic purposes:
+//CCTK_VINFO("Cons: tau rho S %.16e %.16e %.16e %.16e %.16e", cons->tau, cons->rho, cons->S_x, cons->S_y, cons->S_z);
+//CCTK_VINFO("Orig: tau rho S %.16e %.16e %.16e %.16e %.16e", cons_orig.tau, cons_orig.rho, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z);
+  diagnostics->error_int_numer += fabs(cons->tau - cons_orig.tau) + fabs(cons->rho - cons_orig.rho) + fabs(cons->S_x - cons_orig.S_x)
+                    + fabs(cons->S_y - cons_orig.S_y) + fabs(cons->S_z - cons_orig.S_z);
+  diagnostics->error_int_denom += cons_orig.tau + cons_orig.rho + fabs(cons_orig.S_x) + fabs(cons_orig.S_y) + fabs(cons_orig.S_z);
 
-    //Now we compute the difference between original & new conservatives, for diagnostic purposes:
-    diagnostics->error_int_numer += fabs(cons->tau - cons_orig.tau) + fabs(cons->rho - cons_orig.rho) + fabs(cons->S_x - cons_orig.S_x)
-                      + fabs(cons->S_y - cons_orig.S_y) + fabs(cons->S_z - cons_orig.S_z) + fabs(cons->Y_e - cons_orig.Y_e);
-    diagnostics->error_int_denom += cons_orig.tau + cons_orig.rho + fabs(cons_orig.S_x) + fabs(cons_orig.S_y) + fabs(cons_orig.S_z)
-                      + cons_orig.Y_e;
-
-//TODO: Remove cctk function   if(stats.nan_found==1) { CCTK_VWARN(CCTK_WARN_ALERT,"Found NAN while imposing speed limit"); diagnostics->nan_found++; }
-    if(check!=0) {
-      diagnostics->failures++;
-      if(exp(metric->bssn_phi*6.0)>params->psi6threshold) {
-        diagnostics->failures_inhoriz++;
-        diagnostics->pointcount_inhoriz++;
-      }
+  if(check!=0) {
+    diagnostics->failures++;
+    if(exp(metric->bssn_phi*6.0)>params->psi6threshold) {
+      diagnostics->failures_inhoriz++;
+      diagnostics->pointcount_inhoriz++;
     }
-    diagnostics->pointcount++;
-    /***************************************************************************************************************************/
   }
-//  } // if( (loop_count == 0) || (c2p_fail_flag != 0) )
+  diagnostics->pointcount++;
 }

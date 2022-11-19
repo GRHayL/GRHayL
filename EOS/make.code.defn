@@ -1,0 +1,7 @@
+# Main make.code.defn file for thorn Baikal
+
+# Source files in this directory that need compiled:
+SRCS = \
+       EOS_functions.c \
+       EOS_hybrid.c \
+       initialize_eos.c

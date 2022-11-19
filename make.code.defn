@@ -5,26 +5,22 @@ SRCS = \
        apply_tau_floor.c \
        con2prim_ETK_interface.c \
        con2prim_loop_kernel.c \
-       con2prim_Noble2D.c \
-       con2prim_select.c \
-       con2prim_wrapper.c \
-       EOS_functions.c \
-       EOS_hybrid.c \
-       font_fix.c \
-       font_fix_hybrid_EOS.c \
-       font_fix_rhob_loop.c \
+       C2P_test_suite.c \
        guess_primitives.c \
        IGM_functions.c \
        initialize_conservatives.c \
        initialize_diagnostics.c \
-       initialize_eos.c \
        initialize_metric.c \
        initialize_parameters.c \
        initialize_primitives.c \
        limit_velocity_and_convert_utilde_to_v.c \
        return_conservatives.c \
        return_primitives.c \
-       undensitize.c
+       undensitize_conservatives.c
 
-#con2prim_test.C                          
-       #con2prim_ETKTest.c \
+# Subdirectories containing source files (normal compilation)
+# ... directories are listed in bottom-up order
+SUBDIRS = \
+          EOS \
+          C2P_Routines/Hybrid \
+          Font_Fix

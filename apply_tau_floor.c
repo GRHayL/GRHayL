@@ -1,3 +1,4 @@
+#include "cctk.h"
 #include "con2prim_header.h"
 
 // This subroutine calculates the eigenvalues of a real, symmetric 3x3
@@ -33,7 +34,7 @@ inline void eigenvalues_3by3_real_sym_matrix(double *restrict  lam1, double *res
 }
 
 int apply_tau_floor(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
-                           metric_quantities *restrict metric, primitive_quantities *restrict prims,
+                           metric_quantities *restrict metric, const primitive_quantities *restrict prims,
                            conservative_quantities *restrict cons, con2prim_diagnostics *restrict diagnostics) {
 
   double lam1,lam2,lam3;
@@ -118,7 +119,6 @@ int apply_tau_floor(const GRMHD_parameters *restrict params, const eos_parameter
   }
 
   double tau_fluid_min = cons->tau - 0.5*metric->psi6*Bbar2 - (Bbar2*sdots - SQR(BbardotS))*0.5/(metric->psi6*SQR(Wmin+Bbar2));
-
 
   //Apply Stilde fix when B==0.
 

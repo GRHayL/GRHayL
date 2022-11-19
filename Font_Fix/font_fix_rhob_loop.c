@@ -5,7 +5,7 @@
  * Authors     : Leo Werneck
  * Description : Determines rhob using the font fix prescription
  * Dependencies: find_polytropic_K_and_Gamma_index()
- *             : compute_P_cold__eps_cold()
+ *             : compute_P_cold_and_eps_cold()
  * Reference   : Etienne et al. (2011) [https://arxiv.org/pdf/1112.0568.pdf]
  *
  * Inputs      : maxits          - maximum number of iterations allowed
@@ -74,7 +74,7 @@ int font_fix_rhob_loop( const eos_parameters *restrict eos,
        * | h = h_cold = 1 + eps_cold + P_cold/rhob. |
        * .------------------------------------------.
        */
-      compute_P_cold__eps_cold(eos,rhob0, &P_cold, &eps_cold);
+      compute_P_cold_and_eps_cold(eos,rhob0, &P_cold, &eps_cold);
       h = 1.0 + eps_cold + P_cold/rhob0;
 
       /* Update rhob using eq. (A62) in Etienne et al. (2011)
@@ -99,7 +99,7 @@ int font_fix_rhob_loop( const eos_parameters *restrict eos,
     /* Perform physical checks on the variables
      * and output the last value of h obtained
      */
-    compute_P_cold__eps_cold(eos,rhob_out, &P_cold, &eps_cold);
+    compute_P_cold_and_eps_cold(eos,rhob_out, &P_cold, &eps_cold);
     h = 1.0 + eps_cold + P_cold/rhob_out;
 
     /* Set W based on eq. (A60) in Etienne et al. (2011)

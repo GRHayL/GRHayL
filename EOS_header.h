@@ -110,7 +110,7 @@ void initialize_tabulated_eos(
 
 //------------------------------------------------
 
-void compute_P_cold__eps_cold(
+void compute_P_cold_and_eps_cold(
              const eos_parameters *restrict eos, const double rho_in,
              double *restrict P_cold_ptr, double *restrict eps_cold_ptr);
 

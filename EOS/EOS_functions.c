@@ -20,7 +20,7 @@ void prims_enforce_extrema_and_recompute( const GRMHD_parameters *restrict param
     // Compute P and eps
     double prs_cold = 0.0;
     double eps_cold = 0.0;
-    compute_P_cold__eps_cold(eos, prims->rho, &prs_cold, &eps_cold);
+    compute_P_cold_and_eps_cold(eos, prims->rho, &prs_cold, &eps_cold);
     // Set P_min and P_max
     double P_min = 0.9*prs_cold;
     double P_max = 100.0*prs_cold;
@@ -61,7 +61,7 @@ void prims_enforce_extrema_and_recompute( const GRMHD_parameters *restrict param
 
 }
 
-void compute_P_cold__eps_cold(const eos_parameters *restrict eos, const double rho_in,
+void compute_P_cold_and_eps_cold(const eos_parameters *restrict eos, const double rho_in,
                               double *restrict P_cold_ptr, double *restrict eps_cold_ptr) {
   double P_cold = *P_cold_ptr, eps_cold = *eps_cold_ptr;
 
@@ -85,7 +85,8 @@ void compute_P_cold__eps_cold(const eos_parameters *restrict eos, const double r
 }
 
 void reset_prims_to_atmosphere( const eos_parameters *restrict eos,
-                                primitive_quantities *restrict prims ) {
+                                primitive_quantities *restrict prims,
+                                con2prim_diagnostics *restrict diagnostics ) {
 
   // Just a simple reset to atmospheric values.
   // Velocities are set to zero. Keeping it
@@ -102,5 +103,4 @@ void reset_prims_to_atmosphere( const eos_parameters *restrict eos,
   prims->vx = 0.0;
   prims->vy = 0.0;
   prims->vz = 0.0;  
-  
 }

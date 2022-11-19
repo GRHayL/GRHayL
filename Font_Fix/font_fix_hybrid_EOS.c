@@ -7,7 +7,7 @@
  **********************************/
 int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
                          const metric_quantities *restrict metric,
-                         const conservative_quantities *restrict cons_undens,
+                         const conservative_quantities *restrict cons,
                          const primitive_quantities *restrict prims,
                          double *restrict u_x_ptr, double *restrict u_y_ptr, double *restrict u_z_ptr ) {
 
@@ -30,7 +30,7 @@ int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
     double B_xtemp=Bbar_x/Bmax, B_ytemp=Bbar_y/Bmax, B_ztemp=Bbar_z/Bmax;
     Bbar = sqrt(Bxtmp*B_xtemp + Bytemp*B_ytemp + Bztemp*B_ztemp)*Bmax;
   }
-  double BbardotS = Bxbar*cons_undens->S_x + Bybar*cons_undens->S_y + Bzbar*cons_undens->S_z;
+  double BbardotS = Bxbar*cons->S_x + Bybar*cons->S_y + Bzbar*cons->S_z;
   double BbardotS2 = BbardotS*BbardotS;
   double hatBbardotS = BbardotS/Bbar;
   if (Bbar<1.e-300) hatBbardotS = 0.0;
@@ -57,14 +57,14 @@ int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
   //   BbardotS2 = BbardotS*BbardotS;
   //}
 
-  double sdots = metric->adm_gupxx*SQR(cons_undens->S_x) + metric->adm_gupyy*SQR(cons_undens->S_y) + metric->adm_gupzz*SQR(cons_undens->S_z)
-    + 2.0*( metric->adm_gupxy*cons_undens->S_x*cons_undens->S_y + metric->adm_gupxz*cons_undens->S_x*cons_undens->S_z
-            + metric->adm_gupyz*cons_undens->S_y*cons_undens->S_z);
+  double sdots = metric->adm_gupxx*SQR(cons->S_x) + metric->adm_gupyy*SQR(cons->S_y) + metric->adm_gupzz*SQR(cons->S_z)
+    + 2.0*( metric->adm_gupxy*cons->S_x*cons->S_y + metric->adm_gupxz*cons->S_x*cons->S_z
+            + metric->adm_gupyz*cons->S_y*cons->S_z);
 
 
   double rhob;
   if (sdots<1.e-300) {
-    rhob = cons_undens->rho*Psim6;
+    rhob = cons->rho*Psim6;
     *u_x_ptr=0.0; *u_y_ptr=0.0; *u_z_ptr=0.0;
     return 0;
   }
@@ -77,9 +77,9 @@ int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
 
 
   // Initial guess for W, S_fluid and rhob
-  double W0    = sqrt( SQR(hatBbardotS) + SQR(cons_undens->rho) ) * Psim6;
+  double W0    = sqrt( SQR(hatBbardotS) + SQR(cons->rho) ) * Psim6;
   double Sf20  = (SQR(W0)*sdots + BbardotS2*(B2bar + 2.0*W0))/SQR(W0+B2bar);
-  double rhob0 = cons_undens->rho*Psim6/sqrt(1.0+Sf20/SQR(cons_undens->rho));
+  double rhob0 = cons->rho*Psim6/sqrt(1.0+Sf20/SQR(cons->rho));
 
 
   //****************************************************************
@@ -111,7 +111,7 @@ int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
 
     tol *= pow(font_fix_tol_factor,n);
     font_fix_status = font_fix_rhob_loop(eos, maxits, tol, W0, Sf20, Psim6, sdots,
-                                         BbardotS2, B2bar, cons_undens, rhob0, &rhob);
+                                         BbardotS2, B2bar, cons, rhob0, &rhob);
     rhob0 = rhob;
     if(font_fix_status==0) break;
 
@@ -123,7 +123,7 @@ int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
   /* Font fix works! */
   /* First compute P_cold, eps_cold, then h = h_cold */
   double P_cold, eps_cold;
-  compute_P_cold__eps_cold(eos, rhob, &P_cold, &eps_cold);
+  compute_P_cold_and_eps_cold(eos, rhob, &P_cold, &eps_cold);
   double h = 1.0 + eps_cold + P_cold/rhob;
 
   /* Then compute gamma_v using equation (A19) in
@@ -132,15 +132,15 @@ int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
    * | gamma_v = psi^{-6} * (rho_star / rho_b) |
    * .-----------------------------------------.
    */
-  double gammav = cons_undens->rho*Psim6/rhob;
+  double gammav = cons->rho*Psim6/rhob;
 
   /* Finally, compute u_{i} */
-  double rhosh = cons_undens->rho*h;
+  double rhosh = cons->rho*h;
   double fac1 = metric->psi6*BbardotS/(gammav*rhosh);
   double fac2 = 1.0/(rhosh + metric->psi6*B2bar/gammav);
-  *u_x_ptr = fac2*(cons_undens->S_x + fac1*Bbar_x);
-  *u_y_ptr = fac2*(cons_undens->S_y + fac1*Bbar_y);
-  *u_z_ptr = fac2*(cons_undens->S_z + fac1*Bbar_z);
+  *u_x_ptr = fac2*(cons->S_x + fac1*Bbar_x);
+  *u_y_ptr = fac2*(cons->S_y + fac1*Bbar_y);
+  *u_z_ptr = fac2*(cons->S_z + fac1*Bbar_z);
 
   return 0;
 }

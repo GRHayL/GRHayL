@@ -1,16 +1,16 @@
 #include "con2prim_header.h"
 
-int con2prim_select( const eos_parameters *restrict eos, const int c2p_key,
-                     const metric_quantities *restrict metric,
-                     const conservative_quantities *restrict cons,
-                     primitive_quantities *restrict prims,
-                     con2prim_diagnostics *restrict diagnostics ) {
+int C2P_Select_Hybrid_Method( const eos_parameters *restrict eos, const int c2p_key,
+                              const metric_quantities *restrict metric,
+                              const conservative_quantities *restrict cons,
+                              primitive_quantities *restrict prims,
+                              con2prim_diagnostics *restrict diagnostics ) {
 
   switch( c2p_key ) {
 
     // Noble2D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
-      return( con2prim_Noble2D(eos,metric,cons,prims,diagnostics) );
+      return( C2P_Hybrid_Noble2D(eos,metric,cons,prims,diagnostics) );
       break;
 
 //    // Noble1D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)

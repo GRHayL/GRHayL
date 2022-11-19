@@ -9,15 +9,14 @@
  **********************************/
 int font_fix(const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
-             const conservative_quantities *restrict cons_undens,
+             const conservative_quantities *restrict cons,
              const primitive_quantities *restrict prims,
              primitive_quantities *restrict prims_guess,
-             con2prim_diagnostics *restrict diagnostics,
-             double *restrict u0L_ptr) {
+             con2prim_diagnostics *restrict diagnostics) {
 
   int check=1;
 
-  double u0L = *u0L_ptr;
+  double u0;
 
   double utcon1;
   double utcon2;
@@ -29,12 +28,13 @@ int font_fix(const eos_parameters *restrict eos,
     /************************
      * New Font fix routine *
      ************************/
-    check = font_fix_hybrid_EOS(eos, metric, cons_undens, prims, &u_xl, &u_yl, &u_zl);
+    check = font_fix_hybrid_EOS(eos, metric, cons, prims, &u_xl, &u_yl, &u_zl);
 
     //Translate to HARM primitive now:
-    utcon1 = metric->adm_gxx*u_xl + metric->adm_gxy*u_yl + metric->adm_gxz*u_zl;
-    utcon2 = metric->adm_gxy*u_xl + metric->adm_gyy*u_yl + metric->adm_gyz*u_zl;
-    utcon3 = metric->adm_gxz*u_xl + metric->adm_gyz*u_yl + metric->adm_gzz*u_zl;
+    utcon1 = metric->adm_gupxx*u_xl + metric->adm_gupxy*u_yl + metric->adm_gupxz*u_zl;
+    utcon2 = metric->adm_gupxy*u_xl + metric->adm_gupyy*u_yl + metric->adm_gupyz*u_zl;
+    utcon3 = metric->adm_gupxz*u_xl + metric->adm_gupyz*u_yl + metric->adm_gupzz*u_zl;
+
     if (check==1) {
 //TODO: error checking
 //      CCTK_VInfo(CCTK_THORNSTRING,"Font fix failed!");
@@ -50,23 +50,33 @@ int font_fix(const eos_parameters *restrict eos,
   diagnostics->failure_checker+=10000;
   diagnostics->font_fixes++;
   //The Font fix only sets the velocities.  Here we set the pressure & density HARM primitives.
-  limit_velocity_and_convert_utilde_to_v(eos, metric, &utcon1, &utcon2, &utcon3, cons_undens->rho, prims_guess, diagnostics);
-  double gijuiuj = metric->adm_gxx*SQR(utcon1) +
-    2.0*metric->adm_gxy*utcon1*utcon2 + 2.0*metric->adm_gxz*utcon1*utcon3 +
-    metric->adm_gyy*SQR(utcon2) + 2.0*metric->adm_gyz*utcon2*utcon3 +
-    metric->adm_gzz*SQR(utcon3);
-  double au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
-  u0L = (au0m1+1.0)*metric->lapseinv;
-  prims_guess->rho = cons_undens->rho/(metric->lapse*u0L);
+  limit_velocity_and_convert_utilde_to_v(eos, metric, &u0, &utcon1, &utcon2, &utcon3, prims_guess, diagnostics);
 
+  prims_guess->rho = cons->rho/(metric->lapse*u0*metric->psi6);
+  //Next set P = P_cold:
+  CCTK_REAL P_cold;
+
+  /**********************************
+   * Piecewise Polytropic EOS Patch *
+   *  Finding Gamma_ppoly_tab and K_ppoly_tab *
+   **********************************/
+  /* Here we use our newly implemented
+   * find_polytropic_K_and_Gamma() function
+   * to determine the relevant polytropic
+   * Gamma and K parameters to be used
+   * within this function.
+   */
   int polytropic_index = find_polytropic_K_and_Gamma_index(eos,prims_guess->rho);
+  double K_ppoly_tab     = eos->K_ppoly_tab[polytropic_index];
   double Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
 
-  double uu_energy = prims_guess->press/(Gamma_ppoly_tab-1.0);
+  // After that, we compute P_cold
+  P_cold = K_ppoly_tab*pow(prims_guess->rho,Gamma_ppoly_tab);
+
+  double energy_u = P_cold/(Gamma_ppoly_tab-1.0);
 
   if( eos->eos_type == 0 ) {
-    prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, uu_energy);
+    prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, energy_u);
   }
-
   return 0;
 }

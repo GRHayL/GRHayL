@@ -78,9 +78,9 @@ double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, const double W);
 
 int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
                             double x[], int n,
-                            void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict, const double [], double [], double [], double [][NEWT_DIM], double *, double *, int) );
+                            void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict,double [], double [], double [], double [][NEWT_DIM], double *, double *, int) );
 
-void func_vsq( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux, const double [], double [], double [], double [][NEWT_DIM], double *f, double *df, int n);
+void func_vsq( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,double [], double [], double [], double [][NEWT_DIM], double *f, double *df, int n);
 
 double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 ) ;
 
@@ -205,25 +205,19 @@ int con2prim_Noble2D( const eos_parameters *restrict eos,
   new_prims[BCON2] = new_cons[B2_con];
   new_prims[BCON3] = new_cons[B3_con];
   new_prims[WLORENTZ] = 1.0;
-//Additional tabulated code here
-
-
-
-CCTK_VINFO("cons: rho=%.16e, u=%.16e, S1=(%.16e, %.16e, %.16e),", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
-CCTK_VINFO("      B=(%.16e, %.16e, %.16e)",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
-CCTK_VINFO("prims: rho=%.16e, u=%.16e, utx=%.16e, uty=%.16e, utz=%.16e",new_prims[RHO],new_prims[UU],new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+  new_prims[TEMP] = prims->temp;
+  new_prims[YE] = prims->Y_e;
 
   int retval = Utoprim_new_body(eos, new_cons, metric->g4dn, metric->g4up, new_prims);
 
   //TODO: missing eps, entropy. Are these not used for this routine?
 
   prims->rho = new_prims[RHO];
-  //Aditional tabulated code here
+  prims->temp = new_prims[TEMP];
+  prims->Y_e = new_prims[YE];
 
   limit_velocity_and_convert_utilde_to_v(eos, metric, &new_prims[UTCON1], &new_prims[UTCON2],
                                          &new_prims[UTCON3], cons_undens->rho, prims, diagnostics);
-
-  prims->press = pressure_rho0_u(eos, prims->rho,new_prims[UU]);
 
   return retval;
 }
@@ -295,8 +289,6 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   for(i=1;i<4;i++) Bcon[i] = cons[BCON1+i-1] ;
 
   lower_g(Bcon,gcov,Bcov) ;
-//CCTK_VINFO("Bcon=[%.16e, %.16e, %.16e, %.16e]", Bcon[0], Bcon[1], Bcon[2], Bcon[3]);
-//CCTK_VINFO("Bcov=[%.16e, %.16e, %.16e, %.16e]", Bcov[0], Bcov[1], Bcov[2], Bcov[3]);
 
   for(i=0;i<4;i++) Qcov[i] = cons[QCOV0+i] ;
   raise_g(Qcov,gcon,Qcon) ;
@@ -348,29 +340,24 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   u = prims[UU];
 
   // p = 0.0;
-  // if( eos.is_Hybrid ) {
-    p = pressure_rho0_u(eos, rho0,u);
-  // }
-  // else if( eos.is_Tabulated ) {
-  //   harm_aux.ye            = U[YE]/U[RHO];
-  //   harm_aux.gamma_times_S = U[WS];
-  //   harm_aux.use_entropy   = false;
-  //   harm_aux.T_guess       = prim[TEMP];
-  //   double xrho         = rho0;
-  //   double xye          = harm_aux.ye;
-  //   double xtemp        = harm_aux.T_guess;
-  //   double xprs         = 0.0;
-  //   double xeps         = 0.0;
-  //   double xdepsdT      = 0.0;
+  harm_aux.ye            = U[YE]/U[RHO];
+  harm_aux.gamma_times_S = U[WS];
+  harm_aux.use_entropy   = false;
+  harm_aux.T_guess       = prim[TEMP];
+  double xrho         = rho0;
+  double xye          = harm_aux.ye;
+  double xtemp        = harm_aux.T_guess;
+  double xprs         = 0.0;
+  double xeps         = 0.0;
+  double xdepsdT      = 0.0;
 
-  //   // Now compute P and eps from (rho,Ye,T). Note that
-  //   // at this point we do not know W, so we do not
-  //   // use the entropy in this function call.
-  //   get_P_eps_and_depsdT_from_rho_Ye_and_T( eos,xrho,xye,xtemp, &xprs,&xeps,&xdepsdT );
-  //   p = xprs;
-  //   u = xeps*xrho;
-  //   if( xdepsdT < eos.depsdT_threshold ) harm_aux.use_entropy = true;
-  // }
+  // Now compute P and eps from (rho,Ye,T). Note that
+  // at this point we do not know W, so we do not
+  // use the entropy in this function call.
+  get_P_eps_and_depsdT_from_rho_Ye_and_T( eos,xrho,xye,xtemp, &xprs,&xeps,&xdepsdT );
+  p = xprs;
+  u = xeps*xrho;
+  if( xdepsdT < eos.depsdT_threshold ) harm_aux.use_entropy = true;
 
   w = rho0 + u + p ;
   W_last = w*gammasq ;
@@ -388,8 +375,6 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   x_2d[0] =  fabs( W_last );
   x_2d[1] = x1_of_x0( &harm_aux, W_last ) ;
 
-//CCTK_VINFO("  Before GNR, w=%.16e from rho0=%.16e, u=%.16e, p=%.16e", w, rho0, u, p);
-//CCTK_VINFO("Bsq=%.16e, QdotBsq=%.16e, Qtsq=%.16e, Qdotn=%.16e, D=%.16e", harm_aux.Bsq, harm_aux.QdotBsq, harm_aux.Qtsq, harm_aux.Qdotn, harm_aux.D);
   retval = general_newton_raphson( eos, &harm_aux, x_2d, n, func_vsq) ;
 
   W = x_2d[0];
@@ -400,9 +385,11 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
     retval = retval*100+1;
     return(retval);
   }
-  else if(W <= 0. || W > W_TOO_BIG) {
-    retval = 3;
-    return(retval) ;
+  else{
+    if(W <= 0. || W > W_TOO_BIG) {
+      retval = 3;
+      return(retval) ;
+    }
   }
 
   // Calculate v^2:
@@ -419,41 +406,31 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   rho0 = harm_aux.D * gtmp;
 
   w = W * (1. - vsq) ;
-//CCTK_VINFO("  After GNR, w=%.16e from W=%.16e, vsq=%.16e", w, W, vsq);
 
-  // if( eos.is_Hybrid ) {
-    p = pressure_rho0_w(eos, rho0,w) ;
-    u = w - (rho0 + p) ; // u = rho0 eps, w = rho0 h
-    prims[RHO] = rho0 ;
-    prims[UU ] = u ;
-//CCTK_VINFO("   p=%e and u=%e from w=%e, rho0=%e", p, u, w, rho0);
-  // }
-  // else {
-  //   double xrho  = rho0;
-  //   double xye   = harm_aux.ye;
-  //   double xtemp = harm_aux.T_guess;
-  //   double xent  = harm_aux.gamma_times_S / W;
-  //   double xprs  = 0.0;
-  //   double xuu   = 0.0;
-  //   double xeps  = 0.0;
-  //   if( harm_aux.use_entropy ) {
-  //     get_P_eps_and_T_from_rho_Ye_and_S( eos,xrho,xye,xent, &xprs,&xeps,&xtemp );
-  //   }
-  //   else {
-  //     xprs  = -0.5*harm_aux.Bsq/(harm_aux.gamma*harm_aux.gamma)+harm_aux.Qdotn+W+harm_aux.Bsq-0.5*harm_aux.QdotBsq/(W*W);;
-  //     xuu   = (W-harm_aux.D*harm_aux.gamma-xprs*harm_aux.gamma*harm_aux.gamma)/(harm_aux.D*harm_aux.gamma) * rho0;
-  //     xeps  = xuu/xrho;
-  //     get_P_S_and_T_from_rho_Ye_and_eps( eos,xrho,xye,xeps, &xprs,&xent,&xtemp );
-  //   }
+  double xrho  = rho0;
+  double xye   = harm_aux.ye;
+  double xtemp = harm_aux.T_guess;
+  double xent  = harm_aux.gamma_times_S / W;
+  double xprs  = 0.0;
+  double xuu   = 0.0;
+  double xeps  = 0.0;
+  if( harm_aux.use_entropy ) {
+    get_P_eps_and_T_from_rho_Ye_and_S( eos,xrho,xye,xent, &xprs,&xeps,&xtemp );
+  }
+  else {
+    xprs  = -0.5*harm_aux.Bsq/(harm_aux.gamma*harm_aux.gamma)+harm_aux.Qdotn+W+harm_aux.Bsq-0.5*harm_aux.QdotBsq/(W*W);;
+    xuu   = (W-harm_aux.D*harm_aux.gamma-xprs*harm_aux.gamma*harm_aux.gamma)/(harm_aux.D*harm_aux.gamma) * rho0;
+    xeps  = xuu/xrho;
+    get_P_S_and_T_from_rho_Ye_and_eps( eos,xrho,xye,xeps, &xprs,&xent,&xtemp );
+  }
 
-  //   // Update P and T in the prim array
-  //   prim[RHO  ] = xrho;
-  //   prim[YE   ] = harm_aux.ye;
-  //   prim[TEMP ] = MIN(MAX(xtemp,eos.T_atm),eos.T_max);
-  //   prim[PRESS] = xprs;
-  //   prim[EPS  ] = xeps;
-  //   prim[ENT  ] = xent;
-  // }
+  // Update P and T in the prim array
+  prim[RHO  ] = xrho;
+  prim[YE   ] = harm_aux.ye;
+  prim[TEMP ] = MIN(MAX(xtemp,eos.T_atm),eos.T_max);
+  prim[PRESS] = xprs;
+  prim[EPS  ] = xeps;
+  prim[ENT  ] = xent;
 
   if( (rho0 <= 0.) || (u <= 0.) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
@@ -473,8 +450,6 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   return(retval) ;
 
 }
-
-
 
 /**********************************************************************/
 /****************************************************************************
@@ -551,7 +526,7 @@ void validate_x(double x[2], const double x0[2] )
 *****************************************************************/
 int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
                             double x[], int n,
-                            void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict, const double [], double [], double [],
+                            void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict, double [], double [], double [],
                                           double [][NEWT_DIM], double *, double *, int) )
 {
   double f, df, dx[NEWT_DIM], x_old[NEWT_DIM];
@@ -571,9 +546,8 @@ int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_st
 
   /* Start the Newton-Raphson iterations : */
   keep_iterating = 1;
-int tmp=0;
   while( keep_iterating ) {
-tmp++;
+
     (*funcd) (eos, harm_aux, x, dx, resid, jac, &f, &df, n);  /* returns with new dx, f, df */
 
 
@@ -587,7 +561,6 @@ tmp++;
     for( id = 0; id < n ; id++) {
       x[id] += dx[id]  ;
     }
-//CCTK_VINFO("Newton step %d with W=%.16e",tmp,x[0]);
 
     /****************************************/
     /* Calculate the convergence criterion */
@@ -599,7 +572,6 @@ tmp++;
     /* Make sure that the new x[] is physical : */
     /****************************************/
     validate_x( x, x_old ) ;
-//CCTK_VINFO("          validated W=%.16e",x[0]);
 
 
     /*****************************************************************************/
@@ -664,7 +636,7 @@ tmp++;
          n    = dimension of x[];
 *********************************************************************************/
 
-void func_vsq(const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux, const double x[], double dx[], double resid[],
+void func_vsq(const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux, double x[], double dx[], double resid[],
               double jac[][NEWT_DIM], double *f, double *df, int n)
 {
 
@@ -674,11 +646,44 @@ void func_vsq(const eos_parameters *restrict eos, harm_aux_vars_struct *restrict
 
   double p_tmp, dPdvsq, dPdW;
 
-  /*** For hybrid EOS ***/
-  p_tmp  = pressure_W_vsq( eos, W, vsq , harm_aux->D);
-  dPdW   = dpdW_calc_vsq( eos, W, vsq );
-  dPdvsq = dpdvsq_calc( eos, W, vsq, harm_aux->D );
-  /*** For hybrid EOS ***/
+  // Here we must compute dPdW and dPdvsq for tabulated EOS.
+  // We will be using the expressions
+  double gamma_sq = 1.0/(1.0-vsq);
+  harm_aux.gamma     = sqrt(gamma_sq);
+  if( harm_aux.gamma > eos.W_max ) {
+    harm_aux.gamma = eos.W_max;
+    gamma_sq       = harm_aux.gamma * harm_aux.gamma;
+  }
+
+  const double rho = MAX(harm_aux.D / harm_aux.gamma,eos.rho_min);
+  const double xye = harm_aux.ye;
+  const double h   = fabs(W /(rho*gamma_sq)); // W := rho*h*gamma^{2}
+  const double ent = harm_aux.gamma_times_S / harm_aux.gamma;
+  double T         = harm_aux.T_guess;
+  double prs       = 0.0;
+  double eps       = 0.0;
+  double dPdrho    = 0.0;
+  double dPdeps    = 0.0;
+
+  // Now compute the pressure and its derivatives with respect to rho and eps
+  if( harm_aux.use_entropy ) {
+    get_P_eps_T_dPdrho_and_dPdeps_from_rho_Ye_and_S(eos,rho,xye,ent, &prs,&eps,&T,&dPdrho,&dPdeps);
+  }
+  else {
+    get_P_eps_T_dPdrho_and_dPdeps_from_rho_Ye_and_h(eos,rho,xye,h, &prs,&eps,&T,&dPdrho,&dPdeps);
+  }
+
+  // Set P
+  p_tmp = prs;
+
+  // Now compute dP/dW
+  const double dPdeps_o_rho = dPdeps/rho;
+  dPdW = ( dPdeps_o_rho/(1.+dPdeps_o_rho) )/gamma_sq;
+
+  // And finally dP/d(v^{2})
+  const double dPdvsq_1 = -0.5*harm_aux.D*harm_aux.gamma*dPdrho;
+  const double dPdvsq_2 = -0.5*(W + prs*gamma_sq)/rho;
+  dPdvsq = (dPdvsq_1 + dPdeps*dPdvsq_2)/(1+dPdeps_o_rho);
 
   // These expressions were calculated using Mathematica, but made into efficient
   // code using Maple.  Since we know the analytic form of the equations, we can

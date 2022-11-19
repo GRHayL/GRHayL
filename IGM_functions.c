@@ -2,7 +2,7 @@
 #include "con2prim_header.h"
 
 static inline void impose_speed_limit_output_u0(const eos_parameters *restrict eos, const metric_quantities *restrict metric,
-                                         primitive_quantities *restrict prims, int *restrict speed_limit_applied,
+                                         primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics,
                                          double *restrict u0_out) {
 
   // Derivation of first equation:
@@ -19,14 +19,14 @@ static inline void impose_speed_limit_output_u0(const eos_parameters *restrict e
                                                    metric->adm_gzz * SQR(prims->vz + metric->betaz) )*metric->lapseinv2;
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
-  const double ONE_MINUS_ONE_OVER_GAMMA_SPEED_LIMIT_SQUARED = 1.0-1.0/SQR(eos->W_max);
-  if(one_minus_one_over_alpha_u0_squared > ONE_MINUS_ONE_OVER_GAMMA_SPEED_LIMIT_SQUARED) {
-    double correction_fac = sqrt(ONE_MINUS_ONE_OVER_GAMMA_SPEED_LIMIT_SQUARED/one_minus_one_over_alpha_u0_squared);
-    prims->vx = (prims->vx + metric->betax)*correction_fac-metric->betax;
-    prims->vy = (prims->vy + metric->betay)*correction_fac-metric->betay;
-    prims->vz = (prims->vz + metric->betaz)*correction_fac-metric->betaz;
-    one_minus_one_over_alpha_u0_squared=ONE_MINUS_ONE_OVER_GAMMA_SPEED_LIMIT_SQUARED;
-    *speed_limit_applied+=1000;
+  const double one_minus_one_over_W_max_squared = 1.0-1.0/SQR(eos->W_max); // 1 - W_max^{-2}
+  if(one_minus_one_over_alpha_u0_squared > one_minus_one_over_W_max_squared) {
+    double correction_fac = sqrt(one_minus_one_over_W_max_squared/one_minus_one_over_alpha_u0_squared);
+    prims->vx = (prims->vx + metric->betax)*correction_fac - metric->betax;
+    prims->vy = (prims->vy + metric->betay)*correction_fac - metric->betay;
+    prims->vz = (prims->vz + metric->betaz)*correction_fac - metric->betaz;
+    one_minus_one_over_alpha_u0_squared = one_minus_one_over_W_max_squared;
+    diagnostics->failure_checker+=1000;
   }
 
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
@@ -34,7 +34,15 @@ static inline void impose_speed_limit_output_u0(const eos_parameters *restrict e
   //double alpha_u0_minus_one = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared)-1.0;
   //u0_out          = (alpha_u0_minus_one + 1.0)*metric.lapseinv;
   double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
-//TODO: error checking  if(std::isnan(alpha_u0*metric->lapseinv)) CCTK_VWARN(CCTK_WARN_ALERT, "BAD FOUND NAN U0 CALC: %.15e %.15e %.15e | %.15e %.15e\n",alpha_u0,metric->lapseinv,one_minus_one_over_alpha_u0_squared, metric->psi4, prims->vx);
+  if(isnan(alpha_u0*metric->lapseinv)) {
+    CCTK_VINFO("*********************************************");
+    CCTK_VINFO("Metric/psi4: %e %e %e %e %e %e / %e", metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz, metric->psi4);
+    CCTK_VINFO("Lapse/shift: %e (=1/%e) / %e %e %e",metric->lapse, metric->lapseinv, metric->betax, metric->betay, metric->betaz);
+    CCTK_VINFO("Velocities : %e %e %e", prims->vx, prims->vx, prims->vz);
+    CCTK_VINFO("Found nan while computing u^{0} in function %s (file: %s)",__func__,__FILE__);
+    CCTK_VINFO("*********************************************");
+    diagnostics->nan_found++;
+  }
   *u0_out = alpha_u0*metric->lapseinv;
 }
 
@@ -92,7 +100,6 @@ static inline void compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantiti
        2.0*( metric->adm_gxy*(bx_plus_shiftx_bt)*(by_plus_shifty_bt) +
              metric->adm_gxz*(bx_plus_shiftx_bt)*(bz_plus_shiftz_bt) +
              metric->adm_gyz*(by_plus_shifty_bt)*(bz_plus_shiftz_bt) );
-   
   *u_x_over_u0_psi4 = u_over_u0_psi4[0];
   *u_y_over_u0_psi4 = u_over_u0_psi4[1];
   *u_z_over_u0_psi4 = u_over_u0_psi4[2];
@@ -102,7 +109,8 @@ static inline void compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantiti
 void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
                                                          const metric_quantities *restrict metric, primitive_quantities *restrict prims,
                                                          conservative_quantities *restrict cons, double *TUPMUNU,double *TDNMUNU,
-                                                         int *restrict speed_limit_applied) {
+                                                         stress_energy *restrict Tmunu,
+                                                         con2prim_diagnostics *restrict diagnostics) {
 
   // The goal here is to apply floors and ceilings to the primitives
   // and compute the enthalpy. Note that the derivative of the
@@ -122,7 +130,7 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;
 
   double uUP[4];
-  impose_speed_limit_output_u0(eos, metric, prims, speed_limit_applied, &uUP[0]);
+  impose_speed_limit_output_u0(eos, metric, prims, diagnostics, &uUP[0]);
 
   // Compute u^i. We've already set uUP[0] in the lines above.
   uUP[1] = uUP[0]*prims->vx;
@@ -180,6 +188,7 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
   cons->S_z = cons->rho*h_enthalpy*uDN[3] + alpha_sqrt_gamma*(uUP[0]*smallb[SMALLB2]*uDN[3] - smallb[SMALLBT]*smallb_lower[SMALLBZ]);
   // tauL = alpha^2 sqrt(gamma) T^{00} - CONSERVS[RHOSTAR]
   cons->tau =  metric->lapse*alpha_sqrt_gamma*(rho0_h_plus_b2*SQR(uUP[0]) - P_plus_half_b2*metric->lapseinv2 - SQR(smallb[SMALLBT])) - cons->rho;
+
   if( params->evolve_entropy ) {
     // Entropy equation evolves S_star = alpha * sqrt(gamma) * S * u^{0}
     cons->entropy = alpha_sqrt_gamma * prims->entropy * uUP[0];
@@ -188,4 +197,17 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
     // Tabulated EOS evolves Y_e_star = alpha * sqrt(gamma) * rho_b * Y_e * u^{0} = rho_star * Y_e
     cons->Y_e = cons->rho * prims->Y_e;
   }
+    if(params->update_Tmunu) {
+      int ww=0;
+      Tmunu->Ttt = TDNMUNU[ww++];
+      Tmunu->Ttx = TDNMUNU[ww++];
+      Tmunu->Tty = TDNMUNU[ww++];
+      Tmunu->Ttz = TDNMUNU[ww++];
+      Tmunu->Txx = TDNMUNU[ww++];
+      Tmunu->Txy = TDNMUNU[ww++];
+      Tmunu->Txz = TDNMUNU[ww++];
+      Tmunu->Tyy = TDNMUNU[ww++];
+      Tmunu->Tyz = TDNMUNU[ww++];
+      Tmunu->Tzz = TDNMUNU[ww  ];
+    }
 }
