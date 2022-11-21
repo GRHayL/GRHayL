@@ -69,10 +69,8 @@ static inline void lower_g(const double vcon[NDIM], const double gcov[NDIM][NDIM
 
   for(i=0;i<NDIM;i++) {
     vcov[i] = 0. ;
-    for(j=0;j<NDIM;j++) {
+    for(j=0;j<NDIM;j++)
       vcov[i] += gcov[i][j]*vcon[j] ;
-//CCTK_VINFO(" vcov[%d]=%.16e += gcov(%d,%d)=%.16e * vcon[%d]=%.16e",i, vcov[i], i, j, gcov[i][j], j, vcon[j]);
-}
   }
 
   return ;
@@ -116,8 +114,6 @@ static inline double pressure_rho0_u(const eos_parameters *restrict eos, const d
   // Compute P_cold, eps_cold
   double P_cold, eps_cold;
   compute_P_cold_and_eps_cold(eos, rho0, &P_cold, &eps_cold);
-//CCTK_VINFO("  new P=%.16e from rho0=%.16e, gamma_th=%.16e, u=%.16e",( P_cold + (eos->Gamma_th - 1.0)*(u - rho0*eps_cold) ), rho0, eos->Gamma_th, u);
-//CCTK_VINFO("  old vs new: %.16e | %.16e",((eos->Gamma_th - 1.0)*u), ( P_cold + (eos->Gamma_th - 1.0)*(u - rho0*eps_cold) ) );
 
   /* Compute the pressure as a function of rho_b (rho0) and
    * u = rho_b * eps, using our hybrid EOS:
@@ -140,8 +136,6 @@ static inline double pressure_rho0_w(const eos_parameters *restrict eos, const d
   // Compute P_cold, eps_cold
   double P_cold, eps_cold;
   compute_P_cold_and_eps_cold(eos,rho0, &P_cold, &eps_cold);
-//CCTK_VINFO("  new P=%.16e from\n   rho0=%.16e\n   gamma_th=%.16e,\n   w=%.16e",( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0+eps_cold) ) )/eos->Gamma_th ), rho0, eos->Gamma_th, w);
-//CCTK_VINFO("  old vs new: %.16e | %.16e",( (eos->Gamma_th-1.)*( w - rho0)/eos->Gamma_th ), ( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0+eps_cold) ) )/eos->Gamma_th ) );
 
   /* Compute the pressure as a function of rho_b (rho0) and
    * w = u + rho_b + p, using our hybrid EOS:

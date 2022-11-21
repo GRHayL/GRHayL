@@ -70,8 +70,8 @@ int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
   }
   /* This test has some problem.
      if (fabs(BbardotS2 - sdots*B2bar) > 1e-8) {
-     CCTK_VInfo(CCTK_THORNSTRING,"(Bbar dot S)^2, Bbar^2 * sdotS, %e %e",SQR(BbardotS),sdots*B2bar);
-     CCTK_VInfo(CCTK_THORNSTRING,"Cauchy-Schwartz inequality is violated!");
+     CCTK_VINFO("(Bbar dot S)^2, Bbar^2 * sdotS, %e %e",SQR(BbardotS),sdots*B2bar);
+     CCTK_VINFO("Cauchy-Schwartz inequality is violated!");
      }
   */
 

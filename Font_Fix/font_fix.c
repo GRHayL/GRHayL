@@ -44,7 +44,7 @@ int font_fix(const eos_parameters *restrict eos,
   /*************************************************************/
   } else {
     printf("Font fix is only implemented for Hybrid EOS! The eos_type is set to %d.",eos->eos_type); //TODO: make a better error message
-    return 1;
+    return 5;
   } //EOS if
 
   diagnostics->failure_checker+=10000;
@@ -54,7 +54,6 @@ int font_fix(const eos_parameters *restrict eos,
 
   prims_guess->rho = cons->rho/(metric->lapse*u0*metric->psi6);
   //Next set P = P_cold:
-  CCTK_REAL P_cold;
 
   /**********************************
    * Piecewise Polytropic EOS Patch *
@@ -71,7 +70,7 @@ int font_fix(const eos_parameters *restrict eos,
   double Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
 
   // After that, we compute P_cold
-  P_cold = K_ppoly_tab*pow(prims_guess->rho,Gamma_ppoly_tab);
+  double P_cold = K_ppoly_tab*pow(prims_guess->rho,Gamma_ppoly_tab);
 
   double energy_u = P_cold/(Gamma_ppoly_tab-1.0);
 

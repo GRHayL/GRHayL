@@ -10,7 +10,6 @@ void prims_enforce_extrema_and_recompute( const GRMHD_parameters *restrict param
                                           const metric_quantities *restrict metric,
                                           primitive_quantities *restrict prims ) {
 
-
   // The density floor and ceiling is always applied
   prims->rho = MIN(MAX(prims->rho,eos->rho_atm),eos->rho_max);
 

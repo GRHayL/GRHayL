@@ -83,10 +83,6 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
     }
   }
 
-//  CCTK_VINFO("Testing routine 1: %s", params.main_routine);
-//  for(int i=0;i<num_routines_tested-1;i++)
-//    CCTK_VINFO("Testing routine %d: %s",i+2,params.backup_routine[i]);
-
   // We will be performing the tabulated EOS test in the following way:
   //
   //      Y_e      = 0.1
@@ -131,7 +127,7 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
   // Now perform one test for each of the selected routines
   for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
 
-    CCTK_VINFO("Beginning test for routine %s",con2prim_test_names[which_routine]);
+    printf("Beginning test for routine %s",con2prim_test_names[which_routine]);
 
     char filename[100];
     sprintf(filename,"C2P_Testsuite_%s.asc",con2prim_test_names[which_routine]);
@@ -235,18 +231,18 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
         //---------- Primitive recovery completed ----------
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
-        enforce_limits_on_primitives_and_recompute_conservs(&params, &eos, &metric, &prims, &cons,
+        enforce_limits_on_primitives_and_recompute_conservs(&params, &eos, &metric, &prims_guess, &cons,
                                                             TUPMUNU, TDNMUNU, &Tmunu, &diagnostics);
 
         primitive_quantities prims_error;
         double accumulated_error = 0.0;
         if( check != 0 ) {
           failures++;
-          CCTK_VINFO("Recovery FAILED!\n");
+          fprintf(outfile,"Recovery FAILED!\n");
           accumulated_error = 1e300;
         } else {
           prims = prims_guess;
-          CCTK_VINFO("Recovery SUCCEEDED!");
+          fprintf(outfile, "Recovery SUCCEEDED!");
           prims_error.rho     = relative_error(prims.rho,     prims_orig.rho);
           prims_error.press   = relative_error(prims.press,   prims_orig.press);
           prims_error.eps     = relative_error(prims.eps,     prims_orig.eps);
@@ -260,246 +256,240 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
           prims_error.Y_e     = relative_error(prims.Y_e,     prims_orig.Y_e);
           prims_error.temp    = relative_error(prims.temp,    prims_orig.temp);
 
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "rho_b", prims_orig.rho, prims.rho, prims_error.rho);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "press", prims_orig.press, prims.press, prims_error.press);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "eps", prims_orig.eps, prims.eps, prims_error.eps);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "vx", prims_orig.vx, prims.vx, prims_error.vx);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "vy", prims_orig.vy, prims.vy, prims_error.vy);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "vz", prims_orig.vz, prims.vz, prims_error.vz);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "Bx", prims_orig.Bx, prims.Bx, prims_error.Bx);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "By", prims_orig.By, prims.By, prims_error.By);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "Bz", prims_orig.Bz, prims.Bz, prims_error.Bz);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "entropy", prims_orig.entropy, prims.entropy, prims_error.entropy);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "Y_e", prims_orig.Y_e, prims.Y_e, prims_error.Y_e);
-//          CCTK_VINFO("Relative error for prim %s: %.3e (%e -> %e)", "temp", prims_orig.temp, prims.temp, prims_error.temp);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "rho_b", prims_orig.rho, prims.rho, prims_error.rho);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "press", prims_orig.press, prims.press, prims_error.press);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "eps", prims_orig.eps, prims.eps, prims_error.eps);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "vx", prims_orig.vx, prims.vx, prims_error.vx);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "vy", prims_orig.vy, prims.vy, prims_error.vy);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "vz", prims_orig.vz, prims.vz, prims_error.vz);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "Bx", prims_orig.Bx, prims.Bx, prims_error.Bx);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "By", prims_orig.By, prims.By, prims_error.By);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "Bz", prims_orig.Bz, prims.Bz, prims_error.Bz);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "entropy", prims_orig.entropy, prims.entropy, prims_error.entropy);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "Y_e", prims_orig.Y_e, prims.Y_e, prims_error.Y_e);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "temp", prims_orig.temp, prims.temp, prims_error.temp);
           fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "rho_b", prims_orig.rho, prims.rho, prims_error.rho);
           fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "press", prims_orig.press, prims.press, prims_error.press);
           fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "vx", prims_orig.vx, prims.vx, prims_error.vx);
           fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "vy", prims_orig.vy, prims.vy, prims_error.vy);
           fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "vz", prims_orig.vz, prims.vz, prims_error.vz);
+//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "Bx", prims_orig.Bx, prims.Bx, prims_error.Bx);
+//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "By", prims_orig.By, prims.By, prims_error.By);
+//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "Bz", prims_orig.Bz, prims.Bz, prims_error.Bz);
 
-          accumulated_error = prims_error.rho + prims_error.press + prims_error.eps + prims_error.vx + prims_error.vy + prims_error.vz
-                            + prims_error.Bx + prims_error.By + prims_error.Bz + prims_error.entropy + prims_error.Y_e + prims_error.temp;
+          accumulated_error = prims_error.rho + prims_error.press /*+ prims_error.eps*/ + prims_error.vx + prims_error.vy + prims_error.vz
+                            + prims_error.Bx + prims_error.By + prims_error.Bz /*+ prims_error.entropy + prims_error.Y_e + prims_error.temp*/;
 
-          CCTK_VINFO("Total accumulated error    : %e\n",accumulated_error);
+          fprintf(outfile, "Total accumulated error    : %e\n",accumulated_error);
         }
-        fprintf(outfile,"%e %e %e\n",log10(prims_orig.rho),log10(prims_orig.temp),log10(MAX(accumulated_error,1e-16)));
+        fprintf(outfile,"%e %e\n",log10(prims_orig.rho), log10(MAX(accumulated_error,1e-16)));
+//      } // temperature loop
+      fprintf(outfile,"\n");
+    }
+
+    fclose(outfile);
+
+    int ntotal = npoints*npoints;
+
+    printf("Completed test for routine %s",con2prim_test_names[which_routine]);
+    printf("Final report:");
+    printf("    Number of recovery attempts: %d",ntotal);
+    printf("    Number of failed recoveries: %d",failures);
+    printf("    Recovery failure rate      : %.2lf%%",((double)failures)/((double)ntotal)*100.0);
+
+  }
+
+//  int exp_num = 2;
+//  int failures = 0;
+//
+//  double explicit_rho_b[] = {1.2928527350944400e-10, 1.2928527350944400e-10};
+//  double explicit_P[] = {1.5043213751770567e-20, 1.5043213751770567e-20};
+//  double explicit_vx[] = {0.0, 0.0, 0.0};
+//  double explicit_vy[] = {0.0, 0.0, 0.0};
+//  double explicit_vz[] = {0.0, 0.0, 0.0};
+//  double explicit_Bx[] = {0.0, 0.0, 0.0};
+//  double explicit_By[] = {0.0, 0.0, 0.0};
+//  double explicit_Bz[] = {0.0, 0.0, 0.0};
+//  double explicit_rho_star[] = {1.3234724020689511e-10, 1.3234724020689511e-10};
+//  double explicit_tau[] = {1.5399466368020248e-20, 1.5399466368068784e-20};
+//  double explicit_Sx[] = {8.7368463342954066e-15, 8.7368463342954066e-15};
+//  double explicit_Sy[] = {7.1465425792354919e-15, 7.1465425792387736e-15};
+//  double explicit_Sz[] = {8.7368463342954066e-15, 8.7368463342954066e-15};
+//
+//  double out_rhob=1.2928527350944400e-10;
+//  double out_P=1.5043213751770567e-20;
+//  double out_vx = 9.1927394657560273e-06;
+//  double out_vy = 7.5194528435267824e-06;
+//  double out_vz = 9.1927394657560273e-06;
+//  double out_Bx = 0.0;
+//  double out_By = 0.0;
+//  double out_Bz = 0.0;
+//  double out_rhos = 1.3234724034565631e-10;
+//  double out_tau = 3.0798958584463867e-20;
+//  double out_Sx = 1.2454672417374646e-15;
+//  double out_Sy = 1.0187640177651899e-15;
+//  double out_Sz = 1.2454672417374646e-15;
+//  
+//  for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
+//
+//    CCTK_VINFO("Beginning explicit value test for routine %s",con2prim_test_names[which_routine]);
+//
+//    char filename[100];
+//    sprintf(filename,"C2P_Testsuite_%s.asc",con2prim_test_names[which_routine]);
+//    FILE* outfile = fopen(filename,"a");
+//    fprintf(outfile, "Beginning explicit data tests...");
+//
+//    int failures = 0;
+//
+//    srand(0);
+//
+//    for(int i=0;i<exp_num;i++) {
+//
+//      // Set the metric to flat space
+//      metric_quantities metric;
+//      initialize_metric(&metric, 0.0, 0.0, 1.0,  // phi, psi, lapse
+//                                 1.0, 0.0, 0.0,  // gxx, gxy, gxz
+//                                 1.0, 0.0, 1.0,  // gyy, gyz, gzz
+//                                 0.0, 0.0, 0.0); // betax, betay, betaz
+//
+//      conservative_quantities cons, cons_undens;
+//      initialize_conservatives(&params, &eos,
+//                               explicit_rho_star[i], explicit_tau[i],
+//                               explicit_Sx[i], explicit_Sy[i], explicit_Sz[i],
+//                               poison, poison, // entropy, Y_e
+//                               &cons);
+//
+//      primitive_quantities prims, prims_orig, prims_guess;
+//      initialize_primitives(&eos, &metric,
+//                            explicit_rho_b[i], explicit_P[i], poison,
+//                            explicit_vx[i], explicit_vy[i], explicit_vz[i],
+//                            explicit_Bx[i], explicit_By[i], explicit_Bz[i],
+//                            poison, poison, poison, // entropy, Y_e=xye, temp=xtemp
+//                            &prims);
+//
+//      // Store original prims
+//      prims_orig = prims;
+//
+//      int check = 0;
+//      if(cons.rho>0.0) {
+//
+//        //This applies the inequality (or "Faber") fixes on the conservatives
+//        apply_tau_floor(&params, &eos, &metric, &prims, &cons, &diagnostics);
+//
+//        // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
+//        undensitize_conservatives(&eos, con2prim_test_keys[which_routine], &metric, &prims, &cons, &cons_undens);
+//
+//        // The con2prim routines require primitive guesses in order to perform
+//        // the recovery. In IllinoisGRMHD, we do not keep track of the primitives
+//        // in between time steps, and therefore our guesses are *not* the
+//        // values of the primitives in the previous time level. Instead, we provide
+//        // guesses based on the conservative variables.
+//
+//        for(int which_guess=1;which_guess<=2;which_guess++) {
+//          guess_primitives(&eos, con2prim_test_keys[which_routine], which_guess,
+//                           &metric, &prims, &cons, &prims_guess);
+//
+//          check = C2P_Select_Hybrid_Method(&eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
+//          if(check!=0) {
+//            CCTK_VINFO("Applying Font fix to explicit point %d", i);
+//            check = font_fix(&eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
+//            diagnostics.font_fixes++;
+//          }
+//          if( check == 0 ) {
+//            prims = prims_guess;
+//            which_guess = 3;
+//          }
+//        }
+//      } else {
+//        diagnostics.failure_checker+=1;
+//        reset_prims_to_atmosphere(&eos, &prims, &diagnostics);
+//        diagnostics.rho_star_fix_applied++;
+//        CCTK_VINFO("Applying rho_* fix to explicit point %d with rho %e", i, cons.rho);
 //      }
-      fprintf(outfile,"\n");
-    }
+//      if(check != 0) {
+//        CCTK_VINFO("C2P and FF failed for explicit point %d! Reseting to atm...", i);
+//        // Sigh, reset to atmosphere
+//        reset_prims_to_atmosphere( &eos, &prims, &diagnostics);
+//        diagnostics.atm_resets++;
+//        // Then flag this point as a "success"
+//        check = 0;
+//      }
+//
+//      //--------------------------------------------------
+//      //---------- Primitive recovery completed ----------
+//      //--------------------------------------------------
+//      // Enforce limits on primitive variables and recompute conservatives.
+//      double TUPMUNU[10],TDNMUNU[10];
+//      stress_energy Tmunu;
+//      enforce_limits_on_primitives_and_recompute_conservs(&params, &eos, &metric, &prims, &cons,
+//                                                          TUPMUNU, TDNMUNU, &Tmunu, &diagnostics);
+////CCTK_VINFO("Post-enforce %.16e %.16e\n   %.16e %.16e\n   %.16e", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
+//
+//      primitive_quantities prims_error;
+//      conservative_quantities cons_error;
+//      double total_prims_error = 0.0;
+//      double total_cons_error = 0.0;
+//      if( check != 0 ) {
+//        failures++;
+//        CCTK_VINFO("Recovery FAILED!\n");
+//        total_prims_error = total_cons_error = 1e300;
+//      } else {
+//        prims = prims_guess;
+//        CCTK_VINFO("Recovery SUCCEEDED!");
+//        prims_error.rho   = relative_error(prims.rho,   out_rhob);
+//        prims_error.press = relative_error(prims.press, out_P);
+//        prims_error.vx    = relative_error(prims.vx,    out_vx);
+//        prims_error.vy    = relative_error(prims.vy,    out_vy);
+//        prims_error.vz    = relative_error(prims.vz,    out_vz);
+//
+//        cons_error.rho   = relative_error(cons.rho, out_rhos);
+//        cons_error.tau = relative_error(cons.tau, out_tau);
+//        cons_error.S_x    = relative_error(cons.S_x,  out_Sx);
+//        cons_error.S_y    = relative_error(cons.S_y,  out_Sy);
+//        cons_error.S_z    = relative_error(cons.S_z,  out_Sz);
+//
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "rho_b", out_rhob, prims.rho, prims_error.rho);
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "press", out_P, prims.press, prims_error.press);
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "vx", out_vx, prims.vx, prims_error.vx);
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "vy", out_vy, prims.vy, prims_error.vy);
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "vz", out_vz, prims.vz, prims_error.vz);
+//
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "rho_*", out_rhos, cons.rho, cons_error.rho);
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "tau", out_tau, cons.tau, cons_error.tau);
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "Sx", out_Sx, cons.S_x, cons_error.S_x);
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "Sy", out_Sy, cons.S_y, cons_error.S_y);
+//        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "Sz", out_Sz, cons.S_z, cons_error.S_z);
+//
+//        total_prims_error = prims_error.rho + prims_error.press
+//                          + prims_error.vx + prims_error.vy + prims_error.vz;
+//
+//        total_cons_error = cons_error.rho + cons_error.tau
+//                          + cons_error.S_x + cons_error.S_y + cons_error.S_z;
+//
+//        fprintf("Total accumulated errors    : %e %e\n",total_prims_error, total_cons_error);
+//      }
+//      fprintf(outfile,"\n");
+//    }
+//
+//    fclose(outfile);
+//
+//    int ntotal = npoints*npoints;
+//
+//    printf("Completed explicit data test for routine %s",con2prim_test_names[which_routine]);
+//    printf("Final report:");
+//    printf("    Number of recovery attempts: %d",exp_num);
+//    printf("    Number of failed recoveries: %d",failures);
+//    printf("    Recovery failure rate      : %.2lf%%",((double)failures)/((double)ntotal)*100.0);
+//
+//  }
 
-    fclose(outfile);
-
-    int ntotal = npoints*npoints;
-
-    CCTK_VINFO("Completed test for routine %s",con2prim_test_names[which_routine]);
-    CCTK_VINFO("Final report:");
-    CCTK_VINFO("    Number of recovery attempts: %d",ntotal);
-    CCTK_VINFO("    Number of failed recoveries: %d",failures);
-    CCTK_VINFO("    Recovery failure rate      : %.2lf%%",((double)failures)/((double)ntotal)*100.0);
-
-  }
-
-  int exp_num = 2;
-  int failures = 0;
-
-  double explicit_rho_b[] = {1.2928527350944400e-10, 1.2928527350944400e-10};
-  double explicit_P[] = {1.5043213751770567e-20, 1.5043213751770567e-20};
-  double explicit_vx[] = {0.0, 0.0, 0.0};
-  double explicit_vy[] = {0.0, 0.0, 0.0};
-  double explicit_vz[] = {0.0, 0.0, 0.0};
-  double explicit_Bx[] = {0.0, 0.0, 0.0};
-  double explicit_By[] = {0.0, 0.0, 0.0};
-  double explicit_Bz[] = {0.0, 0.0, 0.0};
-  double explicit_rho_star[] = {1.3234724020689511e-10, 1.3234724020689511e-10};
-  double explicit_tau[] = {1.5399466368020248e-20, 1.5399466368068784e-20};
-  double explicit_Sx[] = {8.7368463342954066e-15, 8.7368463342954066e-15};
-  double explicit_Sy[] = {7.1465425792354919e-15, 7.1465425792387736e-15};
-  double explicit_Sz[] = {8.7368463342954066e-15, 8.7368463342954066e-15};
-
-  double out_rhob=1.2928527350944400e-10;
-  double out_P=1.5043213751770567e-20;
-  double out_vx = 9.1927394657560273e-06;
-  double out_vy = 7.5194528435267824e-06;
-  double out_vz = 9.1927394657560273e-06;
-  double out_Bx = 0.0;
-  double out_By = 0.0;
-  double out_Bz = 0.0;
-  double out_rhos = 1.3234724034565631e-10;
-  double out_tau = 3.0798958584463867e-20;
-  double out_Sx = 1.2454672417374646e-15;
-  double out_Sy = 1.0187640177651899e-15;
-  double out_Sz = 1.2454672417374646e-15;
-// new v=(9.4841713896814228e-06,7.7578375619435056e-06,9.4841713896814228e-06)
-// old v=(9.1927394657560273e-06,7.5194528435267824e-06,9.1927394657560273e-06)
-// new rho_*=1.3234724034664818e-10
-// old rho_*=1.3234724034565631e-10
-// new tau=3.1790825687097374e-20
-// old tau=3.0798958584463867e-20
-// new S=(1.2849515451896353e-15,1.0510612844254329e-15,1.2849515451896353e-15)
-// old S=(1.2454672417374646e-15,1.0187640177651899e-15,1.2454672417374646e-15)
-  
-  for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
-
-    CCTK_VINFO("Beginning explicit value test for routine %s",con2prim_test_names[which_routine]);
-
-    char filename[100];
-    sprintf(filename,"C2P_Testsuite_%s.asc",con2prim_test_names[which_routine]);
-    FILE* outfile = fopen(filename,"a");
-    fprintf(outfile, "Beginning explicit data tests...");
-
-    int failures = 0;
-
-    srand(0);
-
-    for(int i=0;i<exp_num;i++) {
-
-      // Set the metric to flat space
-      metric_quantities metric;
-      initialize_metric(&metric, 0.0, 0.0, 1.0,  // phi, psi, lapse
-                                 1.0, 0.0, 0.0,  // gxx, gxy, gxz
-                                 1.0, 0.0, 1.0,  // gyy, gyz, gzz
-                                 0.0, 0.0, 0.0); // betax, betay, betaz
-
-      conservative_quantities cons, cons_undens;
-      initialize_conservatives(&params, &eos,
-                               explicit_rho_star[i], explicit_tau[i],
-                               explicit_Sx[i], explicit_Sy[i], explicit_Sz[i],
-                               poison, poison, // entropy, Y_e
-                               &cons);
-
-      primitive_quantities prims, prims_orig, prims_guess;
-      initialize_primitives(&eos, &metric,
-                            explicit_rho_b[i], explicit_P[i], poison,
-                            explicit_vx[i], explicit_vy[i], explicit_vz[i],
-                            explicit_Bx[i], explicit_By[i], explicit_Bz[i],
-                            poison, poison, poison, // entropy, Y_e=xye, temp=xtemp
-                            &prims);
-
-      // Store original prims
-      prims_orig = prims;
-
-      int check = 0;
-      if(cons.rho>0.0) {
-
-        //This applies the inequality (or "Faber") fixes on the conservatives
-        apply_tau_floor(&params, &eos, &metric, &prims, &cons, &diagnostics);
-
-        // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
-        undensitize_conservatives(&eos, con2prim_test_keys[which_routine], &metric, &prims, &cons, &cons_undens);
-
-        // The con2prim routines require primitive guesses in order to perform
-        // the recovery. In IllinoisGRMHD, we do not keep track of the primitives
-        // in between time steps, and therefore our guesses are *not* the
-        // values of the primitives in the previous time level. Instead, we provide
-        // guesses based on the conservative variables.
-
-        for(int which_guess=1;which_guess<=2;which_guess++) {
-          guess_primitives(&eos, con2prim_test_keys[which_routine], which_guess,
-                           &metric, &prims, &cons, &prims_guess);
-
-          check = C2P_Select_Hybrid_Method(&eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
-          if(check!=0) {
-            CCTK_VINFO("Applying Font fix to explicit point %d", i);
-            check = font_fix(&eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
-            diagnostics.font_fixes++;
-          }
-          if( check == 0 ) {
-            prims = prims_guess;
-            which_guess = 3;
-          }
-        }
-      } else {
-        diagnostics.failure_checker+=1;
-        reset_prims_to_atmosphere(&eos, &prims, &diagnostics);
-        diagnostics.rho_star_fix_applied++;
-        CCTK_VINFO("Applying rho_* fix to explicit point %d with rho %e", i, cons.rho);
-      }
-      if(check != 0) {
-        CCTK_VINFO("C2P and FF failed for explicit point %d! Reseting to atm...", i);
-        // Sigh, reset to atmosphere
-        reset_prims_to_atmosphere( &eos, &prims, &diagnostics);
-        diagnostics.atm_resets++;
-        // Then flag this point as a "success"
-        check = 0;
-      }
-
-      //--------------------------------------------------
-      //---------- Primitive recovery completed ----------
-      //--------------------------------------------------
-      // Enforce limits on primitive variables and recompute conservatives.
-      double TUPMUNU[10],TDNMUNU[10];
-      stress_energy Tmunu;
-      enforce_limits_on_primitives_and_recompute_conservs(&params, &eos, &metric, &prims, &cons,
-                                                          TUPMUNU, TDNMUNU, &Tmunu, &diagnostics);
-//CCTK_VINFO("Post-enforce %.16e %.16e\n   %.16e %.16e\n   %.16e", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
-
-      primitive_quantities prims_error;
-      conservative_quantities cons_error;
-      double total_prims_error = 0.0;
-      double total_cons_error = 0.0;
-      if( check != 0 ) {
-        failures++;
-        CCTK_VINFO("Recovery FAILED!\n");
-        total_prims_error = total_cons_error = 1e300;
-      } else {
-        prims = prims_guess;
-        CCTK_VINFO("Recovery SUCCEEDED!");
-        prims_error.rho   = relative_error(prims.rho,   out_rhob);
-        prims_error.press = relative_error(prims.press, out_P);
-        prims_error.vx    = relative_error(prims.vx,    out_vx);
-        prims_error.vy    = relative_error(prims.vy,    out_vy);
-        prims_error.vz    = relative_error(prims.vz,    out_vz);
-
-        cons_error.rho   = relative_error(cons.rho, out_rhos);
-        cons_error.tau = relative_error(cons.tau, out_tau);
-        cons_error.S_x    = relative_error(cons.S_x,  out_Sx);
-        cons_error.S_y    = relative_error(cons.S_y,  out_Sy);
-        cons_error.S_z    = relative_error(cons.S_z,  out_Sz);
-
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "rho_b", out_rhob, prims.rho, prims_error.rho);
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "press", out_P, prims.press, prims_error.press);
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "vx", out_vx, prims.vx, prims_error.vx);
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "vy", out_vy, prims.vy, prims_error.vy);
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "vz", out_vz, prims.vz, prims_error.vz);
-
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "rho_*", out_rhos, cons.rho, cons_error.rho);
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "tau", out_tau, cons.tau, cons_error.tau);
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "Sx", out_Sx, cons.S_x, cons_error.S_x);
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "Sy", out_Sy, cons.S_y, cons_error.S_y);
-        fprintf(outfile, "Relative error for %s: (%e -> %e) %.3e\n", "Sz", out_Sz, cons.S_z, cons_error.S_z);
-
-        total_prims_error = prims_error.rho + prims_error.press
-                          + prims_error.vx + prims_error.vy + prims_error.vz;
-
-        total_cons_error = cons_error.rho + cons_error.tau
-                          + cons_error.S_x + cons_error.S_y + cons_error.S_z;
-
-        CCTK_VINFO("Total accumulated errors    : %e %e\n",total_prims_error, total_cons_error);
-      }
-      fprintf(outfile,"\n");
-    }
-
-    fclose(outfile);
-
-    int ntotal = npoints*npoints;
-
-    CCTK_VINFO("Completed explicit data test for routine %s",con2prim_test_names[which_routine]);
-    CCTK_VINFO("Final report:");
-    CCTK_VINFO("    Number of recovery attempts: %d",exp_num);
-    CCTK_VINFO("    Number of failed recoveries: %d",failures);
-    CCTK_VINFO("    Recovery failure rate      : %.2lf%%",((double)failures)/((double)ntotal)*100.0);
-
-  }
-
-  CCTK_VINFO("All done! Terminating the run.");
+  printf("All done! Terminating the run.");
   exit(1);
 }
-// ID that should trigger Font fix (hopefully for both)
-//  rho_b=4.1583153206554863e-05
-//  P=4.3715833127846331e-08
-//  v=(2.9654694990685426e-04,-2.9654694992678558e-04,-2.9647327480036172e-04)
-//  B=(-1.0015339892232854e-05,9.8344084067429127e-06,-1.9840653396925622e-05)
-//Incoming conservatives:  rho_*=2.3995320450572215e-06
-//  tau=3.8712996396831345e-09
-//  S=(-1.2764009790120381e-07,1.2763915658920790e-07,1.2714959053780215e-07)
+/*
+  Conservative ID that should trigger Font fix.
+Incoming conservatives:
+  rho_*=2.3995320450572215e-06
+  tau=3.8712996396831345e-09
+  S=(-1.2764009790120381e-07,1.2763915658920790e-07,1.2714959053780215e-07)
+*/

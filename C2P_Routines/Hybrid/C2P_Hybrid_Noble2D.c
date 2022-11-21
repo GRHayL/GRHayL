@@ -208,30 +208,31 @@ int C2P_Hybrid_Noble2D( const eos_parameters *restrict eos,
 //Additional tabulated code here
 
 
-
-//CCTK_VINFO("old_prims: rho=%.16e, u=%.16e",new_prims[RHO],new_prims[UU]);
-//CCTK_VINFO("           ~u=(%.16e, %.16e, %.16e)",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-//CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
-//CCTK_VINFO("     cons: rho=%.16e, u=%.16e, S=(%.16e, %.16e, %.16e),", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
-//CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
+if(prims->print) {
+CCTK_VINFO("old_prims: rho=%.16e\n u=%.16e",new_prims[RHO],new_prims[UU]);
+CCTK_VINFO("           ~u=(%.16e, %.16e, %.16e)",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+CCTK_VINFO("     cons: rho=%.16e\n u=%.16e\n S=(%.16e, %.16e, %.16e),", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
+CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
+}
   int retval = Utoprim_new_body(eos, new_cons, metric->g4dn, metric->g4up, new_prims);
-//CCTK_VINFO("new_prims: rho=%.16e, u=%.16e",new_prims[RHO],new_prims[UU]);
-//CCTK_VINFO("           ~u=(%.16e, %.16e, %.16e)",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-//CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+if(prims->print) {
+CCTK_VINFO("new_prims: rho=%.16e\n u=%.16e",new_prims[RHO],new_prims[UU]);
+CCTK_VINFO("           ~u=(%.16e, %.16e, %.16e)",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+}
 
   if(retval==0) {
     prims->rho = new_prims[RHO];
   //Aditional tabulated code here
 
     double u0;
-//CCTK_VINFO("new_prims: retval=%d, rho=%.16e, u=%.16e, ~u=(%.16e, %.16e, %.16e)",retval, new_prims[RHO],new_prims[UU],new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
     limit_velocity_and_convert_utilde_to_v(eos, metric, &u0, &new_prims[UTCON1], &new_prims[UTCON2],
                                            &new_prims[UTCON3], prims, diagnostics);
 
 
     prims->press = pressure_rho0_u(eos, prims->rho,new_prims[UU]);
   }
-//CCTK_VINFO("Final press=%.16e from rho=%.16e, u=%.16e", prims->press, prims->rho, new_prims[UU]);
 
   return retval;
 }
@@ -303,8 +304,6 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   for(i=1;i<4;i++) Bcon[i] = cons[BCON1+i-1] ;
 
   lower_g(Bcon,gcov,Bcov) ;
-//CCTK_VINFO("Bcon=[%.16e, %.16e, %.16e, %.16e]", Bcon[0], Bcon[1], Bcon[2], Bcon[3]);
-//CCTK_VINFO("Bcov=[%.16e, %.16e, %.16e, %.16e]", Bcov[0], Bcov[1], Bcov[2], Bcov[3]);
 
   for(i=0;i<4;i++) Qcov[i] = cons[QCOV0+i] ;
   raise_g(Qcov,gcon,Qcon) ;
@@ -327,12 +326,8 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
 
   harm_aux.Qsq = 0. ;
   for(i=0;i<4;i++) harm_aux.Qsq += Qcov[i]*Qcon[i] ;
-//CCTK_VINFO("Qcov %.16e %.16e %.16e %.16e", Qcov[0], Qcov[1], Qcov[2], Qcov[3]);
-//CCTK_VINFO("Qcon %.16e %.16e %.16e %.16e", Qcon[0], Qcon[1], Qcon[2], Qcon[3]);
-//CCTK_VINFO("Qsq %.16e", harm_aux.Qsq);
 
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn ;
-//CCTK_VINFO("Qtsq=%.16e from Qsq=%.16e, Qdotn^2=%.16e, Qdotn=%.16e", harm_aux.Qtsq, harm_aux.Qsq, harm_aux.Qdotn*harm_aux.Qdotn, harm_aux.Qdotn);
 
   harm_aux.D    = cons[RHO];
 
@@ -399,13 +394,10 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   x_2d[0] =  fabs( W_last );
   x_2d[1] = x1_of_x0( &harm_aux, W_last ) ;
 
-//CCTK_VINFO("  Before GNR, w=%.16e from rho0=%.16e, u=%.16e, p=%.16e", w, rho0, u, p);
-//CCTK_VINFO("harm auxiliaries %.16e %.16e %.16e\n%.16e %.16e", harm_aux.Bsq, harm_aux.QdotBsq, harm_aux.Qtsq, harm_aux.Qdotn, harm_aux.D);
   retval = general_newton_raphson( eos, &harm_aux, x_2d, n, func_vsq) ;
 
   W = x_2d[0];
   vsq = x_2d[1];
-//CCTK_VINFO("After GNR, W %.16e vsq %.16e", W, vsq);
 
   /* Problem with solver, so return denoting error before doing anything further */
   if( (retval != 0) || (W == FAIL_VAL) ) {
@@ -431,16 +423,13 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   rho0 = harm_aux.D * gtmp;
 
   w = W * (1. - vsq) ;
-//CCTK_VINFO("  After GNR, w=%.16e from W=%.16e, vsq=%.16e", w, W, vsq);
 
 //Tabulated EOS changes this section
   p = pressure_rho0_w(eos, rho0,w) ;
   u = w - (rho0 + p) ;
   prims[RHO] = rho0 ;
   prims[UU ] = u ;
-//CCTK_VINFO("u %.16e from %.16e %.16e %.16e", u, w, rho0, p);
 
-//CCTK_VINFO("  After GNR, rho0=%.16e, u=%.16e from w=%.16e, vsq=%.16e, D=%.16e", rho0, u, w, vsq, harm_aux.D);
   if( (rho0 <= 0.) || (u <= 0.) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
@@ -573,8 +562,6 @@ tmp++;
     for( id = 0; id < n ; id++) {
       x[id] += dx[id]  ;
     }
-//CCTK_VINFO("x %.16e %.16e to  %.16e %.16e", x_old[0], x_old[1], x[0], x[1]);
-//CCTK_VINFO("Newton step %d with W=%.16e",tmp,x[0]);
 
     /****************************************/
     /* Calculate the convergence criterion */
@@ -586,7 +573,6 @@ tmp++;
     /* Make sure that the new x[] is physical : */
     /****************************************/
     validate_x( x, x_old ) ;
-//CCTK_VINFO("          validated W=%.16e",x[0]);
 
 
     /*****************************************************************************/
@@ -617,7 +603,6 @@ tmp++;
 
 
   if( fabs(errx) > MIN_NEWT_TOL){
-    //CCTK_VINFO("%d %e %e %e %e",n_iter,f,df,errx,MIN_NEWT_TOL);
     return(1);
   }
   if( (fabs(errx) <= MIN_NEWT_TOL) && (fabs(errx) > NEWT_TOL) ){
@@ -739,13 +724,9 @@ double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const 
   compute_P_cold_and_eps_cold(eos,rho_b, &P_cold, &eps_cold);
 
 
-//double old_val = (eos->Gamma_th - 1.) * (  W * inv_gammasq -  D * inv_gamma /*rho_b*/ ) / eos->Gamma_th;
-//double new_val = (  P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th;
-//CCTK_VINFO("Comparing pressure_W_vsq: reldiff %.16e from %.16e %.16e", (new_val-old_val)/old_val, old_val, new_val);
-//CCTK_VINFO("Eq. ( P + (G-1)(W g - D sqrtg(1+eps))/G\n(%.16e + (%.16e) (%.16e - %.16e))) / %.16e", P_cold, eos->Gamma_th - 1., W*inv_gammasq, D*inv_gamma*( 1.0 + eps_cold ), eos->Gamma_th);
-//CCTK_VINFO("pressure_W_vsq %.16e\nfrom %.16e %.16e %.16e", ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th, W, vsq, D);
 
   // Compute p = P_{cold} + P_{th}
+//  return( (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma )/eos->Gamma_th );
   return( ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th );
 
 }
@@ -761,7 +742,6 @@ double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const 
 double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq)
 {
 
-//CCTK_VINFO("dpdW_calc_vsq %.16e\nfrom %.16e %.16e", (eos->Gamma_th - 1.0) * (1.0 - vsq) /  eos->Gamma_th, W, vsq);
   return( (eos->Gamma_th - 1.0) * (1.0 - vsq) /  eos->Gamma_th  ) ;
 
 }
@@ -815,10 +795,6 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
    * |                                            - (D/gamma) * deps_cold/dvsq) )  |
    *  -----------------------------------------------------------------------------
    */
-//double old_val = (eos->Gamma_th - 1.) * ( 0.5 * D / sqrt(1.-vsq)/*.5rho_b*/  - W  ) / eos->Gamma_th;
-//double new_val = ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th;
-//CCTK_VINFO("Comparing dpdvsq_calc: reldiff %.16e from %.16e %.16e", (new_val-old_val)/old_val, old_val, new_val);
-//CCTK_VINFO("dpdvsq_calc %.16e\nfrom %.16e %.16e %.16e", ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th, W, vsq, D);
 
   return( ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th );
 }

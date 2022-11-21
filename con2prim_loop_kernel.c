@@ -99,9 +99,6 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
   
       if(check!=0) {
         check = font_fix(eos, metric, cons, prims, &prims_guess, diagnostics);
-//if(fabs(cons_orig.tau - 3.8712996396e-09) < 1.0e-18 ) {
-//  CCTK_VINFO("Font Fix final prims: %.16e %.16e\n  %.16e %.16e %.16e", prims_guess.rho, prims_guess.press, prims_guess.vx, prims_guess.vy, prims_guess.vz);
-//}
         diagnostics->font_fixes++;
       }
   
@@ -121,29 +118,28 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
         }
   
         *prims = prims_guess;
-  //CCTK_VINFO("cons: rho=%.16e, ~tau=%.16e, ~S=(%.16e, %.16e, %.16e),", cons->rho,cons->tau,cons->S_x,cons->S_y,cons->S_z);
-  //CCTK_VINFO("prims: rho=%.16e, press=%.16e, vx=%.16e, vy=%.16e, vz=%.16e",prims->rho,prims->press,prims->vx,prims->vy,prims->vz);
-  //CCTK_VINFO("      B=(%.16e, %.16e, %.16e)",prims->Bx,prims->By,prims->Bz);
-        which_guess=3;
-      } //If we didn't find a root, then try again with a different guess.
-    }
-    diagnostics->failure_checker+=100000;
+        which_guess=3; //TODO: can we make the multiple guess loop cleaner?
+      } else {
+        printf("Con2Prim and Font fix failed!");
+        printf("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
+                diagnostics->failure_checker, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho, prims->Bx, prims->By, prims->Bz,
+                metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz, metric->psi6);
+      }
+    } //If we didn't find a root, then try again with a different guess.
 
-/************************************************************************/
-//    check = con2prim(params, eos, metric, cons, prims, diagnostics);
   } else {
     diagnostics->failure_checker+=1;
     reset_prims_to_atmosphere(eos, prims, diagnostics);
     diagnostics->rho_star_fix_applied++;
-  }
+  } // if rho_star>0
 
   if( check != 0 ) {
     //--------------------------------------------------
     //----------- Primitive recovery failed ------------
     //--------------------------------------------------
-CCTK_VINFO("C2P and FF failures! Reseting to atm...");
     // Sigh, reset to atmosphere
     reset_prims_to_atmosphere( eos, prims, diagnostics);
+    diagnostics->failure_checker+=100000;
     diagnostics->atm_resets++;
     // Then flag this point as a "success"
     check = 0;

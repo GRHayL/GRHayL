@@ -112,6 +112,7 @@ typedef struct primitive_quantities {
   double vx, vy, vz;
   double Bx, By, Bz;
   double entropy, Y_e, temp;
+  bool print;
 } primitive_quantities;
 
 /*
