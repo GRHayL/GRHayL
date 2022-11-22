@@ -1,53 +1,47 @@
 #include "con2prim_header.h"
 
-/* This function fills the struct metric_quantities with data. The phi, psi,
-   and g** arguments are the BSSN variables. For more information on the
+/* This function fills the struct metric_quantities with data. The g**
+   arguments are the ADM variables. For more information on the
    arguments, see the definition of the struct in new_header.h. */
-void initialize_metric(metric_quantities *restrict metric, 
-                const double phi, const double psi, const double lapse,
+
+//We could consider allowing the struct to be either BSSN or ADM in the future if
+//we ever need a BSSN struct by having initialize_BSSN and initialize_ADM functions.
+void initialize_metric(metric_quantities *restrict metric, const double lapse,
                 const double gxx, const double gxy, const double gxz,
                 const double gyy, const double gyz, const double gzz,
                 const double betax, const double betay, const double betaz) {
-  metric->bssn_phi = phi;
-  metric->bssn_psi = psi;
-  metric->bssn_gxx = gxx;
-  metric->bssn_gxy = gxy;
-  metric->bssn_gxz = gxz;
-  metric->bssn_gyy = gyy;
-  metric->bssn_gyz = gyz;
-  metric->bssn_gzz = gzz;
+
+  metric->adm_gxx = gxx;
+  metric->adm_gxy = gxy;
+  metric->adm_gxz = gxz;
+  metric->adm_gyy = gyy;
+  metric->adm_gyz = gyz;
+  metric->adm_gzz = gzz;
   metric->lapse = lapse;
   metric->betax = betax;
   metric->betay = betay;
   metric->betaz = betaz;
-//TODO: the constraint getgij=1 could be applied inside this initialization
-//      automatically, possibly with a parameter to turn it off.
-  metric->bssn_gupxx =   ( gyy * gzz - gyz * gyz );
-  metric->bssn_gupxy = - ( gxy * gzz - gyz * gxz );
-  metric->bssn_gupxz =   ( gxy * gyz - gyy * gxz );
-  metric->bssn_gupyy =   ( gxx * gzz - gxz * gxz );
-  metric->bssn_gupyz = - ( gxx * gyz - gxy * gxz );
-  metric->bssn_gupzz =   ( gxx * gyy - gxy * gxy );
-//Do we really need lapm1?
-  metric->lapm1 = lapse-1.0;
-  metric->psi2 = exp(2.0*metric->bssn_phi);
+
+  double gijdet = fabs(gxx * gyy * gzz + gxy * gyz * gxz + gxz * gxy * gyz
+                     - gxz * gyy * gxz - gxy * gxy * gzz - gxx * gyz * gyz);
+
+  // This is the analytic algorithm for finding the inverse of a 3x3 matrix. See e.g.
+  // https://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_3_%C3%97_3_matrices
+  metric->adm_gupxx =  gijdet*( gyy * gzz - gyz * gyz );
+  metric->adm_gupxy = -gijdet*( gxy * gzz - gyz * gxz );
+  metric->adm_gupxz =  gijdet*( gxy * gyz - gyy * gxz );
+  metric->adm_gupyy =  gijdet*( gxx * gzz - gxz * gxz );
+  metric->adm_gupyz = -gijdet*( gxx * gyz - gxy * gxz );
+  metric->adm_gupzz =  gijdet*( gxx * gyy - gxy * gxy );
+
+  double phi = (1.0/12.0) * log(gijdet);
+
+  metric->psi2 = exp(2.0*phi);
   metric->psi4 = SQR(metric->psi2);
   metric->psi6 = metric->psi4*metric->psi2;
   metric->psi4inv = 1.0/metric->psi4;
   metric->lapseinv = 1.0/metric->lapse;
   metric->lapseinv2=SQR(metric->lapseinv);
-  metric->adm_gxx = metric->bssn_gxx*metric->psi4;
-  metric->adm_gxy = metric->bssn_gxy*metric->psi4;
-  metric->adm_gxz = metric->bssn_gxz*metric->psi4;
-  metric->adm_gyy = metric->bssn_gyy*metric->psi4;
-  metric->adm_gyz = metric->bssn_gyz*metric->psi4;
-  metric->adm_gzz = metric->bssn_gzz*metric->psi4;
-  metric->adm_gupxx = metric->bssn_gupxx*metric->psi4inv;
-  metric->adm_gupxy = metric->bssn_gupxy*metric->psi4inv;
-  metric->adm_gupxz = metric->bssn_gupxz*metric->psi4inv;
-  metric->adm_gupyy = metric->bssn_gupyy*metric->psi4inv;
-  metric->adm_gupyz = metric->bssn_gupyz*metric->psi4inv;
-  metric->adm_gupzz = metric->bssn_gupzz*metric->psi4inv;
 
   double shift_xL = metric->adm_gxx*metric->betax + metric->adm_gxy*metric->betay + metric->adm_gxz*metric->betaz;
   double shift_yL = metric->adm_gxy*metric->betax + metric->adm_gyy*metric->betay + metric->adm_gyz*metric->betaz;

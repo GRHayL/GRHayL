@@ -60,15 +60,14 @@ void c2p_initialize_hybrid_eos(CCTK_POINTER *void_eos, const int neos,
   initialize_hybrid_eos(eos, neos, rho_ppoly_tab, Gamma_ppoly_tab, K_ppoly_tab, eps_integ_const, Gamma_th);
 }
 
-void c2p_initialize_metric(CCTK_POINTER *void_metric, 
-                const double phi, const double psi, const double lapse,
+void c2p_initialize_metric(CCTK_POINTER *void_metric, const double lapse,
                 const double gxx, const double gxy, const double gxz,
                 const double gyy, const double gyz, const double gzz,
                 const double betax, const double betay, const double betaz) {
 
   metric_quantities *metric = *( (metric_quantities **)void_metric );
 
-  initialize_metric(metric, phi, psi, lapse, gxx, gxy, gxz,
+  initialize_metric(metric, lapse, gxx, gxy, gxz,
                     gyy, gyz, gzz, betax, betay, betaz);
 
 }

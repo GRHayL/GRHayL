@@ -10,6 +10,10 @@
 #include "stdlib.h"
 #include "con2prim_header.h"
 
+inline double randf(double low,double high) {
+    return (rand()/(double)(RAND_MAX))*(high-low)+low;
+}
+
 inline double relative_error( const double a, const double b ) {
   if     ( a != 0 ) return( fabs(1.0-b/a) );
   else if( b != 0 ) return( fabs(1.0-a/b) );
@@ -127,17 +131,27 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
   // Now perform one test for each of the selected routines
   for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
 
-    printf("Beginning test for routine %s",con2prim_test_names[which_routine]);
-
-    char filename[100];
-    sprintf(filename,"C2P_Testsuite_%s.asc",con2prim_test_names[which_routine]);
-    FILE* outfile = fopen(filename,"w");
-
     int failures = 0;
+    for(int rand=0;rand<2;rand++) {
 
-    srand(0);
+      double rand_val[13];
+      char suffix[10] = "norm";
+      if(rand==1) {
+        srand(1000000);
+        sprintf(suffix, "rand");
+        for(int i=0;i<13;i++) rand_val[i] = 1.0 + randf(-1,1)*1.0e-15;
+      }
 
-    for(int i=0;i<npoints;i++) { // Density loop
+    CCTK_VINFO("Beginning %s test", suffix);
+//    printf("Beginning %s test for routine %s\n",con2prim_test_names[which_routine]);
+
+      char filename[100];
+      sprintf(filename,"C2P_Testsuite_%s_%s.asc",con2prim_test_names[which_routine], suffix);
+      FILE* outfile = fopen(filename,"w");
+
+      srand(0);
+
+      for(int i=0;i<npoints;i++) { // Density loop
 //      for(int j=0;j<npoints;j++) { // Temperature loop
         // Start by setting the prims (rho,Ye,T,P,eps)
         double xrho  = exp(lrmin + dlr*i);
@@ -151,8 +165,8 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
         // Now set the velocities
         // Velocity magnitude
         const double v = sqrt(1.0-1.0/(W_test*W_test));
-        const double vx = v*((double)rand())/((double)RAND_MAX);
-        const double vy = sqrt(v*v - vx*vx)*((double)rand())/((double)RAND_MAX);
+        const double vx = v*randf(0.0,1.0);
+        const double vy = sqrt(v*v - vx*vx)*randf(0.0,1.0);
         const double vz = sqrt(v*v - vx*vx - vy*vy);
 
         // Now the magnetic fields. We'll set them aligned
@@ -165,12 +179,25 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
         const double By    = -Bhaty * B;
         const double Bz    = -Bhatz * B;
 
+        const double gxx = 1.0;// + randf(0.0,100.0);
+        const double gyy = 1.0;// + randf(0.0,100.0);
+        const double gzz = 1.0;// + randf(0.0,100.0);
+        const double gxy = 0.0;//randf(-1.0e-1,1.0e-1);
+        const double gxz = 0.0;//randf(-1.0e-1,1.0e-1);
+        const double gyz = 0.0;//randf(-1.0e-1,1.0e-1);
+
+        const double lapse = 1.0;//randf(-1.0e-10,1.0);
+
+        const double betax = 0.0;//randf(0.0,1.0);
+        const double betay = 0.0;//sqrt(v*v - betax*betax)*randf(0.0,1.0);
+        const double betaz = 0.0;//sqrt(v*v - betax*betax - betay*betay);
+
         // Set the metric to flat space
         metric_quantities metric;
-        initialize_metric(&metric, 0.0, 0.0, 1.0,  // phi, psi, lapse
-                                   1.0, 0.0, 0.0,  // gxx, gxy, gxz
-                                   1.0, 0.0, 1.0,  // gyy, gyz, gzz
-                                   0.0, 0.0, 0.0); // betax, betay, betaz
+        initialize_metric(&metric, lapse,  // phi, psi, lapse
+                          gxx, gxy, gxz,  // gxx, gxy, gxz
+                          gyy, gyz, gzz,  // gyy, gyz, gzz
+                          betax, betay, betaz); // betax, betay, betaz
 
         conservative_quantities cons, cons_undens; // Not initialized because it will be filled based on primitive data.
 
@@ -180,7 +207,9 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
                               vx, vy, vz, Bx, By, Bz,
                               poison, poison, poison, // entropy, Y_e=xye, temp=xtemp
                               &prims);
+        prims.print = true;
 
+CCTK_VINFO("MetAux %e %e\n %e %e %e", metric.lapse, metric.lapseinv, metric.psi2, metric.psi4, metric.psi6);
         // Define the stress_energy struct
         stress_energy Tmunu;
 
@@ -191,6 +220,29 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
 
         // Store original prims
         prims_orig = prims;
+
+        CCTK_VINFO("Initial conservatives:\n %.16e %.16e\n"
+           "  %.16e %.16e %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+        fprintf(outfile, "Initial conservatives:\n %.16e %.16e\n"
+           "  %.16e %.16e %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+        //This is meant to simulate some round-off error that deviates from the "true" values that we just computed.
+        if(rand==1) {
+          prims.rho   *= rand_val[0];
+          prims.press *= rand_val[1];
+          prims.vx    *= rand_val[2];
+          prims.vy    *= rand_val[3];
+          prims.vz    *= rand_val[4];
+          prims.Bx    *= rand_val[5];
+          prims.By    *= rand_val[6];
+          prims.Bz    *= rand_val[7];
+          cons.rho    *= rand_val[8];
+          cons.S_x    *= rand_val[9];
+          cons.S_y    *= rand_val[10];
+          cons.S_z    *= rand_val[11];
+          cons.tau    *= rand_val[12];
+        fprintf(outfile, "Perturbed conservatives:\n %.16e %.16e\n"
+           "  %.16e %.16e %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+        }
 
         //This applies the inequality (or "Faber") fixes on the conservatives
         apply_tau_floor(&params, &eos, &metric, &prims, &cons, &diagnostics);
@@ -231,8 +283,12 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
         //---------- Primitive recovery completed ----------
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
+        CCTK_VINFO("C2P primitives:\n %.16e %.16e\n"
+           "  %.16e %.16e %.16e\n", prims_guess.rho, prims_guess.press, prims_guess.vx, prims_guess.vy, prims_guess.vz);
         enforce_limits_on_primitives_and_recompute_conservs(&params, &eos, &metric, &prims_guess, &cons,
                                                             TUPMUNU, TDNMUNU, &Tmunu, &diagnostics);
+        CCTK_VINFO("Enforced primitives:\n %.16e %.16e\n"
+           "  %.16e %.16e %.16e\n", prims_guess.rho, prims_guess.press, prims_guess.vx, prims_guess.vy, prims_guess.vz);
 
         primitive_quantities prims_error;
         double accumulated_error = 0.0;
@@ -242,7 +298,7 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
           accumulated_error = 1e300;
         } else {
           prims = prims_guess;
-          fprintf(outfile, "Recovery SUCCEEDED!");
+          fprintf(outfile, "Recovery SUCCEEDED!\n");
           prims_error.rho     = relative_error(prims.rho,     prims_orig.rho);
           prims_error.press   = relative_error(prims.press,   prims_orig.press);
           prims_error.eps     = relative_error(prims.eps,     prims_orig.eps);
@@ -256,46 +312,46 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
           prims_error.Y_e     = relative_error(prims.Y_e,     prims_orig.Y_e);
           prims_error.temp    = relative_error(prims.temp,    prims_orig.temp);
 
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "rho_b", prims_orig.rho, prims.rho, prims_error.rho);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "press", prims_orig.press, prims.press, prims_error.press);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "eps", prims_orig.eps, prims.eps, prims_error.eps);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "vx", prims_orig.vx, prims.vx, prims_error.vx);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "vy", prims_orig.vy, prims.vy, prims_error.vy);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "vz", prims_orig.vz, prims.vz, prims_error.vz);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "Bx", prims_orig.Bx, prims.Bx, prims_error.Bx);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "By", prims_orig.By, prims.By, prims_error.By);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "Bz", prims_orig.Bz, prims.Bz, prims_error.Bz);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "entropy", prims_orig.entropy, prims.entropy, prims_error.entropy);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "Y_e", prims_orig.Y_e, prims.Y_e, prims_error.Y_e);
-//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)", "temp", prims_orig.temp, prims.temp, prims_error.temp);
-          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "rho_b", prims_orig.rho, prims.rho, prims_error.rho);
-          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "press", prims_orig.press, prims.press, prims_error.press);
-          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "vx", prims_orig.vx, prims.vx, prims_error.vx);
-          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "vy", prims_orig.vy, prims.vy, prims_error.vy);
-          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "vz", prims_orig.vz, prims.vz, prims_error.vz);
-//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "Bx", prims_orig.Bx, prims.Bx, prims_error.Bx);
-//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "By", prims_orig.By, prims.By, prims_error.By);
-//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.3e\n", "Bz", prims_orig.Bz, prims.Bz, prims_error.Bz);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "rho_b", prims_orig.rho, prims.rho, prims_error.rho);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "press", prims_orig.press, prims.press, prims_error.press);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "eps", prims_orig.eps, prims.eps, prims_error.eps);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "vx", prims_orig.vx, prims.vx, prims_error.vx);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "vy", prims_orig.vy, prims.vy, prims_error.vy);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "vz", prims_orig.vz, prims.vz, prims_error.vz);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "Bx", prims_orig.Bx, prims.Bx, prims_error.Bx);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "By", prims_orig.By, prims.By, prims_error.By);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "Bz", prims_orig.Bz, prims.Bz, prims_error.Bz);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "entropy", prims_orig.entropy, prims.entropy, prims_error.entropy);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "Y_e", prims_orig.Y_e, prims.Y_e, prims_error.Y_e);
+//          fprintf(outfile, "Relative error for prim %s: %.3e (%e -> %e)\n", "temp", prims_orig.temp, prims.temp, prims_error.temp);
+          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.16e\n", "rho_b", prims_orig.rho, prims.rho, prims_error.rho);
+          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.16e\n", "press", prims_orig.press, prims.press, prims_error.press);
+          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.16e\n", "vx", prims_orig.vx, prims.vx, prims_error.vx);
+          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.16e\n", "vy", prims_orig.vy, prims.vy, prims_error.vy);
+          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.16e\n", "vz", prims_orig.vz, prims.vz, prims_error.vz);
+//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.16e\n", "Bx", prims_orig.Bx, prims.Bx, prims_error.Bx);
+//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.16e\n", "By", prims_orig.By, prims.By, prims_error.By);
+//          fprintf(outfile, "Relative error for prim %s: (%e -> %e) %.16e\n", "Bz", prims_orig.Bz, prims.Bz, prims_error.Bz);
 
           accumulated_error = prims_error.rho + prims_error.press /*+ prims_error.eps*/ + prims_error.vx + prims_error.vy + prims_error.vz
                             + prims_error.Bx + prims_error.By + prims_error.Bz /*+ prims_error.entropy + prims_error.Y_e + prims_error.temp*/;
 
           fprintf(outfile, "Total accumulated error    : %e\n",accumulated_error);
         }
-        fprintf(outfile,"%e %e\n",log10(prims_orig.rho), log10(MAX(accumulated_error,1e-16)));
+        fprintf(outfile,"%e %e\n\n",log10(prims_orig.rho), log10(MAX(accumulated_error,1e-16)));
 //      } // temperature loop
-      fprintf(outfile,"\n");
+      }
+    fclose(outfile);
     }
 
-    fclose(outfile);
 
     int ntotal = npoints*npoints;
 
-    printf("Completed test for routine %s",con2prim_test_names[which_routine]);
-    printf("Final report:");
-    printf("    Number of recovery attempts: %d",ntotal);
-    printf("    Number of failed recoveries: %d",failures);
-    printf("    Recovery failure rate      : %.2lf%%",((double)failures)/((double)ntotal)*100.0);
+    printf("Completed test for routine %s\n",con2prim_test_names[which_routine]);
+    printf("Final report:\n");
+    printf("    Number of recovery attempts: %d\n",ntotal);
+    printf("    Number of failed recoveries: %d\n",failures);
+    printf("    Recovery failure rate      : %.2lf%%\n",((double)failures)/((double)ntotal)*100.0);
 
   }
 
@@ -483,7 +539,7 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
 //
 //  }
 
-  printf("All done! Terminating the run.");
+  printf("All done! Terminating the run.\n");
   exit(1);
 }
 /*

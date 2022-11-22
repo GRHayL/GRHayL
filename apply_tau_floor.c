@@ -1,4 +1,3 @@
-#include "cctk.h"
 #include "con2prim_header.h"
 
 // This subroutine calculates the eigenvalues of a real, symmetric 3x3
@@ -38,22 +37,23 @@ int apply_tau_floor(const GRMHD_parameters *restrict params, const eos_parameter
                            conservative_quantities *restrict cons, con2prim_diagnostics *restrict diagnostics) {
 
   double lam1,lam2,lam3;
-  eigenvalues_3by3_real_sym_matrix(&lam1, &lam2, &lam3, metric->bssn_gxx, metric->bssn_gxy, metric->bssn_gxz, metric->bssn_gyy, metric->bssn_gyz, metric->bssn_gzz);
-  if (lam1 < 0.0 || lam2 < 0.0 || lam3 < 0.0) {
-    // Metric is not positive-defitive, reset the metric to be conformally-flat.
-    metric->bssn_gxx = 1.0;
-    metric->bssn_gxy = 0.0;
-    metric->bssn_gxz = 0.0;
-    metric->bssn_gyy = 1.0;
-    metric->bssn_gyz = 0.0;
-    metric->bssn_gzz = 1.0;
-    metric->bssn_gupxx = metric->psi4inv;
-    metric->bssn_gupxy = 0.0;
-    metric->bssn_gupxz = 0.0;
-    metric->bssn_gupyy = metric->psi4inv;
-    metric->bssn_gupyz = 0.0;
-    metric->bssn_gupzz = metric->psi4inv;
-  }
+//  eigenvalues_3by3_real_sym_matrix(&lam1, &lam2, &lam3, metric->bssn_gxx, metric->bssn_gxy, metric->bssn_gxz, metric->bssn_gyy, metric->bssn_gyz, metric->bssn_gzz);
+//  if (lam1 < 0.0 || lam2 < 0.0 || lam3 < 0.0) {
+//    // Metric is not positive-defitive, reset the metric to be conformally-flat.
+//    metric->bssn_gxx = 1.0;
+//    metric->bssn_gxy = 0.0;
+//    metric->bssn_gxz = 0.0;
+//    metric->bssn_gyy = 1.0;
+//    metric->bssn_gyz = 0.0;
+//    metric->bssn_gzz = 1.0;
+//    metric->bssn_gupxx = metric->psi4inv;
+//    metric->bssn_gupxy = 0.0;
+//    metric->bssn_gupxz = 0.0;
+//    metric->bssn_gupyy = metric->psi4inv;
+//    metric->bssn_gupyz = 0.0;
+//    metric->bssn_gupzz = metric->psi4inv;
+//    printf("The eigenvalues are negative! %e %e %e\n", lam1, lam2, lam3);
+//  }
 
   //Next, prepare for the tau and stilde fixes:
 

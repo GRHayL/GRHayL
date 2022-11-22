@@ -1,8 +1,8 @@
 implements: Con2Prim
 
 INCLUDE HEADER: con2prim_header.h in con2prim_header.h
-INCLUDE HEADER: EOS_header.h in EOS/EOS_header.h
-INCLUDE HEADER: EOS_hybrid_header.h in EOS/EOS_hybrid_header.h
+INCLUDE HEADER: EOS/EOS_header.h in EOS_header.h
+INCLUDE HEADER: EOS/EOS_hybrid_header.h in EOS_hybrid_header.h
 INCLUDE HEADER: GRMHD_header.h in GRMHD_header.h
 
 #CCTK_POINTER_TO_CONST IN cctkGH, \
@@ -60,8 +60,7 @@ void FUNCTION initialize_hybrid_eos_ETK(CCTK_POINTER OUT eos,
 PROVIDES FUNCTION initialize_hybrid_eos_ETK WITH c2p_initialize_hybrid_eos
   LANGUAGE C
 
-void FUNCTION initialize_metric_ETK(CCTK_POINTER OUT metric,
-                     CCTK_REAL IN phi, CCTK_REAL IN psi, CCTK_REAL IN lapse,
+void FUNCTION initialize_metric_ETK(CCTK_POINTER OUT metric, CCTK_REAL IN lapse,
                      CCTK_REAL IN gxx, CCTK_REAL IN gxy, CCTK_REAL IN gxz,
                      CCTK_REAL IN gyy, CCTK_REAL IN gyz, CCTK_REAL IN gzz,
                      CCTK_REAL IN betax, CCTK_REAL IN betay, CCTK_REAL IN betaz)

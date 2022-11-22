@@ -1,4 +1,4 @@
-#include "cctk.h"
+#include <stdio.h>
 #include "con2prim_header.h"
 
 static inline void impose_speed_limit_output_u0(const eos_parameters *restrict eos, const metric_quantities *restrict metric,
@@ -35,12 +35,12 @@ static inline void impose_speed_limit_output_u0(const eos_parameters *restrict e
   //u0_out          = (alpha_u0_minus_one + 1.0)*metric.lapseinv;
   double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
   if(isnan(alpha_u0*metric->lapseinv)) {
-    CCTK_VINFO("*********************************************");
-    CCTK_VINFO("Metric/psi4: %e %e %e %e %e %e / %e", metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz, metric->psi4);
-    CCTK_VINFO("Lapse/shift: %e (=1/%e) / %e %e %e",metric->lapse, metric->lapseinv, metric->betax, metric->betay, metric->betaz);
-    CCTK_VINFO("Velocities : %e %e %e", prims->vx, prims->vx, prims->vz);
-    CCTK_VINFO("Found nan while computing u^{0} in function %s (file: %s)",__func__,__FILE__);
-    CCTK_VINFO("*********************************************");
+    printf("*********************************************\n");
+    printf("Metric/psi4: %e %e %e %e %e %e / %e\n", metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz, metric->psi4);
+    printf("Lapse/shift: %e (=1/%e) / %e %e %e\n",metric->lapse, metric->lapseinv, metric->betax, metric->betay, metric->betaz);
+    printf("Velocities : %e %e %e\n", prims->vx, prims->vx, prims->vz);
+    printf("Found nan while computing u^{0} in function %s (file: %s)\n",__func__,__FILE__);
+    printf("*********************************************\n");
     diagnostics->nan_found++;
   }
   *u0_out = alpha_u0*metric->lapseinv;
@@ -63,9 +63,9 @@ static inline void compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantiti
 
   // Eq. 56 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   //  u_i = gamma_{ij} u^0 (v^j + beta^j), gamma_{ij} is the physical metric, and gamma_{ij} = Psi4 * METRIC[Gij], since METRIC[Gij] is the conformal metric.
-  u_over_u0_psi4[0] =  metric->bssn_gxx*shiftx_plus_vx + metric->bssn_gxy*shifty_plus_vy + metric->bssn_gxz*shiftz_plus_vz;
-  u_over_u0_psi4[1] =  metric->bssn_gxy*shiftx_plus_vx + metric->bssn_gyy*shifty_plus_vy + metric->bssn_gyz*shiftz_plus_vz;
-  u_over_u0_psi4[2] =  metric->bssn_gxz*shiftx_plus_vx + metric->bssn_gyz*shifty_plus_vy + metric->bssn_gzz*shiftz_plus_vz;
+  u_over_u0_psi4[0] =  metric->psi4*(metric->adm_gxx*shiftx_plus_vx + metric->adm_gxy*shifty_plus_vy + metric->adm_gxz*shiftz_plus_vz);
+  u_over_u0_psi4[1] =  metric->psi4*(metric->adm_gxy*shiftx_plus_vx + metric->adm_gyy*shifty_plus_vy + metric->adm_gyz*shiftz_plus_vz);
+  u_over_u0_psi4[2] =  metric->psi4*(metric->adm_gxz*shiftx_plus_vx + metric->adm_gyz*shifty_plus_vy + metric->adm_gzz*shiftz_plus_vz);
 
   // Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   //   Compute alpha sqrt(4 pi) b^t = u_i B^i

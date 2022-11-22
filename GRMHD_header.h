@@ -97,19 +97,14 @@ typedef struct GRMHD_parameters {
 */
 
 typedef struct metric_quantities {
-  double bssn_phi, bssn_psi;
-  double bssn_gxx, bssn_gxy, bssn_gxz;
-  double bssn_gyy, bssn_gyz, bssn_gzz;
-  double bssn_gupxx, bssn_gupxy, bssn_gupxz;
-  double bssn_gupyy, bssn_gupyz, bssn_gupzz;
-  double betax, betay, betaz;
-  double lapm1, lapse, lapseinv;
-  double psi2, psi4, psi6;
-  double psi4inv, lapseinv2;
   double adm_gxx, adm_gxy, adm_gxz;
   double adm_gyy, adm_gyz, adm_gzz;
   double adm_gupxx, adm_gupxy, adm_gupxz;
   double adm_gupyy, adm_gupyz, adm_gupzz;
+  double betax, betay, betaz;
+  double lapse, lapseinv;
+  double psi2, psi4, psi6;
+  double psi4inv, lapseinv2;
   double g4dn[4][4],g4up[4][4];
 } metric_quantities;
 
@@ -126,8 +121,7 @@ void initialize_parameters(GRMHD_parameters *restrict params,
              const int evolve_temp, const int calc_prim_guess,
              const double psi6threshold, const int update_Tmunu);
 
-void initialize_metric(metric_quantities *restrict metric, 
-             const double phi, const double psi, const double lapse,
+void initialize_metric(metric_quantities *restrict metric, const double lapse,
              const double gxx, const double gxy, const double gxz,
              const double gyy, const double gyz, const double gzz,
              const double betax, const double betay, const double betaz);

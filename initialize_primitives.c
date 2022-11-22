@@ -30,4 +30,5 @@ void initialize_primitives(
     prims->Y_e = Y_e/rho;
     prims->temp = temp/rho;
   }
+  prims->print=false;
 }
