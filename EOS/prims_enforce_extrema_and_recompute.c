@@ -3,6 +3,7 @@
 
 #include "con2prim_header.h"
 #include "EOS_hybrid_header.h"
+#include <stdio.h>
 
 void prims_enforce_extrema_and_recompute( const GRMHD_parameters *restrict params,
                                           const eos_parameters *restrict eos,
@@ -57,48 +58,4 @@ void prims_enforce_extrema_and_recompute( const GRMHD_parameters *restrict param
   //  prims->entropy = xent;
   }
 
-}
-
-void compute_P_cold_and_eps_cold(const eos_parameters *restrict eos, const double rho_in,
-                              double *restrict P_cold_ptr, double *restrict eps_cold_ptr) {
-  double P_cold = *P_cold_ptr, eps_cold = *eps_cold_ptr;
-
-  if(rho_in==0) {
-    *P_cold_ptr   = 0.0;
-    *eps_cold_ptr = 0.0;
-    return;
-  }
-
-  int polytropic_index      = find_polytropic_K_and_Gamma_index(eos,rho_in);
-  double K_ppoly_tab     = eos->K_ppoly_tab[polytropic_index];
-  double Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
-  double eps_integ_const = eos->eps_integ_const[polytropic_index];
-
-  P_cold = K_ppoly_tab*pow(rho_in,Gamma_ppoly_tab);
-
-  eps_cold = P_cold/(rho_in*(Gamma_ppoly_tab-1.0)) + eps_integ_const;
-
-  *P_cold_ptr = P_cold;
-  *eps_cold_ptr = eps_cold;
-}
-
-void reset_prims_to_atmosphere( const eos_parameters *restrict eos,
-                                primitive_quantities *restrict prims,
-                                con2prim_diagnostics *restrict diagnostics ) {
-
-  // Just a simple reset to atmospheric values.
-  // Velocities are set to zero. Keeping it
-  // inside a single function ensures that
-  // resets are consistent throughout the code.
-  prims->rho = eos->rho_atm;
-  prims->press = eos->press_atm;
-  prims->eps = eos->eps_atm;
-  prims->entropy = eos->entropy_atm;
-  if( eos->eos_type == 1 ) {
-    prims->Y_e = eos->Ye_atm;
-    prims->temp = eos->temp_atm;
-  }
-  prims->vx = 0.0;
-  prims->vy = 0.0;
-  prims->vz = 0.0;  
 }
