@@ -29,16 +29,15 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
-#include "Symmetry.h"
 #include "con2prim_header.h"
 
 void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
                           metric_quantities *restrict metric, conservative_quantities *restrict cons,
                           primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics, stress_energy *restrict Tmunu) {
 
-  //FIXME: might slow down the code.
+  //FIXME: might slow down the code. Was formerly a CCTK_WARN
   if(isnan(cons->rho*cons->S_x*cons->S_y*cons->S_z*cons->tau*prims->Bx*prims->By*prims->Bz)) {
-    CCTK_VWARN(CCTK_WARN_ALERT,"NaN found at start of C2P kernel: st_i = %e %e %e, rho_* = %e, ~tau = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
+    printf("NaN found at start of C2P kernel: st_i = %e %e %e, rho_* = %e, ~tau = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e\n",
                cons->S_x,cons->S_y,cons->S_z,cons->rho,cons->tau,prims->Bx,prims->By,prims->Bz,
                metric->adm_gxx,metric->adm_gxy,metric->adm_gxz,metric->adm_gyy,metric->adm_gyy,metric->adm_gzz,metric->psi6);
     diagnostics->nan_found++;
@@ -105,16 +104,16 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
       if(check==0) {
   //       Check for NAN!
         if( isnan(prims_guess.rho*prims_guess.press*prims_guess.eps*prims_guess.vx*prims_guess.vy*prims_guess.vz) ) {
-          CCTK_VINFO("***********************************************************");
-          CCTK_VINFO("NAN found in function %s (file: %s)",__func__,__FILE__);
-          CCTK_VINFO("Input conserved variables:");
-          CCTK_VINFO("rho_*, ~tau, ~S_{i}: %e %e %e %e %e", cons->rho, cons->tau, cons->S_x, cons->S_y, cons->S_z);
-          CCTK_VINFO("Undensitized conserved variables:");
-          CCTK_VINFO("D, tau, S_{i}: %e %e %e %e %e", cons_undens.rho, cons_undens.tau, cons_undens.S_x, cons_undens.S_y, cons_undens.S_z);
-          CCTK_VINFO("Output primitive variables:");
-          CCTK_VINFO("rho, P: %e %e", prims_guess.rho, prims_guess.press);
-          CCTK_VINFO("v: %e %e %e", prims_guess.vx, prims_guess.vy, prims_guess.vz);
-          CCTK_VINFO("***********************************************************");
+          printf("***********************************************************\n");
+          printf("NAN found in function %s (file: %s)\n",__func__,__FILE__);
+          printf("Input conserved variables:\n");
+          printf("rho_*, ~tau, ~S_{i}: %e %e %e %e %e\n", cons->rho, cons->tau, cons->S_x, cons->S_y, cons->S_z);
+          printf("Undensitized conserved variables:\n");
+          printf("D, tau, S_{i}: %e %e %e %e %e\n", cons_undens.rho, cons_undens.tau, cons_undens.S_x, cons_undens.S_y, cons_undens.S_z);
+          printf("Output primitive variables:\n");
+          printf("rho, P: %e %e\n", prims_guess.rho, prims_guess.press);
+          printf("v: %e %e %e\n", prims_guess.vx, prims_guess.vy, prims_guess.vz);
+          printf("***********************************************************");
         }
   
         *prims = prims_guess;
@@ -144,7 +143,7 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
     // Then flag this point as a "success"
     check = 0;
 //TODO: change to prinf
-    CCTK_VINFO("Couldn't find root from: %e %e %e %e %e, rhob approx=%e, rho_b_atm=%e, Bx=%e, By=%e, Bz=%e, gij_phys=%e %e %e %e %e %e, alpha=%e",
+    printf("Couldn't find root from: %e %e %e %e %e, rhob approx=%e, rho_b_atm=%e, Bx=%e, By=%e, Bz=%e, gij_phys=%e %e %e %e %e %e, alpha=%e\n",
                cons_orig.tau,cons_orig.rho,cons_orig.S_x,cons_orig.S_y,cons_orig.S_z,cons_orig.rho/metric->psi6,eos->rho_atm,
                prims->Bx,prims->By,prims->Bz,metric->adm_gxx,metric->adm_gxy,metric->adm_gxz,metric->adm_gyy,metric->adm_gyy,metric->adm_gzz,metric->lapse);
   }
@@ -157,15 +156,15 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
   enforce_limits_on_primitives_and_recompute_conservs(params, eos, metric, prims, cons, TUPMUNU, TDNMUNU, Tmunu, diagnostics);
 
   //Now we compute the difference between original & new conservatives, for diagnostic purposes:
-//CCTK_VINFO("Cons: tau rho S %.16e %.16e %.16e %.16e %.16e", cons->tau, cons->rho, cons->S_x, cons->S_y, cons->S_z);
-//CCTK_VINFO("Orig: tau rho S %.16e %.16e %.16e %.16e %.16e", cons_orig.tau, cons_orig.rho, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z);
+//printf("Cons: tau rho S %.16e %.16e %.16e %.16e %.16e\n", cons->tau, cons->rho, cons->S_x, cons->S_y, cons->S_z);
+//printf("Orig: tau rho S %.16e %.16e %.16e %.16e %.16e\n", cons_orig.tau, cons_orig.rho, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z);
   diagnostics->error_int_numer += fabs(cons->tau - cons_orig.tau) + fabs(cons->rho - cons_orig.rho) + fabs(cons->S_x - cons_orig.S_x)
                     + fabs(cons->S_y - cons_orig.S_y) + fabs(cons->S_z - cons_orig.S_z);
   diagnostics->error_int_denom += cons_orig.tau + cons_orig.rho + fabs(cons_orig.S_x) + fabs(cons_orig.S_y) + fabs(cons_orig.S_z);
 
   if(check!=0) {
     diagnostics->failures++;
-    if(exp(metric->bssn_phi*6.0)>params->psi6threshold) {
+    if(metric->psi6 > params->psi6threshold) {
       diagnostics->failures_inhoriz++;
       diagnostics->pointcount_inhoriz++;
     }

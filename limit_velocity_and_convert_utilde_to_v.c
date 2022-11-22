@@ -1,4 +1,3 @@
-#include "cctk.h"
 #include "con2prim_header.h"
 
 //TODO: this can also reset rho_b (prims->rho)

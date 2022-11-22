@@ -6,9 +6,8 @@
 //              required by the C2P routines and 2. set appropriate primitive
 //              guesses.
 
-#include "cctk.h"
 #include "con2prim_header.h"
-#include "EOS_hybrid_header.h"
+#include "EOS/EOS_hybrid_header.h"
 
 //TODO: consider passing in cons_undens instead. I don't think we need densitized.
 void guess_primitives( const eos_parameters *restrict eos,

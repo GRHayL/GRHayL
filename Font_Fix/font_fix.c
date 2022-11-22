@@ -1,6 +1,6 @@
 #include "con2prim_header.h"
-#include "EOS_hybrid_header.h"
-#include "harm_u2p_util.h"
+#include "../EOS/EOS_hybrid_header.h"
+#include "../C2P_Routines/harm_u2p_util.h"
 #include <stdio.h>
 
 /**********************************

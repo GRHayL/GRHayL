@@ -1,7 +1,6 @@
-#include "cctk.h"
 #include "con2prim_header.h"
-#include "EOS_hybrid_header.h"
-#include "harm_u2p_util.h"
+#include "../../EOS/EOS_hybrid_header.h"
+#include "../harm_u2p_util.h"
 
 /***********************************************************************************
     Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble,
@@ -176,7 +175,7 @@ int C2P_Hybrid_Noble2D( const eos_parameters *restrict eos,
                       primitive_quantities *restrict prims,
                       con2prim_diagnostics *restrict diagnostics ) {
 
-  double uu = -cons_undens->tau*metric->lapse - (metric->lapm1)*cons_undens->rho +
+  double uu = -cons_undens->tau*metric->lapse - (metric->lapse-1.0)*cons_undens->rho +
     metric->betax*cons_undens->S_x + metric->betay*cons_undens->S_y  + metric->betaz*cons_undens->S_z;
 
   double new_cons[numcons];
@@ -209,17 +208,17 @@ int C2P_Hybrid_Noble2D( const eos_parameters *restrict eos,
 
 
 if(prims->print) {
-CCTK_VINFO("old_prims: rho=%.16e\n u=%.16e",new_prims[RHO],new_prims[UU]);
-CCTK_VINFO("           ~u=(%.16e, %.16e, %.16e)",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
-CCTK_VINFO("     cons: rho=%.16e\n u=%.16e\n S=(%.16e, %.16e, %.16e),", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
-CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
+//printf("old_prims: rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
+//printf("           ~u=(%.16e, %.16e, %.16e)\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+//printf("           B=(%.16e, %.16e, %.16e)\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+//printf("     cons: rho=%.16e\n u=%.16e\n S=(%.16e, %.16e, %.16e)\n", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
+//printf("           B=(%.16e, %.16e, %.16e)\n",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
 }
   int retval = Utoprim_new_body(eos, new_cons, metric->g4dn, metric->g4up, new_prims);
 if(prims->print) {
-CCTK_VINFO("new_prims: rho=%.16e\n u=%.16e",new_prims[RHO],new_prims[UU]);
-CCTK_VINFO("           ~u=(%.16e, %.16e, %.16e)",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-CCTK_VINFO("           B=(%.16e, %.16e, %.16e)",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+printf("new_prims: rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
+printf("           ~u=(%.16e, %.16e, %.16e)\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+printf("           B=(%.16e, %.16e, %.16e)\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
 }
 
   if(retval==0) {
@@ -415,7 +414,6 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
     //retval = 4;
     //return(retval) ;
   }
-
 
   // Recover the primitive variables from the scalars and conserved variables:
   gtmp = sqrt(1. - vsq);
@@ -726,8 +724,8 @@ double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const 
 
 
   // Compute p = P_{cold} + P_{th}
-//  return( (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma )/eos->Gamma_th );
-  return( ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th );
+  return( (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma )/eos->Gamma_th );
+//  return( ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th );
 
 }
 
@@ -796,7 +794,8 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
    *  -----------------------------------------------------------------------------
    */
 
-  return( ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th );
+  return( (eos->Gamma_th - 1.) * ( 0.5 * D / sqrt(1.-vsq)  - W  ) / eos->Gamma_th ) ;
+//  return( ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th );
 }
 
 

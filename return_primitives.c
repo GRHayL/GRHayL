@@ -1,5 +1,4 @@
 #include "con2prim_header.h"
-#include "cctk.h"
 
 /* This function fills the struct primitive_quantities with data. 
    For more information on the arguments, see the definition of the

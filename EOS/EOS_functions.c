@@ -3,7 +3,6 @@
 
 #include "con2prim_header.h"
 #include "EOS_hybrid_header.h"
-#include "cctk.h"
 
 void prims_enforce_extrema_and_recompute( const GRMHD_parameters *restrict params,
                                           const eos_parameters *restrict eos,
