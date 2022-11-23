@@ -1,4 +1,5 @@
 #include "con2prim_header.h"
+#include <stdio.h>
 
 // This subroutine calculates the eigenvalues of a real, symmetric 3x3
 // matrix M={{M11,M12,M13},{M12,M22,M23},{M13,M23,M33}} based on the
@@ -37,9 +38,9 @@ int apply_tau_floor(const GRMHD_parameters *restrict params, const eos_parameter
                            conservative_quantities *restrict cons, con2prim_diagnostics *restrict diagnostics) {
 
   double lam1,lam2,lam3;
-//  eigenvalues_3by3_real_sym_matrix(&lam1, &lam2, &lam3, metric->bssn_gxx, metric->bssn_gxy, metric->bssn_gxz, metric->bssn_gyy, metric->bssn_gyz, metric->bssn_gzz);
-//  if (lam1 < 0.0 || lam2 < 0.0 || lam3 < 0.0) {
-//    // Metric is not positive-defitive, reset the metric to be conformally-flat.
+  eigenvalues_3by3_real_sym_matrix(&lam1, &lam2, &lam3, metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz);
+  if (lam1 < 0.0 || lam2 < 0.0 || lam3 < 0.0) {
+    // Metric is not positive-defitive, reset the metric to be conformally-flat.
 //    metric->bssn_gxx = 1.0;
 //    metric->bssn_gxy = 0.0;
 //    metric->bssn_gxz = 0.0;
@@ -52,8 +53,8 @@ int apply_tau_floor(const GRMHD_parameters *restrict params, const eos_parameter
 //    metric->bssn_gupyy = metric->psi4inv;
 //    metric->bssn_gupyz = 0.0;
 //    metric->bssn_gupzz = metric->psi4inv;
-//    printf("The eigenvalues are negative! %e %e %e\n", lam1, lam2, lam3);
-//  }
+    printf("The eigenvalues are negative! %e %e %e\n", lam1, lam2, lam3);
+  }
 
   //Next, prepare for the tau and stilde fixes:
 

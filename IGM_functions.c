@@ -63,9 +63,9 @@ static inline void compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantiti
 
   // Eq. 56 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   //  u_i = gamma_{ij} u^0 (v^j + beta^j), gamma_{ij} is the physical metric, and gamma_{ij} = Psi4 * METRIC[Gij], since METRIC[Gij] is the conformal metric.
-  u_over_u0_psi4[0] =  metric->psi4*(metric->adm_gxx*shiftx_plus_vx + metric->adm_gxy*shifty_plus_vy + metric->adm_gxz*shiftz_plus_vz);
-  u_over_u0_psi4[1] =  metric->psi4*(metric->adm_gxy*shiftx_plus_vx + metric->adm_gyy*shifty_plus_vy + metric->adm_gyz*shiftz_plus_vz);
-  u_over_u0_psi4[2] =  metric->psi4*(metric->adm_gxz*shiftx_plus_vx + metric->adm_gyz*shifty_plus_vy + metric->adm_gzz*shiftz_plus_vz);
+  u_over_u0_psi4[0] =  (metric->adm_gxx*shiftx_plus_vx + metric->adm_gxy*shifty_plus_vy + metric->adm_gxz*shiftz_plus_vz)/metric->psi4;
+  u_over_u0_psi4[1] =  (metric->adm_gxy*shiftx_plus_vx + metric->adm_gyy*shifty_plus_vy + metric->adm_gyz*shiftz_plus_vz)/metric->psi4;
+  u_over_u0_psi4[2] =  (metric->adm_gxz*shiftx_plus_vx + metric->adm_gyz*shifty_plus_vy + metric->adm_gzz*shiftz_plus_vz)/metric->psi4;
 
   // Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   //   Compute alpha sqrt(4 pi) b^t = u_i B^i
@@ -150,7 +150,6 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
   // Compute u_i; we compute u_0 below.
   double uDN[4] = { 1e200, u_x_over_u0_psi4*uUP[0]*metric->psi4,u_y_over_u0_psi4*uUP[0]*metric->psi4,u_z_over_u0_psi4*uUP[0]*metric->psi4 };
 
-
   // Precompute some useful quantities, for later:
   double alpha_sqrt_gamma=metric->lapse*metric->psi6;
   double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb[SMALLB2]);
@@ -174,7 +173,6 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
 
   // Compute u_0, as we've already computed u_i above.
   uDN[0]=0.0; for(int jj=0;jj<4;jj++) uDN[0] += uUP[jj]*metric->g4dn[0][jj];
-
 
   // Compute T_{\mu \nu}
   if(params->update_Tmunu) {

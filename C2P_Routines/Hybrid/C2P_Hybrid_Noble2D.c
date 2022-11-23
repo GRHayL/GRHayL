@@ -1,6 +1,7 @@
 #include "con2prim_header.h"
 #include "../../EOS/EOS_hybrid_header.h"
 #include "../harm_u2p_util.h"
+#include <stdio.h>
 
 /***********************************************************************************
     Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble,
@@ -174,6 +175,16 @@ int C2P_Hybrid_Noble2D( const eos_parameters *restrict eos,
                       const conservative_quantities *restrict cons_undens,
                       primitive_quantities *restrict prims,
                       con2prim_diagnostics *restrict diagnostics ) {
+
+  // We have already calculated the undensized variables needed for
+  // the Noble2D routine. However, this routine does not use the
+  // variable tau, but instead the energy variable u which is
+  // related to (TODO: library name)'s conservatives via the relation:
+  //
+  // u = -alpha*tau - (alpha-1)*rho_star + beta^{i}tilde(S)_{i}
+  //
+  // The magnetic fields in (TODO: library name) also need to be
+  // rescaled by a factor of sqrt(4pi).
 
   double uu = -cons_undens->tau*metric->lapse - (metric->lapse-1.0)*cons_undens->rho +
     metric->betax*cons_undens->S_x + metric->betay*cons_undens->S_y  + metric->betaz*cons_undens->S_z;
@@ -598,7 +609,6 @@ tmp++;
 //  if( (robust_isfinite(f)==0) ||  (robust_isfinite(df)==0) ) {
 //    return(2);
 //  }
-
 
   if( fabs(errx) > MIN_NEWT_TOL){
     return(1);

@@ -9,5 +9,8 @@ migrate to other modules, such as an EOS library.
 
 This code does *not* depend on the Einstein Toolkit or Cactus framework, though this
 repository is currently being tested within that infrastructure. All functions except
-the included con2prim_test.cc have no references to Cactus parameters or header files.
+the included C2P_test_suite.c have no references to Cactus parameters or header files.
 
+The test code provides a clean example of how to use the library's functions. After
+the initial randomized data is set up and copies of the original primitives are set,
+the remaining code is the C2P routine in its entirety.

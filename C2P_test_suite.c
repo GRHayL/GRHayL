@@ -142,7 +142,7 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
         for(int i=0;i<13;i++) rand_val[i] = 1.0 + randf(-1,1)*1.0e-15;
       }
 
-    CCTK_VINFO("Beginning %s test", suffix);
+    printf("Beginning %s test\n", suffix);
 //    printf("Beginning %s test for routine %s\n",con2prim_test_names[which_routine]);
 
       char filename[100];
@@ -179,27 +179,41 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
         const double By    = -Bhaty * B;
         const double Bz    = -Bhatz * B;
 
-        const double gxx = 1.0;// + randf(0.0,100.0);
-        const double gyy = 1.0;// + randf(0.0,100.0);
-        const double gzz = 1.0;// + randf(0.0,100.0);
-        const double gxy = 0.0;//randf(-1.0e-1,1.0e-1);
-        const double gxz = 0.0;//randf(-1.0e-1,1.0e-1);
-        const double gyz = 0.0;//randf(-1.0e-1,1.0e-1);
+        const double gxx = 1.0 + randf(0.0,100.0);
+        const double gyy = 1.0 + randf(0.0,100.0);
+        const double gzz = 1.0 + randf(0.0,100.0);
+        const double gxy = randf(-1.0e-1,1.0e-1);
+        const double gxz = randf(-1.0e-1,1.0e-1);
+        const double gyz = randf(-1.0e-1,1.0e-1);
 
-        const double lapse = 1.0;//randf(-1.0e-10,1.0);
+        const double lapse = randf(-1.0e-10,1.0);
 
-        const double betax = 0.0;//randf(0.0,1.0);
-        const double betay = 0.0;//sqrt(v*v - betax*betax)*randf(0.0,1.0);
-        const double betaz = 0.0;//sqrt(v*v - betax*betax - betay*betay);
+        const double betax = v*randf(0.0,1.0);
+        const double betay = sqrt(v*v - betax*betax)*randf(0.0,1.0);
+        const double betaz = sqrt(v*v - betax*betax - betay*betay);
+printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
 
-        // Set the metric to flat space
+//        const double gxx = 1.0;// + randf(0.0,100.0);
+//        const double gyy = 1.0;// + randf(0.0,100.0);
+//        const double gzz = 1.0;// + randf(0.0,100.0);
+//        const double gxy = 0.0;//randf(-1.0e-1,1.0e-1);
+//        const double gxz = 0.0;//randf(-1.0e-1,1.0e-1);
+//        const double gyz = 0.0;//randf(-1.0e-1,1.0e-1);
+//
+//        const double lapse = 1.0;//randf(-1.0e-10,1.0);
+//
+//        const double betax = 0.0;//randf(0.0,1.0);
+//        const double betay = 0.0;//sqrt(v*v - betax*betax)*randf(0.0,1.0);
+//        const double betaz = 0.0;//sqrt(v*v - betax*betax - betay*betay);
+
+        // Store the metric randomized values into the structs
         metric_quantities metric;
         initialize_metric(&metric, lapse,  // phi, psi, lapse
                           gxx, gxy, gxz,  // gxx, gxy, gxz
                           gyy, gyz, gzz,  // gyy, gyz, gzz
                           betax, betay, betaz); // betax, betay, betaz
 
-        conservative_quantities cons, cons_undens; // Not initialized because it will be filled based on primitive data.
+        conservative_quantities cons, cons_orig, cons_undens; // Not initialized because it will be filled based on primitive data.
 
         primitive_quantities prims, prims_orig, prims_guess;
         initialize_primitives(&eos, &metric,
@@ -209,7 +223,6 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
                               &prims);
         prims.print = true;
 
-CCTK_VINFO("MetAux %e %e\n %e %e %e", metric.lapse, metric.lapseinv, metric.psi2, metric.psi4, metric.psi6);
         // Define the stress_energy struct
         stress_energy Tmunu;
 
@@ -220,11 +233,12 @@ CCTK_VINFO("MetAux %e %e\n %e %e %e", metric.lapse, metric.lapseinv, metric.psi2
 
         // Store original prims
         prims_orig = prims;
+        cons_orig = cons;
 
-        CCTK_VINFO("Initial conservatives:\n %.16e %.16e\n"
-           "  %.16e %.16e %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
-        fprintf(outfile, "Initial conservatives:\n %.16e %.16e\n"
-           "  %.16e %.16e %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+        printf("Initial primitives:\n %.16e\n %.16e\n"
+           "  %.16e\n %.16e\n %.16e\n", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
+        printf("Initial conservatives:\n %.16e\n %.16e\n"
+           "  %.16e\n %.16e\n %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
         //This is meant to simulate some round-off error that deviates from the "true" values that we just computed.
         if(rand==1) {
           prims.rho   *= rand_val[0];
@@ -240,26 +254,31 @@ CCTK_VINFO("MetAux %e %e\n %e %e %e", metric.lapse, metric.lapseinv, metric.psi2
           cons.S_y    *= rand_val[10];
           cons.S_z    *= rand_val[11];
           cons.tau    *= rand_val[12];
-        fprintf(outfile, "Perturbed conservatives:\n %.16e %.16e\n"
-           "  %.16e %.16e %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+        printf("Perturbed conservatives:\n %.16e\n %.16e\n"
+           "  %.16e\n %.16e\n %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
         }
 
-        //This applies the inequality (or "Faber") fixes on the conservatives
-        apply_tau_floor(&params, &eos, &metric, &prims, &cons, &diagnostics);
-
-        // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
-        undensitize_conservatives(&eos, con2prim_test_keys[which_routine], &metric, &prims, &cons, &cons_undens);
-
-        // The con2prim routines require primitive guesses in order to perform
-        // the recovery. In IllinoisGRMHD, we do not keep track of the primitives
-        // in between time steps, and therefore our guesses are *not* the
-        // values of the primitives in the previous time level. Instead, we provide
-        // guesses based on the conservative variables.
         int check = 0;
+        if(cons.rho > 0.0) {
 
-        for(int which_guess=1;which_guess<=2;which_guess++) {
-          guess_primitives(&eos, con2prim_test_keys[which_routine], which_guess,
-                           &metric, &prims, &cons, &prims_guess);
+          //This applies the inequality (or "Faber") fixes on the conservatives
+          if(eos.eos_type == 0) //Hybrid-only
+            apply_tau_floor(&params, &eos, &metric, &prims, &cons, &diagnostics);
+
+          // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
+          undensitize_conservatives(&eos, con2prim_test_keys[which_routine], &metric, &prims, &cons, &cons_undens);
+
+          // The con2prim routines require primitive guesses in order to perform
+          // the recovery. In IllinoisGRMHD, we do not keep track of the primitives
+          // in between time steps, and therefore our guesses are *not* the
+          // values of the primitives in the previous time level. Instead, we provide
+          // guesses based on the conservative variables.
+
+          /************* Conservative-to-primitive recovery ************/
+
+          for(int which_guess=1;which_guess<=2;which_guess++) {
+            guess_primitives(&eos, con2prim_test_keys[which_routine], which_guess,
+                             &metric, &prims, &cons, &prims_guess);
 
 /*Why was it getting set to 1e300 right after setting the guess?
           for(int i=0;i<numprims;i++) prim[i] = 1e300;
@@ -275,30 +294,53 @@ CCTK_VINFO("MetAux %e %e\n %e %e %e", metric.lapse, metric.lapseinv, metric.psi2
           // prim[B2_con  ] = PRIMS[BY_CENTER  ];
           // prim[B3_con  ] = PRIMS[BZ_CENTER  ];
 */
-          check = C2P_Select_Hybrid_Method(&eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
-          if( check == 0 ) which_guess = 3;
-        }
+            check = C2P_Select_Hybrid_Method(&eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
+            //If multiple C2P routines are selected as backups, the backup routine logic would go here
+  
+            if(check!=0) {
+              printf("Applying Font Fix\n");
+              check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+              diagnostics.font_fixes++;
+            }
+      /*************************************************************/
+  
+            if(check==0) {
+              prims = prims_guess;
+              which_guess=3; //TODO: can we make the multiple guess loop cleaner?
+            } else {
+              printf("Con2Prim and Font fix failed!");
+              printf("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
+                      diagnostics.failure_checker, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho, prims.Bx, prims.By, prims.Bz,
+                      metric.adm_gxx, metric.adm_gxy, metric.adm_gxz, metric.adm_gyy, metric.adm_gyz, metric.adm_gzz, metric.psi6);
+            }
+          } //If we didn't find a root, then try again with a different guess.
+        } else {
+          diagnostics.failure_checker+=1;
+          reset_prims_to_atmosphere(&eos, &prims, &diagnostics);
+          diagnostics.rho_star_fix_applied++;
+        } // if rho_star > 0
 
         //--------------------------------------------------
         //---------- Primitive recovery completed ----------
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
-        CCTK_VINFO("C2P primitives:\n %.16e %.16e\n"
-           "  %.16e %.16e %.16e\n", prims_guess.rho, prims_guess.press, prims_guess.vx, prims_guess.vy, prims_guess.vz);
-        enforce_limits_on_primitives_and_recompute_conservs(&params, &eos, &metric, &prims_guess, &cons,
+        printf("C2P primitives:\n %.16e\n %.16e\n"
+           "  %.16e\n %.16e\n %.16e\n", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
+        enforce_limits_on_primitives_and_recompute_conservs(&params, &eos, &metric, &prims, &cons,
                                                             TUPMUNU, TDNMUNU, &Tmunu, &diagnostics);
-        CCTK_VINFO("Enforced primitives:\n %.16e %.16e\n"
-           "  %.16e %.16e %.16e\n", prims_guess.rho, prims_guess.press, prims_guess.vx, prims_guess.vy, prims_guess.vz);
+        printf("Enforced primitives:\n %.16e\n %.16e\n"
+           "  %.16e\n %.16e\n %.16e\n", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
 
         primitive_quantities prims_error;
         double accumulated_error = 0.0;
         if( check != 0 ) {
           failures++;
           fprintf(outfile,"Recovery FAILED!\n");
+          printf("Recovery FAILED!\n");
           accumulated_error = 1e300;
         } else {
-          prims = prims_guess;
           fprintf(outfile, "Recovery SUCCEEDED!\n");
+          printf("Recovery SUCCEEDED!\n");
           prims_error.rho     = relative_error(prims.rho,     prims_orig.rho);
           prims_error.press   = relative_error(prims.press,   prims_orig.press);
           prims_error.eps     = relative_error(prims.eps,     prims_orig.eps);

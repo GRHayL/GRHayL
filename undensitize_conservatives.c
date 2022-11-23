@@ -15,7 +15,7 @@ void undensitize_conservatives( const eos_parameters *restrict eos,
                                 const conservative_quantities *restrict cons,
                                 conservative_quantities *restrict cons_undens ) {
 
-  // IllinoisGRMHD's variable is the "densitised" version of
+  // (TODO: library name)'s variable is the "densitized" version of
   // the standard conservative variables (D,tau,S_{i}). In
   // other words, we have the relationships:
   //
@@ -24,32 +24,7 @@ void undensitize_conservatives( const eos_parameters *restrict eos,
   // tilde(S)_i = sqrt(gamma) * S_i
   //
   // Therefore the conversion between the two is straightfoward.
-  //
-  // One important note, however, is that the Noble2D con2prim
-  // routine does not use the variable tau, but instead the
-  // energy variable u which is related to IllinoisGRMHD's
-  // conservatives via the relation:
-  //
-  // u = -alpha*tau - (alpha-1)*rho_star + beta^{i}tilde(S)_{i}
-  //
-  // The magnetic fields in IllinoisGRMHD also need to be
-  // rescaled by a factor of sqrt(4pi). In the case of
-  // the Noble2D routine, an extra factor of the lapse
-  // is also required.
-  //
-  // Now let us begin the conversion.
 
-  // First compute alpha*sqrt(gamma) = alpha*psi^(6)
-
-  // Finally compute the remaining quantities (which are routine specific)
-
-  // Note that in the c2p routine we used to
-  // multiply the cons vector by alpha/detg.
-  // But this is equivalent to:
-  //
-  // alpha/detg = alpha/( alpha*sqrt(gamma) )
-  //            = alpha/( alpha*psi^6 )
-  //            = psi^{-6}
   const double psim6 = 1.0/metric->psi6;
 
   cons_undens->rho = cons->rho * psim6;

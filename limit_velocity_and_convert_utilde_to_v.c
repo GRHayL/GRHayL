@@ -1,6 +1,5 @@
 #include "con2prim_header.h"
 
-//TODO: this can also reset rho_b (prims->rho)
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
 void limit_velocity_and_convert_utilde_to_v( const eos_parameters *restrict eos,
