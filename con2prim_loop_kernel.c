@@ -96,10 +96,8 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
       }
       /*************************************************************/
   
-      if(check!=0) {
+      if(check!=0)
         check = font_fix(eos, metric, cons, prims, &prims_guess, diagnostics);
-        diagnostics->font_fixes++;
-      }
   
       if(check==0) {
   //       Check for NAN!
