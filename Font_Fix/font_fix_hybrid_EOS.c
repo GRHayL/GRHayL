@@ -1,5 +1,5 @@
 #include "con2prim_header.h"
-#include "../EOS/EOS_hybrid_header.h"
+#include "../EOS/Hybrid/EOS_hybrid_header.h"
 
 /**********************************
  * Piecewise Polytropic EOS Patch *

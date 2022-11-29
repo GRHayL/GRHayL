@@ -26,6 +26,8 @@
 */
 
 #include "GRMHD_header.h"
+#include <stdio.h>
+static bool print;
 
 // HARM uses lots of globals. These auxiliary variables
 // allow us to pass useful quantities to the con2prim
@@ -143,7 +145,6 @@ static inline double pressure_rho0_w(const eos_parameters *restrict eos, const d
    * | p(rho_b,w) = ( P_cold + (Gamma_th-1)*( w - rho_b*(1+eps_cold) ) )/Gamma_th |
    *  ----------------------------------------------------------------------------
    */
-//printf("  new P=%.16e from\n   rho0=%.16e\n   gamma_th=%.16e,\n   w=%.16e\n",( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0+eps_cold) ) )/eos->Gamma_th ), rho0, eos->Gamma_th, w);
 //  return( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0+eps_cold) ) )/eos->Gamma_th );
   return((eos->Gamma_th-1.0)*(w - rho0)/eos->Gamma_th ) ;
 }

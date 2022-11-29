@@ -1,22 +1,29 @@
-// Thorn      : IllinoisGRMHD
-// File       : con2prim_set_cons_and_prim_from_CONSERVS_and_PRIMS.cc
-// Author(s)  : Leo Werneck (wernecklr@gmail.com)
-// Description: This provides functions which 1. convert IllinoisGRMHD's set
-//              of conservative variables into the appropriate variables
-//              required by the C2P routines and 2. set appropriate primitive
-//              guesses.
-
 #include "con2prim_header.h"
 
-void undensitize_conservatives( const eos_parameters *restrict eos,
-                                const int c2p_key,
-                                const metric_quantities *restrict metric,
-                                const primitive_quantities *restrict prims,
+/* Function    : undensitize_conservatives()
+ * Authors     : Leo Werneck and Samuel Cupp
+ * Description : this function takes a conservative_quantities struct cons with
+ *               densitized variables and computes the undensitized variables,
+ *               which are stored in the struct cons_undens
+ * Dependencies: None
+ *
+ * Inputs      : metric         - an initialized metric_quantities struct
+ *                                with data for the same gridpoint as cons
+ * Inputs      : cons           - an initialized conservative_quantities
+ *                                struct with data for the same gridpoint as
+ *                                metric
+ *
+ * Outputs     : cons_undens    - conservative_quantities struct filled with
+ *                                the undensitized variables associated with
+ *                                cons
+ */
+
+void undensitize_conservatives( const metric_quantities *restrict metric,
                                 const conservative_quantities *restrict cons,
                                 conservative_quantities *restrict cons_undens ) {
 
-  // (TODO: library name)'s variable is the "densitized" version of
-  // the standard conservative variables (D,tau,S_{i}). In
+  // (TODO: library name)'s variables are the "densitized" versions
+  // of the standard conservative variables (D,tau,S_{i}). In
   // other words, we have the relationships:
   //
   // rho_star   = sqrt(gamma) *  D

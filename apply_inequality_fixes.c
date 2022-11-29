@@ -1,39 +1,32 @@
 #include "con2prim_header.h"
 #include <stdio.h>
 
-// This subroutine calculates the eigenvalues of a real, symmetric 3x3
-// matrix M={{M11,M12,M13},{M12,M22,M23},{M13,M23,M33}} based on the
-// algorithm described in
-// http://en.wikipedia.org/wiki/Eigenvalue_algorithm#Eigenvalues_of_3.C3.973_matrices
-// which simply solve the cubic equation Det( M - lamnda I)=0 analytically.
-// The eigenvalues are stored in lam1, lam2 and lam3.
-inline void eigenvalues_3by3_real_sym_matrix(double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
-                                      const double M11, const double M12, const double M13,
-                                      const double M22, const double M23, const double M33) {
-  double m = (M11 + M22 + M33)/3.0;
-  double K11 = M11 - m, K12 = M12, K13 = M13, K22 = M22-m, K23 = M23, K33=M33-m;
-  double q = 0.5* (K11*K22*K33 + K12*K23*K13 + K13*K12*K23 - K13*K22*K13
-                      - K12*K12*K33 - K11*K23*K23);
-  double p = ( SQR(K11) + SQR(K22) + SQR(K33) + 2.0*(SQR(K12) + SQR(K13) + SQR(K23) ) )/6.0;
+/* Function    : apply_inequality_fixes()
+ * Authors     : ?
+ * Description : This function checks whether tau tilde and S tilde
+ *               obey the inequalities constraining their possible values.
+ *               If they are outside these bounds, the function enforces
+ *               the inequalities and updates the diagnostic data.
+ *               
+ * Dependencies: eigenvalues_3by3_real_sym_matrix()
+ *
+ * Inputs      : params         - GRMHD_parameters struct with parameters
+ *                                for the simulation
+ *             : eos            - eos_parameters struct with data for the
+ *                                EOS of the simulation
+ *             : metric         - metric_quantities struct with data for
+ *                                the gridpoint of interest
+ *             : prims          - primitive_quantities struct with data
+ *                                for the gridpoint of interest
+ *
+ * Outputs     : cons           - conservative_quantities struct with potentially
+ *                                different values for cons->tau and cons->S_*
+ *             : diagnostics    - con2prim_diagnostics struct which tracks whether
+ *                                any of the inequality conditions were violated
+ *                                and required the conservatives to be adjusted
+ */
 
-  double phi;
-  double p32 = sqrt(p*p*p);
-  if (fabs(q) >= fabs(p32) ) {
-    phi = 0.0;
-  } else {
-    phi = acos(q/p32)/3.0;
-  }
-  if (phi<0.0) phi += M_PI/3.0;
-
-  double sqrtp = sqrt(p);
-  double sqrtp_cosphi = sqrtp*cos(phi);
-  double sqrtp_sqrt3_sinphi = sqrtp*sqrt(3.0)*sin(phi);
-  *lam1 = m + 2.0*sqrtp_cosphi;
-  *lam2 = m - sqrtp_cosphi - sqrtp_sqrt3_sinphi;
-  *lam3 = m - sqrtp_cosphi + sqrtp_sqrt3_sinphi;
-}
-
-int apply_tau_floor(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
+int apply_inequality_fixes(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
                            metric_quantities *restrict metric, const primitive_quantities *restrict prims,
                            conservative_quantities *restrict cons, con2prim_diagnostics *restrict diagnostics) {
 
@@ -103,7 +96,6 @@ int apply_tau_floor(const GRMHD_parameters *restrict params, const eos_parameter
   //   BbardotS *= fac_reduce;
   //   CONSERVS[STILDEX] = CONSERVS[STILDEX]; CONSERVS[STILDEY] = CONSERVS[STILDEY]; CONSERVS[STILDEZ] = CONSERVS[STILDEZ];
   //}
-
 
   double sdots= metric->adm_gupxx*SQR(cons->S_x)+metric->adm_gupyy*SQR(cons->S_y)+metric->adm_gupzz*SQR(cons->S_z)+2.0*
     (metric->adm_gupxy*cons->S_x*cons->S_y+metric->adm_gupxz*cons->S_x*cons->S_z+metric->adm_gupyz*cons->S_y*cons->S_z);

@@ -2,8 +2,6 @@
 
 # Source files in this directory that need compiled:
 SRCS = \
-       compute_P_cold_and_eps_cold.c \
-       EOS_hybrid.c \
        initialize_eos.c \
        prims_enforce_extrema_and_recompute.c \
        reset_prims_to_atmosphere.c

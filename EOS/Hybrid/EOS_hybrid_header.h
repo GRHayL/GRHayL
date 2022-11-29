@@ -5,6 +5,10 @@
 
 int find_polytropic_K_and_Gamma_index(const eos_parameters *restrict eos, const double rho_in);
 
+void compute_P_cold_and_eps_cold(
+             const eos_parameters *restrict eos, const double rho_in,
+             double *restrict P_cold_ptr, double *restrict eps_cold_ptr);
+
 void compute_entropy_function( const eos_parameters *restrict eos, const double rho,
                                const double P, double *restrict S );
 

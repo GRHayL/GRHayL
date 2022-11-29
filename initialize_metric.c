@@ -1,15 +1,41 @@
 #include "con2prim_header.h"
 
-/* This function fills the struct metric_quantities with data. The g**
-   arguments are the ADM variables. For more information on the
-   arguments, see the definition of the struct in new_header.h. */
+/* Function    : initialize_metric()
+ * Authors     : Samuel Cupp
+ * Description : Initialize the metric struct from user
+ *               input
+ * Dependencies: None
+ *
+ * Inputs      : lapse          - the value of the lapse
+ *             : gxx            - the value of the (1,1) component of the
+ *                                cartesian ADM metric
+ *             : gxy            - the value of the (1,2) component of the
+ *                                cartesian ADM metric
+ *             : gxz            - the value of the (1,3) component of the
+ *                                cartesian ADM metric
+ *             : gyy            - the value of the (2,2) component of the
+ *                                cartesian ADM metric
+ *             : gyz            - the value of the (2,3) component of the
+ *                                cartesian ADM metric
+ *             : gzz            - the value of the (3,3) component of the
+ *                                cartesian ADM metric
+ *             : betax          - the value of the x component of the shift
+ *             : betay          - the value of the y component of the shift
+ *             : betaz          - the value of the z component of the shift
+ *
+ * Outputs     : metric         - fully initialized metric_quantities struct
+ *                                containing the input data along with
+ *                                additional auxiliary data computed from
+ *                                the input
+ */
 
-//We could consider allowing the struct to be either BSSN or ADM in the future if
+//TODO: We could consider allowing the struct to be either BSSN or ADM in the future if
 //we ever need a BSSN struct by having initialize_BSSN and initialize_ADM functions.
-void initialize_metric(metric_quantities *restrict metric, const double lapse,
+void initialize_metric(const double lapse,
                 const double gxx, const double gxy, const double gxz,
                 const double gyy, const double gyz, const double gzz,
-                const double betax, const double betay, const double betaz) {
+                const double betax, const double betay, const double betaz,
+                metric_quantities *restrict metric) {
 
   metric->adm_gxx = gxx;
   metric->adm_gxy = gxy;

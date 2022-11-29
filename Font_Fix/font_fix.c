@@ -1,5 +1,5 @@
 #include "con2prim_header.h"
-#include "../EOS/EOS_hybrid_header.h"
+#include "../EOS/Hybrid/EOS_hybrid_header.h"
 #include "../C2P_Routines/harm_u2p_util.h"
 #include <stdio.h>
 
@@ -53,7 +53,6 @@ int font_fix(const eos_parameters *restrict eos,
   limit_velocity_and_convert_utilde_to_v(eos, metric, &u0, &utcon1, &utcon2, &utcon3, prims_guess, diagnostics);
 
   prims_guess->rho = cons->rho/(metric->lapse*u0*metric->psi6);
-  //Next set P = P_cold:
 
   /**********************************
    * Piecewise Polytropic EOS Patch *

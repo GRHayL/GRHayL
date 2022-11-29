@@ -1,4 +1,33 @@
+#include <stdio.h>
 #include "con2prim_header.h"
+
+/* Function    : limit_velocity_and_convert_utilde_to_v()
+ * Authors     : Samuel Cupp
+ * Description : Initialize the primitives struct from user
+ *               input
+ * Dependencies: None
+ *
+ * Inputs      : eos             - an initialized eos_parameters struct
+ *                                 with data for the EOS of the simulation
+ *             : metric          - an initialized metric_quantities struct
+ *                                 with data for the gridpoint of interest
+ *             : u0_ptr          - an initialized conservative_quantities
+ *                                 struct with data for the gridpoint of
+ *                                 interest
+ *             : utcon1_ptr      - pointer to the x component of u tilde
+ *             : utcon2_ptr      - pointer to the y component of u tilde
+ *             : utcon3_ptr      - pointer to the z component of u tilde
+ *
+ * Outputs     : utcon1_ptr      - if velocity is limited, data of utcon1 is changed
+ *             : utcon2_ptr      - if velocity is limited, data of utcon2 is changed
+ *             : utcon3_ptr      - if velocity is limited, data of utcon3 is changed
+ *             : u0_ptr          - 
+ *             : prims           - primitive_quantities struct containing the
+ *                                 velocities v calculated from the (velocity-
+ *                                 limited) u tilde
+ *             : diagnostics     - con2prim_diagnostics struct which
+ *                                 tracks if the velocity was limited
+ */
 
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
@@ -22,7 +51,7 @@ void limit_velocity_and_convert_utilde_to_v( const eos_parameters *restrict eos,
     metric->adm_gzz*SQR(utcon3);
   double au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
   double u0 = (au0m1+1.0)*metric->lapseinv;
-  
+
   // *** Limit velocity
   if (au0m1 > 0.9999999*(eos->W_max-1.0)) {
     double fac = sqrt((SQR(eos->W_max)-1.0)/(SQR(1.0+au0m1) - 1.0));

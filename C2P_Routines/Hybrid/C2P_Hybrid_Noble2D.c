@@ -1,5 +1,5 @@
 #include "con2prim_header.h"
-#include "../../EOS/EOS_hybrid_header.h"
+#include "../../EOS/Hybrid/EOS_hybrid_header.h"
 #include "../harm_u2p_util.h"
 #include <stdio.h>
 
@@ -216,20 +216,20 @@ int C2P_Hybrid_Noble2D( const eos_parameters *restrict eos,
   new_prims[BCON3] = new_cons[B3_con];
   new_prims[WLORENTZ] = 1.0;
 //Additional tabulated code here
-
+print = prims->print;
 
 if(prims->print) {
-//printf("old_prims: rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
-//printf("           ~u=(%.16e, %.16e, %.16e)\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-//printf("           B=(%.16e, %.16e, %.16e)\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
-//printf("     cons: rho=%.16e\n u=%.16e\n S=(%.16e, %.16e, %.16e)\n", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
-//printf("           B=(%.16e, %.16e, %.16e)\n",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
+printf("old_prims:\n rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
+printf(" ~u=%.16e\n   %.16e\n   %.16e\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+printf("cons:\n rho=%.16e\n u=%.16e\n S=%.16e\n   %.16e\n   %.16e\n", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
+printf(" B=%.16e\n   %.16e\n   %.16e\n",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
 }
   int retval = Utoprim_new_body(eos, new_cons, metric->g4dn, metric->g4up, new_prims);
 if(prims->print) {
-printf("new_prims: rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
-printf("           ~u=(%.16e, %.16e, %.16e)\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-printf("           B=(%.16e, %.16e, %.16e)\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+printf("new_prims:\n rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
+printf(" ~u=%.16e\n   %.16e\n   %.16e\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
 }
 
   if(retval==0) {
@@ -240,8 +240,12 @@ printf("           B=(%.16e, %.16e, %.16e)\n",new_prims[BCON1],new_prims[BCON2],
     limit_velocity_and_convert_utilde_to_v(eos, metric, &u0, &new_prims[UTCON1], &new_prims[UTCON2],
                                            &new_prims[UTCON3], prims, diagnostics);
 
+    if(diagnostics->vel_limited_ptcount==1)
+      prims->rho = cons_undens->rho/(metric->lapse*u0);
 
     prims->press = pressure_rho0_u(eos, prims->rho,new_prims[UU]);
+
+//TODO: consider moving call to enforce primitives limit here from enforce... function in IGM_functions.c
   }
 
   return retval;
@@ -336,6 +340,8 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
 
   harm_aux.Qsq = 0. ;
   for(i=0;i<4;i++) harm_aux.Qsq += Qcov[i]*Qcon[i] ;
+//if(print) printf("Qcov\n %.16e\n %.16e\n %.16e\n %.16e\n",  Qcov[0],  Qcov[1],  Qcov[2],  Qcov[3]);
+//if(print) printf("Qcon\n %.16e\n %.16e\n %.16e\n %.16e\n",  Qcon[0],  Qcon[1],  Qcon[2],  Qcon[3]);
 
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn ;
 
@@ -404,6 +410,7 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   x_2d[0] =  fabs( W_last );
   x_2d[1] = x1_of_x0( &harm_aux, W_last ) ;
 
+//if(print) printf("harm:\n %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n", harm_aux.Bsq, harm_aux.QdotBsq, harm_aux.Qsq, harm_aux.Qtsq, harm_aux.Qdotn, harm_aux.QdotB, harm_aux.D, harm_aux.gamma);
   retval = general_newton_raphson( eos, &harm_aux, x_2d, n, func_vsq) ;
 
   W = x_2d[0];
@@ -426,6 +433,11 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
     //return(retval) ;
   }
 
+  if(vsq < 0.0) {
+    //v should be real!
+    return(5);
+  }
+
   // Recover the primitive variables from the scalars and conserved variables:
   gtmp = sqrt(1. - vsq);
   harm_aux.gamma = 1./gtmp ;
@@ -439,13 +451,13 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   prims[RHO] = rho0 ;
   prims[UU ] = u ;
 
-  if( (rho0 <= 0.) || (u <= 0.) ) {
-    // User may want to handle this case differently, e.g. do NOT return upon
-    // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-
-    retval = 5;
-    //return(retval) ;
-  }
+//  if( (rho0 <= 0.) || (u <= 0.) ) {
+//    // User may want to handle this case differently, e.g. do NOT return upon
+//    // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
+//
+//    retval = 5;
+//    //return(retval) ;
+//  }
 
   for(i=1;i<4;i++) Qtcon[i] = Qcon[i] + ncon[i] * harm_aux.Qdotn;
   for(i=1;i<4;i++) prims[UTCON1+i-1] = harm_aux.gamma/(W+harm_aux.Bsq) * ( Qtcon[i] + harm_aux.QdotB*Bcon[i]/W ) ;
@@ -610,7 +622,9 @@ tmp++;
 //    return(2);
 //  }
 
+//if(print) printf("GNR error %.16e with MIN_NEWT_TOL %.16e and NEWT_TOL %.16e\n", fabs(errx), MIN_NEWT_TOL, NEWT_TOL);
   if( fabs(errx) > MIN_NEWT_TOL){
+//if(print) printf("C2P failed with retval 1.\n");
     return(1);
   }
   if( (fabs(errx) <= MIN_NEWT_TOL) && (fabs(errx) > NEWT_TOL) ){

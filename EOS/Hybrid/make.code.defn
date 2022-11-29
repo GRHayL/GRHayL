@@ -1,0 +1,8 @@
+# Main make.code.defn file for thorn Baikal
+
+# Source files in this directory that need compiled:
+SRCS = \
+       compute_entropy_function.c \
+       compute_P_cold_and_eps_cold.c \
+       find_polytropic_K_and_Gamma_index.c \
+       setup_K_ppoly_tab_and_eps_integ_consts.c

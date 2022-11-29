@@ -1,11 +1,27 @@
 #include "con2prim_header.h"
 
-/* This function fills the struct conservative_quantities with data. 
-   For more information on the arguments, see the definition of the
-   struct in new_header.h. */
+/* Function    : initialize_conservatives()
+ * Authors     : Samuel Cupp
+ * Description : Initialize the conservative struct from user
+ *               input
+ * Dependencies: None
+ *
+ * Inputs      : rho             - value of rho_star (densitized density)
+ *             : tau             - value of tau tilde (densitized energy
+ *                                 variable)
+ *             : S_x             - value of the x component of S tilde
+ *                                 (densitized momentum variable)
+ *             : S_y             - value of the y component of S tilde
+ *                                 (densitized momentum variable)
+ *             : S_z             - value of the z component of S tilde
+ *                                 (densitized momentum variable)
+ *             : entropy         - value of densitized entropy
+ *
+ * Outputs     : cons            - fully initialized conservative_quantities
+ *                                 struct containing the input data
+ */
+
 void initialize_conservatives(
-             const GRMHD_parameters *restrict params,
-             const eos_parameters *restrict eos,
              const double rho, const double tau,
              const double S_x, const double S_y, const double S_z,
              const double Y_e, const double entropy,
@@ -15,10 +31,6 @@ void initialize_conservatives(
   cons->S_y = S_y;
   cons->S_z = S_z;
   cons->tau = tau;
-  if( eos->eos_type == 1) {
-    cons->Y_e = Y_e;
-  }
-  if( params->evolve_entropy ) {
-    cons->entropy = entropy;
-  }
+  cons->Y_e = Y_e;
+  cons->entropy = entropy;
 }

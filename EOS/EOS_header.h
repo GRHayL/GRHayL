@@ -89,30 +89,23 @@ typedef struct eos_parameters {
 
 //---------- Initialization routines ---------------
 void initialize_general_eos(
-             eos_parameters *restrict eos,
              const int type, const double tau_atm, const double W_max,
-             const double eps_atm, const double eps_min, const double eps_max,
-             const double press_atm, const double press_min, const double press_max,
              const double entropy_atm, const double entropy_min, const double entropy_max,
-             const double rho_atm, const double rho_min, const double rho_max);
+             const double rho_atm, const double rho_min, const double rho_max,
+             eos_parameters *restrict eos);
 
 void initialize_hybrid_eos(
-             eos_parameters *restrict eos,
              const int neos, const double rho_ppoly_tab[],
-             const double Gamma_ppoly_tab[], const double K_ppoly_tab[],
-             const double eps_integ_const[], const double Gamma_th);
+             const double Gamma_ppoly_tab[], const double K_ppoly_tab,
+             const double Gamma_th,
+             eos_parameters *restrict eos);
 
 void initialize_tabulated_eos(
-             eos_parameters *restrict eos,
              const double precision, const double threshold,
              const double temp_atm, const double temp_min, const double temp_max,
-             const double Ye_atm, const double Ye_min, const double Ye_max);
-
+             const double Ye_atm, const double Ye_min, const double Ye_max,
+             eos_parameters *restrict eos);
 //------------------------------------------------
-
-void compute_P_cold_and_eps_cold(
-             const eos_parameters *restrict eos, const double rho_in,
-             double *restrict P_cold_ptr, double *restrict eps_cold_ptr);
 
 #endif // EOS_HEADER_H
 

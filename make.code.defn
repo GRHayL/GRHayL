@@ -2,10 +2,11 @@
 
 # Source files in this directory that need compiled:
 SRCS = \
-       apply_tau_floor.c \
+       apply_inequality_fixes.c \
        con2prim_ETK_interface.c \
        con2prim_loop_kernel.c \
        C2P_test_suite.c \
+       eigen.c \
        guess_primitives.c \
        IGM_functions.c \
        initialize_conservatives.c \
@@ -21,6 +22,7 @@ SRCS = \
 # Subdirectories containing source files (normal compilation)
 # ... directories are listed in bottom-up order
 SUBDIRS = \
-          EOS \
           C2P_Routines/Hybrid \
+          EOS \
+          EOS/Hybrid \
           Font_Fix

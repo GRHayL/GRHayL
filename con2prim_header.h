@@ -59,6 +59,7 @@ static const int CerdaDuran3D = 5;
 static const int Palenzuela1D = 6;
 static const int Palenzuela1D_entropy = 7;
 static const int Newman1D = 8;
+static const int OldNoble2D = 20;
 
 //--------------------------------------------------
 
@@ -67,7 +68,20 @@ static const int Newman1D = 8;
    The struct con2prim_diagnostics contains variables for error-checking and
    diagnostic feedback. The struct elements are detailed below:
 
- --failures: TODO
+ --TODO
+
+TODO: consider changing failure_checker to be bitwise; failure modes are currently
+      1: atmosphere reset when rho_star < 0
+      10: reseting P when P<P_min in enforce_...
+      100: reseting P when P>P_max in enforce_...
+      1k: Limiting velocity u~ after C2P/Font Fix or v in enforce_...
+      10k: Font Fix was applied
+      100k: Both C2P and Font Fix failed
+      1M: tau~ was reset in apply_inequality_fixes
+      10M: S~ was reset in apply_inequality_fixes via the first case
+      100M: S~ was reset in apply_inequality_fixes via the second case
+For bitwise, would become 1, 2, 4, 8, 16, 32. 64, 128, and 256
+https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
 
 typedef struct con2prim_diagnostics {
@@ -86,6 +100,7 @@ typedef struct con2prim_diagnostics {
   int c2p_fail_flag;
   double error_int_numer;
   double error_int_denom;
+  int n_iter;
 } con2prim_diagnostics;
 
 /*
@@ -182,8 +197,6 @@ void reset_prims_to_atmosphere( const eos_parameters *restrict eos,
 void initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
 
 void initialize_primitives(
-             const eos_parameters *restrict eos,
-             const metric_quantities *restrict metric,
              const double rho, const double press, const double epsilon,
              const double vx, const double vy, const double vz,
              const double Bx, const double By, const double Bz,
@@ -191,8 +204,6 @@ void initialize_primitives(
              primitive_quantities *restrict prims);
 
 void initialize_conservatives(
-             const GRMHD_parameters *restrict params,
-             const eos_parameters *restrict eos,
              const double rho, const double tau,
              const double S_x, const double S_y, const double S_z,
              const double Y_e, const double entropy,
@@ -203,7 +214,6 @@ void initialize_conservatives(
 //--------- C2P data return routines ---------------
 
 void return_primitives(
-             const eos_parameters *restrict eos,
              const primitive_quantities *restrict prims,
              double *restrict rho, double *restrict press, double *restrict epsilon,
              double *restrict vx, double *restrict vy, double *restrict vz,
@@ -211,8 +221,6 @@ void return_primitives(
              double *restrict entropy, double *restrict Y_e, double *restrict temp);
 
 void return_conservatives(
-             const GRMHD_parameters *restrict params,
-             const eos_parameters *restrict eos,
              const conservative_quantities *restrict cons,
              double *restrict rho, double *restrict tau,
              double *restrict S_x, double *restrict S_y, double *restrict S_z,
@@ -243,7 +251,14 @@ int C2P_Hybrid_Noble2D(
              primitive_quantities *restrict prim,
              con2prim_diagnostics *restrict diagnostics);
 
-int  apply_tau_floor(
+int C2P_Hybrid_OldNoble2D(
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             const conservative_quantities *restrict cons,
+             primitive_quantities *restrict prim,
+             con2prim_diagnostics *restrict diagnostics);
+
+int  apply_inequality_fixes(
              const GRMHD_parameters *restrict params,
              const eos_parameters *restrict eos,
              metric_quantities *restrict metric,
@@ -252,15 +267,13 @@ int  apply_tau_floor(
              con2prim_diagnostics *restrict diagnostics);
 
 void undensitize_conservatives(
-             const eos_parameters *restrict eos, const int c2p_key,
              const metric_quantities *restrict metric,
-             const primitive_quantities *restrict prims,
              const conservative_quantities *restrict cons,
              conservative_quantities *restrict cons_undens);
 
 void guess_primitives(
              const eos_parameters *restrict eos,
-             const int c2p_key, const int which_guess,
+             const int which_guess,
              const metric_quantities *restrict metric,
              const primitive_quantities *restrict prims,
              const conservative_quantities *restrict cons,
@@ -274,6 +287,10 @@ void limit_velocity_and_convert_utilde_to_v(
              primitive_quantities *restrict prims,
              con2prim_diagnostics *restrict diagnostics);
 
+void eigenvalues_3by3_real_sym_matrix(
+             double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
+             const double M11, const double M12, const double M13,
+             const double M22, const double M23, const double M33);
 //--------------------------------------------------
 
 //-------------- Font Fix routines -----------------

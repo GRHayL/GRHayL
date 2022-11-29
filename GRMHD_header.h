@@ -116,15 +116,17 @@ typedef struct stress_energy {
   double Tyy, Tyz, Tzz;
 } stress_energy;
 
-void initialize_parameters(GRMHD_parameters *restrict params,
+void initialize_parameters(
              const int main, const int backup[3], const int evolve_entropy,
              const int evolve_temp, const int calc_prim_guess,
-             const double psi6threshold, const int update_Tmunu);
+             const double psi6threshold, const int update_Tmunu,
+             GRMHD_parameters *restrict params);
 
-void initialize_metric(metric_quantities *restrict metric, const double lapse,
+void initialize_metric(const double lapse,
              const double gxx, const double gxy, const double gxz,
              const double gyy, const double gyz, const double gzz,
-             const double betax, const double betay, const double betaz);
+             const double betax, const double betay, const double betaz,
+             metric_quantities *restrict metric);
 
 //--------------------------------------------------
 

@@ -1,64 +1,56 @@
 #include "con2prim_header.h"
-#include "EOS_hybrid_header.h"
+#include "Hybrid/EOS_hybrid_header.h"
 
 /* The functions initialize_general_eos, initialize_hybrid_eos, and initialize_tabulated_eos
    fill the struct eos_parameters with data. Depending on which eos is being using, an eos-
    specific function must be called to fill in the eos parameters. The initialize_general_eos
    should be called regardless of eos, as it contains the common parameters that are generally
    needed. For more information on the arguments, see the definition of the struct in new_header.h. */
-void initialize_general_eos(eos_parameters *restrict eos, const int type,
+void initialize_general_eos(const int type,
                 const double tau_atm, const double W_max,
-                const double eps_atm, const double eps_min, const double eps_max, //get rid of eps values? we can compute them
-                const double press_atm, const double press_min, const double press_max, //get rid of pressure values? we can compute them
                 const double entropy_atm, const double entropy_min, const double entropy_max,
-                const double rho_atm, const double rho_min, const double rho_max) { //let explicit setting of min, or assume atm?
+                const double rho_atm, const double rho_min, const double rho_max, //let explicit setting of min, or assume atm?
+                eos_parameters *restrict eos) {
   eos->eos_type = type;
   eos->tau_atm = tau_atm;
   eos->W_max = W_max;
   eos->inv_W_max_squared = 1.0/W_max;
-//  eos->eps_atm = eps_atm;
-//  eos->eps_min = eps_min;
-//  eos->eps_max = eps_max;
-//  eos->press_atm = press_atm;
-//  eos->press_min = press_min;
-//  eos->press_max = press_max;
   eos->entropy_atm = entropy_atm;
   eos->entropy_min = entropy_min;
   eos->entropy_max = entropy_max;
   eos->rho_atm = rho_atm;
 //  eos->rho_min = rho_min;
   eos->rho_max = rho_max;
-
-//eps and pressure values can be set automatically (for hybrid, at least)
 }
 
-void initialize_hybrid_eos(eos_parameters *restrict eos, const int neos,
+void initialize_hybrid_eos(const int neos,
                 const double rho_ppoly_tab[], const double Gamma_ppoly_tab[],
-                const double K_ppoly_tab[], const double eps_integ_const[],
-                const double Gamma_th) {
+                const double K_ppoly_tab0, const double Gamma_th,
+                eos_parameters *restrict eos) {
+
   eos->neos = neos;
-  for (int i=0; i<neos-1; i++) {
-    eos->rho_ppoly_tab[i] = rho_ppoly_tab[i];
-    eos->Gamma_ppoly_tab[i] = Gamma_ppoly_tab[i];
-    eos->K_ppoly_tab[i] = K_ppoly_tab[i];
-    eos->eps_integ_const[i] = eps_integ_const[i];
-  }
-  eos->Gamma_ppoly_tab[neos-1] = Gamma_ppoly_tab[neos-1];
-  eos->K_ppoly_tab[neos-1] = K_ppoly_tab[neos-1];
-  eos->eps_integ_const[neos-1] = eps_integ_const[neos-1];
-  if(neos==1)
-    eos->eps_integ_const[0] = 0.0;
   eos->Gamma_th = Gamma_th;
+  eos->K_ppoly_tab[0] = K_ppoly_tab0;
+  if( neos==1 ) {
+    eos->rho_ppoly_tab[0] = rho_ppoly_tab[0];
+    eos->eps_integ_const[0] = 0.0;
+  } else {
+    for(int j=0; j<=neos-2; j++) eos->rho_ppoly_tab[j] = rho_ppoly_tab[j];
+  }
+  for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly_tab[j] = Gamma_ppoly_tab[j];
+
+  // Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
+  setup_K_ppoly_tab_and_eps_integ_consts(eos);
 
   // --------- Atmospheric values ---------
-  // Compute P and eps atm
-  double press,eps;
+  // Compute atmospheric P and eps
+  double press, eps;
   compute_P_cold_and_eps_cold(eos, eos->rho_atm, &press, &eps);
   // Set atmospheric values
   eos->press_atm = press;
   eos->eps_atm = eps;
 //Leo computes tau_atm like this, but this is a parameter as well. We should choose one.
-//  eos.tau_atm = eos.rho_atm * eos.eps_atm;
+//  eos->tau_atm = eos->rho_atm * eos->eps_atm;
   // --------------------------------------
 
   // -------------- Ceilings --------------
@@ -70,16 +62,19 @@ void initialize_hybrid_eos(eos_parameters *restrict eos, const int neos,
   // --------------------------------------
 
   // --------------- Floors ---------------
-  // We'll choose these as the atmospheric values
+  // We'll choose the minimal values to be atmosphere
   eos->rho_min = eos->rho_atm;
   eos->press_min   = eos->press_atm;
   eos->eps_min = eos->eps_atm;
   // --------------------------------------
 }
 
-void initialize_tabulated_eos(eos_parameters *restrict eos, const double precision, const double threshold,
+
+//Eventually, improve this using initialize_Tabulated_EOS_parameters_from_input()
+void initialize_tabulated_eos(const double precision, const double threshold,
                 const double temp_atm, const double temp_min, const double temp_max,
-                const double Ye_atm, const double Ye_min, const double Ye_max) {
+                const double Ye_atm, const double Ye_min, const double Ye_max,
+                eos_parameters *restrict eos) {
   eos->temp_atm = temp_atm;
   eos->temp_min = temp_min;
   eos->temp_max = temp_max;

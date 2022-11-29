@@ -50,7 +50,7 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
   if(cons->rho>0.0) {
     // Apply the tau floor
     if( eos->eos_type == 0 )
-      apply_tau_floor(params, eos, metric, prims, cons, diagnostics);
+      apply_inequality_fixes(params, eos, metric, prims, cons, diagnostics);
 
 /*************************************************************************/
     // declare some variables for the C2P routine.
@@ -58,21 +58,21 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
     primitive_quantities prims_guess;
 
     // Set the conserved variables required by the con2prim routine
-    undensitize_conservatives( eos, params->main_routine, metric, prims, cons, &cons_undens );
+    undensitize_conservatives(metric, cons, &cons_undens);
   
     /************* Conservative-to-primitive recovery ************/
 
     for(int which_guess=1;which_guess<3;which_guess++) {
 
       // Set primitive guesses
-      guess_primitives( eos, params->main_routine, which_guess, metric, prims, cons, &prims_guess );
+      guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
       int check = C2P_Select_Hybrid_Method(eos, params->main_routine, metric, &cons_undens, &prims_guess, diagnostics);
 
       if( (check != 0) && (params->backup_routine[0] != None) ) {
         // Backup 1 triggered
         diagnostics->backup[0] = 1;
         // Recompute guesses
-        guess_primitives( eos,params->backup_routine[0], which_guess, metric, prims, cons, &prims_guess );
+        guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
         // Backup routine #1
         check = C2P_Select_Hybrid_Method(eos, params->backup_routine[0], metric, &cons_undens, &prims_guess, diagnostics);
 
@@ -80,7 +80,7 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
           // Backup 2 triggered
           diagnostics->backup[1] = 1;
           // Recompute guesses
-          guess_primitives( eos,params->backup_routine[1], which_guess, metric, prims, cons, &prims_guess );
+          guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
           // Backup routine #2
           check = C2P_Select_Hybrid_Method(eos, params->backup_routine[1], metric, &cons_undens, &prims_guess, diagnostics);
 
@@ -88,7 +88,7 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
             // Backup 3 triggered
             diagnostics->backup[2] = 1;
             // Recompute guesses
-            guess_primitives( eos,params->backup_routine[2], which_guess, metric, prims, cons, &prims_guess );
+            guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
             // Backup routine #3
             check = C2P_Select_Hybrid_Method(eos, params->backup_routine[2], metric, &cons_undens, &prims_guess, diagnostics);
           }

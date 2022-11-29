@@ -44,23 +44,22 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
 //TODO: I need to fill in rho_tab, gamma_tab, k_tab, eps_tab based on the code, not like this
   double rho_tab[1] = {0.0};
   double gamma_tab[1] = {2.0};
-  double k_tab[1] = {1.0};
-  double eps_tab[1] = {0.0};
+  double k_tab = 1.0;
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRMHD_parameters params;
-  initialize_parameters(&params, main, backup_routine, false, false, true, Psi6threshold, update_Tmunu);
+  initialize_parameters(main, backup_routine, false, false, true, Psi6threshold, update_Tmunu, &params);
 
   eos_parameters eos;
-  initialize_general_eos(&eos, eos_type, tau_atm, W_max,
-             poison, poison,poison, //epsilon
-             poison, poison, poison, //pressure
+  initialize_general_eos(eos_type, tau_atm, W_max,
              poison, poison, poison, //entropy
-             rho_b_min, rho_b_atm, rho_b_max);
+             rho_b_min, rho_b_atm, rho_b_max,
+             &eos);
 
-  initialize_hybrid_eos(&eos, neos, rho_tab,
-             gamma_tab, k_tab, eps_tab, gamma_th);
+  initialize_hybrid_eos(neos, rho_tab,
+             gamma_tab, k_tab, gamma_th,
+             &eos);
 
   con2prim_diagnostics diagnostics;
   initialize_diagnostics(&diagnostics);
@@ -208,16 +207,16 @@ printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
 
         // Store the metric randomized values into the structs
         metric_quantities metric;
-        initialize_metric(&metric, lapse,  // phi, psi, lapse
-                          gxx, gxy, gxz,  // gxx, gxy, gxz
-                          gyy, gyz, gzz,  // gyy, gyz, gzz
-                          betax, betay, betaz); // betax, betay, betaz
+        initialize_metric(lapse,
+                          gxx, gxy, gxz,
+                          gyy, gyz, gzz,
+                          betax, betay, betaz,
+                          &metric);
 
         conservative_quantities cons, cons_orig, cons_undens; // Not initialized because it will be filled based on primitive data.
 
         primitive_quantities prims, prims_orig, prims_guess;
-        initialize_primitives(&eos, &metric,
-                              xrho, xpress, xeps,
+        initialize_primitives(xrho, xpress, xeps,
                               vx, vy, vz, Bx, By, Bz,
                               poison, poison, poison, // entropy, Y_e=xye, temp=xtemp
                               &prims);
@@ -263,10 +262,10 @@ printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
 
           //This applies the inequality (or "Faber") fixes on the conservatives
           if(eos.eos_type == 0) //Hybrid-only
-            apply_tau_floor(&params, &eos, &metric, &prims, &cons, &diagnostics);
+            apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
 
           // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
-          undensitize_conservatives(&eos, con2prim_test_keys[which_routine], &metric, &prims, &cons, &cons_undens);
+          undensitize_conservatives(&metric, &cons, &cons_undens);
 
           // The con2prim routines require primitive guesses in order to perform
           // the recovery. In IllinoisGRMHD, we do not keep track of the primitives
@@ -277,8 +276,7 @@ printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
           /************* Conservative-to-primitive recovery ************/
 
           for(int which_guess=1;which_guess<=2;which_guess++) {
-            guess_primitives(&eos, con2prim_test_keys[which_routine], which_guess,
-                             &metric, &prims, &cons, &prims_guess);
+            guess_primitives(&eos, which_guess, &metric, &prims, &cons, &prims_guess);
 
 /*Why was it getting set to 1e300 right after setting the guess?
           for(int i=0;i<numprims;i++) prim[i] = 1e300;

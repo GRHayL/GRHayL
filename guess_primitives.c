@@ -1,17 +1,31 @@
-// Thorn      : IllinoisGRMHD
-// File       : con2prim_set_cons_and_prim_from_CONSERVS_and_PRIMS.cc
-// Author(s)  : Leo Werneck (wernecklr@gmail.com)
-// Description: This provides functions which 1. convert IllinoisGRMHD's set
-//              of conservative variables into the appropriate variables
-//              required by the C2P routines and 2. set appropriate primitive
-//              guesses.
-
 #include "con2prim_header.h"
-#include "EOS/EOS_hybrid_header.h"
+#include "EOS/Hybrid/EOS_hybrid_header.h"
+#include <stdio.h>
+
+/* Function    : guess_primitives()
+ * Authors     : Leo Werneck and Samuel Cupp
+ * Description : This function computes initial guesses for the primitives
+                 for use in the Con2Prim solver.
+ * Dependencies: 
+ *
+ * Inputs      : eos            - an initialized eos_parameters struct
+ *                                with data for the EOS of the simulation
+ *             : which_guess    - an integer which selects the initial guess
+ *                                to be used for the primitives
+ *             : metric         - an initialized metric_quantities struct
+ *                                with data for the gridpoint of interest
+ *             : cons           - an initialized conservative_quantities
+ *                                struct with data for the gridpoint of
+ *                                interest
+ *
+ * Outputs     : prims_guess    - primitive_quantities struct filled with
+ *                                an initial primitives guess for the
+ *                                Con2Prim solver
+ */
 
 //TODO: consider passing in cons_undens instead. I don't think we need densitized.
 void guess_primitives( const eos_parameters *restrict eos,
-                       const int c2p_key, const int which_guess,
+                       const int which_guess,
                        const metric_quantities *restrict metric,
                        const primitive_quantities *restrict prims,
                        const conservative_quantities *restrict cons,
@@ -19,64 +33,34 @@ void guess_primitives( const eos_parameters *restrict eos,
 
   *prims_guess = *prims;
 
-  int  polytropic_index = 0;
-  double K_ppoly_tab      = 0.0;
-  double Gamma_ppoly_tab  = 0.0;
-  double rho_b_oldL       = prims->rho;
-  double P_oldL           = prims->press;
-
   if(which_guess==1) {
     //Use a different initial guess:
-    rho_b_oldL = cons->rho/metric->psi6;
-
-    /**********************************
-     * Piecewise Polytropic EOS Patch *
-     *  Finding Gamma_ppoly_tab and K_ppoly_tab *
-     **********************************/
-    /* Here we use our newly implemented
-     * find_polytropic_K_and_Gamma() function
-     * to determine the relevant polytropic
-     * Gamma and K parameters to be used
-     * within this function.
-     */
-    polytropic_index = find_polytropic_K_and_Gamma_index(eos,rho_b_oldL);
-    K_ppoly_tab     = eos->K_ppoly_tab[polytropic_index];
-    Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
-
-    // After that, we compute P_cold
-    P_oldL = K_ppoly_tab*pow(rho_b_oldL,Gamma_ppoly_tab);
+    prims_guess->rho = cons->rho/metric->psi6;
+    prims_guess->temp = eos->temp_atm;
   } else if(which_guess==2) {
     //Use atmosphere as initial guess:
-    rho_b_oldL = 100.0*eos->rho_atm;
-
-    /**********************************
-     * Piecewise Polytropic EOS Patch *
-     *  Finding Gamma_ppoly_tab and K_ppoly_tab *
-     **********************************/
-    /* Here we use our newly implemented
-     * find_polytropic_K_and_Gamma() function
-     * to determine the relevant polytropic
-     * Gamma and K parameters to be used
-     * within this function.
-     */
-    polytropic_index = find_polytropic_K_and_Gamma_index(eos,rho_b_oldL);
-    K_ppoly_tab     = eos->K_ppoly_tab[polytropic_index];
-    Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
-
-    // After that, we compute P_cold
-    P_oldL = K_ppoly_tab*pow(rho_b_oldL,Gamma_ppoly_tab);
+    prims_guess->rho = 100.0*eos->rho_atm;
+    prims_guess->temp = eos->temp_max;
+  } else {
+    printf("WARNING: guess_primitives was passed an unknown guess type of %d.", which_guess);
   }
 
-  prims_guess->rho = rho_b_oldL;
-  prims_guess->press = P_oldL;
+  // TODO: Hybrid only?
+  /**********************************
+   * Piecewise Polytropic EOS Patch *
+   *  Finding Gamma_ppoly_tab and K_ppoly_tab *
+   **********************************/
+  /* Here we use our newly implemented
+   * find_polytropic_K_and_Gamma() function
+   * to determine the relevant polytropic
+   * Gamma and K parameters to be used
+   * within this function.
+   */
+  int polytropic_index = find_polytropic_K_and_Gamma_index(eos, prims_guess->rho);
+  double K_ppoly_tab      = eos->K_ppoly_tab[polytropic_index];
+  double Gamma_ppoly_tab  = eos->Gamma_ppoly_tab[polytropic_index];
 
-  if( eos->eos_type == 1 ) {
-    // This one is very simple! The only guess required is the temperature
-    if( which_guess == 1 ) {
-      prims_guess->temp = eos->temp_atm;
-    } else {
-      prims_guess->temp = eos->temp_max;
-    }
-    prims_guess->Y_e = cons->Y_e/cons->rho;
-  }
+  // After that, we compute P_cold
+  prims_guess->press = K_ppoly_tab*pow(prims_guess->rho, Gamma_ppoly_tab);
+  prims_guess->Y_e = cons->Y_e/cons->rho;
 }
