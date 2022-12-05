@@ -161,7 +161,6 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
   // T^{mn} = (rho_0 h + b^2) u^m u^n + (P + 0.5 b^2) g^{mn} - b^m b^n, where m and n both run from 0 to 3.
   count=0; for(int ii=0;ii<4;ii++) for(int jj=ii;jj<4;jj++) { TUPMUNU[count] = rho0_h_plus_b2*uUP[ii]*uUP[jj] + P_plus_half_b2*metric->g4up[ii][jj] - smallb[SMALLBT+ii]*smallb[SMALLBT+jj]; count++; }
 
-
   // Next compute T_{\mu \nu}
   // T_{mn} = (rho_0 h + b^2) u_m u_n + (P + 0.5 b^2) g_{mn} - b_m b_n, where m and n both run from 0 to 3.
 

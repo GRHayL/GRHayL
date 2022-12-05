@@ -5,8 +5,7 @@
 /* Function    : guess_primitives()
  * Authors     : Leo Werneck and Samuel Cupp
  * Description : This function computes initial guesses for the primitives
-                 for use in the Con2Prim solver.
- * Dependencies: 
+ *               for use in the Con2Prim solver.
  *
  * Inputs      : eos            - an initialized eos_parameters struct
  *                                with data for the EOS of the simulation
@@ -23,7 +22,6 @@
  *                                Con2Prim solver
  */
 
-//TODO: consider passing in cons_undens instead. I don't think we need densitized.
 void guess_primitives( const eos_parameters *restrict eos,
                        const int which_guess,
                        const metric_quantities *restrict metric,
@@ -46,21 +44,11 @@ void guess_primitives( const eos_parameters *restrict eos,
   }
 
   // TODO: Hybrid only?
-  /**********************************
-   * Piecewise Polytropic EOS Patch *
-   *  Finding Gamma_ppoly_tab and K_ppoly_tab *
-   **********************************/
-  /* Here we use our newly implemented
-   * find_polytropic_K_and_Gamma() function
-   * to determine the relevant polytropic
-   * Gamma and K parameters to be used
-   * within this function.
-   */
-  int polytropic_index = find_polytropic_K_and_Gamma_index(eos, prims_guess->rho);
-  double K_ppoly_tab      = eos->K_ppoly_tab[polytropic_index];
-  double Gamma_ppoly_tab  = eos->Gamma_ppoly_tab[polytropic_index];
+  double K_ppoly;
+  double Gamma_ppoly;
+  get_K_and_Gamma(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);
 
   // After that, we compute P_cold
-  prims_guess->press = K_ppoly_tab*pow(prims_guess->rho, Gamma_ppoly_tab);
+  prims_guess->press = K_ppoly*pow(prims_guess->rho, Gamma_ppoly);
   prims_guess->Y_e = cons->Y_e/cons->rho;
 }

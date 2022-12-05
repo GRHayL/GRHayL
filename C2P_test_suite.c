@@ -24,9 +24,9 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
+  double poison = 1e200;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  double poison = 1e200;
   int main = Noble2D;
   int backup_routine[3] = {None,None,None};
   int update_Tmunu = 1; //IGM default
@@ -49,7 +49,7 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRMHD_parameters params;
-  initialize_parameters(main, backup_routine, false, false, true, Psi6threshold, update_Tmunu, &params);
+  initialize_parameters(main, backup_routine, false, false, true, Psi6threshold, update_Tmunu, Cupp_Fix, &params);
 
   eos_parameters eos;
   initialize_general_eos(eos_type, tau_atm, W_max,
@@ -178,32 +178,31 @@ void C2P_test_suite( CCTK_ARGUMENTS ) {
         const double By    = -Bhaty * B;
         const double Bz    = -Bhatz * B;
 
-        const double gxx = 1.0 + randf(0.0,100.0);
-        const double gyy = 1.0 + randf(0.0,100.0);
-        const double gzz = 1.0 + randf(0.0,100.0);
-        const double gxy = randf(-1.0e-1,1.0e-1);
-        const double gxz = randf(-1.0e-1,1.0e-1);
-        const double gyz = randf(-1.0e-1,1.0e-1);
-
-        const double lapse = randf(-1.0e-10,1.0);
-
-        const double betax = v*randf(0.0,1.0);
-        const double betay = sqrt(v*v - betax*betax)*randf(0.0,1.0);
-        const double betaz = sqrt(v*v - betax*betax - betay*betay);
-printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
-
-//        const double gxx = 1.0;// + randf(0.0,100.0);
-//        const double gyy = 1.0;// + randf(0.0,100.0);
-//        const double gzz = 1.0;// + randf(0.0,100.0);
-//        const double gxy = 0.0;//randf(-1.0e-1,1.0e-1);
-//        const double gxz = 0.0;//randf(-1.0e-1,1.0e-1);
-//        const double gyz = 0.0;//randf(-1.0e-1,1.0e-1);
-//
-//        const double lapse = 1.0;//randf(-1.0e-10,1.0);
-//
-//        const double betax = 0.0;//randf(0.0,1.0);
-//        const double betay = 0.0;//sqrt(v*v - betax*betax)*randf(0.0,1.0);
-//        const double betaz = 0.0;//sqrt(v*v - betax*betax - betay*betay);
+        double gxx, gyy, gzz, gxy, gxz, gyz, lapse, betax, betay, betaz;
+        bool randmet = true;
+        if(randmet) {
+          gxx = 1.0 + randf(0.0,1.0e-1);
+          gyy = 1.0 + randf(0.0,1.0e-1);
+          gzz = 1.0 + randf(0.0,1.0e-1);
+          gxy = randf(-1.0e-1,1.0e-1);
+          gxz = randf(-1.0e-1,1.0e-1);
+          gyz = randf(-1.0e-1,1.0e-1);
+          lapse = 1.0; //randf(1.0e-10,1.0);
+          betax = v*randf(0.0,1.0);
+          betay = sqrt(v*v - betax*betax)*randf(0.0,1.0);
+          betaz = sqrt(v*v - betax*betax - betay*betay);
+        } else {
+          gxx = 1.0;
+          gyy = 1.0;
+          gzz = 1.0;
+          gxy = 0.0;
+          gxz = 0.0;
+          gyz = 0.0;
+          lapse = 1.0;
+          betax = 0.0;
+          betay = 0.0;
+          betaz = 0.0;
+        }
 
         // Store the metric randomized values into the structs
         metric_quantities metric;
@@ -234,10 +233,6 @@ printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
         prims_orig = prims;
         cons_orig = cons;
 
-        printf("Initial primitives:\n %.16e\n %.16e\n"
-           "  %.16e\n %.16e\n %.16e\n", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
-        printf("Initial conservatives:\n %.16e\n %.16e\n"
-           "  %.16e\n %.16e\n %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
         //This is meant to simulate some round-off error that deviates from the "true" values that we just computed.
         if(rand==1) {
           prims.rho   *= rand_val[0];
@@ -253,8 +248,6 @@ printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
           cons.S_y    *= rand_val[10];
           cons.S_z    *= rand_val[11];
           cons.tau    *= rand_val[12];
-        printf("Perturbed conservatives:\n %.16e\n %.16e\n"
-           "  %.16e\n %.16e\n %.16e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
         }
 
         int check = 0;
@@ -292,7 +285,7 @@ printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
           // prim[B2_con  ] = PRIMS[BY_CENTER  ];
           // prim[B3_con  ] = PRIMS[BZ_CENTER  ];
 */
-            check = C2P_Select_Hybrid_Method(&eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
+            check = C2P_Select_Hybrid_Method(&params, &eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
             //If multiple C2P routines are selected as backups, the backup routine logic would go here
   
             if(check!=0) {
@@ -322,12 +315,8 @@ printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
         //---------- Primitive recovery completed ----------
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
-        printf("C2P primitives:\n %.16e\n %.16e\n"
-           "  %.16e\n %.16e\n %.16e\n", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
         enforce_limits_on_primitives_and_recompute_conservs(&params, &eos, &metric, &prims, &cons,
                                                             TUPMUNU, TDNMUNU, &Tmunu, &diagnostics);
-        printf("Enforced primitives:\n %.16e\n %.16e\n"
-           "  %.16e\n %.16e\n %.16e\n", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
 
         primitive_quantities prims_error;
         double accumulated_error = 0.0;
@@ -337,8 +326,8 @@ printf("randomized betas %.16e %.16e %.16e", betax, betay, betaz);
           printf("Recovery FAILED!\n");
           accumulated_error = 1e300;
         } else {
-          fprintf(outfile, "Recovery SUCCEEDED!\n");
-          printf("Recovery SUCCEEDED!\n");
+          fprintf(outfile, "Recovery SUCCEEDED FOR POINT %d!\n", i);
+          printf("Recovery SUCCEEDED FOR POINT %d!\n", i);
           prims_error.rho     = relative_error(prims.rho,     prims_orig.rho);
           prims_error.press   = relative_error(prims.press,   prims_orig.press);
           prims_error.eps     = relative_error(prims.eps,     prims_orig.eps);

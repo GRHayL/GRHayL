@@ -5,24 +5,6 @@ INCLUDE HEADER: EOS/EOS_header.h in EOS_header.h
 INCLUDE HEADER: EOS/Hybrid/EOS_hybrid_header.h in EOS_hybrid_header.h
 INCLUDE HEADER: GRMHD_header.h in GRMHD_header.h
 
-#CCTK_POINTER_TO_CONST IN cctkGH, \
-#CCTK_INT FUNCTION Con2Prim_ETK(CCTK_INT IN main_routine, CCTK_INT ARRAY IN backup_routines, CCTK_REAL IN Psi6threshold, \
-#                          CCTK_INT IN update_Tmunu, CCTK_REAL IN tau_atm, CCTK_REAL IN GAMMA_SPEED_LIMIT, \
-#                          CCTK_REAL IN rho_b_atm, CCTK_REAL IN rho_max, CCTK_INT IN neos, \
-#                          CCTK_REAL ARRAY IN rho_ppoly_tab, CCTK_REAL ARRAY IN Gamma_ppoly_tab, CCTK_REAL ARRAY IN K_ppoly_tab, \
-#                          CCTK_REAL ARRAY IN eps_integ_const, CCTK_REAL IN Gamma_th, CCTK_POINTER IN phi, CCTK_POINTER IN psi, CCTK_POINTER IN lapm1, \
-#                          CCTK_POINTER IN gxx, CCTK_POINTER IN gxy, CCTK_POINTER IN gxz, \
-#                          CCTK_POINTER IN gyy, CCTK_POINTER IN gyz, CCTK_POINTER IN gzz, \
-#                          CCTK_POINTER IN betax, CCTK_POINTER IN betay, CCTK_POINTER IN betaz, CCTK_POINTER INOUT rho, \
-#                          CCTK_POINTER INOUT press, CCTK_POINTER INOUT epsilon, \
-#                          CCTK_POINTER INOUT vx, CCTK_POINTER INOUT vy, CCTK_POINTER INOUT vz, \
-#                          CCTK_POINTER INOUT Bx, CCTK_POINTER INOUT By, CCTK_POINTER INOUT Bz, \
-#                          CCTK_POINTER INOUT temp, CCTK_POINTER INOUT tau, \
-#                          CCTK_POINTER INOUT S_x, CCTK_POINTER INOUT S_y, CCTK_POINTER INOUT S_z, \
-#                          CCTK_POINTER INOUT Y_e, CCTK_POINTER INOUT entropy)
-#PROVIDES FUNCTION Con2Prim_ETK WITH con2prim_ETKTest \
-#  LANGUAGE C
-
 void FUNCTION Con2Prim_Kernel(CCTK_POINTER_TO_CONST IN params,
                      CCTK_POINTER_TO_CONST IN eos,
                      CCTK_POINTER INOUT metric,
@@ -53,8 +35,8 @@ PROVIDES FUNCTION initialize_general_eos_ETK WITH c2p_initialize_general_eos
   LANGUAGE C
 
 void FUNCTION initialize_hybrid_eos_ETK(
-                    CCTK_INT IN neos, CCTK_REAL ARRAY IN rho_ppoly_tab,
-                    CCTK_REAL ARRAY IN Gamma_ppoly_tab, CCTK_REAL IN K_ppoly_tab,
+                    CCTK_INT IN neos, CCTK_REAL ARRAY IN rho_ppoly,
+                    CCTK_REAL ARRAY IN Gamma_ppoly, CCTK_REAL IN K_ppoly,
                     CCTK_REAL IN Gamma_th,
                     CCTK_POINTER OUT eos)
 PROVIDES FUNCTION initialize_hybrid_eos_ETK WITH c2p_initialize_hybrid_eos

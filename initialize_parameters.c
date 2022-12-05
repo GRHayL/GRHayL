@@ -27,7 +27,7 @@
 
 void initialize_parameters(const int main, const int backup[3],
                 const int evolve_entropy, const int evolve_temp, const int calc_prim_guess,
-                const double psi6threshold, const int update_Tmunu,
+                const double psi6threshold, const int update_Tmunu, const int Cupp_Fix,
                 GRMHD_parameters *restrict params) {
   params->main_routine = main;
   params->backup_routine[0] = backup[0];
@@ -38,5 +38,6 @@ void initialize_parameters(const int main, const int backup[3],
   params->calc_prim_guess = calc_prim_guess;
   params->psi6threshold = psi6threshold;
   params->update_Tmunu = update_Tmunu;
+  params->Cupp_Fix = Cupp_Fix;
   return;
 }

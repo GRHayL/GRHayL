@@ -1,6 +1,7 @@
 #include "con2prim_header.h"
 
-int C2P_Select_Hybrid_Method( const eos_parameters *restrict eos, const int c2p_key,
+int C2P_Select_Hybrid_Method( const GRMHD_parameters *restrict params,
+                              const eos_parameters *restrict eos, const int c2p_key,
                               const metric_quantities *restrict metric,
                               const conservative_quantities *restrict cons,
                               primitive_quantities *restrict prims,
@@ -10,7 +11,11 @@ int C2P_Select_Hybrid_Method( const eos_parameters *restrict eos, const int c2p_
 
     // Noble2D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
-      return( C2P_Hybrid_Noble2D(eos,metric,cons,prims,diagnostics) );
+      return( C2P_Hybrid_Noble2D(params, eos, metric, cons, prims, diagnostics) );
+      break;
+
+    case OldNoble2D:
+      return( C2P_Hybrid_OldNoble2D(eos,metric,cons,prims,diagnostics) );
       break;
 
 //    // Noble1D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)

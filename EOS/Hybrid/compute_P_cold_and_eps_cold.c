@@ -6,25 +6,13 @@
  * Dependencies: initialize_igm_eos_parameters_from_input()
  *             : find_polytropic_K_and_Gamma_index()
  *
- * Inputs      : P_cold           - cold pressure
- *             : eps_cold         - cold specific internal energy
- *             : eos              - a struct containing the following
- *                                  relevant quantities:
- *             : neos             - number of polytropic EOSs used
- *             : rho_ppoly_tab         - array of rho values that determine
- *                                  the polytropic EOS to be used.
- *             : Gamma_ppoly_tab       - array of Gamma_cold values to be
- *                                  used in each polytropic EOS.
- *             : K_ppoly_tab           - array of K_ppoly_tab values to be used
- *                                  in each polytropic EOS.
- *             : eps_integ_const  - array of C_{j} values, which are the
- *                                  integration constants that arrise when
- *                                  determining eps_{cold} for a piecewise
- *                                  polytropic EOS.
+ * Inputs      : P_cold         - cold pressure
+ *             : eps_cold       - cold specific internal energy
+ *             : eos            - an initialized eos_parameters struct
+ *                                with data for the EOS of the simulation
  *
- * Outputs     : P_cold           - cold pressure (supports SPEOS and PPEOS)
- *             : eps_cold         - cold specific internal energy (supports SPEOS and PPEOS)
- *             : polytropic_index - polytropic index used for P_cold and eps_cold
+ * Outputs     : P_cold         - cold pressure (supports SPEOS and PPEOS)
+ *             : eps_cold       - cold specific internal energy (supports SPEOS and PPEOS)
  *
  *             SPEOS: Single-Polytrope Equation of State
  *             PPEOS: Piecewise Polytrope Equation of State
@@ -71,13 +59,13 @@ void compute_P_cold_and_eps_cold(const eos_parameters *restrict eos, const doubl
    */
 
   // Set up useful auxiliary variables
-  int polytropic_index      = find_polytropic_K_and_Gamma_index(eos,rho_in);
-  double K_ppoly_tab     = eos->K_ppoly_tab[polytropic_index];
-  double Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
+  int polytropic_index = find_polytropic_index(eos, rho_in);
+  double K_ppoly       = eos->K_ppoly[polytropic_index];
+  double Gamma_ppoly   = eos->Gamma_ppoly[polytropic_index];
   double eps_integ_const = eos->eps_integ_const[polytropic_index];
 
   // Then compute P_{cold}
-  double P_cold = K_ppoly_tab*pow(rho_in,Gamma_ppoly_tab);
+  double P_cold = K_ppoly*pow(rho_in, Gamma_ppoly);
 
   /* Then we compute the cold component of the specific internal energy,
    * which in the case of a piecewise polytropic EOS is given by (neos -> N)
@@ -88,7 +76,7 @@ void compute_P_cold_and_eps_cold(const eos_parameters *restrict eos, const doubl
    *             |                     ...
    *             \ P_{N-2}/(rho*(Gamma_{N-2}-1)) + C_{N-2}, rho_{N-3} <= rho < rho_{N-2}
    */
-  *eps_cold_ptr = P_cold/(rho_in*(Gamma_ppoly_tab-1.0)) + eps_integ_const;
+  *eps_cold_ptr = P_cold/(rho_in*(Gamma_ppoly-1.0)) + eps_integ_const;
 
   *P_cold_ptr = P_cold;
 }

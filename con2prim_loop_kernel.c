@@ -66,7 +66,7 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
 
       // Set primitive guesses
       guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
-      int check = C2P_Select_Hybrid_Method(eos, params->main_routine, metric, &cons_undens, &prims_guess, diagnostics);
+      int check = C2P_Select_Hybrid_Method(params, eos, params->main_routine, metric, &cons_undens, &prims_guess, diagnostics);
 
       if( (check != 0) && (params->backup_routine[0] != None) ) {
         // Backup 1 triggered
@@ -74,7 +74,7 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
         // Recompute guesses
         guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
         // Backup routine #1
-        check = C2P_Select_Hybrid_Method(eos, params->backup_routine[0], metric, &cons_undens, &prims_guess, diagnostics);
+        check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[0], metric, &cons_undens, &prims_guess, diagnostics);
 
         if( (check != 0) && (params->backup_routine[1] != None) ) {
           // Backup 2 triggered
@@ -82,7 +82,7 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
           // Recompute guesses
           guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
           // Backup routine #2
-          check = C2P_Select_Hybrid_Method(eos, params->backup_routine[1], metric, &cons_undens, &prims_guess, diagnostics);
+          check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[1], metric, &cons_undens, &prims_guess, diagnostics);
 
           if( (check != 0) && (params->backup_routine[2] != None) ) {
             // Backup 3 triggered
@@ -90,7 +90,7 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
             // Recompute guesses
             guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
             // Backup routine #3
-            check = C2P_Select_Hybrid_Method(eos, params->backup_routine[2], metric, &cons_undens, &prims_guess, diagnostics);
+            check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[2], metric, &cons_undens, &prims_guess, diagnostics);
           }
         }
       }

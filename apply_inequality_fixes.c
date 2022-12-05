@@ -46,7 +46,6 @@ int apply_inequality_fixes(const GRMHD_parameters *restrict params, const eos_pa
 //    metric->bssn_gupyy = metric->psi4inv;
 //    metric->bssn_gupyz = 0.0;
 //    metric->bssn_gupzz = metric->psi4inv;
-    printf("The eigenvalues are negative! %e %e %e\n", lam1, lam2, lam3);
   }
 
   //Next, prepare for the tau and stilde fixes:

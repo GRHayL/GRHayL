@@ -54,24 +54,13 @@ int font_fix(const eos_parameters *restrict eos,
 
   prims_guess->rho = cons->rho/(metric->lapse*u0*metric->psi6);
 
-  /**********************************
-   * Piecewise Polytropic EOS Patch *
-   *  Finding Gamma_ppoly_tab and K_ppoly_tab *
-   **********************************/
-  /* Here we use our newly implemented
-   * find_polytropic_K_and_Gamma() function
-   * to determine the relevant polytropic
-   * Gamma and K parameters to be used
-   * within this function.
-   */
-  int polytropic_index = find_polytropic_K_and_Gamma_index(eos,prims_guess->rho);
-  double K_ppoly_tab     = eos->K_ppoly_tab[polytropic_index];
-  double Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
+  double K_ppoly, Gamma_ppoly;
+  get_K_and_Gamma(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);
 
   // After that, we compute P_cold
-  double P_cold = K_ppoly_tab*pow(prims_guess->rho,Gamma_ppoly_tab);
+  double P_cold = K_ppoly*pow(prims_guess->rho, Gamma_ppoly);
 
-  double energy_u = P_cold/(Gamma_ppoly_tab-1.0);
+  double energy_u = P_cold/(Gamma_ppoly-1.0);
 
   if( eos->eos_type == 0 ) {
     prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, energy_u);

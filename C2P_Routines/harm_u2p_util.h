@@ -145,7 +145,7 @@ static inline double pressure_rho0_w(const eos_parameters *restrict eos, const d
    * | p(rho_b,w) = ( P_cold + (Gamma_th-1)*( w - rho_b*(1+eps_cold) ) )/Gamma_th |
    *  ----------------------------------------------------------------------------
    */
-//  return( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0+eps_cold) ) )/eos->Gamma_th );
+//  return( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0 + eps_cold) ) )/eos->Gamma_th );
   return((eos->Gamma_th-1.0)*(w - rho0)/eos->Gamma_th ) ;
 }
 

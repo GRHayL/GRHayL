@@ -56,7 +56,7 @@ int font_fix_rhob_loop( const eos_parameters *restrict eos,
     /* Based on rhob_in (i.e. rhob1), determine the
      * polytropic index j1
      */
-    j1 = find_polytropic_K_and_Gamma_index(eos,rhob1);
+    j1 = find_polytropic_index(eos,rhob1);
 
     //////////////////////
     // INNER LOOP START //
@@ -86,7 +86,7 @@ int font_fix_rhob_loop( const eos_parameters *restrict eos,
       rhob1 = cons->rho*Psim6/sqrt(1.0+Sf20/SQR(cons->rho*h));
 
       /* Update j1 */
-      j1 = find_polytropic_K_and_Gamma_index(eos,rhob1);
+      j1 = find_polytropic_index(eos,rhob1);
 
     }  while( fabs(rhob1-rhob0) > rhob1*tol || j1 != j0);
     //////////////////////

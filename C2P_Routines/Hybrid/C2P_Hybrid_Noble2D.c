@@ -87,7 +87,8 @@ double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 )
 double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const double vsq, const double D) ;
 double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq);
 double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const double vsq, const double D);
-int Utoprim_new_body(const eos_parameters *restrict eos,
+int Utoprim_new_body(const GRMHD_parameters *restrict params,
+                     const eos_parameters *restrict eos,
                      const double *restrict U,
                      const double gcov[NDIM][NDIM],
                      const double gcon[NDIM][NDIM],
@@ -170,11 +171,12 @@ static const int TAU      =9;
 static const int WS       =10;
 static const int numcons  =11; // D, UU, S_{x,y,z}, B^{x,y,z}, DYe, tau, DS
 
-int C2P_Hybrid_Noble2D( const eos_parameters *restrict eos,
-                      const metric_quantities *restrict metric,
-                      const conservative_quantities *restrict cons_undens,
-                      primitive_quantities *restrict prims,
-                      con2prim_diagnostics *restrict diagnostics ) {
+int C2P_Hybrid_Noble2D( const GRMHD_parameters *restrict params,
+                        const eos_parameters *restrict eos,
+                        const metric_quantities *restrict metric,
+                        const conservative_quantities *restrict cons_undens,
+                        primitive_quantities *restrict prims,
+                        con2prim_diagnostics *restrict diagnostics ) {
 
   // We have already calculated the undensized variables needed for
   // the Noble2D routine. However, this routine does not use the
@@ -203,11 +205,11 @@ int C2P_Hybrid_Noble2D( const eos_parameters *restrict eos,
   new_cons[TAU] = MAX(cons_undens->tau, eos->tau_atm);
   new_cons[WS] = cons_undens->entropy;
 
-  int polytropic_index = find_polytropic_K_and_Gamma_index(eos,prims->rho);
-  double Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
+  int polytropic_index = find_polytropic_index(eos, prims->rho);
+  double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
 
   new_prims[RHO] = prims->rho;
-  new_prims[UU] = prims->press/(Gamma_ppoly_tab - 1.0);
+  new_prims[UU] = prims->press/(Gamma_ppoly - 1.0);
   new_prims[UTCON1] = 0.0;
   new_prims[UTCON2] = 0.0;
   new_prims[UTCON3] = 0.0;
@@ -218,19 +220,19 @@ int C2P_Hybrid_Noble2D( const eos_parameters *restrict eos,
 //Additional tabulated code here
 print = prims->print;
 
-if(prims->print) {
-printf("old_prims:\n rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
-printf(" ~u=%.16e\n   %.16e\n   %.16e\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
-printf("cons:\n rho=%.16e\n u=%.16e\n S=%.16e\n   %.16e\n   %.16e\n", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
-printf(" B=%.16e\n   %.16e\n   %.16e\n",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
-}
-  int retval = Utoprim_new_body(eos, new_cons, metric->g4dn, metric->g4up, new_prims);
-if(prims->print) {
-printf("new_prims:\n rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
-printf(" ~u=%.16e\n   %.16e\n   %.16e\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
-}
+//if(prims->print) {
+//printf("old_prims:\n rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
+//printf(" ~u=%.16e\n   %.16e\n   %.16e\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+//printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+//printf("cons:\n rho=%.16e\n u=%.16e\n S=%.16e\n   %.16e\n   %.16e\n", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
+//printf(" B=%.16e\n   %.16e\n   %.16e\n",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
+//}
+  int retval = Utoprim_new_body(params, eos, new_cons, metric->g4dn, metric->g4up, new_prims);
+//if(prims->print) {
+//printf("new_prims:\n rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
+//printf(" ~u=%.16e\n   %.16e\n   %.16e\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
+//printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
+//}
 
   if(retval==0) {
     prims->rho = new_prims[RHO];
@@ -291,7 +293,8 @@ return:  (i*100 + j)  where
 
 **********************************************************************************/
 
-int Utoprim_new_body( const eos_parameters *restrict eos,
+int Utoprim_new_body( const GRMHD_parameters *restrict params,
+                      const eos_parameters *restrict eos,
                       const double *restrict cons,
                       const double gcov[NDIM][NDIM],
                       const double gcon[NDIM][NDIM],
@@ -446,18 +449,19 @@ int Utoprim_new_body( const eos_parameters *restrict eos,
   w = W * (1. - vsq) ;
 
 //Tabulated EOS changes this section
-  p = pressure_rho0_w(eos, rho0,w) ;
-  u = w - (rho0 + p) ;
+  p = pressure_rho0_w(eos, rho0, w) ;
+//  u = w - (rho0 + p) ;
+  u = (w - rho0) * (1.0/eos->Gamma_th);
   prims[RHO] = rho0 ;
   prims[UU ] = u ;
 
-//  if( (rho0 <= 0.) || (u <= 0.) ) {
-//    // User may want to handle this case differently, e.g. do NOT return upon
-//    // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-//
-//    retval = 5;
-//    //return(retval) ;
-//  }
+  if( !params->Cupp_Fix && ((rho0 <= 0.) || (u <= 0.)) ) {
+    // User may want to handle this case differently, e.g. do NOT return upon
+    // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
+
+    retval = 5;
+    //return(retval) ;
+  }
 
   for(i=1;i<4;i++) Qtcon[i] = Qcon[i] + ncon[i] * harm_aux.Qdotn;
   for(i=1;i<4;i++) prims[UTCON1+i-1] = harm_aux.gamma/(W+harm_aux.Bsq) * ( Qtcon[i] + harm_aux.QdotB*Bcon[i]/W ) ;
@@ -787,8 +791,8 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
   compute_P_cold_and_eps_cold(eos, rho_b, &P_cold, &eps_cold);
 
   // Set basic polytropic quantities
-  int polytropic_index = find_polytropic_K_and_Gamma_index(eos,rho_b);
-  double Gamma_ppoly_tab = eos->Gamma_ppoly_tab[polytropic_index];
+  int polytropic_index = find_polytropic_index(eos, rho_b);
+  double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
 
 
   /* Now we implement the derivative of P_cold with respect
@@ -797,16 +801,16 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
    * | dP_cold/dvsq = gamma^{2 + Gamma_{poly}/2} P_{cold} |
    *  ----------------------------------------------------
    */
-  double dPcold_dvsq = P_cold * pow(gamma,2.0 + 0.5*Gamma_ppoly_tab);
+  double dPcold_dvsq = P_cold * pow(gamma,2.0 + 0.5*Gamma_ppoly);
 
 
   /* Now we implement the derivative of eps_cold with respect
    * to v^{2}, given by
    *  -----------------------------------------------------------------------------------
-   * | deps_cold/dvsq = gamma/(D*(Gamma_ppoly_tab-1)) * (dP_cold/dvsq + gamma^{2} P_cold / 2) |
+   * | deps_cold/dvsq = gamma/(D*(Gamma_ppoly-1)) * (dP_cold/dvsq + gamma^{2} P_cold / 2) |
    *  -----------------------------------------------------------------------------------
    */
-  double depscold_dvsq = ( gamma/(D*(Gamma_ppoly_tab-1.0)) ) * ( dPcold_dvsq + 0.5*gamma*gamma*P_cold );
+  double depscold_dvsq = ( gamma/(D*(Gamma_ppoly-1.0)) ) * ( dPcold_dvsq + 0.5*gamma*gamma*P_cold );
 
   /* Now we implement the derivative of p_hybrid with respect
    * to v^{2}, given by

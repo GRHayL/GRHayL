@@ -1,38 +1,23 @@
 #include "EOS_hybrid_header.h"
 
-/* Function    : setup_K_ppoly_tab_and_eps_integ_consts()
+/* Function    : setup_K_ppoly_and_eps_integ_consts()
  * Authors     : Leo Werneck
  * Description : For a given set of EOS inputs, determine
- *               values of K_ppoly_tab that will result in a
+ *               values of K_ppoly that will result in a
  *               everywhere continuous P_cold function.
- * Dependencies: none
  *
- * Inputs      : eos             - a struct containing the following
- *                                 relevant quantities:
- *             : neos            - number of polytropic EOSs used
- *             : rho_ppoly_tab   - array of rho values that determine
- *                                 the polytropic EOS to be used.
- *             : Gamma_ppoly_tab - array of Gamma_cold values to be
- *                                 used in each polytropic EOS.
- *             : K_ppoly_tab     - array of K_ppoly_tab values to be used
- *                                 in each polytropic EOS. Only K_ppoly_tab[0]
- *                                 is known prior to the function call
- *             : eps_integ_const - array of C_{j} values, which are the
- *                                 integration constants that arrise when
- *                                 determining eps_{cold} for a piecewise
- *                                 polytropic EOS. This array should be
- *                                 uninitialized or contain absurd values
- *                                 prior to this function call.
+ * Inputs      : eos                  - an initialized eos_parameters struct
+ *                                      with data for the EOS of the simulation
  *
- * Outputs     : K_ppoly_tab     - fully populated array of K_ppoly_tab
- *                                 to be used in each polytropic EOS.
- *             : eps_integ_const - fully populated array of C_{j}'s,
- *                                 used to compute eps_cold for
- *                                 a piecewise polytropic EOS.
+ * Outputs     : eos->K_ppoly     - fully populated array of K_ppoly
+ *                                      to be used in each polytropic EOS.
+ *             : eos->eps_integ_const - fully populated array of C_{j}'s,
+ *                                      used to compute eps_cold for
+ *                                      a piecewise polytropic EOS.
  */
-void setup_K_ppoly_tab_and_eps_integ_consts(eos_parameters *restrict eos) {
+void setup_K_ppoly_and_eps_integ_consts(eos_parameters *restrict eos) {
 
-  /* When neos = 1, we will only need the value K_ppoly_tab[0] and eps_integ_const[0].
+  /* When neos = 1, we will only need the value K_ppoly[0] and eps_integ_const[0].
    * Since our only polytropic EOS is given by
    *  -----------------------------------
    * | P_{0} = K_{0} * rho ^ (Gamma_{0}) | ,
@@ -41,7 +26,7 @@ void setup_K_ppoly_tab_and_eps_integ_consts(eos_parameters *restrict eos) {
    *  ---------------------------------------------------------------
    * | eps_{0} = K_{0} * rho ^ (Gamma_{0}-1) / (Gamma_{0}-1) + C_{0} | ,
    *  ---------------------------------------------------------------
-   * we only need to set up K_{0} := K_ppoly_tab[0] and C_{0} := eps_integ_const[0].
+   * we only need to set up K_{0} := K_ppoly[0] and C_{0} := eps_integ_const[0].
    * K_{0} is a user input, so we need to do nothing. C_{0}, on the other hand,
    * is fixed by demanding that eps(rho) -> 0 as rho -> 0. Thus, C_{0} = 0.
    */
@@ -69,10 +54,10 @@ void setup_K_ppoly_tab_and_eps_integ_consts(eos_parameters *restrict eos) {
   for(int j=1; j<eos->neos; j++) {
     // Set a useful auxiliary variable to keep things more compact:
     // First, (Gamma_{j-1} - Gamma_{j}):
-    double Gamma_diff = eos->Gamma_ppoly_tab[j-1] - eos->Gamma_ppoly_tab[j];
+    double Gamma_diff = eos->Gamma_ppoly[j-1] - eos->Gamma_ppoly[j];
 
     // Implement the boxed equation above, using our auxiliary variable:
-    eos->K_ppoly_tab[j] = eos->K_ppoly_tab[j-1] * pow(eos->rho_ppoly_tab[j-1],Gamma_diff);
+    eos->K_ppoly[j] = eos->K_ppoly[j-1] * pow(eos->rho_ppoly[j-1],Gamma_diff);
   }
 
   /********************
@@ -98,16 +83,16 @@ void setup_K_ppoly_tab_and_eps_integ_consts(eos_parameters *restrict eos) {
   for(int j=1; j<eos->neos; j++) {
     // Set a few useful auxiliary variables to keep things more compact:
     // First, (Gamma_{j-1}-1):
-    double Gammajm1m1 = eos->Gamma_ppoly_tab[j-1] - 1.0;
+    double Gammajm1m1 = eos->Gamma_ppoly[j-1] - 1.0;
 
     // Then, (Gamma_{j+0}-1):
-    double Gammajp0m1 = eos->Gamma_ppoly_tab[j+0] - 1.0;
+    double Gammajp0m1 = eos->Gamma_ppoly[j+0] - 1.0;
 
     // Next, ( K_{j-1}*rho_{j-1}^(Gamma_{j-1}-1) )/(Gamma_{j-1}-1):
-    double aux_epsm1  = eos->K_ppoly_tab[j-1]*pow(eos->rho_ppoly_tab[j-1],Gammajm1m1)/Gammajm1m1;
+    double aux_epsm1  = eos->K_ppoly[j-1]*pow(eos->rho_ppoly[j-1],Gammajm1m1)/Gammajm1m1;
 
     // Finally, ( K_{j+0}*rho_{j+0}^(Gamma_{j+0}-1) )/(Gamma_{j+0}-1):
-    double aux_epsp0  = eos->K_ppoly_tab[j+0]*pow(eos->rho_ppoly_tab[j-1],Gammajp0m1)/Gammajp0m1;
+    double aux_epsp0  = eos->K_ppoly[j+0]*pow(eos->rho_ppoly[j-1],Gammajp0m1)/Gammajp0m1;
 
     // Implement the boxed equation above, using our auxiliary variables:
     eos->eps_integ_const[j] = eos->eps_integ_const[j-1] + aux_epsm1 - aux_epsp0;

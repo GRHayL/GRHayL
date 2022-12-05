@@ -3,4 +3,5 @@
 # Source files in this directory that need compiled:
 SRCS = \
        C2P_Hybrid_Noble2D.c \
+       C2P_Hybrid_OldNoble2D.c \
        C2P_Select_Hybrid_Method.c

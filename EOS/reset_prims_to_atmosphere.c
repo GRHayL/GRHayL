@@ -1,24 +1,15 @@
 #include "con2prim_header.h"
 
-/* Function    : ()
+/* Function    : reset_prims_to_atmosphere()
  * Authors     : ? and Samuel Cupp
- * Description : Initialize the conservative struct from user
- *               input
- * Dependencies: None
+ * Description : Uses the EOS data to reset the primitives to atmospheric
+ *               values.
  *
- * Inputs      : rho             - value of rho_star (densitized density)
- *             : tau             - value of tau tilde (densitized energy
- *                                 variable)
- *             : S_x             - value of the x component of S tilde
- *                                 (densitized momentum variable)
- *             : S_y             - value of the y component of S tilde
- *                                 (densitized momentum variable)
- *             : S_z             - value of the z component of S tilde
- *                                 (densitized momentum variable)
- *             : entropy         - value of densitized entropy
+ * Inputs      : eos             - an initialized eos_parameters struct
+ *                                 with data for the EOS of the simulation
  *
- * Outputs     : cons            - fully initialized conservative_quantities
- *                                 struct containing the input data
+ * Outputs     : prims           - A primitive_quantities struct which has
+ *                                 been floored to atmospheric values
  */
 
 void reset_prims_to_atmosphere( const eos_parameters *restrict eos,

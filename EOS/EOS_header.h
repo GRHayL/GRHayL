@@ -42,11 +42,11 @@
  --neos: sets the number of polytropic pieces for the hybrid EOS.
    The maximum number of polytropic pieces is controlled by MAX_EOS_PARAMS below.
 
- --rho_ppoly_tab: array of the density values which divide the polytropic pieces
+ --rho_ppoly: array of the density values which divide the polytropic pieces
 
- --Gamma_ppoly_tab: array of the polytropic indices
+ --Gamma_ppoly: array of the polytropic indices
 
- --K_ppoly_tab: array of the adiabatic constants
+ --K_ppoly: array of the adiabatic constants
 
  --eps_integ_const: array of the integration constants for specific internal energy
 
@@ -70,9 +70,9 @@ typedef struct eos_parameters {
 
   //----------- Hybrid Equation of State -----------
   int neos;
-  double rho_ppoly_tab[MAX_EOS_PARAMS-1];
-  double Gamma_ppoly_tab[MAX_EOS_PARAMS];
-  double K_ppoly_tab[MAX_EOS_PARAMS];
+  double rho_ppoly[MAX_EOS_PARAMS-1];
+  double Gamma_ppoly[MAX_EOS_PARAMS];
+  double K_ppoly[MAX_EOS_PARAMS];
   double eps_integ_const[MAX_EOS_PARAMS];
   double Gamma_th;
   //------------------------------------------------
@@ -95,8 +95,8 @@ void initialize_general_eos(
              eos_parameters *restrict eos);
 
 void initialize_hybrid_eos(
-             const int neos, const double rho_ppoly_tab[],
-             const double Gamma_ppoly_tab[], const double K_ppoly_tab,
+             const int neos, const double rho_ppoly[],
+             const double Gamma_ppoly[], const double K_ppoly,
              const double Gamma_th,
              eos_parameters *restrict eos);
 

@@ -238,6 +238,7 @@ void con2prim_loop_kernel(
              stress_energy *restrict Tmunu);
 
 int C2P_Select_Hybrid_Method(
+             const GRMHD_parameters *restrict params,
              const eos_parameters *restrict eos, const int c2p_key,
              const metric_quantities *restrict metric,
              const conservative_quantities *restrict cons,
@@ -245,6 +246,7 @@ int C2P_Select_Hybrid_Method(
              con2prim_diagnostics *restrict diagnostics);
 
 int C2P_Hybrid_Noble2D(
+             const GRMHD_parameters *restrict params,
              const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
              const conservative_quantities *restrict cons,

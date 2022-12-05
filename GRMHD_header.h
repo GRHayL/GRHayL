@@ -39,6 +39,7 @@ typedef struct GRMHD_parameters {
   bool calc_prim_guess;
   double psi6threshold;
   bool update_Tmunu;
+  bool Cupp_Fix;
 } GRMHD_parameters;
 
 /* The struct metric_quantities contains variables for storing the (point-wise)
@@ -119,7 +120,7 @@ typedef struct stress_energy {
 void initialize_parameters(
              const int main, const int backup[3], const int evolve_entropy,
              const int evolve_temp, const int calc_prim_guess,
-             const double psi6threshold, const int update_Tmunu,
+             const double psi6threshold, const int update_Tmunu, const int Cupp_Fix,
              GRMHD_parameters *restrict params);
 
 void initialize_metric(const double lapse,

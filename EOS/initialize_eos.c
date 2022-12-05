@@ -14,7 +14,7 @@ void initialize_general_eos(const int type,
   eos->eos_type = type;
   eos->tau_atm = tau_atm;
   eos->W_max = W_max;
-  eos->inv_W_max_squared = 1.0/W_max;
+  eos->inv_W_max_squared = 1.0/SQR(W_max);
   eos->entropy_atm = entropy_atm;
   eos->entropy_min = entropy_min;
   eos->entropy_max = entropy_max;
@@ -24,23 +24,23 @@ void initialize_general_eos(const int type,
 }
 
 void initialize_hybrid_eos(const int neos,
-                const double rho_ppoly_tab[], const double Gamma_ppoly_tab[],
-                const double K_ppoly_tab0, const double Gamma_th,
+                const double rho_ppoly[], const double Gamma_ppoly[],
+                const double K_ppoly0, const double Gamma_th,
                 eos_parameters *restrict eos) {
 
   eos->neos = neos;
   eos->Gamma_th = Gamma_th;
-  eos->K_ppoly_tab[0] = K_ppoly_tab0;
+  eos->K_ppoly[0] = K_ppoly0;
   if( neos==1 ) {
-    eos->rho_ppoly_tab[0] = rho_ppoly_tab[0];
+    eos->rho_ppoly[0] = rho_ppoly[0];
     eos->eps_integ_const[0] = 0.0;
   } else {
-    for(int j=0; j<=neos-2; j++) eos->rho_ppoly_tab[j] = rho_ppoly_tab[j];
+    for(int j=0; j<=neos-2; j++) eos->rho_ppoly[j] = rho_ppoly[j];
   }
-  for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly_tab[j] = Gamma_ppoly_tab[j];
+  for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
 
   // Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
-  setup_K_ppoly_tab_and_eps_integ_consts(eos);
+  setup_K_ppoly_and_eps_integ_consts(eos);
 
   // --------- Atmospheric values ---------
   // Compute atmospheric P and eps
