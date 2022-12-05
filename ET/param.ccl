@@ -1,4 +1,9 @@
 restricted:
+CCTK_BOOLEAN Cupp_Fix "Whether or not to apply the Cupp Fix"
+{
+} "no"
+
+restricted:
 CCTK_BOOLEAN C2P_unit_test "Whether or not to perform the con2prim unit test"
 {
 } "no"

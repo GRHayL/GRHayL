@@ -7,22 +7,22 @@ INCLUDE HEADER: GRMHD_header.h in GRMHD_header.h
 
 void FUNCTION Con2Prim_Kernel(CCTK_POINTER_TO_CONST IN params,
                      CCTK_POINTER_TO_CONST IN eos,
-                     CCTK_POINTER INOUT metric,
-                     CCTK_POINTER INOUT cons,
-                     CCTK_POINTER INOUT prims,
-                     CCTK_POINTER INOUT diagnostics,
-                     CCTK_POINTER INOUT Tmunu)
+                     CCTK_POINTER IN metric,
+                     CCTK_POINTER IN cons,
+                     CCTK_POINTER IN prims,
+                     CCTK_POINTER IN diagnostics,
+                     CCTK_POINTER IN Tmunu)
 PROVIDES FUNCTION Con2Prim_Kernel WITH con2prim_ETK_kernel
   LANGUAGE C
 
 void FUNCTION initialize_conservatives_ETK(
                      CCTK_REAL IN rho, CCTK_REAL IN tau,
                      CCTK_REAL IN S_x, CCTK_REAL IN S_y, CCTK_REAL IN S_z,
-                     CCTK_REAL IN Y_e, CCTK_REAL IN entropy, CCTK_POINTER OUT cons)
+                     CCTK_REAL IN Y_e, CCTK_REAL IN entropy, CCTK_POINTER IN cons)
 PROVIDES FUNCTION initialize_conservatives_ETK WITH c2p_initialize_conservatives
   LANGUAGE C
 
-void FUNCTION initialize_diagnostics_ETK(CCTK_POINTER OUT diagnostics)
+void FUNCTION initialize_diagnostics_ETK(CCTK_POINTER IN diagnostics)
 PROVIDES FUNCTION initialize_diagnostics_ETK WITH c2p_initialize_diagnostics
   LANGUAGE C
 
@@ -30,7 +30,7 @@ void FUNCTION initialize_general_eos_ETK(
                     CCTK_INT IN type, CCTK_REAL IN tau_atm, CCTK_REAL IN W_max,
                     CCTK_REAL IN entropy_atm, CCTK_REAL IN entropy_min, CCTK_REAL IN entropy_max,
                     CCTK_REAL IN rho_atm, CCTK_REAL IN rho_min, CCTK_REAL IN rho_max,
-                    CCTK_POINTER OUT eos)
+                    CCTK_POINTER IN eos)
 PROVIDES FUNCTION initialize_general_eos_ETK WITH c2p_initialize_general_eos
   LANGUAGE C
 
@@ -38,7 +38,7 @@ void FUNCTION initialize_hybrid_eos_ETK(
                     CCTK_INT IN neos, CCTK_REAL ARRAY IN rho_ppoly,
                     CCTK_REAL ARRAY IN Gamma_ppoly, CCTK_REAL IN K_ppoly,
                     CCTK_REAL IN Gamma_th,
-                    CCTK_POINTER OUT eos)
+                    CCTK_POINTER IN eos)
 PROVIDES FUNCTION initialize_hybrid_eos_ETK WITH c2p_initialize_hybrid_eos
   LANGUAGE C
 
@@ -46,14 +46,14 @@ void FUNCTION initialize_metric_ETK(CCTK_REAL IN lapse,
                      CCTK_REAL IN gxx, CCTK_REAL IN gxy, CCTK_REAL IN gxz,
                      CCTK_REAL IN gyy, CCTK_REAL IN gyz, CCTK_REAL IN gzz,
                      CCTK_REAL IN betax, CCTK_REAL IN betay, CCTK_REAL IN betaz,
-                     CCTK_POINTER OUT metric)
+                     CCTK_POINTER IN metric)
 PROVIDES FUNCTION initialize_metric_ETK WITH c2p_initialize_metric
   LANGUAGE C
 
 void FUNCTION initialize_parameters_ETK(CCTK_INT IN main, CCTK_INT ARRAY IN backup,
                 CCTK_INT IN evolve_entropy, CCTK_INT IN evolve_temp, CCTK_INT IN calc_prim_guess,
-                CCTK_REAL IN psi6threshold, CCTK_INT IN update_Tmunu,
-                CCTK_POINTER OUT params)
+                CCTK_REAL IN psi6threshold, CCTK_INT IN update_Tmunu, CCTK_INT IN Cupp_Fix,
+                CCTK_POINTER IN params)
 PROVIDES FUNCTION initialize_parameters_ETK WITH c2p_initialize_parameters
   LANGUAGE C
 
@@ -62,7 +62,7 @@ void FUNCTION initialize_primitives_ETK(
                 CCTK_REAL IN vx, CCTK_REAL IN vy, CCTK_REAL IN vz,
                 CCTK_REAL IN Bx, CCTK_REAL IN By, CCTK_REAL IN Bz,
                 CCTK_REAL IN entropy, CCTK_REAL IN Y_e, CCTK_REAL IN temp,
-                CCTK_POINTER OUT prims)
+                CCTK_POINTER IN prims)
 PROVIDES FUNCTION initialize_primitives_ETK WITH c2p_initialize_primitives
   LANGUAGE C
 
