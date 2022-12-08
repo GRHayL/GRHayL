@@ -1,59 +1,15 @@
 #include <stdio.h>
 #include "con2prim_header.h"
-
-static inline void impose_speed_limit_output_u0(const eos_parameters *restrict eos, const metric_quantities *restrict metric,
-                                         primitive_quantities *restrict prims, con2prim_diagnostics *restrict diagnostics,
-                                         double *restrict u0_out) {
-
-  // Derivation of first equation:
-  // \gamma_{ij} (v^i + \beta^i)(v^j + \beta^j)/(\alpha)^2
-  //   = \gamma_{ij} 1/(u^0)^2 ( \gamma^{ik} u_k \gamma^{jl} u_l /(\alpha)^2 <- Using Eq. 53 of arXiv:astro-ph/0503420
-  //   = 1/(u^0 \alpha)^2 u_j u_l \gamma^{jl}  <- Since \gamma_{ij} \gamma^{ik} = \delta^k_j
-  //   = 1/(u^0 \alpha)^2 ( (u^0 \alpha)^2 - 1 ) <- Using Eq. 56 of arXiv:astro-ph/0503420
-  //   = 1 - 1/(u^0 \alpha)^2 <= 1
-  double one_minus_one_over_alpha_u0_squared = (metric->adm_gxx * SQR(prims->vx + metric->betax) +
-                                                   2.0*metric->adm_gxy*(prims->vx + metric->betax)*(prims->vy + metric->betay) +
-                                                   2.0*metric->adm_gxz*(prims->vx + metric->betax)*(prims->vz + metric->betaz) +
-                                                   metric->adm_gyy * SQR(prims->vy + metric->betay) +
-                                                   2.0*metric->adm_gyz*(prims->vy + metric->betay)*(prims->vz + metric->betaz) +
-                                                   metric->adm_gzz * SQR(prims->vz + metric->betaz) )*metric->lapseinv2;
-
-  /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
-  const double one_minus_one_over_W_max_squared = 1.0-1.0/SQR(eos->W_max); // 1 - W_max^{-2}
-  if(one_minus_one_over_alpha_u0_squared > one_minus_one_over_W_max_squared) {
-    double correction_fac = sqrt(one_minus_one_over_W_max_squared/one_minus_one_over_alpha_u0_squared);
-    prims->vx = (prims->vx + metric->betax)*correction_fac - metric->betax;
-    prims->vy = (prims->vy + metric->betay)*correction_fac - metric->betay;
-    prims->vz = (prims->vz + metric->betaz)*correction_fac - metric->betaz;
-    one_minus_one_over_alpha_u0_squared = one_minus_one_over_W_max_squared;
-    diagnostics->failure_checker+=1000;
-  }
-
-  // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
-  // 1/sqrt(A) = al u0
-  //double alpha_u0_minus_one = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared)-1.0;
-  //u0_out          = (alpha_u0_minus_one + 1.0)*metric.lapseinv;
-  double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
-  if(isnan(alpha_u0*metric->lapseinv)) {
-    printf("*********************************************\n");
-    printf("Metric/psi4: %e %e %e %e %e %e / %e\n", metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz, metric->psi4);
-    printf("Lapse/shift: %e (=1/%e) / %e %e %e\n",metric->lapse, metric->lapseinv, metric->betax, metric->betay, metric->betaz);
-    printf("Velocities : %e %e %e\n", prims->vx, prims->vx, prims->vz);
-    printf("Found nan while computing u^{0} in function %s (file: %s)\n",__func__,__FILE__);
-    printf("*********************************************\n");
-    diagnostics->nan_found++;
-  }
-  *u0_out = alpha_u0*metric->lapseinv;
-}
+#include "EOS/Hybrid/EOS_hybrid_header.h"
 
 static inline void compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
                                              const double u0L, const double ONE_OVER_LAPSE_SQRT_4PI, double *restrict u_x_over_u0_psi4,
                                              double *restrict u_y_over_u0_psi4, double *restrict u_z_over_u0_psi4, double *restrict smallb) {
 
   double u_over_u0_psi4[3];
-   u_over_u0_psi4[0] = *u_x_over_u0_psi4;
-   u_over_u0_psi4[1] = *u_y_over_u0_psi4;
-   u_over_u0_psi4[2] = *u_z_over_u0_psi4;
+  u_over_u0_psi4[0] = *u_x_over_u0_psi4;
+  u_over_u0_psi4[1] = *u_y_over_u0_psi4;
+  u_over_u0_psi4[2] = *u_z_over_u0_psi4;
 
   // NOW COMPUTE b^{\mu} and b^2 = b^{\mu} b^{\nu} g_{\mu \nu}
   double ONE_OVER_U0 = 1.0/u0L;
@@ -106,39 +62,30 @@ static inline void compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantiti
   /***********************************************************/
 }
 
-void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
-                                                         const metric_quantities *restrict metric, primitive_quantities *restrict prims,
-                                                         conservative_quantities *restrict cons, double *TUPMUNU,double *TDNMUNU,
-                                                         stress_energy *restrict Tmunu,
-                                                         con2prim_diagnostics *restrict diagnostics) {
+void compute_conservs_and_Tmunu(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
+                                const metric_quantities *restrict metric, primitive_quantities *restrict prims, const double u0,
+                                conservative_quantities *restrict cons, stress_energy *restrict Tmunu) {
 
-  // The goal here is to apply floors and ceilings to the primitives
-  // and compute the enthalpy. Note that the derivative of the
-  // pressure with respect to rho was unecessary in this function.
-  //
-  // This function will apply floors and ceilings and recompute:
-  //
-  // rho_b
-  // P
-  // eps
-  // S  (if evolving the entropy)
-  // Ye (if tabulated EOS is enabled)
-  // T  (if tabulated EOS is enabled)
-  prims_enforce_extrema_and_recompute(params,eos,metric,prims);
+
+  double prs_cold = 0.0;
+  double eps_cold = 0.0;
+  compute_P_cold_and_eps_cold(eos, prims->rho, &prs_cold, &eps_cold);
+  prims->eps = eps_cold + (prims->press-prs_cold)/(eos->Gamma_th-1.0)/prims->rho;
 
   // Now compute the enthalpy
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;
 
   double uUP[4];
-  impose_speed_limit_output_u0(eos, metric, prims, diagnostics, &uUP[0]);
 
-  // Compute u^i. We've already set uUP[0] in the lines above.
+  // Compute u^i. u^0 is provided to the function.
+  uUP[0] = u0;
   uUP[1] = uUP[0]*prims->vx;
   uUP[2] = uUP[0]*prims->vy;
   uUP[3] = uUP[0]*prims->vz;
 
+printf("%.16e\n%.16e\n%.16e\n%.16e\n%.16e\n", h_enthalpy, uUP[0], uUP[1], uUP[2], uUP[3]);
   /***************************************************************/
-  // COMPUTE TUPMUNU, TDNMUNU, AND  CONSERVATIVES FROM PRIMITIVES
+  //     COMPUTE TDNMUNU AND  CONSERVATIVES FROM PRIMITIVES      //
   /***************************************************************/
   // Compute b^{\mu}, b^2, and u_i/(u^0 Psi4)
   double ONE_OVER_LAPSE_SQRT_4PI = metric->lapseinv*ONE_OVER_SQRT_4PI;
@@ -155,12 +102,6 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
   double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb[SMALLB2]);
   double P_plus_half_b2 = (prims->press+0.5*smallb[SMALLB2]);
 
-  int count;
-  // Next compute T^{\mu \nu}. This is very useful when computing fluxes and source terms in the GRMHD evolution equations.
-  // (Eq. 33 in http://arxiv.org/pdf/astro-ph/0503420.pdf):
-  // T^{mn} = (rho_0 h + b^2) u^m u^n + (P + 0.5 b^2) g^{mn} - b^m b^n, where m and n both run from 0 to 3.
-  count=0; for(int ii=0;ii<4;ii++) for(int jj=ii;jj<4;jj++) { TUPMUNU[count] = rho0_h_plus_b2*uUP[ii]*uUP[jj] + P_plus_half_b2*metric->g4up[ii][jj] - smallb[SMALLBT+ii]*smallb[SMALLBT+jj]; count++; }
-
   // Next compute T_{\mu \nu}
   // T_{mn} = (rho_0 h + b^2) u_m u_n + (P + 0.5 b^2) g_{mn} - b_m b_n, where m and n both run from 0 to 3.
 
@@ -173,38 +114,43 @@ void enforce_limits_on_primitives_and_recompute_conservs(const GRMHD_parameters 
   // Compute u_0, as we've already computed u_i above.
   uDN[0]=0.0; for(int jj=0;jj<4;jj++) uDN[0] += uUP[jj]*metric->g4dn[0][jj];
 
-  // Compute T_{\mu \nu}
-  if(params->update_Tmunu) {
-    count=0; for(int ii=0;ii<4;ii++) for(int jj=ii;jj<4;jj++) { TDNMUNU[count] = rho0_h_plus_b2*uDN[ii]*uDN[jj] + P_plus_half_b2*metric->g4dn[ii][jj] - smallb_lower[SMALLBT+ii]*smallb_lower[SMALLBT+jj]; count++; }
-  }
-
-  // Finally, compute conservatives:
+  // Compute conservatives:
   cons->rho = alpha_sqrt_gamma * prims->rho * uUP[0];
   cons->S_x = cons->rho*h_enthalpy*uDN[1] + alpha_sqrt_gamma*(uUP[0]*smallb[SMALLB2]*uDN[1] - smallb[SMALLBT]*smallb_lower[SMALLBX]);
   cons->S_y = cons->rho*h_enthalpy*uDN[2] + alpha_sqrt_gamma*(uUP[0]*smallb[SMALLB2]*uDN[2] - smallb[SMALLBT]*smallb_lower[SMALLBY]);
   cons->S_z = cons->rho*h_enthalpy*uDN[3] + alpha_sqrt_gamma*(uUP[0]*smallb[SMALLB2]*uDN[3] - smallb[SMALLBT]*smallb_lower[SMALLBZ]);
   // tauL = alpha^2 sqrt(gamma) T^{00} - CONSERVS[RHOSTAR]
   cons->tau =  metric->lapse*alpha_sqrt_gamma*(rho0_h_plus_b2*SQR(uUP[0]) - P_plus_half_b2*metric->lapseinv2 - SQR(smallb[SMALLBT])) - cons->rho;
+  // Entropy equation evolves S_star = alpha * sqrt(gamma) * S * u^{0}
+  cons->entropy = alpha_sqrt_gamma * prims->entropy * uUP[0];
+  // Tabulated EOS evolves Y_e_star = alpha * sqrt(gamma) * rho_b * Y_e * u^{0} = rho_star * Y_e
+  cons->Y_e = cons->rho * prims->Y_e;
 
-  if( params->evolve_entropy ) {
-    // Entropy equation evolves S_star = alpha * sqrt(gamma) * S * u^{0}
-    cons->entropy = alpha_sqrt_gamma * prims->entropy * uUP[0];
+  // Finally, compute T_{\mu \nu}
+  if(params->update_Tmunu) {
+    Tmunu->Ttt = rho0_h_plus_b2*uDN[0]*uDN[0] + P_plus_half_b2*metric->g4dn[0][0] - smallb_lower[SMALLBT+0]*smallb_lower[SMALLBT+0];;
+    Tmunu->Ttx = rho0_h_plus_b2*uDN[0]*uDN[1] + P_plus_half_b2*metric->g4dn[0][1] - smallb_lower[SMALLBT+0]*smallb_lower[SMALLBT+1];;
+    Tmunu->Tty = rho0_h_plus_b2*uDN[0]*uDN[2] + P_plus_half_b2*metric->g4dn[0][2] - smallb_lower[SMALLBT+0]*smallb_lower[SMALLBT+2];;
+    Tmunu->Ttz = rho0_h_plus_b2*uDN[0]*uDN[3] + P_plus_half_b2*metric->g4dn[0][3] - smallb_lower[SMALLBT+0]*smallb_lower[SMALLBT+3];;
+    Tmunu->Txx = rho0_h_plus_b2*uDN[1]*uDN[1] + P_plus_half_b2*metric->g4dn[1][1] - smallb_lower[SMALLBT+1]*smallb_lower[SMALLBT+1];;
+    Tmunu->Txy = rho0_h_plus_b2*uDN[1]*uDN[2] + P_plus_half_b2*metric->g4dn[1][2] - smallb_lower[SMALLBT+1]*smallb_lower[SMALLBT+2];;
+    Tmunu->Txz = rho0_h_plus_b2*uDN[1]*uDN[3] + P_plus_half_b2*metric->g4dn[1][3] - smallb_lower[SMALLBT+1]*smallb_lower[SMALLBT+3];;
+    Tmunu->Tyy = rho0_h_plus_b2*uDN[2]*uDN[2] + P_plus_half_b2*metric->g4dn[2][2] - smallb_lower[SMALLBT+2]*smallb_lower[SMALLBT+2];;
+    Tmunu->Tyz = rho0_h_plus_b2*uDN[2]*uDN[3] + P_plus_half_b2*metric->g4dn[2][3] - smallb_lower[SMALLBT+2]*smallb_lower[SMALLBT+3];;
+    Tmunu->Tzz = rho0_h_plus_b2*uDN[3]*uDN[3] + P_plus_half_b2*metric->g4dn[3][3] - smallb_lower[SMALLBT+3]*smallb_lower[SMALLBT+3];;
+//    double TDNMUNU[10];
+//    int ww=0;
+//    for(int ii=0;ii<4;ii++) for(int jj=ii;jj<4;jj++) { TDNMUNU[ww] = rho0_h_plus_b2*uDN[ii]*uDN[jj] + P_plus_half_b2*metric->g4dn[ii][jj] - smallb_lower[SMALLBT+ii]*smallb_lower[SMALLBT+jj]; ww++; }
+//    ww=0;
+//    Tmunu->Ttt = TDNMUNU[ww++];
+//    Tmunu->Ttx = TDNMUNU[ww++];
+//    Tmunu->Tty = TDNMUNU[ww++];
+//    Tmunu->Ttz = TDNMUNU[ww++];
+//    Tmunu->Txx = TDNMUNU[ww++];
+//    Tmunu->Txy = TDNMUNU[ww++];
+//    Tmunu->Txz = TDNMUNU[ww++];
+//    Tmunu->Tyy = TDNMUNU[ww++];
+//    Tmunu->Tyz = TDNMUNU[ww++];
+//    Tmunu->Tzz = TDNMUNU[ww  ];
   }
-  if( eos->eos_type == 1 ) {
-    // Tabulated EOS evolves Y_e_star = alpha * sqrt(gamma) * rho_b * Y_e * u^{0} = rho_star * Y_e
-    cons->Y_e = cons->rho * prims->Y_e;
-  }
-    if(params->update_Tmunu) {
-      int ww=0;
-      Tmunu->Ttt = TDNMUNU[ww++];
-      Tmunu->Ttx = TDNMUNU[ww++];
-      Tmunu->Tty = TDNMUNU[ww++];
-      Tmunu->Ttz = TDNMUNU[ww++];
-      Tmunu->Txx = TDNMUNU[ww++];
-      Tmunu->Txy = TDNMUNU[ww++];
-      Tmunu->Txz = TDNMUNU[ww++];
-      Tmunu->Tyy = TDNMUNU[ww++];
-      Tmunu->Tyz = TDNMUNU[ww++];
-      Tmunu->Tzz = TDNMUNU[ww  ];
-    }
 }

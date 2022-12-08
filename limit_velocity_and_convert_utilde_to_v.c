@@ -62,7 +62,7 @@ void limit_velocity_and_convert_utilde_to_v( const eos_parameters *restrict eos,
     au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
     // Reset rho_b and u0
     u0 = (au0m1+1.0)*metric->lapseinv;
-    diagnostics->vel_limited_ptcount++;
+    diagnostics->vel_limited_ptcount=1;
     diagnostics->failure_checker+=1000;
   } //Finished limiting velocity
 

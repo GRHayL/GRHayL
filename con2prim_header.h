@@ -170,15 +170,14 @@ typedef struct conservative_quantities {
    cons/prim structs. The cons and prims structs should therefore be
    defined higher up in the code hierarchy. */
 
-void enforce_limits_on_primitives_and_recompute_conservs(
-             const GRMHD_parameters *restrict params,
-             const eos_parameters *restrict eos,
-             const metric_quantities *restrict metric,
-             primitive_quantities *restrict prims,
-             conservative_quantities *restrict cons,
-             double *TUPMUNU,double *TDNMUNU,
-             stress_energy *restrict Tmunu,
-             con2prim_diagnostics *restrict diagnostics );
+//void enforce_limits_on_primitives_and_recompute_conservs(
+//             const GRMHD_parameters *restrict params,
+//             const eos_parameters *restrict eos,
+//             const metric_quantities *restrict metric,
+//             primitive_quantities *restrict prims,
+//             conservative_quantities *restrict cons,
+//             stress_energy *restrict Tmunu,
+//             con2prim_diagnostics *restrict diagnostics );
 
 void prims_enforce_extrema_and_recompute(
              const GRMHD_parameters *restrict params,
@@ -293,6 +292,14 @@ void eigenvalues_3by3_real_sym_matrix(
              double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
              const double M11, const double M12, const double M13,
              const double M22, const double M23, const double M33);
+
+void enforce_primitive_limits_and_output_u0(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
+                                            const metric_quantities *restrict metric, primitive_quantities *restrict prims,
+                                            double *restrict u0, con2prim_diagnostics *restrict diagnostics);
+
+void compute_conservs_and_Tmunu(const GRMHD_parameters *restrict params, const eos_parameters *restrict eos,
+                                const metric_quantities *restrict metric, primitive_quantities *restrict prims, const double u0,
+                                conservative_quantities *restrict cons, stress_energy *restrict Tmunu);
 //--------------------------------------------------
 
 //-------------- Font Fix routines -----------------

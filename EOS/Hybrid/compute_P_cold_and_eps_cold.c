@@ -1,6 +1,6 @@
 #include "EOS_hybrid_header.h"
 
-/* Function    : compute_P_cold__eps_cold()
+/* Function    : compute_P_cold_and_eps_cold()
  * Authors     : Leo Werneck
  * Description : Computes P_cold and eps_cold.
  * Dependencies: initialize_igm_eos_parameters_from_input()

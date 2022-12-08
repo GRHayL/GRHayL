@@ -127,6 +127,9 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
   } else {
     diagnostics->failure_checker+=1;
     reset_prims_to_atmosphere(eos, prims, diagnostics);
+ prims->vx = -metric->betax;
+ prims->vy = -metric->betay;
+ prims->vz = -metric->betaz;  
     diagnostics->rho_star_fix_applied++;
   } // if rho_star>0
 
@@ -136,6 +139,9 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
     //--------------------------------------------------
     // Sigh, reset to atmosphere
     reset_prims_to_atmosphere( eos, prims, diagnostics);
+ prims->vx = -metric->betax;
+ prims->vy = -metric->betay;
+ prims->vz = -metric->betaz;  
     diagnostics->failure_checker+=100000;
     diagnostics->atm_resets++;
     // Then flag this point as a "success"
@@ -150,8 +156,10 @@ void con2prim_loop_kernel(const GRMHD_parameters *restrict params, const eos_par
   //---------- Primitive recovery succeeded ----------
   //--------------------------------------------------
   // Enforce limits on primitive variables and recompute conservatives.
-  double TUPMUNU[10],TDNMUNU[10];
-  enforce_limits_on_primitives_and_recompute_conservs(params, eos, metric, prims, cons, TUPMUNU, TDNMUNU, Tmunu, diagnostics);
+  double u0;
+  enforce_primitive_limits_and_output_u0(params, eos, metric, prims, &u0, diagnostics);
+  compute_conservs_and_Tmunu(params, eos, metric, prims, u0, cons, Tmunu);
+//  enforce_limits_on_primitives_and_recompute_conservs(params, eos, metric, prims, cons, Tmunu, diagnostics);
 
   //Now we compute the difference between original & new conservatives, for diagnostic purposes:
 //printf("Cons: tau rho S %.16e %.16e %.16e %.16e %.16e\n", cons->tau, cons->rho, cons->S_x, cons->S_y, cons->S_z);

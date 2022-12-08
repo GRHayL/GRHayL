@@ -57,5 +57,4 @@ void prims_enforce_extrema_and_recompute( const GRMHD_parameters *restrict param
   //  prims->eps = xeps;
   //  prims->entropy = xent;
   }
-
 }
