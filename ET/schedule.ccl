@@ -1,5 +1,5 @@
 if (C2P_unit_test) {
-  schedule C2P_test_suite at CCTK_INITIAL {
+  schedule con2prim_test_suite at CCTK_INITIAL {
     LANG: C
   } "Unit test for Con2Prim routines"
 }

@@ -1,0 +1,7 @@
+# Subdirectory make.code.defn for Con2Prim/Font_Fix
+
+# Source files in this directory that need compiled:
+SRCS = \
+       font_fix.c \
+       font_fix_hybrid_EOS.c \
+       font_fix_rhob_loop.c

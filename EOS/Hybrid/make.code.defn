@@ -3,7 +3,5 @@
 # Source files in this directory that need compiled:
 SRCS = \
        compute_entropy_function.c \
-       compute_P_cold_and_eps_cold.c \
-       find_polytropic_index.c \
-       get_K_and_gamma.c \
-       setup_K_ppoly_and_eps_integ_consts.c
+       compute_P_cold.c \
+       compute_P_cold_and_eps_cold.c

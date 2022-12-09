@@ -1,4 +1,4 @@
-#include "EOS_hybrid_header.h"
+#include "EOS_hybrid.h"
 
 void compute_entropy_function( const eos_parameters *restrict eos,
                                const double rho,

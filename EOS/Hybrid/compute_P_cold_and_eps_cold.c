@@ -1,4 +1,4 @@
-#include "EOS_hybrid_header.h"
+#include "EOS_hybrid.h"
 
 /* Function    : compute_P_cold_and_eps_cold()
  * Authors     : Leo Werneck

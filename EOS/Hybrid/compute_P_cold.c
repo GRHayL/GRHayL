@@ -1,4 +1,4 @@
-#include "EOS_hybrid_header.h"
+#include "EOS_hybrid.h"
 
 /* Function    : compute_P_cold()
  * Authors     : Leo Werneck & Samuel Cupp
@@ -48,7 +48,7 @@ void compute_P_cold(const eos_parameters *restrict eos, const double rho_in, dou
   // Set up useful auxiliary variables
   double K_ppoly;
   double Gamma_ppoly;
-  get_K_and_Gamma(eos, rho_in, K_ppoly, Gamma_ppoly);
+  get_K_and_Gamma(eos, rho_in, &K_ppoly, &Gamma_ppoly);
 
   // Then compute P_{cold}
   *P_cold_ptr = K_ppoly*pow(rho_in,Gamma_ppoly);

@@ -1,29 +1,12 @@
-# Main make.code.defn file for thorn Baikal
+# Main make.code.defn file for thorn GRHayL
 
-# Source files in this directory that need compiled:
-SRCS = \
-       apply_inequality_fixes.c \
-       compute_conservs_and_Tmunu.c \
-       con2prim_ETK_interface.c \
-       con2prim_loop_kernel.c \
-       C2P_test_suite.c \
-       eigen.c \
-       enforce_primitive_limits.c \
-       guess_primitives.c \
-       initialize_conservatives.c \
-       initialize_diagnostics.c \
-       initialize_metric.c \
-       initialize_parameters.c \
-       initialize_primitives.c \
-       limit_velocity_and_convert_utilde_to_v.c \
-       return_conservatives.c \
-       return_primitives.c \
-       undensitize_conservatives.c
+# Source files in this directory
+SRCS = 
 
-# Subdirectories containing source files (normal compilation)
-# ... directories are listed in bottom-up order
+# Subdirectories containing source files
 SUBDIRS = \
-          C2P_Routines/Hybrid \
-          EOS \
+          Con2Prim \
+          Con2Prim/C2P_Routines/Font_Fix \
+          Con2Prim/C2P_Routines/Hybrid \
           EOS/Hybrid \
-          Font_Fix
+          GRHayL_Core
