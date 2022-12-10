@@ -1,4 +1,4 @@
-#include "con2prim_header.h"
+#include "con2prim_gem.h"
 
 /* Function    : initialize_diagnostics()
  * Authors     : Samuel Cupp

@@ -4,9 +4,10 @@
 SRCS = 
 
 # Subdirectories containing source files
-SUBDIRS = \
-          Con2Prim \
+SUBDIRS = Con2Prim                       \
           Con2Prim/C2P_Routines/Font_Fix \
-          Con2Prim/C2P_Routines/Hybrid \
-          EOS/Hybrid \
+          Con2Prim/C2P_Routines/Hybrid   \
+          EOS/Hybrid                     \
+          EOS/Tabulated                  \
+          EOS/Tabulated/interpolators    \
           GRHayL_Core
