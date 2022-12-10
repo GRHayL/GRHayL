@@ -170,7 +170,7 @@ void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, NRPyEOS_par
     eos_params->alltables[idx] *= CGS_TO_CODE_ENERGY;
 
     // dpdrhoe
-    idx = NRPyEOS_dPdrho_key6 + NRPyEOS_ntablekeys*i;
+    idx = NRPyEOS_dPdrho_key + NRPyEOS_ntablekeys*i;
     eos_params->alltables[idx] *= CGS_TO_CODE_PRESSURE/CGS_TO_CODE_DENSITY;
 
     // dpderho
