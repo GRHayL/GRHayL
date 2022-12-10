@@ -8,12 +8,12 @@
  */
 
 //------------------------------------------
-static inline __attribute__((always_inline))  
+static inline __attribute__((always_inline))
 int NRPyEOS_checkbounds(const NRPyEOS_params *restrict eos_params,
-                        const double xrho, 
-                        const double xtemp, 
+                        const double xrho,
+                        const double xtemp,
                         const double xye) {
-  
+
   // keyerr codes:
   // 101 -- Y_e too high
   // 102 -- Y_e too low
@@ -45,11 +45,11 @@ int NRPyEOS_checkbounds(const NRPyEOS_params *restrict eos_params,
   return 0;
 }
 //------------------------------------------
-static inline __attribute__((always_inline))  
+static inline __attribute__((always_inline))
 int NRPyEOS_checkbounds_kt0_noTcheck(const NRPyEOS_params *restrict eos_params,
-                                     const double xrho, 
+                                     const double xrho,
                                      const double xye) {
-  
+
   // keyerr codes:
   // 101 -- Y_e too high
   // 102 -- Y_e too low
@@ -71,7 +71,7 @@ int NRPyEOS_checkbounds_kt0_noTcheck(const NRPyEOS_params *restrict eos_params,
   return 0;
 }
 //------------------------------------------
-static inline __attribute__((always_inline))  
+static inline __attribute__((always_inline))
 void NRPyEOS_get_interp_spots(const NRPyEOS_params *restrict eos_params,
                               const double x,
                               const double y,
@@ -81,9 +81,9 @@ void NRPyEOS_get_interp_spots(const NRPyEOS_params *restrict eos_params,
                               double *restrict delz,
                               int *restrict idx) {
 
-  int ix = 1 + (int)( (x - eos_params->logrho[0]  - 1.0e-10) * eos_params->drhoi );
+  int ix = 1 + (int)( (x - eos_params->logrho[0]  - 1.0e-10) * eos_params->drhoi  );
   int iy = 1 + (int)( (y - eos_params->logtemp[0] - 1.0e-10) * eos_params->dtempi );
-  int iz = 1 + (int)( (z - eos_params->yes[0]     - 1.0e-10) * eos_params->dyei );
+  int iz = 1 + (int)( (z - eos_params->yes[0]     - 1.0e-10) * eos_params->dyei  );
 
   ix = MAX( 1, MIN( ix, eos_params->nrho -1 ) );
   iy = MAX( 1, MIN( iy, eos_params->ntemp-1 ) );
@@ -105,7 +105,7 @@ void NRPyEOS_get_interp_spots(const NRPyEOS_params *restrict eos_params,
 
 }
 //------------------------------------------
-static inline __attribute__((always_inline))  
+static inline __attribute__((always_inline))
 void NRPyEOS_get_interp_spots_linT_low(const NRPyEOS_params *restrict eos_params,
                                        const double x,
                                        const double y,
@@ -138,7 +138,7 @@ void NRPyEOS_get_interp_spots_linT_low(const NRPyEOS_params *restrict eos_params
 
 }
 //------------------------------------------
-static inline __attribute__((always_inline))  
+static inline __attribute__((always_inline))
 void NRPyEOS_get_interp_spots_linT_low_eps(const NRPyEOS_params *restrict eos_params,
                                            const double x,
                                            const double y,
@@ -171,10 +171,10 @@ void NRPyEOS_get_interp_spots_linT_low_eps(const NRPyEOS_params *restrict eos_pa
 
 }
 //------------------------------------------
-static inline __attribute__((always_inline))  
+static inline __attribute__((always_inline))
 void NRPyEOS_linterp_one(const NRPyEOS_params *restrict eos_params,
-                         const int *restrict idx, 
-                         const double delx, 
+                         const int *restrict idx,
+                         const double delx,
                          const double dely,
                          const double delz,
                          double *restrict f,
@@ -201,7 +201,7 @@ void NRPyEOS_linterp_one(const NRPyEOS_params *restrict eos_params,
   a[4] = eos_params->drhotempi   * ( fh[4] - fh[1] - fh[2] + fh[0] );
   a[5] = eos_params->drhoyei     * ( fh[5] - fh[1] - fh[3] + fh[0] );
   a[6] = eos_params->dtempyei    * ( fh[6] - fh[2] - fh[3] + fh[0] );
-  a[7] = eos_params->drhotempyei * ( fh[7] - fh[0] + fh[1] + fh[2] + 
+  a[7] = eos_params->drhotempyei * ( fh[7] - fh[0] + fh[1] + fh[2] +
                                      fh[3] - fh[4] - fh[5] - fh[6] );
 
   *f = a[0]
@@ -215,10 +215,10 @@ void NRPyEOS_linterp_one(const NRPyEOS_params *restrict eos_params,
 
 }
 //------------------------------------------
-static inline __attribute__((always_inline))  
+static inline __attribute__((always_inline))
 void NRPyEOS_linterp_one_linT_low(const NRPyEOS_params *restrict eos_params,
-                                  const int *restrict idx, 
-                                  const double delx, 
+                                  const int *restrict idx,
+                                  const double delx,
                                   const double dely,
                                   const double delz,
                                   double *restrict f,
@@ -245,7 +245,7 @@ void NRPyEOS_linterp_one_linT_low(const NRPyEOS_params *restrict eos_params,
   a[4] = eos_params->drholintempi   * ( fh[4] - fh[1] - fh[2] + fh[0] );
   a[5] = eos_params->drhoyei        * ( fh[5] - fh[1] - fh[3] + fh[0] );
   a[6] = eos_params->dlintempyei    * ( fh[6] - fh[2] - fh[3] + fh[0] );
-  a[7] = eos_params->drholintempyei * ( fh[7] - fh[0] + fh[1] + fh[2] + 
+  a[7] = eos_params->drholintempyei * ( fh[7] - fh[0] + fh[1] + fh[2] +
                                         fh[3] - fh[4] - fh[5] - fh[6] );
 
   *f = a[0]
@@ -259,10 +259,10 @@ void NRPyEOS_linterp_one_linT_low(const NRPyEOS_params *restrict eos_params,
 
 }
 //------------------------------------------
-static inline __attribute__((always_inline))  
+static inline __attribute__((always_inline))
 void NRPyEOS_linterp_one_linT_low_eps(const NRPyEOS_params *restrict eos_params,
-                                      const int *restrict idx, 
-                                      const double delx, 
+                                      const int *restrict idx,
+                                      const double delx,
                                       const double dely,
                                       const double delz,
                                       double *restrict f) {
@@ -288,7 +288,7 @@ void NRPyEOS_linterp_one_linT_low_eps(const NRPyEOS_params *restrict eos_params,
   a[4] = eos_params->drholintempi   * ( fh[4] - fh[1] - fh[2] + fh[0] );
   a[5] = eos_params->drhoyei        * ( fh[5] - fh[1] - fh[3] + fh[0] );
   a[6] = eos_params->dlintempyei    * ( fh[6] - fh[2] - fh[3] + fh[0] );
-  a[7] = eos_params->drholintempyei * ( fh[7] - fh[0] + fh[1] + fh[2] + 
+  a[7] = eos_params->drholintempyei * ( fh[7] - fh[0] + fh[1] + fh[2] +
                                         fh[3] - fh[4] - fh[5] - fh[6] );
 
   *f = a[0]
@@ -303,20 +303,20 @@ void NRPyEOS_linterp_one_linT_low_eps(const NRPyEOS_params *restrict eos_params,
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-double NRPyEOS_linterp2D(const double *restrict xs, 
-                         const double *restrict ys, 
-                         const double *restrict fs, 
-                         const double x, 
+double NRPyEOS_linterp2D(const double *restrict xs,
+                         const double *restrict ys,
+                         const double *restrict fs,
+                         const double x,
                          const double y) {
 
-  //  2     3 
+  //  2     3
   //
   //  0     1
   //
   // first interpolate in x between 0 and 1, 2 and 3
   // then interpolate in y
   // assume rectangular grid
-  
+
   double dxi = 1./(xs[1]-xs[0]);
   double dyi = 1./(ys[1]-ys[0]); // x*1./y uses faster instructions than x/y
   double t1 = (fs[1]-fs[0])*dxi * (x - xs[0]) + fs[0];
@@ -327,7 +327,7 @@ double NRPyEOS_linterp2D(const double *restrict xs,
 //------------------------------------------
 static inline __attribute__((always_inline))
 void NRPyEOS_bisection(const NRPyEOS_params *restrict eos_params,
-                       const double lr, 
+                       const double lr,
                        const double lt0,
                        const double ye,
                        const double leps0,
@@ -337,7 +337,7 @@ void NRPyEOS_bisection(const NRPyEOS_params *restrict eos_params,
                        int *restrict keyerrt) {
   // iv is the index of the variable we do the bisection on
 
-  int bcount = 0; 
+  int bcount = 0;
   int maxbcount = 80;
   int itmax = 50;
 
@@ -357,9 +357,9 @@ void NRPyEOS_bisection(const NRPyEOS_params *restrict eos_params,
   double f2a = 0.0;
   double delx,dely,delz;
   int idx[8];
-  
+
   // LSMOD (Modification made by Lorenzo Sala)
-  // LSMOD: The following lines calculate eps in 
+  // LSMOD: The following lines calculate eps in
   //        f2a = eps(rho,Tmin, Ye) and f1a = eps(rho,Tmax,Ye)
   NRPyEOS_get_interp_spots(eos_params,lr,ltmax,ye,&delx,&dely,&delz,idx);
   NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f1a,iv);
@@ -368,7 +368,7 @@ void NRPyEOS_bisection(const NRPyEOS_params *restrict eos_params,
 
   // prepare
   // check if your energy is actually tabulated at this rho and ye.
-  // f2a is the energy evaluated at ltmin, so it is the minimum energy tabulated 
+  // f2a is the energy evaluated at ltmin, so it is the minimum energy tabulated
   // at this rho ad ye.
   // If leps0 <= f2a, then ltout is likely to be the minimum temperature tabulated.
   if(leps0 <= f2a) { // + 1.0E-6
@@ -388,10 +388,10 @@ void NRPyEOS_bisection(const NRPyEOS_params *restrict eos_params,
   lt2 = MAX(lt0 + dlt0m,ltmin);
 
   NRPyEOS_get_interp_spots(eos_params,lr,lt1,ye,&delx,&dely,&delz,idx);
-  NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f1a,iv);  
+  NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f1a,iv);
 
   NRPyEOS_get_interp_spots(eos_params,lr,lt2,ye,&delx,&dely,&delz,idx);
-  NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f2a,iv);  
+  NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f2a,iv);
 
   f1=f1a-leps0;
   f2=f2a-leps0;
@@ -402,10 +402,10 @@ void NRPyEOS_bisection(const NRPyEOS_params *restrict eos_params,
     lt1 = MIN(lt1 + dltp,ltmax);
     lt2 = MAX(lt2 + dltm,ltmin);
     NRPyEOS_get_interp_spots(eos_params,lr,lt1,ye,&delx,&dely,&delz,idx);
-    NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f1a,iv);  
-    
+    NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f1a,iv);
+
     NRPyEOS_get_interp_spots(eos_params,lr,lt2,ye,&delx,&dely,&delz,idx);
-    NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f2a,iv);  
+    NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f2a,iv);
 
     f1=f1a-leps0;
     f2=f2a-leps0;
@@ -445,8 +445,8 @@ void NRPyEOS_bisection(const NRPyEOS_params *restrict eos_params,
     dlt = dlt * 0.5;
     ltmid = lt + dlt;
     NRPyEOS_get_interp_spots(eos_params,lr,ltmid,ye,&delx,&dely,&delz,idx);
-    NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f2a,iv); 
-    
+    NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&f2a,iv);
+
     fmid=f2a-leps0;
     if(fmid <= 0.0) lt=ltmid;
 #if DEBUG
@@ -503,11 +503,11 @@ void NRPyEOS_findtemp_from_any( const NRPyEOS_params *restrict eos_params,
 
   double oerr = 1.0e90;
   double fac  = 1.0;
-  const int irho = MIN(MAX(1 + (int)(( lr - eos_params->logrho[0] - 1.0e-12) * eos_params->drhoi),1),eos_params->nrho-1); 
-  const int iye  = MIN(MAX(1 + (int)(( ye - eos_params->yes[0]    - 1.0e-12) * eos_params->dyei ),1),eos_params->nye -1); 
+  const int irho = MIN(MAX(1 + (int)(( lr - eos_params->logrho[0] - 1.0e-12) * eos_params->drhoi),1),eos_params->nrho-1);
+  const int iye  = MIN(MAX(1 + (int)(( ye - eos_params->yes[0]    - 1.0e-12) * eos_params->dyei ),1),eos_params->nye -1);
 
-  /* ******* if temp low for high density, switch directly to bisection. 
-     Verifying Newton-Raphson result evaluating the derivative. 
+  /* ******* if temp low for high density, switch directly to bisection.
+     Verifying Newton-Raphson result evaluating the derivative.
      The variable shouldgotobisection will be modified accordingly
      to the value of derivative of eps wrt temp ******* */
   bool shouldgotobisection = false; // LSMOD
@@ -516,7 +516,7 @@ void NRPyEOS_findtemp_from_any( const NRPyEOS_params *restrict eos_params,
 
     // step 2: check if the two bounding values of the temperature
     //         give eps values that enclose the new eps.
-    const int itemp = MIN(MAX(1 + (int)(( lt - eos_params->logtemp[0] - 1.0e-12) * eos_params->dtempi),1),eos_params->ntemp-1); 
+    const int itemp = MIN(MAX(1 + (int)(( lt - eos_params->logtemp[0] - 1.0e-12) * eos_params->dtempi),1),eos_params->ntemp-1);
 
     double tablevart1, tablevart2;
     // lower temperature
@@ -526,16 +526,16 @@ void NRPyEOS_findtemp_from_any( const NRPyEOS_params *restrict eos_params,
       // point 0
       int ifs = tablevar_key + NRPyEOS_ntablekeys*(irho-1 + eos_params->nrho*((itemp-1) + eos_params->ntemp*(iye-1)));
       fs[0]   = eos_params->alltables[ifs];
-      // point 1 
+      // point 1
       ifs     = tablevar_key + NRPyEOS_ntablekeys*(irho   + eos_params->nrho*((itemp-1) + eos_params->ntemp*(iye-1)));
       fs[1]   = eos_params->alltables[ifs];
-      // point 2 
+      // point 2
       ifs     = tablevar_key + NRPyEOS_ntablekeys*(irho-1 + eos_params->nrho*((itemp-1) + eos_params->ntemp*(iye)));
       fs[2]   = eos_params->alltables[ifs];
       // point 3
       ifs     = tablevar_key + NRPyEOS_ntablekeys*(irho   + eos_params->nrho*((itemp-1) + eos_params->ntemp*(iye)));
       fs[3]   = eos_params->alltables[ifs];
-      
+
       tablevart1 = NRPyEOS_linterp2D(&eos_params->logrho[irho-1],&eos_params->yes[iye-1], fs, lr, ye);
     }
     // upper temperature
@@ -545,26 +545,26 @@ void NRPyEOS_findtemp_from_any( const NRPyEOS_params *restrict eos_params,
       // point 0
       int ifs = tablevar_key + NRPyEOS_ntablekeys*(irho-1 + eos_params->nrho*((itemp) + eos_params->ntemp*(iye-1)));
       fs[0]   = eos_params->alltables[ifs];
-      // point 1 
+      // point 1
       ifs     = tablevar_key + NRPyEOS_ntablekeys*(irho   + eos_params->nrho*((itemp) + eos_params->ntemp*(iye-1)));
       fs[1]   = eos_params->alltables[ifs];
-      // point 2 
+      // point 2
       ifs     = tablevar_key + NRPyEOS_ntablekeys*(irho-1 + eos_params->nrho*((itemp) + eos_params->ntemp*(iye)));
       fs[2]   = eos_params->alltables[ifs];
       // point 3
       ifs     = tablevar_key + NRPyEOS_ntablekeys*(irho   + eos_params->nrho*((itemp) + eos_params->ntemp*(iye)));
       fs[3]   = eos_params->alltables[ifs];
-      
+
       tablevart2 = NRPyEOS_linterp2D(&eos_params->logrho[irho-1],&eos_params->yes[iye-1], fs, lr, ye);
     }
 
     // Check if we are already bracketing the input internal
     // energy. If so, interpolate for new T.
     if((tablevar_in - tablevart1) * (tablevar_in - tablevart2) <= 0.) {
-      
-      *ltout = (eos_params->logtemp[itemp]-eos_params->logtemp[itemp-1]) / (tablevart2 - tablevart1) * 
+
+      *ltout = (eos_params->logtemp[itemp]-eos_params->logtemp[itemp-1]) / (tablevart2 - tablevart1) *
         (tablevar_in - tablevart1) + eos_params->logtemp[itemp-1];
-     
+
       return;
     }
 
@@ -577,7 +577,7 @@ void NRPyEOS_findtemp_from_any( const NRPyEOS_params *restrict eos_params,
     //       is weak ==> We'd better try bisection.
     //       Factor 1/12.0 come from tests by LSMOD
     //       This is done in order to limit the "velocity" of T variation
-    //       given by Newton-Raphson.    
+    //       given by Newton-Raphson.
     if(ldt > (ltmax-ltmin) / 12.0 ) shouldgotobisection = true;
 
     ltn = MIN(MAX(lt + ldt,ltmin),ltmax);

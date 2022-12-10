@@ -11,13 +11,13 @@
 
 // If on the IO proc (doIO == True) actually perform HDF5 IO, catch possible
 // HDF5 errors
-#define HDF5_DO_IO(fn_call)                                              \
-  {                                                                      \
-    int _error_code = fn_call;                                           \
-    if (_error_code < 0) {                                               \
-      fprintf(stderr,"(NRPyEOS) HDF5 call '%s' returned error code %d",  \
-                  #fn_call, _error_code);                                \
-    }                                                                    \
+#define HDF5_DO_IO(fn_call)                                             \
+  {                                                                     \
+    int error_code = fn_call;                                           \
+    if (error_code < 0) {                                               \
+      fprintf(stderr,"(NRPyEOS) HDF5 call '%s' returned error code %d", \
+                  #fn_call, error_code);                                \
+    }                                                                   \
   }
 
 /*
@@ -75,34 +75,34 @@ void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, NRPyEOS_par
   hid_t mem3 =  H5Screate_simple(2, table_dims, NULL);
 
   // Read alltables_temp
-  READ_BCAST_EOSTABLE_HDF5("logpress",  0, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("logenergy", 1, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("entropy",   2, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("munu",      3, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("cs2",       4, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("dedt",      5, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("dpdrhoe",   6, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("dpderho",   7, table_dims);
+  READ_BCAST_EOSTABLE_HDF5("logpress" , NRPyEOS_press_key  , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("logenergy", NRPyEOS_eps_key    , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("entropy"  , NRPyEOS_entropy_key, table_dims);
+  READ_BCAST_EOSTABLE_HDF5("munu"     , NRPyEOS_munu_key   , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("cs2"      , NRPyEOS_cs2_key    , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("dedt"     , NRPyEOS_depsdT_key , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("dpdrhoe"  , NRPyEOS_dPdrho_key , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("dpderho"  , NRPyEOS_dPdeps_key , table_dims);
   // chemical potentials
-  READ_BCAST_EOSTABLE_HDF5("muhat",     8, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("mu_e",      9, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("mu_p",     10, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("mu_n",     11, table_dims);
+  READ_BCAST_EOSTABLE_HDF5("muhat"    , NRPyEOS_muhat_key  , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("mu_e"     , NRPyEOS_mu_e_key   , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("mu_p"     , NRPyEOS_mu_p_key   , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("mu_n"     , NRPyEOS_mu_n_key   , table_dims);
   // compositions
-  READ_BCAST_EOSTABLE_HDF5("Xa",       12, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("Xh",       13, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("Xn",       14, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("Xp",       15, table_dims);
+  READ_BCAST_EOSTABLE_HDF5("Xa"       , NRPyEOS_X_a_key    , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("Xh"       , NRPyEOS_X_h_key    , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("Xn"       , NRPyEOS_X_n_key    , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("Xp"       , NRPyEOS_X_p_key    , table_dims);
   // average nucleus
-  READ_BCAST_EOSTABLE_HDF5("Abar",     16, table_dims);
-  READ_BCAST_EOSTABLE_HDF5("Zbar",     17, table_dims);
+  READ_BCAST_EOSTABLE_HDF5("Abar"     , NRPyEOS_Abar_key   , table_dims);
+  READ_BCAST_EOSTABLE_HDF5("Zbar"     , NRPyEOS_Zbar_key   , table_dims);
   // Gamma
-  READ_BCAST_EOSTABLE_HDF5("gamma",    18, table_dims);
+  READ_BCAST_EOSTABLE_HDF5("gamma"    , NRPyEOS_Gamma_key  , table_dims);
 
   // Read additional tables and variables
-  READ_BCAST_EOS_HDF5("logrho",       eos_params->logrho,        H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->nrho);
-  READ_BCAST_EOS_HDF5("logtemp",      eos_params->logtemp,       H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->ntemp);
-  READ_BCAST_EOS_HDF5("ye",           eos_params->yes,           H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->nye);
+  READ_BCAST_EOS_HDF5("logrho"      , eos_params->logrho       , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->nrho);
+  READ_BCAST_EOS_HDF5("logtemp"     , eos_params->logtemp      , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->ntemp);
+  READ_BCAST_EOS_HDF5("ye"          , eos_params->yes          , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->nye);
   READ_BCAST_EOS_HDF5("energy_shift", &eos_params->energy_shift, H5T_NATIVE_DOUBLE, H5S_ALL, 1);
 
   HDF5_DO_IO(H5Sclose(mem3));
@@ -110,18 +110,18 @@ void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, NRPyEOS_par
 
   // change ordering of alltables array so that
   // the table kind is the fastest changing index
-  if (!(eos_params->alltables = (double*)malloc(eos_params->nrho * eos_params->ntemp * eos_params->nye * NRPyEOS_ntablekeys 
+  if (!(eos_params->alltables = (double*)malloc(eos_params->nrho * eos_params->ntemp * eos_params->nye * NRPyEOS_ntablekeys
                                                 * sizeof(double)))) {
     fprintf(stderr,"(NRPyEOS) Cannot allocate memory for EOS table");
   }
-  for(int iv = 0;iv<NRPyEOS_ntablekeys;iv++) 
-    for(int k = 0; k<eos_params->nye;k++) 
-      for(int j = 0; j<eos_params->ntemp; j++) 
-    for(int i = 0; i<eos_params->nrho; i++) {
-      int indold = i + eos_params->nrho*(j + eos_params->ntemp*(k + eos_params->nye*iv));
-      int indnew = iv + NRPyEOS_ntablekeys*(i + eos_params->nrho*(j + eos_params->ntemp*k));
-      eos_params->alltables[indnew] = alltables_temp[indold];
-    }
+  for(int iv = 0;iv<NRPyEOS_ntablekeys;iv++)
+    for(int k = 0; k<eos_params->nye;k++)
+      for(int j = 0; j<eos_params->ntemp; j++)
+        for(int i = 0; i<eos_params->nrho; i++) {
+          int indold = i + eos_params->nrho*(j + eos_params->ntemp*(k + eos_params->nye*iv));
+          int indnew = iv + NRPyEOS_ntablekeys*(i + eos_params->nrho*(j + eos_params->ntemp*k));
+          eos_params->alltables[indnew] = alltables_temp[indold];
+        }
 
   // free memory of temporary array
   free(alltables_temp);
@@ -132,57 +132,50 @@ void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, NRPyEOS_par
   eos_params->energy_shift = eos_params->energy_shift * CGS_TO_CODE_ENERGY;
   for(int i=0;i<eos_params->nrho;i++) {
     // rewrite:
-    //logrho[i] = log(pow(10.0,logrho[i]) * CGS_TO_CODE_DENSITY);
+    // logrho[i] = log(pow(10.0,logrho[i]) * CGS_TO_CODE_DENSITY);
     // by using log(a^b*c) = b*log(a)+log(c)
     eos_params->logrho[i] = eos_params->logrho[i] * log(10.) + log(CGS_TO_CODE_DENSITY);
   }
 
   for(int i=0;i<eos_params->ntemp;i++) {
-    //logtemp[i] = log(pow(10.0,logtemp[i]));
+    // logtemp[i] = log(pow(10.0,logtemp[i]));
     eos_params->logtemp[i] = eos_params->logtemp[i]*log(10.0);
   }
 
   // allocate epstable; a linear-scale eps table
   // that allows us to extrapolate to negative eps
-  if (!(eos_params->epstable = (double*)malloc(eos_params->nrho * eos_params->ntemp * eos_params->nye  
+  if (!(eos_params->epstable = (double*)malloc(eos_params->nrho * eos_params->ntemp * eos_params->nye
                                                * sizeof(double)))) {
     fprintf(stderr,"(NRPyEOS) Cannot allocate memory for eps table\n");
   }
 
   // convert units
+  int idx;
   for(int i=0;i<eos_params->nrho*eos_params->ntemp*eos_params->nye;i++) {
+    // pressure
+    idx = NRPyEOS_press_key + NRPyEOS_ntablekeys*i;
+    eos_params->alltables[idx] = eos_params->alltables[idx] * log(10.0) + log(CGS_TO_CODE_PRESSURE);
 
-    { // pressure
-      int idx = 0 + NRPyEOS_ntablekeys*i;
-      eos_params->alltables[idx] = eos_params->alltables[idx] * log(10.0) + log(CGS_TO_CODE_PRESSURE);
-    }
+    // eps
+    idx = NRPyEOS_eps_key + NRPyEOS_ntablekeys*i;
+    eos_params->alltables[idx] = eos_params->alltables[idx] * log(10.0) + log(CGS_TO_CODE_ENERGY);
+    eos_params->epstable[i] = exp(eos_params->alltables[idx]);
 
-    { // eps
-      int idx = 1 + NRPyEOS_ntablekeys*i;
-      eos_params->alltables[idx] = eos_params->alltables[idx] * log(10.0) + log(CGS_TO_CODE_ENERGY);
-      eos_params->epstable[i] = exp(eos_params->alltables[idx]);
-    }
+    // cs2
+    idx = NRPyEOS_cs2_key + NRPyEOS_ntablekeys*i;
+    eos_params->alltables[idx] *= CGS_TO_CODE_LENGTH*CGS_TO_CODE_LENGTH/CGS_TO_CODE_TIME/CGS_TO_CODE_TIME;
 
-    { // cs2
-      int idx = 4 + NRPyEOS_ntablekeys*i;
-      eos_params->alltables[idx] *= CGS_TO_CODE_LENGTH*CGS_TO_CODE_LENGTH/CGS_TO_CODE_TIME/CGS_TO_CODE_TIME;
-    }
+    // dedT
+    idx = NRPyEOS_depsdT_key + NRPyEOS_ntablekeys*i;
+    eos_params->alltables[idx] *= CGS_TO_CODE_ENERGY;
 
-    { // dedT
-      int idx = 5 + NRPyEOS_ntablekeys*i;
-      eos_params->alltables[idx] *= CGS_TO_CODE_ENERGY;
-    }
+    // dpdrhoe
+    idx = NRPyEOS_dPdrho_key6 + NRPyEOS_ntablekeys*i;
+    eos_params->alltables[idx] *= CGS_TO_CODE_PRESSURE/CGS_TO_CODE_DENSITY;
 
-    { // dpdrhoe
-      int idx = 6 + NRPyEOS_ntablekeys*i;
-      eos_params->alltables[idx] *= CGS_TO_CODE_PRESSURE/CGS_TO_CODE_DENSITY;
-    }
-
-    { // dpderho
-      int idx = 7 + NRPyEOS_ntablekeys*i;
-      eos_params->alltables[idx] *= CGS_TO_CODE_PRESSURE/CGS_TO_CODE_ENERGY;
-    }
-
+    // dpderho
+    idx = NRPyEOS_dPdeps_key + NRPyEOS_ntablekeys*i;
+    eos_params->alltables[idx] *= CGS_TO_CODE_PRESSURE/CGS_TO_CODE_ENERGY;
   }
 
   eos_params->temp0 = exp(eos_params->logtemp[0]);
@@ -211,7 +204,7 @@ void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, NRPyEOS_par
 
   eos_params->eos_rhomax = exp(eos_params->logrho[eos_params->nrho-1]);
   eos_params->eos_rhomin = exp(eos_params->logrho[0]);
-  
+
   eos_params->eos_tempmax = exp(eos_params->logtemp[eos_params->ntemp-1]);
   eos_params->eos_tempmin = exp(eos_params->logtemp[0]);
 
