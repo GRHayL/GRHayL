@@ -1,0 +1,112 @@
+#ifndef NRPYEOS_FUNCTION_PROTOTYPES_H_
+#define NRPYEOS_FUNCTION_PROTOTYPES_H_
+
+void NRPyEOS_P_from_rho_Ye_T(const NRPyEOS_params *restrict eos_params,
+                             const double rho,
+                             const double Y_e,
+                             const double T,
+                             double *restrict P);
+void NRPyEOS_eps_from_rho_Ye_T(const NRPyEOS_params *restrict eos_params,
+                               const double rho,
+                               const double Y_e,
+                               const double T,
+                               double *restrict eps);
+void NRPyEOS_P_and_eps_from_rho_Ye_T(const NRPyEOS_params *restrict eos_params,
+                                     const double rho,
+                                     const double Y_e,
+                                     const double T,
+                                     double *restrict P,
+                                     double *restrict eps);
+void NRPyEOS_P_eps_and_S_from_rho_Ye_T(const NRPyEOS_params *restrict eos_params,
+                                       const double rho,
+                                       const double Y_e,
+                                       const double T,
+                                       double *restrict P,
+                                       double *restrict eps,
+                                       double *restrict S);
+void NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(const NRPyEOS_params *restrict eos_params,
+                                           const double rho,
+                                           const double Y_e,
+                                           const double T,
+                                           double *restrict P,
+                                           double *restrict eps,
+                                           double *restrict S,
+                                           double *restrict cs2);
+void NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T(const NRPyEOS_params *restrict eos_params,
+                                            const double rho,
+                                            const double Y_e,
+                                            const double T,
+                                            double *restrict P,
+                                            double *restrict eps,
+                                            double *restrict depsdT);
+void NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(const NRPyEOS_params *restrict eos_params,
+                                                       const double rho,
+                                                       const double Y_e,
+                                                       const double T,
+                                                       double *restrict P,
+                                                       double *restrict eps,
+                                                       double *restrict muhat,
+                                                       double *restrict mu_e,
+                                                       double *restrict mu_p,
+                                                       double *restrict mu_n);
+void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(const NRPyEOS_params *restrict eos_params,
+                                                       const double rho,
+                                                       const double Y_e,
+                                                       const double T,
+                                                       double *restrict muhat,
+                                                       double *restrict mu_e,
+                                                       double *restrict mu_p,
+                                                       double *restrict mu_n,
+                                                       double *restrict X_n,
+                                                       double *restrict X_p);
+void NRPyEOS_P_and_T_from_rho_Ye_eps(const NRPyEOS_params *restrict eos_params,
+                                     const double rho,
+                                     const double Y_e,
+                                     const double eps,
+                                     double *restrict P,
+                                     double *restrict T);
+void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(const NRPyEOS_params *restrict eos_params,
+                                              const double rho,
+                                              const double Y_e,
+                                              const double eps,
+                                              double *restrict P,
+                                              double *restrict S,
+                                              double *restrict depsdT,
+                                              double *restrict T);
+void NRPyEOS_eps_S_and_T_from_rho_Ye_P(const NRPyEOS_params *restrict eos_params,
+                                       const double rho,
+                                       const double Y_e,
+                                       const double P,
+                                       double *restrict eps,
+                                       double *restrict S,
+                                       double *restrict T);
+void NRPyEOS_P_eps_and_T_from_rho_Ye_S(const NRPyEOS_params *restrict eos_params,
+                                       const double rho,
+                                       const double Y_e,
+                                       const double S,
+                                       double *restrict P,
+                                       double *restrict eps,
+                                       double *restrict T);
+void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const NRPyEOS_params *restrict eos_params,
+                                                    const int n,
+                                                    const double rho,
+                                                    const double Y_e,
+                                                    const double T,
+                                                    const int *restrict tablevars_keys,
+                                                    double *restrict tablevars,
+                                                    NRPyEOS_error_report *restrict report);
+void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const NRPyEOS_params *restrict eos_params,
+                                                                 const int n,
+                                                                 const double prec,
+                                                                 const double rho,
+                                                                 const double Y_e,
+                                                                 const double tablevar_in,
+                                                                 const int tablevar_in_key,
+                                                                 const int *restrict tablevars_keys,
+                                                                 double *restrict tablevars,
+                                                                 double *restrict T,
+                                                                 NRPyEOS_error_report *restrict report);
+void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, NRPyEOS_params *restrict eos_params);
+void NRPyEOS_free_memory(NRPyEOS_params *restrict eos_params);
+
+#endif // NRPYEOS_FUNCTION_PROTOTYPES_H_

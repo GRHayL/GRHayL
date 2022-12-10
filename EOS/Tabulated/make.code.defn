@@ -1,0 +1,5 @@
+# Main make.code.defn file for thorn Baikal
+
+# Source files in this directory that need compiled:
+SRCS = NRPyEOS_free_memory.c              \
+       NRPyEOS_readtable_set_EOS_params.c
