@@ -62,68 +62,63 @@ void con2prim_loop_kernel(const GRHayL_parameters *restrict params, const eos_pa
   
     /************* Conservative-to-primitive recovery ************/
 
-    for(int which_guess=1;which_guess<3;which_guess++) {
+    // Set primitive guesses
+    guess_primitives(eos, metric, prims, cons, &prims_guess);
+    int check = C2P_Select_Hybrid_Method(params, eos, params->main_routine, metric, &cons_undens, &prims_guess, diagnostics);
 
-      // Set primitive guesses
-      guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
-      int check = C2P_Select_Hybrid_Method(params, eos, params->main_routine, metric, &cons_undens, &prims_guess, diagnostics);
+    if( (check != 0) && (params->backup_routine[0] != None) ) {
+      // Backup 1 triggered
+      diagnostics->backup[0] = 1;
+      // Recompute guesses
+      guess_primitives(eos, metric, prims, cons, &prims_guess);
+      // Backup routine #1
+      check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[0], metric, &cons_undens, &prims_guess, diagnostics);
 
-      if( (check != 0) && (params->backup_routine[0] != None) ) {
-        // Backup 1 triggered
-        diagnostics->backup[0] = 1;
+      if( (check != 0) && (params->backup_routine[1] != None) ) {
+        // Backup 2 triggered
+        diagnostics->backup[1] = 1;
         // Recompute guesses
-        guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
-        // Backup routine #1
-        check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[0], metric, &cons_undens, &prims_guess, diagnostics);
+        guess_primitives(eos, metric, prims, cons, &prims_guess);
+        // Backup routine #2
+        check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[1], metric, &cons_undens, &prims_guess, diagnostics);
 
-        if( (check != 0) && (params->backup_routine[1] != None) ) {
-          // Backup 2 triggered
-          diagnostics->backup[1] = 1;
+        if( (check != 0) && (params->backup_routine[2] != None) ) {
+          // Backup 3 triggered
+          diagnostics->backup[2] = 1;
           // Recompute guesses
-          guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
-          // Backup routine #2
-          check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[1], metric, &cons_undens, &prims_guess, diagnostics);
-
-          if( (check != 0) && (params->backup_routine[2] != None) ) {
-            // Backup 3 triggered
-            diagnostics->backup[2] = 1;
-            // Recompute guesses
-            guess_primitives(eos, which_guess, metric, prims, cons, &prims_guess);
-            // Backup routine #3
-            check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[2], metric, &cons_undens, &prims_guess, diagnostics);
-          }
+          guess_primitives(eos, metric, prims, cons, &prims_guess);
+          // Backup routine #3
+          check = C2P_Select_Hybrid_Method(params, eos, params->backup_routine[2], metric, &cons_undens, &prims_guess, diagnostics);
         }
       }
-      /*************************************************************/
+    }
+    /*************************************************************/
   
-      if(check!=0)
-        check = font_fix(eos, metric, cons, prims, &prims_guess, diagnostics);
+    if(check!=0)
+      check = font_fix(eos, metric, cons, prims, &prims_guess, diagnostics);
   
-      if(check==0) {
-  //       Check for NAN!
-        if( isnan(prims_guess.rho*prims_guess.press*prims_guess.eps*prims_guess.vx*prims_guess.vy*prims_guess.vz) ) {
-          printf("***********************************************************\n");
-          printf("NAN found in function %s (file: %s)\n",__func__,__FILE__);
-          printf("Input conserved variables:\n");
-          printf("rho_*, ~tau, ~S_{i}: %e %e %e %e %e\n", cons->rho, cons->tau, cons->S_x, cons->S_y, cons->S_z);
-          printf("Undensitized conserved variables:\n");
-          printf("D, tau, S_{i}: %e %e %e %e %e\n", cons_undens.rho, cons_undens.tau, cons_undens.S_x, cons_undens.S_y, cons_undens.S_z);
-          printf("Output primitive variables:\n");
-          printf("rho, P: %e %e\n", prims_guess.rho, prims_guess.press);
-          printf("v: %e %e %e\n", prims_guess.vx, prims_guess.vy, prims_guess.vz);
-          printf("***********************************************************");
-        }
-  
-        *prims = prims_guess;
-        which_guess=3; //TODO: can we make the multiple guess loop cleaner?
-      } else {
-        printf("Con2Prim and Font fix failed!");
-        printf("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
-                diagnostics->failure_checker, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho, prims->Bx, prims->By, prims->Bz,
-                metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz, metric->psi6);
+    if(check==0) {
+  //     Check for NAN!
+      if( isnan(prims_guess.rho*prims_guess.press*prims_guess.eps*prims_guess.vx*prims_guess.vy*prims_guess.vz) ) {
+        printf("***********************************************************\n");
+        printf("NAN found in function %s (file: %s)\n",__func__,__FILE__);
+        printf("Input conserved variables:\n");
+        printf("rho_*, ~tau, ~S_{i}: %e %e %e %e %e\n", cons->rho, cons->tau, cons->S_x, cons->S_y, cons->S_z);
+        printf("Undensitized conserved variables:\n");
+        printf("D, tau, S_{i}: %e %e %e %e %e\n", cons_undens.rho, cons_undens.tau, cons_undens.S_x, cons_undens.S_y, cons_undens.S_z);
+        printf("Output primitive variables:\n");
+        printf("rho, P: %e %e\n", prims_guess.rho, prims_guess.press);
+        printf("v: %e %e %e\n", prims_guess.vx, prims_guess.vy, prims_guess.vz);
+        printf("***********************************************************");
       }
-    } //If we didn't find a root, then try again with a different guess.
-
+  
+      *prims = prims_guess;
+    } else {
+      printf("Con2Prim and Font fix failed!");
+      printf("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
+              diagnostics->failure_checker, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho, prims->Bx, prims->By, prims->Bz,
+              metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz, metric->psi6);
+    }
   } else {
     diagnostics->failure_checker+=1;
     reset_prims_to_atmosphere(params, eos, metric, prims, diagnostics);

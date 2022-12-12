@@ -197,7 +197,7 @@ printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_pr
     //Aditional tabulated code here
 
     double u0;
-    limit_velocity_and_convert_utilde_to_v(eos, metric, &u0, &new_prims[UTCON1], &new_prims[UTCON2],
+    limit_utilde_and_compute_v(eos, metric, &u0, &new_prims[UTCON1], &new_prims[UTCON2],
                                            &new_prims[UTCON3], prims, diagnostics);
 
     prims->press = pressure_rho0_u(eos, prims->rho,new_prims[UU]);

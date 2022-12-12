@@ -49,7 +49,7 @@ int font_fix(const eos_parameters *restrict eos,
   diagnostics->failure_checker+=10000;
   diagnostics->font_fixes++;
   //The Font fix only sets the velocities.  Here we set the pressure & density HARM primitives.
-  limit_velocity_and_convert_utilde_to_v(eos, metric, &u0, &utcon1, &utcon2, &utcon3, prims_guess, diagnostics);
+  limit_utilde_and_compute_v(eos, metric, &u0, &utcon1, &utcon2, &utcon3, prims_guess, diagnostics);
 
   prims_guess->rho = cons->rho/(metric->lapse*u0*metric->psi6);
 

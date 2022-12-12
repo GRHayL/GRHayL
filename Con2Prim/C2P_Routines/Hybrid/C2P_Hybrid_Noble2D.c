@@ -238,7 +238,7 @@ print = prims->print;
   //Aditional tabulated code here
 
     double u0;
-    limit_velocity_and_convert_utilde_to_v(eos, metric, &u0, &new_prims[UTCON1], &new_prims[UTCON2],
+    limit_utilde_and_compute_v(eos, metric, &u0, &new_prims[UTCON1], &new_prims[UTCON2],
                                            &new_prims[UTCON3], prims, diagnostics);
 
     if(diagnostics->vel_limited_ptcount==1)

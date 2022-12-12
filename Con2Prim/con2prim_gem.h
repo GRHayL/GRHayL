@@ -175,13 +175,12 @@ void undensitize_conservatives(
 
 void guess_primitives(
              const eos_parameters *restrict eos,
-             const int which_guess,
              const metric_quantities *restrict metric,
              const primitive_quantities *restrict prims,
              const conservative_quantities *restrict cons,
              primitive_quantities *restrict prims_guess);
 
-void limit_velocity_and_convert_utilde_to_v(
+void limit_utilde_and_compute_v(
              const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
              double *restrict utcon1_ptr, double *restrict u0_ptr,
@@ -189,18 +188,42 @@ void limit_velocity_and_convert_utilde_to_v(
              primitive_quantities *restrict prims,
              con2prim_diagnostics *restrict diagnostics);
 
+void limit_v_and_output_u0(
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             primitive_quantities *restrict prims,
+             double *restrict u0,
+             con2prim_diagnostics *restrict diagnostics);
+
 void eigenvalues_3by3_real_sym_matrix(
              double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
              const double M11, const double M12, const double M13,
              const double M22, const double M23, const double M33);
 
-void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict params, const eos_parameters *restrict eos,
-                                            const metric_quantities *restrict metric, primitive_quantities *restrict prims,
-                                            double *restrict u0, con2prim_diagnostics *restrict diagnostics);
+void enforce_primitive_limits_and_output_u0(
+             const GRHayL_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             primitive_quantities *restrict prims,
+             double *restrict u0,
+             con2prim_diagnostics *restrict diagnostics);
 
-void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params, const eos_parameters *restrict eos,
-                                const metric_quantities *restrict metric, primitive_quantities *restrict prims, const double u0,
-                                conservative_quantities *restrict cons, stress_energy *restrict Tmunu);
+void compute_conservs_and_Tmunu(
+             const GRHayL_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             primitive_quantities *restrict prims,
+             const double u0,
+             conservative_quantities *restrict cons,
+             stress_energy *restrict Tmunu);
+
+void initial_random_data(
+             const double xrho,
+             const double xpress,
+             const bool random_metric,
+             metric_quantities *restrict metric,
+             primitive_quantities *restrict prims);
+
 //--------------------------------------------------
 
 //-------------- Font Fix routines -----------------

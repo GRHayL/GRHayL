@@ -8,8 +8,6 @@
  *
  * Inputs      : eos            - an initialized eos_parameters struct
  *                                with data for the EOS of the simulation
- *             : which_guess    - an integer which selects the initial guess
- *                                to be used for the primitives
  *             : metric         - an initialized metric_quantities struct
  *                                with data for the gridpoint of interest
  *             : cons           - an initialized conservative_quantities
@@ -22,7 +20,6 @@
  */
 
 void guess_primitives( const eos_parameters *restrict eos,
-                       const int which_guess,
                        const metric_quantities *restrict metric,
                        const primitive_quantities *restrict prims,
                        const conservative_quantities *restrict cons,
@@ -30,17 +27,8 @@ void guess_primitives( const eos_parameters *restrict eos,
 
   *prims_guess = *prims;
 
-  if(which_guess==1) {
-    //Use a different initial guess:
-    prims_guess->rho = cons->rho/metric->psi6;
-    prims_guess->temp = eos->temp_atm;
-  } else if(which_guess==2) {
-    //Use atmosphere as initial guess:
-    prims_guess->rho = 100.0*eos->rho_atm;
-    prims_guess->temp = eos->temp_max;
-  } else {
-    printf("WARNING: guess_primitives was passed an unknown guess type of %d.", which_guess);
-  }
+  //Use atmosphere as initial guess:
+  prims_guess->rho = cons->rho/metric->psi6;
 
   // TODO: Hybrid only?
   double K_ppoly;
@@ -50,4 +38,5 @@ void guess_primitives( const eos_parameters *restrict eos,
   // After that, we compute P_cold
   prims_guess->press = K_ppoly*pow(prims_guess->rho, Gamma_ppoly);
   prims_guess->Y_e = cons->Y_e/cons->rho;
+  prims_guess->temp = eos->temp_atm;
 }

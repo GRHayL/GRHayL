@@ -63,9 +63,14 @@ static inline void compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantiti
   /***********************************************************/
 }
 
-void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params, const eos_parameters *restrict eos,
-                                const metric_quantities *restrict metric, primitive_quantities *restrict prims, const double u0,
-                                conservative_quantities *restrict cons, stress_energy *restrict Tmunu) {
+// TODO: really shouldn't set prims->eps in here
+void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
+                                const eos_parameters *restrict eos,
+                                const metric_quantities *restrict metric,
+                                primitive_quantities *restrict prims,
+                                const double u0,
+                                conservative_quantities *restrict cons,
+                                stress_energy *restrict Tmunu) {
 
 
   double prs_cold = 0.0;

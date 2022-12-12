@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "con2prim_gem.h"
 
-/* Function    : limit_velocity_and_convert_utilde_to_v()
+/* Function    : limit_utilde_and_compute_v()
  * Authors     : Samuel Cupp
  * Description : Initialize the primitives struct from user
  *               input
@@ -31,7 +31,7 @@
 
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
-void limit_velocity_and_convert_utilde_to_v( const eos_parameters *restrict eos,
+void limit_utilde_and_compute_v( const eos_parameters *restrict eos,
                                              const metric_quantities *restrict metric,
                                              double *restrict u0_ptr,
                                              double *restrict utcon1_ptr,

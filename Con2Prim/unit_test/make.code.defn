@@ -1,0 +1,7 @@
+# Subdirectory make.code.defn for Con2Prim unit tests
+
+# Source files in this directory that need compiled:
+SRCS = \
+       con2prim_full_routine_test.c \
+       con2prim_test_suite.c \
+       initial_random_data.c

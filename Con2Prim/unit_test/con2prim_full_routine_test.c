@@ -1,15 +1,9 @@
-// Thorn      : GrHayL
-// File       : con2prim_test_suite.cc
-// Author(s)  : Leo Werneck & Samuel Cupp
-// Description: In this file we provide an extensive test suite of
-//              the Con2Prim gem.
-
 #include "cctk.h"
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
 #include "stdlib.h"
-#include "con2prim_gem.h"
-#include "../EOS/Hybrid/EOS_hybrid.h"
+#include "../con2prim_gem.h"
+#include "../../EOS/Hybrid/EOS_hybrid.h"
 
 inline double randf(double low,double high) {
     return (rand()/(double)(RAND_MAX))*(high-low)+low;
@@ -66,7 +60,7 @@ inline void stress_energy_error(const stress_energy *restrict Tmunu_orig,
           Tmunu_error->Tzz = relative_error(Tmunu->Tzz, Tmunu_orig->Tzz);
 }
 
-void con2prim_test_suite( CCTK_ARGUMENTS ) {
+void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
@@ -367,43 +361,25 @@ printf("Initial prims %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n", prims.rho, prims
 
             /************* Conservative-to-primitive recovery ************/
 
-            for(int which_guess=1;which_guess<=2;which_guess++) {
-              guess_primitives(&eos, which_guess, &metric, &prims, &cons, &prims_guess);
-
-/*Why was it getting set to 1e300 right after setting the guess?
-          for(int i=0;i<numprims;i++) prim[i] = 1e300;
-          // prim[TEMP    ] = eos.T_max;
-          // prim[RHO     ] = PRIMS[RHOB       ];
-          // prim[YE      ] = PRIMS[YEPRIM     ];
-          prim[TEMP    ] = PRIMS[TEMPERATURE]*0.95;
-          // prim[UTCON1  ] = PRIMS[VX         ];
-          // prim[UTCON2  ] = PRIMS[VY         ];
-          // prim[UTCON3  ] = PRIMS[VZ         ];
-          prim[WLORENTZ] = W_test*0.95;
-          // prim[B1_con  ] = PRIMS[BX_CENTER  ];
-          // prim[B2_con  ] = PRIMS[BY_CENTER  ];
-          // prim[B3_con  ] = PRIMS[BZ_CENTER  ];
-*/
-              check = C2P_Select_Hybrid_Method(&params, &eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
-              //If multiple C2P routines are selected as backups, the backup routine logic would go here
+            guess_primitives(&eos, &metric, &prims, &cons, &prims_guess);
+            check = C2P_Select_Hybrid_Method(&params, &eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
+            //If multiple C2P routines are selected as backups, the backup routine logic would go here
   
-              if(check!=0) {
-                printf("Applying Font Fix\n");
-                check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
-                diagnostics.font_fixes++;
-              }
+            if(check!=0) {
+              printf("Applying Font Fix\n");
+              check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+              diagnostics.font_fixes++;
+            }
       /*************************************************************/
   
-              if(check==0) {
-                prims = prims_guess;
-                which_guess=3; //TODO: can we make the multiple guess loop cleaner?
-              } else {
-                printf("Con2Prim and Font fix failed!");
-                printf("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
-                        diagnostics.failure_checker, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho, prims.Bx, prims.By, prims.Bz,
-                        metric.adm_gxx, metric.adm_gxy, metric.adm_gxz, metric.adm_gyy, metric.adm_gyz, metric.adm_gzz, metric.psi6);
-              }
-            } //If we didn't find a root, then try again with a different guess.
+            if(check==0) {
+              prims = prims_guess;
+            } else {
+              printf("Con2Prim and Font fix failed!");
+              printf("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
+                      diagnostics.failure_checker, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho, prims.Bx, prims.By, prims.Bz,
+                      metric.adm_gxx, metric.adm_gxy, metric.adm_gxz, metric.adm_gyy, metric.adm_gyz, metric.adm_gzz, metric.psi6);
+            }
           } else {
 //printf("-rho prims %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n", prims.rho, prims.press, prims.vx, prims.vy, prims.vz);
             diagnostics.failure_checker+=1;
