@@ -219,7 +219,7 @@ void con2prim_test_suite( CCTK_ARGUMENTS ) {
       printf("Beginning %s test for routine %s\n", suffix, con2prim_test_names[which_routine]);
 
       FILE* outfiles[8];
-      char filename[100];
+      char filename[512];
 
       sprintf(filename,"unit_test/C2P_%s_%s_Summary.asc",con2prim_test_names[which_routine], suffix);
       outfiles[0] = fopen(filename,"w");

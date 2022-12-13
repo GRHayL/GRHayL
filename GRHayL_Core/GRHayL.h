@@ -1,8 +1,8 @@
 #ifndef GRHayL_H_
 #define GRHayL_H_
 
-#include "math.h"
-#include "stdbool.h"
+#include <math.h>
+#include <stdbool.h>
 
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
 #define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
@@ -112,12 +112,43 @@ typedef struct eos_parameters {
 
   //---------- Tabulated Equation of State ---------
   double Ye_atm, Ye_min, Ye_max;
-  double temp_atm, temp_min, temp_max;
+  double T_atm, T_min, T_max;
   double eps_atm, eps_min, eps_max;
   double entropy_atm, entropy_min, entropy_max;
   double root_finding_precision;
   double depsdT_threshold;
+
+  // Table size
+  int N_rho, N_T, N_Ye;
+
+  // Tabulated quantities
+  double *restrict table_logrho;
+  double *restrict table_logT;
+  double *restrict table_Ye;
+  double *restrict table_all;
+  double *restrict table_eps;
+
+  // Table bounds
+  double table_rho_max, table_rho_min;
+  double table_T_min  , table_T_max;
+  double table_Ye_min , table_Ye_max;
+
+  // Auxiliary variables
+  double energy_shift;
+  double temp0, temp1;
+  double dlintemp, dlintempi;
+  double drholintempi;
+  double dlintempyei;
+  double drholintempyei;
+  double dtemp, dtempi;
+  double drho, drhoi;
+  double dye, dyei;
+  double drhotempi;
+  double drhoyei;
+  double dtempyei;
+  double drhotempyei;
   //------------------------------------------------
+
 } eos_parameters;
 
 void initialize_general_eos(
@@ -179,7 +210,7 @@ typedef struct primitive_quantities {
   double rho, press, eps;
   double vx, vy, vz;
   double Bx, By, Bz;
-  double entropy, Y_e, temp;
+  double entropy, Y_e, temperature;
   bool print;
 } primitive_quantities;
 

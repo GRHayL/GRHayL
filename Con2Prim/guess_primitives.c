@@ -38,5 +38,5 @@ void guess_primitives( const eos_parameters *restrict eos,
   // After that, we compute P_cold
   prims_guess->press = K_ppoly*pow(prims_guess->rho, Gamma_ppoly);
   prims_guess->Y_e = cons->Y_e/cons->rho;
-  prims_guess->temp = eos->temp_atm;
+  prims_guess->temperature = eos->T_atm;
 }

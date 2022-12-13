@@ -25,16 +25,17 @@ void return_primitives(const primitive_quantities *restrict prims,
                       double *restrict rho, double *restrict press, double *restrict epsilon,
                       double *restrict vx, double *restrict vy, double *restrict vz,
                       double *restrict Bx, double *restrict By, double *restrict Bz,
-                      double *restrict entropy, double *restrict Y_e, double *restrict temp) {
+                      double *restrict entropy, double *restrict Y_e, double *restrict temperature) {
 
-  *rho = prims->rho;
-  *press = prims->press;
-  *vx = prims->vx;
-  *vy = prims->vy;
-  *vz = prims->vz;
-//  *epsilon = prims->eps; Doesn't seem to get set in IGM?
-  *entropy = prims->entropy;
+  *rho         = prims->rho;
+  *press       = prims->press;
+  *vx          = prims->vx;
+  *vy          = prims->vy;
+  *vz          = prims->vz;
+  *entropy     = prims->entropy;
   // Tabulated EOS quantities
-  *Y_e = prims->Y_e;
-  *temp = prims->temp;
+  *Y_e         = prims->Y_e;
+  *temperature = prims->temperature;
+  // *epsilon     = prims->eps; // Doesn't seem to get set in IGM?
+
 }

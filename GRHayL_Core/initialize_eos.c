@@ -92,12 +92,12 @@ void initialize_hybrid_eos(const int neos,
 
 //Eventually, improve this using initialize_Tabulated_EOS_parameters_from_input()
 void initialize_tabulated_eos(const double precision, const double threshold,
-                const double temp_atm, const double temp_min, const double temp_max,
+                const double T_atm, const double T_min, const double T_max,
                 const double Ye_atm, const double Ye_min, const double Ye_max,
                 eos_parameters *restrict eos) {
-  eos->temp_atm = temp_atm;
-  eos->temp_min = temp_min;
-  eos->temp_max = temp_max;
+  eos->T_atm = T_atm;
+  eos->T_min = T_min;
+  eos->T_max = T_max;
   eos->Ye_atm = Ye_atm;
   eos->Ye_min = Ye_min;
   eos->Ye_max = Ye_max;

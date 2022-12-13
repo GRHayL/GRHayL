@@ -205,7 +205,7 @@ int con2prim_Noble2D( const eos_parameters *restrict eos,
   new_prims[BCON2] = new_cons[B2_con];
   new_prims[BCON3] = new_cons[B3_con];
   new_prims[WLORENTZ] = 1.0;
-  new_prims[TEMP] = prims->temp;
+  new_prims[TEMP] = prims->temperature;
   new_prims[YE] = prims->Y_e;
 
   int retval = Utoprim_new_body(eos, new_cons, metric->g4dn, metric->g4up, new_prims);
@@ -213,7 +213,7 @@ int con2prim_Noble2D( const eos_parameters *restrict eos,
   //TODO: missing eps, entropy. Are these not used for this routine?
 
   prims->rho = new_prims[RHO];
-  prims->temp = new_prims[TEMP];
+  prims->temperature = new_prims[TEMP];
   prims->Y_e = new_prims[YE];
 
   limit_velocity_and_convert_utilde_to_v(eos, metric, &new_prims[UTCON1], &new_prims[UTCON2],

@@ -22,12 +22,12 @@ void reset_prims_to_atmosphere( const GRHayL_parameters *restrict params,
   // Velocities are set to zero. Keeping it
   // inside a single function ensures that
   // resets are consistent throughout the code.
-  prims->rho = eos->rho_atm;
-  prims->press = eos->press_atm;
-  prims->eps = eos->eps_atm;
-  prims->entropy = eos->entropy_atm;
-  prims->Y_e = eos->Ye_atm;
-  prims->temp = eos->temp_atm;
+  prims->rho         = eos->rho_atm;
+  prims->press       = eos->press_atm;
+  prims->eps         = eos->eps_atm;
+  prims->entropy     = eos->entropy_atm;
+  prims->Y_e         = eos->Ye_atm;
+  prims->temperature = eos->T_atm;
   
   if(params->Cupp_Fix) { //For atmosphere, ET IGM sets v=-beta, Leo's IGM sets v=0
     prims->vx = 0.0;

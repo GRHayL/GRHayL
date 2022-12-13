@@ -21,18 +21,18 @@ inline double relative_error( const double a, const double b ) {
 inline void primitive_error(const primitive_quantities *restrict prims_orig, 
                         const primitive_quantities *restrict prims, 
                         primitive_quantities *restrict prims_error) {
-          prims_error->rho     = relative_error(prims->rho,     prims_orig->rho);
-          prims_error->press   = relative_error(prims->press,   prims_orig->press);
-          prims_error->eps     = relative_error(prims->eps,     prims_orig->eps);
-          prims_error->vx      = relative_error(prims->vx,      prims_orig->vx);
-          prims_error->vy      = relative_error(prims->vy,      prims_orig->vy);
-          prims_error->vz      = relative_error(prims->vz,      prims_orig->vz);
-          prims_error->Bx      = relative_error(prims->Bx,      prims_orig->Bx);
-          prims_error->By      = relative_error(prims->By,      prims_orig->By);
-          prims_error->Bz      = relative_error(prims->Bz,      prims_orig->Bz);
-          prims_error->entropy = relative_error(prims->entropy, prims_orig->entropy);
-          prims_error->Y_e     = relative_error(prims->Y_e,     prims_orig->Y_e);
-          prims_error->temp    = relative_error(prims->temp,    prims_orig->temp);
+          prims_error->rho         = relative_error(prims->rho,         prims_orig->rho);
+          prims_error->press       = relative_error(prims->press,       prims_orig->press);
+          prims_error->eps         = relative_error(prims->eps,         prims_orig->eps);
+          prims_error->vx          = relative_error(prims->vx,          prims_orig->vx);
+          prims_error->vy          = relative_error(prims->vy,          prims_orig->vy);
+          prims_error->vz          = relative_error(prims->vz,          prims_orig->vz);
+          prims_error->Bx          = relative_error(prims->Bx,          prims_orig->Bx);
+          prims_error->By          = relative_error(prims->By,          prims_orig->By);
+          prims_error->Bz          = relative_error(prims->Bz,          prims_orig->Bz);
+          prims_error->entropy     = relative_error(prims->entropy,     prims_orig->entropy);
+          prims_error->Y_e         = relative_error(prims->Y_e,         prims_orig->Y_e);
+          prims_error->temperature = relative_error(prims->temperature, prims_orig->temperature);
   
 }
 

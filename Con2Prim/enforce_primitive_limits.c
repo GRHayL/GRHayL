@@ -41,7 +41,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
     printf("No tabulated EOS support yet! Sorry!");
   //  // Apply floors and ceilings to Y_e and T
   //  const double xye   = MIN(MAX(prims->Y_e,eos->Ye_min),eos->Ye_atm);
-  //  const double xtemp = MIN(MAX(prims->temp,eos->temp_atm ),eos->temp_max );
+  //  const double xtemperature = MIN(MAX(prims->temperature,eos->T_atm ),eos->T_max );
 
   //  // Additional variables used for the EOS call
   //  const double xrho  = prims->rho;
@@ -52,7 +52,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
   //  WVU_EOS_P_eps_and_S_from_rho_Ye_T(xrho,xye,xtemp, &xprs,&xeps,&xent);
   //  // Now update the primitives (rho has already been set)
   //  prims->Y_e = xye;
-  //  prims->temp = xtemp;
+  //  prims->temperature = xtemp;
   //  prims->press = xprs;
   //  prims->eps = xeps;
   //  prims->entropy = xent;
