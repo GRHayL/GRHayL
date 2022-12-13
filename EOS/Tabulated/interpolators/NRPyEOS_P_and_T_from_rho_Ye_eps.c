@@ -1,9 +1,9 @@
-#include "../NRPy_basic_defines.h"
+#include "../EOS_tabulated.h"
 #include "../NRPy_function_prototypes.h"
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_P_and_T_from_rho_Ye_eps(const NRPyEOS_params *restrict eos_params,
+void NRPyEOS_P_and_T_from_rho_Ye_eps(const eos_parameters *restrict eos_params,
                                      const double rho,
                                      const double Y_e,
                                      const double eps,

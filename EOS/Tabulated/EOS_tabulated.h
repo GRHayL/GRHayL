@@ -3,59 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
-#include <stdbool.h>
 #include <hdf5.h>
+#include "../../GRHayL_Core/GRHayL.h"
 #define H5_USE_16_API 1
-
-#ifdef MIN
-#undef MIN
-#endif
-#define MIN(a,b) ( (a) < (b) ? (a) : (b) )
-
-#ifdef MAX
-#undef MAX
-#endif
-#define MAX(a,b) ( (a) > (b) ? (a) : (b) )
-
-// EOS struct
-typedef struct NRPyEOS_params {
-
-  // Number of points
-  int nrho;
-  int ntemp;
-  int nye;
-
-  // Table arrays
-  double *restrict alltables;
-  double *restrict epstable;
-  double *restrict logrho;
-  double *restrict logtemp;
-  double *restrict yes;
-
-  // Minimum and maximum values of
-  // rho, Ye, and T
-  double eos_rhomax , eos_rhomin;
-  double eos_tempmin, eos_tempmax;
-  double eos_yemin  , eos_yemax;
-
-  // Auxiliary variables
-  double energy_shift;
-  double temp0, temp1;
-  double dlintemp, dlintempi;
-  double drholintempi;
-  double dlintempyei;
-  double drholintempyei;
-  double dtemp, dtempi;
-  double drho, drhoi;
-  double dye, dyei;
-  double drhotempi;
-  double drhoyei;
-  double dtempyei;
-  double drhotempyei;
-
-} NRPyEOS_params;
 
 // Table keys
 enum eos_keys {

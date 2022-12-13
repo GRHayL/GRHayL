@@ -1,10 +1,10 @@
-#include "../NRPy_basic_defines.h"
+#include "../EOS_tabulated.h"
 #include "../NRPy_function_prototypes.h"
 #include "NRPyEOS_tabulated_helpers.h"
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const NRPyEOS_params *restrict eos_params,
+void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restrict eos_params,
                                                     const int n,
                                                     const double rho,
                                                     const double Y_e,

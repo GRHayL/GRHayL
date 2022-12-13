@@ -1,4 +1,4 @@
-#include "./NRPy_basic_defines.h"
+#include "./EOS_tabulated.h"
 #include "./NRPy_function_prototypes.h"
 /*
  * (c) 2022 Leo Werneck
@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   }
 
   // Step 1: Initialize the EOS struct
-  NRPyEOS_params eos_params;
+  eos_parameters eos_params;
   NRPyEOS_readtable_set_EOS_params(argv[1],&eos_params);
 
   // Step 2: Perform one interpolation
