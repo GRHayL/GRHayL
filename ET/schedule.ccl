@@ -1,5 +1,11 @@
-if (C2P_unit_test) {
+if (unit_test_C2P) {
   schedule con2prim_test_suite at CCTK_INITIAL {
     LANG: C
   } "Unit test for Con2Prim routines"
+}
+
+if (unit_test_EOS_readtable) {
+  schedule EOS_test_readtable at CCTK_INITIAL {
+    LANG: C
+  } "Unit test for reading HDF5 EOS tables in stellarcollapse.org format."
 }
