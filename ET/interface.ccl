@@ -1,4 +1,4 @@
-implements: Con2Prim
+implements: GRHayL
 
 INCLUDE HEADER: Con2Prim/con2prim_gem.h in con2prim_header.h
 INCLUDE HEADER: EOS/Hybrid/EOS_hybrid.h in EOS_hybrid_header.h
