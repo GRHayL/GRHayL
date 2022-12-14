@@ -11,4 +11,5 @@ SUBDIRS = Con2Prim                       \
           EOS/Hybrid                     \
           EOS/Tabulated                  \
           EOS/Tabulated/interpolators    \
+          EOS/Tabulated/unit_test        \
           GRHayL_Core
