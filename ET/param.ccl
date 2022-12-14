@@ -4,11 +4,6 @@ CCTK_BOOLEAN Cupp_Fix "Whether or not to apply the Cupp Fix"
 } "no"
 
 restricted:
-CCTK_BOOLEAN C2P_unit_test "Whether or not to perform the con2prim unit test"
-{
-} "no"
-
-restricted:
 CCTK_INT C2P_ut_npoints "Number of sampling points in density and temperature for con2prim unit test"
 {
   0:* :: "Positive. Default value is 2^8 = 256."
@@ -37,3 +32,20 @@ CCTK_REAL C2P_ut_T_max "Maximum temperature for the con2prim unit test"
 {
   0.0:* :: "Positive"
 } 1e+2
+
+restricted:
+CCTK_BOOLEAN unit_test_C2P "Whether or not to perform the con2prim unit test"
+{
+} "no"
+
+restricted:
+CCTK_BOOLEAN unit_test_EOS_readtable "Whether or not to perform the EOS readtable unit test"
+{
+} "no"
+
+restricted:
+CCTK_STRING EOS_tablepath "Path to the EOS table"
+{
+  ""    :: "Forbidden, will error out"
+  ".+?" :: "Any string"
+} ""
