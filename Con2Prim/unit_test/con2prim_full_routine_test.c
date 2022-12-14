@@ -92,7 +92,7 @@ void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
   eos_parameters eos;
   initialize_general_eos(eos_type, tau_atm, W_max,
              poison, poison, poison, //entropy
-             C2P_ut_rho_min, C2P_ut_rho_min, rho_b_max,
+             ut_rho_min, ut_rho_min, rho_b_max,
              &eos);
 
   initialize_hybrid_eos(neos, rho_tab,
@@ -134,13 +134,13 @@ void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
   //  T  will vary between  T_min  and  T_max  (uniformly in log space)
 
   // Number of points in the discretization of rho and T
-  const int npoints       = C2P_ut_npoints;
+  const int npoints       = ut_npoints;
 
-  const double test_rho_min = C2P_ut_rho_min;
-  const double test_rho_max = C2P_ut_rho_max;
+  const double test_rho_min = ut_rho_min;
+  const double test_rho_max = ut_rho_max;
 
-  // const double test_T_min   = C2P_ut_T_min;
-  // const double test_T_max   = C2P_ut_T_max;
+  // const double test_T_min   = ut_T_min;
+  // const double test_T_max   = ut_T_max;
 
   // Compute the density step size
   const double lrmin        = log(test_rho_min);
@@ -302,7 +302,6 @@ void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
                                 vx, vy, vz, Bx, By, Bz,
                                 poison, poison, poison, // entropy, Y_e=xye, temp=xtemp
                                 &prims);
-          prims.print = true;
 
           // Define the stress_energy struct
           stress_energy Tmunu, Tmunu_orig;

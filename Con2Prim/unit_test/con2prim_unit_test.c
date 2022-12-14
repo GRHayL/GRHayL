@@ -34,11 +34,11 @@ inline void output_primitive_error(
   prims_error.vy    = relative_error(prims->vy,    prims_orig->vy);
   prims_error.vz    = relative_error(prims->vz,    prims_orig->vz);
   
-  fprintf(outfile, "%d %d %.16e %.16e %.16e"
-                   " %.16e %.16e %.16e"
-                   " %.16e %.16e %.16e"
-                   " %.16e %.16e %.16e "
-                   " %.16e %.16e %.16e\n",
+  fprintf(outfile, "%d %d %.15e %.15e %.15e"
+                   " %.15e %.15e %.15e"
+                   " %.15e %.15e %.15e"
+                   " %.15e %.15e %.15e "
+                   " %.15e %.15e %.15e\n",
                    i, j, prims_orig->rho, prims->rho, prims_error.rho,
                    prims_orig->press, prims->press, prims_error.press,
                    prims_orig->vx, prims->vx, prims_error.vx,
@@ -59,10 +59,10 @@ inline void output_conservative_error(
   cons_error.S_y = relative_error(cons->S_y, cons_orig->S_y);
   cons_error.S_z = relative_error(cons->S_z, cons_orig->S_z);
 
-  fprintf(outfile, "%d %d %.16e %.16e %.16e"
-                   " %.16e %.16e %.16e"
-                   " %.16e %.16e %.16e "
-                   " %.16e %.16e %.16e\n",
+  fprintf(outfile, "%d %d %.15e %.15e %.15e"
+                   " %.15e %.15e %.15e"
+                   " %.15e %.15e %.15e "
+                   " %.15e %.15e %.15e\n",
                    i, j, cons_orig->tau, cons->tau, cons_error.tau,
                    cons_orig->S_x, cons->S_x, cons_error.S_x,
                    cons_orig->S_y, cons->S_y, cons_error.S_y,
@@ -87,11 +87,11 @@ void output_stress_energy_error(
   Tmunu_error.Tyz = relative_error(Tmunu->Tyz, Tmunu_orig->Tyz);
   Tmunu_error.Tzz = relative_error(Tmunu->Tzz, Tmunu_orig->Tzz);
 
-  fprintf(outfile, "%d %d %.16e %.16e %.16e %.16e %.16e %.16e "
-                   "%.16e %.16e %.16e %.16e %.16e %.16e "
-                   "%.16e %.16e %.16e %.16e %.16e %.16e "
-                   "%.16e %.16e %.16e %.16e %.16e %.16e "
-                   "%.16e %.16e %.16e %.16e %.16e %.16e\n",
+  fprintf(outfile, "%d %d %.15e %.15e %.15e %.15e %.15e %.15e "
+                   "%.15e %.15e %.15e %.15e %.15e %.15e "
+                   "%.15e %.15e %.15e %.15e %.15e %.15e "
+                   "%.15e %.15e %.15e %.15e %.15e %.15e "
+                   "%.15e %.15e %.15e %.15e %.15e %.15e\n",
                    i, j, Tmunu_orig->Ttt, Tmunu->Ttt, Tmunu_error.Ttt,
                    Tmunu_orig->Ttx, Tmunu->Ttx, Tmunu_error.Ttx,
                    Tmunu_orig->Tty, Tmunu->Tty, Tmunu_error.Tty,
@@ -104,7 +104,7 @@ void output_stress_energy_error(
                    Tmunu_orig->Tzz, Tmunu->Tzz, Tmunu_error.Tzz);
 }
 
-void con2prim_test_suite( CCTK_ARGUMENTS ) {
+void con2prim_unit_test( CCTK_ARGUMENTS ) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
@@ -137,7 +137,7 @@ void con2prim_test_suite( CCTK_ARGUMENTS ) {
   eos_parameters eos;
   initialize_general_eos(eos_type, tau_atm, W_max,
              poison, poison, poison, //entropy
-             C2P_ut_rho_min, C2P_ut_rho_min, rho_b_max,
+             ut_rho_min, ut_rho_min, rho_b_max,
              &eos);
 
   initialize_hybrid_eos(neos, rho_tab,
@@ -179,13 +179,13 @@ void con2prim_test_suite( CCTK_ARGUMENTS ) {
   //  T  will vary between  T_min  and  T_max  (uniformly in log space)
 
   // Number of points in the discretization of rho and T
-  const int npoints       = C2P_ut_npoints;
+  const int npoints       = ut_npoints;
 
-  const double test_rho_min = C2P_ut_rho_min;
-  const double test_rho_max = C2P_ut_rho_max;
+  const double test_rho_min = ut_rho_min;
+  const double test_rho_max = ut_rho_max;
 
-//  const double test_T_min   = C2P_ut_T_min;
-//  const double test_T_max   = C2P_ut_T_max;
+//  const double test_T_min   = ut_T_min;
+//  const double test_T_max   = ut_T_max;
 
   // Compute the density step size
   const double lrmin        = log(test_rho_min);
@@ -219,42 +219,42 @@ void con2prim_test_suite( CCTK_ARGUMENTS ) {
       printf("Beginning %s test for routine %s\n", suffix, con2prim_test_names[which_routine]);
 
       FILE* outfiles[8];
-      char filename[512];
+      char filename[100];
 
-      sprintf(filename,"unit_test/C2P_%s_%s_Summary.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_Summary.asc",con2prim_test_names[which_routine], suffix);
       outfiles[0] = fopen(filename,"w");
 
-      sprintf(filename,"unit_test/C2P_%s_%s_limit_v_and_output_u0.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_limit_v_and_output_u0.asc",con2prim_test_names[which_routine], suffix);
       outfiles[1] = fopen(filename,"w");
       fprintf(outfiles[1], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[1], "#i j vx vy vz\n");
 
-      sprintf(filename,"unit_test/C2P_%s_%s_apply_inequality_fixes.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_apply_inequality_fixes.asc",con2prim_test_names[which_routine], suffix);
       outfiles[2] = fopen(filename,"w");
       fprintf(outfiles[2], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[2], "#i j tau S_x S_y S_z\n");
 
-      sprintf(filename,"unit_test/C2P_%s_%s_C2P_Select_Hybrid_Method.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_C2P_Select_Hybrid_Method.asc",con2prim_test_names[which_routine], suffix);
       outfiles[3] = fopen(filename,"w");
       fprintf(outfiles[3], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[3], "#i j rho_b press vx vy vz\n");
 
-      sprintf(filename,"unit_test/C2P_%s_%s_font_fix.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_font_fix.asc",con2prim_test_names[which_routine], suffix);
       outfiles[4] = fopen(filename,"w");
       fprintf(outfiles[4], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[4], "#i j rho_b press vx vy vz\n");
 
-      sprintf(filename,"unit_test/C2P_%s_%s_enforce_primitive_limits_and_output_u0.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_enforce_primitive_limits_and_output_u0.asc",con2prim_test_names[which_routine], suffix);
       outfiles[5] = fopen(filename,"w");
       fprintf(outfiles[5], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[5], "#i j rho_b press vx vy vz\n");
 
-      sprintf(filename,"unit_test/C2P_%s_%s_compute_conservs.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_conservs.asc",con2prim_test_names[which_routine], suffix);
       outfiles[6] = fopen(filename,"w");
       fprintf(outfiles[6], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[6], "#i j rho_* tau S_x S_y S_z\n");
 
-      sprintf(filename,"unit_test/C2P_%s_%s_compute_Tmunu.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_Tmunu.asc",con2prim_test_names[which_routine], suffix);
       outfiles[7] = fopen(filename,"w");
       fprintf(outfiles[7], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[7], "#i j Ttt Ttx Tty Ttz Txx Txy Txz Tyy Tyz Tzz\n");
@@ -290,9 +290,9 @@ void con2prim_test_suite( CCTK_ARGUMENTS ) {
           double u0 = poison;
           prims_orig = prims;
           limit_v_and_output_u0(&eos, &metric, &prims, &u0, &diagnostics);
-          fprintf(outfiles[1], "%d %d %.16e %.16e %.16e"
-                               " %.16e %.16e %.16e"
-                               " %.16e %.16e %.16e\n",
+          fprintf(outfiles[1], "%d %d %.15e %.15e %.15e"
+                               " %.15e %.15e %.15e"
+                               " %.15e %.15e %.15e\n",
                                i, j, prims_orig.vx, prims.vx, relative_error(prims.vx, prims_orig.vx),
                                prims_orig.vy, prims.vy, relative_error(prims.vy, prims_orig.vy),
                                prims_orig.vz, prims.vz, relative_error(prims.vz, prims_orig.vz));

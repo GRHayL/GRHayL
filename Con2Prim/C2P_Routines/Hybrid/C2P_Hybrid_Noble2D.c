@@ -216,22 +216,8 @@ int C2P_Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   new_prims[BCON3] = new_cons[B3_con];
   new_prims[WLORENTZ] = 1.0;
 //Additional tabulated code here
-print = prims->print;
 
-//if(prims->print) {
-//printf("old_prims:\n rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
-//printf(" ~u=%.16e\n   %.16e\n   %.16e\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-//printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
-//printf("cons:\n rho=%.16e\n u=%.16e\n S=%.16e\n   %.16e\n   %.16e\n", new_cons[DD],new_cons[UU],new_cons[S1_cov],new_cons[S2_cov],new_cons[S3_cov]);
-//printf(" B=%.16e\n   %.16e\n   %.16e\n",new_cons[B1_con],new_cons[B2_con],new_cons[B3_con]);
-//}
   int retval = Utoprim_new_body(params, eos, new_cons, metric->g4dn, metric->g4up, new_prims);
-//if(prims->print) {
-//printf("new_prims:\n rho=%.16e\n u=%.16e\n",new_prims[RHO],new_prims[UU]);
-//printf(" ~u=%.16e\n   %.16e\n   %.16e\n",new_prims[UTCON1],new_prims[UTCON2],new_prims[UTCON3]);
-//printf(" B=%.16e\n   %.16e\n   %.16e\n",new_prims[BCON1],new_prims[BCON2],new_prims[BCON3]);
-//printf("retval %d\n", retval);
-//}
 
   if(retval==0) {
     prims->rho = new_prims[RHO];
@@ -342,8 +328,6 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
 
   harm_aux.Qsq = 0. ;
   for(i=0;i<4;i++) harm_aux.Qsq += Qcov[i]*Qcon[i] ;
-//if(print) printf("Qcov\n %.16e\n %.16e\n %.16e\n %.16e\n",  Qcov[0],  Qcov[1],  Qcov[2],  Qcov[3]);
-//if(print) printf("Qcon\n %.16e\n %.16e\n %.16e\n %.16e\n",  Qcon[0],  Qcon[1],  Qcon[2],  Qcon[3]);
 
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn ;
 
@@ -412,7 +396,6 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
   x_2d[0] =  fabs( W_last );
   x_2d[1] = x1_of_x0( &harm_aux, W_last ) ;
 
-//if(print) printf("harm:\n %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n", harm_aux.Bsq, harm_aux.QdotBsq, harm_aux.Qsq, harm_aux.Qtsq, harm_aux.Qdotn, harm_aux.QdotB, harm_aux.D, harm_aux.gamma);
   retval = general_newton_raphson( eos, &harm_aux, x_2d, n, func_vsq) ;
 
   W = x_2d[0];
@@ -625,9 +608,7 @@ tmp++;
 //    return(2);
 //  }
 
-//if(print) printf("GNR error %.16e with MIN_NEWT_TOL %.16e and NEWT_TOL %.16e\n", fabs(errx), MIN_NEWT_TOL, NEWT_TOL);
   if( fabs(errx) > MIN_NEWT_TOL){
-//if(print) printf("C2P failed with retval 1.\n");
     return(1);
   }
   if( (fabs(errx) <= MIN_NEWT_TOL) && (fabs(errx) > NEWT_TOL) ){
@@ -751,8 +732,7 @@ double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const 
 
 
   // Compute p = P_{cold} + P_{th}
-  return( (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma )/eos->Gamma_th );
-//  return( ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th );
+  return( ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th );
 
 }
 
@@ -821,8 +801,7 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
    *  -----------------------------------------------------------------------------
    */
 
-  return( (eos->Gamma_th - 1.) * ( 0.5 * D / sqrt(1.-vsq)  - W  ) / eos->Gamma_th ) ;
-//  return( ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th );
+  return( ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th );
 }
 
 

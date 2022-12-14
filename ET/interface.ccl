@@ -94,3 +94,37 @@ void FUNCTION return_primitives_ETK(
 PROVIDES FUNCTION return_primitives_ETK WITH c2p_return_primitives
   LANGUAGE C
 
+void FUNCTION A_i_wrapper_ETK(
+             CCTK_INT IN direction,
+             CCTK_POINTER_TO_CONST IN cctkGH,
+             CCTK_POINTER_TO_CONST IN out_prims_r,
+             CCTK_POINTER_TO_CONST IN out_prims_l,
+             CCTK_POINTER_TO_CONST IN phi_interped,
+             CCTK_POINTER_TO_CONST IN cmax_1,
+             CCTK_POINTER_TO_CONST IN cmin_1,
+             CCTK_POINTER_TO_CONST IN cmax_2,
+             CCTK_POINTER_TO_CONST IN cmin_2,
+             CCTK_POINTER IN A3_rhs)
+PROVIDES FUNCTION A_i_wrapper_ETK WITH A_i_wrapper
+  LANGUAGE C
+
+void FUNCTION A_i_gauge_rhs_ETK(
+             CCTK_POINTER_TO_CONST IN cctkGH,
+             CCTK_POINTER_TO_CONST IN dX,
+             CCTK_POINTER_TO_CONST IN in_vars,
+             CCTK_POINTER_TO_CONST IN phitilde,
+             CCTK_REAL IN Lorenz_damping_factor,
+             CCTK_REAL OUT shiftx_interp,
+             CCTK_REAL OUT shifty_interp,
+             CCTK_REAL OUT shiftz_interp,
+             CCTK_REAL OUT alpha_interp,
+             CCTK_REAL OUT alpha_Phi_minus_betaj_A_j_interp,
+             CCTK_REAL OUT alpha_sqrtg_Ax_interp,
+             CCTK_REAL OUT alpha_sqrtg_Ay_interp,
+             CCTK_REAL OUT alpha_sqrtg_Az_interp,
+             CCTK_REAL OUT phitilde_rhs,
+             CCTK_REAL OUT Ax_rhs,
+             CCTK_REAL OUT Ay_rhs,
+             CCTK_REAL OUT Az_rhs)
+PROVIDES FUNCTION A_i_gauge_rhs_ETK WITH A_i_gauge_rhs
+  LANGUAGE C

@@ -137,29 +137,6 @@ void con2prim_loop_kernel(
              con2prim_diagnostics *restrict diagnostics,
              stress_energy *restrict Tmunu);
 
-int C2P_Select_Hybrid_Method(
-             const GRHayL_parameters *restrict params,
-             const eos_parameters *restrict eos, const int c2p_key,
-             const metric_quantities *restrict metric,
-             const conservative_quantities *restrict cons,
-             primitive_quantities *restrict prims,
-             con2prim_diagnostics *restrict diagnostics);
-
-int C2P_Hybrid_Noble2D(
-             const GRHayL_parameters *restrict params,
-             const eos_parameters *restrict eos,
-             const metric_quantities *restrict metric,
-             const conservative_quantities *restrict cons,
-             primitive_quantities *restrict prim,
-             con2prim_diagnostics *restrict diagnostics);
-
-int C2P_Hybrid_OldNoble2D(
-             const eos_parameters *restrict eos,
-             const metric_quantities *restrict metric,
-             const conservative_quantities *restrict cons,
-             primitive_quantities *restrict prim,
-             con2prim_diagnostics *restrict diagnostics);
-
 int  apply_inequality_fixes(
              const GRHayL_parameters *restrict params,
              const eos_parameters *restrict eos,
@@ -180,26 +157,6 @@ void guess_primitives(
              const conservative_quantities *restrict cons,
              primitive_quantities *restrict prims_guess);
 
-void limit_utilde_and_compute_v(
-             const eos_parameters *restrict eos,
-             const metric_quantities *restrict metric,
-             double *restrict utcon1_ptr, double *restrict u0_ptr,
-             double *restrict utcon2_ptr, double *restrict utcon3_ptr,
-             primitive_quantities *restrict prims,
-             con2prim_diagnostics *restrict diagnostics);
-
-void limit_v_and_output_u0(
-             const eos_parameters *restrict eos,
-             const metric_quantities *restrict metric,
-             primitive_quantities *restrict prims,
-             double *restrict u0,
-             con2prim_diagnostics *restrict diagnostics);
-
-void eigenvalues_3by3_real_sym_matrix(
-             double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
-             const double M11, const double M12, const double M13,
-             const double M22, const double M23, const double M33);
-
 void enforce_primitive_limits_and_output_u0(
              const GRHayL_parameters *restrict params,
              const eos_parameters *restrict eos,
@@ -217,12 +174,23 @@ void compute_conservs_and_Tmunu(
              conservative_quantities *restrict cons,
              stress_energy *restrict Tmunu);
 
-void initial_random_data(
-             const double xrho,
-             const double xpress,
-             const bool random_metric,
-             metric_quantities *restrict metric,
-             primitive_quantities *restrict prims);
+//---------- Primary Con2Prim routines -------------
+
+int C2P_Select_Hybrid_Method(
+             const GRHayL_parameters *restrict params,
+             const eos_parameters *restrict eos, const int c2p_key,
+             const metric_quantities *restrict metric,
+             const conservative_quantities *restrict cons,
+             primitive_quantities *restrict prims,
+             con2prim_diagnostics *restrict diagnostics);
+
+int C2P_Hybrid_Noble2D(
+             const GRHayL_parameters *restrict params,
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             const conservative_quantities *restrict cons,
+             primitive_quantities *restrict prim,
+             con2prim_diagnostics *restrict diagnostics);
 
 //--------------------------------------------------
 
@@ -255,30 +223,40 @@ int font_fix_rhob_loop(
 
 //--------------------------------------------------
 
-/*TODO: use code below as basis to abstract con2prim calls
-// A normal function with an int parameter
-// and void return type
-void fun(int a)
-{
-    printf("Value of a is %d\n", a);
-}
-  
-int main()
-{
-    // fun_ptr is a pointer to function fun() 
-    void (*fun_ptr)(int) = &fun;
-  
-    // The above line is equivalent of following two
-    // void (*fun_ptr)(int);
-    // fun_ptr = &fun; 
-    
-  
-    // Invoking fun() using fun_ptr
-    (*fun_ptr)(10);
-  
-    return 0;
-}
-*/
+//------------ Auxiliary Functions -----------------
+
+void limit_utilde_and_compute_v(
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             double *restrict utcon1_ptr, double *restrict u0_ptr,
+             double *restrict utcon2_ptr, double *restrict utcon3_ptr,
+             primitive_quantities *restrict prims,
+             con2prim_diagnostics *restrict diagnostics);
+
+void limit_v_and_output_u0(
+             const eos_parameters *restrict eos,
+             const metric_quantities *restrict metric,
+             primitive_quantities *restrict prims,
+             double *restrict u0,
+             con2prim_diagnostics *restrict diagnostics);
+
+void eigenvalues_3by3_real_sym_matrix(
+             double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
+             const double M11, const double M12, const double M13,
+             const double M22, const double M23, const double M33);
+
+//--------------------------------------------------
+
+//--------------- Unit Testing ---------------------
+
+void initial_random_data(
+             const double xrho,
+             const double xpress,
+             const bool random_metric,
+             metric_quantities *restrict metric,
+             primitive_quantities *restrict prims);
+
+//--------------------------------------------------
 
 // TODO: The following functions are inside the functions that call them because they are only used by one function in c2p. They are used elsewhere inIGM,
 // so we should consider a better solution.

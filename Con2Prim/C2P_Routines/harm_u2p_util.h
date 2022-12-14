@@ -29,7 +29,6 @@
 //HEADER_TODO: remove need for EOS header
 #include "../../EOS/Hybrid/EOS_hybrid.h"
 #include <stdio.h>
-static bool print;
 
 // HARM uses lots of globals. These auxiliary variables
 // allow us to pass useful quantities to the con2prim
@@ -124,8 +123,7 @@ static inline double pressure_rho0_u(const eos_parameters *restrict eos, const d
    * | p(rho_b,u) = P_cold + (Gamma_th - 1)*(u - rho_b * eps_cold) |
    * .-------------------------------------------------------------.
    */
-//  return( P_cold + (eos->Gamma_th - 1.0)*(u - rho0*eps_cold) );
-  return((eos->Gamma_th - 1.0)*u) ;
+  return( P_cold + (eos->Gamma_th - 1.0)*(u - rho0*eps_cold) );
 
 }
 
@@ -147,8 +145,7 @@ static inline double pressure_rho0_w(const eos_parameters *restrict eos, const d
    * | p(rho_b,w) = ( P_cold + (Gamma_th-1)*( w - rho_b*(1+eps_cold) ) )/Gamma_th |
    *  ----------------------------------------------------------------------------
    */
-//  return( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0 + eps_cold) ) )/eos->Gamma_th );
-  return((eos->Gamma_th-1.0)*(w - rho0)/eos->Gamma_th ) ;
+  return( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0 + eps_cold) ) )/eos->Gamma_th );
 }
 
 #endif

@@ -36,6 +36,7 @@ typedef struct GRHayL_parameters {
   double psi6threshold;
   bool update_Tmunu;
   bool Cupp_Fix;
+  double Lorenz_damping_factor;
 } GRHayL_parameters;
 
 void initialize_GRHayL(
@@ -211,7 +212,6 @@ typedef struct primitive_quantities {
   double vx, vy, vz;
   double Bx, By, Bz;
   double entropy, Y_e, temperature;
-  bool print;
 } primitive_quantities;
 
 /*

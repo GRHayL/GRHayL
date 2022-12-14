@@ -40,5 +40,4 @@ void initialize_primitives(
   prims->entropy     = entropy;
   prims->Y_e         = Y_e;
   prims->temperature = temperature;
-  prims->print       =false;
 }

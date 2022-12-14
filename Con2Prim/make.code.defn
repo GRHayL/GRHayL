@@ -1,16 +1,15 @@
 # Primary make.code.defn for gem Con2Prim
 
 # Source files in this directory that need compiled:
-SRCS = \
-       apply_inequality_fixes.c \
+SRCS = apply_inequality_fixes.c     \
        compute_conservs_and_Tmunu.c \
-       con2prim_ETK_interface.c \
-       con2prim_loop_kernel.c \
-       eigen.c \
-       enforce_primitive_limits.c \
-       guess_primitives.c \
-       initialize_diagnostics.c \
+       con2prim_ETK_interface.c     \
+       con2prim_loop_kernel.c       \
+       eigen.c                      \
+       enforce_primitive_limits.c   \
+       guess_primitives.c           \
+       initialize_diagnostics.c     \
        limit_utilde_and_compute_v.c \
-       limit_v_and_output_u0.c \
-       reset_prims_to_atmosphere.c \
+       limit_v_and_output_u0.c      \
+       reset_prims_to_atmosphere.c  \
        undensitize_conservatives.c

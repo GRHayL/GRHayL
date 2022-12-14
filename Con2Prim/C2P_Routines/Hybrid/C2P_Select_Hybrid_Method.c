@@ -14,10 +14,6 @@ int C2P_Select_Hybrid_Method( const GRHayL_parameters *restrict params,
       return( C2P_Hybrid_Noble2D(params, eos, metric, cons, prims, diagnostics) );
       break;
 
-    case OldNoble2D:
-      return( C2P_Hybrid_OldNoble2D(eos,metric,cons,prims,diagnostics) );
-      break;
-
 //    // Noble1D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
 //    case Noble1D:
 //      return( con2prim_Noble1D(eos,metric,cons,prim,stats) );
