@@ -1,5 +1,4 @@
 #include "../EOS_tabulated.h"
-#include "../NRPy_function_prototypes.h"
 #include "NRPyEOS_tabulated_helpers.h"
 /*
  * (c) 2022 Leo Werneck
@@ -20,7 +19,7 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
   // This function will interpolate n table quantities from
   // (rho,Ye,aux). It replaces EOS_Omni calls with keytemp != 1
   if( n > NRPyEOS_ntablekeys ) {
-    fprintf(stderr,"(NRPyEOS) NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities: number of quantities exceed maximum allowed: %d > %d. ABORTING.",
+    fprintf(stderr,"(GRHayL - EOS) NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities: number of quantities exceed maximum allowed: %d > %d. ABORTING.",
             n,NRPyEOS_ntablekeys);
   }
 
@@ -50,7 +49,7 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
     aux += eos_params->energy_shift;
     // At this point, aux *must* be positive. If not, error out.
     if( aux < 0.0 ) {
-      fprintf(stderr,"(NRPyEOS) NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities: found eps+energy_shift < 0.0 (%e). ABORTING.",
+      fprintf(stderr,"(GRHayL - EOS) NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities: found eps+energy_shift < 0.0 (%e). ABORTING.",
               aux);
     }
     // Compute log(eps+eps0)

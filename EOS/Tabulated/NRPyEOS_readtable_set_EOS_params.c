@@ -1,5 +1,4 @@
 #include "./EOS_tabulated.h"
-#include "./NRPy_function_prototypes.h"
 
 // mini NoMPI
 #ifdef HAVE_CAPABILITY_MPI
@@ -11,28 +10,40 @@
 
 // If on the IO proc (doIO == True) actually perform HDF5 IO, catch possible
 // HDF5 errors
-#define HDF5_DO_IO(fn_call)                                             \
-  {                                                                     \
-    int error_code = fn_call;                                           \
-    if (error_code < 0) {                                               \
-      fprintf(stderr,"(NRPyEOS) HDF5 call '%s' returned error code %d", \
-                  #fn_call, error_code);                                \
-    }                                                                   \
+#define HDF5_DO_IO(fn_call)                                                    \
+  {                                                                            \
+    int error_code = fn_call;                                                  \
+    if (error_code < 0) {                                                      \
+      fprintf(stderr,"(GRHayL - EOS) HDF5 call '%s' returned error code %d\n", \
+                  #fn_call, error_code);                                       \
+    }                                                                          \
   }
+
+#define check_if_file_exists(filename) {                    \
+  FILE *fp = fopen(filename, "r");                          \
+  if( !fp ) {                                               \
+    fprintf(stderr,                                         \
+            "(GRHayL - EOS) Could not open EOS file: %s\n", \
+            filename);                                      \
+    exit(1);                                                \
+  }                                                         \
+  fclose(fp);                                               \
+}
 
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, eos_parameters *restrict eos_params) {
+void NRPyEOS_readtable_set_EOS_params(const char *EOS_tablename, eos_parameters *restrict eos_params) {
 
+  check_if_file_exists(EOS_tablename);
 
-  fprintf(stderr,"(NRPyEOS) *******************************\n");
-  fprintf(stderr,"(NRPyEOS) Reading EOS table from file:\n");
-  fprintf(stderr,"(NRPyEOS) %s\n",nuceos_table_name);
-  fprintf(stderr,"(NRPyEOS) *******************************\n");
+  printf("(GRHayL - EOS) *******************************\n");
+  printf("(GRHayL - EOS) Reading EOS table from file:\n");
+  printf("(GRHayL - EOS) %s\n", EOS_tablename);
+  printf("(GRHayL - EOS) *******************************\n");
 
-  hid_t file;
-  HDF5_DO_IO(file = H5Fopen(nuceos_table_name, H5F_ACC_RDONLY, H5P_DEFAULT));
+  hid_t file = H5Fopen(EOS_tablename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  HDF5_DO_IO(file);
 
 // Use these two defines to easily read in a lot of variables in the same way
 // The first reads in one variable of a given type completely
@@ -58,16 +69,16 @@ void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, eos_paramet
   // Allocate memory for tables
   double* alltables_temp;
   if (!(alltables_temp = (double*)malloc(eos_params->N_rho * eos_params->N_T * eos_params->N_Ye * NRPyEOS_ntablekeys * sizeof(double)))) {
-    fprintf(stderr,"(NRPyEOS) Cannot allocate memory for EOS table");
+    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
   }
   if (!(eos_params->table_logrho = (double*)malloc(eos_params->N_rho * sizeof(double)))) {
-    fprintf(stderr,"(NRPyEOS) Cannot allocate memory for EOS table");
+    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
   }
   if (!(eos_params->table_logT = (double*)malloc(eos_params->N_T * sizeof(double)))) {
-    fprintf(stderr,"(NRPyEOS) Cannot allocate memory for EOS table");
+    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
   }
   if (!(eos_params->table_Ye = (double*)malloc(eos_params->N_Ye * sizeof(double)))) {
-    fprintf(stderr,"(NRPyEOS) Cannot allocate memory for EOS table");
+    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
   }
 
   // Prepare HDF5 to read hyperslabs into alltables_temp
@@ -112,7 +123,7 @@ void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, eos_paramet
   // the table kind is the fastest changing index
   if (!(eos_params->table_all = (double*)malloc(eos_params->N_rho * eos_params->N_T * eos_params->N_Ye * NRPyEOS_ntablekeys
                                                 * sizeof(double)))) {
-    fprintf(stderr,"(NRPyEOS) Cannot allocate memory for EOS table");
+    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
   }
   for(int iv = 0;iv<NRPyEOS_ntablekeys;iv++)
     for(int k = 0; k<eos_params->N_Ye;k++)
@@ -146,7 +157,7 @@ void NRPyEOS_readtable_set_EOS_params(const char *nuceos_table_name, eos_paramet
   // that allows us to extrapolate to negative eps
   if (!(eos_params->table_eps = (double*)malloc(eos_params->N_rho * eos_params->N_T * eos_params->N_Ye
                                                * sizeof(double)))) {
-    fprintf(stderr,"(NRPyEOS) Cannot allocate memory for eps table\n");
+    printf("(GRHayL - EOS) Cannot allocate memory for eps table\n");
   }
 
   // convert units

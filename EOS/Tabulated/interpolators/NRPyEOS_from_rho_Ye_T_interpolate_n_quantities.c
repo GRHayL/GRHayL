@@ -1,5 +1,4 @@
 #include "../EOS_tabulated.h"
-#include "../NRPy_function_prototypes.h"
 #include "NRPyEOS_tabulated_helpers.h"
 /*
  * (c) 2022 Leo Werneck
@@ -17,7 +16,7 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restri
   // This function will interpolate n table quantities from
   // (rho,Ye,T). It replaces EOS_Omni calls with keytemp = 1
   if( n > NRPyEOS_ntablekeys ) {
-    fprintf(stderr,"(NRPyEOS) from_rho_Ye_T_interpolate_n_quantities: number of quantities exceed maximum allowed: %d > %d. ABORTING.",
+    fprintf(stderr,"(GRHayL - EOS) from_rho_Ye_T_interpolate_n_quantities: number of quantities exceed maximum allowed: %d > %d. ABORTING.",
             n,NRPyEOS_ntablekeys);
   }
 

@@ -1,5 +1,4 @@
 #include "../EOS_tabulated.h"
-#include "../NRPy_function_prototypes.h"
 /*
  * (c) 2022 Leo Werneck
  */
@@ -28,7 +27,7 @@ void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(const eos_parameters *res
 
   // Step 5: Check for errors
   if( report.error ) {
-    fprintf(stderr,"(NRPyEOS) Inside NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T. Error message: %s (key = %d)",report.message,report.error_key);
+    fprintf(stderr,"(GRHayL - EOS) Inside NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T. Error message: %s (key = %d)",report.message,report.error_key);
   }
 
   // Step 6: Update output variables

@@ -5,8 +5,8 @@
 void NRPyEOS_free_memory(eos_parameters *restrict eos_params) {
 
 
- fprintf(stderr,"(NRPyEOS) *******************************\n");
- fprintf(stderr,"(NRPyEOS) Freeing up memory.\n");
+ printf("(GRHayL - EOS) *******************************\n");
+ printf("(GRHayL - EOS) Freeing up memory.\n");
 
   // Free memory allocated for the table
   free(eos_params->table_logrho);
@@ -15,6 +15,6 @@ void NRPyEOS_free_memory(eos_parameters *restrict eos_params) {
   free(eos_params->table_all);
   free(eos_params->table_eps);
 
- fprintf(stderr,"(NRPyEOS) All done!\n");
- fprintf(stderr,"(NRPyEOS) *******************************\n");
+ printf("(GRHayL - EOS) All done!\n");
+ printf("(GRHayL - EOS) *******************************\n");
 }

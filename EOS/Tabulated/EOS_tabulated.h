@@ -45,4 +45,6 @@ typedef struct NRPyEOS_error_report {
 } NRPyEOS_error_report;
 //********************************************
 
+#include "NRPy_function_prototypes.h"
+
 #endif // TABULATED_EOS_H_
