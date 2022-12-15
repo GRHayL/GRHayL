@@ -36,6 +36,7 @@ typedef struct induction_gauge {
 } induction_gauge;
 
 typedef struct induction_gauge_rhs {
+  double dx[3];
   double alpha_interp;
   double alpha_Phi_minus_betaj_A_j_interp[4]; // [i,j,k], [i,j-1,k], [i,j-1,k], [i,j,k-1]
   double alpha_sqrtg_Ax_interp[2]; // [i,j,k], [i+1,j,  k  ]
@@ -58,7 +59,6 @@ void interpolate_for_A_i_rhs(
              induction_gauge_rhs *restrict gauge_rhs_vars );
 
 void calculate_phitilde_and_A_i_rhs(
-             const double *restrict dX,
              const double Lorenz_damping_factor,
              induction_gauge_rhs *restrict vars);
 #endif // INDUCTION_GEM_H_

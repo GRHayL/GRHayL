@@ -49,13 +49,12 @@ void interpolate_for_A_i_rhs(
 
   double lapse_Psi2_jk = avg2(lapse_psi2, 0,0, 0,1, 0,1);
 
-  double A_x_jk   = gauge_vars->A_x[1][1][0]; // @ (i,j+1/2,k+1/2)
+  double A_x_jk   = gauge_vars->A_x[1][1][1]; // @ (i,j+1/2,k+1/2)
   double A_y_jk   = avg3(gauge_vars->A_y,MINUS1,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)
   double A_z_jk   = avg3(gauge_vars->A_z,MINUS1,PLUS0, PLUS0,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
 
   gauge_rhs_vars->alpha_sqrtg_Ax_interp[0] = lapse_Psi2_jk*
     ( gupxx_jk*A_x_jk + gupxy_jk*A_y_jk + gupxz_jk*A_z_jk );
-
 
   // DO A^Y TERM (interpolate to (i+1/2,j,k+1/2) )
   // \alpha \sqrt{\gamma} A^y = \alpha psi^6 A^y (RHS of \partial_i psi6phi)
@@ -67,7 +66,7 @@ void interpolate_for_A_i_rhs(
   double lapse_Psi2_ik = avg2(lapse_psi2, 0,1, 0,0, 0,1);
 
   double A_x_ik   = avg3(gauge_vars->A_x, PLUS0,PLUS1,MINUS1,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
-  double A_y_ik   = gauge_vars->A_y[1][0][1]; // @ (i+1/2,j,k+1/2)
+  double A_y_ik   = gauge_vars->A_y[1][1][1]; // @ (i+1/2,j,k+1/2)
   double A_z_ik   = avg3(gauge_vars->A_z, PLUS0,PLUS0,MINUS1,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
 
   gauge_rhs_vars->alpha_sqrtg_Ay_interp[0] = lapse_Psi2_ik*
@@ -84,7 +83,7 @@ void interpolate_for_A_i_rhs(
 
   double A_x_ij   = avg3(gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0,MINUS1,PLUS0); // @ (i,j+1/2,k+1/2)
   double A_y_ij   = avg3(gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1,MINUS1,PLUS0); // @ (i+1/2,j,k+1/2)
-  double A_z_ij   = gauge_vars->A_z[0][1][1]; // @ (i+1/2,j+1/2,k)
+  double A_z_ij   = gauge_vars->A_z[1][1][1]; // @ (i+1/2,j+1/2,k)
 
   gauge_rhs_vars->alpha_sqrtg_Az_interp[0] = lapse_Psi2_ij*
     ( gupxz_ij*A_x_ij + gupyz_ij*A_y_ij + gupzz_ij*A_z_ij );
@@ -96,12 +95,12 @@ void interpolate_for_A_i_rhs(
   gauge_rhs_vars->shiftx_interp[0] = avg2(gauge_vars->shiftx, 0,1, 0,1, 0,1);
   gauge_rhs_vars->shifty_interp[0] = avg2(gauge_vars->shifty, 0,1, 0,1, 0,1);
   gauge_rhs_vars->shiftz_interp[0] = avg2(gauge_vars->shiftz, 0,1, 0,1, 0,1);
-  double  lapse_over_Psi6_ijkL = avg2(lapse_over_psi6, 0,1, 0,1, 0,1);
+  double  lapse_over_Psi6_ijk = avg2(lapse_over_psi6, 0,1, 0,1, 0,1);
   double  A_x_ijk = avg3(gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
   double  A_y_ijk = avg3(gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)
   double  A_z_ijk = avg3(gauge_vars->A_z, PLUS0,PLUS0, PLUS0,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
 
-  gauge_rhs_vars->alpha_Phi_minus_betaj_A_j_interp[0] = gauge_vars->phitilde*lapse_over_Psi6_ijkL
+  gauge_rhs_vars->alpha_Phi_minus_betaj_A_j_interp[0] = gauge_vars->phitilde*lapse_over_Psi6_ijk
                                                       - (gauge_rhs_vars->shiftx_interp[0]*A_x_ijk
                                                          + gauge_rhs_vars->shifty_interp[0]*A_y_ijk
                                                          + gauge_rhs_vars->shiftz_interp[0]*A_z_ijk);
