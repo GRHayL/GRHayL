@@ -6,6 +6,10 @@
 #include "induction_gem.h"
 
 static const int BX_STAGGER=8, VXR=11, VXL=14;
+typedef struct gf_and_gz_struct {
+  double *gf;
+  int gz_lo[4],gz_hi[4];
+} gf_and_gz_struct;
 
 void A_i_wrapper( const int A_dirn,
                   CCTK_POINTER_TO_CONST void_cctkGH,

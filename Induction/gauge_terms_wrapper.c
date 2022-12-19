@@ -114,11 +114,11 @@ void A_i_gauge_rhs(CCTK_POINTER_TO_CONST void_cctkGH,
 
     induction_gauge_rhs gauge_rhs_vars;
 
-    gauge_rhs_vars.alpha_interp = alpha_interp[index];;
+    gauge_rhs_vars.alpha_interp = alpha_interp[index];
 
-    gauge_rhs_vars.dx[0] = dxinv[0];
-    gauge_rhs_vars.dx[1] = dxinv[1];
-    gauge_rhs_vars.dx[2] = dxinv[2];
+    gauge_rhs_vars.dxi[0] = dxinv[0];
+    gauge_rhs_vars.dxi[1] = dxinv[1];
+    gauge_rhs_vars.dxi[2] = dxinv[2];
 
     gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[0] = alpha_Phi_minus_betaj_A_j_interp[index];
     gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[1] = alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i-1,j,k)];

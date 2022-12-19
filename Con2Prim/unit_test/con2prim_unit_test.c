@@ -1,7 +1,7 @@
 // Thorn      : GRHayL
 // File       : con2prim_test_suite.c
 // Author(s)  : Leo Werneck & Samuel Cupp
-// Description: In this file we provide an extensive test suite of
+// Description: In this file we provide an extensive unit test of
 //              the Con2Prim gem.
 
 #include "cctk.h"
@@ -13,6 +13,22 @@
 
 inline double randf(double low,double high) {
     return (rand()/(double)(RAND_MAX))*(high-low)+low;
+}
+
+inline void perturb_data(double *restrict rand_val, primitive_quantities *restrict prims, conservative_quantities *restrict cons) {
+  prims->rho   *= rand_val[0];
+  prims->press *= rand_val[1];
+  prims->vx    *= rand_val[2];
+  prims->vy    *= rand_val[3];
+  prims->vz    *= rand_val[4];
+  prims->Bx    *= rand_val[5];
+  prims->By    *= rand_val[6];
+  prims->Bz    *= rand_val[7];
+  cons->rho    *= rand_val[8];
+  cons->S_x    *= rand_val[9];
+  cons->S_y    *= rand_val[10];
+  cons->S_z    *= rand_val[11];
+  cons->tau    *= rand_val[12];
 }
 
 inline double relative_error( const double a, const double b ) {
@@ -108,10 +124,17 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
+  // Count number of routines tested
+  int num_routines_tested = 1;
+  int con2prim_test_keys[num_routines_tested];
+  char con2prim_test_names[num_routines_tested][50];
+
+  con2prim_test_keys[0] = Noble2D;
+  sprintf(con2prim_test_names[0],"%s","Noble2D");
+
   double poison = 1e200;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  int main = Noble2D;
   int backup_routine[3] = {None,None,None};
   bool calc_prims_guess = true;
   double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
@@ -132,7 +155,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  initialize_GRHayL(main, backup_routine, false, false, calc_prims_guess, Psi6threshold, update_Tmunu, Cupp_Fix, &params);
+  initialize_GRHayL(None, backup_routine, false, false, calc_prims_guess, Psi6threshold, update_Tmunu, Cupp_Fix, &params);
 
   eos_parameters eos;
   initialize_general_eos(eos_type, tau_atm, W_max,
@@ -146,28 +169,6 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
 
   con2prim_diagnostics diagnostics;
   initialize_diagnostics(&diagnostics);
-
-  // Count number of routines tested
-  int num_routines_tested = 1;
-  int con2prim_test_keys[4];
-  char con2prim_test_names[4][50];
-  con2prim_test_keys[0] = params.main_routine;
-  sprintf(con2prim_test_names[0],"%s","Noble2D");
-  if( params.backup_routine[0] != None ) {
-    num_routines_tested++;
-    con2prim_test_keys[1] = params.backup_routine[0];
-    //sprintf(con2prim_test_names[1],"%s",igm_con2prim_backup_routine[0]);
-    if( params.backup_routine[1] != None ) {
-      num_routines_tested++;
-      con2prim_test_keys[2] = params.backup_routine[1];
-      //sprintf(con2prim_test_names[2],"%s",igm_con2prim_backup_routine[1]);
-      if( params.backup_routine[2] != None ) {
-        num_routines_tested++;
-        con2prim_test_keys[3] = params.backup_routine[2];
-        //sprintf(con2prim_test_names[3],"%s",igm_con2prim_backup_routine[2]);
-      }
-    }
-  }
 
   // We will be performing the tabulated EOS test in the following way:
   //
@@ -204,6 +205,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
 
   // Now perform one test for each of the selected routines
   for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
+    params.main_routine = con2prim_test_keys[which_routine];
 
     int failures = 0;
     for(int rand=0;rand<2;rand++) {
@@ -234,7 +236,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
       fprintf(outfiles[2], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[2], "#i j tau S_x S_y S_z\n");
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_C2P_Select_Hybrid_Method.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_Hybrid_Multi_Method.asc",con2prim_test_names[which_routine], suffix);
       outfiles[3] = fopen(filename,"w");
       fprintf(outfiles[3], "#Each variable has three columns: original value, new value, relative difference\n");
       fprintf(outfiles[3], "#i j rho_b press vx vy vz\n");
@@ -284,7 +286,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
           stress_energy Tmunu, Tmunu_orig;
 
           // Generate random data to serve as the 'true' primitive values
-          bool random_metric = false;
+          bool random_metric = true;
           initial_random_data(xrho, xpress, random_metric, &metric, &prims);
 
           double u0 = poison;
@@ -301,21 +303,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
           compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
 
           //This is meant to simulate some round-off error that deviates from the "true" values that we just computed.
-          if(rand==1) {
-            prims.rho   *= rand_val[0];
-            prims.press *= rand_val[1];
-            prims.vx    *= rand_val[2];
-            prims.vy    *= rand_val[3];
-            prims.vz    *= rand_val[4];
-            prims.Bx    *= rand_val[5];
-            prims.By    *= rand_val[6];
-            prims.Bz    *= rand_val[7];
-            cons.rho    *= rand_val[8];
-            cons.S_x    *= rand_val[9];
-            cons.S_y    *= rand_val[10];
-            cons.S_z    *= rand_val[11];
-            cons.tau    *= rand_val[12];
-          }
+          if(rand) perturb_data(rand_val, &prims, &cons);
 
           int check = 0;
           if(cons.rho > 0.0) {
@@ -329,17 +317,12 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
 
             // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
             undensitize_conservatives(&metric, &cons, &cons_undens);
-//TODO: Validate cons_undens?
 
             /************* Conservative-to-primitive recovery ************/
 
-            if(params.calc_prim_guess) guess_primitives(&eos, &metric, &prims, &cons, &prims_guess);
-            //TODO: Validate grims_guess? (rhob press v)
-
             prims_orig = prims;
-            check = C2P_Select_Hybrid_Method(&params, &eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
+            check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
             output_primitive_error(&prims_orig, &prims_guess, i, j, outfiles[3]);
-            //If multiple C2P routines are selected as backups, the backup routine logic would go here
   
             prims_orig = prims;
             if(check!=0) {
@@ -352,7 +335,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
               output_primitive_error(&prims_orig, &prims_tmp, i, j, outfiles[4]);
             }
 
-      /*************************************************************/
+            /*************************************************************/
   
             if(check==0) {
               prims = prims_guess;
@@ -389,8 +372,8 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
             fprintf(outfiles[0],"Recovery FAILED!\n");
             printf("Recovery FAILED!\n");
           } else {
-            fprintf(outfiles[0], "Recovery SUCCEEDED FOR POINT %d_%d!\n", i,j);
-            printf("Recovery SUCCEEDED FOR POINT %d_%d!\n", i,j);
+            fprintf(outfiles[0], "Recovery SUCCEEDED FOR POINT (%d,%d)!\n", i,j);
+            printf("Recovery SUCCEEDED FOR POINT (%d,%d)!\n", i,j);
           }
 
         } // Pressure loop

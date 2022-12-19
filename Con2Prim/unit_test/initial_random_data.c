@@ -1,9 +1,3 @@
-// Thorn      : GrHayL
-// File       : con2prim_test_suite.cc
-// Author(s)  : Leo Werneck & Samuel Cupp
-// Description: In this file we provide an extensive test suite of
-//              the Con2Prim gem.
-
 #include "stdlib.h"
 #include "../con2prim_gem.h"
 

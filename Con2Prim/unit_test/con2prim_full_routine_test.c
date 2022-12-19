@@ -64,10 +64,17 @@ void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
+  // Count number of routines tested
+  int num_routines_tested = 1;
+  int con2prim_test_keys[num_routines_tested];
+  char con2prim_test_names[num_routines_tested][50];
+
+  con2prim_test_keys[0] = Noble2D;
+  sprintf(con2prim_test_names[0],"%s","Noble2D");
+
   double poison = 1e200;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  int main = Noble2D;
   int backup_routine[3] = {None,None,None};
   int update_Tmunu = 1; //IGM default
   int eos_type = 0; // Hybrid=0, Tabulated=1;
@@ -85,9 +92,10 @@ void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
   double k_tab = 1.0;
 
   // Here, we initialize the structs that are (usually) static during
-  // a simulation.
+  // a simulation. The C2P routine is initialized to 'None', but it
+  // is explicitly changed in the loop over tested routines.
   GRHayL_parameters params;
-  initialize_GRHayL(main, backup_routine, false, false, true, Psi6threshold, update_Tmunu, Cupp_Fix, &params);
+  initialize_GRHayL(None, backup_routine, false, false, true, Psi6threshold, update_Tmunu, Cupp_Fix, &params);
 
   eos_parameters eos;
   initialize_general_eos(eos_type, tau_atm, W_max,
@@ -101,28 +109,6 @@ void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
 
   con2prim_diagnostics diagnostics;
   initialize_diagnostics(&diagnostics);
-
-  // Count number of routines tested
-  int num_routines_tested = 1;
-  int con2prim_test_keys[4];
-  char con2prim_test_names[4][50];
-  con2prim_test_keys[0] = params.main_routine;
-  sprintf(con2prim_test_names[0],"%s","Noble2D");
-  if( params.backup_routine[0] != None ) {
-    num_routines_tested++;
-    con2prim_test_keys[1] = params.backup_routine[0];
-//    sprintf(con2prim_test_names[1],"%s",igm_con2prim_backup_routine[0]);
-    if( params.backup_routine[1] != None ) {
-      num_routines_tested++;
-      con2prim_test_keys[2] = params.backup_routine[1];
-//      sprintf(con2prim_test_names[2],"%s",igm_con2prim_backup_routine[1]);
-      if( params.backup_routine[2] != None ) {
-        num_routines_tested++;
-        con2prim_test_keys[3] = params.backup_routine[2];
-//        sprintf(con2prim_test_names[3],"%s",igm_con2prim_backup_routine[2]);
-      }
-    }
-  }
 
   // We will be performing the tabulated EOS test in the following way:
   //
@@ -167,6 +153,7 @@ void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
 
   // Now perform one test for each of the selected routines
   for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
+    params.main_routine = con2prim_test_keys[which_routine];
 
     int failures = 0;
     for(int rand=0;rand<2;rand++) {
@@ -179,8 +166,7 @@ void con2prim_full_routine_test( CCTK_ARGUMENTS ) {
         for(int i=0;i<13;i++) rand_val[i] = 1.0 + randf(-1,1)*1.0e-14;
       }
 
-    printf("Beginning %s test\n", suffix);
-//    printf("Beginning %s test for routine %s\n",con2prim_test_names[which_routine]);
+    printf("Beginning %s test for routine %s\n", suffix, con2prim_test_names[which_routine]);
 
       char filename[512];
       sprintf(filename,"unit_test/C2P_Testsuite_%s_%s.asc",con2prim_test_names[which_routine], suffix);
@@ -360,9 +346,7 @@ printf("Initial prims %.16e\n %.16e\n %.16e\n %.16e\n %.16e\n", prims.rho, prims
 
             /************* Conservative-to-primitive recovery ************/
 
-            guess_primitives(&eos, &metric, &prims, &cons, &prims_guess);
-            check = C2P_Select_Hybrid_Method(&params, &eos, con2prim_test_keys[which_routine], &metric, &cons_undens, &prims_guess, &diagnostics);
-            //If multiple C2P routines are selected as backups, the backup routine logic would go here
+            check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
   
             if(check!=0) {
               printf("Applying Font Fix\n");

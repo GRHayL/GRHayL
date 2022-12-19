@@ -124,7 +124,6 @@ static inline double pressure_rho0_u(const eos_parameters *restrict eos, const d
    * .-------------------------------------------------------------.
    */
   return( P_cold + (eos->Gamma_th - 1.0)*(u - rho0*eps_cold) );
-
 }
 
 

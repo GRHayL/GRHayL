@@ -1,8 +1,9 @@
 implements: GRHayL
 
-INCLUDE HEADER: Con2Prim/con2prim_gem.h in con2prim_header.h
-INCLUDE HEADER: EOS/Hybrid/EOS_hybrid.h in EOS_hybrid_header.h
-INCLUDE HEADER: GRHayL_Core/GRHayL.h in GRMHD_header.h
+INCLUDE HEADER: Con2Prim/con2prim_gem.h in con2prim_gem.h
+INCLUDE HEADER: EOS/Hybrid/EOS_hybrid.h in EOS_hybrid.h
+INCLUDE HEADER: GRHayL_Core/GRHayL.h in GRHayL.h
+INCLUDE HEADER: Induction/induction_gem.h in induction_gem.h
 
 void FUNCTION Con2Prim_Kernel(CCTK_POINTER_TO_CONST IN params,
                      CCTK_POINTER_TO_CONST IN eos,

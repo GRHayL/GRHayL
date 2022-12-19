@@ -75,7 +75,7 @@ utoprim_2d.c:
 double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, const double W);
 
 int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
-                            double x[], int n,
+                            double x[], int n, int *restrict n_iter_ptr,
                             void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict, const double [], double [], double [], double [][NEWT_DIM], double *, double *, int) );
 
 void func_vsq( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux, const double [], double [], double [], double [][NEWT_DIM], double *f, double *df, int n);
@@ -90,7 +90,8 @@ int Utoprim_new_body(const GRHayL_parameters *restrict params,
                      const double *restrict U,
                      const double gcov[NDIM][NDIM],
                      const double gcon[NDIM][NDIM],
-                     double *restrict prim);
+                     double *restrict prim,
+                     int *restrict n_iter_ptr);
 
 /**********************************************************************/
 /******************************************************************
@@ -150,9 +151,6 @@ static const int RHO      =0;
 //static const int v1_con   =2;
 //static const int v2_con   =3;
 //static const int v3_con   =4;
-static const int B1_con   =5;
-static const int B2_con   =6;
-static const int B3_con   =7;
 static const int YE       =8;
 //static const int TEMP     =9;
 //static const int PRESS    =10;
@@ -169,12 +167,12 @@ static const int TAU      =9;
 static const int WS       =10;
 static const int numcons  =11; // D, UU, S_{x,y,z}, B^{x,y,z}, DYe, tau, DS
 
-int C2P_Hybrid_Noble2D( const GRHayL_parameters *restrict params,
-                        const eos_parameters *restrict eos,
-                        const metric_quantities *restrict metric,
-                        const conservative_quantities *restrict cons_undens,
-                        primitive_quantities *restrict prims,
-                        con2prim_diagnostics *restrict diagnostics ) {
+int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
+                    const eos_parameters *restrict eos,
+                    const metric_quantities *restrict metric,
+                    const conservative_quantities *restrict cons_undens,
+                    primitive_quantities *restrict prims,
+                    con2prim_diagnostics *restrict diagnostics ) {
 
   // We have already calculated the undensized variables needed for
   // the Noble2D routine. However, this routine does not use the
@@ -196,9 +194,9 @@ int C2P_Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   new_cons[S1_cov] = cons_undens->S_x;
   new_cons[S2_cov] = cons_undens->S_y;
   new_cons[S3_cov] = cons_undens->S_z;
-  new_cons[B1_con] = prims->Bx * ONE_OVER_SQRT_4PI;
-  new_cons[B2_con] = prims->By * ONE_OVER_SQRT_4PI;
-  new_cons[B3_con] = prims->Bz * ONE_OVER_SQRT_4PI;
+  new_cons[BCON1] = prims->Bx * ONE_OVER_SQRT_4PI;
+  new_cons[BCON2] = prims->By * ONE_OVER_SQRT_4PI;
+  new_cons[BCON3] = prims->Bz * ONE_OVER_SQRT_4PI;
   new_cons[YE] = cons_undens->Y_e;
   new_cons[TAU] = MAX(cons_undens->tau, eos->tau_atm);
   new_cons[WS] = cons_undens->entropy;
@@ -211,13 +209,13 @@ int C2P_Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   new_prims[UTCON1] = 0.0;
   new_prims[UTCON2] = 0.0;
   new_prims[UTCON3] = 0.0;
-  new_prims[BCON1] = new_cons[B1_con];
-  new_prims[BCON2] = new_cons[B2_con];
-  new_prims[BCON3] = new_cons[B3_con];
+  new_prims[BCON1] = new_cons[BCON1];
+  new_prims[BCON2] = new_cons[BCON2];
+  new_prims[BCON3] = new_cons[BCON3];
   new_prims[WLORENTZ] = 1.0;
 //Additional tabulated code here
 
-  int retval = Utoprim_new_body(params, eos, new_cons, metric->g4dn, metric->g4up, new_prims);
+  int retval = Utoprim_new_body(params, eos, new_cons, metric->g4dn, metric->g4up, new_prims, &diagnostics->n_iter);
 
   if(retval==0) {
     prims->rho = new_prims[RHO];
@@ -283,7 +281,8 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
                       const double *restrict cons,
                       const double gcov[NDIM][NDIM],
                       const double gcon[NDIM][NDIM],
-                      double *restrict prims )
+                      double *restrict prims,
+                      int *restrict n_iter_ptr )
 {
 
   double x_2d[NEWT_DIM];
@@ -396,7 +395,7 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
   x_2d[0] =  fabs( W_last );
   x_2d[1] = x1_of_x0( &harm_aux, W_last ) ;
 
-  retval = general_newton_raphson( eos, &harm_aux, x_2d, n, func_vsq) ;
+  retval = general_newton_raphson( eos, &harm_aux, x_2d, n, n_iter_ptr, func_vsq) ;
 
   W = x_2d[0];
   vsq = x_2d[1];
@@ -532,7 +531,7 @@ void validate_x(double x[2], const double x0[2] )
 
 *****************************************************************/
 int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
-                            double x[], int n,
+                            double x[], int n, int *restrict n_iter_ptr,
                             void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict, const double [], double [], double [],
                                           double [][NEWT_DIM], double *, double *, int) )
 {
@@ -543,7 +542,6 @@ int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_st
   int n_iter;
   int keep_iterating;
 
-
   // Initialize various parameters and variables:
   n_iter = 0;
   errx = 1. ;
@@ -553,9 +551,7 @@ int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_st
 
   /* Start the Newton-Raphson iterations : */
   keep_iterating = 1;
-int tmp=0;
   while( keep_iterating ) {
-tmp++;
     (*funcd) (eos, harm_aux, x, dx, resid, jac, &f, &df, n);  /* returns with new dx, f, df */
 
 
@@ -575,12 +571,10 @@ tmp++;
     /****************************************/
     errx  = (x[0]==0.) ?  fabs(dx[0]) : fabs(dx[0]/x[0]);
 
-
     /****************************************/
     /* Make sure that the new x[] is physical : */
     /****************************************/
     validate_x( x, x_old ) ;
-
 
     /*****************************************************************************/
     /* If we've reached the tolerance level, then just do a few extra iterations */
@@ -602,6 +596,8 @@ tmp++;
 
   }   // END of while(keep_iterating)
 
+  *n_iter_ptr = n_iter;
+
   /*  Check for bad untrapped divergences : */
 //TODO: error-checking
 //  if( (robust_isfinite(f)==0) ||  (robust_isfinite(df)==0) ) {
@@ -621,9 +617,6 @@ tmp++;
   return(0);
 
 }
-
-
-
 
 /**********************************************************************/
 /*********************************************************************************
@@ -729,11 +722,8 @@ double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const 
   double P_cold, eps_cold;
   compute_P_cold_and_eps_cold(eos,rho_b, &P_cold, &eps_cold);
 
-
-
   // Compute p = P_{cold} + P_{th}
   return( ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th );
-
 }
 
 
@@ -746,9 +736,7 @@ double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const 
 **********************************************************************/
 double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq)
 {
-
   return( (eos->Gamma_th - 1.0) * (1.0 - vsq) /  eos->Gamma_th  ) ;
-
 }
 
 

@@ -1,8 +1,3 @@
-//#ifndef SMALLB_H_
-//#define SMALLB_H_
-//static const int SMALLBT=0,SMALLBX=1,SMALLBY=2,SMALLBZ=3,SMALLB2=4,NUMVARS_SMALLB=5;
-//#endif //SMALLB_H_
-
 #define smallb_defined = 1;
 #define harm_params_defined = 1;
 
@@ -137,6 +132,8 @@ void con2prim_loop_kernel(
              con2prim_diagnostics *restrict diagnostics,
              stress_energy *restrict Tmunu);
 
+//----------- Pre/Post-C2P routines ----------------
+
 int  apply_inequality_fixes(
              const GRHayL_parameters *restrict params,
              const eos_parameters *restrict eos,
@@ -174,17 +171,20 @@ void compute_conservs_and_Tmunu(
              conservative_quantities *restrict cons,
              stress_energy *restrict Tmunu);
 
+//--------------------------------------------------
+
 //---------- Primary Con2Prim routines -------------
 
-int C2P_Select_Hybrid_Method(
+int Hybrid_Multi_Method(
              const GRHayL_parameters *restrict params,
-             const eos_parameters *restrict eos, const int c2p_key,
+             const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
              const conservative_quantities *restrict cons,
-             primitive_quantities *restrict prims,
+             const primitive_quantities *restrict prims,
+             primitive_quantities *restrict prims_guess,
              con2prim_diagnostics *restrict diagnostics);
 
-int C2P_Hybrid_Noble2D(
+int Hybrid_Noble2D(
              const GRHayL_parameters *restrict params,
              const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
