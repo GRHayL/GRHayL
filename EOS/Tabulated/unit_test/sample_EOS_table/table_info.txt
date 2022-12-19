@@ -1,0 +1,23 @@
+Input table information:
+  Filename = /home/leo/Codes/eos_tables/Hempel_SFHoEOS_rho222_temp180_ye60_version_1.1_20120817.h5
+  N_rho    = 222
+  N_T      = 180
+  N_Y_e    = 60
+  rho_min  = 1.660539458646709e+02 g/cm3
+  rho_max  = 3.164091251961056e+15 g/cm3
+  T_min    = 1.000000000000000e-02 MeV
+  T_max    = 1.584893192461114e+02 MeV
+  Y_e_min  = 1.000000000000000e-02
+  Y_e_max  = 6.000000000000000e-01
+
+Output table information:
+  Filename = /home/leo/Codes/grhayl/EOS/Tabulated/unit_test/Hempel_SFHoEOS_rho222_temp180_ye60_version_1.1_20120817_simple.h5
+  N_rho    = 13
+  N_T      = 11
+  N_Y_e    = 7
+  rho_min  = 1.660539458646709e+02 g/cm3
+  rho_max  = 3.164091251961056e+15 g/cm3
+  T_min    = 1.000000000000000e-02 MeV
+  T_max    = 1.584893192461114e+02 MeV
+  Y_e_min  = 1.000000000000000e-02
+  Y_e_max  = 6.000000000000000e-01
