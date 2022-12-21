@@ -1,4 +1,4 @@
-#include "induction_gem.h"
+#include "induction.h"
 
 static int MINUS1=0, PLUS0=1, PLUS1=2;
 
@@ -29,7 +29,7 @@ void interpolate_for_A_i_rhs(
   //    [ RHS1x(i+1,j+1/2,k+1/2) - RHS1x(i,j+1/2,k+1/2) ]/dX.
 
   // First \alpha at (i+1/2,j+1/2,k+1/2). Will come in handy when computing damping term later.
-  gauge_rhs_vars->alpha_interp = avg2(gauge_vars->lapm1 , 0,1, 0,1, 0,1)+1.0;
+  gauge_rhs_vars->alpha_interp = avg2(gauge_vars->lapse , 0,1, 0,1, 0,1);
 
   // Next, do A^X TERM (interpolate to (i,j+1/2,k+1/2) )
   // \alpha \sqrt{\gamma} A^x = \alpha psi^6 A^x (RHS of \partial_i psi6phi)
@@ -42,7 +42,7 @@ void interpolate_for_A_i_rhs(
   double lapse_over_psi6[2][2][2];
   for(int kk=0;kk<=1;kk++) for(int jj=0;jj<=1;jj++) for(int ii=0;ii<=1;ii++) {
         double Psi2 = gauge_vars->psi[kk][jj][ii]*gauge_vars->psi[kk][jj][ii];
-        double alpha = gauge_vars->lapm1[kk][jj][ii]+1.0;
+        double alpha = gauge_vars->lapse[kk][jj][ii];
         lapse_psi2[kk][jj][ii]=alpha*Psi2;
         lapse_over_psi6[kk][jj][ii]=alpha/(Psi2*Psi2*Psi2);
       }

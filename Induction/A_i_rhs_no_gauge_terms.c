@@ -1,4 +1,4 @@
-#include "induction_gem.h"
+#include "induction.h"
 
 /* Compute the part of A_i_rhs that excludes the gauge terms. I.e., we set
  *   A_i_rhs = \partial_t A_i = \psi^{6} (v^z B^x - v^x B^z)   here.

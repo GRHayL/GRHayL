@@ -1,4 +1,4 @@
-#include "../../con2prim_gem.h"
+#include "con2prim.h"
 #include "../harm_u2p_util.h"
 #include <stdio.h>
 

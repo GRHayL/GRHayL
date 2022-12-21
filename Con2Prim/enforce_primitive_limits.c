@@ -1,5 +1,5 @@
-#include "con2prim_gem.h"
-#include "../EOS/Hybrid/EOS_hybrid.h"
+#include "con2prim.h"
+#include "EOS_hybrid.h"
 #include <stdio.h>
 
 void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict params,

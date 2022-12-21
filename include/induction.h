@@ -1,7 +1,7 @@
 #ifndef INDUCTION_GEM_H_
 #define INDUCTION_GEM_H_
 
-#include "../GRHayL_Core/GRHayL.h"
+#include "GRHayL.h"
 
 typedef struct induction_lr {
   double B1r, B1l;
@@ -19,7 +19,7 @@ typedef struct induction_gauge {
   double gupyy[2][2][2];
   double gupyz[2][2][2];
   double gupzz[2][2][2];
-  double lapm1[2][2][2];
+  double lapse[2][2][2];
   double psi[2][2][2];
   double shiftx[2][2][2];
   double shifty[2][2][2];

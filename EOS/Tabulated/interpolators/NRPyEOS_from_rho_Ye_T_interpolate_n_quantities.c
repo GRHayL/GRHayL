@@ -1,4 +1,4 @@
-#include "../EOS_tabulated.h"
+#include "EOS_tabulated.h"
 #include "NRPyEOS_tabulated_helpers.h"
 /*
  * (c) 2022 Leo Werneck

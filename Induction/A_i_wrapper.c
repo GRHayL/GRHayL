@@ -3,7 +3,7 @@
  */
 
 #include "cctk.h"
-#include "induction_gem.h"
+#include "induction.h"
 
 static const int BX_STAGGER=8, VXR=11, VXL=14;
 typedef struct gf_and_gz_struct {

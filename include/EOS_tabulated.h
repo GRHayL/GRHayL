@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <hdf5.h>
-#include "../../GRHayL_Core/GRHayL.h"
+#include "GRHayL.h"
 #define H5_USE_16_API 1
 
 // Table keys

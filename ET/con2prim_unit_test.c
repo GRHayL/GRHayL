@@ -1,11 +1,14 @@
-// Gem        : Con2Prim
+// Thorn      : GRHayL
 // File       : con2prim_unit_test.c
 // Author(s)  : Leo Werneck & Samuel Cupp
 // Description: In this file we provide an extensive unit test of
 //              the Con2Prim gem.
 
+#include "cctk.h"
+#include "cctk_Arguments.h"
+#include "cctk_Parameters.h"
 #include "stdlib.h"
-#include "con2prim.h"
+#include "con2prim_gem.h"
 #include "EOS_hybrid.h"
 
 inline double randf(double low,double high) {
@@ -117,7 +120,10 @@ void output_stress_energy_error(
                    Tmunu_orig->Tzz, Tmunu->Tzz, Tmunu_error.Tzz);
 }
 
-void main() {
+void con2prim_unit_test( CCTK_ARGUMENTS ) {
+  DECLARE_CCTK_ARGUMENTS;
+  DECLARE_CCTK_PARAMETERS;
+
   // Count number of routines tested
   int num_routines_tested = 1;
   int con2prim_test_keys[num_routines_tested];
@@ -145,14 +151,6 @@ void main() {
   double rho_tab[1] = {0.0};
   double gamma_tab[1] = {2.0};
   double k_tab = 1.0;
-
-  //Setting things that are set by the parfile for ET
-  bool Cupp_Fix = "yes";
-  int ut_npoints = 256;
-  double ut_rho_min = 1e-12;
-  double ut_rho_max = 1e-3;
-  double ut_T_min = 1e-2;
-  double ut_T_max = 1e+2;
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
@@ -393,4 +391,5 @@ void main() {
 
   }
   printf("All done! Terminating the run.\n");
+  exit(1);
 }

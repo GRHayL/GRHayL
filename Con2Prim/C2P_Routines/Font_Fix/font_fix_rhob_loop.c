@@ -1,6 +1,6 @@
-#include "../../con2prim_gem.h"
+#include "con2prim.h"
 // HEADER_TODO: remove need for EOS header
-#include "../../../EOS/Hybrid/EOS_hybrid.h"
+#include "EOS_hybrid.h"
 
 /* Function    : font_fix_rhob_loop()
  * Authors     : Leo Werneck

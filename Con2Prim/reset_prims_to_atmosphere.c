@@ -1,4 +1,4 @@
-#include "con2prim_gem.h"
+#include "con2prim.h"
 
 /* Function    : reset_prims_to_atmosphere()
  * Authors     : ? and Samuel Cupp

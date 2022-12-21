@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "con2prim_gem.h"
+#include "con2prim.h"
 
 /* Function    : limit_utilde_and_compute_v()
  * Authors     : Samuel Cupp

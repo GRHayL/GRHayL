@@ -1,7 +1,7 @@
 #ifndef EOS_HYBRID_H
 #define EOS_HYBRID_H
 
-#include "../../GRHayL_Core/GRHayL.h"
+#include "GRHayL.h"
 
 void compute_P_cold_and_eps_cold(
              const eos_parameters *restrict eos, const double rho_in,

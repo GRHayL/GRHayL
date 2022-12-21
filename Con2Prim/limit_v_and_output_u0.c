@@ -1,4 +1,4 @@
-#include "con2prim_gem.h"
+#include "con2prim.h"
 #include <stdio.h>
 
 void limit_v_and_output_u0(const eos_parameters *restrict eos,

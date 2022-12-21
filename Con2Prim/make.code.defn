@@ -3,7 +3,6 @@
 # Source files in this directory that need compiled:
 SRCS = apply_inequality_fixes.c     \
        compute_conservs_and_Tmunu.c \
-       con2prim_ETK_interface.c     \
        con2prim_loop_kernel.c       \
        eigen.c                      \
        enforce_primitive_limits.c   \

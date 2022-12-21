@@ -1,13 +1,23 @@
 #include "cctk.h"
-#include "induction_gem.h"
-
-static const int SHIFTXI=0,SHIFTYI=1,SHIFTZI=2,GUPXXI=3,GUPXYI=4,GUPXZI=5,GUPYYI=6,GUPYZI=7,GUPZZI=8,
-  PSII=9,LAPM1I=10,A_XI=11,A_YI=12,A_ZI=13;
+#include "induction.h"
 
 void A_i_gauge_rhs(CCTK_POINTER_TO_CONST void_cctkGH,
-                   CCTK_POINTER_TO_CONST void_dX,
-                   CCTK_POINTER_TO_CONST void_in_vars,
-                   CCTK_POINTER_TO_CONST void_phitilde,
+                   const CCTK_REAL *restrict dX,
+                   const CCTK_REAL *restrict gupxx,
+                   const CCTK_REAL *restrict gupxy,
+                   const CCTK_REAL *restrict gupxz,
+                   const CCTK_REAL *restrict gupyy,
+                   const CCTK_REAL *restrict gupyz,
+                   const CCTK_REAL *restrict gupzz,
+                   const CCTK_REAL *restrict psi,
+                   const CCTK_REAL *restrict lapm1,
+                   const CCTK_REAL *restrict betax,
+                   const CCTK_REAL *restrict betay,
+                   const CCTK_REAL *restrict betaz,
+                   const CCTK_REAL *restrict Ax,
+                   const CCTK_REAL *restrict Ay,
+                   const CCTK_REAL *restrict Az,
+                   const CCTK_REAL *restrict phitilde,
                    CCTK_REAL Lorenz_damping_factor,
                    CCTK_REAL *restrict shiftx_interp,
                    CCTK_REAL *restrict shifty_interp,
@@ -25,10 +35,6 @@ void A_i_gauge_rhs(CCTK_POINTER_TO_CONST void_cctkGH,
   const cGH *cctkGH = (const cGH *)void_cctkGH;
   int *bounds = cctkGH->cctk_lsh;
   int *ghostzones = cctkGH->cctk_nghostzones;
-
-  const CCTK_REAL *dX = (const CCTK_REAL *)void_dX;
-  const CCTK_REAL **in_vars = (const CCTK_REAL **)void_in_vars;
-  const CCTK_REAL *phitilde = (const CCTK_REAL *)void_phitilde;
 
   /* Compute \partial_t psi6phi = -\partial_i (  \alpha psi^6 A^i - psi6phi \beta^i)
    *    (Eq 13 of http://arxiv.org/pdf/1110.4633.pdf), using Lorenz gauge.
@@ -56,17 +62,17 @@ void A_i_gauge_rhs(CCTK_POINTER_TO_CONST void_cctkGH,
         for(int itery=0; itery<2; itery++)
         for(int iterx=0; iterx<2; iterx++) {
           int ind = CCTK_GFINDEX3D(cctkGH,i+iterx,j+itery,k+iterz);
-          gauge_vars.gupxx[iterz][itery][iterx]  = in_vars[GUPXXI][ind];
-          gauge_vars.gupxy[iterz][itery][iterx]  = in_vars[GUPXYI][ind];
-          gauge_vars.gupxz[iterz][itery][iterx]  = in_vars[GUPXZI][ind];
-          gauge_vars.gupyy[iterz][itery][iterx]  = in_vars[GUPYYI][ind];
-          gauge_vars.gupyz[iterz][itery][iterx]  = in_vars[GUPYZI][ind];
-          gauge_vars.gupzz[iterz][itery][iterx]  = in_vars[GUPZZI][ind];
-          gauge_vars.lapm1[iterz][itery][iterx]  = in_vars[LAPM1I][ind];
-          gauge_vars.psi[iterz][itery][iterx]    = in_vars[PSII][ind];
-          gauge_vars.shiftx[iterz][itery][iterx] = in_vars[SHIFTXI][ind];
-          gauge_vars.shifty[iterz][itery][iterx] = in_vars[SHIFTYI][ind];
-          gauge_vars.shiftz[iterz][itery][iterx] = in_vars[SHIFTZI][ind];
+          gauge_vars.gupxx[iterz][itery][iterx]  = gupxx[ind];
+          gauge_vars.gupxy[iterz][itery][iterx]  = gupxy[ind];
+          gauge_vars.gupxz[iterz][itery][iterx]  = gupxz[ind];
+          gauge_vars.gupyy[iterz][itery][iterx]  = gupyy[ind];
+          gauge_vars.gupyz[iterz][itery][iterx]  = gupyz[ind];
+          gauge_vars.gupzz[iterz][itery][iterx]  = gupzz[ind];
+          gauge_vars.lapse[iterz][itery][iterx]  = lapm1[ind]+1.0;
+          gauge_vars.psi[iterz][itery][iterx]    = psi[ind];
+          gauge_vars.shiftx[iterz][itery][iterx] = betax[ind];
+          gauge_vars.shifty[iterz][itery][iterx] = betay[ind];
+          gauge_vars.shiftz[iterz][itery][iterx] = betaz[ind];
         }
         // A_x needs a stencil s.t. interp_limits={ 0,1,-1,1,-1,1}.
         // A_y needs a stencil s.t. interp_limits={-1,1, 0,1,-1,1}.
@@ -79,9 +85,9 @@ void A_i_gauge_rhs(CCTK_POINTER_TO_CONST void_cctkGH,
         for(int itery=-1; itery<2; itery++)
         for(int iterx=-1; iterx<2; iterx++) {
           int ind = CCTK_GFINDEX3D(cctkGH,i+iterx,j+itery,k+iterz);
-          gauge_vars.A_x[iterz+1][itery+1][iterx+1] = in_vars[A_XI][ind];
-          gauge_vars.A_y[iterz+1][itery+1][iterx+1] = in_vars[A_YI][ind];
-          gauge_vars.A_z[iterz+1][itery+1][iterx+1] = in_vars[A_ZI][ind];
+          gauge_vars.A_x[iterz+1][itery+1][iterx+1] = Ax[ind];
+          gauge_vars.A_y[iterz+1][itery+1][iterx+1] = Ay[ind];
+          gauge_vars.A_z[iterz+1][itery+1][iterx+1] = Az[ind];
         }
 // This code should only copy the needed data that isn't copied in the loop for other variables, but it is untested.
 //        for(int iter2=0; iter2<2; iter2++)

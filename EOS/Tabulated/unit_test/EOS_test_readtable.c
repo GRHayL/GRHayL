@@ -1,7 +1,7 @@
 #include "cctk.h"
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
-#include "../EOS_tabulated.h"
+#include "EOS_tabulated.h"
 /*
  * (c) 2022 Leo Werneck
  */

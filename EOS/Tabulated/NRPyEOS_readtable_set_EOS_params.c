@@ -1,4 +1,4 @@
-#include "./EOS_tabulated.h"
+#include "EOS_tabulated.h"
 
 // mini NoMPI
 #ifdef HAVE_CAPABILITY_MPI

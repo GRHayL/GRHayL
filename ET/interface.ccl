@@ -1,9 +1,10 @@
 implements: GRHayL
 
-INCLUDE HEADER: Con2Prim/con2prim_gem.h in con2prim_gem.h
-INCLUDE HEADER: EOS/Hybrid/EOS_hybrid.h in EOS_hybrid.h
-INCLUDE HEADER: GRHayL_Core/GRHayL.h in GRHayL.h
-INCLUDE HEADER: Induction/induction_gem.h in induction_gem.h
+INCLUDE HEADER: include/con2prim.h in con2prim_gem.h
+INCLUDE HEADER: include/EOS_hybrid.h in EOS_hybrid.h
+INCLUDE HEADER: include/EOS_tabulated.h in EOS_tabulated.h
+INCLUDE HEADER: include/GRHayL.h in GRHayL.h
+INCLUDE HEADER: include/induction.h in induction_gem.h
 
 void FUNCTION Con2Prim_Kernel(CCTK_POINTER_TO_CONST IN params,
                      CCTK_POINTER_TO_CONST IN eos,
@@ -111,9 +112,22 @@ PROVIDES FUNCTION A_i_wrapper_ETK WITH A_i_wrapper
 
 void FUNCTION A_i_gauge_rhs_ETK(
              CCTK_POINTER_TO_CONST IN cctkGH,
-             CCTK_POINTER_TO_CONST IN dX,
-             CCTK_POINTER_TO_CONST IN in_vars,
-             CCTK_POINTER_TO_CONST IN phitilde,
+             CCTK_REAL ARRAY IN dX,
+             CCTK_REAL ARRAY IN gupxx,
+             CCTK_REAL ARRAY IN gupxy,
+             CCTK_REAL ARRAY IN gupxz,
+             CCTK_REAL ARRAY IN gupyy,
+             CCTK_REAL ARRAY IN gupyz,
+             CCTK_REAL ARRAY IN gupzz,
+             CCTK_REAL ARRAY IN psi,
+             CCTK_REAL ARRAY IN lapm1,
+             CCTK_REAL ARRAY IN betax,
+             CCTK_REAL ARRAY IN betay,
+             CCTK_REAL ARRAY IN betaz,
+             CCTK_REAL ARRAY IN Ax,
+             CCTK_REAL ARRAY IN Ay,
+             CCTK_REAL ARRAY IN Az,
+             CCTK_REAL ARRAY IN phitilde,
              CCTK_REAL IN Lorenz_damping_factor,
              CCTK_REAL OUT shiftx_interp,
              CCTK_REAL OUT shifty_interp,

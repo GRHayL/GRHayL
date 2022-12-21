@@ -29,7 +29,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
-#include "con2prim_gem.h"
+#include "con2prim.h"
 
 void con2prim_loop_kernel(const GRHayL_parameters *restrict params, const eos_parameters *restrict eos,
                           metric_quantities *restrict metric, conservative_quantities *restrict cons,

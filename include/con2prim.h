@@ -4,7 +4,7 @@
 #ifndef CON2PRIM_GEM_H_
 #define CON2PRIM_GEM_H_
 
-#include "../GRHayL_Core/GRHayL.h"
+#include "GRHayL.h"
 
 //----------------- Ugly variables -----------------
 // TODO: These things should be gotten rid of if possible.

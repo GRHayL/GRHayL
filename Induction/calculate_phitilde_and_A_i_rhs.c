@@ -1,4 +1,4 @@
-#include "induction_gem.h"
+#include "induction.h"
 
 void calculate_phitilde_and_A_i_rhs(
                                    const double Lorenz_damping_factor,

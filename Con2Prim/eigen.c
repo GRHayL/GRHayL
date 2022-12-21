@@ -1,4 +1,4 @@
-#include "con2prim_gem.h"
+#include "con2prim.h"
 
 // This subroutine calculates the eigenvalues of a real, symmetric 3x3
 // matrix M={{M11,M12,M13},{M12,M22,M23},{M13,M23,M33}} based on the

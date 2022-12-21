@@ -1,4 +1,4 @@
-#include "con2prim_gem.h"
+#include "con2prim.h"
 
 /* Function    : undensitize_conservatives()
  * Authors     : Leo Werneck and Samuel Cupp

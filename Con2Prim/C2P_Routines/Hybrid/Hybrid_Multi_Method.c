@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../con2prim_gem.h"
+#include "con2prim.h"
 
 int Hybrid_Select_Method(const GRHayL_parameters *restrict params,
                          const eos_parameters *restrict eos,
@@ -18,6 +18,7 @@ int Hybrid_Multi_Method( const GRHayL_parameters *restrict params,
                          primitive_quantities *restrict prims_guess,
                          con2prim_diagnostics *restrict diagnostics ) {
 
+  // Compute primitive initial guesses if they are not provided
   if(params->calc_prim_guess) guess_primitives(eos, metric, prims, cons, prims_guess);
   int check = Hybrid_Select_Method(params, eos, params->main_routine, metric, cons, prims_guess, diagnostics);
 
