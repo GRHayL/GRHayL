@@ -1,5 +1,5 @@
 #include "cctk.h"
-#include "con2prim_gem.h"
+#include "con2prim.h"
 
 void con2prim_ETK_kernel( CCTK_POINTER_TO_CONST params, CCTK_POINTER_TO_CONST eos,
                           CCTK_POINTER metric, CCTK_POINTER cons,

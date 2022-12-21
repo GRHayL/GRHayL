@@ -25,7 +25,7 @@
   -------------------------------------------------------------------------------
 */
 
-#include "con2prim_gem.h"
+#include "con2prim.h"
 //HEADER_TODO: remove need for EOS header
 #include "EOS_hybrid.h"
 #include <stdio.h>

@@ -8,7 +8,7 @@
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
 #include "stdlib.h"
-#include "con2prim_gem.h"
+#include "con2prim.h"
 #include "EOS_hybrid.h"
 
 inline double randf(double low,double high) {
