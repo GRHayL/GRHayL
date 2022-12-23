@@ -1,6 +1,4 @@
 #include "GRHayL.h"
-//HEADER_TODO: remove this header
-#include "EOS_hybrid.h"
 
 /* Function    : initialize_general_eos()
  * Authors     : Leo Werneck & Samuel Cupp

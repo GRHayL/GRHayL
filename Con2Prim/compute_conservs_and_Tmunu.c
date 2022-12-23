@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include "con2prim.h"
-// HEADER_TODO: remove need for EOS header
-#include "EOS_hybrid.h"
 
 static inline void compute_smallba_b2_and_u_i_over_u0_psi4(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
                                              const double u0L, const double ONE_OVER_LAPSE_SQRT_4PI, double *restrict u_x_over_u0_psi4,

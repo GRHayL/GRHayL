@@ -1,4 +1,4 @@
-#include "EOS_hybrid.h"
+#include "GRHayL.h"
 
 void GRHayL_compute_entropy_function(
       const eos_parameters *restrict eos,

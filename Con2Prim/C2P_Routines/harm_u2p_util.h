@@ -27,7 +27,6 @@
 
 #include "con2prim.h"
 //HEADER_TODO: remove need for EOS header
-#include "EOS_hybrid.h"
 #include <stdio.h>
 
 // HARM uses lots of globals. These auxiliary variables

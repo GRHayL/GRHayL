@@ -1,4 +1,4 @@
-#include "EOS_hybrid.h"
+#include "GRHayL.h"
 
 /* Function    : compute_P_cold_and_eps_cold()
  * Authors     : Leo Werneck

@@ -6,7 +6,6 @@
 
 #include "stdlib.h"
 #include "con2prim.h"
-#include "EOS_hybrid.h"
 
 inline double randf(double low,double high) {
     return (rand()/(double)(RAND_MAX))*(high-low)+low;

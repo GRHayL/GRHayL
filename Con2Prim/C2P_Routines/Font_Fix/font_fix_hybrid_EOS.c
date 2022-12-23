@@ -1,6 +1,4 @@
 #include "con2prim.h"
-// HEADER_TODO: remove need for EOS header
-#include "EOS_hybrid.h"
 
 /**********************************
  * Piecewise Polytropic EOS Patch *
