@@ -284,6 +284,12 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
           conservative_quantities cons, cons_orig, cons_undens;
           stress_energy Tmunu, Tmunu_orig;
 
+          // Leo says: Initialize cons_orig to silence warning; remove later.
+          cons_orig.rho = 1e300;
+          cons_orig.S_x = 1e300;
+          cons_orig.S_y = 1e300;
+          cons_orig.S_z = 1e300;
+
           // Generate random data to serve as the 'true' primitive values
           bool random_metric = true;
           initial_random_data(xrho, xpress, random_metric, &metric, &prims);

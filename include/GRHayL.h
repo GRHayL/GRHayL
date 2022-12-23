@@ -187,7 +187,7 @@ typedef struct eos_parameters {
 
 } eos_parameters;
 
-#include "GRHayL_EOS_helpers.h"
+#include "GRHayL_hybrid_EOS.h"
 
 void initialize_general_eos(
       const int type,

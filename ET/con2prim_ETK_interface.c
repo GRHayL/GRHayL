@@ -62,7 +62,7 @@ void c2p_initialize_metric(const CCTK_REAL lapse,
 
 }
 
-void c2p_initialize_parameters(const int main, const int backup[3],
+void c2p_initialize_parameters(const int main, const int *restrict backup,
                 const int evolve_entropy, const int evolve_temp, const int calc_prim_guess,
                 const CCTK_REAL psi6threshold, const int update_Tmunu, const int Cupp_Fix,
                 CCTK_POINTER params) {
