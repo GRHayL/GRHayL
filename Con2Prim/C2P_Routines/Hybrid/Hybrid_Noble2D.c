@@ -201,7 +201,7 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   new_cons[TAU] = MAX(cons_undens->tau, eos->tau_atm);
   new_cons[WS] = cons_undens->entropy;
 
-  int polytropic_index = find_polytropic_index(eos, prims->rho);
+  int polytropic_index = (*eos->hybrid_find_polytropic_index)(eos, prims->rho);
   double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
 
   new_prims[RHO] = prims->rho;
@@ -720,7 +720,7 @@ double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const 
 
   // Compute P_cold and eps_cold
   double P_cold, eps_cold;
-  compute_P_cold_and_eps_cold(eos,rho_b, &P_cold, &eps_cold);
+  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos,rho_b, &P_cold, &eps_cold);
 
   // Compute p = P_{cold} + P_{th}
   return( ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th );
@@ -755,10 +755,10 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
 
   // Compute P_cold and eps_cold
   double P_cold, eps_cold;
-  compute_P_cold_and_eps_cold(eos, rho_b, &P_cold, &eps_cold);
+  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, rho_b, &P_cold, &eps_cold);
 
   // Set basic polytropic quantities
-  int polytropic_index = find_polytropic_index(eos, rho_b);
+  int polytropic_index = (*eos->hybrid_find_polytropic_index)(eos, rho_b);
   double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
 
 

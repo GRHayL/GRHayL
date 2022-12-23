@@ -115,7 +115,7 @@ static inline double pressure_rho0_u(const eos_parameters *restrict eos, const d
 
   // Compute P_cold, eps_cold
   double P_cold, eps_cold;
-  compute_P_cold_and_eps_cold(eos, rho0, &P_cold, &eps_cold);
+  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, rho0, &P_cold, &eps_cold);
 
   /* Compute the pressure as a function of rho_b (rho0) and
    * u = rho_b * eps, using our hybrid EOS:
@@ -136,7 +136,7 @@ static inline double pressure_rho0_w(const eos_parameters *restrict eos, const d
 
   // Compute P_cold, eps_cold
   double P_cold, eps_cold;
-  compute_P_cold_and_eps_cold(eos,rho0, &P_cold, &eps_cold);
+  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos,rho0, &P_cold, &eps_cold);
 
   /* Compute the pressure as a function of rho_b (rho0) and
    * w = u + rho_b + p, using our hybrid EOS:

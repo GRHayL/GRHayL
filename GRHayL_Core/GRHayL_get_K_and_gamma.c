@@ -16,9 +16,13 @@
  * Outputs     : K              - the value of polytropic K for rho_in
  * Outputs     : Gamma          - the value of polytropic gamma for rho_in
  */
-void get_K_and_Gamma(const eos_parameters *restrict eos, const double rho_in, double *restrict K, double *restrict Gamma) {
+void GRHayL_get_K_and_Gamma(
+      const eos_parameters *restrict eos,
+      const double rho_in,
+      double *restrict K,
+      double *restrict Gamma) {
 
-  int polytropic_index = find_polytropic_index(eos,rho_in);
-  *K = eos->K_ppoly[polytropic_index];
+  int polytropic_index = GRHayL_find_polytropic_index(eos, rho_in);
+  *K     = eos->K_ppoly[polytropic_index];
   *Gamma = eos->Gamma_ppoly[polytropic_index];
 }

@@ -54,7 +54,7 @@ int font_fix(const eos_parameters *restrict eos,
   prims_guess->rho = cons->rho/(metric->lapse*u0*metric->psi6);
 
   double K_ppoly, Gamma_ppoly;
-  get_K_and_Gamma(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);
+  (*eos->hybrid_get_K_and_Gamma)(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);
 
   // After that, we compute P_cold
   double P_cold = K_ppoly*pow(prims_guess->rho, Gamma_ppoly);

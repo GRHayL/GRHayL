@@ -266,7 +266,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
       for(int i=0;i<npoints;i++) { // Density loop
         double xrho  = exp(lrmin + dlr*i);
         double P_cold = 0.0;
-        compute_P_cold(&eos, xrho, &P_cold);
+        (*eos.hybrid_compute_P_cold)(&eos, xrho, &P_cold);
 
         // Compute the pressure step size
         const double lpmin        = log(1.0e-30);//-P_cold);

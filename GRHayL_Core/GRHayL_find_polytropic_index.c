@@ -13,7 +13,9 @@
  * Outputs     : polytropic_index   - the appropriate index for the K_ppoly,
  *                                    Gamma_ppoly, and eps_int_consts array
  */
-int find_polytropic_index(const eos_parameters *restrict eos, const double rho_in) {
+int GRHayL_find_polytropic_index(
+      const eos_parameters *restrict eos,
+      const double rho_in) {
 
   /* We want to find the appropriate polytropic EOS for the
    * input value rho_in. Remember that:

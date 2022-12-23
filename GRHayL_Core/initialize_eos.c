@@ -49,6 +49,15 @@ void initialize_hybrid_eos(const int neos,
                 const double K_ppoly0, const double Gamma_th,
                 eos_parameters *restrict eos) {
 
+  // --------- Function Prototypes --------
+  eos->hybrid_find_polytropic_index            = &GRHayL_find_polytropic_index;
+  eos->hybrid_get_K_and_Gamma                  = &GRHayL_get_K_and_Gamma;
+  eos->hybrid_set_K_ppoly_and_eps_integ_consts = &GRHayL_set_K_ppoly_and_eps_integ_consts;
+  eos->hybrid_compute_P_cold                   = &GRHayL_compute_P_cold;
+  eos->hybrid_compute_P_cold_and_eps_cold      = &GRHayL_compute_P_cold_and_eps_cold;
+  eos->hybrid_compute_entropy_function         = &GRHayL_compute_entropy_function;
+  // --------------------------------------
+
   eos->neos = neos;
   eos->Gamma_th = Gamma_th;
   eos->K_ppoly[0] = K_ppoly0;
@@ -61,12 +70,12 @@ void initialize_hybrid_eos(const int neos,
   for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
 
   // Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
-  setup_K_ppoly_and_eps_integ_consts(eos);
+  (*eos->hybrid_set_K_ppoly_and_eps_integ_consts)(eos);
 
   // --------- Atmospheric values ---------
   // Compute atmospheric P and eps
   double press, eps;
-  compute_P_cold_and_eps_cold(eos, eos->rho_atm, &press, &eps);
+  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, eos->rho_atm, &press, &eps);
   // Set atmospheric values
   eos->press_atm = press;
   eos->eps_atm = eps;
@@ -76,7 +85,7 @@ void initialize_hybrid_eos(const int neos,
 
   // -------------- Ceilings --------------
   // Compute maximum P and eps
-  compute_P_cold_and_eps_cold(eos, eos->rho_max, &press, &eps);
+  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, eos->rho_max, &press, &eps);
   // Set maximum values
   eos->press_max = press;
   eos->eps_max = eps;

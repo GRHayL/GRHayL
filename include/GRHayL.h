@@ -40,10 +40,15 @@ typedef struct GRHayL_parameters {
 } GRHayL_parameters;
 
 void initialize_GRHayL(
-             const int main, const int backup[3], const int evolve_entropy,
-             const int evolve_temp, const int calc_prim_guess,
-             const double psi6threshold, const int update_Tmunu, const int Cupp_Fix,
-             GRHayL_parameters *restrict params);
+      const int main,
+      const int backup[3],
+      const int evolve_entropy,
+      const int evolve_temp,
+      const int calc_prim_guess,
+      const double psi6threshold,
+      const int update_Tmunu,
+      const int Cupp_Fix,
+      GRHayL_parameters *restrict params);
 
 //--------------------------------------------------
 
@@ -109,6 +114,36 @@ typedef struct eos_parameters {
   double K_ppoly[MAX_EOS_PARAMS];
   double eps_integ_const[MAX_EOS_PARAMS];
   double Gamma_th;
+
+  // Function prototypes
+  int  (*hybrid_find_polytropic_index)(
+        const struct eos_parameters *restrict eos,
+        const double rho_in);
+
+  void (*hybrid_get_K_and_Gamma)(
+        const struct eos_parameters *restrict eos,
+        const double rho_in,
+        double *restrict K,
+        double *restrict Gamma);
+
+  void (*hybrid_set_K_ppoly_and_eps_integ_consts)(struct eos_parameters *restrict eos);
+  
+  void (*hybrid_compute_P_cold)(
+        const struct eos_parameters *restrict eos,
+        const double rho_in,
+        double *restrict P_cold_ptr);
+
+  void (*hybrid_compute_P_cold_and_eps_cold)(
+        const struct eos_parameters *restrict eos,
+        const double rho_in,
+        double *restrict P_cold_ptr,
+        double *restrict eps_cold_ptr);
+
+  void (*hybrid_compute_entropy_function)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double P,
+        double *restrict S );
   //------------------------------------------------
 
   //---------- Tabulated Equation of State ---------
@@ -152,29 +187,41 @@ typedef struct eos_parameters {
 
 } eos_parameters;
 
+#include "GRHayL_EOS_helpers.h"
+
 void initialize_general_eos(
-             const int type, const double tau_atm, const double W_max,
-             const double entropy_atm, const double entropy_min, const double entropy_max,
-             const double rho_atm, const double rho_min, const double rho_max,
-             eos_parameters *restrict eos);
+      const int type,
+      const double tau_atm,
+      const double W_max,
+      const double entropy_atm,
+      const double entropy_min,
+      const double entropy_max,
+      const double rho_atm,
+      const double rho_min,
+      const double rho_max,
+      eos_parameters *restrict eos);
 
+// Leo says: I think this function should
+//           be called by the general one.
 void initialize_hybrid_eos(
-             const int neos, const double rho_ppoly[],
-             const double Gamma_ppoly[], const double K_ppoly,
-             const double Gamma_th,
-             eos_parameters *restrict eos);
+      const int neos,
+      const double *restrict rho_ppoly,
+      const double *restrict Gamma_ppoly,
+      const double K_ppoly,
+      const double Gamma_th,
+      eos_parameters *restrict eos);
 
+// Leo says: Same comment.
 void initialize_tabulated_eos(
-             const double precision, const double threshold,
-             const double temp_atm, const double temp_min, const double temp_max,
-             const double Ye_atm, const double Ye_min, const double Ye_max,
-             eos_parameters *restrict eos);
-
-int find_polytropic_index(const eos_parameters *restrict eos, const double rho_in);
-
-void get_K_and_Gamma(const eos_parameters *restrict eos, const double rho_in, double *restrict K, double *restrict Gamma);
-
-void setup_K_ppoly_and_eps_integ_consts(eos_parameters *restrict eos);
+      const double precision,
+      const double threshold,
+      const double temp_atm,
+      const double temp_min,
+      const double temp_max,
+      const double Ye_atm,
+      const double Ye_min,
+      const double Ye_max,
+      eos_parameters *restrict eos);
 
 //--------------------------------------------------
 
@@ -191,7 +238,7 @@ void setup_K_ppoly_and_eps_integ_consts(eos_parameters *restrict eos);
  --v*: the 3-velocity v^i used in IllinoisGRMHD. This is defined as u^i/u^0. The other
    commonly used choice is the Valencia 3-velocity Vv^i defined as
    Vv^i = u^i/W + beta^i/lapse.
-   
+
 
  --B*: the magnetic field TODO: give specific B definition
 

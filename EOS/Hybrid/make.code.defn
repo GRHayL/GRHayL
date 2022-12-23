@@ -1,6 +1,6 @@
 # Main make.code.defn file for thorn Baikal
 
 # Source files in this directory that need compiled:
-SRCS = compute_entropy_function.c \
-       compute_P_cold.c           \
-       compute_P_cold_and_eps_cold.c
+SRCS = GRHayL_compute_P_cold.c              \
+       GRHayL_compute_P_cold_and_eps_cold.c \
+       GRHayL_compute_entropy_function.c
