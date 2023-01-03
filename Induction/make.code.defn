@@ -1,8 +1,6 @@
 # Primary make.code.defn for GRHayL chalice
 
 # Source files in this directory that need compiled:
-SRCS = A_i_wrapper.c                    \
-       A_i_rhs_no_gauge_terms.c         \
+SRCS = A_i_rhs_no_gauge_terms.c         \
        calculate_phitilde_and_A_i_rhs.c \
-       gauge_terms_wrapper.c            \
        interpolate_for_A_i_rhs.c
