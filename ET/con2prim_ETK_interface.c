@@ -30,15 +30,11 @@ void c2p_initialize_diagnostics(CCTK_POINTER diagnostics) {
 }
 
 void c2p_initialize_general_eos(const int type,
-                const CCTK_REAL tau_atm, const CCTK_REAL W_max,
-                const CCTK_REAL entropy_atm, const CCTK_REAL entropy_min, const CCTK_REAL entropy_max,
+                const CCTK_REAL W_max,
                 const CCTK_REAL rho_atm, const CCTK_REAL rho_min, const CCTK_REAL rho_max,
                 CCTK_POINTER eos) {
 
-  initialize_general_eos(type, tau_atm, W_max,
-                         entropy_atm, entropy_min, entropy_max,
-                         rho_atm, rho_min, rho_max,
-                         (eos_parameters *)eos);
+  initialize_general_eos(type, W_max, rho_atm, rho_min, rho_max, (eos_parameters *)eos);
 }
 
 void c2p_initialize_hybrid_eos(const int neos,

@@ -1,9 +1,9 @@
 implements: GRHayL
 
-INCLUDE HEADER: include/con2prim.h      in con2prim.h
-INCLUDE HEADER: include/EOS_tabulated.h in EOS_tabulated.h
-INCLUDE HEADER: include/GRHayL.h        in GRHayL.h
-INCLUDE HEADER: include/induction.h     in induction.h
+INCLUDE HEADER: include/GRHayL.h               in GRHayL.h
+INCLUDE HEADER: include/GRHayL_EOS_Tabulated.h in GRHayL_EOS_Tabulated.h
+INCLUDE HEADER: include/con2prim.h             in con2prim.h
+INCLUDE HEADER: include/induction.h            in induction.h
 
 void FUNCTION Con2Prim_Kernel(CCTK_POINTER_TO_CONST IN params,
                      CCTK_POINTER_TO_CONST IN eos,

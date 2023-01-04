@@ -141,7 +141,6 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
 
   int eos_type = 0; // Hybrid=0, Tabulated=1;
   int neos = 1;
-  double tau_atm = 4.876083025795607e-12; //Taken from magnetizedTOV.par
   double W_max = 10.0; //IGM default
   double rho_b_max = 1e300; //IGM default
   double gamma_th = 2.0; //Taken from magnetizedTOV.par
@@ -157,8 +156,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
   initialize_GRHayL(None, backup_routine, false, false, calc_prims_guess, Psi6threshold, update_Tmunu, Cupp_Fix, &params);
 
   eos_parameters eos;
-  initialize_general_eos(eos_type, tau_atm, W_max,
-             poison, poison, poison, //entropy
+  initialize_general_eos(eos_type, W_max,
              ut_rho_min, ut_rho_min, rho_b_max,
              &eos);
 

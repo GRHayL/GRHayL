@@ -1,4 +1,5 @@
 #include "GRHayL.h"
+#include "GRHayL_EOS_Hybrid.h"
 
 /* Function    : get_K_and_Gamma()
  * Authors     : Samuel Cupp

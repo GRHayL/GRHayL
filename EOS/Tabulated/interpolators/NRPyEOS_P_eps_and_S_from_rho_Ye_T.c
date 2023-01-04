@@ -1,4 +1,4 @@
-#include "EOS_tabulated.h"
+#include "GRHayL_EOS_Tabulated.h"
 /*
  * (c) 2022 Leo Werneck
  */

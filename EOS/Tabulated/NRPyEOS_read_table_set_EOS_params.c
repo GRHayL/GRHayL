@@ -1,4 +1,5 @@
-#include "EOS_tabulated.h"
+#include "GRHayL.h"
+#include "GRHayL_EOS_Tabulated.h"
 
 // mini NoMPI
 #ifdef HAVE_CAPABILITY_MPI
@@ -30,10 +31,37 @@
   fclose(fp);                                               \
 }
 
+inline double get_EOS_table_max(
+      const eos_parameters *restrict eos,
+      const int var_key ) {
+  // Loop over the table, searching for the maximum value
+  int totalsize        = eos->N_rho * eos->N_Ye * eos->N_T;
+  double var_max_value = eos->table_all[var_key];
+
+  for(int i=0;i<totalsize;i++) {
+    double var_value = eos->table_all[var_key + NRPyEOS_ntablekeys*i];
+    if( var_value > var_max_value ) var_max_value = var_value;
+  }
+  return var_max_value;
+}
+
+inline double get_EOS_table_min(
+      const eos_parameters *restrict eos,
+      const int var_key ) {
+  // Loop over the table, searching for the minimum value
+  int totalsize        = eos->N_rho * eos->N_Ye * eos->N_T;
+  double var_min_value = eos->table_all[var_key];
+
+  for(int i=0;i<totalsize;i++) {
+    double var_value = eos->table_all[var_key + NRPyEOS_ntablekeys*i];
+    if( var_value < var_min_value ) var_min_value = var_value;
+  }
+  return var_min_value;
+}
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_readtable_set_EOS_params(const char *EOS_tablename, eos_parameters *restrict eos_params) {
+void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters *restrict eos_params) {
 
   check_if_file_exists(EOS_tablename);
 
@@ -215,8 +243,16 @@ void NRPyEOS_readtable_set_EOS_params(const char *EOS_tablename, eos_parameters 
 
   eos_params->table_rho_max  = exp(eos_params->table_logrho[eos_params->N_rho-1]);
   eos_params->table_rho_min  = exp(eos_params->table_logrho[0]);
-  eos_params->table_T_max = exp(eos_params->table_logT[eos_params->N_T-1]);
-  eos_params->table_T_min = exp(eos_params->table_logT[0]);
+  eos_params->table_T_max    = exp(eos_params->table_logT[eos_params->N_T-1]);
+  eos_params->table_T_min    = exp(eos_params->table_logT[0]);
   eos_params->table_Ye_max   = eos_params->table_Ye[eos_params->N_Ye-1];
   eos_params->table_Ye_min   = eos_params->table_Ye[0];
+
+  // Table bounds for useful quantities
+  eos_params->table_P_min   = get_EOS_table_min(eos_params, NRPyEOS_press_key);
+  eos_params->table_P_max   = get_EOS_table_max(eos_params, NRPyEOS_press_key);
+  eos_params->table_eps_min = get_EOS_table_min(eos_params, NRPyEOS_eps_key);
+  eos_params->table_eps_max = get_EOS_table_max(eos_params, NRPyEOS_eps_key);
+  eos_params->table_ent_min = get_EOS_table_min(eos_params, NRPyEOS_entropy_key);
+  eos_params->table_ent_max = get_EOS_table_max(eos_params, NRPyEOS_entropy_key);
 }

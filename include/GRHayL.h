@@ -165,9 +165,12 @@ typedef struct eos_parameters {
   double *restrict table_eps;
 
   // Table bounds
-  double table_rho_max, table_rho_min;
+  double table_rho_min, table_rho_max;
   double table_T_min  , table_T_max;
   double table_Ye_min , table_Ye_max;
+  double table_P_min  , table_P_max;
+  double table_eps_min, table_eps_max;
+  double table_ent_min, table_ent_max;
 
   // Auxiliary variables
   double energy_shift;
@@ -183,19 +186,130 @@ typedef struct eos_parameters {
   double drhoyei;
   double dtempyei;
   double drhotempyei;
+
+  // Function prototypes
+  void (*tabulated_read_table_set_EOS_params)(
+        const char *nuceos_table_name,
+        struct eos_parameters *restrict eos_params);
+
+  void (*tabulated_free_memory)(struct eos_parameters *restrict eos_params);
+
+  void (*tabulated_compute_P_from_T)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict P);
+
+  void (*tabulated_compute_eps_from_T)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict eps);
+
+  void (*tabulated_compute_P_eps_from_T)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict P,
+        double *restrict eps);
+
+  void (*tabulated_compute_P_eps_S_from_T)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict P,
+        double *restrict eps,
+        double *restrict S);
+
+  void (*tabulated_compute_P_eps_S_cs2_from_T)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict P,
+        double *restrict eps,
+        double *restrict S,
+        double *restrict cs2);
+
+  void (*tabulated_compute_P_eps_depsdT_from_T)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict P,
+        double *restrict eps,
+        double *restrict depsdT);
+
+  void (*tabulated_compute_P_eps_muhat_mue_mup_mun_from_T)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict P,
+        double *restrict eps,
+        double *restrict muhat,
+        double *restrict mu_e,
+        double *restrict mu_p,
+        double *restrict mu_n);
+
+  void (*tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict muhat,
+        double *restrict mu_e,
+        double *restrict mu_p,
+        double *restrict mu_n,
+        double *restrict X_n,
+        double *restrict X_p);
+
+  void (*tabulated_compute_P_T_from_eps)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double eps,
+        double *restrict P,
+        double *restrict T);
+
+  void (*tabulated_compute_P_S_depsdT_T_from_eps)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double eps,
+        double *restrict P,
+        double *restrict S,
+        double *restrict depsdT,
+        double *restrict T);
+
+  void (*tabulated_compute_eps_S_T_from_P)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double P,
+        double *restrict eps,
+        double *restrict S,
+        double *restrict T);
+
+  void (*tabulated_compute_P_eps_T_from_S)(
+        const struct eos_parameters *restrict eos_params,
+        const double rho,
+        const double Y_e,
+        const double S,
+        double *restrict P,
+        double *restrict eps,
+        double *restrict T);
   //------------------------------------------------
 
 } eos_parameters;
 
-#include "GRHayL_EOS_Hybrid.h"
-
 void initialize_general_eos(
       const int type,
-      const double tau_atm,
       const double W_max,
-      const double entropy_atm,
-      const double entropy_min,
-      const double entropy_max,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -207,21 +321,25 @@ void initialize_hybrid_eos(
       const int neos,
       const double *restrict rho_ppoly,
       const double *restrict Gamma_ppoly,
-      const double K_ppoly,
+      const double K_ppoly0,
       const double Gamma_th,
       eos_parameters *restrict eos);
 
 // Leo says: Same comment.
 void initialize_tabulated_eos(
-      const double precision,
-      const double threshold,
-      const double temp_atm,
-      const double temp_min,
-      const double temp_max,
+      const double root_finding_precision,
+      const double depsdT_threshold,
       const double Ye_atm,
       const double Ye_min,
       const double Ye_max,
+      const double T_atm,
+      const double T_min,
+      const double T_max,
       eos_parameters *restrict eos);
+
+void initialize_hybrid_functions(eos_parameters *restrict eos);
+
+void initialize_tabulated_functions(eos_parameters *restrict eos);
 
 //--------------------------------------------------
 
@@ -284,30 +402,30 @@ typedef struct conservative_quantities {
 } conservative_quantities;
 
 void initialize_primitives(
-             const double rho, const double press, const double epsilon,
-             const double vx, const double vy, const double vz,
-             const double Bx, const double By, const double Bz,
-             const double entropy, const double Y_e, const double temp,
-             primitive_quantities *restrict prims);
+      const double rho, const double press, const double epsilon,
+      const double vx, const double vy, const double vz,
+      const double Bx, const double By, const double Bz,
+      const double entropy, const double Y_e, const double temp,
+      primitive_quantities *restrict prims);
 
 void initialize_conservatives(
-             const double rho, const double tau,
-             const double S_x, const double S_y, const double S_z,
-             const double Y_e, const double entropy,
-             conservative_quantities *restrict cons);
+      const double rho, const double tau,
+      const double S_x, const double S_y, const double S_z,
+      const double Y_e, const double entropy,
+      conservative_quantities *restrict cons);
 
 void return_primitives(
-             const primitive_quantities *restrict prims,
-             double *restrict rho, double *restrict press, double *restrict epsilon,
-             double *restrict vx, double *restrict vy, double *restrict vz,
-             double *restrict Bx, double *restrict By, double *restrict Bz,
-             double *restrict entropy, double *restrict Y_e, double *restrict temp);
+      const primitive_quantities *restrict prims,
+      double *restrict rho, double *restrict press, double *restrict epsilon,
+      double *restrict vx, double *restrict vy, double *restrict vz,
+      double *restrict Bx, double *restrict By, double *restrict Bz,
+      double *restrict entropy, double *restrict Y_e, double *restrict temp);
 
 void return_conservatives(
-             const conservative_quantities *restrict cons,
-             double *restrict rho, double *restrict tau,
-             double *restrict S_x, double *restrict S_y, double *restrict S_z,
-             double *restrict Y_e, double *restrict entropy);
+      const conservative_quantities *restrict cons,
+      double *restrict rho, double *restrict tau,
+      double *restrict S_x, double *restrict S_y, double *restrict S_z,
+      double *restrict Y_e, double *restrict entropy);
 
 //--------------------------------------------------
 
@@ -388,11 +506,12 @@ typedef struct stress_energy {
   double Tyy, Tyz, Tzz;
 } stress_energy;
 
-void initialize_metric(const double lapse,
-             const double gxx, const double gxy, const double gxz,
-             const double gyy, const double gyz, const double gzz,
-             const double betax, const double betay, const double betaz,
-             metric_quantities *restrict metric);
+void initialize_metric(
+      const double lapse,
+      const double gxx, const double gxy, const double gxz,
+      const double gyy, const double gyz, const double gzz,
+      const double betax, const double betay, const double betaz,
+      metric_quantities *restrict metric);
 
 //--------------------------------------------------
 
