@@ -1,5 +1,5 @@
-#ifndef GRHAYL_TABULATED_EOS_H_
-#define GRHAYL_TABULATED_EOS_H_
+#ifndef NRPYEOS_TABULATED_H_
+#define NRPYEOS_TABULATED_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -185,4 +185,6 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       double *restrict T,
       NRPyEOS_error_report *restrict report);
 
-#endif // GRHAYL_TABULATED_EOS_H_
+void NRPyEOS_initialize_tabulated_functions(eos_parameters *restrict eos);
+
+#endif // NRPYEOS_TABULATED_H_

@@ -1,5 +1,5 @@
-#include "GRHayL_EOS_Hybrid.h"
-#include "GRHayL_EOS_Tabulated.h"
+#include "NRPyEOS_Hybrid.h"
+#include "NRPyEOS_Tabulated.h"
 
 /* Function    : initialize_general_eos()
  * Authors     : Leo Werneck & Samuel Cupp
@@ -59,30 +59,30 @@ void initialize_hybrid_eos(
   for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
 
   // Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
-  (*eos->hybrid_set_K_ppoly_and_eps_integ_consts)(eos);
+  eos->hybrid_set_K_ppoly_and_eps_integ_consts(eos);
 
   // -------------- Ceilings --------------
   // Compute maximum P and eps
-  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, eos->rho_max, &eos->press_max, &eos->eps_max);
+  eos->hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_max, &eos->press_max, &eos->eps_max);
 
   // Compute maximum entropy
-  (*eos->hybrid_compute_entropy_function)(eos, eos->rho_max, eos->press_max, &eos->entropy_max);
+  eos->hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max, &eos->entropy_max);
   // --------------------------------------
 
   // --------------- Floors ---------------
   // Compute maximum P and eps
-  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
+  eos->hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
 
   // Compute maximum entropy
-  (*eos->hybrid_compute_entropy_function)(eos, eos->rho_min, eos->press_min, &eos->entropy_min);
+  eos->hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min, &eos->entropy_min);
   // --------------------------------------
 
   // --------- Atmospheric values ---------
   // Compute atmospheric P and eps
-  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, eos->rho_atm, &eos->press_atm, &eos->eps_atm);
+  eos->hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_atm, &eos->press_atm, &eos->eps_atm);
 
   // Compute atmospheric entropy
-  (*eos->hybrid_compute_entropy_function)(eos, eos->rho_atm, eos->press_atm, &eos->entropy_atm);
+  eos->hybrid_compute_entropy_function(eos, eos->rho_atm, eos->press_atm, &eos->entropy_atm);
 
   // Compute atmospheric tau
   eos->tau_atm = eos->rho_atm * eos->eps_atm;
@@ -112,27 +112,9 @@ void initialize_tabulated_eos(
 }
 
 void initialize_hybrid_functions(eos_parameters *restrict eos) {
-  eos->hybrid_find_polytropic_index            = &GRHayL_find_polytropic_index;
-  eos->hybrid_get_K_and_Gamma                  = &GRHayL_get_K_and_Gamma;
-  eos->hybrid_set_K_ppoly_and_eps_integ_consts = &GRHayL_set_K_ppoly_and_eps_integ_consts;
-  eos->hybrid_compute_P_cold                   = &GRHayL_compute_P_cold;
-  eos->hybrid_compute_P_cold_and_eps_cold      = &GRHayL_compute_P_cold_and_eps_cold;
-  eos->hybrid_compute_entropy_function         = &GRHayL_compute_entropy_function;
+  NRPyEOS_initialize_hybrid_functions(eos);
 }
 
 void initialize_tabulated_functions(eos_parameters *restrict eos) {
-  eos->tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;
-  eos->tabulated_free_memory                            = &NRPyEOS_free_memory;
-  eos->tabulated_compute_P_from_T                       = &NRPyEOS_P_from_rho_Ye_T;
-  eos->tabulated_compute_eps_from_T                     = &NRPyEOS_eps_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_from_T                   = &NRPyEOS_P_and_eps_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_S_from_T                 = &NRPyEOS_P_eps_and_S_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_S_cs2_from_T             = &NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_depsdT_from_T            = &NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_muhat_mue_mup_mun_from_T = &NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T;
-  eos->tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = &NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T;
-  eos->tabulated_compute_P_T_from_eps                   = &NRPyEOS_P_and_T_from_rho_Ye_eps;
-  eos->tabulated_compute_P_S_depsdT_T_from_eps          = &NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps;
-  eos->tabulated_compute_eps_S_T_from_P                 = &NRPyEOS_eps_S_and_T_from_rho_Ye_P;
-  eos->tabulated_compute_P_eps_T_from_S                 = &NRPyEOS_P_eps_and_T_from_rho_Ye_S;
+  NRPyEOS_initialize_tabulated_functions(eos);
 }

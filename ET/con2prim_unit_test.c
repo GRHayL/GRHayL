@@ -37,8 +37,8 @@ inline double relative_error( const double a, const double b ) {
 }
 
 inline void output_primitive_error(
-                     const primitive_quantities *restrict prims_orig, 
-                     const primitive_quantities *restrict prims, 
+                     const primitive_quantities *restrict prims_orig,
+                     const primitive_quantities *restrict prims,
                      const int i, const int j, FILE* outfile) {
 
   primitive_quantities prims_error;
@@ -48,7 +48,7 @@ inline void output_primitive_error(
   prims_error.vx    = relative_error(prims->vx,    prims_orig->vx);
   prims_error.vy    = relative_error(prims->vy,    prims_orig->vy);
   prims_error.vz    = relative_error(prims->vz,    prims_orig->vz);
-  
+
   fprintf(outfile, "%d %d %.15e %.15e %.15e"
                    " %.15e %.15e %.15e"
                    " %.15e %.15e %.15e"
@@ -62,8 +62,8 @@ inline void output_primitive_error(
 }
 
 inline void output_conservative_error(
-                     const conservative_quantities *restrict cons_orig, 
-                     const conservative_quantities *restrict cons, 
+                     const conservative_quantities *restrict cons_orig,
+                     const conservative_quantities *restrict cons,
                      const int i, const int j, FILE* outfile) {
 
   conservative_quantities cons_error;
@@ -85,7 +85,7 @@ inline void output_conservative_error(
 }
 
 void output_stress_energy_error(
-                     const stress_energy *restrict Tmunu_orig, 
+                     const stress_energy *restrict Tmunu_orig,
                      const stress_energy *restrict Tmunu,
                      const int i, const int j, FILE* outfile) {
 
@@ -263,7 +263,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
       for(int i=0;i<npoints;i++) { // Density loop
         double xrho  = exp(lrmin + dlr*i);
         double P_cold = 0.0;
-        (*eos.hybrid_compute_P_cold)(&eos, xrho, &P_cold);
+        eos.hybrid_compute_P_cold(&eos, xrho, &P_cold);
 
         // Compute the pressure step size
         const double lpmin        = log(1.0e-30);//-P_cold);
@@ -326,7 +326,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
             prims_orig = prims;
             check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
             output_primitive_error(&prims_orig, &prims_guess, i, j, outfiles[3]);
-  
+
             prims_orig = prims;
             if(check!=0) {
               check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
@@ -339,7 +339,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
             }
 
             /*************************************************************/
-  
+
             if(check==0) {
               prims = prims_guess;
             } else {

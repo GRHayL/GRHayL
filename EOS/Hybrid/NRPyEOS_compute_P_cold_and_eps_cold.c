@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "NRPyEOS_Hybrid.h"
 
 /* Function    : compute_P_cold_and_eps_cold()
  * Authors     : Leo Werneck
@@ -18,7 +18,7 @@
  *             PPEOS: Piecewise Polytrope Equation of State
  */
 
-void GRHayL_compute_P_cold_and_eps_cold(
+void NRPyEOS_compute_P_cold_and_eps_cold(
       const eos_parameters *restrict eos,
       const double rho_in,
       double *restrict P_cold_ptr,
@@ -27,7 +27,7 @@ void GRHayL_compute_P_cold_and_eps_cold(
   // in Eqs 13-16 in http://arxiv.org/pdf/0802.0200.pdf
   //
   // Set up useful auxiliary variables
-  int polytropic_index   = (*eos->hybrid_find_polytropic_index)(eos, rho_in);
+  int polytropic_index   = NRPyEOS_find_polytropic_index(eos, rho_in);
   double K_ppoly         = eos->K_ppoly[polytropic_index];
   double Gamma_ppoly     = eos->Gamma_ppoly[polytropic_index];
   double eps_integ_const = eos->eps_integ_const[polytropic_index];

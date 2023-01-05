@@ -1,7 +1,7 @@
 #include "cctk.h"
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
-#include "GRHayL_EOS_Tabulated.h"
+#include "NRPyEOS_Tabulated.h"
 /*
  * (c) 2022 Leo Werneck
  */
@@ -14,7 +14,7 @@ void EOS_test_readtable(CCTK_ARGUMENTS) {
   // Step 1: Initialize the EOS struct
   eos_parameters eos;
   initialize_tabulated_functions(&eos);
-  (*eos.tabulated_read_table_set_EOS_params)(EOS_tablepath, &eos);
+  eos.tabulated_read_table_set_EOS_params(EOS_tablepath, &eos);
 
   printf("(GRHayL - EOS) Table dimensions: rho, T, Ye: %d, %d, %d\n", eos.N_rho, eos.N_T, eos.N_Ye);
 
@@ -24,7 +24,7 @@ void EOS_test_readtable(CCTK_ARGUMENTS) {
   const double xY_e = 0.4;
   const double xT   = 1.1;
   double xP, xeps;
-  (*eos.tabulated_compute_P_eps_from_T)(&eos, xrho, xY_e, xT, &xP, &xeps);
+  eos.tabulated_compute_P_eps_from_T(&eos, xrho, xY_e, xT, &xP, &xeps);
 
   // Step 3: Print information
   printf("(GRHayL - EOS) Input Density    : %.15e\n", xrho);
@@ -34,7 +34,7 @@ void EOS_test_readtable(CCTK_ARGUMENTS) {
   printf("(GRHayL - EOS) Output Energy    : %.15e\n", xeps);
 
   // Step 4: Free memory
-  (*eos.tabulated_free_memory)(&eos);
+  eos.tabulated_free_memory(&eos);
 
   printf("(GRHayL - EOS) Test finished successfully.\n");
 

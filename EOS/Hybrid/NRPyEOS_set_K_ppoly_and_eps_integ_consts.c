@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "NRPyEOS_Hybrid.h"
 
 /* Function    : setup_K_ppoly_and_eps_integ_consts()
  * Authors     : Leo Werneck & Samuel Cupp
@@ -15,7 +15,7 @@
  *                                      used to compute eps_cold for
  *                                      a piecewise polytropic EOS.
  */
-void GRHayL_set_K_ppoly_and_eps_integ_consts(eos_parameters *restrict eos) {
+void NRPyEOS_set_K_ppoly_and_eps_integ_consts(eos_parameters *restrict eos) {
 
   /* When neos = 1, we will only need the value K_ppoly[0] and eps_integ_const[0].
    * Since our only polytropic EOS is given by

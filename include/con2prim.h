@@ -108,7 +108,7 @@ typedef struct con2prim_diagnostics {
    cons/prim structs. The cons and prims structs should therefore be
    defined higher up in the code hierarchy. */
 
-void reset_prims_to_atmosphere( 
+void reset_prims_to_atmosphere(
              const GRHayL_parameters *restrict params,
              const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
@@ -195,7 +195,7 @@ int Hybrid_Noble2D(
 //--------------------------------------------------
 
 //-------------- Font Fix routines -----------------
-  
+
 int font_fix(const eos_parameters *restrict eos,
              const metric_quantities *restrict metric,
              const conservative_quantities *restrict cons_undens,
@@ -272,6 +272,6 @@ void initial_random_data(
 // In apply_tau_floor.c:
 // eigenvalues_3by3_real_sym_matrix(double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
 //                                      const double M11, const double M12, const double M13,
-//                                      const double M22, const double M23, const double M33); 
+//                                      const double M22, const double M23, const double M33);
 
 #endif // CON2PRIM_GEM_H

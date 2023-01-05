@@ -1,9 +1,10 @@
 implements: GRHayL
 
-INCLUDE HEADER: include/GRHayL.h               in GRHayL.h
-INCLUDE HEADER: include/GRHayL_EOS_Tabulated.h in GRHayL_EOS_Tabulated.h
-INCLUDE HEADER: include/con2prim.h             in con2prim.h
-INCLUDE HEADER: include/induction.h            in induction.h
+INCLUDE HEADER: include/GRHayL.h            in GRHayL.h
+INCLUDE HEADER: include/NRPyEOS_Hybrid.h    in NRPyEOS_Hybrid.h
+INCLUDE HEADER: include/NRPyEOS_Tabulated.h in NRPyEOS_Tabulated.h
+INCLUDE HEADER: include/con2prim.h          in con2prim.h
+INCLUDE HEADER: include/induction.h         in induction.h
 
 void FUNCTION Con2Prim_Kernel(CCTK_POINTER_TO_CONST IN params,
                      CCTK_POINTER_TO_CONST IN eos,
@@ -27,8 +28,7 @@ PROVIDES FUNCTION initialize_diagnostics_ETK WITH c2p_initialize_diagnostics
   LANGUAGE C
 
 void FUNCTION initialize_general_eos_ETK(
-                    CCTK_INT IN type, CCTK_REAL IN tau_atm, CCTK_REAL IN W_max,
-                    CCTK_REAL IN entropy_atm, CCTK_REAL IN entropy_min, CCTK_REAL IN entropy_max,
+                    CCTK_INT IN type, CCTK_REAL IN W_max,
                     CCTK_REAL IN rho_atm, CCTK_REAL IN rho_min, CCTK_REAL IN rho_max,
                     CCTK_POINTER IN eos)
 PROVIDES FUNCTION initialize_general_eos_ETK WITH c2p_initialize_general_eos

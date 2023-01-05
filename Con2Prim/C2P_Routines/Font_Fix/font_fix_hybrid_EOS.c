@@ -122,7 +122,7 @@ int font_fix_hybrid_EOS( const eos_parameters *restrict eos,
   /* Font fix works! */
   /* First compute P_cold, eps_cold, then h = h_cold */
   double P_cold, eps_cold;
-  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, rhob, &P_cold, &eps_cold);
+  eos->hybrid_compute_P_cold_and_eps_cold(eos, rhob, &P_cold, &eps_cold);
   double h = 1.0 + eps_cold + P_cold/rhob;
 
   /* Then compute gamma_v using equation (A19) in

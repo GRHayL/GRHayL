@@ -1,13 +1,10 @@
 # Primary make.code.defn for GRHayL chalice
 
 # Source files in this directory that need compiled:
-SRCS = GRHayL_set_K_ppoly_and_eps_integ_consts.c \
-       GRHayL_find_polytropic_index.c            \
-       GRHayL_get_K_and_gamma.c                  \
-       initialize_conservatives.c                \
-       initialize_metric.c                       \
-       initialize_GRHayL.c                       \
-       initialize_primitives.c                   \
-       initialize_eos.c                          \
-       return_conservatives.c                    \
+SRCS = initialize_conservatives.c \
+       initialize_metric.c        \
+       initialize_GRHayL.c        \
+       initialize_primitives.c    \
+       initialize_eos.c           \
+       return_conservatives.c     \
        return_primitives.c

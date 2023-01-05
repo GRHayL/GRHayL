@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "NRPyEOS_Hybrid.h"
 
 /* Function    : find_polytropic_index()
  * Authors     : Leo Werneck, Zach Etienne, & Samuel Cupp
@@ -13,7 +13,7 @@
  * Outputs     : polytropic_index   - the appropriate index for the K_ppoly,
  *                                    Gamma_ppoly, and eps_int_consts array
  */
-int GRHayL_find_polytropic_index(
+int NRPyEOS_find_polytropic_index(
       const eos_parameters *restrict eos,
       const double rho_in) {
 

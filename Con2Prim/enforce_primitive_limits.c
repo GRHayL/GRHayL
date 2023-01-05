@@ -17,7 +17,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
     // Compute P and eps
     double prs_cold = 0.0;
     double eps_cold = 0.0;
-    (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, prims->rho, &prs_cold, &eps_cold);
+    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prs_cold, &eps_cold);
     // Set P_min and P_max
     double P_min = 0.9*prs_cold;
     double P_max = 100.0*prs_cold;
@@ -33,7 +33,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
     // Now compute eps
     prims->eps = eps_cold + (prims->press-prs_cold)/(eos->Gamma_th-1.0)/prims->rho;
     // If needed, recompute the entropy function
-    if( params->evolve_entropy ) (*eos->hybrid_compute_entropy_function)(eos, prims->rho, prims->press, &prims->entropy);
+    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
 
   // Tabulated EOS specific floors and ceilings
   } else if( eos->eos_type==1 ) {

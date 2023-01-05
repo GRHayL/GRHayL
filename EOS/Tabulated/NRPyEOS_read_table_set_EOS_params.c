@@ -1,5 +1,4 @@
-#include "GRHayL.h"
-#include "GRHayL_EOS_Tabulated.h"
+#include "NRPyEOS_Tabulated.h"
 
 // mini NoMPI
 #ifdef HAVE_CAPABILITY_MPI

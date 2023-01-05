@@ -33,7 +33,6 @@ void c2p_initialize_general_eos(const int type,
                 const CCTK_REAL W_max,
                 const CCTK_REAL rho_atm, const CCTK_REAL rho_min, const CCTK_REAL rho_max,
                 CCTK_POINTER eos) {
-
   initialize_general_eos(type, W_max, rho_atm, rho_min, rho_max, (eos_parameters *)eos);
 }
 

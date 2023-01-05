@@ -340,7 +340,6 @@ void initialize_tabulated_eos(
 void initialize_hybrid_functions(eos_parameters *restrict eos);
 
 void initialize_tabulated_functions(eos_parameters *restrict eos);
-
 //--------------------------------------------------
 
 //--------------- Con2Prim facets ------------------

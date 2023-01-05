@@ -1,4 +1,4 @@
-#include "GRHayL_EOS_Tabulated.h"
+#include "NRPyEOS_Tabulated.h"
 #include "NRPyEOS_tabulated_helpers.h"
 /*
  * (c) 2022 Leo Werneck

@@ -73,7 +73,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
 
   double prs_cold = 0.0;
   double eps_cold = 0.0;
-  (*eos->hybrid_compute_P_cold_and_eps_cold)(eos, prims->rho, &prs_cold, &eps_cold);
+  eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prs_cold, &eps_cold);
   prims->eps = eps_cold + (prims->press-prs_cold)/(eos->Gamma_th-1.0)/prims->rho;
 
   // Now compute the enthalpy
