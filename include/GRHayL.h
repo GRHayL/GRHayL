@@ -127,7 +127,7 @@ typedef struct eos_parameters {
         double *restrict Gamma);
 
   void (*hybrid_set_K_ppoly_and_eps_integ_consts)(struct eos_parameters *restrict eos);
-  
+
   void (*hybrid_compute_P_cold)(
         const struct eos_parameters *restrict eos,
         const double rho_in,

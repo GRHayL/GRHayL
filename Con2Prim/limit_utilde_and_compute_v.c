@@ -21,7 +21,7 @@
  * Outputs     : utcon1_ptr      - if velocity is limited, data of utcon1 is changed
  *             : utcon2_ptr      - if velocity is limited, data of utcon2 is changed
  *             : utcon3_ptr      - if velocity is limited, data of utcon3 is changed
- *             : u0_ptr          - 
+ *             : u0_ptr          -
  *             : prims           - primitive_quantities struct containing the
  *                                 velocities v calculated from the (velocity-
  *                                 limited) u tilde

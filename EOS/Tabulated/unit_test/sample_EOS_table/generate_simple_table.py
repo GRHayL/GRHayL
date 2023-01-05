@@ -58,12 +58,12 @@ def create_simple_table(intablename, outtablename,
                         rho_min=None, rho_max=None,
                         T_min=None, T_max=None,
                         Y_e_min=None, Y_e_max=None):
-    
+
     # First we read in the input table
     with H5File(intablename, "r") as intable:
 
         print(intable.keys())
-        
+
         rho_min, rho_max, \
         T_min  , T_max  , \
         Y_e_min, Y_e_max = check_limits(intable, rho_min, rho_max, T_min, T_max, Y_e_min, Y_e_max)
@@ -114,7 +114,7 @@ def create_simple_table(intablename, outtablename,
         print(f'  T_max    = {10**intable["logtemp"][-1]:.15e} MeV')
         print(f'  Y_e_min  = {intable["ye"][0]:.15e}')
         print(f'  Y_e_max  = {intable["ye"][-1]:.15e}')
-    
+
         print("\nOutput table information:")
         print(f'  Filename = {outtablename}')
         print(f'  N_rho    = {N_rho}')
@@ -164,7 +164,7 @@ def create_simple_table(intablename, outtablename,
         f.create_dataset("logrho"      , shape=N_rho, dtype="f8", data=table_log_rho  )
         f.create_dataset("logtemp"     , shape=N_T  , dtype="f8", data=table_log_T    )
         f.create_dataset("ye"          , shape=N_Y_e, dtype="f8", data=table_Y_e      )
-        
+
         # Create derived datasets
         f.create_dataset("Abar"        , shape=dims , dtype="f8", data=table_Abar     )
         f.create_dataset("Xa"          , shape=dims , dtype="f8", data=table_Xa       )
@@ -188,7 +188,7 @@ def create_simple_table(intablename, outtablename,
 
 if __name__ == '__main__':
     argc = len(argv)
-    
+
     if argc < 2:
         print("ERROR: Need at least an input table")
         exit(1)

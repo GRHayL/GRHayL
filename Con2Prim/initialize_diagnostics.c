@@ -28,4 +28,4 @@ void initialize_diagnostics(con2prim_diagnostics *restrict diagnostics) {
   diagnostics->error_int_numer=0;
   diagnostics->error_int_denom=0;
   diagnostics->which_routine = None;
-} 
+}

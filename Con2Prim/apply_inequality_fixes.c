@@ -7,7 +7,7 @@
  *               obey the inequalities constraining their possible values.
  *               If they are outside these bounds, the function enforces
  *               the inequalities and updates the diagnostic data.
- *               
+ *
  * Dependencies: eigenvalues_3by3_real_sym_matrix()
  *
  * Inputs      : params         - GRHayL_parameters struct with parameters

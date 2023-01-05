@@ -59,16 +59,16 @@ void con2prim_loop_kernel(const GRHayL_parameters *restrict params, const eos_pa
 
     // Set the conserved variables required by the con2prim routine
     undensitize_conservatives(metric, cons, &cons_undens);
-  
+
     /************* Conservative-to-primitive recovery ************/
 
     int check = Hybrid_Multi_Method(params, eos, metric, &cons_undens, prims, &prims_guess, diagnostics);
 
     /*************************************************************/
-  
+
     if(check!=0)
       check = font_fix(eos, metric, cons, prims, &prims_guess, diagnostics);
-  
+
     if(check==0) {
   //     Check for NAN!
       if( isnan(prims_guess.rho*prims_guess.press*prims_guess.eps*prims_guess.vx*prims_guess.vy*prims_guess.vz) ) {
@@ -83,7 +83,7 @@ void con2prim_loop_kernel(const GRHayL_parameters *restrict params, const eos_pa
         printf("v: %e %e %e\n", prims_guess.vx, prims_guess.vy, prims_guess.vz);
         printf("***********************************************************");
       }
-  
+
       *prims = prims_guess;
     } else {
       printf("Con2Prim and Font fix failed!");

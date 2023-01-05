@@ -28,7 +28,7 @@ void reset_prims_to_atmosphere( const GRHayL_parameters *restrict params,
   prims->entropy     = eos->entropy_atm;
   prims->Y_e         = eos->Ye_atm;
   prims->temperature = eos->T_atm;
-  
+
   if(params->Cupp_Fix) { //For atmosphere, ET IGM sets v=-beta, Leo's IGM sets v=0
     prims->vx = 0.0;
     prims->vy = 0.0;
@@ -37,5 +37,5 @@ void reset_prims_to_atmosphere( const GRHayL_parameters *restrict params,
     prims->vx = -metric->betax;
     prims->vy = -metric->betay;
     prims->vz = -metric->betaz;
-  } 
+  }
 }
