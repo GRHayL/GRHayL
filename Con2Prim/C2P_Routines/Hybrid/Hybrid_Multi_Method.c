@@ -18,6 +18,7 @@ int Hybrid_Multi_Method( const GRHayL_parameters *restrict params,
                          primitive_quantities *restrict prims_guess,
                          con2prim_diagnostics *restrict diagnostics ) {
 
+  *prims_guess = *prims;
   // Compute primitive initial guesses if they are not provided
   if(params->calc_prim_guess) guess_primitives(eos, metric, prims, cons, prims_guess);
   int check = Hybrid_Select_Method(params, eos, params->main_routine, metric, cons, prims_guess, diagnostics);
@@ -26,6 +27,7 @@ int Hybrid_Multi_Method( const GRHayL_parameters *restrict params,
     // Backup 1 triggered
     diagnostics->backup[0] = 1;
     // Recompute guesses
+    *prims_guess = *prims;
     if(params->calc_prim_guess) guess_primitives(eos, metric, prims, cons, prims_guess);
     // Backup routine #1
     check = Hybrid_Select_Method(params, eos, params->backup_routine[0], metric, cons, prims_guess, diagnostics);
@@ -34,6 +36,7 @@ int Hybrid_Multi_Method( const GRHayL_parameters *restrict params,
       // Backup 2 triggered
       diagnostics->backup[1] = 1;
       // Recompute guesses
+      *prims_guess = *prims;
       if(params->calc_prim_guess) guess_primitives(eos, metric, prims, cons, prims_guess);
       // Backup routine #2
       check = Hybrid_Select_Method(params, eos, params->backup_routine[1], metric, cons, prims_guess, diagnostics);
@@ -42,6 +45,7 @@ int Hybrid_Multi_Method( const GRHayL_parameters *restrict params,
         // Backup 3 triggered
         diagnostics->backup[2] = 1;
         // Recompute guesses
+        *prims_guess = *prims;
         if(params->calc_prim_guess) guess_primitives(eos, metric, prims, cons, prims_guess);
         // Backup routine #3
         check = Hybrid_Select_Method(params, eos, params->backup_routine[2], metric, cons, prims_guess, diagnostics);

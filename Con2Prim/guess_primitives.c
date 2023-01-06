@@ -25,8 +25,6 @@ void guess_primitives( const eos_parameters *restrict eos,
                        const conservative_quantities *restrict cons,
                        primitive_quantities *restrict prims_guess ) {
 
-  *prims_guess = *prims;
-
   //Use atmosphere as initial guess:
   prims_guess->rho = cons->rho/metric->psi6;
 
