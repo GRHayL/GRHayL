@@ -1,0 +1,6 @@
+# Primary make.code.defn for gem Con2Prim
+
+# Source files in this directory that need compiled:
+SRCS = output_conservative_binary.c  \
+       output_primitive_binary.c     \
+       output_stress_energy_binary.c

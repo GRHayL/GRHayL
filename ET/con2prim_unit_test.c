@@ -7,12 +7,7 @@
 #include "cctk.h"
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
-#include "stdlib.h"
-#include "con2prim.h"
-
-inline double randf(double low,double high) {
-    return (rand()/(double)(RAND_MAX))*(high-low)+low;
-}
+#include "unit_tests.h"
 
 inline void perturb_data(double *restrict rand_val, primitive_quantities *restrict prims, conservative_quantities *restrict cons) {
   prims->rho   *= rand_val[0];
@@ -28,95 +23,6 @@ inline void perturb_data(double *restrict rand_val, primitive_quantities *restri
   cons->S_y    *= rand_val[10];
   cons->S_z    *= rand_val[11];
   cons->tau    *= rand_val[12];
-}
-
-inline double relative_error( const double a, const double b ) {
-  if     ( a != 0 ) return( fabs(1.0-b/a) );
-  else if( b != 0 ) return( fabs(1.0-a/b) );
-  else              return( 0.0 );
-}
-
-inline void output_primitive_error(
-                     const primitive_quantities *restrict prims_orig,
-                     const primitive_quantities *restrict prims,
-                     const int i, const int j, FILE* outfile) {
-
-  primitive_quantities prims_error;
-
-  prims_error.rho   = relative_error(prims->rho,   prims_orig->rho);
-  prims_error.press = relative_error(prims->press, prims_orig->press);
-  prims_error.vx    = relative_error(prims->vx,    prims_orig->vx);
-  prims_error.vy    = relative_error(prims->vy,    prims_orig->vy);
-  prims_error.vz    = relative_error(prims->vz,    prims_orig->vz);
-
-  fprintf(outfile, "%d %d %.15e %.15e %.15e"
-                   " %.15e %.15e %.15e"
-                   " %.15e %.15e %.15e"
-                   " %.15e %.15e %.15e "
-                   " %.15e %.15e %.15e\n",
-                   i, j, prims_orig->rho, prims->rho, prims_error.rho,
-                   prims_orig->press, prims->press, prims_error.press,
-                   prims_orig->vx, prims->vx, prims_error.vx,
-                   prims_orig->vy, prims->vy, prims_error.vy,
-                   prims_orig->vz, prims->vz, prims_error.vz);
-}
-
-inline void output_conservative_error(
-                     const conservative_quantities *restrict cons_orig,
-                     const conservative_quantities *restrict cons,
-                     const int i, const int j, FILE* outfile) {
-
-  conservative_quantities cons_error;
-
-  cons_error.rho = relative_error(cons->rho, cons_orig->rho);
-  cons_error.tau = relative_error(cons->tau, cons_orig->tau);
-  cons_error.S_x = relative_error(cons->S_x, cons_orig->S_x);
-  cons_error.S_y = relative_error(cons->S_y, cons_orig->S_y);
-  cons_error.S_z = relative_error(cons->S_z, cons_orig->S_z);
-
-  fprintf(outfile, "%d %d %.15e %.15e %.15e"
-                   " %.15e %.15e %.15e"
-                   " %.15e %.15e %.15e "
-                   " %.15e %.15e %.15e\n",
-                   i, j, cons_orig->tau, cons->tau, cons_error.tau,
-                   cons_orig->S_x, cons->S_x, cons_error.S_x,
-                   cons_orig->S_y, cons->S_y, cons_error.S_y,
-                   cons_orig->S_z, cons->S_z, cons_error.S_z);
-}
-
-void output_stress_energy_error(
-                     const stress_energy *restrict Tmunu_orig,
-                     const stress_energy *restrict Tmunu,
-                     const int i, const int j, FILE* outfile) {
-
-  stress_energy Tmunu_error;
-
-  Tmunu_error.Ttt = relative_error(Tmunu->Ttt, Tmunu_orig->Ttt);
-  Tmunu_error.Ttx = relative_error(Tmunu->Ttx, Tmunu_orig->Ttx);
-  Tmunu_error.Tty = relative_error(Tmunu->Tty, Tmunu_orig->Tty);
-  Tmunu_error.Ttz = relative_error(Tmunu->Ttz, Tmunu_orig->Ttz);
-  Tmunu_error.Txx = relative_error(Tmunu->Txx, Tmunu_orig->Txx);
-  Tmunu_error.Txy = relative_error(Tmunu->Txy, Tmunu_orig->Txy);
-  Tmunu_error.Txz = relative_error(Tmunu->Txz, Tmunu_orig->Txz);
-  Tmunu_error.Tyy = relative_error(Tmunu->Tyy, Tmunu_orig->Tyy);
-  Tmunu_error.Tyz = relative_error(Tmunu->Tyz, Tmunu_orig->Tyz);
-  Tmunu_error.Tzz = relative_error(Tmunu->Tzz, Tmunu_orig->Tzz);
-
-  fprintf(outfile, "%d %d %.15e %.15e %.15e %.15e %.15e %.15e "
-                   "%.15e %.15e %.15e %.15e %.15e %.15e "
-                   "%.15e %.15e %.15e %.15e %.15e %.15e "
-                   "%.15e %.15e %.15e %.15e %.15e %.15e "
-                   "%.15e %.15e %.15e %.15e %.15e %.15e\n",
-                   i, j, Tmunu_orig->Ttt, Tmunu->Ttt, Tmunu_error.Ttt,
-                   Tmunu_orig->Ttx, Tmunu->Ttx, Tmunu_error.Ttx,
-                   Tmunu_orig->Tty, Tmunu->Tty, Tmunu_error.Tty,
-                   Tmunu_orig->Ttz, Tmunu->Ttz, Tmunu_error.Ttz,
-                   Tmunu_orig->Txx, Tmunu->Txx, Tmunu_error.Txx,
-                   Tmunu_orig->Txy, Tmunu->Txy, Tmunu_error.Txy,
-                   Tmunu_orig->Txz, Tmunu->Txz, Tmunu_error.Txz,
-                   Tmunu_orig->Tyy, Tmunu->Tyy, Tmunu_error.Tyy,
-                   Tmunu_orig->Tyz, Tmunu->Tyz, Tmunu_error.Tyz,
-                   Tmunu_orig->Tzz, Tmunu->Tzz, Tmunu_error.Tzz);
 }
 
 void con2prim_unit_test( CCTK_ARGUMENTS ) {
@@ -160,6 +66,8 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
              ut_rho_min, ut_rho_min, rho_b_max,
              &eos);
 
+  initialize_hybrid_functions(&eos);
+
   initialize_hybrid_eos(neos, rho_tab,
              gamma_tab, k_tab, gamma_th,
              &eos);
@@ -200,6 +108,11 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
   // tau := hW^{2} + B^{2} - P - 0.5*( (B.v)^{2} + (B/W)^{2} )
   // Absolutely minimum allowed tau
 
+  char filename[100];
+  FILE* summaryf;
+  sprintf(filename,"unit_test/C2P_Summary.asc");
+  summaryf = fopen(filename,"w");
+
   // Now perform one test for each of the selected routines
   for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
     params.main_routine = con2prim_test_keys[which_routine];
@@ -217,46 +130,28 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
 
       printf("Beginning %s test for routine %s\n", suffix, con2prim_test_names[which_routine]);
 
-      FILE* outfiles[8];
-      char filename[100];
+      FILE* outfiles[7];
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_Summary.asc",con2prim_test_names[which_routine], suffix);
-      outfiles[0] = fopen(filename,"w");
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_limit_v_and_output_u0.bin",con2prim_test_names[which_routine], suffix);
+      outfiles[0] = fopen(filename,"wb");
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_limit_v_and_output_u0.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_apply_inequality_fixes.bin",con2prim_test_names[which_routine], suffix);
       outfiles[1] = fopen(filename,"w");
-      fprintf(outfiles[1], "#Each variable has three columns: original value, new value, relative difference\n");
-      fprintf(outfiles[1], "#i j vx vy vz\n");
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_apply_inequality_fixes.asc",con2prim_test_names[which_routine], suffix);
-      outfiles[2] = fopen(filename,"w");
-      fprintf(outfiles[2], "#Each variable has three columns: original value, new value, relative difference\n");
-      fprintf(outfiles[2], "#i j tau S_x S_y S_z\n");
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_Hybrid_Multi_Method.bin",con2prim_test_names[which_routine], suffix);
+      outfiles[2] = fopen(filename,"wb");
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_Hybrid_Multi_Method.asc",con2prim_test_names[which_routine], suffix);
-      outfiles[3] = fopen(filename,"w");
-      fprintf(outfiles[3], "#Each variable has three columns: original value, new value, relative difference\n");
-      fprintf(outfiles[3], "#i j rho_b press vx vy vz\n");
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_font_fix.bin",con2prim_test_names[which_routine], suffix);
+      outfiles[3] = fopen(filename,"wb");
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_font_fix.asc",con2prim_test_names[which_routine], suffix);
-      outfiles[4] = fopen(filename,"w");
-      fprintf(outfiles[4], "#Each variable has three columns: original value, new value, relative difference\n");
-      fprintf(outfiles[4], "#i j rho_b press vx vy vz\n");
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_enforce_primitive_limits_and_output_u0.bin",con2prim_test_names[which_routine], suffix);
+      outfiles[4] = fopen(filename,"wb");
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_enforce_primitive_limits_and_output_u0.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_conservs.bin",con2prim_test_names[which_routine], suffix);
       outfiles[5] = fopen(filename,"w");
-      fprintf(outfiles[5], "#Each variable has three columns: original value, new value, relative difference\n");
-      fprintf(outfiles[5], "#i j rho_b press vx vy vz\n");
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_conservs.asc",con2prim_test_names[which_routine], suffix);
+      sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_Tmunu.bin",con2prim_test_names[which_routine], suffix);
       outfiles[6] = fopen(filename,"w");
-      fprintf(outfiles[6], "#Each variable has three columns: original value, new value, relative difference\n");
-      fprintf(outfiles[6], "#i j rho_* tau S_x S_y S_z\n");
-
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_Tmunu.asc",con2prim_test_names[which_routine], suffix);
-      outfiles[7] = fopen(filename,"w");
-      fprintf(outfiles[7], "#Each variable has three columns: original value, new value, relative difference\n");
-      fprintf(outfiles[7], "#i j Ttt Ttx Tty Ttz Txx Txy Txz Tyy Tyz Tzz\n");
 
       srand(0);
 
@@ -295,12 +190,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
           double u0 = poison;
           prims_orig = prims;
           limit_v_and_output_u0(&eos, &metric, &prims, &u0, &diagnostics);
-          fprintf(outfiles[1], "%d %d %.15e %.15e %.15e"
-                               " %.15e %.15e %.15e"
-                               " %.15e %.15e %.15e\n",
-                               i, j, prims_orig.vx, prims.vx, relative_error(prims.vx, prims_orig.vx),
-                               prims_orig.vy, prims.vy, relative_error(prims.vy, prims_orig.vy),
-                               prims_orig.vz, prims.vz, relative_error(prims.vz, prims_orig.vz));
+          output_primitive_binary(eos.eos_type, 1, params.evolve_entropy, &prims_orig, &prims, outfiles[0]);
 
           // Compute conservatives based on these primitives
           compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
@@ -315,7 +205,7 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
             if(eos.eos_type == 0) { //Hybrid-only
               cons_orig = cons;
               apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
-              output_conservative_error(&cons_orig, &cons, i, j, outfiles[2]);
+              output_conservative_binary(params.evolve_entropy, &cons_orig, &cons, outfiles[1]);
             }
 
             // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
@@ -325,17 +215,16 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
 
             prims_orig = prims;
             check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
-            output_primitive_error(&prims_orig, &prims_guess, i, j, outfiles[3]);
+            output_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[2]);
 
-            prims_orig = prims;
             if(check!=0) {
               check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
               diagnostics.font_fixes++;
-              output_primitive_error(&prims_orig, &prims_guess, i, j, outfiles[4]);
+              output_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[3]);
             } else { //The else is so that Font Fix is tested even when the primary routine succeeds.
               primitive_quantities prims_tmp;
               check = font_fix(&eos, &metric, &cons, &prims, &prims_tmp, &diagnostics);
-              output_primitive_error(&prims_orig, &prims_tmp, i, j, outfiles[4]);
+              output_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_tmp, outfiles[3]);
             }
 
             /*************************************************************/
@@ -362,20 +251,18 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
           // Enforce limits on primitive variables and recompute conservatives.
           prims_orig = prims;
           enforce_primitive_limits_and_output_u0(&params, &eos, &metric, &prims, &u0, &diagnostics);
-          output_primitive_error(&prims_orig, &prims, i, j, outfiles[5]);
+          output_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims, outfiles[4]);
 
           cons_orig = cons;
           Tmunu_orig = Tmunu;
           compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
-          output_conservative_error(&cons_orig, &cons, i, j, outfiles[6]);
-          output_stress_energy_error(&Tmunu_orig, &Tmunu, i, j, outfiles[7]);
+          output_conservative_binary(params.evolve_entropy, &cons_orig, &cons, outfiles[5]);
+          output_stress_energy_binary(&Tmunu_orig, &Tmunu, outfiles[6]);
 
           if( check != 0 ) {
             failures++;
-            fprintf(outfiles[0],"Recovery FAILED!\n");
             printf("Recovery FAILED!\n");
           } else {
-            fprintf(outfiles[0], "Recovery SUCCEEDED FOR POINT (%d,%d)!\n", i,j);
             printf("Recovery SUCCEEDED FOR POINT (%d,%d)!\n", i,j);
           }
 
@@ -392,7 +279,13 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
     printf("    Number of failed recoveries: %d\n",failures);
     printf("    Recovery failure rate      : %.2lf%%\n",((double)failures)/((double)ntotal)*100.0);
 
+    fprintf(summaryf, "Completed test for routine %s\n",con2prim_test_names[which_routine]);
+    fprintf(summaryf, "Final report:\n");
+    fprintf(summaryf, "    Number of recovery attempts: %d\n",ntotal);
+    fprintf(summaryf, "    Number of failed recoveries: %d\n",failures);
+    fprintf(summaryf, "    Recovery failure rate      : %.2lf%%\n",((double)failures)/((double)ntotal)*100.0);
   }
-  printf("All done! Terminating the run.\n");
+  fprintf(summaryf, "All done! Terminating the run.\n");
+  fclose(summaryf);
   exit(1);
 }
