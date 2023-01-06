@@ -1,4 +1,0 @@
-# Subdirectory make.code.defn for Con2Prim unit tests
-
-# Source files in this directory that need compiled:
-SRCS = initial_random_data.c

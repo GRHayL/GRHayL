@@ -7,7 +7,6 @@ SRCS =
 SUBDIRS = Con2Prim                       \
           Con2Prim/C2P_Routines/Font_Fix \
           Con2Prim/C2P_Routines/Hybrid   \
-          Con2Prim/unit_test             \
           EOS/Hybrid                     \
           EOS/Tabulated                  \
           EOS/Tabulated/interpolators    \

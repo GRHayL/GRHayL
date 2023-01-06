@@ -4,37 +4,7 @@ CCTK_BOOLEAN Cupp_Fix "Whether or not to apply the Cupp Fix"
 } "no"
 
 restricted:
-CCTK_INT ut_npoints "Number of sampling points in density and temperature for GRHayL unit tests"
-{
-  0:* :: "Positive. Default value is 2^8 = 256."
-} 256
-
-restricted:
-CCTK_REAL ut_rho_min "Minimum density for GRHayL unit tests"
-{
-  0.0:* :: "Positive"
-} 1e-12
-
-restricted:
-CCTK_REAL ut_rho_max "Maximum density for GRHayL unit tests"
-{
-  0.0:* :: "Positive"
-} 1e-3
-
-restricted:
-CCTK_REAL ut_T_min "Maximum temperature for the GRHayL unit tests"
-{
-  0.0:* :: "Positive"
-} 1e-2
-
-restricted:
-CCTK_REAL ut_T_max "Maximum temperature for the GRHayL unit tests"
-{
-  0.0:* :: "Positive"
-} 1e+2
-
-restricted:
-CCTK_BOOLEAN unit_test_C2P "Whether or not to perform the con2prim unit test"
+CCTK_BOOLEAN run_unit_tests "Whether or not to perform the GRHayL unit tests"
 {
 } "no"
 

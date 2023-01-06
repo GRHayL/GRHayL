@@ -25,9 +25,15 @@ inline void perturb_data(double *restrict rand_val, primitive_quantities *restri
   cons->tau    *= rand_val[12];
 }
 
-void con2prim_unit_test( CCTK_ARGUMENTS ) {
-  DECLARE_CCTK_ARGUMENTS;
-  DECLARE_CCTK_PARAMETERS;
+void con2prim_unit_test( ) {
+
+  // These variables set up the tested range of values
+  // and number of sampling points.
+  int npoints = 256; //Number of sampling points in density and temperature
+  double test_rho_min = 1e-12; //Minimum input density
+  double test_rho_max = 1e-3; //Maximum input density
+  double test_T_min = 1e-2; //Minimum input temperature
+  double test_T_max = 1e+2; //Maximum input temperature
 
   // Count number of routines tested
   int num_routines_tested = 1;
@@ -50,8 +56,6 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
   double W_max = 10.0; //IGM default
   double rho_b_max = 1e300; //IGM default
   double gamma_th = 2.0; //Taken from magnetizedTOV.par
-
-//TODO: I need to fill in rho_tab, gamma_tab, k_tab, eps_tab based on the code, not like this
   double rho_tab[1] = {0.0};
   double gamma_tab[1] = {2.0};
   double k_tab = 1.0;
@@ -59,11 +63,11 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  initialize_GRHayL(None, backup_routine, false, false, calc_prims_guess, Psi6threshold, update_Tmunu, Cupp_Fix, &params);
+  initialize_GRHayL(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess, Psi6threshold, update_Tmunu, 1 /*Cupp Fix*/, &params);
 
   eos_parameters eos;
   initialize_general_eos(eos_type, W_max,
-             ut_rho_min, ut_rho_min, rho_b_max,
+             test_rho_min, test_rho_min, rho_b_max,
              &eos);
 
   initialize_hybrid_functions(&eos);
@@ -83,15 +87,6 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
   //
   // rho will vary between rho_min and rho_max (uniformly in log space)
   //  T  will vary between  T_min  and  T_max  (uniformly in log space)
-
-  // Number of points in the discretization of rho and T
-  const int npoints       = ut_npoints;
-
-  const double test_rho_min = ut_rho_min;
-  const double test_rho_max = ut_rho_max;
-
-//  const double test_T_min   = ut_T_min;
-//  const double test_T_max   = ut_T_max;
 
   // Compute the density step size
   const double lrmin        = log(test_rho_min);
@@ -287,5 +282,4 @@ void con2prim_unit_test( CCTK_ARGUMENTS ) {
   }
   fprintf(summaryf, "All done! Terminating the run.\n");
   fclose(summaryf);
-  exit(1);
 }

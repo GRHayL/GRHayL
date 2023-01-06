@@ -247,15 +247,6 @@ void eigenvalues_3by3_real_sym_matrix(
 
 //--------------------------------------------------
 
-//--------------- Unit Testing ---------------------
-
-void initial_random_data(
-             const double xrho,
-             const double xpress,
-             const bool random_metric,
-             metric_quantities *restrict metric,
-             primitive_quantities *restrict prims);
-
 //--------------------------------------------------
 
 // TODO: The following functions are inside the functions that call them because they are only used by one function in c2p. They are used elsewhere inIGM,

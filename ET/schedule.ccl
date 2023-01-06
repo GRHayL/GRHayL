@@ -1,7 +1,7 @@
-if (unit_test_C2P) {
-  schedule con2prim_unit_test at CCTK_INITIAL {
+if (run_unit_tests) {
+  schedule unit_tests at CCTK_INITIAL {
     LANG: C
-  } "Unit test for Con2Prim routines"
+  } "Unit test for GRHayL routines"
 }
 
 if (unit_test_EOS_readtable) {
