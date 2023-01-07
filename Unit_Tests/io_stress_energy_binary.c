@@ -1,11 +1,11 @@
 #include "unit_tests.h"
 
 void read_stress_energy_binary(
-                     const stress_energy *restrict Tmunu_orig,
-                     const stress_energy *restrict Tmunu,
+                     stress_energy *restrict Tmunu_orig,
+                     stress_energy *restrict Tmunu,
                      FILE *restrict infile) {
 
-  int key;
+  __attribute__((unused)) int key;
   key = fread(&Tmunu_orig->Ttt, sizeof(double), 1, infile);
   key = fread(&Tmunu->Ttt,      sizeof(double), 1, infile);
 

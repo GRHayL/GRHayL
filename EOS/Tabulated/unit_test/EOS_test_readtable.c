@@ -1,13 +1,8 @@
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
 #include "NRPyEOS_Tabulated.h"
 /*
  * (c) 2022 Leo Werneck
  */
-void EOS_test_readtable(CCTK_ARGUMENTS) {
-
-  DECLARE_CCTK_PARAMETERS;
+void EOS_test_readtable(const char *EOS_tablepath) {
 
   printf("(GRHayL - EOS) Beginning readtable unit test\n");
 

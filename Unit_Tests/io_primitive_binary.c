@@ -4,11 +4,11 @@ void read_primitive_binary(
       const int eos_type,
       const bool velocity_only,
       const bool evolve_entropy,
-      const primitive_quantities *restrict prims_orig,
-      const primitive_quantities *restrict prims,
+      primitive_quantities *restrict prims_orig,
+      primitive_quantities *restrict prims,
       FILE *restrict infile) {
 
-  int key;
+  __attribute__((unused)) int key;
   key = fread(&prims_orig->vx, sizeof(double), 1, infile);
   key = fread(&prims->vx,      sizeof(double), 1, infile);
 

@@ -2,11 +2,11 @@
 
 void read_conservative_binary(
                      const bool evolve_entropy,
-                     const conservative_quantities *restrict cons_orig,
-                     const conservative_quantities *restrict cons,
+                     conservative_quantities *restrict cons_orig,
+                     conservative_quantities *restrict cons,
                      FILE *restrict infile) {
 
-  int key;
+  __attribute__((unused)) int key;
   key = fread(&cons_orig->rho, sizeof(double), 1, infile);
   key = fread(&cons->rho,      sizeof(double), 1, infile);
 
