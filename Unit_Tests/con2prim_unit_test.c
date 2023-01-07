@@ -185,7 +185,7 @@ void con2prim_unit_test( ) {
           double u0 = poison;
           prims_orig = prims;
           limit_v_and_output_u0(&eos, &metric, &prims, &u0, &diagnostics);
-          output_primitive_binary(eos.eos_type, 1, params.evolve_entropy, &prims_orig, &prims, outfiles[0]);
+          write_primitive_binary(eos.eos_type, 1, params.evolve_entropy, &prims_orig, &prims, outfiles[0]);
 
           // Compute conservatives based on these primitives
           compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
@@ -200,7 +200,7 @@ void con2prim_unit_test( ) {
             if(eos.eos_type == 0) { //Hybrid-only
               cons_orig = cons;
               apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
-              output_conservative_binary(params.evolve_entropy, &cons_orig, &cons, outfiles[1]);
+              write_conservative_binary(params.evolve_entropy, &cons_orig, &cons, outfiles[1]);
             }
 
             // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
@@ -210,16 +210,16 @@ void con2prim_unit_test( ) {
 
             prims_orig = prims;
             check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
-            output_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[2]);
+            write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[2]);
 
             if(check!=0) {
               check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
               diagnostics.font_fixes++;
-              output_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[3]);
+              write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[3]);
             } else { //The else is so that Font Fix is tested even when the primary routine succeeds.
               primitive_quantities prims_tmp;
               check = font_fix(&eos, &metric, &cons, &prims, &prims_tmp, &diagnostics);
-              output_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_tmp, outfiles[3]);
+              write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_tmp, outfiles[3]);
             }
 
             /*************************************************************/
@@ -246,13 +246,13 @@ void con2prim_unit_test( ) {
           // Enforce limits on primitive variables and recompute conservatives.
           prims_orig = prims;
           enforce_primitive_limits_and_output_u0(&params, &eos, &metric, &prims, &u0, &diagnostics);
-          output_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims, outfiles[4]);
+          write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims, outfiles[4]);
 
           cons_orig = cons;
           Tmunu_orig = Tmunu;
           compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
-          output_conservative_binary(params.evolve_entropy, &cons_orig, &cons, outfiles[5]);
-          output_stress_energy_binary(&Tmunu_orig, &Tmunu, outfiles[6]);
+          write_conservative_binary(params.evolve_entropy, &cons_orig, &cons, outfiles[5]);
+          write_stress_energy_binary(&Tmunu_orig, &Tmunu, outfiles[6]);
 
           if( check != 0 ) {
             failures++;
