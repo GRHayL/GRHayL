@@ -18,9 +18,9 @@ mcd_locs=`find . | grep make.code.defn`
 
 awk -v hdf5_dir=$1 '
 BEGIN { print "(GRHayL) Beginning Makefile automatic generation..." }
-/SRCS/,/^$/ {
+/SRCS/,/[^\\] *$/ {
 
-  if( match(FILENAME, /ET\//) || match($0, /^#/) )
+  if( match(FILENAME, /ET\//) )
     next
 
   if( FNR != pFNR ) {
@@ -44,15 +44,14 @@ BEGIN { print "(GRHayL) Beginning Makefile automatic generation..." }
   }
 }
 END {
-
   n = split(src, srcs, " ")
   m = split(obj, objs, " ")
   if( n != m ) {
     printf("Error: number of source files (%d) does not match number of object files (%d).\n", n, m)
     exit
   }
-  printf("(GRHayL) Found %d source and object files\n", n);
-  print "(GRHayL) Writing Makefile..."
+  printf("(GRHayL) Found %d source and object files.\n", n)
+  printf("(GRHayL) Writing Makefile...\n")
 
   print "# This Makefile was automatically generated using the GRHayL script generate_makefile.sh" > "Makefile"
   print "# Compiler options" >> "Makefile"
