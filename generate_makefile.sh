@@ -29,11 +29,15 @@ BEGIN { print "(GRHayL) Beginning Makefile automatic generation..."}
 
   if( fileid != prev_fileid ) {
     n = split(FILENAME, name, "/")
-    dir = name[1]"/"
+    srcdir = name[1]"/"
     for(i=2;i<n;i++)
-      dir = dir""name[i]"/"
+      srcdir = srcdir""name[i]"/"
     prev_fileid = fileid
-    src_dirs[++nsrcdirs] = dir
+    objdir = srcdir
+    sub(/\.*\//, "", objdir)
+    src_dirs[++nsrcdirs] = srcdir
+    if( srcdir != "./" && srcdir != "../" )
+      obj_dirs[++nobjdirs] = "build/"objdir
   }
 
   sub(/SRCS *= */, "", $0)
@@ -43,10 +47,13 @@ BEGIN { print "(GRHayL) Beginning Makefile automatic generation..."}
 
   n = split($0, current_srcs, " ")
   for(key in current_srcs) {
-    src = src" "dir""current_srcs[key]
+    src = src" "srcdir""current_srcs[key]
     sub(/\.c/, ".o", current_srcs[key])
-    obj = obj" obj/"current_srcs[key]
-    src_filecount[dir]++
+    src_filecount[srcdir]++
+
+    objdir = srcdir
+    sub(/\.\//, "", objdir)
+    obj = obj" build/"objdir""current_srcs[key]
   }
 }
 END {
@@ -72,6 +79,7 @@ END {
 
   bubble_sort(nincdirs, inc_dirs)
   bubble_sort(nsrcdirs, src_dirs)
+  bubble_sort(nobjdirs, obj_dirs)
 
   printf("(GRHayL) File summary:\n", nsrc)
   printf("(GRHayL)   Source files:\n")
@@ -125,14 +133,19 @@ END {
   print "# Source files\nSRC="src"\n" >> "Makefile"
   print "# Object files\nOBJ="obj"\n" >> "Makefile"
   print "# Header files\nINC="inc"\n" >> "Makefile"
-  print "all: objdir $(OBJ)\n" >> "Makefile"
-  print "objdir:\n\tmkdir -p obj\n" >> "Makefile"
+  printf("all:") >> "Makefile"
+  for(i=1;i<=nobjdirs;i++)
+    printf(" %s", obj_dirs[i]) >> "Makefile"
+  print " $(OBJ)\n" >> "Makefile"
+  for(i=1;i<=nobjdirs;i++)
+    print obj_dirs[i]":\n\t@mkdir -p "obj_dirs[i]"\n\t@echo \"Creating build directory "obj_dirs[i]"\"\n" >> "Makefile"
   for(i=1;i<=nsrc;i++) {
     print objs[i]": "srcs[i]" $(INC)" >> "Makefile"
-    print "\t$(CC) $(CFLAGS) -c "srcs[i]" -o "objs[i]"\n" >> "Makefile"
+    print "\t@$(CC) $(CFLAGS) -c "srcs[i]" -o "objs[i] >> "Makefile"
+    print "\t@echo \"Compiling source file "srcs[i]"\"\n" >> "Makefile"
   }
-  print "clean:\n\trm -f $(OBJ)\n" >> "Makefile"
-  print "veryclean: clean\n\trm -rf obj/" >> "Makefile"
+  print "clean:\n\t@rm -f $(OBJ)\n\t@echo \"Removing object files\"\n" >> "Makefile"
+  print "veryclean: clean\n\t@rm -rf build/\n\t@echo \"Removing build directory\"" >> "Makefile"
 
   print "(GRHayL) Finished writing Makefile."
   if( length(hdf5_dir) > 0 )
