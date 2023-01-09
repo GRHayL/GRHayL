@@ -1,13 +1,19 @@
 #ifndef GRHayL_H_
 #define GRHayL_H_
 
-#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
 #define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
 #define SQR(x) ((x) * (x))
 #define ONE_OVER_SQRT_4PI 0.282094791773878143474039725780
+
+#ifndef M_PI
+#define M_PI 3.141592653589793238462643383279502884L
+#endif
 
 /*
    The struct GRHayL_parameters contains parameters for controlling
