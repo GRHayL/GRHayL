@@ -127,13 +127,15 @@ END {
   print "# Now adjust CFLAGS and LD_FLAGS" >> "Makefile"
   print "CFLAGS += -I./include -I$(HDF5_INC_DIR)" >> "Makefile"
   print "LD_FLAGS += -L$(HDF5_LIB_DIR) -lhdf5\n" >> "Makefile"
-  print "# Source files\nSRC="src"\n" >> "Makefile"
-  print "# Object files\nOBJ="obj"\n" >> "Makefile"
-  print "# Header files\nINC="inc"\n" >> "Makefile"
-  printf("all:") >> "Makefile"
+  print "# Source files\nSRC ="src"\n" >> "Makefile"
+  print "# Object files\nOBJ ="obj"\n" >> "Makefile"
+  print "# Header files\nINC = "inc"\n" >> "Makefile"
+  printf("all: libdir") >> "Makefile"
   for(i=1;i<=nobjdirs;i++)
     printf(" %s", obj_dirs[i]) >> "Makefile"
-  print " $(OBJ)\n" >> "Makefile"
+  print " libgrhayl\n" >> "Makefile"
+  print "libgrhayl: $(OBJ)\n\t@echo \"Linking GRHayL object files\"\n\t@ar rcs lib/libgrhayl.a $(OBJ)\n\t@echo \"All done!\"\n" >> "Makefile"
+  print "libdir:\n\t@mkdir -p lib\n\t@echo \"Creating lib directory\"\n" >> "Makefile"
   for(i=1;i<=nobjdirs;i++)
     print obj_dirs[i]":\n\t@mkdir -p "obj_dirs[i]"\n\t@echo \"Creating build directory "obj_dirs[i]"\"\n" >> "Makefile"
   for(i=1;i<=nsrc;i++) {
@@ -141,8 +143,8 @@ END {
     print "\t@$(CC) $(CFLAGS) -c "srcs[i]" -o "objs[i] >> "Makefile"
     print "\t@echo \"Compiling source file "srcs[i]"\"\n" >> "Makefile"
   }
-  print "clean:\n\t@rm -f $(OBJ)\n\t@echo \"Removing object files\"\n" >> "Makefile"
-  print "veryclean: clean\n\t@rm -rf build/\n\t@echo \"Removing build directory\"" >> "Makefile"
+  print "clean:\n\t@rm -f $(OBJ) lib/libgrhayl.a\n\t@echo \"Removing objects and library file\"\n" >> "Makefile"
+  print "veryclean: clean\n\t@rm -rf build/ lib/\n\t@echo \"Removing build and lib directories\"" >> "Makefile"
 
   print "(GRHayL) Finished writing Makefile."
   if( length(hdf5_dir) > 0 )
