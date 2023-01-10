@@ -1,0 +1,4 @@
+# Primary make.code.defn for gem Con2Prim
+
+# Source files in this directory that need compiled:
+SRCS = simple_ppm.c

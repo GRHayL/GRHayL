@@ -29,7 +29,6 @@ void limit_v_and_output_u0(const eos_parameters *restrict eos,
     prims->vz = (prims->vz + metric->betaz)*correction_fac - metric->betaz;
     one_minus_one_over_alpha_u0_squared = one_minus_one_over_W_max_squared;
     diagnostics->failure_checker+=1000;
-//printf("speed limited 2\n");
   }
 
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
