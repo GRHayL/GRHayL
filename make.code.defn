@@ -14,4 +14,5 @@ SUBDIRS = Con2Prim                       \
           ET                             \
           GRHayL_Core                    \
           Induction                      \
+          Reconstruction                 \
           Unit_Tests

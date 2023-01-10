@@ -29,10 +29,11 @@ static double slope_limit(const double dU, const double dUp1) {
     //    If delta_m_U==0,then (0.0 < delta_m_U)==0, and (delta_m_U < 0.0)==0, so sign_delta_a_j=0
     const int sign_delta_m_U = (0.0 < delta_m_U) - (delta_m_U < 0.0);
     //Decide whether to use 2nd order derivative or first-order derivative, limiting slope.
-    return sign_delta_m_U*MIN(fabs(delta_m_U),MIN(SLOPE_LIMITER_COEFF*fabs(dUp1),SLOPE_LIMITER_COEFF*fabs(dU)));
+    return sign_delta_m_U*MIN(fabs(delta_m_U), MIN(SLOPE_LIMITER_COEFF*fabs(dUp1), SLOPE_LIMITER_COEFF*fabs(dU)));
   }
   return 0.0;
 }
+
 static void compute_UrUl_onevar(const double U[5], double *restrict Ur, double *restrict Ul) {
   const double slope_limited_dU_m1 = slope_limit(U[MINUS1] - U[MINUS2], U[PLUS_0] - U[MINUS1]);
   const double slope_limited_dU_p0 = slope_limit(U[PLUS_0] - U[MINUS1], U[PLUS_1] - U[PLUS_0]);
@@ -47,7 +48,7 @@ static void compute_UrUl_onevar(const double U[5], double *restrict Ur, double *
 #define OMEGA1   0.75
 #define OMEGA2  10.0
 #define EPSILON2 0.33
-static double shock_detection__ftilde(const double P[5], const double v_flux_dirn[5]) {
+static double shock_detection_ftilde(const double P[5], const double v_flux_dirn[5]) {
   double dP1 = P[PLUS_1] - P[MINUS1];
   double dP2 = P[PLUS_2] - P[MINUS2];
 
@@ -79,20 +80,21 @@ static double shock_detection__ftilde(const double P[5], const double v_flux_dir
 #define ETA1   20.0
 #define ETA2    0.05
 #define EPSILON 0.01
-static void steepen_rhor_rhol(const double rho[5],const double P[5], const double Gamma_eff,
+static void steepen_rhor_rhol(const double rho[5], const double P[5], const double Gamma_eff,
                               double *restrict rhor, double *restrict rhol) {
 
   // Next compute centered differences d RHOB and d^2 RHOB
   const double d1rho_b     = 0.5*(rho[PLUS_1] - rho[MINUS1]);
   const double d2rho_b_m1  = rho[PLUS_0] - 2.0*rho[MINUS1] + rho[MINUS2];
   const double d2rho_b_p1  = rho[PLUS_2] - 2.0*rho[PLUS_1] + rho[PLUS_0];
+  const double rho_b_min = MIN(rho[PLUS_1],rho[MINUS1]);
 
   // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
-  const double contact_discontinuity_check = Gamma_eff*K0*fabs(rho[PLUS_1]-rho[MINUS1])*
-    MIN(P[PLUS_1],P[MINUS1])
-    -fabs(P[PLUS_1]-P[MINUS1])*MIN(rho[PLUS_1],rho[MINUS1]);
+  const double contact_discontinuity_check =
+                 Gamma_eff*K0*fabs(rho[PLUS_1]-rho[MINUS1])*MIN(P[PLUS_1],P[MINUS1])
+                 - fabs(P[PLUS_1]-P[MINUS1])*rho_b_min;
   const double second_deriv_check = -d2rho_b_p1*d2rho_b_m1;
-  const double relative_change_check = fabs(2.0*d1rho_b) - EPSILON*MIN(rho[PLUS_1],rho[MINUS1]);
+  const double relative_change_check = fabs(2.0*d1rho_b) - EPSILON*rho_b_min;
 
   if(contact_discontinuity_check >= 0.0 && second_deriv_check >= 0.0
      && relative_change_check >= 0.0) {
@@ -102,7 +104,7 @@ static void steepen_rhor_rhol(const double rho[5],const double P[5], const doubl
 
     double eta_tilde=0.0;
     if (fabs(d1rho_b) > 0.0) {
-      eta_tilde = -(1.0/6.0)*(d2rho_b_p1-d2rho_b_m1)/(2.0*d1rho_b);
+      eta_tilde = -(1.0/6.0)*(d2rho_b_p1 - d2rho_b_m1)/(2.0*d1rho_b);
     }
     const double eta = MAX(0.0,MIN(ETA1*(eta_tilde - ETA2),1.0));
     // Next compute Urp1 and Ul for RHOB, using the MC prescription:
@@ -113,22 +115,22 @@ static void steepen_rhor_rhol(const double rho[5],const double P[5], const doubl
     //    So: Ur[indexp1] = a_{j+1} - \delta_m a_{j+1} / 2. This is why we have rho_br_mc[indexp1]
     const double rho_bl_mc    = rho[MINUS1] + 0.5*slope_limited_drho_m1;
 
-    *rhol = (*rhol)*(1.0-eta) + rho_bl_mc*eta;
-    *rhor = (*rhor)*(1.0-eta) + rho_br_mc_p1*eta;
+    *rhol = (*rhol)*(1.0 - eta) + rho_bl_mc*eta;
+    *rhor = (*rhor)*(1.0 - eta) + rho_br_mc_p1*eta;
 
   }
 }
 
 static void flatten_Ur_and_Ul(const double U, const double ftilde, double *restrict Ur, double *restrict Ul) {
-  *Ur = U*ftilde + (*Ur)*(1.0-ftilde);
-  *Ul = U*ftilde + (*Ul)*(1.0-ftilde);
+  *Ur = U*ftilde + (*Ur)*(1.0 - ftilde);
+  *Ul = U*ftilde + (*Ul)*(1.0 - ftilde);
 }
 
 static void monotonize_Ur_and_Ul(const double U, double *restrict Ur, double *restrict Ul) {
   const double dU = (*Ur) - (*Ul);
-  const double mU = 0.5*((*Ur)+(*Ul));
+  const double mU = 0.5*((*Ur) + (*Ul));
 
-  if ( ((*Ur)-U)*(U-(*Ul)) <= 0.0) {
+  if ( ((*Ur) - U)*(U - (*Ul)) <= 0.0) {
     (*Ur) = U;
     (*Ul) = U;
     return;
@@ -150,13 +152,13 @@ static void monotonize_Ur_and_Ul(const double U, double *restrict Ur, double *re
 //          tmp_Ul[PLUS_0] = U(i-1/2)
 static void ppm_Ur_Ul(const double rho[5], const double P[5],
                       const double vx[5], const double vy[5], const double vz[5],
-                      const double *other_vars[5], const int num_other_vars,
+                      const double other_vars[8][5], const int num_other_vars,
                       const double v_flux_dirn[5],
                       const double Gamma_eff, // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
 
                       double *restrict rhor, double *restrict rhol, double *restrict Pr, double *restrict Pl,
                       double *restrict vxr, double *restrict vxl, double *restrict vyr, double *restrict vyl, double *restrict vzr, double *restrict vzl,
-                      double *restrict other_varsr[8], double *restrict other_varsl[8]) {
+                      double other_varsr[8], double other_varsl[8]) {
 
   // Interpolate primitives to faces with a slope limiter.
   compute_UrUl_onevar(rho, rhor, rhol);
@@ -165,7 +167,7 @@ static void ppm_Ur_Ul(const double rho[5], const double P[5],
   compute_UrUl_onevar(vy,  vyr,  vyl);
   compute_UrUl_onevar(vz,  vzr,  vzl);
   for(int var=0;var<num_other_vars;var++) {
-    compute_UrUl_onevar(other_vars[var], other_varsr[var], other_varsl[var]);
+    compute_UrUl_onevar(other_vars[var], &other_varsr[var], &other_varsl[var]);
   }
 
   // Steepen rhol and rhor
@@ -174,25 +176,25 @@ static void ppm_Ur_Ul(const double rho[5], const double P[5],
   // Flatten all variables
   {
     // First detect shocks / steep gradients:
-    const double ftilde = shock_detection__ftilde(P, v_flux_dirn);
-    flatten_Ur_and_Ul(rho[PLUS_0],ftilde, rhor,rhol);
-    flatten_Ur_and_Ul(  P[PLUS_0],ftilde,   Pr,  Pl);
-    flatten_Ur_and_Ul( vx[PLUS_0],ftilde,  vxr, vxl);
-    flatten_Ur_and_Ul( vy[PLUS_0],ftilde,  vyr, vyl);
-    flatten_Ur_and_Ul( vz[PLUS_0],ftilde,  vzr, vzl);
+    const double ftilde = shock_detection_ftilde(P, v_flux_dirn);
+    flatten_Ur_and_Ul(rho[PLUS_0], ftilde, rhor,rhol);
+    flatten_Ur_and_Ul(  P[PLUS_0], ftilde,   Pr,  Pl);
+    flatten_Ur_and_Ul( vx[PLUS_0], ftilde,  vxr, vxl);
+    flatten_Ur_and_Ul( vy[PLUS_0], ftilde,  vyr, vyl);
+    flatten_Ur_and_Ul( vz[PLUS_0], ftilde,  vzr, vzl);
     for(int var=0;var<num_other_vars;var++)
-      flatten_Ur_and_Ul( other_vars[var][PLUS_0],ftilde, other_varsr[var], other_varsl[var]);
+      flatten_Ur_and_Ul(other_vars[var][PLUS_0], ftilde, &other_varsr[var], &other_varsl[var]);
   }
 
   // Monotonize all variables
   {
-    monotonize_Ur_and_Ul(rho[PLUS_0], rhor,rhol);
-    monotonize_Ur_and_Ul(  P[PLUS_0],   Pr,  Pl);
-    monotonize_Ur_and_Ul( vx[PLUS_0],  vxr, vxl);
-    monotonize_Ur_and_Ul( vy[PLUS_0],  vyr, vyl);
-    monotonize_Ur_and_Ul( vz[PLUS_0],  vzr, vzl);
+    monotonize_Ur_and_Ul(rho[PLUS_0], rhor, rhol);
+    monotonize_Ur_and_Ul(  P[PLUS_0],   Pr,   Pl);
+    monotonize_Ur_and_Ul( vx[PLUS_0],  vxr,  vxl);
+    monotonize_Ur_and_Ul( vy[PLUS_0],  vyr,  vyl);
+    monotonize_Ur_and_Ul( vz[PLUS_0],  vzr,  vzl);
     for(int var=0;var<num_other_vars;var++)
-      monotonize_Ur_and_Ul(other_vars[var][PLUS_0], other_varsr[var],other_varsl[var]);
+      monotonize_Ur_and_Ul(other_vars[var][PLUS_0], &other_varsr[var], &other_varsl[var]);
   }
 }
 
@@ -203,17 +205,24 @@ static void ppm_Ur_Ul(const double rho[5], const double P[5],
 //          Ul(i) = U(i-1/2-epsilon)
 void simple_ppm(const double rho[6], const double P[6],
                 const double vx[6], const double vy[6], const double vz[6],
-                const double *other_vars[6], const int num_other_vars,
+                const double other_vars[8][6], const int num_other_vars,
                 const double v_flux_dirn[6],
                 const double Gamma_eff, // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
 
                 double *restrict rhor, double *restrict rhol, double *restrict Pr, double *restrict Pl,
                 double *restrict vxr, double *restrict vxl, double *restrict vyr, double *restrict vyl, double *restrict vzr, double *restrict vzl,
-                double *restrict other_varsr[8], double *restrict other_varsl[8]) {
+                double other_varsr[8], double other_varsl[8]) {
 
-  double *restrict tmp_rhor,*restrict tmp_rhol,*restrict tmp_Pr,*restrict tmp_Pl;
-  double *restrict tmp_vxr,*restrict tmp_vxl,*restrict tmp_vyr,*restrict tmp_vyl,*restrict tmp_vzr,*restrict tmp_vzl;
-  double *restrict tmp_other_varsr[8],*restrict tmp_other_varsl[8];
+  // For the other variables array, the data slices need to be
+  // explicitly extracted to pass to the PPM routine.
+  double tmp_other_vars[8][5];
+  for(int var=0; var<num_other_vars; var++)
+    for(int i=0; i<5; i++)
+    tmp_other_vars[var][i] = other_vars[var][i+1];
+
+  double tmp_rhor, tmp_rhol, tmp_Pr, tmp_Pl;
+  double tmp_vxr, tmp_vxl, tmp_vyr, tmp_vyl, tmp_vzr, tmp_vzl;
+  double tmp_other_varsr[8], tmp_other_varsl[8];
 
   // ppm_Ur_Ul evaluates
   //  * tmp_Ur[PLUS_0] = U(i+1/2)
@@ -228,36 +237,40 @@ void simple_ppm(const double rho[6], const double P[6],
   //         hence the passing of the address U[1]
   //         as the lower bound of each U array.
   ppm_Ur_Ul(&rho[1], &P[1], &vx[1], &vy[1], &vz[1],
-            &other_vars[1], num_other_vars,
+            tmp_other_vars, num_other_vars,
             &v_flux_dirn[1], Gamma_eff,
 
-            tmp_rhor,tmp_rhol,tmp_Pr,tmp_Pl,
-            tmp_vxr,tmp_vxl,tmp_vyr,tmp_vyl,tmp_vzr,tmp_vzl,
-            tmp_other_varsr,tmp_other_varsl);
+            &tmp_rhor, &tmp_rhol, &tmp_Pr, &tmp_Pl,
+            &tmp_vxr, &tmp_vxl, &tmp_vyr, &tmp_vyl, &tmp_vzr, &tmp_vzl,
+            tmp_other_varsr, tmp_other_varsl);
   // tmp_Ul[PLUS_0] is Ur[PLUS0], so set that now:
-  rhor = tmp_rhol;
-  Pr   = tmp_Pl;
-  vxr  = tmp_vxl;
-  vyr  = tmp_vyl;
-  vzr  = tmp_vzl;
-  for(int var=0;var<num_other_vars;var++)
+  *rhor = tmp_rhol;
+  *Pr   = tmp_Pl;
+  *vxr  = tmp_vxl;
+  *vyr  = tmp_vyl;
+  *vzr  = tmp_vzl;
+  for(int var=0;var<num_other_vars;var++) {
     other_varsr[var] = tmp_other_varsl[var];
+    // Setting the data slice for Step 2
+    for(int i=0; i<5; i++)
+    tmp_other_vars[var][i] = other_vars[var][i];
+  }
 
   // STEP 2: Evaluate Ur[MINUS1] and Ul[MINUS1],
   //         which depend on U[0],U[1],U[2],U[3],U[4]
   ppm_Ur_Ul(rho, P, vx, vy, vz,
-            other_vars, num_other_vars,
+            tmp_other_vars, num_other_vars,
             v_flux_dirn, Gamma_eff,
 
-            tmp_rhor,tmp_rhol,tmp_Pr,tmp_Pl,
-            tmp_vxr,tmp_vxl,tmp_vyr,tmp_vyl,vzr,tmp_vzl,
-            tmp_other_varsr,tmp_other_varsl);
+            &tmp_rhor, &tmp_rhol, &tmp_Pr, &tmp_Pl,
+            &tmp_vxr, &tmp_vxl, &tmp_vyr, &tmp_vyl, &tmp_vzr, &tmp_vzl,
+            tmp_other_varsr, tmp_other_varsl);
   // tmp_Ur[MINUS1] is Ul[PLUS0], so set that now:
-  rhol = tmp_rhor;
-  Pl   = tmp_Pr;
-  vxl  = tmp_vxr;
-  vyl  = tmp_vyr;
-  vzl  = tmp_vzr;
+  *rhol = tmp_rhor;
+  *Pl   = tmp_Pr;
+  *vxl  = tmp_vxr;
+  *vyl  = tmp_vyr;
+  *vzl  = tmp_vzr;
   for(int var=0;var<num_other_vars;var++)
     other_varsl[var] = tmp_other_varsr[var];
 }
