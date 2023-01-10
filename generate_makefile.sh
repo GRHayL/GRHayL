@@ -19,13 +19,10 @@ inc_locs=`find . | egrep '\.h$'`
 
 awk -v hdf5_dir=$1 -v inc="`echo $inc_locs`" '
 
-FNR==1{ fileid++ }
+FNR==1 { fileid++ }
 
 BEGIN { print "(GRHayL) Beginning Makefile automatic generation..."}
-/SRCS/,/[^\\] *$/ {
-
-  if( match(FILENAME, /ET\//) )
-    next
+FILENAME !~ /ET\// && /SRCS/,/[^\\] *$/ {
 
   if( fileid != prev_fileid ) {
     n = split(FILENAME, name, "/")
