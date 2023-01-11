@@ -1,15 +1,20 @@
-#include "NRPyEOS_Tabulated.h"
+#include "GRHayL.h"
 /*
  * (c) 2022 Leo Werneck
  */
-void EOS_test_readtable(const char *EOS_tablepath) {
+int main(int argc, char **argv) {
+
+  if( argc != 2 ) {
+    fprintf(stderr, "(GRHayL - EOS) Correct usage is %s <table path>\n", argv[0]);
+    exit(1);
+  }
 
   printf("(GRHayL - EOS) Beginning readtable unit test\n");
 
   // Step 1: Initialize the EOS struct
   eos_parameters eos;
   initialize_tabulated_functions(&eos);
-  eos.tabulated_read_table_set_EOS_params(EOS_tablepath, &eos);
+  eos.tabulated_read_table_set_EOS_params(argv[1], &eos);
 
   printf("(GRHayL - EOS) Table dimensions: rho, T, Ye: %d, %d, %d\n", eos.N_rho, eos.N_T, eos.N_Ye);
 
@@ -34,5 +39,5 @@ void EOS_test_readtable(const char *EOS_tablepath) {
   printf("(GRHayL - EOS) Test finished successfully.\n");
 
   // All done!
-  exit(0);
+  return 0;
 }
