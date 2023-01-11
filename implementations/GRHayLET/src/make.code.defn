@@ -1,7 +1,10 @@
 # Main make.code.defn file for thorn GRHayL
 
 # Source files in this directory
-SRCS =
+SRCS = A_i_wrapper.c            \
+       con2prim_ETK_interface.c \
+       unit_tests.c             \
+       gauge_terms_wrapper.c
 
 # Subdirectories containing source files
 SUBDIRS = Con2Prim                       \

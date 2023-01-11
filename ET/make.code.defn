@@ -1,7 +1,0 @@
-# Primary make.code.defn for gem Con2Prim
-
-# Source files in this directory that need compiled:
-SRCS = A_i_wrapper.c            \
-       con2prim_ETK_interface.c \
-       unit_tests.c             \
-       gauge_terms_wrapper.c
