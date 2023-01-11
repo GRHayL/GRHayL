@@ -13,9 +13,6 @@ SUBDIRS = Con2Prim                       \
           EOS/Hybrid                     \
           EOS/Tabulated                  \
           EOS/Tabulated/interpolators    \
-          EOS/Tabulated/unit_test        \
-          ET                             \
           GRHayL_Core                    \
           Induction                      \
-          Reconstruction                 \
-          Unit_Tests
+          Reconstruction

@@ -3,9 +3,3 @@ if (run_unit_tests) {
     LANG: C
   } "Unit test for GRHayL routines"
 }
-
-if (unit_test_EOS_readtable) {
-  schedule EOS_test_readtable at CCTK_INITIAL {
-    LANG: C
-  } "Unit test for reading HDF5 EOS tables in stellarcollapse.org format."
-}
