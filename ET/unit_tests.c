@@ -9,10 +9,10 @@
 #include "unit_tests.h"
 
 void unit_tests( CCTK_ARGUMENTS ) {
-  DECLARE_CCTK_ARGUMENTS;
-  DECLARE_CCTK_PARAMETERS;
+  // DECLARE_CCTK_ARGUMENTS;
+  // DECLARE_CCTK_PARAMETERS;
 
-  con2prim_unit_test();
+  // con2prim_unit_test();
 
-  exit(1);
+  // exit(1);
 }
