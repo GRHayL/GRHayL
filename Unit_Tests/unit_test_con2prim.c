@@ -5,6 +5,12 @@
 //              the Con2Prim gem.
 #include "unit_tests.h"
 
+#define check_file_was_successfully_open(fp, filename) \
+  if( fp == NULL ) { \
+    fprintf(stderr, "(GRHayL) ERROR: Could not open file %s. Terminating.\n", filename); \
+    exit(1); \
+  }
+
 inline void perturb_data(double *restrict rand_val, primitive_quantities *restrict prims, conservative_quantities *restrict cons) {
   prims->rho   *= rand_val[0];
   prims->press *= rand_val[1];
@@ -21,7 +27,7 @@ inline void perturb_data(double *restrict rand_val, primitive_quantities *restri
   cons->tau    *= rand_val[12];
 }
 
-void con2prim_unit_test( ) {
+int main(int argc, char **argv) {
 
   // These variables set up the tested range of values
   // and number of sampling points.
@@ -125,24 +131,31 @@ void con2prim_unit_test( ) {
 
       sprintf(filename,"unit_test/C2P_%.30s_%.4s_limit_v_and_output_u0.bin",con2prim_test_names[which_routine], suffix);
       outfiles[0] = fopen(filename,"wb");
+      check_file_was_successfully_open(outfiles[0], filename);
 
       sprintf(filename,"unit_test/C2P_%.30s_%.4s_apply_inequality_fixes.bin",con2prim_test_names[which_routine], suffix);
       outfiles[1] = fopen(filename,"w");
+      check_file_was_successfully_open(outfiles[1], filename);
 
       sprintf(filename,"unit_test/C2P_%.30s_%.4s_Hybrid_Multi_Method.bin",con2prim_test_names[which_routine], suffix);
       outfiles[2] = fopen(filename,"wb");
+      check_file_was_successfully_open(outfiles[2], filename);
 
       sprintf(filename,"unit_test/C2P_%.30s_%.4s_font_fix.bin",con2prim_test_names[which_routine], suffix);
       outfiles[3] = fopen(filename,"wb");
+      check_file_was_successfully_open(outfiles[3], filename);
 
       sprintf(filename,"unit_test/C2P_%.30s_%.4s_enforce_primitive_limits_and_output_u0.bin",con2prim_test_names[which_routine], suffix);
       outfiles[4] = fopen(filename,"wb");
+      check_file_was_successfully_open(outfiles[4], filename);
 
       sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_conservs.bin",con2prim_test_names[which_routine], suffix);
       outfiles[5] = fopen(filename,"w");
+      check_file_was_successfully_open(outfiles[5], filename);
 
       sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_Tmunu.bin",con2prim_test_names[which_routine], suffix);
       outfiles[6] = fopen(filename,"w");
+      check_file_was_successfully_open(outfiles[6], filename);
 
       srand(0);
 
@@ -278,4 +291,6 @@ void con2prim_unit_test( ) {
   }
   fprintf(summaryf, "All done! Terminating the run.\n");
   fclose(summaryf);
+
+  return 0;
 }
