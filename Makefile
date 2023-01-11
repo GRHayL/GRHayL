@@ -3,9 +3,30 @@ COMPILER = "gnu"
 # COMPILER = "intel"
 # COMPILER = "clang"
 
-# Set name of the build directory
-BUILD_DIR = build/
+# List of Gems that should be compiled
+GEM = GRHayL_Core Con2Prim EOS Induction Reconstruction
 
+# Set build directory name
+BUILD_DIR = build
+
+# HDF5 configuration
+HDF5_DIR     = /usr/lib/x86_64-linux-gnu/hdf5/serial
+HDF5_INC_DIR = $(HDF5_DIR)/include
+HDF5_LIB_DIR = $(HDF5_DIR)/lib
+
+# Get directory structures for Gems
+DIR = $(shell find $(GEM) -type d)
+
+# Find all source files
+SRC = $(wildcard $(addsuffix /*.c, $(DIR)))
+
+# Find all header files
+INC = $(wildcard $(addsuffix /*.h, $(DIR)))
+
+# Set all object files
+OBJ = $(addprefix $(BUILD_DIR)/, $(SRC:.c=.o))
+
+# Different compiler options
 ifeq ($(COMPILER), "gnu")
 	CC       = gcc
 	CFLAGS   = -Wall -O2 -march=native -std=c99 -fopenmp
@@ -24,25 +45,11 @@ ifeq ($(COMPILER), "clang")
 	LD_FLAGS = -lm
 endif
 
-# HDF5 configuration
-HDF5_DIR=/usr/lib/x86_64-linux-gnu/hdf5/serial
-HDF5_INC_DIR=$(HDF5_DIR)/include
-HDF5_LIB_DIR=$(HDF5_DIR)/lib
-
 # Now adjust CFLAGS and LD_FLAGS
 CFLAGS   += -I./include -I$(HDF5_INC_DIR) -shared -fPIC
 LD_FLAGS += -L$(HDF5_LIB_DIR) -lhdf5
 
-# Source files
-SRC := $(wildcard GRHayL_Core/*.c Con2Prim/*.c Con2Prim/C2P_Routines/Font_Fix/*.c Con2Prim/C2P_Routines/Hybrid/*.c EOS/Hybrid/*.c EOS/Tabulated/*.c EOS/Tabulated/interpolators/*.c Induction/*.c Reconstruction/*.c)
-
-# Object files
-OBJ = $(patsubst %.c,$(BUILD_DIR)%.o,$(SRC))
-
-# Header files
-INC = ./EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h ./include/induction.h ./include/con2prim.h ./include/unit_tests.h ./include/GRHayL.h ./include/NRPyEOS_Hybrid.h ./include/NRPyEOS_Tabulated.h ./Con2Prim/C2P_Routines/harm_u2p_util.h
-
-BUILD_DIRS = lib/ build/Con2Prim/ build/Con2Prim/C2P_Routines/Font_Fix/ build/Con2Prim/C2P_Routines/Hybrid/ build/EOS/Hybrid/ build/EOS/Tabulated/ build/EOS/Tabulated/interpolators/ build/GRHayL_Core/ build/Induction/ build/Reconstruction/ build/Unit_Tests/
+BUILD_DIRS = lib/ $(addprefix $(BUILD_DIR)/, /$(addsuffix /, $(DIR)))
 
 all: $(BUILD_DIRS) lib/libgrhayl.so
 
@@ -64,5 +71,5 @@ clean:
 	@echo "Removing objects and library file"
 
 veryclean: clean
-	@rm -rf build/ lib/
+	@rm -rf $(BUILD_DIRS)
 	@echo "Removing build and lib directories"
