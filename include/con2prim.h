@@ -1,5 +1,5 @@
-#define smallb_defined = 1;
-#define harm_params_defined = 1;
+#define smallb_defined 1
+#define harm_params_defined 1
 
 #ifndef CON2PRIM_GEM_H_
 #define CON2PRIM_GEM_H_
