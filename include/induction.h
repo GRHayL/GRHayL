@@ -33,7 +33,7 @@ typedef struct induction_gauge {
 typedef struct induction_gauge_rhs {
   double dxi[3];
   double alpha_interp;
-  double alpha_Phi_minus_betaj_A_j_interp[4]; // [i,j,k], [i,j-1,k], [i,j-1,k], [i,j,k-1]
+  double alpha_Phi_minus_betaj_A_j_interp[4]; // [i,j,k], [i-1,j,k], [i,j-1,k], [i,j,k-1]
   double alpha_sqrtg_Ax_interp[2]; // [i,j,k], [i+1,j,  k  ]
   double alpha_sqrtg_Ay_interp[2]; // [i,j,k], [i,  j+1,k  ]
   double alpha_sqrtg_Az_interp[2]; // [i,j,k], [i,  j,  k+1]
