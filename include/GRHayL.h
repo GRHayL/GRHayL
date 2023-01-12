@@ -196,26 +196,26 @@ typedef struct eos_parameters {
   // Function prototypes
   void (*tabulated_read_table_set_EOS_params)(
         const char *nuceos_table_name,
-        struct eos_parameters *restrict eos_params);
+        struct eos_parameters *restrict eos);
 
-  void (*tabulated_free_memory)(struct eos_parameters *restrict eos_params);
+  void (*tabulated_free_memory)(struct eos_parameters *restrict eos);
 
   void (*tabulated_compute_P_from_T)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double T,
         double *restrict P);
 
   void (*tabulated_compute_eps_from_T)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double T,
         double *restrict eps);
 
   void (*tabulated_compute_P_eps_from_T)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double T,
@@ -223,7 +223,7 @@ typedef struct eos_parameters {
         double *restrict eps);
 
   void (*tabulated_compute_P_eps_S_from_T)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double T,
@@ -232,7 +232,7 @@ typedef struct eos_parameters {
         double *restrict S);
 
   void (*tabulated_compute_P_eps_S_cs2_from_T)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double T,
@@ -242,7 +242,7 @@ typedef struct eos_parameters {
         double *restrict cs2);
 
   void (*tabulated_compute_P_eps_depsdT_from_T)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double T,
@@ -251,7 +251,7 @@ typedef struct eos_parameters {
         double *restrict depsdT);
 
   void (*tabulated_compute_P_eps_muhat_mue_mup_mun_from_T)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double T,
@@ -263,7 +263,7 @@ typedef struct eos_parameters {
         double *restrict mu_n);
 
   void (*tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double T,
@@ -275,7 +275,7 @@ typedef struct eos_parameters {
         double *restrict X_p);
 
   void (*tabulated_compute_P_T_from_eps)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double eps,
@@ -283,7 +283,7 @@ typedef struct eos_parameters {
         double *restrict T);
 
   void (*tabulated_compute_P_S_depsdT_T_from_eps)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double eps,
@@ -293,7 +293,7 @@ typedef struct eos_parameters {
         double *restrict T);
 
   void (*tabulated_compute_eps_S_T_from_P)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double P,
@@ -302,7 +302,7 @@ typedef struct eos_parameters {
         double *restrict T);
 
   void (*tabulated_compute_P_eps_T_from_S)(
-        const struct eos_parameters *restrict eos_params,
+        const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double S,

@@ -7,7 +7,7 @@ COMPILER = "gnu"
 # COMPILER = "clang"
 
 # List of Gems that should be compiled
-GEM = GRHayL_Core Con2Prim EOS Induction Reconstruction
+GEM = GRHayL_Core Con2Prim EOS Induction Reconstruction Neutrinos
 
 # Set build directory name
 BUILD_DIR = build
@@ -32,7 +32,7 @@ endif
 
 ifeq ($(COMPILER), "clang")
 	CC       = clang
-	CFLAGS   = -Wall -O2 -march=native -std=c99 -fopenmp
+	CFLAGS   = -Wall -O2 -march=native -std=c99 -fopenmp=libgomp
 	LD_FLAGS = -lm
 endif
 
@@ -93,7 +93,7 @@ $(BUILD_DIRS):
 # Compile all object files for all gems in GEM
 $(OBJ): $(BUILD_DIR)/%.o : %.c $(INC)
 	@echo "Compiling $<"
-	@$(CC) $(CFLAGS) -shared -fPIC -c $< -o $@
+	@$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 # Compile all auxiliary object files for the unit tests
 $(UNIT_TEST_AUXS_OBJ): $(BUILD_DIR)/%.o : %.c $(INC)  $(UNIT_TEST_INC)
