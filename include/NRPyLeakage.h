@@ -105,7 +105,6 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
       const double *restrict stencil_gxx,
       const double *restrict stencil_gyy,
       const double *restrict stencil_gzz,
-      const neutrino_opacities *restrict kappa_i_j_k,
       const neutrino_opacities *restrict kappa_im1_j_k,
       const neutrino_opacities *restrict kappa_ip1_j_k,
       const neutrino_opacities *restrict kappa_i_jm1_k,
@@ -118,7 +117,8 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
       const neutrino_opacities *restrict tau_i_jp1_k,
       const neutrino_opacities *restrict tau_i_j_km1,
       const neutrino_opacities *restrict tau_i_j_kp1,
-      neutrino_optical_depths *restrict tau_i_j_k);
+      const neutrino_opacities *restrict kappa_i_j_k,
+      neutrino_optical_depths *restrict tau_i_j_k );
 
 static inline int robust_isnan(double x) {
   unsigned long *pbits = (unsigned long *)&x;

@@ -1,5 +1,21 @@
 if (run_unit_tests) {
-  schedule unit_tests at CCTK_INITIAL {
+  schedule unit_tests at CCTK_INITIAL
+  {
     LANG: C
   } "Unit test for GRHayL routines"
+}
+
+if ( read_EOS_table )
+{
+  schedule GRHayLET_EOS_initialize at CCTK_WRAGH
+  {
+    LANG: C
+    OPTIONS: GLOBAL
+  } "Read the table and set up the EOS struct."
+
+  schedule GRHayLET_EOS_terminate AT CCTK_TERMINATE
+  {
+    LANG: C
+    OPTIONS: GLOBAL
+  } "Free memory allocated for the EOS struct."
 }

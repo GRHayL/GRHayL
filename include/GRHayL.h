@@ -164,10 +164,10 @@ typedef struct eos_parameters {
   int N_rho, N_T, N_Ye;
 
   // Tabulated quantities
+  double *restrict table_all;
   double *restrict table_logrho;
   double *restrict table_logT;
   double *restrict table_Ye;
-  double *restrict table_all;
   double *restrict table_eps;
 
   // Table bounds

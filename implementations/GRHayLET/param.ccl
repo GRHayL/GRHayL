@@ -14,6 +14,11 @@ CCTK_BOOLEAN unit_test_EOS_readtable "Whether or not to perform the EOS readtabl
 } "no"
 
 restricted:
+CCTK_BOOLEAN read_EOS_table "Whether or not to read from the EOS table"
+{
+} "no"
+
+restricted:
 CCTK_STRING EOS_tablepath "Path to the EOS table"
 {
   ""    :: "Forbidden, will error out"
