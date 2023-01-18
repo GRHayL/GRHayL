@@ -1,8 +1,8 @@
 #define smallb_defined 1
 #define harm_params_defined 1
 
-#ifndef CON2PRIM_GEM_H_
-#define CON2PRIM_GEM_H_
+#ifndef CON2PRIM_H_
+#define CON2PRIM_H_
 
 #include "GRHayL.h"
 
@@ -265,4 +265,4 @@ void eigenvalues_3by3_real_sym_matrix(
 //                                      const double M11, const double M12, const double M13,
 //                                      const double M22, const double M23, const double M33);
 
-#endif // CON2PRIM_GEM_H
+#endif // CON2PRIM_H

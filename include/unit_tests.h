@@ -1,3 +1,6 @@
+#ifndef UNIT_TESTS_H_
+#define UNIT_TESTS_H_
+
 #include "stdio.h"
 #include "stdlib.h"
 #include "con2prim.h"
@@ -41,3 +44,5 @@ void initial_random_data(
       const bool random_metric,
       metric_quantities *restrict metric,
       primitive_quantities *restrict prims);
+
+#endif // UNIT_TESTS_H_
