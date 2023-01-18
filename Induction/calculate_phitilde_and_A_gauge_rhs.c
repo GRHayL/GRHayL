@@ -1,8 +1,8 @@
 #include "induction.h"
 
-void calculate_phitilde_and_A_i_rhs(
+void calculate_phitilde_and_A_gauge_rhs(
                                    const double Lorenz_damping_factor,
-                                   induction_gauge_rhs *restrict vars) {
+                                   A_gauge_rhs_vars *restrict vars) {
 
   // \partial_t A_i = [reconstructed stuff] + [gauge stuff],
   //    where [gauge stuff] = -\partial_i (\alpha \Phi - \beta^j A_j)
