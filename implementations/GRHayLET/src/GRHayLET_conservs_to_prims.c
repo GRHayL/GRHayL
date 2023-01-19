@@ -26,51 +26,21 @@
 
 
 #include "cctk.h"
-//#include <iostream>
-//#include <iomanip>
-#include <fstream>
-//#include <sys/time.h>
-//#include <cmath>
-//#include <ctime>
-//#include <cstdlib>
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
 #include "Symmetry.h"
+#include "GRHayLET.h"
 
-#include "con2prim.h"
-#include "IllinoisGRMHD_headers.h"
-#include "harm_primitives_headers.h"
-#include "inlined_functions.C"
-#include "apply_tau_floor__enforce_limits_on_primitives_and_recompute_conservs.C"
-
-void IllinoisGRMHD_conserv_to_prims(CCTK_ARGUMENTS) {
+void GRHayLET_conserv_to_prims(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
-  double poison = 1e200;
-  int main = Noble2D;
-  int backup_routines[3] = {None,None,None};
-
-  GRHayL_parameters params;
-  initialize_parameters_ETK(main, backup_routines, false, false, true, Psi6threshold, update_Tmunu, Cupp_Fix, (void*)&params);
-
-  eos_parameters eos;
-  int eos_type = 0; // Hybrid=0, Tabulated=1;
-  initialize_general_eos_ETK(eos_type, GAMMA_SPEED_LIMIT,
-             rho_b_atm, rho_b_atm, rho_b_max,
-             (void*)&eos);
-
-  initialize_hybrid_eos_ETK(
-             neos, rho_tab,
-             gamma_tab, k_tab[0],
-             gamma_th, (void*)&eos);
-
   // These BSSN-based variables are not evolved, and so are not defined anywhere that the grid has moved.
   // Here we convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-  IllinoisGRMHD_convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij(cctkGH,cctk_lsh,  gxx,gxy,gxz,gyy,gyz,gzz,alp,
-                                                                gtxx,gtxy,gtxz,gtyy,gtyz,gtzz,
-                                                                gtupxx,gtupxy,gtupxz,gtupyy,gtupyz,gtupzz,
-                                                                phi_bssn,psi_bssn,lapm1);
+  //IllinoisGRMHD_convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij(cctkGH,cctk_lsh,  gxx,gxy,gxz,gyy,gyz,gzz,alp,
+  //                                                              gtxx,gtxy,gtxz,gtyy,gtyz,gtzz,
+  //                                                              gtupxx,gtupxy,gtupxz,gtupyy,gtupyz,gtupzz,
+  //                                                              phi_bssn,psi_bssn,lapm1);
 
   if(CCTK_EQUALS(Symmetry,"equatorial")) {
     // SET SYMMETRY GHOSTZONES ON ALL CONSERVATIVE VARIABLES!
@@ -81,7 +51,7 @@ void IllinoisGRMHD_conserv_to_prims(CCTK_ARGUMENTS) {
     ierr+=CartSymGN(cctkGH,"bssn::BSSN_vars");
     ierr+=CartSymGN(cctkGH,"bssn::BSSN_AH");
     ierr+=CartSymGN(cctkGH,"shift::shift_vars");
-    if(ierr!=0) CCTK_VError(VERR_DEF_PARAMS,"IllinoisGRMHD ERROR (grep for it, foo!)  :(");
+    if(ierr!=0) CCTK_VERROR("IllinoisGRMHD ERROR (grep for it, foo!)  :(");
   }
 
   //Start the timer, so we can benchmark the primitives solver during evolution.
@@ -93,7 +63,7 @@ void IllinoisGRMHD_conserv_to_prims(CCTK_ARGUMENTS) {
     gettimeofday(&start, NULL);
   */
 
-//  int pressure_cap_hit=0;
+  double poison = 1e200;
 
   // Diagnostic variables.
   int failures=0;
@@ -111,62 +81,154 @@ void IllinoisGRMHD_conserv_to_prims(CCTK_ARGUMENTS) {
   double error_int_numer=0;
   double error_int_denom=0;
   int n_iter=0;
+  double dummy1, dummy2, dummy3;
 
 #pragma omp parallel for reduction(+:failures,font_fixes,vel_limited_ptcount,atm_resets,rho_star_fix_applied,pointcount,failures_inhoriz,pointcount_inhoriz,backup0,backup1,backup2,nan_found,error_int_numer,error_int_denom,n_iter) schedule(static)
   for(int k=0;k<cctk_lsh[2];k++)
     for(int j=0;j<cctk_lsh[1];j++)
       for(int i=0;i<cctk_lsh[0];i++) {
-        int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int index0 = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
+        const int index1 = CCTK_GFINDEX4D(cctkGH,i,j,k,1);
+        const int index2 = CCTK_GFINDEX4D(cctkGH,i,j,k,2);
 
-    con2prim_diagnostics diagnostics_private;
-    initialize_diagnostics_ETK((void*)&diagnostics_private);
-//    diagnostics_private.c2p_fail_flag = con2prim_failed_flag[index]; This is also from Leo's IGM
+    con2prim_diagnostics diagnostics;
+    initialize_diagnostics(&diagnostics);
+//    diagnostics.c2p_fail_flag = con2prim_failed_flag[index]; This is also from Leo's IGM
 
     // Read in BSSN metric quantities from gridfunctions and
     // set auxiliary and ADM metric quantities
     metric_quantities metric;
-    initialize_metric_ETK(alp[index],
+    initialize_metric(alp[index],
                       gxx[index], gxy[index], gxz[index],
                       gyy[index], gyz[index], gzz[index],
                       betax[index], betay[index], betaz[index],
-                      (void*)&metric);
+                      &metric);
        
     // Read in primitive variables from gridfunctions
-    primitive_quantities prims, prims_orig;
-    initialize_primitives_ETK(rho_b[index],
-                          P[index], eps[index],
+    primitive_quantities prims;
+    initialize_primitives(rho[index],
+                          press[index], eps[index],
                           vx[index], vy[index], vz[index],
-                          Bx[index], By[index], Bz[index],
-                          poison, poison, poison,
+                          Bvec[index0], Bvec[index1], Bvec[index2],
+                          poison, poison, poison, &prims);
                           //entropy[index], Y_e[index], temp[index],
-                          (void*)&prims);
 
     // Read in conservative variables from gridfunctions
     conservative_quantities cons, cons_orig;
-    initialize_conservatives_ETK(
+    initialize_conservatives(
                              rho_star[index], tau[index],
-                             mhd_st_x[index], mhd_st_y[index], mhd_st_z[index],
-                             poison, poison,
+                             Stildex[index], Stildey[index], Stildez[index],
+                             poison, poison, &cons);
                              //Y_e[index], entropy[index],
-                             (void*)&cons);
 
-    prims_orig = prims;
+    // Here we save the original values of conservative variables in cons_orig for debugging purposes.
     cons_orig = cons;
 
+    //FIXME: might slow down the code. Was formerly a CCTK_WARN
+    if(isnan(cons.rho*cons.S_x*cons.S_y*cons.S_z*cons.tau*prims.Bx*prims.By*prims.Bz)) {
+      CCTK_VINFO("NaN found at start of C2P kernel: st_i = %e %e %e, rho_* = %e, ~tau = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e\n",
+                 cons.S_x,cons.S_y,cons.S_z,cons.rho,cons.tau,prims.Bx,prims.By,prims.Bz,
+                 metric.adm_gxx,metric.adm_gxy,metric.adm_gxz,metric.adm_gyy,metric.adm_gyy,metric.adm_gzz,metric.psi6);
+      diagnostics.nan_found++;
+    }
+
+    /************* Main conservative-to-primitive logic ************/
+    int check=0;
+    if(cons.rho>0.0) {
+      // Apply the tau floor
+      if( grhayl_eos->eos_type == 0 )
+        apply_inequality_fixes(grhayl_params, grhayl_eos, &metric, &prims, &cons, &diagnostics);
+
+      // declare some variables for the C2P routine.
+      conservative_quantities cons_undens;
+      primitive_quantities prims_guess;
+
+      // Set the conserved variables required by the con2prim routine
+      undensitize_conservatives(&metric, &cons, &cons_undens);
+
+      /************* Conservative-to-primitive recovery ************/
+      int check = Hybrid_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
+      if(check!=0)
+        check = font_fix(grhayl_eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+      /*************************************************************/
+
+      if(check==0) {
+        //Check for NAN!
+        if( isnan(prims_guess.rho*prims_guess.press*prims_guess.eps*prims_guess.vx*prims_guess.vy*prims_guess.vz) ) {
+          CCTK_VINFO("***********************************************************\n");
+          CCTK_VINFO("NAN found in function %s (file: %s)\n",__func__,__FILE__);
+          CCTK_VINFO("Input conserved variables:\n");
+          CCTK_VINFO("rho_*, ~tau, ~S_{i}: %e %e %e %e %e\n", cons.rho, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+          CCTK_VINFO("Undensitized conserved variables:\n");
+          CCTK_VINFO("D, tau, S_{i}: %e %e %e %e %e\n", cons_undens.rho, cons_undens.tau, cons_undens.S_x, cons_undens.S_y, cons_undens.S_z);
+          CCTK_VINFO("Output primitive variables:\n");
+          CCTK_VINFO("rho, P: %e %e\n", prims_guess.rho, prims_guess.press);
+          CCTK_VINFO("v: %e %e %e\n", prims_guess.vx, prims_guess.vy, prims_guess.vz);
+          CCTK_VINFO("***********************************************************");
+        }
+
+        prims = prims_guess;
+      } else {
+        CCTK_VINFO("Con2Prim and Font fix failed!");
+        CCTK_VINFO("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
+                diagnostics.failure_checker, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho, prims.Bx, prims.By, prims.Bz,
+                metric.adm_gxx, metric.adm_gxy, metric.adm_gxz, metric.adm_gyy, metric.adm_gyz, metric.adm_gzz, metric.psi6);
+      }
+    } else {
+      diagnostics.failure_checker+=1;
+      reset_prims_to_atmosphere(grhayl_params, grhayl_eos, &metric, &prims, &diagnostics);
+      rho_star_fix_applied++;
+    } // if rho_star>0
+    /***************************************************************/
+
+    if( check != 0 ) {
+      //--------------------------------------------------
+      //----------- Primitive recovery failed ------------
+      //--------------------------------------------------
+      // Sigh, reset to atmosphere
+      reset_prims_to_atmosphere(grhayl_params, grhayl_eos, &metric, &prims, &diagnostics);
+      diagnostics.failure_checker+=100000;
+      atm_resets++;
+      // Then flag this point as a "success"
+      check = 0;
+      CCTK_VINFO("Couldn't find root from: %e %e %e %e %e, rhob approx=%e, rho_b_atm=%e, Bx=%e, By=%e, Bz=%e, gij_phys=%e %e %e %e %e %e, alpha=%e\n",
+                 cons_orig.tau, cons_orig.rho, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho/metric.psi6, grhayl_eos->rho_atm,
+                 prims.Bx, prims.By, prims.Bz, metric.adm_gxx, metric.adm_gxy, metric.adm_gxz, metric.adm_gyy, metric.adm_gyy, metric.adm_gzz, metric.lapse);
+    }
+
+    //--------------------------------------------------
+    //---------- Primitive recovery succeeded ----------
+    //--------------------------------------------------
+    // Enforce limits on primitive variables and recompute conservatives.
+    double u0;
     stress_energy Tmunu;
-    Con2Prim_Kernel((void*)&params, (void*)&eos, (void*)&metric, (void*)&cons, (void*)&prims, (void*)&diagnostics_private, (void*)&Tmunu);
+    enforce_primitive_limits_and_output_u0(grhayl_params, grhayl_eos, &metric, &prims, &u0, &diagnostics);
+    compute_conservs_and_Tmunu(grhayl_params, grhayl_eos, &metric, &prims, u0, &cons, &Tmunu);
 
-    failure_checker[index] = diagnostics_private.failure_checker;
+    //Now we compute the difference between original & new conservatives, for diagnostic purposes:
+    error_int_numer += fabs(cons.tau - cons_orig.tau) + fabs(cons.rho - cons_orig.rho) + fabs(cons.S_x - cons_orig.S_x)
+                       + fabs(cons.S_y - cons_orig.S_y) + fabs(cons.S_z - cons_orig.S_z);
+    error_int_denom += cons_orig.tau + cons_orig.rho + fabs(cons_orig.S_x) + fabs(cons_orig.S_y) + fabs(cons_orig.S_z);
 
-    double dummy;
-    return_primitives_ETK((void*)&prims, &rho_b[index], &P[index], &eps[index],
-                  &vx[index], &vy[index], &vz[index], &Bx[index], &By[index], &Bz[index],
-                  &dummy, &dummy, &dummy);
+    if(check!=0) {
+      diagnostics.failures++;
+      if(metric.psi6 > grhayl_params->psi6threshold) {
+        failures_inhoriz++;
+        pointcount_inhoriz++;
+      }
+    }
+
+    failure_checker[index] = diagnostics.failure_checker;
+
+    return_primitives(&prims, &rho[index], &press[index], &eps[index],
+                  &vx[index], &vy[index], &vz[index], &Bvec[index0], &Bvec[index1], &Bvec[index2],
+                  &dummy1, &dummy2, &dummy3);
                   //&entropy[index], &Y_e[index], &temp[index]);
 
-    return_conservatives_ETK((void*)&cons, &rho_star[index], &tau[index],
-                        &mhd_st_x[index], &mhd_st_y[index], &mhd_st_z[index],
-                        &dummy, &dummy);
+    return_conservatives(&cons, &rho_star[index], &tau[index],
+                        &Stildex[index], &Stildey[index], &Stildez[index],
+                        &dummy1, &dummy2);
                         //&Y_e[index], &entropy[index]);
 
     if(update_Tmunu) {
@@ -182,21 +244,15 @@ void IllinoisGRMHD_conserv_to_prims(CCTK_ARGUMENTS) {
       eTzz[index] = Tmunu.Tzz;
     }
 
-    failures += diagnostics_private.failures;
-    font_fixes += diagnostics_private.font_fixes;
-    vel_limited_ptcount += diagnostics_private.vel_limited_ptcount;
-    atm_resets += diagnostics_private.atm_resets;
-    rho_star_fix_applied += diagnostics_private.rho_star_fix_applied;
-    pointcount += diagnostics_private.pointcount;
-    failures_inhoriz += diagnostics_private.failures_inhoriz;
-    pointcount_inhoriz += diagnostics_private.pointcount_inhoriz;
-    backup0 += diagnostics_private.backup[0];
-    backup1 += diagnostics_private.backup[1];
-    backup2 += diagnostics_private.backup[2];
-    nan_found += diagnostics_private.nan_found;
-    error_int_numer += diagnostics_private.error_int_numer;
-    error_int_denom += diagnostics_private.error_int_denom;
-    n_iter += diagnostics_private.n_iter;
+    failures += diagnostics.failures;
+    font_fixes += diagnostics.font_fixes;
+    vel_limited_ptcount += diagnostics.vel_limited_ptcount;
+    pointcount++;
+    backup0 += diagnostics.backup[0];
+    backup1 += diagnostics.backup[1];
+    backup2 += diagnostics.backup[2];
+    nan_found += diagnostics.nan_found;
+    n_iter += diagnostics.n_iter;
 }
 
   if(CCTK_Equals(verbose, "essential") || CCTK_Equals(verbose, "essential+iteration output")) {
@@ -290,5 +346,3 @@ void IllinoisGRMHD_conserv_to_prims(CCTK_ARGUMENTS) {
 //    CCTK_VInfo(CCTK_THORNSTRING,"Finished writing...");
 //  }
 }
-
-#include "harm_primitives_lowlevel.C"

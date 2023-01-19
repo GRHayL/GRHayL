@@ -5,6 +5,14 @@ CCTK_BOOLEAN run_unit_tests "Whether or not to perform the GRHayL unit tests"
 
 #########################################################
 
+# Symmetry boundary params. Needed for handling staggered gridfunctions.
+KEYWORD Symmetry "Currently only no symmetry supported, though work has begun in adding equatorial-symmetry support. FIXME: Extend ET symmetry interface to support symmetries on staggered gridfunctions"
+{
+  "none"       :: "no symmetry, full 3d domain"
+} "none"
+
+#########################################################
+
 # EOS parameters
 KEYWORD EOS_type "The type of EOS for the simulation"
 {

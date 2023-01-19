@@ -4,6 +4,7 @@
 #include "include/GRHayL.h"
 #include "include/con2prim.h"
 #include "include/induction.h"
+//#include "include/flux_source.h"
 #include "include/Neutrinos.h"
 #include "include/NRPyEOS_Hybrid.h"
 #include "include/NRPyEOS_Tabulated.h"
@@ -15,7 +16,7 @@ static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,
   VXR=11,VYR=12,VZR=13,VXL=14,VYL=15,VZL=16,MAXNUMVARS=17;  //<-- Be _sure_ to define MAXNUMVARS appropriately!
 
 extern eos_parameters *grhayl_eos;
-extern GRHayL_parameters *grhayl_parameters;
+extern GRHayL_parameters *grhayl_params;
 
 /******** Helper functions for the RHS calculations *************/
 

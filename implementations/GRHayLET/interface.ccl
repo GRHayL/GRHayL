@@ -9,17 +9,9 @@ inherits: ADMBase, Tmunubase, HydroBase
 # HydroBase::prolongation_type = 'none'
 # HydroBase::timelevels = 1
 
-INCLUDE HEADER: GRHayLET.h in GRHayLET.h
+USES INCLUDE: Symmetry.h
 
-void FUNCTION Con2Prim_Kernel(CCTK_POINTER_TO_CONST IN params,
-                     CCTK_POINTER_TO_CONST IN eos,
-                     CCTK_POINTER IN metric,
-                     CCTK_POINTER IN cons,
-                     CCTK_POINTER IN prims,
-                     CCTK_POINTER IN diagnostics,
-                     CCTK_POINTER IN Tmunu)
-PROVIDES FUNCTION Con2Prim_Kernel WITH con2prim_ETK_kernel
-  LANGUAGE C
+INCLUDE HEADER: GRHayLET.h in GRHayLET.h
 
 void FUNCTION initialize_conservatives_ETK(
                      CCTK_REAL IN rho, CCTK_REAL IN tau,
@@ -110,16 +102,22 @@ CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
 
 #########################################################
 
-#########################################################
-
-# phitilde (=Phi*psi^6) is defined on the staggered grid (i+1/2,j+1/2,k+1/2)
-# WARNING: WILL NOT WORK PROPERLY WITHOUT FULLY-STAGGERED PROLONGATION/RESTRICTION
-CCTK_REAL em_psi6phi type = GF Timelevels=3 tags='Prolongation="STAGGER111"'
+# Primitive variables
+# The HydroBase quantities rho and press are used as the primitives in this code. However,
+# GRHayL uses the velocity v^i = u^i/u^0, while HydroBase uses the Valencia velocity, so
+# we declare our own velocities here.
+cctk_real grmhd_primitives_allbutBi type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
 {
-  phitilde
-} "sqrt{gamma} Phi, where Phi is the em scalar potential"
+  vx, vy, vz
+} "Primitive variables density, pressure, and components of three velocity v^i. Note that v^i is defined in terms of 4-velocity as: v^i = u^i/u^0. Note that this definition differs from the Valencia formalism."
 
 #########################################################
+
+# Evolved variables
+cctk_real grmhd_conservatives type = GF Timelevels=3
+{
+  rho_star, tau, Stildex, Stildey, Stildez # Note that Stildei = \tilde{S}_i.
+} "Evolved mhd variables"
 
 # These variables are semi-staggered. Since their staggering and--by extension--
 # prolongation type are different, we cannot use the Avec defined by
@@ -144,6 +142,13 @@ CCTK_REAL em_Az type = GF Timelevels=3 tags='Prolongation="STAGGER110"'
 {
   Az
 } "z-component of the vector potential, evolved when constrained_transport_scheme==3"
+
+# phitilde (=Phi*psi^6) is defined on the staggered grid (i+1/2,j+1/2,k+1/2)
+# WARNING: WILL NOT WORK PROPERLY WITHOUT FULLY-STAGGERED PROLONGATION/RESTRICTION
+CCTK_REAL em_psi6phi type = GF Timelevels=3 tags='Prolongation="STAGGER111"'
+{
+  phitilde
+} "sqrt{gamma} Phi, where Phi is the em scalar potential"
 
 #########################################################
 
@@ -194,6 +199,12 @@ CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="non
 } "Temporary variables used for primitives reconstruction"
 
 #########################################################
+
+# Diagnostic gridfunctions
+CCTK_REAL diagnostic_gfs type = GF TAGS='prolongation="none" Checkpoint="no"'
+{
+  failure_checker
+} "Gridfunction to track conservative-to-primitives solver fixes. Beware that this gridfunction is overwritten at each RK substep."
 
 #########################################
 ###  Aliased functions from Carpet    ###

@@ -1,19 +1,6 @@
 #include "cctk.h"
 #include "con2prim.h"
 
-void con2prim_ETK_kernel( CCTK_POINTER_TO_CONST params, CCTK_POINTER_TO_CONST eos,
-                          CCTK_POINTER metric, CCTK_POINTER cons,
-                          CCTK_POINTER prims, CCTK_POINTER diagnostics, CCTK_POINTER Tmunu) {
-
-  con2prim_loop_kernel((const GRHayL_parameters *)params,
-                       (const eos_parameters *)eos,
-                       (metric_quantities *)metric,
-                       (conservative_quantities *)cons,
-                       (primitive_quantities *)prims,
-                       (con2prim_diagnostics *)diagnostics,
-                       (stress_energy *)Tmunu);
-}
-
 void c2p_initialize_conservatives(
              const CCTK_REAL rho, const CCTK_REAL tau,
              const CCTK_REAL S_x, const CCTK_REAL S_y, const CCTK_REAL S_z,

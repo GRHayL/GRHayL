@@ -43,12 +43,13 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
              grhayl_eos);
 
   if(grhayl_eos->eos_type == 0) {
+    initialize_hybrid_functions(grhayl_eos);
     initialize_hybrid_eos(
                neos, rho_ppoly_in,
                gamma_ppoly_in, k_ppoly0,
                gamma_th, grhayl_eos);
   } else if(grhayl_eos->eos_type == 1) {
-double Ye_max = 100; //Temporary until the parameter is set up
+    double Ye_max = 100; //TODO: temporary until the parameter is set up
     initialize_tabulated_functions(grhayl_eos);
     grhayl_eos->tabulated_read_table_set_EOS_params(EOS_tablepath, grhayl_eos);
     initialize_tabulated_eos(

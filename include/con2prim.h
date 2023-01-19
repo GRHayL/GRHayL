@@ -55,6 +55,17 @@ static const int Palenzuela1D = 6;
 static const int Palenzuela1D_entropy = 7;
 static const int Newman1D = 8;
 
+/*TODO: change failure checker to use bitwise operations instead of add powers of 10
+        current failure checker values (using K=1000 and M=1000000):
+          1:    reset to atmosphere because rho<0
+          1K:   velocity (either u or v) were speed limited
+          10K:  Font fix triggered
+          100K: Con2Prim routine and Font Fix failed
+          1M:   tau inequality fix triggered
+          10M:  first Stilde fix triggered
+          100M: second Stilde fix triggered
+*/
+
 //--------------------------------------------------
 
 //------------ Con2Prim structs --------------------
@@ -83,12 +94,7 @@ typedef struct con2prim_diagnostics {
   int failure_checker;
   int font_fixes;
   int vel_limited_ptcount;
-  int atm_resets;
   int which_routine;
-  int rho_star_fix_applied;
-  int pointcount;
-  int failures_inhoriz;
-  int pointcount_inhoriz;
   int backup[3];
   int nan_found;
   int c2p_fail_flag;
@@ -99,14 +105,6 @@ typedef struct con2prim_diagnostics {
 
 //--------------------------------------------------
 
-//------------- Misplaced functions ---------------
-/* TODO: These functions come from the IllinoisGRMHD_header, EOS_header,
-   or inlined_functions.h and
-   are used by functions outside of con2prim. As such, they should be
-   provided by something above c2p in the hierarchy. However, they use the
-   cons/prim structs. The cons and prims structs should therefore be
-   defined higher up in the code hierarchy. */
-
 void reset_prims_to_atmosphere(
              const GRHayL_parameters *restrict params,
              const eos_parameters *restrict eos,
@@ -114,22 +112,9 @@ void reset_prims_to_atmosphere(
              primitive_quantities *restrict prims,
              con2prim_diagnostics *restrict diagnostics);
 
-//--------------------------------------------------
-
 //--------- Initialization routines ----------------
 
 void initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
-
-//--------------------------------------------------
-
-void con2prim_loop_kernel(
-             const GRHayL_parameters *restrict params,
-             const eos_parameters *restrict eos,
-             metric_quantities *restrict metric,
-             conservative_quantities *restrict cons,
-             primitive_quantities *restrict prims,
-             con2prim_diagnostics *restrict diagnostics,
-             stress_energy *restrict Tmunu);
 
 //----------- Pre/Post-C2P routines ----------------
 
