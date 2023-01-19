@@ -1,0 +1,36 @@
+name: GRHayL
+run-name: ${{ github.actor }} is learning GitHub Actions
+
+on:
+  push:
+    branches: master
+  pull_request:
+    branches: master
+
+jobs:
+  Con2Prim:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+#      matrix:
+#        python-version: ["3.8.12", "3.10", "3.11"]  # 3.8+ required: https://pypi.org/project/sympy/
+
+    steps:
+    - uses: actions/checkout@v3
+#    - name: Set up Python ${{ matrix.python-version }}
+#      uses: actions/setup-python@v3
+#      with:
+#        python-version: ${{ matrix.python-version }}
+    - name: Install needed ubuntu packages
+      run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+#    - name: Install dependencies
+#      run: |
+#        python -m pip install --upgrade pip setuptools
+#        python -m pip install --upgrade nbconvert
+#        python -m pip install --upgrade git+https://github.com/sympy/sympy/
+#        python -m pip install testfixtures mpmath jupyter matplotlib scipy nrpylatex
+#        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+     - name: Compile GRHayL
+       run: make
+     - name: Run Con2Prim unit test
+       run: ./exe/unit_test_con2prim
