@@ -54,7 +54,6 @@ static const int CerdaDuran3D = 5;
 static const int Palenzuela1D = 6;
 static const int Palenzuela1D_entropy = 7;
 static const int Newman1D = 8;
-static const int OldNoble2D = 20;
 
 //--------------------------------------------------
 

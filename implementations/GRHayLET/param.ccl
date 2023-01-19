@@ -1,26 +1,197 @@
 restricted:
-CCTK_BOOLEAN Cupp_Fix "Whether or not to apply the Cupp Fix"
-{
-} "no"
-
-restricted:
 CCTK_BOOLEAN run_unit_tests "Whether or not to perform the GRHayL unit tests"
 {
 } "no"
 
-restricted:
-CCTK_BOOLEAN unit_test_EOS_readtable "Whether or not to perform the EOS readtable unit test"
-{
-} "no"
+#########################################################
 
-restricted:
+# EOS parameters
+KEYWORD EOS_type "The type of EOS for the simulation"
+{
+   ""         :: "Forbidden default; an EOS type must be specified"
+  "hybrid"    :: "Hybrid EOS"
+  "tabulated" :: "Tabulated EOS"
+} ""
+
 CCTK_BOOLEAN read_EOS_table "Whether or not to read from the EOS table"
 {
 } "no"
 
-restricted:
 CCTK_STRING EOS_tablepath "Path to the EOS table"
 {
   ""    :: "Forbidden, will error out"
   ".+?" :: "Any string"
 } ""
+
+CCTK_REAL EOS_root_finding_precision "Root-finding precision for EOS table inversions"
+{
+ 0.0:* :: "Positive."
+} 1e-10
+
+CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?"
+{
+} "no"
+
+CCTK_BOOLEAN evolve_entropy "Do we want to evolve the entropy?"
+{
+} "no"
+
+#########################################################
+
+# Verbosity Level
+KEYWORD verbose "Determines how much evolution information is output" STEERABLE=ALWAYS
+{
+  "no"        :: "Complete silence"
+  "essential" :: "Essential health monitoring of the GRMHD evolution: Information about conservative-to-primitive fixes, etc."
+  "essential+iteration output" :: "Outputs health monitoring information, plus a record of which RK iteration. Very useful for backtracing a crash."
+} "essential+iteration output"
+
+#########################################################
+
+# CONSERV TO PRIMS PARAMETERS
+KEYWORD con2prim_routine "What con2prim routine is used" STEERABLE=ALWAYS
+{
+  "Noble2D"          :: "2D  routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
+  "Noble1D"          :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
+  "Noble1D_entropy"  :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy"
+  "Noble1D_entropy2" :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy and eq. (27)"
+  "CerdaDuran2D"     :: "See https://arxiv.org/pdf/0804.4572.pdf"
+  "CerdaDuran3D"     :: "See https://arxiv.org/pdf/0804.4572.pdf"
+  "Palenzuela1D"     :: "https://arxiv.org/pdf/1505.01607.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
+  "Newman1D"         :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
+} "Noble2D"
+
+KEYWORD con2prim_backup_routines[3] "We allow up to 3 backup routines" STEERABLE=ALWAYS
+{
+  "None"             :: "Don't use backup routines"
+  "Noble2D"          :: "2D  routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
+  "Noble1D"          :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
+  "Noble1D_entropy"  :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy"
+  "Noble1D_entropy2" :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy and eq. (27)"
+  "CerdaDuran2D"     :: "See https://arxiv.org/pdf/0804.4572.pdf"
+  "CerdaDuran3D"     :: "See https://arxiv.org/pdf/0804.4572.pdf"
+  "Palenzuela1D"     :: "https://arxiv.org/pdf/1505.01607.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
+  "Newman1D"         :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
+} "None"
+
+CCTK_REAL depsdT_threshold "If depsdT is smaller than this value, the entropy will be used during con2prim" STEERABLE=ALWAYS
+{
+  *:* :: "Can be anything. Negative values disable the entropy equation."
+} 1e-6
+
+# FIXME: Enable this parameter! IllinoisGRMHD is currently hard-coded to tau_stildefix_enable=2.
+#CCTK_INT tau_stildefix_enable "tau<0 fix in primitive_vars_hybrid2 to reduce number of Font fixes, especially in puncture+matter evolutions" STEERABLE=ALWAYS
+#{
+# 0:3 :: "zero (disable), one (enable everywhere), or two (enable only where Psi6 > Psi6threshold [i.e., inside the horizon, where B's are set to zero], or three (kludge: set B=0 if tau<0 inside horizon))"
+#} 0
+
+CCTK_BOOLEAN update_Tmunu "Update Tmunu, for RHS of Einstein's equations?" STEERABLE=ALWAYS
+{
+} "yes"
+
+CCTK_BOOLEAN Cupp_Fix "Whether or not to apply the Cupp Fix"
+{
+  "no"  :: "Standard behavior of IllinoisGRMHD code"
+  "yes" :: "Changes logic of Noble2D routine which removes need for most Font fixes and adjusts atmosphere reset."
+} "no"
+
+CCTK_REAL Psi6threshold "Where Psi^6 > Psi6threshold, we assume we're inside the horizon in the primitives solver, and certain limits are relaxed or imposed" STEERABLE=ALWAYS
+{
+ *:* :: "Can set to anything"
+} 1e100
+
+CCTK_BOOLEAN calc_primitive_guess "Do we want to calculate estimates for the primitives in Con2Prim?"
+{
+  "no"  :: "Uses the data currently in the primitive variables as the guess."
+  "yes" :: "Calculates primitive guesses from the current conservatives."
+} "yes"
+
+#########################################################
+
+# Limiters on tau, rho_b, Y_e, and T
+CCTK_REAL tau_atm "Floor value on the energy variable tau (cf. tau_stildefix_enable). Given the variety of systems this code may encounter, there *is no reasonable default*. Effectively the current (enormous) value should disable the tau_atm floor. Please set this in your initial data thorn, and reset at will during evolutions." STEERABLE=ALWAYS
+{
+ 0:* :: "Positive"
+} 1e100
+
+CCTK_REAL rho_b_atm "Floor value on the baryonic rest mass density rho_b (atmosphere). Given the variety of systems this code may encounter, there *is no reasonable default*. Your run will die unless you override this default value in your initial data thorn." STEERABLE=ALWAYS
+{
+ *:* :: "Allow for negative values.  This enables us to debug the code and verify if rho_b_atm is properly set."
+} 1e200
+
+CCTK_REAL rho_b_max "Ceiling value on the baryonic rest mass density rho_b. The enormous value effectively disables this ceiling by default. It can be quite useful after a black hole has accreted a lot of mass, leading to enormous densities inside the BH. To enable this trick, set rho_b_max in your initial data thorn! You are welcome to change this parameter mid-run (after restarting from a checkpoint)." STEERABLE=ALWAYS
+{
+ 0:* :: "Note that you will have problems unless rho_b_atm<rho_b_max"
+} 1e300
+
+CCTK_REAL Ye_atm "Atmospheric electron fraction"
+{
+ 0.0:1.0 :: "Only makes sense if set to something between 0 and 1"
+} 0.5
+
+#There should be a max, probably
+#CCTK_REAL Ye_max "Maximum electron fraction allowed" STEERABLE=ALWAYS
+#{
+# 0.0:1.0 :: ""
+#} 0.5
+
+CCTK_REAL T_atm "Atmospheric temperature"
+{
+ 0.0:* :: "Positive. Should be within table limits (preferably at least 10% above the minimum)."
+} 0.1
+
+CCTK_REAL T_max "Maximum temperature allowed" STEERABLE=ALWAYS
+{
+ 0.0:* :: "Positive. Should be within table limits (preferably at least 10% above the minimum)."
+} 90.0
+
+#########################################################
+
+# Speed limit: set maximum relativistic gamma factor
+CCTK_REAL gamma_speed_limit "Maximum relativistic gamma factor."
+{
+ 1:* :: "Positive > 1, though you'll likely have troubles far above 10."
+} 10.0
+
+#########################################################
+
+# Equation of state parameters
+CCTK_INT neos "number of parameters in EOS table"
+{
+ 1:10 :: "Any integer between 1 and 10"
+} 1
+
+CCTK_REAL gamma_th "thermal gamma parameter"
+{
+ 0:* :: "Physical values"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile"
+} -1
+
+CCTK_REAL k_ppoly0 "Also known as k_ppoly[0], this is the polytropic constant for the lowest density piece of the piecewise polytrope. All other k_tab EOS array elements are set from user-defined rho_tab EOS array elements and by enforcing continuity in the equation of state."
+{
+ 0:* :: "Physical values"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile"
+} -1
+
+CCTK_REAL rho_ppoly_in[10] "Set polytropic rho parameters"
+{
+ 0:* :: "after this time (inclusively)"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile"
+} -1
+
+CCTK_REAL gamma_ppoly_in[11] "Set polytropic gamma parameters"
+{
+ 0:* :: "after this time (inclusively)"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile"
+} -1
+
+#########################################################
+
+# EVOLUTION PARAMS
+CCTK_REAL damp_lorenz "Damping factor for the generalized Lorenz gauge. Has units of 1/length = 1/M. Typically set this parameter to 1.5/(maximum Delta t on AMR grids)." STEERABLE=ALWAYS
+{
+ *:* :: "any real"
+} 0.0
+
+#########################################################
+

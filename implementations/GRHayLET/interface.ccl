@@ -1,4 +1,13 @@
-implements: GRHayL
+# Interface definition for thorn IllinoisGRMHD
+
+implements: GRHayLET
+
+inherits: ADMBase, Tmunubase, HydroBase
+
+# Since the evolution code uses some HydroBase quantities, it is
+# important to set certain HydroBase parameters for intended behavior:
+# HydroBase::prolongation_type = 'none'
+# HydroBase::timelevels = 1
 
 INCLUDE HEADER: GRHayLET.h in GRHayLET.h
 
@@ -91,50 +100,106 @@ void FUNCTION return_primitives_ETK(
 PROVIDES FUNCTION return_primitives_ETK WITH c2p_return_primitives
   LANGUAGE C
 
-void FUNCTION A_i_wrapper_ETK(
-             CCTK_INT IN direction,
-             CCTK_POINTER_TO_CONST IN cctkGH,
-             CCTK_POINTER_TO_CONST IN out_prims_r,
-             CCTK_POINTER_TO_CONST IN out_prims_l,
-             CCTK_POINTER_TO_CONST IN phi_interped,
-             CCTK_POINTER_TO_CONST IN cmax_1,
-             CCTK_POINTER_TO_CONST IN cmin_1,
-             CCTK_POINTER_TO_CONST IN cmax_2,
-             CCTK_POINTER_TO_CONST IN cmin_2,
-             CCTK_POINTER IN A3_rhs)
-PROVIDES FUNCTION A_i_wrapper_ETK WITH A_i_wrapper
-  LANGUAGE C
+#########################################################
 
-void FUNCTION A_i_gauge_rhs_ETK(
-             CCTK_POINTER_TO_CONST IN cctkGH,
-             CCTK_REAL ARRAY IN dX,
-             CCTK_REAL ARRAY IN gupxx,
-             CCTK_REAL ARRAY IN gupxy,
-             CCTK_REAL ARRAY IN gupxz,
-             CCTK_REAL ARRAY IN gupyy,
-             CCTK_REAL ARRAY IN gupyz,
-             CCTK_REAL ARRAY IN gupzz,
-             CCTK_REAL ARRAY IN psi,
-             CCTK_REAL ARRAY IN lapm1,
-             CCTK_REAL ARRAY IN betax,
-             CCTK_REAL ARRAY IN betay,
-             CCTK_REAL ARRAY IN betaz,
-             CCTK_REAL ARRAY IN Ax,
-             CCTK_REAL ARRAY IN Ay,
-             CCTK_REAL ARRAY IN Az,
-             CCTK_REAL ARRAY IN phitilde,
-             CCTK_REAL IN Lorenz_damping_factor,
-             CCTK_REAL OUT shiftx_interp,
-             CCTK_REAL OUT shifty_interp,
-             CCTK_REAL OUT shiftz_interp,
-             CCTK_REAL OUT alpha_interp,
-             CCTK_REAL OUT alpha_Phi_minus_betaj_A_j_interp,
-             CCTK_REAL OUT alpha_sqrtg_Ax_interp,
-             CCTK_REAL OUT alpha_sqrtg_Ay_interp,
-             CCTK_REAL OUT alpha_sqrtg_Az_interp,
-             CCTK_REAL OUT phitilde_rhs,
-             CCTK_REAL OUT Ax_rhs,
-             CCTK_REAL OUT Ay_rhs,
-             CCTK_REAL OUT Az_rhs)
-PROVIDES FUNCTION A_i_gauge_rhs_ETK WITH A_i_gauge_rhs
-  LANGUAGE C
+# BSSN-based quantities, computed from ADM quantities
+CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
+{
+   gtxx,gtxy,gtxz,gtyy,gtyz,gtzz,gtupxx,gtupxy,gtupxz,gtupyy,gtupyz,gtupzz,phi_bssn,psi_bssn,lapm1
+} "BSSN quantities, computed from ADM quantities"
+
+#########################################################
+
+#########################################################
+
+# phitilde (=Phi*psi^6) is defined on the staggered grid (i+1/2,j+1/2,k+1/2)
+# WARNING: WILL NOT WORK PROPERLY WITHOUT FULLY-STAGGERED PROLONGATION/RESTRICTION
+CCTK_REAL em_psi6phi type = GF Timelevels=3 tags='Prolongation="STAGGER111"'
+{
+  phitilde
+} "sqrt{gamma} Phi, where Phi is the em scalar potential"
+
+#########################################################
+
+# These variables are semi-staggered. Since their staggering and--by extension--
+# prolongation type are different, we cannot use the Avec defined by
+# Hydrobase since it is a single variable array Avec[3] which can only have
+# one type of prolongation.
+
+# WARNING: WILL NOT WORK PROPERLY WITHOUT SEMI-STAGGERED PROLONGATION/RESTRICTION
+# Ax is defined on the semi-staggered grid (i,j+1/2,k+1/2)
+CCTK_REAL em_Ax type = GF Timelevels=3 tags='Prolongation="STAGGER011"'
+{
+  Ax
+} "x-component of the vector potential, evolved when constrained_transport_scheme==3"
+
+# Ay is defined on the semi-staggered grid (i+1/2,j,k+1/2)
+CCTK_REAL em_Ay type = GF Timelevels=3 tags='Prolongation="STAGGER101"'
+{
+  Ay
+} "y-component of the vector potential, evolved when constrained_transport_scheme==3"
+
+# Az is defined on the semi-staggered grid (i+1/2,j+1/2,k)
+CCTK_REAL em_Az type = GF Timelevels=3 tags='Prolongation="STAGGER110"'
+{
+  Az
+} "z-component of the vector potential, evolved when constrained_transport_scheme==3"
+
+#########################################################
+
+# Grid functions for staggered B-fields
+CCTK_REAL grmhd_B_stagger type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
+{
+  Bx_stagger
+  By_stagger
+  Bz_stagger
+} "B-field components defined at staggered points [Bx_stagger at (i+1/2,j,k),By_stagger at (i,j+1/2,k),Bz_stagger at (i,j,k+1/2)]."
+
+#########################################################
+
+# RHS variables for MoL timestepping
+CCTK_REAL A_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
+{
+  Ax_rhs
+  Ay_rhs
+  Az_rhs
+} "Storage for the right-hand side of the partial_t A equations."
+
+CCTK_REAL phitilde_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
+{
+  phitilde_rhs
+} "Storage for the right-hand side of the partial_t (psi^6 Phi) equation."
+
+#########################################################
+
+# Temporary variables for A-field evolution
+CCTK_REAL grmhd_cmin_cmax_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
+{
+  cmin_x, cmax_x
+  cmin_y, cmax_y
+  cmin_z, cmax_z
+} "Store min and max characteristic speeds in all three directions."
+
+#########################################################
+
+# Temporary variables for reconstruction
+CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
+{
+  rhor, pressr, vxr, vyr, vzr
+  rhol, pressl, vxl, vyl, vzl
+  Bxr, Byr, Bzr, Bx_staggerr, By_staggerr, Bz_staggerr
+  Bxl, Byl, Bzl, Bx_staggerl, By_staggerl, Bz_staggerl
+  vxrr, vxrl, vyrr, vyrl, vzrr, vzrl
+  vxlr, vxll, vylr, vyll, vzlr, vzll
+} "Temporary variables used for primitives reconstruction"
+
+#########################################################
+
+#########################################
+###  Aliased functions from Carpet    ###
+#########################################
+
+CCTK_INT FUNCTION GetRefinementLevel
+        (CCTK_POINTER_TO_CONST IN cctkGH)
+USES FUNCTION GetRefinementLevel
+
