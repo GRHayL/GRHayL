@@ -1,36 +1,37 @@
 name: GRHayL
-run-name: ${{ github.actor }} is learning GitHub Actions
 
 on:
   push:
     branches: master
   pull_request:
-    branches: master
 
 jobs:
-  Con2Prim:
+  con-to-prim:
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
-#      matrix:
-#        python-version: ["3.8.12", "3.10", "3.11"]  # 3.8+ required: https://pypi.org/project/sympy/
 
     steps:
-    - uses: actions/checkout@v3
-#    - name: Set up Python ${{ matrix.python-version }}
-#      uses: actions/setup-python@v3
-#      with:
-#        python-version: ${{ matrix.python-version }}
-    - name: Install needed ubuntu packages
-      run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
-#    - name: Install dependencies
-#      run: |
-#        python -m pip install --upgrade pip setuptools
-#        python -m pip install --upgrade nbconvert
-#        python -m pip install --upgrade git+https://github.com/sympy/sympy/
-#        python -m pip install testfixtures mpmath jupyter matplotlib scipy nrpylatex
-#        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-     - name: Compile GRHayL
-       run: make
-     - name: Run Con2Prim unit test
-       run: ./exe/unit_test_con2prim
+      - uses: actions/checkout@v3
+      - name: Install needed ubuntu packages
+        run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+      - name: Compile GRHayL
+        run: make
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_Hybrid_Multi_Method.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_apply_inequality_fixes.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_compute_Tmunu.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_compute_conservs.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_font_fix.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_limit_v_and_output_u0.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_enforce_primitive_limits_and_output_u0.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_Hybrid_Multi_Method.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_apply_inequality_fixes.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_compute_Tmunu.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_compute_conservs.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_font_fix.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_limit_v_and_output_u0.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_enforce_primitive_limits_and_output_u0.bin
+      - name: Run Con2Prim unit test
+        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_con2prim

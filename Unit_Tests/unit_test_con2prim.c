@@ -292,13 +292,8 @@ int main(int argc, char **argv) {
             exit(1);
           }
 
-          if( check != 0 ) {
+          if( check != 0 )
             failures++;
-            printf("Recovery FAILED!\n");
-          } else {
-            printf("Recovery SUCCEEDED FOR POINT (%d,%d)!\n", i,j);
-          }
-
         } // Pressure loop
       } // Density loop
       for(int k = 0; k < (sizeof(infiles)/sizeof(infiles[0])); k++) fclose(infiles[k]);
