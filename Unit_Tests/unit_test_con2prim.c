@@ -223,7 +223,6 @@ int main(int argc, char **argv) {
 
             if(check!=0) {
               check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
-              diagnostics.font_fixes++;
               write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[3]);
             } else { //The else is so that Font Fix is tested even when the primary routine succeeds.
               primitive_quantities prims_tmp;
@@ -246,7 +245,6 @@ int main(int argc, char **argv) {
             reset_prims_to_atmosphere(&params, &eos, &metric, &prims, &diagnostics);
             //TODO: Validate reset? (rhob press v)
             printf("Negative rho_* triggering atmospheric reset.\n");
-            diagnostics.rho_star_fix_applied++;
           } // if rho_star > 0
 
           //--------------------------------------------------
