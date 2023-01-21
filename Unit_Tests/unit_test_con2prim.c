@@ -1,5 +1,5 @@
 // Thorn      : GRHayL
-// File       : con2prim_unit_test.c
+// File       : unit_test_con2prim.c
 // Author(s)  : Leo Werneck & Samuel Cupp
 // Description: In this file we provide an extensive unit test of
 //              the Con2Prim gem.
@@ -10,6 +10,9 @@
     fprintf(stderr, "(GRHayL) ERROR: Could not open file %s. Terminating.\n", filename); \
     exit(1); \
   }
+
+// Tolerance limit for numerical values
+double relative_tolerance = 1.0e-15;
 
 inline void perturb_data(double *restrict rand_val, primitive_quantities *restrict prims, conservative_quantities *restrict cons) {
   prims->rho   *= rand_val[0];
@@ -106,10 +109,6 @@ int main(int argc, char **argv) {
   // Absolutely minimum allowed tau
 
   char filename[100];
-  FILE* summaryf;
-  sprintf(filename,"unit_test/C2P_Summary.asc");
-  summaryf = fopen(filename,"w");
-
   // Now perform one test for each of the selected routines
   for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
     params.main_routine = con2prim_test_keys[which_routine];
@@ -127,35 +126,35 @@ int main(int argc, char **argv) {
 
       printf("Beginning %s test for routine %s\n", suffix, con2prim_test_names[which_routine]);
 
-      FILE* outfiles[7];
+      FILE* infiles[7];
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_limit_v_and_output_u0.bin",con2prim_test_names[which_routine], suffix);
-      outfiles[0] = fopen(filename,"wb");
-      check_file_was_successfully_open(outfiles[0], filename);
+      sprintf(filename,"C2P_%.30s_%.4s_limit_v_and_output_u0.bin",con2prim_test_names[which_routine], suffix);
+      infiles[0] = fopen(filename,"rb");
+      check_file_was_successfully_open(infiles[0], filename);
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_apply_inequality_fixes.bin",con2prim_test_names[which_routine], suffix);
-      outfiles[1] = fopen(filename,"w");
-      check_file_was_successfully_open(outfiles[1], filename);
+      sprintf(filename,"C2P_%.30s_%.4s_apply_inequality_fixes.bin",con2prim_test_names[which_routine], suffix);
+      infiles[1] = fopen(filename,"rb");
+      check_file_was_successfully_open(infiles[1], filename);
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_Hybrid_Multi_Method.bin",con2prim_test_names[which_routine], suffix);
-      outfiles[2] = fopen(filename,"wb");
-      check_file_was_successfully_open(outfiles[2], filename);
+      sprintf(filename,"C2P_%.30s_%.4s_Hybrid_Multi_Method.bin",con2prim_test_names[which_routine], suffix);
+      infiles[2] = fopen(filename,"rb");
+      check_file_was_successfully_open(infiles[2], filename);
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_font_fix.bin",con2prim_test_names[which_routine], suffix);
-      outfiles[3] = fopen(filename,"wb");
-      check_file_was_successfully_open(outfiles[3], filename);
+      sprintf(filename,"C2P_%.30s_%.4s_font_fix.bin",con2prim_test_names[which_routine], suffix);
+      infiles[3] = fopen(filename,"rb");
+      check_file_was_successfully_open(infiles[3], filename);
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_enforce_primitive_limits_and_output_u0.bin",con2prim_test_names[which_routine], suffix);
-      outfiles[4] = fopen(filename,"wb");
-      check_file_was_successfully_open(outfiles[4], filename);
+      sprintf(filename,"C2P_%.30s_%.4s_enforce_primitive_limits_and_output_u0.bin",con2prim_test_names[which_routine], suffix);
+      infiles[4] = fopen(filename,"rb");
+      check_file_was_successfully_open(infiles[4], filename);
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_conservs.bin",con2prim_test_names[which_routine], suffix);
-      outfiles[5] = fopen(filename,"w");
-      check_file_was_successfully_open(outfiles[5], filename);
+      sprintf(filename,"C2P_%.30s_%.4s_compute_conservs.bin",con2prim_test_names[which_routine], suffix);
+      infiles[5] = fopen(filename,"rb");
+      check_file_was_successfully_open(infiles[5], filename);
 
-      sprintf(filename,"unit_test/C2P_%.30s_%.4s_compute_Tmunu.bin",con2prim_test_names[which_routine], suffix);
-      outfiles[6] = fopen(filename,"w");
-      check_file_was_successfully_open(outfiles[6], filename);
+      sprintf(filename,"C2P_%.30s_%.4s_compute_Tmunu.bin",con2prim_test_names[which_routine], suffix);
+      infiles[6] = fopen(filename,"rb");
+      check_file_was_successfully_open(infiles[6], filename);
 
       srand(0);
 
@@ -192,9 +191,15 @@ int main(int argc, char **argv) {
           initial_random_data(xrho, xpress, random_metric, &metric, &prims);
 
           double u0 = poison;
+          int test_fail;
           prims_orig = prims;
           limit_v_and_output_u0(&eos, &metric, &prims, &u0, &diagnostics);
-          write_primitive_binary(eos.eos_type, 1, params.evolve_entropy, &prims_orig, &prims, outfiles[0]);
+          test_fail = validate_primitives(relative_tolerance, eos.eos_type, 1, params.evolve_entropy, &prims_orig, &prims, infiles[0]);
+          if(test_fail) {
+            printf("Test unit_test_con2prim has failed with error code %d after function limit_v_and_output_u0.\n"
+                   "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
+            exit(1);
+          }
 
           // Compute conservatives based on these primitives
           compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
@@ -209,25 +214,39 @@ int main(int argc, char **argv) {
             if(eos.eos_type == 0) { //Hybrid-only
               cons_orig = cons;
               apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
-              write_conservative_binary(params.evolve_entropy, &cons_orig, &cons, outfiles[1]);
+              test_fail = validate_conservatives(relative_tolerance, params.evolve_entropy, &cons_orig, &cons, infiles[1]);
+              if(test_fail) {
+                printf("Test unit_test_con2prim has failed with error code %d after function apply_inequality_fixes.\n"
+                       "Please check file Unit_Tests/validate_conservatives.c for information on the possible exit codes.\n", test_fail);
+                exit(1);
+              }
             }
 
             // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
             undensitize_conservatives(&metric, &cons, &cons_undens);
 
             /************* Conservative-to-primitive recovery ************/
-
             prims_orig = prims;
             check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
-            write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[2]);
+            test_fail = validate_primitives(relative_tolerance, eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, infiles[2]);
+            if(test_fail) {
+              printf("Test unit_test_con2prim has failed with error code %d after function Hybrid_Multi_Method.\n"
+                     "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
+              exit(1);
+            }
 
             if(check!=0) {
               check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
-              write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, outfiles[3]);
+              test_fail = validate_primitives(relative_tolerance, eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, infiles[3]);
             } else { //The else is so that Font Fix is tested even when the primary routine succeeds.
               primitive_quantities prims_tmp;
               check = font_fix(&eos, &metric, &cons, &prims, &prims_tmp, &diagnostics);
-              write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_tmp, outfiles[3]);
+              test_fail = validate_primitives(relative_tolerance, eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_tmp, infiles[3]);
+            }
+            if(test_fail) {
+              printf("Test unit_test_con2prim has failed with error code %d after function font_fix.\n"
+                     "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
+              exit(1);
             }
 
             /*************************************************************/
@@ -236,9 +255,6 @@ int main(int argc, char **argv) {
               prims = prims_guess;
             } else {
               printf("Con2Prim and Font fix failed!");
-              printf("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
-                      diagnostics.failure_checker, cons_orig.S_x, cons_orig.S_y, cons_orig.S_z, cons_orig.rho, prims.Bx, prims.By, prims.Bz,
-                      metric.adm_gxx, metric.adm_gxy, metric.adm_gxz, metric.adm_gyy, metric.adm_gyz, metric.adm_gzz, metric.psi6);
             }
           } else {
             diagnostics.failure_checker+=1;
@@ -253,13 +269,28 @@ int main(int argc, char **argv) {
           // Enforce limits on primitive variables and recompute conservatives.
           prims_orig = prims;
           enforce_primitive_limits_and_output_u0(&params, &eos, &metric, &prims, &u0, &diagnostics);
-          write_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims, outfiles[4]);
+          validate_primitives(relative_tolerance, eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims, infiles[4]);
+            if(test_fail) {
+              printf("Test unit_test_con2prim has failed with error code %d after function enforce_primitive_limits_and_output_u0.\n"
+                     "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
+              exit(1);
+            }
 
           cons_orig = cons;
           Tmunu_orig = Tmunu;
           compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
-          write_conservative_binary(params.evolve_entropy, &cons_orig, &cons, outfiles[5]);
-          write_stress_energy_binary(&Tmunu_orig, &Tmunu, outfiles[6]);
+          test_fail = validate_conservatives(relative_tolerance, params.evolve_entropy, &cons_orig, &cons, infiles[5]);
+          if(test_fail) {
+            printf("Test unit_test_con2prim has failed with error code %d after function compute_conservs_and_Tmunu.\n"
+                   "Please check file Unit_Tests/validate_conservatives.c for information on the possible exit codes.\n", test_fail);
+            exit(1);
+          }
+          test_fail = validate_stress_energy(relative_tolerance, &Tmunu_orig, &Tmunu, infiles[6]);
+          if(test_fail) {
+            printf("Test unit_test_con2prim has failed with error code %d after function compute_conservs_and_Tmunu.\n"
+                   "Please check file Unit_Tests/validate_stress_energy.c for information on the possible exit codes.\n", test_fail);
+            exit(1);
+          }
 
           if( check != 0 ) {
             failures++;
@@ -270,7 +301,7 @@ int main(int argc, char **argv) {
 
         } // Pressure loop
       } // Density loop
-      for(int k = 0; k < (sizeof(outfiles)/sizeof(outfiles[0])); k++) fclose(outfiles[k]);
+      for(int k = 0; k < (sizeof(infiles)/sizeof(infiles[0])); k++) fclose(infiles[k]);
     } // perturbation loop
 
     int ntotal = npoints*npoints;
@@ -280,15 +311,6 @@ int main(int argc, char **argv) {
     printf("    Number of recovery attempts: %d\n",ntotal);
     printf("    Number of failed recoveries: %d\n",failures);
     printf("    Recovery failure rate      : %.2lf%%\n",((double)failures)/((double)ntotal)*100.0);
-
-    fprintf(summaryf, "Completed test for routine %s\n",con2prim_test_names[which_routine]);
-    fprintf(summaryf, "Final report:\n");
-    fprintf(summaryf, "    Number of recovery attempts: %d\n",ntotal);
-    fprintf(summaryf, "    Number of failed recoveries: %d\n",failures);
-    fprintf(summaryf, "    Recovery failure rate      : %.2lf%%\n",((double)failures)/((double)ntotal)*100.0);
   }
-  fprintf(summaryf, "All done! Terminating the run.\n");
-  fclose(summaryf);
-
   return 0;
 }

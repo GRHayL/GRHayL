@@ -5,7 +5,49 @@
 #include "stdlib.h"
 #include "con2prim.h"
 
-void con2prim_unit_test( );
+
+// con2prim validation functions
+int validate_primitives(
+      const double tolerance,
+      const int eos_type,
+      const bool velocity_only,
+      const bool evolve_entropy,
+      const primitive_quantities *restrict prims_orig,
+      const primitive_quantities *restrict prims,
+      FILE *restrict infile);
+
+int validate_conservatives(
+      const double tolerance,
+      const bool evolve_entropy,
+      const conservative_quantities *restrict cons_orig,
+      const conservative_quantities *restrict cons,
+      FILE *restrict infile);
+
+int validate_stress_energy(
+      const double tolerance,
+      const stress_energy *restrict Tmunu_orig,
+      const stress_energy *restrict Tmunu,
+      FILE *restrict infile);
+
+// con2prim binary input functions
+void read_primitive_binary(
+      const int eos_type,
+      const bool velocity_only,
+      const bool evolve_entropy,
+      primitive_quantities *restrict prims_orig, 
+      primitive_quantities *restrict prims, 
+      FILE *restrict outfile);
+
+void read_conservative_binary(
+      const bool evolve_entropy,
+      conservative_quantities *restrict cons_orig,
+      conservative_quantities *restrict cons,
+      FILE *restrict outfile);
+
+void read_stress_energy_binary(
+      stress_energy *restrict Tmunu_orig,
+      stress_energy *restrict Tmunu,
+      FILE *restrict outfile);
 
 // con2prim binary output functions
 void write_primitive_binary(
