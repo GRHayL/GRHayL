@@ -1,0 +1,47 @@
+name: GRHayL
+
+on:
+  push:
+    branches: main
+  pull_request:
+
+jobs:
+  con-to-prim:
+    runs-on: macos-12
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install gcc and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install gcc hdf5
+      - name: Compile GRHayL
+        run: make
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_Hybrid_Multi_Method.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_apply_inequality_fixes.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_compute_Tmunu.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_compute_conservs.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_font_fix.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_limit_v_and_output_u0.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_enforce_primitive_limits_and_output_u0.bin
+      - name: Run con2prim unit test
+        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_con2prim
+
+  induction-gauge-rhs:
+    runs-on: macos-12
+    strategy:
+      fail-fast: false  
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install gcc and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install gcc hdf5
+      - name: Compile GRHayL
+        run: make
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/phitilde_and_A_gauge_rhs.bin
+      - name: Run induction equation gauge RHS unit test
+        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_gauge_rhs
