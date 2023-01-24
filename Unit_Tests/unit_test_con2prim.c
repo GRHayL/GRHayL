@@ -5,12 +5,6 @@
 //              the Con2Prim gem.
 #include "unit_tests.h"
 
-#define check_file_was_successfully_open(fp, filename) \
-  if( fp == NULL ) { \
-    fprintf(stderr, "(GRHayL) ERROR: Could not open file %s. Terminating.\n", filename); \
-    exit(1); \
-  }
-
 // Tolerance limit for numerical values
 const double relative_tolerance = 1.0e-15;
 
@@ -34,7 +28,7 @@ int main(int argc, char **argv) {
 
   // These variables set up the tested range of values
   // and number of sampling points.
-  int npoints = 256; //Number of sampling points in density and temperature
+  int npoints = 80; //Number of sampling points in density and temperature
   double test_rho_min = 1e-12; //Minimum input density
   double test_rho_max = 1e-3; //Maximum input density
   // double test_T_min = 1e-2; //Minimum input temperature

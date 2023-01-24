@@ -88,4 +88,10 @@ void initial_random_data(
 
 void randomize_metric(metric_quantities *restrict metric);
 
+#define check_file_was_successfully_open(fp, filename) \
+  if( fp == NULL ) { \
+    fprintf(stderr, "(GRHayL) ERROR: Could not open file %s. Terminating.\n", filename); \
+    exit(1); \
+  }
+
 #endif // UNIT_TESTS_H_
