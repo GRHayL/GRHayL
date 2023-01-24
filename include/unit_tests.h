@@ -76,6 +76,12 @@ static inline double relative_error( const double a, const double b ) {
   else              return( 0.0 );
 }
 
+static int rel_tol(const double tolerance, const double x1, const double x2) {
+  const double rel_diff = relative_error(x1, x2);
+  if(rel_diff > tolerance) return 1;
+  return 0;
+}
+
 static inline double randf(double low,double high) {
     return (rand()/(double)(RAND_MAX))*(high-low)+low;
 }

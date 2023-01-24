@@ -16,19 +16,6 @@
      6: entropy differs by more than tolerance
 */
 
-static int rel_tol(const double tolerance, const double x1, const double x2) {
-  double rel_diff;
-  if(x1!=0) {
-    rel_diff = abs((x1-x2)/x1);
-  } else if(x1!=0) {
-    rel_diff = abs((x1-x2)/x2);
-  } else {
-    rel_diff = 0.0;
-  }
-  if(rel_diff > tolerance) return 1;
-  return 0;
-}
-
 int validate_conservatives(
                      const double tolerance,
                      const bool evolve_entropy,
