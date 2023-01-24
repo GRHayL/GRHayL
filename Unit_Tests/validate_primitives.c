@@ -28,7 +28,8 @@ int validate_primitives(
       FILE *restrict infile) {
 
   primitive_quantities prims_before, prims_after;
-  read_primitive_binary(eos_type, velocity_only, evolve_entropy, &prims_before, &prims_after, infile);
+  read_primitive_binary(eos_type, velocity_only, evolve_entropy, &prims_before, infile);
+  read_primitive_binary(eos_type, velocity_only, evolve_entropy, &prims_after,  infile);
 
   if(rel_tol(tolerance, prims_before.vx, prims_orig->vx))
     return -1;

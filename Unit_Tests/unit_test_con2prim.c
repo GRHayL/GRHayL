@@ -121,7 +121,8 @@ int main(int argc, char **argv) {
         cons_orig.S_z = 1e300;
 
         // Read initial data accompanying trusted output
-        read_c2p_initial_data_binary(eos.eos_type, params.evolve_entropy, &metric, &prims, initial_data);
+        read_metric_binary(&metric, initial_data);
+        read_primitive_binary(eos.eos_type, 0, params.evolve_entropy, &prims, initial_data);
 
         double u0 = poison;
         int test_fail;

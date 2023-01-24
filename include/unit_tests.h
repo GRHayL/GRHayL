@@ -34,7 +34,6 @@ void read_primitive_binary(
       const int eos_type,
       const bool velocity_only,
       const bool evolve_entropy,
-      primitive_quantities *restrict prims_orig, 
       primitive_quantities *restrict prims, 
       FILE *restrict outfile);
 
@@ -49,11 +48,8 @@ void read_stress_energy_binary(
       stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 
-void read_c2p_initial_data_binary(
-      const int eos_type,
-      const bool evolve_entropy,
+void read_metric_binary(
       metric_quantities *restrict metric,
-      primitive_quantities *restrict prims,
       FILE *restrict infile);
 
 // con2prim binary output functions
@@ -61,7 +57,6 @@ void write_primitive_binary(
       const int eos_type,
       const bool velocity_only,
       const bool evolve_entropy,
-      const primitive_quantities *restrict prims_orig, 
       const primitive_quantities *restrict prims, 
       FILE *restrict outfile);
 
@@ -76,11 +71,8 @@ void write_stress_energy_binary(
       const stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 
-void write_c2p_initial_data_binary(
-      const int eos_type,
-      const bool evolve_entropy,
+void write_metric_binary(
       const metric_quantities *restrict metric,
-      const primitive_quantities *restrict prims,
       FILE *restrict outfile);
 
 // Helper functions
