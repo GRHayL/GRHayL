@@ -1,4 +1,4 @@
-name: GRHayL
+name: Ubuntu 20.04, 22.04
 
 on:
   push:
