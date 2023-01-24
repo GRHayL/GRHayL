@@ -7,9 +7,11 @@ on:
 
 jobs:
   con-to-prim:
-    runs-on: macos-12
     strategy:
       fail-fast: false
+      matrix:
+        os: [macos-11, macos-12, macos-13]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
@@ -33,9 +35,11 @@ jobs:
         run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_con2prim
 
   induction-gauge-rhs:
-    runs-on: macos-12
     strategy:
-      fail-fast: false  
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12, macos-13]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
