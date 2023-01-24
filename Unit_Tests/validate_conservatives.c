@@ -24,7 +24,8 @@ int validate_conservatives(
                      FILE *restrict infile) {
 
   conservative_quantities cons_before, cons_after;
-  read_conservative_binary(evolve_entropy, &cons_before, &cons_after, infile);
+  read_conservative_binary(evolve_entropy, &cons_before, infile);
+  read_conservative_binary(evolve_entropy, &cons_after,  infile);
 
   if(rel_tol(tolerance, cons_before.rho, cons_orig->rho))
     return -1;

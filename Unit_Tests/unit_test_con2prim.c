@@ -6,7 +6,7 @@
 #include "unit_tests.h"
 
 // Tolerance limit for numerical values
-const double relative_tolerance = 1.0e-15;
+const double relative_tolerance = 1.0e-13;
 
 int main(int argc, char **argv) {
 

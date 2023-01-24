@@ -25,8 +25,10 @@ int validate_stress_energy(
                      const stress_energy *restrict Tmunu_orig,
                      const stress_energy *restrict Tmunu,
                      FILE *restrict infile) {
+
   stress_energy Tmunu_before, Tmunu_after;
-  read_stress_energy_binary(&Tmunu_before, &Tmunu_after, infile);
+  read_stress_energy_binary(&Tmunu_before, infile);
+  read_stress_energy_binary(&Tmunu_after, infile);
 
   if(rel_tol(tolerance, Tmunu_before.Ttt, Tmunu_orig->Ttt))
     return -1;

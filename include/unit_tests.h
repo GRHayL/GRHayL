@@ -39,12 +39,10 @@ void read_primitive_binary(
 
 void read_conservative_binary(
       const bool evolve_entropy,
-      conservative_quantities *restrict cons_orig,
       conservative_quantities *restrict cons,
       FILE *restrict outfile);
 
 void read_stress_energy_binary(
-      stress_energy *restrict Tmunu_orig,
       stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 
@@ -62,12 +60,10 @@ void write_primitive_binary(
 
 void write_conservative_binary(
       const bool evolve_entropy,
-      const conservative_quantities *restrict cons_orig,
       const conservative_quantities *restrict cons,
       FILE *restrict outfile);
 
 void write_stress_energy_binary(
-      const stress_energy *restrict Tmunu_orig,
       const stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 
