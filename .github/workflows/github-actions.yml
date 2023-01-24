@@ -28,12 +28,5 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_font_fix.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_limit_v_and_output_u0.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_enforce_primitive_limits_and_output_u0.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_Hybrid_Multi_Method.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_apply_inequality_fixes.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_compute_Tmunu.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_compute_conservs.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_font_fix.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_limit_v_and_output_u0.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_rand_enforce_primitive_limits_and_output_u0.bin
       - name: Run Con2Prim unit test
         run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_con2prim
