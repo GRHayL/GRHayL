@@ -12,7 +12,7 @@
   }
 
 // Tolerance limit for numerical values
-double relative_tolerance = 1.0e-15;
+const double relative_tolerance = 1.0e-15;
 
 inline void perturb_data(double *restrict rand_val, primitive_quantities *restrict prims, conservative_quantities *restrict cons) {
   prims->rho   *= rand_val[0];
@@ -110,6 +110,7 @@ int main(int argc, char **argv) {
 
   char filename[100];
   // Now perform one test for each of the selected routines
+  // TODO: unlike main loop, this loop can be parallelized because each routine uses a different file
   for(int which_routine=0;which_routine<num_routines_tested;which_routine++) {
     params.main_routine = con2prim_test_keys[which_routine];
 
@@ -158,6 +159,7 @@ int main(int argc, char **argv) {
 
       srand(0);
 
+      // Can't parallelize because it could change the behavior of reading from the files
       for(int i=0;i<npoints;i++) { // Density loop
         double xrho  = exp(lrmin + dlr*i);
         double P_cold = 0.0;
@@ -187,8 +189,7 @@ int main(int argc, char **argv) {
           cons_orig.S_z = 1e300;
 
           // Generate random data to serve as the 'true' primitive values
-          bool random_metric = true;
-          initial_random_data(xrho, xpress, random_metric, &metric, &prims);
+          initial_random_data(xrho, xpress, &metric, &prims);
 
           double u0 = poison;
           int test_fail;

@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "con2prim.h"
-
+#include "induction.h"
 
 // con2prim validation functions
 int validate_primitives(
@@ -83,8 +83,9 @@ static inline double randf(double low,double high) {
 void initial_random_data(
       const double xrho,
       const double xpress,
-      const bool random_metric,
       metric_quantities *restrict metric,
       primitive_quantities *restrict prims);
+
+void randomize_metric(metric_quantities *restrict metric);
 
 #endif // UNIT_TESTS_H_
