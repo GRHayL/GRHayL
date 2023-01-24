@@ -10,13 +10,8 @@ const double relative_tolerance = 1.0e-15;
 
 int main(int argc, char **argv) {
 
-  // These variables set up the tested range of values
-  // and number of sampling points.
-  int npoints = 80; //Number of sampling points in density and pressure/temperature
-  double test_rho_min = 1e-12; //Minimum input density
-  double test_rho_max = 1e-3; //Maximum input density
-  // double test_T_min = 1e-2; //Minimum input temperature
-  // double test_T_max = 1e+2; //Maximum input temperature
+  //Number of sampling points in density and pressure/temperature
+  int npoints = 80;
 
   // Count number of routines tested
   int num_routines_tested = 1;
@@ -37,11 +32,12 @@ int main(int argc, char **argv) {
   int eos_type = 0; // Hybrid=0, Tabulated=1;
   int neos = 1;
   double W_max = 10.0; //IGM default
+  double rho_b_min = 1e-12;
   double rho_b_max = 1e300; //IGM default
   double gamma_th = 2.0; //Taken from magnetizedTOV.par
-  double rho_tab[1] = {0.0};
-  double gamma_tab[1] = {2.0};
-  double k_tab = 1.0;
+  double rho_ppoly[1] = {0.0};
+  double gamma_ppoly[1] = {2.0};
+  double k_ppoly0 = 1.0;
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
@@ -50,41 +46,17 @@ int main(int argc, char **argv) {
 
   eos_parameters eos;
   initialize_general_eos(eos_type, W_max,
-             test_rho_min, test_rho_min, rho_b_max,
+             rho_b_min, rho_b_min, rho_b_max,
              &eos);
 
   initialize_hybrid_functions(&eos);
 
-  initialize_hybrid_eos(neos, rho_tab,
-             gamma_tab, k_tab, gamma_th,
+  initialize_hybrid_eos(neos, rho_ppoly,
+             gamma_ppoly, k_ppoly0, gamma_th,
              &eos);
 
   con2prim_diagnostics diagnostics;
   initialize_diagnostics(&diagnostics);
-
-  // We will be performing the tabulated EOS test in the following way:
-  //
-  //      Y_e      = 0.1
-  //       W       = 2
-  // log10(Pmag/P) = -5
-  //
-  // rho will vary between rho_min and rho_max (uniformly in log space)
-  //  T  will vary between  T_min  and  T_max  (uniformly in log space)
-
-  // Compute the density step size
-  const double lrmin        = log(test_rho_min);
-  const double lrmax        = log(test_rho_max);
-  const double dlr          = (lrmax - lrmin)/(npoints-1);
-
-  // Compute the temperature step size
-  //const double ltmin        = log(test_T_min);
-  //const double ltmax        = log(test_T_max);
-  //const double dlt          = (ltmax - ltmin)/(npoints-1);
-
-  // tau is given by (see :
-  //
-  // tau := hW^{2} + B^{2} - P - 0.5*( (B.v)^{2} + (B/W)^{2} )
-  // Absolutely minimum allowed tau
 
   char filename[100];
   // Now perform one test for each of the selected routines
@@ -95,6 +67,11 @@ int main(int argc, char **argv) {
     int failures = 0;
 
     printf("Beginning test for routine %s\n", con2prim_test_names[which_routine]);
+
+    FILE* initial_data;
+    sprintf(filename,"C2P_%.30s_norm_initial_data.bin",con2prim_test_names[which_routine]);
+    initial_data = fopen(filename,"rb");
+    check_file_was_successfully_open(initial_data, filename);
 
     FILE* infiles[7];
 
@@ -130,21 +107,7 @@ int main(int argc, char **argv) {
 
     // Can't parallelize because it could change the behavior of reading from the files
     for(int i=0;i<npoints;i++) { // Density loop
-      double xrho  = exp(lrmin + dlr*i);
-      double P_cold = 0.0;
-      eos.hybrid_compute_P_cold(&eos, xrho, &P_cold);
-
-      // Compute the pressure step size
-      const double lpmin        = log(1.0e-30);//-P_cold);
-      const double lpmax        = log(10.0*P_cold);
-      const double dlp          = (lpmax - lpmin)/(npoints-1);
       for(int j=0;j<npoints;j++) { // Pressure loop
-        // Start by setting the prims (rho,Ye,T,P,eps)
-        //double xtemp = exp(ltmin + dlt*j);
-        //double xye   = Ye_test;
-        double xpress  = exp(lpmin + dlp*j);
-        //WVU_EOS_P_and_eps_from_rho_Ye_T( xrho,xye,xtemp, &xpress,&xeps );
-
         // Define the various GRHayL structs for the unit tests
         metric_quantities metric;
         primitive_quantities prims, prims_orig, prims_guess;
@@ -157,8 +120,8 @@ int main(int argc, char **argv) {
         cons_orig.S_y = 1e300;
         cons_orig.S_z = 1e300;
 
-        // Generate random data to serve as the 'true' primitive values
-        initial_random_data(xrho, xpress, &metric, &prims);
+        // Read initial data accompanying trusted output
+        read_c2p_initial_data_binary(eos.eos_type, params.evolve_entropy, &metric, &prims, initial_data);
 
         double u0 = poison;
         int test_fail;
