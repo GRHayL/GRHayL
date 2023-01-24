@@ -1,4 +1,10 @@
 # GRHayL
+
+---
+
+[![Unit Tests - Ubuntu](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu.yml)
+[![Unit Tests - Mac OS](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS.yml)
+
 This is a beta version of the infrastructure-agnostic magnetohydrodynamics code
 my collaborators and I are developing. This is a piece of the upcoming GRHayL
 (General Relativistic Hydrodynamic Library) code. This repo currently contains the core
