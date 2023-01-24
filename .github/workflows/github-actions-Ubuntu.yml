@@ -47,6 +47,7 @@ jobs:
         run: make
       - name: Copy test data to working directory
         run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/gauge_rhs_initial_data.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/phitilde_and_A_gauge_rhs.bin
       - name: Run induction equation gauge RHS unit test
         run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_gauge_rhs

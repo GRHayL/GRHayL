@@ -12,7 +12,6 @@ int main(int argc, char **argv) {
   const int gridmax     = 21;
   const int arraylength = gridmax*gridmax*gridmax;
 
-  const int gauss_center = 10;
   const double dX[3] = {0.1, 0.1, 0.1};
 
   const double Lorenz_damping_factor = 0.1;
@@ -50,41 +49,47 @@ int main(int argc, char **argv) {
   double *Ay_rhs = (double*) malloc(sizeof(double)*arraylength);
   double *Az_rhs = (double*) malloc(sizeof(double)*arraylength);
 
+//  // Read in data from file to ensure portability
+  FILE* infile;
+  infile = fopen("gauge_rhs_initial_data.bin", "rb");
+  check_file_was_successfully_open(infile, "gauge_rhs_initial_data.bin");
+
+  int key;
+  key  = fread(gupxx, sizeof(double), arraylength, infile);
+  key += fread(gupxy, sizeof(double), arraylength, infile);
+  key += fread(gupxz, sizeof(double), arraylength, infile);
+  key += fread(gupyy, sizeof(double), arraylength, infile);
+  key += fread(gupyz, sizeof(double), arraylength, infile);
+  key += fread(gupzz, sizeof(double), arraylength, infile);
+
+  key += fread(psi,   sizeof(double), arraylength, infile);
+  key += fread(lapse, sizeof(double), arraylength, infile);
+  key += fread(betax, sizeof(double), arraylength, infile);
+  key += fread(betay, sizeof(double), arraylength, infile);
+  key += fread(betaz, sizeof(double), arraylength, infile);
+
+  key += fread(phitilde, sizeof(double), arraylength, infile);
+  key += fread(Ax,       sizeof(double), arraylength, infile);
+  key += fread(Ay,       sizeof(double), arraylength, infile);
+  key += fread(Az,       sizeof(double), arraylength, infile);
+
+  fclose(infile);
+  if(key != arraylength*15) {
+    printf("An error has occured with reading in initial data. Please check that data\n"
+           "is up-to-date with current test version.\n");
+    exit(1);
+  }
+
   // Data which should be written before it is used is poisoned to validate behavior.
   // RHSs for A are set to 0 because they are assumed to already contain the zero-gauge
   // contribution to the RHS before entering this function.
   const double poison = 1e200;
-  // This cannot be in parallel because the randomized quantities need to happen in the
-  // same order every time.
+
+#pragma omp parallel for
   for(int k=gridmin; k<gridmax; k++)
     for(int j=gridmin; j<gridmax; j++)
       for(int i=gridmin; i<gridmax; i++) {
         const int index = indexf(gridmax,i,j,k);
-
-        metric_quantities metric;
-        randomize_metric(&metric);
-        gupxx[index] = metric.adm_gupxx;
-        gupxy[index] = metric.adm_gupxy;
-        gupxz[index] = metric.adm_gupxz;
-        gupyy[index] = metric.adm_gupyy;
-        gupyz[index] = metric.adm_gupyz;
-        gupzz[index] = metric.adm_gupzz;
-
-        psi[index]   = sqrt(metric.psi2);
-        lapse[index] = metric.lapse;
-        betax[index] = metric.betax;
-        betay[index] = metric.betay;
-        betaz[index] = metric.betaz;
-
-        const int x = abs(i-gauss_center)*dX[0];
-        const int y = abs(j-gauss_center)*dX[1];
-        const int z = abs(k-gauss_center)*dX[2];
-        const double r2 = x*x + y*y + z*z;
-
-        Ax[index]       = exp(-r2/(2.0*4.0));
-        Ay[index]       = exp(-r2/(2.0*5.0));;
-        Az[index]       = exp(-r2/(2.0*2.0));;
-        phitilde[index] = exp(-r2/(2.0*1.0));;
 
         alpha_interp[index]  = poison;
         shiftx_interp[index] = poison;
@@ -218,7 +223,6 @@ int main(int argc, char **argv) {
   }
 
 
-  FILE* infile;
   infile = fopen("phitilde_and_A_gauge_rhs.bin", "rb");
   check_file_was_successfully_open(infile, "phitilde_and_A_gauge_rhs.bin");
 
@@ -227,12 +231,13 @@ int main(int argc, char **argv) {
   double *Ay_trusted       = (double*) malloc(sizeof(double)*arraylength);
   double *Az_trusted       = (double*) malloc(sizeof(double)*arraylength);
 
-  int readkey;
-  readkey  = fread(phitilde_trusted, sizeof(double), arraylength, infile);
-  readkey += fread(Ax_trusted,       sizeof(double), arraylength, infile);
-  readkey += fread(Ay_trusted,       sizeof(double), arraylength, infile);
-  readkey += fread(Az_trusted,       sizeof(double), arraylength, infile);
-  if(readkey != arraylength*4) {
+  key  = fread(phitilde_trusted, sizeof(double), arraylength, infile);
+  key += fread(Ax_trusted,       sizeof(double), arraylength, infile);
+  key += fread(Ay_trusted,       sizeof(double), arraylength, infile);
+  key += fread(Az_trusted,       sizeof(double), arraylength, infile);
+
+  fclose(infile);
+  if(key != arraylength*4) {
     printf("An error has occured with reading in trusted data. Please check that comparison data\n"
            "is up-to-date with current test version.\n");
     exit(1);
