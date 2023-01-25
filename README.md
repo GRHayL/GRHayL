@@ -3,6 +3,7 @@
 ---
 
 [![Ubuntu-gcc](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-gcc.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-gcc.yml)
+[![Ubuntu-intel](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-intel.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-intel.yml)
 [![Ubuntu-clang](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-clang.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-clang.yml)
 [![MacOS-gcc](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-gcc.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-gcc.yml)
 [![MacOS-clang](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-clang.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-clang.yml)

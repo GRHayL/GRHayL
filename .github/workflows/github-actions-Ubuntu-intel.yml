@@ -1,4 +1,4 @@
-name: Ubuntu-gcc
+name: Ubuntu-intel
 
 on:
   push:
@@ -15,10 +15,22 @@ jobs:
     
     steps:
       - uses: actions/checkout@v3
-      - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+      - name: Install intel compiler and hdf5
+        run: |
+          wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          sudo apt-get update
+          sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+
       - name: Compile GRHayL
-        run: make
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          printenv >> $GITHUB_ENV
+          sed -i 's/"gnu"/"intel"/; s/icc/icx/' Makefile
+          make
+
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_initial_data.bin
@@ -41,10 +53,22 @@ jobs:
     
     steps:
       - uses: actions/checkout@v3
-      - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+      - name: Install intel compiler and hdf5
+        run: |
+          wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          sudo apt-get update
+          sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+
       - name: Compile GRHayL
-        run: make
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          printenv >> $GITHUB_ENV
+          sed -i 's/"gnu"/"intel"/; s/icc/icx/' Makefile
+          make
+
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/gauge_rhs_initial_data.bin
@@ -62,10 +86,22 @@ jobs:
     
     steps:
       - uses: actions/checkout@v3
-      - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+      - name: Install intel compiler and hdf5
+        run: |
+          wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          sudo apt-get update
+          sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+
       - name: Compile GRHayL
-        run: make
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          printenv >> $GITHUB_ENV
+          sed -i 's/"gnu"/"intel"/; s/icc/icx/' Makefile
+          make
+
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
