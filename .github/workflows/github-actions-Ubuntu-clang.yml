@@ -1,4 +1,4 @@
-name: Ubuntu-gcc
+name: Ubuntu-clang
 
 on:
   push:
@@ -16,9 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+        run: sudo apt-get update && sudo apt-get install -y clang libhdf5-serial-dev
       - name: Compile GRHayL
-        run: make
+        run: |
+          sed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
+          make
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_initial_data.bin
@@ -42,9 +44,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+        run: sudo apt-get update && sudo apt-get install -y clang libhdf5-serial-dev
       - name: Compile GRHayL
-        run: make
+        run: |
+          sed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
+          make
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/gauge_rhs_initial_data.bin
@@ -63,9 +67,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+        run: sudo apt-get update && sudo apt-get install -y clang libhdf5-serial-dev
       - name: Compile GRHayL
-        run: make
+        run: |
+          sed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
+          make
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
