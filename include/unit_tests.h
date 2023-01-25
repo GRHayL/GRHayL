@@ -12,8 +12,7 @@ void validate_primitives(
       const bool evolve_entropy,
       const primitive_quantities *restrict prims,
       const primitive_quantities *restrict prims_trusted,
-      const primitive_quantities *restrict prims_pert,
-      FILE *restrict infile);
+      const primitive_quantities *restrict prims_pert);
 
 void validate_conservatives(
       const bool evolve_entropy,
@@ -24,8 +23,7 @@ void validate_conservatives(
 void validate_stress_energy(
       const stress_energy *restrict Tmunu,
       const stress_energy *restrict Tmunu_trusted,
-      const stress_energy *restrict Tmunu_pert,
-      FILE *restrict infile);
+      const stress_energy *restrict Tmunu_pert);
 
 // con2prim binary input functions
 void read_primitive_binary(

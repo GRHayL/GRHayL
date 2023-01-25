@@ -12,8 +12,7 @@ void validate_primitives(
       const bool evolve_entropy,
       const primitive_quantities *restrict prims,
       const primitive_quantities *restrict prims_trusted,
-      const primitive_quantities *restrict prims_pert,
-      FILE *restrict infile) {
+      const primitive_quantities *restrict prims_pert) {
 
   char fail_msg[100] = "Test has failed!\n The primitive variable(s) which failed are ";
   int test_fail = 0;

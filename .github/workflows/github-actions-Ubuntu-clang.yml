@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  con-to-prim:
+  inequality-fix:
     strategy:
       fail-fast: false
       matrix:
@@ -29,6 +29,30 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_apply_inequality_fixes_pert.bin
       - name: Run con2prim unit test for apply_inequality_fix function
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_inequality_fix
+
+  font-fix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install needed ubuntu packages
+        run: sudo apt-get update && sudo apt-get install -y clang-14 libhdf5-serial-dev
+      - name: Compile GRHayL
+        run: |
+          sed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
+          sed -i 's/= clang/= clang-14/' Makefile
+          make
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_initial_data.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_font_fix.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_font_fix_pert.bin
+      - name: Run con2prim unit test for font_fix function
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_font_fix
 
   induction-gauge-rhs:
     strategy:
