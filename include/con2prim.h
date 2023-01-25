@@ -44,16 +44,14 @@ static const double NUMEPSILON   = 2.2204460492503131e-16;
 //                       CerdaDuran2D, CerdaDuran3D, Palenzuela1D, Palenzuela1D_entropy,
 //                       Newman1D};
 
-static const int None = -1;
-static const int Noble2D = 0;
-static const int Noble1D = 1;
-static const int Noble1D_entropy = 2;
-static const int Noble1D_entropy2 = 3;
-static const int CerdaDuran2D = 4;
-static const int CerdaDuran3D = 5;
-static const int Palenzuela1D = 6;
-static const int Palenzuela1D_entropy = 7;
-static const int Newman1D = 8;
+enum available_con2prim_methods {
+  None=-1,
+  Noble2D, Noble1D,
+  Noble1D_entropy, Noble1D_entropy2,
+  CerdaDuran2D, CerdaDuran3D,
+  Palenzuela1D, Palenzuela1D_entropy,
+  Newman1D
+};
 
 /*TODO: change failure checker to use bitwise operations instead of add powers of 10
         current failure checker values (using K=1000 and M=1000000):
