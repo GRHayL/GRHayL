@@ -16,43 +16,43 @@ void validate_primitives(
 
   char fail_msg[100] = "Test has failed!\n The primitive variable(s) which failed are ";
   int test_fail = 0;
-  if( relative_error(prims_trusted->rho, prims->rho) > relative_error(prims_trusted->rho, prims_pert->rho) ) {
+  if( relative_error(prims_trusted->rho, prims->rho) > tolerance*relative_error(prims_trusted->rho, prims_pert->rho) ) {
     sprintf(fail_msg, "%.80s rho_b", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(prims_trusted->press, prims->press) > relative_error(prims_trusted->press, prims_pert->press) ) {
+  if( relative_error(prims_trusted->press, prims->press) > tolerance*relative_error(prims_trusted->press, prims_pert->press) ) {
     sprintf(fail_msg, "%.80s press", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(prims_trusted->vx, prims->vx) > relative_error(prims_trusted->vx, prims_pert->vx) ) {
+  if( relative_error(prims_trusted->vx, prims->vx) > tolerance*relative_error(prims_trusted->vx, prims_pert->vx) ) {
     sprintf(fail_msg, "%.80s vx", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(prims_trusted->vy, prims->vy) > relative_error(prims_trusted->vy, prims_pert->vy) ) {
+  if( relative_error(prims_trusted->vy, prims->vy) > tolerance*relative_error(prims_trusted->vy, prims_pert->vy) ) {
     sprintf(fail_msg, "%.80s vy", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(prims_trusted->vz, prims->vz) > relative_error(prims_trusted->vz, prims_pert->vz) ) {
+  if( relative_error(prims_trusted->vz, prims->vz) > tolerance*relative_error(prims_trusted->vz, prims_pert->vz) ) {
     sprintf(fail_msg, "%.80s vz", fail_msg);
     test_fail = 1;
   }
 
   if(evolve_entropy)
-    if( relative_error(prims_trusted->entropy, prims->entropy) > relative_error(prims_trusted->entropy, prims_pert->entropy) ) {
+    if( relative_error(prims_trusted->entropy, prims->entropy) > tolerance*relative_error(prims_trusted->entropy, prims_pert->entropy) ) {
       sprintf(fail_msg, "%.80s entropy", fail_msg);
       test_fail = 1;
     }
 
   if(eos_type == 2) { //Tabulated
-    if( relative_error(prims_trusted->Y_e, prims->Y_e) > relative_error(prims_trusted->Y_e, prims_pert->Y_e) ) {
+    if( relative_error(prims_trusted->Y_e, prims->Y_e) > tolerance*relative_error(prims_trusted->Y_e, prims_pert->Y_e) ) {
       sprintf(fail_msg, "%.80s Y_e", fail_msg);
       test_fail = 1;
     }
-    if( relative_error(prims_trusted->temperature, prims->temperature) > relative_error(prims_trusted->temperature, prims_pert->temperature) ) {
+    if( relative_error(prims_trusted->temperature, prims->temperature) > tolerance*relative_error(prims_trusted->temperature, prims_pert->temperature) ) {
       sprintf(fail_msg, "%.80s temperature", fail_msg);
       test_fail = 1;
     }

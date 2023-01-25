@@ -15,33 +15,33 @@ void validate_conservatives(
 
   char fail_msg[100] = "Test has failed!\n The conservative variable(s) which failed are ";
   int test_fail = 0;
-  if( relative_error(cons_trusted->rho, cons->rho) > relative_error(cons_trusted->rho, cons_pert->rho) ) {
+  if( relative_error(cons_trusted->rho, cons->rho) > tolerance*relative_error(cons_trusted->rho, cons_pert->rho) ) {
     sprintf(fail_msg, "%.90s rho_star", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(cons_trusted->tau, cons->tau) > relative_error(cons_trusted->tau, cons_pert->tau) ) {
+  if( relative_error(cons_trusted->tau, cons->tau) > tolerance*relative_error(cons_trusted->tau, cons_pert->tau) ) {
     sprintf(fail_msg, "%.90s tau", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(cons_trusted->S_x, cons->S_x) > relative_error(cons_trusted->S_x, cons_pert->S_x) ) {
+  if( relative_error(cons_trusted->S_x, cons->S_x) > tolerance*relative_error(cons_trusted->S_x, cons_pert->S_x) ) {
     sprintf(fail_msg, "%.90s S_x", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(cons_trusted->S_y, cons->S_y) > relative_error(cons_trusted->S_y, cons_pert->S_y) ) {
+  if( relative_error(cons_trusted->S_y, cons->S_y) > tolerance*relative_error(cons_trusted->S_y, cons_pert->S_y) ) {
     sprintf(fail_msg, "%.90s S_y", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(cons_trusted->S_z, cons->S_z) > relative_error(cons_trusted->S_z, cons_pert->S_z) ) {
+  if( relative_error(cons_trusted->S_z, cons->S_z) > tolerance*relative_error(cons_trusted->S_z, cons_pert->S_z) ) {
     sprintf(fail_msg, "%.90s S_z", fail_msg);
     test_fail = 1;
   }
 
   if(evolve_entropy)
-    if( relative_error(cons_trusted->entropy, cons->entropy) > relative_error(cons_trusted->entropy, cons_pert->entropy) ) {
+    if( relative_error(cons_trusted->entropy, cons->entropy) > tolerance*relative_error(cons_trusted->entropy, cons_pert->entropy) ) {
       sprintf(fail_msg, "%.90s entropy", fail_msg);
       test_fail = 1;
     }

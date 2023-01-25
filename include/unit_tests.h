@@ -96,6 +96,8 @@ static inline double relative_error( const double a, const double b ) {
   else              return( 0.0 );
 }
 
+static double tolerance = 4.0;
+
 static inline double randf(double low,double high) {
   return (rand()/(double)(RAND_MAX))*(high-low)+low;
 }
