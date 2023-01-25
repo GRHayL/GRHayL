@@ -22,6 +22,7 @@ jobs:
           gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
           gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
           gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
+          gsed -i 's/libgomp/libomp/' Makefile
           export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
           export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
           make
@@ -56,6 +57,7 @@ jobs:
           gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
           gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
           gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
+          gsed -i 's/libgomp/libomp/' Makefile
           export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
           export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
           make
@@ -84,6 +86,7 @@ jobs:
           gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
           gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
           gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
+          gsed -i 's/libgomp/libomp/' Makefile
           export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
           export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
           make
