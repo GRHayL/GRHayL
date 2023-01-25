@@ -4,13 +4,13 @@ inline int indexf(const int gridmax, const int i, const int j, const int k) {
   return i + j*gridmax + k*gridmax*gridmax;
 }
 
-int rel_tol(const double tolerance, const double x1, const double x2) {
+int rel_tol(const double reltol, const double x1, const double x2) {
   const double rel_diff = relative_error(x1, x2);
-  if(rel_diff > tolerance) return 1;
+  if(rel_diff > reltol) return 1;
   return 0;
 }
 // Tolerance limit for numerical values
-const double tolerance = 1.0e-15;
+const double reltol = 1.0e-15;
 
 int main(int argc, char **argv) {
   const int gridmin     = 0;
@@ -249,16 +249,16 @@ int main(int argc, char **argv) {
     for(int j=gridmin+3; j<gridmax-3; j++)
       for(int i=gridmin+3; i<gridmax-3; i++) {
         const int index = indexf(gridmax,i,j,k);
-        if(rel_tol(tolerance, phitilde_trusted[index], phitilde_rhs[index]))
+        if(rel_tol(reltol, phitilde_trusted[index], phitilde_rhs[index]))
           grhayl_error("Test unit_test_gauge_rhs has failed for variable phitilde_rhs at index (%d,%d,%d).\n", i, j, k);
 
-        if(rel_tol(tolerance, Ax_trusted[index], Ax_rhs[index]))
+        if(rel_tol(reltol, Ax_trusted[index], Ax_rhs[index]))
           grhayl_error("Test unit_test_gauge_rhs has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);
 
-        if(rel_tol(tolerance, Ay_trusted[index], Ay_rhs[index]))
+        if(rel_tol(reltol, Ay_trusted[index], Ay_rhs[index]))
           grhayl_error("Test unit_test_gauge_rhs has failed for variable Ay_rhs at index (%d,%d,%d).\n", i, j, k);
 
-        if(rel_tol(tolerance, Az_trusted[index], Az_rhs[index]))
+        if(rel_tol(reltol, Az_trusted[index], Az_rhs[index]))
           grhayl_error("Test unit_test_gauge_rhs has failed for variable Az_rhs at index (%d,%d,%d).\n", i, j, k);
   }
   grhayl_info("Induction equation gauge RHS test has passed!\n");
