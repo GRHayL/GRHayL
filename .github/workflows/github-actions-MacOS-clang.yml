@@ -1,0 +1,83 @@
+name: MacOS-clang
+
+on:
+  push:
+    branches: main
+  pull_request:
+
+jobs:
+  con-to-prim:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install llvm@14 gsed hdf5
+      - name: Compile GRHayL
+        run: |
+          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
+          gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
+          gsed -i 's/= clang/= clang-14/' Makefile
+          make
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_initial_data.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_Hybrid_Multi_Method.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_apply_inequality_fixes.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_compute_Tmunu.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_compute_conservs.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_font_fix.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_limit_v_and_output_u0.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_enforce_primitive_limits_and_output_u0.bin
+      - name: Run con2prim unit test
+        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_con2prim
+
+  induction-gauge-rhs:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install llvm@14 gsed hdf5
+      - name: Compile GRHayL
+        run: |
+          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
+          gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
+          gsed -i 's/= clang/= clang-14/' Makefile
+          make
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/gauge_rhs_initial_data.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/phitilde_and_A_gauge_rhs.bin
+      - name: Run induction equation gauge RHS unit test
+        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_gauge_rhs
+
+  tabulated-eos-read-table:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install llvm@14 gsed hdf5
+      - name: Compile GRHayL
+        run: |
+          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
+          gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
+          gsed -i 's/= clang/= clang-14/' Makefile
+          make
+      - name: Copy test data to working directory
+        run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
+      - name: Run tabulated EOS read table unit test
+        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_tabulated_eos_read_table simple_table.h5
