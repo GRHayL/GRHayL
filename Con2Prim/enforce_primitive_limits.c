@@ -37,7 +37,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
 
   // Tabulated EOS specific floors and ceilings
   } else if( eos->eos_type==1 ) {
-    printf("No tabulated EOS support yet! Sorry!");
+    grhayl_warn("No tabulated EOS support yet! Sorry!");
   //  // Apply floors and ceilings to Y_e and T
   //  const double xye   = MIN(MAX(prims->Y_e,eos->Ye_min),eos->Ye_atm);
   //  const double xtemperature = MIN(MAX(prims->temperature,eos->T_atm ),eos->T_max );

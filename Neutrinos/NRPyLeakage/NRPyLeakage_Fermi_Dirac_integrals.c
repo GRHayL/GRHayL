@@ -31,8 +31,7 @@ double NRPyLeakage_Fermi_Dirac_integrals(const int k, const double z) {
       Fermi_Dirac_integral = ((1.0/6.0)*pow(z, 6) + 8.2247000000000003*((z)*(z)*(z)*(z)) + 113.6439*((z)*(z)) + 236.53229999999999)/(1 + exp(-1.9726999999999999*z));
       break;
     default:
-      fprintf(stderr, "Unsuported value of k: %d\n", k);
-      exit(1);
+      grhayl_error("Unsuported value of k: %d\n", k);
     }
   }
   else {
@@ -56,8 +55,7 @@ double NRPyLeakage_Fermi_Dirac_integrals(const int k, const double z) {
       Fermi_Dirac_integral = 120*exp(z)/(0.0147*exp(0.94310000000000005*z) + 1);
       break;
     default:
-      fprintf(stderr, "Unsuported value of k: %d\n", k);
-      exit(1);
+      grhayl_error("Unsuported value of k: %d\n", k);
     }
   }
 

@@ -38,12 +38,16 @@ void limit_v_and_output_u0(const eos_parameters *restrict eos,
   double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
   *u0_out = alpha_u0*metric->lapseinv;
   if(isnan(*u0_out)) {
-    printf("*********************************************\n");
-    printf("Metric/psi4: %e %e %e %e %e %e / %e\n", metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz, metric->psi4);
-    printf("Lapse/shift: %e (=1/%e) / %e %e %e\n",metric->lapse, metric->lapseinv, metric->betax, metric->betay, metric->betaz);
-    printf("Velocities : %e %e %e\n", prims->vx, prims->vx, prims->vz);
-    printf("Found nan while computing u^{0} in function %s (file: %s)\n",__func__,__FILE__);
-    printf("*********************************************\n");
+    // Leo asks: shouldn't this be an error?
+    grhayl_warn("*********************************************\n"
+                "Found nan while computing u^{0}\nMetric/psi4: %e %e %e %e %e %e / %e\n"
+                "Lapse/shift: %e (=1/%e) / %e %e %e\nVelocities : %e %e %e\n"
+                "*********************************************\n",
+                metric->adm_gxx, metric->adm_gxy, metric->adm_gxz,
+                metric->adm_gyy, metric->adm_gyz, metric->adm_gzz,
+                metric->psi4, metric->lapse, metric->lapseinv,
+                metric->betax, metric->betay, metric->betaz,
+                prims->vx, prims->vx, prims->vz);
     diagnostics->nan_found++;
   }
 }

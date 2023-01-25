@@ -34,7 +34,7 @@ int apply_inequality_fixes(const GRHayL_parameters *restrict params, const eos_p
   eigenvalues_3by3_real_sym_matrix(&lam1, &lam2, &lam3, metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz);
   if (lam1 < 0.0 || lam2 < 0.0 || lam3 < 0.0) {
     // Metric is not positive-defitive, reset the metric to be conformally-flat.
-    printf("Metric isn't positive-definite!\n");
+    grhayl_warn("Metric isn't positive-definite!\n");
 //    metric->bssn_gxx = 1.0;
 //    metric->bssn_gxy = 0.0;
 //    metric->bssn_gxz = 0.0;

@@ -78,14 +78,14 @@ static inline double relative_error( const double a, const double b ) {
   else              return( 0.0 );
 }
 
-static int rel_tol(const double tolerance, const double x1, const double x2) {
+static inline int rel_tol(const double tolerance, const double x1, const double x2) {
   const double rel_diff = relative_error(x1, x2);
   if(rel_diff > tolerance) return 1;
   return 0;
 }
 
 static inline double randf(double low,double high) {
-    return (rand()/(double)(RAND_MAX))*(high-low)+low;
+  return (rand()/(double)(RAND_MAX))*(high-low)+low;
 }
 
 void initial_random_data(
@@ -97,9 +97,6 @@ void initial_random_data(
 void randomize_metric(metric_quantities *restrict metric);
 
 #define check_file_was_successfully_open(fp, filename) \
-  if( fp == NULL ) { \
-    fprintf(stderr, "(GRHayL) ERROR: Could not open file %s. Terminating.\n", filename); \
-    exit(1); \
-  }
+  if(!fp) grhayl_error("Could not open file %s.\n", filename);
 
 #endif // UNIT_TESTS_H_

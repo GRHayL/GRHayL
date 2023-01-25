@@ -1,8 +1,6 @@
 #include "GRHayL.h"
 #include "NRPyEOS_Tabulated.h"
 
-enum error_keys {err_usage=1, err_dims, err_wrong_var};
-
 double rel_err(const double a, const double b) {
   if( a == 0 ) return fabs(1 - a/b);
   if( b == 0 ) return fabs(1 - b/a);
@@ -39,7 +37,7 @@ double get_table_quantity(
 int main(int argc, char **argv) {
 
   if( argc != 2 )
-    grhayl_error(err_usage, "Correct usage is %s <table path>\n", argv[0]);
+    grhayl_error("Correct usage is %s <table path>\n", argv[0]);
 
   grhayl_info("Beginning readtable unit test\n");
 
@@ -48,11 +46,10 @@ int main(int argc, char **argv) {
   initialize_tabulated_functions(&eos);
   eos.tabulated_read_table_set_EOS_params(argv[1], &eos);
 
-  if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 ) {
-    grhayl_error(err_dims,
-                 "Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
+  if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
+    grhayl_error("Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
                  eos.N_rho, eos.N_T, eos.N_Ye);
-  }
+
   grhayl_info("Table dimensions: %d x %d x %d\n", eos.N_rho, eos.N_T, eos.N_Ye);
 
   // Step 2: Begin test
@@ -62,7 +59,7 @@ int main(int argc, char **argv) {
       const double var       = get_table_quantity(var_key, npoints, index);
       const double table_var = eos.table_all[var_key + NRPyEOS_ntablekeys*index];
       if( rel_err(var, table_var) > 1e-15 )
-        grhayl_error(err_wrong_var, "Relative error exceeds round-off: %.15e vs. %.15e\n", var, table_var);
+        grhayl_error("Relative error exceeds round-off: %.15e vs. %.15e\n", var, table_var);
     }
   }
 

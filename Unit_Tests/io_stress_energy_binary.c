@@ -18,12 +18,10 @@ void read_stress_energy_binary(
 
   // Since each read only reads a single double, the key should just be a sum of
   // every read that happens.
-  if( key != 10) {
-    printf("An error has occured with reading in trusted stress energy tensor data."
-           "Please check that comparison data"
-           "is up-to-date with current test version.\n");
-    exit(1);
-  }
+  if( key != 10)
+    grhayl_error("An error has occured with reading in trusted stress energy tensor data."
+                 "Please check that comparison data"
+                 "is up-to-date with current test version.\n");
 }
 
 void write_stress_energy_binary(

@@ -74,11 +74,9 @@ int main(int argc, char **argv) {
   key += fread(Az,       sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*15) {
-    printf("An error has occured with reading in initial data. Please check that data\n"
-           "is up-to-date with current test version.\n");
-    exit(1);
-  }
+  if(key != arraylength*15)
+    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+                 "is up-to-date with current test version.\n");
 
   // Data which should be written before it is used is poisoned to validate behavior.
   // RHSs for A are set to 0 because they are assumed to already contain the zero-gauge
@@ -237,37 +235,27 @@ int main(int argc, char **argv) {
   key += fread(Az_trusted,       sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*4) {
-    printf("An error has occured with reading in trusted data. Please check that comparison data\n"
-           "is up-to-date with current test version.\n");
-    exit(1);
-  }
+  if(key != arraylength*4)
+    grhayl_error("An error has occured with reading in trusted data. Please check that comparison data\n"
+                 "is up-to-date with current test version.\n");
 
 #pragma omp parallel for
   for(int k=gridmin+3; k<gridmax-3; k++)
     for(int j=gridmin+3; j<gridmax-3; j++)
       for(int i=gridmin+3; i<gridmax-3; i++) {
         const int index = indexf(gridmax,i,j,k);
-        if(rel_tol(tolerance, phitilde_trusted[index], phitilde_rhs[index])) {
-          printf("Test unit_test_gauge_rhs has failed for variable phitilde_rhs at index (%d,%d,%d).\n", i, j, k);
-          exit(1);
-        }
+        if(rel_tol(tolerance, phitilde_trusted[index], phitilde_rhs[index]))
+          grhayl_error("Test unit_test_gauge_rhs has failed for variable phitilde_rhs at index (%d,%d,%d).\n", i, j, k);
 
-        if(rel_tol(tolerance, Ax_trusted[index], Ax_rhs[index])) {
-          printf("Test unit_test_gauge_rhs has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);
-          exit(1);
-        }
+        if(rel_tol(tolerance, Ax_trusted[index], Ax_rhs[index]))
+          grhayl_error("Test unit_test_gauge_rhs has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);
 
-        if(rel_tol(tolerance, Ay_trusted[index], Ay_rhs[index])) {
-          printf("Test unit_test_gauge_rhs has failed for variable Ay_rhs at index (%d,%d,%d).\n", i, j, k);
-          exit(1);
-        }
+        if(rel_tol(tolerance, Ay_trusted[index], Ay_rhs[index]))
+          grhayl_error("Test unit_test_gauge_rhs has failed for variable Ay_rhs at index (%d,%d,%d).\n", i, j, k);
 
-        if(rel_tol(tolerance, Az_trusted[index], Az_rhs[index])) {
-          printf("Test unit_test_gauge_rhs has failed for variable Az_rhs at index (%d,%d,%d).\n", i, j, k);
-          exit(1);
-        }
+        if(rel_tol(tolerance, Az_trusted[index], Az_rhs[index]))
+          grhayl_error("Test unit_test_gauge_rhs has failed for variable Az_rhs at index (%d,%d,%d).\n", i, j, k);
   }
-  printf("Induction equation gauge RHS test has passed!\n");
+  grhayl_info("Induction equation gauge RHS test has passed!\n");
   return 0;
 }
