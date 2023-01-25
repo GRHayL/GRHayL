@@ -15,52 +15,52 @@ void validate_stress_energy(
 
   char fail_msg[100] = "Test has failed!\n The stress-energy variable(s) which failed are ";
   int test_fail = 0;
-  if( relative_error(Tmunu_trusted->Ttt, Tmunu->Ttt) > tolerance*relative_error(Tmunu_trusted->Ttt, Tmunu_pert->Ttt) ) {
+  if( validate(Tmunu_trusted->Ttt, Tmunu->Ttt, Tmunu_pert->Ttt) ) {
     sprintf(fail_msg, "%.90s Ttt", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Ttx, Tmunu->Ttx) > tolerance*relative_error(Tmunu_trusted->Ttx, Tmunu_pert->Ttx) ) {
+  if( validate(Tmunu_trusted->Ttx, Tmunu->Ttx, Tmunu_pert->Ttx) ) {
     sprintf(fail_msg, "%.90s Ttx", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Tty, Tmunu->Tty) > tolerance*relative_error(Tmunu_trusted->Tty, Tmunu_pert->Tty) ) {
+  if( validate(Tmunu_trusted->Tty, Tmunu->Tty, Tmunu_pert->Tty) ) {
     sprintf(fail_msg, "%.90s Tty", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Ttz, Tmunu->Ttz) > tolerance*relative_error(Tmunu_trusted->Ttz, Tmunu_pert->Ttz) ) {
+  if( validate(Tmunu_trusted->Ttz, Tmunu->Ttz, Tmunu_pert->Ttz) ) {
     sprintf(fail_msg, "%.90s Ttz", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Txx, Tmunu->Txx) > tolerance*relative_error(Tmunu_trusted->Txx, Tmunu_pert->Txx) ) {
+  if( validate(Tmunu_trusted->Txx, Tmunu->Txx, Tmunu_pert->Txx) ) {
     sprintf(fail_msg, "%.90s Txx", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Txy, Tmunu->Txy) > tolerance*relative_error(Tmunu_trusted->Txy, Tmunu_pert->Txy) ) {
+  if( validate(Tmunu_trusted->Txy, Tmunu->Txy, Tmunu_pert->Txy) ) {
     sprintf(fail_msg, "%.90s Txy", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Txz, Tmunu->Txz) > tolerance*relative_error(Tmunu_trusted->Txz, Tmunu_pert->Txz) ) {
+  if( validate(Tmunu_trusted->Txz, Tmunu->Txz, Tmunu_pert->Txz) ) {
     sprintf(fail_msg, "%.90s Txz", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Tyy, Tmunu->Tyy) > tolerance*relative_error(Tmunu_trusted->Tyy, Tmunu_pert->Tyy) ) {
+  if( validate(Tmunu_trusted->Tyy, Tmunu->Tyy, Tmunu_pert->Tyy) ) {
     sprintf(fail_msg, "%.90s Tyy", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Tyz, Tmunu->Tyz) > tolerance*relative_error(Tmunu_trusted->Tyz, Tmunu_pert->Tyz) ) {
+  if( validate(Tmunu_trusted->Tyz, Tmunu->Tyz, Tmunu_pert->Tyz) ) {
     sprintf(fail_msg, "%.90s Tyz", fail_msg);
     test_fail = 1;
   }
 
-  if( relative_error(Tmunu_trusted->Tzz, Tmunu->Tzz) > tolerance*relative_error(Tmunu_trusted->Tzz, Tmunu_pert->Tzz) ) {
+  if( validate(Tmunu_trusted->Tzz, Tmunu->Tzz, Tmunu_pert->Tzz) ) {
     sprintf(fail_msg, "%.90s Tzz", fail_msg);
     test_fail = 1;
   }
