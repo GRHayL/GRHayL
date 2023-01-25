@@ -21,7 +21,7 @@ jobs:
         run: |
           gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
           gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          gsed -i 's/= clang/= clang-14/' Makefile
+          gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
           make
       - name: Copy test data to working directory
         run: |
@@ -34,7 +34,11 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_limit_v_and_output_u0.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_norm_enforce_primitive_limits_and_output_u0.bin
       - name: Run con2prim unit test
-        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_con2prim
+        run: |
+          export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
+          export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
+          export LD_LIBRARY_PATH="`pwd`/lib"
+          ./exe/unit_test_con2prim
 
   induction-gauge-rhs:
     strategy:
@@ -51,14 +55,18 @@ jobs:
         run: |
           gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
           gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          gsed -i 's/= clang/= clang-14/' Makefile
+          gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
           make
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/gauge_rhs_initial_data.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/phitilde_and_A_gauge_rhs.bin
       - name: Run induction equation gauge RHS unit test
-        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_gauge_rhs
+        run: |
+          export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
+          export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
+          export LD_LIBRARY_PATH="`pwd`/lib"
+          ./exe/unit_test_gauge_rhs
 
   tabulated-eos-read-table:
     strategy:
@@ -75,9 +83,13 @@ jobs:
         run: |
           gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
           gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          gsed -i 's/= clang/= clang-14/' Makefile
+          gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
           make
       - name: Copy test data to working directory
         run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS read table unit test
-        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_tabulated_eos_read_table simple_table.h5
+        run: |
+          export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
+          export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
+          export LD_LIBRARY_PATH="`pwd`/lib"
+          ./exe/unit_test_tabulated_eos_read_table simple_table.h5
