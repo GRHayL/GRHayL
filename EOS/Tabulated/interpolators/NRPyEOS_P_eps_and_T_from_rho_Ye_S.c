@@ -26,7 +26,7 @@ void NRPyEOS_P_eps_and_T_from_rho_Ye_S(const eos_parameters *restrict eos_params
 
   // Step 5: Check for errors
   if( report.error )
-    grhayl_error(report.error_key, report.message);
+    grhayl_Error(report.error_key, report.message);
 
   // Step 6: Update output variables
   *P = outvars[0];

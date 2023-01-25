@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 
     int failures = 0;
 
-    printf("Beginning test for routine %s\n", con2prim_test_names[which_routine]);
+    grhayl_info("Beginning test for routine %s\n", con2prim_test_names[which_routine]);
 
     FILE* initial_data;
     sprintf(filename,"C2P_%.30s_norm_initial_data.bin",con2prim_test_names[which_routine]);
@@ -129,11 +129,10 @@ int main(int argc, char **argv) {
         prims_orig = prims;
         limit_v_and_output_u0(&eos, &metric, &prims, &u0, &diagnostics);
         test_fail = validate_primitives(relative_tolerance, eos.eos_type, 1, params.evolve_entropy, &prims_orig, &prims, infiles[0]);
-        if(test_fail) {
-          printf("Test unit_test_con2prim has failed with error code %d after function limit_v_and_output_u0.\n"
-                 "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
-          exit(1);
-        }
+        if(test_fail)
+          grhayl_error("Test unit_test_con2prim has failed with error code %d after function limit_v_and_output_u0.\n"
+                       "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
+                       
 
         // Compute conservatives based on these primitives
         compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
@@ -146,11 +145,9 @@ int main(int argc, char **argv) {
             cons_orig = cons;
             apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
             test_fail = validate_conservatives(relative_tolerance, params.evolve_entropy, &cons_orig, &cons, infiles[1]);
-            if(test_fail) {
-              printf("Test unit_test_con2prim has failed with error code %d after function apply_inequality_fixes.\n"
-                     "Please check file Unit_Tests/validate_conservatives.c for information on the possible exit codes.\n", test_fail);
-              exit(1);
-            }
+            if(test_fail)
+              grhayl_error("Test unit_test_con2prim has failed with error code %d after function apply_inequality_fixes.\n"
+                           "Please check file Unit_Tests/validate_conservatives.c for information on the possible exit codes.\n", test_fail);
           }
 
           // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
@@ -160,11 +157,9 @@ int main(int argc, char **argv) {
           prims_orig = prims;
           check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
           test_fail = validate_primitives(relative_tolerance, eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_guess, infiles[2]);
-          if(test_fail) {
-            printf("Test unit_test_con2prim has failed with error code %d after function Hybrid_Multi_Method.\n"
-                   "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
-            exit(1);
-          }
+          if(test_fail)
+            grhayl_error("Test unit_test_con2prim has failed with error code %d after function Hybrid_Multi_Method.\n"
+                         "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
 
           if(check!=0) {
             check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
@@ -174,24 +169,22 @@ int main(int argc, char **argv) {
             check = font_fix(&eos, &metric, &cons, &prims, &prims_tmp, &diagnostics);
             test_fail = validate_primitives(relative_tolerance, eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims_tmp, infiles[3]);
           }
-          if(test_fail) {
-            printf("Test unit_test_con2prim has failed with error code %d after function font_fix.\n"
-                   "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
-            exit(1);
-          }
+          if(test_fail)
+            grhayl_error("Test unit_test_con2prim has failed with error code %d after function font_fix.\n"
+                         "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
 
           /*************************************************************/
 
           if(check==0) {
             prims = prims_guess;
           } else {
-            printf("Con2Prim and Font fix failed!");
+            grhayl_warn("Con2Prim and Font fix failed!");
           }
         } else {
           diagnostics.failure_checker+=1;
           reset_prims_to_atmosphere(&params, &eos, &metric, &prims, &diagnostics);
           //TODO: Validate reset? (rhob press v)
-          printf("Negative rho_* triggering atmospheric reset.\n");
+          grhayl_warn("Negative rho_* triggering atmospheric reset.\n");
         } // if rho_star > 0
 
         //--------------------------------------------------
@@ -201,27 +194,22 @@ int main(int argc, char **argv) {
         prims_orig = prims;
         enforce_primitive_limits_and_output_u0(&params, &eos, &metric, &prims, &u0, &diagnostics);
         validate_primitives(relative_tolerance, eos.eos_type, 0, params.evolve_entropy, &prims_orig, &prims, infiles[4]);
-          if(test_fail) {
-            printf("Test unit_test_con2prim has failed with error code %d after function enforce_primitive_limits_and_output_u0.\n"
-                   "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
-            exit(1);
-          }
+        if(test_fail)
+          grhayl_error("Test unit_test_con2prim has failed with error code %d after function enforce_primitive_limits_and_output_u0.\n"
+                       "Please check file Unit_Tests/validate_primitives.c for information on the possible exit codes.\n", test_fail);
 
         cons_orig = cons;
         Tmunu_orig = Tmunu;
         compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0, &cons, &Tmunu);
         test_fail = validate_conservatives(relative_tolerance, params.evolve_entropy, &cons_orig, &cons, infiles[5]);
-        if(test_fail) {
-          printf("Test unit_test_con2prim has failed with error code %d after function compute_conservs_and_Tmunu.\n"
-                 "Please check file Unit_Tests/validate_conservatives.c for information on the possible exit codes.\n", test_fail);
-          exit(1);
-        }
+        if(test_fail)
+          grhayl_error("Test unit_test_con2prim has failed with error code %d after function compute_conservs_and_Tmunu.\n"
+                       "Please check file Unit_Tests/validate_conservatives.c for information on the possible exit codes.\n", test_fail);
+
         test_fail = validate_stress_energy(relative_tolerance, &Tmunu_orig, &Tmunu, infiles[6]);
-        if(test_fail) {
-          printf("Test unit_test_con2prim has failed with error code %d after function compute_conservs_and_Tmunu.\n"
-                 "Please check file Unit_Tests/validate_stress_energy.c for information on the possible exit codes.\n", test_fail);
-          exit(1);
-        }
+        if(test_fail)
+          grhayl_error("Test unit_test_con2prim has failed with error code %d after function compute_conservs_and_Tmunu.\n"
+                       "Please check file Unit_Tests/validate_stress_energy.c for information on the possible exit codes.\n", test_fail);
 
         if( check != 0 )
           failures++;
@@ -231,11 +219,11 @@ int main(int argc, char **argv) {
 
     int ntotal = npoints*npoints;
 
-    printf("Completed test for routine %s\n",con2prim_test_names[which_routine]);
-    printf("Final report:\n");
-    printf("    Number of recovery attempts: %d\n",ntotal);
-    printf("    Number of failed recoveries: %d\n",failures);
-    printf("    Recovery failure rate      : %.2lf%%\n",((double)failures)/((double)ntotal)*100.0);
+    grhayl_info("Completed test for routine %s\n",con2prim_test_names[which_routine]);
+    grhayl_info("Final report:\n");
+    grhayl_info("    Number of recovery attempts: %d\n",ntotal);
+    grhayl_info("    Number of failed recoveries: %d\n",failures);
+    grhayl_info("    Recovery failure rate      : %.2lf%%\n",((double)failures)/((double)ntotal)*100.0);
   }
   return 0;
 }

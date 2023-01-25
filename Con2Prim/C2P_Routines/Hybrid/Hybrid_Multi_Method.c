@@ -104,8 +104,7 @@ int Hybrid_Select_Method(const GRHayL_parameters *restrict params,
 //      break;
 
     default:
-      printf("Unknown c2p key in Hybrid_Select_Method (%d). ABORTING!", c2p_key);
-      exit(100);
+      grhayl_Error(100, "Unknown c2p key in Hybrid_Select_Method (%d).", c2p_key);
       return 100;
       break;
   }

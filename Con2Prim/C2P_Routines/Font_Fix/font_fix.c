@@ -42,7 +42,7 @@ int font_fix(const eos_parameters *restrict eos,
     }
   /*************************************************************/
   } else {
-    printf("Font fix is only implemented for Hybrid EOS! The eos_type is set to %d.",eos->eos_type); //TODO: make a better error message
+    grhayl_warn("Font fix is only implemented for Hybrid EOS! The eos_type is set to %d.", eos->eos_type); //TODO: make a better error message
     return 5;
   } //EOS if
 

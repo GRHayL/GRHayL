@@ -33,12 +33,10 @@ void read_primitive_binary(
   // that happens. Hence, 3 for velocities, 5 for other primitives, 1 for entropy, and
   // 2 for tabulated (Y_e and temperature).
   const int correct_key = 3 + (!velocity_only)*5 + evolve_entropy + (eos_type == 2)*2;
-  if( key != correct_key) {
-    printf("An error has occured with reading in trusted primitive data."
-           "Please check that comparison data "
-           "is up-to-date with current test version.\n");
-    exit(1);
-  }
+  if( key != correct_key)
+    grhayl_error("An error has occured with reading in trusted primitive data."
+                 "Please check that comparison data "
+                 "is up-to-date with current test version.\n");
 }
 
 void write_primitive_binary(

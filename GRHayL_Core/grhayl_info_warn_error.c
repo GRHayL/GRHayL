@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include "GRHayL_io.h"
 
 void grhayl_info(const char *format, ...) {
 
@@ -19,37 +20,25 @@ void grhayl_Warn_Error(
       const int line,
       const char *funcname,
       const char *format,
-      va_list args) {
+      ...) {
 
   fprintf(stderr, "(GRHayL) %s in file: %s, line: %d, function: %s\n", type, filename, line, funcname);
   fprintf(stderr, "(GRHayL) %s message: ", type);
 
+  va_list args;
+  va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
 
-  if( exit_code )
+  switch (exit_code) {
+  case grhayl_success:
+    return;
+    break;
+  case grhayl_error_abort:
+    abort();
+    break;
+  default:
     exit(exit_code);
-}
-
-void grhayl_Warn(
-      const char *filename,
-      const int line,
-      const char *funcname,
-      const char *format,
-      ...) {
-  va_list args;
-  va_start(args, format);
-  grhayl_Warn_Error("Warning", 0, filename, line, funcname, format, args);
-}
-
-void grhayl_Error(
-      const int exit_code,
-      const char *filename,
-      const int line,
-      const char *funcname,
-      const char *format,
-      ...) {
-  va_list args;
-  va_start(args, format);
-  grhayl_Warn_Error("Error", exit_code, filename, line, funcname, format, args);
+    break;
+  }
 }
