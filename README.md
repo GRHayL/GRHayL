@@ -2,8 +2,9 @@
 
 ---
 
-[![Unit Tests - Ubuntu](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu.yml)
-[![Unit Tests - Mac OS](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS.yml)
+[![Ubuntu-gcc](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu.yml)
+[![MacOS-gcc](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-gcc.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-gcc.yml)
+[![MacOS-clang](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-clang.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-clang.yml)
 
 This is a beta version of the infrastructure-agnostic magnetohydrodynamics code
 my collaborators and I are developing. This is a piece of the upcoming GRHayL
