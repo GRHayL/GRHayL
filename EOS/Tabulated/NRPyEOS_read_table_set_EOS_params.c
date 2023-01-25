@@ -10,24 +10,20 @@
 
 // If on the IO proc (doIO == True) actually perform HDF5 IO, catch possible
 // HDF5 errors
-#define HDF5_DO_IO(fn_call)                                                    \
-  {                                                                            \
-    int error_code = fn_call;                                                  \
-    if (error_code < 0) {                                                      \
-      fprintf(stderr,"(GRHayL - EOS) HDF5 call '%s' returned error code %d\n", \
-                  #fn_call, error_code);                                       \
-    }                                                                          \
+#define HDF5_DO_IO(fn_call)                                       \
+  {                                                               \
+    int error_code = fn_call;                                     \
+    if (error_code < 0) {                                         \
+      grhayl_error(1, "HDF5 call '%s' returned error code %d \n", \
+                   #fn_call, error_code);                         \
+    }                                                             \
   }
 
-#define check_if_file_exists(filename) {                    \
-  FILE *fp = fopen(filename, "r");                          \
-  if( !fp ) {                                               \
-    fprintf(stderr,                                         \
-            "(GRHayL - EOS) Could not open EOS file: %s\n", \
-            filename);                                      \
-    exit(1);                                                \
-  }                                                         \
-  fclose(fp);                                               \
+#define check_if_file_exists(filename) {                        \
+  FILE *fp = fopen(filename, "r");                              \
+  if( !fp )                                                     \
+    grhayl_error(1, "Could not open EOS file: %s\n", filename); \
+  fclose(fp);                                                   \
 }
 
 inline double get_EOS_table_max(
@@ -64,10 +60,10 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
 
   check_if_file_exists(EOS_tablename);
 
-  printf("(GRHayL - EOS) *******************************\n");
-  printf("(GRHayL - EOS) Reading EOS table from file:\n");
-  printf("(GRHayL - EOS) %s\n", EOS_tablename);
-  printf("(GRHayL - EOS) *******************************\n");
+  grhayl_info("*******************************\n");
+  grhayl_info("Reading EOS table from file:\n");
+  grhayl_info("%s\n", EOS_tablename);
+  grhayl_info("*******************************\n");
 
   hid_t file = H5Fopen(EOS_tablename, H5F_ACC_RDONLY, H5P_DEFAULT);
   HDF5_DO_IO(file);
@@ -96,16 +92,16 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   // Allocate memory for tables
   double* alltables_temp;
   if (!(alltables_temp = (double*)malloc(eos_params->N_rho * eos_params->N_T * eos_params->N_Ye * NRPyEOS_ntablekeys * sizeof(double)))) {
-    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
+    grhayl_error(1, "Cannot allocate memory for EOS table");
   }
   if (!(eos_params->table_logrho = (double*)malloc(eos_params->N_rho * sizeof(double)))) {
-    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
+    grhayl_error(1, "Cannot allocate memory for EOS table");
   }
   if (!(eos_params->table_logT = (double*)malloc(eos_params->N_T * sizeof(double)))) {
-    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
+    grhayl_error(1, "Cannot allocate memory for EOS table");
   }
   if (!(eos_params->table_Ye = (double*)malloc(eos_params->N_Ye * sizeof(double)))) {
-    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
+    grhayl_error(1, "Cannot allocate memory for EOS table");
   }
 
   // Prepare HDF5 to read hyperslabs into alltables_temp
@@ -150,7 +146,7 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   // the table kind is the fastest changing index
   if (!(eos_params->table_all = (double*)malloc(eos_params->N_rho * eos_params->N_T * eos_params->N_Ye * NRPyEOS_ntablekeys
                                                 * sizeof(double)))) {
-    printf("(GRHayL - EOS) Cannot allocate memory for EOS table");
+    grhayl_info("Cannot allocate memory for EOS table");
   }
   for(int iv = 0;iv<NRPyEOS_ntablekeys;iv++)
     for(int k = 0; k<eos_params->N_Ye;k++)
@@ -184,7 +180,7 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   // that allows us to extrapolate to negative eps
   if (!(eos_params->table_eps = (double*)malloc(eos_params->N_rho * eos_params->N_T * eos_params->N_Ye
                                                * sizeof(double)))) {
-    printf("(GRHayL - EOS) Cannot allocate memory for eps table\n");
+    grhayl_error(1, "Cannot allocate memory for eps table\n");
   }
 
   // convert units

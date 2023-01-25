@@ -408,17 +408,8 @@ void NRPyEOS_bisection(const eos_parameters *restrict eos_params,
     f1=f1a-leps0;
     f2=f2a-leps0;
 
-#if DEBUG
-    fprintf(stderr,"(GRHayL - EOS) bisection bracketing it %d, f1: %15.6E, f2: %15.6E, lt1: %15.6E, lt2: %15.6E, f1a: %18.11E, f2a: %18.11E leps0: %18.11E\n",
-            bcount,f1,f2,lt1,lt2,f1a,f2a,leps0);
-#endif
-
     bcount++;
     if(bcount >= maxbcount) {
-#if DEBUG
-      fprintf(stderr,"(GRHayL - EOS) bcount out of range it %d, lr: %15.6E, lt1: %15.6E, lt2: %15.6E, f1a: %18.11E, f2a: %18.11E leps0: %18.11E, ye: %15.6E\n",
-              bcount,lr,lt1,lt2,f1a,f2a,leps0,ye);
-#endif
       *keyerrt = 667;
       return;
     }
@@ -432,12 +423,6 @@ void NRPyEOS_bisection(const eos_parameters *restrict eos_params,
     dlt = lt1 - lt2;
   }
 
-#if DEBUG
-  fprintf(stderr,"(GRHayL - EOS) bisection step 2 it -1, fmid: %15.6E ltmid: %15.6E dlt: %15.6E\n",
-          f2,lt,dlt);
-  fprintf(stderr,"(GRHayL - EOS) ltmax: %15.6E\n",ltmax);
-#endif
-
   int it;
   for(it=0;it<itmax;it++) {
     dlt = dlt * 0.5;
@@ -447,10 +432,6 @@ void NRPyEOS_bisection(const eos_parameters *restrict eos_params,
 
     fmid=f2a-leps0;
     if(fmid <= 0.0) lt=ltmid;
-#if DEBUG
-    fprintf(stderr,"(GRHayL - EOS) bisection step 2 it %d, fmid: %15.6E f2a: %15.6E lt: %15.6E ltmid: %15.6E dlt: %15.6E\n",
-            it,fmid,f2a,lt,ltmid,dlt);
-#endif
 
     if(fabs(leps0-f2a) <= leps0_prec) {
       *ltout = ltmid;

@@ -15,12 +15,16 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
                                                                  double *restrict T,
                                                                  NRPyEOS_error_report *restrict report) {
 
+  // Start by assuming no errors
+  report->error = false;
 
   // This function will interpolate n table quantities from
   // (rho,Ye,aux). It replaces EOS_Omni calls with keytemp != 1
   if( n > NRPyEOS_ntablekeys ) {
-    fprintf(stderr,"(GRHayL - EOS) NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities: number of quantities exceed maximum allowed: %d > %d. ABORTING.",
-            n,NRPyEOS_ntablekeys);
+    sprintf(report->message, "In %s call, number of quantities exceed maximum allowed: %d > %d.\n",
+            __func__, n, NRPyEOS_ntablekeys);
+    report->error = true;
+    return;
   }
 
   // Check table bounds for input variables
@@ -28,7 +32,7 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
   if( report->error_key != 0 ) {
     // This should never happen, because we enforce
     // limits before calling this function
-    sprintf(report->message,"NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities: problem with checkbounds_kt0_noTcheck");
+    sprintf(report->message,"In %s call, problem with checkbounds_kt0_noTcheck.\n", __func__);
     report->error = true;
     return;
   }
@@ -49,9 +53,12 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
     aux += eos_params->energy_shift;
     // At this point, aux *must* be positive. If not, error out.
     if( aux < 0.0 ) {
-      fprintf(stderr,"(GRHayL - EOS) NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities: found eps+energy_shift < 0.0 (%e). ABORTING.",
-              aux);
+      sprintf(report->message, "In %s call, found eps+energy_shift < 0.0 (%e).\n",
+              __func__, aux);
+      report->error = true;
+      return;
     }
+
     // Compute log(eps+eps0)
     aux = log(aux);
   }

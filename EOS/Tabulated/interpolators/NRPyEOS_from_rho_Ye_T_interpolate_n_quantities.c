@@ -12,23 +12,24 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restri
                                                     double *restrict tablevars,
                                                     NRPyEOS_error_report *restrict report) {
 
+  // Start by assuming no errors
+  report->error = false;
 
   // This function will interpolate n table quantities from
   // (rho,Ye,T). It replaces EOS_Omni calls with keytemp = 1
   if( n > NRPyEOS_ntablekeys ) {
-    fprintf(stderr,"(GRHayL - EOS) from_rho_Ye_T_interpolate_n_quantities: number of quantities exceed maximum allowed: %d > %d. ABORTING.",
-            n,NRPyEOS_ntablekeys);
+    sprintf(report->message, "In %s call, number of quantities exceed maximum allowed: %d > %d.\n",
+            __func__, n, NRPyEOS_ntablekeys);
+    report->error = true;
+    return;
   }
 
-  // Start by assuming no errors
-  report->error = false;
-
   // Check table bounds for input variables
-  report->error_key = NRPyEOS_checkbounds(eos_params,rho,T,Y_e);
+  report->error_key = NRPyEOS_checkbounds(eos_params, rho, T, Y_e);
   if( report->error_key != 0 ) {
     // This should never happen, because we enforce
     // limits before calling this function
-    sprintf(report->message,"from_rho_Ye_T_interpolate_n_quantities: problem with checkbounds");
+    sprintf(report->message,"In %s call, problem with checkbounds.\n", __func__);
     report->error = true;
     return;
   }

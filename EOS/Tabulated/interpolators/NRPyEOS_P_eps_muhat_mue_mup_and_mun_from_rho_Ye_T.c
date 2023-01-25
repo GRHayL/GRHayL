@@ -26,9 +26,8 @@ void NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(const eos_parameters *res
   NRPyEOS_from_rho_Ye_T_interpolate_n_quantities( eos_params, 6,rho,Y_e,T, keys,outvars, &report );
 
   // Step 5: Check for errors
-  if( report.error ) {
-    fprintf(stderr,"(GRHayL - EOS) Inside NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T. Error message: %s (key = %d)",report.message,report.error_key);
-  }
+  if( report.error )
+    grhayl_error(report.error_key, report.message);
 
   // Step 6: Update output variables
   *P = outvars[0];
