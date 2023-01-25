@@ -2,66 +2,52 @@
 
 /*
   In the function validate_conservatives, the conservatives are validated
-  individually, and the function returns upon finding the first failure.
-  The failure codes are
-
-    -1: original value differs by more than tolerance. Since this is the
-        value from before the tested function, the source of the difference
-        occurs due to an unknown problem before the tested function.
-     1: rho_star differs by more than tolerance
-     2: tau differs by more than tolerance
-     3: S_x differs by more than tolerance
-     4: S_y differs by more than tolerance
-     5: S_z differs by more than tolerance
-     6: entropy differs by more than tolerance
+  individually. In the case of failure, the code errors out and lists all
+  the components that failed to be within the error bars of the perturbed
+  version of the code.
 */
 
-int validate_conservatives(
-                     const double tolerance,
+void validate_conservatives(
                      const bool evolve_entropy,
-                     const conservative_quantities *restrict cons_orig,
                      const conservative_quantities *restrict cons,
-                     FILE *restrict infile) {
+                     const conservative_quantities *restrict cons_trusted,
+                     const conservative_quantities *restrict cons_pert) {
 
-  conservative_quantities cons_before, cons_after;
-  read_conservative_binary(evolve_entropy, &cons_before, infile);
-  read_conservative_binary(evolve_entropy, &cons_after,  infile);
+  char fail_msg[100] = "Test has failed!\n The conservative variable(s) which failed are ";
+  int test_fail = 0;
+  if( relative_error(cons_trusted->rho, cons->rho) > relative_error(cons_trusted->rho, cons_pert->rho) ) {
+    sprintf(fail_msg, "%.90s rho_star", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, cons_before.rho, cons_orig->rho))
-    return -1;
+  if( relative_error(cons_trusted->tau, cons->tau) > relative_error(cons_trusted->tau, cons_pert->tau) ) {
+    sprintf(fail_msg, "%.90s tau", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, cons_before.tau, cons_orig->tau))
-    return -1;
+  if( relative_error(cons_trusted->S_x, cons->S_x) > relative_error(cons_trusted->S_x, cons_pert->S_x) ) {
+    sprintf(fail_msg, "%.90s S_x", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, cons_before.S_x, cons_orig->S_x))
-    return -1;
+  if( relative_error(cons_trusted->S_y, cons->S_y) > relative_error(cons_trusted->S_y, cons_pert->S_y) ) {
+    sprintf(fail_msg, "%.90s S_y", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, cons_before.S_y, cons_orig->S_y))
-    return -1;
+  if( relative_error(cons_trusted->S_z, cons->S_z) > relative_error(cons_trusted->S_z, cons_pert->S_z) ) {
+    sprintf(fail_msg, "%.90s S_z", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, cons_before.S_z, cons_orig->S_z))
-    return -1;
+  if(evolve_entropy)
+    if( relative_error(cons_trusted->entropy, cons->entropy) > relative_error(cons_trusted->entropy, cons_pert->entropy) ) {
+      sprintf(fail_msg, "%.90s entropy", fail_msg);
+      test_fail = 1;
+    }
 
-  if(evolve_entropy && rel_tol(tolerance, cons_before.entropy, cons_orig->entropy))
-    return -1;
-
-  if(rel_tol(tolerance, cons_after.rho, cons->rho))
-    return 1;
-
-  if(rel_tol(tolerance, cons_after.tau, cons->tau))
-    return 2;
-
-  if(rel_tol(tolerance, cons_after.S_x, cons->S_x))
-    return 3;
-
-  if(rel_tol(tolerance, cons_after.S_y, cons->S_y))
-    return 4;
-
-  if(rel_tol(tolerance, cons_after.S_z, cons->S_z))
-    return 5;
-
-  if(evolve_entropy && rel_tol(tolerance, cons_after.entropy, cons->entropy))
-    return 6;
-
-  return 0;
+  if(test_fail) {
+    grhayl_error("%.100s\n", fail_msg);
+  }
+  return;
 }

@@ -2,18 +2,23 @@
 
 void read_conservative_binary(
                      const bool evolve_entropy,
-                     conservative_quantities *restrict cons,
+                     double *restrict rho,
+                     double *restrict tau,
+                     double *restrict S_x,
+                     double *restrict S_y,
+                     double *restrict S_z,
+                     double *restrict entropy,
                      FILE *restrict infile) {
 
   int key;
-  key  = fread(&cons->rho, sizeof(double), 1, infile);
-  key += fread(&cons->tau, sizeof(double), 1, infile);
-  key += fread(&cons->S_x, sizeof(double), 1, infile);
-  key += fread(&cons->S_y, sizeof(double), 1, infile);
-  key += fread(&cons->S_z, sizeof(double), 1, infile);
+  key  = fread(rho, sizeof(double), 1, infile);
+  key += fread(tau, sizeof(double), 1, infile);
+  key += fread(S_x, sizeof(double), 1, infile);
+  key += fread(S_y, sizeof(double), 1, infile);
+  key += fread(S_z, sizeof(double), 1, infile);
 
   if(evolve_entropy)
-    key += fread(&cons->entropy, sizeof(double), 1, infile);
+    key += fread(entropy, sizeof(double), 1, infile);
 
   // Since each read only reads a single double, the key should just be a sum of every read
   // that happens. Hence, 5 variables and +1 for entropy.

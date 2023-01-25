@@ -2,93 +2,72 @@
 
 /*
   In the function validate_stress_energy, the components of Tmunu are
-  validated individually, and the function returns upon finding the
-  first failure. The failure codes are
-
-    -1: original value differs by more than tolerance. Since this is the
-        value from before the tested function, the source of the difference
-        occurs due to an unknown problem before the tested function.
-     1: Ttt differs by more than tolerance
-     2: Ttx differs by more than tolerance
-     3: Tty differs by more than tolerance
-     4: Ttz differs by more than tolerance
-     5: Txx differs by more than tolerance
-     6: Txy differs by more than tolerance
-     7: Txz differs by more than tolerance
-     8: Tyy differs by more than tolerance
-     9: Tyz differs by more than tolerance
-    10: Tzz differs by more than tolerance
+  validated individually. In the case of failure, the code errors out
+  and lists all the components that failed to be within the error
+  bars of the perturbed version of the code.
 */
 
-int validate_stress_energy(
-                     const double tolerance,
-                     const stress_energy *restrict Tmunu_orig,
+void validate_stress_energy(
                      const stress_energy *restrict Tmunu,
+                     const stress_energy *restrict Tmunu_trusted,
+                     const stress_energy *restrict Tmunu_pert,
                      FILE *restrict infile) {
 
-  stress_energy Tmunu_before, Tmunu_after;
-  read_stress_energy_binary(&Tmunu_before, infile);
-  read_stress_energy_binary(&Tmunu_after, infile);
 
-  if(rel_tol(tolerance, Tmunu_before.Ttt, Tmunu_orig->Ttt))
-    return -1;
+  char fail_msg[100] = "Test has failed!\n The stress-energy variable(s) which failed are ";
+  int test_fail = 0;
+  if( relative_error(Tmunu_trusted->Ttt, Tmunu->Ttt) > relative_error(Tmunu_trusted->Ttt, Tmunu_pert->Ttt) ) {
+    sprintf(fail_msg, "%.90s Ttt", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Ttx, Tmunu_orig->Ttx))
-    return -1;
+  if( relative_error(Tmunu_trusted->Ttx, Tmunu->Ttx) > relative_error(Tmunu_trusted->Ttx, Tmunu_pert->Ttx) ) {
+    sprintf(fail_msg, "%.90s Ttx", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Tty, Tmunu_orig->Tty))
-    return -1;
+  if( relative_error(Tmunu_trusted->Tty, Tmunu->Tty) > relative_error(Tmunu_trusted->Tty, Tmunu_pert->Tty) ) {
+    sprintf(fail_msg, "%.90s Tty", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Ttz, Tmunu_orig->Ttz))
-    return -1;
+  if( relative_error(Tmunu_trusted->Ttz, Tmunu->Ttz) > relative_error(Tmunu_trusted->Ttz, Tmunu_pert->Ttz) ) {
+    sprintf(fail_msg, "%.90s Ttz", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Txx, Tmunu_orig->Txx))
-    return -1;
+  if( relative_error(Tmunu_trusted->Txx, Tmunu->Txx) > relative_error(Tmunu_trusted->Txx, Tmunu_pert->Txx) ) {
+    sprintf(fail_msg, "%.90s Txx", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Txy, Tmunu_orig->Txy))
-    return -1;
+  if( relative_error(Tmunu_trusted->Txy, Tmunu->Txy) > relative_error(Tmunu_trusted->Txy, Tmunu_pert->Txy) ) {
+    sprintf(fail_msg, "%.90s Txy", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Txz, Tmunu_orig->Txz))
-    return -1;
+  if( relative_error(Tmunu_trusted->Txz, Tmunu->Txz) > relative_error(Tmunu_trusted->Txz, Tmunu_pert->Txz) ) {
+    sprintf(fail_msg, "%.90s Txz", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Tyy, Tmunu_orig->Tyy))
-    return -1;
+  if( relative_error(Tmunu_trusted->Tyy, Tmunu->Tyy) > relative_error(Tmunu_trusted->Tyy, Tmunu_pert->Tyy) ) {
+    sprintf(fail_msg, "%.90s Tyy", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Tyz, Tmunu_orig->Tyz))
-    return -1;
+  if( relative_error(Tmunu_trusted->Tyz, Tmunu->Tyz) > relative_error(Tmunu_trusted->Tyz, Tmunu_pert->Tyz) ) {
+    sprintf(fail_msg, "%.90s Tyz", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_before.Tzz, Tmunu_orig->Tzz))
-    return -1;
+  if( relative_error(Tmunu_trusted->Tzz, Tmunu->Tzz) > relative_error(Tmunu_trusted->Tzz, Tmunu_pert->Tzz) ) {
+    sprintf(fail_msg, "%.90s Tzz", fail_msg);
+    test_fail = 1;
+  }
 
-  if(rel_tol(tolerance, Tmunu_after.Ttt, Tmunu->Ttt))
-    return 1;
-
-  if(rel_tol(tolerance, Tmunu_after.Ttx, Tmunu->Ttx))
-    return 2;
-
-  if(rel_tol(tolerance, Tmunu_after.Tty, Tmunu->Tty))
-    return 3;
-
-  if(rel_tol(tolerance, Tmunu_after.Ttz, Tmunu->Ttz))
-    return 4;
-
-  if(rel_tol(tolerance, Tmunu_after.Txx, Tmunu->Txx))
-    return 5;
-
-  if(rel_tol(tolerance, Tmunu_after.Txy, Tmunu->Txy))
-    return 6;
-
-  if(rel_tol(tolerance, Tmunu_after.Txz, Tmunu->Txz))
-    return 7;
-
-  if(rel_tol(tolerance, Tmunu_after.Tyy, Tmunu->Tyy))
-    return 8;
-
-  if(rel_tol(tolerance, Tmunu_after.Tyz, Tmunu->Tyz))
-    return 9;
-
-  if(rel_tol(tolerance, Tmunu_after.Tzz, Tmunu->Tzz))
-    return 10;
-
-  return 0;
+  if(test_fail) {
+    grhayl_error("%.100s\n", fail_msg);
+  }
+  return;
 }

@@ -4,6 +4,11 @@ inline int indexf(const int gridmax, const int i, const int j, const int k) {
   return i + j*gridmax + k*gridmax*gridmax;
 }
 
+int rel_tol(const double tolerance, const double x1, const double x2) {
+  const double rel_diff = relative_error(x1, x2);
+  if(rel_diff > tolerance) return 1;
+  return 0;
+}
 // Tolerance limit for numerical values
 const double tolerance = 1.0e-15;
 
