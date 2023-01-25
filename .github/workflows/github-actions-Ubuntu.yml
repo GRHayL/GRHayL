@@ -51,3 +51,23 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/phitilde_and_A_gauge_rhs.bin
       - name: Run induction equation gauge RHS unit test
         run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_gauge_rhs
+
+
+  tabulated-eos-read-table:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install needed ubuntu packages
+        run: sudo apt-get update && sudo apt-get install -y gcc libhdf5-serial-dev
+      - name: Compile GRHayL
+        run: make
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
+      - name: Run induction equation gauge RHS unit test
+        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_tabulated_eos_read_table simple_table.h5

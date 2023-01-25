@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-12, macos-13]
+        os: [macos-10, macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -57,3 +57,24 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/phitilde_and_A_gauge_rhs.bin
       - name: Run induction equation gauge RHS unit test
         run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_gauge_rhs
+
+  tabulated-eos-read-table:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-10, macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install gcc-12, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install gcc@12 gsed hdf5
+      - name: Compile GRHayL
+        run: |
+          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
+          gsed -i 's/gcc/gcc-12/' Makefile
+          make
+      - name: Copy test data to working directory
+        run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
+      - name: Run induction equation gauge RHS unit test
+        run: LD_LIBRARY_PATH="`pwd`/lib" ./exe/unit_test_tabulated_eos_read_table simple_table.h5
