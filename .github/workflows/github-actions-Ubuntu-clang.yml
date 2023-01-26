@@ -20,8 +20,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang-14 libhdf5-serial-dev
       - name: Compile GRHayL
         run: |
-          sed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          sed -i 's/= clang/= clang-14/' Makefile
+          export COMPILER=clang
           make
       - name: Copy test data to working directory
         run: |
@@ -37,15 +36,14 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
         run: sudo apt-get update && sudo apt-get install -y clang-14 libhdf5-serial-dev
       - name: Compile GRHayL
         run: |
-          sed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          sed -i 's/= clang/= clang-14/' Makefile
+          export COMPILER=clang
           make
       - name: Copy test data to working directory
         run: |
@@ -61,15 +59,14 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
         run: sudo apt-get update && sudo apt-get install -y clang-14 libhdf5-serial-dev
       - name: Compile GRHayL
         run: |
-          sed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          sed -i 's/= clang/= clang-14/' Makefile
+          export COMPILER=clang
           make
       - name: Copy test data to working directory
         run: |

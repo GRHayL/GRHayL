@@ -17,15 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install llvm@14 gsed hdf5
+        run: brew update && brew install llvm gsed hdf5
       - name: Compile GRHayL
         run: |
-          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
-          gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
-          gsed -i 's/libgomp/libomp/' Makefile
-          export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
-          export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
+          export COMPILER=clang
+          export CFLAGS="-I`brew --prefix`/opt/llvm/include"
+          export LDFLAGS="-L`brew --prefix`/opt/llvm/lib"
           make
       - name: Copy test data to working directory
         run: |
@@ -34,7 +31,7 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_${{ matrix.test-function }}_pert.bin
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/opt/llvm@14/lib:`pwd`/lib
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`brew --prefix`/opt/llvm/lib:`pwd`/lib
           ./exe/unit_test_${{ matrix.test-function }}
 
   induction-gauge-rhs:
@@ -47,15 +44,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install llvm@14 gsed hdf5
+        run: brew update && brew install llvm gsed hdf5
       - name: Compile GRHayL
         run: |
-          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
-          gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
-          gsed -i 's/libgomp/libomp/' Makefile
-          export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
-          export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
+          export COMPILER=clang
+          export CFLAGS="-I`brew --prefix`/opt/llvm/include"
+          export LDFLAGS="-L`brew --prefix`/opt/llvm/lib"
           make
       - name: Copy test data to working directory
         run: |
@@ -63,7 +57,7 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/phitilde_and_A_gauge_rhs.bin
       - name: Run induction equation gauge RHS unit test
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/opt/llvm@14/lib:`pwd`/lib
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`brew --prefix`/opt/llvm/lib:`pwd`/lib
           ./exe/unit_test_gauge_rhs
 
   tabulated-eos:
@@ -76,19 +70,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install llvm@14 gsed hdf5
+        run: brew update && brew install llvm gsed hdf5
       - name: Compile GRHayL
         run: |
-          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
-          gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
-          gsed -i 's/libgomp/libomp/' Makefile
-          export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
-          export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
+          export COMPILER=clang
+          export CFLAGS="-I`brew --prefix`/opt/llvm/include"
+          export LDFLAGS="-L`brew --prefix`/opt/llvm/lib"
           make
       - name: Copy test data to working directory
         run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/opt/llvm@14/lib:`pwd`/lib
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`brew --prefix`/opt/llvm/lib:`pwd`/lib
           ./exe/unit_test_tabulated_eos simple_table.h5
