@@ -26,7 +26,7 @@
   fclose(fp);                                                \
 }
 
-inline double get_EOS_table_max(
+static inline double get_EOS_table_max(
       const eos_parameters *restrict eos,
       const int var_key ) {
   // Loop over the table, searching for the maximum value
@@ -40,7 +40,7 @@ inline double get_EOS_table_max(
   return var_max_value;
 }
 
-inline double get_EOS_table_min(
+static inline double get_EOS_table_min(
       const eos_parameters *restrict eos,
       const int var_key ) {
   // Loop over the table, searching for the minimum value

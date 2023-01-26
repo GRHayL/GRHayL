@@ -29,7 +29,7 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
-          sed -i 's/"gnu"/"intel"/; s/icc/icx/' Makefile
+          export COMPILER=intel
           make
 
       - name: Copy test data to working directory
@@ -46,7 +46,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v3
       - name: Install intel compiler and hdf5
@@ -62,7 +62,7 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
-          sed -i 's/"gnu"/"intel"/; s/icc/icx/' Makefile
+          export COMPILER=intel
           make
 
       - name: Copy test data to working directory
@@ -79,7 +79,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v3
       - name: Install intel compiler and hdf5
@@ -95,11 +95,10 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
-          sed -i 's/"gnu"/"intel"/; s/icc/icx/' Makefile
+          export COMPILER=intel
           make
 
       - name: Copy test data to working directory
-        run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
+        run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_tabulated_eos simple_table.h5

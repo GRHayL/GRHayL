@@ -16,12 +16,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install gcc-12, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install gcc@12 gsed hdf5
+      - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install gcc gsed hdf5
       - name: Compile GRHayL
         run: |
-          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
-          gsed -i 's/gcc/gcc-12/' Makefile
+          export COMPILER=gnu
           make
       - name: Copy test data to working directory
         run: |
@@ -40,12 +39,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install gcc-12, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install gcc@12 gsed hdf5
+      - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install gcc gsed hdf5
       - name: Compile GRHayL
         run: |
-          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
-          gsed -i 's/gcc/gcc-12/' Makefile
+          export COMPILER=gnu
           make
       - name: Copy test data to working directory
         run: |
@@ -63,12 +61,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install gcc-12, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install gcc@12 gsed hdf5
+      - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install gcc gsed hdf5
       - name: Compile GRHayL
         run: |
-          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
-          gsed -i 's/gcc/gcc-12/' Makefile
+          export COMPILER=gnu
           make
       - name: Copy test data to working directory
         run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
