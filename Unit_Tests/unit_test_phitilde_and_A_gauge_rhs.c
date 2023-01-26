@@ -48,8 +48,8 @@ int main(int argc, char **argv) {
 
 //  // Read in data from file to ensure portability
   FILE* infile;
-  infile = fopen("gauge_rhs_initial_data.bin", "rb");
-  check_file_was_successfully_open(infile, "gauge_rhs_initial_data.bin");
+  infile = fopen("phitilde_and_A_gauge_rhs_initial_data.bin", "rb");
+  check_file_was_successfully_open(infile, "phitilde_and_A_gauge_rhs_initial_data.bin");
 
   int key;
   key  = fread(gupxx, sizeof(double), arraylength, infile);
