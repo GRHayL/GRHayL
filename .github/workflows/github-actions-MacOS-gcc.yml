@@ -30,10 +30,11 @@ jobs:
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
 
-  induction-gauge-rhs:
+  induction:
     strategy:
       fail-fast: false
       matrix:
+        test-function: [phitilde_and_A_gauge_rhs]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
@@ -47,10 +48,11 @@ jobs:
           make
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/gauge_rhs_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/phitilde_and_A_gauge_rhs.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_pert.bin
       - name: Run induction equation gauge RHS unit test
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_gauge_rhs
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
 
   tabulated-eos:
     strategy:
