@@ -89,6 +89,13 @@ void write_metric_binary(
       const metric_quantities *restrict metric,
       FILE *restrict outfile);
 
+// Tabulated EOS helper functions
+double get_table_quantity(
+      const int which_var,
+      const double rho,
+      const double Y_e,
+      const double T );
+
 // Helper functions
 static inline double relative_error( const double a, const double b ) {
   if     ( a != 0 ) return( fabs(1.0-b/a) );

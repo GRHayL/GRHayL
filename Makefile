@@ -12,7 +12,7 @@ GEM = GRHayL_Core Con2Prim EOS Induction Reconstruction Neutrinos
 # Set build directory name
 BUILD_DIR = build
 
-# HDF5 configuration
+# # HDF5 configuration
 HDF5_DIR     = /usr/lib/x86_64-linux-gnu/hdf5/serial
 HDF5_INC_DIR = $(HDF5_DIR)/include
 HDF5_LIB_DIR = $(HDF5_DIR)/lib
@@ -20,28 +20,28 @@ HDF5_LIB_DIR = $(HDF5_DIR)/lib
 # Different compiler options
 ifeq ($(COMPILER), "gnu")
 	CC       = gcc
-	CFLAGS   = -Wall -O2 -march=native -std=c99 -fopenmp
-	LD_FLAGS = -lm
+	CFLAGS  += -Wall -O2 -march=native -std=c99 -fopenmp
+	LDFLAGS += -lm
 endif
 
 ifeq ($(COMPILER), "intel")
 	CC       = icc
-	CFLAGS   = -Wall -O2 -march=native -std=c99 -fopenmp
-	LD_FLAGS = -lm
+	CFLAGS  += -Wall -O2 -march=native -std=c99 -fopenmp
+	LDFLAGS += -lm
 endif
 
 ifeq ($(COMPILER), "clang")
 	CC       = clang
-	CFLAGS   = -Wall -O2 -march=native -std=c99 -fopenmp=libgomp
-	LD_FLAGS = -lm
+	CFLAGS  += -Wall -O2 -march=native -std=c99 -fopenmp=libgomp
+	LDFLAGS += -lm
 endif
 
-# Now adjust CFLAGS and LD_FLAGS
-CFLAGS   += -I./include -I$(HDF5_INC_DIR)
-LD_FLAGS += -L$(HDF5_LIB_DIR) -lhdf5
+# Now adjust CFLAGS and LDFLAGS
+CFLAGS  += -I./include -I$(HDF5_INC_DIR)
+LDFLAGS += -L$(HDF5_LIB_DIR) -lhdf5
 
 # Get directory structures for Gems
-DIR = $(shell find $(GEM) -type d)
+DIR = $(shell find $(GEM) include -type d)
 
 # Find all source files
 SRC = $(wildcard $(addsuffix /*.c, $(DIR)))
@@ -83,7 +83,7 @@ all: $(BUILD_DIRS) lib/libgrhayl.so $(UNIT_TEST_MAIN_EXE)
 # Compile the GRHayL standard library
 lib/libgrhayl.so: $(OBJ)
 	@echo "Linking GRHayL object files"
-	@$(CC) $(CFLAGS) -shared -fPIC $(OBJ) -o $@ $(LD_FLAGS)
+	@$(CC) $(CFLAGS) -shared -fPIC $(OBJ) -o $@ $(LDFLAGS)
 
 # Create all directories in BUILD_DIRS if they do not already exist
 $(BUILD_DIRS):
@@ -96,19 +96,19 @@ $(OBJ): $(BUILD_DIR)/%.o : %.c $(INC)
 	@$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 # Compile all auxiliary object files for the unit tests
-$(UNIT_TEST_AUXS_OBJ): $(BUILD_DIR)/%.o : %.c $(INC)  $(UNIT_TEST_INC)
+$(UNIT_TEST_AUXS_OBJ): $(BUILD_DIR)/%.o : %.c $(INC) $(UNIT_TEST_INC)
 	@echo "Compiling $<"
 	@$(CC) $(CFLAGS) -I$(UNIT_TEST_DIR) -c $< -o $@
 
 # Compile all main object files for the unit tests
-$(UNIT_TEST_MAIN_OBJ): $(BUILD_DIR)/%.o : %.c $(INC)  $(UNIT_TEST_INC)
+$(UNIT_TEST_MAIN_OBJ): $(BUILD_DIR)/%.o : %.c $(INC) $(UNIT_TEST_INC)
 	@echo "Compiling $<"
 	@$(CC) $(CFLAGS) -I$(UNIT_TEST_DIR) -c $< -o $@
 
 # Create the unit test executables
 $(UNIT_TEST_MAIN_EXE): exe/% : $(BUILD_DIR)/$(UNIT_TEST_DIR)/%.o $(UNIT_TEST_AUXS_OBJ) $(INC) $(UNIT_TEST_INC) lib/libgrhayl.so
 	@echo "Creating unit test $@"
-	@$(CC) $(CFLAGS) -I$(UNIT_TEST_DIR) $(UNIT_TEST_AUXS_OBJ) $< -o $@ $(LD_FLAGS) -L./lib -lgrhayl
+	@$(CC) $(CFLAGS) -I$(UNIT_TEST_DIR) $(UNIT_TEST_AUXS_OBJ) $< -o $@ $(LDFLAGS) -L./lib -lgrhayl
 
 # Clean: remove libraries, all objects, and all executables
 clean:

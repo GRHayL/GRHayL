@@ -54,7 +54,7 @@ jobs:
       - name: Run induction equation gauge RHS unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_gauge_rhs
 
-  tabulated-eos-read-table:
+  tabulated-eos:
     strategy:
       fail-fast: false
       matrix:
@@ -72,5 +72,5 @@ jobs:
           make
       - name: Copy test data to working directory
         run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
-      - name: Run tabulated EOS read table unit test
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_tabulated_eos_read_table simple_table.h5
+      - name: Run tabulated EOS unit test
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_tabulated_eos simple_table.h5
