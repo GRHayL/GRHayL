@@ -2,6 +2,7 @@ name: MacOS-clang
 
 on:
   push:
+    branches: main
   pull_request:
 
 jobs:

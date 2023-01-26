@@ -2,6 +2,7 @@ name: Ubuntu-gcc
 
 on:
   push:
+    branches: main
   pull_request:
 
 jobs:
