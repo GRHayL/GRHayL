@@ -3,6 +3,7 @@ name: Ubuntu-clang
 on:
   push:
     branches: main
+
   pull_request:
 
 jobs:
