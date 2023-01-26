@@ -2,13 +2,15 @@ name: MacOS-clang
 
 on:
   push:
+    branches: main
   pull_request:
 
 jobs:
-  inequality-fix:
+  con-to-prim:
     strategy:
       fail-fast: false
       matrix:
+        test-function: [apply_inequality_fixes, font_fix]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
@@ -28,42 +30,12 @@ jobs:
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_apply_inequality_fixes.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_apply_inequality_fixes_pert.bin
-      - name: Run con2prim unit test for apply_inequality_fix function
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_${{ matrix.test-function }}.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_${{ matrix.test-function }}_pert.bin
+      - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/opt/llvm@14/lib:`pwd`/lib
-          ./exe/unit_test_inequality_fix
-
-  font-fix:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-11, macos-12]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install llvm@14 gsed hdf5
-      - name: Compile GRHayL
-        run: |
-          gsed -i '/^ *HDF5_DIR/s|^.*$|HDF5_DIR     = /usr/local/opt/hdf5|' Makefile
-          gsed -i 's/COMPILER = "gnu"/COMPILER = "clang"/' Makefile
-          gsed -i 's|= clang|= /usr/local/opt/llvm@14/bin/clang-14|' Makefile
-          gsed -i 's/libgomp/libomp/' Makefile
-          export CPPFLAGS="-I/usr/local/opt/llvm@14/include"
-          export LDFLAGS="-L/usr/local/opt/llvm@14/lib"
-          make
-      - name: Copy test data to working directory
-        run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_Noble2D_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_font_fix.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/C2P_font_fix_pert.bin
-      - name: Run con2prim unit test for font_fix function
-        run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/opt/llvm@14/lib:`pwd`/lib
-          ./exe/unit_test_font_fix
+          ./exe/unit_test_${{ matrix.test-function }}
 
   induction-gauge-rhs:
     strategy:
