@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [apply_inequality_fixes, font_fix]
+        test-function: [apply_inequality_fixes, font_fix, enforce_primitive_limits_and_output_u0]
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 
