@@ -204,8 +204,16 @@ int main(int argc, char **argv) {
                       &prims_pert);
 
     validate_primitives(eos.eos_type, params.evolve_entropy, &prims, &prims_trusted, &prims_pert);
-    if( validate(u0_trusted[i], u0, u0_pert[i]) )
-      grhayl_error("Test has failed!\n The computed u0 does not fall within tolerance.\n");
+    // The value of u0 varies by more than roundoff because roundoff alone can trigger the velocity
+    // limiting if it is on the edge, leading to a higher difference in some edge cases. Thus,
+    // the default roundoff tolerance of validate() is not a valid floor for the possible
+    // relative difference.
+    if( validate_with_tolerance(u0_trusted[i], u0, u0_pert[i], 1.0e-14) )
+      grhayl_error("Test has failed! The computed u0 does not fall within tolerance.\n"
+                   "   u0_trusted %.15e\n"
+                   "   u0_compute %.15e\n"
+                   "   u0_perturb %.15e\n"
+                   "   rel_diff %.15e %.15e\n", u0_trusted[i], u0, u0_pert[i], relative_error(u0_trusted[i], u0), relative_error(u0_trusted[i], u0_pert[i]));
   }
   printf("Completed test for routine enforce_primitive_limits_and_output_u0\n");
   return 0;
