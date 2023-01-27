@@ -53,7 +53,16 @@ void read_conservative_binary(
       FILE *restrict outfile);
 
 void read_stress_energy_binary(
-      stress_energy *restrict Tmunu,
+      double *restrict Ttt,
+      double *restrict Ttx,
+      double *restrict Tty,
+      double *restrict Ttz,
+      double *restrict Txx,
+      double *restrict Txy,
+      double *restrict Txz,
+      double *restrict Tyy,
+      double *restrict Tyz,
+      double *restrict Tzz,
       FILE *restrict outfile);
 
 void read_metric_binary(

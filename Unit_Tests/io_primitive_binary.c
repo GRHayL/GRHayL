@@ -39,7 +39,7 @@ void read_primitive_binary(
   // 2 for tabulated (Y_e and temperature).
   const int correct_key = 8 + evolve_entropy + (eos_type == 2)*2;
   if( key != correct_key)
-    grhayl_error("An error has occured with reading in trusted primitive data."
+    grhayl_error("An error has occured with reading in trusted primitive data. "
                  "Please check that comparison data "
                  "is up-to-date with current test version.\n");
 }

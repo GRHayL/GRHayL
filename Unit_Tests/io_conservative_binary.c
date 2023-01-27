@@ -23,8 +23,8 @@ void read_conservative_binary(
   // Since each read only reads a single double, the key should just be a sum of every read
   // that happens. Hence, 5 variables and +1 for entropy.
   if( key != 5 + evolve_entropy)
-    grhayl_error("An error has occured with reading in trusted conservative data."
-                 "Please check that comparison data"
+    grhayl_error("An error has occured with reading in trusted conservative data. "
+                 "Please check that comparison data "
                  "is up-to-date with current test version.\n");
 }
 
