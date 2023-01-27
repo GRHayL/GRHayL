@@ -1,7 +1,7 @@
 // Thorn      : GRHayL
-// File       : unit_test_apply_inequality_fixes.c
+// File       : unit_test_Noble2D_Hybrid_Multi_Method.c
 // Author(s)  : Samuel Cupp
-// Description: A standalone unit test for the apply_inequality_fixes function.
+// Description: A standalone unit test for the Noble2D Con2Prim routine.
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  initialize_GRHayL(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess, Psi6threshold, update_Tmunu, 1 /*Cupp Fix*/, &params);
+  initialize_GRHayL(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess, Psi6threshold, update_Tmunu, 1 /*Cupp Fix*/, &params);
 
   eos_parameters eos;
   initialize_general_eos(eos_type, W_max,
@@ -54,11 +54,11 @@ int main(int argc, char **argv) {
   FILE* initial_data = fopen(filename,"rb");
   check_file_was_successfully_open(initial_data, filename);
 
-  sprintf(filename,"C2P_apply_inequality_fixes.bin");
+  sprintf(filename,"C2P_Noble2D_Hybrid_Multi_Method.bin");
   FILE* infile = fopen(filename,"rb");
   check_file_was_successfully_open(infile, filename);
 
-  sprintf(filename,"C2P_apply_inequality_fixes_pert.bin");
+  sprintf(filename,"C2P_Noble2D_Hybrid_Multi_Method_pert.bin");
   FILE* inpert = fopen(filename,"rb");
   check_file_was_successfully_open(inpert, filename);
 
@@ -75,7 +75,8 @@ int main(int argc, char **argv) {
   double *betay = (double*) malloc(sizeof(double)*arraylength);
   double *betaz = (double*) malloc(sizeof(double)*arraylength);
 
-  // Allocate memory for the initial primitive data
+  // Allocate memory for the initial primitive data, trusted output,
+  // and perturbed output
   double *rho_b = (double*) malloc(sizeof(double)*arraylength);
   double *press = (double*) malloc(sizeof(double)*arraylength);
   double *vx = (double*) malloc(sizeof(double)*arraylength);
@@ -85,40 +86,47 @@ int main(int argc, char **argv) {
   double *By = (double*) malloc(sizeof(double)*arraylength);
   double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
+  double *rho_b_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *press_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *vx_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *vy_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *vz_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *Bx_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *By_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *Bz_trusted = (double*) malloc(sizeof(double)*arraylength);
+
+  double *rho_b_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *press_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *vx_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *vy_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *vz_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *Bx_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *By_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *Bz_pert = (double*) malloc(sizeof(double)*arraylength);
+
   // These arrays may not be used, but it's simpler to just declare them
   // either way.
   double *entropy = (double*) malloc(sizeof(double)*arraylength);
+  double *entropy_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *entropy_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Y_e = (double*) malloc(sizeof(double)*arraylength);
+  double *Y_e_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *Y_e_pert = (double*) malloc(sizeof(double)*arraylength);
   double *temperature = (double*) malloc(sizeof(double)*arraylength);
+  double *temperature_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *temperature_pert = (double*) malloc(sizeof(double)*arraylength);
 
-  // Allocate memory for the initial conservative data, trusted output,
-  // and perturbed output
+  // Allocate memory for the initial conservative data
   double *rho_star = (double*) malloc(sizeof(double)*arraylength);
   double *tau = (double*) malloc(sizeof(double)*arraylength);
   double *S_x = (double*) malloc(sizeof(double)*arraylength);
   double *S_y = (double*) malloc(sizeof(double)*arraylength);
   double *S_z = (double*) malloc(sizeof(double)*arraylength);
 
-  double *rho_star_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *tau_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *S_x_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *S_y_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *S_z_trusted = (double*) malloc(sizeof(double)*arraylength);
-
-  double *rho_star_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *tau_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *S_x_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *S_y_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *S_z_pert = (double*) malloc(sizeof(double)*arraylength);
-
   // These arrays may not be used, but it's simpler to just declare them
   // either way.
   double *ent_cons = (double*) malloc(sizeof(double)*arraylength);
-  double *ent_cons_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *ent_cons_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Y_e_cons = (double*) malloc(sizeof(double)*arraylength);
-  double *Y_e_cons_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *Y_e_cons_pert = (double*) malloc(sizeof(double)*arraylength);
 
   // Can't parallelize because it could change the behavior of reading from the files
   for(int j=0;j<npoints;j++)
@@ -138,26 +146,30 @@ int main(int argc, char **argv) {
                                &S_x[index], &S_y[index], &S_z[index], &ent_cons[index],
                                infile);
 
-      read_conservative_binary(params.evolve_entropy, &rho_star_trusted[index], &tau_trusted[index],
-                               &S_x_trusted[index], &S_y_trusted[index], &S_z_trusted[index], &ent_cons_trusted[index],
-                               infile);
+      read_primitive_binary(eos.eos_type, params.evolve_entropy, &rho_b_trusted[index], &press_trusted[index],
+                            &vx_trusted[index], &vy_trusted[index], &vz_trusted[index],
+                            &Bx_trusted[index], &By_trusted[index], &Bz_trusted[index],
+                            &entropy_trusted[index], &Y_e_trusted[index], &temperature_trusted[index],
+                            infile);
 
-      read_conservative_binary(params.evolve_entropy, &rho_star_pert[index], &tau_pert[index],
-                               &S_x_pert[index], &S_y_pert[index], &S_z_pert[index], &ent_cons_pert[index],
-                               inpert);
+      read_primitive_binary(eos.eos_type, params.evolve_entropy, &rho_b_pert[index], &press_pert[index],
+                            &vx_pert[index], &vy_pert[index], &vz_pert[index],
+                            &Bx_pert[index], &By_pert[index], &Bz_pert[index],
+                            &entropy_pert[index], &Y_e_pert[index], &temperature_pert[index],
+                            inpert);
   }
   fclose(initial_data);
   fclose(infile);
   fclose(inpert);
 
   
-#pragma omp parallel for
+//#pragma omp parallel for
   for(int i=0;i<arraylength;i++) {
 
     // Define the various GRHayL structs for the unit tests
     metric_quantities metric;
-    primitive_quantities prims;
-    conservative_quantities cons;
+    primitive_quantities prims, prims_guess;
+    conservative_quantities cons, cons_undens;
 
     // Read initial data accompanying trusted output
     initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
@@ -175,21 +187,29 @@ int main(int argc, char **argv) {
                              S_x[i], S_y[i], S_z[i],
                              Y_e_cons[i], ent_cons[i], &cons);
 
-    //This applies the inequality (or "Faber") fixes on the conservatives
-    apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+    // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
+    undensitize_conservatives(&metric, &cons, &cons_undens);
 
-    conservative_quantities cons_trusted, cons_pert;
-    initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
-                             S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
-                             Y_e_cons_trusted[i], ent_cons_trusted[i], &cons_trusted);
+    // This runs the selected Con2Prim method (in this case, Noble2D).
+    int check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
 
-    initialize_conservatives(rho_star_pert[i], tau_pert[i],
-                             S_x_pert[i], S_y_pert[i], S_z_pert[i],
-                             Y_e_cons_pert[i], ent_cons_pert[i], &cons_pert);
+    primitive_quantities prims_trusted, prims_pert;
+    initialize_primitives(
+                      rho_b_trusted[i], press_trusted[i], poison,
+                      vx_trusted[i], vy_trusted[i], vz_trusted[i],
+                      Bx_trusted[i], By_trusted[i], Bz_trusted[i],
+                      entropy_trusted[i], Y_e_trusted[i], temperature_trusted[i],
+                      &prims_trusted);
 
+    initialize_primitives(
+                      rho_b_pert[i], press_pert[i], poison,
+                      vx_pert[i], vy_pert[i], vz_pert[i],
+                      Bx_pert[i], By_pert[i], Bz_pert[i],
+                      entropy_pert[i], Y_e_pert[i], temperature_pert[i],
+                      &prims_pert);
 
-    validate_conservatives(params.evolve_entropy, &cons, &cons_trusted, &cons_pert);
+    validate_primitives(eos.eos_type, params.evolve_entropy, &prims_guess, &prims_trusted, &prims_pert);
   }
-  printf("Completed test for routine apply_inequality_fixes\n");
+  printf("Completed test for routine Noble2D_Hybrid_Multi_Method\n");
   return 0;
 }

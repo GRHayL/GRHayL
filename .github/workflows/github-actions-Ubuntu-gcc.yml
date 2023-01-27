@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [apply_inequality_fixes, font_fix, enforce_primitive_limits_and_output_u0, compute_conservs_and_Tmunu]
+        test-function: [apply_inequality_fixes, Noble2D_Hybrid_Multi_Method, font_fix, enforce_primitive_limits_and_output_u0, compute_conservs_and_Tmunu]
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 

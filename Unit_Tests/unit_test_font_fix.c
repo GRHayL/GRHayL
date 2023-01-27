@@ -1,8 +1,7 @@
 // Thorn      : GRHayL
-// File       : unit_test_con2prim.c
-// Author(s)  : Leo Werneck & Samuel Cupp
-// Description: In this file we provide an extensive unit test of
-//              the Con2Prim gem.
+// File       : unit_test_font_fix.c
+// Author(s)  : Samuel Cupp
+// Description: A standalone unit test for the font_fix function.
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {

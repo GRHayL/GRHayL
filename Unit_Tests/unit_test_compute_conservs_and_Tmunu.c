@@ -1,8 +1,7 @@
 // Thorn      : GRHayL
-// File       : unit_test_con2prim.c
-// Author(s)  : Leo Werneck & Samuel Cupp
-// Description: In this file we provide an extensive unit test of
-//              the Con2Prim gem.
+// File       : unit_test_compute_conservs_and_Tmunu.c
+// Author(s)  : Samuel Cupp
+// Description: A standalone unit test for the compute_conservs_and_Tmunu function.
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {
@@ -239,6 +238,6 @@ int main(int argc, char **argv) {
     validate_conservatives(params.evolve_entropy, &cons, &cons_trusted, &cons_pert);
     validate_stress_energy(&Tmunu, &Tmunu_trusted, &Tmunu_pert);
   }
-  printf("Completed test for routine enforce_primitive_limits_and_output_u0\n");
+  printf("Completed test for routine compute_conservs_and_Tmunu\n");
   return 0;
 }
