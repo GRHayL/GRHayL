@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
     // limiting if it is on the edge, leading to a higher difference in some edge cases. Thus,
     // the default roundoff tolerance of validate() is not a valid floor for the possible
     // relative difference.
-    if( validate_with_tolerance(u0_trusted[i], u0, u0_pert[i], 1.0e-14) )
+    if( validate(u0_trusted[i], u0, u0_pert[i]) )
       grhayl_error("Test has failed! The computed u0 does not fall within tolerance.\n"
                    "   u0_trusted %.15e\n"
                    "   u0_compute %.15e\n"
