@@ -16,16 +16,19 @@ void validate_conservatives(
   char fail_msg[100] = "Test has failed!\n The conservative variable(s) which failed are ";
   int test_fail = 0;
   if( validate(cons_trusted->rho, cons->rho, cons_pert->rho) ) {
+    printf("rho trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->rho, cons->rho, cons_pert->rho);
     sprintf(fail_msg, "%.90s rho_star", fail_msg);
     test_fail = 1;
   }
 
   if( validate(cons_trusted->tau, cons->tau, cons_pert->tau) ) {
+    printf("tau trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->tau, cons->tau, cons_pert->tau);
     sprintf(fail_msg, "%.90s tau", fail_msg);
     test_fail = 1;
   }
 
   if( validate(cons_trusted->S_x, cons->S_x, cons_pert->S_x) ) {
+    printf("S_x trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_x, cons->S_x, cons_pert->S_x);
     sprintf(fail_msg, "%.90s S_x", fail_msg);
     test_fail = 1;
   }
@@ -36,12 +39,14 @@ void validate_conservatives(
   }
 
   if( validate(cons_trusted->S_z, cons->S_z, cons_pert->S_z) ) {
+    printf("S_y trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_y, cons->S_y, cons_pert->S_y);
     sprintf(fail_msg, "%.90s S_z", fail_msg);
     test_fail = 1;
   }
 
   if(evolve_entropy)
     if( validate(cons_trusted->entropy, cons->entropy, cons_pert->entropy) ) {
+    printf("S_z trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_z, cons->S_z, cons_pert->S_z);
       sprintf(fail_msg, "%.90s entropy", fail_msg);
       test_fail = 1;
     }

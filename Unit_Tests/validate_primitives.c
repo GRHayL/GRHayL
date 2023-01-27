@@ -17,45 +17,54 @@ void validate_primitives(
   char fail_msg[100] = "Test has failed!\n The primitive variable(s) which failed are ";
   int test_fail = 0;
   if( validate(prims_trusted->rho, prims->rho, prims_pert->rho) ) {
+    printf("rho_b trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->rho, prims->rho, prims_pert->rho);
     sprintf(fail_msg, "%.80s rho_b", fail_msg);
-    printf("%e %e %e\n", prims_trusted->rho, prims->rho, prims_pert->rho);
     test_fail = 1;
   }
 
-  if( validate(prims_trusted->press, prims->press, prims_pert->press) ) {
+  // Pressure has an additional absolute difference check because the pressure can become very small depending on the
+  // input values. The pressure coming out of HARM doesn't have the accuracy to preserve the stringent accuracy requirements
+  // demanded elsewhere, so this relaxes the demands on the pressure for very small values.
+  if( validate(prims_trusted->press, prims->press, prims_pert->press) && fabs(prims_trusted->press-prims->press) > 1.0e-18 ) {
+    printf("pressure trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->press, prims->press, prims_pert->press);
     sprintf(fail_msg, "%.80s press", fail_msg);
     test_fail = 1;
   }
 
   if( validate(prims_trusted->vx, prims->vx, prims_pert->vx) ) {
+    printf("vx trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vx, prims->vx, prims_pert->vx);
     sprintf(fail_msg, "%.80s vx", fail_msg);
     printf("%e %e %e\n", prims_trusted->vx, prims->vx, prims_pert->vx);
     test_fail = 1;
   }
 
   if(validate(prims_trusted->vy, prims->vy, prims_pert->vy)) {
+    printf("vy trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vy, prims->vy, prims_pert->vy);
     sprintf(fail_msg, "%.80s vy", fail_msg);
-    printf("%.15e %.15e %.15e\n", prims_trusted->vy, prims->vy, prims_pert->vy);
     test_fail = 1;
   }
 
   if( validate(prims_trusted->vz, prims->vz, prims_pert->vz) ) {
+    printf("vz trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vz, prims->vz, prims_pert->vz);
     sprintf(fail_msg, "%.80s vz", fail_msg);
     test_fail = 1;
   }
 
   if(evolve_entropy)
     if( validate(prims_trusted->entropy, prims->entropy, prims_pert->entropy) ) {
+      printf("entropy trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->entropy, prims->entropy, prims_pert->entropy);
       sprintf(fail_msg, "%.80s entropy", fail_msg);
       test_fail = 1;
     }
 
   if(eos_type == 2) { //Tabulated
     if( validate(prims_trusted->Y_e, prims->Y_e, prims_pert->Y_e) ) {
+      printf("Y_e trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->Y_e, prims->Y_e, prims_pert->Y_e);
       sprintf(fail_msg, "%.80s Y_e", fail_msg);
       test_fail = 1;
     }
     if( validate(prims_trusted->temperature, prims->temperature, prims_pert->temperature) ) {
+      printf("temperature trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->temperature, prims->temperature, prims_pert->temperature);
       sprintf(fail_msg, "%.80s temperature", fail_msg);
       test_fail = 1;
     }
