@@ -52,12 +52,12 @@ int main(int argc, char **argv) {
   }
 
   double *A_rhs[3];
-  double *A_rhs_trusted[3];
-  double *A_rhs_pert[3];
+  double *A_trusted[3];
+  double *A_pert[3];
   for(int i=0; i<3; i++) {
     A_rhs[i] = (double*) malloc(sizeof(double)*arraylength);
-    A_rhs_trusted[i] = (double*) malloc(sizeof(double)*arraylength);
-    A_rhs_pert[i] = (double*) malloc(sizeof(double)*arraylength);
+    A_trusted[i] = (double*) malloc(sizeof(double)*arraylength);
+    A_pert[i] = (double*) malloc(sizeof(double)*arraylength);
   }
 
   FILE* infile;
@@ -83,6 +83,15 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
   
+#pragma omp parallel for
+  for(int k=1; k<dirlength; k++)
+    for(int j=1; j<dirlength; j++)
+      for(int i=1; i<dirlength; i++) {
+        const int index = indexf(dirlength,i,j,k);
+        A_rhs[0][index] = 0.0;
+        A_rhs[1][index] = 0.0;
+        A_rhs[2][index] = 0.0;
+  }
 
   for(int A_dir=1; A_dir<4; A_dir++) {
   int dir1 = A_dir%3, dir2 = (A_dir+1)%3;
@@ -101,18 +110,28 @@ int main(int argc, char **argv) {
 
   key = 0;
   for(int coord=0; coord<3; coord++)
-    key += fread(A_rhs_trusted[coord], sizeof(double), arraylength, infile);
+    key += fread(A_trusted[coord], sizeof(double), arraylength, infile);
   fclose(infile);
   if(key != arraylength*3)
     grhayl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
   key = 0;
   for(int coord=0; coord<3; coord++)
-    key += fread(A_rhs_pert[coord], sizeof(double), arraylength, inpert);
+    key += fread(A_pert[coord], sizeof(double), arraylength, inpert);
   fclose(inpert);
   if(key != arraylength*3)
     grhayl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
+
+#pragma omp parallel for
+  for(int k=1; k<dirlength; k++)
+    for(int j=1; j<dirlength; j++)
+      for(int i=1; i<dirlength; i++) {
+        const int index = indexf(dirlength,i,j,k);
+        validate(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]);
+        validate(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]);
+        validate(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]);
+  }
 }
 
 void A_rhs_dir(const int dirlength,
