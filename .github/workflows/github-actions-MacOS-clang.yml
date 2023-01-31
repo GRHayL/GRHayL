@@ -34,6 +34,34 @@ jobs:
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`brew --prefix`/opt/llvm/lib:`pwd`/lib
           ./exe/unit_test_${{ matrix.test-function }}
 
+  reconstruction:
+    strategy:
+      fail-fast: false
+      matrix:
+        test-function: [simple_ppm]
+        os: [macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install llvm gsed hdf5
+      - name: Compile GRHayL
+        run: |
+          export COMPILER=clang
+          export CFLAGS="-I`brew --prefix`/opt/llvm/include"
+          export LDFLAGS="-L`brew --prefix`/opt/llvm/lib"
+          make
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_initial_data.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_pert.bin
+      - name: Run reconstruction unit test for ${{ matrix.test-function }} function
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`brew --prefix`/opt/llvm/lib:`pwd`/lib
+          ./exe/unit_test_${{ matrix.test-function }}
+
   induction:
     strategy:
       fail-fast: false
@@ -57,7 +85,7 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_pert.bin
-      - name: Run induction equation gauge RHS unit test
+      - name: Run induction equation unit test for ${{ matrix.test-function }} function
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`brew --prefix`/opt/llvm/lib:`pwd`/lib
           ./exe/unit_test_${{ matrix.test-function }}
