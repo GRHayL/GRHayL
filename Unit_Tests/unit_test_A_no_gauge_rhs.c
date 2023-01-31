@@ -124,9 +124,12 @@ int main(int argc, char **argv) {
     for(int j=1; j<dirlength; j++)
       for(int i=1; i<dirlength; i++) {
         const int index = indexf(dirlength,i,j,k);
-        validate(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]);
-        validate(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]);
-        validate(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]);
+        if( validate(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]) )
+          grhayl_error("Test unit_test_A_no_gauge_rhs has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);
+        if( validate(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]) )
+          grhayl_error("Test unit_test_A_no_gauge_rhs has failed for variable Ay_rhs at index (%d,%d,%d).\n", i, j, k);
+        if( validate(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]) )
+          grhayl_error("Test unit_test_A_no_gauge_rhs has failed for variable Az_rhs at index (%d,%d,%d).\n", i, j, k);
   }
 }
 
