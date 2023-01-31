@@ -15,10 +15,6 @@ void A_rhs_dir(const int dirlength, const int A_dir,
                const double *restrict B2r, const double *restrict B2l,
                double *restrict A_rhs);
 
-inline int indexf(const int gridmax, const int i, const int j, const int k) {
-  return i + j*gridmax + k*gridmax*gridmax;
-}
-
 int main(int argc, char **argv) {
 
   const int dirlength = 20;

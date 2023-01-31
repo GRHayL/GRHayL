@@ -3,7 +3,7 @@
 
 static const int RHOB=0,PRESSURE=1,VX=2;
 
-static double eos_Gamma_temp(const eos_parameters *restrict eos, const double rho_in, const double press_in);
+static double eos_gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
 
 void reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir, const int num_vars, 
                          const int *restrict var_indices,
@@ -45,11 +45,11 @@ void reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir
         }
 
         // Compute gamma
-        const double Gamma = eos_Gamma_temp(eos, in_prims[RHOB][index], in_prims[PRESSURE][index]);
+        const double gamma = eos_gamma_eff(eos, in_prims[RHOB][index], in_prims[PRESSURE][index]);
 
         simple_ppm_no_rho_P(
           pressure, var_data, num_vars,
-          v_flux_dir, Gamma,
+          v_flux_dir, gamma,
           vars_r, vars_l);
 
         for(int var=0; var<num_vars; var++) {
@@ -59,7 +59,7 @@ void reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir
   }
 }
 
-static double eos_Gamma_temp(const eos_parameters *restrict eos, const double rho_in, const double press_in) {
+static double eos_gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in) {
   double K, gamma;
   eos->hybrid_get_K_and_Gamma(eos, rho_in, &K, &gamma);
   const double P_cold = K*pow(rho_in, gamma);

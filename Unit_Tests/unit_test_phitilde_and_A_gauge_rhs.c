@@ -1,9 +1,5 @@
 #include "unit_tests.h"
 
-inline int indexf(const int gridmax, const int i, const int j, const int k) {
-  return i + j*gridmax + k*gridmax*gridmax;
-}
-
 int main(int argc, char **argv) {
   const int gridmin     = 0;
   const int gridmax     = 21;

@@ -5,6 +5,7 @@
 #include "stdlib.h"
 #include "con2prim.h"
 #include "induction.h"
+#include "reconstruction.h"
 
 // con2prim validation functions
 void validate_primitives(
@@ -110,6 +111,10 @@ static inline double relative_error( const double a, const double b ) {
   if     ( a != 0 ) return( fabs(1.0-b/a) );
   else if( b != 0 ) return( fabs(1.0-a/b) );
   else              return( 0.0 );
+}
+
+inline int indexf(const int gridmax, const int i, const int j, const int k) {
+  return i + j*gridmax + k*gridmax*gridmax;
 }
 
 static inline bool validate_with_tolerance(
