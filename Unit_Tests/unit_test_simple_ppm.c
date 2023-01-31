@@ -122,15 +122,23 @@ int main(int argc, char **argv) {
                    &rhor, &rhol, &pressr, &pressl,
                    var_datar, var_datal);
 
-        validate(rhor_trusted[index], rhor, rhor_pert[index]);
-        validate(pressr_trusted[index], pressr, pressr_pert[index]);
-        validate(vxr_trusted[index], var_datar[0], vxr_pert[index]);
-        validate(vzr_trusted[index], var_datar[1], vzr_pert[index]);
+        if( validate(rhor_trusted[index], rhor, rhor_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable rho_r at index (%d,%d,%d).\n", i, j, k);
+        if( validate(pressr_trusted[index], pressr, pressr_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable press_r at index (%d,%d,%d).\n", i, j, k);
+        if( validate(vxr_trusted[index], var_datar[0], vxr_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable vx_r at index (%d,%d,%d).\n", i, j, k);
+        if( validate(vzr_trusted[index], var_datar[1], vzr_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable vz_r at index (%d,%d,%d).\n", i, j, k);
 
-        validate(rhol_trusted[index], rhol, rhol_pert[index]);
-        validate(pressl_trusted[index], pressl, pressl_pert[index]);
-        validate(vxl_trusted[index], var_datal[0], vxl_pert[index]);
-        validate(vzl_trusted[index], var_datal[1], vzl_pert[index]);
+        if( validate(rhol_trusted[index], rhol, rhol_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable rho_l at index (%d,%d,%d).\n", i, j, k);
+        if( validate(pressl_trusted[index], pressl, pressl_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable press_l at index (%d,%d,%d).\n", i, j, k);
+        if( validate(vxl_trusted[index], var_datal[0], vxl_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable vx_l at index (%d,%d,%d).\n", i, j, k);
+        if( validate(vzl_trusted[index], var_datal[1], vzl_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable vz_l at index (%d,%d,%d).\n", i, j, k);
   }
 
   key  = fread(vxr_trusted   , sizeof(double), arraylength, infile);
@@ -170,11 +178,15 @@ int main(int argc, char **argv) {
                    num_vars, v_flux_dir, gamma_eff,
                    var_datar, var_datal);
 
-        validate(vxr_trusted[index], var_datar[0], vxr_pert[index]);
-        validate(vzr_trusted[index], var_datar[1], vzr_pert[index]);
+        if( validate(vxr_trusted[index], var_datar[0], vxr_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable vx_r at index (%d,%d,%d).\n", i, j, k);
+        if( validate(vzr_trusted[index], var_datar[1], vzr_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable vz_r at index (%d,%d,%d).\n", i, j, k);
 
-        validate(vxl_trusted[index], var_datal[0], vxl_pert[index]);
-        validate(vzl_trusted[index], var_datal[1], vzl_pert[index]);
+        if( validate(vxl_trusted[index], var_datal[0], vxl_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable vx_l at index (%d,%d,%d).\n", i, j, k);
+        if( validate(vzl_trusted[index], var_datal[1], vzl_pert[index]) )
+          grhayl_error("Test unit_test_simple_ppm has failed for variable vz_l at index (%d,%d,%d).\n", i, j, k);
   }
 }
 
