@@ -1,5 +1,4 @@
 # generate_makefile.sh - Generates a Makefile for GRHayL
-# Author: Leo Werneck
 #
 # Basic usage (may require manually editing the generated Makefile):
 #

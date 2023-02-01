@@ -2,7 +2,6 @@
 #include "con2prim.h"
 
 /* Function    : limit_utilde_and_compute_v()
- * Authors     : Samuel Cupp
  * Description : Initialize the primitives struct from user
  *               input
  * Dependencies: None

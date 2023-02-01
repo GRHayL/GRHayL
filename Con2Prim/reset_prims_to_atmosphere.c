@@ -1,7 +1,6 @@
 #include "con2prim.h"
 
 /* Function    : reset_prims_to_atmosphere()
- * Authors     : ? and Samuel Cupp
  * Description : Uses the EOS data to reset the primitives to atmospheric
  *               values.
  *

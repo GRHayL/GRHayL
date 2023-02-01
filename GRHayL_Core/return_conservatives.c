@@ -1,7 +1,6 @@
 #include "GRHayL.h"
 
 /* Function    : return_conservatives()
- * Authors     : Samuel Cupp
  * Description : unpacks conservative struct into variables
  *
  * Intputs      : cons          - conservative_quantities struct with

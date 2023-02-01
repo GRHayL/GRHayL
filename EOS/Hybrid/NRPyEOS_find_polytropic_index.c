@@ -1,7 +1,6 @@
 #include "NRPyEOS_Hybrid.h"
 
 /* Function    : find_polytropic_index()
- * Authors     : Leo Werneck, Zach Etienne, & Samuel Cupp
  * Description : For a given value of rho, find the
  *               appropriate polytropic index
  *

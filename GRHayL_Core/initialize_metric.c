@@ -1,7 +1,6 @@
 #include "GRHayL.h"
 
 /* Function    : initialize_metric()
- * Authors     : Samuel Cupp
  * Description : Initialize the metric struct from user
  *               input
  *

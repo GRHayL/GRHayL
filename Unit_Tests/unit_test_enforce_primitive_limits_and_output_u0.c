@@ -1,7 +1,3 @@
-// Thorn      : GRHayL
-// File       : unit_test_enforce_primitive_limits_and_output_u0.c
-// Author(s)  : Samuel Cupp
-// Description: A standalone unit test for the enforce_primitive_limits_and_output_u0 function.
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {

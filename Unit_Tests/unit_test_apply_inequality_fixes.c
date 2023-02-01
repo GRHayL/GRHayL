@@ -1,7 +1,3 @@
-// Thorn      : GRHayL
-// File       : unit_test_apply_inequality_fixes.c
-// Author(s)  : Samuel Cupp
-// Description: A standalone unit test for the apply_inequality_fixes function.
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {

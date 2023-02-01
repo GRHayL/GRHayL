@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 /* Function    : apply_inequality_fixes()
- * Authors     : ?
  * Description : This function checks whether tau tilde and S tilde
  *               obey the inequalities constraining their possible values.
  *               If they are outside these bounds, the function enforces

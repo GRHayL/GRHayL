@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 /* Function    : guess_primitives()
- * Authors     : Leo Werneck and Samuel Cupp
  * Description : This function computes initial guesses for the primitives
  *               for use in the Con2Prim solver.
  *

@@ -12,7 +12,6 @@
 // in GRHayl.h.
 
 /* Function    : initialize_general_eos()
- * Authors     : Leo Werneck & Samuel Cupp
  * Description : This function initializes the quantities in the
  *               EOS struct which are independent of the type of EOS
  *
@@ -45,7 +44,6 @@ void initialize_general_eos(
 }
 
 /* Function    : initialize_hybrid_eos()
- * Authors     : Leo Werneck & Samuel Cupp
  * Description : This function initializes the quantities in the
  *               EOS struct for a hybrid EOS
  *
@@ -117,7 +115,6 @@ void initialize_hybrid_eos(
 
 //TODO: Eventually, improve this using initialize_Tabulated_EOS_parameters_from_input()
 /* Function    : initialize_tabulated_eos()
- * Authors     : Leo Werneck & Samuel Cupp
  * Description : This function initializes the quantities in the
  *               EOS struct which are independent of the type of EOS
  *

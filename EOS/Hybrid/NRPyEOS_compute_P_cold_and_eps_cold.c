@@ -1,7 +1,6 @@
 #include "NRPyEOS_Hybrid.h"
 
 /* Function    : compute_P_cold_and_eps_cold()
- * Authors     : Leo Werneck
  * Description : Computes P_cold and eps_cold.
  * Dependencies: initialize_igm_eos_parameters_from_input()
  *             : find_polytropic_K_and_Gamma_index()

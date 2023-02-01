@@ -1,7 +1,6 @@
 #include "con2prim.h"
 
 /* Function    : font_fix_rhob_loop()
- * Authors     : Leo Werneck
  * Description : Determines rhob using the font fix prescription
  * Dependencies: find_polytropic_K_and_Gamma_index()
  *             : compute_P_cold_and_eps_cold()

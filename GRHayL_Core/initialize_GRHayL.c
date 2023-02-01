@@ -1,7 +1,6 @@
 #include "GRHayL.h"
 
 /* Function    : initialize_GRHayL()
- * Authors     : Samuel Cupp
  * Description : Initialize the GRHayL_parameters struct from user input
  *
  * Inputs      : main            - selection of Con2Prim routine for the

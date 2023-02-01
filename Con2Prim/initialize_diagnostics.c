@@ -1,7 +1,6 @@
 #include "con2prim.h"
 
 /* Function    : initialize_diagnostics()
- * Authors     : Samuel Cupp
  * Description : Initialize the diagnostics struct for Con2Prim
  *               input
  * Dependencies: None

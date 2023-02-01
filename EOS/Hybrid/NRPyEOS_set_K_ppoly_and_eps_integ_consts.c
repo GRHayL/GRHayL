@@ -1,7 +1,6 @@
 #include "NRPyEOS_Hybrid.h"
 
 /* Function    : setup_K_ppoly_and_eps_integ_consts()
- * Authors     : Leo Werneck & Samuel Cupp
  * Description : For a given set of EOS inputs, determine
  *               values of K_ppoly that will result in a
  *               everywhere continuous P_cold function.

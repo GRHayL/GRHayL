@@ -1,7 +1,6 @@
 #include "GRHayL.h"
 
 /* Function    : initialize_primitives()
- * Authors     : Samuel Cupp
  * Description : Initialize the primitives struct from user
  *               input
  *

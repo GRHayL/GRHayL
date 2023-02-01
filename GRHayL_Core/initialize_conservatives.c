@@ -1,7 +1,6 @@
 #include "GRHayL.h"
 
 /* Function    : initialize_conservatives()
- * Authors     : Samuel Cupp
  * Description : Initialize the conservative struct from user
  *               input
  *

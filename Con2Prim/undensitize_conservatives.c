@@ -1,7 +1,6 @@
 #include "con2prim.h"
 
 /* Function    : undensitize_conservatives()
- * Authors     : Leo Werneck and Samuel Cupp
  * Description : this function takes a conservative_quantities struct cons with
  *               densitized variables and computes the undensitized variables,
  *               which are stored in the struct cons_undens

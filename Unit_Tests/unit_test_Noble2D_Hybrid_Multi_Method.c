@@ -1,7 +1,3 @@
-// Thorn      : GRHayL
-// File       : unit_test_Noble2D_Hybrid_Multi_Method.c
-// Author(s)  : Samuel Cupp
-// Description: A standalone unit test for the Noble2D Con2Prim routine.
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {

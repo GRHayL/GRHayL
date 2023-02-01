@@ -1,7 +1,6 @@
 #include "GRHayL.h"
 
 /* Function    : return_primitives()
- * Authors     : Samuel Cupp
  * Description : unpacks primitives struct into variables
  *
  * Inputs      : cons            - primitive_quantities struct with

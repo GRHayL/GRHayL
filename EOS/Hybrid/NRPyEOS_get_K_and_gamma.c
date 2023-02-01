@@ -1,7 +1,6 @@
 #include "NRPyEOS_Hybrid.h"
 
 /* Function    : get_K_and_Gamma()
- * Authors     : Samuel Cupp
  * Description : For a given value of rho, find the
  *               appropriate values of Gamma_ppoly
  *               and K_ppoly by determining the

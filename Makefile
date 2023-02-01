@@ -1,5 +1,4 @@
 # GRHayL Makefile
-# Author(s): Leo Werneck and Sam Cupp
 
 # List of Gems that should be compiled
 GEM = GRHayL_Core Con2Prim EOS Induction Reconstruction Neutrinos
