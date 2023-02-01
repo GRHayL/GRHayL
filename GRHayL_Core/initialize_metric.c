@@ -48,17 +48,18 @@ void initialize_metric(const double lapse,
 
   // This is the analytic algorithm for finding the inverse of a 3x3 matrix. See e.g.
   // https://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_3_%C3%97_3_matrices
-  double gijdet = fabs(gxx * (gyy*gzz - gyz*gyz) + gxy * (gyz*gxz - gxy*gzz) + gxz * (gxy*gyz - gyy*gxz));
-  metric->adm_gupxx =   ( gyy * gzz - gyz * gyz )/gijdet;
-  metric->adm_gupxy = - ( gxy * gzz - gyz * gxz )/gijdet;
-  metric->adm_gupxz =   ( gxy * gyz - gyy * gxz )/gijdet;
-  metric->adm_gupyy =   ( gxx * gzz - gxz * gxz )/gijdet;
-  metric->adm_gupyz = - ( gxx * gyz - gxy * gxz )/gijdet;
-  metric->adm_gupzz =   ( gxx * gyy - gxy * gxy )/gijdet;
+  metric->gijdet = fabs(gxx * (gyy*gzz - gyz*gyz) + gxy * (gyz*gxz - gxy*gzz) + gxz * (gxy*gyz - gyy*gxz));
 
-  double phi = (1.0/12.0) * log(gijdet);
+  metric->adm_gupxx =   ( gyy * gzz - gyz * gyz )/metric->gijdet;
+  metric->adm_gupxy = - ( gxy * gzz - gyz * gxz )/metric->gijdet;
+  metric->adm_gupxz =   ( gxy * gyz - gyy * gxz )/metric->gijdet;
+  metric->adm_gupyy =   ( gxx * gzz - gxz * gxz )/metric->gijdet;
+  metric->adm_gupyz = - ( gxx * gyz - gxy * gxz )/metric->gijdet;
+  metric->adm_gupzz =   ( gxx * gyy - gxy * gxy )/metric->gijdet;
 
-  metric->psi2 = exp(2.0*phi);
+  metric->phi = (1.0/12.0) * log(metric->gijdet);
+
+  metric->psi2 = exp(2.0*metric->phi);
   metric->psi4 = SQR(metric->psi2);
   metric->psi6 = metric->psi4*metric->psi2;
   metric->psi4inv = 1.0/metric->psi4;

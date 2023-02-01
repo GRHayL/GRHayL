@@ -1,8 +1,7 @@
 #include "cctk.h"
-#include "induction.h"
+#include "GRHayLET.h"
 #define IPH(METRICm1,METRICp0,METRICp1,METRICp2) (-0.0625*((METRICm1) + (METRICp2)) + 0.5625*((METRICp0) + (METRICp1)))
 
-static const int BX_STAGGER=8, VXR=11, VXL=14;
 void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
                /*const*/ double **out_prims_r,
                /*const*/ double **out_prims_l,

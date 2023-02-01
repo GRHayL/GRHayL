@@ -364,7 +364,7 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // We are FINISHED with v{x,y,z}{r,l} and P{r,l} so we use these 8 gridfunctions' worth of space as temp storage.
   phitilde_and_A_gauge_rhs(cctkGH, dX, gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz,
               psi_bssn, lapm1, betax, betay, betaz, Ax, Ay, Az, phitilde,
-              damp_lorenz, vxr, vyr, vzr, vxl, vyl, vzl, pressr, pressl,
+              grhayl_params->Lorenz_damping_factor, vxr, vyr, vzr, vxl, vyl, vzl, pressr, pressl,
               phitilde_rhs, Ax_rhs, Ay_rhs, Az_rhs);
 
   return;

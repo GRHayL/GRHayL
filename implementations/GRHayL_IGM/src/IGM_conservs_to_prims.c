@@ -99,28 +99,29 @@ void GRHayLET_conserv_to_prims(CCTK_ARGUMENTS) {
     // Read in BSSN metric quantities from gridfunctions and
     // set auxiliary and ADM metric quantities
     metric_quantities metric;
-    initialize_metric(alp[index],
-                      gxx[index], gxy[index], gxz[index],
-                      gyy[index], gyz[index], gzz[index],
-                      betax[index], betay[index], betaz[index],
-                      &metric);
+    GRHayL_enforce_detgtij_and_initialize_metric(
+          alp[index],
+          gxx[index], gxy[index], gxz[index],
+          gyy[index], gyz[index], gzz[index],
+          betax[index], betay[index], betaz[index],
+          &metric);
        
     // Read in primitive variables from gridfunctions
     primitive_quantities prims;
     initialize_primitives(rho[index],
-                          press[index], eps[index],
-                          vx[index], vy[index], vz[index],
-                          Bvec[index0], Bvec[index1], Bvec[index2],
-                          poison, poison, poison, &prims);
-                          //entropy[index], Y_e[index], temp[index],
+          press[index], eps[index],
+          vx[index], vy[index], vz[index],
+          Bvec[index0], Bvec[index1], Bvec[index2],
+          poison, poison, poison, &prims);
+          //entropy[index], Y_e[index], temp[index],
 
     // Read in conservative variables from gridfunctions
     conservative_quantities cons, cons_orig;
     initialize_conservatives(
-                             rho_star[index], tau[index],
-                             Stildex[index], Stildey[index], Stildez[index],
-                             poison, poison, &cons);
-                             //Y_e[index], entropy[index],
+          rho_star[index], tau[index],
+          Stildex[index], Stildey[index], Stildez[index],
+          poison, poison, &cons);
+          //Y_e[index], entropy[index],
 
     // Here we save the original values of conservative variables in cons_orig for debugging purposes.
     cons_orig = cons;
@@ -222,16 +223,16 @@ void GRHayLET_conserv_to_prims(CCTK_ARGUMENTS) {
     failure_checker[index] = diagnostics.failure_checker;
 
     return_primitives(&prims, &rho[index], &press[index], &eps[index],
-                  &vx[index], &vy[index], &vz[index], &Bvec[index0], &Bvec[index1], &Bvec[index2],
-                  &dummy1, &dummy2, &dummy3);
-                  //&entropy[index], &Y_e[index], &temp[index]);
+          &vx[index], &vy[index], &vz[index], &Bvec[index0], &Bvec[index1], &Bvec[index2],
+          &dummy1, &dummy2, &dummy3);
+          //&entropy[index], &Y_e[index], &temp[index]);
 
     return_conservatives(&cons, &rho_star[index], &tau[index],
-                        &Stildex[index], &Stildey[index], &Stildez[index],
-                        &dummy1, &dummy2);
-                        //&Y_e[index], &entropy[index]);
+          &Stildex[index], &Stildey[index], &Stildez[index],
+          &dummy1, &dummy2);
+          //&Y_e[index], &entropy[index]);
 
-    if(update_Tmunu) {
+    if(grhayl_params->update_Tmunu) {
       eTtt[index] = Tmunu.Ttt;
       eTtx[index] = Tmunu.Ttx;
       eTty[index] = Tmunu.Tty;

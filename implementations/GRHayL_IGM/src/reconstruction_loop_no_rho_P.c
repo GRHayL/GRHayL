@@ -1,7 +1,5 @@
 #include "cctk.h"
-#include "reconstruction.h"
-
-static const int RHOB=0,PRESSURE=1,VX=2;
+#include "GRHayLET.h"
 
 static double eos_gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
 

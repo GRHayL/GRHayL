@@ -1,18 +1,3 @@
-restricted:
-CCTK_BOOLEAN run_unit_tests "Whether or not to perform the GRHayL unit tests"
-{
-} "no"
-
-#########################################################
-
-# Symmetry boundary params. Needed for handling staggered gridfunctions.
-KEYWORD Symmetry "Currently only no symmetry supported, though work has begun in adding equatorial-symmetry support. FIXME: Extend ET symmetry interface to support symmetries on staggered gridfunctions"
-{
-  "none"       :: "no symmetry, full 3d domain"
-} "none"
-
-#########################################################
-
 # EOS parameters
 KEYWORD EOS_type "The type of EOS for the simulation"
 {
@@ -43,16 +28,6 @@ CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?"
 CCTK_BOOLEAN evolve_entropy "Do we want to evolve the entropy?"
 {
 } "no"
-
-#########################################################
-
-# Verbosity Level
-KEYWORD verbose "Determines how much evolution information is output" STEERABLE=ALWAYS
-{
-  "no"        :: "Complete silence"
-  "essential" :: "Essential health monitoring of the GRMHD evolution: Information about conservative-to-primitive fixes, etc."
-  "essential+iteration output" :: "Outputs health monitoring information, plus a record of which RK iteration. Very useful for backtracing a crash."
-} "essential+iteration output"
 
 #########################################################
 
@@ -196,7 +171,7 @@ CCTK_REAL gamma_ppoly_in[11] "Set polytropic gamma parameters"
 #########################################################
 
 # EVOLUTION PARAMS
-CCTK_REAL damp_lorenz "Damping factor for the generalized Lorenz gauge. Has units of 1/length = 1/M. Typically set this parameter to 1.5/(maximum Delta t on AMR grids)." STEERABLE=ALWAYS
+CCTK_REAL Lorenz_damping_factor "Damping factor for the generalized Lorenz gauge. Has units of 1/length = 1/M. Typically set this parameter to 1.5/(maximum Delta t on AMR grids)." STEERABLE=ALWAYS
 {
  *:* :: "any real"
 } 0.0

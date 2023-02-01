@@ -1,14 +1,7 @@
 # Main make.code.defn file for thorn GRHayL
 
 # Source files in this directory
-SRCS = A_no_gauge_rhs.c                  \
-       con2prim_ETK_interface.c          \
-       GRHayLET_conservs_to_prims.c      \
-       GRHayLET_evaluate_MHD_rhs.c       \
-       GRHayL_initialize_and_shutdown.c  \
-       phitilde_and_A_gauge_rhs.c        \
-       reconstruction_loop.c             \
-       reconstruction_loop_no_rho_P.c
+SRCS = GRHayL_initialize_and_shutdown.c
 
 # Subdirectories containing source files
 SUBDIRS = Con2Prim                       \

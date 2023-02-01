@@ -1,0 +1,20 @@
+
+#########################################################
+
+# Symmetry boundary params. Needed for handling staggered gridfunctions.
+KEYWORD Symmetry "Currently only no symmetry supported, though work has begun in adding equatorial-symmetry support. FIXME: Extend ET symmetry interface to support symmetries on staggered gridfunctions"
+{
+  "none"       :: "no symmetry, full 3d domain"
+} "none"
+
+#########################################################
+
+
+# Verbosity Level
+KEYWORD verbose "Determines how much evolution information is output" STEERABLE=ALWAYS
+{
+  "no"        :: "Complete silence"
+  "essential" :: "Essential health monitoring of the GRMHD evolution: Information about conservative-to-primitive fixes, etc."
+  "essential+iteration output" :: "Outputs health monitoring information, plus a record of which RK iteration. Very useful for backtracing a crash."
+} "essential+iteration output"
+

@@ -29,26 +29,7 @@ int apply_inequality_fixes(const GRHayL_parameters *restrict params, const eos_p
                            metric_quantities *restrict metric, const primitive_quantities *restrict prims,
                            conservative_quantities *restrict cons, con2prim_diagnostics *restrict diagnostics) {
 
-  double lam1,lam2,lam3;
-  eigenvalues_3by3_real_sym_matrix(&lam1, &lam2, &lam3, metric->adm_gxx, metric->adm_gxy, metric->adm_gxz, metric->adm_gyy, metric->adm_gyz, metric->adm_gzz);
-  if (lam1 < 0.0 || lam2 < 0.0 || lam3 < 0.0) {
-    // Metric is not positive-defitive, reset the metric to be conformally-flat.
-    grhayl_warn("Metric isn't positive-definite!\n");
-//    metric->bssn_gxx = 1.0;
-//    metric->bssn_gxy = 0.0;
-//    metric->bssn_gxz = 0.0;
-//    metric->bssn_gyy = 1.0;
-//    metric->bssn_gyz = 0.0;
-//    metric->bssn_gzz = 1.0;
-//    metric->bssn_gupxx = metric->psi4inv;
-//    metric->bssn_gupxy = 0.0;
-//    metric->bssn_gupxz = 0.0;
-//    metric->bssn_gupyy = metric->psi4inv;
-//    metric->bssn_gupyz = 0.0;
-//    metric->bssn_gupzz = metric->psi4inv;
-  }
-
-  //Next, prepare for the tau and stilde fixes:
+  //First, prepare for the tau and stilde fixes:
 
   double Bxbar = prims->Bx*ONE_OVER_SQRT_4PI;
   double Bybar = prims->By*ONE_OVER_SQRT_4PI;

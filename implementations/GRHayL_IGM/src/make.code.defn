@@ -1,0 +1,9 @@
+# Main make.code.defn file for thorn GRHayL
+
+# Source files in this directory
+SRCS = A_no_gauge_rhs.c                  \
+       IGM_conservs_to_prims.c        \
+       IGM_evaluate_MHD_rhs.c         \
+       phitilde_and_A_gauge_rhs.c        \
+       reconstruction_loop.c             \
+       reconstruction_loop_no_rho_P.c

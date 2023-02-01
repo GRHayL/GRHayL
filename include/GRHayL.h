@@ -495,6 +495,7 @@ typedef struct metric_quantities {
   double adm_gyy, adm_gyz, adm_gzz;
   double adm_gupxx, adm_gupxy, adm_gupxz;
   double adm_gupyy, adm_gupyz, adm_gupzz;
+  double gijdet, phi;
   double betax, betay, betaz;
   double lapse, lapseinv;
   double psi2, psi4, psi6;

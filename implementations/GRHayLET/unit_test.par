@@ -1,9 +1,0 @@
-ActiveThorns = "Con2Prim"
-ActiveThorns = "Carpet CoordBase"
-GRHayL::run_unit_tests = "yes"
-
-Con2Prim::Cupp_Fix = "yes"
-
-cactus::cctk_show_schedule = "no"
-cactus::cctk_show_banners = "no"
-cactus::cctk_brief_output = "yes"
