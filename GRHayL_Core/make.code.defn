@@ -1,7 +1,8 @@
 # Primary make.code.defn for GRHayL chalice
 
 # Source files in this directory that need compiled:
-SRCS = initialize_conservatives.c \
+SRCS = grhayl_info_warn_error.c   \
+       initialize_conservatives.c \
        initialize_metric.c        \
        initialize_GRHayL.c        \
        initialize_primitives.c    \
