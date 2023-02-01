@@ -1,9 +1,6 @@
 #ifndef NEUTRINOS_H_
 #define NEUTRINOS_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 #include "GRHayL.h"
 
 // Neutrino quantities

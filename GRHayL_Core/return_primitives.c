@@ -9,10 +9,10 @@
  *
  * Outputs     : rho            - pointer to the baryonic density
  *             : press          - pointer to the pressure
- *             : epsilon        - pointer to epsilon (for tabulated EOS TODO: right?)
- *             : vx             - pointer to the x component of the velocity TODO: which velocity?
- *             : vy             - pointer to the y component of the velocity
- *             : vz             - pointer to the z component of the velocity
+ *             : epsilon        - pointer to epsilon
+ *             : vx             - pointer to 3-velocity component u^1/u^0
+ *             : vy             - pointer to 3-velocity component u^2/u^0
+ *             : vz             - pointer to 3-velocity component u^3/u^0
  *             : Bx             - pointer to the x component of the magnetic field TODO: which magnetic field?
  *             : By             - pointer to the y component of the magnetic field
  *             : Bz             - pointer to the z component of the magnetic field
@@ -36,6 +36,6 @@ void return_primitives(const primitive_quantities *restrict prims,
   // Tabulated EOS quantities
   *Y_e         = prims->Y_e;
   *temperature = prims->temperature;
-  // *epsilon     = prims->eps; // Doesn't seem to get set in IGM?
+  *epsilon     = prims->eps;
 
 }

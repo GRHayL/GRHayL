@@ -4,7 +4,7 @@
  * Authors     : Samuel Cupp
  * Description : unpacks conservative struct into variables
  *
- * Intputs      : cons           - conservative_quantities struct with
+ * Intputs      : cons          - conservative_quantities struct with
  *                                data from the Con2Prim routine
  *
  * Outputs     : rho            - pointer to densitized density variable

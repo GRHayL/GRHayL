@@ -49,11 +49,11 @@ typedef struct A_gauge_rhs_vars {
 double A_no_gauge_rhs_stencil(const A_no_gauge_vars *restrict vars);
 
 void interpolate_for_A_gauge_rhs(
-            A_gauge_vars *restrict gauge_vars,
-            A_gauge_rhs_vars *restrict gauge_rhs_vars );
+      A_gauge_vars *restrict gauge_vars,
+      A_gauge_rhs_vars *restrict gauge_rhs_vars );
 
 void calculate_phitilde_and_A_gauge_rhs(
-                                   const double Lorenz_damping_factor,
-                                   A_gauge_rhs_vars *restrict vars);
+      const double Lorenz_damping_factor,
+      A_gauge_rhs_vars *restrict vars);
 
 #endif // INDUCTION_H_

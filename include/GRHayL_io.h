@@ -1,6 +1,9 @@
 #ifndef GRHAYL_IO_H_
 #define GRHAYL_IO_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+
 void grhayl_info(const char *format, ...);
 
 void grhayl_Warn_Error(

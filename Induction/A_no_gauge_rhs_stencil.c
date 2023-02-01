@@ -1,7 +1,17 @@
 #include "induction.h"
 
-/* Compute the part of A_i_rhs that excludes the gauge terms. I.e., we set
- *   A_i_rhs = \partial_t A_i = \psi^{6} (v^z B^x - v^x B^z)   here.
+/* Function    : A_no_gauge_rhs_stencil()
+ * Description : compute RHS for A_i, excluding gauge contributions; i.e., we
+ *               set A_y_rhs = \partial_t A_y = \psi^{6} (v^z B^x - v^x B^z).
+ *               This is direction-agnostic, and the stencils just need
+ *               to contain the correct information; see an implementation for
+ *               examples of usage
+ *
+ * Inputs      : vars            - A_no_gauge_vars struct containing variable
+ *                                 stencils
+ *
+ * Outputs     : return          - returns right-hand side calculation for A_i
+ *
  */
 double A_no_gauge_rhs_stencil(const A_no_gauge_vars *restrict vars) {
 

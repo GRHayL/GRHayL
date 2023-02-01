@@ -7,10 +7,10 @@
  *
  * Inputs      : rho            - value of the baryonic density
  *             : press          - value of the pressure
- *             : epsilon        - value of epsilon (for tabulated EOS TODO: right?)
- *             : vx             - value of the x component of the velocity TODO: which velocity?
- *             : vy             - value of the y component of the velocity
- *             : vz             - value of the z component of the velocity
+ *             : epsilon        - value of epsilon
+ *             : vx             - value of the x component of the 3-velocity u^i/u^0
+ *             : vy             - value of the y component of the 3-velocity u^i/u^0
+ *             : vz             - value of the z component of the 3-velocity u^i/u^0
  *             : Bx             - value of the x component of the magnetic field TODO: which magnetic field?
  *             : By             - value of the y component of the magnetic field
  *             : Bz             - value of the z component of the magnetic field

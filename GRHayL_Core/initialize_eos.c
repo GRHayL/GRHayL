@@ -1,6 +1,16 @@
 #include "NRPyEOS_Hybrid.h"
 #include "NRPyEOS_Tabulated.h"
 
+// The initialize_general_eos() function sets the parameters in the eos_parameters struct
+// which are independent of EOS. The functions initialize_hybrid_functions() and
+// initialize_tabulated_functions() set the function pointers for eos_parameters. These
+// must be run before initialize_hybrid_eos() or initialize_tabulated_eos(), respectively.
+// To replace these functions with in-house variants, simply set the pointers to the new
+// functions. The initialize_hybrid_eos() or initialize_tabulated_eos() funcitons set
+// the parameters for hybrid and tabulated EOS, respectively. For more information on
+// the arguments and other properties of eos_parameters, see the definition of the struct
+// in GRHayl.h.
+
 /* Function    : initialize_general_eos()
  * Authors     : Leo Werneck & Samuel Cupp
  * Description : This function initializes the quantities in the
@@ -11,20 +21,14 @@
  *                                tau tilde TODO: give definition of tau
  *             : W_max          - the maximum allowable value for the Lorenz
  *                                factor W
- *             : entropy_atm    - the atmospheric value for the entropy TODO: entropy or densitized entropy?
- *             : entropy_min    - the minimum allowable value for the entropy
- *             : entropy_max    - the maximum allowable value for the entropy
  *             : rho_atm        - the atmospheric value for rho_*
  *             : rho_min        - the minimum allowable value for rho_*
  *             : rho_max        - the maximum allowable value for rho_*
  *
  * Outputs     : eos            - an eos_parameters struct with the above inputs
  *                                initialized
- The functions initialize_general_eos, initialize_hybrid_eos, and initialize_tabulated_eos
-   fill the struct eos_parameters with data. Depending on which eos is being using, an eos-
-   specific function must be called to fill in the eos parameters. The initialize_general_eos
-   should be called regardless of eos, as it contains the common parameters that are generally
-   needed. For more information on the arguments, see the definition of the struct in new_header.h. */
+ *
+ */
 void initialize_general_eos(
       const int type,
       const double W_max,
@@ -40,6 +44,28 @@ void initialize_general_eos(
   eos->rho_max           = rho_max;
 }
 
+/* Function    : initialize_hybrid_eos()
+ * Authors     : Leo Werneck & Samuel Cupp
+ * Description : This function initializes the quantities in the
+ *               EOS struct for a hybrid EOS
+ *
+ * Inputs      : neos           - the number of pieces in the piecewise
+ *                                polytrope
+ *             : rho_ppoly      - pointer to the array containing the
+ *                                minimum rho_b for each polytropic piece
+ *             : gamma_ppoly    - pointer to the array containing the
+ *                                minimum rho_b for each polytropic piece
+ *                                tau tilde TODO: give definition of tau
+ *             : W_max          - the maximum allowable value for the Lorenz
+ *                                factor W
+ *             : rho_atm        - the atmospheric value for rho_*
+ *             : rho_min        - the minimum allowable value for rho_*
+ *             : rho_max        - the maximum allowable value for rho_*
+ *
+ * Outputs     : eos            - an eos_parameters struct with the above inputs
+ *                                initialized
+ *
+ */
 void initialize_hybrid_eos(
       const int neos,
       const double *restrict rho_ppoly,
@@ -89,7 +115,25 @@ void initialize_hybrid_eos(
   // --------------------------------------
 }
 
-//Eventually, improve this using initialize_Tabulated_EOS_parameters_from_input()
+//TODO: Eventually, improve this using initialize_Tabulated_EOS_parameters_from_input()
+/* Function    : initialize_tabulated_eos()
+ * Authors     : Leo Werneck & Samuel Cupp
+ * Description : This function initializes the quantities in the
+ *               EOS struct which are independent of the type of EOS
+ *
+ * Inputs      : root_finding_precision - TODO: 
+ *             : depsdT_threshold       - TODO:
+ *             : Y_e_atm                - the atmospheric value for Y_e
+ *             : Y_e_min                - the minimum allowable value for Y_e
+ *             : Y_e_max                - the maximum allowable value for Y_e
+ *             : T_atm                  - the atmospheric value for temperature
+ *             : T_min                  - the minimum allowable value for temperature
+ *             : T_max                  - the maximum allowable value for temperature
+ *
+ * Outputs     : eos                    - an eos_parameters struct with the above inputs
+ *                                        initialized
+ *
+ */
 void initialize_tabulated_eos(
       const double root_finding_precision,
       const double depsdT_threshold,

@@ -1,8 +1,6 @@
 #ifndef NRPYEOS_TABULATED_H_
 #define NRPYEOS_TABULATED_H_
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <hdf5.h>
 #include "GRHayL.h"

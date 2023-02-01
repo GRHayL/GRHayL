@@ -2,27 +2,29 @@
 
 /* Function    : initialize_GRHayL()
  * Authors     : Samuel Cupp
- * Description : Initialize the GRHayL_parameters struct from user
- *               input
+ * Description : Initialize the GRHayL_parameters struct from user input
  *
- * Inputs      : main             - selection of Con2Prim routine for the
- *                                  C2P_Select_Hybrid_Method() function
- *             : backup[3]        - array for up to three backup routines for
- *                                  the C2P_Select_Hybrid_Method() function
- *             : evolve_entropy   -
- *             : evolve_temp      -
- *             : calc_prim_guess  - Codes which have valid primitive data at
- *                                  the start of Con2Prim routines do not need
- *                                  to generate guesses and can immediately run
- *                                  C2P. Those that don't need to calculate primitive
- *                                  guesses. Setting this to 1 triggers the calculation
- *                                  of guesses. TODO: idk if this is how we want to handle this
- *             : psi6threshold    -
- *             : update_Tmunu     - This will update the T_{\mu\nu} values of the stress_energy
- *                                  struct after obtaining the new prims and cons
+ * Inputs      : main            - selection of Con2Prim routine for the
+ *                                 Hybrid_Multi_Method() function
+ *             : backup[3]       - array for up to three backup routines for
+ *                                 the Hybrid_Multi_Method() function
+ *             : evolve_entropy  - sets whether entropy is being evolved in
+ *                                 the simulation
+ *             : evolve_temp     - sets whether temperature is being evolved in
+ *                                 the simulation
+ *             : calc_prim_guess - sets whether Hybrid_Multi_Method() should compute
+ *                                 initial guesses for the primitives; if set to 0,
+ *                                 the initial guess will be whatever has been loaded into
+ *                                 the primitive_quantities struct passed to Hybrid_Multi_Method()
+ *             : psi6threshold   -
+ *             : update_Tmunu    - This will update the T_{\mu\nu} values of the stress_energy
+ *                                 struct after obtaining the new prims and cons
+ *             : Cupp_Fix        - If active, will change behavior of Noble2D which removes
+ *                                 most causes of Font fixes and also change the choice of velocity
+ *                                 in the case of atmospheric reset
  *
- * Outputs     : params           - fully initialized GRHayL_parameters struct
- *                                  containing the input parameters
+ * Outputs     : params          - fully initialized GRHayL_parameters struct
+ *                                 containing the input parameters
  */
 
 void initialize_GRHayL(const int main, const int backup[3],
