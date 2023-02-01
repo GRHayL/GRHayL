@@ -50,6 +50,12 @@ void validate_primitives(
     test_fail = 1;
   }
 
+  if( validate(prims_trusted->eps, prims->eps, prims_pert->eps) ) {
+    printf("eps trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->eps, prims->eps, prims_pert->eps);
+    sprintf(fail_msg, "%.80s eps", fail_msg);
+    test_fail = 1;
+  }
+
   if(evolve_entropy)
     if( validate(prims_trusted->entropy, prims->entropy, prims_pert->entropy) ) {
       printf("entropy trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->entropy, prims->entropy, prims_pert->entropy);

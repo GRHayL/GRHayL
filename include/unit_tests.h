@@ -33,6 +33,7 @@ void read_primitive_binary(
       double *restrict vx,
       double *restrict vy,
       double *restrict vz,
+      double *restrict eps,
       double *restrict Bx,
       double *restrict By,
       double *restrict Bz,

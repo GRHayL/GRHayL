@@ -8,6 +8,7 @@ void read_primitive_binary(
       double *restrict vx,
       double *restrict vy,
       double *restrict vz,
+      double *restrict eps,
       double *restrict Bx,
       double *restrict By,
       double *restrict Bz,
@@ -22,6 +23,7 @@ void read_primitive_binary(
   key += fread(vx,    sizeof(double), 1, infile);
   key += fread(vy,    sizeof(double), 1, infile);
   key += fread(vz,    sizeof(double), 1, infile);
+  key += fread(eps,    sizeof(double), 1, infile);
   key += fread(Bx,    sizeof(double), 1, infile);
   key += fread(By,    sizeof(double), 1, infile);
   key += fread(Bz,    sizeof(double), 1, infile);
@@ -37,7 +39,7 @@ void read_primitive_binary(
   // Since each read only reads a single double, the key should just be a sum of every read
   // that happens. Hence, 8 for main primitives, +1 for entropy, and
   // 2 for tabulated (Y_e and temperature).
-  const int correct_key = 8 + evolve_entropy + (eos_type == 2)*2;
+  const int correct_key = 9 + evolve_entropy + (eos_type == 2)*2;
   if( key != correct_key)
     grhayl_error("An error has occured with reading in trusted primitive data. "
                  "Please check that comparison data "
@@ -55,6 +57,7 @@ void write_primitive_binary(
   fwrite(&prims->vx, sizeof(double), 1, outfile);
   fwrite(&prims->vy, sizeof(double), 1, outfile);
   fwrite(&prims->vz, sizeof(double), 1, outfile);
+  fwrite(&prims->eps, sizeof(double), 1, outfile);
   fwrite(&prims->Bx, sizeof(double), 1, outfile);
   fwrite(&prims->By, sizeof(double), 1, outfile);
   fwrite(&prims->Bz, sizeof(double), 1, outfile);

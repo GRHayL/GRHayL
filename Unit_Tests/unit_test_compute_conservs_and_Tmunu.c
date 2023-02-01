@@ -6,7 +6,6 @@ int main(int argc, char **argv) {
   const int npoints = 80;
   const int arraylength = npoints*npoints;
 
-  const double poison = 1e200;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
   const int backup_routine[3] = {None,None,None};
@@ -77,6 +76,7 @@ int main(int argc, char **argv) {
   double *vx = (double*) malloc(sizeof(double)*arraylength);
   double *vy = (double*) malloc(sizeof(double)*arraylength);
   double *vz = (double*) malloc(sizeof(double)*arraylength);
+  double *eps = (double*) malloc(sizeof(double)*arraylength);
   double *Bx = (double*) malloc(sizeof(double)*arraylength);
   double *By = (double*) malloc(sizeof(double)*arraylength);
   double *Bz = (double*) malloc(sizeof(double)*arraylength);
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
                          &betay[index], &betaz[index], initial_data);
 
       read_primitive_binary(eos.eos_type, params.evolve_entropy, &rho_b[index], &press[index],
-                            &vx[index], &vy[index], &vz[index],
+                            &vx[index], &vy[index], &vz[index], &eps[index],
                             &Bx[index], &By[index], &Bz[index],
                             &entropy[index], &Y_e[index], &temperature[index],
                             infile);
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
                       betay[i], betaz[i], &metric);
 
     initialize_primitives(
-                      rho_b[i], press[i], poison,
+                      rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
                       entropy[i], Y_e[i], temperature[i],

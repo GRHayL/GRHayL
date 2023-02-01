@@ -6,7 +6,6 @@ int main(int argc, char **argv) {
   const int npoints = 80;
   const int arraylength = npoints*npoints;
 
-  const double poison = 1e200;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
   const int backup_routine[3] = {None,None,None};
@@ -78,6 +77,7 @@ int main(int argc, char **argv) {
   double *vx = (double*) malloc(sizeof(double)*arraylength);
   double *vy = (double*) malloc(sizeof(double)*arraylength);
   double *vz = (double*) malloc(sizeof(double)*arraylength);
+  double *eps = (double*) malloc(sizeof(double)*arraylength);
   double *Bx = (double*) malloc(sizeof(double)*arraylength);
   double *By = (double*) malloc(sizeof(double)*arraylength);
   double *Bz = (double*) malloc(sizeof(double)*arraylength);
@@ -87,6 +87,7 @@ int main(int argc, char **argv) {
   double *vx_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *vy_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *vz_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *eps_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Bx_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *By_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_trusted = (double*) malloc(sizeof(double)*arraylength);
@@ -96,6 +97,7 @@ int main(int argc, char **argv) {
   double *vx_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vy_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vz_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *eps_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Bx_pert = (double*) malloc(sizeof(double)*arraylength);
   double *By_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_pert = (double*) malloc(sizeof(double)*arraylength);
@@ -126,13 +128,13 @@ int main(int argc, char **argv) {
                          &betay[index], &betaz[index], initial_data);
 
       read_primitive_binary(eos.eos_type, params.evolve_entropy, &rho_b[index], &press[index],
-                            &vx[index], &vy[index], &vz[index],
+                            &vx[index], &vy[index], &vz[index], &eps[index],
                             &Bx[index], &By[index], &Bz[index],
                             &entropy[index], &Y_e[index], &temperature[index],
                             infile);
 
       read_primitive_binary(eos.eos_type, params.evolve_entropy, &rho_b_trusted[index], &press_trusted[index],
-                            &vx_trusted[index], &vy_trusted[index], &vz_trusted[index],
+                            &vx_trusted[index], &vy_trusted[index], &vz_trusted[index], &eps_trusted[index],
                             &Bx_trusted[index], &By_trusted[index], &Bz_trusted[index],
                             &entropy_trusted[index], &Y_e_trusted[index], &temperature_trusted[index],
                             infile);
@@ -144,7 +146,7 @@ int main(int argc, char **argv) {
                      "is up-to-date with current test version.\n");
 
       read_primitive_binary(eos.eos_type, params.evolve_entropy, &rho_b_pert[index], &press_pert[index],
-                            &vx_pert[index], &vy_pert[index], &vz_pert[index],
+                            &vx_pert[index], &vy_pert[index], &vz_pert[index], &eps_pert[index],
                             &Bx_pert[index], &By_pert[index], &Bz_pert[index],
                             &entropy_pert[index], &Y_e_pert[index], &temperature_pert[index],
                             inpert);
@@ -173,7 +175,7 @@ int main(int argc, char **argv) {
                       betay[i], betaz[i], &metric);
 
     initialize_primitives(
-                      rho_b[i], press[i], poison,
+                      rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
                       entropy[i], Y_e[i], temperature[i],
@@ -185,14 +187,14 @@ int main(int argc, char **argv) {
 
     primitive_quantities prims_trusted, prims_pert;
     initialize_primitives(
-                      rho_b_trusted[i], press_trusted[i], poison,
+                      rho_b_trusted[i], press_trusted[i], eps_trusted[i],
                       vx_trusted[i], vy_trusted[i], vz_trusted[i],
                       Bx_trusted[i], By_trusted[i], Bz_trusted[i],
                       entropy_trusted[i], Y_e_trusted[i], temperature_trusted[i],
                       &prims_trusted);
 
     initialize_primitives(
-                      rho_b_pert[i], press_pert[i], poison,
+                      rho_b_pert[i], press_pert[i], eps_pert[i],
                       vx_pert[i], vy_pert[i], vz_pert[i],
                       Bx_pert[i], By_pert[i], Bz_pert[i],
                       entropy_pert[i], Y_e_pert[i], temperature_pert[i],

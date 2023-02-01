@@ -94,7 +94,7 @@ void compute_conservs_and_Tmunu(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
-      primitive_quantities *restrict prims,
+      const primitive_quantities *restrict prims,
       const double u0,
       conservative_quantities *restrict cons,
       stress_energy *restrict Tmunu);
