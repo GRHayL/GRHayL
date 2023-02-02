@@ -56,6 +56,5 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
   //  prims->eps = xeps;
   //  prims->entropy = xent;
   }
-
   limit_v_and_output_u0(eos, metric, prims, u0, diagnostics);
 }

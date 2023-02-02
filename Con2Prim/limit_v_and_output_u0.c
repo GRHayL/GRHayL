@@ -22,7 +22,7 @@ void limit_v_and_output_u0(const eos_parameters *restrict eos,
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
   const double one_minus_one_over_W_max_squared = 1.0-1.0/SQR(eos->W_max); // 1 - W_max^{-2}
   if(one_minus_one_over_alpha_u0_squared > one_minus_one_over_W_max_squared) {
-    double correction_fac = sqrt(one_minus_one_over_W_max_squared/one_minus_one_over_alpha_u0_squared);
+    const double correction_fac = sqrt(one_minus_one_over_W_max_squared/one_minus_one_over_alpha_u0_squared);
     prims->vx = (prims->vx + metric->betax)*correction_fac - metric->betax;
     prims->vy = (prims->vy + metric->betay)*correction_fac - metric->betay;
     prims->vz = (prims->vz + metric->betaz)*correction_fac - metric->betaz;
@@ -34,7 +34,7 @@ void limit_v_and_output_u0(const eos_parameters *restrict eos,
   // 1/sqrt(A) = al u0
   //double alpha_u0_minus_one = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared)-1.0;
   //u0_out          = (alpha_u0_minus_one + 1.0)*metric.lapseinv;
-  double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
+  const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
   *u0_out = alpha_u0*metric->lapseinv;
   if(isnan(*u0_out)) {
     // Leo asks: shouldn't this be an error?

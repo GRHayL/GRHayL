@@ -1,11 +1,7 @@
 #include "con2prim.h"
 
-void compute_u_i_over_u0_psi4(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
-                              double *restrict u_x_over_u0_psi4, double *restrict u_y_over_u0_psi4,
-                              double *restrict u_z_over_u0_psi4);
 void compute_smallb_and_b2(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
-                           const double u0L, const double u_x_over_u0_psi4, const double u_y_over_u0_psi4,
-                           const double u_z_over_u0_psi4, double *restrict smallb, double *restrict smallb2);
+                           const double uDN[4], double *restrict smallb, double *restrict smallb2);
 
 /* Function    : compute_conservs_and_Tmunu()
  * Description : This function computes the conservatives from the given primitives.
@@ -37,7 +33,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   // Now compute the enthalpy
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;
 
-  double uUP[4];
+  double uUP[4], uDN[4];
 
   // Compute u^i. u^0 is provided to the function.
   uUP[0] = u0;
@@ -45,22 +41,15 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   uUP[2] = uUP[0]*prims->vy;
   uUP[3] = uUP[0]*prims->vz;
 
+  // Compute u_\alpha
+  lower_vector(metric, uUP, uDN);
+
   /***************************************************************/
   //     COMPUTE TDNMUNU AND  CONSERVATIVES FROM PRIMITIVES      //
   /***************************************************************/
   // Compute b^{\mu}, b^2, and u_i/(u^0 Psi4)
-  double u_x_over_u0_psi4,u_y_over_u0_psi4,u_z_over_u0_psi4;
   double smallb[4], smallb2;
-  compute_u_i_over_u0_psi4(metric, prims, &u_x_over_u0_psi4, &u_y_over_u0_psi4, &u_z_over_u0_psi4);
-  compute_smallb_and_b2(metric, prims, uUP[0], u_x_over_u0_psi4, u_y_over_u0_psi4, u_z_over_u0_psi4, smallb, &smallb2);
-
-  // Compute u_0; we compute u_i below.
-  double udn0=0.0;
-  for(int jj=0; jj<4; jj++)
-    udn0 += uUP[jj]*metric->g4dn[0][jj];
-
-  // Compute u_i; we computed u_0 above.
-  const double uDN[4] = { udn0, u_x_over_u0_psi4*uUP[0]*metric->psi4,u_y_over_u0_psi4*uUP[0]*metric->psi4,u_z_over_u0_psi4*uUP[0]*metric->psi4 };
+  compute_smallb_and_b2(metric, prims, uDN, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
   const double alpha_sqrt_gamma=metric->lapse*metric->psi6;
@@ -68,14 +57,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 
   double smallb_lower[4];
-  // FIXME: This could be replaced by the function call
-  //           lower_4vector_output_spatial_part(psi4,smallb,smallb_lower);
-  // b_a = b^c g_{ac}
-  for(int ii=0;ii<4;ii++) {
-    smallb_lower[0+ii]=0;
-    for(int jj=0;jj<4;jj++)
-      smallb_lower[0+ii] += smallb[0+jj]*metric->g4dn[ii][jj];
-  }
+  lower_vector(metric, smallb, smallb_lower);
 
   // Compute conservatives:
   cons->rho = alpha_sqrt_gamma * prims->rho * uUP[0];
@@ -105,41 +87,20 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   }
 }
 
-void compute_u_i_over_u0_psi4(
-      const metric_quantities *restrict metric,
-      const primitive_quantities *restrict prims,
-      double *restrict u_x_over_u0_psi4,
-      double *restrict u_y_over_u0_psi4,
-      double *restrict u_z_over_u0_psi4) {
-
-  double shiftx_plus_vx = (metric->betax+prims->vx);
-  double shifty_plus_vy = (metric->betay+prims->vy);
-  double shiftz_plus_vz = (metric->betaz+prims->vz);
-
-  // Eq. 56 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
-  //  u_i = gamma_{ij} u^0 (v^j + beta^j), gamma_{ij} is the physical metric, and gamma_{ij} = Psi4 * METRIC[Gij], since METRIC[Gij] is the conformal metric.
-  *u_x_over_u0_psi4 =  (metric->adm_gxx*shiftx_plus_vx + metric->adm_gxy*shifty_plus_vy + metric->adm_gxz*shiftz_plus_vz)/metric->psi4;
-  *u_y_over_u0_psi4 =  (metric->adm_gxy*shiftx_plus_vx + metric->adm_gyy*shifty_plus_vy + metric->adm_gyz*shiftz_plus_vz)/metric->psi4;
-  *u_z_over_u0_psi4 =  (metric->adm_gxz*shiftx_plus_vx + metric->adm_gyz*shifty_plus_vy + metric->adm_gzz*shiftz_plus_vz)/metric->psi4;
-}
-
 // Computes b^{\mu} and b^2 = b^{\mu} b^{\nu} g_{\mu \nu}
 void compute_smallb_and_b2(
       const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
-      const double u0L,
-      const double u_x_over_u0_psi4,
-      const double u_y_over_u0_psi4,
-      const double u_z_over_u0_psi4,
+      const double uDN[4],
       double *restrict smallb,
       double *restrict smallb2) {
 
-  double ONE_OVER_LAPSE_SQRT_4PI = metric->lapseinv*ONE_OVER_SQRT_4PI;
-  double ONE_OVER_U0 = 1.0/u0L;
+  const double ONE_OVER_LAPSE_SQRT_4PI = metric->lapseinv*ONE_OVER_SQRT_4PI;
+  const double ONE_OVER_U0 = 1.0/uDN[0];
 
   // Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   //   Compute alpha sqrt(4 pi) b^t = u_i B^i
-  double alpha_sqrt_4pi_bt = ( u_x_over_u0_psi4*prims->Bx + u_y_over_u0_psi4*prims->By + u_z_over_u0_psi4*prims->Bz ) * metric->psi4*u0L;
+  const double alpha_sqrt_4pi_bt = uDN[1]*prims->Bx + uDN[2]*prims->By + uDN[3]*prims->Bz;
 
   // Eq. 24 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   // b^i = B^i_u / sqrt(4 pi)
@@ -162,9 +123,9 @@ void compute_smallb_and_b2(
   //     = - (alpha b^t)^2 + gamma_{ij} ((b^t)^2 beta^i beta^j + b^i b^j + 2 b^t beta^j b^i)
   //     = - (alpha b^t)^2 + gamma_{ij} ((b^t)^2 beta^i beta^j + 2 b^t beta^j b^i + b^i b^j)
   //     = - (alpha b^t)^2 + gamma_{ij} (b^i + b^t beta^i) (b^j + b^t beta^j)
-  double bx_plus_shiftx_bt = smallb[1]+metric->betax*smallb[0];
-  double by_plus_shifty_bt = smallb[2]+metric->betay*smallb[0];
-  double bz_plus_shiftz_bt = smallb[3]+metric->betaz*smallb[0];
+  const double bx_plus_shiftx_bt = smallb[1]+metric->betax*smallb[0];
+  const double by_plus_shifty_bt = smallb[2]+metric->betay*smallb[0];
+  const double bz_plus_shiftz_bt = smallb[3]+metric->betaz*smallb[0];
   *smallb2 = -SQR(metric->lapse*smallb[0]) +
     metric->adm_gxx*SQR(bx_plus_shiftx_bt) + metric->adm_gyy*SQR(by_plus_shifty_bt) + metric->adm_gzz*SQR(bz_plus_shiftz_bt) +
        2.0*( metric->adm_gxy*(bx_plus_shiftx_bt)*(by_plus_shifty_bt) +

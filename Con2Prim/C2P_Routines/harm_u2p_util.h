@@ -83,7 +83,6 @@ static inline void raise_g(const double vcov[NDIM], const double gcon[NDIM][NDIM
   return ;
 }
 
-
 /**********************************************************************
      lower_g():
 
@@ -102,7 +101,6 @@ static inline void lower_g(const double vcon[NDIM], const double gcov[NDIM][NDIM
 
   return ;
 }
-
 
 /**********************************************************************
      ncov_calc():

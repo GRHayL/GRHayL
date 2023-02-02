@@ -518,6 +518,14 @@ void initialize_metric(
       const double betax, const double betay, const double betaz,
       metric_quantities *restrict metric);
 
-//--------------------------------------------------
+void raise_vector(
+      const metric_quantities *restrict metric,
+      const double vcov[4],
+      double vcon[4]);
+
+void lower_vector(
+      const metric_quantities *restrict metric,
+      const double vcon[4],
+      double vcov[4]);
 
 #endif // GRHayL_H

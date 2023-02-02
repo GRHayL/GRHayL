@@ -50,7 +50,9 @@ void validate_primitives(
     test_fail = 1;
   }
 
-  if( validate(prims_trusted->eps, prims->eps, prims_pert->eps) ) {
+  // Epsilon is zero for much of the test, so this can have a false positive with values of 1e-310 vs 0.0 triggering
+  // an error.
+  if( validate(prims_trusted->eps, prims->eps, prims_pert->eps) && fabs(prims_trusted->eps-prims->eps) > 1.0e-40 ) {
     printf("eps trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->eps, prims->eps, prims_pert->eps);
     sprintf(fail_msg, "%.80s eps", fail_msg);
     test_fail = 1;
