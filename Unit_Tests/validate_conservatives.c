@@ -34,19 +34,20 @@ void validate_conservatives(
   }
 
   if( validate(cons_trusted->S_y, cons->S_y, cons_pert->S_y) ) {
+    printf("S_y trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_y, cons->S_y, cons_pert->S_y);
     sprintf(fail_msg, "%.90s S_y", fail_msg);
     test_fail = 1;
   }
 
   if( validate(cons_trusted->S_z, cons->S_z, cons_pert->S_z) ) {
-    printf("S_y trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_y, cons->S_y, cons_pert->S_y);
+    printf("S_z trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_z, cons->S_z, cons_pert->S_z);
     sprintf(fail_msg, "%.90s S_z", fail_msg);
     test_fail = 1;
   }
 
   if(evolve_entropy)
     if( validate(cons_trusted->entropy, cons->entropy, cons_pert->entropy) ) {
-    printf("S_z trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_z, cons->S_z, cons_pert->S_z);
+      printf("entropy trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->entropy, cons->entropy, cons_pert->entropy);
       sprintf(fail_msg, "%.90s entropy", fail_msg);
       test_fail = 1;
     }
