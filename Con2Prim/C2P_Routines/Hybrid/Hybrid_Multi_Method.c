@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "con2prim.h"
 
 int Hybrid_Select_Method(const GRHayL_parameters *restrict params,

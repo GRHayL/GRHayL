@@ -1,5 +1,4 @@
 #include "../harm_u2p_util.h"
-#include <stdio.h>
 
 /***********************************************************************************
     Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble,
@@ -184,7 +183,7 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   // The magnetic fields in (TODO: library name) also need to be
   // rescaled by a factor of sqrt(4pi).
 
-  double uu = -cons_undens->tau*metric->lapse - (metric->lapse-1.0)*cons_undens->rho +
+  const double uu = -cons_undens->tau*metric->lapse - (metric->lapse-1.0)*cons_undens->rho +
     metric->betax*cons_undens->S_x + metric->betay*cons_undens->S_y  + metric->betaz*cons_undens->S_z;
 
   double new_cons[numcons];
@@ -201,8 +200,8 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   new_cons[TAU] = MAX(cons_undens->tau, eos->tau_atm);
   new_cons[WS] = cons_undens->entropy;
 
-  int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims->rho);
-  double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
+  const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims->rho);
+  const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
 
   new_prims[RHO] = prims->rho;
   new_prims[UU] = prims->press/(Gamma_ppoly - 1.0);
@@ -215,7 +214,7 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   new_prims[WLORENTZ] = 1.0;
 //Additional tabulated code here
 
-  int retval = Utoprim_new_body(params, eos, new_cons, metric->g4dn, metric->g4up, new_prims, &diagnostics->n_iter);
+  const int retval = Utoprim_new_body(params, eos, new_cons, metric->g4dn, metric->g4up, new_prims, &diagnostics->n_iter);
 
   if(retval==0) {
     prims->rho = new_prims[RHO];
@@ -230,7 +229,12 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
 
     prims->press = pressure_rho0_u(eos, prims->rho,new_prims[UU]);
 
-//TODO: consider moving call to enforce primitives limit here from enforce... function in IGM_functions.c
+    // Now compute eps and, if needed, entropy
+    double P_cold = 0.0;
+    double eps_cold = 0.0;
+    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
+    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
+    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
   }
 
   return retval;

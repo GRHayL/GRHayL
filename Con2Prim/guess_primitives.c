@@ -26,14 +26,7 @@ void guess_primitives( const eos_parameters *restrict eos,
 
   //Use atmosphere as initial guess:
   prims_guess->rho = cons->rho/metric->psi6;
-
-  // TODO: Hybrid only?
-  double K_ppoly;
-  double Gamma_ppoly;
-  eos->hybrid_get_K_and_Gamma(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);
-
-  // After that, we compute P_cold
-  prims_guess->press = K_ppoly*pow(prims_guess->rho, Gamma_ppoly);
+  eos->hybrid_compute_P_cold(eos, prims_guess->rho, &prims_guess->press);
   prims_guess->Y_e = cons->Y_e/cons->rho;
   prims_guess->temperature = eos->T_atm;
 }

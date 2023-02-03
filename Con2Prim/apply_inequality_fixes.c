@@ -1,13 +1,10 @@
 #include "con2prim.h"
-#include <stdio.h>
 
 /* Function    : apply_inequality_fixes()
  * Description : This function checks whether tau tilde and S tilde
  *               obey the inequalities constraining their possible values.
  *               If they are outside these bounds, the function enforces
  *               the inequalities and updates the diagnostic data.
- *
- * Dependencies: eigenvalues_3by3_real_sym_matrix()
  *
  * Inputs      : params         - GRHayL_parameters struct with parameters
  *                                for the simulation
@@ -25,30 +22,34 @@
  *                                and required the conservatives to be adjusted
  */
 
-int apply_inequality_fixes(const GRHayL_parameters *restrict params, const eos_parameters *restrict eos,
-                           metric_quantities *restrict metric, const primitive_quantities *restrict prims,
-                           conservative_quantities *restrict cons, con2prim_diagnostics *restrict diagnostics) {
+void apply_inequality_fixes(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const primitive_quantities *restrict prims,
+      conservative_quantities *restrict cons,
+      con2prim_diagnostics *restrict diagnostics) {
 
   //First, prepare for the tau and stilde fixes:
 
-  double Bxbar = prims->Bx*ONE_OVER_SQRT_4PI;
-  double Bybar = prims->By*ONE_OVER_SQRT_4PI;
-  double Bzbar = prims->Bz*ONE_OVER_SQRT_4PI;
+  const double Bxbar = prims->Bx*ONE_OVER_SQRT_4PI;
+  const double Bybar = prims->By*ONE_OVER_SQRT_4PI;
+  const double Bzbar = prims->Bz*ONE_OVER_SQRT_4PI;
 
-  double Bbar_x = metric->adm_gxx*Bxbar + metric->adm_gxy*Bybar + metric->adm_gxz*Bzbar;
-  double Bbar_y = metric->adm_gxy*Bxbar + metric->adm_gyy*Bybar + metric->adm_gyz*Bzbar;
-  double Bbar_z = metric->adm_gxz*Bxbar + metric->adm_gyz*Bybar + metric->adm_gzz*Bzbar;
-  double Bbar2 = Bxbar*Bbar_x + Bybar*Bbar_y + Bzbar*Bbar_z;
+  const double Bbar_x = metric->adm_gxx*Bxbar + metric->adm_gxy*Bybar + metric->adm_gxz*Bzbar;
+  const double Bbar_y = metric->adm_gxy*Bxbar + metric->adm_gyy*Bybar + metric->adm_gyz*Bzbar;
+  const double Bbar_z = metric->adm_gxz*Bxbar + metric->adm_gyz*Bybar + metric->adm_gzz*Bzbar;
+  const double Bbar2 = Bxbar*Bbar_x + Bybar*Bbar_y + Bzbar*Bbar_z;
   double Bbar = sqrt(Bbar2);
 
-  double check_B_small = fabs(Bxbar)+fabs(Bybar)+fabs(Bzbar);
+  const double check_B_small = fabs(Bxbar)+fabs(Bybar)+fabs(Bzbar);
   if (check_B_small>0 && check_B_small<1.e-150) {
     // need to compute Bbar specially to prevent floating-point underflow
     double Bmax = fabs(Bxbar);
-    if (Bmax < fabs(Bybar)) Bmax=fabs(Bybar);
-    if (Bmax < fabs(Bzbar)) Bmax=fabs(Bzbar);
-    double Bxtmp=Bxbar/Bmax, Bytemp=Bybar/Bmax, Bztemp=Bzbar/Bmax;
-    double B_xtemp=Bbar_x/Bmax, B_ytemp=Bbar_y/Bmax, B_ztemp=Bbar_z/Bmax;
+    if (Bmax < fabs(Bybar)) Bmax = fabs(Bybar);
+    if (Bmax < fabs(Bzbar)) Bmax = fabs(Bzbar);
+    const double Bxtmp = Bxbar/Bmax, Bytemp=Bybar/Bmax, Bztemp=Bzbar/Bmax;
+    const double B_xtemp = Bbar_x/Bmax, B_ytemp=Bbar_y/Bmax, B_ztemp=Bbar_z/Bmax;
     Bbar = sqrt(Bxtmp*B_xtemp + Bytemp*B_ytemp + Bztemp*B_ztemp)*Bmax;
   }
 
@@ -77,13 +78,13 @@ int apply_inequality_fixes(const GRHayL_parameters *restrict params, const eos_p
   //   CONSERVS[STILDEX] = CONSERVS[STILDEX]; CONSERVS[STILDEY] = CONSERVS[STILDEY]; CONSERVS[STILDEZ] = CONSERVS[STILDEZ];
   //}
 
-  double sdots= metric->adm_gupxx*SQR(cons->S_x)+metric->adm_gupyy*SQR(cons->S_y)+metric->adm_gupzz*SQR(cons->S_z)+2.0*
+  const double sdots= metric->adm_gupxx*SQR(cons->S_x)+metric->adm_gupyy*SQR(cons->S_y)+metric->adm_gupzz*SQR(cons->S_z)+2.0*
     (metric->adm_gupxy*cons->S_x*cons->S_y+metric->adm_gupxz*cons->S_x*cons->S_z+metric->adm_gupyz*cons->S_y*cons->S_z);
 
-  double Wm = sqrt(SQR(hatBbardotS)+ SQR(cons->rho))/metric->psi6;
-  double Sm2 = (SQR(Wm)*sdots + SQR(BbardotS)*(Bbar2+2.0*Wm))/SQR(Wm+Bbar2);
-  double Wmin = sqrt(Sm2 + SQR(cons->rho))/metric->psi6;
-  double sdots_fluid_max = sdots;
+  const double Wm = sqrt(SQR(hatBbardotS)+ SQR(cons->rho))/metric->psi6;
+  const double Sm2 = (SQR(Wm)*sdots + SQR(BbardotS)*(Bbar2+2.0*Wm))/SQR(Wm+Bbar2);
+  const double Wmin = sqrt(Sm2 + SQR(cons->rho))/metric->psi6;
+  const double sdots_fluid_max = sdots;
 
   //tau fix, applicable when B==0 and B!=0:
   if(cons->tau < 0.5*metric->psi6*Bbar2) {
@@ -94,38 +95,36 @@ int apply_inequality_fixes(const GRHayL_parameters *restrict params, const eos_p
   double tau_fluid_min = cons->tau - 0.5*metric->psi6*Bbar2 - (Bbar2*sdots - SQR(BbardotS))*0.5/(metric->psi6*SQR(Wmin+Bbar2));
 
   //Apply Stilde fix when B==0.
-
   if(check_B_small*check_B_small < eos->press_atm*1e-32) {
-    double rhot=cons->tau*(cons->tau+2.0*cons->rho);
-    double safetyfactor = 0.999999;
+    const double rhot = cons->tau*(cons->tau+2.0*cons->rho);
+    const double safetyfactor = 0.999999;
     //if(METRIC_LAP_PSI4[PSI6]>Psi6threshold) safetyfactor=0.99;
 
     if(sdots > safetyfactor*rhot) {
-      double rfactm1 = sqrt((safetyfactor*rhot)/sdots);
+      const double rfactm1 = sqrt((safetyfactor*rhot)/sdots);
       cons->S_x*=rfactm1;
       cons->S_y*=rfactm1;
       cons->S_z*=rfactm1;
       diagnostics->failure_checker+=10000000;
     }
+  //Apply new Stilde fix.
   } else if(metric->psi6>params->psi6threshold) {
-    //Apply new Stilde fix.
     if (tau_fluid_min < eos->tau_atm*1.001) {
       tau_fluid_min = eos->tau_atm*1.001;
       cons->tau = tau_fluid_min + 0.5*metric->psi6*Bbar2 + (Bbar2*sdots - SQR(BbardotS))*0.5/(metric->psi6*SQR(Wmin+Bbar2));
     }
 
-    double LHS = tau_fluid_min*(tau_fluid_min+2.0*cons->rho);
-    double RHS = sdots_fluid_max;
+    const double LHS = tau_fluid_min*(tau_fluid_min+2.0*cons->rho);
+    const double RHS = sdots_fluid_max;
 
-    double safetyfactor = 0.999999;
+    const double safetyfactor = 0.999999;
     if(safetyfactor*LHS < RHS) {
-      double rfactm1 = sqrt((safetyfactor*LHS)/RHS);
+      const double rfactm1 = sqrt((safetyfactor*LHS)/RHS);
       cons->S_x*=rfactm1;
       cons->S_y*=rfactm1;
       cons->S_z*=rfactm1;
       diagnostics->failure_checker+=100000000;
     }
   }
-
-  return 0;
+  return;
 }

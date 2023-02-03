@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "con2prim.h"
 
 void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict params,
@@ -18,21 +17,20 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
     double prs_cold = 0.0;
     double eps_cold = 0.0;
     eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prs_cold, &eps_cold);
+
     // Set P_min and P_max
-    double P_min = 0.9*prs_cold;
-    double P_max = 100.0*prs_cold;
-    // Set Psi6
+    const double P_min = 0.9*prs_cold;
     // Adjust P_max based on Psi6
-    if(metric->psi6 > params->psi6threshold) P_max = 1e5*prs_cold; // <-- better than 10.
+    const double P_max = (metric->psi6 > params->psi6threshold) ? 1e5*prs_cold : 100.0*prs_cold;
+
     // Now apply floors and ceilings to P
     if(prims->press<P_min) prims->press = P_min;
     // Finally, perform the last check
     if((prims->rho < 100.0*eos->rho_atm || metric->psi6 > params->psi6threshold) && prims->press>P_max) {
       prims->press = P_max;
     }
-    // Now compute eps
+    // Now recompute eps and, if needed, entropy
     prims->eps = eps_cold + (prims->press-prs_cold)/(eos->Gamma_th-1.0)/prims->rho;
-    // If needed, recompute the entropy function
     if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
 
   // Tabulated EOS specific floors and ceilings
@@ -56,5 +54,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
   //  prims->eps = xeps;
   //  prims->entropy = xent;
   }
+
+  // Finally, apply speed limit to v and output u^0
   limit_v_and_output_u0(eos, metric, prims, u0, diagnostics);
 }

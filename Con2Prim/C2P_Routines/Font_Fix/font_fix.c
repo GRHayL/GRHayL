@@ -1,6 +1,5 @@
 #include "con2prim.h"
 #include "../harm_u2p_util.h"
-#include <stdio.h>
 
 /**********************************
  * Piecewise Polytropic EOS Patch *

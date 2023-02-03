@@ -62,10 +62,10 @@ void initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
 
-int  apply_inequality_fixes(
+void apply_inequality_fixes(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      metric_quantities *restrict metric,
+      const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
       conservative_quantities *restrict cons,
       con2prim_diagnostics *restrict diagnostics);

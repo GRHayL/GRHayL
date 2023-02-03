@@ -1,10 +1,25 @@
 #include "con2prim.h"
 
-void limit_v_and_output_u0(const eos_parameters *restrict eos,
-                           const metric_quantities *restrict metric,
-                           primitive_quantities *restrict prims,
-                           double *restrict u0_out,
-                           con2prim_diagnostics *restrict diagnostics) {
+/* Function    : limit_v_and_output_u0()
+ * Description : Initialize the primitives struct from user
+ *               input
+ *
+ * Inputs      : eos             - initialized eos_parameters struct
+ *             : metric          - initialized metric_quantities struct
+ *             : prims           - primitive_quantities struct to be speed limited
+ *
+ * Outputs     : u0_out          - returns u^0
+ *             : prims           - returns velocity-limited prims->v^i
+ *             : diagnostics     - tracks if the velocity was limited
+ *
+ */
+
+void limit_v_and_output_u0(
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      primitive_quantities *restrict prims,
+      double *restrict u0_out,
+      con2prim_diagnostics *restrict diagnostics) {
 
   // Derivation of first equation:
   // \gamma_{ij} (v^i + \beta^i)(v^j + \beta^j)/(\alpha)^2

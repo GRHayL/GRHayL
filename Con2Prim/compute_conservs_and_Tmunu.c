@@ -52,7 +52,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   compute_smallb_and_b2(metric, prims, uUP[0], uDN, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
-  const double alpha_sqrt_gamma=metric->lapse*metric->psi6;
+  const double alpha_sqrt_gamma = metric->lapse*metric->psi6;
   const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 
