@@ -1,20 +1,15 @@
 #include "con2prim.h"
 
 /* Function    : undensitize_conservatives()
- * Description : this function takes a conservative_quantities struct cons with
- *               densitized variables and computes the undensitized variables,
- *               which are stored in the struct cons_undens
- * Dependencies: None
+ * Description : Computes undensitized conservatives using the metric
  *
- * Inputs      : metric         - an initialized metric_quantities struct
- *                                with data for the same gridpoint as cons
- * Inputs      : cons           - an initialized conservative_quantities
- *                                struct with data for the same gridpoint as
- *                                metric
+ * Inputs      : metric         - metric_quantities struct with data for
+ *                                the gridpoint of interest
+ *             : cons           - conservative_quantities struct with data
+ *                                for the gridpoint of interest
  *
- * Outputs     : cons_undens    - conservative_quantities struct filled with
- *                                the undensitized variables associated with
- *                                cons
+ * Outputs     : cons_undens    - returns undensitized conservative
+ *
  */
 
 void undensitize_conservatives( const metric_quantities *restrict metric,

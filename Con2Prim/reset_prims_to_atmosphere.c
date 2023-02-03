@@ -4,11 +4,10 @@
  * Description : Uses the EOS data to reset the primitives to atmospheric
  *               values.
  *
- * Inputs      : eos             - an initialized eos_parameters struct
- *                                 with data for the EOS of the simulation
+ * Inputs      : eos            - eos_parameters struct with data for the
+ *                                EOS of the simulation
  *
- * Outputs     : prims           - A primitive_quantities struct which has
- *                                 been floored to atmospheric values
+ * Outputs     : prims          - returns with all primitives set to atmospheric values
  */
 
 void reset_prims_to_atmosphere( const GRHayL_parameters *restrict params,

@@ -1,34 +1,30 @@
 #include "GRHayL.h"
 
 /* Function    : initialize_metric()
- * Description : Initialize the metric struct from user
- *               input
+ * Description : Initialize the metric struct from user input
  *
- * Inputs      : lapse          - the value of the lapse
- *             : gxx            - the value of the (1,1) component of the
+ * Inputs      : lapse          - value of the lapse
+ *             : gxx            - value of the (1,1) component of the
  *                                cartesian ADM metric
- *             : gxy            - the value of the (1,2) component of the
+ *             : gxy            - value of the (1,2) component of the
  *                                cartesian ADM metric
- *             : gxz            - the value of the (1,3) component of the
+ *             : gxz            - value of the (1,3) component of the
  *                                cartesian ADM metric
- *             : gyy            - the value of the (2,2) component of the
+ *             : gyy            - value of the (2,2) component of the
  *                                cartesian ADM metric
- *             : gyz            - the value of the (2,3) component of the
+ *             : gyz            - value of the (2,3) component of the
  *                                cartesian ADM metric
- *             : gzz            - the value of the (3,3) component of the
+ *             : gzz            - value of the (3,3) component of the
  *                                cartesian ADM metric
- *             : betax          - the value of the x component of the shift
- *             : betay          - the value of the y component of the shift
- *             : betaz          - the value of the z component of the shift
+ *             : betax          - value of the x component of the shift
+ *             : betay          - value of the y component of the shift
+ *             : betaz          - value of the z component of the shift
  *
- * Outputs     : metric         - fully initialized metric_quantities struct
- *                                containing the input data along with
- *                                additional auxiliary data computed from
- *                                the input
+ * Outputs     : metric         - returns metric_quantities struct containing
+ *                                the inputs and additional auxiliary data computed
+ *                                from input
  */
 
-//TODO: We could consider allowing the struct to be either BSSN or ADM in the future if
-//we ever need a BSSN struct by having initialize_BSSN and initialize_ADM functions.
 void initialize_metric(const double lapse,
                 const double gxx, const double gxy, const double gxz,
                 const double gyy, const double gyz, const double gzz,

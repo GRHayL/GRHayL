@@ -3,21 +3,20 @@
 /* Function    : return_primitives()
  * Description : unpacks primitives struct into variables
  *
- * Inputs      : cons            - primitive_quantities struct with
- *                                 data from the Con2Prim routine
+ * Inputs      : cons            - primitive_quantities struct to be unpacked
  *
- * Outputs     : rho            - pointer to the baryonic density
- *             : press          - pointer to the pressure
+ * Outputs     : rho            - pointer to baryonic density
+ *             : press          - pointer to pressure
  *             : epsilon        - pointer to epsilon
  *             : vx             - pointer to 3-velocity component u^1/u^0
  *             : vy             - pointer to 3-velocity component u^2/u^0
  *             : vz             - pointer to 3-velocity component u^3/u^0
- *             : Bx             - pointer to the x component of the magnetic field TODO: which magnetic field?
- *             : By             - pointer to the y component of the magnetic field
- *             : Bz             - pointer to the z component of the magnetic field
- *             : entropy        - pointer to the entropy
- *             : Y_e            - pointer to the electron fraction (for tabulated EOS)
- *             : temp           - pointer to the temperature (for tabulated EOS)
+ *             : Bx             - pointer to magnetic field B^1 TODO: define choice of B
+ *             : By             - pointer to magnetic field B^2
+ *             : Bz             - pointer to magnetic field B^3
+ *             : entropy        - pointer to entropy
+ *             : Y_e            - pointer to electron fraction (for tabulated EOS)
+ *             : temp           - pointer to temperature (for tabulated EOS)
  */
 
 void return_primitives(const primitive_quantities *restrict prims,

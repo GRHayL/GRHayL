@@ -12,22 +12,20 @@
 // in GRHayl.h.
 
 /* Function    : initialize_general_eos()
- * Description : This function initializes the quantities in the
- *               EOS struct which are independent of the type of EOS
+ * Description : Initializes EOS struct elements which are independent of the type of EOS
  *
- * Inputs      : type           - the type of EOS (0=Hybrid, 1=Tabulated)
- *             : tau_atm        - the atmospheric value for the conservative
- *                                tau tilde TODO: give definition of tau
- *             : W_max          - the maximum allowable value for the Lorenz
- *                                factor W
- *             : rho_atm        - the atmospheric value for rho_*
- *             : rho_min        - the minimum allowable value for rho_*
- *             : rho_max        - the maximum allowable value for rho_*
+ * Inputs      : type           - type of EOS (0=Hybrid, 1=Tabulated)
+ *             : tau_atm        - atmospheric value for \tilde{tau} TODO: give definition of tau
+ *             : W_max          - maximum allowable Lorenz factor W
+ *             : rho_atm        - atmospheric value for rho_*
+ *             : rho_min        - minimum allowable value for rho_*
+ *             : rho_max        - maximum allowable value for rho_*
  *
- * Outputs     : eos            - an eos_parameters struct with the above inputs
+ * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
  *
  */
+
 void initialize_general_eos(
       const int type,
       const double W_max,
@@ -44,26 +42,22 @@ void initialize_general_eos(
 }
 
 /* Function    : initialize_hybrid_eos()
- * Description : This function initializes the quantities in the
- *               EOS struct for a hybrid EOS
+ * Description : Initializes EOS struct elements for a hybrid EOS
  *
- * Inputs      : neos           - the number of pieces in the piecewise
+ * Inputs      : neos           - number of pieces in the piecewise
  *                                polytrope
  *             : rho_ppoly      - pointer to the array containing the
  *                                minimum rho_b for each polytropic piece
  *             : gamma_ppoly    - pointer to the array containing the
  *                                minimum rho_b for each polytropic piece
- *                                tau tilde TODO: give definition of tau
- *             : W_max          - the maximum allowable value for the Lorenz
- *                                factor W
- *             : rho_atm        - the atmospheric value for rho_*
- *             : rho_min        - the minimum allowable value for rho_*
- *             : rho_max        - the maximum allowable value for rho_*
+ *             : K_ppoly0       - TODO: comment
+ *             : Gamma_th       - TODO: comment
  *
- * Outputs     : eos            - an eos_parameters struct with the above inputs
+ * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
  *
  */
+
 void initialize_hybrid_eos(
       const int neos,
       const double *restrict rho_ppoly,
@@ -115,22 +109,22 @@ void initialize_hybrid_eos(
 
 //TODO: Eventually, improve this using initialize_Tabulated_EOS_parameters_from_input()
 /* Function    : initialize_tabulated_eos()
- * Description : This function initializes the quantities in the
- *               EOS struct which are independent of the type of EOS
+ * Description : Initializes EOS struct elements for tabulated EOS
  *
  * Inputs      : root_finding_precision - TODO: 
  *             : depsdT_threshold       - TODO:
- *             : Y_e_atm                - the atmospheric value for Y_e
- *             : Y_e_min                - the minimum allowable value for Y_e
- *             : Y_e_max                - the maximum allowable value for Y_e
- *             : T_atm                  - the atmospheric value for temperature
- *             : T_min                  - the minimum allowable value for temperature
- *             : T_max                  - the maximum allowable value for temperature
+ *             : Y_e_atm                - atmospheric value for Y_e
+ *             : Y_e_min                - minimum allowable value for Y_e
+ *             : Y_e_max                - maximum allowable value for Y_e
+ *             : T_atm                  - atmospheric value for temperature
+ *             : T_min                  - minimum allowable value for temperature
+ *             : T_max                  - maximum allowable value for temperature
  *
- * Outputs     : eos                    - an eos_parameters struct with the above inputs
+ * Outputs     : eos                    - eos_parameters struct with the above inputs
  *                                        initialized
  *
  */
+
 void initialize_tabulated_eos(
       const double root_finding_precision,
       const double depsdT_threshold,
@@ -152,9 +146,27 @@ void initialize_tabulated_eos(
   eos->tabulated_compute_P_eps_S_from_T(eos, eos->rho_atm, Ye_atm, T_atm, &eos->press_atm, &eos->eps_atm, &eos->entropy_atm);
 }
 
+//TODO: Eventually, improve this using initialize_Tabulated_EOS_parameters_from_input()
+/* Function    : initialize_hybrid_eos()
+ * Description : Sets EOS hybrid function pointers to point to NRPyEOS
+ *
+ * Outputs     : eos            - eos_parameters struct hybrid function pointers
+ *                                pointing to NRPyEOS
+ *
+ */
+
 void initialize_hybrid_functions(eos_parameters *restrict eos) {
   NRPyEOS_initialize_hybrid_functions(eos);
 }
+
+//TODO: Eventually, improve this using initialize_Tabulated_EOS_parameters_from_input()
+/* Function    : initialize_tabulated_functions()
+ * Description : Sets EOS tabulated function pointers to point to NRPyEOS
+ *
+ * Outputs     : eos            - eos_parameters struct tabulated function pointers
+ *                                pointing to NRPyEOS
+ *
+ */
 
 void initialize_tabulated_functions(eos_parameters *restrict eos) {
   NRPyEOS_initialize_tabulated_functions(eos);

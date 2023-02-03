@@ -4,8 +4,8 @@ void compute_smallb_and_b2(const metric_quantities *restrict metric, const primi
                            const double u0L, const double uDN[4], double *restrict smallb, double *restrict smallb2);
 
 /* Function    : compute_conservs_and_Tmunu()
- * Description : This function computes the conservatives from the given primitives.
- *               It also computes Tmunu if params->update_Tmunu is true.
+ * Description : Computes the conservatives from the given primitives and
+ *               computes Tmunu if params->update_Tmunu is true.
  *
  * Inputs      : params         - GRHayL_parameters struct with parameters
  *                                for the simulation
@@ -17,8 +17,8 @@ void compute_smallb_and_b2(const metric_quantities *restrict metric, const primi
  *                                for the gridpoint of interest
  *             : u0             - t component of 4-velocity
  *
- * Outputs     : cons           - computed conservative values
- *             : Tmunu          - computed stress-energy tensor
+ * Outputs     : cons           - returns computed conservative values
+ *             : Tmunu          - returns computed stress-energy tensor
  *
  */
 

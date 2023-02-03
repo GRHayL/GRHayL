@@ -15,11 +15,11 @@
  *                                 initial guesses for the primitives; if set to 0,
  *                                 the initial guess will be whatever has been loaded into
  *                                 the primitive_quantities struct passed to Hybrid_Multi_Method()
- *             : psi6threshold   -
- *             : update_Tmunu    - This will update the T_{\mu\nu} values of the stress_energy
- *                                 struct after obtaining the new prims and cons
+ *             : psi6threshold   - TODO: comment
+ *             : update_Tmunu    - sets whether to update stress_energy struct after obtaining
+ *                                 new prims and cons
  *             : Cupp_Fix        - If active, will change behavior of Noble2D which removes
- *                                 most causes of Font fixes and also change the choice of velocity
+ *                                 cause of most Font fixes and also change the choice of velocity
  *                                 in the case of atmospheric reset
  *
  * Outputs     : params          - fully initialized GRHayL_parameters struct

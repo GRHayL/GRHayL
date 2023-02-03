@@ -1,21 +1,22 @@
 #include "con2prim.h"
 
 /* Function    : limit_utilde_and_compute_v()
- * Description : Initialize the primitives struct from user
- *               input
+ * Description : Applies speed limit to \tilde{u}^i and computes v^i and u^0
  *
- * Inputs      : eos             - initialized eos_parameters struct
- *             : metric          - initialized metric_quantities struct
- *             : utcon1_ptr      - pointer to the x component of \tilde{u}^1
- *             : utcon2_ptr      - pointer to the y component of \tilde{u}^2
- *             : utcon3_ptr      - pointer to the z component of \tilde{u}^3
+ * Inputs      : eos            - eos_parameters struct with data for the
+ *                                EOS of the simulation
+ *             : metric         - metric_quantities struct with data for
+ *                                the gridpoint of interest
+ *             : utcon1_ptr     - pointer to the x component of \tilde{u}^1
+ *             : utcon2_ptr     - pointer to the y component of \tilde{u}^2
+ *             : utcon3_ptr     - pointer to the z component of \tilde{u}^3
  *
- * Outputs     : utcon1_ptr      - returns velocity-limited \tilde{u}^1
- *             : utcon2_ptr      - returns velocity-limited \tilde{u}^2
- *             : utcon3_ptr      - returns velocity-limited \tilde{u}^3
- *             : u0_ptr          - returns u^0
- *             : prims           - returns prims->v^i computed from velocity-limited \tilde{u}^i
- *             : diagnostics     - tracks if the velocity was limited
+ * Outputs     : utcon1_ptr     - returns velocity-limited \tilde{u}^1
+ *             : utcon2_ptr     - returns velocity-limited \tilde{u}^2
+ *             : utcon3_ptr     - returns velocity-limited \tilde{u}^3
+ *             : u0_ptr         - returns u^0
+ *             : prims          - returns prims->v^i computed from velocity-limited \tilde{u}^i
+ *             : diagnostics    - tracks if the velocity was limited
  *
  */
 

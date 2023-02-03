@@ -1,16 +1,17 @@
 #include "con2prim.h"
 
 /* Function    : limit_v_and_output_u0()
- * Description : Initialize the primitives struct from user
- *               input
+ * Description : Applies speed limit to v^i and computes u^0
  *
- * Inputs      : eos             - initialized eos_parameters struct
- *             : metric          - initialized metric_quantities struct
- *             : prims           - primitive_quantities struct to be speed limited
+ * Inputs      : eos            - eos_parameters struct with data for the
+ *                                EOS of the simulation
+ *             : metric         - metric_quantities struct with data for
+ *                                the gridpoint of interest
+ *             : prims          - primitive_quantities struct to be speed limited
  *
- * Outputs     : u0_out          - returns u^0
- *             : prims           - returns velocity-limited prims->v^i
- *             : diagnostics     - tracks if the velocity was limited
+ * Outputs     : u0_out         - returns u^0
+ *             : prims          - returns velocity-limited prims->v^i
+ *             : diagnostics    - tracks if the velocity was limited
  *
  */
 

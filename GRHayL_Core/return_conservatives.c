@@ -3,18 +3,14 @@
 /* Function    : return_conservatives()
  * Description : unpacks conservative struct into variables
  *
- * Intputs      : cons          - conservative_quantities struct with
- *                                data from the Con2Prim routine
+ * Intputs      : cons          - conservative_quantities struct to be unpacked
  *
- * Outputs     : rho            - pointer to densitized density variable
- *             : tau            - pointer to densitized energy variable
- *             : S_x            - pointer to the x component of densitized
- *                                momentum variable
- *             : S_y            - pointer to the y component of densitized
-                                  momentum variable
- *             : S_z            - pointer to the z component of densitized
- *                                densitized momentum variable
- *             : entropy        - pointer to densitized entropy variable
+ * Outputs     : rho            - pointer to rho_star
+ *             : tau            - pointer to \tilde{tau}
+ *             : S_x            - pointer to \tilde{S}_x
+ *             : S_y            - pointer to \tilde{S}_y
+ *             : S_z            - pointer to \tilde{S}_z
+ *             : entropy        - pointer to densitized entropy
  */
 
 void return_conservatives(

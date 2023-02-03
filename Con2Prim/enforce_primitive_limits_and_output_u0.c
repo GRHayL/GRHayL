@@ -1,5 +1,23 @@
 #include "con2prim.h"
 
+/* Function    : enforce_primitive_limits_and_output_u0()
+ * Description : Applies limits to rho_b, pressure, and v^i, then
+                 recomputes epsilon and (if needed) entropy
+
+ * Inputs      : params         - GRHayL_parameters struct with parameters
+ *                                for the simulation
+ *             : eos            - eos_parameters struct with data for the
+ *                                EOS of the simulation
+ *             : metric         - metric_quantities struct with data for
+ *                                the gridpoint of interest
+ *             : prims          - primitive_quantities struct with data
+ *                                for the gridpoint of interest
+ *
+ * Outputs     : prims          - returns primitives within floors and ceilings
+ *             : diagnostics    - tracks whether velocity was speed-limited
+ *
+ */
+
 void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict params,
                                             const eos_parameters *restrict eos,
                                             const metric_quantities *restrict metric,

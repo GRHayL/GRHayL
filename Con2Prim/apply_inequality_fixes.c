@@ -1,10 +1,10 @@
 #include "con2prim.h"
 
 /* Function    : apply_inequality_fixes()
- * Description : This function checks whether tau tilde and S tilde
- *               obey the inequalities constraining their possible values.
- *               If they are outside these bounds, the function enforces
- *               the inequalities and updates the diagnostic data.
+ * Description : Checks whether \tilde{tau} \tilde{S} obey the inequalities
+ *               constraining their possible values. If they are outside
+ *               these bounds, the function enforces the inequalities
+ *               and updates the diagnostic data.
  *
  * Inputs      : params         - GRHayL_parameters struct with parameters
  *                                for the simulation
@@ -15,11 +15,9 @@
  *             : prims          - primitive_quantities struct with data
  *                                for the gridpoint of interest
  *
- * Outputs     : cons           - conservative_quantities struct with potentially
- *                                different values for cons->tau and cons->S_*
- *             : diagnostics    - con2prim_diagnostics struct which tracks whether
- *                                any of the inequality conditions were violated
- *                                and required the conservatives to be adjusted
+ * Outputs     : cons           - returns potentially different values for cons->tau and cons->S_*
+ *             : diagnostics    - tracks whether any inequalities were violated
+ *
  */
 
 void apply_inequality_fixes(

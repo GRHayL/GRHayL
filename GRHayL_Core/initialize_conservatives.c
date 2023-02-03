@@ -1,22 +1,17 @@
 #include "GRHayL.h"
 
 /* Function    : initialize_conservatives()
- * Description : Initialize the conservative struct from user
- *               input
+ * Description : Initialize the conservative struct from user input
  *
  * Inputs      : rho            - value of rho_star (densitized density)
- *             : tau            - value of tau tilde (densitized energy
+ *             : tau            - value of \tilde{tau} (densitized energy
  *                                variable)
- *             : S_x            - value of the x component of S tilde
- *                                (densitized momentum variable)
- *             : S_y            - value of the y component of S tilde
- *                                (densitized momentum variable)
- *             : S_z            - value of the z component of S tilde
- *                                (densitized momentum variable)
+ *             : S_x            - value of \tilde{S}_1 (densitized momentum variable)
+ *             : S_y            - value of \tilde{S}_2 (densitized momentum variable)
+ *             : S_z            - value of \tilde{S}_3 (densitized momentum variable)
  *             : entropy        - value of densitized entropy
  *
- * Outputs     : cons           - fully initialized conservative_quantities
- *                                struct containing the input data
+ * Outputs     : cons           - returns conservative_quantities struct containing the input
  */
 
 void initialize_conservatives(

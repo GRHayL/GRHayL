@@ -1,21 +1,17 @@
 #include "con2prim.h"
-#include <stdio.h>
 
 /* Function    : guess_primitives()
- * Description : This function computes initial guesses for the primitives
- *               for use in the Con2Prim solver.
+ * Description : Computes initial guesses for the primitives
+ *               by assuming the values are atmosphere
  *
- * Inputs      : eos            - an initialized eos_parameters struct
- *                                with data for the EOS of the simulation
- *             : metric         - an initialized metric_quantities struct
- *                                with data for the gridpoint of interest
- *             : cons           - an initialized conservative_quantities
- *                                struct with data for the gridpoint of
- *                                interest
+ * Inputs      : eos            - eos_parameters struct with data for the
+ *                                EOS of the simulation
+ *             : metric         - metric_quantities struct with data for
+ *                                the gridpoint of interest
+ *             : cons           - conservative_quantities struct with data
+ *                                for the gridpoint of interest
  *
- * Outputs     : prims_guess    - primitive_quantities struct filled with
- *                                an initial primitives guess for the
- *                                Con2Prim solver
+ * Outputs     : prims_guess    - returns initial guesses for primitives
  */
 
 void guess_primitives( const eos_parameters *restrict eos,

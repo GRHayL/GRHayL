@@ -2,8 +2,6 @@
 
 /* Function    : initialize_diagnostics()
  * Description : Initialize the diagnostics struct for Con2Prim
- *               input
- * Dependencies: None
  *
  * Outputs     : diagnostics   - new con2prim_diagnostics struct is
  *                               initialized with zeros in preparation
