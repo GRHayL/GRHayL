@@ -230,11 +230,11 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
     prims->press = pressure_rho0_u(eos, prims->rho,new_prims[UU]);
 
     // Now compute eps and, if needed, entropy
-    double P_cold = 0.0;
-    double eps_cold = 0.0;
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
-    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
-    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+    //double P_cold = 0.0;
+    //double eps_cold = 0.0;
+    //eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
+    //prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
+    //if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
   }
 
   return retval;
