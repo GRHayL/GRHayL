@@ -1,7 +1,7 @@
 #include "con2prim.h"
 
 void compute_smallb_and_b2(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
-                           const double uDN[4], double *restrict smallb, double *restrict smallb2);
+                           const double u0L, const double uDN[4], double *restrict smallb, double *restrict smallb2);
 
 /* Function    : compute_conservs_and_Tmunu()
  * Description : This function computes the conservatives from the given primitives.
@@ -49,7 +49,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   /***************************************************************/
   // Compute b^{\mu}, b^2, and u_i/(u^0 Psi4)
   double smallb[4], smallb2;
-  compute_smallb_and_b2(metric, prims, uDN, smallb, &smallb2);
+  compute_smallb_and_b2(metric, prims, uUP[0], uDN, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
   const double alpha_sqrt_gamma=metric->lapse*metric->psi6;
@@ -91,12 +91,13 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
 void compute_smallb_and_b2(
       const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
+      const double u0L,
       const double uDN[4],
       double *restrict smallb,
       double *restrict smallb2) {
 
   const double ONE_OVER_LAPSE_SQRT_4PI = metric->lapseinv*ONE_OVER_SQRT_4PI;
-  const double ONE_OVER_U0 = 1.0/uDN[0];
+  const double ONE_OVER_U0 = 1.0/u0L;
 
   // Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   //   Compute alpha sqrt(4 pi) b^t = u_i B^i
@@ -131,6 +132,4 @@ void compute_smallb_and_b2(
        2.0*( metric->adm_gxy*(bx_plus_shiftx_bt)*(by_plus_shifty_bt) +
              metric->adm_gxz*(bx_plus_shiftx_bt)*(bz_plus_shiftz_bt) +
              metric->adm_gyz*(by_plus_shifty_bt)*(bz_plus_shiftz_bt) );
-  /***********************************************************/
 }
-
