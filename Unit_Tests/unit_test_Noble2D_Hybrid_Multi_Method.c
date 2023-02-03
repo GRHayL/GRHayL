@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
 
     // This runs the selected Con2Prim method (in this case, Noble2D).
     int check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
-    printf("Con2Prim returned value isn't currently checked: %d\n", check);
+    //TODO: Con2Prim returned value isn't currently checked
 
     primitive_quantities prims_trusted, prims_pert;
     initialize_primitives(
@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
                       entropy_pert[i], Y_e_pert[i], temperature_pert[i],
                       &prims_pert);
 
-    validate_primitives(eos.eos_type, params.evolve_entropy, &prims_guess, &prims_trusted, &prims_pert);
+    validate_primitives(params.evolve_entropy, &eos, &prims_guess, &prims_trusted, &prims_pert);
   }
   printf("Completed test for routine Noble2D_Hybrid_Multi_Method\n");
   return 0;

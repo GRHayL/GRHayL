@@ -8,8 +8,8 @@
 */
 
 void validate_primitives(
-      const int eos_type,
       const bool evolve_entropy,
+      const eos_parameters *restrict eos,
       const primitive_quantities *restrict prims,
       const primitive_quantities *restrict prims_trusted,
       const primitive_quantities *restrict prims_pert) {
@@ -22,10 +22,11 @@ void validate_primitives(
     test_fail = 1;
   }
 
+  const double pressure_cutoff = 1.0e-18;
   // Pressure has an additional absolute difference check because the pressure can become very small depending on the
   // input values. The pressure coming out of HARM doesn't have the accuracy to preserve the stringent accuracy requirements
   // demanded elsewhere, so this relaxes the demands on the pressure for very small values.
-  if( validate(prims_trusted->press, prims->press, prims_pert->press) && fabs(prims_trusted->press-prims->press) > 1.0e-18 ) {
+  if( validate(prims_trusted->press, prims->press, prims_pert->press) && fabs(prims_trusted->press-prims->press) > pressure_cutoff ) {
     printf("pressure trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->press, prims->press, prims_pert->press);
     sprintf(fail_msg, "%.80s press", fail_msg);
     test_fail = 1;
@@ -50,9 +51,10 @@ void validate_primitives(
     test_fail = 1;
   }
 
-  // Epsilon is zero for much of the test, so this can have a false positive with values of 1e-310 vs 0.0 triggering
-  // an error.
-  if( validate(prims_trusted->eps, prims->eps, prims_pert->eps) && fabs(prims_trusted->eps-prims->eps) > 1.0e-40 ) {
+  // Epsilon has a similar issue with pressure, so we compute a cutoff that is consistent with the above choice.
+  //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos->K_ppoly[0], 1.0/eos->Gamma_ppoly[0]) * (eos->Gamma_ppoly[0] - 1.0));
+  const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
+  if( validate(prims_trusted->eps, prims->eps, prims_pert->eps) && fabs(prims_trusted->eps-prims->eps) > eps_cutoff ) {
     printf("eps trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->eps, prims->eps, prims_pert->eps);
     sprintf(fail_msg, "%.80s eps", fail_msg);
     test_fail = 1;
@@ -65,7 +67,7 @@ void validate_primitives(
       test_fail = 1;
     }
 
-  if(eos_type == 2) { //Tabulated
+  if(eos->eos_type == 2) { //Tabulated
     if( validate(prims_trusted->Y_e, prims->Y_e, prims_pert->Y_e) ) {
       printf("Y_e trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->Y_e, prims->Y_e, prims_pert->Y_e);
       sprintf(fail_msg, "%.80s Y_e", fail_msg);

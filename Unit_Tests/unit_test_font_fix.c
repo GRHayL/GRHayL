@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
 
     //This uses the Font fix method to compute primitives from conservatives.
     int check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
-    printf("Font fix returned value isn't currently checked: %d\n", check);
+    //TODO: Font fix returned value isn't currently checked
 
     primitive_quantities prims_trusted, prims_pert;
     initialize_primitives(
@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
                       entropy_pert[i], Y_e_pert[i], temperature_pert[i],
                       &prims_pert);
 
-    validate_primitives(eos.eos_type, params.evolve_entropy, &prims_guess, &prims_trusted, &prims_pert);
+    validate_primitives(params.evolve_entropy, &eos, &prims_guess, &prims_trusted, &prims_pert);
   }
   printf("Completed test for routine font_fix\n");
   return 0;

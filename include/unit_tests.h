@@ -7,8 +7,8 @@
 
 // con2prim validation functions
 void validate_primitives(
-      const int eos_type,
       const bool evolve_entropy,
+      const eos_parameters *restrict eos,
       const primitive_quantities *restrict prims,
       const primitive_quantities *restrict prims_trusted,
       const primitive_quantities *restrict prims_pert);

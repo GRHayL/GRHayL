@@ -216,9 +216,9 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
 
   const int retval = Utoprim_new_body(params, eos, new_cons, metric->g4dn, metric->g4up, new_prims, &diagnostics->n_iter);
 
-  if(retval==0) {
+  if(retval==0 || retval==5) {
     prims->rho = new_prims[RHO];
-  //Aditional tabulated code here
+    //Aditional tabulated code here
 
     double u0;
     limit_utilde_and_compute_v(eos, metric, &u0, &new_prims[UTCON1], &new_prims[UTCON2],
@@ -228,15 +228,9 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
       prims->rho = cons_undens->rho/(metric->lapse*u0);
 
     prims->press = pressure_rho0_u(eos, prims->rho,new_prims[UU]);
-
-    // Now compute eps and, if needed, entropy
-    //double P_cold = 0.0;
-    //double eps_cold = 0.0;
-    //eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
-    //prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
-    //if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+    prims->eps = new_prims[UU]/prims->rho;
+    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
   }
-
   return retval;
 }
 
@@ -440,7 +434,7 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
   prims[RHO] = rho0 ;
   prims[UU ] = u ;
 
-  if( !params->Cupp_Fix && ((rho0 <= 0.) || (u <= 0.)) ) {
+  if( ((rho0 <= 0.) || (u <= 0.)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
 

@@ -150,6 +150,11 @@ void GRHayLET_conserv_to_prims(CCTK_ARGUMENTS) {
 
       /************* Conservative-to-primitive recovery ************/
       int check = Hybrid_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
+      // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
+      // that u or rho were negative (usually u). Since the method converged, we only need to fix the values
+      // using enforce_primitive_limits_and_output_u0(). There's no need to trigger a Font fix.
+      if(check==5) check = 0;
+
       if(check!=0)
         check = font_fix(grhayl_eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
       /*************************************************************/
