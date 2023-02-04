@@ -130,8 +130,8 @@ CCTK_REAL T_max "Maximum temperature allowed" STEERABLE=ALWAYS
 
 #########################################################
 
-# Speed limit: set maximum relativistic gamma factor
-CCTK_REAL gamma_speed_limit "Maximum relativistic gamma factor."
+# Speed limit: set maximum Lorentz factor
+CCTK_REAL W_max "Maximum Lorentz factor."
 {
  1:* :: "Positive > 1, though you'll likely have troubles far above 10."
 } 10.0
@@ -144,7 +144,7 @@ CCTK_INT neos "number of parameters in EOS table"
  1:10 :: "Any integer between 1 and 10"
 } 1
 
-CCTK_REAL gamma_th "thermal gamma parameter"
+CCTK_REAL Gamma_th "thermal gamma parameter"
 {
  0:* :: "Physical values"
 -1   :: "forbidden value to make sure it is explicitly set in the parfile"
@@ -162,7 +162,7 @@ CCTK_REAL rho_ppoly_in[10] "Set polytropic rho parameters"
 -1   :: "forbidden value to make sure it is explicitly set in the parfile"
 } -1
 
-CCTK_REAL gamma_ppoly_in[11] "Set polytropic gamma parameters"
+CCTK_REAL Gamma_ppoly_in[11] "Set polytropic gamma parameters"
 {
  0:* :: "after this time (inclusively)"
 -1   :: "forbidden value to make sure it is explicitly set in the parfile"

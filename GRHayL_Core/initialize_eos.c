@@ -48,7 +48,7 @@ void initialize_general_eos(
  *                                polytrope
  *             : rho_ppoly      - pointer to the array containing the
  *                                minimum rho_b for each polytropic piece
- *             : gamma_ppoly    - pointer to the array containing the
+ *             : Gamma_ppoly    - pointer to the array containing the
  *                                minimum rho_b for each polytropic piece
  *             : K_ppoly0       - TODO: comment
  *             : Gamma_th       - TODO: comment

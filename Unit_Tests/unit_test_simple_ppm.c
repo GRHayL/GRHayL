@@ -1,31 +1,31 @@
 #include "unit_tests.h"
 #define IPH(METRICm1,METRICp0,METRICp1,METRICp2) (-0.0625*((METRICm1) + (METRICp2)) + 0.5625*((METRICp0) + (METRICp1)))
 
-static double eos_gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
+static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
 
 int main(int argc, char **argv) {
   const double poison = 1e200;
 
 
   const int eos_type = 0;
-  const double gamma_speed_limit = 10.0;
+  const double W_max = 10.0;
 
   eos_parameters eos;
-  initialize_general_eos(eos_type, gamma_speed_limit,
+  initialize_general_eos(eos_type, W_max,
              poison, poison, poison,
              &eos);
 
   const int neos = 1;
   const double rho_ppoly_in[1] = {0.0};
-  const double gamma_ppoly_in[1] = {2.0};
+  const double Gamma_ppoly_in[1] = {2.0};
   const double k_ppoly0 = 1.0;
-  const double gamma_th = 2.0;
+  const double Gamma_th = 2.0;
 
   initialize_hybrid_functions(&eos);
   initialize_hybrid_eos(
              neos, rho_ppoly_in,
-             gamma_ppoly_in, k_ppoly0,
-             gamma_th, &eos);
+             Gamma_ppoly_in, k_ppoly0,
+             Gamma_th, &eos);
 
   const int dirlength = 20;
   const int arraylength = dirlength*dirlength*dirlength;
@@ -115,10 +115,10 @@ int main(int argc, char **argv) {
           var_data[0][ind]   = vx[stencil];
           var_data[1][ind]   = vz[stencil];
         }
-        const double gamma_eff = eos_gamma_eff(&eos, rho[index], press[index]);
+        const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
 
         simple_ppm(rho_stencil, press_stencil, var_data,
-                   num_vars, v_flux_dir, gamma_eff,
+                   num_vars, v_flux_dir, Gamma_eff,
                    &rhor, &rhol, &pressr, &pressl,
                    var_datar, var_datal);
 
@@ -173,9 +173,9 @@ int main(int argc, char **argv) {
           var_data[0][ind]   = vx[stencil];
           var_data[1][ind]   = vz[stencil];
         }
-        const double gamma_eff = eos_gamma_eff(&eos, rho[index], press[index]);
+        const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
         simple_ppm_no_rho_P(press_stencil, var_data,
-                   num_vars, v_flux_dir, gamma_eff,
+                   num_vars, v_flux_dir, Gamma_eff,
                    var_datar, var_datal);
 
         if( validate(vxr_trusted[index], var_datar[0], vxr_pert[index]) )
@@ -190,9 +190,9 @@ int main(int argc, char **argv) {
   }
 }
 
-static double eos_gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in) {
-  double K, gamma;
-  eos->hybrid_get_K_and_Gamma(eos, rho_in, &K, &gamma);
-  const double P_cold = K*pow(rho_in, gamma);
-  return eos->Gamma_th + (gamma - eos->Gamma_th)*P_cold/press_in;
+double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in) {
+  double K, Gamma;
+  eos->hybrid_get_K_and_Gamma(eos, rho_in, &K, &Gamma);
+  const double P_cold = K*pow(rho_in, Gamma);
+  return eos->Gamma_th + (Gamma - eos->Gamma_th)*P_cold/press_in;
 }

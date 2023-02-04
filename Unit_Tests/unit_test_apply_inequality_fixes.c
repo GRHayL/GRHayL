@@ -18,9 +18,9 @@ int main(int argc, char **argv) {
   const double W_max = 10.0; //IGM default
   const double rho_b_min = 1e-12;
   const double rho_b_max = 1e300; //IGM default
-  const double gamma_th = 2.0; //Taken from magnetizedTOV.par
+  const double Gamma_th = 2.0; //Taken from magnetizedTOV.par
   const double rho_ppoly[1] = {0.0};
-  const double gamma_ppoly[1] = {2.0};
+  const double Gamma_ppoly[1] = {2.0};
   const double k_ppoly0 = 1.0;
 
   // Here, we initialize the structs that are (usually) static during
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   initialize_hybrid_functions(&eos);
 
   initialize_hybrid_eos(neos, rho_ppoly,
-             gamma_ppoly, k_ppoly0, gamma_th,
+             Gamma_ppoly, k_ppoly0, Gamma_th,
              &eos);
 
   con2prim_diagnostics diagnostics;

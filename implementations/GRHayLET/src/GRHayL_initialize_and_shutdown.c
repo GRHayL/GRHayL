@@ -38,7 +38,7 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
                 " the list of parameter options in the param.ccl.");
   }
 
-  initialize_general_eos(grhayl_eos_type, gamma_speed_limit,
+  initialize_general_eos(grhayl_eos_type, W_max,
              rho_b_atm, rho_b_atm, rho_b_max,
              grhayl_eos);
 
@@ -46,8 +46,8 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
     initialize_hybrid_functions(grhayl_eos);
     initialize_hybrid_eos(
                neos, rho_ppoly_in,
-               gamma_ppoly_in, k_ppoly0,
-               gamma_th, grhayl_eos);
+               Gamma_ppoly_in, k_ppoly0,
+               Gamma_th, grhayl_eos);
   } else if(grhayl_eos->eos_type == 1) {
     double Ye_max = 100; //TODO: temporary until the parameter is set up
     initialize_tabulated_functions(grhayl_eos);

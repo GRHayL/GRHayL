@@ -8,5 +8,6 @@ SRCS = enforce_detgij_and_initialize_metric.c \
        initialize_GRHayL.c                    \
        initialize_primitives.c                \
        initialize_eos.c                       \
+       metric_helper.c                        \
        return_conservatives.c                 \
        return_primitives.c
