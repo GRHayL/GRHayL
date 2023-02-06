@@ -1,5 +1,27 @@
 #include "../harm_u2p_util.h"
 
+/* Function    : Hybrid_Noble2D()
+ * Description : Unpacks the primitive_quantities struct into the variables
+                 needed by the Newton-Rapson solver provided by HARM, then
+                 repacks the  primitives. This function
+                 is adapted from the HARM function provided by IllinoisGRMHD. The
+                 original HARM copyright is included below.
+
+ * Inputs      : params         - GRHayL_parameters struct with parameters
+ *                                for the simulation
+ *             : eos            - eos_parameters struct with data for the
+ *                                EOS of the simulation
+ *             : metric         - metric_quantities struct with data for
+ *                                the gridpoint of interest
+ *             : cons           - conservative_quantities struct with data
+ *                                for the gridpoint of interest
+ *
+ * Outputs     : prims          - returns computed primitives if Newton-Rapson
+                                  method converges
+ *             : diagnostics    - tracks the number of iterations for convergence
+ *
+ */
+
 /***********************************************************************************
     Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble,
                    Gabor Toth, and Luca Del Zanna
@@ -73,171 +95,34 @@ utoprim_2d.c:
 // Declarations:
 double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, const double W);
 
-int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
-                            double x[], int n, int *restrict n_iter_ptr,
-                            void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict, const double [], double [], double [], double [][NEWT_DIM], double *, double *, int) );
+int general_newton_raphson(
+      const eos_parameters *restrict eos,
+      harm_aux_vars_struct *restrict harm_aux,
+      double x[],
+      int n,
+      int *restrict n_iter_ptr,
+      void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict, const double [], double [], double [], double [][NEWT_DIM], double *, double *, int) );
 
-void func_vsq( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux, const double [], double [], double [], double [][NEWT_DIM], double *f, double *df, int n);
+void func_vsq(
+      const eos_parameters *restrict eos,
+      harm_aux_vars_struct *restrict harm_aux,
+      const double [],
+      double [],
+      double [],
+      double [][NEWT_DIM],
+      double *f,
+      double *df,
+      int n);
 
 double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 ) ;
 
 double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const double vsq, const double D) ;
 double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq);
 double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const double vsq, const double D);
-int Utoprim_new_body(const GRHayL_parameters *restrict params,
-                     const eos_parameters *restrict eos,
-                     const double *restrict U,
-                     const double gcov[NDIM][NDIM],
-                     const double gcon[NDIM][NDIM],
-                     double *restrict prim,
-                     int *restrict n_iter_ptr);
 
-/**********************************************************************/
-/******************************************************************
-
-  Utoprim_2d():
-
-  -- Driver for new prim. var. solver.  The driver just translates
-     between the two sets of definitions for U and P.  The user may
-     wish to alter the translation as they see fit.  Note that Greek
-     indices run 0,1,2,3 and Latin indices run 1,2,3 (spatial only).
-
-
-             /     rho u^t     \
-         U = | T^t_t + rho u^t |  sqrt(-det(g_{\mu\nu}))
-             |      T^t_i      |
-             \       B^i       /
-
-             /     rho     \
-         P = |     uu      |
-             | \tilde{u}^i |
-             \     B^i     /
-
-
-   Arguments:
-       U[NPR]           = conserved variables (current values on input/output);
-       gcov[NDIM][NDIM] = covariant form of the metric ;
-       gcon[NDIM][NDIM] = contravariant form of the metric ;
-       gdet             = sqrt( - determinant of the metric) ;
-       prim[NPR]        = primitive variables (guess on input, calculated values on
-                                                output if there are no problems);
-
-   -- NOTE: for those using this routine for special relativistic MHD and are
-            unfamiliar with metrics, merely set
-              gcov = gcon = diag(-1,1,1,1)  and gdet = 1.  ;
-
-******************************************************************/
-
-/* some mnemonics */
-/* for primitive variables */
-static const int UU       =1;
-static const int UTCON1   =2;
-static const int UTCON2   =3;
-static const int UTCON3   =4;
-static const int BCON1    =5;
-static const int BCON2    =6;
-static const int BCON3    =7;
-
-/* for conserved variables */
-static const int QCOV0    =1;
-//static const int QCOV1    =2;
-//static const int QCOV2    =3;
-//static const int QCOV3    =4;
-
-/* Also for primitive variables */
-static const int RHO      =0;
-//static const int EPS      =1;
-//static const int v1_con   =2;
-//static const int v2_con   =3;
-//static const int v3_con   =4;
-static const int YE       =8;
-//static const int TEMP     =9;
-//static const int PRESS    =10;
-static const int WLORENTZ =11;
-//static const int ENT      =12;
-static const int numprims =13; // rho, eps, v^{x,y,z}, B^{x,y,z}, Ye, T, P, W, S
-
-/* Also for conservative variables */
-static const int DD       =0;
-static const int S1_cov   =2;
-static const int S2_cov   =3;
-static const int S3_cov   =4;
-static const int TAU      =9;
-static const int WS       =10;
-static const int numcons  =11; // D, UU, S_{x,y,z}, B^{x,y,z}, DYe, tau, DS
-
-int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
-                    const eos_parameters *restrict eos,
-                    const metric_quantities *restrict metric,
-                    const conservative_quantities *restrict cons_undens,
-                    primitive_quantities *restrict prims,
-                    con2prim_diagnostics *restrict diagnostics ) {
-
-  // We have already calculated the undensized variables needed for
-  // the Noble2D routine. However, this routine does not use the
-  // variable tau, but instead the energy variable u which is
-  // related to (TODO: library name)'s conservatives via the relation:
-  //
-  // u = -alpha*tau - (alpha-1)*rho_star + beta^{i}tilde(S)_{i}
-  //
-  // The magnetic fields in (TODO: library name) also need to be
-  // rescaled by a factor of sqrt(4pi).
-
-  const double uu = -cons_undens->tau*metric->lapse - (metric->lapse-1.0)*cons_undens->rho +
-    metric->betax*cons_undens->S_x + metric->betay*cons_undens->S_y  + metric->betaz*cons_undens->S_z;
-
-  double new_cons[numcons];
-  double new_prims[numprims];
-  new_cons[DD] = cons_undens->rho;
-  new_cons[UU] = uu - cons_undens->rho;
-  new_cons[S1_cov] = cons_undens->S_x;
-  new_cons[S2_cov] = cons_undens->S_y;
-  new_cons[S3_cov] = cons_undens->S_z;
-  new_cons[BCON1] = prims->Bx * ONE_OVER_SQRT_4PI;
-  new_cons[BCON2] = prims->By * ONE_OVER_SQRT_4PI;
-  new_cons[BCON3] = prims->Bz * ONE_OVER_SQRT_4PI;
-  new_cons[YE] = cons_undens->Y_e;
-  new_cons[TAU] = MAX(cons_undens->tau, eos->tau_atm);
-  new_cons[WS] = cons_undens->entropy;
-
-  const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims->rho);
-  const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
-
-  new_prims[RHO] = prims->rho;
-  new_prims[UU] = prims->press/(Gamma_ppoly - 1.0);
-  new_prims[UTCON1] = 0.0;
-  new_prims[UTCON2] = 0.0;
-  new_prims[UTCON3] = 0.0;
-  new_prims[BCON1] = new_cons[BCON1];
-  new_prims[BCON2] = new_cons[BCON2];
-  new_prims[BCON3] = new_cons[BCON3];
-  new_prims[WLORENTZ] = 1.0;
-//Additional tabulated code here
-
-  const int retval = Utoprim_new_body(params, eos, new_cons, metric->g4dn, metric->g4up, new_prims, &diagnostics->n_iter);
-
-  if(retval==0 || retval==5) {
-    prims->rho = new_prims[RHO];
-    //Aditional tabulated code here
-
-    double u0;
-    limit_utilde_and_compute_v(eos, metric, &u0, &new_prims[UTCON1], &new_prims[UTCON2],
-                                           &new_prims[UTCON3], prims, diagnostics);
-
-    if(diagnostics->vel_limited_ptcount==1)
-      prims->rho = cons_undens->rho/(metric->lapse*u0);
-
-    prims->press = pressure_rho0_u(eos, prims->rho,new_prims[UU]);
-    prims->eps = new_prims[UU]/prims->rho;
-    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
-  }
-  return retval;
-}
-
-/**********************************************************************/
 /**********************************************************************************
 
-  Utoprim_new_body():
+  Hybrid_Noble2D():
 
      -- Attempt an inversion from U to prim using the initial guess prim.
 
@@ -270,70 +155,79 @@ return:  (i*100 + j)  where
              2 -> failure: utsq<0 w/ initial p[] guess;
              3 -> failure: W<0 or W>W_TOO_BIG
              4 -> failure: v^2 > 1
-             5 -> failure: rho,uu <= 0 ;
+             5 -> failure: v^2 < 0
+             6 -> failure: rho,uu <= 0 ;
 
 **********************************************************************************/
 
-int Utoprim_new_body( const GRHayL_parameters *restrict params,
-                      const eos_parameters *restrict eos,
-                      const double *restrict cons,
-                      const double gcov[NDIM][NDIM],
-                      const double gcon[NDIM][NDIM],
-                      double *restrict prims,
-                      int *restrict n_iter_ptr )
+int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
+                    const eos_parameters *restrict eos,
+                    const metric_quantities *restrict metric,
+                    const conservative_quantities *restrict cons_undens,
+                    primitive_quantities *restrict prims_guess,
+                    con2prim_diagnostics *restrict diagnostics )
 {
 
   double x_2d[NEWT_DIM];
-  double Bcon[NDIM],Bcov[NDIM],Qcov[NDIM],Qcon[NDIM],ncov[NDIM],ncon[NDIM],Qtcon[NDIM];
-  double rho0,u,p,w,gammasq,gtmp,W_last,W,utsq,vsq;
-  int i,j, n, retval, i_increase;
+  int i_increase;
 
   // Contains Bsq,QdotBsq,Qsq,Qtsq,Qdotn,QdotB,D,gamma,gamma_times_S,ye
   harm_aux_vars_struct harm_aux;
 
-  n = NEWT_DIM ;
+  const int n = NEWT_DIM;
 
   // Assume ok initially:
-  retval = 0;
-
-  for(i = BCON1; i <= BCON3; i++) prims[i] = cons[i] ;
+  int retval = 0;
 
   // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
-  Bcon[0] = 0. ;
-  for(i=1;i<4;i++) Bcon[i] = cons[BCON1+i-1] ;
+  const double Bup[4] = {0.0, prims_guess->Bx * ONE_OVER_SQRT_4PI,
+                              prims_guess->By * ONE_OVER_SQRT_4PI,
+                              prims_guess->Bz * ONE_OVER_SQRT_4PI};
 
-  lower_g(Bcon,gcov,Bcov) ;
+  double Bdn[4]; lower_vector(metric, Bup, Bdn);
 
-  for(i=0;i<4;i++) Qcov[i] = cons[QCOV0+i] ;
-  raise_g(Qcov,gcon,Qcon) ;
+  const double uu = - cons_undens->tau*metric->lapse
+                    - (metric->lapse-1.0)*cons_undens->rho
+                    + metric->betax*cons_undens->S_x
+                    + metric->betay*cons_undens->S_y
+                    + metric->betaz*cons_undens->S_z;
+
+  const double Qdn[4] = {uu - cons_undens->rho,
+                              cons_undens->S_x,
+                              cons_undens->S_y,
+                              cons_undens->S_z};
+
+  double Qup[4]; raise_vector(metric, Qdn, Qup);
 
   harm_aux.Bsq = 0. ;
-  for(i=1;i<4;i++) harm_aux.Bsq += Bcon[i]*Bcov[i] ;
+  for(int i=1; i<4; i++) harm_aux.Bsq += Bup[i]*Bdn[i] ;
 
   harm_aux.QdotB = 0. ;
-  for(i=0;i<4;i++) harm_aux.QdotB += Qcov[i]*Bcon[i] ;
+  for(int i=0; i<4; i++) harm_aux.QdotB += Qdn[i]*Bup[i] ;
   harm_aux.QdotBsq = harm_aux.QdotB*harm_aux.QdotB ;
 
-  ncov_calc(gcon,ncov) ;
-  // FIXME: The exact form of n^{\mu} can be found
-  //        in eq. (2.116) and implementing it
-  //        directly is a lot more efficient than
-  //        performing n^{\mu} = g^{\mu\nu}n_{nu}
-  raise_g(ncov,gcon,ncon);
+  const double ndn[4] = {-metric->lapse, 0, 0, 0};
 
-  harm_aux.Qdotn = Qcon[0]*ncov[0] ;
+  const double nup[4] = {metric->lapseinv,
+                        -metric->lapseinv*metric->betax,
+                        -metric->lapseinv*metric->betay,
+                        -metric->lapseinv*metric->betaz};
+
+  //Only place n_\alpha is used. Do we really need it?
+  harm_aux.Qdotn = Qup[0]*ndn[0] ;
 
   harm_aux.Qsq = 0. ;
-  for(i=0;i<4;i++) harm_aux.Qsq += Qcov[i]*Qcon[i] ;
+  for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
 
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn ;
 
-  harm_aux.D    = cons[RHO];
+  harm_aux.D    = cons_undens->rho;
 
   /* calculate W from last timestep and use for guess */
-  utsq = 0. ;
-  for(i=1;i<4;i++)
-    for(j=1;j<4;j++) utsq += gcov[i][j]*prims[UTCON1+i-1]*prims[UTCON1+j-1] ;
+  double utsq = 0.0;
+  // IGM always set the velocity guesses to 0; not sure how ut^i in harm relates to v^i
+  //for(int i=1; i<4; i++)
+  //  for(int j=1; j<4; j++) utsq += metric->gdn[i][j]*prims[UTCON1+i-1]*prims[UTCON1+j-1];
 
 
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
@@ -341,20 +235,22 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
   }
   if(utsq < 0. || utsq > UTSQ_TOO_BIG) {
     retval = 2;
-    return(retval) ;
+    return(retval);
   }
 
-  gammasq = 1. + utsq ;
+  double gammasq = 1. + utsq;
   harm_aux.gamma  = sqrt(gammasq);
 
   // Always calculate rho from D and gamma so that using D in EOS remains consistent
-  //   i.e. you don't get positive values for dP/d(vsq) .
-  rho0 = harm_aux.D / harm_aux.gamma ;
-  u = prims[UU];
+  //   i.e. you don't get positive values for dP/d(vsq).
+  double rho0 = harm_aux.D / harm_aux.gamma;
 
   // p = 0.0;
   // if( eos.is_Hybrid ) {
-    p = pressure_rho0_u(eos, rho0,u);
+    const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims_guess->rho);
+    const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
+    double u = prims_guess->press/(Gamma_ppoly - 1.0);
+    double p = pressure_rho0_u(eos, rho0, u);
   // }
   // else if( eos.is_Tabulated ) {
   //   harm_aux.ye            = U[YE]/U[RHO];
@@ -377,8 +273,8 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
   //   if( xdepsdT < eos.depsdT_threshold ) harm_aux.use_entropy = true;
   // }
 
-  w = rho0 + u + p ;
-  W_last = w*gammasq ;
+  double w = rho0 + u + p ;
+  double W_last = w*gammasq ;
 
   // Make sure that W is large enough so that v^2 < 1 :
   i_increase = 0;
@@ -390,20 +286,19 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
   }
 
   // Calculate W and vsq:
-  x_2d[0] =  fabs( W_last );
-  x_2d[1] = x1_of_x0( &harm_aux, W_last ) ;
+  x_2d[0] = fabs( W_last );
+  x_2d[1] = x1_of_x0( &harm_aux, W_last );
 
-  retval = general_newton_raphson( eos, &harm_aux, x_2d, n, n_iter_ptr, func_vsq) ;
+  retval = general_newton_raphson(eos, &harm_aux, x_2d, n, &diagnostics->n_iter, func_vsq);
 
-  W = x_2d[0];
-  vsq = x_2d[1];
+  const double W = x_2d[0];
+  double vsq = x_2d[1];
 
   /* Problem with solver, so return denoting error before doing anything further */
   if( (retval != 0) || (W == FAIL_VAL) ) {
     retval = retval*100+1;
     return(retval);
-  }
-  else if(W <= 0. || W > W_TOO_BIG) {
+  } else if(W <= 0. || W > W_TOO_BIG) {
     retval = 3;
     return(retval) ;
   }
@@ -413,15 +308,13 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
     vsq = 1.-2.e-16;
     //retval = 4;
     //return(retval) ;
-  }
-
-  if(vsq < 0.0) {
+  } else if(vsq < 0.0) {
     //v should be real!
     return(5);
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  gtmp = sqrt(1. - vsq);
+  const double gtmp = sqrt(1. - vsq);
   harm_aux.gamma = 1./gtmp ;
   rho0 = harm_aux.D * gtmp;
 
@@ -431,22 +324,32 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
   p = pressure_rho0_w(eos, rho0, w) ;
 //  u = w - (rho0 + p) ;
   u = (w - rho0) * (1.0/eos->Gamma_th);
-  prims[RHO] = rho0 ;
-  prims[UU ] = u ;
 
   if( ((rho0 <= 0.) || (u <= 0.)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-
-    retval = 5;
-    //return(retval) ;
+    retval = 6;
   }
 
-  for(i=1;i<4;i++) Qtcon[i] = Qcon[i] + ncon[i] * harm_aux.Qdotn;
-  for(i=1;i<4;i++) prims[UTCON1+i-1] = harm_aux.gamma/(W+harm_aux.Bsq) * ( Qtcon[i] + harm_aux.QdotB*Bcon[i]/W ) ;
+  double Qtcon[4];
+  for(int i=1; i<4; i++) Qtcon[i] = Qup[i] + nup[i] * harm_aux.Qdotn;
+  double utx = harm_aux.gamma/(W+harm_aux.Bsq) * ( Qtcon[1] + harm_aux.QdotB*Bup[1]/W ) ;
+  double uty = harm_aux.gamma/(W+harm_aux.Bsq) * ( Qtcon[2] + harm_aux.QdotB*Bup[2]/W ) ;
+  double utz = harm_aux.gamma/(W+harm_aux.Bsq) * ( Qtcon[3] + harm_aux.QdotB*Bup[3]/W ) ;
 
-  /* set field components */
-  for(i = BCON1; i <= BCON3; i++) prims[i] = cons[i] ;
+  prims_guess->rho = rho0;
+  //Aditional tabulated code here
+
+  double u0;
+  limit_utilde_and_compute_v(eos, metric, &u0, &utx, &uty,
+                                         &utz, prims_guess, diagnostics);
+
+  if(diagnostics->vel_limited_ptcount==1)
+    prims_guess->rho = cons_undens->rho/(metric->lapse*u0);
+
+  prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);
+  prims_guess->eps = u/prims_guess->rho;
+  if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
 
   /* done! */
   return(retval) ;
@@ -465,8 +368,8 @@ int Utoprim_new_body( const GRHayL_parameters *restrict params,
 ****************************************************************************/
 double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, const double W)
 {
-  double Wsq = W*W ;
-  double Xsq = (harm_aux->Bsq + W) * (harm_aux->Bsq + W);
+  const double Wsq = W*W ;
+  const double Xsq = (harm_aux->Bsq + W) * (harm_aux->Bsq + W);
 
   return(  ( Wsq * harm_aux->Qtsq  + harm_aux->QdotBsq * (harm_aux->Bsq + 2.*W)) / (Wsq*Xsq) );
 }
@@ -485,8 +388,8 @@ double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, const double W)
 
 double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 )
 {
-  double dv  = 1.e-15;
-  double vsq = fabs(vsq_calc(harm_aux,x0)) ; // guaranteed to be positive
+  const double dv  = 1.e-15;
+  const double vsq = fabs(vsq_calc(harm_aux,x0)) ; // guaranteed to be positive
 
   return( ( vsq > 1. ) ? (1.0 - dv) : vsq   );
 }
@@ -504,7 +407,7 @@ double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 )
 void validate_x(double x[2], const double x0[2] )
 {
 
-  double dv = 1.e-15;
+  const double dv = 1.e-15;
 
   /* Always take the absolute value of x[0] and check to see if it's too big:  */
   x[0] = fabs(x[0]);
@@ -637,36 +540,34 @@ void func_vsq(const eos_parameters *restrict eos, harm_aux_vars_struct *restrict
               double jac[][NEWT_DIM], double *f, double *df, int n)
 {
 
-  double W   = x[0];
-  double vsq = x[1];
-  double Wsq = W*W;
-
-  double p_tmp, dPdvsq, dPdW;
+  const double W   = x[0];
+  const double vsq = x[1];
+  const double Wsq = W*W;
 
   /*** For hybrid EOS ***/
-  p_tmp  = pressure_W_vsq( eos, W, vsq , harm_aux->D);
-  dPdW   = dpdW_calc_vsq( eos, W, vsq );
-  dPdvsq = dpdvsq_calc( eos, W, vsq, harm_aux->D );
+  const double p_tmp  = pressure_W_vsq( eos, W, vsq , harm_aux->D);
+  const double dPdW   = dpdW_calc_vsq( eos, W, vsq );
+  const double dPdvsq = dpdvsq_calc( eos, W, vsq, harm_aux->D );
   /*** For hybrid EOS ***/
 
   // These expressions were calculated using Mathematica, but made into efficient
   // code using Maple.  Since we know the analytic form of the equations, we can
   // explicitly calculate the Newton-Raphson step:
 
-  double t2  = -0.5*harm_aux->Bsq+dPdvsq;
-  double t3  = harm_aux->Bsq+W;
-  double t4  = t3*t3;
-  double t9  = 1/Wsq;
-  double t11 = harm_aux->Qtsq-vsq*t4+harm_aux->QdotBsq*(harm_aux->Bsq+2.0*W)*t9;
-  double t16 = harm_aux->QdotBsq*t9;
-  double t18 = -harm_aux->Qdotn-0.5*harm_aux->Bsq*(1.0+vsq)+0.5*t16-W+p_tmp;
-  double t21 = 1/t3;
-  double t23 = 1/W;
-  double t24 = t16*t23;
-  double t25 = -1.0+dPdW-t24;
-  double t35 = t25*t3+(harm_aux->Bsq-2.0*dPdvsq)*(harm_aux->QdotBsq+vsq*Wsq*W)*t9*t23;
-  double t36 = 1/t35;
-  double t40 = (vsq+t24)*t3;
+  const double t2  = -0.5*harm_aux->Bsq+dPdvsq;
+  const double t3  = harm_aux->Bsq+W;
+  const double t4  = t3*t3;
+  const double t9  = 1/Wsq;
+  const double t11 = harm_aux->Qtsq-vsq*t4+harm_aux->QdotBsq*(harm_aux->Bsq+2.0*W)*t9;
+  const double t16 = harm_aux->QdotBsq*t9;
+  const double t18 = -harm_aux->Qdotn-0.5*harm_aux->Bsq*(1.0+vsq)+0.5*t16-W+p_tmp;
+  const double t21 = 1/t3;
+  const double t23 = 1/W;
+  const double t24 = t16*t23;
+  const double t25 = -1.0+dPdW-t24;
+  const double t35 = t25*t3+(harm_aux->Bsq-2.0*dPdvsq)*(harm_aux->QdotBsq+vsq*Wsq*W)*t9*t23;
+  const double t36 = 1/t35;
+  const double t40 = (vsq+t24)*t3;
   dx[0] = -(t2*t11+t4*t18)*t21*t36;
   dx[1] = -(-t25*t11-2.0*t40*t18)*t21*t36;
   //detJ = t3*t35; // <- set but not used...
@@ -710,11 +611,11 @@ double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const 
 {
 
   // Compute gamma^{-2} = 1 - v^{2} and gamma^{-1}
-  double inv_gammasq = 1.0 - vsq;
-  double inv_gamma   = sqrt(inv_gammasq);
+  const double inv_gammasq = 1.0 - vsq;
+  const double inv_gamma   = sqrt(inv_gammasq);
 
   // Compute rho_b = D / gamma
-  double rho_b = D*inv_gamma;
+  const double rho_b = D*inv_gamma;
 
   // Compute P_cold and eps_cold
   double P_cold, eps_cold;
@@ -748,16 +649,16 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
 {
 
   // Set gamma and rho
-  double gamma = 1.0/sqrt(1.0 - vsq);
-  double rho_b = D/gamma;
+  const double gamma = 1.0/sqrt(1.0 - vsq);
+  const double rho_b = D/gamma;
 
   // Compute P_cold and eps_cold
   double P_cold, eps_cold;
   eos->hybrid_compute_P_cold_and_eps_cold(eos, rho_b, &P_cold, &eps_cold);
 
   // Set basic polytropic quantities
-  int polytropic_index = eos->hybrid_find_polytropic_index(eos, rho_b);
-  double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
+  const int polytropic_index = eos->hybrid_find_polytropic_index(eos, rho_b);
+  const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
 
 
   /* Now we implement the derivative of P_cold with respect
@@ -766,7 +667,7 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
    * | dP_cold/dvsq = gamma^{2 + Gamma_{poly}/2} P_{cold} |
    *  ----------------------------------------------------
    */
-  double dPcold_dvsq = P_cold * pow(gamma,2.0 + 0.5*Gamma_ppoly);
+  const double dPcold_dvsq = P_cold * pow(gamma,2.0 + 0.5*Gamma_ppoly);
 
 
   /* Now we implement the derivative of eps_cold with respect
@@ -775,7 +676,7 @@ double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const dou
    * | deps_cold/dvsq = gamma/(D*(Gamma_ppoly-1)) * (dP_cold/dvsq + gamma^{2} P_cold / 2) |
    *  -----------------------------------------------------------------------------------
    */
-  double depscold_dvsq = ( gamma/(D*(Gamma_ppoly-1.0)) ) * ( dPcold_dvsq + 0.5*gamma*gamma*P_cold );
+  const double depscold_dvsq = ( gamma/(D*(Gamma_ppoly-1.0)) ) * ( dPcold_dvsq + 0.5*gamma*gamma*P_cold );
 
   /* Now we implement the derivative of p_hybrid with respect
    * to v^{2}, given by

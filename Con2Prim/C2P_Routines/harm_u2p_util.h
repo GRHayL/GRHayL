@@ -102,29 +102,6 @@ static inline void lower_g(const double vcon[NDIM], const double gcov[NDIM][NDIM
   return ;
 }
 
-/**********************************************************************
-     ncov_calc():
-
-         -- calculates the covariant form of the normal vector to our
-            spacelike hypersurfaces ala the ADM formalism.
-
-         -- requires the inverse metric;
-***********************************************************************/
-static inline void ncov_calc(const double gcon[NDIM][NDIM],double ncov[NDIM])
-{
-  double lapse ;
-  int i;
-
-  lapse = sqrt(-1./gcon[0][0]) ;
-
-  ncov[0] = -lapse ;
-  for( i = 1; i < NDIM; i++) {
-    ncov[i] = 0. ;
-  }
-
-  return ;
-}
-
 /**************************************************
   The following functions assume a Gamma-law EOS:
 ***************************************************/

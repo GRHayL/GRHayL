@@ -35,7 +35,6 @@ void validate_primitives(
   if( validate(prims_trusted->vx, prims->vx, prims_pert->vx) ) {
     printf("vx trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vx, prims->vx, prims_pert->vx);
     sprintf(fail_msg, "%.80s vx", fail_msg);
-    printf("%e %e %e\n", prims_trusted->vx, prims->vx, prims_pert->vx);
     test_fail = 1;
   }
 
