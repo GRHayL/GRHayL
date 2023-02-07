@@ -26,20 +26,20 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
                                             con2prim_diagnostics *restrict diagnostics) {
 
   // The density floor and ceiling is always applied
-  prims->rho = MIN(MAX(prims->rho,eos->rho_atm),eos->rho_max);
+  prims->rho = MIN(MAX(prims->rho,eos->rho_min),eos->rho_max);
 
   // Hybrid EOS specific floors and ceilings
   if( eos->eos_type == 0 ) {
     // Pressure and epsilon must be recomputed
     // Compute P and eps
-    double prs_cold = 0.0;
+    double P_cold = 0.0;
     double eps_cold = 0.0;
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prs_cold, &eps_cold);
+    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
 
     // Set P_min and P_max
-    const double P_min = 0.9*prs_cold;
+    const double P_min = 0.9*P_cold;
     // Adjust P_max based on Psi6
-    const double P_max = (metric->psi6 > params->psi6threshold) ? 1e5*prs_cold : 100.0*prs_cold;
+    const double P_max = (metric->psi6 > params->psi6threshold) ? 1e5*P_cold : 100.0*P_cold;
 
     // Now apply floors and ceilings to P
     if(prims->press<P_min) prims->press = P_min;
@@ -48,7 +48,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
       prims->press = P_max;
     }
     // Now recompute eps and, if needed, entropy
-    prims->eps = eps_cold + (prims->press-prs_cold)/(eos->Gamma_th-1.0)/prims->rho;
+    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
     if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
 
   // Tabulated EOS specific floors and ceilings
