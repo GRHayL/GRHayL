@@ -67,38 +67,9 @@ utoprim_1d.c:
 
 ******************************************************************************/
 
-#ifdef  NEWT_DIM
-#undef  NEWT_DIM
-#endif
 #define NEWT_DIM (1)
 
-// Declarations:
-
-int newton_raphson_1d(
-      const eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      double x[],
-      int n,
-      int *restrict n_iter_ptr,
-      double indep_var_in,
-      void (*funcd) (const eos_parameters *restrict, const harm_aux_vars_struct *restrict,
-                     const double [], double [], double [], double [][NEWT_DIM],
-                     double *, double *, int, double));
-
-void func_1d_orig(
-      const eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const double x[],
-      double dx[],
-      double resid[],
-      double jac[][NEWT_DIM],
-      double *f,
-      double *df,
-      int n,
-      double dummy);
-
 double dpdW_calc_vsq(const eos_parameters *restrict eos, double W, double vsq);
-double dvsq_dW(const harm_aux_vars_struct *restrict harm_aux, double W);
 
 /**********************************************************************/
 /******************************************************************
@@ -140,16 +111,6 @@ double dvsq_dW(const harm_aux_vars_struct *restrict harm_aux, double W);
 
 ******************************************************************/
 
-//int con2prim_Noble1D( const eos_parameters *restrict eos,
-//                      const double g4dn[4][4],
-//                      const double g4up[4][4],
-//                      const double *restrict cons,
-//                      double *restrict prim,
-//                      output_stats& stats ) {
-//
-//  return( Utoprim_new_body_1d(eos, cons, g4dn, g4up, prim) );
-//
-//}
 
 
 /**********************************************************************/
@@ -192,12 +153,13 @@ return:  (i*100 + j)  where
 
 **********************************************************************************/
 
-int Hybrid_Noble1D( const GRHayL_parameters *restrict params,
-                    const eos_parameters *restrict eos,
-                    const metric_quantities *restrict metric,
-                    const conservative_quantities *restrict cons_undens,
-                    primitive_quantities *restrict prims_guess,
-                    con2prim_diagnostics *restrict diagnostics ) {
+int Hybrid_Noble1D(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons_undens,
+      primitive_quantities *restrict prims_guess,
+      con2prim_diagnostics *restrict diagnostics ) {
 
   double gnr_out[NEWT_DIM];
 
@@ -242,7 +204,6 @@ int Hybrid_Noble1D( const GRHayL_parameters *restrict params,
   harm_aux.Qsq = 0.0;
   for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
 
-  // \tilde{Q}^{2} = Q^{2} + (Q.n)^{2}
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
 
   harm_aux.D    = cons_undens->rho;
@@ -256,7 +217,7 @@ int Hybrid_Noble1D( const GRHayL_parameters *restrict params,
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
     utsq = fabs(utsq);
   }
-  if(utsq < 0. || utsq > UTSQ_TOO_BIG) {
+  if(utsq < 0.0 || utsq > UTSQ_TOO_BIG) {
     retval = 2;
     return(retval);
   }
@@ -409,217 +370,3 @@ const double nup[4] = {metric->lapseinv,
   /* Done! */
   return(retval);
 }
-
-
-/**********************************************************************/
-/****************************************************************************
-   dvsq_dW():
-
-      -- evaluate the partial derivative of v^2 w.r.t. W
-
-****************************************************************************/
-double dvsq_dW(const harm_aux_vars_struct *restrict harm_aux, const double W)
-{
-
-  double X  = harm_aux->Bsq + W;
-  double W3 = W*W*W;
-  double X3 = X*X*X;
-
-  return( -2.*( harm_aux->Qtsq/X3 + harm_aux->QdotBsq * (3*W*X + harm_aux->Bsq*harm_aux->Bsq) / ( W3 * X3 ) )  );
-}
-
-/************************************************************
-
-  general_newton_raphson():
-
-    -- performs Newton-Rapshon method on an arbitrary system.
-
-    -- inspired in part by Num. Rec.'s routine newt();
-
-*****************************************************************/
-int newton_raphson_1d(
-      const eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      double x[],
-      const int n,
-      int *restrict n_iter_ptr,
-      double indep_var_in,
-      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const double [], double [], double [],
-                    double [][NEWT_DIM], double *, double *, int, double))
-{
-  double dx[n], x_old[n];
-  double resid[n], jac[n][n];
-  double x_orig[n];
-
-  // Initialize various parameters and variables:
-  int n_iter = 0;
-  int i_extra = 0;
-  int doing_extra = 0;
-  double errx = 1.0;
-  double df = 1.0;
-  double f = 1.0;
-
-  /* Start the Newton-Raphson iterations : */
-  int keep_iterating = 1;
-  while( keep_iterating ) {
-    (*funcd) (eos, harm_aux, x, dx, resid, jac, &f, &df, n, indep_var_in);
-
-    /* Make the newton step: */
-    for( int id = 0; id < n ; id++) {
-      x[id] += dx[id]  ;
-    }
-
-    /****************************************/
-    /* Calculate the convergence criterion */
-    /****************************************/
-    errx  = (x[0]==0.0) ? fabs(dx[0]) : fabs(dx[0]/x[0]);
-
-    /****************************************/
-    /* Make sure that the new x[] is physical : */
-    /****************************************/
-    x[0] = fabs(x[0]);
-
-    /*****************************************************************************/
-    /* If we've reached the tolerance level, then just do a few extra iterations */
-    /*  before stopping                                                          */
-    /*****************************************************************************/
-    if( (fabs(errx) <= NEWT_TOL) && (doing_extra == 0) && (EXTRA_NEWT_ITER > 0) ) {
-      doing_extra = 1;
-    }
-
-    if( doing_extra == 1 ) i_extra++;
-
-    if( ((fabs(errx) <= NEWT_TOL)&&(doing_extra == 0))
-        || (i_extra > EXTRA_NEWT_ITER) || (n_iter >= (MAX_NEWT_ITER-1)) ) {
-      keep_iterating = 0;
-    }
-
-    n_iter++;
-
-  }   // END of while(keep_iterating)
-
-  *n_iter_ptr = n_iter;
-
-  /*  Check for bad untrapped divergences : */
-//TODO: error-checking
-//  if( (robust_isfinite(f)==0) ||  (robust_isfinite(df)==0) ) {
-//    return(2);
-//  }
-
-  if( fabs(errx) <= NEWT_TOL ){
-    return(0);
-  }
-  else if( (fabs(errx) <= MIN_NEWT_TOL) && (fabs(errx) > NEWT_TOL) ){
-    return(0);
-  }
-  else {
-    return(1);
-  }
-
-  return(0);
-
-}
-
-/**********************************************************************/
-/*********************************************************************************
-   func_1d_orig():
-
-        -- calculates the residuals, and Newton step for general_newton_raphson();
-        -- for this method, x=W here;
-
-     Arguments:
-          x   = current value of independent var's (on input & output);
-         dx   = Newton-Raphson step (on output);
-        resid = residuals based on x (on output);
-         jac  = Jacobian matrix based on x (on output);
-         f    =  resid.resid/2  (on output)
-        df    = -2*f;  (on output)
-         n    = dimension of x[];
-*********************************************************************************/
-void func_1d_orig(
-      const eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const double x[],
-      double dx[],
-      double resid[],
-      double jac[][NEWT_DIM],
-      double *f,
-      double *df,
-      int n,
-      double dummy) {
-
-  // Set W from input
-  double W = x[0];
-
-  // W^2
-  double Wsq = W*W;
-
-  // v^2
-  double vsq = vsq_calc(harm_aux,W);
-
-  // Make sure that v^2 is physically reasonable, and if not make it so:
-  const double dv = 1.0e-15;
-  vsq = ( vsq < -dv ) ?  0.      : fabs(vsq);
-  vsq = ( vsq > 1. )  ?  (1.-dv) : vsq;
-
-  // Compute P from W and v^2
-  double p_tmp = 0.0;
-  double dpdW  = 0.0;
-  const double dvsq = dvsq_dW(harm_aux, W);
-
-  // Jacobian is calculated using full differentiation w.r.t. W
-  if( eos->eos_type == 0 ) {
-    p_tmp      = pressure_W_vsq(eos, W, vsq, harm_aux->D);
-    const double dp1 = dpdW_calc_vsq( eos, W, vsq );
-    const double dp2 = dpdvsq_calc( eos, W, vsq, harm_aux->D );
-    dpdW        = dp1  + dp2*dvsq;
-  }
-  // else if( eos.is_Tabulated ) {
-  //   // Here we must compute dPdW and dPdvsq for tabulated EOS.
-  //   // We will be using the expressions
-  //   double W_sq = 1.0/(1.0-vsq);
-  //   harm_aux->W     = sqrt(W_sq);
-  //   if( harm_aux->W > eos.W_max ) {
-  //     harm_aux->W = eos.W_max;
-  //     W_sq       = harm_aux->W * harm_aux->W;
-  //   }
-
-  //   const double rho = MAX(harm_aux->D / harm_aux->W,eos.rho_min);
-  //   const double xye = harm_aux->ye;
-  //   const double h   = fabs(W /(rho*W_sq)); // W := rho*h*W^{2}
-  //   const double ent = harm_aux->W_times_S / harm_aux->W;
-  //   double T         = harm_aux->T_guess;
-  //   double prs       = 0.0;
-  //   double eps       = 0.0;
-  //   double dPdrho    = 0.0;
-  //   double dPdeps    = 0.0;
-
-  //   // Now compute the pressure and its derivatives with respect to rho and eps
-  //   if( harm_aux->use_entropy ) {
-  //     WVU_EOS_P_eps_T_dPdrho_and_dPdeps_from_rho_Ye_S(eos,rho,xye,ent, &prs,&eps,&T,&dPdrho,&dPdeps);
-  //   }
-  //   else {
-  //     WVU_EOS_P_eps_T_dPdrho_and_dPdeps_from_rho_Ye_h(eos,rho,xye,h, &prs,&eps,&T,&dPdrho,&dPdeps);
-  //   }
-
-  //   // Set P
-  //   p_tmp = prs;
-
-  //   // Now compute dP/dW
-  //   const double dPdeps_o_rho = dPdeps/rho;
-  //   dpdW = ( dPdeps_o_rho/(1.+dPdeps_o_rho) )/W_sq;
-
-  // }
-
-  // Compute the residual and the needed Jacobian component
-  resid[0]  = W + 0.5 * harm_aux->Bsq * ( 1. + vsq ) - 0.5*harm_aux->QdotBsq/Wsq + harm_aux->Qdotn - p_tmp;
-  jac[0][0] = 1. - dpdW + harm_aux->QdotBsq/(Wsq*W) + 0.5*harm_aux->Bsq*dvsq;
-  // Set dx (NR step), f, and df (see function description above)
-  dx[0] = - resid[0]/jac[0][0];
-  *df   = - resid[0]*resid[0];
-  *f    = - 0.5*(*df);
-
-}
-/******************************************************************************
-             END   OF   UTOPRIM_1D.C
-******************************************************************************/

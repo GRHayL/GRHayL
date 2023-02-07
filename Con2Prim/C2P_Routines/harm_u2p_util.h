@@ -238,4 +238,47 @@ static inline double dpdvsq_calc(const eos_parameters *restrict eos, const doubl
   return( ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th );
 }
 
+int general_newton_raphson(
+      const eos_parameters *restrict eos,
+      const harm_aux_vars_struct *restrict harm_aux,
+      double x[],
+      const int n,
+      int *restrict n_iter_ptr,
+
+      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const double [], double [], double [],
+                    double [][2], double *, double *, int) );
+
+int newton_raphson_1d(
+      const eos_parameters *restrict eos,
+      const harm_aux_vars_struct *restrict harm_aux,
+      double x[],
+      int n,
+      int *restrict n_iter_ptr,
+      double indep_var_in,
+      void (*funcd) (const eos_parameters *restrict, const harm_aux_vars_struct *restrict,
+                     const double [], double [], double [], double [][1],
+                     double *, double *, int, double));
+
+void func_vsq(
+      const eos_parameters *restrict eos,
+      const harm_aux_vars_struct *restrict harm_aux,
+      const double x[],
+      double dx[],
+      double resid[],
+      double jac[][2],
+      double *f,
+      double *df,
+      int n);
+
+void func_1d_orig(
+      const eos_parameters *restrict eos,
+      const harm_aux_vars_struct *restrict harm_aux,
+      const double x[],
+      double dx[],
+      double resid[],
+      double jac[][1],
+      double *f,
+      double *df,
+      int n,
+      double dummy);
 #endif

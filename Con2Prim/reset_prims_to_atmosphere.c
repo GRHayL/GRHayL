@@ -13,8 +13,7 @@
 void reset_prims_to_atmosphere( const GRHayL_parameters *restrict params,
                                 const eos_parameters *restrict eos,
                                 const metric_quantities *restrict metric,
-                                primitive_quantities *restrict prims,
-                                con2prim_diagnostics *restrict diagnostics ) {
+                                primitive_quantities *restrict prims) {
 
   // Just a simple reset to atmospheric values.
   // Velocities are set to zero. Keeping it
