@@ -143,7 +143,7 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   // Contains Bsq,QdotBsq,Qsq,Qtsq,Qdotn,QdotB,D,W,W_times_S,ye
   harm_aux_vars_struct harm_aux;
 
-  const int n = NEWT_DIM;
+  const int ndim = NEWT_DIM;
 
   // Assume ok initially:
   int retval = 0;
@@ -208,31 +208,14 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   double rho0 = harm_aux.D / harm_aux.W;
 
   // p = 0.0;
-  // if( eos.is_Hybrid ) {
+   if( eos->eos_type == 0 ) {
     const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims_guess->rho);
     const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
     double u = prims_guess->press/(Gamma_ppoly - 1.0);
     double p = pressure_rho0_u(eos, rho0, u);
-  // } else if( eos.is_Tabulated ) {
-  //   harm_aux.ye            = U[YE]/U[RHO];
-  //   harm_aux.W_times_S = U[WS];
-  //   harm_aux.use_entropy   = false;
-  //   harm_aux.T_guess       = prim[TEMP];
-  //   double xrho         = rho0;
-  //   double xye          = harm_aux.ye;
-  //   double xtemp        = harm_aux.T_guess;
-  //   double xprs         = 0.0;
-  //   double xeps         = 0.0;
-  //   double xdepsdT      = 0.0;
-
-  //   // Now compute P and eps from (rho,Ye,T). Note that
-  //   // at this point we do not know W, so we do not
-  //   // use the entropy in this function call.
-  //   get_P_eps_and_depsdT_from_rho_Ye_and_T( eos,xrho,xye,xtemp, &xprs,&xeps,&xdepsdT );
-  //   p = xprs;
-  //   u = xeps*xrho;
-  //   if( xdepsdT < eos.depsdT_threshold ) harm_aux.use_entropy = true;
-  // }
+   } else if( eos->eos_type == 1 ) {
+    grhayl_warn("No tabulated EOS support yet! Sorry!");
+   }
 
   double w = rho0 + u + p;
   double W_last = w*Wsq;
@@ -250,7 +233,7 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   gnr_out[0] = fabs( W_last );
   gnr_out[1] = x1_of_x0( &harm_aux, W_last );
 
-  retval = general_newton_raphson(eos, &harm_aux, gnr_out, n, &diagnostics->n_iter, func_vsq);
+  retval = general_newton_raphson(eos, &harm_aux, gnr_out, ndim, &diagnostics->n_iter, func_vsq);
 
   const double W = gnr_out[0];
   double vsq = gnr_out[1];
