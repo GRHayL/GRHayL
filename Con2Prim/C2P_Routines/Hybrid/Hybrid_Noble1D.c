@@ -166,7 +166,7 @@ int Hybrid_Noble1D(
   // Contains Bsq,QdotBsq,Qsq,Qtsq,Qdotn,QdotB,D,W,W_times_S,ye
   harm_aux_vars_struct harm_aux;
 
-  const int n = NEWT_DIM;
+  const int ndim = NEWT_DIM;
 
   // Assume ok initially:
   int retval = 0;
@@ -223,23 +223,26 @@ int Hybrid_Noble1D(
   }
 
   double Wsq = 1.0 + utsq;   // Lorentz factor squared
-  harm_aux.W = sqrt(Wsq); // Lorentz factor, not to be confused with Gamma
+  harm_aux.W = sqrt(Wsq);
 
   // Always calculate rho from D and W so that using D in EOS remains consistent
   //   i.e. you don't get positive values for dP/d(vsq).
-  double rho0 = harm_aux.D / harm_aux.W;
+  const double rho0 = harm_aux.D / harm_aux.W;
+  double u;
+  double p;
+  double w;
 
   // p = 0.0;
-  if( eos.is_Hybrid ) {
+  if( eos->eos_type == 0 ) {
     const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims_guess->rho);
     const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
-    double u = prims_guess->press/(Gamma_ppoly - 1.0);
-    double p = pressure_rho0_u(eos, rho0, u);
+    u = prims_guess->press/(Gamma_ppoly - 1.0);
+    p = pressure_rho0_u(eos, rho0, u);
+    w = rho0 + u + p;
   } else if( eos->eos_type == 1 ) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
-  double w = rho0 + u + p;
   double W_last = w*Wsq;
 
   // Make sure that W is large enough so that v^2 < 1 :
@@ -281,19 +284,19 @@ int Hybrid_Noble1D(
 
   // Recover the primitive variables from the scalars and conserved variables:
   const double gtmp = sqrt(1. - vsq);
-  harm_aux.W = 1./gtmp;
-  rho0 = harm_aux.D * gtmp;
+  harm_aux.W = 1.0/gtmp;
+  w = W * (1.0 - vsq);
 
-  w = W * (1. - vsq);
+  prims_guess->rho = harm_aux.D * gtmp;
 
   if( eos->eos_type == 0 ) {
-    p = pressure_rho0_w(eos, rho0, w);
-    u = w - (rho0 + p); // u = rho0 eps, w = rho0 h
+    p = pressure_rho0_w(eos, prims_guess->rho, w);
+    u = w - (prims_guess->rho + p); // u = rho eps, w = rho0 h
   } else if( eos->eos_type == 1 ) {
    grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
-  if( ((rho0 <= 0.) || (u <= 0.)) ) {
+  if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
     retval = 6;
@@ -313,7 +316,6 @@ const double nup[4] = {metric->lapseinv,
   double uty = g_o_WBsq * ( Qtcon[2] + QdB_o_W*Bup[2] ) ;
   double utz = g_o_WBsq * ( Qtcon[3] + QdB_o_W*Bup[3] ) ;
 
-  prims_guess->rho = rho0;
   //Aditional tabulated code here
 
   double u0;

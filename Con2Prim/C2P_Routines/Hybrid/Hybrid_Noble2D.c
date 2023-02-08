@@ -131,12 +131,13 @@ return:  (i*100 + j)  where
 
 **********************************************************************************/
 
-int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
-                    const eos_parameters *restrict eos,
-                    const metric_quantities *restrict metric,
-                    const conservative_quantities *restrict cons_undens,
-                    primitive_quantities *restrict prims_guess,
-                    con2prim_diagnostics *restrict diagnostics ) {
+int Hybrid_Noble2D(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons_undens,
+      primitive_quantities *restrict prims_guess,
+      con2prim_diagnostics *restrict diagnostics ) {
 
   double gnr_out[NEWT_DIM];
 
@@ -195,29 +196,32 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
     utsq = fabs(utsq);
   }
-  if(utsq < 0. || utsq > UTSQ_TOO_BIG) {
+  if(utsq < 0.0 || utsq > UTSQ_TOO_BIG) {
     retval = 2;
     return(retval);
   }
 
-  double Wsq = 1.0 + utsq;
+  double Wsq = 1.0 + utsq;   // Lorentz factor squared
   harm_aux.W = sqrt(Wsq);
 
   // Always calculate rho from D and W so that using D in EOS remains consistent
   //   i.e. you don't get positive values for dP/d(vsq).
-  double rho0 = harm_aux.D / harm_aux.W;
+  const double rho0 = harm_aux.D / harm_aux.W;
+  double u;
+  double p;
+  double w;
 
   // p = 0.0;
-   if( eos->eos_type == 0 ) {
+  if( eos->eos_type == 0 ) {
     const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims_guess->rho);
     const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
-    double u = prims_guess->press/(Gamma_ppoly - 1.0);
-    double p = pressure_rho0_u(eos, rho0, u);
-   } else if( eos->eos_type == 1 ) {
+    u = prims_guess->press/(Gamma_ppoly - 1.0);
+    p = pressure_rho0_u(eos, rho0, u);
+    w = rho0 + u + p;
+  } else if( eos->eos_type == 1 ) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
-   }
+  }
 
-  double w = rho0 + u + p;
   double W_last = w*Wsq;
 
   // Make sure that W is large enough so that v^2 < 1 :
@@ -260,13 +264,13 @@ int Hybrid_Noble2D( const GRHayL_parameters *restrict params,
   // Recover the primitive variables from the scalars and conserved variables:
   const double gtmp = sqrt(1. - vsq);
   harm_aux.W = 1.0/gtmp;
-  rho0 = harm_aux.D * gtmp;
-
   w = W * (1.0 - vsq);
 
+  prims_guess->rho = harm_aux.D * gtmp;
+
   if( eos->eos_type == 0 ) {
-    p = pressure_rho0_w(eos, rho0, w);
-    u = w - (rho0 + p); // u = rho0 eps, w = rho0 h
+    p = pressure_rho0_w(eos, prims_guess->rho, w);
+    u = w - (prims_guess->rho + p); // u = rho eps, w = rho0 h
   } else {
     grhayl_warn("Tabulated not implemented!");
   }
@@ -291,7 +295,6 @@ const double nup[4] = {metric->lapseinv,
   double uty = g_o_WBsq * ( Qtcon[2] + QdB_o_W*Bup[2] ) ;
   double utz = g_o_WBsq * ( Qtcon[3] + QdB_o_W*Bup[3] ) ;
 
-  prims_guess->rho = rho0;
   //Aditional tabulated code here
 
   double u0;
