@@ -261,7 +261,7 @@ int Hybrid_Noble1D(
   // consistent with the ones in the con2prim_Noble1D_entropy.cc and
   // con2prim_Noble1D_entropy2.cc files.
   double dummy = 0.0;
-  retval = newton_raphson_1d(eos, &harm_aux, gnr_out, n, &diagnostics->n_iter, dummy, func_1d_orig);
+  retval = newton_raphson_1d(eos, &harm_aux, gnr_out, ndim, &diagnostics->n_iter, dummy, func_1d_orig);
 
   const double W = gnr_out[0];
 
