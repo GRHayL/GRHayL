@@ -124,7 +124,7 @@ return:  (i*100 + j)  where
          j = 0 -> success
              1 -> failure: some sort of failure in Newton-Raphson;
              2 -> failure: utsq<0 w/ initial p[] guess;
-             3 -> failure: W<0 or W>W_TOO_BIG
+             3 -> failure: Z<0 or Z>Z_TOO_BIG
              4 -> failure: v^2 > 1
              5 -> failure: v^2 < 0
              6 -> failure: rho,uu <= 0 ;
@@ -157,15 +157,15 @@ int Hybrid_Noble2D(
   double Bdn[4]; lower_vector(metric, Bup, Bdn);
 
   const double uu = - cons_undens->tau*metric->lapse
-                    - (metric->lapse-1.0)*cons_undens->rho
+                    - metric->lapse*cons_undens->rho
                     + metric->betax*cons_undens->S_x
                     + metric->betay*cons_undens->S_y
                     + metric->betaz*cons_undens->S_z;
 
-  const double Qdn[4] = {uu - cons_undens->rho,
-                              cons_undens->S_x,
-                              cons_undens->S_y,
-                              cons_undens->S_z};
+  const double Qdn[4] = {uu,
+                         cons_undens->S_x,
+                         cons_undens->S_y,
+                         cons_undens->S_z};
 
   double Qup[4]; raise_vector(metric, Qdn, Qup);
 
@@ -222,31 +222,31 @@ int Hybrid_Noble2D(
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
-  double W_last = w*Wsq;
+  double Z_last = w*Wsq;
 
   // Make sure that W is large enough so that v^2 < 1 :
   int i_increase = 0;
-  while( (( W_last*W_last*W_last * ( W_last + 2.*harm_aux.Bsq )
-            - harm_aux.QdotBsq*(2.*W_last + harm_aux.Bsq) ) <= W_last*W_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
+  while( (( Z_last*Z_last*Z_last * ( Z_last + 2.*harm_aux.Bsq )
+            - harm_aux.QdotBsq*(2.*Z_last + harm_aux.Bsq) ) <= Z_last*Z_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
          && (i_increase < 10) ) {
-    W_last *= 10.;
+    Z_last *= 10.;
     i_increase++;
   }
 
   // Calculate W and vsq:
-  gnr_out[0] = fabs( W_last );
-  gnr_out[1] = x1_of_x0( &harm_aux, W_last );
+  gnr_out[0] = fabs( Z_last );
+  gnr_out[1] = x1_of_x0( &harm_aux, Z_last );
 
   retval = general_newton_raphson(eos, &harm_aux, gnr_out, ndim, &diagnostics->n_iter, func_vsq);
 
-  const double W = gnr_out[0];
+  const double Z = gnr_out[0];
   double vsq = gnr_out[1];
 
   /* Problem with solver, so return denoting error before doing anything further */
-  if( (retval != 0) || (W == FAIL_VAL) ) {
+  if( (retval != 0) || (Z == FAIL_VAL) ) {
     retval = retval*100+1;
     return(retval);
-  } else if(W <= 0. || W > W_TOO_BIG) {
+  } else if(Z <= 0. || Z > Z_TOO_BIG) {
     retval = 3;
     return(retval);
   }
@@ -264,18 +264,18 @@ int Hybrid_Noble2D(
   // Recover the primitive variables from the scalars and conserved variables:
   const double gtmp = sqrt(1. - vsq);
   harm_aux.W = 1.0/gtmp;
-  w = W * (1.0 - vsq);
+  w = Z * (1.0 - vsq);
 
   prims_guess->rho = harm_aux.D * gtmp;
 
   if( eos->eos_type == 0 ) {
     p = pressure_rho0_w(eos, prims_guess->rho, w);
     u = w - (prims_guess->rho + p); // u = rho eps, w = rho0 h
-  } else {
+  } else if( eos->eos_type == 1 ) {
     grhayl_warn("Tabulated not implemented!");
   }
 
-  if( ((rho0 <= 0.) || (u <= 0.)) ) {
+  if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
     retval = 6;
@@ -287,15 +287,15 @@ const double nup[4] = {metric->lapseinv,
 		      -metric->lapseinv*metric->betaz};
 
   double Qtcon[4];
-  const double g_o_WBsq = harm_aux.W/(W+harm_aux.Bsq);
-  const double QdB_o_W  = harm_aux.QdotB / W;
+  const double g_o_ZBsq = harm_aux.W/(Z+harm_aux.Bsq);
+  const double QdB_o_Z  = harm_aux.QdotB / Z;
 
   for(int i=1; i<4; i++) Qtcon[i] = Qup[i] + nup[i] * harm_aux.Qdotn;
-  double utx = g_o_WBsq * ( Qtcon[1] + QdB_o_W*Bup[1] ) ;
-  double uty = g_o_WBsq * ( Qtcon[2] + QdB_o_W*Bup[2] ) ;
-  double utz = g_o_WBsq * ( Qtcon[3] + QdB_o_W*Bup[3] ) ;
+  double utx = g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*Bup[1] ) ;
+  double uty = g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*Bup[2] ) ;
+  double utz = g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*Bup[3] ) ;
 
-  //Aditional tabulated code here
+  //Additional tabulated code here
 
   double u0;
   limit_utilde_and_compute_v(eos, metric, &u0, &utx, &uty,

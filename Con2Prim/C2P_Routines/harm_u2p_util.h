@@ -44,7 +44,7 @@ static const int EXTRA_NEWT_ITER  = 0; /* ZACH SAYS: Original value = 2. But I d
 static const double NEWT_TOL2     = 1.0e-15;      /* TOL of new 1D^*_{v^2} gnr2 method */
 static const double MIN_NEWT_TOL2 = 1.0e-10;  /* TOL of new 1D^*_{v^2} gnr2 method */
 
-static const double W_TOO_BIG    = 1.e20;    /* \gamma^2 (\rho_0 + u + p) is assumed
+static const double Z_TOO_BIG    = 1.e20;    /* \gamma^2 (\rho_0 + u + p) is assumed
                                                   to always be smaller than this.  This
                                                   is used to detect solver failures */
 static const double UTSQ_TOO_BIG = 1.e20;    /* \tilde{u}^2 is assumed to be smaller

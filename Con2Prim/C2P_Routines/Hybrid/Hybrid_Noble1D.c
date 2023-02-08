@@ -71,49 +71,6 @@ utoprim_1d.c:
 
 double dpdW_calc_vsq(const eos_parameters *restrict eos, double W, double vsq);
 
-/**********************************************************************/
-/******************************************************************
-
-  Utoprim_1d():
-
-  -- Driver for new prim. var. solver.  The driver just translates
-     between the two sets of definitions for U and P.  The user may
-     wish to alter the translation as they see fit.
-
-     It assumes that on input/output:
-
-
-              /  rho u^t           \
-         U =  |  T^t_t   + rho u^t |  sqrt(-det(g_{\mu\nu}))
-              |  T^t_\mu           |
-              \   B^i              /
-
-
-             /    rho        \
-         P = |    uu         |
-             | \tilde{u}^i   |
-             \   B^i         /
-
-
-     ala HARM.
-
-   Arguments:
-       U[NPR]    = conserved variables (current values on input/output);
-       gcov[NDIM][NDIM] = covariant form of the metric;
-       gcon[NDIM][NDIM] = contravariant form of the metric;
-       gdet             = sqrt( - determinant of the metric);
-       prim[NPR] = primitive variables (guess on input, calculated values on
-                                        output if there are no problems);
-
-   -- NOTE: for those using this routine for special relativistic MHD and are
-            unfamiliar with metrics, merely set
-              gcov = gcon = diag(-1,1,1,1)  and gdet = 1.;
-
-******************************************************************/
-
-
-
-/**********************************************************************/
 /**********************************************************************************
 
   Hybrid_Noble1D():
@@ -147,7 +104,7 @@ return:  (i*100 + j)  where
          j = 0 -> success
              1 -> failure: some sort of failure in Newton-Raphson;
              2 -> failure: utsq<0 w/ initial p[] guess;
-             3 -> failure: W<0 or W>W_TOO_BIG
+             3 -> failure: W<0 or Z>Z_TOO_BIG
              4 -> failure: v^2 > 1
              5 -> failure: rho,uu <= 0;
 
@@ -243,19 +200,19 @@ int Hybrid_Noble1D(
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
-  double W_last = w*Wsq;
+  double Z_last = w*Wsq;
 
   // Make sure that W is large enough so that v^2 < 1 :
   int i_increase = 0;
-  while( (( W_last*W_last*W_last * ( W_last + 2.*harm_aux.Bsq )
-            - harm_aux.QdotBsq*(2.*W_last + harm_aux.Bsq) ) <= W_last*W_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
+  while( (( Z_last*Z_last*Z_last * ( Z_last + 2.*harm_aux.Bsq )
+            - harm_aux.QdotBsq*(2.*Z_last + harm_aux.Bsq) ) <= Z_last*Z_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
          && (i_increase < 10) ) {
-    W_last *= 10.;
+    Z_last *= 10.;
     i_increase++;
   }
 
   // Calculate W:
-  gnr_out[0] = W_last;
+  gnr_out[0] = Z_last;
 
   // We need a dummy variable to keep the function call in this file
   // consistent with the ones in the con2prim_Noble1D_entropy.cc and
@@ -263,19 +220,19 @@ int Hybrid_Noble1D(
   double dummy = 0.0;
   retval = newton_raphson_1d(eos, &harm_aux, gnr_out, ndim, &diagnostics->n_iter, dummy, func_1d_orig);
 
-  const double W = gnr_out[0];
+  const double Z = gnr_out[0];
 
   /* Problem with solver, so return denoting error before doing anything further */
-  if( (retval != 0) || (W == FAIL_VAL) ) {
+  if( (retval != 0) || (Z == FAIL_VAL) ) {
     retval = retval*100+1;
     return(retval);
-  } else if(W <= 0. || W > W_TOO_BIG) {
+  } else if(Z <= 0. || Z > Z_TOO_BIG) {
     retval = 3;
     return(retval);
   }
 
   // Calculate v^2:
-  double vsq = vsq_calc(&harm_aux, W);
+  double vsq = vsq_calc(&harm_aux, Z);
 //TODO: differs from Noble2D
   if( vsq >= 1. ) {
     retval = 4;
@@ -285,7 +242,7 @@ int Hybrid_Noble1D(
   // Recover the primitive variables from the scalars and conserved variables:
   const double gtmp = sqrt(1. - vsq);
   harm_aux.W = 1.0/gtmp;
-  w = W * (1.0 - vsq);
+  w = Z * (1.0 - vsq);
 
   prims_guess->rho = harm_aux.D * gtmp;
 
@@ -308,13 +265,13 @@ const double nup[4] = {metric->lapseinv,
 		      -metric->lapseinv*metric->betaz};
 
   double Qtcon[4];
-  const double g_o_WBsq = harm_aux.W/(W+harm_aux.Bsq);
-  const double QdB_o_W  = harm_aux.QdotB / W;
+  const double g_o_ZBsq = harm_aux.W/(Z+harm_aux.Bsq);
+  const double QdB_o_Z  = harm_aux.QdotB / Z;
 
   for(int i=1; i<4; i++) Qtcon[i] = Qup[i] + nup[i] * harm_aux.Qdotn;
-  double utx = g_o_WBsq * ( Qtcon[1] + QdB_o_W*Bup[1] ) ;
-  double uty = g_o_WBsq * ( Qtcon[2] + QdB_o_W*Bup[2] ) ;
-  double utz = g_o_WBsq * ( Qtcon[3] + QdB_o_W*Bup[3] ) ;
+  double utx = g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*Bup[1] ) ;
+  double uty = g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*Bup[2] ) ;
+  double utz = g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*Bup[3] ) ;
 
   //Aditional tabulated code here
 
