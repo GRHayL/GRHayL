@@ -23,7 +23,7 @@ void read_primitive_binary(
   key += fread(vx,    sizeof(double), 1, infile);
   key += fread(vy,    sizeof(double), 1, infile);
   key += fread(vz,    sizeof(double), 1, infile);
-  key += fread(eps,    sizeof(double), 1, infile);
+  key += fread(eps,   sizeof(double), 1, infile);
   key += fread(Bx,    sizeof(double), 1, infile);
   key += fread(By,    sizeof(double), 1, infile);
   key += fread(Bz,    sizeof(double), 1, infile);
@@ -31,7 +31,7 @@ void read_primitive_binary(
   if(evolve_entropy)
     key += fread(entropy, sizeof(double), 1, infile);
 
-  if(eos_type == 2) { //Tabulated
+  if(eos_type == 1) { //Tabulated
     key += fread(Y_e, sizeof(double), 1, infile);
     key += fread(temperature, sizeof(double), 1, infile);
   }
@@ -65,7 +65,7 @@ void write_primitive_binary(
   if(evolve_entropy)
     fwrite(&prims->entropy, sizeof(double), 1, outfile);
 
-  if(eos_type == 2) { //Tabulated
+  if(eos_type == 1) { //Tabulated
     fwrite(&prims->Y_e, sizeof(double), 1, outfile);
     fwrite(&prims->temperature, sizeof(double), 1, outfile);
   }

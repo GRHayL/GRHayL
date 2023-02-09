@@ -125,9 +125,8 @@ return:  (i*100 + j)  where
              1 -> failure: some sort of failure in Newton-Raphson;
              2 -> failure: utsq<0 w/ initial p[] guess;
              3 -> failure: Z<0 or Z>Z_TOO_BIG
-             4 -> failure: v^2 > 1
-             5 -> failure: v^2 < 0
-             6 -> failure: rho,uu <= 0 ;
+             4 -> failure: v^2 < 0
+             5 -> failure: rho,uu <= 0 ;
 
 **********************************************************************************/
 
@@ -207,9 +206,9 @@ int Hybrid_Noble2D(
   // Always calculate rho from D and W so that using D in EOS remains consistent
   //   i.e. you don't get positive values for dP/d(vsq).
   const double rho0 = harm_aux.D / harm_aux.W;
-  double u;
-  double p;
-  double w;
+  double u = 0;
+  double p = 0;
+  double w = 0;
 
   // p = 0.0;
   if( eos->eos_type == 0 ) {
@@ -254,11 +253,9 @@ int Hybrid_Noble2D(
   // Calculate v^2:
   if( vsq >= 1. ) {
     vsq = 1.-2.e-16;
-    //retval = 4;
-    //return(retval) ;
   } else if(vsq < 0.0) {
     //v should be real!
-    return(5);
+    return(4);
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
@@ -278,13 +275,13 @@ int Hybrid_Noble2D(
   if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-    retval = 6;
+    retval = 5;
   }
 
-const double nup[4] = {metric->lapseinv,
-		      -metric->lapseinv*metric->betax,
-		      -metric->lapseinv*metric->betay,
-		      -metric->lapseinv*metric->betaz};
+  const double nup[4] = {metric->lapseinv,
+                        -metric->lapseinv*metric->betax,
+                        -metric->lapseinv*metric->betay,
+                        -metric->lapseinv*metric->betaz};
 
   double Qtcon[4];
   const double g_o_ZBsq = harm_aux.W/(Z+harm_aux.Bsq);
