@@ -301,6 +301,7 @@ int Hybrid_Noble2D(
   if(diagnostics->vel_limited_ptcount==1)
     prims_guess->rho = cons_undens->rho/(metric->lapse*u0);
 
+  // Since u is dependent on rho, it seems weird to not reset u if rho has changed from above
   prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);
   prims_guess->eps = u/prims_guess->rho;
   if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
