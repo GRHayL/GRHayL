@@ -17,7 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y clang-14 libhdf5-serial-dev
+        run: |
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
+          sudo apt-get update
+          sudo apt-get install -y clang-14 libhdf5-serial-dev
       - name: Compile GRHayL
         run: |
           export COMPILER=clang
@@ -41,7 +49,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y clang-14 libhdf5-serial-dev
+        run: |
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
+          sudo apt-get update
+          sudo apt-get install -y clang-14 libhdf5-serial-dev
       - name: Compile GRHayL
         run: |
           export COMPILER=clang
@@ -65,7 +81,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y clang-14 libhdf5-serial-dev
+        run: |
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
+          sudo apt-get update
+          sudo apt-get install -y clang-14 libhdf5-serial-dev
       - name: Compile GRHayL
         run: |
           export COMPILER=clang
@@ -89,7 +113,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install needed ubuntu packages
-        run: sudo apt-get update && sudo apt-get install -y clang-14 libhdf5-serial-dev
+        run: |
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
+          sudo apt-get update
+          sudo apt-get install -y clang-14 libhdf5-serial-dev
       - name: Compile GRHayL
         run: |
           export COMPILER=clang

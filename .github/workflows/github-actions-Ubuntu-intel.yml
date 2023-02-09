@@ -22,6 +22,12 @@ jobs:
           sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
           rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
           sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
 
@@ -56,6 +62,12 @@ jobs:
           sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
           rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
           sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
 
@@ -90,6 +102,12 @@ jobs:
           sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
           rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
           sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
 
@@ -123,6 +141,12 @@ jobs:
           sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
           rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
           sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
 
