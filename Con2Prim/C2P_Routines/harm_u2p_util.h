@@ -64,44 +64,6 @@ typedef struct _harm_auxiliary_vars_ {
   bool use_entropy;
 } harm_aux_vars_struct;
 
-/**********************************************************************
-    raise_g():
-
-         -- calculates the contravariant form of a covariant tensor,
-            using the inverse of the metric;
-***********************************************************************/
-static inline void raise_g(const double vcov[NDIM], const double gcon[NDIM][NDIM], double vcon[NDIM])
-{
-  int i,j;
-
-  for(i=0;i<NDIM;i++) {
-    vcon[i] = 0. ;
-    for(j=0;j<NDIM;j++)
-      vcon[i] += gcon[i][j]*vcov[j];
-  }
-
-  return ;
-}
-
-/**********************************************************************
-     lower_g():
-
-          -- calculates the ocvariant form of a contravariant tensor
-             using the metric;
-***********************************************************************/
-static inline void lower_g(const double vcon[NDIM], const double gcov[NDIM][NDIM], double vcov[NDIM])
-{
-  int i,j;
-
-  for(i=0;i<NDIM;i++) {
-    vcov[i] = 0. ;
-    for(j=0;j<NDIM;j++)
-      vcov[i] += gcov[i][j]*vcon[j] ;
-  }
-
-  return ;
-}
-
 /**************************************************
   The following functions assume a Gamma-law EOS:
 ***************************************************/

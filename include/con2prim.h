@@ -123,7 +123,9 @@ int Hybrid_Noble2D(
 
 //-------------- Font Fix routines -----------------
 
-int font_fix(const eos_parameters *restrict eos,
+int font_fix(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons_undens,
       const primitive_quantities *restrict prims,

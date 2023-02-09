@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
                              Y_e_cons[i], ent_cons[i], &cons);
 
     //This uses the Font fix method to compute primitives from conservatives.
-    int check = font_fix(&eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+    int check = font_fix(&params, &eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
     //TODO: Font fix returned value isn't currently checked
 
     primitive_quantities prims_trusted, prims_pert;
