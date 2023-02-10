@@ -42,15 +42,15 @@ int main(int argc, char **argv) {
   char filename[100];
 
   // Initialize the needed data files
-  sprintf(filename,"C2P_Noble2D_initial_data.bin");
+  sprintf(filename,"Noble2D_initial_data.bin");
   FILE* initial_data = fopen(filename,"rb");
   check_file_was_successfully_open(initial_data, filename);
 
-  sprintf(filename,"C2P_enforce_primitive_limits_and_output_u0.bin");
+  sprintf(filename,"enforce_primitive_limits_and_output_u0.bin");
   FILE* infile = fopen(filename,"rb");
   check_file_was_successfully_open(infile, filename);
 
-  sprintf(filename,"C2P_enforce_primitive_limits_and_output_u0_pert.bin");
+  sprintf(filename,"enforce_primitive_limits_and_output_u0_pert.bin");
   FILE* inpert = fopen(filename,"rb");
   check_file_was_successfully_open(inpert, filename);
 
