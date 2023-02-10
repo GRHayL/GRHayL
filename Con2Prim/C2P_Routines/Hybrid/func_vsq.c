@@ -1,16 +1,19 @@
 #include "../harm_u2p_util.h"
 
 double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq);
+
 void func_vsq(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
+      const int ndim,
+      const double dummy,
       const double x[],
       double dx[],
       double resid[],
       double jac[][2],
-      double *f,
-      double *df,
-      int n) {
+      double *restrict f,
+      double *restrict df,
+      int *restrict n_iter) {
 
   const double W   = x[0];
   const double vsq = x[1];

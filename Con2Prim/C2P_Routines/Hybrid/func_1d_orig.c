@@ -6,14 +6,15 @@ double dvsq_dW(const harm_aux_vars_struct *restrict harm_aux, double W);
 void func_1d_orig(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
+      const int ndim,
+      const double dummy,
       const double x[],
       double dx[],
       double resid[],
       double jac[][1],
-      double *f,
-      double *df,
-      int n,
-      double dummy) {
+      double *restrict f,
+      double *restrict df,
+      int *restrict n_iter) {
 
   const double W = x[0];
   double vsq = vsq_calc(harm_aux, W);
@@ -23,7 +24,6 @@ void func_1d_orig(
   const double dv = 1.0e-15;
   vsq = ( vsq < -dv ) ?  0.      : fabs(vsq);
   vsq = ( vsq > 1. )  ?  (1.-dv) : vsq;
-
 
   // Compute P from W and v^2
   const double dvsq = dvsq_dW(harm_aux, W);
@@ -40,10 +40,10 @@ void func_1d_orig(
   jac[0][0] = 1. - dPdW + harm_aux->QdotBsq/(Wsq*W) + 0.5*harm_aux->Bsq*dvsq;
   // Set dx (NR step), f, and df (see function description above)
   dx[0] = - resid[0]/jac[0][0];
+  *df   = - resid[0]*resid[0];
+  *f    = -0.5 * ( *df );
 
-  *df = - resid[0]*resid[0];
-  *f  = -0.5 * ( *df );
-
+  return;
 }
 
 double dvsq_dW(const harm_aux_vars_struct *restrict harm_aux, const double W)

@@ -5,12 +5,12 @@ void validate_x(double x[2], const double x0[2] );
 int general_newton_raphson(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
-      double x[],
       const int ndim,
+      const double indep_var_in,
       int *restrict n_iter_ptr,
-
-      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const double [], double [], double [],
-                    double [][ndim], double *, double *, int))
+      double x[],
+      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
+                    double [], double [][ndim], double *restrict, double *restrict, int *restrict))
 {
   double dx[ndim], x_old[ndim];
   double resid[ndim], jac[ndim][ndim];
@@ -27,7 +27,7 @@ int general_newton_raphson(
   /* Start the Newton-Raphson iterations : */
   int keep_iterating = 1;
   while( keep_iterating ) {
-    funcd(eos, harm_aux, x, dx, resid, jac, &f, &df, ndim);  /* returns with new dx, f, df */
+    funcd(eos, harm_aux, ndim, indep_var_in, x, dx, resid, jac, &f, &df, n_iter_ptr);  /* returns with new dx, f, df */
 
     /* Save old values before calculating the new: */
     errx = 0.0;

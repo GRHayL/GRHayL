@@ -209,7 +209,6 @@ int Hybrid_Noble2D(
   double p = 0;
   double w = 0;
 
-  // p = 0.0;
   if( eos->eos_type == 0 ) {
     const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims_guess->rho);
     const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
@@ -235,7 +234,7 @@ int Hybrid_Noble2D(
   gnr_out[0] = fabs( Z_last );
   gnr_out[1] = x1_of_x0( &harm_aux, Z_last );
 
-  retval = general_newton_raphson(eos, &harm_aux, gnr_out, ndim, &diagnostics->n_iter, func_vsq);
+  retval = general_newton_raphson(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, func_vsq);
 
   const double Z = gnr_out[0];
   double vsq = gnr_out[1];
@@ -268,7 +267,7 @@ int Hybrid_Noble2D(
     p = pressure_rho0_w(eos, prims_guess->rho, w);
     u = w - (prims_guess->rho + p); // u = rho eps, w = rho0 h
   } else if( eos->eos_type == 1 ) {
-    grhayl_warn("Tabulated not implemented!");
+    grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
   if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {

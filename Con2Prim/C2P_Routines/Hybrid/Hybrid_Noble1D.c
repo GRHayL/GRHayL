@@ -185,11 +185,10 @@ int Hybrid_Noble1D(
   // Always calculate rho from D and W so that using D in EOS remains consistent
   //   i.e. you don't get positive values for dP/d(vsq).
   const double rho0 = harm_aux.D / harm_aux.W;
-  double u;
-  double p;
-  double w;
+  double u = 0;
+  double p = 0;
+  double w = 0;
 
-  // p = 0.0;
   if( eos->eos_type == 0 ) {
     const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims_guess->rho);
     const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
@@ -211,14 +210,11 @@ int Hybrid_Noble1D(
     i_increase++;
   }
 
-  // Calculate W:
+  // Calculate Z:
   gnr_out[0] = Z_last;
 
-  // We need a dummy variable to keep the function call in this file
-  // consistent with the ones in the con2prim_Noble1D_entropy.cc and
-  // con2prim_Noble1D_entropy2.cc files.
-  double dummy = 0.0;
-  retval = newton_raphson_1d(eos, &harm_aux, gnr_out, ndim, &diagnostics->n_iter, dummy, func_1d_orig);
+  // To be consistent with entropy variants, unused argument 0.0 is needed
+  retval = newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, func_1d_orig);
 
   const double Z = gnr_out[0];
 
@@ -250,7 +246,7 @@ int Hybrid_Noble1D(
     p = pressure_rho0_w(eos, prims_guess->rho, w);
     u = w - (prims_guess->rho + p); // u = rho eps, w = rho0 h
   } else if( eos->eos_type == 1 ) {
-   grhayl_warn("No tabulated EOS support yet! Sorry!");
+    grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
   if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
@@ -273,7 +269,7 @@ int Hybrid_Noble1D(
   double uty = g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*Bup[2] ) ;
   double utz = g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*Bup[3] ) ;
 
-  //Aditional tabulated code here
+  //Additional tabulated code here
 
   double u0;
   limit_utilde_and_compute_v(eos, metric, &u0, &utx, &uty,

@@ -3,12 +3,12 @@
 int newton_raphson_1d(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
-      double x[],
       const int ndim,
+      const double indep_var_in,
       int *restrict n_iter_ptr,
-      double indep_var_in,
-      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const double [], double [], double [],
-                    double [][ndim], double *, double *, int, double))
+      double x[],
+      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
+                    double [], double [][ndim], double *restrict, double *restrict, int *restrict))
 {
   double dx[ndim], x_old[ndim];
   double resid[ndim], jac[ndim][ndim];
@@ -24,7 +24,7 @@ int newton_raphson_1d(
   /* Start the Newton-Raphson iterations : */
   int keep_iterating = 1;
   while( keep_iterating ) {
-    funcd(eos, harm_aux, x, dx, resid, jac, &f, &df, ndim, indep_var_in);
+    funcd(eos, harm_aux, ndim, indep_var_in, x, dx, resid, jac, &f, &df, n_iter_ptr);
 
     /* Make the newton step: */
     for( int id = 0; id < ndim; id++) {
