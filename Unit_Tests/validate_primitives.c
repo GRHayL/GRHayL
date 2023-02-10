@@ -53,6 +53,7 @@ void validate_primitives(
   // Epsilon has a similar issue with pressure, so we compute a cutoff that is consistent with the above choice.
   //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos->K_ppoly[0], 1.0/eos->Gamma_ppoly[0]) * (eos->Gamma_ppoly[0] - 1.0));
   const double eps_cutoff = 1.0e-10; // Above computed 1e-9, which seemed too large to make sense as a cutoff
+    printf("eps trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->eps, prims->eps, prims_pert->eps);
   if( validate(prims_trusted->eps, prims->eps, prims_pert->eps) && fabs(prims_trusted->eps-prims->eps) > eps_cutoff ) {
     printf("eps trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->eps, prims->eps, prims_pert->eps);
     sprintf(fail_msg, "%.80s eps", fail_msg);

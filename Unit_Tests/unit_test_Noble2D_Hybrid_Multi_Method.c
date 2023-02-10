@@ -39,9 +39,6 @@ int main(int argc, char **argv) {
              Gamma_ppoly, k_ppoly0, Gamma_th,
              &eos);
 
-  con2prim_diagnostics diagnostics;
-  initialize_diagnostics(&diagnostics);
-
   char filename[100];
 
   // Initialize the needed data files
@@ -165,6 +162,8 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
 
     // Define the various GRHayL structs for the unit tests
+    con2prim_diagnostics diagnostics;
+    initialize_diagnostics(&diagnostics);
     metric_quantities metric;
     primitive_quantities prims, prims_guess;
     conservative_quantities cons, cons_undens;
