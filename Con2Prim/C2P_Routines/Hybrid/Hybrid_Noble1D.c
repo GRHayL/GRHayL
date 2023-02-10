@@ -104,9 +104,9 @@ return:  (i*100 + j)  where
          j = 0 -> success
              1 -> failure: some sort of failure in Newton-Raphson;
              2 -> failure: utsq<0 w/ initial p[] guess;
-             3 -> failure: W<0 or Z>Z_TOO_BIG
+             3 -> failure: Z<0 or Z>Z_TOO_BIG
              4 -> failure: v^2 > 1
-             5 -> failure: rho,uu <= 0;
+             5 -> failure: rho,uu <= 0
 
 **********************************************************************************/
 
@@ -136,15 +136,15 @@ int Hybrid_Noble1D(
   double Bdn[4]; lower_vector(metric, Bup, Bdn);
 
   const double uu = - cons_undens->tau*metric->lapse
-                    - (metric->lapse-1.0)*cons_undens->rho
+                    - metric->lapse*cons_undens->rho
                     + metric->betax*cons_undens->S_x
                     + metric->betay*cons_undens->S_y
                     + metric->betaz*cons_undens->S_z;
 
-  const double Qdn[4] = {uu - cons_undens->rho,
-                              cons_undens->S_x,
-                              cons_undens->S_y,
-                              cons_undens->S_z};
+  const double Qdn[4] = {uu,
+                         cons_undens->S_x,
+                         cons_undens->S_y,
+                         cons_undens->S_z};
 
   double Qup[4]; raise_vector(metric, Qdn, Qup);
 
@@ -256,13 +256,13 @@ int Hybrid_Noble1D(
   if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-    retval = 6;
+    retval = 5;
   }
 
-const double nup[4] = {metric->lapseinv,
-		      -metric->lapseinv*metric->betax,
-		      -metric->lapseinv*metric->betay,
-		      -metric->lapseinv*metric->betaz};
+  const double nup[4] = {metric->lapseinv,
+                        -metric->lapseinv*metric->betax,
+                        -metric->lapseinv*metric->betay,
+                        -metric->lapseinv*metric->betaz};
 
   double Qtcon[4];
   const double g_o_ZBsq = harm_aux.W/(Z+harm_aux.Bsq);
@@ -282,6 +282,7 @@ const double nup[4] = {metric->lapseinv,
   if(diagnostics->vel_limited_ptcount==1)
     prims_guess->rho = cons_undens->rho/(metric->lapse*u0);
 
+  // Since u is dependent on rho, it seems weird to not reset u if rho has changed from above
   prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);
   prims_guess->eps = u/prims_guess->rho;
   if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);

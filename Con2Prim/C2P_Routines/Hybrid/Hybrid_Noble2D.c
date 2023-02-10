@@ -126,7 +126,7 @@ return:  (i*100 + j)  where
              2 -> failure: utsq<0 w/ initial p[] guess;
              3 -> failure: Z<0 or Z>Z_TOO_BIG
              4 -> failure: v^2 < 0
-             5 -> failure: rho,uu <= 0 ;
+             5 -> failure: rho,uu <= 0
 
 **********************************************************************************/
 
@@ -181,7 +181,6 @@ int Hybrid_Noble2D(
   harm_aux.Qsq = 0.0;
   for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
 
-  // \tilde{Q}^{2} = Q^{2} + (Q.n)^{2}
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
 
   harm_aux.D    = cons_undens->rho;
