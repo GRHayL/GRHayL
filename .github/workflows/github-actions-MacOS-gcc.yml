@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install gcc gsed hdf5 md5sum
+        run: brew update && brew install gcc gsed hdf5 md5sha1sum
       - name: Compile GRHayL
         run: |
           export COMPILER=gnu
