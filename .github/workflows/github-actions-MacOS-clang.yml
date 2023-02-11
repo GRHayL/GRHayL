@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install clang-14, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: brew update && brew install llvm gsed hdf5
+        run: brew update && brew install llvm gsed hdf5 md5sum
       - name: Compile GRHayL
         run: |
           export COMPILER=clang
@@ -29,10 +29,8 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.md5
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.md5
-          md5sum -c check_{{ matrix.test-function }}.md5
-          md5sum -c check_{{ matrix.test-function }}_pert.md5
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5
+          md5sum -c check_${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`brew --prefix`/opt/llvm/lib:`pwd`/lib
