@@ -2,6 +2,7 @@ name: Ubuntu-clang
 
 on:
   push:
+    paths-ignore: 'docs/**'
     branches: main
   pull_request:
 
