@@ -194,11 +194,22 @@ int Hybrid_Noble1D_Entropy(
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
   harm_aux.D    = cons_undens->rho;
 
-  /* calculate W from last timestep and use for guess */
+  const double tmp_u = metric->adm_gxx * SQR(prims_guess->vx + metric->betax) +
+                                             2.0*metric->adm_gxy*(prims_guess->vx + metric->betax)*(prims_guess->vy + metric->betay) +
+                                             2.0*metric->adm_gxz*(prims_guess->vx + metric->betax)*(prims_guess->vz + metric->betaz) +
+                                             metric->adm_gyy * SQR(prims_guess->vy + metric->betay) +
+                                             2.0*metric->adm_gyz*(prims_guess->vy + metric->betay)*(prims_guess->vz + metric->betaz) +
+                                             metric->adm_gzz * SQR(prims_guess->vz + metric->betaz);
+
+  double u0 = 1.0/sqrt(1.0-tmp_u);
+  const double utilde[3] = {u0*(prims_guess->vx + metric->betax),
+                            u0*(prims_guess->vy + metric->betay),
+                            u0*(prims_guess->vz + metric->betaz)};
+
+  /* calculate Z from last timestep and use for guess */
   double vsq = 0.0;
-  // IGM always set the velocity guesses to 0; not sure how ut^i in harm relates to v^i
-  //for(int i=1; i<4; i++)
-  //  for(int j=1; j<4; j++) vsq += metric->gdn[i][j]*prims[UTCON1+i-1]*prims[UTCON1+j-1];
+  for(int i=1; i<4; i++)
+    for(int j=1; j<4; j++) vsq += metric->g4dn[i][j]*-utilde[i-1]*utilde[j-1];
 
   if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
     vsq = fabs(vsq);
@@ -241,7 +252,7 @@ int Hybrid_Noble1D_Entropy(
 
   double Z_last = w*Wsq;
 
-  // Make sure that W is large enough so that v^2 < 1 :
+  // Make sure that Z is large enough so that v^2 < 1 :
   int i_increase = 0;
   while( (( Z_last*Z_last*Z_last * ( Z_last + 2.*harm_aux.Bsq )
             - harm_aux.QdotBsq*(2.*Z_last + harm_aux.Bsq) ) <= Z_last*Z_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
@@ -331,7 +342,6 @@ int Hybrid_Noble1D_Entropy(
 
   //Additional tabulated code here
 
-  double u0;
   limit_utilde_and_compute_v(eos, metric, &u0, &utx, &uty,
                                          &utz, prims_guess, diagnostics);
 

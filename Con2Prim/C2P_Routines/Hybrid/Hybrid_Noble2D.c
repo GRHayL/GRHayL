@@ -50,19 +50,19 @@
     http://rainman.astro.uiuc.edu/codelib/
 
 
-    HARM is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+  HARM is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-    HARM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+  HARM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with HARM; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with HARM; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 ***********************************************************************************/
 
@@ -123,7 +123,7 @@ return:  (i*100 + j)  where
 
          j = 0 -> success
              1 -> failure: some sort of failure in Newton-Raphson;
-             2 -> failure: utsq<0 w/ initial p[] guess;
+             2 -> failure: vsq<0 w/ initial p[] guess;
              3 -> failure: Z<0 or Z>Z_TOO_BIG
              4 -> failure: v^2 < 0
              5 -> failure: rho,uu <= 0
@@ -185,21 +185,32 @@ int Hybrid_Noble2D(
 
   harm_aux.D    = cons_undens->rho;
 
-  /* calculate W from last timestep and use for guess */
-  double utsq = 0.0;
-  // IGM always set the velocity guesses to 0; not sure how ut^i in harm relates to v^i
-  //for(int i=1; i<4; i++)
-  //  for(int j=1; j<4; j++) utsq += metric->gdn[i][j]*prims[UTCON1+i-1]*prims[UTCON1+j-1];
+  const double tmp_u = metric->adm_gxx * SQR(prims_guess->vx + metric->betax) +
+                                             2.0*metric->adm_gxy*(prims_guess->vx + metric->betax)*(prims_guess->vy + metric->betay) +
+                                             2.0*metric->adm_gxz*(prims_guess->vx + metric->betax)*(prims_guess->vz + metric->betaz) +
+                                             metric->adm_gyy * SQR(prims_guess->vy + metric->betay) +
+                                             2.0*metric->adm_gyz*(prims_guess->vy + metric->betay)*(prims_guess->vz + metric->betaz) +
+                                             metric->adm_gzz * SQR(prims_guess->vz + metric->betaz);
 
-  if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
-    utsq = fabs(utsq);
+  double u0 = 1.0/sqrt(1.0-tmp_u);
+  const double utilde[3] = {u0*(prims_guess->vx + metric->betax),
+                            u0*(prims_guess->vy + metric->betay),
+                            u0*(prims_guess->vz + metric->betaz)};
+
+  /* calculate Z from last timestep and use for guess */
+  double vsq = 0.0;
+  for(int i=1; i<4; i++)
+    for(int j=1; j<4; j++) vsq += metric->g4dn[i][j]*-utilde[i-1]*utilde[j-1];
+
+  if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
+    vsq = fabs(vsq);
   }
-  if(utsq < 0.0 || utsq > UTSQ_TOO_BIG) {
+  if(vsq < 0.0 || vsq > UTSQ_TOO_BIG) {
     retval = 2;
     return(retval);
   }
 
-  double Wsq = 1.0 + utsq;   // Lorentz factor squared
+  const double Wsq = 1.0 + vsq;   // Lorentz factor squared
   harm_aux.W = sqrt(Wsq);
 
   // Always calculate rho from D and W so that using D in EOS remains consistent
@@ -221,7 +232,7 @@ int Hybrid_Noble2D(
 
   double Z_last = w*Wsq;
 
-  // Make sure that W is large enough so that v^2 < 1 :
+  // Make sure that Z is large enough so that v^2 < 1 :
   int i_increase = 0;
   while( (( Z_last*Z_last*Z_last * ( Z_last + 2.*harm_aux.Bsq )
             - harm_aux.QdotBsq*(2.*Z_last + harm_aux.Bsq) ) <= Z_last*Z_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
@@ -230,14 +241,15 @@ int Hybrid_Noble2D(
     i_increase++;
   }
 
-  // Calculate W and vsq:
+  // Calculate Z and vsq:
   gnr_out[0] = fabs( Z_last );
   gnr_out[1] = x1_of_x0( &harm_aux, Z_last );
 
+  // To be consistent with entropy variants, unused argument 0.0 is needed
   retval = general_newton_raphson(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, func_vsq);
 
   const double Z = gnr_out[0];
-  double vsq = gnr_out[1];
+  vsq = gnr_out[1];
 
   /* Problem with solver, so return denoting error before doing anything further */
   if( (retval != 0) || (Z == FAIL_VAL) ) {
@@ -292,7 +304,6 @@ int Hybrid_Noble2D(
 
   //Additional tabulated code here
 
-  double u0;
   limit_utilde_and_compute_v(eos, metric, &u0, &utx, &uty,
                                          &utz, prims_guess, diagnostics);
 
