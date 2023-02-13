@@ -23,7 +23,7 @@ jobs:
           export COMPILER=clang
           export CFLAGS="-I`brew --prefix`/opt/llvm/include"
           export LDFLAGS="-L`brew --prefix`/opt/llvm/lib"
-          make
+          make -j
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin
@@ -53,7 +53,7 @@ jobs:
           export COMPILER=clang
           export CFLAGS="-I`brew --prefix`/opt/llvm/include"
           export LDFLAGS="-L`brew --prefix`/opt/llvm/lib"
-          make
+          make -j
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_initial_data.bin
@@ -81,7 +81,7 @@ jobs:
           export COMPILER=clang
           export CFLAGS="-I`brew --prefix`/opt/llvm/include"
           export LDFLAGS="-L`brew --prefix`/opt/llvm/lib"
-          make
+          make -j
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin
@@ -108,7 +108,7 @@ jobs:
           export COMPILER=clang
           export CFLAGS="-I`brew --prefix`/opt/llvm/include"
           export LDFLAGS="-L`brew --prefix`/opt/llvm/lib"
-          make
+          make -j
       - name: Copy test data to working directory
         run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test

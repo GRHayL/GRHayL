@@ -21,7 +21,7 @@ jobs:
       - name: Compile GRHayL
         run: |
           export COMPILER=gnu
-          make
+          make -j
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin
@@ -47,7 +47,7 @@ jobs:
       - name: Compile GRHayL
         run: |
           export COMPILER=gnu
-          make
+          make -j
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_initial_data.bin
@@ -71,7 +71,7 @@ jobs:
       - name: Compile GRHayL
         run: |
           export COMPILER=gnu
-          make
+          make -j
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin
@@ -94,7 +94,7 @@ jobs:
       - name: Compile GRHayL
         run: |
           export COMPILER=gnu
-          make
+          make -j
       - name: Copy test data to working directory
         run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test

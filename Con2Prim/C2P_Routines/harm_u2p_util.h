@@ -246,7 +246,7 @@ void func_1d_orig(
       double *restrict df,
       int *restrict n_iter);
 
-void func_W(
+void func_Z(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -263,7 +263,20 @@ void func_rho(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
-      const double W_in,
+      const double Z_in,
+      const double x[],
+      double dx[],
+      double resid[],
+      double jac[][1],
+      double *restrict f,
+      double *restrict df,
+      int *restrict n_iter);
+
+void func_rho2(
+      const eos_parameters *restrict eos,
+      const harm_aux_vars_struct *restrict harm_aux,
+      const int ndim,
+      const double Z_in,
       const double x[],
       double dx[],
       double resid[],

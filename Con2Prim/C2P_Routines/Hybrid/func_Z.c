@@ -2,10 +2,10 @@
 
 /**********************************************************************/
 /*********************************************************************************
-   func_W()
+   func_Z()
 
         -- calculates the residuals, and Newton step for general_newton_raphson();
-        -- for this method, x=W here;
+        -- for this method, x=Z here;
 
      Arguments:
           x   = current value of independent var's (on input & output);
@@ -16,7 +16,7 @@
         df    = -2*f;  (on output)
          n    = dimension of x[];
 *********************************************************************************/
-void func_W(
+void func_Z(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,

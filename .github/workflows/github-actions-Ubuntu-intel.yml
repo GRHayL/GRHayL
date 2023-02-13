@@ -36,7 +36,7 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
           export COMPILER=intel
-          make
+          make -j
 
       - name: Copy test data to working directory
         run: |
@@ -78,7 +78,7 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
           export COMPILER=intel
-          make
+          make -j
 
       - name: Copy test data to working directory
         run: |
@@ -118,7 +118,7 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
           export COMPILER=intel
-          make
+          make -j
 
       - name: Copy test data to working directory
         run: |
@@ -157,7 +157,7 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
           export COMPILER=intel
-          make
+          make -j
 
       - name: Copy test data to working directory
         run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5

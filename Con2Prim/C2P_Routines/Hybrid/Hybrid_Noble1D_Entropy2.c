@@ -22,40 +22,71 @@
  *
  */
 
-/**********************************************************************************
-  Copyright 2005 Scott C. Noble, Charles F. Gammie,
-  Jonathan C. McKinney, and Luca Del Zanna
+/***********************************************************************************
+  Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble,
+                 Gabor Toth, and Luca Del Zanna
+
+                      HARM  version 1.0   (released May 1, 2006)
+
+  This file is part of HARM.  HARM is a program that solves hyperbolic
+  partial differential equations in conservative form using high-resolution
+  shock-capturing techniques.  This version of HARM has been configured to
+  solve the relativistic magnetohydrodynamic equations of motion on a
+  stationary black hole spacetime in Kerr-Schild coordinates to evolve
+  an accretion disk model.
+
+  You are morally obligated to cite the following two papers in his/her
+  scientific literature that results from use of any part of HARM:
+
+  [1] Gammie, C. F., McKinney, J. C., \& Toth, G.\ 2003,
+      Astrophysical Journal, 589, 444.
+
+  [2] Noble, S. C., Gammie, C. F., McKinney, J. C., \& Del Zanna, L. \ 2006,
+      Astrophysical Journal, 641, 626.
 
 
-  This file is part of PVS-GRMHD.
+  Further, we strongly encourage you to obtain the latest version of
+  HARM directly from our distribution website:
+  http://rainman.astro.uiuc.edu/codelib/
 
-  PVS-GRMHD is free software; you can redistribute it and/or modify
+
+  HARM is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
 
-  PVS-GRMHD is distributed in the hope that it will be useful,
+  HARM is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with PVS-GRMHD; if not, write to the Free Software
+  along with HARM; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-  -------------------------------------------------------------------------------
-*/
+***********************************************************************************/
 
 /*************************************************************************************/
 /*************************************************************************************/
 /*************************************************************************************
 
-utoprim_1d.c:
+utoprim_1d_ee2.c:
 ---------------
 
-    Uses the 1D_W method:
-       -- solves for one independent variable (W) via a 1D
+  -- uses eq. (27) of Noble  et al. or the "momentum equation" and ignores
+        the energy equation (29) in order to use the additional EOS, which
+        is
+
+             P = Sc rho^(GAMMA-1) / gamma
+
+    Uses a method similiar to  1D_W method:
+       -- solves for one independent variable (rho) via a 1D
           Newton-Raphson method
+       -- by substituting
+          W = Dc ( Dc + GAMMA Sc rho^(GAMMA-1) / (GAMMA-1) ) / rho
+           into Qtsq equation, one can get one equation for
+           one unknown (rho)
+
        -- can be used (in principle) with a general equation of state.
 
   -- Currently returns with an error state (>0) if a negative rest-mass
@@ -69,11 +100,9 @@ utoprim_1d.c:
 
 #define NEWT_DIM (1)
 
-double dpdW_calc_vsq(const eos_parameters *restrict eos, double W, double vsq);
-
 /**********************************************************************************
 
-  Hybrid_Noble1D():
+  Hybrid_Noble1D_Entropy2():
 
      -- Attempt an inversion from U to prim using the initial guess prim.
 
@@ -104,13 +133,13 @@ return:  (i*100 + j)  where
          j = 0 -> success
              1 -> failure: some sort of failure in Newton-Raphson;
              2 -> failure: vsq<0 w/ initial p[] guess;
-             3 -> failure: Z<0 or Z>Z_TOO_BIG
+             3 -> failure: rho<0 or rho > eos->rho_max
              4 -> failure: v^2 > 1
              5 -> failure: rho,uu <= 0
 
 **********************************************************************************/
 
-int Hybrid_Noble1D(
+int Hybrid_Noble1D_Entropy2(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
@@ -134,6 +163,9 @@ int Hybrid_Noble1D(
                               prims_guess->Bz * ONE_OVER_SQRT_4PI};
 
   double Bdn[4]; lower_vector(metric, Bup, Bdn);
+
+  // W_times_S
+  harm_aux.W_times_S = cons_undens->entropy;
 
   const double uu = - cons_undens->tau*metric->lapse
                     - metric->lapse*cons_undens->rho
@@ -162,7 +194,6 @@ int Hybrid_Noble1D(
   for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
 
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
-
   harm_aux.D    = cons_undens->rho;
 
   /* calculate W from last timestep and use for guess */
@@ -184,70 +215,75 @@ int Hybrid_Noble1D(
 
   // Always calculate rho from D and W so that using D in EOS remains consistent
   //   i.e. you don't get positive values for dP/d(vsq).
-  const double rho0 = harm_aux.D / harm_aux.W;
+  double rho0 = harm_aux.D / harm_aux.W;
   double u = 0;
   double p = 0;
   double w = 0;
 
   if( eos->eos_type == 0 ) {
-    const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims_guess->rho);
-    const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
-    u = prims_guess->press/(Gamma_ppoly - 1.0);
-    p = pressure_rho0_u(eos, rho0, u);
+    const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, rho0)];
+    const double Gm1        = Gamma_ppoly - 1.0;                            // HARM auxiliary variable
+    const double rho_Gm1    = pow(rho0,Gm1);                               // HARM auxiliary variable
+
+    /* The definition of the entropy density, S, is
+     *
+     * S = P / rho^(Gamma - 1)
+     *
+     * Thus we have
+     * .-------------------------.
+     * | P = rho^(Gamma - 1) * S |
+     * .-------------------------.
+     */
+    p = cons_undens->entropy * rho_Gm1;
+    u = p/Gm1;
     w = rho0 + u + p;
   } else if( eos->eos_type == 1 ) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
-  double Z_last = w*Wsq;
-
-  // Make sure that W is large enough so that v^2 < 1 :
-  int i_increase = 0;
-  while( (( Z_last*Z_last*Z_last * ( Z_last + 2.*harm_aux.Bsq )
-            - harm_aux.QdotBsq*(2.*Z_last + harm_aux.Bsq) ) <= Z_last*Z_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
-         && (i_increase < 10) ) {
-    Z_last *= 10.;
-    i_increase++;
-  }
-
-  // Calculate Z:
-  gnr_out[0] = Z_last;
-
+  gnr_out[0] = rho0;
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  retval = newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, func_1d_orig);
-
-  const double Z = gnr_out[0];
+  retval = newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, func_rho2);
+  rho0 = gnr_out[0];
 
   /* Problem with solver, so return denoting error before doing anything further */
-  if( (retval != 0) || (Z == FAIL_VAL) ) {
+  // HARM uses error checks for Z, which doesn't make sense for this function since
+  // it returns rho; thus, we have changed the errors
+  if( (retval != 0) ) {
     retval = retval*100+1;
     return(retval);
-  } else if(Z <= 0. || Z > Z_TOO_BIG) {
+  } else if(rho0 < 0 || rho0 > eos->rho_max) {
     retval = 3;
     return(retval);
   }
 
-  // Calculate v^2:
-  vsq = vsq_calc(&harm_aux, Z);
-//TODO: differs from Noble2D
-  if( vsq >= 1. ) {
+  // Calculate v^2 :
+  if( eos->eos_type == 0 ) {
+    const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, rho0)];
+    const double Gm1        = Gamma_ppoly - 1.0;
+    const double rho_Gm1    = pow(rho0,Gm1);
+    p = cons_undens->entropy * rho_Gm1;
+    u = p/Gm1;
+    w = rho0 + u + p;
+  } else if( eos->eos_type == 1 ) {
+    grhayl_warn("No tabulated EOS support yet! Sorry!");
+  }
+
+  double rel_err = (harm_aux.D != 0.0) ? fabs((harm_aux.D-rho0)/harm_aux.D) : ( (rho0 != 0.0) ? fabs((harm_aux.D-rho0)/rho0) : 0.0 );
+  vsq = ( rel_err > 1e-15 ) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
+
+  if( vsq < 0. ) {
     retval = 4;
     return(retval);
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  const double gtmp = sqrt(1. - vsq);
-  harm_aux.W = 1.0/gtmp;
-  w = Z * (1.0 - vsq);
+  Wsq        = 1.0+vsq;
+  harm_aux.W = sqrt(Wsq);
+  const double Z = w * Wsq;
 
-  prims_guess->rho = harm_aux.D * gtmp;
+  prims_guess->rho = rho0;
 
-  if( eos->eos_type == 0 ) {
-    p = pressure_rho0_w(eos, prims_guess->rho, w);
-    u = w - (prims_guess->rho + p); // u = rho eps, w = rho0 h
-  } else if( eos->eos_type == 1 ) {
-    grhayl_warn("No tabulated EOS support yet! Sorry!");
-  }
 
   if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
