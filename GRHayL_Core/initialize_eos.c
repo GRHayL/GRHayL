@@ -65,6 +65,7 @@ void initialize_hybrid_eos(
       const double K_ppoly0,
       const double Gamma_th,
       eos_parameters *restrict eos) {
+
   eos->neos = neos;
   eos->Gamma_th = Gamma_th;
   eos->K_ppoly[0] = K_ppoly0;
@@ -111,7 +112,7 @@ void initialize_hybrid_eos(
 /* Function    : initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
  *
- * Inputs      : root_finding_precision - TODO: 
+ * Inputs      : root_finding_precision - TODO:
  *             : depsdT_threshold       - TODO:
  *             : Y_e_atm                - atmospheric value for Y_e
  *             : Y_e_min                - minimum allowable value for Y_e
@@ -135,6 +136,7 @@ void initialize_tabulated_eos(
       const double T_min,
       const double T_max,
       eos_parameters *restrict eos) {
+
   eos->root_finding_precision = root_finding_precision;
   eos->depsdT_threshold       = depsdT_threshold;
   eos->Ye_atm                 = Ye_atm;

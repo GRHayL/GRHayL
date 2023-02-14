@@ -81,6 +81,15 @@ void NRPyEOS_P_eps_and_S_from_rho_Ye_T(
       double *restrict eps,
       double *restrict S);
 
+void NRPyEOS_P_eps_and_cs2_from_rho_Ye_T(
+      const eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict P,
+      double *restrict eps,
+      double *restrict cs2);
+
 void NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(
       const eos_parameters *restrict eos_params,
       const double rho,
@@ -184,5 +193,11 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       NRPyEOS_error_report *restrict report);
 
 void NRPyEOS_initialize_tabulated_functions(eos_parameters *restrict eos);
+
+void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
+      eos_parameters const *restrict eos,
+      primitive_quantities const *restrict prims,
+      double *restrict enthalpy_ptr,
+      double *restrict cs2_ptr );
 
 #endif // NRPYEOS_TABULATED_H_

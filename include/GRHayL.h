@@ -63,6 +63,40 @@ void initialize_GRHayL(
 #define MAX_EOS_PARAMS (10)
 
 /*
+   The struct primitive_quantities contains variables for storing the (point-wise)
+   primitive variable data. The struct elements are detailed below:
+
+ --rho: the baryonic density rho_b
+
+ --press: the pressure P
+
+ --v*: the 3-velocity v^i used in IllinoisGRMHD. This is defined as u^i/u^0. The other
+   commonly used choice is the Valencia 3-velocity Vv^i defined as
+   Vv^i = u^i/W + beta^i/lapse.
+
+
+ --B*: the magnetic field TODO: give specific B definition
+
+ --entropy: the entropy S
+
+ --Y_e: the electron fraction Y_e
+
+ --temp: the temperature T
+
+ --u: this is the energy variable needed by HARM-type routines. It is currently not
+   possible to set this via the initialize_primitives function, as most code do not
+   have this. A guess is automatically generated for this quantity from the other
+   values.
+*/
+
+typedef struct primitive_quantities {
+  double rho, press, eps;
+  double vx, vy, vz;
+  double Bx, By, Bz;
+  double entropy, Y_e, temperature;
+} primitive_quantities;
+
+/*
    The struct eos_parameters contains information about the eos being used
    by the simulation. The struct elements are detailed below:
 
@@ -111,6 +145,13 @@ typedef struct eos_parameters {
   double press_atm, press_min, press_max;
   double W_max, inv_W_max_squared;
   //------------------------------------------------
+
+  //------- Functions available for all EOSs -------
+  void (*compute_h_and_cs2)(
+        struct eos_parameters const *restrict eos,
+        primitive_quantities const *restrict prims,
+        double *restrict h,
+        double *restrict cs2);
 
   //----------- Hybrid Equation of State -----------
   int neos;
@@ -230,6 +271,15 @@ typedef struct eos_parameters {
         double *restrict eps,
         double *restrict S);
 
+  void (*tabulated_compute_P_eps_cs2_from_T)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double Y_e,
+        const double T,
+        double *restrict P,
+        double *restrict eps,
+        double *restrict cs2);
+
   void (*tabulated_compute_P_eps_S_cs2_from_T)(
         const struct eos_parameters *restrict eos,
         const double rho,
@@ -348,40 +398,6 @@ void initialize_tabulated_functions(eos_parameters *restrict eos);
 //--------------------------------------------------
 
 //--------------- Con2Prim facets ------------------
-
-/*
-   The struct primitive_quantities contains variables for storing the (point-wise)
-   primitive variable data. The struct elements are detailed below:
-
- --rho: the baryonic density rho_b
-
- --press: the pressure P
-
- --v*: the 3-velocity v^i used in IllinoisGRMHD. This is defined as u^i/u^0. The other
-   commonly used choice is the Valencia 3-velocity Vv^i defined as
-   Vv^i = u^i/W + beta^i/lapse.
-
-
- --B*: the magnetic field TODO: give specific B definition
-
- --entropy: the entropy S
-
- --Y_e: the electron fraction Y_e
-
- --temp: the temperature T
-
- --u: this is the energy variable needed by HARM-type routines. It is currently not
-   possible to set this via the initialize_primitives function, as most code do not
-   have this. A guess is automatically generated for this quantity from the other
-   values.
-*/
-
-typedef struct primitive_quantities {
-  double rho, press, eps;
-  double vx, vy, vz;
-  double Bx, By, Bz;
-  double entropy, Y_e, temperature;
-} primitive_quantities;
 
 /*
    The struc conservative_quantities contains variables for storing the (point-wise)

@@ -7,4 +7,5 @@ void NRPyEOS_initialize_hybrid_functions(eos_parameters *restrict eos) {
   eos->hybrid_compute_P_cold                   = &NRPyEOS_compute_P_cold;
   eos->hybrid_compute_P_cold_and_eps_cold      = &NRPyEOS_compute_P_cold_and_eps_cold;
   eos->hybrid_compute_entropy_function         = &NRPyEOS_compute_entropy_function;
+  eos->compute_h_and_cs2                       = &NRPyEOS_hybrid_compute_enthalpy_and_cs2;
 }
