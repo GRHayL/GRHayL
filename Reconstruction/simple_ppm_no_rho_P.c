@@ -1,8 +1,13 @@
 #include "reconstruction.h"
 
-void ppm_Ur_Ul_no_rho_P(const double pressure[5], const double var_data[][5],
-               const int num_vars, const double v_flux_dirn[5], const double Gamma_eff,
-               double *restrict varsr, double *restrict varsl);
+void ppm_Ur_Ul_no_rho_P(
+      const double pressure[5],
+      const double var_data[][5],
+      const int num_vars,
+      const double v_flux_dirn[5],
+      const double Gamma_eff,
+      double *restrict varsr,
+      double *restrict varsl);
 
 /* Function    : simple_ppm_no_rho_P()
  * Description : reconstructs variables at the points

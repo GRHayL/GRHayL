@@ -1,9 +1,18 @@
 #include "reconstruction.h"
 
-void ppm_Ur_Ul(const double rho[5], const double pressure[5], const double var_data[][5],
-               const int num_vars, const double v_flux_dirn[5], const double Gamma_eff,
-               double *restrict rhor, double *restrict rhol, double *restrict pressr,
-               double *restrict pressl, double *restrict varsr, double *restrict varsl);
+void ppm_Ur_Ul(
+      const double rho[5],
+      const double pressure[5],
+      const double var_data[][5],
+      const int num_vars,
+      const double v_flux_dirn[5],
+      const double Gamma_eff,
+      double *restrict rhor,
+      double *restrict rhol,
+      double *restrict pressr,
+      double *restrict pressl,
+      double *restrict varsr,
+      double *restrict varsl);
 
 /* Function    : simple_ppm()
  * Description : reconstructs rho_b, pressure, and other variables at the points
