@@ -168,9 +168,4 @@ void limit_v_and_output_u0(
       double *restrict u0,
       con2prim_diagnostics *restrict diagnostics);
 
-void eigenvalues_3by3_real_sym_matrix(
-      double *restrict  lam1, double *restrict  lam2, double *restrict  lam3,
-      const double M11, const double M12, const double M13,
-      const double M22, const double M23, const double M33);
-
 #endif // CON2PRIM_H

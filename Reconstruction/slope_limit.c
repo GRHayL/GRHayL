@@ -17,7 +17,7 @@ double slope_limit(const double dU, const double dUp1) {
     //    If delta_m_U==0,then (0.0 < delta_m_U)==0, and (delta_m_U < 0.0)==0, so sign_delta_a_j=0
     const int sign_delta_m_U = (0.0 < delta_m_U) - (delta_m_U < 0.0);
     //Decide whether to use 2nd order derivative or first-order derivative, limiting slope.
-    return sign_delta_m_U*MIN(fabs(delta_m_U), MIN(SLOPE_LIMITER_COEFF*fabs(dUp1), SLOPE_LIMITER_COEFF*fabs(dU)));
+    return sign_delta_m_U*MIN(fabs(delta_m_U), SLOPE_LIMITER_COEFF*MIN(fabs(dUp1), fabs(dU)));
   }
   return 0.0;
 }
