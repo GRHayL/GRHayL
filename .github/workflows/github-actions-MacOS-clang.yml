@@ -69,7 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [A_no_gauge_rhs, phitilde_and_A_gauge_rhs]
+        test-function: [HLL_flux, phitilde_and_A_gauge_rhs]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 

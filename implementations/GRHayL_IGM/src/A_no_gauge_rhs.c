@@ -95,6 +95,6 @@ void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
         vars.c2_min = cmin_2[index_B1];
         vars.c2_max = cmax_2[index_B1];
 
-        A_rhs[index] = A_no_gauge_rhs_stencil(&vars);
+        A_rhs[index] = HLL_flux(&vars);
   }
 }

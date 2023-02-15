@@ -57,8 +57,8 @@ int main(int argc, char **argv) {
   }
 
   FILE* infile;
-  infile = fopen("A_no_gauge_rhs_initial_data.bin", "rb");
-  check_file_was_successfully_open(infile, "A_no_gauge_rhs_initial_data.bin");
+  infile = fopen("HLL_flux_initial_data.bin", "rb");
+  check_file_was_successfully_open(infile, "HLL_flux_initial_data.bin");
 
   int key = fread(phi_bssn, sizeof(double), arraylength, infile);
 
@@ -99,10 +99,10 @@ int main(int argc, char **argv) {
             A_rhs[A_dir-1]);
   }
 
-  infile = fopen("A_no_gauge_rhs.bin","rb");
-  check_file_was_successfully_open(infile, "A_no_gauge_rhs.bin");
-  FILE *inpert = fopen("A_no_gauge_rhs_pert.bin","rb");
-  check_file_was_successfully_open(infile, "A_no_gauge_rhs_pert.bin");
+  infile = fopen("HLL_flux.bin","rb");
+  check_file_was_successfully_open(infile, "HLL_flux.bin");
+  FILE *inpert = fopen("HLL_flux_pert.bin","rb");
+  check_file_was_successfully_open(infile, "HLL_flux_pert.bin");
 
   key = 0;
   for(int coord=0; coord<3; coord++)
@@ -125,11 +125,11 @@ int main(int argc, char **argv) {
       for(int i=1; i<dirlength; i++) {
         const int index = indexf(dirlength,i,j,k);
         if( validate(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]) )
-          grhayl_error("Test unit_test_A_no_gauge_rhs has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_HLL_flux has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);
         if( validate(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]) )
-          grhayl_error("Test unit_test_A_no_gauge_rhs has failed for variable Ay_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_HLL_flux has failed for variable Ay_rhs at index (%d,%d,%d).\n", i, j, k);
         if( validate(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]) )
-          grhayl_error("Test unit_test_A_no_gauge_rhs has failed for variable Az_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_HLL_flux has failed for variable Az_rhs at index (%d,%d,%d).\n", i, j, k);
   }
 }
 
@@ -231,6 +231,6 @@ void A_rhs_dir(const int dirlength,
         vars.c2_min = cmin_2[index_B1];
         vars.c2_max = cmax_2[index_B1];
 
-        A_rhs[index] = A_no_gauge_rhs_stencil(&vars);
+        A_rhs[index] = HLL_flux(&vars);
   }
 }
