@@ -31,7 +31,7 @@ void read_primitive_binary(
   if(evolve_entropy)
     key += fread(entropy, sizeof(double), 1, infile);
 
-  if(eos_type == 1) { //Tabulated
+  if(eos_type == grhayl_eos_tabulated) { //Tabulated
     key += fread(Y_e, sizeof(double), 1, infile);
     key += fread(temperature, sizeof(double), 1, infile);
   }
@@ -39,7 +39,7 @@ void read_primitive_binary(
   // Since each read only reads a single double, the key should just be a sum of every read
   // that happens. Hence, 8 for main primitives, +1 for entropy, and
   // 2 for tabulated (Y_e and temperature).
-  const int correct_key = 9 + evolve_entropy + (eos_type == 2)*2;
+  const int correct_key = 9 + evolve_entropy + (eos_type == grhayl_eos_tabulated)*2;
   if( key != correct_key)
     grhayl_error("An error has occured with reading in trusted primitive data. "
                  "Please check that comparison data "
@@ -65,7 +65,7 @@ void write_primitive_binary(
   if(evolve_entropy)
     fwrite(&prims->entropy, sizeof(double), 1, outfile);
 
-  if(eos_type == 1) { //Tabulated
+  if(eos_type == grhayl_eos_tabulated) { //Tabulated
     fwrite(&prims->Y_e, sizeof(double), 1, outfile);
     fwrite(&prims->temperature, sizeof(double), 1, outfile);
   }

@@ -7,25 +7,18 @@ int main(int argc, char **argv) {
   const double poison = 1e200;
 
 
-  const int eos_type = 0;
   const double W_max = 10.0;
-
-  eos_parameters eos;
-  initialize_general_eos(eos_type, W_max,
-             poison, poison, poison,
-             &eos);
-
   const int neos = 1;
   const double rho_ppoly_in[1] = {0.0};
   const double Gamma_ppoly_in[1] = {2.0};
   const double k_ppoly0 = 1.0;
   const double Gamma_th = 2.0;
 
-  initialize_hybrid_functions(&eos);
-  initialize_hybrid_eos(
-             neos, rho_ppoly_in,
-             Gamma_ppoly_in, k_ppoly0,
-             Gamma_th, &eos);
+  eos_parameters eos;
+  initialize_hybrid_eos_functions_and_params(W_max,
+                                             poison, poison, poison,
+                                             neos, rho_ppoly_in, Gamma_ppoly_in,
+                                             k_ppoly0, Gamma_th, &eos);
 
   const int dirlength = 20;
   const int arraylength = dirlength*dirlength*dirlength;

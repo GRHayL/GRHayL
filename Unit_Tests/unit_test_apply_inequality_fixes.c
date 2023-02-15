@@ -13,7 +13,6 @@ int main(int argc, char **argv) {
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
   const int update_Tmunu = 1; //IGM default
 
-  const int eos_type = 0; // Hybrid=0, Tabulated=1;
   const int neos = 1;
   const double W_max = 10.0; //IGM default
   const double rho_b_min = 1e-12;
@@ -29,15 +28,10 @@ int main(int argc, char **argv) {
   initialize_GRHayL(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess, Psi6threshold, update_Tmunu, 1 /*Cupp Fix*/, &params);
 
   eos_parameters eos;
-  initialize_general_eos(eos_type, W_max,
-             rho_b_min, rho_b_min, rho_b_max,
-             &eos);
-
-  initialize_hybrid_functions(&eos);
-
-  initialize_hybrid_eos(neos, rho_ppoly,
-             Gamma_ppoly, k_ppoly0, Gamma_th,
-             &eos);
+  initialize_hybrid_eos_functions_and_params(W_max,
+                                             rho_b_min, rho_b_min, rho_b_max,
+                                             neos, rho_ppoly, Gamma_ppoly,
+                                             k_ppoly0, Gamma_th, &eos);
 
   char filename[100];
 
@@ -143,7 +137,7 @@ int main(int argc, char **argv) {
   fclose(infile);
   fclose(inpert);
 
-  
+
 #pragma omp parallel for
   for(int i=0;i<arraylength;i++) {
 

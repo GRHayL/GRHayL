@@ -14,7 +14,7 @@ int font_fix(
       primitive_quantities *restrict prims_guess,
       con2prim_diagnostics *restrict diagnostics) {
 
-  if( eos->eos_type != 0 ) {
+  if( eos->eos_type != grhayl_eos_hybrid ) {
     grhayl_warn("Font fix is only implemented for Hybrid EOS! The eos_type is set to %d.", eos->eos_type); //TODO: make a better error message
     return 1;
   }

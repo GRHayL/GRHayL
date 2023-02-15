@@ -198,12 +198,12 @@ int Hybrid_Noble1D(
   double p = 0;
   double w = 0;
 
-  if( eos->eos_type == 0 ) {
+  if( eos->eos_type == grhayl_eos_hybrid ) {
     const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, prims_guess->rho)];
     u = prims_guess->press/(Gamma_ppoly - 1.0);
     p = pressure_rho0_u(eos, rho0, u);
     w = rho0 + u + p;
-  } else if( eos->eos_type == 1 ) {
+  } else if( eos->eos_type == grhayl_eos_tabulated) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
@@ -250,10 +250,10 @@ int Hybrid_Noble1D(
 
   prims_guess->rho = harm_aux.D * gtmp;
 
-  if( eos->eos_type == 0 ) {
+  if( eos->eos_type == grhayl_eos_hybrid ) {
     p = pressure_rho0_w(eos, prims_guess->rho, w);
     u = w - (prims_guess->rho + p); // u = rho eps, w = rho0 h
-  } else if( eos->eos_type == 1 ) {
+  } else if( eos->eos_type == grhayl_eos_tabulated ) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 

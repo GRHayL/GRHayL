@@ -136,6 +136,8 @@ typedef struct primitive_quantities {
  --depsdT_threshold: this threshold is used by the Palenzuela con2prim routine
 */
 
+typedef enum {grhayl_eos_hybrid, grhayl_eos_tabulated} grhayl_eos_t;
+
 typedef struct eos_parameters {
 
   //-------------- General parameters --------------
@@ -362,39 +364,59 @@ typedef struct eos_parameters {
 
 } eos_parameters;
 
-void initialize_general_eos(
-      const int type,
+void initialize_eos_functions(
+    grhayl_eos_t const eos_type,
+    eos_parameters *restrict eos );
+
+void initialize_hybrid_eos(
       const double W_max,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
-      eos_parameters *restrict eos);
-
-// Leo says: I think this function should
-//           be called by the general one.
-void initialize_hybrid_eos(
       const int neos,
       const double *restrict rho_ppoly,
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
-      eos_parameters *restrict eos);
+      eos_parameters *restrict eos );
 
-// Leo says: Same comment.
 void initialize_tabulated_eos(
-      const double root_finding_precision,
-      const double depsdT_threshold,
+      const double W_max,
+      const double rho_atm,
+      const double rho_min,
+      const double rho_max,
       const double Ye_atm,
       const double Ye_min,
       const double Ye_max,
       const double T_atm,
       const double T_min,
       const double T_max,
-      eos_parameters *restrict eos);
+      eos_parameters *restrict eos );
 
-void initialize_hybrid_functions(eos_parameters *restrict eos);
+void initialize_hybrid_eos_functions_and_params(
+      const double W_max,
+      const double rho_atm,
+      const double rho_min,
+      const double rho_max,
+      const int neos,
+      const double *restrict rho_ppoly,
+      const double *restrict Gamma_ppoly,
+      const double K_ppoly0,
+      const double Gamma_th,
+      eos_parameters *restrict eos );
 
-void initialize_tabulated_functions(eos_parameters *restrict eos);
+void initialize_tabulated_eos_functions_and_params(
+      const double W_max,
+      const double rho_atm,
+      const double rho_min,
+      const double rho_max,
+      const double Ye_atm,
+      const double Ye_min,
+      const double Ye_max,
+      const double T_atm,
+      const double T_min,
+      const double T_max,
+      eos_parameters *restrict eos );
 //--------------------------------------------------
 
 //--------------- Con2Prim facets ------------------
