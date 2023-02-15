@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
   // Step 1: Initialize the EOS struct
   eos_parameters eos;
-  initialize_tabulated_functions(&eos);
+  initialize_eos_functions(grhayl_eos_tabulated, &eos);
   eos.tabulated_read_table_set_EOS_params(argv[1], &eos);
 
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )

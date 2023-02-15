@@ -105,7 +105,7 @@ void GRHayLET_conserv_to_prims(CCTK_ARGUMENTS) {
           gyy[index], gyz[index], gzz[index],
           betax[index], betay[index], betaz[index],
           &metric);
-       
+
     // Read in primitive variables from gridfunctions
     primitive_quantities prims;
     initialize_primitives(rho[index],
@@ -138,7 +138,7 @@ void GRHayLET_conserv_to_prims(CCTK_ARGUMENTS) {
     int check=0;
     if(cons.rho>0.0) {
       // Apply the tau floor
-      if( grhayl_eos->eos_type == 0 )
+      if( grhayl_eos->eos_type == grhayl_eos_hybrid )
         apply_inequality_fixes(grhayl_params, grhayl_eos, &metric, &prims, &cons, &diagnostics);
 
       // declare some variables for the C2P routine.

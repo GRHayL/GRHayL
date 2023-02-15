@@ -26,43 +26,29 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
                     calc_primitive_guess, Psi6threshold,
                     update_Tmunu, Cupp_Fix, grhayl_params);
 
-  int grhayl_eos_type;
   if (CCTK_EQUALS(EOS_type, "hybrid")) {
-    grhayl_eos_type = 0;
+    initialize_hybrid_eos_functions_and_params(W_max,
+                                               rho_atm, rho_min, rho_max,
+                                               neos, rho_ppoly_in,
+                                               Gamma_ppoly_in, k_ppoly0,
+                                               Gamma_th, grhayl_eos);
   } else if (CCTK_EQUALS(EOS_type, "tabulated")) {
-    grhayl_eos_type = 1;
+    double Ye_max = 1; //TODO: temporary until the parameter is set up
+    initialize_tabulated_eos_functions_and_params(W_max,
+                                                  rho_atm, rho_min, rho_max,
+                                                  Ye_atm, Ye_atm, Ye_max,
+                                                  T_atm, T_atm, T_max,
+                                                  grhayl_eos);
   } else if (CCTK_EQUALS(EOS_type, "")) {
     CCTK_VERROR("GRHayLET parameter EOS_type is unset. Please set an EOS type.");
   } else {
     CCTK_VERROR("GRHayLET parameter EOS_type has an unsupported type. Please check"
                 " the list of parameter options in the param.ccl.");
   }
-
-  initialize_general_eos(grhayl_eos_type, W_max,
-             rho_b_atm, rho_b_atm, rho_b_max,
-             grhayl_eos);
-
-  if(grhayl_eos->eos_type == 0) {
-    initialize_hybrid_functions(grhayl_eos);
-    initialize_hybrid_eos(
-               neos, rho_ppoly_in,
-               Gamma_ppoly_in, k_ppoly0,
-               Gamma_th, grhayl_eos);
-  } else if(grhayl_eos->eos_type == 1) {
-    double Ye_max = 100; //TODO: temporary until the parameter is set up
-    initialize_tabulated_functions(grhayl_eos);
-    grhayl_eos->tabulated_read_table_set_EOS_params(EOS_tablepath, grhayl_eos);
-    initialize_tabulated_eos(
-               EOS_root_finding_precision,
-               depsdT_threshold,
-               Ye_atm, Ye_atm, Ye_max,
-               T_atm, T_atm, T_max,
-               grhayl_eos);
-  }
 }
 
 void GRHayLET_terminate(CCTK_ARGUMENTS) {
-  if(grhayl_eos->eos_type == 1) {
+  if(grhayl_eos->eos_type == grhayl_eos_tabulated) {
     free(grhayl_eos->table_all);
     free(grhayl_eos->table_logrho);
     free(grhayl_eos->table_logT);
@@ -97,4 +83,3 @@ int parse_C2P_routine_keyword(const char *restrict routine_name) {
   }
   return -100;
 }
-

@@ -29,7 +29,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
   prims->rho = MIN(MAX(prims->rho,eos->rho_min),eos->rho_max);
 
   // Hybrid EOS specific floors and ceilings
-  if( eos->eos_type == 0 ) {
+  if( eos->eos_type == grhayl_eos_hybrid ) {
     // Pressure and epsilon must be recomputed
     // Compute P and eps
     double P_cold = 0.0;
@@ -52,7 +52,7 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
     if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
 
   // Tabulated EOS specific floors and ceilings
-  } else if( eos->eos_type==1 ) {
+  } else if( eos->eos_type == grhayl_eos_tabulated ) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   //  // Apply floors and ceilings to Y_e and T
   //  const double xye   = MIN(MAX(prims->Y_e,eos->Ye_min),eos->Ye_atm);
