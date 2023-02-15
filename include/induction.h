@@ -46,7 +46,7 @@ typedef struct A_gauge_rhs_vars {
 
 //--------------------------------------------------
 
-double A_no_gauge_rhs_stencil(const A_no_gauge_vars *restrict vars);
+double HLL_flux(const A_no_gauge_vars *restrict vars);
 
 void interpolate_for_A_gauge_rhs(
       A_gauge_vars *restrict gauge_vars,
