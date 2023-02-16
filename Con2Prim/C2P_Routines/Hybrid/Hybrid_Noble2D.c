@@ -149,11 +149,10 @@ int Hybrid_Noble2D(
   int retval = 0;
 
   // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
-  const double Bup[4] = {0.0, prims_guess->Bx * ONE_OVER_SQRT_4PI,
-                              prims_guess->By * ONE_OVER_SQRT_4PI,
-                              prims_guess->Bz * ONE_OVER_SQRT_4PI};
-
-  double Bdn[4]; lower_vector(metric, Bup, Bdn);
+  const double Bup[3] = {prims_guess->Bx * ONE_OVER_SQRT_4PI,
+                         prims_guess->By * ONE_OVER_SQRT_4PI,
+                         prims_guess->Bz * ONE_OVER_SQRT_4PI};
+  harm_aux.Bsq = compute_Bsq_from_Bup(metric, Bup);
 
   const double uu = - cons_undens->tau*metric->lapse
                     - metric->lapse*cons_undens->rho
@@ -162,24 +161,19 @@ int Hybrid_Noble2D(
                     + metric->betaz*cons_undens->S_z;
 
   const double Qdn[4] = {uu,
-                         cons_undens->S_x,
-                         cons_undens->S_y,
-                         cons_undens->S_z};
-
+                        cons_undens->S_x,
+                        cons_undens->S_y,
+                        cons_undens->S_z};
   double Qup[4]; raise_vector(metric, Qdn, Qup);
-
-  harm_aux.Bsq = 0. ;
-  for(int i=1; i<4; i++) harm_aux.Bsq += Bup[i]*Bdn[i];
+  harm_aux.Qsq = 0.0;
+  for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
 
   harm_aux.QdotB = 0. ;
-  for(int i=0; i<4; i++) harm_aux.QdotB += Qdn[i]*Bup[i];
+  for(int i=0; i<3; i++) harm_aux.QdotB += Qdn[i+1]*Bup[i];
   harm_aux.QdotBsq = harm_aux.QdotB*harm_aux.QdotB;
 
   // n_{\mu}Q^{\mu} = -alpha Q^{0}, since n_{\mu} = (-alpha,0,0,0)
   harm_aux.Qdotn = -metric->lapse*Qup[0];
-
-  harm_aux.Qsq = 0.0;
-  for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
 
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
 
@@ -298,9 +292,9 @@ int Hybrid_Noble2D(
   const double QdB_o_Z  = harm_aux.QdotB / Z;
 
   for(int i=1; i<4; i++) Qtcon[i] = Qup[i] + nup[i] * harm_aux.Qdotn;
-  double utx = g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*Bup[1] ) ;
-  double uty = g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*Bup[2] ) ;
-  double utz = g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*Bup[3] ) ;
+  double utx = g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*Bup[0] ) ;
+  double uty = g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*Bup[1] ) ;
+  double utz = g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*Bup[2] ) ;
 
   //Additional tabulated code here
 

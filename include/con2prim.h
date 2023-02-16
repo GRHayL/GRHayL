@@ -34,6 +34,7 @@ https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
 
 typedef struct con2prim_diagnostics {
+  bool c2p_failed;
   int failures;
   int failure_checker;
   int font_fixes;
@@ -46,6 +47,10 @@ typedef struct con2prim_diagnostics {
   double error_int_denom;
   int n_iter;
 } con2prim_diagnostics;
+
+typedef struct palenzuela_quantities {
+  double q, r, s, t, D, Y_e, S;
+} palenzuela_quantities;
 
 //--------------------------------------------------
 
@@ -167,5 +172,9 @@ void limit_v_and_output_u0(
       primitive_quantities *restrict prims,
       double *restrict u0,
       con2prim_diagnostics *restrict diagnostics);
+
+double compute_Bsq_from_Bup(
+      const metric_quantities *restrict metric,
+      const double *restrict Bup );
 
 #endif // CON2PRIM_H
