@@ -17,7 +17,6 @@
  *             SPEOS: Single-Polytrope Equation of State
  *             PPEOS: Piecewise Polytrope Equation of State
  */
-
 void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       eos_parameters const *restrict eos,
       primitive_quantities const *restrict prims,
