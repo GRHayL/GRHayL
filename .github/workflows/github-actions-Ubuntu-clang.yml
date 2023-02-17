@@ -134,3 +134,36 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_tabulated_eos simple_table.h5
+
+  flux_source:
+    strategy:
+      fail-fast: false
+      matrix:
+        test-function: [flux_source]
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install needed ubuntu packages
+        run: |
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
+          sudo apt-get update
+          sudo apt-get install -y clang-14 libhdf5-serial-dev
+      - name: Compile GRHayL
+        run: |
+          export COMPILER=clang
+          make -j
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn1.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn2.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn3.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_output_rhs_data.bin
+      - name: Run flux_source unit test for ${{ matrix.test-function }} functions
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
