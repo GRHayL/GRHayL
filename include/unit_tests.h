@@ -4,6 +4,7 @@
 #include "con2prim.h"
 #include "induction.h"
 #include "reconstruction.h"
+#include "flux_source.h"
 
 // con2prim validation functions
 void validate_primitives(
