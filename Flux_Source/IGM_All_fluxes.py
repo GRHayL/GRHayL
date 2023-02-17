@@ -191,7 +191,7 @@ def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, outCparam
     prims_NRPy_r = ["u4rU0", "u4rU1", "u4rU2", "u4rU3", "BrU0", "BrU1", "BrU2", "P_r", "rhob_r"]
     prims_NRPy_l = ["u4lU0", "u4lU1", "u4lU2", "u4lU3", "BlU0", "BlU1", "BlU2", "P_l", "rhob_l"]
 
-    prims_GRHayL = ["ut", "vx", "vy", "vz", "Bx", "By", "Bz", "press", "rho"]
+    prims_GRHayL = ["u0", "vx", "vy", "vz", "Bx", "By", "Bz", "press", "rho"]
 
     prestring = r"""
 double h_r, h_l, cs2_r, cs2_l;

@@ -10,8 +10,8 @@ double h_r, h_l, cs2_r, cs2_l;
 
 eos->compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
 eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
-const double u4rU0 = prims_r->ut;
-const double u4lU0 = prims_l->ut;
+const double u4rU0 = prims_r->u0;
+const double u4lU0 = prims_l->u0;
 const double u4rU1 = prims_r->vx*u4rU0;
 const double u4lU1 = prims_l->vx*u4lU0;
 const double u4rU2 = prims_r->vy*u4rU0;

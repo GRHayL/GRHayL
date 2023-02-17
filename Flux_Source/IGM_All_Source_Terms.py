@@ -71,7 +71,7 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM"):
                                  S_tilde_source_termD2_free_symbols)
 
     prims_NRPy = ["u4U0", "u4U1", "u4U2", "u4U3", "BU0", "BU1", "BU2", "P", "rhob"]
-    prims_GRHayL = ["ut", "vx*u4U0", "vy*u4U0", "vz*u4U0", "Bx", "By", "Bz", "press", "rho"]
+    prims_GRHayL = ["u0", "vx*u4U0", "vy*u4U0", "vz*u4U0", "Bx", "By", "Bz", "press", "rho"]
 
     prestring = r"""
 double h, cs2;

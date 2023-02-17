@@ -9,7 +9,7 @@ void calculate_all_source_terms(const primitive_quantities *restrict prims, stru
 double h, cs2;
 
 eos->compute_h_and_cs2(eos, prims, &h, &cs2);
-const double u4U0 = prims->ut;
+const double u4U0 = prims->u0;
 const double u4U1 = prims->vx*u4U0;
 const double u4U2 = prims->vy*u4U0;
 const double u4U3 = prims->vz*u4U0;

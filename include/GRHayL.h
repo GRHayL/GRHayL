@@ -70,7 +70,7 @@ void initialize_GRHayL(
 
  --press: the pressure P
 
- --ut: the zeroth component of the fluid four-velocity
+ --u0: the zeroth component of the fluid four-velocity
 
  --v*: the 3-velocity v^i used in IllinoisGRMHD. This is defined as u^i/u^0. The other
    commonly used choice is the Valencia 3-velocity Vv^i defined as
@@ -93,7 +93,7 @@ void initialize_GRHayL(
 
 typedef struct primitive_quantities {
   double rho, press, eps;
-  double ut, vx, vy, vz;
+  double u0, vx, vy, vz;
   double Bx, By, Bz;
   double entropy, Y_e, temperature;
 } primitive_quantities;

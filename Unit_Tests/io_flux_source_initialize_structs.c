@@ -18,9 +18,9 @@ const double U4U0  =  auxevol_gfs[IDX4ptS(U4U0GF, idx)];
 const double U4RU0 =  auxevol_gfs[IDX4ptS(U4RU0GF, idx)];
 const double U4LU0 =  auxevol_gfs[IDX4ptS(U4LU0GF, idx)];
     
-prims->ut = U4U0;
-prims_r->ut = U4RU0;
-prims_l->ut = U4LU0;
+prims->u0 = U4U0;
+prims_r->u0 = U4RU0;
+prims_l->u0 = U4LU0;
     
 prims->vx = auxevol_gfs[IDX4ptS(U4U1GF, idx)] / U4U0;
 prims_r->vx = auxevol_gfs[IDX4ptS(U4RU1GF, idx)] / U4RU0;
