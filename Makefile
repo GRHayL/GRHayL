@@ -1,7 +1,7 @@
 # GRHayL Makefile
 
 # List of Gems that should be compiled
-GEM = GRHayL_Core Con2Prim EOS Induction Reconstruction Neutrinos
+GEM = GRHayL_Core Con2Prim EOS Induction Reconstruction Neutrinos Flux_Source
 
 # Set build directory name
 BUILD_DIR = build
