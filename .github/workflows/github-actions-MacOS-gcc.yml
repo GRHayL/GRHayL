@@ -101,27 +101,27 @@ jobs:
       - name: Run tabulated EOS unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_tabulated_eos simple_table.h5
 
-  # flux_source:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       test-function: [flux_source]
-  #       os: [macos-11, macos-12]
-  #   runs-on: ${{ matrix.os }}
+  flux_source:
+    strategy:
+      fail-fast: false
+      matrix:
+        test-function: [flux_source]
+        os: [macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
 
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
-  #       run: brew update && brew install gcc gsed hdf5
-  #     - name: Compile GRHayL
-  #       run: |
-  #         export COMPILER=gnu
-  #         make -j
-  #     - name: Copy test data to working directory
-  #       run: |
-  #         curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn1.bin
-  #         curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn2.bin
-  #         curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn3.bin
-  #         curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_output_rhs_data.bin
-  #     - name: Run flux_source unit test for ${{ matrix.test-function }} function
-  #       run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
+        run: brew update && brew install gcc gsed hdf5
+      - name: Compile GRHayL
+        run: |
+          export COMPILER=gnu
+          make -j
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn1.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn2.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn3.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_output_rhs_data.bin
+      - name: Run flux_source unit test for ${{ matrix.test-function }} function
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
