@@ -1,4 +1,4 @@
-#include "flux_source_terms.h"
+#include "flux_source.h"
 /*
  * Compute the HLLE-derived fluxes on the left face in the 0direction for all components.
  */

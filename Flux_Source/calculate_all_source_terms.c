@@ -1,4 +1,4 @@
-#include "flux_source_terms.h"
+#include "flux_source.h"
 /*
  * Adds source term and connection terms to Stilde and tau_tilde
  */
