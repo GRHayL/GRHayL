@@ -279,11 +279,10 @@ int Hybrid_Noble1D(
 
   //Additional tabulated code here
 
-  limit_utilde_and_compute_v(eos, metric, &u0, &utx, &uty,
-                                         &utz, prims_guess, diagnostics);
+  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims_guess, diagnostics);
 
   if(diagnostics->vel_limited_ptcount==1)
-    prims_guess->rho = cons_undens->rho/(metric->lapse*u0);
+    prims_guess->rho = cons_undens->rho/(metric->lapse*prims_guess->u0);
 
   // Since u is dependent on rho, it seems weird to not reset u if rho has changed from above
   prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);

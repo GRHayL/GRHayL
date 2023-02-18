@@ -124,6 +124,54 @@ static inline double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, con
   return(  ( Wsq * harm_aux->Qtsq  + harm_aux->QdotBsq * (harm_aux->Bsq + 2.*W)) / (Wsq*Xsq) );
 }
 
+static inline double
+compute_Bsq_from_Bup(
+      const metric_quantities *restrict metric,
+      const double *restrict Bup ) {
+
+  double Bsq = 0.0;
+  for(int i=0;i<3;i++)
+    for(int j=0;j<3;j++)
+      Bsq += metric->g4dn[i+1][j+1] * Bup[i] * Bup[j];
+
+  return Bsq;
+}
+
+static inline double
+compute_S_squared(
+      const metric_quantities *restrict metric,
+      const double *restrict SD ) {
+
+  return metric->adm_gupxx * SD[0] * SD[0] +
+         metric->adm_gupyy * SD[1] * SD[1] +
+         metric->adm_gupzz * SD[2] * SD[2] +
+   2.0 * metric->adm_gupxy * SD[0] * SD[1] +
+   2.0 * metric->adm_gupxz * SD[0] * SD[2] +
+   2.0 * metric->adm_gupyz * SD[1] * SD[2];
+}
+
+static inline void
+raise_vector_3d(
+      const metric_quantities *restrict metric,
+      const double *restrict SD,
+      double *restrict SU ) {
+
+  // S^{x} = gamma^{xj}S_{j} = gamma^{jx}S_{j}
+  SU[0] = metric->adm_gupxx * SD[0]
+        + metric->adm_gupxy * SD[1]
+        + metric->adm_gupxz * SD[2];
+
+  // S^{y} = gamma^{yj}S_{j} = gamma^{jy}S_{j}
+  SU[1] = metric->adm_gupxy * SD[0]
+        + metric->adm_gupyy * SD[1]
+        + metric->adm_gupyz * SD[2];
+
+  // S^{z} = gamma^{zj}S_{j} = gamma^{jz}S_{j}
+  SU[2] = metric->adm_gupxz * SD[0]
+        + metric->adm_gupyz * SD[1]
+        + metric->adm_gupzz * SD[2];
+}
+
 /**********************************************************************/
 /**********************************************************************
   pressure_W_vsq():

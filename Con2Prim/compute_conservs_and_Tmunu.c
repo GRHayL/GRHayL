@@ -1,7 +1,7 @@
 #include "con2prim.h"
 
 void compute_smallb_and_b2(const metric_quantities *restrict metric, const primitive_quantities *restrict prims,
-                           const double u0L, const double uDN[4], double *restrict smallb, double *restrict smallb2);
+                           const double uDN[4], double *restrict smallb, double *restrict smallb2);
 
 /* Function    : compute_conservs_and_Tmunu()
  * Description : Computes the conservatives from the given primitives and
@@ -15,7 +15,6 @@ void compute_smallb_and_b2(const metric_quantities *restrict metric, const primi
  *                                the gridpoint of interest
  *             : prims          - primitive_quantities struct with data
  *                                for the gridpoint of interest
- *             : u0             - t component of 4-velocity
  *
  * Outputs     : cons           - returns computed conservative values
  *             : Tmunu          - returns computed stress-energy tensor
@@ -26,7 +25,6 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
                                 const eos_parameters *restrict eos,
                                 const metric_quantities *restrict metric,
                                 const primitive_quantities *restrict prims,
-                                const double u0,
                                 conservative_quantities *restrict cons,
                                 stress_energy *restrict Tmunu) {
 
@@ -36,7 +34,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   double uUP[4], uDN[4];
 
   // Compute u^i. u^0 is provided to the function.
-  uUP[0] = u0;
+  uUP[0] = prims->u0;
   uUP[1] = uUP[0]*prims->vx;
   uUP[2] = uUP[0]*prims->vy;
   uUP[3] = uUP[0]*prims->vz;
@@ -49,7 +47,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   /***************************************************************/
   // Compute b^{\mu}, b^2, and u_i/(u^0 Psi4)
   double smallb[4], smallb2;
-  compute_smallb_and_b2(metric, prims, uUP[0], uDN, smallb, &smallb2);
+  compute_smallb_and_b2(metric, prims, uDN, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
   const double alpha_sqrt_gamma = metric->lapse*metric->psi6;
@@ -91,13 +89,12 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
 void compute_smallb_and_b2(
       const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
-      const double u0L,
       const double uDN[4],
       double *restrict smallb,
       double *restrict smallb2) {
 
   const double ONE_OVER_LAPSE_SQRT_4PI = metric->lapseinv*ONE_OVER_SQRT_4PI;
-  const double ONE_OVER_U0 = 1.0/u0L;
+  const double ONE_OVER_U0 = 1.0/prims->u0;
 
   // Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   //   Compute alpha sqrt(4 pi) b^t = u_i B^i

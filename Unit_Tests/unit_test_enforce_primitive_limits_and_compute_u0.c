@@ -40,11 +40,11 @@ int main(int argc, char **argv) {
   FILE* initial_data = fopen(filename,"rb");
   check_file_was_successfully_open(initial_data, filename);
 
-  sprintf(filename,"enforce_primitive_limits_and_output_u0.bin");
+  sprintf(filename,"enforce_primitive_limits_and_compute_u0.bin");
   FILE* infile = fopen(filename,"rb");
   check_file_was_successfully_open(infile, filename);
 
-  sprintf(filename,"enforce_primitive_limits_and_output_u0_pert.bin");
+  sprintf(filename,"enforce_primitive_limits_and_compute_u0_pert.bin");
   FILE* inpert = fopen(filename,"rb");
   check_file_was_successfully_open(inpert, filename);
 
@@ -175,8 +175,7 @@ int main(int argc, char **argv) {
                       &prims);
 
     //This applies the inequality (or "Faber") fixes on the conservatives
-    double u0;
-    enforce_primitive_limits_and_output_u0(&params, &eos, &metric, &prims, &u0, &diagnostics);
+    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics);
 
     primitive_quantities prims_trusted, prims_pert;
     initialize_primitives(
@@ -198,13 +197,13 @@ int main(int argc, char **argv) {
     // limiting if it is on the edge, leading to a higher difference in some edge cases. Thus,
     // the default roundoff tolerance of validate() is not a valid floor for the possible
     // relative difference.
-    if( validate(u0_trusted[i], u0, u0_pert[i]) )
+    if( validate(u0_trusted[i], prims.u0, u0_pert[i]) )
       grhayl_error("Test has failed! The computed u0 does not fall within tolerance.\n"
                    "   u0_trusted %.15e\n"
                    "   u0_compute %.15e\n"
                    "   u0_perturb %.15e\n"
-                   "   rel_diff %.15e %.15e\n", u0_trusted[i], u0, u0_pert[i], relative_error(u0_trusted[i], u0), relative_error(u0_trusted[i], u0_pert[i]));
+                   "   rel_diff %.15e %.15e\n", u0_trusted[i], prims.u0, u0_pert[i], relative_error(u0_trusted[i], prims.u0), relative_error(u0_trusted[i], u0_pert[i]));
   }
-  printf("Completed test for routine enforce_primitive_limits_and_output_u0\n");
+  printf("Completed test for routine enforce_primitive_limits_and_compute_u0\n");
   return 0;
 }

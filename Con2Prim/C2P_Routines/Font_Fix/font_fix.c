@@ -34,11 +34,9 @@ int font_fix(
   double utcon2 = metric->adm_gupxy*u_xl + metric->adm_gupyy*u_yl + metric->adm_gupyz*u_zl;
   double utcon3 = metric->adm_gupxz*u_xl + metric->adm_gupyz*u_yl + metric->adm_gupzz*u_zl;
 
-  double u0;
   //The Font fix only sets the velocities.  Here we set the pressure & density HARM primitives.
-  limit_utilde_and_compute_v(eos, metric, &u0, &utcon1, &utcon2, &utcon3, prims_guess, diagnostics);
-
-  prims_guess->rho = cons->rho/(metric->lapse*u0*metric->psi6);
+  limit_utilde_and_compute_v(eos, metric, &utcon1, &utcon2, &utcon3, prims_guess, diagnostics);
+  prims_guess->rho = cons->rho/(metric->lapse*prims->u0*metric->psi6);
 
   double K_ppoly, Gamma_ppoly;
   eos->hybrid_get_K_and_Gamma(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);

@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : enforce_primitive_limits_and_output_u0()
+/* Function    : enforce_primitive_limits_and_compute_u0()
  * Description : Applies limits to rho_b, pressure, and v^i, then
                  recomputes epsilon and (if needed) entropy
 
@@ -18,11 +18,10 @@
  *
  */
 
-void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict params,
+void enforce_primitive_limits_and_compute_u0(const GRHayL_parameters *restrict params,
                                             const eos_parameters *restrict eos,
                                             const metric_quantities *restrict metric,
                                             primitive_quantities *restrict prims,
-                                            double *restrict u0,
                                             con2prim_diagnostics *restrict diagnostics) {
 
   // The density floor and ceiling is always applied
@@ -73,6 +72,6 @@ void enforce_primitive_limits_and_output_u0(const GRHayL_parameters *restrict pa
   //  prims->entropy = xent;
   }
 
-  // Finally, apply speed limit to v and output u^0
-  limit_v_and_output_u0(eos, metric, prims, u0, diagnostics);
+  // Finally, apply speed limit to v and compute u^0
+  limit_v_and_compute_u0(eos, metric, prims, diagnostics);
 }

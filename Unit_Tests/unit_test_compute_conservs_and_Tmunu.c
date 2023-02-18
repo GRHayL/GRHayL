@@ -187,9 +187,10 @@ int main(int argc, char **argv) {
                       Bx[i], By[i], Bz[i],
                       entropy[i], Y_e[i], temperature[i],
                       &prims);
+    prims.u0 = u0[i];
 
     //This computes the conservatives and stress-energy tensor from the new primitives
-    compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, u0[i], &cons, &Tmunu);
+    compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, &cons, &Tmunu);
 
     conservative_quantities cons_trusted, cons_pert;
     stress_energy Tmunu_trusted, Tmunu_pert;

@@ -6,5 +6,6 @@ SRCS = NRPyEOS_compute_entropy_function.c         \
        NRPyEOS_compute_P_cold.c                   \
        NRPyEOS_find_polytropic_index.c            \
        NRPyEOS_get_K_and_gamma.c                  \
+       NRPyEOS_hybrid_compute_enthalpy_and_cs2.c  \
        NRPyEOS_initialize_hybrid_functions.c      \
        NRPyEOS_set_K_ppoly_and_eps_integ_consts.c

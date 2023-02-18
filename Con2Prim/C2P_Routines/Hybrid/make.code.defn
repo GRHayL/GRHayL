@@ -1,5 +1,7 @@
 # Subdirectory make.code.defn for EOS/Hybrid
 
 # Source files in this directory that need compiled:
-SRCS = Hybrid_Noble2D.c \
+SRCS = func_vsq.c       \
+       GNR2D.c          \
+       Hybrid_Noble2D.c \
        Hybrid_Multi_Method.c

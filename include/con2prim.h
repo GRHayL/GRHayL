@@ -81,12 +81,11 @@ void guess_primitives(
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prims_guess);
 
-void enforce_primitive_limits_and_output_u0(
+void enforce_primitive_limits_and_compute_u0(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       primitive_quantities *restrict prims,
-      double *restrict u0,
       con2prim_diagnostics *restrict diagnostics);
 
 void compute_conservs_and_Tmunu(
@@ -94,7 +93,6 @@ void compute_conservs_and_Tmunu(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
-      const double u0,
       conservative_quantities *restrict cons,
       stress_energy *restrict Tmunu);
 
@@ -156,16 +154,16 @@ int font_fix_rhob_loop(
 void limit_utilde_and_compute_v(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
-      double *restrict utcon1_ptr, double *restrict u0_ptr,
-      double *restrict utcon2_ptr, double *restrict utcon3_ptr,
+      double *restrict utcon1_ptr,
+      double *restrict utcon2_ptr,
+      double *restrict utcon3_ptr,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
 
-void limit_v_and_output_u0(
+void limit_v_and_compute_u0(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       primitive_quantities *restrict prims,
-      double *restrict u0,
       con2prim_diagnostics *restrict diagnostics);
 
 #endif // CON2PRIM_H

@@ -142,7 +142,29 @@ void initial_random_data(
       metric_quantities *restrict metric,
       primitive_quantities *restrict prims);
 
-void randomize_metric(metric_quantities *restrict metric);
+void randomize_metric(
+      double *restrict lapse,
+      double *restrict gxx_ptr,
+      double *restrict gxy_ptr,
+      double *restrict gxz_ptr,
+      double *restrict gyy_ptr,
+      double *restrict gyz_ptr,
+      double *restrict gzz_ptr,
+      double *restrict betax,
+      double *restrict betay,
+      double *restrict betaz);
+
+void randomize_primitives(
+      const eos_parameters *restrict eos,
+      const double rho,
+      const double press,
+      double *restrict eps,
+      double *restrict vx,
+      double *restrict vy,
+      double *restrict vz,
+      double *restrict Bx,
+      double *restrict By,
+      double *restrict Bz);
 
 #define check_file_was_successfully_open(fp, filename) \
   if(!fp) grhayl_error("Could not open file %s.\n", filename);

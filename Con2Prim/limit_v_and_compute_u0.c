@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : limit_v_and_output_u0()
+/* Function    : limit_v_and_compute_u0()
  * Description : Applies speed limit to v^i and computes u^0
  *
  * Inputs      : eos            - eos_parameters struct with data for the
@@ -9,17 +9,16 @@
  *                                the gridpoint of interest
  *             : prims          - primitive_quantities struct to be speed limited
  *
- * Outputs     : u0_out         - returns u^0
- *             : prims          - returns velocity-limited prims->v^i
+ * Outputs     : prims          - returns velocity-limited prims->v^i and t
+ *                                component of 4-velocity prims->u0
  *             : diagnostics    - tracks if the velocity was limited
  *
  */
 
-void limit_v_and_output_u0(
+void limit_v_and_compute_u0(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       primitive_quantities *restrict prims,
-      double *restrict u0_out,
       con2prim_diagnostics *restrict diagnostics) {
 
   // Derivation of first equation:
@@ -51,8 +50,8 @@ void limit_v_and_output_u0(
   //double alpha_u0_minus_one = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared)-1.0;
   //u0_out          = (alpha_u0_minus_one + 1.0)*metric.lapseinv;
   const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
-  *u0_out = alpha_u0*metric->lapseinv;
-  if(isnan(*u0_out)) {
+  prims->u0 = alpha_u0*metric->lapseinv;
+  if(isnan(prims->u0)) {
     // Leo asks: shouldn't this be an error?
     grhayl_warn("*********************************************\n"
                 "Found nan while computing u^{0}\nMetric/psi4: %e %e %e %e %e %e / %e\n"
