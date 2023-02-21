@@ -148,6 +148,6 @@ clean:
 	@echo "Removing objects and library file"
 
 # Thorough clean: remove all files in clean and all build, library, and executable directories
-veryclean: clean
+realclean: clean
 	@rm -rf $(BUILD_DIRS) lib/ exe/
 	@echo "Removing build directories"
