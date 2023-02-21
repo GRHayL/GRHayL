@@ -69,11 +69,11 @@ ifeq ($(HDF5_LIB_DIR),)
 endif
 
 # Now adjust CFLAGS and LDFLAGS
-CFLAGS  += -I./include -I$(HDF5_INC_DIR)
+CFLAGS  += -I./GRHayL/include -I$(HDF5_INC_DIR)
 LDFLAGS += -L$(HDF5_LIB_DIR) -lhdf5
 
 # Get directory structures for Gems
-DIR := $(shell find $(GEM) include -type d)
+DIR := $(shell find $(addprefix GRHayL/, $(GEM) include) -type d)
 
 # Find all source files
 SRC := $(wildcard $(addsuffix /*.c, $(DIR)))
@@ -148,6 +148,6 @@ clean:
 	@echo "Removing objects and library file"
 
 # Thorough clean: remove all files in clean and all build, library, and executable directories
-veryclean: clean
-	@rm -rf $(BUILD_DIRS) lib/ exe/
+realclean: clean
+	@rm -rf $(BUILD_DIRS) build/ lib/ exe/
 	@echo "Removing build directories"
