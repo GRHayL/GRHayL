@@ -34,12 +34,12 @@ jobs:
           make install
       - name: Copy test data to working directory
         run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/Noble2D_initial_data.bin -o build/Noble2D_initial_data.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin -o build/${{ matrix.test-function }}_input.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output.bin -o build/${{ matrix.test-function }}_output.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_output_pert.bin
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/${{ matrix.test-function }}.md5 -o build/${{ matrix.test-function }}.md5
           cd build && md5sum -c ${{ matrix.test-function }}.md5 && cd ..
-      - name: Run con2prim unit test for ${{ matrix.test-function }} function
+      - name: Run ET IllinoisGRMHD unit test for ${{ matrix.test-function }}
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib
           make check-verbose ${{ matrix.test-function }}

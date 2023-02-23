@@ -57,8 +57,8 @@ int main(int argc, char **argv) {
   }
 
   FILE* infile;
-  infile = fopen("HLL_flux_initial_data.bin", "rb");
-  check_file_was_successfully_open(infile, "HLL_flux_initial_data.bin");
+  infile = fopen("ET_Legacy_HLL_flux_input.bin", "rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_HLL_flux_input.bin");
 
   int key = fread(phi_bssn, sizeof(double), arraylength, infile);
 
@@ -99,10 +99,10 @@ int main(int argc, char **argv) {
             A_rhs[A_dir-1]);
   }
 
-  infile = fopen("HLL_flux.bin","rb");
-  check_file_was_successfully_open(infile, "HLL_flux.bin");
-  FILE *inpert = fopen("HLL_flux_pert.bin","rb");
-  check_file_was_successfully_open(infile, "HLL_flux_pert.bin");
+  infile = fopen("ET_Legacy_HLL_flux_output.bin","rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_HLL_flux_output.bin");
+  FILE *inpert = fopen("ET_Legacy_HLL_flux_output_pert.bin","rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_HLL_flux_output_pert.bin");
 
   key = 0;
   for(int coord=0; coord<3; coord++)
@@ -120,16 +120,28 @@ int main(int argc, char **argv) {
                  "is up-to-date with current test version.\n");
 
 #pragma omp parallel for
-  for(int k=1; k<dirlength; k++)
-    for(int j=1; j<dirlength; j++)
-      for(int i=1; i<dirlength; i++) {
+  for(int k=2; k<dirlength-2; k++)
+    for(int j=2; j<dirlength-2; j++)
+      for(int i=2; i<dirlength-2; i++) {
         const int index = indexf(dirlength,i,j,k);
         if( validate(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]) )
-          grhayl_error("Test unit_test_HLL_flux has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_HLL_flux has failed for variable Ax_rhs.\n"
+                       "  trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n",
+                       A_trusted[0][index], A_rhs[0][index], A_pert[0][index],
+                       relative_error(A_trusted[0][index], A_rhs[0][index]), relative_error(A_trusted[0][index], A_pert[0][index]));
         if( validate(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]) )
-          grhayl_error("Test unit_test_HLL_flux has failed for variable Ay_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_HLL_flux has failed for variable Ay_rhs.\n"
+                       "  trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n",
+                       A_trusted[1][index], A_rhs[1][index], A_pert[1][index],
+                       relative_error(A_trusted[1][index], A_rhs[1][index]), relative_error(A_trusted[1][index], A_pert[1][index]));
         if( validate(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]) )
-          grhayl_error("Test unit_test_HLL_flux has failed for variable Az_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_HLL_flux has failed for variable Az_rhs.\n"
+                       "  trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n",
+                       A_trusted[2][index], A_rhs[2][index], A_pert[2][index],
+                       relative_error(A_trusted[2][index], A_rhs[2][index]), relative_error(A_trusted[2][index], A_pert[2][index]));
   }
 }
 
@@ -167,14 +179,14 @@ void A_rhs_dir(const int dirlength,
   // This offsets the index by +1 in the permuted direction (x->y->z)
   const int B2_offset[3] = { zdir, xdir, ydir };
 
-  const int imax = dirlength-2*!xdir;
-  const int jmax = dirlength-2*!ydir;
-  const int kmax = dirlength-2*!zdir;
+  const int imax = dirlength-2;
+  const int jmax = dirlength-2;
+  const int kmax = dirlength-2;
 
 #pragma omp parallel for
-  for(int k=1; k<kmax; k++)
-    for(int j=1; j<jmax; j++)
-      for(int i=1; i<imax; i++) {
+  for(int k=2; k<kmax; k++)
+    for(int j=2; j<jmax; j++)
+      for(int i=2; i<imax; i++) {
         const int index    = indexf(dirlength,i,j,k);
         const int index_v  = indexf(dirlength,i+v_offset[0], j+v_offset[1], k+v_offset[2]);
         const int index_B1 = indexf(dirlength,i+B1_offset[0],j+B1_offset[1],k+B1_offset[2]);
