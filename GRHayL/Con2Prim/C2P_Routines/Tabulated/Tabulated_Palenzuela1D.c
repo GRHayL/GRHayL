@@ -1,25 +1,17 @@
 #include "con2prim.h"
+#include "brent.h"
 
-double
-zbrent(
-      double func(const eos_parameters *restrict,
-                  const conservative_quantities *restrict,
-                  const double *restrict,
-                  const bool,
-                  const double,
-                  primitive_quantities *restrict,
-                  double *restrict),
-      const eos_parameters *restrict eos,
-      const conservative_quantities *restrict cons_undens,
-      const double *restrict params,
-      const bool evolve_T,
-      primitive_quantities *restrict prims,
-      double *restrict temp_guess,
-      double x1,
-      double x2,
-      double tol_x,
-      con2prim_diagnostics *restrict stats );
-
+/*
+ * Function   : compute_S_squared
+ * Author     : Leo Werneck
+ *
+ * Computes S^{2} = gamma^{ij}S_{i}S_{j}.
+ *
+ * Parameters : metric   - Pointer to GRHayL metric_quantities struct.
+ *            : SD       - Array containing S_{i}.
+ *
+ * Returns    : S^{2}
+ */
 static inline double
 compute_S_squared(
       const metric_quantities *restrict metric,
@@ -33,36 +25,51 @@ compute_S_squared(
    2.0 * metric->adm_gupyz * SD[1] * SD[2];
 }
 
+/*
+ * Function   : raise_vector_3d
+ * Author     : Leo Werneck
+ *
+ * Raises a 3-vector v^{i} = gamma^{ij} v_{j}.
+ *
+ * Parameters : metric   - Pointer to GRHayL metric_quantities struct.
+ *            : vD       - Array containing v_{i}.
+ *            : vU       - Array containing v^{i}, the output.
+ *
+ * Returns    : Nothing.
+ */
 static inline void
 raise_vector_3d(
       const metric_quantities *restrict metric,
-      const double *restrict SD,
-      double *restrict SU ) {
+      const double *restrict vD,
+      double *restrict vU ) {
 
-  // S^{x} = gamma^{xj}S_{j} = gamma^{jx}S_{j}
-  SU[0] = metric->adm_gupxx * SD[0]
-        + metric->adm_gupxy * SD[1]
-        + metric->adm_gupxz * SD[2];
+  // v^{x} = gamma^{xj}v_{j} = gamma^{jx}v_{j}
+  vU[0] = metric->adm_gupxx * vD[0]
+        + metric->adm_gupxy * vD[1]
+        + metric->adm_gupxz * vD[2];
 
-  // S^{y} = gamma^{yj}S_{j} = gamma^{jy}S_{j}
-  SU[1] = metric->adm_gupxy * SD[0]
-        + metric->adm_gupyy * SD[1]
-        + metric->adm_gupyz * SD[2];
+  // v^{y} = gamma^{yj}v_{j} = gamma^{jy}v_{j}
+  vU[1] = metric->adm_gupxy * vD[0]
+        + metric->adm_gupyy * vD[1]
+        + metric->adm_gupyz * vD[2];
 
-  // S^{z} = gamma^{zj}S_{j} = gamma^{jz}S_{j}
-  SU[2] = metric->adm_gupxz * SD[0]
-        + metric->adm_gupyz * SD[1]
-        + metric->adm_gupzz * SD[2];
+  // v^{z} = gamma^{zj}v_{j} = gamma^{jz}v_{j}
+  vU[2] = metric->adm_gupxz * vD[0]
+        + metric->adm_gupyz * vD[1]
+        + metric->adm_gupzz * vD[2];
 }
 
-void
+typedef struct fparams_struct {
+  bool evolve_T;
+  double temp_guess, q, r, s, t;
+  const eos_parameters *eos;
+  const conservative_quantities *cons_undens;
+} fparams_struct;
+
+static void
 compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
-  const eos_parameters *restrict eos,
-  const conservative_quantities *restrict cons_undens,
-  const double *restrict params,
-  const bool evolve_T,
   const double x,
-  const double *temp_guess,
+  const fparams_struct *restrict fparams,
   double *restrict rho_ptr,
   double *restrict Y_e_ptr,
   double *restrict T_ptr,
@@ -70,12 +77,13 @@ compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
   double *restrict eps_ptr,
   double *restrict W_ptr ) {
 
-  // computes f(x) from x and q,r,s,t
-
-  const double q = params[0];
-  const double r = params[1];
-  const double s = params[2];
-  const double t = params[3];
+  // Step 1: Unpack the fparams struct
+  const double q = fparams->q;
+  const double r = fparams->r;
+  const double s = fparams->s;
+  const double t = fparams->t;
+  const eos_parameters *eos = fparams->eos;
+  const conservative_quantities *cons_undens = fparams->cons_undens;
 
   double Wminus2 = 1.0 - ( x*x*r + (2*x+s)*t*t  )/ (x*x*(x+s)*(x+s));
   Wminus2        = fmin(fmax(Wminus2, eos->inv_W_max_squared ), 1.0);
@@ -83,11 +91,11 @@ compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
 
   double rho     = cons_undens->rho/W;
   double ye      = cons_undens->Y_e/cons_undens->rho;
-  double temp    = *temp_guess;
+  double temp    = fparams->temp_guess;
   double P       = 0.0;
   double eps     = 0.0;
 
-  if( evolve_T ) {
+  if( fparams->evolve_T ) {
     eps = W - 1.0 + (1.0-W*W)*x/W + W*(q - s + t*t/(2*x*x) + s/(2*W*W) );
     eos->tabulated_compute_P_T_from_eps( eos, rho, ye, eps, &P, &temp );
   }
@@ -103,20 +111,26 @@ compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
   *W_ptr   = W;
 }
 
-double
-func_root(
-      const eos_parameters *restrict eos,
-      const conservative_quantities *restrict cons_undens,
-      const double *restrict params,
-      const bool evolve_T,
-      const double x,
-      primitive_quantities *restrict prims,
-      double *restrict temp_guess ) {
+/*
+ * Function : froot
+ * Author   : Leo Werneck (adapted from Siegel et al)
+ *
+ * Computes Eq. (33) of Siegel et al., 2018 (arXiv: 1712.07538). The function
+ * arguments follow the standards set by the brent.h file.
+ *
+ * Parameters : x        - The point at which f(x) is evaluated.
+ *            : fparams  - Pointer to parameter structed containing auxiliary
+ *                         variables needed by this function (see definition
+ *                         above).
+ *
+ * Returns    : Nothing.
+ */
+static double
+froot( const double x, void *restrict fparams ) {
 
   double rho, Y_e, T, P, eps, W;
   compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
-    eos, cons_undens, params, evolve_T, x, temp_guess,
-    &rho, &Y_e, &T, &P, &eps, &W );
+    x, fparams, &rho, &Y_e, &T, &P, &eps, &W );
 
   return x - (1.0 + eps + P/rho)*W;
 }
@@ -172,33 +186,39 @@ int Tabulated_Palenzuela1D(
   for(int i=0;i<3;i++) BdotS += Bup[i]*SD[i];
 
   // Step 5: Set specific quantities for this routine (Eq. A7 of [1])
-  const double invD  = 1.0/cons_undens->rho;
-  const double q     = cons_undens->tau * invD;
-  const double r     = S_squared * invD * invD;
-  const double s     = B_squared * invD;
-  const double t     = BdotS/pow(cons_undens->rho, 1.5);
+  fparams_struct fparams;
+  const double invD = 1.0/cons_undens->rho;
+  fparams.q = cons_undens->tau * invD;
+  fparams.r = S_squared * invD * invD;
+  fparams.s = B_squared * invD;
+  fparams.t = BdotS/pow(cons_undens->rho, 1.5);
+  fparams.eos = eos;
+  fparams.cons_undens = cons_undens;
 
   // Step 6: Bracket x (Eq. A8 of [1])
-  double xlow = 1 + q - s;
-  double xup  = 2*(1 + q) - s;
+  double xlow = 1 + fparams.q - fparams.s;
+  double xup  = 2*(1 + fparams.q) - fparams.s;
 
   // Step 7: Set initial guess for temperature
-  double temp_guess = prims_guess->temperature;
+  fparams.temp_guess = prims_guess->temperature;
 
   // Step 8: Call the main function and perform the con2prim
-  const double params[4] = {q, r, s, t};
-  const double tol_x     = 1e-10;
+  brent_params bparams;
+  bparams.tol = 1e-12;
+  bparams.max_iters = 300;
+  brent(froot, &fparams, xlow, xup, &bparams);
+  if( bparams.error_key != brent_success ) {
+    grhayl_warn("Brent's method did not find a root (see error report below)\n");
+    brent_info(&bparams);
+    return bparams.error_key;
+  }
 
-  double x = zbrent(func_root, eos, cons_undens, params,
-                    grhayl_params->evolve_temp, prims_guess,
-                    &temp_guess, xlow, xup, tol_x, diagnostics);
+  double x = bparams.root;
 
   // Step 9: Set core primitives using the EOS and the root
-  double W;
+  double rho, Y_e, T, P, eps, W;
   compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
-    eos, cons_undens, params, grhayl_params->evolve_temp, x, &temp_guess,
-    &prims_guess->rho, &prims_guess->Y_e, &prims_guess->temperature,
-    &prims_guess->press, &prims_guess->eps, &W );
+    x, &fparams, &rho, &Y_e, &T, &P, &eps, &W );
 
   // Step 10: Compute the velocities using Eq. (24) in [2]. Note, however, that
   //          GRHayL expects the velocity tilde(u)^{i} := W v^{i},
@@ -214,5 +234,5 @@ int Tabulated_Palenzuela1D(
   prims_guess->vy = W*(SU[1] + BdotS*prims_guess->By/Z)/(Z+B_squared);
   prims_guess->vz = W*(SU[2] + BdotS*prims_guess->Bz/Z)/(Z+B_squared);
 
-  return diagnostics->c2p_failed;
+  return brent_success;
 }
