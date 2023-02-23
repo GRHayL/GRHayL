@@ -39,6 +39,17 @@ which is a `Python3` script that handles the `meson` configuration. The builds
 happen out of the source tree, with all object files placed in the `build/`
 directory (by default).
 
+The standard back-end used by `meson` is `ninja`. To install them we recommend
+using a virtual environment as that takes care of potential permission issues.
+Here's an example of how to set it up:
+
+```shell
+$ python3 -m venv py3
+$ source py3/bin/activate
+(py3) $ pip install -U pip
+(py3) $ pip install meson ninja
+```
+
 ### Dependencies
 
 Currently, `GRHayL` requires `HDF5` C bindings in order to compile. On Ubuntu,
