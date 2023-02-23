@@ -7,6 +7,40 @@ on:
   pull_request:
 
 jobs:
+  ET-Legacy:
+    strategy:
+      fail-fast: false
+      matrix:
+        test-function: [ET_Legacy_induction_gauge_rhs]
+        os: [ubuntu-22.04, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install needed ubuntu packages
+        run: |
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
+          sudo apt-get update
+          sudo apt-get install -y gcc libhdf5-serial-dev
+      - name: Compile GRHayL
+        run: |
+          export COMPILER=gnu
+          make -j
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output_pert.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/${{ matrix.test-function }}.md5
+          md5sum -c ${{ matrix.test-function }}.md5
+      - name: Run ET IllinoisGRMHD unit test for ${{ matrix.test-function }}
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+
   con-to-prim:
     strategy:
       fail-fast: false
@@ -89,7 +123,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [HLL_flux, phitilde_and_A_gauge_rhs]
+        test-function: [HLL_flux]
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 
