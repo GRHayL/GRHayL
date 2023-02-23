@@ -1,4 +1,3 @@
 README.md linguist-documentation
-docs/*/* linguist-documentation
-GRHayL/Flux_Source/nrpy/*.py linguist-vendored
-GRHayL/Flux_Source/nrpy/*/*.py linguist-vendored
+docs/** linguist-documentation
+GRHayL/Flux_Source/nrpy/** linguist-vendored
