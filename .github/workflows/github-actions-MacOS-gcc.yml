@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [ET_Legacy_induction_gauge_rhs]
+        test-function: [ET_Legacy_induction_gauge_rhs, ET_Legacy_HLL_flux]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
@@ -32,7 +32,7 @@ jobs:
         run: |
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin -o build/${{ matrix.test-function }}_input.bin
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output.bin -o build/${{ matrix.test-function }}_output.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_output_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output_pert.bin -o build/${{ matrix.test-function }}_output_pert.bin
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/${{ matrix.test-function }}.md5 -o build/${{ matrix.test-function }}.md5
           cd build && md5sum -c ${{ matrix.test-function }}.md5 && cd ..
       - name: Run ET IllinoisGRMHD unit test for ${{ matrix.test-function }}
@@ -98,36 +98,6 @@ jobs:
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
       - name: Run reconstruction unit test for ${{ matrix.test-function }} function
-        run: make check-verbose ${{ matrix.test-function }}
-
-  induction:
-    strategy:
-      fail-fast: false
-      matrix:
-        test-function: [HLL_flux]
-        os: [macos-11, macos-12]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-      - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: |
-          brew update && brew install gcc@12 gsed hdf5
-          # Now install meson and ninja
-          python -m pip install -U pip
-          python -m pip install meson ninja
-      - name: Compile GRHayL
-        run: |
-          CC=gcc-12 ./configure --prefix=`pwd` --compile-silent
-          make
-          make install
-      - name: Copy test data to working directory
-        run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin -o build/${{ matrix.test-function }}_initial_data.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
-      - name: Run induction equation unit test for ${{ matrix.test-function }} function
         run: make check-verbose ${{ matrix.test-function }}
 
   tabulated-eos:
