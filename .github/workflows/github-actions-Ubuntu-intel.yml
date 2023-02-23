@@ -46,7 +46,6 @@ jobs:
           md5sum -c ${{ matrix.test-function }}.md5
       - name: Run ET IllinoisGRMHD unit test for ${{ matrix.test-function }}
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
 
   con-to-prim:
     strategy:
