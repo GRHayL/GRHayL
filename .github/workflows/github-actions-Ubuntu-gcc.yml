@@ -17,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install needed ubuntu packages
         run: |
           # use apt-spy2 to select closest apt mirror,
@@ -27,19 +29,23 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y gcc libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
       - name: Compile GRHayL
         run: |
-          export COMPILER=gnu
-          make -j
+          CC=gcc ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5
-          md5sum -c ${{ matrix.test-function }}.md5
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin -o build/Noble2D_initial_data.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5 -o build/${{ matrix.test-function }}.md5
+          cd build && md5sum -c ${{ matrix.test-function }}.md5 && cd ..
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+        run: make check-verbose ${{ matrix.test-function }}
 
   reconstruction:
     strategy:
@@ -51,6 +57,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install needed ubuntu packages
         run: |
           # use apt-spy2 to select closest apt mirror,
@@ -61,17 +69,21 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y gcc libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
       - name: Compile GRHayL
         run: |
-          export COMPILER=gnu
-          make -j
+          CC=gcc ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_initial_data.bin -o build/${{ matrix.test-function }}_initial_data.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
       - name: Run reconstruction unit test for ${{ matrix.test-function }} function
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+        run: make check-verbose ${{ matrix.test-function }}
 
   induction:
     strategy:
@@ -83,6 +95,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install needed ubuntu packages
         run: |
           # use apt-spy2 to select closest apt mirror,
@@ -93,17 +107,21 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y gcc libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
       - name: Compile GRHayL
         run: |
-          export COMPILER=gnu
-          make -j
+          CC=gcc ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin -o build/${{ matrix.test-function }}_initial_data.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
       - name: Run induction equation unit test for ${{ matrix.test-function }} function
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+        run: make check-verbose ${{ matrix.test-function }}
 
   tabulated-eos:
     strategy:
@@ -114,6 +132,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install needed ubuntu packages
         run: |
           # use apt-spy2 to select closest apt mirror,
@@ -124,14 +144,18 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y gcc libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
       - name: Compile GRHayL
         run: |
-          export COMPILER=gnu
-          make -j
+          CC=gcc ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
       - name: Copy test data to working directory
-        run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
+        run: curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5 -o build/simple_table.h5
       - name: Run tabulated EOS unit test
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_tabulated_eos simple_table.h5
+        run: make check-verbose tabulated_eos
 
   flux_source:
     strategy:
@@ -143,6 +167,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install needed ubuntu packages
         run: |
           # use apt-spy2 to select closest apt mirror,
@@ -153,15 +179,19 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y gcc libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
       - name: Compile GRHayL
         run: |
-          export COMPILER=gnu
-          make -j
+          CC=gcc ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn1.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn2.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn3.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_output_rhs_data.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn1.bin -o build/${{ matrix.test-function }}_dirn1.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn2.bin -o build/${{ matrix.test-function }}_dirn2.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn3.bin -o build/${{ matrix.test-function }}_dirn3.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_output_rhs_data.bin -o build/${{ matrix.test-function }}_output_rhs_data.bin
       - name: Run flux_source unit test for ${{ matrix.test-function }} functions
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+        run: make check-verbose ${{ matrix.test-function }}

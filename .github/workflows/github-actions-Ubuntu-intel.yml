@@ -17,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install intel compiler and hdf5
         run: |
           wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
@@ -31,23 +33,27 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
 
       - name: Compile GRHayL
         run: |
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
-          export COMPILER=intel
-          make -j
+          CC=icx ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
 
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5
-          md5sum -c ${{ matrix.test-function }}.md5
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin -o build/Noble2D_initial_data.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5 -o build/${{ matrix.test-function }}.md5
+          cd build && md5sum -c ${{ matrix.test-function }}.md5 && cd ..
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+        run: make check-verbose ${{ matrix.test-function }}
 
   reconstruction:
     strategy:
@@ -59,6 +65,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install intel compiler and hdf5
         run: |
           wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
@@ -73,21 +81,25 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
 
       - name: Compile GRHayL
         run: |
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
-          export COMPILER=intel
-          make -j
+          CC=icx ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
 
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_initial_data.bin -o build/${{ matrix.test-function }}_initial_data.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
       - name: Run reconstruction unit test for ${{ matrix.test-function }} function
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+        run: make check-verbose ${{ matrix.test-function }}
 
   induction:
     strategy:
@@ -99,6 +111,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install intel compiler and hdf5
         run: |
           wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
@@ -113,21 +127,25 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
 
       - name: Compile GRHayL
         run: |
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
-          export COMPILER=intel
-          make -j
+          CC=icx ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
 
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_initial_data.bin -o build/${{ matrix.test-function }}_initial_data.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/induction/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
       - name: Run induction equation unit test for ${{ matrix.test-function }} function
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+        run: make check-verbose ${{ matrix.test-function }}
 
   tabulated-eos:
     strategy:
@@ -138,6 +156,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
       - name: Install intel compiler and hdf5
         run: |
           wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
@@ -152,56 +172,66 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
 
       - name: Compile GRHayL
         run: |
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
-          export COMPILER=intel
-          make -j
+          CC=icx ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
 
       - name: Copy test data to working directory
-        run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
+        run: curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5 -o build/simple_table.h5
       - name: Run tabulated EOS unit test
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_tabulated_eos simple_table.h5
+        run: make check-verbose tabulated_eos
 
   flux_source:
-      strategy:
-        fail-fast: false
-        matrix:
-          test-function: [flux_source]
-          os: [ubuntu-22.04, ubuntu-20.04]
-      runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        test-function: [flux_source]
+        os: [ubuntu-22.04, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
 
-      steps:
-        - uses: actions/checkout@v3
-        - name: Install intel compiler and hdf5
-          run: |
-            wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-            sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-            rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-            sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
-            # use apt-spy2 to select closest apt mirror,
-            # which helps avoid connectivity issues in Azure;
-            # see https://github.com/actions/virtual-environments/issues/675
-            sudo gem install apt-spy2
-            sudo apt-spy2 fix --commit --launchpad --country=US
-            # after selecting a specific mirror, we need to run 'apt-get update'
-            sudo apt-get update
-            sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup python3 environment
+        uses: actions/setup-python@v3
+      - name: Install intel compiler and hdf5
+        run: |
+          wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+          sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          # use apt-spy2 to select closest apt mirror,
+          # which helps avoid connectivity issues in Azure;
+          # see https://github.com/actions/virtual-environments/issues/675
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+          # after selecting a specific mirror, we need to run 'apt-get update'
+          sudo apt-get update
+          sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
 
-        - name: Compile GRHayL
-          run: |
-            source /opt/intel/oneapi/setvars.sh
-            printenv >> $GITHUB_ENV
-            export COMPILER=intel
-            make -j
+      - name: Compile GRHayL
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          printenv >> $GITHUB_ENV
+          CC=icx ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
 
-        - name: Copy test data to working directory
-          run: |
-            curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn1.bin
-            curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn2.bin
-            curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn3.bin
-            curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_output_rhs_data.bin
-        - name: Run flux_source unit test for ${{ matrix.test-function }} functions
-          run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./exe/unit_test_${{ matrix.test-function }}
+      - name: Copy test data to working directory
+        run: |
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn1.bin -o build/${{ matrix.test-function }}_dirn1.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn2.bin -o build/${{ matrix.test-function }}_dirn2.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_dirn3.bin -o build/${{ matrix.test-function }}_dirn3.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/flux_source/${{ matrix.test-function }}_output_rhs_data.bin -o build/${{ matrix.test-function }}_output_rhs_data.bin
+      - name: Run flux_source unit test for ${{ matrix.test-function }} functions
+        run: make check-verbose ${{ matrix.test-function }}
