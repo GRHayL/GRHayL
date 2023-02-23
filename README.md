@@ -39,6 +39,32 @@ which is a `Python3` script that handles the `meson` configuration. The builds
 happen out of the source tree, with all object files placed in the `build/`
 directory (by default).
 
+### Dependencies
+
+Currently, `GRHayL` requires `HDF5` C bindings in order to compile. On Ubuntu,
+you can install `HDF5` using
+
+```shell
+$ sudo apt-get install libhdf5-serial-dev
+```
+
+`GRHayL` is also actively tested on MacOS using the [Homebrew](https://brew.sh/)
+package manager. To install `HDF5` on MacOS we thus recommend using
+
+```shell
+$ brew install hdf5
+```
+
+We have not tested `GRHayL` with [macports](https://www.macports.org/), although
+we do not expect users to have issues when using it.
+
+The `HDF5` dependency arises from the Tabulated Equation of State (EOS) gem, as
+it currently only supports EOS tables in that format. We are working on adding
+an option to compile `GRHayL` with Hybrid EOS support only, thus removing the
+`HDF5` dependency for those who do not wish to use Tabulated EOSs. We are also
+working supporting tables in the [CompOSE](https://compose.obspm.fr/table)
+format, which would also remove the `HDF5` dependency for those who wish to use
+these larger ASCII tables.
 
 ### System-wide Installation (default)
 
