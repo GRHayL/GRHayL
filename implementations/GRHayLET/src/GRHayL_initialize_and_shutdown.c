@@ -28,14 +28,14 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
 
   if (CCTK_EQUALS(EOS_type, "hybrid")) {
     initialize_hybrid_eos_functions_and_params(W_max,
-                                               rho_atm, rho_min, rho_max,
+                                               rho_b_atm, rho_b_atm, rho_b_max,
                                                neos, rho_ppoly_in,
                                                Gamma_ppoly_in, k_ppoly0,
                                                Gamma_th, grhayl_eos);
   } else if (CCTK_EQUALS(EOS_type, "tabulated")) {
     double Ye_max = 1; //TODO: temporary until the parameter is set up
     initialize_tabulated_eos_functions_and_params(W_max,
-                                                  rho_atm, rho_min, rho_max,
+                                                  rho_b_atm, rho_b_atm, rho_b_max,
                                                   Ye_atm, Ye_atm, Ye_max,
                                                   T_atm, T_atm, T_max,
                                                   grhayl_eos);

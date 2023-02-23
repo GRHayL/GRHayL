@@ -1,0 +1,10 @@
+GRHayL_Core_sources = files('enforce_detgij_and_initialize_metric.c',
+                            'grhayl_info_warn_error.c',
+                            'initialize_conservatives.c',
+                            'initialize_eos.c',
+                            'initialize_GRHayL.c',
+                            'initialize_metric.c',
+                            'initialize_primitives.c',
+                            'metric_helper.c',
+                            'return_conservatives.c',
+                            'return_primitives.c')

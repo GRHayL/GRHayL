@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
 
   // Read in data from file to ensure portability
   FILE* infile;
-  infile = fopen("phitilde_and_A_gauge_rhs_initial_data.bin", "rb");
-  check_file_was_successfully_open(infile, "phitilde_and_A_gauge_rhs_initial_data.bin");
+  infile = fopen("ET_Legacy_induction_gauge_rhs_input.bin", "rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_induction_gauge_rhs_input.bin");
 
   int key;
   key  = fread(gupxx, sizeof(double), arraylength, infile);
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
         phitilde_rhs[index] = poison;
   }
 
-#pragma omp parallel for
+//#pragma omp parallel for
   for(int k=gridmin+1; k<gridmax-1; k++)
     for(int j=gridmin+1; j<gridmax-1; j++)
       for(int i=gridmin+1; i<gridmax-1; i++) {
@@ -165,6 +165,13 @@ int main(int argc, char **argv) {
 
   const double dxinv[3] = {1.0/dX[0], 1.0/dX[1], 1.0/dX[2]};
 
+//for(int k=gridmin+1; k<gridmax-1; k++)
+//  for(int j=gridmin+1; j<gridmax-1; j++)
+//    for(int i=gridmin+1; i<gridmax-1; i++) {
+//  const int index = indexf(gridmax,i,j,k);
+//  printf("%e %e %e %e\n", alpha_interp[index], alpha_sqrtg_Ax_interp[index], alpha_sqrtg_Ay_interp[index], alpha_sqrtg_Az_interp[index]);
+//}
+
   // This loop requires two additional ghostzones in every direction. Hence the following loop definition:
 #pragma omp parallel for
   for(int k=gridmin+3; k<gridmax-3; k++)
@@ -214,8 +221,8 @@ int main(int argc, char **argv) {
   }
 
 
-  infile = fopen("phitilde_and_A_gauge_rhs.bin", "rb");
-  check_file_was_successfully_open(infile, "phitilde_and_A_gauge_rhs.bin");
+  infile = fopen("ET_Legacy_induction_gauge_rhs_output.bin", "rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_induction_gauge_rhs_output.bin");
 
   double *phitilde_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Ax_trusted       = (double*) malloc(sizeof(double)*arraylength);
@@ -232,7 +239,7 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in trusted data. Please check that comparison data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen("phitilde_and_A_gauge_rhs_pert.bin", "rb");
+  infile = fopen("ET_Legacy_induction_gauge_rhs_output_pert.bin", "rb");
   check_file_was_successfully_open(infile, "phitilde_and_A_gauge_rhs_pert.bin");
 
   double *phitilde_pert = (double*) malloc(sizeof(double)*arraylength);
@@ -250,13 +257,20 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in perturbed data. Please check that comparison data\n"
                  "is up-to-date with current test version.\n");
 
-#pragma omp parallel for
+//#pragma omp parallel for
   for(int k=gridmin+3; k<gridmax-3; k++)
     for(int j=gridmin+3; j<gridmax-3; j++)
       for(int i=gridmin+3; i<gridmax-3; i++) {
         const int index = indexf(gridmax,i,j,k);
+
+//printf("index %d %d %d\n", i, j, k);
+//printf("phitilde %e\n", phitilde_rhs[index]);
         if( validate(phitilde_trusted[index], phitilde_rhs[index], phitilde_pert[index]) )
-          grhayl_error("Test unit_test_gauge_rhs has failed for variable phitilde_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable phitilde_rhs.\n"
+                       "  phitilde trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", phitilde_trusted[index], phitilde_rhs[index], phitilde_pert[index],
+                                                   relative_error(phitilde_trusted[index], phitilde_rhs[index]),
+                                                   relative_error(phitilde_trusted[index], phitilde_pert[index]));
 
         if( validate(Ax_trusted[index], Ax_rhs[index], Ax_pert[index]) )
           grhayl_error("Test unit_test_gauge_rhs has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);

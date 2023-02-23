@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+from os.path import exists
+from shutil import which
+from argparse import ArgumentParser
+from subprocess import run
+
+# https://stackoverflow.com/questions/287871/how-do-i-print-colored-text-to-the-terminal
+class bcolors:
+    RED    = '\033[31m'
+    GREEN  = '\033[32m'
+    END    = '\033[0m'
+    BOLD   = '\033[1m'
+    BGREEN = BOLD+GREEN
+    BRED   = BOLD+RED
+
+def parse_cmd_args():
+    """
+    Parse command line arguments.
+
+    Inputs
+    ------
+      None.
+
+    Returns
+    -------
+      An argparse.Namespace object with all arguments parsed.
+    """
+
+    parser = ArgumentParser(
+        prog="./configure",
+        description="Configuration script for the GRHayL library.")
+
+    parser.add_argument("--meson"          , default="meson"    , help="path to meson executable")
+    parser.add_argument("--ninja"          , default="ninja"    , help="path to ninja executable")
+    parser.add_argument("--prefix"         , default=None       , help="installation directory")
+    parser.add_argument("--builddir"       , default="build"    , help="build directory")
+    parser.add_argument("--compile-silent" , action="store_true", help="less verbose while compiling")
+    parser.add_argument("--default-library", default="static"   , help="library type")
+
+    return parser.parse_args()
+
+def check_command_exists(cmd):
+    """
+    Checks whether or not a command exists.
+
+    Inputs
+    ------
+      cmd : str
+        Command.
+
+    Returns
+    -------
+      True if the command is found, false otherwise.
+    """
+
+    print(f"Looking for command {cmd}... ", end="")
+    path = which(cmd)
+    if path is None:
+        print(f"{bcolors.BRED}NOT FOUND{bcolors.END}")
+        # Command not found
+        return False
+    # Command found
+    print(f"{bcolors.BGREEN}FOUND{bcolors.END} ({path})")
+    return True
+
+def meson_build(args):
+    """
+    Creates the build directory and call meson build.
+
+    Inputs
+    ------
+      args : argparse.Namespace
+        Parsed command line arguments.
+
+    Returns
+    -------
+      Nothing.
+    """
+
+    if not check_command_exists(args.meson):
+        raise Exception("Could not find meson executable. Please install it "
+                        "with `pip install meson` or provide the installation "
+                        "path using ./configure --meson=<path>")
+    if not check_command_exists(args.ninja):
+        raise Exception("Could not find ninja executable. Please install it "
+                        "with `pip install ninja` or provide the installation "
+                        "path using ./configure --ninja=<path>")
+
+    cmdargs = [args.meson, "setup", args.builddir]
+    if exists(args.builddir):
+        cmdargs += ["--reconfigure"]
+    if args.prefix is not None:
+        cmdargs += [f"--prefix={args.prefix}"]
+    run(cmdargs)
+
+def write_makefile(args):
+    """
+    Writes a Makefile.
+
+    Inputs
+    ------
+      args : argparse.Namespace
+        Parsed command line arguments.
+
+    Returns
+    -------
+      Nothing.
+    """
+
+    print("Creating Makefile...", end="")
+    with open("Makefile", "w") as f:
+        f.write(f"""# Source: https://stackoverflow.com/questions/2214575/passing-arguments-to-make-run
+# If the first argument is "check*"...
+ifneq ($(filter check%, $(firstword $(MAKECMDGOALS))),)
+  # use the rest as arguments for "check"
+  testnames := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(testnames):;@:)
+endif
+
+.PHONY: grhayl check check-verbose
+prefix={args.prefix}
+
+all: grhayl
+
+grhayl:
+\t@{args.meson} compile -{'' if args.compile_silent else 'v'}C build
+
+check:
+\t@{args.meson} test -C build $(testnames)
+
+check-verbose:
+\t@{args.meson} test -vC build $(testnames)
+
+install:
+\t@{args.meson} install -C build
+
+clean:
+\t@echo "Cleaning object files"
+\t@rm -f `find build | grep -E "\.[s]?o$$"`
+
+realclean:
+\t@echo "Removing build directory."
+\t@rm -rf build lib include
+\t@echo "Restoring old Makefile."
+\t@cp Makefile_old Makefile
+\t@echo "All done. Run configure again to setup the meson build system."
+
+uninstall:
+\t@echo "Removing header files from $(prefix)/include/grhayl"
+\t@rm -rf $(prefix)/include/grhayl
+\t@echo "Removing library files from $(prefix)/lib"
+\t@rm -f `find $(prefix)/lib | grep libgrhayl`
+\t@echo "All done"
+""")
+    print(" done.")
+
+if __name__ == '__main__':
+
+    args = parse_cmd_args()
+    meson_build(args)
+    write_makefile(args)
