@@ -27,10 +27,14 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y clang-14 libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
       - name: Compile GRHayL
         run: |
-          export COMPILER=clang
-          make -j
+          CC=clang-14 ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
       - name: Copy test data to working directory
         run: |
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin -o build/${{ matrix.test-function }}_input.bin

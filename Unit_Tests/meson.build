@@ -44,11 +44,11 @@ unit_test_font_fix = executable(
   dependencies : dep_without_hdf5)
 test('font_fix', unit_test_font_fix)
 
-unit_test_HLL_flux = executable(
-  'unit_test_HLL_flux',
-  sources : ['unit_test_HLL_flux.c', common_sources],
+unit_test_ET_Legacy_HLL_flux = executable(
+  'unit_test_ET_Legacy_HLL_flux',
+  sources : ['unit_test_ET_Legacy_HLL_flux.c', common_sources],
   dependencies : dep_without_hdf5)
-test('HLL_flux', unit_test_HLL_flux)
+test('ET_Legacy_HLL_flux', unit_test_ET_Legacy_HLL_flux)
 
 unit_test_Noble2D_Hybrid_Multi_Method = executable(
   'unit_test_Noble2D_Hybrid_Multi_Method',
@@ -56,11 +56,11 @@ unit_test_Noble2D_Hybrid_Multi_Method = executable(
   dependencies : dep_without_hdf5)
 test('Noble2D_Hybrid_Multi_Method', unit_test_Noble2D_Hybrid_Multi_Method)
 
-unit_test_phitilde_and_A_gauge_rhs = executable(
-  'unit_test_phitilde_and_A_gauge_rhs',
-  sources : ['unit_test_phitilde_and_A_gauge_rhs.c', common_sources],
+unit_test_ET_Legacy_induction_gauge_rhs = executable(
+  'unit_test_ET_Legacy_induction_gauge_rhs',
+  sources : ['unit_test_ET_Legacy_induction_gauge_rhs.c', common_sources],
   dependencies : dep_without_hdf5)
-test('phitilde_and_A_gauge_rhs', unit_test_phitilde_and_A_gauge_rhs)
+test('ET_Legacy_induction_gauge_rhs', unit_test_ET_Legacy_induction_gauge_rhs)
 
 unit_test_simple_ppm = executable(
   'unit_test_simple_ppm',

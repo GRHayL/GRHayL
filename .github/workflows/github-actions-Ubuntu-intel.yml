@@ -31,12 +31,18 @@ jobs:
           # after selecting a specific mirror, we need to run 'apt-get update'
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+          # Now install meson and ninja
+          python -m pip install -U pip
+          python -m pip install meson ninja
+
       - name: Compile GRHayL
         run: |
           source /opt/intel/oneapi/setvars.sh
           printenv >> $GITHUB_ENV
-          export COMPILER=intel
-          make -j
+          CC=icx ./configure --prefix=`pwd` --compile-silent
+          make
+          make install
+
       - name: Copy test data to working directory
         run: |
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin -o build/${{ matrix.test-function }}_input.bin
