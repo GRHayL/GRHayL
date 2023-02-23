@@ -1,3 +1,4 @@
 README.md linguist-documentation
 docs/*/* linguist-documentation
 GRHayL/Flux_Source/nrpy/* linguist-vendored
+GRHayL/Flux_Source/nrpy/*/* linguist-vendored
