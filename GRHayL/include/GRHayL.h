@@ -148,7 +148,7 @@ typedef enum {grhayl_eos_hybrid, grhayl_eos_tabulated} grhayl_eos_t;
 typedef struct eos_parameters {
 
   //-------------- General parameters --------------
-  int eos_type;
+  grhayl_eos_t eos_type;
   double rho_atm, rho_min, rho_max;
   double tau_atm;
   double press_atm, press_min, press_max;
@@ -392,6 +392,7 @@ void initialize_hybrid_eos(
       eos_parameters *restrict eos );
 
 void initialize_tabulated_eos(
+      const char *table_path,
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -417,6 +418,7 @@ void initialize_hybrid_eos_functions_and_params(
       eos_parameters *restrict eos );
 
 void initialize_tabulated_eos_functions_and_params(
+      const char *table_path,
       const double W_max,
       const double rho_atm,
       const double rho_min,

@@ -8,7 +8,8 @@
   eos->rho_min           = rho_min;        \
   eos->rho_max           = rho_max;
 
-/* Function    : initialize_eos_functions()
+/*
+ * Function    : initialize_eos_functions()
  * Description : Initializes function pointers in EOS struct to NRPyEOS
  *
  * Input/Output: eos - eos_parameters struct with the function pointers
@@ -33,7 +34,8 @@ void initialize_eos_functions(
   }
 }
 
-/* Function    : initialize_hybrid_eos()
+/*
+ * Function    : initialize_hybrid_eos()
  * Description : Initializes EOS struct elements for a hybrid EOS
  *
  * Inputs      : W_max          - Maximum allowed Lorentz factor
@@ -51,7 +53,6 @@ void initialize_eos_functions(
  *
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
- *
  */
 void initialize_hybrid_eos(
       const double W_max,
@@ -114,7 +115,8 @@ void initialize_hybrid_eos(
   // --------------------------------------
 }
 
-/* Function    : initialize_tabulated_eos()
+/*
+ * Function    : initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
  *
  * Inputs      : W_max          - maximum allowed Lorentz factor
@@ -130,9 +132,9 @@ void initialize_hybrid_eos(
  *
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
- *
  */
 void initialize_tabulated_eos(
+      const char *table_filepath,
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -148,10 +150,13 @@ void initialize_tabulated_eos(
   // Step 1: Set EOS type to Tabulated.
   eos->eos_type = grhayl_eos_hybrid;
 
-  // Step 2: Initialize quantities which are common to all EOSs.
+  // Step 2: Read the EOS table
+  eos->tabulated_read_table_set_EOS_params(table_filepath, eos);
+
+  // Step 3: Initialize quantities which are common to all EOSs.
   init_common_eos_quantities;
 
-  // Step 3: Set parameters specific to Tabulated EOS.
+  // Step 4: Set parameters specific to Tabulated EOS.
   eos->Ye_atm                 = Ye_atm;
   eos->Ye_min                 = Ye_min;
   eos->Ye_max                 = Ye_max;
@@ -165,14 +170,14 @@ void initialize_tabulated_eos(
                                         &eos->eps_atm,
                                         &eos->entropy_atm);
 
-  // Step 4: These parameters are manually set here, but
+  // Step 5: These parameters are manually set here, but
   //         can be overwritten later.
-  eos->root_finding_precision = 1e-10;
+  eos->root_finding_precision = 1e-15;
   eos->depsdT_threshold       = 1e-6;
 }
 
-
-/* Function    : initialize_hybrid_eos_functions_and_params()
+/*
+ * Function    : initialize_hybrid_eos_functions_and_params()
  * Description : Fully initializes EOS struct elements for a hybrid EOS
  *
  * Inputs      : W_max          - Maximum allowed Lorentz factor
@@ -228,9 +233,9 @@ void initialize_hybrid_eos_functions_and_params(
  *
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
- *
  */
 void initialize_tabulated_eos_functions_and_params(
+      const char *table_filepath,
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -247,7 +252,7 @@ void initialize_tabulated_eos_functions_and_params(
   initialize_eos_functions(grhayl_eos_tabulated, eos);
 
   // Step 2: Initialize Tabulated EOS parameters
-  initialize_tabulated_eos(W_max,
+  initialize_tabulated_eos(table_filepath, W_max,
                            rho_atm, rho_min, rho_max,
                            Ye_atm, Ye_min, Ye_max,
                            T_atm, T_min, T_max,

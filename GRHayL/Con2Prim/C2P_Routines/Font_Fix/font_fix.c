@@ -10,8 +10,7 @@ int font_fix(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons,
-      const primitive_quantities *restrict prims,
-      primitive_quantities *restrict prims_guess,
+      primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics) {
 
   if( eos->eos_type != grhayl_eos_hybrid ) {
@@ -34,11 +33,11 @@ int font_fix(
   double utcon3 = metric->adm_gupxz*u_xl + metric->adm_gupyz*u_yl + metric->adm_gupzz*u_zl;
 
   //The Font fix only sets the velocities.  Here we set the pressure & density HARM primitives.
-  limit_utilde_and_compute_v(eos, metric, &utcon1, &utcon2, &utcon3, prims_guess, diagnostics);
-  prims_guess->rho = cons->rho/(metric->lapse*prims_guess->u0*metric->psi6);
+  limit_utilde_and_compute_v(eos, metric, &utcon1, &utcon2, &utcon3, prims, diagnostics);
+  prims->rho = cons->rho/(metric->lapse*prims->u0*metric->psi6);
 
   double K_ppoly, Gamma_ppoly;
-  eos->hybrid_get_K_and_Gamma(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);
+  eos->hybrid_get_K_and_Gamma(eos, prims->rho, &K_ppoly, &Gamma_ppoly);
 
   // After that, we set P = P_cold
   eos->hybrid_compute_P_cold(eos, prims_guess->rho, &prims_guess->press);

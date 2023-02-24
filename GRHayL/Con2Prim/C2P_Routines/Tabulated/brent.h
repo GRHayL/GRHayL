@@ -109,7 +109,7 @@ swap(
  * Function   : cicle
  * Author     : Leo Werneck
  *
- * From inputs a, b, c, cicle a <- b <- c <- a.
+ * From inputs a, b, c, cicle a, b, c = b, c, b.
  *
  * Parameters : a        - First number.
  *            : b        - Second number.
@@ -123,10 +123,9 @@ cicle(
     double *restrict b,
     double *restrict c ) {
 
-  const double d = *a;
   *a = *b;
   *b = *c;
-  *c = d;
+  *c = *a;
 }
 
 /*
@@ -269,8 +268,8 @@ brent(
     return r->error_key;
 
   // Step 2: Declare/initialize auxiliary variables
-  double c  = b;
-  double fc = fb;
+  double c  = a;
+  double fc = fa;
   double d  = b-a;
   double e  = d;
   double tol, m, P, Q, R, S;
@@ -298,7 +297,7 @@ brent(
     m = 0.5*(c-b);
 
     // Step 3.f: Check for convergence
-    if( fabs(b-a) < tol || fb == 0.0 ) {
+    if( fabs(m) < tol || fb == 0.0 ) {
       r->root     = b;
       r->residual = fb;
       return (r->error_key = brent_success);
