@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
     metric_quantities metric;
-    primitive_quantities prims, prims_guess;
+    primitive_quantities prims;
     conservative_quantities cons;
 
     // Read initial data accompanying trusted output
@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
                              Y_e_cons[i], ent_cons[i], &cons);
 
     //This uses the Font fix method to compute primitives from conservatives.
-    int check = font_fix(&params, &eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+    int check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
     //TODO: Font fix returned value isn't currently checked
 
     primitive_quantities prims_trusted, prims_pert;

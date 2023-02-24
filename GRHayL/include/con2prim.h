@@ -110,11 +110,26 @@ int Hybrid_Multi_Method(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons,
-      const primitive_quantities *restrict prims,
-      primitive_quantities *restrict prims_guess,
+      primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
 
 int Hybrid_Noble2D(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons,
+      primitive_quantities *restrict prim,
+      con2prim_diagnostics *restrict diagnostics);
+
+int Tabulated_Multi_Method(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons,
+      primitive_quantities *restrict prim,
+      con2prim_diagnostics *restrict diagnostics);
+
+int Tabulated_Palenzuela1D(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
@@ -131,8 +146,7 @@ int font_fix(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons_undens,
-      const primitive_quantities *restrict prims,
-      primitive_quantities *restrict prims_guess,
+      primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
 
 int font_fix_hybrid_EOS(

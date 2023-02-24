@@ -23,7 +23,7 @@ void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(const eos_parameters *restrict eos
   double outvars[3];
 
   // Step 4: Perform the interpolation
-  const double root_finding_precision = 1e-10;
+  const double root_finding_precision = eos_params->root_finding_precision;
   NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities( eos_params, 3,root_finding_precision,
                                                                rho,Y_e,eps,NRPyEOS_eps_key, keys,outvars, T, &report );
 
