@@ -124,18 +124,18 @@ static inline double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, con
   return(  ( Wsq * harm_aux->Qtsq  + harm_aux->QdotBsq * (harm_aux->Bsq + 2.*W)) / (Wsq*Xsq) );
 }
 
-static inline double
-compute_Bsq_from_Bup(
-      const metric_quantities *restrict metric,
-      const double *restrict Bup ) {
+// static inline double
+// compute_Bsq_from_Bup(
+//       const metric_quantities *restrict metric,
+//       const double *restrict Bup ) {
 
-  double Bsq = 0.0;
-  for(int i=0;i<3;i++)
-    for(int j=0;j<3;j++)
-      Bsq += metric->g4dn[i+1][j+1] * Bup[i] * Bup[j];
+//   double Bsq = 0.0;
+//   for(int i=0;i<3;i++)
+//     for(int j=0;j<3;j++)
+//       Bsq += metric->g4dn[i+1][j+1] * Bup[i] * Bup[j];
 
-  return Bsq;
-}
+//   return Bsq;
+// }
 
 static inline double
 compute_S_squared(

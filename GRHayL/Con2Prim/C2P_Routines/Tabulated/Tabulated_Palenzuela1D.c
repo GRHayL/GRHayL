@@ -109,6 +109,13 @@ compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
   *P_ptr   = P;
   *eps_ptr = eps;
   *W_ptr   = W;
+
+  // printf("rho = %.15e\n", rho);
+  // printf("Y_e = %.15e\n", ye);
+  // printf(" T  = %.15e\n", temp);
+  // printf(" P  = %.15e\n",  P );
+  // printf("eps = %.15e\n", eps);
+  // printf(" W  = %.15e\n",  W );
 }
 
 /*
@@ -131,6 +138,8 @@ froot( const double x, void *restrict fparams ) {
   double rho, Y_e, T, P, eps, W;
   compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
     x, fparams, &rho, &Y_e, &T, &P, &eps, &W );
+
+  //printf("ans = %.15e\n", x - (1.0 + eps + P/rho)*W);
 
   return x - (1.0 + eps + P/rho)*W;
 }
@@ -155,7 +164,7 @@ int Tabulated_Palenzuela1D(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims_guess,
+      primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
@@ -176,9 +185,9 @@ int Tabulated_Palenzuela1D(
   }
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
-  const double Bup[3] = {prims_guess->Bx * ONE_OVER_SQRT_4PI,
-                         prims_guess->By * ONE_OVER_SQRT_4PI,
-                         prims_guess->Bz * ONE_OVER_SQRT_4PI};
+  const double Bup[3] = {prims->Bx * ONE_OVER_SQRT_4PI,
+                         prims->By * ONE_OVER_SQRT_4PI,
+                         prims->Bz * ONE_OVER_SQRT_4PI};
   const double B_squared = compute_Bsq_from_Bup(metric, Bup);
 
   // Step 4: Compute B.S = B^{i}S_{i}
@@ -195,16 +204,23 @@ int Tabulated_Palenzuela1D(
   fparams.eos = eos;
   fparams.cons_undens = cons_undens;
 
+  // printf("q = %.15e\n", fparams.q);
+  // printf("r = %.15e\n", fparams.r);
+  // printf("s = %.15e\n", fparams.s);
+  // printf("t = %.15e\n", fparams.t);
+
   // Step 6: Bracket x (Eq. A8 of [1])
   double xlow = 1 + fparams.q - fparams.s;
   double xup  = 2*(1 + fparams.q) - fparams.s;
 
+  // printf("[%.15e, %.15e]\n", xlow, xup);
+
   // Step 7: Set initial guess for temperature
-  fparams.temp_guess = prims_guess->temperature;
+  fparams.temp_guess = prims->temperature;
 
   // Step 8: Call the main function and perform the con2prim
   brent_params bparams;
-  bparams.tol = 1e-12;
+  bparams.tol = 1e-15;
   bparams.max_iters = 300;
   brent(froot, &fparams, xlow, xup, &bparams);
   if( bparams.error_key != brent_success ) {
@@ -215,10 +231,14 @@ int Tabulated_Palenzuela1D(
 
   double x = bparams.root;
 
+  // printf(" x  = %.15e\n", x);
+  // printf("res = %.15e\n", bparams.residual);
+
   // Step 9: Set core primitives using the EOS and the root
-  double rho, Y_e, T, P, eps, W;
+  double W;
   compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
-    x, &fparams, &rho, &Y_e, &T, &P, &eps, &W );
+    x, &fparams, &prims->rho, &prims->Y_e, &prims->temperature,
+    &prims->press, &prims->eps, &W );
 
   // Step 10: Compute the velocities using Eq. (24) in [2]. Note, however, that
   //          GRHayL expects the velocity tilde(u)^{i} := W v^{i},
@@ -227,12 +247,12 @@ int Tabulated_Palenzuela1D(
   raise_vector_3d(metric, SD, SU);
 
   // Step 10.b: Set Z
-  const double Z = x*prims_guess->rho*W;
+  const double Z = x*prims->rho*W;
 
   // Step 10.c: Compute tilde(u)^{i}
-  prims_guess->vx = W*(SU[0] + BdotS*prims_guess->Bx/Z)/(Z+B_squared);
-  prims_guess->vy = W*(SU[1] + BdotS*prims_guess->By/Z)/(Z+B_squared);
-  prims_guess->vz = W*(SU[2] + BdotS*prims_guess->Bz/Z)/(Z+B_squared);
+  prims->vx = W*(SU[0] + BdotS*prims->Bx/Z)/(Z+B_squared);
+  prims->vy = W*(SU[1] + BdotS*prims->By/Z)/(Z+B_squared);
+  prims->vz = W*(SU[2] + BdotS*prims->Bz/Z)/(Z+B_squared);
 
   return brent_success;
 }
