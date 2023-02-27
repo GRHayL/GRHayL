@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [ET_Legacy_induction_gauge_rhs, ET_Legacy_HLL_flux]
+        test-function: [ET_Legacy_induction_gauge_rhs, ET_Legacy_HLL_flux, ET_Legacy_reconstruction]
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
 
@@ -83,44 +83,6 @@ jobs:
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5 -o build/${{ matrix.test-function }}.md5
           cd build && md5sum -c ${{ matrix.test-function }}.md5 && cd ..
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
-        run: make check-verbose ${{ matrix.test-function }}
-
-  reconstruction:
-    strategy:
-      fail-fast: false
-      matrix:
-        test-function: [simple_ppm]
-        os: [ubuntu-22.04]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup python3 environment
-        uses: actions/setup-python@v3
-      - name: Install needed ubuntu packages
-        run: |
-          # use apt-spy2 to select closest apt mirror,
-          # which helps avoid connectivity issues in Azure;
-          # see https://github.com/actions/virtual-environments/issues/675
-          sudo gem install apt-spy2
-          sudo apt-spy2 fix --commit --launchpad --country=US
-          # after selecting a specific mirror, we need to run 'apt-get update'
-          sudo apt-get update
-          sudo apt-get install -y clang-14 libhdf5-serial-dev
-          # Now install meson and ninja
-          python -m pip install -U pip
-          python -m pip install meson ninja
-      - name: Compile GRHayL
-        run: |
-          CC=clang-14 ./configure --prefix=`pwd` --compile-silent
-          make
-          make install
-      - name: Copy test data to working directory
-        run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_initial_data.bin -o build/${{ matrix.test-function }}_initial_data.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
-      - name: Run reconstruction unit test for ${{ matrix.test-function }} function
         run: make check-verbose ${{ matrix.test-function }}
 
   tabulated-eos:

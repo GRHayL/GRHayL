@@ -273,13 +273,25 @@ int main(int argc, char **argv) {
                                                    relative_error(phitilde_trusted[index], phitilde_pert[index]));
 
         if( validate(Ax_trusted[index], Ax_rhs[index], Ax_pert[index]) )
-          grhayl_error("Test unit_test_gauge_rhs has failed for variable Ax_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Ax_rhs.\n"
+                       "  Ax trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", Ax_trusted[index], Ax_rhs[index], Ax_pert[index],
+                                                   relative_error(Ax_trusted[index], Ax_rhs[index]),
+                                                   relative_error(Ax_trusted[index], Ax_pert[index]));
 
         if( validate(Ay_trusted[index], Ay_rhs[index], Ay_pert[index]) )
-          grhayl_error("Test unit_test_gauge_rhs has failed for variable Ay_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Ay_rhs.\n"
+                       "  Ay trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", Ay_trusted[index], Ay_rhs[index], Ay_pert[index],
+                                                   relative_error(Ay_trusted[index], Ay_rhs[index]),
+                                                   relative_error(Ay_trusted[index], Ay_pert[index]));
 
         if( validate(Az_trusted[index], Az_rhs[index], Az_pert[index]) )
-          grhayl_error("Test unit_test_gauge_rhs has failed for variable Az_rhs at index (%d,%d,%d).\n", i, j, k);
+          grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Az_rhs.\n"
+                       "  Az trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", Az_trusted[index], Az_rhs[index], Az_pert[index],
+                                                   relative_error(Az_trusted[index], Az_rhs[index]),
+                                                   relative_error(Az_trusted[index], Az_pert[index]));
   }
   grhayl_info("Induction equation gauge RHS test has passed!\n");
   return 0;
