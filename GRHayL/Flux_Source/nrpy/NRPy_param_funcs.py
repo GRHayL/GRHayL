@@ -8,7 +8,7 @@
 #         zachetie **at** gmail **dot* com
 
 import sympy as sp                   # Import SymPy
-import os, sys                       # Standard Python: OS-independent system functions
+import sys                           # Standard Python: OS-independent system functions
 from collections import namedtuple   # Standard Python: Enable namedtuple data type
 import re
 import textwrap

@@ -224,7 +224,7 @@ def Execute_input_string(input_string, file_to_redirect_stdout=os.devnull, verbo
     delete_existing_files(filename)
     end = time.time()
     if verbose:
-        print("(BENCH): Finished executing in "+str(round(end-start, 1))+" seconds.")
+        print("(BENCH): Finished executing in "+'{:.2f}'.format(round(end-start, 2))+" seconds.")
 
 # delete_existing_files(file_or_wildcard):
 #          Runs del file_or_wildcard in Windows, or

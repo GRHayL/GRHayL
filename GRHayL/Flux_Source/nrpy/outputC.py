@@ -591,12 +591,12 @@ def construct_Makefile_from_outC_function_dict(Ccodesrootdir, exec_name, uses_fr
             CFLAGS += " " + FLAG
             DEBUGCFLAGS += " " + FLAG
             FASTCFLAGS += " " + FLAG
-    all_str = exec_name + " "
+    obj_dependency_str = ""
     dep_list = []
     compile_list = []
     for c_file in Makefile_list_of_files:
         object_file = c_file.replace(".c", ".o")
-        all_str += " " + object_file
+        obj_dependency_str += " " + object_file
         addl_headers = ""
         if uses_free_parameters_h:
             if c_file == "main.c":
@@ -631,20 +631,20 @@ CFLAGS = """ + CHOSEN_CFLAGS + """
                     include_dirs_str += "-I" + include_dir + " "
                 include_dirs_str = include_dirs_str[:-1]
             Makefile.write("INCLUDEDIRS = " + include_dirs_str + "\n")
-            Makefile.write("all: " + all_str + "\n")
+            Makefile.write("all: " + exec_name + " " + obj_dependency_str + "\n")
             for idx, dep in enumerate(dep_list):
                 Makefile.write(dep + "\n")
                 Makefile.write(compile_list[idx] + "\n\n")
-            Makefile.write(exec_name + ": " + all_str.replace(exec_name, "") + "\n")
+            Makefile.write(exec_name + ": " + obj_dependency_str + "\n")
             ## LINKER STEP:
-            Makefile.write("\t$(CC) " + all_str.replace(exec_name, "") + " -o " + exec_name + linked_libraries + "\n")
+            Makefile.write("\t$(CC) " + obj_dependency_str + " -o " + exec_name + linked_libraries + "\n")
             ## MAKE CLEAN:
             Makefile.write("\nclean:\n\trm -f *.o */*.o *~ */*~ ./#* *.txt *.dat *.avi *.png " + exec_name + "\n")
     else:
         with open(os.path.join(Ccodesrootdir, "backup_script_nomake.sh"), "w") as backup:
             for compile_line in compile_list:
                 backup.write(compile_line.replace("$(CC)", CC).replace("$(CFLAGS)", CFLAGS).replace("\t", "") + "\n")
-            backup.write(CC + " " + CFLAGS + " " + all_str.replace(exec_name, "") + " -o " + exec_name + linked_libraries + "\n")
+            backup.write(CC + " " + CFLAGS + " " + obj_dependency_str + " -o " + exec_name + linked_libraries + "\n")
         os.chmod(os.path.join(Ccodesrootdir, "backup_script_nomake.sh"), stat.S_IRWXU)
 
 
@@ -690,7 +690,7 @@ def construct_NRPy_function_prototypes_h(Ccodesrootdir):
             file.write(item + "\n")
 
 
-def outputC_register_C_functions_and_NRPy_basic_defines():
+def outputC_register_C_functions_and_NRPy_basic_defines(addl_includes=None):
     # First register C functions needed by outputC
 
     # Then set up the dictionary entry for outputC in NRPy_basic_defines
@@ -700,6 +700,14 @@ def outputC_register_C_functions_and_NRPy_basic_defines():
 #include "math.h"
 #include "string.h" // "string.h Needed for strncmp, etc.
 #include "stdint.h" // "stdint.h" Needed for Windows GCC 6.x compatibility, and for int8_t
+"""
+    if addl_includes is not None:
+        if not isinstance(addl_includes, list):
+            print("Error: addl_includes must be a list!")
+            sys.exit(1)
+        for include in addl_includes:
+            Nbd_str += "#include \"" + include + "\"\n"
+    Nbd_str += """
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643383279502884L

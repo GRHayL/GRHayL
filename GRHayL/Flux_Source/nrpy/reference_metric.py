@@ -47,7 +47,8 @@ scalefactor_orthog = ixp.zerorank1(DIM=4)  # Must be set as a function of (xx[0]
 Cartx, Carty, Cartz = sp.symbols("Cartx Carty Cartz", real=True)
 Cart = [Cartx, Carty, Cartz]
 
-scalefactor_orthog_funcform = ixp.zerorank1(DIM=4) # Must be set in terms of generic functions of xx[]s
+scalefactor_orthog_funcform = ixp.zerorank1(DIM=4)  # Must be set in terms of generic functions of xx[]s
+
 
 # The following are necessary since SymPy has trouble with its native sinh and cosh functions.
 def nrpysinh(x):
@@ -66,8 +67,9 @@ def reference_metric(SymPySimplifyExpressions=True): #, enable_compute_hatted_qu
     f2_of_xx0_xx1_funcform = sp.Function('f2_of_xx0_xx1_funcform')(xx[0], xx[1])
     f3_of_xx0_funcform     = sp.Function('f3_of_xx0_funcform')(xx[0])
     f4_of_xx2_funcform     = sp.Function('f4_of_xx2_funcform')(xx[2])
-    f0_of_xx0, f1_of_xx1, f2_of_xx1, f2_of_xx0_xx1, f3_of_xx0, f4_of_xx2 = par.Cparameters("REAL", thismodule,
-                                  ["f0_of_xx0", "f1_of_xx1", "f2_of_xx1", "f2_of_xx0_xx1", "f3_of_xx0", "f4_of_xx2"], 1e300)
+    f0_of_xx0, f1_of_xx1, f2_of_xx1, f2_of_xx0_xx1, f3_of_xx0, f4_of_xx2 = \
+        par.Cparameters("REAL", thismodule,
+                        ["f0_of_xx0", "f1_of_xx1", "f2_of_xx1", "f2_of_xx0_xx1", "f3_of_xx0", "f4_of_xx2"], 1e300)
     # FIXME: Hack
     # return values of par.Cparameters() in the following code block are unused, so we ignore them.
     par.Cparameters("REAL", thismodule, ["f0_of_xx0__D0", "f0_of_xx0__DD00","f0_of_xx0__DDD000"], 1e300)
@@ -245,8 +247,8 @@ def reference_metric(SymPySimplifyExpressions=True): #, enable_compute_hatted_qu
             xxmax = [sp.sympify(1),  M_PI, sp.sympify(+1)]
 
             AMPLRHO, SINHWRHO, AMPLZ, SINHWZ = par.Cparameters("REAL",thismodule,
-                                                               ["AMPLRHO","SINHWRHO","AMPLZ","SINHWZ"],
-                                                               [     10.0,       0.2,   10.0,    0.2])
+                                                               ["AMPLRHO", "SINHWRHO", "AMPLZ", "SINHWZ"],
+                                                               [     10.0,        0.2,    10.0,      0.2])
 
             # Set SinhCylindrical radial & z coordinates by default; overwrite later if CoordSystem == "SinhCylindricalv2".
             RHOCYL = AMPLRHO * (sp.exp(xx[0] / SINHWRHO) - sp.exp(-xx[0] / SINHWRHO)) / (sp.exp(1 / SINHWRHO) - sp.exp(-1 / SINHWRHO))
@@ -319,9 +321,8 @@ def reference_metric(SymPySimplifyExpressions=True): #, enable_compute_hatted_qu
 
         if CoordSystem == "SinhSymTP":
             xxmax[0] = sp.sympify(1)
-            # With xxmax[0] == AMAX, sinh(xx0/AMAX) will evaluate to a number between 0 and 1.
-            #   Similarly, sinh(xx0/(AMAX*SINHWAA)) / sinh(1/SINHWAA) will also evaluate to a number between 0 and 1.
-            #   Then AA = AMAX*sinh(xx0/(AMAX*SINHWAA)) / sinh(1/SINHWAA) will evaluate to a number between 0 and AMAX.
+            # With xxmax[0] = 1, sinh(xx0/SINHWAA) / sinh(1/SINHWAA) will evaluate to a number between 0 and 1.
+            #   Then AA = AMAX * sinh(xx0/SINHWAA) / sinh(1/SINHWAA) will evaluate to a number between 0 and AMAX.
             AA = AMAX * (sp.exp(xx[0] / SINHWAA) - sp.exp(-xx[0] / SINHWAA)) / (sp.exp(1 / SINHWAA) - sp.exp(-1 / SINHWAA))
 
         var1 = sp.sqrt(AA**2 + (bScale * sp.sin(xx[1]))**2)
@@ -448,7 +449,7 @@ def reference_metric(SymPySimplifyExpressions=True): #, enable_compute_hatted_qu
                        [sp.sympify(0), sp.sympify(1), sp.sympify(0)],
                        [sp.sympify(0), sp.sympify(0), sp.sympify(1)]]
 
-    elif CoordSystem == "SinhCartesian":
+    elif "SinhCartesian" in CoordSystem:
         # SinhCartesian coordinates allows us to push the outer boundary of the
         # computational domain a lot further away, while keeping reasonably high
         # resolution towards the center of the computational grid.
@@ -722,7 +723,7 @@ def ref_metric__hatted_quantities(SymPySimplifyExpressions=True):
 
     # Step 6: At this point, each expression is written in terms of the generic functions
     #         of xx0, xx1, and/or xx2 and their derivatives. Depending on the functions, some
-    #         of these derivatives may be zero. In Step 5 we'll evaluate the function
+    #         of these derivatives may be zero. In this step, we'll evaluate the function
     #         derivatives exactly and set the expressions to zero. Otherwise in the C code
     #         we'd be storing performing arithmetic with zeros -- wasteful!
 
@@ -785,8 +786,8 @@ def ref_metric__hatted_quantities(SymPySimplifyExpressions=True):
         if derivatv == "":
             pass
         else:
-            derivorder = derivatv.replace("d", "").replace("D", "").replace("0", "0 ").replace("1", "1 ").replace(
-                "2", "2 ").split(" ")
+            derivorder = derivatv.replace("d", "").replace("D", "").\
+                replace("0", "0 ").replace("1", "1 ").replace("2", "2 ").split(" ")
             for derivdirn in derivorder:
                 if derivdirn != "":
                     derivwrt = xx[int(derivdirn)]
@@ -1012,6 +1013,58 @@ def basis_transform_tensorDD_from_Cartesian_to_rfmbasis(Jac_dUCart_dDrfmUD, Cart
                 for m in range(3):
                     rfm_dst_tensorDD[i][j] += Jac_dUCart_dDrfmUD[l][i]*Jac_dUCart_dDrfmUD[m][j]*Cart_src_tensorDD[l][m]
     return rfm_dst_tensorDD
+
+
+# Useful for stress-energy tensor; assumes reference metric is time-independent.
+def basis_transform_4tensorUU_from_time_indep_rfmbasis_to_Cartesian(Jac_dUCart_dDrfmUD, T4UU):
+    # 4D Jacobians assume that reference metric is time-independent
+    Jac4_dUCart_dDrfmUD = ixp.zerorank2(DIM=4)
+    Jac4_dUCart_dDrfmUD[0][0] = sp.sympify(1)
+    for i in range(3):
+        for j in range(3):
+            Jac4_dUCart_dDrfmUD[i+1][j+1] = Jac_dUCart_dDrfmUD[i][j]
+
+    # Perform Jacobian operations on T^{mu nu}
+    Cart_dst_T4UU = ixp.zerorank2(DIM=4)
+    for mu in range(4):
+        for nu in range(4):
+            for delta in range(4):
+                for sigma in range(4):
+                    Cart_dst_T4UU[mu][nu] += \
+                         Jac4_dUCart_dDrfmUD[mu][delta]*Jac4_dUCart_dDrfmUD[nu][sigma]*T4UU[delta][sigma]
+    return Cart_dst_T4UU
+
+
+# Useful for stress-energy tensor; assumes reference metric is time-independent.
+def basis_transform_4tensorUU_from_Cartesian_to_time_indep_rfmbasis(Jac_dUrfm_dDCartUD, T4UU):
+    # 4D Jacobians assume that reference metric is time-independent
+    Jac4_dUrfm_dDCartUD = ixp.zerorank2(DIM=4)
+    Jac4_dUrfm_dDCartUD[0][0] = sp.sympify(1)
+    for i in range(3):
+        for j in range(3):
+            Jac4_dUrfm_dDCartUD[i+1][j+1] = Jac_dUrfm_dDCartUD[i][j]
+
+    # Perform Jacobian operations on T^{mu nu}
+    Cart_dst_T4UU = ixp.zerorank2(DIM=4)
+    for mu in range(4):
+        for nu in range(4):
+            for delta in range(4):
+                for sigma in range(4):
+                    Cart_dst_T4UU[mu][nu] += \
+                         Jac4_dUrfm_dDCartUD[mu][delta]*Jac4_dUrfm_dDCartUD[nu][sigma]*T4UU[delta][sigma]
+    return Cart_dst_T4UU
+
+
+# to/from spherical coordinates
+def compute_Jacobian_and_inverseJacobian_tofrom_Spherical():
+    # Step 2.a: First construct Jacobian matrix:
+    Jac_dUSph_dDrfmUD = ixp.zerorank2()
+    for i in range(3):
+        for j in range(3):
+            Jac_dUSph_dDrfmUD[i][j] = sp.diff(xxSph[i], xx[j])
+    Jac_dUrfm_dDSphUD, dummyDET = ixp.generic_matrix_inverter3x3(Jac_dUSph_dDrfmUD)
+    return Jac_dUSph_dDrfmUD, Jac_dUrfm_dDSphUD
+
 ##################################################
 
 def get_EigenCoord():
@@ -1035,7 +1088,6 @@ def ds_dirn(delxx):
     return ds_dirn
 
 
-# Find the appropriate timestep for the CFL condition.
 # Find the appropriate timestep for the CFL condition.
 def add_to_Cfunction_dict__find_timestep(rel_path_to_Cparams=os.path.join("./"),
                                          use_unit_wavespeed=False, set_dsmin_gridfunction=False):
@@ -1229,25 +1281,25 @@ def add_to_Cfunc_dict__Cart_to_xx_and_nearest_i0i1i2(rel_path_to_Cparams=os.path
     preloop = ""
     if relative_to == "local_grid_center":
         preloop = """
-    // First compute the closest (xx0,xx1,xx2) to the given Cartesian gridpoint (x,y,z),
-    //   *relative* to the center of the local grid.
-    //   So for example,
-    //   1) if global xCart[012] = (1,1,1), and the
-    //      origin of the grid is at global xCart (x,y,z) = (1,1,1), then
-    //      (Cartx,Carty,Cartz) = (0,0,0)
-    //   2) if global xCart[012] = (0,0,0), and the
-    //      origin of the grid is at global xCart (x,y,z) = (1,1,1), then
-    //      (Cartx,Carty,Cartz) = (-1,-1,-1)
-    // Therefore, (Cartx,Carty,Cartz) = (xCart[0]-originx, xCart[1]-originy, xCart[2]-originz)
-    const REAL Cartx = xCart[0] - Cart_originx;
-    const REAL Carty = xCart[1] - Cart_originy;
-    const REAL Cartz = xCart[2] - Cart_originz;
+  // First compute the closest (xx0,xx1,xx2) to the given Cartesian gridpoint (x,y,z),
+  //   *relative* to the center of the local grid.
+  //   So for example,
+  //   1) if global xCart[012] = (1,1,1), and the
+  //      origin of the grid is at global xCart (x,y,z) = (1,1,1), then
+  //      (Cartx,Carty,Cartz) = (0,0,0)
+  //   2) if global xCart[012] = (0,0,0), and the
+  //      origin of the grid is at global xCart (x,y,z) = (1,1,1), then
+  //      (Cartx,Carty,Cartz) = (-1,-1,-1)
+  // Therefore, (Cartx,Carty,Cartz) = (xCart[0]-originx, xCart[1]-originy, xCart[2]-originz)
+  const REAL Cartx = xCart[0] - Cart_originx;
+  const REAL Carty = xCart[1] - Cart_originy;
+  const REAL Cartz = xCart[2] - Cart_originz;
 """
     elif relative_to == "global_grid_center":
         preloop = """
-    const REAL Cartx = xCart[0];
-    const REAL Carty = xCart[1];
-    const REAL Cartz = xCart[2];
+  const REAL Cartx = xCart[0];
+  const REAL Carty = xCart[1];
+  const REAL Cartz = xCart[2];
 """
     else:
         print("Error: relative_to must be set to either local_grid_center or global_grid_center. " + relative_to + " was chosen.")
@@ -1262,13 +1314,13 @@ def add_to_Cfunc_dict__Cart_to_xx_and_nearest_i0i1i2(rel_path_to_Cparams=os.path
                        ["xx[0]", "xx[1]", "xx[2]"], "returnstring", params="includebraces=False,preindent=1")
 
     body += """
-    // Then find the nearest index (i0,i1,i2) on underlying grid to (x,y,z)
-    // Recall that:
-    // xx[0][j] = xxmin[0] + ((REAL)(j-NGHOSTS) + (1.0/2.0))*params->dxx0; // Cell-centered grid.
-    //   --> j = (int) ( (xx[0][j] - xxmin[0]) / params->dxx0 + (1.0/2.0) + NGHOSTS )
-    Cart_to_i0i1i2[0] = (int)( ( xx[0] - ("""+str(xxmin[0])+""") ) / params->dxx0 + (1.0/2.0) + NGHOSTS - 0.5 ); // Account for (int) typecast rounding down
-    Cart_to_i0i1i2[1] = (int)( ( xx[1] - ("""+str(xxmin[1])+""") ) / params->dxx1 + (1.0/2.0) + NGHOSTS - 0.5 ); // Account for (int) typecast rounding down
-    Cart_to_i0i1i2[2] = (int)( ( xx[2] - ("""+str(xxmin[2])+""") ) / params->dxx2 + (1.0/2.0) + NGHOSTS - 0.5 ); // Account for (int) typecast rounding down
+  // Then find the nearest index (i0,i1,i2) on underlying grid to (x,y,z)
+  // Recall that:
+  // xx[0][j] = xxmin[0] + ((REAL)(j-NGHOSTS) + (1.0/2.0))*params->dxx0; // Cell-centered grid.
+  //   --> j = (int) ( (xx[0][j] - xxmin[0]) / params->dxx0 + (1.0/2.0) + NGHOSTS )
+  Cart_to_i0i1i2[0] = (int)( ( xx[0] - ("""+str(xxmin[0])+""") ) / params->dxx0 + (1.0/2.0) + NGHOSTS - 0.5 ); // Account for (int) typecast rounding down
+  Cart_to_i0i1i2[1] = (int)( ( xx[1] - ("""+str(xxmin[1])+""") ) / params->dxx1 + (1.0/2.0) + NGHOSTS - 0.5 ); // Account for (int) typecast rounding down
+  Cart_to_i0i1i2[2] = (int)( ( xx[2] - ("""+str(xxmin[2])+""") ) / params->dxx2 + (1.0/2.0) + NGHOSTS - 0.5 ); // Account for (int) typecast rounding down
 """
     add_to_Cfunction_dict(
         includes=[os.path.join(rel_path_to_Cparams, "NRPy_basic_defines.h")],
@@ -1282,7 +1334,13 @@ def add_to_Cfunc_dict__Cart_to_xx_and_nearest_i0i1i2(rel_path_to_Cparams=os.path
         rel_path_to_Cparams=rel_path_to_Cparams)
 
 
-def add_to_Cfunc_dict_set_Nxx_dxx_invdx_params__and__xx(rel_path_to_Cparams=os.path.join("./"), NGHOSTS_is_a_param=False):
+def add_to_Cfunc_dict_set_Nxx_dxx_invdx_params__and__xx(rel_path_to_Cparams=os.path.join("./")):
+    includes = [os.path.join(rel_path_to_Cparams, "NRPy_basic_defines.h")]
+    desc = "Override default values for Nxx{0,1,2}, Nxx_plus_2NGHOSTS{0,1,2}, dxx{0,1,2}, and invdx{0,1,2}; and set xx[3][]"
+    c_type = "void"
+    name = "set_Nxx_dxx_invdx_params__and__xx"
+    params = "const int EigenCoord, const int Nxx[3],paramstruct *restrict params, REAL *restrict xx[3]"
+
     def set_xxmin_xxmax():
         outstr = ""
         for dirn in range(3):
@@ -1290,18 +1348,17 @@ def add_to_Cfunc_dict_set_Nxx_dxx_invdx_params__and__xx(rel_path_to_Cparams=os.p
             outstr += "    xxmax[" + str(dirn) + "] = " + str(xxmax[dirn]) + ";\n"
         return outstr
     body = """
+  // Set CoordSystemName
+  snprintf(params->CoordSystemName, 100, \"""" + par.parval_from_str("CoordSystem") + """\");
+
   // Override parameter defaults with values based on command line arguments and NGHOSTS.
   params->Nxx0 = Nxx[0];
   params->Nxx1 = Nxx[1];
   params->Nxx2 = Nxx[2];
-"""
-    NGHOSTS_prefix=""
-    if NGHOSTS_is_a_param:
-        NGHOSTS_prefix="params->"
-    body += """
-  params->Nxx_plus_2NGHOSTS0 = Nxx[0] + 2*"""+NGHOSTS_prefix+"""NGHOSTS;
-  params->Nxx_plus_2NGHOSTS1 = Nxx[1] + 2*"""+NGHOSTS_prefix+"""NGHOSTS;
-  params->Nxx_plus_2NGHOSTS2 = Nxx[2] + 2*"""+NGHOSTS_prefix+"""NGHOSTS;
+
+  params->Nxx_plus_2NGHOSTS0 = Nxx[0] + 2*NGHOSTS;
+  params->Nxx_plus_2NGHOSTS1 = Nxx[1] + 2*NGHOSTS;
+  params->Nxx_plus_2NGHOSTS2 = Nxx[2] + 2*NGHOSTS;
   // Now that params->Nxx_plus_2NGHOSTS* has been set, and below we need e.g., Nxx_plus_2NGHOSTS*, we include set_Cparameters.h here:
 #include \"""" + os.path.join(rel_path_to_Cparams, "set_Cparameters.h") + """\"
   // Step 0d: Set up space and time coordinates
@@ -1329,20 +1386,19 @@ def add_to_Cfunc_dict_set_Nxx_dxx_invdx_params__and__xx(rel_path_to_Cparams=os.p
     for dirn in ["0", "1", "2"]:
         body += "  params->dxx"+dirn+" = (xxmax["+dirn+"] - xxmin["+dirn+"]) / ((REAL)Nxx["+dirn+"]);\n"
         body += "  params->invdx"+dirn+" = 1.0/params->dxx"+dirn+";\n"
-        body += """  xx["""+dirn+"""] = (REAL *)malloc(sizeof(REAL)*Nxx_plus_2NGHOSTS"""+dirn + """);
+        body += """  xx["""+dirn+"""] = (REAL *)malloc(sizeof(REAL)*Nxx_plus_2NGHOSTS"""+dirn+ """);
+#pragma omp parallel for
   for(int j=0;j<Nxx_plus_2NGHOSTS"""+dirn+""";j++)
-    xx["""+dirn+"""][j] = xxmin["""+dirn+"""] + ((REAL)(j-NGHOSTS) + (1.0/2.0))*params->dxx"""+dirn+"""; // Cell-centered grid.\n"""
-        if dirn != "2":
-            body += "\n"
+    xx["""+dirn+"""][j] = xxmin["""+dirn+"""] + ((REAL)(j-NGHOSTS) + (1.0/2.0))*params->dxx"""+dirn+"""; // Cell-centered grid.\n\n"""
+    body = body[:-1]  # Remove last "\n" for consistent aesthetics
 
     add_to_Cfunction_dict(
-        includes=[os.path.join(rel_path_to_Cparams, "NRPy_basic_defines.h")],
-        desc  ="Override default values for Nxx{0,1,2}, Nxx_plus_2NGHOSTS{0,1,2}, dxx{0,1,2}, and invdx{0,1,2}; and set xx[3][]",
-        c_type="void",
-        name  ="set_Nxx_dxx_invdx_params__and__xx",
-        params="const int EigenCoord, const int Nxx[3],paramstruct *restrict params, REAL *restrict xx[3]",
+        includes=includes,
+        desc  =desc,
+        c_type=c_type,  name  =name,  params=params,
         body  =body,
         enableCparameters=False)  # Cparameters here must be #include'd in body, not at top of function as usual.
+
 
 def add_to_Cfunc_dict_xx_to_Cart(rel_path_to_Cparams=os.path.join("./")):
     # Arbitrary-coordinate NRPy+ file output, Part 1: output the conversion from (x0,x1,x2) to Cartesian (x,y,z)
@@ -1370,12 +1426,22 @@ def add_to_Cfunc_dict_xx_to_Cart(rel_path_to_Cparams=os.path.join("./")):
 
 
 def register_NRPy_basic_defines(enable_rfm_precompute=False):
+    # TODO: Move the following to the top of this file when "old_way" is deprecated
+    par.initialize_Cparam(par.glb_Cparam("char [100]", thismodule, "CoordSystemName", "Nxx_dxx_invdx_params__and__xx_sets_this"))
+
     Nbd = ""
     if enable_rfm_precompute:
         if par.parval_from_str(thismodule+"::rfm_precompute_to_Cfunctions_and_NRPy_basic_defines") == "True":
             Nbd += NRPy_basic_defines_str
         else:
             Nbd += "#include \"" + os.path.join("rfm_files", "rfm_struct__declare.h") + "\"\n"
+    # Finally, register griddata information for this module.
+    #   griddata is declared inside NRPy_basic_defines.h.
+    griddata_struct_list = []
+    # griddata_struct_list = [gri.glb_griddata(__name__, "char CoordSystemname[100];  // the name of the CoordSystem (from reference_metric)")]
+    if enable_rfm_precompute:
+        griddata_struct_list += [gri.glb_griddata(__name__, "rfm_struct rfmstruct;")]
+    gri.glb_griddata_struct_list += griddata_struct_list
 
     outC_NRPy_basic_defines_h_dict["reference_metric"] = Nbd
 
