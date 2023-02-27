@@ -62,11 +62,11 @@ unit_test_ET_Legacy_induction_gauge_rhs = executable(
   dependencies : dep_without_hdf5)
 test('ET_Legacy_induction_gauge_rhs', unit_test_ET_Legacy_induction_gauge_rhs)
 
-unit_test_simple_ppm = executable(
-  'unit_test_simple_ppm',
-  sources : ['unit_test_simple_ppm.c', common_sources],
+unit_test_ET_Legacy_reconstruction = executable(
+  'unit_test_ET_Legacy_reconstruction',
+  sources : ['unit_test_ET_Legacy_reconstruction.c', common_sources],
   dependencies : dep_without_hdf5)
-test('simple_ppm', unit_test_simple_ppm)
+test('ET_Legacy_reconstruction', unit_test_ET_Legacy_reconstruction)
 
 unit_test_tabulated_eos = executable(
   'unit_test_tabulated_eos',
