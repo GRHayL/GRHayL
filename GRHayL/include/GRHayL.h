@@ -5,8 +5,12 @@
 #include <math.h>
 #include "GRHayL_io.h"
 
-#define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
-#define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
+#ifndef MIN
+#define MIN(A, B) ( ((A) < (B)) ? (A) : (B) )
+#endif
+#ifndef MAX
+#define MAX(A, B) ( ((A) > (B)) ? (A) : (B) )
+#endif
 #define SQR(x) ((x) * (x))
 #define ONE_OVER_SQRT_4PI 0.282094791773878143474039725780
 

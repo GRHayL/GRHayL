@@ -3,9 +3,6 @@
 
 #include "GRHayL.h"
 
-#define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
-#define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
-
 // Integer constants to keep track of stencil.
 enum reconstruction_stencil {
   MINUS2, MINUS1,
