@@ -3,14 +3,14 @@
 
 #include "GRHayL.h"
 
-enum available_con2prim_methods {
+typedef enum available_con2prim_methods {
   None=-1,
   Noble2D, Noble1D,
   Noble1D_entropy, Noble1D_entropy2,
   CerdaDuran2D, CerdaDuran3D,
   Palenzuela1D, Palenzuela1D_entropy,
   Newman1D
-};
+} con2prim_method_t;
 
 //------------- Con2Prim struct --------------------
 /*
@@ -113,14 +113,6 @@ int Hybrid_Multi_Method(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
 
-int Hybrid_Noble2D(
-      const GRHayL_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prim,
-      con2prim_diagnostics *restrict diagnostics);
-
 int Tabulated_Multi_Method(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
@@ -129,7 +121,23 @@ int Tabulated_Multi_Method(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
+int Hybrid_Noble2D(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons,
+      primitive_quantities *restrict prim,
+      con2prim_diagnostics *restrict diagnostics);
+
 int Tabulated_Palenzuela1D(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons,
+      primitive_quantities *restrict prim,
+      con2prim_diagnostics *restrict diagnostics);
+
+int Tabulated_Palenzuela1D_entropy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,

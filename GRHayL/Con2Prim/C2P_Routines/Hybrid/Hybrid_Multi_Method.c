@@ -2,7 +2,7 @@
 
 int Hybrid_Select_Method(const GRHayL_parameters *restrict params,
                          const eos_parameters *restrict eos,
-                         const int c2p_key,
+                         const con2prim_method_t c2p_key,
                          const metric_quantities *restrict metric,
                          const conservative_quantities *restrict cons,
                          primitive_quantities *restrict prims,
@@ -58,7 +58,7 @@ int Hybrid_Multi_Method( const GRHayL_parameters *restrict params,
 
 int Hybrid_Select_Method(const GRHayL_parameters *restrict params,
                          const eos_parameters *restrict eos,
-                         const int c2p_key,
+                         const con2prim_method_t c2p_key,
                          const metric_quantities *restrict metric,
                          const conservative_quantities *restrict cons,
                          primitive_quantities *restrict prims,
