@@ -35,6 +35,7 @@ typedef enum {
  */
 typedef struct roots_params {
   roots_error_t error_key;
+  char routine_name[256];
   unsigned n_iters, max_iters;
   double a, b, root, residual, tol;
 } roots_params;
@@ -54,7 +55,7 @@ roots_info(const roots_params *restrict r) {
 
   // Step 1: Print basic message to the user
   printf("(roots) Root-finding information:\n");
-  printf("(roots)   %16s : Brent's\n", "Method");
+  printf("(roots)   %16s : %s\n", "Routine", r->routine_name);
   printf("(roots)   %16s : [%c%21.15e, %c%21.15e]\n",
          "Initial interval",
          r->a >= 0 ? '+' : '-', fabs(r->a),
@@ -79,7 +80,7 @@ roots_info(const roots_params *restrict r) {
     case roots_error_not_finite:
       printf("Failure\n");
       printf("(roots)   %16s : ", "Error message");
-      printf("Found NAN or INF during Brent's method.\n");
+      printf("Found NAN or INF during root-finding procedure.\n");
       break;
   }
 
