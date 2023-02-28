@@ -113,13 +113,6 @@ compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
   *P_ptr   = P;
   *eps_ptr = eps;
   *W_ptr   = W;
-
-  // printf("rho = %.15e\n", rho);
-  // printf("Y_e = %.15e\n", ye);
-  // printf(" T  = %.15e\n", temp);
-  // printf(" P  = %.15e\n",  P );
-  // printf("eps = %.15e\n", eps);
-  // printf(" W  = %.15e\n",  W );
 }
 
 /*
@@ -142,8 +135,6 @@ froot( const double x, void *restrict fparams ) {
   double rho, Y_e, T, P, eps, W;
   compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
     x, fparams, &rho, &Y_e, &T, &P, &eps, &W );
-
-  //printf("ans = %.15e\n", x - (1.0 + eps + P/rho)*W);
 
   return x - (1.0 + eps + P/rho)*W;
 }
@@ -216,25 +207,6 @@ int Tabulated_Palenzuela1D(
   // Step 7: Set initial guess for temperature
   fparams.temp_guess = prims->temperature;
 
-  printf(" D  = %.15e\n", cons_undens->rho);
-  printf("tau = %.15e\n", cons_undens->tau);
-  printf("S_x = %.15e\n", SD[0]);
-  printf("S_y = %.15e\n", SD[1]);
-  printf("S_z = %.15e\n", SD[2]);
-  printf("S^2 = %.15e\n", S_squared);
-  printf("B^x = %.15e\n", BU[0]);
-  printf("B^y = %.15e\n", BU[1]);
-  printf("B^z = %.15e\n", BU[2]);
-  printf("B^2 = %.15e\n", B_squared);
-  printf("B.S = %.15e\n", BdotS);
-  printf(" q  = %.15e\n", fparams.q);
-  printf(" r  = %.15e\n", fparams.r);
-  printf(" s  = %.15e\n", fparams.s);
-  printf(" t  = %.15e\n", fparams.t);
-  printf(" a  = %.15e\n", xlow);
-  printf(" b  = %.15e\n", xup);
-  printf(" T  = %.15e\n", fparams.temp_guess);
-
   // Step 8: Call the main function and perform the con2prim
   roots_params rparams;
   rparams.tol = 1e-15;
@@ -246,21 +218,14 @@ int Tabulated_Palenzuela1D(
     prims->temperature = eos->T_max;
     toms748(froot, &fparams, xlow, xup, &rparams);
     if( rparams.error_key != roots_success ) {
-      grhayl_warn("Brent's method did not find a root (see error report below)\n");
+      grhayl_warn("TOMS748 did not find a root (see error report below)\n");
       roots_info(&rparams);
       return rparams.error_key;
     }
   }
 
-  double x = rparams.root;
-  printf(" x  = %.15e\n", x);
-
-  // printf(" x  = %.15e\n", x);
-  // printf("res = %.15e\n", bparams.residual);
-
   // Step 9: Set core primitives using the EOS and the root
-  printf(" Tg = %.15e\n", prims->temperature);
-  double W;
+  double W, x = rparams.root;
   compute_rho_Ye_T_P_eps_W_from_x_and_conservatives(
     x, &fparams, &prims->rho, &prims->Y_e, &prims->temperature,
     &prims->press, &prims->eps, &W );
@@ -274,28 +239,10 @@ int Tabulated_Palenzuela1D(
   // Step 10.b: Set Z
   const double Z = x*prims->rho*W;
 
-  printf(" T  = %.15e\n", prims->temperature);
-  printf("eps = %.15e\n", prims->eps);
-
-  printf(" W  = %.15e\n", W);
-  printf(" Z  = %.15e\n", Z);
-  printf("S^x = %.15e\n", SU[0]);
-  printf("S^y = %.15e\n", SU[1]);
-  printf("S^z = %.15e\n", SU[2]);
-  printf("B^x = %.15e\n", BU[0]);
-  printf("B^y = %.15e\n", BU[1]);
-  printf("B^z = %.15e\n", BU[2]);
-  printf("B^2 = %.15e\n", B_squared);
-  printf("B.S = %.15e\n", BdotS);
-
   // Step 10.c: Compute tilde(u)^{i}
   prims->vx = W*(SU[0] + BdotS*BU[0]/Z)/(Z+B_squared);
   prims->vy = W*(SU[1] + BdotS*BU[1]/Z)/(Z+B_squared);
   prims->vz = W*(SU[2] + BdotS*BU[2]/Z)/(Z+B_squared);
-
-  printf("u^x = %.15e\n", prims->vx);
-  printf("u^y = %.15e\n", prims->vy);
-  printf("u^z = %.15e\n", prims->vz);
 
   return roots_success;
 }
