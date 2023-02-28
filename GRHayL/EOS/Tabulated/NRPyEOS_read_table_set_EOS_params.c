@@ -253,10 +253,10 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   eos_params->table_Ye_min   = eos_params->table_Ye[0];
 
   // Table bounds for useful quantities
-  eos_params->table_P_min   = get_EOS_table_min(eos_params, NRPyEOS_press_key);
-  eos_params->table_P_max   = get_EOS_table_max(eos_params, NRPyEOS_press_key);
-  eos_params->table_eps_min = get_EOS_table_min(eos_params, NRPyEOS_eps_key);
-  eos_params->table_eps_max = get_EOS_table_max(eos_params, NRPyEOS_eps_key);
+  eos_params->table_P_min   = exp(get_EOS_table_min(eos_params, NRPyEOS_press_key));
+  eos_params->table_P_max   = exp(get_EOS_table_max(eos_params, NRPyEOS_press_key));
+  eos_params->table_eps_min = exp(get_EOS_table_min(eos_params, NRPyEOS_eps_key)) - eos_params->energy_shift;
+  eos_params->table_eps_max = exp(get_EOS_table_max(eos_params, NRPyEOS_eps_key)) - eos_params->energy_shift;
   eos_params->table_ent_min = get_EOS_table_min(eos_params, NRPyEOS_entropy_key);
   eos_params->table_ent_max = get_EOS_table_max(eos_params, NRPyEOS_entropy_key);
 #endif

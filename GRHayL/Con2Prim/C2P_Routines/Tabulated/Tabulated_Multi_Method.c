@@ -3,7 +3,7 @@
 int Tabulated_Select_Method(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const int c2p_key,
+      const con2prim_method_t c2p_key,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prims,
@@ -13,6 +13,9 @@ int Tabulated_Select_Method(
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
       return( Tabulated_Palenzuela1D(params, eos, metric, cons, prims, diagnostics) );
+      break;
+    case Palenzuela1D_entropy:
+      return( Tabulated_Palenzuela1D_entropy(params, eos, metric, cons, prims, diagnostics) );
       break;
     default:
       grhayl_Error(100, "Unknown c2p key in Tabulated_Select_Method (%d).", c2p_key);
