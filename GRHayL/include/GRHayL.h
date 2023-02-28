@@ -51,13 +51,12 @@ typedef struct GRHayL_parameters {
 void initialize_GRHayL(
       const int main,
       const int backup[3],
-      const int evolve_entropy,
-      const int evolve_temp,
-      const int calc_prim_guess,
+      const bool evolve_entropy,
+      const bool evolve_temp,
+      const bool calc_prim_guess,
       const double psi6threshold,
-      const int update_Tmunu,
-      const int Cupp_Fix,
-      const double Lorenz_damping_factor,
+      const bool update_Tmunu,
+      const bool Cupp_Fix,
       GRHayL_parameters *restrict params);
 
 //--------------------------------------------------
@@ -100,7 +99,7 @@ typedef struct primitive_quantities {
   double rho, press, eps;
   double u0, vx, vy, vz;
   double Bx, By, Bz;
-  double entropy, Y_e, temperature;
+  double Y_e, temperature, entropy;
 } primitive_quantities;
 
 /*
