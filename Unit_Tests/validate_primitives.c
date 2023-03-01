@@ -89,10 +89,6 @@ void validate_primitives(
   }
 
   if(test_fail) {
-    //grhayl_warn("%.100s\n", fail_msg);
-printf(" output %.14e %.14e %.14e %.14e %.14e\n", prims->rho, prims->press, prims->vx, prims->vy, prims->vz);
-printf("trusted %.14e %.14e %.14e %.14e %.14e\n", prims_trusted->rho, prims_trusted->press, prims_trusted->vx, prims_trusted->vy, prims_trusted->vz);
-printf("perturb %.14e %.14e %.14e %.14e %.14e\n", prims_pert->rho, prims_pert->press, prims_pert->vx, prims_pert->vy, prims_pert->vz);
     grhayl_error("%.100s\n", fail_msg);
   }
   return;

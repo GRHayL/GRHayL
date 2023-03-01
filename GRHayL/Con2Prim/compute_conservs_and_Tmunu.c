@@ -30,7 +30,6 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
 
   // First compute the enthalpy
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;
-printf("ent %.14e\n %.14e\n %.14e\n", prims->eps, prims->press, prims->rho);
 
   double uUP[4], uDN[4];
 
@@ -40,7 +39,6 @@ printf("ent %.14e\n %.14e\n %.14e\n", prims->eps, prims->press, prims->rho);
   uUP[2] = uUP[0]*prims->vy;
   uUP[3] = uUP[0]*prims->vz;
 
-//printf("uup %.14e\n %.14e\n %.14e\n %.14e\n", uUP[0], uUP[1], uUP[2], uUP[3]);
   // Compute u_\alpha
   lower_vector(metric, uUP, uDN);
 
@@ -50,21 +48,15 @@ printf("ent %.14e\n %.14e\n %.14e\n", prims->eps, prims->press, prims->rho);
   // Compute b^{\mu}, b^2, and u_i/(u^0 Psi4)
   double smallb[4], smallb2;
   compute_smallb_and_b2(metric, prims, uDN, smallb, &smallb2);
-//printf("bup %.14e\n %.14e\n %.14e\n %.14e\n", smallb[0], smallb[1], smallb[2], smallb[3]);
-//printf("udn %.14e\n %.14e\n %.14e\n %.14e\n", uDN[0], uDN[1], uDN[2], uDN[3]);
 
   // Precompute some useful quantities, for later:
   const double alpha_sqrt_gamma = metric->lapse*metric->psi6;
   const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
-//printf("int %.14e\n %.14e\n %.14e\n", alpha_sqrt_gamma, rho0_h_plus_b2, P_plus_half_b2);
 
   double smallb_lower[4];
   lower_vector(metric, smallb, smallb_lower);
-//printf("bdn %.14e\n %.14e\n %.14e\n %.14e\n", smallb_lower[0], smallb_lower[1], smallb_lower[2], smallb_lower[3]);
 
-//printf("term1 %.14e\n %.14e\n %.14e\n", cons->rho,h_enthalpy,uDN[1]);
-//printf("  S %.14e\n %.14e\n %.14e\n", cons->rho*h_enthalpy*uDN[1], uUP[0]*smallb2*uDN[1], smallb[0]*smallb_lower[1]);
   // Compute conservatives:
   cons->rho = alpha_sqrt_gamma * prims->rho * uUP[0];
   cons->S_x = cons->rho*h_enthalpy*uDN[1] + alpha_sqrt_gamma*(uUP[0]*smallb2*uDN[1] - smallb[0]*smallb_lower[1]);
