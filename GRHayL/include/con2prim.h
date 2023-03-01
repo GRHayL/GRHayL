@@ -129,7 +129,7 @@ int Hybrid_Noble2D(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int Tabulated_Palenzuela1D(
+int Tabulated_Palenzuela1D_energy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,

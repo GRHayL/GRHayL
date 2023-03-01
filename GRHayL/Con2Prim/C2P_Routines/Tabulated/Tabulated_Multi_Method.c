@@ -12,7 +12,7 @@ int Tabulated_Select_Method(
   switch( c2p_key ) {
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
-      return( Tabulated_Palenzuela1D(params, eos, metric, cons, prims, diagnostics) );
+      return( Tabulated_Palenzuela1D_energy(params, eos, metric, cons, prims, diagnostics) );
       break;
     case Palenzuela1D_entropy:
       return( Tabulated_Palenzuela1D_entropy(params, eos, metric, cons, prims, diagnostics) );
