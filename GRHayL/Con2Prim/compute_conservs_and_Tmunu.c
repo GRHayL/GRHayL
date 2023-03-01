@@ -63,27 +63,6 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   // Tabulated EOS evolves Y_e_star = alpha * sqrt(gamma) * rho_b * Y_e * u^{0} = rho_star * Y_e
   cons->Y_e = cons->rho * prims->Y_e;
 
-  printf("----------------------------\n");
-  printf("rho = %.15e\n", prims->rho);
-  printf("Y_e = %.15e\n", prims->Y_e);
-  printf(" T  = %.15e\n", prims->temperature);
-  printf(" P  = %.15e\n", prims->press);
-  printf("eps = %.15e\n", prims->eps);
-  printf("v^x = %.15e\n", prims->vx);
-  printf("v^y = %.15e\n", prims->vy);
-  printf("v^z = %.15e\n", prims->vz);
-  printf("B^x = %.15e\n", prims->Bx);
-  printf("B^y = %.15e\n", prims->By);
-  printf("B^z = %.15e\n", prims->Bz);
-  printf(" h  = %.15e\n", h_enthalpy);
-  printf(" ~D = %.15e\n", cons->rho);
-  printf("~Sx = %.15e\n", cons->S_x);
-  printf("~Sy = %.15e\n", cons->S_y);
-  printf("~Sz = %.15e\n", cons->S_z);
-  printf("~tau= %.15e\n", cons->tau);
-  printf("~DYe= %.15e\n", cons->Y_e);
-  printf("----------------------------\n");
-
   // Finally, compute T_{\mu \nu}
   // T_{mn} = (rho_0 h + b^2) u_m u_n + (P + 0.5 b^2) g_{mn} - b_m b_n, where m and n both run from 0 to 3.
   // We don't use the GRHayL-provided function for computing T_{\mu \nu} because we can reuse a lot of precomputed quantities
