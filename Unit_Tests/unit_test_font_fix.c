@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
                       entropy_pert[i], Y_e_pert[i], temperature_pert[i],
                       &prims_pert);
 
-    validate_primitives(params.evolve_entropy, &eos, &prims_guess, &prims_trusted, &prims_pert);
+    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims_guess, &prims_pert);
   }
   printf("Completed test for routine font_fix\n");
   return 0;

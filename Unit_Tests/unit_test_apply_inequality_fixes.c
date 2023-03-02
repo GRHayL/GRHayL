@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
                              Y_e_cons_pert[i], ent_cons_pert[i], &cons_pert);
 
 
-    validate_conservatives(params.evolve_entropy, &cons, &cons_trusted, &cons_pert);
+    validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
   }
   printf("Completed test for routine apply_inequality_fixes\n");
   return 0;

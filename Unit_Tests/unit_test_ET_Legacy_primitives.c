@@ -287,7 +287,7 @@ int main(int argc, char **argv) {
     prims_pert_rel_error[3] += relative_error(prims_orig.vy, prims_pert.vy);
     prims_pert_rel_error[4] += relative_error(prims_orig.vz, prims_pert.vz);
 
-    validate_primitives(params.evolve_entropy, &eos, &prims, &prims_trusted, &prims_pert);
+    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
   }
 
   output = fopen("prims_summary.asc","w");

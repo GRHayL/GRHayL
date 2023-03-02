@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
                       entropy_pert[i], Y_e_pert[i], temperature_pert[i],
                       &prims_pert);
 
-    validate_primitives(params.evolve_entropy, &eos, &prims, &prims_trusted, &prims_pert);
+    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
     // The value of u0 varies by more than roundoff because roundoff alone can trigger the velocity
     // limiting if it is on the edge, leading to a higher difference in some edge cases. Thus,
     // the default roundoff tolerance of validate() is not a valid floor for the possible

@@ -308,9 +308,9 @@ int main(int argc, char **argv) {
     Tmunu_pert.Tyy = Tyy_pert[index];
     Tmunu_pert.Tyz = Tyz_pert[index];
 
-    validate_primitives(params.evolve_entropy, &eos, &prims, &prims_trusted, &prims_pert);
-    validate_conservatives(params.evolve_entropy, &cons, &cons_trusted, &cons_pert);
-    validate_stress_energy(&Tmunu, &Tmunu_trusted, &Tmunu_pert);
+    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
+    validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   return 0;
 }

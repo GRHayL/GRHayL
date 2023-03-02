@@ -79,7 +79,6 @@ int main(int argc, char **argv) {
   double *restrict etk_evol_gfs    = (double *restrict)malloc(sizeof(double) * NUM_EVOL_GFS * Nxx_plus_2NGHOSTS_tot);
   double *restrict auxevol_gfs = (double *restrict)malloc(sizeof(double) * NUM_AUXEVOL_GFS * Nxx_plus_2NGHOSTS_tot);
 
-
   // Now we need to properly populate our structs for the unit test.
 
   primitive_quantities prims, prims_r, prims_l;

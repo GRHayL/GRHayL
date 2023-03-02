@@ -8,8 +8,8 @@
 */
 
 void validate_stress_energy(
-                     const stress_energy *restrict Tmunu,
                      const stress_energy *restrict Tmunu_trusted,
+                     const stress_energy *restrict Tmunu,
                      const stress_energy *restrict Tmunu_pert) {
 
 

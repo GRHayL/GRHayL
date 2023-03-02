@@ -225,8 +225,8 @@ int main(int argc, char **argv) {
     Tmunu_pert.Tyz = Tyz_pert[i];
     Tmunu_pert.Tzz = Tzz_pert[i];
 
-    validate_conservatives(params.evolve_entropy, &cons, &cons_trusted, &cons_pert);
-    validate_stress_energy(&Tmunu, &Tmunu_trusted, &Tmunu_pert);
+    validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   printf("Completed test for routine compute_conservs_and_Tmunu\n");
   return 0;

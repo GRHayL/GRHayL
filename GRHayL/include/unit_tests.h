@@ -10,19 +10,19 @@
 void validate_primitives(
       const bool evolve_entropy,
       const eos_parameters *restrict eos,
-      const primitive_quantities *restrict prims,
       const primitive_quantities *restrict prims_trusted,
+      const primitive_quantities *restrict prims,
       const primitive_quantities *restrict prims_pert);
 
 void validate_conservatives(
       const bool evolve_entropy,
-      const conservative_quantities *restrict cons,
       const conservative_quantities *restrict cons_trusted,
+      const conservative_quantities *restrict cons,
       const conservative_quantities *restrict cons_pert);
 
 void validate_stress_energy(
-      const stress_energy *restrict Tmunu,
       const stress_energy *restrict Tmunu_trusted,
+      const stress_energy *restrict Tmunu,
       const stress_energy *restrict Tmunu_pert);
 
 // con2prim binary input functions
@@ -118,16 +118,17 @@ inline int indexf(const int gridmax, const int i, const int j, const int k) {
 }
 
 static inline bool validate_with_tolerance(
-                            const double trusted,
-                            const double computed,
-                            const double perturbed,
-                            const double tolerance) {
+      const double trusted,
+      const double computed,
+      const double perturbed,
+      const double tolerance) {
   return relative_error(trusted, computed) > 4.0*fmax(relative_error(trusted, perturbed), tolerance);
 }
 
-static inline bool validate(const double trusted,
-                            const double computed,
-                            const double perturbed) {
+static inline bool validate(
+      const double trusted,
+      const double computed,
+      const double perturbed) {
   const double roundoff = 1.0e-14;
   return validate_with_tolerance(trusted, computed, perturbed, roundoff);
 }
