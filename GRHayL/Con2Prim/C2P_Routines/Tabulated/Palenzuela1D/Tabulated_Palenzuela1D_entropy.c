@@ -1,4 +1,4 @@
-#include "palenzuela.h"
+#include "../utils.h"
 
 /*
  * Function   : compute_rho_P_eps_T_W_entropy

@@ -180,4 +180,20 @@ int Tabulated_Palenzuela1D(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics );
 
+int Tabulated_Newman1D(
+      void compute_rho_P_eps_T_W(
+            const double x,
+            fparams_struct *restrict fparams,
+            double *restrict rho_ptr,
+            double *restrict P_ptr,
+            double *restrict eps_ptr,
+            double *restrict T_ptr,
+            double *restrict W_ptr ),
+      const GRHayL_parameters *restrict grhayl_params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons_undens,
+      primitive_quantities *restrict prims,
+      con2prim_diagnostics *restrict diagnostics );
+
 #endif // PALENZUELA_H_

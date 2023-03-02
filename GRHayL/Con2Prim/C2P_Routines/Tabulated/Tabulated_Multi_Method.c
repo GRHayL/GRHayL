@@ -17,6 +17,12 @@ int Tabulated_Select_Method(
     case Palenzuela1D_entropy:
       return( Tabulated_Palenzuela1D_entropy(params, eos, metric, cons, prims, diagnostics) );
       break;
+    case Newman1D:
+      return( Tabulated_Newman1D_energy(params, eos, metric, cons, prims, diagnostics) );
+      break;
+    case Newman1D_entropy:
+      return( Tabulated_Newman1D_entropy(params, eos, metric, cons, prims, diagnostics) );
+      break;
     default:
       grhayl_Error(100, "Unknown c2p key in Tabulated_Select_Method (%d).", c2p_key);
       return 100;
