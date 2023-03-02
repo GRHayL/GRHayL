@@ -3,17 +3,19 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restrict eos_params,
-                                                    const int n,
-                                                    const double rho,
-                                                    const double Y_e,
-                                                    const double T,
-                                                    const int *restrict tablevars_keys,
-                                                    double *restrict tablevars,
-                                                    NRPyEOS_error_report *restrict report) {
+void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
+      const eos_parameters *restrict eos,
+      const int n,
+      const double rho,
+      const double Y_e,
+      const double T,
+      const int *restrict tablevars_keys,
+      double *restrict tablevars,
+      NRPyEOS_error_report *restrict report) {
 #ifndef USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
+
   // Start by assuming no errors
   report->error = false;
 
@@ -27,11 +29,32 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restri
   }
 
   // Check table bounds for input variables
-  report->error_key = NRPyEOS_checkbounds(eos_params, rho, T, Y_e);
+  report->error_key = NRPyEOS_checkbounds(eos, rho, T, Y_e);
   if( report->error_key != 0 ) {
-    // This should never happen, because we enforce
-    // limits before calling this function
-    sprintf(report->message,"In %s call, problem with checkbounds.\n", __func__);
+    char message[256];
+    switch(report->error_key) {
+      case 101:
+        sprintf(message, "Input Y_e (%.15e) is too large.", Y_e);
+        break;
+      case 102:
+        sprintf(message, "Input Y_e (%.15e) is too small.", Y_e);
+        break;
+      case 103:
+        sprintf(message, "Input temperature (%.15e) is too large.", T);
+        break;
+      case 104:
+        sprintf(message, "Input temperature (%.15e) is too small.", T);
+        break;
+      case 105:
+        sprintf(message, "Input rho (%.15e) is too large.", rho);
+        break;
+      case 106:
+        sprintf(message, "Input rho (%.15e) is too small.", rho);
+        break;
+    }
+    sprintf(report->message,
+            "In %s call, problem with checkbounds: %s\n",
+            __func__, message);
     report->error = true;
     return;
   }
@@ -41,13 +64,13 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restri
   double delx,dely,delz;
   const double lr = log(rho);
   const double lt = log(T);
-  NRPyEOS_get_interp_spots(eos_params,lr,lt,Y_e,&delx,&dely,&delz,idx);
+  NRPyEOS_get_interp_spots(eos,lr,lt,Y_e,&delx,&dely,&delz,idx);
 
   for(int i=0;i<n;i++) {
     // Now perform the interpolations
     int key = tablevars_keys[i];
     double tablevar_out;
-    NRPyEOS_linterp_one(eos_params,idx,delx,dely,delz,&tablevar_out,key);
+    NRPyEOS_linterp_one(eos,idx,delx,dely,delz,&tablevar_out,key);
 
     // We have the result, but we must convert appropriately.
     // The only edge cases are P and eps, for which we obtain
@@ -56,7 +79,7 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restri
       tablevar_out = exp(tablevar_out);
     }
     else if( key == NRPyEOS_eps_key ) {
-      tablevar_out = exp(tablevar_out) - eos_params->energy_shift;
+      tablevar_out = exp(tablevar_out) - eos->energy_shift;
     }
 
     // Then update tablevars

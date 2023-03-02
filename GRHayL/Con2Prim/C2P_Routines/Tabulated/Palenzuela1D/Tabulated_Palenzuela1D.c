@@ -1,4 +1,4 @@
-#include "palenzuela.h"
+#include "../utils.h"
 
 /* Function    : Tabulated_Palenzuela1D
  * Author      : Leo Werneck
