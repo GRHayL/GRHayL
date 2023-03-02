@@ -128,7 +128,7 @@ static inline bool validate_with_tolerance(
 static inline bool validate(const double trusted,
                             const double computed,
                             const double perturbed) {
-  const double roundoff = 1.0e-11;
+  const double roundoff = 1.0e-14;
   return validate_with_tolerance(trusted, computed, perturbed, roundoff);
 }
 
