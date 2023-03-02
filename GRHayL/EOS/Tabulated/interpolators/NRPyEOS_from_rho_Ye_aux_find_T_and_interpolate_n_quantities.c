@@ -32,9 +32,24 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
   // Check table bounds for input variables
   report->error_key = NRPyEOS_checkbounds_kt0_noTcheck(eos_params,rho,Y_e);
   if( report->error_key != 0 ) {
-    // This should never happen, because we enforce
-    // limits before calling this function
-    sprintf(report->message,"In %s call, problem with checkbounds_kt0_noTcheck.\n", __func__);
+    char message[256];
+    switch(report->error_key) {
+      case 101:
+        sprintf(message, "Input Y_e (%.15e) is too large.", Y_e);
+        break;
+      case 102:
+        sprintf(message, "Input Y_e (%.15e) is too small.", Y_e);
+        break;
+      case 105:
+        sprintf(message, "Input rho (%.15e) is too large.", rho);
+        break;
+      case 106:
+        sprintf(message, "Input rho (%.15e) is too small.", rho);
+        break;
+    }
+    sprintf(report->message,
+            "In %s call, problem with checkbounds: %s\n",
+            __func__, message);
     report->error = true;
     return;
   }

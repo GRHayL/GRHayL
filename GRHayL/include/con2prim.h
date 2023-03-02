@@ -3,13 +3,13 @@
 
 #include "GRHayL.h"
 
-typedef enum available_con2prim_methods {
+typedef enum {
   None=-1,
   Noble2D, Noble1D,
   Noble1D_entropy, Noble1D_entropy2,
   CerdaDuran2D, CerdaDuran3D,
   Palenzuela1D, Palenzuela1D_entropy,
-  Newman1D
+  Newman1D, Newman1D_entropy
 } con2prim_method_t;
 
 //------------- Con2Prim struct --------------------
@@ -138,6 +138,22 @@ int Tabulated_Palenzuela1D_energy(
       con2prim_diagnostics *restrict diagnostics);
 
 int Tabulated_Palenzuela1D_entropy(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons,
+      primitive_quantities *restrict prim,
+      con2prim_diagnostics *restrict diagnostics);
+
+int Tabulated_Newman1D_energy(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons,
+      primitive_quantities *restrict prim,
+      con2prim_diagnostics *restrict diagnostics);
+
+int Tabulated_Newman1D_entropy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,

@@ -45,7 +45,7 @@ static const char table_var_names[NRPyEOS_ntablekeys][10] = {
 typedef struct NRPyEOS_error_report {
   bool error;
   int error_key;
-  char message[512];
+  char message[1024];
 } NRPyEOS_error_report;
 
 #ifdef __cplusplus
@@ -147,6 +147,14 @@ void NRPyEOS_P_and_T_from_rho_Ye_eps(
       const double rho,
       const double Y_e,
       const double eps,
+      double *restrict P,
+      double *restrict T);
+
+void NRPyEOS_P_and_T_from_rho_Ye_S(
+      const eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double S,
       double *restrict P,
       double *restrict T);
 
