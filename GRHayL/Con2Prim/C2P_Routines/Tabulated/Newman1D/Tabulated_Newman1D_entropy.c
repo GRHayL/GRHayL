@@ -11,42 +11,33 @@ int newman_entropy(
       primitive_quantities *restrict prim,
       const double tol_x ) {
 
-  bool conacc = false;
-
-  // We always guess W = 1, since we don't keep
-  // track of the velocities in between time
-  // steps and therefore do not have a good
-  // guess for them
+  // Set basic quantities from input
   double invD   = 1.0/con->rho;
-  double xrho   = con->rho;
   double xye    = con->Y_e * invD;
   double xtemp  = eos->T_atm;
-  double xprs   = 0.0;
-
-  // Compute P and eps
-  // eos->tabulated_compute_P_from_T(eos, xrho, xye, xtemp, &xprs);
 
   //Now, begin iterative procedure to derive the primitive variables
-  // double P_old = xprs; // -> setup pressure initial guess
   unsigned step=0;
-
   const unsigned maxsteps = 300;
   double AtP[maxsteps]; // not length 3 in case of extrap. probs
   double AtR;
   int AtStep=0;
-  AtP[0]=xprs;
 
   // d = 0.5( S^{2}*B^{2} - (B.S)^{2} ) (eq. 5.7 in Newman & Hamlin 2014)
   const double d = MAX(0.5*(S_squared*B_squared-BdotS*BdotS),0.0);
   // e = tau + D
   const double e = con->tau + con->rho;
   // z = rho*h*W^{2} = D*h*W; initialize to zero.
-  double z=0, W=0;
+  double z=0, invW=0, W=0;
 
   // Useful auxiliary variable
   const double BdotSsq = BdotS * BdotS;
-  double P_old;
 
+  // Now initialize the pressure and AtP
+  double P_old, xprs = 0.0;
+  AtP[0] = xprs;
+
+  bool conacc = false;
   do {
     P_old = xprs;
     step++;
@@ -70,16 +61,13 @@ int newman_entropy(
     const double zsq   = z*z;
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
 
-    // Then compute W^{2} = 1/(1-v^{2})
-    const double Wsq = 1.0/(1.0-vsq);
-
-    // Impose physical limits on W
-    W = MIN(MAX(sqrt(Wsq), 1.0), eos->W_max);
+    // Impose physical limits and compute W
+    invW = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
+    W    = 1.0/invW;
 
     // Then compute rho = D/W
-    double xrho = con->rho/W;
-    double xent = con->entropy/W;
-    xprs = 0.0;
+    double xrho = con->rho*invW;
+    double xent = con->entropy*invW;
     eos->tabulated_compute_P_T_from_S(eos, xrho, xye, xent, &xprs, &xtemp);
 
     AtStep++;
@@ -101,51 +89,28 @@ int newman_entropy(
     return roots_error_max_iter;
 
   if( conacc ) {     //converged on an extrap. so recompute vars
-    const double a      = e + xprs + 0.5*B_squared;
-    const double phi    = acos(sqrt(27.0*d/(4.0*a))/a);
-    const double Eps    = a/3.0*( 1.0 - 2.0*cos( (2.0/3.0)*(phi + M_PI) ) );
-    z = Eps-B_squared;
-    const double zBsq   = z + B_squared;
-    const double zBsqsq = zBsq*zBsq;
-    const double zsq    = z*z;
-    const double vsq    = (zsq * S_squared + (z+zBsq)*BdotSsq)/(zsq*zBsqsq);
-    const double Wsq    = 1.0/(1.0-vsq);
-    W                   = MIN(MAX(sqrt(Wsq), 1.0), eos->W_max);
-    prim->rho           = con->rho/W; //    rho[s] = tildeD[s]/(sqrtDetg[s]*W[s]);
+    const double a     = e + xprs + 0.5*B_squared;
+    const double phi   = acos(sqrt(27.0*d/(4.0*a))/a);
+    const double Eps   = a/3.0*( 1.0 - 2.0*cos( (2.0/3.0)*(phi + M_PI) ) );
+    z                  = Eps-B_squared;
+    const double Epssq = Eps*Eps;
+    const double zsq   = z*z;
+    const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
+    invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
+    W                  = 1.0/invW;
+    prim->rho          = con->rho*invW;
   }
 
-  prim->rho     = con->rho/W;
-  prim->Y_e     = xye;
-  prim->entropy = con->entropy/W;
-  prim->vx      = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
-  prim->vy      = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
-  prim->vz      = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
-
-  // Then compute P, S, and T using (rho,Ye,eps)
+  // Set the primitives
+  prim->rho         = con->rho*invW;
+  prim->Y_e         = xye;
   prim->temperature = xtemp;
-  // eos->tabulated_compute_P_eps_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
-                                       // &prim->press, &prim->eps );
-  // prim->temperature = eos->T_atm;
-  eos->tabulated_compute_P_eps_T_from_S( eos, prim->rho, prim->Y_e, prim->entropy,
-                                         &prim->press, &prim->eps, &prim->temperature );
-
-  // fprintf(stderr, " W        = %.15e\n", W);
-  // fprintf(stderr, " z        = %.15e\n", z);
-  // fprintf(stderr, "S^x       = %.15e\n", SU[0]);
-  // fprintf(stderr, "S^y       = %.15e\n", SU[1]);
-  // fprintf(stderr, "S^z       = %.15e\n", SU[2]);
-  // fprintf(stderr, "B^x       = %.15e\n", BU[0]);
-  // fprintf(stderr, "B^y       = %.15e\n", BU[1]);
-  // fprintf(stderr, "B^z       = %.15e\n", BU[2]);
-  // fprintf(stderr, "B^2       = %.15e\n", B_squared);
-  // fprintf(stderr, "B.S       = %.15e\n", BdotS);
-  // fprintf(stderr, "rho       = %.15e\n", prim->rho);
-  // fprintf(stderr, "Y_e       = %.15e\n", prim->Y_e);
-  // fprintf(stderr, " S        = %.15e\n", prim->entropy);
-  // fprintf(stderr, " P        = %.15e\n", prim->press);
-  // fprintf(stderr, "eps       = %.15e\n", prim->eps);
-  // fprintf(stderr, " T        = %.15e\n", prim->temperature);
-  // fprintf(stderr, "u^i       = %.15e %.15e %.15e\n", prim->vx, prim->vy, prim->vz);
+  prim->entropy     = con->entropy*invW;
+  prim->vx          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
+  prim->vy          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
+  prim->vz          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
+  eos->tabulated_compute_P_eps_S_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
+                                         &prim->press, &prim->eps, &prim->entropy );
 
   return grhayl_success;
 }
@@ -158,38 +123,13 @@ int Tabulated_Newman1D_entropy(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
-  // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
-  double SD[3] = {cons_undens->S_x, cons_undens->S_y, cons_undens->S_z};
-  double S_squared = compute_S_squared(metric, SD);
+  // Step 1: Compute auxiliary quantities
+  double BU[3], SU[3], Bsq, Ssq, BdotS;
+  compute_BU_SU_Bsq_Ssq_BdotS(metric, cons_undens, prims,
+                              BU, SU, &Bsq, &Ssq, &BdotS);
 
-  // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
-  // Step 2.1: Compute maximum allowed value for S^{2}
-  const double S_squared_max = SQR(cons_undens->tau + cons_undens->rho);
-  if( S_squared > S_squared_max ) {
-    // Step 2.2: Rescale S_{i}
-    const double rescale_factor = sqrt(0.9999*S_squared_max/S_squared);
-    for(int i=0;i<3;i++)
-      SD[i] *= rescale_factor;
-
-    // Step 2.3: Recompute S^{2}
-    S_squared = compute_S_squared(metric, SD);
-  }
-
-  // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
-  const double BU[3] = {prims->Bx * ONE_OVER_SQRT_4PI,
-                        prims->By * ONE_OVER_SQRT_4PI,
-                        prims->Bz * ONE_OVER_SQRT_4PI};
-  const double B_squared = compute_Bsq_from_Bup(metric, BU);
-
-  // Step 4: Compute B.S = B^{i}S_{i}
-  double BdotS = 0.0;
-  for(int i=0;i<3;i++) BdotS += BU[i]*SD[i];
-
-  // Step 5: Compute S^{i}
-  double SU[3];
-  raise_vector_3d(metric, SD, SU);
-
-  const double tol_x = 1e-10;
-  return newman_entropy(eos, S_squared, BdotS, B_squared, BU, SU,
+  // Step 2: Call the Newman routine that uses the entropy to recover T
+  const double tol_x = 1e-15;
+  return newman_entropy(eos, Ssq, BdotS, Bsq, BU, SU,
                         cons_undens, prims, tol_x);
 }

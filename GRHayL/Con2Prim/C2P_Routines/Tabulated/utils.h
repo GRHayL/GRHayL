@@ -109,7 +109,7 @@ raise_vector_3d(
  *
  * Returns    : Nothing.
  */
-static void
+static inline void
 compute_rho_W_from_x_and_conservatives(
   const double x,
   const fparams_struct *restrict fparams,
@@ -159,6 +159,66 @@ froot(
 
   // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
   return x - (1.0 + eps + P/rho)*W;
+}
+
+/*
+ * Function : compute_BU_SU_Bsq_Ssq_BdotS
+ * Author   : Leo Werneck
+ *
+ * Computes B^{i}, S^{i}, B^2, S^2, B.S = B^{i}S_{i}.
+ *
+ * Parameters : metric       - Metric quantities
+ *            : cons_undens  - Undensitized conservatives
+ *            : prims        - Input primitives (for B^{i})
+ *            : BU           - Stores B^{i}.
+ *            : SU           - Stores S^{i}.
+ *            : Bsq          - Stores B^2.
+ *            : Ssq          - Stores S^2.
+ *            : BdotS        - Stores B.S = B^{i}S_{i}.
+ *
+ * Returns    : Nothing.
+ */
+static inline void
+compute_BU_SU_Bsq_Ssq_BdotS(
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons_undens,
+      const primitive_quantities *restrict prims,
+      double *restrict BU,
+      double *restrict SU,
+      double *restrict Bsq,
+      double *restrict Ssq,
+      double *restrict BdotS ) {
+
+  // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
+  double SD[3] = {cons_undens->S_x, cons_undens->S_y, cons_undens->S_z};
+  double S_squared = compute_S_squared(metric, SD);
+
+  // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
+  // Step 2.1: Compute maximum allowed value for S^{2}
+  const double S_squared_max = SQR(cons_undens->tau + cons_undens->rho);
+  if( S_squared > S_squared_max ) {
+    // Step 2.2: Rescale S_{i}
+    const double rescale_factor = sqrt(0.9999*S_squared_max/S_squared);
+    for(int i=0;i<3;i++)
+      SD[i] *= rescale_factor;
+
+    // Step 2.3: Recompute S^{2}
+    S_squared = compute_S_squared(metric, SD);
+  }
+  *Ssq = S_squared;
+
+  // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
+  BU[0] = prims->Bx * ONE_OVER_SQRT_4PI;
+  BU[1] = prims->By * ONE_OVER_SQRT_4PI;
+  BU[2] = prims->Bz * ONE_OVER_SQRT_4PI;
+  *Bsq = compute_Bsq_from_Bup(metric, BU);
+
+  // Step 4: Compute B.S = B^{i}S_{i}
+  *BdotS = 0.0;
+  for(int i=0;i<3;i++) *BdotS += BU[i]*SD[i];
+
+  // Step 5: Compute S^{i}
+  raise_vector_3d(metric, SD, SU);
 }
 
 /*
