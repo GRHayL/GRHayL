@@ -495,24 +495,39 @@ int main(int argc, char **argv) {
       const double S_y_rel_diff = log10(fabs(0.5*(evol_gfs[IDX4ptS(STILDED1GF, idx)] - etk_evol_gfs[IDX4ptS(STILDED1GF, idx)]) / (evol_gfs[IDX4ptS(STILDED1GF, idx)] + etk_evol_gfs[IDX4ptS(STILDED1GF, idx)])));
       const double S_z_rel_diff = log10(fabs(0.5*(evol_gfs[IDX4ptS(STILDED2GF, idx)] - etk_evol_gfs[IDX4ptS(STILDED2GF, idx)]) / (evol_gfs[IDX4ptS(STILDED2GF, idx)] + etk_evol_gfs[IDX4ptS(STILDED2GF, idx)])));
 
-      if(rho_rel_diff > -9 || ( isnan(evol_gfs[IDX4ptS(RHO_STARGF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(RHO_STARGF, idx)]) )) {
+      if(isnan(evol_gfs[IDX4ptS(RHO_STARGF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(RHO_STARGF, idx)])) {
+        printf("ERROR: rho_star evaluated to nan!");
+        exit(1);
+      } else if(rho_rel_diff > -9) {
         printf("ERROR: S_x_rel_diff is too high");
         exit(1);
       }
-      if(tau_rel_diff > -9 || ( isnan(evol_gfs[IDX4ptS(TAU_TILDEGF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(TAU_TILDEGF, idx)]) )) {
+      if(isnan(evol_gfs[IDX4ptS(TAU_TILDEGF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(TAU_TILDEGF, idx)])) {
+        printf("ERROR: tau evaluated to nan!");
+        exit(1);
+      } else if(tau_rel_diff > -9) {
+        printf("ERROR: tau_rel_diff is too high");
+        exit(1);
+      }
+      if(isnan(evol_gfs[IDX4ptS(STILDED0GF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED0GF, idx)])) {
+        printf("ERROR: S_x evaluated to nan!");
+        exit(1);
+      } else if(S_x_rel_diff > -9) {
+        printf("ERROR: S_x_rel_diff is too high");
+        exit(1);
+      }
+      if(isnan(evol_gfs[IDX4ptS(STILDED1GF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED1GF, idx)])) {
+        printf("ERROR: S_y evaluated to nan!");
+        exit(1);
+      } else if(S_y_rel_diff > -9) {
         printf("ERROR: S_y_rel_diff is too high");
         exit(1);
       }
-      if(S_x_rel_diff > -9 || ( isnan(evol_gfs[IDX4ptS(STILDED0GF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED0GF, idx)]) )) {
+      if(isnan(evol_gfs[IDX4ptS(STILDED2GF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED2GF, idx)])) {
+        printf("ERROR: S_z evaluated to nan!");
+        exit(1);
+      } else if(S_z_rel_diff > -9) {
         printf("ERROR: S_z_rel_diff is too high");
-        exit(1);
-      }
-      if(S_y_rel_diff > -9 || ( isnan(evol_gfs[IDX4ptS(STILDED1GF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED1GF, idx)]) )) {
-        printf("ERROR: rho_rel_diff is too high");
-        exit(1);
-      }
-      if(S_z_rel_diff > -9 || ( isnan(evol_gfs[IDX4ptS(STILDED2GF, idx)]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED2GF, idx)]) )) {
-        printf("ERROR: tau_rel_diff is too high");
         exit(1);
       }
 
