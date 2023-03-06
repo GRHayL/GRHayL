@@ -164,16 +164,6 @@ static const int kronecker_delta[4][3] = { { 0,0,0 },
                                     { 0,1,0 },
                                     { 0,0,1 } };
 
-void initialize_structs(const int idx,
-                        const double *restrict auxevol_gfs, 
-                        primitive_quantities *restrict prims, 
-                        primitive_quantities *restrict prims_r, 
-                        primitive_quantities *restrict prims_l, 
-                        metric_quantities *restrict metric, 
-                        metric_quantities *restrict metric_face,
-                        extrinsic_curvature *restrict curv, 
-                        metric_derivatives *restrict metric_derivs);
-
 void read_from_binary_file_all(const char *restrict binary_file, 
                                double *restrict auxevol_gfs);
 void read_from_binary_file_recons(const char *restrict binary_file, 
