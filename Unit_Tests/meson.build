@@ -67,6 +67,12 @@ unit_test_ET_Legacy_reconstruction = executable(
   dependencies : dep_without_hdf5)
 test('ET_Legacy_reconstruction', unit_test_ET_Legacy_reconstruction)
 
+unit_test_ET_Legacy_flux_source = executable(
+  'unit_test_ET_Legacy_flux_source',
+  sources : ['unit_test_ET_Legacy_flux_source.c', common_sources],
+  dependencies : dep_without_hdf5)
+test('ET_Legacy_flux_source', unit_test_ET_Legacy_flux_source)
+
 unit_test_tabulated_eos = executable(
   'unit_test_tabulated_eos',
   sources : ['unit_test_tabulated_eos.c', 'tabulated_eos_unit_test_helpers.c', common_sources],

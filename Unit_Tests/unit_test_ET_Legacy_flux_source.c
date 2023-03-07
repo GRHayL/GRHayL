@@ -10,8 +10,8 @@ static inline void compute_h_and_cs2(struct eos_parameters const *restrict eos,
 // CCTK_REAL h_ = U[PRESSURE]*U[VX]/U[VZ];
 *h = prims->press*prims->vx / prims->vz;
 
-// CCTK_REAL c_s_squared  = U[RHOB]*U[VZ]*(h)/1e4;
-*cs2 = prims->rho*prims->vz*(*h)/1e4;
+// CCTK_REAL c_s_squared  = U[PRESSURE]*U[VZ]/(h);
+*cs2 = prims->rho*prims->vz/(*h);
 // printf("works!!\n");
 }
 
@@ -57,21 +57,16 @@ static inline void calculate_face_value(
  * // Step 5: Free all allocated memory
  */
 int main(int argc, char **argv) {
+  // Set up test data
+  const int ghostzone = 3;
+  const int dirlength = 20;
+  const int arraylength = dirlength*dirlength*dirlength;
+  double invdx = 1.0/0.1;
+
+  const double poison = 0.0/0.0;
 
   eos_parameters eos;
   eos.compute_h_and_cs2 = &compute_h_and_cs2;  
-  const double poison = 0.0/0.0;
-
-  const int ghostzone = 3; 
-  const int dirlength = Nxx_plus_2NGHOSTS0;
-  const int arraylength = dirlength*dirlength*dirlength;
- 
-  // Step 0.m: Allocate memory for non y_n_gfs. We do this here to free up
-  //         memory for setting up initial data (for cases in which initial
-  //         data setup is memory intensive.)
-  double *restrict     evol_gfs    = (double *restrict)malloc(sizeof(double) * NUM_EVOL_GFS * arraylength);
-  double *restrict etk_evol_gfs    = (double *restrict)malloc(sizeof(double) * NUM_EVOL_GFS * arraylength);
-  double *restrict auxevol_gfs = (double *restrict)malloc(sizeof(double) * NUM_AUXEVOL_GFS * arraylength);
 
   // Allocate memory for metric
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
@@ -173,28 +168,55 @@ int main(int argc, char **argv) {
   double *S_y_rhs = (double*) malloc(sizeof(double)*arraylength);
   double *S_z_rhs = (double*) malloc(sizeof(double)*arraylength);
 
-  // We begin by generating random inital data.
+  char filename[100];
+  sprintf(filename,"ET_Legacy_flux_source_input.bin");
+  FILE* infile = fopen(filename, "rb");
+  check_file_was_successfully_open(infile, filename);
+  int key = fread(gxx,     sizeof(double), arraylength, infile);
+  key += fread(gxy,     sizeof(double), arraylength, infile);
+  key += fread(gxz,     sizeof(double), arraylength, infile);
+  key += fread(gyy,     sizeof(double), arraylength, infile);
+  key += fread(gyz,     sizeof(double), arraylength, infile);
+  key += fread(gzz,     sizeof(double), arraylength, infile);
+  key += fread(lapse,   sizeof(double), arraylength, infile);
+  key += fread(betax,   sizeof(double), arraylength, infile);
+  key += fread(betay,   sizeof(double), arraylength, infile);
+  key += fread(betaz,   sizeof(double), arraylength, infile);
+  key += fread(kxx,     sizeof(double), arraylength, infile);
+  key += fread(kxy,     sizeof(double), arraylength, infile);
+  key += fread(kxz,     sizeof(double), arraylength, infile);
+  key += fread(kyy,     sizeof(double), arraylength, infile);
+  key += fread(kyz,     sizeof(double), arraylength, infile);
+  key += fread(kzz,     sizeof(double), arraylength, infile);
 
-  for(int which_gf=0; which_gf<NUM_AUXEVOL_GFS; which_gf++) for(int idx=0; idx<arraylength; idx++) {
-    auxevol_gfs[IDX4ptS(which_gf, idx)] = poison;
-        }
+  key += fread(rho,     sizeof(double), arraylength, infile);
+  key += fread(press,   sizeof(double), arraylength, infile);
+  key += fread(vx,      sizeof(double), arraylength, infile);
+  key += fread(vy,      sizeof(double), arraylength, infile);
+  key += fread(vz,      sizeof(double), arraylength, infile);
+  key += fread(Bx,      sizeof(double), arraylength, infile);
+  key += fread(By,      sizeof(double), arraylength, infile);
+  key += fread(Bz,      sizeof(double), arraylength, infile);
 
-  for(int which_gf=0; which_gf<NUM_EVOL_GFS; which_gf++) for(int idx=0; idx<arraylength; idx++) {
-    evol_gfs[IDX4ptS(which_gf, idx)] = poison;
-        }
-
-  for(int i=0; i<arraylength; i++) {
-    rho_star_rhs[i] = 0.0;
-    tau_rhs[i] = 0.0;
-    S_x_rhs[i] = 0.0;
-    S_y_rhs[i] = 0.0;
-    S_z_rhs[i] = 0.0;
-  }
+  if(key != arraylength*24)
+    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+                 "is up-to-date with current test version.\n");
 
   /*
   After reading in the same random data used in the original IGM code, now we
   calculate face cell-face values and derivatives at cell centers
   */
+
+  for(int k=ghostzone; k<dirlength-ghostzone; k++)
+    for(int j=ghostzone; j<dirlength-ghostzone; j++)
+      for(int i=ghostzone; i<dirlength-ghostzone; i++) {
+        const int index  = indexf(dirlength, i, j ,k);
+        rho_star_rhs[index] = 0.0;
+        tau_rhs[index] = 0.0;
+        S_x_rhs[index] = 0.0;
+        S_y_rhs[index] = 0.0;
+        S_z_rhs[index] = 0.0;
+  }
 
   void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
                               const eos_parameters *restrict, const metric_quantities *restrict, conservative_quantities *restrict);
@@ -206,46 +228,37 @@ int main(int argc, char **argv) {
 
     switch(flux_dirn) {
       case 0:
-        read_from_binary_file_all("flux_source_dirn1.bin", auxevol_gfs);
         calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn0;
-        for(int i=0; i<arraylength; i++) {
-          gxx[i]   = auxevol_gfs[IDX4ptS(GAMMADD00GF, i)];
-          gxy[i]   = auxevol_gfs[IDX4ptS(GAMMADD01GF, i)];
-          gxz[i]   = auxevol_gfs[IDX4ptS(GAMMADD02GF, i)];
-          gyy[i]   = auxevol_gfs[IDX4ptS(GAMMADD11GF, i)];
-          gyz[i]   = auxevol_gfs[IDX4ptS(GAMMADD12GF, i)];
-          gzz[i]   = auxevol_gfs[IDX4ptS(GAMMADD22GF, i)];
-          lapse[i] = auxevol_gfs[IDX4ptS(ALPHAGF, i)];
-          betax[i] = auxevol_gfs[IDX4ptS(BETAU0GF, i)];
-          betay[i] = auxevol_gfs[IDX4ptS(BETAU1GF, i)];
-          betaz[i] = auxevol_gfs[IDX4ptS(BETAU2GF, i)];
-
-          kxx[i] = auxevol_gfs[IDX4ptS(KDD00GF, i)];
-          kxy[i] = auxevol_gfs[IDX4ptS(KDD01GF, i)];
-          kxz[i] = auxevol_gfs[IDX4ptS(KDD02GF, i)];
-          kyy[i] = auxevol_gfs[IDX4ptS(KDD11GF, i)];
-          kyz[i] = auxevol_gfs[IDX4ptS(KDD12GF, i)];
-          kzz[i] = auxevol_gfs[IDX4ptS(KDD22GF, i)];
-
-          rho[i] = auxevol_gfs[IDX4ptS(RHOBGF, i)];
-          press[i] = auxevol_gfs[IDX4ptS(PGF, i)];
-          vx[i] = auxevol_gfs[IDX4ptS(VU0GF, i)];
-          vy[i] = auxevol_gfs[IDX4ptS(VU1GF, i)];
-          vz[i] = auxevol_gfs[IDX4ptS(VU2GF, i)];
-          Bx[i] = auxevol_gfs[IDX4ptS(BU0GF, i)];
-          By[i] = auxevol_gfs[IDX4ptS(BU1GF, i)];
-          Bz[i] = auxevol_gfs[IDX4ptS(BU2GF, i)];
-        }
         break;
       case 1:
-        read_from_binary_file_recons("flux_source_dirn2.bin", auxevol_gfs);
         calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn1;
         break;
       case 2:
-        read_from_binary_file_recons("flux_source_dirn3.bin", auxevol_gfs);
         calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn2;
         break;
     }
+
+    key  = fread(rho_r,   sizeof(double), arraylength, infile);
+    key += fread(press_r, sizeof(double), arraylength, infile);
+    key += fread(vx_r,    sizeof(double), arraylength, infile);
+    key += fread(vy_r,    sizeof(double), arraylength, infile);
+    key += fread(vz_r,    sizeof(double), arraylength, infile);
+    key += fread(Bx_r,    sizeof(double), arraylength, infile);
+    key += fread(By_r,    sizeof(double), arraylength, infile);
+    key += fread(Bz_r,    sizeof(double), arraylength, infile);
+
+    key += fread(rho_l,   sizeof(double), arraylength, infile);
+    key += fread(press_l, sizeof(double), arraylength, infile);
+    key += fread(vx_l,    sizeof(double), arraylength, infile);
+    key += fread(vy_l,    sizeof(double), arraylength, infile);
+    key += fread(vz_l,    sizeof(double), arraylength, infile);
+    key += fread(Bx_l,    sizeof(double), arraylength, infile);
+    key += fread(By_l,    sizeof(double), arraylength, infile);
+    key += fread(Bz_l,    sizeof(double), arraylength, infile);
+
+    if(key != arraylength*16)
+      grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+                   "is up-to-date with current test version.\n");
 
     calculate_face_value(flux_dirn, dirlength, ghostzone, lapse, face_lapse);
     calculate_face_value(flux_dirn, dirlength, ghostzone, betax, face_betax);
@@ -257,30 +270,6 @@ int main(int argc, char **argv) {
     calculate_face_value(flux_dirn, dirlength, ghostzone, gyy, face_gyy);
     calculate_face_value(flux_dirn, dirlength, ghostzone, gyz, face_gyz);
     calculate_face_value(flux_dirn, dirlength, ghostzone, gzz, face_gzz);
-
-    for(int k=ghostzone-1; k<dirlength-(ghostzone-1); k++)
-      for(int j=ghostzone-1; j<dirlength-(ghostzone-1); j++)
-        for(int i=ghostzone-1; i<dirlength-(ghostzone-1); i++) {
-          const int index  = indexf(dirlength, i, j ,k);
-          int idx  = IDX3S(i, j, k);
-          rho_r[index] = auxevol_gfs[IDX4ptS(RHOB_RGF, idx)];
-          press_r[index] = auxevol_gfs[IDX4ptS(P_RGF, idx)];
-          vx_r[index] = auxevol_gfs[IDX4ptS(VRU0GF, idx)];
-          vy_r[index] = auxevol_gfs[IDX4ptS(VRU1GF, idx)];
-          vz_r[index] = auxevol_gfs[IDX4ptS(VRU2GF, idx)];
-          Bx_r[index] = auxevol_gfs[IDX4ptS(BRU0GF, idx)];
-          By_r[index] = auxevol_gfs[IDX4ptS(BRU1GF, idx)];
-          Bz_r[index] = auxevol_gfs[IDX4ptS(BRU2GF, idx)];
-
-          rho_l[index] = auxevol_gfs[IDX4ptS(RHOB_LGF, idx)];
-          press_l[index] = auxevol_gfs[IDX4ptS(P_LGF, idx)];
-          vx_l[index] = auxevol_gfs[IDX4ptS(VLU0GF, idx)];
-          vy_l[index] = auxevol_gfs[IDX4ptS(VLU1GF, idx)];
-          vz_l[index] = auxevol_gfs[IDX4ptS(VLU2GF, idx)];
-          Bx_l[index] = auxevol_gfs[IDX4ptS(BLU0GF, idx)];
-          By_l[index] = auxevol_gfs[IDX4ptS(BLU1GF, idx)];
-          Bz_l[index] = auxevol_gfs[IDX4ptS(BLU2GF, idx)];
-    }
 
     for(int k=ghostzone-1; k<dirlength-(ghostzone-1); k++)
       for(int j=ghostzone-1; j<dirlength-(ghostzone-1); j++)
@@ -307,8 +296,9 @@ int main(int argc, char **argv) {
                                 poison, poison, poison, // entropy, Y_e, temp
                                 &prims_l);
 
-          prims_r.u0 = rho_r[index]*Bx_r[index] / vy_r[index];
-          prims_l.u0 = rho_l[index]*Bx_l[index] / vy_l[index];
+          // Generate randomized u^0
+          prims_r.u0 = rho_r[index]*Bx_r[index]/vy_r[index];
+          prims_l.u0 = rho_l[index]*Bx_l[index]/vy_l[index];
 
           conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(&prims_r, 
@@ -317,11 +307,11 @@ int main(int argc, char **argv) {
                                 &metric_face, 
                                 &cons_fluxes);
 
-          rho_star_flux[index] = cons_fluxes.rho;
-          tau_flux[index] = cons_fluxes.tau;
-          S_x_flux[index] = cons_fluxes.S_x;
-          S_y_flux[index] = cons_fluxes.S_y;
-          S_z_flux[index] = cons_fluxes.S_z;
+          rho_star_flux[index]  = cons_fluxes.rho;
+          tau_flux[index]       = cons_fluxes.tau;
+          S_x_flux[index]       = cons_fluxes.S_x;
+          S_y_flux[index]       = cons_fluxes.S_y;
+          S_z_flux[index]       = cons_fluxes.S_z;
     }
 
     for(int k=ghostzone-1; k<dirlength-(ghostzone-1); k++)
@@ -369,21 +359,6 @@ int main(int argc, char **argv) {
         curv.Kyz = kyz[index];
         curv.Kzz = kzz[index];
 
-        /* Consider alternative code setup
-        metric_quantities metric_derivs[3];
-        for(int dirn=0; dirn<3; dirn++) {
-          metric_derivs[dirn].lapse = D_lapse[dirn][index];
-          metric_derivs[dirn].betax = D_betax[dirn][index];
-          metric_derivs[dirn].betay = D_betay[dirn][index];
-          metric_derivs[dirn].betaz = D_betaz[dirn][index];
-          metric_derivs[dirn].adm_gxx = D_gxx[dirn][index];
-          metric_derivs[dirn].adm_gxy = D_gxy[dirn][index];
-          metric_derivs[dirn].adm_gxz = D_gxz[dirn][index];
-          metric_derivs[dirn].adm_gyy = D_gyy[dirn][index];
-          metric_derivs[dirn].adm_gyz = D_gyz[dirn][index];
-          metric_derivs[dirn].adm_gzz = D_gzz[dirn][index];
-        }
-        */
         metric_derivatives metric_derivs;
         for(int dirn=0; dirn<3; dirn++) {
           metric_derivs.lapse[dirn] = D_lapse[dirn][index];
@@ -421,79 +396,91 @@ int main(int argc, char **argv) {
         S_z_rhs[index] += cons_sources.S_z;
   }
 
-  FILE *infile = fopen("flux_source_output_rhs_data.bin", "rb");
-  double rhs_correct_magic_number = 9.524300707856655e-3;
-  double rhs_magic_number1, rhs_magic_number2, rhs_magic_number3;
-  
-  int key;
-  
-  key  = fread(&rhs_magic_number1, sizeof(double), 1, infile);
-  key += fread(etk_evol_gfs + arraylength*RHO_STARGF, sizeof(double), arraylength, infile);
-  key += fread(etk_evol_gfs + arraylength*TAU_TILDEGF, sizeof(double), arraylength, infile);
-  key += fread(etk_evol_gfs + arraylength*STILDED0GF, sizeof(double), arraylength, infile);
-  key += fread(&rhs_magic_number2, sizeof(double), 1, infile);
-  key += fread(etk_evol_gfs + arraylength*STILDED1GF, sizeof(double), arraylength, infile);
-  key += fread(etk_evol_gfs + arraylength*STILDED2GF, sizeof(double), arraylength, infile);
-  key += fread(&rhs_magic_number3, sizeof(double), 1, infile);
-  
   fclose(infile);
-  if(rhs_magic_number1!=rhs_correct_magic_number){ printf("ERROR: magic_number1 does not match"); exit(1);}
-  if(rhs_magic_number2!=rhs_correct_magic_number){ printf("ERROR: magic_number2 does not match"); exit(1);}
-  if(rhs_magic_number3!=rhs_correct_magic_number){ printf("ERROR: magic_number3 does not match"); exit(1);}
+
+  // Allocate memory for comparison data
+  double *trusted_rho_star_rhs = (double*) malloc(sizeof(double)*arraylength);
+  double *trusted_tau_rhs = (double*) malloc(sizeof(double)*arraylength);
+  double *trusted_S_x_rhs = (double*) malloc(sizeof(double)*arraylength);
+  double *trusted_S_y_rhs = (double*) malloc(sizeof(double)*arraylength);
+  double *trusted_S_z_rhs = (double*) malloc(sizeof(double)*arraylength);
+
+  double *pert_rho_star_rhs = (double*) malloc(sizeof(double)*arraylength);
+  double *pert_tau_rhs = (double*) malloc(sizeof(double)*arraylength);
+  double *pert_S_x_rhs = (double*) malloc(sizeof(double)*arraylength);
+  double *pert_S_y_rhs = (double*) malloc(sizeof(double)*arraylength);
+  double *pert_S_z_rhs = (double*) malloc(sizeof(double)*arraylength);
+
+  sprintf(filename,"ET_Legacy_flux_source_output.bin");
+  FILE *outfile = fopen(filename, "rb");
+  check_file_was_successfully_open(outfile, filename)
+
+  key  = fread(trusted_rho_star_rhs, sizeof(double), arraylength, outfile);
+  key += fread(trusted_tau_rhs,      sizeof(double), arraylength, outfile);
+  key += fread(trusted_S_x_rhs,      sizeof(double), arraylength, outfile);
+  key += fread(trusted_S_y_rhs,      sizeof(double), arraylength, outfile);
+  key += fread(trusted_S_z_rhs,      sizeof(double), arraylength, outfile);
+
+  if(key != arraylength*5)
+    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+                 "is up-to-date with current test version.\n");
+
+  fclose(outfile);
+
+  sprintf(filename,"ET_Legacy_flux_source_output_pert.bin");
+  outfile = fopen(filename, "rb");
+  check_file_was_successfully_open(outfile, filename);
+
+  key  = fread(pert_rho_star_rhs, sizeof(double), arraylength, outfile);
+  key += fread(pert_tau_rhs,      sizeof(double), arraylength, outfile);
+  key += fread(pert_S_x_rhs,      sizeof(double), arraylength, outfile);
+  key += fread(pert_S_y_rhs,      sizeof(double), arraylength, outfile);
+  key += fread(pert_S_z_rhs,      sizeof(double), arraylength, outfile);
+
+  if(key != arraylength*5)
+    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+                 "is up-to-date with current test version.\n");
+
+  fclose(outfile);
 
   for(int k=ghostzone; k<dirlength-ghostzone-1; k++)
     for(int j=ghostzone; j<dirlength-ghostzone-1; j++)
       for(int i=ghostzone; i<dirlength-ghostzone-1; i++) {
         const int index  = indexf(dirlength, i, j ,k);
-        int idx  = IDX3S(i, j, k);
 
-    const double rho_rel_diff = log10(fabs(0.5*(rho_star_rhs[index] - etk_evol_gfs[IDX4ptS(RHO_STARGF, idx)]) / (rho_star_rhs[index] + etk_evol_gfs[IDX4ptS(RHO_STARGF, idx)])));
-    const double tau_rel_diff = log10(fabs(0.5*(tau_rhs[index] - etk_evol_gfs[IDX4ptS(TAU_TILDEGF, idx)]) / (tau_rhs[index] + etk_evol_gfs[IDX4ptS(TAU_TILDEGF, idx)])));
-    const double S_x_rel_diff = log10(fabs(0.5*(S_x_rhs[index] - etk_evol_gfs[IDX4ptS(STILDED0GF, idx)]) / (S_x_rhs[index] + etk_evol_gfs[IDX4ptS(STILDED0GF, idx)])));
-    const double S_y_rel_diff = log10(fabs(0.5*(S_y_rhs[index] - etk_evol_gfs[IDX4ptS(STILDED1GF, idx)]) / (S_y_rhs[index] + etk_evol_gfs[IDX4ptS(STILDED1GF, idx)])));
-    const double S_z_rel_diff = log10(fabs(0.5*(S_z_rhs[index] - etk_evol_gfs[IDX4ptS(STILDED2GF, idx)]) / (S_z_rhs[index] + etk_evol_gfs[IDX4ptS(STILDED2GF, idx)])));
-
-    if(isnan(rho_star_rhs[index]) && isfinite(etk_evol_gfs[IDX4ptS(RHO_STARGF, idx)])) {
-      printf("ERROR: rho_star evaluated to nan!\n");
-      exit(1);
-    } else if(rho_rel_diff > -9) {
-      printf("ERROR: S_x_rel_diff is too high\n");
-      exit(1);
-    }
-    if(isnan(tau_rhs[index]) && isfinite(etk_evol_gfs[IDX4ptS(TAU_TILDEGF, idx)])) {
-      printf("ERROR: tau evaluated to nan!\n");
-      exit(1);
-    } else if(tau_rel_diff > -9) {
-      printf("ERROR: tau_rel_diff is too high\n");
-      exit(1);
-    }
-    if(isnan(S_x_rhs[index]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED0GF, idx)])) {
-      printf("ERROR: S_x evaluated to nan!\n");
-      exit(1);
-    } else if(S_x_rel_diff > -9) {
-      printf("ERROR: S_x_rel_diff is too high\n");
-      exit(1);
-    }
-    if(isnan(S_y_rhs[index]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED1GF, idx)])) {
-      printf("ERROR: S_y evaluated to nan!\n");
-      exit(1);
-    } else if(S_y_rel_diff > -9) {
-      printf("ERROR: S_y_rel_diff is too high\n");
-      exit(1);
-    }
-    if(isnan(S_z_rhs[index]) && isfinite(etk_evol_gfs[IDX4ptS(STILDED2GF, idx)])) {
-      printf("ERROR: S_z evaluated to nan!\n");
-      exit(1);
-    } else if(S_z_rel_diff > -9) {
-      printf("ERROR: S_z_rel_diff is too high\n");
-      exit(1);
-    }
+          printf("  rel.err. %.14e %.14e\n", relative_error(trusted_rho_star_rhs[index], rho_star_rhs[index]),
+                                                  relative_error(trusted_rho_star_rhs[index], pert_rho_star_rhs[index]));
+        if( validate(trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index]) )
+          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable rho_star_rhs.\n"
+                       "  rho_star_rhs trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index],
+                                                   relative_error(trusted_rho_star_rhs[index], rho_star_rhs[index]),
+                                                   relative_error(trusted_rho_star_rhs[index], pert_rho_star_rhs[index]));
+        if( validate(trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index]) )
+          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable tau_rhs.\n"
+                       "  tau_rhs trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index],
+                                                   relative_error(trusted_tau_rhs[index], tau_rhs[index]),
+                                                   relative_error(trusted_tau_rhs[index], pert_tau_rhs[index]));
+        if( validate(trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index]) )
+          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_x_rhs.\n"
+                       "  S_x_rhs trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index],
+                                                   relative_error(trusted_S_x_rhs[index], S_x_rhs[index]),
+                                                   relative_error(trusted_S_x_rhs[index], pert_S_x_rhs[index]));
+        if( validate(trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index]) )
+          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_y_rhs.\n"
+                       "  S_y_rhs trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index],
+                                                   relative_error(trusted_S_y_rhs[index], S_y_rhs[index]),
+                                                   relative_error(trusted_S_y_rhs[index], pert_S_y_rhs[index]));
+        if( validate(trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index]) )
+          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_z_rhs.\n"
+                       "  S_z_rhs trusted %.14e computed %.14e perturbed %.14e\n"
+                       "  rel.err. %.14e %.14e\n", trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index],
+                                                   relative_error(trusted_S_z_rhs[index], S_z_rhs[index]),
+                                                   relative_error(trusted_S_z_rhs[index], pert_S_z_rhs[index]));
   }
-
-  // Step 4: Free all allocated memory
-  free(evol_gfs);
-  free(etk_evol_gfs);
-  free(auxevol_gfs);
   free(gxx); free(gxy); free(gxz);
   free(gyy); free(gyz); free(gzz);
   free(lapse);

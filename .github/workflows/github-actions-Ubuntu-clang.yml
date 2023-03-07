@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [ET_Legacy_conservs, ET_Legacy_primitives, ET_Legacy_induction_gauge_rhs, ET_Legacy_HLL_flux, ET_Legacy_reconstruction]
+        test-function: [ET_Legacy_conservs, ET_Legacy_primitives, ET_Legacy_induction_gauge_rhs, ET_Legacy_HLL_flux, ET_Legacy_reconstruction, ET_Legacy_flux_source]
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
 
