@@ -1,5 +1,4 @@
 common_sources = files('io_conservative_binary.c',
-                       'io_flux_source_initialize_structs.c',
                        'io_flux_source_read_from_binary_file.c',
                        'io_metric_binary.c',
                        'io_primitive_binary.c',
