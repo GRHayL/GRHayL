@@ -6,7 +6,6 @@ static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho
 int main(int argc, char **argv) {
   const double poison = 1e200;
 
-
   const double W_max = 10.0;
   const int neos = 1;
   const double rho_ppoly_in[1] = {0.0};
@@ -20,7 +19,11 @@ int main(int argc, char **argv) {
                                              neos, rho_ppoly_in, Gamma_ppoly_in,
                                              k_ppoly0, Gamma_th, &eos);
 
-  const int dirlength = 20;
+  FILE* infile = fopen("ET_Legacy_reconstruction_input.bin", "rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_reconstruction_input.bin");
+
+  int dirlength;
+  int key = fread(&dirlength, sizeof(int), 1, infile);
   const int arraylength = dirlength*dirlength*dirlength;
 
   double *rho = (double*) malloc(sizeof(double)*arraylength);
@@ -51,13 +54,11 @@ int main(int argc, char **argv) {
   double *vzr_pert    = (double*) malloc(sizeof(double)*arraylength);
   double *vzl_pert    = (double*) malloc(sizeof(double)*arraylength);
 
-  FILE* infile = fopen("ET_Legacy_reconstruction_input.bin", "rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_reconstruction_input.bin");
-  int key = fread(rho  , sizeof(double), arraylength, infile);
-  key    += fread(press, sizeof(double), arraylength, infile);
-  key    += fread(vx   , sizeof(double), arraylength, infile);
-  key    += fread(vy   , sizeof(double), arraylength, infile);
-  key    += fread(vz   , sizeof(double), arraylength, infile);
+  key  = fread(rho  , sizeof(double), arraylength, infile);
+  key += fread(press, sizeof(double), arraylength, infile);
+  key += fread(vx   , sizeof(double), arraylength, infile);
+  key += fread(vy   , sizeof(double), arraylength, infile);
+  key += fread(vz   , sizeof(double), arraylength, infile);
 
   fclose(infile);
 

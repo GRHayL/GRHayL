@@ -11,7 +11,7 @@ static inline void compute_h_and_cs2(struct eos_parameters const *restrict eos,
 *h = prims->press*prims->vx / prims->vz;
 
 // CCTK_REAL c_s_squared  = U[PRESSURE]*U[VZ]/(h);
-*cs2 = prims->rho*prims->vz/(*h);
+*cs2 = prims->rho*prims->vz*(*h)/1e4;
 // printf("works!!\n");
 }
 
@@ -57,9 +57,14 @@ static inline void calculate_face_value(
  * // Step 5: Free all allocated memory
  */
 int main(int argc, char **argv) {
+
   // Set up test data
+  FILE* infile = fopen("ET_Legacy_flux_source_input.bin", "rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_flux_source_input.bin");
+
+  int dirlength;
+  int key = fread(&dirlength, sizeof(int), 1, infile);
   const int ghostzone = 3;
-  const int dirlength = 20;
   const int arraylength = dirlength*dirlength*dirlength;
   double invdx = 1.0/0.1;
 
@@ -168,11 +173,7 @@ int main(int argc, char **argv) {
   double *S_y_rhs = (double*) malloc(sizeof(double)*arraylength);
   double *S_z_rhs = (double*) malloc(sizeof(double)*arraylength);
 
-  char filename[100];
-  sprintf(filename,"ET_Legacy_flux_source_input.bin");
-  FILE* infile = fopen(filename, "rb");
-  check_file_was_successfully_open(infile, filename);
-  int key = fread(gxx,     sizeof(double), arraylength, infile);
+  key  = fread(gxx,     sizeof(double), arraylength, infile);
   key += fread(gxy,     sizeof(double), arraylength, infile);
   key += fread(gxz,     sizeof(double), arraylength, infile);
   key += fread(gyy,     sizeof(double), arraylength, infile);
@@ -411,9 +412,8 @@ int main(int argc, char **argv) {
   double *pert_S_y_rhs = (double*) malloc(sizeof(double)*arraylength);
   double *pert_S_z_rhs = (double*) malloc(sizeof(double)*arraylength);
 
-  sprintf(filename,"ET_Legacy_flux_source_output.bin");
-  FILE *outfile = fopen(filename, "rb");
-  check_file_was_successfully_open(outfile, filename)
+  FILE *outfile = fopen("ET_Legacy_flux_source_output.bin", "rb");
+  check_file_was_successfully_open(outfile, "ET_Legacy_flux_source_output.bin")
 
   key  = fread(trusted_rho_star_rhs, sizeof(double), arraylength, outfile);
   key += fread(trusted_tau_rhs,      sizeof(double), arraylength, outfile);
@@ -427,9 +427,8 @@ int main(int argc, char **argv) {
 
   fclose(outfile);
 
-  sprintf(filename,"ET_Legacy_flux_source_output_pert.bin");
-  outfile = fopen(filename, "rb");
-  check_file_was_successfully_open(outfile, filename);
+  outfile = fopen("ET_Legacy_flux_source_output_pert.bin", "rb");
+  check_file_was_successfully_open(outfile, "ET_Legacy_flux_source_output_pert.bin");
 
   key  = fread(pert_rho_star_rhs, sizeof(double), arraylength, outfile);
   key += fread(pert_tau_rhs,      sizeof(double), arraylength, outfile);
@@ -448,8 +447,6 @@ int main(int argc, char **argv) {
       for(int i=ghostzone; i<dirlength-ghostzone-1; i++) {
         const int index  = indexf(dirlength, i, j ,k);
 
-          printf("  rel.err. %.14e %.14e\n", relative_error(trusted_rho_star_rhs[index], rho_star_rhs[index]),
-                                                  relative_error(trusted_rho_star_rhs[index], pert_rho_star_rhs[index]));
         if( validate(trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index]) )
           grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable rho_star_rhs.\n"
                        "  rho_star_rhs trusted %.14e computed %.14e perturbed %.14e\n"

@@ -17,7 +17,11 @@ void A_rhs_dir(const int dirlength, const int A_dir,
 
 int main(int argc, char **argv) {
 
-  const int dirlength = 20;
+  FILE* infile = fopen("ET_Legacy_HLL_flux_input.bin", "rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_HLL_flux_input.bin");
+
+  int dirlength;
+  int key = fread(&dirlength, sizeof(int), 1, infile);
   const int arraylength = dirlength*dirlength*dirlength;
 
   double *phi_bssn = (double*) malloc(sizeof(double)*arraylength);
@@ -56,11 +60,7 @@ int main(int argc, char **argv) {
     A_pert[i] = (double*) malloc(sizeof(double)*arraylength);
   }
 
-  FILE* infile;
-  infile = fopen("ET_Legacy_HLL_flux_input.bin", "rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_HLL_flux_input.bin");
-
-  int key = fread(phi_bssn, sizeof(double), arraylength, infile);
+  key = fread(phi_bssn, sizeof(double), arraylength, infile);
 
   for(int coord=0; coord<3; coord++) {
     key += fread(Br[coord], sizeof(double), arraylength, infile);

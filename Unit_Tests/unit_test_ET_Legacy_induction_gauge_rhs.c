@@ -1,9 +1,12 @@
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {
-  const int gridmin     = 0;
-  const int gridmax     = 21;
-  const int arraylength = gridmax*gridmax*gridmax;
+  FILE* infile = fopen("ET_Legacy_induction_gauge_rhs_input.bin","rb");
+  check_file_was_successfully_open(infile, "ET_Legacy_induction_gauge_rhs_input.bin");
+
+  int dirlength;
+  int key = fread(&dirlength, sizeof(int), 1, infile);
+  const int arraylength = dirlength*dirlength*dirlength;
 
   const double dX[3] = {0.1, 0.1, 0.1};
 
@@ -43,11 +46,6 @@ int main(int argc, char **argv) {
   double *Az_rhs = (double*) malloc(sizeof(double)*arraylength);
 
   // Read in data from file to ensure portability
-  FILE* infile;
-  infile = fopen("ET_Legacy_induction_gauge_rhs_input.bin", "rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_induction_gauge_rhs_input.bin");
-
-  int key;
   key  = fread(gupxx, sizeof(double), arraylength, infile);
   key += fread(gupxy, sizeof(double), arraylength, infile);
   key += fread(gupxz, sizeof(double), arraylength, infile);
@@ -77,10 +75,10 @@ int main(int argc, char **argv) {
   const double poison = 1e200;
 
 #pragma omp parallel for
-  for(int k=gridmin; k<gridmax; k++)
-    for(int j=gridmin; j<gridmax; j++)
-      for(int i=gridmin; i<gridmax; i++) {
-        const int index = indexf(gridmax,i,j,k);
+  for(int k=0; k<dirlength; k++)
+    for(int j=0; j<dirlength; j++)
+      for(int i=0; i<dirlength; i++) {
+        const int index = indexf(dirlength,i,j,k);
 
         alpha_interp[index]  = poison;
         shiftx_interp[index] = poison;
@@ -99,10 +97,10 @@ int main(int argc, char **argv) {
   }
 
 //#pragma omp parallel for
-  for(int k=gridmin+1; k<gridmax-1; k++)
-    for(int j=gridmin+1; j<gridmax-1; j++)
-      for(int i=gridmin+1; i<gridmax-1; i++) {
-        const int index = indexf(gridmax,i,j,k);
+  for(int k=1; k<dirlength-1; k++)
+    for(int j=1; j<dirlength-1; j++)
+      for(int i=1; i<dirlength-1; i++) {
+        const int index = indexf(dirlength,i,j,k);
 
         A_gauge_vars gauge_vars;
         A_gauge_rhs_vars gauge_rhs_vars;
@@ -112,7 +110,7 @@ int main(int argc, char **argv) {
         for(int iterz=0; iterz<2; iterz++)
           for(int itery=0; itery<2; itery++)
             for(int iterx=0; iterx<2; iterx++) {
-              const int ind = indexf(gridmax,i+iterx,j+itery,k+iterz);
+              const int ind = indexf(dirlength,i+iterx,j+itery,k+iterz);
               gauge_vars.gupxx[iterz][itery][iterx]  = gupxx[ind];
               gauge_vars.gupxy[iterz][itery][iterx]  = gupxy[ind];
               gauge_vars.gupxz[iterz][itery][iterx]  = gupxz[ind];
@@ -135,7 +133,7 @@ int main(int argc, char **argv) {
         for(int iterz=-1; iterz<2; iterz++)
           for(int itery=-1; itery<2; itery++)
             for(int iterx=-1; iterx<2; iterx++) {
-              const int ind = indexf(gridmax,i+iterx,j+itery,k+iterz);
+              const int ind = indexf(dirlength,i+iterx,j+itery,k+iterz);
               gauge_vars.A_x[iterz+1][itery+1][iterx+1] = Ax[ind];
               gauge_vars.A_y[iterz+1][itery+1][iterx+1] = Ay[ind];
               gauge_vars.A_z[iterz+1][itery+1][iterx+1] = Az[ind];
@@ -143,12 +141,12 @@ int main(int argc, char **argv) {
 // This code should only copy the needed data that isn't copied in the loop for other variables, but it is untested.
 //        for(int iter2=0; iter2<2; iter2++)
 //        for(int iter1=0; iter1<2; iter1++) {
-//          gauge_vars.A_x[iter2+1][0][iter1+1] = in_vars[A_XI][indexf(gridmax, i+iter1,     j-1, k+iter2)]; // { (0,1),    -1, (0,1)}
-//          gauge_vars.A_x[0][iter2+1][iter1+1] = in_vars[A_XI][indexf(gridmax, i+iter1, j+iter2, k-1    )]; // { (0,1), (0,1), -1}
-//          gauge_vars.A_y[iter2+1][iter1+1][0] = in_vars[A_YI][indexf(gridmax,     i-1, j+iter1, k+iter2)]; // { -1,    (0,1), (0,1)}
-//          gauge_vars.A_y[0][iter1+1][iter2+1] = in_vars[A_YI][indexf(gridmax, i+iter2, j+iter1, k-1    )]; // { (0,1), (0,1), -1}
-//          gauge_vars.A_z[iter1+1][iter2+1][0] = in_vars[A_ZI][indexf(gridmax,     i-1, j+iter2, k+iter1)]; // { -1,    (0,1), (0,1)}
-//          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][indexf(gridmax, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
+//          gauge_vars.A_x[iter2+1][0][iter1+1] = in_vars[A_XI][indexf(dirlength, i+iter1,     j-1, k+iter2)]; // { (0,1),    -1, (0,1)}
+//          gauge_vars.A_x[0][iter2+1][iter1+1] = in_vars[A_XI][indexf(dirlength, i+iter1, j+iter2, k-1    )]; // { (0,1), (0,1), -1}
+//          gauge_vars.A_y[iter2+1][iter1+1][0] = in_vars[A_YI][indexf(dirlength,     i-1, j+iter1, k+iter2)]; // { -1,    (0,1), (0,1)}
+//          gauge_vars.A_y[0][iter1+1][iter2+1] = in_vars[A_YI][indexf(dirlength, i+iter2, j+iter1, k-1    )]; // { (0,1), (0,1), -1}
+//          gauge_vars.A_z[iter1+1][iter2+1][0] = in_vars[A_ZI][indexf(dirlength,     i-1, j+iter2, k+iter1)]; // { -1,    (0,1), (0,1)}
+//          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][indexf(dirlength, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
         interpolate_for_A_gauge_rhs(&gauge_vars, &gauge_rhs_vars);
@@ -165,19 +163,19 @@ int main(int argc, char **argv) {
 
   const double dxinv[3] = {1.0/dX[0], 1.0/dX[1], 1.0/dX[2]};
 
-//for(int k=gridmin+1; k<gridmax-1; k++)
-//  for(int j=gridmin+1; j<gridmax-1; j++)
-//    for(int i=gridmin+1; i<gridmax-1; i++) {
-//  const int index = indexf(gridmax,i,j,k);
+//for(int k=1; k<dirlength-1; k++)
+//  for(int j=1; j<dirlength-1; j++)
+//    for(int i=1; i<dirlength-1; i++) {
+//  const int index = indexf(dirlength,i,j,k);
 //  printf("%e %e %e %e\n", alpha_interp[index], alpha_sqrtg_Ax_interp[index], alpha_sqrtg_Ay_interp[index], alpha_sqrtg_Az_interp[index]);
 //}
 
   // This loop requires two additional ghostzones in every direction. Hence the following loop definition:
 #pragma omp parallel for
-  for(int k=gridmin+3; k<gridmax-3; k++)
-    for(int j=gridmin+3; j<gridmax-3; j++)
-      for(int i=gridmin+3; i<gridmax-3; i++) {
-        const int index = indexf(gridmax,i,j,k);
+  for(int k=3; k<dirlength-3; k++)
+    for(int j=3; j<dirlength-3; j++)
+      for(int i=3; i<dirlength-3; i++) {
+        const int index = indexf(dirlength,i,j,k);
 
         // \partial_t A_i = [reconstructed stuff] + [gauge stuff],
         //    where [gauge stuff] = -\partial_i (\alpha \Phi - \beta^j A_j)
@@ -190,21 +188,21 @@ int main(int argc, char **argv) {
         gauge_rhs_vars.dxi[2] = dxinv[2];
     
         gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[0] = alpha_Phi_minus_betaj_A_j_interp[index];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[1] = alpha_Phi_minus_betaj_A_j_interp[indexf(gridmax,i-1,j,k)];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[2] = alpha_Phi_minus_betaj_A_j_interp[indexf(gridmax,i,j-1,k)];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[3] = alpha_Phi_minus_betaj_A_j_interp[indexf(gridmax,i,j,k-1)];
+        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[1] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i-1,j,k)];
+        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[2] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j-1,k)];
+        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[3] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j,k-1)];
     
         gauge_rhs_vars.alpha_sqrtg_Ax_interp[0] = alpha_sqrtg_Ax_interp[index];
         gauge_rhs_vars.alpha_sqrtg_Ay_interp[0] = alpha_sqrtg_Ay_interp[index];
         gauge_rhs_vars.alpha_sqrtg_Az_interp[0] = alpha_sqrtg_Az_interp[index];
-        gauge_rhs_vars.alpha_sqrtg_Ax_interp[1] = alpha_sqrtg_Ax_interp[indexf(gridmax,i+1,j,k)];
-        gauge_rhs_vars.alpha_sqrtg_Ay_interp[1] = alpha_sqrtg_Ay_interp[indexf(gridmax,i,j+1,k)];
-        gauge_rhs_vars.alpha_sqrtg_Az_interp[1] = alpha_sqrtg_Az_interp[indexf(gridmax,i,j,k+1)];
+        gauge_rhs_vars.alpha_sqrtg_Ax_interp[1] = alpha_sqrtg_Ax_interp[indexf(dirlength,i+1,j,k)];
+        gauge_rhs_vars.alpha_sqrtg_Ay_interp[1] = alpha_sqrtg_Ay_interp[indexf(dirlength,i,j+1,k)];
+        gauge_rhs_vars.alpha_sqrtg_Az_interp[1] = alpha_sqrtg_Az_interp[indexf(dirlength,i,j,k+1)];
     
         for(int iter=-2; iter<3; iter++) {
-          const int indexx = indexf(gridmax,i+iter,j,     k     );
-          const int indexy = indexf(gridmax,i,     j+iter,k     );
-          const int indexz = indexf(gridmax,i,     j,     k+iter);
+          const int indexx = indexf(dirlength,i+iter,j,     k     );
+          const int indexy = indexf(dirlength,i,     j+iter,k     );
+          const int indexz = indexf(dirlength,i,     j,     k+iter);
           gauge_rhs_vars.shiftx_interp[iter+2] = shiftx_interp[indexx];
           gauge_rhs_vars.shifty_interp[iter+2] = shifty_interp[indexy];
           gauge_rhs_vars.shiftz_interp[iter+2] = shiftz_interp[indexz];
@@ -258,13 +256,11 @@ int main(int argc, char **argv) {
                  "is up-to-date with current test version.\n");
 
 //#pragma omp parallel for
-  for(int k=gridmin+3; k<gridmax-3; k++)
-    for(int j=gridmin+3; j<gridmax-3; j++)
-      for(int i=gridmin+3; i<gridmax-3; i++) {
-        const int index = indexf(gridmax,i,j,k);
+  for(int k=3; k<dirlength-3; k++)
+    for(int j=3; j<dirlength-3; j++)
+      for(int i=3; i<dirlength-3; i++) {
+        const int index = indexf(dirlength,i,j,k);
 
-//printf("index %d %d %d\n", i, j, k);
-//printf("phitilde %e\n", phitilde_rhs[index]);
         if( validate(phitilde_trusted[index], phitilde_rhs[index], phitilde_pert[index]) )
           grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable phitilde_rhs.\n"
                        "  phitilde trusted %.14e computed %.14e perturbed %.14e\n"

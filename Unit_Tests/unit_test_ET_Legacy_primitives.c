@@ -8,9 +8,11 @@
 
 int main(int argc, char **argv) {
 
-  // These variables set up the tested range of values
-  // and number of sampling points.
-  int npoints = 80; //Number of sampling points in density and temperature
+  FILE* input = fopen("ET_Legacy_primitives_input.bin", "rb");
+  check_file_was_successfully_open(input, "ET_Legacy_primitives_input.bin");
+
+  int npoints;
+  int key = fread(&npoints, sizeof(int), 1, input);
   const int arraylength = npoints*npoints;
 
   double poison = 1e200;
@@ -40,8 +42,6 @@ int main(int argc, char **argv) {
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
-
-  char filename[100];
 
   // Allocate memory for the metrics
   double *gxx = (double*) malloc(sizeof(double)*arraylength);
@@ -89,11 +89,6 @@ int main(int argc, char **argv) {
   double *vz_pert = (double*) malloc(sizeof(double)*arraylength);
 
   // Read in data from file to ensure portability
-  sprintf(filename,"ET_Legacy_primitives_input.bin");
-  FILE* input = fopen(filename,"rb");
-  check_file_was_successfully_open(input, filename);
-
-  int key;
   key  = fread(gxx,   sizeof(double), arraylength, input);
   key += fread(gxy,   sizeof(double), arraylength, input);
   key += fread(gxz,   sizeof(double), arraylength, input);
@@ -130,9 +125,8 @@ int main(int argc, char **argv) {
 
   // The output for this test is provided by IllinoisGRMHD via the ET
   // for validation with legacy code
-  sprintf(filename,"ET_Legacy_primitives_output.bin");
-  FILE* output = fopen(filename,"rb");
-  check_file_was_successfully_open(output, filename);
+  FILE* output = fopen("ET_Legacy_primitives_output.bin", "rb");
+  check_file_was_successfully_open(output, "ET_Legacy_primitives_output.bin");
 
   key  = fread(rho_b_trusted, sizeof(double), arraylength, output);
   key += fread(press_trusted, sizeof(double), arraylength, output);
@@ -147,9 +141,8 @@ int main(int argc, char **argv) {
 
   fclose(output);
 
-  sprintf(filename,"ET_Legacy_primitives_output_pert.bin");
-  output = fopen(filename,"rb");
-  check_file_was_successfully_open(output, filename);
+  output = fopen("ET_Legacy_primitives_output_pert.bin", "rb");
+  check_file_was_successfully_open(output, "ET_Legacy_primitives_output_pert.bin");
 
   key  = fread(rho_b_pert, sizeof(double), arraylength, output);
   key += fread(press_pert, sizeof(double), arraylength, output);
