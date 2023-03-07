@@ -10,8 +10,8 @@ static inline void compute_h_and_cs2(struct eos_parameters const *restrict eos,
 // CCTK_REAL h_ = U[PRESSURE]*U[VX]/U[VZ];
 *h = prims->press*prims->vx / prims->vz;
 
-// CCTK_REAL c_s_squared  = U[PRESSURE]*U[VZ]/(h);
-*cs2 = prims->rho*prims->vz/(*h);
+// CCTK_REAL c_s_squared  = U[RHOB]*U[VZ]*(h)/1e4;
+*cs2 = prims->rho*prims->vz*(*h)/1e4;
 // printf("works!!\n");
 }
 
