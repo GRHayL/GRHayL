@@ -67,7 +67,7 @@ def magnetic_rotor(r, r_in=0.1, Omega=9.95, cartx=rfm.Cartx, carty=rfm.Carty):
     rfm.reference_metric()
 
     vU_Cyl = ixp.zerorank1()
-    vU_Cyl[1] = Omega
+    vU_Cyl[1] = noif.coord_leq_bound(r, r_in)*Omega
 
     Jac_dUCart_dDrfmUD, Jac_dUrfm_dDCartUD = rfm.compute_Jacobian_and_inverseJacobian_tofrom_Cartesian()
     vU = rfm.basis_transform_vectorU_from_rfmbasis_to_Cartesian(Jac_dUCart_dDrfmUD, vU_Cyl)

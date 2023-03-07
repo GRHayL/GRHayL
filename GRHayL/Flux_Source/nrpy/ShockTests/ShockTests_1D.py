@@ -154,3 +154,34 @@ def BtoA_piecewise_constant_Cart_Flat(x, y, z, BU):
     AD[2] = y*BU[0]
 
     return AD
+
+
+def hydro1(x, bound = 0.5):
+    vU = ixp.zerorank1()
+    BU = ixp.zerorank1()
+
+    rho_left = rl(10.)
+    rho_right = rl(1.0)
+    rho = noif.coord_less_bound(x, bound)*rho_left \
+        + noif.coord_geq_bound(x,bound)*rho_right
+
+    press_left = rl(40, 3)
+    press_right = rl(0.0)
+    press = noif.coord_less_bound(x, bound)*press_left \
+          + noif.coord_geq_bound(x,bound)*press_right
+
+    return rho, press, vU, BU
+
+
+def hydro2(x, bound = 0.5):
+    vU = ixp.zerorank1()
+    BU = ixp.zerorank1()
+
+    rho = rl(1.0)
+
+    press_left = rl(1000.0)
+    press_right = rl(1, 100)
+    press = noif.coord_less_bound(x, bound)*press_left \
+          + noif.coord_geq_bound(x,bound)*press_right
+
+    return rho, press, vU, BU
