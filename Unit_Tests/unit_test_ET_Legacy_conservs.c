@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
 
   fclose(output);
 
-  //OMP
+  //Parallelizing this also needs parallel sum of abs/rel error arrays
   for(int index=0; index<arraylength; index++) {
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
@@ -300,10 +300,34 @@ int main(int argc, char **argv) {
     Tmunu_pert.Txz = Txz_pert[index];
     Tmunu_pert.Tyy = Tyy_pert[index];
     Tmunu_pert.Tyz = Tyz_pert[index];
+    Tmunu_pert.Tzz = Tzz_pert[index];
 
     validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
-  return 0;
+  grhayl_info("ET_Legacy primitives-to-conservatives test has passed!\n");
+  free(lapse);
+  free(betax); free(betay); free(betaz);
+  free(gxx); free(gxy); free(gxz);
+  free(gyy); free(gyz); free(gzz);
+  free(rho_b); free(press); free(eps);
+  free(vx); free(vy); free(vz);
+  free(Bx); free(By); free(Bz);
+  free(rho_star); free(tau);
+  free(S_x); free(S_y); free(S_z);
+  free(rho_b_trusted); free(press_trusted);
+  free(vx_trusted); free(vy_trusted); free(vz_trusted);
+  free(rho_star_trusted); free(tau_trusted);
+  free(S_x_trusted); free(S_y_trusted); free(S_z_trusted);
+  free(Ttt_trusted); free(Ttx_trusted); free(Tty_trusted);
+  free(Ttz_trusted); free(Txx_trusted); free(Txy_trusted);
+  free(Txz_trusted); free(Tyy_trusted); free(Tyz_trusted); free(Tzz_trusted);
+  free(rho_b_pert); free(press_pert);
+  free(vx_pert); free(vy_pert); free(vz_pert);
+  free(rho_star_pert); free(tau_pert);
+  free(S_x_pert); free(S_y_pert); free(S_z_pert);
+  free(Ttt_pert); free(Ttx_pert); free(Tty_pert);
+  free(Ttz_pert); free(Txx_pert); free(Txy_pert);
+  free(Txz_pert); free(Tyy_pert); free(Tyz_pert); free(Tzz_pert);
 }

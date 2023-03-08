@@ -257,6 +257,21 @@ int main(int argc, char **argv) {
                                                      relative_error(vzl_trusted[index], vzl_pert[index]));
     }
   }
+  fclose(infile);
+  fclose(inpert);
+  grhayl_info("ET_Legacy reconstruction test has passed!\n");
+  free(rho); free(press);
+  free(vx); free(vy); free(vz);
+
+  free(rhor_trusted); free(rhol_trusted);
+  free(pressr_trusted); free(pressl_trusted);
+  free(vxr_trusted); free(vxl_trusted); free(vyr_trusted);
+  free(vyl_trusted); free(vzr_trusted); free(vzl_trusted);
+
+  free(rhor_pert); free(rhol_pert);
+  free(pressr_pert); free(pressl_pert);
+  free(vxr_pert); free(vxl_pert); free(vyr_pert);
+  free(vyl_pert); free(vzr_pert); free(vzl_pert);
 }
 
 double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in) {

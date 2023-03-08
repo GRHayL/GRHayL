@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
   double prims_trusted_rel_error[5] = {0,0,0,0,0};
   double prims_pert_rel_error[5] = {0,0,0,0,0};
 
-  //OMP
+  //Parallelizing this also needs parallel sum of abs/rel error arrays
   for(int index=0; index<arraylength; index++) {
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
@@ -309,5 +309,18 @@ int main(int argc, char **argv) {
           prims_rel_error[4], prims_trusted_rel_error[4], prims_pert_rel_error[4]);
 
   fclose(output);
-  return 0;
+  grhayl_info("ET_Legacy conservatives-to-primitives test has passed!\n");
+  free(gxx); free(gxy); free(gxz);
+  free(gyy); free(gyz); free(gzz);
+  free(lapse);
+  free(betax); free(betay); free(betaz);
+  free(rho_b); free(press); free(eps);
+  free(vx); free(vy); free(vz);
+  free(Bx); free(By); free(Bz);
+  free(rho_star); free(tau);
+  free(S_x); free(S_y); free(S_z);
+  free(rho_b_trusted); free(press_trusted);
+  free(vx_trusted); free(vy_trusted); free(vz_trusted);
+  free(rho_b_pert); free(press_pert);
+  free(vx_pert); free(vy_pert); free(vz_pert);
 }

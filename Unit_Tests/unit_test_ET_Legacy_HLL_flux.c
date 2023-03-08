@@ -143,6 +143,22 @@ int main(int argc, char **argv) {
                        A_trusted[2][index], A_rhs[2][index], A_pert[2][index],
                        relative_error(A_trusted[2][index], A_rhs[2][index]), relative_error(A_trusted[2][index], A_pert[2][index]));
   }
+  grhayl_info("ET_Legacy HLL magnetic flux test has passed!\n");
+  free(phi_bssn);
+
+  for(int i=0; i<3; i++) {
+    free(cmin[i]);
+    free(cmax[i]);
+    free(vrr[i]);
+    free(vrl[i]);
+    free(vlr[i]);
+    free(vll[i]);
+    free(Br[i]);
+    free(Bl[i]);
+    free(A_rhs[i]);
+    free(A_trusted[i]);
+    free(A_pert[i]);
+  }
 }
 
 void A_rhs_dir(const int dirlength,

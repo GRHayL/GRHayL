@@ -12,7 +12,6 @@ void validate_stress_energy(
                      const stress_energy *restrict Tmunu,
                      const stress_energy *restrict Tmunu_pert) {
 
-
   char fail_msg[100] = "Test has failed!\n The stress-energy variable(s) which failed are ";
   int test_fail = 0;
   if( validate(Tmunu_trusted->Ttt, Tmunu->Ttt, Tmunu_pert->Ttt) && fabs(Tmunu->Ttt) > 1.0e-12 ) {

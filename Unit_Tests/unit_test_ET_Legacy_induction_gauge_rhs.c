@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
         phitilde_rhs[index] = poison;
   }
 
-//#pragma omp parallel for
+#pragma omp parallel for
   for(int k=1; k<dirlength-1; k++)
     for(int j=1; j<dirlength-1; j++)
       for(int i=1; i<dirlength-1; i++) {
@@ -162,13 +162,6 @@ int main(int argc, char **argv) {
       }
 
   const double dxinv[3] = {1.0/dX[0], 1.0/dX[1], 1.0/dX[2]};
-
-//for(int k=1; k<dirlength-1; k++)
-//  for(int j=1; j<dirlength-1; j++)
-//    for(int i=1; i<dirlength-1; i++) {
-//  const int index = indexf(dirlength,i,j,k);
-//  printf("%e %e %e %e\n", alpha_interp[index], alpha_sqrtg_Ax_interp[index], alpha_sqrtg_Ay_interp[index], alpha_sqrtg_Az_interp[index]);
-//}
 
   // This loop requires two additional ghostzones in every direction. Hence the following loop definition:
 #pragma omp parallel for
@@ -255,7 +248,7 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in perturbed data. Please check that comparison data\n"
                  "is up-to-date with current test version.\n");
 
-//#pragma omp parallel for
+#pragma omp parallel for
   for(int k=3; k<dirlength-3; k++)
     for(int j=3; j<dirlength-3; j++)
       for(int i=3; i<dirlength-3; i++) {
@@ -289,6 +282,21 @@ int main(int argc, char **argv) {
                                                    relative_error(Az_trusted[index], Az_rhs[index]),
                                                    relative_error(Az_trusted[index], Az_pert[index]));
   }
-  grhayl_info("Induction equation gauge RHS test has passed!\n");
-  return 0;
+  grhayl_info("ET_Legacy induction gauge RHS test has passed!\n");
+  free(gupxx); free(gupxy); free(gupxz);
+  free(gupyy); free(gupyz); free(gupzz);
+  free(psi); free(lapse);
+  free(betax); free(betay); free(betaz);
+  free(phitilde);
+  free(Ax); free(Ay); free(Az);
+  free(alpha_interp);
+  free(shiftx_interp); free(shifty_interp); free(shiftz_interp);
+  free(alpha_Phi_minus_betaj_A_j_interp);
+  free(alpha_sqrtg_Ax_interp); free(alpha_sqrtg_Ay_interp); free(alpha_sqrtg_Az_interp);
+  free(phitilde_rhs);
+  free(Ax_rhs); free(Ay_rhs); free(Az_rhs);
+  free(phitilde_trusted);
+  free(Ax_trusted); free(Ay_trusted); free(Az_trusted);
+  free(phitilde_pert);
+  free(Ax_pert); free(Ay_pert); free(Az_pert);
 }
