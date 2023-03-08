@@ -199,6 +199,25 @@ int main(int argc, char **argv) {
 
     validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims_guess, &prims_pert);
   }
-  printf("Completed test for routine font_fix\n");
-  return 0;
+  grhayl_info("font_fix function test has passed!\n");
+  free(lapse);
+  free(betax); free(betay); free(betaz);
+  free(gxx); free(gxy); free(gxz);
+  free(gyy); free(gyz); free(gzz);
+  free(rho_b); free(press); free(eps);
+  free(vx); free(vy); free(vz);
+  free(Bx); free(By); free(Bz);
+  free(rho_star); free(tau);
+  free(S_x); free(S_y); free(S_z);
+  free(rho_b_trusted); free(press_trusted); free(eps_trusted);
+  free(vx_trusted); free(vy_trusted); free(vz_trusted);
+  free(Bx_trusted); free(By_trusted); free(Bz_trusted);
+  free(rho_b_pert); free(press_pert); free(eps_pert);
+  free(vx_pert); free(vy_pert); free(vz_pert);
+  free(Bx_pert); free(By_pert); free(Bz_pert);
+
+  free(ent_cons); free(Y_e_cons);
+  free(entropy); free(entropy_trusted); free(entropy_pert);
+  free(Y_e); free(Y_e_trusted); free(Y_e_pert);
+  free(temperature); free(temperature_trusted); free(temperature_pert);
 }

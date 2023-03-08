@@ -228,6 +228,31 @@ int main(int argc, char **argv) {
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
-  printf("Completed test for routine compute_conservs_and_Tmunu\n");
-  return 0;
+  grhayl_info("compute_conservs_and_Tmunu function test has passed!\n");
+  free(lapse);
+  free(betax); free(betay); free(betaz);
+  free(gxx); free(gxy); free(gxz);
+  free(gyy); free(gyz); free(gzz);
+  free(rho_b); free(press); free(eps);
+  free(vx); free(vy); free(vz);
+  free(Bx); free(By); free(Bz);
+  free(u0);
+  free(rho_star_trusted); free(tau_trusted);
+  free(S_x_trusted); free(S_y_trusted); free(S_z_trusted);
+  free(rho_star_pert); free(tau_pert);
+  free(S_x_pert); free(S_y_pert); free(S_z_pert);
+  free(Ttt_trusted); free(Ttx_trusted); free(Tty_trusted);
+  free(Ttz_trusted); free(Txx_trusted); free(Txy_trusted);
+  free(Txz_trusted); free(Tyy_trusted); free(Tyz_trusted);
+  free(Tzz_trusted);
+  free(Ttt_pert); free(Ttx_pert); free(Tty_pert);
+  free(Ttz_pert); free(Txx_pert); free(Txy_pert);
+  free(Txz_pert); free(Tyy_pert); free(Tyz_pert);
+  free(Tzz_pert);
+
+  free(Y_e);
+  free(entropy);
+  free(temperature);
+  free(Y_e_cons_trusted); free(ent_cons_trusted);
+  free(Y_e_cons_pert); free(ent_cons_pert);
 }

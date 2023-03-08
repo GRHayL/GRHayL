@@ -204,6 +204,23 @@ int main(int argc, char **argv) {
                    "   u0_perturb %.15e\n"
                    "   rel_diff %.15e %.15e\n", u0_trusted[i], prims.u0, u0_pert[i], relative_error(u0_trusted[i], prims.u0), relative_error(u0_trusted[i], u0_pert[i]));
   }
-  printf("Completed test for routine enforce_primitive_limits_and_compute_u0\n");
-  return 0;
+  grhayl_info("enforce_primitive_limits_and_compute_u0 function test has passed!\n");
+  free(lapse);
+  free(betax); free(betay); free(betaz);
+  free(gxx); free(gxy); free(gxz);
+  free(gyy); free(gyz); free(gzz);
+  free(rho_b); free(press); free(eps);
+  free(vx); free(vy); free(vz);
+  free(Bx); free(By); free(Bz);
+  free(u0_trusted); free(u0_pert);
+  free(rho_b_trusted); free(press_trusted); free(eps_trusted);
+  free(vx_trusted); free(vy_trusted); free(vz_trusted);
+  free(Bx_trusted); free(By_trusted); free(Bz_trusted);
+  free(rho_b_pert); free(press_pert); free(eps_pert);
+  free(vx_pert); free(vy_pert); free(vz_pert);
+  free(Bx_pert); free(By_pert); free(Bz_pert);
+
+  free(entropy); free(entropy_trusted); free(entropy_pert);
+  free(Y_e); free(Y_e_trusted); free(Y_e_pert);
+  free(temperature); free(temperature_trusted); free(temperature_pert);
 }

@@ -137,7 +137,6 @@ int main(int argc, char **argv) {
   fclose(infile);
   fclose(inpert);
 
-
 #pragma omp parallel for
   for(int i=0;i<arraylength;i++) {
 
@@ -179,6 +178,22 @@ int main(int argc, char **argv) {
 
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
   }
-  printf("Completed test for routine apply_inequality_fixes\n");
-  return 0;
+  grhayl_info("apply_inequality_fixes function test has passed!\n");
+  free(lapse);
+  free(betax); free(betay); free(betaz);
+  free(gxx); free(gxy); free(gxz);
+  free(gyy); free(gyz); free(gzz);
+  free(rho_b); free(press); free(eps);
+  free(vx); free(vy); free(vz);
+  free(Bx); free(By); free(Bz);
+  free(rho_star); free(tau);
+  free(S_x); free(S_y); free(S_z);
+  free(rho_star_trusted); free(tau_trusted);
+  free(S_x_trusted); free(S_y_trusted); free(S_z_trusted);
+  free(rho_star_pert); free(tau_pert);
+  free(S_x_pert); free(S_y_pert); free(S_z_pert);
+
+  free(Y_e); free(entropy); free(temperature);
+  free(ent_cons); free(ent_cons_trusted); free(ent_cons_pert);
+  free(Y_e_cons); free(Y_e_cons_trusted); free(Y_e_cons_pert);
 }
