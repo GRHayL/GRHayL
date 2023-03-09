@@ -17,18 +17,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-      - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: |
-          brew update && brew install gcc gsed hdf5 md5sha1sum
-          # Now install meson and ninja
-          python -m pip install -U pip
-          python -m pip install meson ninja
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          OS: 'Mac'
+          compiler: 'gcc'
       - name: Compile GRHayL
-        run: |
-          CC=gcc-12 ./configure --prefix=`pwd` --compile-silent
-          make
-          make install
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          OS: 'Mac'
+          compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin -o build/${{ matrix.test-function }}_input.bin
@@ -49,18 +47,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-      - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: |
-          brew update && brew install gcc@12 gsed hdf5 md5sha1sum
-          # Now install meson and ninja
-          python -m pip install -U pip
-          python -m pip install meson ninja
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          OS: 'Mac'
+          compiler: 'gcc'
       - name: Compile GRHayL
-        run: |
-          CC=gcc-12 ./configure --prefix=`pwd` --compile-silent
-          make
-          make install
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          OS: 'Mac'
+          compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
           curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin -o build/Noble2D_initial_data.bin
@@ -80,18 +76,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-      - name: Install gcc, gnu-sed, and hdf5 on Mac OS using Homebrew
-        run: |
-          brew update && brew install gcc@12 gsed hdf5
-          # Now install meson and ninja
-          python -m pip install -U pip
-          python -m pip install meson ninja
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          OS: 'Mac'
+          compiler: 'gcc'
       - name: Compile GRHayL
-        run: |
-          CC=gcc-12 ./configure --prefix=`pwd` --compile-silent
-          make
-          make install
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          OS: 'Mac'
+          compiler: 'gcc'
       - name: Copy test data to working directory
         run: curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5 -o build/simple_table.h5
       - name: Run tabulated EOS unit test
