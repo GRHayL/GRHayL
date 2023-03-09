@@ -18,17 +18,11 @@ unit_test_apply_inequality_fixes = executable(
   dependencies : dep_without_hdf5)
 test('apply_inequality_fixes', unit_test_apply_inequality_fixes, args : ['myfile'])
 
-unit_test_compute_conservs_and_Tmunu = executable(
-  'unit_test_compute_conservs_and_Tmunu',
-  sources : ['unit_test_compute_conservs_and_Tmunu.c', common_sources],
+unit_test_Noble2D_Hybrid_Multi_Method = executable(
+  'unit_test_Noble2D_Hybrid_Multi_Method',
+  sources : ['unit_test_Noble2D_Hybrid_Multi_Method.c', common_sources],
   dependencies : dep_without_hdf5)
-test('compute_conservs_and_Tmunu', unit_test_compute_conservs_and_Tmunu)
-
-unit_test_enforce_primitive_limits_and_compute_u0 = executable(
-  'unit_test_enforce_primitive_limits_and_compute_u0',
-  sources : ['unit_test_enforce_primitive_limits_and_compute_u0.c', common_sources],
-  dependencies : dep_without_hdf5)
-test('enforce_primitive_limits_and_compute_u0', unit_test_enforce_primitive_limits_and_compute_u0)
+test('Noble2D_Hybrid_Multi_Method', unit_test_Noble2D_Hybrid_Multi_Method)
 
 unit_test_font_fix = executable(
   'unit_test_font_fix',
@@ -36,17 +30,35 @@ unit_test_font_fix = executable(
   dependencies : dep_without_hdf5)
 test('font_fix', unit_test_font_fix)
 
+unit_test_enforce_primitive_limits_and_compute_u0 = executable(
+  'unit_test_enforce_primitive_limits_and_compute_u0',
+  sources : ['unit_test_enforce_primitive_limits_and_compute_u0.c', common_sources],
+  dependencies : dep_without_hdf5)
+test('enforce_primitive_limits_and_compute_u0', unit_test_enforce_primitive_limits_and_compute_u0)
+
+unit_test_compute_conservs_and_Tmunu = executable(
+  'unit_test_compute_conservs_and_Tmunu',
+  sources : ['unit_test_compute_conservs_and_Tmunu.c', common_sources],
+  dependencies : dep_without_hdf5)
+test('compute_conservs_and_Tmunu', unit_test_compute_conservs_and_Tmunu)
+
+unit_test_ET_Legacy_primitives = executable(
+  'unit_test_ET_Legacy_primitives',
+  sources : ['unit_test_ET_Legacy_primitives.c', common_sources],
+  dependencies : dep_without_hdf5)
+test('ET_Legacy_primitives', unit_test_ET_Legacy_primitives)
+
+unit_test_ET_Legacy_conservs = executable(
+  'unit_test_ET_Legacy_conservs',
+  sources : ['unit_test_ET_Legacy_conservs.c', common_sources],
+  dependencies : dep_without_hdf5)
+test('ET_Legacy_conservs', unit_test_ET_Legacy_conservs)
+
 unit_test_ET_Legacy_HLL_flux = executable(
   'unit_test_ET_Legacy_HLL_flux',
   sources : ['unit_test_ET_Legacy_HLL_flux.c', common_sources],
   dependencies : dep_without_hdf5)
 test('ET_Legacy_HLL_flux', unit_test_ET_Legacy_HLL_flux)
-
-unit_test_Noble2D_Hybrid_Multi_Method = executable(
-  'unit_test_Noble2D_Hybrid_Multi_Method',
-  sources : ['unit_test_Noble2D_Hybrid_Multi_Method.c', common_sources],
-  dependencies : dep_without_hdf5)
-test('Noble2D_Hybrid_Multi_Method', unit_test_Noble2D_Hybrid_Multi_Method)
 
 unit_test_ET_Legacy_induction_gauge_rhs = executable(
   'unit_test_ET_Legacy_induction_gauge_rhs',
