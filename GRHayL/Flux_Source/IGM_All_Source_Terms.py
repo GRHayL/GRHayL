@@ -28,7 +28,7 @@ CoordSystem = "Cartesian"
 par.set_parval_from_str("reference_metric::CoordSystem", CoordSystem)
 rfm.reference_metric()
 
-def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM"):    
+def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outCparams = "outCverbose=False,CSE_sorting=canonical,CSE_enable=True"):    
     # Generate SymPy symbolic expressions
     GRMHD.set_up_base_vars(formalism=formalism)
 
@@ -182,9 +182,7 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
             prestring += f"const double gammaDD_dD12{i} = metric_derivs->adm_gyz[{i}];\n"
 
             prestring += f"const double gammaDD_dD22{i} = metric_derivs->adm_gzz[{i}];\n"
-    
-
-    outCparams = "outCverbose=False,CSE_sorting=canonical,CSE_enable=True"
+            
     
     desc = "Adds source term and connection terms to Stilde and tau_tilde"
     name = "calculate_all_source_terms"

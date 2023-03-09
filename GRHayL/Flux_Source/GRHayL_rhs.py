@@ -14,12 +14,13 @@ import IGM_All_Source_Terms as st    # NRPy+: Generate general relativistic magn
 includes = ["flux_source.h"]
 
 def write_grhayl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM"):
-    outCparams = "outCverbose=False,CSE_sorting=True"
+    outCparams = "outCverbose=False,GoldenKernelsEnable=True"
 
 
     st.Cfunction__GRMHD_SourceTerms(Ccodesrootdir, 
                                     includes=includes,
-                                    formalism=formalism)
+                                    formalism=formalism,
+                                    outCparams=outCparams)
 
     chsp.Cfunction__GRMHD_characteristic_speeds(Ccodesrootdir, 
                                                 includes=includes,
