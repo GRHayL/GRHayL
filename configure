@@ -127,10 +127,18 @@ grhayl:
 \t@{args.meson} compile -{'' if args.compile_silent else 'v'}C build
 
 check:
-\t@{args.meson} test -C build $(testnames) | grep "No suitable test found" && $(error "One or more tests ($(testnames)) not found")
+\t@{args.meson} test -C build $(testnames) | tee test.log
+\t@if grep -q "No suitable tests defined" test.log; then \
+     echo "One or more tests ($(testnames)) not found"; \
+     exit 1; \
+   fi
 
 check-verbose:
-\t@{args.meson} test -vC build $(testnames) | grep "No suitable test found" && $(error "One or more tests ($(testnames)) not found")
+\t@{args.meson} test -vC build $(testnames) | tee test.log
+\t@if grep -q "No suitable tests defined" test.log; then \
+     echo "One or more tests ($(testnames)) not found"; \
+     exit 1; \
+   fi
 
 install:
 \t@{args.meson} install -C build
