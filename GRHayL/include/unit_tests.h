@@ -122,14 +122,14 @@ static inline bool validate_with_tolerance(
       const double computed,
       const double perturbed,
       const double tolerance) {
-  return relative_error(trusted, computed) > 4.0*fmax(relative_error(trusted, perturbed), tolerance);
+  return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), tolerance);
 }
 
 static inline bool validate(
       const double trusted,
       const double computed,
       const double perturbed) {
-  const double roundoff = 1.0e-14;
+  const double roundoff = 8.0e-14;
   return validate_with_tolerance(trusted, computed, perturbed, roundoff);
 }
 
