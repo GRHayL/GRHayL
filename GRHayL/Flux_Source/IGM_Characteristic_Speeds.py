@@ -229,8 +229,6 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
              "cmax_dirn1", 
              "cmax_dirn2"]
 
-    outCparams = "outCverbose=False,CSE_sorting=True"
-
     c_type = "void"
 
     params  =  "const primitive_quantities *restrict prims_r, "
