@@ -9,4 +9,5 @@ GRHayL_Core_sources = files('enforce_detgij_and_initialize_metric.c',
                             'initialize_stress_energy.c',
                             'metric_helper.c',
                             'return_conservatives.c',
-                            'return_primitives.c')
+                            'return_primitives.c',
+                            'return_stress_energy.c')

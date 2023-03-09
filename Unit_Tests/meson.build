@@ -1,5 +1,4 @@
 common_sources = files('io_conservative_binary.c',
-                       'io_flux_source_read_from_binary_file.c',
                        'io_metric_binary.c',
                        'io_primitive_binary.c',
                        'io_stress_energy_binary.c',
@@ -30,12 +29,6 @@ unit_test_enforce_primitive_limits_and_compute_u0 = executable(
   sources : ['unit_test_enforce_primitive_limits_and_compute_u0.c', common_sources],
   dependencies : dep_without_hdf5)
 test('enforce_primitive_limits_and_compute_u0', unit_test_enforce_primitive_limits_and_compute_u0)
-
-unit_test_flux_source = executable(
-  'unit_test_flux_source',
-  sources : ['unit_test_flux_source.c', common_sources],
-  dependencies : dep_without_hdf5)
-test('flux_source', unit_test_flux_source)
 
 unit_test_font_fix = executable(
   'unit_test_font_fix',

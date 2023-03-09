@@ -31,7 +31,7 @@
 #include "Symmetry.h"
 #include "GRHayLET.h"
 
-void GRHayLET_conserv_to_prims(CCTK_ARGUMENTS) {
+void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
@@ -238,16 +238,10 @@ void GRHayLET_conserv_to_prims(CCTK_ARGUMENTS) {
           //&Y_e[index], &entropy[index]);
 
     if(grhayl_params->update_Tmunu) {
-      eTtt[index] = Tmunu.Ttt;
-      eTtx[index] = Tmunu.Ttx;
-      eTty[index] = Tmunu.Tty;
-      eTtz[index] = Tmunu.Ttz;
-      eTxx[index] = Tmunu.Txx;
-      eTxy[index] = Tmunu.Txy;
-      eTxz[index] = Tmunu.Txz;
-      eTyy[index] = Tmunu.Tyy;
-      eTyz[index] = Tmunu.Tyz;
-      eTzz[index] = Tmunu.Tzz;
+      return_stress_energy(&Tmunu, &eTtt[index], &eTtx[index],
+            &eTty[index], &eTtz[index], &eTxx[index],
+            &eTxy[index], &eTxz[index], &eTyy[index],
+            &eTyz[index], &eTzz[index]);
     }
 
     failures += diagnostics.failures;
