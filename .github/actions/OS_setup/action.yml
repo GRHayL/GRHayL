@@ -1,0 +1,70 @@
+name: OS-setup
+description: 'Setup requested OS for installing GRHayL'
+inputs:
+  OS:
+    description: OS for test
+    required: true
+    default: 'Ubuntu'
+  compiler:
+    description: compiler for test
+    required: true
+    default: 'gcc'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 'pypy3.7'
+    - if: inputs.OS == 'Ubuntu' && inputs.compiler == 'gcc'
+      run: |
+        # use apt-spy2 to select closest apt mirror,
+        # which helps avoid connectivity issues in Azure;
+        # see https://github.com/actions/virtual-environments/issues/675
+        sudo gem install apt-spy2
+        sudo apt-spy2 fix --commit --launchpad --country=US
+        # after selecting a specific mirror, we need to run 'apt-get update'
+        sudo apt-get update
+        sudo apt-get install -y gcc libhdf5-serial-dev
+      shell: bash
+
+    - if: inputs.OS == 'Ubuntu' && inputs.compiler == 'clang'
+      run: |
+        # use apt-spy2 to select closest apt mirror,
+        # which helps avoid connectivity issues in Azure;
+        # see https://github.com/actions/virtual-environments/issues/675
+        sudo gem install apt-spy2
+        sudo apt-spy2 fix --commit --launchpad --country=US
+        # after selecting a specific mirror, we need to run 'apt-get update'
+        sudo apt-get update
+        sudo apt-get install -y clang-14 libhdf5-serial-dev
+      shell: bash
+
+    - if: inputs.OS == 'Ubuntu' && inputs.compiler == 'intel'
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+        rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+        sudo echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        # use apt-spy2 to select closest apt mirror,
+        # which helps avoid connectivity issues in Azure;
+        # see https://github.com/actions/virtual-environments/issues/675
+        sudo gem install apt-spy2
+        sudo apt-spy2 fix --commit --launchpad --country=US
+        # after selecting a specific mirror, we need to run 'apt-get update'
+        sudo apt-get update
+        sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp libhdf5-serial-dev
+      shell: bash
+
+    - if: inputs.OS == 'Mac' && inputs.compiler == 'gcc'
+      run: brew update && brew install gcc gsed hdf5 md5sha1sum
+      shell: bash
+    - if: inputs.OS == 'Mac' && inputs.compiler == 'clang'
+      run: brew update && brew install llvm@14 hdf5 md5sha1sum
+      shell: bash
+    - run: |
+        # Now install meson and ninja
+        python --version
+        python -m pip install -U pip
+        python -m pip install meson ninja
+      shell: bash
