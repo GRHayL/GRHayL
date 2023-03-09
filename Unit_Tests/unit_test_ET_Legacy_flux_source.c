@@ -32,6 +32,7 @@ static inline void calculate_face_value(
   const int ydir = (flux_dirn == 1);
   const int zdir = (flux_dirn == 2);
 
+#pragma omp parallel for
   for(int k=ghostzone-1; k<dirlength-(ghostzone-2); k++)
     for(int j=ghostzone-1; j<dirlength-(ghostzone-2); j++)
       for(int i=ghostzone-1; i<dirlength-(ghostzone-2); i++) {
@@ -47,15 +48,6 @@ static inline void calculate_face_value(
   }
 }
 
-/*
- * // main() function:
- * // Step 0: Read command-line input, set up grid structure, allocate memory for gridfunctions, set up coordinates
- * // Step 1: Write test data to gridfunctions
- * // Step 2: Overwrite all data in ghost zones with NaNs
- * // Step 3: Apply curvilinear boundary conditions
- * // Step 4: Print gridfunction data after curvilinear boundary conditions have been applied
- * // Step 5: Free all allocated memory
- */
 int main(int argc, char **argv) {
 
   // Set up test data
@@ -203,11 +195,8 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  /*
-  After reading in the same random data used in the original IGM code, now we
-  calculate face cell-face values and derivatives at cell centers
-  */
-
+  // Initialize rhs variables to 0 so we can safely use += operator
+#pragma omp parallel for
   for(int k=ghostzone; k<dirlength-ghostzone; k++)
     for(int j=ghostzone; j<dirlength-ghostzone; j++)
       for(int i=ghostzone; i<dirlength-ghostzone; i++) {
@@ -219,14 +208,17 @@ int main(int argc, char **argv) {
         S_z_rhs[index] = 0.0;
   }
 
+  // Function pointer to allow for loop over fluxes
   void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
                               const eos_parameters *restrict, const metric_quantities *restrict, conservative_quantities *restrict);
 
+  // Loop over flux directions (x,y,z)
   for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
     const int xdir = (flux_dirn == 0);
     const int ydir = (flux_dirn == 1);
     const int zdir = (flux_dirn == 2);
 
+    // Set function pointer to specific function for a given direction
     switch(flux_dirn) {
       case 0:
         calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn0;
@@ -261,6 +253,8 @@ int main(int argc, char **argv) {
       grhayl_error("An error has occured with reading in initial data. Please check that data\n"
                    "is up-to-date with current test version.\n");
 
+    // Calculate the values of the metric quantities at the faces by interpolating
+    // from the cell-centered quantities
     calculate_face_value(flux_dirn, dirlength, ghostzone, lapse, face_lapse);
     calculate_face_value(flux_dirn, dirlength, ghostzone, betax, face_betax);
     calculate_face_value(flux_dirn, dirlength, ghostzone, betay, face_betay);
@@ -272,9 +266,12 @@ int main(int argc, char **argv) {
     calculate_face_value(flux_dirn, dirlength, ghostzone, gyz, face_gyz);
     calculate_face_value(flux_dirn, dirlength, ghostzone, gzz, face_gzz);
 
-    for(int k=ghostzone-1; k<dirlength-(ghostzone-1); k++)
-      for(int j=ghostzone-1; j<dirlength-(ghostzone-1); j++)
-        for(int i=ghostzone-1; i<dirlength-(ghostzone-1); i++) {
+    // Upper bound includes 1 ghostzone for RHS calculation in following
+    // loop.
+#pragma omp parallel for
+    for(int k=ghostzone; k<dirlength-(ghostzone-1); k++)
+      for(int j=ghostzone; j<dirlength-(ghostzone-1); j++)
+        for(int i=ghostzone; i<dirlength-(ghostzone-1); i++) {
           const int index  = indexf(dirlength, i, j ,k);
 
           metric_quantities metric_face;
@@ -315,9 +312,10 @@ int main(int argc, char **argv) {
           S_z_flux[index]       = cons_fluxes.S_z;
     }
 
-    for(int k=ghostzone-1; k<dirlength-(ghostzone-1); k++)
-      for(int j=ghostzone-1; j<dirlength-(ghostzone-1); j++)
-        for(int i=ghostzone-1; i<dirlength-(ghostzone-1); i++) {
+#pragma omp parallel for
+    for(int k=ghostzone; k<dirlength-ghostzone; k++)
+      for(int j=ghostzone; j<dirlength-ghostzone; j++)
+        for(int i=ghostzone; i<dirlength-ghostzone; i++) {
           const int index  = indexf(dirlength, i, j ,k);
           const int indp1  = indexf(dirlength, i+xdir, j+ydir, k+zdir);
 
@@ -340,9 +338,10 @@ int main(int argc, char **argv) {
     }
   }
 
-  for(int k=ghostzone-1; k<dirlength-(ghostzone-1); k++)
-    for(int j=ghostzone-1; j<dirlength-(ghostzone-1); j++)
-      for(int i=ghostzone-1; i<dirlength-(ghostzone-1); i++) {
+#pragma omp parallel for
+  for(int k=ghostzone; k<dirlength-ghostzone; k++)
+    for(int j=ghostzone; j<dirlength-ghostzone; j++)
+      for(int i=ghostzone; i<dirlength-ghostzone; i++) {
         const int index  = indexf(dirlength, i, j ,k);
 
         metric_quantities metric;
@@ -353,12 +352,10 @@ int main(int argc, char **argv) {
                           &metric);
 
         extrinsic_curvature curv;
-        curv.Kxx = kxx[index];
-        curv.Kxy = kxy[index];
-        curv.Kxz = kxz[index];
-        curv.Kyy = kyy[index];
-        curv.Kyz = kyz[index];
-        curv.Kzz = kzz[index];
+        initialize_extrinsic_curvature(
+                          kxx[index], kxy[index], kxz[index],
+                          kyy[index], kyz[index], kzz[index],
+                          &curv);
 
         metric_derivatives metric_derivs;
         for(int dirn=0; dirn<3; dirn++) {
@@ -442,9 +439,10 @@ int main(int argc, char **argv) {
 
   fclose(outfile);
 
-  for(int k=ghostzone; k<dirlength-ghostzone-1; k++)
-    for(int j=ghostzone; j<dirlength-ghostzone-1; j++)
-      for(int i=ghostzone; i<dirlength-ghostzone-1; i++) {
+#pragma omp parallel for
+  for(int k=ghostzone; k<dirlength-ghostzone; k++)
+    for(int j=ghostzone; j<dirlength-ghostzone; j++)
+      for(int i=ghostzone; i<dirlength-ghostzone; i++) {
         const int index  = indexf(dirlength, i, j ,k);
 
         if( validate(trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index]) )
@@ -492,25 +490,24 @@ int main(int argc, char **argv) {
     free(D_lapse[i]);
     free(D_betax[i]); free(D_betay[i]); free(D_betaz[i]);
   }
+  grhayl_info("ET_Legacy flux/source test has passed!\n");
   free(kxx); free(kxy); free(kxz);
   free(kyy); free(kyz); free(kzz);
-  free(rho);
-  free(press);
+  free(rho); free(press);
   free(vx); free(vy); free(vz);
   free(Bx); free(By); free(Bz);
-  free(rho_r);
-  free(press_r);
+  free(rho_r); free(press_r);
   free(vx_r); free(vy_r); free(vz_r);
   free(Bx_r); free(By_r); free(Bz_r);
-  free(rho_l);
-  free(press_l);
+  free(rho_l); free(press_l);
   free(vx_l); free(vy_l); free(vz_l);
   free(Bx_l); free(By_l); free(Bz_l);
-  free(rho_star_flux);
-  free(tau_flux);
+  free(rho_star_flux); free(tau_flux);
   free(S_x_flux); free(S_y_flux); free(S_z_flux);
-  free(rho_star_rhs);
-  free(tau_rhs);
+  free(rho_star_rhs); free(tau_rhs);
   free(S_x_rhs); free(S_y_rhs); free(S_z_rhs);
-  return 0;
+  free(trusted_rho_star_rhs); free(trusted_tau_rhs);
+  free(trusted_S_x_rhs); free(trusted_S_y_rhs); free(trusted_S_z_rhs);
+  free(pert_rho_star_rhs); free(pert_tau_rhs);
+  free(pert_S_x_rhs); free(pert_S_y_rhs); free(pert_S_z_rhs);
 }

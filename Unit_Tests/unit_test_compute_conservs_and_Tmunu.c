@@ -203,27 +203,19 @@ int main(int argc, char **argv) {
                              S_x_pert[i], S_y_pert[i], S_z_pert[i],
                              Y_e_cons_pert[i], ent_cons_pert[i], &cons_pert);
 
-    Tmunu_trusted.Ttt = Ttt_trusted[i];
-    Tmunu_trusted.Ttx = Ttx_trusted[i];
-    Tmunu_trusted.Tty = Tty_trusted[i];
-    Tmunu_trusted.Ttz = Ttz_trusted[i];
-    Tmunu_trusted.Txx = Txx_trusted[i];
-    Tmunu_trusted.Txy = Txy_trusted[i];
-    Tmunu_trusted.Txz = Txz_trusted[i];
-    Tmunu_trusted.Tyy = Tyy_trusted[i];
-    Tmunu_trusted.Tyz = Tyz_trusted[i];
-    Tmunu_trusted.Tzz = Tzz_trusted[i];
+    initialize_stress_energy(Ttt_trusted[i], Ttx_trusted[i],
+                             Tty_trusted[i], Ttz_trusted[i],
+                             Txx_trusted[i], Txy_trusted[i],
+                             Txz_trusted[i], Tyy_trusted[i],
+                             Tyz_trusted[i], Tzz_trusted[i],
+                             &Tmunu_trusted);
 
-    Tmunu_pert.Ttt = Ttt_pert[i];
-    Tmunu_pert.Ttx = Ttx_pert[i];
-    Tmunu_pert.Tty = Tty_pert[i];
-    Tmunu_pert.Ttz = Ttz_pert[i];
-    Tmunu_pert.Txx = Txx_pert[i];
-    Tmunu_pert.Txy = Txy_pert[i];
-    Tmunu_pert.Txz = Txz_pert[i];
-    Tmunu_pert.Tyy = Tyy_pert[i];
-    Tmunu_pert.Tyz = Tyz_pert[i];
-    Tmunu_pert.Tzz = Tzz_pert[i];
+    initialize_stress_energy(Ttt_pert[i], Ttx_pert[i],
+                             Tty_pert[i], Ttz_pert[i],
+                             Txx_pert[i], Txy_pert[i],
+                             Txz_pert[i], Tyy_pert[i],
+                             Tyz_pert[i], Tzz_pert[i],
+                             &Tmunu_pert);
 
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);

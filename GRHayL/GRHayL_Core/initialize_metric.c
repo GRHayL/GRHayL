@@ -4,18 +4,8 @@
  * Description : Initialize the metric struct from user input
  *
  * Inputs      : lapse          - value of the lapse
- *             : gxx            - value of the (1,1) component of the
- *                                cartesian ADM metric
- *             : gxy            - value of the (1,2) component of the
- *                                cartesian ADM metric
- *             : gxz            - value of the (1,3) component of the
- *                                cartesian ADM metric
- *             : gyy            - value of the (2,2) component of the
- *                                cartesian ADM metric
- *             : gyz            - value of the (2,3) component of the
- *                                cartesian ADM metric
- *             : gzz            - value of the (3,3) component of the
- *                                cartesian ADM metric
+ *             : gij            - value of the (i,j) component of the
+ *                                cartesian ADM metric g_ij
  *             : betax          - value of the x component of the shift
  *             : betay          - value of the y component of the shift
  *             : betaz          - value of the z component of the shift

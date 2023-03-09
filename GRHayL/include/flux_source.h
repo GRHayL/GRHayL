@@ -8,26 +8,6 @@ static const double TINYDOUBLE = 1e-100;
 
 static const double SQRT_4_PI = 3.544907701811032054596334966682290365L;
 
-
-typedef struct extrinsic_curvature {
-  double Kxx, Kxy, Kxz;
-  double Kyy, Kyz, Kzz;
-} extrinsic_curvature;
-
-typedef struct metric_derivatives {
-  double lapse[3];
-  double betax[3];
-  double betay[3];
-  double betaz[3];
-  double adm_gxx[3];
-  double adm_gxy[3];
-  double adm_gxz[3];
-  double adm_gyy[3];
-  double adm_gyz[3];
-  double adm_gzz[3];
-} metric_derivatives;
-
-
 void calculate_characteristic_speed_dirn0(const primitive_quantities *restrict prims_r, 
                                           const primitive_quantities *restrict prims_l, 
                                           const eos_parameters *restrict eos, 

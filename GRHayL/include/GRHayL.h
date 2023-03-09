@@ -547,8 +547,25 @@ typedef struct metric_quantities {
   double g4dn[4][4],g4up[4][4];
 } metric_quantities;
 
+//TODO: add definitions of these structs
+typedef struct metric_derivatives {
+  double lapse[3];
+  double betax[3];
+  double betay[3];
+  double betaz[3];
+  double adm_gxx[3];
+  double adm_gxy[3];
+  double adm_gxz[3];
+  double adm_gyy[3];
+  double adm_gyz[3];
+  double adm_gzz[3];
+} metric_derivatives;
 
-//TODO: comment/add to this
+typedef struct extrinsic_curvature {
+  double Kxx, Kxy, Kxz;
+  double Kyy, Kyz, Kzz;
+} extrinsic_curvature;
+
 typedef struct stress_energy {
   double Ttt, Ttx, Tty, Ttz;
   double Txx, Txy, Txz;
@@ -561,6 +578,18 @@ void initialize_metric(
       const double gyy, const double gyz, const double gzz,
       const double betax, const double betay, const double betaz,
       metric_quantities *restrict metric);
+
+void initialize_extrinsic_curvature(
+      const double Kxx, const double Kxy, const double Kxz,
+      const double Kyy, const double Kyz, const double Kzz,
+      extrinsic_curvature *restrict curv);
+
+void initialize_stress_energy(
+      const double Ttt,
+      const double Ttx, const double Tty, const double Ttz,
+      const double Txx, const double Txy, const double Txz,
+      const double Tyy, const double Tyz, const double Tzz,
+      stress_energy *restrict Tmunu);
 
 void raise_vector(
       const metric_quantities *restrict metric,
