@@ -137,7 +137,7 @@ check:
      exit 2; \
    fi
 
-check-verbose: test-verbose
+check-verbose:
 \t@{args.meson} test -vC build $(testnames) | tee test.log
 \t@if grep -q "No suitable tests defined" test.log; then \
      echo "One or more tests ($(testnames)) not found"; \
