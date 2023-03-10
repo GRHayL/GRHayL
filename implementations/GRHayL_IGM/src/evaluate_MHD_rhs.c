@@ -38,6 +38,7 @@
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
 #include "GRHayLET.h"
+#include "IGM.h"
 
 void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS;
@@ -71,12 +72,12 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   int ww=0;
   in_prims[ww]=rho;        out_prims_r[ww]=rhor;        out_prims_l[ww]=rhol;        ww++;
   in_prims[ww]=press;      out_prims_r[ww]=pressr;      out_prims_l[ww]=pressl;      ww++;
-  in_prims[ww]=&vel[0];    out_prims_r[ww]=vxr;         out_prims_l[ww]=vxl;         ww++;
-  in_prims[ww]=&vel[1];    out_prims_r[ww]=vyr;         out_prims_l[ww]=vyl;         ww++;
-  in_prims[ww]=&vel[2];    out_prims_r[ww]=vzr;         out_prims_l[ww]=vzl;         ww++;
-  in_prims[ww]=&Bvec[0];   out_prims_r[ww]=Bxr;         out_prims_l[ww]=Bxl;         ww++;
-  in_prims[ww]=&Bvec[1];   out_prims_r[ww]=Byr;         out_prims_l[ww]=Byl;         ww++;
-  in_prims[ww]=&Bvec[2];   out_prims_r[ww]=Bzr;         out_prims_l[ww]=Bzl;         ww++;
+  in_prims[ww]=vx;         out_prims_r[ww]=vxr;         out_prims_l[ww]=vxl;         ww++;
+  in_prims[ww]=vy;         out_prims_r[ww]=vyr;         out_prims_l[ww]=vyl;         ww++;
+  in_prims[ww]=vz;         out_prims_r[ww]=vzr;         out_prims_l[ww]=vzl;         ww++;
+  in_prims[ww]=Bx_center;  out_prims_r[ww]=Bxr;         out_prims_l[ww]=Bxl;         ww++;
+  in_prims[ww]=By_center;  out_prims_r[ww]=Byr;         out_prims_l[ww]=Byl;         ww++;
+  in_prims[ww]=Bz_center;  out_prims_r[ww]=Bzr;         out_prims_l[ww]=Bzl;         ww++;
   in_prims[ww]=Bx_stagger; out_prims_r[ww]=Bx_staggerr; out_prims_l[ww]=Bx_staggerl; ww++;
   in_prims[ww]=By_stagger; out_prims_r[ww]=By_staggerr; out_prims_l[ww]=By_staggerl; ww++;
   in_prims[ww]=Bz_stagger; out_prims_r[ww]=Bz_staggerr; out_prims_l[ww]=Bz_staggerl; ww++;
@@ -127,22 +128,23 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 //  TUPmunu[ww]=TUPyz; ww++;
 //  TUPmunu[ww]=TUPzz; ww++;
 
-  // 1) First initialize {rho_star_rhs,tau_rhs,st_x_rhs,st_y_rhs,st_z_rhs} to zero
+  // 1) First initialize RHS variables to zero
 #pragma omp parallel for
   for(int k=0;k<cctk_lsh[2];k++)
     for(int j=0;j<cctk_lsh[1];j++)
       for(int i=0;i<cctk_lsh[0];i++) {
         int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+        tau_rhs[index]=0.0;
+        rho_star_rhs[index]=0.0;
+        Stildex_rhs[index]=0.0;
+        Stildey_rhs[index]=0.0;
+        Stildez_rhs[index]=0.0;
+
+//TODO: remove for IGH
+        phitilde_rhs[index]=0.0;
         Ax_rhs[index]=0.0;
         Ay_rhs[index]=0.0;
         Az_rhs[index]=0.0;
-        phitilde_rhs[index]=0.0;
-
-//        tau_rhs[index]=0.0;
-//        rho_star_rhs[index]=0.0;
-//        st_x_rhs[index]=0.0;
-//        st_y_rhs[index]=0.0;
-//        st_z_rhs[index]=0.0;
   }
 
 //TODO: pull compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu into GRHayLET
@@ -171,14 +173,15 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 //   * 2Aa) vx and vy are at (i,j,k), and we reconstruct them to (i-1/2,j,k) below. After
 //   *      this, we'll reconstruct again in the y-dir'n to get {vx,vy} at (i-1/2,j-1/2,k)
 //   * 2Ab) By_stagger is at (i,j+1/2,k), and we reconstruct below to (i-1/2,j+1/2,k). */
-/**************************************new code*******************************************/
-  {const int num_vars = 6;
-  num_prims_to_reconstruct=num_vars+2;
-  const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};
-  reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  { // num_vars and var_indices are local variables
+    const int num_vars = 6;
+    num_prims_to_reconstruct=num_vars+2;
+    const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};
+    const double *var_pointers[6] = {vx, vy, vz, By_center, Bz_center, By_stagger};
+    reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-/*****************************************************************************************/
 
+exit(0);
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^x face values to be consistent with BX_STAGGER.
 #pragma omp parallel for
@@ -199,7 +202,6 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //   at (i-1/2,j,k). That result is stored in v{x,y}{r,l}.  Bx_stagger data
   //   are defined at (i+1/2,j,k).
   // Next goal: reconstruct Bx, vx and vy at (i+1/2,j+1/2,k).
-  flux_dir=2;
 
   /* There are two stories going on here:
    * 1) Computation of \partial_y on RHS of \partial_t {rho_star,tau,mhd_st_{x,y,z}},
@@ -221,17 +223,18 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
    * 2Ba) Bz_stagger is at (i,j,k+1/2), and we reconstruct to (i,j-1/2,k+1/2) below */
   //// NOTE! The order of variable reconstruction is important here,
   ////   as we don't want to overwrite {vxr,vxl,vyr,vyl}!
-/**************************************new code*******************************************/
-  {const int num_vars = 4;
-  const int var_indices[4] = {VXR, VYR, VXL, VYL};
-  reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  flux_dir=2;
+  { // num_vars and var_indices are local variables
+    const int num_vars = 4;
+    const int var_indices[4] = {VXR, VYR, VXL, VYL};
+    reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-  {const int num_vars = 7;
-  num_prims_to_reconstruct = num_vars+2;
-  const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER};
-  reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  { // num_vars and var_indices are local variables
+    const int num_vars = 7;
+    num_prims_to_reconstruct = num_vars+2;
+    const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER};
+    reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-/*****************************************************************************************/
 
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^y face values to be consistent with BY_STAGGER.
@@ -286,14 +289,16 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // NOTE! The order of variable reconstruction is important here,
   //   as we don't want to overwrite {vyr,vyl,vzr,vzl}!
 /**************************************new code*******************************************/
-  {const int num_vars = 4;
-  const int var_indices[4] = {VYR, VZR, VYL, VZL};
-  reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  { // num_vars and var_indices are local variables
+    const int num_vars = 4;
+    const int var_indices[4] = {VYR, VZR, VYL, VZL};
+    reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-  {const int num_vars = 7;
-  num_prims_to_reconstruct = num_vars+2;
-  const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER};
-  reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  { // num_vars and var_indices are local variables
+    const int num_vars = 7;
+    num_prims_to_reconstruct = num_vars+2;
+    const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER};
+    reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 /*****************************************************************************************/
 
@@ -332,12 +337,11 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin_y, cmax_y, cmin_z, cmax_z, Ax_rhs);
 
   // We reprise flux_dir=1 reconstruction to finish up computations of Ai_rhs's!
-/**************************************new code*******************************************/
-  {const int num_vars = 5;
-  const int var_indices[5] = {VXR, VZR, VXL, VZL, BZ_STAGGER};
-  reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  { // num_vars and var_indices are local variables
+    const int num_vars = 5;
+    const int var_indices[5] = {VXR, VZR, VXL, VZL, BZ_STAGGER};
+    reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-/*****************************************************************************************/
 
 
   /*****************************************

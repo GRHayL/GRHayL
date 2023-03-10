@@ -47,5 +47,5 @@ int font_fix(
   prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, energy_u);
   prims_guess->eps = energy_u/prims_guess->rho;
   if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
-  return 0;
+  return check;
 }

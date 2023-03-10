@@ -1,5 +1,5 @@
 #include "cctk.h"
-#include "GRHayLET.h"
+#include "IGM.h"
 #define IPH(METRICm1,METRICp0,METRICp1,METRICp2) (-0.0625*((METRICm1) + (METRICp2)) + 0.5625*((METRICp0) + (METRICp1)))
 
 void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,

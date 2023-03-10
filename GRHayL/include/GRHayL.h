@@ -579,6 +579,13 @@ void initialize_metric(
       const double betax, const double betay, const double betaz,
       metric_quantities *restrict metric);
 
+void GRHayL_enforce_detgtij_and_initialize_metric(
+      const double lapse,
+      const double gxx, const double gxy, const double gxz,
+      const double gyy, const double gyz, const double gzz,
+      const double betax, const double betay, const double betaz,
+      metric_quantities *restrict metric);
+
 void initialize_extrinsic_curvature(
       const double Kxx, const double Kxy, const double Kxz,
       const double Kyy, const double Kyz, const double Kzz,
@@ -590,6 +597,13 @@ void initialize_stress_energy(
       const double Txx, const double Txy, const double Txz,
       const double Tyy, const double Tyz, const double Tzz,
       stress_energy *restrict Tmunu);
+
+void return_stress_energy(
+      const stress_energy *restrict Tmunu,
+      double *restrict Ttt, double *restrict Ttx, double *restrict Tty,
+      double *restrict Ttz, double *restrict Txx, double *restrict Txy,
+      double *restrict Txz, double *restrict Tyy, double *restrict Tyz,
+      double *restrict Tzz);
 
 void raise_vector(
       const metric_quantities *restrict metric,

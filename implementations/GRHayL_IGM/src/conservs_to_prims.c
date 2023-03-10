@@ -29,7 +29,7 @@
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
 #include "Symmetry.h"
-#include "GRHayLET.h"
+#include "IGM.h"
 
 void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS;
@@ -81,9 +81,9 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     for(int j=0;j<cctk_lsh[1];j++)
       for(int i=0;i<cctk_lsh[0];i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
-        const int index0 = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
-        const int index1 = CCTK_GFINDEX4D(cctkGH,i,j,k,1);
-        const int index2 = CCTK_GFINDEX4D(cctkGH,i,j,k,2);
+    //    const int index0 = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
+    //    const int index1 = CCTK_GFINDEX4D(cctkGH,i,j,k,1);
+    //    const int index2 = CCTK_GFINDEX4D(cctkGH,i,j,k,2);
 
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
@@ -104,7 +104,8 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     initialize_primitives(rho[index],
           press[index], eps[index],
           vx[index], vy[index], vz[index],
-          Bvec[index0], Bvec[index1], Bvec[index2],
+    //      Bvec[index0], Bvec[index1], Bvec[index2],
+          Bx_center[index], By_center[index], Bz_center[index],
           poison, poison, poison, &prims);
           //entropy[index], Y_e[index], temp[index],
 
@@ -145,7 +146,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
       int check = Hybrid_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
 
       if(check!=0)
-        check = font_fix(grhayl_eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+        check = font_fix(grhayl_params, grhayl_eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
       /*************************************************************/
 
       if(check==0) {
@@ -196,10 +197,9 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     //---------- Primitive recovery succeeded ----------
     //--------------------------------------------------
     // Enforce limits on primitive variables and recompute conservatives.
-    double u0;
     stress_energy Tmunu;
-    enforce_primitive_limits_and_output_u0(grhayl_params, grhayl_eos, &metric, &prims, &u0, &diagnostics);
-    compute_conservs_and_Tmunu(grhayl_params, grhayl_eos, &metric, &prims, u0, &cons, &Tmunu);
+    enforce_primitive_limits_and_compute_u0(grhayl_params, grhayl_eos, &metric, &prims, &diagnostics);
+    compute_conservs_and_Tmunu(grhayl_params, grhayl_eos, &metric, &prims, &cons, &Tmunu);
 
     //Now we compute the difference between original & new conservatives, for diagnostic purposes:
     error_int_numer += fabs(cons.tau - cons_orig.tau) + fabs(cons.rho - cons_orig.rho) + fabs(cons.S_x - cons_orig.S_x)
@@ -216,12 +216,16 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
 
     failure_checker[index] = diagnostics.failure_checker;
 
-    return_primitives(&prims, &rho[index], &press[index], &eps[index],
-          &vx[index], &vy[index], &vz[index], &Bvec[index0], &Bvec[index1], &Bvec[index2],
+    return_primitives(&prims,
+          &rho[index], &press[index], &eps[index],
+          &vx[index], &vy[index], &vz[index],
+          //&Bvec[index0], &Bvec[index1], &Bvec[index2],
+          &Bx_center[index], &By_center[index], &Bz_center[index],
           &dummy1, &dummy2, &dummy3);
           //&entropy[index], &Y_e[index], &temp[index]);
 
-    return_conservatives(&cons, &rho_star[index], &tau[index],
+    return_conservatives(&cons,
+          &rho_star[index], &tau[index],
           &Stildex[index], &Stildey[index], &Stildez[index],
           &dummy1, &dummy2);
           //&Y_e[index], &entropy[index]);

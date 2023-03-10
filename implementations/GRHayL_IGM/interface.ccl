@@ -81,9 +81,27 @@ CCTK_REAL grmhd_B_stagger type = GF TAGS='InterpNumTimelevels=1 prolongation="no
   Bz_stagger
 } "B-field components defined at staggered points [Bx_stagger at (i+1/2,j,k),By_stagger at (i,j+1/2,k),Bz_stagger at (i,j,k+1/2)]."
 
+# This could probably use Bvec from HydroBase instead of making a new variable
+# It is useful to split Bi from Bi_stagger, since we're generally only interested in outputting Bi for diagnostics
+cctk_real grmhd_B_center type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
+{
+  Bx_center
+  By_center
+  Bz_center
+} "B-field components defined at vertices."
+
 #########################################################
 
 # RHS variables for MoL timestepping
+cctk_real grmhd_conservatives_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
+{
+  rho_star_rhs
+  tau_rhs
+  Stildex_rhs
+  Stildey_rhs
+  Stildez_rhs
+} "Storage for the right-hand side of the partial_t rho_star, partial_t tau, and partial_t tilde{S}_i equations. Needed for MoL timestepping."
+
 CCTK_REAL A_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
   Ax_rhs
