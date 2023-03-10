@@ -6,6 +6,10 @@ int main(int argc, char **argv) {
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
+  if( key != 1)
+    grhayl_error("An error has occured with reading the grid size. "
+                 "Please check that Noble2D_initial_data.bin"
+                 "is up-to-date with current test version.\n");
   const int arraylength = dirlength*dirlength*dirlength;
 
   const double dX[3] = {0.1, 0.1, 0.1};

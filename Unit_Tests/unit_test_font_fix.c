@@ -2,8 +2,16 @@
 
 int main(int argc, char **argv) {
 
+  FILE* initial_data = fopen("Noble2D_initial_data.bin","rb");
+  check_file_was_successfully_open(initial_data, "Noble2D_initial_data.bin");
+
   //Number of sampling points in density and pressure/temperature
-  const int npoints = 80;
+  int npoints;
+  const int key = fread(&npoints, sizeof(int), 1, initial_data);
+  if( key != 1)
+    grhayl_error("An error has occured with reading the grid size. "
+                 "Please check that Noble2D_initial_data.bin"
+                 "is up-to-date with current test version.\n");
   const int arraylength = npoints*npoints;
 
   // This section sets up the initial parameters that would normally
@@ -33,20 +41,12 @@ int main(int argc, char **argv) {
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
 
-  char filename[100];
-
   // Initialize the needed data files
-  sprintf(filename,"Noble2D_initial_data.bin");
-  FILE* initial_data = fopen(filename,"rb");
-  check_file_was_successfully_open(initial_data, filename);
+  FILE* infile = fopen("font_fix.bin","rb");
+  check_file_was_successfully_open(infile, "font_fix.bin");
 
-  sprintf(filename,"font_fix.bin");
-  FILE* infile = fopen(filename,"rb");
-  check_file_was_successfully_open(infile, filename);
-
-  sprintf(filename,"font_fix_pert.bin");
-  FILE* inpert = fopen(filename,"rb");
-  check_file_was_successfully_open(inpert, filename);
+  FILE* inpert = fopen("font_fix_pert.bin","rb");
+  check_file_was_successfully_open(inpert, "font_fix_pert.bin");
 
   // Allocate memory for the metric data
   double *gxx = (double*) malloc(sizeof(double)*arraylength);
