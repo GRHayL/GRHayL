@@ -277,10 +277,16 @@ int Hybrid_Noble2D(
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
-  if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
+  // Cupp Fix logic:
+  // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
+  // that u or rho were negative (usually u). Since the method converged, we only need to fix the values
+  // using enforce_primitive_limits_and_output_u0(). There's no need to trigger a Font fix. In my experience,
+  // Font Fix returns nearly the same values as this, but takes longer to run (we already did the work for
+  // these results, after all!
+  if( !params->Cupp_Fix && ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-    retval = 5;
+    return(5);
   }
 
   const double nup[4] = {metric->lapseinv,

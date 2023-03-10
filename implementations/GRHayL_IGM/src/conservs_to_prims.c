@@ -35,13 +35,6 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
-  // These BSSN-based variables are not evolved, and so are not defined anywhere that the grid has moved.
-  // Here we convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-  //IllinoisGRMHD_convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij(cctkGH,cctk_lsh,  gxx,gxy,gxz,gyy,gyz,gzz,alp,
-  //                                                              gtxx,gtxy,gtxz,gtyy,gtyz,gtzz,
-  //                                                              gtupxx,gtupxy,gtupxz,gtupyy,gtupyz,gtupzz,
-  //                                                              phi_bssn,psi_bssn,lapm1);
-
   if(CCTK_EQUALS(Symmetry,"equatorial")) {
     // SET SYMMETRY GHOSTZONES ON ALL CONSERVATIVE VARIABLES!
     int ierr=0;
@@ -150,10 +143,6 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
 
       /************* Conservative-to-primitive recovery ************/
       int check = Hybrid_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
-      // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
-      // that u or rho were negative (usually u). Since the method converged, we only need to fix the values
-      // using enforce_primitive_limits_and_output_u0(). There's no need to trigger a Font fix.
-      if(check==5) check = 0;
 
       if(check!=0)
         check = font_fix(grhayl_eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
