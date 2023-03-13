@@ -10,6 +10,10 @@ enum reconstruction_stencil {
   PLUS_2
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void simple_ppm(
       const double rho[6],
       const double pressure[6],
@@ -43,4 +47,9 @@ double shock_detection_ftilde(const double P[5], const double v_flux_dirn[5]);
 void steepen_rhor_rhol(const double rho[5], const double P[5], const double Gamma_eff,
                               double *restrict rhor, double *restrict rhol);
 void flatten_and_monotonize_Ur_and_Ul(const double U, const double ftilde, double *restrict Ur, double *restrict Ul);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif // RECONSTRUCTION_H_

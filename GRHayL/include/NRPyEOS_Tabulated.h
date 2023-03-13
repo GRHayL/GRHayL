@@ -43,6 +43,10 @@ typedef struct NRPyEOS_error_report {
 } NRPyEOS_error_report;
 //********************************************
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Function prototypes
 void NRPyEOS_read_table_set_EOS_params(
       const char *nuceos_table_name,
@@ -199,5 +203,9 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       primitive_quantities const *restrict prims,
       double *restrict enthalpy_ptr,
       double *restrict cs2_ptr );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // NRPYEOS_TABULATED_H_

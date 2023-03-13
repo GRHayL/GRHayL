@@ -8,6 +8,10 @@ static const double TINYDOUBLE = 1e-100;
 
 static const double SQRT_4_PI = 3.544907701811032054596334966682290365L;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void calculate_characteristic_speed_dirn0(const primitive_quantities *restrict prims_r, 
                                           const primitive_quantities *restrict prims_l, 
                                           const eos_parameters *restrict eos, 
@@ -53,5 +57,9 @@ void calculate_all_source_terms(const primitive_quantities *restrict prims,
                                 const extrinsic_curvature *restrict curv, 
                                 const metric_derivatives *restrict metric_derivs, 
                                 conservative_quantities *restrict cons);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // FLUX_SOURCE_H_

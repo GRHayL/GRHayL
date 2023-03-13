@@ -3,6 +3,10 @@
 
 #include "GRHayL.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int NRPyEOS_find_polytropic_index(
       const eos_parameters *restrict eos,
       const double rho_in);
@@ -39,5 +43,9 @@ void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       primitive_quantities const *restrict prims,
       double *restrict enthalpy_ptr,
       double *restrict cs2_ptr );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // NRPYEOS_HYBRID_H_

@@ -48,6 +48,9 @@ typedef struct con2prim_diagnostics {
 } con2prim_diagnostics;
 
 //--------------------------------------------------
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void reset_prims_to_atmosphere(
       const GRHayL_parameters *restrict params,
@@ -165,5 +168,9 @@ void limit_v_and_compute_u0(
       const metric_quantities *restrict metric,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CON2PRIM_H

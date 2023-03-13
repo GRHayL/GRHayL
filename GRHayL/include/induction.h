@@ -48,6 +48,10 @@ typedef struct A_gauge_rhs_vars {
 
 double HLL_flux(const A_no_gauge_vars *restrict vars);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void interpolate_for_A_gauge_rhs(
       A_gauge_vars *restrict gauge_vars,
       A_gauge_rhs_vars *restrict gauge_rhs_vars );
@@ -55,5 +59,9 @@ void interpolate_for_A_gauge_rhs(
 void calculate_phitilde_and_A_gauge_rhs(
       const double Lorenz_damping_factor,
       A_gauge_rhs_vars *restrict vars);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // INDUCTION_H_

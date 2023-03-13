@@ -370,6 +370,10 @@ typedef struct eos_parameters {
 
 } eos_parameters;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void initialize_eos_functions(
     grhayl_eos_t const eos_type,
     eos_parameters *restrict eos );
@@ -423,6 +427,11 @@ void initialize_tabulated_eos_functions_and_params(
       const double T_min,
       const double T_max,
       eos_parameters *restrict eos );
+
+#ifdef __cplusplus
+}
+#endif
+
 //--------------------------------------------------
 
 //--------------- Con2Prim facets ------------------
@@ -449,6 +458,10 @@ typedef struct conservative_quantities {
   double entropy;
 } conservative_quantities;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void initialize_primitives(
       const double rho, const double press, const double epsilon,
       const double vx, const double vy, const double vz,
@@ -474,6 +487,10 @@ void return_conservatives(
       double *restrict rho, double *restrict tau,
       double *restrict S_x, double *restrict S_y, double *restrict S_z,
       double *restrict Y_e, double *restrict entropy);
+
+#ifdef __cplusplus
+}
+#endif
 
 //--------------------------------------------------
 
@@ -572,6 +589,10 @@ typedef struct stress_energy {
   double Tyy, Tyz, Tzz;
 } stress_energy;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void initialize_metric(
       const double lapse,
       const double gxx, const double gxy, const double gxz,
@@ -614,5 +635,9 @@ void lower_vector(
       const metric_quantities *restrict metric,
       const double vcon[4],
       double vcov[4]);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GRHayL_H
