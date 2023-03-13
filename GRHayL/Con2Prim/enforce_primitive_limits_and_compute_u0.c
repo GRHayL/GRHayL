@@ -73,5 +73,5 @@ void enforce_primitive_limits_and_compute_u0(const GRHayL_parameters *restrict p
   }
 
   // Finally, apply speed limit to v and compute u^0
-  limit_v_and_compute_u0(eos, metric, prims, diagnostics);
+  limit_v_and_compute_u0(eos, metric, prims, &diagnostics->failure_checker);
 }

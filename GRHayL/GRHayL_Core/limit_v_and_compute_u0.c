@@ -11,7 +11,7 @@
  *
  * Outputs     : prims          - returns velocity-limited prims->v^i and t
  *                                component of 4-velocity prims->u0
- *             : diagnostics    - tracks if the velocity was limited
+ *             : speed_limit    - tracks if the velocity was limited
  *
  */
 
@@ -19,7 +19,7 @@ void limit_v_and_compute_u0(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics) {
+      int *restrict speed_limit) {
 
   // Derivation of first equation:
   // \gamma_{ij} (v^i + \beta^i)(v^j + \beta^j)/(\alpha)^2
@@ -42,7 +42,7 @@ void limit_v_and_compute_u0(
     prims->vy = (prims->vy + metric->betay)*correction_fac - metric->betay;
     prims->vz = (prims->vz + metric->betaz)*correction_fac - metric->betaz;
     one_minus_one_over_alpha_u0_squared = one_minus_one_over_W_max_squared;
-    diagnostics->failure_checker+=1000;
+    speed_limit+=1000;
   }
 
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
@@ -62,6 +62,5 @@ void limit_v_and_compute_u0(
                 metric->psi4, metric->lapse, metric->lapseinv,
                 metric->betax, metric->betay, metric->betaz,
                 prims->vx, prims->vx, prims->vz);
-    diagnostics->nan_found++;
   }
 }

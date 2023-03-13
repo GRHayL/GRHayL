@@ -167,7 +167,7 @@ void limit_v_and_compute_u0(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics);
+      int *restrict speed_limit);
 
 #ifdef __cplusplus
 }
