@@ -89,7 +89,7 @@ void enforce_primitive_limits_and_compute_u0(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics);
+      int *restrict speed_limit);
 
 void compute_conservs_and_Tmunu(
       const GRHayL_parameters *restrict params,

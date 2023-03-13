@@ -9,7 +9,6 @@ KEYWORD Symmetry "Currently only no symmetry supported, though work has begun in
 
 #########################################################
 
-
 # Verbosity Level
 KEYWORD verbose "Determines how much evolution information is output" STEERABLE=ALWAYS
 {
@@ -18,3 +17,15 @@ KEYWORD verbose "Determines how much evolution information is output" STEERABLE=
   "essential+iteration output" :: "Outputs health monitoring information, plus a record of which RK iteration. Very useful for backtracing a crash."
 } "essential+iteration output"
 
+#########################################################
+
+# Parameters for perturbing the initial data from HydroBase
+INT random_seed "Random seed for random, generally roundoff-level perturbation on initial data. Seeds srand(), and rand() is used for the RNG."
+{
+ 0:99999999 :: "Anything unsigned goes."
+} 0
+
+REAL random_pert "Random perturbation atop data"
+{
+ *:* :: "Anything goes."
+} 0

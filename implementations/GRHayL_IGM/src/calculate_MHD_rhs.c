@@ -66,6 +66,8 @@ void calculate_MHD_rhs(const cGH *cctkGH, const int flux_dirn, double *restrict 
     case 2:
       calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn2;
       break;
+    default:
+      CCTK_VERROR("Warning: invalid flux_dirn value (not 0, 1, or 2) has been passed to calculate_MHD_rhs.");
   }
 
   const int imin = cctkGH->cctk_nghostzones[0];

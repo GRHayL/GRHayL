@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
                              poison, poison, &cons);
 
     // Enforce limits on primitive variables and recompute conservatives.
-    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics);
+    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics.failure_checker);
     compute_conservs_and_Tmunu(&params, &eos, &metric, &prims, &cons, &Tmunu);
 
     // Now, we load the trusted/perturbed data for this index and validate the computed results.

@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
                       &prims);
 
     //This applies the inequality (or "Faber") fixes on the conservatives
-    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics);
+    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics.failure_checker);
 
     primitive_quantities prims_trusted, prims_pert;
     initialize_primitives(

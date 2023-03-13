@@ -27,9 +27,13 @@ void return_primitives(const primitive_quantities *restrict prims,
 
   *rho         = prims->rho;
   *press       = prims->press;
+  *epsilon     = prims->eps;
   *vx          = prims->vx;
   *vy          = prims->vy;
   *vz          = prims->vz;
+  *Bx          = prims->Bx;
+  *By          = prims->By;
+  *Bz          = prims->Bz;
   *entropy     = prims->entropy;
   // Tabulated EOS quantities
   *Y_e         = prims->Y_e;
