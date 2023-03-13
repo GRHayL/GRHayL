@@ -1,5 +1,6 @@
 #ifndef GRHAYL_IGM_H_
 #define GRHAYL_IGM_H_
+#include "cctk.h"
 #include "GRHayLET.h"
 
 // The order here MATTERS, and must be consistent with the order in the in_prims[] array in GRHayLET_evaluate_MHD_rhs.C.
@@ -12,7 +13,6 @@ static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,
 void reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
                          const int *restrict var_indices,
                          const eos_parameters *restrict eos,
-                         const double *restrict v_flux,
                          const double **in_prims,
                          double **out_prims_r,
                          double **out_prims_l);

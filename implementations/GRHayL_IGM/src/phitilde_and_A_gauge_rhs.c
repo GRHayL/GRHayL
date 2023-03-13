@@ -1,5 +1,5 @@
 #include "cctk.h"
-#include "GRHayLET.h"
+#include "IGM.h"
 
 void phitilde_and_A_gauge_rhs(const cGH *cctkGH,
                    const double *restrict dX,

@@ -6,7 +6,6 @@ Con2Prim_base_sources = files('apply_inequality_fixes.c',
                               'guess_primitives.c',
                               'initialize_diagnostics.c',
                               'limit_utilde_and_compute_v.c',
-                              'limit_v_and_compute_u0.c',
                               'reset_prims_to_atmosphere.c',
                               'undensitize_conservatives.c')
 
