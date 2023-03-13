@@ -76,7 +76,7 @@ CCTK_BOOLEAN Cupp_Fix "Whether or not to apply the Cupp Fix"
 {
   "no"  :: "Standard behavior of IllinoisGRMHD code"
   "yes" :: "Changes logic of Noble2D routine which removes need for most Font fixes and adjusts atmosphere reset."
-} "no"
+} "yes"
 
 CCTK_REAL Psi6threshold "Where Psi^6 > Psi6threshold, we assume we're inside the horizon in the primitives solver, and certain limits are relaxed or imposed" STEERABLE=ALWAYS
 {

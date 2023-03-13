@@ -6,10 +6,8 @@ void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
                /*const*/ double **out_prims_r,
                /*const*/ double **out_prims_l,
                const double *restrict phi_bssn,
-               const double *restrict cmin_1,
-               const double *restrict cmax_1,
-               const double *restrict cmin_2,
-               const double *restrict cmax_2,
+               const double **cmin,
+               const double **cmax,
                double *restrict A_rhs) {
   const int xdir = (A_dir==1);
   const int ydir = (A_dir==2);
@@ -90,10 +88,10 @@ void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
         vars.B2r=out_prims_r[BX_STAGGER+v2_offset][index_B2];
         vars.B2l=out_prims_l[BX_STAGGER+v2_offset][index_B2];
 
-        vars.c1_min = cmin_1[index_B2];
-        vars.c1_max = cmax_1[index_B2];
-        vars.c2_min = cmin_2[index_B1];
-        vars.c2_max = cmax_2[index_B1];
+        vars.c1_min = cmin[v1_offset][index_B2];
+        vars.c1_max = cmax[v1_offset][index_B2];
+        vars.c2_min = cmin[v2_offset][index_B1];
+        vars.c2_max = cmax[v2_offset][index_B1];
 
         A_rhs[index] = HLL_flux(&vars);
   }

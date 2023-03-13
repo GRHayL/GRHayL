@@ -88,6 +88,9 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   in_prims[ww]=vyl;        out_prims_r[ww]=vylr;        out_prims_l[ww]=vyll;        ww++;
   in_prims[ww]=vzl;        out_prims_r[ww]=vzlr;        out_prims_l[ww]=vzll;        ww++;
 
+  const double *cmin[3] = {cmin_x, cmin_y, cmin_z};
+  const double *cmax[3] = {cmax_x, cmax_y, cmax_z};
+
 //TODO: this function needs to be pulled into GRHayLET first
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
 //  IllinoisGRMHD_convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij(cctkGH,cctk_lsh,  gxx,gxy,gxz,gyy,gyz,gzz,alp,
@@ -269,7 +272,7 @@ exit(0);
   flux_dir=3;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin_x, cmax_x, cmin_y, cmax_y, Az_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
 
   /* There are two stories going on here:
    * 1) Single reconstruction to (i,j,k-1/2) for {rho,P,vx,vy,vz,Bx,By,Bz} to compute
@@ -334,7 +337,7 @@ exit(0);
   flux_dir=1;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin_y, cmax_y, cmin_z, cmax_z, Ax_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
 
   // We reprise flux_dir=1 reconstruction to finish up computations of Ai_rhs's!
   { // num_vars and var_indices are local variables
@@ -360,7 +363,7 @@ exit(0);
   flux_dir=2;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin_z, cmax_z, cmin_x, cmax_x, Ay_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
 
   // Next compute phitilde_rhs, and add gauge terms to A_i_rhs terms!
   //   Note that in the following function, we don't bother with reconstruction, instead interpolating.
