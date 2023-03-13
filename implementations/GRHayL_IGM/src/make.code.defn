@@ -1,12 +1,13 @@
 # Main make.code.defn file for thorn GRHayL
 
 # Source files in this directory
-SRCS = A_no_gauge_rhs.c                            \
-       calculate_MHD_rhs.c                         \
-       conservs_to_prims.c                         \
-       convert_ADM_to_BSSN.c                       \
-       evaluate_MHD_rhs.c                          \
-       interpolate_to_face_and_initialize_metric.c \
-       phitilde_and_A_gauge_rhs.c                  \
-       reconstruction_loop.c                       \
+SRCS = A_no_gauge_rhs.c                               \
+       calculate_MHD_rhs.c                            \
+       conservs_to_prims.c                            \
+       convert_ADM_to_BSSN.c                          \
+       convert_from_ADMBase_HydroBase_to_GRHayL_IGM.c \
+       evaluate_MHD_rhs.c                             \
+       interpolate_to_face_and_initialize_metric.c    \
+       phitilde_and_A_gauge_rhs.c                     \
+       reconstruction_loop.c                          \
        reconstruction_loop_no_rho_P.c
