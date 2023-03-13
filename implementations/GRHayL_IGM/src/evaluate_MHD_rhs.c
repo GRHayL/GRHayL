@@ -63,7 +63,6 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   const double *in_prims[MAXNUMVARS];
   double *out_prims_r[MAXNUMVARS];
   double *out_prims_l[MAXNUMVARS];
-  int num_prims_to_reconstruct;
 
   /* SET POINTERS TO GRMHD GRIDFUNCTIONS */
   // The order here MATTERS, and must be consistent with the global variable declarations in
@@ -91,32 +90,26 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   const double *cmin[3] = {cmin_x, cmin_y, cmin_z};
   const double *cmax[3] = {cmax_x, cmax_y, cmax_z};
 
-//TODO: this function needs to be pulled into GRHayLET first
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-//  IllinoisGRMHD_convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij(cctkGH,cctk_lsh,  gxx,gxy,gxz,gyy,gyz,gzz,alp,
-//                                                                gtxx,gtxy,gtxz,gtyy,gtyz,gtzz,
-//                                                                gtupxx,gtupxy,gtupxz,gtupyy,gtupyz,gtupzz,
-//                                                                phi_bssn,psi_bssn,lapm1);
+  GRHayL_convert_ADM_to_BSSN(cctkGH,
+                             gxx, gxy, gxz, gyy, gyz, gzz,
+                             alp, phi_bssn, psi_bssn,
+                             gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
+                             gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
 
 //  /* SET POINTERS TO METRIC GRIDFUNCTIONS */
-//  CCTK_REAL *metric[NUMVARS_FOR_METRIC_FACEVALS]; // "metric" here is array of pointers to the actual gridfunctions.
-//  ww=0;
-//  metric[ww]=phi_bssn;ww++;
-//  metric[ww]=psi_bssn;ww++;
-//  metric[ww]=gtxx;    ww++;
-//  metric[ww]=gtxy;    ww++;
-//  metric[ww]=gtxz;    ww++;
-//  metric[ww]=gtyy;    ww++;
-//  metric[ww]=gtyz;    ww++;
-//  metric[ww]=gtzz;    ww++;
-//  metric[ww]=lapm1;   ww++;
-//  metric[ww]=betax;   ww++;
-//  metric[ww]=betay;   ww++;
-//  metric[ww]=betaz;   ww++;
-//  metric[ww]=gtupxx;  ww++;
-//  metric[ww]=gtupyy;  ww++;
-//  metric[ww]=gtupzz;  ww++;
-//
+  const double *metric[10]; // "metric" here is array of pointers to the actual gridfunctions.
+  metric[LAPSE]= alp;
+  metric[BETAX]= betax;
+  metric[BETAY]= betay;
+  metric[BETAZ]= betaz;
+  metric[GXX]  = gtxx;
+  metric[GXY]  = gtxy;
+  metric[GXZ]  = gtxz;
+  metric[GYY]  = gtyy;
+  metric[GYZ]  = gtyz;
+  metric[GZZ]  = gtzz;
+
 //  /* SET POINTERS TO STRESS-ENERGY TENSOR GRIDFUNCTIONS */
 //  CCTK_REAL *TUPmunu[10];// "TUPmunu" here is array of pointers to the actual gridfunctions.
 //  ww=0;
@@ -143,7 +136,7 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         Stildey_rhs[index]=0.0;
         Stildez_rhs[index]=0.0;
 
-//TODO: remove for IGH
+        //TODO: remove for IGH
         phitilde_rhs[index]=0.0;
         Ax_rhs[index]=0.0;
         Ay_rhs[index]=0.0;
@@ -161,7 +154,7 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 //                                                        tau_rhs);
 
   int flux_dir;
-  flux_dir=1;
+  flux_dir=0;
 //  /* There are two stories going on here:
 //   * 1) Computation of \partial_x on RHS of \partial_t {rho_star,tau,mhd_st_{x,y,z}},
 //   *    via PPM reconstruction onto (i-1/2,j,k), so that
@@ -178,25 +171,23 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 //   * 2Ab) By_stagger is at (i,j+1/2,k), and we reconstruct below to (i-1/2,j+1/2,k). */
   { // num_vars and var_indices are local variables
     const int num_vars = 6;
-    num_prims_to_reconstruct=num_vars+2;
     const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};
-    const double *var_pointers[6] = {vx, vy, vz, By_center, Bz_center, By_stagger};
     reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
-exit(0);
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^x face values to be consistent with BX_STAGGER.
 #pragma omp parallel for
   for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) {
-        int index=CCTK_GFINDEX3D(cctkGH,i,j,k), indexim1=CCTK_GFINDEX3D(cctkGH,i-1+(i==0),j,k); /* indexim1=0 when i=0 */
+        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int indexim1=CCTK_GFINDEX3D(cctkGH,i-1+(i==0),j,k); /* indexim1=0 when i=0 */
         out_prims_r[BX_CENTER][index]=out_prims_l[BX_CENTER][index]=in_prims[BX_STAGGER][indexim1]; }
 
 //TODO: add in Terrence's code
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-//  add_fluxes_and_source_terms_to_hydro_rhss(flux_dir,cctkGH,cctk_lsh,cctk_nghostzones,dX,   metric,in_prims,TUPmunu,
-//                                            num_prims_to_reconstruct,out_prims_r,out_prims_l,eos,
+//  add_fluxes_and_source_terms_to_hydro_rhss(cctkGH, flux_dir, dX, metric, in_prims,
+//                                            out_prims_r,out_prims_l,eos,
 //                                            cmax_x,cmin_x,
 //                                            rho_star_flux,tau_flux,st_x_flux,st_y_flux,st_z_flux,
 //                                            rho_star_rhs,tau_rhs,st_x_rhs,st_y_rhs,st_z_rhs);
@@ -226,7 +217,7 @@ exit(0);
    * 2Ba) Bz_stagger is at (i,j,k+1/2), and we reconstruct to (i,j-1/2,k+1/2) below */
   //// NOTE! The order of variable reconstruction is important here,
   ////   as we don't want to overwrite {vxr,vxl,vyr,vyl}!
-  flux_dir=2;
+  flux_dir=1;
   { // num_vars and var_indices are local variables
     const int num_vars = 4;
     const int var_indices[4] = {VXR, VYR, VXL, VYL};
@@ -234,7 +225,6 @@ exit(0);
   }
   { // num_vars and var_indices are local variables
     const int num_vars = 7;
-    num_prims_to_reconstruct = num_vars+2;
     const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER};
     reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
@@ -243,15 +233,16 @@ exit(0);
   //   Instead of reconstructing, we simply set B^y face values to be consistent with BY_STAGGER.
 #pragma omp parallel for
   for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) {
-        int index=CCTK_GFINDEX3D(cctkGH,i,j,k), indexjm1=CCTK_GFINDEX3D(cctkGH,i,j-1+(j==0),k); /* indexjm1=0 when j=0 */
+        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int indexjm1=CCTK_GFINDEX3D(cctkGH,i,j-1+(j==0),k); /* indexjm1=0 when j=0 */
         out_prims_r[BY_CENTER][index]=out_prims_l[BY_CENTER][index]=in_prims[BY_STAGGER][indexjm1]; }
 
 //TODO: add in Terrence's code
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-//  add_fluxes_and_source_terms_to_hydro_rhss(flux_dir,cctkGH,cctk_lsh,cctk_nghostzones,dX,   metric,in_prims,TUPmunu,
-//                                            num_prims_to_reconstruct,out_prims_r,out_prims_l,eos,
-//                                            cmax_y,cmin_y,
+//  add_fluxes_and_source_terms_to_hydro_rhss(cctkGH, flux_dir, dX, metric,in_prims,
+//                                            out_prims_r,out_prims_l,eos,
+//                                            cmin[flux_dir], cmax[flux_dir],
 //                                            rho_star_flux,tau_flux,st_x_flux,st_y_flux,st_z_flux,
 //                                            rho_star_rhs,tau_rhs,st_x_rhs,st_y_rhs,st_z_rhs);
 
@@ -269,7 +260,7 @@ exit(0);
    * ==========================
    ******************************************/
   // Interpolates to i+1/2
-  flux_dir=3;
+  flux_dir=2;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
   A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
@@ -299,7 +290,6 @@ exit(0);
   }
   { // num_vars and var_indices are local variables
     const int num_vars = 7;
-    num_prims_to_reconstruct = num_vars+2;
     const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER};
     reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
@@ -309,7 +299,8 @@ exit(0);
   //   Instead of reconstructing, we simply set B^z face values to be consistent with BZ_STAGGER.
 #pragma omp parallel for
   for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) {
-        int index=CCTK_GFINDEX3D(cctkGH,i,j,k), indexkm1=CCTK_GFINDEX3D(cctkGH,i,j,k-1+(k==0)); /* indexkm1=0 when k=0 */
+        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int indexkm1=CCTK_GFINDEX3D(cctkGH,i,j,k-1+(k==0)); /* indexkm1=0 when k=0 */
         out_prims_r[BZ_CENTER][index]=out_prims_l[BZ_CENTER][index]=in_prims[BZ_STAGGER][indexkm1]; }
 
 //TODO: add in Terrence's code
@@ -334,7 +325,7 @@ exit(0);
    * (i,j,k)        | {phi}
    * ==========================
    ******************************************/
-  flux_dir=1;
+  flux_dir=0;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
   A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
@@ -360,7 +351,7 @@ exit(0);
    * (i,j,k)        | {phi}
    * ==========================
    ******************************************/
-  flux_dir=2;
+  flux_dir=1;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
   A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
@@ -370,7 +361,7 @@ exit(0);
   // We need A^i, but only have A_i. So we add gtupij to the list of input variables.
   // We are FINISHED with v{x,y,z}{r,l} and P{r,l} so we use these 8 gridfunctions' worth of space as temp storage.
   phitilde_and_A_gauge_rhs(cctkGH, dX, gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz,
-              psi_bssn, lapm1, betax, betay, betaz, Ax, Ay, Az, phitilde,
+              psi_bssn, alp, betax, betay, betaz, Ax, Ay, Az, phitilde,
               grhayl_params->Lorenz_damping_factor, vxr, vyr, vzr, vxl, vyl, vzl, pressr, pressl,
               phitilde_rhs, Ax_rhs, Ay_rhs, Az_rhs);
 

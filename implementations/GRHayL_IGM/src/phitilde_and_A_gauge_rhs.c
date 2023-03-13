@@ -10,7 +10,7 @@ void phitilde_and_A_gauge_rhs(const cGH *cctkGH,
                    const double *restrict gupyz,
                    const double *restrict gupzz,
                    const double *restrict psi,
-                   const double *restrict lapm1,
+                   const double *restrict lapse,
                    const double *restrict betax,
                    const double *restrict betay,
                    const double *restrict betaz,
@@ -76,7 +76,7 @@ void phitilde_and_A_gauge_rhs(const cGH *cctkGH,
               gauge_vars.gupyy[iterz][itery][iterx]  = gupyy[ind];
               gauge_vars.gupyz[iterz][itery][iterx]  = gupyz[ind];
               gauge_vars.gupzz[iterz][itery][iterx]  = gupzz[ind];
-              gauge_vars.lapse[iterz][itery][iterx]  = lapm1[ind]+1.0;
+              gauge_vars.lapse[iterz][itery][iterx]  = lapse[ind];
               gauge_vars.psi[iterz][itery][iterx]    = psi[ind];
               gauge_vars.shiftx[iterz][itery][iterx] = betax[ind];
               gauge_vars.shifty[iterz][itery][iterx] = betay[ind];

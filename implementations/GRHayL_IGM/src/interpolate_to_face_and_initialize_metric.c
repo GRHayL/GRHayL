@@ -9,18 +9,18 @@
 
 void interpolate_to_face_and_initialize_metric(
       const cGH *cctkGH,
-      const int flux_dirn,
       const int i, const int j, const int k,
+      const int flux_dirn,
       const double *restrict lapse,
+      const double *restrict betax,
+      const double *restrict betay,
+      const double *restrict betaz,
       const double *restrict gxx,
       const double *restrict gxy,
       const double *restrict gxz,
       const double *restrict gyy,
       const double *restrict gyz,
       const double *restrict gzz,
-      const double *restrict betax,
-      const double *restrict betay,
-      const double *restrict betaz,
       metric_quantities *restrict metric) {
 
   const int xdir = (flux_dirn == 0);

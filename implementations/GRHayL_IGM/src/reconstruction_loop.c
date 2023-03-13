@@ -14,9 +14,9 @@ void reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const i
   // 3, but upper index includes first ghostzone point (stencil is only 2 on upper end)
   // This limit only applies to the direction of the stencil, hence the == logic below.
 
-  const int xdir = (flux_dir == 1);
-  const int ydir = (flux_dir == 2);
-  const int zdir = (flux_dir == 3);
+  const int xdir = (flux_dir == 0);
+  const int ydir = (flux_dir == 1);
+  const int zdir = (flux_dir == 2);
 
   const int imin = 3*xdir;
   const int imax = cctkGH->cctk_lsh[0] - 2*xdir;

@@ -18,7 +18,9 @@ USES INCLUDE: GRHayLET.h
 # BSSN-based quantities, computed from ADM quantities
 CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-   gtxx,gtxy,gtxz,gtyy,gtyz,gtzz,gtupxx,gtupxy,gtupxz,gtupyy,gtupyz,gtupzz,phi_bssn,psi_bssn,lapm1
+   phi_bssn, psi_bssn
+   gtxx, gtxy, gtxz, gtyy, gtyz, gtzz
+   gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz
 } "BSSN quantities, computed from ADM quantities"
 
 #########################################################
@@ -76,18 +78,14 @@ CCTK_REAL em_psi6phi type = GF Timelevels=3 tags='Prolongation="STAGGER111"'
 # Grid functions for staggered B-fields
 CCTK_REAL grmhd_B_stagger type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
 {
-  Bx_stagger
-  By_stagger
-  Bz_stagger
+  Bx_stagger, By_stagger, Bz_stagger
 } "B-field components defined at staggered points [Bx_stagger at (i+1/2,j,k),By_stagger at (i,j+1/2,k),Bz_stagger at (i,j,k+1/2)]."
 
 # This could probably use Bvec from HydroBase instead of making a new variable
 # It is useful to split Bi from Bi_stagger, since we're generally only interested in outputting Bi for diagnostics
 cctk_real grmhd_B_center type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
 {
-  Bx_center
-  By_center
-  Bz_center
+  Bx_center, By_center, Bz_center
 } "B-field components defined at vertices."
 
 #########################################################
@@ -95,18 +93,12 @@ cctk_real grmhd_B_center type = GF TAGS='InterpNumTimelevels=1 prolongation="non
 # RHS variables for MoL timestepping
 cctk_real grmhd_conservatives_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-  rho_star_rhs
-  tau_rhs
-  Stildex_rhs
-  Stildey_rhs
-  Stildez_rhs
+  rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs
 } "Storage for the right-hand side of the partial_t rho_star, partial_t tau, and partial_t tilde{S}_i equations. Needed for MoL timestepping."
 
 CCTK_REAL A_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-  Ax_rhs
-  Ay_rhs
-  Az_rhs
+  Ax_rhs, Ay_rhs, Az_rhs
 } "Storage for the right-hand side of the partial_t A equations."
 
 CCTK_REAL phitilde_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
@@ -124,7 +116,12 @@ CCTK_REAL grmhd_cmin_cmax_temps type = GF TAGS='prolongation="none" Checkpoint="
   cmin_z, cmax_z
 } "Store min and max characteristic speeds in all three directions."
 
-#########################################################
+
+#Temporary variables for flux computation
+cctk_real grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
+{
+  rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux
+} "Temporary variables for storing the flux terms of tilde{S}_i."
 
 # Temporary variables for reconstruction
 CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="none" Checkpoint="no"'

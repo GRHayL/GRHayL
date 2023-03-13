@@ -3,10 +3,39 @@
 #include "cctk.h"
 #include "GRHayLET.h"
 
-// The order here MATTERS, and must be consistent with the order in the in_prims[] array in GRHayLET_evaluate_MHD_rhs.C.
+static const int LAPSE=0, BETAX=1,BETAY=2, BETAZ=3,
+                 GXX=4, GXY=5, GXZ=6,
+                 GYY=7, GYZ=8, GZZ=9;
+
+// The order here MATTERS, and must be consistent with the order in the in_prims[] array in evaluate_MHD_rhs.C.
 static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,
   BX_CENTER=5,BY_CENTER=6,BZ_CENTER=7,BX_STAGGER=8,BY_STAGGER=9,BZ_STAGGER=10,
   VXR=11,VYR=12,VZR=13,VXL=14,VYL=15,VZL=16,MAXNUMVARS=17;  //<-- Be _sure_ to define MAXNUMVARS appropriately!
+
+void GRHayL_convert_ADM_to_BSSN(const cGH *cctkGH,
+      double *gxx, double *gxy, double *gxz,
+      double *gyy, double *gyz, double *gzz,
+      double *lapse, double *phi, double *psi,
+      double *gtxx, double *gtxy, double *gtxz,
+      double *gtyy, double *gtyz, double *gtzz,
+      double *gtupxx, double *gtupxy, double *gtupxz,
+      double *gtupyy, double *gtupyz, double *gtupzz);
+
+void interpolate_to_face_and_initialize_metric(
+      const cGH *cctkGH,
+      const int i, const int j, const int k,
+      const int flux_dirn,
+      const double *restrict lapse,
+      const double *restrict betax,
+      const double *restrict betay,
+      const double *restrict betaz,
+      const double *restrict gxx,
+      const double *restrict gxy,
+      const double *restrict gxz,
+      const double *restrict gyy,
+      const double *restrict gyz,
+      const double *restrict gzz,
+      metric_quantities *restrict metric);
 
 /******** Helper functions for the RHS calculations *************/
 
@@ -23,6 +52,23 @@ void reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir
                          const double **in_prims,
                          double **out_prims_r,
                          double **out_prims_l);
+
+void calculate_MHD_rhs(const cGH *cctkGH, const int flux_dirn, double *restrict dX,
+                       const eos_parameters *restrict eos,
+                       const double **metric,
+                       const double **in_prims,
+                       /*const*/ double **prims_r,
+                       /*const*/ double **prims_l,
+                       double *restrict rho_star_flux,
+                       double *restrict tau_flux,
+                       double *restrict Stildex_flux,
+                       double *restrict Stildey_flux,
+                       double *restrict Stildez_flux,
+                       double *restrict rho_star_rhs,
+                       double *restrict tau_rhs,
+                       double *restrict Stildex_rhs,
+                       double *restrict Stildey_rhs,
+                       double *restrict Stildez_rhs);
 
 // The const are commented out because C does not support implicit typecasting of types when
 // they are more than 1 level removed from the top pointer. i.e. I can pass the argument with
