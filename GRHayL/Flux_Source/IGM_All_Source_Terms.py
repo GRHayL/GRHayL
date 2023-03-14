@@ -28,7 +28,7 @@ CoordSystem = "Cartesian"
 par.set_parval_from_str("reference_metric::CoordSystem", CoordSystem)
 rfm.reference_metric()
 
-def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outCparams = "outCverbose=False,CSE_sorting=canonical,CSE_enable=True"):    
+def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outCparams = "outCverbose=False,CSE_sorting=canonical,CSE_enable=True"):
     # Generate SymPy symbolic expressions
     GRMHD.set_up_base_vars(formalism=formalism)
 
@@ -59,7 +59,6 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outC
     GRMHD.compute_tau_tilde_source_term(GRMHD.KDD,GRMHD.betaU,GRMHD.alpha, GRMHD.sqrtgammaDET, GRMHD.alpha_dD, GRMHD.T4UU)
     GRMHD.compute_S_tilde_source_termD(GRMHD.alpha,GRMHD.sqrtgammaDET,GRMHD.g4DD_zerotimederiv_dD, GRMHD.T4UU)
     
-    
     tau_tilde_source_term_free_symbols = GRMHD.tau_tilde_source_term.free_symbols
     S_tilde_source_termD0_free_symbols = GRMHD.S_tilde_source_termD[0].free_symbols
     S_tilde_source_termD1_free_symbols = GRMHD.S_tilde_source_termD[1].free_symbols
@@ -85,6 +84,7 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
     prestring += "const double "+str(GRMHD.alpha)+" = metric->lapse;\n"
 
     checker = []
+
 
     if formalism=="BSSN":
         # BSSN quantites
@@ -154,7 +154,57 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
         prestring += "const double gammaDD11 = metric->adm_gyy;\n"
         prestring += "const double gammaDD12 = metric->adm_gyz;\n"
 
-        prestring += "const double gammaDD22 = metric->adm_gzz;\n"
+        prestring += "const double gammaDD22 = metric->adm_gzz;\n"    
+
+        vars_to_write = ["cons->S_x", "cons->S_y", "cons->S_z", "cons->tau"]
+        vars_rhs = [GRMHD.S_tilde_source_termD[0], 
+                    GRMHD.S_tilde_source_termD[1], 
+                    GRMHD.S_tilde_source_termD[2], 
+                    GRMHD.tau_tilde_source_term]
+
+        c_type = "void"
+
+        params  = "const primitive_quantities *restrict prims, "
+        params  += "struct eos_parameters const *restrict eos, "
+        params  += "const metric_quantities *restrict metric, "
+        params  += "const metric_derivatives *restrict metric_derivs, "
+        params  += "conservative_quantities *restrict cons"
+
+        for i in range(3):
+            desc = f"Add source term for {i}-component of Stilde"
+            name = f"calculate_Stilde_source_term_dirn{i}"
+
+            loopstring = prestring
+            loopstring += f"const double alpha_dD{i} = metric_derivs->lapse[{i}];\n"
+
+            loopstring += f"const double betaU_dD0{i} = metric_derivs->betax[{i}];\n"
+            loopstring += f"const double betaU_dD1{i} = metric_derivs->betay[{i}];\n"
+            loopstring += f"const double betaU_dD2{i} = metric_derivs->betaz[{i}];\n"
+
+            loopstring += f"const double gammaDD_dD00{i} = metric_derivs->adm_gxx[{i}];\n"
+            loopstring += f"const double gammaDD_dD01{i} = metric_derivs->adm_gxy[{i}];\n"
+            loopstring += f"const double gammaDD_dD02{i} = metric_derivs->adm_gxz[{i}];\n"
+
+            loopstring += f"const double gammaDD_dD11{i} = metric_derivs->adm_gyy[{i}];\n"
+            loopstring += f"const double gammaDD_dD12{i} = metric_derivs->adm_gyz[{i}];\n"
+
+            loopstring += f"const double gammaDD_dD22{i} = metric_derivs->adm_gzz[{i}];\n"
+
+
+            body = outputC(vars_rhs[i], vars_to_write[i], params=outCparams, 
+                       filename="returnstring", prestring=loopstring)
+
+            outCfunction(
+                outfile=os.path.join(Ccodesdir,name+".c"),
+                includes=includes,
+                desc=desc,
+                c_type=c_type, name=name, params=params,
+                enableCparameters=False,
+                body=body)
+
+
+        desc = "Add source term for tau_tilde"
+        name = "calculate_tau_tilde_source_term"    
 
         prestring += "const double KDD00 = curv->Kxx;\n"
         prestring += "const double KDD01 = curv->Kxy;\n"
@@ -165,53 +215,28 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 
         prestring += "const double KDD22 = curv->Kzz;\n"
 
-        prestring += "const double alpha_dD0 = metric_derivs->lapse[0];\n"
-        prestring += "const double alpha_dD1 = metric_derivs->lapse[1];\n"
-        prestring += "const double alpha_dD2 = metric_derivs->lapse[2];\n"
+        loopstring = prestring
 
         for i in range(3):
-            prestring += f"const double betaU_dD0{i} = metric_derivs->betax[{i}];\n"
-            prestring += f"const double betaU_dD1{i} = metric_derivs->betay[{i}];\n"
-            prestring += f"const double betaU_dD2{i} = metric_derivs->betaz[{i}];\n"
+            loopstring += f"const double alpha_dD{i} = metric_derivs->lapse[{i}];\n"
 
-            prestring += f"const double gammaDD_dD00{i} = metric_derivs->adm_gxx[{i}];\n"
-            prestring += f"const double gammaDD_dD01{i} = metric_derivs->adm_gxy[{i}];\n"
-            prestring += f"const double gammaDD_dD02{i} = metric_derivs->adm_gxz[{i}];\n"
+        body = outputC(vars_rhs[3], vars_to_write[3], params=outCparams, 
+                       filename="returnstring", prestring=loopstring)
 
-            prestring += f"const double gammaDD_dD11{i} = metric_derivs->adm_gyy[{i}];\n"
-            prestring += f"const double gammaDD_dD12{i} = metric_derivs->adm_gyz[{i}];\n"
+        params  = "const primitive_quantities *restrict prims, "
+        params  += "struct eos_parameters const *restrict eos, "
+        params  += "const metric_quantities *restrict metric, "
+        params  += "const extrinsic_curvature *restrict curv, "
+        params  += "const metric_derivatives *restrict metric_derivs, "
+        params  += "conservative_quantities *restrict cons"
 
-            prestring += f"const double gammaDD_dD22{i} = metric_derivs->adm_gzz[{i}];\n"
-            
-    
-    desc = "Adds source term and connection terms to Stilde and tau_tilde"
-    name = "calculate_all_source_terms"
-    vars_to_write = ["cons->S_x", "cons->S_y", "cons->S_z", "cons->tau"]
-
-    vars_rhs = [GRMHD.S_tilde_source_termD[0], 
-                GRMHD.S_tilde_source_termD[1], 
-                GRMHD.S_tilde_source_termD[2], 
-                GRMHD.tau_tilde_source_term]
-
-    body = outputC(vars_rhs, vars_to_write, params=outCparams, 
-               filename="returnstring", prestring=prestring)
-
-    c_type = "void"
-
-    params  = "const primitive_quantities *restrict prims, "
-    params  += "struct eos_parameters const *restrict eos, "
-    params  += "const metric_quantities *restrict metric, "
-    params  += "const extrinsic_curvature *restrict curv, "
-    params  += "const metric_derivatives *restrict metric_derivs, "
-    params  += "conservative_quantities *restrict cons"
-    
-    outCfunction(
-        outfile=os.path.join(Ccodesdir,name+".c"),
-        includes=includes,
-        desc=desc,
-        c_type=c_type, name=name, params=params,
-        enableCparameters=False,
-        body=body)
+        outCfunction(
+            outfile=os.path.join(Ccodesdir,name+".c"),
+            includes=includes,
+            desc=desc,
+            c_type=c_type, name=name, params=params,
+            enableCparameters=False,
+            body=body)
 
 
     
