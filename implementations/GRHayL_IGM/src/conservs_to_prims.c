@@ -32,19 +32,19 @@
 #include "IGM.h"
 
 void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS;
+  DECLARE_CCTK_ARGUMENTS_GRHayL_IGM_conserv_to_prims;
   DECLARE_CCTK_PARAMETERS;
 
   if(CCTK_EQUALS(Symmetry,"equatorial")) {
     // SET SYMMETRY GHOSTZONES ON ALL CONSERVATIVE VARIABLES!
     int ierr=0;
-    ierr+=CartSymGN(cctkGH,"IllinoisGRMHD::grmhd_conservatives");
+    ierr+=CartSymGN(cctkGH,"GRHayL_IGM::grmhd_conservatives");
     // FIXME: UGLY. Filling metric ghostzones is needed for, e.g., Cowling runs.
     ierr+=CartSymGN(cctkGH,"lapse::lapse_vars");
     ierr+=CartSymGN(cctkGH,"bssn::BSSN_vars");
     ierr+=CartSymGN(cctkGH,"bssn::BSSN_AH");
     ierr+=CartSymGN(cctkGH,"shift::shift_vars");
-    if(ierr!=0) CCTK_VERROR("IllinoisGRMHD ERROR (grep for it, foo!)  :(");
+    if(ierr!=0) CCTK_VERROR("GRHayL_IGM ERROR (grep for it, foo!)  :(");
   }
 
   //Start the timer, so we can benchmark the primitives solver during evolution.
@@ -56,7 +56,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     gettimeofday(&start, NULL);
   */
 
-  double poison = 1e200;
+  const double poison = 0.0/0.0;
 
   // Diagnostic variables.
   int failures=0;
@@ -87,7 +87,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
 
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
-//    diagnostics.c2p_fail_flag = con2prim_failed_flag[index]; This is also from Leo's IGM
+//    diagnostics.c2p_fail_flag = con2prim_failed_flag[index]; from Leo's IGM
 
     // Read in BSSN metric quantities from gridfunctions and
     // set auxiliary and ADM metric quantities
@@ -107,7 +107,8 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     //      Bvec[index0], Bvec[index1], Bvec[index2],
           Bx_center[index], By_center[index], Bz_center[index],
           poison, poison, poison, &prims);
-          //entropy[index], Y_e[index], temp[index],
+          //wont have storage for these vars for hybrid
+          //entropy[index], Y_e[index], temperature[index], &prims);
 
     // Read in conservative variables from gridfunctions
     conservative_quantities cons, cons_orig;
@@ -222,7 +223,8 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
           //&Bvec[index0], &Bvec[index1], &Bvec[index2],
           &Bx_center[index], &By_center[index], &Bz_center[index],
           &dummy1, &dummy2, &dummy3);
-          //&entropy[index], &Y_e[index], &temp[index]);
+          //wont have storage for these vars for hybrid
+          //&entropy[index], &Y_e[index], &temperature[index]);
 
     return_conservatives(&cons,
           &rho_star[index], &tau[index],

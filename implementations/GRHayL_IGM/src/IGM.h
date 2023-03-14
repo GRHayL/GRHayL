@@ -89,11 +89,12 @@ void calculate_MHD_rhs(const cGH *cctkGH, const int flux_dirn, double *restrict 
 // suggesting this may become part of the C23 standard, so I guess you can uncomment this
 // in like 10 years.
 void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
+                       const double **metric,
                /*const*/ double **out_prims_r,
                /*const*/ double **out_prims_l,
                const double *restrict phi_bssn,
-               const double **cmin,
-               const double **cmax,
+//               const double **cmin,
+//               const double **cmax,
                double *restrict A_rhs);
 
 void phitilde_and_A_gauge_rhs(const cGH *cctkGH,

@@ -3,15 +3,39 @@
 #define IPH(METRICm1,METRICp0,METRICp1,METRICp2) (-0.0625*((METRICm1) + (METRICp2)) + 0.5625*((METRICp0) + (METRICp1)))
 
 void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
-               /*const*/ double **out_prims_r,
-               /*const*/ double **out_prims_l,
+               const double **metric,
+               /*const*/ double **in_prims_r,
+               /*const*/ double **in_prims_l,
                const double *restrict phi_bssn,
-               const double **cmin,
-               const double **cmax,
+//               const double **cmin,
+//               const double **cmax,
                double *restrict A_rhs) {
+
+  const double poison = 0.0/0.0;
   const int xdir = (A_dir==0);
   const int ydir = (A_dir==1);
   const int zdir = (A_dir==2);
+
+  void (*calculate_characteristic_speed)(const primitive_quantities *restrict prims_r,
+                                         const primitive_quantities *restrict prims_l,
+                                         struct eos_parameters const *restrict eos,
+                                         const metric_quantities *restrict metric_face,
+                                         double *cmin, double *cmax);
+
+  // Set function pointer to specific function for a given direction
+  switch(A_dir) {
+    case 0:
+      calculate_characteristic_speed = &calculate_characteristic_speed_dirn0;
+      break;
+    case 1:
+      calculate_characteristic_speed = &calculate_characteristic_speed_dirn1;
+      break;
+    case 2:
+      calculate_characteristic_speed = &calculate_characteristic_speed_dirn2;
+      break;
+    default:
+      CCTK_VERROR("Warning: invalid A_dir value (not 0, 1, or 2) has been passed to A_no_gauge_rhs.");
+  }
 
   // These are used to determine which components of v and
   // B are used in the computation.
@@ -72,26 +96,74 @@ void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
                 phi_bssn[CCTK_GFINDEX3D(cctkGH,i+!xdir,   j+xdir  +2*zdir, k+2*!zdir)],
                 phi_bssn[CCTK_GFINDEX3D(cctkGH,i+2*!xdir, j+2*xdir+2*zdir, k+2*!zdir)])));
 
-        vars.v1rr=out_prims_r[VXR+v1_offset][index_v];
-        vars.v1rl=out_prims_l[VXR+v1_offset][index_v];
-        vars.v1lr=out_prims_r[VXL+v1_offset][index_v];
-        vars.v1ll=out_prims_l[VXL+v1_offset][index_v];
+        vars.v1rr=in_prims_r[VXR+v1_offset][index_v];
+        vars.v1rl=in_prims_l[VXR+v1_offset][index_v];
+        vars.v1lr=in_prims_r[VXL+v1_offset][index_v];
+        vars.v1ll=in_prims_l[VXL+v1_offset][index_v];
 
-        vars.v2rr=out_prims_r[VXR+v2_offset][index_v];
-        vars.v2rl=out_prims_l[VXR+v2_offset][index_v];
-        vars.v2lr=out_prims_r[VXL+v2_offset][index_v];
-        vars.v2ll=out_prims_l[VXL+v2_offset][index_v];
+        vars.v2rr=in_prims_r[VXR+v2_offset][index_v];
+        vars.v2rl=in_prims_l[VXR+v2_offset][index_v];
+        vars.v2lr=in_prims_r[VXL+v2_offset][index_v];
+        vars.v2ll=in_prims_l[VXL+v2_offset][index_v];
 
-        vars.B1r=out_prims_r[BX_STAGGER+v1_offset][index_B1];
-        vars.B1l=out_prims_l[BX_STAGGER+v1_offset][index_B1];
+        vars.B1r=in_prims_r[BX_STAGGER+v1_offset][index_B1];
+        vars.B1l=in_prims_l[BX_STAGGER+v1_offset][index_B1];
 
-        vars.B2r=out_prims_r[BX_STAGGER+v2_offset][index_B2];
-        vars.B2l=out_prims_l[BX_STAGGER+v2_offset][index_B2];
+        vars.B2r=in_prims_r[BX_STAGGER+v2_offset][index_B2];
+        vars.B2l=in_prims_l[BX_STAGGER+v2_offset][index_B2];
 
-        vars.c1_min = cmin[v1_offset][index_B2];
-        vars.c1_max = cmax[v1_offset][index_B2];
-        vars.c2_min = cmin[v2_offset][index_B1];
-        vars.c2_max = cmax[v2_offset][index_B1];
+        //vars.c1_min = cmin[v1_offset][index_B2];
+        //vars.c1_max = cmax[v1_offset][index_B2];
+        //vars.c2_min = cmin[v2_offset][index_B1];
+        //vars.c2_max = cmax[v2_offset][index_B1];
+
+//TODO: we should probably get cmin/max out of the flux function so we don't recompute all of this
+        metric_quantities metric_face;
+        primitive_quantities prims_r, prims_l;
+        interpolate_to_face_and_initialize_metric(
+                          cctkGH, i+B2_offset[0], j+B2_offset[1], k+B2_offset[2],
+                          A_dir, metric[LAPSE],
+                          metric[BETAX], metric[BETAY], metric[BETAZ],
+                          metric[GXX], metric[GXY], metric[GXZ],
+                          metric[GYY], metric[GYZ], metric[GZZ],
+                          &metric_face);
+
+        initialize_primitives(in_prims_r[RHOB][index_B2], in_prims_r[PRESSURE][index_B2], poison,
+                              in_prims_r[VX][index_B2], in_prims_r[VY][index_B2], in_prims_r[VZ][index_B2],
+                              in_prims_r[BX_CENTER][index_B2], in_prims_r[BY_CENTER][index_B2], in_prims_r[BZ_CENTER][index_B2],
+                              poison, poison, poison, // entropy, Y_e, temp
+                              &prims_r);
+
+        initialize_primitives(in_prims_l[RHOB][index_B2], in_prims_l[PRESSURE][index_B2], poison,
+                              in_prims_l[VX][index_B2], in_prims_l[VY][index_B2], in_prims_l[VZ][index_B2],
+                              in_prims_l[BX_CENTER][index_B2], in_prims_l[BY_CENTER][index_B2], in_prims_l[BZ_CENTER][index_B2],
+                              poison, poison, poison, // entropy, Y_e, temp
+                              &prims_l);
+
+
+        calculate_characteristic_speed(&prims_r, &prims_l, grhayl_eos, &metric_face, &vars.c1_min, &vars.c1_max);
+
+        interpolate_to_face_and_initialize_metric(
+                          cctkGH, i+B1_offset[0], j+B1_offset[1], k+B1_offset[2],
+                          A_dir, metric[LAPSE],
+                          metric[BETAX], metric[BETAY], metric[BETAZ],
+                          metric[GXX], metric[GXY], metric[GXZ],
+                          metric[GYY], metric[GYZ], metric[GZZ],
+                          &metric_face);
+
+        initialize_primitives(in_prims_r[RHOB][index_B1], in_prims_r[PRESSURE][index_B1], poison,
+                              in_prims_r[VX][index_B1], in_prims_r[VY][index_B1], in_prims_r[VZ][index_B1],
+                              in_prims_r[BX_CENTER][index_B1], in_prims_r[BY_CENTER][index_B1], in_prims_r[BZ_CENTER][index_B1],
+                              poison, poison, poison, // entropy, Y_e, temp
+                              &prims_r);
+
+        initialize_primitives(in_prims_l[RHOB][index_B1], in_prims_l[PRESSURE][index_B1], poison,
+                              in_prims_l[VX][index_B1], in_prims_l[VY][index_B1], in_prims_l[VZ][index_B1],
+                              in_prims_l[BX_CENTER][index_B1], in_prims_l[BY_CENTER][index_B1], in_prims_l[BZ_CENTER][index_B1],
+                              poison, poison, poison, // entropy, Y_e, temp
+                              &prims_l);
+
+        calculate_characteristic_speed(&prims_r, &prims_l, grhayl_eos, &metric_face, &vars.c2_min, &vars.c2_max);
 
         A_rhs[index] = HLL_flux(&vars);
   }

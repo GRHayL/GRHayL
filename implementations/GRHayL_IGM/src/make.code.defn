@@ -11,7 +11,9 @@ SRCS = A_no_gauge_rhs.c                               \
        InitSymBound.c                                 \
        interpolate_to_face_and_initialize_metric.c    \
        MoL_registration.c                             \
+       outer_boundaries.c                             \
        phitilde_and_A_gauge_rhs.c                     \
+       postpostinitial__set_symmetries__copy_timelevels.c \
        reconstruction_loop.c                          \
        reconstruction_loop_no_rho_P.c                 \
        symmetry_gzs_staggered.c

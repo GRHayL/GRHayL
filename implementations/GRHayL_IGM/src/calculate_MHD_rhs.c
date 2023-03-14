@@ -192,9 +192,9 @@ void calculate_MHD_rhs(const cGH *cctkGH, const int flux_dirn, double *restrict 
                               poison, poison, poison, // entropy, Y_e, temp
                               &prims_l);
 
-        int speed_limit = 0;
-        limit_v_and_compute_u0(eos, &metric_face, &prims_r, &speed_limit);
-        limit_v_and_compute_u0(eos, &metric_face, &prims_l, &speed_limit);
+        int speed_limited = 0;
+        limit_v_and_compute_u0(eos, &metric_face, &prims_r, &speed_limited);
+        limit_v_and_compute_u0(eos, &metric_face, &prims_l, &speed_limited);
 
         conservative_quantities cons_fluxes;
         calculate_HLLE_fluxes(&prims_r, &prims_l, eos, &metric_face, &cons_fluxes);

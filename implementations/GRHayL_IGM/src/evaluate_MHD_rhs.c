@@ -40,8 +40,8 @@
 #include "GRHayLET.h"
 #include "IGM.h"
 
-void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS;
+void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS//_GRHayL_IGM_evaluate_MHD_rhs;
   DECLARE_CCTK_PARAMETERS;
 
   if(CCTK_Equals(verbose, "essential+iteration output")) {
@@ -263,7 +263,7 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=2;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, metric, out_prims_r, out_prims_l, phi_bssn, /*cmin, cmax,*/ Az_rhs);
 
   /* There are two stories going on here:
    * 1) Single reconstruction to (i,j,k-1/2) for {rho,P,vx,vy,vz,Bx,By,Bz} to compute
@@ -328,7 +328,7 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=0;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, metric, out_prims_r, out_prims_l, phi_bssn, /*cmin, cmax,*/ Ax_rhs);
 
   // We reprise flux_dir=1 reconstruction to finish up computations of Ai_rhs's!
   { // num_vars and var_indices are local variables
@@ -354,7 +354,7 @@ void GRHayLET_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=1;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, metric, out_prims_r, out_prims_l, phi_bssn, /*cmin, cmax,*/ Ay_rhs);
 
   // Next compute phitilde_rhs, and add gauge terms to A_i_rhs terms!
   //   Note that in the following function, we don't bother with reconstruction, instead interpolating.
