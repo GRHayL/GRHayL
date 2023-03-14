@@ -15,7 +15,7 @@ static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,
 void GRHayL_convert_ADM_to_BSSN(const cGH *cctkGH,
       double *gxx, double *gxy, double *gxz,
       double *gyy, double *gyz, double *gzz,
-      double *lapse, double *phi, double *psi,
+      double *phi, double *psi,
       double *gtxx, double *gtxy, double *gtxz,
       double *gtyy, double *gtyz, double *gtzz,
       double *gtupxx, double *gtupxy, double *gtupxz,
@@ -36,6 +36,17 @@ void interpolate_to_face_and_initialize_metric(
       const double *restrict gyz,
       const double *restrict gzz,
       metric_quantities *restrict metric);
+
+void GRHayL_IGM_set_symmetry_gzs_staggered(
+      const cGH *cctkGH,
+      const double *X,
+      const double *Y,
+      const double *Z,
+      double *gridfunc,
+      const double *gridfunc_syms,
+      const int stagger_x,  //TODO: unused
+      const int stagger_y,  //TODO: unused
+      const int stagger_z);
 
 /******** Helper functions for the RHS calculations *************/
 

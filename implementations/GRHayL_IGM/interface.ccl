@@ -1,16 +1,10 @@
-# Interface definition for thorn IllinoisGRMHD
+# Interface definition for thorn GRHayL_IGM
 
 implements: GRHayL_IGM
 
 inherits: ADMBase, Tmunubase, HydroBase, GRHayLET
 
-# Since the evolution code uses some HydroBase quantities, it is
-# important to set certain HydroBase parameters for intended behavior:
-# HydroBase::prolongation_type = 'none'
-# HydroBase::timelevels = 1
-
 USES INCLUDE: Symmetry.h
-
 USES INCLUDE: GRHayLET.h
 
 #########################################################
@@ -96,15 +90,10 @@ cctk_real grmhd_conservatives_rhs type = GF TAGS='prolongation="none" Checkpoint
   rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs
 } "Storage for the right-hand side of the partial_t rho_star, partial_t tau, and partial_t tilde{S}_i equations. Needed for MoL timestepping."
 
-CCTK_REAL A_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
+CCTK_REAL EM_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-  Ax_rhs, Ay_rhs, Az_rhs
-} "Storage for the right-hand side of the partial_t A equations."
-
-CCTK_REAL phitilde_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
-{
-  phitilde_rhs
-} "Storage for the right-hand side of the partial_t (psi^6 Phi) equation."
+  Ax_rhs, Ay_rhs, Az_rhs, phitilde_rhs
+} "Storage for the right-hand side of the partial_t A equations and partial_t (psi^6 Phi) equation."
 
 #########################################################
 
@@ -142,11 +131,29 @@ CCTK_REAL diagnostic_gfs type = GF TAGS='prolongation="none" Checkpoint="no"'
   failure_checker
 } "Gridfunction to track conservative-to-primitives solver fixes. Beware that this gridfunction is overwritten at each RK substep."
 
+###########################################################################
+
 #########################################
 ###  Aliased functions from Carpet    ###
 #########################################
 
-CCTK_INT FUNCTION GetRefinementLevel
-        (CCTK_POINTER_TO_CONST IN cctkGH)
+CCTK_INT FUNCTION GetRefinementLevel(
+      CCTK_POINTER_TO_CONST IN cctkGH)
 USES FUNCTION GetRefinementLevel
 
+####################################################
+###  Aliased function from MoL for registration  ###
+####################################################
+
+CCTK_INT FUNCTION MoLRegisterEvolved(
+      CCTK_INT IN EvolvedIndex,
+      CCTK_INT IN RHSIndex)
+CCTK_INT FUNCTION MoLRegisterEvolvedGroup(
+      CCTK_INT IN EvolvedIndex,
+      CCTK_INT IN RHSIndex)
+CCTK_INT FUNCTION MoLRegisterSaveAndRestoreGroup(
+      CCTK_INT IN SandRIndex)
+
+USES FUNCTION MoLRegisterEvolved
+USES FUNCTION MoLRegisterEvolvedGroup
+USES FUNCTION MoLRegisterSaveAndRestoreGroup

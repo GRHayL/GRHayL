@@ -14,7 +14,7 @@
 #include "IGM.h"
 
 void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS;
+  DECLARE_CCTK_ARGUMENTS_convert_from_ADMBase_HydroBase_to_GRHayL_IGM;
   DECLARE_CCTK_PARAMETERS;
 
   const double poison = 0.0/0.0;
@@ -23,7 +23,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
   GRHayL_convert_ADM_to_BSSN(cctkGH,
                              gxx, gxy, gxz, gyy, gyz, gzz,
-                             alp, phi_bssn, psi_bssn,
+                             phi_bssn, psi_bssn,
                              gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
                              gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
 
@@ -36,50 +36,50 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
   for(int k=0; k<kmax; k++)
     for(int j=0; j<jmax; j++)
       for(int i=0; i<imax; i++) {
-	const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-
-//TODO: this references simple gamma law; clearly needs to be extended to more EOS types
-	// P = (\Gamma - 1) rho epsilon
-	// -> \Gamma = P/(rho epsilon) + 1
-	const double measured_gamma = ( press[index]/(rho[index] * eps[index]) + 1.0 );
-	if(rho[index]>grhayl_eos->rho_atm && fabs(grhayl_eos->Gamma_th - measured_gamma)/grhayl_eos->Gamma_th > 1e-2)
-	  CCTK_VERROR("Expected simple gamma law with gamma_th=%.15e, but found a point with gamma law such that gamma_th=%.15e. error = %e| rb=%e rbatm=%e P=%e\n",
+        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+        
+        //TODO: this references simple gamma law; clearly needs to be extended to more EOS types
+        // P = (\Gamma - 1) rho epsilon
+        // -> \Gamma = P/(rho epsilon) + 1
+        const double measured_gamma = ( press[index]/(rho[index] * eps[index]) + 1.0 );
+        if(rho[index]>grhayl_eos->rho_atm && fabs(grhayl_eos->Gamma_th - measured_gamma)/grhayl_eos->Gamma_th > 1e-2)
+          CCTK_VERROR("Expected simple gamma law with gamma_th=%.15e, but found a point with gamma law such that gamma_th=%.15e. error = %e| rb=%e rbatm=%e P=%e\n",
                       grhayl_eos->Gamma_th, measured_gamma, (grhayl_eos->Gamma_th-measured_gamma)/grhayl_eos->Gamma_th, rho[index], grhayl_eos->rho_atm, press[index] );
-
-	Ax[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
-	Ay[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
-	Az[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
-	phitilde[index] = Aphi[index];
-
-	const double ETvx = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
-	const double ETvy = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
-	const double ETvz = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
-
-	// IllinoisGRMHD defines v^i = u^i/u^0.
-
-	// Meanwhile, the ET/HydroBase formalism, called the Valencia
-	// formalism, splits the 4 velocity into a purely spatial part
-	// and a part that is normal to the spatial hypersurface:
-	// u^a = G (n^a + U^a), (Eq. 14 of arXiv:1304.5544; G=W, U^a=v^a)
-	// where n^a is the unit normal vector to the spatial hypersurface,
-	// n_a = {-\alpha,0,0,0}, and U^a is the purely spatial part, which
-	// is defined in HydroBase as the vel[] vector gridfunction.
-	// Then u^a n_a = - \alpha u^0 = G n^a n_a = -G, and
-	// of course \alpha u^0 = 1/sqrt(1+γ^ij u_i u_j) = \Gamma,
-	// the standard Lorentz factor.
-
-	// Note that n^i = - \beta^i / \alpha, so
-	// u^a = \Gamma (n^a + U^a)
-	// -> u^i = \Gamma ( U^i - \beta^i / \alpha )
-	// which implies
-	// v^i = u^i/u^0
-	//     = \Gamma/u^0 ( U^i - \beta^i / \alpha ) <- \Gamma = \alpha u^0
-	//     = \alpha ( U^i - \beta^i / \alpha )
-	//     = \alpha U^i - \beta^i
-
-	vx[index] = alp[index]*ETvx - betax[index];
-	vy[index] = alp[index]*ETvy - betay[index];
-	vz[index] = alp[index]*ETvz - betaz[index];
+        
+        Ax[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
+        Ay[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
+        Az[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
+        phitilde[index] = Aphi[index];
+        
+        const double ETvx = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
+        const double ETvy = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
+        const double ETvz = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
+        
+        // IllinoisGRMHD defines v^i = u^i/u^0.
+        
+        // Meanwhile, the ET/HydroBase formalism, called the Valencia
+        // formalism, splits the 4 velocity into a purely spatial part
+        // and a part that is normal to the spatial hypersurface:
+        // u^a = G (n^a + U^a), (Eq. 14 of arXiv:1304.5544; G=W, U^a=v^a)
+        // where n^a is the unit normal vector to the spatial hypersurface,
+        // n_a = {-\alpha,0,0,0}, and U^a is the purely spatial part, which
+        // is defined in HydroBase as the vel[] vector gridfunction.
+        // Then u^a n_a = - \alpha u^0 = G n^a n_a = -G, and
+        // of course \alpha u^0 = 1/sqrt(1+γ^ij u_i u_j) = \Gamma,
+        // the standard Lorentz factor.
+        
+        // Note that n^i = - \beta^i / \alpha, so
+        // u^a = \Gamma (n^a + U^a)
+        // -> u^i = \Gamma ( U^i - \beta^i / \alpha )
+        // which implies
+        // v^i = u^i/u^0
+        //     = \Gamma/u^0 ( U^i - \beta^i / \alpha ) <- \Gamma = \alpha u^0
+        //     = \alpha ( U^i - \beta^i / \alpha )
+        //     = \alpha U^i - \beta^i
+        
+        vx[index] = alp[index]*ETvx - betax[index];
+        vy[index] = alp[index]*ETvy - betay[index];
+        vz[index] = alp[index]*ETvz - betaz[index];
   }
 
   // Neat feature for debugging: Add a roundoff-error perturbation
@@ -90,18 +90,18 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
   for(int k=0; k<kmax; k++)
     for(int j=0; j<jmax; j++)
       for(int i=0; i<imax; i++) {
-	const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-	const double pert = (random_pert*(double)rand() / RAND_MAX);
-	const double one_plus_pert=(1.0+pert);
-	rho[index]*=one_plus_pert;
-	vx[index]*=one_plus_pert;
-	vy[index]*=one_plus_pert;
-	vz[index]*=one_plus_pert;
+        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const double pert = (random_pert*(double)rand() / RAND_MAX);
+        const double one_plus_pert=(1.0+pert);
+        rho[index]*=one_plus_pert;
+        vx[index]*=one_plus_pert;
+        vy[index]*=one_plus_pert;
+        vz[index]*=one_plus_pert;
 
-	phitilde[index]*=one_plus_pert;
-	Ax[index]*=one_plus_pert;
-	Ay[index]*=one_plus_pert;
-	Az[index]*=one_plus_pert;
+        phitilde[index]*=one_plus_pert;
+        Ax[index]*=one_plus_pert;
+        Ay[index]*=one_plus_pert;
+        Az[index]*=one_plus_pert;
   }
 
   // Next compute B & B_stagger from A_i. Note that this routine also depends on
@@ -288,6 +288,9 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
                           &vx[index], &vy[index], &vz[index],
                           &Bx_center[index], &By_center[index], &Bz_center[index],
                           &dummy1, &dummy2, &dummy3);
+//TODO: add support for other vars; might need to depend on whether these vars
+//      have storage allocated by looking at params
+//                          &entropy[index], &Y_e[index], &temperature[index]);
 
         return_conservatives(&cons,
                           &rho_star[index], &tau[index],
@@ -295,7 +298,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
                           &dummy1, &dummy2);
 //TODO: add support for other vars; might need to depend on whether these vars
 //      have storage allocated by looking at params
-//                          Y_e[index], entropy[index]
+//                          &Y_e[index], &entropy[index]);
 
         if(grhayl_params->update_Tmunu) {
           eTtt[index] = Tmunu.Ttt;

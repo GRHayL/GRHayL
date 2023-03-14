@@ -1,3 +1,10 @@
+# Parameter definitions for thorn GRHayL_IGM
+
+#TODO: only needed if we keep the STORAGE for ADMBase in the schedule
+shares: ADMBase
+USES CCTK_INT lapse_timelevels
+USES CCTK_INT shift_timelevels
+USES CCTK_INT metric_timelevels
 
 #########################################################
 
@@ -7,6 +14,25 @@ KEYWORD Symmetry "Currently only no symmetry supported, though work has begun in
   "none"       :: "no symmetry, full 3d domain"
 } "none"
 
+REAL Sym_Bz "In-progress equatorial symmetry support: Symmetry parameter across z axis for magnetic fields = +/- 1"
+{
+ -1.0:1.0 :: "Set to +1 or -1."
+} 1.0
+
+#########################################################
+
+# OUTER BOUNDARY CONDITION CHOICE
+KEYWORD Matter_BC "Chosen Matter boundary condition"
+{
+  "outflow" :: "Outflow boundary conditions"
+  "frozen"  :: "Frozen boundaries"
+} "outflow"
+
+KEYWORD EM_BC "EM field boundary condition"
+{
+  "copy"    :: "Copy data from nearest boundary point"
+  "frozen"  :: "Frozen boundaries"
+} "copy"
 #########################################################
 
 # Verbosity Level

@@ -5,7 +5,7 @@
 void GRHayL_convert_ADM_to_BSSN(const cGH *cctkGH,
       double *gxx, double *gxy, double *gxz,
       double *gyy, double *gyz, double *gzz,
-      double *lapse, double *phi, double *psi,
+      double *phi, double *psi,
       double *gtxx, double *gtxy, double *gtxz,
       double *gtyy, double *gtyz, double *gtzz,
       double *gtupxx, double *gtupxy, double *gtupxz,

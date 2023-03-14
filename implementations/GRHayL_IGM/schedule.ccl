@@ -1,0 +1,122 @@
+# Schedule for thorn GRHayL_IGM
+
+#TODO: This should be done by ADMBase; no need to do it here, best I can tell
+STORAGE: ADMBase::metric[metric_timelevels], ADMBase::curv[metric_timelevels], ADMBase::lapse[lapse_timelevels], ADMBase::shift[shift_timelevels]
+
+# Since the evolution code uses some HydroBase quantities, it is
+# important to set certain HydroBase parameters for intended behavior:
+# HydroBase::prolongation_type = 'none'
+# HydroBase::timelevels = 1
+#TODO: is this needed?
+# This will only allocate a single timelevel of storage if it's not already been allocated.
+STORAGE: HydroBase::Avec[1], HydroBase::Aphi[1]
+
+STORAGE: BSSN_quantities
+STORAGE: grmhd_conservatives[3], em_Ax[3], em_Ay[3], em_Az[3], em_psi6phi[3] 
+STORAGE: grmhd_primitives_allbutBi, grmhd_B_center, grmhd_B_stagger
+STORAGE: grmhd_conservatives_rhs, EM_rhs
+
+STORAGE: grmhd_primitives_reconstructed_temps, grmhd_cmin_cmax_temps, grmhd_flux_temps, diagnostic_gfs
+
+#########################################################
+
+# Basic registration of MoL RHS, symmetries, and boundary conditions (for PreSync)
+schedule GRHayL_IGM_RegisterVars in MoL_Register after BSSN_RegisterVars after lapse_RegisterVars
+{
+  LANG: C
+  OPTIONS: META
+} "Register evolved, rhs variables in GRHayL_IGM for MoL"
+
+# Tells the symmetry thorn how to apply symmetries on each gridfunction
+schedule GRHayL_IGM_InitSymBound at BASEGRID after Lapse_InitSymBound
+{
+  LANG: C
+} "Schedule symmetries"
+
+#########################################################
+
+# Fill GRHayL_IGM grid functions using initial data from ADMBase and HydroBase
+schedule group GRHayL_IGM_ID_Converter at CCTK_INITIAL after HydroBase_Initial before Convert_to_HydroBase
+{
+} "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayL_IGM"
+
+schedule convert_from_ADMBase_HydroBase_to_GRHayL_IGM IN GRHayL_IGM_ID_Converter as first_initialdata before TOV_Initial_Data
+{
+   LANG:       C
+   OPTIONS:    LOCAL
+   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+   READS:  HydroBase::rho, HydroBase::press, HydroBase::eps,
+           HydroBase::vel, HydroBase::Y_e, HydroBase::entropy,
+           HydroBase::temperature, HydroBase::Avec, HydroBase::Aphi
+   WRITES: grmhd_B_center, grmhd_B_stagger, grmhd_primitives_allbutBi,
+           BSSN_quantities, grmhd_conservatives,
+           Ax, Ay, Az, phitilde
+   # GRHayL_convert_ADM_to_BSSN enforces detgij=1
+   WRITES: ADMBase::metric
+   # Enforced limits on primitives can change the primitives
+   WRITES: HydroBase::rho, HydroBase::press, HydroBase::eps,
+           HydroBase::Y_e, HydroBase::entropy, HydroBase::temperature
+   WRITES: TmunuBase::stress_energy_scalar,
+           TmunuBase::stress_energy_vector,
+           TmunuBase::stress_energy_tensor
+   # What the heck, let's synchronize everything!
+   #TODO: determine proper behavior here
+   #SC: I highly doubt we need to sync ADMBase after this; we're reading it everywhere, so automated syncs will sync before.
+   #    Since all loops are everywhere, there should be no need for syncs at all, but if we aren't confident that things
+   #    have been properly synced beforehand, it would make more sense to only loop over interiors and then sync everything,
+   #    not both.
+   SYNC: grmhd_B_center, grmhd_B_stagger, grmhd_primitives_allbutBi, em_Ax, em_Ay, em_Az, em_psi6phi, grmhd_conservatives, BSSN_quantities, ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
+} "Convert HydroBase initial data (ID) to GRHayL_IGM variables and enforce simulation limits on primitives."
+
+#TODO: I don't think we need to schedule this twice. Already scheduled in BASEGRID.
+#      Also, these syncs happened in the previous function, so why do them again? A lot of extra computation going on in here
+schedule GRHayL_IGM_InitSymBound IN GRHayL_IGM_ID_Converter as second_initialdata after first_initialdata
+{
+  SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
+  LANG: C
+} "Schedule symmetries -- Actually just a placeholder function to ensure prolongation / processor syncs are done BEFORE the primitives solver."
+
+#TODO: Again, syncs are being done despite the fact that the function loops over all points; either sync or loop everywhere, not both
+schedule GRHayL_IGM_compute_B_and_Bstagger_from_A IN GRHayL_IGM_ID_Converter as third_initialdata after second_initialdata
+{
+  LANG: C
+  READS:  GRID::coordinates
+  READS:  phi_bssn, phitilde, Ax, Ay, Az
+  #Technically only writes Ai and phitilde in symmetry gz's
+  WRITES: psi_bssn(everywhere), phitilde(everywhere),
+          Ax(everywhere), Ay(everywhere), Az(everywhere),
+          grmhd_B_center(everywhere), grmhd_B_stagger(everywhere)
+  SYNC: grmhd_B_center, grmhd_B_stagger
+} "Compute B and B_stagger from A"
+
+#schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_ID_Converter as fourth_initialdata after third_initialdata
+#{
+#  LANG: C
+#} "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
+
+#########################################################
+
+#GRHayL_IGM_PostPostInitial_Set_Symmetries__Copy_Timelevels
+#        rho_star_p[index] = rho_star[index];
+#        tau_p[index] = tau[index];
+#        mhd_st_x_p[index] = mhd_st_x[index];
+#        mhd_st_y_p[index] = mhd_st_y[index];
+#        mhd_st_z_p[index] = mhd_st_z[index];
+#
+#        psi6phi_p[index] = psi6phi[index];
+#        Ax_p[index] = Ax[index];
+#        Ay_p[index] = Ay[index];
+#        Az_p[index] = Az[index];
+#
+#        rho_star_p_p[index] = rho_star[index];
+#        tau_p_p[index] = tau[index];
+#        mhd_st_x_p_p[index] = mhd_st_x[index];
+#        mhd_st_y_p_p[index] = mhd_st_y[index];
+#        mhd_st_z_p_p[index] = mhd_st_z[index];
+#
+#        psi6phi_p_p[index] = psi6phi[index];
+#        Ax_p_p[index] = Ax[index];
+#        Ay_p_p[index] = Ay[index];
+#        Az_p_p[index] = Az[index];
+#      }
+#}

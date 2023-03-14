@@ -3,11 +3,15 @@
 # Source files in this directory
 SRCS = A_no_gauge_rhs.c                               \
        calculate_MHD_rhs.c                            \
+       compute_B_and_Bstagger_from_A.c                \
        conservs_to_prims.c                            \
        convert_ADM_to_BSSN.c                          \
        convert_from_ADMBase_HydroBase_to_GRHayL_IGM.c \
        evaluate_MHD_rhs.c                             \
+       InitSymBound.c                                 \
        interpolate_to_face_and_initialize_metric.c    \
+       MoL_registration.c                             \
        phitilde_and_A_gauge_rhs.c                     \
        reconstruction_loop.c                          \
-       reconstruction_loop_no_rho_P.c
+       reconstruction_loop_no_rho_P.c                 \
+       symmetry_gzs_staggered.c
