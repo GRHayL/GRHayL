@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
   // Data which should be written before it is used is poisoned to validate behavior.
   // RHSs for A are set to 0 because they are assumed to already contain the zero-gauge
   // contribution to the RHS before entering this function.
-  const double poison = 1e200;
+  const double poison = 1e300;
 
 #pragma omp parallel for
   for(int k=0; k<dirlength; k++)

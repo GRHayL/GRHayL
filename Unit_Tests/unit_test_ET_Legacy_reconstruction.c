@@ -4,7 +4,7 @@
 static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
 
 int main(int argc, char **argv) {
-  const double poison = 1e200;
+  const double poison = 1e300;
 
   const double W_max = 10.0;
   const int neos = 1;

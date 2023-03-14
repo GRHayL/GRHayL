@@ -58,9 +58,9 @@ int main(int argc, char **argv) {
   int key = fread(&dirlength, sizeof(int), 1, infile);
   const int ghostzone = 3;
   const int arraylength = dirlength*dirlength*dirlength;
-  double invdx = 1.0/0.1;
+  const double invdx = 1.0/0.1;
 
-  const double poison = 0.0/0.0;
+  const double poison = 1e300;
 
   eos_parameters eos;
   eos.compute_h_and_cs2 = &compute_h_and_cs2;  

@@ -19,22 +19,22 @@ int main(int argc, char **argv) {
                  "is up-to-date with current test version.\n");
   const int arraylength = npoints*npoints;
 
-  double poison = 1e200;
+  const double poison = 1e300;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  int backup_routine[3] = {None,None,None};
-  bool calc_prims_guess = true;
-  double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
-  int update_Tmunu = 1; //IGM default
+  const int backup_routine[3] = {None,None,None};
+  const bool calc_prims_guess = true;
+  const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
+  const int update_Tmunu = 1; //IGM default
 
-  int neos = 1;
-  double W_max = 10.0; //IGM default
-  double rho_b_min = 1e-12;
-  double rho_b_max = 1e300; //IGM default
-  double Gamma_th = 2.0; //Taken from magnetizedTOV.par
-  double rho_ppoly[1] = {0.0};
-  double Gamma_ppoly[1] = {2.0};
-  double k_ppoly0 = 1.0;
+  const int neos = 1;
+  const double W_max = 10.0; //IGM default
+  const double rho_b_min = 1e-12;
+  const double rho_b_max = 1e300; //IGM default
+  const double Gamma_th = 2.0; //Taken from magnetizedTOV.par
+  const double rho_ppoly[1] = {0.0};
+  const double Gamma_ppoly[1] = {2.0};
+  const double k_ppoly0 = 1.0;
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
