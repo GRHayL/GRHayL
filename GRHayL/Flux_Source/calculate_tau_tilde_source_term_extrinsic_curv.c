@@ -2,7 +2,7 @@
 /*
  * Add extrinsic curvature source term for tau_tilde
  */
-void calculate_tau_tilde_source_term_extrinsic_curv(const primitive_quantities *restrict prims, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric, const extrinsic_curvature *restrict curv, const metric_derivatives *restrict metric_derivs, conservative_quantities *restrict cons) {
+void calculate_tau_tilde_source_term_extrinsic_curv(const primitive_quantities *restrict prims, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric, const extrinsic_curvature *restrict curv, conservative_quantities *restrict cons) {
 
 {
 

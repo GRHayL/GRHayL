@@ -90,28 +90,16 @@ int main(int argc, char **argv) {
   double *face_gzz   = (double*) malloc(sizeof(double)*arraylength);
 
   // Allocate memory for metric quantity derivatives
-  double *D_lapse[3];
-  double *D_betax[3];
-  double *D_betay[3];
-  double *D_betaz[3];
-  double *D_gxx[3];
-  double *D_gxy[3];
-  double *D_gxz[3];
-  double *D_gyy[3];
-  double *D_gyz[3];
-  double *D_gzz[3];
-  for(int i=0; i<3; i++) {
-    D_lapse[i] = (double*) malloc(sizeof(double)*arraylength);
-    D_betax[i] = (double*) malloc(sizeof(double)*arraylength);
-    D_betay[i] = (double*) malloc(sizeof(double)*arraylength);
-    D_betaz[i] = (double*) malloc(sizeof(double)*arraylength);
-    D_gxx[i]   = (double*) malloc(sizeof(double)*arraylength);
-    D_gxy[i]   = (double*) malloc(sizeof(double)*arraylength);
-    D_gxz[i]   = (double*) malloc(sizeof(double)*arraylength);
-    D_gyy[i]   = (double*) malloc(sizeof(double)*arraylength);
-    D_gyz[i]   = (double*) malloc(sizeof(double)*arraylength);
-    D_gzz[i]   = (double*) malloc(sizeof(double)*arraylength);
-  }
+  double * D_lapse = (double*) malloc(sizeof(double)*arraylength);
+  double * D_betax = (double*) malloc(sizeof(double)*arraylength);
+  double * D_betay = (double*) malloc(sizeof(double)*arraylength);
+  double * D_betaz = (double*) malloc(sizeof(double)*arraylength);
+  double * D_gxx   = (double*) malloc(sizeof(double)*arraylength);
+  double * D_gxy   = (double*) malloc(sizeof(double)*arraylength);
+  double * D_gxz   = (double*) malloc(sizeof(double)*arraylength);
+  double * D_gyy   = (double*) malloc(sizeof(double)*arraylength);
+  double * D_gyz   = (double*) malloc(sizeof(double)*arraylength);
+  double * D_gzz   = (double*) malloc(sizeof(double)*arraylength);
 
   // Allocate memory for extrinsic curvature
   double *kxx   = (double*) malloc(sizeof(double)*arraylength);
@@ -212,6 +200,11 @@ int main(int argc, char **argv) {
   void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
                               const eos_parameters *restrict, const metric_quantities *restrict, conservative_quantities *restrict);
 
+  // Function pointer to allow for loop over directional source terms
+  void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict, const metric_quantities *restrict, 
+  const metric_derivatives *restrict, conservative_quantities *restrict);
+
+
   // Loop over flux directions (x,y,z)
   for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
     const int xdir = (flux_dirn == 0);
@@ -222,12 +215,15 @@ int main(int argc, char **argv) {
     switch(flux_dirn) {
       case 0:
         calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn0;
+        calculate_source_terms = &calculate_source_terms_dirn0;
         break;
       case 1:
         calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn1;
+        calculate_source_terms = &calculate_source_terms_dirn1;
         break;
       case 2:
         calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn2;
+        calculate_source_terms = &calculate_source_terms_dirn2;
         break;
     }
 
@@ -325,16 +321,55 @@ int main(int argc, char **argv) {
           S_y_rhs[index] += invdx*(S_y_flux[index] - S_y_flux[indp1]);
           S_z_rhs[index] += invdx*(S_z_flux[index] - S_z_flux[indp1]);
 
-          D_lapse[flux_dirn][index] = invdx*(face_lapse[indp1] - face_lapse[index]);
-          D_betax[flux_dirn][index] = invdx*(face_betax[indp1] - face_betax[index]);
-          D_betay[flux_dirn][index] = invdx*(face_betay[indp1] - face_betay[index]);
-          D_betaz[flux_dirn][index] = invdx*(face_betaz[indp1] - face_betaz[index]);
-          D_gxx[flux_dirn][index] = invdx*(face_gxx[indp1] - face_gxx[index]);
-          D_gxy[flux_dirn][index] = invdx*(face_gxy[indp1] - face_gxy[index]);
-          D_gxz[flux_dirn][index] = invdx*(face_gxz[indp1] - face_gxz[index]);
-          D_gyy[flux_dirn][index] = invdx*(face_gyy[indp1] - face_gyy[index]);
-          D_gyz[flux_dirn][index] = invdx*(face_gyz[indp1] - face_gyz[index]);
-          D_gzz[flux_dirn][index] = invdx*(face_gzz[indp1] - face_gzz[index]);
+          D_lapse[index] = invdx*(face_lapse[indp1] - face_lapse[index]);
+          D_betax[index] = invdx*(face_betax[indp1] - face_betax[index]);
+          D_betay[index] = invdx*(face_betay[indp1] - face_betay[index]);
+          D_betaz[index] = invdx*(face_betaz[indp1] - face_betaz[index]);
+          D_gxx[index] = invdx*(face_gxx[indp1] - face_gxx[index]);
+          D_gxy[index] = invdx*(face_gxy[indp1] - face_gxy[index]);
+          D_gxz[index] = invdx*(face_gxz[indp1] - face_gxz[index]);
+          D_gyy[index] = invdx*(face_gyy[indp1] - face_gyy[index]);
+          D_gyz[index] = invdx*(face_gyz[indp1] - face_gyz[index]);
+          D_gzz[index] = invdx*(face_gzz[indp1] - face_gzz[index]);
+
+          metric_derivatives metric_derivs;
+          metric_derivs.lapse[flux_dirn] = D_lapse[index];
+          metric_derivs.betax[flux_dirn] = D_betax[index];
+          metric_derivs.betay[flux_dirn] = D_betay[index];
+          metric_derivs.betaz[flux_dirn] = D_betaz[index];
+          metric_derivs.adm_gxx[flux_dirn] = D_gxx[index];
+          metric_derivs.adm_gxy[flux_dirn] = D_gxy[index];
+          metric_derivs.adm_gxz[flux_dirn] = D_gxz[index];
+          metric_derivs.adm_gyy[flux_dirn] = D_gyy[index];
+          metric_derivs.adm_gyz[flux_dirn] = D_gyz[index];
+          metric_derivs.adm_gzz[flux_dirn] = D_gzz[index];
+
+          metric_quantities metric;
+          initialize_metric(lapse[index],
+                            gxx[index], gxy[index], gxz[index],
+                            gyy[index], gyz[index], gzz[index],
+                            betax[index], betay[index], betaz[index],
+                            &metric);
+
+          primitive_quantities prims;
+          initialize_primitives(rho[index], press[index], poison,
+                                vx[index], vy[index], vz[index],
+                                Bx[index], By[index], Bz[index],
+                                poison, poison, poison, // entropy, Y_e, temp
+                                &prims);
+          prims.u0  = rho[index]*Bx[index] / vy[index];
+          
+          conservative_quantities cons_sources;
+          calculate_source_terms(&prims,
+                                 &eos,
+                                 &metric,
+                                 &metric_derivs,
+                                 &cons_sources);
+
+          tau_rhs[index] += cons_sources.tau;
+          S_x_rhs[index] += cons_sources.S_x;
+          S_y_rhs[index] += cons_sources.S_y;
+          S_z_rhs[index] += cons_sources.S_z;
     }
   }
 
@@ -357,20 +392,6 @@ int main(int argc, char **argv) {
                           kyy[index], kyz[index], kzz[index],
                           &curv);
 
-        metric_derivatives metric_derivs;
-        for(int dirn=0; dirn<3; dirn++) {
-          metric_derivs.lapse[dirn] = D_lapse[dirn][index];
-          metric_derivs.betax[dirn] = D_betax[dirn][index];
-          metric_derivs.betay[dirn] = D_betay[dirn][index];
-          metric_derivs.betaz[dirn] = D_betaz[dirn][index];
-          metric_derivs.adm_gxx[dirn] = D_gxx[dirn][index];
-          metric_derivs.adm_gxy[dirn] = D_gxy[dirn][index];
-          metric_derivs.adm_gxz[dirn] = D_gxz[dirn][index];
-          metric_derivs.adm_gyy[dirn] = D_gyy[dirn][index];
-          metric_derivs.adm_gyz[dirn] = D_gyz[dirn][index];
-          metric_derivs.adm_gzz[dirn] = D_gzz[dirn][index];
-        }
-
         primitive_quantities prims;
         initialize_primitives(rho[index], press[index], poison,
                               vx[index], vy[index], vz[index],
@@ -381,17 +402,13 @@ int main(int argc, char **argv) {
 
 
         conservative_quantities cons_sources;
-        calculate_all_source_terms(&prims,
-                                   &eos,
-                                   &metric,
-                                   &curv,
-                                   &metric_derivs,
-                                   &cons_sources);
+        calculate_tau_tilde_source_term_extrinsic_curv(&prims,
+                                                       &eos,
+                                                       &metric,
+                                                       &curv,
+                                                       &cons_sources);
                                     
         tau_rhs[index] += cons_sources.tau;
-        S_x_rhs[index] += cons_sources.S_x;
-        S_y_rhs[index] += cons_sources.S_y;
-        S_z_rhs[index] += cons_sources.S_z;
   }
 
   fclose(infile);
@@ -484,12 +501,10 @@ int main(int argc, char **argv) {
   free(face_gyy); free(face_gyz); free(face_gzz);
   free(face_lapse);
   free(face_betax); free(face_betay); free(face_betaz);
-  for(int i=0; i<3; i++) {
-    free(D_gxx[i]); free(D_gxy[i]); free(D_gxz[i]);
-    free(D_gyy[i]); free(D_gyz[i]); free(D_gzz[i]);
-    free(D_lapse[i]);
-    free(D_betax[i]); free(D_betay[i]); free(D_betaz[i]);
-  }
+  free(D_gxx); free(D_gxy); free(D_gxz);
+  free(D_gyy); free(D_gyz); free(D_gzz);
+  free(D_lapse);
+  free(D_betax); free(D_betay); free(D_betaz);
   grhayl_info("ET_Legacy flux/source test has passed!\n");
   free(kxx); free(kxy); free(kxz);
   free(kyy); free(kyz); free(kzz);

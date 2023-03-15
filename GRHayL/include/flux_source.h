@@ -51,36 +51,28 @@ void calculate_HLLE_fluxes_dirn2(const primitive_quantities *restrict prims_r,
       const metric_quantities *restrict metric_face, 
       conservative_quantities *restrict cons);
 
-void calculate_all_source_terms(const primitive_quantities *restrict prims, 
-      const eos_parameters *restrict eos, 
-      const metric_quantities *restrict metric,
-      const extrinsic_curvature *restrict curv, 
-      const metric_derivatives *restrict metric_derivs, 
-      conservative_quantities *restrict cons);
-
-void calculate_tau_tilde_source_term(
+void calculate_tau_tilde_source_term_extrinsic_curv(
       const primitive_quantities *restrict prims,
       struct eos_parameters const *restrict eos,
       const metric_quantities *restrict metric,
       const extrinsic_curvature *restrict curv,
-      const metric_derivatives *restrict metric_derivs,
       conservative_quantities *restrict cons);
 
-void calculate_Stilde_source_term_dirn0(
+void calculate_source_terms_dirn0(
       const primitive_quantities *restrict prims,
       struct eos_parameters const *restrict eos,
       const metric_quantities *restrict metric,
       const metric_derivatives *restrict metric_derivs,
       conservative_quantities *restrict cons);
 
-void calculate_Stilde_source_term_dirn1(
+void calculate_source_terms_dirn1(
       const primitive_quantities *restrict prims,
       struct eos_parameters const *restrict eos,
       const metric_quantities *restrict metric,
       const metric_derivatives *restrict metric_derivs,
       conservative_quantities *restrict cons);
 
-void calculate_Stilde_source_term_dirn2(
+void calculate_source_terms_dirn2(
       const primitive_quantities *restrict prims,
       struct eos_parameters const *restrict eos,
       const metric_quantities *restrict metric,

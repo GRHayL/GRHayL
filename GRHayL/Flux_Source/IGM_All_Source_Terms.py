@@ -230,7 +230,6 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
         params  += "struct eos_parameters const *restrict eos, "
         params  += "const metric_quantities *restrict metric, "
         params  += "const extrinsic_curvature *restrict curv, "
-        params  += "const metric_derivatives *restrict metric_derivs, "
         params  += "conservative_quantities *restrict cons"
 
         outCfunction(
