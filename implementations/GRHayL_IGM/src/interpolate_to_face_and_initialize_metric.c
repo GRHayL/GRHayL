@@ -32,55 +32,17 @@ void interpolate_to_face_and_initialize_metric(
   const int index  = CCTK_GFINDEX3D(cctkGH, i,        j ,       k);
   const int indp1  = CCTK_GFINDEX3D(cctkGH, i+xdir,   j+ydir,   k+zdir);
 
-  const double face_lapse = COMPUTE_FCVAL(lapse[indm2],
-                                   lapse[indm1],
-                                   lapse[index],
-                                   lapse[indp1]);
+  const double face_lapse = COMPUTE_FCVAL(lapse[indm2], lapse[indm1], lapse[index], lapse[indp1]);
+  const double face_betax = COMPUTE_FCVAL(betax[indm2], betax[indm1], betax[index], betax[indp1]);
+  const double face_betay = COMPUTE_FCVAL(betay[indm2], betay[indm1], betay[index], betay[indp1]);
+  const double face_betaz = COMPUTE_FCVAL(betaz[indm2], betaz[indm1], betaz[index], betaz[indp1]);
 
-  const double face_gxx = COMPUTE_FCVAL(gxx[indm2],
-                                 gxx[indm1],
-                                 gxx[index],
-                                 gxx[indp1]);
-
-  const double face_gxy = COMPUTE_FCVAL(gxy[indm2],
-                                 gxy[indm1],
-                                 gxy[index],
-                                 gxy[indp1]);
-
-  const double face_gxz = COMPUTE_FCVAL(gxz[indm2],
-                                 gxz[indm1],
-                                 gxz[index],
-                                 gxz[indp1]);
-
-  const double face_gyy = COMPUTE_FCVAL(gyy[indm2],
-                                 gyy[indm1],
-                                 gyy[index],
-                                 gyy[indp1]);
-
-  const double face_gyz = COMPUTE_FCVAL(gyz[indm2],
-                                 gyz[indm1],
-                                 gyz[index],
-                                 gyz[indp1]);
-
-  const double face_gzz = COMPUTE_FCVAL(gzz[indm2],
-                                 gzz[indm1],
-                                 gzz[index],
-                                 gzz[indp1]);
-
-  const double face_betax = COMPUTE_FCVAL(betax[indm2],
-                                   betax[indm1],
-                                   betax[index],
-                                   betax[indp1]);
-
-  const double face_betay = COMPUTE_FCVAL(betay[indm2],
-                                   betay[indm1],
-                                   betay[index],
-                                   betay[indp1]);
-
-  const double face_betaz = COMPUTE_FCVAL(betaz[indm2],
-                                   betaz[indm1],
-                                   betaz[index],
-                                   betaz[indp1]);
+  const double face_gxx = COMPUTE_FCVAL(gxx[indm2], gxx[indm1], gxx[index], gxx[indp1]);
+  const double face_gxy = COMPUTE_FCVAL(gxy[indm2], gxy[indm1], gxy[index], gxy[indp1]);
+  const double face_gxz = COMPUTE_FCVAL(gxz[indm2], gxz[indm1], gxz[index], gxz[indp1]);
+  const double face_gyy = COMPUTE_FCVAL(gyy[indm2], gyy[indm1], gyy[index], gyy[indp1]);
+  const double face_gyz = COMPUTE_FCVAL(gyz[indm2], gyz[indm1], gyz[index], gyz[indp1]);
+  const double face_gzz = COMPUTE_FCVAL(gzz[indm2], gzz[indm1], gzz[index], gzz[indp1]);
 
   initialize_metric(face_lapse,
                     face_gxx, face_gxy, face_gxz,

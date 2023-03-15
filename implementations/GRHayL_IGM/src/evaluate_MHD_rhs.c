@@ -41,7 +41,7 @@
 #include "IGM.h"
 
 void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS//_GRHayL_IGM_evaluate_MHD_rhs;
+  DECLARE_CCTK_ARGUMENTS_GRHayL_IGM_evaluate_MHD_rhs;
   DECLARE_CCTK_PARAMETERS;
 
   if(CCTK_Equals(verbose, "essential+iteration output")) {
@@ -87,8 +87,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   in_prims[ww]=vyl;        out_prims_r[ww]=vylr;        out_prims_l[ww]=vyll;        ww++;
   in_prims[ww]=vzl;        out_prims_r[ww]=vzlr;        out_prims_l[ww]=vzll;        ww++;
 
-  const double *cmin[3] = {cmin_x, cmin_y, cmin_z};
-  const double *cmax[3] = {cmax_x, cmax_y, cmax_z};
+  //const double *cmin[3] = {cmin_x, cmin_y, cmin_z};
+  //const double *cmax[3] = {cmax_x, cmax_y, cmax_z};
 
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
   GRHayL_convert_ADM_to_BSSN(cctkGH,
@@ -103,12 +103,12 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   metric[BETAX]= betax;
   metric[BETAY]= betay;
   metric[BETAZ]= betaz;
-  metric[GXX]  = gtxx;
-  metric[GXY]  = gtxy;
-  metric[GXZ]  = gtxz;
-  metric[GYY]  = gtyy;
-  metric[GYZ]  = gtyz;
-  metric[GZZ]  = gtzz;
+  metric[GXX]  = gxx;
+  metric[GXY]  = gxy;
+  metric[GXZ]  = gxz;
+  metric[GYY]  = gyy;
+  metric[GYZ]  = gyz;
+  metric[GZZ]  = gzz;
 
 //  /* SET POINTERS TO STRESS-ENERGY TENSOR GRIDFUNCTIONS */
 //  CCTK_REAL *TUPmunu[10];// "TUPmunu" here is array of pointers to the actual gridfunctions.

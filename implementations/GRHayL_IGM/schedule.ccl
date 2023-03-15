@@ -178,20 +178,19 @@ schedule GRHayL_IGM_PostPostInitial_Set_Symmetries__Copy_Timelevels in GRHayL_IG
 #########################################################
 # RHS EVALUATION
 #########################################################
-#STORAGE: BSSN_quantities
-#STORAGE: grmhd_conservatives[3], em_Ax[3], em_Ay[3], em_Az[3], em_psi6phi[3] 
-#STORAGE: grmhd_primitives_allbutBi, grmhd_B_center, grmhd_B_stagger
-#STORAGE: grmhd_conservatives_rhs, EM_rhs
-#schedule GRHayL_IGM_evaluate_MHD_rhs in MoL_CalcRHS as GRHayL_IGM_RHS_eval after bssn_rhs after shift_rhs
-#{
-#  LANG: C
-#  WRITES: grmhd_primitives_reconstructed_temps, grmhd_cmin_cmax_temps, grmhd_flux_temps
-#  WRITES: grmhd_primitives_reconstructed_temps, grmhd_cmin_cmax_temps, grmhd_flux_temps
-#  GRHayL_convert_ADM_to_BSSN(cctkGH,
-#                             gxx, gxy, gxz, gyy, gyz, gzz,
-#                             phi_bssn, psi_bssn,
-#                             gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
-#} "Evaluate RHSs of GR Hydro & GRMHD equations"
+
+schedule GRHayL_IGM_evaluate_MHD_rhs in MoL_CalcRHS as GRHayL_IGM_RHS_eval after bssn_rhs after shift_rhs
+{
+  LANG: C
+  READS:   ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:   HydroBase::rho, HydroBase::press
+  READS:   grmhd_primitives_allbutBi, grmhd_B_center,
+           grmhd_B_stagger, phitilde, Ax, Ay, Az
+  WRITES:  ADMBase::metric(everywhere), ADMBase::lapse(everywhere), ADMBase::shift(everywhere)
+  WRITES:  BSSN_quantities(everywhere),
+           grmhd_primitives_reconstructed_temps, grmhd_flux_temps, #grmhd_cmin_cmax_temps, currently GFs aren't being set, have to just recompute
+           grmhd_conservatives_rhs, EM_rhs
+} "Evaluate RHSs of GR Hydro & GRMHD equations"
 
 #########################################################
 # COMPUTE B FROM A & RE-SOLVE FOR PRIMITIVES
