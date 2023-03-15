@@ -213,17 +213,31 @@ def compute_S_tilde_fluxUD(alpha, sqrtgammaDET, T4UD):
 
 # Step 5: Define source terms on RHSs of GRHD equations
 # Step 5.a: tau_tilde RHS source term s
+# def compute_tau_tilde_source_term(KDD,betaU,alpha, sqrtgammaDET,alpha_dD, T4UU):
+#     global tau_tilde_source_term
+#     tau_tilde_source_term = sp.sympify(0)
+#     for i in range(3):
+#         for j in range(3):
+#             tau_tilde_source_term += (T4UU[0][0]*betaU[i]*betaU[j] + 2*T4UU[0][i+1]*betaU[j] + T4UU[i+1][j+1])*KDD[i][j]
+
+#     for i in range(3):
+#         tau_tilde_source_term += -(T4UU[0][0]*betaU[i] + T4UU[0][i+1])*alpha_dD[i]
+
+#     tau_tilde_source_term *= alpha*sqrtgammaDET
+
 def compute_tau_tilde_source_term(KDD,betaU,alpha, sqrtgammaDET,alpha_dD, T4UU):
-    global tau_tilde_source_term
-    tau_tilde_source_term = sp.sympify(0)
+    global tau_tilde_source_term_1_3
+    global tau_tilde_source_term_2_3_A, tau_tilde_source_term_2_3_B, tau_tilde_source_term_2_3_C
+    tau_tilde_source_term_1_3 = sp.sympify(0)
     for i in range(3):
         for j in range(3):
-            tau_tilde_source_term += (T4UU[0][0]*betaU[i]*betaU[j] + 2*T4UU[0][i+1]*betaU[j] + T4UU[i+1][j+1])*KDD[i][j]
-
-    for i in range(3):
-        tau_tilde_source_term += -(T4UU[0][0]*betaU[i] + T4UU[0][i+1])*alpha_dD[i]
-
-    tau_tilde_source_term *= alpha*sqrtgammaDET
+            tau_tilde_source_term_1_3 += (T4UU[0][0]*betaU[i]*betaU[j] + 2*T4UU[0][i+1]*betaU[j] + T4UU[i+1][j+1])*KDD[i][j]
+            
+    tau_tilde_source_term_1_3 *= alpha*sqrtgammaDET
+    
+    tau_tilde_source_term_2_3_A = alpha*sqrtgammaDET*(-(T4UU[0][0]*betaU[0] + T4UU[0][0+1])*alpha_dD[0])
+    tau_tilde_source_term_2_3_B = alpha*sqrtgammaDET*(-(T4UU[0][0]*betaU[1] + T4UU[0][1+1])*alpha_dD[1])
+    tau_tilde_source_term_2_3_C = alpha*sqrtgammaDET*(-(T4UU[0][0]*betaU[2] + T4UU[0][2+1])*alpha_dD[2])
 
 # Step 5.b: Define source term on RHS of $\tilde{S}_i$ equation
 # Step 5.b.i: Compute g_{mu nu, i}, needed for the S tilde source term

@@ -59,13 +59,13 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outC
     GRMHD.compute_tau_tilde_source_term(GRMHD.KDD,GRMHD.betaU,GRMHD.alpha, GRMHD.sqrtgammaDET, GRMHD.alpha_dD, GRMHD.T4UU)
     GRMHD.compute_S_tilde_source_termD(GRMHD.alpha,GRMHD.sqrtgammaDET,GRMHD.g4DD_zerotimederiv_dD, GRMHD.T4UU)
     
-    tau_tilde_source_term_free_symbols = GRMHD.tau_tilde_source_term.free_symbols
+    # tau_tilde_source_term_free_symbols = GRMHD.tau_tilde_source_term.free_symbols
     S_tilde_source_termD0_free_symbols = GRMHD.S_tilde_source_termD[0].free_symbols
     S_tilde_source_termD1_free_symbols = GRMHD.S_tilde_source_termD[1].free_symbols
     S_tilde_source_termD2_free_symbols = GRMHD.S_tilde_source_termD[2].free_symbols
 
-    all_free_sysmbols = tau_tilde_source_term_free_symbols.union(\
-                                 S_tilde_source_termD0_free_symbols, 
+    # all_free_sysmbols = tau_tilde_source_term_free_symbols.union(\
+    all_free_sysmbols = S_tilde_source_termD0_free_symbols.union(\
                                  S_tilde_source_termD1_free_symbols,
                                  S_tilde_source_termD2_free_symbols)
 
@@ -154,13 +154,18 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
         prestring += "const double gammaDD11 = metric->adm_gyy;\n"
         prestring += "const double gammaDD12 = metric->adm_gyz;\n"
 
-        prestring += "const double gammaDD22 = metric->adm_gzz;\n"    
-
+        prestring += "const double gammaDD22 = metric->adm_gzz;\n"
+    
         vars_to_write = ["cons->S_x", "cons->S_y", "cons->S_z", "cons->tau"]
+        
         vars_rhs = [GRMHD.S_tilde_source_termD[0], 
                     GRMHD.S_tilde_source_termD[1], 
                     GRMHD.S_tilde_source_termD[2], 
-                    GRMHD.tau_tilde_source_term]
+                    GRMHD.tau_tilde_source_term_2_3_A, 
+                    GRMHD.tau_tilde_source_term_2_3_B, 
+                    GRMHD.tau_tilde_source_term_2_3_C,
+                    GRMHD.tau_tilde_source_term_1_3,
+                    ]
 
         c_type = "void"
 
@@ -171,8 +176,8 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
         params  += "conservative_quantities *restrict cons"
 
         for i in range(3):
-            desc = f"Add source term for {i}-component of Stilde"
-            name = f"calculate_Stilde_source_term_dirn{i}"
+            desc = f"Add source term for {i}-component of Stilde and tau_tilde"
+            name = f"calculate_source_terms_dirn{i}"
 
             loopstring = prestring
             loopstring += f"const double alpha_dD{i} = metric_derivs->lapse[{i}];\n"
@@ -191,7 +196,8 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
             loopstring += f"const double gammaDD_dD22{i} = metric_derivs->adm_gzz[{i}];\n"
 
 
-            body = outputC(vars_rhs[i], vars_to_write[i], params=outCparams, 
+            body = outputC([vars_rhs[i], vars_rhs[i+3]], [vars_to_write[i], vars_to_write[-1]],
+                                  params=outCparams, 
                        filename="returnstring", prestring=loopstring)
 
             outCfunction(
@@ -203,8 +209,8 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
                 body=body)
 
 
-        desc = "Add source term for tau_tilde"
-        name = "calculate_tau_tilde_source_term"    
+        desc = "Add extrinsic curvature source term for tau_tilde"
+        name = "calculate_tau_tilde_source_term_extrinsic_curv"    
 
         prestring += "const double KDD00 = curv->Kxx;\n"
         prestring += "const double KDD01 = curv->Kxy;\n"
@@ -217,10 +223,7 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 
         loopstring = prestring
 
-        for i in range(3):
-            loopstring += f"const double alpha_dD{i} = metric_derivs->lapse[{i}];\n"
-
-        body = outputC(vars_rhs[3], vars_to_write[3], params=outCparams, 
+        body = outputC(vars_rhs[-1], vars_to_write[-1], params=outCparams, 
                        filename="returnstring", prestring=loopstring)
 
         params  = "const primitive_quantities *restrict prims, "
