@@ -10,7 +10,6 @@ void GRHayL_convert_ADM_to_BSSN(const cGH *cctkGH,
       double *gtyy, double *gtyz, double *gtzz,
       double *gtupxx, double *gtupxy, double *gtupxz,
       double *gtupyy, double *gtupyz, double *gtupzz) {
-//  DECLARE_CCTK_PARAMETERS;
 
 #pragma omp parallel for
   for(int k=0; k<cctkGH->cctk_lsh[2]; k++)

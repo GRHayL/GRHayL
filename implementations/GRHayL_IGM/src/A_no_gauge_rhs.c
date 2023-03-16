@@ -39,7 +39,7 @@ void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
 
   // These are used to determine which components of v and
   // B are used in the computation.
-  const int v1_offset = (A_dir+1)%3, v2_offset = (A_dir-1)%3;
+  const int v1_offset = (A_dir+1)%3, v2_offset = (A_dir+2)%3;
 
   // This offsets the index by +1 in the perpendicular directions
   const int v_offset[3] = { !xdir, !ydir, !zdir };

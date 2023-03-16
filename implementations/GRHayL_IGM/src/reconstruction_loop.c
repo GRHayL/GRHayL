@@ -18,12 +18,12 @@ void reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const i
   const int ydir = (flux_dir == 1);
   const int zdir = (flux_dir == 2);
 
-  const int imin = 3*xdir;
-  const int imax = cctkGH->cctk_lsh[0] - 2*xdir;
-  const int jmin = 3*ydir;
-  const int jmax = cctkGH->cctk_lsh[1] - 2*ydir;
-  const int kmin = 3*zdir;
-  const int kmax = cctkGH->cctk_lsh[2] - 2*zdir;
+  const int imin = cctkGH->cctk_nghostzones[0]*xdir;
+  const int imax = cctkGH->cctk_lsh[0] - (cctkGH->cctk_nghostzones[0]-1)*xdir;
+  const int jmin = cctkGH->cctk_nghostzones[1]*ydir;
+  const int jmax = cctkGH->cctk_lsh[1] - (cctkGH->cctk_nghostzones[1]-1)*ydir;
+  const int kmin = cctkGH->cctk_nghostzones[2]*zdir;
+  const int kmax = cctkGH->cctk_lsh[2] - (cctkGH->cctk_nghostzones[2]-1)*zdir;
 
 #pragma omp parallel for
   for(int k=kmin; k<kmax; k++)
@@ -36,7 +36,7 @@ void reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const i
 
         for(int ind=0; ind<6; ind++) {
           const int stencil = CCTK_GFINDEX3D(cctkGH, i+xdir*(ind-3), j+ydir*(ind-3), k+zdir*(ind-3)); // PPM needs indices from -3 to +2
-          v_flux_dir[ind] = in_prims[VX+(flux_dir-1)][stencil]; // Could be smaller; doesn't use full stencil
+          v_flux_dir[ind] = in_prims[VX+flux_dir][stencil]; // Could be smaller; doesn't use full stencil
           rho[ind] = in_prims[RHOB][stencil];
           pressure[ind] = in_prims[PRESSURE][stencil];
           for(int var=0; var<num_vars; var++) {

@@ -56,12 +56,9 @@ void phitilde_and_A_gauge_rhs(const cGH *cctkGH,
   // Note that ALL input variables are defined at ALL gridpoints, so no
   // worries about ghostzones.
 #pragma omp parallel for
-  for(int k=1; k<cctkGH->cctk_lsh[2]-1; k++)
-    for(int j=1; j<cctkGH->cctk_lsh[1]-1; j++)
-      for(int i=1; i<cctkGH->cctk_lsh[0]-1; i++) {
-//  for(int k=kmin-2; k<kmax+2; k++)
-//    for(int j=jmin-2; j<jmax+2; j++)
-//      for(int i=imin-2; i<imax+2; i++) {
+  for(int k=kmin-2; k<kmax+2; k++)
+    for(int j=jmin-2; j<jmax+2; j++)
+      for(int i=imin-2; i<imax+2; i++) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
 
         // First compute \partial_j \alpha \sqrt{\gamma} A^j (RHS of \partial_i psi6phi)
@@ -137,12 +134,9 @@ void phitilde_and_A_gauge_rhs(const cGH *cctkGH,
   const double dxinv[3] = {1.0/dX[0], 1.0/dX[1], 1.0/dX[2]};
 
 #pragma omp parallel for
-  for(int k=cctkGH->cctk_nghostzones[2]; k<cctkGH->cctk_lsh[2]-cctkGH->cctk_nghostzones[2]; k++)
-    for(int j=cctkGH->cctk_nghostzones[1]; j<cctkGH->cctk_lsh[1]-cctkGH->cctk_nghostzones[1]; j++)
-      for(int i=cctkGH->cctk_nghostzones[0]; i<cctkGH->cctk_lsh[0]-cctkGH->cctk_nghostzones[0]; i++) {
-//  for(int k=kmin; k<kmax; k++)
-//    for(int j=jmin; j<jmax; j++)
-//      for(int i=imin; i<imax; i++) {
+  for(int k=kmin; k<kmax; k++)
+    for(int j=jmin; j<jmax; j++)
+      for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
         // \partial_t A_i = [reconstructed stuff] + [gauge stuff],

@@ -10,7 +10,7 @@
 void interpolate_to_face_and_initialize_metric(
       const cGH *cctkGH,
       const int i, const int j, const int k,
-      const int flux_dirn,
+      const int flux_dir,
       const double *restrict lapse,
       const double *restrict betax,
       const double *restrict betay,
@@ -23,9 +23,9 @@ void interpolate_to_face_and_initialize_metric(
       const double *restrict gzz,
       metric_quantities *restrict metric) {
 
-  const int xdir = (flux_dirn == 0);
-  const int ydir = (flux_dirn == 1);
-  const int zdir = (flux_dirn == 2);
+  const int xdir = (flux_dir == 0);
+  const int ydir = (flux_dir == 1);
+  const int zdir = (flux_dir == 2);
 
   const int indm2  = CCTK_GFINDEX3D(cctkGH, i-2*xdir, j-2*ydir, k-2*zdir);
   const int indm1  = CCTK_GFINDEX3D(cctkGH, i-xdir,   j-ydir,   k-zdir);
