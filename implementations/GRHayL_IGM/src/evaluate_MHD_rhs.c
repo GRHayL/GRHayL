@@ -99,17 +99,24 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 
 //  /* SET POINTERS TO METRIC GRIDFUNCTIONS */
   const double *metric[10]; // "metric" here is array of pointers to the actual gridfunctions.
-  metric[LAPSE]= alp;
-  metric[BETAX]= betax;
-  metric[BETAY]= betay;
-  metric[BETAZ]= betaz;
-  metric[GXX]  = gxx;
-  metric[GXY]  = gxy;
-  metric[GXZ]  = gxz;
-  metric[GYY]  = gyy;
-  metric[GYZ]  = gyz;
-  metric[GZZ]  = gzz;
+  metric[LAPSE] = alp;
+  metric[BETAX] = betax;
+  metric[BETAY] = betay;
+  metric[BETAZ] = betaz;
+  metric[GXX]   = gxx;
+  metric[GXY]   = gxy;
+  metric[GXZ]   = gxz;
+  metric[GYY]   = gyy;
+  metric[GYZ]   = gyz;
+  metric[GZZ]   = gzz;
 
+  const double *curv[6];
+  curv[KXX] = kxx;
+  curv[KXY] = kxy;
+  curv[KXZ] = kxz;
+  curv[KYY] = kyy;
+  curv[KYZ] = kyz;
+  curv[KZZ] = kzz;
 //  /* SET POINTERS TO STRESS-ENERGY TENSOR GRIDFUNCTIONS */
 //  CCTK_REAL *TUPmunu[10];// "TUPmunu" here is array of pointers to the actual gridfunctions.
 //  ww=0;
@@ -143,15 +150,11 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         Az_rhs[index]=0.0;
   }
 
-//TODO: pull compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu into GRHayLET
   // Here, we:
   // 1) Compute tau_rhs extrinsic curvature terms, and
   // 2) Compute TUPmunu.
   // This function is housed in the file: "compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C"
-//  compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu(cctkGH,cctk_lsh,cctk_nghostzones,dX,metric,in_prims,TUPmunu,grhayl_eos,
-//                                                        gtupxy,gtupxz,gtupyz,
-//                                                        kxx,kxy,kxz,kyy,kyz,kzz,
-//                                                        tau_rhs);
+  calculate_tau_source_rhs(cctkGH, grhayl_eos, metric, curv, in_prims, tau_rhs);
 
   int flux_dir;
   flux_dir=0;
@@ -178,19 +181,19 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^x face values to be consistent with BX_STAGGER.
 #pragma omp parallel for
-  for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) {
-        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-        const int indexim1=CCTK_GFINDEX3D(cctkGH,i-1+(i==0),j,k); /* indexim1=0 when i=0 */
-        out_prims_r[BX_CENTER][index]=out_prims_l[BX_CENTER][index]=in_prims[BX_STAGGER][indexim1]; }
+  for(int k=0; k<cctk_lsh[2]; k++)
+    for(int j=0; j<cctk_lsh[1]; j++)
+      for(int i=0; i<cctk_lsh[0]; i++) {
+        const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int indexim1 = CCTK_GFINDEX3D(cctkGH,i-1+(i==0),j,k); /* indexim1=0 when i=0 */
+        out_prims_r[BX_CENTER][index] = out_prims_l[BX_CENTER][index] = in_prims[BX_STAGGER][indexim1];
+  }
 
-//TODO: add in Terrence's code
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-//  add_fluxes_and_source_terms_to_hydro_rhss(cctkGH, flux_dir, dX, metric, in_prims,
-//                                            out_prims_r,out_prims_l,eos,
-//                                            cmax_x,cmin_x,
-//                                            rho_star_flux,tau_flux,st_x_flux,st_y_flux,st_z_flux,
-//                                            rho_star_rhs,tau_rhs,st_x_rhs,st_y_rhs,st_z_rhs);
+  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims, out_prims_r, out_prims_l,
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
   // Note that we have already reconstructed vx and vy along the x-direction,
   //   at (i-1/2,j,k). That result is stored in v{x,y}{r,l}.  Bx_stagger data
@@ -232,19 +235,19 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^y face values to be consistent with BY_STAGGER.
 #pragma omp parallel for
-  for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) {
-        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-        const int indexjm1=CCTK_GFINDEX3D(cctkGH,i,j-1+(j==0),k); /* indexjm1=0 when j=0 */
-        out_prims_r[BY_CENTER][index]=out_prims_l[BY_CENTER][index]=in_prims[BY_STAGGER][indexjm1]; }
+  for(int k=0; k<cctk_lsh[2]; k++)
+    for(int j=0; j<cctk_lsh[1]; j++)
+      for(int i=0; i<cctk_lsh[0]; i++) {
+        const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int indexjm1 = CCTK_GFINDEX3D(cctkGH,i,j-1+(j==0),k); /* indexjm1=0 when j=0 */
+        out_prims_r[BY_CENTER][index] = out_prims_l[BY_CENTER][index] = in_prims[BY_STAGGER][indexjm1];
+  }
 
-//TODO: add in Terrence's code
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-//  add_fluxes_and_source_terms_to_hydro_rhss(cctkGH, flux_dir, dX, metric,in_prims,
-//                                            out_prims_r,out_prims_l,eos,
-//                                            cmin[flux_dir], cmax[flux_dir],
-//                                            rho_star_flux,tau_flux,st_x_flux,st_y_flux,st_z_flux,
-//                                            rho_star_rhs,tau_rhs,st_x_rhs,st_y_rhs,st_z_rhs);
+  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims, out_prims_r, out_prims_l,
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
   /*****************************************
    * COMPUTING RHS OF A_z, BOOKKEEPING NOTE:
@@ -298,19 +301,19 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^z face values to be consistent with BZ_STAGGER.
 #pragma omp parallel for
-  for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) {
-        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-        const int indexkm1=CCTK_GFINDEX3D(cctkGH,i,j,k-1+(k==0)); /* indexkm1=0 when k=0 */
-        out_prims_r[BZ_CENTER][index]=out_prims_l[BZ_CENTER][index]=in_prims[BZ_STAGGER][indexkm1]; }
+  for(int k=0; k<cctk_lsh[2]; k++)
+    for(int j=0; j<cctk_lsh[1]; j++)
+      for(int i=0; i<cctk_lsh[0]; i++) {
+        const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int indexkm1 = CCTK_GFINDEX3D(cctkGH,i,j,k-1+(k==0)); /* indexkm1=0 when k=0 */
+        out_prims_r[BZ_CENTER][index] = out_prims_l[BZ_CENTER][index] = in_prims[BZ_STAGGER][indexkm1];
+  }
 
-//TODO: add in Terrence's code
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-//  add_fluxes_and_source_terms_to_hydro_rhss(flux_dir,cctkGH,cctk_lsh,cctk_nghostzones,dX,   metric,in_prims,TUPmunu,
-//                                            num_prims_to_reconstruct,out_prims_r,out_prims_l,eos,
-//                                            cmax_z,cmin_z,
-//                                            rho_star_flux,tau_flux,st_x_flux,st_y_flux,st_z_flux,
-//                                            rho_star_rhs,tau_rhs,st_x_rhs,st_y_rhs,st_z_rhs);
+  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims, out_prims_r, out_prims_l,
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
   /*****************************************
    * COMPUTING RHS OF A_x, BOOKKEEPING NOTE:

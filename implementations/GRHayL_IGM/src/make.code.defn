@@ -7,6 +7,7 @@ SRCS = A_no_gauge_rhs.c                               \
        conservs_to_prims.c                            \
        convert_ADM_to_BSSN.c                          \
        convert_from_ADMBase_HydroBase_to_GRHayL_IGM.c \
+       convert_from_GRHayL_IGM_to_HydroBase.c         \
        evaluate_MHD_rhs.c                             \
        InitSymBound.c                                 \
        interpolate_to_face_and_initialize_metric.c    \
@@ -16,4 +17,5 @@ SRCS = A_no_gauge_rhs.c                               \
        postpostinitial__set_symmetries__copy_timelevels.c \
        reconstruction_loop.c                          \
        reconstruction_loop_no_rho_P.c                 \
+       seed_magnetic_fields.c                         \
        symmetry_gzs_staggered.c

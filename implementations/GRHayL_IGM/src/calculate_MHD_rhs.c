@@ -33,13 +33,14 @@
 //  }
 //}
 
-void calculate_tau_source_rhs(const cGH *cctkGH, const int flux_dirn, double *restrict dX,
-                       const eos_parameters *restrict eos,
-                       const double **in_metric,
-                       const double **in_prims,
-                       double *restrict tau_rhs) {
+void calculate_tau_source_rhs(
+      const cGH *cctkGH,
+      const eos_parameters *restrict eos,
+      const double **in_metric,
+      const double **in_curv,
+      const double **in_prims,
+      double *restrict tau_rhs) {
 
-  const double dxi[3] = { 1.0/dX[0],1.0/dX[1],1.0/dX[2] };
   const double poison = 0.0/0.0;
 
   const int imin = cctkGH->cctk_nghostzones[0];
@@ -49,24 +50,11 @@ void calculate_tau_source_rhs(const cGH *cctkGH, const int flux_dirn, double *re
   const int jmax = cctkGH->cctk_lsh[1] - cctkGH->cctk_nghostzones[1];
   const int kmax = cctkGH->cctk_lsh[2] - cctkGH->cctk_nghostzones[2];
 
+//#pragma omp parallel for
   for(int k=kmin; k<kmax; k++)
     for(int j=jmin; j<jmax; j++)
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
-
-        metric_derivatives metric_derivs;
-        for(int dir=0; dir<3; dir++) {
-          const int xdir = (dir == 0);
-          const int ydir = (dir == 1);
-          const int zdir = (dir == 2);
-          const int indm2  = CCTK_GFINDEX3D(cctkGH, i-2*xdir, j-2*ydir, k-2*zdir);
-          const int indm1  = CCTK_GFINDEX3D(cctkGH, i-xdir,   j-ydir,   k-zdir);
-          const int indp1  = CCTK_GFINDEX3D(cctkGH, i+xdir,   j+ydir,   k+zdir);
-          const int indp2  = CCTK_GFINDEX3D(cctkGH, i+2*xdir, j+2*ydir, k+2*zdir);
-          const double lapse    = COMPUTE_FCVAL(in_metric[LAPSE][indm2], in_metric[LAPSE][indm1], in_metric[LAPSE][index], in_metric[LAPSE][indp1]);
-          const double lapse_p1 = COMPUTE_FCVAL(in_metric[LAPSE][indm1], in_metric[LAPSE][index], in_metric[LAPSE][indp1], in_metric[LAPSE][indp2]);
-          metric_derivs.lapse[dir] = dxi[dir]*(lapse_p1 - lapse);
-        }
 
         metric_quantities metric;
         initialize_metric(in_metric[LAPSE][index],
@@ -76,10 +64,10 @@ void calculate_tau_source_rhs(const cGH *cctkGH, const int flux_dirn, double *re
                           &metric);
 
         extrinsic_curvature curv;
-//        initialize_extrinsic_curvature(
-//                          kxx[index], kxy[index], kxz[index],
-//                          kyy[index], kyz[index], kzz[index],
-//                          &curv);
+        initialize_extrinsic_curvature(
+                          in_curv[KXX][index], in_curv[KXY][index], in_curv[KXZ][index],
+                          in_curv[KYY][index], in_curv[KYZ][index], in_curv[KZZ][index],
+                          &curv);
 
         primitive_quantities prims;
         initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], poison,
@@ -92,11 +80,11 @@ void calculate_tau_source_rhs(const cGH *cctkGH, const int flux_dirn, double *re
         limit_v_and_compute_u0(eos, &metric, &prims, &speed_limited);
 
         conservative_quantities cons_source;
-        calculate_tau_tilde_source_term(&prims, grhayl_eos, &metric, &curv, &metric_derivs, &cons_source);
+        calculate_tau_tilde_source_term_extrinsic_curv(&prims, grhayl_eos, &metric, &curv, &cons_source);
   }
 }
 
-void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dirn, double *restrict dX,
+void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dirn, const double *restrict dX,
                             const eos_parameters *restrict eos,
                             const double **in_metric,
                             const double **in_prims,
@@ -113,7 +101,7 @@ void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dirn, double *rest
   // Function pointer to allow for loop over fluxes and sources
   void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
                               const eos_parameters *restrict, const metric_quantities *restrict, conservative_quantities *restrict);
-  void (*calculate_Stilde_source)(const primitive_quantities *restrict, const eos_parameters *restrict eos,
+  void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict eos,
                               const metric_quantities *restrict, const metric_derivatives *restrict, conservative_quantities *restrict);
 
   const int xdir = (flux_dirn == 0);
@@ -124,15 +112,15 @@ void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dirn, double *rest
   switch(flux_dirn) {
     case 0:
       calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn0;
-      calculate_Stilde_source = &calculate_Stilde_source_term_dirn0;
+      calculate_source_terms = &calculate_source_terms_dirn0;
       break;
     case 1:
       calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn1;
-      calculate_Stilde_source = &calculate_Stilde_source_term_dirn1;
+      calculate_source_terms = &calculate_source_terms_dirn1;
       break;
     case 2:
       calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn2;
-      calculate_Stilde_source = &calculate_Stilde_source_term_dirn2;
+      calculate_source_terms = &calculate_source_terms_dirn2;
       break;
     default:
       CCTK_VERROR("Warning: invalid flux_dirn value (not 0, 1, or 2) has been passed to calculate_MHD_rhs.");
@@ -160,78 +148,9 @@ void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dirn, double *rest
 //  calculate_face_value(cctkGH, flux_dirn, gyy, face_gyy);
 //  calculate_face_value(cctkGH, flux_dirn, gyz, face_gyz);
 //  calculate_face_value(cctkGH, flux_dirn, gzz, face_gzz);
-//
-//  // Upper bound includes 1 ghostzone for RHS calculation in following
-//  // loop.
-//#pragma omp parallel for
-//  for(int k=kmin; k<kmax+1; k++)
-//    for(int j=jmin; j<jmax+1; j++)
-//      for(int i=imin; i<imax+1; i++) {
-//        const int index  = CCTK_GFINDEX3D(cctkGH, i, j ,k);
-//
-//        metric_quantities metric_face;
-//        initialize_metric(face_lapse[index],
-//                          face_gxx[index], face_gxy[index], face_gxz[index],
-//                          face_gyy[index], face_gyz[index], face_gzz[index],
-//                          face_betax[index], face_betay[index], face_betaz[index],
-//                          &metric_face);
-//
-//        primitive_quantities prims_r, prims_l;
-//        initialize_primitives(rho_r[index], press_r[index], poison,
-//                              vx_r[index], vy_r[index], vz_r[index],
-//                              Bx_r[index], By_r[index], Bz_r[index],
-//                              poison, poison, poison, // entropy, Y_e, temp
-//                              &prims_r);
-//
-//        initialize_primitives(rho_l[index], press_l[index], poison,
-//                              vx_l[index], vy_l[index], vz_l[index],
-//                              Bx_l[index], By_l[index], Bz_l[index],
-//                              poison, poison, poison, // entropy, Y_e, temp
-//                              &prims_l);
-//
-//        // Generate randomized u^0
-//        prims_r.u0 = rho_r[index]*Bx_r[index]/vy_r[index];
-//        prims_l.u0 = rho_l[index]*Bx_l[index]/vy_l[index];
-//
-//        conservative_quantities cons_fluxes;
-//        calculate_HLLE_fluxes(&prims_r, 
-//                              &prims_l,
-//                              &eos,
-//                              &metric_face, 
-//                              &cons_fluxes);
-//
-//        rho_star_flux[index]  = cons_fluxes.rho;
-//        tau_flux[index]       = cons_fluxes.tau;
-//        Stildex_flux[index]       = cons_fluxes.S_x;
-//        Stildey_flux[index]       = cons_fluxes.S_y;
-//        Stildez_flux[index]       = cons_fluxes.S_z;
-//  }
-//
-//#pragma omp parallel for
-//  for(int k=kmin; k<kmax; k++)
-//    for(int j=jmin; j<jmax; j++)
-//      for(int i=imin; i<imax; i++) {
-//        const int index  = CCTK_GFINDEX3D(cctkGH, i, j ,k);
-//        const int indp1  = CCTK_GFINDEX3D(cctkGH, i+xdir, j+ydir, k+zdir);
-//
-//        rho_star_rhs[index] += dxi[flux_dirn]*(rho_star_flux[index] - rho_star_flux[indp1]);
-//        tau_rhs[index] += dxi[flux_dirn]*(tau_flux[index] - tau_flux[indp1]);
-//        Stildex_rhs[index] += dxi[flux_dirn]*(Stildex_flux[index] - Stildex_flux[indp1]);
-//        Stildey_rhs[index] += dxi[flux_dirn]*(Stildey_flux[index] - Stildey_flux[indp1]);
-//        Stildez_rhs[index] += dxi[flux_dirn]*(Stildez_flux[index] - Stildez_flux[indp1]);
-//
-//        D_lapse[flux_dirn][index] = dxi[flux_dirn]*(face_lapse[indp1] - face_lapse[index]);
-//        D_betax[flux_dirn][index] = dxi[flux_dirn]*(face_betax[indp1] - face_betax[index]);
-//        D_betay[flux_dirn][index] = dxi[flux_dirn]*(face_betay[indp1] - face_betay[index]);
-//        D_betaz[flux_dirn][index] = dxi[flux_dirn]*(face_betaz[indp1] - face_betaz[index]);
-//        D_gxx[flux_dirn][index] = dxi[flux_dirn]*(face_gxx[indp1] - face_gxx[index]);
-//        D_gxy[flux_dirn][index] = dxi[flux_dirn]*(face_gxy[indp1] - face_gxy[index]);
-//        D_gxz[flux_dirn][index] = dxi[flux_dirn]*(face_gxz[indp1] - face_gxz[index]);
-//        D_gyy[flux_dirn][index] = dxi[flux_dirn]*(face_gyy[indp1] - face_gyy[index]);
-//        D_gyz[flux_dirn][index] = dxi[flux_dirn]*(face_gyz[indp1] - face_gyz[index]);
-//        D_gzz[flux_dirn][index] = dxi[flux_dirn]*(face_gzz[indp1] - face_gzz[index]);
-//  }
 
+  // This loop includes 1 ghostzone because the RHS calculation for e.g. the x direction
+  // requires (i,j,k) and (i+1,j,k)
 #pragma omp parallel for
   for(int k=kmin; k<kmax+1; k++)
     for(int j=jmin; j<jmax+1; j++)
@@ -274,6 +193,7 @@ void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dirn, double *rest
         Stildez_flux[index]  = cons_fluxes.S_z;
   }
 
+//#pragma omp parallel for
   for(int k=kmin; k<kmax; k++)
     for(int j=jmin; j<jmax; j++)
       for(int i=imin; i<imax; i++) {
@@ -310,13 +230,6 @@ void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dirn, double *rest
                           in_metric[BETAX][index], in_metric[BETAY][index], in_metric[BETAZ][index],
                           &metric);
 
-//        metric_quantities metric_derivs;
-//        initialize_metric(lapse[index],
-//                          gxx[index], gxy[index], gxz[index],
-//                          gyy[index], gyz[index], gzz[index],
-//                          betax[index], betay[index], betaz[index],
-//                          &metric_derivs);
-
         primitive_quantities prims;
         initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], poison,
                               in_prims[VX][index], in_prims[VY][index], in_prims[VZ][index],
@@ -341,62 +254,10 @@ void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dirn, double *rest
         metric_derivs.adm_gzz[flux_dirn] = dxi[flux_dirn]*(metric_facep1.adm_gzz - metric_face.adm_gzz);
 
         conservative_quantities cons_source;
-        calculate_Stilde_source(&prims, grhayl_eos, &metric, &metric_derivs, &cons_source);
+        calculate_source_terms(&prims, grhayl_eos, &metric, &metric_derivs, &cons_source);
+        tau_rhs[index]     += cons_source.tau;
+        Stildex_rhs[index] += cons_source.S_x;
+        Stildey_rhs[index] += cons_source.S_y;
+        Stildez_rhs[index] += cons_source.S_z;
   }
-
-//#pragma omp parallel for
-//  for(int k=ghostzone; k<dirlength-ghostzone; k++)
-//    for(int j=ghostzone; j<dirlength-ghostzone; j++)
-//      for(int i=ghostzone; i<dirlength-ghostzone; i++) {
-//        const int index  = CCTK_GFINDEX3D(cctkGH, i, j ,k);
-//
-//        metric_quantities metric;
-//        initialize_metric(lapse[index],
-//                          gxx[index], gxy[index], gxz[index],
-//                          gyy[index], gyz[index], gzz[index],
-//                          betax[index], betay[index], betaz[index],
-//                          &metric);
-//
-//        extrinsic_curvature curv;
-//        initialize_extrinsic_curvature(
-//                          kxx[index], kxy[index], kxz[index],
-//                          kyy[index], kyz[index], kzz[index],
-//                          &curv);
-//
-//        metric_derivatives metric_derivs;
-//        for(int dirn=0; dirn<3; dirn++) {
-//          metric_derivs.lapse[dirn] = D_lapse[dirn][index];
-//          metric_derivs.betax[dirn] = D_betax[dirn][index];
-//          metric_derivs.betay[dirn] = D_betay[dirn][index];
-//          metric_derivs.betaz[dirn] = D_betaz[dirn][index];
-//          metric_derivs.adm_gxx[dirn] = D_gxx[dirn][index];
-//          metric_derivs.adm_gxy[dirn] = D_gxy[dirn][index];
-//          metric_derivs.adm_gxz[dirn] = D_gxz[dirn][index];
-//          metric_derivs.adm_gyy[dirn] = D_gyy[dirn][index];
-//          metric_derivs.adm_gyz[dirn] = D_gyz[dirn][index];
-//          metric_derivs.adm_gzz[dirn] = D_gzz[dirn][index];
-//        }
-//
-//        primitive_quantities prims;
-//        initialize_primitives(rho[index], press[index], poison,
-//                              vx[index], vy[index], vz[index],
-//                              Bx[index], By[index], Bz[index],
-//                              poison, poison, poison, // entropy, Y_e, temp
-//                              &prims);
-//        prims.u0  = rho[index]*Bx[index] / vy[index];
-//
-//
-//        conservative_quantities cons_sources;
-//        calculate_all_source_terms(&prims,
-//                                   &eos,
-//                                   &metric,
-//                                   &curv,
-//                                   &metric_derivs,
-//                                   &cons_sources);
-//                                    
-//        tau_rhs[index] += cons_sources.tau;
-//        Stildex_rhs[index] += cons_sources.S_x;
-//        Stildey_rhs[index] += cons_sources.S_y;
-//        Stildez_rhs[index] += cons_sources.S_z;
-//  }
 }

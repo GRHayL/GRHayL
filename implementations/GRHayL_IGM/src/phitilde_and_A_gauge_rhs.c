@@ -41,13 +41,27 @@ void phitilde_and_A_gauge_rhs(const cGH *cctkGH,
    *    interpolations.
    */
 
-  // The stencil here is {-1,1},{-1,1},{-1,1} for x,y,z directions, respectively.
-  //     Note that ALL input variables are defined at ALL gridpoints, so no
-  //     worries about ghostzones.
+  // We declare these values to be over the interior so the setting of ghostzone points is
+  // more transparent.
+  const int imin = cctkGH->cctk_nghostzones[0];
+  const int jmin = cctkGH->cctk_nghostzones[1];
+  const int kmin = cctkGH->cctk_nghostzones[2];
+  const int imax = cctkGH->cctk_lsh[0]-cctkGH->cctk_nghostzones[0];
+  const int jmax = cctkGH->cctk_lsh[1]-cctkGH->cctk_nghostzones[1];
+  const int kmax = cctkGH->cctk_lsh[2]-cctkGH->cctk_nghostzones[2];
+
+  // The RHS loop requires 2 ghostzones, so this loop must set those values, hence this loop
+  // goes into the ghostzones. This loop requires a stencil of {-1,1},{-1,1},{-1,1},
+  // which uses the last of the 3 ghostzones required by the simulation.
+  // Note that ALL input variables are defined at ALL gridpoints, so no
+  // worries about ghostzones.
 #pragma omp parallel for
   for(int k=1; k<cctkGH->cctk_lsh[2]-1; k++)
     for(int j=1; j<cctkGH->cctk_lsh[1]-1; j++)
       for(int i=1; i<cctkGH->cctk_lsh[0]-1; i++) {
+//  for(int k=kmin-2; k<kmax+2; k++)
+//    for(int j=jmin-2; j<jmax+2; j++)
+//      for(int i=imin-2; i<imax+2; i++) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
 
         // First compute \partial_j \alpha \sqrt{\gamma} A^j (RHS of \partial_i psi6phi)
@@ -122,11 +136,13 @@ void phitilde_and_A_gauge_rhs(const cGH *cctkGH,
 
   const double dxinv[3] = {1.0/dX[0], 1.0/dX[1], 1.0/dX[2]};
 
-  // This loop requires two additional ghostzones in every direction. Hence the following loop definition:
 #pragma omp parallel for
   for(int k=cctkGH->cctk_nghostzones[2]; k<cctkGH->cctk_lsh[2]-cctkGH->cctk_nghostzones[2]; k++)
     for(int j=cctkGH->cctk_nghostzones[1]; j<cctkGH->cctk_lsh[1]-cctkGH->cctk_nghostzones[1]; j++)
       for(int i=cctkGH->cctk_nghostzones[0]; i<cctkGH->cctk_lsh[0]-cctkGH->cctk_nghostzones[0]; i++) {
+//  for(int k=kmin; k<kmax; k++)
+//    for(int j=jmin; j<jmax; j++)
+//      for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
         // \partial_t A_i = [reconstructed stuff] + [gauge stuff],

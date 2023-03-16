@@ -45,7 +45,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   /***************************************************************/
   //     COMPUTE TDNMUNU AND  CONSERVATIVES FROM PRIMITIVES      //
   /***************************************************************/
-  // Compute b^{\mu}, b^2, and u_i/(u^0 Psi4)
+  // Compute b^{\mu} and b^2
   double smallb[4], smallb2;
   compute_smallb_and_b2(metric, prims, uDN, smallb, &smallb2);
 
@@ -71,6 +71,7 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
 
   // Finally, compute T_{\mu \nu}
   // T_{mn} = (rho_0 h + b^2) u_m u_n + (P + 0.5 b^2) g_{mn} - b_m b_n, where m and n both run from 0 to 3.
+  // We don't use the GRHayL-provided function for computing T_{\mu \nu} because we can reuse a lot of precomputed quantities
   if(params->update_Tmunu) {
     Tmunu->Ttt = rho0_h_plus_b2*uDN[0]*uDN[0] + P_plus_half_b2*metric->g4dn[0][0] - smallb_lower[0]*smallb_lower[0];
     Tmunu->Ttx = rho0_h_plus_b2*uDN[0]*uDN[1] + P_plus_half_b2*metric->g4dn[0][1] - smallb_lower[0]*smallb_lower[1];

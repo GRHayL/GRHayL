@@ -7,6 +7,8 @@ static const int LAPSE=0, BETAX=1,BETAY=2, BETAZ=3,
                  GXX=4, GXY=5, GXZ=6,
                  GYY=7, GYZ=8, GZZ=9;
 
+static const int KXX=0, KXY=1, KXZ=2, KYY=3, KYZ=4, KZZ=5;
+
 // The order here MATTERS, and must be consistent with the order in the in_prims[] array in evaluate_MHD_rhs.C.
 static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,
   BX_CENTER=5,BY_CENTER=6,BZ_CENTER=7,BX_STAGGER=8,BY_STAGGER=9,BZ_STAGGER=10,
@@ -64,22 +66,33 @@ void reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir
                          double **out_prims_r,
                          double **out_prims_l);
 
-void calculate_MHD_rhs(const cGH *cctkGH, const int flux_dirn, double *restrict dX,
-                       const eos_parameters *restrict eos,
-                       const double **metric,
-                       const double **in_prims,
-                       /*const*/ double **prims_r,
-                       /*const*/ double **prims_l,
-                       double *restrict rho_star_flux,
-                       double *restrict tau_flux,
-                       double *restrict Stildex_flux,
-                       double *restrict Stildey_flux,
-                       double *restrict Stildez_flux,
-                       double *restrict rho_star_rhs,
-                       double *restrict tau_rhs,
-                       double *restrict Stildex_rhs,
-                       double *restrict Stildey_rhs,
-                       double *restrict Stildez_rhs);
+void calculate_tau_source_rhs(
+      const cGH *cctkGH,
+      const eos_parameters *restrict eos,
+      const double **in_metric,
+      const double **in_curv,
+      const double **in_prims,
+      double *restrict tau_rhs);
+
+void calculate_MHD_dirn_rhs(
+      const cGH *cctkGH,
+      const int flux_dirn,
+      const double *restrict dX,
+      const eos_parameters *restrict eos,
+      const double **in_metric,
+      const double **in_prims,
+      /*const*/ double **in_prims_r,
+      /*const*/ double **in_prims_l,
+      double *restrict rho_star_flux,
+      double *restrict tau_flux,
+      double *restrict Stildex_flux,
+      double *restrict Stildey_flux,
+      double *restrict Stildez_flux,
+      double *restrict rho_star_rhs,
+      double *restrict tau_rhs,
+      double *restrict Stildex_rhs,
+      double *restrict Stildey_rhs,
+      double *restrict Stildez_rhs);
 
 // The const are commented out because C does not support implicit typecasting of types when
 // they are more than 1 level removed from the top pointer. i.e. I can pass the argument with

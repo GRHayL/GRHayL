@@ -141,6 +141,10 @@ void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
                               &prims_l);
 
 
+        int speed_limited = 0;
+        limit_v_and_compute_u0(grhayl_eos, &metric_face, &prims_r, &speed_limited);
+        limit_v_and_compute_u0(grhayl_eos, &metric_face, &prims_l, &speed_limited);
+
         calculate_characteristic_speed(&prims_r, &prims_l, grhayl_eos, &metric_face, &vars.c1_min, &vars.c1_max);
 
         interpolate_to_face_and_initialize_metric(
@@ -162,6 +166,9 @@ void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
                               in_prims_l[BX_CENTER][index_B1], in_prims_l[BY_CENTER][index_B1], in_prims_l[BZ_CENTER][index_B1],
                               poison, poison, poison, // entropy, Y_e, temp
                               &prims_l);
+
+        limit_v_and_compute_u0(grhayl_eos, &metric_face, &prims_r, &speed_limited);
+        limit_v_and_compute_u0(grhayl_eos, &metric_face, &prims_l, &speed_limited);
 
         calculate_characteristic_speed(&prims_r, &prims_l, grhayl_eos, &metric_face, &vars.c2_min, &vars.c2_max);
 

@@ -34,9 +34,9 @@ void GRHayL_IGM_RegisterVars(CCTK_ARGUMENTS)
   rhs = CCTK_VarIndex("GRHayL_IGM::Az_rhs");
   ierr += MoLRegisterEvolved(var, rhs);
 
-  /* psi6phi and psi6phi_rhs */
-  var = CCTK_VarIndex("GRHayL_IGM::psi6phi");
-  rhs = CCTK_VarIndex("GRHayL_IGM::psi6phi_rhs");
+  /* phitilde and phitilde_rhs */
+  var = CCTK_VarIndex("GRHayL_IGM::phitilde");
+  rhs = CCTK_VarIndex("GRHayL_IGM::phitilde_rhs");
   ierr += MoLRegisterEvolved(var, rhs);
 
   /* ALL OTHER EVOLVED VARIABLES (rho_star,tau,Stilde_x,Stilde_y,Stilde_z) */

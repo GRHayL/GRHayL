@@ -37,7 +37,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
     for(int j=0; j<jmax; j++)
       for(int i=0; i<imax; i++) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-        
+
         //TODO: this references simple gamma law; clearly needs to be extended to more EOS types
         // P = (\Gamma - 1) rho epsilon
         // -> \Gamma = P/(rho epsilon) + 1
@@ -45,18 +45,18 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         if(rho[index]>grhayl_eos->rho_atm && fabs(grhayl_eos->Gamma_th - measured_gamma)/grhayl_eos->Gamma_th > 1e-2)
           CCTK_VERROR("Expected simple gamma law with gamma_th=%.15e, but found a point with gamma law such that gamma_th=%.15e. error = %e| rb=%e rbatm=%e P=%e\n",
                       grhayl_eos->Gamma_th, measured_gamma, (grhayl_eos->Gamma_th-measured_gamma)/grhayl_eos->Gamma_th, rho[index], grhayl_eos->rho_atm, press[index] );
-        
+
         Ax[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
         Ay[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
         Az[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
         phitilde[index] = Aphi[index];
-        
+
         const double ETvx = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
         const double ETvy = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
         const double ETvz = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
-        
+
         // IllinoisGRMHD defines v^i = u^i/u^0.
-        
+
         // Meanwhile, the ET/HydroBase formalism, called the Valencia
         // formalism, splits the 4 velocity into a purely spatial part
         // and a part that is normal to the spatial hypersurface:
@@ -67,7 +67,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         // Then u^a n_a = - \alpha u^0 = G n^a n_a = -G, and
         // of course \alpha u^0 = 1/sqrt(1+γ^ij u_i u_j) = \Gamma,
         // the standard Lorentz factor.
-        
+
         // Note that n^i = - \beta^i / \alpha, so
         // u^a = \Gamma (n^a + U^a)
         // -> u^i = \Gamma ( U^i - \beta^i / \alpha )
@@ -76,7 +76,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         //     = \Gamma/u^0 ( U^i - \beta^i / \alpha ) <- \Gamma = \alpha u^0
         //     = \alpha ( U^i - \beta^i / \alpha )
         //     = \alpha U^i - \beta^i
-        
+
         vx[index] = alp[index]*ETvx - betax[index];
         vy[index] = alp[index]*ETvy - betay[index];
         vz[index] = alp[index]*ETvz - betaz[index];
@@ -192,7 +192,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         const double Psi_kp1 = psi_bssn[indexijkp1];
         Bz_stagger[actual_index] *= Psim3/(Psi_kp1*Psi_kp1*Psi_kp1);
 
-      }
+  }
 
 #pragma omp parallel for
   for(int k=0; k<kmax; k++)
@@ -312,5 +312,5 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
           eTyz[index] = Tmunu.Tyz;
           eTzz[index] = Tmunu.Tzz;
         }
-      }
+  }
 }

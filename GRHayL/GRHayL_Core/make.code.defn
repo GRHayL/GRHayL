@@ -4,10 +4,12 @@
 SRCS = enforce_detgij_and_initialize_metric.c \
        grhayl_info_warn_error.c               \
        initialize_conservatives.c             \
-       initialize_metric.c                    \
-       initialize_GRHayL.c                    \
-       initialize_primitives.c                \
        initialize_eos.c                       \
+       initialize_extrinsic_curvature.c       \
+       initialize_GRHayL.c                    \
+       initialize_metric.c                    \
+       initialize_primitives.c                \
+       initialize_stress_energy.c             \
        limit_v_and_compute_u0.c               \
        metric_helper.c                        \
        return_conservatives.c                 \

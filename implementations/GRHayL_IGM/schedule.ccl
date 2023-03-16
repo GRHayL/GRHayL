@@ -1,7 +1,11 @@
 # Schedule for thorn GRHayL_IGM
 
 #TODO: This should be done by ADMBase; no need to do it here, best I can tell
-STORAGE: ADMBase::metric[metric_timelevels], ADMBase::curv[metric_timelevels], ADMBase::lapse[lapse_timelevels], ADMBase::shift[shift_timelevels]
+#STORAGE: ADMBase::metric[metric_timelevels], ADMBase::curv[metric_timelevels], ADMBase::lapse[lapse_timelevels], ADMBase::shift[shift_timelevels]
+
+# Zach says: these explicit STORAGE statements ARE necessary. Otherwise, segfault.
+# SC says: probably just need to properly set up hydrobase parameters
+#STORAGE: HydroBase::rho[1],HydroBase::press[1],HydroBase::eps[1],HydroBase::vel[1],HydroBase::Bvec[1],HydroBase::Avec[1],HydroBase::Aphi[1]
 
 # Since the evolution code uses some HydroBase quantities, it is
 # important to set certain HydroBase parameters for intended behavior:
@@ -41,7 +45,7 @@ schedule group GRHayL_IGM_ID_Converter at CCTK_INITIAL after HydroBase_Initial b
 {
 } "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayL_IGM"
 
-schedule convert_from_ADMBase_HydroBase_to_GRHayL_IGM IN GRHayL_IGM_ID_Converter as first_initialdata before TOV_Initial_Data
+schedule convert_from_ADMBase_HydroBase_to_GRHayL_IGM IN GRHayL_IGM_ID_Converter as first_initialdata after seed_magnetic_fields
 {
    LANG:       C
    OPTIONS:    LOCAL
@@ -107,6 +111,14 @@ schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_ID_Converter as fourth_initia
           TmunuBase::stress_energy_tensor(everywhere)
 } "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
 
+SCHEDULE seed_magnetic_fields IN GRHayL_IGM_ID_Converter
+{
+  LANG: C
+  READS:  GRID::coordinates
+  READS:  HydroBase::rho(everywhere), HydroBase::press(everywhere)
+  WRITES: HydroBase::Avec(everywhere), HydroBase::Aphi(everywhere)
+} "Set up seed magnetic field configuration."
+
 #########################################################
 # POSTPOSTINITIAL
 #########################################################
@@ -115,7 +127,7 @@ schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_ID_Converter as fourth_initia
 # SYNCs actually reprolongate the conservative variables, making cons
 # and prims INCONSISTENT. So here we redo the con2prim, avoiding the 
 # SYNC afterward, then copy the result to other timelevels"
-schedule GROUP GRHayL_IGM_PostPostInitial at CCTK_POSTPOSTINITIAL before MoL_PostStep after HydroBase_Con2Prim
+schedule GROUP GRHayL_IGM_PostPostInitial at CCTK_POSTPOSTINITIAL before MoL_PostStep after Con2Prim #HydroBase_Con2Prim
 {
 } "HydroBase_Con2Prim in CCTK_POSTPOSTINITIAL sets conserv to prim then outer boundaries (OBs, which are technically disabled). The post OB SYNCs actually reprolongate the conservative variables, making cons and prims INCONSISTENT. So here we redo the con2prim, avoiding the SYNC afterward, then copy the result to other timelevels"
 
@@ -182,7 +194,7 @@ schedule GRHayL_IGM_PostPostInitial_Set_Symmetries__Copy_Timelevels in GRHayL_IG
 schedule GRHayL_IGM_evaluate_MHD_rhs in MoL_CalcRHS as GRHayL_IGM_RHS_eval after bssn_rhs after shift_rhs
 {
   LANG: C
-  READS:   ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:   ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
   READS:   HydroBase::rho, HydroBase::press
   READS:   grmhd_primitives_allbutBi, grmhd_B_center,
            grmhd_B_stagger, phitilde, Ax, Ay, Az
@@ -212,7 +224,7 @@ schedule GRHayL_IGM_evaluate_MHD_rhs in MoL_CalcRHS as GRHayL_IGM_RHS_eval after
 #########################################################
 
 # Should be automated by presync (ideally)
-schedule GRHayL_IGM_InitSymBound in HydroBase_Boundaries as Boundary_SYNCs
+schedule GRHayL_IGM_InitSymBound in HydroBase_Boundaries as Boundary_SYNCs after HydroBase_ApplyBCs # after added to try to match ordering
 {
   LANG: C
   SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
@@ -221,13 +233,16 @@ schedule GRHayL_IGM_InitSymBound in HydroBase_Boundaries as Boundary_SYNCs
 schedule GRHayL_IGM_outer_boundaries_on_A_mu in HydroBase_Boundaries after Boundary_SYNCs
 {
   LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  WRITES: ADMBase::metric(everywhere)
+  WRITES: BSSN_quantities(everywhere)
   READS:  phitilde, Ax, Ay, Az
   WRITES: phitilde(boundary), Ax(boundary), Ay(boundary), Az(boundary)
 } "Apply linear extrapolation BCs on A_{mu}, so that BCs are flat on B^i."
 
 # Easiest primitives to solve for: B^i.
 # Note however that B^i depends on derivatives of A_{\mu}, so a SYNC is necessary on B^i.
-schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in HydroBase_Boundaries after outer_boundaries_on_A_mu
+schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in HydroBase_Boundaries after GRHayL_IGM_outer_boundaries_on_A_mu
 {
   LANG: C
   READS:  GRID::coordinates
@@ -274,5 +289,26 @@ schedule GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRH
 # We must sync {P,rho_b,vx,vy,vz} here.
   SYNC: grmhd_primitives_allbutBi
 } "Apply outflow-only, flat BCs on {P,rho_b,vx,vy,vz}. Outflow only == velocities pointed inward from outer boundary are set to zero."
+
+#########################################################
+# Conversion from GRHayL_IGM variables to Hydrobase
+#########################################################
+
+SCHEDULE convert_from_GRHayL_IGM_to_HydroBase AT CCTK_INITIAL AFTER GRHayL_IGM_ID_Converter #Con2Prim old thing doesn't exist to schedule around?
+{
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  vx, vy, vz, grmhd_B_center
+  WRITES: HydroBase::vel(everywhere), HydroBase::w_lorentz(everywhere), HydroBase::Bvec(everywhere)
+} "Convert GRHayL_IGM-native variables to HydroBase"
+
+SCHEDULE convert_from_GRHayL_IGM_to_HydroBase AT CCTK_ANALYSIS BEFORE compute_bi_b2_Poyn_fluxET BEFORE particle_tracerET BEFORE VolumeIntegralGroup BEFORE convert_to_MHD_3velocity AFTER ML_BSSN_evolCalcGroup
+{
+  LANG: C
+  OPTIONS: GLOBAL-EARLY,LOOP-LOCAL
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  vx, vy, vz, grmhd_B_center
+  WRITES: HydroBase::vel(everywhere), HydroBase::w_lorentz(everywhere), HydroBase::Bvec(everywhere)
+} "Convert GRHayL_IGM-native variables to HydroBase"
 
 #########################################################

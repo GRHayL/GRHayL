@@ -37,7 +37,7 @@ void GRHayL_IGM_outer_boundaries_on_A_mu(CCTK_ARGUMENTS) {
 
   const int levelnumber = GetRefinementLevel(cctkGH);
 
-  //GRHayL_IGM_convert_ADM_to_BSSN(cctkGH, gxx, gxy, gxz, gyy, gyz, gzz,
+  //GRHayL_convert_ADM_to_BSSN(cctkGH, gxx, gxy, gxz, gyy, gyz, gzz,
   //                               phi_bssn,psi_bssn,
   //                               gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
   //                               gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);

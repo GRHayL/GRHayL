@@ -15,6 +15,9 @@ void GRHayL_IGM_set_symmetry_gzs_staggered(
 
   DECLARE_CCTK_PARAMETERS;
 
+  //const int imax = cctkGH->cctk_lsh[0];
+  //const int jmax = cctkGH->cctk_lsh[1];
+  //const int kmax = cctkGH->cctk_lsh[2];
   const int lsh[3] = {cctkGH->cctk_lsh[0], cctkGH->cctk_lsh[1], cctkGH->cctk_lsh[2]};
 
   if(CCTK_EQUALS(Symmetry, "equatorial"))
@@ -31,9 +34,14 @@ void GRHayL_IGM_set_symmetry_gzs_staggered(
   //FIXME: Might want to use cctk_nghostzones instead...
   while( (Z[CCTK_GFINDEX3D(cctkGH,0,0,num_gzs)]+z_offset) < -dz*0.1 && num_gzs<lsh[2]) num_gzs++;
   if(num_gzs*2>=lsh[2]) CCTK_VERROR("ERROR in GRHayL_IGM_set_symmetry_gzs_staggered.c");
+  //while( (Z[CCTK_GFINDEX3D(cctkGH,0,0,num_gzs)]+z_offset) < -dz*0.1 && num_gzs<kmax) num_gzs++;
+  //if(num_gzs*2>=kmax) CCTK_VERROR("ERROR in GRHayL_IGM_set_symmetry_gzs_staggered.c");
 
 #pragma omp parallel for
   for(int k=0;k<num_gzs;k++) for(int j=0;j<lsh[1];j++) for(int i=0;i<lsh[0];i++) {
+  //for(int k=0; k<num_gzs; k++)
+  //  for(int j=0; j<jmax; j++)
+  //    for(int i=0; i<imax; i++) {
         const int index_inside__sym_gz = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
         /* This loop sets symmetry ghostzones, regardless of how the gridfunction is staggered.
