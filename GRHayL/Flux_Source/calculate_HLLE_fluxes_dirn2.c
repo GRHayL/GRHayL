@@ -2,12 +2,9 @@
 /*
  * Compute the HLLE-derived fluxes on the left face in the 2direction for all components.
  */
-void calculate_HLLE_fluxes_dirn2(const primitive_quantities *restrict prims_r, const primitive_quantities *restrict prims_l, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric_face, conservative_quantities *restrict cons) {
+void calculate_HLLE_fluxes_dirn2(const primitive_quantities *restrict prims_r, const primitive_quantities *restrict prims_l, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric_face, const double cmin_dirn2, const double cmax_dirn2, conservative_quantities *restrict cons) {
 
 {
-double cmin_dirn2, cmax_dirn2;
-calculate_characteristic_speed_dirn2(prims_r, prims_l, eos, metric_face, &cmin_dirn2, &cmax_dirn2);
-
 
 double h_r, h_l, cs2_r, cs2_l;
 

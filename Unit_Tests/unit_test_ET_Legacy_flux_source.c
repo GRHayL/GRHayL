@@ -186,7 +186,11 @@ int main(int argc, char **argv) {
 
   // Function pointer to allow for loop over fluxes
   void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
-                              const eos_parameters *restrict, const metric_quantities *restrict, conservative_quantities *restrict);
+                              const eos_parameters *restrict, const metric_quantities *restrict, 
+                              const double, const double, conservative_quantities *restrict);
+
+  void (*calculate_characteristic_speed)(const primitive_quantities *restrict, const primitive_quantities *restrict,
+                              const eos_parameters *restrict, const metric_quantities *restrict, const double*, const double*);
 
   // Function pointer to allow for loop over directional source terms
   void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict, const metric_quantities *restrict, 
@@ -202,16 +206,19 @@ int main(int argc, char **argv) {
     // Set function pointer to specific function for a given direction
     switch(flux_dirn) {
       case 0:
-        calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn0;
-        calculate_source_terms = &calculate_source_terms_dirn0;
+        calculate_HLLE_fluxes          = &calculate_HLLE_fluxes_dirn0;
+        calculate_source_terms         = &calculate_source_terms_dirn0;
+        calculate_characteristic_speed = &calculate_characteristic_speed_dirn0;
         break;
       case 1:
-        calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn1;
-        calculate_source_terms = &calculate_source_terms_dirn1;
+        calculate_HLLE_fluxes          = &calculate_HLLE_fluxes_dirn1;
+        calculate_source_terms         = &calculate_source_terms_dirn1;
+        calculate_characteristic_speed = &calculate_characteristic_speed_dirn1;
         break;
       case 2:
-        calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn2;
-        calculate_source_terms = &calculate_source_terms_dirn2;
+        calculate_HLLE_fluxes          = &calculate_HLLE_fluxes_dirn2;
+        calculate_source_terms         = &calculate_source_terms_dirn2;
+        calculate_characteristic_speed = &calculate_characteristic_speed_dirn2;
         break;
     }
 
@@ -282,11 +289,21 @@ int main(int argc, char **argv) {
           prims_r.u0 = rho_r[index]*Bx_r[index]/vy_r[index];
           prims_l.u0 = rho_l[index]*Bx_l[index]/vy_l[index];
 
+          double cmin, cmax;
+          calculate_characteristic_speed(&prims_r, 
+                                         &prims_l,
+                                         &eos,
+                                         &metric_face, 
+                                         &cmin,
+                                         &cmax);
+
           conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(&prims_r, 
                                 &prims_l,
                                 &eos,
-                                &metric_face, 
+                                &metric_face,
+                                cmin,
+                                cmax, 
                                 &cons_fluxes);
 
           rho_star_flux[index]  = cons_fluxes.rho;

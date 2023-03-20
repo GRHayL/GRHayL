@@ -36,19 +36,25 @@ void calculate_characteristic_speed_dirn2(const primitive_quantities *restrict p
 void calculate_HLLE_fluxes_dirn0(const primitive_quantities *restrict prims_r, 
       const primitive_quantities *restrict prims_l, 
       const eos_parameters *restrict eos, 
-      const metric_quantities *restrict metric_face, 
+      const metric_quantities *restrict metric_face,
+      const double cmin_dirn0,
+      const double cmax_dirn0,
       conservative_quantities *restrict cons);
 
 void calculate_HLLE_fluxes_dirn1(const primitive_quantities *restrict prims_r, 
       const primitive_quantities *restrict prims_l, 
       const eos_parameters *restrict eos, 
-      const metric_quantities *restrict metric_face, 
+      const metric_quantities *restrict metric_face,
+      const double cmin_dirn01,
+      const double cmax_dirn01,
       conservative_quantities *restrict cons);
 
 void calculate_HLLE_fluxes_dirn2(const primitive_quantities *restrict prims_r, 
       const primitive_quantities *restrict prims_l, 
       const eos_parameters *restrict eos, 
-      const metric_quantities *restrict metric_face, 
+      const metric_quantities *restrict metric_face,
+      const double cmin_dirn2,
+      const double cmax_dirn2, 
       conservative_quantities *restrict cons);
 
 void calculate_tau_tilde_source_term_extrinsic_curv(

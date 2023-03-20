@@ -263,15 +263,14 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
     params  += "const primitive_quantities *restrict prims_l, "
     params  += "struct eos_parameters const *restrict eos, "
     params  += "const metric_quantities *restrict metric_face, "
-    params  += "conservative_quantities *restrict cons"
 
     for flux_dirn in range(3):
-        cmin_cmax_str = "double "+str(cmins[flux_dirn])+", "+str(cmaxs[flux_dirn])+";\n"
-    
-        calc_char_speeds_params_str = "(prims_r, prims_l, eos, metric_face, &"+str(cmins[flux_dirn])+", &"+str(cmaxs[flux_dirn])+")"
+        cmin_cmax_str = "const double "+str(cmins[flux_dirn])+", const double "+str(cmaxs[flux_dirn])+", "
+
+    #     calc_char_speeds_params_str = "(prims_r, prims_l, eos, metric_face, &"+str(cmins[flux_dirn])+", &"+str(cmaxs[flux_dirn])+")"
 
 
-        calc_char_speeds_func_str = "calculate_characteristic_speed_dirn" + str(flux_dirn)
+    #     calc_char_speeds_func_str = "calculate_characteristic_speed_dirn" + str(flux_dirn)
 
         calculate_HLLE_fluxes(formalism, flux_dirn, alpha_face, gamma_faceDD, beta_faceU,
                               u4rU, u4lU, BrU, BlU,
@@ -287,19 +286,20 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
                     tau_tilde_HLLE_flux]
 
         body = outputC(vars_rhs, vars_to_write, params=outCparams, 
-                   filename="returnstring", prestring=(cmin_cmax_str+
-                                                       calc_char_speeds_func_str+
-                                                       calc_char_speeds_params_str+";\n\n"+
-                                                       prestring))
+                   filename="returnstring", prestring=prestring)
+
+    #     prestring=(cmin_cmax_str+ calc_char_speeds_func_str+
+    #                                calc_char_speeds_params_str+";\n\n"+
+    #                                prestring)
 
         desc = "Compute the HLLE-derived fluxes on the left face in the " + str(flux_dirn) + "direction for all components."
-        name = "calculate_HLLE_fluxes_dirn" + str(flux_dirn)
-    
+        name = "calculate_HLLE_fluxes_dirn" + str(flux_dirn)   
+        
         outCfunction(
             outfile=os.path.join(Ccodesdir,name+".c"),
             includes=includes,
             desc=desc,
             name=name,
-            params=params,
+            params=params+cmin_cmax_str+"conservative_quantities *restrict cons",
             body= body, 
             enableCparameters=False)
