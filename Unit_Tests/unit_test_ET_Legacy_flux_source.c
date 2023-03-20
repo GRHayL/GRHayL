@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
                               const double, const double, conservative_quantities *restrict);
 
   void (*calculate_characteristic_speed)(const primitive_quantities *restrict, const primitive_quantities *restrict,
-                              const eos_parameters *restrict, const metric_quantities *restrict, const double*, const double*);
+                              const eos_parameters *restrict, const metric_quantities *restrict, double *restrict, double *restrict);
 
   // Function pointer to allow for loop over directional source terms
   void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict, const metric_quantities *restrict, 
