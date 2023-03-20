@@ -16,14 +16,6 @@
 
 #define IDX(i,j,k) CCTK_GFINDEX3D(cctkGH,(i),(j),(k))
 
-#define XMAX_OB_LINEAR_EXTRAP(FUNC,imax) for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) FUNC[IDX(imax,j,k)] = 2.0 * FUNC[IDX(imax-1,j,k)] - FUNC[IDX(imax-2,j,k)];
-#define YMAX_OB_LINEAR_EXTRAP(FUNC,jmax) for(int k=0;k<cctk_lsh[2];k++) for(int i=0;i<cctk_lsh[0];i++) FUNC[IDX(i,jmax,k)] = 2.0 * FUNC[IDX(i,jmax-1,k)] - FUNC[IDX(i,jmax-2,k)];
-#define ZMAX_OB_LINEAR_EXTRAP(FUNC,kmax) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) FUNC[IDX(i,j,kmax)] = 2.0 * FUNC[IDX(i,j,kmax-1)] - FUNC[IDX(i,j,kmax-2)];
-
-#define XMIN_OB_LINEAR_EXTRAP(FUNC,imin) for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) FUNC[IDX(imin,j,k)] = 2.0 * FUNC[IDX(imin+1,j,k)] - FUNC[IDX(imin+2,j,k)];
-#define YMIN_OB_LINEAR_EXTRAP(FUNC,jmin) for(int k=0;k<cctk_lsh[2];k++) for(int i=0;i<cctk_lsh[0];i++) FUNC[IDX(i,jmin,k)] = 2.0 * FUNC[IDX(i,jmin+1,k)] - FUNC[IDX(i,jmin+2,k)];
-#define ZMIN_OB_LINEAR_EXTRAP(FUNC,kmin) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) FUNC[IDX(i,j,kmin)] = 2.0 * FUNC[IDX(i,j,kmin+1)] - FUNC[IDX(i,j,kmin+2)];
-
 /*********************************************
  * Apply outer boundary conditions on A_{\mu}
  ********************************************/
@@ -48,41 +40,79 @@ void GRHayL_IGM_outer_boundaries_on_A_mu(CCTK_ARGUMENTS) {
   if(cctk_nghostzones[0]!=cctk_nghostzones[1] || cctk_nghostzones[0]!=cctk_nghostzones[2])
     CCTK_VERROR("ERROR: GRHayL_IGM outer BC driver does not support unequal number of ghostzones in different directions!");
   for(int which_bdry_pt=0; which_bdry_pt<cctk_nghostzones[0]; which_bdry_pt++) {
-    const int imax=cctk_lsh[0]-cctk_nghostzones[0]+which_bdry_pt; // for cctk_nghostzones==3, this goes {cctk_lsh-3,cctk_lsh-2,cctk_lsh-1}; outer bdry pt is at cctk_lsh-1
-    const int jmax=cctk_lsh[1]-cctk_nghostzones[1]+which_bdry_pt;
-    const int kmax=cctk_lsh[2]-cctk_nghostzones[2]+which_bdry_pt;
 
-    const int imin=cctk_nghostzones[0]-which_bdry_pt-1; // for cctk_nghostzones==3, this goes {2,1,0}
-    const int jmin=cctk_nghostzones[1]-which_bdry_pt-1;
-    const int kmin=cctk_nghostzones[2]-which_bdry_pt-1;
+//TODO: These are in blocks of 4 already; this is screaming for some SIMD
+    // for cctk_nghostzones==3, max indices go {cctk_lsh-3,cctk_lsh-2,cctk_lsh-1}; outer bdry pt is at cctk_lsh-1
+    // for cctk_nghostzones==3, minimum indices go {2,1,0}
+    if(cctk_bbox[1]) {
+      const int imax=cctk_lsh[0]-cctk_nghostzones[0]+which_bdry_pt;
+#pragma omp parallel for
+      for(int k=0; k<cctk_lsh[2]; k++)
+        for(int j=0; j<cctk_lsh[1]; j++) {
+          phitilde[IDX(imax,j,k)] = 2.0 * phitilde[IDX(imax-1,j,k)] - phitilde[IDX(imax-2,j,k)];
+          Ax[IDX(imax,j,k)] = 2.0 * Ax[IDX(imax-1,j,k)] - Ax[IDX(imax-2,j,k)];
+          Ay[IDX(imax,j,k)] = 2.0 * Ay[IDX(imax-1,j,k)] - Ay[IDX(imax-2,j,k)];
+          Az[IDX(imax,j,k)] = 2.0 * Az[IDX(imax-1,j,k)] - Az[IDX(imax-2,j,k)];
+      }
+    }
+    if(cctk_bbox[3]) {
+      const int jmax=cctk_lsh[1]-cctk_nghostzones[1]+which_bdry_pt;
+#pragma omp parallel for
+      for(int k=0; k<cctk_lsh[2]; k++)
+        for(int i=0; i<cctk_lsh[0]; i++) {
+          phitilde[IDX(i,jmax,k)] = 2.0 * phitilde[IDX(i,jmax-1,k)] - phitilde[IDX(i,jmax-2,k)];
+          Ax[IDX(i,jmax,k)] = 2.0 * Ax[IDX(i,jmax-1,k)] - Ax[IDX(i,jmax-2,k)];
+          Ay[IDX(i,jmax,k)] = 2.0 * Ay[IDX(i,jmax-1,k)] - Ay[IDX(i,jmax-2,k)];
+          Az[IDX(i,jmax,k)] = 2.0 * Az[IDX(i,jmax-1,k)] - Az[IDX(i,jmax-2,k)];
+      }
+    }
+    if(cctk_bbox[5]) {
+      const int kmax=cctk_lsh[2]-cctk_nghostzones[2]+which_bdry_pt;
+#pragma omp parallel for
+      for(int j=0; j<cctk_lsh[1]; j++)
+        for(int i=0; i<cctk_lsh[0]; i++) {
+          phitilde[IDX(i,j,kmax)] = 2.0 * phitilde[IDX(i,j,kmax-1)] - phitilde[IDX(i,j,kmax-2)];
+          Ax[IDX(i,j,kmax)] = 2.0 * Ax[IDX(i,j,kmax-1)] - Ax[IDX(i,j,kmax-2)];
+          Ay[IDX(i,j,kmax)] = 2.0 * Ay[IDX(i,j,kmax-1)] - Ay[IDX(i,j,kmax-2)];
+          Az[IDX(i,j,kmax)] = 2.0 * Az[IDX(i,j,kmax-1)] - Az[IDX(i,j,kmax-2)];
+      }
+    }
 
-    if(cctk_bbox[1]) { XMAX_OB_LINEAR_EXTRAP(Ax,imax); XMAX_OB_LINEAR_EXTRAP(Ay,imax); XMAX_OB_LINEAR_EXTRAP(Az,imax); XMAX_OB_LINEAR_EXTRAP(phitilde,imax); }
-    if(cctk_bbox[3]) { YMAX_OB_LINEAR_EXTRAP(Ax,jmax); YMAX_OB_LINEAR_EXTRAP(Ay,jmax); YMAX_OB_LINEAR_EXTRAP(Az,jmax); YMAX_OB_LINEAR_EXTRAP(phitilde,jmax); }
-    if(cctk_bbox[5]) { ZMAX_OB_LINEAR_EXTRAP(Ax,kmax); ZMAX_OB_LINEAR_EXTRAP(Ay,kmax); ZMAX_OB_LINEAR_EXTRAP(Az,kmax); ZMAX_OB_LINEAR_EXTRAP(phitilde,kmax); }
-
-    if(cctk_bbox[0]) {                    XMIN_OB_LINEAR_EXTRAP(Ax,imin); XMIN_OB_LINEAR_EXTRAP(Ay,imin); XMIN_OB_LINEAR_EXTRAP(Az,imin); XMIN_OB_LINEAR_EXTRAP(phitilde,imin); }
-    if(cctk_bbox[2]) {                    YMIN_OB_LINEAR_EXTRAP(Ax,jmin); YMIN_OB_LINEAR_EXTRAP(Ay,jmin); YMIN_OB_LINEAR_EXTRAP(Az,jmin); YMIN_OB_LINEAR_EXTRAP(phitilde,jmin); }
-    if((cctk_bbox[4]) && Symmetry_none) { ZMIN_OB_LINEAR_EXTRAP(Ax,kmin); ZMIN_OB_LINEAR_EXTRAP(Ay,kmin); ZMIN_OB_LINEAR_EXTRAP(Az,kmin); ZMIN_OB_LINEAR_EXTRAP(phitilde,kmin); }
+    if(cctk_bbox[0]) {
+      const int imin=cctk_nghostzones[0]-which_bdry_pt-1;
+#pragma omp parallel for
+      for(int k=0; k<cctk_lsh[2]; k++)
+        for(int j=0; j<cctk_lsh[1]; j++) {
+          phitilde[IDX(imin,j,k)] = 2.0 * phitilde[IDX(imin+1,j,k)] - phitilde[IDX(imin+2,j,k)];
+          Ax[IDX(imin,j,k)] = 2.0 * Ax[IDX(imin+1,j,k)] - Ax[IDX(imin+2,j,k)];
+          Ay[IDX(imin,j,k)] = 2.0 * Ay[IDX(imin+1,j,k)] - Ay[IDX(imin+2,j,k)];
+          Az[IDX(imin,j,k)] = 2.0 * Az[IDX(imin+1,j,k)] - Az[IDX(imin+2,j,k)];
+      }
+    }
+    if(cctk_bbox[2]) {
+      const int jmin=cctk_nghostzones[1]-which_bdry_pt-1;
+#pragma omp parallel for
+      for(int k=0; k<cctk_lsh[2]; k++)
+        for(int i=0; i<cctk_lsh[0]; i++) {
+          phitilde[IDX(i,jmin,k)] = 2.0 * phitilde[IDX(i,jmin+1,k)] - phitilde[IDX(i,jmin+2,k)];
+          Ax[IDX(i,jmin,k)] = 2.0 * Ax[IDX(i,jmin+1,k)] - Ax[IDX(i,jmin+2,k)];
+          Ay[IDX(i,jmin,k)] = 2.0 * Ay[IDX(i,jmin+1,k)] - Ay[IDX(i,jmin+2,k)];
+          Az[IDX(i,jmin,k)] = 2.0 * Az[IDX(i,jmin+1,k)] - Az[IDX(i,jmin+2,k)];
+      }
+    }
+    if((cctk_bbox[4]) && Symmetry_none) {
+      const int kmin=cctk_nghostzones[2]-which_bdry_pt-1;
+#pragma omp parallel for
+      for(int j=0; j<cctk_lsh[1]; j++)
+        for(int i=0; i<cctk_lsh[0]; i++) {
+          phitilde[IDX(i,j,kmin)] = 2.0 * phitilde[IDX(i,j,kmin+1)] - phitilde[IDX(i,j,kmin+2)];
+          Ax[IDX(i,j,kmin)] = 2.0 * Ax[IDX(i,j,kmin+1)] - Ax[IDX(i,j,kmin+2)];
+          Ay[IDX(i,j,kmin)] = 2.0 * Ay[IDX(i,j,kmin+1)] - Ay[IDX(i,j,kmin+2)];
+          Az[IDX(i,j,kmin)] = 2.0 * Az[IDX(i,j,kmin+1)] - Az[IDX(i,j,kmin+2)];
+      }
+    }
   }
 }
-
-#define XMAX_OB_SIMPLE_COPY(FUNC,imax) for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) FUNC[IDX(imax,j,k)] = FUNC[IDX(imax-1,j,k)];
-#define YMAX_OB_SIMPLE_COPY(FUNC,jmax) for(int k=0;k<cctk_lsh[2];k++) for(int i=0;i<cctk_lsh[0];i++) FUNC[IDX(i,jmax,k)] = FUNC[IDX(i,jmax-1,k)];
-#define ZMAX_OB_SIMPLE_COPY(FUNC,kmax) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) FUNC[IDX(i,j,kmax)] = FUNC[IDX(i,j,kmax-1)];
-
-#define XMIN_OB_SIMPLE_COPY(FUNC,imin) for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) FUNC[IDX(imin,j,k)] = FUNC[IDX(imin+1,j,k)];
-#define YMIN_OB_SIMPLE_COPY(FUNC,jmin) for(int k=0;k<cctk_lsh[2];k++) for(int i=0;i<cctk_lsh[0];i++) FUNC[IDX(i,jmin,k)] = FUNC[IDX(i,jmin+1,k)];
-#define ZMIN_OB_SIMPLE_COPY(FUNC,kmin) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) FUNC[IDX(i,j,kmin)] = FUNC[IDX(i,j,kmin+1)];
-
-
-#define XMAX_INFLOW_CHECK(vx,imax) for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) if(vx[IDX(imax,j,k)]<0.) vx[IDX(imax,j,k)]=0.;
-#define YMAX_INFLOW_CHECK(vy,jmax) for(int k=0;k<cctk_lsh[2];k++) for(int i=0;i<cctk_lsh[0];i++) if(vy[IDX(i,jmax,k)]<0.) vy[IDX(i,jmax,k)]=0.;
-#define ZMAX_INFLOW_CHECK(vz,kmax) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) if(vz[IDX(i,j,kmax)]<0.) vz[IDX(i,j,kmax)]=0.;
-
-#define XMIN_INFLOW_CHECK(vx,imin) for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) if(vx[IDX(imin,j,k)]>0.) vx[IDX(imin,j,k)]=0.;
-#define YMIN_INFLOW_CHECK(vy,jmin) for(int k=0;k<cctk_lsh[2];k++) for(int i=0;i<cctk_lsh[0];i++) if(vy[IDX(i,jmin,k)]>0.) vy[IDX(i,jmin,k)]=0.;
-#define ZMIN_INFLOW_CHECK(vz,kmin) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) if(vz[IDX(i,j,kmin)]>0.) vz[IDX(i,j,kmin)]=0.;
-
 
 /*******************************************************
  * Apply outer boundary conditions on {P,rho_b,vx,vy,vz}
@@ -104,8 +134,6 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
   // Don't apply approximate outer boundary conditions on initial data, which should be defined everywhere, or on levels != [coarsest level].
   if(cctk_iteration==0 || levelnumber!=0) return;
 
-  int ENABLE=1;
-
   //GRHayL_IGM_convert_ADM_to_BSSN(cctkGH, gxx, gxy, gxz, gyy, gyz, gzz,
   //                               phi_bssn,psi_bssn,
   //                               gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
@@ -115,35 +143,96 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
   if(cctk_nghostzones[0]!=cctk_nghostzones[1] || cctk_nghostzones[0]!=cctk_nghostzones[2])
     CCTK_VERROR("ERROR: GRHayL_IGM outer BC driver does not support unequal number of ghostzones in different directions!");
   for(int which_bdry_pt=0;which_bdry_pt<cctk_nghostzones[0];which_bdry_pt++) {
-    int imax=cctk_lsh[0]-cctk_nghostzones[0]+which_bdry_pt; // for cctk_nghostzones==3, this goes {cctk_lsh-3,cctk_lsh-2,cctk_lsh-1}; outer bdry pt is at cctk_lsh-1
-    int jmax=cctk_lsh[1]-cctk_nghostzones[1]+which_bdry_pt;
-    int kmax=cctk_lsh[2]-cctk_nghostzones[2]+which_bdry_pt;
 
-    int imin=cctk_nghostzones[0]-which_bdry_pt-1; // for cctk_nghostzones==3, this goes {2,1,0}
-    int jmin=cctk_nghostzones[1]-which_bdry_pt-1;
-    int kmin=cctk_nghostzones[2]-which_bdry_pt-1;
-
-    // Order here is for compatibility with old version of this code.
     /* XMIN & XMAX */
     // i=imax=outer boundary
-    if(cctk_bbox[1]) { XMAX_OB_SIMPLE_COPY(press,imax); XMAX_OB_SIMPLE_COPY(rho,imax); XMAX_OB_SIMPLE_COPY(vx,imax); XMAX_OB_SIMPLE_COPY(vy,imax); XMAX_OB_SIMPLE_COPY(vz,imax); if(ENABLE) XMAX_INFLOW_CHECK(vx,imax); }
+    if(cctk_bbox[1]) {
+      const int imax=cctk_lsh[0]-cctk_nghostzones[0]+which_bdry_pt;
+#pragma omp parallel for
+      for(int k=0; k<cctk_lsh[2]; k++)
+        for(int j=0; j<cctk_lsh[1]; j++) {
+          press[IDX(imax,j,k)] = press[IDX(imax-1,j,k)];
+          rho[IDX(imax,j,k)]   = rho[IDX(imax-1,j,k)];
+          vx[IDX(imax,j,k)]    = vx[IDX(imax-1,j,k)];
+          vy[IDX(imax,j,k)]    = vy[IDX(imax-1,j,k)];
+          vz[IDX(imax,j,k)]    = vz[IDX(imax-1,j,k)]; 
+          if(vx[IDX(imax,j,k)]<0.) vx[IDX(imax,j,k)] = 0.0;
+      }
+    }
     // i=imin=outer boundary
     if(cctk_bbox[0]) {
-      XMIN_OB_SIMPLE_COPY(press,imin); XMIN_OB_SIMPLE_COPY(rho,imin); XMIN_OB_SIMPLE_COPY(vx,imin); XMIN_OB_SIMPLE_COPY(vy,imin); XMIN_OB_SIMPLE_COPY(vz,imin); if(ENABLE) XMIN_INFLOW_CHECK(vx,imin); }
+      const int imin=cctk_nghostzones[0]-which_bdry_pt-1;
+#pragma omp parallel for
+      for(int k=0; k<cctk_lsh[2]; k++)
+        for(int j=0; j<cctk_lsh[1]; j++) {
+          press[IDX(imin,j,k)] = press[IDX(imin+1,j,k)];
+          rho[IDX(imin,j,k)]   = rho[IDX(imin+1,j,k)];
+          vx[IDX(imin,j,k)]    = vx[IDX(imin+1,j,k)];
+          vy[IDX(imin,j,k)]    = vy[IDX(imin+1,j,k)];
+          vz[IDX(imin,j,k)]    = vz[IDX(imin+1,j,k)]; 
+          if(vx[IDX(imin,j,k)]>0.) vx[IDX(imin,j,k)] = 0.0;
+      }
+    }
 
     /* YMIN & YMAX */
     // j=jmax=outer boundary
-    if(cctk_bbox[3]) { YMAX_OB_SIMPLE_COPY(press,jmax); YMAX_OB_SIMPLE_COPY(rho,jmax); YMAX_OB_SIMPLE_COPY(vx,jmax); YMAX_OB_SIMPLE_COPY(vy,jmax); YMAX_OB_SIMPLE_COPY(vz,jmax); if(ENABLE) YMAX_INFLOW_CHECK(vy,jmax); }
+    if(cctk_bbox[3]) {
+      const int jmax=cctk_lsh[1]-cctk_nghostzones[1]+which_bdry_pt;
+#pragma omp parallel for
+      for(int k=0; k<cctk_lsh[2]; k++)
+        for(int i=0; i<cctk_lsh[0]; i++) {
+          press[IDX(i,jmax,k)] = press[IDX(i,jmax-1,k)];
+          rho[IDX(i,jmax,k)]   = rho[IDX(i,jmax-1,k)];
+          vx[IDX(i,jmax,k)]    = vx[IDX(i,jmax-1,k)];
+          vy[IDX(i,jmax,k)]    = vy[IDX(i,jmax-1,k)];
+          vz[IDX(i,jmax,k)]    = vz[IDX(i,jmax-1,k)]; 
+          if(vx[IDX(i,jmax,k)]<0.) vx[IDX(i,jmax,k)] = 0.0;
+      }
+    }
     // j=jmin=outer boundary
     if(cctk_bbox[2]) {
-      YMIN_OB_SIMPLE_COPY(press,jmin); YMIN_OB_SIMPLE_COPY(rho,jmin); YMIN_OB_SIMPLE_COPY(vx,jmin); YMIN_OB_SIMPLE_COPY(vy,jmin); YMIN_OB_SIMPLE_COPY(vz,jmin); if(ENABLE) YMIN_INFLOW_CHECK(vy,jmin); }
+      const int jmin=cctk_nghostzones[1]-which_bdry_pt-1;
+#pragma omp parallel for
+      for(int k=0; k<cctk_lsh[2]; k++)
+        for(int i=0; i<cctk_lsh[0]; i++) {
+          press[IDX(i,jmin,k)] = press[IDX(i,jmin+1,k)];
+          rho[IDX(i,jmin,k)]   = rho[IDX(i,jmin+1,k)];
+          vx[IDX(i,jmin,k)]    = vx[IDX(i,jmin+1,k)];
+          vy[IDX(i,jmin,k)]    = vy[IDX(i,jmin+1,k)];
+          vz[IDX(i,jmin,k)]    = vz[IDX(i,jmin+1,k)]; 
+          if(vx[IDX(i,jmin,k)]>0.) vx[IDX(i,jmin,k)] = 0.0;
+      }
+    }
 
     /* ZMIN & ZMAX */
     // k=kmax=outer boundary
-    if(cctk_bbox[5]) { ZMAX_OB_SIMPLE_COPY(press,kmax); ZMAX_OB_SIMPLE_COPY(rho,kmax); ZMAX_OB_SIMPLE_COPY(vx,kmax); ZMAX_OB_SIMPLE_COPY(vy,kmax); ZMAX_OB_SIMPLE_COPY(vz,kmax); if(ENABLE) ZMAX_INFLOW_CHECK(vz,kmax); }
+    if(cctk_bbox[5]) {
+      const int kmax=cctk_lsh[2]-cctk_nghostzones[2]+which_bdry_pt;
+#pragma omp parallel for
+      for(int j=0; j<cctk_lsh[1]; j++)
+        for(int i=0; i<cctk_lsh[0]; i++) {
+          press[IDX(i,j,kmax)] = press[IDX(i,j,kmax-1)];
+          rho[IDX(i,j,kmax)]   = rho[IDX(i,j,kmax-1)];
+          vx[IDX(i,j,kmax)]    = vx[IDX(i,j,kmax-1)];
+          vy[IDX(i,j,kmax)]    = vy[IDX(i,j,kmax-1)];
+          vz[IDX(i,j,kmax)]    = vz[IDX(i,j,kmax-1)]; 
+          if(vx[IDX(i,j,kmax)]<0.) vx[IDX(i,j,kmax)] = 0.0;
+      }
+    }
     // k=kmin=outer boundary
     if((cctk_bbox[4]) && Symmetry_none) {
-      ZMIN_OB_SIMPLE_COPY(press,kmin); ZMIN_OB_SIMPLE_COPY(rho,kmin); ZMIN_OB_SIMPLE_COPY(vx,kmin); ZMIN_OB_SIMPLE_COPY(vy,kmin); ZMIN_OB_SIMPLE_COPY(vz,kmin); if(ENABLE) ZMIN_INFLOW_CHECK(vz,kmin); }
+      const int kmin=cctk_nghostzones[2]-which_bdry_pt-1;
+#pragma omp parallel for
+      for(int j=0; j<cctk_lsh[1]; j++)
+        for(int i=0; i<cctk_lsh[0]; i++) {
+          press[IDX(i,j,kmin)] = press[IDX(i,j,kmin+1)];
+          rho[IDX(i,j,kmin)]   = rho[IDX(i,j,kmin+1)];
+          vx[IDX(i,j,kmin)]    = vx[IDX(i,j,kmin+1)];
+          vy[IDX(i,j,kmin)]    = vy[IDX(i,j,kmin+1)];
+          vz[IDX(i,j,kmin)]    = vz[IDX(i,j,kmin+1)]; 
+          if(vx[IDX(i,j,kmin)]>0.) vx[IDX(i,j,kmin)] = 0.0;
+      }
+    }
   }
 
   const double poison = 0.0/0.0;
@@ -205,9 +294,6 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                   &eTxy[index], &eTxz[index], &eTyy[index],
                   &eTyz[index], &eTzz[index]);
           }
-
-          //if(i==5 && j==5 && k==5) CCTK_VInfo(CCTK_THORNSTRING,"%e %e %e %e",eTtt[index],eTtx[index],eTty[index],eTxy[index]);
-          //CCTK_VInfo(CCTK_THORNSTRING,"YAY: "); for(ww=0;ww<10;ww++) CCTK_VInfo(CCTK_THORNSTRING,"%e ",TDNMUNU[ww]); CCTK_VInfo(CCTK_THORNSTRING,"");
         }
   }
 }

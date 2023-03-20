@@ -37,7 +37,6 @@
 #include "cctk.h"
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
-#include "GRHayLET.h"
 #include "IGM.h"
 
 void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
@@ -87,8 +86,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   in_prims[ww]=vyl;        out_prims_r[ww]=vylr;        out_prims_l[ww]=vyll;        ww++;
   in_prims[ww]=vzl;        out_prims_r[ww]=vzlr;        out_prims_l[ww]=vzll;        ww++;
 
-  //const double *cmin[3] = {cmin_x, cmin_y, cmin_z};
-  //const double *cmax[3] = {cmax_x, cmax_y, cmax_z};
+  double *cmin[3] = {cmin_x, cmin_y, cmin_z};
+  double *cmax[3] = {cmax_x, cmax_y, cmax_z};
 
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
   GRHayL_convert_ADM_to_BSSN(cctkGH,
@@ -117,19 +116,6 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   curv[KYY] = kyy;
   curv[KYZ] = kyz;
   curv[KZZ] = kzz;
-//  /* SET POINTERS TO STRESS-ENERGY TENSOR GRIDFUNCTIONS */
-//  CCTK_REAL *TUPmunu[10];// "TUPmunu" here is array of pointers to the actual gridfunctions.
-//  ww=0;
-//  TUPmunu[ww]=TUPtt; ww++;
-//  TUPmunu[ww]=TUPtx; ww++;
-//  TUPmunu[ww]=TUPty; ww++;
-//  TUPmunu[ww]=TUPtz; ww++;
-//  TUPmunu[ww]=TUPxx; ww++;
-//  TUPmunu[ww]=TUPxy; ww++;
-//  TUPmunu[ww]=TUPxz; ww++;
-//  TUPmunu[ww]=TUPyy; ww++;
-//  TUPmunu[ww]=TUPyz; ww++;
-//  TUPmunu[ww]=TUPzz; ww++;
 
   // 1) First initialize RHS variables to zero
 #pragma omp parallel for
@@ -189,9 +175,13 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         out_prims_r[BX_CENTER][index] = out_prims_l[BX_CENTER][index] = in_prims[BX_STAGGER][indexim1];
   }
 
+  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+                                out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
+
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims, out_prims_r, out_prims_l,
+  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+                         out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
@@ -243,9 +233,13 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         out_prims_r[BY_CENTER][index] = out_prims_l[BY_CENTER][index] = in_prims[BY_STAGGER][indexjm1];
   }
 
+  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+                                out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
+
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims, out_prims_r, out_prims_l,
+  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+                         out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
@@ -266,7 +260,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=2;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, metric, out_prims_r, out_prims_l, phi_bssn, /*cmin, cmax,*/ Az_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
 
   /* There are two stories going on here:
    * 1) Single reconstruction to (i,j,k-1/2) for {rho,P,vx,vy,vz,Bx,By,Bz} to compute
@@ -309,9 +303,13 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         out_prims_r[BZ_CENTER][index] = out_prims_l[BZ_CENTER][index] = in_prims[BZ_STAGGER][indexkm1];
   }
 
+  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+                                out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
+
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims, out_prims_r, out_prims_l,
+  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+                         out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
@@ -331,7 +329,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=0;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, metric, out_prims_r, out_prims_l, phi_bssn, /*cmin, cmax,*/ Ax_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
 
   // We reprise flux_dir=1 reconstruction to finish up computations of Ai_rhs's!
   { // num_vars and var_indices are local variables
@@ -357,7 +355,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=1;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, metric, out_prims_r, out_prims_l, phi_bssn, /*cmin, cmax,*/ Ay_rhs);
+  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
 
   // Next compute phitilde_rhs, and add gauge terms to A_i_rhs terms!
   //   Note that in the following function, we don't bother with reconstruction, instead interpolating.

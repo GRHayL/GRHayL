@@ -200,7 +200,7 @@ schedule GRHayL_IGM_evaluate_MHD_rhs in MoL_CalcRHS as GRHayL_IGM_RHS_eval after
            grmhd_B_stagger, phitilde, Ax, Ay, Az
   WRITES:  ADMBase::metric(everywhere), ADMBase::lapse(everywhere), ADMBase::shift(everywhere)
   WRITES:  BSSN_quantities(everywhere),
-           grmhd_primitives_reconstructed_temps, grmhd_flux_temps, #grmhd_cmin_cmax_temps, currently GFs aren't being set, have to just recompute
+           grmhd_primitives_reconstructed_temps, grmhd_flux_temps, grmhd_cmin_cmax_temps,
            grmhd_conservatives_rhs, EM_rhs
 } "Evaluate RHSs of GR Hydro & GRMHD equations"
 

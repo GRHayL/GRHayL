@@ -34,7 +34,7 @@
 //}
 
 void calculate_tau_source_rhs(
-      const cGH *cctkGH,
+      const cGH *restrict cctkGH,
       const eos_parameters *restrict eos,
       const double **in_metric,
       const double **in_curv,
@@ -86,25 +86,37 @@ void calculate_tau_source_rhs(
   }
 }
 
-void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dir, const double *restrict dX,
-                            const eos_parameters *restrict eos,
-                            const double **in_metric,
-                            const double **in_prims,
-                            /*const*/ double **in_prims_r,
-                            /*const*/ double **in_prims_l,
-                            double *restrict rho_star_flux, double *restrict tau_flux,
-                            double *restrict Stildex_flux, double *restrict Stildey_flux, double *restrict Stildez_flux,
-                            double *restrict rho_star_rhs, double *restrict tau_rhs,
-                            double *restrict Stildex_rhs, double *restrict Stildey_rhs, double *restrict Stildez_rhs) {
+void calculate_MHD_dirn_rhs(
+      const cGH *restrict cctkGH,
+      const int flux_dir,
+      const double *restrict dX,
+      const eos_parameters *restrict eos,
+      const double **in_metric,
+      const double **in_prims,
+      /*const*/ double **in_prims_r,
+      /*const*/ double **in_prims_l,
+      const double *restrict cmin,
+      const double *restrict cmax,
+      double *restrict rho_star_flux,
+      double *restrict tau_flux,
+      double *restrict Stildex_flux,
+      double *restrict Stildey_flux,
+      double *restrict Stildez_flux,
+      double *restrict rho_star_rhs,
+      double *restrict tau_rhs,
+      double *restrict Stildex_rhs,
+      double *restrict Stildey_rhs,
+      double *restrict Stildez_rhs) {
 
   const double dxi[3] = { 1.0/dX[0],1.0/dX[1],1.0/dX[2] };
   const double poison = 0.0/0.0;
 
   // Function pointer to allow for loop over fluxes and sources
   void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
-                              const eos_parameters *restrict, const metric_quantities *restrict, conservative_quantities *restrict);
+                                const eos_parameters *restrict, const metric_quantities *restrict, const double, const double,
+                                conservative_quantities *restrict);
   void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict eos,
-                              const metric_quantities *restrict, const metric_derivatives *restrict, conservative_quantities *restrict);
+                                 const metric_quantities *restrict, const metric_derivatives *restrict, conservative_quantities *restrict);
 
   const int xdir = (flux_dir == 0);
   const int ydir = (flux_dir == 1);
@@ -186,7 +198,7 @@ void calculate_MHD_dirn_rhs(const cGH *cctkGH, const int flux_dir, const double 
         limit_v_and_compute_u0(eos, &metric_face, &prims_l, &speed_limited);
 
         conservative_quantities cons_fluxes;
-        calculate_HLLE_fluxes(&prims_r, &prims_l, eos, &metric_face, &cons_fluxes);
+        calculate_HLLE_fluxes(&prims_r, &prims_l, eos, &metric_face, cmin[index], cmax[index], &cons_fluxes);
 
         rho_star_flux[index] = cons_fluxes.rho;
         tau_flux[index]      = cons_fluxes.tau;

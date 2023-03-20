@@ -4,6 +4,7 @@
 SRCS = A_no_gauge_rhs.c                               \
        calculate_MHD_rhs.c                            \
        compute_B_and_Bstagger_from_A.c                \
+       compute_characteristic_speeds.c                \
        conservs_to_prims.c                            \
        convert_ADM_to_BSSN.c                          \
        convert_from_ADMBase_HydroBase_to_GRHayL_IGM.c \
