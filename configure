@@ -1,178 +1,334 @@
-#!/usr/bin/env python3
-from os.path import exists
-from shutil import which
-from argparse import ArgumentParser
-from subprocess import run
+#!/bin/sh
 
-# https://stackoverflow.com/questions/287871/how-do-i-print-colored-text-to-the-terminal
-class bcolors:
-    RED    = '\033[31m'
-    GREEN  = '\033[32m'
-    END    = '\033[0m'
-    BOLD   = '\033[1m'
-    BGREEN = BOLD+GREEN
-    BRED   = BOLD+RED
+pkg="GRHayL"
+pkg_short="GRHayL"
+pkg_version="1.0.0"
 
-def parse_cmd_args():
-    """
-    Parse command line arguments.
+help_message()
+{
+    echo "This is the configuration script for $pkg."
+    echo "Syntax: ./configure [-h,--help] [--license] [--prefix=<dir>]"
+    echo "                    [--buildtype=<type>] [--nohdf5] [--hdf5dir=<dir>]"
+    echo "                    [--hdf5inc=<dir>] [--hdf5lib=<dir>]"
+    echo "options:"
+    echo "    -h, --help    Print this message and exit"
+    echo "    --license     Print license information and exit"
+    echo "    --prefix      Installation directory"
+    echo "    --buildtype   Build type (default debug-opt). Supported values:"
+    echo "                    type       : compiler flags added to CFLAGS"
+    echo "                    plain      : None"
+    echo "                    debug      : -Wall -std=c99 -O0 -g"
+    echo "                    debug-opt  : -Wall -std=c99 -march=native -O2 -g"
+    echo "                    opt        : -Wall -std=c99 -march=native -O2"
+    echo "                    production : -Wall -std=c99 -march=native -O3"
+    echo "    --nohdf5      Disables HDF5; for now this means no tabulated EOS."
+    echo "    --hdf5dir     Sets the HDF5 base directory. Possible values:"
+    echo "                    <dir> : assumes <dir>/include and <dir>/lib exist"
+    echo "                            (see --hdf5inc and --hdf5lib if not)"
+    echo "    --hdf5inc     Sets the path to the HDF5 include directory"
+    echo "    --hdf5lib     Sets the path to the HDF5 lib directory"
+}
 
-    Inputs
-    ------
-      None.
+check_command()
+{
+    printf "Checking if command $1 exists... "
+    tmp_=$(command -v $1)
+    if [ "$tmp_" = "" ]; then
+        printf "\033[1m\033[31mNO\033[0m\n"
+        eval have_$(printf $1 | tr - _)=0
+    else
+        printf "\033[1m\033[32mYES\033[0m ($tmp_)\n"
+        eval have_$(printf $1 | tr - _)=1
+    fi
+}
 
-    Returns
-    -------
-      An argparse.Namespace object with all arguments parsed.
-    """
+check_compiler()
+{
+    printf "Checking if compiler $1 exists... "
+    tmp_=$(command -v $1)
+    if [ "$tmp_" = "" ]; then
+        printf "\033[1m\033[31mNO\033[0m\n"
+    else
+        printf "\033[1m\033[32mYES\033[0m ($tmp_)\n"
+        CC=$1
+    fi
+}
 
-    parser = ArgumentParser(
-        prog="./configure",
-        description="Configuration script for the GRHayL library.")
+c_compiles()
+{
+    code=$1
+    c_compiler=$2
+    cflags=$3
+    libs=$4
+    msg=$5
+    printf "$msg"
+    printf "$code" | $c_compiler $cflags -x c - $libs
+    rm -f a.out
+    if [ $? -eq 0 ]; then
+        printf "\033[1m\033[32mYES\033[0m ($c_compiler$cflags<objs>$libs)\n"
+    else
+        printf "\033[1m\033[31mNO\033[0m ($c_compiler$cflags<objs>$libs)\n"
+        exit 1
+    fi
+}
 
-    parser.add_argument("--meson"          , default="meson"    , help="path to meson executable")
-    parser.add_argument("--ninja"          , default="ninja"    , help="path to ninja executable")
-    parser.add_argument("--prefix"         , default=None       , help="installation directory")
-    parser.add_argument("--builddir"       , default="build"    , help="build directory")
-    parser.add_argument("--compile-silent" , action="store_true", help="less verbose while compiling")
-    parser.add_argument("--default-library", default="static"   , help="library type")
+NL='
+'
+probe_file()
+{
+    # Source: https://stackoverflow.com/questions/10346816
+    tmp_=$(find $1 2>/dev/null | grep -F $2)
+    # Source: https://unix.stackexchange.com/questions/276834
+    case $tmp_ in
+             "") return 1;;
+        *"$NL"*) return 2;;
+              *) return 0;;
+    esac
+}
 
-    return parser.parse_args()
+set_hdf5()
+{
+    printf "Checking if hdf5.h can be found in $1... "
+    probe_file $1 hdf5.h
+    err=$?
+    if [ $err -ne 0 ]; then
+        case $err in
+            1) printf "\033[1m\033[31mNO\033[0m\n";;
+            2) printf "\nFound multiple hdf5.h files:\n"
+               printf "$tmp_\n"
+               printf "Please specify the desired one using the --hdf5dir, --hdf5inc,\n"
+               printf "and/or --hdf5lib options. Run ./configure -h for further details.\n"
+               ;;
+        esac
+        return $err
+    else
+        printf "\033[1m\033[32mYES\033[0m ($tmp_)\n"
+        CFLAGS="$CFLAGS -I$(dirname $tmp_)"
+    fi
+    for f in libhdf5.so libhdf5.a; do
+        printf "Checking if $f can be found in $2... "
+        probe_file $2 $f
+        if [ $? -ne 0 ]; then
+            printf "\033[1m\033[31mNO\033[0m\n"
+            if [ "$f" = "libhdf5.a" ]; then
+                return 1;
+            fi
+        else
+            printf "\033[1m\033[32mYES\033[0m ($tmp_)\n"
+            LD_FLAGS="$LD_FLAGS -L$(dirname $tmp_) -lhdf5"
+            break
+        fi
+    done
+    return 0
+}
 
-def check_command_exists(cmd):
-    """
-    Checks whether or not a command exists.
+# Source: https://www.baeldung.com/linux/bash-parse-command-line-arguments
+VALID_ARGS=$(getopt -o hl --long help,license,nohdf5,prefix:,hdf5dir:,hdf5inc:,hdf5lib:,buildtype: -- "$@")
+if [ $? -ne 0 ]; then
+    help_message
+    exit 1
+fi
 
-    Inputs
-    ------
-      cmd : str
-        Command.
+# Set defaults
+prefix="/usr/local"
+buildtype="debug-opt"
+withhdf5=1
+hdf5dir=""
+hdf5inc=""
+hdf5lib=""
 
-    Returns
-    -------
-      True if the command is found, false otherwise.
-    """
+if [ "$VALID_ARGS" != " --" ]; then
+   eval set -- "$VALID_ARGS"
+   while [ : ]; do
+       case "$1" in
+           -h | --help) help_message; exit;;
+           -l | --license)
+               if [ -f LICENSE ]; then
+                   cat LICENSE; exit
+               else
+                   printf "License file (LICENSE) does not exist\n"; exit
+               fi
+               ;;
+           --prefix) prefix=$2; shift 2;;
+           --buildtype) buildtype=$2; shift 2;;
+           --nohdf5) withhdf5=0; shift 1;;
+           --hdf5dir) hdf5dir=$2; shift 2;;
+           --hdf5inc) hdf5inc=$2; shift 2;;
+           --hdf5lib) hdf5lib=$2; shift 2;;
+           --) shift; break;;
+       esac
+   done
+fi
 
-    print(f"Looking for command {cmd}... ", end="")
-    path = which(cmd)
-    if path is None:
-        print(f"{bcolors.BRED}NOT FOUND{bcolors.END}")
-        # Command not found
-        return False
-    # Command found
-    print(f"{bcolors.BGREEN}FOUND{bcolors.END} ({path})")
-    return True
+printf "Beginning configuration script for $pkg...\n"
 
-def meson_build(args):
-    """
-    Creates the build directory and call meson build.
+case $buildtype in
+         plain) break;;
+         debug) CFLAGS="$CFLAGS -Wall -std=c99 -O0 -g"; break;;
+     debug-opt) CFLAGS="$CFLAGS -Wall -std=c99 -O2 -g"; break;;
+           opt) CFLAGS="$CFLAGS -Wall -std=c99 -O2"; break;;
+    production) CFLAGS="$CFLAGS -Wall -std=c99 -O3"; break;;
+             *) printf "Unsupported build type $buildtype. Use ./configure -h for help\n"
+                exit 1;;
+esac
+LD_FLAGS="$LD_FLAGS -lm"
 
-    Inputs
-    ------
-      args : argparse.Namespace
-        Parsed command line arguments.
+check_command grep
+check_command sed
+if [ $have_sed -eq 1 ]; then
+    SED=sed
+else
+    check_command gsed
+    if [ $have_gsed -eq 1 ]; then
+        SED=gsed
+        have_sed=1
+    else
+        check_command awk
+        if [ $have_awk -eq 1 ]; then
+            AWK=awk
+        else
+            check_command gawk
+            if [ $have_gawk -eq 1 ]; then
+                AWK = gawk
+                have_awk=1
+            fi
+        fi
+    fi
+fi
 
-    Returns
-    -------
-      Nothing.
-    """
+# Check for a valid C compiler
+for compiler in gcc clang icc icx cc; do
+    if [ -z $CC ]; then
+        check_compiler $compiler
+    else
+        break
+    fi
+done
 
-    if not check_command_exists(args.meson):
-        raise Exception("Could not find meson executable. Please install it "
-                        "with `pip install meson` or provide the installation "
-                        "path using ./configure --meson=<path>")
-    if not check_command_exists(args.ninja):
-        raise Exception("Could not find ninja executable. Please install it "
-                        "with `pip install ninja` or provide the installation "
-                        "path using ./configure --ninja=<path>")
+# Check if C compiler works
 
-    cmdargs = [args.meson, "setup", args.builddir]
-    if exists(args.builddir):
-        cmdargs += ["--reconfigure"]
-    if args.prefix is not None:
-        cmdargs += [f"--prefix={args.prefix}"]
-    run(cmdargs)
+c_compiles "int main() { return 0; }" $CC " -O0 " "" "Checking if C compiler works... "
+code='
+#include <stdio.h>
+#include <math.h>
 
-def write_makefile(args):
-    """
-    Writes a Makefile.
+int main() {
+  printf("%%.15e\\n", cos(2.3456));
+  return 0;
+}
+'
+c_compiles "$code" $CC " -O0 " " -lm" "Checking if compiler works with -lm linker flag... "
+c_compiles "$code" $CC " $CFLAGS " " $LD_FLAGS" "Checking if compiler works with build flags... "
 
-    Inputs
-    ------
-      args : argparse.Namespace
-        Parsed command line arguments.
+if [ $withhdf5 -eq 1 ]; then
+    if [ "$hdf5dir" = "" ]; then
+        if [ "$hdf5inc" = "" ] && [ "$hdf5lib" = "" ]; then
+            check_command pkg-config
+            if [ $have_pkg_config -eq 1 ]; then
+                printf "Checking if hdf5 library is available with pkg-config... "
+                hdf5inc=$(pkg-config hdf5 --cflags 2>/dev/null)
+                hdf5lib=$(pkg-config hdf5 --libs --static 2>/dev/null)
+                if [ "$hdf5inc" != "" ] && [ "$hdf5lib" != "" ]; then
+                    printf "\033[1m\033[32mYES\033[0m\n"
+                    have_hdf5=1
+                    CFLAGS="$CFLAGS $hdf5inc"
+                    LD_FLAGS="$LD_FLAGS $hdf5lib"
+                else
+                    printf "\033[1m\033[31mNO\033[0m\n"
+                    have_hdf5=0
+                fi
+            fi
+            if [ $have_hdf5 -eq 0 ]; then
+                printf "Searching for HDF5 in common places\n"
+                for d in /opt /etc /usr/local/Cellar /usr/local /usr; do
+                    if [ ! -d $d ]; then
+                        continue
+                    fi
+                    set_hdf5 $d $d
+                    case $? in
+                        0) break;;
+                        1) continue;;
+                        2) exit 2;;
+                    esac
+                done
+                if [ $err -ne 0 ]; then
+                    printf "Error: HDF5 not found\n"
+                    exit 1
+                fi
+            fi
+        elif [ "$hdf5inc" = "" ] || [ "$hdf5lib" = "" ]; then
+            printf "For custom HDF5 paths, both --hdf5inc and --hdf5lib must be given\n"
+            exit 1
+        else
+            set_hdf5 "$hdf5inc" "$hdf5lib"
+            if [ $? -ne 0 ]; then
+                exit 1
+            fi
+        fi
+    else
+        if [ ! -d $hdf5dir ]; then
+            printf "Error: HDF5 directory $hdf5dir does not exist\n"
+            exit 1
+        fi
+        set_hdf5 "${hdf5dir}/include" "${hdf5dir}/lib"
+        if [ $? -ne 0 ]; then
+            printf "Error: HDF5 not found\n"
+            exit 1
+        fi
+    fi
+    # Courtesy ChatGPT (comments removed)
+    code='
+#include <stdio.h>
+#include <stdlib.h>
+#include "hdf5.h"
 
-    Returns
-    -------
-      Nothing.
-    """
+int main() {
+  hid_t file_id, dataset_id, dataspace_id;
+  herr_t status;
+  file_id = H5Fopen("test.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (file_id < 0) {
+    fprintf(stderr, "Failed to open HDF5 file!\\n");
+    exit(1);
+  }
+  dataset_id = H5Dopen2(file_id, "test_dataset", H5P_DEFAULT);
+  if (dataset_id < 0) {
+    fprintf(stderr, "Failed to open HDF5 dataset!\\n");
+    exit(1);
+  }
+  dataspace_id = H5Dget_space(dataset_id);
+  if (H5Sget_simple_extent_ndims(dataspace_id) != 2) {
+    fprintf(stderr, "Unexpected dataspace rank!\\n");
+    exit(1);
+  }
+  hsize_t dims[2];
+  status = H5Sget_simple_extent_dims(dataspace_id, dims, NULL);
+  if (status < 0 || dims[0] != 5 || dims[1] != 10) {
+    fprintf(stderr, "Unexpected dataspace dimensions!\\n");
+    exit(1);
+  }
+  status = H5Dclose(dataset_id);
+  status = H5Fclose(file_id);
+  printf("HDF5 installation is OK!\\n");
+  return 0;
+}
+'
+    c_compiles "$code" $CC " $CFLAGS " " $LD_FLAGS" "Checking if compiler works with HDF5... "
+fi
 
-    print("Creating Makefile...", end="")
-    with open("Makefile", "w") as f:
-        f.write(f"""# Source: https://stackoverflow.com/questions/2214575/passing-arguments-to-make-run
-# If the first argument is "check*"...
-ifneq ($(filter check%, $(firstword $(MAKECMDGOALS))),)
-  # use the rest as arguments for "check"
-  testnames := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  # ...and turn them into do-nothing targets
-  $(eval $(testnames):;@:)
-endif
-
-.PHONY: grhayl check check-verbose
-prefix={args.prefix}
-
-all: grhayl
-
-grhayl:
-\t@{args.meson} compile -{'' if args.compile_silent else 'v'}C build
-
-check:
-\t@{args.meson} test -C build $(testnames) | tee test.log
-\t@if grep -q "No suitable tests defined" test.log; then \
-     echo "One or more tests ($(testnames)) not found"; \
-     exit 1; \
-   fi
-\t@if grep -q "FAIL" test.log; then \
-     echo "One or more tests ($(testnames)) failed"; \
-     exit 2; \
-   fi
-
-check-verbose:
-\t@{args.meson} test -vC build $(testnames) | tee test.log
-\t@if grep -q "No suitable tests defined" test.log; then \
-     echo "One or more tests ($(testnames)) not found"; \
-     exit 1; \
-   fi
-\t@if grep -q "FAIL" test.log; then \
-     echo "One or more tests ($(testnames)) failed"; \
-     exit 2; \
-   fi
-
-install:
-\t@{args.meson} install -C build
-
-clean:
-\t@echo "Cleaning object files"
-\t@rm -f `find build | grep -E "\.[s]?o$$"`
-
-realclean:
-\t@echo "Removing build directory."
-\t@rm -rf build lib include
-\t@echo "Restoring old Makefile."
-\t@cp Makefile_old Makefile
-\t@echo "All done. Run configure again to setup the meson build system."
-
-uninstall:
-\t@echo "Removing header files from $(prefix)/include/grhayl"
-\t@rm -rf $(prefix)/include/grhayl
-\t@echo "Removing library files from $(prefix)/lib"
-\t@rm -f `find $(prefix)/lib | grep libgrhayl`
-\t@echo "All done"
-""")
-    print(" done.")
-
-if __name__ == '__main__':
-
-    args = parse_cmd_args()
-    meson_build(args)
-    write_makefile(args)
+#--prefix) prefix=$2; shift 2;;
+#--buildtype) buildtype=$2; shift 2;;
+#--nohdf5) withhdf5=0; shift 1;;
+#--hdf5dir) hdf5dir=$2; shift 2;;
+#--hdf5inc) hdf5inc=$2; shift 2;;
+#--hdf5lib) hdf5lib=$2; shift 2;;
+printf "%60s\n" " " | tr " " -
+printf "\033[1m%28s\033[0m : v.\033[1m%-28s\033[0m\n\n" $pkg_short $pkg_version
+printf "Build options:\n"
+printf "    %-19s : %s\n" "Installation prefix" $prefix
+if [ $withhdf5 -eq 0 ]; then
+    printf "    %-19s : %s\n" "HDF5 support" "No"
+else
+    printf "    %-19s : %s\n" "HDF5 support" "Yes"
+fi
+printf "    %-19s : %s\n" "Selected GEMS" "All"
+printf "%60s\n" " " | tr " " -
