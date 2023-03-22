@@ -84,7 +84,7 @@ void GRHayL_IGM_compute_characteristic_speeds(
       double *restrict cmin,
       double *restrict cmax);
 
-void GRHAYL_IGM_calculate_MHD_dirn_rhs(
+void GRHayL_IGM_calculate_MHD_dirn_rhs(
       const cGH *cctkGH,
       const int flux_dirn,
       const double *restrict dX,
@@ -113,7 +113,7 @@ void GRHAYL_IGM_calculate_MHD_dirn_rhs(
 // pointer to pointer to double -> pointer to pointer to const double. I saw comments
 // suggesting this may become part of the C23 standard, so I guess you can uncomment this
 // in like 10 years.
-void GRHAYL_IGM_A_no_gauge_rhs(
+void GRHayL_IGM_A_no_gauge_rhs(
       const cGH *restrict cctkGH,
       const int A_dir,
       /*const*/ double **out_prims_r,
@@ -123,7 +123,7 @@ void GRHAYL_IGM_A_no_gauge_rhs(
       /*const*/ double **cmax,
       double *restrict A_rhs);
 
-void GRHAYL_IGM_phitilde_and_A_gauge_rhs(
+void GRHayL_IGM_phitilde_and_A_gauge_rhs(
       const cGH *cctkGH,
       const double *restrict dX,
       const double *restrict gupxx,
