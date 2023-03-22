@@ -139,7 +139,7 @@ schedule GRHayL_IGM_InitSymBound in GRHayL_IGM_PostPostInitial as postid before 
 } "Schedule symmetries -- Actually just a placeholder function to ensure prolongations / processor syncs are done BEFORE outer boundaries are updated."
 
 # Easiest primitives to solve for: B^i
-schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in GRHayL_IGM_PostPostInitial as compute_b after postid after empostid after lapsepostid
+schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in GRHayL_IGM_PostPostInitial as compute_b after postid
 {
   LANG: C
   READS:  GRID::coordinates
@@ -157,7 +157,7 @@ schedule GRHayL_IGM_conserv_to_prims in GRHayL_IGM_PostPostInitial after compute
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-  READS:  grmhd_B_center
+  READS:  grmhd_conservatives, grmhd_B_center
   # C2P Shouldn't actually change B^i, but we return the values via the return_primitives() anyways
   # in the event a new C2P for some reason touches B^i
   WRITES: grmhd_primitives_allbutBi(everywhere), grmhd_B_center(everywhere),
@@ -170,7 +170,7 @@ schedule GRHayL_IGM_conserv_to_prims in GRHayL_IGM_PostPostInitial after compute
 } "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
 
 # Copy data to other timelevels.
-schedule GRHayL_IGM_PostPostInitial_Set_Symmetries__Copy_Timelevels in GRHayL_IGM_PostPostInitial as mhdpostid after compute_b after p2c
+schedule GRHayL_IGM_PostPostInitial_Set_Symmetries__Copy_Timelevels in GRHayL_IGM_PostPostInitial as mhdpostid after compute_b
 {
   LANG: C
   READS:  GRID::coordinates
@@ -256,11 +256,11 @@ schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in HydroBase_Boundaries after 
 } "Compute B and B_stagger from A,  SYNC: grmhd_primitives_Bi,grmhd_primitives_Bi_stagger"
 
 # Nontrivial primitives solve, for P,rho_b,vx,vy,vz.
-schedule GRHayL_IGM_conserv_to_prims in AddToTmunu after compute_B_and_Bstagger_from_A
+schedule GRHayL_IGM_conserv_to_prims in AddToTmunu
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-  READS:  grmhd_B_center
+  READS:  grmhd_conservatives, grmhd_B_center
   # C2P Shouldn't actually change B^i, but we return the values via the return_primitives() anyways
   # in the event a new C2P for some reason touches B^i
   WRITES: grmhd_primitives_allbutBi(everywhere), grmhd_B_center(everywhere),
@@ -294,7 +294,7 @@ schedule GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRH
 # Conversion from GRHayL_IGM variables to Hydrobase
 #########################################################
 
-SCHEDULE convert_from_GRHayL_IGM_to_HydroBase AT CCTK_INITIAL AFTER GRHayL_IGM_ID_Converter #Con2Prim old thing doesn't exist to schedule around?
+SCHEDULE convert_from_GRHayL_IGM_to_HydroBase AT CCTK_INITIAL AFTER GRHayL_IGM_ID_Converter
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
