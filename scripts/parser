@@ -1,0 +1,35 @@
+#!/usr/bin/sh
+
+AWK=$1
+
+sources=$($AWK -f scripts/match_all.awk \
+              -v re_start="^ *SRCS" \
+              -v re_end="^ *$" \
+              -v re_in="[a-zA-Z0-9_.]*\\\\.c" \
+              -v set_path=1 \
+              $2)
+
+headers=$($AWK -f scripts/match_all.awk \
+              -v re_start="^#! *INCS" \
+              -v re_end="^ *$" \
+              -v re_in="[a-zA-Z0-9_.]*\\\\.h" \
+              -v set_path=1 \
+              $2)
+
+install_headers=$($AWK -f scripts/match_all.awk \
+                      -v re_start="^#! *install_headers" \
+                      -v re_end="^ *$" \
+                      -v re_in="[a-zA-Z0-9_.]*\\\\.h" \
+                      -v set_path=1 \
+                      $2)
+
+subdirs=$($AWK -f scripts/match_all.awk \
+              -v re_start="^ *SUBDIRS" \
+              -v re_end="^ *$" \
+              -v re_in="[a-zA-z0-0_./]*" \
+              $2 | $AWK '{ sub(/SUBDIRS */, "", $0); print $0 }')
+
+echo "Sources         : $sources"
+echo "Headers         : $headers"
+echo "Install headers : $install_headers"
+echo "Subdirs         : $subdirs"
