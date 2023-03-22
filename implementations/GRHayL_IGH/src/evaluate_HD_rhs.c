@@ -78,7 +78,7 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
   double *cmax[3] = {cmax_x, cmax_y, cmax_z};
 
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-  GRHayL_convert_ADM_to_BSSN(cctkGH,
+  GRHayL_IGH_convert_ADM_to_BSSN(cctkGH,
                              gxx, gxy, gxz, gyy, gyz, gzz,
                              phi_bssn, psi_bssn,
                              gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
@@ -122,7 +122,7 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
   // 1) Compute tau_rhs extrinsic curvature terms, and
   // 2) Compute TUPmunu.
   // This function is housed in the file: "compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C"
-  calculate_tau_source_rhs(cctkGH, grhayl_eos, metric, curv, in_prims, tau_rhs);
+  GRHayL_IGH_calculate_tau_source_rhs(cctkGH, grhayl_eos, metric, curv, in_prims, tau_rhs);
 
   int flux_dir;
   const int var_indices[3] = {VX, VY, VZ};
@@ -132,14 +132,14 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
    *  via PPM reconstruction onto (i-1/2,j,k), so that
    *  \partial_x F = [ F(i+1/2,j,k) - F(i-1/2,j,k) ] / dx
    */
-  reconstruction_loop(cctkGH, flux_dir, 3, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  GRHayL_IGH_reconstruction_loop(cctkGH, flux_dir, 3, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
 
-  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+  GRHayL_IGH_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
                                 out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_HD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayL_IGH_calculate_HD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
@@ -150,14 +150,14 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
    *  \partial_y F = [ F(i,j+1/2,k) - F(i,j-1/2,k) ] / dy
    */
   flux_dir=1;
-  reconstruction_loop(cctkGH, flux_dir, 3, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  GRHayL_IGH_reconstruction_loop(cctkGH, flux_dir, 3, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
 
-  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+  GRHayL_IGH_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
                                 out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_HD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayL_IGH_calculate_HD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
@@ -169,14 +169,14 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
    *  via PPM reconstruction onto (i,j,k-1/2), so that
    *  \partial_z F = [ F(i,j,k+1/2) - F(i,j,k-1/2) ] / dz
    */
-  reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+  GRHayL_IGH_reconstruction_loop(cctkGH, flux_dir, 3, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
 
-  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+  GRHayL_IGH_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
                                 out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_HD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayL_IGH_calculate_HD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);

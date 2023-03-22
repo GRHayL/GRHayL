@@ -1,7 +1,7 @@
 #include "cctk.h"
 #include "IGM.h"
 
-void phitilde_and_A_gauge_rhs(const cGH *cctkGH,
+void GRHayL_IGM_phitilde_and_A_gauge_rhs(const cGH *cctkGH,
                    const double *restrict dX,
                    const double *restrict gupxx,
                    const double *restrict gupxy,

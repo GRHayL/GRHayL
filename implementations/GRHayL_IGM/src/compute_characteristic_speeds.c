@@ -1,7 +1,7 @@
 #include "cctk.h"
 #include "IGM.h"
 
-void compute_characteristic_speeds(
+void GRHayL_IGM_compute_characteristic_speeds(
       const cGH *restrict cctkGH,
       const int flux_dir,
       const eos_parameters *restrict eos,
@@ -49,7 +49,7 @@ void compute_characteristic_speeds(
 
         metric_quantities metric_face;
         primitive_quantities prims_r, prims_l;
-        interpolate_to_face_and_initialize_metric(
+        GRHayL_IGM_interpolate_to_face_and_initialize_metric(
                           cctkGH, i, j, k,
                           flux_dir, in_metric[LAPSE],
                           in_metric[BETAX], in_metric[BETAY], in_metric[BETAZ],

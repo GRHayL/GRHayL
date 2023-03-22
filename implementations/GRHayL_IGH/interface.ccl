@@ -23,7 +23,7 @@ CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
 # The HydroBase quantities rho and press are used as the primitives in this code. However,
 # GRHayL uses the velocity v^i = u^i/u^0, while HydroBase uses the Valencia velocity, so
 # we declare our own velocities here.
-cctk_real grmhd_primitives_allbutBi type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
+cctk_real grmhd_primitives type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
 {
   vx, vy, vz
 } "Primitive variables density, pressure, and components of three velocity v^i. Note that v^i is defined in terms of 4-velocity as: v^i = u^i/u^0. Note that this definition differs from the Valencia formalism."

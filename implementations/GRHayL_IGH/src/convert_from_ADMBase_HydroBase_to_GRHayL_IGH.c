@@ -22,7 +22,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGH(CCTK_ARGUMENTS) {
   double dummy4, dummy5, dummy6;
 
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-  GRHayL_convert_ADM_to_BSSN(cctkGH,
+  GRHayL_IGH_convert_ADM_to_BSSN(cctkGH,
                              gxx, gxy, gxz, gyy, gyz, gzz,
                              phi_bssn, psi_bssn,
                              gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,

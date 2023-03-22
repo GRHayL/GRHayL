@@ -48,9 +48,9 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     CCTK_VINFO("***** Iter. # %d, Lev: %d, Integrating to time: %e *****",cctk_iteration,levelnumber,cctk_delta_time/cctk_levfac[0]+cctk_time);
   }
 
-  if( sizeof(CCTK_REAL) < 8 ) CCTK_VERROR("Error: IllinoisGRMHD assumes that CCTK_REAL is a double precision number. Setting otherwise will likely cause havoc with the conserv_to_prims solver.");
+  if( sizeof(CCTK_REAL) < 8 ) CCTK_VERROR("Error: GRHayL_IGM assumes that CCTK_REAL is a double precision number. Setting otherwise will likely cause havoc with the conserv_to_prims solver.");
 
-  if(cctk_nghostzones[0]<3 || cctk_nghostzones[1]<3 || cctk_nghostzones[2]<3) { CCTK_VERROR("ERROR. Need at least 3 ghostzones for IllinoisGRMHD evolutions."); }
+  if(cctk_nghostzones[0]<3 || cctk_nghostzones[1]<3 || cctk_nghostzones[2]<3) { CCTK_VERROR("ERROR. Need at least 3 ghostzones for GRHayL_IGM evolutions."); }
 
   CCTK_REAL dX[3] = { CCTK_DELTA_SPACE(0), CCTK_DELTA_SPACE(1), CCTK_DELTA_SPACE(2) };
 
@@ -90,7 +90,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   double *cmax[3] = {cmax_x, cmax_y, cmax_z};
 
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-  GRHayL_convert_ADM_to_BSSN(cctkGH,
+  GRHayL_IGM_convert_ADM_to_BSSN(cctkGH,
                              gxx, gxy, gxz, gyy, gyz, gzz,
                              phi_bssn, psi_bssn,
                              gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
@@ -140,7 +140,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // 1) Compute tau_rhs extrinsic curvature terms, and
   // 2) Compute TUPmunu.
   // This function is housed in the file: "compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C"
-  calculate_tau_source_rhs(cctkGH, grhayl_eos, metric, curv, in_prims, tau_rhs);
+  GRHayL_IGM_calculate_tau_source_rhs(cctkGH, grhayl_eos, metric, curv, in_prims, tau_rhs);
 
   int flux_dir;
   flux_dir=0;
@@ -161,7 +161,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   { // num_vars and var_indices are local variables
     const int num_vars = 6;
     const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};
-    reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
@@ -175,12 +175,12 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         out_prims_r[BX_CENTER][index] = out_prims_l[BX_CENTER][index] = in_prims[BX_STAGGER][indexim1];
   }
 
-  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+  GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
                                 out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
@@ -214,12 +214,12 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   { // num_vars and var_indices are local variables
     const int num_vars = 4;
     const int var_indices[4] = {VXR, VYR, VXL, VYL};
-    reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
   { // num_vars and var_indices are local variables
     const int num_vars = 7;
     const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER};
-    reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
@@ -233,12 +233,12 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         out_prims_r[BY_CENTER][index] = out_prims_l[BY_CENTER][index] = in_prims[BY_STAGGER][indexjm1];
   }
 
-  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+  GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
                                 out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
@@ -260,7 +260,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=2;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
+  GRHayL_IGM_A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
 
   /* There are two stories going on here:
    * 1) Single reconstruction to (i,j,k-1/2) for {rho,P,vx,vy,vz,Bx,By,Bz} to compute
@@ -283,12 +283,12 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   { // num_vars and var_indices are local variables
     const int num_vars = 4;
     const int var_indices[4] = {VYR, VZR, VYL, VZL};
-    reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
   { // num_vars and var_indices are local variables
     const int num_vars = 7;
     const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER};
-    reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 /*****************************************************************************************/
 
@@ -303,12 +303,12 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         out_prims_r[BZ_CENTER][index] = out_prims_l[BZ_CENTER][index] = in_prims[BZ_STAGGER][indexkm1];
   }
 
-  compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
+  GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
                                 out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
@@ -329,13 +329,13 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=0;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
+  GRHayL_IGM_A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
 
   // We reprise flux_dir=1 reconstruction to finish up computations of Ai_rhs's!
   { // num_vars and var_indices are local variables
     const int num_vars = 5;
     const int var_indices[5] = {VXR, VZR, VXL, VZL, BZ_STAGGER};
-    reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
 
@@ -355,13 +355,13 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=1;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
+  GRHayL_IGM_A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
 
   // Next compute phitilde_rhs, and add gauge terms to A_i_rhs terms!
   //   Note that in the following function, we don't bother with reconstruction, instead interpolating.
   // We need A^i, but only have A_i. So we add gtupij to the list of input variables.
   // We are FINISHED with v{x,y,z}{r,l} and P{r,l} so we use these 8 gridfunctions' worth of space as temp storage.
-  phitilde_and_A_gauge_rhs(cctkGH, dX, gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz,
+  GRHayL_IGM_phitilde_and_A_gauge_rhs(cctkGH, dX, gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz,
               psi_bssn, alp, betax, betay, betaz, Ax, Ay, Az, phitilde,
               grhayl_params->Lorenz_damping_factor, vxr, vyr, vzr, vxl, vyl, vzl, pressr, pressl,
               phitilde_rhs, Ax_rhs, Ay_rhs, Az_rhs);

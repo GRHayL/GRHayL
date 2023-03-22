@@ -2,7 +2,7 @@
 #include "cctk_Parameters.h"
 #include "IGH.h"
 
-void GRHayL_convert_ADM_to_BSSN(const cGH *cctkGH,
+void GRHayL_IGH_convert_ADM_to_BSSN(const cGH *cctkGH,
       double *gxx, double *gxy, double *gxz,
       double *gyy, double *gyz, double *gzz,
       double *phi, double *psi,

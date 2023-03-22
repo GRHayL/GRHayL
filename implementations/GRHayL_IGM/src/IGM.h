@@ -14,7 +14,7 @@ static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,
   BX_CENTER=5,BY_CENTER=6,BZ_CENTER=7,BX_STAGGER=8,BY_STAGGER=9,BZ_STAGGER=10,
   VXR=11,VYR=12,VZR=13,VXL=14,VYL=15,VZL=16,MAXNUMVARS=17;  //<-- Be _sure_ to define MAXNUMVARS appropriately!
 
-void GRHayL_convert_ADM_to_BSSN(const cGH *cctkGH,
+void GRHayL_IGM_convert_ADM_to_BSSN(const cGH *cctkGH,
       double *gxx, double *gxy, double *gxz,
       double *gyy, double *gyz, double *gzz,
       double *phi, double *psi,
@@ -23,7 +23,7 @@ void GRHayL_convert_ADM_to_BSSN(const cGH *cctkGH,
       double *gtupxx, double *gtupxy, double *gtupxz,
       double *gtupyy, double *gtupyz, double *gtupzz);
 
-void interpolate_to_face_and_initialize_metric(
+void GRHayL_IGM_interpolate_to_face_and_initialize_metric(
       const cGH *cctkGH,
       const int i, const int j, const int k,
       const int flux_dirn,
@@ -52,21 +52,21 @@ void GRHayL_IGM_set_symmetry_gzs_staggered(
 
 /******** Helper functions for the RHS calculations *************/
 
-void reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
+void GRHayL_IGM_reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
                          const int *restrict var_indices,
                          const eos_parameters *restrict eos,
                          const double **in_prims,
                          double **out_prims_r,
                          double **out_prims_l);
 
-void reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
+void GRHayL_IGM_reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
                          const int *restrict var_indices,
                          const eos_parameters *restrict eos,
                          const double **in_prims,
                          double **out_prims_r,
                          double **out_prims_l);
 
-void calculate_tau_source_rhs(
+void GRHayL_IGM_calculate_tau_source_rhs(
       const cGH *cctkGH,
       const eos_parameters *restrict eos,
       const double **in_metric,
@@ -74,7 +74,7 @@ void calculate_tau_source_rhs(
       const double **in_prims,
       double *restrict tau_rhs);
 
-void compute_characteristic_speeds(
+void GRHayL_IGM_compute_characteristic_speeds(
       const cGH *restrict cctkGH,
       const int flux_dir,
       const eos_parameters *restrict eos,
@@ -84,7 +84,7 @@ void compute_characteristic_speeds(
       double *restrict cmin,
       double *restrict cmax);
 
-void calculate_MHD_dirn_rhs(
+void GRHAYL_IGM_calculate_MHD_dirn_rhs(
       const cGH *cctkGH,
       const int flux_dirn,
       const double *restrict dX,
@@ -113,7 +113,7 @@ void calculate_MHD_dirn_rhs(
 // pointer to pointer to double -> pointer to pointer to const double. I saw comments
 // suggesting this may become part of the C23 standard, so I guess you can uncomment this
 // in like 10 years.
-void A_no_gauge_rhs(
+void GRHAYL_IGM_A_no_gauge_rhs(
       const cGH *restrict cctkGH,
       const int A_dir,
       /*const*/ double **out_prims_r,
@@ -123,7 +123,7 @@ void A_no_gauge_rhs(
       /*const*/ double **cmax,
       double *restrict A_rhs);
 
-void phitilde_and_A_gauge_rhs(
+void GRHAYL_IGM_phitilde_and_A_gauge_rhs(
       const cGH *cctkGH,
       const double *restrict dX,
       const double *restrict gupxx,

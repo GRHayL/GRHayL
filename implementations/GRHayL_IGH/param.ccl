@@ -1,4 +1,4 @@
-# Parameter definitions for thorn GRHayL_IGM
+# Parameter definitions for thorn GRHayL_IGH
 
 #TODO: only needed if we keep the STORAGE for ADMBase in the schedule
 shares: ADMBase
@@ -8,7 +8,7 @@ USES CCTK_INT metric_timelevels
 
 #########################################################
 
-INT Convert_to_HydroBase_every "How often to convert GRHayL_IGM primitive variables to HydroBase (Valencia formulation) primitive variables? Needed for some ET-based diagnostics. NOT needed for pure GRHayL_IGM runs."
+INT Convert_to_HydroBase_every "How often to convert GRHayL_IGH primitive variables to HydroBase (Valencia formulation) primitive variables? Needed for some ET-based diagnostics. NOT needed for pure GRHayL_IGH runs."
 {
  0:* :: "zero (disable) or positive (every N iterations)"
 } 0
@@ -16,15 +16,10 @@ INT Convert_to_HydroBase_every "How often to convert GRHayL_IGM primitive variab
 #########################################################
 
 # Symmetry boundary params. Needed for handling staggered gridfunctions.
-KEYWORD Symmetry "Currently only no symmetry supported, though work has begun in adding equatorial-symmetry support. FIXME: Extend ET symmetry interface to support symmetries on staggered gridfunctions"
+KEYWORD Symmetry "Currently only no symmetry supported, though work has begun in adding equatorial-symmetry support."
 {
   "none"       :: "no symmetry, full 3d domain"
 } "none"
-
-REAL Sym_Bz "In-progress equatorial symmetry support: Symmetry parameter across z axis for magnetic fields = +/- 1"
-{
- -1.0:1.0 :: "Set to +1 or -1."
-} 1.0
 
 #########################################################
 

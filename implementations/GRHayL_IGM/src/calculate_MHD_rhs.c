@@ -33,7 +33,7 @@
 //  }
 //}
 
-void calculate_tau_source_rhs(
+void GRHayL_IGM_calculate_tau_source_rhs(
       const cGH *restrict cctkGH,
       const eos_parameters *restrict eos,
       const double **in_metric,
@@ -86,7 +86,7 @@ void calculate_tau_source_rhs(
   }
 }
 
-void calculate_MHD_dirn_rhs(
+void GRHayL_IGM_calculate_MHD_dirn_rhs(
       const cGH *restrict cctkGH,
       const int flux_dir,
       const double *restrict dX,
@@ -172,7 +172,7 @@ void calculate_MHD_dirn_rhs(
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
         metric_quantities metric_face;
-        interpolate_to_face_and_initialize_metric(
+        GRHayL_IGM_interpolate_to_face_and_initialize_metric(
                           cctkGH, i, j, k,
                           flux_dir, in_metric[LAPSE],
                           in_metric[BETAX], in_metric[BETAY], in_metric[BETAZ],
@@ -215,7 +215,7 @@ void calculate_MHD_dirn_rhs(
         const int indp1 = CCTK_GFINDEX3D(cctkGH, i+xdir, j+ydir, k+zdir);
 
         metric_quantities metric_face, metric_facep1;
-        interpolate_to_face_and_initialize_metric(
+        GRHayL_IGM_interpolate_to_face_and_initialize_metric(
                           cctkGH, i, j, k,
                           flux_dir, in_metric[LAPSE],
                           in_metric[BETAX], in_metric[BETAY], in_metric[BETAZ],
@@ -223,7 +223,7 @@ void calculate_MHD_dirn_rhs(
                           in_metric[GYY], in_metric[GYZ], in_metric[GZZ],
                           &metric_face);
 
-        interpolate_to_face_and_initialize_metric(
+        GRHayL_IGM_interpolate_to_face_and_initialize_metric(
                           cctkGH, i+xdir, j+ydir, k+zdir,
                           flux_dir, in_metric[LAPSE],
                           in_metric[BETAX], in_metric[BETAY], in_metric[BETAZ],

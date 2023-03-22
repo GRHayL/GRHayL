@@ -34,8 +34,8 @@
 #include <cctk_Parameters.h>
 #include "IGM.h"
 
-void seed_magnetic_fields(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS_seed_magnetic_fields;
+void GRHayL_IGM_seed_magnetic_fields(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS_GRHayL_IGM_seed_magnetic_fields;
   DECLARE_CCTK_PARAMETERS;
 
   CCTK_INFO ("Seeding magnetic fields");

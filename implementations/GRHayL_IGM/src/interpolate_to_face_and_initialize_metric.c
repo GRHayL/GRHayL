@@ -7,7 +7,7 @@
 #define A1  -0.0625
 #define COMPUTE_FCVAL(METRICm2,METRICm1,METRIC,METRICp1) (AM2*(METRICm2) + AM1*(METRICm1) + A0*(METRIC) + A1*(METRICp1))
 
-void interpolate_to_face_and_initialize_metric(
+void GRHayL_IGM_interpolate_to_face_and_initialize_metric(
       const cGH *cctkGH,
       const int i, const int j, const int k,
       const int flux_dir,

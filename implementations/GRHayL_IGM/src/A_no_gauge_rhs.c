@@ -2,7 +2,7 @@
 #include "IGM.h"
 #define IPH(METRICm1,METRICp0,METRICp1,METRICp2) (-0.0625*((METRICm1) + (METRICp2)) + 0.5625*((METRICp0) + (METRICp1)))
 
-void A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
+void GRHayL_IGM_A_no_gauge_rhs(const cGH *restrict cctkGH, const int A_dir,
                /*const*/ double **in_prims_r,
                /*const*/ double **in_prims_l,
                const double *restrict phi_bssn,
