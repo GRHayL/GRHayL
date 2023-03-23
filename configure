@@ -450,10 +450,10 @@ printf "grhayl: $sharedlib\n\n"                                                >
 if [ $verbose -eq 1 ]; then
     printf "$sharedlib: \$(OBJ)\n"                                             >> Makefile
     printf '\t$(CC) $(CFLAGS) -fPIC -shared $(OBJ) -o $@ $(LD_FLAGS)\n\n'      >> Makefile
-    printf "clean:\n\trm -f \$(OBJ)\n\trm -f $sharedlib\n"                     >> Makefile
-    printf "realclean: clean\n\trm -rf $builddir\n\n"                          >> Makefile
     printf "\$(OBJ): build/%%.o : GRHayL/%%.c \$(INC)\n"                       >> Makefile
     printf "\t\$(CC) \$(CFLAGS) -fPIC -c \$< -o \$@\n\n"                       >> Makefile
+    printf "clean:\n\trm -f \$(OBJ)\n\trm -f $sharedlib\n"                     >> Makefile
+    printf "realclean: clean\n\trm -rf $builddir\n\trm -f Makefile\n\n"        >> Makefile
 else
     printf "$sharedlib: \$(OBJ)\n"                                             >> Makefile
     printf '\t@$(CC) $(CFLAGS) -fPIC -shared $(OBJ) -o $@ $(LD_FLAGS)\n'       >> Makefile
@@ -465,7 +465,10 @@ else
     printf "\t@rm -f \$(OBJ)\n"                                                >> Makefile
     printf '\t@echo "Removing library files"\n'                                >> Makefile
     printf "\t@rm -f $sharedlib\n\n"                                           >> Makefile
-    printf "realclean: clean\n\t@rm -rf $builddir\n\n"                         >> Makefile
+    printf 'realclean: clean\n\t@echo "Removing build directory"\n'            >> Makefile
+    printf "\t@rm -rf $builddir\n"                                             >> Makefile
+    printf '\t@echo "Removing Makefile"\n'                                     >> Makefile
+    printf '\t@rm -f Makefile\n\n'                                             >> Makefile
 fi
 printf "install: grhayl\n"                                                     >> Makefile
 printf '\t@echo "Installing GRHayL in $(PREFIX)..."\n'                         >> Makefile
