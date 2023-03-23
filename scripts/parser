@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ $# -ne 2 ]; then
+    printf "Correct usage: $0 <awk flavor> <make.code.defn file path>\n"
+    exit 1
+fi
+
 AWK=$1
 
 sources=$($AWK -f scripts/match_all.awk \
