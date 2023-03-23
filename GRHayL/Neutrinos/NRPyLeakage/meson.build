@@ -1,5 +1,0 @@
-NRPyLeakage_sources = files('NRPyLeakage_compute_neutrino_luminosities.c',
-                            'NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c',
-                            'NRPyLeakage_compute_neutrino_opacities.c',
-                            'NRPyLeakage_Fermi_Dirac_integrals.c',
-                            'NRPyLeakage_optical_depths_PathOfLeastResistance.c')
