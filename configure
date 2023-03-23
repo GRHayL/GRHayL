@@ -4,6 +4,36 @@ pkg="GRHayL"
 pkg_short="GRHayL"
 pkg_version="1.0.0"
 
+green()
+{
+    printf "\033[1m\033[32m$1\033[0m"
+}
+
+red()
+{
+    printf "\033[1m\033[31m$1\033[0m"
+}
+
+YES()
+{
+    green "YES"
+    if [ $# -eq 1 ]; then
+        printf " ($1)\n"
+    else
+        printf "\n"
+    fi
+}
+
+NO()
+{
+    red "NO"
+    if [ $# -eq 1 ]; then
+        printf " ($1)\n"
+    else
+        printf "\n"
+    fi
+}
+
 help_message()
 {
     echo "This is the configuration script for $pkg."
@@ -34,10 +64,10 @@ check_command()
     printf "Checking if command $1 exists... "
     tmp_=$(command -v $1)
     if [ "$tmp_" = "" ]; then
-        printf "\033[1m\033[31mNO\033[0m\n"
+        NO
         eval have_$(printf $1 | tr - _)=0
     else
-        printf "\033[1m\033[32mYES\033[0m ($tmp_)\n"
+        YES $tmp_
         eval have_$(printf $1 | tr - _)=1
     fi
 }
@@ -47,10 +77,10 @@ check_compiler()
     printf "Checking if compiler $1 exists... "
     tmp_=$(command -v $1)
     if [ "$tmp_" = "" ]; then
-        printf "\033[1m\033[31mNO\033[0m\n"
+        NO
     else
-        printf "\033[1m\033[32mYES\033[0m ($tmp_)\n"
         CC=$1
+        YES "$tmp_"
     fi
 }
 
@@ -65,9 +95,9 @@ c_compiles()
     printf "$code" | $c_compiler $cflags -x c - $libs
     rm -f a.out
     if [ $? -eq 0 ]; then
-        printf "\033[1m\033[32mYES\033[0m ($c_compiler$cflags<objs>$libs)\n"
+        YES "$c_compiler$cflags<objs>$libs"
     else
-        printf "\033[1m\033[31mNO\033[0m ($c_compiler$cflags<objs>$libs)\n"
+        NO "$c_compiler$cflags<objs>$libs"
         exit 1
     fi
 }
@@ -93,28 +123,27 @@ set_hdf5()
     err=$?
     if [ $err -ne 0 ]; then
         case $err in
-            1) printf "\033[1m\033[31mNO\033[0m\n";;
+            1) NO;;
             2) printf "\nFound multiple hdf5.h files:\n"
                printf "$tmp_\n"
                printf "Please specify the desired one using the --hdf5dir, --hdf5inc,\n"
-               printf "and/or --hdf5lib options. Run ./configure -h for further details.\n"
-               ;;
+               printf "and/or --hdf5lib options. Run ./configure -h for further details.\n";;
         esac
         return $err
     else
-        printf "\033[1m\033[32mYES\033[0m ($tmp_)\n"
+        YES "$tmp_"
         CFLAGS="$CFLAGS -I$(dirname $tmp_)"
     fi
-    for f in libhdf5.so libhdf5.a; do
+    for f in $hdf5libfiles; do
         printf "Checking if $f can be found in $2... "
         probe_file $2 $f
         if [ $? -ne 0 ]; then
-            printf "\033[1m\033[31mNO\033[0m\n"
+            NO;
             if [ "$f" = "libhdf5.a" ]; then
                 return 1;
             fi
         else
-            printf "\033[1m\033[32mYES\033[0m ($tmp_)\n"
+            YES "$tmp_"
             LD_FLAGS="$LD_FLAGS -L$(dirname $tmp_) -lhdf5"
             break
         fi
@@ -161,16 +190,34 @@ if [ "$VALID_ARGS" != " --" ]; then
 fi
 
 printf "Beginning configuration script for $pkg...\n"
+printf "Detecting system... "
+unames=$(uname -s)
+case $unames in
+    Linux)
+        printf "%s\n" $(green "$unames")
+        hdf5libfiles="libhdf5.so libhdf5.a"
+        break;;
+    Darwin)
+        printf "%s\n" $(green "$unames")
+        hdf5libfiles="libhdf5.dylib libhdf5.a"
+        break;;
+    *)
+        printf "Unsupported system %s\n" $(red "$unames")
+        exit 1;;
+esac
 
+printf "Checking build type... "
 case $buildtype in
          plain) break;;
-         debug) CFLAGS="$CFLAGS -Wall -std=c99 -O0 -g"; break;;
-     debug-opt) CFLAGS="$CFLAGS -Wall -std=c99 -O2 -g"; break;;
-           opt) CFLAGS="$CFLAGS -Wall -std=c99 -O2"; break;;
-    production) CFLAGS="$CFLAGS -Wall -std=c99 -O3"; break;;
-             *) printf "Unsupported build type $buildtype. Use ./configure -h for help\n"
+         debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g"; break;;
+     debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -O2 -g"; break;;
+           opt) BUILDCFLAGS="-Wall -std=c99 -march=native -O2"; break;;
+    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3"; break;;
+             *) printf "%s\nUnsupported built type, use ./configure -h for help\n" $(red $buildtype)
                 exit 1;;
 esac
+printf "%s (build flags: $BUILDCFLAGS)\n" $(green $buildtype)
+CFLAGS="$CFLAGS $BUILDCFLAGS"
 LD_FLAGS="$LD_FLAGS -lm"
 
 check_command grep
@@ -206,7 +253,6 @@ for compiler in gcc clang icc icx cc; do
 done
 
 # Check if C compiler works
-
 c_compiles "int main() { return 0; }" $CC " -O0 " "" "Checking if C compiler works... "
 code='
 #include <stdio.h>
@@ -239,13 +285,13 @@ if [ $withhdf5 -eq 1 ]; then
                 fi
             fi
             if [ $have_hdf5 -eq 0 ]; then
-                printf "Searching for HDF5 in common places\n"
                 for d in /opt /etc /usr/local/Cellar /usr/local /usr; do
                     if [ ! -d $d ]; then
                         continue
                     fi
                     set_hdf5 $d $d
-                    case $? in
+                    err=$?
+                    case $err in
                         0) break;;
                         1) continue;;
                         2) exit 2;;
@@ -312,23 +358,22 @@ int main() {
   return 0;
 }
 '
-    c_compiles "$code" $CC " $CFLAGS " " $LD_FLAGS" "Checking if compiler works with HDF5... "
+    c_compiles "$code" $CC " $CFLAGS " " $LD_FLAGS" "Checking if compiler works with hdf5... "
 fi
 
-#--prefix) prefix=$2; shift 2;;
-#--buildtype) buildtype=$2; shift 2;;
-#--nohdf5) withhdf5=0; shift 1;;
-#--hdf5dir) hdf5dir=$2; shift 2;;
-#--hdf5inc) hdf5inc=$2; shift 2;;
-#--hdf5lib) hdf5lib=$2; shift 2;;
-printf "%60s\n" " " | tr " " -
-printf "\033[1m%28s\033[0m : v.\033[1m%-28s\033[0m\n\n" $pkg_short $pkg_version
-printf "Build options:\n"
-printf "    %-19s : %s\n" "Installation prefix" $prefix
+tmp=$(printf "$pkg_short configuration finished successfully")
+sep=$(printf "%*s" "${#tmp}" " " | tr " " -)
+printf "%s\n" $sep
+printf "$tmp\n\n"
+printf "%2sConfiguration information\n" " "
+printf "%2s-------------------------\n" " "
+printf "%4s%-19s : %s\n" " " "Version" $pkg_version
+printf "%4s%-19s : %s\n" " " "Installation prefix" $prefix
+printf "%4s%-19s : %s\n" " " "Build type" $buildtype
 if [ $withhdf5 -eq 0 ]; then
-    printf "    %-19s : %s\n" "HDF5 support" "No"
+    printf "%4s%-19s : %s\n" " " "HDF5 support" "No"
 else
-    printf "    %-19s : %s\n" "HDF5 support" "Yes"
+    printf "%4s%-19s : %s\n" " " "HDF5 support" "Yes"
 fi
-printf "    %-19s : %s\n" "Selected GEMS" "All"
-printf "%60s\n" " " | tr " " -
+printf "%4s%-19s : %s\n" " " "Selected GEMS" "All"
+printf "%s\n" $sep
