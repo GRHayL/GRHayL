@@ -18,5 +18,4 @@ SRCS = A_no_gauge_rhs.c                               \
        postpostinitial__set_symmetries__copy_timelevels.c \
        reconstruction_loop.c                          \
        reconstruction_loop_no_rho_P.c                 \
-       seed_magnetic_fields.c                         \
        symmetry_gzs_staggered.c

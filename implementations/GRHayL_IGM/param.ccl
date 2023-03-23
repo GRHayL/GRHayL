@@ -40,43 +40,6 @@ KEYWORD EM_BC "EM field boundary condition"
   "copy"    :: "Copy data from nearest boundary point"
   "frozen"  :: "Frozen boundaries"
 } "copy"
-#########################################################
-
-# Parameters for seeding magnetic fields
-restricted:
-BOOLEAN enable_staggered_A_fields "Define A fields on a GRHayL_IGM staggered grid"
-{
-} "yes"
-
-KEYWORD Afield_type "A-field prescription"
-{
-"Pressure_prescription"     :: "A_phi propto (P - P_cut)^n_s"
-"Density_prescription"      :: "A_phi propto rho"
-} "Pressure_prescription"
-
-BOOLEAN enable_varpi_squared_multiplication "Multiply A_phi by varpi^2?"
-{
-} "yes"
-
-REAL A_b "Magnetic field strength parameter."
-{
- *:* :: "Any real"
-} 1e-3
-
-REAL P_cut "Cutoff pressure, below which vector potential is set to zero. Typically set to 4% of the maximum initial pressure."
-{
- 0:* :: "Positive"
-} 1e-5
-
-REAL n_s "Magnetic field strength pressure exponent."
-{
- *:* :: "Any real"
-} 1.0
-
-REAL rho_cut "Cutoff density, below which vector potential is set to zero. Typically set to 20% of the maximum initial density."
-{
- 0:* :: "Positive"
-} 0.2 # If max density = 1.0
 
 #########################################################
 

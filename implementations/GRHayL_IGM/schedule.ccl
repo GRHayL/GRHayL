@@ -111,14 +111,6 @@ schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_ID_Converter as fourth_initia
           TmunuBase::stress_energy_tensor(everywhere)
 } "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
 
-SCHEDULE GRHayL_IGM_seed_magnetic_fields IN GRHayL_IGM_ID_Converter
-{
-  LANG: C
-  READS:  GRID::coordinates
-  READS:  HydroBase::rho(everywhere), HydroBase::press(everywhere)
-  WRITES: HydroBase::Avec(everywhere), HydroBase::Aphi(everywhere)
-} "Set up seed magnetic field configuration."
-
 #########################################################
 # POSTPOSTINITIAL
 #########################################################
