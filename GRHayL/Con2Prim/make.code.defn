@@ -9,3 +9,5 @@ SRCS = apply_inequality_fixes.c                 \
        limit_utilde_and_compute_v.c             \
        reset_prims_to_atmosphere.c              \
        undensitize_conservatives.c
+
+SUBDIRS = C2P_Routines
