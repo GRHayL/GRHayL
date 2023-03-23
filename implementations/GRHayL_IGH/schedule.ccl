@@ -169,6 +169,12 @@ schedule GRHayL_IGH_evaluate_HD_rhs in MoL_CalcRHS as GRHayL_IGH_RHS_eval after 
 # Problem: all the sync's in outer boundary updates might just overwrite prolongated values.
 #########################################################
 
+schedule IllinoisGRMHD_InitSymBound in HydroBase_Boundaries as Boundary_SYNCs
+{
+  SYNC: grmhd_conservatives
+  LANG: C
+} "Schedule symmetries -- Actually just a placeholder function to ensure prolongations / processor syncs are done BEFORE outer boundaries are updated."
+
 # Nontrivial primitives solve, for P,rho_b,vx,vy,vz.
 schedule GRHayL_IGH_conserv_to_prims in AddToTmunu
 {
