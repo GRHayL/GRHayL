@@ -506,5 +506,5 @@ else
     printf "%4s%-19s : %s\n" " " "HDF5 support" "Yes"
 fi
 printf "%4s%-19s : " " " "GEMS to be built"
-./scripts/parser $AWK "GRHayL/make.code.defn" "subdirs"
+./scripts/parser $AWK "GRHayL/make.code.defn" "subdirs" | awk '{sub(/include /, "", $0); print}'
 printf "%s\n" $sep
