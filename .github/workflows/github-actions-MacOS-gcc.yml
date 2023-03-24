@@ -29,13 +29,13 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin -o build/${{ matrix.test-function }}_input.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output.bin -o build/${{ matrix.test-function }}_output.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output_pert.bin -o build/${{ matrix.test-function }}_output_pert.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/${{ matrix.test-function }}.md5 -o build/${{ matrix.test-function }}.md5
-          cd build && md5sum -c ${{ matrix.test-function }}.md5 && cd ..
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin -o ${{ matrix.test-function }}_input.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output.bin -o ${{ matrix.test-function }}_output.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output_pert.bin -o ${{ matrix.test-function }}_output_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/${{ matrix.test-function }}.md5 -o ${{ matrix.test-function }}.md5
+          md5sum -c ${{ matrix.test-function }}.md5
       - name: Run ET IllinoisGRMHD unit test for ${{ matrix.test-function }}
-        run: make check-verbose ${{ matrix.test-function }}
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
 
   con-to-prim:
     strategy:
@@ -59,13 +59,13 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin -o build/Noble2D_initial_data.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin -o build/${{ matrix.test-function }}.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin -o build/${{ matrix.test-function }}_pert.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5 -o build/${{ matrix.test-function }}.md5
-          cd build && md5sum -c ${{ matrix.test-function }}.md5 && cd ..
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin -o Noble2D_initial_data.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin -o ${{ matrix.test-function }}.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin -o ${{ matrix.test-function }}_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5 -o ${{ matrix.test-function }}.md5
+          md5sum -c ${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
-        run: make check-verbose ${{ matrix.test-function }}
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
 
   tabulated-eos:
     strategy:
@@ -87,6 +87,6 @@ jobs:
           OS: 'Mac'
           compiler: 'gcc'
       - name: Copy test data to working directory
-        run: curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5 -o build/simple_table.h5
+        run: curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5 -o simple_table.h5
       - name: Run tabulated EOS unit test
-        run: make check-verbose tabulated_eos
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_tabulated_eos simple_table.h5

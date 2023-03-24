@@ -1,8 +1,16 @@
 #!/bin/sh
+#
+# configure
+#
+# (c) 2023, Leo Werneck
+#
+# This is GRHayL's configure script, which is responsible for ensuring users are
+# able to compile, test, and install GRHayL on different systems.
 
 pkg="GRHayL"
 pkg_short="GRHayL"
 pkg_version="1.0.0"
+libname="grhayl"
 
 red()
 {
@@ -39,32 +47,45 @@ NO()
     fi
 }
 
+error()
+{
+    red "ERROR: "
+    printf "$1\n"
+    exit 1
+}
+
 help_message()
 {
-    echo "This is the configuration script for $pkg."
-    echo "Syntax: ./configure [-h,--help] [-l,--license] [-r,--reconfigure] [--nohdf5]"
-    echo "                    [--prefix=<dir>] [--builddir=<dir>] [--buildtype=<type>]"
-    echo "                    [--hdf5dir=<dir>] [--hdf5inc=<dir>] [--hdf5lib=<dir>]"
-    echo "options:"
-    echo "    -h,--help           Print this message and exit"
-    echo "    -l,--license        Print license information and exit"
-    echo "    -r,--reconfigure    Force overwrite of previous configuration"
-    echo "    -v,--verbose        Generate a verbose Makefile"
-    echo "    --nohdf5            Disables HDF5; for now this means no tabulated EOS."
-    echo "    --prefix            Installation directory"
-    echo "    --builddir          Build directory (default build)"
-    echo "    --buildtype         Build type (default debug-opt). Supported values:"
-    echo "                          type       : compiler flags added to CFLAGS"
-    echo "                          plain      : None"
-    echo "                          debug      : -Wall -std=c99 -O0 -g"
-    echo "                          debug-opt  : -Wall -std=c99 -march=native -O2 -g"
-    echo "                          opt        : -Wall -std=c99 -march=native -O2"
-    echo "                          production : -Wall -std=c99 -march=native -O3"
-    echo "    --hdf5dir           Sets the HDF5 base directory. Possible values:"
-    echo "                          <dir> : assumes <dir>/include and <dir>/lib exist"
-    echo "                                  (see --hdf5inc and --hdf5lib if not)"
-    echo "    --hdf5inc           Sets the path to the HDF5 include directory"
-    echo "    --hdf5lib           Sets the path to the HDF5 lib directory"
+    echo 'This is the configuration script for $pkg.'
+    echo 'Syntax: ./configure [-h,--help] [-l,--license] [-r,--reconfigure] [-s,--silent]'
+    echo '                    [--noomp] [--nohdf5] [--prefix=<dir>] [--builddir=<dir>]'
+    echo '                    [--buildtype=<type>] [--cflags="<flag1> <flag2>..."]'
+    echo '                    [--clibs="<lib1> <lib2>..."] [--hdf5dir=<dir>]'
+    echo '                    [--hdf5inc=<dir>] [--hdf5lib=<dir>]'
+    echo 'Options:'
+    echo '    -h,--help           Print this message and exit'
+    echo '    -l,--license        Print license information and exit'
+    echo '    -r,--reconfigure    Force overwrite of previous configuration'
+    echo '    -s,--silent         Generate a less verbose Makefile'
+    echo '    --noomp             Disables OpenMP flags when linking unit tests'
+    echo '    --nohdf5            Disables HDF5; for now this means no tabulated EOS'
+    echo '    --prefix            Installation directory'
+    echo '    --builddir          Build directory (default build)'
+    echo '    --buildtype         Build type (default debug-opt). Supported values:'
+    echo '                          <type>     : compiler flags'
+    echo '                          -----------:---------------'
+    echo '                          nocflags   : None'
+    echo '                          debug      : -Wall -std=c99 -O0 -g'
+    echo '                          debug-opt  : -Wall -std=c99 -march=native -O2 -g'
+    echo '                          opt        : -Wall -std=c99 -march=native -O2'
+    echo '                          production : -Wall -std=c99 -march=native -O3'
+    echo '    --cflags            Additional compilation flags'
+    echo '    --clibs             Additional linker flags'
+    echo '    --hdf5dir           Sets the HDF5 base directory. Possible values:'
+    echo '                          <dir> : assumes <dir>/include and <dir>/lib exist'
+    echo '                                  (see --hdf5inc and --hdf5lib if not)'
+    echo '    --hdf5inc           Sets the path to the HDF5 include directory'
+    echo '    --hdf5lib           Sets the path to the HDF5 lib directory'
 }
 
 check_command()
@@ -96,20 +117,23 @@ check_compiler()
 
 c_compiles()
 {
-    code=$1
-    c_compiler=$2
-    cflags=$3
-    libs=$4
-    msg=$5
-    printf "$msg"
-    printf "$code" | $c_compiler $cflags -x c - $libs
-    rm -f a.out
+    printf "$5"
+    printf "$1" | $2 $3 -x c - $4 >/dev/null 2>&1
     if [ $? -eq 0 ]; then
-        YES "$c_compiler$cflags<objs>$libs"
+        YES "$2$3<objs>$4"
+        rm -f a.out
+        return 0
     else
-        NO "$c_compiler$cflags<objs>$libs"
-        exit 1
+        NO "$2$3<objs>$4"
+        rm -f a.out
+        return 1
     fi
+}
+
+Realpath()
+{
+    echo $(cd $(dirname $1); pwd)/$(basename $1) | \
+        awk '{gsub(/\/\.\./, "", $0); gsub(/\/\./, "", $0); print}'
 }
 
 NL='
@@ -128,8 +152,13 @@ probe_file()
 
 set_hdf5()
 {
+    for dir in $1 $2; do
+        if [ ! -d $dir ]; then
+            error "Directory $dir not found"
+        fi
+    done
     printf "Checking if hdf5.h can be found in $1... "
-    probe_file $1 hdf5.h
+    probe_file $1/ hdf5.h
     err=$?
     if [ $err -ne 0 ]; then
         case $err in
@@ -142,11 +171,11 @@ set_hdf5()
         return $err
     else
         YES "$tmp_"
-        CFLAGS="$CFLAGS -I$(dirname $tmp_)"
+        cflags="$cflags -I$(dirname $tmp_)"
     fi
     for f in $hdf5libfiles; do
         printf "Checking if $f can be found in $2... "
-        probe_file $2 $f
+        probe_file $2/ $f
         if [ $? -ne 0 ]; then
             NO;
             if [ "$f" = "libhdf5.a" ]; then
@@ -154,58 +183,81 @@ set_hdf5()
             fi
         else
             YES "$tmp_"
-            LD_FLAGS="$LD_FLAGS -L$(dirname $tmp_) -lhdf5"
+            clibs="$clibs -L$(dirname $tmp_) -lhdf5"
             break
         fi
     done
     return 0
 }
 
-# Source: https://www.baeldung.com/linux/bash-parse-command-line-arguments
-VALID_ARGS=$(getopt -o hlrv --long help,license,verbose,reconfigure,nohdf5,prefix:,hdf5dir:,hdf5inc:,hdf5lib:,buildtype:,builddir: -- "$@")
-if [ $? -ne 0 ]; then
-    help_message
-    exit 1
-fi
-
-# Set defaults
-verbose=0
+silent=0
 reconfigure=0
 prefix="/usr/local"
 buildtype="debug-opt"
 builddir="build"
-withhdf5=1
+ompcflag=" -fopenmp"
+usehdf5=1
+cflags=""
+clibs=""
 hdf5dir=""
 hdf5inc=""
 hdf5lib=""
 
-if [ "$VALID_ARGS" != " --" ]; then
-   eval set -- "$VALID_ARGS"
-   while [ : ]; do
-       case "$1" in
-           -h | --help) help_message; exit;;
-           -l | --license)
-               if [ -f LICENSE ]; then
-                   cat LICENSE; exit
-               else
-                   printf "License file (LICENSE) does not exist\n"; exit
-               fi
-               ;;
-           -v | --verbose) verbose=1; shift 1;;
-           -r | --reconfigure) reconfigure=1; shift 1;;
-           --nohdf5) withhdf5=0; shift 1;;
-           --prefix) prefix=$2; shift 2;;
-           --buildtype) buildtype=$2; shift 2;;
-           --builddir) builddir=$2; shift 2;;
-           --hdf5dir) hdf5dir=$2; shift 2;;
-           --hdf5inc) hdf5inc=$2; shift 2;;
-           --hdf5lib) hdf5lib=$2; shift 2;;
-           --) shift; break;;
-       esac
-   done
-fi
-
-printf "Beginning configuration script for $pkg...\n"
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help) help_message; exit;;
+        -l|--license)
+            if [ -f LICENSE ]; then
+                cat LICENSE; exit
+            else
+                printf "License file (LICENSE) does not exist\n"; exit
+            fi
+            ;;
+        -r|--reconfigure) reconfigure=1;;
+        -s|--silent) silent=1;;
+        --noomp) ompcflag="";;
+        --nohdf5) usehdf5=0;;
+        --prefix=*) prefix=$(echo "$1" | cut -d= -f2);;
+        --buildtype=*) buildtype=$(echo "$1" | cut -d= -f2);;
+        --builddir=*) builddir=$(echo "$1" | cut -d= -f2);;
+        --cflags=*) cflags=$(echo "$1" | cut -d= -f2);;
+        --clibs=*) clibs=$(echo "$1" | cut -d= -f2);;
+        --hdf5dir=*) hdf5dir=$(echo "$1" | cut -d= -f2);;
+        --hdf5inc=*) hdf5inc=$(echo "$1" | cut -d= -f2);;
+        --hdf5lib=*) hdf5lib=$(echo "$1" | cut -d= -f2);;
+        --prefix) prefix=$2; shift;;
+        --buildtype) buildtype=$2; shift;;
+        --builddir) builddir=$2; shift;;
+        --cflags) cflags=$2; shift;;
+        --clibs) clibs=$2; shift;;
+        --hdf5dir) hdf5dir=$2; shift;;
+        --hdf5inc) hdf5inc=$2; shift;;
+        --hdf5lib) hdf5lib=$2; shift;;
+        --) shift; break;;
+        -*)
+            opt=$1
+            opt_length=$(echo "$opt" | awk '{print length}')
+            for i in $(seq 2 "$opt_length"); do
+                char=$(echo "$opt" | cut -c"$i")
+                case $char in
+                    h) help_message; exit;;
+                    l)
+                        if [ -f LICENSE ]; then
+                            cat LICENSE; exit
+                        else
+                            printf "License file (LICENSE) does not exist\n"; exit
+                        fi
+                        ;;
+                    r) reconfigure=1;;
+                    s) silent=1;;
+                    *) echo "Warning: ignoring unknown option: $char";;
+                esac
+            done
+            ;;
+        *) echo "Warning: ignoring unknown option: $1";;
+    esac
+    shift
+done
 
 if [ -f $builddir/.check ] && [ $reconfigure -eq 0 ]; then
     printf "Build directory '$builddir' exists. Stopping configuration.\n"
@@ -213,23 +265,33 @@ if [ -f $builddir/.check ] && [ $reconfigure -eq 0 ]; then
     exit 1
 fi
 
+printf "Beginning configuration script for $pkg...\n"
 printf "Detecting system... "
 unames=$(uname -s)
 case $unames in
     Linux)
         printf "%s\n" $(green "$unames")
         hdf5libfiles="libhdf5.so libhdf5.a"
-        grhaylsharedlib="libgrhayl.so"
+        sharedext=".so"
         break;;
     Darwin)
         printf "%s\n" $(green "$unames")
         hdf5libfiles="libhdf5.dylib libhdf5.a"
-        grhaylsharedlib="libgrhayl.dylib"
+        sharedext=".dylib"
         break;;
     *)
         printf "Unsupported system %s\n" $(red "$unames")
         exit 1;;
 esac
+
+check_command grep
+check_command awk
+if [ $have_awk -eq 0 ]; then
+    printf "awk is required by the build system. Cannot proceed.\n"
+    exit 1
+fi
+
+prefix=$(Realpath $prefix)
 
 printf "Checking if build type is valid... "
 case $buildtype in
@@ -242,35 +304,22 @@ case $buildtype in
                 exit 1;;
 esac
 YES "buildtype: $buildtype; build flags: $BUILDCFLAGS"
-CFLAGS="$CFLAGS $BUILDCFLAGS"
-LD_FLAGS="$LD_FLAGS -lm"
 
-check_command grep
+printf "Checking if cflags were provided... "
+if [ "$cflags" = "" ]; then
+    green "NO\n"
+else
+    YES "$cflags"
+fi
+cflags="$BUILDCFLAGS $cflags"
 
-for cmd in awk gawk mawk nawk; do
-    check_command $cmd
-    if [ $? -eq 1 ]; then
-        have_awk=1
-        AWK=$cmd
-        break
-    fi
-done
-
-if [ $have_awk -eq 0 ]; then
-    printf "awk is required by the build system. Cannot proceed.\n"
-    exit 1
+printf "Checking if clibs were provided... "
+if [ "$clibs" = "" ]; then
+    green "NO\n"
+else
+    YES "$clibs"
 fi
 
-for cmd in sed gsed; do
-    check_command $cmd
-    if [ $? -eq 1 ]; then
-        have_sed=1
-        SED=$cmd
-        break
-    fi
-done
-
-# Check for a valid C compiler
 for compiler in gcc clang icc icx cc; do
     if [ -z $CC ]; then
         check_compiler $compiler
@@ -279,7 +328,8 @@ for compiler in gcc clang icc icx cc; do
     fi
 done
 
-# Check if C compiler works
+clibs=$(printf "%s" "-lm $clibs" | awk '{sub(/ *$/, "", $0); print}')
+
 c_compiles "int main() { return 0; }" $CC " -O0 " "" "Checking if C compiler works... "
 code='
 #include <stdio.h>
@@ -291,9 +341,33 @@ int main() {
 }
 '
 c_compiles "$code" $CC " -O0 " " -lm" "Checking if compiler works with -lm linker flag... "
-c_compiles "$code" $CC " $CFLAGS " " $LD_FLAGS" "Checking if compiler works with build flags... "
+if [ $? -ne 0 ]; then
+    error "The C compiler does not work with libm\n"
+fi
+c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with build flags... "
+if [ $? -ne 0 ]; then
+    error "The C compiler does not work with the build flags\n"
+fi
+if [ "$ompcflag" != "" ]; then
+    code='
+#include <stdio.h>
+#include <omp.h>
+int main() {
+  #pragma omp parallel
+  {
+    printf("Hello, world!\\n");
+  }
+  return 0;
+}
+'
+    c_compiles "$code" $CC " -O0$ompcflag " " $clibs" "Checking if compiler works with$ompcflag flag... "
+    if [ $? -ne 0 ]; then
+        printf "Disabling OpenMP\n"
+        ompcflag=""
+    fi
+fi
 
-if [ $withhdf5 -eq 1 ]; then
+if [ $usehdf5 -eq 1 ]; then
     if [ "$hdf5dir" = "" ]; then
         if [ "$hdf5inc" = "" ] && [ "$hdf5lib" = "" ]; then
             check_command pkg-config
@@ -302,51 +376,33 @@ if [ $withhdf5 -eq 1 ]; then
                 hdf5inc=$(pkg-config hdf5 --cflags 2>/dev/null)
                 hdf5lib=$(pkg-config hdf5 --libs --static 2>/dev/null)
                 if [ "$hdf5inc" != "" ] && [ "$hdf5lib" != "" ]; then
-                    printf "\033[1m\033[32mYES\033[0m\n"
-                    have_hdf5=1
-                    CFLAGS="$CFLAGS $hdf5inc"
-                    LD_FLAGS="$LD_FLAGS $hdf5lib"
+                    YES
+                    cflags="$cflags $hdf5inc"
+                    clibs="$clibs $hdf5lib"
                 else
-                    printf "\033[1m\033[31mNO\033[0m\n"
-                    have_hdf5=0
-                fi
-            fi
-            if [ $have_hdf5 -eq 0 ]; then
-                for d in /opt /etc /usr/local/Cellar /usr/local /usr; do
-                    if [ ! -d $d ]; then
-                        continue
-                    fi
-                    set_hdf5 $d $d
-                    err=$?
-                    case $err in
-                        0) break;;
-                        1) continue;;
-                        2) exit 2;;
-                    esac
-                done
-                if [ $err -ne 0 ]; then
-                    printf "Error: HDF5 not found\n"
+                    NO
+                    red "ERROR: "
+                    printf "HDF5 not found with pkg-config\n"
+                    printf "Please use ./configure -h for instructions on how to manually\n"
+                    printf "specify your HDF5 installation path or disable HDF5\n"
                     exit 1
                 fi
             fi
         elif [ "$hdf5inc" = "" ] || [ "$hdf5lib" = "" ]; then
-            printf "For custom HDF5 paths, both --hdf5inc and --hdf5lib must be given\n"
-            exit 1
+            error "For custom HDF5 paths, both --hdf5inc and --hdf5lib must be given\n"
         else
             set_hdf5 "$hdf5inc" "$hdf5lib"
             if [ $? -ne 0 ]; then
-                exit 1
+                error "HDF5 not found"
             fi
         fi
     else
         if [ ! -d $hdf5dir ]; then
-            printf "Error: HDF5 directory $hdf5dir does not exist\n"
-            exit 1
+            error "HDF5 directory $hdf5dir does not exist"
         fi
         set_hdf5 "${hdf5dir}/include" "${hdf5dir}/lib"
         if [ $? -ne 0 ]; then
-            printf "Error: HDF5 not found\n"
-            exit 1
+            error "HDF5 not found"
         fi
     fi
     # Courtesy ChatGPT (comments removed)
@@ -385,33 +441,39 @@ int main() {
   return 0;
 }
 '
-    c_compiles "$code" $CC " $CFLAGS " " $LD_FLAGS" "Checking if compiler works with hdf5... "
+    c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with hdf5... "
+    if [ $? -ne 0 ]; then
+        msg="C compiler does not work with hdf5. Use ./configure --nohdf5 to disable hdf5 or
+       run ./configure -h for more information on how to specify your hdf5 installation."
+        error "$msg"
+    fi
+    cflags="$cflags -DUSE_HDF5"
 fi
 
 parse_mcd()
 {
-    mkdir -p $(printf "$2/$3" | \
-        $AWK -v bd=$builddir '{sub("GRHayL/", sprintf("%s/", bd), $0); print}')
-    if [ "$4" = "0" ]; then
-        printf "$1- %s\n" $(blue $3)
-    elif [ "$4" = "1" ]; then
-        printf "$1- %s\n" $(green $3)
+    name=$(printf $2 | awk '{n=split($0, arr, "/"); print arr[n]}')
+    if [ "$3" = "0" ]; then
+        printf "$1- %s\n" $(blue $name)
+    elif [ "$3" = "1" ]; then
+        mkdir -p $(printf $2 | awk -v bd=$builddir '{sub(/^GRHayL\//, "", $0); printf("%s/%s", bd, $0)}')
+        printf "$1- %s\n" $(green $name)
     else
-        printf "$1- $3\n"
+        mkdir -p $(printf $2 | awk -v bd=$builddir '{sub(/^GRHayL\//, "", $0); printf("%s/%s", bd, $0)}')
+        printf "$1- $name\n"
     fi
-    file="$2/$3/make.code.defn"
+    file="$2/make.code.defn"
     if [ ! -f $file ]; then
-        printf "$1%s: file $file not found\n" $(red "Error")
-        exit 1
+        error "Fille $file not found"
     fi
-    for sd in $(./scripts/parser $AWK $file "subdirs"); do
-        sdsrcs=$(./scripts/parser $AWK $file "sources")
-        sdincs=$(./scripts/parser $AWK $file "headers")
-        sdihds=$(./scripts/parser $AWK $file "install_headers")
+    for sd in $(./scripts/parser awk $file "subdirs"); do
+        sdsrcs=$(./scripts/parser awk "$2/$sd/make.code.defn" "sources")
+        sdincs=$(./scripts/parser awk "$2/$sd/make.code.defn" "headers")
+        sdihds=$(./scripts/parser awk "$2/$sd/make.code.defn" "install_headers")
         srcs="$srcs $sdsrcs"
         incs="$incs $sdincs"
         ihds="$ihds $sdihds"
-        parse_mcd "$1  " $2/$3 $sd $(($4+1))
+        parse_mcd "$1  " $2/$sd $(($3+1))
     done
 }
 
@@ -420,70 +482,146 @@ count=0
 srcs=""
 incs=""
 ihds=""
-parse_mcd "  " "." "GRHayL" 0
+parse_mcd "  " "GRHayL" 0
+printf "Symlinking header files in GRHayL/include to $builddir/include... "
+rm -f $builddir/include/*
+ln -s `pwd`/GRHayL/include/*.h $builddir/include
+green "DONE\n"
+printf "Creating directory $builddir/lib... "
+mkdir -p $builddir/lib
+green "DONE\n"
 printf "Auto-generated by GRHayL's configuration script\n" > $builddir/.check
 
 # Sanitize all white space (not really necessary)
-CFLAGS=$(printf "$CFLAGS" | $AWK '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-LD_FLAGS=$(printf "$LD_FLAGS" | $AWK '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-srcs=$(printf "$srcs" | $AWK '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-incs=$(printf "$incs" | $AWK '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-ihds=$(printf "$ihds" | $AWK '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-objs=$(printf "$srcs" | $AWK -v bd=$builddir '{gsub("GRHayL/", sprintf("%s/", bd), $0); gsub(/\.c/, ".o", $0); print}')
-
-sharedlib="$builddir/$grhaylsharedlib"
+cflags=$(printf "%s" "$cflags" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
+clibs=$(printf "%s" "$clibs" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
+srcs=$(printf "$srcs" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
+incs=$(printf "$incs" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
+ihds=$(printf "$ihds" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
+objs=$(printf "$srcs" | awk -v bd=$builddir '{gsub("GRHayL/", sprintf("%s/", bd), $0); gsub(/\.c/, ".o", $0); print}')
+tests=$(find Unit_Tests -name unit_test_*.c)
+if [ "$tests" = "" ]; then
+    tnames="None"
+else
+    tnames=$(printf "$tests" | sort | \
+                awk '{
+  split($0, a, "/")
+  sub(/^unit_test_/, "", a[2])
+  sub(/\.c/, "", a[2])
+  if( NR == 1 )
+    print "-", a[2]
+  else
+    printf("%26s- %s\n", " ", a[2])
+}
+END { print tests }
+')
+    tests=$(echo $tests)
+    tsrcs=$(echo $(find Unit_Tests -name *.c ! -name unit_test_*.c))
+    tobjs=$(printf "$tsrcs" | awk '{
+    gsub(/\.c/, ".o", $0)
+    for(i=1;i<=NF;i++) {
+      tobjs=sprintf("%s%s%s ", tobjs, "build/", $i)
+    }
+    print tobjs
+}')
+    texes=$(printf "$tests" | awk '{ gsub(/\.c/, "", $0); gsub(/Unit_Tests\//, "test/", $0); print }')
+    texeobjs=$(printf "$tests" | awk '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\//, "build/Unit_Tests/", $0); print }')
+    mkdir -p $builddir/Unit_Tests test
+fi
 
 printf "Generating Makefile... "
 rm -f Makefile
-printf "# Makefile automatically generated by GRHayL's configure script\n"      > Makefile
-printf "PREFIX   = $prefix\n"                                                  >> Makefile
-printf "CC       = $CC\n"                                                      >> Makefile
-printf "CFLAGS   = $CFLAGS -I./GRHayL/include\n"                               >> Makefile
-printf "LD_FLAGS = $LD_FLAGS\n"                                                >> Makefile
-printf "SRC      = $srcs\n"                                                    >> Makefile
-printf "OBJ      = $objs\n"                                                    >> Makefile
-printf "INCS     = $incs\n"                                                    >> Makefile
-printf "IHDS     = $ihds\n"                                                    >> Makefile
-printf 'INC     := $(INCS) $(IHDS)\n'                                          >> Makefile
-printf '\nall: grhayl\n\t@echo "All done!"\n\n'                                >> Makefile
-printf "grhayl: $sharedlib\n\n"                                                >> Makefile
-if [ $verbose -eq 1 ]; then
-    printf "$sharedlib: \$(OBJ)\n"                                             >> Makefile
-    printf '\t$(CC) $(CFLAGS) -fPIC -shared $(OBJ) -o $@ $(LD_FLAGS)\n\n'      >> Makefile
-    printf "\$(OBJ): build/%%.o : GRHayL/%%.c \$(INC)\n"                       >> Makefile
-    printf "\t\$(CC) \$(CFLAGS) -fPIC -c \$< -o \$@\n\n"                       >> Makefile
-    printf "clean:\n\trm -f \$(OBJ)\n\trm -f $sharedlib\n"                     >> Makefile
-    printf "realclean: clean\n\trm -rf $builddir\n\trm -f Makefile\n\n"        >> Makefile
-else
-    printf "$sharedlib: \$(OBJ)\n"                                             >> Makefile
-    printf '\t@$(CC) $(CFLAGS) -fPIC -shared $(OBJ) -o $@ $(LD_FLAGS)\n'       >> Makefile
-    printf '\t@echo "Linking shared GRHayL library"\n\n'                       >> Makefile
-    printf "\$(OBJ): build/%%.o : GRHayL/%%.c \$(INC)\n"                       >> Makefile
-    printf '\t@echo "Compiling $<"\n\n'                                        >> Makefile
-    printf "\t@\$(CC) \$(CFLAGS) -fPIC -c \$< -o \$@\n"                        >> Makefile
-    printf 'clean:\n\t@echo "Removing object files"\n'                         >> Makefile
-    printf "\t@rm -f \$(OBJ)\n"                                                >> Makefile
-    printf '\t@echo "Removing library files"\n'                                >> Makefile
-    printf "\t@rm -f $sharedlib\n\n"                                           >> Makefile
-    printf 'realclean: clean\n\t@echo "Removing build directory"\n'            >> Makefile
-    printf "\t@rm -rf $builddir\n"                                             >> Makefile
-    printf '\t@echo "Removing Makefile"\n'                                     >> Makefile
-    printf '\t@rm -f Makefile\n\n'                                             >> Makefile
+printf "# Makefile automatically generated by $pkg's configure script\n" > Makefile
+printf "PREFIX       = $prefix\n"                                       >> Makefile
+printf "BUILDDIR     = $builddir\n"                                     >> Makefile
+printf "LIBSOV       = lib${libname}_${pkg_version}$sharedext\n"        >> Makefile
+printf "LIBSO        = lib$libname$sharedext\n"                         >> Makefile
+printf 'BUILDLIBSOV  = $(BUILDDIR)/lib/$(LIBSOV)\n'                     >> Makefile
+printf 'BUILDLIBSO   = $(BUILDDIR)/lib/$(LIBSO)\n'                      >> Makefile
+printf 'PREFIXLIBSOV = $(PREFIX)/lib/$(LIBSOV)\n'                       >> Makefile
+printf 'PREFIXLIBSO  = $(PREFIX)/lib/$(LIBSO)\n'                        >> Makefile
+printf "CC           = $CC\n"                                           >> Makefile
+printf "CFLAGS       = $cflags -I./GRHayL/include\n"                    >> Makefile
+printf "CCOMPILE     = \$(CC) \$(CFLAGS)\n"                             >> Makefile
+printf "CCOMPILEOMP  = \$(CC) \$(CFLAGS)$ompcflag\n"                    >> Makefile
+printf "LD_FLAGS     = $clibs\n"                                        >> Makefile
+printf "SRC          = $srcs\n"                                         >> Makefile
+printf "OBJ          = $objs\n"                                         >> Makefile
+printf "INCS         = $incs\n"                                         >> Makefile
+printf "IHDS         = $ihds\n"                                         >> Makefile
+printf 'INC         := $(INCS) $(IHDS)\n'                               >> Makefile
+printf 'LIBS         = $(BUILDLIBSO)\n'                                 >> Makefile
+if [ "$tests" != "" ]; then
+    printf "TEXES    = $texes\n"      >> Makefile
+    printf "TOBJS    = $tobjs\n"      >> Makefile
+    printf "TEXEOBJS = $texeobjs\n\n" >> Makefile
 fi
-printf "install: grhayl\n"                                                     >> Makefile
+printf '\nall: grhayl tests\n\t@echo "All done!"\n\n' >> Makefile
+printf 'grhayl: $(LIBS)\n\n'                          >> Makefile
+printf 'tests: $(TEXES)\n\n'                          >> Makefile
+if [ $silent -eq 0 ]; then
+    printf '$(BUILDLIBSO): $(BUILDLIBSOV)\n'                                         >> Makefile
+    printf '\trm -f $(BUILDLIBSO) && ln -s $(LIBSOV) $(BUILDLIBSO)\n\n'              >> Makefile
+    printf '$(BUILDLIBSOV): $(OBJ)\n'                                                >> Makefile
+    printf '\t$(CCOMPILE) -fPIC -shared $(OBJ) -o $@ $(LD_FLAGS)\n\n'                >> Makefile
+    printf '$(OBJ): $(BUILDDIR)/%%.o : GRHayL/%%.c $(INC)\n'                         >> Makefile
+    printf '\t$(CCOMPILE) -fPIC -c $< -o $@\n\n'                                     >> Makefile
+    printf 'clean:\n\trm -f $(OBJ) $(TEXES) $(TOBJS) $(BUILDLIBSO) $(BUILDLIBSOV)\n' >> Makefile
+    printf 'realclean: clean\n\trm -rf $(BUILDDIR)\n\trm -f Makefile\n\n'            >> Makefile
+    if [ "$tests" != "" ]; then
+        printf '$(TEXES): test/%%: $(BUILDDIR)/Unit_Tests/%%.o $(TOBJS) $(LIBS)\n'             >> Makefile
+        printf '\t$(CCOMPILEOMP) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
+        printf '$(TOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                            >> Makefile
+        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+        printf '$(TEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                         >> Makefile
+        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+    fi
+else
+    printf '$(BUILDLIBSO): $(BUILDLIBSOV)\n'                             >> Makefile
+    printf '\t@echo "Creating symlink to $@"\n'                          >> Makefile
+    printf '\t@rm -f $(BUILDLIBSO) && ln -s $(LIBSOV) $(BUILDLIBSO)\n\n' >> Makefile
+    printf '$(BUILDLIBSOV): $(OBJ)\n'                                    >> Makefile
+    printf '\t@echo "Linking GRHayL shared library"\n'                   >> Makefile
+    printf '\t@$(CCOMPILE) -fPIC -shared $(OBJ) -o $@ $(LD_FLAGS)\n\n'   >> Makefile
+    printf '$(OBJ): $(BUILDDIR)/%%.o : GRHayL/%%.c $(INC)\n'             >> Makefile
+    printf '\t@echo "Compiling $<"\n'                                    >> Makefile
+    printf '\t@$(CCOMPILE) -fPIC -c $< -o $@\n\n'                        >> Makefile
+    printf 'clean:\n\t@echo "Removing object files"\n'                   >> Makefile
+    printf '\t@rm -f $(OBJ)\n'                                           >> Makefile
+    printf '\t@echo "Removing library files"\n'                          >> Makefile
+    printf '\t@rm -f $(BUILDLIBSO) $(BUILDLIBSOV)\n'                     >> Makefile
+    printf '\t@echo "Removing unit tests"\n'                             >> Makefile
+    printf '\t@rm -f $(TEXES) $(TOBJS)\n\n'                              >> Makefile
+    printf 'realclean: clean\n\t@echo "Removing build directory"\n'      >> Makefile
+    printf '\t@rm -rf $(BUILDDIR)\n'                                     >> Makefile
+    printf '\t@echo "Removing Makefile"\n'                               >> Makefile
+    printf '\t@rm -f Makefile\n\n'                                       >> Makefile
+    if [ "$tests" != "" ]; then
+        printf '$(TEXES): test/%%: $(BUILDDIR)/Unit_Tests/%%.o $(TOBJS) $(LIBS)\n'              >> Makefile
+        printf '\t@echo "Linking $@"\n'                                                         >> Makefile
+        printf '\t@$(CCOMPILEOMP) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
+        printf '$(TOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                             >> Makefile
+        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
+        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+        printf '$(TEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                          >> Makefile
+        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
+        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+    fi
+fi
+printf 'install: grhayl\n'                                                     >> Makefile
 printf '\t@echo "Installing GRHayL in $(PREFIX)..."\n'                         >> Makefile
 printf '\t@echo "Installing GRHayL headers in $(PREFIX)/include/grhayl"\n'     >> Makefile
 printf '\t@mkdir -p $(PREFIX)/include/grhayl\n'                                >> Makefile
 printf '\t@cp $(IHDS) $(PREFIX)/include/grhayl\n'                              >> Makefile
 printf '\t@echo "Installing GRHayL libraries in $(PREFIX)/lib"\n'              >> Makefile
 printf '\t@mkdir -p $(PREFIX)/lib\n'                                           >> Makefile
-printf "\t@cp $sharedlib \$(PREFIX)/lib\n\n"                                   >> Makefile
-printf "uninstall:\n"                                                          >> Makefile
+printf '\t@cp -a $(BUILDDIR)/lib/* $(PREFIX)/lib\n\n'                          >> Makefile
+printf 'uninstall:\n'                                                          >> Makefile
 printf '\t@echo "Uninstalling GRHayL from $(PREFIX)..."\n'                     >> Makefile
 printf '\t@echo "Uninstalling GRHayL headers from $(PREFIX)/include/grhayl"\n' >> Makefile
 printf '\t@rm -rf $(PREFIX)/include/grhayl\n'                                  >> Makefile
 printf '\t@echo "Uninstalling GRHayL libraries from $(PREFIX)/lib"\n'          >> Makefile
-printf "\t@rm -rf \$(PREFIX)/lib/$grhaylsharedlib\n"                           >> Makefile
+printf '\t@rm -rf $(PREFIXLIBSO) $(PREFIXLIBSOV)\n\n'                          >> Makefile
 green "DONE\n"
 
 tmp=$(printf "$pkg_short configuration finished successfully")
@@ -494,17 +632,26 @@ printf "%2sConfiguration information\n" " "
 printf "%2s-------------------------\n" " "
 printf "%4s%-19s : %s\n" " " "Version" $pkg_version
 printf "%4s%-19s : %s\n" " " "Installation prefix" $prefix
+printf "%4s%-19s : %s\n" " " "Build directory" $(Realpath $builddir)
 printf "%4s%-19s : %s\n" " " "Build type" $buildtype
-if [ $verbose -eq 0 ]; then
-    printf "%4s%-19s : %s\n" " " "Verbose Makefile" "No"
+printf "%4s%-19s : %s\n" " " "C compiler flags" "$cflags"
+printf "%4s%-19s : %s\n" " " "C linking flags" "$clibs"
+if [ "$ompcflag" = "" ]; then
+    printf "%4s%-19s : %s\n" " " "OpenMP unit tests" "No"
 else
-    printf "%4s%-19s : %s\n" " " "Verbose Makefile" "Yes"
+    printf "%4s%-19s : %s\n" " " "OpenMP unit tests" "Yes"
 fi
-if [ $withhdf5 -eq 0 ]; then
+if [ $silent -eq 0 ]; then
+    printf "%4s%-19s : %s\n" " " "Silent Makefile" "No"
+else
+    printf "%4s%-19s : %s\n" " " "Silent Makefile" "Yes"
+fi
+if [ $usehdf5 -eq 0 ]; then
     printf "%4s%-19s : %s\n" " " "HDF5 support" "No"
 else
     printf "%4s%-19s : %s\n" " " "HDF5 support" "Yes"
 fi
-printf "%4s%-19s : " " " "GEMS to be built"
-./scripts/parser $AWK "GRHayL/make.code.defn" "subdirs" | awk '{sub(/include /, "", $0); print}'
+printf "%4s%-19s : " " " "Gems found"
+./scripts/parser awk "GRHayL/make.code.defn" "subdirs" | awk '{sub(/include /, "", $0); print}'
+printf "%4s%-19s : %s\n" " " "Unit tests found" "$tnames"
 printf "%s\n" $sep

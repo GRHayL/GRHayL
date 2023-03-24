@@ -1,4 +1,4 @@
-
+#ifdef USE_HDF5
 /*
  * (c) 2022 Leo Werneck
  *
@@ -582,3 +582,4 @@ void NRPyEOS_findtemp_from_any( const eos_parameters *restrict eos_params,
 
   return;
 }
+#endif

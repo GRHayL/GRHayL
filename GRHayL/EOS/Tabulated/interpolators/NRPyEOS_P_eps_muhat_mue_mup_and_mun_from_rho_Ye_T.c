@@ -12,7 +12,9 @@ void NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(const eos_parameters *res
                                                        double *restrict mu_e,
                                                        double *restrict mu_p,
                                                        double *restrict mu_n) {
-
+#ifndef USE_HDF5
+  HDF5_ERROR_IF_USED;
+#else
   // Step 1: Set EOS table keys
   const int keys[6] = {NRPyEOS_press_key,NRPyEOS_eps_key,NRPyEOS_muhat_key,NRPyEOS_mu_e_key,NRPyEOS_mu_p_key,NRPyEOS_mu_n_key};
 
@@ -36,4 +38,5 @@ void NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(const eos_parameters *res
   *mu_e = outvars[3];
   *mu_p = outvars[4];
   *mu_n = outvars[5];
+#endif
 }

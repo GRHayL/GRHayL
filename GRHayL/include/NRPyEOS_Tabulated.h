@@ -1,9 +1,13 @@
 #ifndef NRPYEOS_TABULATED_H_
 #define NRPYEOS_TABULATED_H_
+#include "GRHayL.h"
+#ifndef USE_HDF5
+#define HDF5_ERROR_IF_USED \
+  grhayl_error("HDF5 is disabled, so this function cannot be used\n")
+#else
 
 #include <string.h>
 #include <hdf5.h>
-#include "GRHayL.h"
 #define H5_USE_16_API 1
 
 // Table keys
@@ -34,6 +38,8 @@ static const char table_var_names[NRPyEOS_ntablekeys][10] = {
   "dpdrhoe", "dpderho", "muhat", "mu_e", "mu_p", "mu_n",
   "Xa","Xh","Xn","Xp","Abar","Zbar","Gamma"
 };
+//********************************************
+#endif // USE_HDF5
 
 // Error handling struct
 typedef struct NRPyEOS_error_report {
@@ -41,7 +47,6 @@ typedef struct NRPyEOS_error_report {
   int error_key;
   char message[512];
 } NRPyEOS_error_report;
-//********************************************
 
 #ifdef __cplusplus
 extern "C" {
@@ -207,5 +212,4 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
 #ifdef __cplusplus
 }
 #endif
-
 #endif // NRPYEOS_TABULATED_H_

@@ -14,7 +14,9 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
                                                                  double *restrict tablevars,
                                                                  double *restrict T,
                                                                  NRPyEOS_error_report *restrict report) {
-
+#ifndef USE_HDF5
+  HDF5_ERROR_IF_USED;
+#else
   // Start by assuming no errors
   report->error = false;
 
@@ -78,4 +80,5 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
   NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos_params,n,rho,Y_e,*T,tablevars_keys,tablevars,report);
   report->error_key = keyerr;
   report->error     = anyerr;
+#endif
 }

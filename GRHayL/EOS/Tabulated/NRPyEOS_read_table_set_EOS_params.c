@@ -29,6 +29,9 @@
 static inline double get_EOS_table_max(
       const eos_parameters *restrict eos,
       const int var_key ) {
+#ifndef USE_HDF5
+  HDF5_ERROR_IF_USED;
+#else
   // Loop over the table, searching for the maximum value
   int totalsize        = eos->N_rho * eos->N_Ye * eos->N_T;
   double var_max_value = eos->table_all[var_key];
@@ -38,11 +41,15 @@ static inline double get_EOS_table_max(
     if( var_value > var_max_value ) var_max_value = var_value;
   }
   return var_max_value;
+#endif
 }
 
 static inline double get_EOS_table_min(
       const eos_parameters *restrict eos,
       const int var_key ) {
+#ifndef USE_HDF5
+  HDF5_ERROR_IF_USED;
+#else
   // Loop over the table, searching for the minimum value
   int totalsize        = eos->N_rho * eos->N_Ye * eos->N_T;
   double var_min_value = eos->table_all[var_key];
@@ -52,12 +59,15 @@ static inline double get_EOS_table_min(
     if( var_value < var_min_value ) var_min_value = var_value;
   }
   return var_min_value;
+#endif
 }
 /*
  * (c) 2022 Leo Werneck
  */
 void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters *restrict eos_params) {
-
+#ifndef USE_HDF5
+  HDF5_ERROR_IF_USED;
+#else
   check_if_file_exists(EOS_tablename);
 
   grhayl_info("*******************************\n");
@@ -249,4 +259,5 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   eos_params->table_eps_max = get_EOS_table_max(eos_params, NRPyEOS_eps_key);
   eos_params->table_ent_min = get_EOS_table_min(eos_params, NRPyEOS_entropy_key);
   eos_params->table_ent_max = get_EOS_table_max(eos_params, NRPyEOS_entropy_key);
+#endif
 }
