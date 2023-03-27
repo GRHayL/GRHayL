@@ -19,16 +19,16 @@ typedef enum  {
   grhayl_error_abort=-1, grhayl_success=0
 } grhayl_error_keys;
 
-#define grhayl_warn(format, ...) \
-  grhayl_Warn_Error("Warning", grhayl_success, __FILE__, __LINE__, __func__, format __VA_OPT__(,) __VA_ARGS__)
+#define grhayl_warn(...) \
+  grhayl_Warn_Error("Warning", grhayl_success, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
-#define grhayl_error(format, ...) \
-  grhayl_Warn_Error("Error", 1, __FILE__, __LINE__, __func__, format __VA_OPT__(,) __VA_ARGS__)
+#define grhayl_error(...) \
+  grhayl_Warn_Error("Error", 1, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
-#define grhayl_abort(format, ...) \
-  grhayl_Warn_Error("Error", grhayl_error_abort, __FILE__, __LINE__, __func__, format __VA_OPT__(,) __VA_ARGS__)
+#define grhayl_abort(...) \
+  grhayl_Warn_Error("Error", grhayl_error_abort, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
-#define grhayl_Error(exit_code, format, ...) \
-  grhayl_Warn_Error("Error", exit_code, __FILE__, __LINE__, __func__, format __VA_OPT__(,) __VA_ARGS__)
+#define grhayl_Error(exit_code, ...) \
+  grhayl_Warn_Error("Error", exit_code, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
 #endif // GRHAYL_IO_H_

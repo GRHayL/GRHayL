@@ -4,7 +4,7 @@
 void grhayl_info(const char *format, ...) {
 
   printf("(GRHayL) ");
-  
+
   va_list args;
   va_start(args, format);
   vprintf(format, args);
