@@ -8,16 +8,16 @@
 //********************************************
 
 // Step 0b: Set up numerical grid structure, first in space...
-static const int Nxx = 8;
+#define Nxx 8
 // const REAL domain_size = 10.0;
-static const double dxx = 2.5;
-static const double invdx = 1.0/dxx;
-static const int Nxx0 = Nxx;
-static const int Nxx1 = Nxx;
-static const int Nxx2 = Nxx;
-static const int Nxx_plus_2NGHOSTS0 = Nxx + 2*NGHOSTS;
-static const int Nxx_plus_2NGHOSTS1 = Nxx + 2*NGHOSTS;
-static const int Nxx_plus_2NGHOSTS2 = Nxx + 2*NGHOSTS;
+#define dxx 2.5
+#define invdxx 1.0/dxx
+#define Nxx0 Nxx
+#define Nxx1 Nxx
+#define Nxx2 Nxx
+#define Nxx_plus_2NGHOSTS0 (Nxx + 2*NGHOSTS)
+#define Nxx_plus_2NGHOSTS1 (Nxx + 2*NGHOSTS)
+#define Nxx_plus_2NGHOSTS2 (Nxx + 2*NGHOSTS)
 
 
 //********************************************
