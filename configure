@@ -261,9 +261,9 @@ To see specific configurations, please run one of the following commands:
 
 In all cases you might want to run:
 
-  export CFLAGS="$CFLAGS -I$(pwd)/include"
-  export LD_FLAGS="$LD_FLAGS -L$(pwd)/lib"
-  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(pwd)/lib"
+  export CFLAGS="\$CFLAGS -I$(pwd)/include"
+  export LD_FLAGS="\$LD_FLAGS -L$(pwd)/lib"
+  export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:\$(pwd)/lib"
 
 so that compilers can find the GRHayL headers and so that executables that use
 the GRHayL library are able to run without errors.
