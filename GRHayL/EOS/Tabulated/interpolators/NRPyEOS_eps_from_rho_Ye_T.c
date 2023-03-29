@@ -7,7 +7,9 @@ void NRPyEOS_eps_from_rho_Ye_T(const eos_parameters *restrict eos_params,
                                const double Y_e,
                                const double T,
                                double *restrict eps) {
-
+#ifndef USE_HDF5
+  HDF5_ERROR_IF_USED;
+#else
   // Step 1: Set EOS table keys
   const int keys[1] = {NRPyEOS_eps_key};
 
@@ -26,4 +28,5 @@ void NRPyEOS_eps_from_rho_Ye_T(const eos_parameters *restrict eos_params,
 
   // Step 6: Update output variables
   *eps = outvars[0];
+#endif
 }

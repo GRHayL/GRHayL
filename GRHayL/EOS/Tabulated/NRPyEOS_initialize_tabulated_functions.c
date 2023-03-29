@@ -1,6 +1,9 @@
 #include "NRPyEOS_Tabulated.h"
 
 void NRPyEOS_initialize_tabulated_functions(eos_parameters *restrict eos) {
+#ifndef USE_HDF5
+  HDF5_ERROR_IF_USED;
+#else
   eos->tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;
   eos->tabulated_free_memory                            = &NRPyEOS_free_memory;
   eos->tabulated_compute_P_from_T                       = &NRPyEOS_P_from_rho_Ye_T;
@@ -17,4 +20,5 @@ void NRPyEOS_initialize_tabulated_functions(eos_parameters *restrict eos) {
   eos->tabulated_compute_eps_S_T_from_P                 = &NRPyEOS_eps_S_and_T_from_rho_Ye_P;
   eos->tabulated_compute_P_eps_T_from_S                 = &NRPyEOS_P_eps_and_T_from_rho_Ye_S;
   eos->compute_h_and_cs2                                = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
+#endif
 }

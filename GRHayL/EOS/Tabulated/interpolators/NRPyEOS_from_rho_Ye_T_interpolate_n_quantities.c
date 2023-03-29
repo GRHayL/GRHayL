@@ -11,7 +11,9 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restri
                                                     const int *restrict tablevars_keys,
                                                     double *restrict tablevars,
                                                     NRPyEOS_error_report *restrict report) {
-
+#ifndef USE_HDF5
+  HDF5_ERROR_IF_USED;
+#else
   // Start by assuming no errors
   report->error = false;
 
@@ -60,4 +62,5 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(const eos_parameters *restri
     // Then update tablevars
     tablevars[i] = tablevar_out;
   }
+#endif
 }
