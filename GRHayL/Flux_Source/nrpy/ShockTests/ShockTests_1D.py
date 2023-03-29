@@ -16,10 +16,6 @@ import Min_Max_and_Piecewise_Expressions as noif
 par.set_parval_from_str("grid::DIM", 3)
 DIM = par.parval_from_str("grid::DIM")
 
-par.set_parval_from_str("reference_metric::CoordSystem","Cartesian")
-rfm.reference_metric()
-
-
 def balsara1(x, bound = 0.0):
     vU = ixp.zerorank1()
     BU = ixp.zerorank1()

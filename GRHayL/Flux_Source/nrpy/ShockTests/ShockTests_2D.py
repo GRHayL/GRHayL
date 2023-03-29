@@ -16,9 +16,7 @@ import Min_Max_and_Piecewise_Expressions as noif
 par.set_parval_from_str("grid::DIM", 3)
 DIM = par.parval_from_str("grid::DIM")
 
-par.set_parval_from_str("reference_metric::CoordSystem","Cartesian")
 rfm.reference_metric()
-
 
 def cylindrical_explosion(r, r_in=0.8, r_out=1.0):
     vU = ixp.zerorank1()
@@ -50,6 +48,9 @@ def cylindrical_explosion(r, r_in=0.8, r_out=1.0):
     return rho, press, vU, BU
 
 def magnetic_rotor(r, r_in=0.1, Omega=9.95, cartx=rfm.Cartx, carty=rfm.Carty):
+    
+    OrigCoordSystem = par.parval_from_str("reference_metric::CoordSystem")
+    
     cart_list = [cartx, carty]
 
     vU_cyl = ixp.zerorank1()
@@ -84,6 +85,9 @@ def magnetic_rotor(r, r_in=0.1, Omega=9.95, cartx=rfm.Cartx, carty=rfm.Carty):
             vU[i] = vU[i].subs(rfm.Cart[j], cart_list[j])
 
     BU[0] = rl(1.0)
+    
+    par.set_parval_from_str("reference_metric::CoordSystem", OrigCoordSystem)
+    rfm.reference_metric()
 
     return rho, press, vU, BU
 
