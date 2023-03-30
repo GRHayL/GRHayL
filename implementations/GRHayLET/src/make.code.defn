@@ -7,6 +7,7 @@ SRCS = GRHayL_initialize_and_shutdown.c
 SUBDIRS = Con2Prim                       \
           Con2Prim/C2P_Routines/Font_Fix \
           Con2Prim/C2P_Routines/Hybrid   \
+          Con2Prim/C2P_Routines/Tabulated \
           EOS/Hybrid                     \
           EOS/Tabulated                  \
           EOS/Tabulated/interpolators    \
@@ -14,3 +15,4 @@ SUBDIRS = Con2Prim                       \
           GRHayL_Core                    \
           Induction                      \
           Neutrinos/NRPyLeakage          \
+          Reconstruction
