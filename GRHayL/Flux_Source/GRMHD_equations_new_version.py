@@ -50,14 +50,14 @@ import BSSN.BSSN_quantities as Bq
 
 def set_up_base_vars(formalism="BSSN"):
     global u4U, betaU, betaU_dD, alpha, alpha_dD, sqrt4pi, KDD, gammaDD, sqrtgammaDET, gammaDD_dD
-    global BU, ValenciavU, VU, rho_b, P, h, epsilon 
-    
+    global BU, ValenciavU, VU, rho_b, P, h, epsilon
+
     if formalism == "BSSN":
         Bq.BSSN_basic_tensors()
         Bq.gammabar__inverse_and_derivs()
         Bq.detgammabar_and_derivs()
         Bq.betaU_derivs()
-        
+
         betaU    = Bq.betaU
         betaU_dD = Bq.betaU_dD
 
@@ -67,17 +67,17 @@ def set_up_base_vars(formalism="BSSN"):
         gammaDD = AitoB.gammaDD
         gammaDD_dD = AitoB.gammaDDdD
         KDD = AitoB.KDD
-        
+
     elif formalism == "ADM":
-        betaU = ixp.declarerank1("betaU") 
+        betaU = ixp.declarerank1("betaU")
         betaU_dD = ixp.declarerank2("betaU_dD", "nosym")
         gammaDD = ixp.declarerank2("gammaDD","sym01")
         gammaDD_dD = ixp.declarerank3("gammaDD_dD","sym01")
         KDD = ixp.declarerank2("KDD","sym01")
-        
+
     else:
         print("ERROR: "+formalism+" formalism not supported")
-        
+
     # First define hydrodynamical quantities
     u4U = ixp.declarerank1("u4U", DIM=4)
     smallb4U = ixp.declarerank1("smallb4U", DIM=4)
@@ -86,11 +86,11 @@ def set_up_base_vars(formalism="BSSN"):
     VU = ixp.declarerank1("VU", DIM=3)
     rho_b, P, h, epsilon = sp.symbols('rhob P h epsilon',real=True)
     BU = ixp.declarerank1("BU", DIM=3)
-    
+
     alpha = sp.symbols("alpha")
     alpha_dD = ixp.declarerank1("alpha_dD", DIM=3)
 
-    
+
 
 # Step 2.b.i: Define b^mu.
 def compute_smallb4U(gammaDD,betaU,alpha, u4U, BU, sqrt4pi):
@@ -169,6 +169,11 @@ def compute_rho_star(alpha, sqrtgammaDET, rho_b,u4U):
     # Compute rho_star:
     rho_star = alpha*sqrtgammaDET*rho_b*u4U[0]
 
+def compute_Y_e_star(alpha, sqrtgammaDET, Y_e, rho_b, u4U):
+    global Y_e_star
+    # Compute Y_e_star:
+    Y_e_star = alpha*sqrtgammaDET*rho_b*Y_e*u4U[0]
+
 def compute_tau_tilde(alpha, sqrtgammaDET, T4UU,rho_star):
     global tau_tilde
     tau_tilde = alpha**2*sqrtgammaDET*T4UU[0][0] - rho_star
@@ -196,14 +201,21 @@ def compute_rho_star_fluxU(vU, rho_star):
     for j in range(3):
         rho_star_fluxU[j] = rho_star*vU[j]
 
-# Step 4.c: tau_tilde flux
+# Step 4.c: Y_e_star flux
+def compute_Y_e_star_fluxU(vU, Y_e_star):
+    global Y_e_star_fluxU
+    Y_e_star_fluxU = ixp.zerorank1(DIM=3)
+    for j in range(3):
+        Y_e_star_fluxU[j] = Y_e_star*vU[j]
+
+# Step 4.d: tau_tilde flux
 def compute_tau_tilde_fluxU(alpha, sqrtgammaDET, vU,T4UU,rho_star):
     global tau_tilde_fluxU
     tau_tilde_fluxU = ixp.zerorank1(DIM=3)
     for j in range(3):
         tau_tilde_fluxU[j] = alpha**2*sqrtgammaDET*T4UU[0][j+1] - rho_star*vU[j]
 
-# Step 4.d: S_tilde flux
+# Step 4.e: S_tilde flux
 def compute_S_tilde_fluxUD(alpha, sqrtgammaDET, T4UD):
     global S_tilde_fluxUD
     S_tilde_fluxUD = ixp.zerorank2(DIM=3)
@@ -232,9 +244,9 @@ def compute_tau_tilde_source_term(KDD,betaU,alpha, sqrtgammaDET,alpha_dD, T4UU):
     for i in range(3):
         for j in range(3):
             tau_tilde_source_term_1_3 += (T4UU[0][0]*betaU[i]*betaU[j] + 2*T4UU[0][i+1]*betaU[j] + T4UU[i+1][j+1])*KDD[i][j]
-            
+
     tau_tilde_source_term_1_3 *= alpha*sqrtgammaDET
-    
+
     tau_tilde_source_term_2_3_A = alpha*sqrtgammaDET*(-(T4UU[0][0]*betaU[0] + T4UU[0][0+1])*alpha_dD[0])
     tau_tilde_source_term_2_3_B = alpha*sqrtgammaDET*(-(T4UU[0][0]*betaU[1] + T4UU[0][1+1])*alpha_dD[1])
     tau_tilde_source_term_2_3_C = alpha*sqrtgammaDET*(-(T4UU[0][0]*betaU[2] + T4UU[0][2+1])*alpha_dD[2])
@@ -285,7 +297,7 @@ def compute_S_tilde_source_termD(alpha, sqrtgammaDET,g4DD_zerotimederiv_dD, T4UU
             for nu in range(4):
                 S_tilde_source_termD[i] += sp.Rational(1,2)*alpha*sqrtgammaDET*T4UU[mu][nu]*g4DD_zerotimederiv_dD[mu][nu][i+1]
 
-                
+
 # Step 6.a: Convert Valencia 3-velocity v_{(n)}^i into u^\mu, and apply a speed limiter
 #           Speed-limited ValenciavU is output to rescaledValenciavU global.
 def u4U_in_terms_of_ValenciavU__rescale_ValenciavU_by_applying_speed_limit(alpha,betaU,gammaDD, ValenciavU):
@@ -297,7 +309,7 @@ def u4U_in_terms_of_ValenciavU__rescale_ValenciavU_by_applying_speed_limit(alpha
     for i in range(3):
         for j in range(3):
             R += gammaDD[i][j]*ValenciavU[i]*ValenciavU[j]
-    
+
     Rmax = 1 - 1 / (GAMMA_SPEED_LIMIT * GAMMA_SPEED_LIMIT)
     # Now, we set Rstar = min(Rmax,R):
     # If R <  Rmax, then Rstar = 0.5*(Rmax+R-Rmax+R) = R
@@ -348,4 +360,3 @@ def u4U_in_terms_of_vU__rescale_vU_by_applying_speed_limit(alpha,betaU,gammaDD, 
     rescaledVU = ixp.zerorank1(DIM=3)
     for i in range(3):
         rescaledVU[i] = alpha * rescaledValenciavU[i] - betaU[i]
-    

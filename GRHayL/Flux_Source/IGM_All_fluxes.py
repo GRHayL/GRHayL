@@ -6,7 +6,7 @@ import GRMHD_equations_new_version as GRMHD    # NRPy+: Generate general relativ
 nrpy_dir_path = os.path.join("nrpy/")
 if nrpy_dir_path not in sys.path:
     sys.path.append(nrpy_dir_path)
-    
+
 from outputC import outputC, outCfunction # NRPy+: Core C code output module
 import sympy as sp               # SymPy: The Python computer algebra package upon which NRPy+ depends
 import finite_difference as fin  # NRPy+: Finite difference C code generation module
@@ -28,14 +28,14 @@ rfm.reference_metric()
 # We'll rewrite this assuming that we've passed the entire reconstructed
 # gridfunctions. You could also do this with only one point, but then you'd
 # need to declare everything as a Cparam in NRPy+
-    
-def calculate_GRMHD_Tmunu_and_contractions(formalism, flux_dirn, mom_comp, 
-                                          gammaDD,betaU,alpha,
-                                          rho_b, P, h, u4U, BU):
+
+def calculate_GRMHD_Tmunu_and_contractions(formalism, flux_dirn, mom_comp,
+                                           gammaDD,betaU,alpha,
+                                           rho_b, P, h, u4U, BU, Y_e=None):
     GRMHD.set_up_base_vars(formalism=formalism)
-    
+
     GRMHD.compute_vU_from_u4U__no_speed_limit(u4U)
-    
+
     # First compute stress-energy tensor T4UU and T4UD:
     GRMHD.compute_sqrtgammaDET(gammaDD)
     GRMHD.compute_smallb4U(gammaDD, betaU, alpha, u4U, BU, GRMHD.sqrt4pi)
@@ -44,7 +44,7 @@ def calculate_GRMHD_Tmunu_and_contractions(formalism, flux_dirn, mom_comp,
     # First compute stress-energy tensor T4UU and T4UD:
     GRMHD.compute_T4UU(gammaDD,betaU,alpha, rho_b, P, h, u4U, GRMHD.smallb4U, GRMHD.smallbsquared)
     GRMHD.compute_T4UD(gammaDD,betaU,alpha, GRMHD.T4UU)
-    
+
     # Compute conservative variables in terms of primitive variables
     GRMHD.compute_rho_star(alpha, GRMHD.sqrtgammaDET, rho_b,u4U)
     GRMHD.compute_tau_tilde(alpha, GRMHD.sqrtgammaDET, GRMHD.T4UU,GRMHD.rho_star)
@@ -67,6 +67,15 @@ def calculate_GRMHD_Tmunu_and_contractions(formalism, flux_dirn, mom_comp,
     U_S_tilde = GRMHD.S_tildeD[mom_comp]
     F_S_tilde = GRMHD.S_tilde_fluxUD[flux_dirn][mom_comp]
 
+    global U_Y_e_star, F_Y_e_star
+    U_Y_e_star = None
+    F_Y_e_star = None
+    if Y_e is not None:
+        GRMHD.compute_Y_e_star(alpha, GRMHD.sqrtgammaDET, Y_e, rho_b, u4U)
+        GRMHD.compute_Y_e_star_fluxU(GRMHD.VU, GRMHD.Y_e_star)
+        U_Y_e_star = GRMHD.Y_e_star
+        F_Y_e_star = GRMHD.Y_e_star_fluxU[flux_dirn]
+
 def HLLE_solver(cmax, cmin, Fr, Fl, Ur, Ul):
     # This solves the Riemann problem for the mom_comp component of the momentum
     # flux StildeD in the flux_dirn direction.
@@ -82,61 +91,71 @@ def calculate_HLLE_fluxes(formalism, flux_dirn, alpha_face, gamma_faceDD, beta_f
                           rho_b_r, rho_b_l,
                           P_r, P_l,
                           h_r, h_l,
-                          cmin, cmax):
+                          cmin, cmax,
+                          Y_e_r=None, Y_e_l=None):
 
     global Stilde_flux_HLLED, rho_star_HLLE_flux, tau_tilde_HLLE_flux
     Stilde_flux_HLLED = ixp.zerorank1()
 #     rescaled_Stilde_fluxD = ixp.zerorank1()
     for mom_comp in range(3):
-        calculate_GRMHD_Tmunu_and_contractions(formalism, flux_dirn, mom_comp, 
+        calculate_GRMHD_Tmunu_and_contractions(formalism, flux_dirn, mom_comp,
                                                gamma_faceDD,beta_faceU,
                                                alpha_face,
-                                               rho_b_r, P_r, h_r, u4rU, 
-                                               BrU)
-        
+                                               rho_b_r, P_r, h_r, u4rU,
+                                               BrU, Y_e=Y_e_r)
+
         F_S_tilde_r = F_S_tilde
         U_S_tilde_r = U_S_tilde
-        
+
         if mom_comp==0:
             U_rho_star_r = U_rho_star
             F_rho_star_r = F_rho_star
 
             U_tau_tilde_r = U_tau_tilde
-            F_tau_tilde_r = F_tau_tilde            
-        
-        calculate_GRMHD_Tmunu_and_contractions(formalism, flux_dirn, mom_comp, 
+            F_tau_tilde_r = F_tau_tilde
+
+            if Y_e is not None:
+                U_Y_e_star_r = U_Y_e_star
+                F_Y_e_star_r = F_Y_e_star
+
+        calculate_GRMHD_Tmunu_and_contractions(formalism, flux_dirn, mom_comp,
                                                gamma_faceDD,beta_faceU,
                                                alpha_face,
-                                               rho_b_l, P_l, h_l, u4lU, 
-                                               BlU)
-        
+                                               rho_b_l, P_l, h_l, u4lU,
+                                               BlU, Y_e=Y_e_l)
+
         F_S_tilde_l = F_S_tilde
         U_S_tilde_l = U_S_tilde
-        
+
         if mom_comp==0:
             U_rho_star_l = U_rho_star
             F_rho_star_l = F_rho_star
 
             U_tau_tilde_l = U_tau_tilde
             F_tau_tilde_l = F_tau_tilde
-            
-            # now calculate HLLE derived fluxes, and rescale all of them
-            rho_star_HLLE_flux = HLLE_solver(cmax, cmin, 
-                                      F_rho_star_r, F_rho_star_l, 
-                                      U_rho_star_r, U_rho_star_l)
-            
-            tau_tilde_HLLE_flux = HLLE_solver(cmax, cmin, 
-                                      F_tau_tilde_r, F_tau_tilde_l, 
-                                      U_tau_tilde_r, U_tau_tilde_l)
-        
-        # Rescale the flux term, to be FD
-        Stilde_flux_HLLED[mom_comp] = HLLE_solver(cmax, cmin, 
-                                      F_S_tilde_r, F_S_tilde_l, 
-                                      U_S_tilde_r, U_S_tilde_l)
-        
 
-def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, outCparams = "outCverbose=False,CSE_sorting=True"):
-    
+            if Y_e is not None:
+                U_Y_e_star_l = U_Y_e_star
+                F_Y_e_star_l = F_Y_e_star
+
+            # now calculate HLLE derived fluxes, and rescale all of them
+            rho_star_HLLE_flux = HLLE_solver(cmax, cmin,
+                                      F_rho_star_r, F_rho_star_l,
+                                      U_rho_star_r, U_rho_star_l)
+
+            tau_tilde_HLLE_flux = HLLE_solver(cmax, cmin,
+                                      F_tau_tilde_r, F_tau_tilde_l,
+                                      U_tau_tilde_r, U_tau_tilde_l)
+
+        # Rescale the flux term, to be FD
+        Stilde_flux_HLLED[mom_comp] = HLLE_solver(cmax, cmin,
+                                      F_S_tilde_r, F_S_tilde_l,
+                                      U_S_tilde_r, U_S_tilde_l)
+
+
+def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, tabulated=False,
+                            outCparams = "outCverbose=False,CSE_sorting=True"):
+
     sqrt4pi = sp.symbols("SQRT_4_PI")
     alpha_face = sp.symbols("alpha_face")
     if formalism=="BSSN":
@@ -156,10 +175,10 @@ def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, outCparam
                 gamma_faceDD[i][j] = AitoB.gammaDD[i][j].subs(Bq.hDD[i][j], h_faceDD[i][j]).subs(Bq.cf, cf_face)
 
     else:
-        beta_faceU = ixp.declarerank1("beta_faceU") 
+        beta_faceU = ixp.declarerank1("beta_faceU")
         gamma_faceDD = ixp.declarerank2("gamma_faceDD","sym01")
-        
-               
+
+
     # We'll need some more gridfunctions, now, to represent the reconstructions of BU and ValenciavU
     # on the right and left faces
     u4rU = ixp.declarerank1("u4rU", DIM=4)
@@ -193,6 +212,15 @@ def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, outCparam
 
     prims_GRHayL = ["u0", "vx", "vy", "vz", "Bx", "By", "Bz", "press", "rho"]
 
+    Y_e_r = None
+    Y_e_l = None
+    if tabulated:
+        Y_e_r = sp.symbols("Y_e_r")
+        Y_e_l = sp.symbols("Y_e_l")
+        prims_NRPy_r += ["Y_e_r"]
+        prims_NRPy_l += ["Y_e_l"]
+        prims_GRHayL += ["Y_e"]
+
     prestring = r"""
 double h_r, h_l, cs2_r, cs2_l;
 
@@ -201,7 +229,7 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 """
 
     for i in range(len(prims_NRPy_r)):
-        if "v" in prims_GRHayL[i]: 
+        if "v" in prims_GRHayL[i]:
             vel_r_str = prims_NRPy_r[0]
             vel_l_str = prims_NRPy_l[0]
             prestring += "const double "+prims_NRPy_r[i]+" = prims_r->"+prims_GRHayL[i]+"*"+vel_r_str+";\n"
@@ -229,7 +257,7 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
                 prestring += "const double "+str(hDD_var)+" = metric_face_quantities->"+str(hDD_var)+";\n"
                 checker.append(hDD_var)
 
-    else:    
+    else:
         prestring += "const double beta_faceU0 = metric_face->betax;\n"
         prestring += "const double beta_faceU1 = metric_face->betay;\n"
         prestring += "const double beta_faceU2 = metric_face->betaz;\n"
@@ -254,9 +282,12 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
     #                 continue
     #             prestring += "const double "+str(gammaDD_var)+" = metric_face_quantities->"+str(gammaDD_var)+";\n"
     #             checker.append(gammaDD_var)
-                
-                
+
+
     vars_to_write = ["cons->S_x", "cons->S_y", "cons->S_z", "cons->rho", "cons->tau"]
+    if tabulated:
+        vars_to_write += ["cons->Y_e"]
+
     c_type = "void"
 
     params  =  "const primitive_quantities *restrict prims_r, "
@@ -277,15 +308,16 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
                               rho_b_r, rho_b_l,
                               P_r, P_l,
                               h_r, h_l,
-                              cmins[flux_dirn], cmaxs[flux_dirn])
+                              cmins[flux_dirn], cmaxs[flux_dirn],
+                              Y_e_r=Y_e_r, Y_e_l=Y_e_l)
 
-        vars_rhs = [Stilde_flux_HLLED[0], 
-                    Stilde_flux_HLLED[1], 
-                    Stilde_flux_HLLED[2], 
+        vars_rhs = [Stilde_flux_HLLED[0],
+                    Stilde_flux_HLLED[1],
+                    Stilde_flux_HLLED[2],
                     rho_star_HLLE_flux,
                     tau_tilde_HLLE_flux]
 
-        body = outputC(vars_rhs, vars_to_write, params=outCparams, 
+        body = outputC(vars_rhs, vars_to_write, params=outCparams,
                    filename="returnstring", prestring=prestring)
 
     #     prestring=(cmin_cmax_str+ calc_char_speeds_func_str+
@@ -293,13 +325,13 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
     #                                prestring)
 
         desc = "Compute the HLLE-derived fluxes on the left face in the " + str(flux_dirn) + "direction for all components."
-        name = "calculate_HLLE_fluxes_dirn" + str(flux_dirn)   
-        
+        name = "calculate_HLLE_fluxes_dirn" + str(flux_dirn)
+
         outCfunction(
             outfile=os.path.join(Ccodesdir,name+".c"),
             includes=includes,
             desc=desc,
             name=name,
             params=params+cmin_cmax_str+"conservative_quantities *restrict cons",
-            body= body, 
+            body= body,
             enableCparameters=False)

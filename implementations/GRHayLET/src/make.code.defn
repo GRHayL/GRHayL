@@ -4,10 +4,13 @@
 SRCS = GRHayL_initialize_and_shutdown.c
 
 # Subdirectories containing source files
-SUBDIRS = Con2Prim       \
-          EOS            \
-          Flux_Source    \
-          GRHayL_Core    \
-          Induction      \
-          Neutrinos      \
-          Reconstruction
+SUBDIRS = Con2Prim                       \
+          Con2Prim/C2P_Routines/Font_Fix \
+          Con2Prim/C2P_Routines/Hybrid   \
+          EOS/Hybrid                     \
+          EOS/Tabulated                  \
+          EOS/Tabulated/interpolators    \
+          Flux_Source                    \
+          GRHayL_Core                    \
+          Induction                      \
+          Neutrinos/NRPyLeakage          \
