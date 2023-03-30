@@ -24,7 +24,8 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
   initialize_GRHayL(main, backups,
                     evolve_entropy, evolve_temperature,
                     calc_primitive_guess, Psi6threshold,
-                    update_Tmunu, Cupp_Fix, grhayl_params);
+                    update_Tmunu, Cupp_Fix, Lorenz_damping_factor,
+                    grhayl_params);
 
   if (CCTK_EQUALS(EOS_type, "hybrid")) {
     initialize_hybrid_eos_functions_and_params(W_max,

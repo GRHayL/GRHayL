@@ -29,7 +29,7 @@
 void initialize_GRHayL(const int main, const int backup[3],
                 const int evolve_entropy, const int evolve_temp, const int calc_prim_guess,
                 const double psi6threshold, const int update_Tmunu, const int Cupp_Fix,
-                GRHayL_parameters *restrict params) {
+                const double Lorenz_damping_factor, GRHayL_parameters *restrict params) {
   params->main_routine = main;
   params->backup_routine[0] = backup[0];
   params->backup_routine[1] = backup[1];
@@ -40,5 +40,6 @@ void initialize_GRHayL(const int main, const int backup[3],
   params->psi6threshold = psi6threshold;
   params->update_Tmunu = update_Tmunu;
   params->Cupp_Fix = Cupp_Fix;
+  params->Lorenz_damping_factor = Lorenz_damping_factor;
   return;
 }
