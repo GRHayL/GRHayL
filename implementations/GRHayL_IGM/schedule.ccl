@@ -45,7 +45,7 @@ schedule group GRHayL_IGM_ID_Converter at CCTK_INITIAL after HydroBase_Initial b
 {
 } "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayL_IGM"
 
-schedule convert_from_ADMBase_HydroBase_to_GRHayL_IGM IN GRHayL_IGM_ID_Converter as first_initialdata after GRHayL_IGM_seed_magnetic_fields
+schedule convert_from_ADMBase_HydroBase_to_GRHayL_IGM IN GRHayL_IGM_ID_Converter as first_initialdata
 {
    LANG:       C
    OPTIONS:    LOCAL
@@ -86,10 +86,12 @@ schedule GRHayL_IGM_compute_B_and_Bstagger_from_A IN GRHayL_IGM_ID_Converter as 
 {
   LANG: C
   READS:  GRID::coordinates
-  READS:  phi_bssn, phitilde, Ax, Ay, Az
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  phitilde, Ax, Ay, Az
+  WRITES: ADMBase::metric(everywhere)
+  WRITES: BSSN_quantities(everywhere)
   #Technically only writes Ai and phitilde in symmetry gz's
-  WRITES: psi_bssn(everywhere), phitilde(everywhere),
-          Ax(everywhere), Ay(everywhere), Az(everywhere),
+  WRITES: phitilde(everywhere), Ax(everywhere), Ay(everywhere), Az(everywhere),
           grmhd_B_center(everywhere), grmhd_B_stagger(everywhere)
   SYNC: grmhd_B_center, grmhd_B_stagger
 } "Compute B and B_stagger from A"
@@ -135,10 +137,12 @@ schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in GRHayL_IGM_PostPostInitial 
 {
   LANG: C
   READS:  GRID::coordinates
-  READS:  phi_bssn, phitilde, Ax, Ay, Az
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  phitilde, Ax, Ay, Az
+  WRITES: ADMBase::metric(everywhere)
+  WRITES: BSSN_quantities(everywhere)
   #Technically only writes Ai and phitilde in symmetry gz's
-  WRITES: psi_bssn(everywhere), phitilde(everywhere),
-          Ax(everywhere), Ay(everywhere), Az(everywhere),
+  WRITES: phitilde(everywhere), Ax(everywhere), Ay(everywhere), Az(everywhere),
           grmhd_B_center(everywhere), grmhd_B_stagger(everywhere)
   # This is strictly a processor sync, as prolongation is disabled for all primitives & B^i's.
   SYNC: grmhd_B_center, grmhd_B_stagger # FIXME: Are both SYNC's necessary?
@@ -225,9 +229,6 @@ schedule GRHayL_IGM_InitSymBound in HydroBase_Boundaries as Boundary_SYNCs after
 schedule GRHayL_IGM_outer_boundaries_on_A_mu in HydroBase_Boundaries after Boundary_SYNCs
 {
   LANG: C
-  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-  WRITES: ADMBase::metric(everywhere)
-  WRITES: BSSN_quantities(everywhere)
   READS:  phitilde, Ax, Ay, Az
   WRITES: phitilde(boundary), Ax(boundary), Ay(boundary), Az(boundary)
 } "Apply linear extrapolation BCs on A_{mu}, so that BCs are flat on B^i."
@@ -238,10 +239,12 @@ schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in HydroBase_Boundaries after 
 {
   LANG: C
   READS:  GRID::coordinates
-  READS:  phi_bssn, phitilde, Ax, Ay, Az
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  phitilde, Ax, Ay, Az
+  WRITES: ADMBase::metric(everywhere)
+  WRITES: BSSN_quantities(everywhere)
   #Technically only writes Ai and phitilde in symmetry gz's
-  WRITES: psi_bssn(everywhere), phitilde(everywhere),
-          Ax(everywhere), Ay(everywhere), Az(everywhere),
+  WRITES: phitilde(everywhere), Ax(everywhere), Ay(everywhere), Az(everywhere),
           grmhd_B_center(everywhere), grmhd_B_stagger(everywhere)
   # This is strictly a processor sync, as prolongation is disabled for all primitives & B^i's.
   SYNC: grmhd_B_center, grmhd_B_stagger # FIXME: Are both SYNC's necessary?
