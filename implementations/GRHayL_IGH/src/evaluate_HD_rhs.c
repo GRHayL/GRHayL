@@ -68,8 +68,8 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
   //   evaluate_HD_rhs_headers.h (look for RHOB=0, etc.)
   //   For example, in_prims[0] _must_ be rho_b.
   int ww=0;
-  in_prims[ww]=rho;        out_prims_r[ww]=rhor;        out_prims_l[ww]=rhol;        ww++;
-  in_prims[ww]=press;      out_prims_r[ww]=pressr;      out_prims_l[ww]=pressl;      ww++;
+  in_prims[ww]=rho_b;      out_prims_r[ww]=rhor;        out_prims_l[ww]=rhol;        ww++;
+  in_prims[ww]=pressure;   out_prims_r[ww]=pressr;      out_prims_l[ww]=pressl;      ww++;
   in_prims[ww]=vx;         out_prims_r[ww]=vxr;         out_prims_l[ww]=vxl;         ww++;
   in_prims[ww]=vy;         out_prims_r[ww]=vyr;         out_prims_l[ww]=vyl;         ww++;
   in_prims[ww]=vz;         out_prims_r[ww]=vzr;         out_prims_l[ww]=vzl;         ww++;

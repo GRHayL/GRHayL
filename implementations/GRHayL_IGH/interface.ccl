@@ -25,7 +25,7 @@ CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
 # we declare our own velocities here.
 cctk_real grmhd_primitives type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
 {
-  vx, vy, vz
+  rho_b, pressure, vx, vy, vz
 } "Primitive variables density, pressure, and components of three velocity v^i. Note that v^i is defined in terms of 4-velocity as: v^i = u^i/u^0. Note that this definition differs from the Valencia formalism."
 
 #########################################################
@@ -73,7 +73,7 @@ CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="non
 #########################################################
 
 # Diagnostic gridfunctions
-CCTK_REAL diagnostic_gfs type = GF TAGS='prolongation="none" Checkpoint="no"'
+CCTK_REAL diagnostic_gfs type = GF TAGS='prolongation="none" Checkpoint="no" InterpNumTimelevels=1'
 {
   failure_checker
 } "Gridfunction to track conservative-to-primitives solver fixes. Beware that this gridfunction is overwritten at each RK substep."

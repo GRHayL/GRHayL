@@ -37,6 +37,9 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
     for(int j=0; j<jmax; j++)
       for(int i=0; i<imax; i++) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int ind0=CCTK_GFINDEX4D(cctkGH,i,j,k,0);
+        const int ind1=CCTK_GFINDEX4D(cctkGH,i,j,k,1);
+        const int ind2=CCTK_GFINDEX4D(cctkGH,i,j,k,2);
 
         //TODO: this references simple gamma law; clearly needs to be extended to more EOS types
         // P = (\Gamma - 1) rho epsilon
@@ -46,14 +49,17 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
           CCTK_VERROR("Expected simple gamma law with gamma_th=%.15e, but found a point with gamma law such that gamma_th=%.15e. error = %e| rb=%e rbatm=%e P=%e\n",
                       grhayl_eos->Gamma_th, measured_gamma, (grhayl_eos->Gamma_th-measured_gamma)/grhayl_eos->Gamma_th, rho[index], grhayl_eos->rho_atm, press[index] );
 
-        Ax[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
-        Ay[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
-        Az[index] = Avec[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
+        rho_b[index] = rho[index];
+        pressure[index] = press[index];
+
+        Ax[index] = Avec[ind0];
+        Ay[index] = Avec[ind1];
+        Az[index] = Avec[ind2];
         phitilde[index] = Aphi[index];
 
-        const double ETvx = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
-        const double ETvy = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
-        const double ETvz = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
+        const double ETvx = vel[ind0];
+        const double ETvy = vel[ind1];
+        const double ETvz = vel[ind2];
 
         // IllinoisGRMHD defines v^i = u^i/u^0.
 
@@ -93,7 +99,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
         const double pert = (random_pert*(double)rand() / RAND_MAX);
         const double one_plus_pert=(1.0+pert);
-        rho[index]*=one_plus_pert;
+        rho_b[index]*=one_plus_pert;
         vx[index]*=one_plus_pert;
         vy[index]*=one_plus_pert;
         vz[index]*=one_plus_pert;
@@ -266,7 +272,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
 
         primitive_quantities prims;
         initialize_primitives(
-                          rho[index], press[index], eps[index],
+                          rho_b[index], pressure[index], eps[index],
                           vx[index], vy[index], vz[index],
                           Bx_center[index], By_center[index], Bz_center[index],
                           poison, poison, poison,
@@ -284,7 +290,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         compute_conservs_and_Tmunu(grhayl_params, grhayl_eos, &metric, &prims, &cons, &Tmunu);
 
         return_primitives(&prims,
-                          &rho[index], &press[index], &eps[index],
+                          &rho_b[index], &pressure[index], &eps[index],
                           &vx[index], &vy[index], &vz[index],
                           &Bx_center[index], &By_center[index], &Bz_center[index],
                           &dummy1, &dummy2, &dummy3);

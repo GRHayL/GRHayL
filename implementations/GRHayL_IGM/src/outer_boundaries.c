@@ -140,8 +140,8 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int k=0; k<cctk_lsh[2]; k++)
         for(int j=0; j<cctk_lsh[1]; j++) {
-          press[IDX(imax,j,k)] = press[IDX(imax-1,j,k)];
-          rho[IDX(imax,j,k)]   = rho[IDX(imax-1,j,k)];
+          pressure[IDX(imax,j,k)] = pressure[IDX(imax-1,j,k)];
+          rho_b[IDX(imax,j,k)]   = rho_b[IDX(imax-1,j,k)];
           vx[IDX(imax,j,k)]    = vx[IDX(imax-1,j,k)];
           vy[IDX(imax,j,k)]    = vy[IDX(imax-1,j,k)];
           vz[IDX(imax,j,k)]    = vz[IDX(imax-1,j,k)]; 
@@ -154,8 +154,8 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int k=0; k<cctk_lsh[2]; k++)
         for(int j=0; j<cctk_lsh[1]; j++) {
-          press[IDX(imin,j,k)] = press[IDX(imin+1,j,k)];
-          rho[IDX(imin,j,k)]   = rho[IDX(imin+1,j,k)];
+          pressure[IDX(imin,j,k)] = pressure[IDX(imin+1,j,k)];
+          rho_b[IDX(imin,j,k)]   = rho_b[IDX(imin+1,j,k)];
           vx[IDX(imin,j,k)]    = vx[IDX(imin+1,j,k)];
           vy[IDX(imin,j,k)]    = vy[IDX(imin+1,j,k)];
           vz[IDX(imin,j,k)]    = vz[IDX(imin+1,j,k)]; 
@@ -170,8 +170,8 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int k=0; k<cctk_lsh[2]; k++)
         for(int i=0; i<cctk_lsh[0]; i++) {
-          press[IDX(i,jmax,k)] = press[IDX(i,jmax-1,k)];
-          rho[IDX(i,jmax,k)]   = rho[IDX(i,jmax-1,k)];
+          pressure[IDX(i,jmax,k)] = pressure[IDX(i,jmax-1,k)];
+          rho_b[IDX(i,jmax,k)]   = rho_b[IDX(i,jmax-1,k)];
           vx[IDX(i,jmax,k)]    = vx[IDX(i,jmax-1,k)];
           vy[IDX(i,jmax,k)]    = vy[IDX(i,jmax-1,k)];
           vz[IDX(i,jmax,k)]    = vz[IDX(i,jmax-1,k)]; 
@@ -184,8 +184,8 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int k=0; k<cctk_lsh[2]; k++)
         for(int i=0; i<cctk_lsh[0]; i++) {
-          press[IDX(i,jmin,k)] = press[IDX(i,jmin+1,k)];
-          rho[IDX(i,jmin,k)]   = rho[IDX(i,jmin+1,k)];
+          pressure[IDX(i,jmin,k)] = pressure[IDX(i,jmin+1,k)];
+          rho_b[IDX(i,jmin,k)]   = rho_b[IDX(i,jmin+1,k)];
           vx[IDX(i,jmin,k)]    = vx[IDX(i,jmin+1,k)];
           vy[IDX(i,jmin,k)]    = vy[IDX(i,jmin+1,k)];
           vz[IDX(i,jmin,k)]    = vz[IDX(i,jmin+1,k)]; 
@@ -200,8 +200,8 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int j=0; j<cctk_lsh[1]; j++)
         for(int i=0; i<cctk_lsh[0]; i++) {
-          press[IDX(i,j,kmax)] = press[IDX(i,j,kmax-1)];
-          rho[IDX(i,j,kmax)]   = rho[IDX(i,j,kmax-1)];
+          pressure[IDX(i,j,kmax)] = pressure[IDX(i,j,kmax-1)];
+          rho_b[IDX(i,j,kmax)]   = rho_b[IDX(i,j,kmax-1)];
           vx[IDX(i,j,kmax)]    = vx[IDX(i,j,kmax-1)];
           vy[IDX(i,j,kmax)]    = vy[IDX(i,j,kmax-1)];
           vz[IDX(i,j,kmax)]    = vz[IDX(i,j,kmax-1)]; 
@@ -214,8 +214,8 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int j=0; j<cctk_lsh[1]; j++)
         for(int i=0; i<cctk_lsh[0]; i++) {
-          press[IDX(i,j,kmin)] = press[IDX(i,j,kmin+1)];
-          rho[IDX(i,j,kmin)]   = rho[IDX(i,j,kmin+1)];
+          pressure[IDX(i,j,kmin)] = pressure[IDX(i,j,kmin+1)];
+          rho_b[IDX(i,j,kmin)]   = rho_b[IDX(i,j,kmin+1)];
           vx[IDX(i,j,kmin)]    = vx[IDX(i,j,kmin+1)];
           vy[IDX(i,j,kmin)]    = vy[IDX(i,j,kmin+1)];
           vz[IDX(i,j,kmin)]    = vz[IDX(i,j,kmin+1)]; 
@@ -248,8 +248,8 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 &metric);
       
           primitive_quantities prims;
-          initialize_primitives(rho[index],
-                press[index], eps[index],
+          initialize_primitives(rho_b[index],
+                pressure[index], eps[index],
                 vx[index], vy[index], vz[index],
                 Bx_center[index], By_center[index], Bz_center[index],
                 poison, poison, poison, &prims);
@@ -263,7 +263,7 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           compute_conservs_and_Tmunu(grhayl_params, grhayl_eos, &metric, &prims, &cons, &Tmunu);
       
           return_primitives(&prims,
-                &rho[index], &press[index], &eps[index],
+                &rho_b[index], &pressure[index], &eps[index],
                 &vx[index], &vy[index], &vz[index],
                 //&Bvec[index0], &Bvec[index1], &Bvec[index2],
                 &Bx_center[index], &By_center[index], &Bz_center[index],

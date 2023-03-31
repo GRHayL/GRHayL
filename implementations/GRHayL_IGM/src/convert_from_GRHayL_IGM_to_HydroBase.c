@@ -24,10 +24,8 @@ void convert_from_GRHayL_IGM_to_HydroBase(CCTK_ARGUMENTS) {
         const double vzL = vz[index];
         /* Note that we currently do not set Abar, Y_e, temperature, entropy, Avec[3], Aphi, Avec_stag[3], Aphi_stag */
 
-// GRHayL_IGM directly uses these HydroBase variables now
-//        rho[index]   = PRIMS[RHOB];
-//        press[index] = PRIMS[PRESSURE];
-//        eps[index]   = PRIMS[PRESSURE]/PRIMS[RHOB]/(gamma_th-1.0);
+          rho[index]   = rho_b[index];
+          press[index] = pressure[index];
 
         // IllinoisGRMHD defines v^i = u^i/u^0.
 

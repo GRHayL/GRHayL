@@ -69,7 +69,7 @@ void GRHayL_IGM_compute_characteristic_speeds(
                               poison, poison, poison, // entropy, Y_e, temp
                               &prims_l);
 
-        int speed_limited = poison;
+        int speed_limited = 0;
         limit_v_and_compute_u0(eos, &metric_face, &prims_r, &speed_limited);
         limit_v_and_compute_u0(eos, &metric_face, &prims_l, &speed_limited);
 

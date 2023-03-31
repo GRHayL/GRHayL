@@ -68,8 +68,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //   evaluate_MHD_rhs_headers.h (look for RHOB=0, etc.)
   //   For example, in_prims[0] _must_ be rho_b.
   int ww=0;
-  in_prims[ww]=rho;        out_prims_r[ww]=rhor;        out_prims_l[ww]=rhol;        ww++;
-  in_prims[ww]=press;      out_prims_r[ww]=pressr;      out_prims_l[ww]=pressl;      ww++;
+  in_prims[ww]=rho_b;      out_prims_r[ww]=rhor;        out_prims_l[ww]=rhol;        ww++;
+  in_prims[ww]=pressure;   out_prims_r[ww]=pressr;      out_prims_l[ww]=pressl;      ww++;
   in_prims[ww]=vx;         out_prims_r[ww]=vxr;         out_prims_l[ww]=vxl;         ww++;
   in_prims[ww]=vy;         out_prims_r[ww]=vyr;         out_prims_l[ww]=vyl;         ww++;
   in_prims[ww]=vz;         out_prims_r[ww]=vzr;         out_prims_l[ww]=vzl;         ww++;
@@ -144,20 +144,21 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 
   int flux_dir;
   flux_dir=0;
-//  /* There are two stories going on here:
-//   * 1) Computation of \partial_x on RHS of \partial_t {rho_star,tau,mhd_st_{x,y,z}},
-//   *    via PPM reconstruction onto (i-1/2,j,k), so that
-//   *    \partial_x F = [ F(i+1/2,j,k) - F(i-1/2,j,k) ] / dx
-//   * 2) Computation of \partial_t A_i, where A_i are *staggered* gridfunctions,
-//   *    where A_x is defined at (i,j+1/2,k+1/2), A_y at (i+1/2,j,k+1/2), etc.
-//   *    Ai_rhs = \partial_t A_i = \epsilon_{ijk} \psi^{6} v^j B^k,
-//   *    where \epsilon_{ijk} is the flat-space antisymmetric operator.
-//   * 2A) Az_rhs is defined at (i+1/2,j+1/2,k), and it depends on {Bx,By,vx,vy},
-//   *     so the trick is to reconstruct {Bx,By,vx,vy} cleverly to get to these
-//   *     staggered points. For example:
-//   * 2Aa) vx and vy are at (i,j,k), and we reconstruct them to (i-1/2,j,k) below. After
-//   *      this, we'll reconstruct again in the y-dir'n to get {vx,vy} at (i-1/2,j-1/2,k)
-//   * 2Ab) By_stagger is at (i,j+1/2,k), and we reconstruct below to (i-1/2,j+1/2,k). */
+  /* There are two stories going on here:
+   * 1) Computation of \partial_x on RHS of \partial_t {rho_star,tau,mhd_st_{x,y,z}},
+   *    via PPM reconstruction onto (i-1/2,j,k), so that
+   *    \partial_x F = [ F(i+1/2,j,k) - F(i-1/2,j,k) ] / dx
+   * 2) Computation of \partial_t A_i, where A_i are *staggered* gridfunctions,
+   *    where A_x is defined at (i,j+1/2,k+1/2), A_y at (i+1/2,j,k+1/2), etc.
+   *    Ai_rhs = \partial_t A_i = \epsilon_{ijk} \psi^{6} v^j B^k,
+   *    where \epsilon_{ijk} is the flat-space antisymmetric operator.
+   * 2A) Az_rhs is defined at (i+1/2,j+1/2,k), and it depends on {Bx,By,vx,vy},
+   *     so the trick is to reconstruct {Bx,By,vx,vy} cleverly to get to these
+   *     staggered points. For example:
+   * 2Aa) vx and vy are at (i,j,k), and we reconstruct them to (i-1/2,j,k) below. After
+   *      this, we'll reconstruct again in the y-dir'n to get {vx,vy} at (i-1/2,j-1/2,k)
+   * 2Ab) By_stagger is at (i,j+1/2,k), and we reconstruct below to (i-1/2,j+1/2,k).
+   */
   { // num_vars and var_indices are local variables
     const int num_vars = 6;
     const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};

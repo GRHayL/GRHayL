@@ -101,8 +101,8 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
 
     // Read in primitive variables from gridfunctions
     primitive_quantities prims;
-    initialize_primitives(rho[index],
-          press[index], eps[index],
+    initialize_primitives(rho_b[index],
+          pressure[index], eps[index],
           vx[index], vy[index], vz[index],
     //      Bvec[index0], Bvec[index1], Bvec[index2],
           Bx_center[index], By_center[index], Bz_center[index],
@@ -218,7 +218,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     failure_checker[index] = diagnostics.failure_checker;
 
     return_primitives(&prims,
-          &rho[index], &press[index], &eps[index],
+          &rho_b[index], &pressure[index], &eps[index],
           &vx[index], &vy[index], &vz[index],
           //&Bvec[index0], &Bvec[index1], &Bvec[index2],
           &Bx_center[index], &By_center[index], &Bz_center[index],
