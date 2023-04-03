@@ -40,12 +40,11 @@ int font_fix(
   double K_ppoly, Gamma_ppoly;
   eos->hybrid_get_K_and_Gamma(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);
 
-  // After that, we compute P_cold
-  double P_cold = K_ppoly*pow(prims_guess->rho, Gamma_ppoly);
-  double energy_u = P_cold/(Gamma_ppoly-1.0);
+  // After that, we set P = P_cold
+  eos->compute_P_cold(eos, prims_guess->rho, prims_guess->press);
 
-  prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, energy_u);
-  prims_guess->eps = energy_u/prims_guess->rho;
+  // and compute epsilon from rho and pressure
+  prims_guess->eps = prims_guess->press/(prims_guess->rho*(Gamma_ppoly-1.0));
   if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
   return check;
 }

@@ -270,20 +270,13 @@ int Hybrid_Noble2D(
 
   prims_guess->rho = harm_aux.D * gtmp;
 
-  if( eos->eos_type == grhayl_eos_hybrid ) {
-    p = pressure_rho0_w(eos, prims_guess->rho, w);
-    u = w - (prims_guess->rho + p); // u = rho eps, w = rho0 h
-  } else if( eos->eos_type == grhayl_eos_tabulated ) {
-    grhayl_warn("No tabulated EOS support yet! Sorry!");
-  }
-
   // Cupp Fix logic:
   // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
   // that u or rho were negative (usually u). Since the method converged, we only need to fix the values
   // using enforce_primitive_limits_and_output_u0(). There's no need to trigger a Font fix. In my experience,
   // Font Fix returns nearly the same values as this, but takes longer to run (we already did the work for
   // these results, after all!
-  if( !params->Cupp_Fix && ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
+  if( !params->Cupp_Fix && prims_guess->rho <= 0.0) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
     return(5);
@@ -310,10 +303,18 @@ int Hybrid_Noble2D(
   if(diagnostics->vel_limited_ptcount==1)
     prims_guess->rho = cons_undens->rho/(metric->lapse*prims_guess->u0);
 
-  // Since u is dependent on rho, it seems weird to not reset u if rho has changed from above
-  prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);
-  prims_guess->eps = u/prims_guess->rho;
-  if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
+  if( eos->eos_type == grhayl_eos_hybrid ) {
+    prims->press = pressure_rho0_w(eos, prims_guess->rho, w);
+    //prims_guess->eps = u/prims_guess->rho;
+    //prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);
+    double P_cold = 0.0;
+    double eps_cold = 0.0;
+    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
+    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
+    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
+  } else if( eos->eos_type == grhayl_eos_tabulated ) {
+    grhayl_warn("No tabulated EOS support yet! Sorry!");
+  }
 
   /* Done! */
   return(retval);
