@@ -41,7 +41,7 @@ int font_fix(
   eos->hybrid_get_K_and_Gamma(eos, prims_guess->rho, &K_ppoly, &Gamma_ppoly);
 
   // After that, we set P = P_cold
-  eos->compute_P_cold(eos, prims_guess->rho, prims_guess->press);
+  eos->hybrid_compute_P_cold(eos, prims_guess->rho, &prims_guess->press);
 
   // and compute epsilon from rho and pressure
   prims_guess->eps = prims_guess->press/(prims_guess->rho*(Gamma_ppoly-1.0));

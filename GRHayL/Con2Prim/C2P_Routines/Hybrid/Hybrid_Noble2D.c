@@ -304,13 +304,13 @@ int Hybrid_Noble2D(
     prims_guess->rho = cons_undens->rho/(metric->lapse*prims_guess->u0);
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    prims->press = pressure_rho0_w(eos, prims_guess->rho, w);
+    prims_guess->press = pressure_rho0_w(eos, prims_guess->rho, w);
     //prims_guess->eps = u/prims_guess->rho;
     //prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);
     double P_cold = 0.0;
     double eps_cold = 0.0;
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
-    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
+    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims_guess->rho, &P_cold, &eps_cold);
+    prims_guess->eps = eps_cold + (prims_guess->press-P_cold)/(eos->Gamma_th-1.0)/prims_guess->rho;
     if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
   } else if( eos->eos_type == grhayl_eos_tabulated ) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
