@@ -1,6 +1,6 @@
 # Step 0: Add NRPy's directory to the path
 # https://stackoverflow.com/questions/16780014/import-file-from-parent-directory
-import os,sys
+import os,sys,shutil
 
 nrpy_dir_path = os.path.join("nrpy/")
 if nrpy_dir_path not in sys.path:
@@ -17,15 +17,15 @@ def write_grhayl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tab
     outCparams = "outCverbose=False,GoldenKernelsEnable=True"
 
 
-    st.Cfunction__GRMHD_SourceTerms(Ccodesrootdir,
-                                    includes=includes,
-                                    formalism=formalism,
-                                    outCparams=outCparams)
+    # st.Cfunction__GRMHD_SourceTerms(Ccodesrootdir,
+    #                                 includes=includes,
+    #                                 formalism=formalism,
+    #                                 outCparams=outCparams)
 
-    chsp.Cfunction__GRMHD_characteristic_speeds(Ccodesrootdir,
-                                                includes=includes,
-                                                formalism=formalism,
-                                                outCparams=outCparams)
+    # chsp.Cfunction__GRMHD_characteristic_speeds(Ccodesrootdir,
+    #                                             includes=includes,
+    #                                             formalism=formalism,
+    #                                             outCparams=outCparams)
 
     fl.Cfunction__GRMHD_fluxes(Ccodesrootdir,
                                includes=includes,
@@ -37,11 +37,15 @@ def write_grhayl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tab
 
 if __name__ == '__main__':
 
+    outdir="."
     tabulated=False
     if len(sys.argv) > 1:
         if sys.argv[-1].lower() == "tabulated":
             tabulated=True
+            outdir="./tabulated"
+            # shutil.rmtree(outdir, ignore_errors=True)
+            # os.mkdir(outdir)
 
-    write_grhayl_Cfunctions_to_dir("./tabulated", includes, tabulated=tabulated)
+    write_grhayl_Cfunctions_to_dir(outdir, includes, tabulated=tabulated)
 
     print("Finished printing C files!")

@@ -94,7 +94,7 @@ def calculate_HLLE_fluxes(formalism, flux_dirn, alpha_face, gamma_faceDD, beta_f
                           cmin, cmax,
                           Y_e_r=None, Y_e_l=None):
 
-    global Stilde_flux_HLLED, rho_star_HLLE_flux, tau_tilde_HLLE_flux
+    global Stilde_flux_HLLED, rho_star_HLLE_flux, tau_tilde_HLLE_flux, Y_e_star_HLLE_flux
     Stilde_flux_HLLED = ixp.zerorank1()
 #     rescaled_Stilde_fluxD = ixp.zerorank1()
     for mom_comp in range(3):
@@ -114,7 +114,7 @@ def calculate_HLLE_fluxes(formalism, flux_dirn, alpha_face, gamma_faceDD, beta_f
             U_tau_tilde_r = U_tau_tilde
             F_tau_tilde_r = F_tau_tilde
 
-            if Y_e is not None:
+            if Y_e_r is not None:
                 U_Y_e_star_r = U_Y_e_star
                 F_Y_e_star_r = F_Y_e_star
 
@@ -134,10 +134,6 @@ def calculate_HLLE_fluxes(formalism, flux_dirn, alpha_face, gamma_faceDD, beta_f
             U_tau_tilde_l = U_tau_tilde
             F_tau_tilde_l = F_tau_tilde
 
-            if Y_e is not None:
-                U_Y_e_star_l = U_Y_e_star
-                F_Y_e_star_l = F_Y_e_star
-
             # now calculate HLLE derived fluxes, and rescale all of them
             rho_star_HLLE_flux = HLLE_solver(cmax, cmin,
                                       F_rho_star_r, F_rho_star_l,
@@ -146,6 +142,13 @@ def calculate_HLLE_fluxes(formalism, flux_dirn, alpha_face, gamma_faceDD, beta_f
             tau_tilde_HLLE_flux = HLLE_solver(cmax, cmin,
                                       F_tau_tilde_r, F_tau_tilde_l,
                                       U_tau_tilde_r, U_tau_tilde_l)
+
+            if Y_e_l is not None:
+                U_Y_e_star_l = U_Y_e_star
+                F_Y_e_star_l = F_Y_e_star
+                Y_e_star_HLLE_flux = HLLE_solver(cmax, cmin,
+                                      F_Y_e_star_r, F_Y_e_star_l,
+                                      U_Y_e_star_r, U_Y_e_star_l)
 
         # Rescale the flux term, to be FD
         Stilde_flux_HLLED[mom_comp] = HLLE_solver(cmax, cmin,
@@ -316,6 +319,8 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
                     Stilde_flux_HLLED[2],
                     rho_star_HLLE_flux,
                     tau_tilde_HLLE_flux]
+        if tabulated:
+            vars_rhs += [Y_e_star_HLLE_flux]
 
         body = outputC(vars_rhs, vars_to_write, params=outCparams,
                    filename="returnstring", prestring=prestring)
