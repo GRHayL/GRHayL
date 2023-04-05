@@ -16,7 +16,7 @@ STORAGE: HydroBase::rho[1],HydroBase::press[1],HydroBase::eps[1],HydroBase::vel[
 STORAGE: HydroBase::Avec[1], HydroBase::Aphi[1]
 
 STORAGE: BSSN_quantities
-STORAGE: grmhd_conservatives[3], em_Ax[3], em_Ay[3], em_Az[3], em_psi6phi[3] 
+STORAGE: grmhd_conservatives[3], em_Ax[3], em_Ay[3], em_Az[3], em_psi6phi[3]
 STORAGE: grmhd_primitives_allbutBi, grmhd_B_center, grmhd_B_stagger
 STORAGE: grmhd_conservatives_rhs, EM_rhs
 STORAGE: grmhd_primitives_reconstructed_temps, grmhd_cmin_cmax_temps, grmhd_flux_temps, diagnostic_gfs
@@ -115,9 +115,9 @@ schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_ID_Converter as fourth_initia
 # POSTPOSTINITIAL
 #########################################################
 # HydroBase_Con2Prim in CCTK_POSTPOSTINITIAL sets conserv to prim then
-# outer boundaries (OBs, which are technically disabled). The post OB 
+# outer boundaries (OBs, which are technically disabled). The post OB
 # SYNCs actually reprolongate the conservative variables, making cons
-# and prims INCONSISTENT. So here we redo the con2prim, avoiding the 
+# and prims INCONSISTENT. So here we redo the con2prim, avoiding the
 # SYNC afterward, then copy the result to other timelevels"
 schedule GROUP GRHayL_IGM_PostPostInitial at CCTK_POSTPOSTINITIAL before MoL_PostStep after Con2Prim #HydroBase_Con2Prim
 {

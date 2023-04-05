@@ -182,8 +182,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
   GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
-                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
-                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
 
   // Note that we have already reconstructed vx and vy along the x-direction,
   //   at (i-1/2,j,k). That result is stored in v{x,y}{r,l}.  Bx_stagger data
@@ -240,8 +240,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
   GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
-                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
-                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
 
   /*****************************************
    * COMPUTING RHS OF A_z, BOOKKEEPING NOTE:
@@ -310,8 +310,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
   GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
-                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
-                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
 
   /*****************************************
    * COMPUTING RHS OF A_x, BOOKKEEPING NOTE:

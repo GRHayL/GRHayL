@@ -141,11 +141,15 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
       for(int k=0; k<cctk_lsh[2]; k++)
         for(int j=0; j<cctk_lsh[1]; j++) {
           pressure[IDX(imax,j,k)] = pressure[IDX(imax-1,j,k)];
-          rho_b[IDX(imax,j,k)]   = rho_b[IDX(imax-1,j,k)];
-          vx[IDX(imax,j,k)]    = vx[IDX(imax-1,j,k)];
-          vy[IDX(imax,j,k)]    = vy[IDX(imax-1,j,k)];
-          vz[IDX(imax,j,k)]    = vz[IDX(imax-1,j,k)]; 
+          rho_b[IDX(imax,j,k)] = rho_b[IDX(imax-1,j,k)];
+          vx[IDX(imax,j,k)] = vx[IDX(imax-1,j,k)];
+          vy[IDX(imax,j,k)] = vy[IDX(imax-1,j,k)];
+          vz[IDX(imax,j,k)] = vz[IDX(imax-1,j,k)];
           if(vx[IDX(imax,j,k)]<0.) vx[IDX(imax,j,k)] = 0.0;
+
+          Ye[IDX(imax,j,k)] = Ye[IDX(imax-1,j,k)];
+          T[IDX(imax,j,k)] = T[IDX(imax-1,j,k)];
+          epsgf[IDX(imax,j,k)] = epsgf[IDX(imax-1,j,k)];
       }
     }
     // i=imin=outer boundary
@@ -158,8 +162,12 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           rho_b[IDX(imin,j,k)]   = rho_b[IDX(imin+1,j,k)];
           vx[IDX(imin,j,k)]    = vx[IDX(imin+1,j,k)];
           vy[IDX(imin,j,k)]    = vy[IDX(imin+1,j,k)];
-          vz[IDX(imin,j,k)]    = vz[IDX(imin+1,j,k)]; 
+          vz[IDX(imin,j,k)]    = vz[IDX(imin+1,j,k)];
           if(vx[IDX(imin,j,k)]>0.) vx[IDX(imin,j,k)] = 0.0;
+
+          Ye[IDX(imin,j,k)] = Ye[IDX(imin+1,j,k)];
+          T[IDX(imin,j,k)] = T[IDX(imin+1,j,k)];
+          epsgf[IDX(imin,j,k)] = epsgf[IDX(imin+1,j,k)];
       }
     }
 
@@ -174,8 +182,12 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           rho_b[IDX(i,jmax,k)]   = rho_b[IDX(i,jmax-1,k)];
           vx[IDX(i,jmax,k)]    = vx[IDX(i,jmax-1,k)];
           vy[IDX(i,jmax,k)]    = vy[IDX(i,jmax-1,k)];
-          vz[IDX(i,jmax,k)]    = vz[IDX(i,jmax-1,k)]; 
+          vz[IDX(i,jmax,k)]    = vz[IDX(i,jmax-1,k)];
           if(vx[IDX(i,jmax,k)]<0.) vx[IDX(i,jmax,k)] = 0.0;
+
+          Ye[IDX(i,jmax,k)] = Ye[IDX(i,jmax-1,k)];
+          T[IDX(i,jmax,k)] = T[IDX(i,jmax-1,k)];
+          epsgf[IDX(i,jmax,k)] = epsgf[IDX(i,jmax-1,k)];
       }
     }
     // j=jmin=outer boundary
@@ -188,8 +200,12 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           rho_b[IDX(i,jmin,k)]   = rho_b[IDX(i,jmin+1,k)];
           vx[IDX(i,jmin,k)]    = vx[IDX(i,jmin+1,k)];
           vy[IDX(i,jmin,k)]    = vy[IDX(i,jmin+1,k)];
-          vz[IDX(i,jmin,k)]    = vz[IDX(i,jmin+1,k)]; 
+          vz[IDX(i,jmin,k)]    = vz[IDX(i,jmin+1,k)];
           if(vx[IDX(i,jmin,k)]>0.) vx[IDX(i,jmin,k)] = 0.0;
+
+          Ye[IDX(i,jmin,k)] = Ye[IDX(i,jmin+1,k)];
+          T[IDX(i,jmin,k)] = T[IDX(i,jmin+1,k)];
+          epsgf[IDX(i,jmin,k)] = epsgf[IDX(i,jmin+1,k)];
       }
     }
 
@@ -204,8 +220,12 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           rho_b[IDX(i,j,kmax)]   = rho_b[IDX(i,j,kmax-1)];
           vx[IDX(i,j,kmax)]    = vx[IDX(i,j,kmax-1)];
           vy[IDX(i,j,kmax)]    = vy[IDX(i,j,kmax-1)];
-          vz[IDX(i,j,kmax)]    = vz[IDX(i,j,kmax-1)]; 
+          vz[IDX(i,j,kmax)]    = vz[IDX(i,j,kmax-1)];
           if(vx[IDX(i,j,kmax)]<0.) vx[IDX(i,j,kmax)] = 0.0;
+
+          Ye[IDX(i,j,kmax)] = Ye[IDX(i,j,kmax-1)];
+          T[IDX(i,j,kmax)] = T[IDX(i,j,kmax-1)];
+          epsgf[IDX(i,j,kmax)] = epsgf[IDX(i,j,kmax-1)];
       }
     }
     // k=kmin=outer boundary
@@ -218,8 +238,12 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           rho_b[IDX(i,j,kmin)]   = rho_b[IDX(i,j,kmin+1)];
           vx[IDX(i,j,kmin)]    = vx[IDX(i,j,kmin+1)];
           vy[IDX(i,j,kmin)]    = vy[IDX(i,j,kmin+1)];
-          vz[IDX(i,j,kmin)]    = vz[IDX(i,j,kmin+1)]; 
+          vz[IDX(i,j,kmin)]    = vz[IDX(i,j,kmin+1)];
           if(vx[IDX(i,j,kmin)]>0.) vx[IDX(i,j,kmin)] = 0.0;
+
+          Ye[IDX(i,j,kmin)] = Ye[IDX(i,j,kmin+1)];
+          T[IDX(i,j,kmin)] = T[IDX(i,j,kmin+1)];
+          epsgf[IDX(i,j,kmin)] = epsgf[IDX(i,j,kmin+1)];
       }
     }
   }
@@ -246,37 +270,37 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 gyy[index], gyz[index], gzz[index],
                 betax[index], betay[index], betaz[index],
                 &metric);
-      
+
           primitive_quantities prims;
           initialize_primitives(rho_b[index],
-                pressure[index], eps[index],
+                pressure[index], epsgf[index],
                 vx[index], vy[index], vz[index],
                 Bx_center[index], By_center[index], Bz_center[index],
-                poison, poison, poison, &prims);
+                poison, Ye[index], T[index], &prims);
                 //wont have storage for these vars for hybrid
                 //entropy[index], Y_e[index], temperature[index], &prims);
-      
+
           conservative_quantities cons;
           stress_energy Tmunu;
           int speed_limited = 0;
           enforce_primitive_limits_and_compute_u0(grhayl_params, grhayl_eos, &metric, &prims, &speed_limited);
           compute_conservs_and_Tmunu(grhayl_params, &metric, &prims, &cons, &Tmunu);
-      
+
           return_primitives(&prims,
-                &rho_b[index], &pressure[index], &eps[index],
+                &rho_b[index], &pressure[index], &epsgf[index],
                 &vx[index], &vy[index], &vz[index],
                 //&Bvec[index0], &Bvec[index1], &Bvec[index2],
                 &Bx_center[index], &By_center[index], &Bz_center[index],
-                &dummy1, &dummy2, &dummy3);
+                &dummy1, &Ye[index], &T[index]);
                 //wont have storage for these vars for hybrid
                 //&entropy[index], &Y_e[index], &temperature[index]);
-      
+
           return_conservatives(&cons,
                 &rho_star[index], &tau[index],
                 &Stildex[index], &Stildey[index], &Stildez[index],
-                &dummy1, &dummy2);
+                &Y_e_star[index], &dummy2);
                 //&Y_e[index], &entropy[index]);
-      
+
           if(grhayl_params->update_Tmunu) {
             return_stress_energy(&Tmunu, &eTtt[index], &eTtx[index],
                   &eTty[index], &eTtz[index], &eTxx[index],
