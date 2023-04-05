@@ -2,8 +2,8 @@
 
 static int MINUS1=0, PLUS0=1, PLUS1=2;
 
-static inline double avg3(double f[3][3][3],int imin,int imax, int jmin,int jmax, int kmin,int kmax);
-static inline double avg2(double f[2][2][2],int imin,int imax, int jmin,int jmax, int kmin,int kmax);
+static inline double avg3(const double f[3][3][3],const int imin,const int imax, const int jmin,const int jmax, const int kmin,const int kmax);
+static inline double avg2(const double f[2][2][2],const int imin,const int imax, const int jmin,const int jmax, const int kmin,const int kmax);
 
 /* Function    : interpolate_for_A_gauge_rhs()
  * Description : computes several interpolated quantities for computing the RHS
@@ -18,7 +18,7 @@ static inline double avg2(double f[2][2][2],int imin,int imax, int jmin,int jmax
  *
  */
 void interpolate_for_A_gauge_rhs(
-            A_gauge_vars *restrict gauge_vars,
+            const A_gauge_vars *restrict gauge_vars,
             A_gauge_rhs_vars *restrict gauge_rhs_vars ) {
   /* Compute \partial_t psi6phi = -\partial_i (  \alpha psi^6 A^i - psi6phi \beta^i)
    *    (Eq 13 of http://arxiv.org/pdf/1110.4633.pdf), using Lorenz gauge.
@@ -118,7 +118,7 @@ void interpolate_for_A_gauge_rhs(
                                                          + gauge_rhs_vars->shiftz_interp[0]*A_z_ijk);
 }
 
-static inline double avg3(double f[3][3][3],int imin,int imax, int jmin,int jmax, int kmin,int kmax) {
+static inline double avg3(const double f[3][3][3], const int imin, const int imax, const int jmin, const int jmax, const int kmin, const int kmax) {
   double retval=0.0,num_in_sum=0.0;
   for(int kk=kmin;kk<=kmax;kk++) for(int jj=jmin;jj<=jmax;jj++) for(int ii=imin;ii<=imax;ii++) {
         retval+=f[kk][jj][ii]; num_in_sum++;
@@ -126,7 +126,7 @@ static inline double avg3(double f[3][3][3],int imin,int imax, int jmin,int jmax
   return retval/num_in_sum;
 }
 
-static inline double avg2(double f[2][2][2],int imin,int imax, int jmin,int jmax, int kmin,int kmax) {
+static inline double avg2(const double f[2][2][2], const int imin, const int imax, const int jmin, const int jmax, const int kmin, const int kmax) {
   double retval=0.0,num_in_sum=0.0;
   for(int kk=kmin;kk<=kmax;kk++) for(int jj=jmin;jj<=jmax;jj++) for(int ii=imin;ii<=imax;ii++) {
         retval+=f[kk][jj][ii]; num_in_sum++;

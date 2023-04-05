@@ -53,7 +53,7 @@ extern "C" {
 #endif
 
 void interpolate_for_A_gauge_rhs(
-      A_gauge_vars *restrict gauge_vars,
+      const A_gauge_vars *restrict gauge_vars,
       A_gauge_rhs_vars *restrict gauge_rhs_vars );
 
 void calculate_phitilde_and_A_gauge_rhs(
