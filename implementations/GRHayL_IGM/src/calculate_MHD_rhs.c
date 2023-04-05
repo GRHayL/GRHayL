@@ -67,7 +67,7 @@ void GRHayL_IGM_calculate_tau_source_rhs(
         initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], poison,
                               in_prims[VX][index], in_prims[VY][index], in_prims[VZ][index],
                               in_prims[BX_CENTER][index], in_prims[BY_CENTER][index], in_prims[BZ_CENTER][index],
-                              poison, poison, poison, // entropy, Y_e, temp
+                              poison, in_prims[YEPRIM][index], in_prims[TEMPERATURE][index], // entropy, Y_e, temp
                               &prims);
 
         int speed_limited = 0;
@@ -96,11 +96,13 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
       double *restrict Stildex_flux,
       double *restrict Stildey_flux,
       double *restrict Stildez_flux,
+      double *restrict Y_e_star_flux,
       double *restrict rho_star_rhs,
       double *restrict tau_rhs,
       double *restrict Stildex_rhs,
       double *restrict Stildey_rhs,
-      double *restrict Stildez_rhs) {
+      double *restrict Stildez_rhs,
+      double *restrict Y_e_star_rhs) {
 
   const double dxi[3] = { 1.0/dX[0],1.0/dX[1],1.0/dX[2] };
   const double poison = 0.0/0.0;
@@ -178,13 +180,13 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
         initialize_primitives(in_prims_r[RHOB][index], in_prims_r[PRESSURE][index], poison,
                               in_prims_r[VX][index], in_prims_r[VY][index], in_prims_r[VZ][index],
                               in_prims_r[BX_CENTER][index], in_prims_r[BY_CENTER][index], in_prims_r[BZ_CENTER][index],
-                              poison, poison, poison, // entropy, Y_e, temp
+                              poison, in_prims_r[YEPRIM][index], in_prims_r[TEMPERATURE][index], // entropy, Y_e, temp
                               &prims_r);
 
         initialize_primitives(in_prims_l[RHOB][index], in_prims_l[PRESSURE][index], poison,
                               in_prims_l[VX][index], in_prims_l[VY][index], in_prims_l[VZ][index],
                               in_prims_l[BX_CENTER][index], in_prims_l[BY_CENTER][index], in_prims_l[BZ_CENTER][index],
-                              poison, poison, poison, // entropy, Y_e, temp
+                              poison, in_prims_l[YEPRIM][index], in_prims_l[TEMPERATURE][index], // entropy, Y_e, temp
                               &prims_l);
 
         int speed_limited = 0;
@@ -199,6 +201,7 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
         Stildex_flux[index]  = cons_fluxes.S_x;
         Stildey_flux[index]  = cons_fluxes.S_y;
         Stildez_flux[index]  = cons_fluxes.S_z;
+        Y_e_star_flux[index] = cons_fluxes.Y_e;
   }
 
 #pragma omp parallel for
@@ -230,6 +233,7 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
         Stildex_rhs[index]  += dxi[flux_dir]*(Stildex_flux[index]  - Stildex_flux[indp1]);
         Stildey_rhs[index]  += dxi[flux_dir]*(Stildey_flux[index]  - Stildey_flux[indp1]);
         Stildez_rhs[index]  += dxi[flux_dir]*(Stildez_flux[index]  - Stildez_flux[indp1]);
+        Y_e_star_rhs[index] += dxi[flux_dir]*(Y_e_star_flux[index] - Y_e_star_flux[indp1]);
 
         metric_quantities metric;
         initialize_metric(in_metric[LAPSE][index],
@@ -242,14 +246,14 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
         initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], poison,
                               in_prims[VX][index], in_prims[VY][index], in_prims[VZ][index],
                               in_prims[BX_CENTER][index], in_prims[BY_CENTER][index], in_prims[BZ_CENTER][index],
-                              poison, poison, poison, // entropy, Y_e, temp
+                              poison, in_prims[YEPRIM][index], in_prims[TEMPERATURE][index], // entropy, Y_e, temp
                               &prims);
 
         int speed_limited = 0;
         limit_v_and_compute_u0(eos, &metric, &prims, &speed_limited);
 
         metric_derivatives metric_derivs;
-    
+
         metric_derivs.lapse[flux_dir]   = dxi[flux_dir]*(metric_facep1.lapse - metric_face.lapse);
         metric_derivs.betax[flux_dir]   = dxi[flux_dir]*(metric_facep1.betax - metric_face.betax);
         metric_derivs.betay[flux_dir]   = dxi[flux_dir]*(metric_facep1.betay - metric_face.betay);

@@ -44,10 +44,12 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         //TODO: this references simple gamma law; clearly needs to be extended to more EOS types
         // P = (\Gamma - 1) rho epsilon
         // -> \Gamma = P/(rho epsilon) + 1
-        const double measured_gamma = ( press[index]/(rho[index] * eps[index]) + 1.0 );
-        if(rho[index]>grhayl_eos->rho_atm && fabs(grhayl_eos->Gamma_th - measured_gamma)/grhayl_eos->Gamma_th > 1e-2)
-          CCTK_VERROR("Expected simple gamma law with gamma_th=%.15e, but found a point with gamma law such that gamma_th=%.15e. error = %e| rb=%e rbatm=%e P=%e\n",
-                      grhayl_eos->Gamma_th, measured_gamma, (grhayl_eos->Gamma_th-measured_gamma)/grhayl_eos->Gamma_th, rho[index], grhayl_eos->rho_atm, press[index] );
+        if( grhayl_eos->eos_type == grhayl_eos_hybrid ) {
+          const double measured_gamma = ( press[index]/(rho[index] * eps[index]) + 1.0 );
+          if(rho[index]>grhayl_eos->rho_atm && fabs(grhayl_eos->Gamma_th - measured_gamma)/grhayl_eos->Gamma_th > 1e-2)
+            CCTK_VERROR("Expected simple gamma law with gamma_th=%.15e, but found a point with gamma law such that gamma_th=%.15e. error = %e| rb=%e rbatm=%e P=%e\n",
+                        grhayl_eos->Gamma_th, measured_gamma, (grhayl_eos->Gamma_th-measured_gamma)/grhayl_eos->Gamma_th, rho[index], grhayl_eos->rho_atm, press[index] );
+        }
 
         rho_b[index] = rho[index];
         pressure[index] = press[index];

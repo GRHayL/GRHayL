@@ -25,7 +25,7 @@ CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
 # we declare our own velocities here.
 cctk_real grmhd_primitives_allbutBi type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
 {
-  rho_b, pressure, vx, vy, vz
+  rho_b, pressure, vx, vy, vz, Ye, T, epsgf
 } "Primitive variables density, pressure, and components of three velocity v^i. Note that v^i is defined in terms of 4-velocity as: v^i = u^i/u^0. Note that this definition differs from the Valencia formalism."
 
 #########################################################
@@ -33,7 +33,7 @@ cctk_real grmhd_primitives_allbutBi type = GF TAGS='InterpNumTimelevels=1 prolon
 # Evolved variables
 cctk_real grmhd_conservatives type = GF Timelevels=3
 {
-  rho_star, tau, Stildex, Stildey, Stildez # Note that Stildei = \tilde{S}_i.
+  rho_star, tau, Stildex, Stildey, Stildez, Y_e_star # Note that Stildei = \tilde{S}_i.
 } "Evolved mhd variables"
 
 # These variables are semi-staggered. Since their staggering and--by extension--
@@ -87,7 +87,7 @@ cctk_real grmhd_B_center type = GF TAGS='InterpNumTimelevels=1 prolongation="non
 # RHS variables for MoL timestepping
 cctk_real grmhd_conservatives_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-  rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs
+  rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs
 } "Storage for the right-hand side of the partial_t rho_star, partial_t tau, and partial_t tilde{S}_i equations. Needed for MoL timestepping."
 
 CCTK_REAL EM_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
@@ -109,14 +109,14 @@ CCTK_REAL grmhd_cmin_cmax_temps type = GF TAGS='prolongation="none" Checkpoint="
 #Temporary variables for flux computation
 cctk_real grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-  rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux
+  rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux
 } "Temporary variables for storing the flux terms of tilde{S}_i."
 
 # Temporary variables for reconstruction
 CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-  rhor, pressr, vxr, vyr, vzr
-  rhol, pressl, vxl, vyl, vzl
+  rhor, pressr, vxr, vyr, vzr, Yer, epsr
+  rhol, pressl, vxl, vyl, vzl, Yel, epsl
   Bxr, Byr, Bzr, Bx_staggerr, By_staggerr, Bz_staggerr
   Bxl, Byl, Bzl, Bx_staggerl, By_staggerl, Bz_staggerl
   vxrr, vxrl, vyrr, vyrl, vzrr, vzrl

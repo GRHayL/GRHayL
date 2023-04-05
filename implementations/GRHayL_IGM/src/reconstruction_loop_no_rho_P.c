@@ -3,7 +3,7 @@
 
 static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
 
-void GRHayL_IGM_reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir, const int num_vars, 
+void GRHayL_IGM_reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
                          const int *restrict var_indices,
                          const eos_parameters *restrict eos,
                          const double **in_prims,
@@ -59,6 +59,10 @@ void GRHayL_IGM_reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const i
 }
 
 static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in) {
+
+  if( eos->eos_type == grhayl_eos_tabulated )
+    return 1.0;
+
   double K, Gamma;
   eos->hybrid_get_K_and_Gamma(eos, rho_in, &K, &Gamma);
   const double P_cold = K*pow(rho_in, Gamma);

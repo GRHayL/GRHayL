@@ -7,7 +7,7 @@ enum metric_indices{
       LAPSE, BETAX, BETAY, BETAZ,
       GXX, GXY, GXZ, GYY, GYZ, GZZ};
 
-enum ext_curv{
+enum ext_curv_indices{
       KXX, KXY, KXZ, KYY, KYZ, KZZ};
 
 // The order here MATTERS, and must be consistent with the order in the in_prims[] array in evaluate_MHD_rhs.C.
@@ -97,8 +97,8 @@ void GRHayL_IGM_compute_characteristic_speeds(
       double *restrict cmax);
 
 void GRHayL_IGM_calculate_MHD_dirn_rhs(
-      const cGH *cctkGH,
-      const int flux_dirn,
+      const cGH *restrict cctkGH,
+      const int flux_dir,
       const double *restrict dX,
       const eos_parameters *restrict eos,
       const double **in_metric,
@@ -112,11 +112,13 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
       double *restrict Stildex_flux,
       double *restrict Stildey_flux,
       double *restrict Stildez_flux,
+      double *restrict Y_e_star_flux,
       double *restrict rho_star_rhs,
       double *restrict tau_rhs,
       double *restrict Stildex_rhs,
       double *restrict Stildey_rhs,
-      double *restrict Stildez_rhs);
+      double *restrict Stildez_rhs,
+      double *restrict Y_e_star_rhs);
 
 // The const are commented out because C does not support implicit typecasting of types when
 // they are more than 1 level removed from the top pointer. i.e. I can pass the argument with

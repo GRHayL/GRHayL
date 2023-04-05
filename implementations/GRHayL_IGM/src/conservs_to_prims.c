@@ -74,7 +74,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
   double error_int_numer=0;
   double error_int_denom=0;
   int n_iter=0;
-  double dummy1, dummy2, dummy3;
+  double dummy;
 
 #pragma omp parallel for reduction(+:failures,font_fixes,vel_limited_ptcount,atm_resets,rho_star_fix_applied,pointcount,failures_inhoriz,pointcount_inhoriz,backup0,backup1,backup2,nan_found,error_int_numer,error_int_denom,n_iter) schedule(static)
   for(int k=0;k<cctk_lsh[2];k++)
@@ -102,7 +102,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     // Read in primitive variables from gridfunctions
     primitive_quantities prims;
     initialize_primitives(rho_b[index],
-          pressure[index], eps[index],
+          pressure[index], epsgf[index],
           vx[index], vy[index], vz[index],
     //      Bvec[index0], Bvec[index1], Bvec[index2],
           Bx_center[index], By_center[index], Bz_center[index],
@@ -144,10 +144,10 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
       undensitize_conservatives(&metric, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      int check = Hybrid_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
+      int check = Tabulated_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
 
-      if(check!=0)
-        check = font_fix(grhayl_params, grhayl_eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+      // if(check!=0)
+        // check = font_fix(grhayl_params, grhayl_eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
       /*************************************************************/
 
       if(check==0) {
@@ -218,18 +218,18 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     failure_checker[index] = diagnostics.failure_checker;
 
     return_primitives(&prims,
-          &rho_b[index], &pressure[index], &eps[index],
+          &rho_b[index], &pressure[index], &epsgf[index],
           &vx[index], &vy[index], &vz[index],
           //&Bvec[index0], &Bvec[index1], &Bvec[index2],
           &Bx_center[index], &By_center[index], &Bz_center[index],
-          &dummy1, &dummy2, &dummy3);
+          &dummy, &Ye[index], &T[index]);
           //wont have storage for these vars for hybrid
           //&entropy[index], &Y_e[index], &temperature[index]);
 
     return_conservatives(&cons,
           &rho_star[index], &tau[index],
           &Stildex[index], &Stildey[index], &Stildez[index],
-          &dummy1, &dummy2);
+          &Y_e_star[index], &dummy);
           //&Y_e[index], &entropy[index]);
 
     if(grhayl_params->update_Tmunu) {
