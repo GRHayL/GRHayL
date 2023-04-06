@@ -3,15 +3,6 @@
 
 #include "GRHayL.h"
 
-typedef enum {
-  None=-1,
-  Noble2D, Noble1D,
-  Noble1D_entropy, Noble1D_entropy2,
-  CerdaDuran2D, CerdaDuran3D,
-  Palenzuela1D, Palenzuela1D_entropy,
-  Newman1D, Newman1D_entropy
-} con2prim_method_t;
-
 //------------- Con2Prim struct --------------------
 /*
    The struct con2prim_diagnostics contains variables for error-checking and

@@ -7,12 +7,14 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int backup_routine[3]   = {None,None,None};
-  const bool calc_prims_guess   = false;
-  const bool evolve_entropy     = false;
-  const bool evolve_temperature = true;
-  const double Psi6threshold    = 1e100; //Taken from magnetizedTOV.par
-  const int update_Tmunu        = 1; //IGM default
+  const con2prim_method_t backup_routines[3] = {None,None,None};
+  const bool calc_prims_guess                = false;
+  const bool evolve_entropy                  = false;
+  const bool evolve_temperature              = true;
+  const bool update_Tmunu                    = true; //IGM default
+  const bool use_cupp_fix                    = true;
+  const double Psi6threshold                 = 1e100; //Taken from magnetizedTOV.par
+  const double Lorenz_damping_factor         = 0.0;
 
   const double W_max     = 10.0; //IGM default
   const double rho_b_atm = 1e-12;
@@ -29,13 +31,14 @@ int main(int argc, char **argv) {
   // a simulation.
   GRHayL_parameters params;
   initialize_GRHayL(Palenzuela1D_entropy,
-                    backup_routine,
+                    backup_routines,
                     evolve_entropy,
                     evolve_temperature,
                     calc_prims_guess,
                     Psi6threshold,
                     update_Tmunu,
-                    1 /*Cupp Fix*/,
+                    use_cupp_fix,
+                    Lorenz_damping_factor,
                     &params);
 
   eos_parameters eos;

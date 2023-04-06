@@ -12,7 +12,7 @@ void NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(const eos_parameters *res
                                                        double *restrict mu_e,
                                                        double *restrict mu_p,
                                                        double *restrict mu_n) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Step 1: Set EOS table keys

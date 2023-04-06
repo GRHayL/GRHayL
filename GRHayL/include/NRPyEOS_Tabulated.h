@@ -1,7 +1,7 @@
 #ifndef NRPYEOS_TABULATED_H_
 #define NRPYEOS_TABULATED_H_
 #include "GRHayL.h"
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
 #define HDF5_ERROR_IF_USED \
   grhayl_error("HDF5 is disabled, so this function cannot be used\n")
 #else
@@ -39,7 +39,7 @@ static const char table_var_names[NRPyEOS_ntablekeys][10] = {
   "Xa","Xh","Xn","Xp","Abar","Zbar","Gamma"
 };
 //********************************************
-#endif // USE_HDF5
+#endif // GRHAYL_USE_HDF5
 
 // Error handling struct
 typedef struct NRPyEOS_error_report {

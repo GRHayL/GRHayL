@@ -10,7 +10,7 @@ void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(const eos_parameters *restrict eos
                                               double *restrict S,
                                               double *restrict depsdT,
                                               double *restrict T) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Step 1: Set EOS table keys

@@ -1,7 +1,7 @@
 #include "NRPyEOS_Tabulated.h"
 
 void NRPyEOS_initialize_tabulated_functions(eos_parameters *restrict eos) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   eos->tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;

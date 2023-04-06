@@ -5,7 +5,7 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       primitive_quantities const *restrict prims,
       double *restrict enthalpy_ptr,
       double *restrict cs2_ptr ) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Step 1: Unpack primitives struct
