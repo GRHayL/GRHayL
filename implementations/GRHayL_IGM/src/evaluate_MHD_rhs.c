@@ -85,6 +85,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   in_prims[ww]=vxl;        out_prims_r[ww]=vxlr;        out_prims_l[ww]=vxll;        ww++;
   in_prims[ww]=vyl;        out_prims_r[ww]=vylr;        out_prims_l[ww]=vyll;        ww++;
   in_prims[ww]=vzl;        out_prims_r[ww]=vzlr;        out_prims_l[ww]=vzll;        ww++;
+  in_prims[ww]=Ye;         out_prims_r[ww]=Yer;         out_prims_l[ww]=Yel;         ww++;
+  in_prims[ww]=epsgf;      out_prims_r[ww]=epsr;        out_prims_l[ww]=epsl;        ww++;
 
   double *cmin[3] = {cmin_x, cmin_y, cmin_z};
   double *cmax[3] = {cmax_x, cmax_y, cmax_z};
@@ -123,11 +125,15 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     for(int j=0;j<cctk_lsh[1];j++)
       for(int i=0;i<cctk_lsh[0];i++) {
         int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+
         tau_rhs[index]      = 0.0;
         rho_star_rhs[index] = 0.0;
         Stildex_rhs[index]  = 0.0;
         Stildey_rhs[index]  = 0.0;
         Stildez_rhs[index]  = 0.0;
+        Y_e_star_rhs[index] = 0.0;
+
+        //TODO: remove for IGH
         phitilde_rhs[index] = 0.0;
         Ax_rhs[index]       = 0.0;
         Ay_rhs[index]       = 0.0;
@@ -158,9 +164,9 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
    *      this, we'll reconstruct again in the y-dir'n to get {vx,vy} at (i-1/2,j-1/2,k)
    * 2Ab) By_stagger is at (i,j+1/2,k), and we reconstruct below to (i-1/2,j+1/2,k).
    */
-  { // var_indices is a local variable
-    num_vars = 6;
-    const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};
+  { // num_vars and var_indices are local variables
+    const int num_vars = 8;
+    const int var_indices[8] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER, YEPRIM, EPSILON};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
@@ -216,9 +222,9 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     const int var_indices[4] = {VXR, VYR, VXL, VYL};
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-  { // var_indices is a local variable
-    num_vars = 7;
-    const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER};
+  { // num_vars and var_indices are local variables
+    const int num_vars = 9;
+    const int var_indices[9] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER, YEPRIM, EPSILON};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
@@ -285,9 +291,9 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     const int var_indices[4] = {VYR, VZR, VYL, VZL};
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-  { // var_indices is a local variable
-    num_vars = 7;
-    const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER};
+  { // num_vars and var_indices are local variables
+    const int num_vars = 9;
+    const int var_indices[9] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER, YEPRIM, EPSILON};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 /*****************************************************************************************/

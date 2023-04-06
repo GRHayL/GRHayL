@@ -215,7 +215,7 @@ typedef struct eos_parameters {
   //------------------------------------------------
 
   //---------- Tabulated Equation of State ---------
-  double Ye_atm, Ye_min, Ye_max;
+  double Y_e_atm, Y_e_min, Y_e_max;
   double T_atm, T_min, T_max;
   double eps_atm, eps_min, eps_max;
   double entropy_atm, entropy_min, entropy_max;
