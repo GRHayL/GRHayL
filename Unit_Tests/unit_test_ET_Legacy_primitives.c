@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   double *By = (double*) malloc(sizeof(double)*arraylength);
   double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
-  // Allocate memory for the conservatives 
+  // Allocate memory for the conservatives
   double *rho_star = (double*) malloc(sizeof(double)*arraylength);
   double *tau = (double*) malloc(sizeof(double)*arraylength);
   double *S_x = (double*) malloc(sizeof(double)*arraylength);
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
     metric_quantities metric;
-    primitive_quantities prims, prims_guess;
+    primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
     initialize_metric(lapse[index],
@@ -207,7 +207,12 @@ int main(int argc, char **argv) {
       undensitize_conservatives(&metric, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
+      check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+      // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
+      // that u or rho were negative (usually u). Since the method converged, we only need to fix the values
+      // using enforce_primitive_limits_and_compute_u0(). There's no need to trigger a Font fix.
+      // Cupp_Fix:
+      //if(check==5) check = 0;
 
       if(check!=0)
         check = font_fix(&params, &eos, &metric, &cons, &prims, &prims_guess, &diagnostics);

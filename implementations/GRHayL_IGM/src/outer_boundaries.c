@@ -249,7 +249,7 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
   }
 
   const double poison = 0.0/0.0;
-  double dummy1, dummy2, dummy3;
+  double dummy;
 
 #pragma omp parallel for
   for(int k=0; k<cctk_lsh[2]; k++)
@@ -291,14 +291,14 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 &vx[index], &vy[index], &vz[index],
                 //&Bvec[index0], &Bvec[index1], &Bvec[index2],
                 &Bx_center[index], &By_center[index], &Bz_center[index],
-                &dummy1, &Ye[index], &T[index]);
+                &dummy, &Ye[index], &T[index]);
                 //wont have storage for these vars for hybrid
                 //&entropy[index], &Y_e[index], &temperature[index]);
 
           return_conservatives(&cons,
                 &rho_star[index], &tau[index],
                 &Stildex[index], &Stildey[index], &Stildez[index],
-                &Y_e_star[index], &dummy2);
+                &Y_e_star[index], &dummy);
                 //&Y_e[index], &entropy[index]);
 
           if(grhayl_params->update_Tmunu) {

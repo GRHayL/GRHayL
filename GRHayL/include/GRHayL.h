@@ -18,6 +18,10 @@
 #define M_PI 3.141592653589793238462643383279502884L
 #endif
 
+#ifndef GRHAYL_DISABLE_HDF5
+#define GRHAYL_USE_HDF5
+#endif
+
 /*
    The struct GRHayL_parameters contains parameters for controlling
    the behavior of the GRHayL gems. The struct elements are detailed below:
@@ -48,15 +52,25 @@ typedef struct GRHayL_parameters {
   double Lorenz_damping_factor;
 } GRHayL_parameters;
 
+typedef enum {
+  None=-1,
+  Noble2D, Noble1D,
+  Noble1D_entropy, Noble1D_entropy2,
+  CerdaDuran2D, CerdaDuran3D,
+  Palenzuela1D, Palenzuela1D_entropy,
+  Newman1D, Newman1D_entropy
+} con2prim_method_t;
+
 void initialize_GRHayL(
-      const int main,
-      const int backup[3],
+      const con2prim_method_t main,
+      const con2prim_method_t backup[3],
       const bool evolve_entropy,
       const bool evolve_temp,
       const bool calc_prim_guess,
       const double psi6threshold,
       const bool update_Tmunu,
       const bool Cupp_Fix,
+      const double Lorenz_damping_factor,
       GRHayL_parameters *restrict params);
 
 //--------------------------------------------------

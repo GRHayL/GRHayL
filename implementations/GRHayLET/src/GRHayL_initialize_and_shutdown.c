@@ -34,8 +34,11 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
                                                Gamma_ppoly_in, k_ppoly0,
                                                Gamma_th, grhayl_eos);
   } else if (CCTK_EQUALS(EOS_type, "tabulated")) {
-    double Ye_max = 1; //TODO: temporary until the parameter is set up
-    initialize_tabulated_eos_functions_and_params(W_max,
+    if( CCTK_EQUALS(EOS_tablepath, "") )
+      CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
+
+    double Ye_max = 0.65; //TODO: temporary until the parameter is set up
+    initialize_tabulated_eos_functions_and_params(EOS_tablepath, W_max,
                                                   rho_b_atm, rho_b_atm, rho_b_max,
                                                   Ye_atm, Ye_atm, Ye_max,
                                                   T_atm, T_atm, T_max,

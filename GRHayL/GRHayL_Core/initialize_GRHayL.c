@@ -27,14 +27,15 @@
  */
 
 void initialize_GRHayL(
-      const int main,
-      const int backup[3],
+      const con2prim_method_t main,
+      const con2prim_method_t backup[3],
       const bool evolve_entropy,
       const bool evolve_temp,
       const bool calc_prim_guess,
       const double psi6threshold,
       const bool update_Tmunu,
       const bool Cupp_Fix,
+      const double Lorenz_damping_factor,
       GRHayL_parameters *restrict params ) {
 
   params->main_routine = main;

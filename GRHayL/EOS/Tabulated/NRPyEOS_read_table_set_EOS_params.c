@@ -29,7 +29,7 @@
 static inline double get_EOS_table_max(
       const eos_parameters *restrict eos,
       const int var_key ) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Loop over the table, searching for the maximum value
@@ -47,7 +47,7 @@ static inline double get_EOS_table_max(
 static inline double get_EOS_table_min(
       const eos_parameters *restrict eos,
       const int var_key ) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Loop over the table, searching for the minimum value
@@ -65,7 +65,7 @@ static inline double get_EOS_table_min(
  * (c) 2022 Leo Werneck
  */
 void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters *restrict eos_params) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   check_if_file_exists(EOS_tablename);

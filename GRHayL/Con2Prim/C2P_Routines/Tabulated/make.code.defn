@@ -1,1 +1,3 @@
-SRCS = con2prim_Noble2D_Tab.c Tabulated_CerdaDuran2D.c
+SRCS = Tabulated_Multi_Method.c toms748.c brent.c
+
+SUBDIRS = Newman1D Palenzuela1D
