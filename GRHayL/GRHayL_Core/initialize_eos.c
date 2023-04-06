@@ -139,9 +139,9 @@ void initialize_tabulated_eos(
       const double rho_atm,
       const double rho_min,
       const double rho_max,
-      const double Ye_atm,
-      const double Ye_min,
-      const double Ye_max,
+      const double Y_e_atm,
+      const double Y_e_min,
+      const double Y_e_max,
       const double T_atm,
       const double T_min,
       const double T_max,
@@ -157,18 +157,19 @@ void initialize_tabulated_eos(
   init_common_eos_quantities;
 
   // Step 4: Set parameters specific to Tabulated EOS.
-  eos->Ye_atm                 = Ye_atm;
-  eos->Ye_min                 = Ye_min;
-  eos->Ye_max                 = Ye_max;
+  eos->Y_e_atm                = Y_e_atm;
+  eos->Y_e_min                = Y_e_min;
+  eos->Y_e_max                = Y_e_max;
   eos->T_atm                  = T_atm;
   eos->T_min                  = T_min;
   eos->T_max                  = T_max;
   eos->tabulated_compute_P_eps_S_from_T(eos,
                                         eos->rho_atm,
-                                        Ye_atm, T_atm,
+                                        Y_e_atm, T_atm,
                                         &eos->press_atm,
                                         &eos->eps_atm,
                                         &eos->entropy_atm);
+  eos->tau_atm = eos->rho_atm * eos->eps_atm;
 
   // Step 5: These parameters are manually set here, but
   //         can be overwritten later.

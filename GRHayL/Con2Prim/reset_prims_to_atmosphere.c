@@ -22,7 +22,7 @@ void reset_prims_to_atmosphere(
   prims->press       = eos->press_atm;
   prims->eps         = eos->eps_atm;
   prims->entropy     = eos->entropy_atm;
-  prims->Y_e         = eos->Ye_atm;
+  prims->Y_e         = eos->Y_e_atm;
   prims->temperature = eos->T_atm;
 
   prims->vx = 0.0;
