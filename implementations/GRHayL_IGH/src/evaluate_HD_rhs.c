@@ -111,11 +111,11 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
     for(int j=0;j<cctk_lsh[1];j++)
       for(int i=0;i<cctk_lsh[0];i++) {
         int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-        tau_rhs[index]=0.0;
-        rho_star_rhs[index]=0.0;
-        Stildex_rhs[index]=0.0;
-        Stildey_rhs[index]=0.0;
-        Stildez_rhs[index]=0.0;
+        tau_rhs[index]      = 0.0;
+        rho_star_rhs[index] = 0.0;
+        Stildex_rhs[index]  = 0.0;
+        Stildey_rhs[index]  = 0.0;
+        Stildez_rhs[index]  = 0.0;
   }
 
   // Here, we:
@@ -181,17 +181,4 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
-  return;
-  /*
-  // FUN DEBUGGING TOOL (trust me!):
-  #pragma omp parallel for
-  for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) {
-  int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-  //st_x_rhs[index]=0.0;
-  //st_y_rhs[index]=0.0;
-  //st_z_rhs[index]=0.0;
-  //rho_star_rhs[index]=0.0;
-  //tau_rhs[index]=0.0;
-  }
-  */
 }

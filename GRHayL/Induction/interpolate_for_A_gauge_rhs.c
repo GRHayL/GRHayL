@@ -40,8 +40,11 @@ void interpolate_for_A_gauge_rhs(
   //    (i,j+1/2,k+1/2)and (i+1,j+1/2,k+1/2), then taking \partial_x (RHS1x) =
   //    [ RHS1x(i+1,j+1/2,k+1/2) - RHS1x(i,j+1/2,k+1/2) ]/dX.
 
-  // First \alpha at (i+1/2,j+1/2,k+1/2). Will come in handy when computing damping term later.
+  // First lapse and shift at (i+1/2,j+1/2,k+1/2). Will come in handy when computing phitilde_RHS later.
   gauge_rhs_vars->alpha_interp = avg2(gauge_vars->lapse , 0,1, 0,1, 0,1);
+  gauge_rhs_vars->shiftx_interp[0] = avg2(gauge_vars->shiftx, 0,1, 0,1, 0,1);
+  gauge_rhs_vars->shifty_interp[0] = avg2(gauge_vars->shifty, 0,1, 0,1, 0,1);
+  gauge_rhs_vars->shiftz_interp[0] = avg2(gauge_vars->shiftz, 0,1, 0,1, 0,1);
 
   // Next, do A^X TERM (interpolate to (i,j+1/2,k+1/2) )
   // \alpha \sqrt{\gamma} A^x = \alpha psi^6 A^x (RHS of \partial_i psi6phi)
@@ -102,11 +105,6 @@ void interpolate_for_A_gauge_rhs(
 
 
   // Next set \alpha \Phi - \beta^j A_j at (i+1/2,j+1/2,k+1/2):
-  //   We add a "L" suffix to shifti_ijk to denote "LOCAL", as we set
-  //      shifti_ijk[] gridfunction below.
-  gauge_rhs_vars->shiftx_interp[0] = avg2(gauge_vars->shiftx, 0,1, 0,1, 0,1);
-  gauge_rhs_vars->shifty_interp[0] = avg2(gauge_vars->shifty, 0,1, 0,1, 0,1);
-  gauge_rhs_vars->shiftz_interp[0] = avg2(gauge_vars->shiftz, 0,1, 0,1, 0,1);
   const double  lapse_over_Psi6_ijk = avg2(lapse_over_psi6, 0,1, 0,1, 0,1);
   const double  A_x_ijk = avg3(gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
   const double  A_y_ijk = avg3(gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)

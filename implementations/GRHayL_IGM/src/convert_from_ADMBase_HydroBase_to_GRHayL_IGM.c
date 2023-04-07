@@ -197,7 +197,6 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         const int indexijkp1 = CCTK_GFINDEX3D(cctkGH,i,j,k + ( (kmax_minus_k > 0) - (0 > kmax_minus_k) ));
         const double Psi_kp1 = psi_bssn[indexijkp1];
         Bz_stagger[actual_index] *= Psim3/(Psi_kp1*Psi_kp1*Psi_kp1);
-
   }
 
 #pragma omp parallel for

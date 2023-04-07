@@ -36,11 +36,6 @@ void GRHayL_IGH_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
   // Don't apply approximate outer boundary conditions on initial data, which should be defined everywhere, or on levels != [coarsest level].
   if(cctk_iteration==0 || levelnumber!=0) return;
 
-  //GRHayL_IGH_convert_ADM_to_BSSN(cctkGH, gxx, gxy, gxz, gyy, gyz, gzz,
-  //                               phi_bssn,psi_bssn,
-  //                               gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
-  //                               gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
-
   if(cctk_nghostzones[0]!=cctk_nghostzones[1] || cctk_nghostzones[0]!=cctk_nghostzones[2])
     CCTK_VERROR("ERROR: GRHayL_IGH outer BC driver does not support unequal number of ghostzones in different directions!");
   for(int which_bdry_pt=0;which_bdry_pt<cctk_nghostzones[0];which_bdry_pt++) {

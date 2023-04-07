@@ -41,7 +41,7 @@ schedule GRHayL_IGM_InitSymBound at BASEGRID after Lapse_InitSymBound
 # INITIAL DATA CONVERSION
 #########################################################
 # Fill GRHayL_IGM grid functions using initial data from ADMBase and HydroBase
-schedule group GRHayL_IGM_ID_Converter at CCTK_INITIAL after HydroBase_Initial before Convert_to_HydroBase
+schedule group GRHayL_IGM_ID_Converter at CCTK_INITIAL after (Seed_Magnetic_Fields Seed_Magnetic_Fields_Privt) before Convert_to_HydroBase
 {
 } "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayL_IGM"
 
