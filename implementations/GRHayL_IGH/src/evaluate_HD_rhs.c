@@ -180,5 +180,4 @@ void GRHayL_IGH_evaluate_HD_rhs(CCTK_ARGUMENTS) {
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
-
 }

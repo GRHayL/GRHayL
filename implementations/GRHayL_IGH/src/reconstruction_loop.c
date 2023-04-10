@@ -18,12 +18,12 @@ void GRHayL_IGH_reconstruction_loop(const cGH *restrict cctkGH, const int flux_d
   const int ydir = (flux_dir == 1);
   const int zdir = (flux_dir == 2);
 
-  const int imin = cctkGH->cctk_nghostzones[0]*xdir;
-  const int imax = cctkGH->cctk_lsh[0] - (cctkGH->cctk_nghostzones[0]-1)*xdir;
-  const int jmin = cctkGH->cctk_nghostzones[1]*ydir;
-  const int jmax = cctkGH->cctk_lsh[1] - (cctkGH->cctk_nghostzones[1]-1)*ydir;
-  const int kmin = cctkGH->cctk_nghostzones[2]*zdir;
-  const int kmax = cctkGH->cctk_lsh[2] - (cctkGH->cctk_nghostzones[2]-1)*zdir;
+  const int imin = (cctkGH->cctk_nghostzones[0]-1)*xdir;
+  const int imax = cctkGH->cctk_lsh[0] - cctkGH->cctk_nghostzones[0]*xdir;
+  const int jmin = (cctkGH->cctk_nghostzones[1]-1)*ydir;
+  const int jmax = cctkGH->cctk_lsh[1] - cctkGH->cctk_nghostzones[1]*ydir;
+  const int kmin = (cctkGH->cctk_nghostzones[2]-1)*zdir;
+  const int kmax = cctkGH->cctk_lsh[2] - cctkGH->cctk_nghostzones[2]*zdir;
 
 #pragma omp parallel for
   for(int k=kmin; k<kmax; k++)
@@ -35,7 +35,8 @@ void GRHayL_IGH_reconstruction_loop(const cGH *restrict cctkGH, const int flux_d
         double var_data[num_vars][6], vars_r[num_vars], vars_l[num_vars];
 
         for(int ind=0; ind<6; ind++) {
-          const int stencil = CCTK_GFINDEX3D(cctkGH, i+xdir*(ind-3), j+ydir*(ind-3), k+zdir*(ind-3)); // PPM needs indices from -3 to +2
+          // Stencil from -2 to +3 reconstructs to e.g. i+1/2
+          const int stencil = CCTK_GFINDEX3D(cctkGH, i+xdir*(ind-2), j+ydir*(ind-2), k+zdir*(ind-2));
           v_flux_dir[ind] = in_prims[VX+flux_dir][stencil]; // Could be smaller; doesn't use full stencil
           rho[ind] = in_prims[RHOB][stencil];
           pressure[ind] = in_prims[PRESSURE][stencil];

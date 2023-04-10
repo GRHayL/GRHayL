@@ -34,12 +34,12 @@ void GRHayL_IGH_compute_characteristic_speeds(
       CCTK_VERROR("Warning: invalid flux_dir value (not 0, 1, or 2) has been passed to compute_characteristic_speeds.");
   }
 
-  const int imin = cctkGH->cctk_nghostzones[0];
-  const int jmin = cctkGH->cctk_nghostzones[1];
-  const int kmin = cctkGH->cctk_nghostzones[2];
-  const int imax = cctkGH->cctk_lsh[0]-(cctkGH->cctk_nghostzones[0]-1);
-  const int jmax = cctkGH->cctk_lsh[1]-(cctkGH->cctk_nghostzones[1]-1);
-  const int kmax = cctkGH->cctk_lsh[2]-(cctkGH->cctk_nghostzones[2]-1);
+  const int imin = cctkGH->cctk_nghostzones[0]-1;
+  const int jmin = cctkGH->cctk_nghostzones[1]-1;
+  const int kmin = cctkGH->cctk_nghostzones[2]-1;
+  const int imax = cctkGH->cctk_lsh[0]-cctkGH->cctk_nghostzones[0];
+  const int jmax = cctkGH->cctk_lsh[1]-cctkGH->cctk_nghostzones[1];
+  const int kmax = cctkGH->cctk_lsh[2]-cctkGH->cctk_nghostzones[2];
 
 #pragma omp parallel for
   for(int k=kmin; k<kmax; k++)

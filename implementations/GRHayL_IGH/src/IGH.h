@@ -12,6 +12,13 @@ static const int KXX=0, KXY=1, KXZ=2, KYY=3, KYZ=4, KZZ=5;
 // The order here MATTERS, and must be consistent with the order in the in_prims[] array in evaluate_MHD_rhs.C.
 static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,MAXNUMVARS=5;  //<-- Be _sure_ to define MAXNUMVARS appropriately!
 
+//Interpolates to the +1/2 face
+#define AM1 -0.0625
+#define A0   0.5625
+#define A1   0.5625
+#define A2  -0.0625
+#define COMPUTE_FCVAL(Varm1,Var,Varp1,Varp2) (AM1*(Varm1) + A0*(Var) + A1*(Varp1) + A2*(Varp2))
+
 void GRHayL_IGH_convert_ADM_to_BSSN(const cGH *cctkGH,
       double *gxx, double *gxy, double *gxz,
       double *gyy, double *gyz, double *gzz,
