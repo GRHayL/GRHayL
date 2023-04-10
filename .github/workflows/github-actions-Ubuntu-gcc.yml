@@ -2,7 +2,7 @@ name: Ubuntu-gcc
 
 on:
   push:
-    paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations']
+    paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
     branches: main
   pull_request:
 
