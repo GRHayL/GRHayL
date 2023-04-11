@@ -160,9 +160,9 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
   // This loop includes 1 ghostzone because the RHS calculation for e.g. the x direction
   // requires (i,j,k) and (i+1,j,k)
 #pragma omp parallel for
-  for(int k=kmin; k<kmax+1; k++)
-    for(int j=jmin; j<jmax+1; j++)
-      for(int i=imin; i<imax+1; i++) {
+  for(int k=kmin; k<kmax+zdir; k++)
+    for(int j=jmin; j<jmax+ydir; j++)
+      for(int i=imin; i<imax+xdir; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
         metric_quantities metric_face;
