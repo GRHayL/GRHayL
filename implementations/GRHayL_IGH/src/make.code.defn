@@ -13,5 +13,4 @@ SRCS = calculate_HD_rhs.c                             \
        MoL_registration.c                             \
        outer_boundaries.c                             \
        postpostinitial__set_symmetries__copy_timelevels.c \
-       reconstruction_loop.c                          \
-       reconstruction_loop_no_rho_P.c
+       reconstruction_loop.c
