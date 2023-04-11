@@ -3,16 +3,28 @@
 #include "cctk.h"
 #include "GRHayLET.h"
 
-static const int LAPSE=0, BETAX=1,BETAY=2, BETAZ=3,
-                 GXX=4, GXY=5, GXZ=6,
-                 GYY=7, GYZ=8, GZZ=9;
+enum metric_indices{
+      LAPSE, BETAX, BETAY, BETAZ,
+      GXX, GXY, GXZ, GYY, GYZ, GZZ};
 
-static const int KXX=0, KXY=1, KXZ=2, KYY=3, KYZ=4, KZZ=5;
+enum ext_curv{
+      KXX, KXY, KXZ, KYY, KYZ, KZZ};
 
 // The order here MATTERS, and must be consistent with the order in the in_prims[] array in evaluate_MHD_rhs.C.
-static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,
-  BX_CENTER=5,BY_CENTER=6,BZ_CENTER=7,BX_STAGGER=8,BY_STAGGER=9,BZ_STAGGER=10,
-  VXR=11,VYR=12,VZR=13,VXL=14,VYL=15,VZL=16,MAXNUMVARS=17;  //<-- Be _sure_ to define MAXNUMVARS appropriately!
+enum recon_indices{
+      RHOB, PRESSURE, VX, VY, VZ,
+      BX_CENTER, BY_CENTER, BZ_CENTER,
+      BX_STAGGER, BY_STAGGER, BZ_STAGGER,
+      VXR, VYR, VZR, VXL,VYL, VZL, MAXNUMVARS};
+
+//Interpolates to the +1/2 face
+#define interpolate_to_face(Vm1,V0,Vp1,Vp2) (0.5625*(V0 + Vp1) - 0.0625*(Vm1+Vp2))
+//Interpolates to the -1/2 face
+#define AM2 -0.0625
+#define AM1  0.5625
+#define A0   0.5625
+#define A1  -0.0625
+#define COMPUTE_FCVAL(METRICm2,METRICm1,METRIC,METRICp1) (AM2*(METRICm2) + AM1*(METRICm1) + A0*(METRIC) + A1*(METRICp1))
 
 void GRHayL_IGM_convert_ADM_to_BSSN(const cGH *cctkGH,
       double *gxx, double *gxy, double *gxz,

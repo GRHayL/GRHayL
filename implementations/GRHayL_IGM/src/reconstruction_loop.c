@@ -35,7 +35,8 @@ void GRHayL_IGM_reconstruction_loop(const cGH *restrict cctkGH, const int flux_d
         double var_data[num_vars][6], vars_r[num_vars], vars_l[num_vars];
 
         for(int ind=0; ind<6; ind++) {
-          const int stencil = CCTK_GFINDEX3D(cctkGH, i+xdir*(ind-3), j+ydir*(ind-3), k+zdir*(ind-3)); // PPM needs indices from -3 to +2
+          // Stencil from -3 to +2 reconstructs to e.g. i-1/2
+          const int stencil = CCTK_GFINDEX3D(cctkGH, i+xdir*(ind-3), j+ydir*(ind-3), k+zdir*(ind-3));
           v_flux_dir[ind] = in_prims[VX+flux_dir][stencil]; // Could be smaller; doesn't use full stencil
           rho[ind] = in_prims[RHOB][stencil];
           pressure[ind] = in_prims[PRESSURE][stencil];

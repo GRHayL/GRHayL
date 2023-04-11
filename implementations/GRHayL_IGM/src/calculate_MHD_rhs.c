@@ -1,12 +1,6 @@
 #include "cctk.h"
 #include "IGM.h"
 
-#define AM2 -0.0625
-#define AM1  0.5625
-#define A0   0.5625
-#define A1  -0.0625
-#define COMPUTE_FCVAL(METRICm2,METRICm1,METRIC,METRICp1) (AM2*(METRICm2) + AM1*(METRICm1) + A0*(METRIC) + A1*(METRICp1))
-
 //static inline void calculate_face_value(
 //      const cGH *cctkGH,
 //      const int flux_dir,

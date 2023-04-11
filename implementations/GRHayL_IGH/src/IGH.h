@@ -3,14 +3,19 @@
 #include "cctk.h"
 #include "GRHayLET.h"
 
-static const int LAPSE=0, BETAX=1,BETAY=2, BETAZ=3,
-                 GXX=4, GXY=5, GXZ=6,
-                 GYY=7, GYZ=8, GZZ=9;
+enum metric_indices{
+      LAPSE, BETAX, BETAY, BETAZ,
+      GXX, GXY, GXZ, GYY, GYZ, GZZ};
 
-static const int KXX=0, KXY=1, KXZ=2, KYY=3, KYZ=4, KZZ=5;
+enum ext_curv{
+      KXX, KXY, KXZ, KYY, KYZ, KZZ};
 
 // The order here MATTERS, and must be consistent with the order in the in_prims[] array in evaluate_MHD_rhs.C.
-static const int RHOB=0,PRESSURE=1,VX=2,VY=3,VZ=4,MAXNUMVARS=5;  //<-- Be _sure_ to define MAXNUMVARS appropriately!
+enum recon_indices{
+      RHOB, PRESSURE, VX, VY, VZ,
+      BX_CENTER, BY_CENTER, BZ_CENTER,
+      BX_STAGGER, BY_STAGGER, BZ_STAGGER,
+      VXR, VYR, VZR, VXL,VYL, VZL, MAXNUMVARS};
 
 //Interpolates to the +1/2 face
 #define AM1 -0.0625
