@@ -148,7 +148,7 @@ void initialize_tabulated_eos(
       eos_parameters *restrict eos ) {
 
   // Step 1: Set EOS type to Tabulated.
-  eos->eos_type = grhayl_eos_hybrid;
+  eos->eos_type = grhayl_eos_tabulated;
 
   // Step 2: Read the EOS table
   eos->tabulated_read_table_set_EOS_params(table_filepath, eos);
@@ -248,6 +248,8 @@ void initialize_tabulated_eos_functions_and_params(
       const double T_min,
       const double T_max,
       eos_parameters *restrict eos ) {
+
+  eos->eos_type = grhayl_eos_tabulated;
 
   // Step 1: Initialize Tabulated EOS functions
   initialize_eos_functions(grhayl_eos_tabulated, eos);
