@@ -25,14 +25,14 @@ STORAGE: grmhd_primitives_reconstructed_temps, grmhd_cmin_cmax_temps, grmhd_flux
 # BASIC SETUP
 #########################################################
 # Registration of MoL RHS, symmetries, and boundary conditions (for PreSync)
-schedule GRHayL_IGM_RegisterVars in MoL_Register after BSSN_RegisterVars after lapse_RegisterVars
+schedule GRHayL_IGM_RegisterVars IN MoL_Register AFTER BSSN_RegisterVars AFTER lapse_RegisterVars
 {
   LANG: C
   OPTIONS: META
 } "Register evolved, rhs variables in GRHayL_IGM for MoL"
 
 # Tells the symmetry thorn how to apply symmetries on each gridfunction
-schedule GRHayL_IGM_InitSymBound at BASEGRID after Lapse_InitSymBound
+schedule GRHayL_IGM_InitSymBound AT BASEGRID AFTER Lapse_InitSymBound
 {
   LANG: C
 } "Schedule symmetries"
@@ -45,7 +45,7 @@ schedule group GRHayL_IGM_ID_Converter at CCTK_INITIAL after (Seed_Magnetic_Fiel
 {
 } "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayL_IGM"
 
-schedule convert_from_ADMBase_HydroBase_to_GRHayL_IGM IN GRHayL_IGM_ID_Converter as first_initialdata
+schedule convert_from_ADMBase_HydroBase_to_GRHayL_IGM IN GRHayL_IGM_ID_Converter AS first_initialdata
 {
    LANG:       C
    OPTIONS:    LOCAL
@@ -74,14 +74,14 @@ schedule convert_from_ADMBase_HydroBase_to_GRHayL_IGM IN GRHayL_IGM_ID_Converter
 
 #TODO: I don't think we need to schedule this twice. Already scheduled in BASEGRID.
 #      Also, these syncs happened in the previous function, so why do them again? A lot of extra computation going on in here
-schedule GRHayL_IGM_InitSymBound IN GRHayL_IGM_ID_Converter as second_initialdata after first_initialdata
+schedule GRHayL_IGM_InitSymBound IN GRHayL_IGM_ID_Converter AS second_initialdata AFTER first_initialdata
 {
   LANG: C
   SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
 } "Schedule symmetries -- Actually just a placeholder function to ensure prolongation / processor syncs are done BEFORE the primitives solver."
 
 #TODO: Again, syncs are being done despite the fact that the function loops over all points; either sync or loop everywhere, not both
-schedule GRHayL_IGM_compute_B_and_Bstagger_from_A IN GRHayL_IGM_ID_Converter as third_initialdata after second_initialdata
+schedule GRHayL_IGM_compute_B_and_Bstagger_from_A IN GRHayL_IGM_ID_Converter AS third_initialdata AFTER second_initialdata
 {
   LANG: C
   READS:  GRID::coordinates
@@ -96,7 +96,7 @@ schedule GRHayL_IGM_compute_B_and_Bstagger_from_A IN GRHayL_IGM_ID_Converter as 
 } "Compute B and B_stagger from A"
 
 #TODO: should the loops be everywhere?
-schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_ID_Converter as fourth_initialdata after third_initialdata
+schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_ID_Converter AS fourth_initialdata AFTER third_initialdata
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -119,19 +119,19 @@ schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_ID_Converter as fourth_initia
 # SYNCs actually reprolongate the conservative variables, making cons
 # and prims INCONSISTENT. So here we redo the con2prim, avoiding the
 # SYNC afterward, then copy the result to other timelevels"
-schedule GROUP GRHayL_IGM_PostPostInitial at CCTK_POSTPOSTINITIAL before MoL_PostStep after Con2Prim #HydroBase_Con2Prim
+schedule GROUP GRHayL_IGM_PostPostInitial AT CCTK_POSTPOSTINITIAL BEFORE MoL_PostStep AFTER Con2Prim #HydroBase_Con2Prim
 {
 } "HydroBase_Con2Prim in CCTK_POSTPOSTINITIAL sets conserv to prim then outer boundaries (OBs, which are technically disabled). The post OB SYNCs actually reprolongate the conservative variables, making cons and prims INCONSISTENT. So here we redo the con2prim, avoiding the SYNC afterward, then copy the result to other timelevels"
 
 # Should be automated by presync (ideally)
-schedule GRHayL_IGM_InitSymBound in GRHayL_IGM_PostPostInitial as postid before compute_b
+schedule GRHayL_IGM_InitSymBound IN GRHayL_IGM_PostPostInitial AS postid BEFORE compute_b
 {
   LANG: C
   SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
 } "Schedule symmetries -- Actually just a placeholder function to ensure prolongations / processor syncs are done BEFORE outer boundaries are updated."
 
 # Easiest primitives to solve for: B^i
-schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in GRHayL_IGM_PostPostInitial as compute_b after postid
+schedule GRHayL_IGM_compute_B_and_Bstagger_from_A IN GRHayL_IGM_PostPostInitial AS compute_b AFTER postid
 {
   LANG: C
   READS:  GRID::coordinates
@@ -147,7 +147,7 @@ schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in GRHayL_IGM_PostPostInitial 
 } "Compute B and B_stagger from A SYNC: grmhd_primitives_Bi,grmhd_primitives_Bi_stagger"
 
 # Nontrivial primitives solve, for P,rho_b,vx,vy,vz:
-schedule GRHayL_IGM_conserv_to_prims in GRHayL_IGM_PostPostInitial after compute_b
+schedule GRHayL_IGM_conserv_to_prims IN GRHayL_IGM_PostPostInitial AFTER compute_b
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -163,7 +163,7 @@ schedule GRHayL_IGM_conserv_to_prims in GRHayL_IGM_PostPostInitial after compute
 } "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
 
 # Copy data to other timelevels.
-schedule GRHayL_IGM_PostPostInitial_Set_Symmetries__Copy_Timelevels in GRHayL_IGM_PostPostInitial as mhdpostid after compute_b
+schedule GRHayL_IGM_PostPostInitial_Set_Symmetries__Copy_Timelevels IN GRHayL_IGM_PostPostInitial AS mhdpostid AFTER compute_b
 {
   LANG: C
   READS:  GRID::coordinates
@@ -184,12 +184,13 @@ schedule GRHayL_IGM_PostPostInitial_Set_Symmetries__Copy_Timelevels in GRHayL_IG
 # RHS EVALUATION
 #########################################################
 
-schedule GRHayL_IGM_evaluate_MHD_rhs in MoL_CalcRHS as GRHayL_IGM_RHS_eval after bssn_rhs after shift_rhs
+schedule GRHayL_IGM_evaluate_MHD_rhs IN MoL_CalcRHS AS GRHayL_IGM_RHS_eval AFTER bssn_rhs AFTER shift_rhs
 {
   LANG: C
   READS:   ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
   READS:   grmhd_primitives_allbutBi, grmhd_B_center,
            grmhd_B_stagger, phitilde, Ax, Ay, Az
+  WRITES:  HydroBase::rho(everywhere), HydroBase::Y_e(everywhere), HydroBase::vel(everywhere), HydroBase::temperature(everywhere)
   WRITES:  ADMBase::metric(everywhere), ADMBase::lapse(everywhere), ADMBase::shift(everywhere)
   WRITES:  BSSN_quantities(everywhere),
            grmhd_primitives_reconstructed_temps, grmhd_flux_temps, grmhd_cmin_cmax_temps,
@@ -216,13 +217,13 @@ schedule GRHayL_IGM_evaluate_MHD_rhs in MoL_CalcRHS as GRHayL_IGM_RHS_eval after
 #########################################################
 
 # Should be automated by presync (ideally)
-schedule GRHayL_IGM_InitSymBound in HydroBase_Boundaries as Boundary_SYNCs
+schedule GRHayL_IGM_InitSymBound IN HydroBase_Boundaries AS Boundary_SYNCs
 {
   LANG: C
   SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
 } "Schedule symmetries -- Actually just a placeholder function to ensure prolongations / processor syncs are done BEFORE outer boundaries are updated."
 
-schedule GRHayL_IGM_outer_boundaries_on_A_mu in HydroBase_Boundaries after Boundary_SYNCs
+schedule GRHayL_IGM_outer_boundaries_on_A_mu IN HydroBase_Boundaries AFTER Boundary_SYNCs
 {
   LANG: C
   READS:  phitilde, Ax, Ay, Az
@@ -231,7 +232,7 @@ schedule GRHayL_IGM_outer_boundaries_on_A_mu in HydroBase_Boundaries after Bound
 
 # Easiest primitives to solve for: B^i.
 # Note however that B^i depends on derivatives of A_{\mu}, so a SYNC is necessary on B^i.
-schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in HydroBase_Boundaries after GRHayL_IGM_outer_boundaries_on_A_mu
+schedule GRHayL_IGM_compute_B_and_Bstagger_from_A IN HydroBase_Boundaries AFTER GRHayL_IGM_outer_boundaries_on_A_mu
 {
   LANG: C
   READS:  GRID::coordinates
@@ -247,7 +248,7 @@ schedule GRHayL_IGM_compute_B_and_Bstagger_from_A in HydroBase_Boundaries after 
 } "Compute B and B_stagger from A,  SYNC: grmhd_primitives_Bi,grmhd_primitives_Bi_stagger"
 
 # Nontrivial primitives solve, for P,rho_b,vx,vy,vz.
-schedule GRHayL_IGM_conserv_to_prims in AddToTmunu
+schedule GRHayL_IGM_conserv_to_prims IN AddToTmunu
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -262,7 +263,7 @@ schedule GRHayL_IGM_conserv_to_prims in AddToTmunu
           TmunuBase::stress_energy_tensor(everywhere)
 } "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
 
-schedule GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRHayL_IGM_conserv_to_prims
+schedule GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz IN AddToTmunu AFTER GRHayL_IGM_conserv_to_prims
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -283,7 +284,7 @@ schedule GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRH
 # Conversion from GRHayL_IGM variables to Hydrobase
 #########################################################
 
-SCHEDULE convert_from_GRHayL_IGM_to_HydroBase AT CCTK_INITIAL AFTER GRHayL_IGM_ID_Converter
+SCHEDULE convert_from_GRHayL_IGM_to_HydroBase AT CCTK_INITIAL AFTER HydroBase_Prim2ConInitial
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
