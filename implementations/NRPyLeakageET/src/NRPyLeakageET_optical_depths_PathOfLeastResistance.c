@@ -35,7 +35,7 @@ static void set_optical_depths_struct_from_gfs(
 }
 
 void NRPyLeakageET_optical_depths_PathOfLeastResistance(CCTK_ARGUMENTS) {
-  
+
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
@@ -44,9 +44,9 @@ void NRPyLeakageET_optical_depths_PathOfLeastResistance(CCTK_ARGUMENTS) {
   const CCTK_REAL dxx[3] = {CCTK_DELTA_SPACE(0), CCTK_DELTA_SPACE(1), CCTK_DELTA_SPACE(2)};
 
 #pragma omp parallel
-  for(int k=0;k<cctk_lsh[2];k++) {
-    for(int j=0;j<cctk_lsh[1];j++) {
-      for(int i=0;i<cctk_lsh[0];i++) {
+  for(int k=cctk_nghostzones[2];k<cctk_lsh[2]-cctk_nghostzones[2];k++) {
+    for(int j=cctk_nghostzones[1];j<cctk_lsh[1]-cctk_nghostzones[1];j++) {
+      for(int i=cctk_nghostzones[0];i<cctk_lsh[0]-cctk_nghostzones[0];i++) {
 
         // Step 1: Set gridpoint indices
         const int i_j_k   = CCTK_GFINDEX3D(cctkGH, i  , j, k  );
