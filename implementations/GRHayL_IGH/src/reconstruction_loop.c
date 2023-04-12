@@ -10,14 +10,12 @@ void GRHayL_IGH_reconstruction_loop(const cGH *restrict cctkGH, const int flux_d
                          double **out_prims_r,
                          double **out_prims_l) {
 
-  // Bounds are determined by the stencil, which requires a ghostzone of at least
-  // 3, but upper index includes first ghostzone point (stencil is only 2 on upper end)
-  // This limit only applies to the direction of the stencil, hence the == logic below.
-
   const int xdir = (flux_dir == 0);
   const int ydir = (flux_dir == 1);
   const int zdir = (flux_dir == 2);
 
+  // For repeated reconstructions (needed for A_i RHS), we need to compute ghostzone
+  // points in the directions other than the flux_dir, hence these bounds
   const int imin = (cctkGH->cctk_nghostzones[0]-1)*xdir;
   const int imax = cctkGH->cctk_lsh[0] - cctkGH->cctk_nghostzones[0]*xdir;
   const int jmin = (cctkGH->cctk_nghostzones[1]-1)*ydir;

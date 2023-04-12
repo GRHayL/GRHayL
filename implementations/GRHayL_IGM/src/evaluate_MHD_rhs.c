@@ -140,6 +140,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // This function is housed in the file: "compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C"
   GRHayL_IGM_calculate_tau_source_rhs(cctkGH, grhayl_eos, metric, curv, in_prims, tau_rhs);
 
+  int num_vars;
   int flux_dir;
   flux_dir=0;
   /* There are two stories going on here:
@@ -157,8 +158,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
    *      this, we'll reconstruct again in the y-dir'n to get {vx,vy} at (i-1/2,j-1/2,k)
    * 2Ab) By_stagger is at (i,j+1/2,k), and we reconstruct below to (i-1/2,j+1/2,k).
    */
-  { // num_vars and var_indices are local variables
-    const int num_vars = 6;
+  { // var_indices is a local variable
+    num_vars = 6;
     const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
@@ -210,13 +211,13 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //// NOTE! The order of variable reconstruction is important here,
   ////   as we don't want to overwrite {vxr,vxl,vyr,vyl}!
   flux_dir=1;
-  { // num_vars and var_indices are local variables
-    const int num_vars = 4;
+  { // var_indices is a local variable
+    num_vars = 4;
     const int var_indices[4] = {VXR, VYR, VXL, VYL};
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-  { // num_vars and var_indices are local variables
-    const int num_vars = 7;
+  { // var_indices is a local variable
+    num_vars = 7;
     const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
@@ -279,13 +280,13 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // NOTE! The order of variable reconstruction is important here,
   //   as we don't want to overwrite {vyr,vyl,vzr,vzl}!
 /**************************************new code*******************************************/
-  { // num_vars and var_indices are local variables
-    const int num_vars = 4;
+  { // var_indices is a local variable
+    num_vars = 4;
     const int var_indices[4] = {VYR, VZR, VYL, VZL};
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-  { // num_vars and var_indices are local variables
-    const int num_vars = 7;
+  { // var_indices is a local variable
+    num_vars = 7;
     const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
@@ -331,8 +332,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   GRHayL_IGM_A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
 
   // We reprise flux_dir=1 reconstruction to finish up computations of Ai_rhs's!
-  { // num_vars and var_indices are local variables
-    const int num_vars = 5;
+  { // var_indices is a local variable
+    num_vars = 5;
     const int var_indices[5] = {VXR, VZR, VXL, VZL, BZ_STAGGER};
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }

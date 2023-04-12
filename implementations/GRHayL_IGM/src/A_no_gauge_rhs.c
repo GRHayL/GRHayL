@@ -72,21 +72,21 @@ void GRHayL_IGM_A_no_gauge_rhs(const cGH *restrict cctkGH, const int flux_dir,
                 phi_bssn[CCTK_GFINDEX3D(cctkGH,i+!xdir,   j+xdir  +2*zdir, k+2*!zdir)],
                 phi_bssn[CCTK_GFINDEX3D(cctkGH,i+2*!xdir, j+2*xdir+2*zdir, k+2*!zdir)])));
 
-        vars.v1rr=in_prims_r[VXR+dir1_offset][index_v];
-        vars.v1rl=in_prims_l[VXR+dir1_offset][index_v];
-        vars.v1lr=in_prims_r[VXL+dir1_offset][index_v];
-        vars.v1ll=in_prims_l[VXL+dir1_offset][index_v];
+        vars.v1rr = in_prims_r[VXR+dir1_offset][index_v];
+        vars.v1rl = in_prims_l[VXR+dir1_offset][index_v];
+        vars.v1lr = in_prims_r[VXL+dir1_offset][index_v];
+        vars.v1ll = in_prims_l[VXL+dir1_offset][index_v];
 
-        vars.v2rr=in_prims_r[VXR+dir2_offset][index_v];
-        vars.v2rl=in_prims_l[VXR+dir2_offset][index_v];
-        vars.v2lr=in_prims_r[VXL+dir2_offset][index_v];
-        vars.v2ll=in_prims_l[VXL+dir2_offset][index_v];
+        vars.v2rr = in_prims_r[VXR+dir2_offset][index_v];
+        vars.v2rl = in_prims_l[VXR+dir2_offset][index_v];
+        vars.v2lr = in_prims_r[VXL+dir2_offset][index_v];
+        vars.v2ll = in_prims_l[VXL+dir2_offset][index_v];
 
-        vars.B1r=in_prims_r[BX_STAGGER+dir1_offset][index_B1];
-        vars.B1l=in_prims_l[BX_STAGGER+dir1_offset][index_B1];
+        vars.B1r = in_prims_r[BX_STAGGER+dir1_offset][index_B1];
+        vars.B1l = in_prims_l[BX_STAGGER+dir1_offset][index_B1];
 
-        vars.B2r=in_prims_r[BX_STAGGER+dir2_offset][index_B2];
-        vars.B2l=in_prims_l[BX_STAGGER+dir2_offset][index_B2];
+        vars.B2r = in_prims_r[BX_STAGGER+dir2_offset][index_B2];
+        vars.B2l = in_prims_l[BX_STAGGER+dir2_offset][index_B2];
 
         vars.c1_min = cmin[dir1_offset][index_B2];
         vars.c1_max = cmax[dir1_offset][index_B2];

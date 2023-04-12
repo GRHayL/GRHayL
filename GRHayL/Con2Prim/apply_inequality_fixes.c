@@ -124,5 +124,4 @@ void apply_inequality_fixes(
       diagnostics->failure_checker+=100000000;
     }
   }
-  return;
 }
