@@ -81,39 +81,39 @@ CCTK_INT numberOfIterations "How many iterations are we going to perform to init
 } 2048
 
 restricted:
-CCTK_STRING GFstring_Ye_star_rhs "Gridfunction for the conserved electron fraction right-hand side" STEERABLE = ALWAYS
+CCTK_STRING GFstring_Y_e_star_rhs "Gridfunction for the conserved electron fraction right-hand side" STEERABLE = ALWAYS
 {
-  "IllinoisGRMHD::Ye_star_rhs" :: "IllinoisGRMHD's gridfunction"
+  "GRHayL_IGM::Y_e_star_rhs" :: "GRHayL_IGM's gridfunction"
   ".+"                         :: "Or use you can use your own thorn's gridfunction name"
-} "IllinoisGRMHD::Ye_star_rhs"
+} "GRHayL_IGM::Y_e_star_rhs"
 
 restricted:
 CCTK_STRING GFstring_tau_rhs "Gridfunction for the conserved energy right-hand side" STEERABLE = ALWAYS
 {
-  "IllinoisGRMHD::tau_rhs" :: "IllinoisGRMHD's gridfunction"
+  "GRHayL_IGM::tau_rhs" :: "GRHayL_IGM's gridfunction"
   ".+"                     :: "Or use you can use your own thorn's gridfunction name"
-} "IllinoisGRMHD::tau_rhs"
+} "GRHayL_IGM::tau_rhs"
 
 restricted:
-CCTK_STRING GFstring_st_x_rhs "Gridfunction for the x-component of the conserved momentum right-hand side" STEERABLE = ALWAYS
+CCTK_STRING GFstring_Stildex_rhs "Gridfunction for the x-component of the conserved momentum right-hand side" STEERABLE = ALWAYS
 {
-  "IllinoisGRMHD::st_x_rhs" :: "IllinoisGRMHD's gridfunction"
+  "GRHayL_IGM::Stildex_rhs" :: "GRHayL_IGM's gridfunction"
   ".+"                      :: "Or use you can use your own thorn's gridfunction name"
-} "IllinoisGRMHD::st_x_rhs"
+} "GRHayL_IGM::Stildex_rhs"
 
 restricted:
-CCTK_STRING GFstring_st_y_rhs "Gridfunction for the y-component of the conserved momentum right-hand side" STEERABLE = ALWAYS
+CCTK_STRING GFstring_Stildey_rhs "Gridfunction for the y-component of the conserved momentum right-hand side" STEERABLE = ALWAYS
 {
-  "IllinoisGRMHD::st_y_rhs" :: "IllinoisGRMHD's gridfunction"
+  "GRHayL_IGM::Stildey_rhs" :: "GRHayL_IGM's gridfunction"
   ".+"                      :: "Or use you can use your own thorn's gridfunction name"
-} "IllinoisGRMHD::st_y_rhs"
+} "GRHayL_IGM::Stildey_rhs"
 
 restricted:
-CCTK_STRING GFstring_st_z_rhs "Gridfunction for the z-component of the conserved momentum right-hand side" STEERABLE = ALWAYS
+CCTK_STRING GFstring_Stildez_rhs "Gridfunction for the z-component of the conserved momentum right-hand side" STEERABLE = ALWAYS
 {
-  "IllinoisGRMHD::st_z_rhs" :: "IllinoisGRMHD's gridfunction"
+  "GRHayL_IGM::Stildez_rhs" :: "GRHayL_IGM's gridfunction"
   ".+"                      :: "Or use you can use your own thorn's gridfunction name"
-} "IllinoisGRMHD::st_z_rhs"
+} "GRHayL_IGM::Stildez_rhs"
 
 restricted:
 CCTK_INT compute_luminosities_every "How often should we compute the neutrino luminosities" STEERABLE = ALWAYS
