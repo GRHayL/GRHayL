@@ -18,7 +18,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   const double poison = 0.0/0.0;
-  double dummy1, dummy2, dummy3;
+  double dummy;
 
   // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
   GRHayL_IGM_convert_ADM_to_BSSN(cctkGH,
@@ -33,8 +33,8 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
 
 // We use rho and press from HydroBase directly with no need to convert
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int ind0=CCTK_GFINDEX4D(cctkGH,i,j,k,0);
@@ -45,18 +45,22 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         // P = (\Gamma - 1) rho epsilon
         // -> \Gamma = P/(rho epsilon) + 1
         if( grhayl_eos->eos_type == grhayl_eos_hybrid ) {
+          CCTK_VINFO("I'm here: %d, but should be %d", grhayl_eos->eos_type, grhayl_eos_tabulated);
           const double measured_gamma = ( press[index]/(rho[index] * eps[index]) + 1.0 );
           if(rho[index]>grhayl_eos->rho_atm && fabs(grhayl_eos->Gamma_th - measured_gamma)/grhayl_eos->Gamma_th > 1e-2)
             CCTK_VERROR("Expected simple gamma law with gamma_th=%.15e, but found a point with gamma law such that gamma_th=%.15e. error = %e| rb=%e rbatm=%e P=%e\n",
                         grhayl_eos->Gamma_th, measured_gamma, (grhayl_eos->Gamma_th-measured_gamma)/grhayl_eos->Gamma_th, rho[index], grhayl_eos->rho_atm, press[index] );
         }
 
-        rho_b[index] = rho[index];
+        rho_b[index]    = rho[index];
         pressure[index] = press[index];
+        Ye[index]       = Y_e[index];
+        T[index]        = temperature[index];
+        epsgf[index]    = eps[index];
 
-        Ax[index] = Avec[ind0];
-        Ay[index] = Avec[ind1];
-        Az[index] = Avec[ind2];
+        Ax[index]       = Avec[ind0];
+        Ay[index]       = Avec[ind1];
+        Az[index]       = Avec[ind2];
         phitilde[index] = Aphi[index];
 
         const double ETvx = vel[ind0];
@@ -84,32 +88,37 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         //     = \Gamma/u^0 ( U^i - \beta^i / \alpha ) <- \Gamma = \alpha u^0
         //     = \alpha ( U^i - \beta^i / \alpha )
         //     = \alpha U^i - \beta^i
-
         vx[index] = alp[index]*ETvx - betax[index];
         vy[index] = alp[index]*ETvy - betay[index];
         vz[index] = alp[index]*ETvz - betaz[index];
+      }
+    }
   }
 
   // Neat feature for debugging: Add a roundoff-error perturbation
   //    to the initial data.
   // Set random_pert variable to ~1e-14 for a random 15th digit
   //    perturbation.
-  srand(random_seed); // Use srand() as rand() is thread-safe.
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
-      for(int i=0; i<imax; i++) {
-        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-        const double pert = (random_pert*(double)rand() / RAND_MAX);
-        const double one_plus_pert=(1.0+pert);
-        rho_b[index]*=one_plus_pert;
-        vx[index]*=one_plus_pert;
-        vy[index]*=one_plus_pert;
-        vz[index]*=one_plus_pert;
+  if( random_pert > 1e-30 ) {
+    srand(random_seed); // Use srand() as rand() is thread-safe.
+    for(int k=0; k<kmax; k++) {
+      for(int j=0; j<jmax; j++) {
+        for(int i=0; i<imax; i++) {
+          const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+          const double pert = (random_pert*(double)rand() / RAND_MAX);
+          const double one_plus_pert=(1.0+pert);
+          rho_b[index]*=one_plus_pert;
+          vx[index]*=one_plus_pert;
+          vy[index]*=one_plus_pert;
+          vz[index]*=one_plus_pert;
 
-        phitilde[index]*=one_plus_pert;
-        Ax[index]*=one_plus_pert;
-        Ay[index]*=one_plus_pert;
-        Az[index]*=one_plus_pert;
+          phitilde[index]*=one_plus_pert;
+          Ax[index]*=one_plus_pert;
+          Ay[index]*=one_plus_pert;
+          Az[index]*=one_plus_pert;
+        }
+      }
+    }
   }
 
   // Next compute B & B_stagger from A_i. Note that this routine also depends on
@@ -120,8 +129,8 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
   const double dzi = 1.0/CCTK_DELTA_SPACE(2);
 
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         // Look Mom, no if() statements!
         const int shiftedim1 = (i-1)*(i!=0); // This way, i=0 yields shiftedim1=0 and shiftedi=1, used below for our COPY boundary condition.
@@ -199,11 +208,13 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         const int indexijkp1 = CCTK_GFINDEX3D(cctkGH,i,j,k + ( (kmax_minus_k > 0) - (0 > kmax_minus_k) ));
         const double Psi_kp1 = psi_bssn[indexijkp1];
         Bz_stagger[actual_index] *= Psim3/(Psi_kp1*Psi_kp1*Psi_kp1);
+      }
+    }
   }
 
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         // Look Mom, no if() statements!
         const int shiftedim1 = (i-1)*(i!=0); // This way, i=0 yields shiftedim1=0 and shiftedi=1, used below for our COPY boundary condition.
@@ -249,20 +260,14 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         // Set Bz = 0.5 ( Bz_stagger + Bz_stagger_im1 )
         // "Grid" Bz_stagger(i,j,k) is actually Bz_stagger(i,j+1/2,k)
         Bz_center[actual_index] = 0.5 * ( Bz_stagger[index] + Bz_stagger[indexkm1] );
+      }
+    }
   }
-
-//TODO: comment not applicable anymore
-  // FIXME: IllinoisGRMHD's Conservative-to-Primitive solver
-  //   (a.k.a., C2P or con2prim) only implements single gamma-law EOS.
-  // Also, not compatible with EOS driver in ET, so EOS parameters must
-  //   be specified for both initial data thorns AND IllinoisGRMHD
-  // TODO: Incorporate checks to ensure compatibility with ID.
-  //   Alternatively, read in EOS stuff from an ET EOS driver.
 
   // Finally, enforce limits on primitives & compute conservative variables.
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
@@ -273,14 +278,15 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
 
         primitive_quantities prims;
         initialize_primitives(
-                          rho_b[index], pressure[index], eps[index],
+                          rho_b[index], pressure[index], epsgf[index],
                           vx[index], vy[index], vz[index],
                           Bx_center[index], By_center[index], Bz_center[index],
-                          poison, poison, poison,
+                          poison, Ye[index], T[index],
                           &prims);
-//TODO: add support for other vars; might need to depend on whether these vars
-//      have storage allocated by looking at params
-//                          entropy[index], Y_e[index], temperature[index],
+
+        //TODO: add support for other vars; might need to depend on whether these vars
+        //      have storage allocated by looking at params
+        //                          entropy[index], Y_e[index], temperature[index],
 
         conservative_quantities cons;
         stress_energy Tmunu;
@@ -291,21 +297,15 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
         compute_conservs_and_Tmunu(grhayl_params, &metric, &prims, &cons, &Tmunu);
 
         return_primitives(&prims,
-                          &rho_b[index], &pressure[index], &eps[index],
+                          &rho_b[index], &pressure[index], &epsgf[index],
                           &vx[index], &vy[index], &vz[index],
                           &Bx_center[index], &By_center[index], &Bz_center[index],
-                          &dummy1, &dummy2, &dummy3);
-//TODO: add support for other vars; might need to depend on whether these vars
-//      have storage allocated by looking at params
-//                          &entropy[index], &Y_e[index], &temperature[index]);
+                          &dummy, &Ye[index], &T[index]);
 
         return_conservatives(&cons,
                           &rho_star[index], &tau[index],
                           &Stildex[index], &Stildey[index], &Stildez[index],
-                          &dummy1, &dummy2);
-//TODO: add support for other vars; might need to depend on whether these vars
-//      have storage allocated by looking at params
-//                          &Y_e[index], &entropy[index]);
+                          &Y_e_star[index], &dummy);
 
         if(grhayl_params->update_Tmunu) {
           eTtt[index] = Tmunu.Ttt;
@@ -319,5 +319,7 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
           eTyz[index] = Tmunu.Tyz;
           eTzz[index] = Tmunu.Tzz;
         }
+      }
+    }
   }
 }

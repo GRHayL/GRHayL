@@ -28,8 +28,8 @@ void GRHayL_IGM_compute_B_and_Bstagger_from_A(CCTK_ARGUMENTS) {
 
 
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++)
-    for(int j=0; j<cctk_lsh[1]; j++)
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         // Look Mom, no if() statements!
         const int shiftedim1 = (i-1)*(i!=0); // This way, i=0 yields shiftedim1=0 and shiftedi=1, used below for our COPY boundary condition.
@@ -106,11 +106,13 @@ void GRHayL_IGM_compute_B_and_Bstagger_from_A(CCTK_ARGUMENTS) {
         const int indexijkp1 = CCTK_GFINDEX3D(cctkGH,i,j,k + ( (kmax_minus_k > 0) - (0 > kmax_minus_k) ));
         const double Psi_kp1 = psi_bssn[indexijkp1];
         Bz_stagger[actual_index] *= Psim3/(Psi_kp1*Psi_kp1*Psi_kp1);
+      }
+    }
   }
 
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++)
-    for(int j=0; j<cctk_lsh[1]; j++)
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         // Look Mom, no if() statements!
         const int shiftedim1 = (i-1)*(i!=0); // This way, i=0 yields shiftedim1=0 and shiftedi=1, used below for our COPY boundary condition.
@@ -156,6 +158,8 @@ void GRHayL_IGM_compute_B_and_Bstagger_from_A(CCTK_ARGUMENTS) {
         // Set Bz_center = 0.5 ( Bz_stagger + Bz_stagger_im1 )
         // "Grid" Bz_stagger(i,j,k) is actually Bz_stagger(i,j+1/2,k)
         Bz_center[actual_index] = 0.5 * ( Bz_stagger[index] + Bz_stagger[indexkm1] );
+      }
+    }
   }
 
   // Finish up by setting symmetry ghostzones on Bx, By, Bz, and their staggered variants.

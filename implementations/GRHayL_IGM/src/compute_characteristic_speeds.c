@@ -42,8 +42,8 @@ void GRHayL_IGM_compute_characteristic_speeds(
   const int kmax = cctkGH->cctk_lsh[2]-(cctkGH->cctk_nghostzones[2]-1);
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++)
-    for(int j=jmin; j<jmax; j++)
+  for(int k=kmin; k<kmax; k++) {
+    for(int j=jmin; j<jmax; j++) {
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
@@ -57,16 +57,16 @@ void GRHayL_IGM_compute_characteristic_speeds(
                           in_metric[GYY], in_metric[GYZ], in_metric[GZZ],
                           &metric_face);
 
-        initialize_primitives(in_prims_r[RHOB][index], in_prims_r[PRESSURE][index], poison,
+        initialize_primitives(in_prims_r[RHOB][index], in_prims_r[PRESSURE][index], in_prims_r[EPSILON][index],
                               in_prims_r[VX][index], in_prims_r[VY][index], in_prims_r[VZ][index],
                               in_prims_r[BX_CENTER][index], in_prims_r[BY_CENTER][index], in_prims_r[BZ_CENTER][index],
-                              poison, poison, poison, // entropy, Y_e, temp
+                              poison, in_prims_r[YEPRIM][index], in_prims_r[TEMPERATURE][index], // entropy, Y_e, temp
                               &prims_r);
 
-        initialize_primitives(in_prims_l[RHOB][index], in_prims_l[PRESSURE][index], poison,
+        initialize_primitives(in_prims_l[RHOB][index], in_prims_l[PRESSURE][index], in_prims_l[EPSILON][index],
                               in_prims_l[VX][index], in_prims_l[VY][index], in_prims_l[VZ][index],
                               in_prims_l[BX_CENTER][index], in_prims_l[BY_CENTER][index], in_prims_l[BZ_CENTER][index],
-                              poison, poison, poison, // entropy, Y_e, temp
+                              poison, in_prims_l[YEPRIM][index], in_prims_l[TEMPERATURE][index], // entropy, Y_e, temp
                               &prims_l);
 
         int speed_limited = 0;
@@ -74,5 +74,7 @@ void GRHayL_IGM_compute_characteristic_speeds(
         limit_v_and_compute_u0(eos, &metric_face, &prims_l, &speed_limited);
 
         calculate_characteristic_speed(&prims_r, &prims_l, eos, &metric_face, &cmin[index], &cmax[index]);
+      }
+    }
   }
 }

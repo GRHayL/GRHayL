@@ -31,7 +31,7 @@ cctk_real grmhd_primitives_allbutBi type = GF TAGS='InterpNumTimelevels=1 prolon
 #########################################################
 
 # Evolved variables
-cctk_real grmhd_conservatives type = GF Timelevels=3
+cctk_real grmhd_conservatives type = GF Timelevels=3 TAGS='prolongation="ENO"'
 {
   rho_star, tau, Stildex, Stildey, Stildez, Y_e_star # Note that Stildei = \tilde{S}_i.
 } "Evolved mhd variables"
@@ -115,8 +115,8 @@ cctk_real grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 # Temporary variables for reconstruction
 CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-  rhor, pressr, vxr, vyr, vzr, Yer, epsr
-  rhol, pressl, vxl, vyl, vzl, Yel, epsl
+  rhor, pressr, vxr, vyr, vzr, Yer, epsr, Tr
+  rhol, pressl, vxl, vyl, vzl, Yel, epsl, Tl
   Bxr, Byr, Bzr, Bx_staggerr, By_staggerr, Bz_staggerr
   Bxl, Byl, Bzl, Bx_staggerl, By_staggerl, Bz_staggerl
   vxrr, vxrl, vyrr, vyrl, vzrr, vzrl
