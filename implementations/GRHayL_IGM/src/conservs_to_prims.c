@@ -200,7 +200,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     // Enforce limits on primitive variables and recompute conservatives.
     stress_energy Tmunu;
     enforce_primitive_limits_and_compute_u0(grhayl_params, grhayl_eos, &metric, &prims, &diagnostics.failure_checker);
-    compute_conservs_and_Tmunu(grhayl_params, grhayl_eos, &metric, &prims, &cons, &Tmunu);
+    compute_conservs_and_Tmunu(grhayl_params, &metric, &prims, &cons, &Tmunu);
 
     //Now we compute the difference between original & new conservatives, for diagnostic purposes:
     error_int_numer += fabs(cons.tau - cons_orig.tau) + fabs(cons.rho - cons_orig.rho) + fabs(cons.S_x - cons_orig.S_x)

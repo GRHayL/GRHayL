@@ -93,7 +93,6 @@ void enforce_primitive_limits_and_compute_u0(
 
 void compute_conservs_and_Tmunu(
       const GRHayL_parameters *restrict params,
-      const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
       conservative_quantities *restrict cons,

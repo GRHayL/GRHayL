@@ -9,8 +9,6 @@ void compute_smallb_and_b2(const metric_quantities *restrict metric, const primi
  *
  * Inputs      : params         - GRHayL_parameters struct with parameters
  *                                for the simulation
- *             : eos            - eos_parameters struct with data for the
- *                                EOS of the simulation
  *             : metric         - metric_quantities struct with data for
  *                                the gridpoint of interest
  *             : prims          - primitive_quantities struct with data
@@ -22,7 +20,6 @@ void compute_smallb_and_b2(const metric_quantities *restrict metric, const primi
  */
 
 void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
-                                const eos_parameters *restrict eos,
                                 const metric_quantities *restrict metric,
                                 const primitive_quantities *restrict prims,
                                 conservative_quantities *restrict cons,
