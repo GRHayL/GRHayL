@@ -12,21 +12,16 @@ int Tabulated_Select_Method(
   switch( c2p_key ) {
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
-      return( Tabulated_Palenzuela1D_energy(params, eos, metric, cons, prims, diagnostics) );
-      break;
+      return Tabulated_Palenzuela1D_energy(params, eos, metric, cons, prims, diagnostics);
     case Palenzuela1D_entropy:
-      return( Tabulated_Palenzuela1D_entropy(params, eos, metric, cons, prims, diagnostics) );
-      break;
+      return Tabulated_Palenzuela1D_entropy(params, eos, metric, cons, prims, diagnostics);
     case Newman1D:
-      return( Tabulated_Newman1D_energy(params, eos, metric, cons, prims, diagnostics) );
-      break;
+      return Tabulated_Newman1D_energy(params, eos, metric, cons, prims, diagnostics);
     case Newman1D_entropy:
-      return( Tabulated_Newman1D_entropy(params, eos, metric, cons, prims, diagnostics) );
-      break;
+      return Tabulated_Newman1D_entropy(params, eos, metric, cons, prims, diagnostics);
     default:
       grhayl_Error(100, "Unknown c2p key in Tabulated_Select_Method (%d).", c2p_key);
       return 100;
-      break;
   }
 }
 

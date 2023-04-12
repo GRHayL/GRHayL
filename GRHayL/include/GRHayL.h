@@ -41,17 +41,6 @@
    can, this should be supported.
 */
 
-typedef struct GRHayL_parameters {
-  int main_routine, backup_routine[3];
-  bool evolve_entropy;
-  bool evolve_temp;
-  bool calc_prim_guess;
-  double psi6threshold;
-  bool update_Tmunu;
-  bool Cupp_Fix;
-  double Lorenz_damping_factor;
-} GRHayL_parameters;
-
 typedef enum {
   None=-1,
   Noble2D, Noble1D,
@@ -60,6 +49,17 @@ typedef enum {
   Palenzuela1D, Palenzuela1D_entropy,
   Newman1D, Newman1D_entropy
 } con2prim_method_t;
+
+typedef struct GRHayL_parameters {
+  con2prim_method_t main_routine, backup_routine[3];
+  bool evolve_entropy;
+  bool evolve_temp;
+  bool calc_prim_guess;
+  double psi6threshold;
+  bool update_Tmunu;
+  bool Cupp_Fix;
+  double Lorenz_damping_factor;
+} GRHayL_parameters;
 
 void initialize_GRHayL(
       const con2prim_method_t main,
@@ -351,6 +351,15 @@ typedef struct eos_parameters {
         const double Y_e,
         const double eps,
         double *restrict P,
+        double *restrict T);
+
+  void (*tabulated_compute_P_cs2_T_from_eps)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double Y_e,
+        const double eps,
+        double *restrict P,
+        double *restrict cs2,
         double *restrict T);
 
   void (*tabulated_compute_P_T_from_S)(

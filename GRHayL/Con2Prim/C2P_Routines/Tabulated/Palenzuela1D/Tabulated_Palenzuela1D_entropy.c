@@ -78,12 +78,11 @@ int Tabulated_Palenzuela1D_entropy(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
-  Tabulated_Palenzuela1D(compute_rho_P_eps_T_W_entropy,
-                         grhayl_params,
-                         eos,
-                         metric,
-                         cons_undens,
-                         prims,
-                         diagnostics);
-  return grhayl_success;
+  return Tabulated_Palenzuela1D( compute_rho_P_eps_T_W_entropy,
+                                 grhayl_params,
+                                 eos,
+                                 metric,
+                                 cons_undens,
+                                 prims,
+                                 diagnostics );
 }

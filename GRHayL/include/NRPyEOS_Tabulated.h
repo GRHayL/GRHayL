@@ -150,6 +150,15 @@ void NRPyEOS_P_and_T_from_rho_Ye_eps(
       double *restrict P,
       double *restrict T);
 
+void NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(
+      const eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict P,
+      double *restrict cs2,
+      double *restrict T);
+
 void NRPyEOS_P_and_T_from_rho_Ye_S(
       const eos_parameters *restrict eos_params,
       const double rho,
