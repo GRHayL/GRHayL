@@ -637,6 +637,25 @@ void lower_vector(
       const double vcon[4],
       double vcov[4]);
 
+void compute_TDNmunu(
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const primitive_quantities *restrict prims,
+      stress_energy *restrict Tmunu);
+
+void compute_TUPmunu(
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const primitive_quantities *restrict prims,
+      stress_energy *restrict Tmunu);
+
+void compute_smallb_and_b2(
+      const metric_quantities *restrict metric,
+      const primitive_quantities *restrict prims,
+      const double uDN[4],
+      double *restrict smallb,
+      double *restrict smallb2);
+
 #ifdef __cplusplus
 }
 #endif

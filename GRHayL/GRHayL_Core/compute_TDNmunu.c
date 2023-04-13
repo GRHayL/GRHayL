@@ -1,10 +1,10 @@
 #include "GRHayL.h"
 
 void compute_TDNmunu(
-const eos_parameters *restrict eos,
-const metric_quantities *restrict metric,
-const primitive_quantities *restrict prims,
-stress_energy *restrict Tmunu) {
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const primitive_quantities *restrict prims,
+      stress_energy *restrict Tmunu) {
 
   //   First set h, the enthalpy:
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;

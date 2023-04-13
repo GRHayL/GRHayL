@@ -53,14 +53,14 @@ void limit_v_and_compute_u0(
   prims->u0 = alpha_u0*metric->lapseinv;
   if(isnan(prims->u0)) {
     // Leo asks: shouldn't this be an error?
-    grhayl_warn("*********************************************\n"
-                "Found nan while computing u^{0}\nMetric/psi4: %e %e %e %e %e %e / %e\n"
-                "Lapse/shift: %e (=1/%e) / %e %e %e\nVelocities : %e %e %e\n"
-                "*********************************************\n",
-                metric->adm_gxx, metric->adm_gxy, metric->adm_gxz,
-                metric->adm_gyy, metric->adm_gyz, metric->adm_gzz,
-                metric->psi4, metric->lapse, metric->lapseinv,
-                metric->betax, metric->betay, metric->betaz,
-                prims->vx, prims->vx, prims->vz);
+    grhayl_error("*********************************************\n"
+                 "Found nan while computing u^{0}\nMetric: %e %e %e %e %e %e\n"
+                 "Lapse/shift: %e (=1/%e) / %e %e %e\nVelocities : %e %e %e\n"
+                 "*********************************************\n",
+                 metric->adm_gxx, metric->adm_gxy, metric->adm_gxz,
+                 metric->adm_gyy, metric->adm_gyz, metric->adm_gzz,
+                 metric->lapse, metric->lapseinv,
+                 metric->betax, metric->betay, metric->betaz,
+                 prims->vx, prims->vx, prims->vz);
   }
 }
