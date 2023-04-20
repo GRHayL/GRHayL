@@ -60,6 +60,9 @@ void calculate_phitilde_and_A_gauge_rhs(
       const double Lorenz_damping_factor,
       A_gauge_rhs_vars *restrict vars);
 
+// Helper function for interpolating quantities via averaging
+double avg(const int size, const double f[size][size][size], const int imin, const int imax, const int jmin, const int jmax, const int kmin, const int kmax);
+
 #ifdef __cplusplus
 }
 #endif

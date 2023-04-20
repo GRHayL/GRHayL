@@ -2,9 +2,6 @@
 
 static int MINUS1=0, PLUS0=1, PLUS1=2;
 
-static inline double avg3(const double f[3][3][3],const int imin,const int imax, const int jmin,const int jmax, const int kmin,const int kmax);
-static inline double avg2(const double f[2][2][2],const int imin,const int imax, const int jmin,const int jmax, const int kmin,const int kmax);
-
 /* Function    : interpolate_for_A_gauge_rhs()
  * Description : computes several interpolated quantities for computing the RHS
  *               for tilde{phi} and the gauge contributions to A_i; these are
@@ -41,18 +38,12 @@ void interpolate_for_A_gauge_rhs(
   //    [ RHS1x(i+1,j+1/2,k+1/2) - RHS1x(i,j+1/2,k+1/2) ]/dX.
 
   // First lapse and shift at (i+1/2,j+1/2,k+1/2). Will come in handy when computing phitilde_RHS later.
-  gauge_rhs_vars->alpha_interp = avg2(gauge_vars->lapse , 0,1, 0,1, 0,1);
-  gauge_rhs_vars->shiftx_interp[0] = avg2(gauge_vars->shiftx, 0,1, 0,1, 0,1);
-  gauge_rhs_vars->shifty_interp[0] = avg2(gauge_vars->shifty, 0,1, 0,1, 0,1);
-  gauge_rhs_vars->shiftz_interp[0] = avg2(gauge_vars->shiftz, 0,1, 0,1, 0,1);
+  gauge_rhs_vars->alpha_interp     = avg(2, gauge_vars->lapse , 0,1, 0,1, 0,1);
+  gauge_rhs_vars->shiftx_interp[0] = avg(2, gauge_vars->shiftx, 0,1, 0,1, 0,1);
+  gauge_rhs_vars->shifty_interp[0] = avg(2, gauge_vars->shifty, 0,1, 0,1, 0,1);
+  gauge_rhs_vars->shiftz_interp[0] = avg(2, gauge_vars->shiftz, 0,1, 0,1, 0,1);
 
-  // Next, do A^X TERM (interpolate to (i,j+1/2,k+1/2) )
-  // \alpha \sqrt{\gamma} A^x = \alpha psi^6 A^x (RHS of \partial_i psi6phi)
-  // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  const double gupxx_jk = avg2(gauge_vars->gupxx, 0,0, 0,1, 0,1);
-  const double gupxy_jk = avg2(gauge_vars->gupxy, 0,0, 0,1, 0,1);
-  const double gupxz_jk = avg2(gauge_vars->gupxz, 0,0, 0,1, 0,1);
-
+  // Compute arrays of quantities for interpolating later
   double lapse_psi2[2][2][2];
   double lapse_over_psi6[2][2][2];
   for(int kk=0;kk<=1;kk++) for(int jj=0;jj<=1;jj++) for(int ii=0;ii<=1;ii++) {
@@ -62,11 +53,17 @@ void interpolate_for_A_gauge_rhs(
         lapse_over_psi6[kk][jj][ii]=alpha/(Psi2*Psi2*Psi2);
       }
 
-  const double lapse_Psi2_jk = avg2(lapse_psi2, 0,0, 0,1, 0,1);
+  // Next, do A^X TERM (interpolate to (i,j+1/2,k+1/2) )
+  // \alpha \sqrt{\gamma} A^x = \alpha psi^6 A^x (RHS of \partial_i psi6phi)
+  // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
+  const double gupxx_jk      = avg(2, gauge_vars->gupxx, 0,0, 0,1, 0,1);
+  const double gupxy_jk      = avg(2, gauge_vars->gupxy, 0,0, 0,1, 0,1);
+  const double gupxz_jk      = avg(2, gauge_vars->gupxz, 0,0, 0,1, 0,1);
+  const double lapse_Psi2_jk = avg(2, lapse_psi2,        0,0, 0,1, 0,1);
 
   const double A_x_jk   = gauge_vars->A_x[1][1][1]; // @ (i,j+1/2,k+1/2)
-  const double A_y_jk   = avg3(gauge_vars->A_y,MINUS1,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)
-  const double A_z_jk   = avg3(gauge_vars->A_z,MINUS1,PLUS0, PLUS0,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
+  const double A_y_jk   = avg(3, gauge_vars->A_y, MINUS1,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)
+  const double A_z_jk   = avg(3, gauge_vars->A_z, MINUS1,PLUS0, PLUS0,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
 
   gauge_rhs_vars->alpha_sqrtg_Ax_interp[0] = lapse_Psi2_jk*
     ( gupxx_jk*A_x_jk + gupxy_jk*A_y_jk + gupxz_jk*A_z_jk );
@@ -74,15 +71,14 @@ void interpolate_for_A_gauge_rhs(
   // DO A^Y TERM (interpolate to (i+1/2,j,k+1/2) )
   // \alpha \sqrt{\gamma} A^y = \alpha psi^6 A^y (RHS of \partial_i psi6phi)
   // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  const double gupxy_ik = avg2(gauge_vars->gupxy, 0,1, 0,0, 0,1);
-  const double gupyy_ik = avg2(gauge_vars->gupyy, 0,1, 0,0, 0,1);
-  const double gupyz_ik = avg2(gauge_vars->gupyz, 0,1, 0,0, 0,1);
+  const double gupxy_ik      = avg(2, gauge_vars->gupxy, 0,1, 0,0, 0,1);
+  const double gupyy_ik      = avg(2, gauge_vars->gupyy, 0,1, 0,0, 0,1);
+  const double gupyz_ik      = avg(2, gauge_vars->gupyz, 0,1, 0,0, 0,1);
+  const double lapse_Psi2_ik = avg(2, lapse_psi2,        0,1, 0,0, 0,1);
 
-  const double lapse_Psi2_ik = avg2(lapse_psi2, 0,1, 0,0, 0,1);
-
-  const double A_x_ik   = avg3(gauge_vars->A_x, PLUS0,PLUS1,MINUS1,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
+  const double A_x_ik   = avg(3, gauge_vars->A_x, PLUS0,PLUS1, MINUS1,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
   const double A_y_ik   = gauge_vars->A_y[1][1][1]; // @ (i+1/2,j,k+1/2)
-  const double A_z_ik   = avg3(gauge_vars->A_z, PLUS0,PLUS0,MINUS1,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
+  const double A_z_ik   = avg(3, gauge_vars->A_z, PLUS0,PLUS0, MINUS1,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
 
   gauge_rhs_vars->alpha_sqrtg_Ay_interp[0] = lapse_Psi2_ik*
     ( gupxy_ik*A_x_ik + gupyy_ik*A_y_ik + gupyz_ik*A_z_ik );
@@ -90,14 +86,13 @@ void interpolate_for_A_gauge_rhs(
   // DO A^Z TERM (interpolate to (i+1/2,j+1/2,k) )
   // \alpha \sqrt{\gamma} A^z = \alpha psi^6 A^z (RHS of \partial_i psi6phi)
   // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  const double gupxz_ij = avg2(gauge_vars->gupxz, 0,1, 0,1, 0,0);
-  const double gupyz_ij = avg2(gauge_vars->gupyz, 0,1, 0,1, 0,0);
-  const double gupzz_ij = avg2(gauge_vars->gupzz, 0,1, 0,1, 0,0);
+  const double gupxz_ij      = avg(2, gauge_vars->gupxz, 0,1, 0,1, 0,0);
+  const double gupyz_ij      = avg(2, gauge_vars->gupyz, 0,1, 0,1, 0,0);
+  const double gupzz_ij      = avg(2, gauge_vars->gupzz, 0,1, 0,1, 0,0);
+  const double lapse_Psi2_ij = avg(2, lapse_psi2,        0,1, 0,1, 0,0);
 
-  const double lapse_Psi2_ij = avg2(lapse_psi2, 0,1, 0,1, 0,0);
-
-  const double A_x_ij   = avg3(gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0,MINUS1,PLUS0); // @ (i,j+1/2,k+1/2)
-  const double A_y_ij   = avg3(gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1,MINUS1,PLUS0); // @ (i+1/2,j,k+1/2)
+  const double A_x_ij   = avg(3, gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0, MINUS1,PLUS0); // @ (i,j+1/2,k+1/2)
+  const double A_y_ij   = avg(3, gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1, MINUS1,PLUS0); // @ (i+1/2,j,k+1/2)
   const double A_z_ij   = gauge_vars->A_z[1][1][1]; // @ (i+1/2,j+1/2,k)
 
   gauge_rhs_vars->alpha_sqrtg_Az_interp[0] = lapse_Psi2_ij*
@@ -105,29 +100,13 @@ void interpolate_for_A_gauge_rhs(
 
 
   // Next set \alpha \Phi - \beta^j A_j at (i+1/2,j+1/2,k+1/2):
-  const double  lapse_over_Psi6_ijk = avg2(lapse_over_psi6, 0,1, 0,1, 0,1);
-  const double  A_x_ijk = avg3(gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
-  const double  A_y_ijk = avg3(gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)
-  const double  A_z_ijk = avg3(gauge_vars->A_z, PLUS0,PLUS0, PLUS0,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
+  const double  lapse_over_Psi6_ijk = avg(2, lapse_over_psi6, 0,1, 0,1, 0,1);
+  const double  A_x_ijk = avg(3, gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
+  const double  A_y_ijk = avg(3, gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)
+  const double  A_z_ijk = avg(3, gauge_vars->A_z, PLUS0,PLUS0, PLUS0,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
 
   gauge_rhs_vars->alpha_Phi_minus_betaj_A_j_interp[0] = gauge_vars->phitilde*lapse_over_Psi6_ijk
                                                       - (gauge_rhs_vars->shiftx_interp[0]*A_x_ijk
                                                          + gauge_rhs_vars->shifty_interp[0]*A_y_ijk
                                                          + gauge_rhs_vars->shiftz_interp[0]*A_z_ijk);
-}
-
-static inline double avg3(const double f[3][3][3], const int imin, const int imax, const int jmin, const int jmax, const int kmin, const int kmax) {
-  double retval=0.0,num_in_sum=0.0;
-  for(int kk=kmin;kk<=kmax;kk++) for(int jj=jmin;jj<=jmax;jj++) for(int ii=imin;ii<=imax;ii++) {
-        retval+=f[kk][jj][ii]; num_in_sum++;
-      }
-  return retval/num_in_sum;
-}
-
-static inline double avg2(const double f[2][2][2], const int imin, const int imax, const int jmin, const int jmax, const int kmin, const int kmax) {
-  double retval=0.0,num_in_sum=0.0;
-  for(int kk=kmin;kk<=kmax;kk++) for(int jj=jmin;jj<=jmax;jj++) for(int ii=imin;ii<=imax;ii++) {
-        retval+=f[kk][jj][ii]; num_in_sum++;
-      }
-  return retval/num_in_sum;
 }
