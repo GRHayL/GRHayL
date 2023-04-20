@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   double *gupyz = (double*) malloc(sizeof(double)*arraylength);
   double *gupzz = (double*) malloc(sizeof(double)*arraylength);
 
-  double *psi = (double*) malloc(sizeof(double)*arraylength);
+  double *psi   = (double*) malloc(sizeof(double)*arraylength);
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
   double *betax = (double*) malloc(sizeof(double)*arraylength);
   double *betay = (double*) malloc(sizeof(double)*arraylength);
@@ -34,15 +34,15 @@ int main(int argc, char **argv) {
   double *Ay = (double*) malloc(sizeof(double)*arraylength);
   double *Az = (double*) malloc(sizeof(double)*arraylength);
 
-  double *alpha_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *lapse_interp = (double*) malloc(sizeof(double)*arraylength);
   double *shiftx_interp = (double*) malloc(sizeof(double)*arraylength);
   double *shifty_interp = (double*) malloc(sizeof(double)*arraylength);
   double *shiftz_interp = (double*) malloc(sizeof(double)*arraylength);
 
-  double *alpha_Phi_minus_betaj_A_j_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *alpha_sqrtg_Ax_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *alpha_sqrtg_Ay_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *alpha_sqrtg_Az_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *lapse_Phi_minus_betaj_A_j_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *sqrtg_Ax_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *sqrtg_Ay_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *sqrtg_Az_interp = (double*) malloc(sizeof(double)*arraylength);
 
   double *phitilde_rhs = (double*) malloc(sizeof(double)*arraylength);
   double *Ax_rhs = (double*) malloc(sizeof(double)*arraylength);
@@ -84,15 +84,15 @@ int main(int argc, char **argv) {
       for(int i=0; i<dirlength; i++) {
         const int index = indexf(dirlength,i,j,k);
 
-        alpha_interp[index]  = poison;
+        lapse_interp[index]  = poison;
         shiftx_interp[index] = poison;
         shifty_interp[index] = poison;
         shiftz_interp[index] = poison;
 
-        alpha_Phi_minus_betaj_A_j_interp[index] = poison;
-        alpha_sqrtg_Ax_interp[index]            = poison;
-        alpha_sqrtg_Ay_interp[index]            = poison;
-        alpha_sqrtg_Az_interp[index]            = poison;
+        lapse_Phi_minus_betaj_A_j_interp[index] = poison;
+        sqrtg_Ax_interp[index]            = poison;
+        sqrtg_Ay_interp[index]            = poison;
+        sqrtg_Az_interp[index]            = poison;
 
         Ax_rhs[index]       = 0.0;
         Ay_rhs[index]       = 0.0;
@@ -153,13 +153,13 @@ int main(int argc, char **argv) {
 //          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][indexf(dirlength, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
-        interpolate_for_A_gauge_rhs(&gauge_vars, &gauge_rhs_vars);
+        interpolate_for_A_gauge_rhs_from_BSSN(&gauge_vars, &gauge_rhs_vars);
 
-        alpha_interp[index] = gauge_rhs_vars.alpha_interp;
-        alpha_sqrtg_Ax_interp[index] = gauge_rhs_vars.alpha_sqrtg_Ax_interp[0];
-        alpha_sqrtg_Ay_interp[index] = gauge_rhs_vars.alpha_sqrtg_Ay_interp[0];
-        alpha_sqrtg_Az_interp[index] = gauge_rhs_vars.alpha_sqrtg_Az_interp[0];
-        alpha_Phi_minus_betaj_A_j_interp[index] = gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[0];
+        lapse_interp[index] = gauge_rhs_vars.lapse_interp;
+        sqrtg_Ax_interp[index] = gauge_rhs_vars.sqrtg_Ax_interp[0];
+        sqrtg_Ay_interp[index] = gauge_rhs_vars.sqrtg_Ay_interp[0];
+        sqrtg_Az_interp[index] = gauge_rhs_vars.sqrtg_Az_interp[0];
+        lapse_Phi_minus_betaj_A_j_interp[index] = gauge_rhs_vars.lapse_Phi_minus_betaj_A_j_interp[0];
         shiftx_interp[index] = gauge_rhs_vars.shiftx_interp[0];
         shifty_interp[index] = gauge_rhs_vars.shifty_interp[0];
         shiftz_interp[index] = gauge_rhs_vars.shiftz_interp[0];
@@ -178,23 +178,23 @@ int main(int argc, char **argv) {
         //    where [gauge stuff] = -\partial_i (\alpha \Phi - \beta^j A_j)
         A_gauge_rhs_vars gauge_rhs_vars;
     
-        gauge_rhs_vars.alpha_interp = alpha_interp[index];
+        gauge_rhs_vars.lapse_interp = lapse_interp[index];
     
         gauge_rhs_vars.dxi[0] = dxinv[0];
         gauge_rhs_vars.dxi[1] = dxinv[1];
         gauge_rhs_vars.dxi[2] = dxinv[2];
     
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[0] = alpha_Phi_minus_betaj_A_j_interp[index];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[1] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i-1,j,k)];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[2] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j-1,k)];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[3] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j,k-1)];
+        gauge_rhs_vars.lapse_Phi_minus_betaj_A_j_interp[0] = lapse_Phi_minus_betaj_A_j_interp[index];
+        gauge_rhs_vars.lapse_Phi_minus_betaj_A_j_interp[1] = lapse_Phi_minus_betaj_A_j_interp[indexf(dirlength,i-1,j,k)];
+        gauge_rhs_vars.lapse_Phi_minus_betaj_A_j_interp[2] = lapse_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j-1,k)];
+        gauge_rhs_vars.lapse_Phi_minus_betaj_A_j_interp[3] = lapse_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j,k-1)];
     
-        gauge_rhs_vars.alpha_sqrtg_Ax_interp[0] = alpha_sqrtg_Ax_interp[index];
-        gauge_rhs_vars.alpha_sqrtg_Ay_interp[0] = alpha_sqrtg_Ay_interp[index];
-        gauge_rhs_vars.alpha_sqrtg_Az_interp[0] = alpha_sqrtg_Az_interp[index];
-        gauge_rhs_vars.alpha_sqrtg_Ax_interp[1] = alpha_sqrtg_Ax_interp[indexf(dirlength,i+1,j,k)];
-        gauge_rhs_vars.alpha_sqrtg_Ay_interp[1] = alpha_sqrtg_Ay_interp[indexf(dirlength,i,j+1,k)];
-        gauge_rhs_vars.alpha_sqrtg_Az_interp[1] = alpha_sqrtg_Az_interp[indexf(dirlength,i,j,k+1)];
+        gauge_rhs_vars.sqrtg_Ax_interp[0] = sqrtg_Ax_interp[index];
+        gauge_rhs_vars.sqrtg_Ay_interp[0] = sqrtg_Ay_interp[index];
+        gauge_rhs_vars.sqrtg_Az_interp[0] = sqrtg_Az_interp[index];
+        gauge_rhs_vars.sqrtg_Ax_interp[1] = sqrtg_Ax_interp[indexf(dirlength,i+1,j,k)];
+        gauge_rhs_vars.sqrtg_Ay_interp[1] = sqrtg_Ay_interp[indexf(dirlength,i,j+1,k)];
+        gauge_rhs_vars.sqrtg_Az_interp[1] = sqrtg_Az_interp[indexf(dirlength,i,j,k+1)];
     
         for(int iter=-2; iter<3; iter++) {
           const int indexx = indexf(dirlength,i+iter,j,     k     );
@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
                  "is up-to-date with current test version.\n");
 
   infile = fopen("ET_Legacy_induction_gauge_rhs_output_pert.bin", "rb");
-  check_file_was_successfully_open(infile, "phitilde_and_A_gauge_rhs_pert.bin");
+  check_file_was_successfully_open(infile, "ET_Legacy_induction_gauge_rhs_pert.bin");
 
   double *phitilde_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Ax_pert       = (double*) malloc(sizeof(double)*arraylength);
@@ -293,10 +293,10 @@ int main(int argc, char **argv) {
   free(betax); free(betay); free(betaz);
   free(phitilde);
   free(Ax); free(Ay); free(Az);
-  free(alpha_interp);
+  free(lapse_interp);
   free(shiftx_interp); free(shifty_interp); free(shiftz_interp);
-  free(alpha_Phi_minus_betaj_A_j_interp);
-  free(alpha_sqrtg_Ax_interp); free(alpha_sqrtg_Ay_interp); free(alpha_sqrtg_Az_interp);
+  free(lapse_Phi_minus_betaj_A_j_interp);
+  free(sqrtg_Ax_interp); free(sqrtg_Ay_interp); free(sqrtg_Az_interp);
   free(phitilde_rhs);
   free(Ax_rhs); free(Ay_rhs); free(Az_rhs);
   free(phitilde_trusted);

@@ -21,9 +21,9 @@ void calculate_phitilde_and_A_gauge_rhs(
   // \partial_t A_i = [reconstructed stuff] + [gauge stuff],
   //    where [gauge stuff] = -\partial_i (\alpha \Phi - \beta^j A_j)
   // - partial_i -> - (A_{i} - A_{i-1})/dX = (A_{i-1} - A_{i})/dX, for Ax
-  vars->A_x_gauge_rhs = vars->dxi[0]*(vars->alpha_Phi_minus_betaj_A_j_interp[1] - vars->alpha_Phi_minus_betaj_A_j_interp[0]);
-  vars->A_y_gauge_rhs = vars->dxi[1]*(vars->alpha_Phi_minus_betaj_A_j_interp[2] - vars->alpha_Phi_minus_betaj_A_j_interp[0]);
-  vars->A_z_gauge_rhs = vars->dxi[2]*(vars->alpha_Phi_minus_betaj_A_j_interp[3] - vars->alpha_Phi_minus_betaj_A_j_interp[0]);
+  vars->A_x_gauge_rhs = vars->dxi[0]*(vars->lapse_Phi_minus_betaj_A_j_interp[1] - vars->lapse_Phi_minus_betaj_A_j_interp[0]);
+  vars->A_y_gauge_rhs = vars->dxi[1]*(vars->lapse_Phi_minus_betaj_A_j_interp[2] - vars->lapse_Phi_minus_betaj_A_j_interp[0]);
+  vars->A_z_gauge_rhs = vars->dxi[2]*(vars->lapse_Phi_minus_betaj_A_j_interp[3] - vars->lapse_Phi_minus_betaj_A_j_interp[0]);
 
   // \partial_t psi6phi = [shift advection term] + \partial_j (\alpha \sqrt{\gamma} A^j)
   // Here we compute [shift advection term] = \partial_j (\beta^j psi6phi)
@@ -65,12 +65,12 @@ void calculate_phitilde_and_A_gauge_rhs(
   }
 
   // Next we add \partial_j (\alpha \sqrt{\gamma} A^j) to \partial_t psi6phi:
-  vars->phitilde_rhs+=vars->dxi[0]*(vars->alpha_sqrtg_Ax_interp[0] - vars->alpha_sqrtg_Ax_interp[1])
-                    + vars->dxi[1]*(vars->alpha_sqrtg_Ay_interp[0] - vars->alpha_sqrtg_Ay_interp[1])
-                    + vars->dxi[2]*(vars->alpha_sqrtg_Az_interp[0] - vars->alpha_sqrtg_Az_interp[1]);
+  vars->phitilde_rhs+=vars->dxi[0]*(vars->sqrtg_Ax_interp[0] - vars->sqrtg_Ax_interp[1])
+                    + vars->dxi[1]*(vars->sqrtg_Ay_interp[0] - vars->sqrtg_Ay_interp[1])
+                    + vars->dxi[2]*(vars->sqrtg_Az_interp[0] - vars->sqrtg_Az_interp[1]);
 
   // *GENERALIZED* LORENZ GAUGE:
   // Finally, add damping factor to \partial_t psi6phi
   //subtract lambda * alpha psi^6 Phi
-  vars->phitilde_rhs+=-Lorenz_damping_factor*vars->alpha_interp*vars->phitildex[2];
+  vars->phitilde_rhs+=-Lorenz_damping_factor*vars->lapse_interp*vars->phitildex[2];
 }

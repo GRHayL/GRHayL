@@ -22,6 +22,7 @@ typedef struct A_gauge_vars {
   double gupzz[2][2][2];
   double lapse[2][2][2];
   double psi[2][2][2];
+  double sqrtg[2][2][2];
   double shiftx[2][2][2];
   double shifty[2][2][2];
   double shiftz[2][2][2];
@@ -33,11 +34,11 @@ typedef struct A_gauge_vars {
 
 typedef struct A_gauge_rhs_vars {
   double dxi[3];
-  double alpha_interp;
-  double alpha_Phi_minus_betaj_A_j_interp[4]; // [i,j,k], [i-1,j,k], [i,j-1,k], [i,j,k-1]
-  double alpha_sqrtg_Ax_interp[2]; // [i,j,k], [i+1,j,  k  ]
-  double alpha_sqrtg_Ay_interp[2]; // [i,j,k], [i,  j+1,k  ]
-  double alpha_sqrtg_Az_interp[2]; // [i,j,k], [i,  j,  k+1]
+  double lapse_interp;
+  double lapse_Phi_minus_betaj_A_j_interp[4]; // [i,j,k], [i-1,j,k], [i,j-1,k], [i,j,k-1]
+  double sqrtg_Ax_interp[2]; // [i,j,k], [i+1,j,  k  ]
+  double sqrtg_Ay_interp[2]; // [i,j,k], [i,  j+1,k  ]
+  double sqrtg_Az_interp[2]; // [i,j,k], [i,  j,  k+1]
   double phitildex[5], shiftx_interp[5]; // [i-2,j,  k  ], [i-1,j,  k  ], [i,j,k], [i+1,j,  k  ], [i+2,j,  k  ]
   double phitildey[5], shifty_interp[5]; // [i,  j-2,k  ], [i,  j-1,k  ], [i,j,k], [i,  j+1,k  ], [i,  j+2,k  ]
   double phitildez[5], shiftz_interp[5]; // [i,  j,  k-2], [i,  j,  k-1], [i,j,k], [i,  j,  k+1], [i,  j,  k+2]
@@ -52,7 +53,11 @@ double HLL_flux(const A_no_gauge_vars *restrict vars);
 extern "C" {
 #endif
 
-void interpolate_for_A_gauge_rhs(
+void interpolate_for_A_gauge_rhs_from_ADM(
+      const A_gauge_vars *restrict gauge_vars,
+      A_gauge_rhs_vars *restrict gauge_rhs_vars );
+
+void interpolate_for_A_gauge_rhs_from_BSSN(
       const A_gauge_vars *restrict gauge_vars,
       A_gauge_rhs_vars *restrict gauge_rhs_vars );
 
