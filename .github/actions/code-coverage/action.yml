@@ -1,0 +1,19 @@
+name: code-coverage
+description: 'Uses gcovr and Codecov to generate code coverage report'
+
+runs:
+  using: "composite"
+  steps:
+    - if: runner.os == 'Linux'
+      run: |
+        sudo apt-get install gcovr
+        gcovr -r . --keep
+      shell: bash
+
+    - if: runner.os == 'MacOS'
+      run: |
+        brew install gcovr
+        gcovr -r . --keep
+      shell: bash
+
+    - uses: codecov/codecov-action@v3

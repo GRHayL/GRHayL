@@ -166,7 +166,6 @@ int main(int argc, char **argv) {
   fclose(inpert);
 
 
-#pragma omp parallel for
   for(int i=0;i<arraylength;i++) {
 
     // Define the various GRHayL structs for the unit tests

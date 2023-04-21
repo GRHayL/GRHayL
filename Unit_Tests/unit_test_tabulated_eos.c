@@ -36,7 +36,6 @@ int main(int argc, char **argv) {
   grhayl_info("Energy shift read in correctly\n");
 
   // Step 2: Begin test
-#pragma omp parallel for
   for(int i=0; i<eos.N_rho; i++) {
     const double logrho = eos.table_logrho[i];
     for(int j=0; j<eos.N_T; j++) {

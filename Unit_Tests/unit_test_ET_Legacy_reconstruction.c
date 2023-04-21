@@ -73,52 +73,51 @@ int main(int argc, char **argv) {
   check_file_was_successfully_open(inpert, "ET_Legacy_reconstruction_output_pert.bin");
 
   for(int flux_dirn = 0; flux_dirn<3; flux_dirn++) {
-  const int num_vars = 3;
+    const int num_vars = 3;
 
-  double *vflux[3] = {vx, vy, vz};
-  const int xdir = (flux_dirn==0);
-  const int ydir = (flux_dirn==1);
-  const int zdir = (flux_dirn==2);
+    double *vflux[3] = {vx, vy, vz};
+    const int xdir = (flux_dirn==0);
+    const int ydir = (flux_dirn==1);
+    const int zdir = (flux_dirn==2);
 
-  key  = fread(rhor_trusted  , sizeof(double), arraylength, infile);
-  key += fread(rhol_trusted  , sizeof(double), arraylength, infile);
-  key += fread(pressr_trusted, sizeof(double), arraylength, infile);
-  key += fread(pressl_trusted, sizeof(double), arraylength, infile);
-  key += fread(vxr_trusted   , sizeof(double), arraylength, infile);
-  key += fread(vxl_trusted   , sizeof(double), arraylength, infile);
-  key += fread(vyr_trusted   , sizeof(double), arraylength, infile);
-  key += fread(vyl_trusted   , sizeof(double), arraylength, infile);
-  key += fread(vzr_trusted   , sizeof(double), arraylength, infile);
-  key += fread(vzl_trusted   , sizeof(double), arraylength, infile);
+    key  = fread(rhor_trusted  , sizeof(double), arraylength, infile);
+    key += fread(rhol_trusted  , sizeof(double), arraylength, infile);
+    key += fread(pressr_trusted, sizeof(double), arraylength, infile);
+    key += fread(pressl_trusted, sizeof(double), arraylength, infile);
+    key += fread(vxr_trusted   , sizeof(double), arraylength, infile);
+    key += fread(vxl_trusted   , sizeof(double), arraylength, infile);
+    key += fread(vyr_trusted   , sizeof(double), arraylength, infile);
+    key += fread(vyl_trusted   , sizeof(double), arraylength, infile);
+    key += fread(vzr_trusted   , sizeof(double), arraylength, infile);
+    key += fread(vzl_trusted   , sizeof(double), arraylength, infile);
 
-  if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in comparison data. Please check that data\n"
-                 "is up-to-date with current test version.\n");
+    if(key != arraylength*10)
+      grhayl_error("An error has occured with reading in comparison data. Please check that data\n"
+                   "is up-to-date with current test version.\n");
 
-  key  = fread(rhor_pert  , sizeof(double), arraylength, inpert);
-  key += fread(rhol_pert  , sizeof(double), arraylength, inpert);
-  key += fread(pressr_pert, sizeof(double), arraylength, inpert);
-  key += fread(pressl_pert, sizeof(double), arraylength, inpert);
-  key += fread(vxr_pert   , sizeof(double), arraylength, inpert);
-  key += fread(vxl_pert   , sizeof(double), arraylength, inpert);
-  key += fread(vyr_pert   , sizeof(double), arraylength, inpert);
-  key += fread(vyl_pert   , sizeof(double), arraylength, inpert);
-  key += fread(vzr_pert   , sizeof(double), arraylength, inpert);
-  key += fread(vzl_pert   , sizeof(double), arraylength, inpert);
+    key  = fread(rhor_pert  , sizeof(double), arraylength, inpert);
+    key += fread(rhol_pert  , sizeof(double), arraylength, inpert);
+    key += fread(pressr_pert, sizeof(double), arraylength, inpert);
+    key += fread(pressl_pert, sizeof(double), arraylength, inpert);
+    key += fread(vxr_pert   , sizeof(double), arraylength, inpert);
+    key += fread(vxl_pert   , sizeof(double), arraylength, inpert);
+    key += fread(vyr_pert   , sizeof(double), arraylength, inpert);
+    key += fread(vyl_pert   , sizeof(double), arraylength, inpert);
+    key += fread(vzr_pert   , sizeof(double), arraylength, inpert);
+    key += fread(vzl_pert   , sizeof(double), arraylength, inpert);
 
-  if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in comparison data. Please check that data\n"
-                 "is up-to-date with current test version.\n");
+    if(key != arraylength*10)
+      grhayl_error("An error has occured with reading in comparison data. Please check that data\n"
+                   "is up-to-date with current test version.\n");
 
-  // These are set up to match the loops in the ET version of IllinoisGRMHD.
-  const int imin = 3;
-  const int jmin = 3;
-  const int kmin = 3;
-  const int imax = dirlength - 3 - !xdir;
-  const int jmax = dirlength - 3 - !ydir;
-  const int kmax = dirlength - 3 - !zdir;
+    // These are set up to match the loops in the ET version of IllinoisGRMHD.
+    const int imin = 3;
+    const int jmin = 3;
+    const int kmin = 3;
+    const int imax = dirlength - 3 - !xdir;
+    const int jmax = dirlength - 3 - !ydir;
+    const int kmax = dirlength - 3 - !zdir;
 
-#pragma omp parallel for
     for(int k=kmin; k<kmax; k++)
       for(int j=jmin; j<jmax; j++)
         for(int i=imin; i<imax; i++) {
@@ -207,9 +206,8 @@ int main(int argc, char **argv) {
                                                      relative_error(vzl_trusted[index], vzl_pert[index]));
     }
 
-  const int num_vars2 = 2;
+    const int num_vars2 = 2;
 
-#pragma omp parallel for
     for(int k=kmin; k<kmax; k++)
       for(int j=jmin; j<jmax; j++)
         for(int i=imin; i<imax; i++) {
