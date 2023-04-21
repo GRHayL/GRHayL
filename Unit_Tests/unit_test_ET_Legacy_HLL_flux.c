@@ -79,7 +79,6 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
   
-#pragma omp parallel for
   for(int k=1; k<dirlength; k++)
     for(int j=1; j<dirlength; j++)
       for(int i=1; i<dirlength; i++) {
@@ -119,7 +118,6 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-#pragma omp parallel for
   for(int k=2; k<dirlength-2; k++)
     for(int j=2; j<dirlength-2; j++)
       for(int i=2; i<dirlength-2; i++) {
@@ -199,7 +197,6 @@ void A_rhs_dir(const int dirlength,
   const int jmax = dirlength-2;
   const int kmax = dirlength-2;
 
-#pragma omp parallel for
   for(int k=2; k<kmax; k++)
     for(int j=2; j<jmax; j++)
       for(int i=2; i<imax; i++) {

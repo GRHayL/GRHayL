@@ -260,6 +260,47 @@ int main(int argc, char **argv) {
     enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics.failure_checker);
     compute_conservs_and_Tmunu(&params, &metric, &prims, &cons, &Tmunu);
 
+    // Here, we call the return_* functions and then repack the struct from that data. These functions are too
+    // small to need an individual test, and they are primarily used by Con2Prim anyways.
+    double rho_tmp, press_tmp, eps_tmp, vx_tmp, vy_tmp, vz_tmp, Bx_tmp, By_tmp, Bz_tmp, ent_tmp, Ye_tmp, temp_tmp;
+    double rhos_tmp, tau_tmp, Sx_tmp, Sy_tmp, Sz_tmp, ent_s_tmp, Ye_s_tmp;
+    double Ttt_tmp, Ttx_tmp, Tty_tmp, Ttz_tmp, Txx_tmp, Txy_tmp, Txz_tmp, Tyy_tmp, Tyz_tmp, Tzz_tmp;
+
+    return_primitives(&prims,
+                      &rho_tmp, &press_tmp, &eps_tmp,
+                      &vx_tmp, &vy_tmp, &vz_tmp,
+                      &Bx_tmp, &By_tmp, &Bz_tmp,
+                      &ent_tmp, &Ye_tmp, &temp_tmp);
+
+    return_conservatives(&cons,
+                         &rhos_tmp, &tau_tmp,
+                         &Sx_tmp, &Sy_tmp, &Sz_tmp,
+                         &ent_s_tmp, &Ye_s_tmp);
+
+    return_stress_energy(&Tmunu,
+                         &Ttt_tmp, &Ttx_tmp,
+                         &Tty_tmp, &Ttz_tmp,
+                         &Txx_tmp, &Txy_tmp,
+                         &Txz_tmp, &Tyy_tmp,
+                         &Tyz_tmp, &Tzz_tmp);
+
+    initialize_primitives(rho_tmp, press_tmp, eps_tmp,
+                          vx_tmp, vy_tmp, vz_tmp,
+                          Bx_tmp, By_tmp, Bz_tmp,
+                          ent_tmp, Ye_tmp, temp_tmp,
+                          &prims);
+
+    initialize_conservatives(rhos_tmp, tau_tmp,
+                             Sx_tmp, Sy_tmp, Sz_tmp,
+                             ent_s_tmp, Ye_s_tmp, &cons);
+
+    initialize_stress_energy(Ttt_tmp, Ttx_tmp,
+                             Tty_tmp, Ttz_tmp,
+                             Txx_tmp, Txy_tmp,
+                             Txz_tmp, Tyy_tmp,
+                             Tyz_tmp, Tzz_tmp,
+                             &Tmunu);
+
     // Now, we load the trusted/perturbed data for this index and validate the computed results.
     primitive_quantities prims_trusted, prims_pert;
     conservative_quantities cons_trusted, cons_pert;

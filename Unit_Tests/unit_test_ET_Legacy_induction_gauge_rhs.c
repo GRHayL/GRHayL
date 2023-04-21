@@ -78,7 +78,6 @@ int main(int argc, char **argv) {
   // contribution to the RHS before entering this function.
   const double poison = 1e300;
 
-#pragma omp parallel for
   for(int k=0; k<dirlength; k++)
     for(int j=0; j<dirlength; j++)
       for(int i=0; i<dirlength; i++) {
@@ -100,7 +99,6 @@ int main(int argc, char **argv) {
         phitilde_rhs[index] = poison;
   }
 
-#pragma omp parallel for
   for(int k=1; k<dirlength-1; k++)
     for(int j=1; j<dirlength-1; j++)
       for(int i=1; i<dirlength-1; i++) {
@@ -168,7 +166,6 @@ int main(int argc, char **argv) {
   const double dxinv[3] = {1.0/dX[0], 1.0/dX[1], 1.0/dX[2]};
 
   // This loop requires two additional ghostzones in every direction. Hence the following loop definition:
-#pragma omp parallel for
   for(int k=3; k<dirlength-3; k++)
     for(int j=3; j<dirlength-3; j++)
       for(int i=3; i<dirlength-3; i++) {
@@ -252,7 +249,6 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in perturbed data. Please check that comparison data\n"
                  "is up-to-date with current test version.\n");
 
-#pragma omp parallel for
   for(int k=3; k<dirlength-3; k++)
     for(int j=3; j<dirlength-3; j++)
       for(int i=3; i<dirlength-3; i++) {

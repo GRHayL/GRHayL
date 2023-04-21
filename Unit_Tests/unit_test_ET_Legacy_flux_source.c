@@ -1,5 +1,4 @@
 #include "unit_tests.h"
-#include "flux_source_unit_test.h"
 
 static inline void compute_h_and_cs2(struct eos_parameters const *restrict eos,
                                      primitive_quantities const *restrict prims,
@@ -32,7 +31,6 @@ static inline void calculate_face_value(
   const int ydir = (flux_dirn == 1);
   const int zdir = (flux_dirn == 2);
 
-#pragma omp parallel for
   for(int k=ghostzone-1; k<dirlength-(ghostzone-2); k++)
     for(int j=ghostzone-1; j<dirlength-(ghostzone-2); j++)
       for(int i=ghostzone-1; i<dirlength-(ghostzone-2); i++) {
@@ -172,7 +170,6 @@ int main(int argc, char **argv) {
                  "is up-to-date with current test version.\n");
 
   // Initialize rhs variables to 0 so we can safely use += operator
-#pragma omp parallel for
   for(int k=ghostzone; k<dirlength-ghostzone; k++)
     for(int j=ghostzone; j<dirlength-ghostzone; j++)
       for(int i=ghostzone; i<dirlength-ghostzone; i++) {
@@ -259,7 +256,6 @@ int main(int argc, char **argv) {
 
     // Upper bound includes 1 ghostzone for RHS calculation in following
     // loop.
-#pragma omp parallel for
     for(int k=ghostzone; k<dirlength-(ghostzone-1); k++)
       for(int j=ghostzone; j<dirlength-(ghostzone-1); j++)
         for(int i=ghostzone; i<dirlength-(ghostzone-1); i++) {
@@ -313,7 +309,6 @@ int main(int argc, char **argv) {
           S_z_flux[index]       = cons_fluxes.S_z;
     }
 
-#pragma omp parallel for
     for(int k=ghostzone; k<dirlength-ghostzone; k++)
       for(int j=ghostzone; j<dirlength-ghostzone; j++)
         for(int i=ghostzone; i<dirlength-ghostzone; i++) {
@@ -370,7 +365,6 @@ int main(int argc, char **argv) {
     }
   }
 
-#pragma omp parallel for
   for(int k=ghostzone; k<dirlength-ghostzone; k++)
     for(int j=ghostzone; j<dirlength-ghostzone; j++)
       for(int i=ghostzone; i<dirlength-ghostzone; i++) {
@@ -453,7 +447,6 @@ int main(int argc, char **argv) {
 
   fclose(outfile);
 
-#pragma omp parallel for
   for(int k=ghostzone; k<dirlength-ghostzone; k++)
     for(int j=ghostzone; j<dirlength-ghostzone; j++)
       for(int i=ghostzone; i<dirlength-ghostzone; i++) {
