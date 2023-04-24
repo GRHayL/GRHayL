@@ -90,3 +90,33 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_tabulated_eos simple_table.h5
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+
+  c2p-edge-cases:
+    strategy: 
+      fail-fast: false
+      matrix: 
+        test-function: [apply_inequality_fixes_edge_cases]
+        os: [ubuntu-22.04, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'intel'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'intel'
+      - name: Copy test data to working directory
+        run: |
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_input.bin -o ${{ matrix.test-function }}_input.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_output.bin -o ${{ matrix.test-function }}_output.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_output_pert.bin -o ${{ matrix.test-function }}_output_pert.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5 -o ${{ matrix.test-function }}.md5
+          md5sum -c ${{ matrix.test-function }}.md5
+      - name: Run ET IllinoisGRMHD unit test for ${{ matrix.test-function }}
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
+      - name: Generate coverage report
+        uses: ./.github/actions/code-coverage
