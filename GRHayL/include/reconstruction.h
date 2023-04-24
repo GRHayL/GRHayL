@@ -48,6 +48,38 @@ void steepen_rhor_rhol(const double rho[5], const double P[5], const double Gamm
                               double *restrict rhor, double *restrict rhol);
 void flatten_and_monotonize_Ur_and_Ul(const double U, const double ftilde, double *restrict Ur, double *restrict Ul);
 
+double grhayl_minmod(
+        const double a,
+        const double b);
+
+double grhayl_maxmod(
+        const double a,
+        const double b);
+
+void grhayl_minmod_reconstruction(
+      const double U_m2,
+      const double U_m1,
+      const double U,
+      const double U_p1,
+      double *restrict Ur,
+      double *restrict Ul);
+
+void grhayl_mc_reconstruction(
+      const double U_m2,
+      const double U_m1,
+      const double U,
+      const double U_p1,
+      double *restrict Ur,
+      double *restrict Ul);
+
+void grhayl_superbee_reconstruction(
+      const double U_m2,
+      const double U_m1,
+      const double U,
+      const double U_p1,
+      double *restrict Ur,
+      double *restrict Ul);
+
 #ifdef __cplusplus
 }
 #endif
