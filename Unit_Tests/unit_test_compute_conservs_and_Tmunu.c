@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
     metric_quantities metric;
     primitive_quantities prims;
     conservative_quantities cons;
-    stress_energy Tmunu;
+    stress_energy Tmunu, Tmunu_alt;
 
     // Read initial data accompanying trusted output
     initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
@@ -191,6 +191,10 @@ int main(int argc, char **argv) {
 
     //This computes the conservatives and stress-energy tensor from the new primitives
     compute_conservs_and_Tmunu(&params, &metric, &prims, &cons, &Tmunu);
+
+    //This uses the standalone compute_TDNmunu() function to compute the same stress-energy
+    // tensor, since compute_conservs_and_Tmunu() doesn't use it.
+    compute_TDNmunu(&eos, &metric, &prims, &Tmunu_alt);
 
     conservative_quantities cons_trusted, cons_pert;
     stress_energy Tmunu_trusted, Tmunu_pert;
@@ -219,6 +223,7 @@ int main(int argc, char **argv) {
 
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    validate_stress_energy(&Tmunu_trusted, &Tmunu_alt, &Tmunu_pert);
   }
   grhayl_info("compute_conservs_and_Tmunu function test has passed!\n");
   free(lapse);
