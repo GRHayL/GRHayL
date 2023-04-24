@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
       }
     } else {
       diagnostics.failure_checker+=1;
-      reset_prims_to_atmosphere(&params, &eos, &metric, &prims);
+      reset_prims_to_atmosphere(&eos, &prims);
       //TODO: Validate reset? (rhob press v)
       printf("Negative rho_* triggering atmospheric reset.\n");
     } // if rho_star > 0

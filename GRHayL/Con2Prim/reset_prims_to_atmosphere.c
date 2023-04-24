@@ -10,10 +10,9 @@
  * Outputs     : prims          - returns with all primitives set to atmospheric values
  */
 
-void reset_prims_to_atmosphere( const GRHayL_parameters *restrict params,
-                                const eos_parameters *restrict eos,
-                                const metric_quantities *restrict metric,
-                                primitive_quantities *restrict prims) {
+void reset_prims_to_atmosphere(
+      const eos_parameters *restrict eos,
+      primitive_quantities *restrict prims) {
 
   // Just a simple reset to atmospheric values.
   // Velocities are set to zero. Keeping it
@@ -26,13 +25,7 @@ void reset_prims_to_atmosphere( const GRHayL_parameters *restrict params,
   prims->Y_e         = eos->Ye_atm;
   prims->temperature = eos->T_atm;
 
-  if(params->Cupp_Fix) { //For atmosphere, ET IGM sets v=-beta, Leo's IGM sets v=0
-    prims->vx = 0.0;
-    prims->vy = 0.0;
-    prims->vz = 0.0;
-  } else {
-    prims->vx = -metric->betax;
-    prims->vy = -metric->betay;
-    prims->vz = -metric->betaz;
-  }
+  prims->vx = 0.0;
+  prims->vy = 0.0;
+  prims->vz = 0.0;
 }

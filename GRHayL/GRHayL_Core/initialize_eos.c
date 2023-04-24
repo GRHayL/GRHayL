@@ -15,33 +15,14 @@
  *                     initialized
  */
 void initialize_eos_functions(
-    grhayl_eos_t const eos_type,
-    eos_parameters *restrict eos ) {
+      grhayl_eos_t const eos_type,
+      eos_parameters *restrict eos) {
 
   // Step 1: Hybrid EOS functions (always available)
-  eos->hybrid_find_polytropic_index            = &NRPyEOS_find_polytropic_index;
-  eos->hybrid_get_K_and_Gamma                  = &NRPyEOS_get_K_and_Gamma;
-  eos->hybrid_set_K_ppoly_and_eps_integ_consts = &NRPyEOS_set_K_ppoly_and_eps_integ_consts;
-  eos->hybrid_compute_P_cold                   = &NRPyEOS_compute_P_cold;
-  eos->hybrid_compute_P_cold_and_eps_cold      = &NRPyEOS_compute_P_cold_and_eps_cold;
-  eos->hybrid_compute_entropy_function         = &NRPyEOS_compute_entropy_function;
+  NRPyEOS_initialize_hybrid_functions(eos);
 
   // Step 2: Tabulated EOS functions (always available)
-  eos->tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;
-  eos->tabulated_free_memory                            = &NRPyEOS_free_memory;
-  eos->tabulated_compute_P_from_T                       = &NRPyEOS_P_from_rho_Ye_T;
-  eos->tabulated_compute_eps_from_T                     = &NRPyEOS_eps_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_from_T                   = &NRPyEOS_P_and_eps_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_S_from_T                 = &NRPyEOS_P_eps_and_S_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_cs2_from_T               = &NRPyEOS_P_eps_and_cs2_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_S_cs2_from_T             = &NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_depsdT_from_T            = &NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T;
-  eos->tabulated_compute_P_eps_muhat_mue_mup_mun_from_T = &NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T;
-  eos->tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = &NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T;
-  eos->tabulated_compute_P_T_from_eps                   = &NRPyEOS_P_and_T_from_rho_Ye_eps;
-  eos->tabulated_compute_P_S_depsdT_T_from_eps          = &NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps;
-  eos->tabulated_compute_eps_S_T_from_P                 = &NRPyEOS_eps_S_and_T_from_rho_Ye_P;
-  eos->tabulated_compute_P_eps_T_from_S                 = &NRPyEOS_P_eps_and_T_from_rho_Ye_S;
+  NRPyEOS_initialize_tabulated_functions(eos);
 
   // Step 3: General functions (same interface for all EOSs)
   if( eos_type == grhayl_eos_hybrid ) {
