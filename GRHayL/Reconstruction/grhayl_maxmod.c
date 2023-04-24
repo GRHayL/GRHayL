@@ -19,7 +19,7 @@ double grhayl_maxmod(const double a,
 
   const double ab = a*b;
 
-  if(      (fabs(a) >= fabs(b)) && (ab > 0)) return a;
-  else if( (fabs(b) >  fabs(a)) && (ab > 0)) return b;
-  else                                       return 0.;
+  if(      (fabs(a) > fabs(b)) && (ab > 0)) return a;
+  else if( (fabs(b) > fabs(a)) && (ab > 0)) return b;
+  else                                      return 0.;
 }
