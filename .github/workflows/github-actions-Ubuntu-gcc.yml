@@ -95,7 +95,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [apply_inequality_fixes]
+        test-function: [apply_inequality_fixes_edge_cases]
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 
