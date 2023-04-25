@@ -189,10 +189,10 @@ int main(int argc, char **argv) {
                       &prims);
     prims.u0 = u0[i];
 
-    //This computes the conservatives and stress-energy tensor from the new primitives
+    // This computes the conservatives and stress-energy tensor from the new primitives
     compute_conservs_and_Tmunu(&params, &metric, &prims, &cons, &Tmunu);
 
-    //This uses the standalone compute_TDNmunu() function to compute the same stress-energy
+    // This uses the standalone compute_TDNmunu() function to compute the same stress-energy
     // tensor, since compute_conservs_and_Tmunu() doesn't use it.
     compute_TDNmunu(&eos, &metric, &prims, &Tmunu_alt);
 

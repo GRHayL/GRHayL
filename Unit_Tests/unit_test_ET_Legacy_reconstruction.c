@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
                          "  rel.err. %.14e %.14e\n", rhol_trusted[index], rhol, rhol_pert[index],
                                                      relative_error(rhol_trusted[index], rhol),
                                                      relative_error(rhol_trusted[index], rhol_pert[index]));
-          if( validate(pressr_trusted[index], pressl, pressl_pert[index]) )
+          if( validate(pressl_trusted[index], pressl, pressl_pert[index]) )
             grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable press_l.\n"
                          "  press_l trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", pressl_trusted[index], pressl, pressl_pert[index],
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
           if( validate(vxl_trusted[index], var_datal[0], vxl_pert[index]) )
             grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_l.\n"
                          "  vx_l trusted %.14e computed %.14e perturbed %.14e\n"
-                         "  rel.err. %.14e %.14e\n", vxl_trusted[index], var_datar[0], vxl_pert[index],
+                         "  rel.err. %.14e %.14e\n", vxl_trusted[index], var_datal[0], vxl_pert[index],
                                                      relative_error(vxl_trusted[index], var_datal[0]),
                                                      relative_error(vxl_trusted[index], vxl_pert[index]));
           if( validate(vyl_trusted[index], var_datal[1], vyl_pert[index]) )
@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
           if( validate(vxl_trusted[index], var_datal[0], vxl_pert[index]) )
             grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_l.\n"
                          "  vx_l trusted %.14e computed %.14e perturbed %.14e\n"
-                         "  rel.err. %.14e %.14e\n", vxl_trusted[index], var_datar[0], vxl_pert[index],
+                         "  rel.err. %.14e %.14e\n", vxl_trusted[index], var_datal[0], vxl_pert[index],
                                                      relative_error(vxl_trusted[index], var_datal[0]),
                                                      relative_error(vxl_trusted[index], vxl_pert[index]));
           if( validate(vzl_trusted[index], var_datal[1], vzl_pert[index]) )

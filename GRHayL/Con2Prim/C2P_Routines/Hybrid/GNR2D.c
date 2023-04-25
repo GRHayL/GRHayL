@@ -77,16 +77,11 @@ int general_newton_raphson(
 //    return(2);
 //  }
 
-  if( fabs(errx) <= NEWT_TOL ) {
-    return(0);
-  } else if( (fabs(errx) <= MIN_NEWT_TOL) && (fabs(errx) > NEWT_TOL) ) {
+  if( fabs(errx) <= NEWT_TOL || fabs(errx) <= MIN_NEWT_TOL) {
     return(0);
   } else {
     return(1);
   }
-
-  return(0);
-
 }
 
 void validate_x(double x[2], const double x0[2]) {
