@@ -31,6 +31,6 @@ void grhayl_mc_reconstruction(const double U_m2,
   sigma_i   = grhayl_minmod(0.5*(U_p1 - U_m1), 2*tmp_sigma_i);
   sigma_im1 = grhayl_minmod(0.5*(U    - U_m2), 2*tmp_sigma_im1);
 
-  *Ul = U    - 0.5*sigma_i;
-  *Ur = U_m1 + 0.5*sigma_im1;
+  *Ur = U    - 0.5*sigma_i;
+  *Ul = U_m1 + 0.5*sigma_im1;
  }

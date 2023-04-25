@@ -36,6 +36,6 @@ void grhayl_superbee_reconstruction(const double U_m2,
   sigma_i   = grhayl_maxmod(sigma_i_1,   sigma_i_2);
   sigma_im1 = grhayl_maxmod(sigma_im1_1, sigma_im1_2);
 
-  *Ul = U    - 0.5*sigma_i;
-  *Ur = U_m1 + 0.5*sigma_im1;
+  *Ur = U    - 0.5*sigma_i;
+  *Ul = U_m1 + 0.5*sigma_im1;
  }
