@@ -58,9 +58,3 @@ runs:
     - if: runner.os == 'MacOS' && inputs.compiler == 'clang'
       run: brew update && brew install llvm@14 hdf5 md5sha1sum
       shell: bash
-    - run: |
-        # Now install meson and ninja
-        python --version
-        python -m pip install -U pip
-        python -m pip install meson ninja
-      shell: bash
