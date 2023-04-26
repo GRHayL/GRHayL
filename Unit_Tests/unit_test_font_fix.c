@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
                       entropy_pert[i], Y_e_pert[i], temperature_pert[i],
                       &prims_pert);
 
-    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims_guess, &prims_pert);
+    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
   }
   grhayl_info("font_fix function test has passed!\n");
   free(lapse);

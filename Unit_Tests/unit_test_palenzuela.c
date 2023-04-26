@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
                     Psi6threshold,
                     update_Tmunu,
                     1 /*Cupp Fix*/,
+                    0.0 /*Lorenz_damping_factor*/,
                     &params);
 
   eos_parameters eos;
@@ -125,7 +126,7 @@ int main(int argc, char **argv) {
                             Bx, By, Bz,
                             xent, xye, xtemp,
                             &prims_orig);
-      limit_v_and_compute_u0(&eos, &metric, &prims_orig, &diagnostics);
+      limit_v_and_compute_u0(&eos, &metric, &prims_orig, &diagnostics.failure_checker);
 
       // Set prim guesses
       primitive_quantities prims;
@@ -139,7 +140,7 @@ int main(int argc, char **argv) {
       // Compute conserved variables and Tmunu
       conservative_quantities cons;
       __attribute__((unused)) stress_energy dummy;
-      compute_conservs_and_Tmunu(&params, &eos, &metric, &prims_orig, &cons, &dummy);
+      compute_conservs_and_Tmunu(&params, &metric, &prims_orig, &cons, &dummy);
 
       // Undensitize the conserved variables
       conservative_quantities cons_undens;

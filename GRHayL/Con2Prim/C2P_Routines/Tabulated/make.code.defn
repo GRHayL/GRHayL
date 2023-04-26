@@ -1,1 +1,6 @@
-SRCS = con2prim_Noble2D_Tab.c Tabulated_CerdaDuran2D.c
+#! INCS = roots.h utils.h
+SUBDIRS = Newman1D Palenzuela1D
+
+SRCS = brent.c                  \
+       Tabulated_Multi_Method.c \
+       toms748.c

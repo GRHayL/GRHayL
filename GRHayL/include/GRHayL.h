@@ -57,6 +57,7 @@ void initialize_GRHayL(
       const double psi6threshold,
       const bool update_Tmunu,
       const bool Cupp_Fix,
+      const double Lorenz_damping_factor,
       GRHayL_parameters *restrict params);
 
 //--------------------------------------------------

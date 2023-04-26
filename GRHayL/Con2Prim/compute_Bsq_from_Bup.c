@@ -1,7 +1,6 @@
 #include "con2prim.h"
 
-double
-compute_Bsq_from_Bup(
+double compute_Bsq_from_Bup(
       const metric_quantities *restrict metric,
       const double *restrict Bup ) {
 
