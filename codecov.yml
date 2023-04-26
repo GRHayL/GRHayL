@@ -1,3 +1,9 @@
+###################################################################
+# Important! Run the following command after any changes to this file.
+# If it fails, fix it before pushing!
+# curl -X POST --data-binary @codecov.yml https://codecov.io/validate
+###################################################################
+
 #coverage:
 #  status:
 #    project:
@@ -9,39 +15,39 @@ ignore:
   - "Unit_Tests"
   - "GRHayL/include/unit_tests.h"
 
-#component_management:
-#  default_rules:  # default rules that will be inherited by all components
-#    statuses:
-#      - type:  # in this case every component that doesn't have a status defined will have a project type one
-#        target: auto
-#        branches:
-#          - "!main"
-#  individual_components:
-#    - component_id: grhayl_core # this is an identifier that should not be changed
-#      name: core # this is a display name, and can be changed freely
-#      paths:
-#        - GRHayL/GRHayL_Core/**
-#    - component_id: gem_con2prim
-#      name: con2prim
-#      paths:
-#        - GRHayL/Con2Prim/**
-#    - component_id: gem_eos
-#      name: EOS
-#      paths:
-#        - GRHayL/EOS/**
-#    - component_id: gem_flux_source
-#      name: flux_source
-#      paths:
-#        - GRHayL/Flux_Source/**
-#    - component_id: gem_induction
-#      name: induction
-#      paths:
-#        - GRHayL/Induction/**
-#    - component_id: gem_neutrinos
-#      name: neutrinos
-#      paths:
-#        - GRHayL/Neutrinos/**
-#    - component_id: gem_reconstruction
-#      name: reconstruction
-#      paths:
-#        - GRHayL/Reconstruction/**
+component_management:
+  default_rules:  # default rules that will be inherited by all components
+    statuses:
+      - type: project # in this case every component that doesn't have a status defined will have a project type one
+        target: auto
+        branches:
+          - "!main"
+  individual_components:
+    - component_id: grhayl_core # this is an identifier that should not be changed
+      name: grhayl_core # this is a display name, and can be changed freely
+      paths:
+        - GRHayL/GRHayL_Core/**
+    - component_id: gem_con2prim
+      name: con2prim
+      paths:
+        - GRHayL/Con2Prim/**
+    - component_id: gem_eos
+      name: EOS
+      paths:
+        - GRHayL/EOS/**
+    - component_id: gem_flux_source
+      name: flux_source
+      paths:
+        - GRHayL/Flux_Source/**
+    - component_id: gem_induction
+      name: induction
+      paths:
+        - GRHayL/Induction/**
+    - component_id: gem_neutrinos
+      name: neutrinos
+      paths:
+        - GRHayL/Neutrinos/**
+    - component_id: gem_reconstruction
+      name: reconstruction
+      paths:
+        - GRHayL/Reconstruction/**
