@@ -2,13 +2,6 @@
 
 int main(int argc, char **argv) {
 
-  // This section sets up the initial parameters that would normally
-  // be provided by the simulation.
-  const int backup_routine[3] = {None,None,None};
-  const bool calc_prims_guess = true;
-  const double Psi6threshold = 1e100;
-  const int update_Tmunu = 1;
-
   const int neos = 1;
   const double W_max = 10.0;
   const double rho_b_min = 1e-12;
@@ -18,50 +11,90 @@ int main(int argc, char **argv) {
   const double Gamma_ppoly[1] = {2.0};
   const double k_ppoly0 = 1.0;
 
-  // Here, we initialize the structs that are (usually) static during a simulation.
-  GRHayL_parameters params;
-  initialize_GRHayL(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
-                    Psi6threshold, update_Tmunu, 1 /*Cupp Fix*/, 0.0 /*Lorenz damping factor*/, &params);
+  eos_parameters hybrid_eos;
+  initialize_hybrid_eos_functions_and_params(
+      W_max,
+      rho_b_min, rho_b_min, rho_b_max,
+      neos, rho_ppoly, Gamma_ppoly,
+      k_ppoly0, Gamma_th,
+      &hybrid_eos);
 
-  eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  // TODO: we should add a simple table for tests like this
+  //const double Ye_min = 1e-12;
+  //const double T_min = 1e-12;
+  //const double Ye_max = 1e300;
+  //const double T_max = 1e300;
+  //eos_parameters tabulated_eos;
+  //initialize_tabulated_eos_functions_and_params(
+  //    W_max,
+  //    rho_b_min, rho_b_min, rho_b_max,
+  //    Ye_min, Ye_min, Ye_max,
+  //    T_min, T_min, T_max,
+  //    &tabulated_eos);
 
   // First test: reset_prims_to_atmosphere() function
+  // Function just sets data to eos data, so no need
+  // to store pre-computed comparison data
   primitive_quantities prims;
 
-  // poison initial primitive data so reset is obvious
-  const double poison = 0.0/0.0;
-  prims.rho = poison;
-  prims.press = poison;
-  prims.vx = poison;
-  prims.vy = poison;
-  prims.vz = poison;
-  prims.eps = poison;
-  prims.entropy = poison;
-  prims.Y_e = poison;
-  prims.temperature = poison;
+  for(int eos_it=0; eos_it<2; eos_it++) {
+    // poison initial primitive data so reset is obvious
+    const double poison = 0.0/0.0;
+    prims.rho = poison;
+    prims.press = poison;
+    prims.vx = poison;
+    prims.vy = poison;
+    prims.vz = poison;
+    prims.eps = poison;
+    prims.entropy = poison;
+    prims.Y_e = poison;
+    prims.temperature = poison;
 
-  reset_prims_to_atmosphere(&eos, &prims);
+    eos_parameters eos;
+    if(eos_it==0) {
+      eos = hybrid_eos;
 
-  // Function just sets data to eos data
-  if(prims.rho         != eos.rho_atm
-  || prims.press       != eos.press_atm
-  || prims.eps         != eos.eps_atm
-  || prims.entropy     != eos.entropy_atm
-  || prims.Y_e         != eos.Ye_atm
-  || prims.temperature != eos.T_atm
-  || prims.vx          != 0.0
-  || prims.vy          != 0.0
-  || prims.vz          != 0.0)
-    grhayl_error("grhayl_core_test_suite has failed for reset_prims_to_atmosphere().\n"
-                 "  Struct output: %e %e %e %e %e %e %e %e %e\n"
-                 "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
-                 prims.rho, prims.press, prims.eps, prims.entropy, prims.Y_e,
-                 prims.temperature, prims.vx, prims.vy, prims.vz,
-                 eos.rho_atm, eos.press_atm, eos.eps_atm, eos.entropy_atm, eos.Ye_atm, eos.T_atm, 0.0, 0.0, 0.0);
+      reset_prims_to_atmosphere(&eos, &prims);
+
+      if(prims.rho         != eos.rho_atm
+      || prims.press       != eos.press_atm
+      || prims.vx          != 0.0
+      || prims.vy          != 0.0
+      || prims.vz          != 0.0
+      || prims.eps         != eos.eps_atm
+      || prims.entropy     != eos.entropy_atm)
+        grhayl_error("grhayl_core_test_suite has failed for reset_prims_to_atmosphere() with hybrid EOS.\n"
+                     "  rho_b, pressure, vx, vy, vz, epsilon, entropy\n"
+                     "  Struct output: %e %e %e %e %e %e %e %e %e\n"
+                     "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
+                     prims.rho, prims.press, prims.vx, prims.vy, prims.vz, 
+                     prims.eps, prims.entropy, prims.Y_e, prims.temperature,
+                     eos.rho_atm, eos.press_atm, 0.0, 0.0, 0.0, eos.eps_atm,
+                     eos.entropy_atm, eos.Ye_atm, eos.T_atm);
+  //  } else if(eos_it==0) {
+  //    eos = tabulated_eos;
+
+  //    reset_prims_to_atmosphere(&eos, &prims);
+
+  //    if(prims.rho         != eos.rho_atm
+  //    || prims.press       != eos.press_atm
+  //    || prims.eps         != eos.eps_atm
+  //    || prims.entropy     != eos.entropy_atm
+  //    || prims.Y_e         != eos.Ye_atm
+  //    || prims.temperature != eos.T_atm
+  //    || prims.vx          != 0.0
+  //    || prims.vy          != 0.0
+  //    || prims.vz          != 0.0)
+  //      grhayl_error("grhayl_core_test_suite has failed for reset_prims_to_atmosphere() with tabulated EOS.\n"
+  //                   "  rho_b, pressure, vx, vy, vz, epsilon, entropy, Y_e, temperature\n"
+  //                   "  Struct output: %e %e %e %e %e %e %e %e %e\n"
+  //                   "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
+  //                   prims.rho, prims.press, prims.vx, prims.vy, prims.vz, 
+  //                   prims.eps, prims.entropy, prims.Y_e, prims.temperature,
+  //                   eos.rho_atm, eos.press_atm, 0.0, 0.0, 0.0, eos.eps_atm,
+  //                   eos.entropy_atm, eos.Ye_atm, eos.T_atm);
+    }
+  }
 
   // Second test: GRHayL_enforce_detgtij_and_initialize_metric() function
   // Valid metrics should return near-identical (round-off level) metrics
