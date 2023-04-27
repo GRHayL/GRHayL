@@ -193,8 +193,15 @@ int main(int argc, char **argv) {
     if(cons.rho > 0.0) {
 
       //This applies the inequality (or "Faber") fixes on the conservatives
-      if(eos.eos_type == 0) //Hybrid-only
-        apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+      if(eos.eos_type == 0) { //Hybrid-only
+        if(index == arraylength-2 || index == arraylength-1) {
+          params.psi6threshold = 1e-1; // Artificially triggering fix
+          apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+          params.psi6threshold = Psi6threshold;
+        } else {
+          apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+        }
+      }
 
       // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
       undensitize_conservatives(&metric, &cons, &cons_undens);
@@ -207,20 +214,20 @@ int main(int argc, char **argv) {
       /*************************************************************/
 
       /********** Artificial Font fix for code comparison **********
-      These two points correspond to the last two elements of the edge
+      This point corresponds to the second-to-last element of the edge
       cases for apply_inequality_fixes function. Due to improvements
       in the Noble2D routine, the GRHayL code doesn't trigger font
-      font for these. This is also true for several of the more
-      'physically motivated' indices, but the edge case data isn't
-      constructed to be physically reasonable, causing the font fix
-      to significantly affect the results. For the normal data, the
+      fix while the old code does. This is also true for several of
+      the more 'physically motivated' indices, but the edge case data
+      isn't constructed to be physically reasonable, causing the font
+      fix to significantly affect the results. For the normal data, the
       font fix data from IllinoisGRMHD and Noble2D data from GRHayL
       agree within tolerance, further validating the changes to Noble2D.
       Since this data doesn't match due to the code changing for the
       better, we just have to manually trigger font fix to reproduce
       the behavior of IllinoisGRMHD.
       **************************************************************/
-      if(index==arraylength-2 || index==arraylength-1)
+      if(index==arraylength-2)
         check = font_fix(&params, &eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
 
       if(check==0) {
