@@ -130,7 +130,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [unit_test_minmod_reconstruction, unit_test_mc_reconstruction, unit_test_superbee_reconstruction]
+        test-function: [minmod_reconstruction, mc_reconstruction, superbee_reconstruction]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
