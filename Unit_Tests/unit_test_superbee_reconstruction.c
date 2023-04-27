@@ -16,8 +16,8 @@ int main(int argc, char **argv) {
                                              neos, rho_ppoly_in, Gamma_ppoly_in,
                                              k_ppoly0, Gamma_th, &eos);
 
-  FILE* infile = fopen("unit_test_superbee_reconstruction_input.bin", "rb");
-  check_file_was_successfully_open(infile, "unit_test_superbee_reconstruction_input.bin");
+  FILE* infile = fopen("superbee_reconstruction_input.bin", "rb");
+  check_file_was_successfully_open(infile, "superbee_reconstruction_input.bin");
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
@@ -62,8 +62,8 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen("unit_test_superbee_reconstruction_output.bin","rb");
-  check_file_was_successfully_open(infile, "unit_test_superbee_reconstruction_output.bin");
+  infile = fopen("superbee_reconstruction_output.bin","rb");
+  check_file_was_successfully_open(infile, "superbee_reconstruction_output.bin");
   key  = fread(rhor_trusted  , sizeof(double), arraylength, infile);
   key += fread(rhol_trusted  , sizeof(double), arraylength, infile);
   key += fread(pressr_trusted, sizeof(double), arraylength, infile);
@@ -80,8 +80,8 @@ int main(int argc, char **argv) {
     grhayl_error("An error has occured with reading in comparison data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  FILE* inpert = fopen("unit_test_superbee_reconstruction_output_pert.bin","rb");
-  check_file_was_successfully_open(inpert, "unit_test_superbee_reconstruction_output_pert.bin");
+  FILE* inpert = fopen("superbee_reconstruction_output_pert.bin","rb");
+  check_file_was_successfully_open(inpert, "superbee_reconstruction_output_pert.bin");
 
   key  = fread(rhor_pert  , sizeof(double), arraylength, inpert);
   key += fread(rhol_pert  , sizeof(double), arraylength, inpert);
