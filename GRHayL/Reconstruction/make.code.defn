@@ -7,4 +7,9 @@ SRCS = compute_UrUl_onevar.c              \
        simple_ppm.c                       \
        simple_ppm_no_rho_P.c              \
        slope_limit.c                      \
-       steepen_rhor_rhol.c
+       steepen_rhor_rhol.c                \
+       grhayl_minmod.c                    \
+       grhayl_maxmod.c                    \
+       grhayl_minmod_reconstruction.c     \
+       grhayl_mc_reconstruction.c         \
+       grhayl_superbee_reconstruction.c   \
