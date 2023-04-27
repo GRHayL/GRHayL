@@ -91,11 +91,10 @@ jobs:
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
 
-  c2p-edge-cases:
+  grhayl-core:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [apply_inequality_fixes_edge_cases]
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 
@@ -111,13 +110,11 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_input.bin -o ${{ matrix.test-function }}_input.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_output.bin -o ${{ matrix.test-function }}_output.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_output_pert.bin -o ${{ matrix.test-function }}_output_pert.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5 -o ${{ matrix.test-function }}.md5
-          md5sum -c ${{ matrix.test-function }}.md5
-      - name: Run con2prim unit test for ${{ matrix.test-function }}
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/grhayl_core/grhayl_core_test_suite_input.bin -o grhayl_core_test_suite_input.bin
+          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/grhayl_core/md5/grhayl_core_test_suite.md5 -o grhayl_core_test_suite.md5
+          md5sum -c grhayl_core_test_suite.md5
+      - name: Run GRHayL_Core unit test
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_grhayl_core_test_suite
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
 

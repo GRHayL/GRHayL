@@ -46,6 +46,6 @@ void GRHayL_enforce_detgtij_and_initialize_metric(
 
   if(gtijdet<0.0) grhayl_warn(
                       "WARNING: det[3-metric]<0.0. Hopefully this is occurring in gz's! "
-                      "gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e",
+                      "gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e\n",
   			     gxx, gxy, gxz, gyy, gyz, gzz, gtxx, gtxy, gtxz, gtyy, gtyz, gtzz, metric->gijdet, gtijdet);
 }

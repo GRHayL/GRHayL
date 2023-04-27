@@ -53,9 +53,7 @@ extern "C" {
 #endif
 
 void reset_prims_to_atmosphere(
-      const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
       primitive_quantities *restrict prims);
 
 //--------- Initialization routines ----------------

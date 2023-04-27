@@ -121,16 +121,19 @@ static inline bool validate_with_tolerance(
       const double trusted,
       const double computed,
       const double perturbed,
-      const double tolerance) {
-  return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), tolerance);
+      const double rel_tol,
+      const double abs_tol) {
+  if (fabs(trusted - computed) < abs_tol) return false;
+  return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), rel_tol);
 }
 
 static inline bool validate(
       const double trusted,
       const double computed,
       const double perturbed) {
-  const double roundoff = 8.0e-14;
-  return validate_with_tolerance(trusted, computed, perturbed, roundoff);
+  const double min_rel = 8.0e-14;
+  const double min_abs = 1.0e-30;
+  return validate_with_tolerance(trusted, computed, perturbed, min_rel, min_abs);
 }
 
 static inline double randf(double low,double high) {

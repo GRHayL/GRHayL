@@ -26,7 +26,7 @@ int font_fix(
    ************************/
   int check = font_fix_hybrid_EOS(eos, metric, cons, prims, &u_xl, &u_yl, &u_zl);
   diagnostics->failure_checker+=10000;
-  diagnostics->font_fixes++;
+  diagnostics->font_fixes=1;
 
   //Translate to HARM primitive now:
   double utcon1 = metric->adm_gupxx*u_xl + metric->adm_gupxy*u_yl + metric->adm_gupxz*u_zl;
