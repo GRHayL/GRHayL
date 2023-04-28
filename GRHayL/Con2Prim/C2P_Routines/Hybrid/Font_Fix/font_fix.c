@@ -124,7 +124,7 @@ int font_fix(
   double utcon3 = metric->adm_gupxz*u_x + metric->adm_gupyz*u_y + metric->adm_gupzz*u_z;
 
   //The Font fix only sets the velocities.  Here we set the pressure & density HARM primitives.
-  limit_utilde_and_compute_v(eos, metric, &utcon1, &utcon2, &utcon3, prims, diagnostics->speed_limited);
+  limit_utilde_and_compute_v(eos, metric, &utcon1, &utcon2, &utcon3, prims, &diagnostics->speed_limited);
   prims->rho = cons->rho/(metric->lapse*prims->u0*metric->psi6);
 
   double K_ppoly, Gamma_ppoly;
