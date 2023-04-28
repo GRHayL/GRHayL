@@ -2,11 +2,30 @@
 
 int main(int argc, char **argv) {
 
-  if( argc != 2 )
-    grhayl_error("Correct usage is %s <EOS table path>\n", argv[0]);
+  unsigned test_type = 1;
+  if( argc < 2 || argc > 3 )
+    grhayl_error("Correct usage is %s <EOS table path> [test type (1=rho vs T; 2=Pmag vs W]\n", argv[0]);
+  else if( argc == 3 )
+    test_type = atoi(argv[2]);
+
+  char outfile_suffix[10];
+  switch (test_type) {
+    case 1:
+      grhayl_info("Selected test: rho vs T\n");
+      sprintf(outfile_suffix, "rho_vs_T");
+      break;
+    case 2:
+      grhayl_info("Selected test: Pmag vs W\n");
+      sprintf(outfile_suffix, "Pmag_vs_W");
+      break;
+    default:
+      grhayl_error("Unknown test key: %d. Supported keys are 1 (rho vs T) and 2 (Pmag vs W).\n");
+      break;
+  }
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
+  const con2prim_method_t main_routine       = Palenzuela1D_entropy;
   const con2prim_method_t backup_routines[3] = {None,None,None};
   const bool calc_prims_guess                = false;
   const bool evolve_entropy                  = false;
@@ -16,7 +35,7 @@ int main(int argc, char **argv) {
   const double Psi6threshold                 = 1e100; //Taken from magnetizedTOV.par
   const double Lorenz_damping_factor         = 0.0;
 
-  const double W_max     = 10.0; //IGM default
+  const double W_max     = 100.0; //IGM default: 10
   const double rho_b_atm = 1e-12;
   const double rho_b_min = rho_b_atm;
   const double rho_b_max = 1e300; //IGM default
@@ -30,7 +49,7 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  initialize_GRHayL(Palenzuela1D_entropy,
+  initialize_GRHayL(main_routine,
                     backup_routines,
                     evolve_entropy,
                     evolve_temperature,
@@ -46,50 +65,76 @@ int main(int argc, char **argv) {
                                                 rho_b_atm, rho_b_min, rho_b_max,
                                                 Y_e_atm, Y_e_min, Y_e_max,
                                                 T_atm, T_min, T_max, &eos);
-  eos.root_finding_precision=1e-15;
+  eos.root_finding_precision=1e-12;
 
   // Number of points in the discretization of rho and T
   const int npoints = 256;
 
-  const double test_rho_min = 1e-12; // IGM default
-  const double test_rho_max = 1e-3;  // IGM default
-
-  const double test_T_min   = 1e-2;  // IGM default
-  const double test_T_max   = 1e+2;  // IGM default
+  // const double test_rho_min = 1e-12; // IGM default
+  // const double test_rho_max = 1e-3;  // IGM default
+  // const double test_T_min   = 1e-2;  // IGM default
+  // const double test_T_max   = 1e+2;  // IGM default
 
   // Compute the density step size
-  const double lrmin        = log(test_rho_min);
-  const double lrmax        = log(test_rho_max);
-  const double dlr          = npoints > 1 ? (lrmax - lrmin)/(npoints-1) : 0;
-  // const double rho_test = 1.6192159535484857e-07; // 1e11 g/cm3
+  // const double lrmin        = log(test_rho_min);
+  // const double lrmax        = log(test_rho_max);
+  // const double dlr          = npoints > 1 ? (lrmax - lrmin)/(npoints-1) : 0;
+  const double rho_test = 1.6192159535484857e-07; // 1e11 g/cm3
 
   // Compute the temperature step size
-  const double ltmin        = log(test_T_min);
-  const double ltmax        = log(test_T_max);
-  const double dlt          = npoints > 1 ? (ltmax - ltmin)/(npoints-1) : 0;
-  // const double T_test = 5; // in MeV
+  // const double ltmin        = log(test_T_min);
+  // const double ltmax        = log(test_T_max);
+  // const double dlt          = npoints > 1 ? (ltmax - ltmin)/(npoints-1) : 0;
+  const double T_test = 5; // in MeV
 
   // Fix Y_e
   const double Ye_test = 0.1;
   // Fix W
-  const double W_test  = 2.0;
-  // const double logWm1_min = -5.5;
-  // const double logWm1_max = +1.5;
-  // const double dlogWm1    = (logWm1_max-logWm1_min)/(npoints-1);
+  // const double W_test  = 2.0;
+  const double logWm1_min = -5.5;
+  const double logWm1_max = +1.5;
+  const double dlogWm1    = (logWm1_max-logWm1_min)/(npoints-1);
 
   // Fix log10(Pmag/P)
-  const double logPmoP = -5.0;
-  // const double logPmoP_min = -5;
-  // const double logPmoP_max = +9;
-  // const double dlogPmoP    = (logPmoP_max - logPmoP_min)/(npoints-1);
+  // const double logPmoP = -5.0;
+  const double logPmoP_min = -5;
+  const double logPmoP_max = +9;
+  const double dlogPmoP    = (logPmoP_max - logPmoP_min)/(npoints-1);
 
   // Set metric quantities to Minkowski
   metric_quantities metric;
   initialize_metric(1, 1, 0, 0, 1, 0, 1, 0, 0, 0, &metric);
 
-  FILE *fp = fopen("palenzuela.asc", "w");
+  char outfile[256];
+  switch(main_routine) {
+    case Palenzuela1D:
+      sprintf(outfile, "palenzuela_energy_%s.asc", outfile_suffix);
+      break;
+    case Palenzuela1D_entropy:
+      sprintf(outfile, "palenzuela_entropy_energy_%s.asc", outfile_suffix);
+      break;
+    case Newman1D:
+      sprintf(outfile, "newman_energy_%s.asc", outfile_suffix);
+      break;
+    case Newman1D_entropy:
+      sprintf(outfile, "newman_entropy_%s.asc", outfile_suffix);
+      break;
+    default:
+      grhayl_error("Con2Prim routine not supported in this unit test\n");
+      break;
+  }
+
+  FILE *fp = fopen(outfile, "w");
 
   srand(0);
+
+  double xrho  = rho_test;
+  double xtemp = T_test;
+  double xye   = Ye_test;
+  double xprs  = 0.0;
+  double xeps  = 0.0;
+  double xent  = 0.0;
+  eos.tabulated_compute_P_eps_S_from_T( &eos, xrho, xye, xtemp, &xprs, &xeps, &xent );
 
   for(int i=0;i<npoints;i++) {
     for(int j=0;j<npoints;j++) {
@@ -97,22 +142,22 @@ int main(int argc, char **argv) {
       con2prim_diagnostics diagnostics;
       initialize_diagnostics(&diagnostics);
 
-      double xrho  = exp(lrmin + dlr*i);
-      double xtemp = exp(ltmin + dlt*j);
-      double xye   = Ye_test;
-      double xprs  = 0.0;
-      double xeps  = 0.0;
-      double xent  = 0.0;
-      eos.tabulated_compute_P_eps_S_from_T( &eos, xrho, xye, xtemp, &xprs, &xeps, &xent );
+      // double xrho  = exp(lrmin + dlr*i);
+      // double xtemp = exp(ltmin + dlt*j);
+      // double xye   = Ye_test;
+      // double xprs  = 0.0;
+      // double xeps  = 0.0;
+      // double xent  = 0.0;
+      // eos.tabulated_compute_P_eps_S_from_T( &eos, xrho, xye, xtemp, &xprs, &xeps, &xent );
 
-      // const double logWm1 = logWm1_min+i*dlogWm1;
-      // const double W_test = pow(10.0,logWm1)+1;
+      const double logWm1 = logWm1_min+i*dlogWm1;
+      const double W_test = pow(10.0,logWm1)+1;
       const double v      = sqrt(1.0-1.0/(W_test*W_test));
       const double vx     = v*((double)rand())/((double)RAND_MAX);
       const double vy     = sqrt(v*v - vx*vx)*((double)rand())/((double)RAND_MAX);
       const double vz     = sqrt(v*v - vx*vx - vy*vy);
 
-      // const double logPmoP = logPmoP_min + j*dlogPmoP;
+      const double logPmoP = logPmoP_min + j*dlogPmoP;
       const double Bhatx   = vx/v;
       const double Bhaty   = vy/v;
       const double Bhatz   = vz/v;
@@ -128,7 +173,7 @@ int main(int argc, char **argv) {
                             Bx, By, Bz,
                             xent, xye, xtemp,
                             &prims_orig);
-      limit_v_and_compute_u0(&eos, &metric, &prims_orig, &diagnostics);
+      limit_v_and_compute_u0(&eos, &metric, &prims_orig, &diagnostics.vel_limited_ptcount);
 
       // Set prim guesses
       primitive_quantities prims;
@@ -190,7 +235,8 @@ int main(int argc, char **argv) {
       err = relative_error(prims.Bz, prims_orig.Bz);
       err_total += err;
 
-      fprintf(fp, "%.15e %.15e %.15e\n", log10(prims_orig.rho), log10(prims_orig.temperature), log10(err_total+1e-16));
+      // fprintf(fp, "%.15e %.15e %.15e\n", log10(prims_orig.rho), log10(prims_orig.temperature), log10(err_total+1e-16));
+      fprintf(fp, "%.15e %.15e %.15e\n", logWm1, logPmoP, log10(err_total+1e-16));
     }
     fprintf(fp, "\n");
   }

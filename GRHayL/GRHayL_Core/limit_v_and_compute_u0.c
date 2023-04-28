@@ -42,7 +42,7 @@ void limit_v_and_compute_u0(
     prims->vy = (prims->vy + metric->betay)*correction_fac - metric->betay;
     prims->vz = (prims->vz + metric->betaz)*correction_fac - metric->betaz;
     one_minus_one_over_alpha_u0_squared = one_minus_one_over_W_max_squared;
-    speed_limit+=1000;
+    (*speed_limit)++;
   }
 
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
