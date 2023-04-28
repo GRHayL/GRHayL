@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
       // Compute conserved variables and Tmunu
       conservative_quantities cons;
       __attribute__((unused)) stress_energy dummy;
-      compute_conservs_and_Tmunu(&params, &eos, &metric, &prims_orig, &cons, &dummy);
+      compute_conservs_and_Tmunu(&params, &metric, &prims_orig, &cons, &dummy);
 
       // Undensitize the conserved variables
       conservative_quantities cons_undens;

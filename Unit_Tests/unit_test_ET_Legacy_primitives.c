@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
       //if(check==5) check = 0;
 
       if(check!=0)
-        check = font_fix(&params, &eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+        check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
       /*************************************************************/
 
       /********** Artificial Font fix for code comparison **********
@@ -233,13 +233,10 @@ int main(int argc, char **argv) {
       the behavior of IllinoisGRMHD.
       **************************************************************/
       if(index==arraylength-2)
-        check = font_fix(&params, &eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+        check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
 
-      if(check==0) {
-        prims = prims_guess;
-      } else {
+      if(check)
         printf("Con2Prim and Font fix failed!");
-      }
     } else {
       diagnostics.failure_checker+=1;
       reset_prims_to_atmosphere(&eos, &prims);

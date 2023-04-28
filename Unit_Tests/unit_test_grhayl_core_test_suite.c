@@ -67,10 +67,10 @@ int main(int argc, char **argv) {
                      "  rho_b, pressure, vx, vy, vz, epsilon, entropy\n"
                      "  Struct output: %e %e %e %e %e %e %e %e %e\n"
                      "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
-                     prims.rho, prims.press, prims.vx, prims.vy, prims.vz, 
+                     prims.rho, prims.press, prims.vx, prims.vy, prims.vz,
                      prims.eps, prims.entropy, prims.Y_e, prims.temperature,
                      eos.rho_atm, eos.press_atm, 0.0, 0.0, 0.0, eos.eps_atm,
-                     eos.entropy_atm, eos.Ye_atm, eos.T_atm);
+                     eos.entropy_atm, eos.Y_e_atm, eos.T_atm);
   //  } else if(eos_it==0) {
   //    eos = tabulated_eos;
 
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
   //                   "  rho_b, pressure, vx, vy, vz, epsilon, entropy, Y_e, temperature\n"
   //                   "  Struct output: %e %e %e %e %e %e %e %e %e\n"
   //                   "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
-  //                   prims.rho, prims.press, prims.vx, prims.vy, prims.vz, 
+  //                   prims.rho, prims.press, prims.vx, prims.vy, prims.vz,
   //                   prims.eps, prims.entropy, prims.Y_e, prims.temperature,
   //                   eos.rho_atm, eos.press_atm, 0.0, 0.0, 0.0, eos.eps_atm,
   //                   eos.entropy_atm, eos.Ye_atm, eos.T_atm);
@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
         gyy[0], gyz[0], gzz[0],
         betax[0], betay[0], betaz[0],
         &new_metric);
- 
+
   if(relative_error(lapse[0], new_metric.lapse) > rel_tol
   || relative_error(betax[0], new_metric.betax) > rel_tol
   || relative_error(betay[0], new_metric.betay) > rel_tol
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
     grhayl_error("grhayl_core_test_suite has failed for GRHayL_enforce_detgtij_and_initialize_metric().\n"
                  "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
                  "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
-                 lapse[0], betax[0], betay[0], betaz[0], 
+                 lapse[0], betax[0], betay[0], betaz[0],
                  gxx[0], gxy[0], gxz[0], gyy[0], gyz[0], gzz[0],
                  new_metric.lapse, new_metric.betax, new_metric.betay, new_metric.betaz,
                  new_metric.adm_gxx, new_metric.adm_gxy, new_metric.adm_gxz,
