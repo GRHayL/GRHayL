@@ -37,7 +37,7 @@ int font_fix_rhob_loop( const eos_parameters *restrict eos,
   double W0, Sf20, rhob0, rhob1, h, P_cold, eps_cold;
   double W   = W_in;
   double Sf2 = Sf2_in;
-  double rhob_out = *rhob_out_ptr;
+  double rhob_out;
 
   //////////////////////
   // OUTER LOOP START //
