@@ -39,3 +39,41 @@ void lower_vector(
   }
   return ;
 }
+
+/**********************************************************************
+     square_Vup():
+
+          -- calculates the magnitude squared of a contravariant 3-vector
+             using the ADM metric
+              v^2 = g_{\alpha\beta} v^\alpha v^\beta
+***********************************************************************/
+double compute_vec2_from_vcov(
+      const metric_quantities *restrict metric,
+      const double *restrict vcov) {
+
+  return metric->adm_gupxx * vcov[0] * vcov[0] +
+         metric->adm_gupyy * vcov[1] * vcov[1] +
+         metric->adm_gupzz * vcov[2] * vcov[2] +
+   2.0 * metric->adm_gupxy * vcov[0] * vcov[1] +
+   2.0 * metric->adm_gupxz * vcov[0] * vcov[2] +
+   2.0 * metric->adm_gupyz * vcov[1] * vcov[2];
+}
+
+/**********************************************************************
+     square_Vdn():
+
+          -- calculates the magnitude squared of a contravariant 3-vector
+             using the ADM metric
+              v^2 = g_{\alpha\beta} v^\alpha v^\beta
+***********************************************************************/
+double compute_vec2_from_vcon(
+      const metric_quantities *restrict metric,
+      const double *restrict vcon) {
+
+  double vsq = 0.0;
+  for(int i=0;i<3;i++)
+    for(int j=0;j<3;j++)
+      vsq += metric->g4dn[i+1][j+1] * vcon[i] * vcon[j];
+
+  return vsq;
+}

@@ -14,7 +14,7 @@
  *                                for the gridpoint of interest
  *
  * Outputs     : prims          - returns primitives within floors and ceilings
- *             : speed_limit    - tracks whether velocity was speed-limited
+ *             : speed_limited  - tracks whether velocity was speed-limited
  *
  */
 
@@ -23,7 +23,7 @@ void enforce_primitive_limits_and_compute_u0(
     const eos_parameters *restrict eos,
     const metric_quantities *restrict metric,
     primitive_quantities *restrict prims,
-    int *restrict speed_limit) {
+    int *restrict speed_limited) {
 
   // The density floor and ceiling is always applied
   prims->rho = MIN(MAX(prims->rho,eos->rho_min),eos->rho_max);
@@ -66,5 +66,5 @@ void enforce_primitive_limits_and_compute_u0(
   }
 
   // Finally, apply speed limit to v and compute u^0
-  limit_v_and_compute_u0(eos, metric, prims, speed_limit);
+  limit_v_and_compute_u0(eos, metric, prims, speed_limited);
 }

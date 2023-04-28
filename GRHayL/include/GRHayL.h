@@ -659,6 +659,12 @@ void return_stress_energy(
       double *restrict Txz, double *restrict Tyy, double *restrict Tyz,
       double *restrict Tzz);
 
+void limit_v_and_compute_u0(
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      primitive_quantities *restrict prims,
+      int *restrict speed_limit);
+
 void raise_vector(
       const metric_quantities *restrict metric,
       const double vcov[4],

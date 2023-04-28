@@ -28,8 +28,8 @@ typedef struct con2prim_diagnostics {
   bool c2p_failed;
   int failures;
   int failure_checker;
-  int font_fixes;
-  int vel_limited_ptcount;
+  int font_fix;
+  int speed_limited;
   int which_routine;
   int backup[3];
   int nan_found;
@@ -191,12 +191,6 @@ void limit_utilde_and_compute_v(
       double *restrict utcon1_ptr,
       double *restrict utcon2_ptr,
       double *restrict utcon3_ptr,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics);
-
-void limit_v_and_compute_u0(
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
       primitive_quantities *restrict prims,
       int *restrict speed_limit);
 

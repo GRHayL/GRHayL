@@ -208,11 +208,6 @@ int main(int argc, char **argv) {
 
       /************* Conservative-to-primitive recovery ************/
       check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
-      // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
-      // that u or rho were negative (usually u). Since the method converged, we only need to fix the values
-      // using enforce_primitive_limits_and_compute_u0(). There's no need to trigger a Font fix.
-      // Cupp_Fix:
-      //if(check==5) check = 0;
 
       if(check!=0)
         check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);

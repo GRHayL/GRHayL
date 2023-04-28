@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
                             Bx, By, Bz,
                             xent, xye, xtemp,
                             &prims_orig);
-      limit_v_and_compute_u0(&eos, &metric, &prims_orig, &diagnostics.vel_limited_ptcount);
+      limit_v_and_compute_u0(&eos, &metric, &prims_orig, &diagnostics.speed_limited);
 
       // Set prim guesses
       primitive_quantities prims;

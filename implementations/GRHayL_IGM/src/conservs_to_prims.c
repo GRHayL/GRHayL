@@ -255,10 +255,10 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
                                &eTyz[index], &eTzz[index]);
         }
 
-        failures += diagnostics.failures;
-        font_fixes += diagnostics.font_fixes;
-        vel_limited_ptcount += diagnostics.vel_limited_ptcount;
         pointcount++;
+        failures += diagnostics.failures;
+        font_fixes += diagnostics.font_fix;
+        vel_limited_ptcount += diagnostics.speed_limited;
         backup0 += diagnostics.backup[0];
         backup1 += diagnostics.backup[1];
         backup2 += diagnostics.backup[2];
