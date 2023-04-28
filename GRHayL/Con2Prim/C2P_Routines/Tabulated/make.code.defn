@@ -1,3 +1,7 @@
-SRCS = Tabulated_Multi_Method.c toms748.c brent.c
+#! INCS = roots.h utils.h
+
+SRCS = brent.c                  \
+       Tabulated_Multi_Method.c \
+       toms748.c
 
 SUBDIRS = Newman1D Palenzuela1D

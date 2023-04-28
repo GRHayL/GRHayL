@@ -657,7 +657,7 @@ parse_mcd()
     fi
     file="$2/make.code.defn"
     if [ ! -f $file ]; then
-        error "Fille $file not found"
+        error "File $file not found"
     fi
     for sd in $(./scripts/parser awk $file "subdirs"); do
         sdsrcs=$(./scripts/parser awk "$2/$sd/make.code.defn" "sources")

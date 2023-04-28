@@ -29,7 +29,7 @@ void limit_utilde_and_compute_v(
       double *restrict utcon2_ptr,
       double *restrict utcon3_ptr,
       primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics ) {
+      int *restrict speed_limit) {
 
   double utcon1 = *utcon1_ptr;
   double utcon2 = *utcon2_ptr;
@@ -43,7 +43,7 @@ void limit_utilde_and_compute_v(
   double au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
   prims->u0 = (au0m1+1.0)*metric->lapseinv;
 
-  diagnostics->vel_limited_ptcount=0;
+  (*speed_limit) = 0;
   // *** Limit velocity
   if (au0m1 > 0.9999999*(eos->W_max-1.0)) {
     double fac = sqrt((SQR(eos->W_max)-1.0)/(SQR(1.0+au0m1) - 1.0));
@@ -54,8 +54,7 @@ void limit_utilde_and_compute_v(
     au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
     // Reset rho_b and u0
     prims->u0 = (au0m1+1.0)*metric->lapseinv;
-    diagnostics->vel_limited_ptcount=1;
-    diagnostics->failure_checker+=1000;
+    (*speed_limit) = 1;
   } //Finished limiting velocity
 
   *utcon1_ptr = utcon1;
