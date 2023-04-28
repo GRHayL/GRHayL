@@ -103,7 +103,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
             Y_e_star[index], poison, &cons);
 
         if( i==6 && j==6 && k==6 ) {
-          CCTK_VINFO("Input cons  : %e %e %e %e %e %e", cons.rho, cons.Y_e, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+          CCTK_VINFO("Input cons  : %e %e %.15e %e %e %e", cons.rho, cons.Y_e, cons.tau, cons.S_x, cons.S_y, cons.S_z);
         }
       } else {
         CCTK_VINFO("Con2Prim and Font fix failed!");
