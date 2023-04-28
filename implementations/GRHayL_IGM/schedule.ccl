@@ -41,7 +41,7 @@ schedule GRHayL_IGM_InitSymBound AT BASEGRID AFTER Lapse_InitSymBound
 # INITIAL DATA CONVERSION
 #########################################################
 # Fill GRHayL_IGM grid functions using initial data from ADMBase and HydroBase
-schedule group GRHayL_IGM_ID_Converter at CCTK_INITIAL after (Seed_Magnetic_Fields Seed_Magnetic_Fields_Privt) before Convert_to_HydroBase
+schedule group GRHayL_IGM_ID_Converter at CCTK_INITIAL after (HydroBase_Initial Seed_Magnetic_Fields Seed_Magnetic_Fields_Privt) before Convert_to_HydroBase
 {
 } "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayL_IGM"
 
@@ -284,7 +284,7 @@ schedule GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz IN AddToTmunu AFTER GRH
 # Conversion from GRHayL_IGM variables to Hydrobase
 #########################################################
 
-SCHEDULE convert_from_GRHayL_IGM_to_HydroBase AT CCTK_INITIAL AFTER HydroBase_Prim2ConInitial
+SCHEDULE convert_from_GRHayL_IGM_to_HydroBase AT CCTK_INITIAL AFTER GRHayL_IGM_ID_Converter
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
