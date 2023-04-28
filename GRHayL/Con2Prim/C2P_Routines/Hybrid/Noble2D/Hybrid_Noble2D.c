@@ -298,7 +298,7 @@ int Hybrid_Noble2D(
 
   //Additional tabulated code here
 
-  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims, diagnostics->speed_limited);
+  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims, &diagnostics->speed_limited);
 
   if(diagnostics->speed_limited==1)
     prims->rho = cons_undens->rho/(metric->lapse*prims->u0);
