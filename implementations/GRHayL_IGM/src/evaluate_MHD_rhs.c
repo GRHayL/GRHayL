@@ -71,27 +71,26 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // The order here MATTERS, and must be consistent with the global variable declarations in
   //   evaluate_MHD_rhs_headers.h (look for RHOB=0, etc.)
   //   For example, in_prims[0] _must_ be rho_b.
-  int ww=0;
-  in_prims[ww]=rho_b;      out_prims_r[ww]=rhor;        out_prims_l[ww++]=rhol;
-  in_prims[ww]=pressure;   out_prims_r[ww]=pressr;      out_prims_l[ww++]=pressl;
-  in_prims[ww]=vx;         out_prims_r[ww]=vxr;         out_prims_l[ww++]=vxl;
-  in_prims[ww]=vy;         out_prims_r[ww]=vyr;         out_prims_l[ww++]=vyl;
-  in_prims[ww]=vz;         out_prims_r[ww]=vzr;         out_prims_l[ww++]=vzl;
-  in_prims[ww]=Bx_center;  out_prims_r[ww]=Bxr;         out_prims_l[ww++]=Bxl;
-  in_prims[ww]=By_center;  out_prims_r[ww]=Byr;         out_prims_l[ww++]=Byl;
-  in_prims[ww]=Bz_center;  out_prims_r[ww]=Bzr;         out_prims_l[ww++]=Bzl;
-  in_prims[ww]=Bx_stagger; out_prims_r[ww]=Bx_staggerr; out_prims_l[ww++]=Bx_staggerl;
-  in_prims[ww]=By_stagger; out_prims_r[ww]=By_staggerr; out_prims_l[ww++]=By_staggerl;
-  in_prims[ww]=Bz_stagger; out_prims_r[ww]=Bz_staggerr; out_prims_l[ww++]=Bz_staggerl;
-  in_prims[ww]=vxr;        out_prims_r[ww]=vxrr;        out_prims_l[ww++]=vxrl;
-  in_prims[ww]=vyr;        out_prims_r[ww]=vyrr;        out_prims_l[ww++]=vyrl;
-  in_prims[ww]=vzr;        out_prims_r[ww]=vzrr;        out_prims_l[ww++]=vzrl;
-  in_prims[ww]=vxl;        out_prims_r[ww]=vxlr;        out_prims_l[ww++]=vxll;
-  in_prims[ww]=vyl;        out_prims_r[ww]=vylr;        out_prims_l[ww++]=vyll;
-  in_prims[ww]=vzl;        out_prims_r[ww]=vzlr;        out_prims_l[ww++]=vzll;
-  in_prims[ww]=Ye;         out_prims_r[ww]=Yer;         out_prims_l[ww++]=Yel;
-  in_prims[ww]=epsgf;      out_prims_r[ww]=epsr;        out_prims_l[ww++]=epsl;
-  in_prims[ww]=T;          out_prims_r[ww]=Tr;          out_prims_l[ww++]=Tl;
+  in_prims[RHOB       ]=rho_b;      out_prims_r[RHOB       ]=rhor;        out_prims_l[RHOB       ]=rhol;
+  in_prims[PRESSURE   ]=pressure;   out_prims_r[PRESSURE   ]=pressr;      out_prims_l[PRESSURE   ]=pressl;
+  in_prims[VX         ]=vx;         out_prims_r[VX         ]=vxr;         out_prims_l[VX         ]=vxl;
+  in_prims[VY         ]=vy;         out_prims_r[VY         ]=vyr;         out_prims_l[VY         ]=vyl;
+  in_prims[VZ         ]=vz;         out_prims_r[VZ         ]=vzr;         out_prims_l[VZ         ]=vzl;
+  in_prims[BX_CENTER  ]=Bx_center;  out_prims_r[BX_CENTER  ]=Bxr;         out_prims_l[BX_CENTER  ]=Bxl;
+  in_prims[BY_CENTER  ]=By_center;  out_prims_r[BY_CENTER  ]=Byr;         out_prims_l[BY_CENTER  ]=Byl;
+  in_prims[BZ_CENTER  ]=Bz_center;  out_prims_r[BZ_CENTER  ]=Bzr;         out_prims_l[BZ_CENTER  ]=Bzl;
+  in_prims[BX_STAGGER ]=Bx_stagger; out_prims_r[BX_STAGGER ]=Bx_staggerr; out_prims_l[BX_STAGGER ]=Bx_staggerl;
+  in_prims[BY_STAGGER ]=By_stagger; out_prims_r[BY_STAGGER ]=By_staggerr; out_prims_l[BY_STAGGER ]=By_staggerl;
+  in_prims[BZ_STAGGER ]=Bz_stagger; out_prims_r[BZ_STAGGER ]=Bz_staggerr; out_prims_l[BZ_STAGGER ]=Bz_staggerl;
+  in_prims[VXR        ]=vxr;        out_prims_r[VXR        ]=vxrr;        out_prims_l[VXR        ]=vxrl;
+  in_prims[VYR        ]=vyr;        out_prims_r[VYR        ]=vyrr;        out_prims_l[VYR        ]=vyrl;
+  in_prims[VZR        ]=vzr;        out_prims_r[VZR        ]=vzrr;        out_prims_l[VZR        ]=vzrl;
+  in_prims[VXL        ]=vxl;        out_prims_r[VXL        ]=vxlr;        out_prims_l[VXL        ]=vxll;
+  in_prims[VYL        ]=vyl;        out_prims_r[VYL        ]=vylr;        out_prims_l[VYL        ]=vyll;
+  in_prims[VZL        ]=vzl;        out_prims_r[VZL        ]=vzlr;        out_prims_l[VZL        ]=vzll;
+  in_prims[YEPRIM     ]=Ye;         out_prims_r[YEPRIM     ]=Yer;         out_prims_l[YEPRIM     ]=Yel;
+  in_prims[EPSILON    ]=epsgf;      out_prims_r[EPSILON    ]=epsr;        out_prims_l[EPSILON    ]=epsl;
+  in_prims[TEMPERATURE]=T;          out_prims_r[TEMPERATURE]=Tr;          out_prims_l[TEMPERATURE]=Tl;
 
   double *cmin[3] = {cmin_x, cmin_y, cmin_z};
   double *cmax[3] = {cmax_x, cmax_y, cmax_z};
@@ -143,6 +142,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         Ax_rhs[index]       = 0.0;
         Ay_rhs[index]       = 0.0;
         Az_rhs[index]       = 0.0;
+      }
+    }
   }
 
   // Here, we:

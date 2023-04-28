@@ -19,8 +19,8 @@ void GRHayL_IGM_calculate_tau_source_rhs(
   const int kmax = cctkGH->cctk_lsh[2] - cctkGH->cctk_nghostzones[2];
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++)
-    for(int j=jmin; j<jmax; j++)
+  for(int k=kmin; k<kmax; k++) {
+    for(int j=jmin; j<jmax; j++) {
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
@@ -51,6 +51,8 @@ void GRHayL_IGM_calculate_tau_source_rhs(
         cons_source.tau = 0;
         calculate_tau_tilde_source_term_extrinsic_curv(&prims, grhayl_eos, &metric, &curv, &cons_source);
         tau_rhs[index] += cons_source.tau;
+      }
+    }
   }
 }
 
@@ -120,8 +122,8 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
   // This loop includes 1 ghostzone because the RHS calculation for e.g. the x direction
   // requires (i,j,k) and (i+1,j,k)
 #pragma omp parallel for
-  for(int k=kmin; k<kmax+zdir; k++)
-    for(int j=jmin; j<jmax+ydir; j++)
+  for(int k=kmin; k<kmax+zdir; k++) {
+    for(int j=jmin; j<jmax+ydir; j++) {
       for(int i=imin; i<imax+xdir; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 

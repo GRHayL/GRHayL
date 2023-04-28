@@ -15,7 +15,8 @@ enum recon_indices{
       RHOB, PRESSURE, VX, VY, VZ,
       BX_CENTER, BY_CENTER, BZ_CENTER,
       BX_STAGGER, BY_STAGGER, BZ_STAGGER,
-      VXR, VYR, VZR, VXL,VYL, VZL, MAXNUMVARS};
+      VXR, VYR, VZR, VXL,VYL, VZL,
+      YEPRIM, EPSILON, TEMPERATURE, MAXNUMVARS};
 
 //Interpolates to the +1/2 face
 #define interpolate_to_face(Vm1,V0,Vp1,Vp2) (0.5625*(V0 + Vp1) - 0.0625*(Vm1+Vp2))

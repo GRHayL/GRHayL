@@ -5,8 +5,9 @@ SRCS = GRHayL_initialize_and_shutdown.c
 
 # Subdirectories containing source files
 SUBDIRS = Con2Prim                                     \
-          Con2Prim/C2P_Routines/Font_Fix               \
           Con2Prim/C2P_Routines/Hybrid                 \
+          Con2Prim/C2P_Routines/Hybrid/Font_Fix        \
+          Con2Prim/C2P_Routines/Hybrid/Noble2D         \
           Con2Prim/C2P_Routines/Tabulated              \
           Con2Prim/C2P_Routines/Tabulated/Newman1D     \
           Con2Prim/C2P_Routines/Tabulated/Palenzuela1D \
