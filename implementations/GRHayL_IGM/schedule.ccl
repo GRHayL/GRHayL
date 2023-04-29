@@ -190,7 +190,6 @@ schedule GRHayL_IGM_evaluate_MHD_rhs IN MoL_CalcRHS AS GRHayL_IGM_RHS_eval AFTER
   READS:   ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
   READS:   grmhd_primitives_allbutBi, grmhd_B_center,
            grmhd_B_stagger, phitilde, Ax, Ay, Az
-  WRITES:  HydroBase::rho(everywhere), HydroBase::Y_e(everywhere), HydroBase::vel(everywhere), HydroBase::temperature(everywhere)
   WRITES:  ADMBase::metric(everywhere), ADMBase::lapse(everywhere), ADMBase::shift(everywhere)
   WRITES:  BSSN_quantities(everywhere),
            grmhd_primitives_reconstructed_temps, grmhd_flux_temps, grmhd_cmin_cmax_temps,

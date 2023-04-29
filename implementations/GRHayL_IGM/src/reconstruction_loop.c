@@ -3,12 +3,15 @@
 
 static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
 
-void GRHayL_IGM_reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
-                         const int *restrict var_indices,
-                         const eos_parameters *restrict eos,
-                         const double **in_prims,
-                         double **out_prims_r,
-                         double **out_prims_l) {
+void GRHayL_IGM_reconstruction_loop(
+      const cGH *restrict cctkGH,
+      const int flux_dir,
+      const int num_vars,
+      const int *restrict var_indices,
+      const eos_parameters *restrict eos,
+      const double **in_prims,
+      double **out_prims_r,
+      double **out_prims_l) {
 
   const int xdir = (flux_dir == 0);
   const int ydir = (flux_dir == 1);

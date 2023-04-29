@@ -284,14 +284,9 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
                           poison, Ye[index], T[index],
                           &prims);
 
-        //TODO: add support for other vars; might need to depend on whether these vars
-        //      have storage allocated by looking at params
-        //                          entropy[index], Y_e[index], temperature[index],
-
         conservative_quantities cons;
         stress_energy Tmunu;
         int speed_limited = 0;
-        //This applies the inequality (or "Faber") fixes on the conservatives
         enforce_primitive_limits_and_compute_u0(grhayl_params, grhayl_eos, &metric, &prims, &speed_limited);
         //This computes the conservatives and stress-energy tensor from the new primitives
         compute_conservs_and_Tmunu(grhayl_params, &metric, &prims, &cons, &Tmunu);

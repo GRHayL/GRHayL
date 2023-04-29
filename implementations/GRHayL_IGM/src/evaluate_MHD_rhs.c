@@ -137,8 +137,6 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         Stildey_rhs[index]  = 0.0;
         Stildez_rhs[index]  = 0.0;
         Y_e_star_rhs[index] = 0.0;
-
-        //TODO: remove for IGH
         phitilde_rhs[index] = 0.0;
         Ax_rhs[index]       = 0.0;
         Ay_rhs[index]       = 0.0;
@@ -171,8 +169,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
    *      this, we'll reconstruct again in the y-dir'n to get {vx,vy} at (i-1/2,j-1/2,k)
    * 2Ab) By_stagger is at (i,j+1/2,k), and we reconstruct below to (i-1/2,j+1/2,k).
    */
-  { // num_vars and var_indices are local variables
-    const int num_vars = 7;
+  { // var_indices is a local variable
+    num_vars = 7;
     const int var_indices[7] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER, YEPRIM};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
@@ -242,8 +240,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     const int var_indices[4] = {VXR, VYR, VXL, VYL};
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-  { // num_vars and var_indices are local variables
-    const int num_vars = 8;
+  { // var_indices is a local variable
+    num_vars = 8;
     const int var_indices[8] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER, YEPRIM};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
@@ -321,8 +319,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     const int var_indices[4] = {VYR, VZR, VYL, VZL};
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
-  { // num_vars and var_indices are local variables
-    const int num_vars = 8;
+  { // var_indices is a local variable
+    num_vars = 8;
     const int var_indices[8] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER, YEPRIM};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
