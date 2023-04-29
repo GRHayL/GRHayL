@@ -102,8 +102,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
                              gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
                              gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
 
-//  /* SET POINTERS TO METRIC GRIDFUNCTIONS */
-  const double *metric[10]; // "metric" here is array of pointers to the actual gridfunctions.
+  // "metric" here is array of pointers to the actual gridfunctions.
+  const double *metric[10];
   metric[LAPSE] = alp;
   metric[BETAX] = betax;
   metric[BETAY] = betay;
@@ -115,6 +115,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   metric[GYZ]   = gyz;
   metric[GZZ]   = gzz;
 
+  // "curv" here is array of pointers to the actual gridfunctions.
   const double *curv[6];
   curv[KXX] = kxx;
   curv[KXY] = kxy;

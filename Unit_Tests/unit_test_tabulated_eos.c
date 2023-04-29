@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
   eos_parameters eos;
   initialize_eos_functions(grhayl_eos_tabulated, &eos);
   eos.tabulated_read_table_set_EOS_params(argv[1], &eos);
+  eos.root_finding_precision=1e-10;
 
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
     grhayl_error("Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
