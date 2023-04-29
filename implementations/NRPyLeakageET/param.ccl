@@ -84,14 +84,14 @@ restricted:
 CCTK_STRING GFstring_Y_e_star_rhs "Gridfunction for the conserved electron fraction right-hand side" STEERABLE = ALWAYS
 {
   "GRHayL_IGM::Y_e_star_rhs" :: "GRHayL_IGM's gridfunction"
-  ".+"                         :: "Or use you can use your own thorn's gridfunction name"
+  ".+"                       :: "Or use you can use your own thorn's gridfunction name"
 } "GRHayL_IGM::Y_e_star_rhs"
 
 restricted:
 CCTK_STRING GFstring_tau_rhs "Gridfunction for the conserved energy right-hand side" STEERABLE = ALWAYS
 {
   "GRHayL_IGM::tau_rhs" :: "GRHayL_IGM's gridfunction"
-  ".+"                     :: "Or use you can use your own thorn's gridfunction name"
+  ".+"                  :: "Or use you can use your own thorn's gridfunction name"
 } "GRHayL_IGM::tau_rhs"
 
 restricted:
