@@ -159,6 +159,15 @@ void NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(
       double *restrict cs2,
       double *restrict T);
 
+void NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(
+    const eos_parameters *restrict eos_params,
+    const double rho,
+    const double Y_e,
+    const double P,
+    double *restrict eps,
+    double *restrict cs2,
+    double *restrict T);
+
 void NRPyEOS_P_and_T_from_rho_Ye_S(
       const eos_parameters *restrict eos_params,
       const double rho,
@@ -224,7 +233,7 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       eos_parameters const *restrict eos,
       primitive_quantities const *restrict prims,
       double *restrict enthalpy_ptr,
-      double *restrict cs2_ptr );
+      double *restrict cs2_ptr);
 
 #ifdef __cplusplus
 }

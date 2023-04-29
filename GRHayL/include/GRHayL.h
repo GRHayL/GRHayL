@@ -362,6 +362,15 @@ typedef struct eos_parameters {
         double *restrict cs2,
         double *restrict T);
 
+  void (*tabulated_compute_eps_cs2_T_from_P)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double Y_e,
+        const double P,
+        double *restrict eps,
+        double *restrict cs2,
+        double *restrict T);
+
   void (*tabulated_compute_P_T_from_S)(
         const struct eos_parameters *restrict eos,
         const double rho,

@@ -9,6 +9,7 @@ SRCS = NRPyEOS_eps_from_rho_Ye_T.c                                   \
        NRPyEOS_P_and_eps_from_rho_Ye_T.c                             \
        NRPyEOS_P_and_T_from_rho_Ye_eps.c                             \
        NRPyEOS_P_cs2_and_T_from_rho_Ye_eps.c                         \
+       NRPyEOS_eps_cs2_and_T_from_rho_Ye_P.c                         \
        NRPyEOS_P_and_T_from_rho_Ye_S.c                               \
        NRPyEOS_P_eps_and_cs2_from_rho_Ye_T.c                         \
        NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T.c                      \
