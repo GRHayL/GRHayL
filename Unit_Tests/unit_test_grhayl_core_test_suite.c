@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
   || relative_error(gyy[i],   new_metric.adm_gyy) > rel_tol
   || relative_error(gyz[i],   new_metric.adm_gyz) > rel_tol
   || relative_error(gzz[i],   new_metric.adm_gzz) > rel_tol)
-    grhayl_error("grhayl_core_test_suite has failed for GRHayL_enforce_detgtij_and_initialize_metric().\n"
+    grhayl_error("unit_test_grhayl_core_test_suite has failed for GRHayL_enforce_detgtij_and_initialize_metric().\n"
                  "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
                  "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
                  lapse[i], betax[i], betay[i], betaz[i],
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
   || relative_error(gyy[0],   new_metric.adm_gyy) > rel_tol
   || relative_error(gyz[0],   new_metric.adm_gyz) > rel_tol
   || relative_error(gzz[0],   new_metric.adm_gzz) > rel_tol)
-    grhayl_error("grhayl_core_test_suite has failed for GRHayL_enforce_detgtij_and_initialize_metric().\n"
+    grhayl_error("unit_test_grhayl_core_test_suite has failed for GRHayL_enforce_detgtij_and_initialize_metric().\n"
                  "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
                  "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
                  lapse[0], betax[0], betay[0], betaz[0], 
