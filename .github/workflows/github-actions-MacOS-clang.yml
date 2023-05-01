@@ -97,6 +97,30 @@ jobs:
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
 
+  piecewise-polytrope-eos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'clang'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'clang'
+      - name: Run piecewise polytrope EOS unit test
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib
+          LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_piecewise_polytrope
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+
   grhayl-core:
     strategy:
       fail-fast: false
