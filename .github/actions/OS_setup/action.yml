@@ -53,7 +53,7 @@ runs:
       shell: bash
 
     - if: runner.os == 'MacOS' && inputs.compiler == 'gcc'
-      run: brew update && brew install gcc gsed hdf5 md5sha1sum
+      run: brew update && brew install gcc@12 gsed hdf5 md5sha1sum
       shell: bash
     - if: runner.os == 'MacOS' && inputs.compiler == 'clang'
       run: brew update && brew install llvm@14 hdf5 md5sha1sum
