@@ -270,6 +270,47 @@ void NRPyLeakageET_compute_neutrino_opacities_and_add_source_terms_to_MHD_rhss(C
             Stildey_rhs_avg  += Stildey_rhsL;
             Stildez_rhs_avg  += Stildez_rhsL;
 
+            // if( i==6 && j==6 && k==6 ) {
+            //   printf("*********************************************\n");
+            //   printf("In %s\n", __func__);
+            //   printf("*********************************************\n");
+            //   printf("taus   : %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e\n",
+            //          tauL.nue [0], tauL.nue [1],
+            //          tauL.anue[0], tauL.anue[1],
+            //          tauL.nux [0], tauL.nux [1]);
+            //   printf("kappas : %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e\n",
+            //          kappaL.nue [0], kappaL.nue [1],
+            //          kappaL.anue[0], kappaL.anue[1],
+            //          kappaL.nux [0], kappaL.nux [1]);
+            //   printf("Prims  : %22.15e %22.15e %22.15e\n", rhoL, Y_eL, temperatureL);
+            //   printf("R, Q   : %22.15e %22.15e\n", R_sourceL, Q_sourceL);
+            //   printf("RHSs   : %22.15e %22.15e %22.15e %22.15e %22.15e\n",
+            //          Y_e_star_rhsL, tau_rhsL, Stildex_rhsL, Stildey_rhsL, Stildez_rhsL);
+
+              // neutrino_optical_depths tau;
+              // tau.nue [0] = 0.01;
+              // tau.nue [1] = 0.02;
+              // tau.anue[0] = 0.03;
+              // tau.anue[1] = 0.04;
+              // tau.nux [0] = 0.05;
+              // tau.nux [1] = 0.06;
+              // neutrino_opacities kappa;
+              // CCTK_REAL R, Q;
+              // NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(grhayl_eos,
+              //                                                               1e-12, 0.5, 0.01,
+              //                                                               &tau, &kappa, &R, &Q);
+
+              // CCTK_VINFO("After manual call:");
+              // CCTK_VINFO("R, Q   : %22.15e %22.15e", R, Q);
+              // CCTK_VINFO("T_nue  : %22.15e %22.15e", tau.nue   [0], tau.nue   [1]);
+              // CCTK_VINFO("T_anue : %22.15e %22.15e", tau.anue  [0], tau.anue  [1]);
+              // CCTK_VINFO("T_nux  : %22.15e %22.15e", tau.nux   [0], tau.nux   [1]);
+              // CCTK_VINFO("K_nue  : %22.15e %22.15e", kappa.nue [0], kappa.nue [1]);
+              // CCTK_VINFO("K_Anue : %22.15e %22.15e", kappa.anue[0], kappa.anue[1]);
+              // CCTK_VINFO("K_nux  : %22.15e %22.15e", kappa.nux [0], kappa.nux [1]);
+              // exit(1);
+            // }
+
             num_points++;
           }
         }

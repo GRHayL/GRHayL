@@ -91,42 +91,59 @@ CCTK_BOOLEAN calc_primitive_guess "Do we want to calculate estimates for the pri
 
 #########################################################
 
-# Limiters on tau, rho_b, Y_e, and T
-CCTK_REAL tau_atm "Floor value on the energy variable tau (cf. tau_stildefix_enable). Given the variety of systems this code may encounter, there *is no reasonable default*. Effectively the current (enormous) value should disable the tau_atm floor. Please set this in your initial data thorn, and reset at will during evolutions." STEERABLE=ALWAYS
+CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b. This is a required value. Given the variety of systems this code may encounter, there *is no reasonable default*. Your run will die unless you override this default value in your initial data thorn." STEERABLE=ALWAYS
 {
- 0:* :: "Positive"
-} 1e100
+  0:* :: "Atmosphere density; must be positive"
+  -1  :: "Used to check if anything was given"
+} -1
 
-CCTK_REAL rho_b_atm "Floor value on the baryonic rest mass density rho_b (atmosphere). Given the variety of systems this code may encounter, there *is no reasonable default*. Your run will die unless you override this default value in your initial data thorn." STEERABLE=ALWAYS
+CCTK_REAL rho_b_min "Floor value on the baryonic rest mass density rho_b. Given the variety of systems this code may encounter, there *is no reasonable default*. Your run will die unless you override this default value in your initial data thorn." STEERABLE=ALWAYS
 {
- *:* :: "Allow for negative values.  This enables us to debug the code and verify if rho_b_atm is properly set."
-} 1e200
+  0:* :: "Minimum density; must be positive"
+  -1  :: "Used to check if anything was given"
+} -1
 
-CCTK_REAL rho_b_max "Ceiling value on the baryonic rest mass density rho_b. The enormous value effectively disables this ceiling by default. It can be quite useful after a black hole has accreted a lot of mass, leading to enormous densities inside the BH. To enable this trick, set rho_b_max in your initial data thorn! You are welcome to change this parameter mid-run (after restarting from a checkpoint)." STEERABLE=ALWAYS
+CCTK_REAL rho_b_max "Ceiling value on the baryonic rest mass density rho_b (disabled by default). It can be quite useful after a black hole has accreted a lot of mass, leading to enormous densities inside the BH. To enable this trick, set rho_b_max in your initial data thorn! You are welcome to change this parameter mid-run (after restarting from a checkpoint)." STEERABLE=ALWAYS
 {
- 0:* :: "Note that you will have problems unless rho_b_atm<rho_b_max"
-} 1e300
+  0:* :: "Maximum density; must be positive"
+  -1  :: "Used to check if anything was given"
+} -1
 
-CCTK_REAL Ye_atm "Atmospheric electron fraction"
+CCTK_REAL Y_e_atm "Atmospheric electron fraction (required)" STEERABLE=ALWAYS
 {
- 0.0:1.0 :: "Only makes sense if set to something between 0 and 1"
-} 0.5
+  0:1 :: "Only makes sense if set to something between 0 and 1"
+  -1  :: "Used to check if anything was given"
+} -1
 
-#There should be a max, probably
-#CCTK_REAL Ye_max "Maximum electron fraction allowed" STEERABLE=ALWAYS
-#{
-# 0.0:1.0 :: ""
-#} 0.5
-
-CCTK_REAL T_atm "Atmospheric temperature"
+CCTK_REAL Y_e_min "Atmospheric electron fraction (optional; table bounds used by default)" STEERABLE=ALWAYS
 {
- 0.0:* :: "Positive. Should be within table limits (preferably at least 10% above the minimum)."
-} 0.1
+  0:1 :: "Only makes sense if set to something between 0 and 1"
+  -1  :: "Used to check if anything was given"
+} -1
 
-CCTK_REAL T_max "Maximum temperature allowed" STEERABLE=ALWAYS
+CCTK_REAL Y_e_max "Atmospheric electron fraction (optional; table bounds used by default)" STEERABLE=ALWAYS
 {
- 0.0:* :: "Positive. Should be within table limits (preferably at least 10% above the minimum)."
-} 90.0
+  0:1 :: "Only makes sense if set to something between 0 and 1"
+  -1  :: "Used to check if anything was given"
+} -1
+
+CCTK_REAL T_atm "Atmospheric temperature (required)" STEERABLE=ALWAYS
+{
+  0:* :: "Should be non-negative"
+  -1  :: "Used to check if anything was given"
+} -1
+
+CCTK_REAL T_min "Minimum temperature allowed (optional; table bounds used by default)" STEERABLE=ALWAYS
+{
+  0:* :: "Should be non-negative"
+  -1  :: "Used to check if anything was given"
+} -1
+
+CCTK_REAL T_max "Maximum temperature allowed (optional; table bounds used by default)" STEERABLE=ALWAYS
+{
+  0:* :: "Should be non-negative"
+  -1  :: "Used to check if anything was given"
+} -1
 
 #########################################################
 

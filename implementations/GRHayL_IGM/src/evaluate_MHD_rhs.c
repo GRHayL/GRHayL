@@ -200,6 +200,17 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
 
+  // {
+  //   const int index = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
+  //   printf("*********************************************\n");
+  //   printf("In %s\n", __func__);
+  //   printf("*********************************************\n");
+  //   printf("First  reconstruction: %22.15e %22.15e %22.15e\n",
+  //              in_prims[YEPRIM][index], out_prims_r[YEPRIM][index], out_prims_l[YEPRIM][index]);
+  //   printf("First  fluxes/RHSs   : %22.15e %22.15e\n",
+  //              Y_e_star_flux[index], Y_e_star_rhs[index]);
+  // }
+
   // Note that we have already reconstructed vx and vy along the x-direction,
   //   at (i-1/2,j,k). That result is stored in v{x,y}{r,l}.  Bx_stagger data
   //   are defined at (i+1/2,j,k).
@@ -259,6 +270,14 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
+
+  // {
+  //   const int index = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
+  //   printf("Second reconstruction: %22.15e %22.15e %22.15e\n",
+  //              in_prims[YEPRIM][index], out_prims_r[YEPRIM][index], out_prims_l[YEPRIM][index]);
+  //   printf("Second fluxes/RHSs   : %22.15e %22.15e\n",
+  //              Y_e_star_flux[index], Y_e_star_rhs[index]);
+  // }
 
   /*****************************************
    * COMPUTING RHS OF A_z, BOOKKEEPING NOTE:
@@ -332,6 +351,14 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
 
+  // {
+  //   const int index = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
+  //   printf("Third  reconstruction: %22.15e %22.15e %22.15e\n",
+  //          in_prims[YEPRIM][index], out_prims_r[YEPRIM][index], out_prims_l[YEPRIM][index]);
+  //   printf("Third  fluxes/RHSs   : %22.15e %22.15e\n",
+  //          Y_e_star_flux[index], Y_e_star_rhs[index]);
+  // }
+
   /*****************************************
    * COMPUTING RHS OF A_x, BOOKKEEPING NOTE:
    * We want to compute
@@ -384,16 +411,6 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
               psi_bssn, alp, betax, betay, betaz, Ax, Ay, Az, phitilde,
               grhayl_params->Lorenz_damping_factor, vxr, vyr, vzr, vxl, vyl, vzl, pressr, pressl,
               phitilde_rhs, Ax_rhs, Ay_rhs, Az_rhs);
-  {
-    const int index = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
-    CCTK_VINFO("RHSs: %e %e %e %e %e %e",
-               rho_star_rhs[index],
-               tau_rhs     [index],
-               Stildex_rhs [index],
-               Stildey_rhs [index],
-               Stildez_rhs [index],
-               Y_e_star_rhs[index]);
-  }
 
   if( CCTK_IsThornActive("NRPyLeakageET") ) {
     // Convert rho, Y_e, T, and velocities to HydroBase
@@ -427,4 +444,21 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
       }
     }
   }
+
+  // {
+  //   const int index   = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
+  //   const double rhoL = rho_b[index];
+  //   const double  TL  = T[index];
+  //   const double Y_eL = Ye[index];
+  //   const double rho_star_rhsL = rho_star_rhs[index];
+  //   const double Y_e_star_rhsL = Y_e_star_rhs[index];
+  //   const double tau_rhsL      = tau_rhs[index];
+  //   const double st_x_rhsL     = Stildex_rhs[index];
+  //   const double st_y_rhsL     = Stildey_rhs[index];
+  //   const double st_z_rhsL     = Stildez_rhs[index];
+  //   CCTK_VINFO("Prims: %22.15e %22.15e %22.15e", rhoL, TL, Y_eL);
+  //   CCTK_VINFO("RHSs : %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e",
+  //              rho_star_rhsL, Y_e_star_rhsL, tau_rhsL,
+  //              st_x_rhsL, st_y_rhsL, st_z_rhsL);
+  // }
 }

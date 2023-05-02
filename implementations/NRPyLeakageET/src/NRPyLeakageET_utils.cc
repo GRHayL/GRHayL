@@ -198,14 +198,14 @@ void NRPyLeakageET_Initialize(CCTK_ARGUMENTS) {
 
     if(verbosity_level>0) {
       CCTK_VINFO("Optical depths will be initialized on levels %d through %d with the path of least resistance algorithm",startRefLev,endRefLev);
-      CCTK_VINFO("Number of iterations to be performed on each refinement level: %d",numberOfIterations);
+      CCTK_VINFO("Number of iterations to be performed on each refinement level: %d", max_iterations);
     }
 
     // Step 2: Now perform iterations of the path of least resistance algorithm
     int counter = 0;
-    int RemainingIterations = numberOfIterations;
+    int RemainingIterations = max_iterations;
 
-    for(int i=1;i<=numberOfIterations;i++) {
+    for(int i=1;i<=max_iterations;i++) {
       // Step 2.a: First perform the iteration on refinement level startRefLev
       if( verbosity_level>1 ) CCTK_VINFO("Beginning iteration %d...",counter+1);
 
@@ -238,7 +238,7 @@ void NRPyLeakageET_Initialize(CCTK_ARGUMENTS) {
       if( l2norm_global < tauChangeThreshold ) {
         // Step 2.d.i: Converged!
         RemainingIterations = 0;
-        i = numberOfIterations*10;
+        i = max_iterations*10;
         if( verbosity_level>0 ) CCTK_VINFO("Algorithm converged! l2norm_tau_change = %e (threshold = %e)",l2norm_global,tauChangeThreshold);
       }
       else {

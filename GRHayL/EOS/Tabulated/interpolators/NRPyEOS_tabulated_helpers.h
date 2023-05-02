@@ -28,10 +28,10 @@ int NRPyEOS_checkbounds(const eos_parameters *restrict eos_params,
   if(xrho < eos_params->table_rho_min) {
     return 106;
   }
-  if(xye > eos_params->table_Ye_max) {
+  if(xye > eos_params->table_Y_e_max) {
     return 101;
   }
-  if(xye < eos_params->table_Ye_min) {
+  if(xye < eos_params->table_Y_e_min) {
     return 102;
   }
   if(xtemp > eos_params->table_T_max) {
@@ -60,10 +60,10 @@ int NRPyEOS_checkbounds_kt0_noTcheck(const eos_parameters *restrict eos_params,
   if(xrho < eos_params->table_rho_min) {
     return 106;
   }
-  if(xye > eos_params->table_Ye_max) {
+  if(xye > eos_params->table_Y_e_max) {
     return 101;
   }
-  if(xye < eos_params->table_Ye_min) {
+  if(xye < eos_params->table_Y_e_min) {
     return 102;
   }
   return 0;
@@ -81,7 +81,7 @@ void NRPyEOS_get_interp_spots(const eos_parameters *restrict eos_params,
 
   int ix = 1 + (int)( (x - eos_params->table_logrho[0]  - 1.0e-10) * eos_params->drhoi  );
   int iy = 1 + (int)( (y - eos_params->table_logT[0] - 1.0e-10) * eos_params->dtempi );
-  int iz = 1 + (int)( (z - eos_params->table_Ye[0]     - 1.0e-10) * eos_params->dyei  );
+  int iz = 1 + (int)( (z - eos_params->table_Y_e[0]     - 1.0e-10) * eos_params->dyei  );
 
   ix = MAX( 1, MIN( ix, eos_params->N_rho -1 ) );
   iy = MAX( 1, MIN( iy, eos_params->N_T-1 ) );
@@ -99,7 +99,7 @@ void NRPyEOS_get_interp_spots(const eos_parameters *restrict eos_params,
   // set up aux vars for interpolation
   *delx = eos_params->table_logrho[ix]  - x;
   *dely = eos_params->table_logT[iy] - y;
-  *delz = eos_params->table_Ye[iz]     - z;
+  *delz = eos_params->table_Y_e[iz]     - z;
 
 }
 //------------------------------------------
@@ -115,7 +115,7 @@ void NRPyEOS_get_interp_spots_linT_low(const eos_parameters *restrict eos_params
 
   int ix = 1 + (int)( (x - eos_params->table_logrho[0] - 1.0e-10) * eos_params->drhoi );
   int iy = 1;
-  int iz = 1 + (int)( (z - eos_params->table_Ye[0]    - 1.0e-10) * eos_params->dyei );
+  int iz = 1 + (int)( (z - eos_params->table_Y_e[0]    - 1.0e-10) * eos_params->dyei );
 
   ix = MAX( 1, MIN( ix, eos_params->N_rho-1 ) );
   iz = MAX( 1, MIN( iz, eos_params->N_Ye -1 ) );
@@ -132,7 +132,7 @@ void NRPyEOS_get_interp_spots_linT_low(const eos_parameters *restrict eos_params
   // set up aux vars for interpolation
   *delx = eos_params->table_logrho[ix] - x;
   *dely = eos_params->temp1      - y;
-  *delz = eos_params->table_Ye[iz]    - z;
+  *delz = eos_params->table_Y_e[iz]    - z;
 
 }
 //------------------------------------------
@@ -148,7 +148,7 @@ void NRPyEOS_get_interp_spots_linT_low_eps(const eos_parameters *restrict eos_pa
 
   int ix = 1 + (int)( (x - eos_params->table_logrho[0] - 1.0e-10) * eos_params->drhoi );
   int iy = 1;
-  int iz = 1 + (int)( (z - eos_params->table_Ye[0]    - 1.0e-10) * eos_params->dyei );
+  int iz = 1 + (int)( (z - eos_params->table_Y_e[0]    - 1.0e-10) * eos_params->dyei );
 
   ix = MAX( 1, MIN( ix, eos_params->N_rho-1 ) );
   iz = MAX( 1, MIN( iz, eos_params->N_Ye -1 ) );
@@ -165,7 +165,7 @@ void NRPyEOS_get_interp_spots_linT_low_eps(const eos_parameters *restrict eos_pa
   // set up aux vars for interpolation
   *delx = eos_params->table_logrho[ix] - x;
   *dely = eos_params->temp1      - y;
-  *delz = eos_params->table_Ye[iz]    - z;
+  *delz = eos_params->table_Y_e[iz]    - z;
 
 }
 //------------------------------------------
@@ -483,7 +483,7 @@ void NRPyEOS_findtemp_from_any( const eos_parameters *restrict eos_params,
   double oerr = 1.0e90;
   double fac  = 1.0;
   const int irho = MIN(MAX(1 + (int)(( lr - eos_params->table_logrho[0] - 1.0e-12) * eos_params->drhoi),1),eos_params->N_rho-1);
-  const int iye  = MIN(MAX(1 + (int)(( ye - eos_params->table_Ye[0]    - 1.0e-12) * eos_params->dyei ),1),eos_params->N_Ye -1);
+  const int iye  = MIN(MAX(1 + (int)(( ye - eos_params->table_Y_e[0]    - 1.0e-12) * eos_params->dyei ),1),eos_params->N_Ye -1);
 
   /* ******* if temp low for high density, switch directly to bisection.
      Verifying Newton-Raphson result evaluating the derivative.
@@ -515,7 +515,7 @@ void NRPyEOS_findtemp_from_any( const eos_parameters *restrict eos_params,
       ifs     = tablevar_key + NRPyEOS_ntablekeys*(irho   + eos_params->N_rho*((itemp-1) + eos_params->N_T*(iye)));
       fs[3]   = eos_params->table_all[ifs];
 
-      tablevart1 = NRPyEOS_linterp2D(&eos_params->table_logrho[irho-1],&eos_params->table_Ye[iye-1], fs, lr, ye);
+      tablevart1 = NRPyEOS_linterp2D(&eos_params->table_logrho[irho-1],&eos_params->table_Y_e[iye-1], fs, lr, ye);
     }
     // upper temperature
     {
@@ -534,7 +534,7 @@ void NRPyEOS_findtemp_from_any( const eos_parameters *restrict eos_params,
       ifs     = tablevar_key + NRPyEOS_ntablekeys*(irho   + eos_params->N_rho*((itemp) + eos_params->N_T*(iye)));
       fs[3]   = eos_params->table_all[ifs];
 
-      tablevart2 = NRPyEOS_linterp2D(&eos_params->table_logrho[irho-1],&eos_params->table_Ye[iye-1], fs, lr, ye);
+      tablevart2 = NRPyEOS_linterp2D(&eos_params->table_logrho[irho-1],&eos_params->table_Y_e[iye-1], fs, lr, ye);
     }
 
     // Check if we are already bracketing the input internal

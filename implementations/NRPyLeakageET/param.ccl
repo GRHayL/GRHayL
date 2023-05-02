@@ -75,7 +75,7 @@ CCTK_STRING optical_depth_evolution_type "Type of optical depth evolution" STEER
 } "PathOfLeastResistance"
 
 restricted:
-CCTK_INT numberOfIterations "How many iterations are we going to perform to initialize the optical depth?"
+CCTK_INT max_iterations "Maximum number of iterations to initialize the optical depths"
 {
   1:* :: "Should be greater than one"
 } 2048

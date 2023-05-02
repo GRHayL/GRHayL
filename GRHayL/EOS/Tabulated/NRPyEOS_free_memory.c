@@ -12,7 +12,7 @@ void NRPyEOS_free_memory(eos_parameters *restrict eos_params) {
   // Free memory allocated for the table
   free(eos_params->table_logrho);
   free(eos_params->table_logT);
-  free(eos_params->table_Ye);
+  free(eos_params->table_Y_e);
   free(eos_params->table_all);
   free(eos_params->table_eps);
 

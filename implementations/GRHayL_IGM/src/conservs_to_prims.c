@@ -98,7 +98,7 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
               vx[index], vy[index], vz[index],
         //      Bvec[index0], Bvec[index1], Bvec[index2],
               Bx_center[index], By_center[index], Bz_center[index],
-              poison, Ye[index], T[index], &prims);
+              poison, 0.0/0.0, T[index], &prims);
 
         // Read in conservative variables from gridfunctions
         conservative_quantities cons, cons_orig;
@@ -110,6 +110,14 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
         // Here we save the original values of conservative variables in cons_orig for debugging purposes.
         cons_orig = cons;
 
+        // if( i==6 && j==6 && k==6 ) {
+        //   printf("*********************************************\n");
+        //   printf("In %s\n", __func__);
+        //   printf("*********************************************\n");
+        //   printf("cons_in   : %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e\n",
+        //          cons.rho, cons.Y_e, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+        // }
+
 
         /************* Main conservative-to-primitive logic ************/
         int check=0;
@@ -120,7 +128,6 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
 
           // declare some variables for the C2P routine.
           conservative_quantities cons_undens;
-          primitive_quantities;
 
           // Set the conserved variables required by the con2prim routine
           undensitize_conservatives(&metric, &cons, &cons_undens);
@@ -147,10 +154,6 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
               CCTK_VINFO("v: %e %e %e\n", prims.vx, prims.vy, prims.vz);
               CCTK_VINFO("***********************************************************");
               CCTK_ERROR("Found NAN in con2prim");
-            }
-
-            if( i==6 && j==6 && k==6 ) {
-              CCTK_VINFO("Input cons  : %e %e %.15e %e %e %e", cons.rho, cons.Y_e, cons.tau, cons.S_x, cons.S_y, cons.S_z);
             }
           } else {
             CCTK_VINFO("Con2Prim and Font fix failed!");
@@ -217,12 +220,12 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
             &Stildex[index], &Stildey[index], &Stildez[index],
             &Y_e_star[index], &dummy);
 
-        if( i==6 && j==6 && k==6 ) {
-          CCTK_VINFO("Output cons : %e %e %e %e %e %e", cons.rho, cons.Y_e, cons.tau, cons.S_x, cons.S_y, cons.S_z);
-          CCTK_VINFO("Output prims: %e %e %e %e %e, %e %e %e, %e %e %e",
-                     prims.rho, prims.Y_e, prims.temperature, prims.press, prims.eps,
-                     prims.vx, prims.vy, prims.vz, prims.Bx, prims.By, prims.Bz);
-        }
+        // if( i==6 && j==6 && k==6 ) {
+        //   printf("prims_out : %22.15e %22.15e %22.15e\n",
+        //          prims.rho, prims.Y_e, prims.temperature);
+        //   printf("cons_out  : %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e\n",
+        //          cons.rho, cons.Y_e, cons.tau, cons.S_x, cons.S_y, cons.S_z);
+        // }
 
         if(grhayl_params->update_Tmunu) {
           return_stress_energy(&Tmunu, &eTtt[index], &eTtx[index],
