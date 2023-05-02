@@ -16,19 +16,18 @@
 
 void guess_primitives( const eos_parameters *restrict eos,
                        const metric_quantities *restrict metric,
-                       const primitive_quantities *restrict prims,
                        const conservative_quantities *restrict cons,
-                       primitive_quantities *restrict prims_guess ) {
+                       primitive_quantities *restrict prims ) {
 
   // Use atmosphere as initial guess:
-  prims_guess->rho = cons->rho/metric->psi6;
-  prims_guess->vx = -metric->betax;
-  prims_guess->vy = -metric->betay;
-  prims_guess->vz = -metric->betaz;
-  prims_guess->Y_e = cons->Y_e/cons->rho;
-  prims_guess->temperature = eos->T_atm;
+  prims->rho = cons->rho/metric->psi6;
+  prims->vx = -metric->betax;
+  prims->vy = -metric->betay;
+  prims->vz = -metric->betaz;
+  prims->Y_e = cons->Y_e/cons->rho;
+  prims->temperature = eos->T_atm;
 
   // If using Hybrid EOS, compute P_cold
   if( eos->eos_type == grhayl_eos_hybrid )
-    eos->hybrid_compute_P_cold(eos, prims_guess->rho, &prims_guess->press);
+    eos->hybrid_compute_P_cold(eos, prims->rho, &prims->press);
 }

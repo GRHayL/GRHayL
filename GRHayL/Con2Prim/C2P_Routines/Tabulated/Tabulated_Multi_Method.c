@@ -33,9 +33,11 @@ int Tabulated_Multi_Method(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
-  primitive_quantities prims_guess = *prims;
   if(params->calc_prim_guess)
-    guess_primitives(eos, metric, prims, cons, &prims_guess);
+    guess_primitives(eos, metric, cons, &prims);
+
+  // Store primitive guesses (used if con2prim fails)
+  const primitive_quantities prims_guess = *prims;
 
   int check = Tabulated_Select_Method(params, eos, params->main_routine, metric, cons, prims, diagnostics);
 

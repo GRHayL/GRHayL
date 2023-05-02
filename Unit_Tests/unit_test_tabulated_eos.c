@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
     for(int j=0; j<eos.N_T; j++) {
       const double logT = eos.table_logT[j];
       for(int k=0; k<eos.N_Ye; k++) {
-        const double Y_e = eos.table_Ye[k];
+        const double Y_e = eos.table_Y_e[k];
         const int index = i + eos.N_rho*( j + eos.N_T*k );
         for(int var_key=0; var_key<NRPyEOS_ntablekeys; var_key++) {
           const double var       = get_table_quantity(var_key, logrho, Y_e, logT);
@@ -72,11 +72,11 @@ int main(int argc, char **argv) {
   // Set step sizes
   const double dlogrho = (log_rho_max      - log_rho_min     )/N_rho;
   const double dlogT   = (log_T_max        - log_T_min       )/N_T;
-  const double dYe     = (eos.table_Ye_max - eos.table_Ye_min)/N_Ye;
+  const double dYe     = (eos.table_Y_e_max - eos.table_Y_e_min)/N_Ye;
 
   // Begin test
   for(int k=0;k<N_Ye;k++) {
-    const double Y_e = eos.table_Ye_min + k*dYe;
+    const double Y_e = eos.table_Y_e_min + k*dYe;
     for(int j=0;j<N_T;j++) {
       const double logT = log_T_min + j*dlogT;
       const double T    = exp(logT);

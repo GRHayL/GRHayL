@@ -74,9 +74,8 @@ void undensitize_conservatives(
 void guess_primitives(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
-      const primitive_quantities *restrict prims,
       const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prims_guess);
+      primitive_quantities *restrict prims);
 
 void enforce_primitive_limits_and_compute_u0(
       const GRHayL_parameters *restrict params,

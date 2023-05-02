@@ -15,9 +15,11 @@ int Hybrid_Multi_Method( const GRHayL_parameters *restrict params,
                          primitive_quantities *restrict prims,
                          con2prim_diagnostics *restrict diagnostics ) {
 
-  primitive_quantities prims_guess = *prims;
   if(params->calc_prim_guess)
-    guess_primitives(eos, metric, prims, cons, &prims_guess);
+    guess_primitives(eos, metric, cons, &prims);
+
+  // Store the primitive guesses (used if con2prim fails)
+  const primitive_quantities prims_guess = *prims;
 
   // Compute primitive initial guesses if they are not provided
   int check = Hybrid_Select_Method(params, eos, params->main_routine, metric, cons, prims, diagnostics);
