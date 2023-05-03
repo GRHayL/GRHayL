@@ -46,21 +46,61 @@ void read_primitive_binary(
                  "is up-to-date with current test version.\n");
 }
 
+void read_primitive_struct_binary(
+      const int eos_type,
+      const bool evolve_entropy,
+      primitive_quantities *restrict prims,
+      FILE *restrict infile ) {
+
+  int __attribute__((unused)) err;
+  err  = fread(&prims->rho  , sizeof(double), 1, infile);
+  err += fread(&prims->press, sizeof(double), 1, infile);
+  err += fread(&prims->vx   , sizeof(double), 1, infile);
+  err += fread(&prims->vy   , sizeof(double), 1, infile);
+  err += fread(&prims->vz   , sizeof(double), 1, infile);
+  err += fread(&prims->eps  , sizeof(double), 1, infile);
+  err += fread(&prims->Bx   , sizeof(double), 1, infile);
+  err += fread(&prims->By   , sizeof(double), 1, infile);
+  err += fread(&prims->Bz   , sizeof(double), 1, infile);
+
+  if( err != 9 )
+    grhayl_error("Failed to read primitive file\n");
+
+  if(evolve_entropy) {
+    err += fread(&prims->entropy, sizeof(double), 1, infile);
+    if( err != 10 ) {
+      grhayl_error("Failed to read primitive file\n");
+    }
+  }
+
+  if(eos_type == grhayl_eos_tabulated) { //Tabulated
+    err += fread(&prims->Y_e        , sizeof(double), 1, infile);
+    err += fread(&prims->temperature, sizeof(double), 1, infile);
+    if( evolve_entropy ) {
+      if( err != 12 )
+        grhayl_error("Failed to read primitive file\n");
+    }
+    else
+      if( err != 11 )
+        grhayl_error("Failed to read primitive file\n");
+  }
+}
+
 void write_primitive_binary(
       const int eos_type,
       const bool evolve_entropy,
       const primitive_quantities *restrict prims,
       FILE *restrict outfile) {
 
-  fwrite(&prims->rho, sizeof(double), 1, outfile);
+  fwrite(&prims->rho  , sizeof(double), 1, outfile);
   fwrite(&prims->press, sizeof(double), 1, outfile);
-  fwrite(&prims->vx, sizeof(double), 1, outfile);
-  fwrite(&prims->vy, sizeof(double), 1, outfile);
-  fwrite(&prims->vz, sizeof(double), 1, outfile);
-  fwrite(&prims->eps, sizeof(double), 1, outfile);
-  fwrite(&prims->Bx, sizeof(double), 1, outfile);
-  fwrite(&prims->By, sizeof(double), 1, outfile);
-  fwrite(&prims->Bz, sizeof(double), 1, outfile);
+  fwrite(&prims->vx   , sizeof(double), 1, outfile);
+  fwrite(&prims->vy   , sizeof(double), 1, outfile);
+  fwrite(&prims->vz   , sizeof(double), 1, outfile);
+  fwrite(&prims->eps  , sizeof(double), 1, outfile);
+  fwrite(&prims->Bx   , sizeof(double), 1, outfile);
+  fwrite(&prims->By   , sizeof(double), 1, outfile);
+  fwrite(&prims->Bz   , sizeof(double), 1, outfile);
 
   if(evolve_entropy)
     fwrite(&prims->entropy, sizeof(double), 1, outfile);
