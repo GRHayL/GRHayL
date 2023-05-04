@@ -345,6 +345,13 @@ typedef struct eos_parameters {
         double *restrict X_n,
         double *restrict X_p);
 
+  void (*tabulated_compute_T_from_eps)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double Y_e,
+        const double eps,
+        double *restrict T);
+
   void (*tabulated_compute_P_T_from_eps)(
         const struct eos_parameters *restrict eos,
         const double rho,

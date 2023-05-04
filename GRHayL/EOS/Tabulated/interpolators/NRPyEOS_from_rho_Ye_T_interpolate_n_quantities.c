@@ -16,6 +16,8 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
   HDF5_ERROR_IF_USED;
 #else
 
+  if( !n ) return;
+
   // Start by assuming no errors
   report->error = false;
 

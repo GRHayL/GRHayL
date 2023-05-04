@@ -2,7 +2,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_P_and_T_from_rho_Ye_S( const eos_parameters *restrict eos_params,
+void NRPyEOS_P_and_T_from_rho_Ye_S( const eos_parameters *restrict eos,
                                     const double rho,
                                     const double Y_e,
                                     const double S,
@@ -21,8 +21,8 @@ void NRPyEOS_P_and_T_from_rho_Ye_S( const eos_parameters *restrict eos_params,
   double outvars[1];
 
   // Step 4: Perform the interpolation
-  const double root_finding_precision = eos_params->root_finding_precision;
-  NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities( eos_params, 1, root_finding_precision,
+  const double root_finding_precision = eos->root_finding_precision;
+  NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities( eos, 1, root_finding_precision,
                                                                rho, Y_e, S, NRPyEOS_entropy_key, keys,
                                                                outvars, T, &report );
 

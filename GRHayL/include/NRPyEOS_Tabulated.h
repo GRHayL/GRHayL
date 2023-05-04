@@ -142,6 +142,13 @@ void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
       double *restrict X_n,
       double *restrict X_p);
 
+void NRPyEOS_T_from_rho_Ye_eps(
+      const eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict T);
+
 void NRPyEOS_P_and_T_from_rho_Ye_eps(
       const eos_parameters *restrict eos_params,
       const double rho,

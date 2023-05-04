@@ -3,7 +3,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_parameters *restrict eos_params,
+void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_parameters *restrict eos,
                                                                  const int n,
                                                                  const double prec,
                                                                  const double rho,
@@ -30,7 +30,7 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
   }
 
   // Check table bounds for input variables
-  report->error_key = NRPyEOS_checkbounds_kt0_noTcheck(eos_params,rho,Y_e);
+  report->error_key = NRPyEOS_checkbounds_kt0_noTcheck(eos,rho,Y_e);
   if( report->error_key != 0 ) {
     char message[256];
     switch(report->error_key) {
@@ -67,7 +67,7 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
   else if( tablevar_in_key == NRPyEOS_eps_key ) {
     // If aux = eps, then we need log(eps+eps0).
     // Compute eps+eps0
-    aux += eos_params->energy_shift;
+    aux += eos->energy_shift;
     // At this point, aux *must* be positive. If not, error out.
     if( aux < 0.0 ) {
       sprintf(report->message, "In %s call, found eps+energy_shift < 0.0 (%e).\n",
@@ -85,14 +85,14 @@ void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(const eos_param
   const double lt0 = log(*T);
   double lt        = 0.0;
   int keyerr=0;
-  NRPyEOS_findtemp_from_any(eos_params,tablevar_in_key,lr,lt0,Y_e,aux,prec,&lt,&keyerr);
+  NRPyEOS_findtemp_from_any(eos,tablevar_in_key,lr,lt0,Y_e,aux,prec,&lt,&keyerr);
 
   // Now set the temperature
   *T = exp(lt);
 
   // Then interpolate the quantities we want from (rho,Ye,T)
   int anyerr=0;
-  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos_params,n,rho,Y_e,*T,tablevars_keys,tablevars,report);
+  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos,n,rho,Y_e,*T,tablevars_keys,tablevars,report);
   report->error_key = keyerr;
   report->error     = anyerr;
 #endif

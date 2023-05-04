@@ -2,7 +2,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(const eos_parameters *restrict eos_params,
+void NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(const eos_parameters *restrict eos,
                                            const double rho,
                                            const double Y_e,
                                            const double T,
@@ -23,7 +23,7 @@ void NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(const eos_parameters *restrict eos_pa
   double outvars[4];
 
   // Step 4: Perform the interpolation
-  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities( eos_params, 4,rho,Y_e,T, keys,outvars, &report );
+  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities( eos, 4,rho,Y_e,T, keys,outvars, &report );
 
   // Step 5: Check for errors
   if( report.error )
