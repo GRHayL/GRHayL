@@ -168,15 +168,15 @@ int main( int argc, char **argv ) {
   double gfs[2] = {initial_Y_e, eps};
 
 #ifdef GENERATE_ASCII_DATA
-  FILE *fp = fopen("opticallythingas_semi_analytic_grhayl.txt","w");
+  FILE *fp = fopen("nrpyleakage_optically_thin_gas.txt","w");
   fprintf(fp,"%.15e %.15e %.15e %.15e\n",t*NRPyLeakage_units_geom_to_cgs_T, gfs[Y_E], gfs[EPS], initial_T);
 #else
   FILE *fp1=NULL, *fp2=NULL;
   if( test_key != 2 ) {
     if( test_key )
-      fp1 = fopen("nrpyleakage_perturbed.bin","wb");
+      fp1 = fopen("nrpyleakage_optically_thin_gas_perturbed.bin","wb");
     else
-      fp1 = fopen("nrpyleakage_unperturbed.bin","wb");
+      fp1 = fopen("nrpyleakage_optically_thin_gas_unperturbed.bin","wb");
 
     fwrite(&t        , sizeof(double), 1, fp1);
     fwrite(&gfs[Y_E] , sizeof(double), 1, fp1);
@@ -184,8 +184,8 @@ int main( int argc, char **argv ) {
     fwrite(&initial_T, sizeof(double), 1, fp1);
   }
   else {
-    fp1 = fopen("nrpyleakage_unperturbed.bin", "rb");
-    fp2 = fopen("nrpyleakage_perturbed.bin"  , "rb");
+    fp1 = fopen("nrpyleakage_optically_thin_gas_unperturbed.bin", "rb");
+    fp2 = fopen("nrpyleakage_optically_thin_gas_perturbed.bin"  , "rb");
   }
 #endif
   for(int n=0;n<n_steps;n++) {

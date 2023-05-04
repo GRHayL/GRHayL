@@ -159,10 +159,6 @@ void initialize_tabulated_eos(
       double T_max,
       eos_parameters *restrict eos ) {
 
-  printf("In here: %.15e %.15e\n", rho_min, rho_max);
-  printf("In here: %.15e %.15e\n", Y_e_min, Y_e_max);
-  printf("In here: %.15e %.15e\n", T_min, T_max);
-
   // Step 1: Set EOS type to Tabulated.
   eos->eos_type = grhayl_eos_tabulated;
 
