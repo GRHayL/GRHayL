@@ -4,12 +4,12 @@
 # curl -X POST --data-binary @codecov.yml https://codecov.io/validate
 ###################################################################
 
-#coverage:
-#  status:
-#    project:
-#      default:
-#        target: 100%
-#        threshold: 1%
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5%
 
 ignore:
   - "Unit_Tests"
