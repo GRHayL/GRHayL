@@ -89,7 +89,7 @@ jobs:
         with:
           compiler: 'clang'
       - name: Copy test data to working directory
-        run: curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5 -o simple_table.h5
+        run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib

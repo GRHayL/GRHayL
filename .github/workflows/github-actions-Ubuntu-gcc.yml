@@ -27,10 +27,10 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin -o ${{ matrix.test-function }}_input.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output.bin -o ${{ matrix.test-function }}_output.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output_pert.bin -o ${{ matrix.test-function }}_output_pert.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/${{ matrix.test-function }}.md5 -o ${{ matrix.test-function }}.md5
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output_pert.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/${{ matrix.test-function }}.md5
           md5sum -c ${{ matrix.test-function }}.md5
       - name: Run ET IllinoisGRMHD unit test for ${{ matrix.test-function }}
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
@@ -57,10 +57,10 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin -o Noble2D_initial_data.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin -o ${{ matrix.test-function }}.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin -o ${{ matrix.test-function }}_pert.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5 -o ${{ matrix.test-function }}.md5
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5
           md5sum -c ${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
@@ -85,7 +85,7 @@ jobs:
         with:
           compiler: 'gcc'
       - name: Copy test data to working directory
-        run: curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5 -o simple_table.h5
+        run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_tabulated_eos simple_table.h5
       - name: Generate coverage report
@@ -132,8 +132,8 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/grhayl_core/grhayl_core_test_suite_input.bin -o grhayl_core_test_suite_input.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/grhayl_core/md5/grhayl_core_test_suite.md5 -o grhayl_core_test_suite.md5
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/grhayl_core/grhayl_core_test_suite_input.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/grhayl_core/md5/grhayl_core_test_suite.md5
           md5sum -c grhayl_core_test_suite.md5
       - name: Run GRHayL_Core unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_grhayl_core_test_suite
@@ -160,15 +160,15 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_input.bin -o ${{ matrix.test-function }}_input.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_output.bin -o ${{ matrix.test-function }}_output.bin
-          curl https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_output_pert.bin -o ${{ matrix.test-function }}_output_pert.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_output_pert.bin
       - name: Run reconstruction unit test for ${{ matrix.test-function }} function
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
 
- neutrinos:
+  neutrinos:
     strategy:
       fail-fast: false
       matrix:
