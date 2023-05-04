@@ -136,7 +136,7 @@ Falcon - GCC (tested on 03-29-2023)
 # module list
 # Currently Loaded Modules:
 #   1) gcc/12.1.0   2) mpich/3.4.3   3) hdf5/1.12.2
-  CC=mpicc ./configure --prefix=. --hdf5dir=\$(module show hdf5 2>&1 | awk '/"PATH"/ { match($0, "/"); s=substr($0, RSTART); sub(/\/*bin")$/, "", s); print s }')
+  CC=mpicc ./configure --prefix=. --hdf5dir=\$HDF5_ROOT
   make
   make install
 
@@ -145,7 +145,7 @@ Falcon - Intel (tested on 03-29-2023)
 # module list
 # Currently Loaded Modules:
 #   1) intel/2021.4.0   2) mpich/3.4.3   3) hdf5/1.12.2
-  CC=mpicc ./configure --prefix=. --hdf5dir=\$(module show hdf5 2>&1 | awk '/"PATH"/ { match($0, "/"); s=substr($0, RSTART); sub(/\/*bin")$/, "", s); print s }')
+  CC=mpicc ./configure --prefix=. --hdf5dir=\$HDF5_ROOT
   make
   make install
 EOF
