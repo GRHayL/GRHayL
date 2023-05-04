@@ -143,7 +143,7 @@ jobs:
   reconstruction:
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
         test-function: [minmod_reconstruction, mc_reconstruction, superbee_reconstruction]
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
@@ -168,3 +168,32 @@ jobs:
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
 
+ neutrinos:
+    strategy:
+      fail-fast: false
+      matrix:
+        test-function: [nrpyleakage_optically_thin_gas]
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'clang'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'clang'
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/Neutrinos/${{ matrix.test-function }}_perturbed.bin
+          curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
+      - name: Run reconstruction unit test for ${{ matrix.test-function }} function
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
+          ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 2
+     - name: Generate coverage report
+       uses: ./.github/actions/code-coverage
