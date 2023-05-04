@@ -50,7 +50,7 @@ void read_primitive_struct_binary(
       const int eos_type,
       const bool evolve_entropy,
       primitive_quantities *restrict prims,
-      FILE *restrict infile ) {
+      FILE *restrict infile) {
 
   int __attribute__((unused)) err;
   err  = fread(&prims->rho  , sizeof(double), 1, infile);

@@ -1,14 +1,14 @@
 #include "unit_tests.h"
 
 void read_conservative_binary(
-                     const bool evolve_entropy,
-                     double *restrict rho,
-                     double *restrict tau,
-                     double *restrict S_x,
-                     double *restrict S_y,
-                     double *restrict S_z,
-                     double *restrict entropy,
-                     FILE *restrict infile) {
+      const bool evolve_entropy,
+      double *restrict rho,
+      double *restrict tau,
+      double *restrict S_x,
+      double *restrict S_y,
+      double *restrict S_z,
+      double *restrict entropy,
+      FILE *restrict infile) {
 
   int key;
   key  = fread(rho, sizeof(double), 1, infile);
@@ -29,9 +29,9 @@ void read_conservative_binary(
 }
 
 void read_conservative_struct_binary(
-    const bool evolve_entropy,
-    conservative_quantities *restrict cons,
-    FILE *restrict infile) {
+      const bool evolve_entropy,
+      conservative_quantities *restrict cons,
+      FILE *restrict infile) {
 
   int __attribute__((unused)) err;
   err  = fread(&cons->rho, sizeof(double), 1, infile);
@@ -45,9 +45,9 @@ void read_conservative_struct_binary(
 }
 
 void write_conservative_binary(
-    const bool evolve_entropy,
-    const conservative_quantities *restrict cons,
-    FILE *restrict outfile) {
+      const bool evolve_entropy,
+      const conservative_quantities *restrict cons,
+      FILE *restrict outfile) {
 
   fwrite(&cons->rho, sizeof(double), 1, outfile);
   fwrite(&cons->tau, sizeof(double), 1, outfile);
