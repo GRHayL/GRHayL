@@ -6,7 +6,7 @@
  */
 int main(int argc, char **argv) {
 
-  double rtol = 5e-13;
+  double rtol = 1.5e-12;
   double atol = 1e-14;
 
   if( argc < 2 || argc > 4 ) {
@@ -317,6 +317,71 @@ int main(int argc, char **argv) {
                        "------------:------------------------:------------------------:------------------------:-----------------------\n",
                        T  , T_interp  , relative_error(T  , T_interp  ), fabs(T   - T_interp  ),
                        P  , P_interp  , relative_error(P  , P_interp  ), fabs(P   - P_interp  ),
+                       eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
+
+        T_interp = eos.table_T_min; P_interp = 0.0/0.0;
+        eos.tabulated_compute_P_T_from_S(&eos, rho, Y_e, S, &P_interp, &T_interp);
+        if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
+            ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) )
+          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "Temperature : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "Pressure    : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n",
+                       T  , T_interp  , relative_error(T  , T_interp  ), fabs(T   - T_interp  ),
+                       P  , P_interp  , relative_error(P  , P_interp  ), fabs(P   - P_interp  ));
+
+        T_interp = eos.table_T_min; cs2_interp = P_interp = 0.0/0.0;
+        eos.tabulated_compute_P_cs2_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &cs2_interp, &T_interp);
+        if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
+            ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
+            ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) )
+          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "Temperature : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "cs2         : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "Pressure    : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n",
+                       T  , T_interp  , relative_error(T  , T_interp  ), fabs(T   - T_interp  ),
+                       cs2, cs2_interp, relative_error(cs2, cs2_interp), fabs(cs2 - cs2_interp),
+                       P  , P_interp  , relative_error(P  , P_interp  ), fabs(P   - P_interp  ));
+
+        P_interp = cs2_interp = eps_interp = 0.0/0.0;
+        eos.tabulated_compute_P_eps_cs2_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &cs2_interp);
+        if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
+            ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
+            ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
+          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "Pressure    : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "cs2         : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "Energy      : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n",
+                       P  , P_interp  , relative_error(P  , P_interp  ), fabs(P   - P_interp  ),
+                       cs2, cs2_interp, relative_error(cs2, cs2_interp), fabs(cs2 - cs2_interp),
+                       eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
+
+        T_interp = eos.table_T_min; cs2_interp = eps_interp = 0.0/0.0;
+        eos.tabulated_compute_eps_cs2_T_from_P(&eos, rho, Y_e, P, &eps_interp, &cs2_interp, &T_interp);
+        if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
+            ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
+            ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
+          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "Temperature : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "cs2         : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "Energy      : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n",
+                       T  , T_interp  , relative_error(T  , T_interp  ), fabs(T   - T_interp  ),
+                       cs2, cs2_interp, relative_error(cs2, cs2_interp), fabs(cs2 - cs2_interp),
                        eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
       }
     }

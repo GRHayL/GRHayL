@@ -25,7 +25,7 @@ void NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(
   // Step 4: Perform the interpolation
   const double root_finding_precision = eos->root_finding_precision;
   NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities( eos, 2, root_finding_precision,
-                                                               rho, Y_e, P, NRPyEOS_eps_key, keys, outvars, T, &report );
+                                                               rho, Y_e, P, NRPyEOS_press_key, keys, outvars, T, &report );
 
   // Step 5: Check for errors
   if( report.error )
