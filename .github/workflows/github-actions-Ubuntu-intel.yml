@@ -195,5 +195,5 @@ jobs:
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
           ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 2
-     - name: Generate coverage report
-       uses: ./.github/actions/code-coverage
+      - name: Generate coverage report
+        uses: ./.github/actions/code-coverage
