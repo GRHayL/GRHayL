@@ -691,6 +691,14 @@ void lower_vector(
       const double vcon[4],
       double vcov[4]);
 
+double compute_vec2_from_vcov(
+      const metric_quantities *restrict metric,
+      const double *restrict vcov);
+
+double compute_vec2_from_vcon(
+      const metric_quantities *restrict metric,
+      const double *restrict vcon);
+
 void compute_TDNmunu(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
