@@ -1,6 +1,4 @@
-#include "GRHayL.h"
 #include "Neutrinos.h"
-#include "NRPyLeakage.h"
 #include "unit_tests.h"
 
 //#define GENERATE_ASCII_DATA
@@ -127,10 +125,10 @@ int main( int argc, char **argv ) {
   }
 
   const char *tablepath = argv[1];
-  int test_key = atoi(argv[2]);
-  double initial_rho_b = 1e-12;
-  double initial_Y_e   = 0.5;
-  double initial_T     = 1.0;
+  const int test_key    = atoi(argv[2]);
+  double initial_rho_b  = 1e-12;
+  double initial_Y_e    = 0.5;
+  double initial_T      = 1.0;
   if( test_key == 1 ) {
     initial_rho_b *= (1+randf(-1,1)*1e-14);
     initial_Y_e   *= (1+randf(-1,1)*1e-14);

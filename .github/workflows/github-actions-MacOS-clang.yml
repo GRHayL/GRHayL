@@ -184,7 +184,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [nrpyleakage_optically_thin_gas]
+        test-function: [nrpyleakage_optically_thin_gas, nrpyleakage_constant_density_sphere]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
