@@ -57,13 +57,13 @@ int Tabulated_CerdaDuran2D(
   const double Bup[3] = {prims_guess->Bx * ONE_OVER_SQRT_4PI,
                          prims_guess->By * ONE_OVER_SQRT_4PI,
                          prims_guess->Bz * ONE_OVER_SQRT_4PI};
-  const double B_squared = compute_Bsq_from_Bup(metric, Bup);
+  const double B_squared = compute_vec2_from_vcon(metric, Bup);
 
   const double Sdn[3] = {cons_undens->S_x,
                          cons_undens->S_y,
                          cons_undens->S_z};
   double Sup[3]; raise_vector_3d(metric, Sdn, Sup);
-  const double S_squared = compute_S_squared(metric, Sdn);
+  const double S_squared = compute_vec2_from_vcov(metric, Sdn);
 
   // Need to calculate for (21) and (22) in Cerda-Duran 2008
   // B * S = B^i * S_i

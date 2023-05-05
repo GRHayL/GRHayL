@@ -197,8 +197,4 @@ void limit_utilde_and_compute_v(
 }
 #endif
 
-double compute_Bsq_from_Bup(
-      const metric_quantities *restrict metric,
-      const double *restrict Bup );
-
 #endif // CON2PRIM_H

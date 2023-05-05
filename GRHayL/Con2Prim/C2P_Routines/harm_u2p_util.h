@@ -124,19 +124,6 @@ static inline double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, con
   return(  ( Wsq * harm_aux->Qtsq  + harm_aux->QdotBsq * (harm_aux->Bsq + 2.*W)) / (Wsq*Xsq) );
 }
 
-static inline double
-compute_S_squared(
-      const metric_quantities *restrict metric,
-      const double *restrict SD ) {
-
-  return metric->adm_gupxx * SD[0] * SD[0] +
-         metric->adm_gupyy * SD[1] * SD[1] +
-         metric->adm_gupzz * SD[2] * SD[2] +
-   2.0 * metric->adm_gupxy * SD[0] * SD[1] +
-   2.0 * metric->adm_gupxz * SD[0] * SD[2] +
-   2.0 * metric->adm_gupyz * SD[1] * SD[2];
-}
-
 static inline void
 raise_vector_3d(
       const metric_quantities *restrict metric,

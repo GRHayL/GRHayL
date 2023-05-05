@@ -152,7 +152,7 @@ int Hybrid_Noble2D(
   const double Bup[3] = {prims->Bx * ONE_OVER_SQRT_4PI,
                          prims->By * ONE_OVER_SQRT_4PI,
                          prims->Bz * ONE_OVER_SQRT_4PI};
-  harm_aux.Bsq = compute_Bsq_from_Bup(metric, Bup);
+  harm_aux.Bsq = compute_vec2_from_vcon(metric, Bup);
 
   const double uu = - cons_undens->tau*metric->lapse
                     - metric->lapse*cons_undens->rho

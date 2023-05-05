@@ -38,30 +38,6 @@ typedef struct fparams_struct {
 } fparams_struct;
 
 /*
- * Function   : compute_S_squared
- * Author     : Leo Werneck
- *
- * Computes S^{2} = gamma^{ij}S_{i}S_{j}.
- *
- * Parameters : metric   - Pointer to GRHayL metric_quantities struct.
- *            : SD       - Array containing S_{i}.
- *
- * Returns    : S^{2}
- */
-static inline double
-compute_S_squared(
-      const metric_quantities *restrict metric,
-      const double *restrict SD ) {
-
-  return metric->adm_gupxx * SD[0] * SD[0] +
-         metric->adm_gupyy * SD[1] * SD[1] +
-         metric->adm_gupzz * SD[2] * SD[2] +
-   2.0 * metric->adm_gupxy * SD[0] * SD[1] +
-   2.0 * metric->adm_gupxz * SD[0] * SD[2] +
-   2.0 * metric->adm_gupyz * SD[1] * SD[2];
-}
-
-/*
  * Function   : raise_vector_3d
  * Author     : Leo Werneck
  *
@@ -191,7 +167,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->S_x, cons_undens->S_y, cons_undens->S_z};
-  double S_squared = compute_S_squared(metric, SD);
+  double S_squared = compute_vec2_from_vcov(metric, SD);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
@@ -203,7 +179,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
       SD[i] *= rescale_factor;
 
     // Step 2.3: Recompute S^{2}
-    S_squared = compute_S_squared(metric, SD);
+    S_squared = compute_vec2_from_vcov(metric, SD);
   }
   *Ssq = S_squared;
 
@@ -211,7 +187,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
   BU[0] = prims->Bx * ONE_OVER_SQRT_4PI;
   BU[1] = prims->By * ONE_OVER_SQRT_4PI;
   BU[2] = prims->Bz * ONE_OVER_SQRT_4PI;
-  *Bsq = compute_Bsq_from_Bup(metric, BU);
+  *Bsq = compute_vec2_from_vcon(metric, BU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   *BdotS = 0.0;

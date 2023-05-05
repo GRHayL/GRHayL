@@ -40,7 +40,7 @@ int Tabulated_Palenzuela1D(
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->S_x, cons_undens->S_y, cons_undens->S_z};
-  double S_squared = compute_S_squared(metric, SD);
+  double S_squared = compute_vec2_from_vcov(metric, SD);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
@@ -52,14 +52,14 @@ int Tabulated_Palenzuela1D(
       SD[i] *= rescale_factor;
 
     // Step 2.3: Recompute S^{2}
-    S_squared = compute_S_squared(metric, SD);
+    S_squared = compute_vec2_from_vcov(metric, SD);
   }
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
   const double BU[3] = {prims->Bx * ONE_OVER_SQRT_4PI,
                         prims->By * ONE_OVER_SQRT_4PI,
                         prims->Bz * ONE_OVER_SQRT_4PI};
-  const double B_squared = compute_Bsq_from_Bup(metric, BU);
+  const double B_squared = compute_vec2_from_vcon(metric, BU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   double BdotS = 0.0;
