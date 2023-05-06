@@ -229,14 +229,22 @@ jobs:
           compiler: 'clang'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_perturbed.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_perturbed.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_perturbed.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_perturbed.bin
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for tabulated EOS Con2Prim routines
         run: |

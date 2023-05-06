@@ -32,7 +32,7 @@ generate_test_data(
     for(int vars_key=0;vars_key<=1;vars_key++) {
 
       const char *perturb_string = perturb ? "perturbed" : "unperturbed";
-      const char *vars_string    = vars_key ? "Pmag_vs_Wm1" : "P_vs_T";
+      const char *vars_string    = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
 
       grhayl_info("  Generating %s data for test %s\n", perturb_string, vars_string);
       char filename[256];
@@ -43,17 +43,15 @@ generate_test_data(
       fwrite(&npoints, sizeof(int), 1, fp);
 
       double test_Y_e=0.0/0.0, test_rho_min=0.0/0.0, test_rho_max=0.0/0.0, test_T_min=0.0/0.0, test_T_max=0.0/0.0;
-      double test_W=0.0/0.0, test_logPmoP=0.0/0.0, lrmin=0.0/0.0, lrmax=0.0/0.0, dlr=0.0/0.0, ltmin=0.0/0.0, ltmax=0.0/0.0, dlt=0.0/0.0;
-      double test_rho=0.0/0.0, test_T=0.0/0.0, test_Wm1_min=0.0/0.0, test_Wm1_max=0.0/0.0, test_logWm1_min=0.0/0.0;
-      double test_logWm1_max=0.0/0.0, dlogWm1=0.0/0.0, test_logPmoP_min=0.0/0.0, test_logPmoP_max=0.0/0.0, dlogPmoP=0.0/0.0;
+      double test_W=0.0/0.0, test_logPmoP=0.0/0.0, lrmin=0.0/0.0, lrmax=0.0/0.0, dlr=0.0/0.0, ltmin=0.0/0.0, ltmax=0.0/0.0;
+      double dlt=0.0/0.0, test_rho=0.0/0.0, test_T=0.0/0.0, test_logWm1_min=0.0/0.0, test_logWm1_max=0.0/0.0;
+      double dlogWm1=0.0/0.0, test_logPmoP_min=0.0/0.0, test_logPmoP_max=0.0/0.0, dlogPmoP=0.0/0.0;
 
       if( vars_key ) {
         // These variables are used in the Pmag vs W test
         test_Y_e         = 0.1;
         test_rho         = 1.6192159535484857e-07;
         test_T           = 5;
-        test_Wm1_min     = -5.5;
-        test_Wm1_max     = +1.5;
         test_logWm1_min  = -5.5;
         test_logWm1_max  = +1.5;
         dlogWm1          = (test_logWm1_max - test_logWm1_min)/(npoints-1);
@@ -64,8 +62,6 @@ generate_test_data(
           test_Y_e         *= (1+randf(-1,1)*1e-14);
           test_rho         *= (1+randf(-1,1)*1e-14);
           test_T           *= (1+randf(-1,1)*1e-14);
-          test_Wm1_min     *= (1+randf(-1,1)*1e-14);
-          test_Wm1_max     *= (1+randf(-1,1)*1e-14);
           test_logWm1_min  *= (1+randf(-1,1)*1e-14);
           test_logWm1_max  *= (1+randf(-1,1)*1e-14);
           dlogWm1          *= (1+randf(-1,1)*1e-14);
@@ -208,7 +204,7 @@ run_unit_test(
 
   for(int vars_key=0;vars_key<=1;vars_key++) {
 
-    const char *vars_string = vars_key ? "Pmag_vs_Wm1" : "P_vs_T";
+    const char *vars_string = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
     grhayl_info("  Running test %s\n", vars_string);
     char filename[256];
     sprintf(filename, "con2prim_tabulated_%s_%s_unperturbed.bin", routine, vars_string);
@@ -340,6 +336,7 @@ int main(int argc, char **argv) {
     params.main_routine = Newman1D_entropy; run_unit_test(&params, &eos);
     // The routines below fail for high temperatures/magnetizations,
     // respectively. We use the standard Palenzuela routine as a backup.
+    // params.backup_routine[0] = Palenzuela1D;
     params.backup_routine[0] = Palenzuela1D;
     params.main_routine = Newman1D;             run_unit_test(&params, &eos);
     params.main_routine = Palenzuela1D_entropy; run_unit_test(&params, &eos);
