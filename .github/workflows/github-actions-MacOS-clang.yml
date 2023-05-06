@@ -209,3 +209,36 @@ jobs:
           ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 2
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
+
+  con-to-prim-tabulated:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'clang'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'clang'
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_unperturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_perturbed.bin
+          curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
+      - name: Run unit test for tabulated EOS Con2Prim routines
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
+          ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1

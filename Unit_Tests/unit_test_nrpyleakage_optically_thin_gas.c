@@ -116,11 +116,11 @@ rk4_step_ode(
 int main( int argc, char **argv ) {
 
   if( argc != 3 ) {
-    grhayl_info("Correct usage is: %s <eos table> <test key>\n", *argv);
+    grhayl_info("Usage: %s <eos table> <test key>\n", *argv);
     grhayl_info("Available test keys:\n");
-    grhayl_info("  0 : generate unperturbed\n");
-    grhayl_info("  1 : generate perturbed\n");
-    grhayl_info("  2 : perform validation test\n");
+    grhayl_info("  0 : Generate unperturbed data\n");
+    grhayl_info("  1 : Generate perturbed data\n");
+    grhayl_info("  2 : Run unit test\n");
     exit(1);
   }
 

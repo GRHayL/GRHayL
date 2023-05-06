@@ -25,7 +25,7 @@ void guess_primitives( const eos_parameters *restrict eos,
   prims->vy = -metric->betay;
   prims->vz = -metric->betaz;
   prims->Y_e = cons->Y_e/cons->rho;
-  prims->temperature = eos->T_atm;
+  prims->temperature = eos->T_max;
 
   // If using Hybrid EOS, compute P_cold
   if( eos->eos_type == grhayl_eos_hybrid )
