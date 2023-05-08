@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   double *By = (double*) malloc(sizeof(double)*arraylength);
   double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
-  // Allocate memory for the conservatives 
+  // Allocate memory for the conservatives
   double *rho_star = (double*) malloc(sizeof(double)*arraylength);
   double *tau = (double*) malloc(sizeof(double)*arraylength);
   double *S_x = (double*) malloc(sizeof(double)*arraylength);
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
     metric_quantities metric;
-    primitive_quantities prims, prims_guess;
+    primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
     initialize_metric(lapse[index],
@@ -207,10 +207,10 @@ int main(int argc, char **argv) {
       undensitize_conservatives(&metric, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
+      check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
 
       if(check!=0)
-        check = font_fix(&params, &eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+        check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
       /*************************************************************/
 
       /********** Artificial Font fix for code comparison **********
@@ -228,13 +228,10 @@ int main(int argc, char **argv) {
       the behavior of IllinoisGRMHD.
       **************************************************************/
       if(index==arraylength-2)
-        check = font_fix(&params, &eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+        check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
 
-      if(check==0) {
-        prims = prims_guess;
-      } else {
+      if(check)
         printf("Con2Prim and Font fix failed!");
-      }
     } else {
       diagnostics.failure_checker+=1;
       reset_prims_to_atmosphere(&eos, &prims);

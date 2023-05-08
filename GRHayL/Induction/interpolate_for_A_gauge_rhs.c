@@ -2,12 +2,22 @@
 
 static int MINUS1=0, PLUS0=1, PLUS1=2;
 
+// Helper function for interpolating quantities via averaging
+double avg(const int size,
+           const double f[size][size][size],
+           const int imin,
+           const int imax,
+           const int jmin,
+           const int jmax,
+           const int kmin,
+           const int kmax);
+
 /* Function    : interpolate_for_A_gauge_rhs()
  * Description : computes several interpolated quantities for computing the RHS
  *               for tilde{phi} and the gauge contributions to A_i; these are
  *               used in calculate_phitilde_and_A_gauge_rhs() function
  *
- * Inputs      : gauge_vars      - A_gauge_vars struct containing stencils for 
+ * Inputs      : gauge_vars      - A_gauge_vars struct containing stencils for
  *                                 variables to compute interpolated values
  *
  * Outputs     : gauge_rhs_vars  - A_gauge_rhs_vars struct containing interpolated

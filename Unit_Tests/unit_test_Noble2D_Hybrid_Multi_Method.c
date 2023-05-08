@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
     metric_quantities metric;
-    primitive_quantities prims, prims_guess;
+    primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
     // Read initial data accompanying trusted output
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
     undensitize_conservatives(&metric, &cons, &cons_undens);
 
     // This runs the selected Con2Prim method (in this case, Noble2D).
-    int check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
+    int check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
     //TODO: Con2Prim returned value isn't currently checked
 
     primitive_quantities prims_trusted, prims_pert;
@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
                       entropy_pert[i], Y_e_pert[i], temperature_pert[i],
                       &prims_pert);
 
-    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims_guess, &prims_pert);
+    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
   }
   grhayl_info("Noble2D_Hybrid_Multi_Method function test has passed!\n");
   free(lapse);

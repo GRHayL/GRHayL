@@ -29,7 +29,7 @@
 static inline double get_EOS_table_max(
       const eos_parameters *restrict eos,
       const int var_key ) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Loop over the table, searching for the maximum value
@@ -47,7 +47,7 @@ static inline double get_EOS_table_max(
 static inline double get_EOS_table_min(
       const eos_parameters *restrict eos,
       const int var_key ) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Loop over the table, searching for the minimum value
@@ -65,7 +65,7 @@ static inline double get_EOS_table_min(
  * (c) 2022 Leo Werneck
  */
 void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters *restrict eos_params) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   check_if_file_exists(EOS_tablename);
@@ -110,7 +110,7 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   if (!(eos_params->table_logT = (double*)malloc(eos_params->N_T * sizeof(double))))
     grhayl_error("Cannot allocate memory for EOS table\n");
 
-  if (!(eos_params->table_Ye = (double*)malloc(eos_params->N_Ye * sizeof(double))))
+  if (!(eos_params->table_Y_e = (double*)malloc(eos_params->N_Ye * sizeof(double))))
     grhayl_error("Cannot allocate memory for EOS table\n");
 
 
@@ -146,7 +146,7 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   // Read additional tables and variables
   READ_BCAST_EOS_HDF5("logrho"      , eos_params->table_logrho , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->N_rho);
   READ_BCAST_EOS_HDF5("logtemp"     , eos_params->table_logT   , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->N_T);
-  READ_BCAST_EOS_HDF5("ye"          , eos_params->table_Ye     , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->N_Ye);
+  READ_BCAST_EOS_HDF5("ye"          , eos_params->table_Y_e     , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->N_Ye);
   READ_BCAST_EOS_HDF5("energy_shift", &eos_params->energy_shift, H5T_NATIVE_DOUBLE, H5S_ALL, 1);
 
   HDF5_DO_IO(H5Sclose(mem3));
@@ -234,7 +234,7 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   eos_params->drho  = (eos_params->table_logrho[eos_params->N_rho-1] - eos_params->table_logrho[0]) / (1.0*(eos_params->N_rho-1));
   eos_params->drhoi = 1.0/eos_params->drho;
 
-  eos_params->dye  = (eos_params->table_Ye[eos_params->N_Ye-1] - eos_params->table_Ye[0]) / (1.0*(eos_params->N_Ye-1));
+  eos_params->dye  = (eos_params->table_Y_e[eos_params->N_Ye-1] - eos_params->table_Y_e[0]) / (1.0*(eos_params->N_Ye-1));
   eos_params->dyei = 1.0/eos_params->dye;
 
   eos_params->drhotempi      = eos_params->drhoi     * eos_params->dtempi;
@@ -249,14 +249,14 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, eos_parameters
   eos_params->table_rho_min  = exp(eos_params->table_logrho[0]);
   eos_params->table_T_max    = exp(eos_params->table_logT[eos_params->N_T-1]);
   eos_params->table_T_min    = exp(eos_params->table_logT[0]);
-  eos_params->table_Ye_max   = eos_params->table_Ye[eos_params->N_Ye-1];
-  eos_params->table_Ye_min   = eos_params->table_Ye[0];
+  eos_params->table_Y_e_max   = eos_params->table_Y_e[eos_params->N_Ye-1];
+  eos_params->table_Y_e_min   = eos_params->table_Y_e[0];
 
   // Table bounds for useful quantities
-  eos_params->table_P_min   = get_EOS_table_min(eos_params, NRPyEOS_press_key);
-  eos_params->table_P_max   = get_EOS_table_max(eos_params, NRPyEOS_press_key);
-  eos_params->table_eps_min = get_EOS_table_min(eos_params, NRPyEOS_eps_key);
-  eos_params->table_eps_max = get_EOS_table_max(eos_params, NRPyEOS_eps_key);
+  eos_params->table_P_min   = exp(get_EOS_table_min(eos_params, NRPyEOS_press_key));
+  eos_params->table_P_max   = exp(get_EOS_table_max(eos_params, NRPyEOS_press_key));
+  eos_params->table_eps_min = exp(get_EOS_table_min(eos_params, NRPyEOS_eps_key)) - eos_params->energy_shift;
+  eos_params->table_eps_max = exp(get_EOS_table_max(eos_params, NRPyEOS_eps_key)) - eos_params->energy_shift;
   eos_params->table_ent_min = get_EOS_table_min(eos_params, NRPyEOS_entropy_key);
   eos_params->table_ent_max = get_EOS_table_max(eos_params, NRPyEOS_entropy_key);
 #endif

@@ -10,8 +10,8 @@
 
 void initialize_diagnostics(con2prim_diagnostics *restrict diagnostics) {
   diagnostics->failures=0;
-  diagnostics->font_fixes=0;
-  diagnostics->vel_limited_ptcount=0;
+  diagnostics->font_fix=0;
+  diagnostics->speed_limited=0;
   diagnostics->backup[0]=0;
   diagnostics->backup[1]=0;
   diagnostics->backup[2]=0;

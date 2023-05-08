@@ -18,6 +18,10 @@
 #define M_PI 3.141592653589793238462643383279502884L
 #endif
 
+#ifndef GRHAYL_DISABLE_HDF5
+#define GRHAYL_USE_HDF5
+#endif
+
 /*
    The struct GRHayL_parameters contains parameters for controlling
    the behavior of the GRHayL gems. The struct elements are detailed below:
@@ -37,8 +41,17 @@
    can, this should be supported.
 */
 
+typedef enum {
+  None=-1,
+  Noble2D, Noble1D,
+  Noble1D_entropy, Noble1D_entropy2,
+  CerdaDuran2D, CerdaDuran3D,
+  Palenzuela1D, Palenzuela1D_entropy,
+  Newman1D, Newman1D_entropy
+} con2prim_method_t;
+
 typedef struct GRHayL_parameters {
-  int main_routine, backup_routine[3];
+  con2prim_method_t main_routine, backup_routine[3];
   bool evolve_entropy;
   bool evolve_temp;
   bool calc_prim_guess;
@@ -49,14 +62,14 @@ typedef struct GRHayL_parameters {
 } GRHayL_parameters;
 
 void initialize_GRHayL(
-      const int main,
-      const int backup[3],
-      const int evolve_entropy,
-      const int evolve_temp,
-      const int calc_prim_guess,
+      const con2prim_method_t main,
+      const con2prim_method_t backup[3],
+      const bool evolve_entropy,
+      const bool evolve_temp,
+      const bool calc_prim_guess,
       const double psi6threshold,
-      const int update_Tmunu,
-      const int Cupp_Fix,
+      const bool update_Tmunu,
+      const bool Cupp_Fix,
       const double Lorenz_damping_factor,
       GRHayL_parameters *restrict params);
 
@@ -100,7 +113,7 @@ typedef struct primitive_quantities {
   double rho, press, eps;
   double u0, vx, vy, vz;
   double Bx, By, Bz;
-  double entropy, Y_e, temperature;
+  double Y_e, temperature, entropy;
 } primitive_quantities;
 
 /*
@@ -148,7 +161,7 @@ typedef enum {grhayl_eos_hybrid, grhayl_eos_tabulated} grhayl_eos_t;
 typedef struct eos_parameters {
 
   //-------------- General parameters --------------
-  int eos_type;
+  grhayl_eos_t eos_type;
   double rho_atm, rho_min, rho_max;
   double tau_atm;
   double press_atm, press_min, press_max;
@@ -202,7 +215,7 @@ typedef struct eos_parameters {
   //------------------------------------------------
 
   //---------- Tabulated Equation of State ---------
-  double Ye_atm, Ye_min, Ye_max;
+  double Y_e_atm, Y_e_min, Y_e_max;
   double T_atm, T_min, T_max;
   double eps_atm, eps_min, eps_max;
   double entropy_atm, entropy_min, entropy_max;
@@ -216,13 +229,13 @@ typedef struct eos_parameters {
   double *restrict table_all;
   double *restrict table_logrho;
   double *restrict table_logT;
-  double *restrict table_Ye;
+  double *restrict table_Y_e;
   double *restrict table_eps;
 
   // Table bounds
   double table_rho_min, table_rho_max;
   double table_T_min  , table_T_max;
-  double table_Ye_min , table_Ye_max;
+  double table_Y_e_min , table_Y_e_max;
   double table_P_min  , table_P_max;
   double table_eps_min, table_eps_max;
   double table_ent_min, table_ent_max;
@@ -332,11 +345,44 @@ typedef struct eos_parameters {
         double *restrict X_n,
         double *restrict X_p);
 
+  void (*tabulated_compute_T_from_eps)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double Y_e,
+        const double eps,
+        double *restrict T);
+
   void (*tabulated_compute_P_T_from_eps)(
         const struct eos_parameters *restrict eos,
         const double rho,
         const double Y_e,
         const double eps,
+        double *restrict P,
+        double *restrict T);
+
+  void (*tabulated_compute_P_cs2_T_from_eps)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double Y_e,
+        const double eps,
+        double *restrict P,
+        double *restrict cs2,
+        double *restrict T);
+
+  void (*tabulated_compute_eps_cs2_T_from_P)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double Y_e,
+        const double P,
+        double *restrict eps,
+        double *restrict cs2,
+        double *restrict T);
+
+  void (*tabulated_compute_P_T_from_S)(
+        const struct eos_parameters *restrict eos,
+        const double rho,
+        const double Y_e,
+        const double S,
         double *restrict P,
         double *restrict T);
 
@@ -392,6 +438,7 @@ void initialize_hybrid_eos(
       eos_parameters *restrict eos );
 
 void initialize_tabulated_eos(
+      const char *table_path,
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -417,6 +464,7 @@ void initialize_hybrid_eos_functions_and_params(
       eos_parameters *restrict eos );
 
 void initialize_tabulated_eos_functions_and_params(
+      const char *table_path,
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -627,6 +675,12 @@ void return_stress_energy(
       double *restrict Txz, double *restrict Tyy, double *restrict Tyz,
       double *restrict Tzz);
 
+void limit_v_and_compute_u0(
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      primitive_quantities *restrict prims,
+      int *restrict speed_limit);
+
 void raise_vector(
       const metric_quantities *restrict metric,
       const double vcov[4],
@@ -636,6 +690,14 @@ void lower_vector(
       const metric_quantities *restrict metric,
       const double vcon[4],
       double vcov[4]);
+
+double compute_vec2_from_vcov(
+      const metric_quantities *restrict metric,
+      const double *restrict vcov);
+
+double compute_vec2_from_vcon(
+      const metric_quantities *restrict metric,
+      const double *restrict vcon);
 
 void compute_TDNmunu(
       const eos_parameters *restrict eos,

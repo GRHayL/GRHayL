@@ -1,7 +1,7 @@
 #ifndef NRPYEOS_TABULATED_H_
 #define NRPYEOS_TABULATED_H_
 #include "GRHayL.h"
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
 #define HDF5_ERROR_IF_USED \
   grhayl_error("HDF5 is disabled, so this function cannot be used\n")
 #else
@@ -39,13 +39,13 @@ static const char table_var_names[NRPyEOS_ntablekeys][10] = {
   "Xa","Xh","Xn","Xp","Abar","Zbar","Gamma"
 };
 //********************************************
-#endif // USE_HDF5
+#endif // GRHAYL_USE_HDF5
 
 // Error handling struct
 typedef struct NRPyEOS_error_report {
   bool error;
   int error_key;
-  char message[512];
+  char message[1024];
 } NRPyEOS_error_report;
 
 #ifdef __cplusplus
@@ -142,11 +142,44 @@ void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
       double *restrict X_n,
       double *restrict X_p);
 
+void NRPyEOS_T_from_rho_Ye_eps(
+      const eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict T);
+
 void NRPyEOS_P_and_T_from_rho_Ye_eps(
       const eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
       const double eps,
+      double *restrict P,
+      double *restrict T);
+
+void NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(
+      const eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict P,
+      double *restrict cs2,
+      double *restrict T);
+
+void NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(
+    const eos_parameters *restrict eos_params,
+    const double rho,
+    const double Y_e,
+    const double P,
+    double *restrict eps,
+    double *restrict cs2,
+    double *restrict T);
+
+void NRPyEOS_P_and_T_from_rho_Ye_S(
+      const eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double S,
       double *restrict P,
       double *restrict T);
 
@@ -207,7 +240,7 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       eos_parameters const *restrict eos,
       primitive_quantities const *restrict prims,
       double *restrict enthalpy_ptr,
-      double *restrict cs2_ptr );
+      double *restrict cs2_ptr);
 
 #ifdef __cplusplus
 }

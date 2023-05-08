@@ -31,14 +31,13 @@ int font_fix_rhob_loop( const eos_parameters *restrict eos,
                         const conservative_quantities *restrict cons,
                         const double rhob_in, double *restrict rhob_out_ptr ) {
 
-  double rhob_out = *rhob_out_ptr;
-
   /* Declare basic variables */
   bool fontcheck=true;
   int itcount = 0, j0, j1;
   double W0, Sf20, rhob0, rhob1, h, P_cold, eps_cold;
   double W   = W_in;
   double Sf2 = Sf2_in;
+  double rhob_out=0;
 
   //////////////////////
   // OUTER LOOP START //
@@ -97,7 +96,7 @@ int font_fix_rhob_loop( const eos_parameters *restrict eos,
     /* Perform physical checks on the variables
      * and output the last value of h obtained
      */
-    eos->hybrid_compute_P_cold_and_eps_cold(eos,rhob_out, &P_cold, &eps_cold);
+    eos->hybrid_compute_P_cold_and_eps_cold(eos, rhob_out, &P_cold, &eps_cold);
     h = 1.0 + eps_cold + P_cold/rhob_out;
 
     /* Set W based on eq. (A60) in Etienne et al. (2011)

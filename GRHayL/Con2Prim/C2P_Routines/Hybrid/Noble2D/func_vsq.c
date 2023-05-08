@@ -1,4 +1,4 @@
-#include "../harm_u2p_util.h"
+#include "../../harm_u2p_util.h"
 
 double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq);
 

@@ -2,7 +2,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(const eos_parameters *restrict eos_params,
+void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(const eos_parameters *restrict eos,
                                               const double rho,
                                               const double Y_e,
                                               const double eps,
@@ -10,7 +10,7 @@ void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(const eos_parameters *restrict eos
                                               double *restrict S,
                                               double *restrict depsdT,
                                               double *restrict T) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Step 1: Set EOS table keys
@@ -23,13 +23,13 @@ void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(const eos_parameters *restrict eos
   double outvars[3];
 
   // Step 4: Perform the interpolation
-  const double root_finding_precision = 1e-10;
-  NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities( eos_params, 3,root_finding_precision,
+  const double root_finding_precision = eos->root_finding_precision;
+  NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities( eos, 3,root_finding_precision,
                                                                rho,Y_e,eps,NRPyEOS_eps_key, keys,outvars, T, &report );
 
   // Step 5: Check for errors
   if( report.error )
-    grhayl_Error(report.error_key, report.message);
+    grhayl_Error(report.error_key, report.message, report.error_key);
 
   // Step 6: Update output variables
   *P = outvars[0];

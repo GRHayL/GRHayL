@@ -1,0 +1,42 @@
+# IsotropicGasID schedule.ccl file
+    
+STORAGE: ADMBase::metric[metric_timelevels]
+STORAGE: ADMBase::curv[metric_timelevels]
+STORAGE: ADMBase::lapse[lapse_timelevels]
+STORAGE: ADMBase::shift[shift_timelevels]
+STORAGE: HydroBase::rho[timelevels]
+STORAGE: HydroBase::press[timelevels]
+STORAGE: HydroBase::eps[timelevels]
+STORAGE: HydroBase::vel[timelevels]
+STORAGE: HydroBase::Y_e[timelevels]
+STORAGE: HydroBase::temperature[timelevels]
+STORAGE: HydroBase::entropy[timelevels]
+
+schedule IsotropicGasID IN HydroBase_Initial
+{
+  LANG: C
+  WRITES: ADMBase::alp(Everywhere)
+  WRITES: ADMBase::betax(Everywhere)
+  WRITES: ADMBase::betay(Everywhere)
+  WRITES: ADMBase::betaz(Everywhere)
+  WRITES: ADMBase::kxx(Everywhere)
+  WRITES: ADMBase::kxy(Everywhere)
+  WRITES: ADMBase::kxz(Everywhere)
+  WRITES: ADMBase::kyy(Everywhere)
+  WRITES: ADMBase::kyz(Everywhere)
+  WRITES: ADMBase::kzz(Everywhere)
+  WRITES: ADMBase::gxx(Everywhere)
+  WRITES: ADMBase::gxy(Everywhere)
+  WRITES: ADMBase::gxz(Everywhere)
+  WRITES: ADMBase::gyy(Everywhere)
+  WRITES: ADMBase::gyz(Everywhere)
+  WRITES: ADMBase::gzz(Everywhere)
+  WRITES: HydroBase::vel[0](Everywhere)
+  WRITES: HydroBase::vel[1](Everywhere)
+  WRITES: HydroBase::vel[2](Everywhere)
+  WRITES: HydroBase::rho(Everywhere)
+  WRITES: HydroBase::eps(Everywhere)
+  WRITES: HydroBase::press(Everywhere)
+  WRITES: HydroBase::Y_e(Everywhere)
+  WRITES: HydroBase::temperature(Everywhere)
+} "Set up general relativistic hydrodynamic (GRHD) fields for isotropic gas initial data"

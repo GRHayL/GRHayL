@@ -14,15 +14,16 @@
  *                                for the gridpoint of interest
  *
  * Outputs     : prims          - returns primitives within floors and ceilings
- *             : speed_limit    - tracks whether velocity was speed-limited
+ *             : speed_limited  - tracks whether velocity was speed-limited
  *
  */
 
-void enforce_primitive_limits_and_compute_u0(const GRHayL_parameters *restrict params,
-                                            const eos_parameters *restrict eos,
-                                            const metric_quantities *restrict metric,
-                                            primitive_quantities *restrict prims,
-                                            int *restrict speed_limit) {
+void enforce_primitive_limits_and_compute_u0(
+    const GRHayL_parameters *restrict params,
+    const eos_parameters *restrict eos,
+    const metric_quantities *restrict metric,
+    primitive_quantities *restrict prims,
+    int *restrict speed_limited) {
 
   // The density floor and ceiling is always applied
   prims->rho = MIN(MAX(prims->rho,eos->rho_min),eos->rho_max);
@@ -52,26 +53,18 @@ void enforce_primitive_limits_and_compute_u0(const GRHayL_parameters *restrict p
 
   // Tabulated EOS specific floors and ceilings
   } else if( eos->eos_type == grhayl_eos_tabulated ) {
-    grhayl_warn("No tabulated EOS support yet! Sorry!");
-  //  // Apply floors and ceilings to Y_e and T
-  //  const double xye   = MIN(MAX(prims->Y_e,eos->Ye_min),eos->Ye_atm);
-  //  const double xtemperature = MIN(MAX(prims->temperature,eos->T_atm ),eos->T_max );
+    // Apply floors and ceilings to Y_e and T
+    prims->Y_e = MIN(MAX(prims->Y_e,eos->Y_e_min), eos->Y_e_max);
+    prims->temperature = MIN(MAX(prims->temperature, eos->T_min),eos->T_max);
 
-  //  // Additional variables used for the EOS call
-  //  const double xrho  = prims->rho;
-  //  double xprs        = 0.0;
-  //  double xeps        = 0.0;
-  //  double xeps        = 0.0;
-  //  double xent        = 0.0;
-  //  WVU_EOS_P_eps_and_S_from_rho_Ye_T(xrho,xye,xtemp, &xprs,&xeps,&xent);
-  //  // Now update the primitives (rho has already been set)
-  //  prims->Y_e = xye;
-  //  prims->temperature = xtemp;
-  //  prims->press = xprs;
-  //  prims->eps = xeps;
-  //  prims->entropy = xent;
+    // Additional variables used for the EOS call
+    prims->press = 0.0;
+    prims->eps   = 0.0;
+    eos->tabulated_compute_P_eps_from_T(eos,
+                                        prims->rho, prims->Y_e, prims->temperature,
+                                        &prims->press, &prims->eps);
   }
 
   // Finally, apply speed limit to v and compute u^0
-  limit_v_and_compute_u0(eos, metric, prims, speed_limit);
+  limit_v_and_compute_u0(eos, metric, prims, speed_limited);
 }

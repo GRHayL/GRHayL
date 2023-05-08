@@ -8,7 +8,8 @@
   eos->rho_min           = rho_min;        \
   eos->rho_max           = rho_max;
 
-/* Function    : initialize_eos_functions()
+/*
+ * Function    : initialize_eos_functions()
  * Description : Initializes function pointers in EOS struct to NRPyEOS
  *
  * Input/Output: eos - eos_parameters struct with the function pointers
@@ -33,7 +34,8 @@ void initialize_eos_functions(
   }
 }
 
-/* Function    : initialize_hybrid_eos()
+/*
+ * Function    : initialize_hybrid_eos()
  * Description : Initializes EOS struct elements for a hybrid EOS
  *
  * Inputs      : W_max          - Maximum allowed Lorentz factor
@@ -51,19 +53,30 @@ void initialize_eos_functions(
  *
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
- *
  */
 void initialize_hybrid_eos(
       const double W_max,
       const double rho_atm,
-      const double rho_min,
-      const double rho_max,
+      double rho_min,
+      double rho_max,
       const int neos,
       const double *restrict rho_ppoly,
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
       eos_parameters *restrict eos ) {
+
+  // Step 0: Enforce default values
+  if( rho_atm < 0 ) grhayl_error("rho_atm must be specified\n");
+  if( rho_min < 0 ) {
+    grhayl_warn("Minimum density not provided. Disabling density floor (rho_min = 0)\n");
+    rho_min = 0.0;
+  }
+  if( rho_max < 0 ) {
+    grhayl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
+    rho_max = 1e300;
+  }
+  if( rho_min > rho_max ) grhayl_error("rho_min cannot be greater than rho_max\n");
 
   // Step 1: Set EOS type to Hybrid
   eos->eos_type = grhayl_eos_hybrid;
@@ -114,7 +127,8 @@ void initialize_hybrid_eos(
   // --------------------------------------
 }
 
-/* Function    : initialize_tabulated_eos()
+/*
+ * Function    : initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
  *
  * Inputs      : W_max          - maximum allowed Lorentz factor
@@ -130,49 +144,92 @@ void initialize_hybrid_eos(
  *
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
- *
  */
 void initialize_tabulated_eos(
+      const char *table_filepath,
       const double W_max,
       const double rho_atm,
-      const double rho_min,
-      const double rho_max,
-      const double Ye_atm,
-      const double Ye_min,
-      const double Ye_max,
+      double rho_min,
+      double rho_max,
+      const double Y_e_atm,
+      double Y_e_min,
+      double Y_e_max,
       const double T_atm,
-      const double T_min,
-      const double T_max,
+      double T_min,
+      double T_max,
       eos_parameters *restrict eos ) {
 
   // Step 1: Set EOS type to Tabulated.
-  eos->eos_type = grhayl_eos_hybrid;
+  eos->eos_type = grhayl_eos_tabulated;
 
-  // Step 2: Initialize quantities which are common to all EOSs.
+  // Step 2: Read the EOS table
+  eos->tabulated_read_table_set_EOS_params(table_filepath, eos);
+
+  // Step 3: Enforce default values for (rho, Y_e, T) min, max, and atm
+  // Step 3.a: Atmosphere values
+  if( rho_atm < 0 ) grhayl_error("rho_atm must be specified\n");
+  if( Y_e_atm < 0 ) grhayl_error("Y_e_atm must be specified\n");
+  if(   T_atm < 0 ) grhayl_error("T_atm must be specified\n");
+
+  // Step 3.b: Minimum values
+  if( rho_min < 0 ) {
+    grhayl_warn("Minimum density not provided; using table bounds (%.15e)\n", eos->table_rho_min);
+    rho_min = eos->table_rho_min;
+  }
+  if( Y_e_min < 0 ) {
+    grhayl_warn("Minimum electron fraction not provided; using table bounds (%.15e)\n", eos->table_Y_e_min);
+    Y_e_min = eos->table_Y_e_min;
+  }
+  if( T_min < 0 ) {
+    grhayl_warn("Minimum temperature not provided; using table bounds (%.15e)\n", eos->table_T_min);
+    T_min = eos->table_T_min;
+  }
+
+  // Step 3.c: Maximum values
+  if( rho_max < 0 ) {
+    grhayl_warn("Maximum density not provided; using table bounds (%.15e)\n", eos->table_rho_max);
+    rho_max = eos->table_rho_max;
+  }
+  if( Y_e_max < 0 ) {
+    grhayl_warn("Maximum electron fraction not provided; using table bounds (%.15e)\n", eos->table_Y_e_max);
+    Y_e_max = eos->table_Y_e_max;
+  }
+  if( T_max < 0 ) {
+    grhayl_warn("Maximum temperature not provided; using table bounds (%.15e)\n", eos->table_T_max);
+    T_max = eos->table_T_max;
+  }
+
+  // Step 3.d: Sanity check mins and maxs
+  if( rho_min > rho_max ) grhayl_error("rho_min cannot be greater than rho_max\n");
+  if( Y_e_min > Y_e_max ) grhayl_error("Y_e_min cannot be greater than Y_e_max\n");
+  if(   T_min >   T_max ) grhayl_error("T_min cannot be greater than T_max\n");
+
+  // Step 4: Initialize quantities which are common to all EOSs.
   init_common_eos_quantities;
 
-  // Step 3: Set parameters specific to Tabulated EOS.
-  eos->Ye_atm                 = Ye_atm;
-  eos->Ye_min                 = Ye_min;
-  eos->Ye_max                 = Ye_max;
-  eos->T_atm                  = T_atm;
-  eos->T_min                  = T_min;
-  eos->T_max                  = T_max;
+  // Step 5: Set parameters specific to Tabulated EOS.
+  eos->Y_e_atm = Y_e_atm;
+  eos->Y_e_min = Y_e_min;
+  eos->Y_e_max = Y_e_max;
+  eos->T_atm   = T_atm;
+  eos->T_min   = T_min;
+  eos->T_max   = T_max;
   eos->tabulated_compute_P_eps_S_from_T(eos,
                                         eos->rho_atm,
-                                        Ye_atm, T_atm,
+                                        Y_e_atm, T_atm,
                                         &eos->press_atm,
                                         &eos->eps_atm,
                                         &eos->entropy_atm);
+  eos->tau_atm = eos->rho_atm * eos->eps_atm;
 
-  // Step 4: These parameters are manually set here, but
+  // Step 6: These parameters are manually set here, but
   //         can be overwritten later.
-  eos->root_finding_precision = 1e-10;
+  eos->root_finding_precision = 1e-15;
   eos->depsdT_threshold       = 1e-6;
 }
 
-
-/* Function    : initialize_hybrid_eos_functions_and_params()
+/*
+ * Function    : initialize_hybrid_eos_functions_and_params()
  * Description : Fully initializes EOS struct elements for a hybrid EOS
  *
  * Inputs      : W_max          - Maximum allowed Lorentz factor
@@ -228,9 +285,9 @@ void initialize_hybrid_eos_functions_and_params(
  *
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
- *
  */
 void initialize_tabulated_eos_functions_and_params(
+      const char *table_filepath,
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -243,11 +300,13 @@ void initialize_tabulated_eos_functions_and_params(
       const double T_max,
       eos_parameters *restrict eos ) {
 
+  eos->eos_type = grhayl_eos_tabulated;
+
   // Step 1: Initialize Tabulated EOS functions
   initialize_eos_functions(grhayl_eos_tabulated, eos);
 
   // Step 2: Initialize Tabulated EOS parameters
-  initialize_tabulated_eos(W_max,
+  initialize_tabulated_eos(table_filepath, W_max,
                            rho_atm, rho_min, rho_max,
                            Ye_atm, Ye_min, Ye_max,
                            T_atm, T_min, T_max,

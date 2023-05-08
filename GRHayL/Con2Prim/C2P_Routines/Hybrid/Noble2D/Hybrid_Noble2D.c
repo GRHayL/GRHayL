@@ -1,4 +1,4 @@
-#include "../harm_u2p_util.h"
+#include "../../harm_u2p_util.h"
 
 /* Function    : Hybrid_Noble2D()
  * Description : Unpacks the primitive_quantities struct into the variables
@@ -135,7 +135,7 @@ int Hybrid_Noble2D(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims_guess,
+      primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
   double gnr_out[NEWT_DIM];
@@ -149,10 +149,10 @@ int Hybrid_Noble2D(
   int retval = 0;
 
   // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
-  const double Bup[3] = {prims_guess->Bx * ONE_OVER_SQRT_4PI,
-                         prims_guess->By * ONE_OVER_SQRT_4PI,
-                         prims_guess->Bz * ONE_OVER_SQRT_4PI};
-  harm_aux.Bsq = compute_Bsq_from_Bup(metric, Bup);
+  const double Bup[3] = {prims->Bx * ONE_OVER_SQRT_4PI,
+                         prims->By * ONE_OVER_SQRT_4PI,
+                         prims->Bz * ONE_OVER_SQRT_4PI};
+  harm_aux.Bsq = compute_vec2_from_vcon(metric, Bup);
 
   const double uu = - cons_undens->tau*metric->lapse
                     - metric->lapse*cons_undens->rho
@@ -180,17 +180,17 @@ int Hybrid_Noble2D(
 
   harm_aux.D    = cons_undens->rho;
 
-  const double tmp_u = metric->adm_gxx * SQR(prims_guess->vx + metric->betax) +
-                                             2.0*metric->adm_gxy*(prims_guess->vx + metric->betax)*(prims_guess->vy + metric->betay) +
-                                             2.0*metric->adm_gxz*(prims_guess->vx + metric->betax)*(prims_guess->vz + metric->betaz) +
-                                             metric->adm_gyy * SQR(prims_guess->vy + metric->betay) +
-                                             2.0*metric->adm_gyz*(prims_guess->vy + metric->betay)*(prims_guess->vz + metric->betaz) +
-                                             metric->adm_gzz * SQR(prims_guess->vz + metric->betaz);
+  const double tmp_u = metric->adm_gxx * SQR(prims->vx + metric->betax) +
+                                             2.0*metric->adm_gxy*(prims->vx + metric->betax)*(prims->vy + metric->betay) +
+                                             2.0*metric->adm_gxz*(prims->vx + metric->betax)*(prims->vz + metric->betaz) +
+                                             metric->adm_gyy * SQR(prims->vy + metric->betay) +
+                                             2.0*metric->adm_gyz*(prims->vy + metric->betay)*(prims->vz + metric->betaz) +
+                                             metric->adm_gzz * SQR(prims->vz + metric->betaz);
 
-  prims_guess->u0 = 1.0/sqrt(1.0-tmp_u);
-  const double utilde[3] = {prims_guess->u0*(prims_guess->vx + metric->betax),
-                            prims_guess->u0*(prims_guess->vy + metric->betay),
-                            prims_guess->u0*(prims_guess->vz + metric->betaz)};
+  prims->u0 = 1.0/sqrt(1.0-tmp_u);
+  const double utilde[3] = {prims->u0*(prims->vx + metric->betax),
+                            prims->u0*(prims->vy + metric->betay),
+                            prims->u0*(prims->vz + metric->betaz)};
 
   /* calculate Z from last timestep and use for guess */
   double vsq = 0.0;
@@ -216,9 +216,9 @@ int Hybrid_Noble2D(
   double w = 0;
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims_guess->rho);
+    const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims->rho);
     const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
-    u = prims_guess->press/(Gamma_ppoly - 1.0);
+    u = prims->press/(Gamma_ppoly - 1.0);
     p = pressure_rho0_u(eos, rho0, u);
     w = rho0 + u + p;
   } else if( eos->eos_type == grhayl_eos_tabulated ) {
@@ -268,7 +268,7 @@ int Hybrid_Noble2D(
   harm_aux.W = 1.0/gtmp;
   w = Z * (1.0 - vsq);
 
-  prims_guess->rho = harm_aux.D * gtmp;
+  prims->rho = harm_aux.D * gtmp;
 
   // Cupp Fix logic:
   // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
@@ -276,7 +276,7 @@ int Hybrid_Noble2D(
   // using enforce_primitive_limits_and_output_u0(). There's no need to trigger a Font fix. In my experience,
   // Font Fix returns nearly the same values as this, but takes longer to run (we already did the work for
   // these results, after all!
-  if( !params->Cupp_Fix && prims_guess->rho <= 0.0) {
+  if( !params->Cupp_Fix && prims->rho <= 0.0) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
     return(5);
@@ -298,20 +298,20 @@ int Hybrid_Noble2D(
 
   //Additional tabulated code here
 
-  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims_guess, diagnostics);
+  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims, &diagnostics->speed_limited);
 
-  if(diagnostics->vel_limited_ptcount==1)
-    prims_guess->rho = cons_undens->rho/(metric->lapse*prims_guess->u0);
+  if(diagnostics->speed_limited==1)
+    prims->rho = cons_undens->rho/(metric->lapse*prims->u0);
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    prims_guess->press = pressure_rho0_w(eos, prims_guess->rho, w);
-    //prims_guess->eps = u/prims_guess->rho;
-    //prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);
+    prims->press = pressure_rho0_w(eos, prims->rho, w);
+    //prims->eps = u/prims->rho;
+    //prims->press = pressure_rho0_u(eos, prims->rho, u);
     double P_cold = 0.0;
     double eps_cold = 0.0;
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims_guess->rho, &P_cold, &eps_cold);
-    prims_guess->eps = eps_cold + (prims_guess->press-P_cold)/(eos->Gamma_th-1.0)/prims_guess->rho;
-    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
+    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
+    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
+    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
   } else if( eos->eos_type == grhayl_eos_tabulated ) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }

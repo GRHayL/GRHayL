@@ -2,12 +2,12 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_P_from_rho_Ye_T(const eos_parameters *restrict eos_params,
+void NRPyEOS_P_from_rho_Ye_T(const eos_parameters *restrict eos,
                              const double rho,
                              const double Y_e,
                              const double T,
                              double *restrict P) {
-#ifndef USE_HDF5
+#ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Step 1: Set EOS table keys
@@ -20,11 +20,11 @@ void NRPyEOS_P_from_rho_Ye_T(const eos_parameters *restrict eos_params,
   double outvars[1];
 
   // Step 4: Perform the interpolation
-  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities( eos_params, 1,rho,Y_e,T, keys,outvars, &report );
+  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities( eos, 1,rho,Y_e,T, keys,outvars, &report );
 
   // Step 5: Check for errors
   if( report.error )
-    grhayl_Error(report.error_key, report.message);
+    grhayl_Error(report.error_key, report.message, report.error_key);
 
   // Step 6: Update output variables
   *P = outvars[0];

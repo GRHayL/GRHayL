@@ -559,7 +559,9 @@ int main() {
     fi
 fi
 
-if [ $usehdf5 -eq 1 ]; then
+if [ $usehdf5 -eq 0 ]; then
+    cflags="$cflags -DGRHAYL_DISABLE_HDF5"
+else
     if [ "$hdf5dir" = "" ]; then
         if [ "$hdf5inc" = "" ] && [ "$hdf5lib" = "" ]; then
             check_command pkg-config
@@ -639,7 +641,6 @@ int main() {
        run ./configure -h for more information on how to specify your hdf5 installation."
         error "$msg"
     fi
-    cflags="$cflags -DUSE_HDF5"
 fi
 
 parse_mcd()
@@ -656,7 +657,7 @@ parse_mcd()
     fi
     file="$2/make.code.defn"
     if [ ! -f $file ]; then
-        error "Fille $file not found"
+        error "File $file not found"
     fi
     for sd in $(./scripts/parser awk $file "subdirs"); do
         sdsrcs=$(./scripts/parser awk "$2/$sd/make.code.defn" "sources")

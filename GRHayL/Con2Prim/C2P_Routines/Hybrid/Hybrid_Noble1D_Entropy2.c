@@ -144,7 +144,7 @@ int Hybrid_Noble1D_Entropy2(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims_guess,
+      primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
   double gnr_out[NEWT_DIM];
@@ -158,9 +158,9 @@ int Hybrid_Noble1D_Entropy2(
   int retval = 0;
 
   // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
-  const double Bup[4] = {0.0, prims_guess->Bx * ONE_OVER_SQRT_4PI,
-                              prims_guess->By * ONE_OVER_SQRT_4PI,
-                              prims_guess->Bz * ONE_OVER_SQRT_4PI};
+  const double Bup[4] = {0.0, prims->Bx * ONE_OVER_SQRT_4PI,
+                              prims->By * ONE_OVER_SQRT_4PI,
+                              prims->Bz * ONE_OVER_SQRT_4PI};
 
   double Bdn[4]; lower_vector(metric, Bup, Bdn);
 
@@ -196,17 +196,17 @@ int Hybrid_Noble1D_Entropy2(
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
   harm_aux.D    = cons_undens->rho;
 
-  const double tmp_u = metric->adm_gxx * SQR(prims_guess->vx + metric->betax) +
-                                             2.0*metric->adm_gxy*(prims_guess->vx + metric->betax)*(prims_guess->vy + metric->betay) +
-                                             2.0*metric->adm_gxz*(prims_guess->vx + metric->betax)*(prims_guess->vz + metric->betaz) +
-                                             metric->adm_gyy * SQR(prims_guess->vy + metric->betay) +
-                                             2.0*metric->adm_gyz*(prims_guess->vy + metric->betay)*(prims_guess->vz + metric->betaz) +
-                                             metric->adm_gzz * SQR(prims_guess->vz + metric->betaz);
+  const double tmp_u = metric->adm_gxx * SQR(prims->vx + metric->betax) +
+                                             2.0*metric->adm_gxy*(prims->vx + metric->betax)*(prims->vy + metric->betay) +
+                                             2.0*metric->adm_gxz*(prims->vx + metric->betax)*(prims->vz + metric->betaz) +
+                                             metric->adm_gyy * SQR(prims->vy + metric->betay) +
+                                             2.0*metric->adm_gyz*(prims->vy + metric->betay)*(prims->vz + metric->betaz) +
+                                             metric->adm_gzz * SQR(prims->vz + metric->betaz);
 
   double u0 = 1.0/sqrt(1.0-tmp_u);
-  const double utilde[3] = {u0*(prims_guess->vx + metric->betax),
-                            u0*(prims_guess->vy + metric->betay),
-                            u0*(prims_guess->vz + metric->betaz)};
+  const double utilde[3] = {u0*(prims->vx + metric->betax),
+                            u0*(prims->vy + metric->betay),
+                            u0*(prims->vz + metric->betaz)};
 
   /* calculate Z from last timestep and use for guess */
   double vsq = 0.0;
@@ -293,10 +293,10 @@ int Hybrid_Noble1D_Entropy2(
   harm_aux.W = sqrt(Wsq);
   const double Z = w * Wsq;
 
-  prims_guess->rho = rho0;
+  prims->rho = rho0;
 
 
-  if( ((prims_guess->rho <= 0.0) || (u <= 0.0)) ) {
+  if( ((prims->rho <= 0.0) || (u <= 0.0)) ) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
     retval = 5;
@@ -318,15 +318,15 @@ int Hybrid_Noble1D_Entropy2(
 
   //Additional tabulated code here
 
-  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims_guess, diagnostics);
+  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims, &diagnostics->speed_limited);
 
-  if(diagnostics->vel_limited_ptcount==1)
-    prims_guess->rho = cons_undens->rho/(metric->lapse*prims_guess->u0);
+  if(diagnostics->speed_limited==1)
+    prims->rho = cons_undens->rho/(metric->lapse*prims->u0);
 
   // Since u is dependent on rho, it seems weird to not reset u if rho has changed from above
-  prims_guess->press = pressure_rho0_u(eos, prims_guess->rho, u);
-  prims_guess->eps = u/prims_guess->rho;
-  if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims_guess->rho, prims_guess->press, &prims_guess->entropy);
+  prims->press = pressure_rho0_u(eos, prims->rho, u);
+  prims->eps = u/prims->rho;
+  if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
 
   /* Done! */
   return(retval);

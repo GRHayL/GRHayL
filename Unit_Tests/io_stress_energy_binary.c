@@ -1,17 +1,17 @@
 #include "unit_tests.h"
 
 void read_stress_energy_binary(
-                     double *restrict Ttt,
-                     double *restrict Ttx,
-                     double *restrict Tty,
-                     double *restrict Ttz,
-                     double *restrict Txx,
-                     double *restrict Txy,
-                     double *restrict Txz,
-                     double *restrict Tyy,
-                     double *restrict Tyz,
-                     double *restrict Tzz,
-                     FILE *restrict infile) {
+      double *restrict Ttt,
+      double *restrict Ttx,
+      double *restrict Tty,
+      double *restrict Ttz,
+      double *restrict Txx,
+      double *restrict Txy,
+      double *restrict Txz,
+      double *restrict Tyy,
+      double *restrict Tyz,
+      double *restrict Tzz,
+      FILE *restrict infile) {
 
   int key;
   key  = fread(Ttt, sizeof(double), 1, infile);
@@ -33,9 +33,29 @@ void read_stress_energy_binary(
                  "is up-to-date with current test version.\n");
 }
 
+void read_stress_energy_struct_binary(
+      stress_energy *restrict Tmunu,
+      FILE *restrict outfile) {
+
+  int err;
+  err  = fread(&Tmunu->Ttt, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Ttx, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Tty, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Ttz, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Txx, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Txy, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Txz, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Tyy, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Tyz, sizeof(double), 1, outfile);
+  err += fread(&Tmunu->Tzz, sizeof(double), 1, outfile);
+
+  if( err != 10 )
+    grhayl_error("Error while reading Tmunu\n");
+}
+
 void write_stress_energy_binary(
-                     const stress_energy *restrict Tmunu,
-                     FILE *restrict outfile) {
+      const stress_energy *restrict Tmunu,
+      FILE *restrict outfile) {
 
   fwrite(&Tmunu->Ttt, sizeof(double), 1, outfile);
   fwrite(&Tmunu->Ttx, sizeof(double), 1, outfile);

@@ -1,0 +1,3 @@
+SRCS = Tabulated_Palenzuela1D.c        \
+       Tabulated_Palenzuela1D_energy.c \
+       Tabulated_Palenzuela1D_entropy.c

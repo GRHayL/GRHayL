@@ -24,7 +24,7 @@ SCHEDULE NRPyLeakageET_InitSym AT BASEGRID AFTER Lapse_InitSymBound
   LANG: C
 } "Schedule symmetries"
 
-SCHEDULE NRPyLeakageET_compute_neutrino_opacities_and_add_source_terms_to_MHD_rhss AS NRPyLeakageET_RHS IN MoL_CalcRHS AFTER IllinoisGRMHD_RHS_eval
+SCHEDULE NRPyLeakageET_compute_neutrino_opacities_and_add_source_terms_to_MHD_rhss AS NRPyLeakageET_RHS IN MoL_CalcRHS AFTER GRHayL_IGM_RHS_eval
 {
   SYNC: NRPyLeakageET_optical_depths, NRPyLeakageET_opacities
   LANG: C

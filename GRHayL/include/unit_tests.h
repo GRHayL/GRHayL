@@ -43,6 +43,12 @@ void read_primitive_binary(
       double *restrict temperature,
       FILE *restrict outfile);
 
+void read_primitive_struct_binary(
+      const int eos_type,
+      const bool evolve_entropy,
+      primitive_quantities *restrict prims,
+      FILE *restrict infile);
+
 void read_conservative_binary(
       const bool evolve_entropy,
       double *restrict rho,
@@ -52,6 +58,11 @@ void read_conservative_binary(
       double *restrict S_z,
       double *restrict entropy,
       FILE *restrict outfile);
+
+void read_conservative_struct_binary(
+      const bool evolve_entropy,
+      conservative_quantities *restrict cons,
+      FILE *restrict infile);
 
 void read_stress_energy_binary(
       double *restrict Ttt,
@@ -64,6 +75,10 @@ void read_stress_energy_binary(
       double *restrict Tyy,
       double *restrict Tyz,
       double *restrict Tzz,
+      FILE *restrict outfile);
+
+void read_stress_energy_struct_binary(
+      stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 
 void read_metric_binary(
@@ -79,11 +94,15 @@ void read_metric_binary(
       double *restrict betaz,
       FILE *restrict infile);
 
+void read_metric_struct_binary(
+      metric_quantities *restrict metric,
+      FILE *restrict infile);
+
 // con2prim binary output functions
 void write_primitive_binary(
       const int eos_type,
       const bool evolve_entropy,
-      const primitive_quantities *restrict prims, 
+      const primitive_quantities *restrict prims,
       FILE *restrict outfile);
 
 void write_conservative_binary(
