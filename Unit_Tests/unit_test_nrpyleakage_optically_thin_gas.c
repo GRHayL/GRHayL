@@ -204,4 +204,4 @@ run_unit_test(const eos_parameters *restrict eos) {
   }
 }
 
-#include "nrpyleakage_main.c"
+#include "nrpyleakage_main.h"

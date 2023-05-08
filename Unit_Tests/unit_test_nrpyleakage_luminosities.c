@@ -28,10 +28,10 @@ generate_test_data(const eos_parameters *restrict eos) {
                        &gammayy, &gammayz, &gammazz);
 
       // Get random primitive values
-      const double rho = pow(10, randf(log10(eos->rho_min), log10(eos->rho_max)));
-      const double Y_e = randf(eos->Y_e_min, eos->Y_e_max);
-      const double T   = pow(10, randf(log10(eos->T_min), log10(eos->T_max)));
-      const double W   = randf(1, 10);
+      double rho = pow(10, randf(log10(eos->rho_min), log10(eos->rho_max)));
+      double Y_e = randf(eos->Y_e_min, eos->Y_e_max);
+      double T   = pow(10, randf(log10(eos->T_min), log10(eos->T_max)));
+      double W   = randf(1, 10);
 
       // Get random optical depths (not sure these are reasonable values)
       neutrino_optical_depths tau;
@@ -41,6 +41,26 @@ generate_test_data(const eos_parameters *restrict eos) {
       tau.anue[1] = randf(1, 1000);
       tau.nux [0] = randf(1, 1000);
       tau.nux [1] = randf(1, 1000);
+
+      if( perturb ) {
+        alpha       *= (1+randf(-1,1)*1e-14);
+        gammaxx     *= (1+randf(-1,1)*1e-14);
+        gammaxy     *= (1+randf(-1,1)*1e-14);
+        gammaxz     *= (1+randf(-1,1)*1e-14);
+        gammayy     *= (1+randf(-1,1)*1e-14);
+        gammayz     *= (1+randf(-1,1)*1e-14);
+        gammazz     *= (1+randf(-1,1)*1e-14);
+        rho         *= (1+randf(-1,1)*1e-14);
+        Y_e         *= (1+randf(-1,1)*1e-14);
+        T           *= (1+randf(-1,1)*1e-14);
+        W           *= (1+randf(-1,1)*1e-14);
+        tau.nue [0] *= (1+randf(-1,1)*1e-14);
+        tau.nue [1] *= (1+randf(-1,1)*1e-14);
+        tau.anue[0] *= (1+randf(-1,1)*1e-14);
+        tau.anue[1] *= (1+randf(-1,1)*1e-14);
+        tau.nux [0] *= (1+randf(-1,1)*1e-14);
+        tau.nux [1] *= (1+randf(-1,1)*1e-14);
+      }
 
       // Compute luminosities
       neutrino_luminosities lum;
@@ -65,7 +85,7 @@ generate_test_data(const eos_parameters *restrict eos) {
         fwrite(&W      , sizeof(double)                 , 1, fp);
         fwrite(&tau    , sizeof(neutrino_optical_depths), 1, fp);
       }
-      fwrite(&lum    , sizeof(neutrino_luminosities)  , 1, fp);
+      fwrite(&lum      , sizeof(neutrino_luminosities)  , 1, fp);
     }
     fclose(fp);
   }
@@ -145,4 +165,4 @@ run_unit_test(const eos_parameters *restrict eos) {
   fclose(fp_pert);
 }
 
-#include "nrpyleakage_main.c"
+#include "nrpyleakage_main.h"
