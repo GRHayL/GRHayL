@@ -39,10 +39,6 @@
 #include "cctk_Parameters.h"
 #include "IGM.h"
 
-#define velx (&vel[0*cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]])
-#define vely (&vel[1*cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]])
-#define velz (&vel[2*cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]])
-
 void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS_GRHayL_IGM_evaluate_MHD_rhs;
   DECLARE_CCTK_PARAMETERS;
@@ -52,9 +48,9 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     CCTK_VINFO("***** Iter. # %d, Lev: %d, Integrating to time: %e *****",cctk_iteration,levelnumber,cctk_delta_time/cctk_levfac[0]+cctk_time);
   }
 
-  if( sizeof(CCTK_REAL) < 8 ) CCTK_ERROR("Error: GRHayL_IGM assumes that CCTK_REAL is a double precision number. Setting otherwise will likely cause havoc with the conserv_to_prims solver.");
+  if( sizeof(CCTK_REAL) < 8 ) CCTK_VERROR("Error: GRHayL_IGM assumes that CCTK_REAL is a double precision number. Setting otherwise will likely cause havoc with the conserv_to_prims solver.");
 
-  if(cctk_nghostzones[0]<3 || cctk_nghostzones[1]<3 || cctk_nghostzones[2]<3) { CCTK_ERROR("ERROR. Need at least 3 ghostzones for GRHayL_IGM evolutions."); }
+  if(cctk_nghostzones[0]<3 || cctk_nghostzones[1]<3 || cctk_nghostzones[2]<3) { CCTK_VERROR("ERROR. Need at least 3 ghostzones for GRHayL_IGM evolutions."); }
 
   CCTK_REAL dX[3] = { CCTK_DELTA_SPACE(0), CCTK_DELTA_SPACE(1), CCTK_DELTA_SPACE(2) };
 
@@ -71,26 +67,24 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // The order here MATTERS, and must be consistent with the global variable declarations in
   //   evaluate_MHD_rhs_headers.h (look for RHOB=0, etc.)
   //   For example, in_prims[0] _must_ be rho_b.
-  in_prims[RHOB       ]=rho_b;      out_prims_r[RHOB       ]=rhor;        out_prims_l[RHOB       ]=rhol;
-  in_prims[PRESSURE   ]=pressure;   out_prims_r[PRESSURE   ]=pressr;      out_prims_l[PRESSURE   ]=pressl;
-  in_prims[VX         ]=vx;         out_prims_r[VX         ]=vxr;         out_prims_l[VX         ]=vxl;
-  in_prims[VY         ]=vy;         out_prims_r[VY         ]=vyr;         out_prims_l[VY         ]=vyl;
-  in_prims[VZ         ]=vz;         out_prims_r[VZ         ]=vzr;         out_prims_l[VZ         ]=vzl;
-  in_prims[BX_CENTER  ]=Bx_center;  out_prims_r[BX_CENTER  ]=Bxr;         out_prims_l[BX_CENTER  ]=Bxl;
-  in_prims[BY_CENTER  ]=By_center;  out_prims_r[BY_CENTER  ]=Byr;         out_prims_l[BY_CENTER  ]=Byl;
-  in_prims[BZ_CENTER  ]=Bz_center;  out_prims_r[BZ_CENTER  ]=Bzr;         out_prims_l[BZ_CENTER  ]=Bzl;
-  in_prims[BX_STAGGER ]=Bx_stagger; out_prims_r[BX_STAGGER ]=Bx_staggerr; out_prims_l[BX_STAGGER ]=Bx_staggerl;
-  in_prims[BY_STAGGER ]=By_stagger; out_prims_r[BY_STAGGER ]=By_staggerr; out_prims_l[BY_STAGGER ]=By_staggerl;
-  in_prims[BZ_STAGGER ]=Bz_stagger; out_prims_r[BZ_STAGGER ]=Bz_staggerr; out_prims_l[BZ_STAGGER ]=Bz_staggerl;
-  in_prims[VXR        ]=vxr;        out_prims_r[VXR        ]=vxrr;        out_prims_l[VXR        ]=vxrl;
-  in_prims[VYR        ]=vyr;        out_prims_r[VYR        ]=vyrr;        out_prims_l[VYR        ]=vyrl;
-  in_prims[VZR        ]=vzr;        out_prims_r[VZR        ]=vzrr;        out_prims_l[VZR        ]=vzrl;
-  in_prims[VXL        ]=vxl;        out_prims_r[VXL        ]=vxlr;        out_prims_l[VXL        ]=vxll;
-  in_prims[VYL        ]=vyl;        out_prims_r[VYL        ]=vylr;        out_prims_l[VYL        ]=vyll;
-  in_prims[VZL        ]=vzl;        out_prims_r[VZL        ]=vzlr;        out_prims_l[VZL        ]=vzll;
-  in_prims[YEPRIM     ]=Ye;         out_prims_r[YEPRIM     ]=Yer;         out_prims_l[YEPRIM     ]=Yel;
-  in_prims[EPSILON    ]=epsgf;      out_prims_r[EPSILON    ]=epsr;        out_prims_l[EPSILON    ]=epsl;
-  in_prims[TEMPERATURE]=T;          out_prims_r[TEMPERATURE]=Tr;          out_prims_l[TEMPERATURE]=Tl;
+  int ww=0;
+  in_prims[ww]=rho_b;      out_prims_r[ww]=rhor;        out_prims_l[ww]=rhol;        ww++;
+  in_prims[ww]=pressure;   out_prims_r[ww]=pressr;      out_prims_l[ww]=pressl;      ww++;
+  in_prims[ww]=vx;         out_prims_r[ww]=vxr;         out_prims_l[ww]=vxl;         ww++;
+  in_prims[ww]=vy;         out_prims_r[ww]=vyr;         out_prims_l[ww]=vyl;         ww++;
+  in_prims[ww]=vz;         out_prims_r[ww]=vzr;         out_prims_l[ww]=vzl;         ww++;
+  in_prims[ww]=Bx_center;  out_prims_r[ww]=Bxr;         out_prims_l[ww]=Bxl;         ww++;
+  in_prims[ww]=By_center;  out_prims_r[ww]=Byr;         out_prims_l[ww]=Byl;         ww++;
+  in_prims[ww]=Bz_center;  out_prims_r[ww]=Bzr;         out_prims_l[ww]=Bzl;         ww++;
+  in_prims[ww]=Bx_stagger; out_prims_r[ww]=Bx_staggerr; out_prims_l[ww]=Bx_staggerl; ww++;
+  in_prims[ww]=By_stagger; out_prims_r[ww]=By_staggerr; out_prims_l[ww]=By_staggerl; ww++;
+  in_prims[ww]=Bz_stagger; out_prims_r[ww]=Bz_staggerr; out_prims_l[ww]=Bz_staggerl; ww++;
+  in_prims[ww]=vxr;        out_prims_r[ww]=vxrr;        out_prims_l[ww]=vxrl;        ww++;
+  in_prims[ww]=vyr;        out_prims_r[ww]=vyrr;        out_prims_l[ww]=vyrl;        ww++;
+  in_prims[ww]=vzr;        out_prims_r[ww]=vzrr;        out_prims_l[ww]=vzrl;        ww++;
+  in_prims[ww]=vxl;        out_prims_r[ww]=vxlr;        out_prims_l[ww]=vxll;        ww++;
+  in_prims[ww]=vyl;        out_prims_r[ww]=vylr;        out_prims_l[ww]=vyll;        ww++;
+  in_prims[ww]=vzl;        out_prims_r[ww]=vzlr;        out_prims_l[ww]=vzll;        ww++;
 
   double *cmin[3] = {cmin_x, cmin_y, cmin_z};
   double *cmax[3] = {cmax_x, cmax_y, cmax_z};
@@ -102,8 +96,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
                              gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
                              gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
 
-  // "metric" here is array of pointers to the actual gridfunctions.
-  const double *metric[10];
+//  /* SET POINTERS TO METRIC GRIDFUNCTIONS */
+  const double *metric[10]; // "metric" here is array of pointers to the actual gridfunctions.
   metric[LAPSE] = alp;
   metric[BETAX] = betax;
   metric[BETAY] = betay;
@@ -115,7 +109,6 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   metric[GYZ]   = gyz;
   metric[GZZ]   = gzz;
 
-  // "curv" here is array of pointers to the actual gridfunctions.
   const double *curv[6];
   curv[KXX] = kxx;
   curv[KXY] = kxy;
@@ -126,23 +119,19 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 
   // 1) First initialize RHS variables to zero
 #pragma omp parallel for
-  for(int k=0;k<cctk_lsh[2];k++) {
-    for(int j=0;j<cctk_lsh[1];j++) {
+  for(int k=0;k<cctk_lsh[2];k++)
+    for(int j=0;j<cctk_lsh[1];j++)
       for(int i=0;i<cctk_lsh[0];i++) {
         int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-
         tau_rhs[index]      = 0.0;
         rho_star_rhs[index] = 0.0;
         Stildex_rhs[index]  = 0.0;
         Stildey_rhs[index]  = 0.0;
         Stildez_rhs[index]  = 0.0;
-        Y_e_star_rhs[index] = 0.0;
         phitilde_rhs[index] = 0.0;
         Ax_rhs[index]       = 0.0;
         Ay_rhs[index]       = 0.0;
         Az_rhs[index]       = 0.0;
-      }
-    }
   }
 
   // Here, we:
@@ -170,22 +159,20 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
    * 2Ab) By_stagger is at (i,j+1/2,k), and we reconstruct below to (i-1/2,j+1/2,k).
    */
   { // var_indices is a local variable
-    num_vars = 7;
-    const int var_indices[7] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER, YEPRIM};
+    num_vars = 6;
+    const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^x face values to be consistent with BX_STAGGER.
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++) {
-    for(int j=0; j<cctk_lsh[1]; j++) {
+  for(int k=0; k<cctk_lsh[2]; k++)
+    for(int j=0; j<cctk_lsh[1]; j++)
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int indexim1 = CCTK_GFINDEX3D(cctkGH,i-1+(i==0),j,k); /* indexim1=0 when i=0 */
         out_prims_r[BX_CENTER][index] = out_prims_l[BX_CENTER][index] = in_prims[BX_STAGGER][indexim1];
-      }
-    }
   }
 
   GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
@@ -195,19 +182,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
   GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
-                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
-                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
-
-  // {
-  //   const int index = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
-  //   printf("*********************************************\n");
-  //   printf("In %s\n", __func__);
-  //   printf("*********************************************\n");
-  //   printf("First  reconstruction: %22.15e %22.15e %22.15e\n",
-  //              in_prims[YEPRIM][index], out_prims_r[YEPRIM][index], out_prims_l[YEPRIM][index]);
-  //   printf("First  fluxes/RHSs   : %22.15e %22.15e\n",
-  //              Y_e_star_flux[index], Y_e_star_rhs[index]);
-  // }
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
   // Note that we have already reconstructed vx and vy along the x-direction,
   //   at (i-1/2,j,k). That result is stored in v{x,y}{r,l}.  Bx_stagger data
@@ -241,22 +217,20 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
   { // var_indices is a local variable
-    num_vars = 8;
-    const int var_indices[8] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER, YEPRIM};
+    num_vars = 7;
+    const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^y face values to be consistent with BY_STAGGER.
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++) {
-    for(int j=0; j<cctk_lsh[1]; j++) {
+  for(int k=0; k<cctk_lsh[2]; k++)
+    for(int j=0; j<cctk_lsh[1]; j++)
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int indexjm1 = CCTK_GFINDEX3D(cctkGH,i,j-1+(j==0),k); /* indexjm1=0 when j=0 */
         out_prims_r[BY_CENTER][index] = out_prims_l[BY_CENTER][index] = in_prims[BY_STAGGER][indexjm1];
-      }
-    }
   }
 
   GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
@@ -266,16 +240,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
   GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
-                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
-                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
-
-  // {
-  //   const int index = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
-  //   printf("Second reconstruction: %22.15e %22.15e %22.15e\n",
-  //              in_prims[YEPRIM][index], out_prims_r[YEPRIM][index], out_prims_l[YEPRIM][index]);
-  //   printf("Second fluxes/RHSs   : %22.15e %22.15e\n",
-  //              Y_e_star_flux[index], Y_e_star_rhs[index]);
-  // }
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
   /*****************************************
    * COMPUTING RHS OF A_z, BOOKKEEPING NOTE:
@@ -320,8 +286,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     GRHayL_IGM_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
   { // var_indices is a local variable
-    num_vars = 8;
-    const int var_indices[8] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER, YEPRIM};
+    num_vars = 7;
+    const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER};
     GRHayL_IGM_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
   }
 /*****************************************************************************************/
@@ -329,14 +295,12 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^z face values to be consistent with BZ_STAGGER.
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++) {
-    for(int j=0; j<cctk_lsh[1]; j++) {
+  for(int k=0; k<cctk_lsh[2]; k++)
+    for(int j=0; j<cctk_lsh[1]; j++)
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int indexkm1 = CCTK_GFINDEX3D(cctkGH,i,j,k-1+(k==0)); /* indexkm1=0 when k=0 */
         out_prims_r[BZ_CENTER][index] = out_prims_l[BZ_CENTER][index] = in_prims[BZ_STAGGER][indexkm1];
-      }
-    }
   }
 
   GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
@@ -346,16 +310,8 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
   GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
-                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux, Y_e_star_flux,
-                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs, Y_e_star_rhs);
-
-  // {
-  //   const int index = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
-  //   printf("Third  reconstruction: %22.15e %22.15e %22.15e\n",
-  //          in_prims[YEPRIM][index], out_prims_r[YEPRIM][index], out_prims_l[YEPRIM][index]);
-  //   printf("Third  fluxes/RHSs   : %22.15e %22.15e\n",
-  //          Y_e_star_flux[index], Y_e_star_rhs[index]);
-  // }
+                         rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
+                         rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
 
   /*****************************************
    * COMPUTING RHS OF A_x, BOOKKEEPING NOTE:
@@ -409,54 +365,4 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
               psi_bssn, alp, betax, betay, betaz, Ax, Ay, Az, phitilde,
               grhayl_params->Lorenz_damping_factor, vxr, vyr, vzr, vxl, vyl, vzl, pressr, pressl,
               phitilde_rhs, Ax_rhs, Ay_rhs, Az_rhs);
-
-  if( CCTK_IsThornActive("NRPyLeakageET") ) {
-    // Convert rho, Y_e, T, and velocities to HydroBase
-    // because they are needed by NRPyLeakage
-#pragma omp parallel for
-    for(int k=0;k<cctk_lsh[2];k++) {
-      for(int j=0;j<cctk_lsh[1];j++) {
-        for(int i=0;i<cctk_lsh[0];i++) {
-          const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
-
-          // Read from main memory
-          const CCTK_REAL invalpL      = 1.0/alp[index];
-          const CCTK_REAL betaxL       = betax[index];
-          const CCTK_REAL betayL       = betay[index];
-          const CCTK_REAL betazL       = betaz[index];
-          const CCTK_REAL rhoL         = rho_b[index];
-          const CCTK_REAL Y_eL         = Ye[index];
-          const CCTK_REAL temperatureL = T[index];
-          const CCTK_REAL vxL          = vx[index];
-          const CCTK_REAL vyL          = vy[index];
-          const CCTK_REAL vzL          = vz[index];
-
-          // Write to main memory, converting to HydroBase
-          rho[index]         = rhoL;
-          Y_e[index]         = Y_eL;
-          temperature[index] = temperatureL;
-          velx[index]        = (vxL + betaxL)*invalpL;
-          vely[index]        = (vyL + betayL)*invalpL;
-          velz[index]        = (vzL + betazL)*invalpL;
-        }
-      }
-    }
-  }
-
-  // {
-  //   const int index   = CCTK_GFINDEX3D(cctkGH, 6, 6, 6);
-  //   const double rhoL = rho_b[index];
-  //   const double  TL  = T[index];
-  //   const double Y_eL = Ye[index];
-  //   const double rho_star_rhsL = rho_star_rhs[index];
-  //   const double Y_e_star_rhsL = Y_e_star_rhs[index];
-  //   const double tau_rhsL      = tau_rhs[index];
-  //   const double st_x_rhsL     = Stildex_rhs[index];
-  //   const double st_y_rhsL     = Stildey_rhs[index];
-  //   const double st_z_rhsL     = Stildez_rhs[index];
-  //   CCTK_VINFO("Prims: %22.15e %22.15e %22.15e", rhoL, TL, Y_eL);
-  //   CCTK_VINFO("RHSs : %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e",
-  //              rho_star_rhsL, Y_e_star_rhsL, tau_rhsL,
-  //              st_x_rhsL, st_y_rhsL, st_z_rhsL);
-  // }
 }

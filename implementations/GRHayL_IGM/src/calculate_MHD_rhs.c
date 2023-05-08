@@ -1,6 +1,32 @@
 #include "cctk.h"
 #include "IGM.h"
 
+//static inline void calculate_face_value(
+//      const cGH *cctkGH,
+//      const int flux_dir,
+//      const double *restrict cell_var,
+//      double *restrict face_var) {
+//
+//  const int xdir = (flux_dir == 0);
+//  const int ydir = (flux_dir == 1);
+//  const int zdir = (flux_dir == 2);
+//
+//#pragma omp parallel for
+//  for(int k=cctkGH->cctk_nghostzones[2]-1; k<cctkGH->cctk_lsh[0]-(cctkGH->cctk_nghostzones[2]-2); k++)
+//    for(int j=cctkGH->cctk_nghostzones[1]-1; j<cctkGH->cctk_lsh[1]-(cctkGH->cctk_nghostzones[1]-2); j++)
+//      for(int i=cctkGH->cctk_nghostzones[0]-1; i<cctkGH->cctk_lsh[2]-(cctkGH->cctk_nghostzones[0]-2); i++) {
+//        const int indm2  = CCTK_GFINDEX3D(cctkGH, i-2*xdir, j-2*ydir, k-2*zdir);
+//        const int indm1  = CCTK_GFINDEX3D(cctkGH, i-xdir,   j-ydir,   k-zdir);
+//        const int index  = CCTK_GFINDEX3D(cctkGH, i,        j ,       k);
+//        const int indp1  = CCTK_GFINDEX3D(cctkGH, i+xdir,   j+ydir,   k+zdir);
+//
+//        face_var[index] = COMPUTE_FCVAL(cell_var[indm2],
+//                                        cell_var[indm1],
+//                                        cell_var[index],
+//                                        cell_var[indp1]);
+//  }
+//}
+
 void GRHayL_IGM_calculate_tau_source_rhs(
       const cGH *restrict cctkGH,
       const eos_parameters *restrict eos,
@@ -19,8 +45,8 @@ void GRHayL_IGM_calculate_tau_source_rhs(
   const int kmax = cctkGH->cctk_lsh[2] - cctkGH->cctk_nghostzones[2];
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++) {
-    for(int j=jmin; j<jmax; j++) {
+  for(int k=kmin; k<kmax; k++)
+    for(int j=jmin; j<jmax; j++)
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
@@ -38,10 +64,10 @@ void GRHayL_IGM_calculate_tau_source_rhs(
                           &curv);
 
         primitive_quantities prims;
-        initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], in_prims[EPSILON][index],
+        initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], poison,
                               in_prims[VX][index], in_prims[VY][index], in_prims[VZ][index],
                               in_prims[BX_CENTER][index], in_prims[BY_CENTER][index], in_prims[BZ_CENTER][index],
-                              poison, in_prims[YEPRIM][index], in_prims[TEMPERATURE][index], // entropy, Y_e, temp
+                              poison, poison, poison, // entropy, Y_e, temp
                               &prims);
 
         int speed_limited = 0;
@@ -51,8 +77,6 @@ void GRHayL_IGM_calculate_tau_source_rhs(
         cons_source.tau = 0;
         calculate_tau_tilde_source_term_extrinsic_curv(&prims, grhayl_eos, &metric, &curv, &cons_source);
         tau_rhs[index] += cons_source.tau;
-      }
-    }
   }
 }
 
@@ -72,13 +96,11 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
       double *restrict Stildex_flux,
       double *restrict Stildey_flux,
       double *restrict Stildez_flux,
-      double *restrict Y_e_star_flux,
       double *restrict rho_star_rhs,
       double *restrict tau_rhs,
       double *restrict Stildex_rhs,
       double *restrict Stildey_rhs,
-      double *restrict Stildez_rhs,
-      double *restrict Y_e_star_rhs) {
+      double *restrict Stildez_rhs) {
 
   const double dxi[3] = { 1.0/dX[0],1.0/dX[1],1.0/dX[2] };
   const double poison = 0.0/0.0;
@@ -109,7 +131,7 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
       calculate_source_terms = &calculate_source_terms_dirn2;
       break;
     default:
-      CCTK_ERROR("Invalid flux_dir value (not 0, 1, or 2) has been passed to calculate_MHD_rhs.");
+      CCTK_VERROR("Warning: invalid flux_dir value (not 0, 1, or 2) has been passed to calculate_MHD_rhs.");
   }
 
   const int imin = cctkGH->cctk_nghostzones[0];
@@ -119,11 +141,27 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
   const int jmax = cctkGH->cctk_lsh[1] - cctkGH->cctk_nghostzones[1];
   const int kmax = cctkGH->cctk_lsh[2] - cctkGH->cctk_nghostzones[2];
 
+//This section needs a lot of extra memory (all metric quantities have face GFs)
+//However, computing them once and saving them would prevent the repeated computation
+//of the +1 point for the derivative
+//  // Calculate the values of the metric quantities at the faces by interpolating
+//  // from the cell-centered quantities
+//  calculate_face_value(cctkGH, flux_dir, lapse, face_lapse);
+//  calculate_face_value(cctkGH, flux_dir, betax, face_betax);
+//  calculate_face_value(cctkGH, flux_dir, betay, face_betay);
+//  calculate_face_value(cctkGH, flux_dir, betaz, face_betaz);
+//  calculate_face_value(cctkGH, flux_dir, gxx, face_gxx);
+//  calculate_face_value(cctkGH, flux_dir, gxy, face_gxy);
+//  calculate_face_value(cctkGH, flux_dir, gxz, face_gxz);
+//  calculate_face_value(cctkGH, flux_dir, gyy, face_gyy);
+//  calculate_face_value(cctkGH, flux_dir, gyz, face_gyz);
+//  calculate_face_value(cctkGH, flux_dir, gzz, face_gzz);
+
   // This loop includes 1 ghostzone because the RHS calculation for e.g. the x direction
   // requires (i,j,k) and (i+1,j,k)
 #pragma omp parallel for
-  for(int k=kmin; k<kmax+zdir; k++) {
-    for(int j=jmin; j<jmax+ydir; j++) {
+  for(int k=kmin; k<kmax+zdir; k++)
+    for(int j=jmin; j<jmax+ydir; j++)
       for(int i=imin; i<imax+xdir; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
@@ -136,18 +174,17 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
                           in_metric[GYY], in_metric[GYZ], in_metric[GZZ],
                           &metric_face);
 
-        primitive_quantities prims_r;
-        initialize_primitives(in_prims_r[RHOB][index], in_prims_r[PRESSURE][index], in_prims_r[EPSILON][index],
+        primitive_quantities prims_r, prims_l;
+        initialize_primitives(in_prims_r[RHOB][index], in_prims_r[PRESSURE][index], poison,
                               in_prims_r[VX][index], in_prims_r[VY][index], in_prims_r[VZ][index],
                               in_prims_r[BX_CENTER][index], in_prims_r[BY_CENTER][index], in_prims_r[BZ_CENTER][index],
-                              poison, in_prims_r[YEPRIM][index], in_prims_r[TEMPERATURE][index], // entropy, Y_e, temp
+                              poison, poison, poison, // entropy, Y_e, temp
                               &prims_r);
 
-        primitive_quantities prims_l;
-        initialize_primitives(in_prims_l[RHOB][index], in_prims_l[PRESSURE][index], in_prims_l[EPSILON][index],
+        initialize_primitives(in_prims_l[RHOB][index], in_prims_l[PRESSURE][index], poison,
                               in_prims_l[VX][index], in_prims_l[VY][index], in_prims_l[VZ][index],
                               in_prims_l[BX_CENTER][index], in_prims_l[BY_CENTER][index], in_prims_l[BZ_CENTER][index],
-                              poison, in_prims_l[YEPRIM][index], in_prims_l[TEMPERATURE][index], // entropy, Y_e, temp
+                              poison, poison, poison, // entropy, Y_e, temp
                               &prims_l);
 
         int speed_limited = 0;
@@ -162,14 +199,11 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
         Stildex_flux[index]  = cons_fluxes.S_x;
         Stildey_flux[index]  = cons_fluxes.S_y;
         Stildez_flux[index]  = cons_fluxes.S_z;
-        Y_e_star_flux[index] = cons_fluxes.Y_e;
-      }
-    }
   }
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++) {
-    for(int j=jmin; j<jmax; j++) {
+  for(int k=kmin; k<kmax; k++)
+    for(int j=jmin; j<jmax; j++)
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
         const int indp1 = CCTK_GFINDEX3D(cctkGH, i+xdir, j+ydir, k+zdir);
@@ -196,7 +230,6 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
         Stildex_rhs[index]  += dxi[flux_dir]*(Stildex_flux[index]  - Stildex_flux[indp1]);
         Stildey_rhs[index]  += dxi[flux_dir]*(Stildey_flux[index]  - Stildey_flux[indp1]);
         Stildez_rhs[index]  += dxi[flux_dir]*(Stildez_flux[index]  - Stildez_flux[indp1]);
-        Y_e_star_rhs[index] += dxi[flux_dir]*(Y_e_star_flux[index] - Y_e_star_flux[indp1]);
 
         metric_quantities metric;
         initialize_metric(in_metric[LAPSE][index],
@@ -206,17 +239,17 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
                           &metric);
 
         primitive_quantities prims;
-        initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], in_prims[EPSILON][index],
+        initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], poison,
                               in_prims[VX][index], in_prims[VY][index], in_prims[VZ][index],
                               in_prims[BX_CENTER][index], in_prims[BY_CENTER][index], in_prims[BZ_CENTER][index],
-                              poison, in_prims[YEPRIM][index], in_prims[TEMPERATURE][index], // entropy, Y_e, temp
+                              poison, poison, poison, // entropy, Y_e, temp
                               &prims);
 
         int speed_limited = 0;
         limit_v_and_compute_u0(eos, &metric, &prims, &speed_limited);
 
         metric_derivatives metric_derivs;
-
+    
         metric_derivs.lapse[flux_dir]   = dxi[flux_dir]*(metric_facep1.lapse - metric_face.lapse);
         metric_derivs.betax[flux_dir]   = dxi[flux_dir]*(metric_facep1.betax - metric_face.betax);
         metric_derivs.betay[flux_dir]   = dxi[flux_dir]*(metric_facep1.betay - metric_face.betay);
@@ -235,12 +268,9 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
         cons_source.S_z = 0.0;
 
         calculate_source_terms(&prims, grhayl_eos, &metric, &metric_derivs, &cons_source);
-
         tau_rhs[index]     += cons_source.tau;
         Stildex_rhs[index] += cons_source.S_x;
         Stildey_rhs[index] += cons_source.S_y;
         Stildez_rhs[index] += cons_source.S_z;
-      }
-    }
   }
 }

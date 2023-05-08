@@ -62,3 +62,4 @@ void GRHayL_IGM_InitSymBound(CCTK_ARGUMENTS)
     }
   }
 }
+
