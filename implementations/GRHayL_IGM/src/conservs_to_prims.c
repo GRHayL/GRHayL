@@ -138,21 +138,20 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
 
       // declare some variables for the C2P routine.
       conservative_quantities cons_undens;
-      primitive_quantities prims_guess;
 
       // Set the conserved variables required by the con2prim routine
       undensitize_conservatives(&metric, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      int check = Hybrid_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &prims_guess, &diagnostics);
+      int check = Hybrid_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &diagnostics);
 
       if(check!=0)
-        check = font_fix(grhayl_params, grhayl_eos, &metric, &cons, &prims, &prims_guess, &diagnostics);
+        check = font_fix(grhayl_params, grhayl_eos, &metric, &cons, &prims, &diagnostics);
       /*************************************************************/
 
       if(check==0) {
         //Check for NAN!
-        if( isnan(prims_guess.rho*prims_guess.press*prims_guess.eps*prims_guess.vx*prims_guess.vy*prims_guess.vz) ) {
+        if( isnan(prims.rho*prims.press*prims.eps*prims.vx*prims.vy*prims.vz) ) {
           CCTK_VINFO("***********************************************************\n");
           CCTK_VINFO("NAN found in function %s (file: %s)\n",__func__,__FILE__);
           CCTK_VINFO("Input conserved variables:\n");
@@ -160,12 +159,10 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
           CCTK_VINFO("Undensitized conserved variables:\n");
           CCTK_VINFO("D, tau, S_{i}: %e %e %e %e %e\n", cons_undens.rho, cons_undens.tau, cons_undens.S_x, cons_undens.S_y, cons_undens.S_z);
           CCTK_VINFO("Output primitive variables:\n");
-          CCTK_VINFO("rho, P: %e %e\n", prims_guess.rho, prims_guess.press);
-          CCTK_VINFO("v: %e %e %e\n", prims_guess.vx, prims_guess.vy, prims_guess.vz);
+          CCTK_VINFO("rho, P: %e %e\n", prims.rho, prims.press);
+          CCTK_VINFO("v: %e %e %e\n", prims.vx, prims.vy, prims.vz);
           CCTK_VINFO("***********************************************************");
         }
-
-        prims = prims_guess;
       } else {
         CCTK_VINFO("Con2Prim and Font fix failed!");
         CCTK_VINFO("diagnostics->failure_checker = %d st_i = %e %e %e, rhostar = %e, Bi = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
@@ -240,8 +237,8 @@ void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
     }
 
     failures += diagnostics.failures;
-    font_fixes += diagnostics.font_fixes;
-    vel_limited_ptcount += diagnostics.vel_limited_ptcount;
+    font_fixes += diagnostics.font_fix;
+    vel_limited_ptcount += diagnostics.speed_limited;
     pointcount++;
     backup0 += diagnostics.backup[0];
     backup1 += diagnostics.backup[1];

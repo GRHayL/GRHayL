@@ -1,4 +1,4 @@
-# Subdirectory make.code.defn for EOS/Hybrid
+# Subdirectory make.code.defn for Con2Prim/C2P_Routines/Hybrid/Noble2D
 
 # Source files in this directory that need compiled:
 SRCS = func_vsq.c       \
