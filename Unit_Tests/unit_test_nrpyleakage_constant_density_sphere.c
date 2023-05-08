@@ -322,9 +322,9 @@ void constantdensitysphere_test(
   if( test_key != 2 ) {
     FILE *fp;
     if( test_key )
-      fp = fopen("nrpyleakage_constant_density_sphere_perturbed.bin", "wb");
+      fp = fopen_with_check("nrpyleakage_constant_density_sphere_perturbed.bin", "wb");
     else
-      fp = fopen("nrpyleakage_constant_density_sphere_unperturbed.bin", "wb");
+      fp = fopen_with_check("nrpyleakage_constant_density_sphere_unperturbed.bin", "wb");
 
     fwrite(kappa_nue [0], sizeof(double), Ntotal, fp);
     fwrite(kappa_nue [1], sizeof(double), Ntotal, fp);
@@ -368,7 +368,7 @@ void constantdensitysphere_test(
       tau_nux_pert     [i] = (double *)malloc(sizeof(double)*Ntotal);
     }
     // Read in the unperturbed data
-    FILE *fp_unpert = fopen("nrpyleakage_constant_density_sphere_unperturbed.bin", "rb");
+    FILE *fp_unpert = fopen_with_check("nrpyleakage_constant_density_sphere_unperturbed.bin", "rb");
     int err = 0;
     err += fread(kappa_nue_unpert [0], sizeof(double), Ntotal, fp_unpert);
     err += fread(kappa_nue_unpert [1], sizeof(double), Ntotal, fp_unpert);
@@ -387,7 +387,7 @@ void constantdensitysphere_test(
       grhayl_error("Error reading file nrpyleakage_constant_density_sphere_unperturbed.bin\n");
 
     // Read in the perturbed data
-    FILE *fp_pert   = fopen("nrpyleakage_constant_density_sphere_perturbed.bin", "rb");
+    FILE *fp_pert   = fopen_with_check("nrpyleakage_constant_density_sphere_perturbed.bin", "rb");
     err = 0;
     err += fread(kappa_nue_pert [0], sizeof(double), Ntotal, fp_pert);
     err += fread(kappa_nue_pert [1], sizeof(double), Ntotal, fp_pert);
@@ -478,40 +478,53 @@ void constantdensitysphere_test(
   free(tau_nux_p);
 }
 
-int main(int argc, char **argv) {
-
-  if( argc != 3 ) {
-    grhayl_info("Usage: %s <eos table> <test key>\n", *argv);
-    grhayl_info("Available test keys:\n");
-    grhayl_info("  0 : Generate unperturbed data\n");
-    grhayl_info("  1 : Generate perturbed data\n");
-    grhayl_info("  2 : Run unit test\n");
-    exit(1);
-  }
-
-  const char *tablepath  = argv[1];
-  const int test_key     = atoi(argv[2]);
-  const double W_max     = 10.0;
-  const double rho_b_atm = 1e-12;
-  const double rho_b_min = -1;
-  const double rho_b_max = -1;
-  const double Y_e_atm   = 0.5;
-  const double Y_e_min   = -1;
-  const double Y_e_max   = -1;
-  const double T_atm     = 1e-2;
-  const double T_min     = -1;
-  const double T_max     = -1;
-
-  eos_parameters eos;
-  initialize_tabulated_eos_functions_and_params(tablepath, W_max,
-                                                rho_b_atm, rho_b_min, rho_b_max,
-                                                Y_e_atm, Y_e_min, Y_e_max,
-                                                T_atm, T_min, T_max, &eos);
-  eos.root_finding_precision=1e-10;
-
-  constantdensitysphere_test(&eos, test_key);
-
-  eos.tabulated_free_memory(&eos);
-
-  return 0;
+void
+generate_test_data(const eos_parameters *restrict eos) {
+  for(int perturb=0;perturb<=1;perturb++)
+    constantdensitysphere_test(eos, perturb);
 }
+
+void
+run_unit_test(const eos_parameters *restrict eos) {
+  constantdensitysphere_test(eos, 2);
+}
+
+#include "nrpyleakage_main.c"
+
+// int main(int argc, char **argv) {
+
+//   if( argc != 3 ) {
+//     grhayl_info("Usage: %s <eos table> <test key>\n", *argv);
+//     grhayl_info("Available test keys:\n");
+//     grhayl_info("  0 : Generate unperturbed data\n");
+//     grhayl_info("  1 : Generate perturbed data\n");
+//     grhayl_info("  2 : Run unit test\n");
+//     exit(1);
+//   }
+
+//   const char *tablepath  = argv[1];
+//   const int test_key     = atoi(argv[2]);
+//   const double W_max     = 10.0;
+//   const double rho_b_atm = 1e-12;
+//   const double rho_b_min = -1;
+//   const double rho_b_max = -1;
+//   const double Y_e_atm   = 0.5;
+//   const double Y_e_min   = -1;
+//   const double Y_e_max   = -1;
+//   const double T_atm     = 1e-2;
+//   const double T_min     = -1;
+//   const double T_max     = -1;
+
+//   eos_parameters eos;
+//   initialize_tabulated_eos_functions_and_params(tablepath, W_max,
+//                                                 rho_b_atm, rho_b_min, rho_b_max,
+//                                                 Y_e_atm, Y_e_min, Y_e_max,
+//                                                 T_atm, T_min, T_max, &eos);
+//   eos.root_finding_precision=1e-10;
+
+//   constantdensitysphere_test(&eos, test_key);
+
+//   eos.tabulated_free_memory(&eos);
+
+//   return 0;
+// }

@@ -46,7 +46,7 @@ validate_computed_values(
 static inline
 void
 rhs(const eos_parameters *restrict eos,
-    const double rho_b,
+    const double rho,
     const double Y_e,
     const double eps,
     const double T,
@@ -54,11 +54,11 @@ rhs(const eos_parameters *restrict eos,
   neutrino_optical_depths tau = {{0,0},{0,0},{0,0}};
   neutrino_opacities kappa;
   double R_source, Q_source;
-  NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(eos, rho_b, Y_e, T,
+  NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(eos, rho, Y_e, T,
                                                                 &tau, &kappa, &R_source, &Q_source);
 
-  rhs_gfs[Y_E] = R_source/rho_b;
-  rhs_gfs[EPS] = Q_source/rho_b;
+  rhs_gfs[Y_E] = R_source/rho;
+  rhs_gfs[EPS] = Q_source/rho;
 }
 
 static inline
@@ -66,7 +66,7 @@ void
 rk4_step_ode(
     const eos_parameters *restrict eos,
     const double dt,
-    const double rho_b,
+    const double rho,
     double *restrict gfs,
     double *restrict T ) {
 
@@ -84,126 +84,124 @@ rk4_step_ode(
   *T = eos->T_max;
   Y_e = gfs[Y_E];
   eps = gfs[EPS];
-  eos->tabulated_compute_T_from_eps(eos, rho_b, Y_e, eps, T);
-  rhs(eos, rho_b, Y_e, eps, *T, k1);
+  eos->tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  rhs(eos, rho, Y_e, eps, *T, k1);
 
   // RK4 - substep 2;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + 0.5*dt*k1[Y_E];
   eps = gfs[EPS] + 0.5*dt*k1[EPS];
-  eos->tabulated_compute_T_from_eps(eos, rho_b, Y_e, eps, T);
-  rhs(eos, rho_b, Y_e, eps, *T, k2);
+  eos->tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  rhs(eos, rho, Y_e, eps, *T, k2);
 
   // RK4 - substep 3;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + 0.5*dt*k2[Y_E];
   eps = gfs[EPS] + 0.5*dt*k2[EPS];
-  eos->tabulated_compute_T_from_eps(eos, rho_b, Y_e, eps, T);
-  rhs(eos, rho_b, Y_e, eps, *T, k3);
+  eos->tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  rhs(eos, rho, Y_e, eps, *T, k3);
 
   // RK4 - substep 4;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + dt*k3[Y_E];
   eps = gfs[EPS] + dt*k3[EPS];
-  eos->tabulated_compute_T_from_eps(eos, rho_b, Y_e, eps, T);
-  rhs(eos, rho_b, Y_e, eps, *T, k4);
+  eos->tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  rhs(eos, rho, Y_e, eps, *T, k4);
 
   // RK4 - update step
   for(int i=0;i<2;i++)
     gfs[i] += (dt/6.0)*( k1[i] + 2.0*( k2[i] + k3[i] ) + k4[i] );
 }
 
-int main( int argc, char **argv ) {
-
-  if( argc != 3 ) {
-    grhayl_info("Usage: %s <eos table> <test key>\n", *argv);
-    grhayl_info("Available test keys:\n");
-    grhayl_info("  0 : Generate unperturbed data\n");
-    grhayl_info("  1 : Generate perturbed data\n");
-    grhayl_info("  2 : Run unit test\n");
-    exit(1);
-  }
-
-  const char *tablepath = argv[1];
-  const int test_key    = atoi(argv[2]);
-  double initial_rho_b  = 1e-12;
-  double initial_Y_e    = 0.5;
-  double initial_T      = 1.0;
-  if( test_key == 1 ) {
-    initial_rho_b *= (1+randf(-1,1)*1e-14);
-    initial_Y_e   *= (1+randf(-1,1)*1e-14);
-    initial_T     *= (1+randf(-1,1)*1e-14);
-  }
-  else if( test_key != 0 && test_key != 2 )
-    grhayl_error("Unsupported test key %d\n", test_key);
-
-  const double W_max     = 10.0;
-  const double rho_b_atm = 1e-12;
-  const double rho_b_min = -1;
-  const double rho_b_max = -1;
-  const double Y_e_atm   = 0.5;
-  const double Y_e_min   = -1;
-  const double Y_e_max   = -1;
-  const double T_atm     = 1e-2;
-  const double T_min     = -1;
-  const double T_max     = -1;
-
-  eos_parameters eos;
-  initialize_tabulated_eos_functions_and_params(tablepath, W_max,
-                                                rho_b_atm, rho_b_min, rho_b_max,
-                                                Y_e_atm, Y_e_min, Y_e_max,
-                                                T_atm, T_min, T_max, &eos);
-  eos.root_finding_precision=1e-10;
+void
+generate_test_data(const eos_parameters *restrict eos) {
 
   const double t_final = 0.5*NRPyLeakage_units_cgs_to_geom_T;
   const double dt      = 0.001*NRPyLeakage_units_cgs_to_geom_T;
   const int n_steps    = (int)(t_final/dt+0.5);
-  double t = 0.0;
 
-  double eps;
-  eos.tabulated_compute_eps_from_T(&eos, initial_rho_b, initial_Y_e, initial_T, &eps);
-
-  double gfs[2] = {initial_Y_e, eps};
-
-#ifdef GENERATE_ASCII_DATA
-  FILE *fp = fopen("nrpyleakage_optically_thin_gas.txt","w");
-  fprintf(fp,"%.15e %.15e %.15e %.15e\n",t*NRPyLeakage_units_geom_to_cgs_T, gfs[Y_E], gfs[EPS], initial_T);
-#else
-  FILE *fp1=NULL, *fp2=NULL;
-  if( test_key != 2 ) {
-    if( test_key )
-      fp1 = fopen("nrpyleakage_optically_thin_gas_perturbed.bin","wb");
+  for(int perturb=0;perturb<=1;perturb++) {
+    char filename[64];
+    if( perturb )
+      sprintf(filename, "nrpyleakage_optically_thin_gas_perturbed.bin");
     else
-      fp1 = fopen("nrpyleakage_optically_thin_gas_unperturbed.bin","wb");
+      sprintf(filename, "nrpyleakage_optically_thin_gas_unperturbed.bin");
 
-    fwrite(&t        , sizeof(double), 1, fp1);
-    fwrite(&gfs[Y_E] , sizeof(double), 1, fp1);
-    fwrite(&gfs[EPS] , sizeof(double), 1, fp1);
-    fwrite(&initial_T, sizeof(double), 1, fp1);
+    FILE *fp = fopen_with_check(filename, "wb");
+
+    double initial_rho = 1e-12;
+    double initial_Y_e = 0.5;
+    double initial_T   = 1.0;
+    if( perturb ) {
+      initial_rho *= (1+randf(-1,1)*1e-14);
+      initial_Y_e *= (1+randf(-1,1)*1e-14);
+      initial_T   *= (1+randf(-1,1)*1e-14);
+    }
+
+    double eps;
+    eos->tabulated_compute_eps_from_T(eos, initial_rho, initial_Y_e, initial_T, &eps);
+
+    double gfs[2] = {initial_Y_e, eps};
+    fwrite(&n_steps  , sizeof(int)   , 1, fp);
+    if( !perturb ) {
+      fwrite(&dt         , sizeof(double), 1, fp);
+      fwrite(&t_final    , sizeof(double), 1, fp);
+      fwrite(&initial_rho, sizeof(double), 1, fp);
+      fwrite(&initial_T  , sizeof(double), 1, fp);
+      fwrite(&gfs[Y_E]   , sizeof(double), 1, fp);
+      fwrite(&gfs[EPS]   , sizeof(double), 1, fp);
+    }
+    double t = 0.0;
+    for(int n=0;n<n_steps;n++) {
+      double T;
+      rk4_step_ode(eos, dt, initial_rho, gfs, &T);
+      t += dt;
+      fwrite(&t        , sizeof(double), 1, fp);
+      fwrite(&gfs[Y_E] , sizeof(double), 1, fp);
+      fwrite(&gfs[EPS] , sizeof(double), 1, fp);
+      fwrite(&T        , sizeof(double), 1, fp);
+    }
+    fclose(fp);
+    grhayl_info("Finished %s evolution\n", perturb ? "perturbed" : "unperturbed");
   }
-  else {
-    fp1 = fopen("nrpyleakage_optically_thin_gas_unperturbed.bin", "rb");
-    fp2 = fopen("nrpyleakage_optically_thin_gas_perturbed.bin"  , "rb");
+}
+
+void
+run_unit_test(const eos_parameters *restrict eos) {
+  int n1, n2;
+
+  FILE *fp_unpert = fopen_with_check("nrpyleakage_optically_thin_gas_unperturbed.bin", "rb");
+  FILE *fp_pert   = fopen_with_check("nrpyleakage_optically_thin_gas_perturbed.bin", "rb");
+
+  int err = 0;
+  err += fread(&n1, sizeof(int), 1, fp_unpert);
+  err += fread(&n2, sizeof(int), 1, fp_pert  );
+  if( err != 2 || n1 != n2 ) {
+    fclose(fp_unpert); fclose(fp_pert);
+    grhayl_error("Problem reading number of steps from file (err: %d, n1: %d, n2: %d)\n",
+                 err, n1, n2);
   }
-#endif
+
+  const int n_steps = n1;
+  double dt, t_final, initial_rho, initial_T, gfs[2];
+  err  = 0;
+  err += fread(&dt         , sizeof(double), 1, fp_unpert);
+  err += fread(&t_final    , sizeof(double), 1, fp_unpert);
+  err += fread(&initial_rho, sizeof(double), 1, fp_unpert);
+  err += fread(&initial_T  , sizeof(double), 1, fp_unpert);
+  err += fread(&gfs[Y_E]   , sizeof(double), 1, fp_unpert);
+  err += fread(&gfs[EPS]   , sizeof(double), 1, fp_unpert);
+  if( err != 6 ) {
+    fclose(fp_unpert); fclose(fp_pert);
+    grhayl_error("Failed to read initial data from unperturbed data file\n");
+  }
+  double t = 0.0;
   for(int n=0;n<n_steps;n++) {
     double T;
-    rk4_step_ode(&eos, dt, initial_rho_b, gfs, &T);
+    rk4_step_ode(eos, dt, initial_rho, gfs, &T);
     t += dt;
-#ifdef GENERATE_ASCII_DATA
-    fprintf(fp,"%.15e %.15e %.15e %.15e\n",t*NRPyLeakage_units_geom_to_cgs_T, gfs[Y_E], gfs[EPS], T);
-#else
-    if( test_key == 2 )
-      validate_computed_values(fp1, fp2, t, gfs[Y_E], gfs[EPS], T);
-    else {
-      fwrite(&t        , sizeof(double), 1, fp1);
-      fwrite(&gfs[Y_E] , sizeof(double), 1, fp1);
-      fwrite(&gfs[EPS] , sizeof(double), 1, fp1);
-      fwrite(&T        , sizeof(double), 1, fp1);
-    }
-#endif
+    validate_computed_values(fp_unpert, fp_pert, t, gfs[Y_E], gfs[EPS], T);
   }
-  fclose(fp1);
-  if( test_key == 2 ) fclose(fp2);
-  eos.tabulated_free_memory(&eos);
 }
+
+#include "nrpyleakage_main.c"

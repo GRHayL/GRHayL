@@ -184,7 +184,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [nrpyleakage_optically_thin_gas, nrpyleakage_constant_density_sphere]
+        test-function: [nrpyleakage_optically_thin_gas, nrpyleakage_constant_density_sphere, nrpyleakage_luminosities]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
@@ -202,11 +202,13 @@ jobs:
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/Neutrinos/${{ matrix.test-function }}_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/Neutrinos/md5/${{ matrix.test-function }}.md5
+          md5sum -c ${{ matrix.test-function }}.md5
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run neutrinos unit test for ${{ matrix.test-function }} function
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
-          ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 2
+          ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 1
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
 
@@ -245,6 +247,8 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_unperturbed.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_perturbed.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_perturbed.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/con2prim_tabulated.md5
+          md5sum -c con2prim_tabulated.md5
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for tabulated EOS Con2Prim routines
         run: |

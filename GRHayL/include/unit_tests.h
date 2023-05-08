@@ -192,4 +192,11 @@ void randomize_primitives(
 #define check_file_was_successfully_open(fp, filename) \
   if(!fp) grhayl_error("Could not open file %s.\n", filename);
 
+static inline
+FILE *
+fopen_with_check(const char *filename, const char *mode) {
+  FILE *fp = fopen(filename, mode);
+  if(!fp) grhayl_error("Could not open file %s.\n", filename);
+  return fp;
+}
 #endif // UNIT_TESTS_H_

@@ -1,7 +1,7 @@
 #include "Neutrinos.h"
 
 static double EnsureFinite(const double x) {
-  if(robust_isfinite(x))
+  if(isfinite(x))
     return x;
   else
     return 1e-15;
