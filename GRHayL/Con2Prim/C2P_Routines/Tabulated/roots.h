@@ -125,16 +125,16 @@ swap(
  *
  * Returns    : Nothing.
  */
-static inline void
-cicle(
-    double *restrict a,
-    double *restrict b,
-    double *restrict c ) {
+// static inline void
+// cicle(
+//     double *restrict a,
+//     double *restrict b,
+//     double *restrict c ) {
 
-  *a = *b;
-  *b = *c;
-  *c = *a;
-}
+//   *a = *b;
+//   *b = *c;
+//   *c = *a;
+// }
 
 /*
  * Function   : sign
@@ -151,32 +151,6 @@ static inline int
 sign( const double x ) {
 
   return (x>0) - (x<0);
-}
-
-/*
- * Function   : ensure_b_is_closest_to_root
- * Author     : Leo Werneck
- *
- * Given a, b, f(a), f(b), ensures |f(b)| < |f(a)|.
- *
- * Parameters : a        - First point where f(x) is evaluated at.
- *            : b        - Second point where f(x) is evaluated at.
- * Parameters : fa       - f(a)
- *            : fb       - f(b).
- *
- * Returns    : Nothing.
- */
-static inline void
-ensure_b_is_closest_to_root(
-    double *restrict a,
-    double *restrict b,
-    double *restrict fa,
-    double *restrict fb ) {
-
-  if( fabs(*fa) < fabs(*fb) ) {
-    swap(a, b);
-    swap(fa, fb);
-  }
 }
 
 /*
@@ -206,61 +180,61 @@ ensure_b_is_closest_to_root(
  *                 - roots_error_root_not_bracketed if the interval [a,b]
  *                   does not bracket a root of f(x)
  */
-static inline roots_error_t
-check_a_b_compute_fa_fb(
-    double f(double const, void *restrict),
-    void   *restrict fparams,
-    double *restrict a,
-    double *restrict b,
-    double *restrict fa,
-    double *restrict fb,
-    roots_params *restrict r ) {
+// static inline roots_error_t
+// check_a_b_compute_fa_fb(
+//     double f(double const, void *restrict),
+//     void   *restrict fparams,
+//     double *restrict a,
+//     double *restrict b,
+//     double *restrict fa,
+//     double *restrict fb,
+//     roots_params *restrict r ) {
 
-  // Step 1: Compute fa; check if a is the root.
-  *fa = f(*a, fparams);
-  if( *fa == 0.0 ) {
-    r->root     = *a;
-    r->residual = *fa;
-    return (r->error_key = roots_success);
-  }
+//   // Step 1: Compute fa; check if a is the root.
+//   *fa = f(*a, fparams);
+//   if( *fa == 0.0 ) {
+//     r->root     = *a;
+//     r->residual = *fa;
+//     return (r->error_key = roots_success);
+//   }
 
-  // Step 2: Compute fb; check if b is the root.
-  *fb = f(*b, fparams);
-  if( *fb == 0.0 ) {
-    r->root     = *b;
-    r->residual = *fb;
-    return (r->error_key = roots_success);
-  }
+//   // Step 2: Compute fb; check if b is the root.
+//   *fb = f(*b, fparams);
+//   if( *fb == 0.0 ) {
+//     r->root     = *b;
+//     r->residual = *fb;
+//     return (r->error_key = roots_success);
+//   }
 
-  // Step 3: Ensure the root is in [a,b]
-  if( (*fa)*(*fb) > 0 )
-    return (r->error_key = roots_error_root_not_bracketed);
+//   // Step 3: Ensure the root is in [a,b]
+//   if( (*fa)*(*fb) > 0 )
+//     return (r->error_key = roots_error_root_not_bracketed);
 
-  // Step 4: Ensure b contains the best approximation to the root
-  ensure_b_is_closest_to_root(a, b, fa, fb);
+//   // Step 4: Ensure b contains the best approximation to the root
+//   ensure_b_is_closest_to_root(a, b, fa, fb);
 
-  // Step 5: If [a,b] is too small, return b
-  if( fabs(*a - *b) < r->tol ) {
-    r->root     = *b;
-    r->residual = *fb;
-    return (r->error_key = roots_success);
-  }
+//   // Step 5: If [a,b] is too small, return b
+//   if( fabs(*a - *b) < r->tol ) {
+//     r->root     = *b;
+//     r->residual = *fb;
+//     return (r->error_key = roots_success);
+//   }
 
-  // Step 6: Root not found.
-  return roots_continue;
-}
+//   // Step 6: Root not found.
+//   return roots_continue;
+// }
 
 
 /*
  * Function prototypes
  */
-roots_error_t
-brent(
-    double f(const double, void *restrict),
-    void *restrict fparams,
-    double a,
-    double b,
-    roots_params *restrict r );
+// roots_error_t
+// brent(
+//     double f(const double, void *restrict),
+//     void *restrict fparams,
+//     double a,
+//     double b,
+//     roots_params *restrict r );
 
 roots_error_t
 toms748(
