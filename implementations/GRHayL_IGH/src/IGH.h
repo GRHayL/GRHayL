@@ -1,6 +1,9 @@
 #ifndef GRHAYL_IGH_H_
 #define GRHAYL_IGH_H_
+
 #include "cctk.h"
+#include "cctk_Parameters.h"
+#include "cctk_Arguments.h"
 #include "GRHayLET.h"
 
 enum metric_indices{
@@ -23,15 +26,6 @@ enum recon_indices{
 #define A1   0.5625
 #define A2  -0.0625
 #define COMPUTE_FCVAL(Varm1,Var,Varp1,Varp2) (AM1*(Varm1) + A0*(Var) + A1*(Varp1) + A2*(Varp2))
-
-void GRHayL_IGH_convert_ADM_to_BSSN(const cGH *cctkGH,
-      double *gxx, double *gxy, double *gxz,
-      double *gyy, double *gyz, double *gzz,
-      double *phi, double *psi,
-      double *gtxx, double *gtxy, double *gtxz,
-      double *gtyy, double *gtyz, double *gtzz,
-      double *gtupxx, double *gtupxy, double *gtupxz,
-      double *gtupyy, double *gtupyz, double *gtupzz);
 
 void GRHayL_IGH_interpolate_to_face_and_initialize_metric(
       const cGH *cctkGH,

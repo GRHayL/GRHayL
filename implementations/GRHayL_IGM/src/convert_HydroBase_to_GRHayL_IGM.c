@@ -8,24 +8,14 @@
  * HydroBase and ADMBase.
  ********************************/
 
-#include "cctk.h"
-#include "cctk_Parameters.h"
-#include "cctk_Arguments.h"
 #include "IGM.h"
 
-void convert_from_ADMBase_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS_convert_from_ADMBase_HydroBase_to_GRHayL_IGM;
+void convert_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS_convert_HydroBase_to_GRHayL_IGM;
   DECLARE_CCTK_PARAMETERS;
 
   const double poison = 0.0/0.0;
   double dummy1, dummy2, dummy3;
-
-  // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-  GRHayL_IGM_convert_ADM_to_BSSN(cctkGH,
-                             gxx, gxy, gxz, gyy, gyz, gzz,
-                             phi_bssn, psi_bssn,
-                             gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
-                             gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
 
   const int imax = cctk_lsh[0];
   const int jmax = cctk_lsh[1];

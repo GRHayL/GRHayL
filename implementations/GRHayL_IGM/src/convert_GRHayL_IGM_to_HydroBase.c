@@ -1,10 +1,7 @@
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
 #include "IGM.h"
 
-void convert_from_GRHayL_IGM_to_HydroBase(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS_convert_from_GRHayL_IGM_to_HydroBase;
+void convert_GRHayL_IGM_to_HydroBase(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS_convert_GRHayL_IGM_to_HydroBase;
   DECLARE_CCTK_PARAMETERS;
 
   // Generally, we only need the HydroBase variables for diagnostic purposes, so we run the below loop only at iterations in which diagnostics are run.

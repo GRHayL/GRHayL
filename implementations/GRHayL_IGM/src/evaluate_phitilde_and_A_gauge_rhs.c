@@ -1,36 +1,23 @@
-#include "cctk.h"
 #include "IGM.h"
 
-void GRHayL_IGM_phitilde_and_A_gauge_rhs(const cGH *cctkGH,
-                   const double *restrict dX,
-                   const double *restrict gupxx,
-                   const double *restrict gupxy,
-                   const double *restrict gupxz,
-                   const double *restrict gupyy,
-                   const double *restrict gupyz,
-                   const double *restrict gupzz,
-                   const double *restrict psi,
-                   const double *restrict lapse,
-                   const double *restrict betax,
-                   const double *restrict betay,
-                   const double *restrict betaz,
-                   const double *restrict Ax,
-                   const double *restrict Ay,
-                   const double *restrict Az,
-                   const double *restrict phitilde,
-                   double Lorenz_damping_factor,
-                   double *restrict shiftx_interp,
-                   double *restrict shifty_interp,
-                   double *restrict shiftz_interp,
-                   double *restrict alpha_interp,
-                   double *restrict alpha_Phi_minus_betaj_A_j_interp,
-                   double *restrict alpha_sqrtg_Ax_interp,
-                   double *restrict alpha_sqrtg_Ay_interp,
-                   double *restrict alpha_sqrtg_Az_interp,
-                   double *restrict phitilde_rhs,
-                   double *restrict Ax_rhs,
-                   double *restrict Ay_rhs,
-                   double *restrict Az_rhs) {
+void GRHayL_IGM_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS_GRHayL_IGM_evaluate_phitilde_and_A_gauge_rhs;
+  DECLARE_CCTK_PARAMETERS;
+
+  // Note that in this function, we don't bother with reconstruction, instead interpolating.
+  // We need A^i, but only have A_i. So we use the BSSN metric gtupij.
+  // The reconstruction variables are temporary variables and the data in them can be safely overwritten,
+  // saving some memory.
+  double *shiftx_interp = vxr;
+  double *shifty_interp = vyr;
+  double *shiftz_interp = vzr;
+  double *alpha_interp = pressr;
+  double *alpha_Phi_minus_betaj_A_j_interp = pressl;
+  double *alpha_sqrtg_Ax_interp = vxl;
+  double *alpha_sqrtg_Ay_interp = vyl;
+  double *alpha_sqrtg_Az_interp = vzl;
+
+  CCTK_REAL dxi[3] = { 1.0/CCTK_DELTA_SPACE(0), 1.0/CCTK_DELTA_SPACE(1), 1.0/CCTK_DELTA_SPACE(2) };
 
   /* Compute \partial_t psi6phi = -\partial_i (  \alpha psi^6 A^i - psi6phi \beta^i)
    *    (Eq 13 of http://arxiv.org/pdf/1110.4633.pdf), using Lorenz gauge.
@@ -71,7 +58,7 @@ void GRHayL_IGM_phitilde_and_A_gauge_rhs(const cGH *cctkGH,
         //    We do this by first interpolating (RHS1x) = (\alpha \sqrt{\gamma} A^x) at
         //    (i,j+1/2,k+1/2)and (i+1,j+1/2,k+1/2), then taking \partial_x (RHS1x) =
         //    [ RHS1x(i+1,j+1/2,k+1/2) - RHS1x(i,j+1/2,k+1/2) ]/dX.
-        // First bring gup's, psi, and alpha to (i,j+1/2,k+1/2):
+        // First bring gtup's, psi, and alpha to (i,j+1/2,k+1/2):
         A_gauge_vars gauge_vars;
         A_gauge_rhs_vars gauge_rhs_vars;
 
@@ -81,14 +68,14 @@ void GRHayL_IGM_phitilde_and_A_gauge_rhs(const cGH *cctkGH,
           for(int itery=0; itery<2; itery++)
             for(int iterx=0; iterx<2; iterx++) {
               const int ind = CCTK_GFINDEX3D(cctkGH,i+iterx,j+itery,k+iterz);
-              gauge_vars.gupxx[iterz][itery][iterx]  = gupxx[ind];
-              gauge_vars.gupxy[iterz][itery][iterx]  = gupxy[ind];
-              gauge_vars.gupxz[iterz][itery][iterx]  = gupxz[ind];
-              gauge_vars.gupyy[iterz][itery][iterx]  = gupyy[ind];
-              gauge_vars.gupyz[iterz][itery][iterx]  = gupyz[ind];
-              gauge_vars.gupzz[iterz][itery][iterx]  = gupzz[ind];
-              gauge_vars.lapse[iterz][itery][iterx]  = lapse[ind];
-              gauge_vars.psi[iterz][itery][iterx]    = psi[ind];
+              gauge_vars.gupxx[iterz][itery][iterx]  = gtupxx[ind];
+              gauge_vars.gupxy[iterz][itery][iterx]  = gtupxy[ind];
+              gauge_vars.gupxz[iterz][itery][iterx]  = gtupxz[ind];
+              gauge_vars.gupyy[iterz][itery][iterx]  = gtupyy[ind];
+              gauge_vars.gupyz[iterz][itery][iterx]  = gtupyz[ind];
+              gauge_vars.gupzz[iterz][itery][iterx]  = gtupzz[ind];
+              gauge_vars.lapse[iterz][itery][iterx]  = alp[ind];
+              gauge_vars.psi[iterz][itery][iterx]    = psi_bssn[ind];
               gauge_vars.shiftx[iterz][itery][iterx] = betax[ind];
               gauge_vars.shifty[iterz][itery][iterx] = betay[ind];
               gauge_vars.shiftz[iterz][itery][iterx] = betaz[ind];
@@ -131,8 +118,6 @@ void GRHayL_IGM_phitilde_and_A_gauge_rhs(const cGH *cctkGH,
         shiftz_interp[index] = gauge_rhs_vars.shiftz_interp[0];
       }
 
-  const double dxinv[3] = {1.0/dX[0], 1.0/dX[1], 1.0/dX[2]};
-
 #pragma omp parallel for
   for(int k=kmin; k<kmax; k++)
     for(int j=jmin; j<jmax; j++)
@@ -145,9 +130,9 @@ void GRHayL_IGM_phitilde_and_A_gauge_rhs(const cGH *cctkGH,
     
         gauge_rhs_vars.alpha_interp = alpha_interp[index];
     
-        gauge_rhs_vars.dxi[0] = dxinv[0];
-        gauge_rhs_vars.dxi[1] = dxinv[1];
-        gauge_rhs_vars.dxi[2] = dxinv[2];
+        gauge_rhs_vars.dxi[0] = dxi[0];
+        gauge_rhs_vars.dxi[1] = dxi[1];
+        gauge_rhs_vars.dxi[2] = dxi[2];
     
         gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[0] = alpha_Phi_minus_betaj_A_j_interp[index];
         gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[1] = alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i-1,j,k)];
@@ -172,7 +157,7 @@ void GRHayL_IGM_phitilde_and_A_gauge_rhs(const cGH *cctkGH,
           gauge_rhs_vars.phitildey[iter+2] = phitilde[indexy];
           gauge_rhs_vars.phitildez[iter+2] = phitilde[indexz];
         }
-        calculate_phitilde_and_A_gauge_rhs(Lorenz_damping_factor, &gauge_rhs_vars);
+        calculate_phitilde_and_A_gauge_rhs(grhayl_params->Lorenz_damping_factor, &gauge_rhs_vars);
     
         phitilde_rhs[index] = gauge_rhs_vars.phitilde_rhs;
         Ax_rhs[index] += gauge_rhs_vars.A_x_gauge_rhs;

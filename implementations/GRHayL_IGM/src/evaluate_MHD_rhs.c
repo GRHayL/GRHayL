@@ -34,9 +34,6 @@
  * to have 3 ghostzones instead of 4.
  *********************************************/
 
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
 #include "IGM.h"
 
 void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
@@ -48,12 +45,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
     CCTK_VINFO("***** Iter. # %d, Lev: %d, Integrating to time: %e *****",cctk_iteration,levelnumber,cctk_delta_time/cctk_levfac[0]+cctk_time);
   }
 
-  if( sizeof(CCTK_REAL) < 8 ) CCTK_VERROR("Error: GRHayL_IGM assumes that CCTK_REAL is a double precision number. Setting otherwise will likely cause havoc with the conserv_to_prims solver.");
-
-  if(cctk_nghostzones[0]<3 || cctk_nghostzones[1]<3 || cctk_nghostzones[2]<3) { CCTK_VERROR("ERROR. Need at least 3 ghostzones for GRHayL_IGM evolutions."); }
-
   CCTK_REAL dX[3] = { CCTK_DELTA_SPACE(0), CCTK_DELTA_SPACE(1), CCTK_DELTA_SPACE(2) };
-
 
   // in_prims,out_prims_r, and out_prims_l are arrays of pointers to the actual gridfunctions.
   // Can't use restrict because pointers for e.g. vxr are in in_prims and out_prims_r.
@@ -89,14 +81,7 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   double *cmin[3] = {cmin_x, cmin_y, cmin_z};
   double *cmax[3] = {cmax_x, cmax_y, cmax_z};
 
-  // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-  GRHayL_IGM_convert_ADM_to_BSSN(cctkGH,
-                             gxx, gxy, gxz, gyy, gyz, gzz,
-                             phi_bssn, psi_bssn,
-                             gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
-                             gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
-
-//  /* SET POINTERS TO METRIC GRIDFUNCTIONS */
+  /* SET POINTERS TO METRIC GRIDFUNCTIONS */
   const double *metric[10]; // "metric" here is array of pointers to the actual gridfunctions.
   metric[LAPSE] = alp;
   metric[BETAX] = betax;
@@ -108,37 +93,6 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   metric[GYY]   = gyy;
   metric[GYZ]   = gyz;
   metric[GZZ]   = gzz;
-
-  const double *curv[6];
-  curv[KXX] = kxx;
-  curv[KXY] = kxy;
-  curv[KXZ] = kxz;
-  curv[KYY] = kyy;
-  curv[KYZ] = kyz;
-  curv[KZZ] = kzz;
-
-  // 1) First initialize RHS variables to zero
-#pragma omp parallel for
-  for(int k=0;k<cctk_lsh[2];k++)
-    for(int j=0;j<cctk_lsh[1];j++)
-      for(int i=0;i<cctk_lsh[0];i++) {
-        int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-        tau_rhs[index]      = 0.0;
-        rho_star_rhs[index] = 0.0;
-        Stildex_rhs[index]  = 0.0;
-        Stildey_rhs[index]  = 0.0;
-        Stildez_rhs[index]  = 0.0;
-        phitilde_rhs[index] = 0.0;
-        Ax_rhs[index]       = 0.0;
-        Ay_rhs[index]       = 0.0;
-        Az_rhs[index]       = 0.0;
-  }
-
-  // Here, we:
-  // 1) Compute tau_rhs extrinsic curvature terms, and
-  // 2) Compute TUPmunu.
-  // This function is housed in the file: "compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C"
-  GRHayL_IGM_calculate_tau_source_rhs(cctkGH, grhayl_eos, metric, curv, in_prims, tau_rhs);
 
   int num_vars;
   int flux_dir;
@@ -174,9 +128,6 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         const int indexim1 = CCTK_GFINDEX3D(cctkGH,i-1+(i==0),j,k); /* indexim1=0 when i=0 */
         out_prims_r[BX_CENTER][index] = out_prims_l[BX_CENTER][index] = in_prims[BX_STAGGER][indexim1];
   }
-
-  GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
-                                out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
@@ -232,9 +183,6 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         const int indexjm1 = CCTK_GFINDEX3D(cctkGH,i,j-1+(j==0),k); /* indexjm1=0 when j=0 */
         out_prims_r[BY_CENTER][index] = out_prims_l[BY_CENTER][index] = in_prims[BY_STAGGER][indexjm1];
   }
-
-  GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
-                                out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
@@ -303,9 +251,6 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
         out_prims_r[BZ_CENTER][index] = out_prims_l[BZ_CENTER][index] = in_prims[BZ_STAGGER][indexkm1];
   }
 
-  GRHayL_IGM_compute_characteristic_speeds(cctkGH, flux_dir, grhayl_eos, metric,
-                                out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir]);
-
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
   GRHayL_IGM_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
@@ -356,13 +301,4 @@ void GRHayL_IGM_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
   GRHayL_IGM_A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
-
-  // Next compute phitilde_rhs, and add gauge terms to A_i_rhs terms!
-  //   Note that in the following function, we don't bother with reconstruction, instead interpolating.
-  // We need A^i, but only have A_i. So we add gtupij to the list of input variables.
-  // We are FINISHED with v{x,y,z}{r,l} and P{r,l} so we use these 8 gridfunctions' worth of space as temp storage.
-  GRHayL_IGM_phitilde_and_A_gauge_rhs(cctkGH, dX, gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz,
-              psi_bssn, alp, betax, betay, betaz, Ax, Ay, Az, phitilde,
-              grhayl_params->Lorenz_damping_factor, vxr, vyr, vzr, vxl, vyl, vzl, pressr, pressl,
-              phitilde_rhs, Ax_rhs, Ay_rhs, Az_rhs);
 }

@@ -1,4 +1,3 @@
-#include "cctk.h"
 #include "IGM.h"
 
 static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);

@@ -1,15 +1,8 @@
-#include "cctk.h"
-#include "cctk_Parameters.h"
 #include "IGM.h"
 
-void GRHayL_IGM_convert_ADM_to_BSSN(const cGH *cctkGH,
-      double *gxx, double *gxy, double *gxz,
-      double *gyy, double *gyz, double *gzz,
-      double *phi, double *psi,
-      double *gtxx, double *gtxy, double *gtxz,
-      double *gtyy, double *gtyz, double *gtzz,
-      double *gtupxx, double *gtupxy, double *gtupxz,
-      double *gtupyy, double *gtupyz, double *gtupzz) {
+void GRHayL_IGM_convert_ADM_to_BSSN(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS_GRHayL_IGM_convert_ADM_to_BSSN;
+  DECLARE_CCTK_PARAMETERS;
 
 #pragma omp parallel for
   for(int k=0; k<cctkGH->cctk_lsh[2]; k++)
@@ -65,8 +58,8 @@ void GRHayL_IGM_convert_ADM_to_BSSN(const cGH *cctkGH,
         /*****************************************
          * Set all the needed BSSN gridfunctions *
          *****************************************/
-        phi[index] = phiL;
-        psi[index] = psiL;
+        phi_bssn[index] = phiL;
+        psi_bssn[index] = psiL;
 
         gtxx[index] = gtxxL;
         gtxy[index] = gtxyL;
