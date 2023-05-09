@@ -1,4 +1,3 @@
-#include "cctk.h"
 #include "IGM.h"
 
 void GRHayL_IGM_interpolate_to_face_and_initialize_metric(

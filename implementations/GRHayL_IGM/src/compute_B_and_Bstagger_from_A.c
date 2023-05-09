@@ -1,16 +1,8 @@
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
 #include "IGM.h"
 
 void GRHayL_IGM_compute_B_and_Bstagger_from_A(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS_GRHayL_IGM_compute_B_and_Bstagger_from_A;
   DECLARE_CCTK_PARAMETERS;
-
-  GRHayL_IGM_convert_ADM_to_BSSN(cctkGH, gxx, gxy, gxz, gyy, gyz, gzz,
-                                 phi_bssn,psi_bssn,
-                                 gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
-                                 gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
 
   CCTK_REAL dxi = 1.0/CCTK_DELTA_SPACE(0);
   CCTK_REAL dyi = 1.0/CCTK_DELTA_SPACE(1);

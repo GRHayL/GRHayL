@@ -1,5 +1,3 @@
-#include "cctk.h"
-#include "cctk_Parameters.h"
 #include "IGM.h"
 
 void GRHayL_IGM_set_symmetry_gzs_staggered(

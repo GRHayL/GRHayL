@@ -1,4 +1,3 @@
-#include "cctk.h"
 #include "IGM.h"
 
 void GRHayL_IGM_A_no_gauge_rhs(const cGH *restrict cctkGH, const int flux_dir,

@@ -4,9 +4,7 @@
 // To understand this, read documentation in arrangements/CactusBase/MoL/doc
 //--------------------------------------------------------------------------
 
-#include "cctk.h"
-#include "cctk_Parameters.h"
-#include "cctk_Arguments.h"
+#include "IGM.h"
 #include "Symmetry.h"
 
 void GRHayL_IGM_RegisterVars(CCTK_ARGUMENTS)

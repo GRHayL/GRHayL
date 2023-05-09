@@ -1,21 +1,21 @@
 # Main make.code.defn file for thorn GRHayL
 
 # Source files in this directory
-SRCS = A_no_gauge_rhs.c                               \
-       calculate_MHD_rhs.c                            \
-       compute_B_and_Bstagger_from_A.c                \
-       compute_characteristic_speeds.c                \
-       conservs_to_prims.c                            \
-       convert_ADM_to_BSSN.c                          \
-       convert_from_ADMBase_HydroBase_to_GRHayL_IGM.c \
-       convert_from_GRHayL_IGM_to_HydroBase.c         \
-       evaluate_MHD_rhs.c                             \
-       InitSymBound.c                                 \
-       interpolate_to_face_and_initialize_metric.c    \
-       MoL_registration.c                             \
-       outer_boundaries.c                             \
-       phitilde_and_A_gauge_rhs.c                     \
-       postpostinitial__set_symmetries__copy_timelevels.c \
-       reconstruction_loop.c                          \
-       reconstruction_loop_no_rho_P.c                 \
+SRCS = A_no_gauge_rhs.c                            \
+       calculate_MHD_rhs.c                         \
+       compute_B_and_Bstagger_from_A.c             \
+       conservs_to_prims.c                         \
+       convert_ADM_to_BSSN.c                       \
+       convert_HydroBase_to_GRHayL_IGM.c           \
+       convert_GRHayL_IGM_to_HydroBase.c           \
+       evaluate_MHD_rhs.c                          \
+       evaluate_phitilde_and_A_gauge_rhs.c         \
+       evaluate_tau_curvature_rhs.c                \
+       InitSymBound.c                              \
+       interpolate_to_face_and_initialize_metric.c \
+       MoL_registration.c                          \
+       outer_boundaries.c                          \
+       set_gz_symmetries.c                         \
+       reconstruction_loop.c                       \
+       reconstruction_loop_no_rho_P.c              \
        symmetry_gzs_staggered.c

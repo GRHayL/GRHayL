@@ -24,12 +24,8 @@
  *  moment, though it would be easy to extend to a piecewise
  *  polytrope. */
 
-
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
-#include "Symmetry.h"
 #include "IGM.h"
+#include "Symmetry.h"
 
 void GRHayL_IGM_conserv_to_prims(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS_GRHayL_IGM_conserv_to_prims;

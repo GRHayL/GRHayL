@@ -1,84 +1,4 @@
-#include "cctk.h"
 #include "IGM.h"
-
-//static inline void calculate_face_value(
-//      const cGH *cctkGH,
-//      const int flux_dir,
-//      const double *restrict cell_var,
-//      double *restrict face_var) {
-//
-//  const int xdir = (flux_dir == 0);
-//  const int ydir = (flux_dir == 1);
-//  const int zdir = (flux_dir == 2);
-//
-//#pragma omp parallel for
-//  for(int k=cctkGH->cctk_nghostzones[2]-1; k<cctkGH->cctk_lsh[0]-(cctkGH->cctk_nghostzones[2]-2); k++)
-//    for(int j=cctkGH->cctk_nghostzones[1]-1; j<cctkGH->cctk_lsh[1]-(cctkGH->cctk_nghostzones[1]-2); j++)
-//      for(int i=cctkGH->cctk_nghostzones[0]-1; i<cctkGH->cctk_lsh[2]-(cctkGH->cctk_nghostzones[0]-2); i++) {
-//        const int indm2  = CCTK_GFINDEX3D(cctkGH, i-2*xdir, j-2*ydir, k-2*zdir);
-//        const int indm1  = CCTK_GFINDEX3D(cctkGH, i-xdir,   j-ydir,   k-zdir);
-//        const int index  = CCTK_GFINDEX3D(cctkGH, i,        j ,       k);
-//        const int indp1  = CCTK_GFINDEX3D(cctkGH, i+xdir,   j+ydir,   k+zdir);
-//
-//        face_var[index] = COMPUTE_FCVAL(cell_var[indm2],
-//                                        cell_var[indm1],
-//                                        cell_var[index],
-//                                        cell_var[indp1]);
-//  }
-//}
-
-void GRHayL_IGM_calculate_tau_source_rhs(
-      const cGH *restrict cctkGH,
-      const eos_parameters *restrict eos,
-      const double **in_metric,
-      const double **in_curv,
-      const double **in_prims,
-      double *restrict tau_rhs) {
-
-  const double poison = 0.0/0.0;
-
-  const int imin = cctkGH->cctk_nghostzones[0];
-  const int jmin = cctkGH->cctk_nghostzones[1];
-  const int kmin = cctkGH->cctk_nghostzones[2];
-  const int imax = cctkGH->cctk_lsh[0] - cctkGH->cctk_nghostzones[0];
-  const int jmax = cctkGH->cctk_lsh[1] - cctkGH->cctk_nghostzones[1];
-  const int kmax = cctkGH->cctk_lsh[2] - cctkGH->cctk_nghostzones[2];
-
-#pragma omp parallel for
-  for(int k=kmin; k<kmax; k++)
-    for(int j=jmin; j<jmax; j++)
-      for(int i=imin; i<imax; i++) {
-        const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
-
-        metric_quantities metric;
-        initialize_metric(in_metric[LAPSE][index],
-                          in_metric[GXX][index], in_metric[GXY][index], in_metric[GXZ][index],
-                          in_metric[GYY][index], in_metric[GYZ][index], in_metric[GZZ][index],
-                          in_metric[BETAX][index], in_metric[BETAY][index], in_metric[BETAZ][index],
-                          &metric);
-
-        extrinsic_curvature curv;
-        initialize_extrinsic_curvature(
-                          in_curv[KXX][index], in_curv[KXY][index], in_curv[KXZ][index],
-                          in_curv[KYY][index], in_curv[KYZ][index], in_curv[KZZ][index],
-                          &curv);
-
-        primitive_quantities prims;
-        initialize_primitives(in_prims[RHOB][index], in_prims[PRESSURE][index], poison,
-                              in_prims[VX][index], in_prims[VY][index], in_prims[VZ][index],
-                              in_prims[BX_CENTER][index], in_prims[BY_CENTER][index], in_prims[BZ_CENTER][index],
-                              poison, poison, poison, // entropy, Y_e, temp
-                              &prims);
-
-        int speed_limited = 0;
-        limit_v_and_compute_u0(eos, &metric, &prims, &speed_limited);
-
-        conservative_quantities cons_source;
-        cons_source.tau = 0;
-        calculate_tau_tilde_source_term_extrinsic_curv(&prims, grhayl_eos, &metric, &curv, &cons_source);
-        tau_rhs[index] += cons_source.tau;
-  }
-}
 
 void GRHayL_IGM_calculate_MHD_dirn_rhs(
       const cGH *restrict cctkGH,
@@ -89,8 +9,8 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
       const double **in_prims,
       /*const*/ double **in_prims_r,
       /*const*/ double **in_prims_l,
-      const double *restrict cmin,
-      const double *restrict cmax,
+      double *restrict cmin,
+      double *restrict cmax,
       double *restrict rho_star_flux,
       double *restrict tau_flux,
       double *restrict Stildex_flux,
@@ -106,9 +26,16 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
   const double poison = 0.0/0.0;
 
   // Function pointer to allow for loop over fluxes and sources
+  void (*calculate_characteristic_speed)(const primitive_quantities *restrict prims_r,
+                                         const primitive_quantities *restrict prims_l,
+                                         struct eos_parameters const *restrict eos,
+                                         const metric_quantities *restrict metric_face,
+                                         double *cmin, double *cmax);
+
   void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
                                 const eos_parameters *restrict, const metric_quantities *restrict, const double, const double,
                                 conservative_quantities *restrict);
+
   void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict eos,
                                  const metric_quantities *restrict, const metric_derivatives *restrict, conservative_quantities *restrict);
 
@@ -119,14 +46,17 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
   // Set function pointer to specific function for a given direction
   switch(flux_dir) {
     case 0:
+      calculate_characteristic_speed = &calculate_characteristic_speed_dirn0;
       calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn0;
       calculate_source_terms = &calculate_source_terms_dirn0;
       break;
     case 1:
+      calculate_characteristic_speed = &calculate_characteristic_speed_dirn1;
       calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn1;
       calculate_source_terms = &calculate_source_terms_dirn1;
       break;
     case 2:
+      calculate_characteristic_speed = &calculate_characteristic_speed_dirn2;
       calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn2;
       calculate_source_terms = &calculate_source_terms_dirn2;
       break;
@@ -141,28 +71,13 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
   const int jmax = cctkGH->cctk_lsh[1] - cctkGH->cctk_nghostzones[1];
   const int kmax = cctkGH->cctk_lsh[2] - cctkGH->cctk_nghostzones[2];
 
-//This section needs a lot of extra memory (all metric quantities have face GFs)
-//However, computing them once and saving them would prevent the repeated computation
-//of the +1 point for the derivative
-//  // Calculate the values of the metric quantities at the faces by interpolating
-//  // from the cell-centered quantities
-//  calculate_face_value(cctkGH, flux_dir, lapse, face_lapse);
-//  calculate_face_value(cctkGH, flux_dir, betax, face_betax);
-//  calculate_face_value(cctkGH, flux_dir, betay, face_betay);
-//  calculate_face_value(cctkGH, flux_dir, betaz, face_betaz);
-//  calculate_face_value(cctkGH, flux_dir, gxx, face_gxx);
-//  calculate_face_value(cctkGH, flux_dir, gxy, face_gxy);
-//  calculate_face_value(cctkGH, flux_dir, gxz, face_gxz);
-//  calculate_face_value(cctkGH, flux_dir, gyy, face_gyy);
-//  calculate_face_value(cctkGH, flux_dir, gyz, face_gyz);
-//  calculate_face_value(cctkGH, flux_dir, gzz, face_gzz);
-
   // This loop includes 1 ghostzone because the RHS calculation for e.g. the x direction
-  // requires (i,j,k) and (i+1,j,k)
+  // requires (i,j,k) and (i+1,j,k); if cmin/max weren't also needed for A_i, we could
+  // technically have the loop only go 1 extra point in the flux_dir direction
 #pragma omp parallel for
-  for(int k=kmin; k<kmax+zdir; k++)
-    for(int j=jmin; j<jmax+ydir; j++)
-      for(int i=imin; i<imax+xdir; i++) {
+  for(int k=kmin; k<kmax+1; k++)
+    for(int j=jmin; j<jmax+1; j++)
+      for(int i=imin; i<imax+1; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
         metric_quantities metric_face;
@@ -192,6 +107,7 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
         limit_v_and_compute_u0(eos, &metric_face, &prims_l, &speed_limited);
 
         conservative_quantities cons_fluxes;
+        calculate_characteristic_speed(&prims_r, &prims_l, eos, &metric_face, &cmin[index], &cmax[index]);
         calculate_HLLE_fluxes(&prims_r, &prims_l, eos, &metric_face, cmin[index], cmax[index], &cons_fluxes);
 
         rho_star_flux[index] = cons_fluxes.rho;
