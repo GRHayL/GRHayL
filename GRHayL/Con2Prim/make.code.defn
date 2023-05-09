@@ -1,4 +1,5 @@
 # Primary make.code.defn for gem Con2Prim
+#! INCS = harm_u2p_util.h
 
 # Source files in this directory that need compiled:
 SRCS = apply_inequality_fixes.c                  \
@@ -11,4 +12,4 @@ SRCS = apply_inequality_fixes.c                  \
        reset_prims_to_atmosphere.c               \
        undensitize_conservatives.c
 
-SUBDIRS = C2P_Routines
+SUBDIRS = Hybrid Tabulated

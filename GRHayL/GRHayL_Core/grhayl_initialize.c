@@ -38,6 +38,7 @@ void grhayl_initialize(
       const double Lorenz_damping_factor,
       GRHayL_parameters *restrict params ) {
 
+  // This comment is new
   params->main_routine          = main_routine;
   params->backup_routine[0]     = backup_routine[0];
   params->backup_routine[1]     = backup_routine[1];

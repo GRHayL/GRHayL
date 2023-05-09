@@ -1,2 +1,0 @@
-#! INCS = harm_u2p_util.h
-SUBDIRS = Hybrid Tabulated
