@@ -9,16 +9,6 @@ USES INCLUDE: GRHayLET.h
 
 #########################################################
 
-# BSSN-based quantities, computed from ADM quantities
-CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
-{
-   phi_bssn, psi_bssn
-   gtxx, gtxy, gtxz, gtyy, gtyz, gtzz
-   gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz
-} "BSSN quantities, computed from ADM quantities"
-
-#########################################################
-
 # Primitive variables
 # The HydroBase quantities rho and press are used as the primitives in this code. However,
 # GRHayL uses the velocity v^i = u^i/u^0, while HydroBase uses the Valencia velocity, so
@@ -46,29 +36,11 @@ cctk_real grmhd_conservatives_rhs type = GF TAGS='prolongation="none" Checkpoint
 
 #########################################################
 
-# Temporary variables for A-field evolution
-CCTK_REAL grmhd_cmin_cmax_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
-{
-  cmin_x, cmax_x
-  cmin_y, cmax_y
-  cmin_z, cmax_z
-} "Store min and max characteristic speeds in all three directions."
-
-
 #Temporary variables for flux computation
 cctk_real grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
   rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux
 } "Temporary variables for storing the flux terms of tilde{S}_i."
-
-# Temporary variables for reconstruction
-CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
-{
-  rhor, pressr, vxr, vyr, vzr
-  rhol, pressl, vxl, vyl, vzl
-  vxrr, vxrl, vyrr, vyrl, vzrr, vzrl
-  vxlr, vxll, vylr, vyll, vzlr, vzll
-} "Temporary variables used for primitives reconstruction"
 
 #########################################################
 

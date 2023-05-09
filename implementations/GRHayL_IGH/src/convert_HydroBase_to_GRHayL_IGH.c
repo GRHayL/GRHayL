@@ -8,25 +8,15 @@
  * HydroBase and ADMBase.
  ********************************/
 
-#include "cctk.h"
-#include "cctk_Parameters.h"
-#include "cctk_Arguments.h"
 #include "IGH.h"
 
-void convert_from_ADMBase_HydroBase_to_GRHayL_IGH(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS_convert_from_ADMBase_HydroBase_to_GRHayL_IGH;
+void convert_HydroBase_to_GRHayL_IGH(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS_convert_HydroBase_to_GRHayL_IGH;
   DECLARE_CCTK_PARAMETERS;
 
   const double poison = 0.0/0.0;
   double dummy1, dummy2, dummy3;
   double dummy4, dummy5, dummy6;
-
-  // Convert ADM variables (from ADMBase) to the BSSN-based variables expected by this routine.
-  GRHayL_IGH_convert_ADM_to_BSSN(cctkGH,
-                             gxx, gxy, gxz, gyy, gyz, gzz,
-                             phi_bssn, psi_bssn,
-                             gtxx, gtxy, gtxz, gtyy, gtyz, gtzz,
-                             gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz);
 
   const int imax = cctk_lsh[0];
   const int jmax = cctk_lsh[1];
@@ -85,26 +75,20 @@ void convert_from_ADMBase_HydroBase_to_GRHayL_IGH(CCTK_ARGUMENTS) {
   //    to the initial data.
   // Set random_pert variable to ~1e-14 for a random 15th digit
   //    perturbation.
-  srand(random_seed); // Use srand() as rand() is thread-safe.
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
-      for(int i=0; i<imax; i++) {
-        const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
-        const double pert = (random_pert*(double)rand() / RAND_MAX);
-        const double one_plus_pert=(1.0+pert);
-        rho_b[index]*=one_plus_pert;
-        vx[index]*=one_plus_pert;
-        vy[index]*=one_plus_pert;
-        vz[index]*=one_plus_pert;
+  if(random_pert > 1e-30) {
+    srand(random_seed); // Use srand() as rand() is thread-safe.
+    for(int k=0; k<kmax; k++)
+      for(int j=0; j<jmax; j++)
+        for(int i=0; i<imax; i++) {
+          const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
+          const double pert = (random_pert*(double)rand() / RAND_MAX);
+          const double one_plus_pert=(1.0+pert);
+          rho_b[index]*=one_plus_pert;
+          vx[index]*=one_plus_pert;
+          vy[index]*=one_plus_pert;
+          vz[index]*=one_plus_pert;
+    }
   }
-
-//TODO: comment not applicable anymore
-  // FIXME: IllinoisGRMHD's Conservative-to-Primitive solver
-  //   (a.k.a., C2P or con2prim) only implements single gamma-law EOS.
-  // Also, not compatible with EOS driver in ET, so EOS parameters must
-  //   be specified for both initial data thorns AND IllinoisGRMHD
-  // TODO: Incorporate checks to ensure compatibility with ID.
-  //   Alternatively, read in EOS stuff from an ET EOS driver.
 
   // Finally, enforce limits on primitives & compute conservative variables.
 #pragma omp parallel for

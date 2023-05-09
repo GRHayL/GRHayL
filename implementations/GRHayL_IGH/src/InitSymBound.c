@@ -12,6 +12,9 @@ void GRHayL_IGH_InitSymBound(CCTK_ARGUMENTS)
   DECLARE_CCTK_ARGUMENTS_GRHayL_IGH_InitSymBound;
   DECLARE_CCTK_PARAMETERS;
 
+
+  if( sizeof(CCTK_REAL) < 8 ) CCTK_VERROR("Error: GRHayL_IGH assumes that CCTK_REAL is a double precision number. Setting otherwise will likely cause havoc with the conserv_to_prims solver.");
+
   if ((cctk_nghostzones[0]<3 || cctk_nghostzones[1]<3 || cctk_nghostzones[2]<3))
     CCTK_VERROR("ERROR: The version of PPM in this thorn requires 3 ghostzones. You only have (%d,%d,%d) ghostzones!",cctk_nghostzones[0],cctk_nghostzones[1],cctk_nghostzones[2]);
 
@@ -40,4 +43,3 @@ void GRHayL_IGH_InitSymBound(CCTK_ARGUMENTS)
     }
   }
 }
-
