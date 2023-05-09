@@ -41,17 +41,8 @@
    can, this should be supported.
 */
 
-typedef enum {
-  None=-1,
-  Noble2D, Noble1D,
-  Noble1D_entropy, Noble1D_entropy2,
-  CerdaDuran2D, CerdaDuran3D,
-  Palenzuela1D, Palenzuela1D_entropy,
-  Newman1D, Newman1D_entropy
-} con2prim_method_t;
-
 typedef struct GRHayL_parameters {
-  con2prim_method_t main_routine, backup_routine[3];
+  int main_routine, backup_routine[3];
   bool evolve_entropy;
   bool evolve_temp;
   bool calc_prim_guess;
@@ -62,8 +53,8 @@ typedef struct GRHayL_parameters {
 } GRHayL_parameters;
 
 void initialize_GRHayL(
-      const con2prim_method_t main,
-      const con2prim_method_t backup[3],
+      const int main,
+      const int backup[3],
       const bool evolve_entropy,
       const bool evolve_temp,
       const bool calc_prim_guess,

@@ -24,6 +24,15 @@ For bitwise, would become 1, 2, 4, 8, 16, 32. 64, 128, and 256
 https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
 
+typedef enum {
+  None=-1,
+  Noble2D, Noble1D,
+  Noble1D_entropy, Noble1D_entropy2,
+  CerdaDuran2D, CerdaDuran3D,
+  Palenzuela1D, Palenzuela1D_entropy,
+  Newman1D, Newman1D_entropy
+} con2prim_method_t;
+
 typedef struct con2prim_diagnostics {
   bool c2p_failed;
   int failures;
@@ -94,16 +103,16 @@ void compute_conservs_and_Tmunu(
 //--------------------------------------------------
 
 //---------- Primary Con2Prim routines -------------
-
-int Hybrid_Multi_Method(
+int grhayl_con2prim_multi_method(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prims,
+      primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int Tabulated_Multi_Method(
+int grhayl_con2prim_select_method(
+      const con2prim_method_t c2p_key,
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,

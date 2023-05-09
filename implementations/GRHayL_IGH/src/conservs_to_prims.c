@@ -143,7 +143,7 @@ void GRHayL_IGH_conserv_to_prims(CCTK_ARGUMENTS) {
       undensitize_conservatives(&metric, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      int check = Hybrid_Multi_Method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &diagnostics);
+      int check = grhayl_con2prim_multi_method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &diagnostics);
 
       if(check!=0)
         check = font_fix(grhayl_params, grhayl_eos, &metric, &cons, &prims, &diagnostics);

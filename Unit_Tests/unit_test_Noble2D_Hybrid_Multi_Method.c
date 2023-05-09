@@ -181,8 +181,8 @@ int main(int argc, char **argv) {
     undensitize_conservatives(&metric, &cons, &cons_undens);
 
     // This runs the selected Con2Prim method (in this case, Noble2D).
-    int check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
-    //TODO: Con2Prim returned value isn't currently checked
+    if( grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics) )
+      grhayl_warn("Con2Prim failed\n");
 
     primitive_quantities prims_trusted, prims_pert;
     initialize_primitives(

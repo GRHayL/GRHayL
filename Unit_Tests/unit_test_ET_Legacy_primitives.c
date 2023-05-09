@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
       undensitize_conservatives(&metric, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      check = Hybrid_Multi_Method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+      check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
 
       if(check!=0)
         check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);

@@ -4,17 +4,17 @@
  * Description : Initialize the GRHayL_parameters struct from user input
  *
  * Inputs      : main            - selection of Con2Prim routine for the
- *                                 Hybrid_Multi_Method() function
+ *                                 grhayl_con2prim_multi_method() function
  *             : backup[3]       - array for up to three backup routines for
- *                                 the Hybrid_Multi_Method() function
+ *                                 the grhayl_con2prim_multi_method() function
  *             : evolve_entropy  - sets whether entropy is being evolved in
  *                                 the simulation
  *             : evolve_temp     - sets whether temperature is being evolved in
  *                                 the simulation
- *             : calc_prim_guess - sets whether Hybrid_Multi_Method() should compute
+ *             : calc_prim_guess - sets whether grhayl_con2prim_multi_method() should compute
  *                                 initial guesses for the primitives; if set to 0,
  *                                 the initial guess will be whatever has been loaded into
- *                                 the primitive_quantities struct passed to Hybrid_Multi_Method()
+ *                                 the primitive_quantities struct passed to grhayl_con2prim_multi_method()
  *             : psi6threshold   - TODO: comment
  *             : update_Tmunu    - sets whether to update stress_energy struct after obtaining
  *                                 new prims and cons
@@ -27,8 +27,8 @@
  */
 
 void initialize_GRHayL(
-      const con2prim_method_t main,
-      const con2prim_method_t backup[3],
+      const int main_routine,
+      const int backup_routine[3],
       const bool evolve_entropy,
       const bool evolve_temp,
       const bool calc_prim_guess,
@@ -38,15 +38,15 @@ void initialize_GRHayL(
       const double Lorenz_damping_factor,
       GRHayL_parameters *restrict params ) {
 
-  params->main_routine = main;
-  params->backup_routine[0] = backup[0];
-  params->backup_routine[1] = backup[1];
-  params->backup_routine[2] = backup[2];
-  params->evolve_entropy = evolve_entropy;
-  params->evolve_temp = evolve_temp;
-  params->calc_prim_guess = calc_prim_guess;
-  params->psi6threshold = psi6threshold;
-  params->update_Tmunu = update_Tmunu;
-  params->Cupp_Fix = Cupp_Fix;
+  params->main_routine          = main_routine;
+  params->backup_routine[0]     = backup_routine[0];
+  params->backup_routine[1]     = backup_routine[1];
+  params->backup_routine[2]     = backup_routine[2];
+  params->evolve_entropy        = evolve_entropy;
+  params->evolve_temp           = evolve_temp;
+  params->calc_prim_guess       = calc_prim_guess;
+  params->psi6threshold         = psi6threshold;
+  params->update_Tmunu          = update_Tmunu;
+  params->Cupp_Fix              = Cupp_Fix;
   params->Lorenz_damping_factor = Lorenz_damping_factor;
 }

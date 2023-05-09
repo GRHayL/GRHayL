@@ -17,19 +17,20 @@ several "gems" which provide specific features. These currently include Con2Prim
 EOS, Flux_Source, Induction, Neutrinos, and Reconstruction. Each gem implements
 infrastructure-agnostic functions for computing quantities for GRMHD simulations.
 
-The Con2Prim gem provides functions to perform the entire conservative-to-primitive
-variable recovery. This includes a variety of C2P routines, functions to enforce
-limits on incoming conservatives and outgoing primitives, and a function to compute
-conservatives and Tmunu from the newly computed primitives. All the C2P routines have the
-same arguments, allowing for quick and easy substitution. The functions
-Hybrid_Multi_Method() and Tabulated_Multi_Method() provide runtime switching between
-provided methods, as well as the option to choose backup routines in the case of failure.
+The Con2Prim gem provides functions to perform the entire
+conservative-to-primitive variable recovery. This includes a variety of C2P
+routines, functions to enforce limits on incoming conservatives and outgoing
+primitives, and a function to compute conservatives and Tmunu from the newly
+computed primitives. All the C2P routines have the same arguments, allowing for
+quick and easy substitution. The function `grhayl_con2prim_multi_method()`
+provides runtime switching between available methods, as well as the option to
+choose backup routines in the case of failure.
 
 The EOS gem provides many functions which are needed by other gems to compute quantities
 (e.g. P_cold for hybrid or table interpolation in tabulated). The other gems depend purely
 on the eos_parameters struct. This struct contains function pointers which can be initialized
-to the EOS gem functions using initialize_hybrid_eos_functions_and_params() or
-initialize_tabulated_eos_functions_and_params(). Of course, these pointers can be changed to
+to the EOS gem functions using `initialize_hybrid_eos_functions_and_params()` or
+`initialize_tabulated_eos_functions_and_params()`. Of course, these pointers can be changed to
 point to another function if required, so long as the argument lists are identical.
 
 The Unit_Testing directory contains the unit tests which are used by the Github Actions continuous

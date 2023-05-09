@@ -176,7 +176,7 @@ generate_test_data(
           undensitize_conservatives(&metric, &cons, &cons_undens);
 
           // Now perform the con2prim
-          if( Tabulated_Multi_Method(params, eos, &metric, &cons_undens, &prims, &diagnostics) )
+          if( grhayl_con2prim_multi_method(params, eos, &metric, &cons_undens, &prims, &diagnostics) )
             grhayl_error("Con2Prim failed\n");
 
           prims.vx = prims.vx/prims.u0;
@@ -243,7 +243,7 @@ run_unit_test(
         undensitize_conservatives(&metric, &cons, &cons_undens);
 
         // Now perform the con2prim
-        if( Tabulated_Multi_Method(params, eos, &metric, &cons_undens, &prims, &diagnostics) )
+        if( grhayl_con2prim_multi_method(params, eos, &metric, &cons_undens, &prims, &diagnostics) )
           grhayl_error("Con2Prim failed\n");
 
         prims.vx = prims.vx/prims.u0;
