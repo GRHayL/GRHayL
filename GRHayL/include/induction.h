@@ -1,7 +1,7 @@
 #ifndef INDUCTION_H_
 #define INDUCTION_H_
 
-#include "GRHayL.h"
+#include "grhayl.h"
 
 typedef struct A_no_gauge_vars {
   double psi6;

@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
 /* Function    : initialize_extrinsic_curvature()
  * Description : Initialize the extrinsic_curvature struct from user input

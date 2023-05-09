@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
 /* Function    : return_conservatives()
  * Description : unpacks conservative struct into variables

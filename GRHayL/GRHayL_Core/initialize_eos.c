@@ -1,5 +1,5 @@
-#include "NRPyEOS_Hybrid.h"
-#include "NRPyEOS_Tabulated.h"
+#include "nrpyeos_hybrid.h"
+#include "nrpyeos_tabulated.h"
 
 #define init_common_eos_quantities         \
   eos->W_max             = W_max;          \

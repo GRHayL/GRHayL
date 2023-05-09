@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
 void compute_TUPmunu(
       const eos_parameters *restrict eos,

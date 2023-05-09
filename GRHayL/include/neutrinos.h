@@ -1,7 +1,7 @@
 #ifndef NEUTRINOS_H_
 #define NEUTRINOS_H_
 
-#include "GRHayL.h"
+#include "grhayl.h"
 
 // Neutrino quantities
 typedef struct neutrino_luminosities {
@@ -14,6 +14,6 @@ typedef struct neutrino_opacities {
 
 typedef neutrino_opacities neutrino_optical_depths;
 
-#include "NRPyLeakage.h"
+#include "nrpyleakage.h"
 
 #endif // NEUTRINOS_H_

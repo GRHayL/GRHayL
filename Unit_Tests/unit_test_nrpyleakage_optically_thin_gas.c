@@ -1,4 +1,4 @@
-#include "Neutrinos.h"
+#include "neutrinos.h"
 #include "unit_tests.h"
 
 //#define GENERATE_ASCII_DATA

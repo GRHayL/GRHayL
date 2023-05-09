@@ -1,4 +1,4 @@
-#include "NRPyEOS_Hybrid.h"
+#include "nrpyeos_hybrid.h"
 
 /* Function    : setup_K_ppoly_and_eps_integ_consts()
  * Description : For a given set of EOS inputs, determine

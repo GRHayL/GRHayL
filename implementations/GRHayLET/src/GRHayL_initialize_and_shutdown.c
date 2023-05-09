@@ -73,7 +73,7 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
   CCTK_VINFO("%.15e %.15e %.15e", Y_e_atm, Y_e_min, Y_e_max);
   CCTK_VINFO("%.15e %.15e %.15e", T_atm, T_min, T_max);
 
-  initialize_GRHayL(main, backups,
+  grhayl_initialize(main, backups,
                     evolve_entropy, evolve_temperature,
                     calc_primitive_guess, Psi6threshold,
                     update_Tmunu, Cupp_Fix, Lorenz_damping_factor,

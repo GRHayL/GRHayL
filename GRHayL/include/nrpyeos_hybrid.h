@@ -1,7 +1,7 @@
 #ifndef NRPYEOS_HYBRID_H_
 #define NRPYEOS_HYBRID_H_
 
-#include "GRHayL.h"
+#include "grhayl.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,4 +1,4 @@
-#include "NRPyEOS_Tabulated.h"
+#include "nrpyeos_tabulated.h"
 /*
  * (c) 2022 Leo Werneck
  */

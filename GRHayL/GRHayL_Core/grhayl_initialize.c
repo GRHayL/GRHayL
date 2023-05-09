@@ -1,6 +1,6 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
-/* Function    : initialize_GRHayL()
+/* Function    : grhayl_initialize()
  * Description : Initialize the GRHayL_parameters struct from user input
  *
  * Inputs      : main            - selection of Con2Prim routine for the
@@ -26,7 +26,7 @@
  *                                 containing the input parameters
  */
 
-void initialize_GRHayL(
+void grhayl_initialize(
       const int main_routine,
       const int backup_routine[3],
       const bool evolve_entropy,

@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
 /* Function    : initialize_primitives()
  * Description : Initialize the primitives struct from user input

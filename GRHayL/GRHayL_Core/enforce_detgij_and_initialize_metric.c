@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
 void GRHayL_enforce_detgtij_and_initialize_metric(
       const double lapse,

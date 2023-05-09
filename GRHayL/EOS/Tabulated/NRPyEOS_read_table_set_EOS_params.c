@@ -1,4 +1,4 @@
-#include "NRPyEOS_Tabulated.h"
+#include "nrpyeos_tabulated.h"
 
 // mini NoMPI
 #ifdef HAVE_CAPABILITY_MPI

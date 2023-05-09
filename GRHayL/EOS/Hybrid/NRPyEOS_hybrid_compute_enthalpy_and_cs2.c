@@ -1,4 +1,4 @@
-#include "NRPyEOS_Hybrid.h"
+#include "nrpyeos_hybrid.h"
 
 /* Function    : NRPyEOS_hybrid_compute_enthalpy_and_cs2()
  * Description : Computes the enthalpy and the sound speed squared.

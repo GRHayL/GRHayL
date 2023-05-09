@@ -1,4 +1,4 @@
-#include "NRPyEOS_Tabulated.h"
+#include "nrpyeos_tabulated.h"
 
 double get_table_quantity(
       const int which_var,
@@ -13,7 +13,7 @@ double get_table_quantity(
     case NRPyEOS_entropy_key:
       return rho - Y_e + T;
     case NRPyEOS_munu_key:
-      return rho - Y_e - T; 
+      return rho - Y_e - T;
     case NRPyEOS_cs2_key:
       return -rho + Y_e + T;
     case NRPyEOS_depsdT_key:

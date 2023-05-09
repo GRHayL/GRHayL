@@ -1,4 +1,4 @@
-#include "NRPyEOS_Hybrid.h"
+#include "nrpyeos_hybrid.h"
 
 /* Function    : compute_P_cold_and_eps_cold()
  * Description : Computes P_cold and eps_cold.

@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
 /* Function    : return_primitives()
  * Description : unpacks primitives struct into variables

@@ -1,4 +1,4 @@
-#include "NRPyEOS_Hybrid.h"
+#include "nrpyeos_hybrid.h"
 
 void NRPyEOS_compute_P_cold(
       const eos_parameters *restrict eos,

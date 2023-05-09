@@ -1,4 +1,4 @@
-#include "Neutrinos.h"
+#include "neutrinos.h"
 
 static double EnsureFinite(const double x) {
   if(isfinite(x))

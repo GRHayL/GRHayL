@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
 /* Function    : return_stress_energy()
  * Description : unpacks stress_energy struct into variables

@@ -1,4 +1,4 @@
-#include "NRPyEOS_Tabulated.h"
+#include "nrpyeos_tabulated.h"
 
 void NRPyEOS_initialize_tabulated_functions(eos_parameters *restrict eos) {
 #ifndef GRHAYL_USE_HDF5

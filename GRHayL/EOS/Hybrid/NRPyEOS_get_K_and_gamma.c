@@ -1,4 +1,4 @@
-#include "NRPyEOS_Hybrid.h"
+#include "nrpyeos_hybrid.h"
 
 /* Function    : get_K_and_Gamma()
  * Description : For a given value of rho, find the

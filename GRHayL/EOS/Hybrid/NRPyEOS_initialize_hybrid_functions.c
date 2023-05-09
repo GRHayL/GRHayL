@@ -1,4 +1,4 @@
-#include "NRPyEOS_Hybrid.h"
+#include "nrpyeos_hybrid.h"
 
 void NRPyEOS_initialize_hybrid_functions(eos_parameters *restrict eos) {
   eos->hybrid_find_polytropic_index            = &NRPyEOS_find_polytropic_index;

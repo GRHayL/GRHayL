@@ -1,12 +1,12 @@
 # This is GRHayL syntax to install these headers to <prefix>/grhayl/include
 # whenever `make install` is run.
 #! install_headers = con2prim.h flux_source.h
-#!                   GRHayL.h
-#!                   GRHayL_io.h
+#!                   grhayl.h
+#!                   grhayl_io.h
 #!                   induction.h
-#!                   Neutrinos.h
-#!                   NRPyEOS_Hybrid.h
-#!                   NRPyEOS_Tabulated.h
-#!                   NRPyLeakage.h
+#!                   neutrinos.h
+#!                   nrpyeos_hybrid.h
+#!                   nrpyeos_tabulated.h
+#!                   nrpyleakage.h
 #!                   reconstruction.h
 #!                   unit_tests.h

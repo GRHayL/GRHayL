@@ -1,4 +1,4 @@
-#include "NRPyEOS_Tabulated.h"
+#include "nrpyeos_tabulated.h"
 #include "unit_tests.h"
 
 /*

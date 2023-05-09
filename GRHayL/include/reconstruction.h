@@ -1,7 +1,7 @@
 #ifndef RECONSTRUCTION_H_
 #define RECONSTRUCTION_H_
 
-#include "GRHayL.h"
+#include "grhayl.h"
 
 // Integer constants to keep track of stencil.
 enum reconstruction_stencil {

@@ -1,7 +1,7 @@
 #ifndef CON2PRIM_H_
 #define CON2PRIM_H_
 
-#include "GRHayL.h"
+#include "grhayl.h"
 
 //------------- Con2Prim struct --------------------
 /*

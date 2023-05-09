@@ -1,4 +1,4 @@
-#include "NRPyEOS_Tabulated.h"
+#include "nrpyeos_tabulated.h"
 
 void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       eos_parameters const *restrict eos,

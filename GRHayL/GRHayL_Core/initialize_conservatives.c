@@ -1,4 +1,4 @@
-#include "GRHayL.h"
+#include "grhayl.h"
 
 /* Function    : initialize_conservatives()
  * Description : Initialize the conservative struct from user input

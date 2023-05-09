@@ -1,9 +1,9 @@
-#ifndef GRHayL_H_
-#define GRHayL_H_
+#ifndef GRHAYL_H_
+#define GRHAYL_H_
 
 #include <stdbool.h>
 #include <math.h>
-#include "GRHayL_io.h"
+#include "grhayl_io.h"
 
 #ifndef MIN
 #define MIN(A, B) ( ((A) < (B)) ? (A) : (B) )
@@ -52,7 +52,7 @@ typedef struct GRHayL_parameters {
   double Lorenz_damping_factor;
 } GRHayL_parameters;
 
-void initialize_GRHayL(
+void grhayl_initialize(
       const int main,
       const int backup[3],
       const bool evolve_entropy,

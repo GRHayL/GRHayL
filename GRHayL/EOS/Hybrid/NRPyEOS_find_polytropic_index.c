@@ -1,4 +1,4 @@
-#include "NRPyEOS_Hybrid.h"
+#include "nrpyeos_hybrid.h"
 
 /* Function    : find_polytropic_index()
  * Description : For a given value of rho, find the

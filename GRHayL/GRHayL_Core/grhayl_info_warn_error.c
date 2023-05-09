@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include "GRHayL_io.h"
+#include "grhayl_io.h"
 
 void grhayl_info(const char *format, ...) {
 
