@@ -197,7 +197,7 @@ schedule GRHayL_IGH_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRH
 # Conversion from GRHayL_IGH variables to Hydrobase
 #########################################################
 
-SCHEDULE convert_from_GRHayL_IGH_to_HydroBase at CCTK_INITIAL after GRHayL_IGH_ID_Converter
+SCHEDULE convert_GRHayL_IGH_to_HydroBase at CCTK_INITIAL after GRHayL_IGH_ID_Converter
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -206,7 +206,7 @@ SCHEDULE convert_from_GRHayL_IGH_to_HydroBase at CCTK_INITIAL after GRHayL_IGH_I
           HydroBase::vel(everywhere), HydroBase::w_lorentz(everywhere), HydroBase::Bvec(everywhere)
 } "Convert GRHayL_IGH-native variables to HydroBase"
 
-SCHEDULE convert_from_GRHayL_IGH_to_HydroBase at CCTK_ANALYSIS before particle_tracerET before VolumeIntegralGroup before convert_to_MHD_3velocity after ML_BSSN_evolCalcGroup
+SCHEDULE convert_GRHayL_IGH_to_HydroBase at CCTK_ANALYSIS before particle_tracerET before VolumeIntegralGroup before convert_to_MHD_3velocity after ML_BSSN_evolCalcGroup
 {
   LANG: C
   OPTIONS: GLOBAL-EARLY,LOOP-LOCAL

@@ -1,9 +1,6 @@
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
 #include "IGH.h"
 
-void convert_from_GRHayL_IGH_to_HydroBase(CCTK_ARGUMENTS) {
+void convert_GRHayL_IGH_to_HydroBase(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS_convert_from_GRHayL_IGH_to_HydroBase;
   DECLARE_CCTK_PARAMETERS;
 

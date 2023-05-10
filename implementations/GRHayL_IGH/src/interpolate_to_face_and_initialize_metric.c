@@ -1,4 +1,3 @@
-#include "cctk.h"
 #include "IGH.h"
 
 void GRHayL_IGH_interpolate_to_face_and_initialize_metric(
