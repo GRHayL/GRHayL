@@ -1,12 +1,9 @@
 #include "con2prim.h"
 
-/* Function    : compute_conservs_and_Tmunu()
- * Description : Computes the conservatives from the given primitives and
- *               computes Tmunu if params->update_Tmunu is true.
+/* Function    : compute_conservs()
+ * Description : Computes the conservatives from the given primitives
  *
- * Inputs      : params         - GRHayL_parameters struct with parameters
- *                                for the simulation
- *             : metric         - metric_quantities struct with data for
+ * Inputs      : metric         - metric_quantities struct with data for
  *                                the gridpoint of interest
  *             : prims          - primitive_quantities struct with data
  *                                for the gridpoint of interest
@@ -15,8 +12,7 @@
  *
  */
 
-void compute_conservs(const GRHayL_parameters *restrict params,
-                      const metric_quantities *restrict metric,
+void compute_conservs(const metric_quantities *restrict metric,
                       const primitive_quantities *restrict prims,
                       conservative_quantities *restrict cons) {
 

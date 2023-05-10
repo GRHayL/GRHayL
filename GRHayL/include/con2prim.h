@@ -28,7 +28,7 @@ typedef enum {
   None=-1,
   Noble2D, Noble1D,
   Noble1D_entropy, Noble1D_entropy2,
-  CerdaDuran2D, CerdaDuran3D,
+  FontFix, CerdaDuran2D, CerdaDuran3D,
   Palenzuela1D, Palenzuela1D_entropy,
   Newman1D, Newman1D_entropy
 } con2prim_method_t;
@@ -94,16 +94,15 @@ void enforce_primitive_limits_and_compute_u0(
       int *restrict speed_limit);
 
 void compute_conservs_and_Tmunu(
-      const GRHayL_parameters *restrict params,
       const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
       conservative_quantities *restrict cons,
       stress_energy *restrict Tmunu);
 
-void compute_conservs(const GRHayL_parameters *restrict params,
-                      const metric_quantities *restrict metric,
-                      const primitive_quantities *restrict prims,
-                      conservative_quantities *restrict cons);
+void compute_conservs(
+      const metric_quantities *restrict metric,
+      const primitive_quantities *restrict prims,
+      conservative_quantities *restrict cons);
 
 //--------------------------------------------------
 
