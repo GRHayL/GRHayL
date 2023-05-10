@@ -16,8 +16,6 @@
  *                                 the initial guess will be whatever has been loaded into
  *                                 the primitive_quantities struct passed to grhayl_con2prim_multi_method()
  *             : psi6threshold   - TODO: comment
- *             : update_Tmunu    - sets whether to update stress_energy struct after obtaining
- *                                 new prims and cons
  *             : Cupp_Fix        - If active, will change behavior of Noble2D which removes
  *                                 cause of most Font fixes and also change the choice of velocity
  *                                 in the case of atmospheric reset
@@ -33,7 +31,6 @@ void grhayl_initialize(
       const bool evolve_temp,
       const bool calc_prim_guess,
       const double psi6threshold,
-      const bool update_Tmunu,
       const bool Cupp_Fix,
       const double Lorenz_damping_factor,
       GRHayL_parameters *restrict params ) {
@@ -47,7 +44,6 @@ void grhayl_initialize(
   params->evolve_temp           = evolve_temp;
   params->calc_prim_guess       = calc_prim_guess;
   params->psi6threshold         = psi6threshold;
-  params->update_Tmunu          = update_Tmunu;
   params->Cupp_Fix              = Cupp_Fix;
   params->Lorenz_damping_factor = Lorenz_damping_factor;
 }

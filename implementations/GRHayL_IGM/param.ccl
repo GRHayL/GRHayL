@@ -13,6 +13,10 @@ INT Convert_to_HydroBase_every "How often to convert GRHayL_IGM primitive variab
  0:* :: "zero (disable) or positive (every N iterations)"
 } 0
 
+CCTK_BOOLEAN update_Tmunu "Update Tmunu, for RHS of Einstein's equations?" STEERABLE=ALWAYS
+{
+} "yes"
+
 #########################################################
 
 # Symmetry boundary params. Needed for handling staggered gridfunctions.

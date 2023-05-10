@@ -181,7 +181,7 @@ void GRHayL_IGH_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 &dummy1, &dummy2);
                 //&Y_e[index], &entropy[index]);
       
-          if(grhayl_params->update_Tmunu) {
+          if(update_Tmunu) {
             return_stress_energy(&Tmunu, &eTtt[index], &eTtx[index],
                   &eTty[index], &eTtz[index], &eTxx[index],
                   &eTxy[index], &eTxz[index], &eTyy[index],

@@ -1,8 +1,8 @@
 #include "con2prim.h"
 
 /* Function    : compute_conservs_and_Tmunu()
- * Description : Computes the conservatives and T_munu from the
- *               given primitives
+ * Description : Computes the conservatives from the given primitives and
+ *               computes Tmunu if params->update_Tmunu is true.
  *
  * Inputs      : params         - GRHayL_parameters struct with parameters
  *                                for the simulation
@@ -12,15 +12,13 @@
  *                                for the gridpoint of interest
  *
  * Outputs     : cons           - returns computed conservative values
- *             : Tmunu          - returns computed stress-energy tensor
  *
  */
 
-void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
-                                const metric_quantities *restrict metric,
-                                const primitive_quantities *restrict prims,
-                                conservative_quantities *restrict cons,
-                                stress_energy *restrict Tmunu) {
+void compute_conservs(const GRHayL_parameters *restrict params,
+                      const metric_quantities *restrict metric,
+                      const primitive_quantities *restrict prims,
+                      conservative_quantities *restrict cons) {
 
   // First compute the enthalpy
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;
@@ -62,18 +60,4 @@ void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
   cons->entropy = alpha_sqrt_gamma * prims->entropy * uUP[0];
   // Tabulated EOS evolves Y_e_star = alpha * sqrt(gamma) * rho_b * Y_e * u^{0} = rho_star * Y_e
   cons->Y_e = cons->rho * prims->Y_e;
-
-  // Finally, compute T_{\mu \nu}
-  // T_{mn} = (rho_0 h + b^2) u_m u_n + (P + 0.5 b^2) g_{mn} - b_m b_n, where m and n both run from 0 to 3.
-  // We don't use the GRHayL-provided function for computing T_{\mu \nu} because we can reuse a lot of precomputed quantities
-  Tmunu->Ttt = rho0_h_plus_b2*uDN[0]*uDN[0] + P_plus_half_b2*metric->g4dn[0][0] - smallb_lower[0]*smallb_lower[0];
-  Tmunu->Ttx = rho0_h_plus_b2*uDN[0]*uDN[1] + P_plus_half_b2*metric->g4dn[0][1] - smallb_lower[0]*smallb_lower[1];
-  Tmunu->Tty = rho0_h_plus_b2*uDN[0]*uDN[2] + P_plus_half_b2*metric->g4dn[0][2] - smallb_lower[0]*smallb_lower[2];
-  Tmunu->Ttz = rho0_h_plus_b2*uDN[0]*uDN[3] + P_plus_half_b2*metric->g4dn[0][3] - smallb_lower[0]*smallb_lower[3];
-  Tmunu->Txx = rho0_h_plus_b2*uDN[1]*uDN[1] + P_plus_half_b2*metric->g4dn[1][1] - smallb_lower[1]*smallb_lower[1];
-  Tmunu->Txy = rho0_h_plus_b2*uDN[1]*uDN[2] + P_plus_half_b2*metric->g4dn[1][2] - smallb_lower[1]*smallb_lower[2];
-  Tmunu->Txz = rho0_h_plus_b2*uDN[1]*uDN[3] + P_plus_half_b2*metric->g4dn[1][3] - smallb_lower[1]*smallb_lower[3];
-  Tmunu->Tyy = rho0_h_plus_b2*uDN[2]*uDN[2] + P_plus_half_b2*metric->g4dn[2][2] - smallb_lower[2]*smallb_lower[2];
-  Tmunu->Tyz = rho0_h_plus_b2*uDN[2]*uDN[3] + P_plus_half_b2*metric->g4dn[2][3] - smallb_lower[2]*smallb_lower[3];
-  Tmunu->Tzz = rho0_h_plus_b2*uDN[3]*uDN[3] + P_plus_half_b2*metric->g4dn[3][3] - smallb_lower[3]*smallb_lower[3];
 }

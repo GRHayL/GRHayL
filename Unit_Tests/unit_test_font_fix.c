@@ -19,7 +19,6 @@ int main(int argc, char **argv) {
   const int backup_routine[3] = {None,None,None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
-  const int update_Tmunu = 1; //IGM default
 
   const int neos = 1;
   const double W_max = 10.0; //IGM default
@@ -34,7 +33,7 @@ int main(int argc, char **argv) {
   // a simulation.
   GRHayL_parameters params;
   grhayl_initialize(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
-                    Psi6threshold, update_Tmunu, 1 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
+                    Psi6threshold, 1 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
   initialize_hybrid_eos_functions_and_params(W_max,

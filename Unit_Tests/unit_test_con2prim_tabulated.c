@@ -294,7 +294,6 @@ int main(int argc, char **argv) {
   const bool calc_prims_guess                = true;
   const bool evolve_entropy                  = false;
   const bool evolve_temperature              = true;
-  const bool update_Tmunu                    = true; //IGM default
   const bool use_cupp_fix                    = true;
   const double Psi6threshold                 = 1e100; //Taken from magnetizedTOV.par
   const double Lorenz_damping_factor         = 0.0;
@@ -319,7 +318,6 @@ int main(int argc, char **argv) {
                     evolve_temperature,
                     calc_prims_guess,
                     Psi6threshold,
-                    update_Tmunu,
                     use_cupp_fix,
                     Lorenz_damping_factor,
                     &params);

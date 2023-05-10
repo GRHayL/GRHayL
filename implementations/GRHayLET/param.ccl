@@ -68,10 +68,6 @@ CCTK_REAL depsdT_threshold "If depsdT is smaller than this value, the entropy wi
 # 0:3 :: "zero (disable), one (enable everywhere), or two (enable only where Psi6 > Psi6threshold [i.e., inside the horizon, where B's are set to zero], or three (kludge: set B=0 if tau<0 inside horizon))"
 #} 0
 
-CCTK_BOOLEAN update_Tmunu "Update Tmunu, for RHS of Einstein's equations?" STEERABLE=ALWAYS
-{
-} "yes"
-
 CCTK_BOOLEAN Cupp_Fix "Whether or not to apply the Cupp Fix"
 {
   "no"  :: "Standard behavior of IllinoisGRMHD code"
