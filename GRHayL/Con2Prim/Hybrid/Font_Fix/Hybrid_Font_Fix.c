@@ -1,10 +1,10 @@
-#include "con2prim.h"
+#include "../../harm_u2p_util.h"
 
 /**********************************
  * Piecewise Polytropic EOS Patch *
  *    Font fix: function call     *
  **********************************/
-int font_fix(
+int Hybrid_Font_Fix(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
@@ -69,7 +69,7 @@ int font_fix(
     for(int n=0; n<font_fix_attempts; n++) {
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
       const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
-      font_fix_status = font_fix_rhob_loop(eos, loop_maxits, loop_tol, W0, Sf20, Psim6, sdots,
+      font_fix_status = hybrid_font_fix_loop(eos, loop_maxits, loop_tol, W0, Sf20, Psim6, sdots,
                                            BbardotS2, B2bar, cons, rhob0, &rhob);
       rhob0 = rhob;
       if(font_fix_status==0) break;

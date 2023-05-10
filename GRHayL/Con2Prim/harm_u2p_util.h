@@ -307,4 +307,12 @@ void func_rho2(
       double *restrict df,
       int *restrict n_iter);
 
+int hybrid_font_fix_loop(
+      const eos_parameters *restrict eos,
+      const int maxits, const double tol, const double W_in,
+      const double Sf2_in, const double Psim6, const double sdots,
+      const double BbardotS2, const double B2bar,
+      const conservative_quantities *restrict cons,
+      const double rhob_in, double *restrict rhob_out_ptr );
+
 #endif

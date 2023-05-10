@@ -142,10 +142,6 @@ void GRHayL_IGH_conserv_to_prims(CCTK_ARGUMENTS) {
       /************* Conservative-to-primitive recovery ************/
       int check = grhayl_con2prim_multi_method(grhayl_params, grhayl_eos, &metric, &cons_undens, &prims, &diagnostics);
 
-      if(check!=0)
-        check = font_fix(grhayl_params, grhayl_eos, &metric, &cons, &prims, &diagnostics);
-      /*************************************************************/
-
       if(check==0) {
         //Check for NAN!
         if( isnan(prims.rho*prims.press*prims.eps*prims.vx*prims.vy*prims.vz) ) {

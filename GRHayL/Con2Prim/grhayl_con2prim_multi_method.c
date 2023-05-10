@@ -13,6 +13,9 @@ int grhayl_con2prim_select_method(
     // Noble2D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
       return Hybrid_Noble2D(params, eos, metric, cons, prims, diagnostics);
+    // "Font fix" routine (see )
+    case FontFix:
+      return Hybrid_Font_Fix(params, eos, metric, cons, prims, diagnostics);
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
       return Tabulated_Palenzuela1D_energy(params, eos, metric, cons, prims, diagnostics);

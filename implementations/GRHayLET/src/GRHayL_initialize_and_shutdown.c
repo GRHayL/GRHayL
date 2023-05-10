@@ -126,6 +126,8 @@ int parse_C2P_routine_keyword(const char *restrict routine_name) {
     return Noble1D_entropy;
   } else if (CCTK_EQUALS(routine_name, "Noble1D_entropy2")) {
     return Noble1D_entropy2;
+  } else if (CCTK_EQUALS(routine_name, "FontFix")) {
+    return FontFix;
   } else if (CCTK_EQUALS(routine_name, "CerdaDuran2D")) {
     return CerdaDuran2D;
   } else if (CCTK_EQUALS(routine_name, "CerdaDuran3D")) {

@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
                 write_primitive_binary(eos.eos_type, params.evolve_entropy, &prims, outfiles[2]);
                 write_conservative_binary(params.evolve_entropy, &cons, outfiles[2]);
               }
-              check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
+              check = Hybrid_Font_Fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
               write_primitive_binary(eos.eos_type, params.evolve_entropy, &prims, outfiles[2]);
             } else { //The else is so that Font Fix is tested even when the primary routine succeeds.
               if(!perturb) {
@@ -246,7 +246,7 @@ int main(int argc, char **argv) {
                 write_conservative_binary(params.evolve_entropy, &cons, outfiles[2]);
               }
               primitive_quantities prims_tmp;
-              check = font_fix(&params, &eos, &metric, &cons, &prims_tmp, &diagnostics);
+              check = Hybrid_Font_Fix(&params, &eos, &metric, &cons, &prims_tmp, &diagnostics);
               if(con2prim_test_keys[which_routine] == Noble2D)
                 write_primitive_binary(eos.eos_type, params.evolve_entropy, &prims_tmp, outfiles[2]);
             }

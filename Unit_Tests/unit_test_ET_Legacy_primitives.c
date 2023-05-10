@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
       check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
 
       if(check!=0)
-        check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
+        check = Hybrid_Font_Fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
       /*************************************************************/
 
       /********** Artificial Font fix for code comparison **********
@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
       the behavior of IllinoisGRMHD.
       **************************************************************/
       if(index==arraylength-2)
-        check = font_fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
+        check = Hybrid_Font_Fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
 
       if(check)
         printf("Con2Prim and Font fix failed!");

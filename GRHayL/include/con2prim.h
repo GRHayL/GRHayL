@@ -106,7 +106,7 @@ void compute_conservs(
 
 //--------------------------------------------------
 
-//---------- Primary Con2Prim routines -------------
+//-------------- Con2Prim routines -----------------
 int grhayl_con2prim_multi_method(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
@@ -130,6 +130,14 @@ int Hybrid_Noble2D(
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
+      con2prim_diagnostics *restrict diagnostics);
+
+int Hybrid_Font_Fix(
+      const GRHayL_parameters *restrict params,
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const conservative_quantities *restrict cons_undens,
+      primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
 
 int Tabulated_Palenzuela1D_energy(
@@ -163,35 +171,6 @@ int Tabulated_Newman1D_entropy(
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
-
-//--------------------------------------------------
-
-//-------------- Font Fix routines -----------------
-
-int font_fix(
-      const GRHayL_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics);
-
-int font_fix_hybrid_EOS(
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
-      const conservative_quantities *restrict cons_undens,
-      const primitive_quantities *restrict prims,
-      double *restrict u_x_ptr, double *restrict u_y_ptr,
-      double *restrict u_z_ptr );
-
-//TODO: this was formerly inline. Include inside font_fix_hybrid_EOS directly?
-int font_fix_rhob_loop(
-      const eos_parameters *restrict eos,
-      const int maxits, const double tol, const double W_in,
-      const double Sf2_in, const double Psim6, const double sdots,
-      const double BbardotS2, const double B2bar,
-      const conservative_quantities *restrict cons,
-      const double rhob_in, double *restrict rhob_out_ptr );
 
 //--------------------------------------------------
 
