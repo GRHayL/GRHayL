@@ -243,7 +243,7 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 gyy[index], gyz[index], gzz[index],
                 betax[index], betay[index], betaz[index],
                 &metric);
-      
+
           primitive_quantities prims;
           initialize_primitives(rho_b[index],
                 pressure[index], eps[index],
@@ -252,13 +252,13 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 poison, poison, poison, &prims);
                 //wont have storage for these vars for hybrid
                 //entropy[index], Y_e[index], temperature[index], &prims);
-      
+
           conservative_quantities cons;
           stress_energy Tmunu;
           int speed_limited = 0;
           enforce_primitive_limits_and_compute_u0(grhayl_params, grhayl_eos, &metric, &prims, &speed_limited);
           compute_conservs_and_Tmunu(grhayl_params, &metric, &prims, &cons, &Tmunu);
-      
+
           return_primitives(&prims,
                 &rho_b[index], &pressure[index], &eps[index],
                 &vx[index], &vy[index], &vz[index],
@@ -267,14 +267,14 @@ void GRHayL_IGM_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 &dummy1, &dummy2, &dummy3);
                 //wont have storage for these vars for hybrid
                 //&entropy[index], &Y_e[index], &temperature[index]);
-      
+
           return_conservatives(&cons,
                 &rho_star[index], &tau[index],
                 &Stildex[index], &Stildey[index], &Stildez[index],
                 &dummy1, &dummy2);
                 //&Y_e[index], &entropy[index]);
-      
-          if(grhayl_params->update_Tmunu) {
+
+          if(update_Tmunu) {
             return_stress_energy(&Tmunu, &eTtt[index], &eTtx[index],
                   &eTty[index], &eTtz[index], &eTxx[index],
                   &eTxy[index], &eTxz[index], &eTyy[index],

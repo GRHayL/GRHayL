@@ -226,7 +226,7 @@ void GRHayL_IGH_conserv_to_prims(CCTK_ARGUMENTS) {
           &dummy1, &dummy2);
           //&Y_e[index], &entropy[index]);
 
-    if(grhayl_params->update_Tmunu) {
+    if(update_Tmunu) {
       return_stress_energy(&Tmunu, &eTtt[index], &eTtx[index],
             &eTty[index], &eTtz[index], &eTxx[index],
             &eTxy[index], &eTxz[index], &eTyy[index],
@@ -252,86 +252,4 @@ void GRHayL_IGH_conserv_to_prims(CCTK_ARGUMENTS) {
                error_int_numer/error_int_denom, error_int_denom,
                (double)n_iter/( (double)(cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]) ));
   }
-//
-//  if(pressure_cap_hit!=0) {
-//    //CCTK_VInfo(CCTK_THORNSTRING,"PRESSURE CAP HIT %d TIMES!  Outputting debug file!",pressure_cap_hit);
-//  }
-//
-//  // Very useful con2prim debugger. If the primitives (con2prim) solver fails, this will output all data needed to
-//  //     debug where and why the solver failed. Strongly suggested for experimenting with new fixes.
-//  if(conserv_to_prims_debug==1) {
-//
-//    ofstream myfile;
-//    char filename[100];
-//    srand(time(NULL));
-//    sprintf(filename,"primitives_debug-%e.dat",rho_star[CCTK_GFINDEX3D(cctkGH,3,15,6)]);
-//    //Alternative, for debugging purposes as well: sprintf(filename,"primitives_debug-%d.dat",rand());
-//    myfile.open (filename, ios::out | ios::binary);
-//    //myfile.open ("data.bin", ios::out | ios::binary);
-//    myfile.write((char*)cctk_lsh, 3*sizeof(int));
-//
-//    myfile.write((char*)&rho_b_atm, 1*sizeof(CCTK_REAL));
-//    myfile.write((char*)&tau_atm, 1*sizeof(CCTK_REAL));
-//
-//    myfile.write((char*)&Psi6threshold, 1*sizeof(CCTK_REAL));
-//
-//    CCTK_REAL gamma_th=2.0;
-//    myfile.write((char*)&gamma_th, 1*sizeof(CCTK_REAL));
-//    myfile.write((char*)&neos,     1*sizeof(int));
-//
-//    myfile.write((char*)gamma_tab, (neos+1)*sizeof(CCTK_REAL));
-//    myfile.write((char*)k_tab,     (neos+1)*sizeof(CCTK_REAL));
-//
-//    myfile.write((char*)eps_tab,   neos*sizeof(CCTK_REAL));
-//    myfile.write((char*)rho_tab,   neos*sizeof(CCTK_REAL));
-//    myfile.write((char*)P_tab,     neos*sizeof(CCTK_REAL));
-//
-//    int fullsize=cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2];
-//    myfile.write((char*)x,   (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)y,   (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)z,   (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)phi_bssn, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtxx, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtxy, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtxz, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtyy, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtyz, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtzz, (fullsize)*sizeof(CCTK_REAL));
-//
-//    myfile.write((char*)gtupxx, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtupxy, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtupxz, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtupyy, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtupyz, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)gtupzz, (fullsize)*sizeof(CCTK_REAL));
-//
-//    myfile.write((char*)betax, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)betay, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)betaz, (fullsize)*sizeof(CCTK_REAL));
-//
-//    myfile.write((char*)lapm1, (fullsize)*sizeof(CCTK_REAL));
-//
-//    // HERE WE USE _flux variables as temp storage for original values of conservative variables.. This is used for debugging purposes only.
-//    myfile.write((char*)tau_flux,      (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)st_x_flux, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)st_y_flux, (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)st_z_flux, (fullsize)*sizeof(CCTK_REAL));
-//
-//    myfile.write((char*)rho_star_flux, (fullsize)*sizeof(CCTK_REAL));
-//
-//    myfile.write((char*)Bx,   (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)By,   (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)Bz,   (fullsize)*sizeof(CCTK_REAL));
-//
-//    myfile.write((char*)vx,   (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)vy,   (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)vz,   (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)P,    (fullsize)*sizeof(CCTK_REAL));
-//    myfile.write((char*)rho_b,(fullsize)*sizeof(CCTK_REAL));
-//
-//    int checker=1063; myfile.write((char*)&checker,sizeof(int));
-//
-//    myfile.close();
-//    CCTK_VInfo(CCTK_THORNSTRING,"Finished writing...");
-//  }
 }

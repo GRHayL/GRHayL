@@ -47,7 +47,6 @@ typedef struct GRHayL_parameters {
   bool evolve_temp;
   bool calc_prim_guess;
   double psi6threshold;
-  bool update_Tmunu;
   bool Cupp_Fix;
   double Lorenz_damping_factor;
 } GRHayL_parameters;
@@ -59,7 +58,6 @@ void grhayl_initialize(
       const bool evolve_temp,
       const bool calc_prim_guess,
       const double psi6threshold,
-      const bool update_Tmunu,
       const bool Cupp_Fix,
       const double Lorenz_damping_factor,
       GRHayL_parameters *restrict params);

@@ -19,7 +19,6 @@ int main(int argc, char **argv) {
   const int backup_routine[3] = {None,None,None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
-  const int update_Tmunu = 1; //IGM default
 
   const int neos = 1;
   const double W_max = 10.0; //IGM default
@@ -34,7 +33,7 @@ int main(int argc, char **argv) {
   // a simulation.
   GRHayL_parameters params;
   grhayl_initialize(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
-                    Psi6threshold, update_Tmunu, 1 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
+                    Psi6threshold, 1 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
   initialize_hybrid_eos_functions_and_params(W_max,
@@ -192,10 +191,6 @@ int main(int argc, char **argv) {
     // This computes the conservatives and stress-energy tensor from the new primitives
     compute_conservs_and_Tmunu(&params, &metric, &prims, &cons, &Tmunu);
 
-    // This uses the standalone compute_TDNmunu() function to compute the same stress-energy
-    // tensor, since compute_conservs_and_Tmunu() doesn't use it.
-    compute_TDNmunu(&eos, &metric, &prims, &Tmunu_alt);
-
     conservative_quantities cons_trusted, cons_pert;
     stress_energy Tmunu_trusted, Tmunu_pert;
 
@@ -223,7 +218,19 @@ int main(int argc, char **argv) {
 
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
-    validate_stress_energy(&Tmunu_trusted, &Tmunu_alt, &Tmunu_pert);
+
+    /*
+       GRHayL also has standalone functions compute_conservs() and compute_TDNmunu().
+       These exist for several reasons:
+         1) the user only wants to compute the conservs
+         2) the Tmunu variable is at a different centering than the conservatives,
+            requiring some sort of interpolation which the user handles separately.
+       We can easily use this test to also check these functions.
+    */
+    compute_conservs(&eos, &metric, &prims, &cons);
+    compute_TDNmunu(&eos, &metric, &prims, &Tmunu);
+    validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   grhayl_info("compute_conservs_and_Tmunu function test has passed!\n");
   free(lapse);

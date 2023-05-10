@@ -295,17 +295,11 @@ void convert_HydroBase_to_GRHayL_IGM(CCTK_ARGUMENTS) {
 //      have storage allocated by looking at params
 //                          &Y_e[index], &entropy[index]);
 
-        if(grhayl_params->update_Tmunu) {
-          eTtt[index] = Tmunu.Ttt;
-          eTtx[index] = Tmunu.Ttx;
-          eTty[index] = Tmunu.Tty;
-          eTtz[index] = Tmunu.Ttz;
-          eTxx[index] = Tmunu.Txx;
-          eTxy[index] = Tmunu.Txy;
-          eTxz[index] = Tmunu.Txz;
-          eTyy[index] = Tmunu.Tyy;
-          eTyz[index] = Tmunu.Tyz;
-          eTzz[index] = Tmunu.Tzz;
+        if(update_Tmunu) {
+          return_stress_energy(&Tmunu, &eTtt[index], &eTtx[index],
+                &eTty[index], &eTtz[index], &eTxx[index],
+                &eTxy[index], &eTxz[index], &eTyy[index],
+                &eTyz[index], &eTzz[index]);
         }
   }
 }

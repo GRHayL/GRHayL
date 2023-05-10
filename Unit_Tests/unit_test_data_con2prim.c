@@ -44,7 +44,6 @@ int main(int argc, char **argv) {
   int backup_routine[3] = {None,None,None};
   bool calc_prims_guess = true;
   double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
-  int update_Tmunu = 1; //IGM default
 
   int neos = 1;
   double W_max = 10.0; //IGM default
@@ -58,7 +57,7 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  grhayl_initialize(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess, Psi6threshold, update_Tmunu, 1 /*Cupp Fix*/, 0, &params);
+  grhayl_initialize(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess, Psi6threshold, 1 /*Cupp Fix*/, 0, &params);
 
   eos_parameters eos;
   initialize_hybrid_eos_functions_and_params(W_max,
