@@ -23,13 +23,14 @@
  *             : return value: 0 - Font fix worked
  *             : return value: 1 - Font fix failed
  */
-int font_fix_rhob_loop( const eos_parameters *restrict eos,
-                        const int maxits, const double tol,
-                        const double W_in, const double Sf2_in,
-                        const double Psim6, const double sdots,
-                        const double BbardotS2, const double B2bar,
-                        const conservative_quantities *restrict cons,
-                        const double rhob_in, double *restrict rhob_out_ptr ) {
+int hybrid_font_fix_loop(
+      const eos_parameters *restrict eos,
+      const int maxits, const double tol,
+      const double W_in, const double Sf2_in,
+      const double Psim6, const double sdots,
+      const double BbardotS2, const double B2bar,
+      const conservative_quantities *restrict cons,
+      const double rhob_in, double *restrict rhob_out_ptr ) {
 
   /* Declare basic variables */
   bool fontcheck=true;
