@@ -165,7 +165,7 @@ void GRHayL_IGH_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           stress_energy Tmunu;
           int speed_limited = 0;
           enforce_primitive_limits_and_compute_u0(grhayl_params, grhayl_eos, &metric, &prims, &speed_limited);
-          compute_conservs_and_Tmunu(grhayl_params, &metric, &prims, &cons, &Tmunu);
+          compute_conservs_and_Tmunu(&metric, &prims, &cons, &Tmunu);
       
           return_primitives(&prims,
                 &rho_b[index], &pressure[index], &eps[index],

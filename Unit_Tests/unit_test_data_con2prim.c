@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
           prims.eps = eps_cold + (prims.press-P_cold)/(eos.Gamma_th-1.0)/prims.rho;
 
           // Compute conservatives based on these primitives
-          compute_conservs_and_Tmunu(&params, &metric, &prims, &cons, &Tmunu);
+          compute_conservs_and_Tmunu(&metric, &prims, &cons, &Tmunu);
 
           //This is meant to simulate some round-off error that deviates from the "true" values that we just computed.
           if(perturb) perturb_data(rand_val, &prims, &cons);
@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
             write_primitive_binary(eos.eos_type, params.evolve_entropy, &prims, outfiles[4]);
             fwrite(&prims.u0, sizeof(double), 1, outfiles[4]);
           }
-          compute_conservs_and_Tmunu(&params, &metric, &prims, &cons, &Tmunu);
+          compute_conservs_and_Tmunu(&metric, &prims, &cons, &Tmunu);
           write_conservative_binary(params.evolve_entropy, &cons, outfiles[4]);
           write_stress_energy_binary(&Tmunu, outfiles[4]);
 

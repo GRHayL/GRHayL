@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
     metric_quantities metric;
     primitive_quantities prims;
     conservative_quantities cons;
-    stress_energy Tmunu, Tmunu_alt;
+    stress_energy Tmunu;
 
     // Read initial data accompanying trusted output
     initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
     prims.u0 = u0[i];
 
     // This computes the conservatives and stress-energy tensor from the new primitives
-    compute_conservs_and_Tmunu(&params, &metric, &prims, &cons, &Tmunu);
+    compute_conservs_and_Tmunu(&metric, &prims, &cons, &Tmunu);
 
     conservative_quantities cons_trusted, cons_pert;
     stress_energy Tmunu_trusted, Tmunu_pert;
@@ -227,8 +227,8 @@ int main(int argc, char **argv) {
             requiring some sort of interpolation which the user handles separately.
        We can easily use this test to also check these functions.
     */
-    compute_conservs(&eos, &metric, &prims, &cons);
-    compute_TDNmunu(&eos, &metric, &prims, &Tmunu);
+    compute_conservs(&metric, &prims, &cons);
+    compute_TDNmunu(&metric, &prims, &Tmunu);
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }

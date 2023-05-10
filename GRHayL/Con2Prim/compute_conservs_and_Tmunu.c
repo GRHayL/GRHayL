@@ -4,9 +4,7 @@
  * Description : Computes the conservatives and T_munu from the
  *               given primitives
  *
- * Inputs      : params         - GRHayL_parameters struct with parameters
- *                                for the simulation
- *             : metric         - metric_quantities struct with data for
+ * Inputs      : metric         - metric_quantities struct with data for
  *                                the gridpoint of interest
  *             : prims          - primitive_quantities struct with data
  *                                for the gridpoint of interest
@@ -16,8 +14,7 @@
  *
  */
 
-void compute_conservs_and_Tmunu(const GRHayL_parameters *restrict params,
-                                const metric_quantities *restrict metric,
+void compute_conservs_and_Tmunu(const metric_quantities *restrict metric,
                                 const primitive_quantities *restrict prims,
                                 conservative_quantities *restrict cons,
                                 stress_energy *restrict Tmunu) {

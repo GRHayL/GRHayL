@@ -169,7 +169,7 @@ generate_test_data(
           // Compute conserved variables and Tmunu
           conservative_quantities cons;
           __attribute__((unused)) stress_energy dummy;
-          compute_conservs_and_Tmunu(params, &metric, &prims_orig, &cons, &dummy);
+          compute_conservs_and_Tmunu(&metric, &prims_orig, &cons, &dummy);
 
           // Undensitize the conserved variables
           conservative_quantities cons_undens;
@@ -236,7 +236,7 @@ run_unit_test(
         // Compute conserved variables and Tmunu
         conservative_quantities cons;
         __attribute__((unused)) stress_energy dummy;
-        compute_conservs_and_Tmunu(params, &metric, &prims, &cons, &dummy);
+        compute_conservs_and_Tmunu(&metric, &prims, &cons, &dummy);
 
         // Undensitize the conserved variables
         conservative_quantities cons_undens;

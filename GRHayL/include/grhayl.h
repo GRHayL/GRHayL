@@ -689,13 +689,11 @@ double compute_vec2_from_vcon(
       const double *restrict vcon);
 
 void compute_TDNmunu(
-      const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
       stress_energy *restrict Tmunu);
 
 void compute_TUPmunu(
-      const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       const primitive_quantities *restrict prims,
       stress_energy *restrict Tmunu);
