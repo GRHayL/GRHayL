@@ -4,6 +4,7 @@
 // To understand this, read documentation in arrangements/CactusBase/MoL/doc
 //--------------------------------------------------------------------------
 
+#include "IGH.h"
 #include "Symmetry.h"
 
 void GRHayL_IGH_RegisterVars(CCTK_ARGUMENTS)
