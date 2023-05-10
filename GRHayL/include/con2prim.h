@@ -100,6 +100,11 @@ void compute_conservs_and_Tmunu(
       conservative_quantities *restrict cons,
       stress_energy *restrict Tmunu);
 
+void compute_conservs(const GRHayL_parameters *restrict params,
+                      const metric_quantities *restrict metric,
+                      const primitive_quantities *restrict prims,
+                      conservative_quantities *restrict cons);
+
 //--------------------------------------------------
 
 //---------- Primary Con2Prim routines -------------
