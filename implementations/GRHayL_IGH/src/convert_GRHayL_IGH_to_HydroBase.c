@@ -1,7 +1,7 @@
 #include "IGH.h"
 
 void convert_GRHayL_IGH_to_HydroBase(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS_convert_from_GRHayL_IGH_to_HydroBase;
+  DECLARE_CCTK_ARGUMENTS_convert_GRHayL_IGH_to_HydroBase;
   DECLARE_CCTK_PARAMETERS;
 
   // Generally, we only need the HydroBase variables for diagnostic purposes, so we run the below loop only at iterations in which diagnostics are run.

@@ -4,11 +4,10 @@
 SRCS = conservs_to_prims.c                         \
        enforce_detgtij_eq_1.c                      \
        convert_HydroBase_to_GRHayL_IGH.c           \
-       convert_from_GRHayL_IGH_to_HydroBase.c      \
+       convert_GRHayL_IGH_to_HydroBase.c           \
        evaluate_flux_source_rhs.c                  \
        evaluate_tau_curvature_rhs.c                \
        InitSymBound.c                              \
        interpolate_to_face_and_initialize_metric.c \
        MoL_registration.c                          \
-       outer_boundaries.c                          \
-       reconstruction_loop.c
+       outer_boundaries.c
