@@ -34,9 +34,6 @@
  * to have 3 ghostzones instead of 4.
  *********************************************/
 
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
 #include "IGH.h"
 
 void GRHayL_IGH_evaluate_tau_curvature_rhs(CCTK_ARGUMENTS) {

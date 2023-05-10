@@ -9,9 +9,6 @@
  * ( 5) (optional) set conservatives on outer boundary.
  *******************************************************/
 
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
 #include "IGH.h"
 
 #define IDX(i,j,k) CCTK_GFINDEX3D(cctkGH,(i),(j),(k))

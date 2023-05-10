@@ -2,9 +2,7 @@
   Set the symmetries for the GRHayL_IGH variables
 */
 
-#include "cctk.h"
-#include "cctk_Arguments.h"
-#include "cctk_Parameters.h"
+#include "IGH.h"
 #include "Symmetry.h"
 
 void GRHayL_IGH_InitSymBound(CCTK_ARGUMENTS)
