@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
-  if( key != 1)
+  if( key != 1 || arraylength < 1 )
     grhayl_error("An error has occured with reading the grid size. "
                  "Please check that metric_initial_data.bin"
                  "is up-to-date with current test version.\n");
