@@ -276,6 +276,7 @@ int Hybrid_Noble2D(
   // using enforce_primitive_limits_and_output_u0(). There's no need to trigger a Font fix. In my experience,
   // Font Fix returns nearly the same values as this, but takes longer to run (we already did the work for
   // these results, after all!
+  // Also note that we have completely eliminated u, so that check doesn't exist any longer.
   if( !params->Cupp_Fix && prims->rho <= 0.0) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:

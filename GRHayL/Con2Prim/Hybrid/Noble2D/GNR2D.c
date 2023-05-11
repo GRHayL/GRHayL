@@ -72,12 +72,9 @@ int general_newton_raphson(
   *n_iter_ptr = n_iter;
 
   /*  Check for bad untrapped divergences : */
-//TODO: error-checking
-//  if( (robust_isfinite(f)==0) ||  (robust_isfinite(df)==0) ) {
-//    return(2);
-//  }
-
-  if( fabs(errx) <= NEWT_TOL || fabs(errx) <= MIN_NEWT_TOL) {
+  if( !isfinite(f) ||  !isfinite(df) ) {
+    return(2);
+  } else if( fabs(errx) <= NEWT_TOL || fabs(errx) <= MIN_NEWT_TOL) {
     return(0);
   } else {
     return(1);
