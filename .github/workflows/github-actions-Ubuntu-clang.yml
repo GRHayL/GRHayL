@@ -38,11 +38,11 @@ jobs:
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
 
-  con-to-prim:
+  hybrid-c2p-routines:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [apply_inequality_fixes, Noble2D_Hybrid_Multi_Method, font_fix, enforce_primitive_limits_and_compute_u0, compute_conservs_and_Tmunu]
+        test-function: [FontFix, Noble2D]
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
 
@@ -58,9 +58,41 @@ jobs:
           compiler: 'clang'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/Noble2D_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_pert.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/metric_initial_data.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/grhayl_con2prim_multi_method_hybrid_input.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/grhayl_con2prim_multi_method_hybrid_${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/grhayl_con2prim_multi_method_hybrid_${{ matrix.test-function }}_output_pert.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/hybrid_${{ matrix.test-function }}.md5
+          md5sum -c hybrid_${{ matrix.test-function }}.md5
+      - name: Run con2prim unit test for ${{ matrix.test-function }} function
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_Hybrid_${{ matrix.test-function }}
+      - name: Generate coverage report
+        uses: ./.github/actions/code-coverage
+
+  c2p-auxiliaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        test-function: [apply_inequality_fixes, enforce_primitive_limits_and_compute_u0, compute_conservs_and_Tmunu]
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'clang'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'clang'
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/metric_initial_data.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/${{ matrix.test-function }}_output_pert.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/${{ matrix.test-function }}.md5
           md5sum -c ${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} function

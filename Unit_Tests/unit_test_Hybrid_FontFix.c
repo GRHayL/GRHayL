@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
+  const int main_routine = FontFix;
   const int backup_routine[3] = {None,None,None};
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
@@ -32,7 +33,7 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  grhayl_initialize(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+  grhayl_initialize(main_routine, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
@@ -40,6 +41,7 @@ int main(int argc, char **argv) {
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
+
 
   // Allocate memory for the metric data
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
@@ -82,7 +84,14 @@ int main(int argc, char **argv) {
   double *By = (double*) malloc(sizeof(double)*arraylength);
   double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_input.bin","rb");
+  // Allocate memory for the initial conservative data
+  double *rho_star = (double*) malloc(sizeof(double)*arraylength);
+  double *tau = (double*) malloc(sizeof(double)*arraylength);
+  double *S_x = (double*) malloc(sizeof(double)*arraylength);
+  double *S_y = (double*) malloc(sizeof(double)*arraylength);
+  double *S_z = (double*) malloc(sizeof(double)*arraylength);
+
+  infile = fopen_with_check("grhayl_con2prim_multi_method_hybrid_input.bin","rb");
   key  = fread(rho_b, sizeof(double), arraylength, infile);
   key += fread(press, sizeof(double), arraylength, infile);
   key += fread(eps, sizeof(double), arraylength, infile);
@@ -93,8 +102,14 @@ int main(int argc, char **argv) {
   key += fread(By, sizeof(double), arraylength, infile);
   key += fread(Bz, sizeof(double), arraylength, infile);
 
+  key += fread(rho_star, sizeof(double), arraylength, infile);
+  key += fread(tau, sizeof(double), arraylength, infile);
+  key += fread(S_x, sizeof(double), arraylength, infile);
+  key += fread(S_y, sizeof(double), arraylength, infile);
+  key += fread(S_z, sizeof(double), arraylength, infile);
+
   fclose(infile);
-  if(key != arraylength*9)
+  if(key != arraylength*14)
     grhayl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -108,9 +123,11 @@ int main(int argc, char **argv) {
   double *Bx_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *By_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *u0_trusted = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_output.bin","rb");
+  // Allocate memory for the returned value of C2P routine
+  int *c2p_check = (int*) malloc(sizeof(int)*arraylength);
+
+  infile = fopen_with_check("grhayl_con2prim_multi_method_hybrid_FontFix_output.bin","rb");
   key  = fread(rho_b_trusted, sizeof(double), arraylength, infile);
   key += fread(press_trusted, sizeof(double), arraylength, infile);
   key += fread(eps_trusted, sizeof(double), arraylength, infile);
@@ -120,13 +137,14 @@ int main(int argc, char **argv) {
   key += fread(Bx_trusted, sizeof(double), arraylength, infile);
   key += fread(By_trusted, sizeof(double), arraylength, infile);
   key += fread(Bz_trusted, sizeof(double), arraylength, infile);
-  key += fread(u0_trusted, sizeof(double), arraylength, infile);
+  key += fread(c2p_check, sizeof(int), arraylength, infile);
 
   fclose(infile);
   if(key != arraylength*10)
     grhayl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
+  // Allocate memory for the perturbed primitive data
   double *rho_b_pert = (double*) malloc(sizeof(double)*arraylength);
   double *press_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vx_pert = (double*) malloc(sizeof(double)*arraylength);
@@ -136,9 +154,8 @@ int main(int argc, char **argv) {
   double *Bx_pert = (double*) malloc(sizeof(double)*arraylength);
   double *By_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *u0_pert = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_output_pert.bin","rb");
+  infile = fopen_with_check("grhayl_con2prim_multi_method_hybrid_FontFix_output_pert.bin","rb");
   key  = fread(rho_b_pert, sizeof(double), arraylength, infile);
   key += fread(press_pert, sizeof(double), arraylength, infile);
   key += fread(eps_pert, sizeof(double), arraylength, infile);
@@ -148,10 +165,9 @@ int main(int argc, char **argv) {
   key += fread(Bx_pert, sizeof(double), arraylength, infile);
   key += fread(By_pert, sizeof(double), arraylength, infile);
   key += fread(Bz_pert, sizeof(double), arraylength, infile);
-  key += fread(u0_pert, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*10)
+  if(key != arraylength*9)
     grhayl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -164,6 +180,7 @@ int main(int argc, char **argv) {
     initialize_diagnostics(&diagnostics);
     metric_quantities metric;
     primitive_quantities prims;
+    conservative_quantities cons, cons_undens;
 
     // Read initial data accompanying trusted output
     initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
@@ -177,8 +194,16 @@ int main(int argc, char **argv) {
                       poison, poison, poison,
                       &prims);
 
-    //This applies the inequality fixes on the conservatives
-    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics.failure_checker);
+    initialize_conservatives(rho_star[i], tau[i],
+                             S_x[i], S_y[i], S_z[i],
+                             poison, poison, &cons);
+
+    //This uses the Font fix method to compute primitives from conservatives.
+    undensitize_conservatives(&metric, &cons, &cons_undens);
+    guess_primitives(&eos, &metric, &cons, &prims);
+    const int check = Hybrid_Font_Fix(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+    if( check != c2p_check[i] )
+      grhayl_error("Test Hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
 
     primitive_quantities prims_trusted, prims_pert;
     initialize_primitives(
@@ -196,14 +221,8 @@ int main(int argc, char **argv) {
                       &prims_pert);
 
     validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
-    if( validate(u0_trusted[i], prims.u0, u0_pert[i]) )
-      grhayl_error("Test has failed! The computed u0 does not fall within tolerance.\n"
-                   "   u0_trusted  %.15e\n"
-                   "   u0_computed %.15e\n"
-                   "   u0_perturb  %.15e\n"
-                   "   rel_diff %.15e %.15e\n", u0_trusted[i], prims.u0, u0_pert[i], relative_error(u0_trusted[i], prims.u0), relative_error(u0_trusted[i], u0_pert[i]));
   }
-  grhayl_info("enforce_primitive_limits_and_compute_u0 function test has passed!\n");
+  grhayl_info("Hybrid_Font_Fix function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);
@@ -211,7 +230,8 @@ int main(int argc, char **argv) {
   free(rho_b); free(press); free(eps);
   free(vx); free(vy); free(vz);
   free(Bx); free(By); free(Bz);
-  free(u0_trusted); free(u0_pert);
+  free(rho_star); free(tau);
+  free(S_x); free(S_y); free(S_z);
   free(rho_b_trusted); free(press_trusted); free(eps_trusted);
   free(vx_trusted); free(vy_trusted); free(vz_trusted);
   free(Bx_trusted); free(By_trusted); free(Bz_trusted);

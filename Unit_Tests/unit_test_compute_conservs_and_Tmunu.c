@@ -2,29 +2,29 @@
 
 int main(int argc, char **argv) {
 
-  FILE* initial_data = fopen("Noble2D_initial_data.bin","rb");
-  check_file_was_successfully_open(initial_data, "Noble2D_initial_data.bin");
+  FILE* infile = fopen_with_check("metric_initial_data.bin","rb");
 
-  //Number of sampling points in density and pressure/temperature
-  int npoints;
-  const int key = fread(&npoints, sizeof(int), 1, initial_data);
+  int arraylength;
+  int key = fread(&arraylength, sizeof(int), 1, infile);
   if( key != 1)
     grhayl_error("An error has occured with reading the grid size. "
-                 "Please check that Noble2D_initial_data.bin"
+                 "Please check that metric_initial_data.bin"
                  "is up-to-date with current test version.\n");
-  const int arraylength = npoints*npoints;
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
   const int backup_routine[3] = {None,None,None};
+  const bool evolve_entropy = false;
+  const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
-  const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
+  const double Psi6threshold = 1e100;
+  const bool Cupp_fix = true;
 
   const int neos = 1;
-  const double W_max = 10.0; //IGM default
+  const double W_max = 10.0;
   const double rho_b_min = 1e-12;
-  const double rho_b_max = 1e300; //IGM default
-  const double Gamma_th = 2.0; //Taken from magnetizedTOV.par
+  const double rho_b_max = 1e300;
+  const double Gamma_th = 2.0;
   const double rho_ppoly[1] = {0.0};
   const double Gamma_ppoly[1] = {2.0};
   const double k_ppoly0 = 1.0;
@@ -32,8 +32,8 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  grhayl_initialize(None, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
-                    Psi6threshold, 1 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
+  grhayl_initialize(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+                    Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
   initialize_hybrid_eos_functions_and_params(W_max,
@@ -41,14 +41,12 @@ int main(int argc, char **argv) {
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
 
-  // Initialize the needed data files
-  FILE* infile = fopen("compute_conservs_and_Tmunu.bin","rb");
-  check_file_was_successfully_open(infile, "compute_conservs_and_Tmunu.bin");
-
-  FILE* inpert = fopen("compute_conservs_and_Tmunu_pert.bin","rb");
-  check_file_was_successfully_open(inpert, "compute_conservs_and_Tmunu_pert.bin");
-
   // Allocate memory for the metric data
+  double *lapse = (double*) malloc(sizeof(double)*arraylength);
+  double *betax = (double*) malloc(sizeof(double)*arraylength);
+  double *betay = (double*) malloc(sizeof(double)*arraylength);
+  double *betaz = (double*) malloc(sizeof(double)*arraylength);
+
   double *gxx = (double*) malloc(sizeof(double)*arraylength);
   double *gxy = (double*) malloc(sizeof(double)*arraylength);
   double *gxz = (double*) malloc(sizeof(double)*arraylength);
@@ -56,52 +54,61 @@ int main(int argc, char **argv) {
   double *gyz = (double*) malloc(sizeof(double)*arraylength);
   double *gzz = (double*) malloc(sizeof(double)*arraylength);
 
-  double *lapse = (double*) malloc(sizeof(double)*arraylength);
-  double *betax = (double*) malloc(sizeof(double)*arraylength);
-  double *betay = (double*) malloc(sizeof(double)*arraylength);
-  double *betaz = (double*) malloc(sizeof(double)*arraylength);
+  key  = fread(lapse, sizeof(double), arraylength, infile);
+  key += fread(betax, sizeof(double), arraylength, infile);
+  key += fread(betay, sizeof(double), arraylength, infile);
+  key += fread(betaz, sizeof(double), arraylength, infile);
+
+  key += fread(gxx, sizeof(double), arraylength, infile);
+  key += fread(gxy, sizeof(double), arraylength, infile);
+  key += fread(gxz, sizeof(double), arraylength, infile);
+  key += fread(gyy, sizeof(double), arraylength, infile);
+  key += fread(gyz, sizeof(double), arraylength, infile);
+  key += fread(gzz, sizeof(double), arraylength, infile);
+
+  fclose(infile);
+  if(key != arraylength*10)
+    grhayl_error("An error has occured with reading in metric data. Please check that data\n"
+                 "is up-to-date with current test version.\n");
 
   // Allocate memory for the initial primitive data
   double *rho_b = (double*) malloc(sizeof(double)*arraylength);
   double *press = (double*) malloc(sizeof(double)*arraylength);
+  double *eps = (double*) malloc(sizeof(double)*arraylength);
   double *vx = (double*) malloc(sizeof(double)*arraylength);
   double *vy = (double*) malloc(sizeof(double)*arraylength);
   double *vz = (double*) malloc(sizeof(double)*arraylength);
-  double *eps = (double*) malloc(sizeof(double)*arraylength);
   double *Bx = (double*) malloc(sizeof(double)*arraylength);
   double *By = (double*) malloc(sizeof(double)*arraylength);
   double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
-  // These arrays may not be used, but it's simpler to just declare them
-  // either way.
-  double *entropy = (double*) malloc(sizeof(double)*arraylength);
-  double *Y_e = (double*) malloc(sizeof(double)*arraylength);
-  double *temperature = (double*) malloc(sizeof(double)*arraylength);
-
   // This function uses u^0, so we need to store it as well
   double *u0 = (double*) malloc(sizeof(double)*arraylength);
 
-  // Allocate memory for trusted and perturbed output for the conservatives
+  infile = fopen_with_check("compute_conservs_and_Tmunu_input.bin","rb");
+  key  = fread(rho_b, sizeof(double), arraylength, infile);
+  key += fread(press, sizeof(double), arraylength, infile);
+  key += fread(eps, sizeof(double), arraylength, infile);
+  key += fread(vx, sizeof(double), arraylength, infile);
+  key += fread(vy, sizeof(double), arraylength, infile);
+  key += fread(vz, sizeof(double), arraylength, infile);
+  key += fread(Bx, sizeof(double), arraylength, infile);
+  key += fread(By, sizeof(double), arraylength, infile);
+  key += fread(Bz, sizeof(double), arraylength, infile);
+  key += fread(u0, sizeof(double), arraylength, infile);
+
+  fclose(infile);
+  if(key != arraylength*10)
+    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+                 "is up-to-date with current test version.\n");
+
+  // Allocate memory for the trusted conservative and Tmunu data
   double *rho_star_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *tau_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *S_x_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *S_y_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *S_z_trusted = (double*) malloc(sizeof(double)*arraylength);
 
-  double *rho_star_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *tau_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *S_x_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *S_y_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *S_z_pert = (double*) malloc(sizeof(double)*arraylength);
-
-  // These arrays may not be used, but it's simpler to just declare them
-  // either way.
-  double *ent_cons_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *Y_e_cons_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *ent_cons_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *Y_e_cons_pert = (double*) malloc(sizeof(double)*arraylength);
-
-  // Storage for the trusted and perturbed output for the stress-energy tensor
   double *Ttt_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Ttx_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Tty_trusted = (double*) malloc(sizeof(double)*arraylength);
@@ -112,6 +119,36 @@ int main(int argc, char **argv) {
   double *Tyy_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Tyz_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Tzz_trusted = (double*) malloc(sizeof(double)*arraylength);
+
+  infile = fopen_with_check("compute_conservs_and_Tmunu_output.bin","rb");
+  key  = fread(rho_star_trusted, sizeof(double), arraylength, infile);
+  key += fread(tau_trusted, sizeof(double), arraylength, infile);
+  key += fread(S_x_trusted, sizeof(double), arraylength, infile);
+  key += fread(S_y_trusted, sizeof(double), arraylength, infile);
+  key += fread(S_z_trusted, sizeof(double), arraylength, infile);
+
+  key += fread(Ttt_trusted, sizeof(double), arraylength, infile);
+  key += fread(Ttx_trusted, sizeof(double), arraylength, infile);
+  key += fread(Tty_trusted, sizeof(double), arraylength, infile);
+  key += fread(Ttz_trusted, sizeof(double), arraylength, infile);
+  key += fread(Txx_trusted, sizeof(double), arraylength, infile);
+  key += fread(Txy_trusted, sizeof(double), arraylength, infile);
+  key += fread(Txz_trusted, sizeof(double), arraylength, infile);
+  key += fread(Tyy_trusted, sizeof(double), arraylength, infile);
+  key += fread(Tyz_trusted, sizeof(double), arraylength, infile);
+  key += fread(Tzz_trusted, sizeof(double), arraylength, infile);
+
+  fclose(infile);
+  if(key != arraylength*15)
+    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+                 "is up-to-date with current test version.\n");
+
+  // Allocate memory for the perturbed conservative and Tmunu data
+  double *rho_star_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *tau_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *S_x_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *S_y_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *S_z_pert = (double*) malloc(sizeof(double)*arraylength);
 
   double *Ttt_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Ttx_pert = (double*) malloc(sizeof(double)*arraylength);
@@ -124,46 +161,30 @@ int main(int argc, char **argv) {
   double *Tyz_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Tzz_pert = (double*) malloc(sizeof(double)*arraylength);
 
-  // Can't parallelize because it could change the behavior of reading from the files
-  for(int j=0;j<npoints;j++)
-    for(int i=0;i<npoints;i++) {
-      const int index = i + j*npoints;
-      read_metric_binary(&lapse[index], &gxx[index], &gxy[index], &gxz[index],
-                         &gyy[index], &gyz[index], &gzz[index], &betax[index],
-                         &betay[index], &betaz[index], initial_data);
+  infile = fopen_with_check("compute_conservs_and_Tmunu_output_pert.bin","rb");
+  key  = fread(rho_star_pert, sizeof(double), arraylength, infile);
+  key += fread(tau_pert, sizeof(double), arraylength, infile);
+  key += fread(S_x_pert, sizeof(double), arraylength, infile);
+  key += fread(S_y_pert, sizeof(double), arraylength, infile);
+  key += fread(S_z_pert, sizeof(double), arraylength, infile);
 
-      read_primitive_binary(eos.eos_type, params.evolve_entropy, &rho_b[index], &press[index],
-                            &vx[index], &vy[index], &vz[index], &eps[index],
-                            &Bx[index], &By[index], &Bz[index],
-                            &entropy[index], &Y_e[index], &temperature[index],
-                            infile);
+  key += fread(Ttt_pert, sizeof(double), arraylength, infile);
+  key += fread(Ttx_pert, sizeof(double), arraylength, infile);
+  key += fread(Tty_pert, sizeof(double), arraylength, infile);
+  key += fread(Ttz_pert, sizeof(double), arraylength, infile);
+  key += fread(Txx_pert, sizeof(double), arraylength, infile);
+  key += fread(Txy_pert, sizeof(double), arraylength, infile);
+  key += fread(Txz_pert, sizeof(double), arraylength, infile);
+  key += fread(Tyy_pert, sizeof(double), arraylength, infile);
+  key += fread(Tyz_pert, sizeof(double), arraylength, infile);
+  key += fread(Tzz_pert, sizeof(double), arraylength, infile);
 
-      int key = fread(&u0[index], sizeof(double), 1, infile);
-      if( key != 1)
-        grhayl_error("An error has occured with reading in trusted primitive data."
-                     "Please check that comparison data "
-                     "is up-to-date with current test version.\n");
-
-      read_conservative_binary(params.evolve_entropy, &rho_star_trusted[index], &tau_trusted[index],
-                               &S_x_trusted[index], &S_y_trusted[index], &S_z_trusted[index], &ent_cons_trusted[index],
-                               infile);
-
-      read_stress_energy_binary(&Ttt_trusted[index], &Ttx_trusted[index], &Tty_trusted[index], &Ttz_trusted[index],
-                                &Txx_trusted[index], &Txy_trusted[index], &Txz_trusted[index], &Tyy_trusted[index],
-                                &Tyz_trusted[index], &Tzz_trusted[index], infile);
-
-      read_conservative_binary(params.evolve_entropy, &rho_star_pert[index], &tau_pert[index],
-                               &S_x_pert[index], &S_y_pert[index], &S_z_pert[index], &ent_cons_pert[index],
-                               inpert);
-
-      read_stress_energy_binary(&Ttt_pert[index], &Ttx_pert[index], &Tty_pert[index], &Ttz_pert[index],
-                                &Txx_pert[index], &Txy_pert[index], &Txz_pert[index], &Tyy_pert[index],
-                                &Tyz_pert[index], &Tzz_pert[index], inpert);
-  }
-  fclose(initial_data);
   fclose(infile);
-  fclose(inpert);
+  if(key != arraylength*15)
+    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+                 "is up-to-date with current test version.\n");
 
+  const double poison = 0.0/0.0;
 
   for(int i=0;i<arraylength;i++) {
 
@@ -184,7 +205,7 @@ int main(int argc, char **argv) {
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
-                      entropy[i], Y_e[i], temperature[i],
+                      poison, poison, poison,
                       &prims);
     prims.u0 = u0[i];
 
@@ -196,11 +217,11 @@ int main(int argc, char **argv) {
 
     initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
                              S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
-                             Y_e_cons_trusted[i], ent_cons_trusted[i], &cons_trusted);
+                             poison, poison, &cons_trusted);
 
     initialize_conservatives(rho_star_pert[i], tau_pert[i],
                              S_x_pert[i], S_y_pert[i], S_z_pert[i],
-                             Y_e_cons_pert[i], ent_cons_pert[i], &cons_pert);
+                             poison, poison, &cons_pert);
 
     initialize_stress_energy(Ttt_trusted[i], Ttx_trusted[i],
                              Tty_trusted[i], Ttz_trusted[i],
@@ -253,10 +274,4 @@ int main(int argc, char **argv) {
   free(Ttz_pert); free(Txx_pert); free(Txy_pert);
   free(Txz_pert); free(Tyy_pert); free(Tyz_pert);
   free(Tzz_pert);
-
-  free(Y_e);
-  free(entropy);
-  free(temperature);
-  free(Y_e_cons_trusted); free(ent_cons_trusted);
-  free(Y_e_cons_pert); free(ent_cons_pert);
 }
