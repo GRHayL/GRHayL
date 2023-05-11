@@ -23,15 +23,17 @@ void validate_primitives(
     test_fail = 1;
   }
 
-  const double min_rel = 8.0e-14; // This is the default relative tolerance cutoff used by validate()
-  const double pressure_cutoff = 1.0e-18;
-  // Pressure has an additional absolute difference check because the pressure can become very small depending on the
-  // input values. The pressure coming out of HARM doesn't have the accuracy to preserve the stringent accuracy requirements
-  // demanded elsewhere, so this relaxes the demands on the pressure for very small values.
-  if( validate_with_tolerance(prims_trusted->press, prims->press, prims_pert->press, min_rel, pressure_cutoff)) {
+  if( validate(prims_trusted->press, prims->press, prims_pert->press)) {
     printf("pressure trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->press, prims->press, prims_pert->press);
     printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->press, prims->press), relative_error(prims_trusted->press, prims_pert->press));
     sprintf(fail_msg, "%.80s press", fail_msg);
+    test_fail = 1;
+  }
+
+  if( validate(prims_trusted->eps, prims->eps, prims_pert->eps)) {
+    printf("eps trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->eps, prims->eps, prims_pert->eps);
+    printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->eps, prims->eps), relative_error(prims_trusted->eps, prims_pert->eps));
+    sprintf(fail_msg, "%.80s eps", fail_msg);
     test_fail = 1;
   }
 
@@ -53,16 +55,6 @@ void validate_primitives(
     printf("vz trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vz, prims->vz, prims_pert->vz);
     printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->vz, prims->vz), relative_error(prims_trusted->vz, prims_pert->vz));
     sprintf(fail_msg, "%.80s vz", fail_msg);
-    test_fail = 1;
-  }
-
-  // Epsilon has a similar issue with pressure, so we compute a cutoff that is consistent with the above choice.
-  //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos->K_ppoly[0], 1.0/eos->Gamma_ppoly[0]) * (eos->Gamma_ppoly[0] - 1.0));
-  const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
-  if( validate_with_tolerance(prims_trusted->eps, prims->eps, prims_pert->eps, min_rel, eps_cutoff)) {
-    printf("eps trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->eps, prims->eps, prims_pert->eps);
-    printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->eps, prims->eps), relative_error(prims_trusted->eps, prims_pert->eps));
-    sprintf(fail_msg, "%.80s eps", fail_msg);
     test_fail = 1;
   }
 

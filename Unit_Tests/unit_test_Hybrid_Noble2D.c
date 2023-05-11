@@ -239,6 +239,16 @@ int main(int argc, char **argv) {
                                                relative_error(prims_trusted.press, prims.press),
                                                relative_error(prims_trusted.press, prims_pert.press));
 
+    // Epsilon has a similar issue with pressure, so we compute a cutoff that is consistent with the above choice.
+    //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos.K_ppoly[0], 1.0/eos.Gamma_ppoly[0]) * (eos.Gamma_ppoly[0] - 1.0));
+    const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
+    if( validate_with_tolerance(prims_trusted.eps, prims.eps, prims_pert.eps, min_rel, eps_cutoff))
+      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable eps.\n"
+                   "  eps trusted %.14e computed %.14e perturbed %.14e\n"
+                   "  rel.err. %.14e %.14e\n", prims_trusted.eps, prims.eps, prims_pert.eps,
+                                               relative_error(prims_trusted.eps, prims.eps),
+                                               relative_error(prims_trusted.eps, prims_pert.eps));
+
     if( validate(prims_trusted.vx, prims.vx, prims_pert.vx) )
       grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vx.\n"
                    "  vx trusted %.14e computed %.14e perturbed %.14e\n"
@@ -259,16 +269,6 @@ int main(int argc, char **argv) {
                    "  rel.err. %.14e %.14e\n", prims_trusted.vz, prims.vz, prims_pert.vz,
                                                relative_error(prims_trusted.vz, prims.vz),
                                                relative_error(prims_trusted.vz, prims_pert.vz));
-
-    // Epsilon has a similar issue with pressure, so we compute a cutoff that is consistent with the above choice.
-    //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos.K_ppoly[0], 1.0/eos.Gamma_ppoly[0]) * (eos.Gamma_ppoly[0] - 1.0));
-    const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
-    if( validate_with_tolerance(prims_trusted.eps, prims.eps, prims_pert.eps, min_rel, eps_cutoff))
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable eps.\n"
-                   "  eps trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.eps, prims.eps, prims_pert.eps,
-                                               relative_error(prims_trusted.eps, prims.eps),
-                                               relative_error(prims_trusted.eps, prims_pert.eps));
   }
   grhayl_info("Hybrid_Noble2D function test has passed!\n");
   free(lapse);
