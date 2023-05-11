@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
 
     // Enforce limits on primitive variables and recompute conservatives.
     enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics.failure_checker);
-    compute_conservs_and_Tmunu(&params, &metric, &prims, &cons, &Tmunu);
+    compute_conservs_and_Tmunu(&metric, &prims, &cons, &Tmunu);
 
     // Here, we call the return_* functions and then repack the struct from that data. These functions are too
     // small to need an individual test, and they are primarily used by Con2Prim anyways.
