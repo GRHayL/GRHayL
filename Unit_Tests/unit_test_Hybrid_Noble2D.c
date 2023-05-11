@@ -220,7 +220,55 @@ int main(int argc, char **argv) {
                       poison, poison, poison,
                       &prims_pert);
 
-    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
+    if( validate(prims_trusted.rho, prims.rho, prims_pert.rho) )
+      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable rho.\n"
+                   "  rho trusted %.14e computed %.14e perturbed %.14e\n"
+                   "  rel.err. %.14e %.14e\n", prims_trusted.rho, prims.rho, prims_pert.rho,
+                                               relative_error(prims_trusted.rho, prims.rho),
+                                               relative_error(prims_trusted.rho, prims_pert.rho));
+
+    const double min_rel = 8.0e-14; // This is the default relative tolerance cutoff used by validate()
+    const double pressure_cutoff = 1.0e-16;
+    // Pressure has an additional absolute difference check because the pressure can become very small depending on the
+    // input values. The pressure coming out of HARM doesn't have the accuracy to preserve the stringent accuracy requirements
+    // demanded elsewhere, so this relaxes the demands on the pressure for very small values.
+    if( validate_with_tolerance(prims_trusted.press, prims.press, prims_pert.press, min_rel, pressure_cutoff))
+      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable press.\n"
+                   "  press trusted %.14e computed %.14e perturbed %.14e\n"
+                   "  rel.err. %.14e %.14e\n", prims_trusted.press, prims.press, prims_pert.press,
+                                               relative_error(prims_trusted.press, prims.press),
+                                               relative_error(prims_trusted.press, prims_pert.press));
+
+    if( validate(prims_trusted.vx, prims.vx, prims_pert.vx) )
+      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vx.\n"
+                   "  vx trusted %.14e computed %.14e perturbed %.14e\n"
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vx, prims.vx, prims_pert.vx,
+                                               relative_error(prims_trusted.vx, prims.vx),
+                                               relative_error(prims_trusted.vx, prims_pert.vx));
+
+    if(validate(prims_trusted.vy, prims.vy, prims_pert.vy))
+      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vy.\n"
+                   "  vy trusted %.14e computed %.14e perturbed %.14e\n"
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vy, prims.vy, prims_pert.vy,
+                                               relative_error(prims_trusted.vy, prims.vy),
+                                               relative_error(prims_trusted.vy, prims_pert.vy));
+
+    if( validate(prims_trusted.vz, prims.vz, prims_pert.vz) )
+      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vz.\n"
+                   "  vz trusted %.14e computed %.14e perturbed %.14e\n"
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vz, prims.vz, prims_pert.vz,
+                                               relative_error(prims_trusted.vz, prims.vz),
+                                               relative_error(prims_trusted.vz, prims_pert.vz));
+
+    // Epsilon has a similar issue with pressure, so we compute a cutoff that is consistent with the above choice.
+    //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos.K_ppoly[0], 1.0/eos.Gamma_ppoly[0]) * (eos.Gamma_ppoly[0] - 1.0));
+    const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
+    if( validate_with_tolerance(prims_trusted.eps, prims.eps, prims_pert.eps, min_rel, eps_cutoff))
+      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable eps.\n"
+                   "  eps trusted %.14e computed %.14e perturbed %.14e\n"
+                   "  rel.err. %.14e %.14e\n", prims_trusted.eps, prims.eps, prims_pert.eps,
+                                               relative_error(prims_trusted.eps, prims.eps),
+                                               relative_error(prims_trusted.eps, prims_pert.eps));
   }
   grhayl_info("Hybrid_Noble2D function test has passed!\n");
   free(lapse);
