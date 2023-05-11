@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [ET_Legacy_conservs, ET_Legacy_primitives, ET_Legacy_induction_gauge_rhs, ET_Legacy_HLL_flux, ET_Legacy_reconstruction, ET_Legacy_flux_source]
+        test-function: [conservs, primitives, induction_gauge_rhs, HLL_flux, reconstruction, flux_source]
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
 
@@ -28,13 +28,13 @@ jobs:
           compiler: 'clang'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/${{ matrix.test-function }}_output_pert.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/${{ matrix.test-function }}.md5
-          md5sum -c ${{ matrix.test-function }}.md5
-      - name: Run ET IllinoisGRMHD unit test for ${{ matrix.test-function }}
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/ET_Legacy_${{ matrix.test-function }}.md5
+          md5sum -c ET_Legacy_${{ matrix.test-function }}.md5
+      - name: Run ET IllinoisGRMHD unit test for ET_Legacy_${{ matrix.test-function }}
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
 
