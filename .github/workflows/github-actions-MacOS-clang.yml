@@ -106,6 +106,31 @@ jobs:
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
 
+  c2p-failure:
+    strategy:
+      fail-fast: false
+      matrix:
+        test-function: [Hybrid_Noble2D_failure]
+        os: [macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'clang'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'clang'
+      - name: Run con2prim unit test for ${{ matrix.test-function }} function
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
+          ./test/unit_test_${{ matrix.test-function }}
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+
   tabulated-eos:
     strategy:
       fail-fast: false

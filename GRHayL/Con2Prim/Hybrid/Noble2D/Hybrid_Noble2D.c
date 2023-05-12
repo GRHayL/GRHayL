@@ -113,20 +113,20 @@ double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 )
              \  alpha B^i  /
 
 
-return:  (i*100 + j)  where
-         i = 0 ->  Newton-Raphson solver either was not called (yet or not used)
-                   or returned successfully;
-             1 ->  Newton-Raphson solver did not converge to a solution with the
-                   given tolerances;
-             2 ->  Newton-Raphson procedure encountered a numerical divergence
-                   (occurrence of "nan" or "+/-inf";
-
-         j = 0 -> success
-             1 -> failure: some sort of failure in Newton-Raphson;
-             2 -> failure: vsq<0 w/ initial p[] guess;
-             3 -> failure: Z<0 or Z>Z_TOO_BIG
-             4 -> failure: v^2 < 0
-             5 -> failure: rho,uu <= 0
+return: i where
+        i = 0 -> success
+            1 -> calculation of initial v^2 lead to numerical divergence 
+                 (occurrence of "nan" or "+/-inf");
+            2 -> initial v^2 < 0 with initial primitive guess;
+            3 -> Newton-Raphson solver did not converge to a solution with the
+                 given tolerances;
+            4 -> Newton-Raphson procedure encountered a numerical divergence
+                 (occurrence of "nan" or "+/-inf");
+            5 -> Z<0 or Z>Z_TOO_BIG
+            6 -> v^2 < 0 returned by the Newton-Raphson solver;
+            7 -> rho <= 0 computed by returned quantities; note that this error code
+                 is bypassed by the Cupp_fix parameter, known cases of this error
+                 are resolved by enforce_primitive_limits_and_compute_u0()
 
 **********************************************************************************/
 
@@ -188,6 +188,7 @@ int Hybrid_Noble2D(
                                              metric->adm_gzz * SQR(prims->vz + metric->betaz);
 
   prims->u0 = 1.0/sqrt(1.0-tmp_u);
+
   const double utilde[3] = {prims->u0*(prims->vx + metric->betax),
                             prims->u0*(prims->vy + metric->betay),
                             prims->u0*(prims->vz + metric->betaz)};
@@ -197,12 +198,12 @@ int Hybrid_Noble2D(
   for(int i=1; i<4; i++)
     for(int j=1; j<4; j++) vsq += metric->g4dn[i][j]*-utilde[i-1]*utilde[j-1];
 
-  if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
+  if( !isfinite(vsq)) {
+    return 1;
+  } else if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
     vsq = fabs(vsq);
-  }
-  if(vsq < 0.0 || vsq > UTSQ_TOO_BIG) {
-    retval = 2;
-    return(retval);
+  } else if(vsq < 0.0 || vsq > UTSQ_TOO_BIG) {
+    return 2;
   }
 
   const double Wsq = 1.0 + vsq;   // Lorentz factor squared
@@ -247,11 +248,10 @@ int Hybrid_Noble2D(
   vsq = gnr_out[1];
 
   /* Problem with solver, so return denoting error before doing anything further */
-  if( (retval != 0) || (Z == FAIL_VAL) ) {
-    retval = retval*100+1;
+  if( retval != 0) {
     return(retval);
   } else if(Z <= 0. || Z > Z_TOO_BIG) {
-    retval = 3;
+    retval = 5;
     return(retval);
   }
 
@@ -260,7 +260,7 @@ int Hybrid_Noble2D(
     vsq = 1.-2.e-16;
   } else if(vsq < 0.0) {
     //v should be real!
-    return(4);
+    return 6;
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
@@ -280,7 +280,7 @@ int Hybrid_Noble2D(
   if( !params->Cupp_Fix && prims->rho <= 0.0) {
     // User may want to handle this case differently, e.g. do NOT return upon
     // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-    return(5);
+    return 7;
   }
 
   const double nup[4] = {metric->lapseinv,
@@ -318,12 +318,12 @@ int Hybrid_Noble2D(
   }
 
   /* Done! */
-  return(retval);
+  return retval;
 }
 
 double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 ) {
   const double dv  = 1.e-15;
   const double vsq = fabs(vsq_calc(harm_aux,x0)) ; // guaranteed to be positive
 
-  return( ( vsq > 1. ) ? (1.0 - dv) : vsq   );
+  return( ( vsq > 1. ) ? (1.0 - dv) : vsq );
 }

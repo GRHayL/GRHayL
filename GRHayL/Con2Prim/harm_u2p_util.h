@@ -36,10 +36,7 @@ static const int NPR =8;
 static const int NDIM=4;
 
 static const int MAX_NEWT_ITER    = 30;     /* Max. # of Newton-Raphson iterations for find_root_2D(); */
-//#define MAX_NEWT_ITER 300     /* Max. # of Newton-Raphson iterations for find_root_2D(); */
 static const double NEWT_TOL      = 1.0e-10;    /* Min. of tolerance allowed for Newton-Raphson iterations */
-static const double MIN_NEWT_TOL  = 1.0e-10;    /* Max. of tolerance allowed for Newton-Raphson iterations */
-static const int EXTRA_NEWT_ITER  = 0; /* ZACH SAYS: Original value = 2. But I don't think this parameter > 0 is warranted. Just slows the code for no reason, since our tolerances are fine. */
 
 static const double NEWT_TOL2     = 1.0e-15;      /* TOL of new 1D^*_{v^2} gnr2 method */
 static const double MIN_NEWT_TOL2 = 1.0e-10;  /* TOL of new 1D^*_{v^2} gnr2 method */
@@ -47,11 +44,10 @@ static const double MIN_NEWT_TOL2 = 1.0e-10;  /* TOL of new 1D^*_{v^2} gnr2 meth
 static const double Z_TOO_BIG    = 1.e20;    /* \gamma^2 (\rho_0 + u + p) is assumed
                                                   to always be smaller than this.  This
                                                   is used to detect solver failures */
+
 static const double UTSQ_TOO_BIG = 1.e20;    /* \tilde{u}^2 is assumed to be smaller
                                                   than this.  Used to detect solver
                                                   failures */
-
-static const double FAIL_VAL     = 1.e30;    /* Generic value to which we set variables when a problem arises */
 
 static const double NUMEPSILON   = 2.2204460492503131e-16;
 

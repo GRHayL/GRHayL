@@ -50,18 +50,7 @@ int general_newton_raphson(
     /****************************************/
     validate_x(x, x_old);
 
-    /*****************************************************************************/
-    /* If we've reached the tolerance level, then just do a few extra iterations */
-    /*  before stopping                                                          */
-    /*****************************************************************************/
-    if( (fabs(errx) <= NEWT_TOL) && (doing_extra == 0) && (EXTRA_NEWT_ITER > 0) ) {
-      doing_extra = 1;
-    }
-
-    if( doing_extra == 1 ) i_extra++;
-
-    if( ((fabs(errx) <= NEWT_TOL)&&(doing_extra == 0))
-        || (i_extra > EXTRA_NEWT_ITER) || (n_iter >= (MAX_NEWT_ITER-1)) ) {
+    if( ((fabs(errx) <= NEWT_TOL)) || (n_iter >= (MAX_NEWT_ITER-1)) ) {
       keep_iterating = 0;
     }
 
@@ -73,11 +62,11 @@ int general_newton_raphson(
 
   /*  Check for bad untrapped divergences : */
   if( !isfinite(f) ||  !isfinite(df) ) {
-    return(2);
-  } else if( fabs(errx) <= NEWT_TOL || fabs(errx) <= MIN_NEWT_TOL) {
-    return(0);
+    return 4;
+  } else if( fabs(errx) <= NEWT_TOL ) {
+    return 0;
   } else {
-    return(1);
+    return 3;
   }
 }
 
@@ -90,6 +79,4 @@ void validate_x(double x[2], const double x0[2]) {
 
   x[1] = (x[1] < 0.) ?   0.       : x[1];  /* if it's too small */
   x[1] = (x[1] > 1.) ?  (1. - dv) : x[1];  /* if it's too big   */
-
-  return;
 }
