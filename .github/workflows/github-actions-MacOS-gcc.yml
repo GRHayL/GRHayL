@@ -104,7 +104,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [Hybrid_Noble2D_failure]
+        test-function: [hybrid_failure]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
