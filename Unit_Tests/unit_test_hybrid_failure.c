@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
     tau[i]   = 1e-2;
     S_x[i] = S_y[i] = S_z[i] = 1000.0*tau[i]*(tau[i] + 2.0e-2);
   }
+  gxy[1] = -5.0;
   rho_star[2] = 1e15;
   rho_star[3] = 0.0;
 
@@ -134,6 +135,14 @@ int main(int argc, char **argv) {
         grhayl_error("FontFix has returned a different failure code: old %d and new %d", 0, check);
       params.backup_routine[2-i] = None;
       params.calc_prim_guess = true;
+      if(i==0) {
+        // This just gets coverage for the success branch of the main routine
+        params.main_routine = FontFix;
+        int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+        if(check != 0)
+          grhayl_error("FontFix has returned a different failure code: old %d and new %d", 0, check);
+        params.main_routine = Noble2D;
+      }
     } else if (i==3) {
       // Here, we can check the Font Fix failure condition (there's just one return value)
       params.backup_routine[0] = FontFix;

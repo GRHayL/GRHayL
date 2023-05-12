@@ -37,19 +37,9 @@ static const int NDIM=4;
 
 static const int MAX_NEWT_ITER    = 30;     /* Max. # of Newton-Raphson iterations for find_root_2D(); */
 static const double NEWT_TOL      = 1.0e-10;    /* Min. of tolerance allowed for Newton-Raphson iterations */
-
-static const double NEWT_TOL2     = 1.0e-15;      /* TOL of new 1D^*_{v^2} gnr2 method */
-static const double MIN_NEWT_TOL2 = 1.0e-10;  /* TOL of new 1D^*_{v^2} gnr2 method */
-
 static const double Z_TOO_BIG    = 1.e20;    /* \gamma^2 (\rho_0 + u + p) is assumed
                                                   to always be smaller than this.  This
                                                   is used to detect solver failures */
-
-static const double UTSQ_TOO_BIG = 1.e20;    /* \tilde{u}^2 is assumed to be smaller
-                                                  than this.  Used to detect solver
-                                                  failures */
-
-static const double NUMEPSILON   = 2.2204460492503131e-16;
 
 // HARM uses lots of globals. These auxiliary variables
 // allow us to pass useful quantities to the con2prim
