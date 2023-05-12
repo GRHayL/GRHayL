@@ -83,11 +83,6 @@ int main(int argc, char **argv) {
   rho_star[3] = 0.0;
 
   for(int i=0; i<arraylength; i++) {
-    // Setting backups to Noble2D allows us to traverse the multi-method
-    // while doing the failure checking
-    if(i>0 && i<4)
-      params.backup_routine[3-i] = None;
-
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
     metric_quantities metric;
@@ -109,9 +104,9 @@ int main(int argc, char **argv) {
     if (i==0 || i==1) {
       params.calc_prim_guess = false;
       prims.rho = cons.rho/metric.psi6;
-      prims.vx = 0.9;
-      prims.vy = 0.9;
-      prims.vz = 0.9;
+      prims.vx = 2.0;
+      prims.vy = 2.0;
+      prims.vz = 2.0;
       prims.Y_e = cons.Y_e/cons.rho;
       prims.temperature = eos.T_max;
       eos.hybrid_compute_P_cold(&eos, prims.rho, &prims.press);
@@ -129,37 +124,24 @@ int main(int argc, char **argv) {
     undensitize_conservatives(&metric, &cons, &cons_undens);
     int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
     if(check != i+1)
-      grhayl_error("Noble2D has returned a different failure code: old %d and new %d", check, i+1);
+      grhayl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);
 
-    // All this nonsense is so we can check out all the different ways to traverse grhayl_con2prim_multi_method
-    // while doing the error checking
-    if (i==1) {
-      params.backup_routine[2] = FontFix;
+    if(i<3) {
+      // This block lets us test that successes on the backup branches make it back out successfully
+      params.backup_routine[2-i] = FontFix;
       int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
       if(check != 0)
-        grhayl_error("FontFix has returned a different failure code: old %d and new %d", check, 0);
-      params.backup_routine[2] = None;
-
+        grhayl_error("FontFix has returned a different failure code: old %d and new %d", 0, check);
+      params.backup_routine[2-i] = None;
       params.calc_prim_guess = true;
-    } else if (i==2) {
-      params.backup_routine[1] = Noble2D;
-      params.backup_routine[2] = FontFix;
-      int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
-      if(check != 0)
-        grhayl_error("FontFix has returned a different failure code: old %d and new %d", check, 0);
-      params.backup_routine[1] = None;
-      params.backup_routine[2] = None;
     } else if (i==3) {
-      params.backup_routine[0] = Noble2D;
-      params.backup_routine[1] = FontFix;
+      // Here, we can check the Font Fix failure condition (there's just one return value)
+      params.backup_routine[0] = FontFix;
       int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
       if(check != 1)
-        grhayl_error("FontFix has returned a different failure code: old %d and new %d", check, 1);
+        grhayl_error("FontFix has returned a different failure code: old %d and new %d", 1, check);
       params.backup_routine[0] = None;
-      params.backup_routine[1] = None;
     }
   }
-
-
   return 0;
 }
