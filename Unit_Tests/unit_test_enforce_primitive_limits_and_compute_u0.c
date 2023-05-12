@@ -160,8 +160,6 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
 
     // Define the various GRHayL structs for the unit tests
-    con2prim_diagnostics diagnostics;
-    initialize_diagnostics(&diagnostics);
     metric_quantities metric;
     primitive_quantities prims;
 
@@ -177,8 +175,9 @@ int main(int argc, char **argv) {
                       poison, poison, poison,
                       &prims);
 
-    //This applies the inequality fixes on the conservatives
-    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics.failure_checker);
+    //This applies limits on the primitives
+    int failure_checker = 0;
+    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &failure_checker);
 
     primitive_quantities prims_trusted, prims_pert;
     initialize_primitives(
@@ -203,6 +202,52 @@ int main(int argc, char **argv) {
                    "   u0_perturb  %.15e\n"
                    "   rel_diff %.15e %.15e\n", u0_trusted[i], prims.u0, u0_pert[i], relative_error(u0_trusted[i], prims.u0), relative_error(u0_trusted[i], u0_pert[i]));
   }
+
+
+  // Here we hit a few cases that weren't covered by the previous data (which is
+  // the output from the Noble2D test)
+
+  // While we're at it, lets hit some of the warnings in the initialize!
+  initialize_hybrid_eos_functions_and_params(W_max,
+                                             rho_b_min, -1, -1,
+                                             neos, rho_ppoly, Gamma_ppoly,
+                                             k_ppoly0, Gamma_th, &eos);
+
+  int failure_checker = 0;
+  double rho_test = 1e-2;
+  double P_cold = 0.0;
+  eos.hybrid_compute_P_cold(&eos, rho_test, &P_cold);
+
+  metric_quantities metric;
+  initialize_metric(1.0,
+                    1.0, 0.0, 0.0,
+                    1.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0,
+                    &metric);
+
+  primitive_quantities prims;
+  initialize_primitives(1e-2, 1e6*P_cold, 0.0,
+                        0.0, 0.0, 0.0,
+                        0.0, 0.0, 0.0,
+                        0.0, 0.0, 0.0,
+                        &prims);
+
+  params.psi6threshold = 0;
+  enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &failure_checker);
+  if( relative_error(1e5*P_cold, prims.press) > 1e-20 )
+    grhayl_error("Pressure reset failure: returned value %e vs expected %e\n",
+                 prims.press, 1e5*P_cold);
+
+  params.psi6threshold = Psi6threshold;
+
+  prims.rho   = 12.0*eos.rho_atm;
+  eos.hybrid_compute_P_cold(&eos, prims.rho, &P_cold);
+  prims.press = 1e3*P_cold;
+  enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &failure_checker);
+  if( relative_error(1e2*P_cold, prims.press) > 1e-20 )
+    grhayl_error("Pressure reset failure: returned value %e vs expected %e\n",
+                 prims.press, 1e2*P_cold);
+
   grhayl_info("enforce_primitive_limits_and_compute_u0 function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);

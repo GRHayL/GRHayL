@@ -153,7 +153,6 @@ int main(int argc, char **argv) {
   const double poison = 0.0/0.0;
 
   for(int i=0;i<arraylength;i++) {
-
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
