@@ -21,15 +21,20 @@ int main(int argc, char **argv) {
   double k_ppoly0 = 1.0;
   double Lorenz_damping_factor = 0.0;
 
+  /*
+     Hybrid EOS setup:
+       0: rho_b_atm too small
+       1: rho_b_min > rho_b_max
+  */
   if(test_key == 0) {
     rho_b_atm = -1;
   } else if(test_key == 1) {
     rho_b_min = 1e301;
   }
 
-  GRHayL_parameters hybrid_params;
+  GRHayL_parameters params;
   grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-                    Psi6threshold, Cupp_fix, Lorenz_damping_factor, &hybrid_params);
+                    Psi6threshold, Cupp_fix, Lorenz_damping_factor, &params);
 
   eos_parameters hybrid_eos;
   initialize_hybrid_eos_functions_and_params(W_max,
@@ -42,6 +47,11 @@ int main(int argc, char **argv) {
   grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, Lorenz_damping_factor, &tab_params);
 
+  /*
+     NRPyLeakage_Fermi_Dirac_integrals:
+       8: invalid choice of k (z<1e-3)
+       9: invalid choice of k (z>1e-3)
+  */
   double Fermi_Dirac_integral = 0.0;
   if(test_key == 8) {
     int k = -1;
@@ -60,6 +70,12 @@ int main(int argc, char **argv) {
                     0.0, 0.0, 0.0,
                     &metric);
 
+  /*
+     limit_v_and_compute_u0:
+       10: u^0 is nan
+     grhayl_con2prim_select_method:
+       11: invalid C2P key
+  */
   int speed_limited = 0;
   if(test_key == 10) {
     primitive_quantities prims;
@@ -67,6 +83,11 @@ int main(int argc, char **argv) {
     prims.vy = 0.0/0.0;
     prims.vz = 0.0/0.0;
     limit_v_and_compute_u0(&hybrid_eos, &metric, &prims, &speed_limited);
+  } else if(test_key == 11) {
+    conservative_quantities cons;
+    primitive_quantities prims;
+    con2prim_diagnostics diagnostics; 
+    grhayl_con2prim_select_method(-5, &params, &hybrid_eos, &metric, &cons, &prims, &diagnostics);
   }
 
   const char tablepath[] = "SLy4_3335_rho391_temp163_ye66.h5";
@@ -77,6 +98,15 @@ int main(int argc, char **argv) {
   double T_min     = T_atm;
   double T_max     = 1e2;
 
+  /* 
+     Tabulated EOS setup:
+       2: rho_b_atm too small
+       3: Y_e_atm too small
+       4: T_atm too small
+       5: rho_b_min > rho_b_max
+       6: Y_e_min > Y_e_max
+       7: T_min > T_max
+   */
   if(test_key == 2) {
     rho_b_atm = -1;
   } else if(test_key == 3) {
@@ -101,7 +131,44 @@ int main(int argc, char **argv) {
                                                 Y_e_atm, Y_e_min, Y_e_max,
                                                 T_atm, T_min, T_max, &tab_eos);
 
+  /* 
+     NRPyEOS interpolators:
+       12: rho is too small
+       13: rho is too large
+       14: Y_e is too small
+       15: Y_e is too large
+       16: T is too small
+       17: T is too large
+   */
+  double rho, Y_e, T, eps;
+  rho = 1e-2;
+  Y_e = eps = T = 0.1;
+  if(test_key == 12) {
+    rho = rho_b_min-1.0;
+    NRPyEOS_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &T);
+
+  } else if(test_key == 13) {
+    rho = rho_b_max+1e2;
+    NRPyEOS_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &T);
+
+  } else if(test_key == 14) {
+    Y_e = Y_e_min-1.0;
+    NRPyEOS_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &T);
+
+  } else if(test_key == 15) {
+    Y_e = Y_e_max+1e2;
+    NRPyEOS_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &T);
+
+  } else if(test_key == 16) {
+    T = T_min-1.0;
+    NRPyEOS_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &eps);
+
+  } else if(test_key == 17) {
+    T = T_max+1e5;
+    NRPyEOS_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &eps);
+  }
+
   printf("We shouldn't be here, so I'll get rid of some compilation warnings :)\n"
-         "%e %d\n", Fermi_Dirac_integral, speed_limited);
+         "%e %d %e %e %e %e\n", Fermi_Dirac_integral, speed_limited, rho, Y_e, eps, T);
   return 0;
 }
