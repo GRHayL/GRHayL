@@ -52,7 +52,6 @@ void limit_v_and_compute_u0(
   const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
   prims->u0 = alpha_u0*metric->lapseinv;
   if(isnan(prims->u0)) {
-    // Leo asks: shouldn't this be an error?
     grhayl_error("*********************************************\n"
                  "Found nan while computing u^{0}\nMetric: %e %e %e %e %e %e\n"
                  "Lapse/shift: %e (=1/%e) / %e %e %e\nVelocities : %e %e %e\n"

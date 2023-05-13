@@ -42,6 +42,33 @@ int main(int argc, char **argv) {
   grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, Lorenz_damping_factor, &tab_params);
 
+  double Fermi_Dirac_integral = 0.0;
+  if(test_key == 8) {
+    int k = -1;
+    double z = 1e-4;
+    Fermi_Dirac_integral = NRPyLeakage_Fermi_Dirac_integrals(k, z);
+  } else if(test_key == 9) {
+    int k = -1;
+    double z = 1e-2;
+    Fermi_Dirac_integral = NRPyLeakage_Fermi_Dirac_integrals(k, z);
+  }
+
+  metric_quantities metric;
+  initialize_metric(1.0,
+                    1.0, 0.0, 0.0,
+                    1.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0,
+                    &metric);
+
+  int speed_limited = 0;
+  if(test_key == 10) {
+    primitive_quantities prims;
+    prims.vx = 0.0/0.0;
+    prims.vy = 0.0/0.0;
+    prims.vz = 0.0/0.0;
+    limit_v_and_compute_u0(&hybrid_eos, &metric, &prims, &speed_limited);
+  }
+
   const char tablepath[] = "SLy4_3335_rho391_temp163_ye66.h5";
   double Y_e_atm   = 0.5;
   double Y_e_min   = 0.05;
@@ -74,5 +101,7 @@ int main(int argc, char **argv) {
                                                 Y_e_atm, Y_e_min, Y_e_max,
                                                 T_atm, T_min, T_max, &tab_eos);
 
+  printf("We shouldn't be here, so I'll get rid of some compilation warnings :)\n"
+         "%e %d\n", Fermi_Dirac_integral, speed_limited);
   return 0;
 }
