@@ -300,3 +300,33 @@ jobs:
           ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+
+  code-failure:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'gcc'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'gcc'
+      - name: Copy EOS table to working directory
+        run: |
+          curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
+      - name: Run unit test for error-catching
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
+          for i in {0...7}
+          do
+            ./Unit_Tests/failure.sh "./test/unit_test_code_error "+$i
+          done
+      - name: Generate coverage report
+        uses: ./.github/actions/code-coverage
