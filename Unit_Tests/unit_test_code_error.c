@@ -66,6 +66,9 @@ int main(int argc, char **argv) {
   }
 
   metric_quantities metric;
+  primitive_quantities prims;
+  conservative_quantities cons;
+  con2prim_diagnostics diagnostics; 
   initialize_metric(1.0,
                     1.0, 0.0, 0.0,
                     1.0, 0.0, 1.0,
@@ -79,7 +82,6 @@ int main(int argc, char **argv) {
        5: invalid C2P key
   */
   int speed_limited = 0;
-  primitive_quantities prims;
   switch (test_key) {
     case 4:
       prims.vx = 0.0/0.0;
@@ -88,8 +90,6 @@ int main(int argc, char **argv) {
       limit_v_and_compute_u0(&hybrid_eos, &metric, &prims, &speed_limited);
       break;
     case 5:
-      conservative_quantities cons;
-      con2prim_diagnostics diagnostics; 
       grhayl_con2prim_select_method(-5, &params, &hybrid_eos, &metric, &cons, &prims, &diagnostics);
       break;
   }

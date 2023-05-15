@@ -17,8 +17,6 @@ int general_newton_raphson(
 
   // Initialize various parameters and variables:
   int n_iter = 0;
-  int i_extra = 0;
-  int doing_extra = 0;
   double errx = 1.0;
   double df = 1.0;
   double f = 1.0;
