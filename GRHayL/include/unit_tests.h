@@ -5,6 +5,7 @@
 #include "induction.h"
 #include "reconstruction.h"
 #include "flux_source.h"
+#include "neutrinos.h"
 #include "nrpyeos_tabulated.h"
 #include "nrpyeos_hybrid.h"
 
