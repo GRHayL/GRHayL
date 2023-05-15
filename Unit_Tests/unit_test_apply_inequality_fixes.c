@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  grhayl_initialize(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+  grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
@@ -153,7 +153,6 @@ int main(int argc, char **argv) {
   const double poison = 0.0/0.0;
 
   for(int i=0;i<arraylength;i++) {
-
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
     initialize_diagnostics(&diagnostics);
@@ -178,7 +177,11 @@ int main(int argc, char **argv) {
                              poison, poison, &cons);
 
     //This applies inequality fixes on the conservatives
+    if(i == arraylength-1 || i == arraylength-2)
+      params.psi6threshold = 0.0;
     apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+    if(i == arraylength-1 || i == arraylength-2)
+      params.psi6threshold = Psi6threshold;
 
     conservative_quantities cons_trusted, cons_pert;
     initialize_conservatives(rho_star_trusted[i], tau_trusted[i],

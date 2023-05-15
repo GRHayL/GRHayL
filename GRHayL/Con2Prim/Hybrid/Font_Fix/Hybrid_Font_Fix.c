@@ -16,34 +16,23 @@ int Hybrid_Font_Fix(
   diagnostics->font_fix=1;
   double u_x, u_y, u_z;
 
-  const double Bxbar = prims->Bx*ONE_OVER_SQRT_4PI;
-  const double Bybar = prims->By*ONE_OVER_SQRT_4PI;
-  const double Bzbar = prims->Bz*ONE_OVER_SQRT_4PI;
-  const double Bbar_x = metric->adm_gxx*Bxbar + metric->adm_gxy*Bybar + metric->adm_gxz*Bzbar;
-  const double Bbar_y = metric->adm_gxy*Bxbar + metric->adm_gyy*Bybar + metric->adm_gyz*Bzbar;
-  const double Bbar_z = metric->adm_gxz*Bxbar + metric->adm_gyz*Bybar + metric->adm_gzz*Bzbar;
-  double B2bar = Bxbar*Bbar_x + Bybar*Bbar_y + Bzbar*Bbar_z;
-  double Bbar = sqrt(B2bar);
+  const double S[3] = {cons->S_x, cons->S_y, cons->S_z};
+  const double sdots = compute_vec2_from_vcov(metric, S);
 
-  double check_B_small = fabs(Bxbar)+fabs(Bybar)+fabs(Bzbar);
-  if (check_B_small>0 && check_B_small<1.e-150) {
-    // need to compute B2bar specially to prevent floating-point underflow
-    double Bmax = fabs(Bxbar);
-    if (Bmax < fabs(Bybar)) Bmax=fabs(Bybar);
-    if (Bmax < fabs(Bzbar)) Bmax=fabs(Bzbar);
-    double Bxtmp=Bxbar/Bmax, Bytemp=Bybar/Bmax, Bztemp=Bzbar/Bmax;
-    double B_xtemp=Bbar_x/Bmax, B_ytemp=Bbar_y/Bmax, B_ztemp=Bbar_z/Bmax;
-    Bbar = sqrt(Bxtmp*B_xtemp + Bytemp*B_ytemp + Bztemp*B_ztemp)*Bmax;
+  const double Bbar[3] = {prims->Bx*ONE_OVER_SQRT_4PI, prims->By*ONE_OVER_SQRT_4PI, prims->Bz*ONE_OVER_SQRT_4PI};
+  const double Bbar2 = compute_vec2_from_vcon(metric, Bbar);
+
+  double BbardotS, BbardotS2, hatBbardotS;
+  if(Bbar2 < 1e-150) {
+    BbardotS = BbardotS2 = hatBbardotS = 0.0;
+  } else {
+    const double Bbar_mag = sqrt(Bbar2);
+    BbardotS = Bbar[0]*cons->S_x + Bbar[1]*cons->S_y + Bbar[2]*cons->S_z;
+    BbardotS2 = BbardotS*BbardotS;
+    hatBbardotS = BbardotS/Bbar_mag;
   }
-  double BbardotS = Bxbar*cons->S_x + Bybar*cons->S_y + Bzbar*cons->S_z;
-  double BbardotS2 = BbardotS*BbardotS;
-  double hatBbardotS = BbardotS/Bbar;
-  if (Bbar<1.e-300) hatBbardotS = 0.0;
-  double Psim6 = 1.0/metric->psi6;
 
-  double sdots = metric->adm_gupxx*SQR(cons->S_x) + metric->adm_gupyy*SQR(cons->S_y) + metric->adm_gupzz*SQR(cons->S_z)
-    + 2.0*( metric->adm_gupxy*cons->S_x*cons->S_y + metric->adm_gupxz*cons->S_x*cons->S_z
-            + metric->adm_gupyz*cons->S_y*cons->S_z);
+  double Psim6 = 1.0/metric->psi6;
 
   double rhob;
   if (sdots<1.e-300) {
@@ -53,7 +42,7 @@ int Hybrid_Font_Fix(
   } else {
     // Initial guess for W, S_fluid and rhob
     double W0    = sqrt( SQR(hatBbardotS) + SQR(cons->rho) ) * Psim6;
-    double Sf20  = (SQR(W0)*sdots + BbardotS2*(B2bar + 2.0*W0))/SQR(W0+B2bar);
+    double Sf20  = (SQR(W0)*sdots + BbardotS2*(Bbar2 + 2.0*W0))/SQR(W0+Bbar2);
     double rhob0 = cons->rho*Psim6/sqrt(1.0+Sf20/SQR(cons->rho));
 
     //****************************************************************
@@ -70,7 +59,7 @@ int Hybrid_Font_Fix(
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
       const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
       font_fix_status = hybrid_font_fix_loop(eos, loop_maxits, loop_tol, W0, Sf20, Psim6, sdots,
-                                           BbardotS2, B2bar, cons, rhob0, &rhob);
+                                           BbardotS2, Bbar2, cons, rhob0, &rhob);
       rhob0 = rhob;
       if(font_fix_status==0) break;
     }
@@ -97,7 +86,12 @@ int Hybrid_Font_Fix(
     /* Finally, compute u_{i} */
     double rhosh = cons->rho*h;
     double fac1 = metric->psi6*BbardotS/(gammav*rhosh);
-    double fac2 = 1.0/(rhosh + metric->psi6*B2bar/gammav);
+    double fac2 = 1.0/(rhosh + metric->psi6*Bbar2/gammav);
+
+    const double Bbar_x = metric->adm_gxx*Bbar[0] + metric->adm_gxy*Bbar[1] + metric->adm_gxz*Bbar[2];
+    const double Bbar_y = metric->adm_gxy*Bbar[0] + metric->adm_gyy*Bbar[1] + metric->adm_gyz*Bbar[2];
+    const double Bbar_z = metric->adm_gxz*Bbar[0] + metric->adm_gyz*Bbar[1] + metric->adm_gzz*Bbar[2];
+
     u_x = fac2*(cons->S_x + fac1*Bbar_x);
     u_y = fac2*(cons->S_y + fac1*Bbar_y);
     u_z = fac2*(cons->S_z + fac1*Bbar_z);

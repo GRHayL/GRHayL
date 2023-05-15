@@ -7,7 +7,7 @@
 [![Ubuntu-clang](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-clang.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-clang.yml)
 [![MacOS-gcc](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-gcc.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-gcc.yml)
 [![MacOS-clang](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-clang.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-clang.yml)
-<!--- [![codecov](https://codecov.io/gh/SamuelCupp/GRHayL_beta/branch/main/graph/badge.svg)](https://codecov.io/gh/SamuelCupp/GRHayL_beta) -->
+[![codecov](https://codecov.io/gh/SamuelCupp/GRHayL_beta/branch/main/graph/badge.svg)](https://codecov.io/gh/SamuelCupp/GRHayL_beta)
 
 This is a beta version of GRHayL (General Relativistic Hydrodynamic Library),
 the infrastructure-agnostic magnetohydrodynamics code my collaborators and I are

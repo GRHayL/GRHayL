@@ -5,6 +5,9 @@
 #include "induction.h"
 #include "reconstruction.h"
 #include "flux_source.h"
+#include "neutrinos.h"
+#include "nrpyeos_tabulated.h"
+#include "nrpyeos_hybrid.h"
 
 // con2prim validation functions
 void validate_primitives(
@@ -132,7 +135,7 @@ static inline double relative_error( const double a, const double b ) {
   else              return( 0.0 );
 }
 
-inline int indexf(const int gridmax, const int i, const int j, const int k) {
+static inline int indexf(const int gridmax, const int i, const int j, const int k) {
   return i + j*gridmax + k*gridmax*gridmax;
 }
 

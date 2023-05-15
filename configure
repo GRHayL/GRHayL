@@ -78,9 +78,9 @@ Options:'
                           -----------:---------------
                           nocflags   : None
                           debug      : -Wall -std=c99 -O0 -g
-                          debug-opt  : -Wall -std=c99 -march=native -O2 -g
-                          opt        : -Wall -std=c99 -march=native -O2
-                          production : -Wall -std=c99 -march=native -O3
+                          debug-opt  : -Wall -std=c99 -march=native -fno-finite-math-only -O2 -g
+                          opt        : -Wall -std=c99 -march=native -fno-finite-math-only -O2
+                          production : -Wall -std=c99 -march=native -fno-finite-math-only -O3
     --cflags            Additional compilation flags
     --clibs             Additional linker flags
     --hdf5dir           Sets the HDF5 base directory. Possible values:
@@ -489,8 +489,8 @@ printf "Checking if build type is valid... "
 case $buildtype in
          plain) break;;
          debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g"; break;;
-     debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -O2 -g"; break;;
-           opt) BUILDCFLAGS="-Wall -std=c99 -march=native -O2"; break;;
+     debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2 -g"; break;;
+           opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2"; break;;
     production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3"; break;;
              *) printf "%s\nUnsupported built type, use ./configure -h for help\n" $(red $buildtype)
                 exit 1;;

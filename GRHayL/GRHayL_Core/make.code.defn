@@ -9,7 +9,7 @@ SRCS = compute_smallb_and_b2.c                \
        initialize_conservatives.c             \
        initialize_eos.c                       \
        initialize_extrinsic_curvature.c       \
-       grhayl_initialize.c                    \
+       initialize_params.c                    \
        initialize_metric.c                    \
        initialize_primitives.c                \
        initialize_stress_energy.c             \

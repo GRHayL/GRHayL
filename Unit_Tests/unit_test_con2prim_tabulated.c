@@ -312,7 +312,7 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   GRHayL_parameters params;
-  grhayl_initialize(main_routine,
+  grhayl_initialize_params(main_routine,
                     backup_routines,
                     evolve_entropy,
                     evolve_temperature,

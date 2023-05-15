@@ -180,6 +180,7 @@ int Hybrid_Noble2D(
 
   harm_aux.D    = cons_undens->rho;
 
+  // We can reduce this by using tmp_u to directly compute vsq; utilde isn't needed
   const double tmp_u = metric->adm_gxx * SQR(prims->vx + metric->betax) +
                                              2.0*metric->adm_gxy*(prims->vx + metric->betax)*(prims->vy + metric->betay) +
                                              2.0*metric->adm_gxz*(prims->vx + metric->betax)*(prims->vz + metric->betaz) +
@@ -196,13 +197,13 @@ int Hybrid_Noble2D(
   /* calculate Z from last timestep and use for guess */
   double vsq = 0.0;
   for(int i=1; i<4; i++)
-    for(int j=1; j<4; j++) vsq += metric->g4dn[i][j]*-utilde[i-1]*utilde[j-1];
+    for(int j=1; j<4; j++) vsq += metric->g4dn[i][j]*utilde[i-1]*utilde[j-1];
 
   if( !isfinite(vsq)) {
     return 1;
   } else if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
     vsq = fabs(vsq);
-  } else if(vsq < 0.0 || vsq > UTSQ_TOO_BIG) {
+  } else if(vsq < 0.0 || vsq > 10.0) {
     return 2;
   }
 

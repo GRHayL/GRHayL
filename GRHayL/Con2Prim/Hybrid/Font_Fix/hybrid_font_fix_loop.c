@@ -72,7 +72,7 @@ int hybrid_font_fix_loop(
        * | h = h_cold = 1 + eps_cold + P_cold/rhob. |
        * .------------------------------------------.
        */
-      eos->hybrid_compute_P_cold_and_eps_cold(eos,rhob0, &P_cold, &eps_cold);
+      eos->hybrid_compute_P_cold_and_eps_cold(eos, rhob0, &P_cold, &eps_cold);
       h = 1.0 + eps_cold + P_cold/rhob0;
 
       /* Update rhob using eq. (A62) in Etienne et al. (2011)

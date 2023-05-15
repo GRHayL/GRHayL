@@ -51,7 +51,7 @@ typedef struct GRHayL_parameters {
   double Lorenz_damping_factor;
 } GRHayL_parameters;
 
-void grhayl_initialize(
+void grhayl_initialize_params(
       const int main,
       const int backup[3],
       const bool evolve_entropy,
