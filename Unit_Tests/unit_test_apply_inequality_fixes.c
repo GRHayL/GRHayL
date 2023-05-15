@@ -177,7 +177,11 @@ int main(int argc, char **argv) {
                              poison, poison, &cons);
 
     //This applies inequality fixes on the conservatives
+    if(i == arraylength-1 || i == arraylength-2)
+      params.psi6threshold = 0.0;
     apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+    if(i == arraylength-1 || i == arraylength-2)
+      params.psi6threshold = Psi6threshold;
 
     conservative_quantities cons_trusted, cons_pert;
     initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
