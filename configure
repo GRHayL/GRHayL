@@ -491,7 +491,7 @@ case $buildtype in
          debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g"; break;;
      debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2 -g"; break;;
            opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2"; break;;
-    production) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O3"; break;;
+    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3"; break;;
              *) printf "%s\nUnsupported built type, use ./configure -h for help\n" $(red $buildtype)
                 exit 1;;
 esac
