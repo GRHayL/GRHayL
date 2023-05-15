@@ -489,9 +489,9 @@ printf "Checking if build type is valid... "
 case $buildtype in
          plain) break;;
          debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g"; break;;
-     debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -O2 -g"; break;;
-           opt) BUILDCFLAGS="-Wall -std=c99 -march=native -O2"; break;;
-    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3"; break;;
+     debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -O2 -g -fno-finite-math-only"; break;;
+           opt) BUILDCFLAGS="-Wall -std=c99 -march=native -O2 -fno-finite-math-only"; break;;
+    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3 -fno-finite-math-only"; break;;
              *) printf "%s\nUnsupported built type, use ./configure -h for help\n" $(red $buildtype)
                 exit 1;;
 esac
