@@ -81,7 +81,7 @@ int Tabulated_CerdaDuran3D(
   const double Sdn[3] = {cons_undens->S_x,
                          cons_undens->S_y,
                          cons_undens->S_z};
-  double Sup[3]; raise_vector_3d(metric, Sdn, Sup);
+  double Sup[3]; raise_vector_3D(metric, Sdn, Sup);
   const double S_squared = compute_vec2_from_vcov(metric, Sdn);
 
 

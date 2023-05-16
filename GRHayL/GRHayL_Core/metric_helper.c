@@ -1,13 +1,14 @@
 #include "grhayl.h"
 
 /**********************************************************************
-    raise_vector():
+    raise_vector_4D() and raise_vector_3D():
 
          -- calculates the contravariant form of a covariant vector
             using the inverse of the metric
               v^\alpha = g^{\alpha\beta} v_\beta
+            3D and 4D vectors are currently supported.
 ***********************************************************************/
-void raise_vector(
+void raise_vector_4D(
       const metric_quantities *restrict metric,
       const double vcov[4],
       double vcon[4]) {
@@ -17,7 +18,24 @@ void raise_vector(
     for(int j=0; j<4; j++)
       vcon[i] += metric->g4up[i][j]*vcov[j];
   }
-  return ;
+}
+
+void raise_vector_3D(
+      const metric_quantities *restrict metric,
+      const double vcov[3],
+      double vcon[3]) {
+
+  vcon[0] = metric->adm_gupxx * vcov[0]
+          + metric->adm_gupxy * vcov[1]
+          + metric->adm_gupxz * vcov[2];
+
+  vcon[1] = metric->adm_gupxy * vcov[0]
+          + metric->adm_gupyy * vcov[1]
+          + metric->adm_gupyz * vcov[2];
+
+  vcon[2] = metric->adm_gupxz * vcov[0]
+          + metric->adm_gupyz * vcov[1]
+          + metric->adm_gupzz * vcov[2];
 }
 
 /**********************************************************************

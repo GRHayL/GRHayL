@@ -165,7 +165,7 @@ int Hybrid_Noble2D(
                          cons_undens->S_y,
                          cons_undens->S_z};
 
-  double Qup[4]; raise_vector(metric, Qdn, Qup);
+  double Qup[4]; raise_vector_4D(metric, Qdn, Qup);
   harm_aux.Qsq = 0.0;
   for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
 

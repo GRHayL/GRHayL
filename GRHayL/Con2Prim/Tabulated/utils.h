@@ -38,40 +38,6 @@ typedef struct fparams_struct {
 } fparams_struct;
 
 /*
- * Function   : raise_vector_3d
- * Author     : Leo Werneck
- *
- * Raises a 3-vector v^{i} = gamma^{ij} v_{j}.
- *
- * Parameters : metric   - Pointer to GRHayL metric_quantities struct.
- *            : vD       - Array containing v_{i}.
- *            : vU       - Array containing v^{i}, the output.
- *
- * Returns    : Nothing.
- */
-static inline void
-raise_vector_3d(
-      const metric_quantities *restrict metric,
-      const double *restrict vD,
-      double *restrict vU ) {
-
-  // v^{x} = gamma^{xj}v_{j} = gamma^{jx}v_{j}
-  vU[0] = metric->adm_gupxx * vD[0]
-        + metric->adm_gupxy * vD[1]
-        + metric->adm_gupxz * vD[2];
-
-  // v^{y} = gamma^{yj}v_{j} = gamma^{jy}v_{j}
-  vU[1] = metric->adm_gupxy * vD[0]
-        + metric->adm_gupyy * vD[1]
-        + metric->adm_gupyz * vD[2];
-
-  // v^{z} = gamma^{zj}v_{j} = gamma^{jz}v_{j}
-  vU[2] = metric->adm_gupxz * vD[0]
-        + metric->adm_gupyz * vD[1]
-        + metric->adm_gupzz * vD[2];
-}
-
-/*
  * Function   : compute_rho_W_from_x_and_conservatives
  * Author     : Leo Werneck
  *
@@ -194,7 +160,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
   for(int i=0;i<3;i++) *BdotS += BU[i]*SD[i];
 
   // Step 5: Compute S^{i}
-  raise_vector_3d(metric, SD, SU);
+  raise_vector_3D(metric, SD, SU);
 }
 
 /*

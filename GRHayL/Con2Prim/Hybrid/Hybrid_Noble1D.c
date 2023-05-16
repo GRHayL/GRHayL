@@ -145,7 +145,7 @@ int Hybrid_Noble1D(
                          cons_undens->S_y,
                          cons_undens->S_z};
 
-  double Qup[4]; raise_vector(metric, Qdn, Qup);
+  double Qup[4]; raise_vector_4D(metric, Qdn, Qup);
 
   harm_aux.Bsq = 0. ;
   for(int i=1; i<4; i++) harm_aux.Bsq += Bup[i]*Bdn[i];

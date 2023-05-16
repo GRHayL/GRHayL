@@ -670,10 +670,15 @@ void limit_v_and_compute_u0(
       primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
-void raise_vector(
+void raise_vector_4D(
       const metric_quantities *restrict metric,
       const double vcov[4],
       double vcon[4]);
+
+void raise_vector_3D(
+      const metric_quantities *restrict metric,
+      const double vcov[3],
+      double vcon[3]);
 
 void lower_vector(
       const metric_quantities *restrict metric,

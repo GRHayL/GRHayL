@@ -112,7 +112,7 @@ int Tabulated_Palenzuela1D(
   //          tilde(u)^{i} := W v^{i},
   // Step 10.a: Compute S^{i}
   double SU[3];
-  raise_vector_3d(metric, SD, SU);
+  raise_vector_3D(metric, SD, SU);
 
   // Step 10.b: Set Z
   const double Z = x*rho*W;
