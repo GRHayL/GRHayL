@@ -18,7 +18,7 @@ runs:
     - if: runner.os == 'Linux' && inputs.compiler == 'clang'
       run: |
         sudo apt-get install gcovr
-        gcovr -r .  --gcov-executable "llvm-cov gcov" --keep
+        gcovr -r .  --gcov-executable "llvm-cov-14 gcov" --keep
       shell: bash
 
     - if: runner.os == 'Linux' && inputs.compiler == 'intel'
@@ -36,7 +36,7 @@ runs:
     - if: runner.os == 'MacOS' && inputs.compiler == 'clang'
       run: |
         brew install gcovr
-        gcovr -r . --gcov-executable "llvm-cov gcov" --keep
+        gcovr -r . --gcov-executable "llvm-cov-14 gcov" --keep
       shell: bash
 
     - uses: codecov/codecov-action@v3
