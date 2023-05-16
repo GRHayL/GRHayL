@@ -234,7 +234,7 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_output.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_output_pert.bin
       - name: Run reconstruction unit test for ${{ matrix.test-function }} function
-        run: ./test/unit_test_${{ matrix.test-function }}
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
         with:
