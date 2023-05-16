@@ -89,6 +89,6 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
 
   // Then interpolate the quantities we want from (rho,Ye,T)
   NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, n, rho, Y_e, *T, tablevars_keys, tablevars, report);
-  return error;
+  return 0; //error;
 #endif
 }
