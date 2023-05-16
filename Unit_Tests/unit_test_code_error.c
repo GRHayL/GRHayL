@@ -166,12 +166,13 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   const int keys[1];
   double outvars[1];
   NRPyEOS_error_report report;
+  int error;
 
   switch (test_key) {
     case 12:
-      NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(&tab_eos, nvars, rho, Y_e, T, keys, outvars, &report);
-      if( report.error )
-        grhayl_error(report.message, report.error_key);
+      error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(&tab_eos, nvars, rho, Y_e, T, keys, outvars, &report);
+      if( error )
+        grhayl_error(report.message, error);
       break;
     case 13:
       rho = rho_b_min-1.0;
@@ -231,10 +232,10 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
    */
   switch (test_key) {
     case 23:
-      NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(&tab_eos, nvars, tab_eos.root_finding_precision,
+      error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(&tab_eos, nvars, tab_eos.root_finding_precision,
                                                                rho, Y_e, eps, NRPyEOS_eps_key, keys, outvars, &T, &report);
-      if( report.error )
-        grhayl_error(report.message, report.error_key);
+      if( error )
+        grhayl_error(report.message, error);
     case 24:
       rho = rho_b_min-1.0;
       NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &S, &depsdT, &T);
