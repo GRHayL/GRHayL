@@ -170,7 +170,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
 
   switch (test_key) {
     case 12:
-      int error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(&tab_eos, nvars, rho, Y_e, T, keys, outvars, &report);
+      error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(&tab_eos, nvars, rho, Y_e, T, keys, outvars, &report);
       if( error )
         grhayl_error(report.message, error);
       break;
@@ -232,7 +232,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
    */
   switch (test_key) {
     case 23:
-      int error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(&tab_eos, nvars, tab_eos.root_finding_precision,
+      error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(&tab_eos, nvars, tab_eos.root_finding_precision,
                                                                rho, Y_e, eps, NRPyEOS_eps_key, keys, outvars, &T, &report);
       if( error )
         grhayl_error(report.message, error);
