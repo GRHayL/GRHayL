@@ -43,8 +43,6 @@ static const char table_var_names[NRPyEOS_ntablekeys][10] = {
 
 // Error handling struct
 typedef struct NRPyEOS_error_report {
-  bool error;
-  int error_key;
   char message[1024];
 } NRPyEOS_error_report;
 
@@ -211,7 +209,7 @@ void NRPyEOS_P_eps_and_T_from_rho_Ye_S(
       double *restrict eps,
       double *restrict T);
 
-void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
+int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
       const eos_parameters *restrict eos_params,
       const int n,
       const double rho,
@@ -221,7 +219,7 @@ void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
       double *restrict tablevars,
       NRPyEOS_error_report *restrict report);
 
-void NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
+int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       const eos_parameters *restrict eos_params,
       const int n,
       const double prec,

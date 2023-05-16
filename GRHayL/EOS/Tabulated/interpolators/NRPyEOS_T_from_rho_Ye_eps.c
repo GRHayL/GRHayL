@@ -22,12 +22,13 @@ void NRPyEOS_T_from_rho_Ye_eps(
 
   // Step 4: Perform the interpolation
   const double root_finding_precision = eos->root_finding_precision;
-  NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities( eos, 0, root_finding_precision,
-                                                               rho,Y_e,eps,NRPyEOS_eps_key, keys,outvars, T, &report );
+  const int error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(eos, 0, root_finding_precision,
+                                                                                rho, Y_e, eps, NRPyEOS_eps_key,
+                                                                                keys, outvars, T, &report);
 
   // Step 5: Check for errors
-  if( report.error )
-    grhayl_Error(report.error_key, report.message, report.error_key);
+  if( error )
+    grhayl_error(report.message, error);
 
 #endif
 }
