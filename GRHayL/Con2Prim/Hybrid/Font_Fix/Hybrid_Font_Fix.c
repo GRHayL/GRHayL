@@ -7,38 +7,40 @@
 int Hybrid_Font_Fix(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics) {
 
-  diagnostics->failure_checker+=10000;
-  diagnostics->font_fix=1;
-  double u_x, u_y, u_z;
+  double utU[3];
 
-  const double S[3] = {cons->S_x, cons->S_y, cons->S_z};
-  const double sdots = compute_vec2_from_vcov(metric, S);
+  const double sdots = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, cons->SD);
 
-  const double Bbar[3] = {prims->Bx*ONE_OVER_SQRT_4PI, prims->By*ONE_OVER_SQRT_4PI, prims->Bz*ONE_OVER_SQRT_4PI};
-  const double Bbar2 = compute_vec2_from_vcon(metric, Bbar);
+  const double BbarU[3] = {prims->BU[0]*ONE_OVER_SQRT_4PI, prims->BU[1]*ONE_OVER_SQRT_4PI, prims->BU[2]*ONE_OVER_SQRT_4PI};
+  const double Bbar2 = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
 
   double BbardotS, BbardotS2, hatBbardotS;
   if(Bbar2 < 1e-150) {
     BbardotS = BbardotS2 = hatBbardotS = 0.0;
   } else {
     const double Bbar_mag = sqrt(Bbar2);
-    BbardotS = Bbar[0]*cons->S_x + Bbar[1]*cons->S_y + Bbar[2]*cons->S_z;
+    BbardotS = BbarU[0]*cons->SD[0] + BbarU[1]*cons->SD[1] + BbarU[2]*cons->SD[2];
     BbardotS2 = BbardotS*BbardotS;
     hatBbardotS = BbardotS/Bbar_mag;
   }
 
-  double Psim6 = 1.0/metric->psi6;
+  double Psim6 = 1.0/metric_aux->psi6;
 
   double rhob;
   if (sdots<1.e-300) {
-    u_x=0.0;
-    u_y=0.0;
-    u_z=0.0;
+    utU[0] = 0.0;
+    utU[1] = 0.0;
+    utU[2] = 0.0;
+    prims->u0    = ADM_metric->lapseinv;
+    prims->vU[0] = -ADM_metric->betaU[0];
+    prims->vU[1] = -ADM_metric->betaU[1];
+    prims->vU[2] = -ADM_metric->betaU[2];
   } else {
     // Initial guess for W, S_fluid and rhob
     double W0    = sqrt( SQR(hatBbardotS) + SQR(cons->rho) ) * Psim6;
@@ -83,28 +85,22 @@ int Hybrid_Font_Fix(
      */
     double gammav = cons->rho*Psim6/rhob;
 
-    /* Finally, compute u_{i} */
+    /* Finally, compute u^{i} */
     double rhosh = cons->rho*h;
-    double fac1 = metric->psi6*BbardotS/(gammav*rhosh);
-    double fac2 = 1.0/(rhosh + metric->psi6*Bbar2/gammav);
+    double fac1 = metric_aux->psi6*BbardotS/(gammav*rhosh);
+    double fac2 = 1.0/(rhosh + metric_aux->psi6*Bbar2/gammav);
 
-    const double Bbar_x = metric->adm_gxx*Bbar[0] + metric->adm_gxy*Bbar[1] + metric->adm_gxz*Bbar[2];
-    const double Bbar_y = metric->adm_gxy*Bbar[0] + metric->adm_gyy*Bbar[1] + metric->adm_gyz*Bbar[2];
-    const double Bbar_z = metric->adm_gxz*Bbar[0] + metric->adm_gyz*Bbar[1] + metric->adm_gzz*Bbar[2];
+    double SU[3];
+    grhayl_raise_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
 
-    u_x = fac2*(cons->S_x + fac1*Bbar_x);
-    u_y = fac2*(cons->S_y + fac1*Bbar_y);
-    u_z = fac2*(cons->S_z + fac1*Bbar_z);
+    utU[0] = fac2*(SU[0] + fac1*BbarU[0]);
+    utU[1] = fac2*(SU[1] + fac1*BbarU[1]);
+    utU[2] = fac2*(SU[2] + fac1*BbarU[2]);
+    grhayl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
   }
 
-  //Translate to HARM primitive now:
-  double utcon1 = metric->adm_gupxx*u_x + metric->adm_gupxy*u_y + metric->adm_gupxz*u_z;
-  double utcon2 = metric->adm_gupxy*u_x + metric->adm_gupyy*u_y + metric->adm_gupyz*u_z;
-  double utcon3 = metric->adm_gupxz*u_x + metric->adm_gupyz*u_y + metric->adm_gupzz*u_z;
-
-  //The Font fix only sets the velocities.  Here we set the pressure & density HARM primitives.
-  limit_utilde_and_compute_v(eos, metric, &utcon1, &utcon2, &utcon3, prims, &diagnostics->speed_limited);
-  prims->rho = cons->rho/(metric->lapse*prims->u0*metric->psi6);
+  //The Font fix only sets the velocities.  Here we set the primitives.
+  prims->rho = cons->rho/(ADM_metric->lapse*prims->u0*metric_aux->psi6);
 
   double K_ppoly, Gamma_ppoly;
   eos->hybrid_get_K_and_Gamma(eos, prims->rho, &K_ppoly, &Gamma_ppoly);

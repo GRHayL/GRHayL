@@ -60,11 +60,11 @@ int general_newton_raphson(
 
   /*  Check for bad untrapped divergences : */
   if( !isfinite(f) ||  !isfinite(df) ) {
-    return 4;
+    return 3;
   } else if( fabs(errx) <= NEWT_TOL ) {
     return 0;
   } else {
-    return 3;
+    return 2;
   }
 }
 

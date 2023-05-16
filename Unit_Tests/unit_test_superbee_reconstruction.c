@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
   const double Gamma_th = 2.0;
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              poison, poison, poison,
                                              neos, rho_ppoly_in, Gamma_ppoly_in,
                                              k_ppoly0, Gamma_th, &eos);

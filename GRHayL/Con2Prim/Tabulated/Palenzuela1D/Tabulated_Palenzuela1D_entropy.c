@@ -73,7 +73,8 @@ compute_rho_P_eps_T_W_entropy(
 int Tabulated_Palenzuela1D_entropy(
       const GRHayL_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
@@ -81,7 +82,7 @@ int Tabulated_Palenzuela1D_entropy(
   return Tabulated_Palenzuela1D( compute_rho_P_eps_T_W_entropy,
                                  grhayl_params,
                                  eos,
-                                 metric,
+                                 ADM_metric,
                                  cons_undens,
                                  prims,
                                  diagnostics );

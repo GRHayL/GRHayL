@@ -6,12 +6,8 @@ static inline void compute_h_and_cs2(struct eos_parameters const *restrict eos,
                                      double *restrict cs2) {
 
 
-// CCTK_REAL h_ = U[PRESSURE]*U[VX]/U[VZ];
-*h = prims->press*prims->vx / prims->vz;
-
-// CCTK_REAL c_s_squared  = U[PRESSURE]*U[VZ]/(h);
-*cs2 = prims->rho*prims->vz*(*h)/1e4;
-// printf("works!!\n");
+*h = prims->press*prims->vU[0] / prims->vU[2];
+*cs2 = prims->rho*prims->vU[2]*(*h)/1e4;
 }
 
 #define AM2 -0.0625
@@ -191,7 +187,7 @@ int main(int argc, char **argv) {
 
   // Function pointer to allow for loop over directional source terms
   void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict, const metric_quantities *restrict, 
-  const metric_derivatives *restrict, conservative_quantities *restrict);
+  const metric_quantities *restrict, conservative_quantities *restrict);
 
 
   // Loop over flux directions (x,y,z)
@@ -262,20 +258,20 @@ int main(int argc, char **argv) {
           const int index  = indexf(dirlength, i, j ,k);
 
           metric_quantities metric_face;
-          initialize_metric(face_lapse[index],
+          grhayl_initialize_metric(face_lapse[index],
+                            face_betax[index], face_betay[index], face_betaz[index],
                             face_gxx[index], face_gxy[index], face_gxz[index],
                             face_gyy[index], face_gyz[index], face_gzz[index],
-                            face_betax[index], face_betay[index], face_betaz[index],
                             &metric_face);
 
           primitive_quantities prims_r, prims_l;
-          initialize_primitives(rho_r[index], press_r[index], poison,
+          grhayl_initialize_primitives(rho_r[index], press_r[index], poison,
                                 vx_r[index], vy_r[index], vz_r[index],
                                 Bx_r[index], By_r[index], Bz_r[index],
                                 poison, poison, poison, // entropy, Y_e, temp
                                 &prims_r);
 
-          initialize_primitives(rho_l[index], press_l[index], poison,
+          grhayl_initialize_primitives(rho_l[index], press_l[index], poison,
                                 vx_l[index], vy_l[index], vz_l[index],
                                 Bx_l[index], By_l[index], Bz_l[index],
                                 poison, poison, poison, // entropy, Y_e, temp
@@ -304,9 +300,9 @@ int main(int argc, char **argv) {
 
           rho_star_flux[index]  = cons_fluxes.rho;
           tau_flux[index]       = cons_fluxes.tau;
-          S_x_flux[index]       = cons_fluxes.S_x;
-          S_y_flux[index]       = cons_fluxes.S_y;
-          S_z_flux[index]       = cons_fluxes.S_z;
+          S_x_flux[index]       = cons_fluxes.SD[0];
+          S_y_flux[index]       = cons_fluxes.SD[1];
+          S_z_flux[index]       = cons_fluxes.SD[2];
     }
 
     for(int k=ghostzone; k<dirlength-ghostzone; k++)
@@ -321,27 +317,27 @@ int main(int argc, char **argv) {
           S_y_rhs[index] += invdx*(S_y_flux[index] - S_y_flux[indp1]);
           S_z_rhs[index] += invdx*(S_z_flux[index] - S_z_flux[indp1]);
 
-          metric_derivatives metric_derivs;
-          metric_derivs.lapse[flux_dirn]   = invdx*(face_lapse[indp1] - face_lapse[index]);
-          metric_derivs.betax[flux_dirn]   = invdx*(face_betax[indp1] - face_betax[index]);
-          metric_derivs.betay[flux_dirn]   = invdx*(face_betay[indp1] - face_betay[index]);
-          metric_derivs.betaz[flux_dirn]   = invdx*(face_betaz[indp1] - face_betaz[index]);
-          metric_derivs.adm_gxx[flux_dirn] = invdx*(face_gxx[indp1] - face_gxx[index]);
-          metric_derivs.adm_gxy[flux_dirn] = invdx*(face_gxy[indp1] - face_gxy[index]);
-          metric_derivs.adm_gxz[flux_dirn] = invdx*(face_gxz[indp1] - face_gxz[index]);
-          metric_derivs.adm_gyy[flux_dirn] = invdx*(face_gyy[indp1] - face_gyy[index]);
-          metric_derivs.adm_gyz[flux_dirn] = invdx*(face_gyz[indp1] - face_gyz[index]);
-          metric_derivs.adm_gzz[flux_dirn] = invdx*(face_gzz[indp1] - face_gzz[index]);
+          metric_quantities metric_derivs;
+          metric_derivs.lapse    = invdx*(face_lapse[indp1] - face_lapse[index]);
+          metric_derivs.betaU[0] = invdx*(face_betax[indp1] - face_betax[index]);
+          metric_derivs.betaU[1] = invdx*(face_betay[indp1] - face_betay[index]);
+          metric_derivs.betaU[2] = invdx*(face_betaz[indp1] - face_betaz[index]);
+          metric_derivs.gammaDD[0][0] = invdx*(face_gxx[indp1] - face_gxx[index]);
+          metric_derivs.gammaDD[0][1] = invdx*(face_gxy[indp1] - face_gxy[index]);
+          metric_derivs.gammaDD[0][2] = invdx*(face_gxz[indp1] - face_gxz[index]);
+          metric_derivs.gammaDD[1][1] = invdx*(face_gyy[indp1] - face_gyy[index]);
+          metric_derivs.gammaDD[1][2] = invdx*(face_gyz[indp1] - face_gyz[index]);
+          metric_derivs.gammaDD[2][2] = invdx*(face_gzz[indp1] - face_gzz[index]);
 
           metric_quantities metric;
-          initialize_metric(lapse[index],
+          grhayl_initialize_metric(lapse[index],
                             gxx[index], gxy[index], gxz[index],
                             gyy[index], gyz[index], gzz[index],
                             betax[index], betay[index], betaz[index],
                             &metric);
 
           primitive_quantities prims;
-          initialize_primitives(rho[index], press[index], poison,
+          grhayl_initialize_primitives(rho[index], press[index], poison,
                                 vx[index], vy[index], vz[index],
                                 Bx[index], By[index], Bz[index],
                                 poison, poison, poison, // entropy, Y_e, temp
@@ -349,9 +345,9 @@ int main(int argc, char **argv) {
           prims.u0  = rho[index]*Bx[index] / vy[index];
 
           conservative_quantities cons_sources;
-          cons_sources.S_x = 0.0;
-          cons_sources.S_y = 0.0;
-          cons_sources.S_z = 0.0;
+          cons_sources.SD[0] = 0.0;
+          cons_sources.SD[1] = 0.0;
+          cons_sources.SD[2] = 0.0;
           calculate_source_terms(&prims,
                                  &eos,
                                  &metric,
@@ -359,9 +355,9 @@ int main(int argc, char **argv) {
                                  &cons_sources);
 
           tau_rhs[index] += cons_sources.tau;
-          S_x_rhs[index] += cons_sources.S_x;
-          S_y_rhs[index] += cons_sources.S_y;
-          S_z_rhs[index] += cons_sources.S_z;
+          S_x_rhs[index] += cons_sources.SD[0];
+          S_y_rhs[index] += cons_sources.SD[1];
+          S_z_rhs[index] += cons_sources.SD[2];
     }
   }
 
@@ -371,20 +367,20 @@ int main(int argc, char **argv) {
         const int index  = indexf(dirlength, i, j ,k);
 
         metric_quantities metric;
-        initialize_metric(lapse[index],
+        grhayl_initialize_metric(lapse[index],
                           gxx[index], gxy[index], gxz[index],
                           gyy[index], gyz[index], gzz[index],
                           betax[index], betay[index], betaz[index],
                           &metric);
 
         extrinsic_curvature curv;
-        initialize_extrinsic_curvature(
+        grhayl_initialize_extrinsic_curvature(
                           kxx[index], kxy[index], kxz[index],
                           kyy[index], kyz[index], kzz[index],
                           &curv);
 
         primitive_quantities prims;
-        initialize_primitives(rho[index], press[index], poison,
+        grhayl_initialize_primitives(rho[index], press[index], poison,
                               vx[index], vy[index], vz[index],
                               Bx[index], By[index], Bz[index],
                               poison, poison, poison, // entropy, Y_e, temp

@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : compute_smallb_and_b2()
+/* Function    : grhayl_compute_smallb_and_b2()
  * Description : Computes magnetic quantities b^0, b^i and b^2 (see Eqs. 23
                  and 24 in https://arxiv.org/abs/astro-ph/0503420).
  *
@@ -17,19 +17,19 @@
  *
  */
 
-void compute_smallb_and_b2(
-      const metric_quantities *restrict metric,
+void grhayl_compute_smallb_and_b2(
+      const metric_quantities *restrict ADM_metric,
       const primitive_quantities *restrict prims,
       const double uDN[4],
-      double *restrict smallb,
+      double smallb[4],
       double *restrict smallb2) {
 
-  const double ONE_OVER_LAPSE_SQRT_4PI = metric->lapseinv*ONE_OVER_SQRT_4PI;
+  const double ONE_OVER_LAPSE_SQRT_4PI = ADM_metric->lapseinv*ONE_OVER_SQRT_4PI;
   const double ONE_OVER_U0 = 1.0/prims->u0;
 
   // Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   //   Compute alpha sqrt(4 pi) b^t = u_i B^i
-  const double alpha_sqrt_4pi_bt = uDN[1]*prims->Bx + uDN[2]*prims->By + uDN[3]*prims->Bz;
+  const double alpha_sqrt_4pi_bt = uDN[1]*prims->BU[0] + uDN[2]*prims->BU[1] + uDN[3]*prims->BU[2];
 
   // Eq. 24 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
   // b^i = B^i_u / sqrt(4 pi)
@@ -38,9 +38,9 @@ void compute_smallb_and_b2(
   // b^i = ( B^i +  alpha sqrt(4 pi) b^t u^i ) / ( alpha u^0 sqrt(4 pi) )
   // b^i = ( B^i/u^0 +  alpha sqrt(4 pi) b^t u^i/u^0 ) / ( alpha sqrt(4 pi) )
   // b^i = ( B^i/u^0 +  alpha sqrt(4 pi) b^t v^i ) / ( alpha sqrt(4 pi) )
-  smallb[1] = (prims->Bx*ONE_OVER_U0 + prims->vx*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
-  smallb[2] = (prims->By*ONE_OVER_U0 + prims->vy*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
-  smallb[3] = (prims->Bz*ONE_OVER_U0 + prims->vz*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
+  smallb[1] = (prims->BU[0]*ONE_OVER_U0 + prims->vU[0]*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
+  smallb[2] = (prims->BU[1]*ONE_OVER_U0 + prims->vU[1]*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
+  smallb[3] = (prims->BU[2]*ONE_OVER_U0 + prims->vU[2]*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
   // Eq. 23 in http://arxiv.org/pdf/astro-ph/0503420.pdf, with alpha sqrt (4 pi) b^2 = u_i B^i already computed above
   smallb[0] = alpha_sqrt_4pi_bt * ONE_OVER_LAPSE_SQRT_4PI;
 
@@ -52,12 +52,9 @@ void compute_smallb_and_b2(
   //     = - (alpha b^t)^2 + gamma_{ij} ((b^t)^2 beta^i beta^j + b^i b^j + 2 b^t beta^j b^i)
   //     = - (alpha b^t)^2 + gamma_{ij} ((b^t)^2 beta^i beta^j + 2 b^t beta^j b^i + b^i b^j)
   //     = - (alpha b^t)^2 + gamma_{ij} (b^i + b^t beta^i) (b^j + b^t beta^j)
-  const double bx_plus_shiftx_bt = smallb[1]+metric->betax*smallb[0];
-  const double by_plus_shifty_bt = smallb[2]+metric->betay*smallb[0];
-  const double bz_plus_shiftz_bt = smallb[3]+metric->betaz*smallb[0];
-  *smallb2 = -SQR(metric->lapse*smallb[0]) +
-    metric->adm_gxx*SQR(bx_plus_shiftx_bt) + metric->adm_gyy*SQR(by_plus_shifty_bt) + metric->adm_gzz*SQR(bz_plus_shiftz_bt) +
-       2.0*( metric->adm_gxy*(bx_plus_shiftx_bt)*(by_plus_shifty_bt) +
-             metric->adm_gxz*(bx_plus_shiftx_bt)*(bz_plus_shiftz_bt) +
-             metric->adm_gyz*(by_plus_shifty_bt)*(bz_plus_shiftz_bt) );
+  const double bi_plus_bt_betai[3] = {smallb[1] + smallb[0]*ADM_metric->betaU[0],
+                                      smallb[2] + smallb[0]*ADM_metric->betaU[1],
+                                      smallb[3] + smallb[0]*ADM_metric->betaU[2]};
+
+  *smallb2 = -SQR(ADM_metric->lapse*smallb[0]) + grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, bi_plus_bt_betai);
 }

@@ -113,9 +113,9 @@ int newman_energy(
   prim->rho         = con->rho*invW;
   prim->Y_e         = xye;
   prim->temperature = xtemp;
-  prim->vx          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
-  prim->vy          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
-  prim->vz          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
+  prim->vU[0]          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
+  prim->vU[1]          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
+  prim->vU[2]          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
   eos->tabulated_compute_P_eps_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
                                        &prim->press, &prim->eps );
 
@@ -125,14 +125,15 @@ int newman_energy(
 int Tabulated_Newman1D_energy(
       const GRHayL_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
   // Step 1: Compute auxiliary quantities
   double BU[3], SU[3], Bsq, Ssq, BdotS;
-  compute_BU_SU_Bsq_Ssq_BdotS(metric, cons_undens, prims,
+  compute_BU_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims,
                               BU, SU, &Bsq, &Ssq, &BdotS);
 
   // Step 2: Call the Newman routine that uses the energy to recover T

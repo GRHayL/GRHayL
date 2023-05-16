@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -177,43 +177,48 @@ int main(int argc, char **argv) {
 
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    initialize_diagnostics(&diagnostics);
-    metric_quantities metric;
+    grhayl_initialize_diagnostics(&diagnostics);
+    metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
     // Read initial data accompanying trusted output
-    initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
-                      gyy[i], gyz[i], gzz[i], betax[i],
-                      betay[i], betaz[i], &metric);
+    grhayl_initialize_metric(lapse[i],
+                      betax[i], betay[i], betaz[i],
+                      gxx[i], gxy[i], gxz[i],
+                      gyy[i], gyz[i], gzz[i],
+                      &ADM_metric);
 
-    initialize_primitives(
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+
+    grhayl_initialize_primitives(
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
                       poison, poison, poison,
                       &prims);
 
-    initialize_conservatives(rho_star[i], tau[i],
+    grhayl_initialize_conservatives(rho_star[i], tau[i],
                              S_x[i], S_y[i], S_z[i],
                              poison, poison, &cons);
 
     //This uses the Noble2D routine to compute primitives from conservatives.
-    undensitize_conservatives(&metric, &cons, &cons_undens);
-    guess_primitives(&eos, &metric, &cons, &prims);
-    const int check = Hybrid_Noble2D(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+    grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+    grhayl_guess_primitives(&eos, &ADM_metric, &metric_aux, &cons, &prims);
+    const int check = Hybrid_Noble2D(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if( check != c2p_check[i] )
       grhayl_error("Test Hybrid_Noble2D has different return value: %d vs %d\n", check, c2p_check[i]);
 
     primitive_quantities prims_trusted, prims_pert;
-    initialize_primitives(
+    grhayl_initialize_primitives(
                       rho_b_trusted[i], press_trusted[i], eps_trusted[i],
                       vx_trusted[i], vy_trusted[i], vz_trusted[i],
                       Bx_trusted[i], By_trusted[i], Bz_trusted[i],
                       poison, poison, poison,
                       &prims_trusted);
 
-    initialize_primitives(
+    grhayl_initialize_primitives(
                       rho_b_pert[i], press_pert[i], eps_pert[i],
                       vx_pert[i], vy_pert[i], vz_pert[i],
                       Bx_pert[i], By_pert[i], Bz_pert[i],
@@ -249,26 +254,26 @@ int main(int argc, char **argv) {
                                                relative_error(prims_trusted.eps, prims.eps),
                                                relative_error(prims_trusted.eps, prims_pert.eps));
 
-    if( validate(prims_trusted.vx, prims.vx, prims_pert.vx) )
+    if( validate(prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0]) )
       grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vx.\n"
                    "  vx trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vx, prims.vx, prims_pert.vx,
-                                               relative_error(prims_trusted.vx, prims.vx),
-                                               relative_error(prims_trusted.vx, prims_pert.vx));
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0],
+                                               relative_error(prims_trusted.vU[0], prims.vU[0]),
+                                               relative_error(prims_trusted.vU[0], prims_pert.vU[0]));
 
-    if(validate(prims_trusted.vy, prims.vy, prims_pert.vy))
+    if(validate(prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1]))
       grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vy.\n"
                    "  vy trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vy, prims.vy, prims_pert.vy,
-                                               relative_error(prims_trusted.vy, prims.vy),
-                                               relative_error(prims_trusted.vy, prims_pert.vy));
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1],
+                                               relative_error(prims_trusted.vU[1], prims.vU[1]),
+                                               relative_error(prims_trusted.vU[1], prims_pert.vU[1]));
 
-    if( validate(prims_trusted.vz, prims.vz, prims_pert.vz) )
+    if( validate(prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2]) )
       grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vz.\n"
                    "  vz trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vz, prims.vz, prims_pert.vz,
-                                               relative_error(prims_trusted.vz, prims.vz),
-                                               relative_error(prims_trusted.vz, prims_pert.vz));
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2],
+                                               relative_error(prims_trusted.vU[2], prims.vU[2]),
+                                               relative_error(prims_trusted.vU[2], prims_pert.vU[2]));
   }
   grhayl_info("Hybrid_Noble2D function test has passed!\n");
   free(lapse);

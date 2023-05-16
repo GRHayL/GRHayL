@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : limit_utilde_and_compute_v()
+/* Function    : grhayl_limit_utilde_and_compute_v()
  * Description : Applies speed limit to \tilde{u}^i and computes v^i and u^0
  *
  * Inputs      : eos            - eos_parameters struct with data for the
@@ -22,47 +22,32 @@
 
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
-void limit_utilde_and_compute_v(
+void grhayl_limit_utilde_and_compute_v(
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
-      double *restrict utcon1_ptr,
-      double *restrict utcon2_ptr,
-      double *restrict utcon3_ptr,
+      const metric_quantities *restrict ADM_metric,
+      double utU[3],
       primitive_quantities *restrict prims,
       int *restrict speed_limit) {
 
-  double utcon1 = *utcon1_ptr;
-  double utcon2 = *utcon2_ptr;
-  double utcon3 = *utcon3_ptr;
-
   //Velocity limiter:
-  double gijuiuj = metric->adm_gxx*SQR(utcon1 ) +
-    2.0*metric->adm_gxy*utcon1*utcon2 + 2.0*metric->adm_gxz*utcon1*utcon3 +
-    metric->adm_gyy*SQR(utcon2) + 2.0*metric->adm_gyz*utcon2*utcon3 +
-    metric->adm_gzz*SQR(utcon3);
-  double au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
-  prims->u0 = (au0m1+1.0)*metric->lapseinv;
+  double ut2 = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU);
+  double au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
 
   (*speed_limit) = 0;
   // *** Limit velocity
   if (au0m1 > 0.9999999*(eos->W_max-1.0)) {
     double fac = sqrt((SQR(eos->W_max)-1.0)/(SQR(1.0+au0m1) - 1.0));
-    utcon1 *= fac;
-    utcon2 *= fac;
-    utcon3 *= fac;
-    gijuiuj = gijuiuj * SQR(fac);
-    au0m1 = gijuiuj/( 1.0+sqrt(1.0+gijuiuj) );
-    // Reset rho_b and u0
-    prims->u0 = (au0m1+1.0)*metric->lapseinv;
+    utU[0] *= fac;
+    utU[1] *= fac;
+    utU[2] *= fac;
+    ut2 = ut2 * SQR(fac);
+    au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
     (*speed_limit) = 1;
   } //Finished limiting velocity
 
-  *utcon1_ptr = utcon1;
-  *utcon2_ptr = utcon2;
-  *utcon3_ptr = utcon3;
-
-  // Calculate v^i from \tilde{u}^i
-  prims->vx = utcon1/prims->u0 - metric->betax;
-  prims->vy = utcon2/prims->u0 - metric->betay;
-  prims->vz = utcon3/prims->u0 - metric->betaz;
+  // Calculate v^i and u^0 from \tilde{u}^i
+  prims->u0 = (au0m1+1.0)*ADM_metric->lapseinv;
+  prims->vU[0] = utU[0]/prims->u0 - ADM_metric->betaU[0];
+  prims->vU[1] = utU[1]/prims->u0 - ADM_metric->betaU[1];
+  prims->vU[2] = utU[2]/prims->u0 - ADM_metric->betaU[2];
 }

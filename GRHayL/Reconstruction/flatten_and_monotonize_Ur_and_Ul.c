@@ -1,6 +1,11 @@
 #include "reconstruction.h"
 
-void flatten_and_monotonize_Ur_and_Ul(const double U, const double ftilde, double *restrict Ur, double *restrict Ul) {
+void grhayl_flatten_and_monotonize_Ur_and_Ul(
+      const double U,
+      const double ftilde,
+      double *restrict Ur,
+      double *restrict Ul) {
+
   // First detect shocks / steep gradients:
   *Ur = U*ftilde + (*Ur)*(1.0 - ftilde);
   *Ul = U*ftilde + (*Ul)*(1.0 - ftilde);

@@ -195,18 +195,18 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 
     else:
 
-        prestring += "const double beta_faceU0 = metric_face->betax;\n"
-        prestring += "const double beta_faceU1 = metric_face->betay;\n"
-        prestring += "const double beta_faceU2 = metric_face->betaz;\n"
+        prestring += "const double beta_faceU0 = metric_face->betaU[0];\n"
+        prestring += "const double beta_faceU1 = metric_face->betaU[1];\n"
+        prestring += "const double beta_faceU2 = metric_face->betaU[2];\n"
 
-        prestring += "const double gamma_faceDD00 = metric_face->adm_gxx;\n"
-        prestring += "const double gamma_faceDD01 = metric_face->adm_gxy;\n"
-        prestring += "const double gamma_faceDD02 = metric_face->adm_gxz;\n"
+        prestring += "const double gamma_faceDD00 = metric_face->gammaDD[0][0];\n"
+        prestring += "const double gamma_faceDD01 = metric_face->gammaDD[0][1];\n"
+        prestring += "const double gamma_faceDD02 = metric_face->gammaDD[0][2];\n"
 
-        prestring += "const double gamma_faceDD11 = metric_face->adm_gyy;\n"
-        prestring += "const double gamma_faceDD12 = metric_face->adm_gyz;\n"
+        prestring += "const double gamma_faceDD11 = metric_face->gammaDD[1][1];\n"
+        prestring += "const double gamma_faceDD12 = metric_face->gammaDD[1][2];\n"
 
-        prestring += "const double gamma_faceDD22 = metric_face->adm_gzz;\n"
+        prestring += "const double gamma_faceDD22 = metric_face->gammaDD[2][2];\n"
 
     #     for i in range(3):
     #             betaU_var = beta_faceU[i]

@@ -33,14 +33,14 @@ int Tabulated_Palenzuela1D(
             double *restrict W_ptr ),
       const GRHayL_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
-  double SD[3] = {cons_undens->S_x, cons_undens->S_y, cons_undens->S_z};
-  double S_squared = compute_vec2_from_vcov(metric, SD);
+  double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
+  double S_squared = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
@@ -52,18 +52,18 @@ int Tabulated_Palenzuela1D(
       SD[i] *= rescale_factor;
 
     // Step 2.3: Recompute S^{2}
-    S_squared = compute_vec2_from_vcov(metric, SD);
+    S_squared = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
   }
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
-  const double BU[3] = {prims->Bx * ONE_OVER_SQRT_4PI,
-                        prims->By * ONE_OVER_SQRT_4PI,
-                        prims->Bz * ONE_OVER_SQRT_4PI};
-  const double B_squared = compute_vec2_from_vcon(metric, BU);
+  const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
+                           prims->BU[1] * ONE_OVER_SQRT_4PI,
+                           prims->BU[2] * ONE_OVER_SQRT_4PI};
+  const double B_squared = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   double BdotS = 0.0;
-  for(int i=0;i<3;i++) BdotS += BU[i]*SD[i];
+  for(int i=0;i<3;i++) BdotS += BbarU[i]*SD[i];
 
   // Step 5: Set specific quantities for this routine (Eq. A7 of [1])
   fparams_struct fparams;
@@ -112,7 +112,7 @@ int Tabulated_Palenzuela1D(
   //          tilde(u)^{i} := W v^{i},
   // Step 10.a: Compute S^{i}
   double SU[3];
-  raise_vector_3D(metric, SD, SU);
+  grhayl_raise_vector_3D(ADM_metric->gammaUU, SD, SU);
 
   // Step 10.b: Set Z
   const double Z = x*rho*W;
@@ -123,9 +123,9 @@ int Tabulated_Palenzuela1D(
   prims->temperature = T;
   prims->press       = P;
   prims->eps         = eps;
-  prims->vx          = W*(SU[0] + BdotS*BU[0]/Z)/(Z+B_squared);
-  prims->vy          = W*(SU[1] + BdotS*BU[1]/Z)/(Z+B_squared);
-  prims->vz          = W*(SU[2] + BdotS*BU[2]/Z)/(Z+B_squared);
+  prims->vU[0]          = W*(SU[0] + BdotS*BbarU[0]/Z)/(Z+B_squared);
+  prims->vU[1]          = W*(SU[1] + BdotS*BbarU[1]/Z)/(Z+B_squared);
+  prims->vU[2]          = W*(SU[2] + BdotS*BbarU[2]/Z)/(Z+B_squared);
 
   return grhayl_success;
 }

@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : enforce_primitive_limits_and_compute_u0()
+/* Function    : grhayl_enforce_primitive_limits_and_compute_u0()
  * Description : Applies limits to rho_b, pressure, and v^i, then
                  recomputes epsilon and (if needed) entropy
 
@@ -18,10 +18,11 @@
  *
  */
 
-void enforce_primitive_limits_and_compute_u0(
+void grhayl_enforce_primitive_limits_and_compute_u0(
     const GRHayL_parameters *restrict params,
     const eos_parameters *restrict eos,
-    const metric_quantities *restrict metric,
+    const metric_quantities *restrict ADM_metric,
+    const ADM_aux_quantities *restrict metric_aux,
     primitive_quantities *restrict prims,
     int *restrict speed_limited) {
 
@@ -39,12 +40,12 @@ void enforce_primitive_limits_and_compute_u0(
     // Set P_min and P_max
     const double P_min = 0.9*P_cold;
     // Adjust P_max based on Psi6
-    const double P_max = (metric->psi6 > params->psi6threshold) ? 1e5*P_cold : 100.0*P_cold;
+    const double P_max = (metric_aux->psi6 > params->psi6threshold) ? 1e5*P_cold : 100.0*P_cold;
 
     // Now apply floors and ceilings to P
     if(prims->press<P_min) prims->press = P_min;
     // Finally, perform the last check
-    if((prims->rho < 100.0*eos->rho_atm || metric->psi6 > params->psi6threshold) && prims->press>P_max) {
+    if((prims->rho < 100.0*eos->rho_atm || metric_aux->psi6 > params->psi6threshold) && prims->press>P_max) {
       prims->press = P_max;
     }
     // Now recompute eps and, if needed, entropy
@@ -66,5 +67,5 @@ void enforce_primitive_limits_and_compute_u0(
   }
 
   // Finally, apply speed limit to v and compute u^0
-  limit_v_and_compute_u0(eos, metric, prims, speed_limited);
+  grhayl_limit_v_and_compute_u0(eos, ADM_metric, prims, speed_limited);
 }

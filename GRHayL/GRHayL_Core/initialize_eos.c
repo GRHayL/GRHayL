@@ -9,13 +9,13 @@
   eos->rho_max           = rho_max;
 
 /*
- * Function    : initialize_eos_functions()
+ * Function    : grhayl_initialize_eos_functions()
  * Description : Initializes function pointers in EOS struct to NRPyEOS
  *
  * Input/Output: eos - eos_parameters struct with the function pointers
  *                     initialized
  */
-void initialize_eos_functions(
+void grhayl_initialize_eos_functions(
       grhayl_eos_t const eos_type,
       eos_parameters *restrict eos) {
 
@@ -35,7 +35,7 @@ void initialize_eos_functions(
 }
 
 /*
- * Function    : initialize_hybrid_eos()
+ * Function    : grhayl_initialize_hybrid_eos()
  * Description : Initializes EOS struct elements for a hybrid EOS
  *
  * Inputs      : W_max          - Maximum allowed Lorentz factor
@@ -54,7 +54,7 @@ void initialize_eos_functions(
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
  */
-void initialize_hybrid_eos(
+void grhayl_initialize_hybrid_eos(
       const double W_max,
       const double rho_atm,
       double rho_min,
@@ -128,7 +128,7 @@ void initialize_hybrid_eos(
 }
 
 /*
- * Function    : initialize_tabulated_eos()
+ * Function    : grhayl_initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
  *
  * Inputs      : W_max          - maximum allowed Lorentz factor
@@ -145,7 +145,7 @@ void initialize_hybrid_eos(
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
  */
-void initialize_tabulated_eos(
+void grhayl_initialize_tabulated_eos(
       const char *table_filepath,
       const double W_max,
       const double rho_atm,
@@ -229,7 +229,7 @@ void initialize_tabulated_eos(
 }
 
 /*
- * Function    : initialize_hybrid_eos_functions_and_params()
+ * Function    : grhayl_initialize_hybrid_eos_functions_and_params()
  * Description : Fully initializes EOS struct elements for a hybrid EOS
  *
  * Inputs      : W_max          - Maximum allowed Lorentz factor
@@ -248,7 +248,7 @@ void initialize_tabulated_eos(
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
  */
-void initialize_hybrid_eos_functions_and_params(
+void grhayl_initialize_hybrid_eos_functions_and_params(
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -261,15 +261,15 @@ void initialize_hybrid_eos_functions_and_params(
       eos_parameters *restrict eos ) {
 
   // Step 1: Initialize Hybrid EOS functions
-  initialize_eos_functions(grhayl_eos_hybrid, eos);
+  grhayl_initialize_eos_functions(grhayl_eos_hybrid, eos);
 
   // Step 2: Initialize Hybrid EOS parameters
-  initialize_hybrid_eos(W_max, rho_atm, rho_min, rho_max,
+  grhayl_initialize_hybrid_eos(W_max, rho_atm, rho_min, rho_max,
                         neos, rho_ppoly, Gamma_ppoly,
                         K_ppoly0, Gamma_th, eos);
 }
 
-/* Function    : initialize_tabulated_eos()
+/* Function    : grhayl_initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
  *
  * Inputs      : W_max          - maximum allowed Lorentz factor
@@ -286,7 +286,7 @@ void initialize_hybrid_eos_functions_and_params(
  * Outputs     : eos            - eos_parameters struct with the above inputs
  *                                initialized
  */
-void initialize_tabulated_eos_functions_and_params(
+void grhayl_initialize_tabulated_eos_functions_and_params(
       const char *table_filepath,
       const double W_max,
       const double rho_atm,
@@ -303,10 +303,10 @@ void initialize_tabulated_eos_functions_and_params(
   eos->eos_type = grhayl_eos_tabulated;
 
   // Step 1: Initialize Tabulated EOS functions
-  initialize_eos_functions(grhayl_eos_tabulated, eos);
+  grhayl_initialize_eos_functions(grhayl_eos_tabulated, eos);
 
   // Step 2: Initialize Tabulated EOS parameters
-  initialize_tabulated_eos(table_filepath, W_max,
+  grhayl_initialize_tabulated_eos(table_filepath, W_max,
                            rho_atm, rho_min, rho_max,
                            Ye_atm, Ye_min, Ye_max,
                            T_atm, T_min, T_max,

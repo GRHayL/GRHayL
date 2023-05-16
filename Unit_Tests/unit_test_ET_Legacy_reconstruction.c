@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   const double Gamma_th = 2.0;
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              poison, poison, poison,
                                              neos, rho_ppoly_in, Gamma_ppoly_in,
                                              k_ppoly0, Gamma_th, &eos);
@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
           }
           const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
 
-          simple_ppm(rho_stencil, press_stencil, var_data,
+          grhayl_simple_ppm(rho_stencil, press_stencil, var_data,
                      num_vars, v_flux_dir, Gamma_eff,
                      &rhor, &rhol, &pressr, &pressl,
                      var_datar, var_datal);
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
             var_data[1][ind]   = vz[stencil];
           }
           const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
-          simple_ppm_no_rho_P(press_stencil, var_data,
+          grhayl_simple_ppm_no_rho_P(press_stencil, var_data,
                      num_vars2, v_flux_dir, Gamma_eff,
                      var_datar, var_datal);
 

@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : return_primitives()
+/* Function    : grhayl_return_primitives()
  * Description : unpacks primitives struct into variables
  *
  * Inputs      : cons            - primitive_quantities struct to be unpacked
@@ -19,7 +19,7 @@
  *             : temp           - pointer to temperature (for tabulated EOS)
  */
 
-void return_primitives(const primitive_quantities *restrict prims,
+void grhayl_return_primitives(const primitive_quantities *restrict prims,
                       double *restrict rho, double *restrict press, double *restrict epsilon,
                       double *restrict vx, double *restrict vy, double *restrict vz,
                       double *restrict Bx, double *restrict By, double *restrict Bz,
@@ -28,12 +28,12 @@ void return_primitives(const primitive_quantities *restrict prims,
   *rho         = prims->rho;
   *press       = prims->press;
   *epsilon     = prims->eps;
-  *vx          = prims->vx;
-  *vy          = prims->vy;
-  *vz          = prims->vz;
-  *Bx          = prims->Bx;
-  *By          = prims->By;
-  *Bz          = prims->Bz;
+  *vx          = prims->vU[0];
+  *vy          = prims->vU[1];
+  *vz          = prims->vU[2];
+  *Bx          = prims->BU[0];
+  *By          = prims->BU[1];
+  *Bz          = prims->BU[2];
   *entropy     = prims->entropy;
   // Tabulated EOS quantities
   *Y_e         = prims->Y_e;

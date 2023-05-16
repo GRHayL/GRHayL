@@ -6,8 +6,12 @@
 #define ETA1   20.0
 #define ETA2    0.05
 #define EPSILON 0.01
-void steepen_rhor_rhol(const double rho[5], const double P[5], const double Gamma_eff,
-                              double *restrict rhor, double *restrict rhol) {
+void grhayl_steepen_rhor_rhol(
+      const double rho[5],
+      const double P[5],
+      const double Gamma_eff,
+      double *restrict rhor,
+      double *restrict rhol) {
 
   // Next compute centered differences d RHOB and d^2 RHOB
   const double d1rho_b     = 0.5*(rho[PLUS_1] - rho[MINUS1]);
@@ -25,8 +29,8 @@ void steepen_rhor_rhol(const double rho[5], const double P[5], const double Gamm
   if(contact_discontinuity_check >= 0.0 && second_deriv_check >= 0.0
      && relative_change_check >= 0.0) {
 
-    const double slope_limited_drho_m1 = slope_limit(rho[MINUS1] - rho[MINUS2], rho[PLUS_0] - rho[MINUS1]);
-    const double slope_limited_drho_p1 = slope_limit(rho[PLUS_1] - rho[PLUS_0], rho[PLUS_2] - rho[PLUS_1]);
+    const double slope_limited_drho_m1 = grhayl_slope_limit(rho[MINUS1] - rho[MINUS2], rho[PLUS_0] - rho[MINUS1]);
+    const double slope_limited_drho_p1 = grhayl_slope_limit(rho[PLUS_1] - rho[PLUS_0], rho[PLUS_2] - rho[PLUS_1]);
 
     double eta_tilde=0.0;
     if (fabs(d1rho_b) > 0.0) {

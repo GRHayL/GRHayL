@@ -115,25 +115,24 @@ double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 )
 
 return: i where
         i = 0 -> success
-            1 -> calculation of initial v^2 lead to numerical divergence 
-                 (occurrence of "nan" or "+/-inf");
-            2 -> initial v^2 < 0 with initial primitive guess;
-            3 -> Newton-Raphson solver did not converge to a solution with the
+            1 -> initial v^2 < 0 with initial primitive guess;
+            2 -> Newton-Raphson solver did not converge to a solution with the
                  given tolerances;
-            4 -> Newton-Raphson procedure encountered a numerical divergence
+            3 -> Newton-Raphson procedure encountered a numerical divergence
                  (occurrence of "nan" or "+/-inf");
-            5 -> Z<0 or Z>Z_TOO_BIG
-            6 -> v^2 < 0 returned by the Newton-Raphson solver;
-            7 -> rho <= 0 computed by returned quantities; note that this error code
+            4 -> Z<0 or Z>Z_TOO_BIG
+            5 -> v^2 < 0 returned by the Newton-Raphson solver;
+            6 -> rho <= 0 computed by returned quantities; note that this error code
                  is bypassed by the Cupp_fix parameter, known cases of this error
-                 are resolved by enforce_primitive_limits_and_compute_u0()
+                 are resolved by grhayl_enforce_primitive_limits_and_compute_u0()
 
 **********************************************************************************/
 
 int Hybrid_Noble2D(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
@@ -149,62 +148,49 @@ int Hybrid_Noble2D(
   int retval = 0;
 
   // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
-  const double Bup[3] = {prims->Bx * ONE_OVER_SQRT_4PI,
-                         prims->By * ONE_OVER_SQRT_4PI,
-                         prims->Bz * ONE_OVER_SQRT_4PI};
-  harm_aux.Bsq = compute_vec2_from_vcon(metric, Bup);
+  const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
+                           prims->BU[1] * ONE_OVER_SQRT_4PI,
+                           prims->BU[2] * ONE_OVER_SQRT_4PI};
+  harm_aux.Bsq = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
 
-  const double uu = - cons_undens->tau*metric->lapse
-                    - metric->lapse*cons_undens->rho
-                    + metric->betax*cons_undens->S_x
-                    + metric->betay*cons_undens->S_y
-                    + metric->betaz*cons_undens->S_z;
+  const double uu = - cons_undens->tau*ADM_metric->lapse
+                    - ADM_metric->lapse*cons_undens->rho
+                    + ADM_metric->betaU[0]*cons_undens->SD[0]
+                    + ADM_metric->betaU[1]*cons_undens->SD[1]
+                    + ADM_metric->betaU[2]*cons_undens->SD[2];
 
-  const double Qdn[4] = {uu,
-                         cons_undens->S_x,
-                         cons_undens->S_y,
-                         cons_undens->S_z};
+  const double QD[4] = {uu,
+                        cons_undens->SD[0],
+                        cons_undens->SD[1],
+                        cons_undens->SD[2]};
 
-  double Qup[4]; raise_vector_4D(metric, Qdn, Qup);
+  double QU[4]; grhayl_raise_vector_4D(metric_aux->g4UU, QD, QU);
   harm_aux.Qsq = 0.0;
-  for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
+  for(int i=0; i<4; i++) harm_aux.Qsq += QD[i]*QU[i] ;
 
   harm_aux.QdotB = 0. ;
-  for(int i=0; i<3; i++) harm_aux.QdotB += Qdn[i+1]*Bup[i];
+  for(int i=0; i<3; i++) harm_aux.QdotB += QD[i+1]*BbarU[i];
   harm_aux.QdotBsq = harm_aux.QdotB*harm_aux.QdotB;
 
   // n_{\mu}Q^{\mu} = -alpha Q^{0}, since n_{\mu} = (-alpha,0,0,0)
-  harm_aux.Qdotn = -metric->lapse*Qup[0];
+  harm_aux.Qdotn = -ADM_metric->lapse*QU[0];
 
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
 
   harm_aux.D    = cons_undens->rho;
 
-  // We can reduce this by using tmp_u to directly compute vsq; utilde isn't needed
-  const double tmp_u = metric->adm_gxx * SQR(prims->vx + metric->betax) +
-                                             2.0*metric->adm_gxy*(prims->vx + metric->betax)*(prims->vy + metric->betay) +
-                                             2.0*metric->adm_gxz*(prims->vx + metric->betax)*(prims->vz + metric->betaz) +
-                                             metric->adm_gyy * SQR(prims->vy + metric->betay) +
-                                             2.0*metric->adm_gyz*(prims->vy + metric->betay)*(prims->vz + metric->betaz) +
-                                             metric->adm_gzz * SQR(prims->vz + metric->betaz);
-
-  prims->u0 = 1.0/sqrt(1.0-tmp_u);
-
-  const double utilde[3] = {prims->u0*(prims->vx + metric->betax),
-                            prims->u0*(prims->vy + metric->betay),
-                            prims->u0*(prims->vz + metric->betaz)};
-
   /* calculate Z from last timestep and use for guess */
-  double vsq = 0.0;
-  for(int i=1; i<4; i++)
-    for(int j=1; j<4; j++) vsq += metric->g4dn[i][j]*utilde[i-1]*utilde[j-1];
+  const double utU_guess[3] = {prims->vU[0] + ADM_metric->betaU[0],
+                               prims->vU[1] + ADM_metric->betaU[1],
+                               prims->vU[2] + ADM_metric->betaU[2]};
+  const double tmp_u = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU_guess);
 
-  if( !isfinite(vsq)) {
-    return 1;
-  } else if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
+  double vsq = tmp_u/(1.0-tmp_u);
+
+  if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
     vsq = fabs(vsq);
   } else if(vsq < 0.0 || vsq > 10.0) {
-    return 2;
+    return 1;
   }
 
   const double Wsq = 1.0 + vsq;   // Lorentz factor squared
@@ -252,8 +238,7 @@ int Hybrid_Noble2D(
   if( retval != 0) {
     return(retval);
   } else if(Z <= 0. || Z > Z_TOO_BIG) {
-    retval = 5;
-    return(retval);
+    return 4;
   }
 
   // Calculate v^2:
@@ -261,7 +246,7 @@ int Hybrid_Noble2D(
     vsq = 1.-2.e-16;
   } else if(vsq < 0.0) {
     //v should be real!
-    return 6;
+    return 5;
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
@@ -279,31 +264,30 @@ int Hybrid_Noble2D(
   // these results, after all!
   // Also note that we have completely eliminated u, so that check doesn't exist any longer.
   if( !params->Cupp_Fix && prims->rho <= 0.0) {
-    // User may want to handle this case differently, e.g. do NOT return upon
-    // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-    return 7;
+    return 6;
   }
 
-  const double nup[4] = {metric->lapseinv,
-                        -metric->lapseinv*metric->betax,
-                        -metric->lapseinv*metric->betay,
-                        -metric->lapseinv*metric->betaz};
+  const double nU[4] = {ADM_metric->lapseinv,
+                       -ADM_metric->lapseinv*ADM_metric->betaU[0],
+                       -ADM_metric->lapseinv*ADM_metric->betaU[1],
+                       -ADM_metric->lapseinv*ADM_metric->betaU[2]};
 
   double Qtcon[4];
   const double g_o_ZBsq = harm_aux.W/(Z+harm_aux.Bsq);
   const double QdB_o_Z  = harm_aux.QdotB / Z;
 
-  for(int i=1; i<4; i++) Qtcon[i] = Qup[i] + nup[i] * harm_aux.Qdotn;
-  double utx = g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*Bup[0] ) ;
-  double uty = g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*Bup[1] ) ;
-  double utz = g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*Bup[2] ) ;
+  for(int i=1; i<4; i++) Qtcon[i] = QU[i] + nU[i] * harm_aux.Qdotn;
+
+  double utU[3] = {g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*BbarU[0] ),
+                   g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*BbarU[1] ),
+                   g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*BbarU[2] )};
 
   //Additional tabulated code here
 
-  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims, &diagnostics->speed_limited);
+  grhayl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
 
   if(diagnostics->speed_limited==1)
-    prims->rho = cons_undens->rho/(metric->lapse*prims->u0);
+    prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
     prims->press = pressure_rho0_w(eos, prims->rho, w);

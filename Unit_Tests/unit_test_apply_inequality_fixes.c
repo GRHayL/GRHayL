@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -155,47 +155,52 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    initialize_diagnostics(&diagnostics);
-    metric_quantities metric;
+    grhayl_initialize_diagnostics(&diagnostics);
+    metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons;
 
     // Read initial data accompanying trusted output
-    initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
-                      gyy[i], gyz[i], gzz[i], betax[i],
-                      betay[i], betaz[i], &metric);
+    grhayl_initialize_metric(lapse[i],
+                      betax[i], betay[i], betaz[i],
+                      gxx[i], gxy[i], gxz[i],
+                      gyy[i], gyz[i], gzz[i],
+                      &ADM_metric);
 
-    initialize_primitives(
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+
+    grhayl_initialize_primitives(
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
                       poison, poison, poison,
                       &prims);
 
-    initialize_conservatives(rho_star[i], tau[i],
+    grhayl_initialize_conservatives(rho_star[i], tau[i],
                              S_x[i], S_y[i], S_z[i],
                              poison, poison, &cons);
 
     //This applies inequality fixes on the conservatives
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = 0.0;
-    apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+    grhayl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = Psi6threshold;
 
     conservative_quantities cons_trusted, cons_pert;
-    initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
+    grhayl_initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
                              S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
                              poison, poison, &cons_trusted);
 
-    initialize_conservatives(rho_star_pert[i], tau_pert[i],
+    grhayl_initialize_conservatives(rho_star_pert[i], tau_pert[i],
                              S_x_pert[i], S_y_pert[i], S_z_pert[i],
                              poison, poison, &cons_pert);
 
 
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
   }
-  grhayl_info("apply_inequality_fixes function test has passed!\n");
+  grhayl_info("grhayl_apply_inequality_fixes function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

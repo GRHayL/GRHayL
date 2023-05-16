@@ -3,7 +3,10 @@
 //Eq. 60 in JOURNAL OF COMPUTATIONAL PHYSICS 123, 1-14 (1996)
 //   [note the factor of 2 missing in the |a_{j+1} - a_{j}| term].
 //   Recall that dU = U_{i} - U_{i-1}.
-double slope_limit(const double dU, const double dUp1) {
+double grhayl_slope_limit(
+      const double dU,
+      const double dUp1) {
+
   // Set SLOPE_LIMITER_COEFF = 2.0 for MC, 1 for minmod
 #define SLOPE_LIMITER_COEFF 2.0
 

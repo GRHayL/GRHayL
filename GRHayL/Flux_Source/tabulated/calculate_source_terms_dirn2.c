@@ -2,7 +2,7 @@
 /*
  * Add source term for 2-component of Stilde and tau_tilde
  */
-void calculate_source_terms_dirn2(const primitive_quantities *restrict prims, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric, const metric_derivatives *restrict metric_derivs, conservative_quantities *restrict cons) {
+void calculate_source_terms_dirn2(const primitive_quantities *restrict prims, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric, const metric_quantities *restrict metric_derivs, conservative_quantities *restrict cons) {
 
 {
 
@@ -10,34 +10,34 @@ double h, cs2;
 
 eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 const double u4U0 = prims->u0;
-const double u4U1 = prims->vx*u4U0;
-const double u4U2 = prims->vy*u4U0;
-const double u4U3 = prims->vz*u4U0;
-const double BU0 = prims->Bx;
-const double BU1 = prims->By;
-const double BU2 = prims->Bz;
+const double u4U1 = prims->vU[0]*u4U0;
+const double u4U2 = prims->vU[1]*u4U0;
+const double u4U3 = prims->vU[2]*u4U0;
+const double BU0 = prims->BU[0];
+const double BU1 = prims->BU[1];
+const double BU2 = prims->BU[2];
 const double P = prims->press;
 const double rhob = prims->rho;
 const double alpha = metric->lapse;
-const double betaU0 = metric->betax;
-const double betaU1 = metric->betay;
-const double betaU2 = metric->betaz;
-const double gammaDD00 = metric->adm_gxx;
-const double gammaDD01 = metric->adm_gxy;
-const double gammaDD02 = metric->adm_gxz;
-const double gammaDD11 = metric->adm_gyy;
-const double gammaDD12 = metric->adm_gyz;
-const double gammaDD22 = metric->adm_gzz;
-const double alpha_dD2 = metric_derivs->lapse[2];
-const double betaU_dD02 = metric_derivs->betax[2];
-const double betaU_dD12 = metric_derivs->betay[2];
-const double betaU_dD22 = metric_derivs->betaz[2];
-const double gammaDD_dD002 = metric_derivs->adm_gxx[2];
-const double gammaDD_dD012 = metric_derivs->adm_gxy[2];
-const double gammaDD_dD022 = metric_derivs->adm_gxz[2];
-const double gammaDD_dD112 = metric_derivs->adm_gyy[2];
-const double gammaDD_dD122 = metric_derivs->adm_gyz[2];
-const double gammaDD_dD222 = metric_derivs->adm_gzz[2];
+const double betaU0 = metric->betaU[0];
+const double betaU1 = metric->betaU[1];
+const double betaU2 = metric->betaU[2];
+const double gammaDD00 = metric->gammaDD[0][0];
+const double gammaDD01 = metric->gammaDD[0][1];
+const double gammaDD02 = metric->gammaDD[0][2];
+const double gammaDD11 = metric->gammaDD[1][1];
+const double gammaDD12 = metric->gammaDD[1][2];
+const double gammaDD22 = metric->gammaDD[2][2];
+const double alpha_dD2 = metric_derivs[2].lapse;
+const double betaU_dD02 = metric_derivs[2].betaU[0];
+const double betaU_dD12 = metric_derivs[2].betaU[1];
+const double betaU_dD22 = metric_derivs[2].betaU[2];
+const double gammaDD_dD002 = metric_derivs[2].gammaDD[0][0];
+const double gammaDD_dD012 = metric_derivs[2].gammaDD[0][1];
+const double gammaDD_dD022 = metric_derivs[2].gammaDD[0][2];
+const double gammaDD_dD112 = metric_derivs[2].gammaDD[1][1];
+const double gammaDD_dD122 = metric_derivs[2].gammaDD[1][2];
+const double gammaDD_dD222 = metric_derivs[2].gammaDD[2][2];
   const double _Integer_2 = 2.0;
   const double _Rational_1_2 = 1.0/2.0;
   const double tmp_0 = betaU0*gammaDD_dD002 + betaU1*gammaDD_dD012 + betaU2*gammaDD_dD022 + betaU_dD02*gammaDD00 + betaU_dD12*gammaDD01 + betaU_dD22*gammaDD02;
@@ -73,7 +73,7 @@ const double gammaDD_dD222 = metric_derivs->adm_gzz[2];
   const double tmp_40 = betaU2*tmp_28 - tmp_16*tmp_9 + tmp_29*u4U0*u4U3;
   const double tmp_42 = (1.0/(tmp_34));
   const double tmp_43 = -tmp_18 - tmp_28 + tmp_29*((u4U0)*(u4U0));
-  cons->S_z = _Rational_1_2*(gammaDD_dD002*tmp_36*(-tmp_13 + tmp_27*(-((betaU0)*(betaU0))*tmp_7 + tmp_42*(gammaDD11*gammaDD22 - ((gammaDD12)*(gammaDD12)))) + tmp_29*((u4U1)*(u4U1))) + gammaDD_dD112*tmp_36*(-tmp_15 + tmp_27*(-((betaU1)*(betaU1))*tmp_7 + tmp_42*(gammaDD00*gammaDD22 - ((gammaDD02)*(gammaDD02)))) + tmp_29*((u4U2)*(u4U2))) + gammaDD_dD222*tmp_36*(-tmp_17 + tmp_27*(-((betaU2)*(betaU2))*tmp_7 + tmp_42*(gammaDD00*gammaDD11 - ((gammaDD01)*(gammaDD01)))) + tmp_29*((u4U3)*(u4U3))) + tmp_36*tmp_43*(-_Integer_2*alpha*alpha_dD2 + betaU0*tmp_0 + betaU1*tmp_37 + betaU2*tmp_39 + betaU_dD02*tmp_1 + betaU_dD12*tmp_2 + betaU_dD22*tmp_3)) + gammaDD_dD012*tmp_36*(-tmp_21 + tmp_27*(-betaU0*betaU1*tmp_7 + tmp_42*(-gammaDD01*gammaDD22 + gammaDD02*gammaDD12)) + tmp_30*u4U2) + gammaDD_dD022*tmp_36*(-tmp_22 + tmp_27*(-betaU0*betaU2*tmp_7 + tmp_42*(gammaDD01*gammaDD12 - gammaDD02*gammaDD11)) + tmp_30*u4U3) + gammaDD_dD122*tmp_36*(-tmp_23 + tmp_27*(-betaU1*betaU2*tmp_7 + tmp_42*(-gammaDD00*gammaDD12 + gammaDD01*gammaDD02)) + tmp_29*u4U2*u4U3) + tmp_0*tmp_36*(betaU0*tmp_28 + tmp_30*u4U0 - tmp_5*tmp_9) + tmp_36*tmp_37*(betaU1*tmp_28 - tmp_14*tmp_9 + tmp_29*u4U0*u4U2) + tmp_36*tmp_39*tmp_40;
+  cons->SD[2] = _Rational_1_2*(gammaDD_dD002*tmp_36*(-tmp_13 + tmp_27*(-((betaU0)*(betaU0))*tmp_7 + tmp_42*(gammaDD11*gammaDD22 - ((gammaDD12)*(gammaDD12)))) + tmp_29*((u4U1)*(u4U1))) + gammaDD_dD112*tmp_36*(-tmp_15 + tmp_27*(-((betaU1)*(betaU1))*tmp_7 + tmp_42*(gammaDD00*gammaDD22 - ((gammaDD02)*(gammaDD02)))) + tmp_29*((u4U2)*(u4U2))) + gammaDD_dD222*tmp_36*(-tmp_17 + tmp_27*(-((betaU2)*(betaU2))*tmp_7 + tmp_42*(gammaDD00*gammaDD11 - ((gammaDD01)*(gammaDD01)))) + tmp_29*((u4U3)*(u4U3))) + tmp_36*tmp_43*(-_Integer_2*alpha*alpha_dD2 + betaU0*tmp_0 + betaU1*tmp_37 + betaU2*tmp_39 + betaU_dD02*tmp_1 + betaU_dD12*tmp_2 + betaU_dD22*tmp_3)) + gammaDD_dD012*tmp_36*(-tmp_21 + tmp_27*(-betaU0*betaU1*tmp_7 + tmp_42*(-gammaDD01*gammaDD22 + gammaDD02*gammaDD12)) + tmp_30*u4U2) + gammaDD_dD022*tmp_36*(-tmp_22 + tmp_27*(-betaU0*betaU2*tmp_7 + tmp_42*(gammaDD01*gammaDD12 - gammaDD02*gammaDD11)) + tmp_30*u4U3) + gammaDD_dD122*tmp_36*(-tmp_23 + tmp_27*(-betaU1*betaU2*tmp_7 + tmp_42*(-gammaDD00*gammaDD12 + gammaDD01*gammaDD02)) + tmp_29*u4U2*u4U3) + tmp_0*tmp_36*(betaU0*tmp_28 + tmp_30*u4U0 - tmp_5*tmp_9) + tmp_36*tmp_37*(betaU1*tmp_28 - tmp_14*tmp_9 + tmp_29*u4U0*u4U2) + tmp_36*tmp_39*tmp_40;
   cons->tau = alpha*alpha_dD2*tmp_35*(-betaU2*tmp_43 - tmp_40);
 }
 }

@@ -91,17 +91,12 @@ void grhayl_initialize_params(
  --Y_e: the electron fraction Y_e
 
  --temp: the temperature T
-
- --u: this is the energy variable needed by HARM-type routines. It is currently not
-   possible to set this via the initialize_primitives function, as most code do not
-   have this. A guess is automatically generated for this quantity from the other
-   values.
 */
 
 typedef struct primitive_quantities {
   double rho, press, eps;
-  double u0, vx, vy, vz;
-  double Bx, By, Bz;
+  double u0, vU[3];
+  double BU[3];
   double Y_e, temperature, entropy;
 } primitive_quantities;
 
@@ -410,11 +405,11 @@ typedef struct eos_parameters {
 extern "C" {
 #endif
 
-void initialize_eos_functions(
+void grhayl_initialize_eos_functions(
     grhayl_eos_t const eos_type,
     eos_parameters *restrict eos );
 
-void initialize_hybrid_eos(
+void grhayl_initialize_hybrid_eos(
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -426,7 +421,7 @@ void initialize_hybrid_eos(
       const double Gamma_th,
       eos_parameters *restrict eos );
 
-void initialize_tabulated_eos(
+void grhayl_initialize_tabulated_eos(
       const char *table_path,
       const double W_max,
       const double rho_atm,
@@ -440,7 +435,7 @@ void initialize_tabulated_eos(
       const double T_max,
       eos_parameters *restrict eos );
 
-void initialize_hybrid_eos_functions_and_params(
+void grhayl_initialize_hybrid_eos_functions_and_params(
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -452,7 +447,7 @@ void initialize_hybrid_eos_functions_and_params(
       const double Gamma_th,
       eos_parameters *restrict eos );
 
-void initialize_tabulated_eos_functions_and_params(
+void grhayl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
       const double W_max,
       const double rho_atm,
@@ -492,7 +487,7 @@ void initialize_tabulated_eos_functions_and_params(
 
 typedef struct conservative_quantities {
   double rho, tau, Y_e;
-  double S_x, S_y, S_z;
+  double SD[3];
   double entropy;
 } conservative_quantities;
 
@@ -500,27 +495,27 @@ typedef struct conservative_quantities {
 extern "C" {
 #endif
 
-void initialize_primitives(
+void grhayl_initialize_primitives(
       const double rho, const double press, const double epsilon,
       const double vx, const double vy, const double vz,
       const double Bx, const double By, const double Bz,
       const double entropy, const double Y_e, const double temp,
       primitive_quantities *restrict prims);
 
-void initialize_conservatives(
+void grhayl_initialize_conservatives(
       const double rho, const double tau,
       const double S_x, const double S_y, const double S_z,
       const double Y_e, const double entropy,
       conservative_quantities *restrict cons);
 
-void return_primitives(
+void grhayl_return_primitives(
       const primitive_quantities *restrict prims,
       double *restrict rho, double *restrict press, double *restrict epsilon,
       double *restrict vx, double *restrict vy, double *restrict vz,
       double *restrict Bx, double *restrict By, double *restrict Bz,
       double *restrict entropy, double *restrict Y_e, double *restrict temp);
 
-void return_conservatives(
+void grhayl_return_conservatives(
       const conservative_quantities *restrict cons,
       double *restrict rho, double *restrict tau,
       double *restrict S_x, double *restrict S_y, double *restrict S_z,
@@ -542,25 +537,26 @@ void return_conservatives(
  --bssn_psi: TODO
 
  --bssn_gij: the BSSN conformal metric g_{i j}. These variables are set via the
-   initialize_metric function.
+   grhayl_initialize_metric function.
 
  --betai: the shift vector (beta^x, beta^y, beta^z) from the 3+1
-   decomposition. These variables are set via the initialize_metric function.
+   decomposition. These variables are set via the grhayl_initialize_metric function.
 
  --lapse: the lapse from the 3+1 decomposition. These variables are set via the
-   initialize_metric function.
+   grhayl_initialize_metric function.
 
-   All of the following varibles are calculated from the previous quantities in the initialize_metric
+   All of the following varibles are calculated from the previous quantities in the grhayl_initialize_metric
    function.
 
- --bssn_gupij: the BSSN conformal metric inverse g^{i j}. They are calculated from
-   the bssn_gij variables using the relations
-     gupxx =   ( gyy * gzz - gyz * gyz );
-     gupxy = - ( gxy * gzz - gyz * gxz );
-     gupxz =   ( gxy * gyz - gyy * gxz );
-     gupyy =   ( gxx * gzz - gxz * gxz );
-     gupyz = - ( gxx * gyz - gxy * gxz );
-     gupzz =   ( gxx * gyy - gxy * gxy );
+ --gij: the input metric g_{i j}
+
+ --gupij: the metric inverse g^{i j}. They are calculated from
+     gupxx =   ( gyy * gzz - gyz * gyz )/detgij;
+     gupxy = - ( gxy * gzz - gyz * gxz )/detgij;
+     gupxz =   ( gxy * gyz - gyy * gxz )/detgij;
+     gupyy =   ( gxx * gzz - gxz * gxz )/detgij;
+     gupyz = - ( gxx * gyz - gxy * gxz )/detgij;
+     gupzz =   ( gxx * gyy - gxy * gxy )/detgij;
 
  --lapseinv: this variable stores the inverse of the lapse.
 
@@ -576,138 +572,128 @@ void return_conservatives(
 
  --lapseinv2: this variables stores the quantity (lapse^(-2))
 
- --adm_gij: the ADM metric g_{i j} They are computed by the initialize_metric
-   function using the relation adm_gij = psi4*bssn_gij.
-
- --adm_gupij: the ADM metric inverse g^{i j}. They are computed by the
-   initialize_metric function using the relation adm_gupij = psi4inv*bssn_gupij.
-
- --g4dn: the 4-metric g_{\mu \nu}. This quantity is needed for computing T_{\mu \nu} and T^{\mu \nu}
+ --g4DD: the 4-metric g_{\mu \nu}. This quantity is needed for computing T_{\mu \nu} and T^{\mu \nu}
    and the HARM con2prim lowlevel functions.
 
- --g4up: the 4-metric inverse g^{\mu \nu}. This quantity is needed for computing T_{\mu \nu} and T^{\mu \nu}
+ --g4UU: the 4-metric inverse g^{\mu \nu}. This quantity is needed for computing T_{\mu \nu} and T^{\mu \nu}
    and the HARM con2prim lowlevel functions.
 */
 
 typedef struct metric_quantities {
-  double adm_gxx, adm_gxy, adm_gxz;
-  double adm_gyy, adm_gyz, adm_gzz;
-  double adm_gupxx, adm_gupxy, adm_gupxz;
-  double adm_gupyy, adm_gupyz, adm_gupzz;
-  double gijdet, phi;
-  double betax, betay, betaz;
-  double lapse, lapseinv;
-  double psi2, psi4, psi6;
-  double psi4inv, lapseinv2;
-  double g4dn[4][4],g4up[4][4];
+  double lapse, gijdet;
+  double betaU[3];
+  double gammaDD[3][3];
+  double gammaUU[3][3];
+  double lapseinv, lapseinv2;
 } metric_quantities;
 
-//TODO: add definitions of these structs
-typedef struct metric_derivatives {
-  double lapse[3];
-  double betax[3];
-  double betay[3];
-  double betaz[3];
-  double adm_gxx[3];
-  double adm_gxy[3];
-  double adm_gxz[3];
-  double adm_gyy[3];
-  double adm_gyz[3];
-  double adm_gzz[3];
-} metric_derivatives;
+typedef struct ADM_aux_quantities {
+  double phi;
+  double psi2, psi6;
+  double psi4, psi4inv;
+  double g4DD[4][4],g4UU[4][4];
+} ADM_aux_quantities;
 
 typedef struct extrinsic_curvature {
-  double Kxx, Kxy, Kxz;
-  double Kyy, Kyz, Kzz;
+  double K[3][3];
 } extrinsic_curvature;
 
 typedef struct stress_energy {
-  double Ttt, Ttx, Tty, Ttz;
-  double Txx, Txy, Txz;
-  double Tyy, Tyz, Tzz;
+  double T4[4][4];
 } stress_energy;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void initialize_metric(
+void grhayl_initialize_metric(
       const double lapse,
+      const double betax, const double betay, const double betaz,
       const double gxx, const double gxy, const double gxz,
       const double gyy, const double gyz, const double gzz,
-      const double betax, const double betay, const double betaz,
       metric_quantities *restrict metric);
 
-void GRHayL_enforce_detgtij_and_initialize_metric(
+void grhayl_compute_ADM_auxiliaries(
+      const metric_quantities *restrict ADM_metric,
+      ADM_aux_quantities *restrict metric_aux);
+
+void grhayl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
+      const double betax, const double betay, const double betaz,
       const double gxx, const double gxy, const double gxz,
       const double gyy, const double gyz, const double gzz,
-      const double betax, const double betay, const double betaz,
-      metric_quantities *restrict metric);
+      metric_quantities *restrict ADM_metric);
 
-void initialize_extrinsic_curvature(
+void grhayl_initialize_extrinsic_curvature(
       const double Kxx, const double Kxy, const double Kxz,
       const double Kyy, const double Kyz, const double Kzz,
       extrinsic_curvature *restrict curv);
 
-void initialize_stress_energy(
+void grhayl_initialize_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
       const double Txx, const double Txy, const double Txz,
       const double Tyy, const double Tyz, const double Tzz,
       stress_energy *restrict Tmunu);
 
-void return_stress_energy(
+void grhayl_return_stress_energy(
       const stress_energy *restrict Tmunu,
       double *restrict Ttt, double *restrict Ttx, double *restrict Tty,
       double *restrict Ttz, double *restrict Txx, double *restrict Txy,
       double *restrict Txz, double *restrict Tyy, double *restrict Tyz,
       double *restrict Tzz);
 
-void limit_v_and_compute_u0(
+void grhayl_limit_v_and_compute_u0(
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
       primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
-void raise_vector_4D(
-      const metric_quantities *restrict metric,
-      const double vcov[4],
-      double vcon[4]);
+void grhayl_raise_vector_4D(
+      const double g4UU[4][4],
+      const double vecD[4],
+      double vecU[4]);
 
-void raise_vector_3D(
-      const metric_quantities *restrict metric,
-      const double vcov[3],
-      double vcon[3]);
+void grhayl_raise_vector_3D(
+      const double gammaUU[3][3],
+      const double vecD[3],
+      double vecU[3]);
 
-void lower_vector(
-      const metric_quantities *restrict metric,
-      const double vcon[4],
-      double vcov[4]);
+void grhayl_lower_vector_4D(
+      const double g4DD[4][4],
+      const double vecU[4],
+      double vecD[4]);
 
-double compute_vec2_from_vcov(
-      const metric_quantities *restrict metric,
-      const double *restrict vcov);
+void grhayl_lower_vector_3D(
+      const double gammaDD[3][3],
+      const double vecU[3],
+      double vecD[3]);
 
-double compute_vec2_from_vcon(
-      const metric_quantities *restrict metric,
-      const double *restrict vcon);
+double grhayl_compute_vec2_from_vecD(
+      const double gammaUU[3][3],
+      const double *restrict vecD);
 
-void compute_TDNmunu(
-      const metric_quantities *restrict metric,
+double grhayl_compute_vec2_from_vecU(
+      const double gammaDD[3][3],
+      const double *restrict vecU);
+
+void grhayl_compute_TDNmunu(
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       stress_energy *restrict Tmunu);
 
-void compute_TUPmunu(
-      const metric_quantities *restrict metric,
+void grhayl_compute_TUPmunu(
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       stress_energy *restrict Tmunu);
 
-void compute_smallb_and_b2(
-      const metric_quantities *restrict metric,
+void grhayl_compute_smallb_and_b2(
+      const metric_quantities *restrict ADM_metric,
       const primitive_quantities *restrict prims,
       const double uDN[4],
-      double *restrict smallb,
+      double smallb[4],
       double *restrict smallb2);
 
 #ifdef __cplusplus

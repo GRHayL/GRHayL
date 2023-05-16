@@ -68,21 +68,21 @@ void calculate_source_terms_dirn0(
       const primitive_quantities *restrict prims,
       struct eos_parameters const *restrict eos,
       const metric_quantities *restrict metric,
-      const metric_derivatives *restrict metric_derivs,
+      const metric_quantities *restrict metric_derivs,
       conservative_quantities *restrict cons);
 
 void calculate_source_terms_dirn1(
       const primitive_quantities *restrict prims,
       struct eos_parameters const *restrict eos,
       const metric_quantities *restrict metric,
-      const metric_derivatives *restrict metric_derivs,
+      const metric_quantities *restrict metric_derivs,
       conservative_quantities *restrict cons);
 
 void calculate_source_terms_dirn2(
       const primitive_quantities *restrict prims,
       struct eos_parameters const *restrict eos,
       const metric_quantities *restrict metric,
-      const metric_derivatives *restrict metric_derivs,
+      const metric_quantities *restrict metric_derivs,
       conservative_quantities *restrict cons);
 
 #ifdef __cplusplus

@@ -122,7 +122,7 @@ froot(
  */
 static inline void
 compute_BU_SU_Bsq_Ssq_BdotS(
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,
       const primitive_quantities *restrict prims,
       double *restrict BU,
@@ -131,9 +131,10 @@ compute_BU_SU_Bsq_Ssq_BdotS(
       double *restrict Ssq,
       double *restrict BdotS ) {
 
+//Does this limit just do the same as apply_inequality_fixes?
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
-  double SD[3] = {cons_undens->S_x, cons_undens->S_y, cons_undens->S_z};
-  double S_squared = compute_vec2_from_vcov(metric, SD);
+  double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
+  double S_squared = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
@@ -145,22 +146,22 @@ compute_BU_SU_Bsq_Ssq_BdotS(
       SD[i] *= rescale_factor;
 
     // Step 2.3: Recompute S^{2}
-    S_squared = compute_vec2_from_vcov(metric, SD);
+    S_squared = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
   }
   *Ssq = S_squared;
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
-  BU[0] = prims->Bx * ONE_OVER_SQRT_4PI;
-  BU[1] = prims->By * ONE_OVER_SQRT_4PI;
-  BU[2] = prims->Bz * ONE_OVER_SQRT_4PI;
-  *Bsq = compute_vec2_from_vcon(metric, BU);
+  BU[0] = prims->BU[0] * ONE_OVER_SQRT_4PI;
+  BU[1] = prims->BU[1] * ONE_OVER_SQRT_4PI;
+  BU[2] = prims->BU[2] * ONE_OVER_SQRT_4PI;
+  *Bsq = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   *BdotS = 0.0;
   for(int i=0;i<3;i++) *BdotS += BU[i]*SD[i];
 
   // Step 5: Compute S^{i}
-  raise_vector_3D(metric, SD, SU);
+  grhayl_raise_vector_3D(ADM_metric->gammaUU, SD, SU);
 }
 
 /*
@@ -177,7 +178,7 @@ int Tabulated_Palenzuela1D(
             double *restrict W_ptr ),
       const GRHayL_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics );
@@ -193,7 +194,7 @@ int Tabulated_Newman1D(
             double *restrict W_ptr ),
       const GRHayL_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics );

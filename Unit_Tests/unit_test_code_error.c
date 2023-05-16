@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, Cupp_fix, Lorenz_damping_factor, &params);
 
   eos_parameters hybrid_eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_atm, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &hybrid_eos);
@@ -65,18 +65,20 @@ int main(int argc, char **argv) {
       break;
   }
 
-  metric_quantities metric;
+  metric_quantities ADM_metric;
   primitive_quantities prims;
   conservative_quantities cons;
   con2prim_diagnostics diagnostics; 
-  initialize_metric(1.0,
+  grhayl_initialize_metric(1.0, 0.0, 0.0, 0.0,
                     1.0, 0.0, 0.0,
                     1.0, 0.0, 1.0,
-                    0.0, 0.0, 0.0,
-                    &metric);
+                    &ADM_metric);
+
+  ADM_aux_quantities metric_aux;
+  grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
   /*
-     limit_v_and_compute_u0:
+     grhayl_limit_v_and_compute_u0:
        4: u^0 is nan
      grhayl_con2prim_select_method:
        5: invalid C2P key
@@ -84,13 +86,13 @@ int main(int argc, char **argv) {
   int speed_limited = 0;
   switch (test_key) {
     case 4:
-      prims.vx = 0.0/0.0;
-      prims.vy = 0.0/0.0;
-      prims.vz = 0.0/0.0;
-      limit_v_and_compute_u0(&hybrid_eos, &metric, &prims, &speed_limited);
+      prims.vU[0] = 0.0/0.0;
+      prims.vU[1] = 0.0/0.0;
+      prims.vU[2] = 0.0/0.0;
+      grhayl_limit_v_and_compute_u0(&hybrid_eos, &ADM_metric, &prims, &speed_limited);
       break;
     case 5:
-      grhayl_con2prim_select_method(-5, &params, &hybrid_eos, &metric, &cons, &prims, &diagnostics);
+      grhayl_con2prim_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
       break;
   }
 /*
@@ -137,7 +139,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   }
 
   eos_parameters tab_eos;
-  initialize_tabulated_eos_functions_and_params(tablepath, W_max,
+  grhayl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
                                                 rho_b_atm, rho_b_min, rho_b_max,
                                                 Y_e_atm, Y_e_min, Y_e_max,
                                                 T_atm, T_min, T_max, &tab_eos);

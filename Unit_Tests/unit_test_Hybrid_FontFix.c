@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -177,43 +177,48 @@ int main(int argc, char **argv) {
 
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    initialize_diagnostics(&diagnostics);
-    metric_quantities metric;
+    grhayl_initialize_diagnostics(&diagnostics);
+    metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
     // Read initial data accompanying trusted output
-    initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
-                      gyy[i], gyz[i], gzz[i], betax[i],
-                      betay[i], betaz[i], &metric);
+    grhayl_initialize_metric(lapse[i],
+                      betax[i], betay[i], betaz[i],
+                      gxx[i], gxy[i], gxz[i],
+                      gyy[i], gyz[i], gzz[i],
+                      &ADM_metric);
 
-    initialize_primitives(
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+
+    grhayl_initialize_primitives(
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
                       poison, poison, poison,
                       &prims);
 
-    initialize_conservatives(rho_star[i], tau[i],
+    grhayl_initialize_conservatives(rho_star[i], tau[i],
                              S_x[i], S_y[i], S_z[i],
                              poison, poison, &cons);
 
     //This uses the Font fix method to compute primitives from conservatives.
-    undensitize_conservatives(&metric, &cons, &cons_undens);
-    guess_primitives(&eos, &metric, &cons, &prims);
-    const int check = Hybrid_Font_Fix(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+    grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+    grhayl_guess_primitives(&eos, &ADM_metric, &metric_aux, &cons, &prims);
+    const int check = Hybrid_Font_Fix(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if( check != c2p_check[i] )
       grhayl_error("Test Hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
 
     primitive_quantities prims_trusted, prims_pert;
-    initialize_primitives(
+    grhayl_initialize_primitives(
                       rho_b_trusted[i], press_trusted[i], eps_trusted[i],
                       vx_trusted[i], vy_trusted[i], vz_trusted[i],
                       Bx_trusted[i], By_trusted[i], Bz_trusted[i],
                       poison, poison, poison,
                       &prims_trusted);
 
-    initialize_primitives(
+    grhayl_initialize_primitives(
                       rho_b_pert[i], press_pert[i], eps_pert[i],
                       vx_pert[i], vy_pert[i], vz_pert[i],
                       Bx_pert[i], By_pert[i], Bz_pert[i],

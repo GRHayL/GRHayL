@@ -17,9 +17,9 @@ TODO: consider changing failure_checker to be bitwise; failure modes are current
       1k: Limiting velocity u~ after C2P/Font Fix or v in enforce_...
       10k: Font Fix was applied
       100k: Both C2P and Font Fix failed
-      1M: tau~ was reset in apply_inequality_fixes
-      10M: S~ was reset in apply_inequality_fixes via the first case
-      100M: S~ was reset in apply_inequality_fixes via the second case
+      1M: tau~ was reset in grhayl_apply_inequality_fixes
+      10M: S~ was reset in grhayl_apply_inequality_fixes via the first case
+      100M: S~ was reset in grhayl_apply_inequality_fixes via the second case
 For bitwise, would become 1, 2, 4, 8, 16, 32. 64, 128, and 256
 https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
@@ -37,7 +37,6 @@ typedef struct con2prim_diagnostics {
   bool c2p_failed;
   int failures;
   int failure_checker;
-  int font_fix;
   int speed_limited;
   int which_routine;
   int backup[3];
@@ -57,50 +56,55 @@ typedef struct palenzuela_quantities {
 extern "C" {
 #endif
 
-void reset_prims_to_atmosphere(
+void grhayl_reset_prims_to_atmosphere(
       const eos_parameters *restrict eos,
       primitive_quantities *restrict prims);
 
 //--------- Initialization routines ----------------
 
-void initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
+void grhayl_initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
 
-void apply_inequality_fixes(
+void grhayl_apply_inequality_fixes(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       conservative_quantities *restrict cons,
       con2prim_diagnostics *restrict diagnostics);
 
-void undensitize_conservatives(
-      const metric_quantities *restrict metric,
+void grhayl_undensitize_conservatives(
+      const double psi6,
       const conservative_quantities *restrict cons,
       conservative_quantities *restrict cons_undens);
 
-void guess_primitives(
+void grhayl_guess_primitives(
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prims);
 
-void enforce_primitive_limits_and_compute_u0(
+void grhayl_enforce_primitive_limits_and_compute_u0(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
-void compute_conservs_and_Tmunu(
-      const metric_quantities *restrict metric,
+void grhayl_compute_conservs_and_Tmunu(
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       conservative_quantities *restrict cons,
       stress_energy *restrict Tmunu);
 
-void compute_conservs(
-      const metric_quantities *restrict metric,
+void grhayl_compute_conservs(
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       conservative_quantities *restrict cons);
 
@@ -110,7 +114,8 @@ void compute_conservs(
 int grhayl_con2prim_multi_method(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
@@ -119,7 +124,8 @@ int grhayl_con2prim_select_method(
       const con2prim_method_t c2p_key,
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
@@ -127,7 +133,8 @@ int grhayl_con2prim_select_method(
 int Hybrid_Noble2D(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
@@ -135,7 +142,8 @@ int Hybrid_Noble2D(
 int Hybrid_Font_Fix(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
@@ -143,7 +151,8 @@ int Hybrid_Font_Fix(
 int Tabulated_Palenzuela1D_energy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
@@ -151,7 +160,8 @@ int Tabulated_Palenzuela1D_energy(
 int Tabulated_Palenzuela1D_entropy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
@@ -159,7 +169,8 @@ int Tabulated_Palenzuela1D_entropy(
 int Tabulated_Newman1D_energy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
@@ -167,7 +178,8 @@ int Tabulated_Newman1D_energy(
 int Tabulated_Newman1D_entropy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
@@ -176,12 +188,10 @@ int Tabulated_Newman1D_entropy(
 
 //------------ Auxiliary Functions -----------------
 
-void limit_utilde_and_compute_v(
+void grhayl_limit_utilde_and_compute_v(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
-      double *restrict utcon1_ptr,
-      double *restrict utcon2_ptr,
-      double *restrict utcon3_ptr,
+      double utU[3],
       primitive_quantities *restrict prims,
       int *restrict speed_limit);
 

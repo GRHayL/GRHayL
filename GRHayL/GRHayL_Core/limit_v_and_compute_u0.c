@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : limit_v_and_compute_u0()
+/* Function    : grhayl_limit_v_and_compute_u0()
  * Description : Applies speed limit to v^i and computes u^0
  *
  * Inputs      : eos            - eos_parameters struct with data for the
@@ -15,9 +15,9 @@
  *
  */
 
-void limit_v_and_compute_u0(
+void grhayl_limit_v_and_compute_u0(
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
       primitive_quantities *restrict prims,
       int *restrict speed_limit) {
 
@@ -27,20 +27,16 @@ void limit_v_and_compute_u0(
   //   = 1/(u^0 \alpha)^2 u_j u_l \gamma^{jl}  <- Since \gamma_{ij} \gamma^{ik} = \delta^k_j
   //   = 1/(u^0 \alpha)^2 ( (u^0 \alpha)^2 - 1 ) <- Using Eq. 56 of arXiv:astro-ph/0503420
   //   = 1 - 1/(u^0 \alpha)^2 <= 1
-  double one_minus_one_over_alpha_u0_squared = (metric->adm_gxx * SQR(prims->vx + metric->betax) +
-                                                2.0*metric->adm_gxy*(prims->vx + metric->betax)*(prims->vy + metric->betay) +
-                                                2.0*metric->adm_gxz*(prims->vx + metric->betax)*(prims->vz + metric->betaz) +
-                                                metric->adm_gyy * SQR(prims->vy + metric->betay) +
-                                                2.0*metric->adm_gyz*(prims->vy + metric->betay)*(prims->vz + metric->betaz) +
-                                                metric->adm_gzz * SQR(prims->vz + metric->betaz) )*metric->lapseinv2;
+  const double utU[3] = {prims->vU[0] + ADM_metric->betaU[0], prims->vU[1] + ADM_metric->betaU[1], prims->vU[2] + ADM_metric->betaU[2]};
+  double one_minus_one_over_alpha_u0_squared = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
   const double one_minus_one_over_W_max_squared = 1.0-1.0/SQR(eos->W_max); // 1 - W_max^{-2}
   if(one_minus_one_over_alpha_u0_squared > one_minus_one_over_W_max_squared) {
     const double correction_fac = sqrt(one_minus_one_over_W_max_squared/one_minus_one_over_alpha_u0_squared);
-    prims->vx = (prims->vx + metric->betax)*correction_fac - metric->betax;
-    prims->vy = (prims->vy + metric->betay)*correction_fac - metric->betay;
-    prims->vz = (prims->vz + metric->betaz)*correction_fac - metric->betaz;
+    prims->vU[0] = utU[0]*correction_fac - ADM_metric->betaU[0];
+    prims->vU[1] = utU[1]*correction_fac - ADM_metric->betaU[1];
+    prims->vU[2] = utU[2]*correction_fac - ADM_metric->betaU[2];
     one_minus_one_over_alpha_u0_squared = one_minus_one_over_W_max_squared;
     (*speed_limit) = 1;
   }
@@ -48,18 +44,18 @@ void limit_v_and_compute_u0(
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
   // 1/sqrt(A) = al u0
   //double alpha_u0_minus_one = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared)-1.0;
-  //u0_out          = (alpha_u0_minus_one + 1.0)*metric.lapseinv;
+  //u0_out          = (alpha_u0_minus_one + 1.0)*lapseinv;
   const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
-  prims->u0 = alpha_u0*metric->lapseinv;
+  prims->u0 = alpha_u0*ADM_metric->lapseinv;
   if(isnan(prims->u0)) {
     grhayl_error("*********************************************\n"
                  "Found nan while computing u^{0}\nMetric: %e %e %e %e %e %e\n"
                  "Lapse/shift: %e (=1/%e) / %e %e %e\nVelocities : %e %e %e\n"
                  "*********************************************\n",
-                 metric->adm_gxx, metric->adm_gxy, metric->adm_gxz,
-                 metric->adm_gyy, metric->adm_gyz, metric->adm_gzz,
-                 metric->lapse, metric->lapseinv,
-                 metric->betax, metric->betay, metric->betaz,
-                 prims->vx, prims->vx, prims->vz);
+                 ADM_metric->gammaDD[0][0], ADM_metric->gammaDD[0][1], ADM_metric->gammaDD[0][2],
+                 ADM_metric->gammaDD[1][1], ADM_metric->gammaDD[1][2], ADM_metric->gammaDD[2][2],
+                 ADM_metric->lapse, ADM_metric->lapseinv,
+                 ADM_metric->betaU[0], ADM_metric->betaU[1], ADM_metric->betaU[2],
+                 prims->vU[0], prims->vU[1], prims->vU[2]);
   }
 }

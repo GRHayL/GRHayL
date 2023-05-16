@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : initialize_stress_energy()
+/* Function    : grhayl_initialize_stress_energy()
  * Description : Initialize the stress_energy struct from user input
  *
  * Inputs      : Tij            - value of the (i,j) component of the
@@ -10,21 +10,21 @@
  *                                the inputs
  */
 
-void initialize_stress_energy(
+void grhayl_initialize_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
       const double Txx, const double Txy, const double Txz,
       const double Tyy, const double Tyz, const double Tzz,
       stress_energy *restrict Tmunu) {
 
-  Tmunu->Ttt = Ttt;
-  Tmunu->Ttx = Ttx;
-  Tmunu->Tty = Tty;
-  Tmunu->Ttz = Ttz;
-  Tmunu->Txx = Txx;
-  Tmunu->Txy = Txy;
-  Tmunu->Txz = Txz;
-  Tmunu->Tyy = Tyy;
-  Tmunu->Tyz = Tyz;
-  Tmunu->Tzz = Tzz;
+  Tmunu->T4[0][0]                   = Ttt;
+  Tmunu->T4[1][1]                   = Txx;
+  Tmunu->T4[2][2]                   = Tyy;
+  Tmunu->T4[3][3]                   = Tzz;
+  Tmunu->T4[0][1] = Tmunu->T4[1][0] = Ttx;
+  Tmunu->T4[0][2] = Tmunu->T4[2][0] = Tty;
+  Tmunu->T4[0][3] = Tmunu->T4[3][0] = Ttz;
+  Tmunu->T4[1][2] = Tmunu->T4[2][1] = Txy;
+  Tmunu->T4[1][3] = Tmunu->T4[3][1] = Txz;
+  Tmunu->T4[2][3] = Tmunu->T4[3][2] = Tyz;
 }

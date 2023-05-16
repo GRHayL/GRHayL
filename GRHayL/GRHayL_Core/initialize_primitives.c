@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : initialize_primitives()
+/* Function    : grhayl_initialize_primitives()
  * Description : Initialize the primitives struct from user input
  *
  * Inputs      : rho            - value of the baryonic density
@@ -20,20 +20,21 @@
  *                                struct containing input
  */
 
-void initialize_primitives(
+void grhayl_initialize_primitives(
              const double rho, const double press, const double epsilon,
              const double vx, const double vy, const double vz,
              const double Bx, const double By, const double Bz,
              const double entropy, const double Y_e, const double temperature,
              primitive_quantities *restrict prims) {
+
   prims->rho         = rho;
   prims->press       = press;
-  prims->vx          = vx;
-  prims->vy          = vy;
-  prims->vz          = vz;
-  prims->Bx          = Bx;
-  prims->By          = By;
-  prims->Bz          = Bz;
+  prims->vU[0]      = vx;
+  prims->vU[1]      = vy;
+  prims->vU[2]      = vz;
+  prims->BU[0]        = Bx;
+  prims->BU[1]        = By;
+  prims->BU[2]        = Bz;
   prims->eps         = epsilon;
   prims->entropy     = entropy;
   prims->Y_e         = Y_e;

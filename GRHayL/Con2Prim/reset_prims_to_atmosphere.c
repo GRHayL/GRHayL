@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : reset_prims_to_atmosphere()
+/* Function    : grhayl_reset_prims_to_atmosphere()
  * Description : Uses the EOS data to reset the primitives to atmospheric
  *               values.
  *
@@ -10,7 +10,7 @@
  * Outputs     : prims          - returns with all primitives set to atmospheric values
  */
 
-void reset_prims_to_atmosphere(
+void grhayl_reset_prims_to_atmosphere(
       const eos_parameters *restrict eos,
       primitive_quantities *restrict prims) {
 
@@ -25,7 +25,7 @@ void reset_prims_to_atmosphere(
   prims->Y_e         = eos->Y_e_atm;
   prims->temperature = eos->T_atm;
 
-  prims->vx = 0.0;
-  prims->vy = 0.0;
-  prims->vz = 0.0;
+  prims->vU[0] = 0.0;
+  prims->vU[1] = 0.0;
+  prims->vU[2] = 0.0;
 }

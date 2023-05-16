@@ -1,7 +1,7 @@
 #include "unit_tests.h"
 int main(int argc, char **argv) {
 
-  const int arraylength = 4;
+  const int arraylength = 3;
 
   const double poison = 0.0/0.0;
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, Cupp_fix, 0.0, &params);
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -79,74 +79,70 @@ int main(int argc, char **argv) {
     tau[i]   = 1e-2;
     S_x[i] = S_y[i] = S_z[i] = 1000.0*tau[i]*(tau[i] + 2.0e-2);
   }
-  gxy[1] = -5.0;
-  rho_star[2] = 1e15;
-  rho_star[3] = 0.0;
+  rho_star[1] = 1e15;
+  rho_star[2] = 0.0;
 
   for(int i=0; i<arraylength; i++) {
     con2prim_diagnostics diagnostics;
-    initialize_diagnostics(&diagnostics);
-    metric_quantities metric;
+    grhayl_initialize_diagnostics(&diagnostics);
+    metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
-    initialize_metric(lapse[i],
+    grhayl_initialize_metric(lapse[i],
+                      betax[i], betay[i], betaz[i],
                       gxx[i], gxy[i], gxz[i],
                       gyy[i], gyz[i], gzz[i],
-                      betax[i], betay[i], betaz[i],
-                      &metric);
+                      &ADM_metric);
 
-    initialize_primitives(
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+
+    grhayl_initialize_primitives(
                         poison, poison, poison,
                         poison, poison, poison,
                         Bx[i], By[i], Bz[i],
                         poison, poison, poison, &prims);
 
-    if (i==0 || i==1) {
+    if (i==0) {
       params.calc_prim_guess = false;
-      prims.rho = cons.rho/metric.psi6;
-      prims.vx = 2.0;
-      prims.vy = 2.0;
-      prims.vz = 2.0;
+      prims.rho = cons.rho/metric_aux.psi6;
+      prims.vU[0] = 2.0;
+      prims.vU[1] = 2.0;
+      prims.vU[2] = 2.0;
       prims.Y_e = cons.Y_e/cons.rho;
       prims.temperature = eos.T_max;
       eos.hybrid_compute_P_cold(&eos, prims.rho, &prims.press);
-      if(i==1) {
-        prims.vx = 0.5;
-        prims.vy = 0.5;
-        prims.vz = 0.5;
-      }
     }
 
-    initialize_conservatives(rho_star[i], tau[i],
+    grhayl_initialize_conservatives(rho_star[i], tau[i],
              S_x[i], S_y[i], S_z[i],
              poison, poison, &cons);
 
-    undensitize_conservatives(&metric, &cons, &cons_undens);
-    int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+    grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+    int check = grhayl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if(check != i+1)
       grhayl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);
 
-    if(i<3) {
-      // This block lets us test that successes on the backup branches make it back out successfully
-      params.backup_routine[2-i] = FontFix;
-      int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+    if(i==0) {
+      // This just gets coverage for the success branches
+      params.main_routine = FontFix;
+      int check = grhayl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != 0)
         grhayl_error("FontFix has returned a different failure code: old %d and new %d", 0, check);
-      params.backup_routine[2-i] = None;
-      params.calc_prim_guess = true;
-      if(i==0) {
-        // This just gets coverage for the success branch of the main routine
-        params.main_routine = FontFix;
-        int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+      params.main_routine = Noble2D;
+      for (int j=0; j<3; j++) {
+        params.backup_routine[2-j] = FontFix;
+        int check = grhayl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
         if(check != 0)
           grhayl_error("FontFix has returned a different failure code: old %d and new %d", 0, check);
-        params.main_routine = Noble2D;
+        params.backup_routine[2-j] = Noble2D;
       }
+      params.calc_prim_guess = true;
     } else if (i==3) {
       // Here, we can check the Font Fix failure condition (there's just one return value)
       params.backup_routine[0] = FontFix;
-      int check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
+      int check = grhayl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != 1)
         grhayl_error("FontFix has returned a different failure code: old %d and new %d", 1, check);
       params.backup_routine[0] = None;

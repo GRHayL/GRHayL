@@ -158,27 +158,27 @@ int Hybrid_Noble1D_Entropy2(
   int retval = 0;
 
   // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
-  const double Bup[4] = {0.0, prims->Bx * ONE_OVER_SQRT_4PI,
-                              prims->By * ONE_OVER_SQRT_4PI,
-                              prims->Bz * ONE_OVER_SQRT_4PI};
+  const double Bup[4] = {0.0, prims->BU[0] * ONE_OVER_SQRT_4PI,
+                              prims->BU[1] * ONE_OVER_SQRT_4PI,
+                              prims->BU[2] * ONE_OVER_SQRT_4PI};
 
-  double Bdn[4]; lower_vector(metric, Bup, Bdn);
+  double Bdn[4]; grhayl_lower_vector_4D(metric, Bup, Bdn);
 
   // W_times_S
   harm_aux.W_times_S = cons_undens->entropy;
 
   const double uu = - cons_undens->tau*metric->lapse
                     - metric->lapse*cons_undens->rho
-                    + metric->betax*cons_undens->S_x
-                    + metric->betay*cons_undens->S_y
-                    + metric->betaz*cons_undens->S_z;
+                    + metric->betaU[0]*cons_undens->SD[0]
+                    + metric->betaU[1]*cons_undens->SD[1]
+                    + metric->betaU[2]*cons_undens->SD[2];
 
   const double Qdn[4] = {uu,
-                         cons_undens->S_x,
-                         cons_undens->S_y,
-                         cons_undens->S_z};
+                         cons_undens->SD[0],
+                         cons_undens->SD[1],
+                         cons_undens->SD[2]};
 
-  double Qup[4]; raise_vector_4D(metric, Qdn, Qup);
+  double Qup[4]; grhayl_raise_vector_4D(metric, Qdn, Qup);
 
   harm_aux.Bsq = 0. ;
   for(int i=1; i<4; i++) harm_aux.Bsq += Bup[i]*Bdn[i];
@@ -196,22 +196,22 @@ int Hybrid_Noble1D_Entropy2(
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
   harm_aux.D    = cons_undens->rho;
 
-  const double tmp_u = metric->adm_gxx * SQR(prims->vx + metric->betax) +
-                                             2.0*metric->adm_gxy*(prims->vx + metric->betax)*(prims->vy + metric->betay) +
-                                             2.0*metric->adm_gxz*(prims->vx + metric->betax)*(prims->vz + metric->betaz) +
-                                             metric->adm_gyy * SQR(prims->vy + metric->betay) +
-                                             2.0*metric->adm_gyz*(prims->vy + metric->betay)*(prims->vz + metric->betaz) +
-                                             metric->adm_gzz * SQR(prims->vz + metric->betaz);
+  const double tmp_u = metric->gammaDD[0][0] * SQR(prims->vU[0] + metric->betaU[0]) +
+                                             2.0*metric->gammaDD[0][1]*(prims->vU[0] + metric->betaU[0])*(prims->vU[1] + metric->betaU[1]) +
+                                             2.0*metric->gammaDD[0][2]*(prims->vU[0] + metric->betaU[0])*(prims->vU[2] + metric->betaU[2]) +
+                                             metric->gammaDD[1][1] * SQR(prims->vU[1] + metric->betaU[1]) +
+                                             2.0*metric->gammaDD[1][2]*(prims->vU[1] + metric->betaU[1])*(prims->vU[2] + metric->betaU[2]) +
+                                             metric->gammaDD[2][2] * SQR(prims->vU[2] + metric->betaU[2]);
 
   double u0 = 1.0/sqrt(1.0-tmp_u);
-  const double utilde[3] = {u0*(prims->vx + metric->betax),
-                            u0*(prims->vy + metric->betay),
-                            u0*(prims->vz + metric->betaz)};
+  const double utilde[3] = {u0*(prims->vU[0] + metric->betaU[0]),
+                            u0*(prims->vU[1] + metric->betaU[1]),
+                            u0*(prims->vU[2] + metric->betaU[2])};
 
   /* calculate Z from last timestep and use for guess */
   double vsq = 0.0;
   for(int i=1; i<4; i++)
-    for(int j=1; j<4; j++) vsq += metric->g4dn[i][j]*-utilde[i-1]*utilde[j-1];
+    for(int j=1; j<4; j++) vsq += metric->g4DD[i][j]*utilde[i-1]*utilde[j-1];
 
   if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
     vsq = fabs(vsq);
@@ -303,9 +303,9 @@ int Hybrid_Noble1D_Entropy2(
   }
 
   const double nup[4] = {metric->lapseinv,
-                        -metric->lapseinv*metric->betax,
-                        -metric->lapseinv*metric->betay,
-                        -metric->lapseinv*metric->betaz};
+                        -metric->lapseinv*metric->betaU[0],
+                        -metric->lapseinv*metric->betaU[1],
+                        -metric->lapseinv*metric->betaU[2]};
 
   double Qtcon[4];
   const double g_o_ZBsq = harm_aux.W/(Z+harm_aux.Bsq);
@@ -318,7 +318,7 @@ int Hybrid_Noble1D_Entropy2(
 
   //Additional tabulated code here
 
-  limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims, &diagnostics->speed_limited);
+  grhayl_limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims, &diagnostics->speed_limited);
 
   if(diagnostics->speed_limited==1)
     prims->rho = cons_undens->rho/(metric->lapse*prims->u0);

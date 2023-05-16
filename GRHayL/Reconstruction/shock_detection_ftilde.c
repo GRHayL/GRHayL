@@ -5,7 +5,11 @@
 #define OMEGA1   0.75
 #define OMEGA2  10.0
 #define EPSILON2 0.33
-double shock_detection_ftilde(const double P[5], const double v_flux_dirn[5]) {
+
+double grhayl_shock_detection_ftilde(
+      const double P[5],
+      const double v_flux_dirn[5]) {
+
   double dP1 = P[PLUS_1] - P[MINUS1];
   double dP2 = P[PLUS_2] - P[MINUS2];
 

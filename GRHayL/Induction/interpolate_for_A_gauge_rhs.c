@@ -1,21 +1,28 @@
 #include "induction.h"
 
-static int MINUS1=0, PLUS0=1, PLUS1=2;
-
 // Helper function for interpolating quantities via averaging
-double avg(const int size,
-           const double f[size][size][size],
-           const int imin,
-           const int imax,
-           const int jmin,
-           const int jmax,
-           const int kmin,
-           const int kmax);
+void grhayl_A_i_avg(
+      const int size,
+      const double Ax_stencil[size][size][size],
+      const double Ay_stencil[size][size][size],
+      const double Az_stencil[size][size][size],
+      double A_to_phitilde[3],
+      double A_to_Ax[3],
+      double A_to_Ay[3],
+      double A_to_Az[3]);
 
-/* Function    : interpolate_for_A_gauge_rhs()
+void grhayl_metric_avg(
+      const int size,
+      const metric_quantities metric_stencil[size][size][size],
+      const double psi_stencil[size][size][size],
+      metric_quantities *restrict metric_interp,
+      double lapse_psi2_interp[3],
+      double *restrict lapse_over_psi6_interp);
+
+/* Function    : grhayl_interpolate_for_A_gauge_rhs()
  * Description : computes several interpolated quantities for computing the RHS
  *               for tilde{phi} and the gauge contributions to A_i; these are
- *               used in calculate_phitilde_and_A_gauge_rhs() function
+ *               used in grhayl_calculate_phitilde_rhs() function
  *
  * Inputs      : gauge_vars      - A_gauge_vars struct containing stencils for
  *                                 variables to compute interpolated values
@@ -24,9 +31,14 @@ double avg(const int size,
  *                                 values for use in
  *
  */
-void interpolate_for_A_gauge_rhs(
-            const A_gauge_vars *restrict gauge_vars,
-            A_gauge_rhs_vars *restrict gauge_rhs_vars ) {
+void grhayl_interpolate_for_A_gauge_rhs(
+      const metric_quantities metric_stencil[2][2][2],
+      const double psi_stencil[2][2][2],
+      const double Ax_stencil[3][3][3],
+      const double Ay_stencil[3][3][3],
+      const double Az_stencil[3][3][3],
+      const double phitilde,
+      A_gauge_rhs_vars *restrict gauge_rhs_vars ) {
   /* Compute \partial_t psi6phi = -\partial_i (  \alpha psi^6 A^i - psi6phi \beta^i)
    *    (Eq 13 of http://arxiv.org/pdf/1110.4633.pdf), using Lorenz gauge.
    * Note that the RHS consists of a shift advection term on psi6phi and
@@ -47,76 +59,224 @@ void interpolate_for_A_gauge_rhs(
   //    (i,j+1/2,k+1/2)and (i+1,j+1/2,k+1/2), then taking \partial_x (RHS1x) =
   //    [ RHS1x(i+1,j+1/2,k+1/2) - RHS1x(i,j+1/2,k+1/2) ]/dX.
 
-  // First lapse and shift at (i+1/2,j+1/2,k+1/2). Will come in handy when computing phitilde_RHS later.
-  gauge_rhs_vars->alpha_interp     = avg(2, gauge_vars->lapse , 0,1, 0,1, 0,1);
-  gauge_rhs_vars->shiftx_interp[0] = avg(2, gauge_vars->shiftx, 0,1, 0,1, 0,1);
-  gauge_rhs_vars->shifty_interp[0] = avg(2, gauge_vars->shifty, 0,1, 0,1, 0,1);
-  gauge_rhs_vars->shiftz_interp[0] = avg(2, gauge_vars->shiftz, 0,1, 0,1, 0,1);
 
-  // Compute arrays of quantities for interpolating later
-  double lapse_psi2[2][2][2];
-  double lapse_over_psi6[2][2][2];
-  for(int kk=0;kk<=1;kk++) for(int jj=0;jj<=1;jj++) for(int ii=0;ii<=1;ii++) {
-        const double Psi2 = gauge_vars->psi[kk][jj][ii]*gauge_vars->psi[kk][jj][ii];
-        const double alpha = gauge_vars->lapse[kk][jj][ii];
-        lapse_psi2[kk][jj][ii]=alpha*Psi2;
-        lapse_over_psi6[kk][jj][ii]=alpha/(Psi2*Psi2*Psi2);
-      }
+  /*
+     We need to interpolate several quantities to several different points depending on the quantities
+     we're computing. The staggered gridpoints for these variables are
+       phitilde: (i+1/2, j+1/2, k+1/2)
+       A_x:      (i,     j+1/2, k+1/2)
+       A_y:      (i+1/2, j,     k+1/2)
+       A_z:      (i+1/2, j+1/2, k    )
+     For metric quantities, we use grhayl_metric_avg(), which computes most of the needed quantities.
+     It interpolates (via averaging) the lapse and shift to phitilde's location. The metric
+     is interpolated to 3 different points:
+       gammaUU[0][i] is a A_x's location
+       gammaUU[1][i] is a A_y's location
+       gammaUU[2][i] is a A_z's location
 
-  // Next, do A^X TERM (interpolate to (i,j+1/2,k+1/2) )
+     Similarly, the function grhayl_A_i_avg() interpolates A_i to these points, storing the interpolated
+     data in the 4 arrays A_to_phitilde, A_to_Ax, A_to_Ay, and A_to_Az.
+
+     These two averaging loops are split because the stencils are of different sizes. The stencils are
+     centered around the staggered point. This means that the metric have an even stencil, and the A_i
+     have an odd stencil.
+  */
+  metric_quantities metric_interp;
+  double lapse_psi2_interp[3], lapse_over_psi6_interp;
+  grhayl_metric_avg(2, metric_stencil, psi_stencil, &metric_interp, lapse_psi2_interp, &lapse_over_psi6_interp);
+
+  double A_to_phitilde[3], A_to_Ax[3], A_to_Ay[3], A_to_Az[3];
+  grhayl_A_i_avg(3, Ax_stencil, Ay_stencil, Az_stencil, A_to_phitilde, A_to_Ax, A_to_Ay, A_to_Az);
+
+  // Interpolating lapse and shift to (i+1/2, j+1/2, k+1/2) is needed for computing phitilde_rhs.
+  gauge_rhs_vars->alpha_interp     = metric_interp.lapse;
+  gauge_rhs_vars->shiftx_interp[0] = metric_interp.betaU[0];
+  gauge_rhs_vars->shifty_interp[0] = metric_interp.betaU[1];
+  gauge_rhs_vars->shiftz_interp[0] = metric_interp.betaU[2];
+
+  // A^x term (interpolated to (i, j+1/2, k+1/2) )
   // \alpha \sqrt{\gamma} A^x = \alpha psi^6 A^x (RHS of \partial_i psi6phi)
   // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  const double gupxx_jk      = avg(2, gauge_vars->gupxx, 0,0, 0,1, 0,1);
-  const double gupxy_jk      = avg(2, gauge_vars->gupxy, 0,0, 0,1, 0,1);
-  const double gupxz_jk      = avg(2, gauge_vars->gupxz, 0,0, 0,1, 0,1);
-  const double lapse_Psi2_jk = avg(2, lapse_psi2,        0,0, 0,1, 0,1);
+  gauge_rhs_vars->alpha_sqrtg_Ax_interp[0] = lapse_psi2_interp[0]*
+                                               ( metric_interp.gammaUU[0][0]*A_to_Ax[0]
+                                               + metric_interp.gammaUU[0][1]*A_to_Ax[1]
+                                               + metric_interp.gammaUU[0][2]*A_to_Ax[2] );
 
-  const double A_x_jk   = gauge_vars->A_x[1][1][1]; // @ (i,j+1/2,k+1/2)
-  const double A_y_jk   = avg(3, gauge_vars->A_y, MINUS1,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)
-  const double A_z_jk   = avg(3, gauge_vars->A_z, MINUS1,PLUS0, PLUS0,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
-
-  gauge_rhs_vars->alpha_sqrtg_Ax_interp[0] = lapse_Psi2_jk*
-    ( gupxx_jk*A_x_jk + gupxy_jk*A_y_jk + gupxz_jk*A_z_jk );
-
-  // DO A^Y TERM (interpolate to (i+1/2,j,k+1/2) )
+  // A^y term (interpolated to (i+1/2, j, k+1/2) )
   // \alpha \sqrt{\gamma} A^y = \alpha psi^6 A^y (RHS of \partial_i psi6phi)
   // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  const double gupxy_ik      = avg(2, gauge_vars->gupxy, 0,1, 0,0, 0,1);
-  const double gupyy_ik      = avg(2, gauge_vars->gupyy, 0,1, 0,0, 0,1);
-  const double gupyz_ik      = avg(2, gauge_vars->gupyz, 0,1, 0,0, 0,1);
-  const double lapse_Psi2_ik = avg(2, lapse_psi2,        0,1, 0,0, 0,1);
+  gauge_rhs_vars->alpha_sqrtg_Ay_interp[0] = lapse_psi2_interp[1]*
+                                               ( metric_interp.gammaUU[1][0]*A_to_Ay[0]
+                                               + metric_interp.gammaUU[1][1]*A_to_Ay[1]
+                                               + metric_interp.gammaUU[1][2]*A_to_Ay[2] );
 
-  const double A_x_ik   = avg(3, gauge_vars->A_x, PLUS0,PLUS1, MINUS1,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
-  const double A_y_ik   = gauge_vars->A_y[1][1][1]; // @ (i+1/2,j,k+1/2)
-  const double A_z_ik   = avg(3, gauge_vars->A_z, PLUS0,PLUS0, MINUS1,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
-
-  gauge_rhs_vars->alpha_sqrtg_Ay_interp[0] = lapse_Psi2_ik*
-    ( gupxy_ik*A_x_ik + gupyy_ik*A_y_ik + gupyz_ik*A_z_ik );
-
-  // DO A^Z TERM (interpolate to (i+1/2,j+1/2,k) )
+  // A^z term (interpolated to (i+1/2, j+1/2, k) )
   // \alpha \sqrt{\gamma} A^z = \alpha psi^6 A^z (RHS of \partial_i psi6phi)
   // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  const double gupxz_ij      = avg(2, gauge_vars->gupxz, 0,1, 0,1, 0,0);
-  const double gupyz_ij      = avg(2, gauge_vars->gupyz, 0,1, 0,1, 0,0);
-  const double gupzz_ij      = avg(2, gauge_vars->gupzz, 0,1, 0,1, 0,0);
-  const double lapse_Psi2_ij = avg(2, lapse_psi2,        0,1, 0,1, 0,0);
-
-  const double A_x_ij   = avg(3, gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0, MINUS1,PLUS0); // @ (i,j+1/2,k+1/2)
-  const double A_y_ij   = avg(3, gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1, MINUS1,PLUS0); // @ (i+1/2,j,k+1/2)
-  const double A_z_ij   = gauge_vars->A_z[1][1][1]; // @ (i+1/2,j+1/2,k)
-
-  gauge_rhs_vars->alpha_sqrtg_Az_interp[0] = lapse_Psi2_ij*
-    ( gupxz_ij*A_x_ij + gupyz_ij*A_y_ij + gupzz_ij*A_z_ij );
-
+  gauge_rhs_vars->alpha_sqrtg_Az_interp[0] = lapse_psi2_interp[2]*
+                                               ( metric_interp.gammaUU[2][0]*A_to_Az[0]
+                                               + metric_interp.gammaUU[2][1]*A_to_Az[1]
+                                               + metric_interp.gammaUU[2][2]*A_to_Az[2] );
 
   // Next set \alpha \Phi - \beta^j A_j at (i+1/2,j+1/2,k+1/2):
-  const double  lapse_over_Psi6_ijk = avg(2, lapse_over_psi6, 0,1, 0,1, 0,1);
-  const double  A_x_ijk = avg(3, gauge_vars->A_x, PLUS0,PLUS1, PLUS0,PLUS0, PLUS0,PLUS0); // @ (i,j+1/2,k+1/2)
-  const double  A_y_ijk = avg(3, gauge_vars->A_y, PLUS0,PLUS0, PLUS0,PLUS1, PLUS0,PLUS0); // @ (i+1/2,j,k+1/2)
-  const double  A_z_ijk = avg(3, gauge_vars->A_z, PLUS0,PLUS0, PLUS0,PLUS0, PLUS0,PLUS1); // @ (i+1/2,j+1/2,k)
+  gauge_rhs_vars->alpha_Phi_minus_betaj_A_j_interp = phitilde*lapse_over_psi6_interp
+                                                   - ( gauge_rhs_vars->shiftx_interp[0]*A_to_phitilde[0]
+                                                     + gauge_rhs_vars->shifty_interp[0]*A_to_phitilde[1]
+                                                     + gauge_rhs_vars->shiftz_interp[0]*A_to_phitilde[2] );
+}
 
-  gauge_rhs_vars->alpha_Phi_minus_betaj_A_j_interp[0] = gauge_vars->phitilde*lapse_over_Psi6_ijk
-                                                      - (gauge_rhs_vars->shiftx_interp[0]*A_x_ijk
-                                                         + gauge_rhs_vars->shifty_interp[0]*A_y_ijk
-                                                         + gauge_rhs_vars->shiftz_interp[0]*A_z_ijk);
+// Note: the following functions, while having a size argument, are specialized for array size of 3 and 2, respectively.
+//       They will need to be extended to support arbitrary stencil averaging. This involves determining the element
+//       of the array which corresponds to the current location. grhayl_A_i_avg() assumes 1 (centered 3-element stencil),
+//       and grhayl_metric_avg() assumes 0 (2-element stencil centered around staggered gridpoint)
+void grhayl_A_i_avg(
+      const int size,
+      const double Ax_stencil[size][size][size],
+      const double Ay_stencil[size][size][size],
+      const double Az_stencil[size][size][size],
+      double A_to_phitilde[3],
+      double A_to_Ax[3],
+      double A_to_Ay[3],
+      double A_to_Az[3]) {
+  
+  A_to_phitilde[0] = 0.0;
+  A_to_phitilde[1] = 0.0;
+  A_to_phitilde[2] = 0.0;
+  A_to_Ax[1]       = 0.0;
+  A_to_Ax[2]       = 0.0;
+  A_to_Ay[0]       = 0.0;
+  A_to_Ay[2]       = 0.0;
+  A_to_Az[0]       = 0.0;
+  A_to_Az[1]       = 0.0;
+
+  // A_i is already at the location of A_i :)
+  A_to_Ax[0] = Ax_stencil[1][1][1];
+  A_to_Ay[1] = Ay_stencil[1][1][1];
+  A_to_Az[2] = Az_stencil[1][1][1];
+
+  int sum_1D = 0;
+  int sum_2D = 0;
+  // The stenciling sum here is reasonably simple. The index corresponding to the component needs to be
+  // interpolated to +1/2 (the kk loop). Thus, the kk index is always in the same index as the component
+  // of A being interpolated. For the jj loop, the index corresponding to the interpolated A
+  // (i.e. x index for A_to_Ax) needs to be interpolated back by -1/2. Hence, the kk loop is in the range
+  // [1,size) and the jj loop is in the range [0,size-1).
+  for(int kk=1; kk<size; kk++) {
+    A_to_phitilde[0] += Ax_stencil[1][1][kk];
+    A_to_phitilde[1] += Ay_stencil[1][kk][1];
+    A_to_phitilde[2] += Az_stencil[kk][1][1];
+    sum_1D++;
+    for(int jj=0; jj<size-1; jj++) {
+      A_to_Ax[1] += Ay_stencil[1][kk][jj];
+      A_to_Ax[2] += Az_stencil[kk][1][jj];
+
+      A_to_Ay[0] += Ax_stencil[1][jj][kk];
+      A_to_Ay[2] += Az_stencil[kk][jj][1];
+
+      A_to_Az[0] += Ax_stencil[jj][1][kk];
+      A_to_Az[1] += Ay_stencil[jj][kk][1];
+      sum_2D++;
+    }
+  }
+  A_to_phitilde[0] /= sum_1D;
+  A_to_phitilde[1] /= sum_1D;
+  A_to_phitilde[2] /= sum_1D;
+  A_to_Ax[1]       /= sum_2D;
+  A_to_Ax[2]       /= sum_2D;
+  A_to_Ay[0]       /= sum_2D;
+  A_to_Ay[2]       /= sum_2D;
+  A_to_Az[0]       /= sum_2D;
+  A_to_Az[1]       /= sum_2D;
+}
+
+void grhayl_metric_avg(
+      const int size,
+      const metric_quantities metric_stencil[size][size][size],
+      const double psi_stencil[size][size][size],
+      metric_quantities *restrict metric_interp,
+      double lapse_psi2_interp[3],
+      double *restrict lapse_over_psi6_interp) {
+
+  int sum_2D = 0;
+  int sum_3D = 0;
+  metric_interp->lapse         = 0.0;
+  metric_interp->betaU[0]      = 0.0;
+  metric_interp->betaU[1]      = 0.0;
+  metric_interp->betaU[2]      = 0.0;
+  metric_interp->gammaUU[0][0] = 0.0;
+  metric_interp->gammaUU[0][1] = 0.0;
+  metric_interp->gammaUU[0][2] = 0.0;
+  metric_interp->gammaUU[1][0] = 0.0;
+  metric_interp->gammaUU[1][1] = 0.0;
+  metric_interp->gammaUU[1][2] = 0.0;
+  metric_interp->gammaUU[2][0] = 0.0;
+  metric_interp->gammaUU[2][1] = 0.0;
+  metric_interp->gammaUU[2][2] = 0.0;
+  lapse_psi2_interp[0]         = 0.0;
+  lapse_psi2_interp[1]         = 0.0;
+  lapse_psi2_interp[2]         = 0.0;
+  *lapse_over_psi6_interp      = 0.0;
+
+  double lapse_psi2[size][size][size];
+  double lapse_over_psi6[size][size][size];
+  for(int kk=0; kk<size; kk++) {
+    for(int jj=0; jj<size; jj++) {
+      for(int ii=0; ii<size; ii++) {
+        const double psi2 = psi_stencil[kk][jj][ii]*psi_stencil[kk][jj][ii];
+        lapse_psi2[kk][jj][ii] = metric_stencil[kk][jj][ii].lapse*psi2;
+        lapse_over_psi6[kk][jj][ii] = metric_stencil[kk][jj][ii].lapse/(psi2*psi2*psi2);
+      }
+    }
+  }
+
+  for(int kk=0; kk<size; kk++) {
+    for(int jj=0; jj<size; jj++) {
+
+      // Interpolate xx, xy, xz to (i, j+1/2, k+1/2) for A_x
+      metric_interp->gammaUU[0][0] += metric_stencil[kk][jj][0].gammaUU[0][0];
+      metric_interp->gammaUU[0][1] += metric_stencil[kk][jj][0].gammaUU[0][1];
+      metric_interp->gammaUU[0][2] += metric_stencil[kk][jj][0].gammaUU[0][2];
+      lapse_psi2_interp[0]         += lapse_psi2[kk][jj][0];
+
+      // Interpolate yx, yy, yz to (i+1/2, j, k+1/2) for A_y
+      metric_interp->gammaUU[1][0] += metric_stencil[kk][0][jj].gammaUU[0][1];
+      metric_interp->gammaUU[1][1] += metric_stencil[kk][0][jj].gammaUU[1][1];
+      metric_interp->gammaUU[1][2] += metric_stencil[kk][0][jj].gammaUU[1][2];
+      lapse_psi2_interp[1]         += lapse_psi2[kk][0][jj];
+
+      // Interpolate zx, zy, zz to (i+1/2, j+1/2, k) for A_z
+      metric_interp->gammaUU[2][0] += metric_stencil[0][kk][jj].gammaUU[0][2];
+      metric_interp->gammaUU[2][1] += metric_stencil[0][kk][jj].gammaUU[1][2];
+      metric_interp->gammaUU[2][2] += metric_stencil[0][kk][jj].gammaUU[2][2];
+      lapse_psi2_interp[2]         += lapse_psi2[0][kk][jj];
+
+      for(int ii=0; ii<size; ii++) {
+        metric_interp->lapse    += metric_stencil[kk][jj][ii].lapse;
+        metric_interp->betaU[0] += metric_stencil[kk][jj][ii].betaU[0];
+        metric_interp->betaU[1] += metric_stencil[kk][jj][ii].betaU[1];
+        metric_interp->betaU[2] += metric_stencil[kk][jj][ii].betaU[2];
+        *lapse_over_psi6_interp += lapse_over_psi6[kk][jj][ii];
+        sum_3D++;
+      }
+      sum_2D++;
+    }
+  }
+  metric_interp->lapse    /= sum_3D;
+  metric_interp->betaU[0] /= sum_3D;
+  metric_interp->betaU[1] /= sum_3D;
+  metric_interp->betaU[2] /= sum_3D;
+  *lapse_over_psi6_interp /= sum_3D;
+
+  metric_interp->gammaUU[0][0] /= sum_2D;
+  metric_interp->gammaUU[0][1] /= sum_2D;
+  metric_interp->gammaUU[0][2] /= sum_2D;
+  metric_interp->gammaUU[1][0] /= sum_2D;
+  metric_interp->gammaUU[1][1] /= sum_2D;
+  metric_interp->gammaUU[1][2] /= sum_2D;
+  metric_interp->gammaUU[2][0] /= sum_2D;
+  metric_interp->gammaUU[2][1] /= sum_2D;
+  metric_interp->gammaUU[2][2] /= sum_2D;
+  lapse_psi2_interp[0]         /= sum_2D;
+  lapse_psi2_interp[1]         /= sum_2D;
+  lapse_psi2_interp[2]         /= sum_2D;
 }
