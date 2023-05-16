@@ -25,12 +25,12 @@ void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(const eos_parameters *res
   double outvars[6];
 
   // Step 4: Perform the interpolation
-  const int error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, 6, rho, Y_e, T,
-                                                                   keys, outvars, &report);
+  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, 6, rho, Y_e, T,
+                                                 keys, outvars, &report);
 
   // Step 5: Check for errors
-  if( error )
-    grhayl_error(report.message, error);
+  if( report.error )
+    grhayl_Error(report.error_key, report.message, report.error_key);
 
   // Step 6: Update output variables
   *muhat = outvars[0];

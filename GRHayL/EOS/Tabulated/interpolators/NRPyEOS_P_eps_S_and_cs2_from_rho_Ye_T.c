@@ -23,12 +23,12 @@ void NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(const eos_parameters *restrict eos,
   double outvars[4];
 
   // Step 4: Perform the interpolation
-  const int error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, 4, rho, Y_e, T,
-                                                                   keys, outvars, &report);
+  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, 4, rho, Y_e, T,
+                                                 keys, outvars, &report);
 
   // Step 5: Check for errors
-  if( error )
-    grhayl_error(report.message, error);
+  if( report.error )
+    grhayl_Error(report.error_key, report.message, report.error_key);
 
   // Step 6: Update output variables
   *P = outvars[0];

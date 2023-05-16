@@ -3,7 +3,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
-int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
+void NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
       const eos_parameters *restrict eos,
       const int n,
       const double rho,
@@ -19,21 +19,22 @@ int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
   if( !n ) return;
 
   // Start by assuming no errors
-  int error = 0;
+  report->error = false;
 
   // This function will interpolate n table quantities from
   // (rho,Ye,T). It replaces EOS_Omni calls with keytemp = 1
   if( n > NRPyEOS_ntablekeys ) {
     sprintf(report->message, "In %s call, number of quantities exceed maximum allowed: %d > %d.\n",
             __func__, n, NRPyEOS_ntablekeys);
-    return 1;
+    report->error = true;
+    return;
   }
 
   // Check table bounds for input variables
-  error = NRPyEOS_checkbounds(eos, rho, T, Y_e);
-  if( error != 0 ) {
+  report->error_key = NRPyEOS_checkbounds(eos, rho, T, Y_e);
+  if( report->error_key != 0 ) {
     char message[256];
-    switch(error) {
+    switch(report->error_key) {
       case 101:
         sprintf(message, "Input Y_e (%.15e) is too large.", Y_e);
         break;
@@ -56,7 +57,8 @@ int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
     sprintf(report->message,
             "In %s call, problem with checkbounds: %s\n",
             __func__, message);
-    return error;
+    report->error = true;
+    return;
   }
 
   // Get interpolation spots
@@ -64,13 +66,13 @@ int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
   double delx,dely,delz;
   const double lr = log(rho);
   const double lt = log(T);
-  NRPyEOS_get_interp_spots(eos, lr, lt, Y_e, &delx, &dely, &delz, idx);
+  NRPyEOS_get_interp_spots(eos,lr,lt,Y_e,&delx,&dely,&delz,idx);
 
-  for(int i=0; i<n; i++) {
+  for(int i=0;i<n;i++) {
     // Now perform the interpolations
     int key = tablevars_keys[i];
     double tablevar_out;
-    NRPyEOS_linterp_one(eos, idx, delx, dely, delz, &tablevar_out, key);
+    NRPyEOS_linterp_one(eos,idx,delx,dely,delz,&tablevar_out,key);
 
     // We have the result, but we must convert appropriately.
     // The only edge cases are P and eps, for which we obtain
@@ -85,6 +87,5 @@ int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
     // Then update tablevars
     tablevars[i] = tablevar_out;
   }
-  return 0;
 #endif
 }
