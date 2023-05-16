@@ -15,18 +15,23 @@ runs:
         gcovr -r . --keep
       shell: bash
 
+    # This still doesn't generate expected cov. files
     - if: runner.os == 'Linux' && inputs.compiler == 'clang'
       run: |
         sudo apt-get install gcovr
         gcovr -r .  --gcov-executable "llvm-cov-14 gcov" --keep
       shell: bash
 
+    # Try Intel's codecov tool? Not sure if this is compatible with gcovr
     - if: runner.os == 'Linux' && inputs.compiler == 'intel'
       run: |
         sudo apt-get install gcovr
         gcovr -r . --keep
       shell: bash
 
+    # These probably fail because we need to tell gcovr tp
+    # use the installed versions and not whatever MacOS
+    # ships with
     - if: runner.os == 'MacOS' && inputs.compiler == 'gcc'
       run: |
         brew install gcovr
