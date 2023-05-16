@@ -37,6 +37,8 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   hybrid-c2p-routines:
     strategy:
@@ -68,6 +70,8 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_Hybrid_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   c2p-auxiliaries:
     strategy:
@@ -99,6 +103,8 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   c2p-failure:
     strategy:
@@ -122,6 +128,8 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   tabulated-eos:
     strategy:
@@ -146,6 +154,8 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_tabulated_eos simple_table.h5
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   piecewise-polytrope-eos:
     strategy:
@@ -168,6 +178,8 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_piecewise_polytrope
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   grhayl-core:
     strategy:
@@ -195,6 +207,8 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_grhayl_core_test_suite
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   reconstruction:
     strategy:
@@ -223,6 +237,8 @@ jobs:
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   neutrinos:
     strategy:
@@ -255,6 +271,8 @@ jobs:
           ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 1
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   con-to-prim-tabulated:
     strategy:
@@ -300,6 +318,8 @@ jobs:
           ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
 
   code-failure:
     strategy:
@@ -330,3 +350,5 @@ jobs:
           done
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'

@@ -35,7 +35,6 @@ jobs:
           md5sum -c ET_Legacy_${{ matrix.test-function }}.md5
       - name: Run ET IllinoisGRMHD unit test for ET_Legacy_${{ matrix.test-function }}
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -68,7 +67,6 @@ jobs:
           md5sum -c hybrid_${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_Hybrid_${{ matrix.test-function }}
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -101,7 +99,6 @@ jobs:
           md5sum -c ${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_${{ matrix.test-function }}
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -126,7 +123,6 @@ jobs:
           compiler: 'clang'
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_${{ matrix.test-function }}
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -152,7 +148,6 @@ jobs:
         run: curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_tabulated_eos simple_table.h5
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -176,7 +171,6 @@ jobs:
           compiler: 'clang'
       - name: Run piecewise polytrope EOS unit test
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_piecewise_polytrope
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -205,7 +199,6 @@ jobs:
           md5sum -c grhayl_core_test_suite.md5
       - name: Run GRHayL_Core unit test
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_grhayl_core_test_suite
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -235,7 +228,6 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/reconstruction/${{ matrix.test-function }}_output_pert.bin
       - name: Run reconstruction unit test for ${{ matrix.test-function }} function
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_${{ matrix.test-function }}
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -267,7 +259,6 @@ jobs:
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run neutrinos unit test for ${{ matrix.test-function }} function
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 1
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -312,7 +303,6 @@ jobs:
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for tabulated EOS Con2Prim routines
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
@@ -339,7 +329,6 @@ jobs:
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for error-catching
         run: |
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(brew --prefix)/opt/llvm/lib:`pwd`/lib
           for i in {0..31}
           do
             ./Unit_Tests/failure.sh "./test/unit_test_code_error "+$i

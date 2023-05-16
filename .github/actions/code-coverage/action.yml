@@ -1,19 +1,42 @@
 name: code-coverage
 description: 'Uses gcovr and Codecov to generate code coverage report'
+inputs:
+  compiler:
+    description: compiler for test
+    required: true
+    default: 'gcc'
 
 runs:
   using: "composite"
   steps:
-    - if: runner.os == 'Linux'
+    - if: runner.os == 'Linux' && inputs.compiler == 'gcc'
       run: |
         sudo apt-get install gcovr
         gcovr -r . --keep
       shell: bash
 
-    - if: runner.os == 'MacOS'
+    - if: runner.os == 'Linux' && inputs.compiler == 'clang'
+      run: |
+        sudo apt-get install gcovr
+        gcovr -r .  --gcov-executable "llvm-cov gcov" --keep
+      shell: bash
+
+    - if: runner.os == 'Linux' && inputs.compiler == 'intel'
+      run: |
+        sudo apt-get install gcovr
+        gcovr -r . --keep
+      shell: bash
+
+    - if: runner.os == 'MacOS' && inputs.compiler == 'gcc'
       run: |
         brew install gcovr
         gcovr -r . --keep
+      shell: bash
+
+    - if: runner.os == 'MacOS' && inputs.compiler == 'clang'
+      run: |
+        brew install gcovr
+        gcovr -r . --gcov-executable "llvm-cov gcov" --keep
       shell: bash
 
     - uses: codecov/codecov-action@v3
