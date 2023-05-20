@@ -14,7 +14,7 @@ SUBDIRS = Con2Prim                        \
           EOS/Hybrid                      \
           EOS/Tabulated                   \
           EOS/Tabulated/interpolators     \
-          Flux_Source/tabulated           \
+          Flux_Source                     \
           GRHayL_Core                     \
           Induction                       \
           Neutrinos/NRPyLeakage           \

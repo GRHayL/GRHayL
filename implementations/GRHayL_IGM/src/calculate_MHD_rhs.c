@@ -32,12 +32,19 @@ void GRHayL_IGM_calculate_MHD_dirn_rhs(
                                          const metric_quantities *restrict metric_face,
                                          double *cmin, double *cmax);
 
-  void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
-                                const eos_parameters *restrict, const metric_quantities *restrict, const double, const double,
-                                conservative_quantities *restrict);
+  void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict prims_r,
+                                const primitive_quantities *restrict prims_l,
+                                const eos_parameters *restrict eos,
+                                const metric_quantities *restrict ADM_metric_face,
+                                const double cmin,
+                                const double cmax,
+                                conservative_quantities *restrict cons_fluxes);
 
-  void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict eos,
-                                 const metric_quantities *restrict, const metric_derivatives *restrict, conservative_quantities *restrict);
+  void (*calculate_source_terms)(const primitive_quantities *restrict prims,
+                                 const eos_parameters *restrict eos,
+                                 const metric_quantities *restrict ADM_metric,
+                                 const metric_derivatives *restrict metric_derivs,
+                                 conservative_quantities *restrict);
 
   const int xdir = (flux_dir == 0);
   const int ydir = (flux_dir == 1);
