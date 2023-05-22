@@ -5,6 +5,9 @@
 ###################################################################
 
 coverage:
+  range: "70..90" # Boundaries for yellow..green coverage
+  precision: 2 # Digits shown in Codecov report (default)
+  round: down # Rounding type (default)
   status:
     project:
       default:
