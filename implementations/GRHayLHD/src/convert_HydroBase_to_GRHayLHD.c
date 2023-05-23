@@ -22,7 +22,6 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
   const int jmax = cctk_lsh[1];
   const int kmax = cctk_lsh[2];
 
-// We use rho and press from HydroBase directly with no need to convert
 #pragma omp parallel for
   for(int k=0; k<kmax; k++) {
     for(int j=0; j<jmax; j++) {

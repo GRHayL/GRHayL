@@ -1,0 +1,88 @@
+# Interface definition for thorn GRHayLHDX
+
+implements: GRHayLHDX
+
+inherits: ADMBase, Tmunubase, HydroBase, GRHayLib
+
+USES INCLUDE: GRHayLib.h
+
+#########################################################
+
+# Cell-centered metric variables
+# The metric quantities in ADMBase are defined at vertices,
+# but we need them at cell centers. Since this computation will
+# need to be done repeatedly, it is better to store these values.
+CCTK_REAL ccc_spacetime type = GF CENTERING={ccc} TAGS='InterpNumTimelevels=1 prolongation="none" parity={ +1 +1 +1  +1 +1 +1  -1 +1 +1  +1 -1 +1  +1 +1 -1}' #should depend on ADMBase::metric, ADMBase::shift, ADMBase::lapse
+{
+  ccc_lapse,
+  ccc_betax, ccc_betay, ccc_betaz
+  ccc_gxx, ccc_gxy, ccc_gxz
+  ccc_gyy, ccc_gyz, ccc_gzz
+} "Cell-centered spacetime quantities"
+
+CCTK_REAL ccc_curv type = GF CENTERING={ccc} TAGS='InterpNumTimelevels=1 prolongation="none" parity={ +1 +1 +1  +1 +1 +1  -1 +1 +1  +1 -1 +1  +1 +1 -1}' #should depend on ADMBase::curv
+{
+  ccc_kxx, ccc_kxy, ccc_kxz
+  ccc_kyy, ccc_kyz, ccc_kzz
+} "Cell-centered extrinsic curvature"
+
+CCTK_REAL ccc_Tmunu type = GF CENTERING={ccc} TAGS='InterpNumTimelevels=1 prolongation="none" parity={ +1 +1 +1  +1 +1 +1  -1 +1 +1  +1 -1 +1  +1 +1 -1}' #should depend on TmunuBase vars
+{
+  ccc_Ttt, ccc_Ttx, ccc_Tty, ccc_Ttz
+  ccc_Txx, ccc_Txy, ccc_Txz
+  ccc_Tyy, ccc_Tyz, ccc_Tzz
+} "Cell-centered stress-energy tensor"
+
+#########################################################
+
+# Primitive variables
+# The variables rho_b and pressure are identical to the HydroBase variables. However,
+# GRHayL uses the velocity v^i = u^i/u^0, while HydroBase uses the Valencia velocity, so
+# these velocities differ from HydroBase.
+CCTK_REAL grmhd_primitives type = GF CENTERING={ccc} TAGS='InterpNumTimelevels=1 prolongation="none"' #dependents="grmhd_conservatives" (not sure if this would mess up how c2p is designed)
+{
+  rho_b, pressure, vx, vy, vz
+} "Primitive variables density, pressure, and components of three velocity v^i. Note that v^i is defined in terms of 4-velocity as: v^i = u^i/u^0. Note that this definition differs from the Valencia formalism."
+
+# Separating the computation of Tmunu from the con2prim routine requires providing u0.
+# This is most easily done by adding another grid function.
+CCTK_REAL u0 type = GF CENTERING={ccc} TAGS='InterpNumTimelevels=1 prolongation="none" checkpoint="no"' "4-velocity component u^0"
+
+#########################################################
+
+# Evolved variables
+CCTK_REAL grmhd_conservatives type = GF CENTERING={ccc} Timelevels=1 TAGS='rhs="grmhd_conservatives_rhs" dependents="GRHayLHDX::grmhd_conservatives_rhs GRHayLHDX::flux_x GRHayLHDX::flux_y GRHayLHDX::flux_z"'
+{
+  rho_star, tau, Stildex, Stildey, Stildez # Note that Stildei = \tilde{S}_i.
+} "Evolved mhd variables"
+
+#########################################################
+
+# RHS variables for MoL timestepping
+CCTK_REAL grmhd_conservatives_rhs type = GF CENTERING={ccc} TAGS='prolongation="none" Checkpoint="no"'
+{
+  rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs
+} "Storage for the right-hand side of the partial_t rho_star, partial_t tau, and partial_t tilde{S}_i equations. Needed for MoL timestepping."
+
+#########################################################
+
+#Temporary variables for flux computation
+CCTK_REAL flux_x TYPE=gf CENTERING={vcc} TAGS='prolongation="none" checkpoint="no"'
+{
+  rho_star_flux_x, tau_flux_x, Sx_flux_x, Sy_flux_x, Sz_flux_x
+} "Fluxes in x direction"
+
+CCTK_REAL flux_y TYPE=gf CENTERING={cvc} TAGS='prolongation="none" checkpoint="no"'
+{
+  rho_star_flux_y, tau_flux_y, Sx_flux_y, Sy_flux_y, Sz_flux_y
+} "Fluxes in y direction"
+
+CCTK_REAL flux_z TYPE=gf CENTERING={ccv} TAGS='prolongation="none" checkpoint="no"'
+{
+  rho_star_flux_z, tau_flux_z, Sx_flux_z, Sy_flux_z, Sz_flux_z
+} "Fluxes in z direction"
+
+#########################################################
+
+# Diagnostic gridfunctions
+CCTK_REAL failure_checker type = GF CENTERING={ccc} TAGS='prolongation="none" Checkpoint="no" InterpNumTimelevels=1' "Gridfunction to track conservative-to-primitives solver fixes. Beware that this gridfunction is overwritten at each RK substep."

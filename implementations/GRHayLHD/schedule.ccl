@@ -94,7 +94,6 @@ schedule GRHayLHD_conserv_to_prims in GRHayLHD_Con2Prim after GRHayLHD_sync_cons
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
   READS:  grmhd_conservatives
-   # Con2Prim routine also recomputes conservatives after solving for primitives
   WRITES: u0(everywhere), grmhd_primitives(everywhere),
           grmhd_conservatives(everywhere), failure_checker(everywhere)
   WRITES: HydroBase::eps(everywhere)
@@ -112,6 +111,7 @@ schedule GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz in GRHayLHD_Con2Prim afte
 #########################################################
 # Stress-energy Tensor
 #########################################################
+
 schedule GRHayLHD_compute_Tmunu in AddToTmunu
 {
   LANG: C

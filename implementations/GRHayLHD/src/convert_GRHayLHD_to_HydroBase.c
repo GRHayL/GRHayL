@@ -41,8 +41,8 @@ void convert_GRHayLHD_to_HydroBase(CCTK_ARGUMENTS) {
         //     = \Gamma/u^0 ( U^i - \beta^i / \alpha ) <- \Gamma = \alpha u^0
         //     = \alpha ( U^i - \beta^i / \alpha )
         //     = \alpha U^i - \beta^i
-        const double lapseL=alp[index];
-        const double lapseL_inv=1.0/lapseL;
+        const double lapseL = alp[index];
+        const double lapseL_inv = 1.0/lapseL;
         const double utU[3] = {vx[index] + betax[index],
                                vy[index] + betay[index],
                                vz[index] + betaz[index]};

@@ -1,0 +1,14 @@
+# Main make.code.defn file for thorn GRHayL
+
+# Source files in this directory
+SRCS = conservs_to_prims.cxx                         \
+       compute_metric_derivs.cxx                     \
+       compute_ccc_centered_extrinsic_curvature.cxx  \
+       compute_ccc_centered_spacetime_quantities.cxx \
+       compute_Tmunu.cxx                             \
+       convert_HydroBase_to_GRHayLHDX.cxx            \
+       convert_GRHayLHDX_to_HydroBase.cxx            \
+       evaluate_flux_source_rhs.cxx                  \
+       evaluate_tau_curvature_rhs.cxx                \
+       interpolate_metric_to_face.cxx #\
+#       outer_boundaries.cxx

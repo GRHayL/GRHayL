@@ -1,0 +1,153 @@
+# Schedule for thorn GRHayLHDX
+
+STORAGE: grmhd_conservatives
+STORAGE: grmhd_primitives, u0, grmhd_conservatives_rhs
+STORAGE: flux_x, flux_y, flux_z, failure_checker
+
+#########################################################
+# INITIAL DATA CONVERSION
+#########################################################
+# Fill GRHayLHDX grid functions using initial data from ADMBase and HydroBase
+schedule group GRHayLHDX_Prim2Con2Prim in HydroBase_PostInitial
+{
+} "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayLHDX"
+
+schedule GRHayLHDX_compute_ccc_centered_spacetime_quantities in GRHayLHDX_Prim2Con2Prim
+{
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  WRITES: ccc_spacetime(everywhere)
+} "Interpolate spacetime quantities to cell centers."
+
+schedule convert_HydroBase_to_GRHayLHDX in GRHayLHDX_Prim2Con2Prim after GRHayLHDX_compute_ccc_centered_spacetime_quantities
+{
+  LANG: C
+  READS:  HydroBase::rho, HydroBase::press, HydroBase::eps,
+          HydroBase::vel, HydroBase::Ye #, HydroBase::entropy,
+ #         HydroBase::temperature
+  READS:  ccc_spacetime
+  WRITES: HydroBase::eps(everywhere)
+  WRITES: grmhd_primitives(everywhere), grmhd_conservatives(everywhere)
+  SYNC: grmhd_primitives, grmhd_conservatives
+} "Convert HydroBase initial data (ID) to GRHayLHDX variables and enforce simulation limits on primitives."
+
+schedule GRHayLHDX_conservs_to_prims in GRHayLHDX_Prim2Con2Prim after convert_HydroBase_to_GRHayLHDX
+{
+  LANG: C
+  READS:  ccc_spacetime, grmhd_conservatives
+  WRITES: u0(everywhere), grmhd_primitives(everywhere),
+          grmhd_conservatives(everywhere), failure_checker(everywhere)
+  WRITES: HydroBase::eps(everywhere)
+} "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
+
+# Convert data back to ensure both codes have the same data
+SCHEDULE convert_GRHayLHDX_to_HydroBase in GRHayLHDX_Prim2Con2Prim after GRHayLHDX_conservs_to_prims
+{
+  LANG: C
+  READS:  ccc_spacetime, grmhd_primitives
+  WRITES: HydroBase::rho(everywhere), HydroBase::press(everywhere),
+          HydroBase::vel(everywhere), HydroBase::Bvec(everywhere)
+} "Convert GRHayLHDX-native variables to HydroBase"
+
+#########################################################
+# Con2Prim
+#########################################################
+schedule GROUP GRHayLHDX_Con2Prim in ODESolvers_PostStep
+{
+} "Compute the cell-centered spacetime quantities and solve for primitives"
+
+schedule GRHayLHDX_compute_ccc_centered_spacetime_quantities in GRHayLHDX_Con2Prim
+{
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  WRITES: ccc_spacetime(everywhere)
+  SYNC: grmhd_conservatives
+} "Interpolate spacetime quantities to cell centers"
+
+schedule GRHayLHDX_conservs_to_prims in GRHayLHDX_Con2Prim after GRHayLHDX_compute_ccc_centered_spacetime_quantities
+{
+  LANG: C
+  READS:  ccc_spacetime, grmhd_conservatives
+  WRITES: u0(everywhere), grmhd_primitives(everywhere),
+          grmhd_conservatives(everywhere), failure_checker(everywhere)
+  WRITES: HydroBase::eps(everywhere)
+} "Compute primitive variables from conservatives"
+
+# For now, let's just rely on CarpetX's BCs
+#schedule GRHayLHDX_outer_boundaries_on_P_rho_b_vx_vy_vz in GRHayLHDX_Con2Prim after GRHayLHDX_conservs_to_prims
+#{
+#  LANG: C
+#  READS:  ccc_spacetime
+#  WRITES: grmhd_primitives(boundary), grmhd_conservatives(boundary),
+#          failure_checker(boundary)
+#          #ccc_Tmunu(boundary), failure_checker(boundary)
+#  WRITES: HydroBase::eps(boundary)
+## We must sync {P,rho_b,vx,vy,vz} here.
+#  SYNC: grmhd_primitives
+#} "Apply outflow-only, flat BCs on {P,rho_b,vx,vy,vz}. Outflow only == velocities pointed inward from outer boundary are set to zero."
+
+#########################################################
+# RHS EVALUATION
+#########################################################
+
+schedule group GRHayLHDX_RHS in ODESolvers_RHS
+{
+} "Evaluate RHSs GRHD equations"
+
+schedule GRHayLHDX_compute_ccc_centered_extrinsic_curvature in GRHayLHDX_RHS #after GRHayLHDX_enforce_detgtij_eq_1
+{
+   LANG: C
+   READS:  ADMBase::curv
+   WRITES: ccc_curv(everywhere)
+} "Interpolate extrinsic curvature to cell centers"
+
+schedule GRHayLHDX_evaluate_tau_curvature_rhs in GRHayLHDX_RHS after GRHayLHDX_compute_ccc_centered_extrinsic_curvature
+{
+  LANG: C
+  READS:  HydroBase::eps
+  READS:  ccc_spacetime, ccc_curv, grmhd_primitives
+  WRITES: grmhd_conservatives_rhs
+} "Initialize RHS variables to zero and evalute extrinsic curvature source term of tau_rhs"
+
+schedule GRHayLHDX_evaluate_flux_source_rhs in GRHayLHDX_RHS after GRHayLHDX_evaluate_tau_curvature_rhs
+{
+  LANG: C
+  READS:  HydroBase::eps
+  READS:  ccc_spacetime, grmhd_primitives,
+          grmhd_conservatives_rhs(interior)
+  WRITES: flux_x, flux_y, flux_z, grmhd_conservatives_rhs
+} "Evaluate RHSs of GRHD equations"
+
+#########################################################
+# Compute stress-energy tensor T_munu
+#########################################################
+
+schedule GRHayLHDX_compute_Tmunu in TmunuBase_AddToTmunu
+{
+  LANG: C
+  READS:  ccc_spacetime, grmhd_primitives, u0
+  READS:  HydroBase::eps
+  WRITES: ccc_Tmunu(everywhere), TmunuBase::eTtt, TmunuBase::eTti, TmunuBase::eTij
+} "Interpolate stress-energy tensor to vertices"
+
+#########################################################
+# Conversion from GRHayLHDX variables to Hydrobase
+#########################################################
+
+schedule GRHayLHDX_compute_ccc_centered_spacetime_quantities in CCTK_ANALYSIS
+{
+   LANG: C
+   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+   WRITES: ccc_spacetime(everywhere)
+} "Interpolate spacetime quantities to cell centers"
+
+SCHEDULE convert_GRHayLHDX_to_HydroBase at CCTK_ANALYSIS before (particle_tracerET VolumeIntegralGroup convert_to_MHDX_3velocity) after (GRHayLHDX_compute_ccc_centered_spacetime_quantities ML_BSSN_evolCalcGroup)
+{
+  LANG: C
+  OPTIONS: GLOBAL-EARLY,LOOP-LOCAL
+  READS:  ccc_spacetime, grmhd_primitives
+  WRITES: HydroBase::rho(everywhere), HydroBase::press(everywhere),
+          HydroBase::vel(everywhere), HydroBase::Bvec(everywhere)
+} "Convert GRHayLHDX-native variables to HydroBase"
+
+#########################################################
