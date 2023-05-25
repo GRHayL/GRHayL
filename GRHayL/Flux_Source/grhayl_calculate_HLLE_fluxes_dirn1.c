@@ -2,7 +2,7 @@
 /*
  * Compute the HLLE-derived fluxes on the left face in the 1direction for all components.
  */
-void calculate_HLLE_fluxes_dirn1(const primitive_quantities *restrict prims_r, const primitive_quantities *restrict prims_l, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric_face, const double cmin_dirn1, const double cmax_dirn1, conservative_quantities *restrict cons) {
+void grhayl_calculate_HLLE_fluxes_dirn1(const primitive_quantities *restrict prims_r, const primitive_quantities *restrict prims_l, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric_face, const double cmin_dirn1, const double cmax_dirn1, conservative_quantities *restrict cons) {
 
 {
 

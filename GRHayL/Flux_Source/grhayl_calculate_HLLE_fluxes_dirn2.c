@@ -2,7 +2,7 @@
 /*
  * Compute the HLLE-derived fluxes on the left face in the 2direction for all components.
  */
-void calculate_HLLE_fluxes_dirn2(const primitive_quantities *restrict prims_r, const primitive_quantities *restrict prims_l, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric_face, const double cmin_dirn2, const double cmax_dirn2, conservative_quantities *restrict cons) {
+void grhayl_calculate_HLLE_fluxes_dirn2(const primitive_quantities *restrict prims_r, const primitive_quantities *restrict prims_l, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric_face, const double cmin_dirn2, const double cmax_dirn2, conservative_quantities *restrict cons) {
 
 {
 
@@ -28,8 +28,6 @@ const double P_r = prims_r->press;
 const double P_l = prims_l->press;
 const double rhob_r = prims_r->rho;
 const double rhob_l = prims_l->rho;
-const double Y_e_r = prims_r->Y_e;
-const double Y_e_l = prims_l->Y_e;
 const double alpha_face = metric_face->lapse;
 const double beta_faceU0 = metric_face->betaU[0];
 const double beta_faceU1 = metric_face->betaU[1];
@@ -106,16 +104,13 @@ const double gamma_faceDD22 = metric_face->gammaDD[2][2];
   const double tmp_75 = beta_faceU0*tmp_64 - tmp_49*tmp_54 + tmp_65*u4rU1;
   const double tmp_76 = beta_faceU1*tmp_64 - tmp_50*tmp_54 + tmp_65*u4rU2;
   const double tmp_77 = cmax_dirn2*cmin_dirn2;
-  const double tmp_78 = rhob_l*tmp_43*u4lU3;
-  const double tmp_79 = rhob_r*tmp_70*u4rU3;
-  const double tmp_81 = rhob_l*tmp_42*u4lU0;
-  const double tmp_83 = rhob_r*tmp_42*u4rU0;
-  const double tmp_84 = tmp_41*tmp_7;
+  const double tmp_79 = rhob_l*tmp_42*u4lU0;
+  const double tmp_81 = rhob_r*tmp_42*u4rU0;
+  const double tmp_82 = tmp_41*tmp_7;
   cons->SD[0] = tmp_0*(tmp_43*(gamma_faceDD00*tmp_38 + gamma_faceDD01*tmp_40 + gamma_faceDD02*tmp_31 + tmp_1*tmp_34) + tmp_70*(gamma_faceDD00*tmp_68 + gamma_faceDD01*tmp_69 + gamma_faceDD02*tmp_63 + tmp_1*tmp_66) - tmp_77*(alpha_face*tmp_41*(gamma_faceDD00*tmp_75 + gamma_faceDD01*tmp_76 + gamma_faceDD02*tmp_66 + tmp_1*tmp_74) - tmp_42*(gamma_faceDD00*tmp_72 + gamma_faceDD01*tmp_73 + gamma_faceDD02*tmp_34 + tmp_1*tmp_71)));
   cons->SD[1] = tmp_0*(tmp_43*(gamma_faceDD01*tmp_38 + gamma_faceDD11*tmp_40 + gamma_faceDD12*tmp_31 + tmp_2*tmp_34) + tmp_70*(gamma_faceDD01*tmp_68 + gamma_faceDD11*tmp_69 + gamma_faceDD12*tmp_63 + tmp_2*tmp_66) - tmp_77*(alpha_face*tmp_41*(gamma_faceDD01*tmp_75 + gamma_faceDD11*tmp_76 + gamma_faceDD12*tmp_66 + tmp_2*tmp_74) - tmp_42*(gamma_faceDD01*tmp_72 + gamma_faceDD11*tmp_73 + gamma_faceDD12*tmp_34 + tmp_2*tmp_71)));
   cons->SD[2] = tmp_0*(tmp_43*(gamma_faceDD02*tmp_38 + gamma_faceDD12*tmp_40 + gamma_faceDD22*tmp_31 + tmp_3*tmp_34) + tmp_70*(gamma_faceDD02*tmp_68 + gamma_faceDD12*tmp_69 + gamma_faceDD22*tmp_63 + tmp_3*tmp_66) - tmp_77*(alpha_face*tmp_41*(gamma_faceDD02*tmp_75 + gamma_faceDD12*tmp_76 + gamma_faceDD22*tmp_66 + tmp_3*tmp_74) - tmp_42*(gamma_faceDD02*tmp_72 + gamma_faceDD12*tmp_73 + gamma_faceDD22*tmp_34 + tmp_3*tmp_71)));
-  cons->rho = tmp_0*(-tmp_77*(-tmp_81 + tmp_83) + tmp_78 + tmp_79);
-  cons->tau = tmp_0*(cmax_dirn2*(-rhob_l*tmp_42*u4lU3 + tmp_34*tmp_84) + cmin_dirn2*(-rhob_r*tmp_42*u4rU3 + tmp_66*tmp_84) - tmp_77*(tmp_41*tmp_7*tmp_74 - tmp_71*tmp_84 + tmp_81 - tmp_83));
-  cons->Y_e = tmp_0*(Y_e_l*tmp_78 + Y_e_r*tmp_79 - tmp_77*(-Y_e_l*tmp_81 + Y_e_r*alpha_face*rhob_r*tmp_41*u4rU0));
+  cons->rho = tmp_0*(rhob_l*tmp_43*u4lU3 + rhob_r*tmp_70*u4rU3 - tmp_77*(-tmp_79 + tmp_81));
+  cons->tau = tmp_0*(cmax_dirn2*(-rhob_l*tmp_42*u4lU3 + tmp_34*tmp_82) + cmin_dirn2*(-rhob_r*tmp_42*u4rU3 + tmp_66*tmp_82) - tmp_77*(tmp_41*tmp_7*tmp_74 - tmp_71*tmp_82 + tmp_79 - tmp_81));
 }
 }

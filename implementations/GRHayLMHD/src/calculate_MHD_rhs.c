@@ -55,19 +55,19 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
   // Set function pointer to specific function for a given direction
   switch(flux_dir) {
     case 0:
-      calculate_characteristic_speed = &calculate_characteristic_speed_dirn0;
-      calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn0;
-      calculate_source_terms = &calculate_source_terms_dirn0;
+      calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn0;
+      calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn0;
+      calculate_source_terms = &grhayl_calculate_source_terms_dirn0;
       break;
     case 1:
-      calculate_characteristic_speed = &calculate_characteristic_speed_dirn1;
-      calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn1;
-      calculate_source_terms = &calculate_source_terms_dirn1;
+      calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn1;
+      calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn1;
+      calculate_source_terms = &grhayl_calculate_source_terms_dirn1;
       break;
     case 2:
-      calculate_characteristic_speed = &calculate_characteristic_speed_dirn2;
-      calculate_HLLE_fluxes = &calculate_HLLE_fluxes_dirn2;
-      calculate_source_terms = &calculate_source_terms_dirn2;
+      calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn2;
+      calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn2;
+      calculate_source_terms = &grhayl_calculate_source_terms_dirn2;
       break;
     default:
       CCTK_VERROR("Warning: invalid flux_dir value (not 0, 1, or 2) has been passed to calculate_MHD_rhs.");

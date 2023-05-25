@@ -70,7 +70,7 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outC
                                  S_tilde_source_termD2_free_symbols)
 
     prims_NRPy = ["u4U0", "u4U1", "u4U2", "u4U3", "BU0", "BU1", "BU2", "P", "rhob"]
-    prims_GRHayL = ["u0", "vx*u4U0", "vy*u4U0", "vz*u4U0", "Bx", "By", "Bz", "press", "rho"]
+    prims_GRHayL = ["u0", "vU[0]*u4U0", "vU[1]*u4U0", "vU[2]*u4U0", "BU[0]", "BU[1]", "BU[2]", "press", "rho"]
 
     prestring = r"""
 double h, cs2;
@@ -177,23 +177,23 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 
         for i in range(3):
             desc = f"Add source term for {i}-component of Stilde and tau_tilde"
-            name = f"calculate_source_terms_dirn{i}"
+            name = f"grhayl_calculate_source_terms_dirn{i}"
 
             loopstring = prestring
-            loopstring += f"const double alpha_dD{i} = metric_derivs.lapse;\n"
+            loopstring += f"const double alpha_dD{i} = metric_derivs->lapse;\n"
 
-            loopstring += f"const double betaU_dD0{i} = metric_derivs.betaU[0];\n"
-            loopstring += f"const double betaU_dD1{i} = metric_derivs.betaU[1];\n"
-            loopstring += f"const double betaU_dD2{i} = metric_derivs.betaU[2];\n"
+            loopstring += f"const double betaU_dD0{i} = metric_derivs->betaU[0];\n"
+            loopstring += f"const double betaU_dD1{i} = metric_derivs->betaU[1];\n"
+            loopstring += f"const double betaU_dD2{i} = metric_derivs->betaU[2];\n"
 
-            loopstring += f"const double gammaDD_dD00{i} = metric_derivs.gammaDD[0][0];\n"
-            loopstring += f"const double gammaDD_dD01{i} = metric_derivs.gammaDD[0][1];\n"
-            loopstring += f"const double gammaDD_dD02{i} = metric_derivs.gammaDD[0][2];\n"
+            loopstring += f"const double gammaDD_dD00{i} = metric_derivs->gammaDD[0][0];\n"
+            loopstring += f"const double gammaDD_dD01{i} = metric_derivs->gammaDD[0][1];\n"
+            loopstring += f"const double gammaDD_dD02{i} = metric_derivs->gammaDD[0][2];\n"
 
-            loopstring += f"const double gammaDD_dD11{i} = metric_derivs.gammaDD[1][1];\n"
-            loopstring += f"const double gammaDD_dD12{i} = metric_derivs.gammaDD[1][2];\n"
+            loopstring += f"const double gammaDD_dD11{i} = metric_derivs->gammaDD[1][1];\n"
+            loopstring += f"const double gammaDD_dD12{i} = metric_derivs->gammaDD[1][2];\n"
 
-            loopstring += f"const double gammaDD_dD22{i} = metric_derivs.gammaDD[2][2];\n"
+            loopstring += f"const double gammaDD_dD22{i} = metric_derivs->gammaDD[2][2];\n"
 
 
             body = outputC([vars_rhs[i], vars_rhs[i+3]], [vars_to_write[i], vars_to_write[-1]],
@@ -210,7 +210,7 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 
 
         desc = "Add extrinsic curvature source term for tau_tilde"
-        name = "calculate_tau_tilde_source_term_extrinsic_curv"    
+        name = "grhayl_calculate_tau_tilde_source_term_extrinsic_curv"    
 
         prestring += "const double KDD00 = curv->K[0][0];\n"
         prestring += "const double KDD01 = curv->K[0][1];\n"

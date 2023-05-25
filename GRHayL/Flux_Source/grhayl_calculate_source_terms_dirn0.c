@@ -2,7 +2,7 @@
 /*
  * Add source term for 0-component of Stilde and tau_tilde
  */
-void calculate_source_terms_dirn0(const primitive_quantities *restrict prims, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric, const metric_quantities *restrict metric_derivs, conservative_quantities *restrict cons) {
+void grhayl_calculate_source_terms_dirn0(const primitive_quantities *restrict prims, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric, const metric_quantities *restrict metric_derivs, conservative_quantities *restrict cons) {
 
 {
 
@@ -28,16 +28,16 @@ const double gammaDD02 = metric->gammaDD[0][2];
 const double gammaDD11 = metric->gammaDD[1][1];
 const double gammaDD12 = metric->gammaDD[1][2];
 const double gammaDD22 = metric->gammaDD[2][2];
-const double alpha_dD0 = metric_derivs[0].lapse;
-const double betaU_dD00 = metric_derivs[0].betaU[0];
-const double betaU_dD10 = metric_derivs[0].betaU[1];
-const double betaU_dD20 = metric_derivs[0].betaU[2];
-const double gammaDD_dD000 = metric_derivs[0].gammaDD[0][0];
-const double gammaDD_dD010 = metric_derivs[0].gammaDD[0][1];
-const double gammaDD_dD020 = metric_derivs[0].gammaDD[0][2];
-const double gammaDD_dD110 = metric_derivs[0].gammaDD[1][1];
-const double gammaDD_dD120 = metric_derivs[0].gammaDD[1][2];
-const double gammaDD_dD220 = metric_derivs[0].gammaDD[2][2];
+const double alpha_dD0 = metric_derivs->lapse;
+const double betaU_dD00 = metric_derivs->betaU[0];
+const double betaU_dD10 = metric_derivs->betaU[1];
+const double betaU_dD20 = metric_derivs->betaU[2];
+const double gammaDD_dD000 = metric_derivs->gammaDD[0][0];
+const double gammaDD_dD010 = metric_derivs->gammaDD[0][1];
+const double gammaDD_dD020 = metric_derivs->gammaDD[0][2];
+const double gammaDD_dD110 = metric_derivs->gammaDD[1][1];
+const double gammaDD_dD120 = metric_derivs->gammaDD[1][2];
+const double gammaDD_dD220 = metric_derivs->gammaDD[2][2];
   const double _Integer_2 = 2.0;
   const double _Rational_1_2 = 1.0/2.0;
   const double tmp_0 = betaU0*gammaDD_dD000 + betaU1*gammaDD_dD010 + betaU2*gammaDD_dD020 + betaU_dD00*gammaDD00 + betaU_dD10*gammaDD01 + betaU_dD20*gammaDD02;

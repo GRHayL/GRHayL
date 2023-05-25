@@ -2,7 +2,7 @@
 /*
  * Add source term for 1-component of Stilde and tau_tilde
  */
-void calculate_source_terms_dirn1(const primitive_quantities *restrict prims, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric, const metric_quantities *restrict metric_derivs, conservative_quantities *restrict cons) {
+void grhayl_calculate_source_terms_dirn1(const primitive_quantities *restrict prims, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric, const metric_quantities *restrict metric_derivs, conservative_quantities *restrict cons) {
 
 {
 

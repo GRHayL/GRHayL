@@ -213,7 +213,7 @@ def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, tabulated
     prims_NRPy_r = ["u4rU0", "u4rU1", "u4rU2", "u4rU3", "BrU0", "BrU1", "BrU2", "P_r", "rhob_r"]
     prims_NRPy_l = ["u4lU0", "u4lU1", "u4lU2", "u4lU3", "BlU0", "BlU1", "BlU2", "P_l", "rhob_l"]
 
-    prims_GRHayL = ["u0", "vx", "vy", "vz", "Bx", "By", "Bz", "press", "rho"]
+    prims_GRHayL = ["u0", "vU[0]", "vU[1]", "vU[2]", "BU[0]", "BU[1]", "BU[2]", "press", "rho"]
 
     Y_e_r = None
     Y_e_l = None
@@ -330,7 +330,7 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
     #                                prestring)
 
         desc = "Compute the HLLE-derived fluxes on the left face in the " + str(flux_dirn) + "direction for all components."
-        name = "calculate_HLLE_fluxes_dirn" + str(flux_dirn)
+        name = "grhayl_calculate_HLLE_fluxes_dirn" + str(flux_dirn)
 
         outCfunction(
             outfile=os.path.join(Ccodesdir,name+".c"),

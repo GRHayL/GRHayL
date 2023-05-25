@@ -199,19 +199,19 @@ int main(int argc, char **argv) {
     // Set function pointer to specific function for a given direction
     switch(flux_dirn) {
       case 0:
-        calculate_HLLE_fluxes          = &calculate_HLLE_fluxes_dirn0;
-        calculate_source_terms         = &calculate_source_terms_dirn0;
-        calculate_characteristic_speed = &calculate_characteristic_speed_dirn0;
+        calculate_HLLE_fluxes          = &grhayl_calculate_HLLE_fluxes_dirn0;
+        calculate_source_terms         = &grhayl_calculate_source_terms_dirn0;
+        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn0;
         break;
       case 1:
-        calculate_HLLE_fluxes          = &calculate_HLLE_fluxes_dirn1;
-        calculate_source_terms         = &calculate_source_terms_dirn1;
-        calculate_characteristic_speed = &calculate_characteristic_speed_dirn1;
+        calculate_HLLE_fluxes          = &grhayl_calculate_HLLE_fluxes_dirn1;
+        calculate_source_terms         = &grhayl_calculate_source_terms_dirn1;
+        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn1;
         break;
       case 2:
-        calculate_HLLE_fluxes          = &calculate_HLLE_fluxes_dirn2;
-        calculate_source_terms         = &calculate_source_terms_dirn2;
-        calculate_characteristic_speed = &calculate_characteristic_speed_dirn2;
+        calculate_HLLE_fluxes          = &grhayl_calculate_HLLE_fluxes_dirn2;
+        calculate_source_terms         = &grhayl_calculate_source_terms_dirn2;
+        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn2;
         break;
     }
 
@@ -389,7 +389,7 @@ int main(int argc, char **argv) {
 
 
         conservative_quantities cons_sources;
-        calculate_tau_tilde_source_term_extrinsic_curv(&prims,
+        grhayl_calculate_tau_tilde_source_term_extrinsic_curv(&prims,
                                                        &eos,
                                                        &metric,
                                                        &curv,

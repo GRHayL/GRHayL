@@ -155,7 +155,7 @@ def Cfunction__GRMHD_characteristic_speeds(Ccodesdir, includes=None, formalism="
     prims_NRPy_r = ["u4rU0", "u4rU1", "u4rU2", "u4rU3", "BrU0", "BrU1", "BrU2", "rhob_r"]
     prims_NRPy_l = ["u4lU0", "u4lU1", "u4lU2", "u4lU3", "BlU0", "BlU1", "BlU2", "rhob_l"]
 
-    prims_GRHayL = ["u0", "vx", "vy", "vz", "Bx", "By", "Bz", "rho"]
+    prims_GRHayL = ["u0", "vU[0]", "vU[1]", "vU[2]", "BU[0]", "BU[1]", "BU[2]", "rho"]
 
     prestring = r"""
 double h_r, h_l, cs2_r, cs2_l;
@@ -248,7 +248,7 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
                        filename="returnstring", prestring=prestring)
 
         desc = "Compute the characteristic speeds in direction " + str(flux_dirn)
-        name = "calculate_characteristic_speed_dirn" + str(flux_dirn)
+        name = "grhayl_calculate_characteristic_speed_dirn" + str(flux_dirn)
 
         outCfunction(
             outfile=os.path.join(Ccodesdir,name+".c"),
