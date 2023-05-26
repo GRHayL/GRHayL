@@ -18,8 +18,8 @@ runs:
     # This still doesn't generate expected cov. files
     - if: runner.os == 'Linux' && inputs.compiler == 'clang'
       run: |
-        sudo apt-get install gcovr
-        gcovr -r .  --gcov-executable "llvm-cov-14 gcov" --keep
+        llvm-profdata merge -sparse default.profraw -o codecov.profdata
+        llvm-cov show ./test.out -instr-profile=codecov.profdata > coverage.txt
       shell: bash
 
     # Try Intel's codecov tool? Not sure if this is compatible with gcovr

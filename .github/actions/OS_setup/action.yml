@@ -33,7 +33,7 @@ runs:
         sudo apt-spy2 fix --commit --launchpad --country=US
         # after selecting a specific mirror, we need to run 'apt-get update'
         sudo apt-get update
-        sudo apt-get install -y clang-14 libhdf5-serial-dev
+        sudo apt-get install -y clang-14 llvm libhdf5-serial-dev
       shell: bash
 
     - if: runner.os == 'Linux' && inputs.compiler == 'intel'

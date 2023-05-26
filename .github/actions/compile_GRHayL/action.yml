@@ -14,7 +14,7 @@ runs:
       shell: bash
 
     - if: runner.os == 'Linux' && inputs.compiler == 'clang'
-      run: CC=clang-14 ./configure --prefix=`pwd` --cflags='-ftest-coverage -fprofile-arcs'
+      run: CC=clang-14 ./configure --prefix=`pwd` --cflags='-fprofile-instr-generate -fcoverage-mapping'
       shell: bash
 
     - if: runner.os == 'Linux' && inputs.compiler == 'intel'
