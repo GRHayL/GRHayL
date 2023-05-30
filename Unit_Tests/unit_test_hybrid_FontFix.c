@@ -206,9 +206,9 @@ int main(int argc, char **argv) {
     //This uses the Font fix method to compute primitives from conservatives.
     grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
     grhayl_guess_primitives(&eos, &ADM_metric, &metric_aux, &cons, &prims);
-    const int check = Hybrid_Font_Fix(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+    const int check = grhayl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if( check != c2p_check[i] )
-      grhayl_error("Test Hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
+      grhayl_error("Test grhayl_hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
 
     primitive_quantities prims_trusted, prims_pert;
     grhayl_initialize_primitives(
@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
 
     validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
   }
-  grhayl_info("Hybrid_Font_Fix function test has passed!\n");
+  grhayl_info("grhayl_hybrid_FontFix function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

@@ -68,11 +68,9 @@ utoprim_1d.c:
 
 #define NEWT_DIM (1)
 
-double dpdW_calc_vsq(const eos_parameters *restrict eos, double W, double vsq);
-
 /**********************************************************************************
 
-  Hybrid_Noble1D():
+  grhayl_hybrid_Noble1D():
 
      -- Attempt an inversion from U to prim using the initial guess prim.
 
@@ -92,27 +90,26 @@ double dpdW_calc_vsq(const eos_parameters *restrict eos, double W, double vsq);
              \  alpha B^i  /
 
 
-return:  (i*100 + j)  where
-         i = 0 ->  Newton-Raphson solver either was not called (yet or not used)
-                   or returned successfully;
-             1 ->  Newton-Raphson solver did not converge to a solution with the
-                   given tolerances;
-             2 ->  Newton-Raphson procedure encountered a numerical divergence
-                   (occurrence of "nan" or "+/-inf";
-
-         j = 0 -> success
-             1 -> failure: some sort of failure in Newton-Raphson;
-             2 -> failure: vsq<0 w/ initial p[] guess;
-             3 -> failure: Z<0 or Z>Z_TOO_BIG
-             4 -> failure: v^2 > 1
-             5 -> failure: rho,uu <= 0
+return: i where
+        i = 0 -> success
+            1 -> initial v^2 < 0 with initial primitive guess;
+            2 -> Newton-Raphson solver did not converge to a solution with the
+                 given tolerances;
+            3 -> Newton-Raphson procedure encountered a numerical divergence
+                 (occurrence of "nan" or "+/-inf");
+            4 -> Z<0 or Z>Z_TOO_BIG
+            5 -> v^2 > 1 returned by the Newton-Raphson solver;
+            6 -> rho <= 0 computed by returned quantities; note that this error code
+                 is bypassed by the Cupp_fix parameter, known cases of this error
+                 are resolved by grhayl_enforce_primitive_limits_and_compute_u0()
 
 **********************************************************************************/
 
-int Hybrid_Noble1D(
+int grhayl_hybrid_Noble1D(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
@@ -124,68 +121,50 @@ int Hybrid_Noble1D(
 
   const int ndim = NEWT_DIM;
 
-  // Assume ok initially:
-  int retval = 0;
-
   // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
-  const double Bup[4] = {0.0, prims->BU[0] * ONE_OVER_SQRT_4PI,
-                              prims->BU[1] * ONE_OVER_SQRT_4PI,
-                              prims->BU[2] * ONE_OVER_SQRT_4PI};
+  const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
+                           prims->BU[1] * ONE_OVER_SQRT_4PI,
+                           prims->BU[2] * ONE_OVER_SQRT_4PI};
+  harm_aux.Bsq = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
 
-  double Bdn[4]; grhayl_lower_vector_4D(metric, Bup, Bdn);
+  const double uu = - cons_undens->tau*ADM_metric->lapse
+                    - ADM_metric->lapse*cons_undens->rho
+                    + ADM_metric->betaU[0]*cons_undens->SD[0]
+                    + ADM_metric->betaU[1]*cons_undens->SD[1]
+                    + ADM_metric->betaU[2]*cons_undens->SD[2];
 
-  const double uu = - cons_undens->tau*metric->lapse
-                    - metric->lapse*cons_undens->rho
-                    + metric->betaU[0]*cons_undens->SD[0]
-                    + metric->betaU[1]*cons_undens->SD[1]
-                    + metric->betaU[2]*cons_undens->SD[2];
+  const double QD[4] = {uu,
+                        cons_undens->SD[0],
+                        cons_undens->SD[1],
+                        cons_undens->SD[2]};
 
-  const double Qdn[4] = {uu,
-                         cons_undens->SD[0],
-                         cons_undens->SD[1],
-                         cons_undens->SD[2]};
-
-  double Qup[4]; grhayl_raise_vector_4D(metric, Qdn, Qup);
-
-  harm_aux.Bsq = 0. ;
-  for(int i=1; i<4; i++) harm_aux.Bsq += Bup[i]*Bdn[i];
+  double QU[4]; grhayl_raise_vector_4D(metric_aux->g4UU, QD, QU);
+  harm_aux.Qsq = 0.0;
+  for(int i=0; i<4; i++) harm_aux.Qsq += QD[i]*QU[i] ;
 
   harm_aux.QdotB = 0. ;
-  for(int i=0; i<4; i++) harm_aux.QdotB += Qdn[i]*Bup[i];
+  for(int i=0; i<3; i++) harm_aux.QdotB += QD[i+1]*BbarU[i];
   harm_aux.QdotBsq = harm_aux.QdotB*harm_aux.QdotB;
 
   // n_{\mu}Q^{\mu} = -alpha Q^{0}, since n_{\mu} = (-alpha,0,0,0)
-  harm_aux.Qdotn = -metric->lapse*Qup[0];
-
-  harm_aux.Qsq = 0.0;
-  for(int i=0; i<4; i++) harm_aux.Qsq += Qdn[i]*Qup[i] ;
+  harm_aux.Qdotn = -ADM_metric->lapse*QU[0];
 
   harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
+
   harm_aux.D    = cons_undens->rho;
 
-  const double tmp_u = metric->gammaDD[0][0] * SQR(prims->vU[0] + metric->betaU[0]) +
-                                             2.0*metric->gammaDD[0][1]*(prims->vU[0] + metric->betaU[0])*(prims->vU[1] + metric->betaU[1]) +
-                                             2.0*metric->gammaDD[0][2]*(prims->vU[0] + metric->betaU[0])*(prims->vU[2] + metric->betaU[2]) +
-                                             metric->gammaDD[1][1] * SQR(prims->vU[1] + metric->betaU[1]) +
-                                             2.0*metric->gammaDD[1][2]*(prims->vU[1] + metric->betaU[1])*(prims->vU[2] + metric->betaU[2]) +
-                                             metric->gammaDD[2][2] * SQR(prims->vU[2] + metric->betaU[2]);
-
-  double u0 = 1.0/sqrt(1.0-tmp_u);
-  const double utilde[3] = {u0*(prims->vU[0] + metric->betaU[0]),
-                            u0*(prims->vU[1] + metric->betaU[1]),
-                            u0*(prims->vU[2] + metric->betaU[2])};
-
   /* calculate Z from last timestep and use for guess */
-  double vsq = 0.0;
-  for(int i=1; i<4; i++)
-    for(int j=1; j<4; j++) vsq += metric->g4DD[i][j]*utilde[i-1]*utilde[j-1];
+  const double utU_guess[3] = {prims->vU[0] + ADM_metric->betaU[0],
+                               prims->vU[1] + ADM_metric->betaU[1],
+                               prims->vU[2] + ADM_metric->betaU[2]};
+  const double tmp_u = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU_guess);
+
+  double vsq = tmp_u/(1.0-tmp_u);
 
   if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
     vsq = fabs(vsq);
-  }
-  if(vsq < 0.0 || vsq > UTSQ_TOO_BIG) {
-    retval = 2;
-    return(retval);
+  } else if(vsq < 0.0 || vsq > 10.0) {
+    return 1;
   }
 
   const double Wsq = 1.0 + vsq;   // Lorentz factor squared
@@ -201,9 +180,9 @@ int Hybrid_Noble1D(
   if( eos->eos_type == grhayl_eos_hybrid ) {
     const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, prims->rho)];
     u = prims->press/(Gamma_ppoly - 1.0);
-    p = pressure_rho0_u(eos, rho0, u);
+    p = grhayl_pressure_rho0_u(eos, rho0, u);
     w = rho0 + u + p;
-  } else if( eos->eos_type == grhayl_eos_tabulated) {
+  } else if(eos->eos_type == grhayl_eos_tabulated) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
@@ -219,28 +198,26 @@ int Hybrid_Noble1D(
   }
 
   // Calculate Z:
+  // Noble2D has fabs(Z)
   gnr_out[0] = Z_last;
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  retval = newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, func_1d_orig);
+  int retval = grhayl_newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, grhayl_func_1d_orig);
 
   const double Z = gnr_out[0];
 
   /* Problem with solver, so return denoting error before doing anything further */
-  if( (retval != 0) || (Z == FAIL_VAL) ) {
-    retval = retval*100+1;
-    return(retval);
+  if(retval != 0) {
+    return retval;
   } else if(Z <= 0. || Z > Z_TOO_BIG) {
-    retval = 3;
-    return(retval);
+    return 4;
   }
 
   // Calculate v^2:
-  vsq = vsq_calc(&harm_aux, Z);
+  vsq = grhayl_vsq_calc(&harm_aux, Z);
 //TODO: differs from Noble2D
   if( vsq >= 1. ) {
-    retval = 4;
-    return(retval);
+    return 5;
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
@@ -250,45 +227,50 @@ int Hybrid_Noble1D(
 
   prims->rho = harm_aux.D * gtmp;
 
-  if( eos->eos_type == grhayl_eos_hybrid ) {
-    p = pressure_rho0_w(eos, prims->rho, w);
-    u = w - (prims->rho + p); // u = rho eps, w = rho0 h
-  } else if( eos->eos_type == grhayl_eos_tabulated ) {
-    grhayl_warn("No tabulated EOS support yet! Sorry!");
+  // Cupp Fix logic:
+  // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
+  // that u or rho were negative (usually u). Since the method converged, we only need to fix the values
+  // using enforce_primitive_limits_and_output_u0(). There's no need to trigger a Font fix. In my experience,
+  // Font Fix returns nearly the same values as this, but takes longer to run (we already did the work for
+  // these results, after all!
+  // Also note that we have completely eliminated u, so that check doesn't exist any longer.
+  if( !params->Cupp_Fix && prims->rho <= 0.0) {
+    return 6;
   }
 
-  if( ((prims->rho <= 0.0) || (u <= 0.0)) ) {
-    // User may want to handle this case differently, e.g. do NOT return upon
-    // a negative rho/u, calculate v^i so that rho/u can be floored by other routine:
-    retval = 5;
-  }
-
-  const double nup[4] = {metric->lapseinv,
-                        -metric->lapseinv*metric->betaU[0],
-                        -metric->lapseinv*metric->betaU[1],
-                        -metric->lapseinv*metric->betaU[2]};
+  const double nU[4] = {ADM_metric->lapseinv,
+                       -ADM_metric->lapseinv*ADM_metric->betaU[0],
+                       -ADM_metric->lapseinv*ADM_metric->betaU[1],
+                       -ADM_metric->lapseinv*ADM_metric->betaU[2]};
 
   double Qtcon[4];
   const double g_o_ZBsq = harm_aux.W/(Z+harm_aux.Bsq);
   const double QdB_o_Z  = harm_aux.QdotB / Z;
 
-  for(int i=1; i<4; i++) Qtcon[i] = Qup[i] + nup[i] * harm_aux.Qdotn;
-  double utx = g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*Bup[1] ) ;
-  double uty = g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*Bup[2] ) ;
-  double utz = g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*Bup[3] ) ;
+  for(int i=1; i<4; i++) Qtcon[i] = QU[i] + nU[i] * harm_aux.Qdotn;
+
+  double utU[3] = {g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*BbarU[0] ),
+                   g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*BbarU[1] ),
+                   g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*BbarU[2] )};
 
   //Additional tabulated code here
 
-  grhayl_limit_utilde_and_compute_v(eos, metric, &utx, &uty, &utz, prims, &diagnostics->speed_limited);
+  grhayl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
 
   if(diagnostics->speed_limited==1)
-    prims->rho = cons_undens->rho/(metric->lapse*prims->u0);
+    prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
 
-  // Since u is dependent on rho, it seems weird to not reset u if rho has changed from above
-  prims->press = pressure_rho0_u(eos, prims->rho, u);
-  prims->eps = u/prims->rho;
-  if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+  if( eos->eos_type == grhayl_eos_hybrid ) {
+    prims->press = grhayl_pressure_rho0_w(eos, prims->rho, w);
+    double P_cold = 0.0;
+    double eps_cold = 0.0;
+    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
+    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
+    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+  } else if(eos->eos_type == grhayl_eos_tabulated) {
+    grhayl_warn("No tabulated EOS support yet! Sorry!");
+  }
 
   /* Done! */
-  return(retval);
+  return 0;
 }

@@ -1,4 +1,4 @@
-#include "../../harm_u2p_util.h"
+#include "../harm_u2p_util.h"
 
 /* Function    : Hybrid_Noble2D()
  * Description : Unpacks the primitive_quantities struct into the variables
@@ -70,12 +70,23 @@
 /*************************************************************************************/
 /*************************************************************************************
 
-utoprim_2d.c:
+utoprim_1d_ee2.c:
 ---------------
 
-    Uses the 2D method:
-       -- solves for two independent variables (W,v^2) via a 2D
+  -- uses eq. (27) of Noble  et al. or the "momentum equation" and ignores
+        the energy equation (29) in order to use the additional EOS, which
+        is
+
+             P = Sc rho^(GAMMA-1) / gamma
+
+    Uses a method similiar to  1D_W method:
+       -- solves for one independent variable (rho) via a 1D
           Newton-Raphson method
+       -- by substituting
+          W = Dc ( Dc + GAMMA Sc rho^(GAMMA-1) / (GAMMA-1) ) / rho
+           into Qtsq equation, one can get one equation for
+           one unknown (rho)
+
        -- can be used (in principle) with a general equation of state.
 
   -- Currently returns with an error state (>0) if a negative rest-mass
@@ -87,13 +98,11 @@ utoprim_2d.c:
 
 ******************************************************************************/
 
-#define NEWT_DIM (2)
-
-double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 ) ;
+#define NEWT_DIM (1)
 
 /**********************************************************************************
 
-  Hybrid_Noble2D():
+  grhayl_hybrid_Noble1D_entropy2():
 
      -- Attempt an inversion from U to prim using the initial guess prim.
 
@@ -118,17 +127,11 @@ return: i where
             1 -> initial v^2 < 0 with initial primitive guess;
             2 -> Newton-Raphson solver did not converge to a solution with the
                  given tolerances;
-            3 -> Newton-Raphson procedure encountered a numerical divergence
-                 (occurrence of "nan" or "+/-inf");
-            4 -> Z<0 or Z>Z_TOO_BIG
-            5 -> v^2 < 0 returned by the Newton-Raphson solver;
-            6 -> rho <= 0 computed by returned quantities; note that this error code
-                 is bypassed by the Cupp_fix parameter, known cases of this error
-                 are resolved by grhayl_enforce_primitive_limits_and_compute_u0()
+TODO: needs remaining error codes
 
 **********************************************************************************/
 
-int Hybrid_Noble2D(
+int grhayl_hybrid_Noble1D_entropy2(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -144,14 +147,15 @@ int Hybrid_Noble2D(
 
   const int ndim = NEWT_DIM;
 
-  // Assume ok initially:
-  int retval = 0;
-
   // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
   const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
                            prims->BU[1] * ONE_OVER_SQRT_4PI,
                            prims->BU[2] * ONE_OVER_SQRT_4PI};
   harm_aux.Bsq = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
+
+
+  // W_times_S
+  harm_aux.W_times_S = cons_undens->entropy;
 
   const double uu = - cons_undens->tau*ADM_metric->lapse
                     - ADM_metric->lapse*cons_undens->rho
@@ -204,57 +208,65 @@ int Hybrid_Noble2D(
   double w = 0;
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    const int polytropic_index = eos->hybrid_find_polytropic_index(eos, prims->rho);
-    const double Gamma_ppoly = eos->Gamma_ppoly[polytropic_index];
-    u = prims->press/(Gamma_ppoly - 1.0);
-    p = pressure_rho0_u(eos, rho0, u);
+    const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, rho0)];
+    const double Gm1         = Gamma_ppoly - 1.0; // HARM auxiliary variable
+    const double rho_Gm1     = pow(rho0,Gm1);     // HARM auxiliary variable
+
+    /* The definition of the entropy density, S, is
+     *
+     * S = P / rho^(Gamma - 1)
+     *
+     * Thus we have
+     * .-------------------------.
+     * | P = rho^(Gamma - 1) * S |
+     * .-------------------------.
+     */
+    p = cons_undens->entropy * rho_Gm1;
+    u = p/Gm1;
     w = rho0 + u + p;
-  } else if( eos->eos_type == grhayl_eos_tabulated ) {
+  } else if(eos->eos_type == grhayl_eos_tabulated) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
-  double Z_last = w*Wsq;
-
-  // Make sure that Z is large enough so that v^2 < 1 :
-  int i_increase = 0;
-  while( (( Z_last*Z_last*Z_last * ( Z_last + 2.*harm_aux.Bsq )
-            - harm_aux.QdotBsq*(2.*Z_last + harm_aux.Bsq) ) <= Z_last*Z_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
-         && (i_increase < 10) ) {
-    Z_last *= 10.;
-    i_increase++;
-  }
-
-  // Calculate Z and vsq:
-  gnr_out[0] = fabs( Z_last );
-  gnr_out[1] = x1_of_x0( &harm_aux, Z_last );
-
+  gnr_out[0] = rho0;
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  retval = general_newton_raphson(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, func_vsq);
-
-  const double Z = gnr_out[0];
-  vsq = gnr_out[1];
+  int retval = grhayl_newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, grhayl_func_rho2);
+  rho0 = gnr_out[0];
 
   /* Problem with solver, so return denoting error before doing anything further */
-  if( retval != 0) {
-    return(retval);
-  } else if(Z <= 0. || Z > Z_TOO_BIG) {
+  // HARM uses error checks for Z, which doesn't make sense for this function since
+  // it returns rho; thus, we have changed the errors
+  if(retval != 0) {
+    return retval;
+  } else if(rho0 < 0 || rho0 > eos->rho_max) {
     return 4;
   }
 
   // Calculate v^2:
-  if( vsq >= 1. ) {
-    vsq = 1.-2.e-16;
-  } else if(vsq < 0.0) {
-    //v should be real!
+
+  double rel_err = (harm_aux.D != 0.0) ? fabs((harm_aux.D-rho0)/harm_aux.D) : ( (rho0 != 0.0) ? fabs((harm_aux.D-rho0)/rho0) : 0.0 );
+  vsq = ( rel_err > 1e-15 ) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
+
+  if( vsq < 0. ) {
     return 5;
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  const double gtmp = sqrt(1. - vsq);
-  harm_aux.W = 1.0/gtmp;
-  w = Z * (1.0 - vsq);
+  Wsq        = 1.0+vsq;
+  harm_aux.W = sqrt(Wsq);
+  if( eos->eos_type == grhayl_eos_hybrid ) {
+    const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, rho0)];
+    const double Gm1         = Gamma_ppoly - 1.0;
+    const double rho_Gm1     = pow(rho0,Gm1);
+    p = cons_undens->entropy * rho_Gm1;
+    u = p/Gm1;
+    w = rho0 + u + p;
+  } else if(eos->eos_type == grhayl_eos_tabulated) {
+    grhayl_warn("No tabulated EOS support yet! Sorry!");
+  }
+  const double Z = w * Wsq;
 
-  prims->rho = harm_aux.D * gtmp;
+  prims->rho = rho0;
 
   // Cupp Fix logic:
   // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
@@ -290,25 +302,18 @@ int Hybrid_Noble2D(
     prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    prims->press = pressure_rho0_w(eos, prims->rho, w);
-    //prims->eps = u/prims->rho;
-    //prims->press = pressure_rho0_u(eos, prims->rho, u);
-    double P_cold = 0.0;
-    double eps_cold = 0.0;
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
-    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
+    const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, rho0)];
+    const double Gm1        = Gamma_ppoly - 1.0;
+    const double rho_Gm1    = pow(rho0,Gm1);
+    p = cons_undens->entropy * rho_Gm1;
+    u = p/Gm1;
+    prims->press = grhayl_pressure_rho0_u(eos, prims->rho, u);
+    prims->eps = u/prims->rho;
     if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
-  } else if( eos->eos_type == grhayl_eos_tabulated ) {
+  } else if(eos->eos_type == grhayl_eos_tabulated) {
     grhayl_warn("No tabulated EOS support yet! Sorry!");
   }
 
   /* Done! */
-  return retval;
-}
-
-double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 ) {
-  const double dv  = 1.e-15;
-  const double vsq = fabs(vsq_calc(harm_aux,x0)) ; // guaranteed to be positive
-
-  return( ( vsq > 1. ) ? (1.0 - dv) : vsq );
+  return 0;
 }

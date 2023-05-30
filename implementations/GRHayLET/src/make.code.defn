@@ -6,7 +6,7 @@ SRCS = initialize_and_shutdown.c
 # Subdirectories containing source files
 SUBDIRS = Con2Prim                        \
           Con2Prim/Hybrid                 \
-          Con2Prim/Hybrid/Font_Fix        \
+          Con2Prim/Hybrid/FontFix         \
           Con2Prim/Hybrid/Noble2D         \
           Con2Prim/Tabulated              \
           Con2Prim/Tabulated/Newman1D     \

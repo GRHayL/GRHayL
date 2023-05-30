@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : font_fix_rhob_loop()
+/* Function    : grhayl_hybrid_Font_fix_loop()
  * Description : Determines rhob using the font fix prescription
  * Dependencies: find_polytropic_K_and_Gamma_index()
  *             : compute_P_cold_and_eps_cold()
@@ -23,7 +23,7 @@
  *             : return value: 0 - Font fix worked
  *             : return value: 1 - Font fix failed
  */
-int hybrid_font_fix_loop(
+int grhayl_hybrid_Font_fix_loop(
       const eos_parameters *restrict eos,
       const int maxits, const double tol,
       const double W_in, const double Sf2_in,
@@ -33,7 +33,7 @@ int hybrid_font_fix_loop(
       const double rhob_in, double *restrict rhob_out_ptr ) {
 
   /* Declare basic variables */
-  bool fontcheck=true;
+  bool Fontcheck=true;
   int itcount = 0, j0, j1;
   double W0, Sf20, rhob0, rhob1, h, P_cold, eps_cold;
   double W   = W_in;
@@ -43,7 +43,7 @@ int hybrid_font_fix_loop(
   //////////////////////
   // OUTER LOOP START //
   //////////////////////
-  while(fontcheck && itcount < maxits) {
+  while(Fontcheck && itcount < maxits) {
 
     /* Set variables to their input values */
     itcount++;
@@ -116,7 +116,7 @@ int hybrid_font_fix_loop(
      */
     Sf2 = (SQR(W)*sdots + BbardotS2*(B2bar + 2.0*W))/SQR(W+B2bar);
 
-    if ( fabs(W-W0) < W*tol && fabs(Sf20-Sf2) < Sf2*tol) fontcheck=false;
+    if ( fabs(W-W0) < W*tol && fabs(Sf20-Sf2) < Sf2*tol) Fontcheck=false;
 
   }
   //////////////////////
@@ -127,7 +127,7 @@ int hybrid_font_fix_loop(
    * number of iterations were exceeded,
    * return 0, otherwise return 1.
    */
-  if(fontcheck || itcount >= maxits) {
+  if(Fontcheck || itcount >= maxits) {
     *rhob_out_ptr = rhob_out;
     return 1;
   }

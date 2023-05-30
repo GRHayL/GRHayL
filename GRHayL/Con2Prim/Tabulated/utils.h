@@ -167,7 +167,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
 /*
  * Function prototypes
  */
-int Tabulated_Palenzuela1D(
+int grhayl_tabulated_Palenzuela1D(
       void compute_rho_P_eps_T_W(
             const double x,
             fparams_struct *restrict fparams,
@@ -183,7 +183,7 @@ int Tabulated_Palenzuela1D(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics );
 
-int Tabulated_Newman1D(
+int grhayl_tabulated_Newman1D(
       void compute_rho_P_eps_T_W(
             const double x,
             fparams_struct *restrict fparams,

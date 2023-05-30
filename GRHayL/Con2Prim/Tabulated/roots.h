@@ -237,7 +237,7 @@ sign( const double x ) {
 //     roots_params *restrict r );
 
 roots_error_t
-toms748(
+grhayl_toms748(
     double f(const double, void *restrict),
     void *restrict fparams,
     double a,

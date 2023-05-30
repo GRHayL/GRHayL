@@ -1,6 +1,6 @@
 #include "../utils.h"
 
-int newman_entropy(
+int grhayl_newman_energy(
       const eos_parameters *restrict eos,
       const double S_squared,
       const double BdotS,
@@ -37,6 +37,11 @@ int newman_entropy(
   double P_old, xprs = 0.0;
   AtP[0] = xprs;
 
+  // Leo mod: compute auxiliary variables so we can find eps
+  const double q = con->tau * invD;
+  const double s = B_squared * invD;
+  const double t = BdotS/(pow(con->rho,1.5));
+
   bool conacc = false;
   do {
     P_old = xprs;
@@ -65,10 +70,13 @@ int newman_entropy(
     invW = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
     W    = 1.0/invW;
 
-    // Then compute rho = D/W
-    double xrho = con->rho*invW;
-    double xent = con->entropy*invW;
-    eos->tabulated_compute_P_T_from_S(eos, xrho, xye, xent, &xprs, &xtemp);
+    // Set the prims (eps is computed as in Palenzuela et al.)
+    // See e.g., Eq. (44) of https://arxiv.org/pdf/1712.07538.pdf
+    const double x    = z * invD;
+    const double xrho = con->rho * invW;
+    const double xeps = - 1.0 + (1.0-W*W)*x*invW
+                      + W*( 1.0 + q - s + 0.5*( s*invW*invW + (t*t)/(x*x) ) );
+    eos->tabulated_compute_P_T_from_eps(eos, xrho, xye, xeps, &xprs, &xtemp);
 
     AtStep++;
     AtP[AtStep]=xprs;
@@ -105,17 +113,16 @@ int newman_entropy(
   prim->rho         = con->rho*invW;
   prim->Y_e         = xye;
   prim->temperature = xtemp;
-  prim->entropy     = con->entropy*invW;
   prim->vU[0]          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
   prim->vU[1]          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
   prim->vU[2]          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
-  eos->tabulated_compute_P_eps_S_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
-                                         &prim->press, &prim->eps, &prim->entropy );
+  eos->tabulated_compute_P_eps_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
+                                       &prim->press, &prim->eps );
 
   return grhayl_success;
 }
 
-int Tabulated_Newman1D_entropy(
+int grhayl_tabulated_Newman1D_energy(
       const GRHayL_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -129,8 +136,8 @@ int Tabulated_Newman1D_entropy(
   compute_BU_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims,
                               BU, SU, &Bsq, &Ssq, &BdotS);
 
-  // Step 2: Call the Newman routine that uses the entropy to recover T
+  // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
-  return newman_entropy(eos, Ssq, BdotS, Bsq, BU, SU,
-                        cons_undens, prims, tol_x);
+  return grhayl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU,
+                       cons_undens, prims, tol_x);
 }

@@ -1,6 +1,6 @@
 #include "../utils.h"
 
-/* Function    : Tabulated_Palenzuela1D
+/* Function    : grhayl_tabulated_Palenzuela1D
  * Author      : Leo Werneck
  *
  * Performs a primitive recovery using the Palenzuela et al. scheme.
@@ -22,7 +22,7 @@
  * References  : [1] Palenzuela et al. (2015) arXiv:1505.01607
  *             : [2] Siegel et al. (2018) arXiv:1712.07538
  */
-int Tabulated_Palenzuela1D(
+int grhayl_tabulated_Palenzuela1D(
       void compute_rho_P_eps_T_W(
             const double x,
             fparams_struct *restrict fparams,
@@ -89,12 +89,12 @@ int Tabulated_Palenzuela1D(
   roots_params rparams;
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
-  toms748(froot, &fparams, xlow, xup, &rparams);
+  grhayl_toms748(froot, &fparams, xlow, xup, &rparams);
   if( rparams.error_key != roots_success ) {
     // Adjust the temperature guess and try again
     fparams.temp_guess = eos->T_max;
     prims->temperature = eos->T_max;
-    toms748(froot, &fparams, xlow, xup, &rparams);
+    grhayl_toms748(froot, &fparams, xlow, xup, &rparams);
     if( rparams.error_key != roots_success ) {
       grhayl_warn("TOMS748 did not find a root (see error report below)\n");
       roots_info(&rparams);

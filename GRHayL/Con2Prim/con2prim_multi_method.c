@@ -13,22 +13,22 @@ int grhayl_con2prim_select_method(
   switch( c2p_key ) {
     // Noble2D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
-      return Hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return grhayl_hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // "Font fix" routine (see )
     case FontFix:
-      return Hybrid_Font_Fix(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return grhayl_hybrid_Font_fix(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
-      return Tabulated_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return grhayl_tabulated_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Palenzuela1D routine with entropy (see https://arxiv.org/pdf/2208.14487.pdf)
     case Palenzuela1D_entropy:
-      return Tabulated_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return grhayl_tabulated_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Newman 1D routine (see https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf)
     case Newman1D:
-      return Tabulated_Newman1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return grhayl_tabulated_Newman1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Newman1D routine with entropy (see https://arxiv.org/pdf/2208.14487.pdf)
     case Newman1D_entropy:
-      return Tabulated_Newman1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return grhayl_tabulated_Newman1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     default:
       grhayl_Error(100, "Unknown c2p key (%d).", c2p_key);
       return 100;

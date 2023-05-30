@@ -130,7 +130,7 @@ int grhayl_con2prim_select_method(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int Hybrid_Noble2D(
+int grhayl_hybrid_Noble2D(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -139,7 +139,7 @@ int Hybrid_Noble2D(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int Hybrid_Font_Fix(
+int grhayl_hybrid_Font_fix(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -148,7 +148,7 @@ int Hybrid_Font_Fix(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
 
-int Tabulated_Palenzuela1D_energy(
+int grhayl_tabulated_Palenzuela1D_energy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -157,7 +157,7 @@ int Tabulated_Palenzuela1D_energy(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int Tabulated_Palenzuela1D_entropy(
+int grhayl_tabulated_Palenzuela1D_entropy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -166,7 +166,7 @@ int Tabulated_Palenzuela1D_entropy(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int Tabulated_Newman1D_energy(
+int grhayl_tabulated_Newman1D_energy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -175,7 +175,7 @@ int Tabulated_Newman1D_energy(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int Tabulated_Newman1D_entropy(
+int grhayl_tabulated_Newman1D_entropy(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,

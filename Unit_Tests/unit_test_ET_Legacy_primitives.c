@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   const double poison = 1e300;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int backup_routine[3] = {None,None,None};
+  const int backup_routine[3] = {FontFix,None,None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
 
@@ -211,29 +211,26 @@ int main(int argc, char **argv) {
       /************* Conservative-to-primitive recovery ************/
       check = grhayl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
 
-      if(check!=0)
-        check = Hybrid_Font_Fix(&params, &eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
-      /*************************************************************/
-
       /********** Artificial Font fix for code comparison **********
       This point corresponds to the second-to-last element of the edge
       cases for grhayl_apply_inequality_fixes function. Due to improvements
-      in the Noble2D routine, the GRHayL code doesn't trigger font
+      in the Noble2D routine, the GRHayL code doesn't trigger Font
       fix while the old code does. This is also true for several of
       the more 'physically motivated' indices, but the edge case data
-      isn't constructed to be physically reasonable, causing the font
+      isn't constructed to be physically reasonable, causing the Font
       fix to significantly affect the results. For the normal data, the
-      font fix data from IllinoisGRMHD and Noble2D data from GRHayL
+      Font fix data from IllinoisGRMHD and Noble2D data from GRHayL
       agree within tolerance, further validating the changes to Noble2D.
       Since this data doesn't match due to the code changing for the
-      better, we just have to manually trigger font fix to reproduce
+      better, we just have to manually trigger Font fix to reproduce
       the behavior of IllinoisGRMHD.
       **************************************************************/
       if(index==arraylength-2)
-        check = Hybrid_Font_Fix(&params, &eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+        check = grhayl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      /*************************************************************/
 
       if(check)
-        printf("Con2Prim and Font fix failed!");
+        printf("Con2Prim failed!");
     } else {
       diagnostics.failure_checker+=1;
       grhayl_reset_prims_to_atmosphere(&eos, &prims);
@@ -294,7 +291,7 @@ int main(int argc, char **argv) {
     prims_pert_rel_error[4] += relative_error(prims_orig.vU[2], prims_pert.vU[2]);
 
     if( validate(prims_trusted.rho, prims.rho, prims_pert.rho) )
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable rho.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable rho.\n"
                    "  rho trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.rho, prims.rho, prims_pert.rho,
                                                relative_error(prims_trusted.rho, prims.rho),
@@ -306,7 +303,7 @@ int main(int argc, char **argv) {
     // input values. The pressure coming out of HARM doesn't have the accuracy to preserve the stringent accuracy requirements
     // demanded elsewhere, so this relaxes the demands on the pressure for very small values.
     if( validate_with_tolerance(prims_trusted.press, prims.press, prims_pert.press, min_rel, pressure_cutoff))
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable press.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable press.\n"
                    "  press trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.press, prims.press, prims_pert.press,
                                                relative_error(prims_trusted.press, prims.press),
@@ -316,28 +313,28 @@ int main(int argc, char **argv) {
     //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos.K_ppoly[0], 1.0/eos.Gamma_ppoly[0]) * (eos.Gamma_ppoly[0] - 1.0));
     const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
     if( validate_with_tolerance(prims_trusted.eps, prims.eps, prims_pert.eps, min_rel, eps_cutoff))
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable eps.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable eps.\n"
                    "  eps trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.eps, prims.eps, prims_pert.eps,
                                                relative_error(prims_trusted.eps, prims.eps),
                                                relative_error(prims_trusted.eps, prims_pert.eps));
 
     if( validate(prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0]) )
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vx.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vx.\n"
                    "  vx trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0],
                                                relative_error(prims_trusted.vU[0], prims.vU[0]),
                                                relative_error(prims_trusted.vU[0], prims_pert.vU[0]));
 
     if(validate(prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1]))
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vy.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vy.\n"
                    "  vy trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1],
                                                relative_error(prims_trusted.vU[1], prims.vU[1]),
                                                relative_error(prims_trusted.vU[1], prims_pert.vU[1]));
 
     if( validate(prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2]) )
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vz.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vz.\n"
                    "  vz trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2],
                                                relative_error(prims_trusted.vU[2], prims.vU[2]),

@@ -4,7 +4,7 @@
  * Piecewise Polytropic EOS Patch *
  *    Font fix: function call     *
  **********************************/
-int Hybrid_Font_Fix(
+int grhayl_hybrid_Font_fix(
       const GRHayL_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -55,20 +55,20 @@ int Hybrid_Font_Fix(
 
     const int maxits = 300;
     double tol = 1.e-15;
-    int font_fix_status;
-    const int font_fix_attempts = 5;
-    for(int n=0; n<font_fix_attempts; n++) {
+    int Font_fix_status;
+    const int Font_fix_attempts = 5;
+    for(int n=0; n<Font_fix_attempts; n++) {
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
       const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
-      font_fix_status = hybrid_font_fix_loop(eos, loop_maxits, loop_tol, W0, Sf20, Psim6, sdots,
+      Font_fix_status = grhayl_hybrid_Font_fix_loop(eos, loop_maxits, loop_tol, W0, Sf20, Psim6, sdots,
                                            BbardotS2, Bbar2, cons, rhob0, &rhob);
       rhob0 = rhob;
-      if(font_fix_status==0) break;
+      if(Font_fix_status==0) break;
     }
 
     //**************************************************************************************************************
 
-    if(font_fix_status==1)
+    if(Font_fix_status==1)
       return 1;
 
     /* Font fix works! */

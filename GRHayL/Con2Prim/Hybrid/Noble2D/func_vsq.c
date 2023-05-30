@@ -1,8 +1,6 @@
 #include "../../harm_u2p_util.h"
 
-double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq);
-
-void func_vsq(
+void grhayl_func_vsq(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -20,9 +18,9 @@ void func_vsq(
   const double Wsq = W*W;
 
   /*** For hybrid EOS ***/
-  const double p_tmp  = pressure_W_vsq( eos, W, vsq , harm_aux->D);
-  const double dPdvsq = dpdvsq_calc( eos, W, vsq, harm_aux->D );
-  const double dPdW   = dpdW_calc_vsq( eos, W, vsq );
+  const double p_tmp  = grhayl_pressure_W_vsq( eos, W, vsq , harm_aux->D);
+  const double dPdvsq = grhayl_dpdvsq_calc( eos, W, vsq, harm_aux->D );
+  const double dPdW   = grhayl_dpdW_calc_vsq( eos, W, vsq );
   /*** For hybrid EOS ***/
 
   // These expressions were calculated using Mathematica, but made into efficient
@@ -56,9 +54,4 @@ void func_vsq(
   *df = -resid[0]*resid[0] - resid[1]*resid[1];
   *f  = -0.5 * ( *df );
 
-}
-
-double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq)
-{
-  return( (eos->Gamma_th - 1.0) * (1.0 - vsq) /  eos->Gamma_th  ) ;
 }
