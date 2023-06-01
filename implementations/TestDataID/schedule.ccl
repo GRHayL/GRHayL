@@ -1,13 +1,22 @@
 # Schedule definitions for thorn TestDataID
 
-schedule TestDataID_1D_tests_hydro_data in HydroBase_Initial
+if (CCTK_Equals(simulation_type, "1D_test"))
 {
-  LANG: C
-  READS:  Grid::coordinates
-  WRITES: HydroBase::vel[0](Everywhere)
-  WRITES: HydroBase::vel[1](Everywhere)
-  WRITES: HydroBase::vel[2](Everywhere)
-  WRITES: HydroBase::rho(Everywhere)
-  WRITES: HydroBase::eps(Everywhere)
-  WRITES: HydroBase::press(Everywhere)
-} "Schedule GRHD shock test functions"
+  schedule TestDataID_1D_tests_hydro_data in HydroBase_Initial
+  {
+    LANG: C
+    READS:  Grid::coordinates
+    WRITES: HydroBase::rho(everywhere), HydroBase::press(everywhere),
+            HydroBase::eps(everywhere), HydroBase::vel(everywhere)
+  } "Set initial hydrodynamic data for 1D test"
+
+  if (initialize_magnetic_quantities)
+  {
+    schedule TestDataID_1D_tests_magnetic_data in HydroBase_Initial after TestDataID_1D_tests_hydro_data
+    {
+      LANG: C
+      READS:  Grid::coordinates
+      WRITES: HydroBase::Avec(everywhere)
+    } "Set initial magnetic data for 1D test"
+  }
+}
