@@ -166,7 +166,7 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
       }
     } else {
       diagnostics.failure_checker+=1;
-      grhayl_reset_prims_to_atmosphere(grhayl_eos, &prims);
+      grhayl_set_prims_to_constant_atm(grhayl_eos, &prims);
       rho_star_fix_applied++;
     } // if rho_star>0
     /***************************************************************/
@@ -176,7 +176,7 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
       //----------- Primitive recovery failed ------------
       //--------------------------------------------------
       // Sigh, reset to atmosphere
-      grhayl_reset_prims_to_atmosphere(grhayl_eos, &prims);
+      grhayl_set_prims_to_constant_atm(grhayl_eos, &prims);
       diagnostics.failure_checker+=100000;
       atm_resets++;
       // Then flag this point as a "success"

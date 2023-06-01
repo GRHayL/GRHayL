@@ -1,6 +1,7 @@
 #ifndef UNIT_TESTS_H_
 #define UNIT_TESTS_H_
 
+#include "atmosphere.h"
 #include "con2prim.h"
 #include "induction.h"
 #include "reconstruction.h"

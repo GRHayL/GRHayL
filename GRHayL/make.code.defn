@@ -1,4 +1,5 @@
-SUBDIRS = Con2Prim       \
+SUBDIRS = Atmosphere     \
+          Con2Prim       \
           EOS            \
           Flux_Source    \
           GRHayL_Core    \

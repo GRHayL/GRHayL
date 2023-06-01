@@ -2,6 +2,7 @@
 #define GRHAYLET_H_
 
 #include "include/grhayl.h"
+#include "include/atmosphere.h"
 #include "include/con2prim.h"
 #include "include/induction.h"
 #include "include/reconstruction.h"

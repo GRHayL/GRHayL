@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_reset_prims_to_atmosphere()
+/* Function    : grhayl_set_prims_to_constant_atm()
  * Description : Uses the EOS data to reset the primitives to atmospheric
  *               values.
  *
@@ -10,7 +10,7 @@
  * Outputs     : prims          - returns with all primitives set to atmospheric values
  */
 
-void grhayl_reset_prims_to_atmosphere(
+void grhayl_set_prims_to_constant_atm(
       const eos_parameters *restrict eos,
       primitive_quantities *restrict prims) {
 

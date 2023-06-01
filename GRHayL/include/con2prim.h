@@ -56,10 +56,6 @@ typedef struct palenzuela_quantities {
 extern "C" {
 #endif
 
-void grhayl_reset_prims_to_atmosphere(
-      const eos_parameters *restrict eos,
-      primitive_quantities *restrict prims);
-
 //--------- Initialization routines ----------------
 
 void grhayl_initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);

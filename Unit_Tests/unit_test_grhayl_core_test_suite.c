@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   //    T_min, T_min, T_max,
   //    &tabulated_eos);
 
-  // First test: grhayl_reset_prims_to_atmosphere() function
+  // First test: grhayl_set_prims_to_constant_atm() function
   // Function just sets data to eos data, so no need
   // to store pre-computed comparison data
   primitive_quantities prims;
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     if(eos_it==0) {
       eos = hybrid_eos;
 
-      grhayl_reset_prims_to_atmosphere(&eos, &prims);
+      grhayl_set_prims_to_constant_atm(&eos, &prims);
 
       if(prims.rho         != eos.rho_atm
       || prims.press       != eos.press_atm
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
       || prims.vU[2]          != 0.0
       || prims.eps         != eos.eps_atm
       || prims.entropy     != eos.entropy_atm)
-        grhayl_error("grhayl_core_test_suite has failed for grhayl_reset_prims_to_atmosphere() with hybrid EOS.\n"
+        grhayl_error("grhayl_core_test_suite has failed for grhayl_set_prims_to_constant_atm() with hybrid EOS.\n"
                      "  rho_b, pressure, vx, vy, vz, epsilon, entropy\n"
                      "  Struct output: %e %e %e %e %e %e %e %e %e\n"
                      "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
   //  } else if(eos_it==0) {
   //    eos = tabulated_eos;
 
-  //    grhayl_reset_prims_to_atmosphere(&eos, &prims);
+  //    grhayl_set_prims_to_constant_atm(&eos, &prims);
 
   //    if(prims.rho         != eos.rho_atm
   //    || prims.press       != eos.press_atm
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
   //    || prims.vU[0]          != 0.0
   //    || prims.vU[1]          != 0.0
   //    || prims.vU[2]          != 0.0)
-  //      grhayl_error("grhayl_core_test_suite has failed for grhayl_reset_prims_to_atmosphere() with tabulated EOS.\n"
+  //      grhayl_error("grhayl_core_test_suite has failed for grhayl_set_prims_to_constant_atm() with tabulated EOS.\n"
   //                   "  rho_b, pressure, vx, vy, vz, epsilon, entropy, Y_e, temperature\n"
   //                   "  Struct output: %e %e %e %e %e %e %e %e %e\n"
   //                   "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",

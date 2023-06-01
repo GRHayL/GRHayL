@@ -4,7 +4,8 @@
 SRCS = initialize_and_shutdown.c
 
 # Subdirectories containing source files
-SUBDIRS = Con2Prim                        \
+SUBDIRS = Atmosphere                      \
+          Con2Prim                        \
           Con2Prim/Hybrid                 \
           Con2Prim/Hybrid/FontFix         \
           Con2Prim/Hybrid/Noble2D         \
