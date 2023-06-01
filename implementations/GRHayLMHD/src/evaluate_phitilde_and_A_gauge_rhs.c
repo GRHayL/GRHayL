@@ -43,8 +43,8 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
   // Note that ALL input variables are defined at ALL gridpoints, so no
   // worries about ghostzones.
 #pragma omp parallel for
-  for(int k=kmin-2; k<kmax+2; k++)
-    for(int j=jmin-2; j<jmax+2; j++)
+  for(int k=kmin-2; k<kmax+2; k++) {
+    for(int j=jmin-2; j<jmax+2; j++) {
       for(int i=imin-2; i<imax+2; i++) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
 
@@ -120,10 +120,12 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
         shifty_interp[index] = gauge_rhs_vars.shifty_interp[0];
         shiftz_interp[index] = gauge_rhs_vars.shiftz_interp[0];
       }
+    }
+  }
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++)
-    for(int j=jmin; j<jmax; j++)
+  for(int k=kmin; k<kmax; k++) {
+    for(int j=jmin; j<jmax; j++) {
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
@@ -161,5 +163,7 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
         grhayl_calculate_phitilde_rhs(grhayl_params->Lorenz_damping_factor, &gauge_rhs_vars);
     
         phitilde_rhs[index] += gauge_rhs_vars.phitilde_rhs;
+      }
+    }
   }
 }

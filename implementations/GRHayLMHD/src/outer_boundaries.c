@@ -135,7 +135,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
     if(cctk_bbox[1]) {
       const int imax=cctk_lsh[0]-cctk_nghostzones[0]+which_bdry_pt;
 #pragma omp parallel for
-      for(int k=0; k<cctk_lsh[2]; k++)
+      for(int k=0; k<cctk_lsh[2]; k++) {
         for(int j=0; j<cctk_lsh[1]; j++) {
           pressure[IDX(imax,j,k)] = pressure[IDX(imax-1,j,k)];
           rho_b[IDX(imax,j,k)]   = rho_b[IDX(imax-1,j,k)];
@@ -143,13 +143,14 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           vy[IDX(imax,j,k)]    = vy[IDX(imax-1,j,k)];
           vz[IDX(imax,j,k)]    = vz[IDX(imax-1,j,k)]; 
           if(vx[IDX(imax,j,k)]<0.) vx[IDX(imax,j,k)] = 0.0;
+        }
       }
     }
     // i=imin=outer boundary
     if(cctk_bbox[0]) {
       const int imin=cctk_nghostzones[0]-which_bdry_pt-1;
 #pragma omp parallel for
-      for(int k=0; k<cctk_lsh[2]; k++)
+      for(int k=0; k<cctk_lsh[2]; k++) {
         for(int j=0; j<cctk_lsh[1]; j++) {
           pressure[IDX(imin,j,k)] = pressure[IDX(imin+1,j,k)];
           rho_b[IDX(imin,j,k)]   = rho_b[IDX(imin+1,j,k)];
@@ -157,6 +158,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           vy[IDX(imin,j,k)]    = vy[IDX(imin+1,j,k)];
           vz[IDX(imin,j,k)]    = vz[IDX(imin+1,j,k)]; 
           if(vx[IDX(imin,j,k)]>0.) vx[IDX(imin,j,k)] = 0.0;
+        }
       }
     }
 
@@ -165,7 +167,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
     if(cctk_bbox[3]) {
       const int jmax=cctk_lsh[1]-cctk_nghostzones[1]+which_bdry_pt;
 #pragma omp parallel for
-      for(int k=0; k<cctk_lsh[2]; k++)
+      for(int k=0; k<cctk_lsh[2]; k++) {
         for(int i=0; i<cctk_lsh[0]; i++) {
           pressure[IDX(i,jmax,k)] = pressure[IDX(i,jmax-1,k)];
           rho_b[IDX(i,jmax,k)]   = rho_b[IDX(i,jmax-1,k)];
@@ -173,13 +175,14 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           vy[IDX(i,jmax,k)]    = vy[IDX(i,jmax-1,k)];
           vz[IDX(i,jmax,k)]    = vz[IDX(i,jmax-1,k)]; 
           if(vx[IDX(i,jmax,k)]<0.) vx[IDX(i,jmax,k)] = 0.0;
+        }
       }
     }
     // j=jmin=outer boundary
     if(cctk_bbox[2]) {
       const int jmin=cctk_nghostzones[1]-which_bdry_pt-1;
 #pragma omp parallel for
-      for(int k=0; k<cctk_lsh[2]; k++)
+      for(int k=0; k<cctk_lsh[2]; k++) {
         for(int i=0; i<cctk_lsh[0]; i++) {
           pressure[IDX(i,jmin,k)] = pressure[IDX(i,jmin+1,k)];
           rho_b[IDX(i,jmin,k)]   = rho_b[IDX(i,jmin+1,k)];
@@ -187,6 +190,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           vy[IDX(i,jmin,k)]    = vy[IDX(i,jmin+1,k)];
           vz[IDX(i,jmin,k)]    = vz[IDX(i,jmin+1,k)]; 
           if(vx[IDX(i,jmin,k)]>0.) vx[IDX(i,jmin,k)] = 0.0;
+        }
       }
     }
 
@@ -195,7 +199,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
     if(cctk_bbox[5]) {
       const int kmax=cctk_lsh[2]-cctk_nghostzones[2]+which_bdry_pt;
 #pragma omp parallel for
-      for(int j=0; j<cctk_lsh[1]; j++)
+      for(int j=0; j<cctk_lsh[1]; j++) {
         for(int i=0; i<cctk_lsh[0]; i++) {
           pressure[IDX(i,j,kmax)] = pressure[IDX(i,j,kmax-1)];
           rho_b[IDX(i,j,kmax)]   = rho_b[IDX(i,j,kmax-1)];
@@ -203,13 +207,14 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           vy[IDX(i,j,kmax)]    = vy[IDX(i,j,kmax-1)];
           vz[IDX(i,j,kmax)]    = vz[IDX(i,j,kmax-1)]; 
           if(vx[IDX(i,j,kmax)]<0.) vx[IDX(i,j,kmax)] = 0.0;
+        }
       }
     }
     // k=kmin=outer boundary
     if((cctk_bbox[4]) && Symmetry_none) {
       const int kmin=cctk_nghostzones[2]-which_bdry_pt-1;
 #pragma omp parallel for
-      for(int j=0; j<cctk_lsh[1]; j++)
+      for(int j=0; j<cctk_lsh[1]; j++) {
         for(int i=0; i<cctk_lsh[0]; i++) {
           pressure[IDX(i,j,kmin)] = pressure[IDX(i,j,kmin+1)];
           rho_b[IDX(i,j,kmin)]   = rho_b[IDX(i,j,kmin+1)];
@@ -217,6 +222,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           vy[IDX(i,j,kmin)]    = vy[IDX(i,j,kmin+1)];
           vz[IDX(i,j,kmin)]    = vz[IDX(i,j,kmin+1)]; 
           if(vx[IDX(i,j,kmin)]>0.) vx[IDX(i,j,kmin)] = 0.0;
+        }
       }
     }
   }
@@ -225,8 +231,8 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
   double dummy1, dummy2, dummy3;
 
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++)
-    for(int j=0; j<cctk_lsh[1]; j++)
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         if(((cctk_bbox[0]) && i<cctk_nghostzones[0]) ||
            ((cctk_bbox[1]) && i>=cctk_lsh[0]-cctk_nghostzones[0]) ||
@@ -287,5 +293,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                   &eTyz[index], &eTzz[index]);
           }
         }
+      }
+    }
   }
 }

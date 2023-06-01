@@ -1,7 +1,7 @@
 #include "TestDataID.h"
 
-void TestDataID_1D_tests_hydro_data(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS_TestDataID_1D_tests_hydro_data;
+void TestDataID_1D_tests_magnetic_data(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS_TestDataID_1D_tests_magnetic_data;
   DECLARE_CCTK_PARAMETERS;
 
   double Bx_l, By_l, Bz_l;
@@ -13,27 +13,20 @@ void TestDataID_1D_tests_hydro_data(CCTK_ARGUMENTS) {
     Bz_l = Bz_r = 0.0;   
   } else if(CCTK_EQUALS(test_1D_initial_data,"Balsara2")) {
     Bx_l = Bx_r = 5.0;
-    By_l = 6.0;
-    By_r = 0.7;
-    Bz_l = 6.0;
-    Bz_r = 0.7; 
+    By_l = Bz_l = 6.0;
+    By_r = Bz_r = 0.7;
   } else if(CCTK_EQUALS(test_1D_initial_data,"Balsara3")) {
     Bx_l = Bx_r = 10.0;
-    By_l = 7.0;
-    By_r = 0.7;
-    Bz_l = 7.0;
-    Bz_r = 0.7; 
+    By_l = Bz_l = 7.0;
+    By_r = Bz_r = 0.7;
   } else if(CCTK_EQUALS(test_1D_initial_data,"Balsara4")) {
     Bx_l = Bx_r = 10.0;
-    By_l = 7.0;
-    By_r = -7.0;
-    Bz_l = 7.0;
-    Bz_r = -7.0; 
+    By_l = Bz_l = 7.0;
+    By_r = Bz_r = -7.0; 
   } else if(CCTK_EQUALS(test_1D_initial_data,"Balsara5")) {
     Bx_l = Bx_r = 2.0;
-    By_l = 0.3;
+    By_l = Bz_l = 0.3;
     By_r = -0.7;
-    Bz_l = 0.3;
     Bz_r = 0.5; 
   } else if(CCTK_EQUALS(test_1D_initial_data,"equilibrium")
          || CCTK_EQUALS(test_1D_initial_data,"sound wave")
@@ -63,19 +56,16 @@ void TestDataID_1D_tests_hydro_data(CCTK_ARGUMENTS) {
 
     Bxtmp = Bx_r; Bytmp = By_r; Bztmp = Bz_r;
     Bz_r = Bxtmp; Bx_r = Bytmp; By_r = Bztmp;
-  } else {
-    CCTK_VERROR("Parameter test_shock_direction is not set "
-                "to a valid direction. Something has gone wrong.");
   }
 
 #pragma omp parallel for
-  for(int k=0;k<cctk_lsh[2];k++) {
-    for(int j=0;j<cctk_lsh[1];j++) {
-      for(int i=0;i<cctk_lsh[0];i++) {
-        int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
-        int ind4x = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
-        int ind4y = CCTK_GFINDEX4D(cctkGH,i,j,k,1);
-        int ind4z = CCTK_GFINDEX4D(cctkGH,i,j,k,2);
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
+      for(int i=0; i<cctk_lsh[0]; i++) {
+        const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int ind4x = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
+        const int ind4y = CCTK_GFINDEX4D(cctkGH,i,j,k,1);
+        const int ind4z = CCTK_GFINDEX4D(cctkGH,i,j,k,2);
 
         if(CCTK_EQUALS(test_shock_direction, "x")) {
           if(x[index] <= discontinuity_position) { 
@@ -86,7 +76,7 @@ void TestDataID_1D_tests_hydro_data(CCTK_ARGUMENTS) {
           Avec[ind4y] = 0.0;
           Avec[ind4z] = Bx_r * y[index];
 
-        else if(CCTK_EQUALS(test_shock_direction, "y")) {
+        } else if(CCTK_EQUALS(test_shock_direction, "y")) {
           if(y[index] <= discontinuity_position) {
             Avec[ind4y] = Bz_l * x[index] - Bx_l * z[index];
           } else {

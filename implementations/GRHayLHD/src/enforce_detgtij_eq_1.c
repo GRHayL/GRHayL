@@ -5,8 +5,8 @@ void GRHayLHD_enforce_detgtij_eq_1(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
 #pragma omp parallel for
-  for(int k=0; k<cctkGH->cctk_lsh[2]; k++)
-    for(int j=0; j<cctkGH->cctk_lsh[1]; j++)
+  for(int k=0; k<cctkGH->cctk_lsh[2]; k++) {
+    for(int j=0; j<cctkGH->cctk_lsh[1]; j++) {
       for(int i=0; i<cctkGH->cctk_lsh[0]; i++) {
         int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
         double gxx_physL=gxx[index];
@@ -63,5 +63,7 @@ void GRHayLHD_enforce_detgtij_eq_1(CCTK_ARGUMENTS) {
         gyy[index] = gtyyL*Psi4;
         gyz[index] = gtyzL*Psi4;
         gzz[index] = gtzzL*Psi4;
+      }
+    }
   }
 }

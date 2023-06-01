@@ -80,8 +80,8 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
     // This loop includes 1 ghostzone because the RHS calculation for e.g. the x direction
     // requires (i,j,k) and (i+1,j,k)
 #pragma omp parallel for
-    for(int k=kmin-1; k<kmax; k++)
-      for(int j=jmin-1; j<jmax; j++)
+    for(int k=kmin-1; k<kmax; k++) {
+      for(int j=jmin-1; j<jmax; j++) {
         for(int i=imin-1; i<imax; i++) {
           const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
@@ -148,11 +148,13 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
           Stildex_flux[index]  = cons_fluxes.SD[0];
           Stildey_flux[index]  = cons_fluxes.SD[1];
           Stildez_flux[index]  = cons_fluxes.SD[2];
+        }
+      }
     }
 
 #pragma omp parallel for
-    for(int k=kmin; k<kmax; k++)
-      for(int j=jmin; j<jmax; j++)
+    for(int k=kmin; k<kmax; k++) {
+      for(int j=jmin; j<jmax; j++) {
         for(int i=imin; i<imax; i++) {
           const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
           const int indm1 = CCTK_GFINDEX3D(cctkGH, i-xdir, j-ydir, k-zdir);
@@ -224,6 +226,8 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
           Stildex_rhs[index] += cons_source.SD[0];
           Stildey_rhs[index] += cons_source.SD[1];
           Stildez_rhs[index] += cons_source.SD[2];
+        }
+      }
     }
   }
 }

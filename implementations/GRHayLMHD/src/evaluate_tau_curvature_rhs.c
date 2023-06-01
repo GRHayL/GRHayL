@@ -19,8 +19,8 @@ void GRHayLMHD_evaluate_tau_curvature_rhs(CCTK_ARGUMENTS) {
   const int kmax = cctk_lsh[2] - cctk_nghostzones[2];
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++)
-    for(int j=jmin; j<jmax; j++)
+  for(int k=kmin; k<kmax; k++) {
+    for(int j=jmin; j<jmax; j++) {
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
@@ -66,5 +66,7 @@ void GRHayLMHD_evaluate_tau_curvature_rhs(CCTK_ARGUMENTS) {
         grhayl_calculate_tau_tilde_source_term_extrinsic_curv(
                  &prims, grhayl_eos, &ADM_metric, &curv, &cons_source);
         tau_rhs[index] += cons_source.tau;
+      }
+    }
   }
 }

@@ -23,21 +23,13 @@ void convert_HydroBase_to_GRHayLMHD(CCTK_ARGUMENTS) {
 
 // We use rho and press from HydroBase directly with no need to convert
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int ind0=CCTK_GFINDEX4D(cctkGH,i,j,k,0);
         const int ind1=CCTK_GFINDEX4D(cctkGH,i,j,k,1);
         const int ind2=CCTK_GFINDEX4D(cctkGH,i,j,k,2);
-
-        //TODO: this references simple gamma law; clearly needs to be extended to more EOS types
-        // P = (\Gamma - 1) rho epsilon
-        // -> \Gamma = P/(rho epsilon) + 1
-        const double measured_gamma = ( press[index]/(rho[index] * eps[index]) + 1.0 );
-        if(rho[index]>grhayl_eos->rho_atm && fabs(grhayl_eos->Gamma_th - measured_gamma)/grhayl_eos->Gamma_th > 1e-2)
-          CCTK_VERROR("Expected simple gamma law with gamma_th=%.15e, but found a point with gamma law such that gamma_th=%.15e. error = %e| rb=%e rbatm=%e P=%e\n",
-                      grhayl_eos->Gamma_th, measured_gamma, (grhayl_eos->Gamma_th-measured_gamma)/grhayl_eos->Gamma_th, rho[index], grhayl_eos->rho_atm, press[index] );
 
         rho_b[index] = rho[index];
         pressure[index] = press[index];
@@ -76,6 +68,8 @@ void convert_HydroBase_to_GRHayLMHD(CCTK_ARGUMENTS) {
         vx[index] = alp[index]*ETvx - betax[index];
         vy[index] = alp[index]*ETvy - betay[index];
         vz[index] = alp[index]*ETvz - betaz[index];
+      }
+    }
   }
 
   // Neat feature for debugging: Add a roundoff-error perturbation
@@ -84,8 +78,8 @@ void convert_HydroBase_to_GRHayLMHD(CCTK_ARGUMENTS) {
   //    perturbation.
   if(random_pert > 1e-30) {
     srand(random_seed); // Use srand() as rand() is thread-safe.
-    for(int k=0; k<kmax; k++)
-      for(int j=0; j<jmax; j++)
+    for(int k=0; k<kmax; k++) {
+      for(int j=0; j<jmax; j++) {
         for(int i=0; i<imax; i++) {
           const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
           const double pert = (random_pert*(double)rand() / RAND_MAX);
@@ -99,6 +93,8 @@ void convert_HydroBase_to_GRHayLMHD(CCTK_ARGUMENTS) {
           Ax[index]*=one_plus_pert;
           Ay[index]*=one_plus_pert;
           Az[index]*=one_plus_pert;
+        }
+      }
     }
   }
 
@@ -110,8 +106,8 @@ void convert_HydroBase_to_GRHayLMHD(CCTK_ARGUMENTS) {
   const double dzi = 1.0/CCTK_DELTA_SPACE(2);
 
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         // Look Mom, no if() statements!
         const int shiftedim1 = (i-1)*(i!=0); // This way, i=0 yields shiftedim1=0 and shiftedi=1, used below for our COPY boundary condition.
@@ -189,11 +185,13 @@ void convert_HydroBase_to_GRHayLMHD(CCTK_ARGUMENTS) {
         const int indexijkp1 = CCTK_GFINDEX3D(cctkGH,i,j,k + ( (kmax_minus_k > 0) - (0 > kmax_minus_k) ));
         const double Psi_kp1 = psi_bssn[indexijkp1];
         Bz_stagger[actual_index] *= Psim3/(Psi_kp1*Psi_kp1*Psi_kp1);
+      }
+    }
   }
 
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         // Look Mom, no if() statements!
         const int shiftedim1 = (i-1)*(i!=0); // This way, i=0 yields shiftedim1=0 and shiftedi=1, used below for our COPY boundary condition.
@@ -239,12 +237,14 @@ void convert_HydroBase_to_GRHayLMHD(CCTK_ARGUMENTS) {
         // Set Bz = 0.5 ( Bz_stagger + Bz_stagger_im1 )
         // "Grid" Bz_stagger(i,j,k) is actually Bz_stagger(i,j+1/2,k)
         Bz_center[actual_index] = 0.5 * ( Bz_stagger[index] + Bz_stagger[indexkm1] );
+      }
+    }
   }
 
   // Finally, enforce limits on primitives & compute conservative variables.
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
@@ -298,5 +298,7 @@ void convert_HydroBase_to_GRHayLMHD(CCTK_ARGUMENTS) {
                 &eTxy[index], &eTxz[index], &eTyy[index],
                 &eTyz[index], &eTzz[index]);
         }
+      }
+    }
   }
 }

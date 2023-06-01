@@ -121,12 +121,14 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^x face values to be consistent with BX_STAGGER.
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++)
-    for(int j=0; j<cctk_lsh[1]; j++)
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int indexim1 = CCTK_GFINDEX3D(cctkGH,i-1+(i==0),j,k); /* indexim1=0 when i=0 */
         out_prims_r[BX_CENTER][index] = out_prims_l[BX_CENTER][index] = in_prims[BX_STAGGER][indexim1];
+      }
+    }
   }
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
@@ -176,12 +178,14 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^y face values to be consistent with BY_STAGGER.
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++)
-    for(int j=0; j<cctk_lsh[1]; j++)
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int indexjm1 = CCTK_GFINDEX3D(cctkGH,i,j-1+(j==0),k); /* indexjm1=0 when j=0 */
         out_prims_r[BY_CENTER][index] = out_prims_l[BY_CENTER][index] = in_prims[BY_STAGGER][indexjm1];
+      }
+    }
   }
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
@@ -243,12 +247,14 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
   //   Instead of reconstructing, we simply set B^z face values to be consistent with BZ_STAGGER.
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++)
-    for(int j=0; j<cctk_lsh[1]; j++)
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int indexkm1 = CCTK_GFINDEX3D(cctkGH,i,j,k-1+(k==0)); /* indexkm1=0 when k=0 */
         out_prims_r[BZ_CENTER][index] = out_prims_l[BZ_CENTER][index] = in_prims[BZ_STAGGER][indexkm1];
+      }
+    }
   }
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:

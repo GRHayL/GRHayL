@@ -23,8 +23,8 @@ void GRHayLMHD_reconstruction_loop(const cGH *restrict cctkGH, const int flux_di
   const int kmax = cctkGH->cctk_lsh[2] - (cctkGH->cctk_nghostzones[2]-1)*zdir;
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++)
-    for(int j=jmin; j<jmax; j++)
+  for(int k=kmin; k<kmax; k++) {
+    for(int j=jmin; j<jmax; j++) {
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j, k);
         double rho[6], pressure[6], v_flux_dir[6];
@@ -58,6 +58,8 @@ void GRHayLMHD_reconstruction_loop(const cGH *restrict cctkGH, const int flux_di
           out_prims_r[var_indices[var]][index] = vars_r[var];
           out_prims_l[var_indices[var]][index] = vars_l[var];
         }
+      }
+    }
   }
 }
 

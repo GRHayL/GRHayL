@@ -36,10 +36,9 @@ void GRHayLMHD_set_symmetry_gzs_staggered(
   //if(num_gzs*2>=kmax) CCTK_VERROR("ERROR in GRHayLMHD_set_symmetry_gzs_staggered.c");
 
 #pragma omp parallel for
-  for(int k=0;k<num_gzs;k++) for(int j=0;j<lsh[1];j++) for(int i=0;i<lsh[0];i++) {
-  //for(int k=0; k<num_gzs; k++)
-  //  for(int j=0; j<jmax; j++)
-  //    for(int i=0; i<imax; i++) {
+  for(int k=0; k<num_gzs; k++) {
+    for(int j=0; j<lsh[1]; j++) {
+      for(int i=0; i<lsh[0]; i++) {
         const int index_inside__sym_gz = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
         /* This loop sets symmetry ghostzones, regardless of how the gridfunction is staggered.
@@ -75,4 +74,6 @@ void GRHayLMHD_set_symmetry_gzs_staggered(
 
         gridfunc[index_inside__sym_gz] = gridfunc_syms[2]*gridfunc[matching_index_outside_sym_gz];
       }
+    }
+  }
 }

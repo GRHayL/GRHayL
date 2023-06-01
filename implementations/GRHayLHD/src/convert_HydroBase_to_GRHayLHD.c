@@ -24,8 +24,8 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
 
 // We use rho and press from HydroBase directly with no need to convert
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
 
@@ -61,6 +61,8 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
         vx[index] = alp[index]*ETvx - betax[index];
         vy[index] = alp[index]*ETvy - betay[index];
         vz[index] = alp[index]*ETvz - betaz[index];
+      }
+    }
   }
 
   // Neat feature for debugging: Add a roundoff-error perturbation
@@ -69,8 +71,8 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
   //    perturbation.
   if(random_pert > 1e-30) {
     srand(random_seed); // Use srand() as rand() is thread-safe.
-    for(int k=0; k<kmax; k++)
-      for(int j=0; j<jmax; j++)
+    for(int k=0; k<kmax; k++) {
+      for(int j=0; j<jmax; j++) {
         for(int i=0; i<imax; i++) {
           const int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
           const double pert = (random_pert*(double)rand() / RAND_MAX);
@@ -79,13 +81,15 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
           vx[index]*=one_plus_pert;
           vy[index]*=one_plus_pert;
           vz[index]*=one_plus_pert;
+        }
+      }
     }
   }
 
   // Finally, enforce limits on primitives & compute conservative variables.
 #pragma omp parallel for
-  for(int k=0; k<kmax; k++)
-    for(int j=0; j<jmax; j++)
+  for(int k=0; k<kmax; k++) {
+    for(int j=0; j<jmax; j++) {
       for(int i=0; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
@@ -139,5 +143,7 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
                 &eTxy[index], &eTxz[index], &eTyy[index],
                 &eTyz[index], &eTzz[index]);
         }
+      }
+    }
   }
 }

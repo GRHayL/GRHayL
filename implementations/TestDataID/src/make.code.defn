@@ -3,7 +3,8 @@
 # Main make.code.defn file for thorn GRHDShockID
 
 # Source files in this directory
-SRCS = 1D_tests_hydro_data.c
+SRCS = 1D_tests_hydro_data.c \
+       1D_tests_magnetic_data.c
 
 # Subdirectories containing source files
 SUBDIRS =

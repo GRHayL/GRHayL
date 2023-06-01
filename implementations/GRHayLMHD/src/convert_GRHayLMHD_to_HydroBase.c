@@ -8,8 +8,8 @@ void convert_GRHayLMHD_to_HydroBase(CCTK_ARGUMENTS) {
   if(Convert_to_HydroBase_every==0 || cctk_iteration%Convert_to_HydroBase_every!=0) return;
 
 #pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++)
-    for(int j=0; j<cctk_lsh[1]; j++)
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int index4D0 = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
@@ -89,5 +89,7 @@ void convert_GRHayLMHD_to_HydroBase(CCTK_ARGUMENTS) {
         Bvec[index4D0] = Bx_center[index];
         Bvec[index4D1] = By_center[index];
         Bvec[index4D2] = Bz_center[index];
+      }
+    }
   }
 }

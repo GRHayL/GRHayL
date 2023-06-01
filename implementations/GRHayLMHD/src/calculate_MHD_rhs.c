@@ -84,8 +84,8 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
   // requires (i,j,k) and (i+1,j,k); if cmin/max weren't also needed for A_i, we could
   // technically have the loop only go 1 extra point in the flux_dir direction
 #pragma omp parallel for
-  for(int k=kmin; k<kmax+1; k++)
-    for(int j=jmin; j<jmax+1; j++)
+  for(int k=kmin; k<kmax+1; k++) {
+    for(int j=jmin; j<jmax+1; j++) {
       for(int i=imin; i<imax+1; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
@@ -128,11 +128,13 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
         Stildex_flux[index]  = cons_fluxes.SD[0];
         Stildey_flux[index]  = cons_fluxes.SD[1];
         Stildez_flux[index]  = cons_fluxes.SD[2];
+      }
+    }
   }
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++)
-    for(int j=jmin; j<jmax; j++)
+  for(int k=kmin; k<kmax; k++) {
+    for(int j=jmin; j<jmax; j++) {
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
         const int indp1 = CCTK_GFINDEX3D(cctkGH, i+xdir, j+ydir, k+zdir);
@@ -205,5 +207,7 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
         Stildex_rhs[index] += cons_source.SD[0];
         Stildey_rhs[index] += cons_source.SD[1];
         Stildez_rhs[index] += cons_source.SD[2];
+      }
+    }
   }
 }

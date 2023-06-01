@@ -33,8 +33,8 @@ void GRHayLMHD_A_no_gauge_rhs(const cGH *restrict cctkGH, const int flux_dir,
   const int kmax = cctkGH->cctk_lsh[2]-cctkGH->cctk_nghostzones[2];
 
 #pragma omp parallel for
-  for(int k=kmin; k<kmax; k++)
-    for(int j=jmin; j<jmax; j++)
+  for(int k=kmin; k<kmax; k++) {
+    for(int j=jmin; j<jmax; j++) {
       for(int i=imin; i<imax; i++) {
         const int index    = CCTK_GFINDEX3D(cctkGH,i,j,k);
         const int index_v  = CCTK_GFINDEX3D(cctkGH,i+v_offset[0], j+v_offset[1], k+v_offset[2]);
@@ -93,5 +93,7 @@ void GRHayLMHD_A_no_gauge_rhs(const cGH *restrict cctkGH, const int flux_dir,
         vars.c2_max = cmax[dir2_offset][index_B1];
 
         A_rhs[index] = grhayl_HLL_flux(&vars);
+      }
+    }
   }
 }
