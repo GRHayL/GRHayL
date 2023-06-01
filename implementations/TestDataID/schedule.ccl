@@ -1,0 +1,13 @@
+# Schedule definitions for thorn TestDataID
+
+schedule TestDataID_1D_tests_hydro_data in HydroBase_Initial
+{
+  LANG: C
+  READS:  Grid::coordinates
+  WRITES: HydroBase::vel[0](Everywhere)
+  WRITES: HydroBase::vel[1](Everywhere)
+  WRITES: HydroBase::vel[2](Everywhere)
+  WRITES: HydroBase::rho(Everywhere)
+  WRITES: HydroBase::eps(Everywhere)
+  WRITES: HydroBase::press(Everywhere)
+} "Schedule GRHD shock test functions"
