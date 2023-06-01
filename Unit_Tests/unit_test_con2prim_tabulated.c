@@ -103,15 +103,22 @@ generate_test_data(
       }
 
       // Set metric quantities to Minkowski
-      metric_quantities metric;
-      initialize_metric(1, 1, 0, 0, 1, 0, 1, 0, 0, 0, &metric);
+      metric_quantities ADM_metric;
+      grhayl_initialize_metric(1,
+                        0, 0, 0,
+                        1, 0, 0,
+                        1, 0, 1,
+                        &ADM_metric);
+
+      ADM_aux_quantities metric_aux;
+      grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
       srand(0);
       for(int i=0;i<npoints;i++) {
         for(int j=0;j<npoints;j++) {
 
           con2prim_diagnostics diagnostics;
-          initialize_diagnostics(&diagnostics);
+          grhayl_initialize_diagnostics(&diagnostics);
 
           double xrho, xtemp, xlogWm1, xW, xlogPmoP;
           if( vars_key ) {
@@ -150,16 +157,16 @@ generate_test_data(
 
           // Set primitive quantities
           primitive_quantities prims_orig;
-          initialize_primitives(xrho, xprs, xeps,
+          grhayl_initialize_primitives(xrho, xprs, xeps,
                                 vx, vy, vz,
                                 Bx, By, Bz,
                                 xent, xye, xtemp,
                                 &prims_orig);
-          limit_v_and_compute_u0(eos, &metric, &prims_orig, &diagnostics.speed_limited);
+          grhayl_limit_v_and_compute_u0(eos, &ADM_metric, &prims_orig, &diagnostics.speed_limited);
 
           // Set prim guesses
           primitive_quantities prims;
-          initialize_primitives(0.0/0.0, 0.0/0.0, 0.0/0.0,
+          grhayl_initialize_primitives(0.0/0.0, 0.0/0.0, 0.0/0.0,
                                 0.0/0.0, 0.0/0.0, 0.0/0.0,
                                 Bx, By, Bz,
                                 0.0/0.0, 0.0/0.0, 0.0/0.0,
@@ -169,19 +176,19 @@ generate_test_data(
           // Compute conserved variables and Tmunu
           conservative_quantities cons;
           __attribute__((unused)) stress_energy dummy;
-          compute_conservs_and_Tmunu(&metric, &prims_orig, &cons, &dummy);
+          grhayl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims_orig, &cons, &dummy);
 
           // Undensitize the conserved variables
           conservative_quantities cons_undens;
-          undensitize_conservatives(&metric, &cons, &cons_undens);
+          grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
 
           // Now perform the con2prim
-          if( grhayl_con2prim_multi_method(params, eos, &metric, &cons_undens, &prims, &diagnostics) )
+          if( grhayl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
             grhayl_error("Con2Prim failed\n");
 
-          prims.vx = prims.vx/prims.u0;
-          prims.vy = prims.vy/prims.u0;
-          prims.vz = prims.vz/prims.u0;
+          prims.vU[0] = prims.vU[0]/prims.u0;
+          prims.vU[1] = prims.vU[1]/prims.u0;
+          prims.vU[2] = prims.vU[2]/prims.u0;
 
           // Write input and output primitives
           if( !perturb )
@@ -219,14 +226,21 @@ run_unit_test(
       grhayl_error("Problem reading input data files (%d != %d)\n", n1, n2);
 
     const int npoints = n1;
-    metric_quantities metric;
-    initialize_metric(1, 1, 0, 0, 1, 0, 1, 0, 0, 0, &metric);
+    metric_quantities ADM_metric;
+    grhayl_initialize_metric(1,
+                      0, 0, 0,
+                      1, 0, 0,
+                      1, 0, 1,
+                      &ADM_metric);
+
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     for(int i=0;i<npoints;i++) {
       for(int j=0;j<npoints;j++) {
 
         con2prim_diagnostics diagnostics;
-        initialize_diagnostics(&diagnostics);
+        grhayl_initialize_diagnostics(&diagnostics);
 
         // Read input primitives from unperturbed data file
         primitive_quantities prims;
@@ -236,19 +250,19 @@ run_unit_test(
         // Compute conserved variables and Tmunu
         conservative_quantities cons;
         __attribute__((unused)) stress_energy dummy;
-        compute_conservs_and_Tmunu(&metric, &prims, &cons, &dummy);
+        grhayl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &dummy);
 
         // Undensitize the conserved variables
         conservative_quantities cons_undens;
-        undensitize_conservatives(&metric, &cons, &cons_undens);
+        grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
 
         // Now perform the con2prim
-        if( grhayl_con2prim_multi_method(params, eos, &metric, &cons_undens, &prims, &diagnostics) )
+        if( grhayl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
           grhayl_error("Con2Prim failed\n");
 
-        prims.vx = prims.vx/prims.u0;
-        prims.vy = prims.vy/prims.u0;
-        prims.vz = prims.vz/prims.u0;
+        prims.vU[0] = prims.vU[0]/prims.u0;
+        prims.vU[1] = prims.vU[1]/prims.u0;
+        prims.vU[2] = prims.vU[2]/prims.u0;
 
         // Read unperturbed and perturbed results from file
         primitive_quantities prims_trusted, prims_pert;
@@ -263,9 +277,9 @@ run_unit_test(
         validate(prims_trusted.temperature, prims.temperature, prims_pert.temperature);
         validate(prims_trusted.press      , prims.press      , prims_pert.press      );
         validate(prims_trusted.eps        , prims.eps        , prims_pert.eps        );
-        validate(prims_trusted.vx         , prims.vx         , prims_pert.vx         );
-        validate(prims_trusted.vy         , prims.vy         , prims_pert.vy         );
-        validate(prims_trusted.vz         , prims.vz         , prims_pert.vz         );
+        validate(prims_trusted.vU[0]         , prims.vU[0]         , prims_pert.vU[0]         );
+        validate(prims_trusted.vU[1]         , prims.vU[1]         , prims_pert.vU[1]         );
+        validate(prims_trusted.vU[2]         , prims.vU[2]         , prims_pert.vU[2]         );
       }
     }
 
@@ -323,7 +337,7 @@ int main(int argc, char **argv) {
                     &params);
 
   eos_parameters eos;
-  initialize_tabulated_eos_functions_and_params(tablepath, W_max,
+  grhayl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
                                                 rho_b_atm, rho_b_min, rho_b_max,
                                                 Y_e_atm, Y_e_min, Y_e_max,
                                                 T_atm, T_min, T_max, &eos);

@@ -175,18 +175,18 @@
 //                       con2prim_diagnostics *restrict diagnostics ) {
 
 //   double uu = -cons_undens->tau*metric->lapse - (metric->lapm1)*cons_undens->rho +
-//     metric->betax*cons_undens->S_x + metric->betay*cons_undens->S_y  + metric->betaz*cons_undens->S_z;
+//     metric->betaU[0]*cons_undens->SD[0] + metric->betaU[1]*cons_undens->SD[1]  + metric->betaU[2]*cons_undens->SD[2];
 
 //   double new_cons[numcons];
 //   double new_prims[numprims];
 //   new_cons[DD] = cons_undens->rho;
 //   new_cons[UU] = uu - cons_undens->rho;
-//   new_cons[S1_cov] = cons_undens->S_x;
-//   new_cons[S2_cov] = cons_undens->S_y;
-//   new_cons[S3_cov] = cons_undens->S_z;
-//   new_cons[B1_con] = prims->Bx * ONE_OVER_SQRT_4PI;
-//   new_cons[B2_con] = prims->By * ONE_OVER_SQRT_4PI;
-//   new_cons[B3_con] = prims->Bz * ONE_OVER_SQRT_4PI;
+//   new_cons[S1_cov] = cons_undens->SD[0];
+//   new_cons[S2_cov] = cons_undens->SD[1];
+//   new_cons[S3_cov] = cons_undens->SD[2];
+//   new_cons[B1_con] = prims->BU[0] * ONE_OVER_SQRT_4PI;
+//   new_cons[B2_con] = prims->BU[1] * ONE_OVER_SQRT_4PI;
+//   new_cons[B3_con] = prims->BU[2] * ONE_OVER_SQRT_4PI;
 //   new_cons[YE] = cons_undens->Y_e;
 //   new_cons[TAU] = MAX(cons_undens->tau, eos->tau_atm);
 //   new_cons[WS] = cons_undens->entropy;
@@ -206,7 +206,7 @@
 //   new_prims[TEMP] = prims->temperature;
 //   new_prims[YE] = prims->Y_e;
 
-//   int retval = Utoprim_new_body(eos, new_cons, metric->g4dn, metric->g4up, new_prims);
+//   int retval = Utoprim_new_body(eos, new_cons, metric->g4DD, metric->g4UU, new_prims);
 
 //   //TODO: missing eps, entropy. Are these not used for this routine?
 

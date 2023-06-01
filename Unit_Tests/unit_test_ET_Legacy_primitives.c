@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   const double poison = 1e300;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int backup_routine[3] = {None,None,None};
+  const int backup_routine[3] = {FontFix,None,None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
 
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, 0 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -166,24 +166,27 @@ int main(int argc, char **argv) {
   for(int index=0; index<arraylength; index++) {
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    initialize_diagnostics(&diagnostics);
-    metric_quantities metric;
+    grhayl_initialize_diagnostics(&diagnostics);
+    metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
-    initialize_metric(lapse[index],
+    grhayl_initialize_metric(lapse[index],
+                      betax[index], betay[index], betaz[index],
                       gxx[index], gxy[index], gxz[index],
                       gyy[index], gyz[index], gzz[index],
-                      betax[index], betay[index], betaz[index],
-                      &metric);
+                      &ADM_metric);
 
-    initialize_primitives(rho_b[index], press[index], eps[index],
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+
+    grhayl_initialize_primitives(rho_b[index], press[index], eps[index],
                           vx[index], vy[index], vz[index],
                           Bx[index], By[index], Bz[index],
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims);
 
-    initialize_conservatives(rho_star[index], tau[index],
+    grhayl_initialize_conservatives(rho_star[index], tau[index],
                              S_x[index], S_y[index], S_z[index],
                              poison, poison, &cons);
 
@@ -195,45 +198,42 @@ int main(int argc, char **argv) {
       if(eos.eos_type == 0) { //Hybrid-only
         if(index == arraylength-2 || index == arraylength-1) {
           params.psi6threshold = 1e-1; // Artificially triggering fix
-          apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+          grhayl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
           params.psi6threshold = Psi6threshold;
         } else {
-          apply_inequality_fixes(&params, &eos, &metric, &prims, &cons, &diagnostics);
+          grhayl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
         }
       }
 
       // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
-      undensitize_conservatives(&metric, &cons, &cons_undens);
+      grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      check = grhayl_con2prim_multi_method(&params, &eos, &metric, &cons_undens, &prims, &diagnostics);
-
-      if(check!=0)
-        check = Hybrid_Font_Fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
-      /*************************************************************/
+      check = grhayl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
 
       /********** Artificial Font fix for code comparison **********
       This point corresponds to the second-to-last element of the edge
-      cases for apply_inequality_fixes function. Due to improvements
-      in the Noble2D routine, the GRHayL code doesn't trigger font
+      cases for grhayl_apply_inequality_fixes function. Due to improvements
+      in the Noble2D routine, the GRHayL code doesn't trigger Font
       fix while the old code does. This is also true for several of
       the more 'physically motivated' indices, but the edge case data
-      isn't constructed to be physically reasonable, causing the font
+      isn't constructed to be physically reasonable, causing the Font
       fix to significantly affect the results. For the normal data, the
-      font fix data from IllinoisGRMHD and Noble2D data from GRHayL
+      Font fix data from IllinoisGRMHD and Noble2D data from GRHayL
       agree within tolerance, further validating the changes to Noble2D.
       Since this data doesn't match due to the code changing for the
-      better, we just have to manually trigger font fix to reproduce
+      better, we just have to manually trigger Font fix to reproduce
       the behavior of IllinoisGRMHD.
       **************************************************************/
       if(index==arraylength-2)
-        check = Hybrid_Font_Fix(&params, &eos, &metric, &cons, &prims, &diagnostics);
+        check = grhayl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      /*************************************************************/
 
       if(check)
-        printf("Con2Prim and Font fix failed!");
+        printf("Con2Prim failed!");
     } else {
       diagnostics.failure_checker+=1;
-      reset_prims_to_atmosphere(&eos, &prims);
+      grhayl_set_prims_to_constant_atm(&eos, &prims);
       //TODO: Validate reset? (rhob press v)
       printf("Negative rho_* triggering atmospheric reset.\n");
     } // if rho_star > 0
@@ -241,26 +241,26 @@ int main(int argc, char **argv) {
     //Now we compute the difference between original & new primitives and conservatives, for diagnostic purposes:
     prims_abs_error[0] += fabs(prims.rho - prims_orig.rho);
     prims_abs_error[1] += fabs(prims.press - prims_orig.press);
-    prims_abs_error[2] += fabs(prims.vx - prims_orig.vx);
-    prims_abs_error[3] += fabs(prims.vy - prims_orig.vy);
-    prims_abs_error[4] += fabs(prims.vz - prims_orig.vz);
+    prims_abs_error[2] += fabs(prims.vU[0] - prims_orig.vU[0]);
+    prims_abs_error[3] += fabs(prims.vU[1] - prims_orig.vU[1]);
+    prims_abs_error[4] += fabs(prims.vU[2] - prims_orig.vU[2]);
 
     prims_rel_error[0] += relative_error(prims_orig.rho, prims.rho);
     prims_rel_error[1] += relative_error(prims_orig.press, prims.press);
-    prims_rel_error[2] += relative_error(prims_orig.vx, prims.vx);
-    prims_rel_error[3] += relative_error(prims_orig.vy, prims.vy);
-    prims_rel_error[4] += relative_error(prims_orig.vz, prims.vz);
+    prims_rel_error[2] += relative_error(prims_orig.vU[0], prims.vU[0]);
+    prims_rel_error[3] += relative_error(prims_orig.vU[1], prims.vU[1]);
+    prims_rel_error[4] += relative_error(prims_orig.vU[2], prims.vU[2]);
 
     // Now, we load the trusted/perturbed data for this index and validate the computed results.
     primitive_quantities prims_trusted, prims_pert;
 
-    initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
+    grhayl_initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
                           vx_trusted[index], vy_trusted[index], vz_trusted[index],
                           poison, poison, poison, // B is C2P input, not output
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims_trusted);
 
-    initialize_primitives(rho_b_pert[index], press_pert[index], prims.eps, // Old code has no eps variable
+    grhayl_initialize_primitives(rho_b_pert[index], press_pert[index], prims.eps, // Old code has no eps variable
                           vx_pert[index], vy_pert[index], vz_pert[index],
                           poison, poison, poison, // B is C2P input, not output
                           poison, poison, poison, // entropy, Y_e, temp
@@ -268,30 +268,30 @@ int main(int argc, char **argv) {
 
     prims_trusted_abs_error[0] += fabs(prims_trusted.rho - prims_orig.rho);
     prims_trusted_abs_error[1] += fabs(prims_trusted.press - prims_orig.press);
-    prims_trusted_abs_error[2] += fabs(prims_trusted.vx - prims_orig.vx);
-    prims_trusted_abs_error[3] += fabs(prims_trusted.vy - prims_orig.vy);
-    prims_trusted_abs_error[4] += fabs(prims_trusted.vz - prims_orig.vz);
+    prims_trusted_abs_error[2] += fabs(prims_trusted.vU[0] - prims_orig.vU[0]);
+    prims_trusted_abs_error[3] += fabs(prims_trusted.vU[1] - prims_orig.vU[1]);
+    prims_trusted_abs_error[4] += fabs(prims_trusted.vU[2] - prims_orig.vU[2]);
 
     prims_trusted_rel_error[0] += relative_error(prims_orig.rho, prims_trusted.rho);
     prims_trusted_rel_error[1] += relative_error(prims_orig.press, prims_trusted.press);
-    prims_trusted_rel_error[2] += relative_error(prims_orig.vx, prims_trusted.vx);
-    prims_trusted_rel_error[3] += relative_error(prims_orig.vy, prims_trusted.vy);
-    prims_trusted_rel_error[4] += relative_error(prims_orig.vz, prims_trusted.vz);
+    prims_trusted_rel_error[2] += relative_error(prims_orig.vU[0], prims_trusted.vU[0]);
+    prims_trusted_rel_error[3] += relative_error(prims_orig.vU[1], prims_trusted.vU[1]);
+    prims_trusted_rel_error[4] += relative_error(prims_orig.vU[2], prims_trusted.vU[2]);
 
     prims_pert_abs_error[0] += fabs(prims_pert.rho - prims_orig.rho);
     prims_pert_abs_error[1] += fabs(prims_pert.press - prims_orig.press);
-    prims_pert_abs_error[2] += fabs(prims_pert.vx - prims_orig.vx);
-    prims_pert_abs_error[3] += fabs(prims_pert.vy - prims_orig.vy);
-    prims_pert_abs_error[4] += fabs(prims_pert.vz - prims_orig.vz);
+    prims_pert_abs_error[2] += fabs(prims_pert.vU[0] - prims_orig.vU[0]);
+    prims_pert_abs_error[3] += fabs(prims_pert.vU[1] - prims_orig.vU[1]);
+    prims_pert_abs_error[4] += fabs(prims_pert.vU[2] - prims_orig.vU[2]);
 
     prims_pert_rel_error[0] += relative_error(prims_orig.rho, prims_pert.rho);
     prims_pert_rel_error[1] += relative_error(prims_orig.press, prims_pert.press);
-    prims_pert_rel_error[2] += relative_error(prims_orig.vx, prims_pert.vx);
-    prims_pert_rel_error[3] += relative_error(prims_orig.vy, prims_pert.vy);
-    prims_pert_rel_error[4] += relative_error(prims_orig.vz, prims_pert.vz);
+    prims_pert_rel_error[2] += relative_error(prims_orig.vU[0], prims_pert.vU[0]);
+    prims_pert_rel_error[3] += relative_error(prims_orig.vU[1], prims_pert.vU[1]);
+    prims_pert_rel_error[4] += relative_error(prims_orig.vU[2], prims_pert.vU[2]);
 
     if( validate(prims_trusted.rho, prims.rho, prims_pert.rho) )
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable rho.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable rho.\n"
                    "  rho trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.rho, prims.rho, prims_pert.rho,
                                                relative_error(prims_trusted.rho, prims.rho),
@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
     // input values. The pressure coming out of HARM doesn't have the accuracy to preserve the stringent accuracy requirements
     // demanded elsewhere, so this relaxes the demands on the pressure for very small values.
     if( validate_with_tolerance(prims_trusted.press, prims.press, prims_pert.press, min_rel, pressure_cutoff))
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable press.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable press.\n"
                    "  press trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.press, prims.press, prims_pert.press,
                                                relative_error(prims_trusted.press, prims.press),
@@ -313,32 +313,32 @@ int main(int argc, char **argv) {
     //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos.K_ppoly[0], 1.0/eos.Gamma_ppoly[0]) * (eos.Gamma_ppoly[0] - 1.0));
     const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
     if( validate_with_tolerance(prims_trusted.eps, prims.eps, prims_pert.eps, min_rel, eps_cutoff))
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable eps.\n"
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable eps.\n"
                    "  eps trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.eps, prims.eps, prims_pert.eps,
                                                relative_error(prims_trusted.eps, prims.eps),
                                                relative_error(prims_trusted.eps, prims_pert.eps));
 
-    if( validate(prims_trusted.vx, prims.vx, prims_pert.vx) )
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vx.\n"
+    if( validate(prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0]) )
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vx.\n"
                    "  vx trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vx, prims.vx, prims_pert.vx,
-                                               relative_error(prims_trusted.vx, prims.vx),
-                                               relative_error(prims_trusted.vx, prims_pert.vx));
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0],
+                                               relative_error(prims_trusted.vU[0], prims.vU[0]),
+                                               relative_error(prims_trusted.vU[0], prims_pert.vU[0]));
 
-    if(validate(prims_trusted.vy, prims.vy, prims_pert.vy))
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vy.\n"
+    if(validate(prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1]))
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vy.\n"
                    "  vy trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vy, prims.vy, prims_pert.vy,
-                                               relative_error(prims_trusted.vy, prims.vy),
-                                               relative_error(prims_trusted.vy, prims_pert.vy));
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1],
+                                               relative_error(prims_trusted.vU[1], prims.vU[1]),
+                                               relative_error(prims_trusted.vU[1], prims_pert.vU[1]));
 
-    if( validate(prims_trusted.vz, prims.vz, prims_pert.vz) )
-      grhayl_error("Test unit_test_Hybrid_Noble2D has failed for variable vz.\n"
+    if( validate(prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2]) )
+      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vz.\n"
                    "  vz trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vz, prims.vz, prims_pert.vz,
-                                               relative_error(prims_trusted.vz, prims.vz),
-                                               relative_error(prims_trusted.vz, prims_pert.vz));
+                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2],
+                                               relative_error(prims_trusted.vU[2], prims.vU[2]),
+                                               relative_error(prims_trusted.vU[2], prims_pert.vU[2]));
   }
 
   output = fopen("prims_summary.asc","w");

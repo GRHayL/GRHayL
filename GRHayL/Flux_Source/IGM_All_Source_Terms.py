@@ -70,7 +70,7 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outC
                                  S_tilde_source_termD2_free_symbols)
 
     prims_NRPy = ["u4U0", "u4U1", "u4U2", "u4U3", "BU0", "BU1", "BU2", "P", "rhob"]
-    prims_GRHayL = ["u0", "vx*u4U0", "vy*u4U0", "vz*u4U0", "Bx", "By", "Bz", "press", "rho"]
+    prims_GRHayL = ["u0", "vU[0]*u4U0", "vU[1]*u4U0", "vU[2]*u4U0", "BU[0]", "BU[1]", "BU[2]", "press", "rho"]
 
     prestring = r"""
 double h, cs2;
@@ -142,21 +142,21 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
     #             prestring += "const double "+str(var)+" = metric_quantities_derivatives->"+str(var)+";\n"
 
 
-        prestring += "const double betaU0 = metric->betax;\n"
-        prestring += "const double betaU1 = metric->betay;\n"
-        prestring += "const double betaU2 = metric->betaz;\n"
+        prestring += "const double betaU0 = metric->betaU[0];\n"
+        prestring += "const double betaU1 = metric->betaU[1];\n"
+        prestring += "const double betaU2 = metric->betaU[2];\n"
 
 
-        prestring += "const double gammaDD00 = metric->adm_gxx;\n"
-        prestring += "const double gammaDD01 = metric->adm_gxy;\n"
-        prestring += "const double gammaDD02 = metric->adm_gxz;\n"
+        prestring += "const double gammaDD00 = metric->gammaDD[0][0];\n"
+        prestring += "const double gammaDD01 = metric->gammaDD[0][1];\n"
+        prestring += "const double gammaDD02 = metric->gammaDD[0][2];\n"
 
-        prestring += "const double gammaDD11 = metric->adm_gyy;\n"
-        prestring += "const double gammaDD12 = metric->adm_gyz;\n"
+        prestring += "const double gammaDD11 = metric->gammaDD[1][1];\n"
+        prestring += "const double gammaDD12 = metric->gammaDD[1][2];\n"
 
-        prestring += "const double gammaDD22 = metric->adm_gzz;\n"
+        prestring += "const double gammaDD22 = metric->gammaDD[2][2];\n"
     
-        vars_to_write = ["cons->S_x", "cons->S_y", "cons->S_z", "cons->tau"]
+        vars_to_write = ["cons->SD[0]", "cons->SD[1]", "cons->SD[2]", "cons->tau"]
         
         vars_rhs = [GRMHD.S_tilde_source_termD[0], 
                     GRMHD.S_tilde_source_termD[1], 
@@ -172,28 +172,28 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
         params  = "const primitive_quantities *restrict prims, "
         params  += "struct eos_parameters const *restrict eos, "
         params  += "const metric_quantities *restrict metric, "
-        params  += "const metric_derivatives *restrict metric_derivs, "
+        params  += "const metric_quantities *restrict metric_derivs, "
         params  += "conservative_quantities *restrict cons"
 
         for i in range(3):
             desc = f"Add source term for {i}-component of Stilde and tau_tilde"
-            name = f"calculate_source_terms_dirn{i}"
+            name = f"grhayl_calculate_source_terms_dirn{i}"
 
             loopstring = prestring
-            loopstring += f"const double alpha_dD{i} = metric_derivs->lapse[{i}];\n"
+            loopstring += f"const double alpha_dD{i} = metric_derivs->lapse;\n"
 
-            loopstring += f"const double betaU_dD0{i} = metric_derivs->betax[{i}];\n"
-            loopstring += f"const double betaU_dD1{i} = metric_derivs->betay[{i}];\n"
-            loopstring += f"const double betaU_dD2{i} = metric_derivs->betaz[{i}];\n"
+            loopstring += f"const double betaU_dD0{i} = metric_derivs->betaU[0];\n"
+            loopstring += f"const double betaU_dD1{i} = metric_derivs->betaU[1];\n"
+            loopstring += f"const double betaU_dD2{i} = metric_derivs->betaU[2];\n"
 
-            loopstring += f"const double gammaDD_dD00{i} = metric_derivs->adm_gxx[{i}];\n"
-            loopstring += f"const double gammaDD_dD01{i} = metric_derivs->adm_gxy[{i}];\n"
-            loopstring += f"const double gammaDD_dD02{i} = metric_derivs->adm_gxz[{i}];\n"
+            loopstring += f"const double gammaDD_dD00{i} = metric_derivs->gammaDD[0][0];\n"
+            loopstring += f"const double gammaDD_dD01{i} = metric_derivs->gammaDD[0][1];\n"
+            loopstring += f"const double gammaDD_dD02{i} = metric_derivs->gammaDD[0][2];\n"
 
-            loopstring += f"const double gammaDD_dD11{i} = metric_derivs->adm_gyy[{i}];\n"
-            loopstring += f"const double gammaDD_dD12{i} = metric_derivs->adm_gyz[{i}];\n"
+            loopstring += f"const double gammaDD_dD11{i} = metric_derivs->gammaDD[1][1];\n"
+            loopstring += f"const double gammaDD_dD12{i} = metric_derivs->gammaDD[1][2];\n"
 
-            loopstring += f"const double gammaDD_dD22{i} = metric_derivs->adm_gzz[{i}];\n"
+            loopstring += f"const double gammaDD_dD22{i} = metric_derivs->gammaDD[2][2];\n"
 
 
             body = outputC([vars_rhs[i], vars_rhs[i+3]], [vars_to_write[i], vars_to_write[-1]],
@@ -210,16 +210,16 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 
 
         desc = "Add extrinsic curvature source term for tau_tilde"
-        name = "calculate_tau_tilde_source_term_extrinsic_curv"    
+        name = "grhayl_calculate_tau_tilde_source_term_extrinsic_curv"    
 
-        prestring += "const double KDD00 = curv->Kxx;\n"
-        prestring += "const double KDD01 = curv->Kxy;\n"
-        prestring += "const double KDD02 = curv->Kxz;\n"
+        prestring += "const double KDD00 = curv->K[0][0];\n"
+        prestring += "const double KDD01 = curv->K[0][1];\n"
+        prestring += "const double KDD02 = curv->K[0][2];\n"
 
-        prestring += "const double KDD11 = curv->Kyy;\n"
-        prestring += "const double KDD12 = curv->Kyz;\n"
+        prestring += "const double KDD11 = curv->K[1][1];\n"
+        prestring += "const double KDD12 = curv->K[1][2];\n"
 
-        prestring += "const double KDD22 = curv->Kzz;\n"
+        prestring += "const double KDD22 = curv->K[2][2];\n"
 
         loopstring = prestring
 
@@ -267,18 +267,5 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 #   double lapse, lapseinv;
 #   double psi2, psi4, psi6;
 #   double psi4inv, lapseinv2;
-#   double g4dn[4][4],g4up[4][4];
+#   double g4DD[4][4],g4UU[4][4];
 # } metric_quantities;
-
-# typedef struct metric_derivatives {
-#   double lapse[3];
-#   double betax[3];
-#   double betay[3];
-#   double betaz[3];
-#   double adm_gxx[3];
-#   double adm_gxy[3];
-#   double adm_gxz[3];
-#   double adm_gyy[3];
-#   double adm_gyz[3];
-#   double adm_gzz[3];
-# } metric_derivatives;

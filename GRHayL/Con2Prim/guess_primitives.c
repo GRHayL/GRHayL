@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : guess_primitives()
+/* Function    : grhayl_guess_primitives()
  * Description : Computes initial guesses for the primitives
  *               by assuming the values are atmosphere
  *
@@ -14,16 +14,18 @@
  * Outputs     : prims_guess    - returns initial guesses for primitives
  */
 
-void guess_primitives( const eos_parameters *restrict eos,
-                       const metric_quantities *restrict metric,
-                       const conservative_quantities *restrict cons,
-                       primitive_quantities *restrict prims ) {
+void grhayl_guess_primitives(
+      const eos_parameters *restrict eos,
+      const metric_quantities *restrict metric,
+      const ADM_aux_quantities *restrict metric_aux,
+      const conservative_quantities *restrict cons,
+      primitive_quantities *restrict prims) {
 
   // Use atmosphere as initial guess:
-  prims->rho = cons->rho/metric->psi6;
-  prims->vx = -metric->betax;
-  prims->vy = -metric->betay;
-  prims->vz = -metric->betaz;
+  prims->rho = cons->rho/metric_aux->psi6;
+  prims->vU[0] = -metric->betaU[0];
+  prims->vU[1] = -metric->betaU[1];
+  prims->vU[2] = -metric->betaU[2];
   prims->Y_e = cons->Y_e/cons->rho;
   prims->temperature = eos->T_max;
 

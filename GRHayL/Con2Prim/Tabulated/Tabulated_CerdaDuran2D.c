@@ -29,7 +29,7 @@ void NR_2D_WT(
       const double S_squared,
       const double BdotS,
       const double B_squared,
-      const double *restrict Sup,
+      const double *restrict SU,
       const conservative_quantities *restrict cons_undens,
       double W,
       primitive_quantities *restrict prims_guess,
@@ -54,33 +54,33 @@ int Tabulated_CerdaDuran2D(
       primitive_quantities *restrict prims_guess,
       con2prim_diagnostics *restrict diagnostics ) {
 
-  const double Bup[3] = {prims_guess->Bx * ONE_OVER_SQRT_4PI,
-                         prims_guess->By * ONE_OVER_SQRT_4PI,
-                         prims_guess->Bz * ONE_OVER_SQRT_4PI};
-  const double B_squared = compute_vec2_from_vcon(metric, Bup);
+  const double BU[3] = {prims_guess->BU[0] * ONE_OVER_SQRT_4PI,
+                        prims_guess->BU[1] * ONE_OVER_SQRT_4PI,
+                        prims_guess->BU[2] * ONE_OVER_SQRT_4PI};
+  const double B_squared = grhayl_compute_vec2_from_vecU(metric->gammaDD, BU);
 
-  const double Sdn[3] = {cons_undens->S_x,
-                         cons_undens->S_y,
-                         cons_undens->S_z};
-  double Sup[3]; raise_vector_3D(metric, Sdn, Sup);
-  const double S_squared = compute_vec2_from_vcov(metric, Sdn);
+  const double SD[3] = {cons_undens->SD[0],
+                        cons_undens->SD[1],
+                        cons_undens->SD[2]};
+  double SU[3]; grhayl_raise_vector_3D(metric->gammaUU, SD, SU);
+  const double S_squared = grhayl_compute_vec2_from_vecD(metric->gammaUU, SD);
 
   // Need to calculate for (21) and (22) in Cerda-Duran 2008
   // B * S = B^i * S_i
   double BdotS = 0.0;
-  for(int i=0;i<3;i++) BdotS += Bup[i] * Sdn[i];
+  for(int i=0;i<3;i++) BdotS += BU[i] * SD[i];
 
   double W = 0;
 
   bool c2p_failed = false;
   int safe_guess  = 0;
   const double tol_x    = 5e-9;
-  NR_2D_WT(eos, safe_guess, tol_x, S_squared, BdotS, B_squared, Sup, cons_undens, W, prims_guess, &c2p_failed);
+  NR_2D_WT(eos, safe_guess, tol_x, S_squared, BdotS, B_squared, SU, cons_undens, W, prims_guess, &c2p_failed);
 
   if( c2p_failed ) {
     // If failed to recover the prims, try again with safe guesses
     int safe_guess=1;
-    NR_2D_WT(eos, safe_guess, tol_x, S_squared, BdotS, B_squared, Sup, cons_undens, W, prims_guess, &c2p_failed);
+    NR_2D_WT(eos, safe_guess, tol_x, S_squared, BdotS, B_squared, SU, cons_undens, W, prims_guess, &c2p_failed);
   }
 
   return c2p_failed;
@@ -124,7 +124,7 @@ void calc_prim_from_x_2D_WT(
       const eos_parameters *restrict eos,
       const double BdotS,
       const double B_squared,
-      const double *restrict Sup,
+      const double *restrict SU,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims_guess,
       double *restrict x ) {
@@ -147,9 +147,9 @@ void calc_prim_from_x_2D_WT(
 
   // Eq. (24) in Siegel et al. 2018, with S^{i} := gamma^{ij} S_{j}
   // The extra factor of W converts v^{i} to tilde(u)^{i}.
-  prims_guess->vx = (Sup[0] + BdotS*prims_guess->Bx/Z)/(Z+B_squared);
-  prims_guess->vy = (Sup[1] + BdotS*prims_guess->By/Z)/(Z+B_squared);
-  prims_guess->vz = (Sup[2] + BdotS*prims_guess->Bz/Z)/(Z+B_squared);
+  prims_guess->vU[0] = (SU[0] + BdotS*prims_guess->BU[0]/Z)/(Z+B_squared);
+  prims_guess->vU[1] = (SU[1] + BdotS*prims_guess->BU[1]/Z)/(Z+B_squared);
+  prims_guess->vU[2] = (SU[2] + BdotS*prims_guess->BU[2]/Z)/(Z+B_squared);
   prims_guess->rho = xrho;
   prims_guess->Y_e = xye;
   prims_guess->temperature = T;
@@ -270,7 +270,7 @@ void NR_2D_WT(
       const double S_squared,
       const double BdotS,
       const double B_squared,
-      const double *restrict Sup,
+      const double *restrict SU,
       const conservative_quantities *restrict cons_undens,
       double W,
       primitive_quantities *restrict prims_guess,
@@ -380,5 +380,5 @@ void NR_2D_WT(
   }
 
   // Recover the primitive variables from the final scalars x = (W, T)
-  calc_prim_from_x_2D_WT(eos, BdotS, B_squared, Sup, cons_undens, prims_guess, x);
+  calc_prim_from_x_2D_WT(eos, BdotS, B_squared, SU, cons_undens, prims_guess, x);
 }

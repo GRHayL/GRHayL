@@ -16,7 +16,7 @@
         df    = -2*f;  (on output)
          n    = dimension of x[];
 *********************************************************************************/
-void func_Z(
+void grhayl_func_Z(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -36,7 +36,7 @@ void func_Z(
   double x_rho[1] = {rho_in};
   // Find rho from W
   int retval, ntries = 0;
-  while (  (retval = newton_raphson_1d(eos, harm_aux, ndim, W, n_iter, &rho, func_rho)) &&  ( ntries++ < 10 )  ) {
+  while (  (retval = grhayl_newton_raphson_1d(eos, harm_aux, ndim, W, n_iter, &rho, func_rho)) &&  ( ntries++ < 10 )  ) {
     rho     *= 10.;
     x_rho[0] = rho;
   }
@@ -84,6 +84,4 @@ void func_Z(
   dx[0] = - resid[0]/jac[0][0];
   *df   = - resid[0]*resid[0];
   *f    = - 0.5*(*df);
-
-  return;
 }

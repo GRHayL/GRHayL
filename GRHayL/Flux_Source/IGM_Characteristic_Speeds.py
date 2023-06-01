@@ -155,7 +155,7 @@ def Cfunction__GRMHD_characteristic_speeds(Ccodesdir, includes=None, formalism="
     prims_NRPy_r = ["u4rU0", "u4rU1", "u4rU2", "u4rU3", "BrU0", "BrU1", "BrU2", "rhob_r"]
     prims_NRPy_l = ["u4lU0", "u4lU1", "u4lU2", "u4lU3", "BlU0", "BlU1", "BlU2", "rhob_l"]
 
-    prims_GRHayL = ["u0", "vx", "vy", "vz", "Bx", "By", "Bz", "rho"]
+    prims_GRHayL = ["u0", "vU[0]", "vU[1]", "vU[2]", "BU[0]", "BU[1]", "BU[2]", "rho"]
 
     prestring = r"""
 double h_r, h_l, cs2_r, cs2_l;
@@ -195,18 +195,18 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 
     else:
 
-        prestring += "const double beta_faceU0 = metric_face->betax;\n"
-        prestring += "const double beta_faceU1 = metric_face->betay;\n"
-        prestring += "const double beta_faceU2 = metric_face->betaz;\n"
+        prestring += "const double beta_faceU0 = metric_face->betaU[0];\n"
+        prestring += "const double beta_faceU1 = metric_face->betaU[1];\n"
+        prestring += "const double beta_faceU2 = metric_face->betaU[2];\n"
 
-        prestring += "const double gamma_faceDD00 = metric_face->adm_gxx;\n"
-        prestring += "const double gamma_faceDD01 = metric_face->adm_gxy;\n"
-        prestring += "const double gamma_faceDD02 = metric_face->adm_gxz;\n"
+        prestring += "const double gamma_faceDD00 = metric_face->gammaDD[0][0];\n"
+        prestring += "const double gamma_faceDD01 = metric_face->gammaDD[0][1];\n"
+        prestring += "const double gamma_faceDD02 = metric_face->gammaDD[0][2];\n"
 
-        prestring += "const double gamma_faceDD11 = metric_face->adm_gyy;\n"
-        prestring += "const double gamma_faceDD12 = metric_face->adm_gyz;\n"
+        prestring += "const double gamma_faceDD11 = metric_face->gammaDD[1][1];\n"
+        prestring += "const double gamma_faceDD12 = metric_face->gammaDD[1][2];\n"
 
-        prestring += "const double gamma_faceDD22 = metric_face->adm_gzz;\n"
+        prestring += "const double gamma_faceDD22 = metric_face->gammaDD[2][2];\n"
 
     #     for i in range(3):
     #             betaU_var = beta_faceU[i]
@@ -248,7 +248,7 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
                        filename="returnstring", prestring=prestring)
 
         desc = "Compute the characteristic speeds in direction " + str(flux_dirn)
-        name = "calculate_characteristic_speed_dirn" + str(flux_dirn)
+        name = "grhayl_calculate_characteristic_speed_dirn" + str(flux_dirn)
 
         outCfunction(
             outfile=os.path.join(Ccodesdir,name+".c"),

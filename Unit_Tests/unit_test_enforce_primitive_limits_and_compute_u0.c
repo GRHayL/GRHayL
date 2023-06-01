@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -160,15 +160,20 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
 
     // Define the various GRHayL structs for the unit tests
-    metric_quantities metric;
+    metric_quantities ADM_metric;
     primitive_quantities prims;
 
     // Read initial data accompanying trusted output
-    initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
-                      gyy[i], gyz[i], gzz[i], betax[i],
-                      betay[i], betaz[i], &metric);
+    grhayl_initialize_metric(lapse[i],
+                      betax[i], betay[i], betaz[i],
+                      gxx[i], gxy[i], gxz[i],
+                      gyy[i], gyz[i], gzz[i],
+                      &ADM_metric);
 
-    initialize_primitives(
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+
+    grhayl_initialize_primitives(
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
@@ -177,17 +182,17 @@ int main(int argc, char **argv) {
 
     //This applies limits on the primitives
     int failure_checker = 0;
-    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &failure_checker);
+    grhayl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
 
     primitive_quantities prims_trusted, prims_pert;
-    initialize_primitives(
+    grhayl_initialize_primitives(
                       rho_b_trusted[i], press_trusted[i], eps_trusted[i],
                       vx_trusted[i], vy_trusted[i], vz_trusted[i],
                       Bx_trusted[i], By_trusted[i], Bz_trusted[i],
                       poison, poison, poison,
                       &prims_trusted);
 
-    initialize_primitives(
+    grhayl_initialize_primitives(
                       rho_b_pert[i], press_pert[i], eps_pert[i],
                       vx_pert[i], vy_pert[i], vz_pert[i],
                       Bx_pert[i], By_pert[i], Bz_pert[i],
@@ -208,7 +213,7 @@ int main(int argc, char **argv) {
   // the output from the Noble2D test)
 
   // While we're at it, lets hit some of the warnings in the initialize!
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, -1, -1,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -218,22 +223,25 @@ int main(int argc, char **argv) {
   double P_cold = 0.0;
   eos.hybrid_compute_P_cold(&eos, rho_test, &P_cold);
 
-  metric_quantities metric;
-  initialize_metric(1.0,
+  metric_quantities ADM_metric;
+  grhayl_initialize_metric(1.0,
+                    0.0, 0.0, 0.0,
                     1.0, 0.0, 0.0,
                     1.0, 0.0, 1.0,
-                    0.0, 0.0, 0.0,
-                    &metric);
+                    &ADM_metric);
+
+  ADM_aux_quantities metric_aux;
+  grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
   primitive_quantities prims;
-  initialize_primitives(1e-2, 1e6*P_cold, 0.0,
+  grhayl_initialize_primitives(1e-2, 1e6*P_cold, 0.0,
                         0.0, 0.0, 0.0,
                         0.0, 0.0, 0.0,
                         0.0, 0.0, 0.0,
                         &prims);
 
   params.psi6threshold = 0;
-  enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &failure_checker);
+  grhayl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
   if( relative_error(1e5*P_cold, prims.press) > 1e-20 )
     grhayl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e5*P_cold);
@@ -243,12 +251,12 @@ int main(int argc, char **argv) {
   prims.rho   = 12.0*eos.rho_atm;
   eos.hybrid_compute_P_cold(&eos, prims.rho, &P_cold);
   prims.press = 1e3*P_cold;
-  enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &failure_checker);
+  grhayl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
   if( relative_error(1e2*P_cold, prims.press) > 1e-20 )
     grhayl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e2*P_cold);
 
-  grhayl_info("enforce_primitive_limits_and_compute_u0 function test has passed!\n");
+  grhayl_info("grhayl_enforce_primitive_limits_and_compute_u0 function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

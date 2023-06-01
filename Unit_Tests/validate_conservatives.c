@@ -29,24 +29,24 @@ void validate_conservatives(
     test_fail = 1;
   }
 
-  if( validate(cons_trusted->S_x, cons->S_x, cons_pert->S_x) ) {
-    printf("S_x trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_x, cons->S_x, cons_pert->S_x);
-    printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->S_x, cons->S_x), relative_error(cons_trusted->S_x, cons_pert->S_x));
-    sprintf(fail_msg, "%.90s S_x", fail_msg);
+  if( validate(cons_trusted->SD[0], cons->SD[0], cons_pert->SD[0]) ) {
+    printf("S[0] trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->SD[0], cons->SD[0], cons_pert->SD[0]);
+    printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->SD[0], cons->SD[0]), relative_error(cons_trusted->SD[0], cons_pert->SD[0]));
+    sprintf(fail_msg, "%.90s S[0]", fail_msg);
     test_fail = 1;
   }
 
-  if( validate(cons_trusted->S_y, cons->S_y, cons_pert->S_y) ) {
-    printf("S_y trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_y, cons->S_y, cons_pert->S_y);
-    printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->S_y, cons->S_y), relative_error(cons_trusted->S_y, cons_pert->S_y));
-    sprintf(fail_msg, "%.90s S_y", fail_msg);
+  if( validate(cons_trusted->SD[1], cons->SD[1], cons_pert->SD[1]) ) {
+    printf("S[1] trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->SD[1], cons->SD[1], cons_pert->SD[1]);
+    printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->SD[1], cons->SD[1]), relative_error(cons_trusted->SD[1], cons_pert->SD[1]));
+    sprintf(fail_msg, "%.90s S[1]", fail_msg);
     test_fail = 1;
   }
 
-  if( validate(cons_trusted->S_z, cons->S_z, cons_pert->S_z) ) {
-    printf("S_z trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->S_z, cons->S_z, cons_pert->S_z);
-    printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->S_z, cons->S_z), relative_error(cons_trusted->S_z, cons_pert->S_z));
-    sprintf(fail_msg, "%.90s S_z", fail_msg);
+  if( validate(cons_trusted->SD[2], cons->SD[2], cons_pert->SD[2]) ) {
+    printf("S[2] trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->SD[2], cons->SD[2], cons_pert->SD[2]);
+    printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->SD[2], cons->SD[2]), relative_error(cons_trusted->SD[2], cons_pert->SD[2]));
+    sprintf(fail_msg, "%.90s S[2]", fail_msg);
     test_fail = 1;
   }
 

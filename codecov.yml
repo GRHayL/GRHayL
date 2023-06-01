@@ -30,6 +30,10 @@ component_management:
       name: grhayl_core # this is a display name, and can be changed freely
       paths:
         - GRHayL/GRHayL_Core/**
+    - component_id: gem_atmosphere
+      name: atmosphere
+      paths:
+        - GRHayL/Atmosphere/**
     - component_id: gem_con2prim
       name: con2prim
       paths:

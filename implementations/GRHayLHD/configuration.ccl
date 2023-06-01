@@ -1,0 +1,2 @@
+# Configuration definition for thorn GRHayLHD
+requires HDF5

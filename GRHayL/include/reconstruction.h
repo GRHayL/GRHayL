@@ -14,7 +14,7 @@ enum reconstruction_stencil {
 extern "C" {
 #endif
 
-void simple_ppm(
+void grhayl_simple_ppm(
       const double rho[6],
       const double pressure[6],
       const double var_data[][6],
@@ -28,7 +28,7 @@ void simple_ppm(
       double *restrict var_datar,
       double *restrict var_datal);
 
-void simple_ppm_no_rho_P(
+void grhayl_simple_ppm_no_rho_P(
       const double pressure[6],
       const double var_data[][6],
       const int num_vars,
@@ -37,16 +37,16 @@ void simple_ppm_no_rho_P(
       double *restrict var_datar,
       double *restrict var_datal);
 
-double slope_limit(
+double grhayl_slope_limit(
       const double dU,
       const double dUp1);
 
-void compute_UrUl_onevar(const double U[5], double *restrict Ur, double *restrict Ul);
+void grhayl_compute_UrUl_onevar(const double U[5], double *restrict Ur, double *restrict Ul);
 
-double shock_detection_ftilde(const double P[5], const double v_flux_dirn[5]);
-void steepen_rhor_rhol(const double rho[5], const double P[5], const double Gamma_eff,
+double grhayl_shock_detection_ftilde(const double P[5], const double v_flux_dirn[5]);
+void grhayl_steepen_rhor_rhol(const double rho[5], const double P[5], const double Gamma_eff,
                               double *restrict rhor, double *restrict rhol);
-void flatten_and_monotonize_Ur_and_Ul(const double U, const double ftilde, double *restrict Ur, double *restrict Ul);
+void grhayl_flatten_and_monotonize_Ur_and_Ul(const double U, const double ftilde, double *restrict Ur, double *restrict Ul);
 
 double grhayl_minmod(
         const double a,

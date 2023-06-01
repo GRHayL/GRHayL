@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : compute_conservs_and_Tmunu()
+/* Function    : grhayl_compute_conservs_and_Tmunu()
  * Description : Computes the conservatives and T_munu from the
  *               given primitives
  *
@@ -14,63 +14,64 @@
  *
  */
 
-void compute_conservs_and_Tmunu(const metric_quantities *restrict metric,
-                                const primitive_quantities *restrict prims,
-                                conservative_quantities *restrict cons,
-                                stress_energy *restrict Tmunu) {
+void grhayl_compute_conservs_and_Tmunu(
+      const metric_quantities *restrict ADM_metric,
+      const ADM_aux_quantities *restrict metric_aux,
+      const primitive_quantities *restrict prims,
+      conservative_quantities *restrict cons,
+      stress_energy *restrict Tmunu) {
 
   // First compute the enthalpy
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;
 
-  double uUP[4], uDN[4];
-
   // Compute u^i. u^0 is provided to the function.
-  uUP[0] = prims->u0;
-  uUP[1] = uUP[0]*prims->vx;
-  uUP[2] = uUP[0]*prims->vy;
-  uUP[3] = uUP[0]*prims->vz;
+  const double uU[4] = {prims->u0,
+                        prims->u0*prims->vU[0],
+                        prims->u0*prims->vU[1],
+                        prims->u0*prims->vU[2]};
 
   // Compute u_\alpha
-  lower_vector(metric, uUP, uDN);
+  double uD[4];
+  grhayl_lower_vector_4D(metric_aux->g4DD, uU, uD);
 
   /***************************************************************/
-  //     COMPUTE TDNMUNU AND  CONSERVATIVES FROM PRIMITIVES      //
+  //     COMPUTE TDNMUNU AND CONSERVATIVES FROM PRIMITIVES       //
   /***************************************************************/
   // Compute b^{\mu} and b^2
   double smallb[4], smallb2;
-  compute_smallb_and_b2(metric, prims, uDN, smallb, &smallb2);
+  grhayl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
-  const double alpha_sqrt_gamma = metric->lapse*metric->psi6;
+  const double alpha_sqrt_gamma = ADM_metric->lapse*metric_aux->psi6;
   const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 
   double smallb_lower[4];
-  lower_vector(metric, smallb, smallb_lower);
+  grhayl_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
 
   // Compute conservatives:
-  cons->rho = alpha_sqrt_gamma * prims->rho * uUP[0];
-  cons->S_x = cons->rho*h_enthalpy*uDN[1] + alpha_sqrt_gamma*(uUP[0]*smallb2*uDN[1] - smallb[0]*smallb_lower[1]);
-  cons->S_y = cons->rho*h_enthalpy*uDN[2] + alpha_sqrt_gamma*(uUP[0]*smallb2*uDN[2] - smallb[0]*smallb_lower[2]);
-  cons->S_z = cons->rho*h_enthalpy*uDN[3] + alpha_sqrt_gamma*(uUP[0]*smallb2*uDN[3] - smallb[0]*smallb_lower[3]);
+  cons->rho = alpha_sqrt_gamma * prims->rho * uU[0];
+  cons->SD[0] = cons->rho*h_enthalpy*uD[1] + alpha_sqrt_gamma*(uU[0]*smallb2*uD[1] - smallb[0]*smallb_lower[1]);
+  cons->SD[1] = cons->rho*h_enthalpy*uD[2] + alpha_sqrt_gamma*(uU[0]*smallb2*uD[2] - smallb[0]*smallb_lower[2]);
+  cons->SD[2] = cons->rho*h_enthalpy*uD[3] + alpha_sqrt_gamma*(uU[0]*smallb2*uD[3] - smallb[0]*smallb_lower[3]);
   // tau = alpha^2 sqrt(gamma) T^{00} - rho_star
-  cons->tau =  metric->lapse*alpha_sqrt_gamma*(rho0_h_plus_b2*SQR(uUP[0]) - P_plus_half_b2*metric->lapseinv2 - SQR(smallb[0])) - cons->rho;
+  cons->tau =  ADM_metric->lapse*alpha_sqrt_gamma*(rho0_h_plus_b2*SQR(uU[0]) - P_plus_half_b2*ADM_metric->lapseinv2 - SQR(smallb[0])) - cons->rho;
   // Entropy equation evolves S_star = alpha * sqrt(gamma) * S * u^{0}
-  cons->entropy = alpha_sqrt_gamma * prims->entropy * uUP[0];
+  cons->entropy = alpha_sqrt_gamma * prims->entropy * uU[0];
   // Tabulated EOS evolves Y_e_star = alpha * sqrt(gamma) * rho_b * Y_e * u^{0} = rho_star * Y_e
   cons->Y_e = cons->rho * prims->Y_e;
 
   // Finally, compute T_{\mu \nu}
   // T_{mn} = (rho_0 h + b^2) u_m u_n + (P + 0.5 b^2) g_{mn} - b_m b_n, where m and n both run from 0 to 3.
   // We don't use the GRHayL-provided function for computing T_{\mu \nu} because we can reuse a lot of precomputed quantities
-  Tmunu->Ttt = rho0_h_plus_b2*uDN[0]*uDN[0] + P_plus_half_b2*metric->g4dn[0][0] - smallb_lower[0]*smallb_lower[0];
-  Tmunu->Ttx = rho0_h_plus_b2*uDN[0]*uDN[1] + P_plus_half_b2*metric->g4dn[0][1] - smallb_lower[0]*smallb_lower[1];
-  Tmunu->Tty = rho0_h_plus_b2*uDN[0]*uDN[2] + P_plus_half_b2*metric->g4dn[0][2] - smallb_lower[0]*smallb_lower[2];
-  Tmunu->Ttz = rho0_h_plus_b2*uDN[0]*uDN[3] + P_plus_half_b2*metric->g4dn[0][3] - smallb_lower[0]*smallb_lower[3];
-  Tmunu->Txx = rho0_h_plus_b2*uDN[1]*uDN[1] + P_plus_half_b2*metric->g4dn[1][1] - smallb_lower[1]*smallb_lower[1];
-  Tmunu->Txy = rho0_h_plus_b2*uDN[1]*uDN[2] + P_plus_half_b2*metric->g4dn[1][2] - smallb_lower[1]*smallb_lower[2];
-  Tmunu->Txz = rho0_h_plus_b2*uDN[1]*uDN[3] + P_plus_half_b2*metric->g4dn[1][3] - smallb_lower[1]*smallb_lower[3];
-  Tmunu->Tyy = rho0_h_plus_b2*uDN[2]*uDN[2] + P_plus_half_b2*metric->g4dn[2][2] - smallb_lower[2]*smallb_lower[2];
-  Tmunu->Tyz = rho0_h_plus_b2*uDN[2]*uDN[3] + P_plus_half_b2*metric->g4dn[2][3] - smallb_lower[2]*smallb_lower[3];
-  Tmunu->Tzz = rho0_h_plus_b2*uDN[3]*uDN[3] + P_plus_half_b2*metric->g4dn[3][3] - smallb_lower[3]*smallb_lower[3];
+  Tmunu->T4[0][0] = rho0_h_plus_b2*uD[0]*uD[0] + P_plus_half_b2*metric_aux->g4DD[0][0] - smallb_lower[0]*smallb_lower[0];
+  Tmunu->T4[0][1] = rho0_h_plus_b2*uD[0]*uD[1] + P_plus_half_b2*metric_aux->g4DD[0][1] - smallb_lower[0]*smallb_lower[1];
+  Tmunu->T4[0][2] = rho0_h_plus_b2*uD[0]*uD[2] + P_plus_half_b2*metric_aux->g4DD[0][2] - smallb_lower[0]*smallb_lower[2];
+  Tmunu->T4[0][3] = rho0_h_plus_b2*uD[0]*uD[3] + P_plus_half_b2*metric_aux->g4DD[0][3] - smallb_lower[0]*smallb_lower[3];
+  Tmunu->T4[1][1] = rho0_h_plus_b2*uD[1]*uD[1] + P_plus_half_b2*metric_aux->g4DD[1][1] - smallb_lower[1]*smallb_lower[1];
+  Tmunu->T4[1][2] = rho0_h_plus_b2*uD[1]*uD[2] + P_plus_half_b2*metric_aux->g4DD[1][2] - smallb_lower[1]*smallb_lower[2];
+  Tmunu->T4[1][3] = rho0_h_plus_b2*uD[1]*uD[3] + P_plus_half_b2*metric_aux->g4DD[1][3] - smallb_lower[1]*smallb_lower[3];
+  Tmunu->T4[2][2] = rho0_h_plus_b2*uD[2]*uD[2] + P_plus_half_b2*metric_aux->g4DD[2][2] - smallb_lower[2]*smallb_lower[2];
+  Tmunu->T4[2][3] = rho0_h_plus_b2*uD[2]*uD[3] + P_plus_half_b2*metric_aux->g4DD[2][3] - smallb_lower[2]*smallb_lower[3];
+  Tmunu->T4[3][3] = rho0_h_plus_b2*uD[3]*uD[3] + P_plus_half_b2*metric_aux->g4DD[3][3] - smallb_lower[3]*smallb_lower[3];
 }

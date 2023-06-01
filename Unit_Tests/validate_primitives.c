@@ -37,24 +37,24 @@ void validate_primitives(
     test_fail = 1;
   }
 
-  if( validate(prims_trusted->vx, prims->vx, prims_pert->vx) ) {
-    printf("vx trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vx, prims->vx, prims_pert->vx);
-    printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->vx, prims->vx), relative_error(prims_trusted->vx, prims_pert->vx));
-    sprintf(fail_msg, "%.80s vx", fail_msg);
+  if( validate(prims_trusted->vU[0], prims->vU[0], prims_pert->vU[0]) ) {
+    printf("vel[0] trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vU[0], prims->vU[0], prims_pert->vU[0]);
+    printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->vU[0], prims->vU[0]), relative_error(prims_trusted->vU[0], prims_pert->vU[0]));
+    sprintf(fail_msg, "%.80s vel[0]", fail_msg);
     test_fail = 1;
   }
 
-  if(validate(prims_trusted->vy, prims->vy, prims_pert->vy)) {
-    printf("vy trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vy, prims->vy, prims_pert->vy);
-    printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->vy, prims->vy), relative_error(prims_trusted->vy, prims_pert->vy));
-    sprintf(fail_msg, "%.80s vy", fail_msg);
+  if(validate(prims_trusted->vU[1], prims->vU[1], prims_pert->vU[1])) {
+    printf("vel[1] trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vU[1], prims->vU[1], prims_pert->vU[1]);
+    printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->vU[1], prims->vU[1]), relative_error(prims_trusted->vU[1], prims_pert->vU[1]));
+    sprintf(fail_msg, "%.80s vel[1]", fail_msg);
     test_fail = 1;
   }
 
-  if( validate(prims_trusted->vz, prims->vz, prims_pert->vz) ) {
-    printf("vz trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vz, prims->vz, prims_pert->vz);
-    printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->vz, prims->vz), relative_error(prims_trusted->vz, prims_pert->vz));
-    sprintf(fail_msg, "%.80s vz", fail_msg);
+  if( validate(prims_trusted->vU[2], prims->vU[2], prims_pert->vU[2]) ) {
+    printf("vel[2] trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->vU[2], prims->vU[2], prims_pert->vU[2]);
+    printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->vU[2], prims->vU[2]), relative_error(prims_trusted->vU[2], prims_pert->vU[2]));
+    sprintf(fail_msg, "%.80s vel[2]", fail_msg);
     test_fail = 1;
   }
 

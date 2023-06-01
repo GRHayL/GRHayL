@@ -256,6 +256,6 @@ void A_rhs_dir(const int dirlength,
         vars.c2_min = cmin_2[index_B1];
         vars.c2_max = cmax_2[index_B1];
 
-        A_rhs[index] = HLL_flux(&vars);
+        A_rhs[index] = grhayl_HLL_flux(&vars);
   }
 }

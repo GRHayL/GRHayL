@@ -1,20 +1,21 @@
 # Primary make.code.defn for GRHayL chalice
 
 # Source files in this directory that need compiled:
-SRCS = compute_smallb_and_b2.c                \
-       compute_TDNmunu.c                      \
-       compute_TUPmunu.c                      \
-       enforce_detgij_and_initialize_metric.c \
-       grhayl_info_warn_error.c               \
-       initialize_conservatives.c             \
-       initialize_eos.c                       \
-       initialize_extrinsic_curvature.c       \
-       initialize_params.c                    \
-       initialize_metric.c                    \
-       initialize_primitives.c                \
-       initialize_stress_energy.c             \
-       limit_v_and_compute_u0.c               \
-       metric_helper.c                        \
-       return_conservatives.c                 \
-       return_primitives.c                    \
+SRCS = compute_ADM_auxiliaries.c                  \
+       compute_smallb_and_b2.c                    \
+       compute_TDNmunu.c                          \
+       compute_TUPmunu.c                          \
+       enforce_detgij_and_initialize_ADM_metric.c \
+       grhayl_info_warn_error.c                   \
+       initialize_conservatives.c                 \
+       initialize_eos.c                           \
+       initialize_extrinsic_curvature.c           \
+       initialize_params.c                        \
+       initialize_metric.c                        \
+       initialize_primitives.c                    \
+       initialize_stress_energy.c                 \
+       limit_v_and_compute_u0.c                   \
+       metric_helper.c                            \
+       return_conservatives.c                     \
+       return_primitives.c                        \
        return_stress_energy.c

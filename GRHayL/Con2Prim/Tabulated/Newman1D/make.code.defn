@@ -1,2 +1,2 @@
-SRCS =  Tabulated_Newman1D_energy.c  \
-        Tabulated_Newman1D_entropy.c
+SRCS =  tabulated_Newman1D_energy.c  \
+        tabulated_Newman1D_entropy.c

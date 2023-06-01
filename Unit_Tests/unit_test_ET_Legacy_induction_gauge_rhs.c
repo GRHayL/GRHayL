@@ -104,26 +104,29 @@ int main(int argc, char **argv) {
       for(int i=1; i<dirlength-1; i++) {
         const int index = indexf(dirlength,i,j,k);
 
-        A_gauge_vars gauge_vars;
+        metric_quantities metric_stencil[2][2][2];
+        double psi_stencil[2][2][2];
+        double Ax_stencil[3][3][3];
+        double Ay_stencil[3][3][3];
+        double Az_stencil[3][3][3];
         A_gauge_rhs_vars gauge_rhs_vars;
 
         // Read in variable at interpolation stencil points from main memory.
-        gauge_vars.phitilde = phitilde[index];
         for(int iterz=0; iterz<2; iterz++)
           for(int itery=0; itery<2; itery++)
             for(int iterx=0; iterx<2; iterx++) {
               const int ind = indexf(dirlength,i+iterx,j+itery,k+iterz);
-              gauge_vars.gupxx[iterz][itery][iterx]  = gupxx[ind];
-              gauge_vars.gupxy[iterz][itery][iterx]  = gupxy[ind];
-              gauge_vars.gupxz[iterz][itery][iterx]  = gupxz[ind];
-              gauge_vars.gupyy[iterz][itery][iterx]  = gupyy[ind];
-              gauge_vars.gupyz[iterz][itery][iterx]  = gupyz[ind];
-              gauge_vars.gupzz[iterz][itery][iterx]  = gupzz[ind];
-              gauge_vars.lapse[iterz][itery][iterx]  = lapse[ind];
-              gauge_vars.psi[iterz][itery][iterx]    = psi[ind];
-              gauge_vars.shiftx[iterz][itery][iterx] = betax[ind];
-              gauge_vars.shifty[iterz][itery][iterx] = betay[ind];
-              gauge_vars.shiftz[iterz][itery][iterx] = betaz[ind];
+              metric_stencil[iterz][itery][iterx].lapse          = lapse[ind];
+              metric_stencil[iterz][itery][iterx].betaU[0]       = betax[ind];
+              metric_stencil[iterz][itery][iterx].betaU[1]       = betay[ind];
+              metric_stencil[iterz][itery][iterx].betaU[2]       = betaz[ind];
+              metric_stencil[iterz][itery][iterx].gammaUU[0][0]  = gupxx[ind];
+              metric_stencil[iterz][itery][iterx].gammaUU[0][1]  = gupxy[ind];
+              metric_stencil[iterz][itery][iterx].gammaUU[0][2]  = gupxz[ind];
+              metric_stencil[iterz][itery][iterx].gammaUU[1][1]  = gupyy[ind];
+              metric_stencil[iterz][itery][iterx].gammaUU[1][2]  = gupyz[ind];
+              metric_stencil[iterz][itery][iterx].gammaUU[2][2]  = gupzz[ind];
+              psi_stencil[iterz][itery][iterx] = psi[ind];
         }
         // A_x needs a stencil s.t. interp_limits={ 0,1,-1,1,-1,1}.
         // A_y needs a stencil s.t. interp_limits={-1,1, 0,1,-1,1}.
@@ -136,9 +139,9 @@ int main(int argc, char **argv) {
           for(int itery=-1; itery<2; itery++)
             for(int iterx=-1; iterx<2; iterx++) {
               const int ind = indexf(dirlength,i+iterx,j+itery,k+iterz);
-              gauge_vars.A_x[iterz+1][itery+1][iterx+1] = Ax[ind];
-              gauge_vars.A_y[iterz+1][itery+1][iterx+1] = Ay[ind];
-              gauge_vars.A_z[iterz+1][itery+1][iterx+1] = Az[ind];
+              Ax_stencil[iterz+1][itery+1][iterx+1] = Ax[ind];
+              Ay_stencil[iterz+1][itery+1][iterx+1] = Ay[ind];
+              Az_stencil[iterz+1][itery+1][iterx+1] = Az[ind];
         }
 // This code should only copy the needed data that isn't copied in the loop for other variables, but it is untested.
 //        for(int iter2=0; iter2<2; iter2++)
@@ -151,13 +154,13 @@ int main(int argc, char **argv) {
 //          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][indexf(dirlength, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
-        interpolate_for_A_gauge_rhs(&gauge_vars, &gauge_rhs_vars);
+        grhayl_interpolate_for_A_gauge_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &gauge_rhs_vars);
 
         alpha_interp[index] = gauge_rhs_vars.alpha_interp;
         alpha_sqrtg_Ax_interp[index] = gauge_rhs_vars.alpha_sqrtg_Ax_interp[0];
         alpha_sqrtg_Ay_interp[index] = gauge_rhs_vars.alpha_sqrtg_Ay_interp[0];
         alpha_sqrtg_Az_interp[index] = gauge_rhs_vars.alpha_sqrtg_Az_interp[0];
-        alpha_Phi_minus_betaj_A_j_interp[index] = gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[0];
+        alpha_Phi_minus_betaj_A_j_interp[index] = gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp;
         shiftx_interp[index] = gauge_rhs_vars.shiftx_interp[0];
         shifty_interp[index] = gauge_rhs_vars.shifty_interp[0];
         shiftz_interp[index] = gauge_rhs_vars.shiftz_interp[0];
@@ -173,6 +176,10 @@ int main(int argc, char **argv) {
 
         // \partial_t A_i = [reconstructed stuff] + [gauge stuff],
         //    where [gauge stuff] = -\partial_i (\alpha \Phi - \beta^j A_j)
+        Ax_rhs[index] += dxinv[0]*(alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i-1,j,k)] - alpha_Phi_minus_betaj_A_j_interp[index]);
+        Ay_rhs[index] += dxinv[1]*(alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j-1,k)] - alpha_Phi_minus_betaj_A_j_interp[index]);
+        Az_rhs[index] += dxinv[2]*(alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j,k-1)] - alpha_Phi_minus_betaj_A_j_interp[index]);
+
         A_gauge_rhs_vars gauge_rhs_vars;
     
         gauge_rhs_vars.alpha_interp = alpha_interp[index];
@@ -180,11 +187,6 @@ int main(int argc, char **argv) {
         gauge_rhs_vars.dxi[0] = dxinv[0];
         gauge_rhs_vars.dxi[1] = dxinv[1];
         gauge_rhs_vars.dxi[2] = dxinv[2];
-    
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[0] = alpha_Phi_minus_betaj_A_j_interp[index];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[1] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i-1,j,k)];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[2] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j-1,k)];
-        gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp[3] = alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j,k-1)];
     
         gauge_rhs_vars.alpha_sqrtg_Ax_interp[0] = alpha_sqrtg_Ax_interp[index];
         gauge_rhs_vars.alpha_sqrtg_Ay_interp[0] = alpha_sqrtg_Ay_interp[index];
@@ -204,12 +206,9 @@ int main(int argc, char **argv) {
           gauge_rhs_vars.phitildey[iter+2] = phitilde[indexy];
           gauge_rhs_vars.phitildez[iter+2] = phitilde[indexz];
         }
-        calculate_phitilde_and_A_gauge_rhs(Lorenz_damping_factor, &gauge_rhs_vars);
+        grhayl_calculate_phitilde_rhs(Lorenz_damping_factor, &gauge_rhs_vars);
     
         phitilde_rhs[index] = gauge_rhs_vars.phitilde_rhs;
-        Ax_rhs[index] += gauge_rhs_vars.A_x_gauge_rhs;
-        Ay_rhs[index] += gauge_rhs_vars.A_y_gauge_rhs;
-        Az_rhs[index] += gauge_rhs_vars.A_z_gauge_rhs;
   }
 
 

@@ -67,7 +67,7 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/hybrid_${{ matrix.test-function }}.md5
           md5sum -c hybrid_${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_Hybrid_${{ matrix.test-function }}
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_hybrid_${{ matrix.test-function }}
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
         with:

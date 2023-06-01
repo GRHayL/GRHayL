@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   const double k_ppoly0 = 6.80110e-9;
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);

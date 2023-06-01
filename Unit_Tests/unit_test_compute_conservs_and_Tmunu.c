@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -190,18 +190,23 @@ int main(int argc, char **argv) {
 
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    initialize_diagnostics(&diagnostics);
-    metric_quantities metric;
+    grhayl_initialize_diagnostics(&diagnostics);
+    metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons;
     stress_energy Tmunu;
 
     // Read initial data accompanying trusted output
-    initialize_metric(lapse[i], gxx[i], gxy[i], gxz[i],
-                      gyy[i], gyz[i], gzz[i], betax[i],
-                      betay[i], betaz[i], &metric);
+    grhayl_initialize_metric(lapse[i],
+                      betax[i], betay[i], betaz[i],
+                      gxx[i], gxy[i], gxz[i],
+                      gyy[i], gyz[i], gzz[i],
+                      &ADM_metric);
 
-    initialize_primitives(
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+
+    grhayl_initialize_primitives(
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
@@ -210,27 +215,27 @@ int main(int argc, char **argv) {
     prims.u0 = u0[i];
 
     // This computes the conservatives and stress-energy tensor from the new primitives
-    compute_conservs_and_Tmunu(&metric, &prims, &cons, &Tmunu);
+    grhayl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
     conservative_quantities cons_trusted, cons_pert;
     stress_energy Tmunu_trusted, Tmunu_pert;
 
-    initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
+    grhayl_initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
                              S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
                              poison, poison, &cons_trusted);
 
-    initialize_conservatives(rho_star_pert[i], tau_pert[i],
+    grhayl_initialize_conservatives(rho_star_pert[i], tau_pert[i],
                              S_x_pert[i], S_y_pert[i], S_z_pert[i],
                              poison, poison, &cons_pert);
 
-    initialize_stress_energy(Ttt_trusted[i], Ttx_trusted[i],
+    grhayl_initialize_stress_energy(Ttt_trusted[i], Ttx_trusted[i],
                              Tty_trusted[i], Ttz_trusted[i],
                              Txx_trusted[i], Txy_trusted[i],
                              Txz_trusted[i], Tyy_trusted[i],
                              Tyz_trusted[i], Tzz_trusted[i],
                              &Tmunu_trusted);
 
-    initialize_stress_energy(Ttt_pert[i], Ttx_pert[i],
+    grhayl_initialize_stress_energy(Ttt_pert[i], Ttx_pert[i],
                              Tty_pert[i], Ttz_pert[i],
                              Txx_pert[i], Txy_pert[i],
                              Txz_pert[i], Tyy_pert[i],
@@ -241,19 +246,19 @@ int main(int argc, char **argv) {
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
 
     /*
-       GRHayL also has standalone functions compute_conservs() and compute_TDNmunu().
+       GRHayL also has standalone functions grhayl_compute_conservs() and grhayl_compute_TDNmunu().
        These exist for several reasons:
          1) the user only wants to compute the conservs
          2) the Tmunu variable is at a different centering than the conservatives,
             requiring some sort of interpolation which the user handles separately.
        We can easily use this test to also check these functions.
     */
-    compute_conservs(&metric, &prims, &cons);
-    compute_TDNmunu(&metric, &prims, &Tmunu);
+    grhayl_compute_conservs(&ADM_metric, &metric_aux, &prims, &cons);
+    grhayl_compute_TDNmunu(&ADM_metric, &metric_aux, &prims, &Tmunu);
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
-  grhayl_info("compute_conservs_and_Tmunu function test has passed!\n");
+  grhayl_info("grhayl_compute_conservs_and_Tmunu function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

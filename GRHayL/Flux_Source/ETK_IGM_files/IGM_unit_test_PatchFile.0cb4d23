@@ -393,7 +393,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 +  // TPJ made a change here
 +  // ftilde_gf_compute(cctkGH,cctk_lsh,flux_dirn, in_prims, ftilde_gf);
  
-   // in_prims[{VXR,VXL,VYR,VYL}].gz_{lo,hi} ghostzones are set to all zeros, which
+   // in_prims[{VXR,VXL,VYR,VYL}].gammaDD[2]_{lo,hi} ghostzones are set to all zeros, which
    //    is incorrect. We fix this below.
 @@ -261,8 +438,9 @@
    which_prims_to_reconstruct[ww]=VYL;       ww++;
@@ -522,7 +522,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 +  exit(1);
 +
 +
-   // in_prims[{VYR,VYL,VZR,VZL}].gz_{lo,hi} ghostzones are not set correcty.
+   // in_prims[{VYR,VYL,VZR,VZL}].gammaDD[2]_{lo,hi} ghostzones are not set correcty.
    //    We fix this below.
    // [Note that this is a cheap operation, copying only 8 integers and a pointer.]
 diff -ruN src/inlined_functions.C ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/inlined_functions.C

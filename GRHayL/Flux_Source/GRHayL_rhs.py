@@ -17,15 +17,15 @@ def write_grhayl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tab
     outCparams = "outCverbose=False,GoldenKernelsEnable=True"
 
 
-    # st.Cfunction__GRMHD_SourceTerms(Ccodesrootdir,
-    #                                 includes=includes,
-    #                                 formalism=formalism,
-    #                                 outCparams=outCparams)
+#     st.Cfunction__GRMHD_SourceTerms(Ccodesrootdir,
+#                                     includes=includes,
+#                                     formalism=formalism,
+#                                     outCparams=outCparams)
 
-    # chsp.Cfunction__GRMHD_characteristic_speeds(Ccodesrootdir,
-    #                                             includes=includes,
-    #                                             formalism=formalism,
-    #                                             outCparams=outCparams)
+#     chsp.Cfunction__GRMHD_characteristic_speeds(Ccodesrootdir,
+#                                                 includes=includes,
+#                                                 formalism=formalism,
+#                                                 outCparams=outCparams)
 
     fl.Cfunction__GRMHD_fluxes(Ccodesrootdir,
                                includes=includes,

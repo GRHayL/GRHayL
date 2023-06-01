@@ -1,7 +1,6 @@
 # Primary make.code.defn for GRHayL chalice
 
 # Source files in this directory that need compiled:
-SRCS = average.c                            \
-       calculate_phitilde_and_A_gauge_rhs.c \
-       HLL_flux.c                           \
+SRCS = calculate_phitilde_rhs.c \
+       HLL_flux.c               \
        interpolate_for_A_gauge_rhs.c

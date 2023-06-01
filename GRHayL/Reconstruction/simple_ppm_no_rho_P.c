@@ -1,6 +1,6 @@
 #include "reconstruction.h"
 
-void ppm_Ur_Ul_no_rho_P(
+void grhayl_ppm_Ur_Ul_no_rho_P(
       const double pressure[5],
       const double var_data[][5],
       const int num_vars,
@@ -9,12 +9,12 @@ void ppm_Ur_Ul_no_rho_P(
       double *restrict varsr,
       double *restrict varsl);
 
-/* Function    : simple_ppm_no_rho_P()
+/* Function    : grhayl_simple_ppm_no_rho_P()
  * Description : reconstructs variables at the points
  *                   Ur(i) = U(i-1/2+epsilon)
  *                   Ul(i) = U(i-1/2-epsilon)
  *               input stencils require primitives in stencil (i-3,i-2,i-1,i,i+1,i+2)
- *               along reconstruction direction; much is identical to simple_ppm(), but
+ *               along reconstruction direction; much is identical to grhayl_simple_ppm(), but
  *               rho_b has extra function call; this function is a simpler version for when
  *               rho_b and pressure do not need to be reconstructed
  *
@@ -28,10 +28,14 @@ void ppm_Ur_Ul_no_rho_P(
  * Outputs     : var_datar      - array of reconstructed variables on right face
  *             : var_datal      - array of reconstructed variables on left face
  */
-void simple_ppm_no_rho_P(const double pressure[6], const double var_data[][6],
-                const int num_vars, const double v_flux_dirn[6],
-                const double Gamma_eff, // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
-                double *restrict var_datar, double *restrict var_datal) {
+void grhayl_simple_ppm_no_rho_P(
+      const double pressure[6],
+      const double var_data[][6],
+      const int num_vars,
+      const double v_flux_dirn[6],
+      const double Gamma_eff, // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
+      double *restrict var_datar,
+      double *restrict var_datal) {
 
   // For the variables array, the data slices need to be
   // explicitly extracted to pass to the PPM routine.
@@ -41,7 +45,7 @@ void simple_ppm_no_rho_P(const double pressure[6], const double var_data[][6],
     tmp_data[var][i] = var_data[var][i+1];
   double tmp_varsr[num_vars], tmp_varsl[num_vars];
 
-  // ppm_Ur_Ul evaluates
+  // grhayl_ppm_Ur_Ul evaluates
   //  * tmp_Ur[PLUS_0] = U(i+1/2)
   //  * tmp_Ul[PLUS_0] = U(i-1/2)
   // However, we want
@@ -53,7 +57,7 @@ void simple_ppm_no_rho_P(const double pressure[6], const double var_data[][6],
   //         which depend on U[1],U[2],U[3],U[4],U[5],
   //         hence the passing of the address U[1]
   //         as the lower bound of each U array.
-  ppm_Ur_Ul_no_rho_P(&pressure[1], tmp_data, num_vars,
+  grhayl_ppm_Ur_Ul_no_rho_P(&pressure[1], tmp_data, num_vars,
             &v_flux_dirn[1], Gamma_eff,
             tmp_varsr, tmp_varsl);
 
@@ -67,7 +71,7 @@ void simple_ppm_no_rho_P(const double pressure[6], const double var_data[][6],
 
   // STEP 2: Evaluate Ur[MINUS1] and Ul[MINUS1],
   //         which depend on U[0],U[1],U[2],U[3],U[4]
-  ppm_Ur_Ul_no_rho_P(pressure, tmp_data, num_vars,
+  grhayl_ppm_Ur_Ul_no_rho_P(pressure, tmp_data, num_vars,
             v_flux_dirn, Gamma_eff,
             tmp_varsr, tmp_varsl);
 
@@ -80,18 +84,22 @@ void simple_ppm_no_rho_P(const double pressure[6], const double var_data[][6],
 //         where i-2 == MINUS2; i-1 == MINUS1; i == PLUS_0, etc.
 // Outputs: tmp_Ur[PLUS_0] = U(i+1/2)
 //          tmp_Ul[PLUS_0] = U(i-1/2)
-void ppm_Ur_Ul_no_rho_P(const double pressure[5], const double var_data[][5],
-               const int num_vars, const double v_flux_dirn[5],
-               const double Gamma_eff, // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
-               double *restrict varsr, double *restrict varsl) {
+void grhayl_ppm_Ur_Ul_no_rho_P(
+      const double pressure[5],
+      const double var_data[][5],
+      const int num_vars,
+      const double v_flux_dirn[5],
+      const double Gamma_eff, // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
+      double *restrict varsr,
+      double *restrict varsl) {
 
   // Interpolate primitives to faces.
   for(int var=0;var<num_vars;var++) {
-    compute_UrUl_onevar(var_data[var], &varsr[var], &varsl[var]);
+    grhayl_compute_UrUl_onevar(var_data[var], &varsr[var], &varsl[var]);
   }
 
   // Flatten all variables
-  const double ftilde = shock_detection_ftilde(pressure, v_flux_dirn);
+  const double ftilde = grhayl_shock_detection_ftilde(pressure, v_flux_dirn);
   for(int var=0;var<num_vars;var++)
-    flatten_and_monotonize_Ur_and_Ul(var_data[var][PLUS_0], ftilde, &varsr[var], &varsl[var]);
+    grhayl_flatten_and_monotonize_Ur_and_Ul(var_data[var][PLUS_0], ftilde, &varsr[var], &varsl[var]);
 }

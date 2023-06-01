@@ -18,7 +18,7 @@
         df    = -2*f;  (on output)
          n    = dimension of x[];
 *********************************************************************************/
-void func_rho2(
+void grhayl_func_rho2(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -74,6 +74,4 @@ void func_rho2(
   dx[0] = - resid[0]/jac[0][0];
   *df   = - resid[0]*resid[0];
   *f    = - 0.5*(*df);
-
-  return;
 }

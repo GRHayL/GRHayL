@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
                     Psi6threshold, 0 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  initialize_hybrid_eos_functions_and_params(W_max,
+  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -233,67 +233,70 @@ int main(int argc, char **argv) {
   for(int index=0; index<arraylength; index++) {
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    initialize_diagnostics(&diagnostics);
-    metric_quantities metric;
+    grhayl_initialize_diagnostics(&diagnostics);
+    metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons;
     stress_energy Tmunu;
 
-    initialize_metric(lapse[index],
+    grhayl_initialize_metric(lapse[index],
+                      betax[index], betay[index], betaz[index],
                       gxx[index], gxy[index], gxz[index],
                       gyy[index], gyz[index], gzz[index],
-                      betax[index], betay[index], betaz[index],
-                      &metric);
+                      &ADM_metric);
 
-    initialize_primitives(rho_b[index], press[index], eps[index],
+    ADM_aux_quantities metric_aux;
+    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+
+    grhayl_initialize_primitives(rho_b[index], press[index], eps[index],
                           vx[index], vy[index], vz[index],
                           Bx[index], By[index], Bz[index],
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims);
 
-    initialize_conservatives(rho_star[index], tau[index],
+    grhayl_initialize_conservatives(rho_star[index], tau[index],
                              S_x[index], S_y[index], S_z[index],
                              poison, poison, &cons);
 
     // Enforce limits on primitive variables and recompute conservatives.
-    enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &diagnostics.failure_checker);
-    compute_conservs_and_Tmunu(&metric, &prims, &cons, &Tmunu);
+    grhayl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &diagnostics.failure_checker);
+    grhayl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
-    // Here, we call the return_* functions and then repack the struct from that data. These functions are too
+    // Here, we call the grhayl_return_* functions and then repack the struct from that data. These functions are too
     // small to need an individual test, and they are primarily used by Con2Prim anyways.
     double rho_tmp, press_tmp, eps_tmp, vx_tmp, vy_tmp, vz_tmp, Bx_tmp, By_tmp, Bz_tmp, ent_tmp, Ye_tmp, temp_tmp;
     double rhos_tmp, tau_tmp, Sx_tmp, Sy_tmp, Sz_tmp, ent_s_tmp, Ye_s_tmp;
     double Ttt_tmp, Ttx_tmp, Tty_tmp, Ttz_tmp, Txx_tmp, Txy_tmp, Txz_tmp, Tyy_tmp, Tyz_tmp, Tzz_tmp;
 
-    return_primitives(&prims,
+    grhayl_return_primitives(&prims,
                       &rho_tmp, &press_tmp, &eps_tmp,
                       &vx_tmp, &vy_tmp, &vz_tmp,
                       &Bx_tmp, &By_tmp, &Bz_tmp,
                       &ent_tmp, &Ye_tmp, &temp_tmp);
 
-    return_conservatives(&cons,
+    grhayl_return_conservatives(&cons,
                          &rhos_tmp, &tau_tmp,
                          &Sx_tmp, &Sy_tmp, &Sz_tmp,
                          &ent_s_tmp, &Ye_s_tmp);
 
-    return_stress_energy(&Tmunu,
+    grhayl_return_stress_energy(&Tmunu,
                          &Ttt_tmp, &Ttx_tmp,
                          &Tty_tmp, &Ttz_tmp,
                          &Txx_tmp, &Txy_tmp,
                          &Txz_tmp, &Tyy_tmp,
                          &Tyz_tmp, &Tzz_tmp);
 
-    initialize_primitives(rho_tmp, press_tmp, eps_tmp,
+    grhayl_initialize_primitives(rho_tmp, press_tmp, eps_tmp,
                           vx_tmp, vy_tmp, vz_tmp,
                           Bx_tmp, By_tmp, Bz_tmp,
                           ent_tmp, Ye_tmp, temp_tmp,
                           &prims);
 
-    initialize_conservatives(rhos_tmp, tau_tmp,
+    grhayl_initialize_conservatives(rhos_tmp, tau_tmp,
                              Sx_tmp, Sy_tmp, Sz_tmp,
                              ent_s_tmp, Ye_s_tmp, &cons);
 
-    initialize_stress_energy(Ttt_tmp, Ttx_tmp,
+    grhayl_initialize_stress_energy(Ttt_tmp, Ttx_tmp,
                              Tty_tmp, Ttz_tmp,
                              Txx_tmp, Txy_tmp,
                              Txz_tmp, Tyy_tmp,
@@ -305,34 +308,34 @@ int main(int argc, char **argv) {
     conservative_quantities cons_trusted, cons_pert;
     stress_energy Tmunu_trusted, Tmunu_pert;
 
-    initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
+    grhayl_initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
                           vx_trusted[index], vy_trusted[index], vz_trusted[index],
                           poison, poison, poison,
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims_trusted);
 
-    initialize_primitives(rho_b_pert[index], press_pert[index], prims.eps, // Old code has no eps variable
+    grhayl_initialize_primitives(rho_b_pert[index], press_pert[index], prims.eps, // Old code has no eps variable
                           vx_pert[index], vy_pert[index], vz_pert[index],
                           poison, poison, poison,
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims_pert);
 
-    initialize_conservatives(rho_star_trusted[index], tau_trusted[index],
+    grhayl_initialize_conservatives(rho_star_trusted[index], tau_trusted[index],
                              S_x_trusted[index], S_y_trusted[index], S_z_trusted[index],
                              poison, poison, &cons_trusted);
 
-    initialize_conservatives(rho_star_pert[index], tau_pert[index],
+    grhayl_initialize_conservatives(rho_star_pert[index], tau_pert[index],
                              S_x_pert[index], S_y_pert[index], S_z_pert[index],
                              poison, poison, &cons_pert);
 
-    initialize_stress_energy(Ttt_trusted[index], Ttx_trusted[index],
+    grhayl_initialize_stress_energy(Ttt_trusted[index], Ttx_trusted[index],
                              Tty_trusted[index], Ttz_trusted[index],
                              Txx_trusted[index], Txy_trusted[index],
                              Txz_trusted[index], Tyy_trusted[index],
                              Tyz_trusted[index], Tzz_trusted[index],
                              &Tmunu_trusted);
 
-    initialize_stress_energy(Ttt_pert[index], Ttx_pert[index],
+    grhayl_initialize_stress_energy(Ttt_pert[index], Ttx_pert[index],
                              Tty_pert[index], Ttz_pert[index],
                              Txx_pert[index], Txy_pert[index],
                              Txz_pert[index], Tyy_pert[index],
