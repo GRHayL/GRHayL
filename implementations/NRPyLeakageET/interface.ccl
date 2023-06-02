@@ -1,10 +1,10 @@
 # Interface definition for thorn NRPyLeakageET
 
 implements: NRPyLeakageET
-inherits: ADMBase, Boundary, SpaceMask, HydroBase, grid, GRHayLET
+inherits: ADMBase, Boundary, SpaceMask, HydroBase, grid, GRHayLib
 
 USES INCLUDE: Symmetry.h
-USES INCLUDE: GRHayLET.h
+USES INCLUDE: GRHayLib.h
 
 # ------------------------------------------------------
 # Gridfunctions

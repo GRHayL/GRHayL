@@ -20,7 +20,7 @@ get_routine_string(const con2prim_method_t key) {
 
 void
 generate_test_data(
-    const GRHayL_parameters *restrict params,
+    const grhayl_parameters *restrict params,
     const eos_parameters *restrict eos ) {
 
   const char *routine = get_routine_string(params->main_routine);
@@ -203,7 +203,7 @@ generate_test_data(
 
 void
 run_unit_test(
-    const GRHayL_parameters *restrict params,
+    const grhayl_parameters *restrict params,
     const eos_parameters *restrict eos ) {
 
   const char *routine = get_routine_string(params->main_routine);
@@ -325,7 +325,7 @@ int main(int argc, char **argv) {
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
-  GRHayL_parameters params;
+  grhayl_parameters params;
   grhayl_initialize_params(main_routine,
                     backup_routines,
                     evolve_entropy,

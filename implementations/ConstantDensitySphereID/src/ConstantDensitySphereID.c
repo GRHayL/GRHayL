@@ -4,7 +4,7 @@
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
 
-#include "GRHayLET.h"
+#include "GRHayLib.h"
 
 
 #define velx (&vel[0*cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]])

@@ -1,10 +1,10 @@
-schedule GRHayLET_initialize at CCTK_WRAGH
+schedule GRHayLib_initialize at CCTK_WRAGH
 {
   LANG: C
   OPTIONS: GLOBAL
 } "Set up the EOS struct and read the table for tabulated EOS."
 
-schedule GRHayLET_terminate AT CCTK_TERMINATE
+schedule GRHayLib_terminate AT CCTK_TERMINATE
 {
   LANG: C
   OPTIONS: GLOBAL

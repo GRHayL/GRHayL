@@ -1,7 +1,0 @@
-# Interface definition for thorn GRHayLET
-
-implements: GRHayLET
-
-inherits: ADMBase, Tmunubase, HydroBase
-
-INCLUDE HEADER: GRHayLET.h in GRHayLET.h

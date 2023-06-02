@@ -23,7 +23,7 @@
 #endif
 
 /*
-   The struct GRHayL_parameters contains parameters for controlling
+   The struct grhayl_parameters contains parameters for controlling
    the behavior of the GRHayL gems. The struct elements are detailed below:
 
  --main_routine: selects which con2prim routine to use. The
@@ -41,7 +41,7 @@
    can, this should be supported.
 */
 
-typedef struct GRHayL_parameters {
+typedef struct grhayl_parameters {
   int main_routine, backup_routine[3];
   bool evolve_entropy;
   bool evolve_temp;
@@ -49,7 +49,7 @@ typedef struct GRHayL_parameters {
   double psi6threshold;
   bool Cupp_Fix;
   double Lorenz_damping_factor;
-} GRHayL_parameters;
+} grhayl_parameters;
 
 void grhayl_initialize_params(
       const int main,
@@ -60,7 +60,7 @@ void grhayl_initialize_params(
       const double psi6threshold,
       const bool Cupp_Fix,
       const double Lorenz_damping_factor,
-      GRHayL_parameters *restrict params);
+      grhayl_parameters *restrict params);
 
 //--------------------------------------------------
 

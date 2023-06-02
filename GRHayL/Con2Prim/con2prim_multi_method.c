@@ -2,7 +2,7 @@
 
 int grhayl_con2prim_select_method(
       const con2prim_method_t c2p_key,
-      const GRHayL_parameters *restrict params,
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
@@ -36,7 +36,7 @@ int grhayl_con2prim_select_method(
 }
 
 int grhayl_con2prim_multi_method(
-      const GRHayL_parameters *restrict params,
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,

@@ -116,7 +116,7 @@ int grhayl_newman_entropy(
 }
 
 int grhayl_tabulated_Newman1D_entropy(
-      const GRHayL_parameters *restrict grhayl_params,
+      const grhayl_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,

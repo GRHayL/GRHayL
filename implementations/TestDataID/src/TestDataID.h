@@ -4,6 +4,6 @@
 #include "cctk.h"
 #include "cctk_Parameters.h"
 #include "cctk_Arguments.h"
-#include "GRHayLET.h"
+#include "GRHayLib.h"
 
 #endif // TESTDATAID_H_

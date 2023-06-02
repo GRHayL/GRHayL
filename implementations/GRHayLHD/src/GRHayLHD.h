@@ -4,7 +4,7 @@
 #include "cctk.h"
 #include "cctk_Parameters.h"
 #include "cctk_Arguments.h"
-#include "GRHayLET.h"
+#include "GRHayLib.h"
 
 //Interpolates to the +1/2 face
 #define AM1 -0.0625

@@ -1,7 +1,7 @@
 #include "grhayl.h"
 
 /* Function    : grhayl_initialize_params()
- * Description : Initialize the GRHayL_parameters struct from user input
+ * Description : Initialize the grhayl_parameters struct from user input
  *
  * Inputs      : main            - selection of Con2Prim routine for the
  *                                 grhayl_con2prim_multi_method() function
@@ -20,7 +20,7 @@
  *                                 cause of most Font fixes and also change the choice of velocity
  *                                 in the case of atmospheric reset
  *
- * Outputs     : params          - fully initialized GRHayL_parameters struct
+ * Outputs     : params          - fully initialized grhayl_parameters struct
  *                                 containing the input parameters
  */
 
@@ -33,7 +33,7 @@ void grhayl_initialize_params(
       const double psi6threshold,
       const bool Cupp_Fix,
       const double Lorenz_damping_factor,
-      GRHayL_parameters *restrict params ) {
+      grhayl_parameters *restrict params ) {
 
   // This comment is new
   params->main_routine          = main_routine;

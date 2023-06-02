@@ -2,6 +2,6 @@
 
 implements: TestDataID
 
-inherits: GRHayLET, HydroBase
+inherits: GRHayLib, HydroBase
 
-USES INCLUDE: GRHayLET.h
+USES INCLUDE: GRHayLib.h

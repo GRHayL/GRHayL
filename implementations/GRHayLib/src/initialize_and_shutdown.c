@@ -2,9 +2,9 @@
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
 
-#include "GRHayLET.h"
+#include "GRHayLib.h"
 
-GRHayL_parameters *grhayl_params;
+grhayl_parameters *grhayl_params;
 eos_parameters *grhayl_eos;
 
 int parse_C2P_routine_keyword(const char *restrict routine_name);
@@ -55,11 +55,11 @@ void paramcheck() {
   }
 }
 
-void GRHayLET_initialize(CCTK_ARGUMENTS) {
+void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
   DECLARE_CCTK_PARAMETERS;
 
-  grhayl_params = (GRHayL_parameters *)malloc(sizeof(GRHayL_parameters));
+  grhayl_params = (grhayl_parameters *)malloc(sizeof(grhayl_parameters));
   grhayl_eos = (eos_parameters *)malloc(sizeof(eos_parameters));
 
   const int main = parse_C2P_routine_keyword(con2prim_routine);
@@ -99,14 +99,14 @@ void GRHayLET_initialize(CCTK_ARGUMENTS) {
           T_atm, T_min, T_max,
           grhayl_eos);
   } else if (CCTK_EQUALS(EOS_type, "")) {
-    CCTK_VERROR("GRHayLET parameter EOS_type is unset. Please set an EOS type.");
+    CCTK_VERROR("GRHayLib parameter EOS_type is unset. Please set an EOS type.");
   } else {
-    CCTK_VERROR("GRHayLET parameter EOS_type has an unsupported type. Please check"
+    CCTK_VERROR("GRHayLib parameter EOS_type has an unsupported type. Please check"
                 " the list of parameter options in the param.ccl.");
   }
 }
 
-void GRHayLET_terminate(CCTK_ARGUMENTS) {
+void GRHayLib_terminate(CCTK_ARGUMENTS) {
   if(grhayl_eos->eos_type == grhayl_eos_tabulated) {
     free(grhayl_eos->table_all);
     free(grhayl_eos->table_logrho);

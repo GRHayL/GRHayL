@@ -7,7 +7,7 @@
                  is adapted from the HARM function provided by IllinoisGRMHD. The
                  original HARM copyright is included below.
 
- * Inputs      : params         - GRHayL_parameters struct with parameters
+ * Inputs      : params         - grhayl_parameters struct with parameters
  *                                for the simulation
  *             : eos            - eos_parameters struct with data for the
  *                                EOS of the simulation
@@ -130,7 +130,7 @@ TODO: needs remaining error codes
 **********************************************************************************/
 
 int grhayl_hybrid_Noble1D_entropy(
-      const GRHayL_parameters *restrict params,
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,

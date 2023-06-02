@@ -31,7 +31,7 @@ int grhayl_tabulated_Palenzuela1D(
             double *restrict eps_ptr,
             double *restrict T_ptr,
             double *restrict W_ptr ),
-      const GRHayL_parameters *restrict grhayl_params,
+      const grhayl_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,

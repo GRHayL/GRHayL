@@ -5,7 +5,7 @@
  *    Font fix: function call     *
  **********************************/
 int grhayl_hybrid_Font_fix(
-      const GRHayL_parameters *restrict params,
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,

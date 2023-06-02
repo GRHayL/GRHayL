@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
       break;
   }
 
-  GRHayL_parameters params;
+  grhayl_parameters params;
   grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, Lorenz_damping_factor, &params);
 
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
                                              k_ppoly0, Gamma_th, &hybrid_eos);
 
   evolve_temperature = true;
-  GRHayL_parameters tab_params;
+  grhayl_parameters tab_params;
   grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, Lorenz_damping_factor, &tab_params);
 

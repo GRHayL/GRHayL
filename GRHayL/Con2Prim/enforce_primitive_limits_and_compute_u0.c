@@ -4,7 +4,7 @@
  * Description : Applies limits to rho_b, pressure, and v^i, then
                  recomputes epsilon and (if needed) entropy
 
- * Inputs      : params         - GRHayL_parameters struct with parameters
+ * Inputs      : params         - grhayl_parameters struct with parameters
  *                                for the simulation
  *             : eos            - eos_parameters struct with data for the
  *                                EOS of the simulation
@@ -19,7 +19,7 @@
  */
 
 void grhayl_enforce_primitive_limits_and_compute_u0(
-    const GRHayL_parameters *restrict params,
+    const grhayl_parameters *restrict params,
     const eos_parameters *restrict eos,
     const metric_quantities *restrict ADM_metric,
     const ADM_aux_quantities *restrict metric_aux,

@@ -71,7 +71,7 @@ compute_rho_P_eps_T_W_entropy(
  * further details.
  */
 int grhayl_tabulated_Palenzuela1D_entropy(
-      const GRHayL_parameters *restrict grhayl_params,
+      const grhayl_parameters *restrict grhayl_params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,

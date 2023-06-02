@@ -2,10 +2,10 @@
 
 implements: GRHayLMHD
 
-inherits: ADMBase, Tmunubase, HydroBase, GRHayLET
+inherits: ADMBase, Tmunubase, HydroBase, GRHayLib
 
 USES INCLUDE: Symmetry.h
-USES INCLUDE: GRHayLET.h
+USES INCLUDE: GRHayLib.h
 
 #########################################################
 

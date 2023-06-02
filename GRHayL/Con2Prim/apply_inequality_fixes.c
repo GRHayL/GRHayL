@@ -6,7 +6,7 @@
  *               these bounds, the function enforces the inequalities
  *               and updates the diagnostic data.
  *
- * Inputs      : params         - GRHayL_parameters struct with parameters
+ * Inputs      : params         - grhayl_parameters struct with parameters
  *                                for the simulation
  *             : eos            - eos_parameters struct with data for the
  *                                EOS of the simulation
@@ -21,7 +21,7 @@
  */
 
 void grhayl_apply_inequality_fixes(
-      const GRHayL_parameters *restrict params,
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,

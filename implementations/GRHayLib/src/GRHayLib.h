@@ -1,5 +1,5 @@
-#ifndef GRHAYLET_H_
-#define GRHAYLET_H_
+#ifndef GRHAYLIB_H_
+#define GRHAYLIB_H_
 
 #include "include/grhayl.h"
 #include "include/atmosphere.h"
@@ -13,6 +13,6 @@
 #include "include/nrpyleakage.h"
 
 extern eos_parameters *grhayl_eos;
-extern GRHayL_parameters *grhayl_params;
+extern grhayl_parameters *grhayl_params;
 
-#endif // GRHAYLET_H_
+#endif // GRHAYLIB_H_
