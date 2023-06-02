@@ -64,7 +64,7 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
         double Ax_stencil[3][3][3];
         double Ay_stencil[3][3][3];
         double Az_stencil[3][3][3];
-        A_gauge_rhs_vars gauge_rhs_vars;
+        induction_interp_vars interp_vars;
 
         // Read in variable at interpolation stencil points from main memory.
         for(int iterz=0; iterz<2; iterz++)
@@ -109,16 +109,16 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
 //          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][CCTK_GFINDEX3D(cctkGH, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
-        grhayl_interpolate_for_A_gauge_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &gauge_rhs_vars);
+        grhayl_interpolate_for_induction_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
 
-        alpha_interp[index] = gauge_rhs_vars.alpha_interp;
-        alpha_sqrtg_Ax_interp[index] = gauge_rhs_vars.alpha_sqrtg_Ax_interp[0];
-        alpha_sqrtg_Ay_interp[index] = gauge_rhs_vars.alpha_sqrtg_Ay_interp[0];
-        alpha_sqrtg_Az_interp[index] = gauge_rhs_vars.alpha_sqrtg_Az_interp[0];
-        alpha_Phi_minus_betaj_A_j_interp[index] = gauge_rhs_vars.alpha_Phi_minus_betaj_A_j_interp;
-        shiftx_interp[index] = gauge_rhs_vars.shiftx_interp[0];
-        shifty_interp[index] = gauge_rhs_vars.shifty_interp[0];
-        shiftz_interp[index] = gauge_rhs_vars.shiftz_interp[0];
+        alpha_interp[index] = interp_vars.alpha_interp;
+        alpha_sqrtg_Ax_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[0];
+        alpha_sqrtg_Ay_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[1];
+        alpha_sqrtg_Az_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[2];
+        alpha_Phi_minus_betaj_A_j_interp[index] = interp_vars.alpha_Phi_minus_betaj_A_j_interp;
+        shiftx_interp[index] = interp_vars.shifti_interp[0];
+        shifty_interp[index] = interp_vars.shifti_interp[1];
+        shiftz_interp[index] = interp_vars.shifti_interp[2];
       }
     }
   }
@@ -134,35 +134,31 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
         Ax_rhs[index] += dxi[0]*(alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i-1,j,k)] - alpha_Phi_minus_betaj_A_j_interp[index]);
         Ay_rhs[index] += dxi[1]*(alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i,j-1,k)] - alpha_Phi_minus_betaj_A_j_interp[index]);
         Az_rhs[index] += dxi[2]*(alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i,j,k-1)] - alpha_Phi_minus_betaj_A_j_interp[index]);
-        A_gauge_rhs_vars gauge_rhs_vars;
     
-        gauge_rhs_vars.alpha_interp = alpha_interp[index];
+        double shiftx[5], shifty[5], shiftz[5];
+        double phitilde_stencil[3][5], Ai_stencil[3][2];
     
-        gauge_rhs_vars.dxi[0] = dxi[0];
-        gauge_rhs_vars.dxi[1] = dxi[1];
-        gauge_rhs_vars.dxi[2] = dxi[2];
-    
-        gauge_rhs_vars.alpha_sqrtg_Ax_interp[0] = alpha_sqrtg_Ax_interp[index];
-        gauge_rhs_vars.alpha_sqrtg_Ay_interp[0] = alpha_sqrtg_Ay_interp[index];
-        gauge_rhs_vars.alpha_sqrtg_Az_interp[0] = alpha_sqrtg_Az_interp[index];
-        gauge_rhs_vars.alpha_sqrtg_Ax_interp[1] = alpha_sqrtg_Ax_interp[CCTK_GFINDEX3D(cctkGH,i+1,j,k)];
-        gauge_rhs_vars.alpha_sqrtg_Ay_interp[1] = alpha_sqrtg_Ay_interp[CCTK_GFINDEX3D(cctkGH,i,j+1,k)];
-        gauge_rhs_vars.alpha_sqrtg_Az_interp[1] = alpha_sqrtg_Az_interp[CCTK_GFINDEX3D(cctkGH,i,j,k+1)];
+        Ai_stencil[0][0] = alpha_sqrtg_Ax_interp[index];
+        Ai_stencil[1][0] = alpha_sqrtg_Ay_interp[index];
+        Ai_stencil[2][0] = alpha_sqrtg_Az_interp[index];
+
+        Ai_stencil[0][1] = alpha_sqrtg_Ax_interp[CCTK_GFINDEX3D(cctkGH,i+1,j,k)];
+        Ai_stencil[1][1] = alpha_sqrtg_Ay_interp[CCTK_GFINDEX3D(cctkGH,i,j+1,k)];
+        Ai_stencil[2][1] = alpha_sqrtg_Az_interp[CCTK_GFINDEX3D(cctkGH,i,j,k+1)];
     
         for(int iter=-2; iter<3; iter++) {
           const int indexx = CCTK_GFINDEX3D(cctkGH,i+iter,j,     k     );
           const int indexy = CCTK_GFINDEX3D(cctkGH,i,     j+iter,k     );
           const int indexz = CCTK_GFINDEX3D(cctkGH,i,     j,     k+iter);
-          gauge_rhs_vars.shiftx_interp[iter+2] = shiftx_interp[indexx];
-          gauge_rhs_vars.shifty_interp[iter+2] = shifty_interp[indexy];
-          gauge_rhs_vars.shiftz_interp[iter+2] = shiftz_interp[indexz];
-          gauge_rhs_vars.phitildex[iter+2] = phitilde[indexx];
-          gauge_rhs_vars.phitildey[iter+2] = phitilde[indexy];
-          gauge_rhs_vars.phitildez[iter+2] = phitilde[indexz];
+          shiftx[iter+2] = shiftx_interp[indexx];
+          shifty[iter+2] = shifty_interp[indexy];
+          shiftz[iter+2] = shiftz_interp[indexz];
+          phitilde_stencil[0][iter+2] = phitilde[indexx];
+          phitilde_stencil[1][iter+2] = phitilde[indexy];
+          phitilde_stencil[2][iter+2] = phitilde[indexz];
         }
-        grhayl_calculate_phitilde_rhs(grhayl_params->Lorenz_damping_factor, &gauge_rhs_vars);
+        phitilde_rhs[index] += grhayl_calculate_phitilde_rhs(dxi, grhayl_params->Lorenz_damping_factor, alpha_interp[index], shiftx, shifty, shiftz, Ai_stencil, phitilde_stencil);
     
-        phitilde_rhs[index] += gauge_rhs_vars.phitilde_rhs;
       }
     }
   }

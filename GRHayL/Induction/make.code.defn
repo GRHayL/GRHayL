@@ -3,4 +3,4 @@
 # Source files in this directory that need compiled:
 SRCS = calculate_phitilde_rhs.c \
        HLL_flux.c               \
-       interpolate_for_A_gauge_rhs.c
+       interpolate_for_induction_rhs.c
