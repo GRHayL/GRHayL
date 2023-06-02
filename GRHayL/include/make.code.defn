@@ -1,6 +1,8 @@
 # This is GRHayL syntax to install these headers to <prefix>/grhayl/include
 # whenever `make install` is run.
-#! install_headers = con2prim.h flux_source.h
+#! install_headers = atmosphere.h
+#!                   con2prim.h
+#!                   flux_source.h
 #!                   grhayl.h
 #!                   grhayl_io.h
 #!                   induction.h
