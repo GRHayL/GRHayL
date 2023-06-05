@@ -8,15 +8,14 @@ typedef struct em_quantities {
   double AD[3];
 } em_quantities;
 
-typedef struct A_no_gauge_vars {
-  double psi6;
+typedef struct HLL_2D_vars {
   double B1r, B1l;
   double B2r, B2l;
   double c1_min, c1_max;
   double c2_min, c2_max;
   double v1rr, v1rl, v1lr, v1ll;
   double v2rr, v2rl, v2lr, v2ll;
-} A_no_gauge_vars;
+} HLL_2D_vars;
 
 typedef struct induction_interp_vars {
   double alpha_interp;
@@ -27,7 +26,9 @@ typedef struct induction_interp_vars {
 
 //--------------------------------------------------
 
-double grhayl_HLL_flux(const A_no_gauge_vars *restrict vars);
+double grhayl_HLL_2D_flux(
+      const double psi6,
+      const HLL_2D_vars *restrict vars);
 
 #ifdef __cplusplus
 extern "C" {

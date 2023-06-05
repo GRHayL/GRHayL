@@ -1,7 +1,7 @@
 # Main make.code.defn file for thorn GRHayL
 
 # Source files in this directory
-SRCS = A_no_gauge_rhs.c                            \
+SRCS = A_flux_rhs.c                                \
        calculate_MHD_rhs.c                         \
        compute_B_and_Bstagger_from_A.c             \
        conservs_to_prims.c                         \

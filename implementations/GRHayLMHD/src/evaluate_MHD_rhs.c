@@ -212,7 +212,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=2;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  GRHayLMHD_A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
+  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
 
   /* There are two stories going on here:
    * 1) Single reconstruction to (i,j,k-1/2) for {rho,P,vx,vy,vz,Bx,By,Bz} to compute
@@ -280,7 +280,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=0;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  GRHayLMHD_A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
+  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
 
   // We reprise flux_dir=1 reconstruction to finish up computations of Ai_rhs's!
   { // var_indices is a local variable
@@ -306,5 +306,5 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=1;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  GRHayLMHD_A_no_gauge_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
+  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
 }

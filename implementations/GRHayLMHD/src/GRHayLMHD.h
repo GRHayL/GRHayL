@@ -101,7 +101,7 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
 // pointer to pointer to double -> pointer to pointer to const double. I saw comments
 // suggesting this may become part of the C23 standard, so I guess you can uncomment this
 // in like 10 years.
-void GRHayLMHD_A_no_gauge_rhs(
+void GRHayLMHD_A_flux_rhs(
       const cGH *restrict cctkGH,
       const int A_dir,
       /*const*/ double **out_prims_r,
