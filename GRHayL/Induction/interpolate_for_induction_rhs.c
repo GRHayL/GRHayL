@@ -52,13 +52,6 @@ void grhayl_interpolate_for_induction_rhs(
   // FIXME: Would be much cheaper & easier to unstagger A_i, raise, then interpolate A^i.
   //        However, we keep it this way to be completely compatible with the original
   //        Illinois GRMHD thorn, called mhd_evolve.
-  //
-  //Step 1) j=x: Need to raise A_i, but to do that, we must have all variables at the same gridpoints:
-  // The goal is to compute \partial_j (\alpha \sqrt{\gamma} A^j) at (i+1/2,j+1/2,k+1/2)
-  //    We do this by first interpolating (RHS1x) = (\alpha \sqrt{\gamma} A^x) at
-  //    (i,j+1/2,k+1/2)and (i+1,j+1/2,k+1/2), then taking \partial_x (RHS1x) =
-  //    [ RHS1x(i+1,j+1/2,k+1/2) - RHS1x(i,j+1/2,k+1/2) ]/dX.
-
 
   /*
      We need to interpolate several quantities to several different points depending on the quantities
