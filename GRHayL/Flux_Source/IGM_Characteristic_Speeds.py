@@ -248,7 +248,7 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
                        filename="returnstring", prestring=prestring)
 
         desc = "Compute the characteristic speeds in direction " + str(flux_dirn)
-        name = "grhayl_calculate_characteristic_speed_dirn" + str(flux_dirn)
+        name = "ghl_calculate_characteristic_speed_dirn" + str(flux_dirn)
 
         outCfunction(
             outfile=os.path.join(Ccodesdir,name+".c"),

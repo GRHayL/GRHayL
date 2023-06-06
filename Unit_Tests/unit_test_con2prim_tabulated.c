@@ -13,7 +13,7 @@ get_routine_string(const con2prim_method_t key) {
     case Newman1D_entropy:
       return "Newman1D_entropy";
     default:
-      grhayl_error("Unsupported key %d\n", key);
+      ghl_error("Unsupported key %d\n", key);
       return NULL;
   }
 }
@@ -24,7 +24,7 @@ generate_test_data(
     const eos_parameters *restrict eos ) {
 
   const char *routine = get_routine_string(params->main_routine);
-  grhayl_info("Beginning data generation for %s\n", routine);
+  ghl_info("Beginning data generation for %s\n", routine);
 
   const int npoints = 32; // must be > 1
 
@@ -34,7 +34,7 @@ generate_test_data(
       const char *perturb_string = perturb ? "perturbed" : "unperturbed";
       const char *vars_string    = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
 
-      grhayl_info("  Generating %s data for test %s\n", perturb_string, vars_string);
+      ghl_info("  Generating %s data for test %s\n", perturb_string, vars_string);
       char filename[256];
       sprintf(filename, "con2prim_tabulated_%s_%s_%s.bin", routine, vars_string, perturb_string);
       FILE *fp = fopen(filename, "wb");
@@ -104,21 +104,21 @@ generate_test_data(
 
       // Set metric quantities to Minkowski
       metric_quantities ADM_metric;
-      grhayl_initialize_metric(1,
+      ghl_initialize_metric(1,
                         0, 0, 0,
                         1, 0, 0,
                         1, 0, 1,
                         &ADM_metric);
 
       ADM_aux_quantities metric_aux;
-      grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
       srand(0);
       for(int i=0;i<npoints;i++) {
         for(int j=0;j<npoints;j++) {
 
           con2prim_diagnostics diagnostics;
-          grhayl_initialize_diagnostics(&diagnostics);
+          ghl_initialize_diagnostics(&diagnostics);
 
           double xrho, xtemp, xlogWm1, xW, xlogPmoP;
           if( vars_key ) {
@@ -157,16 +157,16 @@ generate_test_data(
 
           // Set primitive quantities
           primitive_quantities prims_orig;
-          grhayl_initialize_primitives(xrho, xprs, xeps,
+          ghl_initialize_primitives(xrho, xprs, xeps,
                                 vx, vy, vz,
                                 Bx, By, Bz,
                                 xent, xye, xtemp,
                                 &prims_orig);
-          grhayl_limit_v_and_compute_u0(eos, &ADM_metric, &prims_orig, &diagnostics.speed_limited);
+          ghl_limit_v_and_compute_u0(eos, &ADM_metric, &prims_orig, &diagnostics.speed_limited);
 
           // Set prim guesses
           primitive_quantities prims;
-          grhayl_initialize_primitives(0.0/0.0, 0.0/0.0, 0.0/0.0,
+          ghl_initialize_primitives(0.0/0.0, 0.0/0.0, 0.0/0.0,
                                 0.0/0.0, 0.0/0.0, 0.0/0.0,
                                 Bx, By, Bz,
                                 0.0/0.0, 0.0/0.0, 0.0/0.0,
@@ -176,15 +176,15 @@ generate_test_data(
           // Compute conserved variables and Tmunu
           conservative_quantities cons;
           __attribute__((unused)) stress_energy dummy;
-          grhayl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims_orig, &cons, &dummy);
+          ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims_orig, &cons, &dummy);
 
           // Undensitize the conserved variables
           conservative_quantities cons_undens;
-          grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+          ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
 
           // Now perform the con2prim
-          if( grhayl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
-            grhayl_error("Con2Prim failed\n");
+          if( ghl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
+            ghl_error("Con2Prim failed\n");
 
           prims.vU[0] = prims.vU[0]/prims.u0;
           prims.vU[1] = prims.vU[1]/prims.u0;
@@ -207,12 +207,12 @@ run_unit_test(
     const eos_parameters *restrict eos ) {
 
   const char *routine = get_routine_string(params->main_routine);
-  grhayl_info("Beginning unit test for %s\n", routine);
+  ghl_info("Beginning unit test for %s\n", routine);
 
   for(int vars_key=0;vars_key<=1;vars_key++) {
 
     const char *vars_string = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
-    grhayl_info("  Running test %s\n", vars_string);
+    ghl_info("  Running test %s\n", vars_string);
     char filename[256];
     sprintf(filename, "con2prim_tabulated_%s_%s_unperturbed.bin", routine, vars_string);
     FILE *fp_unpert = fopen(filename, "rb");
@@ -220,45 +220,45 @@ run_unit_test(
     FILE *fp_pert = fopen(filename, "rb");
 
     int n1, n2;
-    if(fread(&n1, sizeof(int), 1, fp_unpert) != 1 ) grhayl_error("Failed to read from file\n");;
-    if(fread(&n2, sizeof(int), 1, fp_pert  ) != 1 ) grhayl_error("Failed to read from file\n");;
+    if(fread(&n1, sizeof(int), 1, fp_unpert) != 1 ) ghl_error("Failed to read from file\n");;
+    if(fread(&n2, sizeof(int), 1, fp_pert  ) != 1 ) ghl_error("Failed to read from file\n");;
     if( n1 != n2 )
-      grhayl_error("Problem reading input data files (%d != %d)\n", n1, n2);
+      ghl_error("Problem reading input data files (%d != %d)\n", n1, n2);
 
     const int npoints = n1;
     metric_quantities ADM_metric;
-    grhayl_initialize_metric(1,
+    ghl_initialize_metric(1,
                       0, 0, 0,
                       1, 0, 0,
                       1, 0, 1,
                       &ADM_metric);
 
     ADM_aux_quantities metric_aux;
-    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     for(int i=0;i<npoints;i++) {
       for(int j=0;j<npoints;j++) {
 
         con2prim_diagnostics diagnostics;
-        grhayl_initialize_diagnostics(&diagnostics);
+        ghl_initialize_diagnostics(&diagnostics);
 
         // Read input primitives from unperturbed data file
         primitive_quantities prims;
         if( fread(&prims, sizeof(primitive_quantities), 1, fp_unpert) != 1 )
-          grhayl_error("Failed to read input primitives from file\n");
+          ghl_error("Failed to read input primitives from file\n");
 
         // Compute conserved variables and Tmunu
         conservative_quantities cons;
         __attribute__((unused)) stress_energy dummy;
-        grhayl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &dummy);
+        ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &dummy);
 
         // Undensitize the conserved variables
         conservative_quantities cons_undens;
-        grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+        ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
 
         // Now perform the con2prim
-        if( grhayl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
-          grhayl_error("Con2Prim failed\n");
+        if( ghl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
+          ghl_error("Con2Prim failed\n");
 
         prims.vU[0] = prims.vU[0]/prims.u0;
         prims.vU[1] = prims.vU[1]/prims.u0;
@@ -267,9 +267,9 @@ run_unit_test(
         // Read unperturbed and perturbed results from file
         primitive_quantities prims_trusted, prims_pert;
         if( fread(&prims_trusted, sizeof(primitive_quantities), 1, fp_unpert) != 1 )
-          grhayl_error("Failed to read trusted primitives from file\n");
+          ghl_error("Failed to read trusted primitives from file\n");
         if( fread(&prims_pert   , sizeof(primitive_quantities), 1, fp_pert) != 1 )
-          grhayl_error("Failed to read perturbed primitives from file\n");
+          ghl_error("Failed to read perturbed primitives from file\n");
 
         // Validate results
         validate(prims_trusted.rho        , prims.rho        , prims_pert.rho        );
@@ -291,10 +291,10 @@ run_unit_test(
 int main(int argc, char **argv) {
 
   if( argc != 3 ) {
-    grhayl_info("Usage: %s <EOS table path> <test key>\n", argv[0]);
-    grhayl_info("Available test keys:\n");
-    grhayl_info("  0 : Generate data\n");
-    grhayl_info("  1 : Run unit test\n");
+    ghl_info("Usage: %s <EOS table path> <test key>\n", argv[0]);
+    ghl_info("Available test keys:\n");
+    ghl_info("  0 : Generate data\n");
+    ghl_info("  1 : Run unit test\n");
     exit(1);
   }
 
@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   grhayl_parameters params;
-  grhayl_initialize_params(main_routine,
+  ghl_initialize_params(main_routine,
                     backup_routines,
                     evolve_entropy,
                     evolve_temperature,
@@ -337,7 +337,7 @@ int main(int argc, char **argv) {
                     &params);
 
   eos_parameters eos;
-  grhayl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
+  ghl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
                                                 rho_b_atm, rho_b_min, rho_b_max,
                                                 Y_e_atm, Y_e_min, Y_e_max,
                                                 T_atm, T_min, T_max, &eos);
@@ -352,7 +352,7 @@ int main(int argc, char **argv) {
     params.backup_routine[0] = Palenzuela1D;
     params.main_routine = Newman1D;             run_unit_test(&params, &eos);
     params.main_routine = Palenzuela1D_entropy; run_unit_test(&params, &eos);
-    grhayl_info("All tests succeeded\n");
+    ghl_info("All tests succeeded\n");
   }
   else {
     params.main_routine = Palenzuela1D;     generate_test_data(&params, &eos);

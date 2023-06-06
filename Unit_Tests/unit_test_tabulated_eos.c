@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
   double atol = 1e-14;
 
   if( argc < 2 || argc > 4 ) {
-    grhayl_error("Correct usage is %s <table path> [rel. err. tolerance] [abs. err. tolerance]\n", argv[0]);
+    ghl_error("Correct usage is %s <table path> [rel. err. tolerance] [abs. err. tolerance]\n", argv[0]);
   }
   else if( argc > 2 ) {
     rtol = strtod(argv[1], NULL);
@@ -18,23 +18,23 @@ int main(int argc, char **argv) {
       atol = strtod(argv[2], NULL);
   }
 
-  grhayl_info("Beginning tabulated EOS unit test...\n");
+  ghl_info("Beginning tabulated EOS unit test...\n");
 
   // Step 1: Initialize the EOS struct
   eos_parameters eos;
-  grhayl_initialize_eos_functions(grhayl_eos_tabulated, &eos);
+  ghl_initialize_eos_functions(grhayl_eos_tabulated, &eos);
   eos.tabulated_read_table_set_EOS_params(argv[1], &eos);
   eos.root_finding_precision=1e-10;
 
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
-    grhayl_error("Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
+    ghl_error("Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
                  eos.N_rho, eos.N_T, eos.N_Ye);
-  grhayl_info("Table dimensions read in correctly\n");
+  ghl_info("Table dimensions read in correctly\n");
 
   if( relative_error(eos.energy_shift, 123e-45) > rtol )
-    grhayl_error("Error in energy shift exceeds tolerance: %.15e vs. %.15e\n",
+    ghl_error("Error in energy shift exceeds tolerance: %.15e vs. %.15e\n",
                  eos.energy_shift, 123e-45);
-  grhayl_info("Energy shift read in correctly\n");
+  ghl_info("Energy shift read in correctly\n");
 
   // Step 2: Begin test
   for(int i=0; i<eos.N_rho; i++) {
@@ -48,15 +48,15 @@ int main(int argc, char **argv) {
           const double var       = get_table_quantity(var_key, logrho, Y_e, logT);
           const double table_var = eos.table_all[var_key + NRPyEOS_ntablekeys*index];
           if( relative_error(var, table_var) > rtol && fabs(var-table_var) > atol )
-            grhayl_error("Errors in variable %d exceed tolernaces: %.15e vs. %.15e\n",
+            ghl_error("Errors in variable %d exceed tolernaces: %.15e vs. %.15e\n",
                          var_key, var, table_var);
         }
       }
     }
   }
-  grhayl_info("All table quantities read in correctly!\n");
+  ghl_info("All table quantities read in correctly!\n");
 
-  grhayl_info("Beginning interpolation tests...\n");
+  ghl_info("Beginning interpolation tests...\n");
 
   // Set number of points
   const int N_rho = 17;
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
         P_interp = 0.0/0.0;
         eos.tabulated_compute_P_from_T(&eos, rho, Y_e, T, &P_interp);
         if( relative_error(P, P_interp) > rtol && fabs(P - P_interp) > atol )
-          grhayl_error("tabulated_compute_P_from_T validation failed:\n"
+          ghl_error("tabulated_compute_P_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
                        " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
         eps_interp = 0.0/0.0;
         eos.tabulated_compute_eps_from_T(&eos, rho, Y_e, T, &eps_interp);
         if( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol )
-          grhayl_error("tabulated_compute_eps_from_T validation failed:\n"
+          ghl_error("tabulated_compute_eps_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
                        " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
         eos.tabulated_compute_P_eps_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp);
         if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ))
-          grhayl_error("tabulated_compute_P_eps_from_T validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
                        " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
         if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) ||
             ( relative_error(S  , S_interp  ) > rtol && fabs(S   - S_interp  ) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_S_from_T validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_S_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
                        " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) ||
             ( relative_error(S  , S_interp  ) > rtol && fabs(S   - S_interp  ) > atol ) ||
             ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_S_cs2_from_T validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_S_cs2_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
                        " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
         if( ( relative_error(P     , P_interp     ) > rtol && fabs(P      - P_interp     ) > atol ) ||
             ( relative_error(eps   , eps_interp   ) > rtol && fabs(eps    - eps_interp   ) > atol ) ||
             ( relative_error(depsdT, depsdT_interp) > rtol && fabs(depsdT - depsdT_interp) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_depsdT_from_T validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_depsdT_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
                        " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
             ( relative_error(mu_e , mu_e_interp ) > rtol && fabs(mu_e  - mu_e_interp ) > atol ) ||
             ( relative_error(mu_p , mu_p_interp ) > rtol && fabs(mu_p  - mu_p_interp ) > atol ) ||
             ( relative_error(mu_n , mu_n_interp ) > rtol && fabs(mu_n  - mu_n_interp ) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_muhat_mue_mup_mun_from_T validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_muhat_mue_mup_mun_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
                        " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
             ( relative_error(mu_n , mu_n_interp ) > rtol && fabs(mu_n  - mu_n_interp ) > atol ) ||
             ( relative_error(X_n  , X_n_interp  ) > rtol && fabs(X_n   - X_n_interp  ) > atol ) ||
             ( relative_error(X_p  , X_p_interp  ) > rtol && fabs(X_p   - X_p_interp  ) > atol ) )
-          grhayl_error("tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T validation failed:\n"
+          ghl_error("tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
                        " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -255,7 +255,7 @@ int main(int argc, char **argv) {
         eos.tabulated_compute_P_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &T_interp);
         if( ( relative_error(T, T_interp) > rtol && fabs(T - T_interp) > atol ) ||
             ( relative_error(P, P_interp) > rtol && fabs(P - P_interp) > atol ) )
-          grhayl_error("tabulated_compute_P_T_from_eps validation failed:\n"
+          ghl_error("tabulated_compute_P_T_from_eps validation failed:\n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
                        "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
             ( relative_error(P     , P_interp     ) > rtol && fabs(P      - P_interp     ) > atol ) ||
             ( relative_error(S     , S_interp     ) > rtol && fabs(S      - S_interp     ) > atol ) ||
             ( relative_error(depsdT, depsdT_interp) > rtol && fabs(depsdT - depsdT_interp) > atol ) )
-          grhayl_error("tabulated_compute_P_S_depsdT_T_from_eps validation failed:\n"
+          ghl_error("tabulated_compute_P_S_depsdT_T_from_eps validation failed:\n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
                        "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -290,7 +290,7 @@ int main(int argc, char **argv) {
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) ||
             ( relative_error(S  , S_interp  ) > rtol && fabs(S   - S_interp  ) > atol ) )
-          grhayl_error("tabulated_compute_eps_S_T_from_P validation failed:\n"
+          ghl_error("tabulated_compute_eps_S_T_from_P validation failed:\n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
                        "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -307,7 +307,7 @@ int main(int argc, char **argv) {
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
                        "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -323,7 +323,7 @@ int main(int argc, char **argv) {
         eos.tabulated_compute_P_T_from_S(&eos, rho, Y_e, S, &P_interp, &T_interp);
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
                        "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -338,7 +338,7 @@ int main(int argc, char **argv) {
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
             ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
                        "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -355,7 +355,7 @@ int main(int argc, char **argv) {
         if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
                        "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -372,7 +372,7 @@ int main(int argc, char **argv) {
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
-          grhayl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
+          ghl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
                        "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
                        "------------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -390,7 +390,7 @@ int main(int argc, char **argv) {
   // Step 4: Free memory
   eos.tabulated_free_memory(&eos);
 
-  grhayl_info("Test finished with no errors!\n");
+  ghl_info("Test finished with no errors!\n");
 
   // All done!
   return 0;

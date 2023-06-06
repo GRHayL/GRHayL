@@ -37,7 +37,7 @@ void GRHayLHD_interpolate_to_face_and_initialize_metric(
   const double face_gyz = COMPUTE_FCVAL(gyz[indm1], gyz[index], gyz[indp1], gyz[indp2]);
   const double face_gzz = COMPUTE_FCVAL(gzz[indm1], gzz[index], gzz[indp1], gzz[indp2]);
 
-  grhayl_initialize_metric(
+  ghl_initialize_metric(
         face_lapse,
         face_betax, face_betay, face_betaz,
         face_gxx, face_gxy, face_gxz,

@@ -1,6 +1,6 @@
 #include "../utils.h"
 
-int grhayl_newman_entropy(
+int ghl_newman_entropy(
       const eos_parameters *restrict eos,
       const double S_squared,
       const double BdotS,
@@ -115,8 +115,8 @@ int grhayl_newman_entropy(
   return grhayl_success;
 }
 
-int grhayl_tabulated_Newman1D_entropy(
-      const grhayl_parameters *restrict grhayl_params,
+int ghl_tabulated_Newman1D_entropy(
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
@@ -131,6 +131,6 @@ int grhayl_tabulated_Newman1D_entropy(
 
   // Step 2: Call the Newman routine that uses the entropy to recover T
   const double tol_x = 1e-15;
-  return grhayl_newman_entropy(eos, Ssq, BdotS, Bsq, BU, SU,
+  return ghl_newman_entropy(eos, Ssq, BdotS, Bsq, BU, SU,
                         cons_undens, prims, tol_x);
 }

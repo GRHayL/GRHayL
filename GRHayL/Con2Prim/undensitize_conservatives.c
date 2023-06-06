@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_undensitize_conservatives()
+/* Function    : ghl_undensitize_conservatives()
  * Description : Computes undensitized conservatives using the metric
  *
  * Inputs      : metric         - metric_quantities struct with data for
@@ -12,7 +12,7 @@
  *
  */
 
-void grhayl_undensitize_conservatives(
+void ghl_undensitize_conservatives(
       const double psi6,
       const conservative_quantities *restrict cons,
       conservative_quantities *restrict cons_undens) {

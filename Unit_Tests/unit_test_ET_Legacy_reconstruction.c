@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   const double Gamma_th = 2.0;
 
   eos_parameters eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              poison, poison, poison,
                                              neos, rho_ppoly_in, Gamma_ppoly_in,
                                              k_ppoly0, Gamma_th, &eos);
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
   fclose(infile);
 
   if(key != arraylength*5)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   infile = fopen("ET_Legacy_reconstruction_output.bin","rb");
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     key += fread(vzl_trusted   , sizeof(double), arraylength, infile);
 
     if(key != arraylength*10)
-      grhayl_error("An error has occured with reading in comparison data. Please check that data\n"
+      ghl_error("An error has occured with reading in comparison data. Please check that data\n"
                    "is up-to-date with current test version.\n");
 
     key  = fread(rhor_pert  , sizeof(double), arraylength, inpert);
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
     key += fread(vzl_pert   , sizeof(double), arraylength, inpert);
 
     if(key != arraylength*10)
-      grhayl_error("An error has occured with reading in comparison data. Please check that data\n"
+      ghl_error("An error has occured with reading in comparison data. Please check that data\n"
                    "is up-to-date with current test version.\n");
 
     // These are set up to match the loops in the ET version of IllinoisGRMHD.
@@ -138,68 +138,68 @@ int main(int argc, char **argv) {
           }
           const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
 
-          grhayl_simple_ppm(rho_stencil, press_stencil, var_data,
+          ghl_simple_ppm(rho_stencil, press_stencil, var_data,
                      num_vars, v_flux_dir, Gamma_eff,
                      &rhor, &rhol, &pressr, &pressl,
                      var_datar, var_datal);
 
           if( validate(rhor_trusted[index], rhor, rhor_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable rho_r.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable rho_r.\n"
                          "  rho_r trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", rhor_trusted[index], rhor, rhor_pert[index],
                                                      relative_error(rhor_trusted[index], rhor),
                                                      relative_error(rhor_trusted[index], rhor_pert[index]));
           if( validate(pressr_trusted[index], pressr, pressr_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable press_r.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable press_r.\n"
                          "  press_r trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", pressr_trusted[index], pressr, pressr_pert[index],
                                                      relative_error(pressr_trusted[index], pressr),
                                                      relative_error(pressr_trusted[index], pressr_pert[index]));
           if( validate(vxr_trusted[index], var_datar[0], vxr_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_r.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_r.\n"
                          "  vx_r trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vxr_trusted[index], var_datar[0], vxr_pert[index],
                                                      relative_error(vxr_trusted[index], var_datar[0]),
                                                      relative_error(vxr_trusted[index], vxr_pert[index]));
           if( validate(vyr_trusted[index], var_datar[1], vyr_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vy_r.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vy_r.\n"
                          "  vy_r trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vyr_trusted[index], var_datar[1], vyr_pert[index],
                                                      relative_error(vyr_trusted[index], var_datar[1]),
                                                      relative_error(vyr_trusted[index], vyr_pert[index]));
           if( validate(vzr_trusted[index], var_datar[2], vzr_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vz_r.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vz_r.\n"
                          "  vz_r trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vzr_trusted[index], var_datar[2], vzr_pert[index],
                                                      relative_error(vzr_trusted[index], var_datar[2]),
                                                      relative_error(vzr_trusted[index], vzr_pert[index]));
 
           if( validate(rhol_trusted[index], rhol, rhol_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable rho_l.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable rho_l.\n"
                          "  rho_l trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", rhol_trusted[index], rhol, rhol_pert[index],
                                                      relative_error(rhol_trusted[index], rhol),
                                                      relative_error(rhol_trusted[index], rhol_pert[index]));
           if( validate(pressl_trusted[index], pressl, pressl_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable press_l.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable press_l.\n"
                          "  press_l trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", pressl_trusted[index], pressl, pressl_pert[index],
                                                      relative_error(pressl_trusted[index], pressl),
                                                      relative_error(pressl_trusted[index], pressl_pert[index]));
           if( validate(vxl_trusted[index], var_datal[0], vxl_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_l.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_l.\n"
                          "  vx_l trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vxl_trusted[index], var_datal[0], vxl_pert[index],
                                                      relative_error(vxl_trusted[index], var_datal[0]),
                                                      relative_error(vxl_trusted[index], vxl_pert[index]));
           if( validate(vyl_trusted[index], var_datal[1], vyl_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vy_l.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vy_l.\n"
                          "  vy_l trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vyl_trusted[index], var_datal[1], vyl_pert[index],
                                                      relative_error(vyl_trusted[index], var_datal[1]),
                                                      relative_error(vyl_trusted[index], vyl_pert[index]));
           if( validate(vzl_trusted[index], var_datal[2], vzl_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vz_l.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vz_l.\n"
                          "  vz_l trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vzl_trusted[index], var_datal[2], vzl_pert[index],
                                                      relative_error(vzl_trusted[index], var_datal[2]),
@@ -224,31 +224,31 @@ int main(int argc, char **argv) {
             var_data[1][ind]   = vz[stencil];
           }
           const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
-          grhayl_simple_ppm_no_rho_P(press_stencil, var_data,
+          ghl_simple_ppm_no_rho_P(press_stencil, var_data,
                      num_vars2, v_flux_dir, Gamma_eff,
                      var_datar, var_datal);
 
           if( validate(vxr_trusted[index], var_datar[0], vxr_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_r.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_r.\n"
                          "  vx_r trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vxr_trusted[index], var_datar[0], vxr_pert[index],
                                                      relative_error(vxr_trusted[index], var_datar[0]),
                                                      relative_error(vxr_trusted[index], vxr_pert[index]));
           if( validate(vzr_trusted[index], var_datar[1], vzr_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vz_r.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vz_r.\n"
                          "  vz_r trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vzr_trusted[index], var_datar[1], vzr_pert[index],
                                                      relative_error(vzr_trusted[index], var_datar[1]),
                                                      relative_error(vzr_trusted[index], vzr_pert[index]));
 
           if( validate(vxl_trusted[index], var_datal[0], vxl_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_l.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_l.\n"
                          "  vx_l trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vxl_trusted[index], var_datal[0], vxl_pert[index],
                                                      relative_error(vxl_trusted[index], var_datal[0]),
                                                      relative_error(vxl_trusted[index], vxl_pert[index]));
           if( validate(vzl_trusted[index], var_datal[1], vzl_pert[index]) )
-            grhayl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vz_l.\n"
+            ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vz_l.\n"
                          "  vz_l trusted %.14e computed %.14e perturbed %.14e\n"
                          "  rel.err. %.14e %.14e\n", vzl_trusted[index], var_datal[1], vzl_pert[index],
                                                      relative_error(vzl_trusted[index], var_datal[1]),
@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
   }
   fclose(infile);
   fclose(inpert);
-  grhayl_info("ET_Legacy reconstruction test has passed!\n");
+  ghl_info("ET_Legacy reconstruction test has passed!\n");
   free(rho); free(press);
   free(vx); free(vy); free(vz);
 

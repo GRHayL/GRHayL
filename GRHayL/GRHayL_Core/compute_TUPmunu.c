@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-void grhayl_compute_TUPmunu(
+void ghl_compute_TUPmunu(
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
@@ -17,14 +17,14 @@ void grhayl_compute_TUPmunu(
 
   // Compute u_\alpha
   double uD[4];
-  grhayl_lower_vector_4D(metric_aux->g4DD, uU, uD);
+  ghl_lower_vector_4D(metric_aux->g4DD, uU, uD);
 
   /***************************************************************/
   //                     COMPUTE TUPMUNU                         //
   /***************************************************************/
   // Compute b^{\mu} and b^2
   double smallb[4], smallb2;
-  grhayl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
+  ghl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
   const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);

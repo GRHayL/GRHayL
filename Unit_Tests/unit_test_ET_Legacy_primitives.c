@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, input);
   if( key != 1 || arraylength < 1 )
-    grhayl_error("An error has occured with reading the grid size. "
+    ghl_error("An error has occured with reading the grid size. "
                  "Please check that Noble2D_initial_data.bin"
                  "is up-to-date with current test version.\n");
 
@@ -37,11 +37,11 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   grhayl_parameters params;
-  grhayl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
+  ghl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
                     Psi6threshold, 0 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
   key += fread(S_z, sizeof(double), arraylength, input);
 
   if( key != (10+3+5)*arraylength)
-    grhayl_error("An error has occured with reading in initial data. "
+    ghl_error("An error has occured with reading in initial data. "
                  "Please check that comparison data "
                  "is up-to-date with current test version.\n");
 
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
   key += fread(vz_trusted, sizeof(double), arraylength, output);
 
   if( key != 5*arraylength)
-    grhayl_error("An error has occured with reading in initial data. "
+    ghl_error("An error has occured with reading in initial data. "
                  "Please check that comparison data "
                  "is up-to-date with current test version.\n");
 
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
   key += fread(vz_pert, sizeof(double), arraylength, output);
 
   if( key != 5*arraylength)
-    grhayl_error("An error has occured with reading in initial data. "
+    ghl_error("An error has occured with reading in initial data. "
                  "Please check that comparison data "
                  "is up-to-date with current test version.\n");
 
@@ -166,27 +166,27 @@ int main(int argc, char **argv) {
   for(int index=0; index<arraylength; index++) {
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    grhayl_initialize_diagnostics(&diagnostics);
+    ghl_initialize_diagnostics(&diagnostics);
     metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
-    grhayl_initialize_metric(lapse[index],
+    ghl_initialize_metric(lapse[index],
                       betax[index], betay[index], betaz[index],
                       gxx[index], gxy[index], gxz[index],
                       gyy[index], gyz[index], gzz[index],
                       &ADM_metric);
 
     ADM_aux_quantities metric_aux;
-    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-    grhayl_initialize_primitives(rho_b[index], press[index], eps[index],
+    ghl_initialize_primitives(rho_b[index], press[index], eps[index],
                           vx[index], vy[index], vz[index],
                           Bx[index], By[index], Bz[index],
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims);
 
-    grhayl_initialize_conservatives(rho_star[index], tau[index],
+    ghl_initialize_conservatives(rho_star[index], tau[index],
                              S_x[index], S_y[index], S_z[index],
                              poison, poison, &cons);
 
@@ -198,22 +198,22 @@ int main(int argc, char **argv) {
       if(eos.eos_type == 0) { //Hybrid-only
         if(index == arraylength-2 || index == arraylength-1) {
           params.psi6threshold = 1e-1; // Artificially triggering fix
-          grhayl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+          ghl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
           params.psi6threshold = Psi6threshold;
         } else {
-          grhayl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+          ghl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
         }
       }
 
       // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
-      grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+      ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      check = grhayl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+      check = ghl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
 
       /********** Artificial Font fix for code comparison **********
       This point corresponds to the second-to-last element of the edge
-      cases for grhayl_apply_inequality_fixes function. Due to improvements
+      cases for ghl_apply_inequality_fixes function. Due to improvements
       in the Noble2D routine, the GRHayL code doesn't trigger Font
       fix while the old code does. This is also true for several of
       the more 'physically motivated' indices, but the edge case data
@@ -226,14 +226,14 @@ int main(int argc, char **argv) {
       the behavior of IllinoisGRMHD.
       **************************************************************/
       if(index==arraylength-2)
-        check = grhayl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+        check = ghl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
       /*************************************************************/
 
       if(check)
         printf("Con2Prim failed!");
     } else {
       diagnostics.failure_checker+=1;
-      grhayl_set_prims_to_constant_atm(&eos, &prims);
+      ghl_set_prims_to_constant_atm(&eos, &prims);
       //TODO: Validate reset? (rhob press v)
       printf("Negative rho_* triggering atmospheric reset.\n");
     } // if rho_star > 0
@@ -254,13 +254,13 @@ int main(int argc, char **argv) {
     // Now, we load the trusted/perturbed data for this index and validate the computed results.
     primitive_quantities prims_trusted, prims_pert;
 
-    grhayl_initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
+    ghl_initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
                           vx_trusted[index], vy_trusted[index], vz_trusted[index],
                           poison, poison, poison, // B is C2P input, not output
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims_trusted);
 
-    grhayl_initialize_primitives(rho_b_pert[index], press_pert[index], prims.eps, // Old code has no eps variable
+    ghl_initialize_primitives(rho_b_pert[index], press_pert[index], prims.eps, // Old code has no eps variable
                           vx_pert[index], vy_pert[index], vz_pert[index],
                           poison, poison, poison, // B is C2P input, not output
                           poison, poison, poison, // entropy, Y_e, temp
@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
     prims_pert_rel_error[4] += relative_error(prims_orig.vU[2], prims_pert.vU[2]);
 
     if( validate(prims_trusted.rho, prims.rho, prims_pert.rho) )
-      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable rho.\n"
+      ghl_error("Test unit_test_ghl_hybrid_Noble2D has failed for variable rho.\n"
                    "  rho trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.rho, prims.rho, prims_pert.rho,
                                                relative_error(prims_trusted.rho, prims.rho),
@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
     // input values. The pressure coming out of HARM doesn't have the accuracy to preserve the stringent accuracy requirements
     // demanded elsewhere, so this relaxes the demands on the pressure for very small values.
     if( validate_with_tolerance(prims_trusted.press, prims.press, prims_pert.press, min_rel, pressure_cutoff))
-      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable press.\n"
+      ghl_error("Test unit_test_ghl_hybrid_Noble2D has failed for variable press.\n"
                    "  press trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.press, prims.press, prims_pert.press,
                                                relative_error(prims_trusted.press, prims.press),
@@ -313,28 +313,28 @@ int main(int argc, char **argv) {
     //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos.K_ppoly[0], 1.0/eos.Gamma_ppoly[0]) * (eos.Gamma_ppoly[0] - 1.0));
     const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
     if( validate_with_tolerance(prims_trusted.eps, prims.eps, prims_pert.eps, min_rel, eps_cutoff))
-      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable eps.\n"
+      ghl_error("Test unit_test_ghl_hybrid_Noble2D has failed for variable eps.\n"
                    "  eps trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.eps, prims.eps, prims_pert.eps,
                                                relative_error(prims_trusted.eps, prims.eps),
                                                relative_error(prims_trusted.eps, prims_pert.eps));
 
     if( validate(prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0]) )
-      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vx.\n"
+      ghl_error("Test unit_test_ghl_hybrid_Noble2D has failed for variable vx.\n"
                    "  vx trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0],
                                                relative_error(prims_trusted.vU[0], prims.vU[0]),
                                                relative_error(prims_trusted.vU[0], prims_pert.vU[0]));
 
     if(validate(prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1]))
-      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vy.\n"
+      ghl_error("Test unit_test_ghl_hybrid_Noble2D has failed for variable vy.\n"
                    "  vy trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1],
                                                relative_error(prims_trusted.vU[1], prims.vU[1]),
                                                relative_error(prims_trusted.vU[1], prims_pert.vU[1]));
 
     if( validate(prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2]) )
-      grhayl_error("Test unit_test_grhayl_hybrid_Noble2D has failed for variable vz.\n"
+      ghl_error("Test unit_test_ghl_hybrid_Noble2D has failed for variable vz.\n"
                    "  vz trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2],
                                                relative_error(prims_trusted.vU[2], prims.vU[2]),
@@ -367,7 +367,7 @@ int main(int argc, char **argv) {
           prims_rel_error[4], prims_trusted_rel_error[4], prims_pert_rel_error[4]);
 
   fclose(output);
-  grhayl_info("ET_Legacy conservatives-to-primitives test has passed!\n");
+  ghl_info("ET_Legacy conservatives-to-primitives test has passed!\n");
   free(gxx); free(gxy); free(gxz);
   free(gyy); free(gyz); free(gzz);
   free(lapse);

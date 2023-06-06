@@ -1,6 +1,6 @@
 #include "induction.h"
 
-/* Function    : grhayl_HLL_flux()
+/* Function    : ghl_HLL_flux()
  * Description : compute RHS for A_i, excluding gauge contributions; i.e., we
  *               set A_y_rhs = \partial_t A_y = \psi^{6} (v^z B^x - v^x B^z).
  *               This is direction-agnostic, and the stencils just need
@@ -13,7 +13,7 @@
  * Outputs     : return          - returns right-hand side calculation for A_i
  *
  */
-double grhayl_HLL_2D_flux(const double psi6, const HLL_2D_vars *restrict vars) {
+double ghl_HLL_2D_flux(const double psi6, const HLL_2D_vars *restrict vars) {
 
   const double c1_sum = vars->c1_min+vars->c1_max;
   const double c2_sum = vars->c2_min+vars->c2_max;

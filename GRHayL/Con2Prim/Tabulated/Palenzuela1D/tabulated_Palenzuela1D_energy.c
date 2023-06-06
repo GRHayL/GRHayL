@@ -66,16 +66,16 @@ compute_rho_P_eps_T_W_energy(
 }
 
 /*
- * Function : grhayl_tabulated_Palenzuela1D_energy
+ * Function : ghl_tabulated_Palenzuela1D_energy
  * Author   : Leo Werneck
  *
- * This is a wrapper function around the grhayl_tabulated_Palenzuela1D that performs
+ * This is a wrapper function around the ghl_tabulated_Palenzuela1D that performs
  * a primitive recovery using the Palenzuela et al. scheme using the specific
- * energy to recover the temperature. See file grhayl_tabulated_Palenzuela1D.c for
+ * energy to recover the temperature. See file ghl_tabulated_Palenzuela1D.c for
  * further details.
  */
-int grhayl_tabulated_Palenzuela1D_energy(
-      const grhayl_parameters *restrict grhayl_params,
+int ghl_tabulated_Palenzuela1D_energy(
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
@@ -83,8 +83,8 @@ int grhayl_tabulated_Palenzuela1D_energy(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics ) {
 
-  return grhayl_tabulated_Palenzuela1D(compute_rho_P_eps_T_W_energy,
-                                grhayl_params,
+  return ghl_tabulated_Palenzuela1D(compute_rho_P_eps_T_W_energy,
+                                params,
                                 eos,
                                 ADM_metric,
                                 cons_undens,

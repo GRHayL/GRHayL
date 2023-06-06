@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : grhayl_compute_ADM_auxiliaries()
+/* Function    : ghl_compute_ADM_auxiliaries()
  * Description : Initialize the metric struct from user input
  *
  * Inputs      : lapse          - value of the lapse
@@ -15,7 +15,7 @@
  *                                from input
  */
 
-void grhayl_compute_ADM_auxiliaries(
+void ghl_compute_ADM_auxiliaries(
       const metric_quantities *restrict ADM_metric,
       ADM_aux_quantities *restrict metric_aux) {
 
@@ -27,7 +27,7 @@ void grhayl_compute_ADM_auxiliaries(
   metric_aux->psi4inv = 1.0/metric_aux->psi4;
 
   double betaD[3];
-  grhayl_lower_vector_3D(ADM_metric->gammaDD, ADM_metric->betaU, betaD);
+  ghl_lower_vector_3D(ADM_metric->gammaDD, ADM_metric->betaU, betaD);
 
   const double shift2 = betaD[0]*ADM_metric->betaU[0]
                       + betaD[1]*ADM_metric->betaU[1]

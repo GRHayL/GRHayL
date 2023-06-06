@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : grhayl_initialize_stress_energy()
+/* Function    : ghl_initialize_stress_energy()
  * Description : Initialize the stress_energy struct from user input
  *
  * Inputs      : Tij            - value of the (i,j) component of the
@@ -10,7 +10,7 @@
  *                                the inputs
  */
 
-void grhayl_initialize_stress_energy(
+void ghl_initialize_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
       const double Txx, const double Txy, const double Txz,

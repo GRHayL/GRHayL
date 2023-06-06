@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_set_prims_to_radial_falloff_atm()
+/* Function    : ghl_set_prims_to_radial_falloff_atm()
  * Description : Uses the EOS data to reset the primitives to atmospheric
  *               values.
  *
@@ -10,7 +10,7 @@
  * Outputs     : prims          - returns with all primitives set to atmospheric values
  */
 
-void grhayl_set_prims_to_radial_falloff_atm(
+void ghl_set_prims_to_radial_falloff_atm(
       const eos_parameters *restrict eos,
       const double r, //not sure what is actually needed
       primitive_quantities *restrict prims) {

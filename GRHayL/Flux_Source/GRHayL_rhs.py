@@ -13,7 +13,7 @@ import IGM_All_Source_Terms as st    # NRPy+: Generate general relativistic magn
 
 includes = ["flux_source.h"]
 
-def write_grhayl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tabulated=False):
+def write_ghl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tabulated=False):
     outCparams = "outCverbose=False,GoldenKernelsEnable=True"
 
 
@@ -46,6 +46,6 @@ if __name__ == '__main__':
             # shutil.rmtree(outdir, ignore_errors=True)
             # os.mkdir(outdir)
 
-    write_grhayl_Cfunctions_to_dir(outdir, includes, tabulated=tabulated)
+    write_ghl_Cfunctions_to_dir(outdir, includes, tabulated=tabulated)
 
     print("Finished printing C files!")

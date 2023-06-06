@@ -26,7 +26,7 @@ typedef struct induction_interp_vars {
 
 //--------------------------------------------------
 
-double grhayl_HLL_2D_flux(
+double ghl_HLL_2D_flux(
       const double psi6,
       const HLL_2D_vars *restrict vars);
 
@@ -34,7 +34,7 @@ double grhayl_HLL_2D_flux(
 extern "C" {
 #endif
 
-void grhayl_interpolate_for_induction_rhs(
+void ghl_interpolate_for_induction_rhs(
       const metric_quantities metric[2][2][2],
       const double psi_stencil[2][2][2],
       const double Ax_stencil[3][3][3],
@@ -43,7 +43,7 @@ void grhayl_interpolate_for_induction_rhs(
       const double phitilde,
       induction_interp_vars *restrict interp_vars);
 
-double grhayl_calculate_phitilde_rhs(
+double ghl_calculate_phitilde_rhs(
       const double dxi[3],
       const double Lorenz_damping_factor,
       const double alpha_interp,

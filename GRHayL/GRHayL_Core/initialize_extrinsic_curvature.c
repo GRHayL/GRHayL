@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : grhayl_initialize_extrinsic_curvature()
+/* Function    : ghl_initialize_extrinsic_curvature()
  * Description : Initialize the extrinsic_curvature struct from user input
  *
  * Inputs      : Kij            - value of the (i,j) component of the
@@ -10,7 +10,7 @@
  *                                the inputs
  */
 
-void grhayl_initialize_extrinsic_curvature(
+void ghl_initialize_extrinsic_curvature(
       const double Kxx, const double Kxy, const double Kxz,
       const double Kyy, const double Kyz, const double Kzz,
       extrinsic_curvature *restrict curv){

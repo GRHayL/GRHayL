@@ -30,7 +30,7 @@ void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(const eos_parameters *restrict eos
 
   // Step 5: Check for errors
   if( error )
-    grhayl_error(report.message, error);
+    ghl_error(report.message, error);
 
   // Step 6: Update output variables
   *P = outvars[0];

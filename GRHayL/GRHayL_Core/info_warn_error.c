@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include "grhayl_io.h"
 
-void grhayl_info(const char *format, ...) {
+void ghl_info(const char *format, ...) {
 
   printf("(GRHayL) ");
 
@@ -11,7 +11,7 @@ void grhayl_info(const char *format, ...) {
   va_end(args);
 }
 
-void grhayl_Warn_Error(
+void ghl_Warn_Error(
       const char *type,
       const int exit_code,
       const char *filename,

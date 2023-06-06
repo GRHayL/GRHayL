@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-int grhayl_con2prim_select_method(
+int ghl_con2prim_select_method(
       const con2prim_method_t c2p_key,
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
@@ -13,29 +13,29 @@ int grhayl_con2prim_select_method(
   switch( c2p_key ) {
     // Noble2D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
-      return grhayl_hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return ghl_hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // "Font fix" routine (see )
     case FontFix:
-      return grhayl_hybrid_Font_fix(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return ghl_hybrid_Font_fix(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
-      return grhayl_tabulated_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return ghl_tabulated_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Palenzuela1D routine with entropy (see https://arxiv.org/pdf/2208.14487.pdf)
     case Palenzuela1D_entropy:
-      return grhayl_tabulated_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return ghl_tabulated_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Newman 1D routine (see https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf)
     case Newman1D:
-      return grhayl_tabulated_Newman1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return ghl_tabulated_Newman1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Newman1D routine with entropy (see https://arxiv.org/pdf/2208.14487.pdf)
     case Newman1D_entropy:
-      return grhayl_tabulated_Newman1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return ghl_tabulated_Newman1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     default:
-      grhayl_Error(100, "Unknown c2p key (%d).", c2p_key);
+      ghl_Error(100, "Unknown c2p key (%d).", c2p_key);
       return 100;
   }
 }
 
-int grhayl_con2prim_multi_method(
+int ghl_con2prim_multi_method(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -45,12 +45,12 @@ int grhayl_con2prim_multi_method(
       con2prim_diagnostics *restrict diagnostics ) {
 
   if(params->calc_prim_guess)
-    grhayl_guess_primitives(eos, ADM_metric, metric_aux, cons, prims);
+    ghl_guess_primitives(eos, ADM_metric, metric_aux, cons, prims);
 
   // Store primitive guesses (used if con2prim fails)
   const primitive_quantities prims_guess = *prims;
 
-  int failed = grhayl_con2prim_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+  int failed = ghl_con2prim_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
   if( failed && params->backup_routine[0] != None ) {
     // Backup 1 triggered
@@ -58,7 +58,7 @@ int grhayl_con2prim_multi_method(
     // Reset guesses
     *prims = prims_guess;
     // Backup routine #1
-    failed = grhayl_con2prim_select_method(params->backup_routine[0], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+    failed = ghl_con2prim_select_method(params->backup_routine[0], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
     if( failed && params->backup_routine[1] != None ) {
       // Backup 2 triggered
@@ -66,7 +66,7 @@ int grhayl_con2prim_multi_method(
       // Reset guesses
       *prims = prims_guess;
       // Backup routine #2
-      failed = grhayl_con2prim_select_method(params->backup_routine[1], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      failed = ghl_con2prim_select_method(params->backup_routine[1], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
       if( failed && params->backup_routine[2] != None ) {
         // Backup 3 triggered
@@ -74,7 +74,7 @@ int grhayl_con2prim_multi_method(
         // Reset guesses
         *prims = prims_guess;
         // Backup routine #3
-        failed = grhayl_con2prim_select_method(params->backup_routine[2], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+        failed = ghl_con2prim_select_method(params->backup_routine[2], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
       }
     }
   }

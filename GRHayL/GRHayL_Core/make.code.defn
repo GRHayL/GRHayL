@@ -6,7 +6,7 @@ SRCS = compute_ADM_auxiliaries.c                  \
        compute_TDNmunu.c                          \
        compute_TUPmunu.c                          \
        enforce_detgij_and_initialize_ADM_metric.c \
-       grhayl_info_warn_error.c                   \
+       info_warn_error.c                          \
        initialize_conservatives.c                 \
        initialize_eos.c                           \
        initialize_extrinsic_curvature.c           \

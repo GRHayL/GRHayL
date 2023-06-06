@@ -1,6 +1,6 @@
 #include "../harm_u2p_util.h"
 
-int grhayl_newton_raphson_1d(
+int ghl_newton_raphson_1d(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,

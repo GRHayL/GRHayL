@@ -1,6 +1,6 @@
 #include "reconstruction.h"
 
-/* Function    : grhayl_maxmod()
+/* Function    : ghl_maxmod()
  * Description : evaluates the minmod function, defined as
  *
  *
@@ -14,7 +14,7 @@
  * Outputs     : result - minmod evaluation
  */
 
-double grhayl_maxmod(
+double ghl_maxmod(
       const double a,
       const double b) {
 

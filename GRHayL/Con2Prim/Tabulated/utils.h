@@ -134,7 +134,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
 //Does this limit just do the same as apply_inequality_fixes?
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
-  double S_squared = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
+  double S_squared = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
@@ -146,7 +146,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
       SD[i] *= rescale_factor;
 
     // Step 2.3: Recompute S^{2}
-    S_squared = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
+    S_squared = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
   }
   *Ssq = S_squared;
 
@@ -154,20 +154,20 @@ compute_BU_SU_Bsq_Ssq_BdotS(
   BU[0] = prims->BU[0] * ONE_OVER_SQRT_4PI;
   BU[1] = prims->BU[1] * ONE_OVER_SQRT_4PI;
   BU[2] = prims->BU[2] * ONE_OVER_SQRT_4PI;
-  *Bsq = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BU);
+  *Bsq = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, BU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   *BdotS = 0.0;
   for(int i=0;i<3;i++) *BdotS += BU[i]*SD[i];
 
   // Step 5: Compute S^{i}
-  grhayl_raise_vector_3D(ADM_metric->gammaUU, SD, SU);
+  ghl_raise_vector_3D(ADM_metric->gammaUU, SD, SU);
 }
 
 /*
  * Function prototypes
  */
-int grhayl_tabulated_Palenzuela1D(
+int ghl_tabulated_Palenzuela1D(
       void compute_rho_P_eps_T_W(
             const double x,
             fparams_struct *restrict fparams,
@@ -176,14 +176,14 @@ int grhayl_tabulated_Palenzuela1D(
             double *restrict eps_ptr,
             double *restrict T_ptr,
             double *restrict W_ptr ),
-      const grhayl_parameters *restrict grhayl_params,
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics );
 
-int grhayl_tabulated_Newman1D(
+int ghl_tabulated_Newman1D(
       void compute_rho_P_eps_T_W(
             const double x,
             fparams_struct *restrict fparams,
@@ -192,7 +192,7 @@ int grhayl_tabulated_Newman1D(
             double *restrict eps_ptr,
             double *restrict T_ptr,
             double *restrict W_ptr ),
-      const grhayl_parameters *restrict grhayl_params,
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,

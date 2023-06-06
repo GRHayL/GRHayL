@@ -172,7 +172,7 @@ if __name__ == '__main__':
 #     elif i==18:
 #       return rho - 3*Y_e - T # Gamma
 #     default:
-#       grhayl_error("Invalid variable %d\\n", which_var);
+#       ghl_error("Invalid variable %d\\n", which_var);
 #   }
 # }\n"""
 

@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_limit_v_and_compute_u0()
+/* Function    : ghl_limit_v_and_compute_u0()
  * Description : Applies speed limit to v^i and computes u^0
  *
  * Inputs      : eos            - eos_parameters struct with data for the
@@ -15,7 +15,7 @@
  *
  */
 
-void grhayl_limit_v_and_compute_u0(
+void ghl_limit_v_and_compute_u0(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       primitive_quantities *restrict prims,
@@ -28,7 +28,7 @@ void grhayl_limit_v_and_compute_u0(
   //   = 1/(u^0 \alpha)^2 ( (u^0 \alpha)^2 - 1 ) <- Using Eq. 56 of arXiv:astro-ph/0503420
   //   = 1 - 1/(u^0 \alpha)^2 <= 1
   const double utU[3] = {prims->vU[0] + ADM_metric->betaU[0], prims->vU[1] + ADM_metric->betaU[1], prims->vU[2] + ADM_metric->betaU[2]};
-  double one_minus_one_over_alpha_u0_squared = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
+  double one_minus_one_over_alpha_u0_squared = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
   const double one_minus_one_over_W_max_squared = 1.0-1.0/SQR(eos->W_max); // 1 - W_max^{-2}
@@ -48,7 +48,7 @@ void grhayl_limit_v_and_compute_u0(
   const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
   prims->u0 = alpha_u0*ADM_metric->lapseinv;
   if(isnan(prims->u0)) {
-    grhayl_error("*********************************************\n"
+    ghl_error("*********************************************\n"
                  "Found nan while computing u^{0}\nMetric: %e %e %e %e %e %e\n"
                  "Lapse/shift: %e (=1/%e) / %e %e %e\nVelocities : %e %e %e\n"
                  "*********************************************\n",

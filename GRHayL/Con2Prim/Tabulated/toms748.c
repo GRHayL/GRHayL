@@ -210,7 +210,7 @@ cubic_interpolate(
 }
 
 roots_error_t
-grhayl_toms748(
+ghl_toms748(
     double f(const double, void *restrict),
     void *restrict fparams,
     double a,

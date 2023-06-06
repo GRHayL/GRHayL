@@ -76,13 +76,13 @@ int Tabulated_CerdaDuran3D(
   const double BU[3] = {prims_guess->BU[0] * ONE_OVER_SQRT_4PI,
                         prims_guess->BU[1] * ONE_OVER_SQRT_4PI,
                         prims_guess->BU[2] * ONE_OVER_SQRT_4PI};
-  const double B_squared = grhayl_compute_vec2_from_vecU(metric->gammaDD, BU);
+  const double B_squared = ghl_compute_vec2_from_vecU(metric->gammaDD, BU);
 
   const double SD[3] = {cons_undens->SD[0],
                          cons_undens->SD[1],
                          cons_undens->SD[2]};
-  double SU[3]; grhayl_raise_vector_3D(metric->gammaUU, SD, SU);
-  const double S_squared = grhayl_compute_vec2_from_vecD(metric->gammaUU, SD);
+  double SU[3]; ghl_raise_vector_3D(metric->gammaUU, SD, SU);
+  const double S_squared = ghl_compute_vec2_from_vecD(metric->gammaUU, SD);
 
 
   // Enforce ceiling on S^{2} (A5 of Palenzuela et al. https://arxiv.org/pdf/1505.01607.pdf)

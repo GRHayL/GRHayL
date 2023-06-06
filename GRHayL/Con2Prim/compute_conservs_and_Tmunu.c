@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_compute_conservs_and_Tmunu()
+/* Function    : ghl_compute_conservs_and_Tmunu()
  * Description : Computes the conservatives and T_munu from the
  *               given primitives
  *
@@ -14,7 +14,7 @@
  *
  */
 
-void grhayl_compute_conservs_and_Tmunu(
+void ghl_compute_conservs_and_Tmunu(
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
@@ -32,14 +32,14 @@ void grhayl_compute_conservs_and_Tmunu(
 
   // Compute u_\alpha
   double uD[4];
-  grhayl_lower_vector_4D(metric_aux->g4DD, uU, uD);
+  ghl_lower_vector_4D(metric_aux->g4DD, uU, uD);
 
   /***************************************************************/
   //     COMPUTE TDNMUNU AND CONSERVATIVES FROM PRIMITIVES       //
   /***************************************************************/
   // Compute b^{\mu} and b^2
   double smallb[4], smallb2;
-  grhayl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
+  ghl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
   const double alpha_sqrt_gamma = ADM_metric->lapse*metric_aux->psi6;
@@ -47,7 +47,7 @@ void grhayl_compute_conservs_and_Tmunu(
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 
   double smallb_lower[4];
-  grhayl_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
+  ghl_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
 
   // Compute conservatives:
   cons->rho = alpha_sqrt_gamma * prims->rho * uU[0];

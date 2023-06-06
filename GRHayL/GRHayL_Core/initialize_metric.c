@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : grhayl_initialize_metric()
+/* Function    : ghl_initialize_metric()
  * Description : Initialize the metric struct from user input
  *
  * Inputs      : lapse          - value of the lapse
@@ -15,7 +15,7 @@
  *                                from input
  */
 
-void grhayl_initialize_metric(const double lapse,
+void ghl_initialize_metric(const double lapse,
                 const double betax, const double betay, const double betaz,
                 const double gxx, const double gxy, const double gxz,
                 const double gyy, const double gyz, const double gzz,

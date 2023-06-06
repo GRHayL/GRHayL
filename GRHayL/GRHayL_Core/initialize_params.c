@@ -1,20 +1,20 @@
 #include "grhayl.h"
 
-/* Function    : grhayl_initialize_params()
+/* Function    : ghl_initialize_params()
  * Description : Initialize the grhayl_parameters struct from user input
  *
  * Inputs      : main            - selection of Con2Prim routine for the
- *                                 grhayl_con2prim_multi_method() function
+ *                                 ghl_con2prim_multi_method() function
  *             : backup[3]       - array for up to three backup routines for
- *                                 the grhayl_con2prim_multi_method() function
+ *                                 the ghl_con2prim_multi_method() function
  *             : evolve_entropy  - sets whether entropy is being evolved in
  *                                 the simulation
  *             : evolve_temp     - sets whether temperature is being evolved in
  *                                 the simulation
- *             : calc_prim_guess - sets whether grhayl_con2prim_multi_method() should compute
+ *             : calc_prim_guess - sets whether ghl_con2prim_multi_method() should compute
  *                                 initial guesses for the primitives; if set to 0,
  *                                 the initial guess will be whatever has been loaded into
- *                                 the primitive_quantities struct passed to grhayl_con2prim_multi_method()
+ *                                 the primitive_quantities struct passed to ghl_con2prim_multi_method()
  *             : psi6threshold   - TODO: comment
  *             : Cupp_Fix        - If active, will change behavior of Noble2D which removes
  *                                 cause of most Font fixes and also change the choice of velocity
@@ -24,7 +24,7 @@
  *                                 containing the input parameters
  */
 
-void grhayl_initialize_params(
+void ghl_initialize_params(
       const int main_routine,
       const int backup_routine[3],
       const bool evolve_entropy,

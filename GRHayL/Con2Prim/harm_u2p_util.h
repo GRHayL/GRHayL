@@ -58,7 +58,7 @@ typedef struct _harm_auxiliary_vars_ {
 pressure as a function of rho0 and u
 this is used by primtoU and Utoprim_?D
 */
-static inline double grhayl_pressure_rho0_u(
+static inline double ghl_pressure_rho0_u(
       const eos_parameters *restrict eos,
       const double rho0,
       const double u) {
@@ -80,7 +80,7 @@ static inline double grhayl_pressure_rho0_u(
    pressure as a function of rho0 and w = rho0 + u + p
    this is used by primtoU and Utoprim_1D
 */
-static inline double grhayl_pressure_rho0_w(
+static inline double ghl_pressure_rho0_w(
       const eos_parameters *restrict eos,
       const double rho0,
       const double w) {
@@ -105,7 +105,7 @@ static inline double grhayl_pressure_rho0_w(
             W = \gamma^2 w
 
 ****************************************************************************/
-static inline double grhayl_vsq_calc(
+static inline double ghl_vsq_calc(
       const harm_aux_vars_struct *restrict harm_aux,
       const double W) {
   const double Wsq = W*W ;
@@ -115,9 +115,9 @@ static inline double grhayl_vsq_calc(
 }
 
 /****************************************************************************
-   grhayl_dpdW_calc_vsq():
+   ghl_dpdW_calc_vsq():
 ****************************************************************************/
-static inline double grhayl_dpdW_calc_vsq(
+static inline double ghl_dpdW_calc_vsq(
       const eos_parameters *restrict eos,
       const double W,
       const double vsq) {
@@ -126,9 +126,9 @@ static inline double grhayl_dpdW_calc_vsq(
 
 
 /****************************************************************************
-   grhayl_dvsq_dW():
+   ghl_dvsq_dW():
 ****************************************************************************/
-static inline double grhayl_dvsq_dW(
+static inline double ghl_dvsq_dW(
       const harm_aux_vars_struct *restrict harm_aux,
       const double W) {
 
@@ -140,9 +140,9 @@ static inline double grhayl_dvsq_dW(
 }
 
 /****************************************************************************
-   grhayl_dvsq_dW():
+   ghl_dvsq_dW():
 ****************************************************************************/
-static inline void grhayl_validate_x(
+static inline void ghl_validate_x(
       double x[2],
       const double x0[2]) {
   const double dv = 1.e-15;
@@ -161,7 +161,7 @@ static inline void grhayl_validate_x(
         -- Hybrid single and piecewise polytropic equation of state;
         -- pressure as a function of P_cold, eps_cold, W, vsq, and D:
 **********************************************************************/
-static inline double grhayl_pressure_W_vsq(
+static inline double ghl_pressure_W_vsq(
       const eos_parameters *restrict eos,
       const double W,
       const double vsq,
@@ -188,7 +188,7 @@ static inline double grhayl_pressure_W_vsq(
 
       -- partial derivative of pressure with respect to vsq
 **********************************************************************/
-static inline double grhayl_dpdvsq_calc(
+static inline double ghl_dpdvsq_calc(
       const eos_parameters *restrict eos,
       const double W,
       const double vsq,
@@ -235,7 +235,7 @@ static inline double grhayl_dpdvsq_calc(
   return( ( dPcold_dvsq + (eos->Gamma_th-1.0)*( -W + D*gamma*(1+eps_cold)/2.0 - D*depscold_dvsq/gamma ) )/eos->Gamma_th );
 }
 
-int grhayl_general_newton_raphson(
+int ghl_general_newton_raphson(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -245,7 +245,7 @@ int grhayl_general_newton_raphson(
       void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
                     double [], double [][ndim], double *restrict, double *restrict, int *restrict));
 
-int grhayl_newton_raphson_1d(
+int ghl_newton_raphson_1d(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -255,7 +255,7 @@ int grhayl_newton_raphson_1d(
       void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
                     double [], double [][ndim], double *restrict, double *restrict, int *restrict));
 
-void grhayl_func_vsq(
+void ghl_func_vsq(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -268,7 +268,7 @@ void grhayl_func_vsq(
       double *restrict df,
       int *restrict n_iter);
 
-void grhayl_func_1d_orig(
+void ghl_func_1d_orig(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -281,7 +281,7 @@ void grhayl_func_1d_orig(
       double *restrict df,
       int *restrict n_iter);
 
-void grhayl_func_Z(
+void ghl_func_Z(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -294,7 +294,7 @@ void grhayl_func_Z(
       double *restrict df,
       int *restrict n_iter);
 
-void grhayl_func_rho(
+void ghl_func_rho(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -307,7 +307,7 @@ void grhayl_func_rho(
       double *restrict df,
       int *restrict n_iter);
 
-void grhayl_func_rho2(
+void ghl_func_rho2(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -320,7 +320,7 @@ void grhayl_func_rho2(
       double *restrict df,
       int *restrict n_iter);
 
-int grhayl_hybrid_Font_fix_loop(
+int ghl_hybrid_Font_fix_loop(
       const eos_parameters *restrict eos,
       const int maxits, const double tol, const double W_in,
       const double Sf2_in, const double Psim6, const double sdots,

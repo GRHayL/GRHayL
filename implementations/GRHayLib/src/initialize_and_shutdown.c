@@ -73,7 +73,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
   CCTK_VINFO("%.15e %.15e %.15e", Y_e_atm, Y_e_min, Y_e_max);
   CCTK_VINFO("%.15e %.15e %.15e", T_atm, T_min, T_max);
 
-  grhayl_initialize_params(
+  ghl_initialize_params(
       main, backups,
       evolve_entropy, evolve_temperature,
       calc_primitive_guess, Psi6threshold,
@@ -82,7 +82,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
   if (CCTK_EQUALS(EOS_type, "hybrid")) {
 
-    grhayl_initialize_hybrid_eos_functions_and_params(
+    ghl_initialize_hybrid_eos_functions_and_params(
           W_max,
           rho_b_atm, rho_b_min, rho_b_max,
           neos, rho_ppoly_in,
@@ -92,7 +92,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     if( CCTK_EQUALS(EOS_tablepath, "") )
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
 
-    grhayl_initialize_tabulated_eos_functions_and_params(
+    ghl_initialize_tabulated_eos_functions_and_params(
           EOS_tablepath, W_max,
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,

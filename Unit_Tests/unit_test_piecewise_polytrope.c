@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   const double k_ppoly0 = 6.80110e-9;
 
   eos_parameters eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -30,13 +30,13 @@ int main(int argc, char **argv) {
 
   for(int i=1; i<4; i++) {
     if(validate(k_comp[i], eos.K_ppoly[i], k_pert[i]))
-      grhayl_error("unit_test_piecewise_polytrope has failed for K_ppoly.\n"
+      ghl_error("unit_test_piecewise_polytrope has failed for K_ppoly.\n"
                    "For index %d, expected %e, computed %e, perturbed %e\n"
                    "%e\n", i, k_comp[i], eos.K_ppoly[i], k_pert[i],
                            validate(k_comp[i], eos.K_ppoly[i], k_pert[i]));
 
     if(validate(eps_comp[i], eos.eps_integ_const[i], eps_pert[i]))
-      grhayl_error("unit_test_piecewise_polytrope has failed for eps_integ_const.\n"
+      ghl_error("unit_test_piecewise_polytrope has failed for eps_integ_const.\n"
                    "For index %d, expected %e, computed %e, perturbed %e\n"
                    "relative error: %e\n", i, eps_comp[i], eos.eps_integ_const[i], eps_pert[i],
                            validate(eps_comp[i], eos.eps_integ_const[i], eps_pert[i]));

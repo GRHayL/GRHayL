@@ -45,7 +45,7 @@ void GRHayLMHD_reconstruction_loop(const cGH *restrict cctkGH, const int flux_di
         // Compute Gamma
         const double Gamma = eos_Gamma_eff(eos, in_prims[RHOB][index], in_prims[PRESSURE][index]);
 
-        grhayl_simple_ppm(
+        ghl_simple_ppm(
               rho, pressure, var_data,
               num_vars, v_flux_dir, Gamma,
               &rhor, &rhol, &pressr, &pressl, vars_r, vars_l);

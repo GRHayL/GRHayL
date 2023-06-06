@@ -330,7 +330,7 @@ eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
     #                                prestring)
 
         desc = "Compute the HLLE-derived fluxes on the left face in the " + str(flux_dirn) + "direction for all components."
-        name = "grhayl_calculate_HLLE_fluxes_dirn" + str(flux_dirn)
+        name = "ghl_calculate_HLLE_fluxes_dirn" + str(flux_dirn)
 
         outCfunction(
             outfile=os.path.join(Ccodesdir,name+".c"),

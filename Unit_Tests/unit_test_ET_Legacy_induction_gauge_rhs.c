@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
   if( key != 1 || dirlength < 1 )
-    grhayl_error("An error has occured with reading the grid size. "
+    ghl_error("An error has occured with reading the grid size. "
                  "Please check that Noble2D_initial_data.bin"
                  "is up-to-date with current test version.\n");
   const int arraylength = dirlength*dirlength*dirlength;
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*15)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Data which should be written before it is used is poisoned to validate behavior.
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 //          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][indexf(dirlength, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
-        grhayl_interpolate_for_induction_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
+        ghl_interpolate_for_induction_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
 
         alpha_interp[index] = interp_vars.alpha_interp;
         alpha_sqrtg_Ax_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[0];
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
           phitilde_stencil[1][iter+2] = phitilde[indexy];
           phitilde_stencil[2][iter+2] = phitilde[indexz];
         }
-        phitilde_rhs[index] = grhayl_calculate_phitilde_rhs(dxinv, Lorenz_damping_factor, alpha_interp[index], shiftx, shifty, shiftz, Ai_stencil, phitilde_stencil);
+        phitilde_rhs[index] = ghl_calculate_phitilde_rhs(dxinv, Lorenz_damping_factor, alpha_interp[index], shiftx, shifty, shiftz, Ai_stencil, phitilde_stencil);
       }
     }
   }
@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*4)
-    grhayl_error("An error has occured with reading in trusted data. Please check that comparison data\n"
+    ghl_error("An error has occured with reading in trusted data. Please check that comparison data\n"
                  "is up-to-date with current test version.\n");
 
   infile = fopen("ET_Legacy_induction_gauge_rhs_output_pert.bin", "rb");
@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*4)
-    grhayl_error("An error has occured with reading in perturbed data. Please check that comparison data\n"
+    ghl_error("An error has occured with reading in perturbed data. Please check that comparison data\n"
                  "is up-to-date with current test version.\n");
 
   for(int k=3; k<dirlength-3; k++)
@@ -258,34 +258,34 @@ int main(int argc, char **argv) {
         const int index = indexf(dirlength,i,j,k);
 
         if( validate(phitilde_trusted[index], phitilde_rhs[index], phitilde_pert[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable phitilde_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable phitilde_rhs.\n"
                        "  phitilde trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", phitilde_trusted[index], phitilde_rhs[index], phitilde_pert[index],
                                                    relative_error(phitilde_trusted[index], phitilde_rhs[index]),
                                                    relative_error(phitilde_trusted[index], phitilde_pert[index]));
 
         if( validate(Ax_trusted[index], Ax_rhs[index], Ax_pert[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Ax_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Ax_rhs.\n"
                        "  Ax trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Ax_trusted[index], Ax_rhs[index], Ax_pert[index],
                                                    relative_error(Ax_trusted[index], Ax_rhs[index]),
                                                    relative_error(Ax_trusted[index], Ax_pert[index]));
 
         if( validate(Ay_trusted[index], Ay_rhs[index], Ay_pert[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Ay_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Ay_rhs.\n"
                        "  Ay trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Ay_trusted[index], Ay_rhs[index], Ay_pert[index],
                                                    relative_error(Ay_trusted[index], Ay_rhs[index]),
                                                    relative_error(Ay_trusted[index], Ay_pert[index]));
 
         if( validate(Az_trusted[index], Az_rhs[index], Az_pert[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Az_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Az_rhs.\n"
                        "  Az trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Az_trusted[index], Az_rhs[index], Az_pert[index],
                                                    relative_error(Az_trusted[index], Az_rhs[index]),
                                                    relative_error(Az_trusted[index], Az_pert[index]));
   }
-  grhayl_info("ET_Legacy induction gauge RHS test has passed!\n");
+  ghl_info("ET_Legacy induction gauge RHS test has passed!\n");
   free(gupxx); free(gupxy); free(gupxz);
   free(gupyy); free(gupyz); free(gupzz);
   free(psi); free(lapse);

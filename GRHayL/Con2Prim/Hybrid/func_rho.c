@@ -23,7 +23,7 @@
           D   = W * rho, set in the Utoprim_new_body() functoin
 *********************************************************************************/
 // for the isentropic version: eq. (27)
-void grhayl_func_rho(
+void ghl_func_rho(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,

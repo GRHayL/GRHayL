@@ -70,7 +70,7 @@ utoprim_1d.c:
 
 /**********************************************************************************
 
-  grhayl_hybrid_Noble1D():
+  ghl_hybrid_Noble1D():
 
      -- Attempt an inversion from U to prim using the initial guess prim.
 
@@ -101,11 +101,11 @@ return: i where
             5 -> v^2 > 1 returned by the Newton-Raphson solver;
             6 -> rho <= 0 computed by returned quantities; note that this error code
                  is bypassed by the Cupp_fix parameter, known cases of this error
-                 are resolved by grhayl_enforce_primitive_limits_and_compute_u0()
+                 are resolved by ghl_enforce_primitive_limits_and_compute_u0()
 
 **********************************************************************************/
 
-int grhayl_hybrid_Noble1D(
+int ghl_hybrid_Noble1D(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -125,7 +125,7 @@ int grhayl_hybrid_Noble1D(
   const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
                            prims->BU[1] * ONE_OVER_SQRT_4PI,
                            prims->BU[2] * ONE_OVER_SQRT_4PI};
-  harm_aux.Bsq = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
+  harm_aux.Bsq = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
 
   const double uu = - cons_undens->tau*ADM_metric->lapse
                     - ADM_metric->lapse*cons_undens->rho
@@ -138,7 +138,7 @@ int grhayl_hybrid_Noble1D(
                         cons_undens->SD[1],
                         cons_undens->SD[2]};
 
-  double QU[4]; grhayl_raise_vector_4D(metric_aux->g4UU, QD, QU);
+  double QU[4]; ghl_raise_vector_4D(metric_aux->g4UU, QD, QU);
   harm_aux.Qsq = 0.0;
   for(int i=0; i<4; i++) harm_aux.Qsq += QD[i]*QU[i] ;
 
@@ -157,7 +157,7 @@ int grhayl_hybrid_Noble1D(
   const double utU_guess[3] = {prims->vU[0] + ADM_metric->betaU[0],
                                prims->vU[1] + ADM_metric->betaU[1],
                                prims->vU[2] + ADM_metric->betaU[2]};
-  const double tmp_u = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU_guess);
+  const double tmp_u = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU_guess);
 
   double vsq = tmp_u/(1.0-tmp_u);
 
@@ -180,10 +180,10 @@ int grhayl_hybrid_Noble1D(
   if( eos->eos_type == grhayl_eos_hybrid ) {
     const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, prims->rho)];
     u = prims->press/(Gamma_ppoly - 1.0);
-    p = grhayl_pressure_rho0_u(eos, rho0, u);
+    p = ghl_pressure_rho0_u(eos, rho0, u);
     w = rho0 + u + p;
   } else if(eos->eos_type == grhayl_eos_tabulated) {
-    grhayl_warn("No tabulated EOS support yet! Sorry!");
+    ghl_warn("No tabulated EOS support yet! Sorry!");
   }
 
   double Z_last = w*Wsq;
@@ -202,7 +202,7 @@ int grhayl_hybrid_Noble1D(
   gnr_out[0] = Z_last;
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  int retval = grhayl_newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, grhayl_func_1d_orig);
+  int retval = ghl_newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, ghl_func_1d_orig);
 
   const double Z = gnr_out[0];
 
@@ -214,7 +214,7 @@ int grhayl_hybrid_Noble1D(
   }
 
   // Calculate v^2:
-  vsq = grhayl_vsq_calc(&harm_aux, Z);
+  vsq = ghl_vsq_calc(&harm_aux, Z);
 //TODO: differs from Noble2D
   if( vsq >= 1. ) {
     return 5;
@@ -255,20 +255,20 @@ int grhayl_hybrid_Noble1D(
 
   //Additional tabulated code here
 
-  grhayl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
+  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
 
   if(diagnostics->speed_limited==1)
     prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    prims->press = grhayl_pressure_rho0_w(eos, prims->rho, w);
+    prims->press = ghl_pressure_rho0_w(eos, prims->rho, w);
     double P_cold = 0.0;
     double eps_cold = 0.0;
     eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
     prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
     if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
   } else if(eos->eos_type == grhayl_eos_tabulated) {
-    grhayl_warn("No tabulated EOS support yet! Sorry!");
+    ghl_warn("No tabulated EOS support yet! Sorry!");
   }
 
   /* Done! */

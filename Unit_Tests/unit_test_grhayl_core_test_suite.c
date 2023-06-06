@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
   const double k_ppoly0 = 1.0;
 
   eos_parameters hybrid_eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(
+  ghl_initialize_hybrid_eos_functions_and_params(
       W_max,
       rho_b_min, rho_b_min, rho_b_max,
       neos, rho_ppoly, Gamma_ppoly,
@@ -25,14 +25,14 @@ int main(int argc, char **argv) {
   //const double Ye_max = 1e300;
   //const double T_max = 1e300;
   //eos_parameters tabulated_eos;
-  //grhayl_initialize_tabulated_eos_functions_and_params(
+  //ghl_initialize_tabulated_eos_functions_and_params(
   //    W_max,
   //    rho_b_min, rho_b_min, rho_b_max,
   //    Ye_min, Ye_min, Ye_max,
   //    T_min, T_min, T_max,
   //    &tabulated_eos);
 
-  // First test: grhayl_set_prims_to_constant_atm() function
+  // First test: ghl_set_prims_to_constant_atm() function
   // Function just sets data to eos data, so no need
   // to store pre-computed comparison data
   primitive_quantities prims;
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     if(eos_it==0) {
       eos = hybrid_eos;
 
-      grhayl_set_prims_to_constant_atm(&eos, &prims);
+      ghl_set_prims_to_constant_atm(&eos, &prims);
 
       if(prims.rho         != eos.rho_atm
       || prims.press       != eos.press_atm
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
       || prims.vU[2]          != 0.0
       || prims.eps         != eos.eps_atm
       || prims.entropy     != eos.entropy_atm)
-        grhayl_error("grhayl_core_test_suite has failed for grhayl_set_prims_to_constant_atm() with hybrid EOS.\n"
+        ghl_error("ghl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with hybrid EOS.\n"
                      "  rho_b, pressure, vx, vy, vz, epsilon, entropy\n"
                      "  Struct output: %e %e %e %e %e %e %e %e %e\n"
                      "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
   //  } else if(eos_it==0) {
   //    eos = tabulated_eos;
 
-  //    grhayl_set_prims_to_constant_atm(&eos, &prims);
+  //    ghl_set_prims_to_constant_atm(&eos, &prims);
 
   //    if(prims.rho         != eos.rho_atm
   //    || prims.press       != eos.press_atm
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
   //    || prims.vU[0]          != 0.0
   //    || prims.vU[1]          != 0.0
   //    || prims.vU[2]          != 0.0)
-  //      grhayl_error("grhayl_core_test_suite has failed for grhayl_set_prims_to_constant_atm() with tabulated EOS.\n"
+  //      ghl_error("ghl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with tabulated EOS.\n"
   //                   "  rho_b, pressure, vx, vy, vz, epsilon, entropy, Y_e, temperature\n"
   //                   "  Struct output: %e %e %e %e %e %e %e %e %e\n"
   //                   "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
@@ -96,13 +96,13 @@ int main(int argc, char **argv) {
     }
   }
 
-  // Second test: grhayl_enforce_detgtij_and_initialize_ADM_metric() function
+  // Second test: ghl_enforce_detgtij_and_initialize_ADM_metric() function
   // Valid metrics should return near-identical (round-off level) metrics
   metric_quantities new_metric;
 
   // read in metric data
-  FILE* infile = fopen("grhayl_core_test_suite_input.bin","rb");
-  check_file_was_successfully_open(infile, "grhayl_core_test_suite_input.bin");
+  FILE* infile = fopen("ghl_core_test_suite_input.bin","rb");
+  check_file_was_successfully_open(infile, "ghl_core_test_suite_input.bin");
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
@@ -130,12 +130,12 @@ int main(int argc, char **argv) {
   key += fread(gzz, sizeof(double), arraylength, infile);
   fclose(infile);
   if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   const double rel_tol = 1e-14;
   for(int i=0; i<arraylength; i++) {
-    grhayl_enforce_detgtij_and_initialize_ADM_metric(
+    ghl_enforce_detgtij_and_initialize_ADM_metric(
         lapse[i],
         betax[i], betay[i], betaz[i],
         gxx[i], gxy[i], gxz[i],
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
   || relative_error(gyy[i],   new_metric.gammaDD[1][1]) > rel_tol
   || relative_error(gyz[i],   new_metric.gammaDD[1][2]) > rel_tol
   || relative_error(gzz[i],   new_metric.gammaDD[2][2]) > rel_tol)
-    grhayl_error("unit_test_grhayl_core_test_suite has failed for grhayl_enforce_detgtij_and_initialize_ADM_metric().\n"
+    ghl_error("unit_test_ghl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
                  "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
                  "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
                  lapse[i], betax[i], betay[i], betaz[i],
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
   // For a final test, we trigger the -detg warning
   gxy[0] += 10.0;
 
-    grhayl_enforce_detgtij_and_initialize_ADM_metric(
+    ghl_enforce_detgtij_and_initialize_ADM_metric(
         lapse[0],
         betax[0], betay[0], betaz[0],
         gxx[0], gxy[0], gxz[0],
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
   || relative_error(gyy[0],   new_metric.gammaDD[1][1]) > rel_tol
   || relative_error(gyz[0],   new_metric.gammaDD[1][2]) > rel_tol
   || relative_error(gzz[0],   new_metric.gammaDD[2][2]) > rel_tol)
-    grhayl_error("unit_test_grhayl_core_test_suite has failed for grhayl_enforce_detgtij_and_initialize_ADM_metric().\n"
+    ghl_error("unit_test_ghl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
                  "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
                  "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
                  lapse[0], betax[0], betay[0], betaz[0],
@@ -192,5 +192,5 @@ int main(int argc, char **argv) {
                  new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
                  new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
 
-  grhayl_info("grhayl_core_test_suite has passed!\n");
+  ghl_info("ghl_core_test_suite has passed!\n");
 }

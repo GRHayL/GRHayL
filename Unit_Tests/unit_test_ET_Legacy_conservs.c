@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   int npoints;
   int key = fread(&npoints, sizeof(int), 1, input);
   if( key != 1 || npoints < 1 )
-    grhayl_error("An error has occured with reading the grid size. "
+    ghl_error("An error has occured with reading the grid size. "
                  "Please check that Noble2D_initial_data.bin"
                  "is up-to-date with current test version.\n");
   const int arraylength = npoints*npoints;
@@ -38,11 +38,11 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   grhayl_parameters params;
-  grhayl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
+  ghl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
                     Psi6threshold, 0 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
   key += fread(S_z, sizeof(double), arraylength, input);
 
   if( key != (10+9+5)*arraylength)
-    grhayl_error("An error has occured with reading initial data. "
+    ghl_error("An error has occured with reading initial data. "
                  "Please check that comparison data "
                  "is up-to-date with current test version.\n");
 
@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
   key += fread(Tzz_trusted,   sizeof(double), arraylength, output);
 
   if( key != 20*arraylength)
-    grhayl_error("An error has occured with reading trusted data. "
+    ghl_error("An error has occured with reading trusted data. "
                  "Please check that comparison data "
                  "is up-to-date with current test version.\n");
 
@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
   key += fread(Tzz_pert,   sizeof(double), arraylength, output);
 
   if( key != 20*arraylength)
-    grhayl_error("An error has occured with reading perturbed data. "
+    ghl_error("An error has occured with reading perturbed data. "
                  "Please check that comparison data "
                  "is up-to-date with current test version.\n");
 
@@ -233,70 +233,70 @@ int main(int argc, char **argv) {
   for(int index=0; index<arraylength; index++) {
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    grhayl_initialize_diagnostics(&diagnostics);
+    ghl_initialize_diagnostics(&diagnostics);
     metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons;
     stress_energy Tmunu;
 
-    grhayl_initialize_metric(lapse[index],
+    ghl_initialize_metric(lapse[index],
                       betax[index], betay[index], betaz[index],
                       gxx[index], gxy[index], gxz[index],
                       gyy[index], gyz[index], gzz[index],
                       &ADM_metric);
 
     ADM_aux_quantities metric_aux;
-    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-    grhayl_initialize_primitives(rho_b[index], press[index], eps[index],
+    ghl_initialize_primitives(rho_b[index], press[index], eps[index],
                           vx[index], vy[index], vz[index],
                           Bx[index], By[index], Bz[index],
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims);
 
-    grhayl_initialize_conservatives(rho_star[index], tau[index],
+    ghl_initialize_conservatives(rho_star[index], tau[index],
                              S_x[index], S_y[index], S_z[index],
                              poison, poison, &cons);
 
     // Enforce limits on primitive variables and recompute conservatives.
-    grhayl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &diagnostics.failure_checker);
-    grhayl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+    ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &diagnostics.failure_checker);
+    ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
-    // Here, we call the grhayl_return_* functions and then repack the struct from that data. These functions are too
+    // Here, we call the ghl_return_* functions and then repack the struct from that data. These functions are too
     // small to need an individual test, and they are primarily used by Con2Prim anyways.
     double rho_tmp, press_tmp, eps_tmp, vx_tmp, vy_tmp, vz_tmp, Bx_tmp, By_tmp, Bz_tmp, ent_tmp, Ye_tmp, temp_tmp;
     double rhos_tmp, tau_tmp, Sx_tmp, Sy_tmp, Sz_tmp, ent_s_tmp, Ye_s_tmp;
     double Ttt_tmp, Ttx_tmp, Tty_tmp, Ttz_tmp, Txx_tmp, Txy_tmp, Txz_tmp, Tyy_tmp, Tyz_tmp, Tzz_tmp;
 
-    grhayl_return_primitives(&prims,
+    ghl_return_primitives(&prims,
                       &rho_tmp, &press_tmp, &eps_tmp,
                       &vx_tmp, &vy_tmp, &vz_tmp,
                       &Bx_tmp, &By_tmp, &Bz_tmp,
                       &ent_tmp, &Ye_tmp, &temp_tmp);
 
-    grhayl_return_conservatives(&cons,
+    ghl_return_conservatives(&cons,
                          &rhos_tmp, &tau_tmp,
                          &Sx_tmp, &Sy_tmp, &Sz_tmp,
                          &ent_s_tmp, &Ye_s_tmp);
 
-    grhayl_return_stress_energy(&Tmunu,
+    ghl_return_stress_energy(&Tmunu,
                          &Ttt_tmp, &Ttx_tmp,
                          &Tty_tmp, &Ttz_tmp,
                          &Txx_tmp, &Txy_tmp,
                          &Txz_tmp, &Tyy_tmp,
                          &Tyz_tmp, &Tzz_tmp);
 
-    grhayl_initialize_primitives(rho_tmp, press_tmp, eps_tmp,
+    ghl_initialize_primitives(rho_tmp, press_tmp, eps_tmp,
                           vx_tmp, vy_tmp, vz_tmp,
                           Bx_tmp, By_tmp, Bz_tmp,
                           ent_tmp, Ye_tmp, temp_tmp,
                           &prims);
 
-    grhayl_initialize_conservatives(rhos_tmp, tau_tmp,
+    ghl_initialize_conservatives(rhos_tmp, tau_tmp,
                              Sx_tmp, Sy_tmp, Sz_tmp,
                              ent_s_tmp, Ye_s_tmp, &cons);
 
-    grhayl_initialize_stress_energy(Ttt_tmp, Ttx_tmp,
+    ghl_initialize_stress_energy(Ttt_tmp, Ttx_tmp,
                              Tty_tmp, Ttz_tmp,
                              Txx_tmp, Txy_tmp,
                              Txz_tmp, Tyy_tmp,
@@ -308,34 +308,34 @@ int main(int argc, char **argv) {
     conservative_quantities cons_trusted, cons_pert;
     stress_energy Tmunu_trusted, Tmunu_pert;
 
-    grhayl_initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
+    ghl_initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
                           vx_trusted[index], vy_trusted[index], vz_trusted[index],
                           poison, poison, poison,
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims_trusted);
 
-    grhayl_initialize_primitives(rho_b_pert[index], press_pert[index], prims.eps, // Old code has no eps variable
+    ghl_initialize_primitives(rho_b_pert[index], press_pert[index], prims.eps, // Old code has no eps variable
                           vx_pert[index], vy_pert[index], vz_pert[index],
                           poison, poison, poison,
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims_pert);
 
-    grhayl_initialize_conservatives(rho_star_trusted[index], tau_trusted[index],
+    ghl_initialize_conservatives(rho_star_trusted[index], tau_trusted[index],
                              S_x_trusted[index], S_y_trusted[index], S_z_trusted[index],
                              poison, poison, &cons_trusted);
 
-    grhayl_initialize_conservatives(rho_star_pert[index], tau_pert[index],
+    ghl_initialize_conservatives(rho_star_pert[index], tau_pert[index],
                              S_x_pert[index], S_y_pert[index], S_z_pert[index],
                              poison, poison, &cons_pert);
 
-    grhayl_initialize_stress_energy(Ttt_trusted[index], Ttx_trusted[index],
+    ghl_initialize_stress_energy(Ttt_trusted[index], Ttx_trusted[index],
                              Tty_trusted[index], Ttz_trusted[index],
                              Txx_trusted[index], Txy_trusted[index],
                              Txz_trusted[index], Tyy_trusted[index],
                              Tyz_trusted[index], Tzz_trusted[index],
                              &Tmunu_trusted);
 
-    grhayl_initialize_stress_energy(Ttt_pert[index], Ttx_pert[index],
+    ghl_initialize_stress_energy(Ttt_pert[index], Ttx_pert[index],
                              Tty_pert[index], Ttz_pert[index],
                              Txx_pert[index], Txy_pert[index],
                              Txz_pert[index], Tyy_pert[index],
@@ -346,7 +346,7 @@ int main(int argc, char **argv) {
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
-  grhayl_info("ET_Legacy primitives-to-conservatives test has passed!\n");
+  ghl_info("ET_Legacy primitives-to-conservatives test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

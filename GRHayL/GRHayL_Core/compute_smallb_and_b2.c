@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_compute_smallb_and_b2()
+/* Function    : ghl_compute_smallb_and_b2()
  * Description : Computes magnetic quantities b^0, b^i and b^2 (see Eqs. 23
                  and 24 in https://arxiv.org/abs/astro-ph/0503420).
  *
@@ -17,7 +17,7 @@
  *
  */
 
-void grhayl_compute_smallb_and_b2(
+void ghl_compute_smallb_and_b2(
       const metric_quantities *restrict ADM_metric,
       const primitive_quantities *restrict prims,
       const double uDN[4],
@@ -56,5 +56,5 @@ void grhayl_compute_smallb_and_b2(
                                       smallb[2] + smallb[0]*ADM_metric->betaU[1],
                                       smallb[3] + smallb[0]*ADM_metric->betaU[2]};
 
-  *smallb2 = -SQR(ADM_metric->lapse*smallb[0]) + grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, bi_plus_bt_betai);
+  *smallb2 = -SQR(ADM_metric->lapse*smallb[0]) + ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, bi_plus_bt_betai);
 }

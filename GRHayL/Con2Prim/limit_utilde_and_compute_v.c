@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_limit_utilde_and_compute_v()
+/* Function    : ghl_limit_utilde_and_compute_v()
  * Description : Applies speed limit to \tilde{u}^i and computes v^i and u^0
  *
  * Inputs      : eos            - eos_parameters struct with data for the
@@ -22,7 +22,7 @@
 
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
-void grhayl_limit_utilde_and_compute_v(
+void ghl_limit_utilde_and_compute_v(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       double utU[3],
@@ -30,7 +30,7 @@ void grhayl_limit_utilde_and_compute_v(
       int *restrict speed_limit) {
 
   //Velocity limiter:
-  double ut2 = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU);
+  double ut2 = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU);
   double au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
 
   (*speed_limit) = 0;

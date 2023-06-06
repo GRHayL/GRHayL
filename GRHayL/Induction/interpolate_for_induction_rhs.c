@@ -1,7 +1,7 @@
 #include "induction.h"
 
 // Helper function for interpolating quantities via averaging
-void grhayl_A_i_avg(
+void ghl_A_i_avg(
       const int size,
       const double Ax_stencil[size][size][size],
       const double Ay_stencil[size][size][size],
@@ -11,7 +11,7 @@ void grhayl_A_i_avg(
       double A_to_Ay[3],
       double A_to_Az[3]);
 
-void grhayl_metric_avg(
+void ghl_metric_avg(
       const int size,
       const metric_quantities metric_stencil[size][size][size],
       const double psi_stencil[size][size][size],
@@ -19,10 +19,10 @@ void grhayl_metric_avg(
       double lapse_psi2_interp[3],
       double *restrict lapse_over_psi6_interp);
 
-/* Function    : grhayl_interpolate_for_A_gauge_rhs()
+/* Function    : ghl_interpolate_for_A_gauge_rhs()
  * Description : computes several interpolated quantities for computing the RHS
  *               for tilde{phi} and the gauge contributions to A_i; these are
- *               used in grhayl_calculate_phitilde_rhs() function
+ *               used in ghl_calculate_phitilde_rhs() function
  *
  * Inputs      : gauge_vars      - A_gauge_vars struct containing stencils for
  *                                 variables to compute interpolated values
@@ -31,7 +31,7 @@ void grhayl_metric_avg(
  *                                 values for use in
  *
  */
-void grhayl_interpolate_for_induction_rhs(
+void ghl_interpolate_for_induction_rhs(
       const metric_quantities metric_stencil[2][2][2],
       const double psi_stencil[2][2][2],
       const double Ax_stencil[3][3][3],
@@ -60,14 +60,14 @@ void grhayl_interpolate_for_induction_rhs(
        A_x:      (i,     j+1/2, k+1/2)
        A_y:      (i+1/2, j,     k+1/2)
        A_z:      (i+1/2, j+1/2, k    )
-     For metric quantities, we use grhayl_metric_avg(), which computes most of the needed quantities.
+     For metric quantities, we use ghl_metric_avg(), which computes most of the needed quantities.
      It interpolates (via averaging) the lapse and shift to phitilde's location. The metric
      is interpolated to 3 different points:
        gammaUU[0][i] is a A_x's location
        gammaUU[1][i] is a A_y's location
        gammaUU[2][i] is a A_z's location
 
-     Similarly, the function grhayl_A_i_avg() interpolates A_i to these points, storing the interpolated
+     Similarly, the function ghl_A_i_avg() interpolates A_i to these points, storing the interpolated
      data in the 4 arrays A_to_phitilde, A_to_Ax, A_to_Ay, and A_to_Az.
 
      These two averaging loops are split because the stencils are of different sizes. The stencils are
@@ -76,10 +76,10 @@ void grhayl_interpolate_for_induction_rhs(
   */
   metric_quantities metric_interp;
   double lapse_psi2_interp[3], lapse_over_psi6_interp;
-  grhayl_metric_avg(2, metric_stencil, psi_stencil, &metric_interp, lapse_psi2_interp, &lapse_over_psi6_interp);
+  ghl_metric_avg(2, metric_stencil, psi_stencil, &metric_interp, lapse_psi2_interp, &lapse_over_psi6_interp);
 
   double A_to_phitilde[3], A_to_Ax[3], A_to_Ay[3], A_to_Az[3];
-  grhayl_A_i_avg(3, Ax_stencil, Ay_stencil, Az_stencil, A_to_phitilde, A_to_Ax, A_to_Ay, A_to_Az);
+  ghl_A_i_avg(3, Ax_stencil, Ay_stencil, Az_stencil, A_to_phitilde, A_to_Ax, A_to_Ay, A_to_Az);
 
   // Interpolating lapse and shift to (i+1/2, j+1/2, k+1/2) is needed for computing phitilde_rhs.
   interp_vars->alpha_interp  = metric_interp.lapse;
@@ -120,9 +120,9 @@ void grhayl_interpolate_for_induction_rhs(
 
 // Note: the following functions, while having a size argument, are specialized for array size of 3 and 2, respectively.
 //       They will need to be extended to support arbitrary stencil averaging. This involves determining the element
-//       of the array which corresponds to the current location. grhayl_A_i_avg() assumes 1 (centered 3-element stencil),
-//       and grhayl_metric_avg() assumes 0 (2-element stencil centered around staggered gridpoint)
-void grhayl_A_i_avg(
+//       of the array which corresponds to the current location. ghl_A_i_avg() assumes 1 (centered 3-element stencil),
+//       and ghl_metric_avg() assumes 0 (2-element stencil centered around staggered gridpoint)
+void ghl_A_i_avg(
       const int size,
       const double Ax_stencil[size][size][size],
       const double Ay_stencil[size][size][size],
@@ -182,7 +182,7 @@ void grhayl_A_i_avg(
   A_to_Az[1]       /= sum_2D;
 }
 
-void grhayl_metric_avg(
+void ghl_metric_avg(
       const int size,
       const metric_quantities metric_stencil[size][size][size],
       const double psi_stencil[size][size][size],

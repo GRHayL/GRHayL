@@ -1,6 +1,6 @@
 #include "induction.h"
 
-/* Function    : grhayl_calculate_phitilde_rhs()
+/* Function    : ghl_calculate_phitilde_rhs()
  * Description : compute RHS for \tilde{phi} = psi^6*Phi and the gauge contribution
  *               for A_i
  *
@@ -8,13 +8,13 @@
  *             : vars                  - A_gauge_rhs_vars struct containing the
  *                                       stencils for interpolated variables;
  *                                       these can be computed using
- *                                       grhayl_interpolate_for_A_gauge_rhs()
+ *                                       ghl_interpolate_for_A_gauge_rhs()
  *
  * Outputs     : vars                  - struct elements A_i_gauge_rhs and
  *                                       phitilde_rhs contain RHS values
  *
  */
-double grhayl_calculate_phitilde_rhs(
+double ghl_calculate_phitilde_rhs(
       const double dxi[3],
       const double Lorenz_damping_factor,
       const double alpha_interp,

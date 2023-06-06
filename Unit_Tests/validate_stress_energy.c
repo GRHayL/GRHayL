@@ -85,7 +85,7 @@ void validate_stress_energy(
   }
 
   if(test_fail) {
-    grhayl_error("%.100s\n", fail_msg);
+    ghl_error("%.100s\n", fail_msg);
   }
   return;
 }

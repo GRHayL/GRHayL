@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : grhayl_return_conservatives()
+/* Function    : ghl_return_conservatives()
  * Description : unpacks conservative struct into variables
  *
  * Intputs      : cons          - conservative_quantities struct to be unpacked
@@ -13,7 +13,7 @@
  *             : entropy        - pointer to densitized entropy
  */
 
-void grhayl_return_conservatives(
+void ghl_return_conservatives(
              const conservative_quantities *restrict cons,
              double *restrict rho, double *restrict tau,
              double *restrict S_x, double *restrict S_y, double *restrict S_z,

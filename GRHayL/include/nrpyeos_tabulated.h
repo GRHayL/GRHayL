@@ -3,7 +3,7 @@
 #include "grhayl.h"
 #ifndef GRHAYL_USE_HDF5
 #define HDF5_ERROR_IF_USED \
-  grhayl_error("HDF5 is disabled, so this function cannot be used\n")
+  ghl_error("HDF5 is disabled, so this function cannot be used\n")
 #else
 
 #include <string.h>

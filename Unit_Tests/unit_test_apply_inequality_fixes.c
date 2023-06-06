@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
   if( key != 1 || arraylength < 1 )
-    grhayl_error("An error has occured with reading the grid size. "
+    ghl_error("An error has occured with reading the grid size. "
                  "Please check that metric_initial_data.bin"
                  "is up-to-date with current test version.\n");
 
@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   grhayl_parameters params;
-  grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+  ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in metric data. Please check that data\n"
+    ghl_error("An error has occured with reading in metric data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Allocate memory for the initial primitive data
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*14)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Allocate memory for the trusted conservative data
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*5)
-    grhayl_error("An error has occured with reading in trusted data. Please check that data\n"
+    ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Allocate memory for the perturbed conservative data
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*5)
-    grhayl_error("An error has occured with reading in perturbed data. Please check that data\n"
+    ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   const double poison = 0.0/0.0;
@@ -155,52 +155,52 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    grhayl_initialize_diagnostics(&diagnostics);
+    ghl_initialize_diagnostics(&diagnostics);
     metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons;
 
     // Read initial data accompanying trusted output
-    grhayl_initialize_metric(lapse[i],
+    ghl_initialize_metric(lapse[i],
                       betax[i], betay[i], betaz[i],
                       gxx[i], gxy[i], gxz[i],
                       gyy[i], gyz[i], gzz[i],
                       &ADM_metric);
 
     ADM_aux_quantities metric_aux;
-    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-    grhayl_initialize_primitives(
+    ghl_initialize_primitives(
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
                       poison, poison, poison,
                       &prims);
 
-    grhayl_initialize_conservatives(rho_star[i], tau[i],
+    ghl_initialize_conservatives(rho_star[i], tau[i],
                              S_x[i], S_y[i], S_z[i],
                              poison, poison, &cons);
 
     //This applies inequality fixes on the conservatives
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = 0.0;
-    grhayl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+    ghl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = Psi6threshold;
 
     conservative_quantities cons_trusted, cons_pert;
-    grhayl_initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
+    ghl_initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
                              S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
                              poison, poison, &cons_trusted);
 
-    grhayl_initialize_conservatives(rho_star_pert[i], tau_pert[i],
+    ghl_initialize_conservatives(rho_star_pert[i], tau_pert[i],
                              S_x_pert[i], S_y_pert[i], S_z_pert[i],
                              poison, poison, &cons_pert);
 
 
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
   }
-  grhayl_info("grhayl_apply_inequality_fixes function test has passed!\n");
+  ghl_info("ghl_apply_inequality_fixes function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

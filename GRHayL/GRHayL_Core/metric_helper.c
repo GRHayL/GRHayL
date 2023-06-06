@@ -1,14 +1,14 @@
 #include "grhayl.h"
 
 /**********************************************************************
-    grhayl_raise_vector_4D() and grhayl_raise_vector_3D():
+    ghl_raise_vector_4D() and ghl_raise_vector_3D():
 
          -- calculates the contravariant form of a covariant vector
             using the inverse of the metric
               v^\alpha = g^{\alpha\beta} v_\beta
             3D and 4D vectors are currently supported.
 ***********************************************************************/
-void grhayl_raise_vector_4D(
+void ghl_raise_vector_4D(
       const double g4UU[4][4],
       const double vecD[4],
       double vecU[4]) {
@@ -20,7 +20,7 @@ void grhayl_raise_vector_4D(
   }
 }
 
-void grhayl_raise_vector_3D(
+void ghl_raise_vector_3D(
       const double gammaUU[3][3],
       const double vecD[3],
       double vecU[3]) {
@@ -40,14 +40,14 @@ void grhayl_raise_vector_3D(
 
 /**********************************************************************
 
-    grhayl_lower_vector_4D() and grhayl_lower_vector_3D():
+    ghl_lower_vector_4D() and ghl_lower_vector_3D():
 
          -- calculates the covariant form of a contravariant vector
             using the metric
               v_\alpha = g_{\alpha\beta} v^\beta
             3D and 4D vectors are currently supported.
 ***********************************************************************/
-void grhayl_lower_vector_4D(
+void ghl_lower_vector_4D(
       const double g4DD[4][4],
       const double vecU[4],
       double vecD[4]) {
@@ -59,7 +59,7 @@ void grhayl_lower_vector_4D(
   }
 }
 
-void grhayl_lower_vector_3D(
+void ghl_lower_vector_3D(
       const double gammaDD[3][3],
       const double vecU[3],
       double vecD[3]) {
@@ -84,7 +84,7 @@ void grhayl_lower_vector_3D(
              using the ADM metric
               v^2 = g_{\alpha\beta} v^\alpha v^\beta
 ***********************************************************************/
-double grhayl_compute_vec2_from_vecD(
+double ghl_compute_vec2_from_vecD(
       const double gammaUU[3][3],
       const double *restrict vecD) {
 
@@ -103,7 +103,7 @@ double grhayl_compute_vec2_from_vecD(
              using the ADM metric
               v^2 = g_{\alpha\beta} v^\alpha v^\beta
 ***********************************************************************/
-double grhayl_compute_vec2_from_vecU(
+double ghl_compute_vec2_from_vecU(
       const double gammaDD[3][3],
       const double *restrict vecU) {
 

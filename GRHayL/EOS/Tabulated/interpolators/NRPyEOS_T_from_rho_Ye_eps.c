@@ -28,7 +28,7 @@ void NRPyEOS_T_from_rho_Ye_eps(
 
   // Step 5: Check for errors
   if( error )
-    grhayl_error(report.message, error);
+    ghl_error(report.message, error);
 
 #endif
 }

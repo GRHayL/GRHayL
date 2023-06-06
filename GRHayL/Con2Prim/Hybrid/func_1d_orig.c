@@ -1,6 +1,6 @@
 #include "../harm_u2p_util.h"
 
-void grhayl_func_1d_orig(
+void ghl_func_1d_orig(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -14,7 +14,7 @@ void grhayl_func_1d_orig(
       int *restrict n_iter) {
 
   const double W = x[0];
-  double vsq = grhayl_vsq_calc(harm_aux, W);
+  double vsq = ghl_vsq_calc(harm_aux, W);
   const double Wsq = W*W;
 
   //TODO: consider adding fabs to vsq calc and replacing below with
@@ -25,12 +25,12 @@ void grhayl_func_1d_orig(
   vsq = ( vsq > 1. )  ?  (1.-dv) : vsq;
 
   // Compute P from W and v^2
-  const double dvsq = grhayl_dvsq_dW(harm_aux, W);
+  const double dvsq = ghl_dvsq_dW(harm_aux, W);
 
   /*** For hybrid EOS ***/
-  const double p_tmp  = grhayl_pressure_W_vsq(eos, W, vsq , harm_aux->D);
-  const double dPdvsq = grhayl_dpdvsq_calc(eos, W, vsq, harm_aux->D);
-  const double dPdW   = grhayl_dpdW_calc_vsq(eos, W, vsq ) + dPdvsq*dvsq;
+  const double p_tmp  = ghl_pressure_W_vsq(eos, W, vsq , harm_aux->D);
+  const double dPdvsq = ghl_dpdvsq_calc(eos, W, vsq, harm_aux->D);
+  const double dPdW   = ghl_dpdW_calc_vsq(eos, W, vsq ) + dPdvsq*dvsq;
   /*** For hybrid EOS ***/
 
 

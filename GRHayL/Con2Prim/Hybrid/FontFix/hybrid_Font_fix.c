@@ -4,7 +4,7 @@
  * Piecewise Polytropic EOS Patch *
  *    Font fix: function call     *
  **********************************/
-int grhayl_hybrid_Font_fix(
+int ghl_hybrid_Font_fix(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -15,10 +15,10 @@ int grhayl_hybrid_Font_fix(
 
   double utU[3];
 
-  const double sdots = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, cons->SD);
+  const double sdots = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, cons->SD);
 
   const double BbarU[3] = {prims->BU[0]*ONE_OVER_SQRT_4PI, prims->BU[1]*ONE_OVER_SQRT_4PI, prims->BU[2]*ONE_OVER_SQRT_4PI};
-  const double Bbar2 = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
+  const double Bbar2 = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
 
   double BbardotS, BbardotS2, hatBbardotS;
   if(Bbar2 < 1e-150) {
@@ -60,7 +60,7 @@ int grhayl_hybrid_Font_fix(
     for(int n=0; n<Font_fix_attempts; n++) {
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
       const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
-      Font_fix_status = grhayl_hybrid_Font_fix_loop(eos, loop_maxits, loop_tol, W0, Sf20, Psim6, sdots,
+      Font_fix_status = ghl_hybrid_Font_fix_loop(eos, loop_maxits, loop_tol, W0, Sf20, Psim6, sdots,
                                            BbardotS2, Bbar2, cons, rhob0, &rhob);
       rhob0 = rhob;
       if(Font_fix_status==0) break;
@@ -91,12 +91,12 @@ int grhayl_hybrid_Font_fix(
     double fac2 = 1.0/(rhosh + metric_aux->psi6*Bbar2/gammav);
 
     double SU[3];
-    grhayl_raise_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
+    ghl_raise_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
 
     utU[0] = fac2*(SU[0] + fac1*BbarU[0]);
     utU[1] = fac2*(SU[1] + fac1*BbarU[1]);
     utU[2] = fac2*(SU[2] + fac1*BbarU[2]);
-    grhayl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
+    ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
   }
 
   //The Font fix only sets the velocities.  Here we set the primitives.

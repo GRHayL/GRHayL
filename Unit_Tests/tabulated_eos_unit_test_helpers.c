@@ -45,7 +45,7 @@ double get_table_quantity(
     case NRPyEOS_Gamma_key:
       return rho - 3*Y_e - T;
     default:
-      grhayl_error("Invalid variable %d\n", which_var);
+      ghl_error("Invalid variable %d\n", which_var);
       return -1;
   }
 }

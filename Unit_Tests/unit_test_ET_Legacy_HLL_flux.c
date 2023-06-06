@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
   }
   fclose(infile);
   if(key != arraylength*(8*3 + 1))
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
   
   for(int k=1; k<dirlength; k++)
@@ -108,14 +108,14 @@ int main(int argc, char **argv) {
     key += fread(A_trusted[coord], sizeof(double), arraylength, infile);
   fclose(infile);
   if(key != arraylength*3)
-    grhayl_error("An error has occured with reading in trusted data. Please check that data\n"
+    ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
   key = 0;
   for(int coord=0; coord<3; coord++)
     key += fread(A_pert[coord], sizeof(double), arraylength, inpert);
   fclose(inpert);
   if(key != arraylength*3)
-    grhayl_error("An error has occured with reading in perturbed data. Please check that data\n"
+    ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   for(int k=2; k<dirlength-2; k++)
@@ -123,25 +123,25 @@ int main(int argc, char **argv) {
       for(int i=2; i<dirlength-2; i++) {
         const int index = indexf(dirlength,i,j,k);
         if( validate(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]) )
-          grhayl_error("Test unit_test_HLL_flux has failed for variable Ax_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux has failed for variable Ax_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[0][index], A_rhs[0][index], A_pert[0][index],
                        relative_error(A_trusted[0][index], A_rhs[0][index]), relative_error(A_trusted[0][index], A_pert[0][index]));
         if( validate(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]) )
-          grhayl_error("Test unit_test_HLL_flux has failed for variable Ay_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux has failed for variable Ay_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[1][index], A_rhs[1][index], A_pert[1][index],
                        relative_error(A_trusted[1][index], A_rhs[1][index]), relative_error(A_trusted[1][index], A_pert[1][index]));
         if( validate(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]) )
-          grhayl_error("Test unit_test_HLL_flux has failed for variable Az_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux has failed for variable Az_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[2][index], A_rhs[2][index], A_pert[2][index],
                        relative_error(A_trusted[2][index], A_rhs[2][index]), relative_error(A_trusted[2][index], A_pert[2][index]));
   }
-  grhayl_info("ET_Legacy HLL magnetic flux test has passed!\n");
+  ghl_info("ET_Legacy HLL magnetic flux test has passed!\n");
   free(phi_bssn);
 
   for(int i=0; i<3; i++) {
@@ -256,6 +256,6 @@ void A_rhs_dir(const int dirlength,
         vars.c2_min = cmin_2[index_B1];
         vars.c2_max = cmax_2[index_B1];
 
-        A_rhs[index] = grhayl_HLL_2D_flux(psi6, &vars);
+        A_rhs[index] = ghl_HLL_2D_flux(psi6, &vars);
   }
 }

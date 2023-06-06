@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_apply_inequality_fixes()
+/* Function    : ghl_apply_inequality_fixes()
  * Description : Checks whether \tilde{tau} \tilde{S} obey the inequalities
  *               constraining their possible values. If they are outside
  *               these bounds, the function enforces the inequalities
@@ -20,7 +20,7 @@
  *
  */
 
-void grhayl_apply_inequality_fixes(
+void ghl_apply_inequality_fixes(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -30,11 +30,11 @@ void grhayl_apply_inequality_fixes(
       con2prim_diagnostics *restrict diagnostics) {
 
   //First, prepare for the tau and stilde fixes:
-  const double sdots = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, cons->SD);
+  const double sdots = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, cons->SD);
 
   const double Bbar[3] = {prims->BU[0]*ONE_OVER_SQRT_4PI, prims->BU[1]*ONE_OVER_SQRT_4PI, prims->BU[2]*ONE_OVER_SQRT_4PI};
 
-  const double Bbar2 = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, Bbar);
+  const double Bbar2 = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, Bbar);
 
   double BbardotS, hatBbardotS;
   double Wm, Sm2, Wmin, half_psi6_Bbar2, tau_fluid_term3;

@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_hybrid_Font_fix_loop()
+/* Function    : ghl_hybrid_Font_fix_loop()
  * Description : Determines rhob using the font fix prescription
  * Dependencies: find_polytropic_K_and_Gamma_index()
  *             : compute_P_cold_and_eps_cold()
@@ -23,7 +23,7 @@
  *             : return value: 0 - Font fix worked
  *             : return value: 1 - Font fix failed
  */
-int grhayl_hybrid_Font_fix_loop(
+int ghl_hybrid_Font_fix_loop(
       const eos_parameters *restrict eos,
       const int maxits, const double tol,
       const double W_in, const double Sf2_in,

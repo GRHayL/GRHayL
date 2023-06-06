@@ -2,7 +2,7 @@
 /*
  * Compute the characteristic speeds in direction 1
  */
-void grhayl_calculate_characteristic_speed_dirn1(const primitive_quantities *restrict prims_r, const primitive_quantities *restrict prims_l, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric_face, double *cmin_dirn1, double *cmax_dirn1) {
+void ghl_calculate_characteristic_speed_dirn1(const primitive_quantities *restrict prims_r, const primitive_quantities *restrict prims_l, struct eos_parameters const *restrict eos, const metric_quantities *restrict metric_face, double *cmin_dirn1, double *cmax_dirn1) {
 
 {
 

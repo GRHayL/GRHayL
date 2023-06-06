@@ -30,7 +30,7 @@ void NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(
 
   // Step 5: Check for errors
   if( error )
-    grhayl_error(report.message, error);
+    ghl_error(report.message, error);
 
   // Step 6: Update output variables
   *eps = outvars[0];

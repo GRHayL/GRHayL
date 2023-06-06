@@ -55,19 +55,19 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
   // Set function pointer to specific function for a given direction
   switch(flux_dir) {
     case 0:
-      calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn0;
-      calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn0;
-      calculate_source_terms = &grhayl_calculate_source_terms_dirn0;
+      calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn0;
+      calculate_HLLE_fluxes = &ghl_calculate_HLLE_fluxes_dirn0;
+      calculate_source_terms = &ghl_calculate_source_terms_dirn0;
       break;
     case 1:
-      calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn1;
-      calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn1;
-      calculate_source_terms = &grhayl_calculate_source_terms_dirn1;
+      calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn1;
+      calculate_HLLE_fluxes = &ghl_calculate_HLLE_fluxes_dirn1;
+      calculate_source_terms = &ghl_calculate_source_terms_dirn1;
       break;
     case 2:
-      calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn2;
-      calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn2;
-      calculate_source_terms = &grhayl_calculate_source_terms_dirn2;
+      calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn2;
+      calculate_HLLE_fluxes = &ghl_calculate_HLLE_fluxes_dirn2;
+      calculate_source_terms = &ghl_calculate_source_terms_dirn2;
       break;
     default:
       CCTK_VERROR("Warning: invalid flux_dir value (not 0, 1, or 2) has been passed to calculate_MHD_rhs.");
@@ -99,14 +99,14 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
               &ADM_metric_face);
 
         primitive_quantities prims_r, prims_l;
-        grhayl_initialize_primitives(
+        ghl_initialize_primitives(
               in_prims_r[RHOB][index], in_prims_r[PRESSURE][index], poison,
               in_prims_r[VX][index], in_prims_r[VY][index], in_prims_r[VZ][index],
               in_prims_r[BX_CENTER][index], in_prims_r[BY_CENTER][index], in_prims_r[BZ_CENTER][index],
               poison, poison, poison, // entropy, Y_e, temp
               &prims_r);
 
-        grhayl_initialize_primitives(
+        ghl_initialize_primitives(
               in_prims_l[RHOB][index], in_prims_l[PRESSURE][index], poison,
               in_prims_l[VX][index], in_prims_l[VY][index], in_prims_l[VZ][index],
               in_prims_l[BX_CENTER][index], in_prims_l[BY_CENTER][index], in_prims_l[BZ_CENTER][index],
@@ -114,9 +114,9 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
               &prims_l);
 
         int speed_limited = 0;
-        grhayl_limit_v_and_compute_u0(
+        ghl_limit_v_and_compute_u0(
               eos, &ADM_metric_face, &prims_r, &speed_limited);
-        grhayl_limit_v_and_compute_u0(
+        ghl_limit_v_and_compute_u0(
               eos, &ADM_metric_face, &prims_l, &speed_limited);
 
         conservative_quantities cons_fluxes;
@@ -163,7 +163,7 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
         Stildez_rhs[index]  += dxi[flux_dir]*(Stildez_flux[index]  - Stildez_flux[indp1]);
 
         metric_quantities ADM_metric;
-        grhayl_initialize_metric(
+        ghl_initialize_metric(
               in_metric[LAPSE][index],
               in_metric[BETAX][index], in_metric[BETAY][index], in_metric[BETAZ][index],
               in_metric[GXX][index], in_metric[GXY][index], in_metric[GXZ][index],
@@ -171,7 +171,7 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
               &ADM_metric);
 
         primitive_quantities prims;
-        grhayl_initialize_primitives(
+        ghl_initialize_primitives(
               in_prims[RHOB][index], in_prims[PRESSURE][index], poison,
               in_prims[VX][index], in_prims[VY][index], in_prims[VZ][index],
               in_prims[BX_CENTER][index], in_prims[BY_CENTER][index], in_prims[BZ_CENTER][index],
@@ -179,7 +179,7 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
               &prims);
 
         int speed_limited = 0;
-        grhayl_limit_v_and_compute_u0(
+        ghl_limit_v_and_compute_u0(
               eos, &ADM_metric, &prims, &speed_limited);
 
         metric_quantities ADM_metric_derivs;

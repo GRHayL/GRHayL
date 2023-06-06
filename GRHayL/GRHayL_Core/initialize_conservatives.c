@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-/* Function    : grhayl_initialize_conservatives()
+/* Function    : ghl_initialize_conservatives()
  * Description : Initialize the conservative struct from user input
  *
  * Inputs      : rho            - value of rho_star (densitized density)
@@ -14,7 +14,7 @@
  * Outputs     : cons           - returns conservative_quantities struct containing the input
  */
 
-void grhayl_initialize_conservatives(
+void ghl_initialize_conservatives(
              const double rho, const double tau,
              const double S_x, const double S_y, const double S_z,
              const double Y_e, const double entropy,

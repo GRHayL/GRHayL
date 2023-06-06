@@ -79,12 +79,12 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
         con2prim_diagnostics diagnostics;
-        grhayl_initialize_diagnostics(&diagnostics);
+        ghl_initialize_diagnostics(&diagnostics);
     
         // Read in ADM metric quantities from gridfunctions and
         // set auxiliary and ADM metric quantities
         metric_quantities ADM_metric;
-        grhayl_enforce_detgtij_and_initialize_ADM_metric(
+        ghl_enforce_detgtij_and_initialize_ADM_metric(
               alp[index],
               betax[index], betay[index], betaz[index],
               gxx[index], gxy[index], gxz[index],
@@ -92,11 +92,11 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
               &ADM_metric);
     
         ADM_aux_quantities metric_aux;
-        grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+        ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
     
         // Read in primitive variables from gridfunctions
         primitive_quantities prims;
-        grhayl_initialize_primitives(
+        ghl_initialize_primitives(
               rho_b[index], pressure[index], eps[index],
               vx[index], vy[index], vz[index],
               0.0, 0.0, 0.0,
@@ -104,7 +104,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
     
         // Read in conservative variables from gridfunctions
         conservative_quantities cons, cons_orig;
-        grhayl_initialize_conservatives(
+        ghl_initialize_conservatives(
               rho_star[index], tau[index],
               Stildex[index], Stildey[index], Stildez[index],
               poison, poison, &cons);
@@ -125,7 +125,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
         if(cons.rho>0.0) {
           // Apply the tau floor
           if( grhayl_eos->eos_type == grhayl_eos_hybrid )
-            grhayl_apply_inequality_fixes(
+            ghl_apply_inequality_fixes(
                   grhayl_params, grhayl_eos, &ADM_metric,
                   &metric_aux, &prims, &cons, &diagnostics);
     
@@ -133,10 +133,10 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
           conservative_quantities cons_undens;
     
           // Set the conserved variables required by the con2prim routine
-          grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+          ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
     
           /************* Conservative-to-primitive recovery ************/
-          int check = grhayl_con2prim_multi_method(
+          int check = ghl_con2prim_multi_method(
                 grhayl_params, grhayl_eos, &ADM_metric, &metric_aux,
                 &cons_undens, &prims, &diagnostics);
     
@@ -167,7 +167,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
           }
         } else {
           diagnostics.failure_checker+=1;
-          grhayl_set_prims_to_constant_atm(grhayl_eos, &prims);
+          ghl_set_prims_to_constant_atm(grhayl_eos, &prims);
           rho_star_fix_applied++;
         } // if rho_star>0
         /***************************************************************/
@@ -177,7 +177,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
           //----------- Primitive recovery failed ------------
           //--------------------------------------------------
           // Sigh, reset to atmosphere
-          grhayl_set_prims_to_constant_atm(grhayl_eos, &prims);
+          ghl_set_prims_to_constant_atm(grhayl_eos, &prims);
           diagnostics.failure_checker+=100000;
           atm_resets++;
           // Then flag this point as a "success"
@@ -192,10 +192,10 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
         stress_energy Tmunu;
-        grhayl_enforce_primitive_limits_and_compute_u0(
+        ghl_enforce_primitive_limits_and_compute_u0(
               grhayl_params, grhayl_eos, &ADM_metric, &metric_aux,
               &prims, &diagnostics.failure_checker);
-        grhayl_compute_conservs_and_Tmunu(
+        ghl_compute_conservs_and_Tmunu(
               &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
     
         //Now we compute the difference between original & new conservatives, for diagnostic purposes:
@@ -213,21 +213,21 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
     
         failure_checker[index] = diagnostics.failure_checker;
     
-        grhayl_return_primitives(
+        ghl_return_primitives(
               &prims,
               &rho_b[index], &pressure[index], &eps[index],
               &vx[index], &vy[index], &vz[index],
               &dummy4, &dummy5, &dummy6,
               &dummy1, &dummy2, &dummy3);
     
-        grhayl_return_conservatives(
+        ghl_return_conservatives(
               &cons,
               &rho_star[index], &tau[index],
               &Stildex[index], &Stildey[index], &Stildez[index],
               &dummy1, &dummy2);
     
         if(update_Tmunu) {
-          grhayl_return_stress_energy(
+          ghl_return_stress_energy(
                 &Tmunu, &eTtt[index], &eTtx[index],
                 &eTty[index], &eTtz[index], &eTxx[index],
                 &eTxy[index], &eTxz[index], &eTyy[index],

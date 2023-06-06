@@ -51,7 +51,7 @@ typedef struct grhayl_parameters {
   double Lorenz_damping_factor;
 } grhayl_parameters;
 
-void grhayl_initialize_params(
+void ghl_initialize_params(
       const int main,
       const int backup[3],
       const bool evolve_entropy,
@@ -405,11 +405,11 @@ typedef struct eos_parameters {
 extern "C" {
 #endif
 
-void grhayl_initialize_eos_functions(
+void ghl_initialize_eos_functions(
     grhayl_eos_t const eos_type,
     eos_parameters *restrict eos );
 
-void grhayl_initialize_hybrid_eos(
+void ghl_initialize_hybrid_eos(
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -421,7 +421,7 @@ void grhayl_initialize_hybrid_eos(
       const double Gamma_th,
       eos_parameters *restrict eos );
 
-void grhayl_initialize_tabulated_eos(
+void ghl_initialize_tabulated_eos(
       const char *table_path,
       const double W_max,
       const double rho_atm,
@@ -435,7 +435,7 @@ void grhayl_initialize_tabulated_eos(
       const double T_max,
       eos_parameters *restrict eos );
 
-void grhayl_initialize_hybrid_eos_functions_and_params(
+void ghl_initialize_hybrid_eos_functions_and_params(
       const double W_max,
       const double rho_atm,
       const double rho_min,
@@ -447,7 +447,7 @@ void grhayl_initialize_hybrid_eos_functions_and_params(
       const double Gamma_th,
       eos_parameters *restrict eos );
 
-void grhayl_initialize_tabulated_eos_functions_and_params(
+void ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
       const double W_max,
       const double rho_atm,
@@ -495,27 +495,27 @@ typedef struct conservative_quantities {
 extern "C" {
 #endif
 
-void grhayl_initialize_primitives(
+void ghl_initialize_primitives(
       const double rho, const double press, const double epsilon,
       const double vx, const double vy, const double vz,
       const double Bx, const double By, const double Bz,
       const double entropy, const double Y_e, const double temp,
       primitive_quantities *restrict prims);
 
-void grhayl_initialize_conservatives(
+void ghl_initialize_conservatives(
       const double rho, const double tau,
       const double S_x, const double S_y, const double S_z,
       const double Y_e, const double entropy,
       conservative_quantities *restrict cons);
 
-void grhayl_return_primitives(
+void ghl_return_primitives(
       const primitive_quantities *restrict prims,
       double *restrict rho, double *restrict press, double *restrict epsilon,
       double *restrict vx, double *restrict vy, double *restrict vz,
       double *restrict Bx, double *restrict By, double *restrict Bz,
       double *restrict entropy, double *restrict Y_e, double *restrict temp);
 
-void grhayl_return_conservatives(
+void ghl_return_conservatives(
       const conservative_quantities *restrict cons,
       double *restrict rho, double *restrict tau,
       double *restrict S_x, double *restrict S_y, double *restrict S_z,
@@ -537,15 +537,15 @@ void grhayl_return_conservatives(
  --bssn_psi: TODO
 
  --bssn_gij: the BSSN conformal metric g_{i j}. These variables are set via the
-   grhayl_initialize_metric function.
+   ghl_initialize_metric function.
 
  --betai: the shift vector (beta^x, beta^y, beta^z) from the 3+1
-   decomposition. These variables are set via the grhayl_initialize_metric function.
+   decomposition. These variables are set via the ghl_initialize_metric function.
 
  --lapse: the lapse from the 3+1 decomposition. These variables are set via the
-   grhayl_initialize_metric function.
+   ghl_initialize_metric function.
 
-   All of the following varibles are calculated from the previous quantities in the grhayl_initialize_metric
+   All of the following varibles are calculated from the previous quantities in the ghl_initialize_metric
    function.
 
  --gij: the input metric g_{i j}
@@ -606,90 +606,90 @@ typedef struct stress_energy {
 extern "C" {
 #endif
 
-void grhayl_initialize_metric(
+void ghl_initialize_metric(
       const double lapse,
       const double betax, const double betay, const double betaz,
       const double gxx, const double gxy, const double gxz,
       const double gyy, const double gyz, const double gzz,
       metric_quantities *restrict metric);
 
-void grhayl_compute_ADM_auxiliaries(
+void ghl_compute_ADM_auxiliaries(
       const metric_quantities *restrict ADM_metric,
       ADM_aux_quantities *restrict metric_aux);
 
-void grhayl_enforce_detgtij_and_initialize_ADM_metric(
+void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax, const double betay, const double betaz,
       const double gxx, const double gxy, const double gxz,
       const double gyy, const double gyz, const double gzz,
       metric_quantities *restrict ADM_metric);
 
-void grhayl_initialize_extrinsic_curvature(
+void ghl_initialize_extrinsic_curvature(
       const double Kxx, const double Kxy, const double Kxz,
       const double Kyy, const double Kyz, const double Kzz,
       extrinsic_curvature *restrict curv);
 
-void grhayl_initialize_stress_energy(
+void ghl_initialize_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
       const double Txx, const double Txy, const double Txz,
       const double Tyy, const double Tyz, const double Tzz,
       stress_energy *restrict Tmunu);
 
-void grhayl_return_stress_energy(
+void ghl_return_stress_energy(
       const stress_energy *restrict Tmunu,
       double *restrict Ttt, double *restrict Ttx, double *restrict Tty,
       double *restrict Ttz, double *restrict Txx, double *restrict Txy,
       double *restrict Txz, double *restrict Tyy, double *restrict Tyz,
       double *restrict Tzz);
 
-void grhayl_limit_v_and_compute_u0(
+void ghl_limit_v_and_compute_u0(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
-void grhayl_raise_vector_4D(
+void ghl_raise_vector_4D(
       const double g4UU[4][4],
       const double vecD[4],
       double vecU[4]);
 
-void grhayl_raise_vector_3D(
+void ghl_raise_vector_3D(
       const double gammaUU[3][3],
       const double vecD[3],
       double vecU[3]);
 
-void grhayl_lower_vector_4D(
+void ghl_lower_vector_4D(
       const double g4DD[4][4],
       const double vecU[4],
       double vecD[4]);
 
-void grhayl_lower_vector_3D(
+void ghl_lower_vector_3D(
       const double gammaDD[3][3],
       const double vecU[3],
       double vecD[3]);
 
-double grhayl_compute_vec2_from_vecD(
+double ghl_compute_vec2_from_vecD(
       const double gammaUU[3][3],
       const double *restrict vecD);
 
-double grhayl_compute_vec2_from_vecU(
+double ghl_compute_vec2_from_vecU(
       const double gammaDD[3][3],
       const double *restrict vecU);
 
-void grhayl_compute_TDNmunu(
+void ghl_compute_TDNmunu(
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       stress_energy *restrict Tmunu);
 
-void grhayl_compute_TUPmunu(
+void ghl_compute_TUPmunu(
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       stress_energy *restrict Tmunu);
 
-void grhayl_compute_smallb_and_b2(
+void ghl_compute_smallb_and_b2(
       const metric_quantities *restrict ADM_metric,
       const primitive_quantities *restrict prims,
       const double uDN[4],

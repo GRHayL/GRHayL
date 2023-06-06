@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
   key += fread(Bz,      sizeof(double), arraylength, infile);
 
   if(key != arraylength*24)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Initialize rhs variables to 0 so we can safely use += operator
@@ -199,19 +199,19 @@ int main(int argc, char **argv) {
     // Set function pointer to specific function for a given direction
     switch(flux_dirn) {
       case 0:
-        calculate_HLLE_fluxes          = &grhayl_calculate_HLLE_fluxes_dirn0;
-        calculate_source_terms         = &grhayl_calculate_source_terms_dirn0;
-        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn0;
+        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn0;
+        calculate_source_terms         = &ghl_calculate_source_terms_dirn0;
+        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn0;
         break;
       case 1:
-        calculate_HLLE_fluxes          = &grhayl_calculate_HLLE_fluxes_dirn1;
-        calculate_source_terms         = &grhayl_calculate_source_terms_dirn1;
-        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn1;
+        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn1;
+        calculate_source_terms         = &ghl_calculate_source_terms_dirn1;
+        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn1;
         break;
       case 2:
-        calculate_HLLE_fluxes          = &grhayl_calculate_HLLE_fluxes_dirn2;
-        calculate_source_terms         = &grhayl_calculate_source_terms_dirn2;
-        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn2;
+        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn2;
+        calculate_source_terms         = &ghl_calculate_source_terms_dirn2;
+        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn2;
         break;
     }
 
@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
     key += fread(Bz_l,    sizeof(double), arraylength, infile);
 
     if(key != arraylength*16)
-      grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+      ghl_error("An error has occured with reading in initial data. Please check that data\n"
                    "is up-to-date with current test version.\n");
 
     // Calculate the values of the metric quantities at the faces by interpolating
@@ -258,20 +258,20 @@ int main(int argc, char **argv) {
           const int index  = indexf(dirlength, i, j ,k);
 
           metric_quantities metric_face;
-          grhayl_initialize_metric(face_lapse[index],
+          ghl_initialize_metric(face_lapse[index],
                             face_betax[index], face_betay[index], face_betaz[index],
                             face_gxx[index], face_gxy[index], face_gxz[index],
                             face_gyy[index], face_gyz[index], face_gzz[index],
                             &metric_face);
 
           primitive_quantities prims_r, prims_l;
-          grhayl_initialize_primitives(rho_r[index], press_r[index], poison,
+          ghl_initialize_primitives(rho_r[index], press_r[index], poison,
                                 vx_r[index], vy_r[index], vz_r[index],
                                 Bx_r[index], By_r[index], Bz_r[index],
                                 poison, poison, poison, // entropy, Y_e, temp
                                 &prims_r);
 
-          grhayl_initialize_primitives(rho_l[index], press_l[index], poison,
+          ghl_initialize_primitives(rho_l[index], press_l[index], poison,
                                 vx_l[index], vy_l[index], vz_l[index],
                                 Bx_l[index], By_l[index], Bz_l[index],
                                 poison, poison, poison, // entropy, Y_e, temp
@@ -330,14 +330,14 @@ int main(int argc, char **argv) {
           metric_derivs.gammaDD[2][2] = invdx*(face_gzz[indp1] - face_gzz[index]);
 
           metric_quantities metric;
-          grhayl_initialize_metric(lapse[index],
+          ghl_initialize_metric(lapse[index],
                             gxx[index], gxy[index], gxz[index],
                             gyy[index], gyz[index], gzz[index],
                             betax[index], betay[index], betaz[index],
                             &metric);
 
           primitive_quantities prims;
-          grhayl_initialize_primitives(rho[index], press[index], poison,
+          ghl_initialize_primitives(rho[index], press[index], poison,
                                 vx[index], vy[index], vz[index],
                                 Bx[index], By[index], Bz[index],
                                 poison, poison, poison, // entropy, Y_e, temp
@@ -367,20 +367,20 @@ int main(int argc, char **argv) {
         const int index  = indexf(dirlength, i, j ,k);
 
         metric_quantities metric;
-        grhayl_initialize_metric(lapse[index],
+        ghl_initialize_metric(lapse[index],
                           gxx[index], gxy[index], gxz[index],
                           gyy[index], gyz[index], gzz[index],
                           betax[index], betay[index], betaz[index],
                           &metric);
 
         extrinsic_curvature curv;
-        grhayl_initialize_extrinsic_curvature(
+        ghl_initialize_extrinsic_curvature(
                           kxx[index], kxy[index], kxz[index],
                           kyy[index], kyz[index], kzz[index],
                           &curv);
 
         primitive_quantities prims;
-        grhayl_initialize_primitives(rho[index], press[index], poison,
+        ghl_initialize_primitives(rho[index], press[index], poison,
                               vx[index], vy[index], vz[index],
                               Bx[index], By[index], Bz[index],
                               poison, poison, poison, // entropy, Y_e, temp
@@ -389,7 +389,7 @@ int main(int argc, char **argv) {
 
 
         conservative_quantities cons_sources;
-        grhayl_calculate_tau_tilde_source_term_extrinsic_curv(&prims,
+        ghl_calculate_tau_tilde_source_term_extrinsic_curv(&prims,
                                                        &eos,
                                                        &metric,
                                                        &curv,
@@ -423,7 +423,7 @@ int main(int argc, char **argv) {
   key += fread(trusted_S_z_rhs,      sizeof(double), arraylength, outfile);
 
   if(key != arraylength*5)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   fclose(outfile);
@@ -438,7 +438,7 @@ int main(int argc, char **argv) {
   key += fread(pert_S_z_rhs,      sizeof(double), arraylength, outfile);
 
   if(key != arraylength*5)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   fclose(outfile);
@@ -449,37 +449,37 @@ int main(int argc, char **argv) {
         const int index  = indexf(dirlength, i, j ,k);
 
         if( validate(trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable rho_star_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable rho_star_rhs.\n"
                        "  rho_star_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index],
                                                    relative_error(trusted_rho_star_rhs[index], rho_star_rhs[index]),
                                                    relative_error(trusted_rho_star_rhs[index], pert_rho_star_rhs[index]));
         if( validate(trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable tau_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable tau_rhs.\n"
                        "  tau_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index],
                                                    relative_error(trusted_tau_rhs[index], tau_rhs[index]),
                                                    relative_error(trusted_tau_rhs[index], pert_tau_rhs[index]));
         if( validate(trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_x_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_x_rhs.\n"
                        "  S_x_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index],
                                                    relative_error(trusted_S_x_rhs[index], S_x_rhs[index]),
                                                    relative_error(trusted_S_x_rhs[index], pert_S_x_rhs[index]));
         if( validate(trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_y_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_y_rhs.\n"
                        "  S_y_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index],
                                                    relative_error(trusted_S_y_rhs[index], S_y_rhs[index]),
                                                    relative_error(trusted_S_y_rhs[index], pert_S_y_rhs[index]));
         if( validate(trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index]) )
-          grhayl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_z_rhs.\n"
+          ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_z_rhs.\n"
                        "  S_z_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index],
                                                    relative_error(trusted_S_z_rhs[index], S_z_rhs[index]),
                                                    relative_error(trusted_S_z_rhs[index], pert_S_z_rhs[index]));
   }
-  grhayl_info("ET_Legacy flux/source test has passed!\n");
+  ghl_info("ET_Legacy flux/source test has passed!\n");
   free(gxx); free(gxy); free(gxz);
   free(gyy); free(gyz); free(gzz);
   free(lapse);

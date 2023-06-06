@@ -121,41 +121,41 @@ void constantdensitysphere_test(
                                          &tau_in, &kappa_exterior);
 
   // Step 5: Print basic information
-  grhayl_info("Test information:\n");
-  grhayl_info("    Domain properties:\n");
-  grhayl_info("        - Sphere radius = %22.15e\n",rSph);
-  grhayl_info("        - xmin          = %22.15e\n",xmin);
-  grhayl_info("        - xmax          = %22.15e\n",xmax);
-  grhayl_info("        - ymin          = %22.15e\n",ymin);
-  grhayl_info("        - ymax          = %22.15e\n",ymax);
-  grhayl_info("        - zmin          = %22.15e\n",zmin);
-  grhayl_info("        - zmax          = %22.15e\n",zmax);
-  grhayl_info("        - Nx            = (%d) + 2x(%d)\n",N0,Ng0);
-  grhayl_info("        - Ny            = (%d) + 2x(%d)\n",N1,Ng1);
-  grhayl_info("        - Nz            = (%d) + 2x(%d)\n",N2,Ng2);
-  grhayl_info("        - dx            = %22.15e\n",dx);
-  grhayl_info("        - dy            = %22.15e\n",dy);
-  grhayl_info("        - dz            = %22.15e\n",dz);
-  grhayl_info("    Hydro quantities at sphere interior:\n");
-  grhayl_info("        - rho           = %22.15e\n", rho_interior);
-  grhayl_info("        - Y_e           = %22.15e\n", Y_e_interior);
-  grhayl_info("        -  T            = %22.15e\n", T_interior);
-  grhayl_info("        - kappa_0_nue   = %22.15e\n", kappa_interior.nue [0]);
-  grhayl_info("        - kappa_1_nue   = %22.15e\n", kappa_interior.nue [1]);
-  grhayl_info("        - kappa_0_anue  = %22.15e\n", kappa_interior.anue[0]);
-  grhayl_info("        - kappa_1_anue  = %22.15e\n", kappa_interior.anue[1]);
-  grhayl_info("        - kappa_0_nux   = %22.15e\n", kappa_interior.nux [0]);
-  grhayl_info("        - kappa_1_nux   = %22.15e\n", kappa_interior.nux [1]);
-  grhayl_info("    Hydro quantities at sphere exterior:\n");
-  grhayl_info("        - rho           = %22.15e\n", rho_exterior);
-  grhayl_info("        - Y_e           = %22.15e\n", Y_e_exterior);
-  grhayl_info("        -  T            = %22.15e\n", T_exterior);
-  grhayl_info("        - kappa_0_nue   = %22.15e\n", kappa_exterior.nue [0]);
-  grhayl_info("        - kappa_1_nue   = %22.15e\n", kappa_exterior.nue [1]);
-  grhayl_info("        - kappa_0_anue  = %22.15e\n", kappa_exterior.anue[0]);
-  grhayl_info("        - kappa_1_anue  = %22.15e\n", kappa_exterior.anue[1]);
-  grhayl_info("        - kappa_0_nux   = %22.15e\n", kappa_exterior.nux [0]);
-  grhayl_info("        - kappa_1_nux   = %22.15e\n", kappa_exterior.nux [1]);
+  ghl_info("Test information:\n");
+  ghl_info("    Domain properties:\n");
+  ghl_info("        - Sphere radius = %22.15e\n",rSph);
+  ghl_info("        - xmin          = %22.15e\n",xmin);
+  ghl_info("        - xmax          = %22.15e\n",xmax);
+  ghl_info("        - ymin          = %22.15e\n",ymin);
+  ghl_info("        - ymax          = %22.15e\n",ymax);
+  ghl_info("        - zmin          = %22.15e\n",zmin);
+  ghl_info("        - zmax          = %22.15e\n",zmax);
+  ghl_info("        - Nx            = (%d) + 2x(%d)\n",N0,Ng0);
+  ghl_info("        - Ny            = (%d) + 2x(%d)\n",N1,Ng1);
+  ghl_info("        - Nz            = (%d) + 2x(%d)\n",N2,Ng2);
+  ghl_info("        - dx            = %22.15e\n",dx);
+  ghl_info("        - dy            = %22.15e\n",dy);
+  ghl_info("        - dz            = %22.15e\n",dz);
+  ghl_info("    Hydro quantities at sphere interior:\n");
+  ghl_info("        - rho           = %22.15e\n", rho_interior);
+  ghl_info("        - Y_e           = %22.15e\n", Y_e_interior);
+  ghl_info("        -  T            = %22.15e\n", T_interior);
+  ghl_info("        - kappa_0_nue   = %22.15e\n", kappa_interior.nue [0]);
+  ghl_info("        - kappa_1_nue   = %22.15e\n", kappa_interior.nue [1]);
+  ghl_info("        - kappa_0_anue  = %22.15e\n", kappa_interior.anue[0]);
+  ghl_info("        - kappa_1_anue  = %22.15e\n", kappa_interior.anue[1]);
+  ghl_info("        - kappa_0_nux   = %22.15e\n", kappa_interior.nux [0]);
+  ghl_info("        - kappa_1_nux   = %22.15e\n", kappa_interior.nux [1]);
+  ghl_info("    Hydro quantities at sphere exterior:\n");
+  ghl_info("        - rho           = %22.15e\n", rho_exterior);
+  ghl_info("        - Y_e           = %22.15e\n", Y_e_exterior);
+  ghl_info("        -  T            = %22.15e\n", T_exterior);
+  ghl_info("        - kappa_0_nue   = %22.15e\n", kappa_exterior.nue [0]);
+  ghl_info("        - kappa_1_nue   = %22.15e\n", kappa_exterior.nue [1]);
+  ghl_info("        - kappa_0_anue  = %22.15e\n", kappa_exterior.anue[0]);
+  ghl_info("        - kappa_1_anue  = %22.15e\n", kappa_exterior.anue[1]);
+  ghl_info("        - kappa_0_nux   = %22.15e\n", kappa_exterior.nux [0]);
+  ghl_info("        - kappa_1_nux   = %22.15e\n", kappa_exterior.nux [1]);
 
   // Step 6: Loop over the grid, set opacities
   //         and initialize optical depth to zero
@@ -384,7 +384,7 @@ void constantdensitysphere_test(
     err += fread(tau_nux_unpert   [1], sizeof(double), Ntotal, fp_unpert);
     fclose(fp_unpert);
     if( err != 12*Ntotal )
-      grhayl_error("Error reading file nrpyleakage_constant_density_sphere_unperturbed.bin\n");
+      ghl_error("Error reading file nrpyleakage_constant_density_sphere_unperturbed.bin\n");
 
     // Read in the perturbed data
     FILE *fp_pert   = fopen_with_check("nrpyleakage_constant_density_sphere_perturbed.bin", "rb");
@@ -402,7 +402,7 @@ void constantdensitysphere_test(
     err += fread(tau_nux_pert   [0], sizeof(double), Ntotal, fp_pert);
     err += fread(tau_nux_pert   [1], sizeof(double), Ntotal, fp_pert);
     if( err != 12*Ntotal )
-      grhayl_error("Error reading file nrpyleakage_constant_density_sphere_perturbed.bin\n");
+      ghl_error("Error reading file nrpyleakage_constant_density_sphere_perturbed.bin\n");
     fclose(fp_pert);
 
     // Perform the validation

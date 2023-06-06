@@ -57,21 +57,21 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
     switch(flux_dir) {
       case 0:
         v_flux_dir = vx;
-        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn0;
-        calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn0;
-        calculate_source_terms = &grhayl_calculate_source_terms_dirn0;
+        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn0;
+        calculate_HLLE_fluxes = &ghl_calculate_HLLE_fluxes_dirn0;
+        calculate_source_terms = &ghl_calculate_source_terms_dirn0;
         break;
       case 1:
         v_flux_dir = vy;
-        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn1;
-        calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn1;
-        calculate_source_terms = &grhayl_calculate_source_terms_dirn1;
+        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn1;
+        calculate_HLLE_fluxes = &ghl_calculate_HLLE_fluxes_dirn1;
+        calculate_source_terms = &ghl_calculate_source_terms_dirn1;
         break;
       case 2:
         v_flux_dir = vz;
-        calculate_characteristic_speed = &grhayl_calculate_characteristic_speed_dirn2;
-        calculate_HLLE_fluxes = &grhayl_calculate_HLLE_fluxes_dirn2;
-        calculate_source_terms = &grhayl_calculate_source_terms_dirn2;
+        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn2;
+        calculate_HLLE_fluxes = &ghl_calculate_HLLE_fluxes_dirn2;
+        calculate_source_terms = &ghl_calculate_source_terms_dirn2;
         break;
       default:
         CCTK_VERROR("Warning: invalid flux_dir value (not 0, 1, or 2) has been passed to calculate_MHD_rhs.");
@@ -103,7 +103,7 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
           // Compute Gamma
           const double Gamma = GRHayLHD_eos_Gamma_eff(grhayl_eos, rho_b[index], pressure[index]);
 
-          grhayl_simple_ppm(
+          ghl_simple_ppm(
                 rho_stencil, press_stencil, vel_stencil,
                 3, v_flux, Gamma,
                 &rhor, &rhol, &pressr, &pressl, vel_r, vel_l);
@@ -118,14 +118,14 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
                 &ADM_metric_face);
 
           primitive_quantities prims_r, prims_l;
-          grhayl_initialize_primitives(
+          ghl_initialize_primitives(
                 rhor, pressr, poison,
                 vel_r[0], vel_r[1], vel_r[2],
                 0.0, 0.0, 0.0,
                 poison, poison, poison, // entropy, Y_e, temp
                 &prims_r);
 
-          grhayl_initialize_primitives(
+          ghl_initialize_primitives(
                 rhol, pressl, poison,
                 vel_l[0], vel_l[1], vel_l[2],
                 0.0, 0.0, 0.0,
@@ -133,9 +133,9 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
                 &prims_l);
 
           int speed_limited = 0;
-          grhayl_limit_v_and_compute_u0(
+          ghl_limit_v_and_compute_u0(
                 grhayl_eos, &ADM_metric_face, &prims_r, &speed_limited);
-          grhayl_limit_v_and_compute_u0(
+          ghl_limit_v_and_compute_u0(
                 grhayl_eos, &ADM_metric_face, &prims_l, &speed_limited);
 
           double cmin, cmax;
@@ -183,14 +183,14 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
           Stildez_rhs[index]  += dxi[flux_dir]*(Stildez_flux[indm1]  - Stildez_flux[index]);
 
           metric_quantities ADM_metric;
-          grhayl_initialize_metric(alp[index],
+          ghl_initialize_metric(alp[index],
                 betax[index], betay[index], betaz[index],
                 gxx[index], gxy[index], gxz[index],
                 gyy[index], gyz[index], gzz[index],
                 &ADM_metric);
 
           primitive_quantities prims;
-          grhayl_initialize_primitives(
+          ghl_initialize_primitives(
                 rho_b[index], pressure[index], eps[index],
                 vx[index], vy[index], vz[index],
                 0.0, 0.0, 0.0,
@@ -198,7 +198,7 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
                 &prims);
 
           int speed_limited = 0;
-          grhayl_limit_v_and_compute_u0(
+          ghl_limit_v_and_compute_u0(
                 grhayl_eos, &ADM_metric, &prims, &speed_limited);
 
           metric_quantities ADM_metric_derivs;

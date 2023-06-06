@@ -105,7 +105,7 @@ run_unit_test(const eos_parameters *restrict eos) {
   if( err != 2 || n1 != n2 ) {
     fclose(fp_unpert);
     fclose(fp_pert);
-    grhayl_error("Problem reading number of points from file (err: %d, n1: %d, n2: %d)\n",
+    ghl_error("Problem reading number of points from file (err: %d, n1: %d, n2: %d)\n",
                  err, n1, n2);
   }
 
@@ -134,7 +134,7 @@ run_unit_test(const eos_parameters *restrict eos) {
 
     if( err != 12 ) {
       fclose(fp_unpert); fclose(fp_pert);
-      grhayl_error("Failed to read inputs from unperturbed data file\n");
+      ghl_error("Failed to read inputs from unperturbed data file\n");
     }
 
     // Compute luminosities
@@ -149,12 +149,12 @@ run_unit_test(const eos_parameters *restrict eos) {
     neutrino_luminosities lum_trusted, lum_pert;
     if( 1 != fread(&lum_trusted, sizeof(neutrino_luminosities), 1, fp_unpert) ) {
       fclose(fp_unpert); fclose(fp_pert);
-      grhayl_error("Failed to read luminosities from unperturbed data file\n");
+      ghl_error("Failed to read luminosities from unperturbed data file\n");
     }
 
     if( 1 != fread(&lum_pert, sizeof(neutrino_luminosities), 1, fp_pert) ) {
       fclose(fp_unpert); fclose(fp_pert);
-      grhayl_error("Failed to read luminosities from perturbed data file\n");
+      ghl_error("Failed to read luminosities from perturbed data file\n");
     }
 
     validate(lum_trusted.nue , lum.nue , lum_pert.nue );

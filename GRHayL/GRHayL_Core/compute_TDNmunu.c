@@ -1,6 +1,6 @@
 #include "grhayl.h"
 
-void grhayl_compute_TDNmunu(
+void ghl_compute_TDNmunu(
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
@@ -17,21 +17,21 @@ void grhayl_compute_TDNmunu(
 
   // Compute u_\alpha
   double uD[4];
-  grhayl_lower_vector_4D(metric_aux->g4DD, uU, uD);
+  ghl_lower_vector_4D(metric_aux->g4DD, uU, uD);
 
   /***************************************************************/
   //                     COMPUTE TDNMUNU                         //
   /***************************************************************/
   // Compute b^{\mu} and b^2
   double smallb[4], smallb2;
-  grhayl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
+  ghl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
   const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 
   double smallb_lower[4];
-  grhayl_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
+  ghl_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
 
   // Next compute T^{\mu \nu}:
   // (Eq. 33 in http://arxiv.org/pdf/astro-ph/0503420.pdf):

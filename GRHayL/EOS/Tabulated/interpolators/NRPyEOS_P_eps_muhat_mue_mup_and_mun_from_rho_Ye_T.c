@@ -30,7 +30,7 @@ void NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(const eos_parameters *res
 
   // Step 5: Check for errors
   if( error )
-    grhayl_error(report.message, error);
+    ghl_error(report.message, error);
 
   // Step 6: Update output variables
   *P = outvars[0];

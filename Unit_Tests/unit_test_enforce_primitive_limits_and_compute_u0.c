@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
   if( key != 1 || arraylength < 1 )
-    grhayl_error("An error has occured with reading the grid size. "
+    ghl_error("An error has occured with reading the grid size. "
                  "Please check that metric_initial_data.bin"
                  "is up-to-date with current test version.\n");
 
@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   grhayl_parameters params;
-  grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+  ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in metric data. Please check that data\n"
+    ghl_error("An error has occured with reading in metric data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Allocate memory for the initial primitive data
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*9)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Allocate memory for the trusted primitive data
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in trusted data. Please check that data\n"
+    ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   double *rho_b_pert = (double*) malloc(sizeof(double)*arraylength);
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in perturbed data. Please check that data\n"
+    ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   const double poison = 0.0/0.0;
@@ -164,16 +164,16 @@ int main(int argc, char **argv) {
     primitive_quantities prims;
 
     // Read initial data accompanying trusted output
-    grhayl_initialize_metric(lapse[i],
+    ghl_initialize_metric(lapse[i],
                       betax[i], betay[i], betaz[i],
                       gxx[i], gxy[i], gxz[i],
                       gyy[i], gyz[i], gzz[i],
                       &ADM_metric);
 
     ADM_aux_quantities metric_aux;
-    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-    grhayl_initialize_primitives(
+    ghl_initialize_primitives(
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
@@ -182,17 +182,17 @@ int main(int argc, char **argv) {
 
     //This applies limits on the primitives
     int failure_checker = 0;
-    grhayl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
+    ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
 
     primitive_quantities prims_trusted, prims_pert;
-    grhayl_initialize_primitives(
+    ghl_initialize_primitives(
                       rho_b_trusted[i], press_trusted[i], eps_trusted[i],
                       vx_trusted[i], vy_trusted[i], vz_trusted[i],
                       Bx_trusted[i], By_trusted[i], Bz_trusted[i],
                       poison, poison, poison,
                       &prims_trusted);
 
-    grhayl_initialize_primitives(
+    ghl_initialize_primitives(
                       rho_b_pert[i], press_pert[i], eps_pert[i],
                       vx_pert[i], vy_pert[i], vz_pert[i],
                       Bx_pert[i], By_pert[i], Bz_pert[i],
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
 
     validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
     if( validate(u0_trusted[i], prims.u0, u0_pert[i]) )
-      grhayl_error("Test has failed! The computed u0 does not fall within tolerance.\n"
+      ghl_error("Test has failed! The computed u0 does not fall within tolerance.\n"
                    "   u0_trusted  %.15e\n"
                    "   u0_computed %.15e\n"
                    "   u0_perturb  %.15e\n"
@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
   // the output from the Noble2D test)
 
   // While we're at it, lets hit some of the warnings in the initialize!
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, -1, -1,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -224,26 +224,26 @@ int main(int argc, char **argv) {
   eos.hybrid_compute_P_cold(&eos, rho_test, &P_cold);
 
   metric_quantities ADM_metric;
-  grhayl_initialize_metric(1.0,
+  ghl_initialize_metric(1.0,
                     0.0, 0.0, 0.0,
                     1.0, 0.0, 0.0,
                     1.0, 0.0, 1.0,
                     &ADM_metric);
 
   ADM_aux_quantities metric_aux;
-  grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+  ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
   primitive_quantities prims;
-  grhayl_initialize_primitives(1e-2, 1e6*P_cold, 0.0,
+  ghl_initialize_primitives(1e-2, 1e6*P_cold, 0.0,
                         0.0, 0.0, 0.0,
                         0.0, 0.0, 0.0,
                         0.0, 0.0, 0.0,
                         &prims);
 
   params.psi6threshold = 0;
-  grhayl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
+  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
   if( relative_error(1e5*P_cold, prims.press) > 1e-20 )
-    grhayl_error("Pressure reset failure: returned value %e vs expected %e\n",
+    ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e5*P_cold);
 
   params.psi6threshold = Psi6threshold;
@@ -251,12 +251,12 @@ int main(int argc, char **argv) {
   prims.rho   = 12.0*eos.rho_atm;
   eos.hybrid_compute_P_cold(&eos, prims.rho, &P_cold);
   prims.press = 1e3*P_cold;
-  grhayl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
+  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
   if( relative_error(1e2*P_cold, prims.press) > 1e-20 )
-    grhayl_error("Pressure reset failure: returned value %e vs expected %e\n",
+    ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e2*P_cold);
 
-  grhayl_info("grhayl_enforce_primitive_limits_and_compute_u0 function test has passed!\n");
+  ghl_info("ghl_enforce_primitive_limits_and_compute_u0 function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

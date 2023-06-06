@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
   if( key != 1 || arraylength < 1 )
-    grhayl_error("An error has occured with reading the grid size. "
+    ghl_error("An error has occured with reading the grid size. "
                  "Please check that metric_initial_data.bin"
                  "is up-to-date with current test version.\n");
 
@@ -33,11 +33,11 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   grhayl_parameters params;
-  grhayl_initialize_params(main_routine, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+  ghl_initialize_params(main_routine, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
   eos_parameters eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in metric data. Please check that data\n"
+    ghl_error("An error has occured with reading in metric data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Allocate memory for the initial primitive data
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
   double *S_y = (double*) malloc(sizeof(double)*arraylength);
   double *S_z = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("grhayl_con2prim_multi_method_hybrid_input.bin","rb");
+  infile = fopen_with_check("ghl_con2prim_multi_method_hybrid_input.bin","rb");
   key  = fread(rho_b, sizeof(double), arraylength, infile);
   key += fread(press, sizeof(double), arraylength, infile);
   key += fread(eps, sizeof(double), arraylength, infile);
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*14)
-    grhayl_error("An error has occured with reading in initial data. Please check that data\n"
+    ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Allocate memory for the trusted primitive data
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
   // Allocate memory for the returned value of C2P routine
   int *c2p_check = (int*) malloc(sizeof(int)*arraylength);
 
-  infile = fopen_with_check("grhayl_con2prim_multi_method_hybrid_FontFix_output.bin","rb");
+  infile = fopen_with_check("ghl_con2prim_multi_method_hybrid_FontFix_output.bin","rb");
   key  = fread(rho_b_trusted, sizeof(double), arraylength, infile);
   key += fread(press_trusted, sizeof(double), arraylength, infile);
   key += fread(eps_trusted, sizeof(double), arraylength, infile);
@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*10)
-    grhayl_error("An error has occured with reading in trusted data. Please check that data\n"
+    ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   // Allocate memory for the perturbed primitive data
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
   double *By_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_pert = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("grhayl_con2prim_multi_method_hybrid_FontFix_output_pert.bin","rb");
+  infile = fopen_with_check("ghl_con2prim_multi_method_hybrid_FontFix_output_pert.bin","rb");
   key  = fread(rho_b_pert, sizeof(double), arraylength, infile);
   key += fread(press_pert, sizeof(double), arraylength, infile);
   key += fread(eps_pert, sizeof(double), arraylength, infile);
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 
   fclose(infile);
   if(key != arraylength*9)
-    grhayl_error("An error has occured with reading in perturbed data. Please check that data\n"
+    ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   const double poison = 0.0/0.0;
@@ -177,48 +177,48 @@ int main(int argc, char **argv) {
 
     // Define the various GRHayL structs for the unit tests
     con2prim_diagnostics diagnostics;
-    grhayl_initialize_diagnostics(&diagnostics);
+    ghl_initialize_diagnostics(&diagnostics);
     metric_quantities ADM_metric;
     primitive_quantities prims;
     conservative_quantities cons, cons_undens;
 
     // Read initial data accompanying trusted output
-    grhayl_initialize_metric(lapse[i],
+    ghl_initialize_metric(lapse[i],
                       betax[i], betay[i], betaz[i],
                       gxx[i], gxy[i], gxz[i],
                       gyy[i], gyz[i], gzz[i],
                       &ADM_metric);
 
     ADM_aux_quantities metric_aux;
-    grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-    grhayl_initialize_primitives(
+    ghl_initialize_primitives(
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
                       poison, poison, poison,
                       &prims);
 
-    grhayl_initialize_conservatives(rho_star[i], tau[i],
+    ghl_initialize_conservatives(rho_star[i], tau[i],
                              S_x[i], S_y[i], S_z[i],
                              poison, poison, &cons);
 
     //This uses the Font fix method to compute primitives from conservatives.
-    grhayl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
-    grhayl_guess_primitives(&eos, &ADM_metric, &metric_aux, &cons, &prims);
-    const int check = grhayl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+    ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+    ghl_guess_primitives(&eos, &ADM_metric, &metric_aux, &cons, &prims);
+    const int check = ghl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if( check != c2p_check[i] )
-      grhayl_error("Test grhayl_hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
+      ghl_error("Test ghl_hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
 
     primitive_quantities prims_trusted, prims_pert;
-    grhayl_initialize_primitives(
+    ghl_initialize_primitives(
                       rho_b_trusted[i], press_trusted[i], eps_trusted[i],
                       vx_trusted[i], vy_trusted[i], vz_trusted[i],
                       Bx_trusted[i], By_trusted[i], Bz_trusted[i],
                       poison, poison, poison,
                       &prims_trusted);
 
-    grhayl_initialize_primitives(
+    ghl_initialize_primitives(
                       rho_b_pert[i], press_pert[i], eps_pert[i],
                       vx_pert[i], vy_pert[i], vz_pert[i],
                       Bx_pert[i], By_pert[i], Bz_pert[i],
@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
 
     validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
   }
-  grhayl_info("grhayl_hybrid_FontFix function test has passed!\n");
+  ghl_info("ghl_hybrid_FontFix function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

@@ -18,7 +18,7 @@
         df    = -2*f;  (on output)
          n    = dimension of x[];
 *********************************************************************************/
-void grhayl_func_rho2(
+void ghl_func_rho2(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,

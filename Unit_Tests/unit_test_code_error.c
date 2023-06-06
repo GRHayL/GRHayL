@@ -36,18 +36,18 @@ int main(int argc, char **argv) {
   }
 
   grhayl_parameters params;
-  grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+  ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, Lorenz_damping_factor, &params);
 
   eos_parameters hybrid_eos;
-  grhayl_initialize_hybrid_eos_functions_and_params(W_max,
+  ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_atm, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &hybrid_eos);
 
   evolve_temperature = true;
   grhayl_parameters tab_params;
-  grhayl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+  ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, Lorenz_damping_factor, &tab_params);
 
   /*
@@ -69,18 +69,18 @@ int main(int argc, char **argv) {
   primitive_quantities prims;
   conservative_quantities cons;
   con2prim_diagnostics diagnostics; 
-  grhayl_initialize_metric(1.0, 0.0, 0.0, 0.0,
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
                     1.0, 0.0, 0.0,
                     1.0, 0.0, 1.0,
                     &ADM_metric);
 
   ADM_aux_quantities metric_aux;
-  grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+  ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
   /*
-     grhayl_limit_v_and_compute_u0:
+     ghl_limit_v_and_compute_u0:
        4: u^0 is nan
-     grhayl_con2prim_select_method:
+     ghl_con2prim_select_method:
        5: invalid C2P key
   */
   int speed_limited = 0;
@@ -89,10 +89,10 @@ int main(int argc, char **argv) {
       prims.vU[0] = 0.0/0.0;
       prims.vU[1] = 0.0/0.0;
       prims.vU[2] = 0.0/0.0;
-      grhayl_limit_v_and_compute_u0(&hybrid_eos, &ADM_metric, &prims, &speed_limited);
+      ghl_limit_v_and_compute_u0(&hybrid_eos, &ADM_metric, &prims, &speed_limited);
       break;
     case 5:
-      grhayl_con2prim_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      ghl_con2prim_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
       break;
   }
 /*
@@ -139,7 +139,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   }
 
   eos_parameters tab_eos;
-  grhayl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
+  ghl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
                                                 rho_b_atm, rho_b_min, rho_b_max,
                                                 Y_e_atm, Y_e_min, Y_e_max,
                                                 T_atm, T_min, T_max, &tab_eos);
@@ -174,7 +174,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
     case 12:
       error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(&tab_eos, nvars, rho, Y_e, T, keys, outvars, &report);
       if( error )
-        grhayl_error(report.message, error);
+        ghl_error(report.message, error);
       break;
     case 13:
       rho = rho_b_min-1.0;
@@ -237,7 +237,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(&tab_eos, nvars, tab_eos.root_finding_precision,
                                                                rho, Y_e, eps, NRPyEOS_eps_key, keys, outvars, &T, &report);
       if( error )
-        grhayl_error(report.message, error);
+        ghl_error(report.message, error);
     case 24:
       rho = rho_b_min-1.0;
       NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &S, &depsdT, &T);

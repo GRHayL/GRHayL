@@ -17,9 +17,9 @@ TODO: consider changing failure_checker to be bitwise; failure modes are current
       1k: Limiting velocity u~ after C2P/Font Fix or v in enforce_...
       10k: Font Fix was applied
       100k: Both C2P and Font Fix failed
-      1M: tau~ was reset in grhayl_apply_inequality_fixes
-      10M: S~ was reset in grhayl_apply_inequality_fixes via the first case
-      100M: S~ was reset in grhayl_apply_inequality_fixes via the second case
+      1M: tau~ was reset in ghl_apply_inequality_fixes
+      10M: S~ was reset in ghl_apply_inequality_fixes via the first case
+      100M: S~ was reset in ghl_apply_inequality_fixes via the second case
 For bitwise, would become 1, 2, 4, 8, 16, 32. 64, 128, and 256
 https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
@@ -58,11 +58,11 @@ extern "C" {
 
 //--------- Initialization routines ----------------
 
-void grhayl_initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
+void ghl_initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
 
-void grhayl_apply_inequality_fixes(
+void ghl_apply_inequality_fixes(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -71,19 +71,19 @@ void grhayl_apply_inequality_fixes(
       conservative_quantities *restrict cons,
       con2prim_diagnostics *restrict diagnostics);
 
-void grhayl_undensitize_conservatives(
+void ghl_undensitize_conservatives(
       const double psi6,
       const conservative_quantities *restrict cons,
       conservative_quantities *restrict cons_undens);
 
-void grhayl_guess_primitives(
+void ghl_guess_primitives(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prims);
 
-void grhayl_enforce_primitive_limits_and_compute_u0(
+void ghl_enforce_primitive_limits_and_compute_u0(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -91,14 +91,14 @@ void grhayl_enforce_primitive_limits_and_compute_u0(
       primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
-void grhayl_compute_conservs_and_Tmunu(
+void ghl_compute_conservs_and_Tmunu(
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       conservative_quantities *restrict cons,
       stress_energy *restrict Tmunu);
 
-void grhayl_compute_conservs(
+void ghl_compute_conservs(
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
@@ -107,7 +107,7 @@ void grhayl_compute_conservs(
 //--------------------------------------------------
 
 //-------------- Con2Prim routines -----------------
-int grhayl_con2prim_multi_method(
+int ghl_con2prim_multi_method(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -116,7 +116,7 @@ int grhayl_con2prim_multi_method(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int grhayl_con2prim_select_method(
+int ghl_con2prim_select_method(
       const con2prim_method_t c2p_key,
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
@@ -126,7 +126,7 @@ int grhayl_con2prim_select_method(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int grhayl_hybrid_Noble2D(
+int ghl_hybrid_Noble2D(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -135,7 +135,7 @@ int grhayl_hybrid_Noble2D(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int grhayl_hybrid_Font_fix(
+int ghl_hybrid_Font_fix(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -144,7 +144,7 @@ int grhayl_hybrid_Font_fix(
       primitive_quantities *restrict prims,
       con2prim_diagnostics *restrict diagnostics);
 
-int grhayl_tabulated_Palenzuela1D_energy(
+int ghl_tabulated_Palenzuela1D_energy(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -153,7 +153,7 @@ int grhayl_tabulated_Palenzuela1D_energy(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int grhayl_tabulated_Palenzuela1D_entropy(
+int ghl_tabulated_Palenzuela1D_entropy(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -162,7 +162,7 @@ int grhayl_tabulated_Palenzuela1D_entropy(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int grhayl_tabulated_Newman1D_energy(
+int ghl_tabulated_Newman1D_energy(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -171,7 +171,7 @@ int grhayl_tabulated_Newman1D_energy(
       primitive_quantities *restrict prim,
       con2prim_diagnostics *restrict diagnostics);
 
-int grhayl_tabulated_Newman1D_entropy(
+int ghl_tabulated_Newman1D_entropy(
       const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
@@ -184,7 +184,7 @@ int grhayl_tabulated_Newman1D_entropy(
 
 //------------ Auxiliary Functions -----------------
 
-void grhayl_limit_utilde_and_compute_v(
+void ghl_limit_utilde_and_compute_v(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict metric,
       double utU[3],

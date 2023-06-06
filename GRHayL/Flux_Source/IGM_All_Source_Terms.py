@@ -177,7 +177,7 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 
         for i in range(3):
             desc = f"Add source term for {i}-component of Stilde and tau_tilde"
-            name = f"grhayl_calculate_source_terms_dirn{i}"
+            name = f"ghl_calculate_source_terms_dirn{i}"
 
             loopstring = prestring
             loopstring += f"const double alpha_dD{i} = metric_derivs->lapse;\n"
@@ -210,7 +210,7 @@ eos->compute_h_and_cs2(eos, prims, &h, &cs2);
 
 
         desc = "Add extrinsic curvature source term for tau_tilde"
-        name = "grhayl_calculate_tau_tilde_source_term_extrinsic_curv"    
+        name = "ghl_calculate_tau_tilde_source_term_extrinsic_curv"    
 
         prestring += "const double KDD00 = curv->K[0][0];\n"
         prestring += "const double KDD01 = curv->K[0][1];\n"

@@ -25,7 +25,7 @@ validate_computed_values(
   err += fread(&eps_unperturbed, sizeof(double), 1, fp_unperturbed);
   err += fread(&T_unperturbed  , sizeof(double), 1, fp_unperturbed);
   if( err != 4 )
-    grhayl_error("Failed to read unperturbed data from file\n");
+    ghl_error("Failed to read unperturbed data from file\n");
 
   // Read time, Y_e, eps, temperature from second file
   err = 0;
@@ -34,7 +34,7 @@ validate_computed_values(
   err += fread(&eps_perturbed, sizeof(double), 1, fp_perturbed);
   err += fread(&T_perturbed  , sizeof(double), 1, fp_perturbed);
   if( err != 4 )
-    grhayl_error("Failed to read perturbed data from file\n");
+    ghl_error("Failed to read perturbed data from file\n");
 
   // Perform validation
   validate(t_unperturbed  , t  , t_perturbed  );
@@ -162,7 +162,7 @@ generate_test_data(const eos_parameters *restrict eos) {
       fwrite(&T        , sizeof(double), 1, fp);
     }
     fclose(fp);
-    grhayl_info("Finished %s evolution\n", perturb ? "perturbed" : "unperturbed");
+    ghl_info("Finished %s evolution\n", perturb ? "perturbed" : "unperturbed");
   }
 }
 
@@ -178,7 +178,7 @@ run_unit_test(const eos_parameters *restrict eos) {
   err += fread(&n2, sizeof(int), 1, fp_pert  );
   if( err != 2 || n1 != n2 ) {
     fclose(fp_unpert); fclose(fp_pert);
-    grhayl_error("Problem reading number of steps from file (err: %d, n1: %d, n2: %d)\n",
+    ghl_error("Problem reading number of steps from file (err: %d, n1: %d, n2: %d)\n",
                  err, n1, n2);
   }
 
@@ -193,7 +193,7 @@ run_unit_test(const eos_parameters *restrict eos) {
   err += fread(&gfs[EPS]   , sizeof(double), 1, fp_unpert);
   if( err != 6 ) {
     fclose(fp_unpert); fclose(fp_pert);
-    grhayl_error("Failed to read initial data from unperturbed data file\n");
+    ghl_error("Failed to read initial data from unperturbed data file\n");
   }
   double t = 0.0;
   for(int n=0;n<n_steps;n++) {

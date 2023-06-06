@@ -94,7 +94,7 @@ void GRHayLMHD_A_flux_rhs(
         vars.c2_min = cmin[dir2_offset][index_B1];
         vars.c2_max = cmax[dir2_offset][index_B1];
 
-        A_rhs[index] = grhayl_HLL_2D_flux(psi6, &vars);
+        A_rhs[index] = ghl_HLL_2D_flux(psi6, &vars);
       }
     }
   }

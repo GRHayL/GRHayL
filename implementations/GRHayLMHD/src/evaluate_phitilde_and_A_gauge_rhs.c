@@ -109,7 +109,7 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
 //          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][CCTK_GFINDEX3D(cctkGH, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
-        grhayl_interpolate_for_induction_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
+        ghl_interpolate_for_induction_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
 
         alpha_interp[index] = interp_vars.alpha_interp;
         alpha_sqrtg_Ax_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[0];
@@ -157,7 +157,7 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
           phitilde_stencil[1][iter+2] = phitilde[indexy];
           phitilde_stencil[2][iter+2] = phitilde[indexz];
         }
-        phitilde_rhs[index] += grhayl_calculate_phitilde_rhs(dxi, grhayl_params->Lorenz_damping_factor, alpha_interp[index], shiftx, shifty, shiftz, Ai_stencil, phitilde_stencil);
+        phitilde_rhs[index] += ghl_calculate_phitilde_rhs(dxi, grhayl_params->Lorenz_damping_factor, alpha_interp[index], shiftx, shifty, shiftz, Ai_stencil, phitilde_stencil);
     
       }
     }

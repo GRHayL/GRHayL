@@ -1,6 +1,6 @@
 #include "reconstruction.h"
 
-void grhayl_flatten_and_monotonize_Ur_and_Ul(
+void ghl_flatten_and_monotonize_Ur_and_Ul(
       const double U,
       const double ftilde,
       double *restrict Ur,

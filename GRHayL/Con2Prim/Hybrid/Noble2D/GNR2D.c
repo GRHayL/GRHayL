@@ -1,6 +1,6 @@
 #include "../../harm_u2p_util.h"
 
-int grhayl_general_newton_raphson(
+int ghl_general_newton_raphson(
       const eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -44,7 +44,7 @@ int grhayl_general_newton_raphson(
     /****************************************/
     /* Make sure that the new x[] is physical : */
     /****************************************/
-    grhayl_validate_x(x, x_old);
+    ghl_validate_x(x, x_old);
 
     if( ((fabs(errx) <= NEWT_TOL)) || (n_iter >= (MAX_NEWT_ITER-1)) ) {
       keep_iterating = 0;

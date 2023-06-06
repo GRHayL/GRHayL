@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : grhayl_enforce_primitive_limits_and_compute_u0()
+/* Function    : ghl_enforce_primitive_limits_and_compute_u0()
  * Description : Applies limits to rho_b, pressure, and v^i, then
                  recomputes epsilon and (if needed) entropy
 
@@ -18,7 +18,7 @@
  *
  */
 
-void grhayl_enforce_primitive_limits_and_compute_u0(
+void ghl_enforce_primitive_limits_and_compute_u0(
     const grhayl_parameters *restrict params,
     const eos_parameters *restrict eos,
     const metric_quantities *restrict ADM_metric,
@@ -67,5 +67,5 @@ void grhayl_enforce_primitive_limits_and_compute_u0(
   }
 
   // Finally, apply speed limit to v and compute u^0
-  grhayl_limit_v_and_compute_u0(eos, ADM_metric, prims, speed_limited);
+  ghl_limit_v_and_compute_u0(eos, ADM_metric, prims, speed_limited);
 }

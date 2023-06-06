@@ -243,7 +243,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
           metric_quantities ADM_metric;
-          grhayl_enforce_detgtij_and_initialize_ADM_metric(
+          ghl_enforce_detgtij_and_initialize_ADM_metric(
                 alp[index],
                 betax[index], betay[index], betaz[index],
                 gxx[index], gxy[index], gxz[index],
@@ -251,10 +251,10 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 &ADM_metric);
       
         ADM_aux_quantities metric_aux;
-        grhayl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+        ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
           primitive_quantities prims;
-          grhayl_initialize_primitives(
+          ghl_initialize_primitives(
                 rho_b[index], pressure[index], eps[index],
                 vx[index], vy[index], vz[index],
                 Bx_center[index], By_center[index], Bz_center[index],
@@ -265,20 +265,20 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
           conservative_quantities cons;
           stress_energy Tmunu;
           int speed_limited = 0;
-          grhayl_enforce_primitive_limits_and_compute_u0(
+          ghl_enforce_primitive_limits_and_compute_u0(
                 grhayl_params, grhayl_eos, &ADM_metric,
                 &metric_aux, &prims, &speed_limited);
-          grhayl_compute_conservs_and_Tmunu(
+          ghl_compute_conservs_and_Tmunu(
                 &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
-          grhayl_return_primitives(
+          ghl_return_primitives(
                 &prims,
                 &rho_b[index], &pressure[index], &eps[index],
                 &vx[index], &vy[index], &vz[index],
                 &Bx_center[index], &By_center[index], &Bz_center[index],
                 &dummy1, &dummy2, &dummy3);
 
-          grhayl_return_conservatives(
+          ghl_return_conservatives(
                 &cons,
                 &rho_star[index], &tau[index],
                 &Stildex[index], &Stildey[index], &Stildez[index],
@@ -286,7 +286,7 @@ void GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
                 //&Y_e[index], &entropy[index]);
 
           if(update_Tmunu) {
-            grhayl_return_stress_energy(
+            ghl_return_stress_energy(
                   &Tmunu, &eTtt[index], &eTtx[index],
                   &eTty[index], &eTtz[index], &eTxx[index],
                   &eTxy[index], &eTxz[index], &eTyy[index],

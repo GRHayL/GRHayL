@@ -1,6 +1,6 @@
 #include "../utils.h"
 
-/* Function    : grhayl_tabulated_Palenzuela1D
+/* Function    : ghl_tabulated_Palenzuela1D
  * Author      : Leo Werneck
  *
  * Performs a primitive recovery using the Palenzuela et al. scheme.
@@ -22,7 +22,7 @@
  * References  : [1] Palenzuela et al. (2015) arXiv:1505.01607
  *             : [2] Siegel et al. (2018) arXiv:1712.07538
  */
-int grhayl_tabulated_Palenzuela1D(
+int ghl_tabulated_Palenzuela1D(
       void compute_rho_P_eps_T_W(
             const double x,
             fparams_struct *restrict fparams,
@@ -31,7 +31,7 @@ int grhayl_tabulated_Palenzuela1D(
             double *restrict eps_ptr,
             double *restrict T_ptr,
             double *restrict W_ptr ),
-      const grhayl_parameters *restrict grhayl_params,
+      const grhayl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,
@@ -40,7 +40,7 @@ int grhayl_tabulated_Palenzuela1D(
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
-  double S_squared = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
+  double S_squared = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
@@ -52,14 +52,14 @@ int grhayl_tabulated_Palenzuela1D(
       SD[i] *= rescale_factor;
 
     // Step 2.3: Recompute S^{2}
-    S_squared = grhayl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
+    S_squared = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, SD);
   }
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
   const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
                            prims->BU[1] * ONE_OVER_SQRT_4PI,
                            prims->BU[2] * ONE_OVER_SQRT_4PI};
-  const double B_squared = grhayl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
+  const double B_squared = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   double BdotS = 0.0;
@@ -69,7 +69,7 @@ int grhayl_tabulated_Palenzuela1D(
   fparams_struct fparams;
   const double invD             = 1.0/cons_undens->rho;
   fparams.compute_rho_P_eps_T_W = compute_rho_P_eps_T_W;
-  fparams.evolve_T              = grhayl_params->evolve_temp;
+  fparams.evolve_T              = params->evolve_temp;
   fparams.Y_e                   = cons_undens->Y_e * invD;
   fparams.q                     = cons_undens->tau * invD;
   fparams.r                     = S_squared * invD * invD;
@@ -89,14 +89,14 @@ int grhayl_tabulated_Palenzuela1D(
   roots_params rparams;
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
-  grhayl_toms748(froot, &fparams, xlow, xup, &rparams);
+  ghl_toms748(froot, &fparams, xlow, xup, &rparams);
   if( rparams.error_key != roots_success ) {
     // Adjust the temperature guess and try again
     fparams.temp_guess = eos->T_max;
     prims->temperature = eos->T_max;
-    grhayl_toms748(froot, &fparams, xlow, xup, &rparams);
+    ghl_toms748(froot, &fparams, xlow, xup, &rparams);
     if( rparams.error_key != roots_success ) {
-      grhayl_warn("TOMS748 did not find a root (see error report below)\n");
+      ghl_warn("TOMS748 did not find a root (see error report below)\n");
       roots_info(&rparams);
       return rparams.error_key;
     }
@@ -112,7 +112,7 @@ int grhayl_tabulated_Palenzuela1D(
   //          tilde(u)^{i} := W v^{i},
   // Step 10.a: Compute S^{i}
   double SU[3];
-  grhayl_raise_vector_3D(ADM_metric->gammaUU, SD, SU);
+  ghl_raise_vector_3D(ADM_metric->gammaUU, SD, SU);
 
   // Step 10.b: Set Z
   const double Z = x*rho*W;

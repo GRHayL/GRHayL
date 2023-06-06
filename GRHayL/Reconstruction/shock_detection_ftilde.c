@@ -6,7 +6,7 @@
 #define OMEGA2  10.0
 #define EPSILON2 0.33
 
-double grhayl_shock_detection_ftilde(
+double ghl_shock_detection_ftilde(
       const double P[5],
       const double v_flux_dirn[5]) {
 

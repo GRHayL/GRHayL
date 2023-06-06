@@ -36,7 +36,7 @@ void GRHayLMHD_evaluate_tau_curvature_rhs(CCTK_ARGUMENTS) {
         Az_rhs[index]       = 0.0;
 
         metric_quantities ADM_metric;
-        grhayl_initialize_metric(
+        ghl_initialize_metric(
               alp[index],
               betax[index], betay[index], betaz[index],
               gxx[index], gxy[index], gxz[index],
@@ -44,13 +44,13 @@ void GRHayLMHD_evaluate_tau_curvature_rhs(CCTK_ARGUMENTS) {
               &ADM_metric);
 
         extrinsic_curvature curv;
-        grhayl_initialize_extrinsic_curvature(
+        ghl_initialize_extrinsic_curvature(
               kxx[index], kxy[index], kxz[index],
               kyy[index], kyz[index], kzz[index],
               &curv);
 
         primitive_quantities prims;
-        grhayl_initialize_primitives(
+        ghl_initialize_primitives(
               rho_b[index], pressure[index], poison,
               vx[index], vy[index], vz[index],
               Bx_center[index], By_center[index], Bz_center[index],
@@ -58,12 +58,12 @@ void GRHayLMHD_evaluate_tau_curvature_rhs(CCTK_ARGUMENTS) {
               &prims);
 
         int speed_limited = 0;
-        grhayl_limit_v_and_compute_u0(
+        ghl_limit_v_and_compute_u0(
               grhayl_eos, &ADM_metric, &prims, &speed_limited);
 
         conservative_quantities cons_source;
         cons_source.tau = 0;
-        grhayl_calculate_tau_tilde_source_term_extrinsic_curv(
+        ghl_calculate_tau_tilde_source_term_extrinsic_curv(
                  &prims, grhayl_eos, &ADM_metric, &curv, &cons_source);
         tau_rhs[index] += cons_source.tau;
       }
