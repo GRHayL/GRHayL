@@ -2,7 +2,7 @@
 
 double GRHayLHD_eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in) {
   double K, Gamma;
-  eos->hybrid_get_K_and_Gamma(eos, rho_in, &K, &Gamma);
+  ghl_hybrid_get_K_and_Gamma(eos, rho_in, &K, &Gamma);
   const double P_cold = K*pow(rho_in, Gamma);
   return eos->Gamma_th + (Gamma - eos->Gamma_th)*P_cold/press_in;
 }
