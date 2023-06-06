@@ -61,9 +61,9 @@ jobs:
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/metric_initial_data.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/grhayl_con2prim_multi_method_hybrid_input.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/grhayl_con2prim_multi_method_hybrid_${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/grhayl_con2prim_multi_method_hybrid_${{ matrix.test-function }}_output_pert.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_multi_method_hybrid_input.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_multi_method_hybrid_${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/con2prim_multi_method_hybrid_${{ matrix.test-function }}_output_pert.bin
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/con2prim/md5/hybrid_${{ matrix.test-function }}.md5
           md5sum -c hybrid_${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} function

@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
   double *S_y = (double*) malloc(sizeof(double)*arraylength);
   double *S_z = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("ghl_con2prim_multi_method_hybrid_input.bin","rb");
+  infile = fopen_with_check("con2prim_multi_method_hybrid_input.bin","rb");
   key  = fread(rho_b, sizeof(double), arraylength, infile);
   key += fread(press, sizeof(double), arraylength, infile);
   key += fread(eps, sizeof(double), arraylength, infile);
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
   // Allocate memory for the returned value of C2P routine
   int *c2p_check = (int*) malloc(sizeof(int)*arraylength);
 
-  infile = fopen_with_check("ghl_con2prim_multi_method_hybrid_FontFix_output.bin","rb");
+  infile = fopen_with_check("con2prim_multi_method_hybrid_FontFix_output.bin","rb");
   key  = fread(rho_b_trusted, sizeof(double), arraylength, infile);
   key += fread(press_trusted, sizeof(double), arraylength, infile);
   key += fread(eps_trusted, sizeof(double), arraylength, infile);
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
   double *By_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_pert = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("ghl_con2prim_multi_method_hybrid_FontFix_output_pert.bin","rb");
+  infile = fopen_with_check("con2prim_multi_method_hybrid_FontFix_output_pert.bin","rb");
   key  = fread(rho_b_pert, sizeof(double), arraylength, infile);
   key += fread(press_pert, sizeof(double), arraylength, infile);
   key += fread(eps_pert, sizeof(double), arraylength, infile);
@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
     ghl_guess_primitives(&eos, &ADM_metric, &metric_aux, &cons, &prims);
     const int check = ghl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if( check != c2p_check[i] )
-      ghl_error("Test ghl_hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
+      ghl_error("ghl_hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
 
     primitive_quantities prims_trusted, prims_pert;
     ghl_initialize_primitives(
