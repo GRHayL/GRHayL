@@ -29,7 +29,7 @@ runs:
         gcovr -r . --keep
       shell: bash
 
-    # These probably fail because we need to tell gcovr tp
+    # These probably fail because we need to tell gcovr to
     # use the installed versions and not whatever MacOS
     # ships with
     - if: runner.os == 'MacOS' && inputs.compiler == 'gcc'

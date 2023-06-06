@@ -1,8 +1,7 @@
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {
-  FILE* infile = fopen("ET_Legacy_induction_gauge_rhs_input.bin","rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_induction_gauge_rhs_input.bin");
+  FILE* infile = fopen_with_check("ET_Legacy_induction_gauge_rhs_input.bin","rb");
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
@@ -216,8 +215,7 @@ int main(int argc, char **argv) {
   }
 
 
-  infile = fopen("ET_Legacy_induction_gauge_rhs_output.bin", "rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_induction_gauge_rhs_output.bin");
+  infile = fopen_with_check("ET_Legacy_induction_gauge_rhs_output.bin", "rb");
 
   double *phitilde_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Ax_trusted       = (double*) malloc(sizeof(double)*arraylength);
@@ -234,8 +232,7 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in trusted data. Please check that comparison data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen("ET_Legacy_induction_gauge_rhs_output_pert.bin", "rb");
-  check_file_was_successfully_open(infile, "phitilde_and_A_gauge_rhs_pert.bin");
+  infile = fopen_with_check("ET_Legacy_induction_gauge_rhs_output_pert.bin", "rb");
 
   double *phitilde_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Ax_pert       = (double*) malloc(sizeof(double)*arraylength);

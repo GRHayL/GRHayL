@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
       || prims.vU[2]          != 0.0
       || prims.eps         != eos.eps_atm
       || prims.entropy     != eos.entropy_atm)
-        ghl_error("ghl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with hybrid EOS.\n"
+        ghl_error("grhayl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with hybrid EOS.\n"
                      "  rho_b, pressure, vx, vy, vz, epsilon, entropy\n"
                      "  Struct output: %e %e %e %e %e %e %e %e %e\n"
                      "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
@@ -101,8 +101,7 @@ int main(int argc, char **argv) {
   metric_quantities new_metric;
 
   // read in metric data
-  FILE* infile = fopen("ghl_core_test_suite_input.bin","rb");
-  check_file_was_successfully_open(infile, "ghl_core_test_suite_input.bin");
+  FILE* infile = fopen_with_check("grhayl_core_test_suite_input.bin","rb");
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
@@ -152,7 +151,7 @@ int main(int argc, char **argv) {
   || relative_error(gyy[i],   new_metric.gammaDD[1][1]) > rel_tol
   || relative_error(gyz[i],   new_metric.gammaDD[1][2]) > rel_tol
   || relative_error(gzz[i],   new_metric.gammaDD[2][2]) > rel_tol)
-    ghl_error("unit_test_ghl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
+    ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
                  "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
                  "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
                  lapse[i], betax[i], betay[i], betaz[i],
@@ -183,7 +182,7 @@ int main(int argc, char **argv) {
   || relative_error(gyy[0],   new_metric.gammaDD[1][1]) > rel_tol
   || relative_error(gyz[0],   new_metric.gammaDD[1][2]) > rel_tol
   || relative_error(gzz[0],   new_metric.gammaDD[2][2]) > rel_tol)
-    ghl_error("unit_test_ghl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
+    ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
                  "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
                  "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
                  lapse[0], betax[0], betay[0], betaz[0],
@@ -192,5 +191,5 @@ int main(int argc, char **argv) {
                  new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
                  new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
 
-  ghl_info("ghl_core_test_suite has passed!\n");
+  ghl_info("grhayl_core_test_suite has passed!\n");
 }

@@ -17,8 +17,7 @@ void A_rhs_dir(const int dirlength, const int A_dir,
 
 int main(int argc, char **argv) {
 
-  FILE* infile = fopen("ET_Legacy_HLL_flux_input.bin", "rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_HLL_flux_input.bin");
+  FILE* infile = fopen_with_check("ET_Legacy_HLL_flux_input.bin", "rb");
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
@@ -98,10 +97,8 @@ int main(int argc, char **argv) {
             A_rhs[A_dir-1]);
   }
 
-  infile = fopen("ET_Legacy_HLL_flux_output.bin","rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_HLL_flux_output.bin");
-  FILE *inpert = fopen("ET_Legacy_HLL_flux_output_pert.bin","rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_HLL_flux_output_pert.bin");
+  infile = fopen_with_check("ET_Legacy_HLL_flux_output.bin","rb");
+  FILE *inpert = fopen_with_check("ET_Legacy_HLL_flux_output_pert.bin","rb");
 
   key = 0;
   for(int coord=0; coord<3; coord++)

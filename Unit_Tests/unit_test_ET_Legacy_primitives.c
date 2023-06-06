@@ -8,8 +8,7 @@
 
 int main(int argc, char **argv) {
 
-  FILE* input = fopen("ET_Legacy_primitives_input.bin", "rb");
-  check_file_was_successfully_open(input, "ET_Legacy_primitives_input.bin");
+  FILE* input = fopen_with_check("ET_Legacy_primitives_input.bin", "rb");
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, input);
@@ -122,8 +121,7 @@ int main(int argc, char **argv) {
 
   // The output for this test is provided by IllinoisGRMHD via the ET
   // for validation with legacy code
-  FILE* output = fopen("ET_Legacy_primitives_output.bin", "rb");
-  check_file_was_successfully_open(output, "ET_Legacy_primitives_output.bin");
+  FILE* output = fopen_with_check("ET_Legacy_primitives_output.bin", "rb");
 
   key  = fread(rho_b_trusted, sizeof(double), arraylength, output);
   key += fread(press_trusted, sizeof(double), arraylength, output);
@@ -138,8 +136,7 @@ int main(int argc, char **argv) {
 
   fclose(output);
 
-  output = fopen("ET_Legacy_primitives_output_pert.bin", "rb");
-  check_file_was_successfully_open(output, "ET_Legacy_primitives_output_pert.bin");
+  output = fopen_with_check("ET_Legacy_primitives_output_pert.bin", "rb");
 
   key  = fread(rho_b_pert, sizeof(double), arraylength, output);
   key += fread(press_pert, sizeof(double), arraylength, output);

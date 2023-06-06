@@ -45,8 +45,7 @@ static inline void calculate_face_value(
 int main(int argc, char **argv) {
 
   // Set up test data
-  FILE* infile = fopen("ET_Legacy_flux_source_input.bin", "rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_flux_source_input.bin");
+  FILE* infile = fopen_with_check("ET_Legacy_flux_source_input.bin", "rb");
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
@@ -413,8 +412,7 @@ int main(int argc, char **argv) {
   double *pert_S_y_rhs = (double*) malloc(sizeof(double)*arraylength);
   double *pert_S_z_rhs = (double*) malloc(sizeof(double)*arraylength);
 
-  FILE *outfile = fopen("ET_Legacy_flux_source_output.bin", "rb");
-  check_file_was_successfully_open(outfile, "ET_Legacy_flux_source_output.bin")
+  FILE *outfile = fopen_with_check("ET_Legacy_flux_source_output.bin", "rb");
 
   key  = fread(trusted_rho_star_rhs, sizeof(double), arraylength, outfile);
   key += fread(trusted_tau_rhs,      sizeof(double), arraylength, outfile);
@@ -428,8 +426,7 @@ int main(int argc, char **argv) {
 
   fclose(outfile);
 
-  outfile = fopen("ET_Legacy_flux_source_output_pert.bin", "rb");
-  check_file_was_successfully_open(outfile, "ET_Legacy_flux_source_output_pert.bin");
+  outfile = fopen_with_check("ET_Legacy_flux_source_output_pert.bin", "rb");
 
   key  = fread(pert_rho_star_rhs, sizeof(double), arraylength, outfile);
   key += fread(pert_tau_rhs,      sizeof(double), arraylength, outfile);

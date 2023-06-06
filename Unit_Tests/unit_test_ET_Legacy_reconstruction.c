@@ -19,8 +19,7 @@ int main(int argc, char **argv) {
                                              neos, rho_ppoly_in, Gamma_ppoly_in,
                                              k_ppoly0, Gamma_th, &eos);
 
-  FILE* infile = fopen("ET_Legacy_reconstruction_input.bin", "rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_reconstruction_input.bin");
+  FILE* infile = fopen_with_check("ET_Legacy_reconstruction_input.bin", "rb");
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
@@ -66,11 +65,9 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen("ET_Legacy_reconstruction_output.bin","rb");
-  check_file_was_successfully_open(infile, "ET_Legacy_reconstruction_output.bin");
+  infile = fopen_with_check("ET_Legacy_reconstruction_output.bin","rb");
 
-  FILE* inpert = fopen("ET_Legacy_reconstruction_output_pert.bin","rb");
-  check_file_was_successfully_open(inpert, "ET_Legacy_reconstruction_output_pert.bin");
+  FILE* inpert = fopen_with_check("ET_Legacy_reconstruction_output_pert.bin","rb");
 
   for(int flux_dirn = 0; flux_dirn<3; flux_dirn++) {
     const int num_vars = 3;
