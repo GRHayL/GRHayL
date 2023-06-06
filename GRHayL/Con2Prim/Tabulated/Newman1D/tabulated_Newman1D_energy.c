@@ -76,7 +76,7 @@ int ghl_newman_energy(
     const double xrho = con->rho * invW;
     const double xeps = - 1.0 + (1.0-W*W)*x*invW
                       + W*( 1.0 + q - s + 0.5*( s*invW*invW + (t*t)/(x*x) ) );
-    eos->tabulated_compute_P_T_from_eps(eos, xrho, xye, xeps, &xprs, &xtemp);
+    ghl_tabulated_compute_P_T_from_eps(eos, xrho, xye, xeps, &xprs, &xtemp);
 
     AtStep++;
     AtP[AtStep]=xprs;
@@ -116,7 +116,7 @@ int ghl_newman_energy(
   prim->vU[0]          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
   prim->vU[1]          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
   prim->vU[2]          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
-  eos->tabulated_compute_P_eps_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
+  ghl_tabulated_compute_P_eps_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
                                        &prim->press, &prim->eps );
 
   return grhayl_success;

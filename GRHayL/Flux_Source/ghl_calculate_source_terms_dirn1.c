@@ -8,7 +8,7 @@ void ghl_calculate_source_terms_dirn1(const primitive_quantities *restrict prims
 
 double h, cs2;
 
-eos->compute_h_and_cs2(eos, prims, &h, &cs2);
+ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
 const double u4U0 = prims->u0;
 const double u4U1 = prims->vU[0]*u4U0;
 const double u4U2 = prims->vU[1]*u4U0;

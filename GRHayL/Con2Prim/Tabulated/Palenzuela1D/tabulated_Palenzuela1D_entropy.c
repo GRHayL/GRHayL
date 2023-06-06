@@ -44,13 +44,13 @@ compute_rho_P_eps_T_W_entropy(
   double P, eps;
   if( fparams->evolve_T ) {
     double ent = fparams->cons_undens->entropy/W;
-    eos->tabulated_compute_P_eps_T_from_S( eos, rho, Y_e, ent, &P, &eps, &T );
+    ghl_tabulated_compute_P_eps_T_from_S( eos, rho, Y_e, ent, &P, &eps, &T );
   }
   else {
     // If the temperature is not evolved, use the input guess to determine
     // the remaining primitives. Note that in this case one must provide
     // the appropriate temperature instead of the default guess T = T_min.
-    eos->tabulated_compute_P_eps_from_T( eos, rho, Y_e, T, &P, &eps );
+    ghl_tabulated_compute_P_eps_from_T( eos, rho, Y_e, T, &P, &eps );
   }
 
   // Step 3: Set the output

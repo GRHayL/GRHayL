@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     ghl_info("Data generation finished successfully\n");
   }
 
-  eos.tabulated_free_memory(&eos);
+  ghl_tabulated_free_memory(&eos);
 
   return 0;
 }

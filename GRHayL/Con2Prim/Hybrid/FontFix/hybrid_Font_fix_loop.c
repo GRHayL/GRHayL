@@ -54,7 +54,7 @@ int ghl_hybrid_Font_fix_loop(
     /* Based on rhob_in (i.e. rhob1), determine the
      * polytropic index j1
      */
-    j1 = eos->hybrid_find_polytropic_index(eos,rhob1);
+    j1 = ghl_hybrid_find_polytropic_index(eos,rhob1);
 
     //////////////////////
     // INNER LOOP START //
@@ -72,7 +72,7 @@ int ghl_hybrid_Font_fix_loop(
        * | h = h_cold = 1 + eps_cold + P_cold/rhob. |
        * .------------------------------------------.
        */
-      eos->hybrid_compute_P_cold_and_eps_cold(eos, rhob0, &P_cold, &eps_cold);
+      ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob0, &P_cold, &eps_cold);
       h = 1.0 + eps_cold + P_cold/rhob0;
 
       /* Update rhob using eq. (A62) in Etienne et al. (2011)
@@ -84,7 +84,7 @@ int ghl_hybrid_Font_fix_loop(
       rhob1 = cons->rho*Psim6/sqrt(1.0+Sf20/SQR(cons->rho*h));
 
       /* Update j1 */
-      j1 = eos->hybrid_find_polytropic_index(eos,rhob1);
+      j1 = ghl_hybrid_find_polytropic_index(eos,rhob1);
 
     }  while( fabs(rhob1-rhob0) > rhob1*tol || j1 != j0);
     //////////////////////
@@ -97,7 +97,7 @@ int ghl_hybrid_Font_fix_loop(
     /* Perform physical checks on the variables
      * and output the last value of h obtained
      */
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, rhob_out, &P_cold, &eps_cold);
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob_out, &P_cold, &eps_cold);
     h = 1.0 + eps_cold + P_cold/rhob_out;
 
     /* Set W based on eq. (A60) in Etienne et al. (2011)

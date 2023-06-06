@@ -170,7 +170,7 @@ void calc_prim_from_x_3D_WZT(
   double xtemp = T;
   double xeps  = 0.0;
   double xprs  = 0.0;
-  eos->tabulated_compute_P_eps_from_T(eos, xrho, xye, xtemp, &xprs, &xeps);
+  ghl_tabulated_compute_P_eps_from_T(eos, xrho, xye, xtemp, &xprs, &xeps);
 
   // Eq. (24) in Siegel et al. 2018, with S^{i} := gamma^{ij} S_{j}
   // The extra factor of W converts v^{i} to tilde(u)^{i}.

@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
   int failure_checker = 0;
   double rho_test = 1e-2;
   double P_cold = 0.0;
-  eos.hybrid_compute_P_cold(&eos, rho_test, &P_cold);
+  ghl_hybrid_compute_P_cold(&eos, rho_test, &P_cold);
 
   metric_quantities ADM_metric;
   ghl_initialize_metric(1.0,
@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
   params.psi6threshold = Psi6threshold;
 
   prims.rho   = 12.0*eos.rho_atm;
-  eos.hybrid_compute_P_cold(&eos, prims.rho, &P_cold);
+  ghl_hybrid_compute_P_cold(&eos, prims.rho, &P_cold);
   prims.press = 1e3*P_cold;
   ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
   if( relative_error(1e2*P_cold, prims.press) > 1e-20 )

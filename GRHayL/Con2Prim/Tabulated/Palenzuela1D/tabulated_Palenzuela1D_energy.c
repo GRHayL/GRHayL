@@ -48,13 +48,13 @@ compute_rho_P_eps_T_W_energy(
     const double t = fparams->t;
     // Eq. (43) of https://arxiv.org/pdf/1712.07538.pdf
     eps = W - 1.0 + (1.0-W*W)*x/W + W*(q - s + t*t/(2*x*x) + s/(2*W*W) );
-    eos->tabulated_compute_P_T_from_eps( eos, rho, Y_e, eps, &P, &T );
+    ghl_tabulated_compute_P_T_from_eps( eos, rho, Y_e, eps, &P, &T );
   }
   else {
     // If the temperature is not evolved, use the input guess to determine
     // the remaining primitives. Note that in this case one must provide
     // the appropriate temperature instead of the default guess T = T_min.
-    eos->tabulated_compute_P_eps_from_T( eos, rho, Y_e, T, &P, &eps );
+    ghl_tabulated_compute_P_eps_from_T( eos, rho, Y_e, T, &P, &eps );
   }
 
   // Step 3: Set the output

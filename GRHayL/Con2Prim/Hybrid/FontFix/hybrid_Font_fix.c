@@ -74,7 +74,7 @@ int ghl_hybrid_Font_fix(
     /* Font fix works! */
     /* First compute P_cold, eps_cold, then h = h_cold */
     double P_cold, eps_cold;
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, rhob, &P_cold, &eps_cold);
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob, &P_cold, &eps_cold);
     double h = 1.0 + eps_cold + P_cold/rhob;
 
     /* Then compute gamma_v using equation (A19) in
@@ -103,13 +103,13 @@ int ghl_hybrid_Font_fix(
   prims->rho = cons->rho/(ADM_metric->lapse*prims->u0*metric_aux->psi6);
 
   double K_ppoly, Gamma_ppoly;
-  eos->hybrid_get_K_and_Gamma(eos, prims->rho, &K_ppoly, &Gamma_ppoly);
+  ghl_hybrid_get_K_and_Gamma(eos, prims->rho, &K_ppoly, &Gamma_ppoly);
 
   // After that, we set P = P_cold
-  eos->hybrid_compute_P_cold(eos, prims->rho, &prims->press);
+  ghl_hybrid_compute_P_cold(eos, prims->rho, &prims->press);
 
   // and compute epsilon from rho and pressure
   prims->eps = prims->press/(prims->rho*(Gamma_ppoly-1.0));
-  if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+  if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
   return 0;
 }

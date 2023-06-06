@@ -34,7 +34,7 @@ void randomize_primitives(
   // Set eps
   double P_cold = 0.0;
   double eps_cold = 0.0;
-  eos->hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
   *eps = eps_cold + (press-P_cold)/(eos->Gamma_th-1.0)/rho;
 
   // Now the magnetic fields. We'll set them aligned

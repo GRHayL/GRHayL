@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   // Step 1: Initialize the EOS struct
   eos_parameters eos;
   ghl_initialize_eos_functions(grhayl_eos_tabulated, &eos);
-  eos.tabulated_read_table_set_EOS_params(argv[1], &eos);
+  ghl_tabulated_read_table_set_EOS_params(argv[1], &eos);
   eos.root_finding_precision=1e-10;
 
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
 
         // Now perform the interpolations, validating the results
         P_interp = 0.0/0.0;
-        eos.tabulated_compute_P_from_T(&eos, rho, Y_e, T, &P_interp);
+        ghl_tabulated_compute_P_from_T(&eos, rho, Y_e, T, &P_interp);
         if( relative_error(P, P_interp) > rtol && fabs(P - P_interp) > atol )
           ghl_error("tabulated_compute_P_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
                        P, P_interp, relative_error(P, P_interp), fabs(P - P_interp));
 
         eps_interp = 0.0/0.0;
-        eos.tabulated_compute_eps_from_T(&eos, rho, Y_e, T, &eps_interp);
+        ghl_tabulated_compute_eps_from_T(&eos, rho, Y_e, T, &eps_interp);
         if( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol )
           ghl_error("tabulated_compute_eps_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
                        eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
 
         P_interp = eps_interp = 0.0/0.0;
-        eos.tabulated_compute_P_eps_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp);
+        ghl_tabulated_compute_P_eps_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp);
         if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ))
           ghl_error("tabulated_compute_P_eps_from_T validation failed:\n"
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
                        eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
 
         P_interp = eps_interp = S_interp = 0.0/0.0;
-        eos.tabulated_compute_P_eps_S_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &S_interp);
+        ghl_tabulated_compute_P_eps_S_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &S_interp);
         if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) ||
             ( relative_error(S  , S_interp  ) > rtol && fabs(S   - S_interp  ) > atol ) )
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
                        S  , S_interp  , relative_error(S  , S_interp  ), fabs(S   - S_interp  ));
 
         P_interp = eps_interp = S_interp = cs2_interp = 0.0/0.0;
-        eos.tabulated_compute_P_eps_S_cs2_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &S_interp, &cs2_interp);
+        ghl_tabulated_compute_P_eps_S_cs2_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &S_interp, &cs2_interp);
         if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) ||
             ( relative_error(S  , S_interp  ) > rtol && fabs(S   - S_interp  ) > atol ) ||
@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
                        cs2, cs2_interp, relative_error(cs2, cs2_interp), fabs(cs2 - cs2_interp));
 
         P_interp = eps_interp = depsdT_interp = 0.0/0.0;
-        eos.tabulated_compute_P_eps_depsdT_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &depsdT_interp);
+        ghl_tabulated_compute_P_eps_depsdT_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &depsdT_interp);
         if( ( relative_error(P     , P_interp     ) > rtol && fabs(P      - P_interp     ) > atol ) ||
             ( relative_error(eps   , eps_interp   ) > rtol && fabs(eps    - eps_interp   ) > atol ) ||
             ( relative_error(depsdT, depsdT_interp) > rtol && fabs(depsdT - depsdT_interp) > atol ) )
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
                        depsdT, depsdT_interp, relative_error(depsdT, depsdT_interp), fabs(depsdT - depsdT_interp ));
 
         P_interp = eps_interp = muhat_interp = mu_e_interp = mu_p_interp = mu_n_interp = 0.0/0.0;
-        eos.tabulated_compute_P_eps_muhat_mue_mup_mun_from_T(&eos, rho, Y_e, T,
+        ghl_tabulated_compute_P_eps_muhat_mue_mup_mun_from_T(&eos, rho, Y_e, T,
                                                              &P_interp, &eps_interp,
                                                              &muhat_interp, &mu_e_interp,
                                                              &mu_p_interp, &mu_n_interp);
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
 
 
         muhat_interp = mu_e_interp = mu_p_interp = mu_n_interp = X_n_interp = X_p_interp = 0.0/0.0;
-        eos.tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T(&eos, rho, Y_e, T,
+        ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T(&eos, rho, Y_e, T,
                                                              &muhat_interp, &mu_e_interp, &mu_p_interp,
                                                              &mu_n_interp, &X_n_interp, &X_p_interp);
         if( ( relative_error(muhat, muhat_interp) > rtol && fabs(muhat - muhat_interp) > atol ) ||
@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
                        X_p  , X_p_interp  , relative_error(X_p  , X_p_interp  ), fabs(X_p   - X_p_interp  ));
 
         T_interp = eos.table_T_min; P_interp = 0.0/0.0;
-        eos.tabulated_compute_P_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &T_interp);
+        ghl_tabulated_compute_P_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &T_interp);
         if( ( relative_error(T, T_interp) > rtol && fabs(T - T_interp) > atol ) ||
             ( relative_error(P, P_interp) > rtol && fabs(P - P_interp) > atol ) )
           ghl_error("tabulated_compute_P_T_from_eps validation failed:\n"
@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
                        P, P_interp, relative_error(P, P_interp), fabs(P - P_interp));
 
         T_interp = eos.table_T_min; P_interp = S_interp = depsdT_interp = 0.0/0.0;
-        eos.tabulated_compute_P_S_depsdT_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &S_interp, &depsdT_interp, &T_interp);
+        ghl_tabulated_compute_P_S_depsdT_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &S_interp, &depsdT_interp, &T_interp);
         if( ( relative_error(T     , T_interp     ) > rtol && fabs(T      - T_interp     ) > atol ) ||
             ( relative_error(P     , P_interp     ) > rtol && fabs(P      - P_interp     ) > atol ) ||
             ( relative_error(S     , S_interp     ) > rtol && fabs(S      - S_interp     ) > atol ) ||
@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
                        depsdT, depsdT_interp, relative_error(depsdT, depsdT_interp), fabs(depsdT - depsdT_interp));
 
         T_interp = eos.table_T_min; eps_interp = S_interp = 0.0/0.0;
-        eos.tabulated_compute_eps_S_T_from_P(&eos, rho, Y_e, P, &eps_interp, &S_interp, &T_interp);
+        ghl_tabulated_compute_eps_S_T_from_P(&eos, rho, Y_e, P, &eps_interp, &S_interp, &T_interp);
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) ||
             ( relative_error(S  , S_interp  ) > rtol && fabs(S   - S_interp  ) > atol ) )
@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
                        S  , S_interp  , relative_error(S  , S_interp  ), fabs(S   - S_interp  ));
 
         T_interp = eos.table_T_min; P_interp = eps_interp = 0.0/0.0;
-        eos.tabulated_compute_P_eps_T_from_S(&eos, rho, Y_e, S, &P_interp, &eps_interp, &T_interp);
+        ghl_tabulated_compute_P_eps_T_from_S(&eos, rho, Y_e, S, &P_interp, &eps_interp, &T_interp);
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
@@ -320,7 +320,7 @@ int main(int argc, char **argv) {
                        eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
 
         T_interp = eos.table_T_min; P_interp = 0.0/0.0;
-        eos.tabulated_compute_P_T_from_S(&eos, rho, Y_e, S, &P_interp, &T_interp);
+        ghl_tabulated_compute_P_T_from_S(&eos, rho, Y_e, S, &P_interp, &T_interp);
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) )
           ghl_error("tabulated_compute_P_eps_T_from_S validation failed:\n"
@@ -334,7 +334,7 @@ int main(int argc, char **argv) {
                        P  , P_interp  , relative_error(P  , P_interp  ), fabs(P   - P_interp  ));
 
         T_interp = eos.table_T_min; cs2_interp = P_interp = 0.0/0.0;
-        eos.tabulated_compute_P_cs2_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &cs2_interp, &T_interp);
+        ghl_tabulated_compute_P_cs2_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &cs2_interp, &T_interp);
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
             ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) )
@@ -351,7 +351,7 @@ int main(int argc, char **argv) {
                        P  , P_interp  , relative_error(P  , P_interp  ), fabs(P   - P_interp  ));
 
         P_interp = cs2_interp = eps_interp = 0.0/0.0;
-        eos.tabulated_compute_P_eps_cs2_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &cs2_interp);
+        ghl_tabulated_compute_P_eps_cs2_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp, &cs2_interp);
         if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
             ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
                        eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
 
         T_interp = eos.table_T_min; cs2_interp = eps_interp = 0.0/0.0;
-        eos.tabulated_compute_eps_cs2_T_from_P(&eos, rho, Y_e, P, &eps_interp, &cs2_interp, &T_interp);
+        ghl_tabulated_compute_eps_cs2_T_from_P(&eos, rho, Y_e, P, &eps_interp, &cs2_interp, &T_interp);
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
             ( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol ) ||
             ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
@@ -388,7 +388,7 @@ int main(int argc, char **argv) {
   }
 
   // Step 4: Free memory
-  eos.tabulated_free_memory(&eos);
+  ghl_tabulated_free_memory(&eos);
 
   ghl_info("Test finished with no errors!\n");
 

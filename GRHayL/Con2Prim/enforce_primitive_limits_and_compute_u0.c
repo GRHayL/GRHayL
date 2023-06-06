@@ -35,7 +35,7 @@ void ghl_enforce_primitive_limits_and_compute_u0(
     // Compute P and eps
     double P_cold = 0.0;
     double eps_cold = 0.0;
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
 
     // Set P_min and P_max
     const double P_min = 0.9*P_cold;
@@ -50,7 +50,7 @@ void ghl_enforce_primitive_limits_and_compute_u0(
     }
     // Now recompute eps and, if needed, entropy
     prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
-    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+    if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
 
   // Tabulated EOS specific floors and ceilings
   } else if( eos->eos_type == grhayl_eos_tabulated ) {
@@ -61,9 +61,9 @@ void ghl_enforce_primitive_limits_and_compute_u0(
     // Additional variables used for the EOS call
     prims->press = 0.0;
     prims->eps   = 0.0;
-    eos->tabulated_compute_P_eps_from_T(eos,
-                                        prims->rho, prims->Y_e, prims->temperature,
-                                        &prims->press, &prims->eps);
+    ghl_tabulated_compute_P_eps_from_T(eos,
+                                       prims->rho, prims->Y_e, prims->temperature,
+                                       &prims->press, &prims->eps);
   }
 
   // Finally, apply speed limit to v and compute u^0

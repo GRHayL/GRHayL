@@ -42,7 +42,7 @@ void ghl_func_rho(
 
   // Auxiliary variable declarations
   // Gamma
-  const double Gamma = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos,rho)];
+  const double Gamma = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos,rho)];
   // Gamma-1
   const double Gm1 = Gamma - 1.0;
   // rho^(Gamma-1)

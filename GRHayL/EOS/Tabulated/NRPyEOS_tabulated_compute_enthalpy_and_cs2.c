@@ -15,7 +15,7 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
 
   // Step 2: Get P, eps, cs2
   double eps, cs2, T=eos->T_atm;
-  eos->tabulated_compute_eps_cs2_T_from_P(eos, rho, Y_e, P, &eps, &cs2, &T);
+  ghl_tabulated_compute_eps_cs2_T_from_P(eos, rho, Y_e, P, &eps, &cs2, &T);
 
   // Step 3: Compute the enthalpy
   double const h = 1 + eps + P/rho;

@@ -1,5 +1,6 @@
 #include "nrpyeos_hybrid.h"
 #include "nrpyeos_tabulated.h"
+#include "grhayl_eos_functions_declaration.h"
 
 #define init_common_eos_quantities         \
   eos->W_max             = W_max;          \
@@ -27,10 +28,10 @@ void ghl_initialize_eos_functions(
 
   // Step 3: General functions (same interface for all EOSs)
   if( eos_type == grhayl_eos_hybrid ) {
-    eos->compute_h_and_cs2 = &NRPyEOS_hybrid_compute_enthalpy_and_cs2;
+    ghl_compute_h_and_cs2 = &NRPyEOS_hybrid_compute_enthalpy_and_cs2;
   }
   else if( eos_type == grhayl_eos_tabulated ) {
-    eos->compute_h_and_cs2 = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
+    ghl_compute_h_and_cs2 = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
   }
 }
 
@@ -97,30 +98,30 @@ void ghl_initialize_hybrid_eos(
   for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
 
   // Step 4: Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
-  eos->hybrid_set_K_ppoly_and_eps_integ_consts(eos);
+  ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
 
   // -------------- Ceilings --------------
   // Compute maximum P and eps
-  eos->hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_max, &eos->press_max, &eos->eps_max);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_max, &eos->press_max, &eos->eps_max);
 
   // Compute maximum entropy
-  eos->hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max, &eos->entropy_max);
+  ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max, &eos->entropy_max);
   // --------------------------------------
 
   // --------------- Floors ---------------
   // Compute maximum P and eps
-  eos->hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
 
   // Compute maximum entropy
-  eos->hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min, &eos->entropy_min);
+  ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min, &eos->entropy_min);
   // --------------------------------------
 
   // --------- Atmospheric values ---------
   // Compute atmospheric P and eps
-  eos->hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_atm, &eos->press_atm, &eos->eps_atm);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_atm, &eos->press_atm, &eos->eps_atm);
 
   // Compute atmospheric entropy
-  eos->hybrid_compute_entropy_function(eos, eos->rho_atm, eos->press_atm, &eos->entropy_atm);
+  ghl_hybrid_compute_entropy_function(eos, eos->rho_atm, eos->press_atm, &eos->entropy_atm);
 
   // Compute atmospheric tau
   eos->tau_atm = eos->rho_atm * eos->eps_atm;
@@ -163,7 +164,7 @@ void ghl_initialize_tabulated_eos(
   eos->eos_type = grhayl_eos_tabulated;
 
   // Step 2: Read the EOS table
-  eos->tabulated_read_table_set_EOS_params(table_filepath, eos);
+  ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
 
   // Step 3: Enforce default values for (rho, Y_e, T) min, max, and atm
   // Step 3.a: Atmosphere values
@@ -214,7 +215,7 @@ void ghl_initialize_tabulated_eos(
   eos->T_atm   = T_atm;
   eos->T_min   = T_min;
   eos->T_max   = T_max;
-  eos->tabulated_compute_P_eps_S_from_T(eos,
+  ghl_tabulated_compute_P_eps_S_from_T(eos,
                                         eos->rho_atm,
                                         Y_e_atm, T_atm,
                                         &eos->press_atm,

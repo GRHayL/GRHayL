@@ -227,8 +227,8 @@ def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, tabulated
     prestring = r"""
 double h_r, h_l, cs2_r, cs2_l;
 
-eos->compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
+ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 """
 
     for i in range(len(prims_NRPy_r)):

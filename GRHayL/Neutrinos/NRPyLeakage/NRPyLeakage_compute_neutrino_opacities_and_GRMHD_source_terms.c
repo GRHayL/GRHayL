@@ -26,7 +26,7 @@ void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
   // Step 1: Get chemical potentials and mass
   //         fractions using the EOS
   double muhat, mu_e, mu_p, mu_n, X_n, X_p;
-  eos->tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T(eos, rho, Y_e, T, &muhat, &mu_e, &mu_p, &mu_n, &X_n, &X_p);
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T(eos, rho, Y_e, T, &muhat, &mu_e, &mu_p, &mu_n, &X_n, &X_p);
 
   // Step 2: Compute rho in cgs units
   const double rho_cgs = rho * NRPyLeakage_units_geom_to_cgs_D;
