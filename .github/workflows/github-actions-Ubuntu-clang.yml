@@ -39,7 +39,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
-          exe: './test/unit_test_ET_Legacy_${{ matrix.test-function }}'
+          exe: ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
 
   hybrid-c2p-routines:
     strategy:
@@ -107,6 +107,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_${{ matrix.test-function }}
 
   c2p-failure:
     strategy:
@@ -132,6 +133,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_${{ matrix.test-function }}
 
   tabulated-eos:
     strategy:
@@ -158,6 +160,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_tabulated_eos
 
   piecewise-polytrope-eos:
     strategy:
@@ -182,6 +185,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_piecewise_polytrope
 
   grhayl-core:
     strategy:
@@ -211,6 +215,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_grhayl_core_test_suite
 
   reconstruction:
     strategy:
@@ -241,6 +246,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_${{ matrix.test-function }}
 
   neutrinos:
     strategy:
@@ -275,6 +281,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_${{ matrix.test-function }}
 
   con-to-prim-tabulated:
     strategy:
@@ -322,6 +329,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_con2prim_tabulated
 
   code-failure:
     strategy:
@@ -354,3 +362,4 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'clang'
+          exe: ./test/unit_test_code_error
