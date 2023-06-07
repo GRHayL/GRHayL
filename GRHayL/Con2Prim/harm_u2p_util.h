@@ -65,7 +65,7 @@ static inline double ghl_pressure_rho0_u(
 
   // Compute P_cold, eps_cold
   double P_cold, eps_cold;
-  eos->hybrid_compute_P_cold_and_eps_cold(eos, rho0, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho0, &P_cold, &eps_cold);
 
   /* Compute the pressure as a function of rho_b (rho0) and
    * u = rho_b * eps, using our hybrid EOS:
@@ -87,7 +87,7 @@ static inline double ghl_pressure_rho0_w(
 
   // Compute P_cold, eps_cold
   double P_cold, eps_cold;
-  eos->hybrid_compute_P_cold_and_eps_cold(eos,rho0, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos,rho0, &P_cold, &eps_cold);
 
   /* Compute the pressure as a function of rho_b (rho0) and
    * w = u + rho_b + p, using our hybrid EOS:
@@ -176,7 +176,7 @@ static inline double ghl_pressure_W_vsq(
 
   // Compute P_cold and eps_cold
   double P_cold, eps_cold;
-  eos->hybrid_compute_P_cold_and_eps_cold(eos,rho_b, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos,rho_b, &P_cold, &eps_cold);
 
   // Compute p = P_{cold} + P_{th}
   return( ( P_cold + (eos->Gamma_th - 1.0)*( W*inv_gammasq - D*inv_gamma*( 1.0 + eps_cold ) ) )/eos->Gamma_th );
@@ -200,10 +200,10 @@ static inline double ghl_dpdvsq_calc(
 
   // Compute P_cold and eps_cold
   double P_cold, eps_cold;
-  eos->hybrid_compute_P_cold_and_eps_cold(eos, rho_b, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho_b, &P_cold, &eps_cold);
 
   // Set basic polytropic quantities
-  const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, rho_b)];
+  const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho_b)];
 
 
   /* Now we implement the derivative of P_cold with respect

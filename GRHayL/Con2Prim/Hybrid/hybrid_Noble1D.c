@@ -178,7 +178,7 @@ int ghl_hybrid_Noble1D(
   double w = 0;
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, prims->rho)];
+    const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, prims->rho)];
     u = prims->press/(Gamma_ppoly - 1.0);
     p = ghl_pressure_rho0_u(eos, rho0, u);
     w = rho0 + u + p;
@@ -264,9 +264,9 @@ int ghl_hybrid_Noble1D(
     prims->press = ghl_pressure_rho0_w(eos, prims->rho, w);
     double P_cold = 0.0;
     double eps_cold = 0.0;
-    eos->hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
     prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
-    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+    if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
   } else if(eos->eos_type == grhayl_eos_tabulated) {
     ghl_warn("No tabulated EOS support yet! Sorry!");
   }

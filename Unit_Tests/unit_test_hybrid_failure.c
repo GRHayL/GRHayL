@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
       prims.vU[2] = 2.0;
       prims.Y_e = cons.Y_e/cons.rho;
       prims.temperature = eos.T_max;
-      eos.hybrid_compute_P_cold(&eos, prims.rho, &prims.press);
+      ghl_hybrid_compute_P_cold(&eos, prims.rho, &prims.press);
     }
 
     ghl_initialize_conservatives(rho_star[i], tau[i],

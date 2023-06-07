@@ -36,7 +36,7 @@ void IsotropicGasID(CCTK_ARGUMENTS) {
 
   // Step 3: Compute local pressure and epsilon
   CCTK_REAL IsotropicGasID_press, IsotropicGasID_eps, IsotropicGasID_entropy;
-  grhayl_eos->tabulated_compute_P_eps_S_from_T(grhayl_eos,
+  ghl_tabulated_compute_P_eps_S_from_T(grhayl_eos,
                                                IsotropicGasID_rho,
                                                IsotropicGasID_Y_e,
                                                IsotropicGasID_temperature,

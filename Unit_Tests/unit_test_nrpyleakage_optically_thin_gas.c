@@ -84,28 +84,28 @@ rk4_step_ode(
   *T = eos->T_max;
   Y_e = gfs[Y_E];
   eps = gfs[EPS];
-  eos->tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
   rhs(eos, rho, Y_e, eps, *T, k1);
 
   // RK4 - substep 2;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + 0.5*dt*k1[Y_E];
   eps = gfs[EPS] + 0.5*dt*k1[EPS];
-  eos->tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
   rhs(eos, rho, Y_e, eps, *T, k2);
 
   // RK4 - substep 3;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + 0.5*dt*k2[Y_E];
   eps = gfs[EPS] + 0.5*dt*k2[EPS];
-  eos->tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
   rhs(eos, rho, Y_e, eps, *T, k3);
 
   // RK4 - substep 4;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + dt*k3[Y_E];
   eps = gfs[EPS] + dt*k3[EPS];
-  eos->tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
   rhs(eos, rho, Y_e, eps, *T, k4);
 
   // RK4 - update step
@@ -139,7 +139,7 @@ generate_test_data(const eos_parameters *restrict eos) {
     }
 
     double eps;
-    eos->tabulated_compute_eps_from_T(eos, initial_rho, initial_Y_e, initial_T, &eps);
+    ghl_tabulated_compute_eps_from_T(eos, initial_rho, initial_Y_e, initial_T, &eps);
 
     double gfs[2] = {initial_Y_e, eps};
     fwrite(&n_steps  , sizeof(int)   , 1, fp);

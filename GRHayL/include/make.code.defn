@@ -4,6 +4,8 @@
 #!                   con2prim.h
 #!                   flux_source.h
 #!                   grhayl.h
+#!                   grhayl_eos_functions.h
+#!                   grhayl_eos_functions_declaration.h
 #!                   grhayl_io.h
 #!                   induction.h
 #!                   neutrinos.h

@@ -68,7 +68,7 @@ int ghl_newman_entropy(
     // Then compute rho = D/W
     double xrho = con->rho*invW;
     double xent = con->entropy*invW;
-    eos->tabulated_compute_P_T_from_S(eos, xrho, xye, xent, &xprs, &xtemp);
+    ghl_tabulated_compute_P_T_from_S(eos, xrho, xye, xent, &xprs, &xtemp);
 
     AtStep++;
     AtP[AtStep]=xprs;
@@ -109,7 +109,7 @@ int ghl_newman_entropy(
   prim->vU[0]          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
   prim->vU[1]          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
   prim->vU[2]          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
-  eos->tabulated_compute_P_eps_S_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
+  ghl_tabulated_compute_P_eps_S_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
                                          &prim->press, &prim->eps, &prim->entropy );
 
   return grhayl_success;

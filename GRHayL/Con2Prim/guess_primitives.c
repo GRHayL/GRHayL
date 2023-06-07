@@ -31,5 +31,5 @@ void ghl_guess_primitives(
 
   // If using Hybrid EOS, compute P_cold
   if( eos->eos_type == grhayl_eos_hybrid )
-    eos->hybrid_compute_P_cold(eos, prims->rho, &prims->press);
+    ghl_hybrid_compute_P_cold(eos, prims->rho, &prims->press);
 }

@@ -8,8 +8,8 @@ void ghl_calculate_characteristic_speed_dirn1(const primitive_quantities *restri
 
 double h_r, h_l, cs2_r, cs2_l;
 
-eos->compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-eos->compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
+ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 const double u4rU0 = prims_r->u0;
 const double u4lU0 = prims_l->u0;
 const double u4rU1 = prims_r->vU[0]*u4rU0;

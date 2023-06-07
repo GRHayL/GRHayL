@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
   const double poison = 1e300;
 
   eos_parameters eos;
-  eos.compute_h_and_cs2 = &compute_h_and_cs2;  
+  ghl_compute_h_and_cs2 = &compute_h_and_cs2;  
 
   // Allocate memory for metric
   double *lapse = (double*) malloc(sizeof(double)*arraylength);

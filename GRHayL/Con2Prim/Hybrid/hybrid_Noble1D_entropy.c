@@ -206,7 +206,7 @@ int ghl_hybrid_Noble1D_entropy(
   double w = 0;
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, rho0)];
+    const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho0)];
     const double Gm1         = Gamma_ppoly - 1.0; // HARM auxiliary variable
     const double rho_Gm1     = pow(rho0,Gm1);     // HARM auxiliary variable
 
@@ -315,14 +315,14 @@ int ghl_hybrid_Noble1D_entropy(
     prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
 
   if( eos->eos_type == grhayl_eos_hybrid ) {
-    const double Gamma_ppoly = eos->Gamma_ppoly[eos->hybrid_find_polytropic_index(eos, rho0)];
+    const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho0)];
     const double Gm1        = Gamma_ppoly - 1.0;
     const double rho_Gm1    = pow(rho0,Gm1);
     p = cons_undens->entropy * rho_Gm1;
     u = p/Gm1;
     prims->press = ghl_pressure_rho0_u(eos, prims->rho, u);
     prims->eps = u/prims->rho;
-    if( params->evolve_entropy ) eos->hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+    if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
   } else if(eos->eos_type == grhayl_eos_tabulated) {
     ghl_warn("No tabulated EOS support yet! Sorry!");
   }

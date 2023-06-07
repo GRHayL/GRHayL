@@ -141,7 +141,7 @@ generate_test_data(
           double xprs  = 0.0;
           double xeps  = 0.0;
           double xent  = 0.0;
-          eos->tabulated_compute_P_eps_S_from_T( eos, xrho, xye, xtemp, &xprs, &xeps, &xent );
+          ghl_tabulated_compute_P_eps_S_from_T( eos, xrho, xye, xtemp, &xprs, &xeps, &xent );
 
           const double v     = sqrt(1.0-1.0/(xW*xW));
           const double vx    = v*((double)rand())/((double)RAND_MAX);
@@ -364,7 +364,7 @@ int main(int argc, char **argv) {
     params.main_routine = Palenzuela1D_entropy; generate_test_data(&params, &eos);
   }
 
-  eos.tabulated_free_memory(&eos);
+  ghl_tabulated_free_memory(&eos);
 
   return 0;
 }

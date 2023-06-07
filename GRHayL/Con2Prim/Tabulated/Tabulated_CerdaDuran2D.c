@@ -112,7 +112,7 @@ void calc_WT_max(
   double xye   = cons_undens->Y_e/cons_undens->rho;
   double xtemp = eos->T_max; // initial guess, choose large enough
   double xprs  = 0.0;
-  eos->tabulated_compute_P_T_from_eps(eos, rhomax, xye, epsmax, &xprs, &xtemp);
+  ghl_tabulated_compute_P_T_from_eps(eos, rhomax, xye, epsmax, &xprs, &xtemp);
 
   // Now set W_max and T_max
   xmax[0] = 1.0e4;
@@ -141,7 +141,7 @@ void calc_prim_from_x_2D_WT(
   double xtemp = T;
   double xeps  = 0.0;
   double xprs  = 0.0;
-  eos->tabulated_compute_P_eps_from_T(eos, xrho, xye, xtemp, &xprs, &xeps);
+  ghl_tabulated_compute_P_eps_from_T(eos, xrho, xye, xtemp, &xprs, &xeps);
 
   const double Z = cons_undens->rho * (1.0 + xeps + xprs/xrho) * W;
 
@@ -187,7 +187,7 @@ void NR_step_2D_WT(
   double dPdT     = 0.0;
   double depsdrho = 0.0;
   double depsdT   = 0.0;
-  //eos->tabulated_compute_P_eps_dPdrho_dPdT_depsdrho_depsdT_from_T(eos, rho, ye, T, &P, &eps, &dPdrho, &dPdT, &depsdrho, &depsdT);
+  //ghl_tabulated_compute_P_eps_dPdrho_dPdT_depsdrho_depsdT_from_T(eos, rho, ye, T, &P, &eps, &dPdrho, &dPdT, &depsdrho, &depsdT);
 
   // h = 1 + eps + P/rho
   const double h     = 1.0 + eps + P / rho;

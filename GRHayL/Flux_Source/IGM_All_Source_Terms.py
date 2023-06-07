@@ -75,7 +75,7 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outC
     prestring = r"""
 double h, cs2;
 
-eos->compute_h_and_cs2(eos, prims, &h, &cs2);
+ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
 """
 
     for i in range(len(prims_NRPy)):
