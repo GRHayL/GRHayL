@@ -89,6 +89,11 @@ void GRHayLMHD_A_flux_rhs(
         vars.B2r = in_prims_r[BX_STAGGER+dir2_offset][index_B2];
         vars.B2l = in_prims_l[BX_STAGGER+dir2_offset][index_B2];
 
+        /*
+          Note that cmax/cmin (\alpha^{\pm}  as defined in Del Zanna et al) is at a slightly DIFFERENT
+          point (e.g., (i+1/2,j,k) instead of (i+1/2,j+1/2,k) for F3). Yuk Tung Liu discussed this point
+          with M. Shibata, who found that the effect is negligible.
+        */
         vars.c1_min = cmin[dir1_offset][index_B2];
         vars.c1_max = cmax[dir1_offset][index_B2];
         vars.c2_min = cmin[dir2_offset][index_B1];

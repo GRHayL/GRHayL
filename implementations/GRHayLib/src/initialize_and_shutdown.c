@@ -69,10 +69,6 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
   paramcheck();
 
-  CCTK_VINFO("%.15e %.15e %.15e", rho_b_atm, rho_b_min, rho_b_max);
-  CCTK_VINFO("%.15e %.15e %.15e", Y_e_atm, Y_e_min, Y_e_max);
-  CCTK_VINFO("%.15e %.15e %.15e", T_atm, T_min, T_max);
-
   ghl_initialize_params(
       main, backups,
       evolve_entropy, evolve_temperature,

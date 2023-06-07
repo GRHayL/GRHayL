@@ -36,20 +36,20 @@ schedule GRHayLHD_InitSymBound at BASEGRID after Lapse_InitSymBound
 # INITIAL DATA CONVERSION
 #########################################################
 # Fill GRHayLHD grid functions using initial data from ADMBase and HydroBase
-schedule group GRHayLHD_ID_Converter at CCTK_INITIAL after HydroBase_Initial before Convert_to_HydroBase
+schedule group GRHayLHD_Prim2Con2Prim in HydroBase_Prim2ConInitial
 {
 } "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayLHD"
 
-schedule GRHayLHD_enforce_detgtij_eq_1 in GRHayLHD_ID_Converter as first_initialdata
+schedule GRHayLHD_enforce_detgtij_eq_1 in GRHayLHD_Prim2Con2Prim as first_initialdata
 {
    LANG:       C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    WRITES: ADMBase::metric(everywhere)
    #SC: loop is everywhere, so there should be no syncs; either the loop is wrong or there should be no syncs.
    SYNC: ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
-} "Enforce BSSN metric is conformally flat and recompute ADM metric."
+} "Enforce BSSN metric is conformally flat and recompute ADM metric"
 
-schedule convert_HydroBase_to_GRHayLHD in GRHayLHD_ID_Converter as second_initialdata after first_initialdata
+schedule convert_HydroBase_to_GRHayLHD in GRHayLHD_Prim2Con2Prim as second_initialdata after first_initialdata
 {
    LANG:       C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -64,9 +64,9 @@ schedule convert_HydroBase_to_GRHayLHD in GRHayLHD_ID_Converter as second_initia
            TmunuBase::stress_energy_tensor(everywhere)
    #SC: loop is everywhere, so there should be no syncs; either the loop is wrong or there should be no syncs.
    SYNC: grmhd_primitives, grmhd_conservatives
-} "Convert HydroBase initial data (ID) to GRHayLHD variables and enforce simulation limits on primitives."
+} "Convert HydroBase initial data (ID) to GRHayLHD variables and enforce simulation limits on primitives"
 
-schedule GRHayLHD_conserv_to_prims in GRHayLHD_ID_Converter as third_initialdata after second_initialdata
+schedule GRHayLHD_conserv_to_prims in GRHayLHD_Prim2Con2Prim as third_initialdata after second_initialdata
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -76,11 +76,25 @@ schedule GRHayLHD_conserv_to_prims in GRHayLHD_ID_Converter as third_initialdata
   WRITES: TmunuBase::stress_energy_scalar(everywhere),
           TmunuBase::stress_energy_vector(everywhere),
           TmunuBase::stress_energy_tensor(everywhere)
-} "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
+} "Compute primitive variables from conservatives"
+
+schedule convert_GRHayLHD_to_HydroBase in GRHayLHD_Prim2Con2Prim as fourth_initialdata after third_initialdata
+{
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  grmhd_primitives
+  WRITES: HydroBase::rho(everywhere), HydroBase::press(everywhere),
+          HydroBase::vel(everywhere), HydroBase::w_lorentz(everywhere), HydroBase::Bvec(everywhere)
+} "Convert GRHayLHD-native variables to HydroBase"
 
 #########################################################
 # POSTPOSTINITIAL
 #########################################################
+# SCupp: This would actually be unnecessary if IllinoisGRMHD had scheduled
+# Con2Prim in the actual HydroBase_Con2Prim bin, as every location con2prim
+# happens occurs right after this bin. However, since it also computes
+# Tmunu the function has to happen in AddtoTmunu...
+
 # HydroBase_Con2Prim in CCTK_POSTPOSTINITIAL sets conserv to prim then
 # outer boundaries (OBs, which are technically disabled). The post OB 
 # SYNCs actually reprolongate the conservative variables, making cons
@@ -108,13 +122,13 @@ schedule GRHayLHD_conserv_to_prims in GRHayLHD_PostPostInitial after postid
   WRITES: TmunuBase::stress_energy_scalar(everywhere),
           TmunuBase::stress_energy_vector(everywhere),
           TmunuBase::stress_energy_tensor(everywhere)
-} "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
+} "Compute primitive variables from conservatives"
 
 #########################################################
 # RHS EVALUATION
 #########################################################
 
-schedule group GRHayLHD_RHS in MoL_CalcRHS after bssn_rhs after shift_rhs
+schedule group GRHayLHD_RHS in MoL_CalcRHS after (bssn_rhs shift_rhs)
 {
 } "Evaluate RHSs GRHD equations"
 
@@ -139,7 +153,8 @@ schedule GRHayLHD_evaluate_flux_source_rhs in GRHayLHD_RHS after GRHayLHD_evalua
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
   READS:  HydroBase::eps
-  READS:  grmhd_primitives
+  READS:  grmhd_primitives,
+          grmhd_conservatives_rhs(interior)
   WRITES: grmhd_flux_temps, grmhd_conservatives_rhs
 } "Evaluate RHSs of GRHD equations"
 
@@ -180,7 +195,7 @@ schedule GRHayLHD_conserv_to_prims in AddToTmunu
   WRITES: TmunuBase::stress_energy_scalar(everywhere),
           TmunuBase::stress_energy_vector(everywhere),
           TmunuBase::stress_energy_tensor(everywhere)
-} "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
+} "Compute primitive variables from conservatives"
 
 schedule GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRHayLHD_conserv_to_prims
 {
@@ -199,16 +214,7 @@ schedule GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRHay
 # Conversion from GRHayLHD variables to Hydrobase
 #########################################################
 
-SCHEDULE convert_GRHayLHD_to_HydroBase at CCTK_INITIAL after GRHayLHD_ID_Converter
-{
-  LANG: C
-  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-  READS:  grmhd_primitives
-  WRITES: HydroBase::rho(everywhere), HydroBase::press(everywhere),
-          HydroBase::vel(everywhere), HydroBase::w_lorentz(everywhere), HydroBase::Bvec(everywhere)
-} "Convert GRHayLHD-native variables to HydroBase"
-
-SCHEDULE convert_GRHayLHD_to_HydroBase at CCTK_ANALYSIS before particle_tracerET before VolumeIntegralGroup before convert_to_MHD_3velocity after ML_BSSN_evolCalcGroup
+SCHEDULE convert_GRHayLHD_to_HydroBase at CCTK_ANALYSIS before (particle_tracerET VolumeIntegralGroup convert_to_MHD_3velocity) after ML_BSSN_evolCalcGroup
 {
   LANG: C
   OPTIONS: GLOBAL-EARLY,LOOP-LOCAL

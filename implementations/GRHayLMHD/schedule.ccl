@@ -41,13 +41,13 @@ schedule GRHayLMHD_InitSymBound at BASEGRID after Lapse_InitSymBound
 # INITIAL DATA CONVERSION
 #########################################################
 # Fill GRHayLMHD grid functions using initial data from ADMBase and HydroBase
-schedule group GRHayLMHD_ID_Converter in HydroBase_Prim2ConInitial
+schedule group GRHayLMHD_Prim2Con2Prim in HydroBase_Prim2ConInitial
 {
 } "Translate ET-generated, HydroBase-compatible initial data and convert into variables used by GRHayLMHD"
 
-schedule GRHayLMHD_convert_ADM_to_BSSN in GRHayLMHD_ID_Converter as first_initialdata
+schedule GRHayLMHD_convert_ADM_to_BSSN in GRHayLMHD_Prim2Con2Prim as first_initialdata
 {
-   LANG:       C
+   LANG: C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    WRITES: ADMBase::metric(everywhere)
    WRITES: BSSN_quantities(everywhere)
@@ -55,9 +55,9 @@ schedule GRHayLMHD_convert_ADM_to_BSSN in GRHayLMHD_ID_Converter as first_initia
    SYNC: BSSN_quantities, ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
 } "Enforce BSSN metric is conformally flat and recompute ADM metric."
 
-schedule convert_HydroBase_to_GRHayLMHD in GRHayLMHD_ID_Converter as second_initialdata after first_initialdata
+schedule convert_HydroBase_to_GRHayLMHD in GRHayLMHD_Prim2Con2Prim as second_initialdata after first_initialdata
 {
-   LANG:       C
+   LANG: C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    READS:  HydroBase::rho, HydroBase::press, HydroBase::eps,
            HydroBase::vel, HydroBase::Y_e, HydroBase::entropy,
@@ -76,25 +76,25 @@ schedule convert_HydroBase_to_GRHayLMHD in GRHayLMHD_ID_Converter as second_init
    SYNC: grmhd_B_center, grmhd_B_stagger, grmhd_primitives_allbutBi, em_Ax, em_Ay, em_Az, em_psi6phi, grmhd_conservatives
 } "Convert HydroBase initial data (ID) to GRHayLMHD variables and enforce simulation limits on primitives."
 
-# these syncs happened in the previous function, so why do them again? A lot of extra computation going on in here
-schedule GRHayLMHD_InitSymBound in GRHayLMHD_ID_Converter as third_initialdata after second_initialdata
-{
-  LANG: C
-  SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
-} "Schedule symmetries -- Actually just a placeholder function to ensure prolongation / processor syncs are done BEFORE the primitives solver."
-
-# this is clearly unnecessary; I include it to preserve exactly identical behavior as IGM for now
-schedule GRHayLMHD_convert_ADM_to_BSSN in GRHayLMHD_ID_Converter as fourth_initialdata after third_initialdata
-{
-   LANG:       C
-   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-   WRITES: ADMBase::metric(everywhere)
-   WRITES: BSSN_quantities(everywhere)
-   #SC: loop is everywhere, so there should be no syncs; either the loop is wrong or there should be no syncs.
-} "Enforce BSSN metric is conformally flat and recompute ADM metric."
+## these syncs happened in the previous function, so why do them again? A lot of extra computation going on in here
+#schedule GRHayLMHD_InitSymBound in GRHayLMHD_Prim2Con2Prim as third_initialdata after second_initialdata
+#{
+#  LANG: C
+#  SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
+#} "Schedule symmetries -- Actually just a placeholder function to ensure prolongation / processor syncs are done BEFORE the primitives solver."
+#
+## this is clearly unnecessary; however, this was original behavior
+#schedule GRHayLMHD_convert_ADM_to_BSSN in GRHayLMHD_Prim2Con2Prim as fourth_initialdata after third_initialdata
+#{
+#   LANG: C
+#   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+#   WRITES: ADMBase::metric(everywhere)
+#   WRITES: BSSN_quantities(everywhere)
+#   #SC: loop is everywhere, so there should be no syncs; either the loop is wrong or there should be no syncs.
+#} "Enforce BSSN metric is conformally flat and recompute ADM metric."
 
 #TODO: Again, syncs are being done despite the fact that the function loops over all points; either sync or loop everywhere, not both
-schedule GRHayLMHD_compute_B_and_Bstagger_from_A in GRHayLMHD_ID_Converter as fifth_initialdata after fourth_initialdata
+schedule GRHayLMHD_compute_B_and_Bstagger_from_A in GRHayLMHD_Prim2Con2Prim as third_initialdata after second_initialdata
 {
   LANG: C
   READS:  GRID::coordinates
@@ -106,8 +106,7 @@ schedule GRHayLMHD_compute_B_and_Bstagger_from_A in GRHayLMHD_ID_Converter as fi
   SYNC: grmhd_B_center, grmhd_B_stagger
 } "Compute B and B_stagger from A"
 
-#TODO: should the loops be everywhere?
-schedule GRHayLMHD_conserv_to_prims in GRHayLMHD_ID_Converter as sixth_initialdata after fifth_initialdata
+schedule GRHayLMHD_conserv_to_prims in GRHayLMHD_Prim2Con2Prim as fourth_initialdata after third_initialdata
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -122,7 +121,7 @@ schedule GRHayLMHD_conserv_to_prims in GRHayLMHD_ID_Converter as sixth_initialda
           TmunuBase::stress_energy_tensor(everywhere)
 } "Compute primitive variables from conservatives. This is non-trivial, requiring a Newton-Raphson root-finder."
 
-SCHEDULE convert_GRHayLMHD_to_HydroBase in GRHayLMHD_ID_Converter as seventh_initialdata after sixth_initialdata
+SCHEDULE convert_GRHayLMHD_to_HydroBase in GRHayLMHD_Prim2Con2Prim as fifth_initialdata after fourth_initialdata
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
@@ -139,29 +138,22 @@ SCHEDULE convert_GRHayLMHD_to_HydroBase in GRHayLMHD_ID_Converter as seventh_ini
 # SYNCs actually reprolongate the conservative variables, making cons
 # and prims INCONSISTENT. So here we redo the con2prim, avoiding the 
 # SYNC afterward, then copy the result to other timelevels"
-schedule GROUP GRHayLMHD_PostPostInitial at CCTK_POSTPOSTINITIAL before MoL_PostStep after Con2Prim #HydroBase_Con2Prim # get rid of these before after
+schedule GROUP GRHayLMHD_PostPostInitial at CCTK_POSTPOSTINITIAL before MoL_PostStep after HydroBase_Con2Prim # get rid of these before after
 {
 } "HydroBase_Con2Prim in CCTK_POSTPOSTINITIAL sets conserv to prim then outer boundaries (OBs, which are technically disabled). The post OB SYNCs actually reprolongate the conservative variables, making cons and prims INCONSISTENT. So here we redo the con2prim, avoiding the SYNC afterward, then copy the result to other timelevels"
 
-# we should be able to get rid of this
-schedule GRHayLMHD_InitSymBound in GRHayLMHD_PostPostInitial as postid
-{
-  LANG: C
-  SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
-} "Schedule symmetries -- Actually just a placeholder function to ensure prolongations / processor syncs are done BEFORE outer boundaries are updated."
-
 schedule GRHayLMHD_convert_ADM_to_BSSN in GRHayLMHD_PostPostInitial
 {
-   LANG:       C
+   LANG: C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    WRITES: ADMBase::metric(everywhere)
    WRITES: BSSN_quantities(everywhere)
-   #SC: loop is everywhere, so there should be no syncs; either the loop is wrong or there should be no syncs.
+  SYNC: grmhd_conservatives, em_Ax, em_Ay, em_Az, em_psi6phi
 } "Enforce BSSN metric is conformally flat and recompute ADM metric."
 
 # Again, loop over everywhere + sync
 # Easiest primitives to solve for: B^i
-schedule GRHayLMHD_compute_B_and_Bstagger_from_A in GRHayLMHD_PostPostInitial as compute_b after postid #after GRHayLMHD_convert_ADM_to_BSSN
+schedule GRHayLMHD_compute_B_and_Bstagger_from_A in GRHayLMHD_PostPostInitial as compute_b after GRHayLMHD_convert_ADM_to_BSSN
 {
   LANG: C
   READS:  GRID::coordinates
@@ -211,13 +203,13 @@ schedule GRHayLMHD_set_gz_symmetries in GRHayLMHD_PostPostInitial as mhdpostid a
 # RHS EVALUATION
 #########################################################
 
-schedule group GRHayLMHD_RHS in MoL_CalcRHS after bssn_rhs after shift_rhs
+schedule group GRHayLMHD_RHS in MoL_CalcRHS after (bssn_rhs shift_rhs)
 {
 } "Evaluate RHSs GRHD equations"
 
 schedule GRHayLMHD_convert_ADM_to_BSSN in GRHayLMHD_RHS
 {
-   LANG:       C
+   LANG: C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    WRITES: ADMBase::metric(everywhere)
    WRITES: BSSN_quantities(everywhere)
@@ -286,7 +278,7 @@ schedule GRHayLMHD_outer_boundaries_on_A_mu in HydroBase_Boundaries after Bounda
  
 schedule GRHayLMHD_convert_ADM_to_BSSN in HydroBase_Boundaries after Boundary_SYNCs
 {
-   LANG:       C
+   LANG: C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    WRITES: ADMBase::metric(everywhere)
    WRITES: BSSN_quantities(everywhere)
@@ -346,7 +338,7 @@ schedule GRHayLMHD_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRHa
 # Conversion from GRHayLMHD variables to Hydrobase
 #########################################################
 
-SCHEDULE convert_GRHayLMHD_to_HydroBase at CCTK_ANALYSIS before compute_bi_b2_Poyn_fluxET before particle_tracerET before VolumeIntegralGroup before convert_to_MHD_3velocity after ML_BSSN_evolCalcGroup
+SCHEDULE convert_GRHayLMHD_to_HydroBase at CCTK_ANALYSIS before (compute_bi_b2_Poyn_fluxET particle_tracerET VolumeIntegralGroup convert_to_MHD_3velocity) after ML_BSSN_evolCalcGroup
 {
   LANG: C
   OPTIONS: GLOBAL-EARLY,LOOP-LOCAL
