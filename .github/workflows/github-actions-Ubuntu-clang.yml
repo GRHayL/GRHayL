@@ -34,7 +34,10 @@ jobs:
           curl -O https://raw.githubusercontent.com/SamuelCupp/GRHayL_TestData/main/ET_Legacy/md5/ET_Legacy_${{ matrix.test-function }}.md5
           md5sum -c ET_Legacy_${{ matrix.test-function }}.md5
       - name: Run ET IllinoisGRMHD unit test for ET_Legacy_${{ matrix.test-function }}
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
+        run: |
+          LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
+          llvm-profdata merge -sparse default.profraw -o codecov.profdata
+          llvm-cov show ./test/unit_test_ET_Legacy_${{ matrix.test-function }} -instr-profile=codecov.profdata > coverage.txt
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
         with:
