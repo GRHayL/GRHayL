@@ -113,15 +113,14 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
               &prims);
 
         conservative_quantities cons;
-        stress_energy Tmunu;
         int speed_limited = 0;
         //This applies inequality fixes on the conservatives
         ghl_enforce_primitive_limits_and_compute_u0(
               grhayl_params, grhayl_eos, &ADM_metric,
               &metric_aux, &prims, &speed_limited);
-        //This computes the conservatives and stress-energy tensor from the new primitives
-        ghl_compute_conservs_and_Tmunu(
-              &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+        //This computes the conservatives from the new primitives
+        ghl_compute_conservs(
+              &ADM_metric, &metric_aux, &prims, &cons);
 
         ghl_return_primitives(
               &prims,
@@ -135,14 +134,6 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
               &rho_star[index], &tau[index],
               &Stildex[index], &Stildey[index], &Stildez[index],
               &dummy1, &dummy2);
-
-        if(update_Tmunu) {
-          ghl_return_stress_energy(
-                &Tmunu, &eTtt[index], &eTtx[index],
-                &eTty[index], &eTtz[index], &eTxx[index],
-                &eTxy[index], &eTxz[index], &eTyy[index],
-                &eTyz[index], &eTzz[index]);
-        }
       }
     }
   }

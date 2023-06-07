@@ -7,13 +7,8 @@ STORAGE: ADMBase::metric[metric_timelevels], ADMBase::curv[metric_timelevels], A
 # SC says: probably just need to properly set up hydrobase parameters
 STORAGE: HydroBase::rho[1],HydroBase::press[1],HydroBase::eps[1],HydroBase::vel[1]
 
-# Since the evolution code uses some HydroBase quantities, it is
-# important to set certain HydroBase parameters for intended behavior:
-# HydroBase::prolongation_type = 'none'
-# HydroBase::timelevels = 1
-
 STORAGE: grmhd_conservatives[3]
-STORAGE: grmhd_primitives, grmhd_conservatives_rhs
+STORAGE: grmhd_primitives, u0, grmhd_conservatives_rhs
 STORAGE: grmhd_flux_temps, diagnostic_gfs
 
 #########################################################
@@ -42,27 +37,21 @@ schedule group GRHayLHD_Prim2Con2Prim in HydroBase_Prim2ConInitial
 
 schedule GRHayLHD_enforce_detgtij_eq_1 in GRHayLHD_Prim2Con2Prim as first_initialdata
 {
-   LANG:       C
+   LANG: C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    WRITES: ADMBase::metric(everywhere)
-   #SC: loop is everywhere, so there should be no syncs; either the loop is wrong or there should be no syncs.
    SYNC: ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
 } "Enforce BSSN metric is conformally flat and recompute ADM metric"
 
 schedule convert_HydroBase_to_GRHayLHD in GRHayLHD_Prim2Con2Prim as second_initialdata after first_initialdata
 {
-   LANG:       C
+   LANG: C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    READS:  HydroBase::rho, HydroBase::press, HydroBase::eps,
            HydroBase::vel, HydroBase::Y_e, HydroBase::entropy,
            HydroBase::temperature
-   # Enforced limits on primitives can change the primitives
    WRITES: HydroBase::eps(everywhere)
    WRITES: grmhd_primitives(everywhere), grmhd_conservatives(everywhere)
-   WRITES: TmunuBase::stress_energy_scalar(everywhere),
-           TmunuBase::stress_energy_vector(everywhere),
-           TmunuBase::stress_energy_tensor(everywhere)
-   #SC: loop is everywhere, so there should be no syncs; either the loop is wrong or there should be no syncs.
    SYNC: grmhd_primitives, grmhd_conservatives
 } "Convert HydroBase initial data (ID) to GRHayLHD variables and enforce simulation limits on primitives"
 
@@ -71,11 +60,10 @@ schedule GRHayLHD_conserv_to_prims in GRHayLHD_Prim2Con2Prim as third_initialdat
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
   READS:  grmhd_conservatives
-  WRITES: grmhd_primitives(everywhere), grmhd_conservatives(everywhere), failure_checker(everywhere)
+   # Con2Prim routine also recomputes conservatives after solving for primitives
+  WRITES: u0(everywhere), grmhd_primitives(everywhere),
+          grmhd_conservatives(everywhere), failure_checker(everywhere)
   WRITES: HydroBase::eps(everywhere)
-  WRITES: TmunuBase::stress_energy_scalar(everywhere),
-          TmunuBase::stress_energy_vector(everywhere),
-          TmunuBase::stress_energy_tensor(everywhere)
 } "Compute primitive variables from conservatives"
 
 schedule convert_GRHayLHD_to_HydroBase in GRHayLHD_Prim2Con2Prim as fourth_initialdata after third_initialdata
@@ -88,41 +76,66 @@ schedule convert_GRHayLHD_to_HydroBase in GRHayLHD_Prim2Con2Prim as fourth_initi
 } "Convert GRHayLHD-native variables to HydroBase"
 
 #########################################################
-# POSTPOSTINITIAL
+# Con2Prim
 #########################################################
-# SCupp: This would actually be unnecessary if IllinoisGRMHD had scheduled
-# Con2Prim in the actual HydroBase_Con2Prim bin, as every location con2prim
-# happens occurs right after this bin. However, since it also computes
-# Tmunu the function has to happen in AddtoTmunu...
 
-# HydroBase_Con2Prim in CCTK_POSTPOSTINITIAL sets conserv to prim then
-# outer boundaries (OBs, which are technically disabled). The post OB 
-# SYNCs actually reprolongate the conservative variables, making cons
-# and prims INCONSISTENT. So here we redo the con2prim, avoiding the 
-# SYNC afterward, then copy the result to other timelevels"
-schedule GROUP GRHayLHD_PostPostInitial at CCTK_POSTPOSTINITIAL
+schedule group GRHayLHD_Con2Prim in HydroBase_Con2Prim
 {
-} "HydroBase_Con2Prim in CCTK_POSTPOSTINITIAL sets conserv to prim then outer boundaries (OBs, which are technically disabled). The post OB SYNCs actually reprolongate the conservative variables, making cons and prims INCONSISTENT. So here we redo the con2prim, avoiding the SYNC afterward, then copy the result to other timelevels"
+} "Compute primitive variables from conservatives"
 
-# we should be able to get rid of this
-schedule GRHayLHD_InitSymBound in GRHayLHD_PostPostInitial as postid
+schedule GRHayLHD_empty_function in GRHayLHD_Con2Prim as GRHayLHD_sync_conservatives
 {
   LANG: C
   SYNC: grmhd_conservatives
-} "Schedule symmetries -- Actually just a placeholder function to ensure prolongations / processor syncs are done before outer boundaries are updated."
+} "Sync conservative variable ghost zones for c2p routine"
 
-# Nontrivial primitives solve, for P,rho_b,vx,vy,vz:
-schedule GRHayLHD_conserv_to_prims in GRHayLHD_PostPostInitial after postid
+schedule GRHayLHD_conserv_to_prims in GRHayLHD_Con2Prim after GRHayLHD_sync_conservatives
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
   READS:  grmhd_conservatives
+   # Con2Prim routine also recomputes conservatives after solving for primitives
+  WRITES: u0(everywhere), grmhd_primitives(everywhere),
+          grmhd_conservatives(everywhere), failure_checker(everywhere)
+  WRITES: HydroBase::eps(everywhere)
+} "Compute primitive variables from conservatives"
+
+schedule GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz in GRHayLHD_Con2Prim after GRHayLHD_conserv_to_prims
+{
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
   WRITES: grmhd_primitives(everywhere), grmhd_conservatives(everywhere), failure_checker(everywhere)
   WRITES: HydroBase::eps(everywhere)
+  SYNC: grmhd_primitives
+} "Apply outflow-only, flat BCs on {P,rho_b,vx,vy,vz}. Outflow only == velocities pointed inward from outer boundary are set to zero."
+
+#########################################################
+# Stress-energy Tensor
+#########################################################
+schedule GRHayLHD_compute_Tmunu in AddToTmunu
+{
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  HydroBase::eps
+  READS:  grmhd_primitives, u0
   WRITES: TmunuBase::stress_energy_scalar(everywhere),
           TmunuBase::stress_energy_vector(everywhere),
           TmunuBase::stress_energy_tensor(everywhere)
-} "Compute primitive variables from conservatives"
+} "Compute stress-energy tensor"
+
+# This preserves original IllinoisGRMHD behavior, but it's bad form.
+# This prevents usfrom making the Tmunu be "add" instead of "set".
+# The ET wants AddToTmunu, not SetTmunu.
+schedule GRHayLHD_compute_Tmunu at CCTK_POSTPOSTINITIAL after Con2Prim
+{
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  HydroBase::eps
+  READS:  grmhd_primitives, u0
+  WRITES: TmunuBase::stress_energy_scalar(everywhere),
+          TmunuBase::stress_energy_vector(everywhere),
+          TmunuBase::stress_energy_tensor(everywhere)
+} "Compute stress-energy tensor"
 
 #########################################################
 # RHS EVALUATION
@@ -134,7 +147,7 @@ schedule group GRHayLHD_RHS in MoL_CalcRHS after (bssn_rhs shift_rhs)
 
 schedule GRHayLHD_enforce_detgtij_eq_1 in GRHayLHD_RHS
 {
-   LANG:       C
+   LANG: C
    READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
    WRITES: ADMBase::metric(everywhere)
 } "Convert ADM variables to GRHayLHD BSSN variables."
@@ -159,59 +172,7 @@ schedule GRHayLHD_evaluate_flux_source_rhs in GRHayLHD_RHS after GRHayLHD_evalua
 } "Evaluate RHSs of GRHD equations"
 
 #########################################################
-# COMPUTE B FROM A & RE-SOLVE FOR PRIMITIVES
-#########################################################
-# After a full timestep, there are two types of boundaries that need filling:
-# (A) Outer boundaries (on coarsest level)
-# (B) AMR grid refinement boundaries
-
-# (A) OUTER BOUNDARY STEPS:
-# ( 0) Synchronize (prolongate/restrict) all evolved variables
-# ( 1) Apply outer boundary conditions (BCs) on A_{\mu}
-# ( 2) Compute B^i from A_i everywhere, synchronize (processor sync) B^i
-# ( 3) Call con2prim to get consistent primitives {P,rho_b,vx,vy,vz} and conservatives at all points (if no restriction, really only need interior)
-# ( 4) Apply outer BCs on {P,rho_b,vx,vy,vz}, recompute conservatives.
-
-# (B) AMR GRID REFINEMENT BOUNDARY STEPS:
-# Same as steps 0,2,3 above. Just need if() statements in steps 1,4 to prevent "outer boundaries" being updated
-# Problem: all the sync's in outer boundary updates might just overwrite prolongated values.
-#########################################################
-
-# we should be able to get rid of this
-schedule GRHayLHD_InitSymBound in HydroBase_Boundaries as Boundary_SYNCs
-{
-  LANG: C
-  SYNC: grmhd_conservatives
-} "Schedule symmetries -- Actually just a placeholder function to ensure prolongations / processor syncs are done BEFORE outer boundaries are updated."
-
-# Nontrivial primitives solve, for P,rho_b,vx,vy,vz.
-schedule GRHayLHD_conserv_to_prims in AddToTmunu
-{
-  LANG: C
-  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-  READS:  grmhd_conservatives
-  WRITES: grmhd_primitives(everywhere), grmhd_conservatives(everywhere), failure_checker(everywhere)
-  WRITES: HydroBase::eps(everywhere)
-  WRITES: TmunuBase::stress_energy_scalar(everywhere),
-          TmunuBase::stress_energy_vector(everywhere),
-          TmunuBase::stress_energy_tensor(everywhere)
-} "Compute primitive variables from conservatives"
-
-schedule GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz in AddToTmunu after GRHayLHD_conserv_to_prims
-{
-  LANG: C
-  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-  WRITES: grmhd_primitives(everywhere), grmhd_conservatives(everywhere), failure_checker(everywhere)
-  WRITES: HydroBase::eps(everywhere)
-  WRITES: TmunuBase::stress_energy_scalar(everywhere),
-          TmunuBase::stress_energy_vector(everywhere),
-          TmunuBase::stress_energy_tensor(everywhere)
-# We must sync {P,rho_b,vx,vy,vz} here.
-  SYNC: grmhd_primitives
-} "Apply outflow-only, flat BCs on {P,rho_b,vx,vy,vz}. Outflow only == velocities pointed inward from outer boundary are set to zero."
-
-#########################################################
-# Conversion from GRHayLHD variables to Hydrobase
+# Set HydroBase variables for analysis
 #########################################################
 
 SCHEDULE convert_GRHayLHD_to_HydroBase at CCTK_ANALYSIS before (particle_tracerET VolumeIntegralGroup convert_to_MHD_3velocity) after ML_BSSN_evolCalcGroup
@@ -223,5 +184,3 @@ SCHEDULE convert_GRHayLHD_to_HydroBase at CCTK_ANALYSIS before (particle_tracerE
   WRITES: HydroBase::rho(everywhere), HydroBase::press(everywhere),
           HydroBase::vel(everywhere), HydroBase::w_lorentz(everywhere), HydroBase::Bvec(everywhere)
 } "Convert GRHayLHD-native variables to HydroBase"
-
-#########################################################

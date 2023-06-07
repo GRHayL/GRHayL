@@ -11,7 +11,7 @@
 
 #include "GRHayLHD.h"
 
-#define IDX(i,j,k) CCTK_GFINDEX3D(cctkGH,(i),(j),(k))
+void GRHayLHD_enforce_primitive_limits_and_compute_conservs(const cGH* cctkGH, const int index);
 
 /*******************************************************
  * Apply outer boundary conditions on {P,rho_b,vx,vy,vz}
@@ -44,12 +44,15 @@ void GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int k=0; k<cctk_lsh[2]; k++) {
         for(int j=0; j<cctk_lsh[1]; j++) {
-          pressure[IDX(imax,j,k)] = pressure[IDX(imax-1,j,k)];
-          rho_b[IDX(imax,j,k)]   = rho_b[IDX(imax-1,j,k)];
-          vx[IDX(imax,j,k)]    = vx[IDX(imax-1,j,k)];
-          vy[IDX(imax,j,k)]    = vy[IDX(imax-1,j,k)];
-          vz[IDX(imax,j,k)]    = vz[IDX(imax-1,j,k)]; 
-          if(vx[IDX(imax,j,k)]<0.) vx[IDX(imax,j,k)] = 0.0;
+          const int indm1 = CCTK_GFINDEX3D(cctkGH,imax-1, j, k);
+          const int index = CCTK_GFINDEX3D(cctkGH,imax, j, k);
+          pressure[index] = pressure[indm1];
+          rho_b[index]    = rho_b[indm1];
+          vx[index]       = vx[indm1];
+          vy[index]       = vy[indm1];
+          vz[index]       = vz[indm1]; 
+          if(vx[index]<0.) vx[index] = 0.0;
+          GRHayLHD_enforce_primitive_limits_and_compute_conservs(cctkGH, index);
         }
       }
     }
@@ -59,12 +62,15 @@ void GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int k=0; k<cctk_lsh[2]; k++) {
         for(int j=0; j<cctk_lsh[1]; j++) {
-          pressure[IDX(imin,j,k)] = pressure[IDX(imin+1,j,k)];
-          rho_b[IDX(imin,j,k)]   = rho_b[IDX(imin+1,j,k)];
-          vx[IDX(imin,j,k)]    = vx[IDX(imin+1,j,k)];
-          vy[IDX(imin,j,k)]    = vy[IDX(imin+1,j,k)];
-          vz[IDX(imin,j,k)]    = vz[IDX(imin+1,j,k)]; 
-          if(vx[IDX(imin,j,k)]>0.) vx[IDX(imin,j,k)] = 0.0;
+          const int index = CCTK_GFINDEX3D(cctkGH, imin, j, k);
+          const int indp1 = CCTK_GFINDEX3D(cctkGH, imin+1, j, k);
+          pressure[index] = pressure[indp1];
+          rho_b[index]    = rho_b[indp1];
+          vx[index]       = vx[indp1];
+          vy[index]       = vy[indp1];
+          vz[index]       = vz[indp1]; 
+          if(vx[index]>0.) vx[index] = 0.0;
+          GRHayLHD_enforce_primitive_limits_and_compute_conservs(cctkGH, index);
         }
       }
     }
@@ -76,12 +82,15 @@ void GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int k=0; k<cctk_lsh[2]; k++) {
         for(int i=0; i<cctk_lsh[0]; i++) {
-          pressure[IDX(i,jmax,k)] = pressure[IDX(i,jmax-1,k)];
-          rho_b[IDX(i,jmax,k)]   = rho_b[IDX(i,jmax-1,k)];
-          vx[IDX(i,jmax,k)]    = vx[IDX(i,jmax-1,k)];
-          vy[IDX(i,jmax,k)]    = vy[IDX(i,jmax-1,k)];
-          vz[IDX(i,jmax,k)]    = vz[IDX(i,jmax-1,k)]; 
-          if(vx[IDX(i,jmax,k)]<0.) vx[IDX(i,jmax,k)] = 0.0;
+          const int indm1 = CCTK_GFINDEX3D(cctkGH, i, jmax-1, k);
+          const int index = CCTK_GFINDEX3D(cctkGH, i, jmax, k);
+          pressure[index] = pressure[indm1];
+          rho_b[index]    = rho_b[indm1];
+          vx[index]       = vx[indm1];
+          vy[index]       = vy[indm1];
+          vz[index]       = vz[indm1]; 
+          if(vx[index]<0.) vx[index] = 0.0;
+          GRHayLHD_enforce_primitive_limits_and_compute_conservs(cctkGH, index);
         }
       }
     }
@@ -91,12 +100,15 @@ void GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int k=0; k<cctk_lsh[2]; k++) {
         for(int i=0; i<cctk_lsh[0]; i++) {
-          pressure[IDX(i,jmin,k)] = pressure[IDX(i,jmin+1,k)];
-          rho_b[IDX(i,jmin,k)]   = rho_b[IDX(i,jmin+1,k)];
-          vx[IDX(i,jmin,k)]    = vx[IDX(i,jmin+1,k)];
-          vy[IDX(i,jmin,k)]    = vy[IDX(i,jmin+1,k)];
-          vz[IDX(i,jmin,k)]    = vz[IDX(i,jmin+1,k)]; 
-          if(vx[IDX(i,jmin,k)]>0.) vx[IDX(i,jmin,k)] = 0.0;
+          const int index = CCTK_GFINDEX3D(cctkGH, i, jmin, k);
+          const int indp1 = CCTK_GFINDEX3D(cctkGH, i, jmin+1, k);
+          pressure[index] = pressure[indp1];
+          rho_b[index]    = rho_b[indp1];
+          vx[index]       = vx[indp1];
+          vy[index]       = vy[indp1];
+          vz[index]       = vz[indp1]; 
+          if(vx[index]>0.) vx[index] = 0.0;
+          GRHayLHD_enforce_primitive_limits_and_compute_conservs(cctkGH, index);
         }
       }
     }
@@ -108,12 +120,15 @@ void GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int j=0; j<cctk_lsh[1]; j++) {
         for(int i=0; i<cctk_lsh[0]; i++) {
-          pressure[IDX(i,j,kmax)] = pressure[IDX(i,j,kmax-1)];
-          rho_b[IDX(i,j,kmax)]   = rho_b[IDX(i,j,kmax-1)];
-          vx[IDX(i,j,kmax)]    = vx[IDX(i,j,kmax-1)];
-          vy[IDX(i,j,kmax)]    = vy[IDX(i,j,kmax-1)];
-          vz[IDX(i,j,kmax)]    = vz[IDX(i,j,kmax-1)]; 
-          if(vx[IDX(i,j,kmax)]<0.) vx[IDX(i,j,kmax)] = 0.0;
+          const int indm1 = CCTK_GFINDEX3D(cctkGH, i, j, kmax-1);
+          const int index = CCTK_GFINDEX3D(cctkGH, i, j, kmax);
+          pressure[index] = pressure[indm1];
+          rho_b[index]    = rho_b[indm1];
+          vx[index]       = vx[indm1];
+          vy[index]       = vy[indm1];
+          vz[index]       = vz[indm1]; 
+          if(vx[index]<0.) vx[index] = 0.0;
+          GRHayLHD_enforce_primitive_limits_and_compute_conservs(cctkGH, index);
         }
       }
     }
@@ -123,85 +138,67 @@ void GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz(CCTK_ARGUMENTS) {
 #pragma omp parallel for
       for(int j=0; j<cctk_lsh[1]; j++) {
         for(int i=0; i<cctk_lsh[0]; i++) {
-          pressure[IDX(i,j,kmin)] = pressure[IDX(i,j,kmin+1)];
-          rho_b[IDX(i,j,kmin)]   = rho_b[IDX(i,j,kmin+1)];
-          vx[IDX(i,j,kmin)]    = vx[IDX(i,j,kmin+1)];
-          vy[IDX(i,j,kmin)]    = vy[IDX(i,j,kmin+1)];
-          vz[IDX(i,j,kmin)]    = vz[IDX(i,j,kmin+1)]; 
-          if(vx[IDX(i,j,kmin)]>0.) vx[IDX(i,j,kmin)] = 0.0;
+          const int index = CCTK_GFINDEX3D(cctkGH, i, j, kmin);
+          const int indp1 = CCTK_GFINDEX3D(cctkGH, i, j, kmin+1);
+          pressure[index] = pressure[indp1];
+          rho_b[index]    = rho_b[indp1];
+          vx[index]       = vx[indp1];
+          vy[index]       = vy[indp1];
+          vz[index]       = vz[indp1]; 
+          if(vx[index]>0.) vx[index] = 0.0;
+          GRHayLHD_enforce_primitive_limits_and_compute_conservs(cctkGH, index);
         }
       }
     }
   }
+}
+
+void GRHayLHD_enforce_primitive_limits_and_compute_conservs(const cGH* cctkGH, const int index) {
+  // We cheat here by using the argument list of the scheduled function
+  // instead of explicitly passing all these variables.
+  DECLARE_CCTK_ARGUMENTS_GRHayLHD_outer_boundaries_on_P_rho_b_vx_vy_vz;
 
   const double poison = 0.0/0.0;
   double dummy1, dummy2, dummy3;
   double dummy4, dummy5, dummy6;
+  int speed_limited = 0;
 
-#pragma omp parallel for
-  for(int k=0; k<cctk_lsh[2]; k++) {
-    for(int j=0; j<cctk_lsh[1]; j++) {
-      for(int i=0; i<cctk_lsh[0]; i++) {
-        if(((cctk_bbox[0]) && i<cctk_nghostzones[0]) ||
-           ((cctk_bbox[1]) && i>=cctk_lsh[0]-cctk_nghostzones[0]) ||
-           ((cctk_bbox[2]) && j<cctk_nghostzones[1]) ||
-           ((cctk_bbox[3]) && j>=cctk_lsh[1]-cctk_nghostzones[1]) ||
-           ((cctk_bbox[4]) && k<cctk_nghostzones[2] && CCTK_EQUALS(Symmetry,"none")) ||
-           ((cctk_bbox[5]) && k>=cctk_lsh[2]-cctk_nghostzones[2])) {
-          const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+  metric_quantities ADM_metric;
+  ghl_enforce_detgtij_and_initialize_ADM_metric(
+        alp[index],
+        betax[index], betay[index], betaz[index],
+        gxx[index], gxy[index], gxz[index],
+        gyy[index], gyz[index], gzz[index],
+        &ADM_metric);
 
-          metric_quantities ADM_metric;
-          ghl_enforce_detgtij_and_initialize_ADM_metric(
-                alp[index],
-                betax[index], betay[index], betaz[index],
-                gxx[index], gxy[index], gxz[index],
-                gyy[index], gyz[index], gzz[index],
-                &ADM_metric);
-      
-        ADM_aux_quantities metric_aux;
-        ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+  ADM_aux_quantities metric_aux;
+  ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-          primitive_quantities prims;
-          ghl_initialize_primitives(
-                rho_b[index], pressure[index], eps[index],
-                vx[index], vy[index], vz[index],
-                0.0, 0.0, 0.0,
-                poison, poison, poison, &prims);
-                //wont have storage for these vars for hybrid
-                //entropy[index], Y_e[index], temperature[index], &prims);
+  primitive_quantities prims;
+  ghl_initialize_primitives(
+        rho_b[index], pressure[index], eps[index],
+        vx[index], vy[index], vz[index],
+        0.0, 0.0, 0.0,
+        poison, poison, poison, &prims);
 
-          conservative_quantities cons;
-          stress_energy Tmunu;
-          int speed_limited = 0;
-          ghl_enforce_primitive_limits_and_compute_u0(
-                grhayl_params, grhayl_eos, &ADM_metric,
-                &metric_aux, &prims, &speed_limited);
-          ghl_compute_conservs_and_Tmunu(
-                &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+  conservative_quantities cons;
+  ghl_enforce_primitive_limits_and_compute_u0(
+        grhayl_params, grhayl_eos, &ADM_metric,
+        &metric_aux, &prims, &speed_limited);
 
-          ghl_return_primitives(
-                &prims,
-                &rho_b[index], &pressure[index], &eps[index],
-                &vx[index], &vy[index], &vz[index],
-                &dummy1, &dummy2, &dummy3,
-                &dummy4, &dummy5, &dummy6);
+  ghl_compute_conservs(
+        &ADM_metric, &metric_aux, &prims, &cons);
 
-          ghl_return_conservatives(
-                &cons,
-                &rho_star[index], &tau[index],
-                &Stildex[index], &Stildey[index], &Stildez[index],
-                &dummy1, &dummy2);
-                //&Y_e[index], &entropy[index]);
+  ghl_return_primitives(
+        &prims,
+        &rho_b[index], &pressure[index], &eps[index],
+        &vx[index], &vy[index], &vz[index],
+        &dummy1, &dummy2, &dummy3,
+        &dummy4, &dummy5, &dummy6);
 
-          if(update_Tmunu) {
-            ghl_return_stress_energy(
-                  &Tmunu, &eTtt[index], &eTtx[index],
-                  &eTty[index], &eTtz[index], &eTxx[index],
-                  &eTxy[index], &eTxz[index], &eTyy[index],
-                  &eTyz[index], &eTzz[index]);
-          }
-        }
-      }
-    }
-  }
+  ghl_return_conservatives(
+        &cons,
+        &rho_star[index], &tau[index],
+        &Stildex[index], &Stildey[index], &Stildez[index],
+        &dummy1, &dummy2);
 }

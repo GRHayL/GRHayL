@@ -41,3 +41,7 @@ void GRHayLHD_InitSymBound(CCTK_ARGUMENTS)
     }
   }
 }
+
+void GRHayLHD_empty_function(CCTK_ARGUMENTS)
+{
+}

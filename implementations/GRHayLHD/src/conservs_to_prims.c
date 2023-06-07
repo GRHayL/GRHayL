@@ -80,7 +80,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
 
         con2prim_diagnostics diagnostics;
         ghl_initialize_diagnostics(&diagnostics);
-    
+
         // Read in ADM metric quantities from gridfunctions and
         // set auxiliary and ADM metric quantities
         metric_quantities ADM_metric;
@@ -90,10 +90,10 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
               gxx[index], gxy[index], gxz[index],
               gyy[index], gyz[index], gzz[index],
               &ADM_metric);
-    
+
         ADM_aux_quantities metric_aux;
         ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
-    
+
         // Read in primitive variables from gridfunctions
         primitive_quantities prims;
         ghl_initialize_primitives(
@@ -101,17 +101,17 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
               vx[index], vy[index], vz[index],
               0.0, 0.0, 0.0,
               poison, poison, poison, &prims);
-    
+
         // Read in conservative variables from gridfunctions
         conservative_quantities cons, cons_orig;
         ghl_initialize_conservatives(
               rho_star[index], tau[index],
               Stildex[index], Stildey[index], Stildez[index],
               poison, poison, &cons);
-    
+
         // Here we save the original values of conservative variables in cons_orig for debugging purposes.
         cons_orig = cons;
-    
+
         //FIXME: might slow down the code. Was formerly a CCTK_WARN
         if(isnan(cons.rho*cons.tau*cons.SD[0]*cons.SD[1]*cons.SD[2])) {
           CCTK_VERROR("NaN found at start of C2P kernel: index %d %d %d, rho_* = %e, ~tau = %e, ~S_i = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e\n",
@@ -119,7 +119,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
                      ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2],metric_aux.psi6);
           diagnostics.nan_found++;
         }
-    
+
         /************* Main conservative-to-primitive logic ************/
         int check=0;
         if(cons.rho>0.0) {
@@ -128,18 +128,18 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
             ghl_apply_inequality_fixes(
                   grhayl_params, grhayl_eos, &ADM_metric,
                   &metric_aux, &prims, &cons, &diagnostics);
-    
+
           // declare some variables for the C2P routine.
           conservative_quantities cons_undens;
-    
+
           // Set the conserved variables required by the con2prim routine
           ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
-    
+
           /************* Conservative-to-primitive recovery ************/
           int check = ghl_con2prim_multi_method(
                 grhayl_params, grhayl_eos, &ADM_metric, &metric_aux,
                 &cons_undens, &prims, &diagnostics);
-    
+
           if(check==0) {
             //Check for NAN!
             if( isnan(prims.rho*prims.press*prims.eps*prims.vU[0]*prims.vU[1]*prims.vU[2]) ) {
@@ -171,7 +171,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
           rho_star_fix_applied++;
         } // if rho_star>0
         /***************************************************************/
-    
+
         if( check != 0 ) {
           //--------------------------------------------------
           //----------- Primitive recovery failed ------------
@@ -186,23 +186,22 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
                      cons_orig.rho, cons_orig.tau, cons_orig.SD[0], cons_orig.SD[1], cons_orig.SD[2], cons_orig.rho/metric_aux.psi6, grhayl_eos->rho_atm,
                      ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2], ADM_metric.lapse);
         }
-    
+
         //--------------------------------------------------
         //---------- Primitive recovery succeeded ----------
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
-        stress_energy Tmunu;
         ghl_enforce_primitive_limits_and_compute_u0(
               grhayl_params, grhayl_eos, &ADM_metric, &metric_aux,
               &prims, &diagnostics.failure_checker);
-        ghl_compute_conservs_and_Tmunu(
-              &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
-    
+        ghl_compute_conservs(
+              &ADM_metric, &metric_aux, &prims, &cons);
+
         //Now we compute the difference between original & new conservatives, for diagnostic purposes:
         error_int_numer += fabs(cons.tau - cons_orig.tau) + fabs(cons.rho - cons_orig.rho) + fabs(cons.SD[0] - cons_orig.SD[0])
                            + fabs(cons.SD[1] - cons_orig.SD[1]) + fabs(cons.SD[2] - cons_orig.SD[2]);
         error_int_denom += cons_orig.tau + cons_orig.rho + fabs(cons_orig.SD[0]) + fabs(cons_orig.SD[1]) + fabs(cons_orig.SD[2]);
-    
+
         if(check!=0) {
           diagnostics.failures++;
           if(metric_aux.psi6 > grhayl_params->psi6threshold) {
@@ -210,30 +209,23 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
             pointcount_inhoriz++;
           }
         }
-    
+
         failure_checker[index] = diagnostics.failure_checker;
-    
+
         ghl_return_primitives(
               &prims,
               &rho_b[index], &pressure[index], &eps[index],
               &vx[index], &vy[index], &vz[index],
               &dummy4, &dummy5, &dummy6,
               &dummy1, &dummy2, &dummy3);
-    
+        u0[index] = prims.u0;
+
         ghl_return_conservatives(
               &cons,
               &rho_star[index], &tau[index],
               &Stildex[index], &Stildey[index], &Stildez[index],
               &dummy1, &dummy2);
-    
-        if(update_Tmunu) {
-          ghl_return_stress_energy(
-                &Tmunu, &eTtt[index], &eTtx[index],
-                &eTty[index], &eTtz[index], &eTxx[index],
-                &eTxy[index], &eTxz[index], &eTyy[index],
-                &eTyz[index], &eTzz[index]);
-        }
-    
+
         pointcount++;
         failures += diagnostics.failures;
         vel_limited_ptcount += diagnostics.speed_limited;
