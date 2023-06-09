@@ -72,9 +72,9 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
   double dummy1, dummy2, dummy3;
 
 #pragma omp parallel for reduction(+:failures,vel_limited_ptcount,atm_resets,rho_star_fix_applied,pointcount,failures_inhoriz,pointcount_inhoriz,backup0,backup1,backup2,nan_found,error_int_numer,error_int_denom,n_iter) schedule(static)
-  for(int k=0;k<cctk_lsh[2];k++) {
-    for(int j=0;j<cctk_lsh[1];j++) {
-      for(int i=0;i<cctk_lsh[0];i++) {
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
+      for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 
         con2prim_diagnostics diagnostics;
@@ -136,8 +136,8 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
 
           /************* Conservative-to-primitive recovery ************/
           int check = ghl_con2prim_multi_method(
-                grhayl_params, grhayl_eos, &ADM_metric,
-                &metric_aux, &cons_undens, &prims, &diagnostics);
+                grhayl_params, grhayl_eos, &ADM_metric, &metric_aux,
+                &cons_undens, &prims, &diagnostics);
 
           if(check==0) {
             //Check for NAN!
@@ -190,12 +190,11 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
         //---------- Primitive recovery succeeded ----------
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
-        stress_energy Tmunu;
         ghl_enforce_primitive_limits_and_compute_u0(
               grhayl_params, grhayl_eos, &ADM_metric, &metric_aux,
               &prims, &diagnostics.failure_checker);
-        ghl_compute_conservs_and_Tmunu(
-              &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+        ghl_compute_conservs(
+              &ADM_metric, &metric_aux, &prims, &cons);
 
         //Now we compute the difference between original & new conservatives, for diagnostic purposes:
         error_int_numer += fabs(cons.tau - cons_orig.tau) + fabs(cons.rho - cons_orig.rho) + fabs(cons.SD[0] - cons_orig.SD[0])
@@ -218,20 +217,13 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
               &vx[index], &vy[index], &vz[index],
               &Bx_center[index], &By_center[index], &Bz_center[index],
               &dummy1, &dummy2, &dummy3);
+        u0[index] = prims.u0;
 
         ghl_return_conservatives(
               &cons,
               &rho_star[index], &tau[index],
               &Stildex[index], &Stildey[index], &Stildez[index],
               &dummy1, &dummy2);
-
-        if(update_Tmunu) {
-          ghl_return_stress_energy(
-                &Tmunu, &eTtt[index], &eTtx[index],
-                &eTty[index], &eTtz[index], &eTxx[index],
-                &eTxy[index], &eTxz[index], &eTyy[index],
-                &eTyz[index], &eTzz[index]);
-        }
 
         pointcount++;
         failures += diagnostics.failures;

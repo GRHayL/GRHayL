@@ -3,6 +3,7 @@
 # Source files in this directory
 SRCS = conservs_to_prims.c                         \
        enforce_detgtij_eq_1.c                      \
+       compute_Tmunu.c                             \
        convert_HydroBase_to_GRHayLHD.c             \
        convert_GRHayLHD_to_HydroBase.c             \
        evaluate_flux_source_rhs.c                  \

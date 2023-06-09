@@ -81,9 +81,9 @@ void TestDataID_1D_tests_hydro_data(CCTK_ARGUMENTS) {
   }
 
 #pragma omp parallel for
-  for(int k=0;k<cctk_lsh[2];k++) {
-    for(int j=0;j<cctk_lsh[1];j++) {
-      for(int i=0;i<cctk_lsh[0];i++) {
+  for(int k=0; k<cctk_lsh[2]; k++) {
+    for(int j=0; j<cctk_lsh[1]; j++) {
+      for(int i=0; i<cctk_lsh[0]; i++) {
         int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
         int ind4x = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
         int ind4y = CCTK_GFINDEX4D(cctkGH,i,j,k,1);

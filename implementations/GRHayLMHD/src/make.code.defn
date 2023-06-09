@@ -4,6 +4,7 @@
 SRCS = A_flux_rhs.c                                \
        calculate_MHD_rhs.c                         \
        compute_B_and_Bstagger_from_A.c             \
+       compute_Tmunu.c                             \
        conservs_to_prims.c                         \
        convert_ADM_to_BSSN.c                       \
        convert_HydroBase_to_GRHayLMHD.c            \
