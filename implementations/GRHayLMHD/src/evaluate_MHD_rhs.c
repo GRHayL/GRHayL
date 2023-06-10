@@ -40,11 +40,6 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS_GRHayLMHD_evaluate_MHD_rhs;
   DECLARE_CCTK_PARAMETERS;
 
-  if(CCTK_Equals(verbose, "essential+iteration output")) {
-    const int levelnumber = GetRefinementLevel(cctkGH);
-    CCTK_VINFO("***** Iter. # %d, Lev: %d, Integrating to time: %e *****",cctk_iteration,levelnumber,cctk_delta_time/cctk_levfac[0]+cctk_time);
-  }
-
   CCTK_REAL dX[3] = { CCTK_DELTA_SPACE(0), CCTK_DELTA_SPACE(1), CCTK_DELTA_SPACE(2) };
 
   // in_prims,out_prims_r, and out_prims_l are arrays of pointers to the actual gridfunctions.
