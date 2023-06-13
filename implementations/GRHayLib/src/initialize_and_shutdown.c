@@ -15,7 +15,7 @@ typedef struct {
   double T_atm  , T_min  , T_max;
 } ghl_params_checked;
 
-void paramcheck() {
+void GRHayLib_paramcheck() {
 
   DECLARE_CCTK_PARAMETERS;
 
@@ -67,7 +67,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
   for(int i=0; i<3; i++)
     backups[i] = parse_C2P_routine_keyword(con2prim_backup_routines[i]);
 
-  paramcheck();
+  GRHayLib_paramcheck();
 
   ghl_initialize_params(
       main, backups,

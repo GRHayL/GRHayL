@@ -32,9 +32,9 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
         rho_b[index] = rho[index];
         pressure[index] = press[index];
 
-        const double ETvx = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,0)];
-        const double ETvy = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,1)];
-        const double ETvz = vel[CCTK_GFINDEX4D(cctkGH,i,j,k,2)];
+        const double ETvx = vel[CCTK_VECTGFINDEX3D(cctkGH,i,j,k,0)];
+        const double ETvy = vel[CCTK_VECTGFINDEX3D(cctkGH,i,j,k,1)];
+        const double ETvz = vel[CCTK_VECTGFINDEX3D(cctkGH,i,j,k,2)];
 
         // IllinoisGRMHD defines v^i = u^i/u^0.
 

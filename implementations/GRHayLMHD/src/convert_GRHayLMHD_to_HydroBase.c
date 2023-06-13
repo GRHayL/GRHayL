@@ -12,9 +12,9 @@ void convert_GRHayLMHD_to_HydroBase(CCTK_ARGUMENTS) {
     for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
-        const int index4D0 = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
-        const int index4D1 = CCTK_GFINDEX4D(cctkGH,i,j,k,1);
-        const int index4D2 = CCTK_GFINDEX4D(cctkGH,i,j,k,2);
+        const int index4D0 = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,0);
+        const int index4D1 = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,1);
+        const int index4D2 = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,2);
 
         /* Note that we currently do not set Abar, Y_e, temperature, entropy, Avec[3], Aphi, Avec_stag[3], Aphi_stag */
         rho[index]   = rho_b[index];

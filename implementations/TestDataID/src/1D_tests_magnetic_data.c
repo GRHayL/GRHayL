@@ -63,9 +63,9 @@ void TestDataID_1D_tests_magnetic_data(CCTK_ARGUMENTS) {
     for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
-        const int ind4x = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
-        const int ind4y = CCTK_GFINDEX4D(cctkGH,i,j,k,1);
-        const int ind4z = CCTK_GFINDEX4D(cctkGH,i,j,k,2);
+        const int ind4x = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,0);
+        const int ind4y = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,1);
+        const int ind4z = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,2);
 
         if(CCTK_EQUALS(test_shock_direction, "x")) {
           if(x[index] <= discontinuity_position) { 

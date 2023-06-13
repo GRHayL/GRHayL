@@ -85,9 +85,9 @@ void TestDataID_1D_tests_hydro_data(CCTK_ARGUMENTS) {
     for(int j=0; j<cctk_lsh[1]; j++) {
       for(int i=0; i<cctk_lsh[0]; i++) {
         int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
-        int ind4x = CCTK_GFINDEX4D(cctkGH,i,j,k,0);
-        int ind4y = CCTK_GFINDEX4D(cctkGH,i,j,k,1);
-        int ind4z = CCTK_GFINDEX4D(cctkGH,i,j,k,2);
+        int ind4x = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,0);
+        int ind4y = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,1);
+        int ind4z = CCTK_VECTGFINDEX3D(cctkGH,i,j,k,2);
 
         double step = x[index];
         if(CCTK_EQUALS(test_shock_direction, "y")) {
