@@ -116,7 +116,7 @@ void convert_HydroBase_to_GRHayLHD(CCTK_ARGUMENTS) {
         int speed_limited = 0;
         //This applies inequality fixes on the conservatives
         ghl_enforce_primitive_limits_and_compute_u0(
-              grhayl_params, grhayl_eos, &ADM_metric,
+              ghl_params, ghl_eos, &ADM_metric,
               &metric_aux, &prims, &speed_limited);
         //This computes the conservatives from the new primitives
         ghl_compute_conservs(

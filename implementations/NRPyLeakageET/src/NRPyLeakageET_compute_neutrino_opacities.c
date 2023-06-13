@@ -75,7 +75,7 @@ void NRPyLeakageET_compute_neutrino_opacities(CCTK_ARGUMENTS) {
             tau.nux [1]                  = tau_1_nux [index];
 
             // Step 3.b.ii: Compute opacities
-            NRPyLeakage_compute_neutrino_opacities(grhayl_eos, rhoL, Y_eL, temperatureL, &tau, &kappa);
+            NRPyLeakage_compute_neutrino_opacities(ghl_eos, rhoL, Y_eL, temperatureL, &tau, &kappa);
           }
         }
 

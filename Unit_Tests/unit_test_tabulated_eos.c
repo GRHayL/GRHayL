@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
   // Step 1: Initialize the EOS struct
   eos_parameters eos;
-  ghl_initialize_eos_functions(grhayl_eos_tabulated, &eos);
+  ghl_initialize_eos_functions(ghl_eos_tabulated, &eos);
   ghl_tabulated_read_table_set_EOS_params(argv[1], &eos);
   eos.root_finding_precision=1e-10;
 

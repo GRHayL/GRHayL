@@ -3,10 +3,10 @@
 #! install_headers = atmosphere.h
 #!                   con2prim.h
 #!                   flux_source.h
-#!                   grhayl.h
-#!                   grhayl_eos_functions.h
-#!                   grhayl_eos_functions_declaration.h
-#!                   grhayl_io.h
+#!                   ghl.h
+#!                   ghl_eos_functions.h
+#!                   ghl_eos_functions_declaration.h
+#!                   ghl_io.h
 #!                   induction.h
 #!                   neutrinos.h
 #!                   nrpyeos_hybrid.h

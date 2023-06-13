@@ -1,7 +1,7 @@
 #ifndef FLUX_SOURCE_H_
 #define FLUX_SOURCE_H_
 
-#include "grhayl.h"
+#include "ghl.h"
 
 
 static const double TINYDOUBLE = 1e-100;

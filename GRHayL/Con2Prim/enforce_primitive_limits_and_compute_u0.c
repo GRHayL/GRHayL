@@ -4,7 +4,7 @@
  * Description : Applies limits to rho_b, pressure, and v^i, then
                  recomputes epsilon and (if needed) entropy
 
- * Inputs      : params         - grhayl_parameters struct with parameters
+ * Inputs      : params         - ghl_parameters struct with parameters
  *                                for the simulation
  *             : eos            - eos_parameters struct with data for the
  *                                EOS of the simulation
@@ -19,7 +19,7 @@
  */
 
 void ghl_enforce_primitive_limits_and_compute_u0(
-    const grhayl_parameters *restrict params,
+    const ghl_parameters *restrict params,
     const eos_parameters *restrict eos,
     const metric_quantities *restrict ADM_metric,
     const ADM_aux_quantities *restrict metric_aux,
@@ -30,7 +30,7 @@ void ghl_enforce_primitive_limits_and_compute_u0(
   prims->rho = MIN(MAX(prims->rho,eos->rho_min),eos->rho_max);
 
   // Hybrid EOS specific floors and ceilings
-  if( eos->eos_type == grhayl_eos_hybrid ) {
+  if( eos->eos_type == ghl_eos_hybrid ) {
     // Pressure and epsilon must be recomputed
     // Compute P and eps
     double P_cold = 0.0;
@@ -53,7 +53,7 @@ void ghl_enforce_primitive_limits_and_compute_u0(
     if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
 
   // Tabulated EOS specific floors and ceilings
-  } else if( eos->eos_type == grhayl_eos_tabulated ) {
+  } else if( eos->eos_type == ghl_eos_tabulated ) {
     // Apply floors and ceilings to Y_e and T
     prims->Y_e = MIN(MAX(prims->Y_e,eos->Y_e_min), eos->Y_e_max);
     prims->temperature = MIN(MAX(prims->temperature, eos->T_min),eos->T_max);

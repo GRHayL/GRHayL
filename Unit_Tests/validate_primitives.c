@@ -66,7 +66,7 @@ void validate_primitives(
       test_fail = 1;
     }
 
-  if(eos->eos_type == grhayl_eos_tabulated) {
+  if(eos->eos_type == ghl_eos_tabulated) {
     if( validate(prims_trusted->Y_e, prims->Y_e, prims_pert->Y_e) ) {
       printf("Y_e trusted %.14e computed %.14e perturbed %.14e\n", prims_trusted->Y_e, prims->Y_e, prims_pert->Y_e);
       printf("rel.err. %.14e %.14e\n", relative_error(prims_trusted->Y_e, prims->Y_e), relative_error(prims_trusted->Y_e, prims_pert->Y_e));

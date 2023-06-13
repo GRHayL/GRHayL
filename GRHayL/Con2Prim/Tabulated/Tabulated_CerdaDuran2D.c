@@ -7,7 +7,7 @@
                  is adapted from the HARM function provided by IllinoisGRMHD. The
                  original HARM copyright is included below.
 
- * Inputs      : params         - grhayl_parameters struct with parameters
+ * Inputs      : params         - ghl_parameters struct with parameters
  *                                for the simulation
  *             : eos            - eos_parameters struct with data for the
  *                                EOS of the simulation

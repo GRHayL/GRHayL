@@ -110,7 +110,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   { // var_indices is a local variable
     num_vars = 6;
     const int var_indices[6] = {VX, VY, VZ, BY_CENTER, BZ_CENTER, BY_STAGGER};
-    GRHayLMHD_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayLMHD_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, ghl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
@@ -128,7 +128,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  GRHayLMHD_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayLMHD_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, ghl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
@@ -162,12 +162,12 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   { // var_indices is a local variable
     num_vars = 4;
     const int var_indices[4] = {VXR, VYR, VXL, VYL};
-    GRHayLMHD_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayLMHD_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, ghl_eos, in_prims, out_prims_r, out_prims_l);
   }
   { // var_indices is a local variable
     num_vars = 7;
     const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BZ_CENTER, BX_STAGGER, BZ_STAGGER};
-    GRHayLMHD_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayLMHD_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, ghl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
   //Right and left face values of BI_CENTER are used in mhdflux computation (first to compute b^a).
@@ -185,7 +185,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  GRHayLMHD_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayLMHD_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, ghl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
@@ -230,12 +230,12 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   { // var_indices is a local variable
     num_vars = 4;
     const int var_indices[4] = {VYR, VZR, VYL, VZL};
-    GRHayLMHD_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayLMHD_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, ghl_eos, in_prims, out_prims_r, out_prims_l);
   }
   { // var_indices is a local variable
     num_vars = 7;
     const int var_indices[7] = {VX, VY, VZ, BX_CENTER, BY_CENTER, BX_STAGGER, BY_STAGGER};
-    GRHayLMHD_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayLMHD_reconstruction_loop(cctkGH, flux_dir, num_vars, var_indices, ghl_eos, in_prims, out_prims_r, out_prims_l);
   }
 /*****************************************************************************************/
 
@@ -254,7 +254,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
 
   // Then add fluxes to RHS for hydro variables {rho_b,P,vx,vy,vz}:
   // This function is housed in the file: "add_fluxes_and_source_terms_to_hydro_rhss.C"
-  GRHayLMHD_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, grhayl_eos, metric, in_prims,
+  GRHayLMHD_calculate_MHD_dirn_rhs(cctkGH, flux_dir, dX, ghl_eos, metric, in_prims,
                          out_prims_r, out_prims_l, cmin[flux_dir], cmax[flux_dir],
                          rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux,
                          rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs);
@@ -281,7 +281,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   { // var_indices is a local variable
     num_vars = 5;
     const int var_indices[5] = {VXR, VZR, VXL, VZL, BZ_STAGGER};
-    GRHayLMHD_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, grhayl_eos, in_prims, out_prims_r, out_prims_l);
+    GRHayLMHD_reconstruction_loop_no_rho_P(cctkGH, flux_dir, num_vars, var_indices, ghl_eos, in_prims, out_prims_r, out_prims_l);
   }
 
 

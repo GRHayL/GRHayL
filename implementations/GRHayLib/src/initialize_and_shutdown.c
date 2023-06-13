@@ -4,8 +4,8 @@
 
 #include "GRHayLib.h"
 
-grhayl_parameters *grhayl_params;
-eos_parameters *grhayl_eos;
+ghl_parameters *ghl_params;
+eos_parameters *ghl_eos;
 
 int parse_C2P_routine_keyword(const char *restrict routine_name);
 
@@ -13,7 +13,7 @@ typedef struct {
   double rho_atm, rho_min, rho_max;
   double Y_e_atm, Y_e_min, Y_e_max;
   double T_atm  , T_min  , T_max;
-} grhayl_params_checked;
+} ghl_params_checked;
 
 void paramcheck() {
 
@@ -59,8 +59,8 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
   DECLARE_CCTK_PARAMETERS;
 
-  grhayl_params = (grhayl_parameters *)malloc(sizeof(grhayl_parameters));
-  grhayl_eos = (eos_parameters *)malloc(sizeof(eos_parameters));
+  ghl_params = (ghl_parameters *)malloc(sizeof(ghl_parameters));
+  ghl_eos = (eos_parameters *)malloc(sizeof(eos_parameters));
 
   const int main = parse_C2P_routine_keyword(con2prim_routine);
   int backups[3];
@@ -74,7 +74,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       evolve_entropy, evolve_temperature,
       calc_primitive_guess, Psi6threshold,
       Cupp_Fix, Lorenz_damping_factor,
-      grhayl_params);
+      ghl_params);
 
   if (CCTK_EQUALS(EOS_type, "hybrid")) {
 
@@ -83,7 +83,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
           rho_b_atm, rho_b_min, rho_b_max,
           neos, rho_ppoly_in,
           Gamma_ppoly_in, k_ppoly0,
-          Gamma_th, grhayl_eos);
+          Gamma_th, ghl_eos);
   } else if (CCTK_EQUALS(EOS_type, "tabulated")) {
     if( CCTK_EQUALS(EOS_tablepath, "") )
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
@@ -93,7 +93,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,
           T_atm, T_min, T_max,
-          grhayl_eos);
+          ghl_eos);
   } else if (CCTK_EQUALS(EOS_type, "")) {
     CCTK_VERROR("GRHayLib parameter EOS_type is unset. Please set an EOS type.");
   } else {
@@ -103,15 +103,15 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 }
 
 void GRHayLib_terminate(CCTK_ARGUMENTS) {
-  if(grhayl_eos->eos_type == grhayl_eos_tabulated) {
-    free(grhayl_eos->table_all);
-    free(grhayl_eos->table_logrho);
-    free(grhayl_eos->table_logT);
-    free(grhayl_eos->table_Y_e);
-    free(grhayl_eos->table_eps);
+  if(ghl_eos->eos_type == ghl_eos_tabulated) {
+    free(ghl_eos->table_all);
+    free(ghl_eos->table_logrho);
+    free(ghl_eos->table_logT);
+    free(ghl_eos->table_Y_e);
+    free(ghl_eos->table_eps);
   }
-  free(grhayl_eos);
-  free(grhayl_params);
+  free(ghl_eos);
+  free(ghl_params);
 }
 
 int parse_C2P_routine_keyword(const char *restrict routine_name) {

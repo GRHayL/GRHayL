@@ -5,7 +5,7 @@
  *    Font fix: function call     *
  **********************************/
 int ghl_hybrid_Font_fix(
-      const grhayl_parameters *restrict params,
+      const ghl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
@@ -49,8 +49,6 @@ int ghl_hybrid_Font_fix(
 
     //****************************************************************
     //                          FONT FIX
-    // Impose Font fix when HARM primitives solver fails to find
-    //   acceptable set of primitives.
     //****************************************************************
 
     const int maxits = 300;
@@ -66,7 +64,7 @@ int ghl_hybrid_Font_fix(
       if(Font_fix_status==0) break;
     }
 
-    //**************************************************************************************************************
+    //****************************************************************
 
     if(Font_fix_status==1)
       return 1;

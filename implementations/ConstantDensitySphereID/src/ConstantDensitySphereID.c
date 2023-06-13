@@ -45,7 +45,7 @@ void ConstantDensitySphereID(CCTK_ARGUMENTS) {
   const CCTK_REAL Y_e_interior = ConstantDensitySphereID_Y_e_interior;
   const CCTK_REAL T_interior   = ConstantDensitySphereID_T_interior;
   CCTK_REAL P_interior, eps_interior, S_interior;
-  ghl_tabulated_compute_P_eps_S_from_T( grhayl_eos,
+  ghl_tabulated_compute_P_eps_S_from_T( ghl_eos,
                                                 rho_interior,
                                                 Y_e_interior,
                                                 T_interior,
@@ -58,7 +58,7 @@ void ConstantDensitySphereID(CCTK_ARGUMENTS) {
   const CCTK_REAL Y_e_exterior = ConstantDensitySphereID_Y_e_exterior;
   const CCTK_REAL T_exterior   = ConstantDensitySphereID_T_exterior;
   CCTK_REAL P_exterior, eps_exterior, S_exterior;
-  ghl_tabulated_compute_P_eps_S_from_T( grhayl_eos,
+  ghl_tabulated_compute_P_eps_S_from_T( ghl_eos,
                                                 rho_exterior,
                                                 Y_e_exterior,
                                                 T_exterior,

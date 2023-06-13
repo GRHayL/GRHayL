@@ -123,9 +123,9 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
         int check=0;
         if(cons.rho>0.0) {
           // Apply the tau floor
-          if( grhayl_eos->eos_type == grhayl_eos_hybrid )
+          if( ghl_eos->eos_type == ghl_eos_hybrid )
             ghl_apply_inequality_fixes(
-                  grhayl_params, grhayl_eos, &ADM_metric,
+                  ghl_params, ghl_eos, &ADM_metric,
                   &metric_aux, &prims, &cons, &diagnostics);
 
           // declare some variables for the C2P routine.
@@ -136,7 +136,7 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
 
           /************* Conservative-to-primitive recovery ************/
           int check = ghl_con2prim_multi_method(
-                grhayl_params, grhayl_eos, &ADM_metric, &metric_aux,
+                ghl_params, ghl_eos, &ADM_metric, &metric_aux,
                 &cons_undens, &prims, &diagnostics);
 
           if(check==0) {
@@ -166,7 +166,7 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
           }
         } else {
           diagnostics.failure_checker+=1;
-          ghl_set_prims_to_constant_atm(grhayl_eos, &prims);
+          ghl_set_prims_to_constant_atm(ghl_eos, &prims);
           rho_star_fix_applied++;
         } // if rho_star>0
         /***************************************************************/
@@ -176,13 +176,13 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
           //----------- Primitive recovery failed ------------
           //--------------------------------------------------
           // Sigh, reset to atmosphere
-          ghl_set_prims_to_constant_atm(grhayl_eos, &prims);
+          ghl_set_prims_to_constant_atm(ghl_eos, &prims);
           diagnostics.failure_checker+=100000;
           atm_resets++;
           // Then flag this point as a "success"
           check = 0;
           CCTK_VINFO("Couldn't find root from: %e %e %e %e %e, rhob approx=%e, rho_b_atm=%e, Bx=%e, By=%e, Bz=%e, gij=%e %e %e %e %e %e, alpha=%e\n",
-                     cons_orig.rho, cons_orig.tau, cons_orig.SD[0], cons_orig.SD[1], cons_orig.SD[2], cons_orig.rho/metric_aux.psi6, grhayl_eos->rho_atm,
+                     cons_orig.rho, cons_orig.tau, cons_orig.SD[0], cons_orig.SD[1], cons_orig.SD[2], cons_orig.rho/metric_aux.psi6, ghl_eos->rho_atm,
                      prims.BU[0], prims.BU[1], prims.BU[2], ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2], ADM_metric.lapse);
         }
 
@@ -191,7 +191,7 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
         ghl_enforce_primitive_limits_and_compute_u0(
-              grhayl_params, grhayl_eos, &ADM_metric, &metric_aux,
+              ghl_params, ghl_eos, &ADM_metric, &metric_aux,
               &prims, &diagnostics.failure_checker);
         ghl_compute_conservs(
               &ADM_metric, &metric_aux, &prims, &cons);
@@ -203,7 +203,7 @@ void GRHayLMHD_conserv_to_prims(CCTK_ARGUMENTS) {
 
         if(check!=0) {
           diagnostics.failures++;
-          if(metric_aux.psi6 > grhayl_params->psi6threshold) {
+          if(metric_aux.psi6 > ghl_params->psi6threshold) {
             failures_inhoriz++;
             pointcount_inhoriz++;
           }

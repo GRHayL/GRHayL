@@ -112,11 +112,11 @@ int ghl_newman_entropy(
   ghl_tabulated_compute_P_eps_S_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
                                          &prim->press, &prim->eps, &prim->entropy );
 
-  return grhayl_success;
+  return ghl_success;
 }
 
 int ghl_tabulated_Newman1D_entropy(
-      const grhayl_parameters *restrict params,
+      const ghl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,

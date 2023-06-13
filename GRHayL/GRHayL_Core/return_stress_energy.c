@@ -1,4 +1,4 @@
-#include "grhayl.h"
+#include "ghl.h"
 
 /* Function    : ghl_return_stress_energy()
  * Description : unpacks stress_energy struct into variables

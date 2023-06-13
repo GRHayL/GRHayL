@@ -31,7 +31,7 @@ int ghl_tabulated_Palenzuela1D(
             double *restrict eps_ptr,
             double *restrict T_ptr,
             double *restrict W_ptr ),
-      const grhayl_parameters *restrict params,
+      const ghl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons_undens,
@@ -127,5 +127,5 @@ int ghl_tabulated_Palenzuela1D(
   prims->vU[1]          = W*(SU[1] + BdotS*BbarU[1]/Z)/(Z+B_squared);
   prims->vU[2]          = W*(SU[2] + BdotS*BbarU[2]/Z)/(Z+B_squared);
 
-  return grhayl_success;
+  return ghl_success;
 }

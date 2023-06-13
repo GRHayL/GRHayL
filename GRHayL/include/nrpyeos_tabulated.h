@@ -1,6 +1,6 @@
 #ifndef NRPYEOS_TABULATED_H_
 #define NRPYEOS_TABULATED_H_
-#include "grhayl.h"
+#include "ghl.h"
 #ifndef GRHAYL_USE_HDF5
 #define HDF5_ERROR_IF_USED \
   ghl_error("HDF5 is disabled, so this function cannot be used\n")

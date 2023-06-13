@@ -1,7 +1,7 @@
 #ifndef ATMOSPHERE_H_
 #define ATMOSPHERE_H_
 
-#include "grhayl.h"
+#include "ghl.h"
 
 #ifdef __cplusplus
 extern "C" {

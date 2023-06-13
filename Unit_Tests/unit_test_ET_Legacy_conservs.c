@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
-  grhayl_parameters params;
+  ghl_parameters params;
   ghl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
                     Psi6threshold, 0 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
 

@@ -1,4 +1,4 @@
-#include "grhayl.h"
+#include "ghl.h"
 
 /**********************************************************************
     ghl_raise_vector_4D() and ghl_raise_vector_3D():

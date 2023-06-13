@@ -7,7 +7,7 @@
                  is adapted from the HARM function provided by IllinoisGRMHD. The
                  original HARM copyright is included below.
 
- * Inputs      : params         - grhayl_parameters struct with parameters
+ * Inputs      : params         - ghl_parameters struct with parameters
  *                                for the simulation
  *             : eos            - eos_parameters struct with data for the
  *                                EOS of the simulation
@@ -127,7 +127,7 @@ return: i where
 **********************************************************************************/
 
 int ghl_hybrid_Noble2D(
-      const grhayl_parameters *restrict params,
+      const ghl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
       const ADM_aux_quantities *restrict metric_aux,
@@ -198,12 +198,12 @@ int ghl_hybrid_Noble2D(
   double p = 0;
   double w = 0;
 
-  if( eos->eos_type == grhayl_eos_hybrid ) {
+  if( eos->eos_type == ghl_eos_hybrid ) {
     const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, prims->rho)];
     u = prims->press/(Gamma_ppoly - 1.0);
     p = ghl_pressure_rho0_u(eos, rho0, u);
     w = rho0 + u + p;
-  } else if(eos->eos_type == grhayl_eos_tabulated) {
+  } else if(eos->eos_type == ghl_eos_tabulated) {
     ghl_warn("No tabulated EOS support yet! Sorry!");
   }
 
@@ -284,14 +284,14 @@ int ghl_hybrid_Noble2D(
   if(diagnostics->speed_limited==1)
     prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
 
-  if( eos->eos_type == grhayl_eos_hybrid ) {
+  if( eos->eos_type == ghl_eos_hybrid ) {
     prims->press = ghl_pressure_rho0_w(eos, prims->rho, w);
     double P_cold = 0.0;
     double eps_cold = 0.0;
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
     prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
     if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
-  } else if(eos->eos_type == grhayl_eos_tabulated) {
+  } else if(eos->eos_type == ghl_eos_tabulated) {
     ghl_warn("No tabulated EOS support yet! Sorry!");
   }
 

@@ -1,6 +1,6 @@
 #include "nrpyeos_hybrid.h"
 #include "nrpyeos_tabulated.h"
-#include "grhayl_eos_functions_declaration.h"
+#include "ghl_eos_functions_declaration.h"
 
 #define init_common_eos_quantities         \
   eos->W_max             = W_max;          \
@@ -17,7 +17,7 @@
  *                     initialized
  */
 void ghl_initialize_eos_functions(
-      grhayl_eos_t const eos_type,
+      ghl_eos_t const eos_type,
       eos_parameters *restrict eos) {
 
   // Step 1: Hybrid EOS functions (always available)
@@ -27,10 +27,10 @@ void ghl_initialize_eos_functions(
   NRPyEOS_initialize_tabulated_functions(eos);
 
   // Step 3: General functions (same interface for all EOSs)
-  if( eos_type == grhayl_eos_hybrid ) {
+  if( eos_type == ghl_eos_hybrid ) {
     ghl_compute_h_and_cs2 = &NRPyEOS_hybrid_compute_enthalpy_and_cs2;
   }
-  else if( eos_type == grhayl_eos_tabulated ) {
+  else if( eos_type == ghl_eos_tabulated ) {
     ghl_compute_h_and_cs2 = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
   }
 }
@@ -80,7 +80,7 @@ void ghl_initialize_hybrid_eos(
   if( rho_min > rho_max ) ghl_error("rho_min cannot be greater than rho_max\n");
 
   // Step 1: Set EOS type to Hybrid
-  eos->eos_type = grhayl_eos_hybrid;
+  eos->eos_type = ghl_eos_hybrid;
 
   // Step 2: Initialize quantities which are common to all EOSs.
   init_common_eos_quantities;
@@ -161,7 +161,7 @@ void ghl_initialize_tabulated_eos(
       eos_parameters *restrict eos ) {
 
   // Step 1: Set EOS type to Tabulated.
-  eos->eos_type = grhayl_eos_tabulated;
+  eos->eos_type = ghl_eos_tabulated;
 
   // Step 2: Read the EOS table
   ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
@@ -262,7 +262,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
       eos_parameters *restrict eos ) {
 
   // Step 1: Initialize Hybrid EOS functions
-  ghl_initialize_eos_functions(grhayl_eos_hybrid, eos);
+  ghl_initialize_eos_functions(ghl_eos_hybrid, eos);
 
   // Step 2: Initialize Hybrid EOS parameters
   ghl_initialize_hybrid_eos(W_max, rho_atm, rho_min, rho_max,
@@ -301,10 +301,10 @@ void ghl_initialize_tabulated_eos_functions_and_params(
       const double T_max,
       eos_parameters *restrict eos ) {
 
-  eos->eos_type = grhayl_eos_tabulated;
+  eos->eos_type = ghl_eos_tabulated;
 
   // Step 1: Initialize Tabulated EOS functions
-  ghl_initialize_eos_functions(grhayl_eos_tabulated, eos);
+  ghl_initialize_eos_functions(ghl_eos_tabulated, eos);
 
   // Step 2: Initialize Tabulated EOS parameters
   ghl_initialize_tabulated_eos(table_filepath, W_max,

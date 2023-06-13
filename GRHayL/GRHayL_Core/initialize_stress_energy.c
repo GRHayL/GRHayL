@@ -1,4 +1,4 @@
-#include "grhayl.h"
+#include "ghl.h"
 
 /* Function    : ghl_initialize_stress_energy()
  * Description : Initialize the stress_energy struct from user input

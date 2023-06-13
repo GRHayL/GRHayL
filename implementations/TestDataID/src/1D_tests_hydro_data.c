@@ -115,9 +115,9 @@ void TestDataID_1D_tests_hydro_data(CCTK_ARGUMENTS) {
           vel[ind4y]   = vy_r;
           vel[ind4z]   = vz_r;
         }
-        double Gamma = grhayl_eos->Gamma_ppoly[
+        double Gamma = ghl_eos->Gamma_ppoly[
                                  ghl_hybrid_find_polytropic_index(
-                                             grhayl_eos, rho[index])];
+                                             ghl_eos, rho[index])];
         eps[index] = press[index]/( rho[index]*(Gamma-1) );
       }
     }

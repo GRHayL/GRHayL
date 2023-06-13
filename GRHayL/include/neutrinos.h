@@ -1,7 +1,7 @@
 #ifndef NEUTRINOS_H_
 #define NEUTRINOS_H_
 
-#include "grhayl.h"
+#include "ghl.h"
 
 // Neutrino quantities
 typedef struct neutrino_luminosities {

@@ -101,7 +101,7 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
           }
 
           // Compute Gamma
-          const double Gamma = GRHayLHD_eos_Gamma_eff(grhayl_eos, rho_b[index], pressure[index]);
+          const double Gamma = GRHayLHD_eos_Gamma_eff(ghl_eos, rho_b[index], pressure[index]);
 
           ghl_simple_ppm(
                 rho_stencil, press_stencil, vel_stencil,
@@ -134,14 +134,14 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
 
           int speed_limited = 0;
           ghl_limit_v_and_compute_u0(
-                grhayl_eos, &ADM_metric_face, &prims_r, &speed_limited);
+                ghl_eos, &ADM_metric_face, &prims_r, &speed_limited);
           ghl_limit_v_and_compute_u0(
-                grhayl_eos, &ADM_metric_face, &prims_l, &speed_limited);
+                ghl_eos, &ADM_metric_face, &prims_l, &speed_limited);
 
           double cmin, cmax;
           conservative_quantities cons_fluxes;
-          calculate_characteristic_speed(&prims_r, &prims_l, grhayl_eos, &ADM_metric_face, &cmin, &cmax);
-          calculate_HLLE_fluxes(&prims_r, &prims_l, grhayl_eos, &ADM_metric_face, cmin, cmax, &cons_fluxes);
+          calculate_characteristic_speed(&prims_r, &prims_l, ghl_eos, &ADM_metric_face, &cmin, &cmax);
+          calculate_HLLE_fluxes(&prims_r, &prims_l, ghl_eos, &ADM_metric_face, cmin, cmax, &cons_fluxes);
 
           rho_star_flux[index] = cons_fluxes.rho;
           tau_flux[index]      = cons_fluxes.tau;
@@ -199,7 +199,7 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
 
           int speed_limited = 0;
           ghl_limit_v_and_compute_u0(
-                grhayl_eos, &ADM_metric, &prims, &speed_limited);
+                ghl_eos, &ADM_metric, &prims, &speed_limited);
 
           metric_quantities ADM_metric_derivs;
 
@@ -221,7 +221,7 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
           cons_source.SD[1] = 0.0;
           cons_source.SD[2] = 0.0;
 
-          calculate_source_terms(&prims, grhayl_eos, &ADM_metric, &ADM_metric_derivs, &cons_source);
+          calculate_source_terms(&prims, ghl_eos, &ADM_metric, &ADM_metric_derivs, &cons_source);
           tau_rhs[index]     += cons_source.tau;
           Stildex_rhs[index] += cons_source.SD[0];
           Stildey_rhs[index] += cons_source.SD[1];

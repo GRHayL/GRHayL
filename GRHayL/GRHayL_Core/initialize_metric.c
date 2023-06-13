@@ -1,4 +1,4 @@
-#include "grhayl.h"
+#include "ghl.h"
 
 /* Function    : ghl_initialize_metric()
  * Description : Initialize the metric struct from user input

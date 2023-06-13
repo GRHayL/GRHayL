@@ -1,4 +1,4 @@
-#include "grhayl.h"
+#include "ghl.h"
 
 void ghl_compute_TUPmunu(
       const metric_quantities *restrict ADM_metric,

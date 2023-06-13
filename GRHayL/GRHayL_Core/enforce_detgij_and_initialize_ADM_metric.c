@@ -1,4 +1,4 @@
-#include "grhayl.h"
+#include "ghl.h"
 
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,

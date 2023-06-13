@@ -89,11 +89,11 @@ void GRHayLHD_evaluate_tau_curvature_rhs(CCTK_ARGUMENTS) {
 
         int speed_limited = 0;
         ghl_limit_v_and_compute_u0(
-              grhayl_eos, &ADM_metric, &prims, &speed_limited);
+              ghl_eos, &ADM_metric, &prims, &speed_limited);
 
         conservative_quantities cons_source;
         cons_source.tau = 0;
-        ghl_calculate_tau_tilde_source_term_extrinsic_curv(&prims, grhayl_eos, &ADM_metric, &curv, &cons_source);
+        ghl_calculate_tau_tilde_source_term_extrinsic_curv(&prims, ghl_eos, &ADM_metric, &curv, &cons_source);
         tau_rhs[index] += cons_source.tau;
       }
     }

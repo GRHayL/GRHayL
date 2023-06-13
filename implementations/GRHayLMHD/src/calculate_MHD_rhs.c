@@ -202,7 +202,7 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
         cons_source.SD[1] = 0.0;
         cons_source.SD[2] = 0.0;
 
-        calculate_source_terms(&prims, grhayl_eos, &ADM_metric, &ADM_metric_derivs, &cons_source);
+        calculate_source_terms(&prims, ghl_eos, &ADM_metric, &ADM_metric_derivs, &cons_source);
         tau_rhs[index]     += cons_source.tau;
         Stildex_rhs[index] += cons_source.SD[0];
         Stildey_rhs[index] += cons_source.SD[1];

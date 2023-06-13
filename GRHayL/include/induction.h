@@ -1,7 +1,7 @@
 #ifndef INDUCTION_H_
 #define INDUCTION_H_
 
-#include "grhayl.h"
+#include "ghl.h"
 
 typedef struct em_quantities {
   double phitilde;

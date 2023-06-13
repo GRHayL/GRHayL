@@ -61,7 +61,7 @@ void NRPyLeakageET_compute_neutrino_luminosities(CCTK_ARGUMENTS) {
 
             // Step 3: Compute neutrino luminosities
             neutrino_luminosities lumL;
-            NRPyLeakage_compute_neutrino_luminosities(grhayl_eos,
+            NRPyLeakage_compute_neutrino_luminosities(ghl_eos,
                                                       alpL, gxxL, gxyL, gxzL, gyyL, gyzL, gzzL,
                                                       rhoL, Y_eL, temperatureL, wL,
                                                       &tauL, &lumL);

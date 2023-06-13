@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include "grhayl_io.h"
+#include "ghl_io.h"
 
 void ghl_info(const char *format, ...) {
 
@@ -29,10 +29,10 @@ void ghl_Warn_Error(
   va_end(args);
 
   switch (exit_code) {
-  case grhayl_success:
+  case ghl_success:
     return;
     break;
-  case grhayl_error_abort:
+  case ghl_error_abort:
     abort();
     break;
   default:
