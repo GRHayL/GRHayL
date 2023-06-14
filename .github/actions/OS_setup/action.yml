@@ -53,8 +53,10 @@ runs:
       shell: bash
 
     - if: runner.os == 'MacOS' && inputs.compiler == 'gcc'
-      run: brew update && brew install gcc gsed hdf5 md5sha1sum
+      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install gcc gsed hdf5 md5sha1sum
+      #run: brew update && brew install gcc gsed hdf5 md5sha1sum
       shell: bash
     - if: runner.os == 'MacOS' && inputs.compiler == 'clang'
-      run: brew update && brew install llvm hdf5 md5sha1sum
+      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install llvm gsed hdf5 md5sha1sum
+      #run: brew update && brew install llvm hdf5 md5sha1sum
       shell: bash
