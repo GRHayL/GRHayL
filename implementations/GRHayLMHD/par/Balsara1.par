@@ -1,0 +1,179 @@
+## Balsara1 Test
+ActiveThorns = "Time MoL"
+ActiveThorns = "Coordbase CartGrid3d Boundary StaticConformal"
+ActiveThorns = "SymBase ADMBase TmunuBase HydroBase InitBase ADMMacros"
+ActiveThorns = "IOUtil"
+ActiveThorns = "SpaceMask CoordGauge Constants LocalReduce aeilocalinterp LoopControl"
+ActiveThorns = "Carpet CarpetLib CarpetReduce CarpetRegrid2 CarpetInterp"
+ActiveThorns = "CarpetIOASCII CarpetIOScalar CarpetIOHDF5 CarpetIOBasic"
+
+ActiveThorns = "GRHayLib GRHayLMHD"
+
+CarpetLib::support_staggered_operators = "yes"
+GRHayLib::Psi6threshold = 1e100
+GRHayLib::Lorenz_damping_factor = 0.1
+
+GRHayLib::rho_b_atm = 1.292852735094440e-10
+GRHayLib::rho_b_min = 1.292852735094440e-10
+
+# grid parameters
+driver::ghost_size = 3
+CoordBase::boundary_size_x_lower = 3
+CoordBase::boundary_size_y_lower = 3
+CoordBase::boundary_size_z_lower = 3
+CoordBase::boundary_size_x_upper = 3
+CoordBase::boundary_size_y_upper = 3
+CoordBase::boundary_size_z_upper = 3
+
+grid::avoid_origin = "no"
+CartGrid3D::type         = "coordbase"
+CoordBase::domainsize = "minmax"
+CoordBase::xmin = -2.0
+CoordBase::ymin = -2.0
+CoordBase::zmin = -2.0
+CoordBase::xmax =  2.0
+CoordBase::ymax =  2.0
+CoordBase::zmax =  2.0
+CoordBase::dx   =  0.1
+CoordBase::dy   =  0.1
+CoordBase::dz   =  0.1
+
+TmunuBase::stress_energy_storage = yes
+TmunuBase::stress_energy_at_RHS  = yes
+TmunuBase::timelevels            =  1
+TmunuBase::prolongation_type     = none
+
+SpaceMask::use_mask      = "yes"
+
+Cactus::cctk_final_time            = 4.0
+Cactus::cctk_full_warnings         = "yes"
+Cactus::cctk_run_title             = "GRHDShockID"
+Cactus::highlight_warning_messages = "no"
+Cactus::terminate                  = "time"
+
+Carpet::domain_from_coordbase = "yes"
+Carpet::enable_all_storage       = no
+Carpet::use_buffer_zones         = "yes"
+
+Carpet::poison_new_timelevels    = "yes"
+Carpet::check_for_poison         = "no"
+
+Carpet::init_3_timelevels        = no
+Carpet::init_fill_timelevels     = "yes"
+
+CarpetLib::poison_new_memory = "yes"
+CarpetLib::poison_value      = 114
+
+Carpet::max_refinement_levels    = 1
+
+CarpetRegrid2::regrid_every = 0
+CarpetRegrid2::num_centres  = 1
+
+CarpetRegrid2::num_levels_1 = 1
+CarpetRegrid2::radius_1[1]  = 1.0
+
+time::dtfac = 0.5
+MoL::ODE_Method             = "rk4"
+MoL::MoL_Intermediate_Steps = 4
+MoL::MoL_Num_Scratch_Levels = 1
+
+ActiveThorns = "GenericFD NewRad"
+ActiveThorns = "SphericalSurface"
+
+SphericalSurface::nsurfaces = 2
+SphericalSurface::maxntheta = 39
+SphericalSurface::maxnphi = 76
+
+SphericalSurface::ntheta      [0] = 39
+SphericalSurface::nphi        [0] = 76
+SphericalSurface::nghoststheta[0] = 2
+SphericalSurface::nghostsphi  [0] = 2
+
+SphericalSurface::ntheta      [1] = 39
+SphericalSurface::nphi        [1] = 76
+SphericalSurface::nghoststheta[1] = 2
+SphericalSurface::nghostsphi  [1] = 2
+
+# init parameters
+InitBase::initial_data_setup_method = "init_some_levels"
+
+#---------ADMBase---------
+ADMBase::evolution_method         = "static"
+ADMBase::lapse_evolution_method   = "static"
+ADMBase::shift_evolution_method   = "static"
+ADMBase::dtlapse_evolution_method = "static"
+ADMBase::dtshift_evolution_method = "static"
+ADMBase::initial_data            = "Cartesian Minkowski"
+ADMBase::initial_lapse           = "one"
+ADMBase::initial_shift           = "zero"
+ADMBase::initial_dtlapse         = "none"
+ADMBase::initial_dtshift         = "none"
+ADMBase::metric_type              = "physical"
+ADMBase::metric_timelevels        = 3
+ADMBase::lapse_timelevels         = 3
+ADMBase::shift_timelevels         = 3
+
+#---------ADMMacros---------
+ADMMacros::spatial_order = 4
+
+#---------HydroBase---------
+HydroBase::initial_hydro       = "hydro_test"
+HydroBase::initial_Y_e         = "none"
+HydroBase::initial_temperature = "none"
+HydroBase::initial_entropy     = "none"
+HydroBase::initial_Avec        = "zero"
+HydroBase::initial_Aphi        = "zero"
+HydroBase::initial_Bvec        = "zero"
+HydroBase::timelevels          = 1
+
+
+GRHayLib::EOS_type              = "hybrid"
+GRHayLib::neos                  = 1
+GRHayLib::Gamma_ppoly_in[0]     = 2.0
+GRHayLib::Gamma_th              = 2.0
+GRHayLib::k_ppoly0              = 1.0
+GRHayLib::rho_ppoly_in[0]       = 0.0
+GRHayLib::con2prim_backup_routines[0] = "FontFix"
+
+ActiveThorns = "TestDataID"
+TestDataID::simulation_type = "1D_test"
+TestDataID::initialize_magnetic_quantities = yes
+TestDataID::test_1D_initial_data = "Balsara1"
+TestDataID::test_shock_direction = "z"
+TestDataID::discontinuity_position = 0.0
+
+# I/O
+
+IOUtil::out_dir                 = $parfile
+IOUtil::parfile_write           = "generate"
+
+IOBasic::outInfo_every = 2
+IOBasic::outInfo_vars  = "Carpet::physical_time_per_hour GRHayLMHD::rho_b GRHayLMHD::pressure"
+
+IOScalar::outScalar_every    = 2
+CarpetIOScalar::outScalar_reductions = "maximum"
+IOScalar::one_file_per_group = no
+IOScalar::outScalar_vars     = "
+ GRHayLMHD::rho_b
+"
+
+CarpetIOASCII::one_file_per_group     = "yes"
+CarpetIOASCII::out1D_every          = 10
+CarpetIOASCII::out1D_x              = "no"
+CarpetIOASCII::out1D_y              = "no"
+CarpetIOASCII::out1D_z              = "yes"
+CarpetIOASCII::out1D_d              = "no"
+CarpetIOASCII::out1d_zline_x        = 0.01
+CarpetIOASCII::out1d_zline_y        = 0.01
+CarpetIOASCII::out1D_vars           = "
+  ADMBase::lapse
+  GRHayLMHD::rho_b
+  GRHayLMHD::pressure
+  GRHayLMHD::vx
+  GRHayLMHD::vy
+  GRHayLMHD::vz
+"
+CarpetIOASCII::out2D_every            = 8
+CarpetIOASCII::out2D_vars             = ""
+CarpetIOASCII::out3D_ghosts           = "no"
+CarpetIOASCII::output_symmetry_points = "no"
