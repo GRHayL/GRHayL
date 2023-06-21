@@ -11,8 +11,6 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS_GRHayLHD_evaluate_flux_source_rhs;
   DECLARE_CCTK_PARAMETERS;
 
-  CCTK_REAL dxi[3] = { 1.0/CCTK_DELTA_SPACE(0), 1.0/CCTK_DELTA_SPACE(1), 1.0/CCTK_DELTA_SPACE(2) };
-
   /*
    *  Computation of \partial_i on RHS of \partial_t {rho_star,tau,Stilde{x,y,z}},
    *  via PPM reconstruction onto e.g. (i+1/2,j,k), so that
@@ -109,7 +107,7 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
                 &rhor, &rhol, &pressr, &pressl, vel_r, vel_l);
 
           metric_quantities ADM_metric_face;
-          GRHayLHD_interpolate_to_face_and_initialize_metric(
+          GRHayLHD_interpolate_metric_to_face(
                 cctkGH, i, j, k,
                 flux_dir, alp,
                 betax, betay, betaz,
@@ -152,6 +150,8 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
       }
     }
 
+    CCTK_REAL dxi = 1.0/CCTK_DELTA_SPACE(flux_dir);
+
 #pragma omp parallel for
     for(int k=kmin; k<kmax; k++) {
       for(int j=jmin; j<jmax; j++) {
@@ -159,28 +159,11 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
           const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
           const int indm1 = CCTK_GFINDEX3D(cctkGH, i-xdir, j-ydir, k-zdir);
 
-          metric_quantities ADM_metric_face, ADM_metric_facem1;
-          GRHayLHD_interpolate_to_face_and_initialize_metric(
-                cctkGH, i, j, k,
-                flux_dir, alp,
-                betax, betay, betaz,
-                gxx, gxy, gxz,
-                gyy, gyz, gzz,
-                &ADM_metric_face);
-
-          GRHayLHD_interpolate_to_face_and_initialize_metric(
-                cctkGH, i-xdir, j-ydir, k-zdir,
-                flux_dir, alp,
-                betax, betay, betaz,
-                gxx, gxy, gxz,
-                gyy, gyz, gzz,
-                &ADM_metric_facem1);
-
-          rho_star_rhs[index] += dxi[flux_dir]*(rho_star_flux[indm1] - rho_star_flux[index]);
-          tau_rhs[index]      += dxi[flux_dir]*(tau_flux[indm1]      - tau_flux[index]);
-          Stildex_rhs[index]  += dxi[flux_dir]*(Stildex_flux[indm1]  - Stildex_flux[index]);
-          Stildey_rhs[index]  += dxi[flux_dir]*(Stildey_flux[indm1]  - Stildey_flux[index]);
-          Stildez_rhs[index]  += dxi[flux_dir]*(Stildez_flux[indm1]  - Stildez_flux[index]);
+          rho_star_rhs[index] += dxi*(rho_star_flux[indm1] - rho_star_flux[index]);
+          tau_rhs[index]      += dxi*(tau_flux[indm1]      - tau_flux[index]);
+          Stildex_rhs[index]  += dxi*(Stildex_flux[indm1]  - Stildex_flux[index]);
+          Stildey_rhs[index]  += dxi*(Stildey_flux[indm1]  - Stildey_flux[index]);
+          Stildez_rhs[index]  += dxi*(Stildez_flux[indm1]  - Stildez_flux[index]);
 
           metric_quantities ADM_metric;
           ghl_initialize_metric(alp[index],
@@ -202,18 +185,13 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
                 ghl_eos, &ADM_metric, &prims, &speed_limited);
 
           metric_quantities ADM_metric_derivs;
-
-          ADM_metric_derivs.lapse      = dxi[flux_dir]*(ADM_metric_face.lapse - ADM_metric_facem1.lapse);
-          ADM_metric_derivs.betaU[0]   = dxi[flux_dir]*(ADM_metric_face.betaU[0] - ADM_metric_facem1.betaU[0]);
-          ADM_metric_derivs.betaU[1]   = dxi[flux_dir]*(ADM_metric_face.betaU[1] - ADM_metric_facem1.betaU[1]);
-          ADM_metric_derivs.betaU[2]   = dxi[flux_dir]*(ADM_metric_face.betaU[2] - ADM_metric_facem1.betaU[2]);
-
-          ADM_metric_derivs.gammaDD[0][0] = dxi[flux_dir]*(ADM_metric_face.gammaDD[0][0] - ADM_metric_facem1.gammaDD[0][0]);
-          ADM_metric_derivs.gammaDD[0][1] = dxi[flux_dir]*(ADM_metric_face.gammaDD[0][1] - ADM_metric_facem1.gammaDD[0][1]);
-          ADM_metric_derivs.gammaDD[0][2] = dxi[flux_dir]*(ADM_metric_face.gammaDD[0][2] - ADM_metric_facem1.gammaDD[0][2]);
-          ADM_metric_derivs.gammaDD[1][1] = dxi[flux_dir]*(ADM_metric_face.gammaDD[1][1] - ADM_metric_facem1.gammaDD[1][1]);
-          ADM_metric_derivs.gammaDD[1][2] = dxi[flux_dir]*(ADM_metric_face.gammaDD[1][2] - ADM_metric_facem1.gammaDD[1][2]);
-          ADM_metric_derivs.gammaDD[2][2] = dxi[flux_dir]*(ADM_metric_face.gammaDD[2][2] - ADM_metric_facem1.gammaDD[2][2]);
+          GRHayLHD_compute_metric_derivs(
+                cctkGH, i, j, k,
+                flux_dir, dxi, alp,
+                betax, betay, betaz,
+                gxx, gxy, gxz,
+                gyy, gyz, gzz,
+                &ADM_metric_derivs);
 
           conservative_quantities cons_source;
           cons_source.tau = 0.0;
