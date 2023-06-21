@@ -50,9 +50,14 @@ void GRHayLMHD_convert_ADM_to_BSSN(CCTK_ARGUMENTS) {
         gtyzL = gtyzL * gtijdet_Fm1o3;
         gtzzL = gtzzL * gtijdet_Fm1o3;
 
-        if(gtijdet<0.0) { CCTK_VWarn(CCTK_WARN_ALERT,__LINE__, __FILE__, CCTK_THORNSTRING,
-                                     "WARNING: det[3-metric]<0.0 at point  %d %d %d | cctk_lsh: %d %d %d. Hopefully this is occurring in gz's! gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e",
-				     i,j,k,cctkGH->cctk_lsh[0],cctkGH->cctk_lsh[1],cctkGH->cctk_lsh[2],gxx_physL,gxy_physL,gxz_physL,gyy_physL,gyz_physL,gzz_physL,gtxxL,gtxyL,gtxzL,gtyyL,gtyzL,gtzzL,-gijdet,gtijdet); }
+        if(gtijdet<0.0)
+          CCTK_VWARN(CCTK_WARN_ALERT,
+                     "WARNING: det[3-metric]<0.0 at point %d %d %d | cctk_lsh: %d %d %d. "
+                     "Hopefully this is occurring in gz's! gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e "
+                     "gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e",
+                     i, j, k, cctkGH->cctk_lsh[0], cctkGH->cctk_lsh[1], cctkGH->cctk_lsh[2],
+                     gxx_physL, gxy_physL, gxz_physL, gyy_physL, gyz_physL, gzz_physL,
+                     gtxxL, gtxyL, gtxzL, gtyyL, gtyzL, gtzzL, -gijdet, gtijdet);
 
         const double Psi4 = psiL*psiL*psiL*psiL;
         /*****************************************

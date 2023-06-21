@@ -11,7 +11,7 @@
 #define vely (&vel[1*cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]])
 #define velz (&vel[2*cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]])
 
-#define CHECK_PARAMETER(par) if(par==-1) CCTK_VError(__LINE__,__FILE__,CCTK_THORNSTRING,"Please set %s::%s in your parfile",CCTK_THORNSTRING,#par);
+#define CHECK_PARAMETER(par) if(par==-1) CCTK_VERROR("Please set %s::%s in your parfile",CCTK_THORNSTRING,#par);
 
 /*
  *

@@ -40,7 +40,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
     ierr+=CartSymGN(cctkGH,"bssn::BSSN_vars");
     ierr+=CartSymGN(cctkGH,"bssn::BSSN_AH");
     ierr+=CartSymGN(cctkGH,"shift::shift_vars");
-    if(ierr!=0) CCTK_VERROR("GRHayLHD ERROR (grep for it, foo!)  :(");
+    if(ierr!=0) CCTK_VERROR("Error with setting equatorial symmetries in con2prim.");
   }
 
   //Start the timer, so we can benchmark the primitives solver during evolution.
