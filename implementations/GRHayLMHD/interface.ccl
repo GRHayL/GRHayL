@@ -13,7 +13,6 @@ USES INCLUDE: GRHayLib.h
 CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
    phi_bssn, psi_bssn
-   gtxx, gtxy, gtxz, gtyy, gtyz, gtzz
    gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz
 } "BSSN quantities, computed from ADM quantities"
 

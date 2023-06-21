@@ -61,13 +61,6 @@ void GRHayLMHD_convert_ADM_to_BSSN(CCTK_ARGUMENTS) {
         phi_bssn[index] = phiL;
         psi_bssn[index] = psiL;
 
-        gtxx[index] = gtxxL;
-        gtxy[index] = gtxyL;
-        gtxz[index] = gtxzL;
-        gtyy[index] = gtyyL;
-        gtyz[index] = gtyzL;
-        gtzz[index] = gtzzL;
-
         gxx[index] = gtxxL*Psi4;
         gxy[index] = gtxyL*Psi4;
         gxz[index] = gtxzL*Psi4;

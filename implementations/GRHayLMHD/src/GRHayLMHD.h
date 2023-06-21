@@ -48,7 +48,7 @@ void GRHayLMHD_interpolate_metric_to_face(
       const CCTK_REAL *restrict gzz,
       metric_quantities *restrict metric);
 
-void GRHayLHD_compute_metric_derivs(
+void GRHayLMHD_compute_metric_derivs(
       const cGH *cctkGH,
       const int i, const int j, const int k,
       const int flux_dirn,
