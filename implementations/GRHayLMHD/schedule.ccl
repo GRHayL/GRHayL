@@ -57,12 +57,9 @@ schedule convert_HydroBase_to_GRHayLMHD in GRHayLMHD_Prim2Con2Prim after GRHayLM
    READS:  HydroBase::rho, HydroBase::press, HydroBase::eps,
            HydroBase::vel, HydroBase::Y_e, HydroBase::entropy,
            HydroBase::temperature, HydroBase::Avec, HydroBase::Aphi
-   READS:  psi_bssn
    WRITES: HydroBase::eps
-   WRITES: grmhd_primitives_allbutBi(everywhere), grmhd_conservatives(everywhere),
-           grmhd_B_center(everywhere), grmhd_B_stagger(everywhere),
-           Ax(everywhere), Ay(everywhere), Az(everywhere),
-           phitilde(everywhere)
+   WRITES: grmhd_primitives_allbutBi(everywhere), phitilde(everywhere),
+           Ax(everywhere), Ay(everywhere), Az(everywhere)
    SYNC: grmhd_B_center, grmhd_B_stagger, grmhd_primitives_allbutBi, Ax, Ay, Az, phitilde, grmhd_conservatives
 } "Convert HydroBase initial data (ID) to GRHayLMHD variables and enforce simulation limits on primitives."
 
@@ -78,7 +75,18 @@ schedule GRHayLMHD_compute_B_and_Bstagger_from_A in GRHayLMHD_Prim2Con2Prim afte
   SYNC: grmhd_B_center, grmhd_B_stagger
 } "Compute B and B_stagger from A"
 
-schedule GRHayLMHD_conserv_to_prims in GRHayLMHD_Prim2Con2Prim after GRHayLMHD_compute_B_and_Bstagger_from_A
+schedule GRHayLMHD_prims_to_conservs in GRHayLMHD_Prim2Con2Prim after GRHayLMHD_compute_B_and_Bstagger_from_A
+{
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  HydroBase::eps(everywhere)
+  READS:  grmhd_primitives_allbutBi, grmhd_B_center
+  WRITES: grmhd_primitives_allbutBi(everywhere), grmhd_conservatives(everywhere),
+          grmhd_B_center(everywhere)
+  WRITES: HydroBase::eps(everywhere)
+} "Compute conservative variables from primitives"
+
+schedule GRHayLMHD_conserv_to_prims in GRHayLMHD_Prim2Con2Prim after GRHayLMHD_prims_to_conservs
 {
   LANG: C
   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift

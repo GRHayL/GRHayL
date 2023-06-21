@@ -28,10 +28,10 @@ void GRHayLMHD_InitSymBound(CCTK_ARGUMENTS)
       /* FIRST SET NO SYMMETRY OPTION */
       sym[0] = 1; sym[1] = 1; sym[2] = 1;
       SetCartSymGN(cctkGH,sym,"GRHayLMHD::grmhd_conservatives");
-      SetCartSymGN(cctkGH,sym,"GRHayLMHD::em_Ax");
-      SetCartSymGN(cctkGH,sym,"GRHayLMHD::em_Ay");
-      SetCartSymGN(cctkGH,sym,"GRHayLMHD::em_Az");
-      SetCartSymGN(cctkGH,sym,"GRHayLMHD::em_psi6phi");
+      SetCartSymGN(cctkGH,sym,"GRHayLMHD::Ax");
+      SetCartSymGN(cctkGH,sym,"GRHayLMHD::Ay");
+      SetCartSymGN(cctkGH,sym,"GRHayLMHD::Az");
+      SetCartSymGN(cctkGH,sym,"GRHayLMHD::phitilde");
       SetCartSymGN(cctkGH,sym,"GRHayLMHD::grmhd_primitives_allbutBi");
     } else if(CCTK_EQUALS(Symmetry,"equatorial")) {
       /* THEN SET EQUATORIAL SYMMETRY OPTION */
@@ -40,10 +40,10 @@ void GRHayLMHD_InitSymBound(CCTK_ARGUMENTS)
       SetCartSymGN(cctkGH,sym,"GRHayLMHD::grmhd_conservatives");
       // Don't worry about the wrong sym values since A_{\mu} is staggered
       // and we're going to impose the symmetry separately
-      SetCartSymGN(cctkGH,sym,"GRHayLMHD::em_Ax");
-      SetCartSymGN(cctkGH,sym,"GRHayLMHD::em_Ay");
-      SetCartSymGN(cctkGH,sym,"GRHayLMHD::em_Az");
-      SetCartSymGN(cctkGH,sym,"GRHayLMHD::em_psi6phi");
+      SetCartSymGN(cctkGH,sym,"GRHayLMHD::Ax");
+      SetCartSymGN(cctkGH,sym,"GRHayLMHD::Ay");
+      SetCartSymGN(cctkGH,sym,"GRHayLMHD::Az");
+      SetCartSymGN(cctkGH,sym,"GRHayLMHD::phitilde");
 
       SetCartSymGN(cctkGH,sym,"GRHayLMHD::grmhd_primitives_allbutBi");
 
