@@ -29,29 +29,49 @@ enum recon_indices{
 #define A1  -0.0625
 #define COMPUTE_FCVAL(METRICm2,METRICm1,METRIC,METRICp1) (AM2*(METRICm2) + AM1*(METRICm1) + A0*(METRIC) + A1*(METRICp1))
 
-void GRHayLMHD_interpolate_to_face_and_initialize_metric(
+// Computes derivative factor dx*deriv
+#define COMPUTE_DERIV(Varm2,Varm1,Varp1,Varp2) ((A0 - AM1)*(Varp1 - Varm1) + AM1*(Varp2 - Varm2))
+
+void GRHayLMHD_interpolate_metric_to_face(
       const cGH *cctkGH,
       const int i, const int j, const int k,
       const int flux_dirn,
-      const double *restrict lapse,
-      const double *restrict betax,
-      const double *restrict betay,
-      const double *restrict betaz,
-      const double *restrict gxx,
-      const double *restrict gxy,
-      const double *restrict gxz,
-      const double *restrict gyy,
-      const double *restrict gyz,
-      const double *restrict gzz,
+      const CCTK_REAL *restrict lapse,
+      const CCTK_REAL *restrict betax,
+      const CCTK_REAL *restrict betay,
+      const CCTK_REAL *restrict betaz,
+      const CCTK_REAL *restrict gxx,
+      const CCTK_REAL *restrict gxy,
+      const CCTK_REAL *restrict gxz,
+      const CCTK_REAL *restrict gyy,
+      const CCTK_REAL *restrict gyz,
+      const CCTK_REAL *restrict gzz,
       metric_quantities *restrict metric);
+
+void GRHayLHD_compute_metric_derivs(
+      const cGH *cctkGH,
+      const int i, const int j, const int k,
+      const int flux_dirn,
+      const CCTK_REAL dxi,
+      const CCTK_REAL *restrict lapse,
+      const CCTK_REAL *restrict betax,
+      const CCTK_REAL *restrict betay,
+      const CCTK_REAL *restrict betaz,
+      const CCTK_REAL *restrict gxx,
+      const CCTK_REAL *restrict gxy,
+      const CCTK_REAL *restrict gxz,
+      const CCTK_REAL *restrict gyy,
+      const CCTK_REAL *restrict gyz,
+      const CCTK_REAL *restrict gzz,
+      metric_quantities *restrict metric_derivs);
 
 void GRHayLMHD_set_symmetry_gzs_staggered(
       const cGH *cctkGH,
-      const double *X,
-      const double *Y,
-      const double *Z,
-      double *gridfunc,
-      const double *gridfunc_syms,
+      const CCTK_REAL *X,
+      const CCTK_REAL *Y,
+      const CCTK_REAL *Z,
+      CCTK_REAL *gridfunc,
+      const CCTK_REAL *gridfunc_syms,
       const int stagger_x,  //TODO: unused
       const int stagger_y,  //TODO: unused
       const int stagger_z);
@@ -61,55 +81,55 @@ void GRHayLMHD_set_symmetry_gzs_staggered(
 void GRHayLMHD_reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
                          const int *restrict var_indices,
                          const eos_parameters *restrict eos,
-                         const double **in_prims,
-                         double **out_prims_r,
-                         double **out_prims_l);
+                         const CCTK_REAL **in_prims,
+                         CCTK_REAL **out_prims_r,
+                         CCTK_REAL **out_prims_l);
 
 void GRHayLMHD_reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
                          const int *restrict var_indices,
                          const eos_parameters *restrict eos,
-                         const double **in_prims,
-                         double **out_prims_r,
-                         double **out_prims_l);
+                         const CCTK_REAL **in_prims,
+                         CCTK_REAL **out_prims_r,
+                         CCTK_REAL **out_prims_l);
 
 void GRHayLMHD_calculate_MHD_dirn_rhs(
       const cGH *cctkGH,
       const int flux_dirn,
-      const double *restrict dX,
+      const CCTK_REAL *restrict dX,
       const eos_parameters *restrict eos,
-      const double **in_metric,
-      const double **in_prims,
-      /*const*/ double **in_prims_r,
-      /*const*/ double **in_prims_l,
-      double *restrict cmin,
-      double *restrict cmax,
-      double *restrict rho_star_flux,
-      double *restrict tau_flux,
-      double *restrict Stildex_flux,
-      double *restrict Stildey_flux,
-      double *restrict Stildez_flux,
-      double *restrict rho_star_rhs,
-      double *restrict tau_rhs,
-      double *restrict Stildex_rhs,
-      double *restrict Stildey_rhs,
-      double *restrict Stildez_rhs);
+      const CCTK_REAL **in_metric,
+      const CCTK_REAL **in_prims,
+      /*const*/ CCTK_REAL **in_prims_r,
+      /*const*/ CCTK_REAL **in_prims_l,
+      CCTK_REAL *restrict cmin,
+      CCTK_REAL *restrict cmax,
+      CCTK_REAL *restrict rho_star_flux,
+      CCTK_REAL *restrict tau_flux,
+      CCTK_REAL *restrict Stildex_flux,
+      CCTK_REAL *restrict Stildey_flux,
+      CCTK_REAL *restrict Stildez_flux,
+      CCTK_REAL *restrict rho_star_rhs,
+      CCTK_REAL *restrict tau_rhs,
+      CCTK_REAL *restrict Stildex_rhs,
+      CCTK_REAL *restrict Stildey_rhs,
+      CCTK_REAL *restrict Stildez_rhs);
 
 // The const are commented out because C does not support implicit typecasting of types when
 // they are more than 1 level removed from the top pointer. i.e. I can pass the argument with
-// type "double *" for an argument expecting "const double *" because this is only 1 level
-// down (pointer to double -> pointer to const double). It will not do
-// pointer to pointer to double -> pointer to pointer to const double. I saw comments
+// type "CCTK_REAL *" for an argument expecting "const CCTK_REAL *" because this is only 1 level
+// down (pointer to CCTK_REAL -> pointer to const CCTK_REAL). It will not do
+// pointer to pointer to CCTK_REAL -> pointer to pointer to const CCTK_REAL. I saw comments
 // suggesting this may become part of the C23 standard, so I guess you can uncomment this
 // in like 10 years.
 void GRHayLMHD_A_flux_rhs(
       const cGH *restrict cctkGH,
       const int A_dir,
-      /*const*/ double **out_prims_r,
-      /*const*/ double **out_prims_l,
-      const double *restrict phi_bssn,
-      /*const*/ double **cmin,
-      /*const*/ double **cmax,
-      double *restrict A_rhs);
+      /*const*/ CCTK_REAL **out_prims_r,
+      /*const*/ CCTK_REAL **out_prims_l,
+      const CCTK_REAL *restrict phi_bssn,
+      /*const*/ CCTK_REAL **cmin,
+      /*const*/ CCTK_REAL **cmax,
+      CCTK_REAL *restrict A_rhs);
 
 /****************************************************************/
 #endif // GRHAYLMHD_H_

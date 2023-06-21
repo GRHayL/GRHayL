@@ -13,13 +13,7 @@
 #define A2  -0.0625
 #define COMPUTE_FCVAL(Varm1,Var,Varp1,Varp2) (AM1*(Varm1) + A0*(Var) + A1*(Varp1) + A2*(Varp2))
 
-/*
-   Computes derivative factor by computing faceval[i] - faceval[i-1]:
-   Let A = AM1 = A2, B = A0 = A1. Let Var at index i be f[i]. Then,
-   dx*deriv = Af[-1] + Bf[0] + Bf[1] + Af[2] - (Af[-2] + Bf[-1] + Bf[0] + Af[1])
-            = Af[-1] - Bf[-1] + Bf[1] - Af[1] + Af[2] - Af[-2]
-            = (B-A)(f[1] - f[-1]) + A(f[2] - f[-2])
-*/ 
+// Computes derivative factor dx*deriv
 #define COMPUTE_DERIV(Varm2,Varm1,Varp1,Varp2) ((A0 - AM1)*(Varp1 - Varm1) + AM1*(Varp2 - Varm2))
 
 void GRHayLHD_interpolate_metric_to_face(

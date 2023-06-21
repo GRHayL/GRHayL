@@ -24,7 +24,7 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
       double *restrict Stildey_rhs,
       double *restrict Stildez_rhs) {
 
-  const double dxi[3] = { 1.0/dX[0],1.0/dX[1],1.0/dX[2] };
+  const double dxi = 1.0/dX[flux_dir];
   const double poison = 0.0/0.0;
 
   // Function pointer to allow for loop over fluxes and sources
@@ -90,7 +90,7 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
 
         metric_quantities ADM_metric_face;
-        GRHayLMHD_interpolate_to_face_and_initialize_metric(
+        GRHayLMHD_interpolate_metric_to_face(
               cctkGH, i, j, k,
               flux_dir, in_metric[LAPSE],
               in_metric[BETAX], in_metric[BETAY], in_metric[BETAZ],
@@ -139,28 +139,11 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
         const int index = CCTK_GFINDEX3D(cctkGH, i, j ,k);
         const int indp1 = CCTK_GFINDEX3D(cctkGH, i+xdir, j+ydir, k+zdir);
 
-        metric_quantities ADM_metric_face, ADM_metric_facep1;
-        GRHayLMHD_interpolate_to_face_and_initialize_metric(
-              cctkGH, i, j, k,
-              flux_dir, in_metric[LAPSE],
-              in_metric[BETAX], in_metric[BETAY], in_metric[BETAZ],
-              in_metric[GXX], in_metric[GXY], in_metric[GXZ],
-              in_metric[GYY], in_metric[GYZ], in_metric[GZZ],
-              &ADM_metric_face);
-
-        GRHayLMHD_interpolate_to_face_and_initialize_metric(
-              cctkGH, i+xdir, j+ydir, k+zdir,
-              flux_dir, in_metric[LAPSE],
-              in_metric[BETAX], in_metric[BETAY], in_metric[BETAZ],
-              in_metric[GXX], in_metric[GXY], in_metric[GXZ],
-              in_metric[GYY], in_metric[GYZ], in_metric[GZZ],
-              &ADM_metric_facep1);
-
-        rho_star_rhs[index] += dxi[flux_dir]*(rho_star_flux[index] - rho_star_flux[indp1]);
-        tau_rhs[index]      += dxi[flux_dir]*(tau_flux[index]      - tau_flux[indp1]);
-        Stildex_rhs[index]  += dxi[flux_dir]*(Stildex_flux[index]  - Stildex_flux[indp1]);
-        Stildey_rhs[index]  += dxi[flux_dir]*(Stildey_flux[index]  - Stildey_flux[indp1]);
-        Stildez_rhs[index]  += dxi[flux_dir]*(Stildez_flux[index]  - Stildez_flux[indp1]);
+        rho_star_rhs[index] += dxi*(rho_star_flux[index] - rho_star_flux[indp1]);
+        tau_rhs[index]      += dxi*(tau_flux[index]      - tau_flux[indp1]);
+        Stildex_rhs[index]  += dxi*(Stildex_flux[index]  - Stildex_flux[indp1]);
+        Stildey_rhs[index]  += dxi*(Stildey_flux[index]  - Stildey_flux[indp1]);
+        Stildez_rhs[index]  += dxi*(Stildez_flux[index]  - Stildez_flux[indp1]);
 
         metric_quantities ADM_metric;
         ghl_initialize_metric(
@@ -183,18 +166,13 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
               eos, &ADM_metric, &prims, &speed_limited);
 
         metric_quantities ADM_metric_derivs;
-
-        ADM_metric_derivs.lapse      = dxi[flux_dir]*(ADM_metric_facep1.lapse - ADM_metric_face.lapse);
-        ADM_metric_derivs.betaU[0]   = dxi[flux_dir]*(ADM_metric_facep1.betaU[0] - ADM_metric_face.betaU[0]);
-        ADM_metric_derivs.betaU[1]   = dxi[flux_dir]*(ADM_metric_facep1.betaU[1] - ADM_metric_face.betaU[1]);
-        ADM_metric_derivs.betaU[2]   = dxi[flux_dir]*(ADM_metric_facep1.betaU[2] - ADM_metric_face.betaU[2]);
-
-        ADM_metric_derivs.gammaDD[0][0] = dxi[flux_dir]*(ADM_metric_facep1.gammaDD[0][0] - ADM_metric_face.gammaDD[0][0]);
-        ADM_metric_derivs.gammaDD[0][1] = dxi[flux_dir]*(ADM_metric_facep1.gammaDD[0][1] - ADM_metric_face.gammaDD[0][1]);
-        ADM_metric_derivs.gammaDD[0][2] = dxi[flux_dir]*(ADM_metric_facep1.gammaDD[0][2] - ADM_metric_face.gammaDD[0][2]);
-        ADM_metric_derivs.gammaDD[1][1] = dxi[flux_dir]*(ADM_metric_facep1.gammaDD[1][1] - ADM_metric_face.gammaDD[1][1]);
-        ADM_metric_derivs.gammaDD[1][2] = dxi[flux_dir]*(ADM_metric_facep1.gammaDD[1][2] - ADM_metric_face.gammaDD[1][2]);
-        ADM_metric_derivs.gammaDD[2][2] = dxi[flux_dir]*(ADM_metric_facep1.gammaDD[2][2] - ADM_metric_face.gammaDD[2][2]);
+        GRHayLMHD_compute_metric_derivs(
+              cctkGH, i, j, k,
+              flux_dir, dxi, in_metric[LAPSE],
+              in_metric[BETAX], in_metric[BETAY], in_metric[BETAZ],
+              in_metric[GXX], in_metric[GXY], in_metric[GXZ],
+              in_metric[GYY], in_metric[GYZ], in_metric[GZZ],
+              &ADM_metric_derivs);
 
         conservative_quantities cons_source;
         cons_source.tau = 0.0;
