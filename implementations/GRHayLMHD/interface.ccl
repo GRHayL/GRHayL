@@ -23,19 +23,19 @@ CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
 # The variables rho_b and pressure are identical to the HydroBase variables. However,
 # GRHayL uses the velocity v^i = u^i/u^0, while HydroBase uses the Valencia velocity, so
 # these velocities differ from HydroBase.
-cctk_real grmhd_primitives_allbutBi type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
+CCTK_REAL grmhd_primitives_allbutBi type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
 {
   rho_b, pressure, vx, vy, vz
 } "Primitive variables density, pressure, and components of three velocity v^i. Note that v^i is defined in terms of 4-velocity as: v^i = u^i/u^0. Note that this definition differs from the Valencia formalism."
 
 # Separating the computation of Tmunu from the con2prim routine requires providing u0.
 # This is most easily done by adding another grid function.
-cctk_real u0 type = GF TAGS='InterpNumTimelevels=1 prolongation="none" checkpoint="no"' "4-velocity component u^0"
+CCTK_REAL u0 type = GF TAGS='InterpNumTimelevels=1 prolongation="none" checkpoint="no"' "4-velocity component u^0"
 
 #########################################################
 
 # Evolved variables
-cctk_real grmhd_conservatives type = GF Timelevels=3
+CCTK_REAL grmhd_conservatives type = GF Timelevels=3
 {
   rho_star, tau, Stildex, Stildey, Stildez # Note that Stildei = \tilde{S}_i.
 } "Evolved mhd variables"
@@ -47,29 +47,17 @@ cctk_real grmhd_conservatives type = GF Timelevels=3
 
 # WARNING: WILL NOT WORK PROPERLY WITHOUT SEMI-STAGGERED PROLONGATION/RESTRICTION
 # Ax is defined on the semi-staggered grid (i,j+1/2,k+1/2)
-CCTK_REAL em_Ax type = GF Timelevels=3 tags='Prolongation="STAGGER011"'
-{
-  Ax
-} "x-component of the vector potential, evolved when constrained_transport_scheme==3"
+CCTK_REAL Ax type = GF Timelevels=3 tags='Prolongation="STAGGER011"' "x-component of the vector potential, evolved when constrained_transport_scheme==3"
 
 # Ay is defined on the semi-staggered grid (i+1/2,j,k+1/2)
-CCTK_REAL em_Ay type = GF Timelevels=3 tags='Prolongation="STAGGER101"'
-{
-  Ay
-} "y-component of the vector potential, evolved when constrained_transport_scheme==3"
+CCTK_REAL Ay type = GF Timelevels=3 tags='Prolongation="STAGGER101"' "y-component of the vector potential, evolved when constrained_transport_scheme==3"
 
 # Az is defined on the semi-staggered grid (i+1/2,j+1/2,k)
-CCTK_REAL em_Az type = GF Timelevels=3 tags='Prolongation="STAGGER110"'
-{
-  Az
-} "z-component of the vector potential, evolved when constrained_transport_scheme==3"
+CCTK_REAL Az type = GF Timelevels=3 tags='Prolongation="STAGGER110"' "z-component of the vector potential, evolved when constrained_transport_scheme==3"
 
 # phitilde (=Phi*psi^6) is defined on the staggered grid (i+1/2,j+1/2,k+1/2)
 # WARNING: WILL NOT WORK PROPERLY WITHOUT FULLY-STAGGERED PROLONGATION/RESTRICTION
-CCTK_REAL em_psi6phi type = GF Timelevels=3 tags='Prolongation="STAGGER111"'
-{
-  phitilde
-} "sqrt{gamma} Phi, where Phi is the em scalar potential"
+CCTK_REAL phitilde type = GF Timelevels=3 tags='Prolongation="STAGGER111"' "sqrt{gamma} Phi, where Phi is the em scalar potential"
 
 #########################################################
 
@@ -81,7 +69,7 @@ CCTK_REAL grmhd_B_stagger type = GF TAGS='InterpNumTimelevels=1 prolongation="no
 
 # This could probably use Bvec from HydroBase instead of making a new variable
 # It is useful to split Bi from Bi_stagger, since we're generally only interested in outputting Bi for diagnostics
-cctk_real grmhd_B_center type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
+CCTK_REAL grmhd_B_center type = GF TAGS='InterpNumTimelevels=1 prolongation="none"'
 {
   Bx_center, By_center, Bz_center
 } "B-field components defined at vertices."
@@ -89,7 +77,7 @@ cctk_real grmhd_B_center type = GF TAGS='InterpNumTimelevels=1 prolongation="non
 #########################################################
 
 # RHS variables for MoL timestepping
-cctk_real grmhd_conservatives_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
+CCTK_REAL grmhd_conservatives_rhs type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
   rho_star_rhs, tau_rhs, Stildex_rhs, Stildey_rhs, Stildez_rhs
 } "Storage for the right-hand side of the partial_t rho_star, partial_t tau, and partial_t tilde{S}_i equations. Needed for MoL timestepping."
@@ -111,7 +99,7 @@ CCTK_REAL grmhd_cmin_cmax_temps type = GF TAGS='prolongation="none" Checkpoint="
 
 
 #Temporary variables for flux computation
-cctk_real grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
+CCTK_REAL grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
   rho_star_flux, tau_flux, Stildex_flux, Stildey_flux, Stildez_flux
 } "Temporary variables for storing the flux terms of tilde{S}_i."
@@ -130,10 +118,7 @@ CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="non
 #########################################################
 
 # Diagnostic gridfunctions
-CCTK_REAL diagnostic_gfs type = GF TAGS='prolongation="none" Checkpoint="no" InterpNumTimelevels=1'
-{
-  failure_checker
-} "Gridfunction to track conservative-to-primitives solver fixes. Beware that this gridfunction is overwritten at each RK substep."
+CCTK_REAL failure_checker type = GF TAGS='prolongation="none" Checkpoint="no" InterpNumTimelevels=1' "Gridfunction to track conservative-to-primitives solver fixes. Beware that this gridfunction is overwritten at each RK substep."
 
 ###########################################################################
 

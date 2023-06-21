@@ -9,7 +9,7 @@ STORAGE: HydroBase::rho[1],HydroBase::press[1],HydroBase::eps[1],HydroBase::vel[
 
 STORAGE: grmhd_conservatives[3]
 STORAGE: grmhd_primitives, u0, grmhd_conservatives_rhs
-STORAGE: grmhd_flux_temps, diagnostic_gfs
+STORAGE: grmhd_flux_temps, failure_checker
 
 #########################################################
 # BASIC SETUP

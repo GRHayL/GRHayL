@@ -49,10 +49,7 @@ cctk_real grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 #########################################################
 
 # Diagnostic gridfunctions
-CCTK_REAL diagnostic_gfs type = GF TAGS='prolongation="none" Checkpoint="no" InterpNumTimelevels=1'
-{
-  failure_checker
-} "Gridfunction to track conservative-to-primitives solver fixes. Beware that this gridfunction is overwritten at each RK substep."
+CCTK_REAL failure_checker type = GF TAGS='prolongation="none" Checkpoint="no" InterpNumTimelevels=1' "Gridfunction to track conservative-to-primitives solver fixes. Beware that this gridfunction is overwritten at each RK substep."
 
 ###########################################################################
 
