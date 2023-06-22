@@ -24,10 +24,8 @@ void ghl_minmod_reconstruction(
       double *restrict Ur,
       double *restrict Ul) {
 
-  double sigma_i, sigma_im1;
-
-  sigma_i   = ghl_minmod(U    - U_m1, U_p1 - U   );
-  sigma_im1 = ghl_minmod(U_m1 - U_m2, U    - U_m1);
+  const double sigma_i   = ghl_minmod(U    - U_m1, U_p1 - U   );
+  const double sigma_im1 = ghl_minmod(U_m1 - U_m2, U    - U_m1);
 
   *Ur = U    - 0.5*sigma_i;
   *Ul = U_m1 + 0.5*sigma_im1;

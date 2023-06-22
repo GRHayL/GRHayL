@@ -24,18 +24,15 @@ void ghl_superbee_reconstruction(
       double *restrict Ur,
       double *restrict Ul) {
 
-  double sigma_i_1, sigma_i_2, sigma_im1_1, sigma_im1_2;
+  const double Um1m2 = U_m1 - U_m2;
+  const double U0m1  = U    - U_m1;
+  const double Up10  = U_p1 - U;
 
-  sigma_i_1   = ghl_minmod( (U    - U_m1), 2.0*(U_p1 - U   ) );
-  sigma_im1_1 = ghl_minmod( (U_m1 - U_m2), 2.0*(U    - U_m1) );
+  const double sigma_i   = ghl_maxmod(ghl_minmod(U0m1, 2.0*Up10),
+                                      ghl_minmod(2.0*U0m1, Up10));
 
-  sigma_i_2   = ghl_minmod( 2.0*(U    - U_m1), (U_p1 - U   ) );
-  sigma_im1_2 = ghl_minmod( 2.0*(U_m1 - U_m2), (U    - U_m1) );
-
-  double sigma_i, sigma_im1;
-
-  sigma_i   = ghl_maxmod(sigma_i_1,   sigma_i_2);
-  sigma_im1 = ghl_maxmod(sigma_im1_1, sigma_im1_2);
+  const double sigma_im1 = ghl_maxmod(ghl_minmod(Um1m2, 2.0*U0m1),
+                                      ghl_minmod(2.0*Um1m2, U0m1));
 
   *Ur = U    - 0.5*sigma_i;
   *Ul = U_m1 + 0.5*sigma_im1;

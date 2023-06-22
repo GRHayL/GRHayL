@@ -24,13 +24,11 @@ void ghl_mc_reconstruction(
       double *restrict Ur,
       double *restrict Ul) {
 
-  double tmp_sigma_i, tmp_sigma_im1, sigma_i, sigma_im1;
+  const double tmp_sigma_i   = ghl_minmod(U    - U_m1, U_p1 - U   );
+  const double tmp_sigma_im1 = ghl_minmod(U_m1 - U_m2, U    - U_m1);
 
-  tmp_sigma_i   = ghl_minmod(U    - U_m1, U_p1 - U   );
-  tmp_sigma_im1 = ghl_minmod(U_m1 - U_m2, U    - U_m1);
-
-  sigma_i   = ghl_minmod(0.5*(U_p1 - U_m1), 2*tmp_sigma_i);
-  sigma_im1 = ghl_minmod(0.5*(U    - U_m2), 2*tmp_sigma_im1);
+  const double sigma_i   = ghl_minmod(0.5*(U_p1 - U_m1), 2*tmp_sigma_i);
+  const double sigma_im1 = ghl_minmod(0.5*(U    - U_m2), 2*tmp_sigma_im1);
 
   *Ur = U    - 0.5*sigma_i;
   *Ul = U_m1 + 0.5*sigma_im1;

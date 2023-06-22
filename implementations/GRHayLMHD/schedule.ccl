@@ -43,24 +43,24 @@ schedule group GRHayLMHD_Prim2Con2Prim in HydroBase_Prim2ConInitial
 
 schedule GRHayLMHD_convert_ADM_to_BSSN in GRHayLMHD_Prim2Con2Prim
 {
-   LANG: C
-   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-   WRITES: ADMBase::metric(everywhere)
-   WRITES: BSSN_quantities(everywhere)
-   SYNC: BSSN_quantities, ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  WRITES: ADMBase::metric(everywhere)
+  WRITES: BSSN_quantities(everywhere)
+  SYNC: BSSN_quantities, ADMBase::metric, ADMBase::lapse, ADMBase::shift, ADMBase::curv
 } "Enforce BSSN metric is conformally flat and recompute ADM metric."
 
 schedule convert_HydroBase_to_GRHayLMHD in GRHayLMHD_Prim2Con2Prim after GRHayLMHD_convert_ADM_to_BSSN
 {
-   LANG: C
-   READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
-   READS:  HydroBase::rho, HydroBase::press, HydroBase::eps,
-           HydroBase::vel, HydroBase::Y_e, HydroBase::entropy,
-           HydroBase::temperature, HydroBase::Avec, HydroBase::Aphi
-   WRITES: HydroBase::eps
-   WRITES: grmhd_primitives_allbutBi(everywhere), phitilde(everywhere),
-           Ax(everywhere), Ay(everywhere), Az(everywhere)
-   SYNC: grmhd_B_center, grmhd_B_stagger, grmhd_primitives_allbutBi, Ax, Ay, Az, phitilde, grmhd_conservatives
+  LANG: C
+  READS:  ADMBase::metric, ADMBase::lapse, ADMBase::shift
+  READS:  HydroBase::rho, HydroBase::press, HydroBase::eps,
+          HydroBase::vel, HydroBase::Y_e, HydroBase::entropy,
+          HydroBase::temperature, HydroBase::Avec, HydroBase::Aphi
+  WRITES: HydroBase::eps
+  WRITES: grmhd_primitives_allbutBi(everywhere), phitilde(everywhere),
+          Ax(everywhere), Ay(everywhere), Az(everywhere)
+  SYNC: grmhd_B_center, grmhd_B_stagger, grmhd_primitives_allbutBi, Ax, Ay, Az, phitilde, grmhd_conservatives
 } "Convert HydroBase initial data (ID) to GRHayLMHD variables and enforce simulation limits on primitives."
 
 schedule GRHayLMHD_compute_B_and_Bstagger_from_A in GRHayLMHD_Prim2Con2Prim after convert_HydroBase_to_GRHayLMHD
