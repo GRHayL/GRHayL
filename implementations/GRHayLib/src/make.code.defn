@@ -16,6 +16,10 @@ SUBDIRS = Atmosphere                      \
           EOS/Tabulated                   \
           EOS/Tabulated/interpolators     \
           Flux_Source                     \
+          Flux_Source/hybrid              \
+          Flux_Source/hybrid_entropy      \
+          Flux_Source/tabulated           \
+          Flux_Source/tabulated_entropy   \
           GRHayL_Core                     \
           Induction                       \
           Induction/Interpolators         \

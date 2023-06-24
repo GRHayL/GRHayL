@@ -4,10 +4,9 @@
 SRCS = ghl_calculate_characteristic_speed_dirn0.c \
        ghl_calculate_characteristic_speed_dirn1.c \
        ghl_calculate_characteristic_speed_dirn2.c \
-       ghl_calculate_HLLE_fluxes_dirn0.c          \
-       ghl_calculate_HLLE_fluxes_dirn1.c          \
-       ghl_calculate_HLLE_fluxes_dirn2.c          \
-       ghl_calculate_source_terms_dirn0.c   \
-       ghl_calculate_source_terms_dirn1.c   \
-       ghl_calculate_source_terms_dirn2.c   \
+       ghl_calculate_source_terms_dirn0.c         \
+       ghl_calculate_source_terms_dirn1.c         \
+       ghl_calculate_source_terms_dirn2.c         \
        ghl_calculate_tau_tilde_source_term_extrinsic_curv.c
+
+SUBDIRS = hybrid hybrid_entropy tabulated tabulated_entropy

@@ -1,0 +1,5 @@
+
+SRCS = ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy.c \
+       ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy.c \
+       ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy.c
+

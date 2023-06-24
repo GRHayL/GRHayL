@@ -1,0 +1,3 @@
+SRCS = ghl_calculate_HLLE_fluxes_dirn0_tabulated.c \
+       ghl_calculate_HLLE_fluxes_dirn1_tabulated.c \
+       ghl_calculate_HLLE_fluxes_dirn2_tabulated.c
