@@ -13,7 +13,7 @@ import IGM_All_Source_Terms as st    # NRPy+: Generate general relativistic magn
 
 includes = ["flux_source.h"]
 
-def write_ghl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tabulated=False):
+def write_ghl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tabulated=False, entropy=False):
     outCparams = "outCverbose=False,GoldenKernelsEnable=True"
 
 
@@ -31,21 +31,17 @@ def write_ghl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tabula
                                includes=includes,
                                formalism=formalism,
                                outCparams=outCparams,
-                               tabulated=tabulated)
+                               tabulated=tabulated,
+                               entropy=entropy)
 
 
+def create_fresh_directory(name):
+    shutil.rmtree(name, ignore_errors=True)
+    os.mkdir(name)
 
 if __name__ == '__main__':
-
-    outdir="."
-    tabulated=False
-    if len(sys.argv) > 1:
-        if sys.argv[-1].lower() == "tabulated":
-            tabulated=True
-            outdir="./tabulated"
-            # shutil.rmtree(outdir, ignore_errors=True)
-            # os.mkdir(outdir)
-
-    write_ghl_Cfunctions_to_dir(outdir, includes, tabulated=tabulated)
-
-    print("Finished printing C files!")
+    for dirname in ["hybrid", "hybrid_entropy", "tabulated", "tabulated_entropy"]:
+        create_fresh_directory(dirname)
+        entropy   = True if "entropy"   in dirname else False
+        tabulated = True if "tabulated" in dirname else False
+        write_ghl_Cfunctions_to_dir(dirname, includes, tabulated=tabulated, entropy=entropy)
