@@ -312,7 +312,7 @@ void ghl_initialize_primitives(
 void ghl_initialize_conservatives(
       const double rho, const double tau,
       const double S_x, const double S_y, const double S_z,
-      const double Y_e, const double entropy,
+      const double entropy, const double Y_e,
       ghl_conservative_quantities *restrict cons);
 
 void ghl_return_primitives(
@@ -326,7 +326,7 @@ void ghl_return_conservatives(
       const ghl_conservative_quantities *restrict cons,
       double *restrict rho, double *restrict tau,
       double *restrict S_x, double *restrict S_y, double *restrict S_z,
-      double *restrict Y_e, double *restrict entropy);
+      double *restrict entropy, double *restrict Y_e);
 
 void ghl_initialize_metric(
       const double lapse,
