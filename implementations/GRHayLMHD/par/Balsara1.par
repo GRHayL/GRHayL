@@ -45,9 +45,9 @@ TmunuBase::prolongation_type     = none
 
 SpaceMask::use_mask      = "yes"
 
-Cactus::cctk_final_time            = 4.0
+Cactus::cctk_final_time            = 2.0
 Cactus::cctk_full_warnings         = "yes"
-Cactus::cctk_run_title             = "GRHDShockID"
+Cactus::cctk_run_title             = "Balsara1"
 Cactus::highlight_warning_messages = "no"
 Cactus::terminate                  = "time"
 
