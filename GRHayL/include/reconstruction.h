@@ -14,7 +14,7 @@ enum reconstruction_stencil {
 extern "C" {
 #endif
 
-void ghl_simple_ppm(
+void ghl_ppm(
       const double rho[6],
       const double pressure[6],
       const double var_data[][6],
@@ -28,7 +28,7 @@ void ghl_simple_ppm(
       double *restrict var_datar,
       double *restrict var_datal);
 
-void ghl_simple_ppm_no_rho_P(
+void ghl_ppm_no_rho_P(
       const double pressure[6],
       const double var_data[][6],
       const int num_vars,

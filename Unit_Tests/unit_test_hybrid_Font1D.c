@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int main_routine = FontFix;
+  const int main_routine = Font1D;
   const int backup_routine[3] = {None,None,None};
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
   // Allocate memory for the returned value of C2P routine
   int *c2p_check = (int*) malloc(sizeof(int)*arraylength);
 
-  infile = fopen_with_check("con2prim_multi_method_hybrid_FontFix_output.bin","rb");
+  infile = fopen_with_check("con2prim_multi_method_hybrid_Font1D_output.bin","rb");
   key  = fread(rho_b_trusted, sizeof(double), arraylength, infile);
   key += fread(press_trusted, sizeof(double), arraylength, infile);
   key += fread(eps_trusted, sizeof(double), arraylength, infile);
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
   double *By_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_pert = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("con2prim_multi_method_hybrid_FontFix_output_pert.bin","rb");
+  infile = fopen_with_check("con2prim_multi_method_hybrid_Font1D_output_pert.bin","rb");
   key  = fread(rho_b_pert, sizeof(double), arraylength, infile);
   key += fread(press_pert, sizeof(double), arraylength, infile);
   key += fread(eps_pert, sizeof(double), arraylength, infile);
@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
     ghl_guess_primitives(&eos, &ADM_metric, &metric_aux, &cons, &prims);
     const int check = ghl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if( check != c2p_check[i] )
-      ghl_error("ghl_hybrid_FontFix has different return value: %d vs %d\n", check, c2p_check[i]);
+      ghl_error("ghl_hybrid_Font1D has different return value: %d vs %d\n", check, c2p_check[i]);
 
     primitive_quantities prims_trusted, prims_pert;
     ghl_initialize_primitives(
@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
 
     validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
   }
-  ghl_info("ghl_hybrid_FontFix function test has passed!\n");
+  ghl_info("ghl_hybrid_Font1D function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

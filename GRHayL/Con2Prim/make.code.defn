@@ -2,7 +2,7 @@
 #! INCS = harm_u2p_util.h
 
 # Source files in this directory that need compiled:
-SRCS = apply_inequality_fixes.c                  \
+SRCS = apply_conservative_limits.c               \
        compute_conservs.c                        \
        compute_conservs_and_Tmunu.c              \
        con2prim_multi_method.c                   \

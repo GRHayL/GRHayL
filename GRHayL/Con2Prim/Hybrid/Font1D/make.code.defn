@@ -1,5 +1,5 @@
 # Subdirectory make.code.defn for Con2Prim/Font_Fix
 
 # Source files in this directory that need compiled:
-SRCS = hybrid_Font_fix.c \
-       hybrid_Font_fix_loop.c
+SRCS = hybrid_Font1D.c \
+       hybrid_Font1D_loop.c

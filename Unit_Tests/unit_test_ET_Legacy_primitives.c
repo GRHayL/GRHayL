@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   const double poison = 1e300;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int backup_routine[3] = {FontFix,None,None};
+  const int backup_routine[3] = {Font1D,None,None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
 
@@ -195,10 +195,10 @@ int main(int argc, char **argv) {
       if(eos.eos_type == 0) { //Hybrid-only
         if(index == arraylength-2 || index == arraylength-1) {
           params.psi6threshold = 1e-1; // Artificially triggering fix
-          ghl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+          ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
           params.psi6threshold = Psi6threshold;
         } else {
-          ghl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+          ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
         }
       }
 
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
 
       /********** Artificial Font fix for code comparison **********
       This point corresponds to the second-to-last element of the edge
-      cases for ghl_apply_inequality_fixes function. Due to improvements
+      cases for ghl_apply_conservative_limits function. Due to improvements
       in the Noble2D routine, the GRHayL code doesn't trigger Font
       fix while the old code does. This is also true for several of
       the more 'physically motivated' indices, but the edge case data

@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : ghl_apply_inequality_fixes()
+/* Function    : ghl_apply_conservative_limits()
  * Description : Checks whether \tilde{tau} \tilde{S} obey the inequalities
  *               constraining their possible values. If they are outside
  *               these bounds, the function enforces the inequalities
@@ -20,7 +20,7 @@
  *
  */
 
-void ghl_apply_inequality_fixes(
+void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,

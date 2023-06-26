@@ -1,0 +1,8 @@
+# Primary make.code.defn for gem Con2Prim
+
+# Source files in this directory that need compiled:
+SRCS = minmod.c                  \
+       maxmod.c                  \
+       minmod_reconstruction.c   \
+       mc_reconstruction.c       \
+       superbee_reconstruction.c

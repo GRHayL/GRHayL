@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
   double *S_y = (double*) malloc(sizeof(double)*arraylength);
   double *S_z = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("apply_inequality_fixes_input.bin","rb");
+  infile = fopen_with_check("apply_conservative_limits_input.bin","rb");
   key  = fread(rho_b, sizeof(double), arraylength, infile);
   key += fread(press, sizeof(double), arraylength, infile);
   key += fread(eps, sizeof(double), arraylength, infile);
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
   double *S_y_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *S_z_trusted = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("apply_inequality_fixes_output.bin","rb");
+  infile = fopen_with_check("apply_conservative_limits_output.bin","rb");
   key  = fread(rho_star_trusted, sizeof(double), arraylength, infile);
   key += fread(tau_trusted, sizeof(double), arraylength, infile);
   key += fread(S_x_trusted, sizeof(double), arraylength, infile);
@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
   double *S_y_pert = (double*) malloc(sizeof(double)*arraylength);
   double *S_z_pert = (double*) malloc(sizeof(double)*arraylength);
 
-  infile = fopen_with_check("apply_inequality_fixes_output_pert.bin","rb");
+  infile = fopen_with_check("apply_conservative_limits_output_pert.bin","rb");
   key  = fread(rho_star_pert, sizeof(double), arraylength, infile);
   key += fread(tau_pert, sizeof(double), arraylength, infile);
   key += fread(S_x_pert, sizeof(double), arraylength, infile);
@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     //This applies inequality fixes on the conservatives
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = 0.0;
-    ghl_apply_inequality_fixes(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+    ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = Psi6threshold;
 
@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
 
     validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
   }
-  ghl_info("ghl_apply_inequality_fixes function test has passed!\n");
+  ghl_info("ghl_apply_conservative_limits function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);

@@ -17,9 +17,9 @@ TODO: consider changing failure_checker to be bitwise; failure modes are current
       1k: Limiting velocity u~ after C2P/Font Fix or v in enforce_...
       10k: Font Fix was applied
       100k: Both C2P and Font Fix failed
-      1M: tau~ was reset in ghl_apply_inequality_fixes
-      10M: S~ was reset in ghl_apply_inequality_fixes via the first case
-      100M: S~ was reset in ghl_apply_inequality_fixes via the second case
+      1M: tau~ was reset in ghl_apply_conservative_limits
+      10M: S~ was reset in ghl_apply_conservative_limits via the first case
+      100M: S~ was reset in ghl_apply_conservative_limits via the second case
 For bitwise, would become 1, 2, 4, 8, 16, 32. 64, 128, and 256
 https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
@@ -28,7 +28,7 @@ typedef enum {
   None=-1,
   Noble2D, Noble1D,
   Noble1D_entropy, Noble1D_entropy2,
-  FontFix, CerdaDuran2D, CerdaDuran3D,
+  Font1D, CerdaDuran2D, CerdaDuran3D,
   Palenzuela1D, Palenzuela1D_entropy,
   Newman1D, Newman1D_entropy
 } con2prim_method_t;
@@ -62,7 +62,7 @@ void ghl_initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
 
-void ghl_apply_inequality_fixes(
+void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,

@@ -1,6 +1,6 @@
 # Subdirectory make.code.defn for EOS/Hybrid
 
-SUBDIRS = FontFix Noble2D
+SUBDIRS = Font1D Noble2D
 
 # Source files in this directory that need compiled:
 SRCS = 

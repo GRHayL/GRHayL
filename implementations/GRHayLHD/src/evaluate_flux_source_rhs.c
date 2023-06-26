@@ -101,7 +101,7 @@ void GRHayLHD_evaluate_flux_source_rhs(CCTK_ARGUMENTS) {
           // Compute Gamma
           const double Gamma = GRHayLHD_eos_Gamma_eff(ghl_eos, rho_b[index], pressure[index]);
 
-          ghl_simple_ppm(
+          ghl_ppm(
                 rho_stencil, press_stencil, vel_stencil,
                 3, v_flux, Gamma,
                 &rhor, &rhol, &pressr, &pressl, vel_r, vel_l);

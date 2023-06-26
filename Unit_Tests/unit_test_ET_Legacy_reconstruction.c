@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
           }
           const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
 
-          ghl_simple_ppm(rho_stencil, press_stencil, var_data,
+          ghl_ppm(rho_stencil, press_stencil, var_data,
                      num_vars, v_flux_dir, Gamma_eff,
                      &rhor, &rhol, &pressr, &pressl,
                      var_datar, var_datal);
@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
             var_data[1][ind]   = vz[stencil];
           }
           const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
-          ghl_simple_ppm_no_rho_P(press_stencil, var_data,
+          ghl_ppm_no_rho_P(press_stencil, var_data,
                      num_vars2, v_flux_dir, Gamma_eff,
                      var_datar, var_datal);
 
