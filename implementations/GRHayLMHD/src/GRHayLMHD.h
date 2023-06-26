@@ -6,17 +6,8 @@
 #include "cctk_Arguments.h"
 #include "GRHayLib.h"
 
-enum metric_indices{
-      LAPSE, BETAX, BETAY, BETAZ,
-      GXX, GXY, GXZ, GYY, GYZ, GZZ};
-
-enum ext_curv{
-      KXX, KXY, KXZ, KYY, KYZ, KZZ};
-
 // The order here MATTERS, and must be consistent with the order in the in_prims[] array in evaluate_MHD_rhs.C.
 enum recon_indices{
-      RHOB, PRESSURE, VX, VY, VZ,
-      BX_CENTER, BY_CENTER, BZ_CENTER,
       BX_STAGGER, BY_STAGGER, BZ_STAGGER,
       VXR, VYR, VZR, VXL,VYL, VZL, MAXNUMVARS};
 
@@ -80,14 +71,9 @@ void GRHayLMHD_set_symmetry_gzs_staggered(
 
 void GRHayLMHD_reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
                          const int *restrict var_indices,
-                         const eos_parameters *restrict eos,
-                         const CCTK_REAL **in_prims,
-                         CCTK_REAL **out_prims_r,
-                         CCTK_REAL **out_prims_l);
-
-void GRHayLMHD_reconstruction_loop_no_rho_P(const cGH *restrict cctkGH, const int flux_dir, const int num_vars,
-                         const int *restrict var_indices,
-                         const eos_parameters *restrict eos,
+                         const double *rho_b,
+                         const double *pressure,
+                         const double *v_flux,
                          const CCTK_REAL **in_prims,
                          CCTK_REAL **out_prims_r,
                          CCTK_REAL **out_prims_l);
@@ -96,9 +82,23 @@ void GRHayLMHD_calculate_MHD_dirn_rhs(
       const cGH *cctkGH,
       const int flux_dirn,
       const CCTK_REAL *restrict dX,
-      const eos_parameters *restrict eos,
-      const CCTK_REAL **in_metric,
-      const CCTK_REAL **in_prims,
+      const CCTK_REAL *restrict lapse,
+      const CCTK_REAL *restrict betax,
+      const CCTK_REAL *restrict betay,
+      const CCTK_REAL *restrict betaz,
+      const CCTK_REAL *restrict gxx,
+      const CCTK_REAL *restrict gxy,
+      const CCTK_REAL *restrict gxz,
+      const CCTK_REAL *restrict gyy,
+      const CCTK_REAL *restrict gyz,
+      const CCTK_REAL *restrict gzz,
+      const double *rho,
+      const double *pressure,
+      const double *vx,
+      const double *vy,
+      const double *vz,
+      const CCTK_REAL **B_center,
+      const double *B_stagger,
       /*const*/ CCTK_REAL **in_prims_r,
       /*const*/ CCTK_REAL **in_prims_l,
       CCTK_REAL *restrict cmin,

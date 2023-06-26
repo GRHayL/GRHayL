@@ -1,20 +1,23 @@
 #include "GRHayLMHD.h"
 
-static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
+static double eos_Gamma_eff(const double rho_in, const double press_in);
 
 void GRHayLMHD_reconstruction_loop(const cGH *restrict cctkGH, const int flux_dir, const int num_vars, 
                          const int *restrict var_indices,
-                         const eos_parameters *restrict eos,
+                         const double *rho_b,
+                         const double *pressure,
+                         const double *v_flux,
                          const double **in_prims,
                          double **out_prims_r,
                          double **out_prims_l) {
 
+  // Bounds are determined by the stencil, which requires a ghostzone of at least
+  // 3, but upper index includes first ghostzone point (stencil is only 2 on upper end)
+  // This limit only applies to the direction of the stencil, hence the == logic below.
   const int xdir = (flux_dir == 0);
   const int ydir = (flux_dir == 1);
   const int zdir = (flux_dir == 2);
 
-  // For repeated reconstructions (needed for A_i RHS), we need to compute ghostzone
-  // points in the directions other than the flux_dir, hence these bounds
   const int imin = cctkGH->cctk_nghostzones[0]*xdir;
   const int imax = cctkGH->cctk_lsh[0] - (cctkGH->cctk_nghostzones[0]-1)*xdir;
   const int jmin = cctkGH->cctk_nghostzones[1]*ydir;
@@ -27,33 +30,27 @@ void GRHayLMHD_reconstruction_loop(const cGH *restrict cctkGH, const int flux_di
     for(int j=jmin; j<jmax; j++) {
       for(int i=imin; i<imax; i++) {
         const int index = CCTK_GFINDEX3D(cctkGH, i, j, k);
-        double rho[6], pressure[6], v_flux_dir[6];
-        double rhor, rhol, pressr, pressl;
+        double press_stencil[6], v_flux_stencil[6];
         double var_data[num_vars][6], vars_r[num_vars], vars_l[num_vars];
 
         for(int ind=0; ind<6; ind++) {
           // Stencil from -3 to +2 reconstructs to e.g. i-1/2
           const int stencil = CCTK_GFINDEX3D(cctkGH, i+xdir*(ind-3), j+ydir*(ind-3), k+zdir*(ind-3));
-          v_flux_dir[ind] = in_prims[VX+flux_dir][stencil]; // Could be smaller; doesn't use full stencil
-          rho[ind] = in_prims[RHOB][stencil];
-          pressure[ind] = in_prims[PRESSURE][stencil];
+          v_flux_stencil[ind] = v_flux[stencil]; // Could be smaller; doesn't use full stencil
+          press_stencil[ind] = pressure[stencil];
           for(int var=0; var<num_vars; var++) {
             var_data[var][ind] = in_prims[var_indices[var]][stencil];
           }
         }
 
         // Compute Gamma
-        const double Gamma = eos_Gamma_eff(eos, in_prims[RHOB][index], in_prims[PRESSURE][index]);
+        const double Gamma = eos_Gamma_eff(rho_b[index], pressure[index]);
 
-        ghl_simple_ppm(
-              rho, pressure, var_data,
-              num_vars, v_flux_dir, Gamma,
-              &rhor, &rhol, &pressr, &pressl, vars_r, vars_l);
+        ghl_ppm_no_rho_P(
+              press_stencil, var_data,
+              num_vars, v_flux_stencil, Gamma,
+              vars_r, vars_l);
 
-        out_prims_r[RHOB][index] = rhor;
-        out_prims_l[RHOB][index] = rhol;
-        out_prims_r[PRESSURE][index] = pressr;
-        out_prims_l[PRESSURE][index] = pressl;
         for(int var=0; var<num_vars; var++) {
           out_prims_r[var_indices[var]][index] = vars_r[var];
           out_prims_l[var_indices[var]][index] = vars_l[var];
@@ -63,9 +60,9 @@ void GRHayLMHD_reconstruction_loop(const cGH *restrict cctkGH, const int flux_di
   }
 }
 
-static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in) {
+static double eos_Gamma_eff(const double rho_in, const double press_in) {
   double K, Gamma;
-  ghl_hybrid_get_K_and_Gamma(eos, rho_in, &K, &Gamma);
+  ghl_hybrid_get_K_and_Gamma(ghl_eos, rho_in, &K, &Gamma);
   const double P_cold = K*pow(rho_in, Gamma);
-  return eos->Gamma_th + (Gamma - eos->Gamma_th)*P_cold/press_in;
+  return ghl_eos->Gamma_th + (Gamma - ghl_eos->Gamma_th)*P_cold/press_in;
 }

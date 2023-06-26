@@ -19,6 +19,5 @@ SRCS = A_flux_rhs.c                        \
        outer_boundaries.c                  \
        prims_to_conservs.c                 \
        reconstruction_loop.c               \
-       reconstruction_loop_no_rho_P.c      \
        set_gz_symmetries.c                 \
        symmetry_gzs_staggered.c

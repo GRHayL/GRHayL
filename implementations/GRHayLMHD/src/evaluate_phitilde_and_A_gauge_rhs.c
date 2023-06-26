@@ -11,8 +11,8 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
   double *shiftx_interp = vxr;
   double *shifty_interp = vyr;
   double *shiftz_interp = vzr;
-  double *alpha_interp = pressr;
-  double *alpha_Phi_minus_betaj_A_j_interp = pressl;
+  double *alpha_interp = vxrr;
+  double *alpha_Phi_minus_betaj_A_j_interp = vxll;
   double *alpha_sqrtg_Ax_interp = vxl;
   double *alpha_sqrtg_Ay_interp = vyl;
   double *alpha_sqrtg_Az_interp = vzl;

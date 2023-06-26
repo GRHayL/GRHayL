@@ -106,10 +106,10 @@ CCTK_REAL grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 # Temporary variables for reconstruction
 CCTK_REAL grmhd_primitives_reconstructed_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 {
-  rhor, pressr, vxr, vyr, vzr
-  rhol, pressl, vxl, vyl, vzl
-  Bxr, Byr, Bzr, Bx_staggerr, By_staggerr, Bz_staggerr
-  Bxl, Byl, Bzl, Bx_staggerl, By_staggerl, Bz_staggerl
+  vxr, vyr, vzr
+  vxl, vyl, vzl
+  Bx_staggerr, By_staggerr, Bz_staggerr
+  Bx_staggerl, By_staggerl, Bz_staggerl
   vxrr, vxrl, vyrr, vyrl, vzrr, vzrl
   vxlr, vxll, vylr, vyll, vzlr, vzll
 } "Temporary variables used for primitives reconstruction"
