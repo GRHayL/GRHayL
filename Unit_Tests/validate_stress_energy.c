@@ -7,10 +7,10 @@
   bars of the perturbed version of the code.
 */
 
-void validate_stress_energy(
-                     const stress_energy *restrict Tmunu_trusted,
-                     const stress_energy *restrict Tmunu,
-                     const stress_energy *restrict Tmunu_pert) {
+void ghl_validate_stress_energy(
+      const stress_energy *restrict Tmunu_trusted,
+      const stress_energy *restrict Tmunu,
+      const stress_energy *restrict Tmunu_pert) {
 
   char fail_msg[100] = "Test has failed!\n The stress-energy variable(s) which failed are ";
   int test_fail = 0;

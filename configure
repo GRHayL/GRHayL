@@ -692,7 +692,9 @@ srcs=$(printf "$srcs" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/
 incs=$(printf "$incs" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
 ihds=$(printf "$ihds" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
 objs=$(printf "$srcs" | awk -v bd=$builddir '{gsub("GRHayL/", sprintf("%s/", bd), $0); gsub(/\.c/, ".o", $0); print}')
-tests=$(find Unit_Tests -name unit_test_*.c)
+tests=$(find Unit_Tests -maxdepth 1 -name unit_test_*.c)
+datagen=$(find Unit_Tests/data_gen -maxdepth 1 -name unit_test_data_*.c)
+echo $datagen
 if [ "$tests" = "" ]; then
     tnames="None"
 else
@@ -709,7 +711,7 @@ else
 END { print tests }
 ')
     tests=$(echo $tests)
-    tsrcs=$(echo $(find Unit_Tests -name *.c ! -name unit_test_*.c))
+    tsrcs=$(echo $(find Unit_Tests -maxdepth 1 -name *.c ! -name unit_test_*.c))
     tobjs=$(printf "$tsrcs" | awk '{
     gsub(/\.c/, ".o", $0)
     for(i=1;i<=NF;i++) {
@@ -720,6 +722,35 @@ END { print tests }
     texes=$(printf "$tests" | awk '{ gsub(/\.c/, "", $0); gsub(/Unit_Tests\//, "test/", $0); print }')
     texeobjs=$(printf "$tests" | awk '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\//, "build/Unit_Tests/", $0); print }')
     mkdir -p $builddir/Unit_Tests test
+fi
+
+if [ "$datagen" = "" ]; then
+    dgnames="None"
+else
+    dgnames=$(printf "$datagen" | sort | \
+                awk '{
+  split($0, a, "/")
+  sub(/^unit_test_data_/, "", a[3])
+  sub(/\.c/, "", a[3])
+  if( NR == 1 )
+    print "-", a[3]
+  else
+    printf("%26s- %s\n", " ", a[3])
+}
+END { print tests }
+')
+    datagen=$(echo $datagen)
+    dgsrcs=$(echo $(find Unit_Tests/data_gen -maxdepth 1 -name *.c ! -name unit_test_data_*.c))
+    dgobjs=$(printf "$dgsrcs" | awk '{
+    gsub(/\.c/, ".o", $0)
+    for(i=1;i<=NF;i++) {
+      dgobjs=sprintf("%s%s%s ", dgobjs, "build/", $i)
+    }
+    print dgobjs
+}')
+    dgexes=$(printf "$datagen" | awk '{ gsub(/\.c/, "", $0); gsub(/Unit_Tests\/data_gen\//, "test/data_gen/", $0); print }')
+    dgexeobjs=$(printf "$datagen" | awk '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\/data_gen\//, "build/Unit_Tests/data_gen/", $0); print }')
+    mkdir -p $builddir/Unit_Tests/data_gen test/data_gen
 fi
 
 printf "Generating Makefile... "
@@ -749,9 +780,15 @@ if [ "$tests" != "" ]; then
     printf "TOBJS    = $tobjs\n"      >> Makefile
     printf "TEXEOBJS = $texeobjs\n\n" >> Makefile
 fi
-printf '\nall: grhayl tests\n\t@echo "All done!"\n\n' >> Makefile
+if [ "$datagen" != "" ]; then
+    printf "DGEXES    = $dgexes\n"      >> Makefile
+    printf "DGOBJS    = $dgobjs\n"      >> Makefile
+    printf "DGEXEOBJS = $dgexeobjs\n\n" >> Makefile
+fi
+printf '\nall: grhayl tests datagen\n\t@echo "All done!"\n\n' >> Makefile
 printf 'grhayl: $(LIBS)\n\n'                          >> Makefile
 printf 'tests: $(TEXES)\n\n'                          >> Makefile
+printf 'datagen: $(DGEXES)\n\n'                       >> Makefile
 if [ $silent -eq 0 ]; then
     printf '$(BUILDLIBSO): $(BUILDLIBSOV)\n'                                         >> Makefile
     printf '\trm -f $(BUILDLIBSO) && ln -s $(LIBSOV) $(BUILDLIBSO)\n\n'              >> Makefile
@@ -767,6 +804,14 @@ if [ $silent -eq 0 ]; then
         printf '$(TOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                            >> Makefile
         printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
         printf '$(TEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                         >> Makefile
+        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+    fi
+    if [ "$datagen" != "" ]; then
+        printf '$(DGEXES): test/data_gen/%%: $(BUILDDIR)/Unit_Tests/data_gen/%%.o $(DGOBJS) $(TOBJS) $(LIBS)\n' >> Makefile
+        printf '\t$(CCOMPILEOMP) $(DGOBJS) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
+        printf '$(DGOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                            >> Makefile
+        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+        printf '$(DGEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                         >> Makefile
         printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
     fi
 else
@@ -797,6 +842,17 @@ else
         printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
         printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
         printf '$(TEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                          >> Makefile
+        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
+        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+    fi
+    if [ "$datagen" != "" ]; then
+        printf '$(DGEXES): test/%%: $(BUILDDIR)/Unit_Tests/%%.o $(DGOBJS) $(TOBJS) $(LIBS)\n'              >> Makefile
+        printf '\t@echo "Linking $@"\n'                                                         >> Makefile
+        printf '\t@$(CCOMPILEOMP) $(DGOBJS) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
+        printf '$(DGOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                             >> Makefile
+        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
+        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+        printf '$(DGEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                          >> Makefile
         printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
         printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
     fi
@@ -847,4 +903,5 @@ fi
 printf "%4s%-19s : " " " "Gems found"
 ./scripts/parser awk "GRHayL/make.code.defn" "subdirs" | awk '{sub(/include /, "", $0); print}'
 printf "%4s%-19s : %s\n" " " "Unit tests found" "$tnames"
+printf "%4s%-19s : %s\n" " " "Unit tests data gen" "$dgnames"
 printf "%s\n" $sep

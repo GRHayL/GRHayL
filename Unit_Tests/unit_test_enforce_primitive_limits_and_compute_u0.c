@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
                       poison, poison, poison,
                       &prims_pert);
 
-    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
+    ghl_validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
     if( validate(u0_trusted[i], prims.u0, u0_pert[i]) )
       ghl_error("Test has failed! The computed u0 does not fall within tolerance.\n"
                    "   u0_trusted  %.15e\n"

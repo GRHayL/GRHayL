@@ -7,11 +7,11 @@
   version of the code.
 */
 
-void validate_conservatives(
-                     const bool evolve_entropy,
-                     const conservative_quantities *restrict cons_trusted,
-                     const conservative_quantities *restrict cons,
-                     const conservative_quantities *restrict cons_pert) {
+void ghl_validate_conservatives(
+      const bool evolve_entropy,
+      const conservative_quantities *restrict cons_trusted,
+      const conservative_quantities *restrict cons,
+      const conservative_quantities *restrict cons_pert) {
 
   char fail_msg[100] = "Test has failed!\n The conservative variable(s) which failed are ";
   int test_fail = 0;

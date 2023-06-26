@@ -11,20 +11,20 @@
 #include "nrpyeos_hybrid.h"
 
 // con2prim validation functions
-void validate_primitives(
+void ghl_validate_primitives(
       const bool evolve_entropy,
       const eos_parameters *restrict eos,
       const primitive_quantities *restrict prims_trusted,
       const primitive_quantities *restrict prims,
       const primitive_quantities *restrict prims_pert);
 
-void validate_conservatives(
+void ghl_validate_conservatives(
       const bool evolve_entropy,
       const conservative_quantities *restrict cons_trusted,
       const conservative_quantities *restrict cons,
       const conservative_quantities *restrict cons_pert);
 
-void validate_stress_energy(
+void ghl_validate_stress_energy(
       const stress_energy *restrict Tmunu_trusted,
       const stress_energy *restrict Tmunu,
       const stress_energy *restrict Tmunu_pert);
@@ -163,13 +163,13 @@ static inline double randf(double low,double high) {
   return (rand()/(double)(RAND_MAX))*(high-low)+low;
 }
 
-void initial_random_data(
+void ghl_initial_random_data(
       const double xrho,
       const double xpress,
       metric_quantities *restrict metric,
       primitive_quantities *restrict prims);
 
-void randomize_metric(
+void ghl_randomize_metric(
       double *restrict lapse,
       double *restrict gxx_ptr,
       double *restrict gxy_ptr,
@@ -181,7 +181,7 @@ void randomize_metric(
       double *restrict betay,
       double *restrict betaz);
 
-void randomize_primitives(
+void ghl_randomize_primitives(
       const eos_parameters *restrict eos,
       const double rho,
       const double press,

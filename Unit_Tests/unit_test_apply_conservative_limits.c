@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
                              poison, poison, &cons_pert);
 
 
-    validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
   }
   ghl_info("ghl_apply_conservative_limits function test has passed!\n");
   free(lapse);

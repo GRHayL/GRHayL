@@ -7,7 +7,7 @@
   version of the code.
 */
 
-void validate_primitives(
+void ghl_validate_primitives(
       const bool evolve_entropy,
       const eos_parameters *restrict eos,
       const primitive_quantities *restrict prims_trusted,

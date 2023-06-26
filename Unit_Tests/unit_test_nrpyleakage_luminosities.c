@@ -23,9 +23,10 @@ generate_test_data(const eos_parameters *restrict eos) {
       double alpha;
       __attribute__((unused)) double betax, betay, betaz;
       double gammaxx, gammaxy, gammaxz, gammayy, gammayz, gammazz;
-      randomize_metric(&alpha, &betax, &betay, &betaz,
-                       &gammaxx, &gammaxy, &gammaxz,
-                       &gammayy, &gammayz, &gammazz);
+      ghl_randomize_metric(
+            &alpha, &betax, &betay, &betaz,
+            &gammaxx, &gammaxy, &gammaxz,
+            &gammayy, &gammayz, &gammazz);
 
       // Get random primitive values
       double rho = pow(10, randf(log10(eos->rho_min), log10(eos->rho_max)));

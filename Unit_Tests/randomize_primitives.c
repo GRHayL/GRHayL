@@ -1,7 +1,7 @@
 #include "stdlib.h"
 #include "unit_tests.h"
 
-void randomize_primitives(
+void ghl_randomize_primitives(
       const eos_parameters *restrict eos,
       const double rho,
       const double press,
