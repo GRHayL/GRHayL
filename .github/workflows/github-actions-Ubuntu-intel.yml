@@ -44,7 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [FontFix, Noble2D]
+        test-function: [Font1D, Noble2D]
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 
@@ -77,7 +77,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [apply_inequality_fixes, enforce_primitive_limits_and_compute_u0, compute_conservs_and_Tmunu]
+        test-function: [apply_conservative_limits, enforce_primitive_limits_and_compute_u0, compute_conservs_and_Tmunu]
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 
