@@ -2,54 +2,73 @@
 
 ---
 
-[![Ubuntu-gcc](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-gcc.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-gcc.yml)
-[![Ubuntu-intel](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-intel.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-intel.yml)
-[![Ubuntu-clang](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-clang.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-Ubuntu-clang.yml)
-[![MacOS-gcc](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-gcc.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-gcc.yml)
-[![MacOS-clang](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-clang.yml/badge.svg)](https://github.com/SamuelCupp/GRHayL_beta/actions/workflows/github-actions-MacOS-clang.yml)
-[![codecov](https://codecov.io/gh/SamuelCupp/GRHayL_beta/branch/main/graph/badge.svg)](https://codecov.io/gh/SamuelCupp/GRHayL_beta)
+[![Ubuntu-gcc](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-Ubuntu-gcc.yml/badge.svg)](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-Ubuntu-gcc.yml)
+[![Ubuntu-intel](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-Ubuntu-intel.yml/badge.svg)](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-Ubuntu-intel.yml)
+[![Ubuntu-clang](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-Ubuntu-clang.yml/badge.svg)](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-Ubuntu-clang.yml)
+[![MacOS-gcc](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-MacOS-gcc.yml/badge.svg)](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-MacOS-gcc.yml)
+[![MacOS-clang](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-MacOS-clang.yml/badge.svg)](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-MacOS-clang.yml)
+[![codecov](https://codecov.io/gh/GRHayL/GRHayL/branch/main/graph/badge.svg)](https://codecov.io/gh/GRHayL/GRHayL)
 
-This is a beta version of GRHayL (General Relativistic Hydrodynamic Library),
-the infrastructure-agnostic magnetohydrodynamics code my collaborators and I are
-developing. The core GRHayL "chalice" provides the basic C structs and other fully
-independent functions that act only on these structs. Adding onto GRHayL_Core are
-several "gems" which provide specific features. These currently include Con2Prim,
+The General Relativistic Hydrodynamic Library (GRHayL) is an infrastructure-agnostic
+magnetohydrodynamics code library designed for modular development of GRMHD code.
+The library is divided into independent modules, or "gems", which provide various
+features needed for GRMHD simulations.
+
+The core GRHayL "chalice" provides core connective tissue in the form of C structs
+and very simple functions that act only on these structs. Adding onto GRHayL_Core are
+several gems which provide specific features. These currently include Atmosphere, Con2Prim,
 EOS, Flux_Source, Induction, Neutrinos, and Reconstruction. Each gem implements
 infrastructure-agnostic functions for computing quantities for GRMHD simulations.
 
-The Con2Prim gem provides functions to perform the entire
-conservative-to-primitive variable recovery. This includes a variety of C2P
-routines, functions to enforce limits on incoming conservatives and outgoing
-primitives, and a function to compute conservatives and Tmunu from the newly
-computed primitives. All the C2P routines have the same arguments, allowing for
-quick and easy substitution. The function `grhayl_con2prim_multi_method()`
-provides runtime switching between available methods, as well as the option to
-choose backup routines in the case of failure.
+The Atmosphere gem provides functions for setting the primitive struct using a specfic
+atmosphere prescription.
+
+The Con2Prim gem provides functions to perform the conservative-to-primitive (con2prim)
+variable recovery. The primary functions here are various con2prim methods, but we
+also provide functions for computing the conservatives and Tmunu from the primitives,
+enforce limits on the computed primitives, etc. All the C2P routines have the same
+argument list, allowing for quick and easy substitution. The function
+`ghl_con2prim_multi_method()` provides runtime switching between available methods,
+as well as the option to choose backup routines in the case of failure.
 
 The EOS gem provides many functions which are needed by other gems to compute quantities
-(e.g. P_cold for hybrid or table interpolation in tabulated). The other gems depend purely
-on the eos_parameters struct. This struct contains function pointers which can be initialized
-to the EOS gem functions using `initialize_hybrid_eos_functions_and_params()` or
-`initialize_tabulated_eos_functions_and_params()`. Of course, these pointers can be changed to
-point to another function if required, so long as the argument lists are identical.
+(e.g. P_cold for hybrid EOS or table interpolation for tabulated EOS). The other gems depend
+purely on the eos_parameters struct and function pointers defined in the ghl.h header.
+The EOS gem provides a function to initialize these function pointers to point to the specific
+implementation provided by GRHayL, but some or all can be changed to point to new user-made
+functions. This allows for all the other gems to be entirely unaware of how these EOS quantities
+are being computed.
 
-The Unit_Testing directory contains the unit tests which are used by the Github Actions continuous
-integration testing. These depend on data kept in the https://github.com/SamuelCupp/GRHayL_TestData
-repository. The files beginning with "unit_test_data" generate the input and output data. Those
-in the ET_Legacy directory only generate input data, as the output is generated from a branch of
-IllinoisGRMHD in the ET for validation with the old code that takes the generated input. These
-tests function by having both output and output_pert. The output_pert is output generated by perturbing
-the input data by
+The Flux_Source gem provides functions for computing the hydrodynamic right-hand sides. This includes
+functions for the characteristic speeds (which are also needed for the induction equation right-hand
+sides), the numerical fluxes, and the source terms.
+
+The Induction gem provides functions for computing right-hand sides for A_i and \tilde{\Phi}. This is
+split into three categories. First, there are the numerical fluxes for A_i (currently we provide a
+function for the HLL flux). Then, we provide a set of interpolation functions in preparation for computing
+the gauge term contributions to A_i and the RHS of \tilde{\Phi}. Finally, we provide a function to compute
+\tilde{\Phi} RHS.
+
+The Reconstruction gem provides functions for reconstructing quantities to cell faces. We have a variety
+of reconstruction methods, and most functions have the same argument list.
+
+The Unit_Tests directory contains the unit tests which are used by the Github Actions continuous
+integration testing. The subdirectory "data_gen" contains the functions for generating the test data.
+The actual test data is kept in the https://github.com/GRHayL/Test_Data repository. Tests with "ET_Legacy"
+in the name only generate input data, as the output is generated from the GRHayLTestPatch branch of
+IllinoisGRMHD in the Einstein Toolkit for validation with the old code. All the tests function by generating
+output data and perturbed output data. The perturbed data is generated by perturbing the input data by
 
 pert = output X (1 + 1e-14).
 
 This output serves as error bars for the functions, and the tests validate that the computed output falls
 within this range.
 
-The implementations directory contains implementations of GRHayL in specific infrastructures.
-Currently this includes the Einstein Toolkit/Cactus Framework and the NRPy+ infrastuctures.
-These implementations and the unit test code provide examples of how to use the library's
-functions.
+The implementations directory contains specific implementations of GRHayL in infrastructures. In the
+following section, we describe how to directly compile the library for linking. However, it can be
+significantly easier in some infrastructures to directly compile the source code instead of linking
+to an external library. We currently only provide and maintain an implementation for the Einstein Toolkit.
+Other codes we maintain which use GRHayL are linking to the compiled library.
 
 ## Building and Installing `GRHayL`
 

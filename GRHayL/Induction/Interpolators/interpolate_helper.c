@@ -39,8 +39,6 @@ void ghl_A_i_avg(
   A_to_Ay[1] = Ay_stencil[1][1][1];
   A_to_Az[2] = Az_stencil[1][1][1];
 
-  int sum_1D = 0;
-  int sum_2D = 0;
   /*
      The stenciling sum here is reasonably simple. The index corresponding to the component needs to be
      interpolated to +1/2 (the kk loop). Thus, the kk index is always in the same index as the component
@@ -52,7 +50,6 @@ void ghl_A_i_avg(
     A_to_phitilde[0] += Ax_stencil[1][1][kk];
     A_to_phitilde[1] += Ay_stencil[1][kk][1];
     A_to_phitilde[2] += Az_stencil[kk][1][1];
-    sum_1D++;
     for(int jj=0; jj<size-1; jj++) {
       A_to_Ax[1] += Ay_stencil[1][kk][jj];
       A_to_Ax[2] += Az_stencil[kk][1][jj];
@@ -62,9 +59,10 @@ void ghl_A_i_avg(
 
       A_to_Az[0] += Ax_stencil[jj][1][kk];
       A_to_Az[1] += Ay_stencil[jj][kk][1];
-      sum_2D++;
     }
   }
+  const double sum_1D = size-1;
+  const double sum_2D = sum_1D*sum_1D;
   A_to_phitilde[0] /= sum_1D;
   A_to_phitilde[1] /= sum_1D;
   A_to_phitilde[2] /= sum_1D;
@@ -93,8 +91,6 @@ void ghl_BSSN_cell_interp(
       double lapse_psi2_interp[3],
       double *restrict lapse_over_psi6_interp) {
 
-  int sum_2D = 0;
-  int sum_3D = 0;
   metric_interp->lapse         = 0.0;
   metric_interp->betaU[0]      = 0.0;
   metric_interp->betaU[1]      = 0.0;
@@ -127,7 +123,6 @@ void ghl_BSSN_cell_interp(
 
   for(int kk=0; kk<size; kk++) {
     for(int jj=0; jj<size; jj++) {
-
       // Interpolate xx, xy, xz to (i, j+1/2, k+1/2) for A_x
       metric_interp->gammaUU[0][0] += metric_stencil[kk][jj][0].gammaUU[0][0];
       metric_interp->gammaUU[0][1] += metric_stencil[kk][jj][0].gammaUU[0][1];
@@ -152,11 +147,11 @@ void ghl_BSSN_cell_interp(
         metric_interp->betaU[1] += metric_stencil[kk][jj][ii].betaU[1];
         metric_interp->betaU[2] += metric_stencil[kk][jj][ii].betaU[2];
         *lapse_over_psi6_interp += lapse_over_psi6[kk][jj][ii];
-        sum_3D++;
       }
-      sum_2D++;
     }
   }
+  const double sum_2D = size*size;
+  const double sum_3D = size*sum_2D;
   metric_interp->lapse    /= sum_3D;
   metric_interp->betaU[0] /= sum_3D;
   metric_interp->betaU[1] /= sum_3D;
@@ -185,8 +180,6 @@ void ghl_ADM_cell_interp(
       double detg_interp[3],
       double *restrict lapse_over_psi6_interp) {
 
-  int sum_2D = 0;
-  int sum_3D = 0;
   metric_interp->lapse         = 0.0;
   metric_interp->betaU[0]      = 0.0;
   metric_interp->betaU[1]      = 0.0;
@@ -230,12 +223,12 @@ void ghl_ADM_cell_interp(
         metric_interp->betaU[0] += metric_stencil[kk][jj][ii].betaU[0];
         metric_interp->betaU[1] += metric_stencil[kk][jj][ii].betaU[1];
         metric_interp->betaU[2] += metric_stencil[kk][jj][ii].betaU[2];
-        *lapse_over_psi6_interp += pow(metric_stencil[kk][jj][ii].lapse,2)/metric_stencil[kk][jj][ii].sqrt_detgamma;
-        sum_3D++;
+        *lapse_over_psi6_interp += metric_stencil[kk][jj][ii].lapse/metric_stencil[kk][jj][ii].sqrt_detgamma;
       }
-      sum_2D++;
     }
   }
+  const double sum_2D = size*size;
+  const double sum_3D = size*sum_2D;
   metric_interp->lapse    /= sum_3D;
   metric_interp->betaU[0] /= sum_3D;
   metric_interp->betaU[1] /= sum_3D;

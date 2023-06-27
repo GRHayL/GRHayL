@@ -146,7 +146,8 @@ static inline bool validate_with_tolerance(
       const double perturbed,
       const double rel_tol,
       const double abs_tol) {
-  if (fabs(trusted - computed) < abs_tol) return false;
+  if (isnan(computed) && isfinite(trusted)) return true; // NaN failure
+  if (fabs(trusted - computed) < abs_tol) return false;  // Absolute tolerance success
   return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), rel_tol);
 }
 

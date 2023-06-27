@@ -56,8 +56,9 @@ int main(int argc, char **argv) {
         metric_quantities ADM_metric;
         double agxx, agxy, agxz, agyy, agyz, agzz;
         ghl_randomize_metric(
-              &lapse[index], &agxx, &agxy, &agxz, &agyy, &agyz,
-                         &agzz, &betax[index], &betay[index], &betaz[index]);
+              &lapse[index], &betax[index], &betay[index], &betaz[index],
+              &agxx, &agxy, &agxz,
+              &agyy, &agyz, &agzz);
 
         // For most tests, we just set the shift to zero to simplify testing;
         // however, this code has branches which explicitly depend on the shift,
