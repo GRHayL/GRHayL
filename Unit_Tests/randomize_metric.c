@@ -1,17 +1,17 @@
 #include "stdlib.h"
 #include "unit_tests.h"
 
-void randomize_metric(
+void ghl_randomize_metric(
       double *restrict lapse,
+      double *restrict betax,
+      double *restrict betay,
+      double *restrict betaz,
       double *restrict gxx_ptr,
       double *restrict gxy_ptr,
       double *restrict gxz_ptr,
       double *restrict gyy_ptr,
       double *restrict gyz_ptr,
-      double *restrict gzz_ptr,
-      double *restrict betax,
-      double *restrict betay,
-      double *restrict betaz) {
+      double *restrict gzz_ptr) {
   const double gyy = 1.0 + randf(0.0,1.0e-1);
   const double gzz = 1.0 + randf(0.0,1.0e-1);
   const double gxy = randf(-1.0e-1,1.0e-1);

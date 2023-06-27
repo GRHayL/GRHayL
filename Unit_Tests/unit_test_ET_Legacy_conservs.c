@@ -339,9 +339,9 @@ int main(int argc, char **argv) {
                              Tyz_pert[index], Tzz_pert[index],
                              &Tmunu_pert);
 
-    validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
-    validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
+    ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   ghl_info("ET_Legacy primitives-to-conservatives test has passed!\n");
   free(lapse);
