@@ -16,16 +16,15 @@
 
 void ghl_guess_primitives(
       const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
-      const ADM_aux_quantities *restrict metric_aux,
+      const metric_quantities *restrict ADM_metric,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prims) {
 
   // Use atmosphere as initial guess:
-  prims->rho = cons->rho/metric_aux->psi6;
-  prims->vU[0] = -metric->betaU[0];
-  prims->vU[1] = -metric->betaU[1];
-  prims->vU[2] = -metric->betaU[2];
+  prims->rho = cons->rho/ADM_metric->sqrt_detgamma;
+  prims->vU[0] = -ADM_metric->betaU[0];
+  prims->vU[1] = -ADM_metric->betaU[1];
+  prims->vU[2] = -ADM_metric->betaU[2];
   prims->Y_e = cons->Y_e/cons->rho;
   prims->temperature = eos->T_max;
 

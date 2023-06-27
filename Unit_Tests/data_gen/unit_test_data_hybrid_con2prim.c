@@ -277,9 +277,6 @@ int main(int argc, char **argv) {
         1.0, 0.0, 1.0,
         &flat_metric);
 
-  ADM_aux_quantities metric_aux;
-  ghl_compute_ADM_auxiliaries(&flat_metric, &metric_aux);
-
   for(int i=sampling; i<sampling+ineq_edge_cases; i++) {
     lapse[i] = 1.0;
     betax[i] = 0.0;
@@ -302,13 +299,13 @@ int main(int argc, char **argv) {
   Bx[sampling+1] = By[sampling+1] = Bz[sampling+1] = 1e-2;
   // Flat space B^2 with bar rescaling
   double Bbar2 = (Bx[sampling+1]*Bx[sampling+1] + By[sampling+1]*By[sampling+1] + Bz[sampling+1]*Bz[sampling+1])*SQR(ONE_OVER_SQRT_4PI);
-  tau[sampling+1] = metric_aux.psi6*Bbar2/4.0;
+  tau[sampling+1] = flat_metric.sqrt_detgamma*Bbar2/4.0;
   S_x[sampling+1] = S_y[sampling+1] = S_z[sampling+1] = eos.tau_atm*(eos.tau_atm + 2.0*rho_star[sampling+1]);
 
   Bx[sampling+2] = By[sampling+2] = Bz[sampling+2] = 1e-2;
   // Flat space B^2 with bar rescaling
   Bbar2 = (Bx[sampling+2]*Bx[sampling+2] + By[sampling+2]*By[sampling+2] + Bz[sampling+2]*Bz[sampling+2])*SQR(ONE_OVER_SQRT_4PI);
-  tau[sampling+2] = 2.0*metric_aux.psi6*Bbar2;
+  tau[sampling+2] = 2.0*flat_metric.sqrt_detgamma*Bbar2;
   S_x[sampling+2] = S_y[sampling+2] = S_z[sampling+2] = 1000*tau[sampling+2]*(tau[sampling+2] + 2.0*rho_star[sampling+2]);
 
   for(int i=sampling; i<arraylength; i++) {
@@ -424,7 +421,7 @@ int main(int argc, char **argv) {
       if(i == arraylength-1 || i == arraylength-2)
         params.psi6threshold = 0.0;
       ghl_apply_conservative_limits(
-            &params, &eos, &ADM_metric, &metric_aux,
+            &params, &eos, &ADM_metric,
             &prims, &cons, &diagnostics);
       if(i == arraylength-1 || i == arraylength-2)
         params.psi6threshold = Psi6threshold;
@@ -495,7 +492,7 @@ int main(int argc, char **argv) {
               S_x_orig[i], S_y_orig[i], S_z_orig[i],
               poison, poison, &cons);
 
-        ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+        ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
         c2p_check[i] = ghl_con2prim_multi_method(
                              &params, &eos, &ADM_metric, &metric_aux,
                              &cons_undens, &prims, &diagnostics);
@@ -558,7 +555,7 @@ int main(int argc, char **argv) {
 
       int speed_limited = 0;
       ghl_enforce_primitive_limits_and_compute_u0(
-            &params, &eos, &ADM_metric, &metric_aux, &prims, &speed_limited);
+            &params, &eos, &ADM_metric, &prims, &speed_limited);
 
       ghl_return_primitives(
             &prims, &rho_b[i], &press[i], &eps[i],

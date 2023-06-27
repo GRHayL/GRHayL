@@ -66,7 +66,6 @@ void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
       const primitive_quantities *restrict prims,
       conservative_quantities *restrict cons,
       con2prim_diagnostics *restrict diagnostics);
@@ -79,7 +78,6 @@ void ghl_undensitize_conservatives(
 void ghl_guess_primitives(
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
       const conservative_quantities *restrict cons,
       primitive_quantities *restrict prims);
 
@@ -87,7 +85,6 @@ void ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const eos_parameters *restrict eos,
       const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
       primitive_quantities *restrict prims,
       int *restrict speed_limit);
 

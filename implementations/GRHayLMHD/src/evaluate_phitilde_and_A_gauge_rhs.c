@@ -8,14 +8,14 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
   // We need A^i, but only have A_i. So we use the BSSN metric gtupij.
   // The reconstruction variables are temporary variables and the data in them can be safely overwritten,
   // saving some memory.
-  double *shiftx_interp = vxr;
-  double *shifty_interp = vyr;
-  double *shiftz_interp = vzr;
+  double *betax_interp = vxr;
+  double *betay_interp = vyr;
+  double *betaz_interp = vzr;
   double *alpha_interp = vxrr;
   double *alpha_Phi_minus_betaj_A_j_interp = vxll;
-  double *alpha_sqrtg_Ax_interp = vxl;
-  double *alpha_sqrtg_Ay_interp = vyl;
-  double *alpha_sqrtg_Az_interp = vzl;
+  double *sqrtg_Ax_interp = vxl;
+  double *sqrtg_Ay_interp = vyl;
+  double *sqrtg_Az_interp = vzl;
 
   CCTK_REAL dxi[3] = { 1.0/CCTK_DELTA_SPACE(0), 1.0/CCTK_DELTA_SPACE(1), 1.0/CCTK_DELTA_SPACE(2) };
 
@@ -109,16 +109,16 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
 //          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][CCTK_GFINDEX3D(cctkGH, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
-        ghl_interpolate_for_induction_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
+        ghl_interpolate_with_cell_centered_BSSN(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
 
-        alpha_interp[index] = interp_vars.alpha_interp;
-        alpha_sqrtg_Ax_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[0];
-        alpha_sqrtg_Ay_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[1];
-        alpha_sqrtg_Az_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[2];
-        alpha_Phi_minus_betaj_A_j_interp[index] = interp_vars.alpha_Phi_minus_betaj_A_j_interp;
-        shiftx_interp[index] = interp_vars.shifti_interp[0];
-        shifty_interp[index] = interp_vars.shifti_interp[1];
-        shiftz_interp[index] = interp_vars.shifti_interp[2];
+        alpha_interp[index] = interp_vars.alpha;
+        sqrtg_Ax_interp[index] = interp_vars.sqrtg_Ai[0];
+        sqrtg_Ay_interp[index] = interp_vars.sqrtg_Ai[1];
+        sqrtg_Az_interp[index] = interp_vars.sqrtg_Ai[2];
+        alpha_Phi_minus_betaj_A_j_interp[index] = interp_vars.alpha_Phi_minus_betaj_A_j;
+        betax_interp[index] = interp_vars.betai[0];
+        betay_interp[index] = interp_vars.betai[1];
+        betaz_interp[index] = interp_vars.betai[2];
       }
     }
   }
@@ -135,29 +135,29 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
         Ay_rhs[index] += dxi[1]*(alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i,j-1,k)] - alpha_Phi_minus_betaj_A_j_interp[index]);
         Az_rhs[index] += dxi[2]*(alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i,j,k-1)] - alpha_Phi_minus_betaj_A_j_interp[index]);
     
-        double shiftx[5], shifty[5], shiftz[5];
-        double phitilde_stencil[3][5], Ai_stencil[3][2];
+        double betax[5], betay[5], betaz[5];
+        double phitilde_stencil[3][5], sqrtg_Ai_stencil[3][2];
     
-        Ai_stencil[0][0] = alpha_sqrtg_Ax_interp[index];
-        Ai_stencil[1][0] = alpha_sqrtg_Ay_interp[index];
-        Ai_stencil[2][0] = alpha_sqrtg_Az_interp[index];
+        sqrtg_Ai_stencil[0][0] = sqrtg_Ax_interp[index];
+        sqrtg_Ai_stencil[1][0] = sqrtg_Ay_interp[index];
+        sqrtg_Ai_stencil[2][0] = sqrtg_Az_interp[index];
 
-        Ai_stencil[0][1] = alpha_sqrtg_Ax_interp[CCTK_GFINDEX3D(cctkGH,i+1,j,k)];
-        Ai_stencil[1][1] = alpha_sqrtg_Ay_interp[CCTK_GFINDEX3D(cctkGH,i,j+1,k)];
-        Ai_stencil[2][1] = alpha_sqrtg_Az_interp[CCTK_GFINDEX3D(cctkGH,i,j,k+1)];
+        sqrtg_Ai_stencil[0][1] = sqrtg_Ax_interp[CCTK_GFINDEX3D(cctkGH,i+1,j,k)];
+        sqrtg_Ai_stencil[1][1] = sqrtg_Ay_interp[CCTK_GFINDEX3D(cctkGH,i,j+1,k)];
+        sqrtg_Ai_stencil[2][1] = sqrtg_Az_interp[CCTK_GFINDEX3D(cctkGH,i,j,k+1)];
     
         for(int iter=-2; iter<3; iter++) {
           const int indexx = CCTK_GFINDEX3D(cctkGH,i+iter,j,     k     );
           const int indexy = CCTK_GFINDEX3D(cctkGH,i,     j+iter,k     );
           const int indexz = CCTK_GFINDEX3D(cctkGH,i,     j,     k+iter);
-          shiftx[iter+2] = shiftx_interp[indexx];
-          shifty[iter+2] = shifty_interp[indexy];
-          shiftz[iter+2] = shiftz_interp[indexz];
+          betax[iter+2] = betax[indexx];
+          betay[iter+2] = betay[indexy];
+          betaz[iter+2] = betaz[indexz];
           phitilde_stencil[0][iter+2] = phitilde[indexx];
           phitilde_stencil[1][iter+2] = phitilde[indexy];
           phitilde_stencil[2][iter+2] = phitilde[indexz];
         }
-        phitilde_rhs[index] += ghl_calculate_phitilde_rhs(dxi, ghl_params->Lorenz_damping_factor, alpha_interp[index], shiftx, shifty, shiftz, Ai_stencil, phitilde_stencil);
+        phitilde_rhs[index] += ghl_calculate_phitilde_rhs(dxi, ghl_params->Lorenz_damping_factor, alpha_interp[index], betax, betay, betaz, sqrtg_Ai_stencil, phitilde_stencil);
     
       }
     }

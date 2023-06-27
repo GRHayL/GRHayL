@@ -18,6 +18,7 @@ SUBDIRS = Atmosphere                      \
           Flux_Source                     \
           GRHayL_Core                     \
           Induction                       \
+          Induction/Interpolators         \
           Neutrinos/NRPyLeakage           \
           Reconstruction/PPM              \
           Reconstruction/TVD

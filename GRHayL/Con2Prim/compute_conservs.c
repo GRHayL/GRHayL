@@ -40,7 +40,7 @@ void ghl_compute_conservs(
   ghl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
-  const double alpha_sqrt_gamma = ADM_metric->lapse*metric_aux->psi6;
+  const double alpha_sqrt_gamma = ADM_metric->lapse*ADM_metric->sqrt_detgamma;
   const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 

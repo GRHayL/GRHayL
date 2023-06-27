@@ -195,15 +195,15 @@ int main(int argc, char **argv) {
       if(eos.eos_type == 0) { //Hybrid-only
         if(index == arraylength-2 || index == arraylength-1) {
           params.psi6threshold = 1e-1; // Artificially triggering fix
-          ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+          ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &prims, &cons, &diagnostics);
           params.psi6threshold = Psi6threshold;
         } else {
-          ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+          ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &prims, &cons, &diagnostics);
         }
       }
 
       // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
-      ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+      ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
       check = ghl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);

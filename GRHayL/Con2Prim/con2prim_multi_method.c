@@ -45,7 +45,7 @@ int ghl_con2prim_multi_method(
       con2prim_diagnostics *restrict diagnostics ) {
 
   if(params->calc_prim_guess)
-    ghl_guess_primitives(eos, ADM_metric, metric_aux, cons, prims);
+    ghl_guess_primitives(eos, ADM_metric, cons, prims);
 
   // Store primitive guesses (used if con2prim fails)
   const primitive_quantities prims_guess = *prims;

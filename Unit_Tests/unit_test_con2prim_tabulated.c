@@ -180,7 +180,7 @@ generate_test_data(
 
           // Undensitize the conserved variables
           conservative_quantities cons_undens;
-          ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+          ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
           // Now perform the con2prim
           if( ghl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
@@ -254,7 +254,7 @@ run_unit_test(
 
         // Undensitize the conserved variables
         conservative_quantities cons_undens;
-        ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+        ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
         // Now perform the con2prim
         if( ghl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )

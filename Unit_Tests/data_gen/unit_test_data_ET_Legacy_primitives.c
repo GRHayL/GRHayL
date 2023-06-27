@@ -211,13 +211,13 @@ int main(int argc, char **argv) {
   Bx[sampling+3] = By[sampling+3] = Bz[sampling+3] = 1e-2;
   // Flat space B^2 with bar rescaling
   double Bbar2 = (Bx[sampling+3]*Bx[sampling+3] + By[sampling+3]*By[sampling+3] + Bz[sampling+3]*Bz[sampling+3])*SQR(ONE_OVER_SQRT_4PI);
-  tau[sampling+3] = metric_aux.psi6*Bbar2/4.0;
+  tau[sampling+3] = ADM_metric.sqrt_detgamma*Bbar2/4.0;
   S_x[sampling+3] = S_y[sampling+3] = S_z[sampling+3] = eos.tau_atm*(eos.tau_atm + 2.0*rho_star[sampling+3]);
 
   Bx[sampling+4] = By[sampling+4] = Bz[sampling+4] = 1e-2;
   // Flat space B^2 with bar rescaling
   Bbar2 = (Bx[sampling+4]*Bx[sampling+4] + By[sampling+4]*By[sampling+4] + Bz[sampling+4]*Bz[sampling+4])*SQR(ONE_OVER_SQRT_4PI);
-  tau[sampling+4] = 2.0*metric_aux.psi6*Bbar2;
+  tau[sampling+4] = 2.0*ADM_metric.sqrt_detgamma*Bbar2;
   S_x[sampling+4] = S_y[sampling+4] = S_z[sampling+4] = 1000*tau[sampling+4]*(tau[sampling+4] + 2.0*rho_star[sampling+4]);
 
   // Ouput data to files and generate perturbed data

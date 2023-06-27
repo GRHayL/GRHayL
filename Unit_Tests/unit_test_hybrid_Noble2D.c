@@ -204,8 +204,8 @@ int main(int argc, char **argv) {
                              poison, poison, &cons);
 
     //This uses the Noble2D routine to compute primitives from conservatives.
-    ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
-    ghl_guess_primitives(&eos, &ADM_metric, &metric_aux, &cons, &prims);
+    ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
+    ghl_guess_primitives(&eos, &ADM_metric, &cons, &prims);
     const int check = ghl_hybrid_Noble2D(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if( check != c2p_check[i] )
       ghl_error("ghl_hybrid_Noble2D has different return value: %d vs %d\n", check, c2p_check[i]);

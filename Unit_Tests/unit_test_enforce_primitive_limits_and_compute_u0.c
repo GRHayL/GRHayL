@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
 
     //This applies limits on the primitives
     int failure_checker = 0;
-    ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
+    ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &failure_checker);
 
     primitive_quantities prims_trusted, prims_pert;
     ghl_initialize_primitives(
@@ -241,7 +241,7 @@ int main(int argc, char **argv) {
                         &prims);
 
   params.psi6threshold = 0;
-  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
+  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &failure_checker);
   if( relative_error(1e5*P_cold, prims.press) > 1e-20 )
     ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e5*P_cold);
@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
   prims.rho   = 12.0*eos.rho_atm;
   ghl_hybrid_compute_P_cold(&eos, prims.rho, &P_cold);
   prims.press = 1e3*P_cold;
-  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &metric_aux, &prims, &failure_checker);
+  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &failure_checker);
   if( relative_error(1e2*P_cold, prims.press) > 1e-20 )
     ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e2*P_cold);

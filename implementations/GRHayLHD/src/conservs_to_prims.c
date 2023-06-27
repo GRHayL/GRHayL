@@ -116,7 +116,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
         if(isnan(cons.rho*cons.tau*cons.SD[0]*cons.SD[1]*cons.SD[2])) {
           CCTK_VERROR("NaN found at start of C2P kernel: index %d %d %d, rho_* = %e, ~tau = %e, ~S_i = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e\n",
                      i, j, k, cons.rho, cons.tau, cons.SD[0], cons.SD[1], cons.SD[2],
-                     ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2],metric_aux.psi6);
+                     ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2], ADM_metric.sqrt_detgamma);
           diagnostics.nan_found++;
         }
 
@@ -127,13 +127,13 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
           if( ghl_eos->eos_type == ghl_eos_hybrid )
             ghl_apply_conservative_limits(
                   ghl_params, ghl_eos, &ADM_metric,
-                  &metric_aux, &prims, &cons, &diagnostics);
+                  &prims, &cons, &diagnostics);
 
           // declare some variables for the C2P routine.
           conservative_quantities cons_undens;
 
           // Set the conserved variables required by the con2prim routine
-          ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+          ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
           /************* Conservative-to-primitive recovery ************/
           int check = ghl_con2prim_multi_method(
@@ -163,7 +163,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
             CCTK_VINFO("Con2Prim and Font fix failed!");
             CCTK_VINFO("diagnostics->failure_checker = %d rho_* = %e, ~tau = %e, ~S_i = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
                     diagnostics.failure_checker, cons_orig.rho, cons_orig.tau, cons_orig.SD[0], cons_orig.SD[1], cons_orig.SD[2],
-                    ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2], metric_aux.psi6);
+                    ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2], ADM_metric.sqrt_detgamma);
           }
         } else {
           diagnostics.failure_checker+=1;
@@ -183,7 +183,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
           // Then flag this point as a "success"
           check = 0;
           CCTK_VINFO("Couldn't find root from: %e %e %e %e %e, rhob approx=%e, rho_b_atm=%e, gij=%e %e %e %e %e %e, alpha=%e\n",
-                     cons_orig.rho, cons_orig.tau, cons_orig.SD[0], cons_orig.SD[1], cons_orig.SD[2], cons_orig.rho/metric_aux.psi6, ghl_eos->rho_atm,
+                     cons_orig.rho, cons_orig.tau, cons_orig.SD[0], cons_orig.SD[1], cons_orig.SD[2], cons_orig.rho/ADM_metric.sqrt_detgamma, ghl_eos->rho_atm,
                      ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2], ADM_metric.lapse);
         }
 
@@ -192,7 +192,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
         //--------------------------------------------------
         // Enforce limits on primitive variables and recompute conservatives.
         ghl_enforce_primitive_limits_and_compute_u0(
-              ghl_params, ghl_eos, &ADM_metric, &metric_aux,
+              ghl_params, ghl_eos, &ADM_metric,
               &prims, &diagnostics.failure_checker);
         ghl_compute_conservs(
               &ADM_metric, &metric_aux, &prims, &cons);
@@ -204,7 +204,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
 
         if(check!=0) {
           diagnostics.failures++;
-          if(metric_aux.psi6 > ghl_params->psi6threshold) {
+          if(ADM_metric.sqrt_detgamma > ghl_params->psi6threshold) {
             failures_inhoriz++;
             pointcount_inhoriz++;
           }

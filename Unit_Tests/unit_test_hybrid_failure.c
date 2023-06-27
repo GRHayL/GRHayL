@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 
     if (i==0) {
       params.calc_prim_guess = false;
-      prims.rho = cons.rho/metric_aux.psi6;
+      prims.rho = cons.rho/ADM_metric.sqrt_detgamma;
       prims.vU[0] = 2.0;
       prims.vU[1] = 2.0;
       prims.vU[2] = 2.0;
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
              S_x[i], S_y[i], S_z[i],
              poison, poison, &cons);
 
-    ghl_undensitize_conservatives(metric_aux.psi6, &cons, &cons_undens);
+    ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
     int check = ghl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if(check != i+1)
       ghl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);

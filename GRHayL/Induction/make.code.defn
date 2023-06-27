@@ -2,5 +2,6 @@
 
 # Source files in this directory that need compiled:
 SRCS = calculate_phitilde_rhs.c \
-       HLL_2D_flux.c            \
-       interpolate_for_induction_rhs.c
+       HLL_2D_flux.c
+
+SUBDIRS = Interpolators

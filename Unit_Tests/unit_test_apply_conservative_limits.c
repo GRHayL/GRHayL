@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     //This applies inequality fixes on the conservatives
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = 0.0;
-    ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &metric_aux, &prims, &cons, &diagnostics);
+    ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &prims, &cons, &diagnostics);
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = Psi6threshold;
 

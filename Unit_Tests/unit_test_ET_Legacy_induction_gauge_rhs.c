@@ -34,14 +34,14 @@ int main(int argc, char **argv) {
   double *Az = (double*) malloc(sizeof(double)*arraylength);
 
   double *alpha_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *shiftx_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *shifty_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *shiftz_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *betax_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *betay_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *betaz_interp = (double*) malloc(sizeof(double)*arraylength);
 
   double *alpha_Phi_minus_betaj_A_j_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *alpha_sqrtg_Ax_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *alpha_sqrtg_Ay_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *alpha_sqrtg_Az_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *sqrtg_Ax_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *sqrtg_Ay_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *sqrtg_Az_interp = (double*) malloc(sizeof(double)*arraylength);
 
   double *phitilde_rhs = (double*) malloc(sizeof(double)*arraylength);
   double *Ax_rhs = (double*) malloc(sizeof(double)*arraylength);
@@ -83,14 +83,14 @@ int main(int argc, char **argv) {
         const int index = indexf(dirlength,i,j,k);
 
         alpha_interp[index]  = poison;
-        shiftx_interp[index] = poison;
-        shifty_interp[index] = poison;
-        shiftz_interp[index] = poison;
+        betax_interp[index] = poison;
+        betay_interp[index] = poison;
+        betaz_interp[index] = poison;
 
         alpha_Phi_minus_betaj_A_j_interp[index] = poison;
-        alpha_sqrtg_Ax_interp[index]            = poison;
-        alpha_sqrtg_Ay_interp[index]            = poison;
-        alpha_sqrtg_Az_interp[index]            = poison;
+        sqrtg_Ax_interp[index]                  = poison;
+        sqrtg_Ay_interp[index]                  = poison;
+        sqrtg_Az_interp[index]                  = poison;
 
         Ax_rhs[index]       = 0.0;
         Ay_rhs[index]       = 0.0;
@@ -159,16 +159,16 @@ int main(int argc, char **argv) {
 //          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][indexf(dirlength, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
-        ghl_interpolate_for_induction_rhs(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
+        ghl_interpolate_with_cell_centered_BSSN(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
 
-        alpha_interp[index] = interp_vars.alpha_interp;
-        alpha_sqrtg_Ax_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[0];
-        alpha_sqrtg_Ay_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[1];
-        alpha_sqrtg_Az_interp[index] = interp_vars.alpha_sqrtg_Ai_interp[2];
-        alpha_Phi_minus_betaj_A_j_interp[index] = interp_vars.alpha_Phi_minus_betaj_A_j_interp;
-        shiftx_interp[index] = interp_vars.shifti_interp[0];
-        shifty_interp[index] = interp_vars.shifti_interp[1];
-        shiftz_interp[index] = interp_vars.shifti_interp[2];
+        alpha_interp[index] = interp_vars.alpha;
+        sqrtg_Ax_interp[index] = interp_vars.sqrtg_Ai[0];
+        sqrtg_Ay_interp[index] = interp_vars.sqrtg_Ai[1];
+        sqrtg_Az_interp[index] = interp_vars.sqrtg_Ai[2];
+        alpha_Phi_minus_betaj_A_j_interp[index] = interp_vars.alpha_Phi_minus_betaj_A_j;
+        betax_interp[index] = interp_vars.betai[0];
+        betay_interp[index] = interp_vars.betai[1];
+        betaz_interp[index] = interp_vars.betai[2];
       }
     }
   }
@@ -187,29 +187,29 @@ int main(int argc, char **argv) {
         Ay_rhs[index] += dxinv[1]*(alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j-1,k)] - alpha_Phi_minus_betaj_A_j_interp[index]);
         Az_rhs[index] += dxinv[2]*(alpha_Phi_minus_betaj_A_j_interp[indexf(dirlength,i,j,k-1)] - alpha_Phi_minus_betaj_A_j_interp[index]);
 
-        double shiftx[5], shifty[5], shiftz[5];
-        double phitilde_stencil[3][5], Ai_stencil[3][2];
+        double betax[5], betay[5], betaz[5];
+        double phitilde_stencil[3][5], sqrtg_Ai_stencil[3][2];
 
-        Ai_stencil[0][0] = alpha_sqrtg_Ax_interp[index];
-        Ai_stencil[1][0] = alpha_sqrtg_Ay_interp[index];
-        Ai_stencil[2][0] = alpha_sqrtg_Az_interp[index];
+        sqrtg_Ai_stencil[0][0] = sqrtg_Ax_interp[index];
+        sqrtg_Ai_stencil[1][0] = sqrtg_Ay_interp[index];
+        sqrtg_Ai_stencil[2][0] = sqrtg_Az_interp[index];
 
-        Ai_stencil[0][1] = alpha_sqrtg_Ax_interp[indexf(dirlength,i+1,j,k)];
-        Ai_stencil[1][1] = alpha_sqrtg_Ay_interp[indexf(dirlength,i,j+1,k)];
-        Ai_stencil[2][1] = alpha_sqrtg_Az_interp[indexf(dirlength,i,j,k+1)];
+        sqrtg_Ai_stencil[0][1] = sqrtg_Ax_interp[indexf(dirlength,i+1,j,k)];
+        sqrtg_Ai_stencil[1][1] = sqrtg_Ay_interp[indexf(dirlength,i,j+1,k)];
+        sqrtg_Ai_stencil[2][1] = sqrtg_Az_interp[indexf(dirlength,i,j,k+1)];
     
         for(int iter=-2; iter<3; iter++) {
           const int indexx = indexf(dirlength,i+iter,j,     k     );
           const int indexy = indexf(dirlength,i,     j+iter,k     );
           const int indexz = indexf(dirlength,i,     j,     k+iter);
-          shiftx[iter+2] = shiftx_interp[indexx];
-          shifty[iter+2] = shifty_interp[indexy];
-          shiftz[iter+2] = shiftz_interp[indexz];
+          betax[iter+2] = betax_interp[indexx];
+          betay[iter+2] = betay_interp[indexy];
+          betaz[iter+2] = betaz_interp[indexz];
           phitilde_stencil[0][iter+2] = phitilde[indexx];
           phitilde_stencil[1][iter+2] = phitilde[indexy];
           phitilde_stencil[2][iter+2] = phitilde[indexz];
         }
-        phitilde_rhs[index] = ghl_calculate_phitilde_rhs(dxinv, Lorenz_damping_factor, alpha_interp[index], shiftx, shifty, shiftz, Ai_stencil, phitilde_stencil);
+        phitilde_rhs[index] = ghl_calculate_phitilde_rhs(dxinv, Lorenz_damping_factor, alpha_interp[index], betax, betay, betaz, sqrtg_Ai_stencil, phitilde_stencil);
       }
     }
   }
@@ -290,9 +290,9 @@ int main(int argc, char **argv) {
   free(phitilde);
   free(Ax); free(Ay); free(Az);
   free(alpha_interp);
-  free(shiftx_interp); free(shifty_interp); free(shiftz_interp);
+  free(betax_interp); free(betay_interp); free(betaz_interp);
   free(alpha_Phi_minus_betaj_A_j_interp);
-  free(alpha_sqrtg_Ax_interp); free(alpha_sqrtg_Ay_interp); free(alpha_sqrtg_Az_interp);
+  free(sqrtg_Ax_interp); free(sqrtg_Ay_interp); free(sqrtg_Az_interp);
   free(phitilde_rhs);
   free(Ax_rhs); free(Ay_rhs); free(Az_rhs);
   free(phitilde_trusted);

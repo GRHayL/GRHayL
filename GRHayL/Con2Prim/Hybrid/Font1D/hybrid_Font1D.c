@@ -30,7 +30,7 @@ int ghl_hybrid_Font_fix(
     hatBbardotS = BbardotS/Bbar_mag;
   }
 
-  double Psim6 = 1.0/metric_aux->psi6;
+  double Psim6 = 1.0/ADM_metric->sqrt_detgamma;
 
   double rhob;
   if (sdots<1.e-300) {
@@ -85,8 +85,8 @@ int ghl_hybrid_Font_fix(
 
     /* Finally, compute u^{i} */
     double rhosh = cons->rho*h;
-    double fac1 = metric_aux->psi6*BbardotS/(gammav*rhosh);
-    double fac2 = 1.0/(rhosh + metric_aux->psi6*Bbar2/gammav);
+    double fac1 = ADM_metric->sqrt_detgamma*BbardotS/(gammav*rhosh);
+    double fac2 = 1.0/(rhosh + ADM_metric->sqrt_detgamma*Bbar2/gammav);
 
     double SU[3];
     ghl_raise_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
@@ -98,7 +98,7 @@ int ghl_hybrid_Font_fix(
   }
 
   //The Font fix only sets the velocities.  Here we set the primitives.
-  prims->rho = cons->rho/(ADM_metric->lapse*prims->u0*metric_aux->psi6);
+  prims->rho = cons->rho/(ADM_metric->lapse*prims->u0*ADM_metric->sqrt_detgamma);
 
   double K_ppoly, Gamma_ppoly;
   ghl_hybrid_get_K_and_Gamma(eos, prims->rho, &K_ppoly, &Gamma_ppoly);

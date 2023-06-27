@@ -386,17 +386,16 @@ void ghl_return_conservatives(
 */
 
 typedef struct metric_quantities {
-  double lapse, gijdet;
+  double lapse, lapseinv, lapseinv2;
+  double detgamma, sqrt_detgamma;
   double betaU[3];
   double gammaDD[3][3];
   double gammaUU[3][3];
-  double lapseinv, lapseinv2;
 } metric_quantities;
 
 typedef struct ADM_aux_quantities {
   double phi;
-  double psi2, psi6;
-  double psi4, psi4inv;
+  double psi2, psi4, psi4inv;
   double g4DD[4][4],g4UU[4][4];
 } ADM_aux_quantities;
 

@@ -312,7 +312,7 @@ void GRHayLMHD_enforce_primitive_limits_and_compute_conservs(const cGH* cctkGH, 
   conservative_quantities cons;
   ghl_enforce_primitive_limits_and_compute_u0(
         ghl_params, ghl_eos, &ADM_metric,
-        &metric_aux, &prims, &speed_limited);
+        &prims, &speed_limited);
 
   ghl_compute_conservs(
         &ADM_metric, &metric_aux, &prims, &cons);

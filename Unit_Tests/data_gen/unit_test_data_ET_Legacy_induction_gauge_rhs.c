@@ -28,9 +28,9 @@ int main(int argc, char **argv) {
   double *Az = (double*) malloc(sizeof(double)*arraylength);
 
   double *alpha_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *shiftx_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *shifty_interp = (double*) malloc(sizeof(double)*arraylength);
-  double *shiftz_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *betax_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *betay_interp = (double*) malloc(sizeof(double)*arraylength);
+  double *betaz_interp = (double*) malloc(sizeof(double)*arraylength);
 
   double *alpha_Phi_minus_betaj_A_j_interp = (double*) malloc(sizeof(double)*arraylength);
   double *alpha_sqrtg_Ax_interp = (double*) malloc(sizeof(double)*arraylength);
@@ -94,9 +94,9 @@ int main(int argc, char **argv) {
         Az[index]       = exp(-r2/(2.0*2.0));;
 
         alpha_interp[index]  = poison;
-        shiftx_interp[index] = poison;
-        shifty_interp[index] = poison;
-        shiftz_interp[index] = poison;
+        betax_interp[index] = poison;
+        betay_interp[index] = poison;
+        betaz_interp[index] = poison;
 
         alpha_Phi_minus_betaj_A_j_interp[index] = poison;
         alpha_sqrtg_Ax_interp[index]            = poison;
