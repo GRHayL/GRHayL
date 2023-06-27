@@ -2,5 +2,4 @@
 
 # Source files in this directory that need compiled:
 SRCS = interpolate_helper.c                  \
-       interpolate_with_cell_centered_ADM.c  \
        interpolate_with_cell_centered_BSSN.c
