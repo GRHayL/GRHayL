@@ -257,45 +257,41 @@ int main(int argc, char **argv) {
           const int index  = indexf(dirlength, i, j ,k);
 
           metric_quantities metric_face;
-          ghl_initialize_metric(face_lapse[index],
-                            face_betax[index], face_betay[index], face_betaz[index],
-                            face_gxx[index], face_gxy[index], face_gxz[index],
-                            face_gyy[index], face_gyz[index], face_gzz[index],
-                            &metric_face);
+          ghl_initialize_metric(
+                face_lapse[index], face_betax[index], face_betay[index], face_betaz[index],
+                face_gxx[index], face_gxy[index], face_gxz[index],
+                face_gyy[index], face_gyz[index], face_gzz[index],
+                &metric_face);
 
           primitive_quantities prims_r, prims_l;
-          ghl_initialize_primitives(rho_r[index], press_r[index], poison,
-                                vx_r[index], vy_r[index], vz_r[index],
-                                Bx_r[index], By_r[index], Bz_r[index],
-                                poison, poison, poison, // entropy, Y_e, temp
-                                &prims_r);
+          ghl_initialize_primitives(
+                rho_r[index], press_r[index], poison,
+                vx_r[index], vy_r[index], vz_r[index],
+                Bx_r[index], By_r[index], Bz_r[index],
+                poison, poison, poison, // entropy, Y_e, temp
+                &prims_r);
 
-          ghl_initialize_primitives(rho_l[index], press_l[index], poison,
-                                vx_l[index], vy_l[index], vz_l[index],
-                                Bx_l[index], By_l[index], Bz_l[index],
-                                poison, poison, poison, // entropy, Y_e, temp
-                                &prims_l);
+          ghl_initialize_primitives(
+                rho_l[index], press_l[index], poison,
+                vx_l[index], vy_l[index], vz_l[index],
+                Bx_l[index], By_l[index], Bz_l[index],
+                poison, poison, poison, // entropy, Y_e, temp
+                &prims_l);
 
           // Generate randomized u^0
           prims_r.u0 = rho_r[index]*Bx_r[index]/vy_r[index];
           prims_l.u0 = rho_l[index]*Bx_l[index]/vy_l[index];
 
           double cmin, cmax;
-          calculate_characteristic_speed(&prims_r, 
-                                         &prims_l,
-                                         &eos,
-                                         &metric_face, 
-                                         &cmin,
-                                         &cmax);
+          calculate_characteristic_speed(
+                &prims_r, &prims_l, &eos,
+                &metric_face, &cmin, &cmax);
 
           conservative_quantities cons_fluxes;
-          calculate_HLLE_fluxes(&prims_r, 
-                                &prims_l,
-                                &eos,
-                                &metric_face,
-                                cmin,
-                                cmax, 
-                                &cons_fluxes);
+          calculate_HLLE_fluxes(
+                &prims_r, &prims_l, &eos,
+                &metric_face, cmin, cmax, 
+                &cons_fluxes);
 
           rho_star_flux[index]  = cons_fluxes.rho;
           tau_flux[index]       = cons_fluxes.tau;
@@ -329,29 +325,27 @@ int main(int argc, char **argv) {
           metric_derivs.gammaDD[2][2] = invdx*(face_gzz[indp1] - face_gzz[index]);
 
           metric_quantities metric;
-          ghl_initialize_metric(lapse[index],
-                            gxx[index], gxy[index], gxz[index],
-                            gyy[index], gyz[index], gzz[index],
-                            betax[index], betay[index], betaz[index],
-                            &metric);
+          ghl_initialize_metric(
+                lapse[index], betax[index], betay[index], betaz[index],
+                gxx[index], gxy[index], gxz[index],
+                gyy[index], gyz[index], gzz[index],
+                &metric);
 
           primitive_quantities prims;
-          ghl_initialize_primitives(rho[index], press[index], poison,
-                                vx[index], vy[index], vz[index],
-                                Bx[index], By[index], Bz[index],
-                                poison, poison, poison, // entropy, Y_e, temp
-                                &prims);
+          ghl_initialize_primitives(
+                rho[index], press[index], poison,
+                vx[index], vy[index], vz[index],
+                Bx[index], By[index], Bz[index],
+                poison, poison, poison, // entropy, Y_e, temp
+                &prims);
           prims.u0  = rho[index]*Bx[index] / vy[index];
 
           conservative_quantities cons_sources;
           cons_sources.SD[0] = 0.0;
           cons_sources.SD[1] = 0.0;
           cons_sources.SD[2] = 0.0;
-          calculate_source_terms(&prims,
-                                 &eos,
-                                 &metric,
-                                 &metric_derivs,
-                                 &cons_sources);
+          calculate_source_terms(
+                &prims, &eos, &metric, &metric_derivs, &cons_sources);
 
           tau_rhs[index] += cons_sources.tau;
           S_x_rhs[index] += cons_sources.SD[0];
@@ -366,33 +360,31 @@ int main(int argc, char **argv) {
         const int index  = indexf(dirlength, i, j ,k);
 
         metric_quantities metric;
-        ghl_initialize_metric(lapse[index],
-                          gxx[index], gxy[index], gxz[index],
-                          gyy[index], gyz[index], gzz[index],
-                          betax[index], betay[index], betaz[index],
-                          &metric);
+        ghl_initialize_metric(
+              lapse[index], betax[index], betay[index], betaz[index],
+              gxx[index], gxy[index], gxz[index],
+              gyy[index], gyz[index], gzz[index],
+              &metric);
 
         extrinsic_curvature curv;
         ghl_initialize_extrinsic_curvature(
-                          kxx[index], kxy[index], kxz[index],
-                          kyy[index], kyz[index], kzz[index],
-                          &curv);
+              kxx[index], kxy[index], kxz[index],
+              kyy[index], kyz[index], kzz[index],
+              &curv);
 
         primitive_quantities prims;
-        ghl_initialize_primitives(rho[index], press[index], poison,
-                              vx[index], vy[index], vz[index],
-                              Bx[index], By[index], Bz[index],
-                              poison, poison, poison, // entropy, Y_e, temp
-                              &prims);
+        ghl_initialize_primitives(
+              rho[index], press[index], poison,
+              vx[index], vy[index], vz[index],
+              Bx[index], By[index], Bz[index],
+              poison, poison, poison, // entropy, Y_e, temp
+              &prims);
         prims.u0  = rho[index]*Bx[index] / vy[index];
 
 
         conservative_quantities cons_sources;
-        ghl_calculate_tau_tilde_source_term_extrinsic_curv(&prims,
-                                                       &eos,
-                                                       &metric,
-                                                       &curv,
-                                                       &cons_sources);
+        ghl_calculate_tau_tilde_source_term_extrinsic_curv(
+              &prims, &eos, &metric, &curv, &cons_sources);
                                     
         tau_rhs[index] += cons_sources.tau;
   }

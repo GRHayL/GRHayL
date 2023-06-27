@@ -110,8 +110,7 @@ int main(int argc, char **argv) {
         phitilde_rhs[index] = poison;
   }
 
-  FILE* outfile = fopen("ET_Legacy_induction_gauge_rhs_input.bin", "wb");
-  check_file_was_successfully_open(outfile, "unit_test_ET_Legacy_induction_gauge_rhs_input.bin");
+  FILE* outfile = fopen_with_check("ET_Legacy_induction_gauge_rhs_input.bin", "wb");
 
   fwrite(&dirlength, sizeof(int), 1, outfile);
   fwrite(gupxx, sizeof(double), arraylength, outfile);
@@ -153,8 +152,7 @@ int main(int argc, char **argv) {
     Az[index]       *= (1.0 + randf(-1,1)*1.0e-14);
   }
 
-  outfile = fopen("ET_Legacy_induction_gauge_rhs_input_pert.bin", "wb");
-  check_file_was_successfully_open(outfile, "unit_test_ET_Legacy_induction_gauge_rhs_input_pert.bin");
+  outfile = fopen_with_check("ET_Legacy_induction_gauge_rhs_input_pert.bin", "wb");
 
   fwrite(gupxx, sizeof(double), arraylength, outfile);
   fwrite(gupxy, sizeof(double), arraylength, outfile);

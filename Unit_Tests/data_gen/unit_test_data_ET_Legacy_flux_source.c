@@ -124,8 +124,7 @@ int main(int argc, char **argv) {
               &Bx_l[index], &By_l[index], &Bz_l[index]);
   }
 
-  FILE* outfile = fopen("ET_Legacy_flux_source_input.bin", "wb");
-  check_file_was_successfully_open(outfile, "ET_Legacy_flux_source_input.bin");
+  FILE* outfile = fopen_with_check("ET_Legacy_flux_source_input.bin", "wb");
   fwrite(&dirlength, sizeof(int), 1, outfile);
   fwrite(gxx,     sizeof(double), arraylength, outfile);
   fwrite(gxy,     sizeof(double), arraylength, outfile);
@@ -204,8 +203,7 @@ int main(int argc, char **argv) {
         Bz_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
   }
 
-  FILE* outpert = fopen("ET_Legacy_flux_source_input_pert.bin", "wb");
-  check_file_was_successfully_open(outpert, "ET_Legacy_flux_source_input_pert.bin");
+  FILE* outpert = fopen_with_check("ET_Legacy_flux_source_input_pert.bin", "wb");
   fwrite(gxx,     sizeof(double), arraylength, outpert);
   fwrite(gxy,     sizeof(double), arraylength, outpert);
   fwrite(gxz,     sizeof(double), arraylength, outpert);

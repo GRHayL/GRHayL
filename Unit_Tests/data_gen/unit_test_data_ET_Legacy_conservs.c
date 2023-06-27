@@ -208,8 +208,7 @@ int main(int argc, char **argv) {
   }
   
   sprintf(filename,"ET_Legacy_conservs_input_pert.bin");
-  input = fopen(filename,"wb");
-  check_file_was_successfully_open(input, filename);
+  input = fopen_with_check(filename,"wb");
 
   fwrite(gxx,   sizeof(double), arraylength, input);
   fwrite(gxy,   sizeof(double), arraylength, input);

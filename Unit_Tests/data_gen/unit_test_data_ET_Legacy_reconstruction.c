@@ -46,8 +46,7 @@ int main(int argc, char **argv) {
         vz[index] = randf(-1.0,1.0);
   }
 
-  FILE* outfile = fopen("ET_Legacy_reconstruction_input.bin", "wb");
-  check_file_was_successfully_open(outfile, "ET_Legacy_reconstruction_input.bin");
+  FILE* outfile = fopen_with_check("ET_Legacy_reconstruction_input.bin", "wb");
   fwrite(&dirlength, sizeof(int), 1, outfile);
   fwrite(rho  , sizeof(double), arraylength, outfile);
   fwrite(press, sizeof(double), arraylength, outfile);
@@ -68,8 +67,7 @@ int main(int argc, char **argv) {
         vz[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
   }
 
-  outfile = fopen("ET_Legacy_reconstruction_input_pert.bin", "wb");
-  check_file_was_successfully_open(outfile, "ET_Legacy_reconstruction_input_pert.bin");
+  outfile = fopen_with_check("ET_Legacy_reconstruction_input_pert.bin", "wb");
   fwrite(rho  , sizeof(double), arraylength, outfile);
   fwrite(press, sizeof(double), arraylength, outfile);
   fwrite(vx   , sizeof(double), arraylength, outfile);

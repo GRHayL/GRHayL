@@ -68,8 +68,7 @@ int main(int argc, char **argv) {
   }
 
   FILE* outfile;
-  outfile = fopen("ET_Legacy_HLL_flux_input.bin", "wb");
-  check_file_was_successfully_open(outfile, "ET_Legacy_HLL_flux_input.bin");
+  outfile = fopen_with_check("ET_Legacy_HLL_flux_input.bin", "wb");
 
   fwrite(&dirlength, sizeof(int), 1, outfile);
   fwrite(phi_bssn, sizeof(double), arraylength, outfile);
@@ -107,8 +106,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  outfile = fopen("ET_Legacy_HLL_flux_input_pert.bin", "wb");
-  check_file_was_successfully_open(outfile, "ET_Legacy_HLL_flux_input_pert.bin");
+  outfile = fopen_with_check("ET_Legacy_HLL_flux_input_pert.bin", "wb");
 
   fwrite(phi_bssn, sizeof(double), arraylength, outfile);
 

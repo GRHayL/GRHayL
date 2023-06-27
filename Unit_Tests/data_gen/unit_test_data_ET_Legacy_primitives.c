@@ -221,9 +221,7 @@ int main(int argc, char **argv) {
   S_x[sampling+4] = S_y[sampling+4] = S_z[sampling+4] = 1000*tau[sampling+4]*(tau[sampling+4] + 2.0*rho_star[sampling+4]);
 
   // Ouput data to files and generate perturbed data
-  sprintf(filename,"ET_Legacy_primitives_input.bin");
-  FILE* input = fopen(filename,"wb");
-  check_file_was_successfully_open(input, filename);
+  FILE* input = fopen_with_check("ET_Legacy_primitives_input.bin", "wb");
 
   fwrite(&arraylength, sizeof(int), 1, input);
   fwrite(gxx,   sizeof(double), arraylength, input);
@@ -263,9 +261,7 @@ int main(int argc, char **argv) {
     S_z[index]      = (1.0 + randf(-1,1)*perturb)*S_z[index];
   }
   
-  sprintf(filename,"ET_Legacy_primitives_input_pert.bin");
-  input = fopen(filename,"wb");
-  check_file_was_successfully_open(input, filename);
+  input = fopen_with_check("ET_Legacy_primitives_input_pert.bin", "wb");
 
   fwrite(gxx,   sizeof(double), arraylength, input);
   fwrite(gxy,   sizeof(double), arraylength, input);
