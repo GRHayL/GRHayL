@@ -1,4 +1,5 @@
 #include "induction.h"
+#include "ghl_induction_helpers.h"
 
 // Note: the following functions, while having a size argument, are specialized for array size of 3 and 2, respectively.
 //       They will need to be extended to support arbitrary stencil averaging. This involves determining the element

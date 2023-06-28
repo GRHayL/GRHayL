@@ -1,4 +1,5 @@
 #include "induction.h"
+#include "ghl_induction_helpers.h"
 
 /* Function    : ghl_interpolate_for_A_gauge_rhs()
  * Description : computes several interpolated quantities for computing the RHS

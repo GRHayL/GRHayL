@@ -1,4 +1,5 @@
 # Primary make.code.defn for GRHayL chalice
+#! INCS = ghl_induction_helpers.h
 
 # Source files in this directory that need compiled:
 SRCS = interpolate_helper.c                   \
