@@ -73,7 +73,7 @@ GRHayLib::Gamma_ppoly_in[0]     = 2.0
 GRHayLib::Gamma_th              = 2.0
 GRHayLib::k_ppoly0              = 1.0
 GRHayLib::rho_ppoly_in[0]       = 0.0
-GRHayLib::con2prim_backup_routines[0] = "FontFix"
+GRHayLib::con2prim_backup_routines[0] = "Font1D"
 
 TestDataIDX::simulation_type = "1D_test"
 TestDataIDX::initialize_magnetic_quantities = no

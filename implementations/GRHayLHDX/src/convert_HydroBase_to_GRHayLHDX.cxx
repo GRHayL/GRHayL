@@ -103,7 +103,7 @@ extern "C" void convert_HydroBase_to_GRHayLHDX(CCTK_ARGUMENTS) {
     //This applies inequality fixes on the conservatives
     ghl_enforce_primitive_limits_and_compute_u0(
           ghl_params, ghl_eos, &ADM_metric,
-          &metric_aux, &prims, &speed_limited);
+          &prims, &speed_limited);
     //This computes the conservatives from the new primitives
     ghl_compute_conservs(
           &ADM_metric, &metric_aux, &prims, &cons);

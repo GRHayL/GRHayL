@@ -82,7 +82,7 @@ template <int flux_dir>
     const CCTK_REAL P_cold = K*pow(rho_b(index), Gamma);
     const CCTK_REAL Gamma_eff = ghl_eos->Gamma_th + (Gamma - ghl_eos->Gamma_th)*P_cold/pressure(index);
   
-    ghl_simple_ppm(
+    ghl_ppm(
           rho_stencil, press_stencil, vel_stencil,
           3, v_flux, Gamma_eff,
           &rhor, &rhol, &pressr, &pressl, vel_r, vel_l);

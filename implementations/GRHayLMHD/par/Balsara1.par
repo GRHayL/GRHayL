@@ -167,11 +167,8 @@ CarpetIOASCII::out1d_zline_x        = 0.01
 CarpetIOASCII::out1d_zline_y        = 0.01
 CarpetIOASCII::out1D_vars           = "
   ADMBase::lapse
-  GRHayLMHD::rho_b
-  GRHayLMHD::pressure
-  GRHayLMHD::vx
-  GRHayLMHD::vy
-  GRHayLMHD::vz
+  GRHayLMHD::grmhd_primitives_allbutBi
+  GRHayLMHD::grmhd_B_center
 "
 CarpetIOASCII::out2D_every            = 8
 CarpetIOASCII::out2D_vars             = ""

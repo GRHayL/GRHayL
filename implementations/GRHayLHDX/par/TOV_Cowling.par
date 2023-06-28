@@ -76,7 +76,7 @@ TOVSolver::TOV_Cowling = yes
 
 GRHayLib::EOS_type = "hybrid"
 GRHayLib::con2prim_routine = "Noble2D"
-GRHayLib::con2prim_backup_routines[0] = "FontFix"
+GRHayLib::con2prim_backup_routines[0] = "Font1D"
 GRHayLib::rho_b_atm = 1e-13
 GRHayLib::rho_b_min = 1e-13
 GRHayLib::Gamma_th = 2.0
