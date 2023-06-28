@@ -123,19 +123,19 @@ void ghl_BSSN_cell_interp(
 
   for(int kk=0; kk<size; kk++) {
     for(int jj=0; jj<size; jj++) {
-      // Interpolate xx, xy, xz to (i, j+1/2, k+1/2) for A_x
+      // Interpolate xx, xy, xz from ccc to cvv centering for A_x
       metric_interp->gammaUU[0][0] += metric_stencil[kk][jj][0].gammaUU[0][0];
       metric_interp->gammaUU[0][1] += metric_stencil[kk][jj][0].gammaUU[0][1];
       metric_interp->gammaUU[0][2] += metric_stencil[kk][jj][0].gammaUU[0][2];
       lapse_psi2_interp[0]         += lapse_psi2[kk][jj][0];
 
-      // Interpolate yx, yy, yz to (i+1/2, j, k+1/2) for A_y
+      // Interpolate yx, yy, yz from ccc to vcv centering for A_y
       metric_interp->gammaUU[1][0] += metric_stencil[kk][0][jj].gammaUU[0][1];
       metric_interp->gammaUU[1][1] += metric_stencil[kk][0][jj].gammaUU[1][1];
       metric_interp->gammaUU[1][2] += metric_stencil[kk][0][jj].gammaUU[1][2];
       lapse_psi2_interp[1]         += lapse_psi2[kk][0][jj];
 
-      // Interpolate zx, zy, zz to (i+1/2, j+1/2, k) for A_z
+      // Interpolate zx, zy, zz from ccc to vvc centering for A_z
       metric_interp->gammaUU[2][0] += metric_stencil[0][kk][jj].gammaUU[0][2];
       metric_interp->gammaUU[2][1] += metric_stencil[0][kk][jj].gammaUU[1][2];
       metric_interp->gammaUU[2][2] += metric_stencil[0][kk][jj].gammaUU[2][2];
@@ -172,7 +172,6 @@ void ghl_BSSN_cell_interp(
   lapse_psi2_interp[2]         /= sum_2D;
 }
 
-
 void ghl_ADM_cell_interp(
       const int size,
       const metric_quantities metric_stencil[size][size][size],
@@ -196,19 +195,19 @@ void ghl_ADM_cell_interp(
 
   for(int kk=0; kk<size; kk++) {
     for(int jj=0; jj<size; jj++) {
-      // Interpolate xx, xy, xz to (i, j+1/2, k+1/2) for A_x
+      // Interpolate xx, xy, xz from ccc to cvv centering for A_x
       const double detgx = metric_stencil[kk][jj][0].lapse*metric_stencil[kk][jj][0].sqrt_detgamma;
       metric_interp->gammaUU[0][0] += detgx*metric_stencil[kk][jj][0].gammaUU[0][0];
       metric_interp->gammaUU[0][1] += detgx*metric_stencil[kk][jj][0].gammaUU[0][1];
       metric_interp->gammaUU[0][2] += detgx*metric_stencil[kk][jj][0].gammaUU[0][2];
 
-      // Interpolate yx, yy, yz to (i+1/2, j, k+1/2) for A_y
+      // Interpolate yx, yy, yz from ccc to vcv centering for A_y
       const double detgy = metric_stencil[kk][0][jj].lapse*metric_stencil[kk][0][jj].sqrt_detgamma;
       metric_interp->gammaUU[1][0] += detgy*metric_stencil[kk][0][jj].gammaUU[0][1];
       metric_interp->gammaUU[1][1] += detgy*metric_stencil[kk][0][jj].gammaUU[1][1];
       metric_interp->gammaUU[1][2] += detgy*metric_stencil[kk][0][jj].gammaUU[1][2];
 
-      // Interpolate zx, zy, zz to (i+1/2, j+1/2, k) for A_z
+      // Interpolate zx, zy, zz from ccc to vvc centering for A_z
       const double detgz = metric_stencil[0][kk][jj].lapse*metric_stencil[0][kk][jj].sqrt_detgamma;
       metric_interp->gammaUU[2][0] += detgz*metric_stencil[0][kk][jj].gammaUU[0][2];
       metric_interp->gammaUU[2][1] += detgz*metric_stencil[0][kk][jj].gammaUU[1][2];
@@ -240,4 +239,49 @@ void ghl_ADM_cell_interp(
   metric_interp->gammaUU[2][0] /= sum_2D;
   metric_interp->gammaUU[2][1] /= sum_2D;
   metric_interp->gammaUU[2][2] /= sum_2D;
+}
+
+void ghl_ADM_vertex_interp(
+      const int size,
+      const metric_quantities metric_stencil[size][size][size],
+      double gammaUU_interp[3][3]) {
+
+  gammaUU_interp[0][0] = 0.0;
+  gammaUU_interp[0][1] = 0.0;
+  gammaUU_interp[0][2] = 0.0;
+  gammaUU_interp[1][0] = 0.0;
+  gammaUU_interp[1][1] = 0.0;
+  gammaUU_interp[1][2] = 0.0;
+  gammaUU_interp[2][0] = 0.0;
+  gammaUU_interp[2][1] = 0.0;
+  gammaUU_interp[2][2] = 0.0;
+
+  for(int ii=0; ii<size; ii++) {
+    // Interpolate xx, xy, xz from vvv to cvv centering for A_x
+    const double detgx = metric_stencil[0][0][ii].lapse*metric_stencil[0][0][ii].sqrt_detgamma;
+    gammaUU_interp[0][0] += detgx*metric_stencil[0][0][ii].gammaUU[0][0];
+    gammaUU_interp[0][1] += detgx*metric_stencil[0][0][ii].gammaUU[0][1];
+    gammaUU_interp[0][2] += detgx*metric_stencil[0][0][ii].gammaUU[0][2];
+
+    // Interpolate yx, yy, yz from vvv to vcv centering for A_y
+    const double detgy = metric_stencil[0][ii][0].lapse*metric_stencil[0][ii][0].sqrt_detgamma;
+    gammaUU_interp[1][0] += detgy*metric_stencil[0][ii][0].gammaUU[0][1];
+    gammaUU_interp[1][1] += detgy*metric_stencil[0][ii][0].gammaUU[1][1];
+    gammaUU_interp[1][2] += detgy*metric_stencil[0][ii][0].gammaUU[1][2];
+
+    // Interpolate zx, zy, zz from vvv to vvc centering for A_z
+    const double detgz = metric_stencil[ii][0][0].lapse*metric_stencil[ii][0][0].sqrt_detgamma;
+    gammaUU_interp[2][0] += detgz*metric_stencil[ii][0][0].gammaUU[0][2];
+    gammaUU_interp[2][1] += detgz*metric_stencil[ii][0][0].gammaUU[1][2];
+    gammaUU_interp[2][2] += detgz*metric_stencil[ii][0][0].gammaUU[2][2];
+  }
+  gammaUU_interp[0][0] /= size;
+  gammaUU_interp[0][1] /= size;
+  gammaUU_interp[0][2] /= size;
+  gammaUU_interp[1][0] /= size;
+  gammaUU_interp[1][1] /= size;
+  gammaUU_interp[1][2] /= size;
+  gammaUU_interp[2][0] /= size;
+  gammaUU_interp[2][1] /= size;
+  gammaUU_interp[2][2] /= size;
 }

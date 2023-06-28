@@ -51,6 +51,14 @@ void ghl_interpolate_with_cell_centered_BSSN(
       const double phitilde,
       induction_interp_vars *restrict interp_vars);
 
+void ghl_interpolate_with_vertex_centered_ADM(
+      const metric_quantities metric_stencil[2][2][2],
+      const double Ax_stencil[3][3][3],
+      const double Ay_stencil[3][3][3],
+      const double Az_stencil[3][3][3],
+      const double phitilde,
+      induction_interp_vars *restrict interp_vars);
+
 double ghl_calculate_phitilde_rhs(
       const double dxi[3],
       const double Lorenz_damping_factor,
@@ -86,6 +94,11 @@ void ghl_ADM_cell_interp(
       const metric_quantities metric_stencil[size][size][size],
       metric_quantities *restrict metric_interp,
       double *restrict lapse_over_psi6_interp);
+
+void ghl_ADM_vertex_interp(
+      const int size,
+      const metric_quantities metric_stencil[size][size][size],
+      double gammaUU_interp[3][3]);
 
 #ifdef __cplusplus
 }

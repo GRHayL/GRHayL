@@ -331,8 +331,11 @@ jobs:
       fail-fast: false
       matrix:
         metric: [BSSN, ADM]
-        centering: [ccc]
+        centering: [ccc, vvv]
         os: [macos-11, macos-12]
+        exclude:
+          - metric: BSSN
+            centering: vvv
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -348,7 +351,7 @@ jobs:
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.metric }}_input.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output_pert.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/md5/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}.md5

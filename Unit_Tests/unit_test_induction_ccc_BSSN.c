@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen_with_check("induction_interpolation_ccc_BSSN_input.bin","rb");
+  infile = fopen_with_check("induction_interpolation_BSSN_input.bin","rb");
   key  = fread(psi,    sizeof(double), arraylength, infile);
   key  = fread(gtupxx, sizeof(double), arraylength, infile);
   key += fread(gtupxy, sizeof(double), arraylength, infile);

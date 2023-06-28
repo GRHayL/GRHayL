@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
   fwrite(Az,       sizeof(double), arraylength, outfile);
   fclose(outfile);
 
-  outfile = fopen_with_check("induction_interpolation_ccc_ADM_input.bin", "wb");
+  outfile = fopen_with_check("induction_interpolation_ADM_input.bin", "wb");
   fwrite(gxx, sizeof(double), arraylength, outfile);
   fwrite(gxy, sizeof(double), arraylength, outfile);
   fwrite(gxz, sizeof(double), arraylength, outfile);
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
   fwrite(gzz, sizeof(double), arraylength, outfile);
   fclose(outfile);
 
-  outfile = fopen_with_check("induction_interpolation_ccc_BSSN_input.bin", "wb");
+  outfile = fopen_with_check("induction_interpolation_BSSN_input.bin", "wb");
   fwrite(psi,    sizeof(double), arraylength, outfile);
   fwrite(gtupxx, sizeof(double), arraylength, outfile);
   fwrite(gtupxy, sizeof(double), arraylength, outfile);
@@ -182,6 +182,25 @@ int main(int argc, char **argv) {
   fwrite(betax_interp, sizeof(double), arraylength, outfile);
   fwrite(betay_interp, sizeof(double), arraylength, outfile);
   fwrite(betaz_interp, sizeof(double), arraylength, outfile);
+  fwrite(alpha_Phi_minus_betaj_A_j_interp, sizeof(double), arraylength, outfile);
+  fwrite(sqrtg_Ax_interp, sizeof(double), arraylength, outfile);
+  fwrite(sqrtg_Ay_interp, sizeof(double), arraylength, outfile);
+  fwrite(sqrtg_Az_interp, sizeof(double), arraylength, outfile);
+  fclose(outfile);
+
+  // For the vertex-centered tests, we can just use the same data, but
+  // they'll represent different coordinate locations relative to the
+  // EM variables.
+  compute_vvv_ADM(
+        dirlength, lapse, betax, betay, betaz,
+        gxx, gxy, gxz, gyy, gyz, gzz,
+        phitilde, Ax, Ay, Az,
+        alpha_Phi_minus_betaj_A_j_interp,
+        sqrtg_Ax_interp,
+        sqrtg_Ay_interp,
+        sqrtg_Az_interp);
+
+  outfile = fopen_with_check("induction_interpolation_vvv_ADM_output.bin", "wb");
   fwrite(alpha_Phi_minus_betaj_A_j_interp, sizeof(double), arraylength, outfile);
   fwrite(sqrtg_Ax_interp, sizeof(double), arraylength, outfile);
   fwrite(sqrtg_Ay_interp, sizeof(double), arraylength, outfile);
@@ -263,4 +282,34 @@ int main(int argc, char **argv) {
   fwrite(sqrtg_Ay_interp, sizeof(double), arraylength, outfile);
   fwrite(sqrtg_Az_interp, sizeof(double), arraylength, outfile);
   fclose(outfile);
+
+  compute_vvv_ADM(
+        dirlength, lapse, betax, betay, betaz,
+        gxx, gxy, gxz, gyy, gyz, gzz,
+        phitilde, Ax, Ay, Az,
+        alpha_Phi_minus_betaj_A_j_interp,
+        sqrtg_Ax_interp,
+        sqrtg_Ay_interp,
+        sqrtg_Az_interp);
+
+  outfile = fopen_with_check("induction_interpolation_vvv_ADM_output_pert.bin", "wb");
+  fwrite(alpha_Phi_minus_betaj_A_j_interp, sizeof(double), arraylength, outfile);
+  fwrite(sqrtg_Ax_interp, sizeof(double), arraylength, outfile);
+  fwrite(sqrtg_Ay_interp, sizeof(double), arraylength, outfile);
+  fwrite(sqrtg_Az_interp, sizeof(double), arraylength, outfile);
+  fclose(outfile);
+
+  free(lapse); free(betax); free(betay); free(betaz);
+  free(gxx); free(gxy); free(gxz);
+  free(gyy); free(gyz); free(gzz);
+
+  free(psi);
+  free(gtupxx); free(gtupxy); free(gtupxz);
+  free(gtupyy); free(gtupyz); free(gtupzz);
+
+  free(phitilde); free(Ax); free(Ay); free(Az);
+
+  free(alpha_interp); free(betax_interp); free(betay_interp); free(betaz_interp);
+  free(alpha_Phi_minus_betaj_A_j_interp);
+  free(sqrtg_Ax_interp); free(sqrtg_Ay_interp); free(sqrtg_Az_interp);
 }

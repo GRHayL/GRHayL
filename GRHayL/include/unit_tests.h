@@ -37,6 +37,27 @@ void compute_ccc_ADM(
   double *restrict sqrtg_Ay_interp,
   double *restrict sqrtg_Az_interp);
 
+void compute_vvv_ADM(
+  const int dirlength,
+  const double *restrict lapse,
+  const double *restrict betax,
+  const double *restrict betay,
+  const double *restrict betaz,
+  const double *restrict gxx,
+  const double *restrict gxy,
+  const double *restrict gxz,
+  const double *restrict gyy,
+  const double *restrict gyz,
+  const double *restrict gzz,
+  const double *restrict phitilde,
+  const double *restrict Ax,
+  const double *restrict Ay,
+  const double *restrict Az,
+  double *restrict alpha_Phi_minus_betaj_A_j_interp,
+  double *restrict sqrtg_Ax_interp,
+  double *restrict sqrtg_Ay_interp,
+  double *restrict sqrtg_Az_interp);
+
 void compute_ccc_BSSN(
   const int dirlength,
   const double *restrict lapse,
