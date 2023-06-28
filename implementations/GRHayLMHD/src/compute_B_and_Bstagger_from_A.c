@@ -35,24 +35,22 @@ void GRHayLMHD_compute_B_and_Bstagger_from_A(CCTK_ARGUMENTS) {
 
         int index,indexim1,indexjm1,indexkm1;
 
-        const int actual_index = CCTK_GFINDEX3D(cctkGH,i,j,k);
-
-        const double Psi = psi_bssn[actual_index];
-        const double Psim3 = 1.0/(Psi*Psi*Psi);
+        const int actual_index = CCTK_GFINDEX3D(cctkGH, i, j, k);
 
         // For the lower boundaries, the following applies a "copy"
         //    boundary condition on Bi_stagger where needed.
         //    E.g., Bx_stagger(i,jmin,k) = Bx_stagger(i,jmin+1,k)
         //    We find the copy BC works better than extrapolation.
         // For the upper boundaries, we do the following copy:
-        //    E.g., Psi(imax+1,j,k)=Psi(imax,j,k)
+        //    E.g., Bx_stagger(imax+1,j,k) = Bx_stagger(imax,j,k)
+        // Note that B_stagger is densitized, so we do not divide by psi^6.
         /**************/
         /* Bx_stagger */
         /**************/
 
-        index    = CCTK_GFINDEX3D(cctkGH,i,shiftedj,shiftedk);
-        indexjm1 = CCTK_GFINDEX3D(cctkGH,i,shiftedjm1,shiftedk);
-        indexkm1 = CCTK_GFINDEX3D(cctkGH,i,shiftedj,shiftedkm1);
+        index    = CCTK_GFINDEX3D(cctkGH, i, shiftedj,   shiftedk);
+        indexjm1 = CCTK_GFINDEX3D(cctkGH, i, shiftedjm1, shiftedk);
+        indexkm1 = CCTK_GFINDEX3D(cctkGH, i, shiftedj,   shiftedkm1);
         // Set Bx_stagger = \partial_y A_z - partial_z A_y
         // "Grid" Ax(i,j,k) is actually Ax(i,j+1/2,k+1/2)
         // "Grid" Ay(i,j,k) is actually Ay(i+1/2,j,k+1/2)
@@ -61,43 +59,25 @@ void GRHayLMHD_compute_B_and_Bstagger_from_A(CCTK_ARGUMENTS) {
         //          ["Grid" Ay(i,j,k) - "Grid" Ay(i,j,k-1)]/dZ
         Bx_stagger[actual_index] = (Az[index]-Az[indexjm1])*dyi - (Ay[index]-Ay[indexkm1])*dzi;
 
-        // Now multiply Bx and Bx_stagger by 1/sqrt(gamma(i+1/2,j,k)]) = 1/sqrt(1/2 [gamma + gamma_ip1]) = exp(-6 x 1/2 [phi + phi_ip1] )
-        const int imax_minus_i = (cctk_lsh[0]-1)-i;
-        const int indexip1jk = CCTK_GFINDEX3D(cctkGH,i + ( (imax_minus_i > 0) - (0 > imax_minus_i) ),j,k);
-        CCTK_REAL Psi_ip1 = psi_bssn[indexip1jk];
-        Bx_stagger[actual_index] *= Psim3/(Psi_ip1*Psi_ip1*Psi_ip1);
-
         /**************/
         /* By_stagger */
         /**************/
 
-        index    = CCTK_GFINDEX3D(cctkGH,shiftedi,j,shiftedk);
-        indexim1 = CCTK_GFINDEX3D(cctkGH,shiftedim1,j,shiftedk);
-        indexkm1 = CCTK_GFINDEX3D(cctkGH,shiftedi,j,shiftedkm1);
+        index    = CCTK_GFINDEX3D(cctkGH, shiftedi,   j, shiftedk);
+        indexim1 = CCTK_GFINDEX3D(cctkGH, shiftedim1, j, shiftedk);
+        indexkm1 = CCTK_GFINDEX3D(cctkGH, shiftedi,   j, shiftedkm1);
         // Set By_stagger = \partial_z A_x - \partial_x A_z
         By_stagger[actual_index] = (Ax[index]-Ax[indexkm1])*dzi - (Az[index]-Az[indexim1])*dxi;
-
-        // Now multiply By and By_stagger by 1/sqrt(gamma(i,j+1/2,k)]) = 1/sqrt(1/2 [gamma + gamma_jp1]) = exp(-6 x 1/2 [phi + phi_jp1] )
-        const int jmax_minus_j = (cctk_lsh[1]-1)-j;
-        const int indexijp1k = CCTK_GFINDEX3D(cctkGH,i,j + ( (jmax_minus_j > 0) - (0 > jmax_minus_j) ),k);
-        const double Psi_jp1 = psi_bssn[indexijp1k];
-        By_stagger[actual_index] *= Psim3/(Psi_jp1*Psi_jp1*Psi_jp1);
 
         /**************/
         /* Bz_stagger */
         /**************/
 
-        index    = CCTK_GFINDEX3D(cctkGH,shiftedi,shiftedj,k);
-        indexim1 = CCTK_GFINDEX3D(cctkGH,shiftedim1,shiftedj,k);
-        indexjm1 = CCTK_GFINDEX3D(cctkGH,shiftedi,shiftedjm1,k);
+        index    = CCTK_GFINDEX3D(cctkGH,shiftedi,   shiftedj,   k);
+        indexim1 = CCTK_GFINDEX3D(cctkGH,shiftedim1, shiftedj,   k);
+        indexjm1 = CCTK_GFINDEX3D(cctkGH,shiftedi,   shiftedjm1, k);
         // Set Bz_stagger = \partial_x A_y - \partial_y A_x
         Bz_stagger[actual_index] = (Ay[index]-Ay[indexim1])*dxi - (Ax[index]-Ax[indexjm1])*dyi;
-
-        // Now multiply Bz_stagger by 1/sqrt(gamma(i,j,k+1/2)]) = 1/sqrt(1/2 [gamma + gamma_kp1]) = exp(-6 x 1/2 [phi + phi_kp1] )
-        const int kmax_minus_k = (cctk_lsh[2]-1)-k;
-        const int indexijkp1 = CCTK_GFINDEX3D(cctkGH,i,j,k + ( (kmax_minus_k > 0) - (0 > kmax_minus_k) ));
-        const double Psi_kp1 = psi_bssn[indexijkp1];
-        Bz_stagger[actual_index] *= Psim3/(Psi_kp1*Psi_kp1*Psi_kp1);
       }
     }
   }
@@ -118,7 +98,14 @@ void GRHayLMHD_compute_B_and_Bstagger_from_A(CCTK_ARGUMENTS) {
 
         int index,indexim1,indexjm1,indexkm1;
 
-        const int actual_index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+        const int actual_index = CCTK_GFINDEX3D(cctkGH, i, j, k);
+
+        // Unlike B_stagger, B_center is undensitized. Therefore, we
+        // need to divide by psi^6 = \sqrt{gamma}
+        const double sqrt_detgamma = sqrt(fabs(
+                gxx[actual_index] * (gyy[actual_index]*gzz[actual_index] - gyz[actual_index]*gyz[actual_index])
+              + gxy[actual_index] * (gyz[actual_index]*gxz[actual_index] - gxy[actual_index]*gzz[actual_index])
+              + gxz[actual_index] * (gxy[actual_index]*gyz[actual_index] - gyy[actual_index]*gxz[actual_index])));
 
         // For the lower boundaries, the following applies a "copy"
         //    boundary condition on Bi and Bi_stagger where needed.
@@ -127,29 +114,29 @@ void GRHayLMHD_compute_B_and_Bstagger_from_A(CCTK_ARGUMENTS) {
         /*************/
         /* Bx_center */
         /*************/
-        index = CCTK_GFINDEX3D(cctkGH,shiftedi,j,k);
-        indexim1 = CCTK_GFINDEX3D(cctkGH,shiftedim1,j,k);
+        index = CCTK_GFINDEX3D(cctkGH, shiftedi, j, k);
+        indexim1 = CCTK_GFINDEX3D(cctkGH, shiftedim1, j, k);
         // Set Bx_center = 0.5 ( Bx_stagger + Bx_stagger_im1 )
         // "Grid" Bx_stagger(i,j,k) is actually Bx_stagger(i+1/2,j,k)
-        Bx_center[actual_index] = 0.5 * ( Bx_stagger[index] + Bx_stagger[indexim1] );
+        Bx_center[actual_index] = 0.5 * ( Bx_stagger[index] + Bx_stagger[indexim1] )/sqrt_detgamma;
 
         /*************/
         /* By_center */
         /*************/
-        index = CCTK_GFINDEX3D(cctkGH,i,shiftedj,k);
-        indexjm1 = CCTK_GFINDEX3D(cctkGH,i,shiftedjm1,k);
+        index = CCTK_GFINDEX3D(cctkGH, i, shiftedj, k);
+        indexjm1 = CCTK_GFINDEX3D(cctkGH, i, shiftedjm1, k);
         // Set By_center = 0.5 ( By_stagger + By_stagger_im1 )
         // "Grid" By_stagger(i,j,k) is actually By_stagger(i,j+1/2,k)
-        By_center[actual_index] = 0.5 * ( By_stagger[index] + By_stagger[indexjm1] );
+        By_center[actual_index] = 0.5 * ( By_stagger[index] + By_stagger[indexjm1] )/sqrt_detgamma;
 
         /*************/
         /* Bz_center */
         /*************/
-        index = CCTK_GFINDEX3D(cctkGH,i,j,shiftedk);
-        indexkm1 = CCTK_GFINDEX3D(cctkGH,i,j,shiftedkm1);
+        index = CCTK_GFINDEX3D(cctkGH, i, j, shiftedk);
+        indexkm1 = CCTK_GFINDEX3D(cctkGH, i, j, shiftedkm1);
         // Set Bz_center = 0.5 ( Bz_stagger + Bz_stagger_im1 )
         // "Grid" Bz_stagger(i,j,k) is actually Bz_stagger(i,j+1/2,k)
-        Bz_center[actual_index] = 0.5 * ( Bz_stagger[index] + Bz_stagger[indexkm1] );
+        Bz_center[actual_index] = 0.5 * ( Bz_stagger[index] + Bz_stagger[indexkm1] )/sqrt_detgamma;
       }
     }
   }

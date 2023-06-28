@@ -13,7 +13,7 @@
  * Outputs     : return          - returns right-hand side calculation for A_i
  *
  */
-double ghl_HLL_2D_flux(const double psi6, const HLL_2D_vars *restrict vars) {
+double ghl_HLL_2D_flux_with_Btilde(const HLL_2D_vars *restrict vars) {
 
   const double c1_sum = vars->c1_min+vars->c1_max;
   const double c2_sum = vars->c2_min+vars->c2_max;
@@ -42,10 +42,10 @@ double ghl_HLL_2D_flux(const double psi6, const HLL_2D_vars *restrict vars) {
   const double A3_rhs_ll = vars->v1ll*vars->B2l - vars->v2ll*vars->B1l;
 
   /* Using Eq. 44 gives the final final RHS value: */
-  return psi6*(B1term - B2term
-              + ( vars->c2_max*vars->c1_max*A3_rhs_ll
-                + vars->c2_min*vars->c1_max*A3_rhs_lr
-                + vars->c2_max*vars->c1_min*A3_rhs_rl
-                + vars->c2_min*vars->c1_min*A3_rhs_rr)
-                /(c2_sum*c1_sum));
+  return B1term - B2term
+         + ( vars->c2_max*vars->c1_max*A3_rhs_ll
+           + vars->c2_min*vars->c1_max*A3_rhs_lr
+           + vars->c2_max*vars->c1_min*A3_rhs_rl
+           + vars->c2_min*vars->c1_min*A3_rhs_rr)
+           /(c2_sum*c1_sum);
 }

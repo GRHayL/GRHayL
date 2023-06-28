@@ -137,7 +137,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
    * ==========================
    ******************************************/
   flux_dir=2;
-  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Az_rhs);
+  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, cmin, cmax, Az_rhs);
 
   /*
      Here we perform reconstructions in preparation for computing the A_i RHS. We aim to compute
@@ -189,7 +189,7 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
   flux_dir=0;
   // cmin/max could be done internally using the same indices as v and B if all c var pointers were collected into
   // single array
-  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ax_rhs);
+  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, cmin, cmax, Ax_rhs);
 
   /*
      Here we perform reconstructions in preparation for computing the A_i RHS. We aim to compute
@@ -220,5 +220,5 @@ void GRHayLMHD_evaluate_MHD_rhs(CCTK_ARGUMENTS) {
    * ==========================
    ******************************************/
   flux_dir=1;
-  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, phi_bssn, cmin, cmax, Ay_rhs);
+  GRHayLMHD_A_flux_rhs(cctkGH, flux_dir, out_prims_r, out_prims_l, cmin, cmax, Ay_rhs);
 }

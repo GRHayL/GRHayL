@@ -53,8 +53,6 @@ int main(int argc, char **argv) {
   const double lrmax        = log(test_rho_max);
   const double dlr          = (lrmax - lrmin)/(npoints-1);
 
-  char filename[100];
-
   // Allocate memory for the metrics
   double *gxx = (double*) malloc(sizeof(double)*arraylength);
   double *gxy = (double*) malloc(sizeof(double)*arraylength);

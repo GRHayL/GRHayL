@@ -9,15 +9,6 @@ USES INCLUDE: GRHayLib.h
 
 #########################################################
 
-# BSSN-based quantities, computed from ADM quantities
-CCTK_REAL BSSN_quantities type = GF TAGS='prolongation="none" Checkpoint="no"'
-{
-   phi_bssn, psi_bssn
-   gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz
-} "BSSN quantities, computed from ADM quantities"
-
-#########################################################
-
 # Primitive variables
 # The variables rho_b and pressure are identical to the HydroBase variables. However,
 # GRHayL uses the velocity v^i = u^i/u^0, while HydroBase uses the Valencia velocity, so
