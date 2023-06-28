@@ -7,7 +7,6 @@ SRCS = A_flux_rhs.c                        \
        compute_metric_derivs.c             \
        compute_Tmunu.c                     \
        conservs_to_prims.c                 \
-       convert_ADM_to_BSSN.c               \
        convert_HydroBase_to_GRHayLMHD.c    \
        convert_GRHayLMHD_to_HydroBase.c    \
        evaluate_MHD_rhs.c                  \
@@ -20,4 +19,5 @@ SRCS = A_flux_rhs.c                        \
        prims_to_conservs.c                 \
        reconstruction_loop.c               \
        set_gz_symmetries.c                 \
-       symmetry_gzs_staggered.c
+       symmetry_gzs_staggered.c            \
+       sync.c

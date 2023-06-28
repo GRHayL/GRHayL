@@ -17,8 +17,6 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
   double *sqrtg_Ay_interp = vyl;
   double *sqrtg_Az_interp = vzl;
 
-  CCTK_REAL dxi[3] = { 1.0/CCTK_DELTA_SPACE(0), 1.0/CCTK_DELTA_SPACE(1), 1.0/CCTK_DELTA_SPACE(2) };
-
   /* Compute \partial_t psi6phi = -\partial_i (  \alpha psi^6 A^i - psi6phi \beta^i)
    *    (Eq 13 of http://arxiv.org/pdf/1110.4633.pdf), using Lorenz gauge.
    * Note that the RHS consists of a shift advection term on psi6phi and
@@ -60,7 +58,6 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
         //    [ RHS1x(i+1,j+1/2,k+1/2) - RHS1x(i,j+1/2,k+1/2) ]/dX.
         // First bring gtup's, psi, and alpha to (i,j+1/2,k+1/2):
         metric_quantities metric_stencil[2][2][2];
-        double psi_stencil[2][2][2];
         double Ax_stencil[3][3][3];
         double Ay_stencil[3][3][3];
         double Az_stencil[3][3][3];
@@ -71,17 +68,12 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
           for(int itery=0; itery<2; itery++)
             for(int iterx=0; iterx<2; iterx++) {
               const int ind = CCTK_GFINDEX3D(cctkGH,i+iterx,j+itery,k+iterz);
-              metric_stencil[iterz][itery][iterx].lapse          = alp[ind];
-              metric_stencil[iterz][itery][iterx].betaU[0]       = betax[ind];
-              metric_stencil[iterz][itery][iterx].betaU[1]       = betay[ind];
-              metric_stencil[iterz][itery][iterx].betaU[2]       = betaz[ind];
-              metric_stencil[iterz][itery][iterx].gammaUU[0][0]  = gtupxx[ind];
-              metric_stencil[iterz][itery][iterx].gammaUU[0][1]  = gtupxy[ind];
-              metric_stencil[iterz][itery][iterx].gammaUU[0][2]  = gtupxz[ind];
-              metric_stencil[iterz][itery][iterx].gammaUU[1][1]  = gtupyy[ind];
-              metric_stencil[iterz][itery][iterx].gammaUU[1][2]  = gtupyz[ind];
-              metric_stencil[iterz][itery][iterx].gammaUU[2][2]  = gtupzz[ind];
-              psi_stencil[iterz][itery][iterx] = psi_bssn[ind];
+            
+              ghl_initialize_metric(
+                    alp[ind], betax[ind], betay[ind], betaz[ind], 
+                    gxx[ind], gxy[ind], gxz[ind],
+                    gyy[ind], gyz[ind], gzz[ind],
+                    &metric_stencil[iterz][itery][iterx]);
         }
         // A_x needs a stencil s.t. interp_limits={ 0,1,-1,1,-1,1}.
         // A_y needs a stencil s.t. interp_limits={-1,1, 0,1,-1,1}.
@@ -109,7 +101,7 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
 //          gauge_vars.A_z[iter1+1][0][iter2+1] = in_vars[A_ZI][CCTK_GFINDEX3D(cctkGH, i+iter2,     j-1, k+iter1)]; // { (0,1),    -1, (0,1)}
 //        }
 
-        ghl_interpolate_with_cell_centered_BSSN(metric_stencil, psi_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
+        ghl_interpolate_with_cell_centered_ADM(metric_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde[index], &interp_vars);
 
         alpha_interp[index] = interp_vars.alpha;
         sqrtg_Ax_interp[index] = interp_vars.sqrtg_Ai[0];
@@ -123,6 +115,8 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
     }
   }
 
+  const CCTK_REAL dxi[3] = { 1.0/CCTK_DELTA_SPACE(0), 1.0/CCTK_DELTA_SPACE(1), 1.0/CCTK_DELTA_SPACE(2) };
+
 #pragma omp parallel for
   for(int k=kmin; k<kmax; k++) {
     for(int j=jmin; j<jmax; j++) {
@@ -135,7 +129,7 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
         Ay_rhs[index] += dxi[1]*(alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i,j-1,k)] - alpha_Phi_minus_betaj_A_j_interp[index]);
         Az_rhs[index] += dxi[2]*(alpha_Phi_minus_betaj_A_j_interp[CCTK_GFINDEX3D(cctkGH,i,j,k-1)] - alpha_Phi_minus_betaj_A_j_interp[index]);
     
-        double betax[5], betay[5], betaz[5];
+        double betax_stencil[5], betay_stencil[5], betaz_stencil[5];
         double phitilde_stencil[3][5], sqrtg_Ai_stencil[3][2];
     
         sqrtg_Ai_stencil[0][0] = sqrtg_Ax_interp[index];
@@ -150,15 +144,14 @@ void GRHayLMHD_evaluate_phitilde_and_A_gauge_rhs(CCTK_ARGUMENTS) {
           const int indexx = CCTK_GFINDEX3D(cctkGH,i+iter,j,     k     );
           const int indexy = CCTK_GFINDEX3D(cctkGH,i,     j+iter,k     );
           const int indexz = CCTK_GFINDEX3D(cctkGH,i,     j,     k+iter);
-          betax[iter+2] = betax[indexx];
-          betay[iter+2] = betay[indexy];
-          betaz[iter+2] = betaz[indexz];
+          betax_stencil[iter+2] = betax_interp[indexx];
+          betay_stencil[iter+2] = betay_interp[indexy];
+          betaz_stencil[iter+2] = betaz_interp[indexz];
           phitilde_stencil[0][iter+2] = phitilde[indexx];
           phitilde_stencil[1][iter+2] = phitilde[indexy];
           phitilde_stencil[2][iter+2] = phitilde[indexz];
         }
-        phitilde_rhs[index] += ghl_calculate_phitilde_rhs(dxi, ghl_params->Lorenz_damping_factor, alpha_interp[index], betax, betay, betaz, sqrtg_Ai_stencil, phitilde_stencil);
-    
+        phitilde_rhs[index] += ghl_calculate_phitilde_rhs(dxi, ghl_params->Lorenz_damping_factor, alpha_interp[index], betax_stencil, betay_stencil, betaz_stencil, sqrtg_Ai_stencil, phitilde_stencil);
       }
     }
   }

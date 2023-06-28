@@ -30,8 +30,11 @@ typedef struct induction_interp_vars {
 extern "C" {
 #endif
 
-double ghl_HLL_2D_flux(
+double ghl_HLL_2D_flux_with_B(
       const double psi6,
+      const HLL_2D_vars *restrict vars);
+
+double ghl_HLL_2D_flux_with_Btilde(
       const HLL_2D_vars *restrict vars);
 
 void ghl_interpolate_with_cell_centered_ADM(

@@ -126,7 +126,6 @@ void GRHayLMHD_A_flux_rhs(
       const int A_dir,
       /*const*/ CCTK_REAL **out_prims_r,
       /*const*/ CCTK_REAL **out_prims_l,
-      const CCTK_REAL *restrict phi_bssn,
       /*const*/ CCTK_REAL **cmin,
       /*const*/ CCTK_REAL **cmax,
       CCTK_REAL *restrict A_rhs);

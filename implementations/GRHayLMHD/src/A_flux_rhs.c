@@ -5,7 +5,6 @@ void GRHayLMHD_A_flux_rhs(
       const int flux_dir,
       /*const*/ double **in_prims_r,
       /*const*/ double **in_prims_l,
-      const double *restrict phi_bssn,
       /*const*/ double **cmin,
       /*const*/ double **cmax,
       double *restrict A_rhs) {
@@ -51,27 +50,6 @@ void GRHayLMHD_A_flux_rhs(
         // With the interpolate_to_face macro, we first interpolate to the points
         // (i, j+1/2, k-1), (i, j+1/2, k), (i, j+1/2, k+1), (i, j+1/2, k+2) and use
         // those to compute phi at (i, j+1/2, k+1/2).
-        const double psi6 =
-          exp(6.0*interpolate_to_face(
-            interpolate_to_face(phi_bssn[CCTK_GFINDEX3D(cctkGH,i-!xdir  , j-xdir  -zdir,   k-!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i        , j       -zdir,   k-!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i+!xdir  , j+xdir  -zdir,   k-!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i+2*!xdir, j+2*xdir-zdir,   k-!zdir)]),
-
-            interpolate_to_face(phi_bssn[CCTK_GFINDEX3D(cctkGH,i-!xdir,   j-xdir,          k      )],
-                phi_bssn[index],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i+!xdir,   j+xdir,          k      )],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i+2*!xdir, j+2*xdir,        k      )]),
-
-            interpolate_to_face(phi_bssn[CCTK_GFINDEX3D(cctkGH,i-!xdir,   j-xdir  +zdir,   k+!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i,         j       +zdir,   k+!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i+!xdir,   j+xdir  +zdir,   k+!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i+2*!xdir, j+2*xdir+zdir,   k+!zdir)]),
-
-            interpolate_to_face(phi_bssn[CCTK_GFINDEX3D(cctkGH,i-!xdir,   j-xdir  +2*zdir, k+2*!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i,         j       +2*zdir, k+2*!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i+!xdir,   j+xdir  +2*zdir, k+2*!zdir)],
-                phi_bssn[CCTK_GFINDEX3D(cctkGH,i+2*!xdir, j+2*xdir+2*zdir, k+2*!zdir)])));
 
         vars.v1rr = in_prims_r[VXR+dir1_offset][index_v];
         vars.v1rl = in_prims_l[VXR+dir1_offset][index_v];
@@ -99,7 +77,7 @@ void GRHayLMHD_A_flux_rhs(
         vars.c2_min = cmin[dir2_offset][index_B1];
         vars.c2_max = cmax[dir2_offset][index_B1];
 
-        A_rhs[index] = ghl_HLL_2D_flux(psi6, &vars);
+        A_rhs[index] = ghl_HLL_2D_flux_with_Btilde(&vars);
       }
     }
   }
