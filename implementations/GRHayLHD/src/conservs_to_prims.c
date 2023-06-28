@@ -160,7 +160,7 @@ void GRHayLHD_conserv_to_prims(CCTK_ARGUMENTS) {
                           prims.vU[0], prims.vU[1], prims.vU[2]);
             }
           } else {
-            CCTK_VINFO("Con2Prim and Font fix failed!");
+            CCTK_VINFO("Con2Prim failed!");
             CCTK_VINFO("diagnostics->failure_checker = %d rho_* = %e, ~tau = %e, ~S_i = %e %e %e, gij = %e %e %e %e %e %e, Psi6 = %e",
                     diagnostics.failure_checker, cons_orig.rho, cons_orig.tau, cons_orig.SD[0], cons_orig.SD[1], cons_orig.SD[2],
                     ADM_metric.gammaDD[0][0], ADM_metric.gammaDD[0][1], ADM_metric.gammaDD[0][2], ADM_metric.gammaDD[1][1], ADM_metric.gammaDD[1][2], ADM_metric.gammaDD[2][2], ADM_metric.sqrt_detgamma);

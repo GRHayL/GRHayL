@@ -87,7 +87,6 @@ CCTK_REAL grmhd_cmin_cmax_temps type = GF TAGS='prolongation="none" Checkpoint="
   cmin_z, cmax_z
 } "Store min and max characteristic speeds in all three directions."
 
-
 #Temporary variables for flux computation
 CCTK_REAL grmhd_flux_temps type = GF TAGS='prolongation="none" Checkpoint="no"'
 {

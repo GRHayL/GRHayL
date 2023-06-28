@@ -4,9 +4,7 @@
  * Description : Computes magnetic quantities b^0, b^i and b^2 (see Eqs. 23
                  and 24 in https://arxiv.org/abs/astro-ph/0503420).
  *
- * Inputs      : params         - ghl_parameters struct with parameters
- *                                for the simulation
- *             : metric         - metric_quantities struct with data for
+ * Inputs      : metric         - metric_quantities struct with data for
  *                                the gridpoint of interest
  *             : prims          - primitive_quantities struct with data
  *                                for the gridpoint of interest
