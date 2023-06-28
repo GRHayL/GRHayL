@@ -177,7 +177,6 @@ void ghl_ADM_cell_interp(
       const int size,
       const metric_quantities metric_stencil[size][size][size],
       metric_quantities *restrict metric_interp,
-      double detg_interp[3],
       double *restrict lapse_over_psi6_interp) {
 
   metric_interp->lapse         = 0.0;
@@ -193,30 +192,27 @@ void ghl_ADM_cell_interp(
   metric_interp->gammaUU[2][0] = 0.0;
   metric_interp->gammaUU[2][1] = 0.0;
   metric_interp->gammaUU[2][2] = 0.0;
-  detg_interp[0]               = 0.0;
-  detg_interp[1]               = 0.0;
-  detg_interp[2]               = 0.0;
   *lapse_over_psi6_interp      = 0.0;
 
   for(int kk=0; kk<size; kk++) {
     for(int jj=0; jj<size; jj++) {
       // Interpolate xx, xy, xz to (i, j+1/2, k+1/2) for A_x
-      metric_interp->gammaUU[0][0] += metric_stencil[kk][jj][0].gammaUU[0][0];
-      metric_interp->gammaUU[0][1] += metric_stencil[kk][jj][0].gammaUU[0][1];
-      metric_interp->gammaUU[0][2] += metric_stencil[kk][jj][0].gammaUU[0][2];
-      detg_interp[0]               += metric_stencil[kk][jj][0].lapse*metric_stencil[kk][jj][0].sqrt_detgamma;
+      const double detgx = metric_stencil[kk][jj][0].lapse*metric_stencil[kk][jj][0].sqrt_detgamma;
+      metric_interp->gammaUU[0][0] += detgx*metric_stencil[kk][jj][0].gammaUU[0][0];
+      metric_interp->gammaUU[0][1] += detgx*metric_stencil[kk][jj][0].gammaUU[0][1];
+      metric_interp->gammaUU[0][2] += detgx*metric_stencil[kk][jj][0].gammaUU[0][2];
 
       // Interpolate yx, yy, yz to (i+1/2, j, k+1/2) for A_y
-      metric_interp->gammaUU[1][0] += metric_stencil[kk][0][jj].gammaUU[0][1];
-      metric_interp->gammaUU[1][1] += metric_stencil[kk][0][jj].gammaUU[1][1];
-      metric_interp->gammaUU[1][2] += metric_stencil[kk][0][jj].gammaUU[1][2];
-      detg_interp[1]               += metric_stencil[kk][0][jj].lapse*metric_stencil[kk][0][jj].sqrt_detgamma;
+      const double detgy = metric_stencil[kk][0][jj].lapse*metric_stencil[kk][0][jj].sqrt_detgamma;
+      metric_interp->gammaUU[1][0] += detgy*metric_stencil[kk][0][jj].gammaUU[0][1];
+      metric_interp->gammaUU[1][1] += detgy*metric_stencil[kk][0][jj].gammaUU[1][1];
+      metric_interp->gammaUU[1][2] += detgy*metric_stencil[kk][0][jj].gammaUU[1][2];
 
       // Interpolate zx, zy, zz to (i+1/2, j+1/2, k) for A_z
-      metric_interp->gammaUU[2][0] += metric_stencil[0][kk][jj].gammaUU[0][2];
-      metric_interp->gammaUU[2][1] += metric_stencil[0][kk][jj].gammaUU[1][2];
-      metric_interp->gammaUU[2][2] += metric_stencil[0][kk][jj].gammaUU[2][2];
-      detg_interp[2]               += metric_stencil[0][kk][jj].lapse*metric_stencil[0][kk][jj].sqrt_detgamma;
+      const double detgz = metric_stencil[0][kk][jj].lapse*metric_stencil[0][kk][jj].sqrt_detgamma;
+      metric_interp->gammaUU[2][0] += detgz*metric_stencil[0][kk][jj].gammaUU[0][2];
+      metric_interp->gammaUU[2][1] += detgz*metric_stencil[0][kk][jj].gammaUU[1][2];
+      metric_interp->gammaUU[2][2] += detgz*metric_stencil[0][kk][jj].gammaUU[2][2];
 
       for(int ii=0; ii<size; ii++) {
         metric_interp->lapse    += metric_stencil[kk][jj][ii].lapse;
@@ -244,7 +240,4 @@ void ghl_ADM_cell_interp(
   metric_interp->gammaUU[2][0] /= sum_2D;
   metric_interp->gammaUU[2][1] /= sum_2D;
   metric_interp->gammaUU[2][2] /= sum_2D;
-  detg_interp[0]               /= sum_2D;
-  detg_interp[1]               /= sum_2D;
-  detg_interp[2]               /= sum_2D;
 }

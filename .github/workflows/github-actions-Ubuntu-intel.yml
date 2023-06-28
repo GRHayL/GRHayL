@@ -352,3 +352,39 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'intel'
+
+  induction-interpolators:
+    strategy:
+      fail-fast: false
+      matrix:
+        metric: [BSSN, ADM]
+        centering: [ccc]
+        os: [ubuntu-22.04, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'intel'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'intel'
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output_pert.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/md5/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}.md5
+          md5sum -c induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}.md5
+      - name: Run interpolation test using ${{ matrix.metric }} metric with ${{ matrix.centering }}-centering
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
+          ./test/unit_test_induction_${{ matrix.centering }}_${{ matrix.metric }}
+      - name: Generate coverage report
+        uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'intel'

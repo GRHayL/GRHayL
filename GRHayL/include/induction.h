@@ -34,6 +34,14 @@ double ghl_HLL_2D_flux(
       const double psi6,
       const HLL_2D_vars *restrict vars);
 
+void ghl_interpolate_with_cell_centered_ADM(
+      const metric_quantities metric_stencil[2][2][2],
+      const double Ax_stencil[3][3][3],
+      const double Ay_stencil[3][3][3],
+      const double Az_stencil[3][3][3],
+      const double phitilde,
+      induction_interp_vars *restrict interp_vars);
+
 void ghl_interpolate_with_cell_centered_BSSN(
       const metric_quantities metric[2][2][2],
       const double psi_stencil[2][2][2],
@@ -77,7 +85,6 @@ void ghl_ADM_cell_interp(
       const int size,
       const metric_quantities metric_stencil[size][size][size],
       metric_quantities *restrict metric_interp,
-      double detg_interp[3],
       double *restrict lapse_over_psi6_interp);
 
 #ifdef __cplusplus

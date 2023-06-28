@@ -12,9 +12,8 @@
  *                                 values for use in
  *
  */
-void ghl_interpolate_with_cell_centered_BSSN(
+void ghl_interpolate_with_cell_centered_ADM(
       const metric_quantities metric_stencil[2][2][2],
-      const double psi_stencil[2][2][2],
       const double Ax_stencil[3][3][3],
       const double Ay_stencil[3][3][3],
       const double Az_stencil[3][3][3],
@@ -41,12 +40,13 @@ void ghl_interpolate_with_cell_centered_BSSN(
        A_x:      (i,     j+1/2, k+1/2)
        A_y:      (i+1/2, j,     k+1/2)
        A_z:      (i+1/2, j+1/2, k    )
-     For metric quantities, we use ghl_BSSN_cell_interp(), which computes most of the needed quantities.
+     For metric quantities, we use ghl_ADM_cell_interp(), which computes most of the needed quantities.
      It interpolates (via averaging) the lapse and shift to phitilde's location. The metric
      is interpolated to 3 different points:
        gammaUU[0][i] is at A_x's location
        gammaUU[1][i] is at A_y's location
        gammaUU[2][i] is at A_z's location
+     Note that we actually store detg*gammaUU to reduce the memory usage.
 
      Similarly, the function ghl_A_i_avg() interpolates A_i to these points, storing the interpolated
      data in the 4 arrays A_to_phitilde, A_to_Ax, A_to_Ay, and A_to_Az.
@@ -56,8 +56,8 @@ void ghl_interpolate_with_cell_centered_BSSN(
      have an odd stencil.
   */
   metric_quantities metric_interp;
-  double lapse_psi2_interp[3], lapse_over_psi6_interp;
-  ghl_BSSN_cell_interp(2, metric_stencil, psi_stencil, &metric_interp, lapse_psi2_interp, &lapse_over_psi6_interp);
+  double lapse_over_psi6_interp;
+  ghl_ADM_cell_interp(2, metric_stencil, &metric_interp, &lapse_over_psi6_interp);
 
   double A_to_phitilde[3], A_to_Ax[3], A_to_Ay[3], A_to_Az[3];
   ghl_A_i_avg(3, Ax_stencil, Ay_stencil, Az_stencil, A_to_phitilde, A_to_Ax, A_to_Ay, A_to_Az);
@@ -69,30 +69,26 @@ void ghl_interpolate_with_cell_centered_BSSN(
   interp_vars->betai[2] = metric_interp.betaU[2];
 
   // A^x term (interpolated to (i, j+1/2, k+1/2) )
-  // \alpha \sqrt{\gamma} A^x = \alpha psi^6 A^x (RHS of \partial_i psi6phi)
-  // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  interp_vars->sqrtg_Ai[0] = lapse_psi2_interp[0]*
-                                     ( metric_interp.gammaUU[0][0]*A_to_Ax[0]
-                                     + metric_interp.gammaUU[0][1]*A_to_Ax[1]
-                                     + metric_interp.gammaUU[0][2]*A_to_Ax[2] );
+  // \sqrt{-g} A^x = \alpha \sqrt{\gamma} A^x (RHS of \partial_i psi6phi)
+  interp_vars->sqrtg_Ai[0] = metric_interp.gammaUU[0][0]*A_to_Ax[0]
+                           + metric_interp.gammaUU[0][1]*A_to_Ax[1]
+                           + metric_interp.gammaUU[0][2]*A_to_Ax[2];
 
   // A^y term (interpolated to (i+1/2, j, k+1/2) )
-  // \alpha \sqrt{\gamma} A^y = \alpha psi^6 A^y (RHS of \partial_i psi6phi)
-  // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  interp_vars->sqrtg_Ai[1] = lapse_psi2_interp[1]*
-                                     ( metric_interp.gammaUU[1][0]*A_to_Ay[0]
-                                     + metric_interp.gammaUU[1][1]*A_to_Ay[1]
-                                     + metric_interp.gammaUU[1][2]*A_to_Ay[2] );
+  // \sqrt{-g} A^y = \alpha \sqrt{\gamma} A^y (RHS of \partial_i psi6phi)
+  interp_vars->sqrtg_Ai[1] = metric_interp.gammaUU[1][0]*A_to_Ay[0]
+                           + metric_interp.gammaUU[1][1]*A_to_Ay[1]
+                           + metric_interp.gammaUU[1][2]*A_to_Ay[2];
 
   // A^z term (interpolated to (i+1/2, j+1/2, k) )
-  // \alpha \sqrt{\gamma} A^z = \alpha psi^6 A^z (RHS of \partial_i psi6phi)
-  // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.
-  interp_vars->sqrtg_Ai[2] = lapse_psi2_interp[2]*
-                                     ( metric_interp.gammaUU[2][0]*A_to_Az[0]
-                                     + metric_interp.gammaUU[2][1]*A_to_Az[1]
-                                     + metric_interp.gammaUU[2][2]*A_to_Az[2] );
+  // \sqrt{-g} A^z = \alpha \sqrt{\gamma} A^z (RHS of \partial_i psi6phi)
+  interp_vars->sqrtg_Ai[2] = metric_interp.gammaUU[2][0]*A_to_Az[0]
+                           + metric_interp.gammaUU[2][1]*A_to_Az[1]
+                           + metric_interp.gammaUU[2][2]*A_to_Az[2];
 
-  // Next set \alpha \Phi - \beta^j A_j at (i+1/2,j+1/2,k+1/2):
+  // Next set \alpha \Phi - \beta^j A_j at (i+1/2,j+1/2,k+1/2)
+  // \alpha \Phi = \alpha \tilde{\Phi} / psi^6
+  //             = \alpha \tilde{\Phi} / \sqrt{\gamma}
   interp_vars->alpha_Phi_minus_betaj_A_j = phitilde*lapse_over_psi6_interp
                                             - ( interp_vars->betai[0]*A_to_phitilde[0]
                                               + interp_vars->betai[1]*A_to_phitilde[1]
