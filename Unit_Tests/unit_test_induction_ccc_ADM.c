@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  compute_ccc_ADM(
+  ghl_test_compute_ccc_ADM(
         dirlength, lapse, betax, betay, betaz,
         gxx, gxy, gxz, gyy, gyz, gzz,
         phitilde, Ax, Ay, Az,

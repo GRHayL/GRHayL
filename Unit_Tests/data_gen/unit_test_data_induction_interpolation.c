@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
   fwrite(gtupzz, sizeof(double), arraylength, outfile);
   fclose(outfile);
 
-  compute_ccc_ADM(
+  ghl_test_compute_ccc_ADM(
         dirlength, lapse, betax, betay, betaz,
         gxx, gxy, gxz, gyy, gyz, gzz,
         phitilde, Ax, Ay, Az,
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
   fwrite(sqrtg_Az_interp, sizeof(double), arraylength, outfile);
   fclose(outfile);
 
-  compute_ccc_BSSN(
+  ghl_test_compute_ccc_BSSN(
         dirlength, lapse, betax, betay, betaz, psi,
         gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz,
         phitilde, Ax, Ay, Az,
@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
   // For the vertex-centered tests, we can just use the same data, but
   // they'll represent different coordinate locations relative to the
   // EM variables.
-  compute_vvv_ADM(
+  ghl_test_compute_vvv_ADM(
         dirlength, lapse, betax, betay, betaz,
         gxx, gxy, gxz, gyy, gyz, gzz,
         phitilde, Ax, Ay, Az,
@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
     Az[index]       *= (1.0 + randf(-1,1)*1.0e-14);
   }
 
-  compute_ccc_ADM(
+  ghl_test_compute_ccc_ADM(
         dirlength, lapse, betax, betay, betaz,
         gxx, gxy, gxz, gyy, gyz, gzz,
         phitilde, Ax, Ay, Az,
@@ -259,7 +259,7 @@ int main(int argc, char **argv) {
   fwrite(sqrtg_Az_interp, sizeof(double), arraylength, outfile);
   fclose(outfile);
 
-  compute_ccc_BSSN(
+  ghl_test_compute_ccc_BSSN(
         dirlength, lapse, betax, betay, betaz, psi,
         gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz,
         phitilde, Ax, Ay, Az,
@@ -283,7 +283,7 @@ int main(int argc, char **argv) {
   fwrite(sqrtg_Az_interp, sizeof(double), arraylength, outfile);
   fclose(outfile);
 
-  compute_vvv_ADM(
+  ghl_test_compute_vvv_ADM(
         dirlength, lapse, betax, betay, betaz,
         gxx, gxy, gxz, gyy, gyz, gzz,
         phitilde, Ax, Ay, Az,

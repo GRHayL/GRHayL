@@ -391,3 +391,38 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'intel'
+
+  induction-flux:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'intel'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'intel'
+      - name: Copy test data to working directory
+        run: |
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_B_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_B_output_pert.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_Btilde_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_Btilde_output_pert.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/md5/HLL_2D_flux.md5
+          md5sum -c HLL_2D_flux.md5
+      - name: Run test of HLL flux functions
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
+          ./test/unit_test_HLL_2D_flux
+      - name: Generate coverage report
+        uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'intel'

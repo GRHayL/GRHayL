@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  compute_ccc_BSSN(
+  ghl_test_compute_ccc_BSSN(
         dirlength, lapse, betax, betay, betaz, psi,
         gtupxx, gtupxy, gtupxz, gtupyy, gtupyz, gtupzz,
         phitilde, Ax, Ay, Az,

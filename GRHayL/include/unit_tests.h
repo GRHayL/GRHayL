@@ -10,9 +10,50 @@
 #include "nrpyeos_tabulated.h"
 #include "nrpyeos_hybrid.h"
 
-// helper functions for computing interpolations
-// for Induction gem
-void compute_ccc_ADM(
+void ghl_test_compute_A_flux_with_B(
+      const int dirlength,
+      const int A_dir,
+      const double *restrict phi_bssn,
+      const double *restrict cmin_1,
+      const double *restrict cmax_1,
+      const double *restrict cmin_2,
+      const double *restrict cmax_2,
+      const double *restrict v1rr,
+      const double *restrict v1rl,
+      const double *restrict v1lr,
+      const double *restrict v1ll,
+      const double *restrict v2rr,
+      const double *restrict v2rl,
+      const double *restrict v2lr,
+      const double *restrict v2ll,
+      const double *restrict B1r,
+      const double *restrict B1l,
+      const double *restrict B2r,
+      const double *restrict B2l,
+      double *restrict A_rhs);
+
+void ghl_test_compute_A_flux_with_Btilde(
+      const int dirlength,
+      const int A_dir,
+      const double *restrict cmin_1,
+      const double *restrict cmax_1,
+      const double *restrict cmin_2,
+      const double *restrict cmax_2,
+      const double *restrict v1rr,
+      const double *restrict v1rl,
+      const double *restrict v1lr,
+      const double *restrict v1ll,
+      const double *restrict v2rr,
+      const double *restrict v2rl,
+      const double *restrict v2lr,
+      const double *restrict v2ll,
+      const double *restrict B1r,
+      const double *restrict B1l,
+      const double *restrict B2r,
+      const double *restrict B2l,
+      double *restrict A_rhs);
+
+void ghl_test_compute_ccc_ADM(
   const int dirlength,
   const double *restrict lapse,
   const double *restrict betax,
@@ -37,7 +78,7 @@ void compute_ccc_ADM(
   double *restrict sqrtg_Ay_interp,
   double *restrict sqrtg_Az_interp);
 
-void compute_vvv_ADM(
+void ghl_test_compute_vvv_ADM(
   const int dirlength,
   const double *restrict lapse,
   const double *restrict betax,
@@ -58,7 +99,7 @@ void compute_vvv_ADM(
   double *restrict sqrtg_Ay_interp,
   double *restrict sqrtg_Az_interp);
 
-void compute_ccc_BSSN(
+void ghl_test_compute_ccc_BSSN(
   const int dirlength,
   const double *restrict lapse,
   const double *restrict betax,

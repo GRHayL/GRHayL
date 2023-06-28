@@ -1,6 +1,6 @@
 #include "unit_tests.h"
 
-void compute_ccc_ADM(
+void ghl_test_compute_ccc_ADM(
   const int dirlength,
   const double *restrict lapse,
   const double *restrict betax,

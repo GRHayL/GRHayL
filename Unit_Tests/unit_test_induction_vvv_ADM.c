@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  compute_vvv_ADM(
+  ghl_test_compute_vvv_ADM(
         dirlength, lapse, betax, betay, betaz,
         gxx, gxy, gxz, gyy, gyz, gzz,
         phitilde, Ax, Ay, Az,
