@@ -1,4 +1,6 @@
 # EOS parameters
+
+restricted:
 KEYWORD EOS_type "The type of EOS for the simulation"
 {
    ""         :: "Forbidden default; an EOS type must be specified"
@@ -146,7 +148,7 @@ CCTK_REAL T_max "Maximum temperature allowed (optional; table bounds used by def
 #########################################################
 
 # Speed limit: set maximum Lorentz factor
-CCTK_REAL W_max "Maximum Lorentz factor."
+CCTK_REAL max_lorenz_factor "Maximum Lorentz factor."
 {
  1:* :: "Positive > 1, though you'll likely have troubles far above 10."
 } 10.0

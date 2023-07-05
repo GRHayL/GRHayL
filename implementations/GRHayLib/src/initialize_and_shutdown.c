@@ -79,7 +79,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
   if (CCTK_EQUALS(EOS_type, "hybrid")) {
 
     ghl_initialize_hybrid_eos_functions_and_params(
-          W_max,
+          max_lorenz_factor,
           rho_b_atm, rho_b_min, rho_b_max,
           neos, rho_ppoly_in,
           Gamma_ppoly_in, k_ppoly0,
@@ -89,7 +89,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
 
     ghl_initialize_tabulated_eos_functions_and_params(
-          EOS_tablepath, W_max,
+          EOS_tablepath, max_lorenz_factor,
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,
           T_atm, T_min, T_max,
