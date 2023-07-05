@@ -1,5 +1,0 @@
-# IsotropicGasID interface.ccl file
-implements: IsotropicGasID
-inherits: ADMBase grid HydroBase GRHayLib
-
-USES INCLUDE HEADER: GRHayLib.h

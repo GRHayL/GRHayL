@@ -1,7 +1,0 @@
-# Interface definition for thorn TestDataIDX
-
-implements: TestDataIDX
-
-inherits: GRHayLib, HydroBase
-
-USES INCLUDE: GRHayLib.h

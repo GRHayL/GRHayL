@@ -1,5 +1,0 @@
-# Main make.code.defn file for thorn GRHayL
-
-# Source files in this directory
-SRCS = 1D_tests_hydro_data.cxx \
-       1D_tests_magnetic_data.cxx
