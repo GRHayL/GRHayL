@@ -137,4 +137,3 @@ void ghl_ppm_Ur_Ul(
   for(int var=0;var<num_vars;var++)
     ghl_flatten_and_monotonize_Ur_and_Ul(var_data[var][PLUS_0], ftilde, &varsr[var], &varsl[var]);
 }
-

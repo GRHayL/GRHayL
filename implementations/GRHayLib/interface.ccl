@@ -2,6 +2,4 @@
 
 implements: GRHayLib
 
-inherits: ADMBase, Tmunubase, HydroBase
-
 INCLUDE HEADER: GRHayLib.h in GRHayLib.h
