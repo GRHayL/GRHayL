@@ -429,19 +429,19 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double gyy, const double gyz, const double gzz,
       ghl_metric_quantities *restrict ADM_metric);
 
-void ghl_initialize_ghl_extrinsic_curvature(
+void ghl_initialize_extrinsic_curvature(
       const double Kxx, const double Kxy, const double Kxz,
       const double Kyy, const double Kyz, const double Kzz,
       ghl_extrinsic_curvature *restrict curv);
 
-void ghl_initialize_ghl_stress_energy(
+void ghl_initialize_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
       const double Txx, const double Txy, const double Txz,
       const double Tyy, const double Tyz, const double Tzz,
       ghl_stress_energy *restrict Tmunu);
 
-void ghl_return_ghl_stress_energy(
+void ghl_return_stress_energy(
       const ghl_stress_energy *restrict Tmunu,
       double *restrict Ttt, double *restrict Ttx, double *restrict Tty,
       double *restrict Ttz, double *restrict Txx, double *restrict Txy,

@@ -626,7 +626,7 @@ int main(int argc, char **argv) {
             &S_x[i], &S_y[i], &S_z[i],
             &dummy1, &dummy2);
 
-      ghl_return_ghl_stress_energy(&Tmunu,
+      ghl_return_stress_energy(&Tmunu,
              &Ttt[i], &Ttx[i], &Tty[i],
              &Ttz[i], &Txx[i], &Txy[i],
              &Txz[i], &Tyy[i], &Tyz[i],

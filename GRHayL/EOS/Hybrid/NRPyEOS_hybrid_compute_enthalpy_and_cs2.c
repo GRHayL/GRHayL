@@ -2,7 +2,7 @@
 
 /* Function    : NRPyEOS_hybrid_compute_enthalpy_and_cs2()
  * Description : Computes the enthalpy and the sound speed squared.
- * Dependencies: initialize_igm_ghl_eos_parameters_from_input()
+ * Dependencies: initialize_eos_parameters_from_input()
  *             : find_polytropic_K_and_Gamma_index()
  *
  * Inputs      : eos            -

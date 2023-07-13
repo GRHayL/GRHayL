@@ -1,6 +1,6 @@
 #include "ghl.h"
 
-/* Function    : ghl_initialize_ghl_extrinsic_curvature()
+/* Function    : ghl_initialize_extrinsic_curvature()
  * Description : Initialize the ghl_extrinsic_curvature struct from user input
  *
  * Inputs      : Kij            - value of the (i,j) component of the
@@ -10,7 +10,7 @@
  *                                the inputs
  */
 
-void ghl_initialize_ghl_extrinsic_curvature(
+void ghl_initialize_extrinsic_curvature(
       const double Kxx, const double Kxy, const double Kxz,
       const double Kyy, const double Kyz, const double Kzz,
       ghl_extrinsic_curvature *restrict curv){

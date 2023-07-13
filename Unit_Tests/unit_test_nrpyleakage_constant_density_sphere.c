@@ -112,12 +112,12 @@ void constantdensitysphere_test(
 
   // Step 4.a: Interior
   ghl_neutrino_opacities kappa_interior;
-  NRPyLeakage_compute_ghl_neutrino_opacities(eos,rho_interior,Y_e_interior,T_interior,
+  NRPyLeakage_compute_neutrino_opacities(eos,rho_interior,Y_e_interior,T_interior,
                                          &tau_in, &kappa_interior);
 
   // Step 4.b: Exterior
   ghl_neutrino_opacities kappa_exterior;
-  NRPyLeakage_compute_ghl_neutrino_opacities(eos,rho_exterior,Y_e_exterior,T_exterior,
+  NRPyLeakage_compute_neutrino_opacities(eos,rho_exterior,Y_e_exterior,T_exterior,
                                          &tau_in, &kappa_exterior);
 
   // Step 5: Print basic information

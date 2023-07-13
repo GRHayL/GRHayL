@@ -276,7 +276,7 @@ int main(int argc, char **argv) {
                          &Sx_tmp, &Sy_tmp, &Sz_tmp,
                          &ent_s_tmp, &Ye_s_tmp);
 
-    ghl_return_ghl_stress_energy(&Tmunu,
+    ghl_return_stress_energy(&Tmunu,
                          &Ttt_tmp, &Ttx_tmp,
                          &Tty_tmp, &Ttz_tmp,
                          &Txx_tmp, &Txy_tmp,
@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
                              Sx_tmp, Sy_tmp, Sz_tmp,
                              ent_s_tmp, Ye_s_tmp, &cons);
 
-    ghl_initialize_ghl_stress_energy(Ttt_tmp, Ttx_tmp,
+    ghl_initialize_stress_energy(Ttt_tmp, Ttx_tmp,
                              Tty_tmp, Ttz_tmp,
                              Txx_tmp, Txy_tmp,
                              Txz_tmp, Tyy_tmp,
@@ -325,14 +325,14 @@ int main(int argc, char **argv) {
                              S_x_pert[index], S_y_pert[index], S_z_pert[index],
                              poison, poison, &cons_pert);
 
-    ghl_initialize_ghl_stress_energy(Ttt_trusted[index], Ttx_trusted[index],
+    ghl_initialize_stress_energy(Ttt_trusted[index], Ttx_trusted[index],
                              Tty_trusted[index], Ttz_trusted[index],
                              Txx_trusted[index], Txy_trusted[index],
                              Txz_trusted[index], Tyy_trusted[index],
                              Tyz_trusted[index], Tzz_trusted[index],
                              &Tmunu_trusted);
 
-    ghl_initialize_ghl_stress_energy(Ttt_pert[index], Ttx_pert[index],
+    ghl_initialize_stress_energy(Ttt_pert[index], Ttx_pert[index],
                              Tty_pert[index], Ttz_pert[index],
                              Txx_pert[index], Txy_pert[index],
                              Txz_pert[index], Tyy_pert[index],
@@ -341,7 +341,7 @@ int main(int argc, char **argv) {
 
     ghl_validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
     ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    ghl_validate_ghl_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   ghl_info("ET_Legacy primitives-to-conservatives test has passed!\n");
   free(lapse);

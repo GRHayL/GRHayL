@@ -54,7 +54,7 @@ rhs(const ghl_eos_parameters *restrict eos,
   ghl_neutrino_optical_depths tau = {{0,0},{0,0},{0,0}};
   ghl_neutrino_opacities kappa;
   double R_source, Q_source;
-  NRPyLeakage_compute_ghl_neutrino_opacities_and_GRMHD_source_terms(eos, rho, Y_e, T,
+  NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(eos, rho, Y_e, T,
                                                                 &tau, &kappa, &R_source, &Q_source);
 
   rhs_gfs[Y_E] = R_source/rho;

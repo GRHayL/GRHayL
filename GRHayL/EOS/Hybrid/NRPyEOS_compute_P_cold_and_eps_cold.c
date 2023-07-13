@@ -2,7 +2,7 @@
 
 /* Function    : compute_P_cold_and_eps_cold()
  * Description : Computes P_cold and eps_cold.
- * Dependencies: initialize_igm_ghl_eos_parameters_from_input()
+ * Dependencies: initialize_eos_parameters_from_input()
  *             : find_polytropic_K_and_Gamma_index()
  *
  * Inputs      : P_cold         - cold pressure

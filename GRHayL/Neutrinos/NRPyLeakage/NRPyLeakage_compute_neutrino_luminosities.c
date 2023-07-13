@@ -13,7 +13,7 @@ static double EnsureFinite(const double x) {
  * https://arxiv.org/pdf/1711.00868.pdf
  * Neutrino rates: https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
  */
-void NRPyLeakage_compute_ghl_neutrino_luminosities(
+void NRPyLeakage_compute_neutrino_luminosities(
       const ghl_eos_parameters *restrict eos,
       const double alpha,
       const double gammaxx,

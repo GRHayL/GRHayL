@@ -139,7 +139,7 @@ void ghl_validate_conservatives(
       const ghl_conservative_quantities *restrict cons,
       const ghl_conservative_quantities *restrict cons_pert);
 
-void ghl_validate_ghl_stress_energy(
+void ghl_validate_stress_energy(
       const ghl_stress_energy *restrict Tmunu_trusted,
       const ghl_stress_energy *restrict Tmunu,
       const ghl_stress_energy *restrict Tmunu_pert);
@@ -183,7 +183,7 @@ void read_conservative_struct_binary(
       ghl_conservative_quantities *restrict cons,
       FILE *restrict infile);
 
-void read_ghl_stress_energy_binary(
+void read_stress_energy_binary(
       double *restrict Ttt,
       double *restrict Ttx,
       double *restrict Tty,
@@ -196,7 +196,7 @@ void read_ghl_stress_energy_binary(
       double *restrict Tzz,
       FILE *restrict outfile);
 
-void read_ghl_stress_energy_struct_binary(
+void read_stress_energy_struct_binary(
       ghl_stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 
@@ -229,7 +229,7 @@ void write_conservative_binary(
       const ghl_conservative_quantities *restrict cons,
       FILE *restrict outfile);
 
-void write_ghl_stress_energy_binary(
+void write_stress_energy_binary(
       const ghl_stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 

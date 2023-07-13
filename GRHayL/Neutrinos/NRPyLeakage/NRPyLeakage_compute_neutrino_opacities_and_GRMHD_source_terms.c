@@ -12,7 +12,7 @@ static double EnsureFinite(const double x) {
  * Compute GRMHD source terms following Ruffert et al. (1996)
  * https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
  */
-void NRPyLeakage_compute_ghl_neutrino_opacities_and_GRMHD_source_terms(
+void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,

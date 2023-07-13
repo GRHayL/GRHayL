@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
                       &prims_pert);
 
     if( validate(prims_trusted.rho, prims.rho, prims_pert.rho) )
-      ghl_error("unit_test_ghl_hybrid_Noble2D has failed for variable rho.\n"
+      ghl_error("unit_test_hybrid_Noble2D has failed for variable rho.\n"
                    "  rho trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.rho, prims.rho, prims_pert.rho,
                                                relative_error(prims_trusted.rho, prims.rho),
@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
     // input values. The pressure coming out of HARM doesn't have the accuracy to preserve the stringent accuracy requirements
     // demanded elsewhere, so this relaxes the demands on the pressure for very small values.
     if( validate_with_tolerance(prims_trusted.press, prims.press, prims_pert.press, min_rel, pressure_cutoff))
-      ghl_error("unit_test_ghl_hybrid_Noble2D has failed for variable press.\n"
+      ghl_error("unit_test_hybrid_Noble2D has failed for variable press.\n"
                    "  press trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.press, prims.press, prims_pert.press,
                                                relative_error(prims_trusted.press, prims.press),
@@ -248,28 +248,28 @@ int main(int argc, char **argv) {
     //const double eps_cutoff = pressure_cutoff/(pow(pressure_cutoff/eos.K_ppoly[0], 1.0/eos.Gamma_ppoly[0]) * (eos.Gamma_ppoly[0] - 1.0));
     const double eps_cutoff = 1.0e-11; // Above computed 1e-9, which seemed too large to make sense as a cutoff
     if( validate_with_tolerance(prims_trusted.eps, prims.eps, prims_pert.eps, min_rel, eps_cutoff))
-      ghl_error("unit_test_ghl_hybrid_Noble2D has failed for variable eps.\n"
+      ghl_error("unit_test_hybrid_Noble2D has failed for variable eps.\n"
                    "  eps trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.eps, prims.eps, prims_pert.eps,
                                                relative_error(prims_trusted.eps, prims.eps),
                                                relative_error(prims_trusted.eps, prims_pert.eps));
 
     if( validate(prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0]) )
-      ghl_error("unit_test_ghl_hybrid_Noble2D has failed for variable vx.\n"
+      ghl_error("unit_test_hybrid_Noble2D has failed for variable vx.\n"
                    "  vx trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0],
                                                relative_error(prims_trusted.vU[0], prims.vU[0]),
                                                relative_error(prims_trusted.vU[0], prims_pert.vU[0]));
 
     if(validate(prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1]))
-      ghl_error("unit_test_ghl_hybrid_Noble2D has failed for variable vy.\n"
+      ghl_error("unit_test_hybrid_Noble2D has failed for variable vy.\n"
                    "  vy trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1],
                                                relative_error(prims_trusted.vU[1], prims.vU[1]),
                                                relative_error(prims_trusted.vU[1], prims_pert.vU[1]));
 
     if( validate(prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2]) )
-      ghl_error("unit_test_ghl_hybrid_Noble2D has failed for variable vz.\n"
+      ghl_error("unit_test_hybrid_Noble2D has failed for variable vz.\n"
                    "  vz trusted %.14e computed %.14e perturbed %.14e\n"
                    "  rel.err. %.14e %.14e\n", prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2],
                                                relative_error(prims_trusted.vU[2], prims.vU[2]),

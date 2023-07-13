@@ -1,6 +1,6 @@
 #include "ghl.h"
 
-/* Function    : ghl_initialize_ghl_stress_energy()
+/* Function    : ghl_initialize_stress_energy()
  * Description : Initialize the ghl_stress_energy struct from user input
  *
  * Inputs      : Tij            - value of the (i,j) component of the
@@ -10,7 +10,7 @@
  *                                the inputs
  */
 
-void ghl_initialize_ghl_stress_energy(
+void ghl_initialize_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
       const double Txx, const double Txy, const double Txz,

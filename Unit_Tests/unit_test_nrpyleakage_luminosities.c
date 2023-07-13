@@ -65,7 +65,7 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 
       // Compute luminosities
       ghl_neutrino_luminosities lum;
-      NRPyLeakage_compute_ghl_neutrino_luminosities(eos, alpha,
+      NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
                                                 gammaxx, gammaxy, gammaxz,
                                                 gammayy, gammayz, gammazz,
                                                 rho, Y_e, T, W,
@@ -140,7 +140,7 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
 
     // Compute luminosities
     ghl_neutrino_luminosities lum;
-    NRPyLeakage_compute_ghl_neutrino_luminosities(eos, alpha,
+    NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
                                               gammaxx, gammaxy, gammaxz,
                                               gammayy, gammayz, gammazz,
                                               rho, Y_e, T, W,

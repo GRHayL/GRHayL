@@ -367,7 +367,7 @@ int main(int argc, char **argv) {
               &metric);
 
         ghl_extrinsic_curvature curv;
-        ghl_initialize_ghl_extrinsic_curvature(
+        ghl_initialize_extrinsic_curvature(
               kxx[index], kxy[index], kxz[index],
               kyy[index], kyz[index], kzz[index],
               &curv);
