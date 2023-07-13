@@ -24,7 +24,7 @@ double ghl_minmod(
   else if( (fabs(b) < fabs(a)) && (ab > 0)) return b;
   else                                      return 0.;
 
-  /* code from ChatGPT, but may not be faster  
+  /* code from ChatGPT, but may not be faster
     // calculate result
     int diff = abs(a) - abs(b);
     int cond1 = (abs(a) < abs(b)) && (ab > 0);

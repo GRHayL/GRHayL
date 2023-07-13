@@ -1,16 +1,16 @@
 #include "unit_tests.h"
 
 /*
-  In the function validate_stress_energy, the components of Tmunu are
+  In the function validate_ghl_stress_energy, the components of Tmunu are
   validated individually. In the case of failure, the code errors out
   and lists all the components that failed to be within the error
   bars of the perturbed version of the code.
 */
 
-void ghl_validate_stress_energy(
-      const stress_energy *restrict Tmunu_trusted,
-      const stress_energy *restrict Tmunu,
-      const stress_energy *restrict Tmunu_pert) {
+void ghl_validate_ghl_stress_energy(
+      const ghl_stress_energy *restrict Tmunu_trusted,
+      const ghl_stress_energy *restrict Tmunu,
+      const ghl_stress_energy *restrict Tmunu_pert) {
 
   char fail_msg[100] = "Test has failed!\n The stress-energy variable(s) which failed are ";
   int test_fail = 0;

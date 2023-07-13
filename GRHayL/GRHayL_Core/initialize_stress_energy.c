@@ -1,21 +1,21 @@
 #include "ghl.h"
 
-/* Function    : ghl_initialize_stress_energy()
- * Description : Initialize the stress_energy struct from user input
+/* Function    : ghl_initialize_ghl_stress_energy()
+ * Description : Initialize the ghl_stress_energy struct from user input
  *
  * Inputs      : Tij            - value of the (i,j) component of the
  *                                stress energy tensor T^\mu\nu
  *
- * Outputs     : Tmunu          - returns stress_energy struct containing
+ * Outputs     : Tmunu          - returns ghl_stress_energy struct containing
  *                                the inputs
  */
 
-void ghl_initialize_stress_energy(
+void ghl_initialize_ghl_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
       const double Txx, const double Txy, const double Txz,
       const double Tyy, const double Tyz, const double Tzz,
-      stress_energy *restrict Tmunu) {
+      ghl_stress_energy *restrict Tmunu) {
 
   Tmunu->T4[0][0]                   = Ttt;
   Tmunu->T4[1][1]                   = Txx;

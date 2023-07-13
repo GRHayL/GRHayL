@@ -4,15 +4,15 @@
 #include "ghl.h"
 
 // Neutrino quantities
-typedef struct neutrino_luminosities {
+typedef struct ghl_neutrino_luminosities {
   double nue, anue, nux;
-} neutrino_luminosities;
+} ghl_neutrino_luminosities;
 
-typedef struct neutrino_opacities {
+typedef struct ghl_neutrino_opacities {
   double nue[2], anue[2], nux[2];
-} neutrino_opacities;
+} ghl_neutrino_opacities;
 
-typedef neutrino_opacities neutrino_optical_depths;
+typedef ghl_neutrino_opacities ghl_neutrino_optical_depths;
 
 #include "nrpyleakage.h"
 

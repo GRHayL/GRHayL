@@ -14,7 +14,7 @@
  *             : calc_prim_guess - sets whether ghl_con2prim_multi_method() should compute
  *                                 initial guesses for the primitives; if set to 0,
  *                                 the initial guess will be whatever has been loaded into
- *                                 the primitive_quantities struct passed to ghl_con2prim_multi_method()
+ *                                 the ghl_primitive_quantities struct passed to ghl_con2prim_multi_method()
  *             : psi6threshold   - TODO: comment
  *             : Cupp_Fix        - If active, will change behavior of Noble2D which removes
  *                                 cause of most Font fixes and also change the choice of velocity

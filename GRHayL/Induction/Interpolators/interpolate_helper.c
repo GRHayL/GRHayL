@@ -24,7 +24,7 @@ void ghl_A_i_avg(
       double A_to_Ax[3],
       double A_to_Ay[3],
       double A_to_Az[3]) {
-  
+
   A_to_phitilde[0] = 0.0;
   A_to_phitilde[1] = 0.0;
   A_to_phitilde[2] = 0.0;
@@ -86,9 +86,9 @@ void ghl_A_i_avg(
 */
 void ghl_BSSN_cell_interp(
       const int size,
-      const metric_quantities metric_stencil[size][size][size],
+      const ghl_metric_quantities metric_stencil[size][size][size],
       const double psi_stencil[size][size][size],
-      metric_quantities *restrict metric_interp,
+      ghl_metric_quantities *restrict metric_interp,
       double lapse_psi2_interp[3],
       double *restrict lapse_over_psi6_interp) {
 
@@ -175,8 +175,8 @@ void ghl_BSSN_cell_interp(
 
 void ghl_ADM_cell_interp(
       const int size,
-      const metric_quantities metric_stencil[size][size][size],
-      metric_quantities *restrict metric_interp,
+      const ghl_metric_quantities metric_stencil[size][size][size],
+      ghl_metric_quantities *restrict metric_interp,
       double *restrict lapse_over_psi6_interp) {
 
   metric_interp->lapse         = 0.0;
@@ -244,7 +244,7 @@ void ghl_ADM_cell_interp(
 
 void ghl_ADM_vertex_interp(
       const int size,
-      const metric_quantities metric_stencil[size][size][size],
+      const ghl_metric_quantities metric_stencil[size][size][size],
       double gammaUU_interp[3][3]) {
 
   gammaUU_interp[0][0] = 0.0;

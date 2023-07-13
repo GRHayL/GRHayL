@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   if(key != arraylength*(8*3 + 1))
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
-  
+
   for(int k=1; k<dirlength; k++) {
     for(int j=1; j<dirlength; j++) {
       for(int i=1; i<dirlength; i++) {

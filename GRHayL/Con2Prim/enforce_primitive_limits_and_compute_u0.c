@@ -6,11 +6,11 @@
 
  * Inputs      : params         - ghl_parameters struct with parameters
  *                                for the simulation
- *             : eos            - eos_parameters struct with data for the
+ *             : eos            - ghl_eos_parameters struct with data for the
  *                                EOS of the simulation
- *             : metric         - metric_quantities struct with data for
+ *             : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
- *             : prims          - primitive_quantities struct with data
+ *             : prims          - ghl_primitive_quantities struct with data
  *                                for the gridpoint of interest
  *
  * Outputs     : prims          - returns primitives within floors and ceilings
@@ -20,9 +20,9 @@
 
 void ghl_enforce_primitive_limits_and_compute_u0(
     const ghl_parameters *restrict params,
-    const eos_parameters *restrict eos,
-    const metric_quantities *restrict ADM_metric,
-    primitive_quantities *restrict prims,
+    const ghl_eos_parameters *restrict eos,
+    const ghl_metric_quantities *restrict ADM_metric,
+    ghl_primitive_quantities *restrict prims,
     int *restrict speed_limited) {
 
   // The density floor and ceiling is always applied

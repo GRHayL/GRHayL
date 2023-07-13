@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
@@ -160,8 +160,8 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
 
     // Define the various GRHayL structs for the unit tests
-    metric_quantities ADM_metric;
-    primitive_quantities prims;
+    ghl_metric_quantities ADM_metric;
+    ghl_primitive_quantities prims;
 
     // Read initial data accompanying trusted output
     ghl_initialize_metric(lapse[i],
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
                       gyy[i], gyz[i], gzz[i],
                       &ADM_metric);
 
-    ADM_aux_quantities metric_aux;
+    ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     ghl_initialize_primitives(
@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     int failure_checker = 0;
     ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &failure_checker);
 
-    primitive_quantities prims_trusted, prims_pert;
+    ghl_primitive_quantities prims_trusted, prims_pert;
     ghl_initialize_primitives(
                       rho_b_trusted[i], press_trusted[i], eps_trusted[i],
                       vx_trusted[i], vy_trusted[i], vz_trusted[i],
@@ -223,17 +223,17 @@ int main(int argc, char **argv) {
   double P_cold = 0.0;
   ghl_hybrid_compute_P_cold(&eos, rho_test, &P_cold);
 
-  metric_quantities ADM_metric;
+  ghl_metric_quantities ADM_metric;
   ghl_initialize_metric(1.0,
                     0.0, 0.0, 0.0,
                     1.0, 0.0, 0.0,
                     1.0, 0.0, 1.0,
                     &ADM_metric);
 
-  ADM_aux_quantities metric_aux;
+  ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-  primitive_quantities prims;
+  ghl_primitive_quantities prims;
   ghl_initialize_primitives(1e-2, 1e6*P_cold, 0.0,
                         0.0, 0.0, 0.0,
                         0.0, 0.0, 0.0,

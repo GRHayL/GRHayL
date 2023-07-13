@@ -74,18 +74,18 @@
 // // Declarations:
 // double vsq_calc(const harm_aux_vars_struct *restrict harm_aux, const double W);
 
-// int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
+// int general_newton_raphson( const ghl_eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
 //                             double x[], int n,
-//                             void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict,double [], double [], double [], double [][NEWT_DIM], double *, double *, int) );
+//                             void (*funcd)(const ghl_eos_parameters *restrict, harm_aux_vars_struct *restrict,double [], double [], double [], double [][NEWT_DIM], double *, double *, int) );
 
-// void func_vsq( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,double [], double [], double [], double [][NEWT_DIM], double *f, double *df, int n);
+// void func_vsq( const ghl_eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,double [], double [], double [], double [][NEWT_DIM], double *f, double *df, int n);
 
 // double x1_of_x0(const harm_aux_vars_struct *restrict harm_aux, const double x0 ) ;
 
-// double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const double vsq, const double D) ;
-// double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq);
-// double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const double vsq, const double D);
-// int Utoprim_new_body(const eos_parameters *restrict eos,
+// double pressure_W_vsq(const ghl_eos_parameters *restrict eos, const double W, const double vsq, const double D) ;
+// double dpdW_calc_vsq(const ghl_eos_parameters *restrict eos, const double W, const double vsq);
+// double dpdvsq_calc(const ghl_eos_parameters *restrict eos, const double W, const double vsq, const double D);
+// int Utoprim_new_body(const ghl_eos_parameters *restrict eos,
 //                      const double *restrict U,
 //                      const double gcov[NDIM][NDIM],
 //                      const double gcon[NDIM][NDIM],
@@ -168,11 +168,11 @@
 // static const int WS       =10;
 // static const int numcons  =11; // D, UU, S_{x,y,z}, B^{x,y,z}, DYe, tau, DS
 
-// int con2prim_Noble2D( const eos_parameters *restrict eos,
-//                       const metric_quantities *restrict metric,
-//                       const conservative_quantities *restrict cons_undens,
-//                       primitive_quantities *restrict prims,
-//                       con2prim_diagnostics *restrict diagnostics ) {
+// int con2prim_Noble2D( const ghl_eos_parameters *restrict eos,
+//                       const ghl_metric_quantities *restrict metric,
+//                       const ghl_conservative_quantities *restrict cons_undens,
+//                       ghl_primitive_quantities *restrict prims,
+//                       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
 //   double uu = -cons_undens->tau*metric->lapse - (metric->lapm1)*cons_undens->rho +
 //     metric->betaU[0]*cons_undens->SD[0] + metric->betaU[1]*cons_undens->SD[1]  + metric->betaU[2]*cons_undens->SD[2];
@@ -261,7 +261,7 @@
 
 // **********************************************************************************/
 
-// int Utoprim_new_body( const eos_parameters *restrict eos,
+// int Utoprim_new_body( const ghl_eos_parameters *restrict eos,
 //                       const double *restrict cons,
 //                       const double gcov[NDIM][NDIM],
 //                       const double gcon[NDIM][NDIM],
@@ -523,9 +523,9 @@
 //     -- inspired in part by Num. Rec.'s routine newt();
 
 // *****************************************************************/
-// int general_newton_raphson( const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
+// int general_newton_raphson( const ghl_eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux,
 //                             double x[], int n,
-//                             void (*funcd)(const eos_parameters *restrict, harm_aux_vars_struct *restrict, double [], double [], double [],
+//                             void (*funcd)(const ghl_eos_parameters *restrict, harm_aux_vars_struct *restrict, double [], double [], double [],
 //                                           double [][NEWT_DIM], double *, double *, int) )
 // {
 //   double f, df, dx[NEWT_DIM], x_old[NEWT_DIM];
@@ -635,7 +635,7 @@
 //          n    = dimension of x[];
 // *********************************************************************************/
 
-// void func_vsq(const eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux, double x[], double dx[], double resid[],
+// void func_vsq(const ghl_eos_parameters *restrict eos, harm_aux_vars_struct *restrict harm_aux, double x[], double dx[], double resid[],
 //               double jac[][NEWT_DIM], double *f, double *df, int n)
 // {
 
@@ -741,7 +741,7 @@
 //         -- Hybrid single and piecewise polytropic equation of state;
 //         -- pressure as a function of P_cold, eps_cold, W, vsq, and D:
 // **********************************************************************/
-// double pressure_W_vsq(const eos_parameters *restrict eos, const double W, const double vsq, const double D)
+// double pressure_W_vsq(const ghl_eos_parameters *restrict eos, const double W, const double vsq, const double D)
 // {
 
 //   // Compute gamma^{-2} = 1 - v^{2} and gamma^{-1}
@@ -768,7 +768,7 @@
 
 //       -- partial derivative of pressure with respect to W;
 // **********************************************************************/
-// double dpdW_calc_vsq(const eos_parameters *restrict eos, const double W, const double vsq)
+// double dpdW_calc_vsq(const ghl_eos_parameters *restrict eos, const double W, const double vsq)
 // {
 
 //   return( (eos->Gamma_th - 1.0) * (1.0 - vsq) /  eos->Gamma_th  ) ;
@@ -782,7 +782,7 @@
 
 //       -- partial derivative of pressure with respect to vsq
 // **********************************************************************/
-// double dpdvsq_calc(const eos_parameters *restrict eos, const double W, const double vsq, const double D)
+// double dpdvsq_calc(const ghl_eos_parameters *restrict eos, const double W, const double vsq, const double D)
 // {
 
 //   // Set gamma and rho

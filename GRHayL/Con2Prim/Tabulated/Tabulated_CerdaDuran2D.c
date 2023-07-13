@@ -1,7 +1,7 @@
 #include "../harm_u2p_util.h"
 
 /* Function    : Hybrid_Noble2D()
- * Description : Unpacks the primitive_quantities struct into the variables
+ * Description : Unpacks the ghl_primitive_quantities struct into the variables
                  needed by the Newton-Rapson solver provided by HARM, then
                  repacks the  primitives. This function
                  is adapted from the HARM function provided by IllinoisGRMHD. The
@@ -9,11 +9,11 @@
 
  * Inputs      : params         - ghl_parameters struct with parameters
  *                                for the simulation
- *             : eos            - eos_parameters struct with data for the
+ *             : eos            - ghl_eos_parameters struct with data for the
  *                                EOS of the simulation
- *             : metric         - metric_quantities struct with data for
+ *             : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
- *             : cons           - conservative_quantities struct with data
+ *             : cons           - ghl_conservative_quantities struct with data
  *                                for the gridpoint of interest
  *
  * Outputs     : prims          - returns computed primitives if Newton-Rapson
@@ -23,16 +23,16 @@
  */
 
 void NR_2D_WT(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const int safe_guess,
       const double tol_x,
       const double S_squared,
       const double BdotS,
       const double B_squared,
       const double *restrict SU,
-      const conservative_quantities *restrict cons_undens,
+      const ghl_conservative_quantities *restrict cons_undens,
       double W,
-      primitive_quantities *restrict prims_guess,
+      ghl_primitive_quantities *restrict prims_guess,
       bool *restrict c2p_failed );
 
 /*****************************************************************************/
@@ -48,11 +48,11 @@ void NR_2D_WT(
 //
 // From the input quantities, we compute B_{i} and S^{i}
 int Tabulated_CerdaDuran2D(
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims_guess,
-      con2prim_diagnostics *restrict diagnostics ) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims_guess,
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   const double BU[3] = {prims_guess->BU[0] * ONE_OVER_SQRT_4PI,
                         prims_guess->BU[1] * ONE_OVER_SQRT_4PI,
@@ -90,9 +90,9 @@ int Tabulated_CerdaDuran2D(
 /*********************** CERDA-DURAN CON2PRIM FUNCTIONS **********************/
 /*****************************************************************************/
 void calc_WT_max(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double B_squared,
-      const conservative_quantities *restrict cons_undens,
+      const ghl_conservative_quantities *restrict cons_undens,
       double *restrict xmax) {
 
   // Calculate maximum values for x = (rho, T) ("safe guess" initial values)
@@ -121,12 +121,12 @@ void calc_WT_max(
 
 
 void calc_prim_from_x_2D_WT(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double BdotS,
       const double B_squared,
       const double *restrict SU,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims_guess,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims_guess,
       double *restrict x ) {
 
   // Recover the primitive variables from the scalars (W,Z)
@@ -158,11 +158,11 @@ void calc_prim_from_x_2D_WT(
 }
 
 void NR_step_2D_WT(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double S_squared,
       const double BdotS,
       const double B_squared,
-      const conservative_quantities *restrict cons_undens,
+      const ghl_conservative_quantities *restrict cons_undens,
       double *restrict x,
       double *restrict dx,
       double *restrict f ) {
@@ -264,16 +264,16 @@ void NR_step_2D_WT(
 
 
 void NR_2D_WT(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const int safe_guess,
       const double tol_x,
       const double S_squared,
       const double BdotS,
       const double B_squared,
       const double *restrict SU,
-      const conservative_quantities *restrict cons_undens,
+      const ghl_conservative_quantities *restrict cons_undens,
       double W,
-      primitive_quantities *restrict prims_guess,
+      ghl_primitive_quantities *restrict prims_guess,
       bool *restrict c2p_failed ) {
 
   // 2D Newton-Raphson scheme, using state vector x = (W, T) and 2D function

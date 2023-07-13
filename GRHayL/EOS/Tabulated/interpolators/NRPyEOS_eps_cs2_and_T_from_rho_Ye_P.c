@@ -3,7 +3,7 @@
  * (c) 2022 Leo Werneck
  */
 void NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(
-    const eos_parameters *restrict eos,
+    const ghl_eos_parameters *restrict eos,
     const double rho,
     const double Y_e,
     const double P,

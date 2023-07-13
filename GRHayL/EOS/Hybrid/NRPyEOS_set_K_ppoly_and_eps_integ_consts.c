@@ -5,7 +5,7 @@
  *               values of K_ppoly that will result in a
  *               everywhere continuous P_cold function.
  *
- * Inputs      : eos                  - an initialized eos_parameters struct
+ * Inputs      : eos                  - an initialized ghl_eos_parameters struct
  *                                      with data for the EOS of the simulation
  *
  * Outputs     : eos->K_ppoly         - fully populated array of K_ppoly
@@ -14,7 +14,7 @@
  *                                      used to compute eps_cold for
  *                                      a piecewise polytropic EOS.
  */
-void NRPyEOS_set_K_ppoly_and_eps_integ_consts(eos_parameters *restrict eos) {
+void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {
 
   /* When neos = 1, we will only need the value K_ppoly[0] and eps_integ_const[0].
    * Since our only polytropic EOS is given by

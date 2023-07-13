@@ -16,7 +16,7 @@
  *             : Y_e            - value of electron fraction (for tabulated EOS)
  *             : temperature    - value of temperature (for tabulated EOS)
  *
- * Outputs     : prims          - returns initialized primitive_quantities
+ * Outputs     : prims          - returns initialized ghl_primitive_quantities
  *                                struct containing input
  */
 
@@ -25,7 +25,7 @@ void ghl_initialize_primitives(
              const double vx, const double vy, const double vz,
              const double Bx, const double By, const double Bz,
              const double entropy, const double Y_e, const double temperature,
-             primitive_quantities *restrict prims) {
+             ghl_primitive_quantities *restrict prims) {
 
   prims->rho         = rho;
   prims->press       = press;

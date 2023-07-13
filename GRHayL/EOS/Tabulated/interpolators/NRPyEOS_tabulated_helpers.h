@@ -9,7 +9,7 @@
 
 //------------------------------------------
 static inline __attribute__((always_inline))
-int NRPyEOS_checkbounds(const eos_parameters *restrict eos,
+int NRPyEOS_checkbounds(const ghl_eos_parameters *restrict eos,
                         const double xrho,
                         const double xtemp,
                         const double xye) {
@@ -44,7 +44,7 @@ int NRPyEOS_checkbounds(const eos_parameters *restrict eos,
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-int NRPyEOS_checkbounds_kt0_noTcheck(const eos_parameters *restrict eos,
+int NRPyEOS_checkbounds_kt0_noTcheck(const ghl_eos_parameters *restrict eos,
                                      const double xrho,
                                      const double xye) {
 
@@ -70,7 +70,7 @@ int NRPyEOS_checkbounds_kt0_noTcheck(const eos_parameters *restrict eos,
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_get_interp_spots(const eos_parameters *restrict eos,
+void NRPyEOS_get_interp_spots(const ghl_eos_parameters *restrict eos,
                               const double x,
                               const double y,
                               const double z,
@@ -104,7 +104,7 @@ void NRPyEOS_get_interp_spots(const eos_parameters *restrict eos,
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_linterp_one(const eos_parameters *restrict eos,
+void NRPyEOS_linterp_one(const ghl_eos_parameters *restrict eos,
                          const int *restrict idx,
                          const double delx,
                          const double dely,
@@ -171,7 +171,7 @@ double NRPyEOS_linterp2D(const double *restrict xs,
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_bisection(const eos_parameters *restrict eos,
+void NRPyEOS_bisection(const ghl_eos_parameters *restrict eos,
                        const double lr,
                        const double lt0,
                        const double ye,
@@ -291,7 +291,7 @@ void NRPyEOS_bisection(const eos_parameters *restrict eos,
 } // bisection
   //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_findtemp_from_any( const eos_parameters *restrict eos,
+void NRPyEOS_findtemp_from_any( const ghl_eos_parameters *restrict eos,
                                 const int tablevar_key,
                                 const double lr,
                                 const double lt0,

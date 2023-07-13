@@ -9,10 +9,10 @@
 
 void ghl_validate_primitives(
       const bool evolve_entropy,
-      const eos_parameters *restrict eos,
-      const primitive_quantities *restrict prims_trusted,
-      const primitive_quantities *restrict prims,
-      const primitive_quantities *restrict prims_pert) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_primitive_quantities *restrict prims_trusted,
+      const ghl_primitive_quantities *restrict prims,
+      const ghl_primitive_quantities *restrict prims_pert) {
 
   char fail_msg[100] = "Test has failed!\n The primitive variable(s) which failed are ";
   int test_fail = 0;

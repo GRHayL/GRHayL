@@ -128,21 +128,21 @@ void ghl_test_compute_ccc_BSSN(
 // con2prim validation functions
 void ghl_validate_primitives(
       const bool evolve_entropy,
-      const eos_parameters *restrict eos,
-      const primitive_quantities *restrict prims_trusted,
-      const primitive_quantities *restrict prims,
-      const primitive_quantities *restrict prims_pert);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_primitive_quantities *restrict prims_trusted,
+      const ghl_primitive_quantities *restrict prims,
+      const ghl_primitive_quantities *restrict prims_pert);
 
 void ghl_validate_conservatives(
       const bool evolve_entropy,
-      const conservative_quantities *restrict cons_trusted,
-      const conservative_quantities *restrict cons,
-      const conservative_quantities *restrict cons_pert);
+      const ghl_conservative_quantities *restrict cons_trusted,
+      const ghl_conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons_pert);
 
-void ghl_validate_stress_energy(
-      const stress_energy *restrict Tmunu_trusted,
-      const stress_energy *restrict Tmunu,
-      const stress_energy *restrict Tmunu_pert);
+void ghl_validate_ghl_stress_energy(
+      const ghl_stress_energy *restrict Tmunu_trusted,
+      const ghl_stress_energy *restrict Tmunu,
+      const ghl_stress_energy *restrict Tmunu_pert);
 
 // con2prim binary input functions
 void read_primitive_binary(
@@ -165,7 +165,7 @@ void read_primitive_binary(
 void read_primitive_struct_binary(
       const int eos_type,
       const bool evolve_entropy,
-      primitive_quantities *restrict prims,
+      ghl_primitive_quantities *restrict prims,
       FILE *restrict infile);
 
 void read_conservative_binary(
@@ -180,10 +180,10 @@ void read_conservative_binary(
 
 void read_conservative_struct_binary(
       const bool evolve_entropy,
-      conservative_quantities *restrict cons,
+      ghl_conservative_quantities *restrict cons,
       FILE *restrict infile);
 
-void read_stress_energy_binary(
+void read_ghl_stress_energy_binary(
       double *restrict Ttt,
       double *restrict Ttx,
       double *restrict Tty,
@@ -196,8 +196,8 @@ void read_stress_energy_binary(
       double *restrict Tzz,
       FILE *restrict outfile);
 
-void read_stress_energy_struct_binary(
-      stress_energy *restrict Tmunu,
+void read_ghl_stress_energy_struct_binary(
+      ghl_stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 
 void read_metric_binary(
@@ -214,27 +214,27 @@ void read_metric_binary(
       FILE *restrict infile);
 
 void read_metric_struct_binary(
-      metric_quantities *restrict metric,
+      ghl_metric_quantities *restrict metric,
       FILE *restrict infile);
 
 // con2prim binary output functions
 void write_primitive_binary(
       const int eos_type,
       const bool evolve_entropy,
-      const primitive_quantities *restrict prims,
+      const ghl_primitive_quantities *restrict prims,
       FILE *restrict outfile);
 
 void write_conservative_binary(
       const bool evolve_entropy,
-      const conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons,
       FILE *restrict outfile);
 
-void write_stress_energy_binary(
-      const stress_energy *restrict Tmunu,
+void write_ghl_stress_energy_binary(
+      const ghl_stress_energy *restrict Tmunu,
       FILE *restrict outfile);
 
 void write_metric_binary(
-      const metric_quantities *restrict metric,
+      const ghl_metric_quantities *restrict metric,
       FILE *restrict outfile);
 
 // Tabulated EOS helper functions
@@ -282,8 +282,8 @@ static inline double randf(double low,double high) {
 void ghl_initial_random_data(
       const double xrho,
       const double xpress,
-      metric_quantities *restrict metric,
-      primitive_quantities *restrict prims);
+      ghl_metric_quantities *restrict metric,
+      ghl_primitive_quantities *restrict prims);
 
 void ghl_randomize_metric(
       double *restrict lapse,
@@ -298,7 +298,7 @@ void ghl_randomize_metric(
       double *restrict betaz);
 
 void ghl_randomize_primitives(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho,
       const double press,
       double *restrict eps,

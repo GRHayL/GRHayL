@@ -6,12 +6,12 @@
  **********************************/
 int ghl_hybrid_Font_fix(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   double utU[3];
 

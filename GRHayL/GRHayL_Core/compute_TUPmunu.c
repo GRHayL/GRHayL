@@ -1,10 +1,10 @@
 #include "ghl.h"
 
 void ghl_compute_TUPmunu(
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const primitive_quantities *restrict prims,
-      stress_energy *restrict Tmunu) {
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_stress_energy *restrict Tmunu) {
 
   //   First set h, the enthalpy:
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;

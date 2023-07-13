@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
                     Psi6threshold, 0 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
@@ -162,11 +162,11 @@ int main(int argc, char **argv) {
   //Parallelizing this also needs parallel sum of abs/rel error arrays
   for(int index=0; index<arraylength; index++) {
     // Define the various GRHayL structs for the unit tests
-    con2prim_diagnostics diagnostics;
+    ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    metric_quantities ADM_metric;
-    primitive_quantities prims;
-    conservative_quantities cons, cons_undens;
+    ghl_metric_quantities ADM_metric;
+    ghl_primitive_quantities prims;
+    ghl_conservative_quantities cons, cons_undens;
 
     ghl_initialize_metric(lapse[index],
                       betax[index], betay[index], betaz[index],
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
                       gyy[index], gyz[index], gzz[index],
                       &ADM_metric);
 
-    ADM_aux_quantities metric_aux;
+    ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     ghl_initialize_primitives(rho_b[index], press[index], eps[index],
@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
                              S_x[index], S_y[index], S_z[index],
                              poison, poison, &cons);
 
-    const primitive_quantities prims_orig = prims;
+    const ghl_primitive_quantities prims_orig = prims;
     int check = 0;
     if(cons.rho > 0.0) {
 
@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
     prims_rel_error[4] += relative_error(prims_orig.vU[2], prims.vU[2]);
 
     // Now, we load the trusted/perturbed data for this index and validate the computed results.
-    primitive_quantities prims_trusted, prims_pert;
+    ghl_primitive_quantities prims_trusted, prims_pert;
 
     ghl_initialize_primitives(rho_b_trusted[index], press_trusted[index], prims.eps, // Old code has no eps variable
                           vx_trusted[index], vy_trusted[index], vz_trusted[index],

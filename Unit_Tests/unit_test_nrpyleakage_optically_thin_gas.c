@@ -45,16 +45,16 @@ validate_computed_values(
 
 static inline
 void
-rhs(const eos_parameters *restrict eos,
+rhs(const ghl_eos_parameters *restrict eos,
     const double rho,
     const double Y_e,
     const double eps,
     const double T,
     double *restrict rhs_gfs ) {
-  neutrino_optical_depths tau = {{0,0},{0,0},{0,0}};
-  neutrino_opacities kappa;
+  ghl_neutrino_optical_depths tau = {{0,0},{0,0},{0,0}};
+  ghl_neutrino_opacities kappa;
   double R_source, Q_source;
-  NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(eos, rho, Y_e, T,
+  NRPyLeakage_compute_ghl_neutrino_opacities_and_GRMHD_source_terms(eos, rho, Y_e, T,
                                                                 &tau, &kappa, &R_source, &Q_source);
 
   rhs_gfs[Y_E] = R_source/rho;
@@ -64,7 +64,7 @@ rhs(const eos_parameters *restrict eos,
 static inline
 void
 rk4_step_ode(
-    const eos_parameters *restrict eos,
+    const ghl_eos_parameters *restrict eos,
     const double dt,
     const double rho,
     double *restrict gfs,
@@ -114,7 +114,7 @@ rk4_step_ode(
 }
 
 void
-generate_test_data(const eos_parameters *restrict eos) {
+generate_test_data(const ghl_eos_parameters *restrict eos) {
 
   const double t_final = 0.5*NRPyLeakage_units_cgs_to_geom_T;
   const double dt      = 0.001*NRPyLeakage_units_cgs_to_geom_T;
@@ -167,7 +167,7 @@ generate_test_data(const eos_parameters *restrict eos) {
 }
 
 void
-run_unit_test(const eos_parameters *restrict eos) {
+run_unit_test(const ghl_eos_parameters *restrict eos) {
   int n1, n2;
 
   FILE *fp_unpert = fopen_with_check("nrpyleakage_optically_thin_gas_unperturbed.bin", "rb");

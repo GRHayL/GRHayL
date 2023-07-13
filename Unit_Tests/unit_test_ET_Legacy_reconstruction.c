@@ -1,7 +1,7 @@
 #include "unit_tests.h"
 #define IPH(METRICm1,METRICp0,METRICp1,METRICp2) (-0.0625*((METRICm1) + (METRICp2)) + 0.5625*((METRICp0) + (METRICp1)))
 
-static double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in);
+static double eos_Gamma_eff(const ghl_eos_parameters *restrict eos, const double rho_in, const double press_in);
 
 int main(int argc, char **argv) {
   const double poison = 1e300;
@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   const double k_ppoly0 = 1.0;
   const double Gamma_th = 2.0;
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              poison, poison, poison,
                                              neos, rho_ppoly_in, Gamma_ppoly_in,
@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
   free(vyl_pert); free(vzr_pert); free(vzl_pert);
 }
 
-double eos_Gamma_eff(const eos_parameters *restrict eos, const double rho_in, const double press_in) {
+double eos_Gamma_eff(const ghl_eos_parameters *restrict eos, const double rho_in, const double press_in) {
   double K, Gamma;
   ghl_hybrid_get_K_and_Gamma(eos, rho_in, &K, &Gamma);
   const double P_cold = K*pow(rho_in, Gamma);

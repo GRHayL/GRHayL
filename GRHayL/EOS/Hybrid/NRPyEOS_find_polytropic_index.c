@@ -4,7 +4,7 @@
  * Description : For a given value of rho, find the
  *               appropriate polytropic index
  *
- * Inputs      : eos                - an initialized eos_parameters struct
+ * Inputs      : eos                - an initialized ghl_eos_parameters struct
  *                                    with data for the EOS of the simulation
  *             : rho_in             - the value rho for which the polytropic
  *                                    EOS is needed
@@ -13,7 +13,7 @@
  *                                    Gamma_ppoly, and eps_int_consts array
  */
 int NRPyEOS_find_polytropic_index(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho_in) {
 
   /* We want to find the appropriate polytropic EOS for the

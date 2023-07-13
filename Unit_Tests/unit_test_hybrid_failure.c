@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0, &params);
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
   double *S_y = (double*) malloc(sizeof(double)*arraylength);
   double *S_z = (double*) malloc(sizeof(double)*arraylength);
 
-  /* 
+  /*
      Hybrid_Noble2D failures
      1) rho=0: nans as inputs to Newton-Raphson, causing error code 201
      2) rho=1e15: triggers failure to converge, causing error code 101
@@ -83,11 +83,11 @@ int main(int argc, char **argv) {
   rho_star[2] = 0.0;
 
   for(int i=0; i<arraylength; i++) {
-    con2prim_diagnostics diagnostics;
+    ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    metric_quantities ADM_metric;
-    primitive_quantities prims;
-    conservative_quantities cons, cons_undens;
+    ghl_metric_quantities ADM_metric;
+    ghl_primitive_quantities prims;
+    ghl_conservative_quantities cons, cons_undens;
 
     ghl_initialize_metric(lapse[i],
                       betax[i], betay[i], betaz[i],
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
                       gyy[i], gyz[i], gzz[i],
                       &ADM_metric);
 
-    ADM_aux_quantities metric_aux;
+    ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     ghl_initialize_primitives(

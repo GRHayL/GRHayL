@@ -2,7 +2,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(const eos_parameters *restrict eos,
+void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(const ghl_eos_parameters *restrict eos,
                                                        const double rho,
                                                        const double Y_e,
                                                        const double T,

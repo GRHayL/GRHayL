@@ -13,12 +13,12 @@
  * Function    : ghl_initialize_eos_functions()
  * Description : Initializes function pointers in EOS struct to NRPyEOS
  *
- * Input/Output: eos - eos_parameters struct with the function pointers
+ * Input/Output: eos - ghl_eos_parameters struct with the function pointers
  *                     initialized
  */
 void ghl_initialize_eos_functions(
       ghl_eos_t const eos_type,
-      eos_parameters *restrict eos) {
+      ghl_eos_parameters *restrict eos) {
 
   // Step 1: Hybrid EOS functions (always available)
   NRPyEOS_initialize_hybrid_functions(eos);
@@ -52,7 +52,7 @@ void ghl_initialize_eos_functions(
  *             : K_ppoly0       - TODO: comment
  *             : Gamma_th       - TODO: comment
  *
- * Outputs     : eos            - eos_parameters struct with the above inputs
+ * Outputs     : eos            - ghl_eos_parameters struct with the above inputs
  *                                initialized
  */
 void ghl_initialize_hybrid_eos(
@@ -65,7 +65,7 @@ void ghl_initialize_hybrid_eos(
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
-      eos_parameters *restrict eos ) {
+      ghl_eos_parameters *restrict eos ) {
 
   // Step 0: Enforce default values
   if( rho_atm < 0 ) ghl_error("rho_atm must be specified\n");
@@ -143,7 +143,7 @@ void ghl_initialize_hybrid_eos(
  *             : T_min          - minimum allowable value for temperature
  *             : T_max          - maximum allowable value for temperature
  *
- * Outputs     : eos            - eos_parameters struct with the above inputs
+ * Outputs     : eos            - ghl_eos_parameters struct with the above inputs
  *                                initialized
  */
 void ghl_initialize_tabulated_eos(
@@ -158,7 +158,7 @@ void ghl_initialize_tabulated_eos(
       const double T_atm,
       double T_min,
       double T_max,
-      eos_parameters *restrict eos ) {
+      ghl_eos_parameters *restrict eos ) {
 
   // Step 1: Set EOS type to Tabulated.
   eos->eos_type = ghl_eos_tabulated;
@@ -246,7 +246,7 @@ void ghl_initialize_tabulated_eos(
  *             : K_ppoly0       - TODO: comment
  *             : Gamma_th       - TODO: comment
  *
- * Outputs     : eos            - eos_parameters struct with the above inputs
+ * Outputs     : eos            - ghl_eos_parameters struct with the above inputs
  *                                initialized
  */
 void ghl_initialize_hybrid_eos_functions_and_params(
@@ -259,7 +259,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
-      eos_parameters *restrict eos ) {
+      ghl_eos_parameters *restrict eos ) {
 
   // Step 1: Initialize Hybrid EOS functions
   ghl_initialize_eos_functions(ghl_eos_hybrid, eos);
@@ -284,7 +284,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
  *             : T_min          - minimum allowable value for temperature
  *             : T_max          - maximum allowable value for temperature
  *
- * Outputs     : eos            - eos_parameters struct with the above inputs
+ * Outputs     : eos            - ghl_eos_parameters struct with the above inputs
  *                                initialized
  */
 void ghl_initialize_tabulated_eos_functions_and_params(
@@ -299,7 +299,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
       const double T_atm,
       const double T_min,
       const double T_max,
-      eos_parameters *restrict eos ) {
+      ghl_eos_parameters *restrict eos ) {
 
   eos->eos_type = ghl_eos_tabulated;
 

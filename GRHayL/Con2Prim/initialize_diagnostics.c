@@ -3,12 +3,12 @@
 /* Function    : ghl_initialize_diagnostics()
  * Description : Initialize the diagnostics struct for Con2Prim
  *
- * Outputs     : diagnostics   - new con2prim_diagnostics struct is
+ * Outputs     : diagnostics   - new ghl_con2prim_diagnostics struct is
  *                               initialized with zeros in preparation
  *                               for tracking Con2Prim diagnostics
  */
 
-void ghl_initialize_diagnostics(con2prim_diagnostics *restrict diagnostics) {
+void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics) {
   diagnostics->failures=0;
   diagnostics->speed_limited=0;
   diagnostics->backup[0]=0;

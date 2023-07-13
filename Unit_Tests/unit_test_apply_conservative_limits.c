@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
@@ -154,11 +154,11 @@ int main(int argc, char **argv) {
 
   for(int i=0;i<arraylength;i++) {
     // Define the various GRHayL structs for the unit tests
-    con2prim_diagnostics diagnostics;
+    ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    metric_quantities ADM_metric;
-    primitive_quantities prims;
-    conservative_quantities cons;
+    ghl_metric_quantities ADM_metric;
+    ghl_primitive_quantities prims;
+    ghl_conservative_quantities cons;
 
     // Read initial data accompanying trusted output
     ghl_initialize_metric(lapse[i],
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
                       gyy[i], gyz[i], gzz[i],
                       &ADM_metric);
 
-    ADM_aux_quantities metric_aux;
+    ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     ghl_initialize_primitives(
@@ -188,7 +188,7 @@ int main(int argc, char **argv) {
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = Psi6threshold;
 
-    conservative_quantities cons_trusted, cons_pert;
+    ghl_conservative_quantities cons_trusted, cons_pert;
     ghl_initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
                              S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
                              poison, poison, &cons_trusted);

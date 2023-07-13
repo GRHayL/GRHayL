@@ -2,13 +2,13 @@
 
 /* Function    : NRPyEOS_hybrid_compute_enthalpy_and_cs2()
  * Description : Computes the enthalpy and the sound speed squared.
- * Dependencies: initialize_igm_eos_parameters_from_input()
+ * Dependencies: initialize_igm_ghl_eos_parameters_from_input()
  *             : find_polytropic_K_and_Gamma_index()
  *
  * Inputs      : eos            -
  *             : P_cold         - cold pressure
  *             : eps_cold       - cold specific internal energy
- *             : eos            - an initialized eos_parameters struct
+ *             : eos            - an initialized ghl_eos_parameters struct
  *                                with data for the EOS of the simulation
  *
  * Outputs     : enthalpy_ptr   - enthalpy
@@ -18,8 +18,8 @@
  *             PPEOS: Piecewise Polytrope Equation of State
  */
 void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
-      eos_parameters const *restrict eos,
-      primitive_quantities const *restrict prims,
+      ghl_eos_parameters const *restrict eos,
+      ghl_primitive_quantities const *restrict prims,
       double *restrict enthalpy_ptr,
       double *restrict cs2_ptr) {
 

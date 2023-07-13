@@ -2,7 +2,7 @@
 #include "unit_tests.h"
 
 void
-generate_test_data(const eos_parameters *restrict eos) {
+generate_test_data(const ghl_eos_parameters *restrict eos) {
 
   srand(100);
 
@@ -35,7 +35,7 @@ generate_test_data(const eos_parameters *restrict eos) {
       double W   = randf(1, 10);
 
       // Get random optical depths (not sure these are reasonable values)
-      neutrino_optical_depths tau;
+      ghl_neutrino_optical_depths tau;
       tau.nue [0] = randf(1, 1000);
       tau.nue [1] = randf(1, 1000);
       tau.anue[0] = randf(1, 1000);
@@ -64,8 +64,8 @@ generate_test_data(const eos_parameters *restrict eos) {
       }
 
       // Compute luminosities
-      neutrino_luminosities lum;
-      NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
+      ghl_neutrino_luminosities lum;
+      NRPyLeakage_compute_ghl_neutrino_luminosities(eos, alpha,
                                                 gammaxx, gammaxy, gammaxz,
                                                 gammayy, gammayz, gammazz,
                                                 rho, Y_e, T, W,
@@ -84,16 +84,16 @@ generate_test_data(const eos_parameters *restrict eos) {
         fwrite(&Y_e    , sizeof(double)                 , 1, fp);
         fwrite(&T      , sizeof(double)                 , 1, fp);
         fwrite(&W      , sizeof(double)                 , 1, fp);
-        fwrite(&tau    , sizeof(neutrino_optical_depths), 1, fp);
+        fwrite(&tau    , sizeof(ghl_neutrino_optical_depths), 1, fp);
       }
-      fwrite(&lum      , sizeof(neutrino_luminosities)  , 1, fp);
+      fwrite(&lum      , sizeof(ghl_neutrino_luminosities)  , 1, fp);
     }
     fclose(fp);
   }
 }
 
 void
-run_unit_test(const eos_parameters *restrict eos) {
+run_unit_test(const ghl_eos_parameters *restrict eos) {
 
   int n1, n2;
 
@@ -117,7 +117,7 @@ run_unit_test(const eos_parameters *restrict eos) {
     double alpha;
     double gammaxx, gammaxy, gammaxz, gammayy, gammayz, gammazz;
     double rho, Y_e, T, W;
-    neutrino_optical_depths tau;
+    ghl_neutrino_optical_depths tau;
 
     err  = 0;
     err += fread(&alpha  , sizeof(double)                 , 1, fp_unpert);
@@ -131,7 +131,7 @@ run_unit_test(const eos_parameters *restrict eos) {
     err += fread(&Y_e    , sizeof(double)                 , 1, fp_unpert);
     err += fread(&T      , sizeof(double)                 , 1, fp_unpert);
     err += fread(&W      , sizeof(double)                 , 1, fp_unpert);
-    err += fread(&tau    , sizeof(neutrino_optical_depths), 1, fp_unpert);
+    err += fread(&tau    , sizeof(ghl_neutrino_optical_depths), 1, fp_unpert);
 
     if( err != 12 ) {
       fclose(fp_unpert); fclose(fp_pert);
@@ -139,21 +139,21 @@ run_unit_test(const eos_parameters *restrict eos) {
     }
 
     // Compute luminosities
-    neutrino_luminosities lum;
-    NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
+    ghl_neutrino_luminosities lum;
+    NRPyLeakage_compute_ghl_neutrino_luminosities(eos, alpha,
                                               gammaxx, gammaxy, gammaxz,
                                               gammayy, gammayz, gammazz,
                                               rho, Y_e, T, W,
                                               &tau, &lum);
 
     // Now read luminosities from unperturbed and perturbed data files
-    neutrino_luminosities lum_trusted, lum_pert;
-    if( 1 != fread(&lum_trusted, sizeof(neutrino_luminosities), 1, fp_unpert) ) {
+    ghl_neutrino_luminosities lum_trusted, lum_pert;
+    if( 1 != fread(&lum_trusted, sizeof(ghl_neutrino_luminosities), 1, fp_unpert) ) {
       fclose(fp_unpert); fclose(fp_pert);
       ghl_error("Failed to read luminosities from unperturbed data file\n");
     }
 
-    if( 1 != fread(&lum_pert, sizeof(neutrino_luminosities), 1, fp_pert) ) {
+    if( 1 != fread(&lum_pert, sizeof(ghl_neutrino_luminosities), 1, fp_pert) ) {
       fclose(fp_unpert); fclose(fp_pert);
       ghl_error("Failed to read luminosities from perturbed data file\n");
     }

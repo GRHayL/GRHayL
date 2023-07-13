@@ -4,7 +4,7 @@
  * (c) 2022 Leo Werneck
  */
 int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const int n,
       const double prec,
       const double rho,

@@ -66,16 +66,16 @@ extern "C" {
 // Function prototypes
 double NRPyLeakage_Fermi_Dirac_integrals(const int k, const double z);
 
-void NRPyLeakage_compute_neutrino_opacities(
-      const eos_parameters *restrict eos,
+void NRPyLeakage_compute_ghl_neutrino_opacities(
+      const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
       const double T,
-      const neutrino_optical_depths *restrict tau,
-      neutrino_opacities *restrict kappa );
+      const ghl_neutrino_optical_depths *restrict tau,
+      ghl_neutrino_opacities *restrict kappa );
 
-void NRPyLeakage_compute_neutrino_luminosities(
-      const eos_parameters *restrict eos,
+void NRPyLeakage_compute_ghl_neutrino_luminosities(
+      const ghl_eos_parameters *restrict eos,
       const double alpha,
       const double gammaxx,
       const double gammaxy,
@@ -87,16 +87,16 @@ void NRPyLeakage_compute_neutrino_luminosities(
       const double Y_e,
       const double T,
       const double W,
-      const neutrino_optical_depths *restrict tau,
-      neutrino_luminosities *restrict lum );
+      const ghl_neutrino_optical_depths *restrict tau,
+      ghl_neutrino_luminosities *restrict lum );
 
-void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
-      const eos_parameters *restrict eos,
+void NRPyLeakage_compute_ghl_neutrino_opacities_and_GRMHD_source_terms(
+      const ghl_eos_parameters *restrict eos,
       const double rho_b,
       const double Y_e,
       const double T,
-      const neutrino_optical_depths *restrict tau,
-      neutrino_opacities *restrict kappa,
+      const ghl_neutrino_optical_depths *restrict tau,
+      ghl_neutrino_opacities *restrict kappa,
       double *restrict R_source,
       double *restrict Q_source );
 
@@ -105,20 +105,20 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
       const double *restrict stencil_gxx,
       const double *restrict stencil_gyy,
       const double *restrict stencil_gzz,
-      const neutrino_opacities *restrict kappa_im1_j_k,
-      const neutrino_opacities *restrict kappa_ip1_j_k,
-      const neutrino_opacities *restrict kappa_i_jm1_k,
-      const neutrino_opacities *restrict kappa_i_jp1_k,
-      const neutrino_opacities *restrict kappa_i_j_km1,
-      const neutrino_opacities *restrict kappa_i_j_kp1,
-      const neutrino_opacities *restrict tau_im1_j_k,
-      const neutrino_opacities *restrict tau_ip1_j_k,
-      const neutrino_opacities *restrict tau_i_jm1_k,
-      const neutrino_opacities *restrict tau_i_jp1_k,
-      const neutrino_opacities *restrict tau_i_j_km1,
-      const neutrino_opacities *restrict tau_i_j_kp1,
-      const neutrino_opacities *restrict kappa_i_j_k,
-      neutrino_optical_depths *restrict tau_i_j_k );
+      const ghl_neutrino_opacities *restrict kappa_im1_j_k,
+      const ghl_neutrino_opacities *restrict kappa_ip1_j_k,
+      const ghl_neutrino_opacities *restrict kappa_i_jm1_k,
+      const ghl_neutrino_opacities *restrict kappa_i_jp1_k,
+      const ghl_neutrino_opacities *restrict kappa_i_j_km1,
+      const ghl_neutrino_opacities *restrict kappa_i_j_kp1,
+      const ghl_neutrino_opacities *restrict tau_im1_j_k,
+      const ghl_neutrino_opacities *restrict tau_ip1_j_k,
+      const ghl_neutrino_opacities *restrict tau_i_jm1_k,
+      const ghl_neutrino_opacities *restrict tau_i_jp1_k,
+      const ghl_neutrino_opacities *restrict tau_i_j_km1,
+      const ghl_neutrino_opacities *restrict tau_i_j_kp1,
+      const ghl_neutrino_opacities *restrict kappa_i_j_k,
+      ghl_neutrino_optical_depths *restrict tau_i_j_k );
 
 static inline int robust_isnan(double x) {
   unsigned long *pbits = (unsigned long *)&x;

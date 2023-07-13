@@ -5,7 +5,7 @@
 #include "GRHayLib.h"
 
 ghl_parameters *ghl_params;
-eos_parameters *ghl_eos;
+ghl_eos_parameters *ghl_eos;
 
 int parse_C2P_routine_keyword(const char *restrict routine_name);
 
@@ -60,7 +60,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   ghl_params = (ghl_parameters *)malloc(sizeof(ghl_parameters));
-  ghl_eos = (eos_parameters *)malloc(sizeof(eos_parameters));
+  ghl_eos = (ghl_eos_parameters *)malloc(sizeof(ghl_eos_parameters));
 
   const int main = parse_C2P_routine_keyword(con2prim_routine);
   int backups[3];

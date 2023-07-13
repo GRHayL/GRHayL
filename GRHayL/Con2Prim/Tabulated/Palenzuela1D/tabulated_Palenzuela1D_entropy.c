@@ -34,7 +34,7 @@ compute_rho_P_eps_T_W_entropy(
   // Step 0: Unpack the fparams struct
   const double Y_e = fparams->Y_e;
   double T = fparams->temp_guess;
-  const eos_parameters *eos = fparams->eos;
+  const ghl_eos_parameters *eos = fparams->eos;
 
   // Step 1: First compute rho and W
   double rho, W;
@@ -72,12 +72,12 @@ compute_rho_P_eps_T_W_entropy(
  */
 int ghl_tabulated_Palenzuela1D_entropy(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics ) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   return ghl_tabulated_Palenzuela1D( compute_rho_P_eps_T_W_entropy,
                                  params,

@@ -1,14 +1,14 @@
 #include "../utils.h"
 
 int ghl_newman_energy(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double S_squared,
       const double BdotS,
       const double B_squared,
       const double *restrict BU,
       const double *restrict SU,
-      const conservative_quantities *restrict con,
-      primitive_quantities *restrict prim,
+      const ghl_conservative_quantities *restrict con,
+      ghl_primitive_quantities *restrict prim,
       const double tol_x ) {
 
   // Set basic quantities from input
@@ -124,12 +124,12 @@ int ghl_newman_energy(
 
 int ghl_tabulated_Newman1D_energy(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics ) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   // Step 1: Compute auxiliary quantities
   double BU[3], SU[3], Bsq, Ssq, BdotS;

@@ -1,7 +1,7 @@
 #include "nrpyeos_hybrid.h"
 
 void NRPyEOS_compute_entropy_function(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho,
       const double P,
       double *restrict S ) {

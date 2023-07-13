@@ -31,7 +31,7 @@ void ghl_test_compute_ccc_BSSN(
       for(int i=1; i<dirlength-1; i++) {
         const int index = indexf(dirlength,i,j,k);
 
-        metric_quantities metric_stencil[2][2][2];
+        ghl_metric_quantities metric_stencil[2][2][2];
         double psi_stencil[2][2][2];
         double Ax_stencil[3][3][3];
         double Ay_stencil[3][3][3];

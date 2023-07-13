@@ -13,8 +13,8 @@ static double EnsureFinite(const double x) {
  * https://arxiv.org/pdf/1711.00868.pdf
  * Neutrino rates: https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
  */
-void NRPyLeakage_compute_neutrino_luminosities(
-      const eos_parameters *restrict eos,
+void NRPyLeakage_compute_ghl_neutrino_luminosities(
+      const ghl_eos_parameters *restrict eos,
       const double alpha,
       const double gammaxx,
       const double gammaxy,
@@ -26,8 +26,8 @@ void NRPyLeakage_compute_neutrino_luminosities(
       const double Y_e,
       const double T,
       const double W,
-      const neutrino_optical_depths *restrict tau,
-      neutrino_luminosities *restrict lum ) {
+      const ghl_neutrino_optical_depths *restrict tau,
+      ghl_neutrino_luminosities *restrict lum ) {
 
   // Step 1: Get chemical potentials and mass
   //         fractions using the EOS

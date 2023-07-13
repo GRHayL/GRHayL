@@ -1,14 +1,14 @@
 #include "con2prim.h"
 
 int ghl_con2prim_select_method(
-      const con2prim_method_t c2p_key,
+      const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics ) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   switch( c2p_key ) {
     // Noble2D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
@@ -37,18 +37,18 @@ int ghl_con2prim_select_method(
 
 int ghl_con2prim_multi_method(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics ) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   if(params->calc_prim_guess)
     ghl_guess_primitives(eos, ADM_metric, cons, prims);
 
   // Store primitive guesses (used if con2prim fails)
-  const primitive_quantities prims_guess = *prims;
+  const ghl_primitive_quantities prims_guess = *prims;
 
   int failed = ghl_con2prim_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 

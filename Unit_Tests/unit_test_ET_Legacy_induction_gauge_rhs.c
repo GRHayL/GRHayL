@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
       for(int i=1; i<dirlength-1; i++) {
         const int index = indexf(dirlength,i,j,k);
 
-        metric_quantities metric_stencil[2][2][2];
+        ghl_metric_quantities metric_stencil[2][2][2];
         double psi_stencil[2][2][2];
         double Ax_stencil[3][3][3];
         double Ay_stencil[3][3][3];
@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
         sqrtg_Ai_stencil[0][1] = sqrtg_Ax_interp[indexf(dirlength,i+1,j,k)];
         sqrtg_Ai_stencil[1][1] = sqrtg_Ay_interp[indexf(dirlength,i,j+1,k)];
         sqrtg_Ai_stencil[2][1] = sqrtg_Az_interp[indexf(dirlength,i,j,k+1)];
-    
+
         for(int iter=-2; iter<3; iter++) {
           const int indexx = indexf(dirlength,i+iter,j,     k     );
           const int indexy = indexf(dirlength,i,     j+iter,k     );

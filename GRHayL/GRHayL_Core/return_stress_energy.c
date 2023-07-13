@@ -1,16 +1,16 @@
 #include "ghl.h"
 
-/* Function    : ghl_return_stress_energy()
- * Description : unpacks stress_energy struct into variables
+/* Function    : ghl_return_ghl_stress_energy()
+ * Description : unpacks ghl_stress_energy struct into variables
  *
- * Inputs      : Tmunu          - stress_energy struct to be unpacked
+ * Inputs      : Tmunu          - ghl_stress_energy struct to be unpacked
  *
  * Outputs     : Tij            - pointer to variable for (i,j) component
  *                                of T^\mu\nu
  */
 
-void ghl_return_stress_energy(
-      const stress_energy *restrict Tmunu,
+void ghl_return_ghl_stress_energy(
+      const ghl_stress_energy *restrict Tmunu,
       double *restrict Ttt, double *restrict Ttx, double *restrict Tty,
       double *restrict Ttz, double *restrict Txx, double *restrict Txy,
       double *restrict Txz, double *restrict Tyy, double *restrict Tyz,

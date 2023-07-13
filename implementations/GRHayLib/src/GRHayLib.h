@@ -12,7 +12,7 @@
 #include "include/nrpyeos_tabulated.h"
 #include "include/nrpyleakage.h"
 
-extern eos_parameters *ghl_eos;
+extern ghl_eos_parameters *ghl_eos;
 extern ghl_parameters *ghl_params;
 
 #endif // GRHAYLIB_H_

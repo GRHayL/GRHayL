@@ -1,13 +1,13 @@
 #include "../../harm_u2p_util.h"
 
 int ghl_general_newton_raphson(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double indep_var_in,
       int *restrict n_iter_ptr,
       double x[],
-      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
+      void (*funcd)(const ghl_eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
                     double [], double [][ndim], double *restrict, double *restrict, int *restrict))
 {
   double dx[ndim], x_old[ndim];

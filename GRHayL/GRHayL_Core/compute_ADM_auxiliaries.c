@@ -10,14 +10,14 @@
  *             : betay          - value of the y component of the shift
  *             : betaz          - value of the z component of the shift
  *
- * Outputs     : metric         - returns metric_quantities struct containing
+ * Outputs     : metric         - returns ghl_metric_quantities struct containing
  *                                the inputs and additional auxiliary data computed
  *                                from input
  */
 
 void ghl_compute_ADM_auxiliaries(
-      const metric_quantities *restrict ADM_metric,
-      ADM_aux_quantities *restrict metric_aux) {
+      const ghl_metric_quantities *restrict ADM_metric,
+      ghl_ADM_aux_quantities *restrict metric_aux) {
 
   metric_aux->phi = (1.0/12.0) * log(ADM_metric->detgamma);
 

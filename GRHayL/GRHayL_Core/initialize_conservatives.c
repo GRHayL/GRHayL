@@ -11,14 +11,14 @@
  *             : S_z            - value of \tilde{S}_3 (densitized momentum variable)
  *             : entropy        - value of densitized entropy
  *
- * Outputs     : cons           - returns conservative_quantities struct containing the input
+ * Outputs     : cons           - returns ghl_conservative_quantities struct containing the input
  */
 
 void ghl_initialize_conservatives(
              const double rho, const double tau,
              const double S_x, const double S_y, const double S_z,
              const double Y_e, const double entropy,
-             conservative_quantities *restrict cons) {
+             ghl_conservative_quantities *restrict cons) {
 
   cons->rho = rho;
   cons->SD[0] = S_x;
