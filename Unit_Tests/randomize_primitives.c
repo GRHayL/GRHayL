@@ -2,7 +2,7 @@
 #include "unit_tests.h"
 
 void ghl_randomize_primitives(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho,
       const double press,
       double *restrict eps,

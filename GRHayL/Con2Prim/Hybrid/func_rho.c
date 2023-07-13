@@ -24,7 +24,7 @@
 *********************************************************************************/
 // for the isentropic version: eq. (27)
 void ghl_func_rho(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double W_in,

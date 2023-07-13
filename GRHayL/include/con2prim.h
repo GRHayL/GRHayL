@@ -5,7 +5,7 @@
 
 //------------- Con2Prim struct --------------------
 /*
-   The struct con2prim_diagnostics contains variables for error-checking and
+   The struct ghl_con2prim_diagnostics contains variables for error-checking and
    diagnostic feedback. The struct elements are detailed below:
 
  --TODO
@@ -31,9 +31,9 @@ typedef enum {
   Font1D, CerdaDuran2D, CerdaDuran3D,
   Palenzuela1D, Palenzuela1D_entropy,
   Newman1D, Newman1D_entropy
-} con2prim_method_t;
+} ghl_con2prim_method_t;
 
-typedef struct con2prim_diagnostics {
+typedef struct ghl_con2prim_diagnostics {
   bool c2p_failed;
   int failures;
   int failure_checker;
@@ -45,11 +45,11 @@ typedef struct con2prim_diagnostics {
   double error_int_numer;
   double error_int_denom;
   int n_iter;
-} con2prim_diagnostics;
+} ghl_con2prim_diagnostics;
 
-typedef struct palenzuela_quantities {
+typedef struct ghl_palenzuela_quantities {
   double q, r, s, t, D, Y_e, S;
-} palenzuela_quantities;
+} ghl_palenzuela_quantities;
 
 //--------------------------------------------------
 #ifdef __cplusplus
@@ -58,134 +58,134 @@ extern "C" {
 
 //--------- Initialization routines ----------------
 
-void ghl_initialize_diagnostics(con2prim_diagnostics *restrict diagnostics);
+void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
 
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const primitive_quantities *restrict prims,
-      conservative_quantities *restrict cons,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_conservative_quantities *restrict cons,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 void ghl_undensitize_conservatives(
       const double psi6,
-      const conservative_quantities *restrict cons,
-      conservative_quantities *restrict cons_undens);
+      const ghl_conservative_quantities *restrict cons,
+      ghl_conservative_quantities *restrict cons_undens);
 
 void ghl_guess_primitives(
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prims);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prims);
 
 void ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      primitive_quantities *restrict prims,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      ghl_primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
 void ghl_compute_conservs_and_Tmunu(
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const primitive_quantities *restrict prims,
-      conservative_quantities *restrict cons,
-      stress_energy *restrict Tmunu);
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_conservative_quantities *restrict cons,
+      ghl_stress_energy *restrict Tmunu);
 
 void ghl_compute_conservs(
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const primitive_quantities *restrict prims,
-      conservative_quantities *restrict cons);
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_conservative_quantities *restrict cons);
 
 //--------------------------------------------------
 
 //-------------- Con2Prim routines -----------------
 int ghl_con2prim_multi_method(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prim,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_con2prim_select_method(
-      const con2prim_method_t c2p_key,
+      const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prim,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_hybrid_Noble2D(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prim,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_hybrid_Font_fix(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_tabulated_Palenzuela1D_energy(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prim,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_tabulated_Palenzuela1D_entropy(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prim,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_tabulated_Newman1D_energy(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prim,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_tabulated_Newman1D_entropy(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons,
-      primitive_quantities *restrict prim,
-      con2prim_diagnostics *restrict diagnostics);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 //--------------------------------------------------
 
 //------------ Auxiliary Functions -----------------
 
 void ghl_limit_utilde_and_compute_v(
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict metric,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric,
       double utU[3],
-      primitive_quantities *restrict prims,
+      ghl_primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
 #ifdef __cplusplus

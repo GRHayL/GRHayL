@@ -8,11 +8,11 @@
  * Parameters  : compute_rho_P_eps_T_W - Function pointer provided by the user
  *             : grhyal_params         - GRHayL parameters struct
  *             : eos                   - EOS parameters struct
- *             : metric                - metric_quantities struct containing local
+ *             : metric                - ghl_metric_quantities struct containing local
  *                                       metric data (gamma_{ij}, g_{mu nu}, etc).
- *             : cons_undens           - conservative_quantities struct containing
+ *             : cons_undens           - ghl_conservative_quantities struct containing
  *                                       local undensitized conservative quantities.
- *             : prims                 - primitive_quantities struct containing
+ *             : prims                 - ghl_primitive_quantities struct containing
  *                                       local hydrodynamic quantities. Stores the
  *                                       result if the root-finding succeeds.
  *             : diagnostics           - Pointer to con2prim diagnostics struct.
@@ -32,11 +32,11 @@ int ghl_tabulated_Palenzuela1D(
             double *restrict T_ptr,
             double *restrict W_ptr ),
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics ) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};

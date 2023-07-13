@@ -14,7 +14,7 @@
  *
  */
 void ghl_interpolate_with_vertex_centered_ADM(
-      const metric_quantities metric_stencil[2][2][2],
+      const ghl_metric_quantities metric_stencil[2][2][2],
       const double Ax_stencil[3][3][3],
       const double Ay_stencil[3][3][3],
       const double Az_stencil[3][3][3],

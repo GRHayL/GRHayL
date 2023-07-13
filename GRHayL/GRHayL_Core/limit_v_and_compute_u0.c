@@ -3,11 +3,11 @@
 /* Function    : ghl_limit_v_and_compute_u0()
  * Description : Applies speed limit to v^i and computes u^0
  *
- * Inputs      : eos            - eos_parameters struct with data for the
+ * Inputs      : eos            - ghl_eos_parameters struct with data for the
  *                                EOS of the simulation
- *             : metric         - metric_quantities struct with data for
+ *             : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
- *             : prims          - primitive_quantities struct to be speed limited
+ *             : prims          - ghl_primitive_quantities struct to be speed limited
  *
  * Outputs     : prims          - returns velocity-limited prims->v^i and t
  *                                component of 4-velocity prims->u0
@@ -16,9 +16,9 @@
  */
 
 void ghl_limit_v_and_compute_u0(
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      primitive_quantities *restrict prims,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      ghl_primitive_quantities *restrict prims,
       int *restrict speed_limit) {
 
   // Derivation of first equation:

@@ -9,14 +9,14 @@
  *
  * Inputs      : rho_in         - the value rho for which the polytropic
  *                                EOS is needed
- *             : eos            - an initialized eos_parameters struct
+ *             : eos            - an initialized ghl_eos_parameters struct
  *                                with data for the EOS of the simulation
  *
  * Outputs     : K              - the value of polytropic K for rho_in
  * Outputs     : Gamma          - the value of polytropic gamma for rho_in
  */
 void NRPyEOS_get_K_and_Gamma(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho_in,
       double *restrict K,
       double *restrict Gamma) {

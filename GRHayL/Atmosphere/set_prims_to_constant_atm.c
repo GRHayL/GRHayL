@@ -4,15 +4,15 @@
  * Description : Uses the EOS data to reset the primitives to atmospheric
  *               values.
  *
- * Inputs      : eos            - eos_parameters struct with data for the
+ * Inputs      : eos            - ghl_eos_parameters struct with data for the
  *                                EOS of the simulation
  *
  * Outputs     : prims          - returns with all primitives set to atmospheric values
  */
 
 void ghl_set_prims_to_constant_atm(
-      const eos_parameters *restrict eos,
-      primitive_quantities *restrict prims) {
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims) {
 
   // Just a simple reset to atmospheric values.
   // Velocities are set to zero. Keeping it

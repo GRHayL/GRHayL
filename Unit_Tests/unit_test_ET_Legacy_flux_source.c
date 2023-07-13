@@ -1,7 +1,7 @@
 #include "unit_tests.h"
 
-static inline void compute_h_and_cs2(struct eos_parameters const *restrict eos,
-                                     primitive_quantities const *restrict prims,
+static inline void compute_h_and_cs2(struct ghl_eos_parameters const *restrict eos,
+                                     ghl_primitive_quantities const *restrict prims,
                                      double *restrict h,
                                      double *restrict cs2) {
 
@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
 
   const double poison = 1e300;
 
-  eos_parameters eos;
-  ghl_compute_h_and_cs2 = &compute_h_and_cs2;  
+  ghl_eos_parameters eos;
+  ghl_compute_h_and_cs2 = &compute_h_and_cs2;
 
   // Allocate memory for metric
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
@@ -177,16 +177,16 @@ int main(int argc, char **argv) {
   }
 
   // Function pointer to allow for loop over fluxes
-  void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
-                              const eos_parameters *restrict, const metric_quantities *restrict, 
-                              const double, const double, conservative_quantities *restrict);
+  void (*calculate_HLLE_fluxes)(const ghl_primitive_quantities *restrict, const ghl_primitive_quantities *restrict,
+                              const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
+                              const double, const double, ghl_conservative_quantities *restrict);
 
-  void (*calculate_characteristic_speed)(const primitive_quantities *restrict, const primitive_quantities *restrict,
-                              const eos_parameters *restrict, const metric_quantities *restrict, double *restrict, double *restrict);
+  void (*calculate_characteristic_speed)(const ghl_primitive_quantities *restrict, const ghl_primitive_quantities *restrict,
+                              const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict, double *restrict, double *restrict);
 
   // Function pointer to allow for loop over directional source terms
-  void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict, const metric_quantities *restrict, 
-  const metric_quantities *restrict, conservative_quantities *restrict);
+  void (*calculate_source_terms)(const ghl_primitive_quantities *restrict, const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
+  const ghl_metric_quantities *restrict, ghl_conservative_quantities *restrict);
 
 
   // Loop over flux directions (x,y,z)
@@ -256,14 +256,14 @@ int main(int argc, char **argv) {
         for(int i=ghostzone; i<dirlength-(ghostzone-1); i++) {
           const int index  = indexf(dirlength, i, j ,k);
 
-          metric_quantities metric_face;
+          ghl_metric_quantities metric_face;
           ghl_initialize_metric(
                 face_lapse[index], face_betax[index], face_betay[index], face_betaz[index],
                 face_gxx[index], face_gxy[index], face_gxz[index],
                 face_gyy[index], face_gyz[index], face_gzz[index],
                 &metric_face);
 
-          primitive_quantities prims_r, prims_l;
+          ghl_primitive_quantities prims_r, prims_l;
           ghl_initialize_primitives(
                 rho_r[index], press_r[index], poison,
                 vx_r[index], vy_r[index], vz_r[index],
@@ -287,10 +287,10 @@ int main(int argc, char **argv) {
                 &prims_r, &prims_l, &eos,
                 &metric_face, &cmin, &cmax);
 
-          conservative_quantities cons_fluxes;
+          ghl_conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(
                 &prims_r, &prims_l, &eos,
-                &metric_face, cmin, cmax, 
+                &metric_face, cmin, cmax,
                 &cons_fluxes);
 
           rho_star_flux[index]  = cons_fluxes.rho;
@@ -312,7 +312,7 @@ int main(int argc, char **argv) {
           S_y_rhs[index] += invdx*(S_y_flux[index] - S_y_flux[indp1]);
           S_z_rhs[index] += invdx*(S_z_flux[index] - S_z_flux[indp1]);
 
-          metric_quantities metric_derivs;
+          ghl_metric_quantities metric_derivs;
           metric_derivs.lapse    = invdx*(face_lapse[indp1] - face_lapse[index]);
           metric_derivs.betaU[0] = invdx*(face_betax[indp1] - face_betax[index]);
           metric_derivs.betaU[1] = invdx*(face_betay[indp1] - face_betay[index]);
@@ -324,14 +324,14 @@ int main(int argc, char **argv) {
           metric_derivs.gammaDD[1][2] = invdx*(face_gyz[indp1] - face_gyz[index]);
           metric_derivs.gammaDD[2][2] = invdx*(face_gzz[indp1] - face_gzz[index]);
 
-          metric_quantities metric;
+          ghl_metric_quantities metric;
           ghl_initialize_metric(
                 lapse[index], betax[index], betay[index], betaz[index],
                 gxx[index], gxy[index], gxz[index],
                 gyy[index], gyz[index], gzz[index],
                 &metric);
 
-          primitive_quantities prims;
+          ghl_primitive_quantities prims;
           ghl_initialize_primitives(
                 rho[index], press[index], poison,
                 vx[index], vy[index], vz[index],
@@ -340,7 +340,7 @@ int main(int argc, char **argv) {
                 &prims);
           prims.u0  = rho[index]*Bx[index] / vy[index];
 
-          conservative_quantities cons_sources;
+          ghl_conservative_quantities cons_sources;
           cons_sources.SD[0] = 0.0;
           cons_sources.SD[1] = 0.0;
           cons_sources.SD[2] = 0.0;
@@ -359,20 +359,20 @@ int main(int argc, char **argv) {
       for(int i=ghostzone; i<dirlength-ghostzone; i++) {
         const int index  = indexf(dirlength, i, j ,k);
 
-        metric_quantities metric;
+        ghl_metric_quantities metric;
         ghl_initialize_metric(
               lapse[index], betax[index], betay[index], betaz[index],
               gxx[index], gxy[index], gxz[index],
               gyy[index], gyz[index], gzz[index],
               &metric);
 
-        extrinsic_curvature curv;
-        ghl_initialize_extrinsic_curvature(
+        ghl_extrinsic_curvature curv;
+        ghl_initialize_ghl_extrinsic_curvature(
               kxx[index], kxy[index], kxz[index],
               kyy[index], kyz[index], kzz[index],
               &curv);
 
-        primitive_quantities prims;
+        ghl_primitive_quantities prims;
         ghl_initialize_primitives(
               rho[index], press[index], poison,
               vx[index], vy[index], vz[index],
@@ -382,10 +382,10 @@ int main(int argc, char **argv) {
         prims.u0  = rho[index]*Bx[index] / vy[index];
 
 
-        conservative_quantities cons_sources;
+        ghl_conservative_quantities cons_sources;
         ghl_calculate_tau_tilde_source_term_extrinsic_curv(
               &prims, &eos, &metric, &curv, &cons_sources);
-                                    
+
         tau_rhs[index] += cons_sources.tau;
   }
 

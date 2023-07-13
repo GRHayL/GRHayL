@@ -2,12 +2,12 @@
 
 /* Function    : compute_P_cold_and_eps_cold()
  * Description : Computes P_cold and eps_cold.
- * Dependencies: initialize_igm_eos_parameters_from_input()
+ * Dependencies: initialize_igm_ghl_eos_parameters_from_input()
  *             : find_polytropic_K_and_Gamma_index()
  *
  * Inputs      : P_cold         - cold pressure
  *             : eps_cold       - cold specific internal energy
- *             : eos            - an initialized eos_parameters struct
+ *             : eos            - an initialized ghl_eos_parameters struct
  *                                with data for the EOS of the simulation
  *
  * Outputs     : P_cold         - cold pressure (supports SPEOS and PPEOS)
@@ -18,7 +18,7 @@
  */
 
 void NRPyEOS_compute_P_cold_and_eps_cold(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho_in,
       double *restrict P_cold_ptr,
       double *restrict eps_cold_ptr) {

@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
                     Psi6threshold, 0 /*Cupp Fix*/, 0.0 /*Lorenz damping factor*/, &params);
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
   double *By = (double*) malloc(sizeof(double)*arraylength);
   double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
-  // Allocate memory for the conservatives 
+  // Allocate memory for the conservatives
   double *rho_star = (double*) malloc(sizeof(double)*arraylength);
   double *tau = (double*) malloc(sizeof(double)*arraylength);
   double *S_x = (double*) malloc(sizeof(double)*arraylength);
@@ -111,10 +111,10 @@ int main(int argc, char **argv) {
             &vx[index], &vy[index], &vz[index],
             &Bx[index], &By[index], &Bz[index]);
 
-      metric_quantities ADM_metric;
-      primitive_quantities prims;
-      conservative_quantities cons;
-      stress_energy Tmunu;
+      ghl_metric_quantities ADM_metric;
+      ghl_primitive_quantities prims;
+      ghl_conservative_quantities cons;
+      ghl_stress_energy Tmunu;
 
       ghl_initialize_metric(
             lapse[index], betax[index], betay[index], betaz[index],
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
             gyy[index], gyz[index], gzz[index],
             &ADM_metric);
 
-      ADM_aux_quantities metric_aux;
+      ghl_ADM_aux_quantities metric_aux;
       ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
       ghl_initialize_primitives(
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
             &vx[index], &vy[index], &vz[index],
             &Bx[index], &By[index], &Bz[index],
             &dummy1, &dummy2, &dummy3);
-  
+
       ghl_return_conservatives(
             &cons, &rho_star[index], &tau[index],
             &S_x[index], &S_y[index], &S_z[index],
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
     S_y[index]      = (1.0 + randf(-1,1)*perturb_mag)*S_y[index];
     S_z[index]      = (1.0 + randf(-1,1)*perturb_mag)*S_z[index];
   }
-  
+
   sprintf(filename,"ET_Legacy_conservs_input_pert.bin");
   input = fopen_with_check(filename,"wb");
 

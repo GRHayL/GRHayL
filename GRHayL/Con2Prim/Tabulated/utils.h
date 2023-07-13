@@ -18,15 +18,15 @@
  *            : r                     - Auxiliary quantity: S^{2}/D^{2}.
  *            : s                     - Auxiliary quantity: B^{2}/D.
  *            : t                     - Auxiliary quantity: B.S/D^{3/2}.
- *            : eos                   - Pointer to const eos_parameters struct.
- *            : cons_undens           - Pointer to const conservative_quantities struct.
+ *            : eos                   - Pointer to const ghl_eos_parameters struct.
+ *            : cons_undens           - Pointer to const ghl_conservative_quantities struct.
  *            : compute_rho_P_eps_T_W - Function pointer provided by the user.
  */
 typedef struct fparams_struct {
   bool evolve_T;
   double temp_guess, Y_e, q, r, s, t;
-  const eos_parameters *eos;
-  const conservative_quantities *cons_undens;
+  const ghl_eos_parameters *eos;
+  const ghl_conservative_quantities *cons_undens;
   void (*compute_rho_P_eps_T_W)(
       const double x,
       struct fparams_struct *restrict fparams,
@@ -122,9 +122,9 @@ froot(
  */
 static inline void
 compute_BU_SU_Bsq_Ssq_BdotS(
-      const metric_quantities *restrict ADM_metric,
-      const conservative_quantities *restrict cons_undens,
-      const primitive_quantities *restrict prims,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const ghl_primitive_quantities *restrict prims,
       double *restrict BU,
       double *restrict SU,
       double *restrict Bsq,
@@ -177,11 +177,11 @@ int ghl_tabulated_Palenzuela1D(
             double *restrict T_ptr,
             double *restrict W_ptr ),
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics );
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics );
 
 int ghl_tabulated_Newman1D(
       void compute_rho_P_eps_T_W(
@@ -193,10 +193,10 @@ int ghl_tabulated_Newman1D(
             double *restrict T_ptr,
             double *restrict W_ptr ),
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics );
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics );
 
 #endif // PALENZUELA_H_

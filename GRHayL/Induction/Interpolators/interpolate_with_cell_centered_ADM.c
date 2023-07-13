@@ -14,7 +14,7 @@
  *
  */
 void ghl_interpolate_with_cell_centered_ADM(
-      const metric_quantities metric_stencil[2][2][2],
+      const ghl_metric_quantities metric_stencil[2][2][2],
       const double Ax_stencil[3][3][3],
       const double Ay_stencil[3][3][3],
       const double Az_stencil[3][3][3],
@@ -56,7 +56,7 @@ void ghl_interpolate_with_cell_centered_ADM(
      centered around the staggered point. This means that the metric have an even stencil, and the A_i
      have an odd stencil.
   */
-  metric_quantities metric_interp;
+  ghl_metric_quantities metric_interp;
   double lapse_over_psi6_interp;
   ghl_ADM_cell_interp(2, metric_stencil, &metric_interp, &lapse_over_psi6_interp);
 

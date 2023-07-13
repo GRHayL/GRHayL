@@ -17,7 +17,7 @@
          n    = dimension of x[];
 *********************************************************************************/
 void ghl_func_Z(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double rho_in,

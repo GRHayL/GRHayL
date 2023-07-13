@@ -3,9 +3,9 @@
 /* Function    : ghl_compute_conservs()
  * Description : Computes the conservatives from the given primitives
  *
- * Inputs      : metric         - metric_quantities struct with data for
+ * Inputs      : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
- *             : prims          - primitive_quantities struct with data
+ *             : prims          - ghl_primitive_quantities struct with data
  *                                for the gridpoint of interest
  *
  * Outputs     : cons           - returns computed conservative values
@@ -13,10 +13,10 @@
  */
 
 void ghl_compute_conservs(
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const primitive_quantities *restrict prims,
-      conservative_quantities *restrict cons) {
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_conservative_quantities *restrict cons) {
 
   // First compute the enthalpy
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;

@@ -70,7 +70,7 @@ void ghl_initialize_params(
 #define MAX_EOS_PARAMS (10)
 
 /*
-   The struct primitive_quantities contains variables for storing the (point-wise)
+   The struct ghl_primitive_quantities contains variables for storing the (point-wise)
    primitive variable data. The struct elements are detailed below:
 
  --rho: the baryonic density rho_b
@@ -93,15 +93,15 @@ void ghl_initialize_params(
  --temp: the temperature T
 */
 
-typedef struct primitive_quantities {
+typedef struct ghl_primitive_quantities {
   double rho, press, eps;
   double u0, vU[3];
   double BU[3];
   double Y_e, temperature, entropy;
-} primitive_quantities;
+} ghl_primitive_quantities;
 
 /*
-   The struct eos_parameters contains information about the eos being used
+   The struct ghl_eos_parameters contains information about the eos being used
    by the simulation. The struct elements are detailed below:
 
  --type: selects the type of EOS (hybrid or tabulated) where
@@ -142,7 +142,7 @@ typedef struct primitive_quantities {
 
 typedef enum {ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
 
-typedef struct eos_parameters {
+typedef struct ghl_eos_parameters {
 
   //-------------- General parameters --------------
   ghl_eos_t eos_type;
@@ -203,7 +203,7 @@ typedef struct eos_parameters {
   double drhotempyei;
   //------------------------------------------------
 
-} eos_parameters;
+} ghl_eos_parameters;
 
 #include "ghl_eos_functions.h"
 
@@ -213,7 +213,7 @@ extern "C" {
 
 void ghl_initialize_eos_functions(
     ghl_eos_t const eos_type,
-    eos_parameters *restrict eos );
+    ghl_eos_parameters *restrict eos );
 
 void ghl_initialize_hybrid_eos(
       const double W_max,
@@ -225,7 +225,7 @@ void ghl_initialize_hybrid_eos(
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
-      eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos );
 
 void ghl_initialize_tabulated_eos(
       const char *table_path,
@@ -239,7 +239,7 @@ void ghl_initialize_tabulated_eos(
       const double T_atm,
       const double T_min,
       const double T_max,
-      eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos );
 
 void ghl_initialize_hybrid_eos_functions_and_params(
       const double W_max,
@@ -251,7 +251,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
-      eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos );
 
 void ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
@@ -265,7 +265,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
       const double T_atm,
       const double T_min,
       const double T_max,
-      eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos );
 
 #ifdef __cplusplus
 }
@@ -276,7 +276,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
 //--------------- Con2Prim facets ------------------
 
 /*
-   The struc conservative_quantities contains variables for storing the (point-wise)
+   The struc ghl_conservative_quantities contains variables for storing the (point-wise)
    conservative variable data. Since most of these variables are densitized, let's
    define dens = sqrt(gamma). Then, the struct elements are detailed below:
 
@@ -291,11 +291,11 @@ void ghl_initialize_tabulated_eos_functions_and_params(
  --entropy: the densitized entropy \tilde{S} = TODO
 */
 
-typedef struct conservative_quantities {
+typedef struct ghl_conservative_quantities {
   double rho, tau, Y_e;
   double SD[3];
   double entropy;
-} conservative_quantities;
+} ghl_conservative_quantities;
 
 #ifdef __cplusplus
 extern "C" {
@@ -306,23 +306,23 @@ void ghl_initialize_primitives(
       const double vx, const double vy, const double vz,
       const double Bx, const double By, const double Bz,
       const double entropy, const double Y_e, const double temp,
-      primitive_quantities *restrict prims);
+      ghl_primitive_quantities *restrict prims);
 
 void ghl_initialize_conservatives(
       const double rho, const double tau,
       const double S_x, const double S_y, const double S_z,
       const double Y_e, const double entropy,
-      conservative_quantities *restrict cons);
+      ghl_conservative_quantities *restrict cons);
 
 void ghl_return_primitives(
-      const primitive_quantities *restrict prims,
+      const ghl_primitive_quantities *restrict prims,
       double *restrict rho, double *restrict press, double *restrict epsilon,
       double *restrict vx, double *restrict vy, double *restrict vz,
       double *restrict Bx, double *restrict By, double *restrict Bz,
       double *restrict entropy, double *restrict Y_e, double *restrict temp);
 
 void ghl_return_conservatives(
-      const conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons,
       double *restrict rho, double *restrict tau,
       double *restrict S_x, double *restrict S_y, double *restrict S_z,
       double *restrict Y_e, double *restrict entropy);
@@ -335,7 +335,7 @@ void ghl_return_conservatives(
 
 //-------------- Space-time facets -----------------
 
-/* The struct metric_quantities contains variables for storing the (point-wise)
+/* The struct ghl_metric_quantities contains variables for storing the (point-wise)
    metric data. The struct elements are detailed below:
 
  --bssn_phi: TODO
@@ -385,27 +385,27 @@ void ghl_return_conservatives(
    and the HARM con2prim lowlevel functions.
 */
 
-typedef struct metric_quantities {
+typedef struct ghl_metric_quantities {
   double lapse, lapseinv, lapseinv2;
   double detgamma, sqrt_detgamma;
   double betaU[3];
   double gammaDD[3][3];
   double gammaUU[3][3];
-} metric_quantities;
+} ghl_metric_quantities;
 
-typedef struct ADM_aux_quantities {
+typedef struct ghl_ADM_aux_quantities {
   double phi;
   double psi2, psi4, psi4inv;
   double g4DD[4][4],g4UU[4][4];
-} ADM_aux_quantities;
+} ghl_ADM_aux_quantities;
 
-typedef struct extrinsic_curvature {
+typedef struct ghl_extrinsic_curvature {
   double K[3][3];
-} extrinsic_curvature;
+} ghl_extrinsic_curvature;
 
-typedef struct stress_energy {
+typedef struct ghl_stress_energy {
   double T4[4][4];
-} stress_energy;
+} ghl_stress_energy;
 
 #ifdef __cplusplus
 extern "C" {
@@ -416,42 +416,42 @@ void ghl_initialize_metric(
       const double betax, const double betay, const double betaz,
       const double gxx, const double gxy, const double gxz,
       const double gyy, const double gyz, const double gzz,
-      metric_quantities *restrict metric);
+      ghl_metric_quantities *restrict metric);
 
 void ghl_compute_ADM_auxiliaries(
-      const metric_quantities *restrict ADM_metric,
-      ADM_aux_quantities *restrict metric_aux);
+      const ghl_metric_quantities *restrict ADM_metric,
+      ghl_ADM_aux_quantities *restrict metric_aux);
 
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax, const double betay, const double betaz,
       const double gxx, const double gxy, const double gxz,
       const double gyy, const double gyz, const double gzz,
-      metric_quantities *restrict ADM_metric);
+      ghl_metric_quantities *restrict ADM_metric);
 
-void ghl_initialize_extrinsic_curvature(
+void ghl_initialize_ghl_extrinsic_curvature(
       const double Kxx, const double Kxy, const double Kxz,
       const double Kyy, const double Kyz, const double Kzz,
-      extrinsic_curvature *restrict curv);
+      ghl_extrinsic_curvature *restrict curv);
 
-void ghl_initialize_stress_energy(
+void ghl_initialize_ghl_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
       const double Txx, const double Txy, const double Txz,
       const double Tyy, const double Tyz, const double Tzz,
-      stress_energy *restrict Tmunu);
+      ghl_stress_energy *restrict Tmunu);
 
-void ghl_return_stress_energy(
-      const stress_energy *restrict Tmunu,
+void ghl_return_ghl_stress_energy(
+      const ghl_stress_energy *restrict Tmunu,
       double *restrict Ttt, double *restrict Ttx, double *restrict Tty,
       double *restrict Ttz, double *restrict Txx, double *restrict Txy,
       double *restrict Txz, double *restrict Tyy, double *restrict Tyz,
       double *restrict Tzz);
 
 void ghl_limit_v_and_compute_u0(
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      primitive_quantities *restrict prims,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      ghl_primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
 void ghl_raise_vector_4D(
@@ -483,20 +483,20 @@ double ghl_compute_vec2_from_vecU(
       const double *restrict vecU);
 
 void ghl_compute_TDNmunu(
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const primitive_quantities *restrict prims,
-      stress_energy *restrict Tmunu);
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_stress_energy *restrict Tmunu);
 
 void ghl_compute_TUPmunu(
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const primitive_quantities *restrict prims,
-      stress_energy *restrict Tmunu);
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_stress_energy *restrict Tmunu);
 
 void ghl_compute_smallb_and_b2(
-      const metric_quantities *restrict ADM_metric,
-      const primitive_quantities *restrict prims,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_primitive_quantities *restrict prims,
       const double uDN[4],
       double smallb[4],
       double *restrict smallb2);

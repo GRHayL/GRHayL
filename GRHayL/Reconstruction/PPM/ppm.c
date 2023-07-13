@@ -66,7 +66,7 @@ void ghl_ppm(
   //  * tmp_Ul[PLUS_0] = U(i-1/2)
   // However, we want
   //  * (STEP 1) Ur[PLUS_0] = U(i-1/2+epsilon) = tmp_Ul[PLUS_0]
-  //  AND 
+  //  AND
   //  * (STEP 2) Ul[PLUS_0] = U(i-1/2-epsilon) = tmp_Ur[MINUS1]
 
   // STEP 1: Evaluate Ur[PLUS_0] and Ul[PLUS_0],

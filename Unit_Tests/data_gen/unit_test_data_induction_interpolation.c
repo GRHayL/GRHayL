@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
       for(int i=0; i<dirlength; i++) {
         const int index = indexf(dirlength,i,j,k);
 
-        metric_quantities ADM_metric;
+        ghl_metric_quantities ADM_metric;
         ghl_randomize_metric(
               &lapse[index], &betax[index], &betay[index], &betaz[index],
               &gxx[index], &gxy[index], &gxz[index],
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
               gyy[index], gyz[index], gzz[index],
               &ADM_metric);
 
-        ADM_aux_quantities metric_aux;
+        ghl_ADM_aux_quantities metric_aux;
         ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
         psi[index]    = sqrt(metric_aux.psi2);

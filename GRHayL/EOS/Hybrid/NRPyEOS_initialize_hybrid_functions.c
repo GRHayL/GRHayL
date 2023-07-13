@@ -1,6 +1,6 @@
 #include "nrpyeos_hybrid.h"
 
-void NRPyEOS_initialize_hybrid_functions(eos_parameters *restrict eos) {
+void NRPyEOS_initialize_hybrid_functions(ghl_eos_parameters *restrict eos) {
   ghl_hybrid_find_polytropic_index            = &NRPyEOS_find_polytropic_index;
   ghl_hybrid_get_K_and_Gamma                  = &NRPyEOS_get_K_and_Gamma;
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts = &NRPyEOS_set_K_ppoly_and_eps_integ_consts;

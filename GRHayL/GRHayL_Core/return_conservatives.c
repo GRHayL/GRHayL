@@ -3,7 +3,7 @@
 /* Function    : ghl_return_conservatives()
  * Description : unpacks conservative struct into variables
  *
- * Intputs      : cons          - conservative_quantities struct to be unpacked
+ * Intputs      : cons          - ghl_conservative_quantities struct to be unpacked
  *
  * Outputs     : rho            - pointer to rho_star
  *             : tau            - pointer to \tilde{tau}
@@ -14,7 +14,7 @@
  */
 
 void ghl_return_conservatives(
-             const conservative_quantities *restrict cons,
+             const ghl_conservative_quantities *restrict cons,
              double *restrict rho, double *restrict tau,
              double *restrict S_x, double *restrict S_y, double *restrict S_z,
              double *restrict Y_e, double *restrict entropy) {

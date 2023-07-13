@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, Lorenz_damping_factor, &params);
 
-  eos_parameters hybrid_eos;
+  ghl_eos_parameters hybrid_eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_atm, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
@@ -65,16 +65,16 @@ int main(int argc, char **argv) {
       break;
   }
 
-  metric_quantities ADM_metric;
-  primitive_quantities prims;
-  conservative_quantities cons;
-  con2prim_diagnostics diagnostics; 
+  ghl_metric_quantities ADM_metric;
+  ghl_primitive_quantities prims;
+  ghl_conservative_quantities cons;
+  ghl_con2prim_diagnostics diagnostics;
   ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
                     1.0, 0.0, 0.0,
                     1.0, 0.0, 1.0,
                     &ADM_metric);
 
-  ADM_aux_quantities metric_aux;
+  ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
   /*
@@ -108,7 +108,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   double T_min     = T_atm;
   double T_max     = 1e2;
 
-  /* 
+  /*
      Tabulated EOS setup:
        6: rho_b_atm too small
        7: Y_e_atm too small
@@ -138,13 +138,13 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
   }
 
-  eos_parameters tab_eos;
+  ghl_eos_parameters tab_eos;
   ghl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
                                                 rho_b_atm, rho_b_min, rho_b_max,
                                                 Y_e_atm, Y_e_min, Y_e_max,
                                                 T_atm, T_min, T_max, &tab_eos);
 
-  /* 
+  /*
      NRPyEOS interpolators:
        NRPyEOS_from_rho_Ye_T_interpolate_n_quantities:
          12: TODO: still need to manually call w/ too many keys
@@ -218,7 +218,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
   }
 
-  /* 
+  /*
      NRPyEOS interpolators:
        NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities:
          23: TODO: still need to manually call w/ too many keys

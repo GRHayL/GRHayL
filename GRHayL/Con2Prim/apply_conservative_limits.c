@@ -8,11 +8,11 @@
  *
  * Inputs      : params         - ghl_parameters struct with parameters
  *                                for the simulation
- *             : eos            - eos_parameters struct with data for the
+ *             : eos            - ghl_eos_parameters struct with data for the
  *                                EOS of the simulation
- *             : metric         - metric_quantities struct with data for
+ *             : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
- *             : prims          - primitive_quantities struct with data
+ *             : prims          - ghl_primitive_quantities struct with data
  *                                for the gridpoint of interest
  *
  * Outputs     : cons           - returns potentially different values for cons->tau and cons->SD
@@ -22,11 +22,11 @@
 
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const primitive_quantities *restrict prims,
-      conservative_quantities *restrict cons,
-      con2prim_diagnostics *restrict diagnostics) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_conservative_quantities *restrict cons,
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   //First, prepare for the tau and stilde fixes:
   const double sdots = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, cons->SD);

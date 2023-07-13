@@ -3,9 +3,9 @@
 /* Function    : ghl_limit_utilde_and_compute_v()
  * Description : Applies speed limit to \tilde{u}^i and computes v^i and u^0
  *
- * Inputs      : eos            - eos_parameters struct with data for the
+ * Inputs      : eos            - ghl_eos_parameters struct with data for the
  *                                EOS of the simulation
- *             : metric         - metric_quantities struct with data for
+ *             : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
  *             : utcon1_ptr     - pointer to the x component of \tilde{u}^1
  *             : utcon2_ptr     - pointer to the y component of \tilde{u}^2
@@ -23,10 +23,10 @@
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
 void ghl_limit_utilde_and_compute_v(
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
       double utU[3],
-      primitive_quantities *restrict prims,
+      ghl_primitive_quantities *restrict prims,
       int *restrict speed_limit) {
 
   //Velocity limiter:

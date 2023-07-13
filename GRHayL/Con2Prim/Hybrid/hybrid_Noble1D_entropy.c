@@ -1,7 +1,7 @@
 #include "../harm_u2p_util.h"
 
 /* Function    : Hybrid_Noble2D()
- * Description : Unpacks the primitive_quantities struct into the variables
+ * Description : Unpacks the ghl_primitive_quantities struct into the variables
                  needed by the Newton-Rapson solver provided by HARM, then
                  repacks the  primitives. This function
                  is adapted from the HARM function provided by IllinoisGRMHD. The
@@ -9,11 +9,11 @@
 
  * Inputs      : params         - ghl_parameters struct with parameters
  *                                for the simulation
- *             : eos            - eos_parameters struct with data for the
+ *             : eos            - ghl_eos_parameters struct with data for the
  *                                EOS of the simulation
- *             : metric         - metric_quantities struct with data for
+ *             : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
- *             : cons           - conservative_quantities struct with data
+ *             : cons           - ghl_conservative_quantities struct with data
  *                                for the gridpoint of interest
  *
  * Outputs     : prims          - returns computed primitives if Newton-Rapson
@@ -131,12 +131,12 @@ TODO: needs remaining error codes
 
 int ghl_hybrid_Noble1D_entropy(
       const ghl_parameters *restrict params,
-      const eos_parameters *restrict eos,
-      const metric_quantities *restrict ADM_metric,
-      const ADM_aux_quantities *restrict metric_aux,
-      const conservative_quantities *restrict cons_undens,
-      primitive_quantities *restrict prims,
-      con2prim_diagnostics *restrict diagnostics ) {
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   double gnr_out[NEWT_DIM];
 

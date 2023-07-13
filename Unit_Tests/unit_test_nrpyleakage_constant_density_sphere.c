@@ -11,7 +11,7 @@ static void set_opacity_struct_from_gfs(
       const double *restrict kappa_1_anue,
       const double *restrict kappa_0_nux,
       const double *restrict kappa_1_nux,
-      neutrino_opacities *restrict kappa) {
+      ghl_neutrino_opacities *restrict kappa) {
 
   kappa->nue [0] = kappa_0_nue [index];
   kappa->nue [1] = kappa_1_nue [index];
@@ -29,7 +29,7 @@ static void set_optical_depths_struct_from_gfs(
       const double *restrict tau_1_anue,
       const double *restrict tau_0_nux,
       const double *restrict tau_1_nux,
-      neutrino_optical_depths *restrict tau) {
+      ghl_neutrino_optical_depths *restrict tau) {
 
   tau->nue [0] = tau_0_nue [index];
   tau->nue [1] = tau_1_nue [index];
@@ -40,7 +40,7 @@ static void set_optical_depths_struct_from_gfs(
 }
 
 void constantdensitysphere_test(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const int test_key) {
 
   // Step 1: Set basic parameters
@@ -108,16 +108,16 @@ void constantdensitysphere_test(
   }
 
   // Step 4: Compute opacities in the interior and exterior
-  neutrino_optical_depths tau_in = {{0,0},{0,0},{0,0}};
+  ghl_neutrino_optical_depths tau_in = {{0,0},{0,0},{0,0}};
 
   // Step 4.a: Interior
-  neutrino_opacities kappa_interior;
-  NRPyLeakage_compute_neutrino_opacities(eos,rho_interior,Y_e_interior,T_interior,
+  ghl_neutrino_opacities kappa_interior;
+  NRPyLeakage_compute_ghl_neutrino_opacities(eos,rho_interior,Y_e_interior,T_interior,
                                          &tau_in, &kappa_interior);
 
   // Step 4.b: Exterior
-  neutrino_opacities kappa_exterior;
-  NRPyLeakage_compute_neutrino_opacities(eos,rho_exterior,Y_e_exterior,T_exterior,
+  ghl_neutrino_opacities kappa_exterior;
+  NRPyLeakage_compute_ghl_neutrino_opacities(eos,rho_exterior,Y_e_exterior,T_exterior,
                                          &tau_in, &kappa_exterior);
 
   // Step 5: Print basic information
@@ -275,10 +275,10 @@ void constantdensitysphere_test(
           const int i_j_kp1 = IDX3D(i0, i1  , i2+1);
           const int i_j_km1 = IDX3D(i0, i1  , i2-1);
 
-          neutrino_opacities kappa_i_j_k;
-          neutrino_opacities kappa_ip1_j_k, kappa_im1_j_k;
-          neutrino_opacities kappa_i_jp1_k, kappa_i_jm1_k;
-          neutrino_opacities kappa_i_j_kp1, kappa_i_j_km1;
+          ghl_neutrino_opacities kappa_i_j_k;
+          ghl_neutrino_opacities kappa_ip1_j_k, kappa_im1_j_k;
+          ghl_neutrino_opacities kappa_i_jp1_k, kappa_i_jm1_k;
+          ghl_neutrino_opacities kappa_i_j_kp1, kappa_i_j_km1;
           set_opacity_struct_from_gfs(i_j_k  , kappa_nue[0], kappa_nue[1], kappa_anue[0], kappa_anue[1], kappa_nux[0], kappa_nux[1], &kappa_i_j_k  );
           set_opacity_struct_from_gfs(ip1_j_k, kappa_nue[0], kappa_nue[1], kappa_anue[0], kappa_anue[1], kappa_nux[0], kappa_nux[1], &kappa_ip1_j_k);
           set_opacity_struct_from_gfs(im1_j_k, kappa_nue[0], kappa_nue[1], kappa_anue[0], kappa_anue[1], kappa_nux[0], kappa_nux[1], &kappa_im1_j_k);
@@ -287,9 +287,9 @@ void constantdensitysphere_test(
           set_opacity_struct_from_gfs(i_j_kp1, kappa_nue[0], kappa_nue[1], kappa_anue[0], kappa_anue[1], kappa_nux[0], kappa_nux[1], &kappa_i_j_kp1);
           set_opacity_struct_from_gfs(i_j_km1, kappa_nue[0], kappa_nue[1], kappa_anue[0], kappa_anue[1], kappa_nux[0], kappa_nux[1], &kappa_i_j_km1);
 
-          neutrino_optical_depths tau_ip1_j_k, tau_im1_j_k;
-          neutrino_optical_depths tau_i_jp1_k, tau_i_jm1_k;
-          neutrino_optical_depths tau_i_j_kp1, tau_i_j_km1;
+          ghl_neutrino_optical_depths tau_ip1_j_k, tau_im1_j_k;
+          ghl_neutrino_optical_depths tau_i_jp1_k, tau_i_jm1_k;
+          ghl_neutrino_optical_depths tau_i_j_kp1, tau_i_j_km1;
           set_optical_depths_struct_from_gfs(ip1_j_k, tau_nue_p[0], tau_nue_p[1], tau_anue_p[0], tau_anue_p[1], tau_nux_p[0], tau_nux_p[1], &tau_ip1_j_k);
           set_optical_depths_struct_from_gfs(im1_j_k, tau_nue_p[0], tau_nue_p[1], tau_anue_p[0], tau_anue_p[1], tau_nux_p[0], tau_nux_p[1], &tau_im1_j_k);
           set_optical_depths_struct_from_gfs(i_jp1_k, tau_nue_p[0], tau_nue_p[1], tau_anue_p[0], tau_anue_p[1], tau_nux_p[0], tau_nux_p[1], &tau_i_jp1_k);
@@ -297,7 +297,7 @@ void constantdensitysphere_test(
           set_optical_depths_struct_from_gfs(i_j_kp1, tau_nue_p[0], tau_nue_p[1], tau_anue_p[0], tau_anue_p[1], tau_nux_p[0], tau_nux_p[1], &tau_i_j_kp1);
           set_optical_depths_struct_from_gfs(i_j_km1, tau_nue_p[0], tau_nue_p[1], tau_anue_p[0], tau_anue_p[1], tau_nux_p[0], tau_nux_p[1], &tau_i_j_km1);
 
-          neutrino_optical_depths tau_i_j_k;
+          ghl_neutrino_optical_depths tau_i_j_k;
           NRPyLeakage_optical_depths_PathOfLeastResistance(dxx, stencil_gxx, stencil_gyy, stencil_gzz,
                                                            &kappa_ip1_j_k, &kappa_im1_j_k,
                                                            &kappa_i_jp1_k, &kappa_i_jm1_k,
@@ -479,13 +479,13 @@ void constantdensitysphere_test(
 }
 
 void
-generate_test_data(const eos_parameters *restrict eos) {
+generate_test_data(const ghl_eos_parameters *restrict eos) {
   for(int perturb=0;perturb<=1;perturb++)
     constantdensitysphere_test(eos, perturb);
 }
 
 void
-run_unit_test(const eos_parameters *restrict eos) {
+run_unit_test(const ghl_eos_parameters *restrict eos) {
   constantdensitysphere_test(eos, 2);
 }
 

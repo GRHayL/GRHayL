@@ -1,7 +1,7 @@
 #include "nrpyeos_hybrid.h"
 
 void NRPyEOS_compute_P_cold(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho_in,
       double *restrict P_cold_ptr) {
   // This code handles equations of state of the form defined

@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
         gyy[index] = 2.33; /*randf(scale);*/ \
         gyz[index] = 0.041; /*randf(scale);*/ \
         gzz[index] = 3.11; /*randf(scale);*/ \
-                     
+
         kxx[index] = randf(0,1.0);
         kxy[index] = randf(0,1.0);
         kxz[index] = randf(0,1.0);

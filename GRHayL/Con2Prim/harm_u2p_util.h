@@ -59,7 +59,7 @@ pressure as a function of rho0 and u
 this is used by primtoU and Utoprim_?D
 */
 static inline double ghl_pressure_rho0_u(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho0,
       const double u) {
 
@@ -81,7 +81,7 @@ static inline double ghl_pressure_rho0_u(
    this is used by primtoU and Utoprim_1D
 */
 static inline double ghl_pressure_rho0_w(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double rho0,
       const double w) {
 
@@ -118,7 +118,7 @@ static inline double ghl_vsq_calc(
    ghl_dpdW_calc_vsq():
 ****************************************************************************/
 static inline double ghl_dpdW_calc_vsq(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double W,
       const double vsq) {
   return( (eos->Gamma_th - 1.0) * (1.0 - vsq) /  eos->Gamma_th  ) ;
@@ -162,7 +162,7 @@ static inline void ghl_validate_x(
         -- pressure as a function of P_cold, eps_cold, W, vsq, and D:
 **********************************************************************/
 static inline double ghl_pressure_W_vsq(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double W,
       const double vsq,
       const double D) {
@@ -189,7 +189,7 @@ static inline double ghl_pressure_W_vsq(
       -- partial derivative of pressure with respect to vsq
 **********************************************************************/
 static inline double ghl_dpdvsq_calc(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const double W,
       const double vsq,
       const double D) {
@@ -236,27 +236,27 @@ static inline double ghl_dpdvsq_calc(
 }
 
 int ghl_general_newton_raphson(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double indep_var_in,
       int *restrict n_iter_ptr,
       double x[],
-      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
+      void (*funcd)(const ghl_eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
                     double [], double [][ndim], double *restrict, double *restrict, int *restrict));
 
 int ghl_newton_raphson_1d(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double indep_var_in,
       int *restrict n_iter_ptr,
       double x[],
-      void (*funcd)(const eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
+      void (*funcd)(const ghl_eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
                     double [], double [][ndim], double *restrict, double *restrict, int *restrict));
 
 void ghl_func_vsq(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double dummy,
@@ -269,7 +269,7 @@ void ghl_func_vsq(
       int *restrict n_iter);
 
 void ghl_func_1d_orig(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double dummy,
@@ -282,7 +282,7 @@ void ghl_func_1d_orig(
       int *restrict n_iter);
 
 void ghl_func_Z(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double rho_in,
@@ -295,7 +295,7 @@ void ghl_func_Z(
       int *restrict n_iter);
 
 void ghl_func_rho(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double Z_in,
@@ -308,7 +308,7 @@ void ghl_func_rho(
       int *restrict n_iter);
 
 void ghl_func_rho2(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double Z_in,
@@ -321,11 +321,11 @@ void ghl_func_rho2(
       int *restrict n_iter);
 
 int ghl_hybrid_Font_fix_loop(
-      const eos_parameters *restrict eos,
+      const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol, const double W_in,
       const double Sf2_in, const double Psim6, const double sdots,
       const double BbardotS2, const double B2bar,
-      const conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons,
       const double rhob_in, double *restrict rhob_out_ptr);
 
 #endif

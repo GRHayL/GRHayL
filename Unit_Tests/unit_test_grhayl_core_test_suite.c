@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
   const double Gamma_ppoly[1] = {2.0};
   const double k_ppoly0 = 1.0;
 
-  eos_parameters hybrid_eos;
+  ghl_eos_parameters hybrid_eos;
   ghl_initialize_hybrid_eos_functions_and_params(
       W_max,
       rho_b_min, rho_b_min, rho_b_max,
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   //const double T_min = 1e-12;
   //const double Ye_max = 1e300;
   //const double T_max = 1e300;
-  //eos_parameters tabulated_eos;
+  //ghl_eos_parameters tabulated_eos;
   //ghl_initialize_tabulated_eos_functions_and_params(
   //    W_max,
   //    rho_b_min, rho_b_min, rho_b_max,
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   // First test: ghl_set_prims_to_constant_atm() function
   // Function just sets data to eos data, so no need
   // to store pre-computed comparison data
-  primitive_quantities prims;
+  ghl_primitive_quantities prims;
 
   for(int eos_it=0; eos_it<2; eos_it++) {
     // poison initial primitive data so reset is obvious
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     prims.Y_e = poison;
     prims.temperature = poison;
 
-    eos_parameters eos;
+    ghl_eos_parameters eos;
     if(eos_it==0) {
       eos = hybrid_eos;
 
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 
   // Second test: ghl_enforce_detgtij_and_initialize_ADM_metric() function
   // Valid metrics should return near-identical (round-off level) metrics
-  metric_quantities new_metric;
+  ghl_metric_quantities new_metric;
 
   // read in metric data
   FILE* infile = fopen_with_check("grhayl_core_test_suite_input.bin","rb");

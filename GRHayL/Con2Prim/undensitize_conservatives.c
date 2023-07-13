@@ -3,9 +3,9 @@
 /* Function    : ghl_undensitize_conservatives()
  * Description : Computes undensitized conservatives using the metric
  *
- * Inputs      : metric         - metric_quantities struct with data for
+ * Inputs      : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
- *             : cons           - conservative_quantities struct with data
+ *             : cons           - ghl_conservative_quantities struct with data
  *                                for the gridpoint of interest
  *
  * Outputs     : cons_undens    - returns undensitized conservative
@@ -14,13 +14,13 @@
 
 void ghl_undensitize_conservatives(
       const double psi6,
-      const conservative_quantities *restrict cons,
-      conservative_quantities *restrict cons_undens) {
+      const ghl_conservative_quantities *restrict cons,
+      ghl_conservative_quantities *restrict cons_undens) {
 
   /*
      Many codes evolve the"densitized" conservative
      variables (D,tau,S_{i}). We have the relationships:
-    
+
      rho_star   = sqrt(gamma) *  D
      tilde(tau) = sqrt(gamma) * tau
      tilde(S)_i = sqrt(gamma) * S_i

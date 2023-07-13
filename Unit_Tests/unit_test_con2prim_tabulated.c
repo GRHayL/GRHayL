@@ -2,7 +2,7 @@
 #include "unit_tests.h"
 
 const char *
-get_routine_string(const con2prim_method_t key) {
+get_routine_string(const ghl_con2prim_method_t key) {
   switch(key) {
     case Palenzuela1D:
       return "Palenzuela1D";
@@ -21,7 +21,7 @@ get_routine_string(const con2prim_method_t key) {
 void
 generate_test_data(
     const ghl_parameters *restrict params,
-    const eos_parameters *restrict eos ) {
+    const ghl_eos_parameters *restrict eos ) {
 
   const char *routine = get_routine_string(params->main_routine);
   ghl_info("Beginning data generation for %s\n", routine);
@@ -103,21 +103,21 @@ generate_test_data(
       }
 
       // Set metric quantities to Minkowski
-      metric_quantities ADM_metric;
+      ghl_metric_quantities ADM_metric;
       ghl_initialize_metric(1,
                         0, 0, 0,
                         1, 0, 0,
                         1, 0, 1,
                         &ADM_metric);
 
-      ADM_aux_quantities metric_aux;
+      ghl_ADM_aux_quantities metric_aux;
       ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
       srand(0);
       for(int i=0;i<npoints;i++) {
         for(int j=0;j<npoints;j++) {
 
-          con2prim_diagnostics diagnostics;
+          ghl_con2prim_diagnostics diagnostics;
           ghl_initialize_diagnostics(&diagnostics);
 
           double xrho, xtemp, xlogWm1, xW, xlogPmoP;
@@ -156,7 +156,7 @@ generate_test_data(
           const double Bz    = -Bhatz * B;
 
           // Set primitive quantities
-          primitive_quantities prims_orig;
+          ghl_primitive_quantities prims_orig;
           ghl_initialize_primitives(xrho, xprs, xeps,
                                 vx, vy, vz,
                                 Bx, By, Bz,
@@ -165,7 +165,7 @@ generate_test_data(
           ghl_limit_v_and_compute_u0(eos, &ADM_metric, &prims_orig, &diagnostics.speed_limited);
 
           // Set prim guesses
-          primitive_quantities prims;
+          ghl_primitive_quantities prims;
           ghl_initialize_primitives(0.0/0.0, 0.0/0.0, 0.0/0.0,
                                 0.0/0.0, 0.0/0.0, 0.0/0.0,
                                 Bx, By, Bz,
@@ -174,12 +174,12 @@ generate_test_data(
           prims.u0 = prims_orig.u0;
 
           // Compute conserved variables and Tmunu
-          conservative_quantities cons;
-          __attribute__((unused)) stress_energy dummy;
+          ghl_conservative_quantities cons;
+          __attribute__((unused)) ghl_stress_energy dummy;
           ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims_orig, &cons, &dummy);
 
           // Undensitize the conserved variables
-          conservative_quantities cons_undens;
+          ghl_conservative_quantities cons_undens;
           ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
           // Now perform the con2prim
@@ -192,8 +192,8 @@ generate_test_data(
 
           // Write input and output primitives
           if( !perturb )
-            fwrite(&prims_orig, sizeof(primitive_quantities), 1, fp);
-          fwrite(&prims     , sizeof(primitive_quantities), 1, fp);
+            fwrite(&prims_orig, sizeof(ghl_primitive_quantities), 1, fp);
+          fwrite(&prims     , sizeof(ghl_primitive_quantities), 1, fp);
         }
       }
       fclose(fp);
@@ -204,7 +204,7 @@ generate_test_data(
 void
 run_unit_test(
     const ghl_parameters *restrict params,
-    const eos_parameters *restrict eos ) {
+    const ghl_eos_parameters *restrict eos ) {
 
   const char *routine = get_routine_string(params->main_routine);
   ghl_info("Beginning unit test for %s\n", routine);
@@ -226,34 +226,34 @@ run_unit_test(
       ghl_error("Problem reading input data files (%d != %d)\n", n1, n2);
 
     const int npoints = n1;
-    metric_quantities ADM_metric;
+    ghl_metric_quantities ADM_metric;
     ghl_initialize_metric(1,
                       0, 0, 0,
                       1, 0, 0,
                       1, 0, 1,
                       &ADM_metric);
 
-    ADM_aux_quantities metric_aux;
+    ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     for(int i=0;i<npoints;i++) {
       for(int j=0;j<npoints;j++) {
 
-        con2prim_diagnostics diagnostics;
+        ghl_con2prim_diagnostics diagnostics;
         ghl_initialize_diagnostics(&diagnostics);
 
         // Read input primitives from unperturbed data file
-        primitive_quantities prims;
-        if( fread(&prims, sizeof(primitive_quantities), 1, fp_unpert) != 1 )
+        ghl_primitive_quantities prims;
+        if( fread(&prims, sizeof(ghl_primitive_quantities), 1, fp_unpert) != 1 )
           ghl_error("Failed to read input primitives from file\n");
 
         // Compute conserved variables and Tmunu
-        conservative_quantities cons;
-        __attribute__((unused)) stress_energy dummy;
+        ghl_conservative_quantities cons;
+        __attribute__((unused)) ghl_stress_energy dummy;
         ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &dummy);
 
         // Undensitize the conserved variables
-        conservative_quantities cons_undens;
+        ghl_conservative_quantities cons_undens;
         ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
         // Now perform the con2prim
@@ -265,10 +265,10 @@ run_unit_test(
         prims.vU[2] = prims.vU[2]/prims.u0;
 
         // Read unperturbed and perturbed results from file
-        primitive_quantities prims_trusted, prims_pert;
-        if( fread(&prims_trusted, sizeof(primitive_quantities), 1, fp_unpert) != 1 )
+        ghl_primitive_quantities prims_trusted, prims_pert;
+        if( fread(&prims_trusted, sizeof(ghl_primitive_quantities), 1, fp_unpert) != 1 )
           ghl_error("Failed to read trusted primitives from file\n");
-        if( fread(&prims_pert   , sizeof(primitive_quantities), 1, fp_pert) != 1 )
+        if( fread(&prims_pert   , sizeof(ghl_primitive_quantities), 1, fp_pert) != 1 )
           ghl_error("Failed to read perturbed primitives from file\n");
 
         // Validate results
@@ -303,8 +303,8 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const con2prim_method_t main_routine       = None;
-  const con2prim_method_t backup_routines[3] = {None,None,None};
+  const ghl_con2prim_method_t main_routine       = None;
+  const ghl_con2prim_method_t backup_routines[3] = {None,None,None};
   const bool calc_prims_guess                = true;
   const bool evolve_entropy                  = false;
   const bool evolve_temperature              = true;
@@ -336,7 +336,7 @@ int main(int argc, char **argv) {
                     Lorenz_damping_factor,
                     &params);
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
                                                 rho_b_atm, rho_b_min, rho_b_max,
                                                 Y_e_atm, Y_e_min, Y_e_max,

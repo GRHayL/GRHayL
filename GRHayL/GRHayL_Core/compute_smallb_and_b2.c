@@ -4,9 +4,9 @@
  * Description : Computes magnetic quantities b^0, b^i and b^2 (see Eqs. 23
                  and 24 in https://arxiv.org/abs/astro-ph/0503420).
  *
- * Inputs      : metric         - metric_quantities struct with data for
+ * Inputs      : metric         - ghl_metric_quantities struct with data for
  *                                the gridpoint of interest
- *             : prims          - primitive_quantities struct with data
+ *             : prims          - ghl_primitive_quantities struct with data
  *                                for the gridpoint of interest
  *             : uDN[4]         - lowered 4-velocity u_\mu
  *
@@ -16,8 +16,8 @@
  */
 
 void ghl_compute_smallb_and_b2(
-      const metric_quantities *restrict ADM_metric,
-      const primitive_quantities *restrict prims,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_primitive_quantities *restrict prims,
       const double uDN[4],
       double smallb[4],
       double *restrict smallb2) {

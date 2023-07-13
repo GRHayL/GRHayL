@@ -12,13 +12,13 @@ static double EnsureFinite(const double x) {
  * Compute GRMHD source terms following Ruffert et al. (1996)
  * https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
  */
-void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
-      const eos_parameters *restrict eos,
+void NRPyLeakage_compute_ghl_neutrino_opacities_and_GRMHD_source_terms(
+      const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
       const double T,
-      const neutrino_optical_depths *restrict tau,
-      neutrino_opacities *restrict kappa,
+      const ghl_neutrino_optical_depths *restrict tau,
+      ghl_neutrino_opacities *restrict kappa,
       double *restrict R_source,
       double *restrict Q_source ) {
 

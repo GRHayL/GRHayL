@@ -2,7 +2,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_free_memory(eos_parameters *restrict eos_params) {
+void NRPyEOS_free_memory(ghl_eos_parameters *restrict eos_params) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else

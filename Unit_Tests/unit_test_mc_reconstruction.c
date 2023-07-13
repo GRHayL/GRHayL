@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
   const double k_ppoly0 = 1.0;
   const double Gamma_th = 2.0;
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              poison, poison, poison,
                                              neos, rho_ppoly_in, Gamma_ppoly_in,
@@ -99,9 +99,9 @@ int main(int argc, char **argv) {
   // These are set up to match the loops in the ET version of IllinoisGRMHD.
   const int num_vars = 5;
   double *gfs[5] = {rho, press, vx, vy, vz};
-  
+
   double gfs_r[5];
-  double gfs_l[5]; 
+  double gfs_l[5];
 
   for(int k=2; k<dirlength-1; k++)
     for(int j=2; j<dirlength-1; j++)
@@ -114,8 +114,8 @@ int main(int argc, char **argv) {
           for(int var=0; var<num_vars; var++) {
             var_data[var][ind] = gfs[var][stencil];
           }
-        }        
-        
+        }
+
     for(int var=0; var<num_vars; var++) {
         ghl_mc_reconstruction( var_data[var][0], //U_m2
                                         var_data[var][1], //U_m1

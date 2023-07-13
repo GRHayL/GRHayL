@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
   const double T_min     = -1;
   const double T_max     = -1;
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
                                                 rho_b_atm, rho_b_min, rho_b_max,
                                                 Y_e_atm, Y_e_min, Y_e_max,

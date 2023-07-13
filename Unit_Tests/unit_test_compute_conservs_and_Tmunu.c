@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
                     Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
 
-  eos_parameters eos;
+  ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(W_max,
                                              rho_b_min, rho_b_min, rho_b_max,
                                              neos, rho_ppoly, Gamma_ppoly,
@@ -189,12 +189,12 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
 
     // Define the various GRHayL structs for the unit tests
-    con2prim_diagnostics diagnostics;
+    ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    metric_quantities ADM_metric;
-    primitive_quantities prims;
-    conservative_quantities cons;
-    stress_energy Tmunu;
+    ghl_metric_quantities ADM_metric;
+    ghl_primitive_quantities prims;
+    ghl_conservative_quantities cons;
+    ghl_stress_energy Tmunu;
 
     // Read initial data accompanying trusted output
     ghl_initialize_metric(lapse[i],
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
                       gyy[i], gyz[i], gzz[i],
                       &ADM_metric);
 
-    ADM_aux_quantities metric_aux;
+    ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     ghl_initialize_primitives(
@@ -217,8 +217,8 @@ int main(int argc, char **argv) {
     // This computes the conservatives and stress-energy tensor from the new primitives
     ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
-    conservative_quantities cons_trusted, cons_pert;
-    stress_energy Tmunu_trusted, Tmunu_pert;
+    ghl_conservative_quantities cons_trusted, cons_pert;
+    ghl_stress_energy Tmunu_trusted, Tmunu_pert;
 
     ghl_initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
                              S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
@@ -228,14 +228,14 @@ int main(int argc, char **argv) {
                              S_x_pert[i], S_y_pert[i], S_z_pert[i],
                              poison, poison, &cons_pert);
 
-    ghl_initialize_stress_energy(Ttt_trusted[i], Ttx_trusted[i],
+    ghl_initialize_ghl_stress_energy(Ttt_trusted[i], Ttx_trusted[i],
                              Tty_trusted[i], Ttz_trusted[i],
                              Txx_trusted[i], Txy_trusted[i],
                              Txz_trusted[i], Tyy_trusted[i],
                              Tyz_trusted[i], Tzz_trusted[i],
                              &Tmunu_trusted);
 
-    ghl_initialize_stress_energy(Ttt_pert[i], Ttx_pert[i],
+    ghl_initialize_ghl_stress_energy(Ttt_pert[i], Ttx_pert[i],
                              Tty_pert[i], Ttz_pert[i],
                              Txx_pert[i], Txy_pert[i],
                              Txz_pert[i], Tyy_pert[i],
@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
                              &Tmunu_pert);
 
     ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_validate_ghl_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
 
     /*
        GRHayL also has standalone functions ghl_compute_conservs() and ghl_compute_TDNmunu().
@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
     ghl_compute_conservs(&ADM_metric, &metric_aux, &prims, &cons);
     ghl_compute_TDNmunu(&ADM_metric, &metric_aux, &prims, &Tmunu);
     ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_validate_ghl_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   ghl_info("ghl_compute_conservs_and_Tmunu function test has passed!\n");
   free(lapse);

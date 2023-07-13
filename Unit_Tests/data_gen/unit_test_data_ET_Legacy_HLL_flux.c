@@ -88,21 +88,21 @@ int main(int argc, char **argv) {
   fclose(outfile);
 
   for(int index=0; index<arraylength; index++) {
-    phi_bssn[index] *= (1.0 + randf(-1,1)*1.0e-14); 
+    phi_bssn[index] *= (1.0 + randf(-1,1)*1.0e-14);
 
     for(int coord=0; coord<3; coord++) {
-      Br[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
-      Bl[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);     
+      Br[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
+      Bl[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
 
-      vrr[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
-      vrl[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
-      vlr[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
-      vll[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
+      vrr[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
+      vrl[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
+      vlr[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
+      vll[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
 
-      cmin[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
-      cmax[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
-      cmin[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
-      cmax[coord][index] *= (1.0 + randf(-1,1)*1.0e-14); 
+      cmin[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
+      cmax[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
+      cmin[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
+      cmax[coord][index] *= (1.0 + randf(-1,1)*1.0e-14);
     }
   }
 
