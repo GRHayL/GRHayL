@@ -20,37 +20,8 @@ several gems which provide specific features. These currently include Atmosphere
 EOS, Flux_Source, Induction, Neutrinos, and Reconstruction. Each gem implements
 infrastructure-agnostic functions for computing quantities for GRMHD simulations.
 
-The Atmosphere gem provides functions for setting the primitive struct using a specfic
-atmosphere prescription.
-
-The Con2Prim gem provides functions to perform the conservative-to-primitive (con2prim)
-variable recovery. The primary functions here are various con2prim methods, but we
-also provide functions for computing the conservatives and Tmunu from the primitives,
-enforce limits on the computed primitives, etc. All the C2P routines have the same
-argument list, allowing for quick and easy substitution. The function
-`ghl_con2prim_multi_method()` provides runtime switching between available methods,
-as well as the option to choose backup routines in the case of failure.
-
-The EOS gem provides many functions which are needed by other gems to compute quantities
-(e.g. P_cold for hybrid EOS or table interpolation for tabulated EOS). The other gems depend
-purely on the eos_parameters struct and function pointers defined in the ghl.h header.
-The EOS gem provides a function to initialize these function pointers to point to the specific
-implementation provided by GRHayL, but some or all can be changed to point to new user-made
-functions. This allows for all the other gems to be entirely unaware of how these EOS quantities
-are being computed.
-
-The Flux_Source gem provides functions for computing the hydrodynamic right-hand sides. This includes
-functions for the characteristic speeds (which are also needed for the induction equation right-hand
-sides), the numerical fluxes, and the source terms.
-
-The Induction gem provides functions for computing right-hand sides for A_i and \tilde{\Phi}. This is
-split into three categories. First, there are the numerical fluxes for A_i (currently we provide a
-function for the HLL flux). Then, we provide a set of interpolation functions in preparation for computing
-the gauge term contributions to A_i and the RHS of \tilde{\Phi}. Finally, we provide a function to compute
-\tilde{\Phi} RHS.
-
-The Reconstruction gem provides functions for reconstructing quantities to cell faces. We have a variety
-of reconstruction methods, and most functions have the same argument list.
+More information about the details of the library functions are provided in the
+[online wiki](https://github.com/GRHayL/GRHayL/wiki).
 
 The Unit_Tests directory contains the unit tests which are used by the Github Actions continuous
 integration testing. The subdirectory "data_gen" contains the functions for generating the test data.
@@ -66,9 +37,9 @@ within this range.
 
 The implementations directory contains specific implementations of GRHayL in infrastructures. In the
 following section, we describe how to directly compile the library for linking. However, it can be
-significantly easier in some infrastructures to directly compile the source code instead of linking
+easier in some infrastructures to directly compile the source code instead of linking
 to an external library. We currently only provide and maintain an implementation for the Einstein Toolkit.
-Other codes we maintain which use GRHayL are linking to the compiled library.
+Other GRHayL-based codes we maintain link to the compiled library.
 
 ## Building and Installing `GRHayL`
 
