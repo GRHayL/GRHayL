@@ -196,4 +196,21 @@ extern void (*ghl_tabulated_compute_P_eps_T_from_S)(
       double *restrict eps,
       double *restrict T);
 
+extern int (*ghl_tabulated_get_index_rho)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho);
+
+extern int (*ghl_tabulated_get_index_T)(
+      const ghl_eos_parameters *restrict eos,
+      const double T);
+
+extern int (*ghl_tabulated_get_index_Ye)(
+      const ghl_eos_parameters *restrict eos,
+      const double Ye);
+
+extern void (*ghl_tabulated_compute_Ye_of_rho_beq_constant_T)(
+      const ghl_eos_parameters *restrict eos,
+      const double Ye,
+      double **Ye_of_rho_out);
+
 #endif // GHL_EOS_FUNCTIONS_H_

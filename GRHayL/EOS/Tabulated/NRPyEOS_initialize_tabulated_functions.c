@@ -23,6 +23,10 @@ void NRPyEOS_initialize_tabulated_functions(ghl_eos_parameters *restrict eos) {
   ghl_tabulated_compute_P_eps_T_from_S                 = &NRPyEOS_P_eps_and_T_from_rho_Ye_S;
   ghl_tabulated_compute_eps_cs2_T_from_P               = &NRPyEOS_eps_cs2_and_T_from_rho_Ye_P;
   ghl_tabulated_compute_P_cs2_T_from_eps               = &NRPyEOS_P_cs2_and_T_from_rho_Ye_eps;
+  ghl_tabulated_compute_Ye_of_rho_beq_constant_T       = &NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T;
+  ghl_tabulated_get_index_rho                          = &NRPyEOS_tabulated_get_index_rho;
+  ghl_tabulated_get_index_T                            = &NRPyEOS_tabulated_get_index_T;
+  ghl_tabulated_get_index_Ye                           = &NRPyEOS_tabulated_get_index_Ye;
   ghl_compute_h_and_cs2                                = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
 #endif
 }

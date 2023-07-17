@@ -177,28 +177,16 @@ int main(int argc, char **argv) {
   }
 
   // Function pointer to allow for loop over fluxes
-<<<<<<< HEAD
   void (*calculate_HLLE_fluxes)(const ghl_primitive_quantities *restrict, const ghl_primitive_quantities *restrict,
                               const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
                               const double, const double, ghl_conservative_quantities *restrict);
-=======
-  void (*calculate_HLLE_fluxes)(const primitive_quantities *restrict, const primitive_quantities *restrict,
-                              const eos_parameters *restrict, const metric_quantities *restrict,
-                              const double, const double, conservative_quantities *restrict);
->>>>>>> 38d4057 (Updated Flux_Source and GRHayLib make.code.defns; adjusted GRHayLHD to use the new functions)
 
   void (*calculate_characteristic_speed)(const ghl_primitive_quantities *restrict, const ghl_primitive_quantities *restrict,
                               const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict, double *restrict, double *restrict);
 
   // Function pointer to allow for loop over directional source terms
-<<<<<<< HEAD
   void (*calculate_source_terms)(const ghl_primitive_quantities *restrict, const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
   const ghl_metric_quantities *restrict, ghl_conservative_quantities *restrict);
-=======
-  void (*calculate_source_terms)(const primitive_quantities *restrict, const eos_parameters *restrict, const metric_quantities *restrict,
-  const metric_quantities *restrict, conservative_quantities *restrict);
->>>>>>> 38d4057 (Updated Flux_Source and GRHayLib make.code.defns; adjusted GRHayLHD to use the new functions)
-
 
   // Loop over flux directions (x,y,z)
   for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
@@ -294,7 +282,6 @@ int main(int argc, char **argv) {
           prims_l.u0 = rho_l[index]*Bx_l[index]/vy_l[index];
 
           double cmin, cmax;
-<<<<<<< HEAD
           calculate_characteristic_speed(
                 &prims_r, &prims_l, &eos,
                 &metric_face, &cmin, &cmax);
@@ -304,23 +291,6 @@ int main(int argc, char **argv) {
                 &prims_r, &prims_l, &eos,
                 &metric_face, cmin, cmax,
                 &cons_fluxes);
-=======
-          calculate_characteristic_speed(&prims_r,
-                                         &prims_l,
-                                         &eos,
-                                         &metric_face,
-                                         &cmin,
-                                         &cmax);
-
-          conservative_quantities cons_fluxes;
-          calculate_HLLE_fluxes(&prims_r,
-                                &prims_l,
-                                &eos,
-                                &metric_face,
-                                cmin,
-                                cmax,
-                                &cons_fluxes);
->>>>>>> 38d4057 (Updated Flux_Source and GRHayLib make.code.defns; adjusted GRHayLHD to use the new functions)
 
           rho_star_flux[index]  = cons_fluxes.rho;
           tau_flux[index]       = cons_fluxes.tau;
@@ -410,19 +380,9 @@ int main(int argc, char **argv) {
               &prims);
         prims.u0  = rho[index]*Bx[index] / vy[index];
 
-
-<<<<<<< HEAD
         ghl_conservative_quantities cons_sources;
         ghl_calculate_tau_tilde_source_term_extrinsic_curv(
               &prims, &eos, &metric, &curv, &cons_sources);
-=======
-        conservative_quantities cons_sources;
-        ghl_calculate_tau_tilde_source_term_extrinsic_curv(&prims,
-                                                       &eos,
-                                                       &metric,
-                                                       &curv,
-                                                       &cons_sources);
->>>>>>> 38d4057 (Updated Flux_Source and GRHayLib make.code.defns; adjusted GRHayLHD to use the new functions)
 
         tau_rhs[index] += cons_sources.tau;
   }
