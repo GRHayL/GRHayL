@@ -8,10 +8,6 @@ KEYWORD EOS_type "The type of EOS for the simulation"
   "tabulated" :: "Tabulated EOS"
 } ""
 
-CCTK_BOOLEAN evolve_entropy "Do we want to evolve the entropy?"
-{
-} "no"
-
 private:
 CCTK_BOOLEAN read_EOS_table "Whether or not to read from the EOS table"
 {
@@ -29,6 +25,10 @@ CCTK_REAL EOS_root_finding_precision "Root-finding precision for EOS table inver
 } 1e-10
 
 CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?"
+{
+} "no"
+
+CCTK_BOOLEAN evolve_entropy "Do we want to evolve the entropy?"
 {
 } "no"
 

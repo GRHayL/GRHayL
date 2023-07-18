@@ -213,4 +213,31 @@ void (*ghl_tabulated_compute_Ye_of_rho_beq_constant_T)(
       const double Ye,
       double **Ye_of_rho_out);
 
+void (*ghl_calculate_HLLE_fluxes_dirn0)(
+      const ghl_primitive_quantities *restrict prims_r,
+      const ghl_primitive_quantities *restrict prims_l,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric_face,
+      const double cmin,
+      const double cmax,
+      ghl_conservative_quantities *restrict cons_fluxes);
+
+void (*ghl_calculate_HLLE_fluxes_dirn1)(
+      const ghl_primitive_quantities *restrict prims_r,
+      const ghl_primitive_quantities *restrict prims_l,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric_face,
+      const double cmin,
+      const double cmax,
+      ghl_conservative_quantities *restrict cons_fluxes);
+
+void (*ghl_calculate_HLLE_fluxes_dirn2)(
+      const ghl_primitive_quantities *restrict prims_r,
+      const ghl_primitive_quantities *restrict prims_l,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric_face,
+      const double cmin,
+      const double cmax,
+      ghl_conservative_quantities *restrict cons_fluxes);
+
 #endif // GHL_EOS_FUNCTIONS_DECLARATION_H_
