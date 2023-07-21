@@ -1,19 +1,10 @@
 #include "induction.h"
 
-/* Function    : ghl_calculate_phitilde_rhs()
- * Description : compute RHS for \tilde{phi} = psi^6*Phi and the gauge contribution
- *               for A_i
- *
- * Inputs      : Lorenz_damping_factor - TODO: ?
- *             : vars                  - A_gauge_rhs_vars struct containing the
- *                                       stencils for interpolated variables;
- *                                       these can be computed using
- *                                       ghl_interpolate_for_A_gauge_rhs()
- *
- * Outputs     : vars                  - struct elements A_i_gauge_rhs and
- *                                       phitilde_rhs contain RHS values
- *
- */
+/* Function      : ghl_calculate_phitilde_rhs()
+ * Description   : compute RHS for \tilde{phi} = psi^6*Phi
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_calculate_phitilde_rhs
+*/
+
 double ghl_calculate_phitilde_rhs(
       const double dxi[3],
       const double Lorenz_damping_factor,
@@ -21,7 +12,7 @@ double ghl_calculate_phitilde_rhs(
       const double shiftx_interp[5],
       const double shifty_interp[5],
       const double shiftz_interp[5],
-      const double Ai_stencil[3][2],
+      const double sqrtg_Ai_stencil[3][2],
       const double phitilde_stencil[3][5]) {
 
   // \partial_t psi6phi = [shift advection term] + \partial_j (\alpha \sqrt{\gamma} A^j)
@@ -68,9 +59,9 @@ double ghl_calculate_phitilde_rhs(
   // Next we add \partial_j (\alpha \sqrt{\gamma} A^j)
   // and add the damping factor for the generalized Lorenz gauge
   // - \lambda * \alpha \psi^6 \Phi
-  phitilde_rhs += dxi[0]*(Ai_stencil[0][0] - Ai_stencil[0][1])
-                + dxi[1]*(Ai_stencil[1][0] - Ai_stencil[1][1])
-                + dxi[2]*(Ai_stencil[2][0] - Ai_stencil[2][1])
+  phitilde_rhs += dxi[0]*(sqrtg_Ai_stencil[0][0] - sqrtg_Ai_stencil[0][1])
+                + dxi[1]*(sqrtg_Ai_stencil[1][0] - sqrtg_Ai_stencil[1][1])
+                + dxi[2]*(sqrtg_Ai_stencil[2][0] - sqrtg_Ai_stencil[2][1])
                 - Lorenz_damping_factor*alpha_interp*phitilde_stencil[0][2];
 
   return phitilde_rhs;

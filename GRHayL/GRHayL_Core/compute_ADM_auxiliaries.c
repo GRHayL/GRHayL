@@ -1,19 +1,10 @@
 #include "ghl.h"
 
-/* Function    : ghl_compute_ADM_auxiliaries()
- * Description : Initialize the metric struct from user input
- *
- * Inputs      : lapse          - value of the lapse
- *             : gij            - value of the (i,j) component of the
- *                                cartesian ADM metric g_ij
- *             : betax          - value of the x component of the shift
- *             : betay          - value of the y component of the shift
- *             : betaz          - value of the z component of the shift
- *
- * Outputs     : metric         - returns ghl_metric_quantities struct containing
- *                                the inputs and additional auxiliary data computed
- *                                from input
- */
+/*
+ * Function      : ghl_compute_ADM_auxiliaries()
+ * Description   : Initialize the metric struct from user input
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_compute_ADM_auxiliaries
+*/
 
 void ghl_compute_ADM_auxiliaries(
       const ghl_metric_quantities *restrict ADM_metric,
@@ -26,7 +17,7 @@ void ghl_compute_ADM_auxiliaries(
   metric_aux->psi4inv = 1.0/metric_aux->psi4;
 
   double betaD[3];
-  ghl_lower_vector_3D(ADM_metric->gammaDD, ADM_metric->betaU, betaD);
+  ghl_raise_lower_vector_3D(ADM_metric->gammaDD, ADM_metric->betaU, betaD);
 
   const double shift2 = betaD[0]*ADM_metric->betaU[0]
                       + betaD[1]*ADM_metric->betaU[1]

@@ -161,7 +161,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
   for(int i=0;i<3;i++) *BdotS += BU[i]*SD[i];
 
   // Step 5: Compute S^{i}
-  ghl_raise_vector_3D(ADM_metric->gammaUU, SD, SU);
+  ghl_raise_lower_vector_3D(ADM_metric->gammaUU, SD, SU);
 }
 
 /*

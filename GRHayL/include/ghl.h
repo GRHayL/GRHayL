@@ -22,27 +22,24 @@
 #define GRHAYL_USE_HDF5
 #endif
 
+typedef enum {
+  None=-1,
+  Noble2D, Noble1D,
+  Noble1D_entropy, Noble1D_entropy2,
+  Font1D, CerdaDuran2D, CerdaDuran3D,
+  Palenzuela1D, Palenzuela1D_entropy,
+  Newman1D, Newman1D_entropy
+} ghl_con2prim_method_t;
+
+typedef enum {ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
+
 /*
-   The struct ghl_parameters contains parameters for controlling
-   the behavior of the GRHayL gems. The struct elements are detailed below:
-
- --main_routine: selects which con2prim routine to use. The
-   available con2prim routines are given by the enum con2prim_routines.
-
- --backup_routine[3]: stores up to three backup routines using the values
-   in con2prim_routines. The "None" option is provided if backups are not
-   desired or if there are less than 3 backup routines.
-
- --evolve_entropy: tells the code whether or not entropy is being evolved.
-   If true, then the code will set the conservative entropy when needed.
-
- --calc_prim_guess: currently does nothing. However, some codes might be able to
-   directly provide guesses for the initial primitive values for con2prim. If they
-   can, this should be supported.
+ * Struct        : ghl_parameters
+ * Description   : stores basic GRHayL parameters
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_parameters
 */
-
 typedef struct ghl_parameters {
-  int main_routine, backup_routine[3];
+  ghl_con2prim_method_t main_routine, backup_routine[3];
   bool evolve_entropy;
   bool evolve_temp;
   bool calc_prim_guess;
@@ -51,48 +48,11 @@ typedef struct ghl_parameters {
   double Lorenz_damping_factor;
 } ghl_parameters;
 
-void ghl_initialize_params(
-      const int main,
-      const int backup[3],
-      const bool evolve_entropy,
-      const bool evolve_temp,
-      const bool calc_prim_guess,
-      const double psi6threshold,
-      const bool Cupp_Fix,
-      const double Lorenz_damping_factor,
-      ghl_parameters *restrict params);
-
-//--------------------------------------------------
-
-//--------------------- EOS facets -----------------
-
-// Maxmimum number of polytropic EOS pieces
-#define MAX_EOS_PARAMS (10)
-
 /*
-   The struct ghl_primitive_quantities contains variables for storing the (point-wise)
-   primitive variable data. The struct elements are detailed below:
-
- --rho: the baryonic density rho_b
-
- --press: the pressure P
-
- --u0: the zeroth component of the fluid four-velocity
-
- --v*: the 3-velocity v^i used in IllinoisGRMHD. This is defined as u^i/u^0. The other
-   commonly used choice is the Valencia 3-velocity Vv^i defined as
-   Vv^i = u^i/W + beta^i/lapse.
-
-
- --B*: the magnetic field TODO: give specific B definition
-
- --entropy: the entropy S
-
- --Y_e: the electron fraction Y_e
-
- --temp: the temperature T
+ * Struct        : ghl_primitive_quantities
+ * Description   : stores pointwise information about the primitive variables
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_primitive_quantities
 */
-
 typedef struct ghl_primitive_quantities {
   double rho, press, eps;
   double u0, vU[3];
@@ -100,6 +60,61 @@ typedef struct ghl_primitive_quantities {
   double Y_e, temperature, entropy;
 } ghl_primitive_quantities;
 
+/*
+ * Struct        : ghl_conservative_quantities
+ * Description   : stores pointwise information about the conservative variables
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_conservative_quantities
+*/
+typedef struct ghl_conservative_quantities {
+  double rho, tau, Y_e;
+  double SD[3];
+  double entropy;
+} ghl_conservative_quantities;
+
+/*
+ * Struct        : ghl_metric_quantities
+ * Description   : stores pointwise information about the spacetime
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_metric_quantities
+*/
+typedef struct ghl_metric_quantities {
+  double lapse, lapseinv, lapseinv2;
+  double detgamma, sqrt_detgamma;
+  double betaU[3];
+  double gammaDD[3][3];
+  double gammaUU[3][3];
+} ghl_metric_quantities;
+
+/*
+ * Struct        : ghl_ADM_aux_quantities
+ * Description   : stores auxiliary information based on ADM metric quantities
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_ADM_aux_quantities
+*/
+typedef struct ghl_ADM_aux_quantities {
+  double phi;
+  double psi2, psi4, psi4inv;
+  double g4DD[4][4],g4UU[4][4];
+} ghl_ADM_aux_quantities;
+
+/*
+ * Struct        : ghl_extrinsic_curvature
+ * Description   : stores pointwise information about the extrinsic curvature
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_extrinsic_curvature
+*/
+typedef struct ghl_extrinsic_curvature {
+  double K[3][3];
+} ghl_extrinsic_curvature;
+
+/*
+ * Struct        : ghl_stress_energy
+ * Description   : stores pointwise information about the stress energy tensor
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_stress_energy
+*/
+typedef struct ghl_stress_energy {
+  double T4[4][4];
+} ghl_stress_energy;
+
+// Maxmimum number of polytropic EOS pieces
+#define MAX_EOS_PARAMS (10)
 /*
    The struct ghl_eos_parameters contains information about the eos being used
    by the simulation. The struct elements are detailed below:
@@ -139,8 +154,6 @@ typedef struct ghl_primitive_quantities {
 
  --depsdT_threshold: this threshold is used by the Palenzuela con2prim routine
 */
-
-typedef enum {ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
 
 typedef struct ghl_eos_parameters {
 
@@ -271,35 +284,22 @@ void ghl_initialize_tabulated_eos_functions_and_params(
 }
 #endif
 
-//--------------------------------------------------
-
-//--------------- Con2Prim facets ------------------
-
-/*
-   The struc ghl_conservative_quantities contains variables for storing the (point-wise)
-   conservative variable data. Since most of these variables are densitized, let's
-   define dens = sqrt(gamma). Then, the struct elements are detailed below:
-
- --rho: the densitized baryonic density \tilde{D} = rho_star = dens * lapse * rho_b * u^0
-
- --tau: the densitized energy density variable \tilde{tau} = dens * tau = dens * lapse^2 * T^{00} - rho_star
-
- --S*: the densitized momentum density \tilde{S}_i = dens * S_i = dens * lapse * T_i^0
-
- --Y_e: the densitized electron fraction \tilde{Y}_e = TODO
-
- --entropy: the densitized entropy \tilde{S} = TODO
-*/
-
-typedef struct ghl_conservative_quantities {
-  double rho, tau, Y_e;
-  double SD[3];
-  double entropy;
-} ghl_conservative_quantities;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+//---- Basic struct packing/unpacking functions ----
+void ghl_initialize_params(
+      const ghl_con2prim_method_t main_routine,
+      const ghl_con2prim_method_t backup_routine[3],
+      const bool evolve_entropy,
+      const bool evolve_temp,
+      const bool calc_prim_guess,
+      const double psi6threshold,
+      const bool Cupp_Fix,
+      const double Lorenz_damping_factor,
+      ghl_parameters *restrict params);
 
 void ghl_initialize_primitives(
       const double rho, const double press, const double epsilon,
@@ -326,90 +326,6 @@ void ghl_return_conservatives(
       double *restrict rho, double *restrict tau,
       double *restrict S_x, double *restrict S_y, double *restrict S_z,
       double *restrict Y_e, double *restrict entropy);
-
-#ifdef __cplusplus
-}
-#endif
-
-//--------------------------------------------------
-
-//-------------- Space-time facets -----------------
-
-/* The struct ghl_metric_quantities contains variables for storing the (point-wise)
-   metric data. The struct elements are detailed below:
-
- --bssn_phi: TODO
-
- --bssn_psi: TODO
-
- --bssn_gij: the BSSN conformal metric g_{i j}. These variables are set via the
-   ghl_initialize_metric function.
-
- --betai: the shift vector (beta^x, beta^y, beta^z) from the 3+1
-   decomposition. These variables are set via the ghl_initialize_metric function.
-
- --lapse: the lapse from the 3+1 decomposition. These variables are set via the
-   ghl_initialize_metric function.
-
-   All of the following varibles are calculated from the previous quantities in the ghl_initialize_metric
-   function.
-
- --gij: the input metric g_{i j}
-
- --gupij: the metric inverse g^{i j}. They are calculated from
-     gupxx =   ( gyy * gzz - gyz * gyz )/detgij;
-     gupxy = - ( gxy * gzz - gyz * gxz )/detgij;
-     gupxz =   ( gxy * gyz - gyy * gxz )/detgij;
-     gupyy =   ( gxx * gzz - gxz * gxz )/detgij;
-     gupyz = - ( gxx * gyz - gxy * gxz )/detgij;
-     gupzz =   ( gxx * gyy - gxy * gxy )/detgij;
-
- --lapseinv: this variable stores the inverse of the lapse.
-
- --lapm1: this variable stores the quantity (lapse-1).
-
- --psi2: this variable stores the quantity exp(2.0*metric.bssn_phi).
-
- --psi4: this variable stores the quantity (psi2^2).
-
- --psi6: this variable stores the quantity (psi4*psi2).
-
- --psi4inv: this variable stores the inverse of psi4.
-
- --lapseinv2: this variables stores the quantity (lapse^(-2))
-
- --g4DD: the 4-metric g_{\mu \nu}. This quantity is needed for computing T_{\mu \nu} and T^{\mu \nu}
-   and the HARM con2prim lowlevel functions.
-
- --g4UU: the 4-metric inverse g^{\mu \nu}. This quantity is needed for computing T_{\mu \nu} and T^{\mu \nu}
-   and the HARM con2prim lowlevel functions.
-*/
-
-typedef struct ghl_metric_quantities {
-  double lapse, lapseinv, lapseinv2;
-  double detgamma, sqrt_detgamma;
-  double betaU[3];
-  double gammaDD[3][3];
-  double gammaUU[3][3];
-} ghl_metric_quantities;
-
-typedef struct ghl_ADM_aux_quantities {
-  double phi;
-  double psi2, psi4, psi4inv;
-  double g4DD[4][4],g4UU[4][4];
-} ghl_ADM_aux_quantities;
-
-typedef struct ghl_extrinsic_curvature {
-  double K[3][3];
-} ghl_extrinsic_curvature;
-
-typedef struct ghl_stress_energy {
-  double T4[4][4];
-} ghl_stress_energy;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void ghl_initialize_metric(
       const double lapse,
@@ -454,25 +370,15 @@ void ghl_limit_v_and_compute_u0(
       ghl_primitive_quantities *restrict prims,
       int *restrict speed_limit);
 
-void ghl_raise_vector_4D(
-      const double g4UU[4][4],
-      const double vecD[4],
-      double vecU[4]);
+void ghl_raise_lower_vector_4D(
+      const double g4[4][4],
+      const double vec[4],
+      double vec_inv[4]);
 
-void ghl_raise_vector_3D(
-      const double gammaUU[3][3],
-      const double vecD[3],
-      double vecU[3]);
-
-void ghl_lower_vector_4D(
-      const double g4DD[4][4],
-      const double vecU[4],
-      double vecD[4]);
-
-void ghl_lower_vector_3D(
-      const double gammaDD[3][3],
-      const double vecU[3],
-      double vecD[3]);
+void ghl_raise_lower_vector_3D(
+      const double gamma[3][3],
+      const double vec[3],
+      double vec_inv[3]);
 
 double ghl_compute_vec2_from_vecD(
       const double gammaUU[3][3],

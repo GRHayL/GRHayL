@@ -24,15 +24,6 @@ For bitwise, would become 1, 2, 4, 8, 16, 32. 64, 128, and 256
 https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
 
-typedef enum {
-  None=-1,
-  Noble2D, Noble1D,
-  Noble1D_entropy, Noble1D_entropy2,
-  Font1D, CerdaDuran2D, CerdaDuran3D,
-  Palenzuela1D, Palenzuela1D_entropy,
-  Newman1D, Newman1D_entropy
-} ghl_con2prim_method_t;
-
 typedef struct ghl_con2prim_diagnostics {
   bool c2p_failed;
   int failures;

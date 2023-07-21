@@ -1,19 +1,10 @@
 #include "con2prim.h"
 
-/* Function    : ghl_limit_v_and_compute_u0()
- * Description : Applies speed limit to v^i and computes u^0
- *
- * Inputs      : eos            - ghl_eos_parameters struct with data for the
- *                                EOS of the simulation
- *             : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : prims          - ghl_primitive_quantities struct to be speed limited
- *
- * Outputs     : prims          - returns velocity-limited prims->v^i and t
- *                                component of 4-velocity prims->u0
- *             : speed_limit    - tracks if the velocity was limited
- *
- */
+/*
+ * Function      : ghl_limit_v_and_compute_u0()
+ * Description   : Applies speed limit to v^i and computes u^0
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_limit_v_and_compute_u0
+*/
 
 void ghl_limit_v_and_compute_u0(
       const ghl_eos_parameters *restrict eos,

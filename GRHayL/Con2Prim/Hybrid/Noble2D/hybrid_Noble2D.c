@@ -159,7 +159,7 @@ int ghl_hybrid_Noble2D(
                         cons_undens->SD[1],
                         cons_undens->SD[2]};
 
-  double QU[4]; ghl_raise_vector_4D(metric_aux->g4UU, QD, QU);
+  double QU[4]; ghl_raise_lower_vector_4D(metric_aux->g4UU, QD, QU);
   harm_aux.Qsq = 0.0;
   for(int i=0; i<4; i++) harm_aux.Qsq += QD[i]*QU[i] ;
 

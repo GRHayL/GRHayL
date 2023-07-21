@@ -81,7 +81,7 @@ int Tabulated_CerdaDuran3D(
   const double SD[3] = {cons_undens->SD[0],
                          cons_undens->SD[1],
                          cons_undens->SD[2]};
-  double SU[3]; ghl_raise_vector_3D(metric->gammaUU, SD, SU);
+  double SU[3]; ghl_raise_lower_vector_3D(metric->gammaUU, SD, SU);
   const double S_squared = ghl_compute_vec2_from_vecD(metric->gammaUU, SD);
 
 

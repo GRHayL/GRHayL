@@ -89,7 +89,7 @@ int ghl_hybrid_Font_fix(
     double fac2 = 1.0/(rhosh + ADM_metric->sqrt_detgamma*Bbar2/gammav);
 
     double SU[3];
-    ghl_raise_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
+    ghl_raise_lower_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
 
     utU[0] = fac2*(SU[0] + fac1*BbarU[0]);
     utU[1] = fac2*(SU[1] + fac1*BbarU[1]);

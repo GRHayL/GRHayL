@@ -1,19 +1,19 @@
 #include "ghl.h"
 
-/* Function    : ghl_initialize_extrinsic_curvature()
- * Description : Initialize the ghl_extrinsic_curvature struct from user input
- *
- * Inputs      : Kij            - value of the (i,j) component of the
- *                                extrinsic curvature tensor K^ij
- *
- * Outputs     : curv           - returns ghl_extrinsic_curvature struct containing
- *                                the inputs
- */
+/*
+ * Function      : ghl_initialize_extrinsic_curvature()
+ * Description   : Initialize the ghl_extrinsic_curvature struct from user input
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_extrinsic_curvature
+*/
 
 void ghl_initialize_extrinsic_curvature(
-      const double Kxx, const double Kxy, const double Kxz,
-      const double Kyy, const double Kyz, const double Kzz,
-      ghl_extrinsic_curvature *restrict curv){
+      const double Kxx,
+      const double Kxy,
+      const double Kxz,
+      const double Kyy,
+      const double Kyz,
+      const double Kzz,
+      ghl_extrinsic_curvature *restrict curv) {
 
   curv->K[0][0]                 = Kxx;
   curv->K[1][1]                 = Kyy;

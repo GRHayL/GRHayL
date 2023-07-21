@@ -1,5 +1,11 @@
 #include "ghl.h"
 
+/*
+ * Function      : ghl_compute_TUPmunu()
+ * Description   : computes stress-energy tensor T^{\mu\nu}
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_compute_TUPmunu
+*/
+
 void ghl_compute_TUPmunu(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,
@@ -17,7 +23,7 @@ void ghl_compute_TUPmunu(
 
   // Compute u_\alpha
   double uD[4];
-  ghl_lower_vector_4D(metric_aux->g4DD, uU, uD);
+  ghl_raise_lower_vector_4D(metric_aux->g4DD, uU, uD);
 
   /***************************************************************/
   //                     COMPUTE TUPMUNU                         //

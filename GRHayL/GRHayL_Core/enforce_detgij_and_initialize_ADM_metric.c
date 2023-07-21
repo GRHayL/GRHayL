@@ -2,9 +2,15 @@
 
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
-      const double betax, const double betay, const double betaz,
-      const double gxx, const double gxy, const double gxz,
-      const double gyy, const double gyz, const double gzz,
+      const double betax,
+      const double betay,
+      const double betaz,
+      const double gxx,
+      const double gxy,
+      const double gxz,
+      const double gyy,
+      const double gyz,
+      const double gzz,
       ghl_metric_quantities *restrict ADM_metric) {
 
   ghl_initialize_metric(lapse,

@@ -32,7 +32,7 @@ void ghl_compute_conservs_and_Tmunu(
 
   // Compute u_\alpha
   double uD[4];
-  ghl_lower_vector_4D(metric_aux->g4DD, uU, uD);
+  ghl_raise_lower_vector_4D(metric_aux->g4DD, uU, uD);
 
   /***************************************************************/
   //     COMPUTE TDNMUNU AND CONSERVATIVES FROM PRIMITIVES       //
@@ -47,7 +47,7 @@ void ghl_compute_conservs_and_Tmunu(
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 
   double smallb_lower[4];
-  ghl_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
+  ghl_raise_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
 
   // Compute conservatives:
   cons->rho = alpha_sqrt_gamma * prims->rho * uU[0];

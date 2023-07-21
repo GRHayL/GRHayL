@@ -1,19 +1,11 @@
 #include "con2prim.h"
 
-/* Function    : ghl_compute_smallb_and_b2()
- * Description : Computes magnetic quantities b^0, b^i and b^2 (see Eqs. 23
-                 and 24 in https://arxiv.org/abs/astro-ph/0503420).
- *
- * Inputs      : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : prims          - ghl_primitive_quantities struct with data
- *                                for the gridpoint of interest
- *             : uDN[4]         - lowered 4-velocity u_\mu
- *
- * Outputs     : smallb         - returns computed b^\mu array
- *             : smallb2        - returns computed b^2
- *
- */
+/*
+ * Function      : ghl_compute_smallb_and_b2()
+ * Description   : Computes magnetic quantities b^0, b^i, and b^2 (see Eqs. 23
+ *                 and 24 in https://arxiv.org/abs/astro-ph/0503420).
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_compute_smallb_and_b2
+*/
 
 void ghl_compute_smallb_and_b2(
       const ghl_metric_quantities *restrict ADM_metric,

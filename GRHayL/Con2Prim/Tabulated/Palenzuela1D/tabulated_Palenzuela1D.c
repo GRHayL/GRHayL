@@ -112,7 +112,7 @@ int ghl_tabulated_Palenzuela1D(
   //          tilde(u)^{i} := W v^{i},
   // Step 10.a: Compute S^{i}
   double SU[3];
-  ghl_raise_vector_3D(ADM_metric->gammaUU, SD, SU);
+  ghl_raise_lower_vector_3D(ADM_metric->gammaUU, SD, SU);
 
   // Step 10.b: Set Z
   const double Z = x*rho*W;

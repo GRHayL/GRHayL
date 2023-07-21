@@ -64,7 +64,7 @@ double ghl_calculate_phitilde_rhs(
       const double shiftx_interp[5],
       const double shifty_interp[5],
       const double shiftz_interp[5],
-      const double Ai_stencil[3][2],
+      const double sqrtg_Ai_stencil[3][2],
       const double phitilde_stencil[3][5]);
 
 #ifdef __cplusplus
