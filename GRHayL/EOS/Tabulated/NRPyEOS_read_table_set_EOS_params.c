@@ -221,14 +221,11 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, ghl_eos_parame
     eos_params->table_all[idx] *= CGS_TO_CODE_PRESSURE/CGS_TO_CODE_ENERGY;
   }
 
-  eos_params->temp0 = exp(eos_params->table_logT[0]);
-  eos_params->temp1 = exp(eos_params->table_logT[1]);
-
   // set up some vars
   eos_params->dtemp  = (eos_params->table_logT[eos_params->N_T-1] - eos_params->table_logT[0]) / (1.0*(eos_params->N_T-1));
   eos_params->dtempi = 1.0/eos_params->dtemp;
 
-  eos_params->dlintemp = eos_params->temp1-eos_params->temp0;
+  eos_params->dlintemp = exp(eos_params->table_logT[1]) - exp(eos_params->table_logT[0]);
   eos_params->dlintempi = 1.0/eos_params->dlintemp;
 
   eos_params->drho  = (eos_params->table_logrho[eos_params->N_rho-1] - eos_params->table_logrho[0]) / (1.0*(eos_params->N_rho-1));

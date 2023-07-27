@@ -200,7 +200,6 @@ typedef struct ghl_eos_parameters {
 
   // Auxiliary variables
   double energy_shift;
-  double temp0, temp1;
   double dlintemp, dlintempi;
   double drholintempi;
   double dlintempyei;
@@ -215,8 +214,6 @@ typedef struct ghl_eos_parameters {
   //------------------------------------------------
 
 } ghl_eos_parameters;
-
-#include "ghl_eos_functions.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -281,6 +278,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
 #ifdef __cplusplus
 }
 #endif
+
 
 
 #ifdef __cplusplus
@@ -389,5 +387,7 @@ void ghl_compute_smallb_and_b2(
 #ifdef __cplusplus
 }
 #endif
+
+#include "ghl_eos_functions.h"
 
 #endif // GHL_H
