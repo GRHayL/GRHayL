@@ -10,20 +10,20 @@
 
 // If on the IO proc (doIO == True) actually perform HDF5 IO, catch possible
 // HDF5 errors
-#define HDF5_DO_IO(fn_call)                                   \
-  {                                                           \
-    int error_code = fn_call;                                 \
-    if (error_code < 0) {                                     \
+#define HDF5_DO_IO(fn_call)                                \
+  {                                                        \
+    int error_code = fn_call;                              \
+    if (error_code < 0) {                                  \
       ghl_error("HDF5 call '%s' returned error code %d\n", \
-                   #fn_call, error_code);                     \
-    }                                                         \
+                   #fn_call, error_code);                  \
+    }                                                      \
   }
 
-#define check_if_file_exists(filename) {                     \
-  FILE *fp = fopen(filename, "r");                           \
-  if( !fp )                                                  \
+#define check_if_file_exists(filename) {                  \
+  FILE *fp = fopen(filename, "r");                        \
+  if( !fp )                                               \
     ghl_error("Could not open EOS file: %s\n", filename); \
-  fclose(fp);                                                \
+  fclose(fp);                                             \
 }
 
 static inline double get_EOS_table_max(
@@ -146,7 +146,7 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, ghl_eos_parame
   // Read additional tables and variables
   READ_BCAST_EOS_HDF5("logrho"      , eos_params->table_logrho , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->N_rho);
   READ_BCAST_EOS_HDF5("logtemp"     , eos_params->table_logT   , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->N_T);
-  READ_BCAST_EOS_HDF5("ye"          , eos_params->table_Y_e     , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->N_Ye);
+  READ_BCAST_EOS_HDF5("ye"          , eos_params->table_Y_e    , H5T_NATIVE_DOUBLE, H5S_ALL, eos_params->N_Ye);
   READ_BCAST_EOS_HDF5("energy_shift", &eos_params->energy_shift, H5T_NATIVE_DOUBLE, H5S_ALL, 1);
 
   HDF5_DO_IO(H5Sclose(mem3));
@@ -222,32 +222,25 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, ghl_eos_parame
   }
 
   // set up some vars
-  eos_params->dtemp  = (eos_params->table_logT[eos_params->N_T-1] - eos_params->table_logT[0]) / (1.0*(eos_params->N_T-1));
-  eos_params->dtempi = 1.0/eos_params->dtemp;
+  const double dtemp = eos_params->table_logT[1] - eos_params->table_logT[0];
+  const double drho  = eos_params->table_logrho[1] - eos_params->table_logrho[0];
+  const double dye   = eos_params->table_Y_e[1] - eos_params->table_Y_e[0];
 
-  eos_params->dlintemp = exp(eos_params->table_logT[1]) - exp(eos_params->table_logT[0]);
-  eos_params->dlintempi = 1.0/eos_params->dlintemp;
+  eos_params->dtempi = 1.0/dtemp;
+  eos_params->drhoi  = 1.0/drho;
+  eos_params->dyei   = 1.0/dye;
 
-  eos_params->drho  = (eos_params->table_logrho[eos_params->N_rho-1] - eos_params->table_logrho[0]) / (1.0*(eos_params->N_rho-1));
-  eos_params->drhoi = 1.0/eos_params->drho;
-
-  eos_params->dye  = (eos_params->table_Y_e[eos_params->N_Ye-1] - eos_params->table_Y_e[0]) / (1.0*(eos_params->N_Ye-1));
-  eos_params->dyei = 1.0/eos_params->dye;
-
-  eos_params->drhotempi      = eos_params->drhoi     * eos_params->dtempi;
-  eos_params->drholintempi   = eos_params->drhoi     * eos_params->dlintempi;
-  eos_params->drhoyei        = eos_params->drhoi     * eos_params->dyei;
-  eos_params->dtempyei       = eos_params->dtempi    * eos_params->dyei;
-  eos_params->dlintempyei    = eos_params->dlintempi * eos_params->dyei;
-  eos_params->drhotempyei    = eos_params->drhoi     * eos_params->dtempi    * eos_params->dyei;
-  eos_params->drholintempyei = eos_params->drhoi     * eos_params->dlintempi * eos_params->dyei;
+  eos_params->drhotempi      = eos_params->drhoi  * eos_params->dtempi;
+  eos_params->drhoyei        = eos_params->drhoi  * eos_params->dyei;
+  eos_params->dtempyei       = eos_params->dtempi * eos_params->dyei;
+  eos_params->drhotempyei    = eos_params->drhoi  * eos_params->dtempi * eos_params->dyei;
 
   eos_params->table_rho_max  = exp(eos_params->table_logrho[eos_params->N_rho-1]);
   eos_params->table_rho_min  = exp(eos_params->table_logrho[0]);
   eos_params->table_T_max    = exp(eos_params->table_logT[eos_params->N_T-1]);
   eos_params->table_T_min    = exp(eos_params->table_logT[0]);
-  eos_params->table_Y_e_max   = eos_params->table_Y_e[eos_params->N_Ye-1];
-  eos_params->table_Y_e_min   = eos_params->table_Y_e[0];
+  eos_params->table_Y_e_max  = eos_params->table_Y_e[eos_params->N_Ye-1];
+  eos_params->table_Y_e_min  = eos_params->table_Y_e[0];
 
   // Table bounds for useful quantities
   eos_params->table_P_min   = exp(get_EOS_table_min(eos_params, NRPyEOS_press_key));

@@ -200,13 +200,9 @@ typedef struct ghl_eos_parameters {
 
   // Auxiliary variables
   double energy_shift;
-  double dlintemp, dlintempi;
-  double drholintempi;
-  double dlintempyei;
-  double drholintempyei;
-  double dtemp, dtempi;
-  double drho, drhoi;
-  double dye, dyei;
+  double dtempi;
+  double drhoi;
+  double dyei;
   double drhotempi;
   double drhoyei;
   double dtempyei;
