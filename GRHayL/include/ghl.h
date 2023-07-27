@@ -152,8 +152,6 @@ typedef struct ghl_stress_energy {
 
          ----------- Tabulated Equation of State -----------
  --root_finding_precision: root-finding precision for table inversions
-
- --depsdT_threshold: this threshold is used by the Palenzuela con2prim routine
 */
 
 typedef struct ghl_eos_parameters {
@@ -181,7 +179,6 @@ typedef struct ghl_eos_parameters {
   double eps_atm, eps_min, eps_max;
   double entropy_atm, entropy_min, entropy_max;
   double root_finding_precision;
-  double depsdT_threshold;
 
   // Table size
   int N_rho, N_T, N_Ye;

@@ -226,7 +226,6 @@ void ghl_initialize_tabulated_eos(
   // Step 6: These parameters are manually set here, but
   //         can be overwritten later.
   eos->root_finding_precision = 1e-15;
-  eos->depsdT_threshold       = 1e-6;
 }
 
 /*
