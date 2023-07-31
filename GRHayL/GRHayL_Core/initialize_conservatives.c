@@ -2,7 +2,7 @@
 
 /*
  * Function    : ghl_initialize_conservatives()
- * Description : Initialize the conservative struct from user input
+ * Description : Initialize the ghl_conservative_quantities struct from user input
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_conservatives
 */
 

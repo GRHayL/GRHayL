@@ -1,24 +1,13 @@
 #include "con2prim.h"
 
-/* Function    : ghl_apply_conservative_limits()
- * Description : Checks whether \tilde{tau} \tilde{S} obey the inequalities
- *               constraining their possible values. If they are outside
- *               these bounds, the function enforces the inequalities
- *               and updates the diagnostic data.
- *
- * Inputs      : params         - ghl_parameters struct with parameters
- *                                for the simulation
- *             : eos            - ghl_eos_parameters struct with data for the
- *                                EOS of the simulation
- *             : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : prims          - ghl_primitive_quantities struct with data
- *                                for the gridpoint of interest
- *
- * Outputs     : cons           - returns potentially different values for cons->tau and cons->SD
- *             : diagnostics    - tracks whether any inequalities were violated
- *
- */
+/*
+ * Function      : ghl_apply_conservative_limits()
+ * Description   : Checks whether \tilde{tau} and \tilde{S} obey the inequalities
+ *                 constraining their possible values. If they are outside
+ *                 these bounds, the function enforces the inequalities
+ *                 and updates the diagnostic data.
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_apply_conservative_limits
+*/
 
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
@@ -46,7 +35,7 @@ void ghl_apply_conservative_limits(
     const double Bbar_mag = sqrt(Bbar2);
     BbardotS = Bbar[0]*cons->SD[0] + Bbar[1]*cons->SD[1] + Bbar[2]*cons->SD[2];
     hatBbardotS = BbardotS/Bbar_mag;
-    Wm = sqrt(SQR(hatBbardotS)+ SQR(cons->rho))/ADM_metric->sqrt_detgamma;
+    Wm = sqrt(SQR(hatBbardotS) + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
     Sm2 = (SQR(Wm)*sdots + SQR(BbardotS)*(Bbar2+2.0*Wm))/SQR(Wm+Bbar2);
     Wmin = sqrt(Sm2 + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
     half_psi6_Bbar2 = 0.5*ADM_metric->sqrt_detgamma*Bbar2;

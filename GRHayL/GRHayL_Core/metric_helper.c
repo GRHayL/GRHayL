@@ -97,7 +97,7 @@ double ghl_compute_vec2_from_vecU(
   //return gammaDD[0][0] * vecU[0] * vecU[0] +
   //       gammaDD[1][1] * vecU[1] * vecU[1] +
   //       gammaDD[2][2] * vecU[2] * vecU[2] +
-  // 2.0 * gammaDD[0][1] * vecU[0] * vecU[1] +
-  // 2.0 * gammaDD[0][2] * vecU[0] * vecU[2] +
-  // 2.0 * gammaDD[1][2] * vecU[1] * vecU[2];
+  //2.0 * (gammaDD[0][1] * vecU[0] * vecU[1] +
+  //       gammaDD[0][2] * vecU[0] * vecU[2] +
+  //       gammaDD[1][2] * vecU[1] * vecU[2]);
 }

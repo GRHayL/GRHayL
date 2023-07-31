@@ -1,18 +1,10 @@
 #include "con2prim.h"
 
-/* Function    : ghl_compute_conservs_and_Tmunu()
- * Description : Computes the conservatives and T_munu from the
- *               given primitives
- *
- * Inputs      : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : prims          - ghl_primitive_quantities struct with data
- *                                for the gridpoint of interest
- *
- * Outputs     : cons           - returns computed conservative values
- *             : Tmunu          - returns computed stress-energy tensor
- *
- */
+/*
+ * Function      : ghl_compute_conservs_and_Tmunu()
+ * Description   : Computes the conservatives and T_munu from the given primitives
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_primitives
+*/
 
 void ghl_compute_conservs_and_Tmunu(
       const ghl_metric_quantities *restrict ADM_metric,

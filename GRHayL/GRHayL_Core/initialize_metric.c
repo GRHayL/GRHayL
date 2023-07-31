@@ -2,7 +2,7 @@
 
 /*
  * Function      : ghl_initialize_metric()
- * Description   : Initialize the metric struct from user input
+ * Description   : Initialize the ghl_metric_quantities struct from user input
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_metric
 */
 
