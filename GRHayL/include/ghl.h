@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "ghl_io.h"
+#include "ghl_metric_helpers.h"
 
 #ifndef MIN
 #define MIN(A, B) ( ((A) < (B)) ? (A) : (B) )
@@ -369,24 +370,6 @@ void ghl_limit_v_and_compute_u0(
       const ghl_metric_quantities *restrict ADM_metric,
       ghl_primitive_quantities *restrict prims,
       int *restrict speed_limit);
-
-void ghl_raise_lower_vector_4D(
-      const double g4[4][4],
-      const double vec[4],
-      double vec_inv[4]);
-
-void ghl_raise_lower_vector_3D(
-      const double gamma[3][3],
-      const double vec[3],
-      double vec_inv[3]);
-
-double ghl_compute_vec2_from_vecD(
-      const double gammaUU[3][3],
-      const double *restrict vecD);
-
-double ghl_compute_vec2_from_vecU(
-      const double gammaDD[3][3],
-      const double *restrict vecU);
 
 void ghl_compute_TDNmunu(
       const ghl_metric_quantities *restrict ADM_metric,

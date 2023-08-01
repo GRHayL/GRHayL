@@ -15,10 +15,10 @@ int ghl_hybrid_Font_fix(
 
   double utU[3];
 
-  const double sdots = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, cons->SD);
+  const double sdots = ghl_compute_vec2_from_vec(ADM_metric->gammaUU, cons->SD);
 
   const double BbarU[3] = {prims->BU[0]*ONE_OVER_SQRT_4PI, prims->BU[1]*ONE_OVER_SQRT_4PI, prims->BU[2]*ONE_OVER_SQRT_4PI};
-  const double Bbar2 = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
+  const double Bbar2 = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, BbarU);
 
   double BbardotS, BbardotS2, hatBbardotS;
   if(Bbar2 < 1e-150) {

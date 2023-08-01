@@ -19,7 +19,7 @@ void ghl_limit_v_and_compute_u0(
   //   = 1/(u^0 \alpha)^2 ( (u^0 \alpha)^2 - 1 ) <- Using Eq. 56 of arXiv:astro-ph/0503420
   //   = 1 - 1/(u^0 \alpha)^2 <= 1
   const double utU[3] = {prims->vU[0] + ADM_metric->betaU[0], prims->vU[1] + ADM_metric->betaU[1], prims->vU[2] + ADM_metric->betaU[2]};
-  double one_minus_one_over_alpha_u0_squared = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
+  double one_minus_one_over_alpha_u0_squared = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
   const double one_minus_one_over_W_max_squared = 1.0-1.0/SQR(eos->W_max); // 1 - W_max^{-2}
