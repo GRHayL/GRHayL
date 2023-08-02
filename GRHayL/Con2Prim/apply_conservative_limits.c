@@ -18,11 +18,11 @@ void ghl_apply_conservative_limits(
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
   //First, prepare for the tau and stilde fixes:
-  const double sdots = ghl_compute_vec2_from_vec(ADM_metric->gammaUU, cons->SD);
+  const double sdots = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, cons->SD);
 
   const double Bbar[3] = {prims->BU[0]*ONE_OVER_SQRT_4PI, prims->BU[1]*ONE_OVER_SQRT_4PI, prims->BU[2]*ONE_OVER_SQRT_4PI};
 
-  const double Bbar2 = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, Bbar);
+  const double Bbar2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, Bbar);
 
   double BbardotS, hatBbardotS;
   double Wm, Sm2, Wmin, half_psi6_Bbar2, tau_fluid_term3;

@@ -7,11 +7,11 @@
 */
 
 void ghl_initialize_primitives(
-             const double rho, const double press, const double epsilon,
-             const double vx, const double vy, const double vz,
-             const double Bx, const double By, const double Bz,
-             const double entropy, const double Y_e, const double temperature,
-             ghl_primitive_quantities *restrict prims) {
+      const double rho, const double press, const double epsilon,
+      const double vx, const double vy, const double vz,
+      const double Bx, const double By, const double Bz,
+      const double entropy, const double Y_e, const double temperature,
+      ghl_primitive_quantities *restrict prims) {
 
   prims->rho         = rho;
   prims->press       = press;

@@ -30,7 +30,7 @@ void ghl_limit_utilde_and_compute_v(
       int *restrict speed_limit) {
 
   //Velocity limiter:
-  double ut2 = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, utU);
+  double ut2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
   double au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
 
   (*speed_limit) = 0;

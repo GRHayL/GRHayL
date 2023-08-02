@@ -151,7 +151,7 @@ int ghl_hybrid_Noble1D_entropy2(
   const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
                            prims->BU[1] * ONE_OVER_SQRT_4PI,
                            prims->BU[2] * ONE_OVER_SQRT_4PI};
-  harm_aux.Bsq = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, BbarU);
+  harm_aux.Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, BbarU);
 
 
   // W_times_S
@@ -187,7 +187,7 @@ int ghl_hybrid_Noble1D_entropy2(
   const double utU_guess[3] = {prims->vU[0] + ADM_metric->betaU[0],
                                prims->vU[1] + ADM_metric->betaU[1],
                                prims->vU[2] + ADM_metric->betaU[2]};
-  const double tmp_u = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, utU_guess);
+  const double tmp_u = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU_guess);
 
   double vsq = tmp_u/(1.0-tmp_u);
 

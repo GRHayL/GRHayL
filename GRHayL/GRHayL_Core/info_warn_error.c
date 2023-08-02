@@ -1,7 +1,9 @@
 #include <stdarg.h>
 #include "ghl_io.h"
 
-void ghl_info(const char *format, ...) {
+void ghl_info(
+      const char *format,
+      ...) {
 
   printf("(GRHayL) ");
 

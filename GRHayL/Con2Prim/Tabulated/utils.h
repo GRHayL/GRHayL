@@ -134,7 +134,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
 //Does this limit just do the same as apply_conservative_limits?
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
-  double S_squared = ghl_compute_vec2_from_vec(ADM_metric->gammaUU, SD);
+  double S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
@@ -146,7 +146,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
       SD[i] *= rescale_factor;
 
     // Step 2.3: Recompute S^{2}
-    S_squared = ghl_compute_vec2_from_vec(ADM_metric->gammaUU, SD);
+    S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
   }
   *Ssq = S_squared;
 
@@ -154,7 +154,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
   BU[0] = prims->BU[0] * ONE_OVER_SQRT_4PI;
   BU[1] = prims->BU[1] * ONE_OVER_SQRT_4PI;
   BU[2] = prims->BU[2] * ONE_OVER_SQRT_4PI;
-  *Bsq = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, BU);
+  *Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, BU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   *BdotS = 0.0;

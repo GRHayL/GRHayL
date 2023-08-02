@@ -1,13 +1,11 @@
 #include "ghl.h"
 
-/* Function    : ghl_return_stress_energy()
- * Description : unpacks ghl_stress_energy struct into variables
- *
- * Inputs      : Tmunu          - ghl_stress_energy struct to be unpacked
- *
- * Outputs     : Tij            - pointer to variable for (i,j) component
- *                                of T^\mu\nu
- */
+/*
+ * Function      : ghl_return_stress_energy()
+ * Description   : Unpacks ghl_stress_energy struct data into provided
+ *                 provided memory locations
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_return_stress_energy
+*/
 
 void ghl_return_stress_energy(
       const ghl_stress_energy *restrict Tmunu,

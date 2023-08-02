@@ -27,7 +27,7 @@
              + gamma[1][2] * vec[1]  \
              + gamma[2][2] * vec[2];
 
-#define ghl_compute_vec2_from_vec4(g4, vec) \
+#define ghl_compute_vec2_from_vec4D(g4, vec) \
   (g4[0][0] * vec[0] * vec[0] +        \
    g4[1][1] * vec[1] * vec[1] +        \
    g4[2][2] * vec[2] * vec[2] +        \
@@ -39,7 +39,7 @@
           g4[1][3] * vec[1] * vec[3] + \
           g4[2][3] * vec[2] * vec[3]))
 
-#define ghl_compute_vec2_from_vec(gamma, vec) \
+#define ghl_compute_vec2_from_vec3D(gamma, vec) \
   (gamma[0][0] * vec[0] * vec[0] +        \
    gamma[1][1] * vec[1] * vec[1] +        \
    gamma[2][2] * vec[2] * vec[2] +        \

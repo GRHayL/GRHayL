@@ -46,5 +46,5 @@ void ghl_compute_smallb_and_b2(
                                       smallb[2] + smallb[0]*ADM_metric->betaU[1],
                                       smallb[3] + smallb[0]*ADM_metric->betaU[2]};
 
-  *smallb2 = -SQR(ADM_metric->lapse*smallb[0]) + ghl_compute_vec2_from_vec(ADM_metric->gammaDD, bi_plus_bt_betai);
+  *smallb2 = -SQR(ADM_metric->lapse*smallb[0]) + ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, bi_plus_bt_betai);
 }

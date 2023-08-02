@@ -17,10 +17,10 @@ void ghl_initialize_conservatives(
       ghl_conservative_quantities *restrict cons) {
 
   cons->rho = rho;
+  cons->tau = tau;
   cons->SD[0] = S_x;
   cons->SD[1] = S_y;
   cons->SD[2] = S_z;
-  cons->tau = tau;
   cons->Y_e = Y_e;
   cons->entropy = entropy;
 }
