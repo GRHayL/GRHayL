@@ -8,6 +8,7 @@
 #!                   ghl_eos_functions_declaration.h
 #!                   ghl_io.h
 #!                   induction.h
+#!                   metric_helpers.h
 #!                   neutrinos.h
 #!                   nrpyeos_hybrid.h
 #!                   nrpyeos_tabulated.h
