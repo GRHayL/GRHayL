@@ -1,25 +1,23 @@
 #include "ghl.h"
 
-/* Function    : ghl_initialize_metric()
- * Description : Initialize the metric struct from user input
- *
- * Inputs      : lapse          - value of the lapse
- *             : gij            - value of the (i,j) component of the
- *                                cartesian ADM metric g_ij
- *             : betax          - value of the x component of the shift
- *             : betay          - value of the y component of the shift
- *             : betaz          - value of the z component of the shift
- *
- * Outputs     : metric         - returns ghl_metric_quantities struct containing
- *                                the inputs and additional auxiliary data computed
- *                                from input
- */
+/*
+ * Function      : ghl_initialize_metric()
+ * Description   : Initialize the ghl_metric_quantities struct from user input
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_metric
+*/
 
-void ghl_initialize_metric(const double lapse,
-                const double betax, const double betay, const double betaz,
-                const double gxx, const double gxy, const double gxz,
-                const double gyy, const double gyz, const double gzz,
-                ghl_metric_quantities *restrict metric) {
+void ghl_initialize_metric(
+      const double lapse,
+      const double betax,
+      const double betay,
+      const double betaz,
+      const double gxx,
+      const double gxy,
+      const double gxz,
+      const double gyy,
+      const double gyz,
+      const double gzz,
+      ghl_metric_quantities *restrict metric) {
 
   metric->lapse                                 = lapse;
   metric->betaU[0]                              = betax;

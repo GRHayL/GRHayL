@@ -1,18 +1,14 @@
 #include "induction.h"
 #include "ghl_induction_helpers.h"
 
-/* Function    : ghl_interpolate_for_A_gauge_rhs()
- * Description : computes several interpolated quantities for computing the RHS
- *               for tilde{phi} and the gauge contributions to A_i; these are
- *               used in ghl_calculate_phitilde_rhs() function
- *
- * Inputs      : gauge_vars      - A_gauge_vars struct containing stencils for
- *                                 variables to compute interpolated values
- *
- * Outputs     : interp_vars  - induction_interp_vars struct containing interpolated
- *                                 values for use in
- *
- */
+/*
+ * Function      : ghl_interpolate_with_cell_centered_ADM()
+ * Description   : computes several interpolated quantities for computing the RHS
+ *                 for tilde{phi} and the gauge contributions to A_i; these are
+ *                 used in ghl_calculate_phitilde_rhs() function
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_interpolate_with_cell_centered_ADM
+*/
+
 void ghl_interpolate_with_cell_centered_ADM(
       const ghl_metric_quantities metric_stencil[2][2][2],
       const double Ax_stencil[3][3][3],

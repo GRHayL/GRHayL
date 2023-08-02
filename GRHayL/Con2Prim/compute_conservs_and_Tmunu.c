@@ -1,18 +1,10 @@
 #include "con2prim.h"
 
-/* Function    : ghl_compute_conservs_and_Tmunu()
- * Description : Computes the conservatives and T_munu from the
- *               given primitives
- *
- * Inputs      : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : prims          - ghl_primitive_quantities struct with data
- *                                for the gridpoint of interest
- *
- * Outputs     : cons           - returns computed conservative values
- *             : Tmunu          - returns computed stress-energy tensor
- *
- */
+/*
+ * Function      : ghl_compute_conservs_and_Tmunu()
+ * Description   : Computes the conservatives and T_munu from the given primitives
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_primitives
+*/
 
 void ghl_compute_conservs_and_Tmunu(
       const ghl_metric_quantities *restrict ADM_metric,
@@ -32,7 +24,7 @@ void ghl_compute_conservs_and_Tmunu(
 
   // Compute u_\alpha
   double uD[4];
-  ghl_lower_vector_4D(metric_aux->g4DD, uU, uD);
+  ghl_raise_lower_vector_4D(metric_aux->g4DD, uU, uD);
 
   /***************************************************************/
   //     COMPUTE TDNMUNU AND CONSERVATIVES FROM PRIMITIVES       //
@@ -47,7 +39,7 @@ void ghl_compute_conservs_and_Tmunu(
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 
   double smallb_lower[4];
-  ghl_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
+  ghl_raise_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
 
   // Compute conservatives:
   cons->rho = alpha_sqrt_gamma * prims->rho * uU[0];

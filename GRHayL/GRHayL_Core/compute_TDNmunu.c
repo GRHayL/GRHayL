@@ -1,5 +1,11 @@
 #include "ghl.h"
 
+/*
+ * Function      : ghl_compute_TDNmunu()
+ * Description   : computes stress-energy tensor T_{\mu\nu}
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_compute_TDNmunu
+*/
+
 void ghl_compute_TDNmunu(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,
@@ -17,7 +23,7 @@ void ghl_compute_TDNmunu(
 
   // Compute u_\alpha
   double uD[4];
-  ghl_lower_vector_4D(metric_aux->g4DD, uU, uD);
+  ghl_raise_lower_vector_4D(metric_aux->g4DD, uU, uD);
 
   /***************************************************************/
   //                     COMPUTE TDNMUNU                         //
@@ -27,11 +33,11 @@ void ghl_compute_TDNmunu(
   ghl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
-  const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);
-  const double P_plus_half_b2 = (prims->press+0.5*smallb2);
+  const double rho0_h_plus_b2 = prims->rho*h_enthalpy + smallb2;
+  const double P_plus_half_b2 = prims->press + 0.5*smallb2;
 
   double smallb_lower[4];
-  ghl_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
+  ghl_raise_lower_vector_4D(metric_aux->g4DD, smallb, smallb_lower);
 
   // Next compute T^{\mu \nu}:
   // (Eq. 33 in http://arxiv.org/pdf/astro-ph/0503420.pdf):

@@ -15,10 +15,10 @@ int ghl_hybrid_Font_fix(
 
   double utU[3];
 
-  const double sdots = ghl_compute_vec2_from_vecD(ADM_metric->gammaUU, cons->SD);
+  const double sdots = ghl_compute_vec2_from_vec(ADM_metric->gammaUU, cons->SD);
 
   const double BbarU[3] = {prims->BU[0]*ONE_OVER_SQRT_4PI, prims->BU[1]*ONE_OVER_SQRT_4PI, prims->BU[2]*ONE_OVER_SQRT_4PI};
-  const double Bbar2 = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
+  const double Bbar2 = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, BbarU);
 
   double BbardotS, BbardotS2, hatBbardotS;
   if(Bbar2 < 1e-150) {
@@ -89,7 +89,7 @@ int ghl_hybrid_Font_fix(
     double fac2 = 1.0/(rhosh + ADM_metric->sqrt_detgamma*Bbar2/gammav);
 
     double SU[3];
-    ghl_raise_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
+    ghl_raise_lower_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
 
     utU[0] = fac2*(SU[0] + fac1*BbarU[0]);
     utU[1] = fac2*(SU[1] + fac1*BbarU[1]);

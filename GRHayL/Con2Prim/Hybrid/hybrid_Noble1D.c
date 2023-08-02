@@ -125,7 +125,7 @@ int ghl_hybrid_Noble1D(
   const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
                            prims->BU[1] * ONE_OVER_SQRT_4PI,
                            prims->BU[2] * ONE_OVER_SQRT_4PI};
-  harm_aux.Bsq = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, BbarU);
+  harm_aux.Bsq = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, BbarU);
 
   const double uu = - cons_undens->tau*ADM_metric->lapse
                     - ADM_metric->lapse*cons_undens->rho
@@ -138,7 +138,7 @@ int ghl_hybrid_Noble1D(
                         cons_undens->SD[1],
                         cons_undens->SD[2]};
 
-  double QU[4]; ghl_raise_vector_4D(metric_aux->g4UU, QD, QU);
+  double QU[4]; ghl_raise_lower_vector_4D(metric_aux->g4UU, QD, QU);
   harm_aux.Qsq = 0.0;
   for(int i=0; i<4; i++) harm_aux.Qsq += QD[i]*QU[i] ;
 
@@ -157,7 +157,7 @@ int ghl_hybrid_Noble1D(
   const double utU_guess[3] = {prims->vU[0] + ADM_metric->betaU[0],
                                prims->vU[1] + ADM_metric->betaU[1],
                                prims->vU[2] + ADM_metric->betaU[2]};
-  const double tmp_u = ghl_compute_vec2_from_vecU(ADM_metric->gammaDD, utU_guess);
+  const double tmp_u = ghl_compute_vec2_from_vec(ADM_metric->gammaDD, utU_guess);
 
   double vsq = tmp_u/(1.0-tmp_u);
 
