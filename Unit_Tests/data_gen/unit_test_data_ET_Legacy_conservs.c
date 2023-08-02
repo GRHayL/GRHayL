@@ -132,8 +132,7 @@ int main(int argc, char **argv) {
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
 
-      int speed_limit;
-      ghl_limit_v_and_compute_u0(&eos, &ADM_metric, &prims, &speed_limit);
+      const int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(&eos, &ADM_metric, &prims);
 
       // Compute conservatives based on these primitives
       ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);

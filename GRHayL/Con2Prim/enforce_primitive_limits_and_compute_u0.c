@@ -18,12 +18,11 @@
  *
  */
 
-void ghl_enforce_primitive_limits_and_compute_u0(
+int ghl_enforce_primitive_limits_and_compute_u0(
     const ghl_parameters *restrict params,
     const ghl_eos_parameters *restrict eos,
     const ghl_metric_quantities *restrict ADM_metric,
-    ghl_primitive_quantities *restrict prims,
-    int *restrict speed_limited) {
+    ghl_primitive_quantities *restrict prims) {
 
   // The density floor and ceiling is always applied
   prims->rho = MIN(MAX(prims->rho,eos->rho_min),eos->rho_max);
@@ -66,5 +65,5 @@ void ghl_enforce_primitive_limits_and_compute_u0(
   }
 
   // Finally, apply speed limit to v and compute u^0
-  ghl_limit_v_and_compute_u0(eos, ADM_metric, prims, speed_limited);
+  return ghl_limit_v_and_compute_u0(eos, ADM_metric, prims);
 }

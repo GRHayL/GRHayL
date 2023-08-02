@@ -72,12 +72,11 @@ void ghl_guess_primitives(
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims);
 
-void ghl_enforce_primitive_limits_and_compute_u0(
+int ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
-      ghl_primitive_quantities *restrict prims,
-      int *restrict speed_limit);
+      ghl_primitive_quantities *restrict prims);
 
 void ghl_compute_conservs_and_Tmunu(
       const ghl_metric_quantities *restrict ADM_metric,
@@ -172,12 +171,11 @@ int ghl_tabulated_Newman1D_entropy(
 
 //------------ Auxiliary Functions -----------------
 
-void ghl_limit_utilde_and_compute_v(
+int ghl_limit_utilde_and_compute_v(
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric,
       double utU[3],
-      ghl_primitive_quantities *restrict prims,
-      int *restrict speed_limit);
+      ghl_primitive_quantities *restrict prims);
 
 #ifdef __cplusplus
 }

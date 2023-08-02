@@ -208,8 +208,7 @@ int main(int argc, char **argv) {
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
 
-      int speed_limited = 0;
-      ghl_limit_v_and_compute_u0(&eos, &ADM_metric, &prims, &speed_limited);
+      const int speed_limited __attribute__((unused)) = ghl_limit_v_and_compute_u0(&eos, &ADM_metric, &prims);
 
       // We need epsilon to compute the enthalpy in ghl_compute_conservs_and_Tmunu;
       // This normally happens in the ghl_enforce_primitive_limits_and_compute_u0 function
@@ -553,9 +552,8 @@ int main(int argc, char **argv) {
             Bx_orig[i], By_orig[i], Bz_orig[i],
             poison, poison, poison, &prims);
 
-      int speed_limited = 0;
-      ghl_enforce_primitive_limits_and_compute_u0(
-            &params, &eos, &ADM_metric, &prims, &speed_limited);
+      const int speed_limited __attribute__((unused)) = ghl_enforce_primitive_limits_and_compute_u0(
+            &params, &eos, &ADM_metric, &prims);
 
       ghl_return_primitives(
             &prims, &rho_b[i], &press[i], &eps[i],
@@ -617,7 +615,6 @@ int main(int argc, char **argv) {
             poison, poison, poison, &prims);
       prims.u0 = u0[i];
 
-      int failure_checker = 0;
       ghl_compute_conservs_and_Tmunu(
             &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
