@@ -1,9 +1,9 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_compute_ADM_auxiliaries()
- * Description   : Initialize the metric struct from user input
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_compute_ADM_auxiliaries
+ * Function     : ghl_compute_ADM_auxiliaries()
+ * Description  : Initialize the metric struct from user input
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_ADM_auxiliaries
 */
 
 void ghl_compute_ADM_auxiliaries(

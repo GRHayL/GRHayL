@@ -1,9 +1,9 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_initialize_stress_energy()
- * Description   : Initialize the ghl_stress_energy struct from user input
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_stress_energy
+ * Function     : ghl_initialize_stress_energy()
+ * Description  : Initialize the ghl_stress_energy struct from user input
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_stress_energy
 */
 
 void ghl_initialize_stress_energy(

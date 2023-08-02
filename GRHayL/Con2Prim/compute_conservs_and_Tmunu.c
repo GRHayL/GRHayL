@@ -1,9 +1,9 @@
 #include "con2prim.h"
 
 /*
- * Function      : ghl_compute_conservs_and_Tmunu()
- * Description   : Computes the conservatives and T_munu from the given primitives
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_primitives
+ * Function     : ghl_compute_conservs_and_Tmunu()
+ * Description  : Computes the conservatives and T_munu from the given primitives
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_conservs_and_Tmunu
 */
 
 void ghl_compute_conservs_and_Tmunu(

@@ -1,9 +1,9 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_compute_TDNmunu()
- * Description   : computes stress-energy tensor T_{\mu\nu}
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_compute_TDNmunu
+ * Function     : ghl_compute_TDNmunu()
+ * Description  : computes stress-energy tensor T_{\mu\nu}
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_TDNmunu
 */
 
 void ghl_compute_TDNmunu(

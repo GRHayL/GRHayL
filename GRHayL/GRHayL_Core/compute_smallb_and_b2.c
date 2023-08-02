@@ -1,10 +1,10 @@
 #include "con2prim.h"
 
 /*
- * Function      : ghl_compute_smallb_and_b2()
- * Description   : Computes magnetic quantities b^0, b^i, and b^2 (see Eqs. 23
- *                 and 24 in https://arxiv.org/abs/astro-ph/0503420).
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_compute_smallb_and_b2
+ * Function     : ghl_compute_smallb_and_b2()
+ * Description  : Computes magnetic quantities b^0, b^i, and b^2 (see Eqs. 23
+ *                and 24 in https://arxiv.org/abs/astro-ph/0503420).
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_smallb_and_b2
 */
 
 void ghl_compute_smallb_and_b2(

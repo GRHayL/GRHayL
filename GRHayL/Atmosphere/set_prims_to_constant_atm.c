@@ -1,14 +1,11 @@
 #include "con2prim.h"
 
-/* Function    : ghl_set_prims_to_constant_atm()
- * Description : Uses the EOS data to reset the primitives to atmospheric
- *               values.
- *
- * Inputs      : eos            - ghl_eos_parameters struct with data for the
- *                                EOS of the simulation
- *
- * Outputs     : prims          - returns with all primitives set to atmospheric values
- */
+/*
+ * Function      : ghl_set_prims_to_constant_atm()
+ * Description   : Uses the EOS data to reset the primitives to
+ *                 constant density atmosphere
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_set_prims_to_constant_atm
+*/
 
 void ghl_set_prims_to_constant_atm(
       const ghl_eos_parameters *restrict eos,

@@ -1,9 +1,9 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_initialize_params()
- * Description   : Initialize the ghl_parameters struct from user input
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_params
+ * Function     : ghl_initialize_params()
+ * Description  : Initialize the ghl_parameters struct from user input
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_params
 */
 
 void ghl_initialize_params(

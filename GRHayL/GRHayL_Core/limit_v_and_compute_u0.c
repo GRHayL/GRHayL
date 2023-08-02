@@ -1,9 +1,9 @@
 #include "con2prim.h"
 
 /*
- * Function      : ghl_limit_v_and_compute_u0()
- * Description   : Applies speed limit to v^i and computes u^0
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_limit_v_and_compute_u0
+ * Function     : ghl_limit_v_and_compute_u0()
+ * Description  : Applies speed limit to v^i and computes u^0
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_limit_v_and_compute_u0
 */
 
 void ghl_limit_v_and_compute_u0(

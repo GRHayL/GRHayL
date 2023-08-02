@@ -1,12 +1,12 @@
 #include "con2prim.h"
 
 /*
- * Function      : ghl_apply_conservative_limits()
- * Description   : Checks whether \tilde{tau} and \tilde{S} obey the inequalities
- *                 constraining their possible values. If they are outside
- *                 these bounds, the function enforces the inequalities
- *                 and updates the diagnostic data.
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_apply_conservative_limits
+ * Function     : ghl_apply_conservative_limits()
+ * Description  : Checks whether \tilde{tau} and \tilde{S} obey the inequalities
+ *                constraining their possible values. If they are outside
+ *                these bounds, the function enforces the inequalities
+ *                and updates the diagnostic data.
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_apply_conservative_limits
 */
 
 void ghl_apply_conservative_limits(

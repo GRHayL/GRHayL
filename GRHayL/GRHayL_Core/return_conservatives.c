@@ -1,10 +1,10 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_return_conservatives()
- * Description   : Unpacks ghl_conservative_quantities struct data into provided
- *                 provided memory locations
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_return_conservatives
+ * Function     : ghl_return_conservatives()
+ * Description  : Unpacks ghl_conservative_quantities struct data into provided
+ *                provided memory locations
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_return_conservatives
 */
 
 void ghl_return_conservatives(

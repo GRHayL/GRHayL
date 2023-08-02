@@ -1,10 +1,10 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_return_primitives()
- * Description   : Unpacks ghl_primitive_quantities struct data into provided
- *                 provided memory locations
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_return_primitives
+ * Function     : ghl_return_primitives()
+ * Description  : Unpacks ghl_primitive_quantities struct data into provided
+ *                provided memory locations
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_return_primitives
 */
 
 void ghl_return_primitives(const ghl_primitive_quantities *restrict prims,

@@ -1,9 +1,9 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_initialize_metric()
- * Description   : Initialize the ghl_metric_quantities struct from user input
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_metric
+ * Function     : ghl_initialize_metric()
+ * Description  : Initialize the ghl_metric_quantities struct from user input
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_metric
 */
 
 void ghl_initialize_metric(

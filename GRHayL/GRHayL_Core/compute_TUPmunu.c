@@ -1,9 +1,9 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_compute_TUPmunu()
- * Description   : computes stress-energy tensor T^{\mu\nu}
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_compute_TUPmunu
+ * Function     : ghl_compute_TUPmunu()
+ * Description  : computes stress-energy tensor T^{\mu\nu}
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_TUPmunu
 */
 
 void ghl_compute_TUPmunu(

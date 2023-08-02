@@ -1,9 +1,9 @@
 #include "ghl.h"
 
 /*
- * Function      : ghl_initialize_extrinsic_curvature()
- * Description   : Initialize the ghl_extrinsic_curvature struct from user input
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_extrinsic_curvature
+ * Function     : ghl_initialize_extrinsic_curvature()
+ * Description  : Initialize the ghl_extrinsic_curvature struct from user input
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_extrinsic_curvature
 */
 
 void ghl_initialize_extrinsic_curvature(

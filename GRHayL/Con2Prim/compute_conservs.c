@@ -1,16 +1,10 @@
 #include "con2prim.h"
 
-/* Function    : ghl_compute_conservs()
- * Description : Computes the conservatives from the given primitives
- *
- * Inputs      : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : prims          - ghl_primitive_quantities struct with data
- *                                for the gridpoint of interest
- *
- * Outputs     : cons           - returns computed conservative values
- *
- */
+/*
+ * Function     : ghl_compute_conservs()
+ * Description  : Computes the conservatives from the given primitives
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_conservs
+*/
 
 void ghl_compute_conservs(
       const ghl_metric_quantities *restrict ADM_metric,
