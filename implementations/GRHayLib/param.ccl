@@ -8,7 +8,6 @@ KEYWORD EOS_type "The type of EOS for the simulation"
   "tabulated" :: "Tabulated EOS"
 } ""
 
-private:
 CCTK_BOOLEAN read_EOS_table "Whether or not to read from the EOS table"
 {
 } "no"
@@ -61,11 +60,6 @@ KEYWORD con2prim_backup_routines[3] "We allow up to 3 backup routines" STEERABLE
   "Palenzuela1D"     :: "https://arxiv.org/pdf/1505.01607.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
   "Newman1D"         :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
 } "None"
-
-CCTK_REAL depsdT_threshold "If depsdT is smaller than this value, the entropy will be used during con2prim" STEERABLE=ALWAYS
-{
-  *:* :: "Can be anything. Negative values disable the entropy equation."
-} 1e-6
 
 # FIXME: Enable this parameter! IllinoisGRMHD is currently hard-coded to tau_stildefix_enable=2.
 #CCTK_INT tau_stildefix_enable "tau<0 fix in primitive_vars_hybrid2 to reduce number of Font fixes, especially in puncture+matter evolutions" STEERABLE=ALWAYS
@@ -195,4 +189,3 @@ CCTK_REAL Lorenz_damping_factor "Damping factor for the generalized Lorenz gauge
 } 0.0
 
 #########################################################
-

@@ -208,9 +208,15 @@ extern int (*ghl_tabulated_get_index_Ye)(
       const ghl_eos_parameters *restrict eos,
       const double Ye);
 
+extern double (*ghl_tabulated_get_Ye_from_rho)(
+    const int nr,
+    const double *lr,
+    const double *Ye_of_lr,
+    const double rho );
+
 extern void (*ghl_tabulated_compute_Ye_of_rho_beq_constant_T)(
       const ghl_eos_parameters *restrict eos,
-      const double Ye,
+      const double T,
       double **Ye_of_rho_out);
 
 extern void (*ghl_calculate_HLLE_fluxes_dirn0)(

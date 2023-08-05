@@ -243,6 +243,11 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
 int NRPyEOS_tabulated_get_index_rho( const ghl_eos_parameters *restrict eos, const double rho );
 int NRPyEOS_tabulated_get_index_T(   const ghl_eos_parameters *restrict eos, const double T   );
 int NRPyEOS_tabulated_get_index_Ye(  const ghl_eos_parameters *restrict eos, const double Ye  );
+double NRPyEOS_tabulated_get_Ye_from_rho(
+    const int nr,
+    const double *lr,
+    const double *Ye_of_lr,
+    const double rho );
 void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const ghl_eos_parameters *restrict eos,
       const double T,
