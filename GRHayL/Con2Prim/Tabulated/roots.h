@@ -113,28 +113,7 @@ swap(
   *b = c;
 }
 
-/*
- * Function   : cicle
- * Author     : Leo Werneck
- *
- * From inputs a, b, c, cicle a, b, c = b, c, b.
- *
- * Parameters : a        - First number.
- *            : b        - Second number.
- *            : c        - Third number.
- *
- * Returns    : Nothing.
- */
-// static inline void
-// cicle(
-//     double *restrict a,
-//     double *restrict b,
-//     double *restrict c ) {
 
-//   *a = *b;
-//   *b = *c;
-//   *c = *a;
-// }
 
 /*
  * Function   : sign
@@ -154,87 +133,15 @@ sign( const double x ) {
 }
 
 /*
- * Function   : check_a_b_compute_fa_fb
- * Author     : Leo Werneck
- *
- * This function is used at the beginning of the root-finding methods. It
- * performs the following tasks:
- *
- *   1. Check if either a or b are roots of f;
- *   2. Check if the root is in the interval [a,b];
- *   3. Ensure |f(b)| < |f(a)| by swapping a and b if necessary.
- *
- * Parameters : f        - Function for which the root is computed.
- *            : fparams  - Object containing all parameters needed by the
- *                         function f other than the variable x.
- *            : a        - Lower limit of the initial interval.
- *            : b        - Upper limit of the initial interval.
- *            : fa       - f(a)
- *            : fb       - f(b)
- *            : r        - Pointer to Roots parameters.
- *
- * Returns    : One the following error keys:
- *                 - roots_success if the root is found
- *                 - roots_continue if the root is not found but no errors
- *                   occurred
- *                 - roots_error_root_not_bracketed if the interval [a,b]
- *                   does not bracket a root of f(x)
- */
-// static inline roots_error_t
-// check_a_b_compute_fa_fb(
-//     double f(double const, void *restrict),
-//     void   *restrict fparams,
-//     double *restrict a,
-//     double *restrict b,
-//     double *restrict fa,
-//     double *restrict fb,
-//     roots_params *restrict r ) {
-
-//   // Step 1: Compute fa; check if a is the root.
-//   *fa = f(*a, fparams);
-//   if( *fa == 0.0 ) {
-//     r->root     = *a;
-//     r->residual = *fa;
-//     return (r->error_key = roots_success);
-//   }
-
-//   // Step 2: Compute fb; check if b is the root.
-//   *fb = f(*b, fparams);
-//   if( *fb == 0.0 ) {
-//     r->root     = *b;
-//     r->residual = *fb;
-//     return (r->error_key = roots_success);
-//   }
-
-//   // Step 3: Ensure the root is in [a,b]
-//   if( (*fa)*(*fb) > 0 )
-//     return (r->error_key = roots_error_root_not_bracketed);
-
-//   // Step 4: Ensure b contains the best approximation to the root
-//   ensure_b_is_closest_to_root(a, b, fa, fb);
-
-//   // Step 5: If [a,b] is too small, return b
-//   if( fabs(*a - *b) < r->tol ) {
-//     r->root     = *b;
-//     r->residual = *fb;
-//     return (r->error_key = roots_success);
-//   }
-
-//   // Step 6: Root not found.
-//   return roots_continue;
-// }
-
-
-/*
  * Function prototypes
  */
-// roots_error_t
-// brent(
-//     double f(const double, void *restrict),
-//     void *restrict fparams,
-//     double a,
-//     double b,
-//     roots_params *restrict r );
+roots_error_t
+ghl_brent(
+    double f(const double, void *restrict),
+    void *restrict fparams,
+    double a,
+    double b,
+    roots_params *restrict r );
 
 roots_error_t
 ghl_toms748(

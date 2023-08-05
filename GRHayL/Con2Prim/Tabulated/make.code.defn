@@ -1,5 +1,5 @@
 #! INCS = roots.h utils.h
 
-SRCS = toms748.c
+SRCS = toms748.c brent.c
 
 SUBDIRS = Newman1D Palenzuela1D

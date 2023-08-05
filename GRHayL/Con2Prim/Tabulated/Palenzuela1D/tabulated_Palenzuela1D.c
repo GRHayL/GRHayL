@@ -89,12 +89,14 @@ int ghl_tabulated_Palenzuela1D(
   roots_params rparams;
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
-  ghl_toms748(froot, &fparams, xlow, xup, &rparams);
+  // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
+  ghl_brent(froot, &fparams, xlow, xup, &rparams);
   if( rparams.error_key != roots_success ) {
     // Adjust the temperature guess and try again
     fparams.temp_guess = eos->T_max;
     prims->temperature = eos->T_max;
-    ghl_toms748(froot, &fparams, xlow, xup, &rparams);
+    // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
+    ghl_brent(froot, &fparams, xlow, xup, &rparams);
     if( rparams.error_key != roots_success ) {
       ghl_warn("TOMS748 did not find a root (see error report below)\n");
       roots_info(&rparams);
