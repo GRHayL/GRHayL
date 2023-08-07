@@ -309,7 +309,7 @@ int ghl_hybrid_Noble1D_entropy(
 
   //Additional tabulated code here
 
-  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims);
 
   if(diagnostics->speed_limited==1)
     prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
@@ -328,5 +328,6 @@ int ghl_hybrid_Noble1D_entropy(
   }
 
   /* Done! */
+  diagnostics->which_routine = Noble1D_entropy;
   return 0;
 }

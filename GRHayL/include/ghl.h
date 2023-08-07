@@ -365,11 +365,10 @@ void ghl_return_stress_energy(
       double *restrict Txz, double *restrict Tyy, double *restrict Tyz,
       double *restrict Tzz);
 
-void ghl_limit_v_and_compute_u0(
+int ghl_limit_v_and_compute_u0(
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
-      ghl_primitive_quantities *restrict prims,
-      int *restrict speed_limit);
+      ghl_primitive_quantities *restrict prims);
 
 void ghl_compute_TDNmunu(
       const ghl_metric_quantities *restrict ADM_metric,

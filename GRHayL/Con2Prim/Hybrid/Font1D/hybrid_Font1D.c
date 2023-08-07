@@ -69,7 +69,6 @@ int ghl_hybrid_Font_fix(
     if(Font_fix_status==1)
       return 1;
 
-    /* Font fix works! */
     /* First compute P_cold, eps_cold, then h = h_cold */
     double P_cold, eps_cold;
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob, &P_cold, &eps_cold);
@@ -94,7 +93,7 @@ int ghl_hybrid_Font_fix(
     utU[0] = fac2*(SU[0] + fac1*BbarU[0]);
     utU[1] = fac2*(SU[1] + fac1*BbarU[1]);
     utU[2] = fac2*(SU[2] + fac1*BbarU[2]);
-    ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims, &diagnostics->speed_limited);
+    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims);
   }
 
   //The Font fix only sets the velocities.  Here we set the primitives.
@@ -109,5 +108,8 @@ int ghl_hybrid_Font_fix(
   // and compute epsilon from rho and pressure
   prims->eps = prims->press/(prims->rho*(Gamma_ppoly-1.0));
   if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+
+  /* Font fix works! */
+  diagnostics->which_routine = Font1D;
   return 0;
 }

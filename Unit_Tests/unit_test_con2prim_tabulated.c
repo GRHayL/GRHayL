@@ -162,7 +162,7 @@ generate_test_data(
                                 Bx, By, Bz,
                                 xent, xye, xtemp,
                                 &prims_orig);
-          ghl_limit_v_and_compute_u0(eos, &ADM_metric, &prims_orig, &diagnostics.speed_limited);
+          diagnostics.speed_limited = ghl_limit_v_and_compute_u0(eos, &ADM_metric, &prims_orig);
 
           // Set prim guesses
           ghl_primitive_quantities prims;

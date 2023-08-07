@@ -181,8 +181,7 @@ int main(int argc, char **argv) {
                       &prims);
 
     //This applies limits on the primitives
-    int failure_checker = 0;
-    ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &failure_checker);
+    const int speed_limited __attribute__((unused)) = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims);
 
     ghl_primitive_quantities prims_trusted, prims_pert;
     ghl_initialize_primitives(
@@ -218,7 +217,6 @@ int main(int argc, char **argv) {
                                              neos, rho_ppoly, Gamma_ppoly,
                                              k_ppoly0, Gamma_th, &eos);
 
-  int failure_checker = 0;
   double rho_test = 1e-2;
   double P_cold = 0.0;
   ghl_hybrid_compute_P_cold(&eos, rho_test, &P_cold);
@@ -241,7 +239,7 @@ int main(int argc, char **argv) {
                         &prims);
 
   params.psi6threshold = 0;
-  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &failure_checker);
+  int speed_limited __attribute__((unused)) = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims);
   if( relative_error(1e5*P_cold, prims.press) > 1e-20 )
     ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e5*P_cold);
@@ -251,7 +249,7 @@ int main(int argc, char **argv) {
   prims.rho   = 12.0*eos.rho_atm;
   ghl_hybrid_compute_P_cold(&eos, prims.rho, &P_cold);
   prims.press = 1e3*P_cold;
-  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &failure_checker);
+  speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims);
   if( relative_error(1e2*P_cold, prims.press) > 1e-20 )
     ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e2*P_cold);
