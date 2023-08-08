@@ -45,10 +45,8 @@ void ghl_apply_conservative_limits(
   //tau fix, applicable when B==0 and B!=0:
   if(cons->tau < half_psi6_Bbar2) {
     cons->tau = eos->tau_atm + half_psi6_Bbar2;
-    diagnostics->failure_checker+=1000000;
+    diagnostics->tau_fix = true;
   }
-
-  double tau_fluid_min = cons->tau - half_psi6_Bbar2 - tau_fluid_term3;
 
   //Apply Stilde fix when B==0.
   if(Bbar2 < eos->press_atm*1e-32) {
@@ -59,13 +57,15 @@ void ghl_apply_conservative_limits(
       cons->SD[0]*=rfactm1;
       cons->SD[1]*=rfactm1;
       cons->SD[2]*=rfactm1;
-      diagnostics->failure_checker+=10000000;
+      diagnostics->Stilde_fix = true;
     }
   //Apply new Stilde fix.
   } else if(ADM_metric->sqrt_detgamma>params->psi6threshold) {
+    double tau_fluid_min = cons->tau - half_psi6_Bbar2 - tau_fluid_term3;
     if (tau_fluid_min < eos->tau_atm*1.001) {
       tau_fluid_min = eos->tau_atm*1.001;
       cons->tau = tau_fluid_min + half_psi6_Bbar2 + tau_fluid_term3;
+      diagnostics->tau_fix = true;
     }
 
     const double rhot = 0.999999*tau_fluid_min*(tau_fluid_min+2.0*cons->rho);
@@ -75,7 +75,7 @@ void ghl_apply_conservative_limits(
       cons->SD[0]*=rfactm1;
       cons->SD[1]*=rfactm1;
       cons->SD[2]*=rfactm1;
-      diagnostics->failure_checker+=100000000;
+      diagnostics->Stilde_fix = true;
     }
   }
 }

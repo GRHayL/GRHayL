@@ -54,7 +54,7 @@ int ghl_con2prim_multi_method(
 
   if( failed && params->backup_routine[0] != None ) {
     // Backup 1 triggered
-    diagnostics->backup[0] = 1;
+    diagnostics->backup[0] = true;
     // Reset guesses
     *prims = prims_guess;
     // Backup routine #1
@@ -62,7 +62,7 @@ int ghl_con2prim_multi_method(
 
     if( failed && params->backup_routine[1] != None ) {
       // Backup 2 triggered
-      diagnostics->backup[1] = 1;
+      diagnostics->backup[1] = true;
       // Reset guesses
       *prims = prims_guess;
       // Backup routine #2
@@ -70,7 +70,7 @@ int ghl_con2prim_multi_method(
 
       if( failed && params->backup_routine[2] != None ) {
         // Backup 3 triggered
-        diagnostics->backup[2] = 1;
+        diagnostics->backup[2] = true;
         // Reset guesses
         *prims = prims_guess;
         // Backup routine #3

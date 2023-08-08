@@ -25,16 +25,11 @@ https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
 
 typedef struct ghl_con2prim_diagnostics {
-  bool c2p_failed;
-  int failures;
-  int failure_checker;
+  int tau_fix;
+  int Stilde_fix;
   int speed_limited;
   int which_routine;
-  int backup[3];
-  int nan_found;
-  int c2p_fail_flag;
-  double error_int_numer;
-  double error_int_denom;
+  bool backup[3];
   int n_iter;
 } ghl_con2prim_diagnostics;
 

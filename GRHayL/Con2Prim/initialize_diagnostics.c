@@ -9,13 +9,11 @@
  */
 
 void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics) {
-  diagnostics->failures=0;
-  diagnostics->speed_limited=0;
-  diagnostics->backup[0]=0;
-  diagnostics->backup[1]=0;
-  diagnostics->backup[2]=0;
-  diagnostics->nan_found=0;
-  diagnostics->error_int_numer=0;
-  diagnostics->error_int_denom=0;
+  diagnostics->tau_fix = false;
+  diagnostics->Stilde_fix = false;
+  diagnostics->speed_limited = 0;
+  diagnostics->backup[0] = false;
+  diagnostics->backup[1] = false;
+  diagnostics->backup[2] = false;
   diagnostics->which_routine = None;
 }
