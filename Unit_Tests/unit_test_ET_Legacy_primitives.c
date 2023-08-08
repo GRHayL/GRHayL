@@ -229,7 +229,6 @@ int main(int argc, char **argv) {
       if(check)
         printf("Con2Prim failed!");
     } else {
-      diagnostics.failure_checker+=1;
       ghl_set_prims_to_constant_atm(&eos, &prims);
       //TODO: Validate reset? (rhob press v)
       printf("Negative rho_* triggering atmospheric reset.\n");
