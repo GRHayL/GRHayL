@@ -235,8 +235,8 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
 void NRPyEOS_initialize_tabulated_functions(ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
-      ghl_eos_parameters const *restrict eos,
-      ghl_primitive_quantities const *restrict prims,
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims,
       double *restrict enthalpy_ptr,
       double *restrict cs2_ptr);
 
@@ -252,6 +252,30 @@ void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const ghl_eos_parameters *restrict eos,
       const double T,
       double **Ye_of_rho );
+
+void NRPyEOS_enforce_table_bounds_rho_Ye_T(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict T );
+
+void NRPyEOS_enforce_table_bounds_rho_Ye_eps(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict eps );
+
+void NRPyEOS_enforce_table_bounds_rho_Ye_S(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict S );
+
+void NRPyEOS_enforce_table_bounds_rho_Ye_P(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict P );
 
 #ifdef __cplusplus
 }

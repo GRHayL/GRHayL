@@ -6,6 +6,7 @@ SRCS = NRPyEOS_free_memory.c                                \
        NRPyEOS_tabulated_compute_enthalpy_and_cs2.c         \
        NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c \
        NRPyEOS_tabulated_get_index.c                        \
-       NRPyEOS_read_table_set_EOS_params.c
+       NRPyEOS_read_table_set_EOS_params.c                  \
+       NRPyEOS_enforce_table_bounds.c
 
 SUBDIRS = interpolators

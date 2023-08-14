@@ -72,10 +72,11 @@ int ghl_newman_energy(
 
     // Set the prims (eps is computed as in Palenzuela et al.)
     // See e.g., Eq. (44) of https://arxiv.org/pdf/1712.07538.pdf
-    const double x    = z * invD;
-    const double xrho = con->rho * invW;
-    const double xeps = - 1.0 + (1.0-W*W)*x*invW
-                      + W*( 1.0 + q - s + 0.5*( s*invW*invW + (t*t)/(x*x) ) );
+    double x    = z * invD;
+    double xrho = con->rho * invW;
+    double xeps = - 1.0 + (1.0-W*W)*x*invW
+                  + W*( 1.0 + q - s + 0.5*( s*invW*invW + (t*t)/(x*x) ) );
+    ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &xrho, &xye, &xeps);
     ghl_tabulated_compute_P_T_from_eps(eos, xrho, xye, xeps, &xprs, &xtemp);
 
     AtStep++;
@@ -116,8 +117,9 @@ int ghl_newman_energy(
   prim->vU[0]          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
   prim->vU[1]          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
   prim->vU[2]          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
-  ghl_tabulated_compute_P_eps_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
-                                       &prim->press, &prim->eps );
+  ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prim->rho, &prim->Y_e, &prim->temperature);
+  ghl_tabulated_compute_P_eps_from_T(eos, prim->rho, prim->Y_e, prim->temperature,
+                                     &prim->press, &prim->eps);
 
   return ghl_success;
 }
@@ -139,5 +141,5 @@ int ghl_tabulated_Newman1D_energy(
   // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
   return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU,
-                       cons_undens, prims, tol_x);
+                           cons_undens, prims, tol_x);
 }

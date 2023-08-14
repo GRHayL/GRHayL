@@ -193,7 +193,7 @@ typedef struct ghl_eos_parameters {
   // Table bounds
   double table_rho_min, table_rho_max;
   double table_T_min  , table_T_max;
-  double table_Y_e_min , table_Y_e_max;
+  double table_Y_e_min, table_Y_e_max;
   double table_P_min  , table_P_max;
   double table_eps_min, table_eps_max;
   double table_ent_min, table_ent_max;

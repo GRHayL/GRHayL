@@ -246,4 +246,28 @@ extern void (*ghl_calculate_HLLE_fluxes_dirn2)(
       const double cmax,
       ghl_conservative_quantities *restrict cons_fluxes);
 
+extern void (*ghl_tabulated_enforce_bounds_rho_Ye_T)(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict T );
+
+extern void (*ghl_tabulated_enforce_bounds_rho_Ye_eps)(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict eps );
+
+extern void (*ghl_tabulated_enforce_bounds_rho_Ye_S)(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict S );
+
+extern void (*ghl_tabulated_enforce_bounds_rho_Ye_P)(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict P );
+
 #endif // GHL_EOS_FUNCTIONS_H_

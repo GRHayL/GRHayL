@@ -93,13 +93,12 @@ int ghl_tabulated_Palenzuela1D(
   ghl_brent(froot, &fparams, xlow, xup, &rparams);
   if( rparams.error_key != roots_success ) {
     // Adjust the temperature guess and try again
-    fparams.temp_guess = eos->T_max;
-    prims->temperature = eos->T_max;
+    fparams.temp_guess = eos->T_min;
+    prims->temperature = eos->T_min;
     // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
     ghl_brent(froot, &fparams, xlow, xup, &rparams);
     if( rparams.error_key != roots_success ) {
-      ghl_warn("TOMS748 did not find a root (see error report below)\n");
-      roots_info(&rparams);
+      // roots_info(&rparams);
       return rparams.error_key;
     }
   }
@@ -125,9 +124,9 @@ int ghl_tabulated_Palenzuela1D(
   prims->temperature = T;
   prims->press       = P;
   prims->eps         = eps;
-  prims->vU[0]          = W*(SU[0] + BdotS*BbarU[0]/Z)/(Z+B_squared);
-  prims->vU[1]          = W*(SU[1] + BdotS*BbarU[1]/Z)/(Z+B_squared);
-  prims->vU[2]          = W*(SU[2] + BdotS*BbarU[2]/Z)/(Z+B_squared);
+  prims->vU[0]       = W*(SU[0] + BdotS*BbarU[0]/Z)/(Z+B_squared);
+  prims->vU[1]       = W*(SU[1] + BdotS*BbarU[1]/Z)/(Z+B_squared);
+  prims->vU[2]       = W*(SU[2] + BdotS*BbarU[2]/Z)/(Z+B_squared);
 
   return ghl_success;
 }

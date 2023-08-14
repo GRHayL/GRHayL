@@ -29,5 +29,9 @@ void NRPyEOS_initialize_tabulated_functions(ghl_eos_parameters *restrict eos) {
   ghl_tabulated_get_index_T                            = &NRPyEOS_tabulated_get_index_T;
   ghl_tabulated_get_index_Ye                           = &NRPyEOS_tabulated_get_index_Ye;
   ghl_compute_h_and_cs2                                = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
+  ghl_tabulated_enforce_bounds_rho_Ye_T                = &NRPyEOS_enforce_table_bounds_rho_Ye_T;
+  ghl_tabulated_enforce_bounds_rho_Ye_eps              = &NRPyEOS_enforce_table_bounds_rho_Ye_eps;
+  ghl_tabulated_enforce_bounds_rho_Ye_S                = &NRPyEOS_enforce_table_bounds_rho_Ye_S;
+  ghl_tabulated_enforce_bounds_rho_Ye_P                = &NRPyEOS_enforce_table_bounds_rho_Ye_P;
 #endif
 }

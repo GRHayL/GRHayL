@@ -32,7 +32,7 @@ compute_rho_P_eps_T_W_energy(
       double *restrict W_ptr ) {
 
   // Step 0: Unpack the fparams struct
-  const double Y_e = fparams->Y_e;
+  double Y_e = fparams->Y_e;
   double T = fparams->temp_guess;
   const ghl_eos_parameters *eos = fparams->eos;
 
@@ -48,13 +48,17 @@ compute_rho_P_eps_T_W_energy(
     const double t = fparams->t;
     // Eq. (43) of https://arxiv.org/pdf/1712.07538.pdf
     eps = W - 1.0 + (1.0-W*W)*x/W + W*(q - s + t*t/(2*x*x) + s/(2*W*W) );
-    ghl_tabulated_compute_P_T_from_eps( eos, rho, Y_e, eps, &P, &T );
+
+    // Enforce limits and call table interpolator
+    ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &rho, &Y_e, &eps);
+    ghl_tabulated_compute_P_T_from_eps(eos, rho, Y_e, eps, &P, &T);
   }
   else {
     // If the temperature is not evolved, use the input guess to determine
     // the remaining primitives. Note that in this case one must provide
     // the appropriate temperature instead of the default guess T = T_min.
-    ghl_tabulated_compute_P_eps_from_T( eos, rho, Y_e, T, &P, &eps );
+    ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &rho, &Y_e, &T);
+    ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
   }
 
   // Step 3: Set the output

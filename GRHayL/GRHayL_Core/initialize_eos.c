@@ -226,6 +226,14 @@ void ghl_initialize_tabulated_eos(
   // Step 6: These parameters are manually set here, but
   //         can be overwritten later.
   eos->root_finding_precision = 1e-15;
+
+  // Step 7: Set minimum values for eps, P, and S
+  eos->press_min   = eos->table_P_min;
+  eos->press_max   = eos->table_P_max;
+  eos->eps_min     = eos->table_eps_min;
+  eos->eps_max     = eos->table_eps_max;
+  eos->entropy_min = eos->table_ent_min;
+  eos->entropy_max = eos->table_ent_max;
 }
 
 /*
