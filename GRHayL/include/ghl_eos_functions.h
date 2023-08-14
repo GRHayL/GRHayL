@@ -2,11 +2,10 @@
 #define GHL_EOS_FUNCTIONS_H_
 
 extern void (*ghl_compute_h_and_cs2)(
-      ghl_eos_parameters const *restrict eos,
-      ghl_primitive_quantities const *restrict prims,
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims,
       double *restrict h,
       double *restrict cs2);
-
 
 extern int  (*ghl_hybrid_find_polytropic_index)(
       const ghl_eos_parameters *restrict eos,

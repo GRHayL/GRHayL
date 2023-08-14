@@ -32,7 +32,7 @@ compute_rho_P_eps_T_W_entropy(
       double *restrict W_ptr ) {
 
   // Step 0: Unpack the fparams struct
-  const double Y_e = fparams->Y_e;
+  double Y_e = fparams->Y_e;
   double T = fparams->temp_guess;
   const ghl_eos_parameters *eos = fparams->eos;
 

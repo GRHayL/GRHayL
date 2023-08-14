@@ -39,8 +39,8 @@ void NRPyEOS_compute_entropy_function(
 void NRPyEOS_initialize_hybrid_functions(ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
-      ghl_eos_parameters const *restrict eos,
-      ghl_primitive_quantities const *restrict prims,
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims,
       double *restrict enthalpy_ptr,
       double *restrict cs2_ptr );
 

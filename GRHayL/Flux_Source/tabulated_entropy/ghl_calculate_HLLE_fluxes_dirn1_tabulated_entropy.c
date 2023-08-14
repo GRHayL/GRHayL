@@ -2,7 +2,7 @@
 /*
  * Compute the HLLE-derived fluxes on the left face in the 1direction for all components.
  */
-void ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy(const ghl_primitive_quantities *restrict prims_r, const ghl_primitive_quantities *restrict prims_l, struct ghl_eos_parameters const *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn1, const double cmax_dirn1, ghl_conservative_quantities *restrict cons) {
+void ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, struct ghl_eos_parameters const *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn1, const double cmax_dirn1, ghl_conservative_quantities *restrict cons) {
 
 {
 
