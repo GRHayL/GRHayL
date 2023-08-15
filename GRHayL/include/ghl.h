@@ -385,5 +385,6 @@ void ghl_compute_smallb_and_b2(
 #endif
 
 #include "ghl_eos_functions.h"
+#include "ghl_debug.h"
 
 #endif // GHL_H
