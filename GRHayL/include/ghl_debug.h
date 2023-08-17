@@ -35,7 +35,7 @@ void ghl_debug_print_prims( const ghl_primitive_quantities *restrict p ) {
 
   // Prepare division
   div[0] = '\0';
-  for(int i=0;i<n_div;i++) sprintf(div, "%s%s", div, subdiv);
+  for(int i=0;i<n_div;i++) sprintf(&div[i*n_subdiv], "%s", subdiv);
   div[n_total  ] = '.';
   div[n_total+1] = '\n';
   div[n_total+2] = '\0';
@@ -66,7 +66,7 @@ void ghl_debug_print_cons( const ghl_conservative_quantities *restrict c ) {
 
   // Prepare division
   div[0] = '\0';
-  for(int i=0;i<n_div;i++) sprintf(div, "%s%s", div, subdiv);
+  for(int i=0;i<n_div;i++) sprintf(&div[i*n_subdiv], "%s", subdiv);
   div[n_total  ] = '.';
   div[n_total+1] = '\n';
   div[n_total+2] = '\0';

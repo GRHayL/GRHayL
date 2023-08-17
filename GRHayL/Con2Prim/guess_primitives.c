@@ -21,12 +21,12 @@ void ghl_guess_primitives(
       ghl_primitive_quantities *restrict prims) {
 
   // Use atmosphere as initial guess:
-  prims->rho = cons->rho/ADM_metric->sqrt_detgamma;
-  prims->vU[0] = -ADM_metric->betaU[0];
-  prims->vU[1] = -ADM_metric->betaU[1];
-  prims->vU[2] = -ADM_metric->betaU[2];
-  prims->Y_e = cons->Y_e/cons->rho;
-  prims->temperature = eos->T_min;
+  prims->rho         = cons->rho/ADM_metric->sqrt_detgamma;
+  prims->vU[0]       = -ADM_metric->betaU[0];
+  prims->vU[1]       = -ADM_metric->betaU[1];
+  prims->vU[2]       = -ADM_metric->betaU[2];
+  prims->Y_e         = cons->Y_e/cons->rho;
+  prims->temperature = eos->T_max;
 
   // If using Hybrid EOS, compute P_cold
   if( eos->eos_type == ghl_eos_hybrid )

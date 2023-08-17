@@ -31,6 +31,7 @@ typedef struct ghl_con2prim_diagnostics {
   int which_routine;
   bool backup[3];
   int n_iter;
+  bool check;
 } ghl_con2prim_diagnostics;
 
 typedef struct ghl_palenzuela_quantities {

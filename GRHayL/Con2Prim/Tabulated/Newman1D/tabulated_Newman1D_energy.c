@@ -1,12 +1,13 @@
 #include "../utils.h"
 
-int ghl_newman_energy(
+static int ghl_newman_energy(
       const ghl_eos_parameters *restrict eos,
       const double S_squared,
       const double BdotS,
       const double B_squared,
       const double *restrict BU,
       const double *restrict SU,
+      const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict con,
       ghl_primitive_quantities *restrict prim,
       const double tol_x ) {
@@ -111,15 +112,17 @@ int ghl_newman_energy(
   }
 
   // Set the primitives
+  double utildeU[3] = {
+    W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared),
+    W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared),
+    W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared)
+  };
   prim->rho         = con->rho*invW;
   prim->Y_e         = xye;
   prim->temperature = xtemp;
-  prim->vU[0]          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
-  prim->vU[1]          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
-  prim->vU[2]          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
-  ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prim->rho, &prim->Y_e, &prim->temperature);
-  ghl_tabulated_compute_P_eps_from_T(eos, prim->rho, prim->Y_e, prim->temperature,
-                                     &prim->press, &prim->eps);
+  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prim);
+  ghl_tabulated_compute_P_eps_S_from_T(eos, prim->rho, prim->Y_e, prim->temperature,
+                                       &prim->press, &prim->eps, &prim->entropy);
 
   return ghl_success;
 }
@@ -141,5 +144,5 @@ int ghl_tabulated_Newman1D_energy(
   // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
   return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU,
-                           cons_undens, prims, tol_x);
+                           ADM_metric, cons_undens, prims, tol_x);
 }
