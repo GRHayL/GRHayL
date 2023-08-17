@@ -114,6 +114,7 @@ int ghl_tabulated_Palenzuela1D(
       return rparams.error_key;
     }
   }
+  diagnostics->n_iter = rparams.n_iters;
 
   // Step 9: Set core primitives using the EOS and the root
   double x = rparams.root;

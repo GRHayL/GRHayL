@@ -10,7 +10,8 @@ static int ghl_newman_energy(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict con,
       ghl_primitive_quantities *restrict prim,
-      const double tol_x ) {
+      const double tol_x,
+      int *restrict n_iter ) {
 
   // Set basic quantities from input
   double invD   = 1.0/con->rho;
@@ -98,6 +99,8 @@ static int ghl_newman_energy(
   if (step >= maxsteps)
     return roots_error_max_iter;
 
+  *n_iter = step;
+
   if( conacc ) {     //converged on an extrap. so recompute vars
     const double a     = e + xprs + 0.5*B_squared;
     const double phi   = acos(sqrt(27.0*d/(4.0*a))/a);
@@ -143,6 +146,6 @@ int ghl_tabulated_Newman1D_energy(
 
   // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
-  return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU,
-                           ADM_metric, cons_undens, prims, tol_x);
+  return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
+                           cons_undens, prims, tol_x, &diagnostics->n_iter);
 }
