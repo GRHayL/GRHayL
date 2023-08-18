@@ -143,6 +143,7 @@ int ghl_tabulated_Palenzuela1D(
   prims->rho         = rho;
   prims->Y_e         = fparams.Y_e;
   prims->temperature = T;
+  ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
   ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);

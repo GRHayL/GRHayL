@@ -9,7 +9,7 @@ static int ghl_newman_energy(
       const double *restrict SU,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict con,
-      ghl_primitive_quantities *restrict prim,
+      ghl_primitive_quantities *restrict prims,
       const double tol_x,
       int *restrict n_iter ) {
 
@@ -111,7 +111,7 @@ static int ghl_newman_energy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
     invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
     W                  = 1.0/invW;
-    prim->rho          = con->rho*invW;
+    prims->rho          = con->rho*invW;
   }
 
   // Set the primitives
@@ -120,12 +120,13 @@ static int ghl_newman_energy(
     W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared),
     W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared)
   };
-  prim->rho         = con->rho*invW;
-  prim->Y_e         = xye;
-  prim->temperature = xtemp;
-  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prim);
-  ghl_tabulated_compute_P_eps_S_from_T(eos, prim->rho, prim->Y_e, prim->temperature,
-                                       &prim->press, &prim->eps, &prim->entropy);
+  prims->rho         = con->rho*invW;
+  prims->Y_e         = xye;
+  prims->temperature = xtemp;
+  ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
+  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prims);
+  ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
+                                       &prims->press, &prims->eps, &prims->entropy);
 
   return ghl_success;
 }
