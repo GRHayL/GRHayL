@@ -1,7 +1,7 @@
 #include "unit_tests.h"
 
-static inline void compute_h_and_cs2(struct ghl_eos_parameters const *restrict eos,
-                                     ghl_primitive_quantities const *restrict prims,
+static inline void compute_h_and_cs2(const ghl_eos_parameters *restrict eos,
+                                     ghl_primitive_quantities *restrict prims,
                                      double *restrict h,
                                      double *restrict cs2) {
 
@@ -177,15 +177,15 @@ int main(int argc, char **argv) {
   }
 
   // Function pointer to allow for loop over fluxes
-  void (*calculate_HLLE_fluxes)(const ghl_primitive_quantities *restrict, const ghl_primitive_quantities *restrict,
+  void (*calculate_HLLE_fluxes)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
                               const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
                               const double, const double, ghl_conservative_quantities *restrict);
 
-  void (*calculate_characteristic_speed)(const ghl_primitive_quantities *restrict, const ghl_primitive_quantities *restrict,
+  void (*calculate_characteristic_speed)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
                               const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict, double *restrict, double *restrict);
 
   // Function pointer to allow for loop over directional source terms
-  void (*calculate_source_terms)(const ghl_primitive_quantities *restrict, const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
+  void (*calculate_source_terms)(ghl_primitive_quantities *restrict, const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
   const ghl_metric_quantities *restrict, ghl_conservative_quantities *restrict);
 
   // Loop over flux directions (x,y,z)
