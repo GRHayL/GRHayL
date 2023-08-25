@@ -10,6 +10,7 @@ SRCS = apply_conservative_limits.c               \
        guess_primitives.c                        \
        initialize_diagnostics.c                  \
        limit_utilde_and_compute_v.c              \
-       undensitize_conservatives.c
+       undensitize_conservatives.c               \
+       get_con2prim_routine_name.c
 
 SUBDIRS = Hybrid Tabulated

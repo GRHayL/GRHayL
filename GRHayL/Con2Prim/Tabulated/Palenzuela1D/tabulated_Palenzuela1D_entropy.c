@@ -81,6 +81,7 @@ int ghl_tabulated_Palenzuela1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
+  diagnostics->which_routine = Palenzuela1D_entropy;
   return ghl_tabulated_Palenzuela1D( compute_rho_P_eps_T_W_entropy,
                                  params,
                                  eos,

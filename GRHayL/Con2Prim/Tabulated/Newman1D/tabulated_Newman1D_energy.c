@@ -147,6 +147,7 @@ int ghl_tabulated_Newman1D_energy(
 
   // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
+  diagnostics->which_routine = Newman1D;
   return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
                            cons_undens, prims, tol_x, &diagnostics->n_iter);
 }
