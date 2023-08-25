@@ -1,4 +1,4 @@
-#include "../utils.h"
+#include "../../utils_Palenzuela1D.h"
 
 /* Function    : ghl_tabulated_Palenzuela1D
  * Author      : Leo Werneck

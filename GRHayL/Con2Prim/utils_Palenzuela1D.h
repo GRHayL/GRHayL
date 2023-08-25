@@ -35,6 +35,13 @@ typedef struct fparams_struct {
       double *restrict eps_ptr,
       double *restrict T_ptr,
       double *restrict W_ptr );
+  void (*compute_rho_P_eps_W)(
+      const double x,
+      struct fparams_struct *restrict fparams,
+      double *restrict rho_ptr,
+      double *restrict P_ptr,
+      double *restrict eps_ptr,
+      double *restrict W_ptr );
 } fparams_struct;
 
 /*
@@ -191,6 +198,36 @@ int ghl_tabulated_Newman1D(
             double *restrict P_ptr,
             double *restrict eps_ptr,
             double *restrict T_ptr,
+            double *restrict W_ptr ),
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics );
+
+int ghl_hybrid_Palenzuela1D(
+      void compute_rho_P_eps_W(
+            const double x,
+            fparams_struct *restrict fparams,
+            double *restrict rho_ptr,
+            double *restrict P_ptr,
+            double *restrict eps_ptr,
+            double *restrict W_ptr ),
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims,
+      ghl_con2prim_diagnostics *restrict diagnostics );
+
+int ghl_hybrid_Newman1D(
+      void compute_rho_P_eps_W(
+            const double x,
+            fparams_struct *restrict fparams,
+            double *restrict rho_ptr,
+            double *restrict P_ptr,
+            double *restrict eps_ptr,
             double *restrict W_ptr ),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

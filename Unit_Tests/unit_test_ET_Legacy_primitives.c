@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
       ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      check = ghl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+      check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
 
       /********** Artificial Font fix for code comparison **********
       This point corresponds to the second-to-last element of the edge

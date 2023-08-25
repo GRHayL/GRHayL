@@ -9,6 +9,15 @@ ghl_eos_parameters *ghl_eos;
 
 int parse_C2P_routine_keyword(const char *restrict routine_name);
 
+int (*ghl_con2prim_multi_method)(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
+
 typedef struct {
   double rho_atm, rho_min, rho_max;
   double Y_e_atm, Y_e_min, Y_e_max;
@@ -77,7 +86,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       ghl_params);
 
   if (CCTK_EQUALS(EOS_type, "hybrid")) {
-
+    ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
     ghl_initialize_hybrid_eos_functions_and_params(
           max_lorenz_factor,
           rho_b_atm, rho_b_min, rho_b_max,
@@ -88,6 +97,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     if( CCTK_EQUALS(EOS_tablepath, "") )
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
 
+    ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
     ghl_initialize_tabulated_eos_functions_and_params(
           EOS_tablepath, max_lorenz_factor,
           rho_b_atm, rho_b_min, rho_b_max,

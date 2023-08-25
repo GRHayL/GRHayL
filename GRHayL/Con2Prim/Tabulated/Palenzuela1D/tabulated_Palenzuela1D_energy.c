@@ -1,4 +1,4 @@
-#include "../utils.h"
+#include "../../utils_Palenzuela1D.h"
 
 /*
  * Function   : compute_rho_P_eps_T_W_energy

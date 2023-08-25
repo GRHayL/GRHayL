@@ -183,7 +183,7 @@ generate_test_data(
           ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
           // Now perform the con2prim
-          if( ghl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
+          if( ghl_con2prim_tabulated_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
             ghl_error("Con2Prim failed\n");
 
           prims.vU[0] = prims.vU[0]/prims.u0;
@@ -257,7 +257,7 @@ run_unit_test(
         ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
 
         // Now perform the con2prim
-        if( ghl_con2prim_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
+        if( ghl_con2prim_tabulated_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
           ghl_error("Con2Prim failed\n");
 
         prims.vU[0] = prims.vU[0]/prims.u0;

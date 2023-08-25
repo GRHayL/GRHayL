@@ -1,5 +1,5 @@
 # Primary make.code.defn for gem Con2Prim
-#! INCS = harm_u2p_util.h
+#! INCS = harm_u2p_util.h utils_Palenzuela1D.h roots.h
 
 # Source files in this directory that need compiled:
 SRCS = apply_conservative_limits.c               \
@@ -11,6 +11,8 @@ SRCS = apply_conservative_limits.c               \
        initialize_diagnostics.c                  \
        limit_utilde_and_compute_v.c              \
        undensitize_conservatives.c               \
-       get_con2prim_routine_name.c
+       get_con2prim_routine_name.c               \
+       toms748.c                                 \
+       brent.c
 
 SUBDIRS = Hybrid Tabulated

@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
      ghl_con2prim_select_method:
        5: invalid C2P key
   */
-   __attribute__((unused)) int speed_limited;
+   __attribute__((unused)) int speed_limited = 0;
   switch (test_key) {
     case 4:
       prims.vU[0] = 0.0/0.0;
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
       speed_limited = ghl_limit_v_and_compute_u0(&hybrid_eos, &ADM_metric, &prims);
       break;
     case 5:
-      ghl_con2prim_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
       break;
   }
 /*

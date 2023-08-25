@@ -492,7 +492,7 @@ int main(int argc, char **argv) {
               poison, poison, &cons);
 
         ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
-        c2p_check[i] = ghl_con2prim_multi_method(
+        c2p_check[i] = ghl_con2prim_hybrid_multi_method(
                              &params, &eos, &ADM_metric, &metric_aux,
                              &cons_undens, &prims, &diagnostics);
 

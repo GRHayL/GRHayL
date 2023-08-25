@@ -1,4 +1,4 @@
-#include "../utils.h"
+#include "../../utils_Palenzuela1D.h"
 
 static int ghl_newman_entropy(
       const ghl_eos_parameters *restrict eos,
