@@ -272,14 +272,14 @@ run_unit_test(
           ghl_error("Failed to read perturbed primitives from file\n");
 
         // Validate results
-        validate(prims_trusted.rho        , prims.rho        , prims_pert.rho        );
-        validate(prims_trusted.Y_e        , prims.Y_e        , prims_pert.Y_e        );
-        validate(prims_trusted.temperature, prims.temperature, prims_pert.temperature);
-        validate(prims_trusted.press      , prims.press      , prims_pert.press      );
-        validate(prims_trusted.eps        , prims.eps        , prims_pert.eps        );
-        validate(prims_trusted.vU[0]         , prims.vU[0]         , prims_pert.vU[0]         );
-        validate(prims_trusted.vU[1]         , prims.vU[1]         , prims_pert.vU[1]         );
-        validate(prims_trusted.vU[2]         , prims.vU[2]         , prims_pert.vU[2]         );
+        ghl_pert_test_fail(prims_trusted.rho        , prims.rho        , prims_pert.rho        );
+        ghl_pert_test_fail(prims_trusted.Y_e        , prims.Y_e        , prims_pert.Y_e        );
+        ghl_pert_test_fail(prims_trusted.temperature, prims.temperature, prims_pert.temperature);
+        ghl_pert_test_fail(prims_trusted.press      , prims.press      , prims_pert.press      );
+        ghl_pert_test_fail(prims_trusted.eps        , prims.eps        , prims_pert.eps        );
+        ghl_pert_test_fail(prims_trusted.vU[0]         , prims.vU[0]         , prims_pert.vU[0]);
+        ghl_pert_test_fail(prims_trusted.vU[1]         , prims.vU[1]         , prims_pert.vU[1]);
+        ghl_pert_test_fail(prims_trusted.vU[2]         , prims.vU[2]         , prims_pert.vU[2]);
       }
     }
 

@@ -107,19 +107,19 @@ int main(int argc, char **argv) {
     for(int j=2; j<dirlength-2; j++) {
       for(int i=2; i<dirlength-2; i++) {
         const int index = indexf(dirlength,i,j,k);
-        if( validate(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]) )
+        if( ghl_pert_test_fail(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]) )
           ghl_error("Test unit_test_HLL_flux has failed for variable Ax_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[0][index], A_rhs[0][index], A_pert[0][index],
                        relative_error(A_trusted[0][index], A_rhs[0][index]), relative_error(A_trusted[0][index], A_pert[0][index]));
-        if( validate(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]) )
+        if( ghl_pert_test_fail(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]) )
           ghl_error("Test unit_test_HLL_flux has failed for variable Ay_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[1][index], A_rhs[1][index], A_pert[1][index],
                        relative_error(A_trusted[1][index], A_rhs[1][index]), relative_error(A_trusted[1][index], A_pert[1][index]));
-        if( validate(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]) )
+        if( ghl_pert_test_fail(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]) )
           ghl_error("Test unit_test_HLL_flux has failed for variable Az_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",

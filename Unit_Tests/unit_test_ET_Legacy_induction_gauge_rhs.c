@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  // Data which should be written before it is used is poisoned to validate behavior.
+  // Data which should be written before it is used is poisoned to ghl_pert_test_fail behavior.
   // RHSs for A are set to 0 because they are assumed to already contain the zero-gauge
   // contribution to the RHS before entering this function.
   const double poison = 1e300;
@@ -254,28 +254,28 @@ int main(int argc, char **argv) {
       for(int i=3; i<dirlength-3; i++) {
         const int index = indexf(dirlength,i,j,k);
 
-        if( validate(phitilde_trusted[index], phitilde_rhs[index], phitilde_pert[index]) )
+        if( ghl_pert_test_fail(phitilde_trusted[index], phitilde_rhs[index], phitilde_pert[index]) )
           ghl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable phitilde_rhs.\n"
                        "  phitilde trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", phitilde_trusted[index], phitilde_rhs[index], phitilde_pert[index],
                                                    relative_error(phitilde_trusted[index], phitilde_rhs[index]),
                                                    relative_error(phitilde_trusted[index], phitilde_pert[index]));
 
-        if( validate(Ax_trusted[index], Ax_rhs[index], Ax_pert[index]) )
+        if( ghl_pert_test_fail(Ax_trusted[index], Ax_rhs[index], Ax_pert[index]) )
           ghl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Ax_rhs.\n"
                        "  Ax trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Ax_trusted[index], Ax_rhs[index], Ax_pert[index],
                                                    relative_error(Ax_trusted[index], Ax_rhs[index]),
                                                    relative_error(Ax_trusted[index], Ax_pert[index]));
 
-        if( validate(Ay_trusted[index], Ay_rhs[index], Ay_pert[index]) )
+        if( ghl_pert_test_fail(Ay_trusted[index], Ay_rhs[index], Ay_pert[index]) )
           ghl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Ay_rhs.\n"
                        "  Ay trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Ay_trusted[index], Ay_rhs[index], Ay_pert[index],
                                                    relative_error(Ay_trusted[index], Ay_rhs[index]),
                                                    relative_error(Ay_trusted[index], Ay_pert[index]));
 
-        if( validate(Az_trusted[index], Az_rhs[index], Az_pert[index]) )
+        if( ghl_pert_test_fail(Az_trusted[index], Az_rhs[index], Az_pert[index]) )
           ghl_error("Test unit_test_ET_Legacy_induction_gauge_rhs has failed for variable Az_rhs.\n"
                        "  Az trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Az_trusted[index], Az_rhs[index], Az_pert[index],

@@ -125,62 +125,62 @@ int main(int argc, char **argv) {
                                         &gfs_l[var]);
     }
 
-      if( validate(rhor_trusted[index], gfs_r[0], rhor_pert[index]) )
+      if( ghl_pert_test_fail(rhor_trusted[index], gfs_r[0], rhor_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable rho_r.\n"
                        "  rho_r trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", rhor_trusted[index], gfs_r[0], rhor_pert[index],
                                                    relative_error(rhor_trusted[index], gfs_r[0]),
                                                    relative_error(rhor_trusted[index], rhor_pert[index]));
-        if( validate(pressr_trusted[index], gfs_r[1], pressr_pert[index]) )
+        if( ghl_pert_test_fail(pressr_trusted[index], gfs_r[1], pressr_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable press_r.\n"
                        "  press_r trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", pressr_trusted[index], gfs_r[1], pressr_pert[index],
                                                    relative_error(pressr_trusted[index], gfs_r[1]),
                                                    relative_error(pressr_trusted[index], pressr_pert[index]));
-        if( validate(vxr_trusted[index], gfs_r[2], vxr_pert[index]) )
+        if( ghl_pert_test_fail(vxr_trusted[index], gfs_r[2], vxr_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable vx_r.\n"
                        "  vx_r trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", vxr_trusted[index], gfs_r[2], vxr_pert[index],
                                                    relative_error(vxr_trusted[index], gfs_r[2]),
                                                    relative_error(vxr_trusted[index], vxr_pert[index]));
-        if( validate(vyr_trusted[index], gfs_r[3], vyr_pert[index]) )
+        if( ghl_pert_test_fail(vyr_trusted[index], gfs_r[3], vyr_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable vy_r.\n"
                        "  vy_r trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", vyr_trusted[index], gfs_r[3], vyr_pert[index],
                                                    relative_error(vyr_trusted[index], gfs_r[3]),
                                                    relative_error(vyr_trusted[index], vyr_pert[index]));
-        if( validate(vzr_trusted[index], gfs_r[4], vzr_pert[index]) )
+        if( ghl_pert_test_fail(vzr_trusted[index], gfs_r[4], vzr_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable vz_r.\n"
                        "  vz_r trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", vzr_trusted[index], gfs_r[4], vzr_pert[index],
                                                    relative_error(vzr_trusted[index], gfs_r[4]),
                                                    relative_error(vzr_trusted[index], vzr_pert[index]));
 
-        if( validate(rhol_trusted[index], gfs_l[0], rhol_pert[index]) )
+        if( ghl_pert_test_fail(rhol_trusted[index], gfs_l[0], rhol_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable rho_l.\n"
                        "  rho_l trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", rhol_trusted[index], gfs_l[0], rhol_pert[index],
                                                    relative_error(rhol_trusted[index], gfs_l[0]),
                                                    relative_error(rhol_trusted[index], rhol_pert[index]));
-        if( validate(pressr_trusted[index], gfs_l[1], pressl_pert[index]) )
+        if( ghl_pert_test_fail(pressr_trusted[index], gfs_l[1], pressl_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable press_l.\n"
                        "  press_l trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", pressl_trusted[index], gfs_l[1], pressl_pert[index],
                                                    relative_error(pressl_trusted[index], gfs_l[1]),
                                                    relative_error(pressl_trusted[index], pressl_pert[index]));
-        if( validate(vxl_trusted[index], gfs_l[2], vxl_pert[index]) )
+        if( ghl_pert_test_fail(vxl_trusted[index], gfs_l[2], vxl_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable vx_l.\n"
                        "  vx_l trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", vxl_trusted[index], gfs_l[2], vxl_pert[index],
                                                    relative_error(vxl_trusted[index], gfs_l[2]),
                                                    relative_error(vxl_trusted[index], vxl_pert[index]));
-        if( validate(vyl_trusted[index], gfs_l[3], vyl_pert[index]) )
+        if( ghl_pert_test_fail(vyl_trusted[index], gfs_l[3], vyl_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable vy_l.\n"
                        "  vy_l trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", vyl_trusted[index], gfs_l[3], vyl_pert[index],
                                                    relative_error(vyl_trusted[index], gfs_l[3]),
                                                    relative_error(vyl_trusted[index], vyl_pert[index]));
-        if( validate(vzl_trusted[index], gfs_l[4], vzl_pert[index]) )
+        if( ghl_pert_test_fail(vzl_trusted[index], gfs_l[4], vzl_pert[index]) )
           ghl_error("Test unit_test_mc_reconstruction has failed for variable vz_l.\n"
                        "  vz_l trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", vzl_trusted[index], gfs_l[4], vzl_pert[index],

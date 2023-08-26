@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  // Data which should be written before it is used is poisoned to validate behavior.
+  // Data which should be written before it is used is poisoned to ghl_pert_test_fail behavior.
   // RHSs for A are set to 0 because they are assumed to already contain the zero-gauge
   // contribution to the RHS before entering this function.
   const double poison = 1e300;
@@ -125,28 +125,28 @@ int main(int argc, char **argv) {
       for(int i=1; i<dirlength-1; i++) {
         const int index = indexf(dirlength,i,j,k);
 
-        if( validate(phitilde_trusted[index], alpha_Phi_minus_betaj_A_j_interp[index], phitilde_pert[index]) )
+        if( ghl_pert_test_fail(phitilde_trusted[index], alpha_Phi_minus_betaj_A_j_interp[index], phitilde_pert[index]) )
           ghl_error("Test unit_test_induction_interpolation_vvv_ADM has failed for interpolation of alpha_Phi_minus_betaj_A_j.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", phitilde_trusted[index], alpha_Phi_minus_betaj_A_j_interp[index], phitilde_pert[index],
                                                    relative_error(phitilde_trusted[index], alpha_Phi_minus_betaj_A_j_interp[index]),
                                                    relative_error(phitilde_trusted[index], phitilde_pert[index]));
 
-        if( validate(Ax_trusted[index], sqrtg_Ax_interp[index], Ax_pert[index]) )
+        if( ghl_pert_test_fail(Ax_trusted[index], sqrtg_Ax_interp[index], Ax_pert[index]) )
           ghl_error("Test unit_test_induction_interpolation_vvv_ADM has failed for interpolation of Ax.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Ax_trusted[index], sqrtg_Ax_interp[index], Ax_pert[index],
                                                    relative_error(Ax_trusted[index], sqrtg_Ax_interp[index]),
                                                    relative_error(Ax_trusted[index], Ax_pert[index]));
 
-        if( validate(Ay_trusted[index], sqrtg_Ay_interp[index], Ay_pert[index]) )
+        if( ghl_pert_test_fail(Ay_trusted[index], sqrtg_Ay_interp[index], Ay_pert[index]) )
           ghl_error("Test unit_test_induction_interpolation_vvv_ADM has failed for interpolation of Ay.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Ay_trusted[index], sqrtg_Ay_interp[index], Ay_pert[index],
                                                    relative_error(Ay_trusted[index], sqrtg_Ay_interp[index]),
                                                    relative_error(Ay_trusted[index], Ay_pert[index]));
 
-        if( validate(Az_trusted[index], sqrtg_Az_interp[index], Az_pert[index]) )
+        if( ghl_pert_test_fail(Az_trusted[index], sqrtg_Az_interp[index], Az_pert[index]) )
           ghl_error("Test unit_test_induction_interpolation_vvv_ADM has failed for interpolation of Az.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", Az_trusted[index], sqrtg_Az_interp[index], Az_pert[index],

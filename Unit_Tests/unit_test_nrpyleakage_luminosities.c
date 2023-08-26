@@ -158,9 +158,9 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
       ghl_error("Failed to read luminosities from perturbed data file\n");
     }
 
-    validate(lum_trusted.nue , lum.nue , lum_pert.nue );
-    validate(lum_trusted.anue, lum.anue, lum_pert.anue);
-    validate(lum_trusted.nux , lum.nux , lum_pert.nux );
+    ghl_pert_test_fail(lum_trusted.nue , lum.nue , lum_pert.nue );
+    ghl_pert_test_fail(lum_trusted.anue, lum.anue, lum_pert.anue);
+    ghl_pert_test_fail(lum_trusted.nux , lum.nux , lum_pert.nux );
   }
   fclose(fp_unpert);
   fclose(fp_pert);

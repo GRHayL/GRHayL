@@ -242,8 +242,8 @@ int main(int argc, char **argv) {
                              Tyz_pert[i], Tzz_pert[i],
                              &Tmunu_pert);
 
-    ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_pert_test_fail_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    ghl_pert_test_fail_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
 
     /*
        GRHayL also has standalone functions ghl_compute_conservs() and ghl_compute_TDNmunu().
@@ -255,8 +255,8 @@ int main(int argc, char **argv) {
     */
     ghl_compute_conservs(&ADM_metric, &metric_aux, &prims, &cons);
     ghl_compute_TDNmunu(&ADM_metric, &metric_aux, &prims, &Tmunu);
-    ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_pert_test_fail_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    ghl_pert_test_fail_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   ghl_info("ghl_compute_conservs_and_Tmunu function test has passed!\n");
   free(lapse);

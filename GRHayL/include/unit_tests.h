@@ -126,20 +126,20 @@ void ghl_test_compute_ccc_BSSN(
   double *restrict sqrtg_Az_interp);
 
 // con2prim validation functions
-void ghl_validate_primitives(
+void ghl_pert_test_fail_primitives(
       const bool evolve_entropy,
       const ghl_eos_parameters *restrict eos,
       const ghl_primitive_quantities *restrict prims_trusted,
       const ghl_primitive_quantities *restrict prims,
       const ghl_primitive_quantities *restrict prims_pert);
 
-void ghl_validate_conservatives(
+void ghl_pert_test_fail_conservatives(
       const bool evolve_entropy,
       const ghl_conservative_quantities *restrict cons_trusted,
       const ghl_conservative_quantities *restrict cons,
       const ghl_conservative_quantities *restrict cons_pert);
 
-void ghl_validate_stress_energy(
+void ghl_pert_test_fail_stress_energy(
       const ghl_stress_energy *restrict Tmunu_trusted,
       const ghl_stress_energy *restrict Tmunu,
       const ghl_stress_energy *restrict Tmunu_pert);
@@ -255,7 +255,7 @@ static inline int indexf(const int gridmax, const int i, const int j, const int 
   return i + j*gridmax + k*gridmax*gridmax;
 }
 
-static inline bool validate_with_tolerance(
+static inline bool ghl_pert_test_fail_with_tolerance(
       const double trusted,
       const double computed,
       const double perturbed,
@@ -266,13 +266,13 @@ static inline bool validate_with_tolerance(
   return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), rel_tol);
 }
 
-static inline bool validate(
+static inline bool ghl_pert_test_fail(
       const double trusted,
       const double computed,
       const double perturbed) {
   const double min_rel = 8.0e-14;
   const double min_abs = 1.0e-30;
-  return validate_with_tolerance(trusted, computed, perturbed, min_rel, min_abs);
+  return ghl_pert_test_fail_with_tolerance(trusted, computed, perturbed, min_rel, min_abs);
 }
 
 static inline double randf(double low,double high) {

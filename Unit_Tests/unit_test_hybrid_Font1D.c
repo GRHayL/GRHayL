@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
                       poison, poison, poison,
                       &prims_pert);
 
-    ghl_validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
+    ghl_pert_test_fail_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
   }
   ghl_info("ghl_hybrid_Font1D function test has passed!\n");
   free(lapse);

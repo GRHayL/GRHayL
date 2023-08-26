@@ -435,31 +435,31 @@ int main(int argc, char **argv) {
       for(int i=ghostzone; i<dirlength-ghostzone; i++) {
         const int index  = indexf(dirlength, i, j ,k);
 
-        if( validate(trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable rho_star_rhs.\n"
                        "  rho_star_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index],
                                                    relative_error(trusted_rho_star_rhs[index], rho_star_rhs[index]),
                                                    relative_error(trusted_rho_star_rhs[index], pert_rho_star_rhs[index]));
-        if( validate(trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable tau_rhs.\n"
                        "  tau_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index],
                                                    relative_error(trusted_tau_rhs[index], tau_rhs[index]),
                                                    relative_error(trusted_tau_rhs[index], pert_tau_rhs[index]));
-        if( validate(trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_x_rhs.\n"
                        "  S_x_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index],
                                                    relative_error(trusted_S_x_rhs[index], S_x_rhs[index]),
                                                    relative_error(trusted_S_x_rhs[index], pert_S_x_rhs[index]));
-        if( validate(trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_y_rhs.\n"
                        "  S_y_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index],
                                                    relative_error(trusted_S_y_rhs[index], S_y_rhs[index]),
                                                    relative_error(trusted_S_y_rhs[index], pert_S_y_rhs[index]));
-        if( validate(trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_z_rhs.\n"
                        "  S_z_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index],
