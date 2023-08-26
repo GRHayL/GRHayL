@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 
   // These variables set up the tested range of values and number of sampling points.
   // number of sampling points in density and pressure
-  const int npoints = 80;
+  const int npoints = 300;
   const int sampling = npoints*npoints;
 
   // number of additional points for ensuring we hit all logic branches
@@ -331,9 +331,6 @@ int main(int argc, char **argv) {
     vx_pert[i] = vx[i]*(1.0 + randf(-1,1)*1.0e-14);
     vy_pert[i] = vy[i]*(1.0 + randf(-1,1)*1.0e-14);
     vz_pert[i] = vz[i]*(1.0 + randf(-1,1)*1.0e-14);
-    Bx_pert[i] = Bx[i]*(1.0 + randf(-1,1)*1.0e-14);
-    By_pert[i] = By[i]*(1.0 + randf(-1,1)*1.0e-14);
-    Bz_pert[i] = Bz[i]*(1.0 + randf(-1,1)*1.0e-14);
 
     rho_star_pert[i] = rho_star[i]*(1.0 + randf(-1,1)*1.0e-14);
     tau_pert[i] = tau[i]*(1.0 + randf(-1,1)*1.0e-14);
@@ -344,21 +341,23 @@ int main(int argc, char **argv) {
 
   const int metric_length = 10;
   const int Tmunu_length = 10;
-  const int prims_length = 9;
+  const int prims_length = 6;
   const int cons_length = 5;
 
   double *metric_array[10] = {lapse, betax, betay, betaz, gxx, gxy, gxz, gyy, gyz, gzz};
   double *Tmunu_array[10] = {Ttt, Ttx, Tty, Ttz, Txx, Txy, Txz, Tyy, Tyz, Tzz};
-  double *prims_array[9] = {rho_b, press, eps, vx, vy, vz, Bx, By, Bz};
+  double *prims_array[6] = {rho_b, press, eps, vx, vy, vz};
   double *cons_array[5] = {rho_star, tau, S_x, S_y, S_z};
 
-  FILE* outfile = fopen_with_check("metric_initial_data.bin", "wb");
+  FILE* outfile = fopen_with_check("metric_Bfield_initial_data.bin", "wb");
   fwrite(&arraylength, sizeof(int), 1, outfile);
   write_to_file(metric_array, arraylength, metric_length, outfile);
+  fwrite(Bx, sizeof(double), arraylength, outfile);
+  fwrite(By, sizeof(double), arraylength, outfile);
+  fwrite(Bz, sizeof(double), arraylength, outfile);
   fclose(outfile);
 
   outfile = fopen_with_check("apply_conservative_limits_input.bin", "wb");
-  write_to_file(prims_array, arraylength, prims_length, outfile);
   write_to_file(cons_array,  arraylength, cons_length,  outfile);
   fclose(outfile);
 
@@ -435,12 +434,8 @@ int main(int argc, char **argv) {
     fclose(outfile);
 
     if(!perturb) {
-      outfile = fopen_with_check("con2prim_multi_method_hybrid_input.bin", "wb");
-      fwrite(Bx, sizeof(double), arraylength, outfile);
-      fwrite(By, sizeof(double), arraylength, outfile);
-      fwrite(Bz, sizeof(double), arraylength, outfile);
-      write_to_file(cons_array,  arraylength, cons_length,  outfile);
-      fclose(outfile);
+      printf("The file con2prim_multi_method_hybrid_input.bin contains the same data as"
+             " apply_conservative_limits_output.bin, so a symlink handles this duplication.\n");
     }
 
     for(int i=0; i<arraylength; i++) {
@@ -505,12 +500,7 @@ int main(int argc, char **argv) {
               &dummy1, &dummy2, &dummy3);
       }
 
-      fwrite(rho_b, sizeof(double), arraylength, outfile);
-      fwrite(press, sizeof(double), arraylength, outfile);
-      fwrite(eps, sizeof(double), arraylength, outfile);
-      fwrite(vx, sizeof(double), arraylength, outfile);
-      fwrite(vy, sizeof(double), arraylength, outfile);
-      fwrite(vz, sizeof(double), arraylength, outfile);
+      write_to_file(prims_array, arraylength, prims_length, outfile);
       fwrite(c2p_check, sizeof(int), arraylength, outfile);
     }
     fclose(outfile);
@@ -575,10 +565,8 @@ int main(int argc, char **argv) {
     fclose(outfile);
 
     if(!perturb) {
-      outfile = fopen_with_check("compute_conservs_and_Tmunu_input.bin", "wb");
-      write_to_file(prims_array, arraylength, prims_length, outfile);
-      fwrite(u0, sizeof(double), arraylength, outfile);
-      fclose(outfile);
+      printf("The file compute_conservs_and_Tmunu_input.bin contains the same data as"
+             " enforce_primitive_limits_and_compute_u0_output.bin, so a symlink handles this duplication.\n");
     }
 
     for(int i=0; i<arraylength; i++) {

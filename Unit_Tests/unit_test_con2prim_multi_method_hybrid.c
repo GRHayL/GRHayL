@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
 
-  FILE* infile = fopen_with_check("metric_initial_data.bin","rb");
+  FILE* infile = fopen_with_check("metric_Bfield_initial_data.bin","rb");
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
@@ -56,6 +56,11 @@ int main(int argc, char **argv) {
   double *gyz = (double*) malloc(sizeof(double)*arraylength);
   double *gzz = (double*) malloc(sizeof(double)*arraylength);
 
+  // Allocate memory for the initial primitive data
+  double *Bx = (double*) malloc(sizeof(double)*arraylength);
+  double *By = (double*) malloc(sizeof(double)*arraylength);
+  double *Bz = (double*) malloc(sizeof(double)*arraylength);
+
   key  = fread(lapse, sizeof(double), arraylength, infile);
   key += fread(betax, sizeof(double), arraylength, infile);
   key += fread(betay, sizeof(double), arraylength, infile);
@@ -68,15 +73,14 @@ int main(int argc, char **argv) {
   key += fread(gyz, sizeof(double), arraylength, infile);
   key += fread(gzz, sizeof(double), arraylength, infile);
 
+  key += fread(Bx, sizeof(double), arraylength, infile);
+  key += fread(By, sizeof(double), arraylength, infile);
+  key += fread(Bz, sizeof(double), arraylength, infile);
+
   fclose(infile);
-  if(key != arraylength*10)
+  if(key != arraylength*13)
     ghl_error("An error has occured with reading in metric data. Please check that data\n"
                  "is up-to-date with current test version.\n");
-
-  // Allocate memory for the initial primitive data
-  double *Bx = (double*) malloc(sizeof(double)*arraylength);
-  double *By = (double*) malloc(sizeof(double)*arraylength);
-  double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
   // Allocate memory for the initial conservative data
   double *rho_star = (double*) malloc(sizeof(double)*arraylength);
@@ -86,18 +90,14 @@ int main(int argc, char **argv) {
   double *S_z = (double*) malloc(sizeof(double)*arraylength);
 
   infile = fopen_with_check("con2prim_multi_method_hybrid_input.bin","rb");
-  key  = fread(Bx, sizeof(double), arraylength, infile);
-  key += fread(By, sizeof(double), arraylength, infile);
-  key += fread(Bz, sizeof(double), arraylength, infile);
-
-  key += fread(rho_star, sizeof(double), arraylength, infile);
+  key  = fread(rho_star, sizeof(double), arraylength, infile);
   key += fread(tau, sizeof(double), arraylength, infile);
   key += fread(S_x, sizeof(double), arraylength, infile);
   key += fread(S_y, sizeof(double), arraylength, infile);
   key += fread(S_z, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*8)
+  if(key != arraylength*5)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -167,25 +167,27 @@ int main(int argc, char **argv) {
       ghl_conservative_quantities cons, cons_undens;
 
       // Read initial data accompanying trusted output
-      ghl_initialize_metric(lapse[i],
-                        betax[i], betay[i], betaz[i],
-                        gxx[i], gxy[i], gxz[i],
-                        gyy[i], gyz[i], gzz[i],
-                        &ADM_metric);
+      ghl_initialize_metric(
+            lapse[i],
+            betax[i], betay[i], betaz[i],
+            gxx[i], gxy[i], gxz[i],
+            gyy[i], gyz[i], gzz[i],
+            &ADM_metric);
 
       ghl_ADM_aux_quantities metric_aux;
       ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
       ghl_initialize_primitives(
-                        poison, poison, poison,
-                        poison, poison, poison,
-                        Bx[i], By[i], Bz[i],
-                        poison, poison, poison,
-                        &prims);
+            poison, poison, poison,
+            poison, poison, poison,
+            Bx[i], By[i], Bz[i],
+            poison, poison, poison,
+            &prims);
 
-      ghl_initialize_conservatives(rho_star[i], tau[i],
-                               S_x[i], S_y[i], S_z[i],
-                               poison, poison, &cons);
+      ghl_initialize_conservatives(
+            rho_star[i], tau[i],
+            S_x[i], S_y[i], S_z[i],
+            poison, poison, &cons);
 
       ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
       ghl_guess_primitives(&eos, &ADM_metric, &cons, &prims);
@@ -198,18 +200,18 @@ int main(int argc, char **argv) {
 
       ghl_primitive_quantities prims_trusted, prims_pert;
       ghl_initialize_primitives(
-                        rho_b_trusted[i], press_trusted[i], eps_trusted[i],
-                        vx_trusted[i], vy_trusted[i], vz_trusted[i],
-                        poison, poison, poison,
-                        poison, poison, poison,
-                        &prims_trusted);
+            rho_b_trusted[i], press_trusted[i], eps_trusted[i],
+            vx_trusted[i], vy_trusted[i], vz_trusted[i],
+            poison, poison, poison,
+            poison, poison, poison,
+            &prims_trusted);
 
       ghl_initialize_primitives(
-                        rho_b_pert[i], press_pert[i], eps_pert[i],
-                        vx_pert[i], vy_pert[i], vz_pert[i],
-                        poison, poison, poison,
-                        poison, poison, poison,
-                        &prims_pert);
+            rho_b_pert[i], press_pert[i], eps_pert[i],
+            vx_pert[i], vy_pert[i], vz_pert[i],
+            poison, poison, poison,
+            poison, poison, poison,
+            &prims_pert);
 
       double pressure_cutoff = 1.0e-30; // Set defaults and change them for Noble2D
       double eps_cutoff = 1.0e-30;
