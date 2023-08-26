@@ -2,7 +2,7 @@
 /*
  * Compute the HLLE-derived fluxes on the left face in the 2direction for all components.
  */
-void ghl_calculate_HLLE_fluxes_dirn2_hybrid(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, struct ghl_eos_parameters const *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn2, const double cmax_dirn2, ghl_conservative_quantities *restrict cons) {
+void ghl_calculate_HLLE_fluxes_dirn2_hybrid(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn2, const double cmax_dirn2, ghl_conservative_quantities *restrict cons) {
 
 {
 

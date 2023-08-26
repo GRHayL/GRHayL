@@ -32,7 +32,7 @@ void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
 
   // Step 3: Set Gamma cold
-  int polytropic_index = ghl_hybrid_find_polytropic_index(eos, rho);
+  const int polytropic_index = ghl_hybrid_find_polytropic_index(eos, rho);
   const double Gamma = eos->Gamma_ppoly[polytropic_index];
 
   // Step 4: Compute the derivative of cold pressure w.r.t. density,

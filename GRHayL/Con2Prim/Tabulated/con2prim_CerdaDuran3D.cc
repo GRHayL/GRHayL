@@ -1,4 +1,4 @@
-#include "../harm_u2p_util.h"
+#include "con2prim.h"
 
 /* Function    : Hybrid_Noble2D()
  * Description : Unpacks the primitive_quantities struct into the variables

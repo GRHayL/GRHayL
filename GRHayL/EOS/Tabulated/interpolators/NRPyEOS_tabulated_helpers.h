@@ -9,10 +9,11 @@
 
 //------------------------------------------
 static inline __attribute__((always_inline))
-int NRPyEOS_checkbounds(const ghl_eos_parameters *restrict eos,
-                        const double xrho,
-                        const double xtemp,
-                        const double xye) {
+int NRPyEOS_checkbounds(
+      const ghl_eos_parameters *restrict eos,
+      const double xrho,
+      const double xtemp,
+      const double xye) {
 
   // keyerr codes:
   // 101 -- Y_e too high
@@ -70,14 +71,15 @@ int NRPyEOS_checkbounds_kt0_noTcheck(const ghl_eos_parameters *restrict eos,
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_get_interp_spots(const ghl_eos_parameters *restrict eos,
-                              const double x,
-                              const double y,
-                              const double z,
-                              double *restrict delx,
-                              double *restrict dely,
-                              double *restrict delz,
-                              int *restrict idx) {
+void NRPyEOS_get_interp_spots(
+      const ghl_eos_parameters *restrict eos,
+      const double x,
+      const double y,
+      const double z,
+      double *restrict delx,
+      double *restrict dely,
+      double *restrict delz,
+      int *restrict idx) {
 
   int ix = 1 + (int)( (x - eos->table_logrho[0]  - 1.0e-10) * eos->drhoi  );
   int iy = 1 + (int)( (y - eos->table_logT[0] - 1.0e-10) * eos->dtempi );
@@ -104,13 +106,14 @@ void NRPyEOS_get_interp_spots(const ghl_eos_parameters *restrict eos,
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_linterp_one(const ghl_eos_parameters *restrict eos,
-                         const int *restrict idx,
-                         const double delx,
-                         const double dely,
-                         const double delz,
-                         double *restrict f,
-                         const int iv) {
+void NRPyEOS_linterp_one(
+      const ghl_eos_parameters *restrict eos,
+      const int *restrict idx,
+      const double delx,
+      const double dely,
+      const double delz,
+      double *restrict f,
+      const int iv) {
 
   // helper variables
   double fh[8], a[8];
@@ -148,11 +151,12 @@ void NRPyEOS_linterp_one(const ghl_eos_parameters *restrict eos,
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-double NRPyEOS_linterp2D(const double *restrict xs,
-                         const double *restrict ys,
-                         const double *restrict fs,
-                         const double x,
-                         const double y) {
+double NRPyEOS_linterp2D(
+      const double *restrict xs,
+      const double *restrict ys,
+      const double *restrict fs,
+      const double x,
+      const double y) {
 
   //  2     3
   //
@@ -162,24 +166,25 @@ double NRPyEOS_linterp2D(const double *restrict xs,
   // then interpolate in y
   // assume rectangular grid
 
-  double dxi = 1./(xs[1]-xs[0]);
-  double dyi = 1./(ys[1]-ys[0]); // x*1./y uses faster instructions than x/y
-  double t1 = (fs[1]-fs[0])*dxi * (x - xs[0]) + fs[0];
-  double t2 = (fs[3]-fs[2])*dxi * (x - xs[0]) + fs[2];
+  const double dxi = 1./(xs[1]-xs[0]);
+  const double dyi = 1./(ys[1]-ys[0]); // x*1./y uses faster instructions than x/y
+  const double t1 = (fs[1]-fs[0])*dxi * (x - xs[0]) + fs[0];
+  const double t2 = (fs[3]-fs[2])*dxi * (x - xs[0]) + fs[2];
 
   return (t2 - t1)*dyi * (y-ys[0]) + t1;
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_bisection(const ghl_eos_parameters *restrict eos,
-                       const double lr,
-                       const double lt0,
-                       const double ye,
-                       const double leps0,
-                       const double prec,
-                       double *restrict ltout,
-                       const int iv,
-                       int *restrict keyerrt) {
+void NRPyEOS_bisection(
+      const ghl_eos_parameters *restrict eos,
+      const double lr,
+      const double lt0,
+      const double ye,
+      const double leps0,
+      const double prec,
+      double *restrict ltout,
+      const int iv,
+      int *restrict keyerrt) {
   // iv is the index of the variable we do the bisection on
 
   int bcount = 0;
@@ -191,12 +196,12 @@ void NRPyEOS_bisection(const ghl_eos_parameters *restrict eos,
   const double dltp  = log(1.2);
   const double dltm  = log(0.8);
 
-  double leps0_prec = fabs(leps0*prec);
+  const double leps0_prec = fabs(leps0*prec);
 
   // temporary local vars
   double lt, lt1, lt2;
-  double ltmin = eos->table_logT[0];
-  double ltmax = eos->table_logT[eos->N_T-1];
+  const double ltmin = eos->table_logT[0];
+  const double ltmax = eos->table_logT[eos->N_T-1];
   double f1,f2,fmid,dlt,ltmid;
   double f1a = 0.0;
   double f2a = 0.0;
@@ -291,15 +296,16 @@ void NRPyEOS_bisection(const ghl_eos_parameters *restrict eos,
 } // bisection
   //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_findtemp_from_any( const ghl_eos_parameters *restrict eos,
-                                const int tablevar_key,
-                                const double lr,
-                                const double lt0,
-                                const double ye,
-                                const double tablevar_in,
-                                const double prec,
-                                double *restrict ltout,
-                                int *keyerrt ) {
+void NRPyEOS_findtemp_from_any(
+      const ghl_eos_parameters *restrict eos,
+      const int tablevar_key,
+      const double lr,
+      const double lt0,
+      const double ye,
+      const double tablevar_in,
+      const double prec,
+      double *restrict ltout,
+      int *keyerrt) {
 
   // local variables
   const int itmax = 200; // use at most 10 iterations, then go to bisection

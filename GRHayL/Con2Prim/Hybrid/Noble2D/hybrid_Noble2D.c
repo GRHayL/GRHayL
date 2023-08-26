@@ -286,11 +286,9 @@ int ghl_hybrid_Noble2D(
 
   if( eos->eos_type == ghl_eos_hybrid ) {
     prims->press = ghl_pressure_rho0_w(eos, prims->rho, w);
-    double P_cold = 0.0;
-    double eps_cold = 0.0;
-    ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
-    prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
-    if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+    prims->eps = ghl_hybrid_compute_epsilon(eos, prims->rho, prims->press);
+    if( params->evolve_entropy )
+      prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
   } else if(eos->eos_type == ghl_eos_tabulated) {
     ghl_warn("No tabulated EOS support yet! Sorry!");
   }

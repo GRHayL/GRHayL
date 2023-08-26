@@ -2,16 +2,17 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(const ghl_eos_parameters *restrict eos,
-                                                       const double rho,
-                                                       const double Y_e,
-                                                       const double T,
-                                                       double *restrict muhat,
-                                                       double *restrict mu_e,
-                                                       double *restrict mu_p,
-                                                       double *restrict mu_n,
-                                                       double *restrict X_n,
-                                                       double *restrict X_p) {
+void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict muhat,
+      double *restrict mu_e,
+      double *restrict mu_p,
+      double *restrict mu_n,
+      double *restrict X_n,
+      double *restrict X_p) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
@@ -29,7 +30,7 @@ void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(const ghl_eos_parameters 
                                                                    keys, outvars, &report);
 
   // Step 5: Check for errors
-  if( error )
+  if(error)
     ghl_error(report.message, error);
 
   // Step 6: Update output variables

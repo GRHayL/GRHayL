@@ -238,6 +238,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
                                                                rho, Y_e, eps, NRPyEOS_eps_key, keys, outvars, &T, &report);
       if( error )
         ghl_error(report.message, error);
+      break;
     case 24:
       rho = rho_b_min-1.0;
       NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &S, &depsdT, &T);
@@ -269,6 +270,21 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
     case 31:
       rho = rho_b_min-1.0;
       NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(&tab_eos, rho, Y_e, P, &eps, &cs2, &T);
+      break;
+  }
+
+  /*
+     ghl_con2prim_*_select_method:
+         32: Invalid hybrid C2P key
+         33: Invalid tabulated C2P key
+   */
+  
+  switch (test_key) {
+    case 32:
+      ghl_con2prim_hybrid_select_method(-10, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      break;
+    case 33:
+      ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
       break;
   }
 

@@ -1,10 +1,9 @@
 #include "nrpyeos_hybrid.h"
 
-void NRPyEOS_compute_entropy_function(
+double NRPyEOS_compute_entropy_function(
       const ghl_eos_parameters *restrict eos,
       const double rho,
-      const double P,
-      double *restrict S ) {
+      const double P) {
   // This function sets the entropy funtion:
   //
   // S = P / rho^(Gamma-1)
@@ -13,5 +12,5 @@ void NRPyEOS_compute_entropy_function(
   const int index    = NRPyEOS_find_polytropic_index(eos, rho);
   const double Gamma = eos->Gamma_ppoly[index];
   // Now compute S
-  *S = P / pow(rho,Gamma-1.0);
+  return P / pow(rho,Gamma-1.0);
 }

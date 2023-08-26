@@ -23,7 +23,7 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
 
   // This function will interpolate n table quantities from
   // (rho,Ye,aux). It replaces EOS_Omni calls with keytemp != 1
-  if( n > NRPyEOS_ntablekeys ) {
+  if(n > NRPyEOS_ntablekeys) {
     sprintf(report->message, "In %s call, number of quantities exceed maximum allowed: %d > %d.\n",
             __func__, n, NRPyEOS_ntablekeys);
     return 1;
@@ -31,7 +31,7 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
 
   // Check table bounds for input variables
   error = NRPyEOS_checkbounds_kt0_noTcheck(eos,rho,Y_e);
-  if( error != 0 ) {
+  if(error != 0) {
     char message[256];
     switch(error) {
       case 101:
@@ -59,16 +59,16 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
   // using (rho,Ye,eps).
   double aux = tablevar_in;
 
-  if( tablevar_in_key == NRPyEOS_press_key ) {
+  if(tablevar_in_key == NRPyEOS_press_key) {
     // If aux = P, then we need log(P).
     aux = log(aux);
   }
-  else if( tablevar_in_key == NRPyEOS_eps_key ) {
+  else if(tablevar_in_key == NRPyEOS_eps_key) {
     // If aux = eps, then we need log(eps+eps0).
     // Compute eps+eps0
     aux += eos->energy_shift;
     // At this point, aux *must* be positive. If not, error out.
-    if( aux < 0.0 ) {
+    if(aux < 0.0) {
       sprintf(report->message, "In %s call, found eps+energy_shift < 0.0 (%e).\n",
               __func__, aux);
       return 2;

@@ -28,17 +28,18 @@
 
 static inline double get_EOS_table_max(
       const ghl_eos_parameters *restrict eos,
-      const int var_key ) {
+      const int var_key) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Loop over the table, searching for the maximum value
-  int totalsize        = eos->N_rho * eos->N_Ye * eos->N_T;
+  const int totalsize  = eos->N_rho * eos->N_Ye * eos->N_T;
   double var_max_value = eos->table_all[var_key];
 
   for(int i=0;i<totalsize;i++) {
     double var_value = eos->table_all[var_key + NRPyEOS_ntablekeys*i];
-    if( var_value > var_max_value ) var_max_value = var_value;
+    if(var_value > var_max_value)
+      var_max_value = var_value;
   }
   return var_max_value;
 #endif
@@ -46,17 +47,18 @@ static inline double get_EOS_table_max(
 
 static inline double get_EOS_table_min(
       const ghl_eos_parameters *restrict eos,
-      const int var_key ) {
+      const int var_key) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // Loop over the table, searching for the minimum value
-  int totalsize        = eos->N_rho * eos->N_Ye * eos->N_T;
+  const int totalsize  = eos->N_rho * eos->N_Ye * eos->N_T;
   double var_min_value = eos->table_all[var_key];
 
   for(int i=0;i<totalsize;i++) {
     double var_value = eos->table_all[var_key + NRPyEOS_ntablekeys*i];
-    if( var_value < var_min_value ) var_min_value = var_value;
+    if(var_value < var_min_value)
+      var_min_value = var_value;
   }
   return var_min_value;
 #endif
@@ -158,8 +160,8 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, ghl_eos_parame
                                                 * sizeof(double)))) {
     ghl_info("Cannot allocate memory for EOS table");
   }
-  for(int iv = 0;iv<NRPyEOS_ntablekeys;iv++)
-    for(int k = 0; k<eos_params->N_Ye;k++)
+  for(int iv = 0; iv<NRPyEOS_ntablekeys; iv++)
+    for(int k = 0; k<eos_params->N_Ye; k++)
       for(int j = 0; j<eos_params->N_T; j++)
         for(int i = 0; i<eos_params->N_rho; i++) {
           int indold = i + eos_params->N_rho*(j + eos_params->N_T*(k + eos_params->N_Ye*iv));
@@ -174,14 +176,14 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, ghl_eos_parame
   // The latter is great, because exp() is way faster than pow()
   // pressure
   eos_params->energy_shift = eos_params->energy_shift * CGS_TO_CODE_ENERGY;
-  for(int i=0;i<eos_params->N_rho;i++) {
+  for(int i=0; i<eos_params->N_rho; i++) {
     // rewrite:
     // logrho[i] = log(pow(10.0,logrho[i]) * CGS_TO_CODE_DENSITY);
     // by using log(a^b*c) = b*log(a)+log(c)
     eos_params->table_logrho[i] = eos_params->table_logrho[i] * log(10.) + log(CGS_TO_CODE_DENSITY);
   }
 
-  for(int i=0;i<eos_params->N_T;i++) {
+  for(int i=0; i<eos_params->N_T; i++) {
     // logtemp[i] = log(pow(10.0,logtemp[i]));
     eos_params->table_logT[i] = eos_params->table_logT[i]*log(10.0);
   }
@@ -194,7 +196,7 @@ void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, ghl_eos_parame
 
   // convert units
   int idx;
-  for(int i=0;i<eos_params->N_rho*eos_params->N_T*eos_params->N_Ye;i++) {
+  for(int i=0; i<eos_params->N_rho*eos_params->N_T*eos_params->N_Ye; i++) {
     // pressure
     idx = NRPyEOS_press_key + NRPyEOS_ntablekeys*i;
     eos_params->table_all[idx] = eos_params->table_all[idx] * log(10.0) + log(CGS_TO_CODE_PRESSURE);

@@ -7,7 +7,7 @@ extern void (*ghl_compute_h_and_cs2)(
       double *restrict h,
       double *restrict cs2);
 
-extern int  (*ghl_hybrid_find_polytropic_index)(
+extern int (*ghl_hybrid_find_polytropic_index)(
       const ghl_eos_parameters *restrict eos,
       const double rho_in);
 
@@ -17,7 +17,8 @@ extern void (*ghl_hybrid_get_K_and_Gamma)(
       double *restrict K,
       double *restrict Gamma);
 
-extern void (*ghl_hybrid_set_K_ppoly_and_eps_integ_consts)(ghl_eos_parameters *restrict eos);
+extern void (*ghl_hybrid_set_K_ppoly_and_eps_integ_consts)(
+      ghl_eos_parameters *restrict eos);
 
 extern void (*ghl_hybrid_compute_P_cold)(
       const ghl_eos_parameters *restrict eos,
@@ -30,18 +31,23 @@ extern void (*ghl_hybrid_compute_P_cold_and_eps_cold)(
       double *restrict P_cold_ptr,
       double *restrict eps_cold_ptr);
 
-extern void (*ghl_hybrid_compute_entropy_function)(
+extern double (*ghl_hybrid_compute_epsilon)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
-      const double P,
-      double *restrict S );
+      const double P);
+
+extern double (*ghl_hybrid_compute_entropy_function)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double P);
 
   // Function prototypes
 extern void (*ghl_tabulated_read_table_set_EOS_params)(
       const char *nuceos_table_name,
       ghl_eos_parameters *restrict eos);
 
-extern void (*ghl_tabulated_free_memory)(ghl_eos_parameters *restrict eos);
+extern void (*ghl_tabulated_free_memory)(
+      ghl_eos_parameters *restrict eos);
 
 extern void (*ghl_tabulated_compute_P_from_T)(
       const ghl_eos_parameters *restrict eos,

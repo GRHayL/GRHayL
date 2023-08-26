@@ -18,7 +18,8 @@ void (*ghl_hybrid_get_K_and_Gamma)(
       double *restrict K,
       double *restrict Gamma);
 
-void (*ghl_hybrid_set_K_ppoly_and_eps_integ_consts)(ghl_eos_parameters *restrict eos);
+void (*ghl_hybrid_set_K_ppoly_and_eps_integ_consts)(
+      ghl_eos_parameters *restrict eos);
 
 void (*ghl_hybrid_compute_P_cold)(
       const ghl_eos_parameters *restrict eos,
@@ -31,11 +32,15 @@ void (*ghl_hybrid_compute_P_cold_and_eps_cold)(
       double *restrict P_cold_ptr,
       double *restrict eps_cold_ptr);
 
-void (*ghl_hybrid_compute_entropy_function)(
+double (*ghl_hybrid_compute_epsilon)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
-      const double P,
-      double *restrict S );
+      const double P);
+
+double (*ghl_hybrid_compute_entropy_function)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double P);
 
   // Function prototypes
 void (*ghl_tabulated_read_table_set_EOS_params)(

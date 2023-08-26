@@ -2,13 +2,14 @@
 /*
  * (c) 2022 Leo Werneck
  */
-void NRPyEOS_P_eps_and_T_from_rho_Ye_S(const ghl_eos_parameters *restrict eos,
-                                       const double rho,
-                                       const double Y_e,
-                                       const double S,
-                                       double *restrict P,
-                                       double *restrict eps,
-                                       double *restrict T) {
+void NRPyEOS_P_eps_and_T_from_rho_Ye_S(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double S,
+      double *restrict P,
+      double *restrict eps,
+      double *restrict T) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
@@ -25,10 +26,10 @@ void NRPyEOS_P_eps_and_T_from_rho_Ye_S(const ghl_eos_parameters *restrict eos,
   const double root_finding_precision = eos->root_finding_precision;
   const int error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(eos, 2, root_finding_precision,
                                                                                 rho, Y_e, S, NRPyEOS_entropy_key,
-                                                                                keys, outvars, T, &report );
+                                                                                keys, outvars, T, &report);
 
   // Step 5: Check for errors
-  if( error )
+  if(error)
     ghl_error(report.message, error);
 
   // Step 6: Update output variables

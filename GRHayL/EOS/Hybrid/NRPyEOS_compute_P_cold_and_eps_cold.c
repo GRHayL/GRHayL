@@ -26,13 +26,13 @@ void NRPyEOS_compute_P_cold_and_eps_cold(
   // in Eqs 13-16 in http://arxiv.org/pdf/0802.0200.pdf
   //
   // Set up useful auxiliary variables
-  int polytropic_index   = ghl_hybrid_find_polytropic_index(eos, rho_in);
-  double K_ppoly         = eos->K_ppoly[polytropic_index];
-  double Gamma_ppoly     = eos->Gamma_ppoly[polytropic_index];
-  double eps_integ_const = eos->eps_integ_const[polytropic_index];
+  const int polytropic_index   = ghl_hybrid_find_polytropic_index(eos, rho_in);
+  const double K_ppoly         = eos->K_ppoly[polytropic_index];
+  const double Gamma_ppoly     = eos->Gamma_ppoly[polytropic_index];
+  const double eps_integ_const = eos->eps_integ_const[polytropic_index];
 
   // Then compute P_{cold}
-  double P_cold = K_ppoly*pow(rho_in, Gamma_ppoly);
+  const double P_cold = K_ppoly*pow(rho_in, Gamma_ppoly);
 
   *P_cold_ptr   = P_cold;
   *eps_cold_ptr = P_cold/(rho_in*(Gamma_ppoly-1.0)) + eps_integ_const;

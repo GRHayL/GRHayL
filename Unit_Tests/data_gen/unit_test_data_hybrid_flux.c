@@ -252,8 +252,8 @@ int main(int argc, char **argv) {
           speed_limit = ghl_limit_v_and_compute_u0(
                 &eos, &ADM_metric, &prims_l);
 
-          ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press, &prims_r.entropy);
-          ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press, &prims_l.entropy);
+          prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
+          prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
 
           double cmin, cmax;
           calculate_characteristic_speed(

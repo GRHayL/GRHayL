@@ -16,14 +16,14 @@ int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
   HDF5_ERROR_IF_USED;
 #else
 
-  if( !n ) return 0;
+  if(!n) return 0;
 
   // Start by assuming no errors
   int error = 0;
 
   // This function will interpolate n table quantities from
   // (rho,Ye,T). It replaces EOS_Omni calls with keytemp = 1
-  if( n > NRPyEOS_ntablekeys ) {
+  if(n > NRPyEOS_ntablekeys) {
     sprintf(report->message, "In %s call, number of quantities exceed maximum allowed: %d > %d.\n",
             __func__, n, NRPyEOS_ntablekeys);
     return 1;
@@ -31,7 +31,7 @@ int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
 
   // Check table bounds for input variables
   error = NRPyEOS_checkbounds(eos, rho, T, Y_e);
-  if( error != 0 ) {
+  if(error != 0) {
     char message[256];
     switch(error) {
       case 101:
@@ -75,10 +75,9 @@ int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
     // We have the result, but we must convert appropriately.
     // The only edge cases are P and eps, for which we obtain
     // log(P) and log(eps+eps0). We must check for them here
-    if( key == NRPyEOS_press_key ) {
+    if(key == NRPyEOS_press_key) {
       tablevar_out = exp(tablevar_out);
-    }
-    else if( key == NRPyEOS_eps_key ) {
+    } else if(key == NRPyEOS_eps_key) {
       tablevar_out = exp(tablevar_out) - eos->energy_shift;
     }
 
