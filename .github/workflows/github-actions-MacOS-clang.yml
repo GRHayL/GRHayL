@@ -39,11 +39,11 @@ jobs:
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
 
-  hybrid-c2p-routines:
+  c2p-routines:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [Font1D, Noble2D]
+        test-function: [hybrid]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
@@ -60,14 +60,14 @@ jobs:
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/metric_initial_data.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_multi_method_hybrid_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_multi_method_hybrid_${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_multi_method_hybrid_${{ matrix.test-function }}_output_pert.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/md5/hybrid_${{ matrix.test-function }}.md5
-          md5sum -c hybrid_${{ matrix.test-function }}.md5
-      - name: Run con2prim unit test for ${{ matrix.test-function }} function
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_multi_method_${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_multi_method_${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_multi_method_${{ matrix.test-function }}_output_pert.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/md5/con2prim_multi_method_${{ matrix.test-function }}.md5
+          md5sum -c con2prim_multi_method_${{ matrix.test-function }}.md5
+      - name: Run con2prim unit test for ${{ matrix.test-function }} functions
         run: |
-          ./test/unit_test_hybrid_${{ matrix.test-function }}
+          ./test/unit_test_con2prim_multi_method_${{ matrix.test-function }}
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
 

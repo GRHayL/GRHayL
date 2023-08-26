@@ -23,15 +23,13 @@ int main(int argc, char **argv) {
   // Count number of routines tested
   int num_routines = 2;
   int c2p_keys[num_routines];
-  char c2p_names[num_routines][50];
 
   c2p_keys[0] = Font1D;
-  sprintf(c2p_names[0],"%.30s","Font1D");
+  //c2p_keys[1] = Palenzuela1D;
 
   // To ensure the behavior remains the same for functions after Con2Prim,
   // we explicitly set a routine to always be last.
   c2p_keys[num_routines-1] = Noble2D;
-  sprintf(c2p_names[num_routines-1],"%.30s","Noble2D");
 
   double dummy1, dummy2, dummy3;
   const double poison = 0.0/0.0;
@@ -438,7 +436,9 @@ int main(int argc, char **argv) {
 
     if(!perturb) {
       outfile = fopen_with_check("con2prim_multi_method_hybrid_input.bin", "wb");
-      write_to_file(prims_array, arraylength, prims_length, outfile);
+      fwrite(Bx, sizeof(double), arraylength, outfile);
+      fwrite(By, sizeof(double), arraylength, outfile);
+      fwrite(Bz, sizeof(double), arraylength, outfile);
       write_to_file(cons_array,  arraylength, cons_length,  outfile);
       fclose(outfile);
     }
@@ -462,6 +462,8 @@ int main(int argc, char **argv) {
       S_z_orig[i] = S_z[i];
     }
 
+    sprintf(filename,"con2prim_multi_method_hybrid_output%.5s.bin", pert_suffix);
+    outfile = fopen_with_check(filename, "wb");
     for(int routine=0; routine<num_routines; routine++) {
       params.main_routine = c2p_keys[routine];
       for(int i=0; i<arraylength; i++) {
@@ -493,8 +495,8 @@ int main(int argc, char **argv) {
 
         ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
         c2p_check[i] = ghl_con2prim_hybrid_multi_method(
-                             &params, &eos, &ADM_metric, &metric_aux,
-                             &cons_undens, &prims, &diagnostics);
+              &params, &eos, &ADM_metric, &metric_aux,
+              &cons_undens, &prims, &diagnostics);
 
         ghl_return_primitives(
               &prims, &rho_b[i], &press[i], &eps[i],
@@ -503,12 +505,15 @@ int main(int argc, char **argv) {
               &dummy1, &dummy2, &dummy3);
       }
 
-      sprintf(filename,"con2prim_multi_method_hybrid_%.30s_output%.5s.bin", c2p_names[routine], pert_suffix);
-      outfile = fopen_with_check(filename, "wb");
-      write_to_file(prims_array, arraylength, prims_length, outfile);
+      fwrite(rho_b, sizeof(double), arraylength, outfile);
+      fwrite(press, sizeof(double), arraylength, outfile);
+      fwrite(eps, sizeof(double), arraylength, outfile);
+      fwrite(vx, sizeof(double), arraylength, outfile);
+      fwrite(vy, sizeof(double), arraylength, outfile);
+      fwrite(vz, sizeof(double), arraylength, outfile);
       fwrite(c2p_check, sizeof(int), arraylength, outfile);
-      fclose(outfile);
     }
+    fclose(outfile);
 
     if(!perturb) {
       outfile = fopen_with_check("enforce_primitive_limits_and_compute_u0_input.bin", "wb");
