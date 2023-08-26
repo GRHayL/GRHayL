@@ -1,5 +1,32 @@
 #include "../../utils_Palenzuela1D.h"
 
+/*
+ * Function : froot_hybrid
+ * Author   : Leo Werneck
+ *
+ * Computes Eq. (33) of Siegel et al., 2018 (arXiv: 1712.07538). The function
+ * arguments follow the standards set by the roots.h file.
+ *
+ * Parameters : x        - The point at which f(x) is evaluated.
+ *            : fparams  - Pointer to parameter structed containing auxiliary
+ *                         variables needed by this function (see definition
+ *                         above).
+ *
+ * Returns    : Nothing.
+ */
+static inline double
+froot(
+      const double x,
+      void *restrict fparams ) {
+
+  double rho, P, eps, W;
+  ((fparams_struct *)fparams)->compute_rho_P_eps_W(
+    x, fparams, &rho, &P, &eps, &W);
+
+  // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
+  return x - (1.0 + eps + P/rho)*W;
+}
+
 /* Function    : ghl_tabulated_Palenzuela1D
  * Author      : Leo Werneck
  *

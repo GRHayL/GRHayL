@@ -84,33 +84,6 @@ compute_rho_W_from_x_and_conservatives(
 }
 
 /*
- * Function : froot
- * Author   : Leo Werneck
- *
- * Computes Eq. (33) of Siegel et al., 2018 (arXiv: 1712.07538). The function
- * arguments follow the standards set by the roots.h file.
- *
- * Parameters : x        - The point at which f(x) is evaluated.
- *            : fparams  - Pointer to parameter structed containing auxiliary
- *                         variables needed by this function (see definition
- *                         above).
- *
- * Returns    : Nothing.
- */
-static inline double
-froot(
-      const double x,
-      void *restrict fparams ) {
-
-  double rho, P, eps, T, W;
-  ((fparams_struct *)fparams)->compute_rho_P_eps_T_W(
-    x, fparams, &rho, &P, &eps, &T, &W);
-
-  // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
-  return x - (1.0 + eps + P/rho)*W;
-}
-
-/*
  * Function : compute_BU_SU_Bsq_Ssq_BdotS
  * Author   : Leo Werneck
  *

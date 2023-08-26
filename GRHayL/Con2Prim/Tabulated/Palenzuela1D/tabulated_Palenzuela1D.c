@@ -1,5 +1,32 @@
 #include "../../utils_Palenzuela1D.h"
 
+/*
+ * Function : froot
+ * Author   : Leo Werneck
+ *
+ * Computes Eq. (33) of Siegel et al., 2018 (arXiv: 1712.07538). The function
+ * arguments follow the standards set by the roots.h file.
+ *
+ * Parameters : x        - The point at which f(x) is evaluated.
+ *            : fparams  - Pointer to parameter structed containing auxiliary
+ *                         variables needed by this function (see definition
+ *                         above).
+ *
+ * Returns    : Nothing.
+ */
+static inline double
+froot(
+      const double x,
+      void *restrict fparams ) {
+
+  double rho, P, eps, T, W;
+  ((fparams_struct *)fparams)->compute_rho_P_eps_T_W(
+    x, fparams, &rho, &P, &eps, &T, &W);
+
+  // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
+  return x - (1.0 + eps + P/rho)*W;
+}
+
 /* Function    : ghl_tabulated_Palenzuela1D
  * Author      : Leo Werneck
  *
@@ -101,18 +128,13 @@ int ghl_tabulated_Palenzuela1D(
   // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
   ghl_brent(froot, &fparams, xlow, xup, &rparams);
   if( rparams.error_key != roots_success ) {
-    // if( diagnostics->check ) {
-      // fprintf(stderr, "Con2Prim failed with initial guess\n");
-    // }
     // Adjust the temperature guess and try again
     fparams.temp_guess = eos->T_min;
     prims->temperature = eos->T_min;
     // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
     ghl_brent(froot, &fparams, xlow, xup, &rparams);
-    if( rparams.error_key != roots_success ) {
-      // roots_info(&rparams);
+    if( rparams.error_key != roots_success )
       return rparams.error_key;
-    }
   }
   diagnostics->n_iter = rparams.n_iters;
 
