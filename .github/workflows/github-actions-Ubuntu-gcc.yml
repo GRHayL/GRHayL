@@ -58,7 +58,7 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/metric_initial_data.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/metric_Bfield_initial_data.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_input.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output_pert.bin
