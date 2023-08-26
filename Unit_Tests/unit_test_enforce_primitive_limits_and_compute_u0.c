@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
 
-  FILE* infile = fopen_with_check("metric_initial_data.bin","rb");
+  FILE* infile = fopen_with_check("metric_Bfield_initial_data.bin","rb");
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
@@ -54,6 +54,10 @@ int main(int argc, char **argv) {
   double *gyz = (double*) malloc(sizeof(double)*arraylength);
   double *gzz = (double*) malloc(sizeof(double)*arraylength);
 
+  double *Bx = (double*) malloc(sizeof(double)*arraylength);
+  double *By = (double*) malloc(sizeof(double)*arraylength);
+  double *Bz = (double*) malloc(sizeof(double)*arraylength);
+
   key  = fread(lapse, sizeof(double), arraylength, infile);
   key += fread(betax, sizeof(double), arraylength, infile);
   key += fread(betay, sizeof(double), arraylength, infile);
@@ -66,8 +70,12 @@ int main(int argc, char **argv) {
   key += fread(gyz, sizeof(double), arraylength, infile);
   key += fread(gzz, sizeof(double), arraylength, infile);
 
+  key += fread(Bx, sizeof(double), arraylength, infile);
+  key += fread(By, sizeof(double), arraylength, infile);
+  key += fread(Bz, sizeof(double), arraylength, infile);
+
   fclose(infile);
-  if(key != arraylength*10)
+  if(key != arraylength*13)
     ghl_error("An error has occured with reading in metric data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -78,9 +86,6 @@ int main(int argc, char **argv) {
   double *vx = (double*) malloc(sizeof(double)*arraylength);
   double *vy = (double*) malloc(sizeof(double)*arraylength);
   double *vz = (double*) malloc(sizeof(double)*arraylength);
-  double *Bx = (double*) malloc(sizeof(double)*arraylength);
-  double *By = (double*) malloc(sizeof(double)*arraylength);
-  double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
   infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_input.bin","rb");
   key  = fread(rho_b, sizeof(double), arraylength, infile);
@@ -89,12 +94,9 @@ int main(int argc, char **argv) {
   key += fread(vx, sizeof(double), arraylength, infile);
   key += fread(vy, sizeof(double), arraylength, infile);
   key += fread(vz, sizeof(double), arraylength, infile);
-  key += fread(Bx, sizeof(double), arraylength, infile);
-  key += fread(By, sizeof(double), arraylength, infile);
-  key += fread(Bz, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*9)
+  if(key != arraylength*6)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -105,9 +107,6 @@ int main(int argc, char **argv) {
   double *vy_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *vz_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *eps_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *Bx_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *By_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *Bz_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *u0_trusted = (double*) malloc(sizeof(double)*arraylength);
 
   infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_output.bin","rb");
@@ -117,13 +116,10 @@ int main(int argc, char **argv) {
   key += fread(vx_trusted, sizeof(double), arraylength, infile);
   key += fread(vy_trusted, sizeof(double), arraylength, infile);
   key += fread(vz_trusted, sizeof(double), arraylength, infile);
-  key += fread(Bx_trusted, sizeof(double), arraylength, infile);
-  key += fread(By_trusted, sizeof(double), arraylength, infile);
-  key += fread(Bz_trusted, sizeof(double), arraylength, infile);
   key += fread(u0_trusted, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*10)
+  if(key != arraylength*7)
     ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -133,9 +129,6 @@ int main(int argc, char **argv) {
   double *vy_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vz_pert = (double*) malloc(sizeof(double)*arraylength);
   double *eps_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *Bx_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *By_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *Bz_pert = (double*) malloc(sizeof(double)*arraylength);
   double *u0_pert = (double*) malloc(sizeof(double)*arraylength);
 
   infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_output_pert.bin","rb");
@@ -145,13 +138,10 @@ int main(int argc, char **argv) {
   key += fread(vx_pert, sizeof(double), arraylength, infile);
   key += fread(vy_pert, sizeof(double), arraylength, infile);
   key += fread(vz_pert, sizeof(double), arraylength, infile);
-  key += fread(Bx_pert, sizeof(double), arraylength, infile);
-  key += fread(By_pert, sizeof(double), arraylength, infile);
-  key += fread(Bz_pert, sizeof(double), arraylength, infile);
   key += fread(u0_pert, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*10)
+  if(key != arraylength*7)
     ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -185,18 +175,18 @@ int main(int argc, char **argv) {
 
     ghl_primitive_quantities prims_trusted, prims_pert;
     ghl_initialize_primitives(
-                      rho_b_trusted[i], press_trusted[i], eps_trusted[i],
-                      vx_trusted[i], vy_trusted[i], vz_trusted[i],
-                      Bx_trusted[i], By_trusted[i], Bz_trusted[i],
-                      poison, poison, poison,
-                      &prims_trusted);
+          rho_b_trusted[i], press_trusted[i], eps_trusted[i],
+          vx_trusted[i], vy_trusted[i], vz_trusted[i],
+          poison, poison, poison,
+          poison, poison, poison,
+          &prims_trusted);
 
     ghl_initialize_primitives(
-                      rho_b_pert[i], press_pert[i], eps_pert[i],
-                      vx_pert[i], vy_pert[i], vz_pert[i],
-                      Bx_pert[i], By_pert[i], Bz_pert[i],
-                      poison, poison, poison,
-                      &prims_pert);
+          rho_b_pert[i], press_pert[i], eps_pert[i],
+          vx_pert[i], vy_pert[i], vz_pert[i],
+          poison, poison, poison,
+          poison, poison, poison,
+          &prims_pert);
 
     ghl_pert_test_fail_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
     if( ghl_pert_test_fail(u0_trusted[i], prims.u0, u0_pert[i]) )
@@ -265,8 +255,6 @@ int main(int argc, char **argv) {
   free(u0_trusted); free(u0_pert);
   free(rho_b_trusted); free(press_trusted); free(eps_trusted);
   free(vx_trusted); free(vy_trusted); free(vz_trusted);
-  free(Bx_trusted); free(By_trusted); free(Bz_trusted);
   free(rho_b_pert); free(press_pert); free(eps_pert);
   free(vx_pert); free(vy_pert); free(vz_pert);
-  free(Bx_pert); free(By_pert); free(Bz_pert);
 }
