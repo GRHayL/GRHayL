@@ -1,4 +1,4 @@
-#include "../utils.h"
+#include "../../utils_Palenzuela1D.h"
 
 /*
  * Function   : compute_rho_P_eps_T_W_entropy
@@ -32,7 +32,7 @@ compute_rho_P_eps_T_W_entropy(
       double *restrict W_ptr ) {
 
   // Step 0: Unpack the fparams struct
-  const double Y_e = fparams->Y_e;
+  double Y_e = fparams->Y_e;
   double T = fparams->temp_guess;
   const ghl_eos_parameters *eos = fparams->eos;
 
@@ -44,13 +44,15 @@ compute_rho_P_eps_T_W_entropy(
   double P, eps;
   if( fparams->evolve_T ) {
     double ent = fparams->cons_undens->entropy/W;
-    ghl_tabulated_compute_P_eps_T_from_S( eos, rho, Y_e, ent, &P, &eps, &T );
+    ghl_tabulated_enforce_bounds_rho_Ye_S(eos, &rho, &Y_e, &ent);
+    ghl_tabulated_compute_P_eps_T_from_S(eos, rho, Y_e, ent, &P, &eps, &T);
   }
   else {
     // If the temperature is not evolved, use the input guess to determine
     // the remaining primitives. Note that in this case one must provide
     // the appropriate temperature instead of the default guess T = T_min.
-    ghl_tabulated_compute_P_eps_from_T( eos, rho, Y_e, T, &P, &eps );
+    ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &rho, &Y_e, &T);
+    ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
   }
 
   // Step 3: Set the output
@@ -79,6 +81,7 @@ int ghl_tabulated_Palenzuela1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
+  diagnostics->which_routine = Palenzuela1D_entropy;
   return ghl_tabulated_Palenzuela1D( compute_rho_P_eps_T_W_entropy,
                                  params,
                                  eos,

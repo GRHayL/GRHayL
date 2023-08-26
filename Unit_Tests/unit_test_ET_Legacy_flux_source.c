@@ -1,7 +1,7 @@
 #include "unit_tests.h"
 
-static inline void compute_h_and_cs2(struct ghl_eos_parameters const *restrict eos,
-                                     ghl_primitive_quantities const *restrict prims,
+static inline void compute_h_and_cs2(const ghl_eos_parameters *restrict eos,
+                                     ghl_primitive_quantities *restrict prims,
                                      double *restrict h,
                                      double *restrict cs2) {
 
@@ -177,17 +177,16 @@ int main(int argc, char **argv) {
   }
 
   // Function pointer to allow for loop over fluxes
-  void (*calculate_HLLE_fluxes)(const ghl_primitive_quantities *restrict, const ghl_primitive_quantities *restrict,
+  void (*calculate_HLLE_fluxes)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
                               const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
                               const double, const double, ghl_conservative_quantities *restrict);
 
-  void (*calculate_characteristic_speed)(const ghl_primitive_quantities *restrict, const ghl_primitive_quantities *restrict,
+  void (*calculate_characteristic_speed)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
                               const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict, double *restrict, double *restrict);
 
   // Function pointer to allow for loop over directional source terms
-  void (*calculate_source_terms)(const ghl_primitive_quantities *restrict, const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
+  void (*calculate_source_terms)(ghl_primitive_quantities *restrict, const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
   const ghl_metric_quantities *restrict, ghl_conservative_quantities *restrict);
-
 
   // Loop over flux directions (x,y,z)
   for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
@@ -198,17 +197,17 @@ int main(int argc, char **argv) {
     // Set function pointer to specific function for a given direction
     switch(flux_dirn) {
       case 0:
-        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn0;
+        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn0_hybrid;
         calculate_source_terms         = &ghl_calculate_source_terms_dirn0;
         calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn0;
         break;
       case 1:
-        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn1;
+        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn1_hybrid;
         calculate_source_terms         = &ghl_calculate_source_terms_dirn1;
         calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn1;
         break;
       case 2:
-        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn2;
+        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn2_hybrid;
         calculate_source_terms         = &ghl_calculate_source_terms_dirn2;
         calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn2;
         break;
@@ -381,7 +380,6 @@ int main(int argc, char **argv) {
               &prims);
         prims.u0  = rho[index]*Bx[index] / vy[index];
 
-
         ghl_conservative_quantities cons_sources;
         ghl_calculate_tau_tilde_source_term_extrinsic_curv(
               &prims, &eos, &metric, &curv, &cons_sources);
@@ -437,31 +435,31 @@ int main(int argc, char **argv) {
       for(int i=ghostzone; i<dirlength-ghostzone; i++) {
         const int index  = indexf(dirlength, i, j ,k);
 
-        if( validate(trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable rho_star_rhs.\n"
                        "  rho_star_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index],
                                                    relative_error(trusted_rho_star_rhs[index], rho_star_rhs[index]),
                                                    relative_error(trusted_rho_star_rhs[index], pert_rho_star_rhs[index]));
-        if( validate(trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable tau_rhs.\n"
                        "  tau_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index],
                                                    relative_error(trusted_tau_rhs[index], tau_rhs[index]),
                                                    relative_error(trusted_tau_rhs[index], pert_tau_rhs[index]));
-        if( validate(trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_x_rhs.\n"
                        "  S_x_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index],
                                                    relative_error(trusted_S_x_rhs[index], S_x_rhs[index]),
                                                    relative_error(trusted_S_x_rhs[index], pert_S_x_rhs[index]));
-        if( validate(trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_y_rhs.\n"
                        "  S_y_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index],
                                                    relative_error(trusted_S_y_rhs[index], S_y_rhs[index]),
                                                    relative_error(trusted_S_y_rhs[index], pert_S_y_rhs[index]));
-        if( validate(trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index]) )
+        if( ghl_pert_test_fail(trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index]) )
           ghl_error("Test unit_test_ET_Legacy_flux_source has failed for variable S_z_rhs.\n"
                        "  S_z_rhs trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n", trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index],

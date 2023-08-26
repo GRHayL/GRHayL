@@ -21,7 +21,7 @@ void NRPyEOS_get_K_and_Gamma(
       double *restrict K,
       double *restrict Gamma) {
 
-  int polytropic_index = NRPyEOS_find_polytropic_index(eos, rho_in);
+  const int polytropic_index = NRPyEOS_find_polytropic_index(eos, rho_in);
   *K     = eos->K_ppoly[polytropic_index];
   *Gamma = eos->Gamma_ppoly[polytropic_index];
 }

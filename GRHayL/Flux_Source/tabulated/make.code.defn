@@ -1,13 +1,3 @@
-# Primary make.code.defn for gem Flux_Source
-
-# Source files in this directory that need compiled:
-SRCS = #calculate_characteristic_speed_dirn0.c \
-       #calculate_characteristic_speed_dirn1.c \
-       #calculate_characteristic_speed_dirn2.c \
-       #calculate_HLLE_fluxes_dirn0.c          \
-       #calculate_HLLE_fluxes_dirn1.c          \
-       #calculate_HLLE_fluxes_dirn2.c          \
-       #calculate_source_terms_dirn0.c   \
-       #calculate_source_terms_dirn1.c   \
-       #calculate_source_terms_dirn2.c   \
-       #calculate_tau_tilde_source_term_extrinsic_curv.c
+SRCS = ghl_calculate_HLLE_fluxes_dirn0_tabulated.c \
+       ghl_calculate_HLLE_fluxes_dirn1_tabulated.c \
+       ghl_calculate_HLLE_fluxes_dirn2_tabulated.c

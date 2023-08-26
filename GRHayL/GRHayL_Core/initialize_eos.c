@@ -105,7 +105,7 @@ void ghl_initialize_hybrid_eos(
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_max, &eos->press_max, &eos->eps_max);
 
   // Compute maximum entropy
-  ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max, &eos->entropy_max);
+  eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
   // --------------------------------------
 
   // --------------- Floors ---------------
@@ -113,7 +113,7 @@ void ghl_initialize_hybrid_eos(
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
 
   // Compute maximum entropy
-  ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min, &eos->entropy_min);
+  eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
   // --------------------------------------
 
   // --------- Atmospheric values ---------
@@ -121,7 +121,7 @@ void ghl_initialize_hybrid_eos(
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_atm, &eos->press_atm, &eos->eps_atm);
 
   // Compute atmospheric entropy
-  ghl_hybrid_compute_entropy_function(eos, eos->rho_atm, eos->press_atm, &eos->entropy_atm);
+  eos->entropy_atm = ghl_hybrid_compute_entropy_function(eos, eos->rho_atm, eos->press_atm);
 
   // Compute atmospheric tau
   eos->tau_atm = eos->rho_atm * eos->eps_atm;
@@ -226,7 +226,14 @@ void ghl_initialize_tabulated_eos(
   // Step 6: These parameters are manually set here, but
   //         can be overwritten later.
   eos->root_finding_precision = 1e-15;
-  eos->depsdT_threshold       = 1e-6;
+
+  // Step 7: Set minimum values for eps, P, and S
+  eos->press_min   = eos->table_P_min;
+  eos->press_max   = eos->table_P_max;
+  eos->eps_min     = eos->table_eps_min;
+  eos->eps_max     = eos->table_eps_max;
+  eos->entropy_min = eos->table_ent_min;
+  eos->entropy_max = eos->table_ent_max;
 }
 
 /*

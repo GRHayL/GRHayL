@@ -1,9 +1,12 @@
 # Main make.code.defn file for thorn Baikal
 
 # Source files in this directory that need compiled:
-SRCS = NRPyEOS_free_memory.c                        \
-       NRPyEOS_initialize_tabulated_functions.c     \
-       NRPyEOS_tabulated_compute_enthalpy_and_cs2.c \
-       NRPyEOS_read_table_set_EOS_params.c
+SRCS = NRPyEOS_free_memory.c                                \
+       NRPyEOS_initialize_tabulated_functions.c             \
+       NRPyEOS_tabulated_compute_enthalpy_and_cs2.c         \
+       NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c \
+       NRPyEOS_tabulated_get_index.c                        \
+       NRPyEOS_read_table_set_EOS_params.c                  \
+       NRPyEOS_enforce_table_bounds.c
 
 SUBDIRS = interpolators

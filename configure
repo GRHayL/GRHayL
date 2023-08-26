@@ -694,7 +694,6 @@ ihds=$(printf "$ihds" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/
 objs=$(printf "$srcs" | awk -v bd=$builddir '{gsub("GRHayL/", sprintf("%s/", bd), $0); gsub(/\.c/, ".o", $0); print}')
 tests=$(find Unit_Tests -maxdepth 1 -name unit_test_*.c)
 datagen=$(find Unit_Tests/data_gen -maxdepth 1 -name unit_test_data_*.c)
-echo $datagen
 if [ "$tests" = "" ]; then
     tnames="None"
 else

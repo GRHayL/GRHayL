@@ -120,20 +120,20 @@ int main(int argc, char **argv) {
              poison, poison, &cons);
 
     ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
-    int check = ghl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+    int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
     if(check != i+1)
       ghl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);
 
     if(i==0) {
       // This just gets coverage for the success branches
       params.main_routine = Font1D;
-      int check = ghl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+      int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != 0)
         ghl_error("Font1D has returned a different failure code: old %d and new %d", 0, check);
       params.main_routine = Noble2D;
       for (int j=0; j<3; j++) {
         params.backup_routine[2-j] = Font1D;
-        int check = ghl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+        int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
         if(check != 0)
           ghl_error("Font1D has returned a different failure code: old %d and new %d", 0, check);
         params.backup_routine[2-j] = Noble2D;
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     } else if (i==3) {
       // Here, we can check the Font Fix failure condition (there's just one return value)
       params.backup_routine[0] = Font1D;
-      int check = ghl_con2prim_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+      int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != 1)
         ghl_error("Font1D has returned a different failure code: old %d and new %d", 1, check);
       params.backup_routine[0] = None;

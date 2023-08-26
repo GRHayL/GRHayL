@@ -1,4 +1,31 @@
-#include "../utils.h"
+#include "../../utils_Palenzuela1D.h"
+
+/*
+ * Function : froot
+ * Author   : Leo Werneck
+ *
+ * Computes Eq. (33) of Siegel et al., 2018 (arXiv: 1712.07538). The function
+ * arguments follow the standards set by the roots.h file.
+ *
+ * Parameters : x        - The point at which f(x) is evaluated.
+ *            : fparams  - Pointer to parameter structed containing auxiliary
+ *                         variables needed by this function (see definition
+ *                         above).
+ *
+ * Returns    : Nothing.
+ */
+static inline double
+froot(
+      const double x,
+      void *restrict fparams ) {
+
+  double rho, P, eps, T, W;
+  ((fparams_struct *)fparams)->compute_rho_P_eps_T_W(
+    x, fparams, &rho, &P, &eps, &T, &W);
+
+  // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
+  return x - (1.0 + eps + P/rho)*W;
+}
 
 /* Function    : ghl_tabulated_Palenzuela1D
  * Author      : Leo Werneck
@@ -85,22 +112,31 @@ int ghl_tabulated_Palenzuela1D(
   // Step 7: Set initial guess for temperature
   fparams.temp_guess = prims->temperature;
 
+  // if( diagnostics->check ) {
+    // fprintf(stderr, "***Con2Prim***\n");
+    // fprintf(stderr, "S's: %22.15e %22.15e %22.15e -> %22.15e\n",
+            // SD[0], SD[1], SD[2], S_squared);
+    // fprintf(stderr, "B's: %22.15e %22.15e %22.15e -> %22.15e %22.15e\n",
+            // BbarU[0], BbarU[1], BbarU[2], B_squared, BdotS);
+    // fprintf(stderr, "T  : %22.15e\n", fparams.temp_guess);
+  // }
+
   // Step 8: Call the main function and perform the con2prim
   roots_params rparams;
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
-  ghl_toms748(froot, &fparams, xlow, xup, &rparams);
+  // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
+  ghl_brent(froot, &fparams, xlow, xup, &rparams);
   if( rparams.error_key != roots_success ) {
     // Adjust the temperature guess and try again
-    fparams.temp_guess = eos->T_max;
-    prims->temperature = eos->T_max;
-    ghl_toms748(froot, &fparams, xlow, xup, &rparams);
-    if( rparams.error_key != roots_success ) {
-      ghl_warn("TOMS748 did not find a root (see error report below)\n");
-      roots_info(&rparams);
+    fparams.temp_guess = eos->T_min;
+    prims->temperature = eos->T_min;
+    // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
+    ghl_brent(froot, &fparams, xlow, xup, &rparams);
+    if( rparams.error_key != roots_success )
       return rparams.error_key;
-    }
   }
+  diagnostics->n_iter = rparams.n_iters;
 
   // Step 9: Set core primitives using the EOS and the root
   double x = rparams.root;
@@ -117,15 +153,29 @@ int ghl_tabulated_Palenzuela1D(
   // Step 10.b: Set Z
   const double Z = x*rho*W;
 
-  // Step 10.c: Set prims struct
+  // Step 10.c: Compute utilde^{i}
+  double utildeU[3] = {
+    W*(SU[0] + BdotS*BbarU[0]/Z)/(Z+B_squared),
+    W*(SU[1] + BdotS*BbarU[1]/Z)/(Z+B_squared),
+    W*(SU[2] + BdotS*BbarU[2]/Z)/(Z+B_squared)
+  };
+
+
+  // Step 10.d: Set prims struct
   prims->rho         = rho;
   prims->Y_e         = fparams.Y_e;
   prims->temperature = T;
-  prims->press       = P;
-  prims->eps         = eps;
-  prims->vU[0]          = W*(SU[0] + BdotS*BbarU[0]/Z)/(Z+B_squared);
-  prims->vU[1]          = W*(SU[1] + BdotS*BbarU[1]/Z)/(Z+B_squared);
-  prims->vU[2]          = W*(SU[2] + BdotS*BbarU[2]/Z)/(Z+B_squared);
+  ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
+  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prims);
+  ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
+                                       &prims->press, &prims->eps, &prims->entropy);
+
+  // if( diagnostics->check ) {
+    // fprintf(stderr, "x Z W : %22.15e %22.15e %22.15e\n", x, Z, W);
+    // fprintf(stderr, "utilde: %22.15e %22.15e %22.15e\n", utildeU[0], utildeU[1], utildeU[2]);
+    // fprintf(stderr, "v's   : %22.15e %22.15e %22.15e\n", prims->vU[0], prims->vU[1], prims->vU[2]);
+    // fprintf(stderr, "**************\n");
+  // }
 
   return ghl_success;
 }

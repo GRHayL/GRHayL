@@ -300,7 +300,7 @@ int main(int argc, char **argv) {
                              Tyz_tmp, Tzz_tmp,
                              &Tmunu);
 
-    // Now, we load the trusted/perturbed data for this index and validate the computed results.
+    // Now, we load the trusted/perturbed data for this index and ghl_pert_test_fail the computed results.
     ghl_primitive_quantities prims_trusted, prims_pert;
     ghl_conservative_quantities cons_trusted, cons_pert;
     ghl_stress_energy Tmunu_trusted, Tmunu_pert;
@@ -339,9 +339,9 @@ int main(int argc, char **argv) {
                              Tyz_pert[index], Tzz_pert[index],
                              &Tmunu_pert);
 
-    ghl_validate_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
-    ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_pert_test_fail_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);
+    ghl_pert_test_fail_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    ghl_pert_test_fail_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   ghl_info("ET_Legacy primitives-to-conservatives test has passed!\n");
   free(lapse);

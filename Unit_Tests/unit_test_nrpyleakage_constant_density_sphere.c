@@ -411,18 +411,18 @@ void constantdensitysphere_test(
       for(int i1=0;i1<Nt1;i1++) {
         for(int i0=0;i0<Nt0;i0++) {
           const int index = IDX3D(i0,i1,i2);
-          validate(kappa_nue_pert [0][index], kappa_nue [0][index], kappa_nue_unpert [0][index]);
-          validate(kappa_nue_pert [1][index], kappa_nue [1][index], kappa_nue_unpert [1][index]);
-          validate(kappa_anue_pert[0][index], kappa_anue[0][index], kappa_anue_unpert[0][index]);
-          validate(kappa_anue_pert[1][index], kappa_anue[1][index], kappa_anue_unpert[1][index]);
-          validate(kappa_nux_pert [0][index], kappa_nux [0][index], kappa_nux_unpert [0][index]);
-          validate(kappa_nux_pert [1][index], kappa_nux [1][index], kappa_nux_unpert [1][index]);
-          validate(tau_nue_pert   [0][index], tau_nue   [0][index], tau_nue_unpert   [0][index]);
-          validate(tau_nue_pert   [1][index], tau_nue   [1][index], tau_nue_unpert   [1][index]);
-          validate(tau_anue_pert  [0][index], tau_anue  [0][index], tau_anue_unpert  [0][index]);
-          validate(tau_anue_pert  [1][index], tau_anue  [1][index], tau_anue_unpert  [1][index]);
-          validate(tau_nux_pert   [0][index], tau_nux   [0][index], tau_nux_unpert   [0][index]);
-          validate(tau_nux_pert   [1][index], tau_nux   [1][index], tau_nux_unpert   [1][index]);
+          ghl_pert_test_fail(kappa_nue_pert [0][index], kappa_nue [0][index], kappa_nue_unpert [0][index]);
+          ghl_pert_test_fail(kappa_nue_pert [1][index], kappa_nue [1][index], kappa_nue_unpert [1][index]);
+          ghl_pert_test_fail(kappa_anue_pert[0][index], kappa_anue[0][index], kappa_anue_unpert[0][index]);
+          ghl_pert_test_fail(kappa_anue_pert[1][index], kappa_anue[1][index], kappa_anue_unpert[1][index]);
+          ghl_pert_test_fail(kappa_nux_pert [0][index], kappa_nux [0][index], kappa_nux_unpert [0][index]);
+          ghl_pert_test_fail(kappa_nux_pert [1][index], kappa_nux [1][index], kappa_nux_unpert [1][index]);
+          ghl_pert_test_fail(tau_nue_pert   [0][index], tau_nue   [0][index], tau_nue_unpert   [0][index]);
+          ghl_pert_test_fail(tau_nue_pert   [1][index], tau_nue   [1][index], tau_nue_unpert   [1][index]);
+          ghl_pert_test_fail(tau_anue_pert  [0][index], tau_anue  [0][index], tau_anue_unpert  [0][index]);
+          ghl_pert_test_fail(tau_anue_pert  [1][index], tau_anue  [1][index], tau_anue_unpert  [1][index]);
+          ghl_pert_test_fail(tau_nux_pert   [0][index], tau_nux   [0][index], tau_nux_unpert   [0][index]);
+          ghl_pert_test_fail(tau_nux_pert   [1][index], tau_nux   [1][index], tau_nux_unpert   [1][index]);
         }
       }
     }

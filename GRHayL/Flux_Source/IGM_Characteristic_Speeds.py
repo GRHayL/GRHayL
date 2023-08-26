@@ -233,7 +233,7 @@ ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 
     params  =  "const primitive_quantities *restrict prims_r, "
     params  += "const primitive_quantities *restrict prims_l, "
-    params  += "struct eos_parameters const *restrict eos, "
+    params  += "const eos_parameters *restrict eos, "
     params  += "const metric_quantities *restrict metric_face, "
 
 

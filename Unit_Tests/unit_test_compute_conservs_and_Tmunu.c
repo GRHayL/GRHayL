@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
 
-  FILE* infile = fopen_with_check("metric_initial_data.bin","rb");
+  FILE* infile = fopen_with_check("metric_Bfield_initial_data.bin","rb");
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
@@ -54,6 +54,10 @@ int main(int argc, char **argv) {
   double *gyz = (double*) malloc(sizeof(double)*arraylength);
   double *gzz = (double*) malloc(sizeof(double)*arraylength);
 
+  double *Bx = (double*) malloc(sizeof(double)*arraylength);
+  double *By = (double*) malloc(sizeof(double)*arraylength);
+  double *Bz = (double*) malloc(sizeof(double)*arraylength);
+
   key  = fread(lapse, sizeof(double), arraylength, infile);
   key += fread(betax, sizeof(double), arraylength, infile);
   key += fread(betay, sizeof(double), arraylength, infile);
@@ -66,8 +70,12 @@ int main(int argc, char **argv) {
   key += fread(gyz, sizeof(double), arraylength, infile);
   key += fread(gzz, sizeof(double), arraylength, infile);
 
+  key += fread(Bx, sizeof(double), arraylength, infile);
+  key += fread(By, sizeof(double), arraylength, infile);
+  key += fread(Bz, sizeof(double), arraylength, infile);
+
   fclose(infile);
-  if(key != arraylength*10)
+  if(key != arraylength*13)
     ghl_error("An error has occured with reading in metric data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -78,9 +86,6 @@ int main(int argc, char **argv) {
   double *vx = (double*) malloc(sizeof(double)*arraylength);
   double *vy = (double*) malloc(sizeof(double)*arraylength);
   double *vz = (double*) malloc(sizeof(double)*arraylength);
-  double *Bx = (double*) malloc(sizeof(double)*arraylength);
-  double *By = (double*) malloc(sizeof(double)*arraylength);
-  double *Bz = (double*) malloc(sizeof(double)*arraylength);
 
   // This function uses u^0, so we need to store it as well
   double *u0 = (double*) malloc(sizeof(double)*arraylength);
@@ -92,13 +97,10 @@ int main(int argc, char **argv) {
   key += fread(vx, sizeof(double), arraylength, infile);
   key += fread(vy, sizeof(double), arraylength, infile);
   key += fread(vz, sizeof(double), arraylength, infile);
-  key += fread(Bx, sizeof(double), arraylength, infile);
-  key += fread(By, sizeof(double), arraylength, infile);
-  key += fread(Bz, sizeof(double), arraylength, infile);
   key += fread(u0, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*10)
+  if(key != arraylength*7)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -197,21 +199,22 @@ int main(int argc, char **argv) {
     ghl_stress_energy Tmunu;
 
     // Read initial data accompanying trusted output
-    ghl_initialize_metric(lapse[i],
-                      betax[i], betay[i], betaz[i],
-                      gxx[i], gxy[i], gxz[i],
-                      gyy[i], gyz[i], gzz[i],
-                      &ADM_metric);
+    ghl_initialize_metric(
+          lapse[i],
+          betax[i], betay[i], betaz[i],
+          gxx[i], gxy[i], gxz[i],
+          gyy[i], gyz[i], gzz[i],
+          &ADM_metric);
 
     ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     ghl_initialize_primitives(
-                      rho_b[i], press[i], eps[i],
-                      vx[i], vy[i], vz[i],
-                      Bx[i], By[i], Bz[i],
-                      poison, poison, poison,
-                      &prims);
+          rho_b[i], press[i], eps[i],
+          vx[i], vy[i], vz[i],
+          Bx[i], By[i], Bz[i],
+          poison, poison, poison,
+          &prims);
     prims.u0 = u0[i];
 
     // This computes the conservatives and stress-energy tensor from the new primitives
@@ -220,30 +223,34 @@ int main(int argc, char **argv) {
     ghl_conservative_quantities cons_trusted, cons_pert;
     ghl_stress_energy Tmunu_trusted, Tmunu_pert;
 
-    ghl_initialize_conservatives(rho_star_trusted[i], tau_trusted[i],
-                             S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
-                             poison, poison, &cons_trusted);
+    ghl_initialize_conservatives(
+          rho_star_trusted[i], tau_trusted[i],
+          S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
+          poison, poison, &cons_trusted);
 
-    ghl_initialize_conservatives(rho_star_pert[i], tau_pert[i],
-                             S_x_pert[i], S_y_pert[i], S_z_pert[i],
-                             poison, poison, &cons_pert);
+    ghl_initialize_conservatives(
+          rho_star_pert[i], tau_pert[i],
+          S_x_pert[i], S_y_pert[i], S_z_pert[i],
+          poison, poison, &cons_pert);
 
-    ghl_initialize_stress_energy(Ttt_trusted[i], Ttx_trusted[i],
-                             Tty_trusted[i], Ttz_trusted[i],
-                             Txx_trusted[i], Txy_trusted[i],
-                             Txz_trusted[i], Tyy_trusted[i],
-                             Tyz_trusted[i], Tzz_trusted[i],
-                             &Tmunu_trusted);
+    ghl_initialize_stress_energy(
+          Ttt_trusted[i], Ttx_trusted[i],
+          Tty_trusted[i], Ttz_trusted[i],
+          Txx_trusted[i], Txy_trusted[i],
+          Txz_trusted[i], Tyy_trusted[i],
+          Tyz_trusted[i], Tzz_trusted[i],
+          &Tmunu_trusted);
 
-    ghl_initialize_stress_energy(Ttt_pert[i], Ttx_pert[i],
-                             Tty_pert[i], Ttz_pert[i],
-                             Txx_pert[i], Txy_pert[i],
-                             Txz_pert[i], Tyy_pert[i],
-                             Tyz_pert[i], Tzz_pert[i],
-                             &Tmunu_pert);
+    ghl_initialize_stress_energy(
+          Ttt_pert[i], Ttx_pert[i],
+          Tty_pert[i], Ttz_pert[i],
+          Txx_pert[i], Txy_pert[i],
+          Txz_pert[i], Tyy_pert[i],
+          Tyz_pert[i], Tzz_pert[i],
+          &Tmunu_pert);
 
-    ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_pert_test_fail_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    ghl_pert_test_fail_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
 
     /*
        GRHayL also has standalone functions ghl_compute_conservs() and ghl_compute_TDNmunu().
@@ -255,8 +262,8 @@ int main(int argc, char **argv) {
     */
     ghl_compute_conservs(&ADM_metric, &metric_aux, &prims, &cons);
     ghl_compute_TDNmunu(&ADM_metric, &metric_aux, &prims, &Tmunu);
-    ghl_validate_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
-    ghl_validate_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
+    ghl_pert_test_fail_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+    ghl_pert_test_fail_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }
   ghl_info("ghl_compute_conservs_and_Tmunu function test has passed!\n");
   free(lapse);

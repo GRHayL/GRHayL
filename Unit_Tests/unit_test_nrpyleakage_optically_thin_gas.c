@@ -7,7 +7,7 @@
 
 static inline
 void
-validate_computed_values(
+ghl_pert_test_fail_computed_values(
     FILE *fp_unperturbed,
     FILE *fp_perturbed,
     const double t,
@@ -37,10 +37,10 @@ validate_computed_values(
     ghl_error("Failed to read perturbed data from file\n");
 
   // Perform validation
-  validate(t_unperturbed  , t  , t_perturbed  );
-  validate(Y_e_unperturbed, Y_e, Y_e_perturbed);
-  validate(eps_unperturbed, eps, eps_perturbed);
-  validate(T_unperturbed  , T  , T_perturbed  );
+  ghl_pert_test_fail(t_unperturbed  , t  , t_perturbed  );
+  ghl_pert_test_fail(Y_e_unperturbed, Y_e, Y_e_perturbed);
+  ghl_pert_test_fail(eps_unperturbed, eps, eps_perturbed);
+  ghl_pert_test_fail(T_unperturbed  , T  , T_perturbed  );
 }
 
 static inline
@@ -200,7 +200,7 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
     double T;
     rk4_step_ode(eos, dt, initial_rho, gfs, &T);
     t += dt;
-    validate_computed_values(fp_unpert, fp_pert, t, gfs[Y_E], gfs[EPS], T);
+    ghl_pert_test_fail_computed_values(fp_unpert, fp_pert, t, gfs[Y_E], gfs[EPS], T);
   }
 }
 

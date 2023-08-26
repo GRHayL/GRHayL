@@ -29,16 +29,16 @@ int main(int argc, char **argv) {
   }
 
   for(int i=1; i<4; i++) {
-    if(validate(k_comp[i], eos.K_ppoly[i], k_pert[i]))
+    if(ghl_pert_test_fail(k_comp[i], eos.K_ppoly[i], k_pert[i]))
       ghl_error("unit_test_piecewise_polytrope has failed for K_ppoly.\n"
                    "For index %d, expected %e, computed %e, perturbed %e\n"
                    "%e\n", i, k_comp[i], eos.K_ppoly[i], k_pert[i],
-                           validate(k_comp[i], eos.K_ppoly[i], k_pert[i]));
+                           ghl_pert_test_fail(k_comp[i], eos.K_ppoly[i], k_pert[i]));
 
-    if(validate(eps_comp[i], eos.eps_integ_const[i], eps_pert[i]))
+    if(ghl_pert_test_fail(eps_comp[i], eos.eps_integ_const[i], eps_pert[i]))
       ghl_error("unit_test_piecewise_polytrope has failed for eps_integ_const.\n"
                    "For index %d, expected %e, computed %e, perturbed %e\n"
                    "relative error: %e\n", i, eps_comp[i], eos.eps_integ_const[i], eps_pert[i],
-                           validate(eps_comp[i], eos.eps_integ_const[i], eps_pert[i]));
+                           ghl_pert_test_fail(eps_comp[i], eos.eps_integ_const[i], eps_pert[i]));
   }
 }

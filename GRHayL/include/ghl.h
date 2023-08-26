@@ -32,6 +32,8 @@ typedef enum {
   Newman1D, Newman1D_entropy
 } ghl_con2prim_method_t;
 
+char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
+
 typedef enum {ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
 
 /*
@@ -152,8 +154,6 @@ typedef struct ghl_stress_energy {
 
          ----------- Tabulated Equation of State -----------
  --root_finding_precision: root-finding precision for table inversions
-
- --depsdT_threshold: this threshold is used by the Palenzuela con2prim routine
 */
 
 typedef struct ghl_eos_parameters {
@@ -181,7 +181,6 @@ typedef struct ghl_eos_parameters {
   double eps_atm, eps_min, eps_max;
   double entropy_atm, entropy_min, entropy_max;
   double root_finding_precision;
-  double depsdT_threshold;
 
   // Table size
   int N_rho, N_T, N_Ye;
@@ -196,21 +195,16 @@ typedef struct ghl_eos_parameters {
   // Table bounds
   double table_rho_min, table_rho_max;
   double table_T_min  , table_T_max;
-  double table_Y_e_min , table_Y_e_max;
+  double table_Y_e_min, table_Y_e_max;
   double table_P_min  , table_P_max;
   double table_eps_min, table_eps_max;
   double table_ent_min, table_ent_max;
 
   // Auxiliary variables
   double energy_shift;
-  double temp0, temp1;
-  double dlintemp, dlintempi;
-  double drholintempi;
-  double dlintempyei;
-  double drholintempyei;
-  double dtemp, dtempi;
-  double drho, drhoi;
-  double dye, dyei;
+  double dtempi;
+  double drhoi;
+  double dyei;
   double drhotempi;
   double drhoyei;
   double dtempyei;
@@ -218,8 +212,6 @@ typedef struct ghl_eos_parameters {
   //------------------------------------------------
 
 } ghl_eos_parameters;
-
-#include "ghl_eos_functions.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -286,6 +278,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
 #endif
 
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -312,7 +305,7 @@ void ghl_initialize_primitives(
 void ghl_initialize_conservatives(
       const double rho, const double tau,
       const double S_x, const double S_y, const double S_z,
-      const double Y_e, const double entropy,
+      const double entropy, const double Y_e,
       ghl_conservative_quantities *restrict cons);
 
 void ghl_return_primitives(
@@ -326,7 +319,7 @@ void ghl_return_conservatives(
       const ghl_conservative_quantities *restrict cons,
       double *restrict rho, double *restrict tau,
       double *restrict S_x, double *restrict S_y, double *restrict S_z,
-      double *restrict Y_e, double *restrict entropy);
+      double *restrict entropy, double *restrict Y_e);
 
 void ghl_initialize_metric(
       const double lapse,
@@ -392,5 +385,8 @@ void ghl_compute_smallb_and_b2(
 #ifdef __cplusplus
 }
 #endif
+
+#include "ghl_eos_functions.h"
+#include "ghl_debug.h"
 
 #endif // GHL_H

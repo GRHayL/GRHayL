@@ -48,12 +48,13 @@ int ghl_enforce_primitive_limits_and_compute_u0(
     }
     // Now recompute eps and, if needed, entropy
     prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
-    if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+    if(params->evolve_entropy)
+      prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 
   // Tabulated EOS specific floors and ceilings
   } else if( eos->eos_type == ghl_eos_tabulated ) {
     // Apply floors and ceilings to Y_e and T
-    prims->Y_e = MIN(MAX(prims->Y_e,eos->Y_e_min), eos->Y_e_max);
+    prims->Y_e         = MIN(MAX(prims->Y_e,eos->Y_e_min), eos->Y_e_max);
     prims->temperature = MIN(MAX(prims->temperature, eos->T_min),eos->T_max);
 
     // Additional variables used for the EOS call

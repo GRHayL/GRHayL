@@ -53,7 +53,7 @@ void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) 
   for(int j=1; j<eos->neos; j++) {
     // Set a useful auxiliary variable to keep things more compact:
     // First, (Gamma_{j-1} - Gamma_{j}):
-    double Gamma_diff = eos->Gamma_ppoly[j-1] - eos->Gamma_ppoly[j];
+    const double Gamma_diff = eos->Gamma_ppoly[j-1] - eos->Gamma_ppoly[j];
 
     // Implement the boxed equation above, using our auxiliary variable:
     eos->K_ppoly[j] = eos->K_ppoly[j-1] * pow(eos->rho_ppoly[j-1],Gamma_diff);
@@ -82,16 +82,16 @@ void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) 
   for(int j=1; j<eos->neos; j++) {
     // Set a few useful auxiliary variables to keep things more compact:
     // First, (Gamma_{j-1}-1):
-    double Gammajm1m1 = eos->Gamma_ppoly[j-1] - 1.0;
+    const double Gammajm1m1 = eos->Gamma_ppoly[j-1] - 1.0;
 
     // Then, (Gamma_{j+0}-1):
-    double Gammajp0m1 = eos->Gamma_ppoly[j+0] - 1.0;
+    const double Gammajp0m1 = eos->Gamma_ppoly[j+0] - 1.0;
 
     // Next, ( K_{j-1}*rho_{j-1}^(Gamma_{j-1}-1) )/(Gamma_{j-1}-1):
-    double aux_epsm1  = eos->K_ppoly[j-1]*pow(eos->rho_ppoly[j-1],Gammajm1m1)/Gammajm1m1;
+    const double aux_epsm1  = eos->K_ppoly[j-1]*pow(eos->rho_ppoly[j-1],Gammajm1m1)/Gammajm1m1;
 
     // Finally, ( K_{j+0}*rho_{j+0}^(Gamma_{j+0}-1) )/(Gamma_{j+0}-1):
-    double aux_epsp0  = eos->K_ppoly[j+0]*pow(eos->rho_ppoly[j-1],Gammajp0m1)/Gammajp0m1;
+    const double aux_epsp0  = eos->K_ppoly[j+0]*pow(eos->rho_ppoly[j-1],Gammajp0m1)/Gammajp0m1;
 
     // Implement the boxed equation above, using our auxiliary variables:
     eos->eps_integ_const[j] = eos->eps_integ_const[j-1] + aux_epsm1 - aux_epsp0;

@@ -1,6 +1,3 @@
 # Subdirectory make.code.defn for EOS/Hybrid
 
-SUBDIRS = Font1D Noble2D
-
-# Source files in this directory that need compiled:
-SRCS = 
+SUBDIRS = Font1D Noble2D Palenzuela1D

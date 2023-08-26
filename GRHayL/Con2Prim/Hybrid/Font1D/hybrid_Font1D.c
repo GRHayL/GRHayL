@@ -1,4 +1,12 @@
-#include "../../harm_u2p_util.h"
+#include "con2prim.h"
+
+int ghl_hybrid_Font_fix_loop(
+      const ghl_eos_parameters *restrict eos,
+      const int maxits, const double tol, const double W_in,
+      const double Sf2_in, const double Psim6, const double sdots,
+      const double BbardotS2, const double B2bar,
+      const ghl_conservative_quantities *restrict cons,
+      const double rhob_in, double *restrict rhob_out_ptr);
 
 /**********************************
  * Piecewise Polytropic EOS Patch *
@@ -107,7 +115,8 @@ int ghl_hybrid_Font_fix(
 
   // and compute epsilon from rho and pressure
   prims->eps = prims->press/(prims->rho*(Gamma_ppoly-1.0));
-  if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
+  if(params->evolve_entropy)
+    prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 
   /* Font fix works! */
   diagnostics->which_routine = Font1D;

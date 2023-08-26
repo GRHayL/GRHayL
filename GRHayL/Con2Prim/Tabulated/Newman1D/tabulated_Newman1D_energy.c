@@ -1,15 +1,17 @@
-#include "../utils.h"
+#include "../../utils_Palenzuela1D.h"
 
-int ghl_newman_energy(
+static int ghl_newman_energy(
       const ghl_eos_parameters *restrict eos,
       const double S_squared,
       const double BdotS,
       const double B_squared,
       const double *restrict BU,
       const double *restrict SU,
+      const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict con,
-      ghl_primitive_quantities *restrict prim,
-      const double tol_x ) {
+      ghl_primitive_quantities *restrict prims,
+      const double tol_x,
+      int *restrict n_iter ) {
 
   // Set basic quantities from input
   double invD   = 1.0/con->rho;
@@ -72,10 +74,11 @@ int ghl_newman_energy(
 
     // Set the prims (eps is computed as in Palenzuela et al.)
     // See e.g., Eq. (44) of https://arxiv.org/pdf/1712.07538.pdf
-    const double x    = z * invD;
-    const double xrho = con->rho * invW;
-    const double xeps = - 1.0 + (1.0-W*W)*x*invW
-                      + W*( 1.0 + q - s + 0.5*( s*invW*invW + (t*t)/(x*x) ) );
+    double x    = z * invD;
+    double xrho = con->rho * invW;
+    double xeps = - 1.0 + (1.0-W*W)*x*invW
+                  + W*( 1.0 + q - s + 0.5*( s*invW*invW + (t*t)/(x*x) ) );
+    ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &xrho, &xye, &xeps);
     ghl_tabulated_compute_P_T_from_eps(eos, xrho, xye, xeps, &xprs, &xtemp);
 
     AtStep++;
@@ -96,6 +99,8 @@ int ghl_newman_energy(
   if (step >= maxsteps)
     return roots_error_max_iter;
 
+  *n_iter = step;
+
   if( conacc ) {     //converged on an extrap. so recompute vars
     const double a     = e + xprs + 0.5*B_squared;
     const double phi   = acos(sqrt(27.0*d/(4.0*a))/a);
@@ -106,18 +111,22 @@ int ghl_newman_energy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
     invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
     W                  = 1.0/invW;
-    prim->rho          = con->rho*invW;
+    prims->rho          = con->rho*invW;
   }
 
   // Set the primitives
-  prim->rho         = con->rho*invW;
-  prim->Y_e         = xye;
-  prim->temperature = xtemp;
-  prim->vU[0]          = W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared);
-  prim->vU[1]          = W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared);
-  prim->vU[2]          = W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared);
-  ghl_tabulated_compute_P_eps_from_T( eos, prim->rho, prim->Y_e, prim->temperature,
-                                       &prim->press, &prim->eps );
+  double utildeU[3] = {
+    W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared),
+    W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared),
+    W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared)
+  };
+  prims->rho         = con->rho*invW;
+  prims->Y_e         = xye;
+  prims->temperature = xtemp;
+  ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
+  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prims);
+  ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
+                                       &prims->press, &prims->eps, &prims->entropy);
 
   return ghl_success;
 }
@@ -138,6 +147,7 @@ int ghl_tabulated_Newman1D_energy(
 
   // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
-  return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU,
-                       cons_undens, prims, tol_x);
+  diagnostics->which_routine = Newman1D;
+  return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
+                           cons_undens, prims, tol_x, &diagnostics->n_iter);
 }

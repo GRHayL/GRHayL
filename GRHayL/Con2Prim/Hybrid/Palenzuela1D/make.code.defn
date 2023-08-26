@@ -1,0 +1,6 @@
+# Subdirectory make.code.defn for EOS/Hybrid
+
+# Source files in this directory that need compiled:
+SRCS = hybrid_Palenzuela1D.c         \
+       hybrid_Palenzuela1D_energy.c  \
+       hybrid_Palenzuela1D_entropy.c

@@ -169,6 +169,11 @@ def compute_rho_star(alpha, sqrtgammaDET, rho_b,u4U):
     # Compute rho_star:
     rho_star = alpha*sqrtgammaDET*rho_b*u4U[0]
 
+def compute_S_star(alpha, sqrtgammaDET, S, u4U):
+    global S_star
+    # Compute S_star:
+    S_star = alpha*sqrtgammaDET*S*u4U[0]
+
 def compute_Y_e_star(alpha, sqrtgammaDET, Y_e, rho_b, u4U):
     global Y_e_star
     # Compute Y_e_star:
@@ -201,21 +206,28 @@ def compute_rho_star_fluxU(vU, rho_star):
     for j in range(3):
         rho_star_fluxU[j] = rho_star*vU[j]
 
-# Step 4.c: Y_e_star flux
+# Step 4.c: S_star flux
+def compute_S_star_fluxU(vU, S_star):
+    global S_star_fluxU
+    S_star_fluxU = ixp.zerorank1(DIM=3)
+    for j in range(3):
+        S_star_fluxU[j] = S_star*vU[j]
+
+# Step 4.d: Y_e_star flux
 def compute_Y_e_star_fluxU(vU, Y_e_star):
     global Y_e_star_fluxU
     Y_e_star_fluxU = ixp.zerorank1(DIM=3)
     for j in range(3):
         Y_e_star_fluxU[j] = Y_e_star*vU[j]
 
-# Step 4.d: tau_tilde flux
+# Step 4.e: tau_tilde flux
 def compute_tau_tilde_fluxU(alpha, sqrtgammaDET, vU,T4UU,rho_star):
     global tau_tilde_fluxU
     tau_tilde_fluxU = ixp.zerorank1(DIM=3)
     for j in range(3):
         tau_tilde_fluxU[j] = alpha**2*sqrtgammaDET*T4UU[0][j+1] - rho_star*vU[j]
 
-# Step 4.e: S_tilde flux
+# Step 4.f: S_tilde flux
 def compute_S_tilde_fluxUD(alpha, sqrtgammaDET, T4UD):
     global S_tilde_fluxUD
     S_tilde_fluxUD = ixp.zerorank2(DIM=3)

@@ -2,7 +2,7 @@
 /*
  * Add source term for 2-component of Stilde and tau_tilde
  */
-void ghl_calculate_source_terms_dirn2(const ghl_primitive_quantities *restrict prims, struct ghl_eos_parameters const *restrict eos, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs, ghl_conservative_quantities *restrict cons) {
+void ghl_calculate_source_terms_dirn2(ghl_primitive_quantities *restrict prims, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs, ghl_conservative_quantities *restrict cons) {
 
 {
 
