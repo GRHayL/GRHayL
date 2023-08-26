@@ -133,6 +133,15 @@ void ghl_pert_test_fail_primitives(
       const ghl_primitive_quantities *restrict prims,
       const ghl_primitive_quantities *restrict prims_pert);
 
+void ghl_pert_test_fail_primitives_with_cutoffs(
+      const bool evolve_entropy,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_primitive_quantities *restrict prims_trusted,
+      const ghl_primitive_quantities *restrict prims,
+      const ghl_primitive_quantities *restrict prims_pert,
+      const double pressure_cutoff,
+      const double eps_cutoff);
+
 void ghl_pert_test_fail_conservatives(
       const bool evolve_entropy,
       const ghl_conservative_quantities *restrict cons_trusted,
