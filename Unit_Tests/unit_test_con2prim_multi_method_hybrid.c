@@ -2,6 +2,13 @@
 
 int main(int argc, char **argv) {
 
+  const int num_methods = 3;
+  int methods[num_methods];
+
+  methods[0] = Font1D;
+  methods[1] = Palenzuela1D;
+  methods[num_methods-1] = Noble2D;
+
   FILE* infile = fopen_with_check("metric_Bfield_initial_data.bin","rb");
 
   int arraylength;
@@ -123,12 +130,6 @@ int main(int argc, char **argv) {
   infile = fopen_with_check("con2prim_multi_method_hybrid_output.bin","rb");
   FILE *inpert = fopen_with_check("con2prim_multi_method_hybrid_output_pert.bin","rb");
 
-  const int num_methods = 2;
-  int methods[num_methods];
-
-  methods[0] = Font1D;
-  methods[num_methods-1] = Noble2D;
-
   for(int method=0; method<num_methods; method++) {
     ghl_info("Beginning test for %.30s method...\n", ghl_get_con2prim_routine_name(methods[method]));
 
@@ -215,8 +216,8 @@ int main(int argc, char **argv) {
 
       double pressure_cutoff = 1.0e-30; // Set defaults and change them for Noble2D
       double eps_cutoff = 1.0e-30;
-      if(params.main_routine == Noble2D) {
-        // Noble2D has problems with losing accuracy in pressure, especially with small values
+      if(params.main_routine == Palenzuela1D || params.main_routine == Noble2D) {
+        // Some routines have problems with losing accuracy in pressure, especially with small values
         // We relax the requirements because simply using a different compiler can cause the
         // test to fail for some inputs.
         pressure_cutoff = 1.0e-16;

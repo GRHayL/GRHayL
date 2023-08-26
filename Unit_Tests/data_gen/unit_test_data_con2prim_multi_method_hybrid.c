@@ -21,11 +21,11 @@ int main(int argc, char **argv) {
   double test_rho_max = 1e-3; //Maximum input density
 
   // Count number of routines tested
-  int num_routines = 2;
+  int num_routines = 3;
   int c2p_keys[num_routines];
 
   c2p_keys[0] = Font1D;
-  //c2p_keys[1] = Palenzuela1D;
+  c2p_keys[1] = Palenzuela1D;
 
   // To ensure the behavior remains the same for functions after Con2Prim,
   // we explicitly set a routine to always be last.
@@ -433,11 +433,6 @@ int main(int argc, char **argv) {
     write_to_file(cons_array, arraylength, cons_length, outfile);
     fclose(outfile);
 
-    if(!perturb) {
-      printf("The file con2prim_multi_method_hybrid_input.bin contains the same data as"
-             " apply_conservative_limits_output.bin, so a symlink handles this duplication.\n");
-    }
-
     for(int i=0; i<arraylength; i++) {
       // Cycle data
       rho_b_orig[i] = rho_b[i];
@@ -499,7 +494,6 @@ int main(int argc, char **argv) {
               &Bx[i], &By[i], &Bz[i],
               &dummy1, &dummy2, &dummy3);
       }
-
       write_to_file(prims_array, arraylength, prims_length, outfile);
       fwrite(c2p_check, sizeof(int), arraylength, outfile);
     }
@@ -564,11 +558,6 @@ int main(int argc, char **argv) {
     fwrite(u0, sizeof(double), arraylength, outfile);
     fclose(outfile);
 
-    if(!perturb) {
-      printf("The file compute_conservs_and_Tmunu_input.bin contains the same data as"
-             " enforce_primitive_limits_and_compute_u0_output.bin, so a symlink handles this duplication.\n");
-    }
-
     for(int i=0; i<arraylength; i++) {
       // Cycle data
       rho_b_orig[i] = rho_b[i];
@@ -630,5 +619,13 @@ int main(int argc, char **argv) {
     write_to_file(Tmunu_array, arraylength, Tmunu_length, outfile);
     fclose(outfile);
   }
+  printf("The file con2prim_multi_method_hybrid_input.bin contains the same data as"
+         " apply_conservative_limits_output.bin. We should try to make this a symlink or something..\n");
+  int ignore __attribute__((unused)) = system("cp apply_conservative_limits_output.bin con2prim_multi_method_hybrid_input.bin");
+
+  printf("The file compute_conservs_and_Tmunu_input.bin contains the same data as"
+         " enforce_primitive_limits_and_compute_u0_output.bin. We should try to make this a symlink or something.\n");
+  ignore = system("cp enforce_primitive_limits_and_compute_u0_output.bin compute_conservs_and_Tmunu_input.bin");
+
   return 0;
 }
