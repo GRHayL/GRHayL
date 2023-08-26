@@ -31,8 +31,6 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_input.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/md5/ET_Legacy_${{ matrix.test-function }}.md5
-          md5sum -c ET_Legacy_${{ matrix.test-function }}.md5
       - name: Run ET IllinoisGRMHD unit test for ET_Legacy_${{ matrix.test-function }}
         run: ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
 #      - name: Generate coverage report
@@ -62,8 +60,6 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_input.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output_pert.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/md5/${{ matrix.test-function }}.md5
-          md5sum -c ${{ matrix.test-function }}.md5
       - name: Run con2prim unit test for ${{ matrix.test-function }} functions
         run: ./test/unit_test_${{ matrix.test-function }}
 #      - name: Generate coverage report
@@ -158,8 +154,6 @@ jobs:
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/grhayl_core/grhayl_core_test_suite_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/grhayl_core/md5/grhayl_core_test_suite.md5
-          md5sum -c grhayl_core_test_suite.md5
       - name: Run GRHayL_Core unit test
         run: ./test/unit_test_grhayl_core_test_suite
 #      - name: Generate coverage report
@@ -243,8 +237,6 @@ jobs:
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/md5/${{ matrix.test-function }}.md5
-          md5sum -c ${{ matrix.test-function }}.md5
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run neutrinos unit test for ${{ matrix.test-function }} function
         run: ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 1
@@ -286,8 +278,6 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_unperturbed.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_perturbed.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/md5/con2prim_tabulated.md5
-          md5sum -c con2prim_tabulated.md5
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for tabulated EOS Con2Prim routines
         run: ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
@@ -351,8 +341,6 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.metric }}_input.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output_pert.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/md5/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}.md5
-          md5sum -c induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}.md5
       - name: Run interpolation test using ${{ matrix.metric }} metric with ${{ matrix.centering }}-centering
         run: |
           ./test/unit_test_induction_${{ matrix.centering }}_${{ matrix.metric }}
@@ -383,8 +371,6 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_B_output_pert.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_Btilde_output.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_Btilde_output_pert.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/md5/HLL_2D_flux.md5
-          md5sum -c HLL_2D_flux.md5
       - name: Run test of HLL flux functions
         run: |
           ./test/unit_test_HLL_2D_flux
