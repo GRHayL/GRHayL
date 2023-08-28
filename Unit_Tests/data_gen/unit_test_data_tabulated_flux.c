@@ -4,8 +4,7 @@ int main(int argc, char **argv) {
 
   const double poison = 1e300;
 
-  char table_filepath[1000];
-  sprintf(table_filepath, "./SLy4_3335_rho391_temp163_ye66.h5");
+  const char tablepath[] = "SLy4_3335_rho391_temp163_ye66.h5";
   const double W_max = 10.0;
   const double rho_b_min = 1e-12;
   const double rho_b_max = 1e300;
@@ -16,7 +15,7 @@ int main(int argc, char **argv) {
 
   ghl_eos_parameters eos;
   ghl_initialize_tabulated_eos_functions_and_params(
-        table_filepath, W_max,
+        tablepath, W_max,
         rho_b_min, rho_b_min, rho_b_max,
         Ye_min, Ye_min, Ye_max,
         T_min, T_min, T_max,
