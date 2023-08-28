@@ -4,20 +4,23 @@ int main(int argc, char **argv) {
 
   const double poison = 1e300;
 
-  int neos = 1;
-  double W_max = 10.0; //IGM default
-  double rho_b_min = 1e-12;
-  double rho_b_max = 1e300; //IGM default
-  double Gamma_th = 2.0; //Taken from magnetizedTOV.par
-  double rho_ppoly[1] = {0.0};
-  double Gamma_ppoly[1] = {2.0};
-  double k_ppoly0 = 1.0;
+  char table_filepath[1000];
+  sprintf(table_filepath, "./SLy4_3335_rho391_temp163_ye66.h5");
+  const double W_max = 10.0;
+  const double rho_b_min = 1e-12;
+  const double rho_b_max = 1e300;
+  const double Ye_min    = 5e-2;
+  const double Ye_max    = 5e-1;
+  const double T_min     = 1e-2;
+  const double T_max     = 1e2;
 
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_tabulated_eos_functions_and_params(
+        table_filepath, W_max,
+        rho_b_min, rho_b_min, rho_b_max,
+        Ye_min, Ye_min, Ye_max,
+        T_min, T_min, T_max,
+        &eos);
 
   const int arraylength = 10000;
 
@@ -34,34 +37,35 @@ int main(int argc, char **argv) {
   double *gzz   = (double*) malloc(sizeof(double)*arraylength);
 
   // Allocate memory for right face
-  double *rho_r   = (double*) malloc(sizeof(double)*arraylength);
-  double *press_r = (double*) malloc(sizeof(double)*arraylength);
-  double *vx_r    = (double*) malloc(sizeof(double)*arraylength);
-  double *vy_r    = (double*) malloc(sizeof(double)*arraylength);
-  double *vz_r    = (double*) malloc(sizeof(double)*arraylength);
-  double *Bx_r    = (double*) malloc(sizeof(double)*arraylength);
-  double *By_r    = (double*) malloc(sizeof(double)*arraylength);
-  double *Bz_r    = (double*) malloc(sizeof(double)*arraylength);
+  double *rho_r = (double*) malloc(sizeof(double)*arraylength);
+  double *Ye_r  = (double*) malloc(sizeof(double)*arraylength);
+  double *T_r   = (double*) malloc(sizeof(double)*arraylength);
+  double *vx_r  = (double*) malloc(sizeof(double)*arraylength);
+  double *vy_r  = (double*) malloc(sizeof(double)*arraylength);
+  double *vz_r  = (double*) malloc(sizeof(double)*arraylength);
+  double *Bx_r  = (double*) malloc(sizeof(double)*arraylength);
+  double *By_r  = (double*) malloc(sizeof(double)*arraylength);
+  double *Bz_r  = (double*) malloc(sizeof(double)*arraylength);
 
   // Allocate memory for left face
-  double *rho_l   = (double*) malloc(sizeof(double)*arraylength);
-  double *press_l = (double*) malloc(sizeof(double)*arraylength);
-  double *vx_l    = (double*) malloc(sizeof(double)*arraylength);
-  double *vy_l    = (double*) malloc(sizeof(double)*arraylength);
-  double *vz_l    = (double*) malloc(sizeof(double)*arraylength);
-  double *Bx_l    = (double*) malloc(sizeof(double)*arraylength);
-  double *By_l    = (double*) malloc(sizeof(double)*arraylength);
-  double *Bz_l    = (double*) malloc(sizeof(double)*arraylength);
+  double *rho_l = (double*) malloc(sizeof(double)*arraylength);
+  double *Ye_l  = (double*) malloc(sizeof(double)*arraylength);
+  double *T_l   = (double*) malloc(sizeof(double)*arraylength);
+  double *vx_l  = (double*) malloc(sizeof(double)*arraylength);
+  double *vy_l  = (double*) malloc(sizeof(double)*arraylength);
+  double *vz_l  = (double*) malloc(sizeof(double)*arraylength);
+  double *Bx_l  = (double*) malloc(sizeof(double)*arraylength);
+  double *By_l  = (double*) malloc(sizeof(double)*arraylength);
+  double *Bz_l  = (double*) malloc(sizeof(double)*arraylength);
 
   double *rho_star_flux = (double*) malloc(sizeof(double)*arraylength);
+  double *Y_e_flux      = (double*) malloc(sizeof(double)*arraylength);
   double *tau_flux      = (double*) malloc(sizeof(double)*arraylength);
   double *S_x_flux      = (double*) malloc(sizeof(double)*arraylength);
   double *S_y_flux      = (double*) malloc(sizeof(double)*arraylength);
   double *S_z_flux      = (double*) malloc(sizeof(double)*arraylength);
 
-  double dummy;
-  // Initialize random data. Note that for this test,
-  // we needn't worry too much with physical reasonableness.
+  // Initialize random data
   for(int index=0; index<arraylength; index++) {
     ghl_randomize_metric(
           &lapse[index], &betax[index], &betay[index], &betaz[index],
@@ -74,55 +78,18 @@ int main(int argc, char **argv) {
     betaz[index] = randf(0, 1e-5);
 
     rho_r[index] = pow(10, randf(-12, -2));
-    double P_cold = 0.0;
-    ghl_hybrid_compute_P_cold(&eos, rho_r[index], &P_cold);
-    double P_min = log(0.9*P_cold);
-    double P_max = log(1000*P_cold);
-    press_r[index] = exp(randf(P_min, P_max));
+    Ye_r[index]  = randf(5e-2, 5e-1);
+    T_r[index]   = pow(10, randf(-2, 2));
 
     rho_l[index] = pow(10, randf(-12, -2));
-    ghl_hybrid_compute_P_cold(&eos, rho_l[index], &P_cold);
-    P_min = log(0.9*P_cold);
-    P_max = log(1000*P_cold);
-    press_l[index] = exp(randf(P_min, P_max));
-
-    ghl_randomize_primitives(
-          &eos, rho_r[index], press_r[index], &dummy, // no need for eps
-          &vx_r[index], &vy_r[index], &vz_r[index],
-          &Bx_r[index], &By_r[index], &Bz_r[index]);
-
-    ghl_randomize_primitives(
-          &eos, rho_l[index], press_l[index], &dummy, // no need for eps
-          &vx_l[index], &vy_l[index], &vz_l[index],
-          &Bx_l[index], &By_l[index], &Bz_l[index]);
-
-    ghl_metric_quantities metric;
-    ghl_initialize_metric(
-          lapse[index],
-          betax[index], betay[index], betaz[index],
-          gxx[index], gxy[index], gxz[index],
-          gyy[index], gyz[index], gzz[index],
-          &metric);
-
-    ghl_primitive_quantities prims_r, prims_l;
-    ghl_initialize_primitives(
-          rho_r[index], press_r[index], poison,
-          vx_r[index], vy_r[index], vz_r[index],
-          Bx_r[index], By_r[index], Bz_r[index],
-          poison, poison, poison, // entropy, Y_e, temp
-          &prims_r);
-
-    ghl_initialize_primitives(
-          rho_l[index], press_l[index], poison,
-          vx_l[index], vy_l[index], vz_l[index],
-          Bx_l[index], By_l[index], Bz_l[index],
-          poison, poison, poison, // entropy, Y_e, temp
-          &prims_l);
+    Ye_l[index]  = randf(5e-2, 5e-1);
+    T_l[index]   = pow(10, randf(-2, 2));
   }
 
   char filename[100];
   for(int perturb=0; perturb<2; perturb++) {
     if(perturb) {
+      sprintf(filename,"tabulated_flux_input_pert.bin");
       for(int index=0; index<arraylength; index++) {
         lapse[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
         betax[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
@@ -136,7 +103,8 @@ int main(int argc, char **argv) {
         gzz[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
 
         rho_r[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        press_r[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
+        Ye_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
+        T_r[index]     *= 1 + randf(-1.0,1.0)*1.0e-14;
         vx_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
         vy_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
         vz_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
@@ -145,7 +113,8 @@ int main(int argc, char **argv) {
         Bz_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
 
         rho_l[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        press_l[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
+        Ye_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
+        T_l[index]     *= 1 + randf(-1.0,1.0)*1.0e-14;
         vx_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
         vy_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
         vz_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
@@ -154,44 +123,46 @@ int main(int argc, char **argv) {
         Bz_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
       }
     } else {
-      sprintf(filename,"hybrid_flux_input.bin");
+      sprintf(filename,"tabulated_flux_input.bin");
       FILE* infile = fopen_with_check(filename, "wb");
 
       fwrite(&arraylength, sizeof(int), 1, infile);
-      fwrite(lapse,   sizeof(double), arraylength, infile);
-      fwrite(betax,   sizeof(double), arraylength, infile);
-      fwrite(betay,   sizeof(double), arraylength, infile);
-      fwrite(betaz,   sizeof(double), arraylength, infile);
-      fwrite(gxx,     sizeof(double), arraylength, infile);
-      fwrite(gxy,     sizeof(double), arraylength, infile);
-      fwrite(gxz,     sizeof(double), arraylength, infile);
-      fwrite(gyy,     sizeof(double), arraylength, infile);
-      fwrite(gyz,     sizeof(double), arraylength, infile);
-      fwrite(gzz,     sizeof(double), arraylength, infile);
+      fwrite(lapse, sizeof(double), arraylength, infile);
+      fwrite(betax, sizeof(double), arraylength, infile);
+      fwrite(betay, sizeof(double), arraylength, infile);
+      fwrite(betaz, sizeof(double), arraylength, infile);
+      fwrite(gxx,   sizeof(double), arraylength, infile);
+      fwrite(gxy,   sizeof(double), arraylength, infile);
+      fwrite(gxz,   sizeof(double), arraylength, infile);
+      fwrite(gyy,   sizeof(double), arraylength, infile);
+      fwrite(gyz,   sizeof(double), arraylength, infile);
+      fwrite(gzz,   sizeof(double), arraylength, infile);
 
-      fwrite(rho_r,   sizeof(double), arraylength, infile);
-      fwrite(press_r, sizeof(double), arraylength, infile);
-      fwrite(vx_r,    sizeof(double), arraylength, infile);
-      fwrite(vy_r,    sizeof(double), arraylength, infile);
-      fwrite(vz_r,    sizeof(double), arraylength, infile);
-      fwrite(Bx_r,    sizeof(double), arraylength, infile);
-      fwrite(By_r,    sizeof(double), arraylength, infile);
-      fwrite(Bz_r,    sizeof(double), arraylength, infile);
+      fwrite(rho_r, sizeof(double), arraylength, infile);
+      fwrite(Ye_r,  sizeof(double), arraylength, infile);
+      fwrite(T_r,   sizeof(double), arraylength, infile);
+      fwrite(vx_r,  sizeof(double), arraylength, infile);
+      fwrite(vy_r,  sizeof(double), arraylength, infile);
+      fwrite(vz_r,  sizeof(double), arraylength, infile);
+      fwrite(Bx_r,  sizeof(double), arraylength, infile);
+      fwrite(By_r,  sizeof(double), arraylength, infile);
+      fwrite(Bz_r,  sizeof(double), arraylength, infile);
 
-      fwrite(rho_l,   sizeof(double), arraylength, infile);
-      fwrite(press_l, sizeof(double), arraylength, infile);
-      fwrite(vx_l,    sizeof(double), arraylength, infile);
-      fwrite(vy_l,    sizeof(double), arraylength, infile);
-      fwrite(vz_l,    sizeof(double), arraylength, infile);
-      fwrite(Bx_l,    sizeof(double), arraylength, infile);
-      fwrite(By_l,    sizeof(double), arraylength, infile);
-      fwrite(Bz_l,    sizeof(double), arraylength, infile);
+      fwrite(rho_l, sizeof(double), arraylength, infile);
+      fwrite(Ye_l,  sizeof(double), arraylength, infile);
+      fwrite(T_l,   sizeof(double), arraylength, infile);
+      fwrite(vx_l,  sizeof(double), arraylength, infile);
+      fwrite(vy_l,  sizeof(double), arraylength, infile);
+      fwrite(vz_l,  sizeof(double), arraylength, infile);
+      fwrite(Bx_l,  sizeof(double), arraylength, infile);
+      fwrite(By_l,  sizeof(double), arraylength, infile);
+      fwrite(Bz_l,  sizeof(double), arraylength, infile);
       fclose(infile);
     }
 
-    sprintf(filename,"hybrid_flux_output.bin");
+    sprintf(filename,"tabulated_flux_output.bin");
     if(perturb)
-      sprintf(filename,"hybrid_flux_output_pert.bin");
+      sprintf(filename,"tabulated_flux_output_pert.bin");
     FILE *outfile = fopen_with_check(filename, "wb");
 
     for(int entropy=0; entropy<2; entropy++) {
@@ -215,15 +186,15 @@ int main(int argc, char **argv) {
         switch(flux_dir) {
           case 0:
             calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn0;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn0_hybrid;
+            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn0_tabulated;
             break;
           case 1:
             calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn1;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn1_hybrid;
+            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn1_tabulated;
             break;
           case 2:
             calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn2;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn2_hybrid;
+            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn2_tabulated;
             break;
         }
 
@@ -238,26 +209,31 @@ int main(int argc, char **argv) {
 
           ghl_primitive_quantities prims_r, prims_l;
           ghl_initialize_primitives(
-                rho_r[index], press_r[index], poison,
+                rho_r[index], poison, poison,
                 vx_r[index], vy_r[index], vz_r[index],
                 Bx_r[index], By_r[index], Bz_r[index],
-                poison, poison, poison, // entropy, Y_e, temp
+                poison, Ye_r[index], T_r[index],
                 &prims_r);
+          ghl_tabulated_compute_P_eps_S_from_T(
+                &eos,
+                prims_r.rho, prims_r.Y_e, prims_r.temperature,
+                &prims_r.press, &prims_r.eps, &prims_r.entropy);
 
           ghl_initialize_primitives(
-                rho_l[index], press_l[index], poison,
+                rho_l[index], poison, poison,
                 vx_l[index], vy_l[index], vz_l[index],
                 Bx_l[index], By_l[index], Bz_l[index],
-                poison, poison, poison, // entropy, Y_e, temp
+                poison, Ye_l[index], T_l[index],
                 &prims_l);
+          ghl_tabulated_compute_P_eps_S_from_T(
+                &eos,
+                prims_l.rho, prims_l.Y_e, prims_l.temperature,
+                &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
           int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
                 &eos, &ADM_metric, &prims_r);
           speed_limit = ghl_limit_v_and_compute_u0(
                 &eos, &ADM_metric, &prims_l);
-
-          prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
-          prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
 
           double cmin, cmax;
           calculate_characteristic_speed(
@@ -271,12 +247,14 @@ int main(int argc, char **argv) {
                 &cons_fluxes);
 
           rho_star_flux[index] = cons_fluxes.rho;
+          Y_e_flux[index]      = cons_fluxes.Y_e;
           tau_flux[index]      = cons_fluxes.tau;
           S_x_flux[index]      = cons_fluxes.SD[0];
           S_y_flux[index]      = cons_fluxes.SD[1];
           S_z_flux[index]      = cons_fluxes.SD[2];
         } // arraylength
         fwrite(rho_star_flux, sizeof(double), arraylength, outfile);
+        fwrite(Y_e_flux,      sizeof(double), arraylength, outfile);
         fwrite(tau_flux,      sizeof(double), arraylength, outfile);
         fwrite(S_x_flux,      sizeof(double), arraylength, outfile);
         fwrite(S_y_flux,      sizeof(double), arraylength, outfile);
@@ -289,12 +267,12 @@ int main(int argc, char **argv) {
   free(betax); free(betay); free(betaz);
   free(gxx); free(gxy); free(gxz);
   free(gyy); free(gyz); free(gzz);
-  free(rho_r); free(press_r);
+  free(rho_r); free(Ye_r); free(T_r);
   free(vx_r); free(vy_r); free(vz_r);
   free(Bx_r); free(By_r); free(Bz_r);
-  free(rho_l); free(press_l);
+  free(rho_l); free(Ye_l); free(T_l);
   free(vx_l); free(vy_l); free(vz_l);
   free(Bx_l); free(By_l); free(Bz_l);
-  free(rho_star_flux); free(tau_flux);
+  free(rho_star_flux); free(tau_flux); free(Y_e_flux);
   free(S_x_flux); free(S_y_flux); free(S_z_flux);
 }

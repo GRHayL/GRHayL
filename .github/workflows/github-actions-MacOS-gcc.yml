@@ -159,11 +159,11 @@ jobs:
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
 
-  hybrid_flux:
+  flux:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [hybrid_flux]
+        test-function: [hybrid_flux, tabulated_flux]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
@@ -182,6 +182,7 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_input.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output_pert.bin
+          curl -O https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2 && bunzip2 LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2
       - name: Run flux unit test for ${{ matrix.test-function }} function
         run: ./test/unit_test_${{ matrix.test-function }}
 #      - name: Generate coverage report
