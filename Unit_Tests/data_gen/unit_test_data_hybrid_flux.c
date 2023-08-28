@@ -73,18 +73,22 @@ int main(int argc, char **argv) {
     betay[index] = randf(0, 1e-5);
     betaz[index] = randf(0, 1e-5);
 
-    rho_r[index] = pow(10, randf(-12, -2));
     double P_cold = 0.0;
+    //rho_r[index] = randf(1e-12, 1e-2);
+    rho_r[index] = pow(10, randf(-12, -2));
     ghl_hybrid_compute_P_cold(&eos, rho_r[index], &P_cold);
     double P_min = log(0.9*P_cold);
     double P_max = log(1000*P_cold);
     press_r[index] = exp(randf(P_min, P_max));
+    //press_r[index] = randf(0.9*P_cold, 1000*P_cold);
 
+    //rho_l[index] = randf(1e-12, 1e-2);
     rho_l[index] = pow(10, randf(-12, -2));
     ghl_hybrid_compute_P_cold(&eos, rho_l[index], &P_cold);
     P_min = log(0.9*P_cold);
     P_max = log(1000*P_cold);
     press_l[index] = exp(randf(P_min, P_max));
+    //press_l[index] = randf(0.9*P_cold, 1000*P_cold);
 
     ghl_randomize_primitives(
           &eos, rho_r[index], press_r[index], &dummy, // no need for eps
@@ -123,35 +127,36 @@ int main(int argc, char **argv) {
   char filename[100];
   for(int perturb=0; perturb<2; perturb++) {
     if(perturb) {
+      const double errval = 1.0e-14;
       for(int index=0; index<arraylength; index++) {
-        lapse[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
-        betax[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
-        betay[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
-        betaz[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
-        gxx[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        gxy[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        gxz[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        gyy[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        gyz[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        gzz[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
+        lapse[index] *= 1 + randf(-1.0,1.0)*errval;
+        betax[index] *= 1 + randf(-1.0,1.0)*errval;
+        betay[index] *= 1 + randf(-1.0,1.0)*errval;
+        betaz[index] *= 1 + randf(-1.0,1.0)*errval;
+        gxx[index]   *= 1 + randf(-1.0,1.0)*errval;
+        gxy[index]   *= 1 + randf(-1.0,1.0)*errval;
+        gxz[index]   *= 1 + randf(-1.0,1.0)*errval;
+        gyy[index]   *= 1 + randf(-1.0,1.0)*errval;
+        gyz[index]   *= 1 + randf(-1.0,1.0)*errval;
+        gzz[index]   *= 1 + randf(-1.0,1.0)*errval;
 
-        rho_r[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        press_r[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
-        vx_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        vy_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        vz_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        Bx_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        By_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        Bz_r[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
+        rho_r[index]   *= 1 + randf(-1.0,1.0)*errval;
+        press_r[index] *= 1 + randf(-1.0,1.0)*errval;
+        vx_r[index]    *= 1 + randf(-1.0,1.0)*errval;
+        vy_r[index]    *= 1 + randf(-1.0,1.0)*errval;
+        vz_r[index]    *= 1 + randf(-1.0,1.0)*errval;
+        Bx_r[index]    *= 1 + randf(-1.0,1.0)*errval;
+        By_r[index]    *= 1 + randf(-1.0,1.0)*errval;
+        Bz_r[index]    *= 1 + randf(-1.0,1.0)*errval;
 
-        rho_l[index]   *= 1 + randf(-1.0,1.0)*1.0e-14;
-        press_l[index] *= 1 + randf(-1.0,1.0)*1.0e-14;
-        vx_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        vy_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        vz_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        Bx_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        By_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
-        Bz_l[index]    *= 1 + randf(-1.0,1.0)*1.0e-14;
+        rho_l[index]   *= 1 + randf(-1.0,1.0)*errval;
+        press_l[index] *= 1 + randf(-1.0,1.0)*errval;
+        vx_l[index]    *= 1 + randf(-1.0,1.0)*errval;
+        vy_l[index]    *= 1 + randf(-1.0,1.0)*errval;
+        vz_l[index]    *= 1 + randf(-1.0,1.0)*errval;
+        Bx_l[index]    *= 1 + randf(-1.0,1.0)*errval;
+        By_l[index]    *= 1 + randf(-1.0,1.0)*errval;
+        Bz_l[index]    *= 1 + randf(-1.0,1.0)*errval;
       }
     } else {
       sprintf(filename,"hybrid_flux_input.bin");
