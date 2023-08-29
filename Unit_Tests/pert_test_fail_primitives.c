@@ -123,8 +123,8 @@ void ghl_pert_test_fail_primitives_with_cutoffs(
     test_fail = 1;
   }
 
-    const double min_rel = 8.0e-14; // This is the default relative tolerance cutoff used by ghl_pert_test_fail()
-    if( ghl_pert_test_fail_with_tolerance(prims_trusted->press, prims->press, prims_pert->press, min_rel, pressure_cutoff)) {
+  const double min_rel = 8.0e-14; // This is the default relative tolerance cutoff used by ghl_pert_test_fail()
+  if( ghl_pert_test_fail_with_tolerance(prims_trusted->press, prims->press, prims_pert->press, min_rel, pressure_cutoff)) {
     printf("pressure trusted %.14e computed %.14e perturbed %.14e\n"
            "rel.err. %.14e %.14e\n",
            prims_trusted->press, prims->press, prims_pert->press,

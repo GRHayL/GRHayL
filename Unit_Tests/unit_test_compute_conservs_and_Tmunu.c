@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
   const int backup_routine[3] = {None,None,None};
-  const bool evolve_entropy = false;
+  const bool evolve_entropy = true;
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100;
@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
   double *vx = (double*) malloc(sizeof(double)*arraylength);
   double *vy = (double*) malloc(sizeof(double)*arraylength);
   double *vz = (double*) malloc(sizeof(double)*arraylength);
+  double *entropy = (double*) malloc(sizeof(double)*arraylength);
 
   // This function uses u^0, so we need to store it as well
   double *u0 = (double*) malloc(sizeof(double)*arraylength);
@@ -99,10 +100,11 @@ int main(int argc, char **argv) {
   key += fread(vx, sizeof(double), arraylength, infile);
   key += fread(vy, sizeof(double), arraylength, infile);
   key += fread(vz, sizeof(double), arraylength, infile);
+  key += fread(entropy, sizeof(double), arraylength, infile);
   key += fread(u0, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*7)
+  if(key != arraylength*8)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -112,6 +114,7 @@ int main(int argc, char **argv) {
   double *S_x_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *S_y_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *S_z_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *ent_trusted = (double*) malloc(sizeof(double)*arraylength);
 
   double *Ttt_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *Ttx_trusted = (double*) malloc(sizeof(double)*arraylength);
@@ -130,6 +133,7 @@ int main(int argc, char **argv) {
   key += fread(S_x_trusted, sizeof(double), arraylength, infile);
   key += fread(S_y_trusted, sizeof(double), arraylength, infile);
   key += fread(S_z_trusted, sizeof(double), arraylength, infile);
+  key += fread(ent_trusted, sizeof(double), arraylength, infile);
 
   key += fread(Ttt_trusted, sizeof(double), arraylength, infile);
   key += fread(Ttx_trusted, sizeof(double), arraylength, infile);
@@ -143,7 +147,7 @@ int main(int argc, char **argv) {
   key += fread(Tzz_trusted, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*15)
+  if(key != arraylength*16)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -153,6 +157,7 @@ int main(int argc, char **argv) {
   double *S_x_pert = (double*) malloc(sizeof(double)*arraylength);
   double *S_y_pert = (double*) malloc(sizeof(double)*arraylength);
   double *S_z_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *ent_pert = (double*) malloc(sizeof(double)*arraylength);
 
   double *Ttt_pert = (double*) malloc(sizeof(double)*arraylength);
   double *Ttx_pert = (double*) malloc(sizeof(double)*arraylength);
@@ -171,6 +176,7 @@ int main(int argc, char **argv) {
   key += fread(S_x_pert, sizeof(double), arraylength, infile);
   key += fread(S_y_pert, sizeof(double), arraylength, infile);
   key += fread(S_z_pert, sizeof(double), arraylength, infile);
+  key += fread(ent_pert, sizeof(double), arraylength, infile);
 
   key += fread(Ttt_pert, sizeof(double), arraylength, infile);
   key += fread(Ttx_pert, sizeof(double), arraylength, infile);
@@ -184,7 +190,7 @@ int main(int argc, char **argv) {
   key += fread(Tzz_pert, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*15)
+  if(key != arraylength*16)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -215,7 +221,7 @@ int main(int argc, char **argv) {
           rho_b[i], press[i], eps[i],
           vx[i], vy[i], vz[i],
           Bx[i], By[i], Bz[i],
-          poison, poison, poison,
+          entropy[i], poison, poison,
           &prims);
     prims.u0 = u0[i];
 
@@ -228,12 +234,12 @@ int main(int argc, char **argv) {
     ghl_initialize_conservatives(
           rho_star_trusted[i], tau_trusted[i],
           S_x_trusted[i], S_y_trusted[i], S_z_trusted[i],
-          poison, poison, &cons_trusted);
+          ent_trusted[i], poison, &cons_trusted);
 
     ghl_initialize_conservatives(
           rho_star_pert[i], tau_pert[i],
           S_x_pert[i], S_y_pert[i], S_z_pert[i],
-          poison, poison, &cons_pert);
+          ent_pert[i], poison, &cons_pert);
 
     ghl_initialize_stress_energy(
           Ttt_trusted[i], Ttx_trusted[i],

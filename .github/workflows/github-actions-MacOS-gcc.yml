@@ -192,7 +192,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [TVD_reconstruction]
+        test-function: [PLM_reconstruction]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 

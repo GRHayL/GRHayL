@@ -2,16 +2,14 @@
 
 void ghl_func_2D(
       const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const int ndim,
+      harm_aux_vars_struct *restrict harm_aux,
       const double dummy,
       const double x[],
       double dx[],
       double resid[],
       double jac[][2],
       double *restrict f,
-      double *restrict df,
-      int *restrict n_iter) {
+      double *restrict df) {
 
   const double Z   = x[0];
   const double vsq = x[1];

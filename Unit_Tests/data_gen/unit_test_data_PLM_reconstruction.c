@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     var[index] = randf(1e-14, 1e-1);
   }
 
-  FILE* outfile = fopen_with_check("TVD_reconstruction_input.bin", "wb");
+  FILE* outfile = fopen_with_check("PLM_reconstruction_input.bin", "wb");
   fwrite(&arraylength, sizeof(int), 1, outfile);
   fwrite(var, sizeof(double), arraylength, outfile);
   fclose(outfile);
@@ -26,8 +26,8 @@ int main(int argc, char **argv) {
     varpert[index] = var[index] * (1 + randf(-1.0,1.0)*1.0e-14);
   }
 
-  outfile = fopen_with_check("TVD_reconstruction_output.bin", "wb");
-  FILE *outpert = fopen("TVD_reconstruction_output_pert.bin", "wb");
+  outfile = fopen_with_check("PLM_reconstruction_output.bin", "wb");
+  FILE *outpert = fopen("PLM_reconstruction_output_pert.bin", "wb");
 
   for(int method=0; method<3; method++) {
     void(*ghl_reconstruction)(

@@ -5,23 +5,32 @@
  *                needed by the Newton-Rapson solver, then repacks the  primitives.
  *                This function is adapted from the HARM function provided by IllinoisGRMHD.
  * Documentation: 
- */
+*/
 
 /*************************************************************************************
 
-utoprim_2d.c:
+utoprim_1d_ee.c:
 ---------------
 
-    Uses the 2D method:
-       -- solves for two independent variables (W,v^2) via a 2D
+  -- uses eq. (27) of Noble  et al. or the "momentum equation" and ignores
+        the energy equation (29) in order to use the additional EOS, which
+        is
+
+             P = Sc rho^(GAMMA-1) / gamma
+
+    Uses the 1D_W method:
+       -- solves for one independent variable (W) via a 1D
           Newton-Raphson method
+       -- solves for rho using Newton-Raphson using the definition of W :
+          W = Dc ( Dc + GAMMA Sc rho^(GAMMA-1) / (GAMMA-1) ) / rho
+
        -- can be used (in principle) with a general equation of state.
 
 ******************************************************************************/
 
 /**********************************************************************************
 
-  ghl_hybrid_Noble2D():
+  ghl_hybrid_Noble1D_entropy():
 
      -- Attempt an inversion from U to prim using the initial guess prim.
 
@@ -50,11 +59,10 @@ return: i where
                  (occurrence of "nan" or "+/-inf");
             4 -> Z<0 or Z>Z_TOO_BIG
             5 -> v^2 < 0 returned by the Newton-Raphson solver;
-            6 -> computed pressure is negative
 
 **********************************************************************************/
 
-int ghl_hybrid_Noble2D(
+int ghl_hybrid_Noble1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -63,20 +71,27 @@ int ghl_hybrid_Noble2D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
-  double gnr_out[2];
+  double gnr_out[1];
 
   harm_aux_vars_struct harm_aux;
 
-  // Calculate Z and vsq:
-  if( ghl_initialize_Noble(params, eos, ADM_metric, metric_aux, cons_undens,
-                           prims, &harm_aux, &gnr_out[0]) )
+  double rho0, Z_last;
+  if( ghl_initialize_Noble_entropy(params, eos, ADM_metric, metric_aux,
+                                   cons_undens, prims, &harm_aux, &rho0, &Z_last) )
     return 1;
 
-  gnr_out[1] = fabs(ghl_vsq_calc(&harm_aux, gnr_out[0]));
-  gnr_out[1] = (gnr_out[1] > 1.0) ? (1.0 - 1.e-15) : gnr_out[1];
+  // Make sure that Z is large enough so that v^2 < 1 :
+  int i_increase = 0;
+  while( (( Z_last*Z_last*Z_last * ( Z_last + 2.*harm_aux.Bsq )
+            - harm_aux.QdotBsq*(2.*Z_last + harm_aux.Bsq) ) <= Z_last*Z_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
+         && (i_increase < 10) ) {
+    Z_last *= 10.;
+    i_increase++;
+  }
 
-  // To be consistent with entropy variants, unused argument 0.0 is needed
-  const int retval = ghl_general_newton_raphson(eos, &harm_aux, 2, 0.0, gnr_out, ghl_validate_2D, ghl_func_2D);
+  gnr_out[0] = Z_last;
+
+  int retval = ghl_general_newton_raphson(eos, &harm_aux, 1, rho0, gnr_out, ghl_validate_1D, ghl_func_Z);
 
   const double Z = gnr_out[0];
 
@@ -87,23 +102,55 @@ int ghl_hybrid_Noble2D(
     return 4;
   }
 
+  const int n_iter = harm_aux.n_iter;
+
+  double rho_g    =  rho0;
+  gnr_out[0] = rho0;
+
+  int ntries = 0;
+  while (
+    (retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z, gnr_out, ghl_validate_1D, ghl_func_rho))
+    && (ntries++ < 10) ) {
+    rho_g *= 10.0;
+    gnr_out[0] = rho_g;
+  }
+
+  if(retval != 0) {
+    return retval;
+  }
+
+  // Combine count for both loops
+  harm_aux.n_iter += n_iter;
+
   // Calculate v^2:
-  double vsq = gnr_out[1];
-  if( vsq >= 1. ) {
-    vsq = 1.-2.e-16;
-  } else if(vsq < 0.0) {
-    //v should be real!
+  rho0       = gnr_out[0];
+
+  const double rel_err = (harm_aux.D != 0.0) ? fabs((harm_aux.D-rho0)/harm_aux.D) :
+                         (     (rho0 != 0.0) ? fabs((harm_aux.D-rho0)/rho0) : 0.0);
+  const double utsq = ( rel_err > 1e-15 ) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
+
+  if( utsq < 0. ) {
     return 5;
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  ghl_finalize_Noble(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
-  if(!params->ignore_negative_pressure && prims->press <= 0.0) {
+  const double Wsq        = 1.0+utsq;
+  const double W = sqrt(Wsq);
+
+  prims->rho = rho0;
+
+  if(prims->rho <= 0.0) {
+    return 7;
+  }
+
+  ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
+
+  if( !params->ignore_negative_pressure && prims->press <= 0.0) {
     return 6;
   }
 
   /* Done! */
   diagnostics->n_iter = harm_aux.n_iter;
-  diagnostics->which_routine = Noble2D;
+  diagnostics->which_routine = Noble1D_entropy;
   return 0;
 }

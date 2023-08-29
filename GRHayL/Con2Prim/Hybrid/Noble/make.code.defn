@@ -2,6 +2,7 @@
 SUBDIRS = Noble1D Noble2D
 
 # Source files in this directory that need compiled:
-SRCS = finalize_Noble.c \
-       general_newton_raphson.c        \
-       initialize_Noble.c
+SRCS = finalize_Noble.c         \
+       general_newton_raphson.c \
+       initialize_Noble.c       \
+       validate_x.c

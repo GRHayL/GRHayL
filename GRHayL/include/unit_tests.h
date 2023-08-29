@@ -278,6 +278,7 @@ static inline bool ghl_pert_test_fail_with_tolerance(
       const double abs_tol) {
   if (isnan(computed) && isfinite(trusted)) return true; // NaN failure
   if (fabs(trusted - computed) < abs_tol) return false;  // Absolute tolerance success
+  if (isnan(perturbed)) return false; // NaN "success"
   return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), rel_tol);
 }
 

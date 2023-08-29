@@ -2,13 +2,24 @@
 
 int main(int argc, char **argv) {
 
-  const int num_methods = 3;
+  const int num_methods = 5;
   int methods[num_methods];
+  bool uses_entropy[num_methods];
 
   methods[0] = Font1D;
+  uses_entropy[0] = false;
   methods[1] = Palenzuela1D;
-  //methods[2] = Noble1D;
+  uses_entropy[1] = false;
+  methods[2] = Noble1D_entropy;
+  uses_entropy[2] = true;
+  methods[3] = Palenzuela1D_entropy;
+  uses_entropy[3] = true;
+  //methods[3] = Noble1D_entropy2;
+  //uses_entropy[3] = true;
+  //methods[4] = Noble1D;
+  //uses_entropy[4] = false;
   methods[num_methods-1] = Noble2D;
+  uses_entropy[num_methods-1] = false;
 
   FILE* infile = fopen_with_check("metric_Bfield_initial_data.bin","rb");
 
@@ -21,7 +32,7 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int main_routine = Noble2D;
+  const int main_routine = None;
   const int backup_routine[3] = {None,None,None};
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
@@ -98,6 +109,7 @@ int main(int argc, char **argv) {
   double *S_x = (double*) malloc(sizeof(double)*arraylength);
   double *S_y = (double*) malloc(sizeof(double)*arraylength);
   double *S_z = (double*) malloc(sizeof(double)*arraylength);
+  double *ent_star = (double*) malloc(sizeof(double)*arraylength);
 
   infile = fopen_with_check("con2prim_multi_method_hybrid_input.bin","rb");
   key  = fread(rho_star, sizeof(double), arraylength, infile);
@@ -105,9 +117,10 @@ int main(int argc, char **argv) {
   key += fread(S_x, sizeof(double), arraylength, infile);
   key += fread(S_y, sizeof(double), arraylength, infile);
   key += fread(S_z, sizeof(double), arraylength, infile);
+  key += fread(ent_star, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*5)
+  if(key != arraylength*6)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -118,6 +131,8 @@ int main(int argc, char **argv) {
   double *vx_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *vy_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *vz_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *ent_trusted = (double*) malloc(sizeof(double)*arraylength);
+
 
   // Allocate memory for the returned value of C2P routine
   int *c2p_check = (int*) malloc(sizeof(int)*arraylength);
@@ -129,6 +144,8 @@ int main(int argc, char **argv) {
   double *vx_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vy_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vz_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *ent_pert = (double*) malloc(sizeof(double)*arraylength);
+
 
   infile = fopen_with_check("con2prim_multi_method_hybrid_output.bin","rb");
   FILE *inpert = fopen_with_check("con2prim_multi_method_hybrid_output_pert.bin","rb");
@@ -136,15 +153,20 @@ int main(int argc, char **argv) {
   for(int method=0; method<num_methods; method++) {
     ghl_info("Beginning test for %.30s method...\n", ghl_get_con2prim_routine_name(methods[method]));
 
+    params.main_routine = methods[method];
+    params.evolve_entropy = uses_entropy[method];
+
     key  = fread(rho_b_trusted, sizeof(double), arraylength, infile);
     key += fread(press_trusted, sizeof(double), arraylength, infile);
     key += fread(eps_trusted, sizeof(double), arraylength, infile);
     key += fread(vx_trusted, sizeof(double), arraylength, infile);
     key += fread(vy_trusted, sizeof(double), arraylength, infile);
     key += fread(vz_trusted, sizeof(double), arraylength, infile);
+    if(params.evolve_entropy)
+      key += fread(ent_trusted, sizeof(double), arraylength, infile);
     key += fread(c2p_check, sizeof(int), arraylength, infile);
 
-    if(key != arraylength*7)
+    if(key != arraylength*(7 + params.evolve_entropy))
       ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                    "is up-to-date with current test version.\n");
 
@@ -154,15 +176,16 @@ int main(int argc, char **argv) {
     key += fread(vx_pert, sizeof(double), arraylength, inpert);
     key += fread(vy_pert, sizeof(double), arraylength, inpert);
     key += fread(vz_pert, sizeof(double), arraylength, inpert);
+    if(params.evolve_entropy)
+      key += fread(ent_pert, sizeof(double), arraylength, inpert);
 
-    if(key != arraylength*6)
+    if(key != arraylength*(6 + params.evolve_entropy))
       ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                    "is up-to-date with current test version.\n");
 
     const double poison = 0.0/0.0;
-
+    int fcnt = 0;
     for(int i=0;i<arraylength;i++) {
-
       // Define the various GRHayL structs for the unit tests
       ghl_con2prim_diagnostics diagnostics;
       ghl_initialize_diagnostics(&diagnostics);
@@ -191,35 +214,38 @@ int main(int argc, char **argv) {
       ghl_initialize_conservatives(
             rho_star[i], tau[i],
             S_x[i], S_y[i], S_z[i],
-            poison, poison, &cons);
+            ent_star[i], poison, &cons);
 
       ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
       ghl_guess_primitives(&eos, &ADM_metric, &cons, &prims);
 
-      params.main_routine = methods[method];
-
       const int check = ghl_con2prim_hybrid_select_method(methods[method], &params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != c2p_check[i])
-        ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: %d vs %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
+        ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
+
+      if(check) {
+        fcnt++;
+        continue;
+      }
 
       ghl_primitive_quantities prims_trusted, prims_pert;
       ghl_initialize_primitives(
             rho_b_trusted[i], press_trusted[i], eps_trusted[i],
             vx_trusted[i], vy_trusted[i], vz_trusted[i],
             poison, poison, poison,
-            poison, poison, poison,
+            ent_trusted[i], poison, poison,
             &prims_trusted);
 
       ghl_initialize_primitives(
             rho_b_pert[i], press_pert[i], eps_pert[i],
             vx_pert[i], vy_pert[i], vz_pert[i],
             poison, poison, poison,
-            poison, poison, poison,
+            ent_pert[i], poison, poison,
             &prims_pert);
 
       double pressure_cutoff = 1.0e-30; // Set defaults and change them for Noble2D
       double eps_cutoff = 1.0e-30;
-      if(params.main_routine == Palenzuela1D || params.main_routine == Noble2D) {
+      if(params.main_routine != Font1D) {
         // Some routines have problems with losing accuracy in pressure, especially with small values
         // We relax the requirements because simply using a different compiler can cause the
         // test to fail for some inputs.
@@ -229,7 +255,7 @@ int main(int argc, char **argv) {
 
       ghl_pert_test_fail_primitives_with_cutoffs(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert, pressure_cutoff, eps_cutoff);
     }
-    ghl_info("unit_test_hybrid_con2prim has passed for %.30s method!\n", ghl_get_con2prim_routine_name(methods[method]));
+    ghl_info("unit_test_hybrid_con2prim has passed for %.30s method! %d out of %d points succeeded.\n", ghl_get_con2prim_routine_name(methods[method]), arraylength-fcnt, arraylength);
   }
   fclose(infile);
   fclose(inpert);
