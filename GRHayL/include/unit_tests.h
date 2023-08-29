@@ -310,7 +310,6 @@ void ghl_randomize_primitives(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double press,
-      double *restrict eps,
       double *restrict vx,
       double *restrict vy,
       double *restrict vz,

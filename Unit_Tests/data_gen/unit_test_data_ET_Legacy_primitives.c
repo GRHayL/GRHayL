@@ -20,6 +20,7 @@ int main(int argc, char **argv) {
   double test_rho_min = 1e-12; //Minimum input density
   double test_rho_max = 1e-3; //Maximum input density
 
+  double dummy, dummy1, dummy2, dummy3;
   double poison = 1e200;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
@@ -109,7 +110,7 @@ int main(int argc, char **argv) {
             &gyy[index], &gyz[index], &gzz[index]);
 
       ghl_randomize_primitives(
-            &eos, rho_b[index], press[index], &eps[index],
+            &eos, rho_b[index], press[index],
             &vx[index], &vy[index], &vz[index],
             &Bx[index], &By[index], &Bz[index]);
 
@@ -130,11 +131,15 @@ int main(int argc, char **argv) {
       ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
       ghl_initialize_primitives(
-            rho_b[index], press[index], eps[index],
+            rho_b[index], press[index], poison,
             vx[index], vy[index], vz[index],
             Bx[index], By[index], Bz[index],
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
+
+      // We need epsilon to compute the enthalpy in ghl_compute_conservs_and_Tmunu;
+      // This normally happens in the ghl_enforce_primitive_limits_and_compute_u0 function
+      prims.eps = eps_cold + (prims.press-P_cold)/(eos.Gamma_th-1.0)/prims.rho;
 
       diagnostics.speed_limited = ghl_limit_v_and_compute_u0(
             &eos, &ADM_metric, &prims);
@@ -143,9 +148,8 @@ int main(int argc, char **argv) {
       ghl_compute_conservs_and_Tmunu(
             &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
-      double dummy1, dummy2, dummy3;
       ghl_return_primitives(
-            &prims, &rho_b[index], &press[index], &eps[index],
+            &prims, &rho_b[index], &press[index], &dummy,
             &vx[index], &vy[index], &vz[index],
             &Bx[index], &By[index], &Bz[index],
             &dummy1, &dummy2, &dummy3);

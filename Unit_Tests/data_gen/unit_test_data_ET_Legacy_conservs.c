@@ -107,9 +107,11 @@ int main(int argc, char **argv) {
             &gyy[index], &gyz[index], &gzz[index]);
 
       ghl_randomize_primitives(
-            &eos, rho_b[index], press[index], &eps[index],
+            &eos, rho_b[index], press[index],
             &vx[index], &vy[index], &vz[index],
             &Bx[index], &By[index], &Bz[index]);
+
+      eps[index] = eps_cold + (press[index]-P_cold)/(eos.Gamma_th-1.0)/rho_b[index];
 
       ghl_metric_quantities ADM_metric;
       ghl_primitive_quantities prims;

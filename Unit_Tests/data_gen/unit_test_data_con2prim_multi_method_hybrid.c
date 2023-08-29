@@ -184,9 +184,9 @@ int main(int argc, char **argv) {
           &local_gxx, &local_gxy, &local_gxz,
           &local_gyy, &local_gyz, &local_gzz);
 
-      double local_eps, local_vx, local_vy, local_vz, local_Bx, local_By, local_Bz;
+      double local_vx, local_vy, local_vz, local_Bx, local_By, local_Bz;
       ghl_randomize_primitives(
-          &eos, xrho, xpress, &local_eps,
+          &eos, xrho, xpress,
           &local_vx, &local_vy, &local_vz,
           &local_Bx, &local_By, &local_Bz);
 
@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
       ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
       ghl_initialize_primitives(
-            xrho, xpress, local_eps,
+            xrho, xpress, poison,
             local_vx, local_vy, local_vz,
             local_Bx, local_By, local_Bz,
             poison, poison, poison, // entropy, Y_e, temp

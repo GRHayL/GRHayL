@@ -26,7 +26,6 @@ int main(int argc, char **argv) {
         neos, rho_ppoly, Gamma_ppoly,
         k_ppoly0, Gamma_th, &eos);
 
-
   // Allocate memory for metric
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
   double *betax = (double*) malloc(sizeof(double)*arraylength);
@@ -58,6 +57,14 @@ int main(int argc, char **argv) {
   double *Bx_l    = (double*) malloc(sizeof(double)*arraylength);
   double *By_l    = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_l    = (double*) malloc(sizeof(double)*arraylength);
+
+  // Allocate memory for characteristic speeds
+  double *cxmin = (double*) malloc(sizeof(double)*arraylength);
+  double *cxmax = (double*) malloc(sizeof(double)*arraylength);
+  double *cymin = (double*) malloc(sizeof(double)*arraylength);
+  double *cymax = (double*) malloc(sizeof(double)*arraylength);
+  double *czmin = (double*) malloc(sizeof(double)*arraylength);
+  double *czmax = (double*) malloc(sizeof(double)*arraylength);
 
   key  = fread(lapse,   sizeof(double), arraylength, infile);
   key += fread(betax,   sizeof(double), arraylength, infile);
@@ -92,7 +99,14 @@ int main(int argc, char **argv) {
   key += fread(By_l,      sizeof(double), arraylength, infile);
   key += fread(Bz_l,      sizeof(double), arraylength, infile);
 
-  if(key != arraylength*16)
+  key += fread(cxmin,      sizeof(double), arraylength, infile);
+  key += fread(cxmax,      sizeof(double), arraylength, infile);
+  key += fread(cymin,      sizeof(double), arraylength, infile);
+  key += fread(cymax,      sizeof(double), arraylength, infile);
+  key += fread(czmin,      sizeof(double), arraylength, infile);
+  key += fread(czmax,      sizeof(double), arraylength, infile);
+
+  if(key != arraylength*22)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
   fclose(infile);
@@ -103,39 +117,48 @@ int main(int argc, char **argv) {
   double *trusted_S_x_flux = (double*) malloc(sizeof(double)*arraylength);
   double *trusted_S_y_flux = (double*) malloc(sizeof(double)*arraylength);
   double *trusted_S_z_flux = (double*) malloc(sizeof(double)*arraylength);
+  double *trusted_ent_flux = (double*) malloc(sizeof(double)*arraylength);
 
   double *pert_rho_star_flux = (double*) malloc(sizeof(double)*arraylength);
   double *pert_tau_flux = (double*) malloc(sizeof(double)*arraylength);
   double *pert_S_x_flux = (double*) malloc(sizeof(double)*arraylength);
   double *pert_S_y_flux = (double*) malloc(sizeof(double)*arraylength);
   double *pert_S_z_flux = (double*) malloc(sizeof(double)*arraylength);
+  double *pert_ent_flux = (double*) malloc(sizeof(double)*arraylength);
 
   FILE *outfile = fopen_with_check("hybrid_flux_output.bin", "rb");
   FILE *pertfile = fopen_with_check("hybrid_flux_output_pert.bin", "rb");
 
   // Function pointer to allow for loop over fluxes
-  void (*calculate_HLLE_fluxes)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
-                              const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
-                              const double, const double, ghl_conservative_quantities *restrict);
+  void (*calculate_HLLE_fluxes)(
+        ghl_primitive_quantities *restrict,
+        ghl_primitive_quantities *restrict,
+        const ghl_eos_parameters *restrict,
+        const ghl_metric_quantities *restrict,
+        const double,
+        const double,
+        ghl_conservative_quantities *restrict);
 
-  void (*calculate_characteristic_speed)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
-                              const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict, double *restrict, double *restrict);
-
+  double *cmin;
+  double *cmax;
   for(int entropy=0; entropy<2; entropy++) {
     // Loop over flux directions (x,y,z)
     for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
       // Set function pointer to specific function for a given direction
       switch(flux_dirn) {
         case 0:
-          calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn0;
+          cmin = cxmin;
+          cmax = cxmax;
           calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn0_hybrid;
           break;
         case 1:
-          calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn1;
+          cmin = cymin;
+          cmax = cymax;
           calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn1_hybrid;
           break;
         case 2:
-          calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn2;
+          cmin = czmin;
+          cmax = czmax;
           calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn2_hybrid;
           break;
       }
@@ -145,8 +168,10 @@ int main(int argc, char **argv) {
       key += fread(trusted_S_x_flux,      sizeof(double), arraylength, outfile);
       key += fread(trusted_S_y_flux,      sizeof(double), arraylength, outfile);
       key += fread(trusted_S_z_flux,      sizeof(double), arraylength, outfile);
+      if(entropy)
+        key += fread(trusted_ent_flux,    sizeof(double), arraylength, outfile);
       
-      if(key != arraylength*5)
+      if(key != arraylength*(5+entropy))
         ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                      "is up-to-date with current test version.\n");
       
@@ -155,8 +180,10 @@ int main(int argc, char **argv) {
       key += fread(pert_S_x_flux,      sizeof(double), arraylength, pertfile);
       key += fread(pert_S_y_flux,      sizeof(double), arraylength, pertfile);
       key += fread(pert_S_z_flux,      sizeof(double), arraylength, pertfile);
+      if(entropy)
+        key += fread(pert_ent_flux,    sizeof(double), arraylength, pertfile);
       
-      if(key != arraylength*5)
+      if(key != arraylength*(5+entropy))
         ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                      "is up-to-date with current test version.\n");
 
@@ -192,47 +219,52 @@ int main(int argc, char **argv) {
         prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
         prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
 
-        double cmin, cmax;
-        calculate_characteristic_speed(
-              &prims_r, &prims_l, &eos,
-              &metric_face, &cmin, &cmax);
-
         ghl_conservative_quantities cons_fluxes;
         calculate_HLLE_fluxes(
               &prims_r, &prims_l, &eos,
-              &metric_face, cmin, cmax,
+              &metric_face, cmin[index], cmax[index],
               &cons_fluxes);
 
         if( ghl_pert_test_fail(trusted_rho_star_flux[index], cons_fluxes.rho, pert_rho_star_flux[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable rho_star_flux.\n"
-                       "  rho_star_flux trusted %.14e computed %.14e perturbed %.14e\n"
-                       "  rel.err. %.14e %.14e\n", trusted_rho_star_flux[index], cons_fluxes.rho, pert_rho_star_flux[index],
-                                                   relative_error(trusted_rho_star_flux[index], cons_fluxes.rho),
-                                                   relative_error(trusted_rho_star_flux[index], pert_rho_star_flux[index]));
+                    "  rho_star_flux trusted %.14e computed %.14e perturbed %.14e\n"
+                    "  rel.err. %.14e %.14e\n", trusted_rho_star_flux[index], cons_fluxes.rho, pert_rho_star_flux[index],
+                                                relative_error(trusted_rho_star_flux[index], cons_fluxes.rho),
+                                                relative_error(trusted_rho_star_flux[index], pert_rho_star_flux[index]));
+
         if( ghl_pert_test_fail(trusted_tau_flux[index], cons_fluxes.tau, pert_tau_flux[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable tau_flux.\n"
-                       "  tau_flux trusted %.14e computed %.14e perturbed %.14e\n"
-                       "  rel.err. %.14e %.14e\n", trusted_tau_flux[index], cons_fluxes.tau, pert_tau_flux[index],
-                                                   relative_error(trusted_tau_flux[index], cons_fluxes.tau),
-                                                   relative_error(trusted_tau_flux[index], pert_tau_flux[index]));
+                    "  tau_flux trusted %.14e computed %.14e perturbed %.14e\n"
+                    "  rel.err. %.14e %.14e\n", trusted_tau_flux[index], cons_fluxes.tau, pert_tau_flux[index],
+                                                relative_error(trusted_tau_flux[index], cons_fluxes.tau),
+                                                relative_error(trusted_tau_flux[index], pert_tau_flux[index]));
+
         if( ghl_pert_test_fail(trusted_S_x_flux[index], cons_fluxes.SD[0], pert_S_x_flux[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable S_x_flux.\n"
-                       "  S_x_flux trusted %.14e computed %.14e perturbed %.14e\n"
-                       "  rel.err. %.14e %.14e\n", trusted_S_x_flux[index], cons_fluxes.SD[0], pert_S_x_flux[index],
-                                                   relative_error(trusted_S_x_flux[index], cons_fluxes.SD[0]),
-                                                   relative_error(trusted_S_x_flux[index], pert_S_x_flux[index]));
+                    "  S_x_flux trusted %.14e computed %.14e perturbed %.14e\n"
+                    "  rel.err. %.14e %.14e\n", trusted_S_x_flux[index], cons_fluxes.SD[0], pert_S_x_flux[index],
+                                                relative_error(trusted_S_x_flux[index], cons_fluxes.SD[0]),
+                                                relative_error(trusted_S_x_flux[index], pert_S_x_flux[index]));
+
         if( ghl_pert_test_fail(trusted_S_y_flux[index], cons_fluxes.SD[1], pert_S_y_flux[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable S_y_flux.\n"
-                       "  S_y_flux trusted %.14e computed %.14e perturbed %.14e\n"
-                       "  rel.err. %.14e %.14e\n", trusted_S_y_flux[index], cons_fluxes.SD[1], pert_S_y_flux[index],
-                                                   relative_error(trusted_S_y_flux[index], cons_fluxes.SD[1]),
-                                                   relative_error(trusted_S_y_flux[index], pert_S_y_flux[index]));
+                    "  S_y_flux trusted %.14e computed %.14e perturbed %.14e\n"
+                    "  rel.err. %.14e %.14e\n", trusted_S_y_flux[index], cons_fluxes.SD[1], pert_S_y_flux[index],
+                                                relative_error(trusted_S_y_flux[index], cons_fluxes.SD[1]),
+                                                relative_error(trusted_S_y_flux[index], pert_S_y_flux[index]));
+
         if( ghl_pert_test_fail(trusted_S_z_flux[index], cons_fluxes.SD[2], pert_S_z_flux[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable S_z_flux.\n"
-                       "  S_z_flux trusted %.14e computed %.14e perturbed %.14e\n"
-                       "  rel.err. %.14e %.14e\n", trusted_S_z_flux[index], cons_fluxes.SD[2], pert_S_z_flux[index],
-                                                   relative_error(trusted_S_z_flux[index], cons_fluxes.SD[2]),
-                                                   relative_error(trusted_S_z_flux[index], pert_S_z_flux[index]));
+                    "  S_z_flux trusted %.14e computed %.14e perturbed %.14e\n"
+                    "  rel.err. %.14e %.14e\n", trusted_S_z_flux[index], cons_fluxes.SD[2], pert_S_z_flux[index],
+                                                relative_error(trusted_S_z_flux[index], cons_fluxes.SD[2]),
+                                                relative_error(trusted_S_z_flux[index], pert_S_z_flux[index]));
+
+        if( entropy && ghl_pert_test_fail(trusted_ent_flux[index], cons_fluxes.entropy, pert_ent_flux[index]) )
+          ghl_error("Test unit_test_hybrid_flux has failed for variable ent_flux.\n"
+                    "  ent_flux trusted %.14e computed %.14e perturbed %.14e\n"
+                    "  rel.err. %.14e %.14e\n", trusted_ent_flux[index], cons_fluxes.entropy, pert_ent_flux[index],
+                                                relative_error(trusted_ent_flux[index], cons_fluxes.entropy),
       }
     } // flux_dir
   } // entropy
@@ -251,8 +283,10 @@ int main(int argc, char **argv) {
   free(rho_l); free(press_l);
   free(vx_l); free(vy_l); free(vz_l);
   free(Bx_l); free(By_l); free(Bz_l);
-  free(trusted_rho_star_flux); free(trusted_tau_flux);
+  free(cxmin); free(cymin); free(czmin);
+  free(cxmax); free(cymax); free(czmax);
+  free(trusted_rho_star_flux); free(trusted_tau_flux); free(trusted_ent_flux);
   free(trusted_S_x_flux); free(trusted_S_y_flux); free(trusted_S_z_flux);
-  free(pert_rho_star_flux); free(pert_tau_flux);
+  free(pert_rho_star_flux); free(pert_tau_flux); free(pert_ent_flux);
   free(pert_S_x_flux); free(pert_S_y_flux); free(pert_S_z_flux);
 }
