@@ -1,15 +1,30 @@
 #include "../harm_u2p_util.h"
 
-int ghl_newton_raphson_1d(
+int ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double indep_var_in,
+      const int max_iterations,
+      const double solver_tolerance,
       int *restrict n_iter_ptr,
       double x[],
-      void (*funcd)(const ghl_eos_parameters *restrict, const harm_aux_vars_struct *restrict, const int, const double, const double [], double [],
-                    double [], double [][ndim], double *restrict, double *restrict, int *restrict))
-{
+      void (*validate_x)(
+            const double [],
+            double []),
+      void (*funcd)(
+            const ghl_eos_parameters *restrict,
+            const harm_aux_vars_struct *restrict,
+            const int,
+            const double,
+            const double [],
+            double [],
+            double [],
+            double [][ndim],
+            double *restrict,
+            double *restrict,
+            int *restrict)) {
+
   double dx[ndim], x_old[ndim];
   double resid[ndim], jac[ndim][ndim];
 
@@ -18,11 +33,17 @@ int ghl_newton_raphson_1d(
   double errx = 1.0;
   double df = 1.0;
   double f = 1.0;
+  for(int id = 0; id < ndim; id++)
+    x_old[id] = x[id];
 
   /* Start the Newton-Raphson iterations : */
   int keep_iterating = 1;
   while( keep_iterating ) {
     funcd(eos, harm_aux, ndim, indep_var_in, x, dx, resid, jac, &f, &df, n_iter_ptr);
+
+    /* Save old values before calculating the new: */
+    for(int id = 0; id < ndim; id++)
+      x_old[id] = x[id];
 
     /* Make the newton step: */
     for( int id = 0; id < ndim; id++) {
@@ -37,9 +58,9 @@ int ghl_newton_raphson_1d(
     /****************************************/
     /* Make sure that the new x[] is physical : */
     /****************************************/
-    x[0] = fabs(x[0]);
+    validate_x(x_old, x);
 
-    if( ((fabs(errx) <= NEWT_TOL)) || (n_iter >= (MAX_NEWT_ITER-1)) ) {
+    if( ((fabs(errx) <= solver_tolerance)) || (n_iter >= (max_iterations-1)) ) {
       keep_iterating = 0;
     }
 
@@ -52,7 +73,7 @@ int ghl_newton_raphson_1d(
   /*  Check for bad untrapped divergences : */
   if( !isfinite(f) ||  !isfinite(df) ) {
     return 3;
-  } else if( fabs(errx) <= NEWT_TOL ) {
+  } else if( fabs(errx) <= solver_tolerance ) {
     return 0;
   } else {
     return 2;

@@ -337,32 +337,6 @@ int main(int argc, char **argv) {
                                                relative_error(prims_trusted.vU[2], prims_pert.vU[2]));
   }
 
-  output = fopen("prims_summary.asc","w");
-
-  fprintf(output, "Absolute error\n"
-          "rho_b %e %e %e\n"
-          "press %e %e %e\n"
-          "   vx %e %e %e\n"
-          "   vy %e %e %e\n"
-          "   vz %e %e %e\n\n"
-          "Relative error\n"
-          "rho_b %e %e %e\n"
-          "press %e %e %e\n"
-          "   vx %e %e %e\n"
-          "   vy %e %e %e\n"
-          "   vz %e %e %e\n",
-          prims_abs_error[0], prims_trusted_abs_error[0], prims_pert_abs_error[0],
-          prims_abs_error[1], prims_trusted_abs_error[1], prims_pert_abs_error[1],
-          prims_abs_error[2], prims_trusted_abs_error[2], prims_pert_abs_error[2],
-          prims_abs_error[3], prims_trusted_abs_error[3], prims_pert_abs_error[3],
-          prims_abs_error[4], prims_trusted_abs_error[4], prims_pert_abs_error[4],
-          prims_rel_error[0], prims_trusted_rel_error[0], prims_pert_rel_error[0],
-          prims_rel_error[1], prims_trusted_rel_error[1], prims_pert_rel_error[1],
-          prims_rel_error[2], prims_trusted_rel_error[2], prims_pert_rel_error[2],
-          prims_rel_error[3], prims_trusted_rel_error[3], prims_pert_rel_error[3],
-          prims_rel_error[4], prims_trusted_rel_error[4], prims_pert_rel_error[4]);
-
-  fclose(output);
   ghl_info("ET_Legacy conservatives-to-primitives test has passed!\n");
   free(gxx); free(gxy); free(gxz);
   free(gyy); free(gyz); free(gzz);

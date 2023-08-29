@@ -11,9 +11,11 @@ int ghl_con2prim_hybrid_select_method(
       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   switch( c2p_key ) {
-    // Noble2D routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
+    // Noble routines (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
       return ghl_hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+    //case Noble1D:
+    //  return ghl_hybrid_Noble1D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics); 
     // "Font fix" routine (see )
     case Font1D:
       return ghl_hybrid_Font_fix(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);

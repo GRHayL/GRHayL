@@ -7,6 +7,7 @@ int main(int argc, char **argv) {
 
   methods[0] = Font1D;
   methods[1] = Palenzuela1D;
+  //methods[2] = Noble1D;
   methods[num_methods-1] = Noble2D;
 
   FILE* infile = fopen_with_check("metric_Bfield_initial_data.bin","rb");

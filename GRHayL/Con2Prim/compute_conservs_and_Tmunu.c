@@ -47,7 +47,7 @@ void ghl_compute_conservs_and_Tmunu(
   cons->SD[1] = cons->rho*h_enthalpy*uD[2] + alpha_sqrt_gamma*(uU[0]*smallb2*uD[2] - smallb[0]*smallb_lower[2]);
   cons->SD[2] = cons->rho*h_enthalpy*uD[3] + alpha_sqrt_gamma*(uU[0]*smallb2*uD[3] - smallb[0]*smallb_lower[3]);
   // tau = alpha^2 sqrt(gamma) T^{00} - rho_star
-  cons->tau =  ADM_metric->lapse*alpha_sqrt_gamma*(rho0_h_plus_b2*SQR(uU[0]) - P_plus_half_b2*ADM_metric->lapseinv2 - SQR(smallb[0])) - cons->rho;
+  cons->tau = ADM_metric->lapse*alpha_sqrt_gamma*(rho0_h_plus_b2*SQR(uU[0]) - P_plus_half_b2*ADM_metric->lapseinv2 - SQR(smallb[0])) - cons->rho;
   // Entropy equation evolves S_star = alpha * sqrt(gamma) * S * u^{0}
   cons->entropy = alpha_sqrt_gamma * prims->entropy * uU[0];
   // Tabulated EOS evolves Y_e_star = alpha * sqrt(gamma) * rho_b * Y_e * u^{0} = rho_star * Y_e

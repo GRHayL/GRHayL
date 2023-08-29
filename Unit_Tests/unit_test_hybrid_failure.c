@@ -106,7 +106,8 @@ int main(int argc, char **argv) {
 
     if (i==0) {
       params.calc_prim_guess = false;
-      prims.rho = cons.rho/ADM_metric.sqrt_detgamma;
+      prims.rho   = cons.rho/ADM_metric.sqrt_detgamma;
+      prims.u0    = 1.0;
       prims.vU[0] = 2.0;
       prims.vU[1] = 2.0;
       prims.vU[2] = 2.0;

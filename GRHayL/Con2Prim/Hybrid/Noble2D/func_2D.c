@@ -1,6 +1,6 @@
 #include "../../harm_u2p_util.h"
 
-void ghl_func_vsq(
+void ghl_func_2D(
       const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -13,14 +13,13 @@ void ghl_func_vsq(
       double *restrict df,
       int *restrict n_iter) {
 
-  const double W   = x[0];
+  const double Z   = x[0];
   const double vsq = x[1];
-  const double Wsq = W*W;
+  const double Zsq = Z*Z;
 
   /*** For hybrid EOS ***/
-  const double p_tmp  = ghl_pressure_W_vsq( eos, W, vsq , harm_aux->D);
-  const double dPdvsq = ghl_dpdvsq_calc( eos, W, vsq, harm_aux->D );
-  const double dPdW   = ghl_dpdW_calc_vsq( eos, W, vsq );
+  double p_tmp, dPdvsq, dPdZ;
+  ghl_compute_func_auxiliaries(eos, Z, vsq , harm_aux->D, &p_tmp, &dPdvsq, &dPdZ);
   /*** For hybrid EOS ***/
 
   // These expressions were calculated using Mathematica, but made into efficient
@@ -28,17 +27,17 @@ void ghl_func_vsq(
   // explicitly calculate the Newton-Raphson step:
 
   const double t2  = -0.5*harm_aux->Bsq+dPdvsq;
-  const double t3  = harm_aux->Bsq+W;
+  const double t3  = harm_aux->Bsq+Z;
   const double t4  = t3*t3;
-  const double t9  = 1/Wsq;
-  const double t11 = harm_aux->Qtsq-vsq*t4+harm_aux->QdotBsq*(harm_aux->Bsq+2.0*W)*t9;
+  const double t9  = 1/Zsq;
+  const double t11 = harm_aux->Qtsq-vsq*t4+harm_aux->QdotBsq*(harm_aux->Bsq+2.0*Z)*t9;
   const double t16 = harm_aux->QdotBsq*t9;
-  const double t18 = -harm_aux->Qdotn-0.5*harm_aux->Bsq*(1.0+vsq)+0.5*t16-W+p_tmp;
+  const double t18 = -harm_aux->Qdotn-0.5*harm_aux->Bsq*(1.0+vsq)+0.5*t16-Z+p_tmp;
   const double t21 = 1/t3;
-  const double t23 = 1/W;
+  const double t23 = 1/Z;
   const double t24 = t16*t23;
-  const double t25 = -1.0+dPdW-t24;
-  const double t35 = t25*t3+(harm_aux->Bsq-2.0*dPdvsq)*(harm_aux->QdotBsq+vsq*Wsq*W)*t9*t23;
+  const double t25 = -1.0+dPdZ-t24;
+  const double t35 = t25*t3+(harm_aux->Bsq-2.0*dPdvsq)*(harm_aux->QdotBsq+vsq*Zsq*Z)*t9*t23;
   const double t36 = 1/t35;
   const double t40 = (vsq+t24)*t3;
   dx[0] = -(t2*t11+t4*t18)*t21*t36;

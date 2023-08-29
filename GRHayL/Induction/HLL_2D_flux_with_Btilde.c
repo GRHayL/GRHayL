@@ -21,8 +21,8 @@ double ghl_HLL_2D_flux_with_Btilde(
       Del Zanna, Bucciantini & Londrillo A&A 400, 397 (2003)
     To explain the terms, let's consider the flux RHS for the z component. Then,
     1->x, 2->y, and 3->z. We first compute the B field contributions
-    Bxterm = \psi^6 * cy_min * cy_max (Bx^R - Bx^L)/ (cy_min + cy_max)
-    Byterm = \psi^6 * cx_min * cx_max (By^R - By^L)/ (cx_min + cx_max)
+    Bxterm = cy_min * cy_max (Bx^R - Bx^L)/ (cy_min + cy_max)
+    Byterm = cx_min * cx_max (By^R - By^L)/ (cx_min + cx_max)
   */
   const double B1term = vars->c2_min * vars->c2_max * (vars->B1r - vars->B1l) / c2_sum;
   const double B2term = vars->c1_min * vars->c1_max * (vars->B2r - vars->B2l) / c1_sum;

@@ -12,7 +12,7 @@ SRCS = apply_conservative_limits.c               \
        limit_utilde_and_compute_v.c              \
        undensitize_conservatives.c               \
        get_con2prim_routine_name.c               \
-       toms748.c                                 \
        brent.c
+       #toms748.c                                 \
 
 SUBDIRS = Hybrid Tabulated

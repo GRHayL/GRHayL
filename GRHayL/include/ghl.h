@@ -49,6 +49,8 @@ typedef struct ghl_parameters {
   double psi6threshold;
   bool Cupp_Fix;
   double Lorenz_damping_factor;
+  int con2prim_max_iterations;
+  double con2prim_solver_tolerance;
 } ghl_parameters;
 
 /*
