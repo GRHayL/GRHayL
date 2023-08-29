@@ -265,6 +265,7 @@ int main(int argc, char **argv) {
                     "  ent_flux trusted %.14e computed %.14e perturbed %.14e\n"
                     "  rel.err. %.14e %.14e\n", trusted_ent_flux[index], cons_fluxes.entropy, pert_ent_flux[index],
                                                 relative_error(trusted_ent_flux[index], cons_fluxes.entropy),
+                                                relative_error(trusted_ent_flux[index], pert_ent_flux[index]));
       }
     } // flux_dir
   } // entropy
