@@ -70,7 +70,6 @@ int main(int argc, char **argv) {
   // Allocate memory for the primitives
   double *rho_b = (double*) malloc(sizeof(double)*arraylength);
   double *press = (double*) malloc(sizeof(double)*arraylength);
-  double *eps = (double*) malloc(sizeof(double)*arraylength);
   double *vx = (double*) malloc(sizeof(double)*arraylength);
   double *vy = (double*) malloc(sizeof(double)*arraylength);
   double *vz = (double*) malloc(sizeof(double)*arraylength);

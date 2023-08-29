@@ -72,7 +72,6 @@ int main(int argc, char **argv) {
   double *By_l    = (double*) malloc(sizeof(double)*arraylength);
   double *Bz_l    = (double*) malloc(sizeof(double)*arraylength);
 
-  double dummy;
   // Initialize random data. Note that for this test,
   // we needn't worry too much with physical reasonableness.
   for(int k=0; k<dirlength; k++)

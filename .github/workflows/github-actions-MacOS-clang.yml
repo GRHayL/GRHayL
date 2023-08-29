@@ -169,7 +169,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [hybrid_flux]
+        test-function: [hybrid_flux, tabulated_flux]
         os: [macos-11, macos-12]
     runs-on: ${{ matrix.os }}
 
