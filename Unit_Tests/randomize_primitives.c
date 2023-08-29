@@ -5,7 +5,6 @@ void ghl_randomize_primitives(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double press,
-      double *restrict eps,
       double *restrict vx,
       double *restrict vy,
       double *restrict vz,
@@ -31,12 +30,6 @@ void ghl_randomize_primitives(
   const double vy2 = (*vy)*(*vy);
   *vz = sqrt(v*v - vx2 - vy2);
 
-  // Set eps
-  double P_cold = 0.0;
-  double eps_cold = 0.0;
-  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
-  *eps = eps_cold + (press-P_cold)/(eos->Gamma_th-1.0)/rho;
-
   // Now the magnetic fields. We'll set them aligned
   // with the velocities, for simplicity.
   const double Bhatx = *vx/v;
@@ -46,5 +39,4 @@ void ghl_randomize_primitives(
   *Bx    = -Bhatx * B;
   *By    = -Bhaty * B;
   *Bz    = -Bhatz * B;
-
 }

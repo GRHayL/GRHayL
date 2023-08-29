@@ -20,6 +20,15 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
 
   // Step 3: Compute the enthalpy
   const double h = 1 + eps + P/rho;
+//printf(
+//"rho %.16e\n"
+//"Y_e %.16e\n"
+//"P   %.16e\n"
+//"eps %.16e\n"
+//"cs2 %.16e\n"
+//"T   %.16e\n"
+//"h   %.16e\n",
+//rho, Y_e, P, eps, cs2, T, h);
 
   // Step 4: Set the output
   *enthalpy_ptr = h;

@@ -109,17 +109,17 @@ int main(int argc, char **argv) {
         press_l[index] = randf(0,1.0);
 
         ghl_randomize_primitives(
-              &eos, rho[index], press[index], &dummy, // no need for eps
+              &eos, rho[index], press[index],
               &vx[index], &vy[index], &vz[index],
               &Bx[index], &By[index], &Bz[index]);
 
         ghl_randomize_primitives(
-              &eos, rho_r[index], press_r[index], &dummy, // no need for eps
+              &eos, rho_r[index], press_r[index],
               &vx_r[index], &vy_r[index], &vz_r[index],
               &Bx_r[index], &By_r[index], &Bz_r[index]);
 
         ghl_randomize_primitives(
-              &eos, rho_l[index], press_l[index], &dummy, // no need for eps
+              &eos, rho_l[index], press_l[index],
               &vx_l[index], &vy_l[index], &vz_l[index],
               &Bx_l[index], &By_l[index], &Bz_l[index]);
   }
@@ -261,12 +261,12 @@ int main(int argc, char **argv) {
         press_l[index] = randf(0,1.0);
 
         ghl_randomize_primitives(
-              &eos, rho_r[index], press_r[index], &dummy, // no need for eps
+              &eos, rho_r[index], press_r[index],
               &vx_r[index], &vy_r[index], &vz_r[index],
               &Bx_r[index], &By_r[index], &Bz_r[index]);
 
         ghl_randomize_primitives(
-              &eos, rho_l[index], press_l[index], &dummy, // no need for eps
+              &eos, rho_l[index], press_l[index],
               &vx_l[index], &vy_l[index], &vz_l[index],
               &Bx_l[index], &By_l[index], &Bz_l[index]);
   }
@@ -344,12 +344,12 @@ int main(int argc, char **argv) {
         press_l[index] = randf(0,1.0);
 
         ghl_randomize_primitives(
-              &eos, rho_r[index], press_r[index], &dummy, // no need for eps
+              &eos, rho_r[index], press_r[index],
               &vx_r[index], &vy_r[index], &vz_r[index],
               &Bx_r[index], &By_r[index], &Bz_r[index]);
 
         ghl_randomize_primitives(
-              &eos, rho_l[index], press_l[index], &dummy, // no need for eps
+              &eos, rho_l[index], press_l[index],
               &vx_l[index], &vy_l[index], &vz_l[index],
               &Bx_l[index], &By_l[index], &Bz_l[index]);
   }
