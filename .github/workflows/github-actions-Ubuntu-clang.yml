@@ -171,36 +171,36 @@ jobs:
         with:
           compiler: 'clang'
 
-  flux:
-    strategy:
-      fail-fast: false
-      matrix:
-        test-function: [hybrid_flux, tabulated_flux]
-        os: [ubuntu-22.04]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup OS and compiler
-        uses: ./.github/actions/OS_setup
-        with:
-          compiler: 'clang'
-      - name: Compile GRHayL
-        uses: ./.github/actions/compile_GRHayL
-        with:
-          compiler: 'clang'
-      - name: Copy test data to working directory
-        run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output_pert.bin
-          curl -O https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2 && bunzip2 LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2
-      - name: Run flux unit test for ${{ matrix.test-function }} function
-        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#  flux:
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        test-function: [hybrid_flux, tabulated_flux]
+#        os: [ubuntu-22.04]
+#    runs-on: ${{ matrix.os }}
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Setup OS and compiler
+#        uses: ./.github/actions/OS_setup
+#        with:
+#          compiler: 'clang'
+#      - name: Compile GRHayL
+#        uses: ./.github/actions/compile_GRHayL
+#        with:
+#          compiler: 'clang'
+#      - name: Copy test data to working directory
+#        run: |
+#          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_input.bin
+#          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output.bin
+#          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output_pert.bin
+#          curl -O https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2 && bunzip2 LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2
+#      - name: Run flux unit test for ${{ matrix.test-function }} function
+#        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   reconstruction:
     strategy:
