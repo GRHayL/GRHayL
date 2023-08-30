@@ -11,7 +11,7 @@ static int ghl_newman_energy(
       const ghl_conservative_quantities *restrict con,
       ghl_primitive_quantities *restrict prims,
       const double tol_x,
-      int *restrict n_iter ) {
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   // Set basic quantities from input
   double invD   = 1.0/con->rho;
@@ -99,7 +99,7 @@ static int ghl_newman_energy(
   if (step >= maxsteps)
     return roots_error_max_iter;
 
-  *n_iter = step;
+  diagnostics->n_iter = step;
 
   if( conacc ) {     //converged on an extrap. so recompute vars
     const double a     = e + xprs + 0.5*B_squared;
@@ -111,7 +111,7 @@ static int ghl_newman_energy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
     invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
     W                  = 1.0/invW;
-    prims->rho          = con->rho*invW;
+    prims->rho         = con->rho*invW;
   }
 
   // Set the primitives
@@ -127,6 +127,13 @@ static int ghl_newman_energy(
   ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
+
+  if(isnan(prims->u0*prims->vU[0]*prims->vU[1]*prims->vU[2])) {
+    ghl_info("u0 = %e\n", prims->u0);
+    ghl_debug_print_prims(prims);
+    ghl_error("Found NAN in prims inside %s, yet was about to return success",
+              ghl_get_con2prim_routine_name(diagnostics->which_routine));
+  }
 
   return ghl_success;
 }
@@ -149,5 +156,5 @@ int ghl_tabulated_Newman1D_energy(
   const double tol_x = 1e-15;
   diagnostics->which_routine = Newman1D;
   return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
-                           cons_undens, prims, tol_x, &diagnostics->n_iter);
+                           cons_undens, prims, tol_x, diagnostics);
 }

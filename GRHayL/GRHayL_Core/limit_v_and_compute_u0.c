@@ -19,25 +19,27 @@ int ghl_limit_v_and_compute_u0(
   //   = 1/(u^0 \alpha)^2 ( (u^0 \alpha)^2 - 1 ) <- Using Eq. 56 of arXiv:astro-ph/0503420
   //   = 1 - 1/(u^0 \alpha)^2 <= 1
   const double utU[3] = {prims->vU[0] + ADM_metric->betaU[0], prims->vU[1] + ADM_metric->betaU[1], prims->vU[2] + ADM_metric->betaU[2]};
-  double one_minus_one_over_alpha_u0_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
+  // double one_minus_one_over_alpha_u0_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
+  double ut2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
+  double W   = 1 + ut2;
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
-  const double one_minus_one_over_W_max_squared = 1.0-1.0/SQR(eos->W_max); // 1 - W_max^{-2}
-  if(one_minus_one_over_alpha_u0_squared > one_minus_one_over_W_max_squared) {
-    const double correction_fac = sqrt(one_minus_one_over_W_max_squared/one_minus_one_over_alpha_u0_squared);
-    prims->vU[0] = utU[0]*correction_fac - ADM_metric->betaU[0];
-    prims->vU[1] = utU[1]*correction_fac - ADM_metric->betaU[1];
-    prims->vU[2] = utU[2]*correction_fac - ADM_metric->betaU[2];
-    one_minus_one_over_alpha_u0_squared = one_minus_one_over_W_max_squared;
-    speed_limited = 1;
+  if(W > eos->W_max) {
+    const double ut2_max = SQR(eos->W_max) - 1;
+    const double fac     = sqrt(ut2_max / ut2);
+    prims->vU[0]         = utU[0]*fac - ADM_metric->betaU[0];
+    prims->vU[1]         = utU[1]*fac - ADM_metric->betaU[1];
+    prims->vU[2]         = utU[2]*fac - ADM_metric->betaU[2];
+    W                    = eos->W_max;
+    speed_limited        = 1;
   }
 
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
   // 1/sqrt(A) = al u0
   //double alpha_u0_minus_one = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared)-1.0;
   //u0_out          = (alpha_u0_minus_one + 1.0)*lapseinv;
-  const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
-  prims->u0 = alpha_u0*ADM_metric->lapseinv;
+  // const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
+  prims->u0 = W*ADM_metric->lapseinv;
   if(isnan(prims->u0)) {
     ghl_error("*********************************************\n"
                  "Found nan while computing u^{0}\nMetric: %e %e %e %e %e %e\n"
