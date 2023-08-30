@@ -20,8 +20,8 @@ int ghl_limit_v_and_compute_u0(
   //   = 1 - 1/(u^0 \alpha)^2 <= 1
   const double utU[3] = {prims->vU[0] + ADM_metric->betaU[0], prims->vU[1] + ADM_metric->betaU[1], prims->vU[2] + ADM_metric->betaU[2]};
   // double one_minus_one_over_alpha_u0_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
-  double ut2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
-  double W   = 1 + ut2;
+  const double ut2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
+  double W         = sqrt(1.0 + ut2);
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
   if(W > eos->W_max) {

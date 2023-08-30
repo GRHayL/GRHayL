@@ -31,7 +31,7 @@ int ghl_limit_utilde_and_compute_v(
   int speed_limited = 0;
   // Velocity limiter:
   const double ut2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
-  double W         = 1.0 + ut2;
+  double W         = sqrt(1.0 + ut2);
 
   // *** Limit velocity
   if( W > 0.9999999*eos->W_max ) {
