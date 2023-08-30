@@ -92,15 +92,17 @@ int ghl_hybrid_Noble2D(
   harm_aux_vars_struct harm_aux;
 
   // Calculate Z and vsq:
-  int retval = ghl_initialize_Noble(eos, ADM_metric, metric_aux, cons_undens, prims,
-                                     &harm_aux, &gnr_out[0]);
+  if( ghl_initialize_Noble(eos, ADM_metric, metric_aux, cons_undens,
+                           prims, &harm_aux, &gnr_out[0]) )
+    return 1;
+
   gnr_out[1] = fabs(ghl_vsq_calc(&harm_aux, gnr_out[0]));
   gnr_out[1] = ( ( gnr_out[1] > 1. ) ? (1.0 - 1.e-15) : gnr_out[1] );
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  retval = ghl_general_newton_raphson(eos, &harm_aux, 2, 0.0, params->con2prim_max_iterations,
-                                      params->con2prim_solver_tolerance, &diagnostics->n_iter, gnr_out,
-                                      ghl_validate_2D, ghl_func_2D);
+  const int retval = ghl_general_newton_raphson(eos, &harm_aux, 2, 0.0, params->con2prim_max_iterations,
+                                                params->con2prim_solver_tolerance, &diagnostics->n_iter,
+                                                gnr_out, ghl_validate_2D, ghl_func_2D);
 
   const double Z = gnr_out[0];
 
