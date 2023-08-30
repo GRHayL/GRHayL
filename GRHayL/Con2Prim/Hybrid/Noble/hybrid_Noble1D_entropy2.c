@@ -1,4 +1,4 @@
-#include "../harm_u2p_util.h"
+#include "../../utils_Noble.h"
 
 /* Function    : Hybrid_Noble2D()
  * Description : Unpacks the ghl_primitive_quantities struct into the variables
@@ -70,7 +70,7 @@
 /*************************************************************************************/
 /*************************************************************************************
 
-utoprim_1d_ee.c:
+utoprim_1d_ee2.c:
 ---------------
 
   -- uses eq. (27) of Noble  et al. or the "momentum equation" and ignores
@@ -79,11 +79,13 @@ utoprim_1d_ee.c:
 
              P = Sc rho^(GAMMA-1) / gamma
 
-    Uses the 1D_W method:
-       -- solves for one independent variable (W) via a 1D
+    Uses a method similiar to  1D_W method:
+       -- solves for one independent variable (rho) via a 1D
           Newton-Raphson method
-       -- solves for rho using Newton-Raphson using the definition of W :
+       -- by substituting
           W = Dc ( Dc + GAMMA Sc rho^(GAMMA-1) / (GAMMA-1) ) / rho
+           into Qtsq equation, one can get one equation for
+           one unknown (rho)
 
        -- can be used (in principle) with a general equation of state.
 
@@ -100,7 +102,7 @@ utoprim_1d_ee.c:
 
 /**********************************************************************************
 
-  ghl_hybrid_Noble1D_entropy():
+  ghl_hybrid_Noble1D_entropy2():
 
      -- Attempt an inversion from U to prim using the initial guess prim.
 
@@ -129,7 +131,7 @@ TODO: needs remaining error codes
 
 **********************************************************************************/
 
-int ghl_hybrid_Noble1D_entropy(
+int ghl_hybrid_Noble1D_entropy2(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -226,46 +228,21 @@ int ghl_hybrid_Noble1D_entropy(
     ghl_warn("No tabulated EOS support yet! Sorry!");
   }
 
-  double Z_last = w*Wsq;
-
-  // Make sure that Z is large enough so that v^2 < 1 :
-  int i_increase = 0;
-  while( (( Z_last*Z_last*Z_last * ( Z_last + 2.*harm_aux.Bsq )
-            - harm_aux.QdotBsq*(2.*Z_last + harm_aux.Bsq) ) <= Z_last*Z_last*(harm_aux.Qtsq-harm_aux.Bsq*harm_aux.Bsq))
-         && (i_increase < 10) ) {
-    Z_last *= 10.;
-    i_increase++;
-  }
-
-  // Calculate Z:
-  gnr_out[0] = Z_last;
-
-  int retval = ghl_newton_raphson_1d(eos, &harm_aux, ndim, rho0, &diagnostics->n_iter, gnr_out, ghl_func_Z);
-
-  const double Z = gnr_out[0];
+  gnr_out[0] = rho0;
+  // To be consistent with entropy variants, unused argument 0.0 is needed
+  int retval = ghl_newton_raphson_1d(eos, &harm_aux, ndim, 0.0, &diagnostics->n_iter, gnr_out, ghl_func_rho2);
+  rho0 = gnr_out[0];
 
   /* Problem with solver, so return denoting error before doing anything further */
+  // HARM uses error checks for Z, which doesn't make sense for this function since
+  // it returns rho; thus, we have changed the errors
   if(retval != 0) {
     return retval;
-  } else if(Z <= 0. || Z > Z_TOO_BIG) {
+  } else if(rho0 < 0 || rho0 > eos->rho_max) {
     return 4;
   }
 
-  double rho_g    =  rho0;
-  gnr_out[0] = rho0;
-
-  int ntries = 0;
-  while (  (retval = ghl_newton_raphson_1d(eos, &harm_aux, ndim, Z, &diagnostics->n_iter, gnr_out, ghl_func_rho)) &&  ( ntries++ < 10 )  ) {
-    rho_g *= 10.;
-    gnr_out[0] = rho_g;
-  }
-
-  if(retval != 0) {
-    return retval;
-  }
-
   // Calculate v^2:
-  rho0       = gnr_out[0];
 
   double rel_err = (harm_aux.D != 0.0) ? fabs((harm_aux.D-rho0)/harm_aux.D) : ( (rho0 != 0.0) ? fabs((harm_aux.D-rho0)/rho0) : 0.0 );
   vsq = ( rel_err > 1e-15 ) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
@@ -277,7 +254,17 @@ int ghl_hybrid_Noble1D_entropy(
   // Recover the primitive variables from the scalars and conserved variables:
   Wsq        = 1.0+vsq;
   harm_aux.W = sqrt(Wsq);
-  w = Z / Wsq;
+  if( eos->eos_type == ghl_eos_hybrid ) {
+    const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho0)];
+    const double Gm1         = Gamma_ppoly - 1.0;
+    const double rho_Gm1     = pow(rho0,Gm1);
+    p = cons_undens->entropy * rho_Gm1;
+    u = p/Gm1;
+    w = rho0 + u + p;
+  } else if(eos->eos_type == ghl_eos_tabulated) {
+    ghl_warn("No tabulated EOS support yet! Sorry!");
+  }
+  const double Z = w * Wsq;
 
   prims->rho = rho0;
 
@@ -328,6 +315,6 @@ int ghl_hybrid_Noble1D_entropy(
   }
 
   /* Done! */
-  diagnostics->which_routine = Noble1D_entropy;
+  diagnostics->which_routine = Noble1D_entropy2;
   return 0;
 }

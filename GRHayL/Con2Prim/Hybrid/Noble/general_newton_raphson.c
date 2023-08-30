@@ -1,4 +1,4 @@
-#include "../harm_u2p_util.h"
+#include "../../utils_Noble.h"
 
 int ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,

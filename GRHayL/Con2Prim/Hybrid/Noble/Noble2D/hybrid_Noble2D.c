@@ -1,12 +1,18 @@
-#include "../../harm_u2p_util.h"
+#include "../../../utils_Noble.h"
 
-void ghl_validate_1D(
-      const double x0[1],
-      double x[1]) {
+void ghl_validate_2D(
+      const double x0[2],
+      double x[2]) {
+  const double dv = 1.e-15;
+
   x[0] = fabs(x[0]);
+  x[0] = (x[0] > Z_TOO_BIG) ?  x0[0] : x[0];
+
+  x[1] = (x[1] < 0.) ?   0.       : x[1];  /* if it's too small */
+  x[1] = (x[1] > 1.) ?  (1. - dv) : x[1];  /* if it's too big   */
 }
 
-void ghl_func_1D(
+void ghl_func_2D(
       const ghl_eos_parameters *restrict eos,
       const harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -14,12 +20,12 @@ void ghl_func_1D(
       const double x[],
       double dx[],
       double resid[],
-      double jac[][1],
+      double jac[][2],
       double *restrict f,
       double *restrict df,
       int *restrict n_iter);
 
-/* Function    :  Hybrid_Noble1D()
+/* Function    :  Hybrid_Noble2D()
  * Description :  Unpacks the ghl_primitive_quantities struct into the variables
  *                needed by the Newton-Rapson solver, then repacks the  primitives.
  *                This function is adapted from the HARM function provided by IllinoisGRMHD.
@@ -28,11 +34,11 @@ void ghl_func_1D(
 
 /*************************************************************************************
 
-utoprim_1d.c:
+utoprim_2d.c:
 ---------------
 
-    Uses the 1D_W method:
-       -- solves for one independent variable (W) via a 1D
+    Uses the 2D method:
+       -- solves for two independent variables (W,v^2) via a 2D
           Newton-Raphson method
        -- can be used (in principle) with a general equation of state.
 
@@ -40,7 +46,7 @@ utoprim_1d.c:
 
 /**********************************************************************************
 
-  ghl_hybrid_Noble1D():
+  ghl_hybrid_Noble2D():
 
      -- Attempt an inversion from U to prim using the initial guess prim.
 
@@ -72,7 +78,7 @@ return: i where
 
 **********************************************************************************/
 
-int ghl_hybrid_Noble1D(
+int ghl_hybrid_Noble2D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -81,18 +87,20 @@ int ghl_hybrid_Noble1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
-  double gnr_out[1];
+  double gnr_out[2];
 
   harm_aux_vars_struct harm_aux;
 
-  // Calculate Z:
+  // Calculate Z and vsq:
   int retval = ghl_initialize_Noble(eos, ADM_metric, metric_aux, cons_undens, prims,
                                      &harm_aux, &gnr_out[0]);
+  gnr_out[1] = fabs(ghl_vsq_calc(&harm_aux, gnr_out[0]));
+  gnr_out[1] = ( ( gnr_out[1] > 1. ) ? (1.0 - 1.e-15) : gnr_out[1] );
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  retval = ghl_general_newton_raphson(eos, &harm_aux, 1, 0.0, params->con2prim_max_iterations,
-                                      params->con2prim_solver_tolerance, &diagnostics->n_iter, gnr_out, 
-                                      ghl_validate_1D, ghl_func_1D);
+  retval = ghl_general_newton_raphson(eos, &harm_aux, 2, 0.0, params->con2prim_max_iterations,
+                                      params->con2prim_solver_tolerance, &diagnostics->n_iter, gnr_out,
+                                      ghl_validate_2D, ghl_func_2D);
 
   const double Z = gnr_out[0];
 
@@ -104,7 +112,7 @@ int ghl_hybrid_Noble1D(
   }
 
   // Calculate v^2:
-  double vsq = ghl_vsq_calc(&harm_aux, Z);
+  double vsq = gnr_out[1];
   if( vsq >= 1. ) {
     vsq = 1.-2.e-16;
   } else if(vsq < 0.0) {
@@ -116,6 +124,6 @@ int ghl_hybrid_Noble1D(
   ghl_finalize_Noble(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
 
   /* Done! */
-  diagnostics->which_routine = Noble1D;
+  diagnostics->which_routine = Noble2D;
   return 0;
 }

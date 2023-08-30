@@ -1,5 +1,5 @@
 # Primary make.code.defn for gem Con2Prim
-#! INCS = harm_u2p_util.h utils_Palenzuela1D.h roots.h
+#! INCS = utils_Noble.h utils_Palenzuela1D.h roots.h
 
 # Source files in this directory that need compiled:
 SRCS = apply_conservative_limits.c               \
