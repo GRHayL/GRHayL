@@ -11,7 +11,7 @@ static int ghl_newman_entropy(
       const ghl_conservative_quantities *restrict con,
       ghl_primitive_quantities *restrict prims,
       const double tol_x,
-      int *restrict n_iter ) {
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   // Set basic quantities from input
   double invD   = 1.0/con->rho;
@@ -91,7 +91,7 @@ static int ghl_newman_entropy(
   if (step >= maxsteps)
     return roots_error_max_iter;
 
-  *n_iter = step;
+  diagnostics->n_iter = step;
 
   if( conacc ) {     //converged on an extrap. so recompute vars
     const double a     = e + xprs + 0.5*B_squared;
@@ -120,6 +120,13 @@ static int ghl_newman_entropy(
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
+  if(isnan(prims->u0*prims->vU[0]*prims->vU[1]*prims->vU[2])) {
+    ghl_info("u0, W, z, S^i, ut^i = %e, %e, %e, %e %e %e, %e %e %e\n", prims->u0, W, z, SU[0], SU[1], SU[2], utildeU[0], utildeU[1], utildeU[2]);
+    ghl_debug_print_prims(prims);
+    ghl_error("Found NAN in prims inside %s, yet was about to return success",
+              ghl_get_con2prim_routine_name(diagnostics->which_routine));
+  }
+
   return ghl_success;
 }
 
@@ -141,5 +148,5 @@ int ghl_tabulated_Newman1D_entropy(
   const double tol_x = 1e-15;
   diagnostics->which_routine = Newman1D_entropy;
   return ghl_newman_entropy(eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
-                            cons_undens, prims, tol_x, &diagnostics->n_iter);
+                            cons_undens, prims, tol_x, diagnostics);
 }
