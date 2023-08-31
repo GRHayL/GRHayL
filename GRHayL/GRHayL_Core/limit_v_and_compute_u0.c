@@ -22,16 +22,16 @@ int ghl_limit_v_and_compute_u0(
   double W = 1.0/sqrt(1-vsq);
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
-  if(vsq > vsq_max) {
+  if(W > eos->W_max) {
     const double vsq_max = 1 - 1/(eos->W_max*eos->W_max);
-    const double fac     = ADM_metric->alpha * sqrt(vsq_max / vsq);
+    const double fac     = ADM_metric->lapse * sqrt(vsq_max / vsq);
 
     // Recompute v^{i} = vel^{i}_{rescaled} * alpha - beta^{i}
-    prims->vU[0]         = vel[0]*fac - ADM_metric->betaU[0];
-    prims->vU[1]         = vel[1]*fac - ADM_metric->betaU[1];
-    prims->vU[2]         = vel[2]*fac - ADM_metric->betaU[2];
-    W                    = eos->W_max;
-    speed_limited        = 1;
+    prims->vU[0]  = velU[0]*fac - ADM_metric->betaU[0];
+    prims->vU[1]  = velU[1]*fac - ADM_metric->betaU[1];
+    prims->vU[2]  = velU[2]*fac - ADM_metric->betaU[2];
+    W             = eos->W_max;
+    speed_limited = 1;
   }
 
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2

@@ -43,7 +43,7 @@ int ghl_limit_utilde_and_compute_v(
   // *** Limit velocity
   if( W > 0.9999999*eos->W_max ) {
     const double utsq_max = SQR(eos->W_max) - 1;
-    const double fac      = sqrt(utsq_max / ut2);
+    const double fac      = sqrt(utsq_max / utsq);
     utU[0] *= fac;
     utU[1] *= fac;
     utU[2] *= fac;
