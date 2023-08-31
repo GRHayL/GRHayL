@@ -12,24 +12,24 @@ int ghl_limit_v_and_compute_u0(
       ghl_primitive_quantities *restrict prims) {
 
   int speed_limited = 0;
-  // Derivation of first equation:
-  // \gamma_{ij} (v^i + \beta^i)(v^j + \beta^j)/(\alpha)^2
-  //   = \gamma_{ij} 1/(u^0)^2 ( \gamma^{ik} u_k \gamma^{jl} u_l /(\alpha)^2 <- Using Eq. 53 of arXiv:astro-ph/0503420
-  //   = 1/(u^0 \alpha)^2 u_j u_l \gamma^{jl}  <- Since \gamma_{ij} \gamma^{ik} = \delta^k_j
-  //   = 1/(u^0 \alpha)^2 ( (u^0 \alpha)^2 - 1 ) <- Using Eq. 56 of arXiv:astro-ph/0503420
-  //   = 1 - 1/(u^0 \alpha)^2 <= 1
-  const double utU[3] = {prims->vU[0] + ADM_metric->betaU[0], prims->vU[1] + ADM_metric->betaU[1], prims->vU[2] + ADM_metric->betaU[2]};
-  // double one_minus_one_over_alpha_u0_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
-  const double ut2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
-  double W         = sqrt(1.0 + ut2);
+  // Begin by computing vel^2, where vel^{i} = (v^{i} + beta^{i})/alpha
+  const double velU[3] = {(prims->vU[0] + ADM_metric->betaU[0])*ADM_metric->lapseinv,
+                          (prims->vU[1] + ADM_metric->betaU[1])*ADM_metric->lapseinv,
+                          (prims->vU[2] + ADM_metric->betaU[2])*ADM_metric->lapseinv};
+  const double vsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, velU);
+
+  // Now compute W from vsq
+  double W = 1.0/sqrt(1-vsq);
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
-  if(W > eos->W_max) {
-    const double ut2_max = SQR(eos->W_max) - 1;
-    const double fac     = sqrt(ut2_max / ut2);
-    prims->vU[0]         = utU[0]*fac - ADM_metric->betaU[0];
-    prims->vU[1]         = utU[1]*fac - ADM_metric->betaU[1];
-    prims->vU[2]         = utU[2]*fac - ADM_metric->betaU[2];
+  if(vsq > vsq_max) {
+    const double vsq_max = 1 - 1/(eos->W_max*eos->W_max);
+    const double fac     = ADM_metric->alpha * sqrt(vsq_max / vsq);
+
+    // Recompute v^{i} = vel^{i}_{rescaled} * alpha - beta^{i}
+    prims->vU[0]         = vel[0]*fac - ADM_metric->betaU[0];
+    prims->vU[1]         = vel[1]*fac - ADM_metric->betaU[1];
+    prims->vU[2]         = vel[2]*fac - ADM_metric->betaU[2];
     W                    = eos->W_max;
     speed_limited        = 1;
   }

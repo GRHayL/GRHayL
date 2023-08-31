@@ -29,14 +29,21 @@ int ghl_limit_utilde_and_compute_v(
       ghl_primitive_quantities *restrict prims) {
 
   int speed_limited = 0;
-  // Velocity limiter:
-  const double ut2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
-  double W         = sqrt(1.0 + ut2);
+  const double utsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
+
+  // tilde{u}^{i} = W * vel^{i}, with W = 1 / sqrt(1 - vsq) and
+  // vsq = gamma_{ij}vel^{i}vel^{j}. We thus have:
+  //
+  // utsq = W^{2} vsq = W^{2} ( 1 - 1/W^{2} ) = W^{2} - 1
+  //    .--------------------.
+  // => | W = sqrt(1 + utsq) |
+  //    .--------------------.
+  double W = sqrt(1 + utsq);
 
   // *** Limit velocity
   if( W > 0.9999999*eos->W_max ) {
-    const double ut2_max = SQR(eos->W_max) - 1;
-    const double fac     = sqrt(ut2_max / ut2);
+    const double utsq_max = SQR(eos->W_max) - 1;
+    const double fac      = sqrt(utsq_max / ut2);
     utU[0] *= fac;
     utU[1] *= fac;
     utU[2] *= fac;
@@ -45,7 +52,7 @@ int ghl_limit_utilde_and_compute_v(
   } //Finished limiting velocity
 
   // Calculate v^i and u^0 from \tilde{u}^i
-  prims->u0 = W*ADM_metric->lapseinv;
+  prims->u0    = W*ADM_metric->lapseinv;
   prims->vU[0] = utU[0]/prims->u0 - ADM_metric->betaU[0];
   prims->vU[1] = utU[1]/prims->u0 - ADM_metric->betaU[1];
   prims->vU[2] = utU[2]/prims->u0 - ADM_metric->betaU[2];
