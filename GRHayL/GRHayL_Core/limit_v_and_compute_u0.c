@@ -16,21 +16,17 @@ int ghl_limit_v_and_compute_u0(
   const double velU[3] = {(prims->vU[0] + ADM_metric->betaU[0])*ADM_metric->lapseinv,
                           (prims->vU[1] + ADM_metric->betaU[1])*ADM_metric->lapseinv,
                           (prims->vU[2] + ADM_metric->betaU[2])*ADM_metric->lapseinv};
-  const double vsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, velU);
-
-  // Now compute W from vsq
-  double W = 1.0/sqrt(1-vsq);
+  double vsq           = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, velU);
+  const double vsq_max = 1 - 1/(eos->W_max*eos->W_max);
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
-  if(W > eos->W_max) {
-    const double vsq_max = 1 - 1/(eos->W_max*eos->W_max);
+  if(vsq > vsq_max) {
     const double fac     = ADM_metric->lapse * sqrt(vsq_max / vsq);
-
     // Recompute v^{i} = vel^{i}_{rescaled} * alpha - beta^{i}
     prims->vU[0]  = velU[0]*fac - ADM_metric->betaU[0];
     prims->vU[1]  = velU[1]*fac - ADM_metric->betaU[1];
     prims->vU[2]  = velU[2]*fac - ADM_metric->betaU[2];
-    W             = eos->W_max;
+    vsq           = vsq_max;
     speed_limited = 1;
   }
 
@@ -39,6 +35,7 @@ int ghl_limit_v_and_compute_u0(
   //double alpha_u0_minus_one = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared)-1.0;
   //u0_out          = (alpha_u0_minus_one + 1.0)*lapseinv;
   // const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
+  const double W = 1/sqrt(1-vsq);
   prims->u0 = W*ADM_metric->lapseinv;
   if(isnan(prims->u0)) {
     ghl_error("*********************************************\n"
