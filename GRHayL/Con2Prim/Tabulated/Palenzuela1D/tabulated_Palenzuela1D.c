@@ -68,10 +68,11 @@ int ghl_tabulated_Palenzuela1D(
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
   double S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
+  const double tau = MAX(cons_undens->tau, 0.99*eos->tau_atm);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
-  const double S_squared_max = SQR(cons_undens->tau + cons_undens->rho);
+  const double S_squared_max = SQR(tau + cons_undens->rho);
   if( S_squared > S_squared_max ) {
     // Step 2.2: Rescale S_{i}
     const double rescale_factor = sqrt(0.9999*S_squared_max/S_squared);
@@ -98,7 +99,7 @@ int ghl_tabulated_Palenzuela1D(
   fparams.compute_rho_P_eps_T_W = compute_rho_P_eps_T_W;
   fparams.evolve_T              = params->evolve_temp;
   fparams.Y_e                   = cons_undens->Y_e * invD;
-  fparams.q                     = cons_undens->tau * invD;
+  fparams.q                     = tau * invD;
   fparams.r                     = S_squared * invD * invD;
   fparams.s                     = B_squared * invD;
   fparams.t                     = BdotS/pow(cons_undens->rho, 1.5);

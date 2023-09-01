@@ -25,10 +25,13 @@ static int ghl_newman_entropy(
   double AtR;
   int AtStep=0;
 
+  // Floor tau
+  const double tau = MAX(con->tau, eos->tau_atm);
+
   // d = 0.5( S^{2}*B^{2} - (B.S)^{2} ) (eq. 5.7 in Newman & Hamlin 2014)
   const double d = MAX(0.5*(S_squared*B_squared-BdotS*BdotS),0.0);
   // e = tau + D
-  const double e = con->tau + con->rho;
+  const double e = tau + con->rho;
   // z = rho*h*W^{2} = D*h*W; initialize to zero.
   double z=0, invW=0, W=0;
 

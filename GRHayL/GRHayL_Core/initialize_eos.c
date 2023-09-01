@@ -221,11 +221,10 @@ void ghl_initialize_tabulated_eos(
                                         &eos->press_atm,
                                         &eos->eps_atm,
                                         &eos->entropy_atm);
-  eos->tau_atm = eos->rho_atm * eos->eps_atm;
 
   // Step 6: These parameters are manually set here, but
   //         can be overwritten later.
-  eos->root_finding_precision = 1e-15;
+  eos->root_finding_precision = 1e-10;
 
   // Step 7: Set minimum values for eps, P, and S
   eos->press_min   = eos->table_P_min;
@@ -234,6 +233,7 @@ void ghl_initialize_tabulated_eos(
   eos->eps_max     = eos->table_eps_max;
   eos->entropy_min = eos->table_ent_min;
   eos->entropy_max = eos->table_ent_max;
+  eos->tau_atm     = eos->rho_min * eos->eps_min;
 }
 
 /*
