@@ -29,7 +29,9 @@ static int ghl_newman_entropy(
   const double tau = MAX(con->tau, eos->tau_atm);
 
   // d = 0.5( S^{2}*B^{2} - (B.S)^{2} ) (eq. 5.7 in Newman & Hamlin 2014)
-  const double d = MAX(0.5*(S_squared*B_squared-BdotS*BdotS),0.0);
+  double d = 0.5*(S_squared*B_squared-BdotS*BdotS);
+  if( d < 1e-20 ) d = 0.0;
+
   // e = tau + D
   const double e = tau + con->rho;
   // z = rho*h*W^{2} = D*h*W; initialize to zero.
@@ -106,7 +108,6 @@ static int ghl_newman_entropy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
     invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
     W                  = 1.0/invW;
-    prims->rho         = con->rho*invW;
   }
 
   // Set the primitives
