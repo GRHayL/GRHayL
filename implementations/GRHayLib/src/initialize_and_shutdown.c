@@ -147,6 +147,8 @@ int parse_C2P_routine_keyword(const char *restrict routine_name) {
     return Palenzuela1D_entropy;
   } else if (CCTK_EQUALS(routine_name, "Newman1D")) {
     return Newman1D;
+  } else if (CCTK_EQUALS(routine_name, "Newman1D_entropy")) {
+    return Newman1D_entropy;
   }
   return -100;
 }
