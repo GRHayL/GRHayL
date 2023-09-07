@@ -11,7 +11,7 @@ static int ghl_newman_energy(
       const ghl_conservative_quantities *restrict con,
       ghl_primitive_quantities *restrict prims,
       const double tol_x,
-      int *restrict n_iter ) {
+      ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   // Set basic quantities from input
   double invD   = 1.0/con->rho;
@@ -29,8 +29,8 @@ static int ghl_newman_energy(
   const double tau = MAX(con->tau, eos->tau_atm);
 
   // d = 0.5( S^{2}*B^{2} - (B.S)^{2} ) (eq. 5.7 in Newman & Hamlin 2014)
-  double d = 0.5*(S_squared*B_squared-BdotS*BdotS);
-  if( d < 1e-20 ) d = 0.0;
+  const double d = 0.5*(S_squared*B_squared-BdotS*BdotS);
+
   // e = tau + D
   const double e = tau + con->rho;
   // z = rho*h*W^{2} = D*h*W; initialize to zero.
@@ -57,8 +57,11 @@ static int ghl_newman_energy(
     // a = e + P + B^{2}/2 (eq. 5.7 in Newman & Hamlin 2014)
     double a = e + xprs + 0.5*B_squared;
 
+    // Eq. (5.9) of Newman & Hamlin 2014
+    if( d > 4.0*a*a*a/27.0 ) return 1;
+
     // phi = acos( sqrt(27d/4a^{3}) ) (eq. 5.10 in Newman & Hamlin 2014)
-    double phi = acos( sqrt(27.0*d/(4.0*a))/a );
+    double phi = acos( sqrt(27.0*d/(4.0*a*a*a)) );
     // Eps = a/3 - 2a/3 cos( 2phi/3 + 2pi/3 )
     double Eps = (a/3.0)*(1.0 - 2.0*cos((2.0/3.0)*(phi + M_PI)));
 
@@ -103,7 +106,7 @@ static int ghl_newman_energy(
   if (step >= maxsteps)
     return roots_error_max_iter;
 
-  *n_iter = step;
+  diagnostics->n_iter = step;
 
   if( conacc ) {     //converged on an extrap. so recompute vars
     const double a     = e + xprs + 0.5*B_squared;
@@ -115,7 +118,6 @@ static int ghl_newman_energy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
     invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
     W                  = 1.0/invW;
-    prims->rho          = con->rho*invW;
   }
 
   // Set the primitives
@@ -153,5 +155,5 @@ int ghl_tabulated_Newman1D_energy(
   const double tol_x = 1e-15;
   diagnostics->which_routine = Newman1D;
   return ghl_newman_energy(eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
-                           cons_undens, prims, tol_x, &diagnostics->n_iter);
+                           cons_undens, prims, tol_x, diagnostics);
 }
