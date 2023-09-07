@@ -29,7 +29,8 @@ static int ghl_newman_entropy(
   const double tau = MAX(con->tau, eos->tau_atm);
 
   // d = 0.5( S^{2}*B^{2} - (B.S)^{2} ) (eq. 5.7 in Newman & Hamlin 2014)
-  const double d = 0.5*(S_squared*B_squared-BdotS*BdotS);
+  double d = 0.5*(S_squared*B_squared-BdotS*BdotS);
+  if( d < 1e-20 ) d = 0.0;
 
   // e = tau + D
   const double e = tau + con->rho;
@@ -95,14 +96,14 @@ static int ghl_newman_entropy(
   }
   while(fabs(xprs-P_old)>tol_x*(xprs+P_old) && step<maxsteps);
 
-  if (step >= maxsteps)
+  if( step >= maxsteps )
     return roots_error_max_iter;
 
   diagnostics->n_iter = step;
 
   if( conacc ) {     //converged on an extrap. so recompute vars
     const double a     = e + xprs + 0.5*B_squared;
-    const double phi   = acos(sqrt(27.0*d/(4.0*a))/a);
+    const double phi   = acos(sqrt(27.0*d/(4.0*a*a*a)));
     const double Eps   = a/3.0*( 1.0 - 2.0*cos( (2.0/3.0)*(phi + M_PI) ) );
     z                  = Eps-B_squared;
     const double Epssq = Eps*Eps;
@@ -111,6 +112,8 @@ static int ghl_newman_entropy(
     invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
     W                  = 1.0/invW;
   }
+
+  if( isnan(z*W) ) return 1;
 
   // Set the primitives
   double utildeU[3] = {
