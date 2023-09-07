@@ -1,0 +1,128 @@
+\documentclass{article}
+
+% Use the Cactus ThornGuide style file
+% (Automatically used from Cactus distribution, if you have a 
+%  thorn without the Cactus Flesh download this from the Cactus
+%  homepage at www.cactuscode.org)
+\usepackage{../../../../doc/latex/cactus}
+\usepackage{xspace}
+\newcommand{\grhayl}{\texttt{GRHayL}\xspace}
+\newcommand{\glib}{\texttt{GRHayLib}\xspace}
+\newcommand{\igm}{\texttt{IllinoisGRMHD}\xspace}
+\newcommand{\hydrobase}{\texttt{HydroBase}\xspace}
+
+\begin{document}
+
+\title{GRHayLib}
+\author{Samuel Cupp \\ Leonardo Rosa Werneck \\ Terrence Pierre Jacques \\ Zachariah Etienne}
+\date{$ $Date$ $}
+
+\maketitle
+
+% Do not delete next line
+% START CACTUS THORNGUIDE
+
+\begin{abstract}
+Provides access to the General Relativistic Hydrodynamics
+Library (\grhayl). This library provides a suite of functions
+for GRMHD evolution codes based on the \igm code.
+\end{abstract}
+
+\section{Introduction}
+
+This thorn provides access to the General Relativistic
+Hydrodynamics Library (\grhayl) through the GRHayLib.h
+header file. The library contains all the core components
+necessary to produce an \igm-like code in a modular,
+infrastructure-agnostic form. These functions are tested
+via unit tests using GitHub Actions in the
+\href{https://github.com/GRHayL/GRHayL}{GRHayL repository}.
+
+For comprehensive documentation of \grhayl's features, please
+visit the \href{https://github.com/GRHayL/GRHayL/wiki}{GitHub wiki}.
+As a brief overview, the library is split into several `gems'
+which are entirely self-contained. These are Atmosphere, Con2Prim,
+EOS, Flux\_Source, Induction, Neutrinos, and Reconstruction.
+The \glib implementation provides access to all these gems in its
+header file. Additionally, the thorn automatically initializes an
+instance of the \texttt{ghl\_parameters} and \texttt{ghl\_eos\_parameters}
+structs. The instances are named \texttt{ghl\_params} and \texttt{ghl\_eos},
+and the pointers to these structs are provided by the GRHayLib.h
+header.
+
+\section{Equation of State}
+
+One of the more complicated part of GRMHD simulations is properly
+setting up the equation of state (EOS), especially for tabulated EOS.
+\grhayl provides both hybrid and tabulated EOS, and this information
+is passed to the library functions through \texttt{ghl\_eos}. \glib's
+parameters control the initialization of this struct, so the user does
+not need to set any of the struct's values unless they plan to manually
+adjust these parameters during the simulation. The \texttt{EOS\_type}
+parameter chooses the type of EOS, and the thorn then sets up the struct
+using the other parameters associated with this choice.
+
+For several variables, there are minimum, atmosphere, and maximum parameters.
+We will refer to these as collectively limit parameters. For the limit
+parameters a given EOS uses, the atmosphere parameter is required. The other
+parameters either have defaults or are ignored if unset.
+
+\subsection{Hybrid EOS}
+
+The hybrid EOS requires several parameters to function properly.
+First, it needs the number of elements in the polytropic approximation.
+This is currently limited by \grhayl to 10 pieces. The transition values
+of rho\_b are set by \texttt{rho\_ppoly\_in}, and the associated Gamma
+values are stored in \texttt{Gamma\_ppoly\_in}. Note that for neos=1,
+only a single Gamma is necessary. Additionally, the parameter \texttt{k\_ppoly0}
+sets the polytropic constant for the first piece of the piecewise polytrope.
+The rest of the constanst are computed automatically.
+
+In addition to the polytropic setup above, the value of the thermal Gamma
+\texttt{Gamma\_th} must be set.
+
+The hybrid EOS only uses the rho\_b limit parameters. If unset, the
+minimum is set to 0, and the maximum is set to 1e300, effectively turning
+off both of these features.
+
+\subsection{Tabulated EOS}
+
+To properly configure for tabulated EOS, the most important parameter is
+the path to the EOS table, given by the \texttt{EOS\_tablepath} parameter.
+\glib automatically reads this table and makes it accessible to \grhayl
+functions through \texttt{ghl\_eos}.
+
+The tabulated EOS uses all the limit parameters (rho\_b, Y\_e, and T).
+If unset, the mimima and maxima are set to table bounds.
+
+\section{Conservative-to-Primitive Routines}
+
+\grhayl provides a selection of con2prim routines along with automated
+backup methods. \texttt{ghl\_params} passes the information from the
+thorn parameters texttt{con2prim\_routine} and texttt{con2prim\_backup\_routines}
+to the library's multi-method functions. Of course, any of the routines
+can be called manually with logic dictated by the user. However, we
+provide functions for automatically calling the selected routine,
+as well as triggering the backup routines in the case of failure.
+The ghl\_con2prim\_hybrid\_multi\_method() and
+ghl\_con2prim\_tabulated\_multi\_method() functions implement this
+feature, and the ghl\_con2prim\_hybrid\_select\_method() and
+ghl\_con2prim\_tabulated\_select\_method() functions directly select
+a single method based on an input value. \grhayl supports up to three
+backups, but more complex behavior can be designed by the user using
+the core con2prim functions. Since the individual con2prim routines
+and the multi-method functions have identical argument lists, swapping
+routines is straightforward and requires little work from the user.
+
+These routines are iterative solvers, so they require an initial guess.
+\igm used always used default guess, which is also provided in \grhayl.
+The \texttt{calc\_primitive\_guess} parameter automatically sets the
+guess to this default in the multi-method function, so set this to
+"no" to use a user-defined guess. Manual use of the con2prim
+routines require the user to either provide a guess or use the
+ghl\_guess\_primitives() function.
+
+% Do not delete next line
+% END CACTUS THORNGUIDE
+
+\end{document}
