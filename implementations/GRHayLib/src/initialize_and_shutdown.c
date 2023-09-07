@@ -28,39 +28,61 @@ void GRHayLib_paramcheck() {
 
   DECLARE_CCTK_PARAMETERS;
 
-  if( rho_b_atm == -1 )
-    CCTK_ERROR("Parameter rho_b_atm must be set in the parameter file");
-  else if( rho_b_atm < 0 )
-    CCTK_ERROR("Parameter rho_b_atm must be non-negative");
+  if(rho_b_atm < 0)
+    CCTK_ERROR("Parameter rho_b_atm must be set in the parameter file and be non-negative.");
 
-  if( rho_b_min < 0 && rho_b_min != -1 )
-    CCTK_ERROR("Parameter rho_b_min must be non-negative");
+  if(rho_b_min < 0 && rho_b_min != -1)
+    CCTK_ERROR("Parameter rho_b_min must be non-negative.");
 
-  if( rho_b_max < 0 && rho_b_max != -1 )
-    CCTK_ERROR("Parameter rho_b_max must be non-negative");
+  if(rho_b_max < 0 && rho_b_max != -1)
+    CCTK_ERROR("Parameter rho_b_max must be non-negative.");
 
-  if( CCTK_EQUALS(EOS_type, "tabulated") ) {
-    if( Y_e_atm == -1 )
+  if( CCTK_EQUALS(EOS_type, "hybrid") ) {
+    if(Gamma_th < 0)
+      CCTK_ERROR("Parameter Gamma_th must be set in the parameter file and be non-negative.");
+
+    if(Gamma_ppoly_in[0] < 0)
+      CCTK_ERROR("Parameter Gamma_ppoly_in[0] must be set in the parameter file and be non-negative.");
+
+    if(k_ppoly0 < 0)
+      CCTK_ERROR("Parameter k_ppoly0 must be set in the parameter file and be non-negative.");
+
+    if(neos > 1) {
+      if(rho_ppoly_in[0] < 0)
+        CCTK_ERROR("Parameter rho_ppoly_in[0] must be set in the parameter file and be non-negative.");
+
+      for(int i=1; i<neos; i++) {
+        if(Gamma_ppoly_in[i] < 0)
+          CCTK_VERROR("Parameter Gamma_ppoly_in[%d] must be set in the parameter file and be non-negative.", i);
+
+        if(rho_ppoly_in[i] < 0)
+          CCTK_VERROR("Parameter rho_ppoly_in[%d] must be set in the parameter file and be non-negative.", i);
+      }
+      if(Gamma_ppoly_in[neos] < 0)
+        CCTK_VERROR("Parameter Gamma_ppoly_in[%d] must be set in the parameter file and be non-negative.", neos);
+    }
+  } else if( CCTK_EQUALS(EOS_type, "tabulated") ) {
+    if(Y_e_atm == -1)
       CCTK_ERROR("Parameter Y_e_atm must be set in the parameter file");
-    else if( Y_e_atm < 0 )
-      CCTK_ERROR("Parameter Y_e_atm must be non-negative");
+    else if(Y_e_atm < 0)
+      CCTK_ERROR("Parameter Y_e_atm must be non-negative.");
 
-    if( Y_e_min < 0 && Y_e_min != -1 )
-      CCTK_ERROR("Parameter Y_e_min must be non-negative");
+    if(Y_e_min < 0 && Y_e_min != -1)
+      CCTK_ERROR("Parameter Y_e_min must be non-negative.");
 
-    if( Y_e_max < 0 && Y_e_max != -1 )
-      CCTK_ERROR("Parameter Y_e_max must be non-negative");
+    if(Y_e_max < 0 && Y_e_max != -1)
+      CCTK_ERROR("Parameter Y_e_max must be non-negative.");
 
-    if( T_atm == -1 )
+    if(T_atm == -1)
       CCTK_ERROR("Parameter T_atm must be set in the parameter file");
-    else if( T_atm < 0 )
-      CCTK_ERROR("Parameter T_atm must be non-negative");
+    else if(T_atm < 0)
+      CCTK_ERROR("Parameter T_atm must be non-negative.");
 
-    if( T_min < 0 && T_min != -1 )
-      CCTK_ERROR("Parameter T_min must be non-negative");
+    if(T_min < 0 && T_min != -1)
+      CCTK_ERROR("Parameter T_min must be non-negative.");
 
-    if( T_max < 0 && T_max != -1 )
-      CCTK_ERROR("Parameter T_max must be non-negative");
+    if(T_max < 0 && T_max != -1)
+      CCTK_ERROR("Parameter T_max must be non-negative.");
   }
 }
 

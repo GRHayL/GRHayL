@@ -8,20 +8,11 @@ KEYWORD EOS_type "The type of EOS for the simulation"
   "tabulated" :: "Tabulated EOS"
 } ""
 
-CCTK_BOOLEAN read_EOS_table "Whether or not to read from the EOS table"
-{
-} "no"
-
 CCTK_STRING EOS_tablepath "Path to the EOS table"
 {
   ""    :: "Forbidden, will error out"
   ".+?" :: "Any string"
 } ""
-
-CCTK_REAL EOS_root_finding_precision "Root-finding precision for EOS table inversions"
-{
- 0.0:* :: "Positive."
-} 1e-10
 
 CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?"
 {
@@ -37,12 +28,12 @@ CCTK_BOOLEAN evolve_entropy "Do we want to evolve the entropy?"
 KEYWORD con2prim_routine "What con2prim routine is used" STEERABLE=ALWAYS
 {
   "Noble2D"              :: "2D  routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
-  "Noble1D"              :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
-  "Noble1D_entropy"      :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy"
-  "Noble1D_entropy2"     :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy and eq. (27)"
+#  "Noble1D"              :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
+#  "Noble1D_entropy"      :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy"
+#  "Noble1D_entropy2"     :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy and eq. (27)"
   "Font1D"               :: "TODO"
-  "CerdaDuran2D"         :: "See https://arxiv.org/pdf/0804.4572.pdf"
-  "CerdaDuran3D"         :: "See https://arxiv.org/pdf/0804.4572.pdf"
+#  "CerdaDuran2D"         :: "See https://arxiv.org/pdf/0804.4572.pdf"
+#  "CerdaDuran3D"         :: "See https://arxiv.org/pdf/0804.4572.pdf"
   "Palenzuela1D"         :: "https://arxiv.org/pdf/1505.01607.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
   "Newman1D"             :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
   "Palenzuela1D_entropy" :: "https://arxiv.org/pdf/1505.01607.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
@@ -53,12 +44,12 @@ KEYWORD con2prim_backup_routines[3] "We allow up to 3 backup routines" STEERABLE
 {
   "None"                 :: "Don't use backup routines"
   "Noble2D"              :: "2D  routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
-  "Noble1D"              :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
-  "Noble1D_entropy"      :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy"
-  "Noble1D_entropy2"     :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy and eq. (27)"
+#  "Noble1D"              :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
+#  "Noble1D_entropy"      :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy"
+#  "Noble1D_entropy2"     :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf, but uses the entropy and eq. (27)"
   "Font1D"               :: "TODO"
-  "CerdaDuran2D"         :: "See https://arxiv.org/pdf/0804.4572.pdf"
-  "CerdaDuran3D"         :: "See https://arxiv.org/pdf/0804.4572.pdf"
+#  "CerdaDuran2D"         :: "See https://arxiv.org/pdf/0804.4572.pdf"
+#  "CerdaDuran3D"         :: "See https://arxiv.org/pdf/0804.4572.pdf"
   "Palenzuela1D"         :: "https://arxiv.org/pdf/1505.01607.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
   "Newman1D"             :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
   "Palenzuela1D_entropy" :: "https://arxiv.org/pdf/1505.01607.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
@@ -90,19 +81,19 @@ CCTK_BOOLEAN calc_primitive_guess "Do we want to calculate estimates for the pri
 
 #########################################################
 
-CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b. This is a required value. Given the variety of systems this code may encounter, there *is no reasonable default*. Your run will die unless you override this default value in your initial data thorn." STEERABLE=ALWAYS
+CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b (required). If this is unset, the run will die." STEERABLE=ALWAYS
 {
   0:* :: "Atmosphere density; must be positive"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL rho_b_min "Floor value on the baryonic rest mass density rho_b. Given the variety of systems this code may encounter, there *is no reasonable default*. Your run will die unless you override this default value in your initial data thorn." STEERABLE=ALWAYS
+CCTK_REAL rho_b_min "Floor value on the baryonic rest mass density rho_b (disabled by default)." STEERABLE=ALWAYS
 {
   0:* :: "Minimum density; must be positive"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL rho_b_max "Ceiling value on the baryonic rest mass density rho_b (disabled by default). It can be quite useful after a black hole has accreted a lot of mass, leading to enormous densities inside the BH. To enable this trick, set rho_b_max in your initial data thorn! You are welcome to change this parameter mid-run (after restarting from a checkpoint)." STEERABLE=ALWAYS
+CCTK_REAL rho_b_max "Ceiling value on the baryonic rest mass density rho_b (disabled by default). Can help with stability to limit densities inside the BH after black hole formation." STEERABLE=ALWAYS
 {
   0:* :: "Maximum density; must be positive"
   -1  :: "Used to check if anything was given"
@@ -166,7 +157,7 @@ CCTK_REAL Gamma_th "thermal gamma parameter"
 -1   :: "forbidden value to make sure it is explicitly set in the parfile"
 } -1
 
-CCTK_REAL k_ppoly0 "Also known as k_ppoly[0], this is the polytropic constant for the lowest density piece of the piecewise polytrope. All other k_tab EOS array elements are set from user-defined rho_tab EOS array elements and by enforcing continuity in the equation of state."
+CCTK_REAL k_ppoly0 "Also known as k_ppoly[0], this is the polytropic constant for the lowest density piece of the piecewise polytrope. All other k_ppoly elements are set using rho_ppoly_in and enforcing continuity in the equation of state."
 {
  0:* :: "Physical values"
 -1   :: "forbidden value to make sure it is explicitly set in the parfile"
@@ -174,13 +165,13 @@ CCTK_REAL k_ppoly0 "Also known as k_ppoly[0], this is the polytropic constant fo
 
 CCTK_REAL rho_ppoly_in[10] "Set polytropic rho parameters"
 {
- 0:* :: "after this time (inclusively)"
--1   :: "forbidden value to make sure it is explicitly set in the parfile"
+ 0:* :: "value of the density delimiters for the pieces of the piecewise polytrope"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile (only checked for neos > 1)"
 } -1
 
-CCTK_REAL Gamma_ppoly_in[11] "Set polytropic gamma parameters"
+CCTK_REAL Gamma_ppoly_in[11] "Set polytropic gamma parameters. Gamma_ppoly_in[0] goes from rho=0 to rho=rho_ppoly_in[0]."
 {
- 0:* :: "after this time (inclusively)"
+ 0:* :: "value of Gamma for the polytropic rho in the bounds rho_ppoly[i-1] to rho_ppoly[i]"
 -1   :: "forbidden value to make sure it is explicitly set in the parfile"
 } -1
 
