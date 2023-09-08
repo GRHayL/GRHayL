@@ -17,22 +17,22 @@ def write_ghl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tabula
     outCparams = "outCverbose=False,GoldenKernelsEnable=True"
 
 
-#     st.Cfunction__GRMHD_SourceTerms(Ccodesrootdir,
-#                                     includes=includes,
-#                                     formalism=formalism,
-#                                     outCparams=outCparams)
+    st.Cfunction__GRMHD_SourceTerms(Ccodesrootdir,
+                                    includes=includes,
+                                    formalism=formalism,
+                                    outCparams=outCparams)
 
 #     chsp.Cfunction__GRMHD_characteristic_speeds(Ccodesrootdir,
 #                                                 includes=includes,
 #                                                 formalism=formalism,
 #                                                 outCparams=outCparams)
 
-    fl.Cfunction__GRMHD_fluxes(Ccodesrootdir,
-                               includes=includes,
-                               formalism=formalism,
-                               outCparams=outCparams,
-                               tabulated=tabulated,
-                               entropy=entropy)
+    # fl.Cfunction__GRMHD_fluxes(Ccodesrootdir,
+    #                            includes=includes,
+    #                            formalism=formalism,
+    #                            outCparams=outCparams,
+    #                            tabulated=tabulated,
+    #                            entropy=entropy)
 
 
 def create_fresh_directory(name):
@@ -40,8 +40,8 @@ def create_fresh_directory(name):
     os.mkdir(name)
 
 if __name__ == '__main__':
-    for dirname in ["hybrid", "hybrid_entropy", "tabulated", "tabulated_entropy"]:
-        create_fresh_directory(dirname)
-        entropy   = True if "entropy"   in dirname else False
-        tabulated = True if "tabulated" in dirname else False
-        write_ghl_Cfunctions_to_dir(dirname, includes, tabulated=tabulated, entropy=entropy)
+    # for dirname in ["hybrid", "hybrid_entropy", "tabulated", "tabulated_entropy"]:
+        # create_fresh_directory(dirname)
+        # entropy   = True if "entropy"   in dirname else False
+        # tabulated = True if "tabulated" in dirname else False
+    write_ghl_Cfunctions_to_dir(".", includes) #, tabulated=tabulated, entropy=entropy

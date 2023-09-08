@@ -52,6 +52,8 @@ int main(int argc, char **argv) {
   const int ghostzone = 3;
   const int arraylength = dirlength*dirlength*dirlength;
   const double invdx = 1.0/0.1;
+  const double invdy = 1.0/0.1;
+  const double invdz = 1.0/0.1;
 
   const double poison = 1e300;
 
@@ -184,9 +186,6 @@ int main(int argc, char **argv) {
   void (*calculate_characteristic_speed)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
                               const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict, double *restrict, double *restrict);
 
-  // Function pointer to allow for loop over directional source terms
-  void (*calculate_source_terms)(ghl_primitive_quantities *restrict, const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
-  const ghl_metric_quantities *restrict, ghl_conservative_quantities *restrict);
 
   // Loop over flux directions (x,y,z)
   for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
@@ -198,17 +197,14 @@ int main(int argc, char **argv) {
     switch(flux_dirn) {
       case 0:
         calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn0_hybrid;
-        calculate_source_terms         = &ghl_calculate_source_terms_dirn0;
         calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn0;
         break;
       case 1:
         calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn1_hybrid;
-        calculate_source_terms         = &ghl_calculate_source_terms_dirn1;
         calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn1;
         break;
       case 2:
         calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn2_hybrid;
-        calculate_source_terms         = &ghl_calculate_source_terms_dirn2;
         calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn2;
         break;
     }
@@ -310,46 +306,6 @@ int main(int argc, char **argv) {
           S_x_rhs[index] += invdx*(S_x_flux[index] - S_x_flux[indp1]);
           S_y_rhs[index] += invdx*(S_y_flux[index] - S_y_flux[indp1]);
           S_z_rhs[index] += invdx*(S_z_flux[index] - S_z_flux[indp1]);
-
-          ghl_metric_quantities metric_derivs;
-          metric_derivs.lapse    = invdx*(face_lapse[indp1] - face_lapse[index]);
-          metric_derivs.betaU[0] = invdx*(face_betax[indp1] - face_betax[index]);
-          metric_derivs.betaU[1] = invdx*(face_betay[indp1] - face_betay[index]);
-          metric_derivs.betaU[2] = invdx*(face_betaz[indp1] - face_betaz[index]);
-          metric_derivs.gammaDD[0][0] = invdx*(face_gxx[indp1] - face_gxx[index]);
-          metric_derivs.gammaDD[0][1] = invdx*(face_gxy[indp1] - face_gxy[index]);
-          metric_derivs.gammaDD[0][2] = invdx*(face_gxz[indp1] - face_gxz[index]);
-          metric_derivs.gammaDD[1][1] = invdx*(face_gyy[indp1] - face_gyy[index]);
-          metric_derivs.gammaDD[1][2] = invdx*(face_gyz[indp1] - face_gyz[index]);
-          metric_derivs.gammaDD[2][2] = invdx*(face_gzz[indp1] - face_gzz[index]);
-
-          ghl_metric_quantities metric;
-          ghl_initialize_metric(
-                lapse[index], betax[index], betay[index], betaz[index],
-                gxx[index], gxy[index], gxz[index],
-                gyy[index], gyz[index], gzz[index],
-                &metric);
-
-          ghl_primitive_quantities prims;
-          ghl_initialize_primitives(
-                rho[index], press[index], poison,
-                vx[index], vy[index], vz[index],
-                Bx[index], By[index], Bz[index],
-                poison, poison, poison, // entropy, Y_e, temp
-                &prims);
-          prims.u0  = rho[index]*Bx[index] / vy[index];
-
-          ghl_conservative_quantities cons_sources;
-          cons_sources.SD[0] = 0.0;
-          cons_sources.SD[1] = 0.0;
-          cons_sources.SD[2] = 0.0;
-          calculate_source_terms(
-                &prims, &eos, &metric, &metric_derivs, &cons_sources);
-
-          tau_rhs[index] += cons_sources.tau;
-          S_x_rhs[index] += cons_sources.SD[0];
-          S_y_rhs[index] += cons_sources.SD[1];
-          S_z_rhs[index] += cons_sources.SD[2];
     }
   }
 
@@ -357,6 +313,9 @@ int main(int argc, char **argv) {
     for(int j=ghostzone; j<dirlength-ghostzone; j++)
       for(int i=ghostzone; i<dirlength-ghostzone; i++) {
         const int index  = indexf(dirlength, i, j ,k);
+        const int indip1  = indexf(dirlength, i+1, j, k);
+        const int indjp1  = indexf(dirlength, i, j+1, k);
+        const int indkp1  = indexf(dirlength, i, j, k+1);
 
         ghl_metric_quantities metric;
         ghl_initialize_metric(
@@ -364,6 +323,42 @@ int main(int argc, char **argv) {
               gxx[index], gxy[index], gxz[index],
               gyy[index], gyz[index], gzz[index],
               &metric);
+
+        ghl_metric_quantities metric_derivs_x;
+        metric_derivs_x.lapse         = invdx*(face_lapse[indip1] - face_lapse[index]);
+        metric_derivs_x.betaU[0]      = invdx*(face_betax[indip1] - face_betax[index]);
+        metric_derivs_x.betaU[1]      = invdx*(face_betay[indip1] - face_betay[index]);
+        metric_derivs_x.betaU[2]      = invdx*(face_betaz[indip1] - face_betaz[index]);
+        metric_derivs_x.gammaDD[0][0] = invdx*(face_gxx  [indip1] - face_gxx  [index]);
+        metric_derivs_x.gammaDD[0][1] = invdx*(face_gxy  [indip1] - face_gxy  [index]);
+        metric_derivs_x.gammaDD[0][2] = invdx*(face_gxz  [indip1] - face_gxz  [index]);
+        metric_derivs_x.gammaDD[1][1] = invdx*(face_gyy  [indip1] - face_gyy  [index]);
+        metric_derivs_x.gammaDD[1][2] = invdx*(face_gyz  [indip1] - face_gyz  [index]);
+        metric_derivs_x.gammaDD[2][2] = invdx*(face_gzz  [indip1] - face_gzz  [index]);
+
+        ghl_metric_quantities metric_derivs_y;
+        metric_derivs_y.lapse         = invdy*(face_lapse[indjp1] - face_lapse[index]);
+        metric_derivs_y.betaU[0]      = invdy*(face_betax[indjp1] - face_betax[index]);
+        metric_derivs_y.betaU[1]      = invdy*(face_betay[indjp1] - face_betay[index]);
+        metric_derivs_y.betaU[2]      = invdy*(face_betaz[indjp1] - face_betaz[index]);
+        metric_derivs_y.gammaDD[0][0] = invdy*(face_gxx  [indjp1] - face_gxx  [index]);
+        metric_derivs_y.gammaDD[0][1] = invdy*(face_gxy  [indjp1] - face_gxy  [index]);
+        metric_derivs_y.gammaDD[0][2] = invdy*(face_gxz  [indjp1] - face_gxz  [index]);
+        metric_derivs_y.gammaDD[1][1] = invdy*(face_gyy  [indjp1] - face_gyy  [index]);
+        metric_derivs_y.gammaDD[1][2] = invdy*(face_gyz  [indjp1] - face_gyz  [index]);
+        metric_derivs_y.gammaDD[2][2] = invdy*(face_gzz  [indjp1] - face_gzz  [index]);
+
+        ghl_metric_quantities metric_derivs_z;
+        metric_derivs_z.lapse         = invdz*(face_lapse[indkp1] - face_lapse[index]);
+        metric_derivs_z.betaU[0]      = invdz*(face_betax[indkp1] - face_betax[index]);
+        metric_derivs_z.betaU[1]      = invdz*(face_betay[indkp1] - face_betay[index]);
+        metric_derivs_z.betaU[2]      = invdz*(face_betaz[indkp1] - face_betaz[index]);
+        metric_derivs_z.gammaDD[0][0] = invdz*(face_gxx  [indkp1] - face_gxx  [index]);
+        metric_derivs_z.gammaDD[0][1] = invdz*(face_gxy  [indkp1] - face_gxy  [index]);
+        metric_derivs_z.gammaDD[0][2] = invdz*(face_gxz  [indkp1] - face_gxz  [index]);
+        metric_derivs_z.gammaDD[1][1] = invdz*(face_gyy  [indkp1] - face_gyy  [index]);
+        metric_derivs_z.gammaDD[1][2] = invdz*(face_gyz  [indkp1] - face_gyz  [index]);
+        metric_derivs_z.gammaDD[2][2] = invdz*(face_gzz  [indkp1] - face_gzz  [index]);
 
         ghl_extrinsic_curvature curv;
         ghl_initialize_extrinsic_curvature(
@@ -381,10 +376,15 @@ int main(int argc, char **argv) {
         prims.u0  = rho[index]*Bx[index] / vy[index];
 
         ghl_conservative_quantities cons_sources;
-        ghl_calculate_tau_tilde_source_term_extrinsic_curv(
-              &prims, &eos, &metric, &curv, &cons_sources);
+        ghl_calculate_source_terms(
+            &eos, &prims, &metric,
+            &metric_derivs_x, &metric_derivs_y, &metric_derivs_z,
+            &curv, &cons_sources);
 
         tau_rhs[index] += cons_sources.tau;
+        S_x_rhs[index] += cons_sources.SD[0];
+        S_y_rhs[index] += cons_sources.SD[1];
+        S_z_rhs[index] += cons_sources.SD[2];
   }
 
   fclose(infile);
