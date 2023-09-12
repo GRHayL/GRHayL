@@ -23,18 +23,17 @@
 static void
 compute_rho_P_eps_W_energy(
       const double x,
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
       fparams_struct *restrict fparams,
       double *restrict rho_ptr,
       double *restrict P_ptr,
       double *restrict eps_ptr,
       double *restrict W_ptr ) {
 
-  // Step 0: Unpack the fparams struct
-  const ghl_eos_parameters *eos = fparams->eos;
-
   // Step 1: First compute rho and W
   double rho, W;
-  compute_rho_W_from_x_and_conservatives( x, fparams, &rho, &W );
+  compute_rho_W_from_x_and_conservatives( x, params, fparams, &rho, &W );
 
   // Step 2: Compute eps
   const double q = fparams->q;

@@ -6,7 +6,6 @@ static double eos_Gamma_eff(const ghl_eos_parameters *restrict eos, const double
 int main(int argc, char **argv) {
   const double poison = 1e300;
 
-  const double W_max = 10.0;
   const int neos = 1;
   const double rho_ppoly_in[1] = {0.0};
   const double Gamma_ppoly_in[1] = {2.0};
@@ -14,10 +13,10 @@ int main(int argc, char **argv) {
   const double Gamma_th = 2.0;
 
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             poison, poison, poison,
-                                             neos, rho_ppoly_in, Gamma_ppoly_in,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        poison, poison, poison,
+        neos, rho_ppoly_in, Gamma_ppoly_in,
+        k_ppoly0, Gamma_th, &eos);
 
   FILE* infile = fopen_with_check("ET_Legacy_reconstruction_input.bin", "rb");
 

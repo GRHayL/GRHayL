@@ -18,14 +18,7 @@ int (*ghl_con2prim_multi_method)(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-typedef struct {
-  double rho_atm, rho_min, rho_max;
-  double Y_e_atm, Y_e_min, Y_e_max;
-  double T_atm  , T_min  , T_max;
-} ghl_params_checked;
-
 void GRHayLib_paramcheck() {
-
   DECLARE_CCTK_PARAMETERS;
 
   if(rho_b_atm < 0)
@@ -104,13 +97,22 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       main, backups,
       evolve_entropy, evolve_temperature,
       calc_primitive_guess, Psi6threshold,
-      Cupp_Fix, Lorenz_damping_factor,
+      Cupp_Fix, max_lorenz_factor,
+      Lorenz_damping_factor,
       ghl_params);
 
-  if (CCTK_EQUALS(EOS_type, "hybrid")) {
+  if (CCTK_EQUALS(EOS_type, "ideal_fluid")) {
+    if(main == Font1D || backups[0] == Font1D || backups[1] == Font1D || backups[2] == Font1D)
+      CCTK_VERROR("Error: Font1D routine is incompatible with ideal fluid EOS. Please choose a different Con2Prim routine.");
+    ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
+    ghl_initialize_ideal_fluid_eos_functions_and_params(
+          rho_b_atm, rho_b_min, rho_b_max,
+          neos, rho_ppoly_in,
+          Gamma_ppoly_in, k_ppoly0,
+          Gamma_th, ghl_eos);
+  } else if (CCTK_EQUALS(EOS_type, "hybrid")) {
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
     ghl_initialize_hybrid_eos_functions_and_params(
-          max_lorenz_factor,
           rho_b_atm, rho_b_min, rho_b_max,
           neos, rho_ppoly_in,
           Gamma_ppoly_in, k_ppoly0,
@@ -121,7 +123,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
     ghl_initialize_tabulated_eos_functions_and_params(
-          EOS_tablepath, max_lorenz_factor,
+          EOS_tablepath,
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,
           T_atm, T_min, T_max,

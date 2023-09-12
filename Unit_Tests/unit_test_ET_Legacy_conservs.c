@@ -24,9 +24,13 @@ int main(int argc, char **argv) {
   const int backup_routine[3] = {None,None,None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
+  const bool cupp_fix = false;
+  const double W_max = 10.0; //IGM default
+  const bool evolve_entropy = false;
+  const bool evolve_temperature = false;
+  const double Lorenz_damping_factor = 0;
 
   const int neos = 1;
-  const double W_max = 10.0; //IGM default
   const double rho_b_min = 1e-12;
   const double rho_b_max = 1e300; //IGM default
   const double Gamma_th = 2.0; //Taken from magnetizedTOV.par
@@ -37,14 +41,15 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   ghl_parameters params;
-  ghl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
-                    Psi6threshold, 0 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
+  ghl_initialize_params(
+        Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+        Psi6threshold, cupp_fix, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &eos);
 
   // Allocate memory for the metrics
   double *gxx = (double*) malloc(sizeof(double)*arraylength);

@@ -101,7 +101,7 @@ int ghl_hybrid_Font_fix(
     utU[0] = fac2*(SU[0] + fac1*BbarU[0]);
     utU[1] = fac2*(SU[1] + fac1*BbarU[1]);
     utU[2] = fac2*(SU[2] + fac1*BbarU[2]);
-    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims);
+    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
   }
 
   //The Font fix only sets the velocities.  Here we set the primitives.

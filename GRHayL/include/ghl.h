@@ -34,7 +34,7 @@ typedef enum {
 
 char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 
-typedef enum {ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
+typedef enum {ghl_eos_ideal_fluid, ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
 
 /*
  * Struct        : ghl_parameters
@@ -46,6 +46,8 @@ typedef struct ghl_parameters {
   bool evolve_entropy;
   bool evolve_temp;
   bool calc_prim_guess;
+  double max_lorenz_factor;
+  double inv_sq_max_lorenz_factor;
   double psi6threshold;
   bool Cupp_Fix;
   double Lorenz_damping_factor;
@@ -137,7 +139,7 @@ typedef struct ghl_stress_energy {
    a separate minimum value, simply pass the atmospheric value for these
    parameters.
 
- --rho_max, tau_max, press_max, Ye_max, temp_max, eps_max, entropy_max, W_max:
+ --rho_max, tau_max, press_max, Ye_max, temp_max, eps_max, entropy_max:
    all variables marked by "_max" are the maximum value for these quantities.
 
            ----------- Hybrid Equation of State -----------
@@ -165,7 +167,6 @@ typedef struct ghl_eos_parameters {
   double rho_atm, rho_min, rho_max;
   double tau_atm;
   double press_atm, press_min, press_max;
-  double W_max, inv_W_max_squared;
   //------------------------------------------------
 
   //----------- Hybrid Equation of State -----------
@@ -223,8 +224,17 @@ void ghl_initialize_eos_functions(
     ghl_eos_t const eos_type,
     ghl_eos_parameters *restrict eos );
 
+void ghl_initialize_ideal_fluid_eos(
+      const double rho_atm,
+      double rho_min,
+      double rho_max,
+      const double press_atm,
+      double press_min,
+      double press_max,
+      const double Gamma,
+      ghl_eos_parameters *restrict eos );
+
 void ghl_initialize_hybrid_eos(
-      const double W_max,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -237,7 +247,6 @@ void ghl_initialize_hybrid_eos(
 
 void ghl_initialize_tabulated_eos(
       const char *table_path,
-      const double W_max,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -250,7 +259,6 @@ void ghl_initialize_tabulated_eos(
       ghl_eos_parameters *restrict eos );
 
 void ghl_initialize_hybrid_eos_functions_and_params(
-      const double W_max,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -263,7 +271,6 @@ void ghl_initialize_hybrid_eos_functions_and_params(
 
 void ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
-      const double W_max,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -294,6 +301,7 @@ void ghl_initialize_params(
       const bool calc_prim_guess,
       const double psi6threshold,
       const bool Cupp_Fix,
+      const double max_lorenz_factor,
       const double Lorenz_damping_factor,
       ghl_parameters *restrict params);
 
@@ -361,7 +369,7 @@ void ghl_return_stress_energy(
       double *restrict Tzz);
 
 int ghl_limit_v_and_compute_u0(
-      const ghl_eos_parameters *restrict eos,
+      const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,
       ghl_primitive_quantities *restrict prims);
 

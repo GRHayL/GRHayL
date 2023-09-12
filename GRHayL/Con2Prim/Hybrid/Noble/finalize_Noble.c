@@ -32,7 +32,7 @@ int ghl_finalize_Noble(
                    g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*harm_aux->BbarU[1] ),
                    g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*harm_aux->BbarU[2] )};
 
-  const int speed_limited = ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims);
+  const int speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
 
   prims->rho = harm_aux->D * gtmp;
   if(speed_limited==1)

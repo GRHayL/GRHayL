@@ -78,7 +78,13 @@ cycle(
  */
 static inline roots_error_t
 check_a_b_compute_fa_fb(
-    double f(double const, void *restrict),
+      double f(
+            const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
+            void *restrict fparams),
+    const ghl_parameters *restrict params,
+    const ghl_eos_parameters *restrict eos,
     void   *restrict fparams,
     double *restrict a,
     double *restrict b,
@@ -87,7 +93,7 @@ check_a_b_compute_fa_fb(
     roots_params *restrict r ) {
 
   // Step 1: Compute fa; check if a is the root.
-  *fa = f(*a, fparams);
+  *fa = f(*a, params, eos, fparams);
   if( *fa == 0.0 ) {
     r->root     = *a;
     r->residual = *fa;
@@ -95,7 +101,7 @@ check_a_b_compute_fa_fb(
   }
 
   // Step 2: Compute fb; check if b is the root.
-  *fb = f(*b, fparams);
+  *fb = f(*b, params, eos, fparams);
   if( *fb == 0.0 ) {
     r->root     = *b;
     r->residual = *fb;
@@ -147,11 +153,17 @@ check_a_b_compute_fa_fb(
  */
 roots_error_t
 ghl_brent(
-    double f(double const, void *restrict),
-    void *restrict fparams,
-    double a,
-    double b,
-    roots_params *restrict r ) {
+      double f(
+            const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
+            void *restrict fparams),
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      void *restrict fparams,
+      double a,
+      double b,
+      roots_params *restrict r ) {
 
   // Step 0: Set basic info to the roots_params struct
   sprintf(r->routine_name, __func__);
@@ -160,7 +172,7 @@ ghl_brent(
 
   // Step 1: Check whether a or b is the root; compute fa and fb
   double fa, fb;
-  if( check_a_b_compute_fa_fb(f, fparams, &a, &b, &fa, &fb, r) >= roots_success )
+  if( check_a_b_compute_fa_fb(f, params, eos, fparams, &a, &b, &fa, &fb, r) >= roots_success )
     return r->error_key;
 
   // Step 2: Declare/initialize auxiliary variables
@@ -237,7 +249,7 @@ ghl_brent(
       b += d;
     else
       b += m>0 ? tol : -tol;
-    fb = f(b, fparams);
+    fb = f(b, params, eos, fparams);
   }
 
   // Step 4: The only way to get here is if we have exceeded the maximum number

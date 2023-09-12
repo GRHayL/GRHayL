@@ -3,7 +3,6 @@
 int main(int argc, char **argv) {
 
   int neos = 1;
-  double W_max = 10.0; //IGM default
   double rho_b_min = 1e-12;
   double rho_b_max = 1e300; //IGM default
   double Gamma_th = 2.0; //Taken from magnetizedTOV.par
@@ -14,10 +13,10 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &eos);
 
   const int dirlength = 20;
   const int arraylength = dirlength*dirlength*dirlength;

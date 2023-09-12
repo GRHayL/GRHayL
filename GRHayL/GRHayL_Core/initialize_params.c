@@ -14,6 +14,7 @@ void ghl_initialize_params(
       const bool calc_prim_guess,
       const double psi6threshold,
       const bool Cupp_Fix,
+      const double max_lorenz_factor,
       const double Lorenz_damping_factor,
       ghl_parameters *restrict params) {
 
@@ -26,6 +27,8 @@ void ghl_initialize_params(
   params->calc_prim_guess           = calc_prim_guess;
   params->psi6threshold             = psi6threshold;
   params->Cupp_Fix                  = Cupp_Fix;
+  params->max_lorenz_factor         = max_lorenz_factor;
+  params->inv_sq_max_lorenz_factor  = 1.0/SQR(max_lorenz_factor);
   params->Lorenz_damping_factor     = Lorenz_damping_factor;
   params->con2prim_max_iterations   = 30;
   params->con2prim_solver_tolerance = 1e-10;

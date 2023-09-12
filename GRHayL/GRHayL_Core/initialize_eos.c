@@ -3,8 +3,6 @@
 #include "ghl_eos_functions_declaration.h"
 
 #define init_common_eos_quantities         \
-  eos->W_max             = W_max;          \
-  eos->inv_W_max_squared = 1.0/SQR(W_max); \
   eos->rho_atm           = rho_atm;        \
   eos->rho_min           = rho_min;        \
   eos->rho_max           = rho_max;
@@ -27,7 +25,7 @@ void ghl_initialize_eos_functions(
   NRPyEOS_initialize_tabulated_functions(eos);
 
   // Step 3: General functions (same interface for all EOSs)
-  if( eos_type == ghl_eos_hybrid ) {
+  if( eos_type == ghl_eos_hybrid || eos_type == ghl_eos_ideal_fluid) {
     ghl_compute_h_and_cs2 = &NRPyEOS_hybrid_compute_enthalpy_and_cs2;
   }
   else if( eos_type == ghl_eos_tabulated ) {
@@ -36,27 +34,80 @@ void ghl_initialize_eos_functions(
 }
 
 /*
+ * Function    : ghl_initialize_ideal_fluid_eos()
+ * Description : Initializes EOS struct elements for a ideal_fluid EOS
+*/
+void ghl_initialize_ideal_fluid_eos(
+      const double rho_atm,
+      double rho_min,
+      double rho_max,
+      const double press_atm,
+      double press_min,
+      double press_max,
+      const double Gamma,
+      ghl_eos_parameters *restrict eos ) {
+
+  // Step 0: Enforce default values
+  if( rho_atm < 0 ) ghl_error("rho_atm must be specified\n");
+  if( rho_min < 0 ) {
+    ghl_warn("Minimum density not provided. Disabling density floor (rho_min = 0)\n");
+    rho_min = 0.0;
+  }
+  if( rho_max < 0 ) {
+    ghl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
+    rho_max = 1e300;
+  }
+  if( rho_min > rho_max ) ghl_error("rho_min cannot be greater than rho_max\n");
+
+  if( press_atm < 0 ) ghl_error("press_atm must be specified\n");
+  if( press_min < 0 ) {
+    ghl_warn("Minimum density not provided. Disabling density floor (press_min = 0)\n");
+    press_min = 0.0;
+  }
+  if( press_max < 0 ) {
+    ghl_warn("Maximum density not provided. Disabling density ceiling (press_max = 1e300)\n");
+    press_max = 1e300;
+  }
+  if( press_min > press_max ) ghl_error("press_min cannot be greater than press_max\n");
+
+  // Step 1: Set EOS type to Ideal Fluid
+  eos->eos_type = ghl_eos_ideal_fluid;
+
+  // Step 2: Initialize quantities which are common to all EOSs.
+  init_common_eos_quantities;
+
+  // Step 3: Set basic ideal fluid EOS parameters.
+  eos->press_atm = press_atm;
+  eos->press_min = press_min;
+  eos->press_max = press_max;
+  eos->Gamma_th = eos->Gamma_ppoly[0] = Gamma;
+  eos->K_ppoly[0] = 1;
+  eos->rho_ppoly[0] = 0.0;
+  eos->eps_integ_const[0] = 0.0;
+
+  const double Gm1 = Gamma - 1.0;
+  // -------------- Ceilings --------------
+  eos->eps_max = eos->press_max/(eos->rho_max*Gm1);
+  eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+
+  // --------------- Floors ---------------
+  eos->eps_min = eos->press_min/(eos->rho_min*Gm1);
+  eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+
+  // --------- Atmospheric values ---------
+  eos->eps_atm = eos->press_atm/(eos->rho_atm*Gm1);
+  eos->entropy_atm = ghl_hybrid_compute_entropy_function(eos, eos->rho_atm, eos->press_atm);
+
+  // Compute atmospheric tau
+  eos->tau_atm = eos->rho_atm * eos->eps_atm;
+  // --------------------------------------
+}
+
+/*
  * Function    : ghl_initialize_hybrid_eos()
  * Description : Initializes EOS struct elements for a hybrid EOS
- *
- * Inputs      : W_max          - Maximum allowed Lorentz factor
- *             : rho_atm        - atmospheric value for rho
- *             : rho_min        - minimum allowable value for rho
- *             : rho_max        - maximum allowable value for rho
- *             : neos           - number of pieces in the piecewise
- *                                polytrope
- *             : rho_ppoly      - pointer to the array containing the
- *                                minimum rho_b for each polytropic piece
- *             : Gamma_ppoly    - pointer to the array containing the
- *                                minimum rho_b for each polytropic piece
- *             : K_ppoly0       - TODO: comment
- *             : Gamma_th       - TODO: comment
- *
- * Outputs     : eos            - ghl_eos_parameters struct with the above inputs
- *                                initialized
- */
+*/
 void ghl_initialize_hybrid_eos(
-      const double W_max,
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -131,24 +182,9 @@ void ghl_initialize_hybrid_eos(
 /*
  * Function    : ghl_initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
- *
- * Inputs      : W_max          - maximum allowed Lorentz factor
- *             : rho_atm        - atmospheric value for rho
- *             : rho_min        - minimum allowable value for rho
- *             : rho_max        - maximum allowable value for rho
- *             : Y_e_atm        - atmospheric value for Y_e
- *             : Y_e_min        - minimum allowable value for Y_e
- *             : Y_e_max        - maximum allowable value for Y_e
- *             : T_atm          - atmospheric value for temperature
- *             : T_min          - minimum allowable value for temperature
- *             : T_max          - maximum allowable value for temperature
- *
- * Outputs     : eos            - ghl_eos_parameters struct with the above inputs
- *                                initialized
- */
+*/
 void ghl_initialize_tabulated_eos(
       const char *table_filepath,
-      const double W_max,
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -239,25 +275,8 @@ void ghl_initialize_tabulated_eos(
 /*
  * Function    : ghl_initialize_hybrid_eos_functions_and_params()
  * Description : Fully initializes EOS struct elements for a hybrid EOS
- *
- * Inputs      : W_max          - Maximum allowed Lorentz factor
- *             : rho_atm        - atmospheric value for rho
- *             : rho_min        - minimum allowable value for rho
- *             : rho_max        - maximum allowable value for rho
- *             : neos           - number of pieces in the piecewise
- *                                polytrope
- *             : rho_ppoly      - pointer to the array containing the
- *                                minimum rho_b for each polytropic piece
- *             : Gamma_ppoly    - pointer to the array containing the
- *                                minimum rho_b for each polytropic piece
- *             : K_ppoly0       - TODO: comment
- *             : Gamma_th       - TODO: comment
- *
- * Outputs     : eos            - ghl_eos_parameters struct with the above inputs
- *                                initialized
- */
+*/
 void ghl_initialize_hybrid_eos_functions_and_params(
-      const double W_max,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -272,31 +291,17 @@ void ghl_initialize_hybrid_eos_functions_and_params(
   ghl_initialize_eos_functions(ghl_eos_hybrid, eos);
 
   // Step 2: Initialize Hybrid EOS parameters
-  ghl_initialize_hybrid_eos(W_max, rho_atm, rho_min, rho_max,
-                        neos, rho_ppoly, Gamma_ppoly,
-                        K_ppoly0, Gamma_th, eos);
+  ghl_initialize_hybrid_eos(
+        rho_atm, rho_min, rho_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        K_ppoly0, Gamma_th, eos);
 }
 
 /* Function    : ghl_initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
- *
- * Inputs      : W_max          - maximum allowed Lorentz factor
- *             : rho_atm        - atmospheric value for rho
- *             : rho_min        - minimum allowable value for rho
- *             : rho_max        - maximum allowable value for rho
- *             : Y_e_atm        - atmospheric value for Y_e
- *             : Y_e_min        - minimum allowable value for Y_e
- *             : Y_e_max        - maximum allowable value for Y_e
- *             : T_atm          - atmospheric value for temperature
- *             : T_min          - minimum allowable value for temperature
- *             : T_max          - maximum allowable value for temperature
- *
- * Outputs     : eos            - ghl_eos_parameters struct with the above inputs
- *                                initialized
- */
+*/
 void ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_filepath,
-      const double W_max,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -314,7 +319,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
   ghl_initialize_eos_functions(ghl_eos_tabulated, eos);
 
   // Step 2: Initialize Tabulated EOS parameters
-  ghl_initialize_tabulated_eos(table_filepath, W_max,
+  ghl_initialize_tabulated_eos(table_filepath,
                            rho_atm, rho_min, rho_max,
                            Ye_atm, Ye_min, Ye_max,
                            T_atm, T_min, T_max,

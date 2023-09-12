@@ -15,9 +15,12 @@ int main(int argc, char **argv) {
   const double Gamma_ppoly[1] = {2.0};
   const double k_ppoly0 = 1.0;
 
+  ghl_parameters params;
+  params.max_lorenz_factor = W_max;
+  params.inv_sq_max_lorenz_factor = 1.0/SQR(W_max);
+
   ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(
-        W_max,
         rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,
         k_ppoly0, Gamma_th, &eos);
@@ -130,9 +133,9 @@ int main(int argc, char **argv) {
           &prims_l);
 
     int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
-          &eos, &ADM_metric, &prims_r);
+          &params, &ADM_metric, &prims_r);
     speed_limit = ghl_limit_v_and_compute_u0(
-          &eos, &ADM_metric, &prims_l);
+          &params, &ADM_metric, &prims_l);
 
     prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
     prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
@@ -292,9 +295,9 @@ int main(int argc, char **argv) {
                 &prims_l);
 
           int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
-                &eos, &ADM_metric, &prims_r);
+                &params, &ADM_metric, &prims_r);
           speed_limit = ghl_limit_v_and_compute_u0(
-                &eos, &ADM_metric, &prims_l);
+                &params, &ADM_metric, &prims_l);
 
           prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
           prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);

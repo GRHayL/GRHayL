@@ -36,19 +36,21 @@ int main(int argc, char **argv) {
   }
 
   ghl_parameters params;
-  ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-                    Psi6threshold, Cupp_fix, Lorenz_damping_factor, &params);
+  ghl_initialize_params(
+        None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+        Psi6threshold, Cupp_fix, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters hybrid_eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_atm, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &hybrid_eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_atm, rho_b_min, rho_b_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &hybrid_eos);
 
   evolve_temperature = true;
   ghl_parameters tab_params;
-  ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-                    Psi6threshold, Cupp_fix, Lorenz_damping_factor, &tab_params);
+  ghl_initialize_params(
+        None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+        Psi6threshold, Cupp_fix, W_max, Lorenz_damping_factor, &tab_params);
 
   /*
      NRPyLeakage_Fermi_Dirac_integrals:
@@ -69,10 +71,11 @@ int main(int argc, char **argv) {
   ghl_primitive_quantities prims;
   ghl_conservative_quantities cons;
   ghl_con2prim_diagnostics diagnostics;
-  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
-                    1.0, 0.0, 0.0,
-                    1.0, 0.0, 1.0,
-                    &ADM_metric);
+  ghl_initialize_metric(
+        1.0, 0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 1.0,
+        &ADM_metric);
 
   ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
@@ -89,7 +92,7 @@ int main(int argc, char **argv) {
       prims.vU[0] = 0.0/0.0;
       prims.vU[1] = 0.0/0.0;
       prims.vU[2] = 0.0/0.0;
-      speed_limited = ghl_limit_v_and_compute_u0(&hybrid_eos, &ADM_metric, &prims);
+      speed_limited = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims);
       break;
     case 5:
       ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
@@ -139,10 +142,11 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   }
 
   ghl_eos_parameters tab_eos;
-  ghl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
-                                                rho_b_atm, rho_b_min, rho_b_max,
-                                                Y_e_atm, Y_e_min, Y_e_max,
-                                                T_atm, T_min, T_max, &tab_eos);
+  ghl_initialize_tabulated_eos_functions_and_params(
+        tablepath,
+        rho_b_atm, rho_b_min, rho_b_max,
+        Y_e_atm, Y_e_min, Y_e_max,
+        T_atm, T_min, T_max, &tab_eos);
 
   /*
      NRPyEOS interpolators:

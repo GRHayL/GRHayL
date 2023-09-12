@@ -1,6 +1,7 @@
 #include "../../utils_Palenzuela1D.h"
 
 static int ghl_newman_entropy(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const double S_squared,
       const double BdotS,
@@ -72,7 +73,7 @@ static int ghl_newman_entropy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
 
     // Impose physical limits and compute W
-    invW = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
+    invW = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_lorenz_factor), 1.0);
     W    = 1.0/invW;
 
     // Then compute rho = D/W
@@ -109,7 +110,7 @@ static int ghl_newman_entropy(
     const double Epssq = Eps*Eps;
     const double zsq   = z*z;
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
-    invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/eos->W_max), 1.0);
+    invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_lorenz_factor), 1.0);
     W                  = 1.0/invW;
   }
 
@@ -125,7 +126,7 @@ static int ghl_newman_entropy(
   prims->Y_e         = xye;
   prims->temperature = xtemp;
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prims);
+  ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
@@ -149,6 +150,6 @@ int ghl_tabulated_Newman1D_entropy(
   // Step 2: Call the Newman routine that uses the entropy to recover T
   const double tol_x = 1e-15;
   diagnostics->which_routine = Newman1D_entropy;
-  return ghl_newman_entropy(eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
+  return ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
                             cons_undens, prims, tol_x, diagnostics);
 }

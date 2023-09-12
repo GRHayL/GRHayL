@@ -162,7 +162,7 @@ generate_test_data(
                                 Bx, By, Bz,
                                 xent, xye, xtemp,
                                 &prims_orig);
-          diagnostics.speed_limited = ghl_limit_v_and_compute_u0(eos, &ADM_metric, &prims_orig);
+          diagnostics.speed_limited = ghl_limit_v_and_compute_u0(params, &ADM_metric, &prims_orig);
 
           // Set prim guesses
           ghl_primitive_quantities prims;
@@ -326,21 +326,24 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   ghl_parameters params;
-  ghl_initialize_params(main_routine,
-                    backup_routines,
-                    evolve_entropy,
-                    evolve_temperature,
-                    calc_prims_guess,
-                    Psi6threshold,
-                    use_cupp_fix,
-                    Lorenz_damping_factor,
-                    &params);
+  ghl_initialize_params(
+        main_routine,
+        backup_routines,
+        evolve_entropy,
+        evolve_temperature,
+        calc_prims_guess,
+        Psi6threshold,
+        use_cupp_fix,
+        W_max,
+        Lorenz_damping_factor,
+        &params);
 
   ghl_eos_parameters eos;
-  ghl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
-                                                rho_b_atm, rho_b_min, rho_b_max,
-                                                Y_e_atm, Y_e_min, Y_e_max,
-                                                T_atm, T_min, T_max, &eos);
+  ghl_initialize_tabulated_eos_functions_and_params(
+        tablepath,
+        rho_b_atm, rho_b_min, rho_b_max,
+        Y_e_atm, Y_e_min, Y_e_max,
+        T_atm, T_min, T_max, &eos);
   eos.root_finding_precision=1e-10;
 
   if( test_key ) {

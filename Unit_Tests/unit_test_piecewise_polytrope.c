@@ -5,7 +5,6 @@ int main(int argc, char **argv) {
   // This is the SLy EOS with the values taken from the NRPyEOS python code
 
   const int neos = 4;
-  const double W_max = 10.0; //IGM default
   const double rho_b_min = 1e-12;
   const double rho_b_max = 1e300; //IGM default
   const double Gamma_th = 2.0; //Taken from magnetizedTOV.par
@@ -14,10 +13,10 @@ int main(int argc, char **argv) {
   const double k_ppoly0 = 6.80110e-9;
 
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &eos);
 
   // Expected output values taken from NRPyEOS python code
   double k_comp[4] = {6.8010999999999996e-09, 1.0618444833278535e-06, 5.3275084583961501e+01, 3.9992069172431910e-08};

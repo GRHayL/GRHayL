@@ -23,9 +23,13 @@ int main(int argc, char **argv) {
   const int backup_routine[3] = {Font1D,None,None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
+  const double W_max = 10.0; //IGM default
+  const bool cupp_fix = false;
+  const bool evolve_entropy = false;
+  const bool evolve_temperature = false;
+  const double Lorenz_damping_factor = 0;
 
   const int neos = 1;
-  const double W_max = 10.0; //IGM default
   const double rho_b_min = 1e-12;
   const double rho_b_max = 1e300; //IGM default
   const double Gamma_th = 2.0; //Taken from magnetizedTOV.par
@@ -36,14 +40,15 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   ghl_parameters params;
-  ghl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
-                    Psi6threshold, 0 /*Cupp Fix*/, 0 /*Lorenz damping factor*/, &params);
+  ghl_initialize_params(
+        Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+        Psi6threshold, cupp_fix, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &eos);
 
   // Allocate memory for the metrics
   double *gxx = (double*) malloc(sizeof(double)*arraylength);
@@ -151,14 +156,6 @@ int main(int argc, char **argv) {
 
   fclose(output);
 
-  double prims_abs_error[5] = {0,0,0,0,0};
-  double prims_trusted_abs_error[5] = {0,0,0,0,0};
-  double prims_pert_abs_error[5] = {0,0,0,0,0};
-
-  double prims_rel_error[5] = {0,0,0,0,0};
-  double prims_trusted_rel_error[5] = {0,0,0,0,0};
-  double prims_pert_rel_error[5] = {0,0,0,0,0};
-
   //Parallelizing this also needs parallel sum of abs/rel error arrays
   for(int index=0; index<arraylength; index++) {
     // Define the various GRHayL structs for the unit tests
@@ -187,12 +184,10 @@ int main(int argc, char **argv) {
                              S_x[index], S_y[index], S_z[index],
                              poison, poison, &cons);
 
-    const ghl_primitive_quantities prims_orig = prims;
     int check = 0;
     if(cons.rho > 0.0) {
-
       //This applies the inequality (or "Faber") fixes on the conservatives
-      if(eos.eos_type == 0) { //Hybrid-only
+      if(eos.eos_type == ghl_eos_hybrid) { //Hybrid-only
         if(index == arraylength-2 || index == arraylength-1) {
           params.psi6threshold = 1e-1; // Artificially triggering fix
           ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &prims, &cons, &diagnostics);
@@ -234,19 +229,6 @@ int main(int argc, char **argv) {
       printf("Negative rho_* triggering atmospheric reset.\n");
     } // if rho_star > 0
 
-    //Now we compute the difference between original & new primitives and conservatives, for diagnostic purposes:
-    prims_abs_error[0] += fabs(prims.rho - prims_orig.rho);
-    prims_abs_error[1] += fabs(prims.press - prims_orig.press);
-    prims_abs_error[2] += fabs(prims.vU[0] - prims_orig.vU[0]);
-    prims_abs_error[3] += fabs(prims.vU[1] - prims_orig.vU[1]);
-    prims_abs_error[4] += fabs(prims.vU[2] - prims_orig.vU[2]);
-
-    prims_rel_error[0] += relative_error(prims_orig.rho, prims.rho);
-    prims_rel_error[1] += relative_error(prims_orig.press, prims.press);
-    prims_rel_error[2] += relative_error(prims_orig.vU[0], prims.vU[0]);
-    prims_rel_error[3] += relative_error(prims_orig.vU[1], prims.vU[1]);
-    prims_rel_error[4] += relative_error(prims_orig.vU[2], prims.vU[2]);
-
     // Now, we load the trusted/perturbed data for this index and ghl_pert_test_fail the computed results.
     ghl_primitive_quantities prims_trusted, prims_pert;
 
@@ -261,30 +243,6 @@ int main(int argc, char **argv) {
                           poison, poison, poison, // B is C2P input, not output
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims_pert);
-
-    prims_trusted_abs_error[0] += fabs(prims_trusted.rho - prims_orig.rho);
-    prims_trusted_abs_error[1] += fabs(prims_trusted.press - prims_orig.press);
-    prims_trusted_abs_error[2] += fabs(prims_trusted.vU[0] - prims_orig.vU[0]);
-    prims_trusted_abs_error[3] += fabs(prims_trusted.vU[1] - prims_orig.vU[1]);
-    prims_trusted_abs_error[4] += fabs(prims_trusted.vU[2] - prims_orig.vU[2]);
-
-    prims_trusted_rel_error[0] += relative_error(prims_orig.rho, prims_trusted.rho);
-    prims_trusted_rel_error[1] += relative_error(prims_orig.press, prims_trusted.press);
-    prims_trusted_rel_error[2] += relative_error(prims_orig.vU[0], prims_trusted.vU[0]);
-    prims_trusted_rel_error[3] += relative_error(prims_orig.vU[1], prims_trusted.vU[1]);
-    prims_trusted_rel_error[4] += relative_error(prims_orig.vU[2], prims_trusted.vU[2]);
-
-    prims_pert_abs_error[0] += fabs(prims_pert.rho - prims_orig.rho);
-    prims_pert_abs_error[1] += fabs(prims_pert.press - prims_orig.press);
-    prims_pert_abs_error[2] += fabs(prims_pert.vU[0] - prims_orig.vU[0]);
-    prims_pert_abs_error[3] += fabs(prims_pert.vU[1] - prims_orig.vU[1]);
-    prims_pert_abs_error[4] += fabs(prims_pert.vU[2] - prims_orig.vU[2]);
-
-    prims_pert_rel_error[0] += relative_error(prims_orig.rho, prims_pert.rho);
-    prims_pert_rel_error[1] += relative_error(prims_orig.press, prims_pert.press);
-    prims_pert_rel_error[2] += relative_error(prims_orig.vU[0], prims_pert.vU[0]);
-    prims_pert_rel_error[3] += relative_error(prims_orig.vU[1], prims_pert.vU[1]);
-    prims_pert_rel_error[4] += relative_error(prims_orig.vU[2], prims_pert.vU[2]);
 
     if( ghl_pert_test_fail(prims_trusted.rho, prims.rho, prims_pert.rho) )
       ghl_error("Test unit_test_hybrid_Noble2D has failed for variable rho.\n"

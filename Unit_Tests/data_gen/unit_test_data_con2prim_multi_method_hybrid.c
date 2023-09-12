@@ -42,9 +42,9 @@ int main(int argc, char **argv) {
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100;
   const bool Cupp_fix = true;
+  const double W_max = 10.0;
 
   const int neos = 1;
-  const double W_max = 10.0;
   const double rho_b_min = 1e-12;
   const double rho_b_max = 1e300;
   const double Gamma_th = 2.0;
@@ -57,11 +57,11 @@ int main(int argc, char **argv) {
   ghl_parameters params;
   ghl_initialize_params(
         None, backup_routine, evolve_entropy, evolve_temperature,
-        calc_prims_guess, Psi6threshold, Cupp_fix, 0.0, &params);
+        calc_prims_guess, Psi6threshold, Cupp_fix, W_max, 0.0, &params);
 
   ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(
-        W_max, rho_b_min, rho_b_min, rho_b_max,
+        rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,
         k_ppoly0, Gamma_th, &eos);
 
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
 
-      const int speed_limited __attribute__((unused)) = ghl_limit_v_and_compute_u0(&eos, &ADM_metric, &prims);
+      const int speed_limited __attribute__((unused)) = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims);
 
       // We need epsilon to compute the enthalpy in ghl_compute_conservs_and_Tmunu;
       // This normally happens in the ghl_enforce_primitive_limits_and_compute_u0 function

@@ -28,7 +28,7 @@ int ghl_enforce_primitive_limits_and_compute_u0(
   prims->rho = MIN(MAX(prims->rho,eos->rho_min),eos->rho_max);
 
   // Hybrid EOS specific floors and ceilings
-  if( eos->eos_type == ghl_eos_hybrid ) {
+  if(eos->eos_type == ghl_eos_hybrid) {
     // Pressure and epsilon must be recomputed
     // Compute P and eps
     double P_cold = 0.0;
@@ -41,18 +41,17 @@ int ghl_enforce_primitive_limits_and_compute_u0(
     const double P_max = (ADM_metric->sqrt_detgamma > params->psi6threshold) ? 1e5*P_cold : 100.0*P_cold;
 
     // Now apply floors and ceilings to P
-    if(prims->press<P_min) prims->press = P_min;
-    // Finally, perform the last check
-    if((prims->rho < 100.0*eos->rho_atm || ADM_metric->sqrt_detgamma > params->psi6threshold) && prims->press>P_max) {
+    if(prims->press < P_min) prims->press = P_min;
+    else if((prims->rho < 100.0*eos->rho_atm || ADM_metric->sqrt_detgamma > params->psi6threshold) && prims->press > P_max)
       prims->press = P_max;
-    }
+
     // Now recompute eps and, if needed, entropy
     prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
     if(params->evolve_entropy)
       prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 
   // Tabulated EOS specific floors and ceilings
-  } else if( eos->eos_type == ghl_eos_tabulated ) {
+  } else if(eos->eos_type == ghl_eos_tabulated) {
     // Apply floors and ceilings to Y_e and T
     prims->Y_e         = MIN(MAX(prims->Y_e,eos->Y_e_min), eos->Y_e_max);
     prims->temperature = MIN(MAX(prims->temperature, eos->T_min),eos->T_max);
@@ -63,8 +62,17 @@ int ghl_enforce_primitive_limits_and_compute_u0(
     ghl_tabulated_compute_P_eps_from_T(eos,
                                        prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps);
+  } else if(eos->eos_type == ghl_eos_ideal_fluid) {
+    // Apply floors and ceilings to P
+    if(prims->press < eos->press_min) prims->press = eos->press_min;
+    else if(prims->press > eos->press_max) prims->press = eos->press_max;
+
+    // Now recompute eps and, if needed, entropy
+    prims->eps = prims->press/(prims->rho * (eos->Gamma_th-1.0));
+    if(params->evolve_entropy)
+      prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
   }
 
   // Finally, apply speed limit to v and compute u^0
-  return ghl_limit_v_and_compute_u0(eos, ADM_metric, prims);
+  return ghl_limit_v_and_compute_u0(params, ADM_metric, prims);
 }
