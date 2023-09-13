@@ -1,6 +1,7 @@
 #include "reconstruction.h"
 
 void ghl_ppm_Ur_Ul(
+      const ghl_parameters *restrict params,
       const double rho[5],
       const double pressure[5],
       const double var_data[][5],
@@ -38,6 +39,7 @@ void ghl_ppm_Ur_Ul(
  */
 
 void ghl_ppm(
+      const ghl_parameters *restrict params,
       const double rho[6],
       const double pressure[6],
       const double var_data[][6],
@@ -73,10 +75,13 @@ void ghl_ppm(
   //         which depend on U[1],U[2],U[3],U[4],U[5],
   //         hence the passing of the address U[1]
   //         as the lower bound of each U array.
-  ghl_ppm_Ur_Ul(&rho[1], &pressure[1], tmp_data, num_vars,
-            &v_flux_dirn[1], Gamma_eff,
-            &tmp_rhor, &tmp_rhol, &tmp_pressr, &tmp_pressl,
-            tmp_varsr, tmp_varsl);
+  ghl_ppm_Ur_Ul(
+        params, &rho[1], &pressure[1],
+         tmp_data, num_vars,
+        &v_flux_dirn[1], Gamma_eff,
+        &tmp_rhor, &tmp_rhol,
+        &tmp_pressr, &tmp_pressl,
+        tmp_varsr, tmp_varsl);
 
   // tmp_Ul[PLUS_0] is Ur[PLUS0], so set that now:
   *rhor = tmp_rhol;
@@ -90,10 +95,13 @@ void ghl_ppm(
 
   // STEP 2: Evaluate Ur[MINUS1] and Ul[MINUS1],
   //         which depend on U[0],U[1],U[2],U[3],U[4]
-  ghl_ppm_Ur_Ul(rho, pressure, tmp_data, num_vars,
-            v_flux_dirn, Gamma_eff,
-            &tmp_rhor, &tmp_rhol, &tmp_pressr, &tmp_pressl,
-            tmp_varsr, tmp_varsl);
+  ghl_ppm_Ur_Ul(
+        params, rho, pressure,
+        tmp_data, num_vars,
+        v_flux_dirn, Gamma_eff,
+        &tmp_rhor, &tmp_rhol,
+        &tmp_pressr, &tmp_pressl,
+        tmp_varsr, tmp_varsl);
 
   // tmp_Ur[MINUS1] is Ul[PLUS0], so set that now:
   *rhol = tmp_rhor;
@@ -107,6 +115,7 @@ void ghl_ppm(
 // Outputs: tmp_Ur[PLUS_0] = U(i+1/2)
 //          tmp_Ul[PLUS_0] = U(i-1/2)
 void ghl_ppm_Ur_Ul(
+      const ghl_parameters *restrict params,
       const double rho[5],
       const double pressure[5],
       const double var_data[][5],
@@ -128,10 +137,10 @@ void ghl_ppm_Ur_Ul(
   }
 
   // Steepen rhol and rhor
-  ghl_steepen_rhor_rhol(rho, pressure, Gamma_eff, rhor, rhol);
+  ghl_steepen_rhor_rhol(params, rho, pressure, Gamma_eff, rhor, rhol);
 
   // Flatten all variables
-  const double ftilde = ghl_shock_detection_ftilde(pressure, v_flux_dirn);
+  const double ftilde = ghl_shock_detection_ftilde(params, pressure, v_flux_dirn);
   ghl_flatten_and_monotonize_Ur_and_Ul(rho[PLUS_0], ftilde, rhor, rhol);
   ghl_flatten_and_monotonize_Ur_and_Ul(pressure[PLUS_0], ftilde, pressr, pressl);
   for(int var=0;var<num_vars;var++)

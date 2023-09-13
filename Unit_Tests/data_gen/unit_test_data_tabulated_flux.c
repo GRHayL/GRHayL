@@ -13,9 +13,13 @@ int main(int argc, char **argv) {
   const double T_min     = 1e-2;
   const double T_max     = 2e2;
 
+  ghl_parameters params;
+  params.max_lorenz_factor = W_max;
+  params.inv_sq_max_lorenz_factor = 1.0/SQR(W_max);
+
   ghl_eos_parameters eos;
   ghl_initialize_tabulated_eos_functions_and_params(
-        tablepath, W_max,
+        tablepath,
         rho_b_min, rho_b_min, rho_b_max,
         Ye_min, Ye_min, Ye_max,
         T_min, T_min, T_max,
@@ -157,9 +161,9 @@ int main(int argc, char **argv) {
           &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
     int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
-          &eos, &ADM_metric, &prims_r);
+          &params, &ADM_metric, &prims_r);
     speed_limit = ghl_limit_v_and_compute_u0(
-          &eos, &ADM_metric, &prims_l);
+          &params, &ADM_metric, &prims_l);
 
     ghl_calculate_characteristic_speed_dirn0(
           &prims_r, &prims_l, &eos,
@@ -332,9 +336,9 @@ int main(int argc, char **argv) {
                 &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
           int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
-                &eos, &ADM_metric, &prims_r);
+                &params, &ADM_metric, &prims_r);
           speed_limit = ghl_limit_v_and_compute_u0(
-                &eos, &ADM_metric, &prims_l);
+                &params, &ADM_metric, &prims_l);
 
           ghl_conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(

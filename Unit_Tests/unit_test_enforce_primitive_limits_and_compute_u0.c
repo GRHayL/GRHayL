@@ -18,10 +18,11 @@ int main(int argc, char **argv) {
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100;
-  const bool Cupp_fix = true;
+  const bool ignore_negative_pressure = true;
+  const double W_max = 10.0;
+  const double Lorenz_damping_factor = 0.0;
 
   const int neos = 1;
-  const double W_max = 10.0;
   const double rho_b_min = 1e-12;
   const double rho_b_max = 1e300;
   const double Gamma_th = 2.0;
@@ -32,14 +33,15 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   ghl_parameters params;
-  ghl_initialize_params(None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-                    Psi6threshold, Cupp_fix, 0.0 /*Lorenz damping factor*/, &params);
+  ghl_initialize_params(
+        None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+        Psi6threshold, ignore_negative_pressure, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &eos);
 
   // Allocate memory for the metric data
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
@@ -202,31 +204,32 @@ int main(int argc, char **argv) {
   // the output from the Noble2D test)
 
   // While we're at it, lets hit some of the warnings in the initialize!
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, -1, -1,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, -1, -1,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &eos);
 
   double rho_test = 1e-2;
   double P_cold = 0.0;
   ghl_hybrid_compute_P_cold(&eos, rho_test, &P_cold);
 
   ghl_metric_quantities ADM_metric;
-  ghl_initialize_metric(1.0,
-                    0.0, 0.0, 0.0,
-                    1.0, 0.0, 0.0,
-                    1.0, 0.0, 1.0,
-                    &ADM_metric);
+  ghl_initialize_metric(
+        1.0, 0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 1.0,
+        &ADM_metric);
 
   ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
   ghl_primitive_quantities prims;
-  ghl_initialize_primitives(1e-2, 1e6*P_cold, 0.0,
-                        0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0,
-                        &prims);
+  ghl_initialize_primitives(
+        1e-2, 1e6*P_cold, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        &prims);
 
   params.psi6threshold = 0;
   int speed_limited __attribute__((unused)) = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims);

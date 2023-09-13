@@ -222,7 +222,7 @@ int ghl_tabulated_Newman1D_entropy(
 //------------ Auxiliary Functions -----------------
 
 int ghl_limit_utilde_and_compute_v(
-      const ghl_eos_parameters *restrict eos,
+      const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict metric,
       double utU[3],
       ghl_primitive_quantities *restrict prims);

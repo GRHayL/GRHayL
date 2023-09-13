@@ -2,28 +2,12 @@
 
 /* Function    : ghl_limit_utilde_and_compute_v()
  * Description : Applies speed limit to \tilde{u}^i and computes v^i and u^0
- *
- * Inputs      : eos            - ghl_eos_parameters struct with data for the
- *                                EOS of the simulation
- *             : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : utcon1_ptr     - pointer to the x component of \tilde{u}^1
- *             : utcon2_ptr     - pointer to the y component of \tilde{u}^2
- *             : utcon3_ptr     - pointer to the z component of \tilde{u}^3
- *
- * Outputs     : utcon1_ptr     - returns velocity-limited \tilde{u}^1
- *             : utcon2_ptr     - returns velocity-limited \tilde{u}^2
- *             : utcon3_ptr     - returns velocity-limited \tilde{u}^3
- *             : prims          - returns prims->v^i and prims->u0 computed from
- *                                velocity-limited \tilde{u}^i
- *             : diagnostics    - tracks if the velocity was limited
- *
- */
+*/
 
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
 int ghl_limit_utilde_and_compute_v(
-      const ghl_eos_parameters *restrict eos,
+      const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,
       double utU[3],
       ghl_primitive_quantities *restrict prims) {
@@ -34,8 +18,8 @@ int ghl_limit_utilde_and_compute_v(
   double au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
 
   // *** Limit velocity
-  if (au0m1 > 0.9999999*(eos->W_max-1.0)) {
-    double fac = sqrt((SQR(eos->W_max)-1.0)/(SQR(1.0+au0m1) - 1.0));
+  if (au0m1 > 0.9999999*(params->max_lorenz_factor-1.0)) {
+    double fac = sqrt((SQR(params->max_lorenz_factor)-1.0)/(SQR(1.0+au0m1) - 1.0));
     utU[0] *= fac;
     utU[1] *= fac;
     utU[2] *= fac;

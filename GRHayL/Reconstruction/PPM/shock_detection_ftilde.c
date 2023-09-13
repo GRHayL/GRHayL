@@ -2,11 +2,9 @@
 
 // Compute ftilde, which is used for flattening left and right face values
 // DEPENDENCIES: P(MINUS2,MINUS1,PLUS_1,PLUS_2) and v^m(MINUS1,PLUS_1), where m=flux_dirn={1,2,3}={x,y,z}.
-#define OMEGA1   0.75
-#define OMEGA2  10.0
-#define EPSILON2 0.33
 
 double ghl_shock_detection_ftilde(
+      const ghl_parameters *restrict params,
       const double P[5],
       const double v_flux_dirn[5]) {
 
@@ -23,12 +21,12 @@ double ghl_shock_detection_ftilde(
   double dP1_over_dP2=1.0;
   if (dP2 != 0.0) dP1_over_dP2 = dP1/dP2;
 
-  const double q1 = (dP1_over_dP2-OMEGA1)*OMEGA2;
+  const double q1 = (dP1_over_dP2 - params->ppm_flattening_omega1) * params->ppm_flattening_omega2;
   const double q2 = fabs(dP1)/MIN(P[PLUS_1], P[MINUS1]);
 
   // w==0 -> NOT inside a shock
   // w==1 -> inside a shock
-  const double w = (q2 > EPSILON2 && q2*( (v_flux_dirn[MINUS1]) - (v_flux_dirn[PLUS_1]) ) > 0.0);
+  const double w = (q2 > params->ppm_flattening_epsilon && q2*( (v_flux_dirn[MINUS1]) - (v_flux_dirn[PLUS_1]) ) > 0.0);
 
   return MIN(1.0, w*MAX(0.0,q1));
 }

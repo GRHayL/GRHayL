@@ -2,8 +2,9 @@
 
 int main(int argc, char **argv) {
 
+  const double rel_tol = 1e-14;
+
   const int neos = 1;
-  const double W_max = 10.0;
   const double rho_b_min = 1e-12;
   const double rho_b_max = 1e300;
   const double Gamma_th = 2.0;
@@ -13,7 +14,6 @@ int main(int argc, char **argv) {
 
   ghl_eos_parameters hybrid_eos;
   ghl_initialize_hybrid_eos_functions_and_params(
-      W_max,
       rho_b_min, rho_b_min, rho_b_max,
       neos, rho_ppoly, Gamma_ppoly,
       k_ppoly0, Gamma_th,
@@ -26,13 +26,12 @@ int main(int argc, char **argv) {
   //const double T_max = 1e300;
   //ghl_eos_parameters tabulated_eos;
   //ghl_initialize_tabulated_eos_functions_and_params(
-  //    W_max,
   //    rho_b_min, rho_b_min, rho_b_max,
   //    Ye_min, Ye_min, Ye_max,
   //    T_min, T_min, T_max,
   //    &tabulated_eos);
 
-  // First test: ghl_set_prims_to_constant_atm() function
+  // ghl_set_prims_to_constant_atm() function
   // Function just sets data to eos data, so no need
   // to store pre-computed comparison data
   ghl_primitive_quantities prims;
@@ -96,7 +95,29 @@ int main(int argc, char **argv) {
     }
   }
 
-  // Second test: ghl_enforce_detgtij_and_initialize_ADM_metric() function
+  // ghl_compute_vec2_from_vec4D() function
+  // Use test quantities with known result
+  double g4[4][4];
+  g4[0][0]            =  1.0;
+  g4[0][1] = g4[1][0] =  2.0;
+  g4[0][2] = g4[2][0] =  3.0;
+  g4[0][3] = g4[3][0] =  4.0;
+  g4[1][1]            =  5.0;
+  g4[1][2] = g4[2][1] =  6.0;
+  g4[1][3] = g4[3][1] =  7.0;
+  g4[2][2]            =  8.0;
+  g4[2][3] = g4[3][2] =  9.0;
+  g4[3][3]            = 10.0;
+
+  const double vec[4] = {-1.0, 2.0, -3.0, 4.0};
+
+  const double v2 = ghl_compute_vec2_from_vec4D(g4, vec);
+  if(relative_error(v2, 55.0) > rel_tol) 
+    ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_compute_vec2_from_vec4D().\n"
+              "  Expected result is 55, but computed value is %e.\n",
+              v2);
+
+  // ghl_enforce_detgtij_and_initialize_ADM_metric() function
   // Valid metrics should return near-identical (round-off level) metrics
   ghl_metric_quantities new_metric;
 
@@ -132,7 +153,6 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  const double rel_tol = 1e-14;
   for(int i=0; i<arraylength; i++) {
     ghl_enforce_detgtij_and_initialize_ADM_metric(
         lapse[i],
@@ -152,13 +172,13 @@ int main(int argc, char **argv) {
   || relative_error(gyz[i],   new_metric.gammaDD[1][2]) > rel_tol
   || relative_error(gzz[i],   new_metric.gammaDD[2][2]) > rel_tol)
     ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
-                 "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
-                 "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
-                 lapse[i], betax[i], betay[i], betaz[i],
-                 gxx[i], gxy[i], gxz[i], gyy[i], gyz[i], gzz[i],
-                 new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1], new_metric.betaU[2],
-                 new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
-                 new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
+              "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
+              "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
+              lapse[i], betax[i], betay[i], betaz[i],
+              gxx[i], gxy[i], gxz[i], gyy[i], gyz[i], gzz[i],
+              new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1], new_metric.betaU[2],
+              new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
+              new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
 
   }
 
@@ -183,13 +203,13 @@ int main(int argc, char **argv) {
   || relative_error(gyz[0],   new_metric.gammaDD[1][2]) > rel_tol
   || relative_error(gzz[0],   new_metric.gammaDD[2][2]) > rel_tol)
     ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
-                 "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
-                 "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
-                 lapse[0], betax[0], betay[0], betaz[0],
-                 gxx[0], gxy[0], gxz[0], gyy[0], gyz[0], gzz[0],
-                 new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1], new_metric.betaU[2],
-                 new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
-                 new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
+              "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
+              "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
+              lapse[0], betax[0], betay[0], betaz[0],
+              gxx[0], gxy[0], gxz[0], gyy[0], gyz[0], gzz[0],
+              new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1], new_metric.betaU[2],
+              new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
+              new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
 
   ghl_info("grhayl_core_test_suite has passed!\n");
 }

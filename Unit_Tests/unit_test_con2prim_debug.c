@@ -99,20 +99,22 @@ int main(int argc, char **argv) {
   // a simulation.
   ghl_parameters params;
   ghl_initialize_params(main_routine,
-                    backup_routines,
-                    evolve_entropy,
-                    evolve_temperature,
-                    calc_prims_guess,
-                    Psi6threshold,
-                    use_cupp_fix,
-                    Lorenz_damping_factor,
-                    &params);
+        backup_routines,
+        evolve_entropy,
+        evolve_temperature,
+        calc_prims_guess,
+        Psi6threshold,
+        use_cupp_fix,
+        W_max,
+        Lorenz_damping_factor,
+        &params);
 
   ghl_eos_parameters eos;
-  ghl_initialize_tabulated_eos_functions_and_params(tablepath, W_max,
-                                                    rho_b_atm, rho_b_min, rho_b_max,
-                                                    Y_e_atm, Y_e_min, Y_e_max,
-                                                    T_atm, T_min, T_max, &eos);
+  ghl_initialize_tabulated_eos_functions_and_params(
+        tablepath,
+        rho_b_atm, rho_b_min, rho_b_max,
+        Y_e_atm, Y_e_min, Y_e_max,
+        T_atm, T_min, T_max, &eos);
   eos.root_finding_precision=1e-10;
 
   const char *lapse_shift_string = "8.787479e-01 8.657114e-03 -2.066025e-02 2.384216e-04";

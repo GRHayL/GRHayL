@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100;
-  const bool Cupp_fix = true;
+  const bool ignore_negative_pressure = true;
 
   const int neos = 1;
   const double W_max = 10.0;
@@ -26,14 +26,15 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   ghl_parameters params;
-  ghl_initialize_params(Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-                    Psi6threshold, Cupp_fix, 0.0, &params);
+  ghl_initialize_params(
+        Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+        Psi6threshold, ignore_negative_pressure, W_max, 0.0, &params);
 
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &eos);
 
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
   double *betax = (double*) malloc(sizeof(double)*arraylength);

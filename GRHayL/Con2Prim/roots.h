@@ -1,9 +1,8 @@
 #ifndef ROOTS_H_
 #define ROOTS_H_
 
+#include "ghl.h"
 #include <stdio.h>
-#include <stdbool.h>
-#include <math.h>
 #include <float.h>
 
 #ifndef DBL_EPSILON
@@ -137,18 +136,30 @@ sign( const double x ) {
  */
 roots_error_t
 ghl_brent(
-    double f(const double, void *restrict),
-    void *restrict fparams,
-    double a,
-    double b,
-    roots_params *restrict r );
+      double f(
+            const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
+            void *restrict fparams),
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      void *restrict fparams,
+      double a,
+      double b,
+      roots_params *restrict r );
 
 roots_error_t
 ghl_toms748(
-    double f(const double, void *restrict),
-    void *restrict fparams,
-    double a,
-    double b,
-    roots_params *restrict r );
+      double f(
+            const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
+            void *restrict fparams),
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      void *restrict fparams,
+      double a,
+      double b,
+      roots_params *restrict r );
 
 #endif // ROOTS_H_

@@ -25,10 +25,11 @@
 typedef struct fparams_struct {
   bool evolve_T;
   double temp_guess, Y_e, q, r, s, t;
-  const ghl_eos_parameters *eos;
   const ghl_conservative_quantities *cons_undens;
   void (*compute_rho_P_eps_T_W)(
       const double x,
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
       struct fparams_struct *restrict fparams,
       double *restrict rho_ptr,
       double *restrict P_ptr,
@@ -37,6 +38,8 @@ typedef struct fparams_struct {
       double *restrict W_ptr );
   void (*compute_rho_P_eps_W)(
       const double x,
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
       struct fparams_struct *restrict fparams,
       double *restrict rho_ptr,
       double *restrict P_ptr,
@@ -61,6 +64,7 @@ typedef struct fparams_struct {
 static inline void
 compute_rho_W_from_x_and_conservatives(
   const double x,
+  const ghl_parameters *restrict params,
   const fparams_struct *restrict fparams,
   double *restrict rho_ptr,
   double *restrict W_ptr ) {
@@ -72,7 +76,7 @@ compute_rho_W_from_x_and_conservatives(
 
   // Step 2: Compute W
   double Wminus2 = 1.0 - ( x*x*r + (2*x+s)*t*t  )/ (x*x*(x+s)*(x+s));
-  Wminus2        = MIN(MAX(Wminus2, fparams->eos->inv_W_max_squared ), 1.0);
+  Wminus2        = MIN(MAX(Wminus2, params->inv_sq_max_lorenz_factor ), 1.0);
   const double W = pow(Wminus2, -0.5);
 
   // Step 3: Compute rho
@@ -150,6 +154,8 @@ compute_BU_SU_Bsq_Ssq_BdotS(
 int ghl_tabulated_Palenzuela1D(
       void compute_rho_P_eps_T_W(
             const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
             fparams_struct *restrict fparams,
             double *restrict rho_ptr,
             double *restrict P_ptr,
@@ -166,6 +172,8 @@ int ghl_tabulated_Palenzuela1D(
 int ghl_tabulated_Newman1D(
       void compute_rho_P_eps_T_W(
             const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
             fparams_struct *restrict fparams,
             double *restrict rho_ptr,
             double *restrict P_ptr,
@@ -182,6 +190,8 @@ int ghl_tabulated_Newman1D(
 int ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(
             const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
             fparams_struct *restrict fparams,
             double *restrict rho_ptr,
             double *restrict P_ptr,
@@ -197,6 +207,8 @@ int ghl_hybrid_Palenzuela1D(
 int ghl_hybrid_Newman1D(
       void compute_rho_P_eps_W(
             const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
             fparams_struct *restrict fparams,
             double *restrict rho_ptr,
             double *restrict P_ptr,

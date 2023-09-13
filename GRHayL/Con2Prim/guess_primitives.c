@@ -29,7 +29,7 @@ void ghl_guess_primitives(
   prims->Y_e         = cons->Y_e/cons->rho;
   prims->temperature = eos->T_max;
 
-  // If using Hybrid EOS, compute P_cold
-  if( eos->eos_type == ghl_eos_hybrid )
+  // If using hybrid or ideal fluid EOS, compute P_cold and eps_cold
+  if( eos->eos_type == ghl_eos_hybrid || eos->eos_type == ghl_eos_ideal_fluid )
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prims->press, &prims->eps);
 }

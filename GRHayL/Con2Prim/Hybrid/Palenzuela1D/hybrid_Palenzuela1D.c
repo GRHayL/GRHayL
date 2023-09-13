@@ -17,11 +17,13 @@
 static inline double
 froot(
       const double x,
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
       void *restrict fparams ) {
 
   double rho, P, eps, W;
   ((fparams_struct *)fparams)->compute_rho_P_eps_W(
-    x, fparams, &rho, &P, &eps, &W);
+    x, params, eos, fparams, &rho, &P, &eps, &W);
 
   // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
   return x - (1.0 + eps + P/rho)*W;
@@ -52,6 +54,8 @@ froot(
 int ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(
             const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
             fparams_struct *restrict fparams,
             double *restrict rho_ptr,
             double *restrict P_ptr,
@@ -99,7 +103,6 @@ int ghl_hybrid_Palenzuela1D(
   fparams.r                   = S_squared * invD * invD;
   fparams.s                   = B_squared * invD;
   fparams.t                   = BdotS/pow(cons_undens->rho, 1.5);
-  fparams.eos                 = eos;
   fparams.cons_undens         = cons_undens;
 
   // Step 6: Bracket x (Eq. A8 of [1])
@@ -111,7 +114,7 @@ int ghl_hybrid_Palenzuela1D(
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
   // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
-  ghl_brent(froot, &fparams, xlow, xup, &rparams);
+  ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
   if( rparams.error_key != roots_success )
     return rparams.error_key;
 
@@ -120,7 +123,7 @@ int ghl_hybrid_Palenzuela1D(
   // Step 8: Set core primitives using the EOS and the root
   double x = rparams.root;
   double rho, P, eps, W;
-  compute_rho_P_eps_W(x, &fparams, &rho, &P, &eps, &W);
+  compute_rho_P_eps_W(x, params, eos, &fparams, &rho, &P, &eps, &W);
 
   // Step 9: Compute auxiliary quantities to obtain the velocities using
   //          Eq. (24) in [2]. Note, however, that GRHayL expects the velocity
@@ -143,7 +146,7 @@ int ghl_hybrid_Palenzuela1D(
   prims->rho   = rho;
   prims->press = P;
   prims->eps   = eps;
-  ghl_limit_utilde_and_compute_v(eos, ADM_metric, utildeU, prims);
+  ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
 
   return ghl_success;
 }

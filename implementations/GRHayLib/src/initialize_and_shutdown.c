@@ -18,14 +18,7 @@ int (*ghl_con2prim_multi_method)(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-typedef struct {
-  double rho_atm, rho_min, rho_max;
-  double Y_e_atm, Y_e_min, Y_e_max;
-  double T_atm  , T_min  , T_max;
-} ghl_params_checked;
-
 void GRHayLib_paramcheck() {
-
   DECLARE_CCTK_PARAMETERS;
 
   if(rho_b_atm < 0)
@@ -37,7 +30,7 @@ void GRHayLib_paramcheck() {
   if(rho_b_max < 0 && rho_b_max != -1)
     CCTK_ERROR("Parameter rho_b_max must be non-negative.");
 
-  if( CCTK_EQUALS(EOS_type, "hybrid") ) {
+  if( CCTK_EQUALS(EOS_type, "Hybrid") ) {
     if(Gamma_th < 0)
       CCTK_ERROR("Parameter Gamma_th must be set in the parameter file and be non-negative.");
 
@@ -61,7 +54,7 @@ void GRHayLib_paramcheck() {
       if(Gamma_ppoly_in[neos] < 0)
         CCTK_VERROR("Parameter Gamma_ppoly_in[%d] must be set in the parameter file and be non-negative.", neos);
     }
-  } else if( CCTK_EQUALS(EOS_type, "tabulated") ) {
+  } else if( CCTK_EQUALS(EOS_type, "Tabulated") ) {
     if(Y_e_atm == -1)
       CCTK_ERROR("Parameter Y_e_atm must be set in the parameter file");
     else if(Y_e_atm < 0)
@@ -104,24 +97,41 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       main, backups,
       evolve_entropy, evolve_temperature,
       calc_primitive_guess, Psi6threshold,
-      Cupp_Fix, Lorenz_damping_factor,
+      ignore_negative_pressure, max_lorenz_factor,
+      Lorenz_damping_factor,
       ghl_params);
 
-  if (CCTK_EQUALS(EOS_type, "hybrid")) {
+      params->ppm_flattening_epsilon = ppm_flattening_epsilon;
+      params->ppm_flattening_omega1  = ppm_flattening_omega1;
+      params->ppm_flattening_omega2  = ppm_flattening_omega2;
+
+      params->ppm_shock_epsilon = ppm_shock_epsilon;
+      params->ppm_shock_eta1    = ppm_shock_eta1;
+      params->ppm_shock_eta2    = ppm_shock_eta2;
+      params->ppm_shock_k0      = ppm_shock_k0;
+
+  if (CCTK_EQUALS(EOS_type, "IdealFluid")) {
+    if(main == Font1D || backups[0] == Font1D || backups[1] == Font1D || backups[2] == Font1D)
+      CCTK_VERROR("Error: Font1D routine is incompatible with ideal fluid EOS. Please choose a different Con2Prim routine.");
+    ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
+    ghl_initialize_ideal_fluid_eos_functions_and_params(
+          rho_b_atm, rho_b_min, rho_b_max,
+          P_atm, P_min, P_max,
+          Gamma, ghl_eos);
+  } else if (CCTK_EQUALS(EOS_type, "Hybrid")) {
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
     ghl_initialize_hybrid_eos_functions_and_params(
-          max_lorenz_factor,
           rho_b_atm, rho_b_min, rho_b_max,
           neos, rho_ppoly_in,
           Gamma_ppoly_in, k_ppoly0,
           Gamma_th, ghl_eos);
-  } else if (CCTK_EQUALS(EOS_type, "tabulated")) {
+  } else if (CCTK_EQUALS(EOS_type, "Tabulated")) {
     if( CCTK_EQUALS(EOS_tablepath, "") )
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
 
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
     ghl_initialize_tabulated_eos_functions_and_params(
-          EOS_tablepath, max_lorenz_factor,
+          EOS_tablepath,
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,
           T_atm, T_min, T_max,

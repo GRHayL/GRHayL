@@ -27,9 +27,13 @@ int main(int argc, char **argv) {
   int backup_routine[3] = {None,None,None};
   bool calc_prims_guess = true;
   double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
+  const bool cupp_fix = false;
+  const bool evolve_entropy = false;
+  const bool evolve_temperature = false;
+  const double Lorenz_damping_factor = 0;
+  const double W_max = 10.0;
 
   int neos = 1;
-  double W_max = 10.0; //IGM default
   double rho_b_min = 1e-12;
   double rho_b_max = 1e300; //IGM default
   double Gamma_th = 2.0; //Taken from magnetizedTOV.par
@@ -40,14 +44,15 @@ int main(int argc, char **argv) {
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   ghl_parameters params;
-  ghl_initialize_params(Noble2D, backup_routine, false /*evolve entropy*/, false /*evolve temperature*/, calc_prims_guess,
-                    Psi6threshold, 0 /*Cupp Fix*/, 0.0 /*Lorenz damping factor*/, &params);
+  ghl_initialize_params(
+        Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+        Psi6threshold, cupp_fix, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
-  ghl_initialize_hybrid_eos_functions_and_params(W_max,
-                                             rho_b_min, rho_b_min, rho_b_max,
-                                             neos, rho_ppoly, Gamma_ppoly,
-                                             k_ppoly0, Gamma_th, &eos);
+  ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max,
+        neos, rho_ppoly, Gamma_ppoly,
+        k_ppoly0, Gamma_th, &eos);
 
   // Compute the density step size
   const double lrmin        = log(test_rho_min);
@@ -141,7 +146,7 @@ int main(int argc, char **argv) {
       prims.eps = eps_cold + (prims.press-P_cold)/(eos.Gamma_th-1.0)/prims.rho;
 
       diagnostics.speed_limited = ghl_limit_v_and_compute_u0(
-            &eos, &ADM_metric, &prims);
+            &params, &ADM_metric, &prims);
 
       // Compute conservatives based on these primitives
       ghl_compute_conservs_and_Tmunu(

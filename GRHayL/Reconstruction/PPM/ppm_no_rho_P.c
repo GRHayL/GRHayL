@@ -1,6 +1,7 @@
 #include "reconstruction.h"
 
 void ghl_ppm_Ur_Ul_no_rho_P(
+      const ghl_parameters *restrict params,
       const double pressure[5],
       const double var_data[][5],
       const int num_vars,
@@ -29,6 +30,7 @@ void ghl_ppm_Ur_Ul_no_rho_P(
  *             : var_datal      - array of reconstructed variables on left face
  */
 void ghl_ppm_no_rho_P(
+      const ghl_parameters *restrict params,
       const double pressure[6],
       const double var_data[][6],
       const int num_vars,
@@ -57,9 +59,11 @@ void ghl_ppm_no_rho_P(
   //         which depend on U[1],U[2],U[3],U[4],U[5],
   //         hence the passing of the address U[1]
   //         as the lower bound of each U array.
-  ghl_ppm_Ur_Ul_no_rho_P(&pressure[1], tmp_data, num_vars,
-            &v_flux_dirn[1], Gamma_eff,
-            tmp_varsr, tmp_varsl);
+  ghl_ppm_Ur_Ul_no_rho_P(
+        params, &pressure[1],
+        tmp_data, num_vars,
+        &v_flux_dirn[1], Gamma_eff,
+        tmp_varsr, tmp_varsl);
 
   // tmp_Ul[PLUS_0] is Ur[PLUS0], so set that now:
   for(int var=0;var<num_vars;var++) {
@@ -71,9 +75,11 @@ void ghl_ppm_no_rho_P(
 
   // STEP 2: Evaluate Ur[MINUS1] and Ul[MINUS1],
   //         which depend on U[0],U[1],U[2],U[3],U[4]
-  ghl_ppm_Ur_Ul_no_rho_P(pressure, tmp_data, num_vars,
-            v_flux_dirn, Gamma_eff,
-            tmp_varsr, tmp_varsl);
+  ghl_ppm_Ur_Ul_no_rho_P(
+        params, pressure,
+        tmp_data, num_vars,
+        v_flux_dirn, Gamma_eff,
+        tmp_varsr, tmp_varsl);
 
   // tmp_Ur[MINUS1] is Ul[PLUS0], so set that now:
   for(int var=0;var<num_vars;var++)
@@ -85,6 +91,7 @@ void ghl_ppm_no_rho_P(
 // Outputs: tmp_Ur[PLUS_0] = U(i+1/2)
 //          tmp_Ul[PLUS_0] = U(i-1/2)
 void ghl_ppm_Ur_Ul_no_rho_P(
+      const ghl_parameters *restrict params,
       const double pressure[5],
       const double var_data[][5],
       const int num_vars,
@@ -99,7 +106,7 @@ void ghl_ppm_Ur_Ul_no_rho_P(
   }
 
   // Flatten all variables
-  const double ftilde = ghl_shock_detection_ftilde(pressure, v_flux_dirn);
+  const double ftilde = ghl_shock_detection_ftilde(params, pressure, v_flux_dirn);
   for(int var=0;var<num_vars;var++)
     ghl_flatten_and_monotonize_Ur_and_Ul(var_data[var][PLUS_0], ftilde, &varsr[var], &varsl[var]);
 }

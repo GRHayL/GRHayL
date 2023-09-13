@@ -16,7 +16,13 @@
 
 static void
 bracket(
-    double f(const double, void *restrict),
+      double f(
+            const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
+            void *restrict fparams),
+    const ghl_parameters *restrict params,
+    const ghl_eos_parameters *restrict eos,
     void *restrict fparams,
     double *restrict a,
     double *restrict b,
@@ -49,7 +55,7 @@ bracket(
   //
   // OK, lets invoke f(c):
   //
-  double fc = f(c, fparams);
+  double fc = f(c, params, eos, fparams);
   //
   // if we have a zero then we have an exact solution to the root:
   //
@@ -211,11 +217,17 @@ cubic_interpolate(
 
 roots_error_t
 ghl_toms748(
-    double f(const double, void *restrict),
-    void *restrict fparams,
-    double a,
-    double b,
-    roots_params *restrict r ) {
+      double f(
+            const double x,
+            const ghl_parameters *restrict params,
+            const ghl_eos_parameters *restrict eos,
+            void *restrict fparams),
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      void *restrict fparams,
+      double a,
+      double b,
+      roots_params *restrict r ) {
 
   // Step 0: Set basic info to the roots_params struct
   sprintf(r->routine_name, __func__);
@@ -231,8 +243,8 @@ ghl_toms748(
     swap(&a, &b);
 
   // Now compute fa and fb
-  double fa = f(a, fparams);
-  double fb = f(b, fparams);
+  double fa = f(a, params, eos, fparams);
+  double fb = f(b, params, eos, fparams);
 
   if(sign(fa) * sign(fb) > 0)
     return (r->error_key = roots_error_root_not_bracketed);
@@ -258,7 +270,7 @@ ghl_toms748(
     // On the first step we take a secant step:
     //
     c = secant_interpolate(a, b, fa, fb);
-    bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
+    bracket(f, params, eos, fparams, &a, &b, c, &fa, &fb, &d, &fd);
     --count;
 
     if(count && (fa != 0) && fabs(b-a) > r->tol) {
@@ -268,7 +280,7 @@ ghl_toms748(
       c = quadratic_interpolate(a, b, d, fa, fb, fd, 2);
       e = d;
       fe = fd;
-      bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
+      bracket(f, params, eos, fparams, &a, &b, c, &fa, &fb, &d, &fd);
       --count;
     }
   }
@@ -301,7 +313,7 @@ ghl_toms748(
     //
     e = d;
     fe = fd;
-    bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
+    bracket(f, params, eos, fparams, &a, &b, c, &fa, &fb, &d, &fd);
     if( (0 == --count) || (fa == 0) || fabs(b-a) < r->tol )
       break;
 
@@ -322,7 +334,7 @@ ghl_toms748(
     //
     // Bracket again, and check termination condition, update e:
     //
-    bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
+    bracket(f, params, eos, fparams, &a, &b, c, &fa, &fb, &d, &fd);
     if( (0 == --count) || (fa == 0) || fabs(b-a) < r->tol )
       break;
 
@@ -346,7 +358,7 @@ ghl_toms748(
     //
     e = d;
     fe = fd;
-    bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
+    bracket(f, params, eos, fparams, &a, &b, c, &fa, &fb, &d, &fd);
     if( (0 == --count) || (fa == 0) || fabs(b-a) < r->tol )
       break;
 
@@ -362,7 +374,7 @@ ghl_toms748(
     //
     e = d;
     fe = fd;
-    bracket(f, fparams, &a, &b, a + (b - a) / 2, &fa, &fb, &d, &fd);
+    bracket(f, params, eos, fparams, &a, &b, a + (b - a) / 2, &fa, &fb, &d, &fd);
     --count;
   } // while loop
 

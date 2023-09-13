@@ -14,7 +14,9 @@ enum reconstruction_stencil {
 extern "C" {
 #endif
 
+// PPM functions
 void ghl_ppm(
+      const ghl_parameters *restrict params,
       const double rho[6],
       const double pressure[6],
       const double var_data[][6],
@@ -29,6 +31,7 @@ void ghl_ppm(
       double *restrict var_datal);
 
 void ghl_ppm_no_rho_P(
+      const ghl_parameters *restrict params,
       const double pressure[6],
       const double var_data[][6],
       const int num_vars,
@@ -41,20 +44,38 @@ double ghl_slope_limit(
       const double dU,
       const double dUp1);
 
-void ghl_compute_UrUl_onevar(const double U[5], double *restrict Ur, double *restrict Ul);
+void ghl_compute_UrUl_onevar(
+      const double U[5],
+      double *restrict Ur,
+      double *restrict Ul);
 
-double ghl_shock_detection_ftilde(const double P[5], const double v_flux_dirn[5]);
-void ghl_steepen_rhor_rhol(const double rho[5], const double P[5], const double Gamma_eff,
-                              double *restrict rhor, double *restrict rhol);
-void ghl_flatten_and_monotonize_Ur_and_Ul(const double U, const double ftilde, double *restrict Ur, double *restrict Ul);
+double ghl_shock_detection_ftilde(
+      const ghl_parameters *restrict params,
+      const double P[5],
+      const double v_flux_dirn[5]);
 
+void ghl_steepen_rhor_rhol(
+      const ghl_parameters *restrict params,
+      const double rho[5],
+      const double P[5],
+      const double Gamma_eff,
+      double *restrict rhor,
+      double *restrict rhol);
+
+void ghl_flatten_and_monotonize_Ur_and_Ul(
+      const double U,
+      const double ftilde,
+      double *restrict Ur,
+      double *restrict Ul);
+
+// TVD functions
 double ghl_minmod(
-        const double a,
-        const double b);
+      const double a,
+      const double b);
 
 double ghl_maxmod(
-        const double a,
-        const double b);
+      const double a,
+      const double b);
 
 void ghl_minmod_reconstruction(
       const double U_m2,
