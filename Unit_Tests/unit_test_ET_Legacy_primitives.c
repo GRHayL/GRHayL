@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
   const double W_max = 10.0; //IGM default
-  const bool cupp_fix = false;
+  const bool ignore_negative_pressure = true;
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
   const double Lorenz_damping_factor = 0;
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
   ghl_parameters params;
   ghl_initialize_params(
         Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-        Psi6threshold, cupp_fix, W_max, Lorenz_damping_factor, &params);
+        Psi6threshold, ignore_negative_pressure, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(
