@@ -207,3 +207,42 @@ CCTK_REAL T_max "Maximum temperature allowed (optional; table bounds used by def
 CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?"
 {
 } "no"
+
+#########################################################
+
+# PPM reconstruction parameters
+CCTK_REAL ppm_flattening_epsilon "Epsilon used for flattening in PPM algorithm"
+{
+  :     :: "Anything goes. Default is from Colella & Woodward"
+} 0.33
+
+CCTK_REAL ppm_flattening_omega1 "Omega1 used for flattening in PPM algorithm"
+{
+  :     :: "Anything goes. Default is from Colella & Woodward"
+} 0.75
+
+CCTK_REAL ppm_flattening_omega2 "Omega2 used for flattening in PPM algorithm"
+{
+  :     :: "Anything goes. Default is from Colella & Woodward"
+} 10.0
+
+CCTK_REAL ppm_shock_epsilon "Epsilon used for shock detection in steepen_rho algorithm"
+{
+  :     :: "Anything goes. Default is from Colella & Woodward"
+} 0.01
+
+CCTK_REAL ppm_shock_eta1 "Eta1 used for shock detection in steepen_rho algorithm"
+{
+  :     :: "Anything goes. Default is from Colella & Woodward"
+} 20.0
+
+CCTK_REAL ppm_shock_eta2 "Eta2 used for shock detection in steepen_rho algorithm"
+{
+  :     :: "Anything goes. Default is from Colella & Woodward"
+} 0.05
+
+CCTK_REAL ppm_shock_k0 "K0 used for shock detection in steepen_rho algorithm"
+{
+  :     :: "Anything goes. Default suggested by Colella & Woodward is: (polytropic constant)/10.0"
+} 0.1
+

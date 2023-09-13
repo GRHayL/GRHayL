@@ -30,6 +30,17 @@ void ghl_initialize_params(
   params->max_lorenz_factor         = max_lorenz_factor;
   params->inv_sq_max_lorenz_factor  = 1.0/SQR(max_lorenz_factor);
   params->Lorenz_damping_factor     = Lorenz_damping_factor;
+
+  // Initialize default Con2Prim values
   params->con2prim_max_iterations   = 30;
   params->con2prim_solver_tolerance = 1e-10;
+
+  // Initialize default PPM values (from Colella & Woodward)
+  params->ppm_flattening_epsilon = 0.33;
+  params->ppm_flattening_omega1  = 0.75;
+  params->ppm_flattening_omega2  = 10.0;
+  params->ppm_shock_k0           = 0.1;
+  params->ppm_shock_eta1         = 20.0;
+  params->ppm_shock_eta2         = 0.05;
+  params->ppm_shock_epsilon      = 0.01;
 }

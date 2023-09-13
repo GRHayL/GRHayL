@@ -49,10 +49,21 @@ typedef struct ghl_parameters {
   double max_lorenz_factor;
   double inv_sq_max_lorenz_factor;
   double psi6threshold;
-  bool ignore_negative_pressure;
   double Lorenz_damping_factor;
+
+  // Con2Prim parameters
+  bool ignore_negative_pressure;
   int con2prim_max_iterations;
   double con2prim_solver_tolerance;
+
+  // PPM parameters
+  double ppm_flattening_epsilon;
+  double ppm_flattening_omega1;
+  double ppm_flattening_omega2;
+  double ppm_shock_k0;
+  double ppm_shock_eta1;
+  double ppm_shock_eta2;
+  double ppm_shock_epsilon;
 } ghl_parameters;
 
 /*
@@ -281,16 +292,6 @@ void ghl_initialize_tabulated_eos_functions_and_params(
       const double T_min,
       const double T_max,
       ghl_eos_parameters *restrict eos );
-
-#ifdef __cplusplus
-}
-#endif
-
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 //---- Basic struct packing/unpacking functions ----
 void ghl_initialize_params(

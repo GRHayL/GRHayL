@@ -6,6 +6,14 @@ static double eos_Gamma_eff(const ghl_eos_parameters *restrict eos, const double
 int main(int argc, char **argv) {
   const double poison = 1e300;
 
+  const int backups[3] = {None, None, None};
+
+  // None of these parameters actually matter. We are only using
+  // the default values set in the initialize function for PPM.
+  ghl_parameters params;
+  ghl_initialize_params(
+        None, backups, false, false, true, 0, true, 10, 0.0, &params);
+
   const int neos = 1;
   const double rho_ppoly_in[1] = {0.0};
   const double Gamma_ppoly_in[1] = {2.0};
@@ -134,10 +142,14 @@ int main(int argc, char **argv) {
           }
           const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
 
-          ghl_ppm(rho_stencil, press_stencil, var_data,
-                     num_vars, v_flux_dir, Gamma_eff,
-                     &rhor, &rhol, &pressr, &pressl,
-                     var_datar, var_datal);
+          ghl_ppm(
+                &params,
+                rho_stencil, press_stencil,
+                var_data, num_vars,
+                v_flux_dir, Gamma_eff,
+                &rhor, &rhol,
+                &pressr, &pressl,
+                var_datar, var_datal);
 
           if( ghl_pert_test_fail(rhor_trusted[index], rhor, rhor_pert[index]) )
             ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable rho_r.\n"
@@ -220,9 +232,11 @@ int main(int argc, char **argv) {
             var_data[1][ind]   = vz[stencil];
           }
           const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
-          ghl_ppm_no_rho_P(press_stencil, var_data,
-                     num_vars2, v_flux_dir, Gamma_eff,
-                     var_datar, var_datal);
+          ghl_ppm_no_rho_P(
+                &params, press_stencil,
+                var_data, num_vars2,
+                v_flux_dir, Gamma_eff,
+                var_datar, var_datal);
 
           if( ghl_pert_test_fail(vxr_trusted[index], var_datar[0], vxr_pert[index]) )
             ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_r.\n"

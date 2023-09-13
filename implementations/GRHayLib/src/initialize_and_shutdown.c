@@ -101,6 +101,15 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       Lorenz_damping_factor,
       ghl_params);
 
+      params->ppm_flattening_epsilon = ppm_flattening_epsilon;
+      params->ppm_flattening_omega1  = ppm_flattening_omega1;
+      params->ppm_flattening_omega2  = ppm_flattening_omega2;
+
+      params->ppm_shock_epsilon = ppm_shock_epsilon;
+      params->ppm_shock_eta1    = ppm_shock_eta1;
+      params->ppm_shock_eta2    = ppm_shock_eta2;
+      params->ppm_shock_k0      = ppm_shock_k0;
+
   if (CCTK_EQUALS(EOS_type, "IdealFluid")) {
     if(main == Font1D || backups[0] == Font1D || backups[1] == Font1D || backups[2] == Font1D)
       CCTK_VERROR("Error: Font1D routine is incompatible with ideal fluid EOS. Please choose a different Con2Prim routine.");
