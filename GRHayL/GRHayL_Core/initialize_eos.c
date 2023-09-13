@@ -61,11 +61,11 @@ void ghl_initialize_ideal_fluid_eos(
 
   if( press_atm < 0 ) ghl_error("press_atm must be specified\n");
   if( press_min < 0 ) {
-    ghl_warn("Minimum density not provided. Disabling density floor (press_min = 0)\n");
+    ghl_warn("Minimum pressure not provided. Disabling pressure floor (press_min = 0)\n");
     press_min = 0.0;
   }
   if( press_max < 0 ) {
-    ghl_warn("Maximum density not provided. Disabling density ceiling (press_max = 1e300)\n");
+    ghl_warn("Maximum pressure not provided. Disabling pressure ceiling (press_max = 1e300)\n");
     press_max = 1e300;
   }
   if( press_min > press_max ) ghl_error("press_min cannot be greater than press_max\n");
@@ -81,6 +81,7 @@ void ghl_initialize_ideal_fluid_eos(
   eos->press_min = press_min;
   eos->press_max = press_max;
   eos->Gamma_th = eos->Gamma_ppoly[0] = Gamma;
+  eos->neos = 1;
   eos->K_ppoly[0] = 1;
   eos->rho_ppoly[0] = 0.0;
   eos->eps_integ_const[0] = 0.0;
@@ -276,10 +277,34 @@ void ghl_initialize_tabulated_eos(
  * Function    : ghl_initialize_hybrid_eos_functions_and_params()
  * Description : Fully initializes EOS struct elements for a hybrid EOS
 */
+void ghl_initialize_ideal_fluid_eos_functions_and_params(
+      const double rho_atm,
+      double rho_min,
+      double rho_max,
+      const double press_atm,
+      double press_min,
+      double press_max,
+      const double Gamma,
+      ghl_eos_parameters *restrict eos ) {
+
+  // Step 1: Initialize Hybrid EOS functions
+  ghl_initialize_eos_functions(ghl_eos_ideal_fluid, eos);
+
+  // Step 2: Initialize Hybrid EOS parameters
+  ghl_initialize_ideal_fluid_eos(
+        rho_atm, rho_min, rho_max,
+        press_atm, press_min, press_max,
+        Gamma, eos);
+}
+
+/*
+ * Function    : ghl_initialize_hybrid_eos_functions_and_params()
+ * Description : Fully initializes EOS struct elements for a hybrid EOS
+*/
 void ghl_initialize_hybrid_eos_functions_and_params(
       const double rho_atm,
-      const double rho_min,
-      const double rho_max,
+      double rho_min,
+      double rho_max,
       const int neos,
       const double *restrict rho_ppoly,
       const double *restrict Gamma_ppoly,

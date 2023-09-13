@@ -1,30 +1,24 @@
 # EOS parameters
 
 restricted:
-KEYWORD EOS_type "The type of EOS for the simulation"
-{
-   ""         :: "Forbidden default; an EOS type must be specified"
-  "hybrid"    :: "Hybrid EOS"
-  "tabulated" :: "Tabulated EOS"
-} ""
+#########################################################
 
-CCTK_STRING EOS_tablepath "Path to the EOS table"
+# Speed limit: set maximum Lorentz factor
+CCTK_REAL max_lorenz_factor "Maximum Lorentz factor."
 {
-  ""    :: "Forbidden, will error out"
-  ".+?" :: "Any string"
-} ""
+ 1:* :: "Positive > 1, though you'll likely have troubles far above 10."
+} 10.0
 
-CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?"
+# generalized Lorenz gauge damping factor
+CCTK_REAL Lorenz_damping_factor "Damping factor for the generalized Lorenz gauge. Has units of 1/length = 1/M. Typically set this parameter to 1.5/(maximum Delta t on AMR grids)." STEERABLE=ALWAYS
 {
-} "no"
-
-CCTK_BOOLEAN evolve_entropy "Do we want to evolve the entropy?"
-{
-} "no"
+ *:* :: "any real"
+} 0.0
 
 #########################################################
 
-# CONSERV TO PRIMS PARAMETERS
+# conservative-to-primitive parameters
+# Disabled options are not yet fully tested and/or implemented
 KEYWORD con2prim_routine "What con2prim routine is used" STEERABLE=ALWAYS
 {
   "Noble2D"              :: "2D  routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
@@ -56,16 +50,10 @@ KEYWORD con2prim_backup_routines[3] "We allow up to 3 backup routines" STEERABLE
   "Newman1D_entropy"     :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
 } "None"
 
-# FIXME: Enable this parameter! IllinoisGRMHD is currently hard-coded to tau_stildefix_enable=2.
-#CCTK_INT tau_stildefix_enable "tau<0 fix in primitive_vars_hybrid2 to reduce number of Font fixes, especially in puncture+matter evolutions" STEERABLE=ALWAYS
-#{
-# 0:3 :: "zero (disable), one (enable everywhere), or two (enable only where Psi6 > Psi6threshold [i.e., inside the horizon, where B's are set to zero], or three (kludge: set B=0 if tau<0 inside horizon))"
-#} 0
-
-CCTK_BOOLEAN Cupp_Fix "Whether or not to apply the Cupp Fix"
+CCTK_BOOLEAN ignore_negative_pressure "Bypass possible C2P failure mode by relying on enforcing limits"
 {
   "no"  :: "Standard behavior of IllinoisGRMHD code"
-  "yes" :: "Changes logic of Noble2D routine which removes need for most Font fixes and adjusts atmosphere reset."
+  "yes" :: "Changes logic of Noble2D routine which removes most common failure mode (negative pressure) by relying on enforced simulation limits"
 } "yes"
 
 CCTK_REAL Psi6threshold "Where Psi^6 > Psi6threshold, we assume we're inside the horizon in the primitives solver, and certain limits are relaxed or imposed" STEERABLE=ALWAYS
@@ -80,6 +68,15 @@ CCTK_BOOLEAN calc_primitive_guess "Do we want to calculate estimates for the pri
 } "yes"
 
 #########################################################
+
+# EOS parameters
+KEYWORD EOS_type "The type of EOS for the simulation"
+{
+   ""          :: "Forbidden default; an EOS type must be specified"
+  "IdealFluid" :: "Ideal Fluid EOS"
+  "Hybrid"     :: "Hybrid EOS"
+  "Tabulated"  :: "Tabulated EOS"
+} ""
 
 CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b (required). If this is unset, the run will die." STEERABLE=ALWAYS
 {
@@ -98,6 +95,78 @@ CCTK_REAL rho_b_max "Ceiling value on the baryonic rest mass density rho_b (disa
   0:* :: "Maximum density; must be positive"
   -1  :: "Used to check if anything was given"
 } -1
+
+CCTK_BOOLEAN evolve_entropy "Do we want to evolve the entropy?"
+{
+} "no"
+
+#########################################################
+
+# Ideal Fluid EOS parameters
+CCTK_REAL Gamma "Gamma parameter"
+{
+ 0:* :: "Physical values"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile"
+} -1
+
+CCTK_REAL P_atm "Atmospheric pressure (required)" STEERABLE=ALWAYS
+{
+  0:* :: "Should be non-negative"
+  -1  :: "Used to check if anything was given"
+} -1
+
+CCTK_REAL P_min "Minimum temperature allowed (disabled by default)" STEERABLE=ALWAYS
+{
+  0:* :: "Should be non-negative"
+  -1  :: "Used to check if anything was given"
+} -1
+
+CCTK_REAL P_max "Maximum temperature allowed (disabled by default)" STEERABLE=ALWAYS
+{
+  0:* :: "Should be non-negative"
+  -1  :: "Used to check if anything was given"
+} -1
+
+#########################################################
+
+# Hybrid EOS parameters
+CCTK_INT neos "number of parameters in EOS table"
+{
+ 1:10 :: "Any integer between 1 and 10"
+} 1
+
+CCTK_REAL Gamma_th "thermal Gamma parameter"
+{
+ 0:* :: "Physical values"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile"
+} -1
+
+CCTK_REAL k_ppoly0 "Also known as k_ppoly[0], this is the polytropic constant for the lowest density piece of the piecewise polytrope. All other k_ppoly elements are set using rho_ppoly_in and enforcing continuity in the equation of state."
+{
+ 0:* :: "Physical values"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile"
+} -1
+
+CCTK_REAL rho_ppoly_in[10] "Set polytropic rho parameters"
+{
+ 0:* :: "value of the density delimiters for the pieces of the piecewise polytrope"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile (only checked for neos > 1)"
+} -1
+
+CCTK_REAL Gamma_ppoly_in[11] "Set polytropic Gamma parameters. Gamma_ppoly_in[0] goes from rho=0 to rho=rho_ppoly_in[0]."
+{
+ 0:* :: "value of Gamma for the polytropic rho in the bounds rho_ppoly[i-1] to rho_ppoly[i]"
+-1   :: "forbidden value to make sure it is explicitly set in the parfile"
+} -1
+
+#########################################################
+
+# Tabulated EOS parameters
+CCTK_STRING EOS_tablepath "Path to the EOS table"
+{
+  ""    :: "Forbidden, will error out"
+  ".+?" :: "Any string"
+} ""
 
 CCTK_REAL Y_e_atm "Atmospheric electron fraction (required)" STEERABLE=ALWAYS
 {
@@ -135,52 +204,6 @@ CCTK_REAL T_max "Maximum temperature allowed (optional; table bounds used by def
   -1  :: "Used to check if anything was given"
 } -1
 
-#########################################################
-
-# Speed limit: set maximum Lorentz factor
-CCTK_REAL max_lorenz_factor "Maximum Lorentz factor."
+CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?"
 {
- 1:* :: "Positive > 1, though you'll likely have troubles far above 10."
-} 10.0
-
-#########################################################
-
-# Equation of state parameters
-CCTK_INT neos "number of parameters in EOS table"
-{
- 1:10 :: "Any integer between 1 and 10"
-} 1
-
-CCTK_REAL Gamma_th "thermal gamma parameter"
-{
- 0:* :: "Physical values"
--1   :: "forbidden value to make sure it is explicitly set in the parfile"
-} -1
-
-CCTK_REAL k_ppoly0 "Also known as k_ppoly[0], this is the polytropic constant for the lowest density piece of the piecewise polytrope. All other k_ppoly elements are set using rho_ppoly_in and enforcing continuity in the equation of state."
-{
- 0:* :: "Physical values"
--1   :: "forbidden value to make sure it is explicitly set in the parfile"
-} -1
-
-CCTK_REAL rho_ppoly_in[10] "Set polytropic rho parameters"
-{
- 0:* :: "value of the density delimiters for the pieces of the piecewise polytrope"
--1   :: "forbidden value to make sure it is explicitly set in the parfile (only checked for neos > 1)"
-} -1
-
-CCTK_REAL Gamma_ppoly_in[11] "Set polytropic gamma parameters. Gamma_ppoly_in[0] goes from rho=0 to rho=rho_ppoly_in[0]."
-{
- 0:* :: "value of Gamma for the polytropic rho in the bounds rho_ppoly[i-1] to rho_ppoly[i]"
--1   :: "forbidden value to make sure it is explicitly set in the parfile"
-} -1
-
-#########################################################
-
-# EVOLUTION PARAMS
-CCTK_REAL Lorenz_damping_factor "Damping factor for the generalized Lorenz gauge. Has units of 1/length = 1/M. Typically set this parameter to 1.5/(maximum Delta t on AMR grids)." STEERABLE=ALWAYS
-{
- *:* :: "any real"
-} 0.0
-
-#########################################################
+} "no"

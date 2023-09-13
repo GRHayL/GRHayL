@@ -275,7 +275,7 @@ int ghl_hybrid_Noble1D_entropy2(
   // Font Fix returns nearly the same values as this, but takes longer to run (we already did the work for
   // these results, after all!
   // Also note that we have completely eliminated u, so that check doesn't exist any longer.
-  if( !params->Cupp_Fix && prims->rho <= 0.0) {
+  if( !params->ignore_negative_pressure && prims->rho <= 0.0) {
     return 6;
   }
 

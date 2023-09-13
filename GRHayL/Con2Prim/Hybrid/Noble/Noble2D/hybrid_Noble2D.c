@@ -75,6 +75,7 @@ return: i where
                  (occurrence of "nan" or "+/-inf");
             4 -> Z<0 or Z>Z_TOO_BIG
             5 -> v^2 < 0 returned by the Newton-Raphson solver;
+            6 -> computed pressure is negative
 
 **********************************************************************************/
 
@@ -124,6 +125,9 @@ int ghl_hybrid_Noble2D(
 
   // Recover the primitive variables from the scalars and conserved variables:
   ghl_finalize_Noble(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
+  if(!params->ignore_negative_pressure && prims->press <= 0.0) {
+    return 6;
+  }
 
   /* Done! */
   diagnostics->which_routine = Noble2D;
