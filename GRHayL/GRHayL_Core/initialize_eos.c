@@ -1,3 +1,4 @@
+#include "con2prim.h"
 #include "nrpyeos_hybrid.h"
 #include "nrpyeos_tabulated.h"
 #include "ghl_eos_functions_declaration.h"
@@ -6,6 +7,15 @@
   eos->rho_atm           = rho_atm;        \
   eos->rho_min           = rho_min;        \
   eos->rho_max           = rho_max;
+
+int (*ghl_con2prim_multi_method)(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons,
+      ghl_primitive_quantities *restrict prim,
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 /*
  * Function    : ghl_initialize_eos_functions()
@@ -26,10 +36,12 @@ void ghl_initialize_eos_functions(
 
   // Step 3: General functions (same interface for all EOSs)
   if( eos_type == ghl_eos_hybrid || eos_type == ghl_eos_ideal_fluid) {
-    ghl_compute_h_and_cs2 = &NRPyEOS_hybrid_compute_enthalpy_and_cs2;
+    ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
+    ghl_compute_h_and_cs2 = NRPyEOS_hybrid_compute_enthalpy_and_cs2;
   }
   else if( eos_type == ghl_eos_tabulated ) {
-    ghl_compute_h_and_cs2 = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
+    ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
+    ghl_compute_h_and_cs2 = NRPyEOS_tabulated_compute_enthalpy_and_cs2;
   }
 }
 

@@ -7,7 +7,6 @@ void (*ghl_compute_h_and_cs2)(
       double *restrict h,
       double *restrict cs2);
 
-
 int  (*ghl_hybrid_find_polytropic_index)(
       const ghl_eos_parameters *restrict eos,
       const double rho_in);

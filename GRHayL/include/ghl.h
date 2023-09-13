@@ -269,6 +269,16 @@ void ghl_initialize_tabulated_eos(
       const double T_max,
       ghl_eos_parameters *restrict eos );
 
+void ghl_initialize_ideal_fluid_eos_functions_and_params(
+      const double rho_atm,
+      double rho_min,
+      double rho_max,
+      const double press_atm,
+      double press_min,
+      double press_max,
+      const double Gamma,
+      ghl_eos_parameters *restrict eos);
+
 void ghl_initialize_hybrid_eos_functions_and_params(
       const double rho_atm,
       const double rho_min,
