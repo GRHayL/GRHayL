@@ -37,7 +37,7 @@ inline void ghl_raise_lower_vector_3D(
              + gamma[2][2] * vec[2];
 }
 
-inline double ghl_compute_vec2_from_vec4D(
+static inline double ghl_compute_vec2_from_vec4D(
       const double g4[][4],
       const double vec[4]) {
 
