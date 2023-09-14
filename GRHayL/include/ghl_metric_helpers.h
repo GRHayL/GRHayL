@@ -1,7 +1,7 @@
 #ifndef GHL_METRIC_HELPERS_H_
 #define GHL_METRIC_HELPERS_H_
 
-static  void ghl_raise_lower_vector_4D(
+inline void ghl_raise_lower_vector_4D(
       const double g4[][4],
       const double vec[4],
       double vec_inv[4]) {
@@ -19,7 +19,7 @@ static  void ghl_raise_lower_vector_4D(
              + g4[2][3] * vec[2] + g4[3][3] * vec[3];
 }
 
-static  void ghl_raise_lower_vector_3D(
+inline void ghl_raise_lower_vector_3D(
       const double gamma[][3],
       const double vec[3],
       double vec_inv[3]) {
@@ -37,7 +37,7 @@ static  void ghl_raise_lower_vector_3D(
              + gamma[2][2] * vec[2];
 }
 
-static  double ghl_compute_vec2_from_vec4D(
+inline double ghl_compute_vec2_from_vec4D(
       const double g4[][4],
       const double vec[4]) {
 
@@ -53,7 +53,7 @@ static  double ghl_compute_vec2_from_vec4D(
                  g4[2][3] * vec[2] * vec[3]));
 }
 
-static  double ghl_compute_vec2_from_vec3D(
+inline double ghl_compute_vec2_from_vec3D(
       const double gamma[][3],
       const double vec[3]) {
 
