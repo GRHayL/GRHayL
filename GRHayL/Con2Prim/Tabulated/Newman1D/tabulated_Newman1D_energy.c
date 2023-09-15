@@ -17,7 +17,7 @@ static int ghl_newman_energy(
   // Set basic quantities from input
   double invD   = 1.0/con->rho;
   double xye    = con->Y_e * invD;
-  double xtemp  = eos->T_atm;
+  double xtemp  = prims->temperature;
 
   //Now, begin iterative procedure to derive the primitive variables
   unsigned step=0;
@@ -158,6 +158,14 @@ int ghl_tabulated_Newman1D_energy(
   // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
   diagnostics->which_routine = Newman1D;
-  return ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
-                           cons_undens, prims, tol_x, diagnostics);
+
+  int check = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
+				cons_undens, prims, tol_x, diagnostics);
+
+  if( check != ghl_success ) {
+    prims->temperature = eos->T_min;
+    check = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
+			      cons_undens, prims, tol_x, diagnostics);
+  }
+  return check;
 }
