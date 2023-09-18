@@ -1,4 +1,4 @@
-#include "../../utils_Noble.h"
+#include "../../../utils_Noble.h"
 
 /**********************************************************************/
 /*********************************************************************************
@@ -17,26 +17,27 @@
          n    = dimension of x[];
 *********************************************************************************/
 void ghl_func_Z(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const int ndim,
+      harm_aux_vars_struct *restrict harm_aux,
       const double rho_in,
       const double x[],
       double dx[],
       double resid[],
       double jac[][1],
       double *restrict f,
-      double *restrict df,
-      int *restrict n_iter) {
+      double *restrict df) {
 
-  const double W = x[0];
+  const double Z = x[0];
 
   // Set input rho for NR
   double rho      =  rho_in;
   double x_rho[1] = {rho_in};
-  // Find rho from W
+  // Find rho from Z
   int retval, ntries = 0;
-  while (  (retval = ghl_newton_raphson_1d(eos, harm_aux, ndim, W, n_iter, &rho, func_rho)) &&  ( ntries++ < 10 )  ) {
+  while (
+    (retval = ghl_general_newton_raphson(params, eos, harm_aux, 1, Z, x_rho, ghl_validate_1D, ghl_func_rho))
+    && (ntries++ < 10) ) {
     rho     *= 10.;
     x_rho[0] = rho;
   }
@@ -62,8 +63,8 @@ void ghl_func_Z(
   const double t15 = t6 - t2; // Leo says: changed from -(D-rho)*(D+rho)
   // D^(-2)
   const double t24 = 1/t2;
-  // W + 2B^2
-  const double t200 = W + two_Bsq;
+  // Z + 2B^2
+  const double t200 = Z + two_Bsq;
   // (Q.B)^2 * B^2 * D^2
   const double t300 = harm_aux->Bsq*t4; // Leo says: changed from QdotBsq*Bsq*t2
   // \tilde{Q}^2 * D^2
@@ -72,14 +73,14 @@ void ghl_func_Z(
   const double s200 = harm_aux->D * Gamma * harm_aux->W_times_S;
   // rho^(Gamma - 1)
   const double rho_Gm1 = pow(rho,Gm1);
-  // -rho^2 / ( W * rho - rho^(Gamma-1) * D * Gamma * gamma * S )
-  const double drho_dW = -t6/( -rho_Gm1*s200 + W*rho); // Leo says: changed rho*rho -> t6
-  // rho^(Gamma-1) * drho_dW (see variable above)
-  const double t1000 = rho*drho_dW;
+  // -rho^2 / ( Z * rho - rho^(Gamma-1) * D * Gamma * gamma * S )
+  const double drho_dZ = -t6/( -rho_Gm1*s200 + Z*rho); // Leo says: changed rho*rho -> t6
+  // rho^(Gamma-1) * drho_dZ (see variable above)
+  const double t1000 = rho*drho_dZ;
 
   // Compute the residual and the needed Jacobian component
-  resid[0]  = (t300+(t4+t4+(t400+t15*(t7+(t200)*W))*W)*W)*t24;
-  jac[0][0] = 2*(t4+(t400+t15*t7+(3.0*t15*harm_aux->Bsq+t7*t1000+(t15+t15+t1000*(t200))*W)*W)*W)*t24;
+  resid[0]  = (t300+(t4+t4+(t400+t15*(t7+(t200)*Z))*Z)*Z)*t24;
+  jac[0][0] = 2*(t4+(t400+t15*t7+(3.0*t15*harm_aux->Bsq+t7*t1000+(t15+t15+t1000*(t200))*Z)*Z)*Z)*t24;
   // Set dx (NR step), f, and df (see function description above)
   dx[0] = - resid[0]/jac[0][0];
   *df   = - resid[0]*resid[0];

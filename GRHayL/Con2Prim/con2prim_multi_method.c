@@ -14,15 +14,19 @@ int ghl_con2prim_hybrid_select_method(
     // Noble routines (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
       return ghl_hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
-    //case Noble1D:
-    //  return ghl_hybrid_Noble1D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics); 
-    // "Font fix" routine (see )
+    case Noble1D:
+      return ghl_hybrid_Noble1D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics); 
+    // Font routine (see https://arxiv.org/abs/gr-qc/9811015)
     case Font1D:
       return ghl_hybrid_Font_fix(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
-    // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
+    // Palenzuela1D routine (see https://arxiv.org/abs/1505.01607)
     case Palenzuela1D:
       return ghl_hybrid_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
-    // Palenzuela1D routine with entropy (see https://arxiv.org/pdf/2208.14487.pdf)
+    // Entropy routines (see https://arxiv.org/abs/2208.14487)
+    case Noble1D_entropy:
+      return ghl_hybrid_Noble1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics); 
+    case Noble1D_entropy2:
+      return ghl_hybrid_Noble1D_entropy2(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics); 
     case Palenzuela1D_entropy:
       return ghl_hybrid_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     default:
@@ -42,16 +46,15 @@ int ghl_con2prim_tabulated_select_method(
       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   switch( c2p_key ) {
-    // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
+    // Palenzuela1D routine (see https://arxiv.org/abs/1505.01607)
     case Palenzuela1D:
       return ghl_tabulated_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
-    // Palenzuela1D routine with entropy (see https://arxiv.org/pdf/2208.14487.pdf)
-    case Palenzuela1D_entropy:
-      return ghl_tabulated_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
-    // Newman 1D routine (see https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf)
+    // Newman 1D routine (see https://escholarship.org/uc/item/0s53f84b)
     case Newman1D:
       return ghl_tabulated_Newman1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
-    // Newman1D routine with entropy (see https://arxiv.org/pdf/2208.14487.pdf)
+    // Entropy routines (see https://arxiv.org/abs/2208.14487)
+    case Palenzuela1D_entropy:
+      return ghl_tabulated_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     case Newman1D_entropy:
       return ghl_tabulated_Newman1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     default:

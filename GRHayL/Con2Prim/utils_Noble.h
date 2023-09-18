@@ -23,7 +23,9 @@ typedef struct _harm_auxiliary_vars_ {
   double Bsq, QdotBsq, QdotB;
   double Qtsq, Qdotn;
   double D, W_times_S;
-  bool use_entropy;
+  int n_iter;
+  int max_iterations;
+  int solver_tolerance;
 } harm_aux_vars_struct;
 
 /**************************************************
@@ -137,76 +139,106 @@ static inline double ghl_vsq_calc(
 }
 
 int ghl_general_newton_raphson(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
+      harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
       const double indep_var_in,
-      const int max_iterations,
-      const double solver_tolerance,
-      int *restrict n_iter_ptr,
       double x[],
       void (*validate_x)(
             const double [],
             double []),
       void (*funcd)(
+            const ghl_parameters *restrict,
             const ghl_eos_parameters *restrict,
-            const harm_aux_vars_struct *restrict,
-            const int,
+            harm_aux_vars_struct *restrict,
             const double,
             const double [],
             double [],
             double [],
             double [][ndim],
             double *restrict,
-            double *restrict,
-            int *restrict));
+            double *restrict));
 
 void ghl_func_Z(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const int ndim,
+      harm_aux_vars_struct *restrict harm_aux,
       const double rho_in,
       const double x[],
       double dx[],
       double resid[],
       double jac[][1],
       double *restrict f,
-      double *restrict df,
-      int *restrict n_iter);
+      double *restrict df);
 
 void ghl_func_rho(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const int ndim,
+      harm_aux_vars_struct *restrict harm_aux,
       const double Z_in,
       const double x[],
       double dx[],
       double resid[],
       double jac[][1],
       double *restrict f,
-      double *restrict df,
-      int *restrict n_iter);
+      double *restrict df);
 
 void ghl_func_rho2(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const int ndim,
+      harm_aux_vars_struct *restrict harm_aux,
       const double Z_in,
       const double x[],
       double dx[],
       double resid[],
       double jac[][1],
       double *restrict f,
-      double *restrict df,
-      int *restrict n_iter);
+      double *restrict df);
+
+void ghl_func_1D(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      harm_aux_vars_struct *restrict harm_aux,
+      const double dummy,
+      const double x[],
+      double dx[],
+      double resid[],
+      double jac[][1],
+      double *restrict f,
+      double *restrict df);
+
+void ghl_func_2D(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      harm_aux_vars_struct *restrict harm_aux,
+      const double dummy,
+      const double x[],
+      double dx[],
+      double resid[],
+      double jac[][2],
+      double *restrict f,
+      double *restrict df);
 
 int ghl_initialize_Noble(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
       harm_aux_vars_struct *restrict harm_aux,
+      double *restrict Z_ptr);
+
+int ghl_initialize_Noble_entropy(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const ghl_primitive_quantities *restrict prims,
+      harm_aux_vars_struct *restrict harm_aux,
+      double *restrict rho_ptr,
       double *restrict Z_ptr);
 
 int ghl_finalize_Noble(
@@ -219,5 +251,24 @@ int ghl_finalize_Noble(
       const double Z,
       const double vsq,
       ghl_primitive_quantities *restrict prims);
+
+int ghl_finalize_Noble_entropy(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const harm_aux_vars_struct *restrict harm_aux,
+      const double Z,
+      const double W,
+      ghl_primitive_quantities *restrict prims);
+
+void ghl_validate_1D(
+      const double x0[1],
+      double x[1]);
+
+void ghl_validate_2D(
+      const double x0[2],
+      double x[2]);
 
 #endif

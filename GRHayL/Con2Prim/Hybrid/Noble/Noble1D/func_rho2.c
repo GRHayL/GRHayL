@@ -1,4 +1,4 @@
-#include "../../utils_Noble.h"
+#include "../../../utils_Noble.h"
 
 /**********************************************************************/
 /*********************************************************************************
@@ -19,17 +19,16 @@
          n    = dimension of x[];
 *********************************************************************************/
 void ghl_func_rho2(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const int ndim,
+      harm_aux_vars_struct *restrict harm_aux,
       const double dummy,
       const double x[],
       double dx[],
       double resid[],
       double jac[][1],
       double *restrict f,
-      double *restrict df,
-      int *restrict n_iter) {
+      double *restrict df) {
 
   // Set rho
   const double rho = x[0];

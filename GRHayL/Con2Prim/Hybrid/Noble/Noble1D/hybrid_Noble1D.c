@@ -1,24 +1,5 @@
 #include "../../../utils_Noble.h"
 
-void ghl_validate_1D(
-      const double x0[1],
-      double x[1]) {
-  x[0] = fabs(x[0]);
-}
-
-void ghl_func_1D(
-      const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const int ndim,
-      const double dummy,
-      const double x[],
-      double dx[],
-      double resid[],
-      double jac[][1],
-      double *restrict f,
-      double *restrict df,
-      int *restrict n_iter);
-
 /* Function    :  Hybrid_Noble1D()
  * Description :  Unpacks the ghl_primitive_quantities struct into the variables
  *                needed by the Newton-Rapson solver, then repacks the  primitives.
@@ -62,7 +43,7 @@ utoprim_1d.c:
 
 return: i where
         i = 0 -> success
-            1 -> initial v^2 < 0 with initial primitive guess;
+            1 -> initial v^2 < 0 or > max speed with initial primitive guess;
             2 -> Newton-Raphson solver did not converge to a solution with the
                  given tolerances;
             3 -> Newton-Raphson procedure encountered a numerical divergence
@@ -87,14 +68,12 @@ int ghl_hybrid_Noble1D(
   harm_aux_vars_struct harm_aux;
 
   // Calculate Z:
-  if( ghl_initialize_Noble(eos, ADM_metric, metric_aux, cons_undens,
+  if( ghl_initialize_Noble(params, eos, ADM_metric, metric_aux, cons_undens,
                            prims, &harm_aux, &gnr_out[0]) )
     return 1;
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  const int retval = ghl_general_newton_raphson(eos, &harm_aux, 1, 0.0, params->con2prim_max_iterations,
-                                                params->con2prim_solver_tolerance, &diagnostics->n_iter,
-                                                gnr_out, ghl_validate_1D, ghl_func_1D);
+  const int retval = ghl_general_newton_raphson(params, eos, &harm_aux, 1, 0.0, gnr_out, ghl_validate_1D, ghl_func_1D);
 
   const double Z = gnr_out[0];
 
@@ -121,6 +100,7 @@ int ghl_hybrid_Noble1D(
   }
 
   /* Done! */
+  diagnostics->n_iter = harm_aux.n_iter;
   diagnostics->which_routine = Noble1D;
   return 0;
 }

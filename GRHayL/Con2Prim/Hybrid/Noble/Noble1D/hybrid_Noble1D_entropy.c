@@ -1,4 +1,4 @@
-#include "../../utils_Noble.h"
+#include "../../../utils_Noble.h"
 
 /* Function    : Hybrid_Noble2D()
  * Description : Unpacks the ghl_primitive_quantities struct into the variables
@@ -96,8 +96,6 @@ utoprim_1d_ee.c:
 
 ******************************************************************************/
 
-#define NEWT_DIM (1)
-
 /**********************************************************************************
 
   ghl_hybrid_Noble1D_entropy():
@@ -138,95 +136,14 @@ int ghl_hybrid_Noble1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
-  double gnr_out[NEWT_DIM];
+  double gnr_out[1];
 
-  // Contains Bsq,QdotBsq,Qsq,Qtsq,Qdotn,QdotB,D,W,W_times_S,ye
   harm_aux_vars_struct harm_aux;
 
-  const int ndim = NEWT_DIM;
-
-  // Calculate various scalars (Q.B, Q^2, etc)  from the conserved variables:
-  const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
-                           prims->BU[1] * ONE_OVER_SQRT_4PI,
-                           prims->BU[2] * ONE_OVER_SQRT_4PI};
-  harm_aux.Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, BbarU);
-
-
-  // W_times_S
-  harm_aux.W_times_S = cons_undens->entropy;
-
-  const double uu = - cons_undens->tau*ADM_metric->lapse
-                    - ADM_metric->lapse*cons_undens->rho
-                    + ADM_metric->betaU[0]*cons_undens->SD[0]
-                    + ADM_metric->betaU[1]*cons_undens->SD[1]
-                    + ADM_metric->betaU[2]*cons_undens->SD[2];
-
-  const double QD[4] = {uu,
-                        cons_undens->SD[0],
-                        cons_undens->SD[1],
-                        cons_undens->SD[2]};
-
-  double QU[4]; ghl_raise_lower_vector_4D(metric_aux->g4UU, QD, QU);
-  harm_aux.Qsq = 0.0;
-  for(int i=0; i<4; i++) harm_aux.Qsq += QD[i]*QU[i] ;
-
-  harm_aux.QdotB = 0. ;
-  for(int i=0; i<3; i++) harm_aux.QdotB += QD[i+1]*BbarU[i];
-  harm_aux.QdotBsq = harm_aux.QdotB*harm_aux.QdotB;
-
-  // n_{\mu}Q^{\mu} = -alpha Q^{0}, since n_{\mu} = (-alpha,0,0,0)
-  harm_aux.Qdotn = -ADM_metric->lapse*QU[0];
-
-  harm_aux.Qtsq = harm_aux.Qsq + harm_aux.Qdotn*harm_aux.Qdotn;
-
-  harm_aux.D    = cons_undens->rho;
-
-  /* calculate Z from last timestep and use for guess */
-  const double utU_guess[3] = {prims->vU[0] + ADM_metric->betaU[0],
-                               prims->vU[1] + ADM_metric->betaU[1],
-                               prims->vU[2] + ADM_metric->betaU[2]};
-  const double tmp_u = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU_guess);
-
-  double vsq = tmp_u/(1.0-tmp_u);
-
-  if( (vsq < 0.) && (fabs(vsq) < 1.0e-13) ) {
-    vsq = fabs(vsq);
-  } else if(vsq < 0.0 || vsq > 10.0) {
+  double rho0, Z_last;
+  if( ghl_initialize_Noble_entropy(params, eos, ADM_metric, metric_aux,
+                                   cons_undens, prims, &harm_aux, &rho0, &Z_last) )
     return 1;
-  }
-
-  const double Wsq = 1.0 + vsq;   // Lorentz factor squared
-  harm_aux.W = sqrt(Wsq);
-
-  // Always calculate rho from D and W so that using D in EOS remains consistent
-  //   i.e. you don't get positive values for dP/d(vsq).
-  const double rho0 = harm_aux.D / harm_aux.W;
-  double u = 0;
-  double p = 0;
-  double w = 0;
-
-  if( eos->eos_type == ghl_eos_hybrid ) {
-    const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho0)];
-    const double Gm1         = Gamma_ppoly - 1.0; // HARM auxiliary variable
-    const double rho_Gm1     = pow(rho0,Gm1);     // HARM auxiliary variable
-
-    /* The definition of the entropy density, S, is
-     *
-     * S = P / rho^(Gamma - 1)
-     *
-     * Thus we have
-     * .-------------------------.
-     * | P = rho^(Gamma - 1) * S |
-     * .-------------------------.
-     */
-    p = cons_undens->entropy * rho_Gm1;
-    u = p/Gm1;
-    w = rho0 + u + p;
-  } else if(eos->eos_type == ghl_eos_tabulated) {
-    ghl_warn("No tabulated EOS support yet! Sorry!");
-  }
-
-  double Z_last = w*Wsq;
 
   // Make sure that Z is large enough so that v^2 < 1 :
   int i_increase = 0;
@@ -237,10 +154,9 @@ int ghl_hybrid_Noble1D_entropy(
     i_increase++;
   }
 
-  // Calculate Z:
   gnr_out[0] = Z_last;
 
-  int retval = ghl_newton_raphson_1d(eos, &harm_aux, ndim, rho0, &diagnostics->n_iter, gnr_out, ghl_func_Z);
+  int retval = ghl_general_newton_raphson(params, eos, &harm_aux, 1, rho0, gnr_out, ghl_validate_1D, ghl_func_Z);
 
   const double Z = gnr_out[0];
 
@@ -255,8 +171,10 @@ int ghl_hybrid_Noble1D_entropy(
   gnr_out[0] = rho0;
 
   int ntries = 0;
-  while (  (retval = ghl_newton_raphson_1d(eos, &harm_aux, ndim, Z, &diagnostics->n_iter, gnr_out, ghl_func_rho)) &&  ( ntries++ < 10 )  ) {
-    rho_g *= 10.;
+  while (
+    (retval = ghl_general_newton_raphson(params, eos, &harm_aux, 1, Z, gnr_out, ghl_validate_1D, ghl_func_rho))
+    && (ntries++ < 10) ) {
+    rho_g *= 10.0;
     gnr_out[0] = rho_g;
   }
 
@@ -267,67 +185,32 @@ int ghl_hybrid_Noble1D_entropy(
   // Calculate v^2:
   rho0       = gnr_out[0];
 
-  double rel_err = (harm_aux.D != 0.0) ? fabs((harm_aux.D-rho0)/harm_aux.D) : ( (rho0 != 0.0) ? fabs((harm_aux.D-rho0)/rho0) : 0.0 );
-  vsq = ( rel_err > 1e-15 ) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
+  const double rel_err = (harm_aux.D != 0.0) ? fabs((harm_aux.D-rho0)/harm_aux.D) :
+                         (     (rho0 != 0.0) ? fabs((harm_aux.D-rho0)/rho0) : 0.0);
+  const double utsq = ( rel_err > 1e-15 ) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
 
-  if( vsq < 0. ) {
+  if( utsq < 0. ) {
     return 5;
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  Wsq        = 1.0+vsq;
-  harm_aux.W = sqrt(Wsq);
-  w = Z / Wsq;
+  const double Wsq        = 1.0+utsq;
+  const double W = sqrt(Wsq);
 
   prims->rho = rho0;
 
-  // Cupp Fix logic:
-  // If the returned value is 5, then the Newton-Rapson method converged, but the values were so small
-  // that u or rho were negative (usually u). Since the method converged, we only need to fix the values
-  // using enforce_primitive_limits_and_output_u0(). There's no need to trigger a Font fix. In my experience,
-  // Font Fix returns nearly the same values as this, but takes longer to run (we already did the work for
-  // these results, after all!
-  // Also note that we have completely eliminated u, so that check doesn't exist any longer.
-  if( !params->ignore_negative_pressure && prims->rho <= 0.0) {
+  if(prims->rho <= 0.0) {
+    return 7;
+  }
+
+  ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
+
+  if( !params->ignore_negative_pressure && prims->press <= 0.0) {
     return 6;
   }
 
-  const double nU[4] = {ADM_metric->lapseinv,
-                       -ADM_metric->lapseinv*ADM_metric->betaU[0],
-                       -ADM_metric->lapseinv*ADM_metric->betaU[1],
-                       -ADM_metric->lapseinv*ADM_metric->betaU[2]};
-
-  double Qtcon[4];
-  const double g_o_ZBsq = harm_aux.W/(Z+harm_aux.Bsq);
-  const double QdB_o_Z  = harm_aux.QdotB / Z;
-
-  for(int i=1; i<4; i++) Qtcon[i] = QU[i] + nU[i] * harm_aux.Qdotn;
-
-  double utU[3] = {g_o_ZBsq * ( Qtcon[1] + QdB_o_Z*BbarU[0] ),
-                   g_o_ZBsq * ( Qtcon[2] + QdB_o_Z*BbarU[1] ),
-                   g_o_ZBsq * ( Qtcon[3] + QdB_o_Z*BbarU[2] )};
-
-  //Additional tabulated code here
-
-  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(eos, ADM_metric, utU, prims);
-
-  if(diagnostics->speed_limited==1)
-    prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
-
-  if( eos->eos_type == ghl_eos_hybrid ) {
-    const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho0)];
-    const double Gm1        = Gamma_ppoly - 1.0;
-    const double rho_Gm1    = pow(rho0,Gm1);
-    p = cons_undens->entropy * rho_Gm1;
-    u = p/Gm1;
-    prims->press = ghl_pressure_rho0_u(eos, prims->rho, u);
-    prims->eps = u/prims->rho;
-    if( params->evolve_entropy ) ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press, &prims->entropy);
-  } else if(eos->eos_type == ghl_eos_tabulated) {
-    ghl_warn("No tabulated EOS support yet! Sorry!");
-  }
-
   /* Done! */
+  diagnostics->n_iter = harm_aux.n_iter;
   diagnostics->which_routine = Noble1D_entropy;
   return 0;
 }

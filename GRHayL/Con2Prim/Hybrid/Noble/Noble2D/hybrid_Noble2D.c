@@ -1,30 +1,5 @@
 #include "../../../utils_Noble.h"
 
-void ghl_validate_2D(
-      const double x0[2],
-      double x[2]) {
-  const double dv = 1.e-15;
-
-  x[0] = fabs(x[0]);
-  x[0] = (x[0] > Z_TOO_BIG) ?  x0[0] : x[0];
-
-  x[1] = (x[1] < 0.) ?   0.       : x[1];  /* if it's too small */
-  x[1] = (x[1] > 1.) ?  (1. - dv) : x[1];  /* if it's too big   */
-}
-
-void ghl_func_2D(
-      const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      const int ndim,
-      const double dummy,
-      const double x[],
-      double dx[],
-      double resid[],
-      double jac[][2],
-      double *restrict f,
-      double *restrict df,
-      int *restrict n_iter);
-
 /* Function    :  Hybrid_Noble2D()
  * Description :  Unpacks the ghl_primitive_quantities struct into the variables
  *                needed by the Newton-Rapson solver, then repacks the  primitives.
@@ -93,7 +68,7 @@ int ghl_hybrid_Noble2D(
   harm_aux_vars_struct harm_aux;
 
   // Calculate Z and vsq:
-  if( ghl_initialize_Noble(eos, ADM_metric, metric_aux, cons_undens,
+  if( ghl_initialize_Noble(params, eos, ADM_metric, metric_aux, cons_undens,
                            prims, &harm_aux, &gnr_out[0]) )
     return 1;
 
@@ -101,9 +76,7 @@ int ghl_hybrid_Noble2D(
   gnr_out[1] = ( ( gnr_out[1] > 1. ) ? (1.0 - 1.e-15) : gnr_out[1] );
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  const int retval = ghl_general_newton_raphson(eos, &harm_aux, 2, 0.0, params->con2prim_max_iterations,
-                                                params->con2prim_solver_tolerance, &diagnostics->n_iter,
-                                                gnr_out, ghl_validate_2D, ghl_func_2D);
+  const int retval = ghl_general_newton_raphson(params, eos, &harm_aux, 2, 0.0, gnr_out, ghl_validate_2D, ghl_func_2D);
 
   const double Z = gnr_out[0];
 
@@ -130,6 +103,7 @@ int ghl_hybrid_Noble2D(
   }
 
   /* Done! */
+  diagnostics->n_iter = harm_aux.n_iter;
   diagnostics->which_routine = Noble2D;
   return 0;
 }
