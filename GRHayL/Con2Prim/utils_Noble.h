@@ -25,7 +25,7 @@ typedef struct _harm_auxiliary_vars_ {
   double D, W_times_S;
   int n_iter;
   int max_iterations;
-  int solver_tolerance;
+  double solver_tolerance;
 } harm_aux_vars_struct;
 
 /**************************************************

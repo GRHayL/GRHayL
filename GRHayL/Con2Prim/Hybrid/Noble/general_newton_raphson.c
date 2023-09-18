@@ -58,7 +58,7 @@ int ghl_general_newton_raphson(
 
     harm_aux->n_iter++;
 
-    if( ((fabs(errx) <= harm_aux->solver_tolerance)) || (harm_aux->n_iter >= (harm_aux->max_iterations-1)) ) {
+    if( ((fabs(errx) <= harm_aux->solver_tolerance)) || (harm_aux->n_iter > harm_aux->max_iterations) ) {
       keep_iterating = 0;
     }
   }   // END of while(keep_iterating)
