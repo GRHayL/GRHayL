@@ -15,12 +15,12 @@ void ghl_initialize_primitives(
 
   prims->rho         = rho;
   prims->press       = press;
-  prims->vU[0]      = vx;
-  prims->vU[1]      = vy;
-  prims->vU[2]      = vz;
-  prims->BU[0]        = Bx;
-  prims->BU[1]        = By;
-  prims->BU[2]        = Bz;
+  prims->vU[0]       = vx;
+  prims->vU[1]       = vy;
+  prims->vU[2]       = vz;
+  prims->BU[0]       = Bx;
+  prims->BU[1]       = By;
+  prims->BU[2]       = Bz;
   prims->eps         = epsilon;
   prims->entropy     = entropy;
   prims->Y_e         = Y_e;

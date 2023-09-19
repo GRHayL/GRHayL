@@ -28,4 +28,4 @@ SUBDIRS = Atmosphere                      \
           Induction/Interpolators         \
           Neutrinos/NRPyLeakage           \
           Reconstruction/PPM              \
-          Reconstruction/TVD
+          Reconstruction/PLM
