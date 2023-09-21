@@ -115,7 +115,7 @@ compute_BU_SU_Bsq_Ssq_BdotS(
       double *restrict Ssq,
       double *restrict BdotS ) {
 
-//Does this limit just do the same as apply_conservative_limits?
+  //Does this limit just do the same as apply_conservative_limits?
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
   double S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
@@ -135,14 +135,10 @@ compute_BU_SU_Bsq_Ssq_BdotS(
   *Ssq = S_squared;
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
-  BU[0] = prims->BU[0] * ONE_OVER_SQRT_4PI;
-  BU[1] = prims->BU[1] * ONE_OVER_SQRT_4PI;
-  BU[2] = prims->BU[2] * ONE_OVER_SQRT_4PI;
-  *Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, BU);
+  *Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
-  *BdotS = 0.0;
-  for(int i=0;i<3;i++) *BdotS += BU[i]*SD[i];
+  *BdotS = prims->BU[0]*SD[0] + prims->BU[1]*SD[1] + prims->BU[2]*SD[2];
 
   // Step 5: Compute S^{i}
   ghl_raise_lower_vector_3D(ADM_metric->gammaUU, SD, SU);

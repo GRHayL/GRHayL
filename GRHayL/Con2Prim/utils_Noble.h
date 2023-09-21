@@ -18,7 +18,6 @@ static const double Z_TOO_BIG    = 1e20;
 // functions without having a large number of function
 // arguments.
 typedef struct _harm_auxiliary_vars_ {
-  double BbarU[3];
   double QU[4];
   double Bsq, QdotBsq, QdotB;
   double Qtsq, Qdotn;

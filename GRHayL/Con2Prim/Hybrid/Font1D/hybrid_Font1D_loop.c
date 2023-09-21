@@ -12,8 +12,8 @@
  *             : Sf2             - S_{fluid}^{2}, see eq. (A24)
  *             : Psim6           - This is equal to sqrt(\gamma)
  *             : sdots           - \tilde{S}_{\mu}\tilde{S}^{\mu}
- *             : BbardotS2       - (\bar{B}^{\mu}S_{\mu})^{2},
- *             : B2bar           - \bar{B}^{2}, see eq. (A28)
+ *             : BdotS2          - (B^{\mu}S_{\mu})^{2},
+ *             : B2              - B^{2}, see eq. (A28)
  *             : cons            - Array of conservative variables
  *             : eos             - Struct of EOS parameters
  *             : rhob_in         - Initial value of rhob
@@ -28,7 +28,7 @@ int ghl_hybrid_Font_fix_loop(
       const int maxits, const double tol,
       const double W_in, const double Sf2_in,
       const double Psim6, const double sdots,
-      const double BbardotS2, const double B2bar,
+      const double BdotS2, const double B2,
       const ghl_conservative_quantities *restrict cons,
       const double rhob_in, double *restrict rhob_out_ptr ) {
 
@@ -114,7 +114,7 @@ int ghl_hybrid_Font_fix_loop(
      * | S_fluid^{2} = ( W^{2}*S^{2} + (B.S)^2*(B^{2} + 2W) )/( ( W + B^{2} )^{2} )|
      * .---------------------------------------------------------------------------.
      */
-    Sf2 = (SQR(W)*sdots + BbardotS2*(B2bar + 2.0*W))/SQR(W+B2bar);
+    Sf2 = (SQR(W)*sdots + BdotS2*(B2 + 2.0*W))/SQR(W+B2);
 
     if ( fabs(W-W0) < W*tol && fabs(Sf20-Sf2) < Sf2*tol) Fontcheck=false;
 

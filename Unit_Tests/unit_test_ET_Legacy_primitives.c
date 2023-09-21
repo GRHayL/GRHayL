@@ -174,9 +174,10 @@ int main(int argc, char **argv) {
     ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
+    // B's get rescaled to match IGM's definition of B
     ghl_initialize_primitives(rho_b[index], press[index], eps[index],
                           vx[index], vy[index], vz[index],
-                          Bx[index], By[index], Bz[index],
+          ONE_OVER_SQRT_4PI*Bx[index], ONE_OVER_SQRT_4PI*By[index], ONE_OVER_SQRT_4PI*Bz[index],
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims);
 

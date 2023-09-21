@@ -134,8 +134,8 @@ int ghl_hybrid_Noble1D_entropy(
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  const double Wsq        = 1.0+utsq;
-  const double W = sqrt(Wsq);
+  const double Wsq = 1.0+utsq;
+  const double W   = sqrt(Wsq);
 
   prims->rho = rho0;
 

@@ -14,25 +14,32 @@ void ghl_compute_smallb_and_b2(
       double smallb[4],
       double *restrict smallb2) {
 
-  const double ONE_OVER_LAPSE_SQRT_4PI = ADM_metric->lapseinv*ONE_OVER_SQRT_4PI;
-  const double ONE_OVER_U0 = 1.0/prims->u0;
+  const double one_over_W = ADM_metric->lapseinv/prims->u0;
 
-  // Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
-  //   Compute alpha sqrt(4 pi) b^t = u_i B^i
-  const double alpha_sqrt_4pi_bt = uDN[1]*prims->BU[0] + uDN[2]*prims->BU[1] + uDN[3]*prims->BU[2];
+  /*
+     Compute b^t (Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf):
+       b^t = u_i B^i/alpha sqrt(4 pi)
+     Note that our B = B/sqrt(4pi) of the paper's B. Then,
+       b^t = u_i B^i/alpha
+  */
+  smallb[0] = (uDN[1]*prims->BU[0] + uDN[2]*prims->BU[1] + uDN[3]*prims->BU[2])*ADM_metric->lapseinv;
 
-  // Eq. 24 in http://arxiv.org/pdf/astro-ph/0503420.pdf:
-  // b^i = B^i_u / sqrt(4 pi)
-  // b^i = ( B^i/alpha + B^0_u u^i ) / ( u^0 sqrt(4 pi) )
-  // b^i = ( B^i/alpha +  sqrt(4 pi) b^t u^i ) / ( u^0 sqrt(4 pi) )
-  // b^i = ( B^i +  alpha sqrt(4 pi) b^t u^i ) / ( alpha u^0 sqrt(4 pi) )
-  // b^i = ( B^i/u^0 +  alpha sqrt(4 pi) b^t u^i/u^0 ) / ( alpha sqrt(4 pi) )
-  // b^i = ( B^i/u^0 +  alpha sqrt(4 pi) b^t v^i ) / ( alpha sqrt(4 pi) )
-  smallb[1] = (prims->BU[0]*ONE_OVER_U0 + prims->vU[0]*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
-  smallb[2] = (prims->BU[1]*ONE_OVER_U0 + prims->vU[1]*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
-  smallb[3] = (prims->BU[2]*ONE_OVER_U0 + prims->vU[2]*alpha_sqrt_4pi_bt)*ONE_OVER_LAPSE_SQRT_4PI;
-  // Eq. 23 in http://arxiv.org/pdf/astro-ph/0503420.pdf, with alpha sqrt (4 pi) b^2 = u_i B^i already computed above
-  smallb[0] = alpha_sqrt_4pi_bt * ONE_OVER_LAPSE_SQRT_4PI;
+  /*
+     Eq. 24 in http://arxiv.org/pdf/astro-ph/0503420.pdf
+       b^i = B^i_u / sqrt(4 pi)
+       b^i = ( B^i/alpha + B^0_u u^i ) / ( u^0 sqrt(4 pi) )
+       b^i = ( B^i/alpha +  sqrt(4 pi) b^t u^i ) / ( u^0 sqrt(4 pi) )
+       b^i = ( B^i +  alpha sqrt(4 pi) b^t u^i ) / ( alpha u^0 sqrt(4 pi) )
+       b^i = ( B^i/u^0 +  alpha sqrt(4 pi) b^t u^i/u^0 ) / ( alpha sqrt(4 pi) )
+       b^i = ( B^i/u^0 +  alpha sqrt(4 pi) b^t v^i ) / ( alpha sqrt(4 pi) )
+
+     Note that our B = B/sqrt(4pi) of the paper's B. Then,
+       b^i = ( B^i/u^0 +  alpha b^t v^i ) / alpha
+       b^i = B^i/W + b^t v^i
+  */
+  smallb[1] = prims->BU[0]*one_over_W + prims->vU[0]*smallb[0];
+  smallb[2] = prims->BU[1]*one_over_W + prims->vU[1]*smallb[0];
+  smallb[3] = prims->BU[2]*one_over_W + prims->vU[2]*smallb[0];
 
   // b^2 = g_{\mu \nu} b^{\mu} b^{\nu}
   //     = gtt bt^2 + gxx bx^2 + gyy by^2 + gzz bz^2 + 2 (gtx bt bx + gty bt by + gtz bt bz + gxy bx by + gxz bx bz + gyz by bz)

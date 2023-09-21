@@ -88,14 +88,11 @@ int ghl_tabulated_Palenzuela1D(
   }
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
-  const double BbarU[3] = {prims->BU[0] * ONE_OVER_SQRT_4PI,
-                           prims->BU[1] * ONE_OVER_SQRT_4PI,
-                           prims->BU[2] * ONE_OVER_SQRT_4PI};
-  const double B_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, BbarU);
+  const double B_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   double BdotS = 0.0;
-  for(int i=0;i<3;i++) BdotS += BbarU[i]*SD[i];
+  for(int i=0;i<3;i++) BdotS += prims->BU[i]*SD[i];
 
   // Step 5: Set specific quantities for this routine (Eq. A7 of [1])
   fparams_struct fparams;
@@ -121,7 +118,7 @@ int ghl_tabulated_Palenzuela1D(
     // fprintf(stderr, "S's: %22.15e %22.15e %22.15e -> %22.15e\n",
             // SD[0], SD[1], SD[2], S_squared);
     // fprintf(stderr, "B's: %22.15e %22.15e %22.15e -> %22.15e %22.15e\n",
-            // BbarU[0], BbarU[1], BbarU[2], B_squared, BdotS);
+            // prims->BU[0], prims->BU[1], prims->BU[2], B_squared, BdotS);
     // fprintf(stderr, "T  : %22.15e\n", fparams.temp_guess);
   // }
 
@@ -159,9 +156,9 @@ int ghl_tabulated_Palenzuela1D(
 
   // Step 10.c: Compute utilde^{i}
   double utildeU[3] = {
-    W*(SU[0] + BdotS*BbarU[0]/Z)/(Z+B_squared),
-    W*(SU[1] + BdotS*BbarU[1]/Z)/(Z+B_squared),
-    W*(SU[2] + BdotS*BbarU[2]/Z)/(Z+B_squared)
+    W*(SU[0] + BdotS*prims->BU[0]/Z)/(Z+B_squared),
+    W*(SU[1] + BdotS*prims->BU[1]/Z)/(Z+B_squared),
+    W*(SU[2] + BdotS*prims->BU[2]/Z)/(Z+B_squared)
   };
 
 
