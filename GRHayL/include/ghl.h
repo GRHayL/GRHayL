@@ -34,7 +34,7 @@ typedef enum {
 
 char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 
-typedef enum {ghl_eos_ideal_fluid, ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
+typedef enum {ghl_eos_simple, ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
 
 /*
  * Struct        : ghl_parameters
@@ -235,7 +235,7 @@ void ghl_initialize_eos_functions(
     ghl_eos_t const eos_type,
     ghl_eos_parameters *restrict eos );
 
-void ghl_initialize_ideal_fluid_eos(
+void ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -269,7 +269,7 @@ void ghl_initialize_tabulated_eos(
       const double T_max,
       ghl_eos_parameters *restrict eos );
 
-void ghl_initialize_ideal_fluid_eos_functions_and_params(
+void ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
       double rho_max,

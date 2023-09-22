@@ -35,7 +35,7 @@ void ghl_initialize_eos_functions(
   NRPyEOS_initialize_tabulated_functions(eos);
 
   // Step 3: General functions (same interface for all EOSs)
-  if( eos_type == ghl_eos_hybrid || eos_type == ghl_eos_ideal_fluid) {
+  if( eos_type == ghl_eos_hybrid || eos_type == ghl_eos_simple) {
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
     ghl_compute_h_and_cs2 = NRPyEOS_hybrid_compute_enthalpy_and_cs2;
   }
@@ -46,10 +46,10 @@ void ghl_initialize_eos_functions(
 }
 
 /*
- * Function    : ghl_initialize_ideal_fluid_eos()
- * Description : Initializes EOS struct elements for a ideal_fluid EOS
+ * Function    : ghl_initialize_simple_eos()
+ * Description : Initializes EOS struct elements for a simple EOS
 */
-void ghl_initialize_ideal_fluid_eos(
+void ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -83,7 +83,7 @@ void ghl_initialize_ideal_fluid_eos(
   if( press_min > press_max ) ghl_error("press_min cannot be greater than press_max\n");
 
   // Step 1: Set EOS type to Ideal Fluid
-  eos->eos_type = ghl_eos_ideal_fluid;
+  eos->eos_type = ghl_eos_simple;
 
   // Step 2: Initialize quantities which are common to all EOSs.
   init_common_eos_quantities;
@@ -289,7 +289,7 @@ void ghl_initialize_tabulated_eos(
  * Function    : ghl_initialize_hybrid_eos_functions_and_params()
  * Description : Fully initializes EOS struct elements for a hybrid EOS
 */
-void ghl_initialize_ideal_fluid_eos_functions_and_params(
+void ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -300,10 +300,10 @@ void ghl_initialize_ideal_fluid_eos_functions_and_params(
       ghl_eos_parameters *restrict eos ) {
 
   // Step 1: Initialize Hybrid EOS functions
-  ghl_initialize_eos_functions(ghl_eos_ideal_fluid, eos);
+  ghl_initialize_eos_functions(ghl_eos_simple, eos);
 
   // Step 2: Initialize Hybrid EOS parameters
-  ghl_initialize_ideal_fluid_eos(
+  ghl_initialize_simple_eos(
         rho_atm, rho_min, rho_max,
         press_atm, press_min, press_max,
         Gamma, eos);

@@ -72,10 +72,10 @@ CCTK_BOOLEAN calc_primitive_guess "Do we want to calculate estimates for the pri
 # EOS parameters
 KEYWORD EOS_type "The type of EOS for the simulation"
 {
-   ""          :: "Forbidden default; an EOS type must be specified"
-  "IdealFluid" :: "Ideal Fluid EOS"
-  "Hybrid"     :: "Hybrid EOS"
-  "Tabulated"  :: "Tabulated EOS"
+   ""         :: "Forbidden default; an EOS type must be specified"
+  "Simple"    :: "Simple EOS (often referred to as 'ideal fluid' in literature)"
+  "Hybrid"    :: "Hybrid EOS"
+  "Tabulated" :: "Tabulated EOS"
 } ""
 
 CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b (required). If this is unset, the run will die." STEERABLE=ALWAYS

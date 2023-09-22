@@ -62,7 +62,7 @@ int ghl_enforce_primitive_limits_and_compute_u0(
     ghl_tabulated_compute_P_eps_from_T(eos,
                                        prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps);
-  } else if(eos->eos_type == ghl_eos_ideal_fluid) {
+  } else if(eos->eos_type == ghl_eos_simple) {
     // Apply floors and ceilings to P
     if(prims->press < eos->press_min) prims->press = eos->press_min;
     else if(prims->press > eos->press_max) prims->press = eos->press_max;

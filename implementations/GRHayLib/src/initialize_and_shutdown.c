@@ -101,11 +101,11 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       ghl_params->ppm_shock_eta2    = ppm_shock_eta2;
       ghl_params->ppm_shock_k0      = ppm_shock_k0;
 
-  if (CCTK_EQUALS(EOS_type, "IdealFluid")) {
+  if (CCTK_EQUALS(EOS_type, "Simple")) {
     if(main == Font1D || backups[0] == Font1D || backups[1] == Font1D || backups[2] == Font1D)
       CCTK_VERROR("Error: Font1D routine is incompatible with ideal fluid EOS. Please choose a different Con2Prim routine.");
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
-    ghl_initialize_ideal_fluid_eos_functions_and_params(
+    ghl_initialize_simple_eos_functions_and_params(
           rho_b_atm, rho_b_min, rho_b_max,
           P_atm, P_min, P_max,
           Gamma, ghl_eos);
