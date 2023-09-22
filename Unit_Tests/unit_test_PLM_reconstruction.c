@@ -1,7 +1,7 @@
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {
-  FILE* infile = fopen_with_check("TVD_reconstruction_input.bin", "rb");
+  FILE* infile = fopen_with_check("PLM_reconstruction_input.bin", "rb");
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen_with_check("TVD_reconstruction_output.bin","rb");
-  FILE* inpert = fopen_with_check("TVD_reconstruction_output_pert.bin","rb");
+  infile = fopen_with_check("PLM_reconstruction_output.bin","rb");
+  FILE* inpert = fopen_with_check("PLM_reconstruction_output_pert.bin","rb");
 
   for(int method=0; method<3; method++) {
     void(*ghl_reconstruction)(
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
   fclose(infile);
   fclose(inpert);
 
-  ghl_info("TVD reconstruction test has passed!\n");
+  ghl_info("PLM reconstruction test has passed!\n");
   free(var);
   free(varr_trusted); free(varl_trusted);
   free(varr_pert); free(varl_pert);

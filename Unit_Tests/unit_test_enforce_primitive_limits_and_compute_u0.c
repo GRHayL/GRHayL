@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
   const int backup_routine[3] = {None,None,None};
-  const bool evolve_entropy = false;
+  const bool evolve_entropy = true;
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100;
@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
   double *vx = (double*) malloc(sizeof(double)*arraylength);
   double *vy = (double*) malloc(sizeof(double)*arraylength);
   double *vz = (double*) malloc(sizeof(double)*arraylength);
+  double *entropy = (double*) malloc(sizeof(double)*arraylength);
 
   infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_input.bin","rb");
   key  = fread(rho_b, sizeof(double), arraylength, infile);
@@ -105,10 +106,11 @@ int main(int argc, char **argv) {
   // Allocate memory for the trusted primitive data
   double *rho_b_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *press_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *eps_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *vx_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *vy_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *vz_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *eps_trusted = (double*) malloc(sizeof(double)*arraylength);
+  double *ent_trusted = (double*) malloc(sizeof(double)*arraylength);
   double *u0_trusted = (double*) malloc(sizeof(double)*arraylength);
 
   infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_output.bin","rb");
@@ -118,19 +120,21 @@ int main(int argc, char **argv) {
   key += fread(vx_trusted, sizeof(double), arraylength, infile);
   key += fread(vy_trusted, sizeof(double), arraylength, infile);
   key += fread(vz_trusted, sizeof(double), arraylength, infile);
+  key += fread(ent_trusted, sizeof(double), arraylength, infile);
   key += fread(u0_trusted, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*7)
+  if(key != arraylength*8)
     ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
   double *rho_b_pert = (double*) malloc(sizeof(double)*arraylength);
   double *press_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *eps_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vx_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vy_pert = (double*) malloc(sizeof(double)*arraylength);
   double *vz_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *eps_pert = (double*) malloc(sizeof(double)*arraylength);
+  double *ent_pert = (double*) malloc(sizeof(double)*arraylength);
   double *u0_pert = (double*) malloc(sizeof(double)*arraylength);
 
   infile = fopen_with_check("enforce_primitive_limits_and_compute_u0_output_pert.bin","rb");
@@ -140,10 +144,11 @@ int main(int argc, char **argv) {
   key += fread(vx_pert, sizeof(double), arraylength, infile);
   key += fread(vy_pert, sizeof(double), arraylength, infile);
   key += fread(vz_pert, sizeof(double), arraylength, infile);
+  key += fread(ent_pert, sizeof(double), arraylength, infile);
   key += fread(u0_pert, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*7)
+  if(key != arraylength*8)
     ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -169,7 +174,7 @@ int main(int argc, char **argv) {
                       rho_b[i], press[i], eps[i],
                       vx[i], vy[i], vz[i],
                       Bx[i], By[i], Bz[i],
-                      poison, poison, poison,
+                      entropy[i], poison, poison,
                       &prims);
 
     //This applies limits on the primitives
@@ -179,7 +184,7 @@ int main(int argc, char **argv) {
     ghl_initialize_primitives(
           rho_b_trusted[i], press_trusted[i], eps_trusted[i],
           vx_trusted[i], vy_trusted[i], vz_trusted[i],
-          poison, poison, poison,
+          ent_trusted[i], poison, poison,
           poison, poison, poison,
           &prims_trusted);
 
@@ -187,7 +192,7 @@ int main(int argc, char **argv) {
           rho_b_pert[i], press_pert[i], eps_pert[i],
           vx_pert[i], vy_pert[i], vz_pert[i],
           poison, poison, poison,
-          poison, poison, poison,
+          ent_pert[i], poison, poison,
           &prims_pert);
 
     ghl_pert_test_fail_primitives(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert);

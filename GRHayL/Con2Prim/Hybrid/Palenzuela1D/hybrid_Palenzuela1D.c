@@ -146,7 +146,8 @@ int ghl_hybrid_Palenzuela1D(
   prims->rho   = rho;
   prims->press = P;
   prims->eps   = eps;
-  ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
+  prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 
   return ghl_success;
 }

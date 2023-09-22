@@ -1,5 +1,6 @@
 # Subdirectory make.code.defn for EOS/Hybrid
 
 # Source files in this directory that need compiled:
-#SRCS = func_1D.c \
-#       hybrid_Noble1D.c
+SRCS = func_rho.c \
+       func_Z.c   \
+       hybrid_Noble1D_entropy.c
