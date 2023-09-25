@@ -28,7 +28,7 @@ typedef struct ghl_con2prim_diagnostics {
   int tau_fix;
   int Stilde_fix;
   int speed_limited;
-  int which_routine;
+  ghl_con2prim_method_t which_routine;
   bool backup[3];
   int n_iter;
 } ghl_con2prim_diagnostics;
