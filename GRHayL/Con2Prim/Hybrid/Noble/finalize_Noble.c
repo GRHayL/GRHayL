@@ -28,9 +28,9 @@ int ghl_finalize_Noble(
                            harm_aux->QU[2] + nU[2] * harm_aux->Qdotn,
                            harm_aux->QU[3] + nU[3] * harm_aux->Qdotn};
 
-  double utU[3] = {g_o_ZBsq * (Qtcon[1] + QdB_o_Z*harm_aux->BbarU[0]),
-                   g_o_ZBsq * (Qtcon[2] + QdB_o_Z*harm_aux->BbarU[1]),
-                   g_o_ZBsq * (Qtcon[3] + QdB_o_Z*harm_aux->BbarU[2])};
+  double utU[3] = {g_o_ZBsq * (Qtcon[1] + QdB_o_Z*prims->BU[0]),
+                   g_o_ZBsq * (Qtcon[2] + QdB_o_Z*prims->BU[1]),
+                   g_o_ZBsq * (Qtcon[3] + QdB_o_Z*prims->BU[2])};
 
   const int speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
 
@@ -71,9 +71,9 @@ int ghl_finalize_Noble_entropy(
                            harm_aux->QU[2] + nU[2] * harm_aux->Qdotn,                                 
                            harm_aux->QU[3] + nU[3] * harm_aux->Qdotn};                                
 
-  double utU[3] = {g_o_ZBsq * (Qtcon[1] + QdB_o_Z*harm_aux->BbarU[0]),
-                   g_o_ZBsq * (Qtcon[2] + QdB_o_Z*harm_aux->BbarU[1]),
-                   g_o_ZBsq * (Qtcon[3] + QdB_o_Z*harm_aux->BbarU[2])};
+  double utU[3] = {g_o_ZBsq * (Qtcon[1] + QdB_o_Z*prims->BU[0]),
+                   g_o_ZBsq * (Qtcon[2] + QdB_o_Z*prims->BU[1]),
+                   g_o_ZBsq * (Qtcon[3] + QdB_o_Z*prims->BU[2])};
 
   //Additional tabulated code here
 

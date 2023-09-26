@@ -14,11 +14,7 @@ int ghl_initialize_Noble(
   harm_aux->max_iterations = params->con2prim_max_iterations;
   harm_aux->solver_tolerance = params->con2prim_solver_tolerance;
 
-  harm_aux->BbarU[0] = prims->BU[0]*ONE_OVER_SQRT_4PI;
-  harm_aux->BbarU[1] = prims->BU[1]*ONE_OVER_SQRT_4PI;
-  harm_aux->BbarU[2] = prims->BU[2]*ONE_OVER_SQRT_4PI;
-
-  harm_aux->Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, harm_aux->BbarU);
+  harm_aux->Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
 
   const double uu = - cons_undens->tau*ADM_metric->lapse
                     - ADM_metric->lapse*cons_undens->rho
@@ -37,9 +33,9 @@ int ghl_initialize_Noble(
                    + QD[2]*harm_aux->QU[2]
                    + QD[3]*harm_aux->QU[3];
 
-  harm_aux->QdotB = QD[1]*harm_aux->BbarU[0]
-                  + QD[2]*harm_aux->BbarU[1]
-                  + QD[3]*harm_aux->BbarU[2];
+  harm_aux->QdotB = QD[1]*prims->BU[0]
+                  + QD[2]*prims->BU[1]
+                  + QD[3]*prims->BU[2];
 
   harm_aux->QdotBsq = harm_aux->QdotB*harm_aux->QdotB;
 
@@ -104,11 +100,7 @@ int ghl_initialize_Noble_entropy(
   harm_aux->max_iterations = params->con2prim_max_iterations;
   harm_aux->solver_tolerance = params->con2prim_solver_tolerance;
 
-  harm_aux->BbarU[0] = prims->BU[0]*ONE_OVER_SQRT_4PI;
-  harm_aux->BbarU[1] = prims->BU[1]*ONE_OVER_SQRT_4PI;
-  harm_aux->BbarU[2] = prims->BU[2]*ONE_OVER_SQRT_4PI;
-
-  harm_aux->Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, harm_aux->BbarU);
+  harm_aux->Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
 
   harm_aux->W_times_S = cons_undens->entropy;
 
@@ -129,9 +121,9 @@ int ghl_initialize_Noble_entropy(
                    + QD[2]*harm_aux->QU[2]
                    + QD[3]*harm_aux->QU[3];
 
-  harm_aux->QdotB = QD[1]*harm_aux->BbarU[0]
-                  + QD[2]*harm_aux->BbarU[1]
-                  + QD[3]*harm_aux->BbarU[2];
+  harm_aux->QdotB = QD[1]*prims->BU[0]
+                  + QD[2]*prims->BU[1]
+                  + QD[3]*prims->BU[2];
 
   harm_aux->QdotBsq = harm_aux->QdotB*harm_aux->QdotB;
 

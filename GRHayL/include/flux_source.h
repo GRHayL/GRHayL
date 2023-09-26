@@ -6,7 +6,7 @@
 
 static const double TINYDOUBLE = 1e-100;
 
-static const double SQRT_4_PI = 3.544907701811032054596334966682290365L;
+static const double SQRT_4_PI = 1; //3.544907701811032054596334966682290365L;
 
 #ifdef __cplusplus
 extern "C" {

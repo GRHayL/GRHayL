@@ -258,18 +258,19 @@ int main(int argc, char **argv) {
                 face_gyy[index], face_gyz[index], face_gzz[index],
                 &metric_face);
 
+          // B's get rescaled to match IGM's definition of B
           ghl_primitive_quantities prims_r, prims_l;
           ghl_initialize_primitives(
                 rho_r[index], press_r[index], poison,
                 vx_r[index], vy_r[index], vz_r[index],
-                Bx_r[index], By_r[index], Bz_r[index],
+                ONE_OVER_SQRT_4PI*Bx_r[index], ONE_OVER_SQRT_4PI*By_r[index], ONE_OVER_SQRT_4PI*Bz_r[index],
                 poison, poison, poison, // entropy, Y_e, temp
                 &prims_r);
 
           ghl_initialize_primitives(
                 rho_l[index], press_l[index], poison,
                 vx_l[index], vy_l[index], vz_l[index],
-                Bx_l[index], By_l[index], Bz_l[index],
+                ONE_OVER_SQRT_4PI*Bx_l[index], ONE_OVER_SQRT_4PI*By_l[index], ONE_OVER_SQRT_4PI*Bz_l[index],
                 poison, poison, poison, // entropy, Y_e, temp
                 &prims_l);
 
@@ -366,11 +367,12 @@ int main(int argc, char **argv) {
               kyy[index], kyz[index], kzz[index],
               &curv);
 
+        // B's get rescaled to match IGM's definition of B
         ghl_primitive_quantities prims;
         ghl_initialize_primitives(
               rho[index], press[index], poison,
               vx[index], vy[index], vz[index],
-              Bx[index], By[index], Bz[index],
+              ONE_OVER_SQRT_4PI*Bx[index], ONE_OVER_SQRT_4PI*By[index], ONE_OVER_SQRT_4PI*Bz[index],
               poison, poison, poison, // entropy, Y_e, temp
               &prims);
         prims.u0  = rho[index]*Bx[index] / vy[index];

@@ -20,38 +20,36 @@ void ghl_apply_conservative_limits(
   //First, prepare for the tau and stilde fixes:
   const double sdots = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, cons->SD);
 
-  const double Bbar[3] = {prims->BU[0]*ONE_OVER_SQRT_4PI, prims->BU[1]*ONE_OVER_SQRT_4PI, prims->BU[2]*ONE_OVER_SQRT_4PI};
+  const double B2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
 
-  const double Bbar2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, Bbar);
-
-  double BbardotS, hatBbardotS;
-  double Wm, Sm2, Wmin, half_psi6_Bbar2, tau_fluid_term3;
-  if(Bbar2 < 1e-150) {
-    BbardotS = hatBbardotS = half_psi6_Bbar2 = tau_fluid_term3 = 0.0;
+  double BdotS, hatBdotS;
+  double Wm, Sm2, Wmin, half_psi6_B2, tau_fluid_term3;
+  if(B2 < 1e-150) {
+    BdotS = hatBdotS = half_psi6_B2 = tau_fluid_term3 = 0.0;
     Wm = cons->rho/ADM_metric->sqrt_detgamma;
     Sm2 = (Wm*sdots + 2.0)/Wm;
     Wmin = sqrt(Sm2 + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
   } else {
-    const double Bbar_mag = sqrt(Bbar2);
-    BbardotS = Bbar[0]*cons->SD[0] + Bbar[1]*cons->SD[1] + Bbar[2]*cons->SD[2];
-    hatBbardotS = BbardotS/Bbar_mag;
-    Wm = sqrt(SQR(hatBbardotS) + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
-    Sm2 = (SQR(Wm)*sdots + SQR(BbardotS)*(Bbar2+2.0*Wm))/SQR(Wm+Bbar2);
+    const double Bmag = sqrt(B2);
+    BdotS = prims->BU[0]*cons->SD[0] + prims->BU[1]*cons->SD[1] + prims->BU[2]*cons->SD[2];
+    hatBdotS = BdotS/Bmag;
+    Wm = sqrt(SQR(hatBdotS) + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
+    Sm2 = (SQR(Wm)*sdots + SQR(BdotS)*(B2+2.0*Wm))/SQR(Wm+B2);
     Wmin = sqrt(Sm2 + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
-    half_psi6_Bbar2 = 0.5*ADM_metric->sqrt_detgamma*Bbar2;
-    tau_fluid_term3 = (Bbar2*sdots - SQR(BbardotS))*0.5/(ADM_metric->sqrt_detgamma*SQR(Wmin+Bbar2));
+    half_psi6_B2 = 0.5*ADM_metric->sqrt_detgamma*B2;
+    tau_fluid_term3 = (B2*sdots - SQR(BdotS))*0.5/(ADM_metric->sqrt_detgamma*SQR(Wmin+B2));
   }
 
   cons->tau = MAX(cons->tau, eos->tau_atm);
 
   //tau fix, applicable when B==0 and B!=0:
-  if(cons->tau < half_psi6_Bbar2) {
-    cons->tau = eos->tau_atm + half_psi6_Bbar2;
+  if(cons->tau < half_psi6_B2) {
+    cons->tau = eos->tau_atm + half_psi6_B2;
     diagnostics->tau_fix = true;
   }
 
   //Apply Stilde fix when B==0.
-  if(Bbar2 < eos->press_atm*1e-32) {
+  if(B2 < eos->press_atm*1e-32) {
     const double rhot = 0.999999*cons->tau*(cons->tau+2.0*cons->rho);
 
     if(sdots > rhot) {
@@ -63,10 +61,10 @@ void ghl_apply_conservative_limits(
     }
   //Apply new Stilde fix.
   } else if(ADM_metric->sqrt_detgamma>params->psi6threshold) {
-    double tau_fluid_min = cons->tau - half_psi6_Bbar2 - tau_fluid_term3;
+    double tau_fluid_min = cons->tau - half_psi6_B2 - tau_fluid_term3;
     if (tau_fluid_min < eos->tau_atm*1.001) {
       tau_fluid_min = eos->tau_atm*1.001;
-      cons->tau = tau_fluid_min + half_psi6_Bbar2 + tau_fluid_term3;
+      cons->tau = tau_fluid_min + half_psi6_B2 + tau_fluid_term3;
       diagnostics->tau_fix = true;
     }
 
