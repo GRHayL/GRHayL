@@ -30,7 +30,7 @@ int ghl_hybrid_Font_fix_loop(
       const double Psim6, const double sdots,
       const double BdotS2, const double B2,
       const ghl_conservative_quantities *restrict cons,
-      const double rhob_in, double *restrict rhob_out_ptr ) {
+      const double rhob_in, double *restrict rhob_out_ptr) {
 
   /* Declare basic variables */
   bool Fontcheck=true;
@@ -86,7 +86,7 @@ int ghl_hybrid_Font_fix_loop(
       /* Update j1 */
       j1 = ghl_hybrid_find_polytropic_index(eos,rhob1);
 
-    }  while( fabs(rhob1-rhob0) > rhob1*tol || j1 != j0);
+    }  while(fabs(rhob1-rhob0) > rhob1*tol || j1 != j0);
     //////////////////////
     //  INNER LOOP END  //
     //////////////////////
@@ -106,7 +106,7 @@ int ghl_hybrid_Font_fix_loop(
      * | W = psi^{-6} * sqrt( S_fluid^{2} + (rho_star*h)^{2} ) |
      * .-------------------------------------------------------.
      */
-    W = sqrt( Sf20 + SQR(cons->rho*h))*Psim6;
+    W = sqrt(Sf20 + SQR(cons->rho*h))*Psim6;
 
     /* Then update S_{fluid}^{2} using eq. (A61) in Etienne et al. (2011)
      *           https://arxiv.org/pdf/1112.0568.pdf
@@ -116,7 +116,7 @@ int ghl_hybrid_Font_fix_loop(
      */
     Sf2 = (SQR(W)*sdots + BdotS2*(B2 + 2.0*W))/SQR(W+B2);
 
-    if ( fabs(W-W0) < W*tol && fabs(Sf20-Sf2) < Sf2*tol) Fontcheck=false;
+    if (fabs(W-W0) < W*tol && fabs(Sf20-Sf2) < Sf2*tol) Fontcheck=false;
 
   }
   //////////////////////

@@ -15,7 +15,6 @@ void ghl_compute_conservs(
   // First compute the enthalpy
   const double h_enthalpy = 1.0 + prims->eps + prims->press/prims->rho;
 
-
   // Compute u^i. u^0 is provided to the function.
   const double uU[4] = {prims->u0,
                         prims->u0*prims->vU[0],

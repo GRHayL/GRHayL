@@ -19,7 +19,7 @@ froot(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      void *restrict fparams ) {
+      void *restrict fparams) {
 
   double rho, P, eps, T, W;
   ((fparams_struct *)fparams)->compute_rho_P_eps_T_W(
@@ -61,13 +61,13 @@ int ghl_tabulated_Palenzuela1D(
             double *restrict P_ptr,
             double *restrict eps_ptr,
             double *restrict T_ptr,
-            double *restrict W_ptr ),
+            double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
@@ -77,7 +77,7 @@ int ghl_tabulated_Palenzuela1D(
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
   const double S_squared_max = SQR(tau + cons_undens->rho);
-  if( S_squared > S_squared_max ) {
+  if(S_squared > S_squared_max) {
     // Step 2.2: Rescale S_{i}
     const double rescale_factor = sqrt(0.9999*S_squared_max/S_squared);
     for(int i=0;i<3;i++)
@@ -113,7 +113,7 @@ int ghl_tabulated_Palenzuela1D(
   // Step 7: Set initial guess for temperature
   fparams.temp_guess = prims->temperature;
 
-  // if( diagnostics->check ) {
+  // if(diagnostics->check) {
     // fprintf(stderr, "***Con2Prim***\n");
     // fprintf(stderr, "S's: %22.15e %22.15e %22.15e -> %22.15e\n",
             // SD[0], SD[1], SD[2], S_squared);
@@ -128,13 +128,13 @@ int ghl_tabulated_Palenzuela1D(
   rparams.max_iters = 300;
   // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
   ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
-  if( rparams.error_key != roots_success ) {
+  if(rparams.error_key != roots_success) {
     // Adjust the temperature guess and try again
     fparams.temp_guess = eos->T_min;
     prims->temperature = eos->T_min;
     // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
     ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
-    if( rparams.error_key != roots_success )
+    if(rparams.error_key != roots_success)
       return rparams.error_key;
   }
   diagnostics->n_iter = rparams.n_iters;
@@ -171,7 +171,7 @@ int ghl_tabulated_Palenzuela1D(
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
-  // if( diagnostics->check ) {
+  // if(diagnostics->check) {
     // fprintf(stderr, "x Z W : %22.15e %22.15e %22.15e\n", x, Z, W);
     // fprintf(stderr, "utilde: %22.15e %22.15e %22.15e\n", utildeU[0], utildeU[1], utildeU[2]);
     // fprintf(stderr, "v's   : %22.15e %22.15e %22.15e\n", prims->vU[0], prims->vU[1], prims->vU[2]);

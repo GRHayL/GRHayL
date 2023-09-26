@@ -35,7 +35,7 @@ typedef struct fparams_struct {
       double *restrict P_ptr,
       double *restrict eps_ptr,
       double *restrict T_ptr,
-      double *restrict W_ptr );
+      double *restrict W_ptr);
   void (*compute_rho_P_eps_W)(
       const double x,
       const ghl_parameters *restrict params,
@@ -44,7 +44,7 @@ typedef struct fparams_struct {
       double *restrict rho_ptr,
       double *restrict P_ptr,
       double *restrict eps_ptr,
-      double *restrict W_ptr );
+      double *restrict W_ptr);
 } fparams_struct;
 
 /*
@@ -67,7 +67,7 @@ compute_rho_W_from_x_and_conservatives(
   const ghl_parameters *restrict params,
   const fparams_struct *restrict fparams,
   double *restrict rho_ptr,
-  double *restrict W_ptr ) {
+  double *restrict W_ptr) {
 
   // Step 1: Unpack the fparams struct
   const double r = fparams->r;
@@ -75,7 +75,7 @@ compute_rho_W_from_x_and_conservatives(
   const double t = fparams->t;
 
   // Step 2: Compute W
-  double Wminus2 = 1.0 - ( x*x*r + (2*x+s)*t*t  )/ (x*x*(x+s)*(x+s));
+  double Wminus2 = 1.0 - ( x*x*r + (2*x+s)*t*t )/ (x*x*(x+s)*(x+s));
   Wminus2        = MIN(MAX(Wminus2, params->inv_sq_max_lorenz_factor ), 1.0);
   const double W = pow(Wminus2, -0.5);
 
@@ -111,7 +111,7 @@ compute_SU_Bsq_Ssq_BdotS(
       double *restrict SU,
       double *restrict Bsq,
       double *restrict Ssq,
-      double *restrict BdotS ) {
+      double *restrict BdotS) {
 
   //Does this limit just do the same as apply_conservative_limits?
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
@@ -121,7 +121,7 @@ compute_SU_Bsq_Ssq_BdotS(
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
   const double S_squared_max = SQR(cons_undens->tau + cons_undens->rho);
-  if( S_squared > S_squared_max ) {
+  if(S_squared > S_squared_max) {
     // Step 2.2: Rescale S_{i}
     const double rescale_factor = sqrt(0.9999*S_squared_max/S_squared);
     for(int i=0;i<3;i++)
@@ -155,13 +155,13 @@ int ghl_tabulated_Palenzuela1D(
             double *restrict P_ptr,
             double *restrict eps_ptr,
             double *restrict T_ptr,
-            double *restrict W_ptr ),
+            double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics );
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_tabulated_Newman1D(
       void compute_rho_P_eps_T_W(
@@ -173,13 +173,13 @@ int ghl_tabulated_Newman1D(
             double *restrict P_ptr,
             double *restrict eps_ptr,
             double *restrict T_ptr,
-            double *restrict W_ptr ),
+            double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics );
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(
@@ -190,13 +190,13 @@ int ghl_hybrid_Palenzuela1D(
             double *restrict rho_ptr,
             double *restrict P_ptr,
             double *restrict eps_ptr,
-            double *restrict W_ptr ),
+            double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics );
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 int ghl_hybrid_Newman1D(
       void compute_rho_P_eps_W(
@@ -207,12 +207,12 @@ int ghl_hybrid_Newman1D(
             double *restrict rho_ptr,
             double *restrict P_ptr,
             double *restrict eps_ptr,
-            double *restrict W_ptr ),
+            double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics );
+      ghl_con2prim_diagnostics *restrict diagnostics);
 
 #endif // PALENZUELA_H_

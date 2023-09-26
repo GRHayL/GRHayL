@@ -5,18 +5,18 @@
 static double find_Ye_st_munu_is_zero(
       const int n,
       const double *restrict Ye,
-      const double *restrict munu ) {
+      const double *restrict munu) {
 
   int i0 = -1;
   for(int i=0;i<n-1;i++) {
-    if( munu[i]*munu[i+1] < 0 ) {
+    if(munu[i]*munu[i+1] < 0) {
       i0 = i;
       break;
     }
   }
 
   /* If munu does not cross zero, return the minimum Ye */
-  if( i0 == -1 )
+  if(i0 == -1)
     return Ye[0];
 
   const int i1  = i0+1;
@@ -45,13 +45,13 @@ double NRPyEOS_tabulated_get_Ye_from_rho(
     const int nr,
     const double *lr,
     const double *Ye_of_lr,
-    const double rho ) {
+    const double rho) {
 
   const double *x_arr = lr;
   const double *y_arr = Ye_of_lr;
   const double x       = log(rho);
 
-  if( x < x_arr[0] || x > x_arr[nr-1] )
+  if(x < x_arr[0] || x > x_arr[nr-1])
     ghl_error("Input density (%e) is out of bounds [%e, %e]\n", x, x_arr[0], x_arr[nr-1]);
 
   const double dx = x_arr[1] - x_arr[0];
@@ -70,7 +70,7 @@ double NRPyEOS_tabulated_get_Ye_from_rho(
 void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const ghl_eos_parameters *restrict eos,
       const double T,
-      double **Ye_of_lr_out ) {
+      double **Ye_of_lr_out) {
 
   const int it = ghl_tabulated_get_index_T(eos, T);
   const int nr = eos->N_rho;

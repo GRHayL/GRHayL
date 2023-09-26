@@ -31,14 +31,14 @@ void NR_3D_WZT(
       const double *restrict SU,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims_guess,
-      bool *restrict c2p_failed );
+      bool *restrict c2p_failed);
 
 static inline double compute_W_from_cons(
       const eos_parameters *restrict eos,
       const conservative_quantities *restrict cons_undens,
       const double S_squared,
       const double B_squared,
-      const double BdotS ) {
+      const double BdotS) {
 
   // Use the same as the Palenzuela routine
   const double q = con[TAU]/con[DD];
@@ -48,7 +48,7 @@ static inline double compute_W_from_cons(
   const double x = 2.0+2.0*q-s;
 
   double Wminus2 = 1.0 - ( x*x*r + (2*x+s)*t*t ) / ( x*x*(x+s)*(x+s) );
-  Wminus2           = fmin(fmax(Wminus2,eos.inv_W_max_squared ), 1.0);
+  Wminus2           = fmin(fmax(Wminus2, eos.inv_W_max_squared), 1.0);
   const double W = pow(Wminus2, -0.5);
   return W;
 
@@ -71,7 +71,7 @@ int Tabulated_CerdaDuran3D(
       const metric_quantities *restrict metric,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims_guess,
-      con2prim_diagnostics *restrict diagnostics ) {
+      con2prim_diagnostics *restrict diagnostics) {
 
   const double BU[3] = {prims_guess->BU[0] * ONE_OVER_SQRT_4PI,
                         prims_guess->BU[1] * ONE_OVER_SQRT_4PI,
@@ -86,19 +86,19 @@ int Tabulated_CerdaDuran3D(
 
 
   // Enforce ceiling on S^{2} (A5 of Palenzuela et al. https://arxiv.org/pdf/1505.01607.pdf)
-  double S_squared_max = SQR( con[DD] + con[TAU] );
-  if( S_squared > 0.9999 * S_squared_max ) {
+  double S_squared_max = SQR(con[DD] + con[TAU]);
+  if(S_squared > 0.9999 * S_squared_max) {
     // Compute rescaling factor
     double rescale_factor_must_be_less_than_one = sqrt(0.9999*S_squared_max/S_squared);
     // Rescale S_{i}
     for(int i=0;i<3;i++) SD[i] *= rescale_factor_must_be_less_than_one;
     // S_{i} has been rescaled. Recompute S^{i}.
-    raise_or_lower_indices_3d( SD,gammaUU, SU );
+    raise_or_lower_indices_3d(SD, gammaUU, SU);
     // Now recompute S^{2} := gamma^{ij}S^{i}S_{j}.
     S_squared = 0.0;
     for(int i=0;i<3;i++) S_squared += SU[i] * SD[i];
     // Check if the fix was successful
-    if( simple_rel_err(S_squared,0.9999*S_squared_max) > 1e-12 ) CCTK_VError(VERR_DEF_PARAMS,"Incompatible values of S_squared after rescaling: %.15e %.15e\n",S_squared,0.9999*S_squared_max);
+    if(simple_rel_err(S_squared,0.9999*S_squared_max) > 1e-12) CCTK_VError(VERR_DEF_PARAMS,"Incompatible values of S_squared after rescaling: %.15e %.15e\n",S_squared,0.9999*S_squared_max);
   }
 
   // Need to calculate for (21) and (22) in Cerda-Duran 2008
@@ -134,7 +134,7 @@ void calc_WZT_guesses(
   const double xtemp = eos.T_max; // initial guess, choose large enough
   double xprs        = 0.0;
   double xeps        = 0.0;
-  WVU_EOS_P_and_eps_from_rho_Ye_T( xrho, xye, xtemp, &xprs, &xeps );
+  WVU_EOS_P_and_eps_from_rho_Ye_T(xrho, xye, xtemp, &xprs, &xeps);
 
   // Compute z = rho * h * W^2
   const double h = 1.0 + xeps + xprs/xrho;
@@ -155,7 +155,7 @@ void calc_prim_from_x_3D_WZT(
       const double *restrict SU,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims_guess,
-      double *restrict x ) {
+      double *restrict x) {
 
   // Recover the primitive variables from the scalars (W,Z)
   // and conserved variables, Eq. (23)-(25) in Cerdá-Durán et al. 2008
@@ -192,7 +192,7 @@ void NR_step_3D_eps(
       const conservative_quantities *restrict cons_undens,
       double *restrict x,
       double *restrict dx,
-      double *restrict f ) {
+      double *restrict f) {
   // Finding the roots of f(x):
   //
   // x_{n+1} = x_{n} - f(x)/J = x_{n} + dx_{n}
@@ -324,7 +324,7 @@ void NR_3D_WZT(
       const double *restrict SU,
       const conservative_quantities *restrict cons_undens,
       primitive_quantities *restrict prims_guess,
-      bool *restrict c2p_failed ) {
+      bool *restrict c2p_failed) {
 
   // 2D Newton-Raphson scheme, using state vector x = (W, T) and 2D function
   // f(x) = (f1(x), f2(x)) given by Eqs. (27), (28) of Siegel et al. 2018
@@ -357,7 +357,7 @@ void NR_3D_WZT(
     f[i]     = 0.0;
     error[i] = 0.0;
     //check for NaNs
-    if( x[i] != x[i] ) {
+    if(x[i] != x[i]) {
       *c2p_failed = true;
       return;
     }
@@ -387,7 +387,7 @@ void NR_3D_WZT(
       error[i] = fabs((x[i]-x_old[i])/x[i]);
 
       // Check for NaNs
-      if( x[i] != x[i] ) {
+      if(x[i] != x[i]) {
         *c2p_failed = true;
         return;
       }
@@ -401,7 +401,7 @@ void NR_3D_WZT(
       doing_extra = 1;
     }
 
-    if( doing_extra == 1 ) i_extra++;
+    if(doing_extra == 1) i_extra++;
 
     if( ((fabs(maxerror) <= tol_x)&&(doing_extra == 0))
         || (i_extra >= EXTRA_NEWT_ITER) || (count >= (MAX_NEWT_ITER)) ) {
@@ -415,7 +415,7 @@ void NR_3D_WZT(
   //  *c2p_failed = true;
   //}
 
-  if( fabs(maxerror) <= tol_x ){
+  if(fabs(maxerror) <= tol_x){
     *c2p_failed = false;
   }
   else if( (fabs(maxerror) <= tol_x) && (fabs(maxerror) > tol_x) ){

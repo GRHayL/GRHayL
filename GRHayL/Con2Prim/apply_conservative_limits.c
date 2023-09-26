@@ -22,20 +22,16 @@ void ghl_apply_conservative_limits(
 
   const double B2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
 
-  double BdotS, hatBdotS;
-  double Wm, Sm2, Wmin, half_psi6_B2, tau_fluid_term3;
+  double BdotS, hatBdotS, half_psi6_B2, tau_fluid_term3;
   if(B2 < 1e-150) {
     BdotS = hatBdotS = half_psi6_B2 = tau_fluid_term3 = 0.0;
-    Wm = cons->rho/ADM_metric->sqrt_detgamma;
-    Sm2 = (Wm*sdots + 2.0)/Wm;
-    Wmin = sqrt(Sm2 + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
   } else {
     const double Bmag = sqrt(B2);
     BdotS = prims->BU[0]*cons->SD[0] + prims->BU[1]*cons->SD[1] + prims->BU[2]*cons->SD[2];
     hatBdotS = BdotS/Bmag;
-    Wm = sqrt(SQR(hatBdotS) + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
-    Sm2 = (SQR(Wm)*sdots + SQR(BdotS)*(B2+2.0*Wm))/SQR(Wm+B2);
-    Wmin = sqrt(Sm2 + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
+    const double Wm = sqrt(SQR(hatBdotS) + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
+    const double Sm2 = (SQR(Wm)*sdots + SQR(BdotS)*(B2+2.0*Wm))/SQR(Wm+B2);
+    const double Wmin = sqrt(Sm2 + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
     half_psi6_B2 = 0.5*ADM_metric->sqrt_detgamma*B2;
     tau_fluid_term3 = (B2*sdots - SQR(BdotS))*0.5/(ADM_metric->sqrt_detgamma*SQR(Wmin+B2));
   }

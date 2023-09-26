@@ -29,11 +29,11 @@ compute_rho_P_eps_W_energy(
       double *restrict rho_ptr,
       double *restrict P_ptr,
       double *restrict eps_ptr,
-      double *restrict W_ptr ) {
+      double *restrict W_ptr) {
 
   // Step 1: First compute rho and W
   double rho, W;
-  compute_rho_W_from_x_and_conservatives( x, params, fparams, &rho, &W );
+  compute_rho_W_from_x_and_conservatives(x, params, fparams, &rho, &W);
 
   // Step 2: Compute eps
   const double q = fparams->q;
@@ -46,7 +46,7 @@ compute_rho_P_eps_W_energy(
   double P_cold, eps_cold;
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
   // Don't let eps be less than eps_cold
-  if( eps < eps_cold ) eps = eps_cold;
+  if(eps < eps_cold) eps = eps_cold;
   // Compute P
   const double P = P_cold + (eps - eps_cold) * (eos->Gamma_th - 1.0) * rho;
 
@@ -72,7 +72,7 @@ int ghl_hybrid_Palenzuela1D_energy(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   diagnostics->which_routine = Palenzuela1D;
   return ghl_hybrid_Palenzuela1D(compute_rho_P_eps_W_energy,

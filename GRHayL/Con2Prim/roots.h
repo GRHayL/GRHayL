@@ -84,7 +84,7 @@ roots_info(const roots_params *restrict r) {
   }
 
   // Step 2: If succeeded, print detailed success message
-  if( !r->error_key ) {
+  if(!r->error_key) {
     fprintf(stderr, "(roots)   %16s : %d\n", "Iterations", r->n_iters);
     fprintf(stderr, "(roots)   %16s : %.15e\n", "Root", r->root);
     fprintf(stderr, "(roots)   %16s : %.15e\n", "Residual", r->residual);
@@ -105,7 +105,7 @@ roots_info(const roots_params *restrict r) {
 static inline void
 swap(
     double *restrict a,
-    double *restrict b ) {
+    double *restrict b) {
 
   const double c = *a;
   *a = *b;
@@ -126,7 +126,7 @@ swap(
  * Returns    : +1 if x>=0, -1 otherwise.
  */
 static inline int
-sign( const double x ) {
+sign(const double x) {
 
   return (x>0) - (x<0);
 }
@@ -146,7 +146,7 @@ ghl_brent(
       void *restrict fparams,
       double a,
       double b,
-      roots_params *restrict r );
+      roots_params *restrict r);
 
 roots_error_t
 ghl_toms748(
@@ -160,6 +160,6 @@ ghl_toms748(
       void *restrict fparams,
       double a,
       double b,
-      roots_params *restrict r );
+      roots_params *restrict r);
 
 #endif // ROOTS_H_

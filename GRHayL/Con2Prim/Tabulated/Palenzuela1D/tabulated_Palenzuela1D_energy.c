@@ -31,7 +31,7 @@ compute_rho_P_eps_T_W_energy(
       double *restrict P_ptr,
       double *restrict eps_ptr,
       double *restrict T_ptr,
-      double *restrict W_ptr ) {
+      double *restrict W_ptr) {
 
   // Step 0: Unpack the fparams struct
   double Y_e = fparams->Y_e;
@@ -39,11 +39,11 @@ compute_rho_P_eps_T_W_energy(
 
   // Step 1: First compute rho and W
   double rho, W;
-  compute_rho_W_from_x_and_conservatives( x, params, fparams, &rho, &W );
+  compute_rho_W_from_x_and_conservatives(x, params, fparams, &rho, &W);
 
   // Step 2: Now compute P and eps
   double P, eps;
-  if( fparams->evolve_T ) {
+  if(fparams->evolve_T) {
     const double q = fparams->q;
     const double s = fparams->s;
     const double t = fparams->t;
@@ -86,7 +86,7 @@ int ghl_tabulated_Palenzuela1D_energy(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   diagnostics->which_routine = Palenzuela1D;
   return ghl_tabulated_Palenzuela1D(compute_rho_P_eps_T_W_energy,

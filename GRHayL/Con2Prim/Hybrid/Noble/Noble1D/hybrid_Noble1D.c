@@ -61,7 +61,7 @@ int ghl_hybrid_Noble1D(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   double gnr_out[1];
 
@@ -86,7 +86,7 @@ int ghl_hybrid_Noble1D(
 
   // Calculate v^2:
   double vsq = ghl_vsq_calc(&harm_aux, Z);
-  if( vsq >= 1. ) {
+  if(vsq >= 1.0) {
     vsq = 1.-2.e-16;
   } else if(vsq < 0.0) {
     //v should be real!

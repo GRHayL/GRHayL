@@ -31,7 +31,7 @@ compute_rho_P_eps_T_W_entropy(
       double *restrict P_ptr,
       double *restrict eps_ptr,
       double *restrict T_ptr,
-      double *restrict W_ptr ) {
+      double *restrict W_ptr) {
 
   // Step 0: Unpack the fparams struct
   double Y_e = fparams->Y_e;
@@ -39,11 +39,11 @@ compute_rho_P_eps_T_W_entropy(
 
   // Step 1: First compute rho and W
   double rho, W;
-  compute_rho_W_from_x_and_conservatives( x, params, fparams, &rho, &W );
+  compute_rho_W_from_x_and_conservatives(x, params, fparams, &rho, &W);
 
   // Step 2: Now compute P and eps
   double P, eps;
-  if( fparams->evolve_T ) {
+  if(fparams->evolve_T) {
     double ent = fparams->cons_undens->entropy/W;
     ghl_tabulated_enforce_bounds_rho_Ye_S(eos, &rho, &Y_e, &ent);
     ghl_tabulated_compute_P_eps_T_from_S(eos, rho, Y_e, ent, &P, &eps, &T);
@@ -80,14 +80,15 @@ int ghl_tabulated_Palenzuela1D_entropy(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   diagnostics->which_routine = Palenzuela1D_entropy;
-  return ghl_tabulated_Palenzuela1D( compute_rho_P_eps_T_W_entropy,
-                                 params,
-                                 eos,
-                                 ADM_metric,
-                                 cons_undens,
-                                 prims,
-                                 diagnostics );
+  return ghl_tabulated_Palenzuela1D(
+               compute_rho_P_eps_T_W_entropy,
+               params,
+               eos,
+               ADM_metric,
+               cons_undens,
+               prims,
+               diagnostics);
 }

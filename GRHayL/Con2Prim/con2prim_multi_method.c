@@ -8,9 +8,9 @@ int ghl_con2prim_hybrid_select_method(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
-  switch( c2p_key ) {
+  switch(c2p_key) {
     // Noble routines (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
       return ghl_hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
@@ -43,9 +43,9 @@ int ghl_con2prim_tabulated_select_method(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
-  switch( c2p_key ) {
+  switch(c2p_key) {
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
       return ghl_tabulated_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
@@ -70,7 +70,7 @@ int ghl_con2prim_hybrid_multi_method(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   if(params->calc_prim_guess)
     ghl_guess_primitives(eos, ADM_metric, cons, prims);
@@ -80,7 +80,7 @@ int ghl_con2prim_hybrid_multi_method(
 
   int failed = ghl_con2prim_hybrid_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-  if( failed && params->backup_routine[0] != None ) {
+  if(failed && params->backup_routine[0] != None) {
     // Backup 1 triggered
     diagnostics->backup[0] = true;
     // Reset guesses
@@ -88,7 +88,7 @@ int ghl_con2prim_hybrid_multi_method(
     // Backup routine #1
     failed = ghl_con2prim_hybrid_select_method(params->backup_routine[0], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-    if( failed && params->backup_routine[1] != None ) {
+    if(failed && params->backup_routine[1] != None) {
       // Backup 2 triggered
       diagnostics->backup[1] = true;
       // Reset guesses
@@ -96,7 +96,7 @@ int ghl_con2prim_hybrid_multi_method(
       // Backup routine #2
       failed = ghl_con2prim_hybrid_select_method(params->backup_routine[1], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-      if( failed && params->backup_routine[2] != None ) {
+      if(failed && params->backup_routine[2] != None) {
         // Backup 3 triggered
         diagnostics->backup[2] = true;
         // Reset guesses
@@ -116,7 +116,7 @@ int ghl_con2prim_tabulated_multi_method(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   if(params->calc_prim_guess)
     ghl_guess_primitives(eos, ADM_metric, cons, prims);
@@ -126,7 +126,7 @@ int ghl_con2prim_tabulated_multi_method(
 
   int failed = ghl_con2prim_tabulated_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-  if( failed && params->backup_routine[0] != None ) {
+  if(failed && params->backup_routine[0] != None) {
     // Backup 1 triggered
     diagnostics->backup[0] = true;
     // Reset guesses
@@ -134,7 +134,7 @@ int ghl_con2prim_tabulated_multi_method(
     // Backup routine #1
     failed = ghl_con2prim_tabulated_select_method(params->backup_routine[0], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-    if( failed && params->backup_routine[1] != None ) {
+    if(failed && params->backup_routine[1] != None) {
       // Backup 2 triggered
       diagnostics->backup[1] = true;
       // Reset guesses
@@ -142,7 +142,7 @@ int ghl_con2prim_tabulated_multi_method(
       // Backup routine #2
       failed = ghl_con2prim_tabulated_select_method(params->backup_routine[1], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-      if( failed && params->backup_routine[2] != None ) {
+      if(failed && params->backup_routine[2] != None) {
         // Backup 3 triggered
         diagnostics->backup[2] = true;
         // Reset guesses

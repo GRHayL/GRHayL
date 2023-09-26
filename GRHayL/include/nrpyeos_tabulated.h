@@ -232,7 +232,7 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       double *restrict T,
       NRPyEOS_error_report *restrict report);
 
-void NRPyEOS_initialize_tabulated_functions(ghl_eos_parameters *restrict eos);
+void NRPyEOS_initialize_tabulated_functions();
 
 void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,

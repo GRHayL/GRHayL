@@ -22,8 +22,8 @@
           _indent_1(f), "", _indent_2(f), f,                                     \
           _indent_1(g), "", _indent_2(g), g);
 
-static inline
-void ghl_debug_print_prims( const ghl_primitive_quantities *restrict p ) {
+static inline void ghl_debug_print_prims(
+      const ghl_primitive_quantities *restrict p) {
 
   fprintf(stderr,
 ".------------------------.------------------------.------------------------.------------------------.------------------------.------------------------.\n"
@@ -37,8 +37,8 @@ void ghl_debug_print_prims( const ghl_primitive_quantities *restrict p ) {
   p->vU[0], p->vU[1], p->vU[2], p->BU[0], p->BU[1], p->BU[2]);
 }
 
-static inline
-void ghl_debug_print_cons( const ghl_conservative_quantities *restrict c ) {
+static inline void ghl_debug_print_cons(
+      const ghl_conservative_quantities *restrict c) {
 
   fprintf(stderr,
 ".------------------------.------------------------.------------------------.------------------------.------------------------.------------------------.------------------------.\n"

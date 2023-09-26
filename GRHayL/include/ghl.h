@@ -106,8 +106,6 @@ typedef struct ghl_metric_quantities {
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_ADM_aux_quantities
 */
 typedef struct ghl_ADM_aux_quantities {
-  double phi;
-  double psi2, psi4, psi4inv;
   double g4DD[4][4],g4UU[4][4];
 } ghl_ADM_aux_quantities;
 
@@ -232,8 +230,7 @@ extern "C" {
 char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 
 void ghl_initialize_eos_functions(
-    ghl_eos_t const eos_type,
-    ghl_eos_parameters *restrict eos );
+    const ghl_eos_t eos_type);
 
 void ghl_initialize_simple_eos(
       const double rho_atm,
@@ -243,7 +240,7 @@ void ghl_initialize_simple_eos(
       double press_min,
       double press_max,
       const double Gamma,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
 void ghl_initialize_hybrid_eos(
       const double rho_atm,
@@ -254,7 +251,7 @@ void ghl_initialize_hybrid_eos(
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
 void ghl_initialize_tabulated_eos(
       const char *table_path,
@@ -267,7 +264,7 @@ void ghl_initialize_tabulated_eos(
       const double T_atm,
       const double T_min,
       const double T_max,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
 void ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,

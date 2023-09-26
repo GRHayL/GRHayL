@@ -30,7 +30,7 @@ bracket(
     double *restrict fa,
     double *restrict fb,
     double *restrict d,
-    double *restrict fd ) {
+    double *restrict fd) {
 
   //
   // Given a point c inside the existing enclosing interval
@@ -87,7 +87,7 @@ static inline double
 safe_div(
     double num,
     double denom,
-    double r ) {
+    double r) {
 
   //
   // return num / denom without overflow,
@@ -104,7 +104,7 @@ secant_interpolate(
     const double a,
     const double b,
     const double fa,
-    const double fb ) {
+    const double fb) {
 
   //
   // Performs standard secant interpolation of [a,b] given
@@ -130,7 +130,7 @@ quadratic_interpolate(
     const double fa,
     const double fb,
     const double fd,
-    unsigned count ) {
+    unsigned count) {
   //
   // Performs quadratic interpolation to determine the next point,
   // takes count Newton steps to find the location of the
@@ -184,7 +184,7 @@ cubic_interpolate(
     const double fa,
     const double fb,
     const double fd,
-    const double fe ) {
+    const double fe) {
 
   //
   // Uses inverse cubic interpolation of f(x) at points
@@ -227,7 +227,7 @@ ghl_toms748(
       void *restrict fparams,
       double a,
       double b,
-      roots_params *restrict r ) {
+      roots_params *restrict r) {
 
   // Step 0: Set basic info to the roots_params struct
   sprintf(r->routine_name, __func__);
@@ -239,7 +239,7 @@ ghl_toms748(
   static const double mu = 0.5;
 
   // We proceed by assuming a < b
-  if( a >= b )
+  if(a >= b)
     swap(&a, &b);
 
   // Now compute fa and fb

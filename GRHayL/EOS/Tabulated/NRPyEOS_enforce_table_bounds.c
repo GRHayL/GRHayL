@@ -4,7 +4,7 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_T(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
       double *restrict Y_e,
-      double *restrict T ) {
+      double *restrict T) {
 
   // Enforce bounds on rho
   *rho = MIN(MAX(*rho, eos->rho_min), eos->rho_max);
@@ -20,7 +20,7 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_eps(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
       double *restrict Y_e,
-      double *restrict eps ) {
+      double *restrict eps) {
 
   // Enforce bounds on rho
   *rho = MIN(MAX(*rho, eos->rho_min), eos->rho_max);
@@ -36,7 +36,7 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_S(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
       double *restrict Y_e,
-      double *restrict S ) {
+      double *restrict S) {
 
   // Enforce bounds on rho
   *rho = MIN(MAX(*rho, eos->rho_min), eos->rho_max);
@@ -52,7 +52,7 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_P(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
       double *restrict Y_e,
-      double *restrict P ) {
+      double *restrict P) {
 
   // Enforce bounds on rho
   *rho = MIN(MAX(*rho, eos->rho_min), eos->rho_max);

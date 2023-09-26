@@ -10,12 +10,6 @@ void ghl_compute_ADM_auxiliaries(
       const ghl_metric_quantities *restrict ADM_metric,
       ghl_ADM_aux_quantities *restrict metric_aux) {
 
-  metric_aux->phi = (1.0/12.0) * log(ADM_metric->detgamma);
-
-  metric_aux->psi2 = exp(2.0*metric_aux->phi);
-  metric_aux->psi4 = SQR(metric_aux->psi2);
-  metric_aux->psi4inv = 1.0/metric_aux->psi4;
-
   double betaD[3];
   ghl_raise_lower_vector_3D(ADM_metric->gammaDD, ADM_metric->betaU, betaD);
 

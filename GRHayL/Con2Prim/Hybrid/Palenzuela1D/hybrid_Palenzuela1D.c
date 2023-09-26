@@ -19,7 +19,7 @@ froot(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      void *restrict fparams ) {
+      void *restrict fparams) {
 
   double rho, P, eps, W;
   ((fparams_struct *)fparams)->compute_rho_P_eps_W(
@@ -60,13 +60,13 @@ int ghl_hybrid_Palenzuela1D(
             double *restrict rho_ptr,
             double *restrict P_ptr,
             double *restrict eps_ptr,
-            double *restrict W_ptr ),
+            double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
@@ -75,7 +75,7 @@ int ghl_hybrid_Palenzuela1D(
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
   const double S_squared_max = SQR(cons_undens->tau + cons_undens->rho);
-  if( S_squared > S_squared_max ) {
+  if(S_squared > S_squared_max) {
     // Step 2.2: Rescale S_{i}
     const double rescale_factor = sqrt(0.9999*S_squared_max/S_squared);
     for(int i=0;i<3;i++)
@@ -112,7 +112,7 @@ int ghl_hybrid_Palenzuela1D(
   rparams.max_iters = 300;
   // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
   ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
-  if( rparams.error_key != roots_success )
+  if(rparams.error_key != roots_success)
     return rparams.error_key;
 
   diagnostics->n_iter = rparams.n_iters;

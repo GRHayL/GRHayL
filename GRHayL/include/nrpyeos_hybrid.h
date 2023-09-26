@@ -41,7 +41,7 @@ double NRPyEOS_compute_entropy_function(
       const double rho,
       const double P);
 
-void NRPyEOS_initialize_hybrid_functions(ghl_eos_parameters *restrict eos);
+void NRPyEOS_initialize_hybrid_functions();
 
 void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,

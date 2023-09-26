@@ -69,7 +69,7 @@ int ghl_hybrid_Noble1D_entropy(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   double gnr_out[1];
 
@@ -127,9 +127,9 @@ int ghl_hybrid_Noble1D_entropy(
 
   const double rel_err = (harm_aux.D != 0.0) ? fabs((harm_aux.D-rho0)/harm_aux.D) :
                          (     (rho0 != 0.0) ? fabs((harm_aux.D-rho0)/rho0) : 0.0);
-  const double utsq = ( rel_err > 1e-15 ) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
+  const double utsq = (rel_err > 1e-15) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
 
-  if( utsq < 0. ) {
+  if(utsq < 0.0) {
     return 5;
   }
 

@@ -32,7 +32,7 @@ int ghl_general_newton_raphson(
 
   /* Start the Newton-Raphson iterations: */
   int keep_iterating = 1;
-  while( keep_iterating ) {
+  while(keep_iterating) {
     funcd(eos, harm_aux, indep_var_in, x, dx, resid, jac, &f, &df);
 
     /* Save old values and make the newton step: */
@@ -53,15 +53,15 @@ int ghl_general_newton_raphson(
 
     harm_aux->n_iter++;
 
-    if( ((fabs(errx) <= harm_aux->solver_tolerance)) || (harm_aux->n_iter >= harm_aux->max_iterations) ) {
+    if( (fabs(errx) <= harm_aux->solver_tolerance) || (harm_aux->n_iter >= harm_aux->max_iterations) ) {
       keep_iterating = 0;
     }
   }   // END of while(keep_iterating)
 
   /*  Check for bad untrapped divergences : */
-  if( !isfinite(f) ||  !isfinite(df) ) {
+  if(!isfinite(f) ||  !isfinite(df)) {
     return 3;
-  } else if( fabs(errx) <= harm_aux->solver_tolerance ) {
+  } else if(fabs(errx) <= harm_aux->solver_tolerance) {
     return 0;
   } else {
     return 2;

@@ -33,7 +33,7 @@ void NR_2D_WT(
       const ghl_conservative_quantities *restrict cons_undens,
       double W,
       ghl_primitive_quantities *restrict prims_guess,
-      bool *restrict c2p_failed );
+      bool *restrict c2p_failed);
 
 /*****************************************************************************/
 /************** ILLINOISGRMHD INTERFACE FOR CERDA-DURAN CON2PRIM *************/
@@ -52,7 +52,7 @@ int Tabulated_CerdaDuran2D(
       const ghl_metric_quantities *restrict metric,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims_guess,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   const double BU[3] = {prims_guess->BU[0] * ONE_OVER_SQRT_4PI,
                         prims_guess->BU[1] * ONE_OVER_SQRT_4PI,
@@ -77,7 +77,7 @@ int Tabulated_CerdaDuran2D(
   const double tol_x    = 5e-9;
   NR_2D_WT(eos, safe_guess, tol_x, S_squared, BdotS, B_squared, SU, cons_undens, W, prims_guess, &c2p_failed);
 
-  if( c2p_failed ) {
+  if(c2p_failed) {
     // If failed to recover the prims, try again with safe guesses
     int safe_guess=1;
     NR_2D_WT(eos, safe_guess, tol_x, S_squared, BdotS, B_squared, SU, cons_undens, W, prims_guess, &c2p_failed);
@@ -127,7 +127,7 @@ void calc_prim_from_x_2D_WT(
       const double *restrict SU,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims_guess,
-      double *restrict x ) {
+      double *restrict x) {
 
   // Recover the primitive variables from the scalars (W,Z)
   // and conserved variables, Eq. (23)-(25) in Cerdá-Durán et al. 2008
@@ -165,7 +165,7 @@ void NR_step_2D_WT(
       const ghl_conservative_quantities *restrict cons_undens,
       double *restrict x,
       double *restrict dx,
-      double *restrict f ) {
+      double *restrict f) {
   // Finding the roots of f(x):
   //
   // x_{n+1} = x_{n} - f(x)/J = x_{n} + dx_{n}
@@ -274,7 +274,7 @@ void NR_2D_WT(
       const ghl_conservative_quantities *restrict cons_undens,
       double W,
       ghl_primitive_quantities *restrict prims_guess,
-      bool *restrict c2p_failed ) {
+      bool *restrict c2p_failed) {
 
   // 2D Newton-Raphson scheme, using state vector x = (W, T) and 2D function
   // f(x) = (f1(x), f2(x)) given by Eqs. (27), (28) of Siegel et al. 2018
@@ -296,11 +296,11 @@ void NR_2D_WT(
   x_lowlim[1] = eos->T_min;
 
   // set initial guess for Newton-Raphson state vector x = (W, T)
-  if( safe_guess==0 ) {
+  if(safe_guess==0) {
     x[0] = W;
     x[1] = prims_guess->temperature;
   }
-  else if( safe_guess==1 ) {
+  else if(safe_guess==1) {
     calc_WT_max(eos, B_squared, cons_undens, x);
   }
 
@@ -311,7 +311,7 @@ void NR_2D_WT(
     f[i]     = 0.0;
     error[i] = 0.0;
     //check for NaNs
-    if( x[i] != x[i] ) {
+    if(x[i] != x[i]) {
       *c2p_failed = true;
       return;
     }
@@ -341,7 +341,7 @@ void NR_2D_WT(
       error[i] = fabs((x[i]-x_old[i])/x[i]);
 
       // Check for NaNs
-      if( x[i] != x[i] ) {
+      if(x[i] != x[i]) {
         *c2p_failed = true;
         return;
       }
@@ -355,7 +355,7 @@ void NR_2D_WT(
       doing_extra = 1;
     }
 
-    if( doing_extra == 1 ) i_extra++;
+    if(doing_extra == 1) i_extra++;
 
     if( ((fabs(maxerror) <= tol_x)&&(doing_extra == 0))
         || (i_extra >= EXTRA_NEWT_ITER) || (count >= (MAX_NEWT_ITER)) ) {
@@ -369,10 +369,10 @@ void NR_2D_WT(
   //  *c2p_failed = true;
   //}
 
-  if( fabs(maxerror) <= tol_x ){
+  if(fabs(maxerror) <= tol_x) {
     *c2p_failed = false;
   }
-  else if( (fabs(maxerror) <= tol_x) && (fabs(maxerror) > tol_x) ){
+  else if( (fabs(maxerror) <= tol_x) && (fabs(maxerror) > tol_x) ) {
     *c2p_failed = false;
   }
   else {

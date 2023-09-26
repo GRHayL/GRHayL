@@ -76,13 +76,18 @@ int main(int argc, char **argv) {
         ghl_ADM_aux_quantities metric_aux;
         ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-        psi[index]    = sqrt(metric_aux.psi2);
-        gtupxx[index] = metric_aux.psi4*ADM_metric.gammaUU[0][0];
-        gtupxy[index] = metric_aux.psi4*ADM_metric.gammaUU[0][1];
-        gtupxz[index] = metric_aux.psi4*ADM_metric.gammaUU[0][2];
-        gtupyy[index] = metric_aux.psi4*ADM_metric.gammaUU[1][1];
-        gtupyz[index] = metric_aux.psi4*ADM_metric.gammaUU[1][2];
-        gtupzz[index] = metric_aux.psi4*ADM_metric.gammaUU[2][2];
+        const double phi = (1.0/12.0) * log(ADM_metric.detgamma);
+
+        const double psi2 = exp(2.0*phi);
+        const double psi4 = SQR(psi2);
+
+        psi[index]    = sqrt(psi2);
+        gtupxx[index] = psi4*ADM_metric.gammaUU[0][0];
+        gtupxy[index] = psi4*ADM_metric.gammaUU[0][1];
+        gtupxz[index] = psi4*ADM_metric.gammaUU[0][2];
+        gtupyy[index] = psi4*ADM_metric.gammaUU[1][1];
+        gtupyz[index] = psi4*ADM_metric.gammaUU[1][2];
+        gtupzz[index] = psi4*ADM_metric.gammaUU[2][2];
 
         const int x = abs(i-gauss_center)*dX[0];
         const int y = abs(j-gauss_center)*dX[1];

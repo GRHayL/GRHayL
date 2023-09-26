@@ -39,14 +39,14 @@ void NRPyLeakage_compute_neutrino_opacities(
   double Y_pn = (Y_e > 0.5) ? exp_metahat*(2.0*Y_e-1.0)/(exp_metahat-1.0) : Y_p;
 
   // Step 3.c: Make sure both Y_np and Y_pn are non-negative
-  if( Y_np < 0.0 ) Y_np = Y_n;
-  if( Y_pn < 0.0 ) Y_pn = Y_p;
+  if(Y_np < 0.0) Y_np = Y_n;
+  if(Y_pn < 0.0) Y_pn = Y_p;
 
   // Leo says: this is the way ZelmaniLeak computes Y_pn and Y_np
   // Step 3: Compute Y_{pn} and Y_{np}
   // Step 3.a: Compute Y_{pn} (See discussion below Eq. A8 in https://arxiv.org/pdf/1306.4953.pdf)
   // double Y_pn;
-  // if( rho_cgs > 2e12 ) {
+  // if(rho_cgs > 2e12) {
   //   // Step 3.a.i: Use Eqs. (A13) and (A14) in https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
   //   Y_pn = (2*Y_e - 1)/(1-exp(muhat/T));
   // }

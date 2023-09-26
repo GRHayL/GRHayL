@@ -11,7 +11,7 @@ static int ghl_newman_energy(
       const ghl_conservative_quantities *restrict con,
       ghl_primitive_quantities *restrict prims,
       const double tol_x,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   // Set basic quantities from input
   double invD   = 1.0/con->rho;
@@ -30,7 +30,7 @@ static int ghl_newman_energy(
 
   // d = 0.5( S^{2}*B^{2} - (B.S)^{2} ) (eq. 5.7 in Newman & Hamlin 2014)
   double d = 0.5*(S_squared*B_squared-BdotS*BdotS);
-  if( d < 1e-20 ) d = 0.0;
+  if(d < 1e-20) d = 0.0;
 
   // e = tau + D
   const double e = tau + con->rho;
@@ -59,7 +59,7 @@ static int ghl_newman_energy(
     double a = e + xprs + 0.5*B_squared;
 
     // Eq. (5.9) of Newman & Hamlin 2014
-    if( d > 4.0*a*a*a/27.0 ) return 1;
+    if(d > 4.0*a*a*a/27.0) return 1;
 
     // phi = acos( sqrt(27d/4a^{3}) ) (eq. 5.10 in Newman & Hamlin 2014)
     double phi = acos( sqrt(27.0*d/(4.0*a*a*a)) );
@@ -104,12 +104,12 @@ static int ghl_newman_energy(
   }
   while(fabs(xprs-P_old)>tol_x*(xprs+P_old) && step<maxsteps);
 
-  if( step >= maxsteps )
+  if(step >= maxsteps)
     return roots_error_max_iter;
 
   diagnostics->n_iter = step;
 
-  if( conacc ) {     //converged on an extrap. so recompute vars
+  if(conacc) {     //converged on an extrap. so recompute vars
     const double a     = e + xprs + 0.5*B_squared;
     const double phi   = acos(sqrt(27.0*d/(4.0*a))/a);
     const double Eps   = a/3.0*( 1.0 - 2.0*cos( (2.0/3.0)*(phi + M_PI) ) );
@@ -121,7 +121,7 @@ static int ghl_newman_energy(
     W                  = 1.0/invW;
   }
 
-  if( isnan(z*W) ) return 1;
+  if(isnan(z*W)) return 1;
 
   // Set the primitives
   double utildeU[3] = {
@@ -147,7 +147,7 @@ int ghl_tabulated_Newman1D_energy(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   // Step 1: Compute auxiliary quantities
   double SU[3], Bsq, Ssq, BdotS;
@@ -161,7 +161,7 @@ int ghl_tabulated_Newman1D_energy(
   int check = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 				cons_undens, prims, tol_x, diagnostics);
 
-  if( check != ghl_success ) {
+  if(check != ghl_success) {
     prims->temperature = eos->T_min;
     check = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 			      cons_undens, prims, tol_x, diagnostics);

@@ -257,13 +257,13 @@ double get_table_quantity(
       const int which_var,
       const double rho,
       const double Y_e,
-      const double T );
+      const double T);
 
 // Helper functions
-static inline double relative_error( const double a, const double b ) {
-  if     ( a != 0 ) return( fabs(1.0-b/a) );
-  else if( b != 0 ) return( fabs(1.0-a/b) );
-  else              return( 0.0 );
+static inline double relative_error(const double a, const double b) {
+  if      (a != 0) return fabs(1.0-b/a);
+  else if (b != 0) return fabs(1.0-a/b);
+  else             return 0.0;
 }
 
 static inline int indexf(const int gridmax, const int i, const int j, const int k) {

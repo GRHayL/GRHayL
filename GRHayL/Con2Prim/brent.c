@@ -18,7 +18,7 @@ ensure_b_is_closest_to_root(
     double *restrict a,
     double *restrict b,
     double *restrict fa,
-    double *restrict fb ) {
+    double *restrict fb) {
 
   if( fabs(*fa) < fabs(*fb) ) {
     swap(a, b);
@@ -42,7 +42,7 @@ static inline void
 cycle(
     double *restrict a,
     double *restrict b,
-    double *restrict c ) {
+    double *restrict c) {
 
   *a = *b;
   *b = *c;
@@ -90,11 +90,11 @@ check_a_b_compute_fa_fb(
     double *restrict b,
     double *restrict fa,
     double *restrict fb,
-    roots_params *restrict r ) {
+    roots_params *restrict r) {
 
   // Step 1: Compute fa; check if a is the root.
   *fa = f(*a, params, eos, fparams);
-  if( *fa == 0.0 ) {
+  if(*fa == 0.0) {
     r->root     = *a;
     r->residual = *fa;
     return (r->error_key = roots_success);
@@ -163,7 +163,7 @@ ghl_brent(
       void *restrict fparams,
       double a,
       double b,
-      roots_params *restrict r ) {
+      roots_params *restrict r) {
 
   // Step 0: Set basic info to the roots_params struct
   sprintf(r->routine_name, __func__);
@@ -186,7 +186,7 @@ ghl_brent(
   for(r->n_iters=1;r->n_iters<=r->max_iters;r->n_iters++) {
 
     // Step 3.a: Keep the bracket in [b,c]
-    if( fb*fc > 0 ) {
+    if(fb*fc > 0) {
       c  = a;
       fc = fa;
       d  = e = b-a;
@@ -194,7 +194,7 @@ ghl_brent(
 
     // Step 3.b: Keep the best guess in b
     if( fabs(fc) < fabs(fb) ) {
-      cycle(&a , &b , &c );
+      cycle(&a , &b , &c);
       cycle(&fa, &fb, &fc);
     }
 
@@ -205,7 +205,7 @@ ghl_brent(
     m = 0.5*(c-b);
 
     // Step 3.f: Check for convergence
-    if( fabs(m) < tol || fb == 0.0 ) {
+    if(fabs(m) < tol || fb == 0.0) {
       r->root     = b;
       r->residual = fb;
       return (r->error_key = roots_success);
@@ -217,7 +217,7 @@ ghl_brent(
     else {
       // Attempt interpolation
       S = fb/fa;
-      if( a == c ) {
+      if(a == c) {
         // Step 3.g.2: Linear interpolation
         P = 2*m*S;
         Q = 1-S;
@@ -229,7 +229,7 @@ ghl_brent(
         P = S*(2*m*Q*(Q-R)-(b-a)*(R-1));
         Q = (Q-1)*(R-1)*(S-1);
       }
-      if( P > 0 )
+      if(P > 0)
         Q = -Q;
       else
         P = -P;
@@ -245,7 +245,7 @@ ghl_brent(
     }
     a  = b;
     fa = fb;
-    if( fabs(d) > tol )
+    if(fabs(d) > tol)
       b += d;
     else
       b += m>0 ? tol : -tol;

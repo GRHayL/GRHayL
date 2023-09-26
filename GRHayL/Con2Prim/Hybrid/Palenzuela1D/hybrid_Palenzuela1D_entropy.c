@@ -29,11 +29,11 @@ compute_rho_P_eps_W_entropy(
       double *restrict rho_ptr,
       double *restrict P_ptr,
       double *restrict eps_ptr,
-      double *restrict W_ptr ) {
+      double *restrict W_ptr) {
 
   // Step 1: First compute rho and W
   double rho, W;
-  compute_rho_W_from_x_and_conservatives( x, params, fparams, &rho, &W );
+  compute_rho_W_from_x_and_conservatives(x, params, fparams, &rho, &W);
 
   // Step 2: Compute P (Eq. 19 of arXiv:0808.3140)
   const double ent   = fparams->cons_undens->entropy / W;
@@ -44,9 +44,9 @@ compute_rho_P_eps_W_entropy(
   double P_cold, eps_cold;
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
   // Don't let P be less than P_cold
-  if( P < P_cold ) P = P_cold;
+  if(P < P_cold) P = P_cold;
   // Compute eps
-  const double eps = eps_cold + (P - P_cold) / ( (eos->Gamma_th - 1.0) * rho );
+  const double eps = eps_cold + (P - P_cold) / ( (eos->Gamma_th - 1.0) * rho);
 
   // Step 4: Set the output
   *rho_ptr = rho;
@@ -70,7 +70,7 @@ int ghl_hybrid_Palenzuela1D_entropy(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
-      ghl_con2prim_diagnostics *restrict diagnostics ) {
+      ghl_con2prim_diagnostics *restrict diagnostics) {
 
   diagnostics->which_routine = Palenzuela1D;
   return ghl_hybrid_Palenzuela1D(compute_rho_P_eps_W_entropy,
