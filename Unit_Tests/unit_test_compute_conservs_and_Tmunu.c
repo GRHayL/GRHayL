@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
     ghl_initialize_primitives(
           rho_b[i], press[i], eps[i],
           vx[i], vy[i], vz[i],
-          ONE_OVER_SQRT_4PI*Bx[i], ONE_OVER_SQRT_4PI*By[i], ONE_OVER_SQRT_4PI*Bz[i],
+          Bx[i], By[i], Bz[i],
           entropy[i], poison, poison,
           &prims);
     prims.u0 = u0[i];
