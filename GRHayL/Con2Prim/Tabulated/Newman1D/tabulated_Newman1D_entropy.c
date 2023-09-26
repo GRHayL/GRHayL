@@ -6,7 +6,6 @@ static int ghl_newman_entropy(
       const double S_squared,
       const double BdotS,
       const double B_squared,
-      const double *restrict BU,
       const double *restrict SU,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict con,
@@ -118,9 +117,9 @@ static int ghl_newman_entropy(
 
   // Set the primitives
   double utildeU[3] = {
-    W*(SU[0] + BdotS*BU[0]/z)/(z+B_squared),
-    W*(SU[1] + BdotS*BU[1]/z)/(z+B_squared),
-    W*(SU[2] + BdotS*BU[2]/z)/(z+B_squared)
+    W*(SU[0] + BdotS*prims->BU[0]/z)/(z+B_squared),
+    W*(SU[1] + BdotS*prims->BU[1]/z)/(z+B_squared),
+    W*(SU[2] + BdotS*prims->BU[2]/z)/(z+B_squared)
   };
   prims->rho         = con->rho*invW;
   prims->Y_e         = xye;
@@ -143,20 +142,20 @@ int ghl_tabulated_Newman1D_entropy(
       ghl_con2prim_diagnostics *restrict diagnostics ) {
 
   // Step 1: Compute auxiliary quantities
-  double BU[3], SU[3], Bsq, Ssq, BdotS;
-  compute_BU_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims,
-                              BU, SU, &Bsq, &Ssq, &BdotS);
+  double SU[3], Bsq, Ssq, BdotS;
+  compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims,
+                           SU, &Bsq, &Ssq, &BdotS);
 
   // Step 2: Call the Newman routine that uses the entropy to recover T
   const double tol_x = 1e-15;
   diagnostics->which_routine = Newman1D_entropy;
 
-  int check = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
+  int check = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 				 cons_undens, prims, tol_x, diagnostics);
 
   if( check != ghl_success ) {
     prims->temperature = eos->T_min;
-    check = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, BU, SU, ADM_metric,
+    check = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 			       cons_undens, prims, tol_x, diagnostics);
   }
 

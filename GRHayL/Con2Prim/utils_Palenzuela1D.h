@@ -96,7 +96,6 @@ compute_rho_W_from_x_and_conservatives(
  * Parameters : metric       - Metric quantities
  *            : cons_undens  - Undensitized conservatives
  *            : prims        - Input primitives (for B^{i})
- *            : BU           - Stores B^{i}.
  *            : SU           - Stores S^{i}.
  *            : Bsq          - Stores B^2.
  *            : Ssq          - Stores S^2.
@@ -105,11 +104,10 @@ compute_rho_W_from_x_and_conservatives(
  * Returns    : Nothing.
  */
 static inline void
-compute_BU_SU_Bsq_Ssq_BdotS(
+compute_SU_Bsq_Ssq_BdotS(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
-      double *restrict BU,
       double *restrict SU,
       double *restrict Bsq,
       double *restrict Ssq,
