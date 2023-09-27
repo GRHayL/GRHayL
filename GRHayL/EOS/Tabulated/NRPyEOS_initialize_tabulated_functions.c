@@ -23,7 +23,10 @@ void NRPyEOS_initialize_tabulated_functions() {
   ghl_tabulated_compute_P_eps_T_from_S                 = &NRPyEOS_P_eps_and_T_from_rho_Ye_S;
   ghl_tabulated_compute_eps_cs2_T_from_P               = &NRPyEOS_eps_cs2_and_T_from_rho_Ye_P;
   ghl_tabulated_compute_P_cs2_T_from_eps               = &NRPyEOS_P_cs2_and_T_from_rho_Ye_eps;
-  ghl_tabulated_get_Ye_from_rho                        = &NRPyEOS_tabulated_get_Ye_from_rho;
+  ghl_tabulated_compute_Ye_from_rho                    = &NRPyEOS_tabulated_compute_Ye_from_rho;
+  ghl_tabulated_compute_P_from_rho                     = &NRPyEOS_tabulated_compute_P_from_rho;
+  ghl_tabulated_compute_rho_from_P                     = &NRPyEOS_tabulated_compute_rho_from_P;
+  ghl_tabulated_compute_eps_from_rho                   = &NRPyEOS_tabulated_compute_eps_from_rho;
   ghl_tabulated_compute_Ye_of_rho_beq_constant_T       = &NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T;
   ghl_tabulated_get_index_rho                          = &NRPyEOS_tabulated_get_index_rho;
   ghl_tabulated_get_index_T                            = &NRPyEOS_tabulated_get_index_T;

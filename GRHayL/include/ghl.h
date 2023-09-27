@@ -219,6 +219,9 @@ typedef struct ghl_eos_parameters {
   double drhoyei;
   double dtempyei;
   double drhotempyei;
+
+  // These are used for beta-equilibrium
+  double *lp_of_lr, *le_of_lr, *Ye_of_lr;
   //------------------------------------------------
 
 } ghl_eos_parameters;

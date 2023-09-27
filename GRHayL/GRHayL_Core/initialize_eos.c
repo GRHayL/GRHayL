@@ -282,6 +282,11 @@ void ghl_initialize_tabulated_eos(
   eos->entropy_min = eos->table_ent_min;
   eos->entropy_max = eos->table_ent_max;
   eos->tau_atm     = eos->rho_min * eos->eps_min;
+
+  // Step 8: Initialize beta-equilibrium arrays to NULL
+  eos->Ye_of_lr = NULL;
+  eos->lp_of_lr = NULL;
+  eos->le_of_lr = NULL;
 }
 
 /*

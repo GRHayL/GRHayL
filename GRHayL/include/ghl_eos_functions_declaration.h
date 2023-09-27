@@ -212,16 +212,31 @@ int (*ghl_tabulated_get_index_Ye)(
       const ghl_eos_parameters *restrict eos,
       const double Ye);
 
-double (*ghl_tabulated_get_Ye_from_rho)(
-    const int nr,
-    const double *lr,
-    const double *Ye_of_lr,
-    const double rho );
-
 void (*ghl_tabulated_compute_Ye_of_rho_beq_constant_T)(
-      const ghl_eos_parameters *restrict eos,
       const double T,
-      double **Ye_of_rho_out);
+      ghl_eos_parameters *restrict eos );
+
+void (*ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T)(
+      const double T,
+      ghl_eos_parameters *restrict eos );
+
+double (*ghl_tabulated_compute_Ye_from_rho)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+double (*ghl_tabulated_compute_P_from_rho)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+double (*ghl_tabulated_compute_rho_from_P)(
+      const ghl_eos_parameters *restrict eos,
+      const double P );
+
+double (*ghl_tabulated_compute_eps_from_rho)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+void (*ghl_tabulated_free_beq_quantities)( ghl_eos_parameters *restrict eos );
 
 void (*ghl_calculate_HLLE_fluxes_dirn0)(
       const ghl_primitive_quantities *restrict prims_r,

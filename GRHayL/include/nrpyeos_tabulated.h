@@ -240,18 +240,45 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       double *restrict enthalpy_ptr,
       double *restrict cs2_ptr);
 
-int NRPyEOS_tabulated_get_index_rho( const ghl_eos_parameters *restrict eos, const double rho );
-int NRPyEOS_tabulated_get_index_T(   const ghl_eos_parameters *restrict eos, const double T   );
-int NRPyEOS_tabulated_get_index_Ye(  const ghl_eos_parameters *restrict eos, const double Ye  );
-double NRPyEOS_tabulated_get_Ye_from_rho(
-    const int nr,
-    const double *lr,
-    const double *Ye_of_lr,
-    const double rho );
-void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
+int NRPyEOS_tabulated_get_index_rho(
       const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+int NRPyEOS_tabulated_get_index_T(
+      const ghl_eos_parameters *restrict eos,
+      const double T );
+
+int NRPyEOS_tabulated_get_index_Ye(
+      const ghl_eos_parameters *restrict eos,
+      const double Ye );
+
+void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const double T,
-      double **Ye_of_rho );
+      ghl_eos_parameters *restrict eos );
+
+void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
+      const double T,
+      ghl_eos_parameters *restrict eos );
+
+void NRPyEOS_tabulated_free_beq_quantities( ghl_eos_parameters *restrict eos );
+
+double NRPyEOS_tabulated_compute_Ye_from_rho(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+double NRPyEOS_tabulated_compute_P_from_rho(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+double NRPyEOS_tabulated_compute_rho_from_P(
+      const ghl_eos_parameters *restrict eos,
+      const double P );
+
+double NRPyEOS_tabulated_compute_eps_from_rho(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+void NRPyEOS_tabulated_free_beq_quantities( ghl_eos_parameters *restrict eos );
 
 void NRPyEOS_enforce_table_bounds_rho_Ye_T(
       const ghl_eos_parameters *restrict eos,
