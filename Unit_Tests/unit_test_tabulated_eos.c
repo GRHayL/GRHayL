@@ -26,6 +26,12 @@ int main(int argc, char **argv) {
   ghl_tabulated_read_table_set_EOS_params(argv[1], &eos);
   eos.root_finding_precision=1e-10;
 
+  // These need to be NULL to avoid segmentation faults. This doesn't have
+  // to manually set normally, but because we are reading manually it is.
+  eos.Ye_of_lr = NULL;
+  eos.lp_of_lr = NULL;
+  eos.le_of_lr = NULL;
+
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
     ghl_error("Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
                  eos.N_rho, eos.N_T, eos.N_Ye);
