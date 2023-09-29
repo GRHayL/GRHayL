@@ -23,6 +23,6 @@ void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
 
   // Step 4: Set the output
   *enthalpy_ptr = h;
-  *cs2_ptr      = cs2;
+  *cs2_ptr      = cs2 / h;
 #endif
 }
