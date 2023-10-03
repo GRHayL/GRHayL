@@ -35,15 +35,15 @@ void GRHayLib_paramcheck() {
       if(rho_ppoly_in[0] < 0)
         CCTK_ERROR("Parameter rho_ppoly_in[0] must be set in the parameter file and be non-negative.");
 
-      for(int i=1; i<neos; i++) {
+      for(int i=1; i<neos-1; i++) {
         if(Gamma_ppoly_in[i] < 0)
           CCTK_VERROR("Parameter Gamma_ppoly_in[%d] must be set in the parameter file and be non-negative.", i);
 
         if(rho_ppoly_in[i] < 0)
           CCTK_VERROR("Parameter rho_ppoly_in[%d] must be set in the parameter file and be non-negative.", i);
       }
-      if(Gamma_ppoly_in[neos] < 0)
-        CCTK_VERROR("Parameter Gamma_ppoly_in[%d] must be set in the parameter file and be non-negative.", neos);
+      if(Gamma_ppoly_in[neos-1] < 0)
+        CCTK_VERROR("Parameter Gamma_ppoly_in[%d] must be set in the parameter file and be non-negative.", neos-1);
     }
   } else if( CCTK_EQUALS(EOS_type, "Tabulated") ) {
     if(Y_e_atm == -1)
