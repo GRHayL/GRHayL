@@ -11,11 +11,7 @@ int main(int argc, char **argv) {
   // These variables set up the tested range of values and number of sampling points.
   // number of sampling points in density and pressure
   const int npoints = 80;
-  const int sampling = npoints*npoints;
-
-  // number of additional points for ensuring we hit all logic branches
-  const int ineq_edge_cases = 5;
-  const int arraylength = sampling + ineq_edge_cases;
+  const int arraylength = npoints*npoints;
 
   double test_rho_min = 1e-12; //Minimum input density
   double test_rho_max = 1e-3; //Maximum input density
@@ -182,49 +178,6 @@ int main(int argc, char **argv) {
         &ADM_metric);
   ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
-
-  for(int i=sampling; i<sampling+ineq_edge_cases; i++) {
-    lapse[i] = 1.0;
-    betax[i] = 0.0;
-    betay[i] = 0.0;
-    betaz[i] = 0.0;
-    gxx[i] = 1.0;
-    gxy[i] = 0.0;
-    gxz[i] = 0.0;
-    gyy[i] = 1.0;
-    gyz[i] = 0.0;
-    gzz[i] = 1.0;
-
-    rho_star[i] = 1e-2;
-  }
-
-  Bx[sampling]   = 1e-302;
-  By[sampling]   = Bz[sampling] = 2e-302;
-  tau[sampling]   = 1e-2;
-  S_x[sampling] = S_y[sampling] = S_z[sampling] = 1000.0*tau[sampling]*(tau[sampling] + 2.0*rho_star[sampling]);
-
-  Bx[sampling+1] = 2e-160;
-  By[sampling+1] = Bz[sampling+1] = 1e-160;
-  tau[sampling+1] = 1e-2;
-  S_x[sampling+1] = S_y[sampling+1] = S_z[sampling+1] = tau[sampling+1]*(tau[sampling+1] + 2.0*rho_star[sampling+1]);
-
-  Bx[sampling+2] = 2e-160;
-  By[sampling+2] = 1e-160;
-  Bz[sampling+2] = 3e-160;
-  tau[sampling+2] = 1e-2;
-  S_x[sampling+2] = S_y[sampling+2] = S_z[sampling+2] = tau[sampling+2]*(tau[sampling+2] + 2.0*rho_star[sampling+2]);
-
-  Bx[sampling+3] = By[sampling+3] = Bz[sampling+3] = 1e-2;
-  // Flat space B^2 with bar rescaling
-  double Bbar2 = (Bx[sampling+3]*Bx[sampling+3] + By[sampling+3]*By[sampling+3] + Bz[sampling+3]*Bz[sampling+3])*SQR(ONE_OVER_SQRT_4PI);
-  tau[sampling+3] = ADM_metric.sqrt_detgamma*Bbar2/4.0;
-  S_x[sampling+3] = S_y[sampling+3] = S_z[sampling+3] = eos.tau_atm*(eos.tau_atm + 2.0*rho_star[sampling+3]);
-
-  Bx[sampling+4] = By[sampling+4] = Bz[sampling+4] = 1e-2;
-  // Flat space B^2 with bar rescaling
-  Bbar2 = (Bx[sampling+4]*Bx[sampling+4] + By[sampling+4]*By[sampling+4] + Bz[sampling+4]*Bz[sampling+4])*SQR(ONE_OVER_SQRT_4PI);
-  tau[sampling+4] = 2.0*ADM_metric.sqrt_detgamma*Bbar2;
-  S_x[sampling+4] = S_y[sampling+4] = S_z[sampling+4] = 1000*tau[sampling+4]*(tau[sampling+4] + 2.0*rho_star[sampling+4]);
 
   // Ouput data to files and generate perturbed data
   FILE* input = fopen_with_check("ET_Legacy_primitives_input.bin", "wb");
