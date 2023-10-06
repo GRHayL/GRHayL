@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   const int backup_routine[3] = {None,None,None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
-  const bool cupp_fix = false;
+  const bool ignore_negative_pressure = false;
   const double W_max = 10.0; //IGM default
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   ghl_parameters params;
   ghl_initialize_params(
         Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-        Psi6threshold, cupp_fix, W_max, Lorenz_damping_factor, &params);
+        Psi6threshold, ignore_negative_pressure, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(
@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
     // B's get rescaled to match IGM's definition of B
     ghl_initialize_primitives(rho_b[index], press[index], eps[index],
                           vx[index], vy[index], vz[index],
-                          ONE_OVER_SQRT_4PI*Bx[index], ONE_OVER_SQRT_4PI*By[index], ONE_OVER_SQRT_4PI*Bz[index],
+                          Bx[index], By[index], Bz[index],
                           poison, poison, poison, // entropy, Y_e, temp
                           &prims);
 

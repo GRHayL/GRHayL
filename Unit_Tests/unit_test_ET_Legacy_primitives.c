@@ -5,7 +5,6 @@
 //              the Con2Prim gem.
 #include "unit_tests.h"
 
-
 int main(int argc, char **argv) {
 
   FILE* input = fopen_with_check("ET_Legacy_primitives_input.bin", "rb");
@@ -24,7 +23,7 @@ int main(int argc, char **argv) {
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
   const double W_max = 10.0; //IGM default
-  const bool ignore_negative_pressure = true;
+  const bool ignore_negative_pressure = false;
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
   const double Lorenz_damping_factor = 0;
@@ -175,15 +174,17 @@ int main(int argc, char **argv) {
     ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
     // B's get rescaled to match IGM's definition of B
-    ghl_initialize_primitives(rho_b[index], press[index], eps[index],
-                          vx[index], vy[index], vz[index],
-          ONE_OVER_SQRT_4PI*Bx[index], ONE_OVER_SQRT_4PI*By[index], ONE_OVER_SQRT_4PI*Bz[index],
-                          poison, poison, poison, // entropy, Y_e, temp
-                          &prims);
+    ghl_initialize_primitives(
+          rho_b[index], press[index], eps[index],
+          vx[index], vy[index], vz[index],
+          Bx[index], By[index], Bz[index],
+          poison, poison, poison, // entropy, Y_e, temp
+          &prims);
 
-    ghl_initialize_conservatives(rho_star[index], tau[index],
-                             S_x[index], S_y[index], S_z[index],
-                             poison, poison, &cons);
+    ghl_initialize_conservatives(
+          rho_star[index], tau[index],
+          S_x[index], S_y[index], S_z[index],
+          poison, poison, &cons);
 
     int check = 0;
     if(cons.rho > 0.0) {
@@ -203,24 +204,6 @@ int main(int argc, char **argv) {
 
       /************* Conservative-to-primitive recovery ************/
       check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
-
-      /********** Artificial Font fix for code comparison **********
-      This point corresponds to the second-to-last element of the edge
-      cases for ghl_apply_conservative_limits function. Due to improvements
-      in the Noble2D routine, the GRHayL code doesn't trigger Font
-      fix while the old code does. This is also true for several of
-      the more 'physically motivated' indices, but the edge case data
-      isn't constructed to be physically reasonable, causing the Font
-      fix to significantly affect the results. For the normal data, the
-      Font fix data from IllinoisGRMHD and Noble2D data from GRHayL
-      agree within tolerance, further validating the changes to Noble2D.
-      Since this data doesn't match due to the code changing for the
-      better, we just have to manually trigger Font fix to reproduce
-      the behavior of IllinoisGRMHD.
-      **************************************************************/
-      if(index==arraylength-2)
-        check = ghl_hybrid_Font_fix(&params, &eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
-      /*************************************************************/
 
       if(check)
         printf("Con2Prim failed!");
