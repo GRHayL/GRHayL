@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   bool calc_prims_guess = true;
   double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
   double W_max = 10.0; //IGM default
-  const bool cupp_fix = false;
+  const bool ignore_negative_pressure = false;
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
   const double Lorenz_damping_factor = 0;
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   ghl_parameters params;
   ghl_initialize_params(
         Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-        Psi6threshold, cupp_fix, W_max, Lorenz_damping_factor, &params);
+        Psi6threshold, ignore_negative_pressure, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
     ghl_hybrid_compute_P_cold_and_eps_cold(&eos, xrho, &P_cold, &eps_cold);
 
     // Compute the pressure step size
-    const double lpmin = log(P_cold/100.0);//1.0e-30);//-P_cold);
+    const double lpmin = log(P_cold);
     const double lpmax = log(P_cold*1.0e6);
     const double dlp   = (lpmax - lpmin)/(npoints-1);
     for(int i=0;i<npoints;i++) { // Pressure loop

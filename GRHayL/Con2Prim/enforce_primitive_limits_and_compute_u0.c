@@ -36,7 +36,7 @@ int ghl_enforce_primitive_limits_and_compute_u0(
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
 
     // Set P_min and P_max
-    const double P_min = 0.9*P_cold;
+    const double P_min = P_cold;
     // Adjust P_max based on Psi6
     const double P_max = (ADM_metric->sqrt_detgamma > params->psi6threshold) ? 1e5*P_cold : 100.0*P_cold;
 
