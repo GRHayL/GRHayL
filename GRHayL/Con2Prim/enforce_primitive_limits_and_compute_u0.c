@@ -29,11 +29,11 @@ int ghl_enforce_primitive_limits_and_compute_u0(
 
   // Hybrid EOS specific floors and ceilings
   switch(eos->eos_type) {
-    case ghl_eos_hybrid:
+    case ghl_eos_hybrid: {
       // Pressure and epsilon must be recomputed
       // Compute P and eps
-      double P_cold = 0.0;
-      double eps_cold = 0.0;
+      double P_cold;
+      double eps_cold;
       ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
 
       // Set P_min and P_max
@@ -50,7 +50,7 @@ int ghl_enforce_primitive_limits_and_compute_u0(
       prims->eps = eps_cold + (prims->press-P_cold)/(eos->Gamma_th-1.0)/prims->rho;
       if(params->evolve_entropy)
         prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
-      break;
+      break;}
 
     // Tabulated EOS specific floors and ceilings
     case ghl_eos_tabulated:
@@ -65,6 +65,7 @@ int ghl_enforce_primitive_limits_and_compute_u0(
                                          prims->rho, prims->Y_e, prims->temperature,
                                          &prims->press, &prims->eps);
       break;
+
     case ghl_eos_simple:
       // Apply floors and ceilings to P
       if(prims->press < eos->press_min) prims->press = eos->press_min;
