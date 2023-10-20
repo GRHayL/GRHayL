@@ -1,7 +1,7 @@
 #include "nrpyeos_tabulated.h"
-/*
- * (c) 2022 Leo Werneck
- */
+
+/// @brief Free memory allocated for EOS table quantities in GRHayL EOS parameter struct
+/// @param eos Pointer to GRHayL EOS parameters struct
 void NRPyEOS_free_memory(ghl_eos_parameters *restrict eos) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
@@ -17,7 +17,7 @@ void NRPyEOS_free_memory(ghl_eos_parameters *restrict eos) {
   free(eos->table_eps);
   NRPyEOS_tabulated_free_beq_quantities(eos);
 
- ghl_info("All done!\n");
- ghl_info("*******************************\n");
+  ghl_info("All done!\n");
+  ghl_info("*******************************\n");
 #endif
 }
