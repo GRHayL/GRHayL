@@ -7,6 +7,8 @@ int ghl_general_newton_raphson(
       const double indep_var_in,
       double x[],
       void (*validate_x)(
+            const harm_aux_vars_struct *restrict harm_aux,
+            const double [],
             const double [],
             double []),
       void (*funcd)(
@@ -41,15 +43,15 @@ int ghl_general_newton_raphson(
       x[id] += dx[id];
     }
 
-    /****************************************/
-    /* Calculate the convergence criterion */
-    /****************************************/
-    errx = (x[0]==0.0) ? fabs(dx[0]) : fabs(dx[0]/x[0]);
+    /******************************************/
+    /* Make sure that the new x[] is physical */
+    /******************************************/
+    validate_x(harm_aux, dx, x_old, x);
 
-    /****************************************/
-    /* Make sure that the new x[] is physical : */
-    /****************************************/
-    validate_x(x_old, x);
+    /***************************************/
+    /* Calculate the convergence criterion */
+    /***************************************/
+    errx = (x[0]==0.0) ? fabs(dx[0]) : fabs(dx[0]/x[0]);
 
     harm_aux->n_iter++;
 

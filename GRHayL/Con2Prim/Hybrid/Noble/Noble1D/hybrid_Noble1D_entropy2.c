@@ -150,7 +150,7 @@ int ghl_hybrid_Noble1D_entropy2(
 
   gnr_out[0] = rho0;
 
-  const int retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z_last, gnr_out, ghl_validate_1D, ghl_func_rho2);
+  const int retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z_last, gnr_out, ghl_validate_1D_entropy, ghl_func_rho2);
 
   rho0 = gnr_out[0];
 

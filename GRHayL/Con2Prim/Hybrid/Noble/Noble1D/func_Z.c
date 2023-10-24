@@ -38,7 +38,7 @@ void ghl_func_Z(
   // Find rho from Z
   int retval, ntries = 0;
   while (
-    (retval = ghl_general_newton_raphson(eos, harm_aux, 1, Z, x_rho, ghl_validate_1D, ghl_func_rho))
+    (retval = ghl_general_newton_raphson(eos, harm_aux, 1, Z, x_rho, ghl_validate_1D_entropy, ghl_func_rho))
     && (ntries++ < 10) ) {
     rho     *= 10.;
     x_rho[0] = rho;

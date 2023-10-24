@@ -3,4 +3,6 @@
 # Source files in this directory that need compiled:
 SRCS = func_rho.c \
        func_Z.c   \
+       func_1D.c   \
+       hybrid_Noble1D.c \
        hybrid_Noble1D_entropy.c

@@ -144,6 +144,8 @@ int ghl_general_newton_raphson(
       const double indep_var_in,
       double x[],
       void (*validate_x)(
+            const harm_aux_vars_struct *restrict harm_aux,
+            const double [],
             const double [],
             double []),
       void (*funcd)(
@@ -256,11 +258,21 @@ int ghl_finalize_Noble_entropy(
       ghl_primitive_quantities *restrict prims);
 
 void ghl_validate_1D(
-      const double x0[1],
+      const harm_aux_vars_struct *restrict harm_aux,
+      const double dx[1],
+      const double x_old[1],
+      double x[1]);
+
+void ghl_validate_1D_entropy(
+      const harm_aux_vars_struct *restrict harm_aux,
+      const double dx[1],
+      const double x_old[1],
       double x[1]);
 
 void ghl_validate_2D(
-      const double x0[2],
+      const harm_aux_vars_struct *restrict harm_aux,
+      const double dx[2],
+      const double x_old[2],
       double x[2]);
 
 #endif

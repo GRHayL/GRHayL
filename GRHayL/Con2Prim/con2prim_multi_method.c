@@ -14,8 +14,8 @@ int ghl_con2prim_hybrid_select_method(
     // Noble routines (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
     case Noble2D:
       return ghl_hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
-    //case Noble1D:
-    //  return ghl_hybrid_Noble1D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics); 
+    case Noble1D:
+      return ghl_hybrid_Noble1D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics); 
     // Font routine (see https://arxiv.org/abs/gr-qc/9811015)
     case Font1D:
       return ghl_hybrid_Font_fix(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);

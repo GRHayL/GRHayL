@@ -13,11 +13,11 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double gzz,
       ghl_metric_quantities *restrict ADM_metric) {
 
-  ghl_initialize_metric(lapse,
-                           betax, betay, betaz,
-                           gxx, gxy, gxz,
-                           gyy, gyz, gzz,
-                           ADM_metric);
+  ghl_initialize_metric(
+        lapse, betax, betay, betaz,
+        gxx, gxy, gxz,
+        gyy, gyz, gzz,
+        ADM_metric);
 
   ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(ADM_metric, &metric_aux);
