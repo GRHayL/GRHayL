@@ -75,7 +75,7 @@ int ghl_hybrid_Font1D(
 
     //****************************************************************
 
-    if(failure)
+    if(failure==1)
       return 1;
 
     /* First compute P_cold, eps_cold, then h = h_cold */
