@@ -2,3 +2,6 @@ test/
 build/
 Makefile
 .idea/
+GRHayL/Flux_Source/__pycache__/
+GRHayL/Flux_Source/nrpy/__pycache__/
+GRHayL/Flux_Source/nrpy/BSSN/__pycache__/
