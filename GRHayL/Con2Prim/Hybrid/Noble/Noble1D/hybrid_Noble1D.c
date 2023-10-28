@@ -67,8 +67,12 @@ int ghl_hybrid_Noble1D(
   if(vsq >= 1.0) {
     vsq = 1.-2.e-16;
   } else if(vsq < 0.0) {
-    //v should be real!
-    return 5;
+    if(vsq > -1e-15)  {
+      vsq = 0.0;
+    } else {
+      //v should be real!
+      return 5;
+    }
   }
 
   // Recover the primitive variables from the scalars and conserved variables:

@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
 
-  const int num_methods = 5;
+  const int num_methods = 6;
   int methods[num_methods];
   bool uses_entropy[num_methods];
 
@@ -14,10 +14,10 @@ int main(int argc, char **argv) {
   uses_entropy[2] = true;
   methods[3] = Palenzuela1D_entropy;
   uses_entropy[3] = true;
-  //methods[3] = Noble1D_entropy2;
-  //uses_entropy[3] = true;
-  //methods[4] = Noble1D;
-  //uses_entropy[4] = false;
+  methods[4] = Noble1D;
+  uses_entropy[4] = false;
+  //methods[5] = Noble1D_entropy2;
+  //uses_entropy[5] = true;
   methods[num_methods-1] = Noble2D;
   uses_entropy[num_methods-1] = false;
 

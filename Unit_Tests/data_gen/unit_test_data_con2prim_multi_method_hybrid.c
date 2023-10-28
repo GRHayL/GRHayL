@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   const double test_rho_max = 1e-3; //Maximum input density
 
   // Count number of routines tested
-  const int num_routines = 5;
+  const int num_routines = 6;
   int methods[num_routines];
   bool uses_entropy[num_routines];
 
@@ -33,10 +33,10 @@ int main(int argc, char **argv) {
   uses_entropy[2] = true;
   methods[3] = Palenzuela1D_entropy;
   uses_entropy[3] = true;
-  //methods[3] = Noble1D_entropy2;
-  //uses_entropy[3] = true;
-  //methods[4] = Noble1D;
-  //uses_entropy[4] = false;
+  methods[4] = Noble1D;
+  uses_entropy[4] = false;
+  //methods[5] = Noble1D_entropy2;
+  //uses_entropy[5] = true;
 
   // To ensure the behavior remains the same for functions after Con2Prim,
   // we explicitly set a routine to always be last.
