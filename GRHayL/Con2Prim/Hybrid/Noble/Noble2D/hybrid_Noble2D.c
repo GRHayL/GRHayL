@@ -4,55 +4,33 @@
  * Description :  Unpacks the ghl_primitive_quantities struct into the variables
  *                needed by the Newton-Rapson solver, then repacks the  primitives.
  *                This function is adapted from the HARM function provided by IllinoisGRMHD.
- * Documentation: 
- */
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_Noble2D
+*/
 
-/*************************************************************************************
+/***********************************************************************************
+******************************* HARM License ***************************************
+************************************************************************************
 
-utoprim_2d.c:
----------------
+    Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble, 
+                   Gabor Toth, and Luca Del Zanna
 
-    Uses the 2D method:
-       -- solves for two independent variables (W,v^2) via a 2D
-          Newton-Raphson method
-       -- can be used (in principle) with a general equation of state.
+                        HARM  version 1.0   (released May 1, 2006)
 
-******************************************************************************/
+    HARM is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
 
-/**********************************************************************************
+    HARM is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-  ghl_hybrid_Noble2D():
+    You should have received a copy of the GNU General Public License
+    along with HARM; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-     -- Attempt an inversion from U to prim using the initial guess prim.
-
-     -- This is the main routine that calculates auxiliary quantities for the
-        Newton-Raphson routine.
-
-  -- assumes that
-             /   rho gamma   \
-         U = | alpha T^t_\mu |
-             \   alpha B^i   /
-
-
-
-             /     rho     \
-      prim = |     uu      |
-             | \tilde{u}^i |
-             \  alpha B^i  /
-
-
-return: i where
-        i = 0 -> success
-            1 -> initial v^2 < 0 with initial primitive guess;
-            2 -> Newton-Raphson solver did not converge to a solution with the
-                 given tolerances;
-            3 -> Newton-Raphson procedure encountered a numerical divergence
-                 (occurrence of "nan" or "+/-inf");
-            4 -> Z<0 or Z>Z_TOO_BIG
-            5 -> v^2 < 0 returned by the Newton-Raphson solver;
-            6 -> computed pressure is negative
-
-**********************************************************************************/
+***********************************************************************************/
 
 int ghl_hybrid_Noble2D(
       const ghl_parameters *restrict params,
@@ -83,7 +61,7 @@ int ghl_hybrid_Noble2D(
   /* Problem with solver, so return denoting error before doing anything further */
   if(retval != 0) {
     return retval;
-  } else if(Z <= 0. || Z > Z_TOO_BIG) {
+  } else if(Z <= 0. || Z > 1e20) {
     return 4;
   }
 

@@ -1,6 +1,6 @@
 #include "con2prim.h"
 
-int ghl_hybrid_Font_fix_loop(
+int ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol, const double W_in,
       const double Sf2_in, const double Psim6, const double sdots,
@@ -8,11 +8,12 @@ int ghl_hybrid_Font_fix_loop(
       const ghl_conservative_quantities *restrict cons,
       const double rhob_in, double *restrict rhob_out_ptr);
 
-/**********************************
- * Piecewise Polytropic EOS Patch *
- *    Font fix: function call     *
- **********************************/
-int ghl_hybrid_Font_fix(
+/*
+ * Function      : ghl_hybrid_Font1D()
+ * Description   : Determines rhob using the Font et al prescription
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_Font1D
+*/
+int ghl_hybrid_Font1D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -60,20 +61,21 @@ int ghl_hybrid_Font_fix(
 
     const int maxits = 300;
     double tol = 1.e-15;
-    int Font_fix_status;
-    const int Font_fix_attempts = 5;
-    for(int n=0; n<Font_fix_attempts; n++) {
+    int failure;
+    const int Font1D_attempts = 5;
+    for(int n=0; n<Font1D_attempts; n++) {
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
       const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
-      Font_fix_status = ghl_hybrid_Font_fix_loop(eos, loop_maxits, loop_tol, W0, Sf20, Psim6, sdots,
-                                           BdotS2, B2, cons, rhob0, &rhob);
+      failure = ghl_hybrid_Font1D_loop(
+            eos, loop_maxits, loop_tol, W0, Sf20, Psim6,
+            sdots, BdotS2, B2, cons, rhob0, &rhob);
       rhob0 = rhob;
-      if(Font_fix_status==0) break;
+      if(!failure) break;
     }
 
     //****************************************************************
 
-    if(Font_fix_status==1)
+    if(failure)
       return 1;
 
     /* First compute P_cold, eps_cold, then h = h_cold */

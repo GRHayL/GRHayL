@@ -1,66 +1,36 @@
 #include "../../../utils_Noble.h"
 
-/* Function    :  Hybrid_Noble2D()
+/* Function    :  Hybrid_Noble1D_entropy()
  * Description :  Unpacks the ghl_primitive_quantities struct into the variables
  *                needed by the Newton-Rapson solver, then repacks the  primitives.
  *                This function is adapted from the HARM function provided by IllinoisGRMHD.
- * Documentation: 
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_Noble1D_entropy
 */
 
-/*************************************************************************************
+/***********************************************************************************
+******************************* HARM License ***************************************
+************************************************************************************
 
-utoprim_1d_ee.c:
----------------
+    Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble, 
+                   Gabor Toth, and Luca Del Zanna
 
-  -- uses eq. (27) of Noble  et al. or the "momentum equation" and ignores
-        the energy equation (29) in order to use the additional EOS, which
-        is
+                        HARM  version 1.0   (released May 1, 2006)
 
-             P = Sc rho^(GAMMA-1) / gamma
+    HARM is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
 
-    Uses the 1D_W method:
-       -- solves for one independent variable (W) via a 1D
-          Newton-Raphson method
-       -- solves for rho using Newton-Raphson using the definition of W :
-          W = Dc ( Dc + GAMMA Sc rho^(GAMMA-1) / (GAMMA-1) ) / rho
+    HARM is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-       -- can be used (in principle) with a general equation of state.
+    You should have received a copy of the GNU General Public License
+    along with HARM; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-******************************************************************************/
-
-/**********************************************************************************
-
-  ghl_hybrid_Noble1D_entropy():
-
-     -- Attempt an inversion from U to prim using the initial guess prim.
-
-     -- This is the main routine that calculates auxiliary quantities for the
-        Newton-Raphson routine.
-
-  -- assumes that
-             /   rho gamma   \
-         U = | alpha T^t_\mu |
-             \   alpha B^i   /
-
-
-
-             /     rho     \
-      prim = |     uu      |
-             | \tilde{u}^i |
-             \  alpha B^i  /
-
-
-return: i where
-        i = 0 -> success
-            1 -> initial v^2 < 0 with initial primitive guess;
-            2 -> Newton-Raphson solver did not converge to a solution with the
-                 given tolerances;
-            3 -> Newton-Raphson procedure encountered a numerical divergence
-                 (occurrence of "nan" or "+/-inf");
-            4 -> Z<0 or Z>Z_TOO_BIG
-            5 -> v^2 < 0 returned by the Newton-Raphson solver;
-
-**********************************************************************************/
+***********************************************************************************/
 
 int ghl_hybrid_Noble1D_entropy(
       const ghl_parameters *restrict params,
@@ -98,7 +68,7 @@ int ghl_hybrid_Noble1D_entropy(
   /* Problem with solver, so return denoting error before doing anything further */
   if(retval != 0) {
     return retval;
-  } else if(Z <= 0. || Z > Z_TOO_BIG) {
+  } else if(Z <= 0. || Z > 1e20) {
     return 4;
   }
 

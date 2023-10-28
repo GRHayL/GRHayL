@@ -178,5 +178,5 @@ int ghl_tabulated_Palenzuela1D(
     // fprintf(stderr, "**************\n");
   // }
 
-  return ghl_success;
+  return 0;
 }

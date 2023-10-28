@@ -1,29 +1,6 @@
 #include "con2prim.h"
 
-/* Function    : ghl_hybrid_Font_fix_loop()
- * Description : Determines rhob using the font fix prescription
- * Dependencies: find_polytropic_K_and_Gamma_index()
- *             : compute_P_cold_and_eps_cold()
- * Reference   : Etienne et al. (2011) [https://arxiv.org/pdf/1112.0568.pdf]
- *
- * Inputs      : maxits          - maximum number of iterations allowed
- *             : tol             - font fix tolerance
- *             : W               - See eq. (A26)
- *             : Sf2             - S_{fluid}^{2}, see eq. (A24)
- *             : Psim6           - This is equal to sqrt(\gamma)
- *             : sdots           - \tilde{S}_{\mu}\tilde{S}^{\mu}
- *             : BdotS2          - (B^{\mu}S_{\mu})^{2},
- *             : B2              - B^{2}, see eq. (A28)
- *             : cons            - Array of conservative variables
- *             : eos             - Struct of EOS parameters
- *             : rhob_in         - Initial value of rhob
- *             : rhob_out        - Output variable
- *
- * Outputs     : rhob_out        - Updated value of rhob
- *             : return value: 0 - Font fix worked
- *             : return value: 1 - Font fix failed
- */
-int ghl_hybrid_Font_fix_loop(
+int ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol,
       const double W_in, const double Sf2_in,

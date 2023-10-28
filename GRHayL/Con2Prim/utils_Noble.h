@@ -3,16 +3,6 @@
 
 #include "con2prim.h"
 
-static const int NPR =8;
-static const int NDIM=4;
-
-/*
-   \gamma^2 (\rho_0 + u + p) is assumed
-   to always be smaller than this.  This
-   is used to detect solver failures
-*/
-static const double Z_TOO_BIG    = 1e20;
-
 // HARM uses lots of globals. These auxiliary variables
 // allow us to pass useful quantities to the con2prim
 // functions without having a large number of function

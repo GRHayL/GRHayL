@@ -18,7 +18,7 @@ int ghl_con2prim_hybrid_select_method(
       return ghl_hybrid_Noble1D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics); 
     // Font routine (see https://arxiv.org/abs/gr-qc/9811015)
     case Font1D:
-      return ghl_hybrid_Font_fix(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      return ghl_hybrid_Font1D(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
       return ghl_hybrid_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);

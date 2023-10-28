@@ -129,7 +129,7 @@ static int ghl_newman_entropy(
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
-  return ghl_success;
+  return 0;
 }
 
 int ghl_tabulated_Newman1D_entropy(
@@ -153,7 +153,7 @@ int ghl_tabulated_Newman1D_entropy(
   int check = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 				 cons_undens, prims, tol_x, diagnostics);
 
-  if(check != ghl_success) {
+  if(check) {
     prims->temperature = eos->T_min;
     check = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 			       cons_undens, prims, tol_x, diagnostics);

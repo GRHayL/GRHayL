@@ -190,7 +190,7 @@ int ghl_hybrid_Palenzuela1D_entropy(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-int ghl_hybrid_Font_fix(
+int ghl_hybrid_Font1D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
