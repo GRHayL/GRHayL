@@ -2,6 +2,8 @@
 
 # Source files in this directory that need compiled:
 SRCS = NRPyEOS_eps_from_rho_Ye_T.c                                   \
+       NRPyEOS_cs2_from_rho_Ye_T.c                                   \
+       NRPyEOS_eps_and_T_from_rho_Ye_P.c                             \
        NRPyEOS_eps_S_and_T_from_rho_Ye_P.c                           \
        NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c \
        NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c              \

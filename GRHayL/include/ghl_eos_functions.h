@@ -63,6 +63,13 @@ extern void (*ghl_tabulated_compute_eps_from_T)(
       const double T,
       double *restrict eps);
 
+extern void (*ghl_tabulated_compute_cs2_from_T)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict cs2);
+
 extern void (*ghl_tabulated_compute_P_eps_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -154,6 +161,14 @@ extern void (*ghl_tabulated_compute_P_cs2_T_from_eps)(
       const double eps,
       double *restrict P,
       double *restrict cs2,
+      double *restrict T);
+
+extern void (*ghl_tabulated_compute_eps_T_from_P)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double P,
+      double *restrict eps,
       double *restrict T);
 
 extern void (*ghl_tabulated_compute_eps_cs2_T_from_P)(

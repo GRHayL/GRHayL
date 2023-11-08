@@ -8,6 +8,7 @@ void NRPyEOS_initialize_tabulated_functions() {
   ghl_tabulated_free_memory                            = &NRPyEOS_free_memory;
   ghl_tabulated_compute_P_from_T                       = &NRPyEOS_P_from_rho_Ye_T;
   ghl_tabulated_compute_eps_from_T                     = &NRPyEOS_eps_from_rho_Ye_T;
+  ghl_tabulated_compute_cs2_from_T                     = &NRPyEOS_cs2_from_rho_Ye_T;
   ghl_tabulated_compute_P_eps_from_T                   = &NRPyEOS_P_and_eps_from_rho_Ye_T;
   ghl_tabulated_compute_P_eps_S_from_T                 = &NRPyEOS_P_eps_and_S_from_rho_Ye_T;
   ghl_tabulated_compute_P_eps_cs2_from_T               = &NRPyEOS_P_eps_and_cs2_from_rho_Ye_T;
@@ -21,6 +22,7 @@ void NRPyEOS_initialize_tabulated_functions() {
   ghl_tabulated_compute_P_S_depsdT_T_from_eps          = &NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps;
   ghl_tabulated_compute_eps_S_T_from_P                 = &NRPyEOS_eps_S_and_T_from_rho_Ye_P;
   ghl_tabulated_compute_P_eps_T_from_S                 = &NRPyEOS_P_eps_and_T_from_rho_Ye_S;
+  ghl_tabulated_compute_eps_T_from_P                   = &NRPyEOS_eps_and_T_from_rho_Ye_P;
   ghl_tabulated_compute_eps_cs2_T_from_P               = &NRPyEOS_eps_cs2_and_T_from_rho_Ye_P;
   ghl_tabulated_compute_P_cs2_T_from_eps               = &NRPyEOS_P_cs2_and_T_from_rho_Ye_eps;
   ghl_tabulated_compute_Ye_from_rho                    = &NRPyEOS_tabulated_compute_Ye_from_rho;
