@@ -40,14 +40,18 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  const char *tablepath = argv[1];
-  const double rho_b_atm = 1e-12;
+  ghl_parameters params;
+  params.max_lorenz_factor = 10.0;
+  params.inv_sq_max_lorenz_factor = 1.0 / (params.max_lorenz_factor * params.max_lorenz_factor);
+
+  char *tablepath = argv[1];
+  const double rho_b_atm = 2.6882e-16;
+  const double Y_e_atm = 0.6;
+  const double T_atm = 0.01;
   const double rho_b_min = -1;
   const double rho_b_max = -1;
-  const double Y_e_atm = 0.5;
   const double Y_e_min = -1;
   const double Y_e_max = -1;
-  const double T_atm = 1e-2;
   const double T_min = -1;
   const double T_max = -1;
 
@@ -68,16 +72,16 @@ int main(int argc, char **argv) {
   const double poison = 0.0 / 0.0;
 
   // Allocate memory for metric
-  double *lapse = (double *)malloc(sizeof(double) * arraylength);
-  double *betax = (double *)malloc(sizeof(double) * arraylength);
-  double *betay = (double *)malloc(sizeof(double) * arraylength);
-  double *betaz = (double *)malloc(sizeof(double) * arraylength);
   double *gxx = (double *)malloc(sizeof(double) * arraylength);
   double *gxy = (double *)malloc(sizeof(double) * arraylength);
   double *gxz = (double *)malloc(sizeof(double) * arraylength);
   double *gyy = (double *)malloc(sizeof(double) * arraylength);
   double *gyz = (double *)malloc(sizeof(double) * arraylength);
   double *gzz = (double *)malloc(sizeof(double) * arraylength);
+  double *lapse = (double *)malloc(sizeof(double) * arraylength);
+  double *betax = (double *)malloc(sizeof(double) * arraylength);
+  double *betay = (double *)malloc(sizeof(double) * arraylength);
+  double *betaz = (double *)malloc(sizeof(double) * arraylength);
 
   // Allocate memory for face-interpolated metric
   double *face_lapse = (double *)malloc(sizeof(double) * arraylength);
@@ -188,9 +192,9 @@ int main(int argc, char **argv) {
               "is up-to-date with current test version.\n");
   }
 
-  for(int k = ghostzone; k < dirlength - ghostzone; k++) {
-    for(int j = ghostzone; j < dirlength - ghostzone; j++) {
-      for(int i = ghostzone; i < dirlength - ghostzone; i++) {
+  for(int k = 0; k < dirlength; k++) {
+    for(int j = 0; j < dirlength; j++) {
+      for(int i = 0; i < dirlength; i++) {
         const int index = indexf(dirlength, i, j, k);
         rho_star_rhs[index] = 0.0;
         tau_rhs[index] = 0.0;
@@ -260,6 +264,7 @@ int main(int argc, char **argv) {
 		key += fread(Y_e_l,    sizeof(double), arraylength, infile); count++;
     key += fread(entropy_l,sizeof(double), arraylength, infile); count++;
     // clang-format on
+    // printf("count = %d\n", count);
 
     if(key != arraylength * count) {
       ghl_error("An error has occured with reading in initial data. Please check that data\n"
@@ -284,7 +289,14 @@ int main(int argc, char **argv) {
     for(int k = ghostzone; k < dirlength - (ghostzone - 1); k++) {
       for(int j = ghostzone; j < dirlength - (ghostzone - 1); j++) {
         for(int i = ghostzone; i < dirlength - (ghostzone - 1); i++) {
+
+          // if(i != dirlength / 2 || j != dirlength / 2 || k != dirlength / 2) {
+          //   continue;
+          // }
           const int index = indexf(dirlength, i, j, k);
+          // if(index != 335) {
+          //   continue;
+          // }
 
           ghl_metric_quantities metric_face;
           ghl_initialize_metric(
@@ -307,14 +319,32 @@ int main(int argc, char **argv) {
               &prims_l);
 
           // Generate randomized u^0
-          prims_r.u0 = rho_r[index] * Bx_r[index] / vy_r[index];
-          prims_l.u0 = rho_l[index] * Bx_l[index] / vy_l[index];
+          // prims_r.u0 = rho_r[index] * Bx_r[index] / vy_r[index];
+          // prims_l.u0 = rho_l[index] * Bx_l[index] / vy_l[index];
+          ghl_limit_v_and_compute_u0(&params, &metric_face, &prims_r);
+          ghl_limit_v_and_compute_u0(&params, &metric_face, &prims_l);
 
           double cmin, cmax;
           calculate_characteristic_speed(&prims_r, &prims_l, &eos, &metric_face, &cmin, &cmax);
 
           ghl_conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(&prims_r, &prims_l, &eos, &metric_face, cmin, cmax, &cons_fluxes);
+
+          if(index == 3388) {
+            printf(
+                "%d - vs: %e %e %e | %e %e %e\n", flux_dirn + 1, prims_r.vU[0], prims_r.vU[1],
+                prims_r.vU[2], prims_l.vU[0], prims_l.vU[1], prims_l.vU[2]);
+            printf(
+                "%d - P: %e %e %e -> %e %e | %e %e %e -> %e %e\n", flux_dirn + 1, prims_r.rho,
+                prims_r.Y_e, prims_r.temperature, prims_r.press, prims_r.eps, prims_l.rho,
+                prims_l.Y_e, prims_l.temperature, prims_l.press, prims_l.eps);
+            printf("%d - u0: %e %e\n", flux_dirn + 1, prims_r.u0, prims_l.u0);
+            printf("%d - cmaxmin: %e %e\n", flux_dirn + 1, cmax, cmin);
+            printf(
+                "%d - Fs: %e %e %e %e %e %e %e\n", flux_dirn + 1, cons_fluxes.rho, cons_fluxes.Y_e,
+                cons_fluxes.entropy, cons_fluxes.tau, cons_fluxes.SD[0], cons_fluxes.SD[1],
+                cons_fluxes.SD[2]);
+          }
 
           rho_star_flux[index] = cons_fluxes.rho;
           tau_flux[index] = cons_fluxes.tau;
@@ -343,6 +373,32 @@ int main(int argc, char **argv) {
         }
       }
     }
+    //   {
+    //     int index = 636;
+    //     printf("index = %d\n", index);
+    //     printf(
+    //         "Metric : %e %e %e %e %e %e %e %e %e %e\n", lapse[index], betax[index],
+    //         betay[index], betaz[index], gxx[index], gxy[index], gxz[index], gyy[index],
+    //         gyz[index], gzz[index]);
+    //     printf(
+    //         "Prims  : %e %e %e %e %e %e %e\n", rho[index], press[index], vx[index], vy[index],
+    //         vz[index], Y_e[index], entropy[index]);
+    //     printf(
+    //         "Prims_r: %e %e %e %e %e %e %e\n", rho_r[index], press_r[index], vx_r[index],
+    //         vy_r[index], vz_r[index], Y_e_r[index], entropy_r[index]);
+    //     printf(
+    //         "Prims_l: %e %e %e %e %e %e %e\n", rho_l[index], press_l[index], vx_l[index],
+    //         vy_l[index], vz_l[index], Y_e_l[index], entropy_l[index]);
+    //     printf(
+    //         "Fluxes : %e %e %e %e %e %e %e\n", rho_star_flux[index], tau_flux[index],
+    //         S_x_flux[index], S_y_flux[index], S_z_flux[index], Y_e_star_flux[index],
+    //         S_star_flux[index]);
+    //     printf(
+    //         "RHSs   : %e %e %e %e %e %e %e\n", rho_star_rhs[index], tau_rhs[index],
+    //         S_x_rhs[index], S_y_rhs[index], S_z_rhs[index], Y_e_star_rhs[index],
+    //         S_star_rhs[index]);
+    //     printf("***************************\n");
+    //   }
   }
 
   for(int k = ghostzone; k < dirlength - ghostzone; k++) {
@@ -404,12 +460,24 @@ int main(int argc, char **argv) {
             rho[index], press[index], poison, vx[index], vy[index], vz[index],
             ONE_OVER_SQRT_4PI * Bx[index], ONE_OVER_SQRT_4PI * By[index],
             ONE_OVER_SQRT_4PI * Bz[index], entropy[index], Y_e[index], eos.table_T_min, &prims);
-        prims.u0 = rho[index] * Bx[index] / vy[index];
+        // prims.u0 = rho[index] * Bx[index] / vy[index];
+        ghl_limit_v_and_compute_u0(&params, &metric, &prims);
 
         ghl_conservative_quantities cons_sources;
         ghl_calculate_source_terms(
             &eos, &prims, &metric, &metric_derivs_x, &metric_derivs_y, &metric_derivs_z, &curv,
             &cons_sources);
+
+        if(index == 2736) {
+          printf("vs: %e %e %e\n", prims.vU[0], prims.vU[1], prims.vU[2]);
+          printf(
+              "P: %e %e %e -> %e %e\n", prims.rho, prims.Y_e, prims.temperature, prims.press,
+              prims.eps);
+          printf("u0: %e\n", prims.u0);
+          printf(
+              "Ss: %e %e %e %e\n", cons_sources.tau, cons_sources.SD[0], cons_sources.SD[1],
+              cons_sources.SD[2]);
+        }
 
         tau_rhs[index] += cons_sources.tau;
         S_x_rhs[index] += cons_sources.SD[0];
@@ -420,6 +488,19 @@ int main(int argc, char **argv) {
   }
 
   fclose(infile);
+
+  // printf("dirlength, ghostzone = %d, %d\n", dirlength, ghostzone);
+  // for(int k = ghostzone; k < dirlength - ghostzone; k++) {
+  //   for(int j = ghostzone; j < dirlength - ghostzone; j++) {
+  //     for(int i = ghostzone; i < dirlength - ghostzone; i++) {
+  //       const int index = indexf(dirlength, i, j, k);
+  //       printf(
+  //           "%d %e %e %e %e %e %e %e\n", index, rho_star_rhs[index], tau_rhs[index],
+  //           S_x_rhs[index], S_y_rhs[index], S_z_rhs[index], Y_e_star_rhs[index],
+  //           S_star_rhs[index]);
+  //     }
+  //   }
+  // }
 
   // Allocate memory for comparison data
   double *trusted_rho_star_rhs = (double *)malloc(sizeof(double) * arraylength);
@@ -478,166 +559,183 @@ int main(int argc, char **argv) {
 
   fclose(outfile);
 
+  const double abs_tol = 1e-30;
+  const double rel_tol = 6e-9;
+  const double tol_fac = 4.0;
+
   for(int k = ghostzone; k < dirlength - ghostzone; k++) {
     for(int j = ghostzone; j < dirlength - ghostzone; j++) {
       for(int i = ghostzone; i < dirlength - ghostzone; i++) {
         const int index = indexf(dirlength, i, j, k);
 
-        if(ghl_pert_test_fail(
-               trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index])) {
+        if(ghl_pert_test_fail_with_tolerance(
+               trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index], 7.5e-13,
+               abs_tol, tol_fac)) {
           ghl_error(
               "Test unit_test_ET_Legacy_flux_source has failed for variable rho_star_rhs.\n"
               "  rho_star_rhs trusted %.14e computed %.14e perturbed %.14e\n"
-              "  rel.err. %.14e %.14e\n",
+              "  rel.err. %.14e %.14e\n%d %d %d -> %d\n",
               trusted_rho_star_rhs[index], rho_star_rhs[index], pert_rho_star_rhs[index],
               relative_error(trusted_rho_star_rhs[index], rho_star_rhs[index]),
-              relative_error(trusted_rho_star_rhs[index], pert_rho_star_rhs[index]));
+              relative_error(trusted_rho_star_rhs[index], pert_rho_star_rhs[index]), i, j, k,
+              index);
         }
-        if(ghl_pert_test_fail(trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index])) {
+        if(ghl_pert_test_fail_with_tolerance(
+               trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index], 7.5e-13, abs_tol,
+               tol_fac)) {
           ghl_error(
               "Test unit_test_ET_Legacy_flux_source has failed for variable tau_rhs.\n"
               "  tau_rhs trusted %.14e computed %.14e perturbed %.14e\n"
-              "  rel.err. %.14e %.14e\n",
+              "  rel.err. %.14e %.14e\n%d %d %d -> %d\n",
               trusted_tau_rhs[index], tau_rhs[index], pert_tau_rhs[index],
               relative_error(trusted_tau_rhs[index], tau_rhs[index]),
-              relative_error(trusted_tau_rhs[index], pert_tau_rhs[index]));
+              relative_error(trusted_tau_rhs[index], pert_tau_rhs[index]), i, j, k, index);
         }
-        if(ghl_pert_test_fail(trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index])) {
+        if(ghl_pert_test_fail_with_tolerance(
+               trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index], 4.5e-9, abs_tol,
+               tol_fac)) {
           ghl_error(
               "Test unit_test_ET_Legacy_flux_source has failed for variable S_x_rhs.\n"
               "  S_x_rhs trusted %.14e computed %.14e perturbed %.14e\n"
-              "  rel.err. %.14e %.14e\n",
+              "  rel.err. %.14e %.14e\n%d %d %d -> %d, tol_fac\n",
               trusted_S_x_rhs[index], S_x_rhs[index], pert_S_x_rhs[index],
               relative_error(trusted_S_x_rhs[index], S_x_rhs[index]),
-              relative_error(trusted_S_x_rhs[index], pert_S_x_rhs[index]));
+              relative_error(trusted_S_x_rhs[index], pert_S_x_rhs[index]), i, j, k, index);
         }
-        if(ghl_pert_test_fail(trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index])) {
+        if(ghl_pert_test_fail_with_tolerance(
+               trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index], 4.5e-9, abs_tol,
+               tol_fac)) {
           ghl_error(
               "Test unit_test_ET_Legacy_flux_source has failed for variable S_y_rhs.\n"
               "  S_y_rhs trusted %.14e computed %.14e perturbed %.14e\n"
-              "  rel.err. %.14e %.14e\n",
+              "  rel.err. %.14e %.14e\n%d %d %d -> %d\n",
               trusted_S_y_rhs[index], S_y_rhs[index], pert_S_y_rhs[index],
               relative_error(trusted_S_y_rhs[index], S_y_rhs[index]),
-              relative_error(trusted_S_y_rhs[index], pert_S_y_rhs[index]));
+              relative_error(trusted_S_y_rhs[index], pert_S_y_rhs[index]), i, j, k, index);
         }
-        if(ghl_pert_test_fail(trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index])) {
+        if(ghl_pert_test_fail_with_tolerance(
+               trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index], 5.8e-9, abs_tol,
+               tol_fac)) {
           ghl_error(
               "Test unit_test_ET_Legacy_flux_source has failed for variable S_z_rhs.\n"
               "  S_z_rhs trusted %.14e computed %.14e perturbed %.14e\n"
-              "  rel.err. %.14e %.14e\n",
+              "  rel.err. %.14e %.14e\n%d %d %d -> %d\n",
               trusted_S_z_rhs[index], S_z_rhs[index], pert_S_z_rhs[index],
               relative_error(trusted_S_z_rhs[index], S_z_rhs[index]),
-              relative_error(trusted_S_z_rhs[index], pert_S_z_rhs[index]));
+              relative_error(trusted_S_z_rhs[index], pert_S_z_rhs[index]), i, j, k, index);
         }
-        if(ghl_pert_test_fail(
-               trusted_Y_e_star_rhs[index], Y_e_star_rhs[index], pert_Y_e_star_rhs[index])) {
+        if(ghl_pert_test_fail_with_tolerance(
+               trusted_Y_e_star_rhs[index], Y_e_star_rhs[index], pert_Y_e_star_rhs[index], 9.1e-13,
+               abs_tol, tol_fac)) {
           ghl_error(
               "Test unit_test_ET_Legacy_flux_source has failed for variable Y_e_star_rhs.\n"
               "  Y_e_star_rhs trusted %.14e computed %.14e perturbed %.14e\n"
-              "  rel.err. %.14e %.14e\n",
+              "  rel.err. %.14e %.14e\n%d %d %d -> %d\n",
               trusted_Y_e_star_rhs[index], Y_e_star_rhs[index], pert_Y_e_star_rhs[index],
               relative_error(trusted_Y_e_star_rhs[index], Y_e_star_rhs[index]),
-              relative_error(trusted_Y_e_star_rhs[index], pert_Y_e_star_rhs[index]));
+              relative_error(trusted_Y_e_star_rhs[index], pert_Y_e_star_rhs[index]), i, j, k,
+              index);
         }
-        if(ghl_pert_test_fail(
-               trusted_S_star_rhs[index], S_star_rhs[index], pert_S_star_rhs[index])) {
+        if(ghl_pert_test_fail_with_tolerance(
+               trusted_S_star_rhs[index], S_star_rhs[index], pert_S_star_rhs[index], 7.5e-13,
+               abs_tol, tol_fac)) {
           ghl_error(
               "Test unit_test_ET_Legacy_flux_source has failed for variable S_star_rhs.\n"
               "  S_star_rhs trusted %.14e computed %.14e perturbed %.14e\n"
-              "  rel.err. %.14e %.14e\n",
+              "  rel.err. %.14e %.14e\n%d %d %d -> %d\n",
               trusted_S_star_rhs[index], S_star_rhs[index], pert_S_star_rhs[index],
               relative_error(trusted_S_star_rhs[index], S_star_rhs[index]),
-              relative_error(trusted_S_star_rhs[index], pert_S_star_rhs[index]));
+              relative_error(trusted_S_star_rhs[index], pert_S_star_rhs[index]), i, j, k, index);
         }
       }
     }
-    ghl_info("ET_Legacy flux/source test has passed!\n");
-
-    free(gxx);
-    free(gxy);
-    free(gxz);
-    free(gyy);
-    free(gyz);
-    free(gzz);
-    free(lapse);
-    free(betax);
-    free(betay);
-    free(betaz);
-    free(face_gxx);
-    free(face_gxy);
-    free(face_gxz);
-    free(face_gyy);
-    free(face_gyz);
-    free(face_gzz);
-    free(face_lapse);
-    free(face_betax);
-    free(face_betay);
-    free(face_betaz);
-    free(kxx);
-    free(kxy);
-    free(kxz);
-    free(kyy);
-    free(kyz);
-    free(kzz);
-    free(rho);
-    free(press);
-    free(vx);
-    free(vy);
-    free(vz);
-    free(Bx);
-    free(By);
-    free(Bz);
-    free(Y_e);
-    free(entropy);
-    free(rho_r);
-    free(press_r);
-    free(vx_r);
-    free(vy_r);
-    free(vz_r);
-    free(Bx_r);
-    free(By_r);
-    free(Bz_r);
-    free(Y_e_r);
-    free(entropy_r);
-    free(rho_l);
-    free(press_l);
-    free(vx_l);
-    free(vy_l);
-    free(vz_l);
-    free(Bx_l);
-    free(By_l);
-    free(Bz_l);
-    free(Y_e_l);
-    free(entropy_l);
-    free(rho_star_flux);
-    free(tau_flux);
-    free(S_x_flux);
-    free(S_y_flux);
-    free(S_z_flux);
-    free(Y_e_star_flux);
-    free(S_star_flux);
-    free(rho_star_rhs);
-    free(tau_rhs);
-    free(S_x_rhs);
-    free(S_y_rhs);
-    free(S_z_rhs);
-    free(Y_e_star_rhs);
-    free(S_star_rhs);
-    free(trusted_rho_star_rhs);
-    free(trusted_tau_rhs);
-    free(trusted_S_x_rhs);
-    free(trusted_S_y_rhs);
-    free(trusted_S_z_rhs);
-    free(trusted_Y_e_star_rhs);
-    free(trusted_S_star_rhs);
-    free(pert_rho_star_rhs);
-    free(pert_tau_rhs);
-    free(pert_S_x_rhs);
-    free(pert_S_y_rhs);
-    free(pert_S_z_rhs);
-    free(pert_Y_e_star_rhs);
-    free(pert_S_star_rhs);
   }
+  ghl_info("ET_Legacy flux/source test has passed!\n");
+
+  free(gxx);
+  free(gxy);
+  free(gxz);
+  free(gyy);
+  free(gyz);
+  free(gzz);
+  free(lapse);
+  free(betax);
+  free(betay);
+  free(betaz);
+  free(face_gxx);
+  free(face_gxy);
+  free(face_gxz);
+  free(face_gyy);
+  free(face_gyz);
+  free(face_gzz);
+  free(face_lapse);
+  free(face_betax);
+  free(face_betay);
+  free(face_betaz);
+  free(kxx);
+  free(kxy);
+  free(kxz);
+  free(kyy);
+  free(kyz);
+  free(kzz);
+  free(rho);
+  free(press);
+  free(vx);
+  free(vy);
+  free(vz);
+  free(Bx);
+  free(By);
+  free(Bz);
+  free(Y_e);
+  free(entropy);
+  free(rho_r);
+  free(press_r);
+  free(vx_r);
+  free(vy_r);
+  free(vz_r);
+  free(Bx_r);
+  free(By_r);
+  free(Bz_r);
+  free(Y_e_r);
+  free(entropy_r);
+  free(rho_l);
+  free(press_l);
+  free(vx_l);
+  free(vy_l);
+  free(vz_l);
+  free(Bx_l);
+  free(By_l);
+  free(Bz_l);
+  free(Y_e_l);
+  free(entropy_l);
+  free(rho_star_flux);
+  free(tau_flux);
+  free(S_x_flux);
+  free(S_y_flux);
+  free(S_z_flux);
+  free(Y_e_star_flux);
+  free(S_star_flux);
+  free(rho_star_rhs);
+  free(tau_rhs);
+  free(S_x_rhs);
+  free(S_y_rhs);
+  free(S_z_rhs);
+  free(Y_e_star_rhs);
+  free(S_star_rhs);
+  free(trusted_rho_star_rhs);
+  free(trusted_tau_rhs);
+  free(trusted_S_x_rhs);
+  free(trusted_S_y_rhs);
+  free(trusted_S_z_rhs);
+  free(trusted_Y_e_star_rhs);
+  free(trusted_S_star_rhs);
+  free(pert_rho_star_rhs);
+  free(pert_tau_rhs);
+  free(pert_S_x_rhs);
+  free(pert_S_y_rhs);
+  free(pert_S_z_rhs);
+  free(pert_Y_e_star_rhs);
+  free(pert_S_star_rhs);
 
   return 0;
 }

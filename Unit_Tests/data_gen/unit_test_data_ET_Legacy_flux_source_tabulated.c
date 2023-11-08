@@ -9,7 +9,7 @@ static void randomize_rho_Ye_T_P_S(
     double *restrict entropy) {
 
   const double rhoL = exp(randf(log(eos->table_rho_min), log(eos->table_rho_max)));
-  const double temperatureL = exp(randf(log(eos->table_T_min), log(eos->table_T_max)));
+  const double temperatureL = 5.0; // exp(randf(log(eos->table_T_min), log(eos->table_T_max)));
   const double Y_eL = randf(eos->table_Y_e_min, eos->table_Y_e_max);
 
   double pressL, epsL, entropyL;

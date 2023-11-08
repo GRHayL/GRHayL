@@ -269,7 +269,8 @@ static inline bool ghl_pert_test_fail_with_tolerance(
     const double computed,
     const double perturbed,
     const double rel_tol,
-    const double abs_tol) {
+    const double abs_tol,
+    const double tol_fac) {
   if(isnan(computed) && isfinite(trusted)) {
     return true; // NaN failure
   }
@@ -280,14 +281,16 @@ static inline bool ghl_pert_test_fail_with_tolerance(
     return false; // NaN "success"
   }
   return relative_error(trusted, computed)
-       > fmax(4.0 * relative_error(trusted, perturbed), rel_tol);
+       > fmax(tol_fac * relative_error(trusted, perturbed), rel_tol);
 }
 
 static inline bool
 ghl_pert_test_fail(const double trusted, const double computed, const double perturbed) {
   const double min_rel = 8.0e-14;
   const double min_abs = 1.0e-30;
-  return ghl_pert_test_fail_with_tolerance(trusted, computed, perturbed, min_rel, min_abs);
+  const double tol_fac = 4.0;
+  return ghl_pert_test_fail_with_tolerance(
+      trusted, computed, perturbed, min_rel, min_abs, tol_fac);
 }
 
 static inline double randf(double low, double high) {
