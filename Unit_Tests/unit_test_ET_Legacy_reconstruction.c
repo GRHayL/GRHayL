@@ -140,16 +140,17 @@ int main(int argc, char **argv) {
             var_data[1][ind]   = vy[stencil];
             var_data[2][ind]   = vz[stencil];
           }
-          const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
 
-          ghl_ppm(
-                &params,
-                rho_stencil, press_stencil,
-                var_data, num_vars,
-                v_flux_dir, Gamma_eff,
-                &rhor, &rhol,
-                &pressr, &pressl,
-                var_datar, var_datal);
+          double ftilde[2];
+          ghl_compute_ftilde(&params, press_stencil, v_flux_dir, ftilde);
+
+          const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
+          ghl_ppm_reconstruction_with_steepening(&params, press_stencil, Gamma_eff, ftilde, rho_stencil, &rhor, &rhol);
+
+          ghl_ppm_reconstruction(ftilde, press_stencil, &pressr, &pressl);
+
+          for(int ind=0; ind<num_vars; ind++)
+            ghl_ppm_reconstruction(ftilde, var_data[ind], &var_datar[ind], &var_datal[ind]);
 
           if( ghl_pert_test_fail(rhor_trusted[index], rhor, rhor_pert[index]) )
             ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable rho_r.\n"
@@ -231,12 +232,11 @@ int main(int argc, char **argv) {
             var_data[0][ind]   = vx[stencil];
             var_data[1][ind]   = vz[stencil];
           }
-          const double Gamma_eff = eos_Gamma_eff(&eos, rho[index], press[index]);
-          ghl_ppm_no_rho_P(
-                &params, press_stencil,
-                var_data, num_vars2,
-                v_flux_dir, Gamma_eff,
-                var_datar, var_datal);
+          double ftilde[2];
+          ghl_compute_ftilde(&params, press_stencil, v_flux_dir, ftilde);
+
+          for(int ind=0; ind<num_vars; ind++)
+            ghl_ppm_reconstruction(ftilde, var_data[ind], &var_datar[ind], &var_datal[ind]);
 
           if( ghl_pert_test_fail(vxr_trusted[index], var_datar[0], vxr_pert[index]) )
             ghl_error("Test unit_test_ET_Legacy_reconstruction has failed for variable vx_r.\n"

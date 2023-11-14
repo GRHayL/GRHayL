@@ -15,39 +15,41 @@ extern "C" {
 #endif
 
 // PPM functions
-void ghl_ppm(
-      const ghl_parameters *restrict params,
-      const double rho[6],
-      const double pressure[6],
-      const double var_data[][6],
-      const int num_vars,
-      const double v_flux_dirn[6],
-      const double Gamma_eff, // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
-      double *restrict rhor,
-      double *restrict rhol,
-      double *restrict pressr,
-      double *restrict pressl,
+void ghl_ppm_reconstruction(
+      const double ftilde[2],
+      const double var_data[6],
       double *restrict var_datar,
       double *restrict var_datal);
 
-void ghl_ppm_no_rho_P(
+void ghl_ppm_reconstruction_with_steepening(
       const ghl_parameters *restrict params,
       const double pressure[6],
-      const double var_data[][6],
-      const int num_vars,
-      const double v_flux_dirn[6],
-      const double Gamma_eff, // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
+      const double Gamma_eff,
+      const double ftilde[2],
+      const double var_data[6],
       double *restrict var_datar,
       double *restrict var_datal);
 
-double ghl_slope_limit(
-      const double dU,
-      const double dUp1);
-
-void ghl_compute_UrUl_onevar(
+void ghl_ppm_compute_for_cell(
+      const double ftilde,
       const double U[5],
-      double *restrict Ur,
-      double *restrict Ul);
+      double *restrict Ur_ptr,
+      double *restrict Ul_ptr);
+
+void ghl_ppm_compute_for_cell_with_steepening(
+      const ghl_parameters *restrict params,
+      const double pressure[5],
+      const double Gamma_eff,
+      const double ftilde,
+      const double U[5],
+      double *restrict Ur_ptr,
+      double *restrict Ul_ptr);
+
+void ghl_compute_ftilde(
+      const ghl_parameters *restrict params,
+      const double pressure[6],
+      const double v_flux_dirn[6],
+      double ftilde[2]);
 
 double ghl_shock_detection_ftilde(
       const ghl_parameters *restrict params,
@@ -62,13 +64,11 @@ void ghl_steepen_rhor_rhol(
       double *restrict rhor,
       double *restrict rhol);
 
-void ghl_flatten_and_monotonize_Ur_and_Ul(
-      const double U,
-      const double ftilde,
-      double *restrict Ur,
-      double *restrict Ul);
+double ghl_slope_limit(
+      const double dU,
+      const double dUp1);
 
-// TVD functions
+// PLM functions
 double ghl_minmod(
       const double a,
       const double b);
