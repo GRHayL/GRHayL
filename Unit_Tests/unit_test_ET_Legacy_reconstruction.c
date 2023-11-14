@@ -127,7 +127,6 @@ int main(int argc, char **argv) {
         for(int i=imin; i<imax; i++) {
           const int index = indexf(dirlength,i,j,k);
 
-printf("i %d\n", index);
           double rhor, rhol, pressr, pressl;
           double rho_stencil[6], press_stencil[6], v_flux_dir[6];
           double var_data[num_vars][6], var_datar[num_vars], var_datal[num_vars];
@@ -236,7 +235,7 @@ printf("i %d\n", index);
           double ftilde[2];
           ghl_compute_ftilde(&params, press_stencil, v_flux_dir, ftilde);
 
-          for(int ind=0; ind<num_vars; ind++)
+          for(int ind=0; ind<num_vars2; ind++)
             ghl_ppm_reconstruction(ftilde, var_data[ind], &var_datar[ind], &var_datal[ind]);
 
           if( ghl_pert_test_fail(vxr_trusted[index], var_datar[0], vxr_pert[index]) )
