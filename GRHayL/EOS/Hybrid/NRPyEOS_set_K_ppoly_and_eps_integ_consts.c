@@ -1,19 +1,13 @@
 #include "nrpyeos_hybrid.h"
 
-/* Function    : setup_K_ppoly_and_eps_integ_consts()
- * Description : For a given set of EOS inputs, determine
- *               values of K_ppoly that will result in a
- *               everywhere continuous P_cold function.
- *
- * Inputs      : eos                  - an initialized ghl_eos_parameters struct
- *                                      with data for the EOS of the simulation
- *
- * Outputs     : eos->K_ppoly         - fully populated array of K_ppoly
- *                                      to be used in each polytropic EOS.
- *             : eos->eps_integ_const - fully populated array of C_{j}'s,
- *                                      used to compute eps_cold for
- *                                      a piecewise polytropic EOS.
- */
+/*
+ * Function     : NRPyEOS_set_K_ppoly_and_eps_integ_consts()
+ * Description  : For a given set of EOS inputs, determine values of K_ppoly
+ *                that will result in an everywhere-continuous P_cold function;
+ *                usually aliased as ghl_hybrid_set_K_ppoly_and_eps_integ_consts
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_set_K_ppoly_and_eps_integ_consts
+*/
+
 void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {
 
   /* When neos = 1, we will only need the value K_ppoly[0] and eps_integ_const[0].
@@ -28,7 +22,7 @@ void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) 
    * we only need to set up K_{0} := K_ppoly[0] and C_{0} := eps_integ_const[0].
    * K_{0} is a user input, so we need to do nothing. C_{0}, on the other hand,
    * is fixed by demanding that eps(rho) -> 0 as rho -> 0. Thus, C_{0} = 0.
-   */
+  */
   eos->eps_integ_const[0] = 0.0;
   if(eos->neos==1) return;
 

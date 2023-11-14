@@ -1,5 +1,11 @@
 #include "nrpyeos_hybrid.h"
 
+/*
+ * Function     : NRPyEOS_compute_entropy_function()
+ * Description  : Computes entropy; usually aliased as ghl_hybrid_compute_entropy_function
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_entropy_function
+*/
+
 double NRPyEOS_compute_entropy_function(
       const ghl_eos_parameters *restrict eos,
       const double rho,
