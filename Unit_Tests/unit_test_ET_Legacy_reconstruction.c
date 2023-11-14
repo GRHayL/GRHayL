@@ -127,6 +127,7 @@ int main(int argc, char **argv) {
         for(int i=imin; i<imax; i++) {
           const int index = indexf(dirlength,i,j,k);
 
+printf("i %d\n", index);
           double rhor, rhol, pressr, pressl;
           double rho_stencil[6], press_stencil[6], v_flux_dir[6];
           double var_data[num_vars][6], var_datar[num_vars], var_datal[num_vars];
