@@ -1,9 +1,10 @@
 #include "nrpyeos_hybrid.h"
 
 /*
- * Function     : compute_epsilon()
- * Description  : Computes epsilon from rho and P
- * Documentation:
+ * Function     : NRPyEOS_hybrid_compute_epsilon()
+ * Description  : Computes epsilon from rho and P; usually aliased as 
+ *                ghl_hybrid_compute_epsilon
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_epsilon
 */
 
 double NRPyEOS_hybrid_compute_epsilon(

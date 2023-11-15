@@ -1,21 +1,11 @@
 #include "nrpyeos_hybrid.h"
 
-/* Function    : compute_P_cold_and_eps_cold()
- * Description : Computes P_cold and eps_cold.
- * Dependencies: initialize_eos_parameters_from_input()
- *             : find_polytropic_K_and_Gamma_index()
- *
- * Inputs      : P_cold         - cold pressure
- *             : eps_cold       - cold specific internal energy
- *             : eos            - an initialized ghl_eos_parameters struct
- *                                with data for the EOS of the simulation
- *
- * Outputs     : P_cold         - cold pressure (supports SPEOS and PPEOS)
- *             : eps_cold       - cold specific internal energy (supports SPEOS and PPEOS)
- *
- *             SPEOS: Single-Polytrope Equation of State
- *             PPEOS: Piecewise Polytrope Equation of State
- */
+/*
+ * Function     : NRPyEOS_compute_P_cold_and_eps_cold()
+ * Description  : Computes P_cold and eps_cold; usually aliased as
+ *                ghl_hybrid_compute_P_cold_and_eps_cold
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_P_cold_and_eps_cold
+*/
 
 void NRPyEOS_compute_P_cold_and_eps_cold(
       const ghl_eos_parameters *restrict eos,

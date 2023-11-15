@@ -1,22 +1,12 @@
 #include "nrpyeos_hybrid.h"
 
-/* Function    : NRPyEOS_hybrid_compute_enthalpy_and_cs2()
- * Description : Computes the enthalpy and the sound speed squared.
- * Dependencies: initialize_eos_parameters_from_input()
- *             : find_polytropic_K_and_Gamma_index()
- *
- * Inputs      : eos            -
- *             : P_cold         - cold pressure
- *             : eps_cold       - cold specific internal energy
- *             : eos            - an initialized ghl_eos_parameters struct
- *                                with data for the EOS of the simulation
- *
- * Outputs     : enthalpy_ptr   - enthalpy
- *             : cs2_ptr        - sound speed squared
- *
- *             SPEOS: Single-Polytrope Equation of State
- *             PPEOS: Piecewise Polytrope Equation of State
- */
+/*
+ * Function     : NRPyEOS_hybrid_compute_enthalpy_and_cs2()
+ * Description  : Computes the enthalpy and the sound speed squared;
+ *                usually aliased as ghl_hybrid_compute_enthalpy_and_cs2
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_enthalpy_and_cs2
+*/
+
 void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,

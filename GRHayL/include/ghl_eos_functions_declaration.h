@@ -34,12 +34,12 @@ void (*ghl_hybrid_compute_P_cold_and_eps_cold)(
 double (*ghl_hybrid_compute_epsilon)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
-      const double P);
+      const double press);
 
 double (*ghl_hybrid_compute_entropy_function)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
-      const double P);
+      const double press);
 
   // Function prototypes
 void (*ghl_tabulated_read_table_set_EOS_params)(

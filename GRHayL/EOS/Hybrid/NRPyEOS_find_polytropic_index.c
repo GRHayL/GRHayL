@@ -1,17 +1,12 @@
 #include "nrpyeos_hybrid.h"
 
-/* Function    : find_polytropic_index()
- * Description : For a given value of rho, find the
- *               appropriate polytropic index
- *
- * Inputs      : eos                - an initialized ghl_eos_parameters struct
- *                                    with data for the EOS of the simulation
- *             : rho_in             - the value rho for which the polytropic
- *                                    EOS is needed
- *
- * Outputs     : polytropic_index   - the appropriate index for the K_ppoly,
- *                                    Gamma_ppoly, and eps_int_consts array
- */
+/*
+ * Function     : NRPyEOS_find_polytropic_index()
+ * Description  : For a given value of rho, find the appropriate polytropic index;
+ *                usually aliased as ghl_hybrid_find_polytropic_index
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_find_polytropic_index
+*/
+
 int NRPyEOS_find_polytropic_index(
       const ghl_eos_parameters *restrict eos,
       const double rho_in) {
