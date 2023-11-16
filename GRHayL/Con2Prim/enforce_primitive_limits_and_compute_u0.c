@@ -59,11 +59,16 @@ int ghl_enforce_primitive_limits_and_compute_u0(
       prims->temperature = MIN(MAX(prims->temperature, eos->T_min),eos->T_max);
 
       // Additional variables used for the EOS call
-      prims->press = 0.0;
-      prims->eps   = 0.0;
-      ghl_tabulated_compute_P_eps_from_T(eos,
-                                         prims->rho, prims->Y_e, prims->temperature,
-                                         &prims->press, &prims->eps);
+      if(params->evolve_entropy) {
+        ghl_tabulated_compute_P_eps_S_from_T(eos,
+                                             prims->rho, prims->Y_e, prims->temperature,
+                                             &prims->press, &prims->eps, &prims->entropy);
+      }
+      else {
+        ghl_tabulated_compute_P_eps_from_T(eos,
+                                           prims->rho, prims->Y_e, prims->temperature,
+                                           &prims->press, &prims->eps);
+      }
       break;
 
     case ghl_eos_simple:
