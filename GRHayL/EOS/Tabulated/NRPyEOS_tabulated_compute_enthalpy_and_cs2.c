@@ -1,10 +1,10 @@
 #include "nrpyeos_tabulated.h"
 
-void
-NRPyEOS_tabulated_compute_enthalpy_and_cs2(
-    const ghl_eos_parameters *restrict eos,
-    ghl_primitive_quantities *restrict prims, double *restrict enthalpy_ptr,
-    double *restrict cs2_ptr) {
+void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims,
+      double *restrict enthalpy_ptr,
+      double *restrict cs2_ptr) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
