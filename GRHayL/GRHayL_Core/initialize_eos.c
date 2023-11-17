@@ -287,6 +287,7 @@ void ghl_initialize_tabulated_eos(
   eos->Ye_of_lr = NULL;
   eos->lp_of_lr = NULL;
   eos->le_of_lr = NULL;
+  eos->table_rho = NULL;
 }
 
 /*
