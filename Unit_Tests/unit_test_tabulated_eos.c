@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
   eos.Ye_of_lr = NULL;
   eos.lp_of_lr = NULL;
   eos.le_of_lr = NULL;
+  eos.table_rho = NULL;
 
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
     ghl_error("Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
