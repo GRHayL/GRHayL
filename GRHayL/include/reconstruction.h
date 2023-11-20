@@ -78,26 +78,17 @@ double ghl_maxmod(
       const double b);
 
 void ghl_minmod_reconstruction(
-      const double U_m2,
-      const double U_m1,
-      const double U,
-      const double U_p1,
+      const double U[4],
       double *restrict Ur,
       double *restrict Ul);
 
 void ghl_mc_reconstruction(
-      const double U_m2,
-      const double U_m1,
-      const double U,
-      const double U_p1,
+      const double U[4],
       double *restrict Ur,
       double *restrict Ul);
 
 void ghl_superbee_reconstruction(
-      const double U_m2,
-      const double U_m1,
-      const double U,
-      const double U_p1,
+      const double U[4],
       double *restrict Ur,
       double *restrict Ul);
 

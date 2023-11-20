@@ -25,10 +25,7 @@ int main(int argc, char **argv) {
 
   for(int method=0; method<3; method++) {
     void(*ghl_reconstruction)(
-          const double,
-          const double,
-          const double,
-          const double,
+          const double *restrict,
           double *restrict,
           double *restrict);
 
@@ -62,7 +59,7 @@ int main(int argc, char **argv) {
     // These are set up to match the loops in the ET version of IllinoisGRMHD.
     for(int index=2; index<arraylength-1; index++) {
       double var_r, var_l;
-      ghl_reconstruction(var[index-2], var[index-1], var[index], var[index+1], &var_r, &var_l);
+      ghl_reconstruction(&var[index-2], &var_r, &var_l);
 
       char mname[20];
       if(method==0) {
