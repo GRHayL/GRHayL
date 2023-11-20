@@ -1,8 +1,8 @@
 # Primary make.code.defn for GRHayL chalice
 
+SUBDIRS = Interpolators
+
 # Source files in this directory that need compiled:
 SRCS = calculate_phitilde_rhs.c \
-       HLL_2D_flux_with_B.c     \
-       HLL_2D_flux_with_Btilde.c
-
-SUBDIRS = Interpolators
+       HLL_flux_with_B.c        \
+       HLL_flux_with_Btilde.c

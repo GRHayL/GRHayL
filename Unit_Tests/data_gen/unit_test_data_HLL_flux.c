@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
   }
 
   FILE* outfile;
-  outfile = fopen_with_check("HLL_2D_flux_input.bin", "wb");
+  outfile = fopen_with_check("HLL_flux_input.bin", "wb");
 
   fwrite(&dirlength, sizeof(int), 1, outfile);
   fwrite(phi_bssn, sizeof(double), arraylength, outfile);
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
               A_rhs[A_dir-1]);
   }
 
-  outfile = fopen_with_check("HLL_2D_flux_with_B_output.bin","wb");
+  outfile = fopen_with_check("HLL_flux_with_B_output.bin","wb");
   fwrite(A_rhs[0], sizeof(double), arraylength, outfile);
   fwrite(A_rhs[1], sizeof(double), arraylength, outfile);
   fwrite(A_rhs[2], sizeof(double), arraylength, outfile);
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
               A_rhs[A_dir-1]);
   }
 
-  outfile = fopen_with_check("HLL_2D_flux_with_Btilde_output.bin","wb");
+  outfile = fopen_with_check("HLL_flux_with_Btilde_output.bin","wb");
   fwrite(A_rhs[0], sizeof(double), arraylength, outfile);
   fwrite(A_rhs[1], sizeof(double), arraylength, outfile);
   fwrite(A_rhs[2], sizeof(double), arraylength, outfile);
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
               A_rhs[A_dir-1]);
   }
 
-  outfile = fopen_with_check("HLL_2D_flux_with_B_output_pert.bin","wb");
+  outfile = fopen_with_check("HLL_flux_with_B_output_pert.bin","wb");
   fwrite(A_rhs[0], sizeof(double), arraylength, outfile);
   fwrite(A_rhs[1], sizeof(double), arraylength, outfile);
   fwrite(A_rhs[2], sizeof(double), arraylength, outfile);
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
               A_rhs[A_dir-1]);
   }
 
-  outfile = fopen_with_check("HLL_2D_flux_with_Btilde_output_pert.bin","wb");
+  outfile = fopen_with_check("HLL_flux_with_Btilde_output_pert.bin","wb");
   fwrite(A_rhs[0], sizeof(double), arraylength, outfile);
   fwrite(A_rhs[1], sizeof(double), arraylength, outfile);
   fwrite(A_rhs[2], sizeof(double), arraylength, outfile);

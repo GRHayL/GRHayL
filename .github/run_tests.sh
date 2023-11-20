@@ -139,13 +139,13 @@ curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/inducti
 ./test/unit_test_induction_vvv_ADM
 ./test/unit_test_induction_ccc_BSSN
 
-curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_input.bin
-curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_B_output.bin
-curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_B_output_pert.bin
-curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_Btilde_output.bin
-curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_Btilde_output_pert.bin
+curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_input.bin
+curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_B_output.bin
+curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_B_output_pert.bin
+curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_Btilde_output.bin
+curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_Btilde_output_pert.bin
 
-./test/unit_test_HLL_2D_flux
+./test/unit_test_HLL_flux
 
 rm *.bin
 rm *.h5

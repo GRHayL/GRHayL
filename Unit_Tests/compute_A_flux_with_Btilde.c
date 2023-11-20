@@ -46,7 +46,7 @@ void ghl_test_compute_A_flux_with_Btilde(
         const int index_B1 = indexf(dirlength,i+B1_offset[0],j+B1_offset[1],k+B1_offset[2]);
         const int index_B2 = indexf(dirlength,i+B2_offset[0],j+B2_offset[1],k+B2_offset[2]);
 
-        HLL_2D_vars vars;
+        HLL_vars vars;
 
         vars.v1rr = v1rr[index_v];
         vars.v1rl = v1rl[index_v];
@@ -69,7 +69,7 @@ void ghl_test_compute_A_flux_with_Btilde(
         vars.c2_min = cmin_2[index_B1];
         vars.c2_max = cmax_2[index_B1];
 
-        A_rhs[index] = ghl_HLL_2D_flux_with_Btilde(&vars);
+        A_rhs[index] = ghl_HLL_flux_with_Btilde(&vars);
       }
     }
   }

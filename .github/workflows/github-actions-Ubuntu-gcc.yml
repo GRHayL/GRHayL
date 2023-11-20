@@ -397,15 +397,15 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_B_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_B_output_pert.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_Btilde_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_2D_flux_with_Btilde_output_pert.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_B_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_B_output_pert.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_Btilde_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_Btilde_output_pert.bin
       - name: Run test of HLL flux functions
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          ./test/unit_test_HLL_2D_flux
+          ./test/unit_test_HLL_flux
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
         with:

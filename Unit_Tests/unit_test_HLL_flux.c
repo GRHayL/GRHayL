@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
 
-  FILE* infile = fopen_with_check("HLL_2D_flux_input.bin", "rb");
+  FILE* infile = fopen_with_check("HLL_flux_input.bin", "rb");
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
           A_rhs[A_dir-1]);
   }
 
-  infile = fopen_with_check("HLL_2D_flux_with_B_output.bin","rb");
+  infile = fopen_with_check("HLL_flux_with_B_output.bin","rb");
 
   key = 0;
   for(int coord=0; coord<3; coord++)
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen_with_check("HLL_2D_flux_with_B_output_pert.bin","rb");
+  infile = fopen_with_check("HLL_flux_with_B_output_pert.bin","rb");
   key = 0;
   for(int coord=0; coord<3; coord++)
     key += fread(A_pert[coord], sizeof(double), arraylength, infile);
@@ -109,19 +109,19 @@ int main(int argc, char **argv) {
       for(int i=2; i<dirlength-2; i++) {
         const int index = indexf(dirlength,i,j,k);
         if( ghl_pert_test_fail(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]) )
-          ghl_error("Test unit_test_HLL_2D_flux_with_B has failed for variable Ax_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux_with_B has failed for variable Ax_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[0][index], A_rhs[0][index], A_pert[0][index],
                        relative_error(A_trusted[0][index], A_rhs[0][index]), relative_error(A_trusted[0][index], A_pert[0][index]));
         if( ghl_pert_test_fail(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]) )
-          ghl_error("Test unit_test_HLL_2D_flux_with_B has failed for variable Ay_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux_with_B has failed for variable Ay_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[1][index], A_rhs[1][index], A_pert[1][index],
                        relative_error(A_trusted[1][index], A_rhs[1][index]), relative_error(A_trusted[1][index], A_pert[1][index]));
         if( ghl_pert_test_fail(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]) )
-          ghl_error("Test unit_test_HLL_2D_flux_with_B has failed for variable Az_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux_with_B has failed for variable Az_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[2][index], A_rhs[2][index], A_pert[2][index],
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
           A_rhs[A_dir-1]);
   }
 
-  infile = fopen_with_check("HLL_2D_flux_with_Btilde_output.bin","rb");
+  infile = fopen_with_check("HLL_flux_with_Btilde_output.bin","rb");
 
   key = 0;
   for(int coord=0; coord<3; coord++)
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen_with_check("HLL_2D_flux_with_Btilde_output_pert.bin","rb");
+  infile = fopen_with_check("HLL_flux_with_Btilde_output_pert.bin","rb");
   key = 0;
   for(int coord=0; coord<3; coord++)
     key += fread(A_pert[coord], sizeof(double), arraylength, infile);
@@ -176,19 +176,19 @@ int main(int argc, char **argv) {
       for(int i=2; i<dirlength-2; i++) {
         const int index = indexf(dirlength,i,j,k);
         if( ghl_pert_test_fail(A_trusted[0][index], A_rhs[0][index], A_pert[0][index]) )
-          ghl_error("Test unit_test_HLL_2D_flux_with_Btilde has failed for variable Ax_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux_with_Btilde has failed for variable Ax_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[0][index], A_rhs[0][index], A_pert[0][index],
                        relative_error(A_trusted[0][index], A_rhs[0][index]), relative_error(A_trusted[0][index], A_pert[0][index]));
         if( ghl_pert_test_fail(A_trusted[1][index], A_rhs[1][index], A_pert[1][index]) )
-          ghl_error("Test unit_test_HLL_2D_flux_with_Btilde has failed for variable Ay_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux_with_Btilde has failed for variable Ay_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[1][index], A_rhs[1][index], A_pert[1][index],
                        relative_error(A_trusted[1][index], A_rhs[1][index]), relative_error(A_trusted[1][index], A_pert[1][index]));
         if( ghl_pert_test_fail(A_trusted[2][index], A_rhs[2][index], A_pert[2][index]) )
-          ghl_error("Test unit_test_HLL_2D_flux_with_Btilde has failed for variable Az_rhs.\n"
+          ghl_error("Test unit_test_HLL_flux_with_Btilde has failed for variable Az_rhs.\n"
                        "  trusted %.14e computed %.14e perturbed %.14e\n"
                        "  rel.err. %.14e %.14e\n",
                        A_trusted[2][index], A_rhs[2][index], A_pert[2][index],

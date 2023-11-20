@@ -3,14 +3,14 @@
 
 #include "ghl.h"
 
-typedef struct HLL_2D_vars {
+typedef struct HLL_vars {
   double B1r, B1l;
   double B2r, B2l;
   double c1_min, c1_max;
   double c2_min, c2_max;
   double v1rr, v1rl, v1lr, v1ll;
   double v2rr, v2rl, v2lr, v2ll;
-} HLL_2D_vars;
+} HLL_vars;
 
 typedef struct induction_interp_vars {
   double alpha;
@@ -25,12 +25,12 @@ typedef struct induction_interp_vars {
 extern "C" {
 #endif
 
-double ghl_HLL_2D_flux_with_B(
+double ghl_HLL_flux_with_B(
       const double psi6,
-      const HLL_2D_vars *restrict vars);
+      const HLL_vars *restrict vars);
 
-double ghl_HLL_2D_flux_with_Btilde(
-      const HLL_2D_vars *restrict vars);
+double ghl_HLL_flux_with_Btilde(
+      const HLL_vars *restrict vars);
 
 void ghl_interpolate_with_cell_centered_ADM(
       const ghl_metric_quantities metric_stencil[2][2][2],

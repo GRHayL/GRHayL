@@ -6,12 +6,12 @@
  *                 This is direction-agnostic, and the stencils just need
  *                 to contain the correct information; see an implementation for
  *                 examples of usage
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_HLL_2D_flux_with_B
+ * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_HLL_flux_with_B
 */
 
-double ghl_HLL_2D_flux_with_B(
+double ghl_HLL_flux_with_B(
       const double psi6,
-      const HLL_2D_vars *restrict vars) {
+      const HLL_vars *restrict vars) {
 
   const double c1_sum = vars->c1_min+vars->c1_max;
   const double c2_sum = vars->c2_min+vars->c2_max;
