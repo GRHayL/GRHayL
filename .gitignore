@@ -1,0 +1,15 @@
+# Ignore all of these files
+Makefile
+*.asc
+*.txt
+*.bin
+*.h5
+*.o
+*.c
+*.h
+
+# Ignore these directories
+build/
+test/
+.vscode/
+.idea/
