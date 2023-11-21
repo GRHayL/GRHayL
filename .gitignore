@@ -5,8 +5,6 @@ Makefile
 *.bin
 *.h5
 *.o
-*.c
-*.h
 
 # Ignore these directories
 build/
