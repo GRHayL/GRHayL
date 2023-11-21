@@ -31,10 +31,7 @@ int main(int argc, char **argv) {
 
   for(int method=0; method<3; method++) {
     void(*ghl_reconstruction)(
-          const double,
-          const double,
-          const double,
-          const double,
+          const double *restrict,
           double *restrict,
           double *restrict);
 
@@ -50,13 +47,13 @@ int main(int argc, char **argv) {
         break;
     }
     for(int index=0; index<arraylength; index++) {
-      ghl_reconstruction(var[index-2], var[index-1], var[index], var[index+1], &var_r[index], &var_l[index]);
+      ghl_reconstruction(&var[index-2], &var_r[index], &var_l[index]);
     }
     fwrite(var_r, sizeof(double), arraylength, outfile);
     fwrite(var_l, sizeof(double), arraylength, outfile);
 
     for(int index=0; index<arraylength; index++) {
-      ghl_reconstruction(varpert[index-2], varpert[index-1], varpert[index], varpert[index+1], &var_r[index], &var_l[index]);
+      ghl_reconstruction(&varpert[index-2], &var_r[index], &var_l[index]);
     }
     fwrite(var_r, sizeof(double), arraylength, outpert);
     fwrite(var_l, sizeof(double), arraylength, outpert);
