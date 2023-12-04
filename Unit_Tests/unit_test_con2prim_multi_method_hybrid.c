@@ -38,7 +38,6 @@ int main(int argc, char **argv) {
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100;
-  const bool ignore_negative_pressure = true;
   const double W_max = 10.0;
   const double Lorenz_damping_factor = 0.0;
 
@@ -55,7 +54,7 @@ int main(int argc, char **argv) {
   ghl_parameters params;
   ghl_initialize_params(
         main_routine, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-        Psi6threshold, ignore_negative_pressure, W_max, Lorenz_damping_factor, &params);
+        Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(

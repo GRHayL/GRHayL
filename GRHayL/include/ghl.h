@@ -50,7 +50,6 @@ typedef struct ghl_parameters {
   double Lorenz_damping_factor;
 
   // Con2Prim parameters
-  bool ignore_negative_pressure;
   int con2prim_max_iterations;
   double con2prim_solver_tolerance;
 
@@ -311,7 +310,6 @@ void ghl_initialize_params(
       const bool evolve_temp,
       const bool calc_prim_guess,
       const double psi6threshold,
-      const bool ignore_negative_pressure,
       const double max_lorenz_factor,
       const double Lorenz_damping_factor,
       ghl_parameters *restrict params);

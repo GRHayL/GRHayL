@@ -50,12 +50,6 @@ KEYWORD con2prim_backup_routines[3] "We allow up to 3 backup routines" STEERABLE
   "Newman1D_entropy"     :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
 } "None"
 
-CCTK_BOOLEAN ignore_negative_pressure "Bypass possible C2P failure mode by relying on enforcing limits"
-{
-  "no"  :: "Standard behavior of IllinoisGRMHD code"
-  "yes" :: "Changes logic of Noble2D routine which removes most common failure mode (negative pressure) by relying on enforced simulation limits"
-} "yes"
-
 CCTK_REAL Psi6threshold "Where Psi^6 > Psi6threshold, we assume we're inside the horizon in the primitives solver, and certain limits are relaxed or imposed" STEERABLE=ALWAYS
 {
  *:* :: "Can set to anything"

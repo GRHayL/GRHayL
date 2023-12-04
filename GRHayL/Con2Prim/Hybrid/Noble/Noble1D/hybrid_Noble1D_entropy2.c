@@ -122,7 +122,7 @@ int ghl_hybrid_Noble1D_entropy2(
 
   ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
 
-  if( !params->ignore_negative_pressure && prims->press <= 0.0) {
+  if(prims->press <= 0.0) {
     return 6;
   }
 

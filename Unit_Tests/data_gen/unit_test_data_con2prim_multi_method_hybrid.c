@@ -54,7 +54,6 @@ int main(int argc, char **argv) {
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100;
-  const bool ignore_negative_pressure = true;
   const double W_max = 10.0;
   const double Lorenz_damping_factor = 0.0;
 
@@ -71,7 +70,7 @@ int main(int argc, char **argv) {
   ghl_parameters params;
   ghl_initialize_params(
         main_routine, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-        Psi6threshold, ignore_negative_pressure, W_max, Lorenz_damping_factor, &params);
+        Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos;
   ghl_initialize_hybrid_eos_functions_and_params(
@@ -510,11 +509,12 @@ int main(int argc, char **argv) {
               ent_star[i], poison, &cons);
 
         ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
-        c2p_check[i] = ghl_con2prim_hybrid_multi_method(
-              &params, &eos, &ADM_metric, &metric_aux,
+        if(params.calc_prim_guess)
+          ghl_guess_primitives(&eos, &ADM_metric, &cons, &prims);
+        c2p_check[i] = ghl_con2prim_hybrid_select_method(
+              methods[routine], &params, &eos, &ADM_metric, &metric_aux,
               &cons_undens, &prims, &diagnostics);
 
-//if(c2p_check[i] && params.main_routine==8) printf("fail %d\n", c2p_check[i]);
         ghl_return_primitives(
               &prims, &rho_b[i], &press[i], &eps[i],
               &vx[i], &vy[i], &vz[i],

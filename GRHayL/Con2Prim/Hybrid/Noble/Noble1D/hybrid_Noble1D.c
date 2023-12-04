@@ -77,7 +77,7 @@ int ghl_hybrid_Noble1D(
 
   // Recover the primitive variables from the scalars and conserved variables:
   ghl_finalize_Noble(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
-  if(!params->ignore_negative_pressure && prims->press <= 0.0) {
+  if(prims->press <= 0.0) {
     return 6;
   }
 

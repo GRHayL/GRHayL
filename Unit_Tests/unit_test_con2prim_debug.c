@@ -80,7 +80,6 @@ int main(int argc, char **argv) {
   const bool calc_prims_guess                = false;
   const bool evolve_entropy                  = false;
   const bool evolve_temperature              = true;
-  const bool use_cupp_fix                    = true;
   const double Psi6threshold                 = 60; //Taken from magnetizedTOV.par
   const double Lorenz_damping_factor         = 0.0;
 
@@ -104,7 +103,6 @@ int main(int argc, char **argv) {
         evolve_temperature,
         calc_prims_guess,
         Psi6threshold,
-        use_cupp_fix,
         W_max,
         Lorenz_damping_factor,
         &params);

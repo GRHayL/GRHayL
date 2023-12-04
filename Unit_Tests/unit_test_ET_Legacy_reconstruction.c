@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
   // the default values set in the initialize function for PPM.
   ghl_parameters params;
   ghl_initialize_params(
-        None, backups, false, false, true, 0, true, 10, 0.0, &params);
+        None, backups, false, false, true, 0, 10, 0.0, &params);
 
   const int neos = 1;
   const double rho_ppoly_in[1] = {0.0};
