@@ -262,7 +262,7 @@ double get_table_quantity(
 // Helper functions
 static inline double relative_error(const double a, const double b) {
   if      (a != 0) return fabs(1.0-b/a);
-  else if (b != 0) return fabs(1.0-a/b);
+  else if (b != 0) return fabs(b);
   else             return 0.0;
 }
 
