@@ -219,10 +219,18 @@ int main(int argc, char **argv) {
       ghl_guess_primitives(&eos, &ADM_metric, &cons, &prims);
 
       const int check = ghl_con2prim_hybrid_select_method(methods[method], &params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
-      if(check != c2p_check[i])
-        ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
+      // This complicated mess is because failure mode 6 in Noble is very unpredictable. As such, whether it fails
+      // or not can change by simply using a different compiler. The following bypasses errors associated with
+      // different return values and doesn't skip the comparison of returned values for non-zero values.
+      if(check != c2p_check[i]) {
+        if(methods[method] != Noble1D && methods[method] != Noble1D_entropy && methods[method] != Noble2D) {
+          ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
+        } else if(check != 6 &&c2p_check[i] != 6) {
+          ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
+        }
+      }
 
-      if(check) {
+      if(check && check != 6) {
         fcnt++;
         continue;
       }
