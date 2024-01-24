@@ -1,5 +1,6 @@
 #include "reconstruction.h"
 
+GRHAYL_HOST GRHAYL_DEVICE
 void ghl_steepen_rhor_rhol(
       const ghl_parameters *restrict params,
       const double rho[5],

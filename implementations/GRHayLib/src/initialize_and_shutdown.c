@@ -1,13 +1,25 @@
 #include "cctk.h"
 #include "cctk_Arguments.h"
 #include "cctk_Parameters.h"
-
 #include "GRHayLib.h"
+
+//elifdef added in C23, so they aren't supported by most compilers yet
+#if defined(__HIPCC__)
+#include "hip_runtime.h"
+#elif defined(__CUDA_ARCH__)
+#include "cuda_runtime.h"
+#endif
+
+#ifndef MIN
+#define MIN(A, B) ( ((A) < (B)) ? (A) : (B) )
+#endif
 
 ghl_parameters *ghl_params;
 ghl_eos_parameters *ghl_eos;
+GRHAYL_DEVICE ghl_parameters *device_ghl_params;
+GRHAYL_DEVICE ghl_eos_parameters *device_ghl_eos;
 
-int parse_C2P_routine_keyword(const char *restrict routine_name);
+ghl_con2prim_method_t parse_C2P_routine_keyword(const char *restrict routine_name);
 
 void GRHayLib_paramcheck() {
   DECLARE_CCTK_PARAMETERS;
@@ -151,8 +163,8 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
   ghl_params = (ghl_parameters *)malloc(sizeof(ghl_parameters));
   ghl_eos = (ghl_eos_parameters *)malloc(sizeof(ghl_eos_parameters));
 
-  const int main = parse_C2P_routine_keyword(con2prim_routine);
-  int backups[3];
+  const ghl_con2prim_method_t main = parse_C2P_routine_keyword(con2prim_routine);
+  ghl_con2prim_method_t backups[3];
   for(int i=0; i<3; i++)
     backups[i] = parse_C2P_routine_keyword(con2prim_backup_routines[i]);
 
@@ -206,6 +218,12 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     CCTK_VERROR("GRHayLib parameter EOS_type has an unsupported type. Please check"
                 " the list of parameter options in the param.ccl.");
   }
+  int size = sizeof(*ghl_params);
+  #if defined(__HIPCC__)
+  hipMemcpy(device_ghl_params, ghl_params, size, hipMemcpyHostToDevice);
+  #elif defined(__CUDA_ARCH__)
+  cudaMemcpy(device_ghl_params, ghl_params, size, cudaMemcpyHostToDevice);
+  #endif
 }
 
 void GRHayLib_terminate(CCTK_ARGUMENTS) {
@@ -220,7 +238,7 @@ void GRHayLib_terminate(CCTK_ARGUMENTS) {
   free(ghl_params);
 }
 
-int parse_C2P_routine_keyword(const char *restrict routine_name) {
+ghl_con2prim_method_t parse_C2P_routine_keyword(const char *restrict routine_name) {
   if (CCTK_EQUALS(routine_name, "None")) {
     return None;
   } else if (CCTK_EQUALS(routine_name, "Noble2D")) {
@@ -246,5 +264,7 @@ int parse_C2P_routine_keyword(const char *restrict routine_name) {
   } else if (CCTK_EQUALS(routine_name, "Newman1D_entropy")) {
     return Newman1D_entropy;
   }
-  return -100;
+  CCTK_VERROR("Invalid con2prim routine in GRHayLib. Given parameter is %s. Please check"
+              " the list of parameter options in the param.ccl.", routine_name);
+  return None;
 }

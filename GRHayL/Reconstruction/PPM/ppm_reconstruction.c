@@ -1,5 +1,6 @@
 #include "reconstruction.h"
 
+GRHAYL_HOST GRHAYL_DEVICE
 void ghl_ppm_reconstruction(
       const double ftilde[2],
       const double var_data[6],

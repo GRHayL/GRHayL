@@ -14,5 +14,7 @@
 
 extern ghl_eos_parameters *ghl_eos;
 extern ghl_parameters *ghl_params;
+extern GRHAYL_DEVICE ghl_parameters *device_ghl_params;
+extern GRHAYL_DEVICE ghl_eos_parameters *device_ghl_eos;
 
 #endif // GRHAYLIB_H_

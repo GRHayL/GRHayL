@@ -3,6 +3,8 @@
 // Compute ftilde, which is used for flattening left and right face values
 // DEPENDENCIES: P(MINUS2,MINUS1,PLUS_1,PLUS_2) and v^m(MINUS1,PLUS_1), where m=flux_dirn={1,2,3}={x,y,z}.
 
+//GRHAYL_HOST
+__host__ GRHAYL_DEVICE
 double ghl_shock_detection_ftilde(
       const ghl_parameters *restrict params,
       const double P[5],

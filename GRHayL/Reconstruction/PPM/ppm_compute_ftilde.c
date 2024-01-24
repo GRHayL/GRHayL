@@ -1,5 +1,6 @@
 #include "reconstruction.h"
 
+GRHAYL_HOST GRHAYL_DEVICE
 void ghl_compute_ftilde(
       const ghl_parameters *restrict params,
       const double pressure[6],

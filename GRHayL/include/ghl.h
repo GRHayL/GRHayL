@@ -6,6 +6,25 @@
 #include "ghl_io.h"
 #include "ghl_metric_helpers.h"
 
+//elifdef added in C23, so they aren't supported by most compilers yet
+#ifdef __HIPCC__
+#define GRHAYL_ENABLE_GPU
+#define GRHAYL_HOST __host__
+#define GRHAYL_DEVICE __device__
+#define GRHAYL_GLOBAL __global__
+
+#elif defined(__CUDA_ARCH__)
+#define GRHAYL_ENABLE_GPU
+#define GRHAYL_HOST __host__
+#define GRHAYL_DEVICE __device__
+#define GRHAYL_GLOBAL __global__
+
+#else
+#define GRHAYL_HOST 
+#define GRHAYL_DEVICE 
+#define GRHAYL_GLOBAL 
+#endif
+
 #ifndef MIN
 #define MIN(A, B) (((A) < (B)) ? (A) : (B))
 #endif
