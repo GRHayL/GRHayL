@@ -1,6 +1,7 @@
 #include "reconstruction.h"
 
 #define SLOPE_LIMITER_COEFF 2.0
+GRHAYL_HOST GRHAYL_DEVICE
 void ghl_ppm_compute_for_cell(
       const double ftilde,
       const double U[5],

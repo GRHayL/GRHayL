@@ -51,7 +51,7 @@ void ghl_compute_ftilde(
       const double v_flux_dirn[6],
       double ftilde[2]);
 
-double ghl_shock_detection_ftilde(
+__host__ __device__ double ghl_shock_detection_ftilde(
       const ghl_parameters *restrict params,
       const double P[5],
       const double v_flux_dirn[5]);
