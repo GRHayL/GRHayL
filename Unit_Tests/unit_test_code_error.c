@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
      ghl_con2prim_select_method:
        5: invalid C2P key
   */
-   __attribute__((unused)) int speed_limited = 0;
+   int speed_limited = 0;
   switch (test_key) {
     case 4:
       prims.vU[0] = 0.0/0.0;
@@ -94,7 +94,8 @@ int main(int argc, char **argv) {
       speed_limited = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims);
       break;
     case 5:
-      ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      if(ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics) < 0)
+        ghl_Error(100, "Unsupported c2p key (%d) with hybrid EOS.\n", -5);
       break;
   }
 /*
@@ -278,16 +279,18 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
 
   /*
      ghl_con2prim_*_select_method:
-         32: Invalid hybrid C2P key
-         33: Invalid tabulated C2P key
+         32: Invalid tabulated C2P key
+     ghl_get_con2prim_routine_name:
+         33: Invalid C2P key
    */
   
   switch (test_key) {
     case 32:
-      ghl_con2prim_hybrid_select_method(-10, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      if(ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics) < 0)
+        ghl_Error(100, "Unsupported c2p key (%d) with hybrid EOS.\n", -5);
       break;
     case 33:
-      ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      printf("%s\n", ghl_get_con2prim_routine_name(-5));
       break;
   }
 

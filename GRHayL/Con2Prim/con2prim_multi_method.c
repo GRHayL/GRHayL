@@ -30,8 +30,7 @@ int ghl_con2prim_hybrid_select_method(
     case Palenzuela1D_entropy:
       return ghl_hybrid_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     default:
-      ghl_Error(100, "Unsupported c2p key (%d) with hybrid EOS.\n", c2p_key);
-      return 100;
+      return -1;
   }
 }
 
@@ -58,8 +57,7 @@ int ghl_con2prim_tabulated_select_method(
     case Newman1D_entropy:
       return ghl_tabulated_Newman1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     default:
-      ghl_Error(100, "Unsupported c2p key (%d) with tabulated EOS.\n", c2p_key);
-      return 100;
+      return -1;
   }
 }
 
