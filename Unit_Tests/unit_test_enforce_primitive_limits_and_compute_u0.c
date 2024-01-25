@@ -262,13 +262,13 @@ int main(int argc, char **argv) {
   prims.rho = 0;
   prims.press = 0;
   speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &simple_eos, &ADM_metric, &prims);
-  if(prims.rho != rho_b_min || prims.press != press_min)
-    ghl_error("Minimum test failed for simple eos: %e %e", prims.rho, prims.press);
+  if(fabs(prims.rho - rho_b_min) > 1e-50 || fabs(prims.press - press_min) > 1e-50)
+    ghl_error("Minimum test failed for simple eos: %e %e\n", prims.rho, prims.press);
   prims.rho = 1e10;
   prims.press = 1e10;
   speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &simple_eos, &ADM_metric, &prims);
-  if(prims.rho != rho_b_max || prims.press != press_max)
-    ghl_error("Maximum test failed for simple eos: %e %e", prims.rho, prims.press);
+  if(fabs(prims.rho - rho_max) > 1e-50 || fabs(prims.press - press_max) > 1e-50)
+    ghl_error("Maximum test failed for simple eos: %e %e\n", prims.rho, prims.press);
 
   ghl_info("ghl_enforce_primitive_limits_and_compute_u0 function test has passed!\n");
   free(lapse);

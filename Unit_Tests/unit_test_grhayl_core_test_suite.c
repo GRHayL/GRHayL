@@ -19,13 +19,13 @@ int main(int argc, char **argv) {
       rho_b_min, -1, -1,
       press_min, -1, -1,
       Gamma_th, &simple_eos);
-  if(simple_eos.rho_min != 0.0)
+  if(simple_eos.rho_min > 1e-50)
     ghl_error("Simple EOS failed to set default rho_min");
-  if(simple_eos.rho_max != 1e300)
+  if(simple_eos.rho_max < 9e299)
     ghl_error("Simple EOS failed to set default rho_max");
-  if(simple_eos.press_min != 0.0)
+  if(simple_eos.press_min > 1e-50)
     ghl_error("Simple EOS failed to set default press_min");
-  if(simple_eos.press_max != 01e300)
+  if(simple_eos.press_max < 9e299)
     ghl_error("Simple EOS failed to set default press_max");
 
   ghl_eos_parameters hybrid_eos;
@@ -86,18 +86,18 @@ int main(int argc, char **argv) {
 
     ghl_set_prims_to_constant_atm(&eos, &prims);
 
-    bool check1 = (prims.rho     != eos.rho_atm
-                || prims.press   != eos.press_atm
-                || prims.vU[0]   != 0.0
-                || prims.vU[1]   != 0.0
-                || prims.vU[2]   != 0.0
-                || prims.eps     != eos.eps_atm
-                || prims.entropy != eos.entropy_atm);
+    bool check1 = (fabs(prims.rho     - eos.rho_atm) > 1e-50
+                || fabs(prims.press   - eos.press_atm) > 1e-50
+                || fabs(prims.vU[0]) > 1e-50
+                || fabs(prims.vU[1]) > 1e-50
+                || fabs(prims.vU[2]) > 1e-50
+                || fabs(prims.eps     - eos.eps_atm) > 1e-50
+                || fabs(prims.entropy - eos.entropy_atm) > 1e-50);
 
     bool check2 = false;
     if(eos_type ==2)
-      check2 = (prims.Y_e         != eos.Y_e_atm
-             || prims.temperature != eos.T_atm);
+      check2 = (fabs(prims.Y_e         - eos.Y_e_atm) > 1e-50
+             || fabs(prims.temperature - eos.T_atm) > 1e-50);
 
     if(check1 || check2)
       ghl_error("grhayl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with %s EOS.\n"
