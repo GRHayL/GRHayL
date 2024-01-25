@@ -12,6 +12,22 @@ int main(int argc, char **argv) {
   const double Gamma_ppoly[1] = {2.0};
   const double k_ppoly0 = 1.0;
 
+  // Checking that warnings trigger
+  const double press_min = 1e-20;
+  ghl_eos_parameters simple_eos;
+  ghl_initialize_simple_eos_functions_and_params(
+      rho_b_min, -1, -1,
+      press_min, -1, -1,
+      Gamma_th, &simple_eos);
+  if(simple_eos.rho_min != 0.0)
+    ghl_error("Simple EOS failed to set default rho_min");
+  if(simple_eos.rho_max != 1e300)
+    ghl_error("Simple EOS failed to set default rho_max");
+  if(simple_eos.press_min != 0.0)
+    ghl_error("Simple EOS failed to set default press_min");
+  if(simple_eos.press_max != 01e300)
+    ghl_error("Simple EOS failed to set default press_max");
+
   ghl_eos_parameters hybrid_eos;
   ghl_initialize_hybrid_eos_functions_and_params(
       rho_b_min, rho_b_min, rho_b_max,
@@ -19,24 +35,24 @@ int main(int argc, char **argv) {
       k_ppoly0, Gamma_th,
       &hybrid_eos);
 
-  // TODO: we should add a simple table for tests like this
-  //const double Ye_min = 1e-12;
-  //const double T_min = 1e-12;
-  //const double Ye_max = 1e300;
-  //const double T_max = 1e300;
-  //ghl_eos_parameters tabulated_eos;
+  //const double Ye_atm = 1e-12;
+  //const double T_atm = 1e300;
+  //ghl_eos_parameters tab_eos;
   //ghl_initialize_tabulated_eos_functions_and_params(
-  //    rho_b_min, rho_b_min, rho_b_max,
-  //    Ye_min, Ye_min, Ye_max,
-  //    T_min, T_min, T_max,
-  //    &tabulated_eos);
+  //    table_filepath,
+  //    rho_b_min, -1, -1,
+  //    Ye_atm, -1, -1,
+  //    T_atm, -1, -1,
+  //    &tab_eos)
+  ////TODO: add tests checking defaults based on table
 
   // ghl_set_prims_to_constant_atm() function
   // Function just sets data to eos data, so no need
   // to store pre-computed comparison data
   ghl_primitive_quantities prims;
 
-  for(int eos_it=0; eos_it<2; eos_it++) {
+  // TODO: when tabulated is added, add 1 to upper limit of loop
+  for(int eos_type = 0; eos_type < 2; eos_type++) {
     // poison initial primitive data so reset is obvious
     const double poison = 0.0/0.0;
     prims.rho = poison;
@@ -50,49 +66,48 @@ int main(int argc, char **argv) {
     prims.temperature = poison;
 
     ghl_eos_parameters eos;
-    if(eos_it==0) {
-      eos = hybrid_eos;
-
-      ghl_set_prims_to_constant_atm(&eos, &prims);
-
-      if(prims.rho         != eos.rho_atm
-      || prims.press       != eos.press_atm
-      || prims.vU[0]          != 0.0
-      || prims.vU[1]          != 0.0
-      || prims.vU[2]          != 0.0
-      || prims.eps         != eos.eps_atm
-      || prims.entropy     != eos.entropy_atm)
-        ghl_error("grhayl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with hybrid EOS.\n"
-                     "  rho_b, pressure, vx, vy, vz, epsilon, entropy\n"
-                     "  Struct output: %e %e %e %e %e %e %e %e %e\n"
-                     "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
-                     prims.rho, prims.press, prims.vU[0], prims.vU[1], prims.vU[2],
-                     prims.eps, prims.entropy, prims.Y_e, prims.temperature,
-                     eos.rho_atm, eos.press_atm, 0.0, 0.0, 0.0, eos.eps_atm,
-                     eos.entropy_atm, eos.Y_e_atm, eos.T_atm);
-  //  } else if(eos_it==0) {
-  //    eos = tabulated_eos;
-
-  //    ghl_set_prims_to_constant_atm(&eos, &prims);
-
-  //    if(prims.rho         != eos.rho_atm
-  //    || prims.press       != eos.press_atm
-  //    || prims.eps         != eos.eps_atm
-  //    || prims.entropy     != eos.entropy_atm
-  //    || prims.Y_e         != eos.Ye_atm
-  //    || prims.temperature != eos.T_atm
-  //    || prims.vU[0]          != 0.0
-  //    || prims.vU[1]          != 0.0
-  //    || prims.vU[2]          != 0.0)
-  //      ghl_error("ghl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with tabulated EOS.\n"
-  //                   "  rho_b, pressure, vx, vy, vz, epsilon, entropy, Y_e, temperature\n"
-  //                   "  Struct output: %e %e %e %e %e %e %e %e %e\n"
-  //                   "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
-  //                   prims.rho, prims.press, prims.vU[0], prims.vU[1], prims.vU[2],
-  //                   prims.eps, prims.entropy, prims.Y_e, prims.temperature,
-  //                   eos.rho_atm, eos.press_atm, 0.0, 0.0, 0.0, eos.eps_atm,
-  //                   eos.entropy_atm, eos.Ye_atm, eos.T_atm);
+    char *eos_name;
+    switch(eos_type) {
+      case 0:
+        eos = simple_eos;
+        eos_name = "simple";
+        break;
+      case 1:
+        eos = hybrid_eos;
+        eos_name = "hybrid";
+        break;
+      case 2:
+        //eos = tab_eos;
+        eos_name = "tabulated";
+        break;
+      default:
+        exit(1);
     }
+
+    ghl_set_prims_to_constant_atm(&eos, &prims);
+
+    bool check1 = (prims.rho     != eos.rho_atm
+                || prims.press   != eos.press_atm
+                || prims.vU[0]   != 0.0
+                || prims.vU[1]   != 0.0
+                || prims.vU[2]   != 0.0
+                || prims.eps     != eos.eps_atm
+                || prims.entropy != eos.entropy_atm);
+
+    bool check2 = false;
+    if(eos_type ==2)
+      check2 = (prims.Y_e         != eos.Y_e_atm
+             || prims.temperature != eos.T_atm);
+
+    if(check1 || check2)
+      ghl_error("grhayl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with %s EOS.\n"
+                   "  rho_b, pressure, vx, vy, vz, epsilon, entropy\n"
+                   "  Struct output: %e %e %e %e %e %e %e %e %e\n"
+                   "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
+                   eos_name, prims.rho, prims.press, prims.vU[0], prims.vU[1], prims.vU[2],
+                   prims.eps, prims.entropy, prims.Y_e, prims.temperature,
+                   eos.rho_atm, eos.press_atm, 0.0, 0.0, 0.0, eos.eps_atm,
+                   eos.entropy_atm, eos.Y_e_atm, eos.T_atm);
   }
 
   // ghl_compute_vec2_from_vec4D() function
@@ -210,6 +225,26 @@ int main(int argc, char **argv) {
               new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1], new_metric.betaU[2],
               new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
               new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
+
+  char *valid_char[12];
+  valid_char[0] = "None";
+  valid_char[1] = "Noble2D";
+  valid_char[2] = "Noble1D";
+  valid_char[3] = "Noble1D_entropy";
+  valid_char[4] = "Noble1D_entropy2";
+  valid_char[5] = "Font1D";
+  valid_char[6] = "CerdaDuran2D";
+  valid_char[7] = "CerdaDuran3D";
+  valid_char[8] = "Palenzuela1D";
+  valid_char[9] = "Palenzuela1D_entropy";
+  valid_char[10] = "Newman1D";
+  valid_char[11] = "Newman1D_entropy";
+  for(int i = None; i <= Newman1D_entropy; i++) {
+    char *test_char = ghl_get_con2prim_routine_name(i);
+    if(strcmp(valid_char[i+1], test_char)) {
+      ghl_error("ghl_get_con2prim_routine_name failed:\n    expected %s, got %s\n", valid_char[i+1], test_char);
+    }
+  }
 
   ghl_info("grhayl_core_test_suite has passed!\n");
 }

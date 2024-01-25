@@ -251,6 +251,25 @@ int main(int argc, char **argv) {
     ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e2*P_cold);
 
+  const double press_min = 1e-20;
+  const double press_max = 100;
+  const double rho_max   = 100;
+  ghl_eos_parameters simple_eos;
+  ghl_initialize_simple_eos_functions_and_params(
+      rho_b_min, rho_b_min, rho_max,
+      press_min, press_min, press_max,
+      Gamma_th, &simple_eos);
+  prims.rho = 0;
+  prims.press = 0;
+  speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &simple_eos, &ADM_metric, &prims);
+  if(prims.rho != rho_b_min || prims.press != press_min)
+    ghl_error("Minimum test failed for simple eos: %e %e", prims.rho, prims.press);
+  prims.rho = 1e10;
+  prims.press = 1e10;
+  speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &simple_eos, &ADM_metric, &prims);
+  if(prims.rho != rho_b_max || prims.press != press_max)
+    ghl_error("Maximum test failed for simple eos: %e %e", prims.rho, prims.press);
+
   ghl_info("ghl_enforce_primitive_limits_and_compute_u0 function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);

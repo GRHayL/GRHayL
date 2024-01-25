@@ -287,7 +287,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   switch (test_key) {
     case 32:
       if(ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics) < 0)
-        ghl_Error(100, "Unsupported c2p key (%d) with hybrid EOS.\n", -5);
+        ghl_Error(100, "Unsupported c2p key (%d) with hybrid EOS.\n", -10);
       break;
     case 33:
       printf("%s\n", ghl_get_con2prim_routine_name(-5));
