@@ -332,7 +332,7 @@ jobs:
       - name: Run unit test for error-catching
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          for i in {0..31}
+          for i in {0..33}
           do
             ./Unit_Tests/failure.sh "./test/unit_test_code_error "+$i
           done
