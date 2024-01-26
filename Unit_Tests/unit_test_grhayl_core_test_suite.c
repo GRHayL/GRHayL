@@ -132,6 +132,17 @@ int main(int argc, char **argv) {
               "  Expected result is 55, but computed value is %e.\n",
               v2);
 
+  double vec_inv[4];
+  ghl_raise_lower_vector_4D(g4, vec, vec_inv);
+  const bool check_inverse = (relative_error(vec_inv[0], 10.0) > rel_tol
+                           || relative_error(vec_inv[1], 18.0) > rel_tol
+                           || relative_error(vec_inv[2], 21.0) > rel_tol
+                           || relative_error(vec_inv[3], 23.0) > rel_tol);
+  if(check_inverse) 
+    ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_raise_lower_vector_4D().\n"
+              "  Expected values are 10, 18, 21, 23. Computed values are %e %e %e %e.\n",
+              vec_inv[0], vec_inv[1], vec_inv[2], vec_inv[3]);
+
   // ghl_enforce_detgtij_and_initialize_ADM_metric() function
   // Valid metrics should return near-identical (round-off level) metrics
   ghl_metric_quantities new_metric;
