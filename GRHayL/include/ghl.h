@@ -42,7 +42,7 @@ typedef enum {
   Newman1D_entropy
 } ghl_con2prim_method_t;
 
-typedef enum { ghl_eos_simple, ghl_eos_hybrid, ghl_eos_tabulated } ghl_eos_t;
+typedef enum {ghl_eos_simple, ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
 
 /*
  * Struct        : ghl_parameters
@@ -241,7 +241,8 @@ extern "C" {
 
 char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 
-void ghl_initialize_eos_functions(const ghl_eos_t eos_type);
+void ghl_initialize_eos_functions(
+    const ghl_eos_t eos_type);
 
 void ghl_initialize_simple_eos(
       const double rho_atm,

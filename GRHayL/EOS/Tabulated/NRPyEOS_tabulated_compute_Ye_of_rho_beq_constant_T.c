@@ -1,6 +1,6 @@
 #include "nrpyeos_tabulated.h"
 
-#define munu_index(ir, it, iy)                                                                    \
+#define munu_index(ir, it, iy) \
   (NRPyEOS_munu_key + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
 
 static double find_Ye_st_munu_is_zero(
@@ -30,8 +30,7 @@ static double find_Ye_st_munu_is_zero(
   return (y0 * x1 - y1 * x0) / (y0 - y1);
 }
 
-static int
-find_left_index_uniform_array(
+static int find_left_index_uniform_array(
       const int nx,
       const double *restrict x_arr,
       const double x) {
@@ -39,8 +38,7 @@ find_left_index_uniform_array(
   return (x - x_arr[0])/(x_arr[1] - x_arr[0]) + 0.5;
 }
 
-static int
-find_left_index_bisection(
+static int find_left_index_bisection(
       const int nx,
       const double *restrict x_arr,
       const double x) {
