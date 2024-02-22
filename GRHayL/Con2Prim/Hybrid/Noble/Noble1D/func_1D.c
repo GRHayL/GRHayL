@@ -6,8 +6,6 @@ void ghl_func_1D(
       const double dummy,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][1],
       double *restrict f,
       double *restrict df) {
 
@@ -35,10 +33,10 @@ void ghl_func_1D(
   /*** For hybrid EOS ***/
 
   // Compute the residual and the needed Jacobian component
-  resid[0]  = Z + 0.5 * harm_aux->Bsq * (1.0 + vsq) - 0.5*harm_aux->QdotBsq/Zsq + harm_aux->Qdotn - p_tmp;
-  jac[0][0] = 1.0 - dPdZ + QBsq_Z3 + 0.5*harm_aux->Bsq*dvsq;
+  const double resid  = Z + 0.5 * harm_aux->Bsq * (1.0 + vsq) - 0.5*harm_aux->QdotBsq/Zsq + harm_aux->Qdotn - p_tmp;
+  const double jac = 1.0 - dPdZ + QBsq_Z3 + 0.5*harm_aux->Bsq*dvsq;
   // Set dx (NR step), f, and df (see function description above)
-  dx[0] = - resid[0]/jac[0][0];
-  *df   = - resid[0]*resid[0];
+  dx[0] = - resid/jac;
+  *df   = - resid*resid;
   *f    = -0.5*(*df);
 }

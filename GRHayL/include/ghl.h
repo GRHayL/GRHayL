@@ -23,6 +23,10 @@
 #define GRHAYL_USE_HDF5
 #endif
 
+#ifdef __cplusplus
+#define restrict __restrict__
+#endif
+
 typedef enum {
   None=-1,
   Noble2D, Noble1D,

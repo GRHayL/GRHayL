@@ -53,10 +53,10 @@ void ghl_interpolate_with_vertex_centered_ADM(
      have an odd stencil.
   */
   double gammaUU_interp[3][3];
-  ghl_ADM_vertex_interp(2, metric_stencil, gammaUU_interp);
+  ghl_ADM_vertex_interp(metric_stencil, gammaUU_interp);
 
   double A_to_phitilde[3], A_to_Ax[3], A_to_Ay[3], A_to_Az[3];
-  ghl_A_i_avg(3, Ax_stencil, Ay_stencil, Az_stencil, A_to_phitilde, A_to_Ax, A_to_Ay, A_to_Az);
+  ghl_A_i_avg(Ax_stencil, Ay_stencil, Az_stencil, A_to_phitilde, A_to_Ax, A_to_Ay, A_to_Az);
 
   // A^x term (interpolated to (i, j+1/2, k+1/2) )
   // \sqrt{-g} A^x = \alpha \sqrt{\gamma} A^x (RHS of \partial_i psi6phi)

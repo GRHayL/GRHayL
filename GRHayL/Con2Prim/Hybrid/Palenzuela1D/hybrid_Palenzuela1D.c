@@ -19,10 +19,10 @@ froot(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      void *restrict fparams) {
+      fparams_struct *restrict fparams) {
 
   double rho, P, eps, W;
-  ((fparams_struct *)fparams)->compute_rho_P_eps_W(
+  fparams->compute_rho_P_eps_W(
     x, params, eos, fparams, &rho, &P, &eps, &W);
 
   // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf

@@ -144,8 +144,6 @@ int ghl_general_newton_raphson(
             const double,
             const double [],
             double [],
-            double [],
-            double [][ndim],
             double *restrict,
             double *restrict));
 
@@ -155,8 +153,6 @@ void ghl_func_Z(
       const double rho_in,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][1],
       double *restrict f,
       double *restrict df);
 
@@ -166,8 +162,6 @@ void ghl_func_rho(
       const double Z_in,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][1],
       double *restrict f,
       double *restrict df);
 
@@ -177,8 +171,6 @@ void ghl_func_rho2(
       const double Z_in,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][1],
       double *restrict f,
       double *restrict df);
 
@@ -188,8 +180,6 @@ void ghl_func_1D(
       const double dummy,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][1],
       double *restrict f,
       double *restrict df);
 
@@ -199,8 +189,6 @@ void ghl_func_2D(
       const double dummy,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][2],
       double *restrict f,
       double *restrict df);
 

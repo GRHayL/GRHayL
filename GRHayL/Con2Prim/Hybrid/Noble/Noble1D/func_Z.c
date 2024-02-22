@@ -10,8 +10,6 @@
      Arguments:
           x   = current value of independent var's (on input & output);
          dx   = Newton-Raphson step (on output);
-        resid = residuals based on x (on output);
-         jac  = Jacobian matrix based on x (on output);
          f    =  resid.resid/2  (on output)
         df    = -2*f;  (on output)
          n    = dimension of x[];
@@ -22,8 +20,6 @@ void ghl_func_Z(
       const double rho_in,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][1],
       double *restrict f,
       double *restrict df) {
 
@@ -36,9 +32,9 @@ void ghl_func_Z(
   double rho      =  rho_in;
   double x_rho[1] = {rho_in};
   // Find rho from Z
-  int retval, ntries = 0;
+  int ntries = 0;
   while (
-    (retval = ghl_general_newton_raphson(eos, harm_aux, 1, Z, x_rho, ghl_validate_1D_entropy, ghl_func_rho))
+    (ghl_general_newton_raphson(eos, harm_aux, 1, Z, x_rho, ghl_validate_1D_entropy, ghl_func_rho))
     && (ntries++ < 10) ) {
     rho     *= 10.;
     x_rho[0] = rho;
@@ -82,10 +78,10 @@ void ghl_func_Z(
   const double t1000 = rho*drho_dZ;
 
   // Compute the residual and the needed Jacobian component
-  resid[0]  = (t300+(t4+t4+(t400+t15*(t7+(t200)*Z))*Z)*Z)*t24;
-  jac[0][0] = 2*(t4+(t400+t15*t7+(3.0*t15*harm_aux->Bsq+t7*t1000+(t15+t15+t1000*(t200))*Z)*Z)*Z)*t24;
+  const double resid  = (t300+(t4+t4+(t400+t15*(t7+(t200)*Z))*Z)*Z)*t24;
+  const double jac = 2*(t4+(t400+t15*t7+(3.0*t15*harm_aux->Bsq+t7*t1000+(t15+t15+t1000*(t200))*Z)*Z)*Z)*t24;
   // Set dx (NR step), f, and df (see function description above)
-  dx[0] = - resid[0]/jac[0][0];
-  *df   = - resid[0]*resid[0];
+  dx[0] = - resid/jac;
+  *df   = - resid*resid;
   *f    = - 0.5*(*df);
 }

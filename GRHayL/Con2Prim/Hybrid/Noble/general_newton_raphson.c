@@ -17,13 +17,10 @@ int ghl_general_newton_raphson(
             const double,
             const double [],
             double [],
-            double [],
-            double [][ndim],
             double *restrict,
             double *restrict)) {
 
   double dx[ndim], x_old[ndim];
-  double resid[ndim], jac[ndim][ndim];
 
   // Initialize various parameters and variables:
   double errx = 1.0;
@@ -35,7 +32,7 @@ int ghl_general_newton_raphson(
   /* Start the Newton-Raphson iterations: */
   int keep_iterating = 1;
   while(keep_iterating) {
-    funcd(eos, harm_aux, indep_var_in, x, dx, resid, jac, &f, &df);
+    funcd(eos, harm_aux, indep_var_in, x, dx, &f, &df);
 
     /* Save old values and make the newton step: */
     for(int id = 0; id < ndim; id++) {

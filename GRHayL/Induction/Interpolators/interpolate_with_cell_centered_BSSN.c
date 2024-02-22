@@ -54,10 +54,10 @@ void ghl_interpolate_with_cell_centered_BSSN(
   */
   ghl_metric_quantities metric_interp;
   double lapse_psi2_interp[3], lapse_over_psi6_interp;
-  ghl_BSSN_cell_interp(2, metric_stencil, psi_stencil, &metric_interp, lapse_psi2_interp, &lapse_over_psi6_interp);
+  ghl_BSSN_cell_interp(metric_stencil, psi_stencil, &metric_interp, lapse_psi2_interp, &lapse_over_psi6_interp);
 
   double A_to_phitilde[3], A_to_Ax[3], A_to_Ay[3], A_to_Az[3];
-  ghl_A_i_avg(3, Ax_stencil, Ay_stencil, Az_stencil, A_to_phitilde, A_to_Ax, A_to_Ay, A_to_Az);
+  ghl_A_i_avg(Ax_stencil, Ay_stencil, Az_stencil, A_to_phitilde, A_to_Ax, A_to_Ay, A_to_Az);
 
   // Interpolating lapse and shift to (i+1/2, j+1/2, k+1/2) is needed for computing phitilde_rhs.
   interp_vars->alpha    = metric_interp.lapse;

@@ -11,8 +11,6 @@
      Arguments:
           x   = current value of independent var's (on input & output);
          dx   = Newton-Raphson step (on output);
-        resid = residuals based on x (on output);
-         jac  = Jacobian matrix based on x (on output);
          f    =  resid.resid/2  (on output)
         df    = -2*f;  (on output)
          n    = dimension of x[];
@@ -29,8 +27,6 @@ void ghl_func_rho(
       const double W_in,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][1],
       double *restrict f,
       double *restrict df) {
 
@@ -53,10 +49,10 @@ void ghl_func_rho(
   const double s200 = harm_aux->D * Gamma * harm_aux->W_times_S;
 
   // Compute the residual and the needed Jacobian component
-  resid[0]  = (rho*W+(-t40*s100-harm_aux->D)*harm_aux->D);
-  jac[0][0] = -t14*s200 + W;
+  const double resid  = (rho*W+(-t40*s100-harm_aux->D)*harm_aux->D);
+  const double jac = -t14*s200 + W;
   // Set dx (NR step), f, and df (see function description above)
-  dx[0] = - resid[0]/jac[0][0];
-  *df   = - resid[0]*resid[0];
+  dx[0] = - resid/jac;
+  *df   = - resid*resid;
   *f    = - 0.5*(*df);
 }

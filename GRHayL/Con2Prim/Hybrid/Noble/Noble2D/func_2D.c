@@ -6,8 +6,6 @@ void ghl_func_2D(
       const double dummy,
       const double x[],
       double dx[],
-      double resid[],
-      double jac[][2],
       double *restrict f,
       double *restrict df) {
 
@@ -40,15 +38,8 @@ void ghl_func_2D(
   const double t40 = (vsq+t24)*t3;
   dx[0] = -(t2*t11+t4*t18)*t21*t36;
   dx[1] = -(-t25*t11-2.0*t40*t18)*t21*t36;
-  //detJ = t3*t35; // <- set but not used...
-  jac[0][0] = -2.0*t40;
-  jac[0][1] = -t4;
-  jac[1][0] = t25;
-  jac[1][1] = t2;
-  resid[0] = t11;
-  resid[1] = t18;
 
-  *df = -resid[0]*resid[0] - resid[1]*resid[1];
+  *df = -t11*t11 - t18*t18;
   *f  = -0.5 * ( *df );
 
 }

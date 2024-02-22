@@ -5,49 +5,6 @@
 #include "roots.h"
 
 /*
- * typedef    : fparams_struct
- * Author     : Leo Werneck
- *
- * Structure containing parameters used by f(x), the function for which we
- * wish to find the root when using the Palenzuela et al. con2prim.
- *
- * Parameters : evolve_T              - Whether or not to evolve the temperature.
- *            : temp_guess            - Temperature guess.
- *            : Y_e                   - Electron fraction.
- *            : q                     - Auxiliary quantity: tau/D.
- *            : r                     - Auxiliary quantity: S^{2}/D^{2}.
- *            : s                     - Auxiliary quantity: B^{2}/D.
- *            : t                     - Auxiliary quantity: B.S/D^{3/2}.
- *            : eos                   - Pointer to const ghl_eos_parameters struct.
- *            : cons_undens           - Pointer to const ghl_conservative_quantities struct.
- *            : compute_rho_P_eps_T_W - Function pointer provided by the user.
- */
-typedef struct fparams_struct {
-  bool evolve_T;
-  double temp_guess, Y_e, q, r, s, t;
-  const ghl_conservative_quantities *cons_undens;
-  void (*compute_rho_P_eps_T_W)(
-      const double x,
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      struct fparams_struct *restrict fparams,
-      double *restrict rho_ptr,
-      double *restrict P_ptr,
-      double *restrict eps_ptr,
-      double *restrict T_ptr,
-      double *restrict W_ptr);
-  void (*compute_rho_P_eps_W)(
-      const double x,
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      struct fparams_struct *restrict fparams,
-      double *restrict rho_ptr,
-      double *restrict P_ptr,
-      double *restrict eps_ptr,
-      double *restrict W_ptr);
-} fparams_struct;
-
-/*
  * Function   : compute_rho_W_from_x_and_conservatives
  * Author     : Leo Werneck
  *
