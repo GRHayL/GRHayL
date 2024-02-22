@@ -56,15 +56,15 @@ void ghl_A_i_avg(
       A_to_Az[1] += Ay_stencil[jj][kk][1];
     }
   }
-  A_to_phitilde[0] /= 3;
-  A_to_phitilde[1] /= 3;
-  A_to_phitilde[2] /= 3;
-  A_to_Ax[1]       /= 9;
-  A_to_Ax[2]       /= 9;
-  A_to_Ay[0]       /= 9;
-  A_to_Ay[2]       /= 9;
-  A_to_Az[0]       /= 9;
-  A_to_Az[1]       /= 9;
+  A_to_phitilde[0] /= 2.0;
+  A_to_phitilde[1] /= 2.0;
+  A_to_phitilde[2] /= 2.0;
+  A_to_Ax[1]       /= 4.0;
+  A_to_Ax[2]       /= 4.0;
+  A_to_Ay[0]       /= 4.0;
+  A_to_Ay[2]       /= 4.0;
+  A_to_Az[0]       /= 4.0;
+  A_to_Az[1]       /= 4.0;
 }
 
 /*
@@ -142,24 +142,24 @@ void ghl_BSSN_cell_interp(
       }
     }
   }
-  metric_interp->lapse    /= 8;
-  metric_interp->betaU[0] /= 8;
-  metric_interp->betaU[1] /= 8;
-  metric_interp->betaU[2] /= 8;
-  *lapse_over_psi6_interp /= 8;
+  metric_interp->lapse    /= 8.0;
+  metric_interp->betaU[0] /= 8.0;
+  metric_interp->betaU[1] /= 8.0;
+  metric_interp->betaU[2] /= 8.0;
+  *lapse_over_psi6_interp /= 8.0;
 
-  metric_interp->gammaUU[0][0] /= 4;
-  metric_interp->gammaUU[0][1] /= 4;
-  metric_interp->gammaUU[0][2] /= 4;
-  metric_interp->gammaUU[1][0] /= 4;
-  metric_interp->gammaUU[1][1] /= 4;
-  metric_interp->gammaUU[1][2] /= 4;
-  metric_interp->gammaUU[2][0] /= 4;
-  metric_interp->gammaUU[2][1] /= 4;
-  metric_interp->gammaUU[2][2] /= 4;
-  lapse_psi2_interp[0]         /= 4;
-  lapse_psi2_interp[1]         /= 4;
-  lapse_psi2_interp[2]         /= 4;
+  metric_interp->gammaUU[0][0] /= 4.0;
+  metric_interp->gammaUU[0][1] /= 4.0;
+  metric_interp->gammaUU[0][2] /= 4.0;
+  metric_interp->gammaUU[1][0] /= 4.0;
+  metric_interp->gammaUU[1][1] /= 4.0;
+  metric_interp->gammaUU[1][2] /= 4.0;
+  metric_interp->gammaUU[2][0] /= 4.0;
+  metric_interp->gammaUU[2][1] /= 4.0;
+  metric_interp->gammaUU[2][2] /= 4.0;
+  lapse_psi2_interp[0]         /= 4.0;
+  lapse_psi2_interp[1]         /= 4.0;
+  lapse_psi2_interp[2]         /= 4.0;
 }
 
 void ghl_ADM_cell_interp(
@@ -211,21 +211,21 @@ void ghl_ADM_cell_interp(
       }
     }
   }
-  metric_interp->lapse    /= 8;
-  metric_interp->betaU[0] /= 8;
-  metric_interp->betaU[1] /= 8;
-  metric_interp->betaU[2] /= 8;
-  *lapse_over_psi6_interp /= 8;
+  metric_interp->lapse    /= 8.0;
+  metric_interp->betaU[0] /= 8.0;
+  metric_interp->betaU[1] /= 8.0;
+  metric_interp->betaU[2] /= 8.0;
+  *lapse_over_psi6_interp /= 8.0;
 
-  metric_interp->gammaUU[0][0] /= 4;
-  metric_interp->gammaUU[0][1] /= 4;
-  metric_interp->gammaUU[0][2] /= 4;
-  metric_interp->gammaUU[1][0] /= 4;
-  metric_interp->gammaUU[1][1] /= 4;
-  metric_interp->gammaUU[1][2] /= 4;
-  metric_interp->gammaUU[2][0] /= 4;
-  metric_interp->gammaUU[2][1] /= 4;
-  metric_interp->gammaUU[2][2] /= 4;
+  metric_interp->gammaUU[0][0] /= 4.0;
+  metric_interp->gammaUU[0][1] /= 4.0;
+  metric_interp->gammaUU[0][2] /= 4.0;
+  metric_interp->gammaUU[1][0] /= 4.0;
+  metric_interp->gammaUU[1][1] /= 4.0;
+  metric_interp->gammaUU[1][2] /= 4.0;
+  metric_interp->gammaUU[2][0] /= 4.0;
+  metric_interp->gammaUU[2][1] /= 4.0;
+  metric_interp->gammaUU[2][2] /= 4.0;
 }
 
 void ghl_ADM_vertex_interp(
@@ -261,13 +261,13 @@ void ghl_ADM_vertex_interp(
     gammaUU_interp[2][1] += detgz*metric_stencil[ii][0][0].gammaUU[1][2];
     gammaUU_interp[2][2] += detgz*metric_stencil[ii][0][0].gammaUU[2][2];
   }
-  gammaUU_interp[0][0] /= 2;
-  gammaUU_interp[0][1] /= 2;
-  gammaUU_interp[0][2] /= 2;
-  gammaUU_interp[1][0] /= 2;
-  gammaUU_interp[1][1] /= 2;
-  gammaUU_interp[1][2] /= 2;
-  gammaUU_interp[2][0] /= 2;
-  gammaUU_interp[2][1] /= 2;
-  gammaUU_interp[2][2] /= 2;
+  gammaUU_interp[0][0] /= 2.0;
+  gammaUU_interp[0][1] /= 2.0;
+  gammaUU_interp[0][2] /= 2.0;
+  gammaUU_interp[1][0] /= 2.0;
+  gammaUU_interp[1][1] /= 2.0;
+  gammaUU_interp[1][2] /= 2.0;
+  gammaUU_interp[2][0] /= 2.0;
+  gammaUU_interp[2][1] /= 2.0;
+  gammaUU_interp[2][2] /= 2.0;
 }
