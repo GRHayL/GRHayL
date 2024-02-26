@@ -784,10 +784,10 @@ if [ "$datagen" != "" ]; then
     printf "DGOBJS    = $dgobjs\n"      >> Makefile
     printf "DGEXEOBJS = $dgexeobjs\n\n" >> Makefile
 fi
-printf '\nall: grhayl tests datagen\n\t@echo "All done!"\n\n' >> Makefile
-printf 'grhayl: $(LIBS)\n\n'                          >> Makefile
-printf 'tests: $(TEXES)\n\n'                          >> Makefile
-printf 'datagen: $(DGEXES)\n\n'                       >> Makefile
+printf '\nall: grhayl\n\t@echo "All done!"\n\n'             >> Makefile
+printf 'grhayl: $(LIBS)\n\n'                                >> Makefile
+printf 'tests: grhayl $(TEXES)\n\t@echo "All done!"\n\n'    >> Makefile
+printf 'datagen: grhayl $(DGEXES)\n\t@echo "All done!"\n\n' >> Makefile
 if [ $silent -eq 0 ]; then
     printf '$(BUILDLIBSO): $(BUILDLIBSOV)\n'                                         >> Makefile
     printf '\trm -f $(BUILDLIBSO) && ln -s $(LIBSOV) $(BUILDLIBSO)\n\n'              >> Makefile
