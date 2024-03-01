@@ -146,6 +146,12 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   }
 
   ghl_eos_parameters tab_eos;
+  ghl_initialize_tabulated_eos_functions_and_params(
+        tablepath,
+        rho_b_atm, rho_b_min, rho_b_max,
+        Y_e_atm, Y_e_min, Y_e_max,
+        T_atm, T_min, T_max, &tab_eos);
+
   /*
      NRPyEOS interpolators:
        NRPyEOS_from_rho_Ye_T_interpolate_n_quantities:
@@ -171,14 +177,6 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   double outvars[1];
   NRPyEOS_error_report report;
   int error;
-
-  if(test_key < 31) {
-    ghl_initialize_tabulated_eos_functions_and_params(
-          tablepath,
-          rho_b_atm, rho_b_min, rho_b_max,
-          Y_e_atm, Y_e_min, Y_e_max,
-          T_atm, T_min, T_max, &tab_eos);
-  }
 
   switch (test_key) {
     case 12:
@@ -302,6 +300,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
 
   if(test_key > 33 && test_key < 61) {
     read_table_error_test(test_key);
+  }
 
   /*
      initialize_*_eos_functions_and_params::
