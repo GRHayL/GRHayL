@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
   const double T_max     = 1e2;
 
   ghl_parameters params;
-  params.max_lorenz_factor = W_max;
-  params.inv_sq_max_lorenz_factor = 1.0/SQR(W_max);
+  params.max_Lorentz_factor = W_max;
+  params.inv_sq_max_Lorentz_factor = 1.0/SQR(W_max);
 
   ghl_eos_parameters eos;
   ghl_initialize_tabulated_eos_functions_and_params(
