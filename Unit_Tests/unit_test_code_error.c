@@ -1,7 +1,11 @@
+// clang-format off
 #include "unit_tests.h"
+
+void read_table_error_test(int test_key);
 
 int main(int argc, char **argv) {
   const int test_key    = atoi(argv[1]);
+
 
   int backup_routine[3] = {None,None,None};
   bool evolve_entropy = false;
@@ -294,7 +298,78 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
   }
 
+  if(test_key > 33 && test_key < 61) {
+    read_table_error_test(test_key);
+  }
+
   printf("We shouldn't be here, so I'll get rid of some compilation warnings :)\n"
          "%e %d %e %e %e %e\n", Fermi_Dirac_integral, speed_limited, rho, Y_e, eps, T);
   return 0;
+}
+// clang-format on
+
+void create_dataset(char *name, int dim, hid_t datatype_id, hid_t file_id) {
+  hsize_t dims[dim];
+  for(int i=0;i<dim;i++) {
+    dims[i] = 1;
+  }
+  hid_t dataspace_id = H5Screate_simple(dim, dims, NULL);
+  hid_t dataset_id = H5Dcreate2(file_id, name, datatype_id, dataspace_id,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+  if( datatype_id == H5T_NATIVE_INT ) {
+    int data = 1;
+    H5Dwrite(dataset_id, datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
+  }
+  else {
+    double data = 42;
+    H5Dwrite(dataset_id, datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
+  }
+  H5Dclose(dataset_id);
+  H5Sclose(dataspace_id);
+}
+
+void read_table_error_test(int test_key) {
+
+  test_key -= 34;
+  FILE *fp = fopen("test.h5", "r");
+  if(fp) {
+    fclose(fp);
+    remove("test.h5");
+  }
+  if(test_key==0) {
+    ghl_eos_parameters eos;
+    NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
+  }
+  test_key--;
+
+  if (test_key < 0 || test_key > 25) {
+    ghl_info("read_table_error_test: unknown test_key\n");
+    return;
+  }
+
+  char *binnames[] = {"pointsrho", "pointstemp",  "pointsye", "logpress",
+                      "logenergy", "entropy",     "munu",     "cs2",
+                      "dedt",      "dpdrhoe",     "dpderho",  "muhat",
+                      "mu_e",      "mu_p",        "mu_n",     "Xa",
+                      "Xh",        "Xn",          "Xp",       "Abar",
+                      "Zbar",      "gamma",       "logrho",   "logtemp",
+                      "ye",        "energy_shift"};
+
+  hid_t file_id = H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  int imax = test_key > 3 ? 3 : test_key;
+  for (int i = 0; i < imax; i++) {
+    create_dataset(binnames[i], 1, H5T_NATIVE_INT, file_id);
+  }
+  imax = test_key > 22 ? 22 : test_key;
+  for (int i = 3; i < imax; i++) {
+    create_dataset(binnames[i], 3, H5T_NATIVE_DOUBLE, file_id); 
+  }
+  for(int i=22;i<test_key;i++) {
+    create_dataset(binnames[i], 1, H5T_NATIVE_DOUBLE, file_id);
+  }
+  H5Fclose(file_id);
+
+  ghl_eos_parameters eos;
+  NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
 }
