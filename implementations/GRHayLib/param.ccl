@@ -4,7 +4,7 @@ restricted:
 #########################################################
 
 # Speed limit: set maximum Lorentz factor
-CCTK_REAL max_lorenz_factor "Maximum Lorentz factor."
+CCTK_REAL max_Lorentz_factor "Maximum Lorentz factor."
 {
  1:* :: "Positive > 1, though you'll likely have troubles far above 10."
 } 10.0

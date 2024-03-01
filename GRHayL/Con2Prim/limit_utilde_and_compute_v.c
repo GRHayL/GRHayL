@@ -18,8 +18,8 @@ int ghl_limit_utilde_and_compute_v(
   double au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
 
   // *** Limit velocity
-  if (au0m1 > 0.9999999*(params->max_lorenz_factor-1.0)) {
-    double fac = sqrt((SQR(params->max_lorenz_factor)-1.0)/(SQR(1.0+au0m1) - 1.0));
+  if (au0m1 > 0.9999999*(params->max_Lorentz_factor-1.0)) {
+    double fac = sqrt((SQR(params->max_Lorentz_factor)-1.0)/(SQR(1.0+au0m1) - 1.0));
     utU[0] *= fac;
     utU[1] *= fac;
     utU[2] *= fac;

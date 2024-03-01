@@ -72,7 +72,7 @@ static int ghl_newman_entropy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
 
     // Impose physical limits and compute W
-    invW = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_lorenz_factor), 1.0);
+    invW = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor), 1.0);
     W    = 1.0/invW;
 
     // Then compute rho = D/W
@@ -109,7 +109,7 @@ static int ghl_newman_entropy(
     const double Epssq = Eps*Eps;
     const double zsq   = z*z;
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
-    invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_lorenz_factor), 1.0);
+    invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor), 1.0);
     W                  = 1.0/invW;
   }
 

@@ -48,8 +48,8 @@ typedef struct ghl_parameters {
   bool evolve_entropy;
   bool evolve_temp;
   bool calc_prim_guess;
-  double max_lorenz_factor;
-  double inv_sq_max_lorenz_factor;
+  double max_Lorentz_factor;
+  double inv_sq_max_Lorentz_factor;
   double psi6threshold;
   double Lorenz_damping_factor;
 
@@ -314,7 +314,7 @@ void ghl_initialize_params(
       const bool evolve_temp,
       const bool calc_prim_guess,
       const double psi6threshold,
-      const double max_lorenz_factor,
+      const double max_Lorentz_factor,
       const double Lorenz_damping_factor,
       ghl_parameters *restrict params);
 

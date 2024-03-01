@@ -22,7 +22,7 @@ int ghl_limit_v_and_compute_u0(
   double one_minus_one_over_alpha_u0_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU)*ADM_metric->lapseinv2;
 
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
-  const double one_minus_one_over_W_max_squared = 1.0 - params->inv_sq_max_lorenz_factor; // 1 - W_max^{-2}
+  const double one_minus_one_over_W_max_squared = 1.0 - params->inv_sq_max_Lorentz_factor; // 1 - W_max^{-2}
   if(one_minus_one_over_alpha_u0_squared > one_minus_one_over_W_max_squared) {
     const double correction_fac = sqrt(one_minus_one_over_W_max_squared/one_minus_one_over_alpha_u0_squared);
     prims->vU[0] = utU[0]*correction_fac - ADM_metric->betaU[0];
