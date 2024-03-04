@@ -302,6 +302,102 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
     read_table_error_test(test_key);
   }
 
+  /*
+     initialize_*_eos_functions_and_params::
+         61-63: Invalid rho_atm
+         64-66: rho_min > rho_max
+         67: Invalid P_atm
+         68: P_min > P_max
+         69: Invalid Y_e_atm
+         70: Y_e_min > Y_e_max
+         71: Invalid T_atm
+         72: T_min > T_max
+   */
+
+  const double press_min = 1e-20;
+  const double press_atm = 1e-16;
+  const double press_max = 1e4;
+  switch (test_key) {
+    case 61:
+      ghl_initialize_simple_eos_functions_and_params(
+            -1, rho_b_min, rho_b_max,
+            press_atm, press_min, press_max,
+            Gamma_th, &hybrid_eos);
+      break;
+    case 62:
+      ghl_initialize_hybrid_eos_functions_and_params(
+            -1, rho_b_min, rho_b_max,
+            neos, rho_ppoly, Gamma_ppoly,
+            k_ppoly0, Gamma_th, &hybrid_eos);
+      break;
+    case 63:
+      ghl_initialize_tabulated_eos_functions_and_params(
+            tablepath,
+            -1, rho_b_min, rho_b_max,
+            Y_e_atm, Y_e_min, Y_e_max,
+            T_atm, T_min, T_max, &tab_eos);
+      break;
+    case 64:
+      ghl_initialize_simple_eos_functions_and_params(
+            rho_b_atm, rho_b_max, rho_b_min,
+            press_atm, press_min, press_max,
+            Gamma_th, &hybrid_eos);
+      break;
+    case 65:
+      ghl_initialize_hybrid_eos_functions_and_params(
+            rho_b_atm, rho_b_max, rho_b_min,
+            neos, rho_ppoly, Gamma_ppoly,
+            k_ppoly0, Gamma_th, &hybrid_eos);
+      break;
+    case 66:
+      ghl_initialize_tabulated_eos_functions_and_params(
+            tablepath,
+            rho_b_atm, rho_b_max, rho_b_min,
+            Y_e_atm, Y_e_min, Y_e_max,
+            T_atm, T_min, T_max, &tab_eos);
+      break;
+    case 67:
+      ghl_initialize_simple_eos_functions_and_params(
+            rho_b_atm, rho_b_min, rho_b_max,
+            -1, press_min, press_max,
+            Gamma_th, &hybrid_eos);
+      break;
+    case 68:
+      ghl_initialize_simple_eos_functions_and_params(
+            rho_b_atm, rho_b_min, rho_b_max,
+            press_atm, press_max, press_min,
+            Gamma_th, &hybrid_eos);
+      break;
+    case 69:
+      ghl_initialize_tabulated_eos_functions_and_params(
+            tablepath,
+            rho_b_atm, rho_b_min, rho_b_max,
+            -1, Y_e_min, Y_e_max,
+            T_atm, T_min, T_max, &tab_eos);
+      break;
+    case 70:
+      ghl_initialize_tabulated_eos_functions_and_params(
+            tablepath,
+            rho_b_atm, rho_b_min, rho_b_max,
+            Y_e_atm, Y_e_max, Y_e_min,
+            T_atm, T_min, T_max, &tab_eos);
+      break;
+    case 71:
+      ghl_initialize_tabulated_eos_functions_and_params(
+            tablepath,
+            rho_b_atm, rho_b_min, rho_b_max,
+            Y_e_atm, Y_e_min, Y_e_max,
+            -1, T_min, T_max, &tab_eos);
+      break;
+    case 72:
+      ghl_initialize_tabulated_eos_functions_and_params(
+            tablepath,
+            rho_b_atm, rho_b_min, rho_b_max,
+            Y_e_atm, Y_e_min, Y_e_max,
+            T_atm, T_max, T_min, &tab_eos);
+      break;
+  }
+
   printf("We shouldn't be here, so I'll get rid of some compilation warnings :)\n"
          "%e %d %e %e %e %e\n", Fermi_Dirac_integral, speed_limited, rho, Y_e, eps, T);
   return 0;

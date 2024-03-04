@@ -116,7 +116,7 @@ curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim
 curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_perturbed.bin
 ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
 
-for i in {0..60}
+for i in {0..72}
 do
   ./Unit_Tests/failure.sh "./test/unit_test_code_error "+$i
 done
