@@ -162,7 +162,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       main, backups,
       evolve_entropy, evolve_temperature,
       calc_primitive_guess, Psi6threshold,
-      max_lorenz_factor, Lorenz_damping_factor,
+      max_Lorentz_factor, Lorenz_damping_factor,
       ghl_params);
 
       ghl_params->ppm_flattening_epsilon = ppm_flattening_epsilon;
