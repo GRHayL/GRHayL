@@ -132,6 +132,17 @@ int main(int argc, char **argv) {
                        "---------:------------------------:------------------------:------------------------:-----------------------\n",
                        eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
 
+        cs2_interp = 0.0/0.0;
+        ghl_tabulated_compute_cs2_from_T(&eos, rho, Y_e, T, &cs2_interp);
+        if( relative_error(cs2, cs2_interp) > rtol && fabs(cs2 - cs2_interp) > atol )
+          ghl_error("tabulated_compute_cs2_from_T validation failed:\n"
+                       "---------:------------------------:------------------------:------------------------:-----------------------\n"
+                       " Varname :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
+                       "---------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "cs2      : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "---------:------------------------:------------------------:------------------------:-----------------------\n",
+                       cs2, cs2_interp, relative_error(cs2, cs2_interp), fabs(cs2 - cs2_interp));
+
         P_interp = eps_interp = 0.0/0.0;
         ghl_tabulated_compute_P_eps_from_T(&eos, rho, Y_e, T, &P_interp, &eps_interp);
         if( ( relative_error(P  , P_interp  ) > rtol && fabs(P   - P_interp  ) > atol ) ||
@@ -339,6 +350,20 @@ int main(int argc, char **argv) {
                        "------------:------------------------:------------------------:------------------------:-----------------------\n",
                        T  , T_interp  , relative_error(T  , T_interp  ), fabs(T   - T_interp  ),
                        P  , P_interp  , relative_error(P  , P_interp  ), fabs(P   - P_interp  ));
+
+        T_interp = eos.table_T_min; eps_interp = 0.0/0.0;
+        ghl_tabulated_compute_eps_T_from_P(&eos, rho, Y_e, P, &eps_interp, &T_interp);
+        if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
+            ( relative_error(eps, eps_interp) > rtol && fabs(eps - eps_interp) > atol ) )
+          ghl_error("tabulated_compute_eps_T_from_P validation failed:\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "  Varname   :     Analytic value     :  Interpolation Value   :     Relative Error     :     Absolute Error    \n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n"
+                       "Temperature : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "Energy      : %22.15e : %22.15e : %22.15e : %22.15e\n"
+                       "------------:------------------------:------------------------:------------------------:-----------------------\n",
+                       T  , T_interp  , relative_error(T  , T_interp  ), fabs(T   - T_interp  ),
+                       eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
 
         T_interp = eos.table_T_min; cs2_interp = P_interp = 0.0/0.0;
         ghl_tabulated_compute_P_cs2_T_from_eps(&eos, rho, Y_e, eps, &P_interp, &cs2_interp, &T_interp);
