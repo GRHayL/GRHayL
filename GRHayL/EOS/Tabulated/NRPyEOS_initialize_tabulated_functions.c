@@ -4,6 +4,7 @@ void NRPyEOS_initialize_tabulated_functions() {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
+  // clang-format off
   ghl_tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;
   ghl_tabulated_free_memory                            = &NRPyEOS_free_memory;
   ghl_tabulated_compute_P_from_T                       = &NRPyEOS_P_from_rho_Ye_T;
@@ -31,13 +32,12 @@ void NRPyEOS_initialize_tabulated_functions() {
   ghl_tabulated_compute_eps_from_rho                   = &NRPyEOS_tabulated_compute_eps_from_rho;
   ghl_tabulated_compute_Ye_of_rho_beq_constant_T       = &NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T;
   ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T = &NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T;
-  ghl_tabulated_get_index_rho                          = &NRPyEOS_tabulated_get_index_rho;
   ghl_tabulated_get_index_T                            = &NRPyEOS_tabulated_get_index_T;
-  ghl_tabulated_get_index_Ye                           = &NRPyEOS_tabulated_get_index_Ye;
   ghl_compute_h_and_cs2                                = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
   ghl_tabulated_enforce_bounds_rho_Ye_T                = &NRPyEOS_enforce_table_bounds_rho_Ye_T;
   ghl_tabulated_enforce_bounds_rho_Ye_eps              = &NRPyEOS_enforce_table_bounds_rho_Ye_eps;
   ghl_tabulated_enforce_bounds_rho_Ye_S                = &NRPyEOS_enforce_table_bounds_rho_Ye_S;
   ghl_tabulated_enforce_bounds_rho_Ye_P                = &NRPyEOS_enforce_table_bounds_rho_Ye_P;
+  // clang-format on
 #endif
 }
