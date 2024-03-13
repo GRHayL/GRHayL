@@ -390,6 +390,19 @@ int main(int argc, char **argv) {
                        cs2, cs2_interp, relative_error(cs2, cs2_interp), fabs(cs2 - cs2_interp),
                        eps, eps_interp, relative_error(eps, eps_interp), fabs(eps - eps_interp));
 
+        // Now compute the enthalpy and perform the validation
+        ghl_primitive_quantities prims;
+        prims.rho = rho;
+        prims.Y_e = Y_e;
+        prims.temperature = T;
+        const double h = 1.0 + eps + P/rho;
+        double h_test, cs2_test;
+        ghl_compute_h_and_cs2(&eos, &prims, &h_test, &cs2_test);
+        if((relative_error(h    , h_test  ) > rtol && fabs(h     - h_test  ) > atol) ||
+           (relative_error(cs2/h, cs2_test) > rtol && fabs(cs2/h - cs2_test) > atol)) {
+          ghl_error("Function ghl_compute_h_and_cs2 failed: %e %e, %e %e\n", h, h_test, cs2, cs2_test);
+        }
+
         T_interp = eos.table_T_min; cs2_interp = eps_interp = 0.0/0.0;
         ghl_tabulated_compute_eps_cs2_T_from_P(&eos, rho, Y_e, P, &eps_interp, &cs2_interp, &T_interp);
         if( ( relative_error(T  , T_interp  ) > rtol && fabs(T   - T_interp  ) > atol ) ||
