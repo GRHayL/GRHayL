@@ -534,7 +534,7 @@ int main(int argc, char **argv) {
       1.200000000000000e+01,
     };
     for(int i=0;i<eos.N_rho;i++) {
-      if(eos.Ye_of_lr[i] == 0 || Y_e_expected[i] == 0) {
+      if(fabs(eos.Ye_of_lr[i]) < 1e-14 || fabs(Y_e_expected[i]) < 1e-14) {
         if( fabs(eos.Ye_of_lr[i] - Y_e_expected[i]) > 1e-14 ) {
           ghl_error("Failed to impose beta equilibrium correctly: %d %.15e %.15e\n", i, eos.Ye_of_lr[i], Y_e_expected[i]);
         }
@@ -544,7 +544,7 @@ int main(int argc, char **argv) {
           ghl_error("Failed to impose beta equilibrium correctly: %d %.15e %.15e\n", i, eos.Ye_of_lr[i], Y_e_expected[i]);
         }
       }
-      if(eos.le_of_lr[i] == 0 || eps_expected[i] == 0) {
+      if(fabs(eos.le_of_lr[i]) < 1e-14 || fabs(eps_expected[i]) < 1e-14) {
         if( fabs(eos.le_of_lr[i] - eps_expected[i]) > 1e-14 ) {
           ghl_error("Failed to impose beta equilibrium correctly: %d %.15e %.15e\n", i, eos.le_of_lr[i], eps_expected[i]);
         }
@@ -554,13 +554,13 @@ int main(int argc, char **argv) {
           ghl_error("Failed to impose beta equilibrium correctly: %d %.15e %.15e\n", i, eos.le_of_lr[i], eps_expected[i]);
         }
       }
-      if(eos.lp_of_lr[i] == 0 || P_expected[i] == 0) {
+      if(fabs(eos.lp_of_lr[i]) < 1e-14 || fabs(P_expected[i]) < 1e-14) {
         if( fabs(eos.lp_of_lr[i] - P_expected[i]) > 1e-14 ) {
           ghl_error("Failed to impose beta equilibrium correctly: %d %.15e %.15e\n", i, eos.lp_of_lr[i], P_expected[i]);
         }
       }
       else {
-        if(relative_error(eos.lp_of_lr[i], P_expected[i]) > 1e-14 ) {
+        if(relative_error(eos.lp_of_lr[i], P_expected[i]) > 1e-14) {
           ghl_error("Failed to impose beta equilibrium correctly: %d %.15e %.15e\n", i, eos.lp_of_lr[i], P_expected[i]);
         }
       }
