@@ -38,20 +38,18 @@ int ghl_enforce_primitive_limits_and_compute_u0(
 
       // Set P_min and P_max
       const double P_min = P_cold;
+
+      const bool inhorizon = ADM_metric->sqrt_detgamma > params->psi6threshold;
       // Adjust P_max based on Psi6
-      // clang-format off
-      const double P_max = (ADM_metric->sqrt_detgamma > params->psi6threshold) ? 1e5*P_cold : 100.0*P_cold;
-      // clang-format on
+      const double P_max = inhorizon ? 1e5 * P_cold : 100.0 * P_cold;
 
       // Now apply floors and ceilings to P
       if(prims->press < P_min) {
         prims->press = P_min;
       }
-      // clang-format off
-      else if((prims->rho < 100.0*eos->rho_atm || ADM_metric->sqrt_detgamma > params->psi6threshold) && prims->press > P_max) {
+      else if((prims->rho < 100.0 * eos->rho_atm || inhorizon) && prims->press > P_max) {
         prims->press = P_max;
       }
-      // clang-format on
 
       // Now recompute eps and, if needed, entropy
       prims->eps

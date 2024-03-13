@@ -1,9 +1,8 @@
 #include "nrpyeos_tabulated.h"
 
-// clang-format off
 #define munu_index(ir, it, iy) \
-  (NRPyEOS_munu_key + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
-// clang-format on
+  (NRPyEOS_munu_key            \
+   + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
 
 static double find_Ye_st_munu_is_zero(
       const int n,
