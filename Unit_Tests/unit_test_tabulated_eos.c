@@ -412,6 +412,54 @@ int main(int argc, char **argv) {
 
   // Enforce limit tests
   {
+    for(int evolve_entropy=0;evolve_entropy<=1;evolve_entropy++) {
+      ghl_parameters params;
+      params.evolve_entropy = evolve_entropy;
+
+      ghl_metric_quantities metric;
+      metric.lapse = metric.lapseinv = metric.lapseinv2 = 1;
+      metric.betaU[0] = metric.betaU[1] = metric.betaU[2] = 0;
+      metric.detgamma = metric.sqrt_detgamma = 1;
+      metric.gammaDD[0][0] = metric.gammaDD[1][1] = metric.gammaDD[2][2] = 1;
+      metric.gammaDD[0][1] = metric.gammaDD[0][2] = metric.gammaDD[1][2] = 1;
+      metric.gammaUU[0][0] = metric.gammaUU[1][1] = metric.gammaUU[2][2] = 1;
+      metric.gammaUU[0][1] = metric.gammaUU[0][2] = metric.gammaUU[1][2] = 1;
+
+      ghl_primitive_quantities prims;
+      prims.vU[0] = prims.vU[1] = prims.vU[2] = 0;
+
+      // Test 1
+      prims.rho = 0.9 * eos.rho_min;
+      prims.Y_e = 0.9 * eos.Y_e_min;
+      prims.temperature = 0.9 * eos.T_min;
+      ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
+      if(prims.rho != eos.rho_min || prims.Y_e != eos.Y_e_min || prims.temperature != eos.T_min) {
+        ghl_error("enforce bounds (rho, Y_e, T) failed for small values: %e != %e or %e != %e or %e != %e\n",
+                  prims.rho, eos.rho_min, prims.Y_e, eos.Y_e_min, prims.temperature, eos.T_min);
+      }
+
+      // Test 2
+      prims.rho = 1.1 * eos.rho_max;
+      prims.Y_e = 1.1 * eos.Y_e_max;
+      prims.temperature = 1.1 * eos.T_max;
+      ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
+      if(prims.rho != eos.rho_max || prims.Y_e != eos.Y_e_max || prims.temperature != eos.T_max) {
+        ghl_error("enforce bounds (rho, Y_e, T) failed for large values: %e != %e or %e != %e or %e != %e\n",
+                  prims.rho, eos.rho_max, prims.Y_e, eos.Y_e_max, prims.temperature, eos.T_max);
+      }
+
+      // Test 3
+      prims.rho = 0.9 * eos.rho_max;
+      prims.Y_e = 0.9 * eos.Y_e_max;
+      prims.temperature = 0.9 * eos.T_max;
+      ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
+      if(prims.rho != 0.9 * eos.rho_max || prims.Y_e != 0.9 * eos.Y_e_max || prims.temperature != 0.9 * eos.T_max) {
+        ghl_error("enforce bounds (rho, Y_e, T) changed values that it shouldn't have");
+      }
+    }
+  }
+
+  {
     double rho = 0.9 * eos.rho_min;
     double Y_e = 0.9 * eos.Y_e_min;
     double P   = 0.9 * eos.press_min;
