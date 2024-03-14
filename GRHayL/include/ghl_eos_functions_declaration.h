@@ -62,6 +62,13 @@ void (*ghl_tabulated_compute_eps_from_T)(
       const double T,
       double *restrict eps);
 
+void (*ghl_tabulated_compute_cs2_from_T)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict cs2);
+
 void (*ghl_tabulated_compute_P_eps_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -155,6 +162,14 @@ void (*ghl_tabulated_compute_P_cs2_T_from_eps)(
       double *restrict cs2,
       double *restrict T);
 
+void (*ghl_tabulated_compute_eps_T_from_P)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double P,
+      double *restrict eps,
+      double *restrict T);
+
 void (*ghl_tabulated_compute_eps_cs2_T_from_P)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -200,17 +215,9 @@ void (*ghl_tabulated_compute_P_eps_T_from_S)(
       double *restrict eps,
       double *restrict T);
 
-int (*ghl_tabulated_get_index_rho)(
-      const ghl_eos_parameters *restrict eos,
-      const double rho);
-
 int (*ghl_tabulated_get_index_T)(
       const ghl_eos_parameters *restrict eos,
       const double T);
-
-int (*ghl_tabulated_get_index_Ye)(
-      const ghl_eos_parameters *restrict eos,
-      const double Ye);
 
 void (*ghl_tabulated_compute_Ye_of_rho_beq_constant_T)(
       const double T,

@@ -11,3 +11,7 @@ build/
 test/
 .vscode/
 .idea/
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/

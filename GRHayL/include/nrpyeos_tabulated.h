@@ -71,6 +71,13 @@ void NRPyEOS_eps_from_rho_Ye_T(
       const double T,
       double *restrict eps);
 
+void NRPyEOS_cs2_from_rho_Ye_T(
+      const ghl_eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict cs2);
+
 void NRPyEOS_P_and_eps_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
@@ -162,6 +169,14 @@ void NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(
       const double eps,
       double *restrict P,
       double *restrict cs2,
+      double *restrict T);
+
+void NRPyEOS_eps_and_T_from_rho_Ye_P(
+      const ghl_eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double P,
+      double *restrict eps,
       double *restrict T);
 
 void NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(

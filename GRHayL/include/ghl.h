@@ -7,10 +7,10 @@
 #include "ghl_metric_helpers.h"
 
 #ifndef MIN
-#define MIN(A, B) ( ((A) < (B)) ? (A) : (B) )
+#define MIN(A, B) (((A) < (B)) ? (A) : (B))
 #endif
 #ifndef MAX
-#define MAX(A, B) ( ((A) > (B)) ? (A) : (B) )
+#define MAX(A, B) (((A) > (B)) ? (A) : (B))
 #endif
 #define SQR(x) ((x) * (x))
 #define ONE_OVER_SQRT_4PI 0.282094791773878143474039725780
@@ -28,12 +28,18 @@
 #endif
 
 typedef enum {
-  None=-1,
-  Noble2D, Noble1D,
-  Noble1D_entropy, Noble1D_entropy2,
-  Font1D, CerdaDuran2D, CerdaDuran3D,
-  Palenzuela1D, Palenzuela1D_entropy,
-  Newman1D, Newman1D_entropy
+  None = -1,
+  Noble2D,
+  Noble1D,
+  Noble1D_entropy,
+  Noble1D_entropy2,
+  Font1D,
+  CerdaDuran2D,
+  CerdaDuran3D,
+  Palenzuela1D,
+  Palenzuela1D_entropy,
+  Newman1D,
+  Newman1D_entropy
 } ghl_con2prim_method_t;
 
 typedef enum {ghl_eos_simple, ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
@@ -109,7 +115,7 @@ typedef struct ghl_metric_quantities {
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_ADM_aux_quantities
 */
 typedef struct ghl_ADM_aux_quantities {
-  double g4DD[4][4],g4UU[4][4];
+  double g4DD[4][4], g4UU[4][4];
 } ghl_ADM_aux_quantities;
 
 /*
@@ -181,7 +187,7 @@ typedef struct ghl_eos_parameters {
 
   //----------- Hybrid Equation of State -----------
   int neos;
-  double rho_ppoly[MAX_EOS_PARAMS-1];
+  double rho_ppoly[MAX_EOS_PARAMS - 1];
   double Gamma_ppoly[MAX_EOS_PARAMS];
   double K_ppoly[MAX_EOS_PARAMS];
   double eps_integ_const[MAX_EOS_PARAMS];
@@ -207,9 +213,9 @@ typedef struct ghl_eos_parameters {
 
   // Table bounds
   double table_rho_min, table_rho_max;
-  double table_T_min  , table_T_max;
+  double table_T_min, table_T_max;
   double table_Y_e_min, table_Y_e_max;
-  double table_P_min  , table_P_max;
+  double table_P_min, table_P_max;
   double table_eps_min, table_eps_max;
   double table_ent_min, table_ent_max;
 
@@ -291,7 +297,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
 void ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
@@ -304,7 +310,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
       const double T_atm,
       const double T_min,
       const double T_max,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
 //---- Basic struct packing/unpacking functions ----
 void ghl_initialize_params(
@@ -319,36 +325,66 @@ void ghl_initialize_params(
       ghl_parameters *restrict params);
 
 void ghl_initialize_primitives(
-      const double rho, const double press, const double epsilon,
-      const double vx, const double vy, const double vz,
-      const double Bx, const double By, const double Bz,
-      const double entropy, const double Y_e, const double temp,
+      const double rho,
+      const double press,
+      const double epsilon,
+      const double vx,
+      const double vy,
+      const double vz,
+      const double Bx,
+      const double By,
+      const double Bz,
+      const double entropy,
+      const double Y_e,
+      const double temp,
       ghl_primitive_quantities *restrict prims);
 
 void ghl_initialize_conservatives(
-      const double rho, const double tau,
-      const double S_x, const double S_y, const double S_z,
-      const double entropy, const double Y_e,
+      const double rho,
+      const double tau,
+      const double S_x,
+      const double S_y,
+      const double S_z,
+      const double entropy,
+      const double Y_e,
       ghl_conservative_quantities *restrict cons);
 
 void ghl_return_primitives(
       const ghl_primitive_quantities *restrict prims,
-      double *restrict rho, double *restrict press, double *restrict epsilon,
-      double *restrict vx, double *restrict vy, double *restrict vz,
-      double *restrict Bx, double *restrict By, double *restrict Bz,
-      double *restrict entropy, double *restrict Y_e, double *restrict temp);
+      double *restrict rho,
+      double *restrict press,
+      double *restrict epsilon,
+      double *restrict vx,
+      double *restrict vy,
+      double *restrict vz,
+      double *restrict Bx,
+      double *restrict By,
+      double *restrict Bz,
+      double *restrict entropy,
+      double *restrict Y_e,
+      double *restrict temp);
 
 void ghl_return_conservatives(
       const ghl_conservative_quantities *restrict cons,
-      double *restrict rho, double *restrict tau,
-      double *restrict S_x, double *restrict S_y, double *restrict S_z,
-      double *restrict entropy, double *restrict Y_e);
+      double *restrict rho,
+      double *restrict tau,
+      double *restrict S_x,
+      double *restrict S_y,
+      double *restrict S_z,
+      double *restrict entropy,
+      double *restrict Y_e);
 
 void ghl_initialize_metric(
       const double lapse,
-      const double betax, const double betay, const double betaz,
-      const double gxx, const double gxy, const double gxz,
-      const double gyy, const double gyz, const double gzz,
+      const double betax,
+      const double betay,
+      const double betaz,
+      const double gxx,
+      const double gxy,
+      const double gxz,
+      const double gyy,
+      const double gyz,
+      const double gzz,
       ghl_metric_quantities *restrict metric);
 
 void ghl_compute_ADM_auxiliaries(
@@ -357,28 +393,50 @@ void ghl_compute_ADM_auxiliaries(
 
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
-      const double betax, const double betay, const double betaz,
-      const double gxx, const double gxy, const double gxz,
-      const double gyy, const double gyz, const double gzz,
+      const double betax,
+      const double betay,
+      const double betaz,
+      const double gxx,
+      const double gxy,
+      const double gxz,
+      const double gyy,
+      const double gyz,
+      const double gzz,
       ghl_metric_quantities *restrict ADM_metric);
 
 void ghl_initialize_extrinsic_curvature(
-      const double Kxx, const double Kxy, const double Kxz,
-      const double Kyy, const double Kyz, const double Kzz,
+      const double Kxx,
+      const double Kxy,
+      const double Kxz,
+      const double Kyy,
+      const double Kyz,
+      const double Kzz,
       ghl_extrinsic_curvature *restrict curv);
 
 void ghl_initialize_stress_energy(
       const double Ttt,
-      const double Ttx, const double Tty, const double Ttz,
-      const double Txx, const double Txy, const double Txz,
-      const double Tyy, const double Tyz, const double Tzz,
+      const double Ttx,
+      const double Tty,
+      const double Ttz,
+      const double Txx,
+      const double Txy,
+      const double Txz,
+      const double Tyy,
+      const double Tyz,
+      const double Tzz,
       ghl_stress_energy *restrict Tmunu);
 
 void ghl_return_stress_energy(
       const ghl_stress_energy *restrict Tmunu,
-      double *restrict Ttt, double *restrict Ttx, double *restrict Tty,
-      double *restrict Ttz, double *restrict Txx, double *restrict Txy,
-      double *restrict Txz, double *restrict Tyy, double *restrict Tyz,
+      double *restrict Ttt,
+      double *restrict Ttx,
+      double *restrict Tty,
+      double *restrict Ttz,
+      double *restrict Txx,
+      double *restrict Txy,
+      double *restrict Txz,
+      double *restrict Tyy,
+      double *restrict Tyz,
       double *restrict Tzz);
 
 int ghl_limit_v_and_compute_u0(
