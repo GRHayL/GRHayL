@@ -10,7 +10,7 @@ CCTK_REAL max_Lorentz_factor "Maximum Lorentz factor."
 } 10.0
 
 # generalized Lorenz gauge damping factor
-CCTK_REAL Lorenz_damping_factor "Damping factor for the generalized Lorenz gauge. Has units of 1/length = 1/M. Typically set this parameter to 1.5/(maximum Delta t on AMR grids)." STEERABLE=ALWAYS
+CCTK_REAL Lorenz_damping_factor "Damping factor for the generalized Lorenz gauge. Has units of 1/length = 1/M. Typically set this parameter to 1.5/(maximum Delta t on AMR grids)."
 {
  *:* :: "any real"
 } 0.0
@@ -19,7 +19,7 @@ CCTK_REAL Lorenz_damping_factor "Damping factor for the generalized Lorenz gauge
 
 # conservative-to-primitive parameters
 # Disabled options are not yet fully tested and/or implemented
-KEYWORD con2prim_routine "What con2prim routine is used" STEERABLE=ALWAYS
+KEYWORD con2prim_routine "What con2prim routine is used" STEERABLE=RECOVER
 {
   "Noble2D"              :: "2D  routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
   "Noble1D"              :: "1Dw routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
@@ -34,7 +34,7 @@ KEYWORD con2prim_routine "What con2prim routine is used" STEERABLE=ALWAYS
   "Newman1D_entropy"     :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
 } "Noble2D"
 
-KEYWORD con2prim_backup_routines[3] "We allow up to 3 backup routines" STEERABLE=ALWAYS
+KEYWORD con2prim_backup_routines[3] "We allow up to 3 backup routines" STEERABLE=RECOVER
 {
   "None"                 :: "Don't use backup routines"
   "Noble2D"              :: "2D  routine in https://arxiv.org/pdf/astro-ph/0512420.pdf"
@@ -50,12 +50,12 @@ KEYWORD con2prim_backup_routines[3] "We allow up to 3 backup routines" STEERABLE
   "Newman1D_entropy"     :: "https://escholarship.org/content/qt0s53f84b/qt0s53f84b.pdf (see also https://arxiv.org/pdf/1712.07538.pdf)"
 } "None"
 
-CCTK_REAL Psi6threshold "Where Psi^6 > Psi6threshold, we assume we're inside the horizon in the primitives solver, and certain limits are relaxed or imposed" STEERABLE=ALWAYS
+CCTK_REAL Psi6threshold "Where Psi^6 > Psi6threshold, we assume we're inside the horizon in the primitives solver, and certain limits are relaxed or imposed" STEERABLE=RECOVER
 {
  *:* :: "Can set to anything"
 } 1e100
 
-CCTK_BOOLEAN calc_primitive_guess "Do we want to calculate estimates for the primitives in Con2Prim?"
+CCTK_BOOLEAN calc_primitive_guess "Do we want to calculate estimates for the primitives in Con2Prim?" STEERABLE=RECOVER
 {
   "no"  :: "Uses the data currently in the primitive variables as the guess."
   "yes" :: "Calculates primitive guesses from the current conservatives."
@@ -72,19 +72,19 @@ KEYWORD EOS_type "The type of EOS for the simulation"
   "Tabulated" :: "Tabulated EOS"
 } ""
 
-CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b (required). If this is unset, the run will die." STEERABLE=ALWAYS
+CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b (required). If this is unset, the run will die."
 {
   0:* :: "Atmosphere density; must be positive"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL rho_b_min "Floor value on the baryonic rest mass density rho_b (disabled by default)." STEERABLE=ALWAYS
+CCTK_REAL rho_b_min "Floor value on the baryonic rest mass density rho_b (disabled by default)." STEERABLE=RECOVER
 {
   0:* :: "Minimum density; must be positive"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL rho_b_max "Ceiling value on the baryonic rest mass density rho_b (disabled by default). Can help with stability to limit densities inside the BH after black hole formation." STEERABLE=ALWAYS
+CCTK_REAL rho_b_max "Ceiling value on the baryonic rest mass density rho_b (disabled by default). Can help with stability to limit densities inside the BH after black hole formation." STEERABLE=RECOVER
 {
   0:* :: "Maximum density; must be positive"
   -1  :: "Used to check if anything was given"
@@ -103,19 +103,19 @@ CCTK_REAL Gamma "Gamma parameter"
 -1   :: "forbidden value to make sure it is explicitly set in the parfile"
 } -1
 
-CCTK_REAL P_atm "Atmospheric pressure (required)" STEERABLE=ALWAYS
+CCTK_REAL P_atm "Atmospheric pressure (required)"
 {
   0:* :: "Should be non-negative"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL P_min "Minimum temperature allowed (disabled by default)" STEERABLE=ALWAYS
+CCTK_REAL P_min "Minimum temperature allowed (disabled by default)" STEERABLE=RECOVER
 {
   0:* :: "Should be non-negative"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL P_max "Maximum temperature allowed (disabled by default)" STEERABLE=ALWAYS
+CCTK_REAL P_max "Maximum temperature allowed (disabled by default)" STEERABLE=RECOVER
 {
   0:* :: "Should be non-negative"
   -1  :: "Used to check if anything was given"
@@ -156,86 +156,86 @@ CCTK_REAL Gamma_ppoly_in[11] "Set polytropic Gamma parameters. Gamma_ppoly_in[0]
 #########################################################
 
 # Tabulated EOS parameters
-CCTK_STRING EOS_tablepath "Path to the EOS table"
+CCTK_STRING EOS_tablepath "Path to the EOS table" STEERABLE=RECOVER
 {
   ""    :: "Forbidden, will error out"
   ".+?" :: "Any string"
 } ""
 
-CCTK_REAL Y_e_atm "Atmospheric electron fraction (required)" STEERABLE=ALWAYS
+CCTK_REAL Y_e_atm "Atmospheric electron fraction (required)"
 {
   0:1 :: "Only makes sense if set to something between 0 and 1"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL Y_e_min "Atmospheric electron fraction (optional; table bounds used by default)" STEERABLE=ALWAYS
+CCTK_REAL Y_e_min "Atmospheric electron fraction (optional; table bounds used by default)" STEERABLE=RECOVER
 {
   0:1 :: "Only makes sense if set to something between 0 and 1"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL Y_e_max "Atmospheric electron fraction (optional; table bounds used by default)" STEERABLE=ALWAYS
+CCTK_REAL Y_e_max "Atmospheric electron fraction (optional; table bounds used by default)" STEERABLE=RECOVER
 {
   0:1 :: "Only makes sense if set to something between 0 and 1"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL T_atm "Atmospheric temperature (required)" STEERABLE=ALWAYS
+CCTK_REAL T_atm "Atmospheric temperature (required)"
 {
   0:* :: "Should be non-negative"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL T_min "Minimum temperature allowed (optional; table bounds used by default)" STEERABLE=ALWAYS
+CCTK_REAL T_min "Minimum temperature allowed (optional; table bounds used by default)" STEERABLE=RECOVER
 {
   0:* :: "Should be non-negative"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_REAL T_max "Maximum temperature allowed (optional; table bounds used by default)" STEERABLE=ALWAYS
+CCTK_REAL T_max "Maximum temperature allowed (optional; table bounds used by default)" STEERABLE=RECOVER
 {
   0:* :: "Should be non-negative"
   -1  :: "Used to check if anything was given"
 } -1
 
-CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?"
+CCTK_BOOLEAN evolve_temperature "Do we want to evolve the temperature?" STEERABLE=RECOVER
 {
 } "no"
 
 #########################################################
 
 # PPM reconstruction parameters
-CCTK_REAL ppm_flattening_epsilon "Epsilon used for flattening in PPM algorithm"
+CCTK_REAL ppm_flattening_epsilon "Epsilon used for flattening in PPM algorithm" STEERABLE=RECOVER
 {
   :     :: "Anything goes. Default is from Colella & Woodward"
 } 0.33
 
-CCTK_REAL ppm_flattening_omega1 "Omega1 used for flattening in PPM algorithm"
+CCTK_REAL ppm_flattening_omega1 "Omega1 used for flattening in PPM algorithm" STEERABLE=RECOVER
 {
   :     :: "Anything goes. Default is from Colella & Woodward"
 } 0.75
 
-CCTK_REAL ppm_flattening_omega2 "Omega2 used for flattening in PPM algorithm"
+CCTK_REAL ppm_flattening_omega2 "Omega2 used for flattening in PPM algorithm" STEERABLE=RECOVER
 {
   :     :: "Anything goes. Default is from Colella & Woodward"
 } 10.0
 
-CCTK_REAL ppm_shock_epsilon "Epsilon used for shock detection in steepen_rho algorithm"
+CCTK_REAL ppm_shock_epsilon "Epsilon used for shock detection in steepen_rho algorithm" STEERABLE=RECOVER
 {
   :     :: "Anything goes. Default is from Colella & Woodward"
 } 0.01
 
-CCTK_REAL ppm_shock_eta1 "Eta1 used for shock detection in steepen_rho algorithm"
+CCTK_REAL ppm_shock_eta1 "Eta1 used for shock detection in steepen_rho algorithm" STEERABLE=RECOVER
 {
   :     :: "Anything goes. Default is from Colella & Woodward"
 } 20.0
 
-CCTK_REAL ppm_shock_eta2 "Eta2 used for shock detection in steepen_rho algorithm"
+CCTK_REAL ppm_shock_eta2 "Eta2 used for shock detection in steepen_rho algorithm" STEERABLE=RECOVER
 {
   :     :: "Anything goes. Default is from Colella & Woodward"
 } 0.05
 
-CCTK_REAL ppm_shock_k0 "K0 used for shock detection in steepen_rho algorithm"
+CCTK_REAL ppm_shock_k0 "K0 used for shock detection in steepen_rho algorithm" STEERABLE=RECOVER
 {
   :     :: "Anything goes. Default suggested by Colella & Woodward is: (polytropic constant)/10.0"
 } 0.1

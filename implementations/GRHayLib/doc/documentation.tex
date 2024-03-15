@@ -122,6 +122,23 @@ guess to this default in the multi-method function, so set this to
 routines require the user to either provide a guess or use the
 ghl\_guess\_primitives() function.
 
+\section{Changing parameters during a run}
+
+Cactus allows for changing parameters during a run using CCTK\_ParameterSet().
+However, this is only allowed for those with "STEERABLE=ALWAYS" in the parfile.
+Those without this tag aren't able to be steered during a run. Because \glib
+stores this information inside \grhayl structs, the actual parameters are not
+steerable during a simulation. However, the parameters can be effectively steered
+by changing the values inside the structs. For the EOS struct, this can be
+dangerous since some elements are computed from the other parameters. To remedy
+this, the derived values need to also be recomputed. For the hybrid and simple EOS,
+we recommend running the appropriate ghl\_initialize\_EOSTYPE\_eos() function
+to ensure that the elements are properly reinitialized. For tabulated EOS,
+initializing the struct involves allocating memory for the table. As such,
+just re-running the initialize function will not behave as desired. The simplest
+solution is to copy the needed code from the \grhayl function into a scheduled
+function and manage the elements values manually.
+
 % Do not delete next line
 % END CACTUS THORNGUIDE
 

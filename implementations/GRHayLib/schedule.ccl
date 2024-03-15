@@ -1,11 +1,16 @@
-schedule GRHayLib_initialize at CCTK_WRAGH
-{
-  LANG: C
-  OPTIONS: GLOBAL
-} "Set up the EOS struct and read the table for tabulated EOS."
+# Schedule for thorn IllinoisGRMHD
+
+# Needed for a single release to preserve IllinoisGRMHD backward compatibility
+if( !CCTK_IsThornActive("ID_converter_ILGRMHD") ) {
+  schedule GRHayLib_initialize at CCTK_WRAGH
+  {
+    LANG: C
+    OPTIONS: GLOBAL
+  } "Set up the GRHayL structs and read the table for tabulated EOS."
+}
 
 schedule GRHayLib_terminate AT CCTK_TERMINATE
 {
   LANG: C
   OPTIONS: GLOBAL
-} "Free memory allocated for the EOS struct."
+} "Free memory allocated for the GRHayL structs."
