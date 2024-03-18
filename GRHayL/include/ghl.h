@@ -24,7 +24,9 @@
 #endif
 
 #ifdef __cplusplus
+#ifndef restrict
 #define restrict __restrict__
+#endif
 #endif
 
 typedef enum {
