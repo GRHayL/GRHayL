@@ -1,0 +1,49 @@
+Cactus Code Thorn GRHayLib
+Author(s)     : Samuel Cupp
+                Leonardo Rosa Werneck
+                Terrence Pierre Jacques
+                Zachariah B. Etienne
+Note          : Most code in the first release version of GRHayL is adapted
+                from IllinoisGRMHD, which is itself based on the GRMHD code
+                of the Illinois Numerical Relativity group, written by Matt
+                Duez, Yuk Tung Liu, and Branson Stephens (original version),
+                and then developed primarily by Zachariah Etienne, Yuk Tung
+                Liu, and Vasileios Paschalidis.
+Maintainer(s) : Samuel Cupp
+                Leonardo Rosa Werneck
+License       : GPLv2 for Noble conservative-to-primitive routines adapted from HARM
+                Creative Commons Attribution-ShareAlike 4.0 International License
+                for Palenzuela and Newman conservative-to-primitive routines adapted
+                from GRMHD_con2prim
+                BSD2 for all other code
+--------------------------------------------------------------------------
+
+==========
+1. Purpose
+==========
+
+GRHayLib provides the features of the General Relativistic Hydrodynamic Library (GRHayL)
+in the Cactus framework. GRHayL is an infrastructure-agnostic magnetohydrodynamics
+code library designed for modular development of GRMHD code. The library is divided
+into independent modules, or "gems", which provide various features needed for GRMHD
+simulations.
+
+The core GRHayL "chalice" provides core connective tissue in the form of C structs
+and very simple functions that act only on these structs. Adding onto GRHayL_Core
+are several gems which provide specific features. These currently include Atmosphere,
+Con2Prim, EOS, Flux_Source, Induction, Neutrinos, and Reconstruction. Each gem
+implements infrastructure-agnostic functions for computing quantities for GRMHD
+simulations.
+
+=========================
+1. Additional Information
+=========================
+
+This thorn only provides the core library features and initializes the GRHayL
+parameter and EOS structs that are used throughout the simulation. To see thorns
+which use GRHayLib for simple initial data, see the GRHayLID and GRHayLIDX thorns.
+For GRMHD evolution, see IllinoisGRMHD, GRHayLHD, or GRHayLHDX.
+
+Also, please note that GRHayLib currently only provides the functions on the host
+for CarpetX simulations. Work to provide access to the library functions on both
+host and device is currently ongoing.
