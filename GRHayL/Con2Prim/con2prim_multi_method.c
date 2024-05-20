@@ -1,5 +1,11 @@
 #include "con2prim.h"
 
+/*
+ * Function     : ghl_con2prim_hybrid_select_method()
+ * Description  : Calls the Con2Prim routine designated by c2p_key
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_hybrid_select_method
+*/
+
 int ghl_con2prim_hybrid_select_method(
       const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
@@ -34,6 +40,12 @@ int ghl_con2prim_hybrid_select_method(
   }
 }
 
+/*
+ * Function     : ghl_con2prim_tabulated_select_method()
+ * Description  : Calls the Con2Prim routine designated by c2p_key
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
+*/
+
 int ghl_con2prim_tabulated_select_method(
       const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
@@ -60,6 +72,12 @@ int ghl_con2prim_tabulated_select_method(
       return -1;
   }
 }
+
+/*
+ * Function     : ghl_con2prim_tabulated_select_method()
+ * Description  : Calls the Con2Prim routine designated by c2p_key
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
+*/
 
 int ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
@@ -106,6 +124,12 @@ int ghl_con2prim_hybrid_multi_method(
   }
   return failed;
 }
+
+/*
+ * Function     : ghl_con2prim_tabulated_select_method()
+ * Description  : Calls the Con2Prim routine designated by c2p_key
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
+*/
 
 int ghl_con2prim_tabulated_multi_method(
       const ghl_parameters *restrict params,

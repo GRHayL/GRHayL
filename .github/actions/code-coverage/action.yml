@@ -5,6 +5,9 @@ inputs:
     description: compiler for test
     required: true
     default: 'gcc'
+  codecov_token:
+    description: Github token needed for upload
+    required: true
 
 runs:
   using: "composite"
@@ -15,33 +18,35 @@ runs:
         gcovr -r . --keep
       shell: bash
 
-    # This still doesn't generate expected cov. files
-    - if: runner.os == 'Linux' && inputs.compiler == 'clang'
-      run: |
-        sudo apt-get install gcovr
-        gcovr -r .  --gcov-executable "llvm-cov-14 gcov" --keep
-      shell: bash
+    ## This still doesn't generate expected cov. files
+    #- if: runner.os == 'Linux' && inputs.compiler == 'clang'
+    #  run: |
+    #    sudo apt-get install gcovr
+    #    gcovr -r .  --gcov-executable "llvm-cov-14 gcov" --keep
+    #  shell: bash
 
-    # Try Intel's codecov tool? Not sure if this is compatible with gcovr
-    - if: runner.os == 'Linux' && inputs.compiler == 'intel'
-      run: |
-        sudo apt-get install gcovr
-        gcovr -r . --keep
-      shell: bash
+    ## Try Intel's codecov tool? Not sure if this is compatible with gcovr
+    #- if: runner.os == 'Linux' && inputs.compiler == 'intel'
+    #  run: |
+    #    sudo apt-get install gcovr
+    #    gcovr -r . --keep
+    #  shell: bash
 
-    # These probably fail because we need to tell gcovr to
-    # use the installed versions and not whatever MacOS
-    # ships with
     - if: runner.os == 'MacOS' && inputs.compiler == 'gcc'
       run: |
         brew install gcovr
         gcovr -r ./build --keep
       shell: bash
 
-    - if: runner.os == 'MacOS' && inputs.compiler == 'clang'
-      run: |
-        brew install gcovr
-        gcovr -r . --gcov-executable "llvm-cov-14 gcov" --keep
-      shell: bash
+    #- if: runner.os == 'MacOS' && inputs.compiler == 'clang'
+    #  run: |
+    #    brew install gcovr
+    #    gcovr -r . --gcov-executable "llvm-cov-14 gcov" --keep
+    #  shell: bash
 
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v4
+      with:
+          fail_ci_if_error: true
+          token: ${{ inputs.codecov_token }}
+#      env:
+#        CODECOV_TOKEN: ${{ inputs.codecov_token }}

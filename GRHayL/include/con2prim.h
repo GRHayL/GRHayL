@@ -25,9 +25,9 @@ https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
 
 typedef struct ghl_con2prim_diagnostics {
-  int tau_fix;
-  int Stilde_fix;
-  int speed_limited;
+  bool tau_fix;
+  bool Stilde_fix;
+  bool speed_limited;
   ghl_con2prim_method_t which_routine;
   bool backup[3];
   int n_iter;
@@ -67,7 +67,7 @@ void ghl_guess_primitives(
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims);
 
-int ghl_enforce_primitive_limits_and_compute_u0(
+bool ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -239,7 +239,7 @@ int ghl_tabulated_Newman1D_entropy(
 
 //------------ Auxiliary Functions -----------------
 
-int ghl_limit_utilde_and_compute_v(
+bool ghl_limit_utilde_and_compute_v(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict metric,
       double utU[3],

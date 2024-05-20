@@ -33,10 +33,10 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
       - name: Run ET IllinoisGRMHD unit test for ET_Legacy_${{ matrix.test-function }}
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   c2p-routines:
     strategy:
@@ -64,10 +64,10 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output_pert.bin
       - name: Run con2prim unit test for ${{ matrix.test-function }} functions
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   c2p-failure:
     strategy:
@@ -89,10 +89,10 @@ jobs:
           compiler: 'clang'
       - name: Run con2prim unit test for ${{ matrix.test-function }} function
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   tabulated-eos:
     strategy:
@@ -115,10 +115,10 @@ jobs:
         run: curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_tabulated_eos simple_table.h5
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   piecewise-polytrope-eos:
     strategy:
@@ -139,10 +139,10 @@ jobs:
           compiler: 'clang'
       - name: Run piecewise polytrope EOS unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_piecewise_polytrope
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   grhayl-core:
     strategy:
@@ -166,10 +166,10 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/grhayl_core/grhayl_core_test_suite_input.bin
       - name: Run GRHayL_Core unit test
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_grhayl_core_test_suite
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   flux:
     strategy:
@@ -197,10 +197,10 @@ jobs:
           curl -O https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2 && bunzip2 LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2
       - name: Run flux unit test for ${{ matrix.test-function }} function
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   reconstruction:
     strategy:
@@ -227,10 +227,10 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/reconstruction/${{ matrix.test-function }}_output_pert.bin
       - name: Run reconstruction unit test for ${{ matrix.test-function }} function
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   neutrinos:
     strategy:
@@ -259,10 +259,10 @@ jobs:
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
           ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 1
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   con-to-prim-tabulated:
     strategy:
@@ -304,10 +304,10 @@ jobs:
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
           ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   code-failure:
     strategy:
@@ -336,10 +336,10 @@ jobs:
           do
             ./Unit_Tests/failure.sh "./test/unit_test_code_error "+$i
           done
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   induction-interpolators:
     strategy:
@@ -373,10 +373,10 @@ jobs:
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
           ./test/unit_test_induction_${{ matrix.centering }}_${{ matrix.metric }}
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'
 
   induction-flux:
     strategy:
@@ -406,7 +406,7 @@ jobs:
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
           ./test/unit_test_HLL_flux
-      - name: Generate coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'clang'
+#      - name: Generate coverage report
+#        uses: ./.github/actions/code-coverage
+#        with:
+#          compiler: 'clang'

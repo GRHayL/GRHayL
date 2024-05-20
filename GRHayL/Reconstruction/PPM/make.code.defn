@@ -8,4 +8,4 @@ SRCS = shock_detection_ftilde.c               \
        ppm_compute_for_cell_with_steepening.c \
        ppm_reconstruction_with_steepening.c   \
        slope_limit.c                          \
-       steepen_rhor_rhol.c
+       steepen_var.c

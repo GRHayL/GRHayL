@@ -56,7 +56,7 @@ double ghl_shock_detection_ftilde(
       const double P[5],
       const double v_flux_dirn[5]);
 
-void ghl_steepen_rhor_rhol(
+void ghl_steepen_var(
       const ghl_parameters *restrict params,
       const double rho[5],
       const double P[5],

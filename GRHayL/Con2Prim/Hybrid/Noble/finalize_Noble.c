@@ -32,10 +32,10 @@ int ghl_finalize_Noble(
                    g_o_ZBsq * (Qtcon[2] + QdB_o_Z*prims->BU[1]),
                    g_o_ZBsq * (Qtcon[3] + QdB_o_Z*prims->BU[2])};
 
-  const int speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
+  const bool speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
 
   prims->rho = harm_aux->D * gtmp;
-  if(speed_limited==1)
+  if(speed_limited)
     prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
 
   /*  Assumes hybrid EOS */
@@ -77,9 +77,9 @@ int ghl_finalize_Noble_entropy(
 
   //Additional tabulated code here
 
-  const int speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
+  const bool speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
 
-  if(speed_limited==1)
+  if(speed_limited)
     prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);                                      
 
   /*  Assumes hybrid EOS */

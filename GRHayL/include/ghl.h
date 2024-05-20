@@ -441,7 +441,7 @@ void ghl_return_stress_energy(
       double *restrict Tyz,
       double *restrict Tzz);
 
-int ghl_limit_v_and_compute_u0(
+bool ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,
       ghl_primitive_quantities *restrict prims);

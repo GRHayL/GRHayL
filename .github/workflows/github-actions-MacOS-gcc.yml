@@ -37,6 +37,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   c2p-routines:
     strategy:
@@ -68,6 +69,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   c2p-failure:
     strategy:
@@ -93,6 +95,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   tabulated-eos:
     strategy:
@@ -119,6 +122,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   piecewise-polytrope-eos:
     strategy:
@@ -143,6 +147,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   grhayl-core:
     strategy:
@@ -170,6 +175,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   flux:
     strategy:
@@ -201,6 +207,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   reconstruction:
     strategy:
@@ -231,6 +238,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   neutrinos:
     strategy:
@@ -261,6 +269,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   con-to-prim-tabulated:
     strategy:
@@ -304,6 +313,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   code-failure:
     strategy:
@@ -335,6 +345,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   induction-interpolators:
     strategy:
@@ -371,6 +382,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   induction-flux:
     strategy:
@@ -403,3 +415,4 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}
