@@ -11,6 +11,8 @@
 #include "include/nrpyeos_hybrid.h"
 #include "include/nrpyeos_tabulated.h"
 #include "include/nrpyleakage.h"
+#include "include/radiation.h"
+#include "include/reconstruction.h"
 
 extern ghl_eos_parameters *ghl_eos;
 extern ghl_parameters *ghl_params;
