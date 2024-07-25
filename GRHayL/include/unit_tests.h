@@ -3,12 +3,12 @@
 
 #include "atmosphere.h"
 #include "con2prim.h"
-#include "induction.h"
-#include "reconstruction.h"
 #include "flux_source.h"
-#include "neutrinos.h"
+#include "induction.h"
 #include "nrpyeos_tabulated.h"
 #include "nrpyeos_hybrid.h"
+#include "radiation.h"
+#include "reconstruction.h"
 
 void ghl_test_compute_A_flux_with_B(
       const int dirlength,

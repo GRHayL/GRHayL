@@ -52,10 +52,10 @@ component_management:
       name: induction
       paths:
         - GRHayL/Induction/**
-    - component_id: gem_neutrinos
-      name: neutrinos
+    - component_id: gem_radiation
+      name: radiation
       paths:
-        - GRHayL/Neutrinos/**
+        - GRHayL/Radiation/**
     - component_id: gem_reconstruction
       name: reconstruction
       paths:

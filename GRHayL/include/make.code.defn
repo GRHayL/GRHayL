@@ -10,9 +10,9 @@
 #!                   ghl_debug.h
 #!                   ghl_metric_helpers.h
 #!                   induction.h
-#!                   neutrinos.h
 #!                   nrpyeos_hybrid.h
 #!                   nrpyeos_tabulated.h
 #!                   nrpyleakage.h
+#!                   radiation.h
 #!                   reconstruction.h
 #!                   unit_tests.h

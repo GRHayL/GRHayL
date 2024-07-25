@@ -5,5 +5,5 @@ SUBDIRS = Atmosphere     \
           GRHayL_Core    \
           include        \
           Induction      \
-          Neutrinos      \
+          Radiation      \
           Reconstruction

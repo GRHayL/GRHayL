@@ -17,7 +17,7 @@ features needed for GRMHD simulations.
 The core GRHayL "chalice" provides core connective tissue in the form of C structs
 and very simple functions that act only on these structs. Adding onto GRHayL_Core are
 several gems which provide specific features. These currently include Atmosphere, Con2Prim,
-EOS, Flux_Source, Induction, Neutrinos, and Reconstruction. Each gem implements
+EOS, Flux_Source, Induction, Radiation, and Reconstruction. Each gem implements
 infrastructure-agnostic functions for computing quantities for GRMHD simulations.
 
 More information about the details of the library functions are provided in the

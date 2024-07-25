@@ -1,5 +1,5 @@
-#ifndef NEUTRINOS_H_
-#define NEUTRINOS_H_
+#ifndef RADIATION_H_
+#define RADIATION_H_
 
 #include "ghl.h"
 
@@ -16,4 +16,4 @@ typedef ghl_neutrino_opacities ghl_neutrino_optical_depths;
 
 #include "nrpyleakage.h"
 
-#endif // NEUTRINOS_H_
+#endif // RADIATION_H_
