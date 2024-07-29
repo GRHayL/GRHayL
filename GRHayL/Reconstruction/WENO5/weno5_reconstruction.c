@@ -12,14 +12,14 @@
 
 void ghl_weno5_reconstruction(
       const double U[6],
-      double *restrict Ul,
-      double *restrict Ur) {
+      double *restrict Ur,
+      double *restrict Ul) {
 
   double tmpr, tmpl;        
 
   ghl_weno5_reconstruction_right_left_faces( U,    &tmpr, &tmpl);
   *Ul = tmpr;
-  
+
   ghl_weno5_reconstruction_right_left_faces(&U[1], &tmpr, &tmpl);
   *Ur = tmpl;
  }
