@@ -1,6 +1,4 @@
 # Primary make.code.defn for gem Reconstruction
 
 # Source files in this directory that need compiled:
-SRC = 
-
-SUBDIRS = PPM PLM WENO5
+SRCS = weno5_reconstruction.c
