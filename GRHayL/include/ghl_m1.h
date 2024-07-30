@@ -3,12 +3,15 @@
 
 #include "ghl.h"
 #include "radiation.h"
-#include "roots.h"
 
 typedef struct {
   double DD[4][4];
   double UD[4][4];
 } ghl_radiation_pressure_tensor; 
+
+typedef struct {
+  double UD[4][4];
+} ghl_radiation_metric_tensor; 
 
 typedef struct {
   double D[4];
@@ -17,6 +20,16 @@ typedef struct {
 typedef struct {
   double U[4];
 } ghl_radiation_source_vector; 
+
+typedef struct {
+  const ghl_metric_quantities *metric;
+  const ghl_ADM_aux_quantities *adm_aux;
+  const ghl_primitive_quantities *prims;
+  const double E;
+  const ghl_radiation_flux_vector* F4;
+  const ghl_radiation_pressure_tensor *P4DD;
+} m1_root_params;
+
 
 /*
  * Struct        : ghl_m1_parameters
