@@ -17,4 +17,7 @@ SRCS = compute_ADM_auxiliaries.c                  \
        limit_v_and_compute_u0.c                   \
        return_conservatives.c                     \
        return_primitives.c                        \
-       return_stress_energy.c
+       return_stress_energy.c                     \
+       roots_brent.c                              \
+       roots_toms748.c
+

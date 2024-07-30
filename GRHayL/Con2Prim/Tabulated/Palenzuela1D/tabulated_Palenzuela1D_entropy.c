@@ -8,7 +8,7 @@
  * conservative variables, using the specific entropy to recover the temperature.
  *
  * Parameters : x       - Current guess for the root of f(x).
- *            : fparams - Parameters used to evaluate f(x) (see palenzuela.h).
+ *            : params  - Parameters used to evaluate f(x) (see palenzuela.h).
  *            : rho_ptr - Stores the result for rho.
  *            : P_ptr   - Stores the result for P.
  *            : eps_ptr - Stores the result for eps.
@@ -24,9 +24,7 @@
 static void
 compute_rho_P_eps_T_W_entropy(
       const double x,
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      fparams_struct *restrict fparams,
+      palenzuela_params *restrict params,
       double *restrict rho_ptr,
       double *restrict P_ptr,
       double *restrict eps_ptr,
@@ -34,26 +32,26 @@ compute_rho_P_eps_T_W_entropy(
       double *restrict W_ptr) {
 
   // Step 0: Unpack the fparams struct
-  double Y_e = fparams->Y_e;
-  double T = fparams->temp_guess;
+  double Y_e = params->Y_e;
+  double T = params->temp_guess;
 
   // Step 1: First compute rho and W
   double rho, W;
-  compute_rho_W_from_x_and_conservatives(x, params, fparams, &rho, &W);
+  compute_rho_W_from_x_and_conservatives(x, params, &rho, &W);
 
   // Step 2: Now compute P and eps
   double P, eps;
-  if(fparams->evolve_T) {
-    double ent = fparams->cons_undens->entropy/W;
-    ghl_tabulated_enforce_bounds_rho_Ye_S(eos, &rho, &Y_e, &ent);
-    ghl_tabulated_compute_P_eps_T_from_S(eos, rho, Y_e, ent, &P, &eps, &T);
+  if(params->evolve_T) {
+    double ent = params->cons_undens->entropy/W;
+    ghl_tabulated_enforce_bounds_rho_Ye_S(params->eos, &rho, &Y_e, &ent);
+    ghl_tabulated_compute_P_eps_T_from_S(params->eos, rho, Y_e, ent, &P, &eps, &T);
   }
   else {
     // If the temperature is not evolved, use the input guess to determine
     // the remaining primitives. Note that in this case one must provide
     // the appropriate temperature instead of the default guess T = T_min.
-    ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &rho, &Y_e, &T);
-    ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
+    ghl_tabulated_enforce_bounds_rho_Ye_T(params->eos, &rho, &Y_e, &T);
+    ghl_tabulated_compute_P_eps_from_T(params->eos, rho, Y_e, T, &P, &eps);
   }
 
   // Step 3: Set the output

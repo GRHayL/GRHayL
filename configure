@@ -568,7 +568,7 @@ else
             if [ $have_pkg_config -eq 1 ]; then
                 printf "Checking if hdf5 library is available with pkg-config... "
                 hdf5inc=$(pkg-config hdf5 --cflags 2>/dev/null)
-                hdf5lib=$(pkg-config hdf5 --libs --static 2>/dev/null)
+                hdf5lib=$(pkg-config hdf5 --libs 2>/dev/null)
                 if [ "$hdf5inc" != "" ] && [ "$hdf5lib" != "" ]; then
                     YES
                     cflags="$cflags $hdf5inc"
