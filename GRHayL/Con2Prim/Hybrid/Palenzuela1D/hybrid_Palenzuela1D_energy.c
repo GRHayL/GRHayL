@@ -35,9 +35,9 @@ compute_rho_P_eps_W_energy(
   compute_rho_W_from_x_and_conservatives(x, params, cons_undens, fparams, &prims->rho, &W);
 
   // Step 2: Compute eps
-  const double q = fparams->q;
-  const double s = fparams->s;
-  const double t = fparams->t;
+  const double q = params->q;
+  const double s = params->s;
+  const double t = params->t;
   // Eq. (43) of https://arxiv.org/pdf/1712.07538.pdf
   prims->eps = W - 1.0 + (1.0-W*W)*x/W + W*(q - s + t*t/(2*x*x) + s/(2*W*W) );
 

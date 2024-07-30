@@ -1,4 +1,5 @@
 #include "../../utils_Palenzuela1D.h"
+#include "ghl_roots.h"
 
 static ghl_error_codes_t ghl_newman_entropy(
       const ghl_parameters *restrict params,

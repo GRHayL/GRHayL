@@ -8,7 +8,7 @@
  * conservative variables, using the specific entropy to recover the temperature.
  *
  * Parameters : x       - Current guess for the root of f(x).
- *            : fparams - Parameters used to evaluate f(x) (see palenzuela.h).
+ *            : params  - Parameters used to evaluate f(x) (see palenzuela.h).
  *            : rho_ptr - Stores the result for rho.
  *            : P_ptr   - Stores the result for P.
  *            : eps_ptr - Stores the result for eps.
