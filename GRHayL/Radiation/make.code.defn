@@ -1,1 +1,1 @@
-SUBDIRS = NRPyLeakage
+SUBDIRS = NRPyLeakage M1
