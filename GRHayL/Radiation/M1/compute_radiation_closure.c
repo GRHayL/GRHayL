@@ -1,5 +1,7 @@
 #include "ghl.h"
 #include "ghl_m1.h"
+#include "ghl_roots.h"
+
 
 
 // This function computes Eq. (6) of Radice et al. (2022)
@@ -121,8 +123,8 @@ void ghl_radiation_apply_closure(
       ghl_radiation_pressure_tensor *P4DD){
   ghl_radiation_pressure_tensor P_thin;
   ghl_radiation_pressure_tensor P_thick;
-  ghl_radiation_compute_pressure_tensor_thin(metric, adm_aux, prims, E, F4->D, &P_thin);
-  ghl_radiation_compute_pressure_tensor_thick(metric, adm_aux, prims, E, F4->D, &P_thick);
+  ghl_radiation_compute_pressure_tensor_thin(metric, adm_aux, prims, E, F4, &P_thin);
+  ghl_radiation_compute_pressure_tensor_thick(metric, adm_aux, prims, E, F4, &P_thick);
 
   const double dthick = 3.*(1 - chi)/2.;
   const double dthin = 1. - dthick;
@@ -149,54 +151,6 @@ double minerbo(const double xi) {
 double thin(const double xi) {
     return 1.0;
 }
-
-typedef struct {
-  double J, H2;
-} fparams;
-
-// Function to rootfind in order to determine the closure
-static inline double froot(
-  const ghl_metric_quantities *metric,
-  const ghl_ADM_aux_quantities *adm_aux,
-  const ghl_primitive_quantities *prims,
-  const double E,
-  const ghl_radiation_flux_vector* F4,
-  const ghl_radiation_pressure_tensor *P4DD,
-  const double xi,
-  const ghl_m1_parameters* restrict params,
-  void *restrict fparams
-) {
-    double chi = minerbo(xi);
-    ghl_radiation_apply_closure(metric, adm_aux, prims, E, F4->D, chi, P4DD);
-
-    double rT_dd[4][4];
-    const double n4D[4] = {metric->lapse, 0, 0, 0};
-    assemble_rT(n4D, E, F4->D, P4DD, &rT_dd);
-
-    // u^{i} = v^{i} * u^{0}
-    const double u4U[4] = { prims->u0, prims->u0 * prims->vU[0], prims->u0 * prims->vU[1],
-                          prims->u0 * prims->vU[2] };
-    double proj4UD[4][4];
-    for (int a = 0; a < 4; a++){
-      for (int b = 0; b < 4; b++){
-        for (int c = 0; c < 4; c++){
-          proj4UD[a][b] += (a==b) - u4U[a] * u4U[c] * adm_aux->g4DD[b][c];
-        }
-      }
-    }
-
-    const double J = calc_J_from_rT(u4U, proj4UD, rT_dd);
-
-    ghl_radiation_flux_vector H4;
-    calc_H_from_rT(rT_dd, u4U, proj4UD, &H4);
-    double H2 = 0;
-    for (int a = 0; a < 4; a++){
-      for (int b = 0; b < 4; b++){
-        H2 += adm_aux->g4UU[a][b] * u4U[a] * u4U[b];
-      }
-    }
-  return xi*xi*params->J*params->J - params->H2;
-} // static inline double froot
 
 // Computes SE tensor in the fluid frame (Eq. (2) of Radice et al. (2022))
 void assemble_rT_fluid_frame(
@@ -229,7 +183,7 @@ void assemble_rT_lab_frame(
 // Computes radiation energy densities in fluid frame (Eq. (2) of Radice et al. (2022))
 double calc_J_from_rT(
         const double  *u4U,
-        const double **proj4UD, 
+        const ghl_radiation_metric_tensor *proj4, 
         const ghl_stress_energy *rT4) {
   double J = 0;
   for (int mu = 0; mu < 4; mu++){
@@ -242,13 +196,13 @@ double calc_J_from_rT(
 // Computes radiation flux in fluid frame (Eq. (2) of Radice et al. (2022))
 void* calc_H4D_from_rT(
         const double  *u4U,
-        const double **proj4UD, 
+        const ghl_radiation_metric_tensor *proj4, 
         const ghl_radiation_pressure_tensor *rT4,
         ghl_radiation_flux_vector *H4) {
   for (int a = 0; a < 4; a++){
     for (int b = 0; b < 4; b++) {
       for(int c = 0; c < 4; c++) {
-        H4->D[a] += proj4UD[b][a] * u4U[c] * rT4->DD[b][c];
+        H4->D[a] += proj4->UD[b][a] * u4U[c] * rT4->DD[b][c];
       }
     }
   }
@@ -257,41 +211,19 @@ void* calc_H4D_from_rT(
 // Computes radiation pressure tensor in fluid frame (Eq. (2) of Radice et al. (2022))
 void calc_K4DD_from_rT(
         const double  *u4U,
-        const double **proj4UD, 
+        const ghl_radiation_metric_tensor *proj4, 
         const ghl_radiation_pressure_tensor *rT4,
         ghl_radiation_pressure_tensor *K4) {
   for (int a = 0; a < 4; a++){
     for (int b = 0; b < 4; b++) {
       for(int c = 0; c < 4; c++) {
         for(int d = 0; d < 4; d++){
-          K4->DD[a][b] += proj4UD[c][a] * proj4UD[d][b] * rT4->DD[c][d];
+          K4->DD[a][b] += proj4->UD[c][a] * proj4->UD[d][b] * rT4->DD[c][d];
         }
       }
     }
   }
 } // calc_K4DD_from_rT
-
-int ghl_radiation_rootSolve_closure(
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      fparams_struct *restrict fparams
-      ) {
-  // Step 5: Set specific quantities for this routine (Eq. A7 of [1])
-  fparams_struct fparams;
-
-  // Step 6: Bracket x (Eq. A8 of [1])
-  double xlow = 0;
-  double xup  = 1;
-
-  // Step 8: Call the main function
-  roots_params rparams;
-  rparams.tol = 1e-15;
-  rparams.max_iters = 300;
-
-
-  ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
-  return 0;
-}
 
 // Eq (23)
 void assemble_fnu(
@@ -321,7 +253,7 @@ double compute_Gamma(
         for (int a = 0; a < 4; a++){
           f_dot_v_sum += F4->D[a] * v4U[a];
         }
-        f_dot_v = min(f_dot_v_sum, 1 - rad_eps);
+        f_dot_v = fmin(f_dot_v_sum, 1 - rad_eps);
         return W*(E/J)*(1 - f_dot_v);
     }
     else {
@@ -403,7 +335,7 @@ void apply_floor(
         ghl_radiation_flux_vector * F4,
         const double rad_E_floor,
         const double rad_eps) {
-    *E = max(rad_E_floor, *E);
+    *E = fmax(rad_E_floor, *E);
 
     double F2 = 0; // needs a better name
     for (int a = 0; a < 4; ++a) {
@@ -419,3 +351,74 @@ void apply_floor(
         }
     }
 }
+
+
+// Function to rootfind in order to determine the closure
+//
+static inline double froot(
+  const double xi,
+  void *restrict fparams_in) {
+  m1_root_params * fparams = (m1_root_params*) fparams_in;
+  const ghl_metric_quantities * metric = fparams->metric; //maybe try this
+  const ghl_ADM_aux_quantities *adm_aux = fparams->adm_aux;
+  const ghl_primitive_quantities *prims = fparams->prims;
+  const double E = fparams->E;
+  const ghl_radiation_flux_vector* F4 = fparams->F4;
+  const ghl_radiation_pressure_tensor *P4DD = fparams->P4DD;
+
+  double chi = minerbo(xi);
+  ghl_radiation_apply_closure(metric, adm_aux, prims, E, F4->D, chi, P4DD);
+
+  double rT_dd[4][4];
+  const double n4D[4] = {metric->lapse, 0, 0, 0};
+  assemble_rT(n4D, E, F4->D, P4DD, &rT_dd);
+
+  // u^{i} = v^{i} * u^{0}
+  const double u4U[4] = { prims->u0, prims->u0 * prims->vU[0], prims->u0 * prims->vU[1],
+                        prims->u0 * prims->vU[2] };
+  ghl_radiation_metric_tensor *proj4;
+  for (int a = 0; a < 4; a++){
+    for (int b = 0; b < 4; b++){
+      for (int c = 0; c < 4; c++){
+        proj4->UD[a][b] += (a==b) - u4U[a] * u4U[c] * adm_aux->g4DD[b][c];
+      }
+    }
+  }
+
+  const double J = calc_J_from_rT(u4U, proj4, rT_dd);
+
+  ghl_radiation_flux_vector H4;
+  calc_H4D_from_rT(rT_dd, u4U, proj4, &H4);
+  double H2 = 0;
+  for (int a = 0; a < 4; a++){
+    for (int b = 0; b < 4; b++){
+      H2 += adm_aux->g4UU[a][b] * u4U[a] * u4U[b];
+    }
+  }
+  return xi*xi*J*J - H2;
+} // static inline double froot
+
+
+
+int ghl_radiation_rootSolve_closure(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      m1_root_params *restrict fparams_in
+      ) {
+  // Step 5: Set specific quantities for this routine (Eq. A7 of [1])
+  m1_root_params * fparams = (m1_root_params*) fparams_in;
+
+  // Step 6: Bracket x (Eq. A8 of [1])
+  double xlow = 0;
+  double xup  = 1;
+
+  // Step 8: Call the main function
+  roots_params rparams;
+  rparams.tol = 1e-15;
+  rparams.max_iters = 300;
+
+
+  ghl_brent(froot, &fparams, xlow, xup, &rparams);
+  return 0;
+}
+
