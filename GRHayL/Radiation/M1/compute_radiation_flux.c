@@ -88,6 +88,31 @@ double calc_F_flux(
 }
 
 
+//rad_E_floor rad_eps is a param
+void apply_floor(
+        const ghl_ADM_aux_quantities *adm_aux,
+        double * E,
+        ghl_radiation_flux_vector * F4,
+        const double rad_E_floor,
+        const double rad_eps) {
+    *E = fmax(rad_E_floor, *E);
+
+    double F2 = 0; // needs a better name
+    for (int a = 0; a < 4; ++a) {
+        for (int b = 0; b < 4; ++b) {
+            F2 += adm_aux->g4UU[a][b] * F4->D[a] * F4->D[b];
+        }
+    }
+    const double lim = (*E)*(*E)*(1 - rad_eps);
+    if (F2 > lim) {
+        double fac = lim/F2;
+        for (int a = 0; a < 4; ++a) {
+            F4->D[a] *= fac;
+        }
+    }
+}
+
+
 
 
 // Eq (29) - 2
