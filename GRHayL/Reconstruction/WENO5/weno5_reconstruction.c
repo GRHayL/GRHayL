@@ -17,7 +17,7 @@ void ghl_weno5_reconstruction(
 
   double tmpr, tmpl;        
 
-  ghl_weno5_reconstruction_right_left_faces( U,    &tmpr, &tmpl);
+  ghl_weno5_reconstruction_right_left_faces(&U[0], &tmpr, &tmpl);
   *Ul = tmpr;
 
   ghl_weno5_reconstruction_right_left_faces(&U[1], &tmpr, &tmpl);
