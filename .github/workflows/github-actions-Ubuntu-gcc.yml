@@ -206,7 +206,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [PLM_reconstruction]
+        test-function: [PLM_reconstruction, WENO5_reconstruction]
         os: [ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 
