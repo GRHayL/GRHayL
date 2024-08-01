@@ -11,7 +11,6 @@ void ghl_radiation_compute_pressure_tensor_thick(
       const double E,
       const ghl_radiation_flux_vector* F4,
       ghl_radiation_pressure_tensor *P_thick) {
-  printf("Find P thick\n");
   // u^{i} = v^{i} * u^{0}
   const double u4U[4] = { prims->u0, prims->u0 * prims->vU[0], prims->u0 * prims->vU[1],
                           prims->u0 * prims->vU[2] };
@@ -57,7 +56,7 @@ void ghl_radiation_compute_pressure_tensor_thick(
       tH4D[mu] = F4->D[mu]/W + coef*W*v4D[mu]*((4.*W2 + 1.)*v_dot_F - 4.*W2*E);
   }
   for (int mu = 0; mu < 4; mu++){
-    for (int nu= mu; nu < 4; nu++) {
+    for (int nu= 0; nu < 4; nu++) { //TODO: start at nu=mu or nu=0
       P_thick->DD[mu][nu]  = Jo3 * (4. * W2 * v4D[mu]*v4D[nu] + adm_aux->g4DD[mu][nu] + n4D[mu]*n4D[nu]);
       P_thick->DD[mu][nu] += W*(tH4D[mu]*v4D[nu] + tH4D[nu]*v4D[mu]);
     }
@@ -74,7 +73,6 @@ void ghl_radiation_compute_pressure_tensor_thin(
     const double E,
     const ghl_radiation_flux_vector* F4,
     ghl_radiation_pressure_tensor *P_thin) {
-  printf("Find P thin\n");
   double F2 = 0;
   for(int mu = 0; mu < 4; mu++){
     for(int nu = 0; nu < 4; nu++){
@@ -83,7 +81,7 @@ void ghl_radiation_compute_pressure_tensor_thin(
   }
   double fac = (F2 > 0 ? E/F2 : 0);
   for (int a = 0; a < 4; a++) {
-    for (int b = a; b < 4; b++) {
+    for (int b = 0; b < 4; b++) { // TODO: b=a or b=0
       P_thin->DD[a][b] = fac * F4->D[a] * F4->D[b];
     }
   }
@@ -97,7 +95,6 @@ void ghl_radiation_apply_closure(
       const ghl_radiation_flux_vector* F4,
       const double chi,
       ghl_radiation_pressure_tensor *P4){
-  printf("Begin apply closure\n");
   ghl_radiation_pressure_tensor P_thin;
   ghl_radiation_pressure_tensor P_thick;
   ghl_radiation_compute_pressure_tensor_thin(metric, adm_aux, prims, E, F4, &P_thin);
@@ -107,7 +104,7 @@ void ghl_radiation_apply_closure(
   const double dthin = 1. - dthick;
 
   for (int mu =  0; mu < 4; mu++){
-    for (int nu = mu; nu < 4; nu++) {
+    for (int nu = 0; nu < 4; nu++) { //TODO: nu=mu or 0?
         P4->DD[mu][nu] = dthick*P_thick.DD[mu][nu] + dthin*P_thin.DD[mu][nu];
     }
   }
@@ -137,7 +134,7 @@ void assemble_rT_lab_frame(
         const ghl_radiation_pressure_tensor *P4,
         ghl_stress_energy *rT4DD) {
   for (int mu = 0; mu < 4; mu++){
-    for (int nu = mu; nu < 4; nu++) {
+    for (int nu = 0; nu < 4; nu++) { //TODO: is this nu=0 or nu=mi?
       rT4DD->T4[mu][nu] = E*n4D[mu]*n4D[nu] + F4->D[mu]*n4D[nu] + F4->D[nu]*n4D[mu] + P4->DD[mu][nu];
     }
   }
@@ -153,7 +150,7 @@ void assemble_rT_fluid_frame(
         const ghl_radiation_pressure_tensor *K4,
         ghl_stress_energy *rT4DD){
   for (int mu = 0; mu < 4; mu++){
-    for (int nu = mu; nu < 4; nu++) {
+    for (int nu = 0; nu < 4; nu++) { //TODO: is this nu=0 or nu=mi?
       rT4DD->T4[mu][nu] = J*u4D[mu]*u4D[nu] + H4->D[mu]*u4D[nu] + H4->D[nu]*u4D[mu] + K4->DD[mu][nu];
     }
   }
@@ -180,6 +177,7 @@ void calc_H4D_from_rT(
         const ghl_stress_energy *rT4DD,
         ghl_radiation_flux_vector *H4) {
   for (int a = 0; a < 4; a++){
+    H4->D[a] = 0.0;
     for (int b = 0; b < 4; b++) {
       for(int c = 0; c < 4; c++) {
         H4->D[a] += - proj4->UD[b][a] * u4U[c] * rT4DD->T4[b][c];
@@ -196,6 +194,7 @@ void calc_K4DD_from_rT(
         ghl_radiation_pressure_tensor *K4) {
   for (int a = 0; a < 4; a++){
     for (int b = 0; b < 4; b++) {
+      K4->DD[a][b] = 0.0;
       for(int c = 0; c < 4; c++) {
         for(int d = 0; d < 4; d++){
           K4->DD[a][b] += proj4->UD[c][a] * proj4->UD[d][b] * rT4DD->T4[c][d];
@@ -205,29 +204,6 @@ void calc_K4DD_from_rT(
   }
 } // calc_K4DD_from_rT
 
-//rad_E_floor rad_eps is a param
-void apply_floor(
-        const ghl_ADM_aux_quantities *adm_aux,
-        double * E,
-        ghl_radiation_flux_vector * F4,
-        const double rad_E_floor,
-        const double rad_eps) {
-    *E = fmax(rad_E_floor, *E);
-
-    double F2 = 0; // needs a better name
-    for (int a = 0; a < 4; ++a) {
-        for (int b = 0; b < 4; ++b) {
-            F2 += adm_aux->g4UU[a][b] * F4->D[a] * F4->D[b];
-        }
-    }
-    const double lim = (*E)*(*E)*(1 - rad_eps);
-    if (F2 > lim) {
-        double fac = lim/F2;
-        for (int a = 0; a < 4; ++a) {
-            F4->D[a] *= fac;
-        }
-    }
-}
 
 
 // Function to rootfind in order to determine the closure
@@ -236,7 +212,6 @@ static inline double froot(
   const double xi,
   void *restrict fparams_in) {
   m1_root_params * fparams = (m1_root_params*) fparams_in;
-  printf("enter froot\n");
   const ghl_metric_quantities * metric = fparams->metric; //maybe try this
   const ghl_ADM_aux_quantities *adm_aux = fparams->adm_aux;
   const ghl_primitive_quantities *prims = fparams->prims;
@@ -251,7 +226,6 @@ static inline double froot(
   assemble_rT_lab_frame(n4D, E, F4, P4, &rT4DD);
 
   // u^{i} = v^{i} * u^{0}
-  // printf("u0 = %f\n",prims->u0);
   const double u4U[4] = { prims->u0, prims->u0 * prims->vU[0], prims->u0 * prims->vU[1],
                         prims->u0 * prims->vU[2] };
 
@@ -262,43 +236,25 @@ static inline double froot(
     }
   }
   ghl_radiation_metric_tensor proj4;
+
   for (int a = 0; a < 4; a++){
     for (int b = 0; b < 4; b++){
-      proj4.UD[a][b] = (int)(a==b) - u4U[a] * u4D[b];
-      // printf("u4U=%f u4D=%f ",u4U[a] , u4D[b]);
+      proj4.UD[a][b] = (int)(a==b) + u4U[a] * u4D[b];
     }
-    // printf("\n");
   }
   const double J = calc_J_from_rT(u4U, &proj4, &rT4DD);
 
   ghl_radiation_flux_vector H4;
   calc_H4D_from_rT(u4U, &proj4, &rT4DD, &H4);
   double H2 = 0;
-  // for (int a = 0; a < 4; a++){
-  //   for (int b = 0; b < 4; b++){
-  //     // printf("%f ",proj4.UD[a][b]);
-  //     printf("%f ",adm_aux->g4DD[a][b]);
-  //   }
-  //   printf("\n");
-  // }
-
-  for (int a = 0; a < 4; a++){
-    printf("u4U[a] = %f ",u4U[a]);
-  }
-  printf("\n");
-
-  for (int a = 0; a < 4; a++){
-    printf("H4D=%f ",H4.D[a]);
-  }
-  printf("\n");
 
   for (int a = 0; a < 4; a++){
     for (int b = 0; b < 4; b++){
       H2 += adm_aux->g4UU[a][b] * H4.D[a] * H4.D[b];
     }
   }
-  printf("J = %f, H2 = %f\n",J,H2);
   double resid = xi*xi*J*J - H2;
+
   printf("xi = %f, residual = %f\n",xi,resid);
   return resid;
 } // static inline double froot
@@ -308,24 +264,22 @@ static inline double froot(
 int ghl_radiation_rootSolve_closure(
       m1_root_params *restrict fparams_in
       ) {
-  // Step 5: Set specific quantities for this routine (Eq. A7 of [1])
+  // Step 1: Set specific quantities for this routine
   m1_root_params * fparams = (m1_root_params*) fparams_in;
 
 
-  // Step 6: Bracket x (Eq. A8 of [1])
-  double xlow = 0;
-  double xup  = 1;
+  // Step 2: set min and max for xi
+  double xi_low = 0;
+  double xi_up  = 1;
 
-  // Step 8: Call the main function
+  // Step 3: Set root finding parameters
   roots_params rparams;
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
 
-  printf("301: begin Brent root solver\n");
-  ghl_brent(froot, fparams, xlow, xup, &rparams);
+  ghl_brent(froot, fparams, xi_low, xi_up, &rparams);
   double xi_root = rparams.root;
   printf("root = %f\n",xi_root);
-  printf("err key = %d\n",rparams.error_key);
   printf("residual = %f\n",rparams.residual);
   return 1;
 }
