@@ -6,7 +6,6 @@
 
 typedef struct {
   double DD[4][4];
-  double UD[4][4];
 } ghl_radiation_pressure_tensor; 
 
 typedef struct {
@@ -17,17 +16,23 @@ typedef struct {
   double D[4];
 } ghl_radiation_flux_vector; 
 
+// conservative flux for M1 equations
 typedef struct {
   double U[4];
-} ghl_radiation_source_vector; 
+} ghl_radiation_con_flux_vector; 
+
+// conservative source for M1 equaitons
+typedef struct {
+  double U[4];
+} ghl_radiation_con_source_vector; 
 
 typedef struct {
-  const ghl_metric_quantities *metric;
-  const ghl_ADM_aux_quantities *adm_aux;
-  const ghl_primitive_quantities *prims;
-  const double E;
-  const ghl_radiation_flux_vector* F4;
-  const ghl_radiation_pressure_tensor *P4DD;
+  ghl_metric_quantities *metric;
+  ghl_ADM_aux_quantities *adm_aux;
+  ghl_primitive_quantities *prims;
+  double E;
+  ghl_radiation_flux_vector* F4;
+  ghl_radiation_pressure_tensor *P4;
 } m1_root_params;
 
 
