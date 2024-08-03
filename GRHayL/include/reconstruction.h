@@ -92,6 +92,16 @@ void ghl_superbee_reconstruction(
       double *restrict Ur,
       double *restrict Ul);
 
+void ghl_weno5_reconstruction(
+      const double U[6],
+      double *restrict Ur,
+      double *restrict Ul);
+
+void ghl_weno5_reconstruction_right_left_faces(
+      const double U[5],
+      double *restrict Ur,
+      double *restrict Ul);
+
 #ifdef __cplusplus
 }
 #endif
