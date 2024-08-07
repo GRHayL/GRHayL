@@ -11,7 +11,7 @@ runs:
   steps:
     - uses: actions/setup-python@v4
       with:
-        python-version: 'pypy3.7'
+        python-version: 'pypy3.10'
     - if: runner.os == 'Linux' && inputs.compiler == 'gcc'
       run: |
         # use apt-spy2 to select closest apt mirror,
