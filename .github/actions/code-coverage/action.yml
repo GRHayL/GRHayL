@@ -49,4 +49,4 @@ runs:
 
     - uses: codecov/codecov-action@v4
       env:
-        token: codecov_token
+        CODECOV_TOKEN: codecov_token
