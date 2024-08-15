@@ -48,5 +48,5 @@ runs:
       shell: bash
 
     - uses: codecov/codecov-action@v4
-      with:
+      env:
         token: codecov_token
