@@ -5,6 +5,9 @@ inputs:
     description: compiler for test
     required: true
     default: 'gcc'
+  codecov_token:
+    description: GitHub token for CodeCov
+    required: true
 
 runs:
   using: "composite"
@@ -45,3 +48,5 @@ runs:
       shell: bash
 
     - uses: codecov/codecov-action@v4
+      with:
+        token: codecov_token
