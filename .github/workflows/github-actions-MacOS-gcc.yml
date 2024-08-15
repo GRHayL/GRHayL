@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         test-function: [conservs, primitives, induction_gauge_rhs, HLL_flux, reconstruction, flux_source]
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -37,14 +37,13 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   c2p-routines:
     strategy:
       fail-fast: false
       matrix:
         test-function: [apply_conservative_limits, con2prim_multi_method_hybrid, enforce_primitive_limits_and_compute_u0, compute_conservs_and_Tmunu]
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -69,14 +68,13 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   c2p-failure:
     strategy:
       fail-fast: false
       matrix:
         test-function: [hybrid_failure]
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -95,13 +93,12 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   tabulated-eos:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -122,13 +119,12 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   piecewise-polytrope-eos:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -147,13 +143,12 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   grhayl-core:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -175,14 +170,13 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   flux:
     strategy:
       fail-fast: false
       matrix:
         test-function: [hybrid_flux, tabulated_flux]
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -207,14 +201,13 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   reconstruction:
     strategy:
       fail-fast: false
       matrix:
         test-function: [PLM_reconstruction, WENO5_reconstruction]
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -238,14 +231,13 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   neutrinos:
     strategy:
       fail-fast: false
       matrix:
         test-function: [nrpyleakage_optically_thin_gas, nrpyleakage_constant_density_sphere, nrpyleakage_luminosities]
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -269,13 +261,12 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   con-to-prim-tabulated:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -313,13 +304,12 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   code-failure:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -345,7 +335,6 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   induction-interpolators:
     strategy:
@@ -353,7 +342,7 @@ jobs:
       matrix:
         metric: [BSSN, ADM]
         centering: [ccc, vvv]
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
         exclude:
           - metric: BSSN
             centering: vvv
@@ -382,13 +371,12 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   induction-flux:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -415,4 +403,3 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-          codecov_token: ${{ secrets.CODECOV_TOKEN }}

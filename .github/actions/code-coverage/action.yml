@@ -5,9 +5,6 @@ inputs:
     description: compiler for test
     required: true
     default: 'gcc'
-  codecov_token:
-    description: GitHub token for CodeCov
-    required: true
 
 runs:
   using: "composite"
@@ -47,6 +44,4 @@ runs:
         gcovr -r . --gcov-executable "llvm-cov-14 gcov" --keep
       shell: bash
 
-    - uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: codecov_token
+    - uses: codecov/codecov-action@v3
