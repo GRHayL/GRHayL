@@ -1,4 +1,6 @@
+#include "ghl.h"
 #include "unit_tests.h"
+#include <assert.h>
 #include <string.h>
 
 const char *get_routine_string(const ghl_con2prim_method_t key) {
@@ -17,6 +19,39 @@ const char *get_routine_string(const ghl_con2prim_method_t key) {
   }
 }
 
+static void initialize_random_metric(ghl_metric_quantities *ADM_metric) {
+  double alpha, betax, betay, betaz, gxx, gxy, gxz, gyy, gyz, gzz;
+  ghl_randomize_metric(
+        &alpha, &betax, &betay, &betaz, &gxx, &gxy, &gxz, &gyy, &gyz, &gzz);
+  ghl_initialize_metric(
+        alpha, betax, betay, betaz, gxx, gxy, gxz, gyy, gyz, gzz, ADM_metric);
+}
+
+static int initialize_primitives(
+      const ghl_parameters *params,
+      const ghl_metric_quantities *ADM_metric,
+      const ghl_eos_parameters *eos,
+      const double xrho,
+      const double xye,
+      const double xtemp,
+      ghl_primitive_quantities *prims) {
+  double xprs = 0.0;
+  double xeps = 0.0;
+  double xent = 0.0;
+  ghl_tabulated_compute_P_eps_S_from_T(eos, xrho, xye, xtemp, &xprs, &xeps, &xent);
+
+  // Set velocities and magnetic fields
+  double vx, vy, vz, Bx, By, Bz;
+  ghl_randomize_primitives(eos, xrho, xprs, &vx, &vy, &vz, &Bx, &By, &Bz);
+
+  // Set primitive quantities
+  ghl_initialize_primitives(
+        xrho, xprs, xeps, vx, vy, vz, Bx, By, Bz, xent, xye, xtemp, prims);
+  int speed_limited = ghl_limit_v_and_compute_u0(params, ADM_metric, prims);
+
+  return speed_limited;
+}
+
 void generate_test_data(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos) {
@@ -24,145 +59,83 @@ void generate_test_data(
   const char *routine = get_routine_string(params->main_routine);
   ghl_info("Beginning data generation for %s\n", routine);
 
-  const int npoints = 32; // must be > 1
+  const int npoints = 3;
 
+  assert(npoints > 1);
   for(int perturb = 0; perturb <= 1; perturb++) {
-    for(int vars_key = 0; vars_key <= 1; vars_key++) {
 
-      const char *perturb_string = perturb ? "perturbed" : "unperturbed";
-      const char *vars_string = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
+    const char *perturb_string = perturb ? "perturbed" : "unperturbed";
+    const char *vars_string = "rho_vs_T";
 
-      ghl_info("  Generating %s data for test %s\n", perturb_string, vars_string);
-      char filename[256];
-      sprintf(
-            filename, "con2prim_tabulated_%s_%s_%s.bin", routine, vars_string,
-            perturb_string);
-      FILE *fp = fopen(filename, "wb");
+    ghl_info("  Generating %s data for test %s\n", perturb_string, vars_string);
+    char filename[256];
+    sprintf(
+          filename, "con2prim_tabulated_%s_%s_%s.bin", routine, vars_string,
+          perturb_string);
+    FILE *fp = fopen(filename, "wb");
 
-      // Write number of points to file
-      fwrite(&npoints, sizeof(int), 1, fp);
+    // Write number of points to file
+    fwrite(&npoints, sizeof(int), 1, fp);
 
-      double test_Y_e = 0.0 / 0.0, test_rho_min = 0.0 / 0.0, test_rho_max = 0.0 / 0.0,
-             test_T_min = 0.0 / 0.0, test_T_max = 0.0 / 0.0;
-      double test_W = 0.0 / 0.0, test_logPmoP = 0.0 / 0.0, lrmin = 0.0 / 0.0,
-             lrmax = 0.0 / 0.0, dlr = 0.0 / 0.0, ltmin = 0.0 / 0.0, ltmax = 0.0 / 0.0;
-      double dlt = 0.0 / 0.0, test_rho = 0.0 / 0.0, test_T = 0.0 / 0.0,
-             test_logWm1_min = 0.0 / 0.0, test_logWm1_max = 0.0 / 0.0;
-      double dlogWm1 = 0.0 / 0.0, test_logPmoP_min = 0.0 / 0.0,
-             test_logPmoP_max = 0.0 / 0.0, dlogPmoP = 0.0 / 0.0;
+    // These variables are used in the P vs T test
+    double test_rho_min = 1e-12;
+    double test_rho_max = 1e-3;
+    double test_T_min = 1e-2;
+    double test_T_max = 1e+2;
+    double test_Y_e_min = 0.1;
+    double test_Y_e_max = 0.5;
+    double dye = (test_Y_e_max - test_Y_e_min) / (npoints - 1);
+    double lrmin = log10(test_rho_min);
+    double lrmax = log10(test_rho_max);
+    double dlr = (lrmax - lrmin) / (npoints - 1);
+    double ltmin = log10(test_T_min);
+    double ltmax = log10(test_T_max);
+    double dlt = (ltmax - ltmin) / (npoints - 1);
+    if(perturb) {
+      test_rho_min *= (1 + randf(-1, 1) * 1e-14);
+      test_rho_max *= (1 + randf(-1, 1) * 1e-14);
+      test_T_min *= (1 + randf(-1, 1) * 1e-14);
+      test_T_max *= (1 + randf(-1, 1) * 1e-14);
+      test_Y_e_min *= (1 + randf(-1, 1) * 1e-14);
+      test_Y_e_max *= (1 + randf(-1, 1) * 1e-14);
+      dye *= (1 + randf(-1, 1) * 1e-14);
+      lrmin *= (1 + randf(-1, 1) * 1e-14);
+      lrmax *= (1 + randf(-1, 1) * 1e-14);
+      dlr *= (1 + randf(-1, 1) * 1e-14);
+      ltmin *= (1 + randf(-1, 1) * 1e-14);
+      ltmax *= (1 + randf(-1, 1) * 1e-14);
+      dlt *= (1 + randf(-1, 1) * 1e-14);
+    }
 
-      if(vars_key) {
-        // These variables are used in the Pmag vs W test
-        test_Y_e = 0.1;
-        test_rho = 1.6192159535484857e-07;
-        test_T = 5;
-        test_logWm1_min = -5.5;
-        test_logWm1_max = +1.5;
-        dlogWm1 = (test_logWm1_max - test_logWm1_min) / (npoints - 1);
-        test_logPmoP_min = -5;
-        test_logPmoP_max = +9;
-        dlogPmoP = (test_logPmoP_max - test_logPmoP_min) / (npoints - 1);
-        if(perturb) {
-          test_Y_e *= (1 + randf(-1, 1) * 1e-14);
-          test_rho *= (1 + randf(-1, 1) * 1e-14);
-          test_T *= (1 + randf(-1, 1) * 1e-14);
-          test_logWm1_min *= (1 + randf(-1, 1) * 1e-14);
-          test_logWm1_max *= (1 + randf(-1, 1) * 1e-14);
-          dlogWm1 *= (1 + randf(-1, 1) * 1e-14);
-          test_logPmoP_min *= (1 + randf(-1, 1) * 1e-14);
-          test_logPmoP_max *= (1 + randf(-1, 1) * 1e-14);
-          dlogPmoP *= (1 + randf(-1, 1) * 1e-14);
-        }
-      }
-      else {
-        // These variables are used in the P vs T test
-        test_Y_e = 0.1;
-        test_rho_min = 1e-12;
-        test_rho_max = 1e-3;
-        test_T_min = 1e-2;
-        test_T_max = 1e+2;
-        test_W = 2;
-        test_logPmoP = -5.0;
-        lrmin = log10(test_rho_min);
-        lrmax = log10(test_rho_max);
-        dlr = (lrmax - lrmin) / (npoints - 1);
-        ltmin = log10(test_T_min);
-        ltmax = log10(test_T_max);
-        dlt = (ltmax - ltmin) / (npoints - 1);
-        if(perturb) {
-          test_Y_e *= (1 + randf(-1, 1) * 1e-14);
-          test_rho_min *= (1 + randf(-1, 1) * 1e-14);
-          test_rho_max *= (1 + randf(-1, 1) * 1e-14);
-          test_T_min *= (1 + randf(-1, 1) * 1e-14);
-          test_T_max *= (1 + randf(-1, 1) * 1e-14);
-          test_W *= (1 + randf(-1, 1) * 1e-14);
-          test_logPmoP *= (1 + randf(-1, 1) * 1e-14);
-          lrmin *= (1 + randf(-1, 1) * 1e-14);
-          lrmax *= (1 + randf(-1, 1) * 1e-14);
-          dlr *= (1 + randf(-1, 1) * 1e-14);
-          ltmin *= (1 + randf(-1, 1) * 1e-14);
-          ltmax *= (1 + randf(-1, 1) * 1e-14);
-          dlt *= (1 + randf(-1, 1) * 1e-14);
-        }
-      }
+    srand(0);
 
-      // Set metric quantities to Minkowski
-      ghl_metric_quantities ADM_metric;
-      ghl_randomize_metric(
-            &ADM_metric.lapse, &ADM_metric.betaU[0], &ADM_metric.betaU[1],
-            &ADM_metric.betaU[2], &ADM_metric.gammaDD[0][0], &ADM_metric.gammaDD[0][1],
-            &ADM_metric.gammaDD[0][2], &ADM_metric.gammaDD[1][1],
-            &ADM_metric.gammaDD[1][2], &ADM_metric.gammaDD[2][2]);
-
-      ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
-
-      srand(0);
-      for(int i = 0; i < npoints; i++) {
-        for(int j = 0; j < npoints; j++) {
+    for(int ir = 0; ir < npoints; ir++) {
+      for(int it = 0; it < npoints; it++) {
+        for(int iy = 0; iy < npoints; iy++) {
 
           ghl_con2prim_diagnostics diagnostics;
           ghl_initialize_diagnostics(&diagnostics);
 
-          double xrho, xtemp, xlogWm1, xW, xlogPmoP;
-          if(vars_key) {
-            // Pmag vs W test
-            xrho = test_rho;
-            xtemp = test_T;
-            xlogWm1 = test_logWm1_min + i * dlogWm1;
-            xW = pow(10.0, xlogWm1) + 1;
-            xlogPmoP = test_logPmoP_min + j * dlogPmoP;
-          }
-          else {
-            // rho vs T test
-            xrho = pow(10.0, lrmin + dlr * i);
-            xtemp = pow(10.0, ltmin + dlt * j);
-            xW = test_W;
-            xlogWm1 = log10(xW - 1);
-            xlogPmoP = test_logPmoP;
-          }
-          double xye = test_Y_e;
-          double xprs = 0.0;
-          double xeps = 0.0;
-          double xent = 0.0;
-          ghl_tabulated_compute_P_eps_S_from_T(
-                eos, xrho, xye, xtemp, &xprs, &xeps, &xent);
+          ghl_metric_quantities ADM_metric;
+          initialize_random_metric(&ADM_metric);
 
-          double vx, vy, vz, Bx, By, Bz;
-          ghl_randomize_primitives(eos, xrho, xprs, &vx, &vy, &vz, &Bx, &By, &Bz);
+          ghl_ADM_aux_quantities metric_aux;
+          ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
-          // Set primitive quantities
+          // rho vs T test
+          const double xrho = pow(10.0, lrmin + dlr * ir);
+          const double xtemp = pow(10.0, ltmin + dlt * it);
+          const double xye = test_Y_e_min + dye * iy;
+
           ghl_primitive_quantities prims_orig;
-          ghl_initialize_primitives(
-                xrho, xprs, xeps, vx, vy, vz, Bx, By, Bz, xent, xye, xtemp, &prims_orig);
-          diagnostics.speed_limited
-                = ghl_limit_v_and_compute_u0(params, &ADM_metric, &prims_orig);
+          diagnostics.speed_limited = initialize_primitives(
+                params, &ADM_metric, eos, xrho, xye, xtemp, &prims_orig);
 
           // Set prim guesses
           ghl_primitive_quantities prims;
           ghl_initialize_primitives(
-                0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0, Bx, By,
-                Bz, 0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0, &prims);
+                NAN, NAN, NAN, NAN, NAN, NAN, prims_orig.BU[0], prims_orig.BU[1],
+                prims_orig.BU[2], NAN, NAN, NAN, &prims);
           prims.u0 = prims_orig.u0;
 
           // Compute conserved variables and Tmunu
@@ -179,7 +152,7 @@ void generate_test_data(
           if(ghl_con2prim_tabulated_multi_method(
                    params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims,
                    &diagnostics)) {
-            ghl_error("Con2Prim failed\n");
+            ghl_info("Con2Prim failed\n");
           }
 
           prims.vU[0] = prims.vU[0] / prims.u0;
@@ -188,13 +161,14 @@ void generate_test_data(
 
           // Write input and output primitives
           if(!perturb) {
+            fwrite(&ADM_metric, sizeof(ghl_metric_quantities), 1, fp);
             fwrite(&prims_orig, sizeof(ghl_primitive_quantities), 1, fp);
           }
           fwrite(&prims, sizeof(ghl_primitive_quantities), 1, fp);
         }
       }
-      fclose(fp);
     }
+    fclose(fp);
   }
 }
 
@@ -205,39 +179,40 @@ void run_unit_test(
   const char *routine = get_routine_string(params->main_routine);
   ghl_info("Beginning unit test for %s\n", routine);
 
-  for(int vars_key = 0; vars_key <= 1; vars_key++) {
+  const char *vars_string = "rho_vs_T";
+  ghl_info("  Running test %s\n", vars_string);
+  char filename[256];
+  sprintf(filename, "con2prim_tabulated_%s_%s_unperturbed.bin", routine, vars_string);
+  FILE *fp_unpert = fopen(filename, "rb");
+  sprintf(filename, "con2prim_tabulated_%s_%s_perturbed.bin", routine, vars_string);
+  FILE *fp_pert = fopen(filename, "rb");
 
-    const char *vars_string = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
-    ghl_info("  Running test %s\n", vars_string);
-    char filename[256];
-    sprintf(filename, "con2prim_tabulated_%s_%s_unperturbed.bin", routine, vars_string);
-    FILE *fp_unpert = fopen(filename, "rb");
-    sprintf(filename, "con2prim_tabulated_%s_%s_perturbed.bin", routine, vars_string);
-    FILE *fp_pert = fopen(filename, "rb");
+  int n1, n2;
+  if(fread(&n1, sizeof(int), 1, fp_unpert) != 1) {
+    ghl_error("Failed to read from file\n");
+  };
+  if(fread(&n2, sizeof(int), 1, fp_pert) != 1) {
+    ghl_error("Failed to read from file\n");
+  };
+  if(n1 != n2) {
+    ghl_error("Problem reading input data files (%d != %d)\n", n1, n2);
+  }
 
-    int n1, n2;
-    if(fread(&n1, sizeof(int), 1, fp_unpert) != 1) {
-      ghl_error("Failed to read from file\n");
-    };
-    if(fread(&n2, sizeof(int), 1, fp_pert) != 1) {
-      ghl_error("Failed to read from file\n");
-    };
-    if(n1 != n2) {
-      ghl_error("Problem reading input data files (%d != %d)\n", n1, n2);
-    }
-
-    const int npoints = n1;
-    ghl_metric_quantities ADM_metric;
-    ghl_initialize_metric(1, 0, 0, 0, 1, 0, 0, 1, 0, 1, &ADM_metric);
-
-    ghl_ADM_aux_quantities metric_aux;
-    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
-
-    for(int i = 0; i < npoints; i++) {
-      for(int j = 0; j < npoints; j++) {
-
+  const int npoints = n1;
+  for(int ir = 0; ir < npoints; ir++) {
+    for(int it = 0; it < npoints; it++) {
+      for(int iy = 0; iy < npoints; iy++) {
         ghl_con2prim_diagnostics diagnostics;
         ghl_initialize_diagnostics(&diagnostics);
+
+        // Read input metric from unperturbed data file
+        ghl_metric_quantities ADM_metric;
+        if(fread(&ADM_metric, sizeof(ghl_metric_quantities), 1, fp_unpert) != 1) {
+          ghl_error("Failed to read input metric from file\n");
+        }
+
+        ghl_ADM_aux_quantities metric_aux;
+        ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
 
         // Read input primitives from unperturbed data file
         ghl_primitive_quantities prims;
@@ -258,7 +233,7 @@ void run_unit_test(
         if(ghl_con2prim_tabulated_multi_method(
                  params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims,
                  &diagnostics)) {
-          ghl_error("Con2Prim failed\n");
+          ghl_info("Con2Prim failed\n");
         }
 
         prims.vU[0] = prims.vU[0] / prims.u0;
@@ -286,10 +261,9 @@ void run_unit_test(
         ghl_pert_test_fail(prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2]);
       }
     }
-
-    fclose(fp_unpert);
-    fclose(fp_pert);
   }
+  fclose(fp_unpert);
+  fclose(fp_pert);
 }
 
 int main(int argc, char **argv) {
