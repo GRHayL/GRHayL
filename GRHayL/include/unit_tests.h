@@ -303,15 +303,15 @@ void ghl_initial_random_data(
 
 void ghl_randomize_metric(
       double *restrict lapse,
+      double *restrict betax,
+      double *restrict betay,
+      double *restrict betaz,
       double *restrict gxx_ptr,
       double *restrict gxy_ptr,
       double *restrict gxz_ptr,
       double *restrict gyy_ptr,
       double *restrict gyz_ptr,
-      double *restrict gzz_ptr,
-      double *restrict betax,
-      double *restrict betay,
-      double *restrict betaz);
+      double *restrict gzz_ptr);
 
 void ghl_randomize_primitives(
       const ghl_eos_parameters *restrict eos,
