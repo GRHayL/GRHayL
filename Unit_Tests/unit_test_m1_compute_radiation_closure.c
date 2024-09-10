@@ -45,6 +45,8 @@ void test_optically_thick_advection(){
   const double Gamma_ppoly[1] = {2.0};
   const double k_ppoly0 = 1.0;
 
+  double vx = 0.87;
+
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
   ghl_parameters params;
@@ -62,7 +64,7 @@ void test_optically_thick_advection(){
   // Ideal fluid P = (Gamma - 1) rho eps
   ghl_primitive_quantities prims;
   ghl_initialize_primitives(0.0, 0.0, 0.0, // rho p eps
-                            0.87, 0.0, 0.0, // vx vy vz
+                            vx , 0.0, 0.0, // vx vy vz
                             0.0, 0.0, 0.0, // Bx By Bz
                             0.0, 0.0, 0.0,   // ent Ye T
                         &prims);
@@ -70,14 +72,16 @@ void test_optically_thick_advection(){
   //This applies limits on the primitives
   ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
 
-
-  double E = 3.0;
-
   ghl_radiation_flux_vector F4;
-  F4.D[0] = 0.5*E;
-  F4.D[1] = -0.5*E;
+  double W = 1.0/sqrt(1 - vx*vx);
+  double J = 3.0;
+  double E = 4./3 *J*W*W - J/3;
+  F4.D[0] = 0.0;
+  F4.D[1] = 4./3*J*W*W*vx;
   F4.D[2] = 0.0;
   F4.D[3] = 0.0;
+   
+  
 
   ghl_radiation_pressure_tensor P4;
   for (int a = 0; a < 4; a++){
@@ -157,7 +161,7 @@ void test_optically_thin_advection(){
 
   ghl_radiation_flux_vector F4;
   F4.D[0] = 0.0;
-  F4.D[1] = 0.99999999*E; //When set exactly to E, the root is found but not swapped
+  F4.D[1] = 0.999999999*E; //When set exactly to E, the root is found but not swapped
   F4.D[2] = 0.0;
   F4.D[3] = 0.0;
 
