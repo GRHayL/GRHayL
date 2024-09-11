@@ -1,4 +1,4 @@
-#include "induction.h"
+#include "ghl_induction.h"
 
 /* Function      : ghl_HLL_flux_with_B()
  * Description   : compute RHS for A_i, excluding gauge contributions; i.e., we

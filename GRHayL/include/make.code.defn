@@ -1,18 +1,18 @@
 # This is GRHayL syntax to install these headers to <prefix>/grhayl/include
 # whenever `make install` is run.
-#! install_headers = atmosphere.h
-#!                   con2prim.h
-#!                   flux_source.h
+#! install_headers = ghl_atmosphere.h
+#!                   ghl_con2prim.h
+#!                   ghl_flux_source.h
 #!                   ghl.h
 #!                   ghl_eos_functions.h
 #!                   ghl_eos_functions_declaration.h
 #!                   ghl_io.h
 #!                   ghl_debug.h
 #!                   ghl_metric_helpers.h
-#!                   induction.h
-#!                   neutrinos.h
+#!                   ghl_induction.h
+#!                   ghl_radiation.h
 #!                   nrpyeos_hybrid.h
 #!                   nrpyeos_tabulated.h
 #!                   nrpyleakage.h
-#!                   reconstruction.h
-#!                   unit_tests.h
+#!                   ghl_reconstruction.h
+#!                   ghl_unit_tests.h

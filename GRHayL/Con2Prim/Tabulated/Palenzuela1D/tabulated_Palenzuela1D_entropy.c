@@ -73,7 +73,7 @@ compute_rho_P_eps_T_W_entropy(
  * entropy to recover the temperature. See file ghl_tabulated_Palenzuela1D.c for
  * further details.
  */
-int ghl_tabulated_Palenzuela1D_entropy(
+ghl_error_codes_t ghl_tabulated_Palenzuela1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,

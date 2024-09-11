@@ -1,4 +1,4 @@
-#include "reconstruction.h"
+#include "ghl_reconstruction.h"
 
 void ghl_compute_ftilde(
       const ghl_parameters *restrict params,

@@ -61,7 +61,7 @@ TODO: needs remaining error codes
 
 **********************************************************************************/
 
-int ghl_hybrid_Noble1D_entropy2(
+ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -82,7 +82,7 @@ int ghl_hybrid_Noble1D_entropy2(
 
   gnr_out[0] = rho0;
 
-  const int retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z_last, gnr_out, ghl_validate_1D_entropy, ghl_func_rho2);
+  const ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, Z_last, gnr_out, ghl_validate_1D_entropy, ghl_func_rho2);
 
   rho0 = gnr_out[0];
 
@@ -117,16 +117,16 @@ int ghl_hybrid_Noble1D_entropy2(
   prims->rho = rho0;
 
   if(prims->rho <= 0.0) {
-    return 7;
+    return ghl_error_neg_rho;
   }
 
-  ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
+  diagnostics->speed_limited = ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
   if(prims->press <= 0.0) {
-    return 6;
+    return ghl_error_neg_pressure;
   }
 
   /* Done! */
   diagnostics->n_iter = harm_aux.n_iter;
   diagnostics->which_routine = Noble1D_entropy2;
-  return 0;
+  return ghl_success;
 }

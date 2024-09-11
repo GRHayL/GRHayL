@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
 
@@ -177,7 +177,10 @@ int main(int argc, char **argv) {
                       &prims);
 
     //This applies limits on the primitives
-    const int speed_limited __attribute__((unused)) = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims);
+    bool speed_limited;
+    ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &speed_limited);
+    if(error)
+      ghl_read_error_codes(error);
 
     ghl_primitive_quantities prims_trusted, prims_pert;
     ghl_initialize_primitives(
@@ -236,7 +239,10 @@ int main(int argc, char **argv) {
         &prims);
 
   params.psi6threshold = 0;
-  int speed_limited __attribute__((unused)) = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims);
+  bool speed_limited;
+  ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &speed_limited);
+  if(error)
+    ghl_read_error_codes(error);
   if( relative_error(1e5*P_cold, prims.press) > 1e-20 )
     ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e5*P_cold);
@@ -246,7 +252,9 @@ int main(int argc, char **argv) {
   prims.rho   = 12.0*eos.rho_atm;
   ghl_hybrid_compute_P_cold(&eos, prims.rho, &P_cold);
   prims.press = 1e3*P_cold;
-  speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims);
+  error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &speed_limited);
+  if(error)
+    ghl_read_error_codes(error);
   if( relative_error(1e2*P_cold, prims.press) > 1e-20 )
     ghl_error("Pressure reset failure: returned value %e vs expected %e\n",
                  prims.press, 1e2*P_cold);
@@ -261,12 +269,16 @@ int main(int argc, char **argv) {
       Gamma_th, &simple_eos);
   prims.rho = 0;
   prims.press = 0;
-  speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &simple_eos, &ADM_metric, &prims);
+  error = ghl_enforce_primitive_limits_and_compute_u0(&params, &simple_eos, &ADM_metric, &prims, &speed_limited);
+  if(error)
+    ghl_read_error_codes(error);
   if(fabs(prims.rho - rho_b_min) > 1e-50 || fabs(prims.press - press_min) > 1e-50)
     ghl_error("Minimum test failed for simple eos: %e %e\n", prims.rho, prims.press);
   prims.rho = 1e10;
   prims.press = 1e10;
-  speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &simple_eos, &ADM_metric, &prims);
+  error = ghl_enforce_primitive_limits_and_compute_u0(&params, &simple_eos, &ADM_metric, &prims, &speed_limited);
+  if(error)
+    ghl_read_error_codes(error);
   if(fabs(prims.rho - rho_max) > 1e-50 || fabs(prims.press - press_max) > 1e-50)
     ghl_error("Maximum test failed for simple eos: %e %e\n", prims.rho, prims.press);
 

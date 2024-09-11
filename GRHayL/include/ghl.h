@@ -30,6 +30,28 @@
 #endif
 
 typedef enum {
+  ghl_success,
+  ghl_error_unknown_eos_type,
+  ghl_error_invalid_c2p_key,
+  ghl_error_neg_rho,
+  ghl_error_neg_pressure,
+  ghl_error_neg_vsq,
+  ghl_error_c2p_max_iter,
+  ghl_error_c2p_singular,
+  ghl_error_root_not_bracketed,
+  ghl_error_table_max_rho,
+  ghl_error_table_min_rho,
+  ghl_error_table_max_ye,
+  ghl_error_table_min_ye,
+  ghl_error_table_max_T,
+  ghl_error_table_min_T,
+  ghl_error_exceed_table_vars,
+  ghl_error_table_neg_energy,
+  ghl_error_table_bisection,
+  ghl_error_u0_singular
+} ghl_error_codes_t;
+
+typedef enum {
   None = -1,
   Noble2D,
   Noble1D,
@@ -441,10 +463,11 @@ void ghl_return_stress_energy(
       double *restrict Tyz,
       double *restrict Tzz);
 
-int ghl_limit_v_and_compute_u0(
+ghl_error_codes_t ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,
-      ghl_primitive_quantities *restrict prims);
+      ghl_primitive_quantities *restrict prims,
+      bool *restrict speed_limited);
 
 void ghl_compute_TDNmunu(
       const ghl_metric_quantities *restrict ADM_metric,
@@ -464,6 +487,9 @@ void ghl_compute_smallb_and_b2(
       const double uDN[4],
       double smallb[4],
       double *restrict smallb2);
+
+void ghl_read_error_codes(
+      const ghl_error_codes_t error);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 #include "stdlib.h"
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 void ghl_randomize_metric(
       double *restrict lapse,

@@ -1,11 +1,12 @@
 // clang-format off
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 void read_table_error_test(int test_key);
 
 int main(int argc, char **argv) {
   const int test_key    = atoi(argv[1]);
 
+  ghl_error_codes_t error = ghl_success;
 
   int backup_routine[3] = {None,None,None};
   bool evolve_entropy = false;
@@ -23,6 +24,7 @@ int main(int argc, char **argv) {
   double Gamma_ppoly[1] = {2.0};
   double k_ppoly0 = 1.0;
   double Lorenz_damping_factor = 0.0;
+  bool speed_limited = false;
 
   /*
      Hybrid EOS setup:
@@ -89,17 +91,19 @@ int main(int argc, char **argv) {
      ghl_con2prim_select_method:
        5: invalid C2P key
   */
-   int speed_limited = 0;
   switch (test_key) {
     case 4:
       prims.vU[0] = 0.0/0.0;
       prims.vU[1] = 0.0/0.0;
       prims.vU[2] = 0.0/0.0;
-      speed_limited = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims);
+      error = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims, &speed_limited);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 5:
-      if(ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics) < 0)
-        ghl_Error(100, "Unsupported c2p key (%d) with hybrid EOS.\n", -5);
+      error = ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      if( error )
+        ghl_read_error_codes(error);
       break;
   }
 /*
@@ -175,54 +179,72 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   const int nvars = 30;
   const int keys[1];
   double outvars[1];
-  NRPyEOS_error_report report;
-  int error;
 
   switch (test_key) {
     case 12:
-      error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(&tab_eos, nvars, rho, Y_e, T, keys, outvars, &report);
+      error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(&tab_eos, nvars, rho, Y_e, T, keys, outvars);
       if( error )
-        ghl_error(report.message, error);
+        ghl_read_error_codes(error);
       break;
     case 13:
       rho = rho_b_min-1.0;
-      NRPyEOS_P_and_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps);
+      error = NRPyEOS_P_and_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 14:
       rho = rho_b_max+1e2;
-      NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &S, &cs2);
+      error = NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &S, &cs2);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 15:
       Y_e = Y_e_min-1.0;
-      NRPyEOS_P_eps_and_S_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &S);
+      error = NRPyEOS_P_eps_and_S_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &S);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 16:
       Y_e = Y_e_max+1e2;
-      NRPyEOS_P_eps_and_cs2_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &cs2);
+      error = NRPyEOS_P_eps_and_cs2_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &cs2);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 17:
       T = T_min-1.0;
-      NRPyEOS_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &eps);
+      error = NRPyEOS_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &eps);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 18:
       T = T_max+1e5;
-      NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &depsdT);
+      error = NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &depsdT);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 19:
       rho = rho_b_min-1.0;
-      NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &muhat, &mu_e, &mu_p, &mu_n);
+      error = NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &muhat, &mu_e, &mu_p, &mu_n);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 20:
       rho = rho_b_min-1.0;
-      NRPyEOS_P_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P);
+      error = NRPyEOS_P_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 21:
       rho = rho_b_min-1.0;
-      NRPyEOS_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &eps);
+      error = NRPyEOS_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &eps);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 22:
       rho = rho_b_min-1.0;
-      NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &muhat, &mu_e, &mu_p, &mu_n, &X_n, &X_p);
+      error = NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &muhat, &mu_e, &mu_p, &mu_n, &X_n, &X_p);
+      if( error )
+        ghl_read_error_codes(error);
       break;
   }
 
@@ -243,41 +265,57 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   switch (test_key) {
     case 23:
       error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(&tab_eos, nvars, tab_eos.root_finding_precision,
-                                                               rho, Y_e, eps, NRPyEOS_eps_key, keys, outvars, &T, &report);
+                                                               rho, Y_e, eps, NRPyEOS_eps_key, keys, outvars, &T);
       if( error )
-        ghl_error(report.message, error);
+        ghl_read_error_codes(error);
       break;
     case 24:
       rho = rho_b_min-1.0;
-      NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &S, &depsdT, &T);
+      error = NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &S, &depsdT, &T);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 25:
       rho = rho_b_max+1e2;
-      NRPyEOS_P_and_T_from_rho_Ye_S(&tab_eos, rho, Y_e, S, &P, &T);
+      error = NRPyEOS_P_and_T_from_rho_Ye_S(&tab_eos, rho, Y_e, S, &P, &T);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 26:
       Y_e = Y_e_min-1.0;
-      NRPyEOS_P_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &T);
+      error = NRPyEOS_P_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &T);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 27:
       Y_e = Y_e_max+1e2;
-      NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &cs2, &T);
+      error = NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &cs2, &T);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 28:
       rho = rho_b_min-1.0;
-      NRPyEOS_P_eps_and_T_from_rho_Ye_S(&tab_eos, rho, Y_e, S, &P, &eps, &T);
+      error = NRPyEOS_P_eps_and_T_from_rho_Ye_S(&tab_eos, rho, Y_e, S, &P, &eps, &T);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 29:
       rho = rho_b_min-1.0;
-      NRPyEOS_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &T);
+      error = NRPyEOS_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &T);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 30:
       rho = rho_b_min-1.0;
-      NRPyEOS_eps_S_and_T_from_rho_Ye_P(&tab_eos, rho, Y_e, P, &eps, &S, &T);
+      error = NRPyEOS_eps_S_and_T_from_rho_Ye_P(&tab_eos, rho, Y_e, P, &eps, &S, &T);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 31:
       rho = rho_b_min-1.0;
-      NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(&tab_eos, rho, Y_e, P, &eps, &cs2, &T);
+      error = NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(&tab_eos, rho, Y_e, P, &eps, &cs2, &T);
+      if( error )
+        ghl_read_error_codes(error);
       break;
   }
 
@@ -290,8 +328,9 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   
   switch (test_key) {
     case 32:
-      if(ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics) < 0)
-        ghl_Error(100, "Unsupported c2p key (%d) with hybrid EOS.\n", -10);
+      error = ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      if( error )
+        ghl_read_error_codes(error);
       break;
     case 33:
       printf("%s\n", ghl_get_con2prim_routine_name(-5));
@@ -398,6 +437,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
   }
 
+  printf("Code failure test has failed for code test %d\n", test_key);
   printf("We shouldn't be here, so I'll get rid of some compilation warnings :)\n"
          "%e %d %e %e %e %e\n", Fermi_Dirac_integral, speed_limited, rho, Y_e, eps, T);
   return 0;

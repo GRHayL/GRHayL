@@ -1,4 +1,4 @@
-#include "reconstruction.h"
+#include "ghl_reconstruction.h"
 
 /* Function     : ghl_minmod()
  * Description  : evaluates the minmod function, defined as

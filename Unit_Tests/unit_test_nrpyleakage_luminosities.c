@@ -1,5 +1,4 @@
-#include "neutrinos.h"
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 void
 generate_test_data(const ghl_eos_parameters *restrict eos) {

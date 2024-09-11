@@ -3,7 +3,7 @@
 // Author(s)  : Leo Werneck & Samuel Cupp
 // Description: In this file we provide an extensive unit test of
 //              the Con2Prim gem.
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 
 int main(int argc, char **argv) {
@@ -138,7 +138,11 @@ int main(int argc, char **argv) {
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
 
-      const int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims);
+      bool speed_limit;
+      ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
+            &params, &ADM_metric, &prims, &speed_limit);
+      if(error)
+        ghl_read_error_codes(error);
 
       // Compute conservatives based on these primitives
       ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);

@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
 
@@ -214,10 +214,14 @@ int main(int argc, char **argv) {
               poison, poison, poison, // entropy, Y_e, temp
               &prims_l);
 
-      int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
-            &params, &metric_face, &prims_r);
-      speed_limit = ghl_limit_v_and_compute_u0(
-            &params, &metric_face, &prims_l);
+        bool speed_limited;
+        ghl_error_codes_t __attribute__((unused)) error;
+        error = ghl_limit_v_and_compute_u0(&params, &metric_face, &prims_r, &speed_limited);
+        if(error)
+          ghl_read_error_codes(error);
+        error = ghl_limit_v_and_compute_u0(&params, &metric_face, &prims_l, &speed_limited);
+        if(error)
+          ghl_read_error_codes(error);
 
         prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
         prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);

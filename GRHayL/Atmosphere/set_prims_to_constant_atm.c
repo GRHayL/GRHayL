@@ -1,4 +1,4 @@
-#include "con2prim.h"
+#include "ghl_atmosphere.h"
 
 /*
  * Function      : ghl_set_prims_to_constant_atm()

@@ -31,7 +31,7 @@ void ghl_Warn_Error(
   va_end(args);
 
   switch (exit_code) {
-  case ghl_success:
+  case ghl_io_success:
     return;
     break;
   case ghl_error_abort:

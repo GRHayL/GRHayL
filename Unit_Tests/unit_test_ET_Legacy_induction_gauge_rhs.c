@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
   FILE* infile = fopen_with_check("ET_Legacy_induction_gauge_rhs_input.bin","rb");

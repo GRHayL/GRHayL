@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 void ghl_test_compute_A_flux_with_Btilde(
       const int dirlength,

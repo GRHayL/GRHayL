@@ -1,4 +1,4 @@
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
 /*
  * Function     : ghl_limit_v_and_compute_u0()
@@ -6,12 +6,12 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_limit_v_and_compute_u0
 */
 
-int ghl_limit_v_and_compute_u0(
+ghl_error_codes_t ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,
-      ghl_primitive_quantities *restrict prims) {
+      ghl_primitive_quantities *restrict prims,
+      bool *restrict speed_limited) {
 
-  int speed_limited = 0;
   // Derivation of first equation:
   // \gamma_{ij} (v^i + \beta^i)(v^j + \beta^j)/(\alpha)^2
   //   = \gamma_{ij} 1/(u^0)^2 ( \gamma^{ik} u_k \gamma^{jl} u_l /(\alpha)^2 <- Using Eq. 53 of arXiv:astro-ph/0503420
@@ -29,7 +29,7 @@ int ghl_limit_v_and_compute_u0(
     prims->vU[1] = utU[1]*correction_fac - ADM_metric->betaU[1];
     prims->vU[2] = utU[2]*correction_fac - ADM_metric->betaU[2];
     one_minus_one_over_alpha_u0_squared = one_minus_one_over_W_max_squared;
-    speed_limited = 1;
+    *speed_limited |= true;
   }
 
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
@@ -38,16 +38,8 @@ int ghl_limit_v_and_compute_u0(
   //u0_out          = (alpha_u0_minus_one + 1.0)*lapseinv;
   const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
   prims->u0 = alpha_u0*ADM_metric->lapseinv;
-  if(isnan(prims->u0)) {
-    ghl_error("*********************************************\n"
-                 "Found nan while computing u^{0}\nMetric: %e %e %e %e %e %e\n"
-                 "Lapse/shift: %e (=1/%e) / %e %e %e\nVelocities : %e %e %e\n"
-                 "*********************************************\n",
-                 ADM_metric->gammaDD[0][0], ADM_metric->gammaDD[0][1], ADM_metric->gammaDD[0][2],
-                 ADM_metric->gammaDD[1][1], ADM_metric->gammaDD[1][2], ADM_metric->gammaDD[2][2],
-                 ADM_metric->lapse, ADM_metric->lapseinv,
-                 ADM_metric->betaU[0], ADM_metric->betaU[1], ADM_metric->betaU[2],
-                 prims->vU[0], prims->vU[1], prims->vU[2]);
-  }
-  return speed_limited;
+  if(isnan(prims->u0))
+    return ghl_error_u0_singular;
+
+  return ghl_success;
 }

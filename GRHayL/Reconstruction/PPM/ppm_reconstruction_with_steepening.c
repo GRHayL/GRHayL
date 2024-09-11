@@ -1,4 +1,4 @@
-#include "reconstruction.h"
+#include "ghl_reconstruction.h"
 
 void ghl_ppm_reconstruction_with_steepening(
       const ghl_parameters *restrict params,

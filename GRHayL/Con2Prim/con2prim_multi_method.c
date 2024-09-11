@@ -1,6 +1,6 @@
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
-int ghl_con2prim_hybrid_select_method(
+ghl_error_codes_t ghl_con2prim_hybrid_select_method(
       const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -30,11 +30,11 @@ int ghl_con2prim_hybrid_select_method(
     case Palenzuela1D_entropy:
       return ghl_hybrid_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     default:
-      return -1;
+      return ghl_error_invalid_c2p_key;
   }
 }
 
-int ghl_con2prim_tabulated_select_method(
+ghl_error_codes_t ghl_con2prim_tabulated_select_method(
       const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -57,11 +57,11 @@ int ghl_con2prim_tabulated_select_method(
     case Newman1D_entropy:
       return ghl_tabulated_Newman1D_entropy(params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
     default:
-      return -1;
+      return ghl_error_invalid_c2p_key;
   }
 }
 
-int ghl_con2prim_hybrid_multi_method(
+ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -76,38 +76,38 @@ int ghl_con2prim_hybrid_multi_method(
   // Store primitive guesses (used if con2prim fails)
   const ghl_primitive_quantities prims_guess = *prims;
 
-  int failed = ghl_con2prim_hybrid_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+  ghl_error_codes_t error = ghl_con2prim_hybrid_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-  if(failed && params->backup_routine[0] != None) {
+  if(error && params->backup_routine[0] != None) {
     // Backup 1 triggered
     diagnostics->backup[0] = true;
     // Reset guesses
     *prims = prims_guess;
     // Backup routine #1
-    failed = ghl_con2prim_hybrid_select_method(params->backup_routine[0], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+    error = ghl_con2prim_hybrid_select_method(params->backup_routine[0], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-    if(failed && params->backup_routine[1] != None) {
+    if(error && params->backup_routine[1] != None) {
       // Backup 2 triggered
       diagnostics->backup[1] = true;
       // Reset guesses
       *prims = prims_guess;
       // Backup routine #2
-      failed = ghl_con2prim_hybrid_select_method(params->backup_routine[1], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      error = ghl_con2prim_hybrid_select_method(params->backup_routine[1], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-      if(failed && params->backup_routine[2] != None) {
+      if(error && params->backup_routine[2] != None) {
         // Backup 3 triggered
         diagnostics->backup[2] = true;
         // Reset guesses
         *prims = prims_guess;
         // Backup routine #3
-        failed = ghl_con2prim_hybrid_select_method(params->backup_routine[2], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+        error = ghl_con2prim_hybrid_select_method(params->backup_routine[2], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
       }
     }
   }
-  return failed;
+  return error;
 }
 
-int ghl_con2prim_tabulated_multi_method(
+ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -122,33 +122,33 @@ int ghl_con2prim_tabulated_multi_method(
   // Store primitive guesses (used if con2prim fails)
   const ghl_primitive_quantities prims_guess = *prims;
 
-  int failed = ghl_con2prim_tabulated_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+  ghl_error_codes_t error = ghl_con2prim_tabulated_select_method(params->main_routine, params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-  if(failed && params->backup_routine[0] != None) {
+  if(error && params->backup_routine[0] != None) {
     // Backup 1 triggered
     diagnostics->backup[0] = true;
     // Reset guesses
     *prims = prims_guess;
     // Backup routine #1
-    failed = ghl_con2prim_tabulated_select_method(params->backup_routine[0], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+    error = ghl_con2prim_tabulated_select_method(params->backup_routine[0], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-    if(failed && params->backup_routine[1] != None) {
+    if(error && params->backup_routine[1] != None) {
       // Backup 2 triggered
       diagnostics->backup[1] = true;
       // Reset guesses
       *prims = prims_guess;
       // Backup routine #2
-      failed = ghl_con2prim_tabulated_select_method(params->backup_routine[1], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+      error = ghl_con2prim_tabulated_select_method(params->backup_routine[1], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
 
-      if(failed && params->backup_routine[2] != None) {
+      if(error && params->backup_routine[2] != None) {
         // Backup 3 triggered
         diagnostics->backup[2] = true;
         // Reset guesses
         *prims = prims_guess;
         // Backup routine #3
-        failed = ghl_con2prim_tabulated_select_method(params->backup_routine[2], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
+        error = ghl_con2prim_tabulated_select_method(params->backup_routine[2], params, eos, ADM_metric, metric_aux, cons, prims, diagnostics);
       }
     }
   }
-  return failed;
+  return error;
 }

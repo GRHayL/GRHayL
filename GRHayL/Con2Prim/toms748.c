@@ -215,8 +215,7 @@ cubic_interpolate(
   return c;
 }
 
-roots_error_t
-ghl_toms748(
+ghl_error_codes_t ghl_toms748(
       double f(
             const double x,
             const ghl_parameters *restrict params,
@@ -247,7 +246,7 @@ ghl_toms748(
   double fb = f(b, params, eos, fparams);
 
   if(sign(fa) * sign(fb) > 0)
-    return (r->error_key = roots_error_root_not_bracketed);
+    return ghl_error_root_not_bracketed;
 
   // Check if we already have a root
   if( fabs(b-a) < r->tol || (fa == 0) || (fb == 0) ) {
@@ -255,11 +254,11 @@ ghl_toms748(
     if(fabs(fa) < fabs(fb)) {
       r->root = a;
       r->residual = fa;
-      return (r->error_key = roots_success);
+      return ghl_success;
     }
     r->root = b;
     r->residual = fb;
-    return (r->error_key = roots_success);
+    return ghl_success;
   }
 
   // dummy value for fd, e and fe:
@@ -382,9 +381,9 @@ ghl_toms748(
   if(fabs(fa) < fabs(fb)) {
     r->root = a;
     r->residual = fa;
-    return (r->error_key = roots_success);
+    return ghl_success;
   }
   r->root = b;
   r->residual = fb;
-  return (r->error_key = roots_success);
+  return ghl_success;
 }

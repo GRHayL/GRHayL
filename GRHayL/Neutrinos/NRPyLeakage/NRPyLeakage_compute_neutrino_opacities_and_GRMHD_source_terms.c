@@ -1,4 +1,4 @@
-#include "neutrinos.h"
+#include "ghl_radiation.h"
 
 static double EnsureFinite(const double x) {
   if(robust_isfinite(x))
