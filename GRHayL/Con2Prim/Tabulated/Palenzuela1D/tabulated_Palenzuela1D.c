@@ -46,12 +46,10 @@ froot(
  *                                       result if the root-finding succeeds.
  *             : diagnostics           - Pointer to con2prim diagnostics struct.
  *
- * Returns     : error_key (see GRHayL.h and roots.h).
- *
  * References  : [1] Palenzuela et al. (2015) arXiv:1505.01607
  *             : [2] Siegel et al. (2018) arXiv:1712.07538
  */
-int ghl_tabulated_Palenzuela1D(
+ghl_error_codes_t ghl_tabulated_Palenzuela1D(
       void compute_rho_P_eps_T_W(
             const double x,
             const ghl_parameters *restrict params,
@@ -127,15 +125,15 @@ int ghl_tabulated_Palenzuela1D(
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
   // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
-  ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
-  if(rparams.error_key != roots_success) {
+  ghl_error_codes_t error = ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
+  if(error) {
     // Adjust the temperature guess and try again
     fparams.temp_guess = eos->T_min;
     prims->temperature = eos->T_min;
     // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
-    ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
-    if(rparams.error_key != roots_success)
-      return rparams.error_key;
+    error = ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
+    if(error)
+      return error;
   }
   diagnostics->n_iter = rparams.n_iters;
 
@@ -167,7 +165,7 @@ int ghl_tabulated_Palenzuela1D(
   prims->Y_e         = fparams.Y_e;
   prims->temperature = T;
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
@@ -178,5 +176,5 @@ int ghl_tabulated_Palenzuela1D(
     // fprintf(stderr, "**************\n");
   // }
 
-  return 0;
+  return ghl_success;
 }

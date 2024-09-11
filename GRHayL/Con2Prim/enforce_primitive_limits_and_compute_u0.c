@@ -1,4 +1,4 @@
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
 /* Function    : ghl_enforce_primitive_limits_and_compute_u0()
  * Description : Applies limits to rho_b, pressure, and v^i, then
@@ -18,11 +18,12 @@
  *
  */
 
-int ghl_enforce_primitive_limits_and_compute_u0(
+ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
-      ghl_primitive_quantities *restrict prims) {
+      ghl_primitive_quantities *restrict prims,
+      bool *restrict speed_limited) {
 
   // Hybrid EOS specific floors and ceilings
   switch(eos->eos_type) {
@@ -94,15 +95,13 @@ int ghl_enforce_primitive_limits_and_compute_u0(
       // Now recompute eps and, if needed, entropy
       prims->eps = prims->press / (prims->rho * (eos->Gamma_th - 1.0));
       if(params->evolve_entropy) {
-        prims->entropy
-              = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
+        prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
       }
       break;
-
     default:
-      ghl_error("Unknown EOS type %d\n", eos->eos_type);
+    return ghl_error_unknown_eos_type;
   }
 
   // Finally, apply speed limit to v and compute u^0
-  return ghl_limit_v_and_compute_u0(params, ADM_metric, prims);
+  return ghl_limit_v_and_compute_u0(params, ADM_metric, prims, speed_limited);
 }

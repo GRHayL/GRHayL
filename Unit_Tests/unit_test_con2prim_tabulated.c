@@ -1,5 +1,5 @@
 #include <string.h>
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 const char *
 get_routine_string(const ghl_con2prim_method_t key) {
@@ -162,7 +162,9 @@ generate_test_data(
                                 Bx, By, Bz,
                                 xent, xye, xtemp,
                                 &prims_orig);
-          diagnostics.speed_limited = ghl_limit_v_and_compute_u0(params, &ADM_metric, &prims_orig);
+          ghl_error_codes_t error = ghl_limit_v_and_compute_u0(params, &ADM_metric, &prims_orig, &diagnostics.speed_limited);
+	  if(error)
+            ghl_read_error_codes(error);
 
           // Set prim guesses
           ghl_primitive_quantities prims;

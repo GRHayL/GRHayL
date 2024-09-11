@@ -1,4 +1,4 @@
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
 /* Function    : ghl_initialize_diagnostics()
  * Description : Initialize the diagnostics struct for Con2Prim

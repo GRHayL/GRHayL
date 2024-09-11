@@ -1,4 +1,4 @@
-#include "reconstruction.h"
+#include "ghl_reconstruction.h"
 
 /*
  * Function     : ghl_mc_reconstruction()

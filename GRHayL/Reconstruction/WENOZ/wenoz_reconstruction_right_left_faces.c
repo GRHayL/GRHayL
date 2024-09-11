@@ -1,4 +1,4 @@
-#include "reconstruction.h"
+#include "ghl_reconstruction.h"
 
 /*
  * Function     : ghl_wenoz_reconstruction_right_left_faces()

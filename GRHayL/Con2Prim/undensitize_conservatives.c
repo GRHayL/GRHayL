@@ -1,4 +1,4 @@
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
 /* Function    : ghl_undensitize_conservatives()
  * Description : Computes undensitized conservatives using the metric

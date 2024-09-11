@@ -1,4 +1,4 @@
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
 /* Function    : Hybrid_Noble2D()
  * Description : Unpacks the ghl_primitive_quantities struct into the variables

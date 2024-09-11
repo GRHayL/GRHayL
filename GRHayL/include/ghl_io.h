@@ -17,11 +17,11 @@ void ghl_Warn_Error(
       ...);
 
 typedef enum  {
-  ghl_error_abort=-1, ghl_success=0
+  ghl_error_abort=-1, ghl_io_success=0
 } ghl_error_keys;
 
 #define ghl_warn(...) \
-  ghl_Warn_Error("Warning", ghl_success, __FILE__, __LINE__, __func__, __VA_ARGS__)
+  ghl_Warn_Error("Warning", ghl_io_success, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
 #define ghl_error(...) \
   ghl_Warn_Error("Error", 1, __FILE__, __LINE__, __func__, __VA_ARGS__)

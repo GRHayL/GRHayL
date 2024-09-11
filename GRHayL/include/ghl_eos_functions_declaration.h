@@ -1,7 +1,7 @@
 #ifndef GHL_EOS_FUNCTIONS_DECLARATION_H_
 #define GHL_EOS_FUNCTIONS_DECLARATION_H_
 
-void (*ghl_compute_h_and_cs2)(
+ghl_error_codes_t (*ghl_compute_h_and_cs2)(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
       double *restrict h,
@@ -48,28 +48,28 @@ void (*ghl_tabulated_read_table_set_EOS_params)(
 
 void (*ghl_tabulated_free_memory)(ghl_eos_parameters *restrict eos);
 
-void (*ghl_tabulated_compute_P_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
       const double T,
       double *restrict P);
 
-void (*ghl_tabulated_compute_eps_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_eps_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
       const double T,
       double *restrict eps);
 
-void (*ghl_tabulated_compute_cs2_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_cs2_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
       const double T,
       double *restrict cs2);
 
-void (*ghl_tabulated_compute_P_eps_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -77,7 +77,7 @@ void (*ghl_tabulated_compute_P_eps_from_T)(
       double *restrict P,
       double *restrict eps);
 
-void (*ghl_tabulated_compute_P_eps_S_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_S_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -86,7 +86,7 @@ void (*ghl_tabulated_compute_P_eps_S_from_T)(
       double *restrict eps,
       double *restrict S);
 
-void (*ghl_tabulated_compute_P_eps_cs2_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_cs2_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -95,7 +95,7 @@ void (*ghl_tabulated_compute_P_eps_cs2_from_T)(
       double *restrict eps,
       double *restrict cs2);
 
-void (*ghl_tabulated_compute_P_eps_S_cs2_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_S_cs2_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -105,7 +105,7 @@ void (*ghl_tabulated_compute_P_eps_S_cs2_from_T)(
       double *restrict S,
       double *restrict cs2);
 
-void (*ghl_tabulated_compute_P_eps_depsdT_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_depsdT_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -114,7 +114,7 @@ void (*ghl_tabulated_compute_P_eps_depsdT_from_T)(
       double *restrict eps,
       double *restrict depsdT);
 
-void (*ghl_tabulated_compute_P_eps_muhat_mue_mup_mun_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_muhat_mue_mup_mun_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -126,7 +126,7 @@ void (*ghl_tabulated_compute_P_eps_muhat_mue_mup_mun_from_T)(
       double *restrict mu_p,
       double *restrict mu_n);
 
-void (*ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T)(
+ghl_error_codes_t (*ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -138,14 +138,14 @@ void (*ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T)(
       double *restrict X_n,
       double *restrict X_p);
 
-void (*ghl_tabulated_compute_T_from_eps)(
+ghl_error_codes_t (*ghl_tabulated_compute_T_from_eps)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
       const double eps,
       double *restrict T);
 
-void (*ghl_tabulated_compute_P_T_from_eps)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_T_from_eps)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -153,7 +153,7 @@ void (*ghl_tabulated_compute_P_T_from_eps)(
       double *restrict P,
       double *restrict T);
 
-void (*ghl_tabulated_compute_P_cs2_T_from_eps)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_cs2_T_from_eps)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -162,7 +162,7 @@ void (*ghl_tabulated_compute_P_cs2_T_from_eps)(
       double *restrict cs2,
       double *restrict T);
 
-void (*ghl_tabulated_compute_eps_T_from_P)(
+ghl_error_codes_t (*ghl_tabulated_compute_eps_T_from_P)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -170,7 +170,7 @@ void (*ghl_tabulated_compute_eps_T_from_P)(
       double *restrict eps,
       double *restrict T);
 
-void (*ghl_tabulated_compute_eps_cs2_T_from_P)(
+ghl_error_codes_t (*ghl_tabulated_compute_eps_cs2_T_from_P)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -179,7 +179,7 @@ void (*ghl_tabulated_compute_eps_cs2_T_from_P)(
       double *restrict cs2,
       double *restrict T);
 
-void (*ghl_tabulated_compute_P_T_from_S)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_T_from_S)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -187,7 +187,7 @@ void (*ghl_tabulated_compute_P_T_from_S)(
       double *restrict P,
       double *restrict T);
 
-void (*ghl_tabulated_compute_P_S_depsdT_T_from_eps)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_S_depsdT_T_from_eps)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -197,7 +197,7 @@ void (*ghl_tabulated_compute_P_S_depsdT_T_from_eps)(
       double *restrict depsdT,
       double *restrict T);
 
-void (*ghl_tabulated_compute_eps_S_T_from_P)(
+ghl_error_codes_t (*ghl_tabulated_compute_eps_S_T_from_P)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -206,7 +206,7 @@ void (*ghl_tabulated_compute_eps_S_T_from_P)(
       double *restrict S,
       double *restrict T);
 
-void (*ghl_tabulated_compute_P_eps_T_from_S)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_T_from_S)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -243,7 +243,8 @@ double (*ghl_tabulated_compute_eps_from_rho)(
       const ghl_eos_parameters *restrict eos,
       const double rho );
 
-void (*ghl_tabulated_free_beq_quantities)( ghl_eos_parameters *restrict eos );
+void (*ghl_tabulated_free_beq_quantities)(
+      ghl_eos_parameters *restrict eos);
 
 void (*ghl_calculate_HLLE_fluxes_dirn0)(
       const ghl_primitive_quantities *restrict prims_r,

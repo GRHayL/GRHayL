@@ -1,7 +1,7 @@
 #ifndef PALENZUELA_H_
 #define PALENZUELA_H_
 
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 #include "roots.h"
 
 /*
@@ -102,7 +102,7 @@ compute_SU_Bsq_Ssq_BdotS(
 /*
  * Function prototypes
  */
-int ghl_tabulated_Palenzuela1D(
+ghl_error_codes_t ghl_tabulated_Palenzuela1D(
       void compute_rho_P_eps_T_W(
             const double x,
             const ghl_parameters *restrict params,
@@ -120,7 +120,7 @@ int ghl_tabulated_Palenzuela1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-int ghl_tabulated_Newman1D(
+ghl_error_codes_t ghl_tabulated_Newman1D(
       void compute_rho_P_eps_T_W(
             const double x,
             const ghl_parameters *restrict params,
@@ -138,7 +138,7 @@ int ghl_tabulated_Newman1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-int ghl_hybrid_Palenzuela1D(
+ghl_error_codes_t ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(
             const double x,
             const ghl_parameters *restrict params,
@@ -155,7 +155,7 @@ int ghl_hybrid_Palenzuela1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-int ghl_hybrid_Newman1D(
+ghl_error_codes_t ghl_hybrid_Newman1D(
       void compute_rho_P_eps_W(
             const double x,
             const ghl_parameters *restrict params,

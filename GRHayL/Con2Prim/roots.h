@@ -10,17 +10,6 @@
 #endif
 
 /*
- * Error keys for root-finding routines
- */
-typedef enum {
-  roots_continue=-1,
-  roots_success,
-  roots_error_root_not_bracketed,
-  roots_error_max_iter,
-  roots_error_not_finite
-} roots_error_t;
-
-/*
  * typedef    : fparams_struct
  * Author     : Leo Werneck
  *
@@ -76,7 +65,6 @@ typedef struct fparams_struct {
  * tol       : Stop when fabs(b_n-a_n) < tol.
  */
 typedef struct roots_params {
-  roots_error_t error_key;
   char routine_name[256];
   unsigned n_iters, max_iters;
   double a, b, root, residual, tol;
@@ -103,35 +91,9 @@ roots_info(const roots_params *restrict r) {
          r->a >= 0 ? '+' : '-', fabs(r->a),
          r->b >= 0 ? '+' : '-', fabs(r->b));
   fprintf(stderr, "(roots)   %16s : ", "Status");
-  switch(r->error_key) {
-    case roots_continue:
-      break;
-    case roots_success:
-      fprintf(stderr, "Success\n");
-      break;
-    case roots_error_root_not_bracketed:
-      fprintf(stderr, "Failure\n");
-      fprintf(stderr, "(roots)   %16s : ", "Error message");
-      fprintf(stderr, "Initial interval does not bracket the root.\n");
-      break;
-    case roots_error_max_iter:
-      fprintf(stderr, "Failure\n");
-      fprintf(stderr, "(roots)   %16s : ", "Error message");
-      fprintf(stderr, "Maximum number of iterations (%d) exceeded.\n", r->max_iters);
-      break;
-    case roots_error_not_finite:
-      fprintf(stderr, "Failure\n");
-      fprintf(stderr, "(roots)   %16s : ", "Error message");
-      fprintf(stderr, "Found NAN or INF during root-finding procedure.\n");
-      break;
-  }
-
-  // Step 2: If succeeded, print detailed success message
-  if(!r->error_key) {
-    fprintf(stderr, "(roots)   %16s : %d\n", "Iterations", r->n_iters);
-    fprintf(stderr, "(roots)   %16s : %.15e\n", "Root", r->root);
-    fprintf(stderr, "(roots)   %16s : %.15e\n", "Residual", r->residual);
-  }
+  fprintf(stderr, "(roots)   %16s : %d\n", "Iterations", r->n_iters);
+  fprintf(stderr, "(roots)   %16s : %.15e\n", "Root", r->root);
+  fprintf(stderr, "(roots)   %16s : %.15e\n", "Residual", r->residual);
 }
 
 /*
@@ -177,8 +139,7 @@ sign(const double x) {
 /*
  * Function prototypes
  */
-roots_error_t
-ghl_brent(
+ghl_error_codes_t ghl_brent(
       double f(
             const double x,
             const ghl_parameters *restrict params,
@@ -191,8 +152,7 @@ ghl_brent(
       double b,
       roots_params *restrict r);
 
-roots_error_t
-ghl_toms748(
+ghl_error_codes_t ghl_toms748(
       double f(
             const double x,
             const ghl_parameters *restrict params,

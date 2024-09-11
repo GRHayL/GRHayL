@@ -1,4 +1,4 @@
-#include "induction.h"
+#include "ghl_induction.h"
 
 /* Function      : ghl_calculate_phitilde_rhs()
  * Description   : compute RHS for \tilde{Phi} = psi^6*Phi

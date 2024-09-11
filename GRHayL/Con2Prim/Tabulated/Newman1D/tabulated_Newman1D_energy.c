@@ -1,6 +1,6 @@
 #include "../../utils_Palenzuela1D.h"
 
-static int ghl_newman_energy(
+static ghl_error_codes_t ghl_newman_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const double S_squared,
@@ -105,7 +105,7 @@ static int ghl_newman_energy(
   while(fabs(xprs-P_old)>tol_x*(xprs+P_old) && step<maxsteps);
 
   if(step >= maxsteps)
-    return roots_error_max_iter;
+    return ghl_error_c2p_max_iter;
 
   diagnostics->n_iter = step;
 
@@ -121,7 +121,7 @@ static int ghl_newman_energy(
     W                  = 1.0/invW;
   }
 
-  if(isnan(z*W)) return 1;
+  if(isnan(z*W)) return ghl_error_c2p_singular;
 
   // Set the primitives
   double utildeU[3] = {
@@ -133,14 +133,14 @@ static int ghl_newman_energy(
   prims->Y_e         = xye;
   prims->temperature = xtemp;
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
-  return 0;
+  return ghl_success;
 }
 
-int ghl_tabulated_Newman1D_energy(
+ghl_error_codes_t ghl_tabulated_Newman1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -158,13 +158,13 @@ int ghl_tabulated_Newman1D_energy(
   const double tol_x = 1e-15;
   diagnostics->which_routine = Newman1D;
 
-  int check = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
+  ghl_error_codes_t error = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 				cons_undens, prims, tol_x, diagnostics);
 
-  if(check) {
+  if(error) {
     prims->temperature = eos->T_min;
-    check = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
+    error = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 			      cons_undens, prims, tol_x, diagnostics);
   }
-  return check;
+  return error;
 }

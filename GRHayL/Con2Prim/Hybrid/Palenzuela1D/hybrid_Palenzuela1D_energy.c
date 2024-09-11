@@ -65,7 +65,7 @@ compute_rho_P_eps_W_energy(
  * a primitive recovery using the Palenzuela et al. scheme using the specific
  * energy. See file ghl_hybrid_Palenzuela1D.c for further details.
  */
-int ghl_hybrid_Palenzuela1D_energy(
+ghl_error_codes_t ghl_hybrid_Palenzuela1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,

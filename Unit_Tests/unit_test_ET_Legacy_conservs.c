@@ -3,7 +3,7 @@
 // Author(s)  : Leo Werneck & Samuel Cupp
 // Description: In this file we provide an extensive unit test of
 //              the Con2Prim gem.
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 
 int main(int argc, char **argv) {
@@ -261,7 +261,9 @@ int main(int argc, char **argv) {
                              poison, poison, &cons);
 
     // Enforce limits on primitive variables and recompute conservatives.
-    diagnostics.speed_limited = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims);
+    int error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &diagnostics.speed_limited);
+    if(error)
+      ghl_read_error_codes(error);
     ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
     // Here, we call the ghl_return_* functions and then repack the struct from that data. These functions are too

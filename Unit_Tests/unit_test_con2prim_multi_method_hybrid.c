@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
 
@@ -225,12 +225,12 @@ int main(int argc, char **argv) {
       if(check != c2p_check[i]) {
         if(methods[method] != Noble1D && methods[method] != Noble1D_entropy && methods[method] != Noble2D) {
           ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
-        } else if(check != 6 &&c2p_check[i] != 6) {
+        } else if(check != ghl_error_neg_pressure && c2p_check[i] != 6) {
           ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
         }
       }
 
-      if(check && check != 6) {
+      if(check && check != ghl_error_neg_pressure) {
         fcnt++;
         continue;
       }

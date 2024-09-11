@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
 
@@ -229,10 +229,15 @@ int main(int argc, char **argv) {
               prims_l.rho, prims_l.Y_e, prims_l.temperature,
               &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
-      int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
-            &params, &metric_face, &prims_r);
-      speed_limit = ghl_limit_v_and_compute_u0(
-            &params, &metric_face, &prims_l);
+        bool speed_limited;
+        ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
+              &params, &metric_face, &prims_r, &speed_limited);
+        if(error)
+          ghl_read_error_codes(error);
+        error = ghl_limit_v_and_compute_u0(
+              &params, &metric_face, &prims_l, &speed_limited);
+        if(error)
+          ghl_read_error_codes(error);
 
         ghl_conservative_quantities cons_fluxes;
         calculate_HLLE_fluxes(

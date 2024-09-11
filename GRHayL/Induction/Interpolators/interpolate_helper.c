@@ -1,4 +1,4 @@
-#include "induction.h"
+#include "ghl_induction.h"
 #include "ghl_induction_helpers.h"
 
 /*

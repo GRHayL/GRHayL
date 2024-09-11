@@ -46,12 +46,10 @@ froot(
  *                                     result if the root-finding succeeds.
  *             : diagnostics         - Pointer to con2prim diagnostics struct.
  *
- * Returns     : error_key (see GRHayL.h and roots.h).
- *
  * References  : [1] Palenzuela et al. (2015) arXiv:1505.01607
  *             : [2] Siegel et al. (2018) arXiv:1712.07538
  */
-int ghl_hybrid_Palenzuela1D(
+ghl_error_codes_t ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(
             const double x,
             const ghl_parameters *restrict params,
@@ -111,9 +109,9 @@ int ghl_hybrid_Palenzuela1D(
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
   // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
-  ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
-  if(rparams.error_key != roots_success)
-    return rparams.error_key;
+  ghl_error_codes_t error = ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
+  if(error)
+    return error;
 
   diagnostics->n_iter = rparams.n_iters;
 
@@ -146,5 +144,5 @@ int ghl_hybrid_Palenzuela1D(
   diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
   prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 
-  return 0;
+  return ghl_success;
 }

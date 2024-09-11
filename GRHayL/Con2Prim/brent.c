@@ -69,14 +69,8 @@ cycle(
  *            : fb       - f(b)
  *            : r        - Pointer to Roots parameters.
  *
- * Returns    : One the following error keys:
- *                 - roots_success if the root is found
- *                 - roots_continue if the root is not found but no errors
- *                   occurred
- *                 - roots_error_root_not_bracketed if the interval [a,b]
- *                   does not bracket a root of f(x)
  */
-static inline roots_error_t
+static inline ghl_error_codes_t
 check_a_b_compute_fa_fb(
       double f(
             const double x,
@@ -97,7 +91,7 @@ check_a_b_compute_fa_fb(
   if(*fa == 0.0) {
     r->root     = *a;
     r->residual = *fa;
-    return (r->error_key = roots_success);
+    return ghl_success;
   }
 
   // Step 2: Compute fb; check if b is the root.
@@ -105,12 +99,12 @@ check_a_b_compute_fa_fb(
   if( *fb == 0.0 ) {
     r->root     = *b;
     r->residual = *fb;
-    return (r->error_key = roots_success);
+    return ghl_success;
   }
 
   // Step 3: Ensure the root is in [a,b]
   if( (*fa)*(*fb) > 0 )
-    return (r->error_key = roots_error_root_not_bracketed);
+    return ghl_error_root_not_bracketed;
 
   // Step 4: Ensure b contains the best approximation to the root
   ensure_b_is_closest_to_root(a, b, fa, fb);
@@ -119,11 +113,11 @@ check_a_b_compute_fa_fb(
   if( fabs(*a - *b) < r->tol ) {
     r->root     = *b;
     r->residual = *fb;
-    return (r->error_key = roots_success);
+    return ghl_success;
   }
 
   // Step 6: Root not found.
-  return roots_continue;
+  return ghl_error_c2p_max_iter;
 }
 
 /*
@@ -151,7 +145,7 @@ check_a_b_compute_fa_fb(
  *              Freely available at: http://numerical.recipes/book/book.html
  *            : Brent, Algorithms for Minimization Without Derivatives (1973)
  */
-roots_error_t
+ghl_error_codes_t
 ghl_brent(
       double f(
             const double x,
@@ -172,8 +166,9 @@ ghl_brent(
 
   // Step 1: Check whether a or b is the root; compute fa and fb
   double fa, fb;
-  if( check_a_b_compute_fa_fb(f, params, eos, fparams, &a, &b, &fa, &fb, r) >= roots_success )
-    return r->error_key;
+  ghl_error_codes_t error = check_a_b_compute_fa_fb(f, params, eos, fparams, &a, &b, &fa, &fb, r);
+  if(error != ghl_error_c2p_max_iter)
+    return error;
 
   // Step 2: Declare/initialize auxiliary variables
   double c  = a;
@@ -208,7 +203,7 @@ ghl_brent(
     if(fabs(m) < tol || fb == 0.0) {
       r->root     = b;
       r->residual = fb;
-      return (r->error_key = roots_success);
+      return ghl_success;
     }
 
     // Step 3.g: Check whether to bisect or interpolate
@@ -254,5 +249,5 @@ ghl_brent(
 
   // Step 4: The only way to get here is if we have exceeded the maximum number
   //         of iterations allowed.
-  return (r->error_key = roots_error_max_iter);
+  return ghl_error_c2p_max_iter;
 }

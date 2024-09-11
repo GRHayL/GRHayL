@@ -1,12 +1,12 @@
 #ifndef UNIT_TESTS_H_
 #define UNIT_TESTS_H_
 
-#include "atmosphere.h"
-#include "con2prim.h"
-#include "induction.h"
-#include "reconstruction.h"
-#include "flux_source.h"
-#include "neutrinos.h"
+#include "ghl_atmosphere.h"
+#include "ghl_con2prim.h"
+#include "ghl_induction.h"
+#include "ghl_reconstruction.h"
+#include "ghl_flux_source.h"
+#include "ghl_radiation.h"
 #include "nrpyeos_tabulated.h"
 #include "nrpyeos_hybrid.h"
 
@@ -125,7 +125,7 @@ void ghl_test_compute_ccc_BSSN(
       double *restrict sqrtg_Ay_interp,
       double *restrict sqrtg_Az_interp);
 
-void ghl_test_compute_h_and_cs2(
+ghl_error_codes_t ghl_test_compute_h_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
       double *restrict h,

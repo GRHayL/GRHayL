@@ -1,6 +1,6 @@
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
-int ghl_hybrid_Font1D_loop(
+ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol,
       const double W_in, const double Sf2_in,
@@ -106,10 +106,10 @@ int ghl_hybrid_Font1D_loop(
    */
   if(Fontcheck || itcount >= maxits) {
     *rhob_out_ptr = rhob_out;
-    return 1;
+    return ghl_error_c2p_max_iter;
   }
   else {
     *rhob_out_ptr = rhob_out;
-    return 0;
+    return ghl_success;
   }
 }

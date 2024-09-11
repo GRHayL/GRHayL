@@ -9,65 +9,51 @@
 
 //------------------------------------------
 static inline __attribute__((always_inline))
-int NRPyEOS_checkbounds(
+ghl_error_codes_t NRPyEOS_checkbounds(
       const ghl_eos_parameters *restrict eos,
       const double xrho,
       const double xtemp,
       const double xye) {
 
-  // keyerr codes:
-  // 101 -- Y_e too high
-  // 102 -- Y_e too low
-  // 103 -- temp too high (if keytemp = 1)
-  // 104 -- temp too low (if keytemp = 1)
-  // 105 -- rho too high
-  // 106 -- rho too low
-
   if(xrho > eos->table_rho_max) {
-    return 105;
+    return ghl_error_table_max_rho;
   }
   if(xrho < eos->table_rho_min) {
-    return 106;
+    return ghl_error_table_min_rho;
   }
   if(xye > eos->table_Y_e_max) {
-    return 101;
+    return ghl_error_table_max_ye;
   }
   if(xye < eos->table_Y_e_min) {
-    return 102;
+    return ghl_error_table_min_ye;
   }
   if(xtemp > eos->table_T_max) {
-    return 103;
+    return ghl_error_table_max_T;
   }
   if(xtemp < eos->table_T_min) {
-    return 104;
+    return ghl_error_table_min_T;
   }
-  return 0;
+  return ghl_success;
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-int NRPyEOS_checkbounds_kt0_noTcheck(const ghl_eos_parameters *restrict eos,
+ghl_error_codes_t NRPyEOS_checkbounds_kt0_noTcheck(const ghl_eos_parameters *restrict eos,
                                      const double xrho,
                                      const double xye) {
 
-  // keyerr codes:
-  // 101 -- Y_e too high
-  // 102 -- Y_e too low
-  // 105 -- rho too high
-  // 106 -- rho too low
-
   if(xrho > eos->table_rho_max) {
-    return 105;
+    return ghl_error_table_max_rho;
   }
   if(xrho < eos->table_rho_min) {
-    return 106;
+    return ghl_error_table_min_rho;
   }
   if(xye > eos->table_Y_e_max) {
-    return 101;
+    return ghl_error_table_max_ye;
   }
   if(xye < eos->table_Y_e_min) {
-    return 102;
+    return ghl_error_table_min_ye;
   }
-  return 0;
+  return ghl_success;
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
@@ -175,7 +161,7 @@ double NRPyEOS_linterp2D(
 }
 //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_bisection(
+ghl_error_codes_t NRPyEOS_bisection(
       const ghl_eos_parameters *restrict eos,
       const double lr,
       const double lt0,
@@ -183,8 +169,7 @@ void NRPyEOS_bisection(
       const double leps0,
       const double prec,
       double *restrict ltout,
-      const int iv,
-      int *restrict keyerrt) {
+      const int iv) {
   // iv is the index of the variable we do the bisection on
 
   int bcount = 0;
@@ -223,7 +208,7 @@ void NRPyEOS_bisection(
   // If leps0 <= f2a, then ltout is likely to be the minimum temperature tabulated.
   if(leps0 <= f2a) { // + 1.0E-6
     *ltout = ltmin;
-    return;
+    return ghl_success;
   }
 
   /* // If leps0 >= f1a, then ltout is likely to be the maximum temperature tabulated.
@@ -262,8 +247,7 @@ void NRPyEOS_bisection(
 
     bcount++;
     if(bcount >= maxbcount) {
-      *keyerrt = 667;
-      return;
+      return ghl_error_table_bisection;
     }
   } // while
 
@@ -287,16 +271,15 @@ void NRPyEOS_bisection(
 
     if(fabs(leps0-f2a) <= leps0_prec) {
       *ltout = ltmid;
-      return;
+      return ghl_success;
     }
   } // for it = 0
-
-  *keyerrt = 667;
-  return;
+  return ghl_error_table_bisection;
 } // bisection
+
   //------------------------------------------
 static inline __attribute__((always_inline))
-void NRPyEOS_findtemp_from_any(
+ghl_error_codes_t NRPyEOS_findtemp_from_any(
       const ghl_eos_parameters *restrict eos,
       const int tablevar_key,
       const double lr,
@@ -304,8 +287,7 @@ void NRPyEOS_findtemp_from_any(
       const double ye,
       const double tablevar_in,
       const double prec,
-      double *restrict ltout,
-      int *keyerrt) {
+      double *restrict ltout) {
 
   // local variables
   const int itmax = 200; // use at most 10 iterations, then go to bisection
@@ -316,9 +298,6 @@ void NRPyEOS_findtemp_from_any(
   const double ltmax = eos->table_logT[eos->N_T-1]; // max temp
   const double ltmin = eos->table_logT[0]; // min temp
   int it = 0;
-
-  // setting up some vars
-  *keyerrt  = 0;
   double lt = lt0;
 
   // step 1: do we already have the right temperature
@@ -330,7 +309,7 @@ void NRPyEOS_findtemp_from_any(
   // TODO: profile this to see which outcome is more likely
   if(fabs(tablevar-tablevar_in) < prec*fabs(tablevar_in)) {
     *ltout = lt0;
-    return;
+    return ghl_success;
   }
 
   double oerr = 1.0e90;
@@ -397,7 +376,7 @@ void NRPyEOS_findtemp_from_any(
       *ltout = (eos->table_logT[itemp]-eos->table_logT[itemp-1]) / (tablevart2 - tablevart1) *
         (tablevar_in - tablevart1) + eos->table_logT[itemp-1];
 
-      return;
+      return ghl_success;
     }
 
     // well, then do a Newton-Raphson step
@@ -415,8 +394,8 @@ void NRPyEOS_findtemp_from_any(
     ltn = MIN(MAX(lt + ldt,ltmin),ltmax);
     lt = ltn;
 
-    NRPyEOS_get_interp_spots(eos,lr,lt,ye,&delx,&dely,&delz,idx);
-    NRPyEOS_linterp_one(eos,idx,delx,dely,delz,&tablevar,tablevar_key);
+    NRPyEOS_get_interp_spots(eos, lr, lt, ye, &delx, &dely, &delz, idx);
+    NRPyEOS_linterp_one(eos, idx, delx, dely, delz, &tablevar, tablevar_key);
 
     // drive the thing into the right direction
     double err = fabs(tablevar-tablevar_in);
@@ -425,14 +404,14 @@ void NRPyEOS_findtemp_from_any(
 
     if(err < prec*fabs(tablevar_in)) {
       *ltout = lt;
-      return;
+      return ghl_success;
     }
 
   } // while(it < itmax)
 
     // try bisection
-  NRPyEOS_bisection(eos,lr,lt0,ye,tablevar_in,prec,ltout,tablevar_key,keyerrt);
+  ghl_error_codes_t error = NRPyEOS_bisection(eos, lr, lt0, ye, tablevar_in, prec, ltout, tablevar_key);
 
-  return;
+  return error;
 }
 #endif

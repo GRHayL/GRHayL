@@ -11,7 +11,7 @@ import IGM_Characteristic_Speeds as chsp
 import IGM_All_Source_Terms as st    # NRPy+: Generate general relativistic magnetohydrodynamics equations
 
 
-includes = ["flux_source.h"]
+includes = ["ghl_flux_source.h"]
 
 def write_ghl_Cfunctions_to_dir(Ccodesrootdir, includes, formalism="ADM", tabulated=False, entropy=False):
     outCparams = "outCverbose=False,GoldenKernelsEnable=True"

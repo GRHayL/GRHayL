@@ -1,4 +1,4 @@
-#include "flux_source.h"
+#include "ghl_flux_source.h"
 /*
  * Compute the characteristic speeds in direction 2
  */

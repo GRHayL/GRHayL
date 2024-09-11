@@ -1,7 +1,12 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 int main(int argc, char **argv) {
 
   const int arraylength = 3;
+
+  ghl_error_codes_t *expected_errors = (ghl_error_codes_t*) malloc(sizeof(ghl_error_codes_t)*arraylength);
+  expected_errors[0] = 1;
+  expected_errors[1] = ghl_error_c2p_max_iter;
+  expected_errors[2] = ghl_error_c2p_singular;
 
   const double poison = 0.0/0.0;
 
@@ -122,7 +127,7 @@ int main(int argc, char **argv) {
 
     ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
     int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
-    if(check != i+1)
+    if(check != expected_errors[i])
       ghl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);
 
     if(i==0) {
@@ -144,7 +149,7 @@ int main(int argc, char **argv) {
       // Here, we can check the Font Fix failure condition (there's just one return value)
       params.backup_routine[0] = Font1D;
       int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
-      if(check != 1)
+      if(check != ghl_error_c2p_max_iter)
         ghl_error("Font1D has returned a different failure code: old %d and new %d", 1, check);
       params.backup_routine[0] = None;
     }
