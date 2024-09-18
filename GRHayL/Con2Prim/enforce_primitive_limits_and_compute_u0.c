@@ -99,7 +99,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       }
       break;
     default:
-    return ghl_error_unknown_eos_type;
+      return ghl_error_unknown_eos_type;
   }
 
   // Finally, apply speed limit to v and compute u^0

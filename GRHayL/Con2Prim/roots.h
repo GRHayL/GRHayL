@@ -29,26 +29,22 @@
  */
 typedef struct fparams_struct {
   bool evolve_T;
-  double temp_guess, Y_e, q, r, s, t;
-  const ghl_conservative_quantities *cons_undens;
+  double q, r, s, t;
   void (*compute_rho_P_eps_T_W)(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
+      const ghl_conservative_quantities *restrict cons_undens,
       struct fparams_struct *restrict fparams,
-      double *restrict rho_ptr,
-      double *restrict P_ptr,
-      double *restrict eps_ptr,
-      double *restrict T_ptr,
+      ghl_primitive_quantities *restrict prims,
       double *restrict W_ptr);
   void (*compute_rho_P_eps_W)(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
+      const ghl_conservative_quantities *restrict cons_undens,
       struct fparams_struct *restrict fparams,
-      double *restrict rho_ptr,
-      double *restrict P_ptr,
-      double *restrict eps_ptr,
+      ghl_primitive_quantities *restrict prims,
       double *restrict W_ptr);
 } fparams_struct;
 
@@ -144,10 +140,14 @@ ghl_error_codes_t ghl_brent(
             const double x,
             const ghl_parameters *restrict params,
             const ghl_eos_parameters *restrict eos,
-            fparams_struct *restrict fparams),
+            const ghl_conservative_quantities *restrict cons_undens,
+            fparams_struct *restrict fparams,
+            ghl_primitive_quantities *restrict prims),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
+      const ghl_conservative_quantities *restrict cons_undens,
       fparams_struct *restrict fparams,
+      ghl_primitive_quantities *restrict prims,
       double a,
       double b,
       roots_params *restrict r);
@@ -157,10 +157,14 @@ ghl_error_codes_t ghl_toms748(
             const double x,
             const ghl_parameters *restrict params,
             const ghl_eos_parameters *restrict eos,
-            fparams_struct *restrict fparams),
+            const ghl_conservative_quantities *restrict cons_undens,
+            fparams_struct *restrict fparams,
+            ghl_primitive_quantities *restrict prims),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
+      const ghl_conservative_quantities *restrict cons_undens,
       fparams_struct *restrict fparams,
+      ghl_primitive_quantities *restrict prims,
       double a,
       double b,
       roots_params *restrict r);

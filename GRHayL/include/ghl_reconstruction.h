@@ -1,5 +1,5 @@
-#ifndef RECONSTRUCTION_H_
-#define RECONSTRUCTION_H_
+#ifndef GHL_RECONSTRUCTION_H_
+#define GHL_RECONSTRUCTION_H_
 
 #include "ghl.h"
 
@@ -106,4 +106,4 @@ void ghl_wenoz_reconstruction_right_left_faces(
 }
 #endif
 
-#endif // RECONSTRUCTION_H_
+#endif // GHL_RECONSTRUCTION_H_

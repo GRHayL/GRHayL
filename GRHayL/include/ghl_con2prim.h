@@ -1,5 +1,5 @@
-#ifndef CON2PRIM_H_
-#define CON2PRIM_H_
+#ifndef GHL_CON2PRIM_H_
+#define GHL_CON2PRIM_H_
 
 #include "ghl.h"
 
@@ -250,4 +250,4 @@ extern ghl_error_codes_t (*ghl_con2prim_multi_method)(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-#endif // CON2PRIM_H
+#endif // GHL_CON2PRIM_H
