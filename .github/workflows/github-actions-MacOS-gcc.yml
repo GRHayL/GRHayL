@@ -206,7 +206,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [PLM_reconstruction, WENO5_reconstruction]
+        test-function: [PLM_reconstruction, WENOZ_reconstruction]
         os: [macos-13, macos-latest]
     runs-on: ${{ matrix.os }}
 
