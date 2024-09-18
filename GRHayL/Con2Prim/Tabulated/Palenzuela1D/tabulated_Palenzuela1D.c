@@ -19,14 +19,16 @@ froot(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      fparams_struct *restrict fparams) {
+      const ghl_conservative_quantities *restrict cons_undens,
+      fparams_struct *restrict fparams,
+      ghl_primitive_quantities *restrict prims) {
 
-  double rho, P, eps, T, W;
+  double W;
   fparams->compute_rho_P_eps_T_W(
-    x, params, eos, fparams, &rho, &P, &eps, &T, &W);
+    x, params, eos, cons_undens, fparams, prims, &W);
 
   // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
-  return x - (1.0 + eps + P/rho)*W;
+  return x - (1.0 + prims->eps + prims->press/prims->rho)*W;
 }
 
 /* Function    : ghl_tabulated_Palenzuela1D
@@ -54,11 +56,9 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
             const double x,
             const ghl_parameters *restrict params,
             const ghl_eos_parameters *restrict eos,
+            const ghl_conservative_quantities *restrict cons_undens,
             fparams_struct *restrict fparams,
-            double *restrict rho_ptr,
-            double *restrict P_ptr,
-            double *restrict eps_ptr,
-            double *restrict T_ptr,
+            ghl_primitive_quantities *restrict prims,
             double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -97,84 +97,58 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
   const double invD             = 1.0/cons_undens->rho;
   fparams.compute_rho_P_eps_T_W = compute_rho_P_eps_T_W;
   fparams.evolve_T              = params->evolve_temp;
-  fparams.Y_e                   = cons_undens->Y_e * invD;
   fparams.q                     = tau * invD;
   fparams.r                     = S_squared * invD * invD;
   fparams.s                     = B_squared * invD;
   fparams.t                     = BdotS/pow(cons_undens->rho, 1.5);
-  fparams.cons_undens           = cons_undens;
 
   // Step 6: Bracket x (Eq. A8 of [1])
   double xlow = 1 + fparams.q - fparams.s;
   double xup  = 2*(1 + fparams.q) - fparams.s;
 
-  // Step 7: Set initial guess for temperature
-  fparams.temp_guess = prims->temperature;
-
-  // if(diagnostics->check) {
-    // fprintf(stderr, "***Con2Prim***\n");
-    // fprintf(stderr, "S's: %22.15e %22.15e %22.15e -> %22.15e\n",
-            // SD[0], SD[1], SD[2], S_squared);
-    // fprintf(stderr, "B's: %22.15e %22.15e %22.15e -> %22.15e %22.15e\n",
-            // prims->BU[0], prims->BU[1], prims->BU[2], B_squared, BdotS);
-    // fprintf(stderr, "T  : %22.15e\n", fparams.temp_guess);
-  // }
-
-  // Step 8: Call the main function and perform the con2prim
+  // Step 7: Call the main function and perform the con2prim
   roots_params rparams;
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
   // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
-  ghl_error_codes_t error = ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
+  ghl_error_codes_t error = ghl_brent(froot, params, eos, cons_undens, &fparams, prims, xlow, xup, &rparams);
   if(error) {
     // Adjust the temperature guess and try again
-    fparams.temp_guess = eos->T_min;
     prims->temperature = eos->T_min;
     // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
-    error = ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
+    error = ghl_brent(froot, params, eos, cons_undens, &fparams, prims, xlow, xup, &rparams);
     if(error)
       return error;
   }
   diagnostics->n_iter = rparams.n_iters;
 
-  // Step 9: Set core primitives using the EOS and the root
+  // Step 8: Set core primitives using the EOS and the root
   double x = rparams.root;
-  double rho, P, eps, T, W;
-  compute_rho_P_eps_T_W(x, params, eos, &fparams, &rho, &P, &eps, &T, &W);
+  double W;
+  compute_rho_P_eps_T_W(x, params, eos, cons_undens, &fparams, prims, &W);
 
-  // Step 10: Compute auxiliary quantities to obtain the velocities using
+  // Step 9: Compute auxiliary quantities to obtain the velocities using
   //          Eq. (24) in [2]. Note, however, that GRHayL expects the velocity
   //          tilde(u)^{i} := W v^{i},
-  // Step 10.a: Compute S^{i}
+  // Step 9.a: Compute S^{i}
   double SU[3];
   ghl_raise_lower_vector_3D(ADM_metric->gammaUU, SD, SU);
 
-  // Step 10.b: Set Z
-  const double Z = x*rho*W;
+  // Step 9.b: Set Z
+  const double Z = x*prims->rho*W;
 
-  // Step 10.c: Compute utilde^{i}
+  // Step 9.c: Compute utilde^{i}
   double utildeU[3] = {
     W*(SU[0] + BdotS*prims->BU[0]/Z)/(Z+B_squared),
     W*(SU[1] + BdotS*prims->BU[1]/Z)/(Z+B_squared),
     W*(SU[2] + BdotS*prims->BU[2]/Z)/(Z+B_squared)
   };
 
-
-  // Step 10.d: Set prims struct
-  prims->rho         = rho;
-  prims->Y_e         = fparams.Y_e;
-  prims->temperature = T;
+  // Step 9.d: Set prims struct
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
   diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
-
-  // if(diagnostics->check) {
-    // fprintf(stderr, "x Z W : %22.15e %22.15e %22.15e\n", x, Z, W);
-    // fprintf(stderr, "utilde: %22.15e %22.15e %22.15e\n", utildeU[0], utildeU[1], utildeU[2]);
-    // fprintf(stderr, "v's   : %22.15e %22.15e %22.15e\n", prims->vU[0], prims->vU[1], prims->vU[2]);
-    // fprintf(stderr, "**************\n");
-  // }
 
   return ghl_success;
 }

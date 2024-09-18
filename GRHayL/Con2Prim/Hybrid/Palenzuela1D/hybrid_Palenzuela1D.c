@@ -19,14 +19,16 @@ froot(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      fparams_struct *restrict fparams) {
+      const ghl_conservative_quantities *restrict cons_undens,
+      fparams_struct *restrict fparams,
+      ghl_primitive_quantities *restrict prims) {
 
-  double rho, P, eps, W;
+  double W;
   fparams->compute_rho_P_eps_W(
-    x, params, eos, fparams, &rho, &P, &eps, &W);
+    x, params, eos, cons_undens, fparams, prims, &W);
 
   // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
-  return x - (1.0 + eps + P/rho)*W;
+  return x - (1.0 + prims->eps + prims->press/prims->rho)*W;
 }
 
 /* Function    : ghl_tabulated_Palenzuela1D
@@ -54,10 +56,9 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
             const double x,
             const ghl_parameters *restrict params,
             const ghl_eos_parameters *restrict eos,
+            const ghl_conservative_quantities *restrict cons_undens,
             fparams_struct *restrict fparams,
-            double *restrict rho_ptr,
-            double *restrict P_ptr,
-            double *restrict eps_ptr,
+            ghl_primitive_quantities *restrict prims,
             double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -98,7 +99,6 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
   fparams.r                   = S_squared * invD * invD;
   fparams.s                   = B_squared * invD;
   fparams.t                   = BdotS/pow(cons_undens->rho, 1.5);
-  fparams.cons_undens         = cons_undens;
 
   // Step 6: Bracket x (Eq. A8 of [1])
   double xlow = 1 + fparams.q - fparams.s;
@@ -109,7 +109,7 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
   // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
-  ghl_error_codes_t error = ghl_brent(froot, params, eos, &fparams, xlow, xup, &rparams);
+  ghl_error_codes_t error = ghl_brent(froot, params, eos, cons_undens, &fparams, prims, xlow, xup, &rparams);
   if(error)
     return error;
 
@@ -117,8 +117,8 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
 
   // Step 8: Set core primitives using the EOS and the root
   double x = rparams.root;
-  double rho, P, eps, W;
-  compute_rho_P_eps_W(x, params, eos, &fparams, &rho, &P, &eps, &W);
+  double W;
+  compute_rho_P_eps_W(x, params, eos, cons_undens, &fparams, prims, &W);
 
   // Step 9: Compute auxiliary quantities to obtain the velocities using
   //          Eq. (24) in [2]. Note, however, that GRHayL expects the velocity
@@ -128,7 +128,7 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
   ghl_raise_lower_vector_3D(ADM_metric->gammaUU, SD, SU);
 
   // Step 9.b: Set Z
-  const double Z = x*rho*W;
+  const double Z = x*prims->rho*W;
 
   // Step 9.c: Compute utilde^{i}
   double utildeU[3] = {
@@ -138,9 +138,6 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
   };
 
   // Step 9.d: Set prims struct
-  prims->rho   = rho;
-  prims->press = P;
-  prims->eps   = eps;
   diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
   prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 

@@ -1,5 +1,5 @@
-#ifndef UNIT_TESTS_H_
-#define UNIT_TESTS_H_
+#ifndef GHL_UNIT_TESTS_H_
+#define GHL_UNIT_TESTS_H_
 
 #include "ghl_atmosphere.h"
 #include "ghl_con2prim.h"
@@ -334,4 +334,4 @@ fopen_with_check(const char *filename, const char *mode) {
   if(!fp) ghl_error("Could not open file %s.\n", filename);
   return fp;
 }
-#endif // UNIT_TESTS_H_
+#endif // GHL_UNIT_TESTS_H_

@@ -1,5 +1,5 @@
-#ifndef INDUCTION_H_
-#define INDUCTION_H_
+#ifndef GHL_INDUCTION_H_
+#define GHL_INDUCTION_H_
 
 #include "ghl.h"
 
@@ -73,4 +73,4 @@ double ghl_calculate_phitilde_rhs(
 
 //--------------------------------------------------
 
-#endif // INDUCTION_H_
+#endif // GHL_INDUCTION_H_
