@@ -1,9 +1,7 @@
 # Primary make.code.defn for gem Flux_Source
 
 # Source files in this directory that need compiled:
-SRCS = ghl_calculate_characteristic_speed_dirn0.c \
-       ghl_calculate_characteristic_speed_dirn1.c \
-       ghl_calculate_characteristic_speed_dirn2.c \
+SRCS = ghl_calculate_characteristic_speed.c \
        ghl_calculate_source_terms.c
 
 SUBDIRS = hybrid hybrid_entropy tabulated tabulated_entropy

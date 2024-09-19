@@ -183,10 +183,6 @@ int main(int argc, char **argv) {
                               const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
                               const double, const double, ghl_conservative_quantities *restrict);
 
-  void (*calculate_characteristic_speed)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
-                              const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict, double *restrict, double *restrict);
-
-
   // Loop over flux directions (x,y,z)
   for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
     const int xdir = (flux_dirn == 0);
@@ -197,15 +193,12 @@ int main(int argc, char **argv) {
     switch(flux_dirn) {
       case 0:
         calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn0_hybrid;
-        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn0;
         break;
       case 1:
         calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn1_hybrid;
-        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn1;
         break;
       case 2:
         calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn2_hybrid;
-        calculate_characteristic_speed = &ghl_calculate_characteristic_speed_dirn2;
         break;
     }
 
@@ -279,9 +272,9 @@ int main(int argc, char **argv) {
           prims_l.u0 = rho_l[index]*Bx_l[index]/vy_l[index];
 
           double cmin, cmax;
-          calculate_characteristic_speed(
-                &prims_r, &prims_l, &eos,
-                &metric_face, &cmin, &cmax);
+          ghl_calculate_characteristic_speed(
+                flux_dirn, &eos, &metric_face,
+                &prims_r, &prims_l, &cmin, &cmax);
 
           ghl_conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(

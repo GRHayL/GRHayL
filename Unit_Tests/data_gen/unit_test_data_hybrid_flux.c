@@ -145,15 +145,15 @@ int main(int argc, char **argv) {
     prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
     prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
 
-    ghl_calculate_characteristic_speed_dirn0(
-          &prims_r, &prims_l, &eos,
-          &ADM_metric, &cxmin[index], &cxmax[index]);
-    ghl_calculate_characteristic_speed_dirn1(
-          &prims_r, &prims_l, &eos,
-          &ADM_metric, &cymin[index], &cymax[index]);
-    ghl_calculate_characteristic_speed_dirn2(
-          &prims_r, &prims_l, &eos,
-          &ADM_metric, &czmin[index], &czmax[index]);
+    ghl_calculate_characteristic_speed(
+          0, &eos, &ADM_metric,
+          &prims_r, &prims_l, &cxmin[index], &cxmax[index]);
+    ghl_calculate_characteristic_speed(
+          1, &eos, &ADM_metric,
+          &prims_r, &prims_l, &cymin[index], &cymax[index]);
+    ghl_calculate_characteristic_speed(
+          1,&eos, &ADM_metric,
+          &prims_r, &prims_l, &czmin[index], &czmax[index]);
   }
 
   double *cmin;
