@@ -1,7 +1,7 @@
 #include "unit_tests.h"
 
 int main(int argc, char **argv) {
-  FILE* infile = fopen_with_check("WENO5_reconstruction_input.bin", "rb");
+  FILE* infile = fopen_with_check("WENOZ_reconstruction_input.bin", "rb");
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
-  infile = fopen_with_check("WENO5_reconstruction_output.bin","rb");
-  FILE* inpert = fopen_with_check("WENO5_reconstruction_output_pert.bin","rb");
+  infile = fopen_with_check("WENOZ_reconstruction_output.bin","rb");
+  FILE* inpert = fopen_with_check("WENOZ_reconstruction_output_pert.bin","rb");
 
   key  = fread(varr_trusted  , sizeof(double), arraylength, infile);
   key += fread(varl_trusted  , sizeof(double), arraylength, infile);
@@ -42,10 +42,10 @@ int main(int argc, char **argv) {
   // These are set up to match the loops in the ET version of IllinoisGRMHD.
   for(int index=NGHOSTS; index<arraylength-2; index++) {
       double var_r, var_l;
-      ghl_weno5_reconstruction(&var[index-3], &var_r, &var_l);
+      ghl_wenoz_reconstruction(&var[index-3], &var_r, &var_l);
 
       char mname[20];
-      sprintf(mname, "WENO5");
+      sprintf(mname, "WENOZ");
 
       if( ghl_pert_test_fail(varr_trusted[index], var_r, varr_pert[index]) )
           ghl_error("Test unit_test_reconstruction has failed for method %.20s.\n"
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
   fclose(infile);
   fclose(inpert);
 
-  ghl_info("WENO5 reconstruction test has passed!\n");
+  ghl_info("WENOZ reconstruction test has passed!\n");
   free(var);
   free(varr_trusted); free(varl_trusted);
   free(varr_pert); free(varl_pert);

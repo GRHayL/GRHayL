@@ -1,5 +1,5 @@
 # Primary make.code.defn for gem Reconstruction
 
 # Source files in this directory that need compiled:
-SRCS = weno5_reconstruction.c                  \
-       weno5_reconstruction_right_left_faces.c
+SRCS = wenoz_reconstruction.c                  \
+       wenoz_reconstruction_right_left_faces.c
