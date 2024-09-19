@@ -3,4 +3,4 @@
 # Source files in this directory that need compiled:
 SRC = 
 
-SUBDIRS = PPM PLM WENO5
+SUBDIRS = PPM PLM WENOZ
