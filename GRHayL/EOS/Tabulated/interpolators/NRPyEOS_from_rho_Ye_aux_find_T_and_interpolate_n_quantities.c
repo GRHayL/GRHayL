@@ -3,7 +3,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
-int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
+ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       const ghl_eos_parameters *restrict eos,
       const int n,
       const double prec,
@@ -13,45 +13,17 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       const int tablevar_in_key,
       const int *restrict tablevars_keys,
       double *restrict tablevars,
-      double *restrict T,
-      NRPyEOS_error_report *restrict report) {
-#ifndef GRHAYL_USE_HDF5
-  HDF5_ERROR_IF_USED;
-#else
-  // Start by assuming no errors
-  int error = 0;
+      double *restrict T) {
 
   // This function will interpolate n table quantities from
   // (rho,Ye,aux). It replaces EOS_Omni calls with keytemp != 1
-  if(n > NRPyEOS_ntablekeys) {
-    sprintf(report->message, "In %s call, number of quantities exceed maximum allowed: %d > %d.\n",
-            __func__, n, NRPyEOS_ntablekeys);
-    return 1;
-  }
+  if(n > NRPyEOS_ntablekeys) 
+    return ghl_error_exceed_table_vars;
 
   // Check table bounds for input variables
-  error = NRPyEOS_checkbounds_kt0_noTcheck(eos,rho,Y_e);
-  if(error != 0) {
-    char message[256];
-    switch(error) {
-      case 101:
-        sprintf(message, "Input Y_e (%.15e) is too large.", Y_e);
-        break;
-      case 102:
-        sprintf(message, "Input Y_e (%.15e) is too small.", Y_e);
-        break;
-      case 105:
-        sprintf(message, "Input rho (%.15e) is too large.", rho);
-        break;
-      case 106:
-        sprintf(message, "Input rho (%.15e) is too small.", rho);
-        break;
-    }
-    sprintf(report->message,
-            "In %s call, problem with checkbounds: %s\n",
-            __func__, message);
+  ghl_error_codes_t error = NRPyEOS_checkbounds_kt0_noTcheck(eos, rho, Y_e);
+  if(error)
     return error;
-  }
 
   // First step is to recover the temperature. The variable
   // tablevar_in is the one used in the temperature recovery.
@@ -68,11 +40,8 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
     // Compute eps+eps0
     aux += eos->energy_shift;
     // At this point, aux *must* be positive. If not, error out.
-    if(aux < 0.0) {
-      sprintf(report->message, "In %s call, found eps+energy_shift < 0.0 (%e).\n",
-              __func__, aux);
-      return 2;
-    }
+    if(aux < 0.0) 
+      return ghl_error_table_neg_energy;
 
     // Compute log(eps+eps0)
     aux = log(aux);
@@ -82,13 +51,14 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
   const double lr  = log(rho);
   const double lt0 = log(*T);
   double lt        = 0.0;
-  NRPyEOS_findtemp_from_any(eos, tablevar_in_key, lr, lt0, Y_e, aux, prec, &lt, &error);
+  error = NRPyEOS_findtemp_from_any(eos, tablevar_in_key, lr, lt0, Y_e, aux, prec, &lt);
+  if(error)
+    return error;
 
   // Now set the temperature
   *T = exp(lt);
 
   // Then interpolate the quantities we want from (rho,Ye,T)
-  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, n, rho, Y_e, *T, tablevars_keys, tablevars, report);
-  return 0; //error;
-#endif
+  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, n, rho, Y_e, *T, tablevars_keys, tablevars);
+  return ghl_success;
 }

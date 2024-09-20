@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 /*
    Simple function for h and cs2 that constructs
@@ -7,7 +7,7 @@
    might fail for others. It also assumes prims
    is full and we can directly compute h.
 */
-void ghl_test_compute_h_and_cs2(
+ghl_error_codes_t ghl_test_compute_h_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
       double *restrict h,
@@ -25,4 +25,5 @@ void ghl_test_compute_h_and_cs2(
 
   *h = 1 + eps + P/rho;
   *cs2 = (rho + T + Y_e)/(rhomax + Yemax + Tmax);
+  return ghl_success;
 }

@@ -1,6 +1,6 @@
 #include "../../utils_Noble.h"
 
-int ghl_general_newton_raphson(
+ghl_error_codes_t ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -59,10 +59,10 @@ int ghl_general_newton_raphson(
 
   /*  Check for bad untrapped divergences : */
   if(!isfinite(f) ||  !isfinite(df)) {
-    return 3;
+    return ghl_error_c2p_singular;
   } else if(fabs(errx) <= harm_aux->solver_tolerance) {
-    return 0;
+    return ghl_success;
   } else {
-    return 2;
+    return ghl_error_c2p_max_iter;
   }
 }

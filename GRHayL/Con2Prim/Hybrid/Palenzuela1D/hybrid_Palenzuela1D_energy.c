@@ -25,35 +25,31 @@ compute_rho_P_eps_W_energy(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
+      const ghl_conservative_quantities *restrict cons_undens,
       fparams_struct *restrict fparams,
-      double *restrict rho_ptr,
-      double *restrict P_ptr,
-      double *restrict eps_ptr,
+      ghl_primitive_quantities *restrict prims,
       double *restrict W_ptr) {
 
   // Step 1: First compute rho and W
   double rho, W;
-  compute_rho_W_from_x_and_conservatives(x, params, fparams, &rho, &W);
+  compute_rho_W_from_x_and_conservatives(x, params, cons_undens, fparams, &prims->rho, &W);
 
   // Step 2: Compute eps
   const double q = fparams->q;
   const double s = fparams->s;
   const double t = fparams->t;
   // Eq. (43) of https://arxiv.org/pdf/1712.07538.pdf
-  double eps = W - 1.0 + (1.0-W*W)*x/W + W*(q - s + t*t/(2*x*x) + s/(2*W*W) );
+  prims->eps = W - 1.0 + (1.0-W*W)*x/W + W*(q - s + t*t/(2*x*x) + s/(2*W*W) );
 
   // Step 3: Compute the pressure
   double P_cold, eps_cold;
-  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
   // Don't let eps be less than eps_cold
-  if(eps < eps_cold) eps = eps_cold;
+  if(prims->eps < eps_cold) prims->eps = eps_cold;
   // Compute P
-  const double P = P_cold + (eps - eps_cold) * (eos->Gamma_th - 1.0) * rho;
+  prims->press = P_cold + (prims->eps - eps_cold) * (eos->Gamma_th - 1.0) * prims->rho;
 
   // Step 4: Set the output
-  *rho_ptr = rho;
-  *P_ptr   = P;
-  *eps_ptr = eps;
   *W_ptr   = W;
 }
 
@@ -65,7 +61,7 @@ compute_rho_P_eps_W_energy(
  * a primitive recovery using the Palenzuela et al. scheme using the specific
  * energy. See file ghl_hybrid_Palenzuela1D.c for further details.
  */
-int ghl_hybrid_Palenzuela1D_energy(
+ghl_error_codes_t ghl_hybrid_Palenzuela1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,

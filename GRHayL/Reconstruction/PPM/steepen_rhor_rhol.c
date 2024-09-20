@@ -1,4 +1,4 @@
-#include "reconstruction.h"
+#include "ghl_reconstruction.h"
 
 void ghl_steepen_rhor_rhol(
       const ghl_parameters *restrict params,

@@ -1,5 +1,5 @@
-#ifndef FLUX_SOURCE_H_
-#define FLUX_SOURCE_H_
+#ifndef GHL_FLUX_SOURCE_H_
+#define GHL_FLUX_SOURCE_H_
 
 #include "ghl.h"
 
@@ -158,4 +158,4 @@ void ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy(
 }
 #endif
 
-#endif // FLUX_SOURCE_H_
+#endif // GHL_FLUX_SOURCE_H_

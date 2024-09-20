@@ -25,33 +25,29 @@ compute_rho_P_eps_W_entropy(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
+      const ghl_conservative_quantities *restrict cons_undens,
       fparams_struct *restrict fparams,
-      double *restrict rho_ptr,
-      double *restrict P_ptr,
-      double *restrict eps_ptr,
+      ghl_primitive_quantities *restrict prims,
       double *restrict W_ptr) {
 
   // Step 1: First compute rho and W
-  double rho, W;
-  compute_rho_W_from_x_and_conservatives(x, params, fparams, &rho, &W);
+  double W;
+  compute_rho_W_from_x_and_conservatives(x, params, cons_undens, fparams, &prims->rho, &W);
 
   // Step 2: Compute P (Eq. 19 of arXiv:0808.3140)
-  const double ent   = fparams->cons_undens->entropy / W;
-  const double Gamma = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho)];
-  double P           = ent * pow(rho, Gamma - 1.0);
+  prims->entropy     = cons_undens->entropy / W;
+  const double Gamma = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, prims->rho)];
+  prims->press       = prims->entropy * pow(prims->rho, Gamma - 1.0);
 
   // Step 3: Compute the pressure
   double P_cold, eps_cold;
-  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
   // Don't let P be less than P_cold
-  if(P < P_cold) P = P_cold;
+  if(prims->press < P_cold) prims->press = P_cold;
   // Compute eps
-  const double eps = eps_cold + (P - P_cold) / ( (eos->Gamma_th - 1.0) * rho);
+  prims->eps = eps_cold + (prims->press - P_cold) / ( (eos->Gamma_th - 1.0) * prims->rho);
 
   // Step 4: Set the output
-  *rho_ptr = rho;
-  *P_ptr   = P;
-  *eps_ptr = eps;
   *W_ptr   = W;
 }
 
@@ -63,7 +59,7 @@ compute_rho_P_eps_W_entropy(
  * a primitive recovery using the Palenzuela et al. scheme using the specific
  * energy. See file ghl_hybrid_Palenzuela1D.c for further details.
  */
-int ghl_hybrid_Palenzuela1D_entropy(
+ghl_error_codes_t ghl_hybrid_Palenzuela1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,

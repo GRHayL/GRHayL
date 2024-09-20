@@ -15,6 +15,7 @@ SRCS = compute_ADM_auxiliaries.c                  \
        initialize_primitives.c                    \
        initialize_stress_energy.c                 \
        limit_v_and_compute_u0.c                   \
+       read_error_codes.c                         \
        return_conservatives.c                     \
        return_primitives.c                        \
        return_stress_energy.c

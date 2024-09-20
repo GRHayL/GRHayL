@@ -2,12 +2,12 @@
 #define GRHAYLIB_H_
 
 #include "include/ghl.h"
-#include "include/atmosphere.h"
-#include "include/con2prim.h"
-#include "include/induction.h"
-#include "include/reconstruction.h"
-#include "include/flux_source.h"
-#include "include/neutrinos.h"
+#include "include/ghl_atmosphere.h"
+#include "include/ghl_con2prim.h"
+#include "include/ghl_induction.h"
+#include "include/ghl_reconstruction.h"
+#include "include/ghl_flux_source.h"
+#include "include/ghl_radiation.h"
 #include "include/nrpyeos_hybrid.h"
 #include "include/nrpyeos_tabulated.h"
 #include "include/nrpyleakage.h"

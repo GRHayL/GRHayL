@@ -3,7 +3,7 @@
 // Author(s)  : Leo Werneck & Samuel Cupp
 // Description: In this file we provide an extensive unit test of
 //              the Con2Prim gem.
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
 

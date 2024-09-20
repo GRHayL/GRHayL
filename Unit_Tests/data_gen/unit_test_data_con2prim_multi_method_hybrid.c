@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 void write_to_file(double **vars, const int arraylength, const int nvars, FILE *restrict outfile) {
   for(int i=0; i<nvars; i++)
@@ -222,7 +222,11 @@ int main(int argc, char **argv) {
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
 
-      const int speed_limited __attribute__((unused)) = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims);
+      bool speed_limited;
+      ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
+            &params, &ADM_metric, &prims, &speed_limited);
+      if(error)
+        ghl_read_error_codes(error);
 
       // We need epsilon to compute the enthalpy in ghl_compute_conservs_and_Tmunu;
       // This normally happens in the ghl_enforce_primitive_limits_and_compute_u0 function
@@ -572,8 +576,11 @@ int main(int argc, char **argv) {
             Bx[i], By[i], Bz[i],
             ent_orig[i], poison, poison, &prims);
 
-      const int speed_limited __attribute__((unused)) = ghl_enforce_primitive_limits_and_compute_u0(
-            &params, &eos, &ADM_metric, &prims);
+      bool speed_limited;
+      ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(
+            &params, &eos, &ADM_metric, &prims, &speed_limited);
+      if(error)
+        ghl_read_error_codes(error);
 
       ghl_return_primitives(
             &prims, &rho_b[i], &press[i], &eps[i],

@@ -1,13 +1,13 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
-static inline void compute_h_and_cs2(const ghl_eos_parameters *restrict eos,
+static inline ghl_error_codes_t compute_h_and_cs2(const ghl_eos_parameters *restrict eos,
                                      ghl_primitive_quantities *restrict prims,
                                      double *restrict h,
                                      double *restrict cs2) {
 
-
-*h = prims->press*prims->vU[0] / prims->vU[2];
-*cs2 = prims->rho*prims->vU[2]*(*h)/1e4;
+  *h = prims->press*prims->vU[0] / prims->vU[2];
+  *cs2 = prims->rho*prims->vU[2]*(*h)/1e4;
+  return ghl_success;
 }
 
 #define AM2 -0.0625

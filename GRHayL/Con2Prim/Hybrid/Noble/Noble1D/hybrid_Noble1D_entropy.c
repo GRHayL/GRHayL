@@ -32,7 +32,7 @@
 
 ***********************************************************************************/
 
-int ghl_hybrid_Noble1D_entropy(
+ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -61,7 +61,7 @@ int ghl_hybrid_Noble1D_entropy(
 
   gnr_out[0] = Z_last;
 
-  int retval = ghl_general_newton_raphson(eos, &harm_aux, 1, rho0, gnr_out, ghl_validate_1D_entropy, ghl_func_Z);
+  ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, rho0, gnr_out, ghl_validate_1D_entropy, ghl_func_Z);
 
   const double Z = gnr_out[0];
 
@@ -100,7 +100,7 @@ int ghl_hybrid_Noble1D_entropy(
   const double utsq = (rel_err > 1e-15) ? (harm_aux.D-rho0)*(harm_aux.D+rho0)/(rho0*rho0) : 0.0;
 
   if(utsq < 0.0) {
-    return 5;
+    return ghl_error_neg_vsq;
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
@@ -110,16 +110,16 @@ int ghl_hybrid_Noble1D_entropy(
   prims->rho = rho0;
 
   if(prims->rho <= 0.0) {
-    return 7;
+    return ghl_error_neg_rho;
   }
 
-  ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
+  diagnostics->speed_limited = ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
   if(prims->press <= 0.0) {
-    return 6;
+    return ghl_error_neg_pressure;
   }
 
   /* Done! */
   diagnostics->n_iter = harm_aux.n_iter;
   diagnostics->which_routine = Noble1D_entropy;
-  return 0;
+  return ghl_success;
 }

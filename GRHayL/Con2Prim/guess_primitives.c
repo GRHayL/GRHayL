@@ -1,4 +1,4 @@
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
 /* Function    : ghl_guess_primitives()
  * Description : Computes initial guesses for the primitives

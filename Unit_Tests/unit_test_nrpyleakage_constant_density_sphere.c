@@ -1,5 +1,4 @@
-#include "neutrinos.h"
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 #define IDX3D(i0,i1,i2) ( (i0) + Nt0*( (i1) + Nt1*(i2) ) )
 

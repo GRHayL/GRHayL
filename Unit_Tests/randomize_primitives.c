@@ -1,5 +1,5 @@
 #include "stdlib.h"
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 void ghl_randomize_primitives(
       const ghl_eos_parameters *restrict eos,

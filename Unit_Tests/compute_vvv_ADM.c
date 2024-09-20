@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 void ghl_test_compute_vvv_ADM(
   const int dirlength,

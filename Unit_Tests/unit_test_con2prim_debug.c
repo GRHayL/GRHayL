@@ -1,5 +1,5 @@
 #include <string.h>
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 #include <string.h>
 
 void init_metric_from_string( const char *lapse_shift_string_in,

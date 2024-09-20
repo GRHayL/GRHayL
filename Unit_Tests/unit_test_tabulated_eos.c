@@ -1,5 +1,5 @@
 #include "nrpyeos_tabulated.h"
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 /*
  * (c) 2023 Leo Werneck
@@ -72,6 +72,8 @@ int main(int argc, char **argv) {
   const double dlogT   = (log_T_max         - log_T_min        )/N_T;
   const double dYe     = (eos.table_Y_e_max - eos.table_Y_e_min)/N_Ye;
 
+  bool speed_limited;
+
   // Begin test
   for(int k=0;k<N_Ye;k++) {
     const double Y_e = eos.table_Y_e_min + k*dYe;
@@ -102,7 +104,10 @@ int main(int argc, char **argv) {
 
         // Now perform the interpolations, validating the results
         P_interp = 0.0/0.0;
-        ghl_tabulated_compute_P_from_T(&eos, rho, Y_e, T, &P_interp);
+        ghl_error_codes_t error = ghl_tabulated_compute_P_from_T(&eos, rho, Y_e, T, &P_interp);
+	if(error)
+          ghl_read_error_codes(error);
+	
         if( relative_error(P, P_interp) > rtol && fabs(P - P_interp) > atol )
           ghl_error("tabulated_compute_P_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -445,7 +450,9 @@ int main(int argc, char **argv) {
       prims.rho = 0.9 * eos.rho_min;
       prims.Y_e = 0.9 * eos.Y_e_min;
       prims.temperature = 0.9 * eos.T_min;
-      ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
+      ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
+      if(error)
+        ghl_read_error_codes(error);
       if(prims.rho != eos.rho_min || prims.Y_e != eos.Y_e_min || prims.temperature != eos.T_min) {
         ghl_error("enforce bounds (rho, Y_e, T) failed for small values: %e != %e or %e != %e or %e != %e\n",
                   prims.rho, eos.rho_min, prims.Y_e, eos.Y_e_min, prims.temperature, eos.T_min);
@@ -455,7 +462,9 @@ int main(int argc, char **argv) {
       prims.rho = 1.1 * eos.rho_max;
       prims.Y_e = 1.1 * eos.Y_e_max;
       prims.temperature = 1.1 * eos.T_max;
-      ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
+      error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
+      if(error)
+        ghl_read_error_codes(error);
       if(prims.rho != eos.rho_max || prims.Y_e != eos.Y_e_max || prims.temperature != eos.T_max) {
         ghl_error("enforce bounds (rho, Y_e, T) failed for large values: %e != %e or %e != %e or %e != %e\n",
                   prims.rho, eos.rho_max, prims.Y_e, eos.Y_e_max, prims.temperature, eos.T_max);
@@ -465,7 +474,9 @@ int main(int argc, char **argv) {
       prims.rho = 0.9 * eos.rho_max;
       prims.Y_e = 0.9 * eos.Y_e_max;
       prims.temperature = 0.9 * eos.T_max;
-      ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
+      error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
+      if(error)
+        ghl_read_error_codes(error);
       if(prims.rho != 0.9 * eos.rho_max || prims.Y_e != 0.9 * eos.Y_e_max || prims.temperature != 0.9 * eos.T_max) {
         ghl_error("enforce bounds (rho, Y_e, T) changed values that it shouldn't have");
       }

@@ -1,7 +1,7 @@
 #ifndef __HARM_U2P_UTIL__C__
 #define __HARM_U2P_UTIL__C__
 
-#include "con2prim.h"
+#include "ghl_con2prim.h"
 
 // HARM uses lots of globals. These auxiliary variables
 // allow us to pass useful quantities to the con2prim
@@ -127,7 +127,7 @@ static inline double ghl_vsq_calc(
   return(  ( Zsq * harm_aux->Qtsq  + harm_aux->QdotBsq * (harm_aux->Bsq + 2.*Z)) / (Zsq*Xsq) );
 }
 
-int ghl_general_newton_raphson(
+ghl_error_codes_t ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
       const int ndim,
@@ -213,7 +213,7 @@ int ghl_initialize_Noble_entropy(
       double *restrict rho_ptr,
       double *restrict Z_ptr);
 
-int ghl_finalize_Noble(
+bool ghl_finalize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -224,7 +224,7 @@ int ghl_finalize_Noble(
       const double vsq,
       ghl_primitive_quantities *restrict prims);
 
-int ghl_finalize_Noble_entropy(
+bool ghl_finalize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,

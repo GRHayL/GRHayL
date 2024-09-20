@@ -1,5 +1,5 @@
-#ifndef ATMOSPHERE_H_
-#define ATMOSPHERE_H_
+#ifndef GHL_ATMOSPHERE_H_
+#define GHL_ATMOSPHERE_H_
 
 #include "ghl.h"
 
@@ -20,4 +20,4 @@ void ghl_set_prims_to_radial_falloff_atm(
 }
 #endif
 
-#endif // ATMOSPHERE_H
+#endif // GHL_ATMOSPHERE_H

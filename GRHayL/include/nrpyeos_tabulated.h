@@ -41,11 +41,6 @@ static const char table_var_names[NRPyEOS_ntablekeys][10] = {
 //********************************************
 #endif // GRHAYL_USE_HDF5
 
-// Error handling struct
-typedef struct NRPyEOS_error_report {
-  char message[1024];
-} NRPyEOS_error_report;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,28 +52,28 @@ void NRPyEOS_read_table_set_EOS_params(
 
 void NRPyEOS_free_memory(ghl_eos_parameters *restrict eos_params);
 
-void NRPyEOS_P_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_P_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
       const double T,
       double *restrict P);
 
-void NRPyEOS_eps_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_eps_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
       const double T,
       double *restrict eps);
 
-void NRPyEOS_cs2_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_cs2_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
       const double T,
       double *restrict cs2);
 
-void NRPyEOS_P_and_eps_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_P_and_eps_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -86,7 +81,7 @@ void NRPyEOS_P_and_eps_from_rho_Ye_T(
       double *restrict P,
       double *restrict eps);
 
-void NRPyEOS_P_eps_and_S_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_P_eps_and_S_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -95,7 +90,7 @@ void NRPyEOS_P_eps_and_S_from_rho_Ye_T(
       double *restrict eps,
       double *restrict S);
 
-void NRPyEOS_P_eps_and_cs2_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_P_eps_and_cs2_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -104,7 +99,7 @@ void NRPyEOS_P_eps_and_cs2_from_rho_Ye_T(
       double *restrict eps,
       double *restrict cs2);
 
-void NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -114,7 +109,7 @@ void NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(
       double *restrict S,
       double *restrict cs2);
 
-void NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -123,7 +118,7 @@ void NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T(
       double *restrict eps,
       double *restrict depsdT);
 
-void NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -135,7 +130,7 @@ void NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(
       double *restrict mu_p,
       double *restrict mu_n);
 
-void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
+ghl_error_codes_t NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -147,14 +142,14 @@ void NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
       double *restrict X_n,
       double *restrict X_p);
 
-void NRPyEOS_T_from_rho_Ye_eps(
+ghl_error_codes_t NRPyEOS_T_from_rho_Ye_eps(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
       const double eps,
       double *restrict T);
 
-void NRPyEOS_P_and_T_from_rho_Ye_eps(
+ghl_error_codes_t NRPyEOS_P_and_T_from_rho_Ye_eps(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -162,7 +157,7 @@ void NRPyEOS_P_and_T_from_rho_Ye_eps(
       double *restrict P,
       double *restrict T);
 
-void NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(
+ghl_error_codes_t NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -171,7 +166,7 @@ void NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(
       double *restrict cs2,
       double *restrict T);
 
-void NRPyEOS_eps_and_T_from_rho_Ye_P(
+ghl_error_codes_t NRPyEOS_eps_and_T_from_rho_Ye_P(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -179,7 +174,7 @@ void NRPyEOS_eps_and_T_from_rho_Ye_P(
       double *restrict eps,
       double *restrict T);
 
-void NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(
+ghl_error_codes_t NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -188,7 +183,7 @@ void NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(
       double *restrict cs2,
       double *restrict T);
 
-void NRPyEOS_P_and_T_from_rho_Ye_S(
+ghl_error_codes_t NRPyEOS_P_and_T_from_rho_Ye_S(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -196,7 +191,7 @@ void NRPyEOS_P_and_T_from_rho_Ye_S(
       double *restrict P,
       double *restrict T);
 
-void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(
+ghl_error_codes_t NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -206,7 +201,7 @@ void NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(
       double *restrict depsdT,
       double *restrict T);
 
-void NRPyEOS_eps_S_and_T_from_rho_Ye_P(
+ghl_error_codes_t NRPyEOS_eps_S_and_T_from_rho_Ye_P(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -215,7 +210,7 @@ void NRPyEOS_eps_S_and_T_from_rho_Ye_P(
       double *restrict S,
       double *restrict T);
 
-void NRPyEOS_P_eps_and_T_from_rho_Ye_S(
+ghl_error_codes_t NRPyEOS_P_eps_and_T_from_rho_Ye_S(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,
       const double Y_e,
@@ -224,17 +219,16 @@ void NRPyEOS_P_eps_and_T_from_rho_Ye_S(
       double *restrict eps,
       double *restrict T);
 
-int NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
+ghl_error_codes_t NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
       const ghl_eos_parameters *restrict eos_params,
       const int n,
       const double rho,
       const double Y_e,
       const double T,
       const int *restrict tablevars_keys,
-      double *restrict tablevars,
-      NRPyEOS_error_report *restrict report);
+      double *restrict tablevars);
 
-int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
+ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       const ghl_eos_parameters *restrict eos_params,
       const int n,
       const double prec,
@@ -244,12 +238,11 @@ int NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       const int tablevar_in_key,
       const int *restrict tablevars_keys,
       double *restrict tablevars,
-      double *restrict T,
-      NRPyEOS_error_report *restrict report);
+      double *restrict T);
 
 void NRPyEOS_initialize_tabulated_functions();
 
-void NRPyEOS_tabulated_compute_enthalpy_and_cs2(
+ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
       double *restrict enthalpy_ptr,

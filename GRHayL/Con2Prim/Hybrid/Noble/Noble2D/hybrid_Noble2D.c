@@ -32,7 +32,7 @@
 
 ***********************************************************************************/
 
-int ghl_hybrid_Noble2D(
+ghl_error_codes_t ghl_hybrid_Noble2D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -54,7 +54,7 @@ int ghl_hybrid_Noble2D(
   gnr_out[1] = (gnr_out[1] > 1.0) ? (1.0 - 1.e-15) : gnr_out[1];
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
-  const int retval = ghl_general_newton_raphson(eos, &harm_aux, 2, 0.0, gnr_out, ghl_validate_2D, ghl_func_2D);
+  const ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 2, 0.0, gnr_out, ghl_validate_2D, ghl_func_2D);
 
   const double Z = gnr_out[0];
 
@@ -71,17 +71,17 @@ int ghl_hybrid_Noble2D(
     vsq = 1.-2.e-16;
   } else if(vsq < 0.0) {
     //v should be real!
-    return 5;
+    return ghl_error_neg_vsq;
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  ghl_finalize_Noble(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
+  diagnostics->speed_limited = ghl_finalize_Noble(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
   if(prims->press <= 0.0) {
-    return 6;
+    return ghl_error_neg_pressure;
   }
 
   /* Done! */
   diagnostics->n_iter = harm_aux.n_iter;
   diagnostics->which_routine = Noble2D;
-  return 0;
+  return ghl_success;
 }

@@ -1,4 +1,4 @@
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
 
@@ -160,10 +160,15 @@ int main(int argc, char **argv) {
           prims_l.rho, prims_l.Y_e, prims_l.temperature,
           &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
-    int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
-          &params, &ADM_metric, &prims_r);
-    speed_limit = ghl_limit_v_and_compute_u0(
-          &params, &ADM_metric, &prims_l);
+    bool speed_limit;
+    ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
+          &params, &ADM_metric, &prims_r, &speed_limit);
+    if(error)
+      ghl_read_error_codes(error);
+    error = ghl_limit_v_and_compute_u0(
+          &params, &ADM_metric, &prims_l, &speed_limit);
+    if(error)
+      ghl_read_error_codes(error);
 
     ghl_calculate_characteristic_speed_dirn0(
           &prims_r, &prims_l, &eos,
@@ -335,10 +340,15 @@ int main(int argc, char **argv) {
                 prims_l.rho, prims_l.Y_e, prims_l.temperature,
                 &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
-          int speed_limit __attribute__((unused)) = ghl_limit_v_and_compute_u0(
-                &params, &ADM_metric, &prims_r);
-          speed_limit = ghl_limit_v_and_compute_u0(
-                &params, &ADM_metric, &prims_l);
+          bool speed_limit;
+          ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
+                &params, &ADM_metric, &prims_r, &speed_limit);
+          if(error)
+            ghl_read_error_codes(error);
+          error = ghl_limit_v_and_compute_u0(
+                &params, &ADM_metric, &prims_l, &speed_limit);
+          if(error)
+            ghl_read_error_codes(error);
 
           ghl_conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(

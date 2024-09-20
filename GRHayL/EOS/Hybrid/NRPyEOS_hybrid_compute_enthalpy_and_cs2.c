@@ -7,7 +7,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_enthalpy_and_cs2
 */
 
-void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
+ghl_error_codes_t NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
       double *restrict enthalpy_ptr,
@@ -46,4 +46,5 @@ void NRPyEOS_hybrid_compute_enthalpy_and_cs2(
   // Step 9: Set the output
   *enthalpy_ptr = h;
   *cs2_ptr      = cs2;
+  return ghl_success;
 }
