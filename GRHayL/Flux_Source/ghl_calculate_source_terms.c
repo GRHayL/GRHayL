@@ -2,135 +2,114 @@
 /*
  * Add source terms for Stilde and tau_tilde
  */
-void ghl_calculate_source_terms(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {
+void ghl_calculate_source_terms(
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_metric_quantities *restrict metric_d0,
+      const ghl_metric_quantities *restrict metric_d1,
+      const ghl_metric_quantities *restrict metric_d2,
+      const ghl_extrinsic_curvature *restrict curv,
+      ghl_conservative_quantities *restrict cons) {
 
-{
+  double h, cs2;
+  ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
 
-double h, cs2;
+  const double sqrt_detg = metric->lapse*metric->sqrt_detgamma;
+  ghl_ADM_aux_quantities metric_aux;
+  ghl_compute_ADM_auxiliaries(metric, &metric_aux);
+  const double betaD[3] = {metric_aux.g4DD[0][1],
+                           metric_aux.g4DD[0][2],
+                           metric_aux.g4DD[0][3]};
 
-ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
-const double u4U0 = prims->u0;
-const double u4U1 = prims->vU[0]*u4U0;
-const double u4U2 = prims->vU[1]*u4U0;
-const double u4U3 = prims->vU[2]*u4U0;
-const double BU0 = prims->BU[0];
-const double BU1 = prims->BU[1];
-const double BU2 = prims->BU[2];
-const double P = prims->press;
-const double rhob = prims->rho;
-const double alpha = metric->lapse;
-const double betaU0 = metric->betaU[0];
-const double betaU1 = metric->betaU[1];
-const double betaU2 = metric->betaU[2];
-const double gammaDD00 = metric->gammaDD[0][0];
-const double gammaDD01 = metric->gammaDD[0][1];
-const double gammaDD02 = metric->gammaDD[0][2];
-const double gammaDD11 = metric->gammaDD[1][1];
-const double gammaDD12 = metric->gammaDD[1][2];
-const double gammaDD22 = metric->gammaDD[2][2];
-const double KDD00 = curv->K[0][0];
-const double KDD01 = curv->K[0][1];
-const double KDD02 = curv->K[0][2];
-const double KDD11 = curv->K[1][1];
-const double KDD12 = curv->K[1][2];
-const double KDD22 = curv->K[2][2];
-const double alpha_dD0     = metric_derivs_x->lapse;
-const double betaU_dD00    = metric_derivs_x->betaU[0];
-const double betaU_dD10    = metric_derivs_x->betaU[1];
-const double betaU_dD20    = metric_derivs_x->betaU[2];
-const double gammaDD_dD000 = metric_derivs_x->gammaDD[0][0];
-const double gammaDD_dD010 = metric_derivs_x->gammaDD[0][1];
-const double gammaDD_dD020 = metric_derivs_x->gammaDD[0][2];
-const double gammaDD_dD110 = metric_derivs_x->gammaDD[1][1];
-const double gammaDD_dD120 = metric_derivs_x->gammaDD[1][2];
-const double gammaDD_dD220 = metric_derivs_x->gammaDD[2][2];
-const double alpha_dD1     = metric_derivs_y->lapse;
-const double betaU_dD01    = metric_derivs_y->betaU[0];
-const double betaU_dD11    = metric_derivs_y->betaU[1];
-const double betaU_dD21    = metric_derivs_y->betaU[2];
-const double gammaDD_dD001 = metric_derivs_y->gammaDD[0][0];
-const double gammaDD_dD011 = metric_derivs_y->gammaDD[0][1];
-const double gammaDD_dD021 = metric_derivs_y->gammaDD[0][2];
-const double gammaDD_dD111 = metric_derivs_y->gammaDD[1][1];
-const double gammaDD_dD121 = metric_derivs_y->gammaDD[1][2];
-const double gammaDD_dD221 = metric_derivs_y->gammaDD[2][2];
-const double alpha_dD2     = metric_derivs_z->lapse;
-const double betaU_dD02    = metric_derivs_z->betaU[0];
-const double betaU_dD12    = metric_derivs_z->betaU[1];
-const double betaU_dD22    = metric_derivs_z->betaU[2];
-const double gammaDD_dD002 = metric_derivs_z->gammaDD[0][0];
-const double gammaDD_dD012 = metric_derivs_z->gammaDD[0][1];
-const double gammaDD_dD022 = metric_derivs_z->gammaDD[0][2];
-const double gammaDD_dD112 = metric_derivs_z->gammaDD[1][1];
-const double gammaDD_dD122 = metric_derivs_z->gammaDD[1][2];
-const double gammaDD_dD222 = metric_derivs_z->gammaDD[2][2];
-  const double _Integer_2 = 2.0;
-  const double _Rational_1_2 = 1.0/2.0;
-  const double tmp_0 = betaU0*gammaDD_dD000 + betaU1*gammaDD_dD010 + betaU2*gammaDD_dD020 + betaU_dD00*gammaDD00 + betaU_dD10*gammaDD01 + betaU_dD20*gammaDD02;
-  const double tmp_1 = betaU0*gammaDD00 + betaU1*gammaDD01 + betaU2*gammaDD02;
-  const double tmp_2 = betaU0*gammaDD01 + betaU1*gammaDD11 + betaU2*gammaDD12;
-  const double tmp_3 = betaU0*gammaDD02 + betaU1*gammaDD12 + betaU2*gammaDD22;
-  const double tmp_4 = BU0*(gammaDD00*u4U1 + gammaDD01*u4U2 + gammaDD02*u4U3 + tmp_1*u4U0) + BU1*(gammaDD01*u4U1 + gammaDD11*u4U2 + gammaDD12*u4U3 + tmp_2*u4U0) + BU2*(gammaDD02*u4U1 + gammaDD12*u4U2 + gammaDD22*u4U3 + tmp_3*u4U0);
-  const double tmp_5 = BU0 + tmp_4*u4U1;
-  const double tmp_7 = (1.0/((alpha)*(alpha)));
-  const double tmp_8 = tmp_7/((SQRT_4_PI)*(SQRT_4_PI));
-  const double tmp_9 = tmp_4*tmp_8/u4U0;
-  const double tmp_12 = tmp_8/((u4U0)*(u4U0));
-  const double tmp_13 = tmp_12*((tmp_5)*(tmp_5));
-  const double tmp_14 = BU1 + tmp_4*u4U2;
-  const double tmp_15 = tmp_12*((tmp_14)*(tmp_14));
-  const double tmp_16 = BU2 + tmp_4*u4U3;
-  const double tmp_17 = tmp_12*((tmp_16)*(tmp_16));
-  const double tmp_18 = ((tmp_4)*(tmp_4))*tmp_8;
-  const double tmp_19 = gammaDD00*tmp_13 + gammaDD11*tmp_15 + gammaDD22*tmp_17 + tmp_18*(-((alpha)*(alpha)) + betaU0*tmp_1 + betaU1*tmp_2 + betaU2*tmp_3);
-  const double tmp_21 = tmp_12*tmp_14*tmp_5;
-  const double tmp_22 = tmp_12*tmp_16*tmp_5;
-  const double tmp_23 = tmp_12*tmp_14*tmp_16;
-  const double tmp_26 = gammaDD01*tmp_21 + gammaDD02*tmp_22 + gammaDD12*tmp_23 + tmp_1*tmp_5*tmp_9 + tmp_14*tmp_2*tmp_9 + tmp_16*tmp_3*tmp_9;
-  const double tmp_27 = P + _Rational_1_2*tmp_19 + tmp_26;
-  const double tmp_28 = tmp_27*tmp_7;
-  const double tmp_29 = _Integer_2*tmp_26 + h*rhob + tmp_19;
-  const double tmp_30 = tmp_29*u4U1;
-  const double tmp_31 = betaU0*tmp_28 + tmp_30*u4U0 - tmp_5*tmp_9;
-  const double tmp_35 = _Integer_2*gammaDD01*gammaDD02*gammaDD12 + gammaDD00*gammaDD11*gammaDD22 - gammaDD00*((gammaDD12)*(gammaDD12)) - ((gammaDD01)*(gammaDD01))*gammaDD22 - ((gammaDD02)*(gammaDD02))*gammaDD11;
-  const double tmp_36 = alpha*sqrt(tmp_35);
-  const double tmp_37 = tmp_31*tmp_36;
-  const double tmp_38 = betaU0*gammaDD_dD010 + betaU1*gammaDD_dD110 + betaU2*gammaDD_dD120 + betaU_dD00*gammaDD01 + betaU_dD10*gammaDD11 + betaU_dD20*gammaDD12;
-  const double tmp_40 = betaU1*tmp_28 - tmp_14*tmp_9 + tmp_29*u4U0*u4U2;
-  const double tmp_41 = tmp_36*tmp_40;
-  const double tmp_42 = betaU0*gammaDD_dD020 + betaU1*gammaDD_dD120 + betaU2*gammaDD_dD220 + betaU_dD00*gammaDD02 + betaU_dD10*gammaDD12 + betaU_dD20*gammaDD22;
-  const double tmp_43 = betaU2*tmp_28 - tmp_16*tmp_9 + tmp_29*u4U0*u4U3;
-  const double tmp_44 = tmp_36*tmp_43;
-  const double tmp_46 = (1.0/(tmp_35));
-  const double tmp_47 = -tmp_21 + tmp_27*(-betaU0*betaU1*tmp_7 + tmp_46*(-gammaDD01*gammaDD22 + gammaDD02*gammaDD12)) + tmp_30*u4U2;
-  const double tmp_48 = tmp_36*tmp_47;
-  const double tmp_49 = -tmp_22 + tmp_27*(-betaU0*betaU2*tmp_7 + tmp_46*(gammaDD01*gammaDD12 - gammaDD02*gammaDD11)) + tmp_30*u4U3;
-  const double tmp_50 = tmp_36*tmp_49;
-  const double tmp_51 = -tmp_23 + tmp_27*(-betaU1*betaU2*tmp_7 + tmp_46*(-gammaDD00*gammaDD12 + gammaDD01*gammaDD02)) + tmp_29*u4U2*u4U3;
-  const double tmp_52 = tmp_36*tmp_51;
-  const double tmp_54 = -tmp_13 + tmp_27*(-((betaU0)*(betaU0))*tmp_7 + tmp_46*(gammaDD11*gammaDD22 - ((gammaDD12)*(gammaDD12)))) + tmp_29*((u4U1)*(u4U1));
-  const double tmp_55 = tmp_36*tmp_54;
-  const double tmp_57 = -tmp_15 + tmp_27*(-((betaU1)*(betaU1))*tmp_7 + tmp_46*(gammaDD00*gammaDD22 - ((gammaDD02)*(gammaDD02)))) + tmp_29*((u4U2)*(u4U2));
-  const double tmp_58 = tmp_36*tmp_57;
-  const double tmp_60 = -tmp_17 + tmp_27*(-((betaU2)*(betaU2))*tmp_7 + tmp_46*(gammaDD00*gammaDD11 - ((gammaDD01)*(gammaDD01)))) + tmp_29*((u4U3)*(u4U3));
-  const double tmp_61 = tmp_36*tmp_60;
-  const double tmp_62 = _Integer_2*alpha;
-  const double tmp_63 = -tmp_18 - tmp_28 + tmp_29*((u4U0)*(u4U0));
-  const double tmp_64 = tmp_36*tmp_63;
-  const double tmp_65 = betaU0*gammaDD_dD001 + betaU1*gammaDD_dD011 + betaU2*gammaDD_dD021 + betaU_dD01*gammaDD00 + betaU_dD11*gammaDD01 + betaU_dD21*gammaDD02;
-  const double tmp_66 = betaU0*gammaDD_dD011 + betaU1*gammaDD_dD111 + betaU2*gammaDD_dD121 + betaU_dD01*gammaDD01 + betaU_dD11*gammaDD11 + betaU_dD21*gammaDD12;
-  const double tmp_67 = betaU0*gammaDD_dD021 + betaU1*gammaDD_dD121 + betaU2*gammaDD_dD221 + betaU_dD01*gammaDD02 + betaU_dD11*gammaDD12 + betaU_dD21*gammaDD22;
-  const double tmp_68 = betaU0*gammaDD_dD002 + betaU1*gammaDD_dD012 + betaU2*gammaDD_dD022 + betaU_dD02*gammaDD00 + betaU_dD12*gammaDD01 + betaU_dD22*gammaDD02;
-  const double tmp_69 = betaU0*gammaDD_dD012 + betaU1*gammaDD_dD112 + betaU2*gammaDD_dD122 + betaU_dD02*gammaDD01 + betaU_dD12*gammaDD11 + betaU_dD22*gammaDD12;
-  const double tmp_70 = betaU0*gammaDD_dD022 + betaU1*gammaDD_dD122 + betaU2*gammaDD_dD222 + betaU_dD02*gammaDD02 + betaU_dD12*gammaDD12 + betaU_dD22*gammaDD22;
-  const double tmp_71 = betaU0*tmp_63;
-  const double tmp_73 = _Integer_2*betaU0;
-  const double tmp_76 = betaU1*tmp_71 + tmp_47;
-  const double tmp_78 = betaU2*tmp_71 + tmp_49;
-  const double tmp_79 = betaU1*betaU2*tmp_63 + tmp_51;
-  cons->SD[0] = _Rational_1_2*(gammaDD_dD000*tmp_55 + gammaDD_dD110*tmp_58 + gammaDD_dD220*tmp_61 + tmp_64*(-alpha_dD0*tmp_62 + betaU0*tmp_0 + betaU1*tmp_38 + betaU2*tmp_42 + betaU_dD00*tmp_1 + betaU_dD10*tmp_2 + betaU_dD20*tmp_3)) + gammaDD_dD010*tmp_48 + gammaDD_dD020*tmp_50 + gammaDD_dD120*tmp_52 + tmp_0*tmp_37 + tmp_38*tmp_41 + tmp_42*tmp_44;
-  cons->SD[1] = _Rational_1_2*(gammaDD_dD001*tmp_55 + gammaDD_dD111*tmp_58 + gammaDD_dD221*tmp_61 + tmp_64*(-alpha_dD1*tmp_62 + betaU0*tmp_65 + betaU1*tmp_66 + betaU2*tmp_67 + betaU_dD01*tmp_1 + betaU_dD11*tmp_2 + betaU_dD21*tmp_3)) + gammaDD_dD011*tmp_48 + gammaDD_dD021*tmp_50 + gammaDD_dD121*tmp_52 + tmp_37*tmp_65 + tmp_41*tmp_66 + tmp_44*tmp_67;
-  cons->SD[2] = _Rational_1_2*(gammaDD_dD002*tmp_55 + gammaDD_dD112*tmp_58 + gammaDD_dD222*tmp_61 + tmp_64*(-alpha_dD2*tmp_62 + betaU0*tmp_68 + betaU1*tmp_69 + betaU2*tmp_70 + betaU_dD02*tmp_1 + betaU_dD12*tmp_2 + betaU_dD22*tmp_3)) + gammaDD_dD012*tmp_48 + gammaDD_dD022*tmp_50 + gammaDD_dD122*tmp_52 + tmp_37*tmp_68 + tmp_41*tmp_69 + tmp_44*tmp_70;
-  cons->tau = alpha_dD0*tmp_36*(-tmp_31 - tmp_71) + alpha_dD1*tmp_36*(-betaU1*tmp_63 - tmp_40) + alpha_dD2*tmp_36*(-betaU2*tmp_63 - tmp_43) + tmp_36*(KDD00*(((betaU0)*(betaU0))*tmp_63 + tmp_31*tmp_73 + tmp_54) + KDD01*(tmp_40*tmp_73 + tmp_76) + KDD01*(_Integer_2*betaU1*tmp_31 + tmp_76) + KDD02*(tmp_43*tmp_73 + tmp_78) + KDD02*(_Integer_2*betaU2*tmp_31 + tmp_78) + KDD11*(_Integer_2*betaU1*tmp_40 + ((betaU1)*(betaU1))*tmp_63 + tmp_57) + KDD12*(_Integer_2*betaU1*tmp_43 + tmp_79) + KDD12*(_Integer_2*betaU2*tmp_40 + tmp_79) + KDD22*(_Integer_2*betaU2*tmp_43 + ((betaU2)*(betaU2))*tmp_63 + tmp_60));
-}
+  // All of these vectors compute derivatives D^j(beta_i) using D^j(beta^k gamma_ik)
+  const double d0_betaD[3] = {metric->betaU[0]*metric_d0->gammaDD[0][0] + metric->betaU[1]*metric_d0->gammaDD[0][1] + metric->betaU[2]*metric_d0->gammaDD[0][2]
+                            + metric_d0->betaU[0]*metric->gammaDD[0][0] + metric_d0->betaU[1]*metric->gammaDD[0][1] + metric_d0->betaU[2]*metric->gammaDD[0][2],
+                              metric->betaU[0]*metric_d0->gammaDD[0][1] + metric->betaU[1]*metric_d0->gammaDD[1][1] + metric->betaU[2]*metric_d0->gammaDD[1][2]
+                            + metric_d0->betaU[0]*metric->gammaDD[0][1] + metric_d0->betaU[1]*metric->gammaDD[1][1] + metric_d0->betaU[2]*metric->gammaDD[1][2],
+                              metric->betaU[0]*metric_d0->gammaDD[0][2] + metric->betaU[1]*metric_d0->gammaDD[1][2] + metric->betaU[2]*metric_d0->gammaDD[2][2]
+                            + metric_d0->betaU[0]*metric->gammaDD[0][2] + metric_d0->betaU[1]*metric->gammaDD[1][2] + metric_d0->betaU[2]*metric->gammaDD[2][2]};
+
+  const double d1_betaD[3] = {metric->betaU[0]*metric_d1->gammaDD[0][0] + metric->betaU[1]*metric_d1->gammaDD[0][1] + metric->betaU[2]*metric_d1->gammaDD[0][2]
+                            + metric_d1->betaU[0]*metric->gammaDD[0][0] + metric_d1->betaU[1]*metric->gammaDD[0][1] + metric_d1->betaU[2]*metric->gammaDD[0][2],
+                              metric->betaU[0]*metric_d1->gammaDD[0][1] + metric->betaU[1]*metric_d1->gammaDD[1][1] + metric->betaU[2]*metric_d1->gammaDD[1][2]
+                            + metric_d1->betaU[0]*metric->gammaDD[0][1] + metric_d1->betaU[1]*metric->gammaDD[1][1] + metric_d1->betaU[2]*metric->gammaDD[1][2],
+                              metric->betaU[0]*metric_d1->gammaDD[0][2] + metric->betaU[1]*metric_d1->gammaDD[1][2] + metric->betaU[2]*metric_d1->gammaDD[2][2]
+                            + metric_d1->betaU[0]*metric->gammaDD[0][2] + metric_d1->betaU[1]*metric->gammaDD[1][2] + metric_d1->betaU[2]*metric->gammaDD[2][2]};
+
+  const double d2_betaD[3] = {metric->betaU[0]*metric_d2->gammaDD[0][0] + metric->betaU[1]*metric_d2->gammaDD[0][1] + metric->betaU[2]*metric_d2->gammaDD[0][2]
+                            + metric_d2->betaU[0]*metric->gammaDD[0][0] + metric_d2->betaU[1]*metric->gammaDD[0][1] + metric_d2->betaU[2]*metric->gammaDD[0][2],
+                              metric->betaU[0]*metric_d2->gammaDD[0][1] + metric->betaU[1]*metric_d2->gammaDD[1][1] + metric->betaU[2]*metric_d2->gammaDD[1][2]
+                            + metric_d2->betaU[0]*metric->gammaDD[0][1] + metric_d2->betaU[1]*metric->gammaDD[1][1] + metric_d2->betaU[2]*metric->gammaDD[1][2],
+                              metric->betaU[0]*metric_d2->gammaDD[0][2] + metric->betaU[1]*metric_d2->gammaDD[1][2] + metric->betaU[2]*metric_d2->gammaDD[2][2]
+                            + metric_d2->betaU[0]*metric->gammaDD[0][2] + metric_d2->betaU[1]*metric->gammaDD[1][2] + metric_d2->betaU[2]*metric->gammaDD[2][2]};
+
+  // This contains the derivatives of g4_00: D(beta^i beta_i - alpha^2)
+  const double d_g4DD00[3] = {metric->betaU[0]*d0_betaD[0] + metric->betaU[1]*d0_betaD[1] + metric->betaU[2]*d0_betaD[2]
+                                + metric_d0->betaU[0]*betaD[0] + metric_d0->betaU[1]*betaD[1] + metric_d0->betaU[2]*betaD[2]
+                                - 2.0*metric->lapse*metric_d0->lapse,
+                              metric->betaU[0]*d1_betaD[0] + metric->betaU[1]*d1_betaD[1] + metric->betaU[2]*d1_betaD[2]
+                                + metric_d1->betaU[0]*betaD[0] + metric_d1->betaU[1]*betaD[1] + metric_d1->betaU[2]*betaD[2]
+                                - 2.0*metric->lapse*metric_d1->lapse,
+                              metric->betaU[0]*d2_betaD[0] + metric->betaU[1]*d2_betaD[1] + metric->betaU[2]*d2_betaD[2]
+                                + metric_d2->betaU[0]*betaD[0] + metric_d2->betaU[1]*betaD[1] + metric_d2->betaU[2]*betaD[2]
+                                - 2.0*metric->lapse*metric_d2->lapse};
+
+  double vD[3];
+  ghl_raise_lower_vector_3D(metric->gammaDD, prims->vU, vD);
+  const double Bvtilde = prims->u0*(prims->BU[0]*(vD[0] + betaD[0])
+                                  + prims->BU[1]*(vD[1] + betaD[1])
+                                  + prims->BU[2]*(vD[2] + betaD[2]));
+
+  const double tmp_4vecU[4] = {metric->lapseinv*Bvtilde,
+                                metric->lapseinv*(prims->BU[0]/prims->u0 + Bvtilde*prims->vU[0]),
+                                metric->lapseinv*(prims->BU[1]/prims->u0 + Bvtilde*prims->vU[1]),
+                                metric->lapseinv*(prims->BU[2]/prims->u0 + Bvtilde*prims->vU[2])};
+  const double tmp_vec2 = ghl_compute_vec2_from_vec4D( metric_aux.g4DD, tmp_4vecU);
+
+  const double tmp_r = (tmp_vec2 + h*prims->rho)*prims->u0*prims->u0;
+  const double tmp_p = prims->press + tmp_vec2/2.0;
+
+  const double soln_scal   =  -tmp_4vecU[0]*tmp_4vecU[0] + tmp_p*metric_aux.g4UU[0][0] + tmp_r  /* u^0 */    /* u^0 */  ;
+  const double soln_vec[3] = {-tmp_4vecU[0]*tmp_4vecU[1] + tmp_p*metric_aux.g4UU[0][1] + tmp_r*prims->vU[0]  /* u^0 */  ,
+                              -tmp_4vecU[0]*tmp_4vecU[2] + tmp_p*metric_aux.g4UU[0][2] + tmp_r*prims->vU[1]  /* u^0 */  ,
+                              -tmp_4vecU[0]*tmp_4vecU[3] + tmp_p*metric_aux.g4UU[0][3] + tmp_r*prims->vU[2]  /* u^0 */  };
+  const double soln_tsr[6] = {-tmp_4vecU[1]*tmp_4vecU[1] + tmp_p*metric_aux.g4UU[1][1] + tmp_r*prims->vU[0]*prims->vU[0],
+                              -tmp_4vecU[1]*tmp_4vecU[2] + tmp_p*metric_aux.g4UU[1][2] + tmp_r*prims->vU[0]*prims->vU[1],
+                              -tmp_4vecU[1]*tmp_4vecU[3] + tmp_p*metric_aux.g4UU[1][3] + tmp_r*prims->vU[0]*prims->vU[2],
+                              -tmp_4vecU[2]*tmp_4vecU[2] + tmp_p*metric_aux.g4UU[2][2] + tmp_r*prims->vU[1]*prims->vU[1],
+                              -tmp_4vecU[2]*tmp_4vecU[3] + tmp_p*metric_aux.g4UU[2][3] + tmp_r*prims->vU[1]*prims->vU[2],
+                              -tmp_4vecU[3]*tmp_4vecU[3] + tmp_p*metric_aux.g4UU[3][3] + tmp_r*prims->vU[2]*prims->vU[2]};
+
+  const double scal_betaU[3] = {metric->betaU[0]*soln_scal,
+                                metric->betaU[1]*soln_scal,
+                                metric->betaU[2]*soln_scal};
+
+  cons->tau = sqrt_detg*(metric_d0->lapse*(-scal_betaU[0] - soln_vec[0])
+                       + metric_d1->lapse*(-scal_betaU[1] - soln_vec[1])
+                       + metric_d2->lapse*(-scal_betaU[2] - soln_vec[2])
+                       + 2.0*curv->K[0][1]*(metric->betaU[0]*soln_vec[1] + soln_vec[0]*metric->betaU[1] + metric->betaU[0]*scal_betaU[1] + soln_tsr[1])
+                       + 2.0*curv->K[0][2]*(metric->betaU[0]*soln_vec[2] + soln_vec[0]*metric->betaU[2] + metric->betaU[0]*scal_betaU[2] + soln_tsr[2])
+                       + 2.0*curv->K[1][2]*(metric->betaU[1]*soln_vec[2] + soln_vec[1]*metric->betaU[2] + metric->betaU[1]*scal_betaU[2] + soln_tsr[4])
+                       + curv->K[0][0]*(2.0*metric->betaU[0]*soln_vec[0] + metric->betaU[0]*scal_betaU[0] + soln_tsr[0])
+                       + curv->K[1][1]*(2.0*metric->betaU[1]*soln_vec[1] + metric->betaU[1]*scal_betaU[1] + soln_tsr[3])
+                       + curv->K[2][2]*(2.0*metric->betaU[2]*soln_vec[2] + metric->betaU[2]*scal_betaU[2] + soln_tsr[5]));
+
+  cons->SD[0] = sqrt_detg*(
+      soln_scal*d_g4DD00[0]
+    + d0_betaD[0]*soln_vec[0] + d0_betaD[1]*soln_vec[1] + d0_betaD[2]*soln_vec[2]
+    + metric_d0->gammaDD[0][1]*soln_tsr[1] + metric_d0->gammaDD[0][2]*soln_tsr[2] + metric_d0->gammaDD[1][2]*soln_tsr[4]
+    + (metric_d0->gammaDD[0][0]*soln_tsr[0] + metric_d0->gammaDD[1][1]*soln_tsr[3] + metric_d0->gammaDD[2][2]*soln_tsr[5])/2.0);
+
+  cons->SD[1] = sqrt_detg*(
+      soln_scal*d_g4DD00[1]
+    + d1_betaD[0]*soln_vec[0] + d1_betaD[1]*soln_vec[1] + d1_betaD[2]*soln_vec[2]
+    + metric_d1->gammaDD[0][1]*soln_tsr[1] + metric_d1->gammaDD[0][2]*soln_tsr[2] + metric_d1->gammaDD[1][2]*soln_tsr[4]
+    + (metric_d1->gammaDD[0][0]*soln_tsr[0] + metric_d1->gammaDD[1][1]*soln_tsr[3] + metric_d1->gammaDD[2][2]*soln_tsr[5])/2.0);
+
+  cons->SD[2] = sqrt_detg*(
+      soln_scal*d_g4DD00[2]
+    + soln_vec[0]*d2_betaD[0] + soln_vec[1]*d2_betaD[1] + soln_vec[2]*d2_betaD[2]
+    + metric_d2->gammaDD[0][1]*soln_tsr[1] + metric_d2->gammaDD[0][2]*soln_tsr[2] + metric_d2->gammaDD[1][2]*soln_tsr[4]
+    + (metric_d2->gammaDD[0][0]*soln_tsr[0] + metric_d2->gammaDD[1][1]*soln_tsr[3] + metric_d2->gammaDD[2][2]*soln_tsr[5])/2.0);
 }

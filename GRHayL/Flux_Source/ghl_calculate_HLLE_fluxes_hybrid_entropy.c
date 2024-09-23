@@ -1,6 +1,6 @@
 #include "ghl_flux_source.h"
 /*
- * Compute the HLLE-derived fluxes on the left face in the 0direction for all components.
+ * Compute the HLLE-derived fluxes on the left face for all components.
  */
 void ghl_calculate_HLLE_fluxes_hybrid_entropy(
       const int direction,
