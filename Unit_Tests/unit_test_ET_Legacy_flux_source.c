@@ -178,29 +178,11 @@ int main(int argc, char **argv) {
         S_z_rhs[index] = 0.0;
   }
 
-  // Function pointer to allow for loop over fluxes
-  void (*calculate_HLLE_fluxes)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
-                              const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
-                              const double, const double, ghl_conservative_quantities *restrict);
-
   // Loop over flux directions (x,y,z)
   for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
     const int xdir = (flux_dirn == 0);
     const int ydir = (flux_dirn == 1);
     const int zdir = (flux_dirn == 2);
-
-    // Set function pointer to specific function for a given direction
-    switch(flux_dirn) {
-      case 0:
-        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn0_hybrid;
-        break;
-      case 1:
-        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn1_hybrid;
-        break;
-      case 2:
-        calculate_HLLE_fluxes          = &ghl_calculate_HLLE_fluxes_dirn2_hybrid;
-        break;
-    }
 
     key  = fread(rho_r,   sizeof(double), arraylength, infile);
     key += fread(press_r, sizeof(double), arraylength, infile);
@@ -277,9 +259,9 @@ int main(int argc, char **argv) {
                 &prims_r, &prims_l, &cmin, &cmax);
 
           ghl_conservative_quantities cons_fluxes;
-          calculate_HLLE_fluxes(
-                &prims_r, &prims_l, &eos,
-                &metric_face, cmin, cmax,
+          ghl_calculate_HLLE_fluxes_hybrid(
+                flux_dirn, &eos, &metric_face,
+                &prims_r, &prims_l, cmin, cmax,
                 &cons_fluxes);
 
           rho_star_flux[index]  = cons_fluxes.rho;

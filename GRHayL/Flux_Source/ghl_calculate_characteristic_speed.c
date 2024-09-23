@@ -12,6 +12,7 @@ void ghl_calculate_characteristic_speed(
 
   ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
   ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+
   double betaD[3];
   ghl_raise_lower_vector_3D(ADM_metric->gammaDD, ADM_metric->betaU, betaD);
   ghl_ADM_aux_quantities metric_aux;
