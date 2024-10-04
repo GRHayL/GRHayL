@@ -5,11 +5,6 @@
 %  thorn without the Cactus Flesh download this from the Cactus
 %  homepage at www.cactuscode.org)
 \usepackage{../../../../doc/latex/cactus}
-\usepackage{xspace}
-\newcommand{\grhayl}{\texttt{GRHayL}\xspace}
-\newcommand{\glib}{\texttt{GRHayLib}\xspace}
-\newcommand{\igm}{\texttt{IllinoisGRMHD}\xspace}
-\newcommand{\hydrobase}{\texttt{HydroBase}\xspace}
 
 \begin{document}
 
@@ -22,10 +17,16 @@
 % Do not delete next line
 % START CACTUS THORNGUIDE
 
+% Add all definitions used in this documentation here
+\newcommand{\grhayl}{\texttt{GRHayL}}
+\newcommand{\glib}{\texttt{GRHayLib}}
+\newcommand{\igm}{\texttt{IllinoisGRMHD}}
+\newcommand{\hydrobase}{\texttt{HydroBase}}
+
 \begin{abstract}
 Provides access to the General Relativistic Hydrodynamics
 Library (\grhayl). This library provides a suite of functions
-for GRMHD evolution codes based on the \igm code.
+for GRMHD evolution codes based on the \igm{} code.
 \end{abstract}
 
 \section{Introduction}
@@ -43,7 +44,7 @@ visit the \href{https://github.com/GRHayL/GRHayL/wiki}{GitHub wiki}.
 As a brief overview, the library is split into several `gems'
 which are entirely self-contained. These are Atmosphere, Con2Prim,
 EOS, Flux\_Source, Induction, Neutrinos, and Reconstruction.
-The \glib implementation provides access to all these gems in its
+The \glib{} implementation provides access to all these gems in its
 header file. Additionally, the thorn automatically initializes an
 instance of the \texttt{ghl\_parameters} and \texttt{ghl\_eos\_parameters}
 structs. The instances are named \texttt{ghl\_params} and \texttt{ghl\_eos},
@@ -54,7 +55,7 @@ header.
 
 One of the more complicated part of GRMHD simulations is properly
 setting up the equation of state (EOS), especially for tabulated EOS.
-\grhayl provides both hybrid and tabulated EOS, and this information
+\grhayl{} provides both hybrid and tabulated EOS, and this information
 is passed to the library functions through \texttt{ghl\_eos}. \glib's
 parameters control the initialization of this struct, so the user does
 not need to set any of the struct's values unless they plan to manually
@@ -71,7 +72,7 @@ parameters either have defaults or are ignored if unset.
 
 The hybrid EOS requires several parameters to function properly.
 First, it needs the number of elements in the polytropic approximation.
-This is currently limited by \grhayl to 10 pieces. The transition values
+This is currently limited by \grhayl{} to 10 pieces. The transition values
 of rho\_b are set by \texttt{rho\_ppoly\_in}, and the associated Gamma
 values are stored in \texttt{Gamma\_ppoly\_in}. Note that for neos=1,
 only a single Gamma is necessary. Additionally, the parameter \texttt{k\_ppoly0}
@@ -89,7 +90,7 @@ off both of these features.
 
 To properly configure for tabulated EOS, the most important parameter is
 the path to the EOS table, given by the \texttt{EOS\_tablepath} parameter.
-\glib automatically reads this table and makes it accessible to \grhayl
+\glib{} automatically reads this table and makes it accessible to \grhayl{}
 functions through \texttt{ghl\_eos}.
 
 The tabulated EOS uses all the limit parameters (rho\_b, Y\_e, and T).
@@ -97,7 +98,7 @@ If unset, the mimima and maxima are set to table bounds.
 
 \section{Conservative-to-Primitive Routines}
 
-\grhayl provides a selection of con2prim routines along with automated
+\grhayl{} provides a selection of con2prim routines along with automated
 backup methods. \texttt{ghl\_params} passes the information from the
 thorn parameters texttt{con2prim\_routine} and texttt{con2prim\_backup\_routines}
 to the library's multi-method functions. Of course, any of the routines
@@ -108,14 +109,14 @@ The ghl\_con2prim\_hybrid\_multi\_method() and
 ghl\_con2prim\_tabulated\_multi\_method() functions implement this
 feature, and the ghl\_con2prim\_hybrid\_select\_method() and
 ghl\_con2prim\_tabulated\_select\_method() functions directly select
-a single method based on an input value. \grhayl supports up to three
+a single method based on an input value. \grhayl{} supports up to three
 backups, but more complex behavior can be designed by the user using
 the core con2prim functions. Since the individual con2prim routines
 and the multi-method functions have identical argument lists, swapping
 routines is straightforward and requires little work from the user.
 
 These routines are iterative solvers, so they require an initial guess.
-\igm used always used default guess, which is also provided in \grhayl.
+\igm{} used always used default guess, which is also provided in \grhayl.
 The \texttt{calc\_primitive\_guess} parameter automatically sets the
 guess to this default in the multi-method function, so set this to
 "no" to use a user-defined guess. Manual use of the con2prim
@@ -126,8 +127,8 @@ ghl\_guess\_primitives() function.
 
 Cactus allows for changing parameters during a run using CCTK\_ParameterSet().
 However, this is only allowed for those with "STEERABLE=ALWAYS" in the parfile.
-Those without this tag aren't able to be steered during a run. Because \glib
-stores this information inside \grhayl structs, the actual parameters are not
+Those without this tag aren't able to be steered during a run. Because \glib{}
+stores this information inside \grhayl{} structs, the actual parameters are not
 steerable during a simulation. However, the parameters can be effectively steered
 by changing the values inside the structs. For the EOS struct, this can be
 dangerous since some elements are computed from the other parameters. To remedy
@@ -136,7 +137,7 @@ we recommend running the appropriate ghl\_initialize\_EOSTYPE\_eos() function
 to ensure that the elements are properly reinitialized. For tabulated EOS,
 initializing the struct involves allocating memory for the table. As such,
 just re-running the initialize function will not behave as desired. The simplest
-solution is to copy the needed code from the \grhayl function into a scheduled
+solution is to copy the needed code from the \grhayl{} function into a scheduled
 function and manage the elements values manually.
 
 % Do not delete next line
