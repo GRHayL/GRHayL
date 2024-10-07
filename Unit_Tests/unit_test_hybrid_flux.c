@@ -134,10 +134,11 @@ int main(int argc, char **argv) {
 
   // Function pointer to allow for loop over fluxes
   void (*calculate_HLLE_fluxes)(
-        ghl_primitive_quantities *restrict,
-        ghl_primitive_quantities *restrict,
+        const int,
         const ghl_eos_parameters *restrict,
         const ghl_metric_quantities *restrict,
+        ghl_primitive_quantities *restrict,
+        ghl_primitive_quantities *restrict,
         const double,
         const double,
         ghl_conservative_quantities *restrict);
@@ -152,17 +153,17 @@ int main(int argc, char **argv) {
         case 0:
           cmin = cxmin;
           cmax = cxmax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn0_hybrid;
+          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_hybrid_entropy : &ghl_calculate_HLLE_fluxes_hybrid;
           break;
         case 1:
           cmin = cymin;
           cmax = cymax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn1_hybrid;
+          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_hybrid_entropy : &ghl_calculate_HLLE_fluxes_hybrid;
           break;
         case 2:
           cmin = czmin;
           cmax = czmax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn2_hybrid;
+          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_hybrid_entropy : &ghl_calculate_HLLE_fluxes_hybrid;
           break;
       }
 
@@ -228,8 +229,8 @@ int main(int argc, char **argv) {
 
         ghl_conservative_quantities cons_fluxes;
         calculate_HLLE_fluxes(
-              &prims_r, &prims_l, &eos,
-              &metric_face, cmin[index], cmax[index],
+              flux_dirn, &eos, &metric_face,
+              &prims_r, &prims_l, cmin[index], cmax[index],
               &cons_fluxes);
 
         if( ghl_pert_test_fail(trusted_rho_star_flux[index], cons_fluxes.rho, pert_rho_star_flux[index]) )
