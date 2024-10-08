@@ -154,6 +154,7 @@ void assemble_rT_fluid_frame(
   }
 } //assemble_rT_fluid_frame
 
+
 // Computes radiation energy densities in fluid frame (Eq. (2) of Radice et al. (2022))
 double calc_J_from_rT(
         const double  *u4U,
@@ -167,6 +168,7 @@ double calc_J_from_rT(
   }
   return J;
 } //calc_J_from_rT
+
 
 // Computes radiation flux in fluid frame (Eq. (2) of Radice et al. (2022))
 void calc_H4D_from_rT(
@@ -183,6 +185,7 @@ void calc_H4D_from_rT(
     }
   }
 } // calc_H4D_from_rT
+
 
 // Computes radiation pressure tensor in fluid frame (Eq. (2) of Radice et al. (2022))
 void calc_K4DD_from_rT(
@@ -202,6 +205,31 @@ void calc_K4DD_from_rT(
   }
 } // calc_K4DD_from_rT
 
+
+// rad_E_floor rad_eps are parameters in param.ccl
+// this function modifies E and F4 given the floor values
+void apply_floor(
+        const ghl_ADM_aux_quantities *adm_aux,
+        double * E,
+        ghl_radiation_flux_vector * F4,
+        const double rad_E_floor,
+        const double rad_eps) {
+    *E = fmax(rad_E_floor, *E);
+
+    double F2 = 0; // needs a better name
+    for (int a = 0; a < 4; ++a) {
+        for (int b = 0; b < 4; ++b) {
+            F2 += adm_aux->g4UU[a][b] * F4->D[a] * F4->D[b];
+        }
+    }
+    const double lim = (*E)*(*E)*(1 - rad_eps);
+    if (F2 > lim) {
+        double fac = lim/F2;
+        for (int a = 0; a < 4; ++a) {
+            F4->D[a] *= fac;
+        }
+    }
+}
 
 
 // Function to rootfind in order to determine the closure
@@ -246,6 +274,15 @@ static inline double froot(
 
   ghl_radiation_flux_vector H4;
   calc_H4D_from_rT(u4U, &proj4, &rT4DD, &H4);
+
+  // rad_eps "Impose F_a F^a < (1 - rad_E_eps) E2"
+  // rad_E_floor "Radiation energy density floor"
+  // TODO: CCTK_param in THC: what to do here?
+  double rad_eps = 1.0e-15; // default value in THC
+  double rad_E_floor = 1.0e-15;
+  apply_floor(adm_aux, &E, &F4, rad_E_floor, rad_eps); // TODO: what does this step do?
+
+
   double H2 = 0;
 
   for (int a = 0; a < 4; a++){
@@ -282,6 +319,8 @@ int ghl_radiation_rootSolve_closure(
   double xi_root = rparams.root;
   printf("root = %f\n",xi_root);
   printf("residual = %f\n",rparams.residual);
+
+  // TODO: add error message when ghl_brent fails
   return 1;
 }
 
