@@ -72,6 +72,8 @@ void test_optically_thick_advection(){
   //This applies limits on the primitives
   ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
 
+  //Set E, F for optically thick limit
+  // Sec 4.3 - Eq (98)
   ghl_radiation_flux_vector F4;
   double W = 1.0/sqrt(1 - vx*vx);
   double J = 3.0;
@@ -156,12 +158,13 @@ void test_optically_thin_advection(){
   //This applies limits on the primitives
   ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
 
-
+  // Set E and F for optically thin limit
+  // Sec 4.1
   double E = 3.0;
 
   ghl_radiation_flux_vector F4;
   F4.D[0] = 0.0;
-  F4.D[1] = 0.999999999*E; //When set exactly to E, the root is found but not swapped
+  F4.D[1] = 0.99999999*E; //When set exactly to E, the root is found but not swapped
   F4.D[2] = 0.0;
   F4.D[3] = 0.0;
 

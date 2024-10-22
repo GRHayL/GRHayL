@@ -302,7 +302,7 @@ int ghl_radiation_rootSolve_closure(
       m1_root_params *restrict fparams_in
       ) {
   // Step 1: Set specific quantities for this routine
-  m1_root_params * fparams = (m1_root_params*) fparams_in;
+  // m1_root_params * fparams = (m1_root_params*) fparams_in;
 
 
   // Step 2: set min and max for xi
@@ -315,7 +315,7 @@ int ghl_radiation_rootSolve_closure(
   rparams.max_iters = 300;
 
   // Step 3: Run Brent root solver and print the root and residual
-  ghl_brent(froot, fparams, xi_low, xi_up, &rparams);
+  ghl_brent(froot, fparams_in, xi_low, xi_up, &rparams);
   double xi_root = rparams.root;
   printf("root = %f\n",xi_root);
   printf("residual = %f\n",rparams.residual);
