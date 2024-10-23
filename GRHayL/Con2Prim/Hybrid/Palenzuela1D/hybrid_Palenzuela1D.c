@@ -15,21 +15,15 @@
  *
  * Returns    : Nothing.
  */
-static inline double
-froot(
-      const double x,
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_conservative_quantities *restrict cons_undens,
-      fparams_struct *restrict fparams,
-      ghl_primitive_quantities *restrict prims) {
+static inline double froot(const double x, void *restrict params_in) {
 
-  double W;
-  fparams->compute_rho_P_eps_W(
-    x, params, eos, cons_undens, fparams, prims, &W);
+  palenzuela_params *params = (palenzuela_params *)params_in;
+
+  double rho, P, eps, W;
+  params->compute_rho_P_eps_W(x, params, &rho, &P, &eps, &W);
 
   // Eq: (33) of https://arxiv.org/pdf/1712.07538.pdf
-  return x - (1.0 + prims->eps + prims->press/prims->rho)*W;
+  return x - (1.0 + eps + P / rho) * W;
 }
 
 /* Function    : ghl_hybrid_Palenzuela1D
@@ -54,11 +48,10 @@ froot(
 ghl_error_codes_t ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(
             const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-            ghl_primitive_quantities *restrict prims,
+            palenzuela_params *restrict params,
+            double *restrict rho_ptr,
+            double *restrict P_ptr,
+            double *restrict eps_ptr,
             double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -95,13 +88,16 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
   }
 
   // Step 5: Set specific quantities for this routine (Eq. A7 of [1])
-  fparams_struct fparams;
-  const double invD           = 1.0/cons_undens->rho;
-  fparams.compute_rho_P_eps_W = compute_rho_P_eps_W;
-  fparams.q                   = cons_undens->tau * invD;
-  fparams.r                   = S_squared * invD * invD;
-  fparams.s                   = B_squared * invD;
-  fparams.t                   = BdotS/pow(cons_undens->rho, 1.5);
+  palenzuela_params pparams;
+  const double invD = 1.0 / cons_undens->rho;
+  pparams.compute_rho_P_eps_W = compute_rho_P_eps_W;
+  pparams.q = cons_undens->tau * invD;
+  pparams.r = S_squared * invD * invD;
+  pparams.s = B_squared * invD;
+  pparams.t = BdotS / pow(cons_undens->rho, 1.5);
+  pparams.cons_undens = cons_undens;
+  pparams.ghl_params = params;
+  pparams.eos = eos;
 
   // Step 6: Bracket x (Eq. A8 of [1])
   double xlow = 1 + pparams.q - pparams.s;
@@ -112,7 +108,7 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
   // ghl_toms748(froot, &fparams, xlow, xup, &rparams);
-  ghl_error_codes_t error = ghl_brent(froot, params, eos, cons_undens, &fparams, prims, xlow, xup, &rparams);
+  ghl_error_codes_t error = ghl_brent(froot, &pparams, xlow, xup, &rparams);
   if(error)
     return error;
 
@@ -120,8 +116,8 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
 
   // Step 8: Set core primitives using the EOS and the root
   double x = rparams.root;
-  double W;
-  compute_rho_P_eps_W(x, params, eos, cons_undens, &fparams, prims, &W);
+  double rho, P, eps, W;
+  compute_rho_P_eps_W(x, &pparams, &rho, &P, &eps, &W);
 
   // Step 9: Compute auxiliary quantities to obtain the velocities using
   //          Eq. (24) in [2]. Note, however, that GRHayL expects the velocity

@@ -24,32 +24,41 @@
 static void
 compute_rho_P_eps_T_W_entropy(
       const double x,
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_conservative_quantities *restrict cons_undens,
-      fparams_struct *restrict fparams,
-      ghl_primitive_quantities *restrict prims,
+      palenzuela_params *restrict params,
+      double *restrict rho_ptr,
+      double *restrict P_ptr,
+      double *restrict eps_ptr,
+      double *restrict T_ptr,
       double *restrict W_ptr) {
 
+  // Step 0: Unpack the fparams struct
+  double Y_e = params->Y_e;
+  double T = params->temp_guess;
+
   // Step 1: First compute rho and W
-  double W;
-  compute_rho_W_from_x_and_conservatives(x, params, cons_undens, fparams, &prims->rho, &W);
+  double rho, W;
+  compute_rho_W_from_x_and_conservatives(x, params, &rho, &W);
 
   // Step 2: Now compute P and eps
-  if(fparams->evolve_T) {
-    prims->entropy = cons_undens->entropy/W;
-    ghl_tabulated_enforce_bounds_rho_Ye_S(eos, &prims->rho, &prims->Y_e, &prims->entropy);
-    ghl_tabulated_compute_P_eps_T_from_S(eos, prims->rho, prims->Y_e, prims->entropy, &prims->press, &prims->eps, &prims->temperature);
+  double P, eps;
+  if(params->evolve_T) {
+    double ent = params->cons_undens->entropy/W;
+    ghl_tabulated_enforce_bounds_rho_Ye_S(params->eos, &rho, &Y_e, &ent);
+    ghl_tabulated_compute_P_eps_T_from_S(params->eos, rho, Y_e, ent, &P, &eps, &T);
   }
   else {
     // If the temperature is not evolved, use the input guess to determine
     // the remaining primitives. Note that in this case one must provide
     // the appropriate temperature instead of the default guess T = T_min.
-    ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-    ghl_tabulated_compute_P_eps_from_T(eos, prims->rho, prims->Y_e, prims->temperature, &prims->press, &prims->eps);
+    ghl_tabulated_enforce_bounds_rho_Ye_T(params->eos, &rho, &Y_e, &T);
+    ghl_tabulated_compute_P_eps_from_T(params->eos, rho, Y_e, T, &P, &eps);
   }
 
   // Step 3: Set the output
+  *rho_ptr = rho;
+  *P_ptr   = P;
+  *eps_ptr = eps;
+  *T_ptr   = T;
   *W_ptr   = W;
 }
 

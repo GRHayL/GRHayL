@@ -16,18 +16,8 @@
 
 static void
 bracket(
-      double f(
-            const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-            ghl_primitive_quantities *restrict prims),
-    const ghl_parameters *restrict params,
-    const ghl_eos_parameters *restrict eos,
-    const ghl_conservative_quantities *restrict cons_undens,
-    fparams_struct *restrict fparams,
-    ghl_primitive_quantities *restrict prims,
+    double f(const double, void *restrict),
+    void *restrict fparams,
     double *restrict a,
     double *restrict b,
     double c,
@@ -62,7 +52,7 @@ bracket(
   //
   // OK, lets invoke f(c):
   //
-  double fc = f(c, params, eos, cons_undens, fparams, prims);
+  double fc = f(c, fparams);
   //
   // if we have a zero then we have an exact solution to the root:
   //
@@ -218,18 +208,8 @@ static double cubic_interpolate(
 }
 
 ghl_error_codes_t ghl_toms748(
-      double f(
-            const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-           ghl_primitive_quantities *restrict prims),
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_conservative_quantities *restrict cons_undens,
-      fparams_struct *restrict fparams,
-      ghl_primitive_quantities *restrict prims,
+      double f(const double, void *restrict),
+      void *restrict fparams,
       double a,
       double b,
       roots_params *restrict r) {
@@ -249,8 +229,8 @@ ghl_error_codes_t ghl_toms748(
   }
 
   // Now compute fa and fb
-  double fa = f(a, params, eos, cons_undens, fparams, prims);
-  double fb = f(b, params, eos, cons_undens, fparams, prims);
+  double fa = f(a, fparams);
+  double fb = f(b, fparams);
 
   if(sign(fa) * sign(fb) > 0)
     return ghl_error_root_not_bracketed;
@@ -276,7 +256,7 @@ ghl_error_codes_t ghl_toms748(
     // On the first step we take a secant step:
     //
     c = secant_interpolate(a, b, fa, fb);
-    bracket(f, params, eos, cons_undens, fparams, prims, &a, &b, c, &fa, &fb, &d, &fd);
+    bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
     --count;
 
     if(count && (fa != 0) && fabs(b - a) > r->tol) {
@@ -286,7 +266,7 @@ ghl_error_codes_t ghl_toms748(
       c = quadratic_interpolate(a, b, d, fa, fb, fd, 2);
       e = d;
       fe = fd;
-      bracket(f, params, eos, cons_undens, fparams, prims, &a, &b, c, &fa, &fb, &d, &fd);
+      bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
       --count;
     }
   }
@@ -318,8 +298,8 @@ ghl_error_codes_t ghl_toms748(
     //
     e = d;
     fe = fd;
-    bracket(f, params, eos, cons_undens, fparams, prims, &a, &b, c, &fa, &fb, &d, &fd);
-    if( (0 == --count) || (fa == 0) || fabs(b-a) < r->tol )
+    bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
+    if((0 == --count) || (fa == 0) || fabs(b - a) < r->tol) {
       break;
     }
 
@@ -339,8 +319,8 @@ ghl_error_codes_t ghl_toms748(
     //
     // Bracket again, and check termination condition, update e:
     //
-    bracket(f, params, eos, cons_undens, fparams, prims, &a, &b, c, &fa, &fb, &d, &fd);
-    if( (0 == --count) || (fa == 0) || fabs(b-a) < r->tol )
+    bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
+    if((0 == --count) || (fa == 0) || fabs(b - a) < r->tol) {
       break;
     }
 
@@ -365,8 +345,8 @@ ghl_error_codes_t ghl_toms748(
     //
     e = d;
     fe = fd;
-    bracket(f, params, eos, cons_undens, fparams, prims, &a, &b, c, &fa, &fb, &d, &fd);
-    if( (0 == --count) || (fa == 0) || fabs(b-a) < r->tol )
+    bracket(f, fparams, &a, &b, c, &fa, &fb, &d, &fd);
+    if((0 == --count) || (fa == 0) || fabs(b - a) < r->tol) {
       break;
     }
 
@@ -383,7 +363,7 @@ ghl_error_codes_t ghl_toms748(
     //
     e = d;
     fe = fd;
-    bracket(f, params, eos, cons_undens, fparams, prims, &a, &b, a + (b - a) / 2, &fa, &fb, &d, &fd);
+    bracket(f, fparams, &a, &b, a + (b - a) / 2, &fa, &fb, &d, &fd);
     --count;
   } // while loop
 

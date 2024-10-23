@@ -2,7 +2,52 @@
 #define PALENZUELA_H_
 
 #include "ghl_con2prim.h"
-#include "roots.h"
+
+/*
+ * typedef    : palenzuela_params
+ * Author     : Leo Werneck
+ *
+ * Structure containing parameters used by f(x), the function for which we
+ * wish to find the root when using the Palenzuela et al. con2prim.
+ *
+ * Parameters : evolve_T              - Whether or not to evolve the temperature.
+ *            : temp_guess            - Temperature guess.
+ *            : Y_e                   - Electron fraction.
+ *            : q                     - Auxiliary quantity: tau/D.
+ *            : r                     - Auxiliary quantity: S^{2}/D^{2}.
+ *            : s                     - Auxiliary quantity: B^{2}/D.
+ *            : t                     - Auxiliary quantity: B.S/D^{3/2}.
+ *            : cons_undens           - Pointer to const ghl_conservative_quantities
+ *            : ghl_params            - Pointer to const ghl_parameters.
+ *            : eos                   - Pointer to const ghl_eos_parameters struct.
+ *            : compute_rho_P_eps_T_W - Function pointer provided by the user.
+ *            : compute_rho_P_eps_W   - Function pointer provided by the user.
+ */
+typedef struct palenzuela_params {
+  bool evolve_T;
+  double temp_guess, Y_e, q, r, s, t;
+  const ghl_conservative_quantities *restrict cons_undens;
+  const ghl_parameters *restrict ghl_params;
+  const ghl_eos_parameters *restrict eos;
+
+  void (*compute_rho_P_eps_T_W)(
+        const double x,
+        struct palenzuela_params *restrict params,
+        double *restrict rho_ptr,
+        double *restrict P_ptr,
+        double *restrict eps_ptr,
+        double *restrict T_ptr,
+        double *restrict W_ptr);
+
+  void (*compute_rho_P_eps_W)(
+        const double x,
+        struct palenzuela_params *restrict params,
+        double *restrict rho_ptr,
+        double *restrict P_ptr,
+        double *restrict eps_ptr,
+        double *restrict W_ptr);
+} palenzuela_params;
+
 
 /*
  * Function   : compute_rho_W_from_x_and_conservatives
@@ -21,9 +66,7 @@
 static inline void
 compute_rho_W_from_x_and_conservatives(
   const double x,
-  const ghl_parameters *restrict params,
-  const ghl_conservative_quantities *restrict cons_undens,
-  const fparams_struct *restrict fparams,
+  const palenzuela_params *restrict params,
   double *restrict rho_ptr,
   double *restrict W_ptr) {
 
@@ -38,7 +81,7 @@ compute_rho_W_from_x_and_conservatives(
   const double W = pow(Wminus2, -0.5);
 
   // Step 3: Compute rho
-  const double rho = cons_undens->rho/W;
+  const double rho = params->cons_undens->rho/W;
 
   // Step 4: Set the output
   *rho_ptr = rho;
@@ -104,13 +147,13 @@ compute_SU_Bsq_Ssq_BdotS(
  * Function prototypes
  */
 ghl_error_codes_t ghl_tabulated_Palenzuela1D(
-      void compute_rho_P_eps_T_W(
+      void compute_rho_P_eps_W(
             const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-            ghl_primitive_quantities *restrict prims,
+            palenzuela_params *restrict params,
+            double *restrict rho_ptr,
+            double *restrict P_ptr,
+            double *restrict eps_ptr,
+            double *restrict T_ptr,
             double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -120,13 +163,13 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
       ghl_con2prim_diagnostics *restrict diagnostics);
 
 ghl_error_codes_t ghl_tabulated_Newman1D(
-      void compute_rho_P_eps_T_W(
+      void compute_rho_P_eps_W(
             const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-            ghl_primitive_quantities *restrict prims,
+            palenzuela_params *restrict params,
+            double *restrict rho_ptr,
+            double *restrict P_ptr,
+            double *restrict eps_ptr,
+            double *restrict T_ptr,
             double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -138,11 +181,10 @@ ghl_error_codes_t ghl_tabulated_Newman1D(
 ghl_error_codes_t ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(
             const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-            ghl_primitive_quantities *restrict prims,
+            palenzuela_params *restrict params,
+            double *restrict rho_ptr,
+            double *restrict P_ptr,
+            double *restrict eps_ptr,
             double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -154,11 +196,10 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
 ghl_error_codes_t ghl_hybrid_Newman1D(
       void compute_rho_P_eps_W(
             const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-            ghl_primitive_quantities *restrict prims,
+            palenzuela_params *restrict params,
+            double *restrict rho_ptr,
+            double *restrict P_ptr,
+            double *restrict eps_ptr,
             double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

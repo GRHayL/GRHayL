@@ -2,7 +2,7 @@
 #define GHL_M1_H_
 
 #include "ghl.h"
-#include "radiation.h"
+#include "ghl_radiation.h"
 
 typedef struct {
   double DD[4][4];

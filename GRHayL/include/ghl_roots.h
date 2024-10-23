@@ -123,14 +123,14 @@ static inline int sign(const double x) { return (x > 0) - (x < 0); }
 /*
  * Function prototypes
  */
-roots_error_t ghl_brent(
+ghl_error_codes_t ghl_brent(
       double f(const double, void *restrict),
       void *restrict fparams,
       double a,
       double b,
       roots_params *restrict r);
 
-roots_error_t ghl_toms748(
+ghl_error_codes_t ghl_toms748(
       double f(const double, void *restrict),
       void *restrict fparams,
       double a,

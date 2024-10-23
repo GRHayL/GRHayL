@@ -48,18 +48,8 @@ static inline void ensure_b_is_closest_to_root(
  */
 static inline ghl_error_codes_t
 check_a_b_compute_fa_fb(
-      double f(
-            const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-            ghl_primitive_quantities *restrict prims),
-    const ghl_parameters *restrict params,
-    const ghl_eos_parameters *restrict eos,
-    const ghl_conservative_quantities *restrict cons_undens,
-    fparams_struct *restrict fparams,
-    ghl_primitive_quantities *restrict prims,
+    double f(const double, void *restrict),
+    void *restrict fparams,
     double *restrict a,
     double *restrict b,
     double *restrict fa,
@@ -67,7 +57,7 @@ check_a_b_compute_fa_fb(
     roots_params *restrict r) {
 
   // Step 1: Compute fa; check if a is the root.
-  *fa = f(*a, params, eos, cons_undens, fparams, prims);
+  *fa = f(*a, fparams);
   if(*fa == 0.0) {
     r->root = *a;
     r->residual = *fa;
@@ -75,7 +65,7 @@ check_a_b_compute_fa_fb(
   }
 
   // Step 2: Compute fb; check if b is the root.
-  *fb = f(*b, params, eos, cons_undens, fparams, prims);
+  *fb = f(*b, fparams);
   if( *fb == 0.0 ) {
     r->root     = *b;
     r->residual = *fb;
@@ -127,18 +117,8 @@ check_a_b_compute_fa_fb(
  */
 ghl_error_codes_t
 ghl_brent(
-      double f(
-            const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-           ghl_primitive_quantities *restrict prims),
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_conservative_quantities *restrict cons_undens,
-      fparams_struct *restrict fparams,
-      ghl_primitive_quantities *restrict prims,
+      double f(const double, void *restrict),
+      void *restrict fparams,
       double a,
       double b,
       roots_params *restrict r) {
@@ -150,7 +130,7 @@ ghl_brent(
 
   // Step 1: Check whether a or b is the root; compute fa and fb
   double fa, fb;
-  ghl_error_codes_t error = check_a_b_compute_fa_fb(f, params, eos, cons_undens, fparams, prims, &a, &b, &fa, &fb, r);
+  ghl_error_codes_t error = check_a_b_compute_fa_fb(f, fparams, &a, &b, &fa, &fb, r);
   if(error != ghl_error_c2p_max_iter)
     return error;
 
@@ -232,9 +212,11 @@ ghl_brent(
     fa = fb;
     if(fabs(d) > tol) {
       b += d;
-    else
+    }
+    else {
       b += m>0 ? tol : -tol;
-    fb = f(b, params, eos, cons_undens, fparams, prims);
+    }
+    fb = f(b, fparams);
   }
 
   // Step 4: The only way to get here is if we have exceeded the maximum number
