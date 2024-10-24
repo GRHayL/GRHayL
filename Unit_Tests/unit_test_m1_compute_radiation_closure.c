@@ -1,5 +1,4 @@
-#include "radiation.h"
-#include "unit_tests.h"
+#include "ghl_unit_tests.h"
 #include "ghl_m1.h"
 
 //copied from unit_test_nrpyleakage_optically_thin_gas.c
