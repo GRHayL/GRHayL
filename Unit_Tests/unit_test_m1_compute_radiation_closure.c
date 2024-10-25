@@ -1,6 +1,9 @@
 #include "ghl_unit_tests.h"
 #include "ghl_m1.h"
 
+void test_optically_thick_advection();
+void test_optically_thin_advection();
+
 //copied from unit_test_nrpyleakage_optically_thin_gas.c
 int main (int argc, char **argv) {
   printf("Run Optically thin test\n");
@@ -69,7 +72,8 @@ void test_optically_thick_advection(){
                         &prims);
 
   //This applies limits on the primitives
-  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
+  bool speed_limited = false;
+  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
 
   //Set E, F for optically thick limit
   // Sec 4.3 - Eq (98)
@@ -155,7 +159,8 @@ void test_optically_thin_advection(){
                         &prims);
 
   //This applies limits on the primitives
-  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims);
+  bool speed_limited = false;
+  ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
 
   // Set E and F for optically thin limit
   // Sec 4.1
