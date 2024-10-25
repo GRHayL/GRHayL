@@ -168,7 +168,7 @@ void test_optically_thin_advection(){
 
   ghl_radiation_flux_vector F4;
   F4.D[0] = 0.0;
-  F4.D[1] = 0.99999999*E; //When set exactly to E, the root is found but not swapped
+  F4.D[1] = E; //When set exactly to E, the root is found but not swapped
   F4.D[2] = 0.0;
   F4.D[3] = 0.0;
 

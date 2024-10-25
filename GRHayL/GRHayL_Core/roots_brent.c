@@ -66,7 +66,7 @@ check_a_b_compute_fa_fb(
 
   // Step 2: Compute fb; check if b is the root.
   *fb = f(*b, fparams);
-  if( *fb == 0.0 ) {
+  if( fabs(*fb) < 1e-15 ) {
     r->root     = *b;
     r->residual = *fb;
     return ghl_success;
@@ -140,10 +140,8 @@ ghl_brent(
   double d = b - a;
   double e = d;
   double tol, m, P, Q, R, S;
-
   // Step 3: Brent's algorithm
   for(r->n_iters = 1; r->n_iters <= r->max_iters; r->n_iters++) {
-
     // Step 3.a: Keep the bracket in [b,c]
     if(fb * fc > 0) {
       c = a;
