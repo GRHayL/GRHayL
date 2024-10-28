@@ -2,8 +2,7 @@
 
 # Source files in this directory that need compiled:
 SRCS = ghl_calculate_characteristic_speed.c       \
+       ghl_calculate_HLLE_fluxes.c \
        ghl_calculate_HLLE_fluxes_hybrid.c         \
        ghl_calculate_HLLE_fluxes_hybrid_entropy.c \
-       ghl_calculate_source_terms.c               \
-       ghl_calculate_HLLE_fluxes_tabulated.c      \
-       ghl_calculate_HLLE_fluxes_tabulated_entropy.c       
+       ghl_calculate_source_terms.c             

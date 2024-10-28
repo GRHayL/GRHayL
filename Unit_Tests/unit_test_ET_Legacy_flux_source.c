@@ -259,7 +259,7 @@ int main(int argc, char **argv) {
                 &prims_r, &prims_l, &cmin, &cmax);
 
           ghl_conservative_quantities cons_fluxes;
-          ghl_calculate_HLLE_fluxes_hybrid(
+          ghl_calculate_HLLE_fluxes_hybrid2(
                 flux_dirn, &eos, &metric_face,
                 &prims_r, &prims_l, cmin, cmax,
                 &cons_fluxes);

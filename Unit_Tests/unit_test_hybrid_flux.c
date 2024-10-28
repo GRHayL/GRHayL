@@ -146,6 +146,7 @@ int main(int argc, char **argv) {
   double *cmin;
   double *cmax;
   for(int entropy=0; entropy<2; entropy++) {
+    calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_hybrid_entropy : &ghl_calculate_HLLE_fluxes_hybrid2;
     // Loop over flux directions (x,y,z)
     for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
       // Set function pointer to specific function for a given direction
@@ -153,17 +154,14 @@ int main(int argc, char **argv) {
         case 0:
           cmin = cxmin;
           cmax = cxmax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_hybrid_entropy : &ghl_calculate_HLLE_fluxes_hybrid;
           break;
         case 1:
           cmin = cymin;
           cmax = cymax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_hybrid_entropy : &ghl_calculate_HLLE_fluxes_hybrid;
           break;
         case 2:
           cmin = czmin;
           cmax = czmax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_hybrid_entropy : &ghl_calculate_HLLE_fluxes_hybrid;
           break;
       }
 

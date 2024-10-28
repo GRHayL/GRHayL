@@ -31,6 +31,26 @@ void ghl_calculate_characteristic_speed(
       double *cmin_dirn0,
       double *cmax_dirn0);
 
+void ghl_calculate_HLLE_fluxes_hybrid2(
+      const int direction,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      ghl_primitive_quantities *restrict prims_r,
+      ghl_primitive_quantities *restrict prims_l,
+      const double cmin_dirn0,
+      const double cmax_dirn0,
+      ghl_conservative_quantities *restrict cons);
+
+void ghl_calculate_HLLE_fluxes_hybrid_entropy2(
+      const int direction,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict ADM_metric,
+      ghl_primitive_quantities *restrict prims_r,
+      ghl_primitive_quantities *restrict prims_l,
+      const double cmin_dirn0,
+      const double cmax_dirn0,
+      ghl_conservative_quantities *restrict cons);
+
 void ghl_calculate_HLLE_fluxes_hybrid(
       const int direction,
       const ghl_eos_parameters *restrict eos,
