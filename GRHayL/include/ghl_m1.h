@@ -26,6 +26,11 @@ typedef struct {
   double U[4];
 } ghl_radiation_con_source_vector; 
 
+// conservative source tensor for M1 equaitons
+typedef struct {
+  double DD[4][4];
+} ghl_radiation_con_source_tensor; 
+
 typedef struct {
   ghl_metric_quantities *metric;
   ghl_ADM_aux_quantities *adm_aux;
