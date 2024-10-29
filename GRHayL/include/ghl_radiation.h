@@ -14,6 +14,55 @@ typedef struct ghl_neutrino_opacities {
 
 typedef ghl_neutrino_opacities ghl_neutrino_optical_depths;
 
+typedef struct {
+  double DD[4][4];
+} ghl_radiation_pressure_tensor; 
+
+typedef struct {
+  double UD[4][4];
+} ghl_radiation_metric_tensor; 
+
+typedef struct {
+  double D[4];
+} ghl_radiation_flux_vector; 
+
+// conservative flux for M1 equations
+typedef struct {
+  double U[4];
+} ghl_radiation_con_flux_vector; 
+
+// conservative source for M1 equaitons
+typedef struct {
+  double U[4];
+} ghl_radiation_con_source_vector; 
+
+// conservative source tensor for M1 equaitons
+typedef struct {
+  double DD[4][4];
+} ghl_radiation_con_source_tensor; 
+
+typedef struct {
+  ghl_metric_quantities *metric;
+  ghl_ADM_aux_quantities *adm_aux;
+  ghl_primitive_quantities *prims;
+  double E;
+  ghl_radiation_flux_vector* F4;
+  ghl_radiation_pressure_tensor *P4;
+} m1_root_params;
+
+
+/*
+ * Struct        : ghl_m1_parameters
+ * Description   : stores M1 transport GRHayL parameters
+ * Documentation : 
+*/
+typedef struct ghl_m1_parameters {
+  // ghl_con2prim_method_t main_routine, backup_routine[3];
+  double J;
+  double H2;
+
+} ghl_m1_parameters;
+
 #include "nrpyleakage.h"
 
 #endif // GHL_RADIATION_H_

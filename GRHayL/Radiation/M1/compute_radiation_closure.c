@@ -1,5 +1,5 @@
 #include "ghl.h"
-#include "ghl_m1.h"
+#include "ghl_radiation.h"
 #include "ghl_roots.h"
 
 // Computes radiation pressure in the lab frame in the thick limit (Eq. (8) of Radice et al. (2022))

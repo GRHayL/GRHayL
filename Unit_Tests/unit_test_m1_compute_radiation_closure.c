@@ -1,5 +1,5 @@
 #include "ghl_unit_tests.h"
-#include "ghl_m1.h"
+#include "ghl_radiation.h"
 
 void test_optically_thick_advection();
 void test_optically_thin_advection();
