@@ -58,7 +58,7 @@ check_a_b_compute_fa_fb(
 
   // Step 1: Compute fa; check if a is the root.
   *fa = f(*a, fparams);
-  if(*fa == 0.0) {
+  if(fabs(*fa) < r->tol) {
     r->root = *a;
     r->residual = *fa;
     return ghl_success;
@@ -66,14 +66,14 @@ check_a_b_compute_fa_fb(
 
   // Step 2: Compute fb; check if b is the root.
   *fb = f(*b, fparams);
-  if( fabs(*fb) < 1e-15 ) {
+  if( fabs(*fb) < r->tol ) {
     r->root     = *b;
     r->residual = *fb;
     return ghl_success;
   }
 
   // Step 3: Ensure the root is in [a,b]
-  if( (*fa)*(*fb) > 0 )
+  if( (*fa)*(*fb) > 0 && fabs(*fa - *fb) > r->tol)
     return ghl_error_root_not_bracketed;
 
   // Step 4: Ensure b contains the best approximation to the root
