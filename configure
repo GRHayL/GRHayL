@@ -2,7 +2,7 @@
 #
 # configure
 #
-# (c) 2023, Leo Werneck
+# (c) 2024, Leo Werneck
 #
 # This is GRHayL's configure script, which is responsible for ensuring users are
 # able to compile, test, and install GRHayL on different systems.
@@ -61,8 +61,9 @@ This is the configuration script for GRHayL
 Syntax: ./configure [-h,--help] [-l,--license] [-r,--reconfigure] [-s,--silent]
                     [--noomp] [--nohdf5] [--prefix=<dir>] [--builddir=<dir>]
                     [--buildtype=<type>] [--cflags="<flag1> <flag2>..."]
-                    [--clibs="<lib1> <lib2>..."] [--hdf5dir=<dir>]
-                    [--hdf5inc=<dir>] [--hdf5lib=<dir>]
+                    [--clibs="<lib1> <lib2>..."]
+                    [--hdf5dir=<dir>] [--hdf5inc=<dir>] [--hdf5lib=<dir>]
+                    [--gsldir=<dir>] [--gslinc=<dir>] [--gsllib=<dir>]
 Options:'
     -h,--help           Print this message and exit
     -u,--usage          Print usage information and exit
@@ -88,6 +89,11 @@ Options:'
                                   (see --hdf5inc and --hdf5lib if not)
     --hdf5inc           Sets the path to the HDF5 include directory
     --hdf5lib           Sets the path to the HDF5 lib directory
+    --gsldir            Sets the GSL base directory. Possible values:
+                          <dir> : assumes <dir>/include/gsl and <dir>/lib exist
+                                  (see --gslinc and --gsllib if not)
+    --gslinc            Sets the path to the GSL include directory
+    --gsllib            Sets the path to the GSL lib directory
 EOF
 }
 
@@ -372,6 +378,46 @@ set_hdf5()
     return 0
 }
 
+set_gsl()
+{
+    for dir in $1 $2; do
+        if [ ! -d $dir ]; then
+            error "Directory $dir not found"
+        fi
+    done
+    printf "Checking if gsl.h can be found in $1... "
+    probe_file $1/gsl/gsl.h
+    err=$?
+    if [ $err -ne 0 ]; then
+        case $err in
+            1) NO;;
+            2) printf "\nFound multiple gsl.h files:\n"
+               printf "$tmp_\n"
+               printf "Please specify the desired one using the --gsldir, --gslinc,\n"
+               printf "and/or --gsllib options. Run ./configure -h for further details.\n";;
+        esac
+        return $err
+    else
+        YES "$tmp_"
+        cflags="$cflags -I$(dirname $tmp_)"
+    fi
+    for f in $gsllibfiles; do
+        printf "Checking if $f can be found in $2... "
+        probe_file $2/$f
+        if [ $? -ne 0 ]; then
+            NO;
+            if [ "$f" = "libgsl.a" ]; then
+                return 1;
+            fi
+        else
+            YES "$tmp_"
+            clibs="$clibs -L$(dirname $tmp_) -lgsl -lgslcblas -lm"
+            break
+        fi
+    done
+    return 0
+}
+
 silent=0
 reconfigure=0
 prefix="/usr/local"
@@ -384,6 +430,9 @@ clibs=""
 hdf5dir=""
 hdf5inc=""
 hdf5lib=""
+gsldir=""
+gslinc=""
+gsllib=""
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -424,6 +473,9 @@ while [ $# -gt 0 ]; do
         --hdf5dir) hdf5dir=$2; shift;;
         --hdf5inc) hdf5inc=$2; shift;;
         --hdf5lib) hdf5lib=$2; shift;;
+        --gsldir) gsldir=$2; shift;;
+        --gslinc) gslinc=$2; shift;;
+        --gsllib) gsllib=$2; shift;;
         --) shift; break;;
         -*)
             opt=$1
@@ -512,13 +564,11 @@ else
     YES "$clibs"
 fi
 
-for compiler in gcc clang icc icx cc; do
-    if [ -z $CC ]; then
+if [ -z $CC ]; then
+    for compiler in gcc clang icc icx cc; do
         check_compiler $compiler
-    else
-        break
-    fi
-done
+    done
+fi
 
 clibs=$(printf "%s" "-lm $clibs" | awk '{sub(/ *$/, "", $0); print}')
 
@@ -569,7 +619,7 @@ else
                 printf "Checking if hdf5 library is available with pkg-config... "
                 hdf5inc=$(pkg-config hdf5 --cflags 2>/dev/null)
                 hdf5lib=$(pkg-config hdf5 --libs 2>/dev/null)
-                if [ "$hdf5inc" != "" ] && [ "$hdf5lib" != "" ]; then
+                if [ "$hdf5lib" != "" ]; then
                     YES
                     cflags="$cflags $hdf5inc"
                     clibs="$clibs $hdf5lib"
@@ -638,9 +688,65 @@ int main() {
     c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with hdf5... "
     if [ $? -ne 0 ]; then
         msg="C compiler does not work with hdf5. Use ./configure --nohdf5 to disable hdf5 or
-       run ./configure -h for more information on how to specify your hdf5 installation."
+run ./configure -h for more information on how to specify your hdf5 installation."
         error "$msg"
     fi
+fi
+
+if [ "$gsldir" = "" ]; then
+    if [ "$gslinc" = "" ] && [ "$gsllib" = "" ]; then
+        check_command pkg-config
+        if [ $have_pkg_config -eq 1 ]; then
+            printf "Checking if gsl library is available with pkg-config... "
+            gslinc=$(pkg-config gsl --cflags 2>/dev/null)
+            gsllib=$(pkg-config gsl --libs 2>/dev/null)
+            if [ "$gsllib" != "" ]; then
+                YES
+                cflags="$cflags $gslinc"
+                clibs="$clibs $gsllib"
+            else
+                NO
+                red "ERROR: "
+                printf "gsl not found with pkg-config\n"
+                printf "Please use ./configure -h for instructions on how to manually\n"
+                printf "specify your gsl installation path or disable gsl\n"
+                exit 1
+            fi
+        fi
+    elif [ "$gslinc" = "" ] || [ "$gsllib" = "" ]; then
+        error "For custom gsl paths, both --gslinc and --gsllib must be given\n"
+    else
+        set_gsl "$gslinc" "$gsllib"
+        if [ $? -ne 0 ]; then
+            error "gsl not found"
+        fi
+    fi
+else
+    if [ ! -d $gsldir ]; then
+        error "gsl directory $gsldir does not exist"
+    fi
+    set_gsl "${gsldir}/include" "${gsldir}/lib"
+    if [ $? -ne 0 ]; then
+        error "gsl not found"
+    fi
+fi
+
+# Courtesy ChatGPT (comments removed)
+code='
+#include <gsl/gsl_sf_bessel.h>
+#include <stdio.h>
+int main() {
+  double x = 5.0;
+  double y = gsl_sf_bessel_J0(x);
+  printf("J0(%.1f) = %.5f\\n", x, y);
+  return 0;
+}
+'
+c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with gsl... "
+if [ $? -ne 0 ]; then
+    msg="C compiler does not work with gsl. Use ./configure --nogsl to disable gsl or
+run ./configure -h for more information on how to specify your gsl installation."
+    error "$msg"
 fi
 
 parse_mcd()
@@ -807,11 +913,11 @@ if [ $silent -eq 0 ]; then
     fi
     if [ "$datagen" != "" ]; then
         printf '$(DGEXES): test/data_gen/%%: $(BUILDDIR)/Unit_Tests/data_gen/%%.o $(DGOBJS) $(TOBJS) $(LIBS)\n' >> Makefile
-        printf '\t$(CCOMPILEOMP) $(DGOBJS) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
-        printf '$(DGOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                            >> Makefile
-        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-        printf '$(DGEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                         >> Makefile
-        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+        printf '\t$(CCOMPILEOMP) $(DGOBJS) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n'        >> Makefile
+        printf '$(DGOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                                            >> Makefile
+        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                                               >> Makefile
+        printf '$(DGEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                                         >> Makefile
+        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                                               >> Makefile
     fi
 else
     printf '$(BUILDLIBSO): $(BUILDLIBSOV)\n'                             >> Makefile
@@ -845,15 +951,15 @@ else
         printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
     fi
     if [ "$datagen" != "" ]; then
-        printf '$(DGEXES): test/%%: $(BUILDDIR)/Unit_Tests/%%.o $(DGOBJS) $(TOBJS) $(LIBS)\n'              >> Makefile
-        printf '\t@echo "Linking $@"\n'                                                         >> Makefile
+        printf '$(DGEXES): test/%%: $(BUILDDIR)/Unit_Tests/%%.o $(DGOBJS) $(TOBJS) $(LIBS)\n'             >> Makefile
+        printf '\t@echo "Linking $@"\n'                                                                   >> Makefile
         printf '\t@$(CCOMPILEOMP) $(DGOBJS) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
-        printf '$(DGOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                             >> Makefile
-        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
-        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-        printf '$(DGEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                          >> Makefile
-        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
-        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
+        printf '$(DGOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                                      >> Makefile
+        printf '\t@echo "Compiling $<"\n'                                                                 >> Makefile
+        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                                        >> Makefile
+        printf '$(DGEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                                   >> Makefile
+        printf '\t@echo "Compiling $<"\n'                                                                 >> Makefile
+        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                                        >> Makefile
     fi
 fi
 printf 'install: grhayl\n'                                                     >> Makefile
