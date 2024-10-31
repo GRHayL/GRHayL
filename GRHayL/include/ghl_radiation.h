@@ -63,6 +63,25 @@ typedef struct ghl_m1_parameters {
 
 } ghl_m1_parameters;
 
+//Choice of closure scheme
+typedef enum {
+  Eddington,
+  Kershaw,
+  Minerbo,
+  Thin
+} ghl_m1_closure_t;
+
 #include "nrpyleakage.h"
+
+//Closure function prototypes
+double eddington(const double xi);
+double kershaw(const double xi);
+double minerbo(const double xi);
+double thin(const double xi);
+
+//The function pointer to be used for the closure.
+extern double (*ghl_m1_closure)(double);
+
+ghl_error_codes_t ghl_initialize_m1_closure(ghl_m1_closure_t ghl_m1_closure_type);
 
 #endif // GHL_RADIATION_H_

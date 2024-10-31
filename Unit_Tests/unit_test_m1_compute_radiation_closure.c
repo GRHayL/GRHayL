@@ -6,6 +6,11 @@ void test_optically_thin_advection();
 
 //copied from unit_test_nrpyleakage_optically_thin_gas.c
 int main (int argc, char **argv) {
+  
+  //initialize the closure of choice
+  ghl_error_codes_t initialize_check = ghl_initialize_m1_closure(Minerbo);
+  ghl_read_error_codes(initialize_check);
+
   printf("Run Optically thin test\n");
   test_optically_thin_advection();
 

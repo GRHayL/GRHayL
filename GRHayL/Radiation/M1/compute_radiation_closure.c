@@ -246,7 +246,7 @@ static inline double froot(
   ghl_radiation_pressure_tensor *P4 = fparams->P4;
 
   // Apply closure (TODO: change this so other functions can be used)
-  double chi = minerbo(xi);
+  double chi = ghl_m1_closure(xi);
   ghl_radiation_apply_closure(metric, adm_aux, prims, E, F4, chi, P4);
 
   ghl_stress_energy rT4DD;

@@ -48,7 +48,8 @@ typedef enum {
   ghl_error_exceed_table_vars,
   ghl_error_table_neg_energy,
   ghl_error_table_bisection,
-  ghl_error_u0_singular
+  ghl_error_u0_singular,
+  ghl_error_invalid_m1_closure
 } ghl_error_codes_t;
 
 typedef enum {

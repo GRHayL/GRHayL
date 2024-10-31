@@ -11,6 +11,7 @@ SRCS = compute_ADM_auxiliaries.c                  \
        initialize_eos.c                           \
        initialize_extrinsic_curvature.c           \
        initialize_params.c                        \
+       initialize_m1_closure.c                    \
        initialize_metric.c                        \
        initialize_primitives.c                    \
        initialize_stress_energy.c                 \

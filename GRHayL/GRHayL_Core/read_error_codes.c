@@ -60,5 +60,8 @@ void ghl_read_error_codes(
     case ghl_error_table_neg_energy:
       ghl_abort("While interpolating temperature, found eps+energy_shift < 0.0. Interpolation cannot be performed.\n");
       break;
+    case ghl_error_invalid_m1_closure:
+      ghl_abort("Invalid M1 scheme. Valid choices are 'Eddington', 'Kershaw', 'Minerbo', and 'Thin'.");
+      break;
   }
 }
