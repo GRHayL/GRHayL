@@ -1,6 +1,9 @@
 #include "ghl.h"
 #include "ghl_radiation.h"
 #include "ghl_roots.h"
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_roots.h>
 
 // Computes radiation pressure in the lab frame in the thick limit (Eq. (8) of Radice et al. (2022))
 // *** "fluid three velocity" in the paper is not the fluid three velocity in GRHayL
@@ -206,32 +209,6 @@ void calc_K4DD_from_rT(
 } // calc_K4DD_from_rT
 
 
-// rad_E_floor rad_eps are parameters in param.ccl
-// this function modifies E and F4 given the floor values
-void apply_floor(
-        const ghl_ADM_aux_quantities *adm_aux,
-        double * E,
-        ghl_radiation_flux_vector * F4,
-        const double rad_E_floor,
-        const double rad_eps) {
-    *E = fmax(rad_E_floor, *E);
-
-    double F2 = 0; // needs a better name
-    for (int a = 0; a < 4; ++a) {
-        for (int b = 0; b < 4; ++b) {
-            F2 += adm_aux->g4UU[a][b] * F4->D[a] * F4->D[b];
-        }
-    }
-    const double lim = (*E)*(*E)*(1 - rad_eps);
-    if (F2 > lim) {
-        double fac = lim/F2;
-        for (int a = 0; a < 4; ++a) {
-            F4->D[a] *= fac;
-        }
-    }
-}
-
-
 // Function to rootfind in order to determine the closure
 //
 static inline double froot(
@@ -241,8 +218,8 @@ static inline double froot(
   const ghl_metric_quantities * metric = fparams->metric; //maybe try this
   const ghl_ADM_aux_quantities *adm_aux = fparams->adm_aux;
   const ghl_primitive_quantities *prims = fparams->prims;
-  const double E = fparams->E;
-  const ghl_radiation_flux_vector* F4 = fparams->F4;
+  double E = fparams->E;
+  ghl_radiation_flux_vector* F4 = fparams->F4;
   ghl_radiation_pressure_tensor *P4 = fparams->P4;
 
   // Apply closure (TODO: change this so other functions can be used)
@@ -274,14 +251,6 @@ static inline double froot(
 
   ghl_radiation_flux_vector H4;
   calc_H4D_from_rT(u4U, &proj4, &rT4DD, &H4);
-
-  // rad_eps "Impose F_a F^a < (1 - rad_E_eps) E2"
-  // rad_E_floor "Radiation energy density floor"
-  // TODO: CCTK_param in THC: what to do here?
-  double rad_eps = 1.0e-15; // default value in THC
-  double rad_E_floor = 1.0e-15;
-  apply_floor(adm_aux, &E, &F4, rad_E_floor, rad_eps); // TODO: what does this step do?
-
 
   double H2 = 0;
 

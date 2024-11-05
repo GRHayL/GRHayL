@@ -1,5 +1,5 @@
 #include "ghl.h"
-#include "ghl_m1.h"
+#include "ghl_radiation.h"
 
 // Eq (21)
 // f^a = u^a + H^a/J

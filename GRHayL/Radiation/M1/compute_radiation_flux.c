@@ -1,5 +1,5 @@
 #include "ghl.h"
-#include "ghl_m1.h"
+#include "ghl_radiation.h"
 
 // Eq (5)
 /*
