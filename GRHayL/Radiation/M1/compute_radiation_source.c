@@ -1,5 +1,5 @@
 #include "ghl.h"
-#include "ghl_m1.h"
+#include "ghl_radiation.h"
 
 /* return dthin */
 inline double radM1_set_dthin(double chi)
