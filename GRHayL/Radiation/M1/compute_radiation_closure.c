@@ -1,9 +1,6 @@
 #include "ghl.h"
 #include "ghl_radiation.h"
 #include "ghl_roots.h"
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_roots.h>
 
 // Computes radiation pressure in the lab frame in the thick limit (Eq. (8) of Radice et al. (2022))
 // *** "fluid three velocity" in the paper is not the fluid three velocity in GRHayL
