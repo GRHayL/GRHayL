@@ -105,6 +105,30 @@ static double linterp(
   return (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
 }
 
+// This is a simple discrete derivative.
+static double discrete_derivative(
+      const int nx,
+      const double *restrict x_arr,
+      const double *restrict y_arr,
+      const double x,
+      int (*find_left_index)(const int, const double *restrict, const double)) {
+
+  if(x < x_arr[0] || x > x_arr[nx - 1]) {
+    ghl_error("Point (%e) out of array bounds [%e, %e]\n", x, x_arr[0], x_arr[nx - 1]);
+  }
+
+  // Set up basic quantities for the interpolation
+  const int i0 = find_left_index(nx, x_arr, x);
+  const int i1 = i0 + 1;
+  const double x0 = x_arr[i0];
+  const double x1 = x_arr[i1];
+  const double y0 = y_arr[i0];
+  const double y1 = y_arr[i1];
+
+  // Perform the derivative
+  return (y1 - y0) / (x1 - x0);
+}
+
 // Compute Ye(logrho) using linear interpolation
 double NRPyEOS_tabulated_compute_Ye_from_rho(
       const ghl_eos_parameters *restrict eos,
@@ -207,4 +231,33 @@ void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos) {
     free(eos->le_of_lr);
     eos->le_of_lr = NULL;
   }
+}
+
+double NRPyEOS_tabulated_compute_dP_drho_from_rho(
+      const ghl_eos_parameters *restrict eos,
+      const double rho) {
+
+  double const dlogP_dlogrho = discrete_derivative(
+        eos->N_rho, eos->table_logrho, eos->lp_of_lr, log(rho),
+        find_left_index_uniform_array);
+
+  double const P = NRPyEOS_tabulated_compute_P_from_rho(eos, rho);
+
+  double const dP_drho = dlogP_dlogrho * P / rho;
+
+  return dP_drho;
+}
+
+double NRPyEOS_tabulated_compute_deps_dP_from_rho(
+      const ghl_eos_parameters *restrict eos,
+      const double rho) {
+
+  double const eps = NRPyEOS_tabulated_compute_eps_from_rho(eos, rho);
+  double const dP_drho = NRPyEOS_tabulated_compute_dP_drho_from_rho(eos, rho);
+  double const P = NRPyEOS_tabulated_compute_P_from_rho(eos, rho);
+
+  double const energy = rho*(1.+eps);
+  double const rhoh = energy + P;
+
+  return rhoh / (dP_drho*rho);
 }

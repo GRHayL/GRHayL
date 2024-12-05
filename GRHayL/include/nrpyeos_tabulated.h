@@ -312,6 +312,14 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_P(
       double *restrict Y_e,
       double *restrict P );
 
+double NRPyEOS_tabulated_compute_dP_drho_from_rho(
+      const ghl_eos_parameters *restrict eos,
+      const double rho);
+
+double NRPyEOS_tabulated_compute_deps_dP_from_rho(
+      const ghl_eos_parameters *restrict eos,
+      const double rho);
+
 #ifdef __cplusplus
 }
 #endif
