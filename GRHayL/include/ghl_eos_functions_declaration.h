@@ -297,4 +297,12 @@ void (*ghl_tabulated_enforce_bounds_rho_Ye_P)(
       double *restrict Y_e,
       double *restrict P );
 
+double (*ghl_tabulated_compute_deps_dP_from_rho)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+double (*ghl_tabulated_compute_dP_drho_from_rho)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
 #endif // GHL_EOS_FUNCTIONS_DECLARATION_H_
