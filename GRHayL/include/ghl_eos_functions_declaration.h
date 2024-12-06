@@ -31,6 +31,10 @@ void (*ghl_hybrid_compute_P_cold_and_eps_cold)(
       double *restrict P_cold_ptr,
       double *restrict eps_cold_ptr);
 
+double (*ghl_hybrid_compute_rho_cold_from_h)(
+      const ghl_eos_parameters *restrict eos,
+      const double h_in);
+
 double (*ghl_hybrid_compute_epsilon)(
       const ghl_eos_parameters *restrict eos,
       const double rho,

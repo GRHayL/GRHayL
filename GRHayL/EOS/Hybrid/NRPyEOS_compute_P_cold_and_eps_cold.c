@@ -27,3 +27,17 @@ void NRPyEOS_compute_P_cold_and_eps_cold(
   *P_cold_ptr   = P_cold;
   *eps_cold_ptr = P_cold/(rho_in*(Gamma_ppoly-1.0)) + eps_integ_const;
 }
+
+double NRPyEOS_hybrid_compute_rho_cold_from_h(
+      const ghl_eos_parameters *restrict eos,
+      const double h_in) {
+
+  const int polytropic_index = ghl_hybrid_find_polytropic_index_from_h(eos, h_in);
+  const double K_ppoly       = eos->K_ppoly[polytropic_index];
+  const double Gamma_ppoly   = eos->Gamma_ppoly[polytropic_index];
+  const double gam_minusone = Gamma_ppoly - 1;
+  const double denom = Gamma_ppoly * K_ppoly;
+  const double numerator = gam_minusone * (h_in - 1. - eos->eps_ppoly[polytropic_index]);
+  const double rho = pow(numerator / denom, 1./gam_minusone);
+  return rho;
+}
