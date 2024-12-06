@@ -94,6 +94,8 @@ void ghl_initialize_simple_eos(
   eos->neos = 1;
   eos->K_ppoly[0] = 1;
   eos->rho_ppoly[0] = 0.0;
+  eos->h_ppoly[0] = 1.0;
+  eos->eps_ppoly[0] = 0.0;
   eos->eps_integ_const[0] = 0.0;
 
   const double Gm1 = Gamma - 1.0;
@@ -161,6 +163,17 @@ void ghl_initialize_hybrid_eos(
 
   // Step 4: Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
+  for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
+
+  // Initialize tabulated specific enthalpy.  We do it here to make sure
+  // eps_integ_consts are initialized.
+  for(int j=1; j<eos->neos; j++) {
+    double P, eps;
+    double rho = rho_ppoly[j];
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P, &eps);
+    eps_ppoly[j] = eps;
+    h_ppoly[j] = 1.0 + eps + P / rho;
+  }
 
   // -------------- Ceilings --------------
   // Compute maximum P and eps

@@ -194,6 +194,10 @@ typedef struct ghl_stress_energy {
 
  --eps_integ_const: array of the integration constants for specific internal energy
 
+ --eps_ppoly: array of internal energy from rho_ppoly
+
+ --h_ppoly: array of specific enthalpy from rho_ppoly
+
  --Gamma_th: thermal adiabatic index
 
          ----------- Tabulated Equation of State -----------
@@ -215,6 +219,8 @@ typedef struct ghl_eos_parameters {
   double Gamma_ppoly[MAX_EOS_PARAMS];
   double K_ppoly[MAX_EOS_PARAMS];
   double eps_integ_const[MAX_EOS_PARAMS];
+  double h_ppoly[MAX_EOS_PARAMS];
+  double eps_ppoly[MAX_EOS_PARAMS];
   double Gamma_th;
   //------------------------------------------------
 
