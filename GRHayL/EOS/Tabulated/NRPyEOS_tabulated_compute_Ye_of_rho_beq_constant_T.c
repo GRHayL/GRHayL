@@ -206,8 +206,11 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
   if(eos->le_of_lr == NULL) {
     eos->le_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
   }
+  if(eos->lh_of_lr == NULL) {
+    eos->lh_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
+  }
 
-  // Compute logP(logrho) and logeps(logrho)
+  // Compute logP(logrho) and logeps(logrho) and logh(logrho)
   for(int ir = 0; ir < eos->N_rho; ir++) {
     const double rho = exp(eos->table_logrho[ir]);
     const double Y_e = eos->Ye_of_lr[ir];
@@ -215,6 +218,7 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
     ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
     eos->lp_of_lr[ir] = log(P);
     eos->le_of_lr[ir] = log(eps + eos->energy_shift);
+    eos->lh_of_lr[ir] = log(1.0 + eps + P / rho);
   }
 }
 
@@ -230,6 +234,10 @@ void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos) {
   if(eos->le_of_lr) {
     free(eos->le_of_lr);
     eos->le_of_lr = NULL;
+  }
+  if(eos->lh_of_lr) {
+    free(eos->lh_of_lr);
+    eos->lh_of_lr = NULL;
   }
 }
 
