@@ -269,3 +269,12 @@ double NRPyEOS_tabulated_compute_deps_dP_from_rho(
 
   return rhoh / (dP_drho*rho);
 }
+
+// Compute density from specific enthalpy
+double NRPyEOS_tabulated_compute_rho_cold_from_h(
+      const ghl_eos_parameters *restrict eos,
+      const double h) {
+  return exp(linterp(
+        eos->N_rho, eos->lh_of_lr, eos->table_logrho, log(h),
+        find_left_index_bisection));
+}

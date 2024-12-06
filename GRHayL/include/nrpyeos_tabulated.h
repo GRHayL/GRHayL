@@ -320,6 +320,9 @@ double NRPyEOS_tabulated_compute_deps_dP_from_rho(
       const ghl_eos_parameters *restrict eos,
       const double rho);
 
+double NRPyEOS_tabulated_compute_rho_cold_from_h(
+      const ghl_eos_parameters *restrict eos,
+      const double h);
 #ifdef __cplusplus
 }
 #endif
