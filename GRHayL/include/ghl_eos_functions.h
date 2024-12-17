@@ -11,6 +11,10 @@ extern int (*ghl_hybrid_find_polytropic_index)(
       const ghl_eos_parameters *restrict eos,
       const double rho_in);
 
+extern int (*ghl_hybrid_find_polytropic_index_from_h)(
+      const ghl_eos_parameters *restrict eos,
+      const double h_in);
+
 extern void (*ghl_hybrid_get_K_and_Gamma)(
       const ghl_eos_parameters *restrict eos,
       const double rho_in,
@@ -30,6 +34,10 @@ extern void (*ghl_hybrid_compute_P_cold_and_eps_cold)(
       const double rho_in,
       double *restrict P_cold_ptr,
       double *restrict eps_cold_ptr);
+
+extern double (*ghl_hybrid_compute_rho_cold_from_h)(
+      const ghl_eos_parameters *restrict eos,
+      const double h_in);
 
 extern double (*ghl_hybrid_compute_epsilon)(
       const ghl_eos_parameters *restrict eos,
