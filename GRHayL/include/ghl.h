@@ -196,6 +196,8 @@ typedef struct ghl_stress_energy {
 
  --eps_ppoly: array of internal energy from rho_ppoly
 
+ --p_ppoly: array of pressure values which divide the polytropic pieces
+
  --h_ppoly: array of specific enthalpy from rho_ppoly
 
  --Gamma_th: thermal adiabatic index
@@ -219,6 +221,7 @@ typedef struct ghl_eos_parameters {
   double Gamma_ppoly[MAX_EOS_PARAMS];
   double K_ppoly[MAX_EOS_PARAMS];
   double eps_integ_const[MAX_EOS_PARAMS];
+  double p_ppoly[MAX_EOS_PARAMS];
   double h_ppoly[MAX_EOS_PARAMS];
   double eps_ppoly[MAX_EOS_PARAMS];
   double Gamma_th;

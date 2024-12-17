@@ -41,3 +41,14 @@ double NRPyEOS_hybrid_compute_rho_cold_from_h(
   const double rho = pow(numerator / denom, 1./gam_minusone);
   return rho;
 }
+
+double NRPyEOS_hybrid_compute_rho_cold_from_P_cold(
+      const ghl_eos_parameters *restrict eos,
+      const double P_in) {
+
+  const int polytropic_index = ghl_hybrid_find_polytropic_index_from_P(eos, P_in);
+  const double K_ppoly       = eos->K_ppoly[polytropic_index];
+  const double Gamma_ppoly   = eos->Gamma_ppoly[polytropic_index];
+  double rho = pow(P_in / K_ppoly, 1.0 / Gamma_ppoly);
+  return rho;
+}
