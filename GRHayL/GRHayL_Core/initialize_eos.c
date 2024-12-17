@@ -171,8 +171,8 @@ void ghl_initialize_hybrid_eos(
     double P, eps;
     double rho = rho_ppoly[j];
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P, &eps);
-    eps_ppoly[j] = eps;
-    h_ppoly[j] = 1.0 + eps + P / rho;
+    eos->eps_ppoly[j] = eps;
+    eos->h_ppoly[j] = 1.0 + eps + P / rho;
   }
 
   // -------------- Ceilings --------------
