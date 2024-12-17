@@ -11,6 +11,10 @@ int  (*ghl_hybrid_find_polytropic_index)(
       const ghl_eos_parameters *restrict eos,
       const double rho_in);
 
+int  (*ghl_hybrid_find_polytropic_index_from_h)(
+      const ghl_eos_parameters *restrict eos,
+      const double h_in);
+
 void (*ghl_hybrid_get_K_and_Gamma)(
       const ghl_eos_parameters *restrict eos,
       const double rho_in,
