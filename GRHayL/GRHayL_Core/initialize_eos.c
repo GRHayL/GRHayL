@@ -87,6 +87,9 @@ void ghl_initialize_simple_eos(
   init_common_eos_quantities;
 
   // Step 3: Set basic ideal fluid EOS parameters.
+  eos->rho_atm = rho_atm;
+  eos->rho_min = rho_min;
+  eos->rho_max = rho_max;
   eos->press_atm = press_atm;
   eos->press_min = press_min;
   eos->press_max = press_max;
@@ -96,6 +99,7 @@ void ghl_initialize_simple_eos(
   eos->rho_ppoly[0] = 0.0;
   eos->h_ppoly[0] = 1.0;
   eos->eps_ppoly[0] = 0.0;
+  eos->p_ppoly[0] = 0.0;
   eos->eps_integ_const[0] = 0.0;
 
   const double Gm1 = Gamma - 1.0;
@@ -142,6 +146,9 @@ void ghl_initialize_hybrid_eos(
     rho_max = 1e300;
   }
   if(rho_min > rho_max) ghl_error("rho_min cannot be greater than rho_max\n");
+  eos->rho_atm = rho_atm;
+  eos->rho_min = rho_min;
+  eos->rho_max = rho_max;
 
   // Step 1: Set EOS type to Hybrid
   eos->eos_type = ghl_eos_hybrid;
@@ -167,13 +174,19 @@ void ghl_initialize_hybrid_eos(
 
   // Initialize tabulated specific enthalpy.  We do it here to make sure
   // eps_integ_consts are initialized.
-  for(int j=1; j<eos->neos; j++) {
+  for(int j=0; j<eos->neos; j++) {
     double P, eps;
     double rho = rho_ppoly[j];
-    ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P, &eps);
-    eos->eps_ppoly[j] = eps;
-    eos->h_ppoly[j] = 1.0 + eps + P / rho;
-    eos->p_ppoly[j] = P;
+    if(rho > 0) {
+      ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P, &eps);
+      eos->eps_ppoly[j] = eps;
+      eos->h_ppoly[j] = 1.0 + eps + P / rho;
+      eos->p_ppoly[j] = P;
+    } else {
+      eos->eps_ppoly[j] = 0.0;
+      eos->h_ppoly[j] = 1.0;
+      eos->p_ppoly[j] = 0.0;
+    }
   }
 
   // -------------- Ceilings --------------
