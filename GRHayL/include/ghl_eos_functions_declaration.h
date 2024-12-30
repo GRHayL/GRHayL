@@ -7,6 +7,10 @@ ghl_error_codes_t (*ghl_compute_h_and_cs2)(
       double *restrict h,
       double *restrict cs2);
 
+bool (*ghl_hybrid_enforce_bounds__rho)(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho);
+
 int  (*ghl_hybrid_find_polytropic_index)(
       const ghl_eos_parameters *restrict eos,
       const double rho_in);
