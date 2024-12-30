@@ -9,4 +9,5 @@ SRCS = NRPyEOS_compute_entropy_function.c         \
        NRPyEOS_hybrid_compute_enthalpy_and_cs2.c  \
        NRPyEOS_hybrid_compute_epsilon.c           \
        NRPyEOS_initialize_hybrid_functions.c      \
-       NRPyEOS_set_K_ppoly_and_eps_integ_consts.c
+       NRPyEOS_set_K_ppoly_and_eps_integ_consts.c \
+       NRPyEOS_enforce_bounds.c
