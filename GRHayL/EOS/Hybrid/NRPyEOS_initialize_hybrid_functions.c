@@ -13,4 +13,5 @@ void NRPyEOS_initialize_hybrid_functions() {
   ghl_hybrid_compute_rho_cold_from_h          = &NRPyEOS_hybrid_compute_rho_cold_from_h;
   ghl_hybrid_compute_rho_cold_from_P_cold     = &NRPyEOS_hybrid_compute_rho_cold_from_P_cold;
   ghl_compute_h_and_cs2                       = &NRPyEOS_hybrid_compute_enthalpy_and_cs2;
+  ghl_hybrid_enforce_bounds__rho              = &NRPyEOS_hybrid_enforce_bounds__rho;
 }
