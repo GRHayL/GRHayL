@@ -218,7 +218,7 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
     ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
     eos->lp_of_lr[ir] = log(P);
     eos->le_of_lr[ir] = log(eps + eos->energy_shift);
-    eos->lh_of_lr[ir] = log(1.0 + eps + eos->energy_shift + P / rho);
+    eos->lh_of_lr[ir] = log(1.0 + eps + P / rho);
   }
 }
 
