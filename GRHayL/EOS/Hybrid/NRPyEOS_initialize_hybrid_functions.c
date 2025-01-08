@@ -10,7 +10,6 @@ void NRPyEOS_initialize_hybrid_functions() {
   ghl_hybrid_compute_P_cold_and_eps_cold      = &NRPyEOS_compute_P_cold_and_eps_cold;
   ghl_hybrid_compute_entropy_function         = &NRPyEOS_compute_entropy_function;
   ghl_hybrid_compute_epsilon                  = &NRPyEOS_hybrid_compute_epsilon;
-  ghl_hybrid_compute_rho_cold_from_h          = &NRPyEOS_hybrid_compute_rho_cold_from_h;
   ghl_hybrid_compute_rho_cold_from_P_cold     = &NRPyEOS_hybrid_compute_rho_cold_from_P_cold;
   ghl_compute_h_and_cs2                       = &NRPyEOS_hybrid_compute_enthalpy_and_cs2;
   ghl_hybrid_enforce_bounds__rho              = &NRPyEOS_hybrid_enforce_bounds__rho;
