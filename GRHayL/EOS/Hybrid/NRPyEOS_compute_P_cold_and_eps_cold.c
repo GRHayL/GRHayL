@@ -30,30 +30,3 @@ void NRPyEOS_compute_P_cold_and_eps_cold(
   *P_cold_ptr   = P_cold;
   *eps_cold_ptr = P_cold/(rho_bounded*(Gamma_ppoly-1.0)) + eps_integ_const;
 }
-
-double NRPyEOS_hybrid_compute_rho_cold_from_h(
-      const ghl_eos_parameters *restrict eos,
-      const double h_in) {
-
-  const int polytropic_index = ghl_hybrid_find_polytropic_index_from_h(eos, h_in);
-  const double K_ppoly       = eos->K_ppoly[polytropic_index];
-  const double Gamma_ppoly   = eos->Gamma_ppoly[polytropic_index];
-  const double gam_minusone = Gamma_ppoly - 1;
-  const double denom = Gamma_ppoly * K_ppoly;
-  const double numerator = gam_minusone * (h_in - 1. - eos->eps_ppoly[polytropic_index]);
-  double rho = pow(numerator / denom, 1./gam_minusone);
-  NRPyEOS_hybrid_enforce_bounds__rho(eos, &rho);
-  return rho;
-}
-
-double NRPyEOS_hybrid_compute_rho_cold_from_P_cold(
-      const ghl_eos_parameters *restrict eos,
-      const double P_in) {
-
-  const int polytropic_index = ghl_hybrid_find_polytropic_index_from_P(eos, P_in);
-  const double K_ppoly       = eos->K_ppoly[polytropic_index];
-  const double Gamma_ppoly   = eos->Gamma_ppoly[polytropic_index];
-  double rho = pow(P_in / K_ppoly, 1.0 / Gamma_ppoly);
-  NRPyEOS_hybrid_enforce_bounds__rho(eos, &rho);
-  return rho;
-}
