@@ -40,7 +40,6 @@ void NRPyEOS_initialize_tabulated_functions() {
   ghl_tabulated_enforce_bounds_rho_Ye_eps              = &NRPyEOS_enforce_table_bounds_rho_Ye_eps;
   ghl_tabulated_enforce_bounds_rho_Ye_S                = &NRPyEOS_enforce_table_bounds_rho_Ye_S;
   ghl_tabulated_enforce_bounds_rho_Ye_P                = &NRPyEOS_enforce_table_bounds_rho_Ye_P;
-  ghl_tabulated_compute_rho_cold_from_h                = &NRPyEOS_tabulated_compute_rho_cold_from_h;
   // clang-format on
 #endif
 }

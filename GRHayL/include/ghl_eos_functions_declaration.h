@@ -325,7 +325,4 @@ double (*ghl_tabulated_compute_dP_drho_from_rho)(
       const ghl_eos_parameters *restrict eos,
       const double rho );
 
-double (*ghl_tabulated_compute_rho_cold_from_h)(
-      const ghl_eos_parameters *restrict eos,
-      const double h );
 #endif // GHL_EOS_FUNCTIONS_DECLARATION_H_
