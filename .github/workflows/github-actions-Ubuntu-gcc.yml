@@ -7,7 +7,7 @@ on:
   pull_request:
     paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
   schedule:
-    - cron: '11 23 * * *'
+    - cron: '27 23 * * *'
 
 jobs:
   ET-Legacy:
