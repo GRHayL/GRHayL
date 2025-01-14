@@ -6,6 +6,8 @@ on:
     branches: main
   pull_request:
     paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+  schedule:
+    - cron: '10 23 * * *'
 
 jobs:
   ET-Legacy:
