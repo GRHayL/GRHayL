@@ -3,11 +3,12 @@ name: Ubuntu-gcc
 on:
   push:
     paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
-    branches: weekly_ci
+    branches: main
   pull_request:
     paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+  # Run workflow on the 1st and 15th of every month at 7:33 AM PST (UTC-8)
   schedule:
-    - cron: '0 1 * * *'
+    - cron: '33 15 1,15 * *'
 
 jobs:
   ET-Legacy:
