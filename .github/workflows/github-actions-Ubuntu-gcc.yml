@@ -3,11 +3,11 @@ name: Ubuntu-gcc
 on:
   push:
     paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
-    branches: main
+    branches: weekly_ci
   pull_request:
     paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
   schedule:
-    - cron: '10 23 * * *'
+    - cron: '0 1 * * *'
 
 jobs:
   ET-Legacy:
