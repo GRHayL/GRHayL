@@ -1,0 +1,6 @@
+CompileFlags:
+  Add: 
+    - -xc
+    - -Wall
+    - -std=c99
+  Compiler: gcc

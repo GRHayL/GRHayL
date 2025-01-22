@@ -8,7 +8,6 @@
 #include "ghl_flux_source.h"
 #include "ghl_radiation.h"
 #include "nrpyeos_tabulated.h"
-#include "nrpyeos_hybrid.h"
 
 void ghl_test_compute_A_flux_with_B(
       const int dirlength,
@@ -77,7 +76,7 @@ void ghl_test_compute_ccc_ADM(
       double *restrict sqrtg_Ax_interp,
       double *restrict sqrtg_Ay_interp,
       double *restrict sqrtg_Az_interp);
-    
+
 void ghl_test_compute_vvv_ADM(
       const int dirlength,
       const double *restrict lapse,
@@ -261,13 +260,19 @@ double get_table_quantity(
 
 // Helper functions
 static inline double relative_error(const double a, const double b) {
-  if      (a != 0) return fabs(1.0-b/a);
-  else if (b != 0) return fabs(b);
-  else             return 0.0;
+  if(a != 0) {
+    return fabs(1.0 - b / a);
+  }
+  else if(b != 0) {
+    return fabs(b);
+  }
+  else {
+    return 0.0;
+  }
 }
 
 static inline int indexf(const int gridmax, const int i, const int j, const int k) {
-  return i + j*gridmax + k*gridmax*gridmax;
+  return i + j * gridmax + k * gridmax * gridmax;
 }
 
 static inline bool ghl_pert_test_fail_with_tolerance(
@@ -276,23 +281,29 @@ static inline bool ghl_pert_test_fail_with_tolerance(
       const double perturbed,
       const double rel_tol,
       const double abs_tol) {
-  if (isnan(computed) && isfinite(trusted)) return true; // NaN failure
-  if (fabs(trusted - computed) < abs_tol) return false;  // Absolute tolerance success
-  if (isnan(perturbed)) return false; // NaN "success"
-  return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), rel_tol);
+  if(isnan(computed) && isfinite(trusted)) {
+    return true; // NaN failure
+  }
+  if(fabs(trusted - computed) < abs_tol) {
+    return false; // Absolute tolerance success
+  }
+  if(isnan(perturbed)) {
+    return false; // NaN "success"
+  }
+  return relative_error(trusted, computed)
+         > fmax(4.0 * relative_error(trusted, perturbed), rel_tol);
 }
 
-static inline bool ghl_pert_test_fail(
-      const double trusted,
-      const double computed,
-      const double perturbed) {
+static inline bool
+ghl_pert_test_fail(const double trusted, const double computed, const double perturbed) {
   const double min_rel = 8.0e-14;
   const double min_abs = 1.0e-30;
-  return ghl_pert_test_fail_with_tolerance(trusted, computed, perturbed, min_rel, min_abs);
+  return ghl_pert_test_fail_with_tolerance(
+        trusted, computed, perturbed, min_rel, min_abs);
 }
 
-static inline double randf(double low,double high) {
-  return (rand()/(double)(RAND_MAX))*(high-low)+low;
+static inline double randf(double low, double high) {
+  return (rand() / (double)(RAND_MAX)) * (high - low) + low;
 }
 
 void ghl_initial_random_data(
@@ -324,14 +335,23 @@ void ghl_randomize_primitives(
       double *restrict By,
       double *restrict Bz);
 
-#define check_file_was_successfully_open(fp, filename) \
-  if(!fp) ghl_error("Could not open file %s.\n", filename);
+void ghl_prims_with_random_velocities_and_magnetic_fields(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double temperature,
+      ghl_primitive_quantities *restrict prims);
 
-static inline
-FILE *
-fopen_with_check(const char *filename, const char *mode) {
+void ghl_random_metric(ghl_metric_quantities *restrict metric);
+void print_metric(const ghl_metric_quantities *restrict metric);
+
+#define check_file_was_successfully_open(fp, filename) \
+  if(!fp)                                              \
+    ghl_error("Could not open file %s.\n", filename);
+
+static inline FILE *fopen_with_check(const char *filename, const char *mode) {
   FILE *fp = fopen(filename, mode);
-  if(!fp) ghl_error("Could not open file %s.\n", filename);
+  check_file_was_successfully_open(fp, filename);
   return fp;
 }
 #endif // GHL_UNIT_TESTS_H_

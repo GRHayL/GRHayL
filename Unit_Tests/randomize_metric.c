@@ -1,4 +1,4 @@
-#include "stdlib.h"
+#include "ghl.h"
 #include "ghl_unit_tests.h"
 
 void ghl_randomize_metric(
@@ -12,13 +12,15 @@ void ghl_randomize_metric(
       double *restrict gyy_ptr,
       double *restrict gyz_ptr,
       double *restrict gzz_ptr) {
-  const double gyy = 1.0 + randf(0.0,1.0e-1);
-  const double gzz = 1.0 + randf(0.0,1.0e-1);
-  const double gxy = randf(-1.0e-1,1.0e-1);
-  const double gxz = randf(-1.0e-1,1.0e-1);
-  const double gyz = randf(-1.0e-1,1.0e-1);
-  const double phi = randf(0.0,2.0);
-  const double gxx = ( 12.0*phi - gxy * (gyz*gxz - gxy*gzz) - gxz * (gxy*gyz - gyy*gxz) )/(gyy*gzz - gyz*gyz);
+  const double gyy = 1.0 + randf(0.0, 1.0e-1);
+  const double gzz = 1.0 + randf(0.0, 1.0e-1);
+  const double gxy = randf(-1.0e-1, 1.0e-1);
+  const double gxz = randf(-1.0e-1, 1.0e-1);
+  const double gyz = randf(-1.0e-1, 1.0e-1);
+  const double phi = randf(0.0, 2.0);
+  const double gxx
+        = (12.0 * phi - gxy * (gyz * gxz - gxy * gzz) - gxz * (gxy * gyz - gyy * gxz))
+          / (gyy * gzz - gyz * gyz);
 
   *gxx_ptr = gxx;
   *gxy_ptr = gxy;
@@ -26,8 +28,19 @@ void ghl_randomize_metric(
   *gyy_ptr = gyy;
   *gyz_ptr = gyz;
   *gzz_ptr = gzz;
-  *lapse   = 1.0;
-  *betax   = 0.0;
-  *betay   = 0.0;
-  *betaz   = 0.0;
+  *lapse = 1.0;
+  *betax = 0.0;
+  *betay = 0.0;
+  *betaz = 0.0;
+}
+
+void ghl_random_metric(ghl_metric_quantities *restrict metric) {
+  // Use the function above to set a random metric
+  double lapse, betax, betay, betaz;
+  double gxx, gxy, gxz, gyy, gyz, gzz;
+  ghl_randomize_metric(
+        &lapse, &betax, &betay, &betaz, &gxx, &gxy, &gxz, &gyy, &gyz, &gzz);
+
+  ghl_initialize_metric(
+        lapse, betax, betay, betaz, gxx, gxy, gxz, gyy, gyz, gzz, metric);
 }
