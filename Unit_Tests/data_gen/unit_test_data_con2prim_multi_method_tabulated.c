@@ -163,23 +163,23 @@ int main(int argc, char **argv) {
         ghl_random_metric(&ADM_metric);
 
         // Initialize auxiliary metric quantities
-        ghl_ADM_aux_quantities metric_aux;
-        ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+        ghl_ADM_aux_quantities AUX_metric;
+        ghl_compute_ADM_auxiliaries(&ADM_metric, &AUX_metric);
 
         bool speed_limited;
         ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims, &speed_limited);
 
         // Compute conservatives
         ghl_conservative_quantities cons;
-        ghl_compute_conservs(&ADM_metric, &metric_aux, &prims, &cons);
+        ghl_compute_conservs(&ADM_metric, &AUX_metric, &prims, &cons);
 
         // Now get perturbed conservatives
-        ghl_conservative_quantities cons_perturbed = cons;
-        ghl_perturb_conservs(&cons_perturbed);
+        // ghl_conservative_quantities cons_perturbed = cons;
+        // ghl_perturb_conservs(&cons_perturbed);
 
         // Metric, primitives, and conservatives to file
         fwrite(&ADM_metric, sizeof(ADM_metric), 1, fp);
-        fwrite(&metric_aux, sizeof(metric_aux), 1, fp);
+        fwrite(&AUX_metric, sizeof(AUX_metric), 1, fp);
         fwrite(&prims, sizeof(prims), 1, fp);
         fwrite(&cons, sizeof(cons), 1, fp);
         // fwrite(&cons_perturbed, sizeof(cons_perturbed), 1, fp);

@@ -781,6 +781,7 @@ if [ "$datagen" != "" ]; then
 fi
 printf '\nall: grhayl\n\t@echo "All done!"\n\n'             >> Makefile
 printf 'grhayl: $(LIBS)\n\n'                                >> Makefile
+printf 'test: tests datagen\n\n'                            >> Makefile
 printf 'tests: grhayl $(TEXES)\n\t@echo "All done!"\n\n'    >> Makefile
 printf 'datagen: grhayl $(DGEXES)\n\t@echo "All done!"\n\n' >> Makefile
 if [ $silent -eq 0 ]; then
