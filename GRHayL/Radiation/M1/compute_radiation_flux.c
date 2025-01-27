@@ -8,84 +8,86 @@
  * @param kscat - scattering coef
  */
 void calc_rad_sources(
-        const double eta,
-        const double kabs,
-        const double kscat,
-        const double * u4D,
-        const double J,
-        const ghl_radiation_flux_vector *H4,
-        ghl_radiation_con_source_vector *S4) {
-    for (int a = 0; a < 4; ++a) {
-        S4->U[a] = (eta - kabs*J) * u4D[a] - (kabs + kscat) * H4->D[a];
-    }
+      const double eta,
+      const double kabs,
+      const double kscat,
+      const double *u4D,
+      const double J,
+      const ghl_radiation_flux_vector *H4,
+      ghl_radiation_con_source_vector *S4) {
+  for(int a = 0; a < 4; ++a) {
+    S4->U[a] = (eta - kabs * J) * u4D[a] - (kabs + kscat) * H4->D[a];
+  }
 }
 
 // Eq (28) - 2
 double calc_E_flux(
-        const ghl_metric_quantities *metric,
-        const double E,
-        const ghl_radiation_flux_vector *F4,
-        const int dir) {
-    return metric->lapse*F4->D[dir] - metric->betaU[dir]*E;
+      const ghl_metric_quantities *metric,
+      const double E,
+      const ghl_radiation_flux_vector *F4,
+      const int dir) {
+  return metric->lapse * F4->D[dir] - metric->betaU[dir] * E;
 }
 
 // Eq (28) - 3
 // should I just return 3*3 tensor?
 double calc_F_flux(
-        const ghl_metric_quantities *metric,
-        const ghl_radiation_flux_vector *F4,
-        const ghl_radiation_pressure_tensor *P4,
-        const int dir,
-        const int comp) {
-        
-  // need to change this to UD
-  return metric->lapse*P4->DD[dir][comp] - metric->betaU[dir]* F4->D[comp];
+      const ghl_metric_quantities *metric,
+      const ghl_radiation_flux_vector *F4,
+      const ghl_radiation_pressure_tensor *P4,
+      const int dir,
+      const int comp) {
+
+  // FIXME:need to change this to UD
+  return metric->lapse * P4->DD[dir][comp] - metric->betaU[dir] * F4->D[comp];
 }
 
 // Eq (29) - 2
 double calc_rE_source(
-        const ghl_metric_quantities *metric,
-        const ghl_radiation_con_source_vector *S4) {
+      const ghl_metric_quantities *metric,
+      const ghl_radiation_con_source_vector *S4) {
   double rE_source = 0.0;
-  double nD4[4] = {-metric->lapse, 0.0, 0.0, 0.0};
-  for (int a = 0; a < 4; ++a) {
-        rE_source += - metric->lapse*nD4[a]* S4->U[a];
+  double nD4[4] = { -metric->lapse, 0.0, 0.0, 0.0 };
+  for(int a = 0; a < 4; ++a) {
+    rE_source += -metric->lapse * nD4[a] * S4->U[a];
   }
   return rE_source;
 }
 
-
 // Eq (29) - 3
 void calc_rF_source(
-        const ghl_metric_quantities *metric,
-        const ghl_ADM_aux_quantities *adm_aux,
-        const ghl_radiation_con_source_vector *S4,
-        ghl_radiation_con_source_vector * F_src) {
-    for (int a = 0; a < 4; ++a) {
-        F_src->U[a] = 0.0;
-        for (int b = 0; b < 4; ++b) {
-            F_src->U[a] += metric->lapse*adm_aux->g4DD[b][a]*S4->U[b];
-        }
+      const ghl_metric_quantities *metric,
+      const ghl_ADM_aux_quantities *adm_aux,
+      const ghl_radiation_con_source_vector *S4,
+      ghl_radiation_con_source_vector *F_src) {
+  for(int a = 0; a < 4; ++a) {
+    F_src->U[a] = 0.0;
+    for(int b = 0; b < 4; ++b) {
+      F_src->U[a] += metric->lapse * adm_aux->g4DD[b][a] * S4->U[b];
     }
+  }
 }
 
 // Eq (30) - 2
 double calc_GE_source(
-          const ghl_metric_quantities *metric,
-          const ghl_metric_quantities *metric_derivs_x,
-          const ghl_metric_quantities *metric_derivs_y,
-          const ghl_metric_quantities *metric_derivs_z,
-          const ghl_radiation_pressure_tensor *P4,
-          const ghl_radiation_flux_vector *F4,
-          const ghl_extrinsic_curvature *K4) {
-  
-  double alpha_dD[3] = { metric_derivs_x->lapse, metric_derivs_y->lapse, metric_derivs_z->lapse };
+      const ghl_metric_quantities *metric,
+      const ghl_metric_quantities *metric_derivs_x,
+      const ghl_metric_quantities *metric_derivs_y,
+      const ghl_metric_quantities *metric_derivs_z,
+      const ghl_radiation_pressure_tensor *P4,
+      const ghl_radiation_flux_vector *F4,
+      const ghl_extrinsic_curvature *K4) {
 
+  double alpha_dD[3]
+        = { metric_derivs_x->lapse, metric_derivs_y->lapse, metric_derivs_z->lapse };
+
+  // FIXME: these are trying to access struct fields that don't exist.
   double GE_Source = 0.0;
-  for (int a = 0; a < 3; a++) {
-    GE_source += -F4->U[a]*alpha_dD[a]; //dlog(alpha) = (1/alpha)*dalpha, the 1/alpha cancels out with the alpha factor in front.
-    for (int b = 0; b < 3; b++) {
-      GE_source += metric->lapse*(P4->UU[a][b] * K4->K[a][b]);
+  for(int i = 0; i < 3; i++) {
+    GE_source += -F4->U[i] * alpha_dD[i]; // dlog(alpha) = (1/alpha)*dalpha, the 1/alpha
+                                          // cancels out with the alpha factor in front.
+    for(int j = 0; j < 3; j++) {
+      GE_source += metric->lapse * (P4->UU[i][j] * K4->K[i][j]);
     }
   }
 
@@ -94,40 +96,54 @@ double calc_GE_source(
 
 // Eq (30) - 3
 void calc_GF_source(
-        const ghl_metric_quantities *metric,
-        const ghl_metric_quantities *metric_derivs_x,
-        const ghl_metric_quantities *metric_derivs_y,
-        const ghl_metric_quantities *metric_derivs_z,
-        const double E,
-        const ghl_radiation_flux_vector *F4,
-        const ghl_radiation_pressure_tensor *P4,
-        ghl_radiation_con_source_vector * F_src) {
-    
-    double alpha_dD[3] = { metric_derivs_x->lapse , metric_derivs_y->lapse , metric_derivs_z->lapse }; //index refers to derivative index.
-    
-    double betaU_dD[3][3] = {{ metric_derivs_x->betaU[0] , metric_derivs_x->betaU[1] , metric_derivs_x->betaU[2] } , 
-                             { metric_derivs_y->betaU[0] , metric_derivs_y->betaU[1] , metric_derivs_y->betaU[2] } , 
-                             { metric_derivs_z->betaU[0] , metric_derivs_z->betaU[1] , metric_derivs_z->betaU[2] }}; //dBeta[deriv_index][Beta_index]
-    
-    double gammaDD_dD[3][3][3] = {{{ metric_derivs_x->gammaDD[0][0] , metric_derivs_x->gammaDD[0][1] , metric_derivs_x->gammaDD[0][2] },
-                                   { metric_derivs_x->gammaDD[1][0] , metric_derivs_x->gammaDD[1][1] , metric_derivs_x->gammaDD[1][2] },
-                                   { metric_derivs_x->gammaDD[2][0] , metric_derivs_x->gammaDD[2][1] , metric_derivs_x->gammaDD[2][2] }},
-                                  {{ metric_derivs_y->gammaDD[0][0] , metric_derivs_y->gammaDD[0][1] , metric_derivs_y->gammaDD[0][2] },
-                                   { metric_derivs_y->gammaDD[1][0] , metric_derivs_y->gammaDD[1][1] , metric_derivs_y->gammaDD[1][2] },
-                                   { metric_derivs_y->gammaDD[2][0] , metric_derivs_y->gammaDD[2][1] , metric_derivs_y->gammaDD[2][2] }},
-                                  {{ metric_derivs_z->gammaDD[0][0] , metric_derivs_z->gammaDD[0][1] , metric_derivs_z->gammaDD[0][2] },
-                                   { metric_derivs_z->gammaDD[1][0] , metric_derivs_z->gammaDD[1][1] , metric_derivs_z->gammaDD[1][2] },
-                                   { metric_derivs_z->gammaDD[2][0] , metric_derivs_z->gammaDD[2][1] , metric_derivs_z->gammaDD[2][2] }}}; //dGamma[deriv_index][Gamma_index1][Gamma_index2]
+      const ghl_metric_quantities *metric,
+      const ghl_metric_quantities *metric_derivs_x,
+      const ghl_metric_quantities *metric_derivs_y,
+      const ghl_metric_quantities *metric_derivs_z,
+      const double E,
+      const ghl_radiation_flux_vector *F4,
+      const ghl_radiation_pressure_tensor *P4,
+      ghl_radiation_con_source_vector *F_src) {
 
+  double alpha_dD[3] = { metric_derivs_x->lapse, metric_derivs_y->lapse,
+                         metric_derivs_z->lapse }; // index refers to derivative index.
 
-    for (int a = 0; a < 3; a++){
-      F_src->U[a] += -E*alpha_dD[a];
-      for (int b = 0; b < 3; b++) {
-        F_src->U[a] += F4->D[b]*betaU_dD[a][b]
-        for (int c = 0; c < 3; c++) {
-          F_src->U[a] += (metric->lapse/2)*(P4->UU[b][c]*gammaDD_dD[a][b][c])
+  double betaU_dD[3][3] = {
+    { metric_derivs_x->betaU[0], metric_derivs_x->betaU[1], metric_derivs_x->betaU[2] },
+    { metric_derivs_y->betaU[0], metric_derivs_y->betaU[1], metric_derivs_y->betaU[2] },
+    { metric_derivs_z->betaU[0], metric_derivs_z->betaU[1], metric_derivs_z->betaU[2] }
+  }; // dBeta[deriv_index][Beta_index]
+
+  double gammaDD_dD[3][3][3] = {
+    { { metric_derivs_x->gammaDD[0][0], metric_derivs_x->gammaDD[0][1],
+        metric_derivs_x->gammaDD[0][2] },
+      { metric_derivs_x->gammaDD[1][0], metric_derivs_x->gammaDD[1][1],
+        metric_derivs_x->gammaDD[1][2] },
+      { metric_derivs_x->gammaDD[2][0], metric_derivs_x->gammaDD[2][1],
+        metric_derivs_x->gammaDD[2][2] } },
+    { { metric_derivs_y->gammaDD[0][0], metric_derivs_y->gammaDD[0][1],
+        metric_derivs_y->gammaDD[0][2] },
+      { metric_derivs_y->gammaDD[1][0], metric_derivs_y->gammaDD[1][1],
+        metric_derivs_y->gammaDD[1][2] },
+      { metric_derivs_y->gammaDD[2][0], metric_derivs_y->gammaDD[2][1],
+        metric_derivs_y->gammaDD[2][2] } },
+    { { metric_derivs_z->gammaDD[0][0], metric_derivs_z->gammaDD[0][1],
+        metric_derivs_z->gammaDD[0][2] },
+      { metric_derivs_z->gammaDD[1][0], metric_derivs_z->gammaDD[1][1],
+        metric_derivs_z->gammaDD[1][2] },
+      { metric_derivs_z->gammaDD[2][0], metric_derivs_z->gammaDD[2][1],
+        metric_derivs_z->gammaDD[2][2] } }
+  }; // dGamma[deriv_index][Gamma_index1][Gamma_index2]
+
+  // FIXME: these are trying to access struct fields that don't exist.
+  //        Also, are we sure F_src has been initialized? 
+  for(int i = 0; i < 3; i++) {
+    F_src->U[i] += -E * alpha_dD[i];
+    for(int j = 0; j < 3; j++) {
+      F_src->U[i] += F4->D[j] * betaU_dD[i][j];
+      for(int k = 0; k < 3; k++) {
+        F_src->U[i] += (metric->lapse / 2) * (P4->UU[j][k] * gammaDD_dD[i][j][k]);
       }
     }
   }
-
 }
