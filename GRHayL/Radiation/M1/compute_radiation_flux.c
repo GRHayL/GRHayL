@@ -136,7 +136,7 @@ void calc_GF_source(
   }; // dGamma[deriv_index][Gamma_index1][Gamma_index2]
 
   // FIXME: these are trying to access struct fields that don't exist.
-  //        Also, are we sure F_src has been initialized? 
+  //        Also, are we sure F_src has been initialized?
   for(int i = 0; i < 3; i++) {
     F_src->U[i] += -E * alpha_dD[i];
     for(int j = 0; j < 3; j++) {
