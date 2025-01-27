@@ -38,6 +38,9 @@ double calc_F_flux(
       const int dir,
       const int comp) {
 
+  // Leo: Compute UD from DD if this is the only place we need P^{i}_{j},
+  //      otherwise add UD component to struct.
+
   // FIXME:need to change this to UD
   return metric->lapse * P4->DD[dir][comp] - metric->betaU[dir] * F4->D[comp];
 }
@@ -82,16 +85,16 @@ double calc_GE_source(
         = { metric_derivs_x->lapse, metric_derivs_y->lapse, metric_derivs_z->lapse };
 
   // FIXME: these are trying to access struct fields that don't exist.
-  double GE_Source = 0.0;
+  double GE_source = 0.0;
   for(int i = 0; i < 3; i++) {
-    GE_source += -F4->U[i] * alpha_dD[i]; // dlog(alpha) = (1/alpha)*dalpha, the 1/alpha
+    GE_source += -F4->U[i+1] * alpha_dD[i]; // dlog(alpha) = (1/alpha)*dalpha, the 1/alpha
                                           // cancels out with the alpha factor in front.
     for(int j = 0; j < 3; j++) {
-      GE_source += metric->lapse * (P4->UU[i][j] * K4->K[i][j]);
+      GE_source += metric->lapse * (P4->UU[i+1][j+1] * K4->K[i+1][j+1]);
     }
   }
 
-  return GE_Source;
+  return GE_source;
 }
 
 // Eq (30) - 3
@@ -135,8 +138,7 @@ void calc_GF_source(
         metric_derivs_z->gammaDD[2][2] } }
   }; // dGamma[deriv_index][Gamma_index1][Gamma_index2]
 
-  // FIXME: these are trying to access struct fields that don't exist.
-  //        Also, are we sure F_src has been initialized?
+  // FIXME: Also, are we sure F_src has been initialized?
   for(int i = 0; i < 3; i++) {
     F_src->U[i] += -E * alpha_dD[i];
     for(int j = 0; j < 3; j++) {

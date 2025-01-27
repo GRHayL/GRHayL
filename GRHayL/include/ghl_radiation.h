@@ -15,6 +15,8 @@ typedef struct ghl_neutrino_opacities {
 typedef ghl_neutrino_opacities ghl_neutrino_optical_depths;
 
 typedef struct {
+  double UU[4][4];
+  double UD[4][4];
   double DD[4][4];
 } ghl_radiation_pressure_tensor;
 

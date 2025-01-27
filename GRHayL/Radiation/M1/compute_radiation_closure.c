@@ -81,7 +81,7 @@ void ghl_radiation_compute_pressure_tensor_thin(
   }
   double fac = (F2 > 0 ? E / F2 : 0);
   for(int a = 0; a < 4; a++) {
-    for(int b = 0; b < 4; b++) { // TODO: b=a or b=0
+    for(int b = 0; b < 4; b++) {
       P_thin->DD[a][b] = fac * F4->D[a] * F4->D[b];
     }
   }
@@ -108,6 +108,7 @@ void ghl_radiation_apply_closure(
       P4->DD[a][b] = dthick * P_thick.DD[a][b] + dthin * P_thin.DD[a][b];
     }
   }
+  // Leo: we need this -> ghl_radation_compute_P4UU_and_P4UD(adm_aux, P4);
 } // ghl_radiation_apply_closure
 
 double eddington(const double xi) { return 1.0 / 3.0; }
@@ -241,7 +242,6 @@ static inline double froot(const double xi, void *restrict fparams_in) {
   calc_H4D_from_rT(u4U, &proj4, &rT4DD, &H4);
 
   double H2 = 0;
-
   for(int a = 0; a < 4; a++) {
     for(int b = 0; b < 4; b++) {
       H2 += adm_aux->g4UU[a][b] * H4.D[a] * H4.D[b];
