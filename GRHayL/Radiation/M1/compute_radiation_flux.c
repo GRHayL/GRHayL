@@ -138,13 +138,14 @@ void calc_GF_source(
         metric_derivs_z->gammaDD[2][2] } }
   }; // dGamma[deriv_index][Gamma_index1][Gamma_index2]
 
-  // FIXME: Also, are we sure F_src has been initialized?
+  // NOTE: F_src is unintialized because I assume that the S_source calcs are done before, and the G_source terms add on after. (See Eq (26))
+  // To use this function properly, it is likely we will have to call this function (calc_GF source()) after (calc_rF_source())
   for(int i = 0; i < 3; i++) {
     F_src->U[i] += -E * alpha_dD[i];
     for(int j = 0; j < 3; j++) {
-      F_src->U[i] += F4->D[j] * betaU_dD[i][j];
+      F_src->U[i] += F4->D[j+1] * betaU_dD[i][j];
       for(int k = 0; k < 3; k++) {
-        F_src->U[i] += (metric->lapse / 2) * (P4->UU[j][k] * gammaDD_dD[i][j][k]);
+        F_src->U[i] += (metric->lapse / 2) * (P4->UU[j+1][k+1] * gammaDD_dD[i][j][k]);
       }
     }
   }
