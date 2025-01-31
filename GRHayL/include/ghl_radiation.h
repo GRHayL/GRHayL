@@ -64,6 +64,42 @@ typedef struct ghl_m1_parameters {
 
 } ghl_m1_parameters;
 
+/*
+ * Struct        : ghl_m1_powell_params
+ * Description   : stores M1 transport GRHayL parameters for Powell's method
+ * Documentation :
+ */
+typedef struct ghl_powell_params {
+  ghl_m1_closure_t closure;
+  gsl_root_fsolver *gsl_solver_1d;
+  double cdt;
+  ghl_metric_quantities *metric;
+  ghl_ADM_aux_quantities *adm_aux;
+  ghl_radiation_metric_tensor *proj4;
+  ghl_primitive_quantities *prims;
+  double *u4D;
+  double *u4U;
+  double *n4D;
+  double *n4U;
+  double J;
+  ghl_radiation_flux_vector *F4;
+  ghl_radiation_flux_vector *H4;
+  ghl_radiation_pressure_tensor *P4;
+  ghl_stress_energy *rT4DD;
+  ghl_radiation_con_source_vector *S4;
+  ghl_radiation_con_source_vector *F_src;
+  double W;
+  double E_star;
+  ghl_radiation_flux_vector *F4_star;
+  double Edot;
+  double chi;
+  double eta;
+  double kabs;
+  double kscat;
+  double E;
+} ghl_m1_powell_params;
+
+
 // Choice of closure scheme
 typedef enum { Eddington, Kershaw, Minerbo, Thin } ghl_m1_closure_t;
 
