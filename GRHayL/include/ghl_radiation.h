@@ -69,7 +69,7 @@ typedef struct ghl_m1_parameters {
  * Description   : stores M1 transport GRHayL parameters for Powell's method
  * Documentation :
  */
-typedef struct ghl_powell_params {
+typedef struct ghl_m1_powell_params {
   ghl_m1_closure_t closure;
   gsl_root_fsolver *gsl_solver_1d;
   double cdt;
