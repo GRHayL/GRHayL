@@ -1,5 +1,8 @@
 #include "ghl.h"
 #include "ghl_radiation.h"
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_multiroots.h>
 
 // This file translates from thc_M1_calc_update.cc
 
@@ -25,6 +28,7 @@ void ghl_M1_update(
     double source_Ye_max = 0.6;
     double rad_E_floor = 1.0e-15;
     double rad_eps =   1.0e-15;
+    double rad_N_floor = 1.0e-10;
     double source_therm_limit = -1.0;
     int ngroups = 1;
     int nspecies = 3;
@@ -37,27 +41,43 @@ void ghl_M1_update(
     // At each step we solve an implicit problem in the form
     //    F = F^* + cdt S[F]
     // Where F^* = F^k + cdt A
-    
-    //int const siz = UTILS_GFSIZE(cctkGH);
-    double * sconx = &scon[0*siz];
-    double * scony = &scon[1*siz];
-    double * sconz = &scon[2*siz];
 
     double const mb = AverageBaryonMass();
 
     // begin parallel
-    // do these come from prims?
-    double dens[ngroups*nspecies];
-    double Y_e[ngroups*nspecies];
-    double nueave[ngroups*nspecies];
-    double chi[ngroups*nspecies];
+    gsl_root_fsolver * gsl_solver_1d =
+            gsl_root_fsolver_alloc(gsl_root_fsolver_brent);
+        gsl_multiroot_fdfsolver * gsl_solver_nd =
+            gsl_multiroot_fdfsolver_alloc(gsl_multiroot_fdfsolver_hybridsj, 4);
 
-    double fidu_w_lorentz = 1.0; //TODO
-    double eta_1 = 1.0; //TODO
+    // THC_Core variables (in schedule.ccl)
+    double volform = 1.0;
+    double dens;
+    double tau;
+    double Y_e;
+    // Johnny: these are probably for back reaction
+    // double* scon[1];
+    // int const siz = UTILS_GFSIZE(cctkGH);
+    // double * sconx = &scon[0*siz];
+    // double * scony = &scon[1*siz];
+    // double * sconz = &scon[2*siz];
+
+    // Public grid variables (in interface.ccl)
+    double rE[ngroups*nspecies];
+    double rFx[ngroups*nspecies];
+    double rFy[ngroups*nspecies];
+    double rFz[ngroups*nspecies];
+    double rN[ngroups*nspecies];
+    double nueave[nspecies*ngroups];
+    double fidu_w_lorentz = 1.0;
+    double chi[ngroups*nspecies];
+        // opacities
+    double abs_0[ngroups*nspecies];
     double abs_1[ngroups*nspecies];
-    double volform = 1.0; //TODO
-    double rad_N_floor = 1.0; //TODO
+    double eta_0[ngroups*nspecies];
+    double eta_1[ngroups*nspecies];
     double scat_1[ngroups*nspecies];
+
     double rE_p[ngroups*nspecies];
     double rFx_p[ngroups*nspecies];
     double rFy_p[ngroups*nspecies];
@@ -68,15 +88,23 @@ void ghl_M1_update(
     double rFy_rhs[ngroups*nspecies];
     double rFz_rhs[ngroups*nspecies];
     double rN_rhs[ngroups*nspecies];
-    double E[ngroups*nspecies];
-    double F4[ngroups*nspecies][4];
-    double H4_star[ngroups*nspecies][4];
-    double g_uu[4][4];
-    double u4U[4];
     
     double rT4DD[4][4];
     double n4D[4];
     double n4U[4];
+    double u4U[4];
+    double u4D[4];
+
+    double E = 0.0;
+    double E_star = 0.0;
+    double E_new = 0.0;
+
+    ghl_radiation_flux_vector *F4;
+    ghl_radiation_flux_vector *F4_star;
+    ghl_radiation_flux_vector *F4_new;
+
+    double v4U[4];
+
 
     //
     // Source RHS are stored here
@@ -91,14 +119,13 @@ void ghl_M1_update(
     for (int ig = 0; ig < ngroups*nspecies; ++ig) {
         //
         // Advect radiation
-        double E_star = rE_p[ig] + cdt*rE_rhs[ig];
-        double F4_star[4];
-        F4_star[1] = rFx_p[ig] + cdt*rFx_rhs[ig];
-        F4_star[2] = rFy_p[ig] + cdt*rFy_rhs[ig];
-        F4_star[3] = rFz_p[ig] + cdt*rFz_rhs[ig];
+        E_star = rE_p[ig] + cdt*rE_rhs[ig];
+        
+        F4_star->D[1] = rFx_p[ig] + cdt*rFx_rhs[ig];
+        F4_star->D[2] = rFy_p[ig] + cdt*rFy_rhs[ig];
+        F4_star->D[3] = rFz_p[ig] + cdt*rFz_rhs[ig];
         apply_floor(adm_aux, E_star, &F4_star, rad_E_floor, rad_eps);
         double N_star = max(rN_p[ig] + cdt*rN_rhs[ig], rad_N_floor);
-        double E_new;
 
         //
         // Compute quantities in the fluid frame
@@ -118,36 +145,38 @@ void ghl_M1_update(
 
         double const Jstar = calc_J_from_rT(u4U, proj4, rT4DD);
 
-        ghl_radiation_flux_vector H4_star;
+        ghl_radiation_flux_vector *H4_star;
         calc_H_from_rT(u4U, proj4, rT4DD, &H4_star);
 
         //
         // Estimate interaction with matter
         double const dtau = cdt/fidu_w_lorentz;
-        double J_new = (Jstar + dtau*eta_1*volform)/(1 + dtau*abs_1[ig]);
+        double J_new = (Jstar + dtau*eta_1[ig]*volform)/(1 + dtau*abs_1[ig]);
 
         // Only three components of H^a are independent H^0 is found by
         // requiring H^a u_a = 0
         double const khat = (abs_1[ig] + scat_1[ig]);
-        ghl_radiation_flux_vector * Hnew4;
+
+        ghl_radiation_flux_vector * H4_new;
         for (int a = 1; a < 4; ++a) {
-            Hnew4->D[a] = H4_star->D[a]/(1 + dtau*khat);
+            H4_new->D[a] = H4_star->D[a]/(1 + dtau*khat);
         }
-        Hnew4->D[0] = 0.0;
+        H4_new->D[0] = 0.0;
         for (int a = 1; a < 4; ++a) {
-            Hnew4->D[0] -= Hnew4->D[a]*(u4U[a]/u4U[0]);
+            H4_new->D[0] -= H4_new->D[a]*(u4U[a]/u4U[0]);
         }
 
         //
         // Update Tmunu
-        double const H2 = ghl_compute_vec2_from_vec4D(adm_aux->g4UU, Hnew_d, Hnew_d);
+        double const H2 = ghl_compute_vec2_from_vec4D(adm_aux->g4UU, H4_new->D);
         double const dthick = 3.*(1. - chi[ig])/2.;
         double const dthin = 1. - dthick;
 
         for(int a = 0; a < 4; ++a) {
             for(int b = 0; b < 4; ++b) {
-                rT4DD[a][b] = J_new*u4U[a]*u4U[b] + Hnew4->D[a]*u4U[b] + Hnew4->D[b]*u4U[a] +
-                    dthin*J_new*(Hnew4->D[a]*Hnew4->D[b]*(H2 > 0 ? 1/H2 : 0)) +
+                rT4DD->T4[a][b] = J_new*u4U[a]*u4U[b] 
+                                + H4_new->D[a]*u4U[b] + H4_new->D[b]*u4U[a] +
+                    dthin*J_new*(H4_new->D[a]*H4_new->D[b]*(H2 > 0 ? 1/H2 : 0)) +
                     dthick*J_new*(adm_aux->g4DD[a][b] + u4U[a]*u4U[b])/3;
             }
         }
@@ -185,9 +214,9 @@ void ghl_M1_update(
 
         //
         // N^k+1 = N^* + dt ( eta - abs N^k+1 )
-        if (source_therm_limit < 0 || dt*abs_0[ig] < source_therm_limit) {
-            DrN[ig] = (N_star + dt*metric->lapse*volform*eta_0[ig])/
-                        (1 + dt*metric->lapse*abs_0[ig]/Gamma) - N_star;
+        if (source_therm_limit < 0 || cdt*abs_0[ig] < source_therm_limit) {
+            DrN[ig] = (N_star + cdt*metric->lapse*volform*eta_0[ig])/
+                        (1 + cdt*metric->lapse*abs_0[ig]/Gamma) - N_star;
         }
         //
         // The neutrino number density is updated assuming the neutrino
@@ -200,6 +229,7 @@ void ghl_M1_update(
         // Fluid lepton sources
         DDxp[ig] = -mb*(DrN[ig]*(ig == 0) - DrN[ig]*(ig == 1));
     } // for (int ig ...)
+
     //
     // Step 2 -- limit the sources
     double theta = 1.0;
@@ -250,29 +280,31 @@ void ghl_M1_update(
         double N =  rN_p[ig] + cdt*rN_rhs[ig]  + theta*DrN[ig];
         N = max(N, rad_N_floor);
 
-        //
+        // TODO: comment out this section and work on it later
         // Compute back reaction on the fluid
         // NOTE: fluid backreaction is only needed at the last substep
-        if (backreact && 0 == *TimeIntegratorStage) {
-            assert (ngroups == 1);
-            assert (nspecies == 3);
+        // if (backreact && 0 == *TimeIntegratorStage) {
+        //     assert (ngroups == 1);
+        //     assert (nspecies == 3);
 
-            sconx  -= theta*DrFx[ig];
-            scony  -= theta*DrFy[ig];
-            sconz  -= theta*DrFz[ig];
-            tau    -= theta*DrE[ig];
-            densxp += theta*DDxp[ig];
-            densxn -= theta*DDxp[ig];
+        //     sconx  -= theta*DrFx[ig];
+        //     scony  -= theta*DrFy[ig];
+        //     sconz  -= theta*DrFz[ig];
+        //     tau    -= theta*DrE[ig];
+        //     densxp += theta*DDxp[ig];
+        //     densxn -= theta*DDxp[ig];
 
-            netabs  += theta*DDxp[ig];
-            netheat -= theta*DrE[ig];
-        }
+        //     netabs  += theta*DDxp[ig];
+        //     netheat -= theta*DrE[ig];
+        // }
 
         //
         // Save updated results into grid functions
         rE[ig]  = E;
-        unpack_F_d(F_d, &rFx[ig], &rFy[ig], &rFz[ig]);
-        rN[ig] = N;
+        rFx[ig] = F4->D[1];
+        rFy[ig] = F4->D[2];
+        rFz[ig] = F4->D[3];
+        rN[ig]  = N;
     }
     gsl_root_fsolver_free(gsl_solver_1d);
     gsl_multiroot_fdfsolver_free(gsl_solver_nd);

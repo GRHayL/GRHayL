@@ -62,11 +62,11 @@ void calc_rF_source(
       const ghl_metric_quantities *metric,
       const ghl_ADM_aux_quantities *adm_aux,
       const ghl_radiation_con_source_vector *S4,
-      ghl_radiation_con_source_vector *F_src) {
+      ghl_radiation_con_source_vector *rF_source) {
   for(int a = 0; a < 4; ++a) {
-    F_src->U[a] = 0.0;
+    rF_source->U[a] = 0.0;
     for(int b = 0; b < 4; ++b) {
-      F_src->U[a] += metric->lapse * adm_aux->g4DD[b][a] * S4->U[b];
+      rF_source->U[a] += metric->lapse * adm_aux->g4DD[b][a] * S4->U[b];
     }
   }
 }

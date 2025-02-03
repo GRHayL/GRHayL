@@ -87,7 +87,6 @@ typedef struct ghl_powell_params {
   ghl_radiation_pressure_tensor *P4;
   ghl_stress_energy *rT4DD;
   ghl_radiation_con_source_vector *S4;
-  ghl_radiation_con_source_vector *F_src;
   double W;
   double E_star;
   ghl_radiation_flux_vector *F4_star;
@@ -97,7 +96,24 @@ typedef struct ghl_powell_params {
   double kabs;
   double kscat;
   double E;
+  double rE_source;
+  ghl_radiation_con_flux_vector *rF_source;
+  double GE_source;
+  ghl_radiation_con_flux_vector *F_src;
 } ghl_m1_powell_params;
+
+/*
+ * Struct        : ghl_m1_thc_params
+ * Description   : THC M1 transport params.ccl parameters
+ * Documentation :
+ */
+typedef struct ghl_m1_thc_params {
+  double source_thick_limit;
+  double source_scat_limit;
+  int source_maxiter;
+  double source_epsabs;
+  double source_epsrel;
+} ghl_m1_thc_params;
 
 
 // Choice of closure scheme
