@@ -1,5 +1,6 @@
 #include "ghl.h"
 #include "ghl_radiation.h"
+#include "../NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c"
 
 //kappa
 int neutrino_opacity_transport(
@@ -50,35 +51,41 @@ int calc_neutrino_density(
       double *d1y,
       double *d1z){return 0;}
 
-//heads up note: I think 0-index refers to electron neutrino and antineutrino species, and 1 refers to heavier neutrino and antineutrino (muon and tauon) species taken together?
-void calc_opacity_and_blackbodies(double rho, double T, double T_trapping_limit, double Y_e, double Y_e_trapping_limit, double tau_trap, double dt) {
+//Note: 0 refers to NUMBER transport, 1 refers to ENERGY transport.
+void calc_opacity_and_blackbodies(const ghl_eos_parameters *restrict ghl_eos,
+                                  double rho, 
+                                  double T, 
+                                  double T_trapping_limit, 
+                                  double Y_e, 
+                                  double Y_e_trapping_limit, 
+                                  double tau_trap, 
+                                  double dt, 
+                                  const ghl_neutrino_optical_depths *restrict tau,
+                                  ghl_neutrino_opacities *restrict kappa) {
 
-  //transport opacity
-  double kappa_0_local[3];
-  double kappa_1_local[3];
-  int ierr = neutrino_opacity_transport(rho, T, Y_e, &kappa_0_local[0], &kappa_0_local[1], &kappa_0_local[2], &kappa_1_local[0], &kappa_1_local[1], &kappa_1_local[2]);
-  //finite-ness and error checks on kappa_local
+  //transport opacity (use GRHayL functions)
+  NRPyLeakage_compute_neutrino_opacities(&ghl_eos, rho, Y_e, T, &tau, &kappa);
   
   
   //Absorbtion Opacity 
-  double abs_0_local[3];
-  double abs_1_local[3];
-  int ierr = neutrino_absorbtions(rho, T, Y_e, &abs_0_local[0], &abs_0_local[1], &abs_0_local[2], &abs_1_local[0], &abs_1_local[1], &abs_1_local[2]);
+  //double abs_0_local[3];
+  //double abs_1_local[3];
+  //int ierr = neutrino_absorbtions(rho, T, Y_e, &abs_0_local[0], &abs_0_local[1], &abs_0_local[2], &abs_1_local[0], &abs_1_local[1], &abs_1_local[2]);
   //finite-ness and error checks on abs_1_local
 
  
-  double eta_0_local[3];
-  double eta_1_local[3];
-  int ierr = neutrino_emissions(rho, T, Y_e, &eta_0_local[0], &eta_0_local[1], &eta_0_local[2], &eta_1_local[0], &eta_1_local[1], &eta_1_local[2]);
+  //double eta_0_local[3];
+  //double eta_1_local[3];
+  //int ierr = neutrino_emissions(rho, T, Y_e, &eta_0_local[0], &eta_0_local[1], &eta_0_local[2], &eta_1_local[0], &eta_1_local[1], &eta_1_local[2]);
   //finite-ness and error checks on eta_local
   
   
   //Now find the optical depth from these local values
-  double tau = min(sqrt(abs_1_local[0]*kappa_1_local[0]),sqrt(abs_1_local[1]*kappa_1_local[1]))*dt;
+  //double tau = min(sqrt(abs_1_local[0]*kappa_1_local[0]),sqrt(abs_1_local[1]*kappa_1_local[1]))*dt;
 
   //now to begin the blackbody calcs, assuming neutrino trapping.
-  double trapped_0_density[3];
-  double trapped_1_density[3];
+  //double trapped_0_density[3];
+  //double trapped_1_density[3];
 
 
 }

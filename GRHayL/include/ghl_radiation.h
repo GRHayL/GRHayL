@@ -26,6 +26,7 @@ typedef struct {
 
 typedef struct {
   double D[4];
+  double U[4];
 } ghl_radiation_flux_vector;
 
 // conservative flux for M1 equations

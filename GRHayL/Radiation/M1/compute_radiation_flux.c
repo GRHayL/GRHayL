@@ -1,6 +1,47 @@
 #include "ghl.h"
 #include "ghl_radiation.h"
 
+//Need extra functions that calculate FU, PUD, and PUU, used in flux calcs throughout file.
+void get_FU(
+  const ghl_ADM_aux_quantities *adm_aux,
+  ghl_radiation_flux_vector *F4) {
+
+
+  for(i=0; i<4; i++){
+    F4->U[i] = 0; //Be on the safe side and initialize
+    for (j=0; j<4; j++){
+        F4->U[i] += adm_aux->g4UU[j][i]*F4->D[j];
+      }
+  }
+
+}
+
+//I put PUD and PUU in the same function. Since we need both, I felt this was more efficient.
+void get_PUD_and_PUU(
+    const ghl_ADM_aux_quantities *adm_aux,
+    ghl_radiation_pressure_tensor *P4){
+
+  //UD first
+  for(i=0; i<4; i++){
+    for(j=0; j<4; j++){
+      P4->UD[i][j] = 0; //Initialize to be safe
+      for(k=0; k<4; k++){
+        P4->UD[i][j] += adm_aux->g4UU[k][i]*P4->DD[k][j];
+      }
+    }
+  }
+
+  //Now use UD for the UU components
+  for(i=0; i<4; i++){
+    for(j=0; j<4; j++){
+      P4->UU[i][j] = 0; //Initialize to be safe
+      for(k=0; k<4; k++){
+        P4->UU[i][j] += adm_aux->g4UU[j][k]*P4->UD[i][k];
+      }
+    }
+  }
+}
+
 // Eq (5)
 /*
  * @param eta   - emissivity
@@ -42,7 +83,7 @@ double calc_F_flux(
   //      otherwise add UD component to struct.
 
   // FIXME:need to change this to UD
-  return metric->lapse * P4->DD[dir][comp] - metric->betaU[dir] * F4->D[comp];
+  return metric->lapse * P4->UD[dir][comp] - metric->betaU[dir] * F4->D[comp];
 }
 
 // Eq (29) - 2
@@ -86,11 +127,11 @@ double calc_GE_source(
 
   // FIXME: these are trying to access struct fields that don't exist.
   double GE_source = 0.0;
-  for(int i = 0; i < 3; i++) {
-    GE_source += -F4->U[i+1] * alpha_dD[i]; // dlog(alpha) = (1/alpha)*dalpha, the 1/alpha
+  for(int i = 0; i < 4; ++i) {
+    GE_source += -F4->U[i] * alpha_dD[i]; // dlog(alpha) = (1/alpha)*dalpha, the 1/alpha
                                           // cancels out with the alpha factor in front.
-    for(int j = 0; j < 3; j++) {
-      GE_source += metric->lapse * (P4->UU[i+1][j+1] * K4->K[i+1][j+1]);
+    for(int j = 0; j < 4; ++j) {
+      GE_source += metric->lapse * (P4->UU[i][j] * K4->K[i][j]);
     }
   }
 
@@ -140,12 +181,12 @@ void calc_GF_source(
 
   // NOTE: F_src is unintialized because I assume that the S_source calcs are done before, and the G_source terms add on after. (See Eq (26))
   // To use this function properly, it is likely we will have to call this function (calc_GF source()) after (calc_rF_source())
-  for(int i = 0; i < 3; i++) {
+  for(int i = 0; i < 4; ++i) {
     F_src->U[i] += -E * alpha_dD[i];
-    for(int j = 0; j < 3; j++) {
-      F_src->U[i] += F4->D[j+1] * betaU_dD[i][j];
-      for(int k = 0; k < 3; k++) {
-        F_src->U[i] += (metric->lapse / 2) * (P4->UU[j+1][k+1] * gammaDD_dD[i][j][k]);
+    for(int j = 0; j < 4; ++j) {
+      F_src->U[i] += F4->D[j] * betaU_dD[i][j];
+      for(int k = 0; k < 4; ++k) {
+        F_src->U[i] += (metric->lapse / 2) * (P4->UU[j][k] * gammaDD_dD[i][j][k]);
       }
     }
   }
