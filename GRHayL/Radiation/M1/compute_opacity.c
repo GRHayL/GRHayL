@@ -1,91 +1,118 @@
-#include "ghl.h"
 #include "ghl_radiation.h"
-#include "../NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c"
 
-//kappa
-int neutrino_opacity_transport(
-      double rho,
-      double T,
-      double Y_e,
-      double *k0x,
-      double *k0y,
-      double *k0z,
-      double *k1x,
-      double *k1y,
-      double *k1z) {return 0;}
+static double EnsureFinite_M1(const double x) {
+  if(isfinite(x))
+    return x;
+  else
+    return 1e-15;
+}
 
-//kappa_a
-int neutrino_absorbtions(
-      double rho,
-      double T,
-      double Y_e,
-      double *a0x,
-      double *a0y,
-      double *a0z,
-      double *a1x,
-      double *a1y,
-      double *a1z) {return 0;}
+//The opacity calculations are reused from NRPyLeakage.
+//Adjusted to save the values of kappa_abs and kappa_scat for source term calculations
 
-//eta
-int neutrino_emissions(
-      double rho,
-      double T,
-      double Y_e,
-      double *n0x,
-      double *n0y,
-      double *n0z,
-      double *n1x,
-      double *n1y,
-      double *n1z) {return 0;}
+/*
+ * (c) Leo Werneck
+ * Compute GRMHD source terms following Ruffert et al. (1996)
+ * https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
+ */
+void compute_neutrino_opacities_M1(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double T,
+      const ghl_neutrino_optical_depths *restrict tau,
+      ghl_neutrino_opacities *restrict kappa,
+      ghl_neutrino_opacities *restrict kappa_abs,
+      ghl_neutrino_opacities *restrict kappa_scat) {
+  // Step 1: Get chemical potentials and mass
+  //         fractions using the EOS
+  double muhat, mu_e, mu_p, mu_n, X_n, X_p;
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T(eos, rho, Y_e, T, &muhat, &mu_e, &mu_p, &mu_n, &X_n, &X_p);
 
-int neutrino_weak_equilibrium(){return 0;}
+  // Step 2: Compute rho in cgs units
+  const double rho_cgs = rho * NRPyLeakage_units_geom_to_cgs_D;
 
-int calc_neutrino_density(
-      double rho,
-      double T,
-      double Y_e,
-      double *d0x,
-      double *d0y,
-      double *d0z,
-      double *d1x,
-      double *d1y,
-      double *d1z){return 0;}
+  // Step 3: Compute Y_{pn} and Y_{np}
+  const double Y_p = Y_e;
+  const double Y_n = 1-Y_e;
+  const double exp_metahat = exp(-muhat/T);
+  // Step 3.a: Compute Y_{np}
+  double Y_np = (Y_e < 0.5) ? (2.0*Y_e-1.0)/(exp_metahat-1.0) : Y_n;
 
-//Note: 0 refers to NUMBER transport, 1 refers to ENERGY transport.
-void calc_opacity_and_blackbodies(const ghl_eos_parameters *restrict ghl_eos,
-                                  double rho, 
-                                  double T, 
-                                  double T_trapping_limit, 
-                                  double Y_e, 
-                                  double Y_e_trapping_limit, 
-                                  double tau_trap, 
-                                  double dt, 
-                                  const ghl_neutrino_optical_depths *restrict tau,
-                                  ghl_neutrino_opacities *restrict kappa) {
+  // Step 3.b: Compute Y_{pn}
+  double Y_pn = (Y_e > 0.5) ? exp_metahat*(2.0*Y_e-1.0)/(exp_metahat-1.0) : Y_p;
 
-  //transport opacity (use GRHayL functions)
-  NRPyLeakage_compute_neutrino_opacities(&ghl_eos, rho, Y_e, T, &tau, &kappa);
-  
-  
-  //Absorbtion Opacity 
-  //double abs_0_local[3];
-  //double abs_1_local[3];
-  //int ierr = neutrino_absorbtions(rho, T, Y_e, &abs_0_local[0], &abs_0_local[1], &abs_0_local[2], &abs_1_local[0], &abs_1_local[1], &abs_1_local[2]);
-  //finite-ness and error checks on abs_1_local
+  // Step 3.c: Make sure both Y_np and Y_pn are non-negative
+  if(Y_np < 0.0) Y_np = Y_n;
+  if(Y_pn < 0.0) Y_pn = Y_p;
 
- 
-  //double eta_0_local[3];
-  //double eta_1_local[3];
-  //int ierr = neutrino_emissions(rho, T, Y_e, &eta_0_local[0], &eta_0_local[1], &eta_0_local[2], &eta_1_local[0], &eta_1_local[1], &eta_1_local[2]);
-  //finite-ness and error checks on eta_local
-  
-  
-  //Now find the optical depth from these local values
-  //double tau = min(sqrt(abs_1_local[0]*kappa_1_local[0]),sqrt(abs_1_local[1]*kappa_1_local[1]))*dt;
+  // Leo says: this is the way ZelmaniLeak computes Y_pn and Y_np
+  // Step 3: Compute Y_{pn} and Y_{np}
+  // Step 3.a: Compute Y_{pn} (See discussion below Eq. A8 in https://arxiv.org/pdf/1306.4953.pdf)
+  // double Y_pn;
+  // if(rho_cgs > 2e12) {
+  //   // Step 3.a.i: Use Eqs. (A13) and (A14) in https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
+  //   Y_pn = (2*Y_e - 1)/(1-exp(muhat/T));
+  // }
+  // else {
+  //   Y_pn = 1-Y_e;
+  // }
+  // // Step 3.a.ii: Make sure Y_{pn} is nonzero
+  // Y_pn = MAX(Y_pn,0.0);
 
-  //now to begin the blackbody calcs, assuming neutrino trapping.
-  //double trapped_0_density[3];
-  //double trapped_1_density[3];
+  // // Step 3.b: Compute Y_{np} (Eq. A13 in https://adsabs.harvard.edu/pdf/1996A%26A...311..532R)
+  // const double Y_np = exp(muhat/T) * Y_pn;
 
+  // Step 4: Compute the source terms
+  //         Note: The code below is generated by NRPy+
+  const double tmp_0 = exp(-tau->nue[0]);
+  const double tmp_1 = (1.0/(T));
+  const double tmp_2 = mu_e*tmp_1;
+  const double tmp_4 = NRPyLeakage_eta_nue_0*tmp_0 + (1 - tmp_0)*(-muhat*tmp_1 + tmp_2);
+  const double tmp_5 = NRPyLeakage_Fermi_Dirac_integrals(4, tmp_4);
+  const double tmp_6 = NRPyLeakage_N_A*NRPyLeakage_sigma_0*((T)*(T))*rho_cgs/((NRPyLeakage_m_e_c2)*(NRPyLeakage_m_e_c2));
+  const double tmp_7 = tmp_5*tmp_6/NRPyLeakage_Fermi_Dirac_integrals(2, tmp_4);
+  const double tmp_9 = (5.0/24.0)*((NRPyLeakage_alpha)*(NRPyLeakage_alpha));
+  const double tmp_10 = (1 - Y_e)*(tmp_9 + 1.0/24.0)/((2.0/3.0)*MAX(mu_n*tmp_1, 0) + 1);
+  const double tmp_11 = Y_e*(tmp_9 + (1.0/6.0)*((NRPyLeakage_C_V - 1)*(NRPyLeakage_C_V - 1)))/((2.0/3.0)*MAX(mu_p*tmp_1, 0) + 1);
+  const double tmp_12 = NRPyLeakage_Fermi_Dirac_integrals(5, tmp_4);
+  const double tmp_13 = (3.0/4.0)*((NRPyLeakage_alpha)*(NRPyLeakage_alpha)) + 1.0/4.0;
+  const double tmp_14 = Y_np*tmp_13/(exp(-tmp_12/tmp_5 + tmp_2) + 1);
+  const double tmp_15 = tmp_12/NRPyLeakage_Fermi_Dirac_integrals(3, tmp_4);
+  const double tmp_17 = tmp_11*tmp_6;
+  const double tmp_18 = exp(-tau->anue[0]);
+  const double tmp_20 = NRPyLeakage_eta_anue_0*tmp_18 + (1 - tmp_18)*(muhat*tmp_1 - tmp_2);
+  const double tmp_21 = NRPyLeakage_Fermi_Dirac_integrals(4, tmp_20);
+  const double tmp_22 = tmp_21/NRPyLeakage_Fermi_Dirac_integrals(2, tmp_20);
+  const double tmp_24 = NRPyLeakage_Fermi_Dirac_integrals(5, tmp_20);
+  const double tmp_25 = Y_pn*tmp_13/(exp(-tmp_2 - tmp_24/tmp_21) + 1);
+  const double tmp_26 = tmp_24/NRPyLeakage_Fermi_Dirac_integrals(3, tmp_20);
+  const double tmp_28 = NRPyLeakage_Fermi_Dirac_integrals(4, 0)/NRPyLeakage_Fermi_Dirac_integrals(2, 0);
+  const double tmp_30 = NRPyLeakage_Fermi_Dirac_integrals(5, 0)/NRPyLeakage_Fermi_Dirac_integrals(3, 0);
+  kappa->nue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_10*tmp_7) + EnsureFinite_M1(tmp_11*tmp_7) + EnsureFinite_M1(tmp_14*tmp_7));
+  kappa->nue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_15*tmp_17) + EnsureFinite_M1(tmp_10*tmp_15*tmp_6) + EnsureFinite_M1(tmp_14*tmp_15*tmp_6));
+  kappa->anue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_22) + EnsureFinite_M1(tmp_10*tmp_22*tmp_6) + EnsureFinite_M1(tmp_22*tmp_25*tmp_6));
+  kappa->anue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_26) + EnsureFinite_M1(tmp_10*tmp_26*tmp_6) + EnsureFinite_M1(tmp_25*tmp_26*tmp_6));
+  kappa->nux[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_28) + EnsureFinite_M1(tmp_10*tmp_28*tmp_6));
+  kappa->nux[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_30) + EnsureFinite_M1(tmp_10*tmp_30*tmp_6));
+  //Need to save individual opacities for source term calcs in M1.
+  kappa_abs->nue[0] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite_M1(tmp_14*tmp_7);
+  kappa_abs->nue[1] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite_M1(tmp_14*tmp_15*tmp_6);
+  kappa_abs->anue[0] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite_M1(tmp_22*tmp_25*tmp_6);
+  kappa_abs->anue[1] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite_M1(tmp_25*tmp_26*tmp_6);
+  kappa_abs->nux[0] = 0.0;
+  kappa_abs->nux[1] = 0.0;
+  kappa_scat->nue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_10*tmp_7) + EnsureFinite_M1(tmp_11*tmp_7));
+  kappa_scat->nue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_15*tmp_17) + EnsureFinite_M1(tmp_10*tmp_15*tmp_6));
+  kappa_scat->anue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_22) + EnsureFinite_M1(tmp_10*tmp_22*tmp_6));
+  kappa_scat->anue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_26) + EnsureFinite_M1(tmp_10*tmp_26*tmp_6));
+  kappa_scat->nux[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_28) + EnsureFinite_M1(tmp_10*tmp_28*tmp_6));
+  kappa_scat->nux[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_30) + EnsureFinite_M1(tmp_10*tmp_30*tmp_6));
 
+  // Step 5: Make sure results are finite; if not reset to small value
+  for(int i=0;i<2;i++) {
+    if( !isfinite(kappa->nue [i]) ) kappa->nue [i] = 1e-15;
+    if( !isfinite(kappa->anue[i]) ) kappa->anue[i] = 1e-15;
+    if( !isfinite(kappa->nux [i]) ) kappa->nux [i] = 1e-15;
+  }
 }
