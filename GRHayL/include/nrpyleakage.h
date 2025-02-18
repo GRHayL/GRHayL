@@ -66,13 +66,22 @@ extern "C" {
 // Function prototypes
 double NRPyLeakage_Fermi_Dirac_integrals(const int k, const double z);
 
+void NRPyLeakage_compute_neutrino_absorption_and_scattering_opacities(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double T,
+      const ghl_neutrino_optical_depths *restrict tau,
+      ghl_neutrino_opacities *restrict kappa_abs,
+      ghl_neutrino_opacities *restrict kappa_scat);
+
 void NRPyLeakage_compute_neutrino_opacities(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
       const double T,
       const ghl_neutrino_optical_depths *restrict tau,
-      ghl_neutrino_opacities *restrict kappa );
+      ghl_neutrino_opacities *restrict kappa);
 
 void NRPyLeakage_compute_neutrino_luminosities(
       const ghl_eos_parameters *restrict eos,

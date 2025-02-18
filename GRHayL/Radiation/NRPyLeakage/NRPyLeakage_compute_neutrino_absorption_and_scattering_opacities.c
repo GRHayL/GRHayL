@@ -1,29 +1,26 @@
 #include "ghl_radiation.h"
 
-static double EnsureFinite_M1(const double x) {
+static double EnsureFinite(const double x) {
   if(isfinite(x))
     return x;
   else
     return 1e-15;
 }
 
-//The opacity calculations are reused from NRPyLeakage.
-//Adjusted to save the values of kappa_abs and kappa_scat for source term calculations
-
 /*
  * (c) Leo Werneck
  * Compute GRMHD source terms following Ruffert et al. (1996)
  * https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
  */
-void compute_neutrino_opacities_M1(
+void NRPyLeakage_compute_neutrino_absorption_and_scattering_opacities(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
       const double T,
       const ghl_neutrino_optical_depths *restrict tau,
-      ghl_neutrino_opacities *restrict kappa,
       ghl_neutrino_opacities *restrict kappa_abs,
       ghl_neutrino_opacities *restrict kappa_scat) {
+
   // Step 1: Get chemical potentials and mass
   //         fractions using the EOS
   double muhat, mu_e, mu_p, mu_n, X_n, X_p;
@@ -89,30 +86,17 @@ void compute_neutrino_opacities_M1(
   const double tmp_26 = tmp_24/NRPyLeakage_Fermi_Dirac_integrals(3, tmp_20);
   const double tmp_28 = NRPyLeakage_Fermi_Dirac_integrals(4, 0)/NRPyLeakage_Fermi_Dirac_integrals(2, 0);
   const double tmp_30 = NRPyLeakage_Fermi_Dirac_integrals(5, 0)/NRPyLeakage_Fermi_Dirac_integrals(3, 0);
-  kappa->nue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_10*tmp_7) + EnsureFinite_M1(tmp_11*tmp_7) + EnsureFinite_M1(tmp_14*tmp_7));
-  kappa->nue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_15*tmp_17) + EnsureFinite_M1(tmp_10*tmp_15*tmp_6) + EnsureFinite_M1(tmp_14*tmp_15*tmp_6));
-  kappa->anue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_22) + EnsureFinite_M1(tmp_10*tmp_22*tmp_6) + EnsureFinite_M1(tmp_22*tmp_25*tmp_6));
-  kappa->anue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_26) + EnsureFinite_M1(tmp_10*tmp_26*tmp_6) + EnsureFinite_M1(tmp_25*tmp_26*tmp_6));
-  kappa->nux[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_28) + EnsureFinite_M1(tmp_10*tmp_28*tmp_6));
-  kappa->nux[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_30) + EnsureFinite_M1(tmp_10*tmp_30*tmp_6));
   //Need to save individual opacities for source term calcs in M1.
-  kappa_abs->nue[0] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite_M1(tmp_14*tmp_7);
-  kappa_abs->nue[1] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite_M1(tmp_14*tmp_15*tmp_6);
-  kappa_abs->anue[0] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite_M1(tmp_22*tmp_25*tmp_6);
-  kappa_abs->anue[1] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite_M1(tmp_25*tmp_26*tmp_6);
+  kappa_abs->nue[0] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite(tmp_14*tmp_7);
+  kappa_abs->nue[1] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite(tmp_14*tmp_15*tmp_6);
+  kappa_abs->anue[0] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite(tmp_22*tmp_25*tmp_6);
+  kappa_abs->anue[1] = NRPyLeakage_units_geom_to_cgs_L*EnsureFinite(tmp_25*tmp_26*tmp_6);
   kappa_abs->nux[0] = 0.0;
   kappa_abs->nux[1] = 0.0;
-  kappa_scat->nue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_10*tmp_7) + EnsureFinite_M1(tmp_11*tmp_7));
-  kappa_scat->nue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_15*tmp_17) + EnsureFinite_M1(tmp_10*tmp_15*tmp_6));
-  kappa_scat->anue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_22) + EnsureFinite_M1(tmp_10*tmp_22*tmp_6));
-  kappa_scat->anue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_26) + EnsureFinite_M1(tmp_10*tmp_26*tmp_6));
-  kappa_scat->nux[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_28) + EnsureFinite_M1(tmp_10*tmp_28*tmp_6));
-  kappa_scat->nux[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite_M1(tmp_17*tmp_30) + EnsureFinite_M1(tmp_10*tmp_30*tmp_6));
-
-  // Step 5: Make sure results are finite; if not reset to small value
-  for(int i=0;i<2;i++) {
-    if( !isfinite(kappa->nue [i]) ) kappa->nue [i] = 1e-15;
-    if( !isfinite(kappa->anue[i]) ) kappa->anue[i] = 1e-15;
-    if( !isfinite(kappa->nux [i]) ) kappa->nux [i] = 1e-15;
-  }
+  kappa_scat->nue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_10*tmp_7) + EnsureFinite(tmp_11*tmp_7));
+  kappa_scat->nue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_15*tmp_17) + EnsureFinite(tmp_10*tmp_15*tmp_6));
+  kappa_scat->anue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_17*tmp_22) + EnsureFinite(tmp_10*tmp_22*tmp_6));
+  kappa_scat->anue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_17*tmp_26) + EnsureFinite(tmp_10*tmp_26*tmp_6));
+  kappa_scat->nux[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_17*tmp_28) + EnsureFinite(tmp_10*tmp_28*tmp_6));
+  kappa_scat->nux[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_17*tmp_30) + EnsureFinite(tmp_10*tmp_30*tmp_6));
 }
