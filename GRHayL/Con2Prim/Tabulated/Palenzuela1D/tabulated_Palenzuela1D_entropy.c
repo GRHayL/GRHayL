@@ -21,8 +21,7 @@
  *            : [2] Siegel et al. (2018) arXiv:1712.07538
  *            : [3] Werneck et al. (2023) arXiv:2208.14487
  */
-static void
-compute_rho_P_eps_T_W_entropy(
+static void compute_rho_P_eps_T_W_entropy(
       const double x,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -33,24 +32,28 @@ compute_rho_P_eps_T_W_entropy(
 
   // Step 1: First compute rho and W
   double W;
-  compute_rho_W_from_x_and_conservatives(x, params, cons_undens, fparams, &prims->rho, &W);
+  compute_rho_W_from_x_and_conservatives(
+        x,
+        params,
+        cons_undens,
+        fparams,
+        &prims->rho,
+        &W);
 
   // Step 2: Now compute P and eps
-  if(fparams->evolve_T) {
-    prims->entropy = cons_undens->entropy/W;
-    ghl_tabulated_enforce_bounds_rho_Ye_S(eos, &prims->rho, &prims->Y_e, &prims->entropy);
-    ghl_tabulated_compute_P_eps_T_from_S(eos, prims->rho, prims->Y_e, prims->entropy, &prims->press, &prims->eps, &prims->temperature);
-  }
-  else {
-    // If the temperature is not evolved, use the input guess to determine
-    // the remaining primitives. Note that in this case one must provide
-    // the appropriate temperature instead of the default guess T = T_min.
-    ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-    ghl_tabulated_compute_P_eps_from_T(eos, prims->rho, prims->Y_e, prims->temperature, &prims->press, &prims->eps);
-  }
+  prims->entropy = cons_undens->entropy / W;
+  ghl_tabulated_enforce_bounds_rho_Ye_S(eos, &prims->rho, &prims->Y_e, &prims->entropy);
+  ghl_tabulated_compute_P_eps_T_from_S(
+        eos,
+        prims->rho,
+        prims->Y_e,
+        prims->entropy,
+        &prims->press,
+        &prims->eps,
+        &prims->temperature);
 
   // Step 3: Set the output
-  *W_ptr   = W;
+  *W_ptr = W;
 }
 
 /*
@@ -73,11 +76,11 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D_entropy(
 
   diagnostics->which_routine = Palenzuela1D_entropy;
   return ghl_tabulated_Palenzuela1D(
-               compute_rho_P_eps_T_W_entropy,
-               params,
-               eos,
-               ADM_metric,
-               cons_undens,
-               prims,
-               diagnostics);
+        compute_rho_P_eps_T_W_entropy,
+        params,
+        eos,
+        ADM_metric,
+        cons_undens,
+        prims,
+        diagnostics);
 }

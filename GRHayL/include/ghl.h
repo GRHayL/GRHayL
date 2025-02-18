@@ -491,6 +491,12 @@ void ghl_compute_smallb_and_b2(
 void ghl_read_error_codes(
       const ghl_error_codes_t error);
 
+void print_metric(FILE *fp, const ghl_metric_quantities *restrict metric);
+
+void print_cons(FILE *fp, const ghl_conservative_quantities *restrict cons);
+
+void print_prims(FILE *fp, const ghl_primitive_quantities *restrict prims);
+
 #ifdef __cplusplus
 }
 #endif

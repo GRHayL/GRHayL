@@ -343,7 +343,7 @@ void ghl_prims_with_random_velocities_and_magnetic_fields(
       ghl_primitive_quantities *restrict prims);
 
 void ghl_random_metric(ghl_metric_quantities *restrict metric);
-void print_metric(const ghl_metric_quantities *restrict metric);
+// void print_metric(const ghl_metric_quantities *restrict metric);
 
 #define check_file_was_successfully_open(fp, filename) \
   if(!fp)                                              \

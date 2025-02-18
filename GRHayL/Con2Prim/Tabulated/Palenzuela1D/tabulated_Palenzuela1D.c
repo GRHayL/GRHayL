@@ -1,5 +1,7 @@
 #include "../../utils_Palenzuela1D.h"
 
+FILE *flog = NULL;
+
 /*
  * Function : froot
  * Author   : Leo Werneck
@@ -70,6 +72,21 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
   double S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
   const double tau = MAX(cons_undens->tau, 0.99 * eos->tau_atm);
 
+  if(flog) {
+    fputs(">>>>>>>>>>>><<<<<<<<<<<<\n", flog);
+    fprintf(flog, "gammaUU00: %.15e\n", ADM_metric->gammaUU[0][0]);
+    fprintf(flog, "gammaUU01: %.15e\n", ADM_metric->gammaUU[0][1]);
+    fprintf(flog, "gammaUU02: %.15e\n", ADM_metric->gammaUU[0][2]);
+    fprintf(flog, "gammaUU10: %.15e\n", ADM_metric->gammaUU[1][0]);
+    fprintf(flog, "gammaUU11: %.15e\n", ADM_metric->gammaUU[1][1]);
+    fprintf(flog, "gammaUU12: %.15e\n", ADM_metric->gammaUU[1][2]);
+    fprintf(flog, "gammaUU20: %.15e\n", ADM_metric->gammaUU[2][0]);
+    fprintf(flog, "gammaUU21: %.15e\n", ADM_metric->gammaUU[2][1]);
+    fprintf(flog, "gammaUU22: %.15e\n", ADM_metric->gammaUU[2][2]);
+    fprintf(flog, ">>>> S_i: %.15e %.15e %.15e\n", SD[0], SD[1], SD[2]);
+    fprintf(flog, ">>>> S^2: %.15e -> ", S_squared);
+  }
+
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
   const double S_squared_max = SQR(tau + cons_undens->rho);
@@ -82,6 +99,10 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
 
     // Step 2.3: Recompute S^{2}
     S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
+  }
+
+  if(flog) {
+    fprintf(flog, "%.15e\n", S_squared);
   }
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
@@ -103,6 +124,17 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
   fparams.s                     = B_squared * invD;
   fparams.t                     = BdotS / pow(cons_undens->rho, 1.5);
 
+  if(flog) {
+    fprintf(
+          flog,
+          "D, S^2, r, s, t: %.15e, %.15e, %.15e, %.15e, %.15e\n",
+          cons_undens->rho,
+          S_squared,
+          fparams.r,
+          fparams.s,
+          fparams.t);
+  }
+
   // Step 6: Bracket x (Eq. A8 of [1])
   double xlow = 1 + fparams.q - fparams.s;
   double xup  = 2 * (1 + fparams.q) - fparams.s;
@@ -112,18 +144,45 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
   rparams.tol       = 1e-15;
   rparams.max_iters = 300;
   // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
-  ghl_error_codes_t error = ghl_brent(
-        froot, params, eos, cons_undens, &fparams, prims, xlow, xup, &rparams);
-  if(error) {
-    // Adjust the temperature guess and try again
-    prims->temperature = eos->T_min;
-    // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
-    error = ghl_brent(
-          froot, params, eos, cons_undens, &fparams, prims, xlow, xup, &rparams);
-    if(error) {
-      return error;
-    }
+  double dummy = 1;
+  double flow  = froot(xlow, params, eos, cons_undens, &fparams, prims);
+  double fup   = froot(xup, params, eos, cons_undens, &fparams, prims);
+  if(flog) {
+    fprintf(
+          flog,
+          "Brent bracket: [%.15e, %.15e] -> [%.15e, %.15e]\n",
+          xlow,
+          xup,
+          flow,
+          fup);
   }
+
+  ghl_error_codes_t error = ghl_brent(
+        froot,
+        params,
+        eos,
+        cons_undens,
+        &fparams,
+        prims,
+        xlow,
+        xup,
+        &rparams);
+  if(error) {
+    if(flog) {
+      fprintf(flog, "Error code: %d\n", error);
+    }
+    return error;
+  }
+  // if(error) {
+  //   // Adjust the temperature guess and try again
+  //   prims->temperature = eos->T_min;
+  //   // ghl_toms748(froot, params, eos, &fparams, xlow, xup, &rparams);
+  //   error = ghl_brent(
+  //         froot, params, eos, cons_undens, &fparams, prims, xlow, xup, &rparams);
+  //   if(error) {
+  //     return error;
+  //   }
+  // }
   diagnostics->n_iter = rparams.n_iters;
 
   // Step 8: Set core primitives using the EOS and the root
@@ -148,11 +207,19 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
 
   // Step 9.d: Set prims struct
   ghl_tabulated_enforce_bounds_rho_Ye_T(
-        eos, &prims->rho, &prims->Y_e, &prims->temperature);
+        eos,
+        &prims->rho,
+        &prims->Y_e,
+        &prims->temperature);
   diagnostics->speed_limited
         = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(
-        eos, prims->rho, prims->Y_e, prims->temperature, &prims->press, &prims->eps,
+        eos,
+        prims->rho,
+        prims->Y_e,
+        prims->temperature,
+        &prims->press,
+        &prims->eps,
         &prims->entropy);
 
   return ghl_success;
