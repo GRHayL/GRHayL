@@ -1,4 +1,3 @@
 SRCS = compute_radiation_closure.c \
        compute_number_density.c \
-       compute_radiation_flux.c \
-       compute_radiation_source.c
+       compute_radiation_flux.c
