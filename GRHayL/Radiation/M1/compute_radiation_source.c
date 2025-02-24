@@ -5,6 +5,8 @@
 #include <gsl/gsl_roots.h>
 
 // gsl_multiroots: https://www.gnu.org/software/gsl/doc/html/multiroots.html
+// E,F_old -> q_old -> x_old -> E,F -> update in root solver -> x -> E,F_new
+//         -> E,F_star
 void init_params(ghl_m1_powell_params *p,
                  const ghl_m1_closure_t closure,
                  const gsl_root_fsolver *gsl_solver_1d,
@@ -13,29 +15,13 @@ void init_params(ghl_m1_powell_params *p,
                  const ghl_ADM_aux_quantities *adm_aux,
                  const ghl_radiation_metric_tensor *proj4,
                  const ghl_primitive_quantities *prims,
-                 const double * u4D,
-                 const double * u4U,
-                 const double * n4D,
-                 const double * n4U,
-                 const double J,
-                 const ghl_radiation_flux_vector *F4,
-                 const ghl_radiation_flux_vector *H4,
-                 const ghl_radiation_pressure_tensor *P4,
-                 const ghl_stress_energy *rT4DD,
-                 const ghl_radiation_con_source_vector *S4,
-                 const double W,
                  const double E_star,
                  const ghl_radiation_flux_vector *F4_star,
-                 const double Edot,
                  const double chi,
                  const double eta,
                  const double kabs,
-                 const double kscat,
-                 const double E,
-                 const double rE_source,
-                 const ghl_radiation_con_flux_vector *rF_source,
-                 const double GE_source,
-                 const ghl_radiation_con_source_vector * F_src) {
+                 const double kscat
+                 ) {
     p->closure = closure;
     p->gsl_solver_1d = gsl_solver_1d;
     p->cdt = cdt;
@@ -43,28 +29,40 @@ void init_params(ghl_m1_powell_params *p,
     p->adm_aux = adm_aux;
     p->proj4 = proj4;
     p->prims = prims;
-    p->u4D = u4D;
-    p->u4U = u4U;
-    p->n4D = n4D;
-    p->n4U = n4U;
-    p->J = J;
-    p->F4 = F4;
-    p->H4 = H4;
-    p->P4 = P4;
-    p->rT4DD = rT4DD;
-    p->W = W;
+
+    // These can be derived from prims and metric
+    p->u4U = {prims->u0, 
+              prims->u0 * prims->vU[0], 
+              prims->u0 * prims->vU[1],
+              prims->u0 * prims->vU[2]};
+    p->n4D = {-metric->lapse, 0, 0, 0};
+    p->W = 0;
+    for(int a = 0; a < 4; a++) {
+      p->W += -p->u4U[a] * p->n4D[a];
+    }
+ 
+
+    // These are calculated from prepare_closure()
+    // p->E = E;
+    // p->J = J;
+    // p->F4 = F4;
+    // p->H4 = H4;
+    // p->P4 = P4;
+    // p->rT4DD = rT4DD;
+    
     p->E_star = E_star;
     p->F4_star = F4_star;
-    p->Edot = Edot;
     p->chi = chi;
     p->eta = eta;
     p->kabs = kabs;
     p->kscat = kscat;
-    p->E = E;
-    p->rE_source = rE_source;
-    p->rF_source = rF_source;
-    p->GE_source = GE_source;
-    p->F_src = F_src;
+    
+
+    // These are calculated from prepare_source()
+    // p->rE_source = rE_source;
+    // p->rF_source = rF_source;
+    // p->GE_source = GE_source;
+    // p->F_src = F_src;
 }
 
 // rad_E_floor rad_eps are parameters in param.ccl
@@ -249,17 +247,46 @@ double dot(double *a, double *b, int length) {
   return result;
 }
 
+int prepare_closure(gsl_vector const * q, ghl_m1_powell_params * p) {
+    double n4U[4] = { p->metric->lapseinv, 
+                    -p->metric->betaU[0] * p->metric->lapseinv,
+                    -p->metric->betaU[1] * p->metric->lapseinv,
+                    -p->metric->betaU[2] * p->metric->lapseinv };
+    p->E = max(gsl_vector_get(q, 0), 0.0);
+    if (p->E < 0) {
+        return GSL_EBADFUNC;
+    }
+    p->F4->D[1] = gsl_vector_get(q, 1);
+    p->F4->D[2] = gsl_vector_get(q, 2);
+    p->F4->D[3] = gsl_vector_get(q, 3);
+    p->F4->D[0] = -p->lapse * (n4U[1] * p->F4->D[1] +
+                               n4U[2] * p->F4->D[2] + 
+                               n4U[3] * p->F4->D[3]);
+    // This operation is just F_0 = beta^i F_i
+
+    // Johnny: closure needs to update p->E, F4, P4, check if this is true
+    m1_root_params closure_params; 
+    closure_params.metric   = p->metric;
+    closure_params.adm_aux  = p->adm_aux;
+    closure_params.prims    = p->prims;
+    closure_params.E        = p->E;
+    closure_params.F4       = p->F4;
+    closure_params.P4       = p->P4;
+    ghl_radiation_rootSolve_closure(&closure_params);
+
+    return GSL_SUCCESS;
+}
+
 int prepare_sources(gsl_vector const * q, ghl_m1_powell_params * p) {
-    assemble_rT_lab_frame(p->n4D,p->E,p->F4,p->P4,p->rT4DD);
+  assemble_rT_lab_frame(p->n4D, p->E, p->F4, p->P4,p->rT4DD);
 
   p->J = calc_J_from_rT(p->u4U, p->proj4, p->rT4DD);
   calc_H4D_from_rT(p->u4U, p->proj4, p->rT4DD, &p->H4);
 
   calc_rad_sources(p->eta, p->kabs, p->kscat, p->u4U, p->J, p->H4, &p->S4);
 
-  p->Edot = calc_rE_source(p->metric, p->S4);
-  calc_rF_source(p->metric, p->adm_aux, p->S4, &p->rF_source);
   p->rE_source = calc_rE_source(p->metric, p->S4);
+  calc_rF_source(p->metric, p->adm_aux, p->S4, &p->rF_source);
 
   return GSL_SUCCESS;
 }
@@ -268,6 +295,10 @@ int prepare(const gsl_vector *q, ghl_m1_powell_params *p) {
   // Johnny: removed chi passing around to just p->chi
   //         this can lead to error here if prepare_closure fails
   int ierr = prepare_closure(q, p);
+  if(ierr != GSL_SUCCESS) {
+    return ierr;
+  }
+  int ierr = prepare_sources(q, p);
   if(ierr != GSL_SUCCESS) {
     return ierr;
   }
@@ -348,10 +379,10 @@ void explicit_update(
         double * E_new,
         ghl_radiation_flux_vector * F4_new) {
     double alp = p->metric->lapse;
-    double n4U[4] = {p->metric->lapseinv, 
-                    -p->metric->betaU[0]*p->metric->lapseinv,
-                    -p->metric->betaU[1]*p->metric->lapseinv,
-                    -p->metric->betaU[2]*p->metric->lapseinv};
+    // double n4U[4] = {p->metric->lapseinv, 
+    //                 -p->metric->betaU[0]*p->metric->lapseinv,
+    //                 -p->metric->betaU[1]*p->metric->lapseinv,
+    //                 -p->metric->betaU[2]*p->metric->lapseinv};
     *E_new      = p->E_star       + p->cdt * p->rE_source;
     
     // rF_source only has U, need to lower indicies
@@ -365,30 +396,47 @@ void explicit_update(
     F4_new->D[2] = p->F4_star->D[2] + p->cdt * rF_source_D[2];
     F4_new->D[3] = p->F4_star->D[3] + p->cdt * rF_source_D[3];
     // F_0 = g_0i F^i = beta_i F^i = beta^i F_i
-    F4_new->D[0] = - alp * p->n4U[1] * F4_new->D[1]
-                   - alp * p->n4U[2] * F4_new->D[2]
-                   - alp * p->n4U[3] * F4_new->D[3];
+    // F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
+    //                - alp * n4U[2] * F4_new->D[2]
+    //                - alp * n4U[3] * F4_new->D[3];
+    F4_new->D[0] = p->metric->betaU[1] * F4_new->D[1]
+                 + p->metric->betaU[2] * F4_new->D[2]
+                 + p->metric->betaU[3] * F4_new->D[3]
+    
 } //explicit_update
 
+
+// Update E_old -> E_new
+//        F_old -> F_new
+// In THC: _old is equivalent to _star, so remove _star here
 int source_update(
       const double cdt,
       ghl_m1_closure_t closure,
       gsl_multiroot_fdfsolver *gsl_solver_nd,
       const double E_old,
-      double *E_new,
       const ghl_radiation_flux_vector *F4_old,
-      ghl_radiation_flux_vector *F4_new,
       const ghl_m1_thc_params *thc_params,
-      ghl_m1_powell_params *p) {
+      ghl_m1_powell_params *p,
+      double *E_new,
+      ghl_radiation_flux_vector *F4_new
+    ) {
+
+  
+  init_params(&p,
+      closure,
+      gsl_solver_nd,
+      E_old,
+      F4_old,
+      thc_params);
 
   gsl_multiroot_function_fdf zfunc
         = { impl_func_val, impl_func_jac, impl_func_val_jac, 4, &p };
 
   double alp = p->metric->lapse;
-  double n4U[4] = { p->metric->lapseinv, 
-                    -p->metric->betaU[0] * p->metric->lapseinv,
-                    -p->metric->betaU[1] * p->metric->lapseinv,
-                    -p->metric->betaU[2] * p->metric->lapseinv };
+  // double n4U[4] = { p->metric->lapseinv, 
+  //                   -p->metric->betaU[0] * p->metric->lapseinv,
+  //                   -p->metric->betaU[1] * p->metric->lapseinv,
+  //                   -p->metric->betaU[2] * p->metric->lapseinv };
 
   // Old solution
   double qold[4] = { E_old, F4_old->D[1], F4_old->D[2], F4_old->D[3] };
@@ -440,14 +488,14 @@ int source_update(
   F4_new->D[2] = gsl_vector_get(gsl_solver_nd->x, 2);
   F4_new->D[3] = gsl_vector_get(gsl_solver_nd->x, 3);
   // F_0 = g_0i F^i = beta_i F^i = beta^i F_i
-  F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
-                 - alp * n4U[2] * F4_new->D[2]
-                 - alp * n4U[3] * F4_new->D[3];
+  // F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
+  //                - alp * n4U[2] * F4_new->D[2]
+  //                - alp * n4U[3] * F4_new->D[3];
+  F4_new->D[0] = p->metric->betaU[1] * F4_new->D[1]
+               + p->metric->betaU[2] * F4_new->D[2]
+               + p->metric->betaU[3] * F4_new->D[3]
 
   prepare_closure(gsl_solver_nd->x, &p);
   return -4; //TODO
   //return THC_M1_SOURCE_OK; //TODO
-
-
-
 } // source_update

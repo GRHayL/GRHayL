@@ -7,9 +7,9 @@ void get_FU(
   ghl_radiation_flux_vector *F4) {
 
 
-  for(i=0; i<4; i++){
+  for(int i=0; i<4; i++){
     F4->U[i] = 0; //Be on the safe side and initialize
-    for (j=0; j<4; j++){
+    for (int j=0; j<4; j++){
         F4->U[i] += adm_aux->g4UU[j][i]*F4->D[j];
       }
   }
@@ -22,20 +22,20 @@ void get_PUD_and_PUU(
     ghl_radiation_pressure_tensor *P4){
 
   //UD first
-  for(i=0; i<4; i++){
-    for(j=0; j<4; j++){
+  for(int i=0; i<4; i++){
+    for(int j=0; j<4; j++){
       P4->UD[i][j] = 0; //Initialize to be safe
-      for(k=0; k<4; k++){
+      for(int k=0; k<4; k++){
         P4->UD[i][j] += adm_aux->g4UU[k][i]*P4->DD[k][j];
       }
     }
   }
 
   //Now use UD for the UU components
-  for(i=0; i<4; i++){
-    for(j=0; j<4; j++){
+  for(int i=0; i<4; i++){
+    for(int j=0; j<4; j++){
       P4->UU[i][j] = 0; //Initialize to be safe
-      for(k=0; k<4; k++){
+      for(int k=0; k<4; k++){
         P4->UU[i][j] += adm_aux->g4UU[j][k]*P4->UD[i][k];
       }
     }
@@ -52,12 +52,12 @@ void calc_rad_sources(
       const double eta,
       const double kabs,
       const double kscat,
-      const double *u4D,
+      const double *u4U,
       const double J,
       const ghl_radiation_flux_vector *H4,
       ghl_radiation_con_source_vector *S4) {
   for(int a = 0; a < 4; ++a) {
-    S4->U[a] = (eta - kabs * J) * u4D[a] - (kabs + kscat) * H4->D[a];
+    S4->U[a] = (eta - kabs * J) * u4U[a] - (kabs + kscat) * H4->U[a];
   }
 }
 
@@ -67,7 +67,7 @@ double calc_E_flux(
       const double E,
       const ghl_radiation_flux_vector *F4,
       const int dir) {
-  return metric->lapse * F4->D[dir] - metric->betaU[dir] * E;
+  return metric->lapse * F4->U[dir] - metric->betaU[dir] * E;
 }
 
 // Eq (28) - 3
