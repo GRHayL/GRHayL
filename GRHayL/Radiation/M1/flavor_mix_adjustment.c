@@ -9,10 +9,10 @@ void flavor_mix_adjustment(double rN_e,
                            double rE_ae,
                            double rE_x,
                            double rE_ax,
-                           ghl_radiation_flux_vector rF_e,
-                           ghl_radiation_flux_vector rF_ae,
-                           ghl_radiation_flux_vector rF_x,
-                           ghl_radiation_flux_vector rF_ax,
+                           ghl_radiation_flux_vector *rF_e,
+                           ghl_radiation_flux_vector *rF_ae,
+                           ghl_radiation_flux_vector *rF_x,
+                           ghl_radiation_flux_vector *rF_ax,
                            const bool mix_type){
 
   //neutrino number and number density
@@ -85,9 +85,9 @@ void flavor_mix_adjustment(double rN_e,
   rE_ax = rE_ae*Prob_a_ex + rE_ax*(Prob_a_xx - Prob_a_xe);
 
   for(int i; i < 4, ++i){
-    rF_e[i] = rF_e[i]*(Prob_ee - Prob_ex) + rF_x[i]*Prob_xe;
-    rF_ae[i] = rF_ae[i]*(Prob_a_ee - Prob_a_ex) + rF_ax[i]*Prob_a_xe;
-    rF_x[i] = rF_e[i]*Prob_ex + rF_x[i]*(Prob_xx - Prob_xe);
-    rF_ax[i] = rF_ae[i]*Prob_a_ex + rF_ax[i]*(Prob_a_xx - Prob_a_xe);
+    rF_e->D[i] = rF_e->D[i]*(Prob_ee - Prob_ex) + rF_x->D[i]*Prob_xe;
+    rF_ae->D[i] = rF_ae->D[i]*(Prob_a_ee - Prob_a_ex) + rF_ax->D[i]*Prob_a_xe;
+    rF_x->D[i] = rF_e->D[i]*Prob_ex + rF_x->D[i]*(Prob_xx - Prob_xe);
+    rF_ax->D[i] = rF_ae->D[i]*Prob_a_ex + rF_ax->D[i]*(Prob_a_xx - Prob_a_xe);
   }
 }
