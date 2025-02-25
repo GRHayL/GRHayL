@@ -78,11 +78,6 @@ double calc_F_flux(
       const ghl_radiation_pressure_tensor *P4,
       const int dir,
       const int comp) {
-
-  // Leo: Compute UD from DD if this is the only place we need P^{i}_{j},
-  //      otherwise add UD component to struct.
-
-  // FIXME:need to change this to UD
   return metric->lapse * P4->UD[dir][comp] - metric->betaU[dir] * F4->D[comp];
 }
 
