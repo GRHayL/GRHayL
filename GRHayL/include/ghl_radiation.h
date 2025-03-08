@@ -99,6 +99,8 @@ extern double (*ghl_m1_closure)(double);
 
 ghl_error_codes_t ghl_initialize_m1_closure(ghl_m1_closure_t ghl_m1_closure_type);
 
+void add_rad_to_Tmunu(ghl_stress_energy *T4DD, const ghl_stress_energy *rT4DD, const ghl_metric_quantities *metric);
+
 /*
  * Struct        : ghl_m1_powell_params
  * Description   : stores M1 transport GRHayL parameters for Powell's method
