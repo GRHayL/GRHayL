@@ -120,6 +120,21 @@ void calc_density_ratios(const double mb,
                          double *energy_ratio_ae,
                          double *energy_ratio_x);
 
+void flavor_mix_adjustment(double *rN_e,
+                           double *rN_ae,
+                           double *rN_x,
+                           double *rN_ax,
+                           const double Nmin,
+                           double *rE_e,
+                           double *rE_ae,
+                           double *rE_x,
+                           double *rE_ax,
+                           ghl_radiation_flux_vector *rF_e,
+                           ghl_radiation_flux_vector *rF_ae,
+                           ghl_radiation_flux_vector *rF_x,
+                           ghl_radiation_flux_vector *rF_ax,
+                           const bool mix_type);
+
 /*
  * Struct        : ghl_m1_powell_params
  * Description   : stores M1 transport GRHayL parameters for Powell's method
