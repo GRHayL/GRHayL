@@ -82,6 +82,7 @@ double calc_F_flux(
 }
 
 // Eq (29) - 2
+// Johnny: return double will be dafault to 0.0
 double calc_rE_source(
       const ghl_metric_quantities *metric,
       const ghl_radiation_con_source_vector *S4) {
@@ -99,10 +100,10 @@ void calc_rF_source(
       const ghl_ADM_aux_quantities *adm_aux,
       const ghl_radiation_con_source_vector *S4,
       ghl_radiation_con_source_vector *rF_source) {
-  for(int a = 0; a < 4; ++a) {
-    rF_source->U[a] = 0.0;
-    for(int b = 0; b < 4; ++b) {
-      rF_source->U[a] += metric->lapse * adm_aux->g4DD[b][a] * S4->U[b];
+  for(int a = 0; a < 3; ++a) {
+    rF_source->D[a] = 0.0;
+    for(int b = 0; b < 3; ++b) {
+      rF_source->D[a] += metric->lapse * metric->gammaDD[b][a] * S4->U[b];
     }
   }
 }
@@ -122,10 +123,10 @@ double calc_GE_source(
 
   // FIXME: these are trying to access struct fields that don't exist.
   double GE_source = 0.0;
-  for(int i = 0; i < 4; ++i) {
+  for(int i = 0; i < 3; ++i) {
     GE_source += -F4->U[i] * alpha_dD[i]; // dlog(alpha) = (1/alpha)*dalpha, the 1/alpha
                                           // cancels out with the alpha factor in front.
-    for(int j = 0; j < 4; ++j) {
+    for(int j = 0; j < 3; ++j) {
       GE_source += metric->lapse * (P4->UU[i][j] * K4->K[i][j]);
     }
   }
@@ -142,7 +143,7 @@ void calc_GF_source(
       const double E,
       const ghl_radiation_flux_vector *F4,
       const ghl_radiation_pressure_tensor *P4,
-      ghl_radiation_con_source_vector *F_src) {
+      ghl_radiation_con_source_vector *GF_source) {
 
   double alpha_dD[3] = { metric_derivs_x->lapse, metric_derivs_y->lapse,
                          metric_derivs_z->lapse }; // index refers to derivative index.
@@ -176,12 +177,13 @@ void calc_GF_source(
 
   // NOTE: F_src is unintialized because I assume that the S_source calcs are done before, and the G_source terms add on after. (See Eq (26))
   // To use this function properly, it is likely we will have to call this function (calc_GF source()) after (calc_rF_source())
-  for(int i = 0; i < 4; ++i) {
-    F_src->U[i] += -E * alpha_dD[i];
-    for(int j = 0; j < 4; ++j) {
-      F_src->U[i] += F4->D[j] * betaU_dD[i][j];
-      for(int k = 0; k < 4; ++k) {
-        F_src->U[i] += (metric->lapse / 2) * (P4->UU[j][k] * gammaDD_dD[i][j][k]);
+  // Johnny: Change from F_src to GF_source. Will need to call rF_source and GF_source separately and add both in the future.
+  for(int i = 0; i < 3; ++i) {
+    GF_source->U[i] += -E * alpha_dD[i];
+    for(int j = 0; j < 3; ++j) {
+      GF_source->U[i] += F4->D[j] * betaU_dD[i][j];
+      for(int k = 0; k < 3; ++k) {
+        GF_source->U[i] += (metric->lapse / 2) * (P4->UU[j][k] * gammaDD_dD[i][j][k]);
       }
     }
   }

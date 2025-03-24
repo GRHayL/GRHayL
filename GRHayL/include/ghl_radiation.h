@@ -6,6 +6,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_roots.h>
+#include <gsl/gsl_multiroots.h>
 
 // Neutrino quantities
 typedef struct ghl_neutrino_luminosities {
@@ -36,11 +37,13 @@ typedef struct {
 // conservative flux for M1 equations
 typedef struct {
   double U[4];
+  double D[4];
 } ghl_radiation_con_flux_vector;
 
 // conservative source for M1 equaitons
 typedef struct {
   double U[4];
+  double D[4];
 } ghl_radiation_con_source_vector;
 
 // conservative source tensor for M1 equaitons
@@ -108,10 +111,10 @@ typedef struct ghl_m1_powell_params {
   // Parameters initialized from init_params
   ghl_m1_closure_t closure;
   gsl_root_fsolver *gsl_solver_1d;
+  gsl_multiroot_fdfsolver *gsl_solver_nd;
   double cdt;
   ghl_metric_quantities *metric;
   ghl_ADM_aux_quantities *adm_aux;
-  ghl_radiation_metric_tensor *proj4;
   ghl_primitive_quantities *prims;
   // Initial E,F value to take in init_params
   double E_star;
@@ -124,26 +127,32 @@ typedef struct ghl_m1_powell_params {
 
 
   // Paraters derived in init_params
-  double *u4U;
-  double *n4D;
+  double u4U[4];
+  double n4D[4];
   double W;
+  double vU[3];
+  double vD[3];
 
   // SE tensor in the lab frame, will be updated in impl solve
-  ghl_stress_energy *rT4DD;
+  // ghl_stress_energy *rT4DD;
   double E;
   ghl_radiation_flux_vector *F4;
   ghl_radiation_pressure_tensor *P4;
 
   // SE tensor in the fluid frame, will be updated in impl solve
-  double J;
-  ghl_radiation_flux_vector *H4;
+  // double J;
+  // ghl_radiation_flux_vector *H4;
   
   // sources
-  ghl_radiation_con_source_vector *S4;
+  // ghl_radiation_con_source_vector *S4;
   double rE_source;
   ghl_radiation_con_flux_vector *rF_source;
   double GE_source;
-  ghl_radiation_con_flux_vector *F_src;
+  ghl_radiation_con_flux_vector *GF_source;
+
+  double E_new;
+  ghl_radiation_flux_vector *F4_new;
+
 } ghl_m1_powell_params;
 
 #endif // GHL_RADIATION_H_
