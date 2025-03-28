@@ -3,7 +3,7 @@
 import os,sys
 import GRMHD_equations_new_version as GRMHD    # NRPy+: Generate general relativistic magnetohydrodynamics equations
 
-nrpy_dir_path = os.path.join("nrpy/")
+nrpy_dir_path = os.path.join("nrpy_old")
 if nrpy_dir_path not in sys.path:
     sys.path.append(nrpy_dir_path)
 
