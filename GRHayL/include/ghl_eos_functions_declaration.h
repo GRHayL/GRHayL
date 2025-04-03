@@ -227,6 +227,10 @@ void (*ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T)(
       const double T,
       ghl_eos_parameters *restrict eos );
 
+void (*ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_entropy)(
+      const double entropy,
+      ghl_eos_parameters *restrict eos);      
+
 double (*ghl_tabulated_compute_Ye_from_rho)(
       const ghl_eos_parameters *restrict eos,
       const double rho );

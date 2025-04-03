@@ -268,6 +268,10 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos );
 
+void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_entropy(
+      const double entropy,
+      ghl_eos_parameters *restrict eos);
+
 void NRPyEOS_tabulated_free_beq_quantities( ghl_eos_parameters *restrict eos );
 
 double NRPyEOS_tabulated_compute_Ye_from_rho(

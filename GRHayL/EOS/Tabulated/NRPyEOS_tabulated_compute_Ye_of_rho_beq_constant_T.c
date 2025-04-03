@@ -1,8 +1,20 @@
 #include "nrpyeos_tabulated.h"
+#include "../../Con2Prim/roots.h"
 
 #define munu_index(ir, it, iy) \
   (NRPyEOS_munu_key            \
    + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
+
+#define entropy_index(ir, it, iy) \
+  (NRPyEOS_entropy_key         \
+    + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
+
+typedef struct {
+  double target_entropy;
+  int ir;
+  double T;   // <--- new field for temperature
+  ghl_eos_parameters *eos;
+} brent_params;     
 
 static double find_Ye_st_munu_is_zero(
       const int n,
@@ -194,17 +206,190 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
   }
 }
 
+static double entropy_at_Ye_T(
+    double Ye,
+    double T,
+    const int ir,
+    ghl_eos_parameters *restrict eos) {
+
+  Ye = MAX(Ye, eos->Y_e_min);
+  Ye = MIN(Ye, eos->Y_e_max);
+
+  T = MAX(T, eos->T_min);
+  T = MIN(T, eos->T_max);
+
+  const int nt = eos->N_T;
+  const int ny = eos->N_Ye;
+
+  const int it = find_left_index_bisection(nt, eos->table_logT, log(T));
+
+  if (it < 0 || it >= nt - 1) {
+    ghl_error("Error: Temperature index out of bounds.\n");
+    return NAN; // Indicate an error
+  }
+
+  double *entropy_of_Ye = (double *)malloc(sizeof(double) * ny);
+  if (entropy_of_Ye == NULL) {
+    ghl_error("Memory allocation failed.\n");
+    return NAN; // Indicate an error
+  }
+
+  for (int iy = 0; iy < ny; iy++) {
+    entropy_of_Ye[iy] = eos->table_all[entropy_index(ir, it, iy)];
+  }
+  
+  double entropy_val = linterp(ny, eos->table_Y_e, entropy_of_Ye, Ye, find_left_index_uniform_array);
+  free(entropy_of_Ye);
+  return entropy_val;
+}
+
+static double munu_at_Ye_T(
+    double Ye,
+    double T,
+    const int ir,
+    ghl_eos_parameters *restrict eos) {
+
+  Ye = MAX(Ye, eos->Y_e_min);
+  Ye = MIN(Ye, eos->Y_e_max);
+
+  T = MAX(T, eos->T_min);
+  T = MIN(T, eos->T_max);
+
+  const int nt = eos->N_T;
+  const int ny = eos->N_Ye;
+
+  const int it = find_left_index_bisection(nt, eos->table_logT, log(T));
+
+  if (it < 0 || it >= nt - 1) {
+    ghl_error("Error: Temperature index out of bounds.\n");
+    return NAN; // Indicate an error
+  }
+
+  double *munu_of_Ye = (double *)malloc(sizeof(double) * ny);
+  if (munu_of_Ye == NULL) {
+    ghl_error("Memory allocation failed.\n");
+    return NAN; // Indicate an error
+  }
+
+  for (int iy = 0; iy < ny; iy++) {
+    munu_of_Ye[iy] = eos->table_all[munu_index(ir, it, iy)];
+  }
+
+  double munu_val = linterp(ny, eos->table_Y_e, munu_of_Ye, Ye, find_left_index_uniform_array);
+  free(munu_of_Ye);
+  return munu_val;
+}
+
+// Add a wrapper for munu_at_Ye_T so that it matches the prototype expected by ghl_brent.
+static double munu_wrapper(const double Ye,
+                           const ghl_parameters *restrict params,
+                           const ghl_eos_parameters *restrict eos,
+                           const ghl_conservative_quantities *restrict cons_undens,
+                           fparams_struct *restrict fparams,
+                           ghl_primitive_quantities *restrict prims) {
+  // Cast back fparams to our brent_params struct.
+  brent_params *bparams = (brent_params *)fparams;
+  return munu_at_Ye_T(Ye, bparams->T, bparams->ir, bparams->eos);
+}
+
+static double brent_objective(
+  const double T,
+  const ghl_parameters *restrict params,
+  const ghl_eos_parameters *restrict eos,
+  const ghl_conservative_quantities *restrict cons_undens,
+  fparams_struct *restrict fparams,
+  ghl_primitive_quantities *restrict prims)
+{
+  // Cast the fparams pointer to retrieve our brent_params structure
+  brent_params *bparams = (brent_params *)fparams;
+  bparams->T = T;
+
+  double ye_beq = eos->Y_e_min;
+  roots_params root_params = {0};
+  root_params.tol = 1e-10; // Adjust tolerance as needed
+  root_params.max_iters = 100;
+
+  // Use the wrapper function for munu solve
+  ghl_brent(munu_wrapper, params, eos, cons_undens, fparams, prims,
+            bparams->eos->table_Y_e[1],
+            bparams->eos->table_Y_e[bparams->eos->N_Ye - 1],
+            &root_params);
+  ye_beq = root_params.root;
+
+  double entropy_beq = entropy_at_Ye_T(ye_beq, T, bparams->ir, bparams->eos);
+  return entropy_beq - bparams->target_entropy;
+}
+
+void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_entropy(
+    const double entropy,
+    ghl_eos_parameters *restrict eos) {
+
+  const int nr = eos->N_rho;
+
+  if (eos->Ye_of_lr == NULL) {
+    eos->Ye_of_lr = (double *)malloc(sizeof(double) * nr);
+  }
+  if (eos->lp_of_lr == NULL) {
+    eos->lp_of_lr = (double *)malloc(sizeof(double) * nr);
+  }
+  if (eos->le_of_lr == NULL) {
+    eos->le_of_lr = (double *)malloc(sizeof(double) * nr);
+  }
+
+  roots_params root_params = {0};
+  root_params.tol = 1e-10; // Adjust tolerance as needed
+  root_params.max_iters = 100;
+
+  brent_params bparams = {0};
+  bparams.target_entropy = entropy;
+  bparams.eos = eos;
+
+  double (*entropy_func)(const double, const ghl_parameters *, const ghl_eos_parameters *, const ghl_conservative_quantities *, fparams_struct *, ghl_primitive_quantities *);
+
+  entropy_func = (double (*)(const double, const ghl_parameters *, const ghl_eos_parameters *, const ghl_conservative_quantities *, fparams_struct *, ghl_primitive_quantities *))brent_objective;
+
+  for (int ir = 0; ir < nr; ir++) {
+    bparams.ir = ir;
+    ghl_brent(entropy_func, NULL, eos, NULL, (fparams_struct*)&bparams, NULL, eos->table_logT[0], eos->table_logT[eos->N_T - 1], &root_params);
+    double temp_beq = root_params.root;
+
+    double ye_beq = eos->Y_e_min;
+    double munu_beq = 0.0;
+    roots_params ye_params = {0};
+    ye_params.tol = 1e-8;
+    ye_params.max_iters = 100;
+
+    double (*ye_func)(const double, const ghl_parameters *, const ghl_eos_parameters *,
+      const ghl_conservative_quantities *, fparams_struct *,
+      ghl_primitive_quantities *);
+
+    ye_func = munu_wrapper;
+    ghl_brent(ye_func, NULL, eos, NULL, (fparams_struct*)&bparams, NULL,
+              eos->table_Y_e[1], eos->table_Y_e[eos->N_Ye-1], &ye_params);
+
+    ye_beq = ye_params.root;
+
+    eos->Ye_of_lr[ir] = ye_beq;
+
+    double P, eps;
+    ghl_tabulated_compute_P_eps_from_T(eos, exp(eos->table_logrho[ir]), ye_beq, temp_beq, &P, &eps);
+    eos->lp_of_lr[ir] = log(P);
+    eos->le_of_lr[ir] = log(eps + eos->energy_shift);
+  }
+}
+
 void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos) {
-  if(eos->Ye_of_lr) {
+  if (eos->Ye_of_lr) {
     free(eos->Ye_of_lr);
     eos->Ye_of_lr = NULL;
   }
-  if(eos->lp_of_lr) {
+  if (eos->lp_of_lr) {
     free(eos->lp_of_lr);
     eos->lp_of_lr = NULL;
   }
-  if(eos->le_of_lr) {
+  if (eos->le_of_lr) {
     free(eos->le_of_lr);
     eos->le_of_lr = NULL;
   }
 }
+
