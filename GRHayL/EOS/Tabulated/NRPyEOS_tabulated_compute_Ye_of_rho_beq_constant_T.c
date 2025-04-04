@@ -5,6 +5,14 @@
   (NRPyEOS_munu_key            \
    + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
 
+#define mu_p_index(ir, it, iy) \
+  (NRPyEOS_mu_p_key            \
+   + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
+   
+#define mu_n_index(ir, it, iy) \
+  (NRPyEOS_mu_n_key            \
+  + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
+
 #define entropy_index(ir, it, iy) \
   (NRPyEOS_entropy_key         \
     + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
@@ -243,7 +251,7 @@ static double entropy_at_Ye_T(
   return entropy_val;
 }
 
-static double munu_at_Ye_T(
+static double mu_p__minus__mu_n__at_Ye_T(
     double Ye,
     double T,
     const int ir,
@@ -265,23 +273,28 @@ static double munu_at_Ye_T(
     return NAN; // Indicate an error
   }
 
-  double *munu_of_Ye = (double *)malloc(sizeof(double) * ny);
-  if (munu_of_Ye == NULL) {
+  double *mu_p__minus__mu_n__of_Ye = (double *)malloc(sizeof(double) * ny);
+  if (mu_p__minus__mu_n__of_Ye == NULL) {
     ghl_error("Memory allocation failed.\n");
     return NAN; // Indicate an error
   }
 
   for (int iy = 0; iy < ny; iy++) {
-    munu_of_Ye[iy] = eos->table_all[munu_index(ir, it, iy)];
+    // munu_of_Ye[iy] = eos->table_all[munu_index(ir, it, iy)];
+    // The above is commented out because this is for beta-equilibrium for a cold, neutrino-less star.
+    // Given constant entropy, with a temperature gradient, we aim to model a newly formed, hot proto-neutron star.
+    // Thus, we need beta-equilibrium, with mu_n + mu_nu = mu_p + mu_e.
+    // --> mu_p - mu_n = 0.
+    mu_p__minus__mu_n__of_Ye[iy] = eos->table_all[mu_p_index(ir, it, iy)] - eos->table_all[mu_n_index(ir, it, iy)];
   }
 
-  double munu_val = linterp(ny, eos->table_Y_e, munu_of_Ye, Ye, find_left_index_uniform_array);
-  free(munu_of_Ye);
-  return munu_val;
+  double mu_p__minus__mu_n_val = linterp(ny, eos->table_Y_e, mu_p__minus__mu_n__of_Ye, Ye, find_left_index_uniform_array);
+  free(mu_p__minus__mu_n__of_Ye);
+  return mu_p__minus__mu_n_val;
 }
 
-// Add a wrapper for munu_at_Ye_T so that it matches the prototype expected by ghl_brent.
-static double munu_wrapper(const double Ye,
+// Add a wrapper for mu_p__minus__mu_n__at_Ye_T so that it matches the prototype expected by ghl_brent.
+static double mu_p__minus__mu_n_wrapper(const double Ye,
                            const ghl_parameters *restrict params,
                            const ghl_eos_parameters *restrict eos,
                            const ghl_conservative_quantities *restrict cons_undens,
@@ -289,7 +302,7 @@ static double munu_wrapper(const double Ye,
                            ghl_primitive_quantities *restrict prims) {
   // Cast back fparams to our brent_params struct.
   brent_params *bparams = (brent_params *)fparams;
-  return munu_at_Ye_T(Ye, bparams->T, bparams->ir, bparams->eos);
+  return mu_p__minus__mu_n__at_Ye_T(Ye, bparams->T, bparams->ir, bparams->eos);
 }
 
 static double brent_objective(
@@ -309,8 +322,8 @@ static double brent_objective(
   root_params.tol = 1e-10; // Adjust tolerance as needed
   root_params.max_iters = 100;
 
-  // Use the wrapper function for munu solve
-  ghl_brent(munu_wrapper, params, eos, cons_undens, fparams, prims,
+  // Use the wrapper function for mu_p__minus__mu_n_wrapper solve
+  ghl_brent(mu_p__minus__mu_n_wrapper, params, eos, cons_undens, fparams, prims,
             bparams->eos->table_Y_e[1],
             bparams->eos->table_Y_e[bparams->eos->N_Ye - 1],
             &root_params);
@@ -354,7 +367,7 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_entropy(
     double temp_beq = root_params.root;
 
     double ye_beq = eos->Y_e_min;
-    double munu_beq = 0.0;
+    // double mu_p__minus__mu_n_wrapper_beq = 0.0;
     roots_params ye_params = {0};
     ye_params.tol = 1e-8;
     ye_params.max_iters = 100;
@@ -363,7 +376,7 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_entropy(
       const ghl_conservative_quantities *, fparams_struct *,
       ghl_primitive_quantities *);
 
-    ye_func = munu_wrapper;
+    ye_func = mu_p__minus__mu_n_wrapper;
     ghl_brent(ye_func, NULL, eos, NULL, (fparams_struct*)&bparams, NULL,
               eos->table_Y_e[1], eos->table_Y_e[eos->N_Ye-1], &ye_params);
 
