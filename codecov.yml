@@ -16,7 +16,7 @@ coverage:
 
 ignore:
   - "Unit_Tests"
-  - "GRHayL/include/unit_tests.h"
+  - "GRHayL/include/ghl_unit_tests.h"
   - "GRHayL/include/ghl_debug.h"
   - "GRHayL/Con2Prim/toms748.c"
 
