@@ -38,14 +38,14 @@ void GRHayLib_paramcheck() {
         CCTK_EQUALS(con2prim_routine, "Font1D") ||
         CCTK_EQUALS(con2prim_routine, "Newman1D_entropy") ) {
       CCTK_VERROR("Selected parameter option for con2prim_routine %s is incompatible with\n"
-                  "hybrid EOS. Please change the routine.", con2prim_routine);
+                  "simple EOS. Please change the routine.", con2prim_routine);
     }
     for(int i=0; i<3; i++) {
       if( CCTK_EQUALS(con2prim_backup_routines[i], "Newman1D_energy")  ||
           CCTK_EQUALS(con2prim_backup_routines[i], "Font1D") ||
           CCTK_EQUALS(con2prim_backup_routines[i], "Newman1D_entropy") ) {
          CCTK_VERROR("Selected parameter option for con2prim_backup_routines[%d] = %s is incompatible with\n"
-                     "hybrid EOS. Please change the routine.", i, con2prim_backup_routines[0]);
+                     "simple EOS. Please change the routine.", i, con2prim_backup_routines[0]);
       }
     }
   } else if( CCTK_EQUALS(EOS_type, "Hybrid") ) {
