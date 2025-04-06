@@ -11,7 +11,7 @@
 
 double ghl_HLL_flux_with_B(
       const double psi6,
-      const HLL_vars *restrict vars) {
+      const ghl_HLL_vars *restrict vars) {
 
   const double c1_sum = vars->c1_min+vars->c1_max;
   const double c2_sum = vars->c2_min+vars->c2_max;
@@ -31,7 +31,7 @@ double ghl_HLL_flux_with_B(
   /*
      Additionally, we need the electric field contribution
      E_z = -(v_x B_y - v_y B_x)
-     For the 2D flux, that means we need to compute
+     That means we need to compute
      E^LL, E^LR, E^RL, and E^RR.
   */
   const double A3_rhs_rr = vars->v1rr*vars->B2r - vars->v2rr*vars->B1r;
