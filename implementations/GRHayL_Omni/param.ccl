@@ -1,0 +1,174 @@
+# Parameter definitions for thorn EOS_Omni
+# Note that these will actually be overwritten by GRHayLib
+
+restricted:
+
+# poly EOS
+REAL poly_gamma "Adiabatic Index for poly EOS" STEERABLE=RECOVER
+{
+ (0:* :: "any positive number"
+} 2.0
+
+
+REAL poly_gamma_initial "Initial Adiabatic Index for poly and hybrid EOS" STEERABLE=RECOVER
+{
+ -1   :: "use poly_gamma/hybrid_gamma, ie no change in gamma during ID"
+ (0:* :: "assume that ID used this adiabiatic index, change K accordingly"
+} -1
+
+REAL poly_k "Polytropic constant in c=G=Msun=1"  STEERABLE=RECOVER
+{
+ : :: ""
+} 100.0
+
+# gamma-law EOS
+REAL gl_gamma "Adiabatic Index for gamma-law EOS" STEERABLE=RECOVER
+{
+ (0:* :: "any positive number"
+} 2.0
+
+REAL gl_k "Polytropic constant in c=G=Msun=1 for gamma-law EOS" STEERABLE=RECOVER 
+{
+ (0:* :: "any positive number"
+} 100.0
+
+########################################################
+# hybrid EOS
+#
+# Now up to ten polytropic pieces
+########################################################
+
+REAL hybrid_gamma_th "Thermal gamma for hybrid EOS" STEERABLE=RECOVER
+{
+ (0:* :: "any positive number"
+} 1.5
+
+
+INT n_pieces "Number of polytropic pieces" STEERABLE=RECOVER
+{
+ 1:10 :: "Max 10 pieces"
+} 2
+
+REAL hybrid_gamma[10] "Adiabatic index of each piece" STEERABLE=RECOVER
+{
+ 0    :: "unset"
+ (0:* :: "Any positive"
+} 0.0
+
+REAL hybrid_k0 "K coefficent of the first piece" STEERABLE=RECOVER
+{
+ 0    :: "unset"
+ (0:* :: "Any positive"
+} 0.0
+
+REAL hybrid_rho[9] "Density values at separation points" STEERABLE=RECOVER
+{
+ 0    :: "unset"
+ (0:* :: "Any positive"
+} 0.0
+
+
+####################################################
+# Legacy parameter fow two polytropic pices 
+#
+# To be used if n_piece = 2 and hybrid_gamma[0]=0
+####################################################
+
+REAL hybrid_gamma1 "subnuclear adiabatic Index for hybrid EOS" STEERABLE=RECOVER
+ {
+ (0:* :: "Any positive"
+} 1.325
+ 
+REAL hybrid_gamma2 "subnuclear adiabatic Index for hybrid EOS" STEERABLE=RECOVER
+{
+ (0:* :: "Any positive"
+} 2.5
+
+REAL hybrid_k1 "Polytropic constant in c=G=Msun=1 for hybrid EOS" STEERABLE=RECOVER 
+{
+ (0:* :: "Any positive"
+} 0.4640517
+
+REAL hybrid_rho_nuc "Density at which to switch between gammas; c=G=Msun=1" STEERABLE=RECOVER 
+{
+ (0:* :: "Any positive"
+} 3.238607e-4
+
+
+##############################################################
+################ cold tabulated EOS + gamma-Law
+##############################################################
+
+STRING coldeos_table_name "table name for cold EOS (ASCII)" 
+{
+ .+ :: "Can be anything"
+} "blah.asc"
+
+BOOLEAN coldeos_read_table "Read in cold EOS table?" 
+{
+} "No"
+
+BOOLEAN coldeos_use_thermal_gamma_law "use an additional thermal gamma?"
+{
+} "Yes"
+
+##############################################################
+################ barotropic tabulated EOS + gamma-Law
+##############################################################
+
+STRING barotropiceos_table_name "table name for barotropic EOS (ASCII)" 
+{
+ .+ :: "Can be anything"
+} "blah.asc"
+
+BOOLEAN barotropiceos_read_table "Read in barotropic EOS table?" 
+{
+} "No"
+
+BOOLEAN barotropiceos_use_thermal_gamma_law "use an additional thermal gamma?"
+{
+} "Yes"
+
+REAL barotropiceos_gammath "thermal gamma for barotropic EOS"
+{
+ 1.0:* :: "something"
+} 2.0
+
+##############################################################
+################ Finite-Temperature Nuclear EOS
+##############################################################
+
+BOOLEAN nuceos_read_table "Read in EOS table?" STEERABLE=RECOVER
+{
+} "No"
+
+BOOLEAN do_energy_shift "shift energies around?" STEERABLE=ALWAYS
+{
+} "yes"
+
+BOOLEAN dump_nuceos_table "Dump table in ASCII at beginning" STEERABLE=RECOVER
+{
+} "No"
+
+STRING dump_nuceos_table_name "nuceos dump table name (ASCII)" STEERABLE=RECOVER
+{
+ .+ :: "Can be anything"
+} "blah.asc"
+
+STRING nuceos_table_name "nuceos table name (hdf5)" STEERABLE=RECOVER
+{
+ .+ :: "Can be anything"
+} "blah.h5"
+
+BOOLEAN read_table_on_single_process "read table on one process only and bcast data" STEERABLE=ALWAYS
+{
+} "no"
+
+INT reader_process "read table on this process and bcast data" STEERABLE=ALWAYS
+{
+  0:* :: "read on process N"
+} 0
+
+shares: IO
+
+USES STRING out_dir

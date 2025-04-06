@@ -1,0 +1,15 @@
+Cactus Code Thorn GRHayLib
+Author(s)     : Samuel Cupp
+Note          : This thorn provides a GRHayL-based interface for thorns
+                using EOS_Omni.
+Maintainer(s) : Samuel Cupp
+License       : BSD2
+--------------------------------------------------------------------------
+
+==========
+1. Purpose
+==========
+
+GRHayL_Omni provides EOS_Omni interface functions using GRHayL routines, allowing
+for automatic switching through the standard Cactus paradigm. See GRHayLib for
+full documentation on the core library.
