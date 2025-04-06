@@ -11,22 +11,32 @@ double ghl_shock_detection_ftilde(
   double dP1 = P[PLUS_1] - P[MINUS1];
   double dP2 = P[PLUS_2] - P[MINUS2];
 
+  const double avg1 = 0.5*(P[PLUS_1] + P[MINUS1]);
+  const double avg2 = 0.5*(P[PLUS_2] + P[MINUS2]);
+
   // MODIFICATION TO STANDARD PPM:
   // Cure roundoff error issues when dP1==0 or dP2==0 to 15 or more significant digits.
-  const double avg1=0.5*(P[PLUS_1] + P[MINUS1]);
-  const double avg2=0.5*(P[PLUS_2] + P[MINUS2]);
-  if(fabs(dP1)/avg1<1e-15) dP1=0.0; /* If this is triggered, there is NO shock */
-  if(fabs(dP2)/avg2<1e-15) dP2=0.0; /* If this is triggered alone, there may be a shock. Otherwise if triggered with above, NO shock. */
+  if(fabs(dP1)/avg1 < 1e-15) {
+    /* If this is triggered, there is NO shock */
+    dP1 = 0.0;
+  }
+  if(fabs(dP2)/avg2 < 1e-15) {
+    /* If this is triggered, there may still be a shock */
+    dP2 = 0.0;
+  }
 
-  double dP1_over_dP2=1.0;
+  double dP1_over_dP2 = 1.0;
   if (dP2 != 0.0) dP1_over_dP2 = dP1/dP2;
 
   const double q1 = (dP1_over_dP2 - params->ppm_flattening_omega1) * params->ppm_flattening_omega2;
   const double q2 = fabs(dP1)/MIN(P[PLUS_1], P[MINUS1]);
 
-  // w==0 -> NOT inside a shock
-  // w==1 -> inside a shock
-  const double w = (q2 > params->ppm_flattening_epsilon && q2*( (v_flux_dirn[MINUS1]) - (v_flux_dirn[PLUS_1]) ) > 0.0);
-
-  return MIN(1.0, w*MAX(0.0,q1));
+  // this if statement is equivalent to the w_j variable in the original Colella and Woodward paper
+  if (q2 > params->ppm_flattening_epsilon && q2*( (v_flux_dirn[MINUS1]) - (v_flux_dirn[PLUS_1]) ) > 0.0) {
+    // inside a shock
+    return MIN(1.0, MAX(0.0, q1));
+  } else {
+    // NOT inside a shock
+    return 0.0;
+  }
 }
