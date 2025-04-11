@@ -2,7 +2,6 @@
 
 void NRPyEOS_initialize_hybrid_functions() {
   ghl_hybrid_find_polytropic_index            = &NRPyEOS_find_polytropic_index;
-  ghl_hybrid_find_polytropic_index_from_h     = &NRPyEOS_find_polytropic_index_from_h;
   ghl_hybrid_find_polytropic_index_from_P     = &NRPyEOS_find_polytropic_index_from_P;
   ghl_hybrid_get_K_and_Gamma                  = &NRPyEOS_get_K_and_Gamma;
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts = &NRPyEOS_set_K_ppoly_and_eps_integ_consts;

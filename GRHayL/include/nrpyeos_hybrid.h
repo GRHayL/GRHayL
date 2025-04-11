@@ -11,10 +11,6 @@ int NRPyEOS_find_polytropic_index(
       const ghl_eos_parameters *restrict eos,
       const double rho_in);
 
-int NRPyEOS_find_polytropic_index_from_h(
-      const ghl_eos_parameters *restrict eos,
-      const double h_in);
-
 int NRPyEOS_find_polytropic_index_from_P(
       const ghl_eos_parameters *restrict eos,
       const double P_in);
