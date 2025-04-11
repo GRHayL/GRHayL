@@ -4,7 +4,6 @@
  * Function     : NRPyEOS_find_polytropic_index_from_P()
  * Description  : For a given value of pressure, find the appropriate polytropic index;
  *                usually aliased as ghl_hybrid_find_polytropic_index
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_find_polytropic_index_from_P
 */
 
 int NRPyEOS_find_polytropic_index_from_P(
