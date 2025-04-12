@@ -44,4 +44,4 @@ runs:
         gcovr -r . --gcov-executable "llvm-cov-14 gcov" --keep
       shell: bash
 
-    - uses: codecov/codecov-action@v4
+    - uses: codecov/codecov-action@v5

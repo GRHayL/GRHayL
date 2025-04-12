@@ -7,7 +7,7 @@
 [![Ubuntu-clang](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-Ubuntu-clang.yml/badge.svg)](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-Ubuntu-clang.yml)
 [![MacOS-gcc](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-MacOS-gcc.yml/badge.svg)](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-MacOS-gcc.yml)
 [![MacOS-clang](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-MacOS-clang.yml/badge.svg)](https://github.com/GRHayL/GRHayL/actions/workflows/github-actions-MacOS-clang.yml)
-<!---[![codecov](https://codecov.io/gh/GRHayL/GRHayL/branch/main/graph/badge.svg)](https://codecov.io/gh/GRHayL/GRHayL)-->
+[![codecov](https://codecov.io/gh/GRHayL/GRHayL/branch/main/graph/badge.svg)](https://codecov.io/gh/GRHayL/GRHayL)
 
 The General Relativistic Hydrodynamic Library (GRHayL) is an infrastructure-agnostic
 magnetohydrodynamics code library designed for modular development of GRMHD code.
