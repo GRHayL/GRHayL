@@ -145,11 +145,17 @@ int main(int argc, char **argv) {
   double *cmin;
   double *cmax;
   // Function pointer to allow for loop over fluxes
-  void (*calculate_HLLE_fluxes)(ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
-                              const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
-                              const double, const double, ghl_conservative_quantities *restrict);
+  void (*calculate_HLLE_fluxes)(
+        const int direction,
+        const ghl_eos_parameters *restrict,
+        const ghl_metric_quantities *restrict,
+        ghl_primitive_quantities *restrict,
+        ghl_primitive_quantities *restrict,
+        const double, const double,
+        ghl_conservative_quantities *restrict);
 
   for(int entropy=0; entropy<2; entropy++) {
+    calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_tabulated_entropy : &ghl_calculate_HLLE_fluxes_tabulated;
     // Loop over flux directions (x,y,z)
     for(int flux_dirn=0; flux_dirn<3; flux_dirn++) {
       // Set function pointer to specific function for a given direction
@@ -157,17 +163,14 @@ int main(int argc, char **argv) {
         case 0:
           cmin = cxmin;
           cmax = cxmax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn0_tabulated;
           break;
         case 1:
           cmin = cymin;
           cmax = cymax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn1_tabulated;
           break;
         case 2:
           cmin = czmin;
           cmax = czmax;
-          calculate_HLLE_fluxes          = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn2_tabulated;
           break;
       }
 
@@ -241,8 +244,8 @@ int main(int argc, char **argv) {
 
         ghl_conservative_quantities cons_fluxes;
         calculate_HLLE_fluxes(
-              &prims_r, &prims_l, &eos,
-              &metric_face, cmin[index], cmax[index],
+              flux_dirn, &eos, &metric_face,
+              &prims_r, &prims_l, cmin[index], cmax[index],
               &cons_fluxes);
 
         if( ghl_pert_test_fail(trusted_rho_star_flux[index], cons_fluxes.rho, pert_rho_star_flux[index]) )
