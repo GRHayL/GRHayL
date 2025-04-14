@@ -1,5 +1,14 @@
 #include "ghl_reconstruction.h"
 
+/*
+ * Function     : ghl_ppm_reconstruction_with_steepening()
+ * Description  : reconstructs variables at the points
+ *                    Ur(i) = U(i-1/2+epsilon)
+ *                    Ul(i) = U(i-1/2-epsilon)
+ *                and applies the additional steepening algorithm
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_ppm_reconstruction_with_steepening
+*/
+
 void ghl_ppm_reconstruction_with_steepening(
       const ghl_parameters *restrict params,
       const double pressure[6],

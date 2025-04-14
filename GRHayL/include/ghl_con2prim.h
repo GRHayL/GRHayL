@@ -25,8 +25,8 @@ https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 */
 
 typedef struct ghl_con2prim_diagnostics {
-  int tau_fix;
-  int Stilde_fix;
+  bool tau_fix;
+  bool Stilde_fix;
   bool speed_limited;
   ghl_con2prim_method_t which_routine;
   bool backup[3];

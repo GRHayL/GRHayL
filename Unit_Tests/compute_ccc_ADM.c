@@ -34,7 +34,7 @@ void ghl_test_compute_ccc_ADM(
         double Ax_stencil[3][3][3];
         double Ay_stencil[3][3][3];
         double Az_stencil[3][3][3];
-        induction_interp_vars interp_vars;
+        ghl_induction_interp_vars interp_vars;
 
         // Read in variable at interpolation stencil points from main memory.
         for(int iterz=0; iterz<2; iterz++) {

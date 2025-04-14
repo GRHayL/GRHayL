@@ -1,16 +1,9 @@
 #include "ghl_con2prim.h"
 
-/* Function    : ghl_undensitize_conservatives()
- * Description : Computes undensitized conservatives using the metric
- *
- * Inputs      : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : cons           - ghl_conservative_quantities struct with data
- *                                for the gridpoint of interest
- *
- * Outputs     : cons_undens    - returns undensitized conservative
- *
- */
+/* Function     : ghl_undensitize_conservatives()
+ * Description  : Computes undensitized conservatives using the metric
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_undensitize_conservatives
+*/
 
 void ghl_undensitize_conservatives(
       const double psi6,
@@ -28,11 +21,11 @@ void ghl_undensitize_conservatives(
 
   const double psim6 = 1.0/psi6;
 
-  cons_undens->rho = cons->rho * psim6;
-  cons_undens->SD[0] = cons->SD[0] * psim6;
-  cons_undens->SD[1] = cons->SD[1] * psim6;
-  cons_undens->SD[2] = cons->SD[2] * psim6;
-  cons_undens->tau = cons->tau * psim6;
-  cons_undens->Y_e = cons->Y_e * psim6;
+  cons_undens->rho     = cons->rho * psim6;
+  cons_undens->SD[0]   = cons->SD[0] * psim6;
+  cons_undens->SD[1]   = cons->SD[1] * psim6;
+  cons_undens->SD[2]   = cons->SD[2] * psim6;
+  cons_undens->tau     = cons->tau * psim6;
+  cons_undens->Y_e     = cons->Y_e * psim6;
   cons_undens->entropy = cons->entropy * psim6;
 }

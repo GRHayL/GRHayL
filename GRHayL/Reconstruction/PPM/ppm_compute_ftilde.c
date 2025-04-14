@@ -1,5 +1,12 @@
 #include "ghl_reconstruction.h"
 
+/*
+ * Function     : ghl_compute_ftilde()
+ * Description  : computes flattening parameters needed
+ *                by ppm_reconstruction functions
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_ftilde
+*/
+
 void ghl_compute_ftilde(
       const ghl_parameters *restrict params,
       const double pressure[6],

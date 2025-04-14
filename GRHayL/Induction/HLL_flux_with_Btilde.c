@@ -10,7 +10,7 @@
 */
 
 double ghl_HLL_flux_with_Btilde(
-      const HLL_vars *restrict vars) {
+      const ghl_HLL_vars *restrict vars) {
 
   const double c1_sum = vars->c1_min+vars->c1_max;
   const double c2_sum = vars->c2_min+vars->c2_max;

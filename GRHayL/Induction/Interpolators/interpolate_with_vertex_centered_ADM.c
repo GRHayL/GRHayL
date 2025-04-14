@@ -15,7 +15,7 @@ void ghl_interpolate_with_vertex_centered_ADM(
       const double Ay_stencil[3][3][3],
       const double Az_stencil[3][3][3],
       const double phitilde,
-      induction_interp_vars *restrict interp_vars) {
+      ghl_induction_interp_vars *restrict interp_vars) {
   /* Compute \partial_t psi6phi = -\partial_i (  \alpha psi^6 A^i - psi6phi \beta^i)
    *    (Eq 13 of http://arxiv.org/pdf/1110.4633.pdf), using Lorenz gauge.
    * Note that the RHS consists of a shift advection term on psi6phi and
