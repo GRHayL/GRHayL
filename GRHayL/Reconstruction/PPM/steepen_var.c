@@ -6,7 +6,6 @@
  *                reconstructed variable var
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_steepen_var
 */
-
 void ghl_steepen_var(
       const ghl_parameters *restrict params,
       const double rho[5],

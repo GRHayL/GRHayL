@@ -1,19 +1,20 @@
 /** 
  * @defgroup EOS EOS Gem
  *
- * # Introduction
+ * @brief The @geos gem implements various nuclear equation-of-state (EOS)
+ *        schemes.
  *
- * The @geos gem provides provides all the core routines to implement GRMHD
- * code for both hybrid and tabulated equations of state. Additionally, we
- * provide a simplified hybrid EOS. This is often referred to as the
- * 'ideal fluid' or 'ideal gas' EOS despite the fact that all of these
- * are ideal fluid EOS. This EOS is primarily only of interest for comparing
- * against known results such as the Balsara tests.
+ * This includes all the core routines to implement GRMHD code for both
+ * hybrid and tabulated equations of state. Additionally, we provide
+ * a simplified hybrid EOS. This is often referred to as the 'ideal fluid'
+ * or 'ideal gas' EOS despite the fact that all of these are ideal
+ * fluid EOS. This EOS is primarily only of interest for comparing against
+ * known results such as the Balsara tests.
  *
  * ## Hybrid EOS
  *
  * The hybrid EOS splits the pressure into cold and thermal components, and
- * the behavior of the thermal part is controlled with $\Gamma\_\mathrm{th}$
+ * the behavior of the thermal part is controlled with \f$ \Gamma_\mathrm{th} \f$
  * (see ghl_eos_parameters and ghl_initialize_hybrid_eos for implementation
  * specifics). The EOS also contains the needed infrastructure for using
  * piecewise polytropes, which allows the hybrid EOS to better approximate

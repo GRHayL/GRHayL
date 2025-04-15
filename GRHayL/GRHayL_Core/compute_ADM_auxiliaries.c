@@ -9,11 +9,11 @@
  * data and computes all the elements of the ghl_ADM_aux_quantities
  * struct.
  *
- * @param[in] ADM_metric: pointer to a ghl_metric_quantities struct.
- *                        This contains the input ADM metric data.
+ * @param[in] ADM_metric:  pointer to a ghl_metric_quantities struct.
+ *                         This contains the input ADM metric data.
  * 
- * @param[out] ADM_aux:   pointer to a ghl_ADM_aux_quantities struct.
- *                        This will be filled with computed auxiliary quantities.
+ * @param[out] metric_aux: pointer to a ghl_ADM_aux_quantities struct.
+ *                         This will be filled with computed auxiliary quantities.
  * 
  * @returns void
  */

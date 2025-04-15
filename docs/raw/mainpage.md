@@ -11,13 +11,13 @@ The core @grhayl "chalice" provides core connective tissue in the form of C stru
 and very simple functions that act only on these structs. Adding onto [GRHayL_Core](@ref GRHayL_Core) are
 several gems which provide specific features. These currently include
 
-- [Atmosphere](@ref Atmosphere)
-- [Con2Prim](@ref Con2Prim)
-- [EOS](@ref EOS)
-- [Flux_Source](@ref Flux_Source)
-- [Induction](@ref Induction)
-- [Neutrinos](@ref Neutrinos)
-- [Reconstruction](@ref Reconstruction)
+- @ref Atmosphere
+- @ref Con2Prim
+- @ref EOS
+- @ref Flux_Source
+- @ref Induction
+- @ref Neutrinos
+- @ref Reconstruction
 
 Each gem implements infrastructure-agnostic functions for computing quantities for
 GRMHD simulations.
@@ -47,7 +47,7 @@ $ brew install hdf5
 We have not tested @grhayl with [macports](https://www.macports.org/), although
 we do not expect users to have issues when using it.
 
-The `HDF5` dependency arises from the tabulated Equation of State (EOS) gem, as
+The `HDF5` dependency arises from the tabulated equation of state implementation, as
 it currently only supports EOS tables in that format. We are also
 working supporting tables in the [CompOSE](https://compose.obspm.fr/table)
 format, which would allow for use of the tabulated EOS without `HDF5`.

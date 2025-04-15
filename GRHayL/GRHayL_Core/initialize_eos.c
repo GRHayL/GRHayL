@@ -40,7 +40,7 @@ ghl_error_codes_t (*ghl_con2prim_multi_method)(
  * @ref ghl_con2prim_hybrid_multi_method or
  * @ref ghl_con2prim_tabulated_multi_method depending on the chosen EOS.
  *
- * @param[in] @ref eos_type_t enum designating the type of EOS being initialized
+ * @param[in] eos_type: @ref eos_type_t enum designating the type of EOS being initialized
  * 
  * @returns void
  */
@@ -308,11 +308,11 @@ void ghl_initialize_hybrid_eos(
  *
  * @param[in] rho_max:        maximum allowed density
  *
- * @param[in] Ye_atm:         atmosphere electron fraction
+ * @param[in] Y_e_atm:        atmosphere electron fraction
  *
- * @param[in] Ye_min:         minimum allowed electron fraction
+ * @param[in] Y_e_min:        minimum allowed electron fraction
  *
- * @param[in] Ye_max:         maximum allowed electron fraction
+ * @param[in] Y_e_max:        maximum allowed electron fraction
  *
  * @param[in] T_atm:          atmosphere temperature
  *

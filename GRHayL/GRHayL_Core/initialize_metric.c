@@ -12,9 +12,9 @@
  *
  * @param[in] alpha: lapse \f$ \alpha \f$
  *
- * @param[in] beta:  shift \f$ \beta^\mu \f$
+ * @param[in] betax, betay, betaz: components of the shift \f$ \beta^i \f$
  *
- * @param[in] gxx, gxy, gxz, gyy, gyz, gzz: components of the 3-metric \f$ g_{xx} \f$
+ * @param[in] gxx, gxy, gxz, gyy, gyz, gzz: components of the 3-metric \f$ g_{i j} \f$
  *
  * @param[out] metric: pointer to ghl_metric_quantities struct
  *
