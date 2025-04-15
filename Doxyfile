@@ -51,6 +51,7 @@ EXTRACT_STATIC  = YES
 
 MARKDOWN_SUPPORT       = YES
 
+# Code aliases
 ALIASES += grhayl="<code class='highlighted-code'>GRHayL</code>"
 ALIASES += gcore="<code class='highlighted-code'>GRHayL_Core</code>"
 ALIASES += gatm="<code class='highlighted-code'>Atmosphere</code>"
@@ -60,6 +61,13 @@ ALIASES += gfs="<code class='highlighted-code'>Flux_Source</code>"
 ALIASES += ginduct="<code class='highlighted-code'>Induction</code>"
 ALIASES += gneut="<code class='highlighted-code'>Neutrinos</code>"
 ALIASES += grecon="<code class='highlighted-code'>Reconstruction</code>"
+
+# Space formatting aliases for manual space configuring
+ALIASES += "sp2=\htmlonly &nbsp;&nbsp;\endhtmlonly"
+ALIASES += "sp4=\htmlonly &nbsp;&nbsp;&nbsp;&nbsp;\endhtmlonly"
+ALIASES += "sp6=\htmlonly &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\endhtmlonly"
+ALIASES += "sp8=\htmlonly &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\endhtmlonly"
+ALIASES += "sp10=\htmlonly &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\endhtmlonly"
 
 # HTML
 GENERATE_HTML          = YES

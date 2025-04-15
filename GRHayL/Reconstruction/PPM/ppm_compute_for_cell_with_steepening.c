@@ -1,14 +1,39 @@
 #include "ghl_reconstruction.h"
 
-/*
- * Function     : ghl_ppm_compute_for_cell_with_steepening()
- * Description  : reconstructs variables at the points
- *                    Ur(i) = U(i-1/2+epsilon)
- *                    Ul(i) = U(i+1/2-epsilon)
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_ppm_compute_for_cell_with_steepening
-*/
-
-#define SLOPE_LIMITER_COEFF 2.0
+/**
+ * @ingroup ppm
+ * @brief Reconstructs variables at the points  
+ * @sp10 \f$ Ur(i) = U \left(i-\frac{1}{2} + \epsilon \right) \f$  
+ * @sp10 \f$ Ul(i) = U \left(i+\frac{1}{2} - \epsilon \right) \f$
+ *
+ * @details
+ * This function computes the right and left face values of a cell for a
+ * single variable using the piecewise parabolic method (PPM). As this
+ * function is nearly identical to @ref ghl_ppm_compute_for_cell, we do
+ * not repeat the full discussion of the PPM method here. Instead, we
+ * simply discuss the key difference between the functions. This function
+ * applies an additional steepening algorithm to the given variable. This
+ * is normally used for the density, as the density profile should be
+ * narrowed in the presence of the contact discontinuity (see e.g. Appendix I
+ * of [Mart\i{} and M\"uller](https://www.sciencedirect.com/science/article/pii/S0021999196900017)).
+ * This procedure is implemented via the @ref ghl_steepen_var function.
+ *
+ * @param[in] params:   pointer to ghl_parameters struct
+ *
+ * @param[in] pressure: 1D array containing stencil for the pressure
+ *
+ * @param[in] Gamma_eff: value of \f$ \Gamma \f$ to be used during the steepening procedure
+ *
+ * @param[in] ftilde:  \f$ \tilde{f} \f$ for the flattening procedure
+ *
+ * @param[in] U:       1D array containing stencil of variable to reconstruct
+ *
+ * @param[out] Ur_ptr: pointer to a double; set to the value of the right face
+ *
+ * @param[out] Ul_ptr: pointer to a double; set to the value of the left face
+ *
+ * @returns void
+ */
 void ghl_ppm_compute_for_cell_with_steepening(
       const ghl_parameters *restrict params,
       const double pressure[5],

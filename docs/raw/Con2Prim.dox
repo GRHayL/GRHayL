@@ -1,41 +1,49 @@
 /** 
  * @defgroup Con2Prim Con2Prim Gem
  *
- * # Introduction
+ * @brief The @gc2p gem provides conservative-to-primitive variable solvers,
+ *        auxiliary functions, a primitive-to-conservative function, etc.
  *
- * The @gc2p gem provides a variety of conservative-to-primitive routines
- * for both hybrid and tabulated equation of state. There is no (known)
- * closed-form solution that allows for directly computing the primitive
- * variables from the conservative variables, so this inversion must be
- * done numerically using an iterative solver. Here we briefly describe
- * the provided @gc2p methods and link to the function documentation pages.
+ * There is no (known) closed-form solution that allows for directly computing
+ * the primitive variables from the conservative variables, so this inversion
+ * must be done numerically using an iterative solver. This gem also provides some
+ * other auxiliary functions, such as computing the conservatives and
+ * stress-energy tensor from the primitive variables.
  * 
- * ## Hybrid EOS
+ * The solvers are split by the types of EOS they support, which are detailed
+ * more explicitly within the documentation subpages.
+ */
+
+/**
+ * @defgroup hyb_c2p Hybrid EOS Con2Prim
+ * @ingroup Con2Prim
  * 
  * The routines provided for the hybrid (a.k.a. piecewise polytrope)
  * equation of state are given in the table below.
  * 
  * | Method                    | Function Name                   | Method Paper |
  * |:-------------------------:|:-------------------------------:|:------------:|
- * | Noble2D                   | ghl_hybrid_Noble2D              | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420) |
- * | Noble1D                   | ghl_hybrid_Noble1D              | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420) |
- * | Noble1D with entropy      | ghl_hybrid_Noble1D_entropy      | [Noble _et al._ (2009)](https://arxiv.org/abs/0808.3140) |
- * | Font1D                    | ghl_hybrid_Font1D               | [Font _et al._ (2000)](https://arxiv.org/abs/gr-qc/9811015) |
- * | Palenzuela1D              | ghl_hybrid_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
- * | Palenzuela1D with entropy | ghl_hybrid_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
+ * | Noble2D                   | @ref ghl_hybrid_Noble2D              | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420) |
+ * | Noble1D                   | @ref ghl_hybrid_Noble1D              | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420) |
+ * | Noble1D with entropy      | @ref ghl_hybrid_Noble1D_entropy      | [Noble _et al._ (2009)](https://arxiv.org/abs/0808.3140) |
+ * | Font1D                    | @ref ghl_hybrid_Font1D               | [Font _et al._ (2000)](https://arxiv.org/abs/gr-qc/9811015) |
+ * | Palenzuela1D              | @ref ghl_hybrid_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
+ * | Palenzuela1D with entropy | @ref ghl_hybrid_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
  * 
  * The simple EOS can also use all these methods **except** for Font1D which
  * assumes that there's a split between cold and thermal parts.
+ */
+
+/**
+ * @defgroup tab_c2p Tabulated EOS Con2Prim
+ * @ingroup Con2Prim
  * 
- * ## Tabulated EOS
- * 
- * The routines provided for the tabulated equation
- * of state are given in the table below.
+ * The routines provided for the tabulated equation of state are given in the table below.
  * 
  * | Method                    | Function Name                   | Method Paper |
  * |:-------------------------:|:-------------------------------:|:------------:|
- * | Newman1D                  | ghl_Newman1D_energy             | [Newman & Hamlin (2014)](https://epubs.siam.org/doi/10.1137/140956749) |
- * | Newman1D with entropy     | ghl_Newman1D_entropy            | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
- * | Palenzuela1D              | ghl_hybrid_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
- * | Palenzuela1D with entropy | ghl_hybrid_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
+ * | Newman1D                  | @ref ghl_Newman1D_energy             | [Newman & Hamlin (2014)](https://epubs.siam.org/doi/10.1137/140956749) |
+ * | Newman1D with entropy     | @ref ghl_Newman1D_entropy            | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
+ * | Palenzuela1D              | @ref ghl_hybrid_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
+ * | Palenzuela1D with entropy | @ref ghl_hybrid_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
  */

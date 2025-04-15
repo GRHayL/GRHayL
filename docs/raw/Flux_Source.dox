@@ -1,16 +1,17 @@
 /** 
  * @defgroup Flux_Source Flux_Source Gem
  *
- * # Introduction
+ * @brief The @gfs gem provides functions for computing the flux and
+          source terms in the evolution equations of the hydrodynamic
+          variables.
  *
- * The @gfs gem provides the functions necessary to compute the right-hand
- *sides (RHS) for the hydrodynamic variables. This includes computing characteristic
- * speeds, fluxes, and RHS source terms. The currently available flux method uses
- * HLLE flux-conservative approach, and the primitive variable inputs are expected
- * to be at cell faces. To compute these, see the [Reconstruction gem](@ref Reconstruction)
- * on how to reconstruct variables using @grhayl. The source terms also require
- * metric derivatives, and these can be computed in whatever way is most natural
- * to the surrounding code and provided as input to those functions.
+ * This includes computing characteristic speeds, fluxes, and RHS source terms.
+ * The currently available flux method uses HLLE flux-conservative approach,
+ * and the primitive variable inputs are expected to be at cell faces. To compute
+ * these, see the @ref Reconstruction gem on how to reconstruct variables
+ * using @grhayl. The source terms also require metric derivatives, and these
+ * can be computed in whatever way is most natural to the surrounding code
+ * and provided as input to those functions.
  *
  * # EOS-specific functions
  *
@@ -19,8 +20,8 @@
  * is being evolved, additional fluxes need to be computed by the function.
  * The general form and behavior of the function are documented on the
  * ghl_calculate_HLLE_fluxes page. These pointers are automatically set to the
- * correct function by the EOS function initialization, but they can also be
- * directly accessed by using e.g.
+ * correct function by the @ref GRHayL_Core EOS initialization functions,
+ * but they can also be directly accessed by using e.g.
  *
  * - ghl_calculate_HLLE_fluxes_dirn0_hybrid
  * - ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy

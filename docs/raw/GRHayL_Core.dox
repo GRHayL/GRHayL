@@ -1,15 +1,16 @@
 /** 
  * @defgroup GRHayL_Core GRHayL_Core
  *
- * The @gcore module provides access to core routines and functions not specific
- * to a single gem. This includes functions for packing structs using data from grid
- * functions, computing elements of an auxiliary struct, raising/lowering operators,
- * and computing the stress-energy tensor.
+ * @brief The @gcore module provides core functions for interfacing with @grhayl structs.
+ *
+ * This includes functions for packing structs using data from grid functions, computing
+ * elements of an auxiliary struct, raising/lowering operators, and computing the
+ * stress-energy tensor.
  *
  * Generally, we recommend using one of the `ghl_initialize_*_eos_functions_and_params`
- * to initialize the EOS struct, as it makes sure that everything is set according
- * to the input parameters. We also encourage use of the `ghl_compute_*` functions
- * to fill structs instead of manually computing and packing the associated structs.
+ * to initialize the ghl_eos_parameters struct, as it makes sure that everything
+ * is set according to the input parameters. We also encourage use of the `ghl_compute_*`
+ * functions to fill structs instead of manually computing and packing the associated structs.
  * The raising and lowering operator functions are very simple, and they are designed
  * to be usable with both @grhayl metric structs and user-defined arrays (so long as
  * they are indexed the same as the @grhayl metric array). Other functions are

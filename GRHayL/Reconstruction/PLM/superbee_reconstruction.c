@@ -1,13 +1,73 @@
 #include "ghl_reconstruction.h"
 
-/*
- * Function     : ghl_superbee_reconstruction()
- * Description  : reconstructs variables at the points
- *                    Ur(i) = U(i-1/2+epsilon)
- *                    Ul(i) = U(i-1/2-epsilon)
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_superbee_reconstruction
-*/
-
+/**
+ * @ingroup plm
+ * @brief Reconstructs variables at the points  
+ * @sp10 \f$ Ur(i) = U \left(i-\frac{1}{2} + \epsilon \right) \f$  
+ * @sp10 \f$ Ul(i) = U \left(i-\frac{1}{2} - \epsilon \right) \f$
+ *
+ * @details
+ * This function computes the right and left values of the left face of variable \f$ U \f$
+ * using the superbee method. For example, to reconstruct the values for the face
+ * \f$ i-\frac{1}{2} \f$, the array \f$ U \f$ should contain a stencil centered
+ * around that face (i.e. values from \f$ i-2 \f$ to \f$ i+1 \f$). For the right
+ * side value `Ur`,
+ *
+ * \f[
+ * U_R \equiv U_{i+\epsilon-1/2} = U_i - \frac{\Delta U}{2}
+ * \f]
+ *
+ * where \f$ \Delta U \f$ is determined by using the @ref ghl_maxmod and @ref ghl_minmod
+ * functions. Specifically, it is computed as
+ *
+ * \f[
+ * \Delta U = \mathrm{maxmod}(\sigma_1,\ \sigma_2)
+ * \f]
+ *
+ * where
+ *
+ * \f[
+ * \sigma_1 = \mathrm{minmod}\left( U_{i} - U_{i-1},\ 2(U_{i+1} - U_{i}) \right)
+ * \f]
+ *
+ * and
+ *
+ * \f[
+ * \sigma_2 = \mathrm{minmod}\left( 2(U_{i} - U_{i-1}),\ U_{i+1} - U_{i} \right)
+ * \f]
+ *
+ * Similarly, the left side value `Ul`
+ *
+ * \f[
+ * U_L \equiv U_{i-\epsilon-1/2} = U_{i-1} + \frac{\Delta U}{2}
+ * \f]
+ *
+ * uses
+ *
+ * \f[
+ * \Delta U = \mathrm{maxmod}(\sigma_1,\ \sigma_2)
+ * \f]
+ *
+ * where
+ *
+ * \f[
+ * \sigma_1 = \mathrm{minmod}\left( U_{i-1} - U_{i-2},\ 2(U_{i} - U_{i-1}) \right)
+ * \f]
+ *
+ * and
+ *
+ * \f[
+ * \sigma_2 = \mathrm{minmod}\left( 2(U_{i-1} - U_{i-2}),\ U_{i} - U_{i-1} \right)
+ * \f]
+ *
+ * @param[in] U:   1D array containing values of variable \f$ U \f$
+ *
+ * @param[out] Ur: pointer to a double; set to the value of the right side of the face
+ *
+ * @param[out] Ul: pointer to a double; set to the value of the left side of the face
+ *
+ * @returns void
+ */
 void ghl_superbee_reconstruction(
       const double U[4],
       double *restrict Ur,

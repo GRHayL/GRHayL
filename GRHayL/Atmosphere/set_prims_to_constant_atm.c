@@ -3,6 +3,7 @@
 /**
  * @ingroup Atmosphere
  * @brief Set the primitives to a constant density atmosphere
+ *
  * @details
  * This function sets the given primitive struct to a constant
  * density atmosphere using the provided EOS information. Velocities
@@ -10,7 +11,9 @@
  *
  * @param[in] eos:     pointer to ghl_eos_parameters struct.
  *
- * @param[out] params: pointer to ghl_primitive_quantities struct.
+ * @param[out] prims: pointer to ghl_primitive_quantities struct.
+ *
+ * @returns void
 */
 
 void ghl_set_prims_to_constant_atm(
