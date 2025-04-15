@@ -1,0 +1,12 @@
+/** 
+ * @defgroup Atmosphere Atmosphere Gem
+ *
+ * # Introduction
+ *
+ * The @gatm gem provides atmosphere prescriptions for setting primitives to atmosphere.
+ * Currently, only a single prescription is provided.
+ *
+ * # Available prescriptions
+ *
+ * [constant density atmosphere](ghl_set_prims_to_constant_atm)
+ */
