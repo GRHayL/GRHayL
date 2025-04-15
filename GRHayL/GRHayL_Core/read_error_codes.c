@@ -1,5 +1,17 @@
 #include "ghl.h"
 
+/**
+ * @ingroup GRHayL_Core
+ * @brief Read a @grhayl error code variable for any errors
+ *
+ * @details
+ * This function reads returned error code values and checks for errors.
+ * It aborts in the case of any fatal errors.
+ *
+ * @param[in] error: error code (from @ref ghl_error_codes_t enum) to check
+ *
+ * @returns void
+ */
 void ghl_read_error_codes(
       const ghl_error_codes_t error) {
   switch(error) {

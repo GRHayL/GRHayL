@@ -1,11 +1,22 @@
 #include "ghl.h"
 
-/*
- * Function     : ghl_compute_ADM_auxiliaries()
- * Description  : Initialize the metric struct from user input
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_ADM_auxiliaries
-*/
-
+/**
+ * @ingroup pack_struct
+ * @brief Initialize the metric struct from user input
+ *
+ * @details
+ * This function takes a ghl_metric_quantities struct with ADM metric
+ * data and computes all the elements of the ghl_ADM_aux_quantities
+ * struct.
+ *
+ * @param[in] ADM_metric: pointer to a ghl_metric_quantities struct.
+ *                        This contains the input ADM metric data.
+ * 
+ * @param[out] ADM_aux:   pointer to a ghl_ADM_aux_quantities struct.
+ *                        This will be filled with computed auxiliary quantities.
+ * 
+ * @returns void
+ */
 void ghl_compute_ADM_auxiliaries(
       const ghl_metric_quantities *restrict ADM_metric,
       ghl_ADM_aux_quantities *restrict metric_aux) {

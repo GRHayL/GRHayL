@@ -1,12 +1,34 @@
 #include "ghl.h"
 
-/*
- * Function     : ghl_return_primitives()
- * Description  : Unpacks ghl_primitive_quantities struct data into provided
- *                provided memory locations
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_return_primitives
-*/
-
+/**
+ * @ingroup pack_struct
+ * @brief Unpacks primitive variable struct into provided provided memory locations
+ *
+ * @details
+ * This function takes data from the ghl_primitive_quantities struct and
+ * unpacks (i.e. copies) the data into the memory locations passed to the
+ * function.
+ *
+ * @param[in] prims:        pointer to ghl_primitive_quantities struct
+ *
+ * @param[out] rho:         pointer to baryonic density \f$ \rho \f$
+ *
+ * @param[out] press:       pointer to fluid pressure \f$ P \f$
+ *
+ * @param[out] epsilon:     pointer to TODO: \f$ \epsilon \f$
+ *
+ * @param[out] vx, vy, vz:  pointer to components of the fluid velocity \f$ v^i \f$
+ *
+ * @param[out] Bx, By, Bz:  pointer to components of the magnetic field \f$ B^i \f$
+ *
+ * @param[out] entropy:     pointer to fluid entropy
+ *
+ * @param[out] Y_e:         pointer to fluid electron fraction
+ *
+ * @param[out] temperature: pointer to fluid temperature
+ *
+ * @returns void
+ */
 void ghl_return_primitives(const ghl_primitive_quantities *restrict prims,
       double *restrict rho, double *restrict press, double *restrict epsilon,
       double *restrict vx, double *restrict vy, double *restrict vz,

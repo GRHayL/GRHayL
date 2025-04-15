@@ -1,5 +1,28 @@
 #include "ghl.h"
 
+/**
+ * @ingroup pack_struct
+ * @brief Initialize the metric struct from user input
+ *
+ * @details
+ * As with @ref ghl_initialize_metric, this function takes pointwise
+ * information about the spacetime and uses it to initialize every
+ * element of the given ghl_metric_quantities struct. However, this
+ * function takes the additional steps of ensuring that the metric
+ * is conformally flat by computing the BSSN metric and enforcing
+ * that the determinant is 1. It then computes the ADM metric from
+ * the resulting BSSN metric.
+ *
+ * @param[in] alpha: lapse \f$ \alpha \f$
+ *
+ * @param[in] beta:  shift \f$ \beta^\mu \f$
+ *
+ * @param[in] gxx, gxy, gxz, gyy, gyz, gzz: components of the 3-metric \f$ g_{xx} \f$
+ *
+ * @param[out] ADM_metric: pointer to ghl_metric_quantities struct
+ *
+ * @returns void
+ */
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax,

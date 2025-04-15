@@ -1,11 +1,57 @@
 #include "ghl.h"
 
-/*
- * Function     : ghl_initialize_params()
- * Description  : Initialize the ghl_parameters struct from user input
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_params
-*/
-
+/**
+ * @ingroup pack_struct
+ * @brief Initialize the @grhayl parameter struct from user input
+ *
+ * @details
+ * This function sets all the elements of the ghl_parameters
+ * struct based on the inputs. These are used to control the
+ * behavior of various aspects of the GRHayL library. In addition
+ * to the input parameters, several others are set to their defaults.
+ *
+ * The Con2Prim parameters are set to the defaults of
+ * ```
+ * con2prim_max_iterations   = 30
+ * con2prim_solver_tolerance = 1e-10
+ * ```
+ *
+ * The PPM reconstruction parameters are set to the defaults of
+ * ```
+ * ppm_flattening_epsilon = 0.33
+ * ppm_flattening_omega1  = 0.75
+ * ppm_flattening_omega2  = 10.0
+ * ppm_shock_k0           = 0.1
+ * ppm_shock_eta1         = 20.0
+ * ppm_shock_eta2         = 0.05
+ * ppm_shock_epsilon      = 0.01
+ * ```
+ * which come from the original Colella and Woodward [paper](https://www.sciencedirect.com/science/article/abs/pii/0021999184901438?via%3Dihub).
+ *
+ * @param[in] main_routine:          selects the primary conservative-to-primitive routine for @ref ghl_con2prim_multi_method
+ *                                   function; options are limited to the @ref ghl_con2prim_method_t enum
+ *
+ * @param[in] backup_routine:        selects backup conservative-to-primitive routines for @ref ghl_con2prim_multi_method
+ *                                   function; up to 3 backups can be selected, with no backup being -1; options are
+ *                                   limited to the @ref ghl_con2prim_method_t enum
+ *
+ * @param[in] evolve_entropy:        whether entropy should be evolved (True) or not (False)
+ *
+ * @param[in] evolve_temp:           whether temperature should be evolved (True) or not (False)
+ *
+ * @param[in] calc_prim_guess:       sets whether the provided ghl_primitive_quantities struct contains an initial
+ *                                   Con2Prim guess for the ghl_con2prim_multi_method function
+ *
+ * @param[in] psi6threshold:         upper limit of \f$ \psi^6 = \sqrt{|\gamma|} \f$ above which the limits on conservatives and primitives are adjusted
+ *
+ * @param[in] max_Lorentz_factor:    maximum allowed Lorenz factor \f$ W \f$ in the simulation
+ *
+ * @param[in] Lorenz_damping_factor: sets the damping factor for the Lorenz gauge term in \f$ \tilde{\Phi}^\mathrm{RHS} \f$
+ *
+ * @param[out] params:               pointer to fully initialized ghl_parameters struct
+ * 
+ * @returns void
+ */
 void ghl_initialize_params(
       const ghl_con2prim_method_t main_routine,
       const ghl_con2prim_method_t backup_routine[3],

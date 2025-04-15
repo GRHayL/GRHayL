@@ -1,20 +1,22 @@
 #include "ghl_atmosphere.h"
 
-/*
- * Function      : ghl_set_prims_to_constant_atm()
- * Description   : Uses the EOS data to reset the primitives to
- *                 constant density atmosphere
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_set_prims_to_constant_atm
+/**
+ * @ingroup Atmosphere
+ * @brief Set the primitives to a constant density atmosphere
+ * @details
+ * This function sets the given primitive struct to a constant
+ * density atmosphere using the provided EOS information. Velocities
+ * are set to zero.
+ *
+ * @param[in] eos:     pointer to ghl_eos_parameters struct.
+ *
+ * @param[out] params: pointer to ghl_primitive_quantities struct.
 */
 
 void ghl_set_prims_to_constant_atm(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims) {
 
-  // Just a simple reset to atmospheric values.
-  // Velocities are set to zero. Keeping it
-  // inside a single function ensures that
-  // resets are consistent throughout the code.
   prims->rho         = eos->rho_atm;
   prims->press       = eos->press_atm;
   prims->eps         = eos->eps_atm;
