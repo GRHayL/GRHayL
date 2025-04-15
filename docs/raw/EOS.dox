@@ -1,0 +1,46 @@
+/** 
+ * @defgroup EOS EOS Gem
+ *
+ * # Introduction
+ *
+ * The @geos gem provides provides all the core routines to implement GRMHD
+ * code for both hybrid and tabulated equations of state. Additionally, we
+ * provide a simplified hybrid EOS. This is often referred to as the
+ * 'ideal fluid' or 'ideal gas' EOS despite the fact that all of these
+ * are ideal fluid EOS. This EOS is primarily only of interest for comparing
+ * against known results such as the Balsara tests.
+ *
+ * ## Hybrid EOS
+ *
+ * The hybrid EOS splits the pressure into cold and thermal components, and
+ * the behavior of the thermal part is controlled with $\Gamma\_\mathrm{th}$
+ * (see ghl_eos_parameters and ghl_initialize_hybrid_eos for implementation
+ * specifics). The EOS also contains the needed infrastructure for using
+ * piecewise polytropes, which allows the hybrid EOS to better approximate
+ * tabulated EOS without the computational expense of the full tabulated approach.
+ *
+ *
+ * ## Tabulated EOS
+ *
+ * The tabulated EOS uses a table of computed values for many quantities to
+ * define the EOS. This EOS requires many interpolations between table
+ * entries, as well as the ability to solve for one table variable when
+ * given other elements of the table. @grhayl provides all the code
+ * required to both read, interpolate, and compute variables in the table.
+ *
+ * # EOS initialization
+ *
+ * Setting up the EOS using @grhayl consists of two steps. First, a
+ * ghl_eos_parameters struct should be declared once per simulation (the
+ * specifics of this depend on the infrastructure). For long simulations
+ * with checkpoint/restart, simply re-initializing the struct on restart is
+ * generally the best solution. This struct can then be initialized by using
+ * one of these functions:
+ *
+ * - ghl_initialize_simple_eos_functions_and_params
+ * - ghl_initialize_hybrid_eos_functions_and_params
+ * - ghl_initialize_tabulated_eos_functions_and_params
+ *
+ * which will properly set up all the function pointers and struct parameters
+ * for the chosen EOS.
+ */
