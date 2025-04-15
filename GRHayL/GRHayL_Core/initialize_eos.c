@@ -8,6 +8,17 @@
   eos->rho_min           = rho_min;        \
   eos->rho_max           = rho_max;
 
+/**
+ * @ingroup eos_init
+ *
+ * @brief Function pointer to the (EOS-specified) con2prim_multi_method
+ *        function.
+ *
+ * @details This variable stores the pointer to the correct multi_method
+ *          function, which allows for users to call a single function
+ *          which is set at runtime to the correct method. This implementation
+ *          allows for more separation of the EOS and Con2Prim gems.
+ */
 ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -17,12 +28,21 @@ ghl_error_codes_t (*ghl_con2prim_multi_method)(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-/*
- * Function    : ghl_initialize_eos_functions()
- * Description : Initializes function pointers in EOS struct to NRPyEOS
+/**
+ * @ingroup eos_init
+ * @brief Initializes function pointers in EOS struct to NRPyEOS
  *
- * Input/Output: eos - ghl_eos_parameters struct with the function pointers
- *                     initialized
+ * @details
+ * This function initializes the EOS function pointers to the NRPyEOS
+ * implementation provided by GRHayL. It handles all provided EOS with
+ * the argument steering how the pointers are initialized. Additionally,
+ * @ref ghl_con2prim_multi_method is initialized to point to either
+ * @ref ghl_con2prim_hybrid_multi_method or
+ * @ref ghl_con2prim_tabulated_multi_method depending on the chosen EOS.
+ *
+ * @param[in] @ref eos_type_t enum designating the type of EOS being initialized
+ * 
+ * @returns void
  */
 void ghl_initialize_eos_functions(
       const ghl_eos_t eos_type) {
@@ -43,10 +63,43 @@ void ghl_initialize_eos_functions(
   }
 }
 
-/*
- * Function    : ghl_initialize_simple_eos()
- * Description : Initializes EOS struct elements for a simple EOS
-*/
+/**
+ * @ingroup eos_init
+ * @brief Initializes EOS struct elements for a simple EOS
+ *
+ * @details
+ * This function initializes the given ghl_eos_parameters struct
+ * to the simple EOS type with the given parameters. This automatically
+ * sets \f$ K = 1 \f$ and \f$ \Gamma_0 = \Gamma_\mathrm{th} \f$ to reduce
+ * equations to the desired EOS. Since there is no concept of
+ * cold vs thermal, the pressure limits must be given explicitly.
+ * As with the hybrid EOS, the floors and ceilings can be disabled
+ * by passing negative values.
+ *
+ * ## Recommended Usage
+ *
+ * For most users, the @ref ghl_initialize_simple_eos_functions_and_params
+ * function is strongly recommended. This function is primarily for those
+ * manually overwriting default @grhayl functions with their own.
+ *
+ * @param[in] rho_atm:   atmosphere density
+ *
+ * @param[in] rho_min:   minimum allowed density
+ *
+ * @param[in] rho_max:   maximum allowed density
+ *
+ * @param[in] press_atm: atmosphere pressure
+ *
+ * @param[in] press_min: minimum allowed pressure
+ *
+ * @param[in] press_max: maximum allowed pressure
+ *
+ * @param[in] Gamma:     polytropic exponent
+ *
+ * @param[out] eos:      pointer to initialized ghl_eos_parameters struct
+ * 
+ * @returns void
+ */
 void ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
@@ -114,10 +167,48 @@ void ghl_initialize_simple_eos(
   // --------------------------------------
 }
 
-/*
- * Function    : ghl_initialize_hybrid_eos()
- * Description : Initializes EOS struct elements for a hybrid EOS
-*/
+/**
+ * @ingroup eos_init
+ * @brief Initializes EOS struct elements for a hybrid EOS
+ *
+ * @details
+ * This function initializes the given ghl_eos_parameters struct to
+ * the hybrid EOS type with the given parameters. The floor and
+ * ceiling on the density can be disabled by setting them to negative
+ * values. The scale factors for pieces after the first are
+ * automatically computed and stored. Additionally, atmospheric values,
+ * floors and ceilings for other variables are computed using the
+ * corresponding densities.
+ *
+ * ## Recommended Usage
+ *
+ * For most users, the @ref ghl_initialize_hybrid_eos_functions_and_params
+ * function is strongly recommended. This function is primarily for those
+ * manually overwriting default @grhayl functions with their own.
+ *
+ * @param[in] rho_atm:     atmosphere density
+ *
+ * @param[in] rho_min:     minimum allowed density
+ *
+ * @param[in] rho_max:     maximum allowed density
+ *
+ * @param[in] neos:        number of piecewise polytrope pieces. Currently, the code
+ *                         supports up to a maximum of 10 pieces.
+ *
+ * @param[in] rho_ppoly:   density divisions for piecewise polytrope (only used if `neos>1`)
+ *
+ * @param[in] Gamma_ppoly: polytropic exponents
+ *
+ * @param[in] K_ppoly0:    pressure/density scale factor for the first polytropic piece
+ *
+ * @param[in] Gamma_th:    determines the conversion efficiency of kinetic
+ *                         to thermal energy at shocks via \f$ P = P_\mathrm{cold} + P_\mathrm{th} \f$
+ *                         and \f$ P_\mathrm{th} = \bigl(\epsilon - \epsilon_\mathrm{cold}\bigr)\rho\bigl(\Gamma_\mathrm{th}-1\bigr) \f$.
+ *
+ * @param[out] eos:        pointer to initialized ghl_eos_parameters struct
+ * 
+ * @returns void
+ */
 void ghl_initialize_hybrid_eos(
       const double rho_atm,
       double rho_min,
@@ -190,10 +281,49 @@ void ghl_initialize_hybrid_eos(
   // --------------------------------------
 }
 
-/*
- * Function    : ghl_initialize_tabulated_eos()
- * Description : Initializes EOS struct elements for tabulated EOS
-*/
+/**
+ * @ingroup eos_init
+ * @brief Initializes EOS struct elements for a tabulated EOS
+ *
+ * @details
+ * This function initializes the given ghl_eos_parameters struct
+ * to the tabulated EOS type with the given parameters. Unlike
+ * other EOS, the floors and ceilings cannot be disabled and
+ * are instead set to the bounds of the table if they are
+ * negative. If the given limits are outside the table, then
+ * they are also reset to the table bounds. Finally,
+ * root_finding_precision is set to the default value of \f$ 10^{-10} \f$.
+ *
+ * ## Recommended Usage
+ *
+ * For most users, the @ref ghl_initialize_tabulated_eos_functions_and_params
+ * function is strongly recommended. This function is primarily for those
+ * manually overwriting default @grhayl functions with their own.
+ *
+ * @param[in] table_filepath: pointer to the path name of the EOS table
+ *
+ * @param[in] rho_atm:        atmosphere density
+ *
+ * @param[in] rho_min:        minimum allowed density
+ *
+ * @param[in] rho_max:        maximum allowed density
+ *
+ * @param[in] Ye_atm:         atmosphere electron fraction
+ *
+ * @param[in] Ye_min:         minimum allowed electron fraction
+ *
+ * @param[in] Ye_max:         maximum allowed electron fraction
+ *
+ * @param[in] T_atm:          atmosphere temperature
+ *
+ * @param[in] T_min:          minimum allowed temperature
+ *
+ * @param[in] T_max:          maximum allowed temperature
+ *
+ * @param[out] eos:           pointer to initialized ghl_eos_parameters struct
+ * 
+ * @returns void
+ */
 void ghl_initialize_tabulated_eos(
       const char *table_filepath,
       const double rho_atm,
@@ -288,10 +418,35 @@ void ghl_initialize_tabulated_eos(
   eos->le_of_lr = NULL;
 }
 
-/*
- * Function    : ghl_initialize_hybrid_eos_functions_and_params()
- * Description : Fully initializes EOS struct elements for a hybrid EOS
-*/
+/**
+ * @ingroup eos_init
+ * @brief Initializes EOS struct and function pointers for simple EOS
+ *
+ * @details
+ * This function initializes the given ghl_eos_parameters struct to the
+ * simple EOS type with the given parameters. This automatically sets
+ * \f$ K = 1 \f$ and \f$ \Gamma_0 = \Gamma_\mathrm{th} \f$ to reduce
+ * equations to the desired EOS. This uses the @ref ghl_initialize_eos_functions
+ * and @ref ghl_initialize_simple_eos functions.
+ *
+ * @param[in] rho_atm:   atmosphere density
+ *
+ * @param[in] rho_min:   minimum allowed density
+ *
+ * @param[in] rho_max:   maximum allowed density
+ *
+ * @param[in] press_atm: atmosphere pressure
+ *
+ * @param[in] press_min: minimum allowed pressure
+ *
+ * @param[in] press_max: maximum allowed pressure
+ *
+ * @param[in] Gamma:     polytropic exponent
+ *
+ * @param[out] eos:      pointer to initialized ghl_eos_parameters struct
+ * 
+ * @returns void
+ */
 void ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
@@ -312,10 +467,38 @@ void ghl_initialize_simple_eos_functions_and_params(
         Gamma, eos);
 }
 
-/*
- * Function    : ghl_initialize_hybrid_eos_functions_and_params()
- * Description : Fully initializes EOS struct elements for a hybrid EOS
-*/
+/**
+ * @ingroup eos_init
+ * @brief Initializes EOS struct and function pointers for hybrid EOS
+ *
+ * @details
+ * This function initializes the given ghl_eos_parameters struct to the
+ * hybrid EOS type with the given parameters. This uses the @ref ghl_initialize_eos_functions
+ * and @ref ghl_initialize_hybrid_eos functions.
+ *
+ * @param[in] rho_atm:     atmosphere density
+ *
+ * @param[in] rho_min:     minimum allowed density
+ *
+ * @param[in] rho_max:     maximum allowed density
+ *
+ * @param[in] neos:        number of piecewise polytrope pieces. Currently, the code
+ *                         supports up to a maximum of 10 pieces.
+ *
+ * @param[in] rho_ppoly:   density divisions for piecewise polytrope (only used if `neos>1`)
+ *
+ * @param[in] Gamma_ppoly: polytropic exponents
+ *
+ * @param[in] K_ppoly0:    pressure/density scale factor for the first polytropic piece
+ *
+ * @param[in] Gamma_th:    determines the conversion efficiency of kinetic
+ *                         to thermal energy at shocks via \f$ P = P_\mathrm{cold} + P_\mathrm{th} \f$
+ *                         and \f$ P_\mathrm{th} = \bigl(\epsilon - \epsilon_\mathrm{cold}\bigr)\rho\bigl(\Gamma_\mathrm{th}-1\bigr) \f$.
+ *
+ * @param[out] eos:        pointer to initialized ghl_eos_parameters struct
+ * 
+ * @returns void
+ */
 void ghl_initialize_hybrid_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
@@ -337,9 +520,39 @@ void ghl_initialize_hybrid_eos_functions_and_params(
         K_ppoly0, Gamma_th, eos);
 }
 
-/* Function    : ghl_initialize_tabulated_eos()
- * Description : Initializes EOS struct elements for tabulated EOS
-*/
+/**
+ * @ingroup eos_init
+ * @brief Initializes EOS struct and function pointers for tabulated EOS
+ *
+ * @details
+ * This function initializes the given ghl_eos_parameters struct to the
+ * tabulated EOS type with the given parameters. This uses the
+ * @ref ghl_initialize_eos_functions and @ref ghl_initialize_tabulated_eos functions.
+ *
+ * @param[in] table_filepath: pointer to the path name of the EOS table
+ *
+ * @param[in] rho_atm:        atmosphere density
+ *
+ * @param[in] rho_min:        minimum allowed density
+ *
+ * @param[in] rho_max:        maximum allowed density
+ *
+ * @param[in] Ye_atm:         atmosphere electron fraction
+ *
+ * @param[in] Ye_min:         minimum allowed electron fraction
+ *
+ * @param[in] Ye_max:         maximum allowed electron fraction
+ *
+ * @param[in] T_atm:          atmosphere temperature
+ *
+ * @param[in] T_min:          minimum allowed temperature
+ *
+ * @param[in] T_max:          maximum allowed temperature
+ *
+ * @param[out] eos:           pointer to initialized ghl_eos_parameters struct
+ * 
+ * @returns void
+ */
 void ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_filepath,
       const double rho_atm,

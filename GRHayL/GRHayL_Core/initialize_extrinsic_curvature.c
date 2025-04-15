@@ -1,11 +1,20 @@
 #include "ghl.h"
 
-/*
- * Function     : ghl_initialize_extrinsic_curvature()
- * Description  : Initialize the ghl_extrinsic_curvature struct from user input
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_extrinsic_curvature
-*/
-
+/**
+ * @ingroup pack_struct
+ * @brief Initialize the extrinsic curvature struct from user input
+ *
+ * @details
+ * This function takes pointwise information about the extrinsic curvature
+ * and uses it to initialize every element of the given ghl_extrinsic_curvature
+ * struct.
+ *
+ * @param[in] Kxx, Kxy, Kxz, Kyy, Kyz, Kzz: individual components of the extrinsic curvature \f$ K_{ij} \f$
+ *
+ * @param[out] curv: pointer to ghl_conservative_quantities struct
+ *
+ * @returns void
+ */
 void ghl_initialize_extrinsic_curvature(
       const double Kxx,
       const double Kxy,

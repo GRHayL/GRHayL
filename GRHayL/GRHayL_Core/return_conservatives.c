@@ -1,12 +1,28 @@
 #include "ghl.h"
 
-/*
- * Function     : ghl_return_conservatives()
- * Description  : Unpacks ghl_conservative_quantities struct data into provided
- *                provided memory locations
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_return_conservatives
-*/
-
+/**
+ * @ingroup pack_struct
+ * @brief Unpack conservative variable struct into provided memory locations
+ *
+ * @details
+ * This function takes data from the ghl_conservative_quantities struct
+ * and unpacks (i.e. copies) the data into the memory locations passed
+ * to the function.
+ *
+ * @param[in] cons:           pointer to ghl_conservative_quantities struct
+ *
+ * @param[out] rho:           pointer to density variable \f$ \rho_* \f$ (also called \f$ \tilde{D} \f$
+ *
+ * @param[out] tau:           pointer to energy variable \f$ \tau \f$
+ *
+ * @param[out] S_x, S_y, S_z: pointer to components of the momentum variable \f$ S_i \f$
+ *
+ * @param[out] entropy:       pointer to fluid entropy variable \f$ \tilde{S} \f$
+ *
+ * @param[out] Y_e:           pointer to electron fraction variable \f$ \tilde{Y}_e \f$
+ *
+ * @returns void
+ */
 void ghl_return_conservatives(
       const ghl_conservative_quantities *restrict cons,
       double *restrict rho,

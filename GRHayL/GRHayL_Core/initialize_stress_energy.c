@@ -1,11 +1,23 @@
 #include "ghl.h"
 
-/*
- * Function     : ghl_initialize_stress_energy()
- * Description  : Initialize the ghl_stress_energy struct from user input
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_stress_energy
-*/
-
+/**
+ * @ingroup pack_struct
+ * @brief Initialize the stress-energy tensor struct from user input
+ *
+ * @details
+ * This function takes pointwise information about the stress-energy tensor
+ * and uses it to initialize every element of the given ghl_stress_energy
+ * struct. This can be used for either \f$ T^{\mu\nu} \f$ or \f$ T_{\mu\nu} \f$,
+ * as neither this function nor the struct distinguish between raised or
+ * lowered indices.
+ *
+ * @param[in] Ttt, Ttx, Tty, Ttz, Txx, Txy, Txz, Tyy, Tyz, Tzz:
+ *            components of the stress-energy tensor \f$ T^{\mu\nu} \f$ or \f$ T_{\mu\nu} \f$
+ *
+ * @param[out] Tmunu: pointer to ghl_stress_energy struct
+ *
+ * @returns void
+ */
 void ghl_initialize_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,
