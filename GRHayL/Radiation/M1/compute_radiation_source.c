@@ -3,66 +3,56 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_roots.h>
+#include <gsl/gsl_multiroots.h>
+
+#include "ghl_m1.h"
+
+
+void apply_floor(
+      const ghl_ADM_aux_quantities *adm_aux,
+      double *E,
+      ghl_radiation_flux_vector *F4,
+      const double rad_E_floor,
+      const double rad_eps);
+
+
 
 // gsl_multiroots: https://www.gnu.org/software/gsl/doc/html/multiroots.html
 // E,F_old -> q_old -> x_old -> E,F -> update in root solver -> x -> E,F_new
 //         -> E,F_star
-void init_params(ghl_m1_powell_params *p,
-                 const ghl_m1_closure_t closure,
-                 const gsl_root_fsolver *gsl_solver_1d,
-                 const double cdt,
-                 const ghl_metric_quantities *metric,
-                 const ghl_ADM_aux_quantities *adm_aux,
-                 const ghl_radiation_metric_tensor *proj4,
-                 const ghl_primitive_quantities *prims,
-                 const double E_star,
-                 const ghl_radiation_flux_vector *F4_star,
-                 const double chi,
-                 const double eta,
-                 const double kabs,
-                 const double kscat
+void init_params(ghl_m1_powell_params *p
                  ) {
-    p->closure = closure;
-    p->gsl_solver_1d = gsl_solver_1d;
-    p->cdt = cdt;
-    p->metric = metric;
-    p->adm_aux = adm_aux;
-    p->proj4 = proj4;
-    p->prims = prims;
-
+    printf("Begin init_params\n");
     // These can be derived from prims and metric
-    p->u4U = {prims->u0, 
-              prims->u0 * prims->vU[0], 
-              prims->u0 * prims->vU[1],
-              prims->u0 * prims->vU[2]};
-    p->n4D = {-metric->lapse, 0, 0, 0};
     p->W = 0;
     for(int a = 0; a < 4; a++) {
+      if(a == 0) {
+        p->u4U[a] = p->prims->u0;
+        p->n4D[a] = -p->metric->lapse;
+      }
+      else {
+        p->u4U[a] = p->prims->u0 * p->prims->vU[a-1];
+        p->n4D[a] = 0;
+      }
       p->W += -p->u4U[a] * p->n4D[a];
     }
- 
-
-    // These are calculated from prepare_closure()
-    // p->E = E;
-    // p->J = J;
-    // p->F4 = F4;
-    // p->H4 = H4;
-    // p->P4 = P4;
-    // p->rT4DD = rT4DD;
+    // p->vU = malloc(3 * sizeof(double));
+    // p->vD = malloc(3 * sizeof(double));
+    for(int a = 0; a < 3; a++) {
+      p->vU[a] = p->prims->vU[a];
+      p->vD[a] = 0;
+      for(int b =0; b < 3; b++) {
+        p->vD[a] += -p->adm_aux->g4DD[a+1][b+1] * p->vU[b]; //Johnny: This might need check
+      }
+    }
     
-    p->E_star = E_star;
-    p->F4_star = F4_star;
-    p->chi = chi;
-    p->eta = eta;
-    p->kabs = kabs;
-    p->kscat = kscat;
     
-
-    // These are calculated from prepare_source()
-    // p->rE_source = rE_source;
-    // p->rF_source = rF_source;
-    // p->GE_source = GE_source;
-    // p->F_src = F_src;
+    // // make a copy of E, F4 to E_star F4_star
+    p->E_star = p->E;
+    p->F4_star = malloc(sizeof(ghl_radiation_flux_vector));
+    for (int a = 0; a < 4; a++) {
+        p->F4_star->D[a] = p->F4->D[a];
+    }
 }
 
 // rad_E_floor rad_eps are parameters in param.ccl
@@ -104,7 +94,7 @@ inline double radM1_set_dthick(double chi) { return 1.5 * (1 - chi); }
 
 // Low level kernel computing the Jacobian matrix
 void __source_jacobian_low_level(
-      double *qpre,
+      double qpre[4],
       double Fup[4],
       double F2,
       double chi,
@@ -116,8 +106,8 @@ void __source_jacobian_low_level(
       double W,
       double alpha,
       double cdt,
-      double *qstar,
-      ghl_radiation_con_source_tensor *J) {
+      double qstar[4],
+      gsl_matrix *J) {
   const double kapas = kapa + kaps;
   const double alpW = alpha * W;
 
@@ -142,7 +132,7 @@ void __source_jacobian_low_level(
   const double hatfupy = Fup[2] * inormF;
   const double hatfupz = Fup[3] * inormF;
   const double e = qpre[0];
-  const double eonormF = min(e * inormF, 1.0); // with factor dthin ...
+  const double eonormF = fmin(e * inormF, 1.0); // with factor dthin ...
 
   // drvts of J
   // Eq (65)
@@ -227,14 +217,14 @@ void __source_jacobian_low_level(
 
   // Store Jacobian into J
   double A_data[4][4] = {
-    1 - cdt * J00, -cdt * J0x, -cdt * J0y, -cdt * J0z,    -cdt * Jx0,    1 - cdt * Jxx,
-    -cdt * Jxy,    -cdt * Jxz, -cdt * Jy0, -cdt * Jyx,    1 - cdt * Jyy, -cdt * Jyz,
-    -cdt * Jz0,    -cdt * Jzx, -cdt * Jzy, 1 - cdt * Jzz,
+    {1 - cdt * J00,   - cdt * J0x,   - cdt * J0y,   - cdt * J0z},
+    {  - cdt * Jx0, 1 - cdt * Jxx,   - cdt * Jxy,   - cdt * Jxz},
+    {  - cdt * Jy0,   - cdt * Jyx, 1 - cdt * Jyy,   - cdt * Jyz},
+    {  - cdt * Jz0,   - cdt * Jzx,   - cdt * Jzy, 1 - cdt * Jzz},
   };
   for(int a = 0; a < 4; ++a) {
     for(int b = 0; b < 4; ++b) {
-      // gsl_matrix_set(J, a, b, A_data[a][b]);
-      J->DD[a][b] = A_data[a][b];
+      gsl_matrix_set(J, a, b, A_data[a][b]);
     }
   }
 }
@@ -248,23 +238,23 @@ double dot(double *a, double *b, int length) {
 }
 
 int prepare_closure(gsl_vector const * q, ghl_m1_powell_params * p) {
+    printf("Begin prepare_closure\n");
     double n4U[4] = { p->metric->lapseinv, 
                     -p->metric->betaU[0] * p->metric->lapseinv,
                     -p->metric->betaU[1] * p->metric->lapseinv,
                     -p->metric->betaU[2] * p->metric->lapseinv };
-    p->E = max(gsl_vector_get(q, 0), 0.0);
+    p->E = fmax(gsl_vector_get(q, 0), 0.0);
     if (p->E < 0) {
         return GSL_EBADFUNC;
     }
     p->F4->D[1] = gsl_vector_get(q, 1);
     p->F4->D[2] = gsl_vector_get(q, 2);
     p->F4->D[3] = gsl_vector_get(q, 3);
-    p->F4->D[0] = -p->lapse * (n4U[1] * p->F4->D[1] +
+    p->F4->D[0] = -p->metric->lapse * (n4U[1] * p->F4->D[1] +
                                n4U[2] * p->F4->D[2] + 
                                n4U[3] * p->F4->D[3]);
     // This operation is just F_0 = beta^i F_i
 
-    // Johnny: closure needs to update p->E, F4, P4, check if this is true
     m1_root_params closure_params; 
     closure_params.metric   = p->metric;
     closure_params.adm_aux  = p->adm_aux;
@@ -272,21 +262,51 @@ int prepare_closure(gsl_vector const * q, ghl_m1_powell_params * p) {
     closure_params.E        = p->E;
     closure_params.F4       = p->F4;
     closure_params.P4       = p->P4;
+    closure_params.chi      = p->chi;
+    
+    printf("Before closure chi = %f\n",p->chi);
     ghl_radiation_rootSolve_closure(&closure_params);
+    p->chi = closure_params.chi;
+    printf("P4 After closure chi = %f\n",p->chi);
 
     return GSL_SUCCESS;
 }
 
 int prepare_sources(gsl_vector const * q, ghl_m1_powell_params * p) {
-  assemble_rT_lab_frame(p->n4D, p->E, p->F4, p->P4,p->rT4DD);
+  printf("Begin prepare_sources\n");
+  ghl_radiation_metric_tensor proj4;
+  for(int a = 0; a < 4; a++) {
+    for(int b = 0; b < 4; b++) {
+      proj4.UD[a][b] = (int)(a == b);
+      for(int c = 0; c < 4; c++) {
+        proj4.UD[a][b] += p->u4U[a] * p->u4U[c] * p->adm_aux->g4DD[b][c];
+      }
+    }
+  }
 
-  p->J = calc_J_from_rT(p->u4U, p->proj4, p->rT4DD);
-  calc_H4D_from_rT(p->u4U, p->proj4, p->rT4DD, &p->H4);
+  ghl_stress_energy rT4DD;
+  
+  assemble_rT_lab_frame(p->n4D, p->E, p->F4, p->P4, &rT4DD);
 
-  calc_rad_sources(p->eta, p->kabs, p->kscat, p->u4U, p->J, p->H4, &p->S4);
+  double J = calc_J_from_rT(p->u4U, &proj4, &rT4DD);
 
-  p->rE_source = calc_rE_source(p->metric, p->S4);
-  calc_rF_source(p->metric, p->adm_aux, p->S4, &p->rF_source);
+  ghl_radiation_flux_vector H4;
+  calc_H4D_from_rT(p->u4U, &proj4, &rT4DD, &H4);
+
+  ghl_radiation_con_source_vector S4 = {0};
+  calc_rad_sources(p->eta, p->kabs, p->kscat, p->u4U, J, &H4, &S4);
+  //
+  // printf("S4\n");
+  // for(int a = 0; a < 4; a++) {
+  //   printf("%f ",S4.U[a]);
+  // }
+  // printf("\n");
+  p->rE_source = calc_rE_source(p->metric, &S4);
+
+  ghl_radiation_con_source_vector rF_source={0};
+  
+  calc_rF_source(p->metric, p->adm_aux, &S4, &rF_source);
+  p->rF_source = &rF_source;
 
   return GSL_SUCCESS;
 }
@@ -294,19 +314,48 @@ int prepare_sources(gsl_vector const * q, ghl_m1_powell_params * p) {
 int prepare(const gsl_vector *q, ghl_m1_powell_params *p) {
   // Johnny: removed chi passing around to just p->chi
   //         this can lead to error here if prepare_closure fails
-  int ierr = prepare_closure(q, p);
-  if(ierr != GSL_SUCCESS) {
-    return ierr;
+  int ierr_closure = prepare_closure(q, p);
+  if(ierr_closure != GSL_SUCCESS) {
+    return ierr_closure;
   }
-  int ierr = prepare_sources(q, p);
-  if(ierr != GSL_SUCCESS) {
-    return ierr;
+  int ierr_sources = prepare_sources(q, p);
+  if(ierr_sources != GSL_SUCCESS) {
+    return ierr_sources;
   }
   return GSL_SUCCESS;
 }
 
+void evaluate_zjac(ghl_m1_powell_params * p, gsl_matrix *J){
+  // printf("Begin evaluate_zjac\n");
+  double m_q[4] = { p->E, p->F4->D[1], p->F4->D[2], p->F4->D[3] };
+  double m_Fup[4] = { p->F4->U[0], p->F4->U[1], p->F4->U[2], p->F4->U[3] };
+  double m_F2 = (p->F4->D[0]*p->F4->U[0] + p->F4->D[1]*p->F4->U[1] + p->F4->D[2]*p->F4->U[2] + p->F4->D[3]*p->F4->U[3]);
+  double m_chi = p->chi;
+  double m_kscat = p->kscat;
+  double m_kabs = p->kabs;
+  double m_vup[4] = { p->vU[0], p->vU[1], p->vU[2], p->vU[3] };
+  double m_vdw[4] = { p->vD[0], p->vD[1], p->vD[2], p->vD[3] };
+  double m_v2 = (p->vU[0]*p->vD[0] + p->vU[1]*p->vD[1] + p->vU[2]*p->vD[2] + p->vU[3]*p->vD[3]);
+  double m_W = p->W;
+  double m_alpha = p->metric->lapse;
+  double m_cdt = p->cdt;
+  double m_qstar[4] = { p->E_star, p->F4_star->D[1], p->F4_star->D[2], p->F4_star->D[3] };
+  __source_jacobian_low_level(                                                      \
+    m_q, m_Fup, m_F2, m_chi, m_kscat, m_kabs, m_vup, m_vdw, m_v2, m_W, m_alpha, \
+    m_cdt, m_qstar, J);
+  
+}
+void evaluate_zfunc(ghl_m1_powell_params * p, gsl_vector *f){
+  // printf("Begin evaluate_zfunc\n");
+  gsl_vector_set(f, 0, p->E - p->E_star - p->cdt * p->rE_source);
+  gsl_vector_set(f, 1, p->F4->D[1] - p->F4_star->D[1] - p->cdt * p->rF_source->D[1]);
+  gsl_vector_set(f, 2, p->F4->D[2] - p->F4_star->D[2] - p->cdt * p->rF_source->D[2]);
+  gsl_vector_set(f, 3, p->F4->D[3] - p->F4_star->D[3] - p->cdt * p->rF_source->D[3]);
+}
+
 // Jacobian of the implicit function
 int impl_func_jac(gsl_vector const * q, void * params, gsl_matrix * J) {
+    // printf("Begin impl_func_jac\n");
     ghl_m1_powell_params * p = (ghl_m1_powell_params *)params;
     // Johnny: maybe it is best to separate param struct used in powell and in the large source func
     int ierr = prepare(q, p);
@@ -314,26 +363,27 @@ int impl_func_jac(gsl_vector const * q, void * params, gsl_matrix * J) {
         return ierr;
     }
 
-#define EVALUATE_ZJAC                                                               \
-  double m_q[] = { p->E, p->F4->D[1], p->F4->D[2], p->F4->D[3] };                      \
-  double m_Fup[] = { p->F4->U[0], p->F4->U[1], p->F4->U[2], p->F4->U[3] };              \
-  double m_F2 = dot(p->F4->D, p->F4->U);                                              \
-  double m_chi = p->chi;                                                            \
-  double m_kscat = p->kscat;                                                        \
-  double m_kabs = p->kabs;                                                          \
-  double m_vup[] = { p->v->U[0], p->v->U[1], p->v->U[2], p->v->U[3] };              \
-  double m_vdw[] = { p->v->D[0], p->v->D[1], p->v->D[2], p->v->D[3] };              \
-  double m_v2 = dot(p->v->U, p->v->D);                                              \
-  double m_W = p->W;                                                                \
-  double m_alpha = p->alp;                                                          \
-  double m_cdt = p->cdt;                                                            \
-  double m_qstar[] = { p->E_star, p->F4_star->D[1], p->F4_star->D[2], p->F4_star->D[3] };  \
-                                                                                    \
-  __source_jacobian_low_level(                                                      \
-        m_q, m_Fup, m_F2, m_chi, m_kscat, m_kabs, m_vup, m_vdw, m_v2, m_W, m_alpha, \
-        m_cdt, m_qstar, J);
+// #define EVALUATE_ZJAC                                                               \
+//   double m_q[] = { p->E, p->F4->D[1], p->F4->D[2], p->F4->D[3] };                      \
+//   double m_Fup[] = { p->F4->U[0], p->F4->U[1], p->F4->U[2], p->F4->U[3] };              \
+//   double m_F2 = (p->F4->D[0]*p->F4->U[0] + p->F4->D[1]*p->F4->U[1] + p->F4->D[2]*p->F4->U[2] + p->F4->D[3]*p->F4->U[3]);         \
+//   double m_chi = p->chi;                                                            \
+//   double m_kscat = p->kscat;                                                        \
+//   double m_kabs = p->kabs;                                                          \
+//   double m_vup[] = { p->vU[0], p->vU[1], p->vU[2], p->vU[3] };              \
+//   double m_vdw[] = { p->vD[0], p->vD[1], p->vD[2], p->vD[3] };              \
+//   double m_v2 = (p->vU[0]*p->vD[0] + p->vU[1]*p->vD[1] + p->vU[2]*p->vD[2] + p->vU[3]*p->vD[3]);                \
+//   double m_W = p->W;                                                                \
+//   double m_alpha = p->metric->lapse;                                                          \
+//   double m_cdt = p->cdt;                                                            \
+//   double m_qstar[] = { p->E_star, p->F4_star->D[1], p->F4_star->D[2], p->F4_star->D[3] };  \
+//                                                                                     \
+//   __source_jacobian_low_level(                                                      \
+//         m_q, m_Fup, m_F2, m_chi, m_kscat, m_kabs, m_vup, m_vdw, m_v2, m_W, m_alpha, \
+//         m_cdt, m_qstar, J);
 
-  EVALUATE_ZJAC
+//   EVALUATE_ZJAC
+  evaluate_zjac(p, J);
 
   return GSL_SUCCESS;
 }
@@ -341,36 +391,41 @@ int impl_func_jac(gsl_vector const * q, void * params, gsl_matrix * J) {
 // Function to rootfind for
 //    f(q) = q - q^* - dt S[q]
 int impl_func_val(const gsl_vector *q, void *params, gsl_vector *f) {
+  // printf("Begin impl_func_val\n");
   ghl_m1_powell_params *p = (ghl_m1_powell_params *)params;
   int ierr = prepare(q, p);
   if(ierr != GSL_SUCCESS) {
     return ierr;
   }
-#define EVALUATE_ZFUNC \
-    gsl_vector_set(f, 0, gsl_vector_get(q, 0) - p->E_star        - p->cdt * p->rE_source); \
-    gsl_vector_set(f, 1, gsl_vector_get(q, 1) - p->F4_star->D[1] - p->cdt * p->rF_source->D[1]); \
-    gsl_vector_set(f, 2, gsl_vector_get(q, 2) - p->F4_star->D[2] - p->cdt * p->rF_source->D[2]); \
-    gsl_vector_set(f, 3, gsl_vector_get(q, 3) - p->F4_star->D[3] - p->cdt * p->rF_source->D[3]);
+// #define EVALUATE_ZFUNC \
+//     gsl_vector_set(f, 0, gsl_vector_get(q, 0) - p->E_star        - p->cdt * p->rE_source); \
+//     gsl_vector_set(f, 1, gsl_vector_get(q, 1) - p->F4_star->D[1] - p->cdt * p->rF_source->D[1]); \
+//     gsl_vector_set(f, 2, gsl_vector_get(q, 2) - p->F4_star->D[2] - p->cdt * p->rF_source->D[2]); \
+//     gsl_vector_set(f, 3, gsl_vector_get(q, 3) - p->F4_star->D[3] - p->cdt * p->rF_source->D[3]);
 
-  EVALUATE_ZFUNC
+//   EVALUATE_ZFUNC
+  evaluate_zfunc(p, f);
 
   return GSL_SUCCESS;
 }
 
 // Function and Jacobian evaluation
 int impl_func_val_jac(gsl_vector const * q, void * params, gsl_vector * f, gsl_matrix * J) {
+    // printf("Begin impl_func_val_jac\n");
     ghl_m1_powell_params * p = (ghl_m1_powell_params *)params;
     int ierr = prepare(q, p);
     if (ierr != 0) {
         return ierr;
     }
-  EVALUATE_ZFUNC
-  EVALUATE_ZJAC
+  // EVALUATE_ZFUNC
+  // EVALUATE_ZJAC
+  evaluate_zjac(p, J);
+  evaluate_zfunc(p, f);
 
   return GSL_SUCCESS;
 }
-#undef EVALUATE_ZFUNC
-#undef EVALUATE_ZJAC
+// #undef EVALUATE_ZFUNC
+// #undef EVALUATE_ZJAC
 
 // Explicit update
 //  F^k+1 = F^* + dt   [ A[F^m] + S[F^k+1] ]
@@ -378,7 +433,8 @@ void explicit_update(
         ghl_m1_powell_params * p,
         double * E_new,
         ghl_radiation_flux_vector * F4_new) {
-    double alp = p->metric->lapse;
+    printf("Begin explicit_update\n");
+    // double alp = p->metric->lapse;
     // double n4U[4] = {p->metric->lapseinv, 
     //                 -p->metric->betaU[0]*p->metric->lapseinv,
     //                 -p->metric->betaU[1]*p->metric->lapseinv,
@@ -386,70 +442,164 @@ void explicit_update(
     *E_new      = p->E_star       + p->cdt * p->rE_source;
     
     // rF_source only has U, need to lower indicies
-    double rF_source_D[4] = {0.0,0.0,0.0,0.0};
-    for(int a = 0; a < 4; ++a) {
-      for (int b = 0; b < 4; ++b) {
-        rF_source_D[a] = p->rF_source->U[b] * p->adm_aux->g4DD[a][b];
-      }
-    }
-    F4_new->D[1] = p->F4_star->D[1] + p->cdt * rF_source_D[1];
-    F4_new->D[2] = p->F4_star->D[2] + p->cdt * rF_source_D[2];
-    F4_new->D[3] = p->F4_star->D[3] + p->cdt * rF_source_D[3];
+    // double rF_source_D[4] = {0.0,0.0,0.0,0.0};
+    // for(int a = 0; a < 4; ++a) {
+    //   for (int b = 0; b < 4; ++b) {
+    //     rF_source_D[a] = p->rF_source->U[b] * p->adm_aux->g4DD[a][b];
+    //   }
+    // }
+    F4_new->D[1] = p->F4_star->D[1] + p->cdt * p->rF_source->D[1];
+    F4_new->D[2] = p->F4_star->D[2] + p->cdt * p->rF_source->D[2];
+    F4_new->D[3] = p->F4_star->D[3] + p->cdt * p->rF_source->D[3];
     // F_0 = g_0i F^i = beta_i F^i = beta^i F_i
     // F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
     //                - alp * n4U[2] * F4_new->D[2]
     //                - alp * n4U[3] * F4_new->D[3];
-    F4_new->D[0] = p->metric->betaU[1] * F4_new->D[1]
-                 + p->metric->betaU[2] * F4_new->D[2]
-                 + p->metric->betaU[3] * F4_new->D[3]
+    F4_new->D[0] = p->metric->betaU[0] * F4_new->D[1]\
+                 + p->metric->betaU[1] * F4_new->D[2]\
+                 + p->metric->betaU[2] * F4_new->D[3];
     
 } //explicit_update
+
+
+int ghl_source_update_test(
+  const ghl_m1_thc_params *thc_params,
+  ghl_m1_powell_params *p
+) {
+  printf("Begin ghl_source_update_test\n");
+  double *E_new = &p->E;
+  ghl_radiation_flux_vector *F4_new = p->F4;
+  init_params(p);
+
+  gsl_multiroot_function_fdf zfunc
+        = { impl_func_val, impl_func_jac, impl_func_val_jac, 4, p };
+  double E_old = p->E;
+  ghl_radiation_flux_vector F4_old;
+  F4_old.D[0] = p->F4->D[0];
+  F4_old.D[1] = p->F4->D[1];
+  F4_old.D[2] = p->F4->D[2];
+  F4_old.D[3] = p->F4->D[3];
+  // Old solution
+  double qold[4] = { E_old, F4_old.D[1], F4_old.D[2], F4_old.D[3] };
+  gsl_vector_view xold = gsl_vector_view_array(qold, 4);
+  // Non stiff limit, use explicit update
+  if(p->cdt * p->kabs < 1 && p->cdt * p->kscat < 1) {
+    printf("Non stiff limit, use explicit update\n");
+    prepare(&xold.vector, p);
+    explicit_update(p, E_new, F4_new);
+    printf("After explicit update\n");
+    printf("E_old: %f  E_new: %f\n",E_old, *E_new);
+    printf("F4_old: ");
+    for(int a = 0; a < 4; a++) {
+      printf("%f ",F4_old.D[a]);
+    }
+    printf("\n");
+    printf("F4_new: ");
+    for(int a = 0; a < 4; a++) {
+      printf("%f ",F4_new->D[a]);
+    }
+    printf("\n");
+
+    double q[4] = { *E_new, F4_new->D[1], F4_new->D[2], F4_new->D[3] };
+    gsl_vector_view x = gsl_vector_view_array(q, 4);
+    prepare_closure(&x.vector, p);
+    return -1;
+    // return THC_M1_SOURCE_THIN; // TODO
+  }
+  
+  // Initial guess for the solution
+  double q[4] = { *E_new, F4_new->D[1], F4_new->D[2], F4_new->D[3] };
+  gsl_vector_view x = gsl_vector_view_array(q, 4);
+
+  printf("%p\n", p->gsl_solver_nd);
+  if (p->gsl_solver_nd == NULL) {
+    printf("Solver not initialized!\n");
+  }
+  printf("\n");
+  if(zfunc.f == NULL) {
+    printf("Function pointer is NULL\n");
+  }
+  int ierr = gsl_multiroot_fdfsolver_set(p->gsl_solver_nd, &zfunc, &x.vector);
+  int iter = 0;
+  printf("Before gsl_multiroot_test_delta\n");
+  do {
+    printf("iter: %d ",iter); 
+    if(iter < thc_params->source_maxiter) {
+      ierr = gsl_multiroot_fdfsolver_iterate(p->gsl_solver_nd);
+      iter++;
+    }
+    if (ierr == GSL_ENOPROG || ierr == GSL_ENOPROGJ ||
+      ierr == GSL_EBADFUNC || iter >= thc_params->source_maxiter) {
+      if (ierr == GSL_EBADFUNC) {
+          printf("NaNs or Infs found in the implicit solve.\n");
+      }
+      else if (iter > thc_params->source_maxiter) {
+          printf("Source solver exceeded the maximum number of iterations\n");
+      }
+      else{
+          printf("Stuck nonlinear solver.\n");
+      }
+      printf("Trying to save the day... \n");
+      // We are optically thick, suggest to retry with Eddington closure
+      // if (p->closure != Eddington) {
+      //   p->closure = Eddington;
+      //   ierr = ghl_source_update_test(thc_params, p);
+      //   return ierr; // TODO
+      // }
+      return -1;
+    }
+    // TODO: removed error handling for now
+    ierr = gsl_multiroot_test_delta(
+          p->gsl_solver_nd->dx, p->gsl_solver_nd->x, thc_params->source_epsabs, thc_params->source_epsrel);
+  } while(ierr == GSL_CONTINUE);
+  printf("After gsl_multiroot_test_delta\n");
+  return -2;
+}
 
 
 // Update E_old -> E_new
 //        F_old -> F_new
 // In THC: _old is equivalent to _star, so remove _star here
-int source_update(
+int ghl_source_update(
       const double cdt,
-      ghl_m1_closure_t closure,
-      gsl_multiroot_fdfsolver *gsl_solver_nd,
-      const double E_old,
-      const ghl_radiation_flux_vector *F4_old,
+      const ghl_m1_closure_t closure,
+      const gsl_multiroot_fdfsolver *gsl_solver_nd,
       const ghl_m1_thc_params *thc_params,
-      ghl_m1_powell_params *p,
-      double *E_new,
-      ghl_radiation_flux_vector *F4_new
+      ghl_m1_powell_params *p
     ) {
+  printf("Begin ghl_source_update\n");
+  double *E_new = &p->E;
+  ghl_radiation_flux_vector *F4_new = p->F4;
 
-  
-  init_params(&p,
-      closure,
-      gsl_solver_nd,
-      E_old,
-      F4_old,
-      thc_params);
-
+  init_params(p);
   gsl_multiroot_function_fdf zfunc
-        = { impl_func_val, impl_func_jac, impl_func_val_jac, 4, &p };
+        = { impl_func_val, impl_func_jac, impl_func_val_jac, 4, p };
 
-  double alp = p->metric->lapse;
+  // double alp = p->metric->lapse;
   // double n4U[4] = { p->metric->lapseinv, 
   //                   -p->metric->betaU[0] * p->metric->lapseinv,
   //                   -p->metric->betaU[1] * p->metric->lapseinv,
   //                   -p->metric->betaU[2] * p->metric->lapseinv };
+  double E_old = p->E;
+  ghl_radiation_flux_vector F4_old;
+  F4_old.D[0] = p->F4->D[0];
+  F4_old.D[1] = p->F4->D[1];
+  F4_old.D[2] = p->F4->D[2];
+  F4_old.D[3] = p->F4->D[3];
 
   // Old solution
-  double qold[4] = { E_old, F4_old->D[1], F4_old->D[2], F4_old->D[3] };
+  double qold[4] = { E_old, F4_old.D[1], F4_old.D[2], F4_old.D[3] };
   gsl_vector_view xold = gsl_vector_view_array(qold, 4);
-
+  
   // Non stiff limit, use explicit update
   if(cdt * p->kabs < 1 && cdt * p->kscat < 1) {
-    prepare(&xold.vector, &p);
-    explicit_update(&p, E_new, F4_new);
+    prepare(&xold.vector, p);
+    explicit_update(p, E_new, F4_new);
+    
 
     double q[4] = { *E_new, F4_new->D[1], F4_new->D[2], F4_new->D[3] };
     gsl_vector_view x = gsl_vector_view_array(q, 4);
-    prepare_closure(&x.vector, &p);
+    prepare_closure(&x.vector, p);
     return -1;
     // return THC_M1_SOURCE_THIN; // TODO
   }
@@ -457,7 +607,7 @@ int source_update(
   // Our scheme cannot capture this dynamics (tau << dt), so we go
   // directly to the equilibrium
   if (thc_params->source_thick_limit > 0 &&
-          SQ(cdt)*(p->kabs*(p->kabs + p->kscat)) > SQ(thc_params->source_thick_limit)) {
+          pow(cdt,2)*(p->kabs*(p->kabs + p->kscat)) > pow(thc_params->source_thick_limit,2)) {
       return -2; //TODO
       //return THC_M1_SOURCE_EQUIL; //TODO
   }
@@ -478,6 +628,7 @@ int source_update(
       ierr = gsl_multiroot_fdfsolver_iterate(gsl_solver_nd);
       iter++;
     }
+
     // TODO: removed error handling for now
     ierr = gsl_multiroot_test_delta(
           gsl_solver_nd->dx, gsl_solver_nd->x, thc_params->source_epsabs, thc_params->source_epsrel);
@@ -491,11 +642,11 @@ int source_update(
   // F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
   //                - alp * n4U[2] * F4_new->D[2]
   //                - alp * n4U[3] * F4_new->D[3];
-  F4_new->D[0] = p->metric->betaU[1] * F4_new->D[1]
-               + p->metric->betaU[2] * F4_new->D[2]
-               + p->metric->betaU[3] * F4_new->D[3]
+  F4_new->D[0] = p->metric->betaU[0] * F4_new->D[1] \
+               + p->metric->betaU[1] * F4_new->D[2] \
+               + p->metric->betaU[2] * F4_new->D[3];
 
-  prepare_closure(gsl_solver_nd->x, &p);
+  prepare_closure(gsl_solver_nd->x, p);
   return -4; //TODO
   //return THC_M1_SOURCE_OK; //TODO
-} // source_update
+} // ghl_source_update

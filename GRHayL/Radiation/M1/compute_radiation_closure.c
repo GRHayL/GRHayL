@@ -272,6 +272,7 @@ int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in) {
   double xi_root = rparams.root;
   printf("root = %f\n", xi_root);
   printf("residual = %f\n", rparams.residual);
+  fparams_in->chi = ghl_m1_closure(xi_root);
 
   // TODO: add error message when ghl_brent fails
   return 1;

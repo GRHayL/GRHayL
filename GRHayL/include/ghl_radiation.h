@@ -58,6 +58,7 @@ typedef struct {
   double E;
   ghl_radiation_flux_vector *F4;
   ghl_radiation_pressure_tensor *P4;
+  double chi;
 } m1_root_params;
 
 /*
@@ -155,8 +156,8 @@ typedef struct ghl_m1_powell_params {
   // Initial E,F value to take in init_params
   double E_star;
   ghl_radiation_flux_vector *F4_star;
-  // opacity parameters
   double chi;
+  // opacity parameters
   double eta;
   double kabs;
   double kscat;
@@ -166,8 +167,8 @@ typedef struct ghl_m1_powell_params {
   double u4U[4];
   double n4D[4];
   double W;
-  double vU[3];
-  double vD[3];
+  double vU[4];
+  double vD[4];
 
   // SE tensor in the lab frame, will be updated in impl solve
   // ghl_stress_energy *rT4DD;

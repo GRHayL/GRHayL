@@ -1,6 +1,8 @@
 #include "ghl.h"
 #include "ghl_radiation.h"
 
+
+
 //Need extra functions that calculate FU, PUD, and PUU, used in flux calcs throughout file.
 void get_FU(
   const ghl_ADM_aux_quantities *adm_aux,
@@ -100,9 +102,9 @@ void calc_rF_source(
       const ghl_ADM_aux_quantities *adm_aux,
       const ghl_radiation_con_source_vector *S4,
       ghl_radiation_con_source_vector *rF_source) {
-  for(int a = 0; a < 3; ++a) {
+  for(int a = 0; a < 4; ++a) {
     rF_source->D[a] = 0.0;
-    for(int b = 0; b < 3; ++b) {
+    for(int b = 0; b < 4; ++b) {
       rF_source->D[a] += metric->lapse * metric->gammaDD[b][a] * S4->U[b];
     }
   }
@@ -116,7 +118,7 @@ double calc_GE_source(
       const ghl_metric_quantities *metric_derivs_z,
       const ghl_radiation_pressure_tensor *P4,
       const ghl_radiation_flux_vector *F4,
-      const ghl_extrinsic_curvature *K4) {
+      const ghl_extrinsic_curvature *curv) {
 
   double alpha_dD[3]
         = { metric_derivs_x->lapse, metric_derivs_y->lapse, metric_derivs_z->lapse };
@@ -124,10 +126,10 @@ double calc_GE_source(
   // FIXME: these are trying to access struct fields that don't exist.
   double GE_source = 0.0;
   for(int i = 0; i < 3; ++i) {
-    GE_source += -F4->U[i] * alpha_dD[i]; // dlog(alpha) = (1/alpha)*dalpha, the 1/alpha
+    GE_source += -F4->U[i+1] * alpha_dD[i]; // dlog(alpha) = (1/alpha)*dalpha, the 1/alpha
                                           // cancels out with the alpha factor in front.
     for(int j = 0; j < 3; ++j) {
-      GE_source += metric->lapse * (P4->UU[i][j] * K4->K[i][j]);
+      GE_source += metric->lapse * (P4->UU[i+1][j+1] * curv->K[i][j]);
     }
   }
 
