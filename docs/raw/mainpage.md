@@ -20,7 +20,9 @@ several gems which provide specific features. These currently include
 - @ref Reconstruction
 
 Each gem implements infrastructure-agnostic functions for computing quantities for
-GRMHD simulations.
+GRMHD simulations. As this project inherits from several sources, we recommend viewing
+the [guide](@ref license) on licensing and citation for a detailed breakdown. Unless
+otherwise stated in the license guide, the code is under the BSD-2-Clause license.
 
 ## Building and Installing GRHayL
 
