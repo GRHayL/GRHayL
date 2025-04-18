@@ -15,7 +15,7 @@
  * applies an additional steepening algorithm to the given variable. This
  * is normally used for the density, as the density profile should be
  * narrowed in the presence of the contact discontinuity (see e.g. Appendix I
- * of [Mart\i{} and M\"uller](https://www.sciencedirect.com/science/article/pii/S0021999196900017)).
+ * of \cite Marti_1996.
  * This procedure is implemented via the @ref ghl_steepen_var function.
  *
  * @param[in] params:   pointer to ghl_parameters struct

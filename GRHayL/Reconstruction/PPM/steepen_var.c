@@ -1,10 +1,107 @@
 #include "ghl_reconstruction.h"
 
-/*
- * Function     : ghl_steepen_var()
- * Description  : applies a steepening algorithm to the
- *                reconstructed variable var
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_steepen_var
+/**
+ * @ingroup ppm_internal
+ * @brief Applies a steepening algorithm to a variable.
+ *
+ * This function takes the right and left face values of a variable and applies
+ * a steepening algorithm. This is normally used for the density, as the density
+ * profile should be narrowed in the presence of the contact discontinuity
+ * (see e.g. Appendix I of \cite Marti_1996. To determine if there is a shock
+ * that requires steepening, several conditions must be met. The primary
+ * equation is eq. 63 from \cite Marti_1996 :
+ *                                            
+ * \f[                                        
+ * \Gamma K_0 \frac{|\rho_{i+1} - \rho_{i-1}|}{\mathrm{min}\left(\rho_{i+1},
+ *                                                       \rho_{i-1}\right)}
+ * \ge \frac{|P_{i+1} - P_{i-1}|}{\mathrm{min}\left(P_{i+1}, P_{i-1}\right)}
+ * \f]
+ *
+ * where \f$ \Gamma \f$ is the Gamma\_eff input variable and \f$ K_0 \f$ is
+ * a constant. We also check that the second derivatives of the adjacent
+ * points are opposite signs
+ *
+ * \f[
+ * \left( \rho_{i+2} + \rho_{i} - 2\rho_{i+1} \right)
+ * \left( \rho_{i-2} + \rho_{i} - 2\rho_{i-1} \right) <= 0
+ * \f]
+ *
+ * Finally, we check if the first derivative is a significant fraction of
+ * the actual density
+ *
+ * \f[
+ * |\rho_{i+1} - \rho_{i-1}| \ge \epsilon_0\ \mathrm{min}\left(\rho_{i+1},
+ *                                                       \rho_{i-1}\right)
+ * \f]
+ *
+ * If all three conditions are met, then we apply the steepening procedure.
+ * We start by computing the MC reconstruction with the limited slope.
+ * We first compute the slopes using the same prescription as in 
+ * ghl_ppm_compute_for_cell:
+ *
+ * \f[
+ * \begin{aligned}
+ * s_- &= \mathrm{slope\_limit} \left( U_{i-1} U_{i-2}, U_{i} - U_{i-1} \right) \\
+ * s_+ &= \mathrm{slope\_limit} \left( U_{i+1} U_{i}, U_{i+2} - U_{i+1} \right)
+ * \end{aligned}
+ * \f]
+ *
+ * Then, we compute the MC-reconstructed face values
+ *
+ * \f[
+ * \begin{aligned}
+ * \rho^\mathrm{MC}_R &= \rho_{i+1} - \frac{s_+}{2} \\
+ * \rho^\mathrm{MC}_L &= \rho_{i-1} + \frac{s_-}{2}
+ * \end{aligned}
+ * \f]
+ *
+ * We also compute \eta using
+ *
+ * \f[
+ * \eta = \mathrm{max}\left[0,\ \mathrm{min}\left( 1,\ \eta_1 (\tilde{\eta} - \eta_2) \right) \right]
+ * \f]
+ *
+ * where
+ *
+ * \f[
+ * \tilde{\eta} = - \frac{\partial^2 \rho_+ - \partial^2 \rho_-}{6\partial \rho}
+ * \f]
+ *
+ * and
+ *
+ * \f[
+ * \begin{aligned}
+ * \partial \rho     &= \rho_{i+1} - \rho_{i-1} \\
+ * \partial^2 \rho_+ &= \rho_{i+2} + \rho_{i} - 2\rho_{i+1} \\
+ * \partial^2 \rho_- &= \rho_{i-2} + \rho_{i} - 2\rho_{i-1}
+ * \end{aligned}
+ * \f]
+ *
+ * Using these, the steepening procedure is applied to \f$ \rho_R \f$ and \f$ \rho_L \f$:
+ *
+ * \f[
+ * \begin{aligned}
+ * \rho_R &= (1 - \eta) \rho_R + \eta\ \rho^\mathrm{MC}_R \\
+ * \rho_L &= (1 - \eta) \rho_L + \eta\ \rho^\mathrm{MC}_L \\
+ * \end{aligned}
+ * \f]
+ *
+ * The constants \f$ K_0 \f$, \f$ \epsilon_0 \f$, \f$ \eta_1 \f$, and
+ * \f$ \eta_2 \f$ are all changeable by the user, and the @ref ghl_initialize_params
+ * sets these to reasonable default values based on the original
+ * Colella & Woodward paper \cite Colella_1984.
+ *
+ * @param[in] rho:       1D array containing stencil of the reconstructed variable
+ *
+ * @param[in] pressure:  1D array containing stencil of the pressure
+ *
+ * @param[in] Gamma_eff: value of \f$ \Gamma \f$ to use
+ *
+ * @param[in,out] rhor:  pointer to reconstructed value of the right face
+ *
+ * @param[in,out] rhol:  pointer to reconstructed value of the left face
+ *
+ * @returns void
 */
 void ghl_steepen_var(
       const ghl_parameters *restrict params,

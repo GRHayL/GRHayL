@@ -69,3 +69,11 @@
  * PPM requires additional arguments, especially with steepening. These are
  * described in more detail within the individual function documentation.
  */
+
+/**
+ * @defgroup ppm_internal Internal PPM Functions
+ * @ingroup ppm
+ *
+ * These are internal functions/attributes used by the PPM routines but should not be
+ * called by standard users.
+ */

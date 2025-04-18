@@ -27,6 +27,7 @@
 PROJECT_NAME           = "GRHayL"
 
 # Input control
+CITE_BIB_FILES         = docs/raw/ref.bib
 INPUT                  = GRHayL docs/raw
 RECURSIVE              = YES
 EXCLUDE                = GRHayL/include/ghl_unit_tests.h
@@ -258,16 +259,6 @@ FILE_VERSION_FILTER    =
 # tag is left empty.
 
 LAYOUT_FILE            =
-
-# The CITE_BIB_FILES tag can be used to specify one or more bib files containing
-# the reference definitions. This must be a list of .bib files. The .bib
-# extension is automatically appended if omitted. This requires the bibtex tool
-# to be installed. See also https://en.wikipedia.org/wiki/BibTeX for more info.
-# For LaTeX the style of the bibliography can be controlled using
-# LATEX_BIB_STYLE. To use this feature you need bibtex and perl available in the
-# search path. See also \cite for info how to create references.
-
-CITE_BIB_FILES         =
 
 #---------------------------------------------------------------------------
 # Configuration options related to warning and progress messages
