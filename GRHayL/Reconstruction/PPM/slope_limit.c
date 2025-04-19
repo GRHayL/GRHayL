@@ -23,8 +23,11 @@
  * limiting the slope by comparing the first- and second-order
  * derivatives. The core algorithm is quite simple, though we
  * expand it here for more detailed explanations. This method
- * comes from equation 60 of \cite Marti_1996. We first compute
- * the first order derivative
+ * comes from equation 60 of \cite Marti_1996. Note, however,
+ * the factor of 2 missing in the
+ * \f$ \left| a_{j+1} - a_{j} \right| \f$ term.
+ *
+ * We first compute the first order derivative
  *
  * \f[
  * \begin{aligned}
@@ -34,21 +37,25 @@
  * \end{aligned}
  * \f]
  *
- * Then, we determine the correct sign of the derivative using
+ * Then, we determine the sign and magnitude of the slope using
  *
  * \f[
- * (0 < \Delta U) - (\Delta U < 0)
+ * \begin{align}
+ * sgn(\mathrm{slope}) &= (0 < \Delta U) - (\Delta U < 0) \\
+ * &=
+ * \begin{cases}
+ *   +1 & \mathrm{if\ } \Delta U > 0 \\
+ *   -1 & \mathrm{if\ } \Delta U < 0 \\
+ *    0 & \mathrm{otherwise}
+ * \end{cases}
+ * \end{align}
  * \f]
- *
- * This expression will give -1 if the slope is negative, +1 if
- * it is positive, and 0 if it is neither. Then, we compute the
- * magnitude of the slope with the expression
  *
  * \f[
- * \mathrm{min}\left[ |\Delta U| , 2 \mathrm{min}\left( |dU| , |dUp1| \right) \right]
+ * \left|\mathrm{slope}\right| = \mathrm{min}\Bigl[ |\Delta U| ,\ 2 \mathrm{min}\left( |dU| ,\ |dUp1| \right) \Bigr]
  * \f]
  *
- * This operation takes the minimum of the 3 derivatives, thereby limiting the slope.
+ * where the slope magnitude is limited by the second equation.
  *
  * @param[in] dU: value of the difference \f$ U_{i} - U_{i-1} \f$
  *
@@ -56,18 +63,12 @@
  *
  * @returns value of the limited slope at point \f$ i \f$
  */
-
-// Eq. 60 \cite Marti_1996
-// [note the factor of 2 missing in the |a_{j+1} - a_{j}| term].
-// Recall that dU = U_{i} - U_{i-1}.
 double ghl_slope_limit(
       const double dU,
       const double dUp1) {
 
   if(dU*dUp1 > 0.0) {
-    //delta_m_U=0.5 * [ (u_(i+1)-u_i) + (u_i-u_(i-1)) ] = (u_(i+1) - u_(i-1))/2  <-- first derivative, second-order; this should happen most of the time (smooth flows)
     const double delta_m_U = 0.5*(dU + dUp1);
-    // EXPLANATION OF BELOW LINE OF CODE.
     // In short, sign_delta_a_j = sign(delta_m_U) = (0.0 < delta_m_U) - (delta_m_U < 0.0).
     //    If delta_m_U>0, then (0.0 < delta_m_U)==1, and (delta_m_U < 0.0)==0, so sign_delta_a_j=+1
     //    If delta_m_U<0, then (0.0 < delta_m_U)==0, and (delta_m_U < 0.0)==1, so sign_delta_a_j=-1

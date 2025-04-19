@@ -1,8 +1,78 @@
 #include "ghl_reconstruction.h"
 
-// Compute ftilde, which is used for flattening left and right face values
-// DEPENDENCIES: P(MINUS2,MINUS1,PLUS_1,PLUS_2) and v^m(MINUS1,PLUS_1), where m=flux_dirn={1,2,3}={x,y,z}.
-
+/**
+ * @ingroup ppm_internal
+ * @brief Computes flattening parameter needed by the PPM algorithm.
+ *
+ * @details
+ * This function computes the \f$ \tilde{f} \f$ value needed for the
+ * flattening procedure inside of the PPM reconstruction routine.
+ * This procedure is described in the appendix of \cite Colella_1984
+ * from which it originates, but we provide an overview of the
+ * implementation here.
+ *
+ * To begin, we compute differences and averages of the pressure across the cell:
+ *
+ * \f[
+ * \begin{aligned}
+ * \Delta P_1 &\equiv P_{i+1} - P_{i-1} \\
+ * \Delta P_2 &\equiv P_{i+2} - P_{i-2} \\
+ * A_1 &\equiv \frac{P_{i+1} + P_{i-1}}{2} \\
+ * A_2 &\equiv \frac{P_{i+2} + P_{i-2}}{2}
+ * \end{aligned}
+ * \f]
+ *
+ * At this point, we introduce protection against numerical round-off issues by
+ * setting the difference to zero if it is less than \f$ 10^{-15} \f$.
+ *
+ * We also define the ratio of the differences
+ *
+ * \f[
+ * R_\Delta \equiv \frac{\Delta P_1}{\Delta P_2}
+ * \f]
+ *
+ * This is set to 1 if \f$ \Delta P_2=0 \f$. Finally, we use these quantities
+ * to determine if flattening needs to occur with the triggers
+ *
+ * \f[
+ * q_2 > \epsilon
+ * \f]
+ *
+ * \f[
+ * q_2 \left( v_{i-1} - v_{i+1} \right) > 0
+ * \f]
+ *
+ * where
+ *
+ * \f[
+ * q_2 = \frac{\left| \Delta P_1 \right|}{\min{\left(P_{i+1}, P_{i-1}\right)}}
+ * \f]
+ *
+ * If both of these conditions are met, then there is a shock. In this case,
+ * the value of \f$ \tilde{f} \f$ is given by
+ *
+ * \f[
+ * \tilde{f} = \min{\left[ 1, \max{\left( 0, q_1 \right)} \right]}
+ * \f]
+ *
+ * where
+ *
+ * \f[
+ * q_1 = \omega_2 \left(R_\Delta - \omega_1 \right)
+ * \f]
+ *
+ * If either condition is false, then there is no shock and thus flattening
+ * is unnecessary. Then, the function simply returns zero for \f$ \tilde{f} \f$.
+ *
+ * @param[in] params:      pointer to ghl_parameters struct
+ *
+ * @param[in] pressure:    1D array containing stencil for the pressure
+ *
+ * @param[in] v_flux_dirn: 1D array containing stencil for the fluid
+ *                         velocity in the direction of the reconstruction
+ *
+ * @returns the computed \f$ \tilde{f} \f$ value
+ */
 double ghl_shock_detection_ftilde(
       const ghl_parameters *restrict params,
       const double P[5],

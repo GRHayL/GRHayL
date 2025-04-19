@@ -12,7 +12,6 @@ GNU General Public License.
 The Palenzuela and Newman routines are adapted from the [GRMHD_con2prim](https://bitbucket.org/dsiegel/grmhd_con2prim/src/master/) code, which is under the Creative
 Commons Attribution-ShareAlike 4.0 International License.
 
-
 ## Citations
 
 The following chart gives a quick reference guide, followed by a more detailed
@@ -53,3 +52,6 @@ the [code](https://zenodo.org/records/1213306) and associated
 The PPM method is adapted from the work by Del Zanna et al, and the
 [release paper](https://www.aanda.org/articles/aa/abs/2003/11/aa3107/aa3107.html)
 ([arxiv](https://arxiv.org/abs/astro-ph/0210618)) should be cited.
+
+The WENO-z method is adapted from the Phoebus code developed by
+Los Alamos National Lab.

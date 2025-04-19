@@ -59,7 +59,7 @@
  * @defgroup ppm Piecewise Parabolic Method
  * @ingroup Reconstruction
  *
- * The highest order method currently in @grecon is the piecewise parabolic method (PPM).
+ * The most commonly used method in @grecon is the piecewise parabolic method (PPM).
  * This method uses information about the pressure to determine if there is a shock
  * and uses additional flattening, monotonizing, and other algorithms to compute the
  * face values. The primary library routines are @ref ghl_ppm_reconstruction and 
@@ -71,9 +71,34 @@
  */
 
 /**
+ * @defgroup weno WENO Methods
+ * @ingroup Reconstruction
+ *
+ * As an alternative to PPM, @grecon also provides WENO (weighted essentially
+ * non-oscillatory) methods. Currently, it only supports WENO-z which is called with
+ * @ref ghl_wenoz_reconstruction.
+ */
+
+/**
+ * @defgroup plm_internal Internal PLM Functions
+ * @ingroup plm
+ *
+ * These are internal functions/attributes used by the PLM routines but should not be
+ * called by standard users.
+ */
+
+/**
  * @defgroup ppm_internal Internal PPM Functions
  * @ingroup ppm
  *
  * These are internal functions/attributes used by the PPM routines but should not be
+ * called by standard users.
+ */
+
+/**
+ * @defgroup weno_internal Internal WENO Functions
+ * @ingroup weno
+ *
+ * These are internal functions/attributes used by the WENO routines but should not be
  * called by standard users.
  */
