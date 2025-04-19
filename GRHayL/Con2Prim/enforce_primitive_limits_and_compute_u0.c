@@ -17,7 +17,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
   switch(eos->eos_type) {
     case ghl_eos_hybrid:
       // Apply floors and ceilings to rho
-      prims->rho = MIN(MAX(prims->rho, eos->rho_min), eos->rho_max);
+      prims->rho = ghl_clamp(prims->rho, eos->rho_min, eos->rho_max);
 
       // Pressure and epsilon must be recomputed
       // Compute P and eps
@@ -68,10 +68,10 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
 
     case ghl_eos_simple:
       // Apply floors and ceilings to rho
-      prims->rho = MIN(MAX(prims->rho, eos->rho_min), eos->rho_max);
+      prims->rho = ghl_clamp(prims->rho, eos->rho_min, eos->rho_max);
 
       // Apply floors and ceilings to P
-      prims->press = MIN(MAX(prims->press, eos->press_min), eos->press_max);
+      prims->press = ghl_clamp(prims->press, eos->press_min, eos->press_max);
 
       // Now recompute eps and, if needed, entropy
       prims->eps = prims->press / (prims->rho * (eos->Gamma_th - 1.0));

@@ -77,7 +77,7 @@ static ghl_error_codes_t ghl_newman_energy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
 
     // Impose physical limits and compute W
-    invW = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor), 1.0);
+    invW = ghl_clamp(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor, 1.0);
     W    = 1.0/invW;
 
     // Set the prims (eps is computed as in Palenzuela et al.)
@@ -117,7 +117,7 @@ static ghl_error_codes_t ghl_newman_energy(
     const double Epssq = Eps*Eps;
     const double zsq   = z*z;
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
-    invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor), 1.0);
+    invW               = ghl_clamp(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor, 1.0);
     W                  = 1.0/invW;
   }
 

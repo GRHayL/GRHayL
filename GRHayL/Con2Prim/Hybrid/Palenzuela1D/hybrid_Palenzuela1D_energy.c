@@ -31,7 +31,7 @@ compute_rho_P_eps_W_energy(
       double *restrict W_ptr) {
 
   // Step 1: First compute rho and W
-  double rho, W;
+  double W;
   compute_rho_W_from_x_and_conservatives(x, params, cons_undens, fparams, &prims->rho, &W);
 
   // Step 2: Compute eps

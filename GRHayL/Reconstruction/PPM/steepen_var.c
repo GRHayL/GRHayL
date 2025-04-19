@@ -134,7 +134,7 @@ void ghl_steepen_var(
     if (fabs(d1rho_b) > 0.0) {
       eta_tilde = -(1.0/6.0)*(d2rho_b_p1 - d2rho_b_m1)/d1rho_b;
     }
-    const double eta = MAX(0.0, MIN(params->ppm_shock_eta1*(eta_tilde - params->ppm_shock_eta2), 1.0));
+    const double eta = ghl_clamp(params->ppm_shock_eta1*(eta_tilde - params->ppm_shock_eta2), 0.0, 1.0);
 
     // Next compute Urp1 and Ul for RHOB, using the MC prescription:
     // Ur_p1 = U_p1   - 0.5*slope_lim_dU_p1

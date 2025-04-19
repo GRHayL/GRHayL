@@ -7,6 +7,9 @@
  * @details
  * This function computes the \f$ \tilde{f} \f$ value needed for the
  * flattening procedure inside of the PPM reconstruction routine.
+ * It aims to reduce oscillation near shocks where a higher value
+ * corresponds to stronger flattening of the interpolation profile.
+ *
  * This procedure is described in the appendix of \cite Colella_1984
  * from which it originates, but we provide an overview of the
  * implementation here.
@@ -86,27 +89,32 @@ double ghl_shock_detection_ftilde(
 
   // MODIFICATION TO STANDARD PPM:
   // Cure roundoff error issues when dP1==0 or dP2==0 to 15 or more significant digits.
-  if(fabs(dP1)/avg1 < 1e-15) {
-    /* If this is triggered, there is NO shock */
-    dP1 = 0.0;
+  const double zero_cutoff = 1e-15;
+
+  if(fabs(dP1)/avg1 < zero_cutoff) {
+    // If this is triggered, there is no shock
+    return 0.0;
   }
-  if(fabs(dP2)/avg2 < 1e-15) {
-    /* If this is triggered, there may still be a shock */
+  if(fabs(dP2)/avg2 < zero_cutoff) {
+    // If this is triggered, there may still be a shock
     dP2 = 0.0;
   }
 
   double dP1_over_dP2 = 1.0;
-  if (dP2 != 0.0) dP1_over_dP2 = dP1/dP2;
+  if (dP2 != 0.0) {
+    dP1_over_dP2 = dP1/dP2;
+  }
 
-  const double q1 = (dP1_over_dP2 - params->ppm_flattening_omega1) * params->ppm_flattening_omega2;
+  const double q1 = (dP1_over_dP2 - params->ppm_flattening_omega1)
+                    * params->ppm_flattening_omega2;
   const double q2 = fabs(dP1)/MIN(P[PLUS_1], P[MINUS1]);
 
   // this if statement is equivalent to the w_j variable in the original Colella and Woodward paper
   if (q2 > params->ppm_flattening_epsilon && q2*( (v_flux_dirn[MINUS1]) - (v_flux_dirn[PLUS_1]) ) > 0.0) {
     // inside a shock
-    return MIN(1.0, MAX(0.0, q1));
+    return ghl_clamp(q1, 0.0, 1.0);
   } else {
-    // NOT inside a shock
+    // Not inside a shock
     return 0.0;
   }
 }

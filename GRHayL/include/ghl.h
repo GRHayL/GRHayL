@@ -29,6 +29,17 @@
 #endif
 #endif
 
+/** @cond DOXYGEN_IGNORE */
+static inline double ghl_clamp(
+      double a,
+      double lo,
+      double hi) {
+  return fmax(
+              fmin(a, hi),
+              lo);
+}
+/** @endcond */
+
 typedef enum {
   ghl_success,
   ghl_error_unknown_eos_type,

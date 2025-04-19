@@ -56,6 +56,14 @@
  */
 
 /**
+ * @defgroup plm_internal Internal PLM Functions
+ * @ingroup plm
+ *
+ * These are internal functions/attributes used by the PLM routines but should not be
+ * called by standard users.
+ */
+
+/**
  * @defgroup ppm Piecewise Parabolic Method
  * @ingroup Reconstruction
  *
@@ -71,28 +79,20 @@
  */
 
 /**
+ * @defgroup ppm_internal Internal PPM Functions
+ * @ingroup ppm
+ *
+ * These are internal functions/attributes used by the PPM routines but should not be
+ * called by standard users.
+ */
+
+/**
  * @defgroup weno WENO Methods
  * @ingroup Reconstruction
  *
  * As an alternative to PPM, @grecon also provides WENO (weighted essentially
  * non-oscillatory) methods. Currently, it only supports WENO-z which is called with
  * @ref ghl_wenoz_reconstruction.
- */
-
-/**
- * @defgroup plm_internal Internal PLM Functions
- * @ingroup plm
- *
- * These are internal functions/attributes used by the PLM routines but should not be
- * called by standard users.
- */
-
-/**
- * @defgroup ppm_internal Internal PPM Functions
- * @ingroup ppm
- *
- * These are internal functions/attributes used by the PPM routines but should not be
- * called by standard users.
  */
 
 /**
