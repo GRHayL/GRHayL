@@ -97,7 +97,7 @@ void ghl_wenoz_reconstruction(
       double *restrict Ur,
       double *restrict Ul);
 
-void ghl_wenoz_reconstruction_right_left_faces(
+void ghl_wenoz_reconstruction_for_cell(
       const double U[5],
       double *restrict Ur,
       double *restrict Ul);

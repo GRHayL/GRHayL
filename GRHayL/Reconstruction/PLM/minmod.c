@@ -1,7 +1,7 @@
 #include "ghl_reconstruction.h"
 
 /**
- * @ingroup plm
+ * @ingroup plm_internal
  * @brief Evaluates \f$ \Delta U \f$ using minmod.
  *
  * @details

@@ -1,17 +1,31 @@
 #include "ghl_reconstruction.h"
 
-/*
- * Function     : ghl_wenoz_reconstruction_right_left_faces()
- * Description  : reconstructs variables at the points
- *                    Ur(i) = U(i+1/2+epsilon)
- *                    Ul(i) = U(i-1/2-epsilon)
- *                using the WENO-z reconstruction algorithm,
- *                i.e. it reconstructs at x-1/2*delta x and 
- *                x+1/2*delta x
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/wenoz
+/**
+ * @ingroup weno_internal
+ * @brief Reconstructs variables at the points  
+ * @sp10 \f$ Ur(i) = U \left(i-\frac{1}{2} + \epsilon \right) \f$  
+ * @sp10 \f$ Ul(i) = U \left(i+\frac{1}{2} - \epsilon \right) \f$
+ *
+ * @details
+ * This function computes the right and left face values of a cell for a
+ * single variable using the WENO-z method.
+ *
+ * @todo Terrence Pierre Jacques should document how this function/method
+ *       works. See for example @ref ghl_ppm_compute_for_cell. Also,
+ *       the comment about references should be converted to actual
+ *       references using the docs/raw/refs.bib and Doxygen's citation
+ *       support.
+ *
+ * @param[in] U:   1D array containing stencil of variable to reconstruct
+ *
+ * @param[out] Ur: pointer to a double; set to the value of the right face
+ *
+ * @param[out] Ul: pointer to a double; set to the value of the left face
+ *
+ * @returns void
+ */
 
-The following code has been adapted from the phoebus code:
-
+/*The following code has been adapted from the phoebus code:
 //========================================================================================
 // (C) (or copyright) 2021. Triad National Security, LLC. All rights reserved.
 //
@@ -59,13 +73,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // WENO interpolation. See Tchekhovskoy et al. 2007 (T07), Shu 2011 (S11)
 // Implemented by Monika Moscibrodzka
 
+/** @cond DOXYGEN_IGNORE */
 static double mc(const double dm, const double dp, const double alpha) {
   const double dc = (dm * dp > 0.0) * 0.5 * (dm + dp);
   return copysign(
       MIN(fabs(dc), alpha * MIN(fabs(dm), fabs(dp))), dc);
 }
+/** @endcond */
 
-void ghl_wenoz_reconstruction_right_left_faces(
+void ghl_wenoz_reconstruction_for_cell(
       const double U[5],
       double *restrict Ur,
       double *restrict Ul) {
