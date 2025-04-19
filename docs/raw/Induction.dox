@@ -47,29 +47,34 @@
  * of variables, whether there is actually a grid variable \f$B_\mathrm{stagger}\f$ is entirely
  * unknown to @grhayl, so long as it is able to be passed the expected variables. The
  * scalar potential \f$\tilde{\Phi}\f$ is fully staggered to (i+1/2,j+1/2,k+1/2).
- *
- * ### Flux Terms
+ */
+
+/**
+ * @defgroup mag_flux Flux Terms
+ * @ingroup Induction
  *
  * @grhayl currently only implements the Harten, Lax, and van Leer (HLL) flux method
- * (see e.g. [Del Zanna, Bucciantini & Londrillo](https://arxiv.org/abs/astro-ph/0210618)).
- * This is provided with the `ghl_HLL_flux_with_*` functions (@ref ghl_HLL_flux_with_B and
- * @ref ghl_HLL_flux_with_Btilde) which directly return the RHS contribution. The
- * flux function is completely independent of direction, as all the data simply
- * needs to be properly packed into the @ref ghl_HLL_vars struct. The difference
- * between the two functions is based on whether the staggered \f$ B^i \f$ is
- * densitized or not. The flux calculation is more naturally computed from the
- * densitized \f$ \tilde{B} \f$ field, so the function which takes undensitized
- * \f$ B \f$ needs \f$ \psi^6 \f$ (from e.g. ghl_metric_quantities::sqrtdetgamma)
- * to densitize \f$ B \f$ internally.
+ * (see e.g. \cite DelZanna_2003). This is provided by the @ref ghl_HLL_flux_with_B
+ * and @ref ghl_HLL_flux_with_Btilde functions which directly return the
+ * RHS contribution. The flux function is completely independent of direction,
+ * as all the data simply needs to be properly packed into the @ref ghl_HLL_vars
+ * struct. The difference between the two functions is based on whether the
+ * staggered \f$ B^i \f$ is densitized or not. The flux calculation is more
+ * naturally computed from the densitized \f$ \tilde{B} \f$ field, so the
+ * function which takes undensitized \f$ B \f$ needs \f$ \psi^6 \f$
+ * (from e.g. ghl_metric_quantities::sqrt_detgamma) to densitize \f$ B \f$ internally.
  *
  * The @ref ghl_HLL_vars struct is more complicated than most @grhayl structs due to the
  * cross-product terms that require different coordinates depending on the component
  * of the RHS being computed. As such, it is highly recommended that users read the
- * struct documentation before using. These functions requires multiple
- * reconstructions of the velocities to get to the staggered gridpoint of \f$ A_i \f$,
- * and improperly packing the struct will cause unexpected behavior.
- *
- * ### Gauge Terms
+ * documentation. These functions require multiple reconstructions of the velocities
+ * to get to the staggered gridpoint of \f$ A_i \f$, and improperly packing the
+ * struct will cause unexpected behavior.
+ */
+
+/**
+ * @defgroup mag_gauge Gauge Terms
+ * @ingroup Induction
  *
  * @grhayl implements the RHS of \f$ \tilde{\Phi}^\mathrm{RHS} \f$ and the gauge terms of
  * \f$ A_i^\mathrm{RHS} \f$ in the same function. However, these calculations require
@@ -80,10 +85,26 @@
  * \f$ \tilde{\Phi}^\mathrm{RHS} \f$ using these quantities. The contribution to \f$ A_i^\mathrm{RHS} \f$
  * is directly computed from the interpolated quantities, so we do not provide a function for this.
  *
- * We provide a set of `interpolate_with_*` functions which fill a @ref ghl_induction_interp_vars
- * struct. The returned values are \f$ \alpha \Phi \beta^j A_j \f$ (a.k.a \f$ A_i^\mathrm{RHS} \f$ on the
- * fully staggered grid and \f$ \sqrt{-g}A^i \f$ on the same staggered grid as \f$ A_i \f$. The different
- * flavors of these functions depend on the metric quantities available. Depending on the
- * spacetime code, these quantities could be cell-centered or vertex-centered. Additionally,
- * we provide a cell-centered BSSN variant which mimics the behavior of the original IllinoisGRMHD code.
+ * A usual implementation will call the desired interpolate function:
+ *
+ * - ghl_interpolate_with_cell_centered_ADM
+ * - ghl_interpolate_with_cell_centered_BSSN
+ * - ghl_interpolate_with_cell_vertex_ADM
+ *
+ * These functions all compute the quantities in the @ref ghl_induction_interp_vars struct. The
+ * different flavors of these functions depend on the metric quantities available. Depending on
+ * the spacetime code, these quantities could be cell-centered or vertex-centered. Additionally,
+ * we provide a cell-centered BSSN variant which mimics the behavior of the original `IllinoisGRMHD` code.
+ *
+ * The returned struct is then used to compute
+ *
+ * - \f$ A_i^\mathrm{RHS} \f$ using a finite difference stencil of ghl_induction_interp_vars::alpha_Phi_minus_betaj_A_j
+ * - \f$ \tilde{\Phi}^\mathrm{RHS} \f$ using @ref ghl_calculate_phitilde_rhs
+ */
+
+/**
+ * @defgroup mag_gauge_internal Internal tmp
+ * @ingroup mag_gauge
+ *
+ * tmp
  */
