@@ -2,13 +2,13 @@
 
 /**
  * @ingroup mag_flux
- * @brief compute RHS for \f$ A_i \f$, excluding gauge contributions; e.g.  
+ * @brief Compute RHS for \f$ A_i \f$, excluding gauge contributions; e.g.  
  * @sp10 \f$ A_y^\mathrm{rhs} = \partial_t A_y = \psi^{6} (v^z B^x - v^x B^z) \f$
  *
  * @details
  * This function computes the right-hand side of the induction equation for a
  * single direction of \f$ A_i \f$ using the undensitized magnetic field
- * \f$ B^i \f$. The specific direction $i$ is based on the data in @ref ghl_HLL_vars.
+ * \f$ B^i \f$. The specific direction \f$ i \f$ is based on the data in @ref ghl_HLL_vars.
  *
  * As this nearly is identical to @ref ghl_HLL_flux_with_Btilde, we only note that
  * this function differs by requiring \f$ \psi^6 \f$ to compute the returned

@@ -69,7 +69,7 @@
  *
  * @param[in] params:      pointer to ghl_parameters struct
  *
- * @param[in] pressure:    1D array containing stencil for the pressure
+ * @param[in] P:           1D array containing stencil for the pressure
  *
  * @param[in] v_flux_dirn: 1D array containing stencil for the fluid
  *                         velocity in the direction of the reconstruction

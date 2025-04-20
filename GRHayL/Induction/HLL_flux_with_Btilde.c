@@ -2,7 +2,7 @@
 
 /**
  * @ingroup mag_flux
- * @brief compute RHS for \f$ A_i \f$, excluding gauge contributions; e.g.  
+ * @brief Compute RHS for \f$ A_i \f$, excluding gauge contributions; e.g.  
  * @sp10 \f$ A_y^\mathrm{rhs} = \partial_t A_y = v^z \tilde{B}^x - v^x \tilde{B}^z \f$
  *
  * @todo
@@ -14,7 +14,7 @@
  * single direction of \f$ A_i \f$ using the densitized magnetic field
  * \f$ \tilde{B}^i \f$.
  *
- * The specific direction $i$ is based on the data in @ref ghl_HLL_vars.
+ * The specific direction \f$ i \f$ is based on the data in @ref ghl_HLL_vars.
  * Since filling this struct is less trivial than for most functions, we
  * give a specific example assuming that we are calculating the \f$ A_z \f$ term.
  * In the  case,
@@ -39,7 +39,7 @@
  * given point. The velocities have to be reconstructed twice, leading
  * to four values.
  *
- * | \f$ A_i^\mathrm{RHS} \f$ Direction | \f$ v \f$ Reconstructed in | \f$ B_1 \f$ reconstructed in | \f$B_2 \f$ reconstructed in |
+ * | \f$ A_i^\mathrm{RHS} \f$ Direction | \f$ v \f$ Reconstructed in | \f$ B_1 \f$ reconstructed in | \f$ B_2 \f$ reconstructed in |
  * |:----------------------------------:|:--------------------------:|:----------------------------:|:---------------------------:|
  * | x                                  | y, z                       | z                            | y                           |
  * | y                                  | z, x                       | x                            | z                           |
@@ -79,7 +79,7 @@
  *
  * The number subscripts represent spatial coordinates \f$ {x,y,z} \f$, which for the
  * characteristic speeds correspond to the direction of the reconstruction from which
- * these are taken. For example, \f$ c_2 f$ is computed using the primitives reconstructed
+ * these are taken. For example, \f$ c_2 \f$ is computed using the primitives reconstructed
  * in the \f$ y \f$ direction.
  *
  * The \f$ R \f$ and \f$ L \f$ superscripts refer to the right/left reconstructed values for
