@@ -29,11 +29,11 @@
  * which come from the original Colella and Woodward [paper](https://www.sciencedirect.com/science/article/abs/pii/0021999184901438?via%3Dihub).
  *
  * @param[in] main_routine:          selects the primary conservative-to-primitive routine for @ref ghl_con2prim_multi_method
- *                                   function; options are limited to the @ref ghl_con2prim_method_t enum
+ *                                   function; options are limited to @ref ghl_con2prim_method_t
  *
  * @param[in] backup_routine:        selects backup conservative-to-primitive routines for @ref ghl_con2prim_multi_method
  *                                   function; up to 3 backups can be selected, with no backup being -1; options are
- *                                   limited to the @ref ghl_con2prim_method_t enum
+ *                                   limited to @ref ghl_con2prim_method_t
  *
  * @param[in] evolve_entropy:        whether entropy should be evolved (True) or not (False)
  *

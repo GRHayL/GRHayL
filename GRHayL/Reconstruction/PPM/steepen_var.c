@@ -1,7 +1,7 @@
 #include "ghl_reconstruction.h"
 
 /**
- * @ingroup ppm_internal
+ * @ingroup recon_internal
  * @brief Applies a steepening algorithm to a variable.
  *
  * This function takes the right and left face values of a variable and applies

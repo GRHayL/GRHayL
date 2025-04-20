@@ -1,7 +1,7 @@
 #include "ghl_reconstruction.h"
 
 /**
- * @ingroup weno_internal
+ * @ingroup weno
  * @brief Reconstructs variables at the points  
  * @sp10 \f$ Ur(i) = U \left(i-\frac{1}{2} + \epsilon \right) \f$  
  * @sp10 \f$ Ul(i) = U \left(i+\frac{1}{2} - \epsilon \right) \f$

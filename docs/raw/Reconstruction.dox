@@ -58,14 +58,6 @@
  */
 
 /**
- * @defgroup plm_internal Internal PLM Functions
- * @ingroup plm
- *
- * These are internal functions/attributes used by the PLM routines but should
- * not be called by standard users.
- */
-
-/**
  * @defgroup ppm Piecewise Parabolic Method
  * @ingroup Reconstruction
  *
@@ -82,14 +74,6 @@
  */
 
 /**
- * @defgroup ppm_internal Internal PPM Functions
- * @ingroup ppm
- *
- * These are internal functions/attributes used by the PPM routines but should
- * not be called by standard users.
- */
-
-/**
  * @defgroup weno WENO Methods
  * @ingroup Reconstruction
  *
@@ -99,9 +83,9 @@
  */
 
 /**
- * @defgroup weno_internal Internal WENO Functions
- * @ingroup weno
+ * @defgroup recon_internal Internal Reconstruction Functions
+ * @ingroup Reconstruction
  *
- * These are internal functions/attributes used by the WENO routines but should
- * not be called by standard users.
+ * These are internal functions/attributes used by the @ref Reconstruction
+ * routines but should not be called by standard users.
  */

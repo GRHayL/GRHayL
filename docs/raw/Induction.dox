@@ -172,10 +172,9 @@
  */
 
 /**
- * @defgroup mag_gauge_internal Internal Induction Gauge Functions
- * @ingroup mag_gauge
+ * @defgroup induction_internal Internal Induction Functions
+ * @ingroup Induction
  *
- * These internal functions are helper functions which extract some of the
- * algorithms out into separate files/functions. While most are not reused,
- * this separation helps with the general clarify of the code.
+ * These are internal functions/attributes used by the @ref Induction
+ * routines but should not be called by standard users.
  */

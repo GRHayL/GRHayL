@@ -1,7 +1,7 @@
 #include "ghl_reconstruction.h"
 
 /**
- * @ingroup ppm_internal
+ * @ingroup recon_internal
  * @brief Macro controlling the slope limit method. 2.0 = MC, 1 = minmod.
  *
  * @todo
@@ -15,7 +15,7 @@
 #define SLOPE_LIMITER_COEFF 2.0
 
 /**
- * @ingroup ppm_internal
+ * @ingroup recon_internal
  * @brief Applies slope limiter to a reconstructed variable.
  *
  * @details

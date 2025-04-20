@@ -8,7 +8,7 @@
  * This function reads returned error code values and checks for errors.
  * It aborts in the case of any fatal errors.
  *
- * @param[in] error: error code (from @ref ghl_error_codes_t enum) to check
+ * @param[in] error: error code (from @ref ghl_error_codes_t) to check
  *
  * @returns void
  */

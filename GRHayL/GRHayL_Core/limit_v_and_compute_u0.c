@@ -52,7 +52,7 @@
  *
  * @param[out] speed_limited: whether speed limiter was triggered (True) or not (False)
  *
- * @returns @ref ghl_error_codes_t: if \f$ u^0 \f$ is singular, this error code will be non-zero
+ * @returns non-zero error code if \f$ u^0 \f$ is singular
  */
 
 ghl_error_codes_t ghl_limit_v_and_compute_u0(

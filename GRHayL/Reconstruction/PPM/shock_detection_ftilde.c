@@ -1,7 +1,7 @@
 #include "ghl_reconstruction.h"
 
 /**
- * @ingroup ppm_internal
+ * @ingroup recon_internal
  * @brief Computes flattening parameter needed by the PPM algorithm.
  *
  * @details
@@ -66,6 +66,11 @@
  *
  * If either condition is false, then there is no shock and thus flattening
  * is unnecessary. Then, the function simply returns zero for \f$ \tilde{f} \f$.
+ *
+ * The constants \f$ \omega_1 \f$, \f$ \omega_2 \f$, and \f$ \epsilon \f$
+ * are all changeable by the user, and the @ref ghl_initialize_params
+ * sets these to reasonable default values based on the original
+ * Colella & Woodward paper \cite Colella_1984.
  *
  * @param[in] params:      pointer to ghl_parameters struct
  *
