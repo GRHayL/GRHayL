@@ -2,7 +2,7 @@
 #include "ghl_induction_helpers.h"
 
 /**
- * @ingroup mag_gauge_internal
+ * @ingroup induction_internal
  * @brief Interpolates vector potential to all staggered grid points
  *
  * @details
@@ -99,7 +99,7 @@ void ghl_A_i_avg(
 }
 
 /**
- * @ingroup mag_gauge_internal
+ * @ingroup induction_internal
  * @brief Interpolates cell-centered BSSN quantities to staggered grid points
  *
  * @details
@@ -221,7 +221,7 @@ void ghl_BSSN_cell_interp(
 }
 
 /**
- * @ingroup mag_gauge_internal
+ * @ingroup induction_internal
  * @brief Interpolates cell-centered ADM quantities to staggered grid points
  *
  * @details
@@ -317,7 +317,7 @@ void ghl_ADM_cell_interp(
 }
 
 /**
- * @ingroup mag_gauge_internal
+ * @ingroup induction_internal
  * @brief Interpolates vertex-centered ADM quantities to staggered grid points
  *
  * @details

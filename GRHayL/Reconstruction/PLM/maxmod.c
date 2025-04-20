@@ -1,7 +1,7 @@
 #include "ghl_reconstruction.h"
 
 /**
- * @ingroup plm_internal
+ * @ingroup recon_internal
  * @brief Evaluates \f$ \Delta U \f$ using maxmod.
  *
  * @details

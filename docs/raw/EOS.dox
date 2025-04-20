@@ -5,29 +5,11 @@
  *        schemes.
  *
  * This includes all the core routines to implement GRMHD code for both
- * hybrid and tabulated equations of state. Additionally, we provide
- * a simplified hybrid EOS. This is often referred to as the 'ideal fluid'
- * or 'ideal gas' EOS despite the fact that all of these are ideal
- * fluid EOS. This EOS is primarily only of interest for comparing against
- * known results such as the Balsara tests.
- *
- * ## Hybrid EOS
- *
- * The hybrid EOS splits the pressure into cold and thermal components, and
- * the behavior of the thermal part is controlled with \f$ \Gamma_\mathrm{th} \f$
- * (see ghl_eos_parameters and ghl_initialize_hybrid_eos for implementation
- * specifics). The EOS also contains the needed infrastructure for using
- * piecewise polytropes, which allows the hybrid EOS to better approximate
- * tabulated EOS without the computational expense of the full tabulated approach.
- *
- *
- * ## Tabulated EOS
- *
- * The tabulated EOS uses a table of computed values for many quantities to
- * define the EOS. This EOS requires many interpolations between table
- * entries, as well as the ability to solve for one table variable when
- * given other elements of the table. @grhayl provides all the code
- * required to both read, interpolate, and compute variables in the table.
+ * [hybrid](@ref hybrid_eos) and [tabulated](@ref tab_eos) equations of state.
+ * Additionally, we provide a simplified hybrid EOS. This is often referred
+ * to as the 'ideal fluid' or 'ideal gas' EOS despite the fact that all of
+ * these are ideal fluid EOS. This EOS is primarily only of interest for
+ * comparing against known results such as the Balsara tests.
  *
  * # EOS initialization
  *
@@ -38,10 +20,43 @@
  * generally the best solution. This struct can then be initialized by using
  * one of these functions:
  *
- * - ghl_initialize_simple_eos_functions_and_params
- * - ghl_initialize_hybrid_eos_functions_and_params
- * - ghl_initialize_tabulated_eos_functions_and_params
+ * - @ref ghl_initialize_simple_eos_functions_and_params
+ * - @ref ghl_initialize_hybrid_eos_functions_and_params
+ * - @ref ghl_initialize_tabulated_eos_functions_and_params
  *
  * which will properly set up all the function pointers and struct parameters
  * for the chosen EOS.
+ */
+
+/**
+ * @defgroup hybrid_eos Hybrid EOS
+ * @ingroup EOS
+ *
+ * The hybrid EOS splits the pressure into cold and thermal components, and
+ * the behavior of the thermal part is controlled with \f$ \Gamma_\mathrm{th} \f$
+ * (see ghl_eos_parameters and @ref ghl_initialize_hybrid_eos for
+ * implementation specifics). The EOS also supports piecewise polytropes,
+ * which allows the hybrid EOS to better approximate tabulated EOS without
+ * the computational expense of the full tabulated approach.
+ */
+
+/**
+ * @defgroup tab_eos Tabulated EOS
+ * @ingroup EOS
+ *
+ * The tabulated EOS uses a table of computed values for many quantities to
+ * define the EOS. This EOS requires many interpolations between table
+ * entries, as well as the ability to solve for one table variable when
+ * given other elements of the table. This has the benefit of better
+ * approximating a given nuclear data table compared to e.g. hybrid EOS,
+ * but at significant computational expense. @grhayl provides all the code
+ * required to both read, interpolate, and compute variables in the table.
+ */
+
+/**
+ * @defgroup eos_internal Internal EOS Functions
+ * @ingroup EOS
+ *
+ * These are internal functions/attributes used by the @ref EOS
+ * routines but should not be called by standard users.
  */

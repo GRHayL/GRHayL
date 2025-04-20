@@ -40,71 +40,114 @@ static inline double ghl_clamp(
 }
 /** @endcond */
 
+/**
+ * @ingroup GRHayL_Core
+ * @enum ghl_error_codes_t
+ * @brief Integer constants to track error types
+ *
+ * @todo
+ * S.Cupp: The tabulated error codes should be reviewed by Leo Werneck for validity
+ * and to check if any should be split or merged with other error codes. E.g. does
+ * ghl_error_table_bisection actually only represent a single error, or should it
+ * be divided into two?
+ */
 typedef enum {
-  ghl_success,
-  ghl_error_unknown_eos_type,
-  ghl_error_invalid_c2p_key,
-  ghl_error_neg_rho,
-  ghl_error_neg_pressure,
-  ghl_error_neg_vsq,
-  ghl_error_c2p_max_iter,
-  ghl_error_c2p_singular,
-  ghl_error_root_not_bracketed,
-  ghl_error_table_max_rho,
-  ghl_error_table_min_rho,
-  ghl_error_table_max_ye,
-  ghl_error_table_min_ye,
-  ghl_error_table_max_T,
-  ghl_error_table_min_T,
-  ghl_error_exceed_table_vars,
-  ghl_error_table_neg_energy,
-  ghl_error_table_bisection,
-  ghl_error_u0_singular
+  ghl_success,                   /**< Success/no error found */
+  ghl_error_unknown_eos_type,   /**< Found an invalid @ref ghl_eos_t key */
+  ghl_error_invalid_c2p_key,    /**< Found an invalid @ref ghl_con2prim_method_t key */
+  ghl_error_neg_rho,            /**< Negative density from @ref Con2Prim routine */
+  ghl_error_neg_pressure,       /**< Negative pressure from @ref Con2Prim routine */
+  ghl_error_neg_vsq,            /**< Imaginary velocity from @ref Con2Prim routine */
+  ghl_error_c2p_max_iter,       /**< Maximum iterations reached in @ref Con2Prim routine */
+  ghl_error_c2p_singular,       /**< Singular value found in @ref Con2Prim routine */
+  ghl_error_root_not_bracketed, /**< Value not contained by bounds in @ref Con2Prim root finder routine */
+  ghl_error_table_max_rho,      /**< Density above table bounds in @ref tab_eos routine */
+  ghl_error_table_min_rho,      /**< Density below table bounds in @ref tab_eos routine */
+  ghl_error_table_max_ye,       /**< Electron fraction above table bounds in @ref tab_eos routine */
+  ghl_error_table_min_ye,       /**< Electron fraction below table bounds in @ref tab_eos routine */
+  ghl_error_table_max_T,        /**< Temperature above table bounds in @ref tab_eos routine */
+  ghl_error_table_min_T,        /**< Temperature below table bounds in @ref tab_eos routine */
+  ghl_error_exceed_table_vars,  /**< Requested more output variables than exist in the @ref tab_eos table */
+  ghl_error_table_neg_energy,   /**< Negative energy found after energy shift in @ref tab_eos routine */
+  ghl_error_table_bisection,    /**< Failure to find solution via bisection in @ref tab_eos routine */
+  ghl_error_u0_singular         /**< Singular \f$ u^0 \f$ while computing velocities */
 } ghl_error_codes_t;
 
+/**
+ * @ingroup Con2Prim
+ * @enum ghl_con2prim_method_t
+ * @brief Integer constants to specify conservative-to-primitive method
+ */
 typedef enum {
-  None = -1,
-  Noble2D,
-  Noble1D,
-  Noble1D_entropy,
-  Noble1D_entropy2,
-  Font1D,
-  CerdaDuran2D,
-  CerdaDuran3D,
-  Palenzuela1D,
-  Palenzuela1D_entropy,
-  Newman1D,
-  Newman1D_entropy
+  None = -1,            /**< No method (for disabling backups) */
+  Noble2D,              /**< The @ref ghl_hybrid_Noble2D routine */
+  Noble1D,              /**< The @ref ghl_hybrid_Noble1D routine */
+  Noble1D_entropy,      /**< The @ref ghl_hybrid_Noble1D routine */
+  Font1D,               /**< The @ref ghl_hybrid_Font1D routine */
+  Palenzuela1D,         /**< The @ref ghl_hybrid_Palenzuela1D_energy or @ref ghl_tabulated_Palenzuela1D_energy routine */
+  Palenzuela1D_entropy, /**< The @ref ghl_hybrid_Palenzuela1D_entropy or @ref ghl_tabulated_Palenzuela1D_entropy routine */
+  Newman1D,             /**< The @ref ghl_tabulated_Newman1D_energy routine */
+  Newman1D_entropy      /**< The @ref ghl_tabulated_Newman1D_entropy routine */
 } ghl_con2prim_method_t;
 
-typedef enum {ghl_eos_simple, ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
+/**
+ * @ingroup EOS
+ * @enum ghl_eos_t
+ * @brief Integer constants to track EOS type
+ */
+typedef enum {
+  ghl_eos_simple,   /**< Simple EOS */ 
+  ghl_eos_hybrid,   /**< Hybrid EOS */ 
+  ghl_eos_tabulated /**< Tabulated EOS */ 
+} ghl_eos_t;
 
-/*
- * Struct        : ghl_parameters
- * Description   : stores basic GRHayL parameters
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_parameters
-*/
+/**
+ * @ingroup GRHayL_Core
+ * @struct ghl_parameters
+ * @brief Stores basic GRHayL parameters
+ */
 typedef struct ghl_parameters {
-  ghl_con2prim_method_t main_routine, backup_routine[3];
+  /** Primary @ref Con2Prim method */
+  ghl_con2prim_method_t main_routine;
+  /** Secondary @ref Con2Prim methods */
+  ghl_con2prim_method_t backup_routine[3];
+  /** Whether entropy is evolved (true) or not (false) */
   bool evolve_entropy;
+  /** Whether temperature is evolved (true) or not (false) */
   bool evolve_temp;
-  bool calc_prim_guess;
+  /** Maximum Lorentz factor for velocity limiters */
   double max_Lorentz_factor;
+  /** Pre-computed value of the inverse square of ghl_parameters::max_Lorenz_factor */
   double inv_sq_max_Lorentz_factor;
+  /** Threshold of \f$ \psi^6 \f$ above which limits on primitives and
+      conservatives change. Approximates whether the point is inside the horizon. */
   double psi6threshold;
+  /** Damping factor for the generalized Lorenz gauge in the @ref Induction */
   double Lorenz_damping_factor;
 
   // Con2Prim parameters
+  /** Whether @ref ghl_con2prim_multi_method should calculate an initial
+      primitive variable guess (true) or use user input (false) */
+  bool calc_prim_guess;
+  /** Maximum number of iterations allowed in @ref Con2Prim solvers */
   int con2prim_max_iterations;
+  /** Convergence tolerance in @ref Con2Prim solvers */
   double con2prim_solver_tolerance;
 
   // PPM parameters
+  /** Parameter controlling the flattening algorithm in @ref ghl_shock_detection_ftilde */
   double ppm_flattening_epsilon;
+  /** Parameter controlling the flattening algorithm in @ref ghl_shock_detection_ftilde */
   double ppm_flattening_omega1;
+  /** Parameter controlling the flattening algorithm in @ref ghl_shock_detection_ftilde */
   double ppm_flattening_omega2;
+  /** Parameter controlling the steepening algorithm in @ref ghl_steepen_var */
   double ppm_shock_k0;
+  /** Parameter controlling the steepening algorithm in @ref ghl_steepen_var */
   double ppm_shock_eta1;
+  /** Parameter controlling the steepening algorithm in @ref ghl_steepen_var */
   double ppm_shock_eta2;
+  /** Parameter controlling the steepening algorithm in @ref ghl_steepen_var */
   double ppm_shock_epsilon;
 } ghl_parameters;
 

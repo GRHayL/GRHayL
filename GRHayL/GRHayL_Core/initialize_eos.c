@@ -9,15 +9,16 @@
   eos->rho_max           = rho_max;
 
 /**
- * @ingroup eos_init
+ * @ingroup Con2Prim
  *
  * @brief Function pointer to the (EOS-specified) con2prim_multi_method
  *        function.
  *
- * @details This variable stores the pointer to the correct multi_method
- *          function, which allows for users to call a single function
- *          which is set at runtime to the correct method. This implementation
- *          allows for more separation of the EOS and Con2Prim gems.
+ * @details
+ * This variable stores the pointer to the correct multi_method function,
+ * which allows for users to call a single function which is set at runtime
+ * to the correct method. This implementation allows for more separation of
+ * @ref EOS and @ref Con2Prim.
  */
 ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_parameters *restrict params,
@@ -40,7 +41,7 @@ ghl_error_codes_t (*ghl_con2prim_multi_method)(
  * @ref ghl_con2prim_hybrid_multi_method or
  * @ref ghl_con2prim_tabulated_multi_method depending on the chosen EOS.
  *
- * @param[in] eos_type: @ref eos_type_t enum designating the type of EOS being initialized
+ * @param[in] eos_type: @ref ghl_eos_t designating the type of EOS being initialized
  * 
  * @returns void
  */
