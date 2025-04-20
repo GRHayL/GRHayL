@@ -55,7 +55,7 @@
  * \end{aligned}
  * \f]
  *
- * We also compute \eta using
+ * We also compute \f$ \eta \f$ using
  *
  * \f[
  * \eta = \mathrm{max}\left[0,\ \mathrm{min}\left( 1,\ \eta_1 (\tilde{\eta} - \eta_2) \right) \right]
@@ -90,6 +90,8 @@
  * \f$ \eta_2 \f$ are all changeable by the user, and the @ref ghl_initialize_params
  * sets these to reasonable default values based on the original
  * Colella & Woodward paper \cite Colella_1984.
+ *
+ * @param[in] params:    pointer to a ghl_parameters struct
  *
  * @param[in] rho:       1D array containing stencil of the reconstructed variable
  *

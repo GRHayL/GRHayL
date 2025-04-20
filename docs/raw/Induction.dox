@@ -1,17 +1,19 @@
 /** 
  * @defgroup Induction Induction Gem
  *
- * @brief The @ginduct gem provides functions for computing the various contributions
-          to the right-hand side of the induction evolution equation.
+ * @brief The @ginduct gem provides functions for computing the various
+ *        contributions to the right-hand side of the induction evolution
+ *        equation.
  *
- * These functions are split between those which are naturally computed in a single
- * direction (flux contributions to \f$ A_i^\mathrm{RHS} \f$) and those which are
- * direction-independent (\f$ \tilde{\Phi}^\mathrm{RHS} \f$ and gauge contributions
- * to \f$ A_i^\mathrm{RHS} \f$). The flux terms require characteristic speeds, which
- * can be computed using functions from the @ref Flux_Source gem.
+ * These functions are split between those which are naturally computed in
+ * a single direction (flux contributions to \f$ A_i^\mathrm{RHS} \f$) and
+ * those which are direction-independent (\f$ \tilde{\Phi}^\mathrm{RHS} \f$
+ * and gauge contributions to \f$ A_i^\mathrm{RHS} \f$). The flux terms
+ * require characteristic speeds, which can be computed using functions
+ * from the @ref Flux_Source .
  *
- * Choosing the generalized Lorenz gauge, the induction equation is given in terms
- * of the vector and scalar potentials as
+ * Choosing the generalized Lorenz gauge, the induction equation is given
+ * in terms of the vector and scalar potentials as
  *
  * \f[
  * \begin{aligned}
@@ -20,70 +22,79 @@
  * \end{aligned}
  * \f]
  *
- * where \f$ \Phi \f$ is the magnetic scalar potential, \f$ \tilde{\Phi} \equiv \sqrt{\gamma}\Phi \f$
- * is the densitized scalar potential, \f$ \epsilon_{ijk} \f$ is the standard permutation symbol, and
+ * where \f$ \Phi \f$ is the magnetic scalar potential,
+ * \f$ \tilde{\Phi} \equiv \sqrt{\gamma}\Phi \f$ is the densitized scalar
+ * potential, \f$ \epsilon_{ijk} \f$ is the standard permutation symbol, and
  *
  * \f[
  * \tilde{B^i} = \sqrt{\gamma} B^i
  * \f]
  *
- * is the densitized magnetic field. As seen, this vector potential is the one associated
- * with \f$ \tilde{B}^i \f$, so computing \f$ B^i \f$ from \f$ A_i \f$ requires dividing by
- * \f$ \sqrt{\gamma} \f$. The \f$ \lambda \f$ in the last term of the RHS of \f$ \tilde{\Phi} \f$
- * is a parameter introduced by the gauge condition and has units of \f$ [Length]^{-1} \f$
- * and is typically set to be \f$ \frac{1.5}{\Delta t_\mathrm{max}} \f$ where \f$ t_\mathrm{max} \f$
- * is the timestep of the simulation. In simulations with multiple meshes (such as adaptive or
- * fixed mesh refinement grids), this is the timestep of the coarsest grid.
+ * is the densitized magnetic field. As seen, this vector potential is the
+ * one associated with \f$ \tilde{B}^i \f$, so computing \f$ B^i \f$ from
+ * \f$ A_i \f$ requires dividing by \f$ \sqrt{\gamma} \f$. The \f$ \lambda \f$
+ * in the last term of the RHS of \f$ \tilde{\Phi} \f$ is a parameter
+ * introduced by the gauge condition and has units of \f$ [Length]^{-1} \f$
+ * and is typically set to be \f$ \frac{3}{2\Delta t_\mathrm{max}} \f$ where
+ * \f$ t_\mathrm{max} \f$ is the timestep of the simulation. In simulations
+ * with multiple meshes (such as adaptive or fixed mesh refinement grids),
+ * this is the timestep of the coarsest grid.
  *
  * ## General Design
  *
- * To compute the RHS, several considerations have to be made. First, we need to decide
- * if we have staggered variables. Currently, all @grhayl functions assume that the
- * vector potential \f$A_i\f$ is staggered in the perpendicular directions (i.e. \f$A_x\f$ is
- * staggered in the y,z directions and \f$A_y\f$ is staggered in the x,z directions). Due
- * to the implementation of the HLL flux, @grhayl's notation also assumes the presence
- * of a \f$B^i\f$ staggered in one direction (i.e. \f$B^x\f$ is staggered in the x direction and
- * \f$B^y\f$ is staggered in the y direction). Since all @grhayl functions only take stencils
- * of variables, whether there is actually a grid variable \f$B_\mathrm{stagger}\f$ is entirely
- * unknown to @grhayl, so long as it is able to be passed the expected variables. The
- * scalar potential \f$\tilde{\Phi}\f$ is fully staggered to (i+1/2,j+1/2,k+1/2).
+ * To compute the RHS, several considerations have to be made. First, we need
+ * to decide if we have staggered variables. Currently, all @grhayl functions
+ * assume that the vector potential \f$ A_i \f$ is staggered in the
+ * perpendicular directions (i.e. \f$ A_x \f$ is staggered in the y,z
+ * directions and \f$ A_y \f$ is staggered in the x,z directions). Due to the
+ * implementation of the HLL flux, @grhayl's notation also assumes the presence
+ * of a \f$ B^i \f$ staggered in one direction (i.e. \f$ B^x \f$ is staggered
+ * in the x direction and \f$ B^y \f$ is staggered in the y direction). Since
+ * all @grhayl functions only take stencils of variables, whether there is
+ * actually a grid variable \f$ B_\mathrm{stagger} \f$ is entirely unknown to
+ * @grhayl, so long as it is able to be passed the expected variables. The
+ * scalar potential \f$ \tilde{\Phi} \f$ is fully staggered to
+ * \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$.
  */
 
 /**
  * @defgroup mag_flux Flux Terms
  * @ingroup Induction
  *
- * @grhayl currently only implements the Harten, Lax, and van Leer (HLL) flux method
- * (see e.g. \cite DelZanna_2003). This is provided by the @ref ghl_HLL_flux_with_B
- * and @ref ghl_HLL_flux_with_Btilde functions which directly return the
- * RHS contribution. The flux function is completely independent of direction,
- * as all the data simply needs to be properly packed into the @ref ghl_HLL_vars
- * struct. The difference between the two functions is based on whether the
- * staggered \f$ B^i \f$ is densitized or not. The flux calculation is more
- * naturally computed from the densitized \f$ \tilde{B} \f$ field, so the
- * function which takes undensitized \f$ B \f$ needs \f$ \psi^6 \f$
- * (from e.g. ghl_metric_quantities::sqrt_detgamma) to densitize \f$ B \f$ internally.
+ * @grhayl currently only implements the Harten, Lax, and van Leer (HLL) flux
+ * method (see e.g. \cite DelZanna_2003). This is provided by the
+ * @ref ghl_HLL_flux_with_B and @ref ghl_HLL_flux_with_Btilde functions which
+ * directly return the RHS contribution. The flux function is completely
+ * independent of direction, as all the data simply needs to be properly
+ * packed into the @ref ghl_HLL_vars struct. The difference between the
+ * two functions is based on whether the staggered \f$ B^i \f$ is densitized
+ * or not. The flux calculation is more naturally computed from the densitized
+ * \f$ \tilde{B} \f$ field, so the function which takes undensitized \f$ B \f$
+ * needs \f$ \psi^6 \f$ (from e.g. ghl_metric_quantities::sqrt_detgamma) to
+ * densitize \f$ B \f$ internally.
  *
- * The @ref ghl_HLL_vars struct is more complicated than most @grhayl structs due to the
- * cross-product terms that require different coordinates depending on the component
- * of the RHS being computed. As such, it is highly recommended that users read the
- * documentation. These functions require multiple reconstructions of the velocities
- * to get to the staggered gridpoint of \f$ A_i \f$, and improperly packing the
- * struct will cause unexpected behavior.
+ * The @ref ghl_HLL_vars struct is more complicated than most @grhayl structs
+ * due to the cross-product terms that require different coordinates depending
+ * on the component of the RHS being computed. As such, it is highly recommended
+ * that users read the documentation. These functions require multiple
+ * reconstructions of the velocities to get to the staggered gridpoint of
+ * \f$ A_i \f$, and improperly packing the struct will cause unexpected behavior.
  */
 
 /**
  * @defgroup mag_gauge Gauge Terms
  * @ingroup Induction
  *
- * @grhayl implements the RHS of \f$ \tilde{\Phi}^\mathrm{RHS} \f$ and the gauge terms of
- * \f$ A_i^\mathrm{RHS} \f$ in the same function. However, these calculations require
- * stencils of quantities that have to be computed. To make the gem infrastructure-agnostic
- * (and to help with OMP parallelism), we split this into two separate stages. First, we
- * provide a variety of interpolators which take spacetime quantities and \f$ A_i \f$ and
- * compute interpolated quantities. Second, we provide a function to compute
- * \f$ \tilde{\Phi}^\mathrm{RHS} \f$ using these quantities. The contribution to \f$ A_i^\mathrm{RHS} \f$
- * is directly computed from the interpolated quantities, so we do not provide a function for this.
+ * @grhayl implements the RHS of \f$ \tilde{\Phi}^\mathrm{RHS} \f$ and the gauge
+ * terms of \f$ A_i^\mathrm{RHS} \f$ in the same function. However, these
+ * calculations require stencils of quantities that have to be computed. To make
+ * the gem infrastructure-agnostic (and to help with OMP parallelism), we split
+ * this into two separate stages. First, we provide a variety of interpolators
+ * which take spacetime quantities and \f$ A_i \f$ and compute interpolated
+ * quantities. Second, we provide a function to compute \f$ \tilde{\Phi}^\mathrm{RHS} \f$
+ * using these quantities. The contribution to \f$ A_i^\mathrm{RHS} \f$ is
+ * directly computed from the interpolated quantities, so we do not provide a
+ * function for this.
  *
  * A usual implementation will call the desired interpolate function:
  *
@@ -91,20 +102,80 @@
  * - ghl_interpolate_with_cell_centered_BSSN
  * - ghl_interpolate_with_cell_vertex_ADM
  *
- * These functions all compute the quantities in the @ref ghl_induction_interp_vars struct. The
- * different flavors of these functions depend on the metric quantities available. Depending on
- * the spacetime code, these quantities could be cell-centered or vertex-centered. Additionally,
- * we provide a cell-centered BSSN variant which mimics the behavior of the original `IllinoisGRMHD` code.
+ * These functions all compute the quantities in the @ref ghl_induction_interp_vars
+ * struct. The different flavors of these functions depend on the metric
+ * quantities available. Depending on the spacetime code, these quantities
+ * could be cell-centered or vertex-centered. Additionally, we provide a
+ * cell-centered BSSN variant which mimics the behavior of the original
+ * `IllinoisGRMHD` code.
  *
  * The returned struct is then used to compute
  *
  * - \f$ A_i^\mathrm{RHS} \f$ using a finite difference stencil of ghl_induction_interp_vars::alpha_Phi_minus_betaj_A_j
  * - \f$ \tilde{\Phi}^\mathrm{RHS} \f$ using @ref ghl_calculate_phitilde_rhs
+ *
+ * ## Interpolator Details
+ *
+ * Here, we describe in more detail the assumed grids for the various inputs
+ * to the interpolators. Assuming we assign our indexing to the (cell-centered)
+ * hydrodynamic variables, the magnetic quantities are at the grid points
+ *
+ * <div align="center">
+ *
+ * | Variable             | x position            | y position            | z position            |
+ * |----------------------|-----------------------|-----------------------|-----------------------|
+ * | \f$ \tilde{\Phi} \f$ | \f$ i+\frac{1}{2} \f$ | \f$ j+\frac{1}{2} \f$ | \f$ k+\frac{1}{2} \f$ |
+ * | \f$ A_x          \f$ | \f$ i             \f$ | \f$ j+\frac{1}{2} \f$ | \f$ k+\frac{1}{2} \f$ |
+ * | \f$ A_y          \f$ | \f$ i+\frac{1}{2} \f$ | \f$ j             \f$ | \f$ k+\frac{1}{2} \f$ |
+ * | \f$ A_z          \f$ | \f$ i+\frac{1}{2} \f$ | \f$ j+\frac{1}{2} \f$ | \f$ k             \f$ |
+ *
+ * </div>
+ *
+ * In addition to these variables, we need to know where the  spacetime
+ * quantities live. This actually differs from code to code. For example, the
+ * `Cactus/Carpet` environment in the Einstein Toolkit implicitly assumes the
+ * hydrodynamical and spacetime variables are on the same grid because it only
+ * supports a single grid structure. Conversely, the `Cactus/CarpetX` environment
+ * sets the hydrodynamical variables and spacetime variables on different grids.
+ * We provide interpolators for the following spacetime grid staggerings:
+ *
+ * - cell-centered \f$ (i, j, k) \f$ BSSN variables
+ * - cell-centered \f$ (i, j, k) \f$ ADM variables
+ * - vertex-centered \f$ (i, j, k) \f$ ADM variables
+ *
+ * The different interpolators all return the same values and handle the mapping
+ * from the given metric type to these variables. As the spacetime variables
+ * and vector potential can be assumed to be smooth, all the interpolations
+ * are performed via averaging.
+ *
+ * The end goal of these interpolations is to compute
+ *
+ * - \f$ \alpha \f$, and \f$ \beta^i \f$, and \f$ \alpha\Phi - \beta^i A_i \f$
+ *   at the fully staggered grid point \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$
+ *   - The first two are used when computing \f$ \tilde{\Phi}^\mathrm{RHS} \f$;
+ *     if the metric is vertex-centered, these are not interpolated since they
+ *     already exist at the correct grid locations
+ *   - The third is the gauge contribution to \f$ A_i^\mathrm{RHS} \f$. While
+ *     \f$ A_i \f$ all exist at different staggered points, this interpolation
+ *     allows for computing derivatives for all of them.
+ * - \f$ \sqrt{g} A^i \f$ are interpolated to the same point as \f$ A_i \f$
+ *   - Since different compponents are at different grid locations, raising
+ *     the index requires interpolation of both the metric and the vector
+ *     potential
+ *
+ * @todo
+ * For the interpolators, `IllinoisGRMHD` said: "Would be much cheaper &
+ * easier to unstagger A_i, raise, then interpolate A^i. However, we keep
+ * it this way to be completely compatible with the original Illinois
+ * GRMHD thorn, called mhd_evolve." This should be revisited now that
+ * there is no need to retain this backward compatibility.
  */
 
 /**
- * @defgroup mag_gauge_internal Internal tmp
+ * @defgroup mag_gauge_internal Internal Induction Gauge Functions
  * @ingroup mag_gauge
  *
- * tmp
+ * These internal functions are helper functions which extract some of the
+ * algorithms out into separate files/functions. While most are not reused,
+ * this separation helps with the general clarify of the code.
  */

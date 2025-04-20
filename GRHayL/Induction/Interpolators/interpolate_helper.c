@@ -1,15 +1,44 @@
 #include "ghl_induction.h"
 #include "ghl_induction_helpers.h"
 
-/*
-   Recall that
-       Ax is staggered to (i, j+1/2, k+1/2)
-       Ay is staggered to (i+1/2, j, k+1/2)
-       Az is staggered to (i+1/2, j, k+1/2)
-       \tilde{\Phi} is staggered to (i+1/2, j+1/2, k+1/2)
-   We need the A_i values at all four of these gridpoints, so we interpolate the three
-   components and store them in A_to_location variables.
-*/
+/**
+ * @ingroup mag_gauge_internal
+ * @brief Interpolates vector potential to all staggered grid points
+ *
+ * @details
+ * \f$ A_i \f$ is staggered in the two directions perpendicular to \f$ i \f$
+ * while \f$ \tilde{\Phi} \f$ is staggered in all directions. Thus,
+ * we need to interpolate each component to the three other grid locations.
+ * They are interpolated through averaging the two adjacent points. For example,
+ * The function will average the values at the points \f$ i \f$ and
+ * \f$ i+1 \f$ to get the value at \f$ i+\frac{1}{2} \f$.
+ *
+ * @param[in] Ax_stencil:     3D stencil array containing \f$ A_x \f$ from
+ *                            \f$ (i-1, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to
+ *                            \f$ (i+1, j+\frac{3}{2}, k+\frac{3}{2}) \f$
+ *
+ * @param[in] Ay_stencil:     3D stencil array containing \f$ A_y \f$ from
+ *                            \f$ (i-\frac{1}{2}, j-1, k-\frac{1}{2}) \f$ to
+ *                            \f$ (i+\frac{3}{2}, j+1, k+\frac{3}{2}) \f$
+ *
+ * @param[in] Az_stencil:     3D stencil array containing \f$ A_z \f$ from
+ *                            \f$ (i-\frac{1}{2}, j-\frac{1}{2}, k-1) \f$ to
+ *                            \f$ (i+\frac{3}{2}, j+\frac{3}{2}, k+1) \f$
+ *
+ * @param[out] A_to_phitilde: \f$ A_i \f$ interpolated to
+ *                            \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$
+ *
+ * @param[out] A_to_Ax:       \f$ A_i \f$ interpolated to
+ *                            \f$ (i, j+\frac{1}{2}, k+\frac{1}{2}) \f$
+ *
+ * @param[out] A_to_Ay:       \f$ A_i \f$ interpolated to
+ *                            \f$ (i+\frac{1}{2}, j, k+\frac{1}{2}) \f$
+ *
+ * @param[out] A_to_Az:       \f$ A_i \f$ interpolated to
+ *                            \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k) \f$
+ *
+ * @returns void
+ */
 void ghl_A_i_avg(
       const double Ax_stencil[3][3][3],
       const double Ay_stencil[3][3][3],
@@ -35,11 +64,13 @@ void ghl_A_i_avg(
   A_to_Az[2] = Az_stencil[1][1][1];
 
   /*
-     The stenciling sum here is reasonably simple. The index corresponding to the component needs to be
-     interpolated to +1/2 (the kk loop). Thus, the kk index is always in the same index as the component
-     of A being interpolated. For the jj loop, the index corresponding to the interpolated A
-     (i.e. x index for A_to_Ax) needs to be interpolated back by -1/2. Hence, the kk loop is in the range
-     [1,size) and the jj loop is in the range [0,size-1).
+     The stenciling sum here is reasonably simple. The index corresponding to
+     the component needs to be interpolated to \f$ +\frac{1}{2} \f$ (the kk
+     loop). Thus, the kk index is always in the same index as the component
+     of \f$ A_i \f$ being interpolated. For the jj loop, the index corresponding
+     to the interpolated quantity (i.e. x index for A_to_Ax) needs to be
+     interpolated back by \f$ -\frac{1}{2} \f$. Hence, the kk loop is in the
+     range [1,size) and the jj loop is in the range [0,size-1).
   */
   for(int kk=1; kk<3; kk++) {
     A_to_phitilde[0] += Ax_stencil[1][1][kk];
@@ -67,15 +98,42 @@ void ghl_A_i_avg(
   A_to_Az[1]       /= 4.0;
 }
 
-/*
-   All of the following code aims to compute metric quantities
-   at several points:
-     1) lapse psi^2 (BSSN) or sqrt{-g} (ADM) at each A_i gridpoint
-     2) lapse, shift, and either lapse / psi^6 (BSSN) or lapse^2 / sqrt{gamma}
-        at the location of \tilde{\Phi}
-   The cell-centered metric code requires more interpolations since \tilde{\Phi}
-   is vertex-centered.
-*/
+/**
+ * @ingroup mag_gauge_internal
+ * @brief Interpolates cell-centered BSSN quantities to staggered grid points
+ *
+ * @details
+ * This function interpolates the cell-centered BSSN quantities to the
+ * following grid points via averaging:
+ *
+ * - \f$ \alpha \f$, \f$ \beta^i \f$, and \f$ \frac{\alpha}{\psi^6} \f$ to
+ *   - \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$
+ *
+ * - \f$ \gamma^{ij} \f$ and \f$ \frac{\alpha}{\psi^2} \f$ to
+ *   - \f$ (i,             j+\frac{1}{2}, k+\frac{1}{2}) \f$
+ *   - \f$ (i+\frac{1}{2}, j,             k+\frac{1}{2}) \f$
+ *   - \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k) \f$
+ *
+ * Note that the last quantity is returned in ghl_metric_quantities::gammaUU
+ * with the first index corresponding to the non-staggered component.
+ *
+ * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
+ *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
+ *
+ * @param[in] psi_stencil:    3D stencil array of \f$ \psi^6 \f$ from
+ *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
+ *
+ * @param[out] metric_interp: ghl_metric_quantities containing interpolated
+ *                            quantities \f$ \alpha \f$, \f$ \beta^i \f$,
+ *                            and \f$ \gamma^{ij} \f$
+ *
+ * @param[out] lapse_psi2_interp: 1D array containing interpolated values
+ *                                for \f$ \frac{\alpha}{\psi^2} \f$
+ *
+ * @param[out] lapse_over_psi6_interp: interpolated value of \f$ \frac{\alpha}{\psi^6} \f$
+ *
+ * @returns void
+ */
 void ghl_BSSN_cell_interp(
       const ghl_metric_quantities metric_stencil[2][2][2],
       const double psi_stencil[2][2][2],
@@ -162,6 +220,36 @@ void ghl_BSSN_cell_interp(
   lapse_psi2_interp[2]         /= 4.0;
 }
 
+/**
+ * @ingroup mag_gauge_internal
+ * @brief Interpolates cell-centered ADM quantities to staggered grid points
+ *
+ * @details
+ * This function interpolates the cell-centered ADM quantities to the
+ * following grid points via averaging:
+ *
+ * - \f$ \alpha \f$, \f$ \beta^i \f$, and \f$ \frac{\alpha}{\psi^6} \f$ to
+ *   - \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$
+ *
+ * - \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$ to
+ *   - \f$ (i,             j+\frac{1}{2}, k+\frac{1}{2}) \f$
+ *   - \f$ (i+\frac{1}{2}, j,             k+\frac{1}{2}) \f$
+ *   - \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k) \f$
+ *
+ * Note that the last quantity is returned in ghl_metric_quantities::gammaUU
+ * with the first index corresponding to the non-staggered component.
+ *
+ * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
+ *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
+ *
+ * @param[out] metric_interp: ghl_metric_quantities containing interpolated
+ *                            quantities \f$ \alpha \f$, \f$ \beta^i \f$,
+ *                            and \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$
+ *
+ * @param[out] lapse_over_psi6_interp: interpolated value of \f$ \frac{\alpha}{\psi^6} \f$
+ *
+ * @returns void
+ */
 void ghl_ADM_cell_interp(
       const ghl_metric_quantities metric_stencil[2][2][2],
       ghl_metric_quantities *restrict metric_interp,
@@ -228,6 +316,31 @@ void ghl_ADM_cell_interp(
   metric_interp->gammaUU[2][2] /= 4.0;
 }
 
+/**
+ * @ingroup mag_gauge_internal
+ * @brief Interpolates vertex-centered ADM quantities to staggered grid points
+ *
+ * @details
+ * Since the spacetime quantities are already fully staggered, this function
+ * only interpolates
+ *
+ * - \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$ to
+ *   - \f$ (i,             j+\frac{1}{2}, k+\frac{1}{2}) \f$
+ *   - \f$ (i+\frac{1}{2}, j,             k+\frac{1}{2}) \f$
+ *   - \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k) \f$
+ *
+ * Note that this quantity is returned in ghl_metric_quantities::gammaUU
+ * with the first index corresponding to the non-staggered component.
+ *
+ * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
+ *                            \f$ (i-\frac{1}{2}, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to
+ *                            \f$ (i+\frac{3}{2}, j+\frac{3}{2}, k+\frac{3}{2}) \f$
+ *
+ * @param[out] gammaUU_interp: 2D array containing interpolated
+ *                            quantity \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$
+ *
+ * @returns void
+ */
 void ghl_ADM_vertex_interp(
       const ghl_metric_quantities metric_stencil[2][2][2],
       double gammaUU_interp[3][3]) {
