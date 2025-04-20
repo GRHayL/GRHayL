@@ -40,10 +40,10 @@
  * 
  * The routines provided for the tabulated equation of state are given in the table below.
  * 
- * | Method                    | Function Name                   | Method Paper |
- * |:-------------------------:|:-------------------------------:|:------------:|
- * | Newman1D                  | @ref ghl_Newman1D_energy             | [Newman & Hamlin (2014)](https://epubs.siam.org/doi/10.1137/140956749) |
- * | Newman1D with entropy     | @ref ghl_Newman1D_entropy            | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
- * | Palenzuela1D              | @ref ghl_hybrid_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
- * | Palenzuela1D with entropy | @ref ghl_hybrid_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
+ * | Method                    | Function Name                           | Method Paper |
+ * |:-------------------------:|:---------------------------------------:|:------------:|
+ * | Newman1D                  | @ref ghl_tabulated_Newman1D_energy      | [Newman & Hamlin (2014)](https://epubs.siam.org/doi/10.1137/140956749) |
+ * | Newman1D with entropy     | @ref ghl_tabulated_Newman1D_entropy     | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
+ * | Palenzuela1D              | @ref ghl_tabulated_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
+ * | Palenzuela1D with entropy | @ref ghl_tabulated_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
  */

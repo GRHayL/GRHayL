@@ -30,60 +30,63 @@
  *             |
  *          Left face of cell i
  * ```
- * This allows for easier pointwise operations and computation of fluxes. However,
- * if one wants to compute the individual faces and store them (saves some computation
- * at significant memory expense), it is possible to do this as well using the lower-level
- * functions in @grhayl. These internal functions are called within each individual
- * method, and extracting the correct face values for a given cell is reasonably
- * straightforward.
+ * This allows for easier pointwise operations and computation of fluxes.
+ * However, if one wants to compute the individual faces and store them
+ * (saves some computation at significant memory expense), it is possible
+ * to do this as well using the lower-level functions in @grhayl. These
+ * internal functions are called within each individual method, and extracting
+ * the correct face values for a given cell is reasonably straightforward.
  *
- * These routines are split by their method/order. Currently, the two categories
- * are piecewise linear methods (PLM) and the piecewise parabolic method (PPM).
+ * These routines are split by their method/order. Currently, the two
+ * categories are piecewise linear methods (PLM) and the piecewise parabolic
+ * method (PPM).
  */
 
 /**
  * @defgroup plm Piecewise Linear Methods
  * @ingroup Reconstruction
  *
- * @grecon provides several algorithms for reconstruction which use various linear
- * approximations to capture the shock. We refer to these methods as piecewise
- * linear methods (PLM). The provided methods are
+ * @grecon provides several algorithms for reconstruction which use various
+ * linear approximations to capture the shock. We refer to these methods as
+ * piecewise linear methods (PLM). The provided methods are
  * - [minmod](@ref ghl_minmod_reconstruction)
  * - [monotonized-central](@ref ghl_mc_reconstruction)
  * - [superbee](@ref ghl_superbee_reconstruction)
  *
- * These are all built on top of the @ref ghl_minmod and @ref ghl_maxmod functions.
+ * These are all built on top of the @ref ghl_minmod and @ref ghl_maxmod
+ * functions.
  */
 
 /**
  * @defgroup plm_internal Internal PLM Functions
  * @ingroup plm
  *
- * These are internal functions/attributes used by the PLM routines but should not be
- * called by standard users.
+ * These are internal functions/attributes used by the PLM routines but should
+ * not be called by standard users.
  */
 
 /**
  * @defgroup ppm Piecewise Parabolic Method
  * @ingroup Reconstruction
  *
- * The most commonly used method in @grecon is the piecewise parabolic method (PPM).
- * This method uses information about the pressure to determine if there is a shock
- * and uses additional flattening, monotonizing, and other algorithms to compute the
- * face values. The primary library routines are @ref ghl_ppm_reconstruction and 
- * @ref ghl_ppm_reconstruction_with_steepening. Because the method normally applies an
- * additional steepening algorithm to the fluid density, the `*_with_steepening` function
- * variants are provided that apply this additional step. Unlike other methods,
- * PPM requires additional arguments, especially with steepening. These are
- * described in more detail within the individual function documentation.
+ * The most commonly used method in @grecon is the piecewise parabolic method
+ * (PPM). This method uses information about the pressure to determine if
+ * there is a shock and uses additional flattening, monotonizing, and other
+ * algorithms to compute the face values. The primary library routines are
+ * @ref ghl_ppm_reconstruction and @ref ghl_ppm_reconstruction_with_steepening.
+ * Because the method normally applies an additional steepening algorithm to
+ * the fluid density, the `*_with_steepening` function variants are provided
+ * that apply this additional step. Unlike other methods, PPM requires
+ * additional arguments, especially with steepening. These are described in
+ * more detail within the individual function documentation.
  */
 
 /**
  * @defgroup ppm_internal Internal PPM Functions
  * @ingroup ppm
  *
- * These are internal functions/attributes used by the PPM routines but should not be
- * called by standard users.
+ * These are internal functions/attributes used by the PPM routines but should
+ * not be called by standard users.
  */
 
 /**
@@ -91,14 +94,14 @@
  * @ingroup Reconstruction
  *
  * As an alternative to PPM, @grecon also provides WENO (weighted essentially
- * non-oscillatory) methods. Currently, it only supports WENO-z which is called with
- * @ref ghl_wenoz_reconstruction.
+ * non-oscillatory) methods. Currently, it only supports WENO-z which is called
+ * with @ref ghl_wenoz_reconstruction.
  */
 
 /**
  * @defgroup weno_internal Internal WENO Functions
  * @ingroup weno
  *
- * These are internal functions/attributes used by the WENO routines but should not be
- * called by standard users.
+ * These are internal functions/attributes used by the WENO routines but should
+ * not be called by standard users.
  */

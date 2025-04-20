@@ -1,20 +1,22 @@
 /** 
  * @defgroup GRHayL_Core GRHayL_Core
  *
- * @brief The @gcore module provides core functions for interfacing with @grhayl structs.
+ * @brief The @gcore module provides core functions for interfacing with
+ *        @grhayl structs.
  *
- * This includes functions for packing structs using data from grid functions, computing
- * elements of an auxiliary struct, raising/lowering operators, and computing the
- * stress-energy tensor.
+ * This includes functions for packing structs using data from grid
+ * functions, computing elements of an auxiliary struct, raising/lowering
+ * operators, and computing the stress-energy tensor.
  *
  * Generally, we recommend using one of the `ghl_initialize_*_eos_functions_and_params`
- * to initialize the ghl_eos_parameters struct, as it makes sure that everything
- * is set according to the input parameters. We also encourage use of the `ghl_compute_*`
- * functions to fill structs instead of manually computing and packing the associated structs.
- * The raising and lowering operator functions are very simple, and they are designed
- * to be usable with both @grhayl metric structs and user-defined arrays (so long as
- * they are indexed the same as the @grhayl metric array). Other functions are
- * primarily for convenience and to show how to get the associated variable out of the
+ * to initialize the ghl_eos_parameters struct, as it makes sure that
+ * everything is set according to the input parameters. We also encourage
+ * use of the `ghl_compute_*` functions to fill structs instead of manually
+ * computing and packing the associated structs. The raising and lowering
+ * operator functions are very simple, and they are designed to be usable with
+ * both @grhayl metric structs and user-defined arrays (so long as they are
+ * indexed the same as the @grhayl metric array). Other functions are primarily
+ * for convenience and to show how to get the associated variable out of the
  * struct.
  */
 
@@ -22,8 +24,9 @@
  * @defgroup eos_init EOS initialization functions
  * @ingroup GRHayL_Core
  *
- * @gcore provides all the core routines to initialize a ghl_eos_parameters struct
- * for all the available EOS types. It also initializes the function pointers.
+ * @gcore provides all the core routines to initialize a ghl_eos_parameters
+ * struct for all the available EOS types. It also initializes the function
+ * pointers.
  */
 
 /**
