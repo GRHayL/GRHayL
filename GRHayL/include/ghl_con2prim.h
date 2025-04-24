@@ -3,36 +3,33 @@
 
 #include "ghl.h"
 
-//------------- Con2Prim struct --------------------
-/*
-   The struct ghl_con2prim_diagnostics contains variables for error-checking and
-   diagnostic feedback. The struct elements are detailed below:
-
- --TODO
-
-TODO: consider changing failure_checker to be bitwise; failure modes are currently
-      1: atmosphere reset when rho_star < 0
-      10: reseting P when P<P_min in enforce_...
-      100: reseting P when P>P_max in enforce_...
-      1k: Limiting velocity u~ after C2P/Font Fix or v in enforce_...
-      10k: Font Fix was applied
-      100k: Both C2P and Font Fix failed
-      1M: tau~ was reset in ghl_apply_conservative_limits
-      10M: S~ was reset in ghl_apply_conservative_limits via the first case
-      100M: S~ was reset in ghl_apply_conservative_limits via the second case
-For bitwise, would become 1, 2, 4, 8, 16, 32. 64, 128, and 256
-https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
-*/
-
+/**
+ * @ingroup Con2Prim
+ * @struct ghl_con2prim_diagnostics
+ * @brief Tracks @ref Con2Prim diagnostics
+ *
+ * @details
+ * This struct should be initialized with @ref ghl_initialize_diagnostics .
+ */
 typedef struct ghl_con2prim_diagnostics {
+  /** Whether a limit was applied to \f$ \tilde{\tau} \f$ (true) or not (false) */
   bool tau_fix;
+  /** Whether a limit was applied to \f$ \tilde{S}_i \f$ (true) or not (false) */
   bool Stilde_fix;
+  /** Whether a speed limiter was triggered (true) or not (false) */
   bool speed_limited;
+  /** The Con2Prim routine which successfully found the primitive variables */
   ghl_con2prim_method_t which_routine;
+  /** Whether a given backup routine was used (true) or not (false) */
   bool backup[3];
+  /** Number of iterations required to find the solution */
   int n_iter;
 } ghl_con2prim_diagnostics;
 
+/**
+ * @ingroup c2p_internal
+ * @brief Stores internal variables for Palenzuela1D routine
+ */
 typedef struct ghl_palenzuela_quantities {
   double q, r, s, t, D, Y_e, S;
 } ghl_palenzuela_quantities;

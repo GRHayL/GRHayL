@@ -11,8 +11,8 @@
 #!                   ghl_metric_helpers.h
 #!                   ghl_induction.h
 #!                   ghl_radiation.h
+#!                   ghl_reconstruction.h
+#!                   ghl_unit_tests.h
 #!                   nrpyeos_hybrid.h
 #!                   nrpyeos_tabulated.h
 #!                   nrpyleakage.h
-#!                   ghl_reconstruction.h
-#!                   ghl_unit_tests.h

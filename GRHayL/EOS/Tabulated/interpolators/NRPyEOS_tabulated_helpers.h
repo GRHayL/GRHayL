@@ -71,9 +71,9 @@ void NRPyEOS_get_interp_spots(
   int iy = 1 + (int)( (y - eos->table_logT[0] - 1.0e-10) * eos->dtempi );
   int iz = 1 + (int)( (z - eos->table_Y_e[0]     - 1.0e-10) * eos->dyei  );
 
-  ix = MAX( 1, MIN( ix, eos->N_rho -1 ) );
-  iy = MAX( 1, MIN( iy, eos->N_T-1 ) );
-  iz = MAX( 1, MIN( iz, eos->N_Ye  -1 ) );
+  ix = ghl_iclamp(ix,  1, eos->N_rho -1);
+  iy = ghl_iclamp(iy,  1, eos->N_T - 1);
+  iz = ghl_iclamp(iz,  1, eos->N_Ye  -1);
 
   idx[0] = NRPyEOS_ntablekeys*(ix     + eos->N_rho*(iy     + eos->N_T*iz    ));
   idx[1] = NRPyEOS_ntablekeys*((ix-1) + eos->N_rho*(iy     + eos->N_T*iz    ));
@@ -314,8 +314,8 @@ ghl_error_codes_t NRPyEOS_findtemp_from_any(
 
   double oerr = 1.0e90;
   double fac  = 1.0;
-  const int irho = MIN(MAX(1 + (int)(( lr - eos->table_logrho[0] - 1.0e-12) * eos->drhoi),1),eos->N_rho-1);
-  const int iye  = MIN(MAX(1 + (int)(( ye - eos->table_Y_e[0]    - 1.0e-12) * eos->dyei ),1),eos->N_Ye -1);
+  const int irho = ghl_iclamp(1 + (int)(( lr - eos->table_logrho[0] - 1.0e-12) * eos->drhoi), 1, eos->N_rho-1);
+  const int iye  = ghl_iclamp(1 + (int)(( ye - eos->table_Y_e[0]    - 1.0e-12) * eos->dyei ), 1, eos->N_Ye -1);
 
   /* ******* if temp low for high density, switch directly to bisection.
      Verifying Newton-Raphson result evaluating the derivative.
@@ -327,7 +327,7 @@ ghl_error_codes_t NRPyEOS_findtemp_from_any(
 
     // step 2: check if the two bounding values of the temperature
     //         give eps values that enclose the new eps.
-    const int itemp = MIN(MAX(1 + (int)(( lt - eos->table_logT[0] - 1.0e-12) * eos->dtempi),1),eos->N_T-1);
+    const int itemp = ghl_iclamp(1 + (int)(( lt - eos->table_logT[0] - 1.0e-12) * eos->dtempi), 1, eos->N_T-1);
 
     double tablevart1, tablevart2;
     // lower temperature
@@ -391,7 +391,7 @@ ghl_error_codes_t NRPyEOS_findtemp_from_any(
     //       given by Newton-Raphson.
     if(ldt > (ltmax-ltmin) / 12.0 ) shouldgotobisection = true;
 
-    ltn = MIN(MAX(lt + ldt,ltmin),ltmax);
+    ltn = ghl_iclamp(lt + ldt, ltmin, ltmax);
     lt = ltn;
 
     NRPyEOS_get_interp_spots(eos, lr, lt, ye, &delx, &dely, &delz, idx);

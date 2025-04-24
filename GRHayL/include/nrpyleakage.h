@@ -1,16 +1,7 @@
 #ifndef NRPYLEAKAGE_H_
 #define NRPYLEAKAGE_H_
 
-#ifdef MIN
-#undef MIN
-#endif
-
-#ifdef MAX
-#undef MAX
-#endif
-
-#define MAX(a,b) ( (a) > (b) ? (a) : (b) )
-#define MIN(a,b) ( (a) < (b) ? (a) : (b) )
+#include "ghl.h"
 
 // "Primary" parameters
 #define NRPyLeakage_enable_beta_nue (1)

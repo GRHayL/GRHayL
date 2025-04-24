@@ -6,7 +6,7 @@
  * @sp10 \f$ A_y^\mathrm{rhs} = \partial_t A_y = v^z \tilde{B}^x - v^x \tilde{B}^z \f$
  *
  * @todo
- * This function has "\@ref ghl_ghl_calculate_characteristic_speed", which is divided
+ * This function has "\@ref ghl_calculate_characteristic_speed", which is divided
  * by direction. Thus, the reference doesn't resolve.
  *
  * @details
