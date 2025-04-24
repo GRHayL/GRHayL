@@ -47,3 +47,11 @@
  * | Palenzuela1D              | @ref ghl_tabulated_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
  * | Palenzuela1D with entropy | @ref ghl_tabulated_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
  */
+
+/**
+ * @defgroup c2p_internal Internal Con2Prim Routines
+ * @ingroup Con2Prim
+ * 
+ * These are internal functions/attributes used by the @ref Con2Prim
+ * routines but should not be called by standard users.
+ */
