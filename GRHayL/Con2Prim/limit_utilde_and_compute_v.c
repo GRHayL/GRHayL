@@ -1,11 +1,27 @@
 #include "ghl_con2prim.h"
 
-/* Function    : ghl_limit_utilde_and_compute_v()
- * Description : Applies speed limit to \tilde{u}^i and computes v^i and u^0
-*/
-
-//Now that we have found some solution, we first limit velocity:
-//FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
+/**
+ * @ingroup c2p_internal
+ * @brief Applies speed limit to \f$ \tilde{u}^i \f$ and computes \f$ u^0 \f$ and \f$ v^i \f$.
+ *
+ * @details
+ * This function applies a speed limit to the Valencia velocity \f$ \tilde{u}^i \f$
+ * based on ghl_parameters::max_Lorentz_factor and then computes
+ * ghl_primitive_quantities::u0 and ghl_primitive_quantities::VU.
+ *
+ * @todo
+ * Add more comments like in @ref ghl_limit_v_and_compute_u0
+ *
+ * @param[in] params:         pointer to ghl_parameters struct
+ *
+ * @param[in] ADM_metric:     pointer to ghl_metric_quantities struct with ADM metric data
+ *
+ * @param[in,out] utU:        3-velocity \f$ u^i \f$
+ *
+ * @param[out] prims:         pointer to ghl_primitive_quantities struct
+ *
+ * @returns whether speed limiter was triggered (True) or not (False)
+ */
 bool ghl_limit_utilde_and_compute_v(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,
