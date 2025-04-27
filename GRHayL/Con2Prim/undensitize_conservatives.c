@@ -5,19 +5,31 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_undensitize_conservatives
 */
 
+/**
+ * @ingroup Con2Prim
+ * @brief Computes undensitized conservatives using the metric quantity \f$ \psi^6 \f$
+ *
+ * @details
+ * This function computes the undensitized conservative variables from the densitized
+ * conservatives using \f$ \psi^6 = \sqrt{|\gamma|} \f$ (i.e. the \f$ \psi^6 \f$ from
+ * the BSSN formulation or the square root of the determinant of the ADM metric). This
+ * is usually taken from ghl_metric_quantities::sqrt_detgamma, though note that this
+ * instance must contain the ADM metric.
+ *
+ * @param[in] psi6: spacetime quantitity \f$ \psi^6 = \sqrt{|\gamma|} \f$
+ *
+ * @param[in] cons: pointer to ghl_conservative_quantities containing the densitized
+ *                  conservative variables
+ *
+ * @param[in] cons_undens: pointer to ghl_conservative_quantities containing the
+ *                         **undensitized** conservative variables
+ *
+ * @returns void
+ */
 void ghl_undensitize_conservatives(
       const double psi6,
       const ghl_conservative_quantities *restrict cons,
       ghl_conservative_quantities *restrict cons_undens) {
-
-  /*
-     Many codes evolve the"densitized" conservative
-     variables (D,tau,S_{i}). We have the relationships:
-
-     rho_star   = sqrt(gamma) *  D
-     tilde(tau) = sqrt(gamma) * tau
-     tilde(S)_i = sqrt(gamma) * S_i
-   */
 
   const double psim6 = 1.0/psi6;
 

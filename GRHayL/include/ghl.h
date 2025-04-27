@@ -377,9 +377,13 @@ typedef struct ghl_eos_parameters {
 
   /** Pointer to full EOS data table */
   double *restrict table_all;
+  /** @todo needs documentation */
   double *restrict table_logrho;
+  /** @todo needs documentation */
   double *restrict table_logT;
+  /** @todo needs documentation */
   double *restrict table_Y_e;
+  /** @todo needs documentation */
   double *restrict table_eps;
 
   /** Minimum density in the table */
@@ -409,21 +413,22 @@ typedef struct ghl_eos_parameters {
 
   /** The energy shift \f$ \epsilon_0 \f$ such that \f$ \epsilon + \epsilon_0 \f$ is always positive */
   double energy_shift;
-  /** TODO@LEO: please describe */
+  /** Inverse of the temperature difference \f$ \Delta T = \log{T_1} - \log{T_0} \f$ for the table */
   double dtempi;
-  /** TODO@LEO: please describe */
+  /** Inverse of the density difference \f$ \Delta \rho = \log{\rho_1} - \log{\rho_0} \f$ for the table */
   double drhoi;
-  /** TODO@LEO: please describe */
+  /** Inverse of the electron fraction difference \f$ \Delta Y_e = {Y_e}_1 - {Y_e}_0 \f$ for the table */
   double dyei;
-  /** TODO@LEO: please describe */
+  /** Value of ghl_eos_parameters::drhoi * ghl_eos_parameters::dtempi */
   double drhotempi;
-  /** TODO@LEO: please describe */
+  /** Value of ghl_eos_parameters::drhoi * ghl_eos_parameters::dyei */
   double drhoyei;
-  /** TODO@LEO: please describe */
+  /** Value of ghl_eos_parameters::dtempi * ghl_eos_parameters::dyei */
   double dtempyei;
-  /** TODO@LEO: please describe */
+  /** Value of ghl_eos_parameters::drhoi * ghl_eos_parameters::dtempi * ghl_eos_parameters::dyei */
   double drhotempyei;
 
+  // These are used for beta-equilibrium
   /** TODO@LEO: please describe */
   double *lp_of_lr;
   /** TODO@LEO: please describe */

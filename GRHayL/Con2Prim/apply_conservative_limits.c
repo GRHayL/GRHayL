@@ -10,10 +10,26 @@
  * ghl_con2prim_diagnostics::tau_fix and ghl_con2prim_diagnostics::Stilde_fix
  * record whether any limits were applied.
  *
- * The only primitive that needs to be provided is ghl_primitives_quantities::BU.
+ * The only primitive that needs to be provided is ghl_primitive_quantities::BU.
  * This is used before the Con2Prim solver, so \f$ B^i \f$ is the only available
  * primitive.
  *
+ * @param[in] params: pointer to ghl_parameters struct
+ *
+ * @param[in] eos: pointer to ghl_eos_parameters struct
+ *
+ * @param[in] ADM_metric: pointer to ghl_metric_quantities struct with ADM metric
+ *
+ * @param[in] prims: pointer to ghl_primitive_quantities struct
+ *
+ * @param[in,out] cons: pointer to ghl_conservative_quantities struct; returned
+ *                      struct contains limit-enforced \f$ \tilde{tau} \f$ and
+ *                      \f$ \tilde{S}_i \f$
+ *
+ * @param[out] diagnostics: pointer to ghl_con2prim_diagnostics struct; returns
+ *                          whether any limits were applied
+ *
+ * @returns void
  */
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
