@@ -1,8 +1,6 @@
 /*! @page derivation GRMHD Derivation
 
-\subsection authors Authors
-
-Samuel Cupp
+Re-derived and written by Samuel Cupp
 
 \section toc Table of Contents
 1. @ref intro
