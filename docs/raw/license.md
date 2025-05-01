@@ -9,8 +9,12 @@ Additionally, the various codes have different licenses, which we document here.
 The Noble routines are adapted from the HARM code, which is under the
 GNU General Public License.
 
-The Palenzuela and Newman routines are adapted from the [GRMHD_con2prim](https://bitbucket.org/dsiegel/grmhd_con2prim/src/master/) code, which is under the Creative
-Commons Attribution-ShareAlike 4.0 International License.
+The Palenzuela and Newman routines are adapted from the
+[GRMHD_con2prim](https://bitbucket.org/dsiegel/grmhd_con2prim/src/master/)
+code, which is under the Creative Commons Attribution-ShareAlike 4.0
+International License. These routines also use a modified version of the toms748
+routine from the Boost library, which is subject to the Boost Software License,
+Version 1.0.
 
 ## Citations
 

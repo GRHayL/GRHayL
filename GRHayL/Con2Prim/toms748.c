@@ -237,7 +237,6 @@ ghl_error_codes_t ghl_toms748(
       roots_params *restrict r) {
 
   // Step 0: Set basic info to the roots_params struct
-  sprintf(r->routine_name, __func__);
   r->a = a;
   r->b = b;
 

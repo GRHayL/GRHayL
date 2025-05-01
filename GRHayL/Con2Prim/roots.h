@@ -9,27 +9,32 @@
 #define DBL_EPSILON 2.220446049250313e-16
 #endif
 
-/*
- * typedef    : fparams_struct
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Structure containing parameters used by f(x)
  *
- * Structure containing parameters used by f(x), the function for which we
+ * @details
+ * This struct contains several values needed by the function for which we
  * wish to find the root when using the Palenzuela et al. con2prim.
  *
- * Parameters : evolve_T              - Whether or not to evolve the temperature.
- *            : temp_guess            - Temperature guess.
- *            : Y_e                   - Electron fraction.
- *            : q                     - Auxiliary quantity: tau/D.
- *            : r                     - Auxiliary quantity: S^{2}/D^{2}.
- *            : s                     - Auxiliary quantity: B^{2}/D.
- *            : t                     - Auxiliary quantity: B.S/D^{3/2}.
- *            : eos                   - Pointer to const ghl_eos_parameters struct.
- *            : cons_undens           - Pointer to const ghl_conservative_quantities struct.
- *            : compute_rho_P_eps_T_W - Function pointer provided by the user.
+ * @todo
+ * I think most functions should have ghl_parameters, so I would remove evolve_T from
+ * here. Also, I would like to see us move away from function pointers as much as
+ * possible to move towards GPU support. Reworking so we don't need to carry around
+ * these fpointers would be great.
  */
 typedef struct fparams_struct {
+  /** Whether or not to evolve the temperature. */
   bool evolve_T;
-  double q, r, s, t;
+  /** Auxiliary quantity \f$ \frac{\tau}{D} \f$ */
+  double q;
+  /** Auxiliary quantity \f$ \frac{S^2}{D^2} \f$ */
+  double r;
+  /** Auxiliary quantity \f$ \frac{B^2}{D} \f$ */
+  double s;
+  /** Auxiliary quantity \f$ \frac{B \cdot S}{D^{3/2}} \f$ */
+  double t;
+  /** Function pointer provided by the surrounding functions */
   void (*compute_rho_P_eps_T_W)(
       const double x,
       const ghl_parameters *restrict params,
@@ -38,6 +43,7 @@ typedef struct fparams_struct {
       struct fparams_struct *restrict fparams,
       ghl_primitive_quantities *restrict prims,
       double *restrict W_ptr);
+  /** Function pointer provided by surrounding functions */
   void (*compute_rho_P_eps_W)(
       const double x,
       const ghl_parameters *restrict params,
@@ -48,40 +54,42 @@ typedef struct fparams_struct {
       double *restrict W_ptr);
 } fparams_struct;
 
-/*
- * Parameters for Brent root-finding routine
+/**
+ * @ingroup c2p_internal
+ * @brief Parameters for Brent root-finding routine
  *
- * error_key : Status of the root-finding algorithm.
- * n_iters   : Number of iterations used to find the root.
- * max_iters : Maximum allowed iterations to find the root.
- * a         : Initial interval is [a,b].
- * b         : Initial interval is [a,b].
- * root      : The root.
- * residual  : f(root).
- * tol       : Stop when fabs(b_n-a_n) < tol.
+ * @todo
+ * Several of these are included in ghl_parameters and ghl_con2prim_diagnostics.
+ * I think these duplications should be reduced as much as possible.
  */
 typedef struct roots_params {
-  char routine_name[256];
-  unsigned n_iters, max_iters;
-  double a, b, root, residual, tol;
+  unsigned n_iters;   /**< Number of iterations used to find the root */
+  unsigned max_iters; /**< Maximum allowed iterations to find the root */
+  double a;           /**< Initial floor of interval */
+  double b;           /**< Initial ceiling of interval */
+  double root;        /**< The root */
+  double residual;    /**< f(root) */
+  double tol;         /**< Tolerance to trigger success: \f$ |b_n - a_n| < tol \f$ */
 } roots_params;
 
-/*
- * Function   : roots_info
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Prints information about the root-finding process.
  *
- * Prints information about the root-finding process.
+ * @param[in] r: pointer to roots_params
  *
- * Parameters : r        - Pointer to roots parameters.
+ * @param[in] calling_function: Calling function (just pass \_\_func\_\_)
  *
- * Returns    : Nothing.
+ * @returns void
  */
 static inline void
-roots_info(const roots_params *restrict r) {
+roots_info(
+      const roots_params *restrict r,
+      const char *calling_function) {
 
   // Step 1: Print basic message to the user
   fprintf(stderr, "(roots) Root-finding information:\n");
-  fprintf(stderr, "(roots)   %16s : %s\n", "Routine", r->routine_name);
+  fprintf(stderr, "(roots)   %16s : %s\n", "Routine", calling_function);
   fprintf(stderr, "(roots)   %16s : [%c%21.15e, %c%21.15e]\n",
          "Initial interval",
          r->a >= 0 ? '+' : '-', fabs(r->a),
@@ -92,16 +100,14 @@ roots_info(const roots_params *restrict r) {
   fprintf(stderr, "(roots)   %16s : %.15e\n", "Residual", r->residual);
 }
 
-/*
- * Function   : swap
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Swaps the value of two doubles
  *
- * Swaps the values of two doubles a and b.
+ * @param[in,out] a: first number
+ * @param[in,out] b: second number
  *
- * Parameters : a        - First number.
- *            : b        - Second number.
- *
- * Returns    : Nothing.
+ * @returns void
  */
 static inline void
 swap(
@@ -113,18 +119,13 @@ swap(
   *b = c;
 }
 
-
-
-/*
- * Function   : sign
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Returns the sign of a double
  *
- * Returns the sign of a number x.
+ * @param[in] x: value
  *
- * Parameters : x        - Number
- *            : b        - Second number.
- *
- * Returns    : +1 if x>=0, -1 otherwise.
+ * @returns +1 if x>=0, -1 otherwise
  */
 static inline int
 sign(const double x) {
