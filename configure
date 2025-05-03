@@ -7,55 +7,15 @@
 # This is GRHayL's configure script, which is responsible for ensuring users are
 # able to compile, test, and install GRHayL on different systems.
 
+. ./config/config_functions.sh
+. ./config/config_usage.sh
+
 pkg="GRHayL"
 pkg_short="GRHayL"
 pkg_version="1.0.0"
 libname="grhayl"
 
-red()
-{
-    printf "\033[1m\033[31m$1\033[0m"
-}
-
-green()
-{
-    printf "\033[1m\033[32m$1\033[0m"
-}
-
-blue()
-{
-    printf "\033[1m\033[34m$1\033[0m"
-}
-
-YES()
-{
-    green "YES"
-    if [ $# -eq 1 ]; then
-        printf " ($1)\n"
-    else
-        printf "\n"
-    fi
-}
-
-NO()
-{
-    red "NO"
-    if [ $# -eq 1 ]; then
-        printf " ($1)\n"
-    else
-        printf "\n"
-    fi
-}
-
-error()
-{
-    red "ERROR: "
-    printf "$1\n"
-    exit 1
-}
-
-help_message()
-{
+help_message() {
     cat <<EOF
 This is the configuration script for GRHayL
 Syntax: ./configure [-h,--help] [-l,--license] [-r,--reconfigure] [-s,--silent]
@@ -91,282 +51,6 @@ Options:'
 EOF
 }
 
-usage_ubuntu()
-{
-    cat <<EOF
---------------------------------------
-Tested GRHayL configurations on Ubuntu
---------------------------------------
-
-Ubuntu 22.04
-------------
-# sudo apt-get update
-# sudo apt-get install -y gcc libhdf5-serial-dev
-  ./configure --prefix=.
-  make
-  make install
-EOF
-}
-
-usage_mac()
-{
-    cat <<EOF
--------------------------------------
-Tested GRHayL configurations on macOS
--------------------------------------
-
-macOS 13.2.1 (Intel Core i7)
-----------------------------
-# brew install gcc hdf5
-  ./configure --prefix=. --hdf5dir=\$(brew --prefix)/opt/hdf5
-  make
-  make install
-EOF
-}
-
-usage_falcon()
-{
-    cat <<EOF
---------------------------------------
-Tested GRHayL configurations on Falcon
---------------------------------------
-
-Falcon - GCC (tested on 03-29-2023)
------------------------------------
-# module list
-# Currently Loaded Modules:
-#   1) gcc/12.1.0   2) mpich/3.4.3   3) hdf5/1.12.2
-  CC=mpicc ./configure --prefix=. --hdf5dir=\$HDF5_ROOT
-  make
-  make install
-
-Falcon - Intel (tested on 03-29-2023)
--------------------------------------
-# module list
-# Currently Loaded Modules:
-#   1) intel/2021.4.0   2) mpich/3.4.3   3) hdf5/1.12.2
-  CC=mpicc ./configure --prefix=. --hdf5dir=\$HDF5_ROOT
-  make
-  make install
-EOF
-}
-
-usage_sawtooth()
-{
-    cat <<EOF
-----------------------------------------
-Tested GRHayL configurations on Sawtooth
-----------------------------------------
-
-Sawtooth - GCC (tested on 03-29-2023)
--------------------------------------
-# module list
-# Currently Loaded Modules:
-#   1) gcc/9.2.0-gcc-4.8.5-bxc7   2) openmpi/4.0.2-gcc-9.2.0-cuda-10.1-5xzs
-#   3) cmake/3.16.2-gcc-9.2.0-r3q3   4) hdf5/1.12.0_gcc9.2.0
-  CC=gcc ./configure --prefix=. --hdf5dir=\$(module show hdf5 2>&1 | awk '/"PATH"/ { match($0, "/"); s=substr($0, RSTART); sub(/\/*bin")$/, "", s); print s }')
-  make
-  make install
-
-Sawtooth - Intel (tested on 03-29-2023)
----------------------------------------
-# module list
-# Currently Loaded Modules:
-#  1) zlib/1.2.11-intel-19.0.5-p7mu   2) intel/19.0.5-gcc-9.2.0-kl4p
-#  3) intel-mpi/2018.5.288-intel-19.0.5-alnu   4) hdf5/1.10.6-intel-19.0.5-m6j7
-  CC=mpiicc ./configure --prefix=. --hdf5dir=\$(module show hdf5 2>&1 | awk '/"PATH"/ { match($0, "/"); s=substr($0, RSTART); sub(/\/*bin")$/, "", s); print s }')
-  make
-  make install
-EOF
-}
-
-usage_lemhi()
-{
-    cat <<EOF
--------------------------------------
-Tested GRHayL configurations on Lemhi
--------------------------------------
-
-Lemhi - GCC (tested on 03-29-2023)
-----------------------------------
-# module list
-# Currently Loaded Modules:
-#   1) gcc/11.2.0-gcc-9.4.0-mm7z   2) openjdk/11.0.12_7-gcc-11.2.0-gzj7
-#   3) openmpi/4.1.1-gcc-11.2.0-nt2l   4) zlib/1.2.11-gcc-11.2.0-lnxa
-#   5) hdf5/1.12.2-gcc-11.2.0-ej5f
-  CC=gcc ./configure --prefix=. --hdf5dir=\$(module show hdf5 2>&1 | awk '/"PATH"/ { match($0, "/"); s=substr($0, RSTART); sub(/\/*bin")$/, "", s); print s }')
-  make
-  make install
-EOF
-}
-
-usage_message()
-{
-    cat <<EOF
------------
-Basic usage
------------
-
-To compile and install GRHayL on your local machine, run:
-
-  ./configure
-  make
-  make install
-
-To install GRHayL on the current directory instead of /usr/local, replace the
-first line above by one of the following three, which should all be equivalent:
-
-  ./configure --prefix=.
-  ./configure --prefix=`pwd`
-  ./configure --prefix=$(pwd)
-
-To change the compiler, set the CC environment variable before configuring, i.e.
-
-  CC=mpiicc ./configure
-
-or
-
-  export CC=mpiicc
-  ./configure
-
-The tabulated EOS gem in GRHayL depends on HDF5. By default, the configuration
-script will attempt to find the HDF5 installation through pkg-config. If it
-cannot be found, then an error will be produced. If HDF5 is installed in your
-system but pkg-config cannot find it, you can specify the HDF5 installation
-directory using
-
-  ./configure --hdf5dir=<hdf5_directory>
-
-Alternatively, if your installation is non-standard, you can manually specify
-the include and lib directories of your HDF5 installation using
-
-  ./configure --hdf5inc=<hdf5_include_directory> --hdf5lib=<hdf5_lib_directory>
-
-If you are interested in hybrid EOS only, the HDF5 dependency might be
-undesirable. To disable HDF5, simply run
-
-  ./configure --nohdf5.
-
------------------------
-Specific configurations
------------------------
-
-To see specific configurations, please run one of the following commands:
-
-  ./configure --usage ubuntu
-  ./configure --usage mac
-  ./configure --usage falcon
-  ./configure --usage sawtooth
-  ./configure --usage lemhi
-
-In all cases you might want to run:
-
-  export CFLAGS="\$CFLAGS -I$(pwd)/include"
-  export LD_FLAGS="\$LD_FLAGS -L$(pwd)/lib"
-  export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:\$(pwd)/lib"
-
-so that compilers can find the GRHayL headers and so that executables that use
-the GRHayL library are able to run without errors.
-EOF
-}
-
-check_command()
-{
-    printf "Checking if command $1 exists... "
-    tmp_=$(command -v $1)
-    if [ "$tmp_" = "" ]; then
-        NO
-        eval have_$(printf $1 | tr - _)=0
-        return 0
-    else
-        YES $tmp_
-        eval have_$(printf $1 | tr - _)=1
-        return 1
-    fi
-}
-
-check_compiler()
-{
-    printf "Checking if compiler $1 exists... "
-    tmp_=$(command -v $1)
-    if [ "$tmp_" = "" ]; then
-        NO
-    else
-        CC=$1
-        YES "$tmp_"
-    fi
-}
-
-c_compiles()
-{
-    printf "$5"
-    printf "$1" | $2 $3 -x c - $4 >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        YES "$2$3<objs>$4"
-        rm -f a.out
-        return 0
-    else
-        NO "$2$3<objs>$4"
-        rm -f a.out
-        return 1
-    fi
-}
-
-Realpath()
-{
-    echo $(cd $(dirname $1); pwd)/$(basename $1) | \
-        awk '{gsub(/\/\.\./, "", $0); gsub(/\/\./, "", $0); print}'
-}
-
-NL='
-'
-probe_file()
-{
-    # Source: https://serverfault.com/questions/225798/
-    tmp_=$(find $1 -name "$2" 2>/dev/null | grep .)
-    return $?
-}
-
-set_hdf5()
-{
-    for dir in $1 $2; do
-        if [ ! -d $dir ]; then
-            error "Directory $dir not found"
-        fi
-    done
-    printf "Checking if hdf5.h can be found in $1... "
-    probe_file $1/ hdf5.h
-    err=$?
-    if [ $err -ne 0 ]; then
-        case $err in
-            1) NO;;
-            2) printf "\nFound multiple hdf5.h files:\n"
-               printf "$tmp_\n"
-               printf "Please specify the desired one using the --hdf5dir, --hdf5inc,\n"
-               printf "and/or --hdf5lib options. Run ./configure -h for further details.\n";;
-        esac
-        return $err
-    else
-        YES "$tmp_"
-        cflags="$cflags -I$(dirname $tmp_)"
-    fi
-    for f in $hdf5libfiles; do
-        printf "Checking if $f can be found in $2... "
-        probe_file $2/ $f
-        if [ $? -ne 0 ]; then
-            NO;
-            if [ "$f" = "libhdf5.a" ]; then
-                return 1;
-            fi
-        else
-            YES "$tmp_"
-            clibs="$clibs -L$(dirname $tmp_) -lhdf5"
-            break
-        fi
-    done
-    return 0
-}
-
 silent=0
 reconfigure=0
 prefix="/usr/local"
@@ -380,6 +64,8 @@ hdf5dir=""
 hdf5inc=""
 hdf5lib=""
 
+# This section uses ${1#*=} to trim arguments:
+# "--prefix=/usr/local" => "/usr/local"
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help) help_message; exit;;
@@ -403,14 +89,14 @@ while [ $# -gt 0 ]; do
         -s|--silent) silent=1;;
         --noomp) ompcflag="";;
         --nohdf5) usehdf5=0;;
-        --prefix=*) prefix=$(echo "$1" | cut -d= -f2);;
-        --buildtype=*) buildtype=$(echo "$1" | cut -d= -f2);;
-        --builddir=*) builddir=$(echo "$1" | cut -d= -f2);;
-        --cflags=*) cflags=$(echo "$1" | cut -d= -f2);;
-        --clibs=*) clibs=$(echo "$1" | cut -d= -f2);;
-        --hdf5dir=*) hdf5dir=$(echo "$1" | cut -d= -f2);;
-        --hdf5inc=*) hdf5inc=$(echo "$1" | cut -d= -f2);;
-        --hdf5lib=*) hdf5lib=$(echo "$1" | cut -d= -f2);;
+        --prefix=*) prefix="${1#*=}";;
+        --buildtype=*) buildtype="${1#*=}";;
+        --builddir=*) builddir="${1#*=}";;
+        --cflags=*) cflags="${1#*=}";;
+        --clibs=*) clibs="${1#*=}";;
+        --hdf5dir=*) hdf5dir="${1#*=}";;
+        --hdf5inc=*) hdf5inc="${1#*=}";;
+        --hdf5lib=*) hdf5lib="${1#*=}";;
         --prefix) prefix=$2; shift;;
         --buildtype) buildtype=$2; shift;;
         --builddir) builddir=$2; shift;;
@@ -482,7 +168,7 @@ prefix=$(Realpath $prefix)
 
 printf "Checking if build type is valid... "
 case $buildtype in
-         plain) break;;
+         plain) BUILDCFLAGS=""; break;;
          debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g"; break;;
      debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2 -g"; break;;
            opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2"; break;;
@@ -493,19 +179,11 @@ esac
 YES "buildtype: $buildtype; build flags: $BUILDCFLAGS"
 
 printf "Checking if cflags were provided... "
-if [ "$cflags" = "" ]; then
-    green "NO\n"
-else
-    YES "$cflags"
-fi
+[ -z "$cflags" ] && green "NO\n" || YES "$cflags"
 cflags="$BUILDCFLAGS $cflags"
 
 printf "Checking if clibs were provided... "
-if [ "$clibs" = "" ]; then
-    green "NO\n"
-else
-    YES "$clibs"
-fi
+[ -z "$clibs" ] && green "NO\n" || YES "$clibs"
 
 for compiler in gcc clang icc icx cc; do
     if [ -z $CC ]; then
@@ -515,56 +193,41 @@ for compiler in gcc clang icc icx cc; do
     fi
 done
 
-clibs=$(printf "%s" "-lm $clibs" | awk '{sub(/ *$/, "", $0); print}')
+# Normalize spaces and remove trailing/leading spaces
+clibs=$(normalize_spaces "-lm $clibs")
 
-c_compiles "int main() { return 0; }" $CC " -O0 " "" "Checking if C compiler works... "
-code='
-#include <stdio.h>
-#include <math.h>
+# Compiler checks
+c_compiles "int main() { return 0; }" $CC " -O0 " "" \
+    "Checking if C compiler works... " || \
+    error "The C compiler failed to compile sample code.\n"
 
-int main() {
-  printf("%%.15e\\n", cos(2.3456));
-  return 0;
-}
-'
-c_compiles "$code" $CC " -O0 " " -lm" "Checking if compiler works with -lm linker flag... "
-if [ $? -ne 0 ]; then
+c_compiles "$(cat config/link_test.c)" $CC " -O0 " " -lm" \
+    "Checking if compiler works with -lm linker flag... " || \
     error "The C compiler does not work with libm\n"
-fi
-c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with build flags... "
-if [ $? -ne 0 ]; then
+
+c_compiles "$(cat config/link_test.c)" $CC " $cflags " " $clibs" \
+    "Checking if compiler works with build flags... " || \
     error "The C compiler does not work with the build flags\n"
-fi
-if [ "$ompcflag" != "" ]; then
-    code='
-#include <stdio.h>
-#include <omp.h>
-int main() {
-  #pragma omp parallel
-  {
-    printf("Hello, world!\\n");
-  }
-  return 0;
-}
-'
-    c_compiles "$code" $CC " -O0$ompcflag " " $clibs" "Checking if compiler works with$ompcflag flag... "
-    if [ $? -ne 0 ]; then
-        printf "Disabling OpenMP\n"
-        ompcflag=""
+
+if [ -n "$ompcflag" ]; then
+    if ! c_compiles "$(cat config/omp_test.c)" $CC " -O0$ompcflag " " $clibs" \
+            "Checking if compiler works with$ompcflag flag... "; then
+            printf "Disabling OpenMP\n"
+            ompcflag=""
     fi
 fi
 
 if [ $usehdf5 -eq 0 ]; then
     cflags="$cflags -DGRHAYL_DISABLE_HDF5"
 else
-    if [ "$hdf5dir" = "" ]; then
-        if [ "$hdf5inc" = "" ] && [ "$hdf5lib" = "" ]; then
+    if [ -z "$hdf5dir" ]; then
+        if [ -z "$hdf5inc" ] && [ -z "$hdf5lib" ]; then
             check_command pkg-config
             if [ $have_pkg_config -eq 1 ]; then
                 printf "Checking if hdf5 library is available with pkg-config... "
                 hdf5inc=$(pkg-config hdf5 --cflags 2>/dev/null)
                 hdf5lib=$(pkg-config hdf5 --libs --static 2>/dev/null)
-                if [ "$hdf5inc" != "" ] && [ "$hdf5lib" != "" ]; then
+                if [ -n "$hdf5inc" ] && [ -n "$hdf5lib" ]; then
                     YES
                     cflags="$cflags $hdf5inc"
                     clibs="$clibs $hdf5lib"
@@ -577,309 +240,252 @@ else
                     exit 1
                 fi
             fi
-        elif [ "$hdf5inc" = "" ] || [ "$hdf5lib" = "" ]; then
+        elif [ -z "$hdf5inc" ] || [ -z "$hdf5lib" ]; then
             error "For custom HDF5 paths, both --hdf5inc and --hdf5lib must be given\n"
         else
-            set_hdf5 "$hdf5inc" "$hdf5lib"
-            if [ $? -ne 0 ]; then
-                error "HDF5 not found"
-            fi
+            set_hdf5 "$hdf5inc" "$hdf5lib" || error "HDF5 not found"
         fi
     else
-        if [ ! -d $hdf5dir ]; then
-            error "HDF5 directory $hdf5dir does not exist"
-        fi
-        set_hdf5 "${hdf5dir}/include" "${hdf5dir}/lib"
-        if [ $? -ne 0 ]; then
-            error "HDF5 not found"
-        fi
+        [ ! -d $hdf5dir ] && error "HDF5 directory $hdf5dir does not exist"
+        set_hdf5 "${hdf5dir}/include" "${hdf5dir}/lib" || error "HDF5 not found"
     fi
-    # Courtesy ChatGPT (comments removed)
-    code='
-#include <stdio.h>
-#include <stdlib.h>
-#include "hdf5.h"
-
-int main() {
-  hid_t file_id, dataset_id, dataspace_id;
-  herr_t status;
-  file_id = H5Fopen("test.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
-  if (file_id < 0) {
-    fprintf(stderr, "Failed to open HDF5 file!\\n");
-    exit(1);
-  }
-  dataset_id = H5Dopen2(file_id, "test_dataset", H5P_DEFAULT);
-  if (dataset_id < 0) {
-    fprintf(stderr, "Failed to open HDF5 dataset!\\n");
-    exit(1);
-  }
-  dataspace_id = H5Dget_space(dataset_id);
-  if (H5Sget_simple_extent_ndims(dataspace_id) != 2) {
-    fprintf(stderr, "Unexpected dataspace rank!\\n");
-    exit(1);
-  }
-  hsize_t dims[2];
-  status = H5Sget_simple_extent_dims(dataspace_id, dims, NULL);
-  if (status < 0 || dims[0] != 5 || dims[1] != 10) {
-    fprintf(stderr, "Unexpected dataspace dimensions!\\n");
-    exit(1);
-  }
-  status = H5Dclose(dataset_id);
-  status = H5Fclose(file_id);
-  printf("HDF5 installation is OK!\\n");
-  return 0;
-}
-'
-    c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with hdf5... "
-    if [ $? -ne 0 ]; then
-        msg="C compiler does not work with hdf5. Use ./configure --nohdf5 to disable hdf5 or
+    if ! c_compiles "$(cat config/hdf5_test.c)" $CC " $cflags " " $clibs" \
+       "Checking if compiler works with hdf5... "; then
+        error "C compiler does not work with hdf5. Use ./configure --nohdf5 to disable hdf5 or
        run ./configure -h for more information on how to specify your hdf5 installation."
-        error "$msg"
     fi
 fi
 
-parse_mcd()
-{
-    name=$(printf $2 | awk '{n=split($0, arr, "/"); print arr[n]}')
-    if [ "$3" = "0" ]; then
-        printf "$1- %s\n" $(blue $name)
-    elif [ "$3" = "1" ]; then
-        mkdir -p $(printf $2 | awk -v bd=$builddir '{sub(/^GRHayL\//, "", $0); printf("%s/%s", bd, $0)}')
-        printf "$1- %s\n" $(green $name)
-    else
-        mkdir -p $(printf $2 | awk -v bd=$builddir '{sub(/^GRHayL\//, "", $0); printf("%s/%s", bd, $0)}')
-        printf "$1- $name\n"
-    fi
-    file="$2/make.code.defn"
-    if [ ! -f $file ]; then
-        error "File $file not found"
-    fi
-    for sd in $(./scripts/parser awk $file "subdirs"); do
-        sdsrcs=$(./scripts/parser awk "$2/$sd/make.code.defn" "sources")
-        sdincs=$(./scripts/parser awk "$2/$sd/make.code.defn" "headers")
-        sdihds=$(./scripts/parser awk "$2/$sd/make.code.defn" "install_headers")
-        srcs="$srcs $sdsrcs"
-        incs="$incs $sdincs"
-        ihds="$ihds $sdihds"
-        parse_mcd "$1  " $2/$sd $(($3+1))
-    done
-}
-
 printf "Creating build directory tree (build directory: $builddir):\n"
-count=0
-srcs=""
-incs=""
-ihds=""
+srcs="" incs="" ihds=""
 parse_mcd "  " "GRHayL" 0
+
 printf "Symlinking header files in GRHayL/include to $builddir/include... "
 rm -f $builddir/include/*
-ln -s `pwd`/GRHayL/include/*.h $builddir/include
+ln -s "$(pwd)/GRHayL/include/"*.h "$builddir/include"
 green "DONE\n"
+
 printf "Creating directory $builddir/lib... "
 mkdir -p $builddir/lib
 green "DONE\n"
+
 printf "Auto-generated by GRHayL's configuration script\n" > $builddir/.check
 
 # Sanitize all white space (not really necessary)
-cflags=$(printf "%s" "$cflags" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-clibs=$(printf "%s" "$clibs" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-srcs=$(printf "$srcs" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-incs=$(printf "$incs" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-ihds=$(printf "$ihds" | awk '{gsub(/  */, " ", $0); sub(/^ */, "", $0); sub(/ $/, "", $0); print}')
-objs=$(printf "$srcs" | awk -v bd=$builddir '{gsub("GRHayL/", sprintf("%s/", bd), $0); gsub(/\.c/, ".o", $0); print}')
+cflags=$(normalize_spaces "$cflags")
+clibs=$(normalize_spaces "$clibs")
+srcs=$(normalize_spaces "$srcs")
+incs=$(normalize_spaces "$incs")
+ihds=$(normalize_spaces "$ihds")
+objs=$(echo "$srcs" | awk -v bd="$builddir" '{gsub("GRHayL/", bd"/", $0); gsub(/\.c/, ".o", $0); print}')
 tests=$(find Unit_Tests -maxdepth 1 -name 'unit_test_*.c')
 datagen=$(find Unit_Tests/data_gen -maxdepth 1 -name 'unit_test_data_*.c')
-if [ "$tests" = "" ]; then
+
+if [ -z "$tests" ]; then
     tnames="None"
 else
-    tnames=$(printf "$tests" | sort | \
-                awk '{
-  split($0, a, "/")
-  sub(/^unit_test_/, "", a[2])
-  sub(/\.c/, "", a[2])
-  if( NR == 1 )
-    print "-", a[2]
-  else
-    printf("%26s- %s\n", " ", a[2])
-}
-END { print tests }
-')
-    tests=$(echo $tests)
-    tsrcs=$(echo $(find Unit_Tests -maxdepth 1 -name '*.c' ! -name 'unit_test_*.c'))
-    tobjs=$(printf "$tsrcs" | awk '{
-    gsub(/\.c/, ".o", $0)
-    for(i=1;i<=NF;i++) {
-      tobjs=sprintf("%s%s%s ", tobjs, "build/", $i)
-    }
-    print tobjs
-}')
-    texes=$(printf "$tests" | awk '{ gsub(/\.c/, "", $0); gsub(/Unit_Tests\//, "test/", $0); print }')
-    texeobjs=$(printf "$tests" | awk '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\//, "build/Unit_Tests/", $0); print }')
-    mkdir -p $builddir/Unit_Tests test
+    tnames=$(printf "$tests" | sort | awk '
+        {
+          split($0, a, "/")
+          sub(/^unit_test_/, "", a[2])
+          sub(/\.c/, "", a[2])
+          if( NR == 1 )
+            print "-", a[2]
+          else
+            printf("%26s- %s\n", " ", a[2])
+        }')
+    tsrcs=$(find Unit_Tests -maxdepth 1 -name '*.c' ! -name 'unit_test_*.c')
+    tobjs=$(for src in $tsrcs; do printf "build/${src%.c}.o "; done)
+    texes=$(for t in $tests; do printf "${t%.c} " | sed 's|Unit_Tests/|test/|'; done)
+    texeobjs=$(for t in $tests; do printf "${t%.c}.o " | sed 's|Unit_Tests/|build/Unit_Tests/|'; done)
+    mkdir -p "$builddir/Unit_Tests" test
 fi
 
-if [ "$datagen" = "" ]; then
+if [ -z "$datagen" ]; then
     dgnames="None"
 else
-    dgnames=$(printf "$datagen" | sort | \
-                awk '{
-  split($0, a, "/")
-  sub(/^unit_test_data_/, "", a[3])
-  sub(/\.c/, "", a[3])
-  if( NR == 1 )
-    print "-", a[3]
-  else
-    printf("%26s- %s\n", " ", a[3])
-}
-END { print tests }
-')
-    datagen=$(echo $datagen)
-    dgsrcs=$(echo $(find Unit_Tests/data_gen -maxdepth 1 -name '*.c' ! -name 'unit_test_data_*.c'))
-    dgobjs=$(printf "$dgsrcs" | awk '{
-    gsub(/\.c/, ".o", $0)
-    for(i=1;i<=NF;i++) {
-      dgobjs=sprintf("%s%s%s ", dgobjs, "build/", $i)
-    }
-    print dgobjs
-}')
-    dgexes=$(printf "$datagen" | awk '{ gsub(/\.c/, "", $0); gsub(/Unit_Tests\/data_gen\//, "test/data_gen/", $0); print }')
-    dgexeobjs=$(printf "$datagen" | awk '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\/data_gen\//, "build/Unit_Tests/data_gen/", $0); print }')
-    mkdir -p $builddir/Unit_Tests/data_gen test/data_gen
+    dgnames=$(printf "$datagen" | sort | awk '
+        {
+          split($0, a, "/")
+          sub(/^unit_test_data_/, "", a[3])
+          sub(/\.c/, "", a[3])
+          if( NR == 1 )
+            print "-", a[3]
+          else
+            printf("%26s- %s\n", " ", a[3])
+        }')
+    dgsrcs=$(find Unit_Tests/data_gen -maxdepth 1 -name '*.c' ! -name 'unit_test_data_*.c')
+    dgobjs=$(for src in $dgsrcs; do printf "build/${src%.c}.o "; done)
+    dgexes=$(for d in $datagen; do printf "${d%.c} " | sed 's|Unit_Tests/data_gen/|test/data_gen/|'; done)
+    dgexeobjs=$(for d in $datagen; do printf "${d%.c}.o " | sed 's|Unit_Tests/data_gen/|build/Unit_Tests/data_gen/|'; done)
+    mkdir -p "$builddir/Unit_Tests/data_gen" test/data_gen
 fi
 
 printf "Generating Makefile... "
 rm -f Makefile
-printf "# Makefile automatically generated by $pkg's configure script\n" > Makefile
-printf "PREFIX       = $prefix\n"                                       >> Makefile
-printf "BUILDDIR     = $builddir\n"                                     >> Makefile
-printf "LIBSOV       = lib${libname}_${pkg_version}$sharedext\n"        >> Makefile
-printf "LIBSO        = lib$libname$sharedext\n"                         >> Makefile
-printf 'BUILDLIBSOV  = $(BUILDDIR)/lib/$(LIBSOV)\n'                     >> Makefile
-printf 'BUILDLIBSO   = $(BUILDDIR)/lib/$(LIBSO)\n'                      >> Makefile
-printf 'PREFIXLIBSOV = $(PREFIX)/lib/$(LIBSOV)\n'                       >> Makefile
-printf 'PREFIXLIBSO  = $(PREFIX)/lib/$(LIBSO)\n'                        >> Makefile
-printf "CC           = $CC\n"                                           >> Makefile
-printf "CFLAGS       = $cflags -I./GRHayL/include\n"                    >> Makefile
-printf "CCOMPILE     = \$(CC) \$(CFLAGS)\n"                             >> Makefile
-printf "CCOMPILEOMP  = \$(CC) \$(CFLAGS)$ompcflag\n"                    >> Makefile
-printf "LD_FLAGS     = $clibs\n"                                        >> Makefile
-printf "SRC          = $srcs\n"                                         >> Makefile
-printf "OBJ          = $objs\n"                                         >> Makefile
-printf "INCS         = $incs\n"                                         >> Makefile
-printf "IHDS         = $ihds\n"                                         >> Makefile
-printf 'INC         := $(INCS) $(IHDS)\n'                               >> Makefile
-printf 'LIBS         = $(BUILDLIBSO)\n'                                 >> Makefile
-if [ "$tests" != "" ]; then
-    printf "TEXES    = $texes\n"      >> Makefile
-    printf "TOBJS    = $tobjs\n"      >> Makefile
-    printf "TEXEOBJS = $texeobjs\n\n" >> Makefile
-fi
-if [ "$datagen" != "" ]; then
-    printf "DGEXES    = $dgexes\n"      >> Makefile
-    printf "DGOBJS    = $dgobjs\n"      >> Makefile
-    printf "DGEXEOBJS = $dgexeobjs\n\n" >> Makefile
-fi
-printf '\nall: grhayl\n\t@echo "All done!"\n\n'             >> Makefile
-printf 'grhayl: $(LIBS)\n\n'                                >> Makefile
-printf 'tests: grhayl $(TEXES)\n\t@echo "All done!"\n\n'    >> Makefile
-printf 'datagen: grhayl $(DGEXES)\n\t@echo "All done!"\n\n' >> Makefile
-if [ $silent -eq 0 ]; then
-    printf '$(BUILDLIBSO): $(BUILDLIBSOV)\n'                                         >> Makefile
-    printf '\trm -f $(BUILDLIBSO) && ln -s $(LIBSOV) $(BUILDLIBSO)\n\n'              >> Makefile
-    printf '$(BUILDLIBSOV): $(OBJ)\n'                                                >> Makefile
-    printf '\t$(CCOMPILE) -fPIC -shared $(OBJ) -o $@ $(LD_FLAGS)\n\n'                >> Makefile
-    printf '$(OBJ): $(BUILDDIR)/%%.o : GRHayL/%%.c $(INC)\n'                         >> Makefile
-    printf '\t$(CCOMPILE) -fPIC -c $< -o $@\n\n'                                     >> Makefile
-    printf 'clean:\n\trm -f $(OBJ) $(TEXES) $(TOBJS) $(BUILDLIBSO) $(BUILDLIBSOV)\n' >> Makefile
-    printf 'realclean: clean\n\trm -rf $(BUILDDIR)\n\trm -f Makefile\n\n'            >> Makefile
-    if [ "$tests" != "" ]; then
-        printf '$(TEXES): test/%%: $(BUILDDIR)/Unit_Tests/%%.o $(TOBJS) $(LIBS)\n'             >> Makefile
-        printf '\t$(CCOMPILEOMP) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
-        printf '$(TOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                            >> Makefile
-        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-        printf '$(TEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                         >> Makefile
-        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-    fi
-    if [ "$datagen" != "" ]; then
-        printf '$(DGEXES): test/data_gen/%%: $(BUILDDIR)/Unit_Tests/data_gen/%%.o $(DGOBJS) $(TOBJS) $(LIBS)\n' >> Makefile
-        printf '\t$(CCOMPILEOMP) $(DGOBJS) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
-        printf '$(DGOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                            >> Makefile
-        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-        printf '$(DGEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                         >> Makefile
-        printf '\t$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-    fi
+
+append "# Makefile automatically generated by $pkg's configure script"
+append "PREFIX       = $prefix"
+append "BUILDDIR     = $builddir"
+append "LIBSOV       = lib${libname}_${pkg_version}$sharedext"
+append "LIBSO        = lib$libname$sharedext"
+append 'BUILDLIBSOV  = $(BUILDDIR)/lib/$(LIBSOV)'
+append 'BUILDLIBSO   = $(BUILDDIR)/lib/$(LIBSO)'
+append 'PREFIXLIBSOV = $(PREFIX)/lib/$(LIBSOV)'
+append 'PREFIXLIBSO  = $(PREFIX)/lib/$(LIBSO)'
+append "CC           = $CC"
+append "CFLAGS       = $cflags -I./GRHayL/include"
+append "CCOMPILE     = \$(CC) \$(CFLAGS)"
+append "CCOMPILEOMP  = \$(CC) \$(CFLAGS)$ompcflag"
+append "LD_FLAGS     = $clibs"
+append "SRC          = $srcs"
+append "OBJ          = $objs"
+append "INCS         = $incs"
+append "IHDS         = $ihds"
+append 'INC         := $(INCS) $(IHDS)'
+append 'LIBS         = $(BUILDLIBSO)'
+
+# Core variables
+[ -n "$tests" ] && {
+  append "TEXES    = $texes"
+  append "TOBJS    = $tobjs"
+  append "TEXEOBJS = $texeobjs"
+  append ""
+}
+
+[ -n "$datagen" ] && {
+  append "DGEXES    = $dgexes"
+  append "DGOBJS    = $dgobjs"
+  append "DGEXEOBJS = $dgexeobjs"
+  append ""
+}
+
+append "all: grhayl"
+tab_append "@echo \"All done!\""
+append ""
+
+append "grhayl: \$(LIBS)"
+append ""
+
+[ -n "$tests" ] && {
+  append "tests: grhayl \$(TEXES)"
+  tab_append "@echo \"All done!\""
+append ""
+}
+
+[ -n "$datagen" ] && {
+  append "datagen: grhayl \$(DGEXES)"
+  tab_append "@echo \"All done!\""
+  append ""
+}
+
+# Shared build rules
+gen_common_rules() {
+  append "\$(BUILDLIBSO): \$(BUILDLIBSOV)"
+  tab_append "$1rm -f \$(BUILDLIBSO) && ln -s \$(LIBSOV) \$(BUILDLIBSO)"
+  append ""
+
+  append "\$(BUILDLIBSOV): \$(OBJ)"
+  tab_append "$1\$(CCOMPILE) -fPIC -shared \$(OBJ) -o \$@ \$(LD_FLAGS)"
+  append ""
+
+  append "\$(OBJ): \$(BUILDDIR)/%.o : GRHayL/%.c \$(INC)"
+  tab_append "$1\$(CCOMPILE) -fPIC -c \$< -o \$@"
+  append ""
+}
+
+if [ "$silent" -eq 0 ]; then
+  gen_common_rules ""
+  append "clean:"
+  tab_append "rm -f \$(OBJ) \$(TEXES) \$(TOBJS) \$(BUILDLIBSO) \$(BUILDLIBSOV)"
+  append "realclean: clean"
+  tab_append "rm -rf \$(BUILDDIR)"
+  tab_append "rm -f Makefile"
+  append ""
 else
-    printf '$(BUILDLIBSO): $(BUILDLIBSOV)\n'                             >> Makefile
-    printf '\t@echo "Creating symlink to $@"\n'                          >> Makefile
-    printf '\t@rm -f $(BUILDLIBSO) && ln -s $(LIBSOV) $(BUILDLIBSO)\n\n' >> Makefile
-    printf '$(BUILDLIBSOV): $(OBJ)\n'                                    >> Makefile
-    printf '\t@echo "Linking GRHayL shared library"\n'                   >> Makefile
-    printf '\t@$(CCOMPILE) -fPIC -shared $(OBJ) -o $@ $(LD_FLAGS)\n\n'   >> Makefile
-    printf '$(OBJ): $(BUILDDIR)/%%.o : GRHayL/%%.c $(INC)\n'             >> Makefile
-    printf '\t@echo "Compiling $<"\n'                                    >> Makefile
-    printf '\t@$(CCOMPILE) -fPIC -c $< -o $@\n\n'                        >> Makefile
-    printf 'clean:\n\t@echo "Removing object files"\n'                   >> Makefile
-    printf '\t@rm -f $(OBJ)\n'                                           >> Makefile
-    printf '\t@echo "Removing library files"\n'                          >> Makefile
-    printf '\t@rm -f $(BUILDLIBSO) $(BUILDLIBSOV)\n'                     >> Makefile
-    printf '\t@echo "Removing unit tests"\n'                             >> Makefile
-    printf '\t@rm -f $(TEXES) $(TOBJS)\n\n'                              >> Makefile
-    printf 'realclean: clean\n\t@echo "Removing build directory"\n'      >> Makefile
-    printf '\t@rm -rf $(BUILDDIR)\n'                                     >> Makefile
-    printf '\t@echo "Removing Makefile"\n'                               >> Makefile
-    printf '\t@rm -f Makefile\n\n'                                       >> Makefile
-    if [ "$tests" != "" ]; then
-        printf '$(TEXES): test/%%: $(BUILDDIR)/Unit_Tests/%%.o $(TOBJS) $(LIBS)\n'              >> Makefile
-        printf '\t@echo "Linking $@"\n'                                                         >> Makefile
-        printf '\t@$(CCOMPILEOMP) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
-        printf '$(TOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                             >> Makefile
-        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
-        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-        printf '$(TEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                          >> Makefile
-        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
-        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-    fi
-    if [ "$datagen" != "" ]; then
-        printf '$(DGEXES): test/%%: $(BUILDDIR)/Unit_Tests/%%.o $(DGOBJS) $(TOBJS) $(LIBS)\n'              >> Makefile
-        printf '\t@echo "Linking $@"\n'                                                         >> Makefile
-        printf '\t@$(CCOMPILEOMP) $(DGOBJS) $(TOBJS) $< -o $@ $(LD_FLAGS) -L$(BUILDDIR)/lib -lgrhayl\n\n' >> Makefile
-        printf '$(DGOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                             >> Makefile
-        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
-        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-        printf '$(DGEXEOBJS): $(BUILDDIR)/%%.o: %%.c\n'                                          >> Makefile
-        printf '\t@echo "Compiling $<"\n'                                                       >> Makefile
-        printf '\t@$(CCOMPILEOMP) -c $< -o $@\n\n'                                              >> Makefile
-    fi
+  gen_common_rules "@"
+  append "clean:"
+  tab_append "@echo \"Removing object files\""
+  tab_append "@rm -f \$(OBJ)"
+  tab_append "@echo \"Removing library files\""
+  tab_append "@rm -f \$(BUILDLIBSO) \$(BUILDLIBSOV)"
+  tab_append "@echo \"Removing unit tests\""
+  tab_append "@rm -f \$(TEXES) \$(TOBJS)"
+  append ""
+  append "realclean: clean"
+  tab_append "@echo \"Removing build directory\""
+  tab_append "@rm -rf \$(BUILDDIR)"
+  tab_append "@echo \"Removing Makefile\""
+  tab_append "@rm -f Makefile"
+  append ""
 fi
-printf 'install: grhayl\n'                                                     >> Makefile
-printf '\t@echo "Installing GRHayL in $(PREFIX)..."\n'                         >> Makefile
-printf '\t@echo "Installing GRHayL headers in $(PREFIX)/include/grhayl"\n'     >> Makefile
-printf '\t@mkdir -p $(PREFIX)/include/grhayl\n'                                >> Makefile
-printf '\t@cp $(IHDS) $(PREFIX)/include/grhayl\n'                              >> Makefile
-printf '\t@echo "Installing GRHayL libraries in $(PREFIX)/lib"\n'              >> Makefile
-printf '\t@mkdir -p $(PREFIX)/lib\n'                                           >> Makefile
-printf '\t@cp -a $(BUILDDIR)/lib/* $(PREFIX)/lib\n\n'                          >> Makefile
-printf 'uninstall:\n'                                                          >> Makefile
-printf '\t@echo "Uninstalling GRHayL from $(PREFIX)..."\n'                     >> Makefile
-printf '\t@echo "Uninstalling GRHayL headers from $(PREFIX)/include/grhayl"\n' >> Makefile
-printf '\t@rm -rf $(PREFIX)/include/grhayl\n'                                  >> Makefile
-printf '\t@echo "Uninstalling GRHayL libraries from $(PREFIX)/lib"\n'          >> Makefile
-printf '\t@rm -rf $(PREFIXLIBSO) $(PREFIXLIBSOV)\n\n'                          >> Makefile
+
+# Test rules
+[ -n "$tests" ] && {
+    local_prefix=""
+    [ "$silent" -ne 0 ] && local_prefix="@"
+
+  append "\$(TEXES): test/%: \$(BUILDDIR)/Unit_Tests/%.o \$(TOBJS) \$(LIBS)"
+  tab_append "${local_prefix}\$(CCOMPILEOMP) \$(TOBJS) \$< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -lgrhayl"
+  append ""
+
+  append "\$(TOBJS): \$(BUILDDIR)/%.o: %.c"
+  tab_append "${local_prefix}\$(CCOMPILEOMP) -c \$< -o \$@"
+  append ""
+
+  append "\$(TEXEOBJS): \$(BUILDDIR)/%.o: %.c"
+  tab_append "${local_prefix}\$(CCOMPILEOMP) -c \$< -o \$@"
+  append ""
+}
+
+# Datagen rules
+[ -n "$datagen" ] && {
+  local_prefix=""
+  [ "$silent" -ne 0 ] && local_prefix="@"
+
+  append "\$(DGEXES): test/data_gen/%: \$(BUILDDIR)/Unit_Tests/data_gen/%.o \$(DGOBJS) \$(TOBJS) \$(LIBS)"
+  tab_append "${local_prefix}\$(CCOMPILEOMP) \$(DGOBJS) \$(TOBJS) \$< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -lgrhayl"
+  append ""
+
+  append "\$(DGOBJS): \$(BUILDDIR)/%.o: %.c"
+  tab_append "${local_prefix}\$(CCOMPILEOMP) -c \$< -o \$@"
+  append ""
+
+  append "\$(DGEXEOBJS): \$(BUILDDIR)/%.o: %.c"
+  tab_append "${local_prefix}\$(CCOMPILEOMP) -c \$< -o \$@"
+  append ""
+}
+
+append "install: grhayl"
+tab_append '@echo "Installing GRHayL in $(PREFIX)..."'
+tab_append '@echo "Installing GRHayL headers in $(PREFIX)/include/grhayl"'
+tab_append '@mkdir -p $(PREFIX)/include/grhayl'
+tab_append '@cp $(IHDS) $(PREFIX)/include/grhayl'
+tab_append '@echo "Installing GRHayL libraries in $(PREFIX)/lib"'
+tab_append '@mkdir -p $(PREFIX)/lib'
+tab_append '@cp -a $(BUILDDIR)/lib/* $(PREFIX)/lib'
+append ""
+append "uninstall:"
+tab_append '@echo "Uninstalling GRHayL from $(PREFIX)..."'
+tab_append '@echo "Uninstalling GRHayL headers from $(PREFIX)/include/grhayl"'
+tab_append '@rm -rf $(PREFIX)/include/grhayl'
+tab_append '@echo "Uninstalling GRHayL libraries from $(PREFIX)/lib"'
+tab_append '@rm -rf $(PREFIXLIBSO) $(PREFIXLIBSOV)'
 green "DONE\n"
 
-tmp=$(printf "$pkg_short configuration finished successfully")
+tmp="$pkg_short configuration finished successfully"
 sep=$(printf "%*s" "${#tmp}" " " | tr " " -)
 printf "%s\n" $sep
 printf "$tmp\n\n"
 printf "%2sConfiguration information\n" " "
 printf "%2s-------------------------\n" " "
-printf "%4s%-19s : %s\n" " " "Version" $pkg_version
-printf "%4s%-19s : %s\n" " " "Installation prefix" $prefix
-printf "%4s%-19s : %s\n" " " "Build directory" $(Realpath $builddir)
-printf "%4s%-19s : %s\n" " " "Build type" $buildtype
+printf "%4s%-19s : %s\n" " " "Version" "$pkg_version"
+printf "%4s%-19s : %s\n" " " "Installation prefix" "$prefix"
+printf "%4s%-19s : %s\n" " " "Build directory" "$(Realpath "$builddir")"
+printf "%4s%-19s : %s\n" " " "Build type" "$buildtype"
 printf "%4s%-19s : %s\n" " " "C compiler flags" "$cflags"
 printf "%4s%-19s : %s\n" " " "C linking flags" "$clibs"
-if [ "$ompcflag" = "" ]; then
+if [ -z "$ompcflag" ]; then
     printf "%4s%-19s : %s\n" " " "OpenMP unit tests" "No"
 else
     printf "%4s%-19s : %s\n" " " "OpenMP unit tests" "Yes"
