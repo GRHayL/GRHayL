@@ -8,6 +8,9 @@
 #include <gsl/gsl_roots.h>
 #include <gsl/gsl_multiroots.h>
 
+// Choice of closure scheme
+typedef enum { Eddington, Kershaw, Minerbo, Thin } ghl_m1_closure_t;
+
 // Neutrino quantities
 typedef struct ghl_neutrino_luminosities {
   double nue, anue, nux;
@@ -86,59 +89,6 @@ typedef struct ghl_m1_thc_params {
   double source_epsrel;
 } ghl_m1_thc_params;
 
-
-// Choice of closure scheme
-typedef enum { Eddington, Kershaw, Minerbo, Thin } ghl_m1_closure_t;
-
-#include "nrpyleakage.h"
-
-// Closure function prototypes
-double eddington(const double xi);
-double kershaw(const double xi);
-double minerbo(const double xi);
-double thin(const double xi);
-
-// The function pointer to be used for the closure.
-extern double (*ghl_m1_closure)(double);
-
-ghl_error_codes_t ghl_initialize_m1_closure(ghl_m1_closure_t ghl_m1_closure_type);
-
-void add_rad_to_Tmunu(ghl_stress_energy *T4DD, 
-                      const ghl_stress_energy *rT4DD, 
-                      const ghl_metric_quantities *metric);
-
-void calc_density_ratios(const double mb,
-                         const double rho,
-                         const double eps,
-                         const ghl_metric_quantities *metric,
-                         const double n_e,
-                         const double n_ae,
-                         const double n_x,
-                         const double J_e,
-                         const double J_ae,
-                         const double J_x,
-                         double *number_ratio_e,
-                         double *number_ratio_ae,
-                         double *number_ratio_x,
-                         double *energy_ratio_e,
-                         double *energy_ratio_ae,
-                         double *energy_ratio_x);
-
-void flavor_mix_adjustment(double *rN_e,
-                           double *rN_ae,
-                           double *rN_x,
-                           double *rN_ax,
-                           const double Nmin,
-                           double *rE_e,
-                           double *rE_ae,
-                           double *rE_x,
-                           double *rE_ax,
-                           ghl_radiation_flux_vector *rF_e,
-                           ghl_radiation_flux_vector *rF_ae,
-                           ghl_radiation_flux_vector *rF_x,
-                           ghl_radiation_flux_vector *rF_ax,
-                           const bool mix_type);
-
 /*
  * Struct        : ghl_m1_powell_params
  * Description   : stores M1 transport GRHayL parameters for Powell's method
@@ -191,5 +141,70 @@ typedef struct ghl_m1_powell_params {
   ghl_radiation_flux_vector *F4_new;
 
 } ghl_m1_powell_params;
+
+#include "nrpyleakage.h"
+
+// Closure function prototypes
+double eddington(const double xi);
+double kershaw(const double xi);
+double minerbo(const double xi);
+double thin(const double xi);
+
+// The function pointer to be used for the closure.
+extern double (*ghl_m1_closure)(double);
+
+ghl_error_codes_t ghl_initialize_m1_closure(ghl_m1_closure_t ghl_m1_closure_type);
+
+void add_rad_to_Tmunu(ghl_stress_energy *T4DD, 
+                      const ghl_stress_energy *rT4DD, 
+                      const ghl_metric_quantities *metric);
+
+void calc_density_ratios(const double mb,
+                         const double rho,
+                         const double eps,
+                         const ghl_metric_quantities *metric,
+                         const double n_e,
+                         const double n_ae,
+                         const double n_x,
+                         const double J_e,
+                         const double J_ae,
+                         const double J_x,
+                         double *number_ratio_e,
+                         double *number_ratio_ae,
+                         double *number_ratio_x,
+                         double *energy_ratio_e,
+                         double *energy_ratio_ae,
+                         double *energy_ratio_x);
+
+void flavor_mix_adjustment(double *rN_e,
+                           double *rN_ae,
+                           double *rN_x,
+                           double *rN_ax,
+                           const double Nmin,
+                           double *rE_e,
+                           double *rE_ae,
+                           double *rE_x,
+                           double *rE_ax,
+                           ghl_radiation_flux_vector *rF_e,
+                           ghl_radiation_flux_vector *rF_ae,
+                           ghl_radiation_flux_vector *rF_x,
+                           ghl_radiation_flux_vector *rF_ax,
+                           const bool mix_type);
+
+// TODO(LRW): I think this is missing the calculation of rnnu. Please check.
+void ghl_m1_set_equilibrium(
+    const double rho,
+    const double T,
+    const double eta_nue,
+    const double eta_nuae,
+    const double eta_nux,
+    const double w_lorentz,
+    const double *u4D,
+    const double *n4U,
+    const ghl_radiation_metric_tensor *proj4,
+    const ghl_ADM_aux_quantities *adm_aux,
+    const ghl_metric_quantities *metric,
+    double *rN,
+    double *rE);
 
 #endif // GHL_RADIATION_H_
