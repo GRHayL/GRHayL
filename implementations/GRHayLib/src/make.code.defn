@@ -26,7 +26,9 @@ SUBDIRS = Atmosphere                      \
           GRHayL_Core                     \
           Induction                       \
           Induction/Interpolators         \
+          Radiation			  \
           Radiation/NRPyLeakage           \
+          Radiation/M1			  \
           Reconstruction/PPM              \
           Reconstruction/PLM              \
           Reconstruction/WENOZ
