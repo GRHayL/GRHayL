@@ -80,13 +80,14 @@ compute_rho_W_from_x_and_conservatives(
  * \f]
  *
  * @todo
- * I (SCupp) compared this limit to apply_conservative_limits, and the two
- * seem to disagree. Should this \f$ S_i \f$ limiter just do the same as
- * @ref apply_conservative_limits? It seems to me like one of them should be wrong
- * unless someone can explain why they would differ between EOS. This should be
- * looked at and, if true, that function should be properly extended to work for
- * any EOS and the two limits should converge to the 'correct' version.
- * It also references eq. A5 of [1], but I don't know what [1] represents here.
+ * I (SCupp) compared this limit to @ref ghl_apply_conservative_limits, and the
+ * two seem to disagree. Should this \f$ S_i \f$ limiter just do the same as
+ * @ref ghl_apply_conservative_limits? It seems to me like one of them should be
+ * wrong unless someone can explain why they would differ between EOS. This
+ * should be looked at and, if true, that function should be properly extended
+ * to work for any EOS and the two limits should converge to the 'correct'
+ * version. It also references eq. A5 of [1], but I don't know what [1]
+ * represents here.
  *
  * @param[in] ADM_metric:  pointer to ghl_metric_quantities containing the ADM metric
  *
