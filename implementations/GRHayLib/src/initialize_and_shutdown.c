@@ -206,6 +206,25 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     CCTK_VERROR("GRHayLib parameter EOS_type has an unsupported type. Please check"
                 " the list of parameter options in the param.ccl.");
   }
+
+  ghl_m1_closure_t ghl_m1_closure_type;
+  if (CCTK_EQUALS(m1_closure_type, "Eddington")){
+    ghl_m1_closure_type = 0;
+  }
+  else if (CCTK_EQUALS(m1_closure_type, "Kershaw")) {
+    ghl_m1_closure_type = 1;
+  }
+  else if (CCTK_EQUALS(m1_closure_type, "Minerbo")) {
+    ghl_m1_closure_type = 2;
+  }
+  else if (CCTK_EQUALS(m1_closure_type, "Thin")) {
+    ghl_m1_closure_type = 3;
+  }
+  else{
+    ghl_m1_closure_type = 4; //else choose an invalid closure type for GRHayL to catch.
+  }
+  ghl_initialize_m1_closure(ghl_m1_closure_type);
+
 }
 
 void GRHayLib_terminate(CCTK_ARGUMENTS) {

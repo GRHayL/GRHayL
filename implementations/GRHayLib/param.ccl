@@ -240,3 +240,13 @@ CCTK_REAL ppm_shock_k0 "K0 used for shock detection in steepen_rho algorithm" ST
   :     :: "Anything goes. Default suggested by Colella & Woodward is: (polytropic constant)/10.0"
 } 0.1
 
+#########################################################
+
+# M1_Neutrinos parameters
+KEYWORD m1_closure_type "What closure is being used" STEERABLE=RECOVER
+{
+  "Eddington" :: "TODO(DRB)"
+  "Kershaw"   :: "TODO(DRB)"
+  "Minerbo"   :: "TODO(DRB)"
+  "Thin"      :: "TODO(DRB)"
+} "Thin"
