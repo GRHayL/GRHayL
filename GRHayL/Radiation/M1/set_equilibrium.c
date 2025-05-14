@@ -14,9 +14,10 @@ void ghl_m1_set_equilibrium(
     const ghl_ADM_aux_quantities *adm_aux,
     const ghl_metric_quantities *metric,
     double *rN,
+    double *rnnu,
     double *rE) {
 
-  const double hc = 1.24e-4 //hc in units of MeVcm
+  const double hc = 1.24e-4; //hc in units of MeVcm
 
   //Calculate neutrino density (0 for number, 1 for energy)
   //eta refers to the chemical potential, not the emissions.
@@ -40,7 +41,8 @@ void ghl_m1_set_equilibrium(
   }
   }
 
-  *rN = max(w_lorentz*nu_dens*metric->detgamma, Nmin); //FIXME: Same question as with J's calc.
+  *rnnu = (nue_dens0 + nuae_dens0 + nux_dens0)*metric->detgamma; //TODO(DRB): Same issue as the J calc.
+  *rN = fmax(w_lorentz*(*rnnu), 0.0); //TODO(DRB): Add in Nfloor.
   *rE = calc_J_from_rT(&n4U, &proj4, &rT4DD); //This works as long as you pass the normal vectors, rather than the four-velocity. Compare eqs (1) and (2) in Radice 2021
   // TODO: why is this being done?
   // ghl_radiation_flux_vector F4 = {0};

@@ -205,6 +205,7 @@ void ghl_m1_set_equilibrium(
     const ghl_ADM_aux_quantities *adm_aux,
     const ghl_metric_quantities *metric,
     double *rN,
+    double *rnnu,
     double *rE);
 
 #endif // GHL_RADIATION_H_
