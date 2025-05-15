@@ -97,8 +97,6 @@ void ghl_initialize_simple_eos(
   eos->neos = 1;
   eos->K_ppoly[0] = 1;
   eos->rho_ppoly[0] = 0.0;
-  eos->h_ppoly[0] = 1.0;
-  eos->eps_ppoly[0] = 0.0;
   eos->p_ppoly[0] = 0.0;
   eos->eps_integ_const[0] = 0.0;
 
@@ -146,9 +144,6 @@ void ghl_initialize_hybrid_eos(
     rho_max = 1e300;
   }
   if(rho_min > rho_max) ghl_error("rho_min cannot be greater than rho_max\n");
-  eos->rho_atm = rho_atm;
-  eos->rho_min = rho_min;
-  eos->rho_max = rho_max;
 
   // Step 1: Set EOS type to Hybrid
   eos->eos_type = ghl_eos_hybrid;
@@ -170,7 +165,6 @@ void ghl_initialize_hybrid_eos(
 
   // Step 4: Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
-  for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
 
   // Initialize tabulated specific enthalpy.  We do it here to make sure
   // eps_integ_consts are initialized.
@@ -179,12 +173,8 @@ void ghl_initialize_hybrid_eos(
     double rho = rho_ppoly[j];
     if(rho > 0) {
       ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P, &eps);
-      eos->eps_ppoly[j] = eps;
-      eos->h_ppoly[j] = 1.0 + eps + P / rho;
       eos->p_ppoly[j] = P;
     } else {
-      eos->eps_ppoly[j] = 0.0;
-      eos->h_ppoly[j] = 1.0;
       eos->p_ppoly[j] = 0.0;
     }
   }
