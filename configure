@@ -314,8 +314,7 @@ c_compiles()
 
 Realpath()
 {
-    echo $(cd $(dirname $1); pwd)/$(basename $1) | \
-        awk '{gsub(/\/\.\./, "", $0); gsub(/\/\./, "", $0); print}'
+    echo $(cd $(dirname $1); pwd)/$(basename $1)
 }
 
 NL='

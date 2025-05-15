@@ -11,6 +11,10 @@ int NRPyEOS_find_polytropic_index(
       const ghl_eos_parameters *restrict eos,
       const double rho_in);
 
+int NRPyEOS_find_polytropic_index_from_P(
+      const ghl_eos_parameters *restrict eos,
+      const double P_in);
+
 void NRPyEOS_get_K_and_Gamma(
       const ghl_eos_parameters *restrict eos,
       const double rho_in,
@@ -31,6 +35,10 @@ void NRPyEOS_compute_P_cold_and_eps_cold(
       double *restrict P_cold_ptr,
       double *restrict eps_cold_ptr);
 
+double NRPyEOS_hybrid_compute_rho_cold_from_P_cold(
+      const ghl_eos_parameters *restrict eos,
+      const double P_in);
+
 double NRPyEOS_hybrid_compute_epsilon(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -42,6 +50,8 @@ double NRPyEOS_compute_entropy_function(
       const double P);
 
 void NRPyEOS_initialize_hybrid_functions();
+
+bool NRPyEOS_hybrid_enforce_bounds__rho(const ghl_eos_parameters *restrict eos, double *restrict rho);
 
 ghl_error_codes_t NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,

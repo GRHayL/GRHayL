@@ -194,6 +194,8 @@ typedef struct ghl_stress_energy {
 
  --eps_integ_const: array of the integration constants for specific internal energy
 
+ --p_ppoly: array of pressure values which divide the polytropic pieces
+
  --Gamma_th: thermal adiabatic index
 
          ----------- Tabulated Equation of State -----------
@@ -215,6 +217,7 @@ typedef struct ghl_eos_parameters {
   double Gamma_ppoly[MAX_EOS_PARAMS];
   double K_ppoly[MAX_EOS_PARAMS];
   double eps_integ_const[MAX_EOS_PARAMS];
+  double p_ppoly[MAX_EOS_PARAMS];
   double Gamma_th;
   //------------------------------------------------
 
@@ -254,7 +257,7 @@ typedef struct ghl_eos_parameters {
   double drhotempyei;
 
   // These are used for beta-equilibrium
-  double *lp_of_lr, *le_of_lr, *Ye_of_lr;
+  double *lp_of_lr, *le_of_lr, *Ye_of_lr, *lh_of_lr;
   //------------------------------------------------
 
 } ghl_eos_parameters;
