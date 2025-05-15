@@ -314,22 +314,16 @@ c_compiles()
 
 Realpath()
 {
-    echo $(cd $(dirname $1); pwd)/$(basename $1) | \
-        awk '{gsub(/\/\.\./, "", $0); gsub(/\/\./, "", $0); print}'
+    echo $(cd $(dirname $1); pwd)/$(basename $1)
 }
 
 NL='
 '
 probe_file()
 {
-    # Source: https://stackoverflow.com/questions/10346816
-    tmp_=$(find $1 2>/dev/null | grep -F $2)
-    # Source: https://unix.stackexchange.com/questions/276834
-    case $tmp_ in
-             "") return 1;;
-        *"$NL"*) return 2;;
-              *) return 0;;
-    esac
+    # Source: https://serverfault.com/questions/225798/
+    tmp_=$(find $1 -name "$2" 2>/dev/null | grep .)
+    return $?
 }
 
 set_hdf5()
