@@ -7,16 +7,6 @@
 
 #include "ghl_m1.h"
 
-
-void apply_floor(
-      const ghl_ADM_aux_quantities *adm_aux,
-      double *E,
-      ghl_radiation_flux_vector *F4,
-      const double rad_E_floor,
-      const double rad_eps);
-
-
-
 // gsl_multiroots: https://www.gnu.org/software/gsl/doc/html/multiroots.html
 // E,F_old -> q_old -> x_old -> E,F -> update in root solver -> x -> E,F_new
 //         -> E,F_star

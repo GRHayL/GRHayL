@@ -191,7 +191,6 @@ void flavor_mix_adjustment(double *rN_e,
                            ghl_radiation_flux_vector *rF_ax,
                            const bool mix_type);
 
-// TODO(LRW): I think this is missing the calculation of rnnu. Please check.
 void ghl_m1_set_equilibrium(
     const double rho,
     const double T,
@@ -206,6 +205,217 @@ void ghl_m1_set_equilibrium(
     const ghl_metric_quantities *metric,
     double *rN,
     double *rnnu,
-    double *rE);
+    double *rE,
+    double *rJ,
+    ghl_radiation_flux_vector *rF4,
+    ghl_radiation_flux_vector *rH4,
+    ghl_radiation_pressure_tensor *rP4);
+
+void ghl_M1_update(double cdt,
+    ghl_neutrino_optical_depths *restrict tau,
+    ghl_neutrino_opacities *restrict kappa,
+    ghl_metric_quantities *metric,
+    ghl_ADM_aux_quantities *adm_aux,
+    ghl_radiation_metric_tensor *proj4,
+    ghl_primitive_quantities *prims);
+
+void assemble_fnu(const ghl_ADM_aux_quantities *adm_aux,
+    const double *u4U,
+    const double J,
+    const ghl_radiation_flux_vector *H4,
+    ghl_radiation_con_flux_vector *fnu4);
+
+double compute_Gamma(const double W,
+    const double *v4U,
+    const double J,
+    const double E,
+    const double rad_E_floor,
+    const double rad_eps,
+    const ghl_radiation_flux_vector *F4);
+    
+void ghl_radiation_compute_pressure_tensor_thick(
+      const ghl_metric_quantities *metric,
+      const ghl_ADM_aux_quantities *adm_aux,
+      const ghl_primitive_quantities *prims,
+      const double E,
+      const ghl_radiation_flux_vector *F4,
+      ghl_radiation_pressure_tensor *P_thick);
+      
+void ghl_radiation_compute_pressure_tensor_thin(
+      const ghl_metric_quantities *metric,
+      const ghl_ADM_aux_quantities *adm_aux,
+      const ghl_primitive_quantities *prims,
+      const double E,
+      const ghl_radiation_flux_vector *F4,
+      ghl_radiation_pressure_tensor *P_thin);
+      
+void ghl_radiation_apply_closure(
+      const ghl_metric_quantities *metric,
+      const ghl_ADM_aux_quantities *adm_aux,
+      const ghl_primitive_quantities *prims,
+      const double E,
+      const ghl_radiation_flux_vector *F4,
+      const double chi,
+      ghl_radiation_pressure_tensor *P4);
+      
+double eddington(const double xi);
+double kershaw(const double xi);
+double minerbo(const double xi);
+double thin(const double xi);
+
+void assemble_rT_lab_frame(
+      const double *n4D,
+      const double E,
+      const ghl_radiation_flux_vector *F4,
+      const ghl_radiation_pressure_tensor *P4,
+      ghl_stress_energy *rT4DD);
+
+void assemble_rT_fluid_frame(
+      const double *u4D,
+      const double J,
+      const ghl_radiation_flux_vector *H4,
+      const ghl_radiation_pressure_tensor *K4,
+      ghl_stress_energy *rT4DD);
+
+double calc_J_from_rT(
+      const double *u4U,
+      const ghl_radiation_metric_tensor *proj4,
+      const ghl_stress_energy *rT4DD);
+      
+void calc_H4D_from_rT(
+      const double *u4U,
+      const ghl_radiation_metric_tensor *proj4,
+      const ghl_stress_energy *rT4DD,
+      ghl_radiation_flux_vector *H4);
+
+void calc_K4DD_from_rT(
+      const double *u4U,
+      const ghl_radiation_metric_tensor *proj4,
+      const ghl_stress_energy *rT4DD,
+      ghl_radiation_pressure_tensor *K4);
+
+int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in);
+
+void get_FU(
+  const ghl_ADM_aux_quantities *adm_aux,
+  ghl_radiation_flux_vector *F4);
+
+void get_PUD_and_PUU(
+    const ghl_ADM_aux_quantities *adm_aux,
+    ghl_radiation_pressure_tensor *P4);
+    
+void calc_rad_sources(
+      const double eta,
+      const double kabs,
+      const double kscat,
+      const double *u4U,
+      const double J,
+      const ghl_radiation_flux_vector *H4,
+      ghl_radiation_con_source_vector *S4);
+      
+double calc_E_flux(
+      const ghl_metric_quantities *metric,
+      const double E,
+      const ghl_radiation_flux_vector *F4,
+      const int dir);
+      
+double calc_F_flux(
+      const ghl_metric_quantities *metric,
+      const ghl_radiation_flux_vector *F4,
+      const ghl_radiation_pressure_tensor *P4,
+      const int dir,
+      const int comp);
+      
+double calc_rE_source(
+      const ghl_metric_quantities *metric,
+      const ghl_radiation_con_source_vector *S4);
+      
+void calc_rF_source(
+      const ghl_metric_quantities *metric,
+      const ghl_ADM_aux_quantities *adm_aux,
+      const ghl_radiation_con_source_vector *S4,
+      ghl_radiation_con_source_vector *rF_source);
+      
+double calc_GE_source(
+      const ghl_metric_quantities *metric,
+      const ghl_metric_quantities *metric_derivs_x,
+      const ghl_metric_quantities *metric_derivs_y,
+      const ghl_metric_quantities *metric_derivs_z,
+      const ghl_radiation_pressure_tensor *P4,
+      const ghl_radiation_flux_vector *F4,
+      const ghl_extrinsic_curvature *curv);
+      
+void calc_GF_source(
+      const ghl_metric_quantities *metric,
+      const ghl_metric_quantities *metric_derivs_x,
+      const ghl_metric_quantities *metric_derivs_y,
+      const ghl_metric_quantities *metric_derivs_z,
+      const double E,
+      const ghl_radiation_flux_vector *F4,
+      const ghl_radiation_pressure_tensor *P4,
+      ghl_radiation_con_source_vector *GF_source);
+      
+void init_params(ghl_m1_powell_params *p);
+
+void apply_floor(
+      const ghl_ADM_aux_quantities *adm_aux,
+      double *E,
+      ghl_radiation_flux_vector *F4,
+      const double rad_E_floor,
+      const double rad_eps);
+      
+void __source_jacobian_low_level(
+      double qpre[4],
+      double Fup[4],
+      double F2,
+      double chi,
+      double kapa,
+      double kaps,
+      double vup[4],
+      double vdown[4],
+      double v2,
+      double W,
+      double alpha,
+      double cdt,
+      double qstar[4],
+      gsl_matrix *J);
+      
+double dot(double *a, double *b, int length);
+
+int prepare_closure(gsl_vector const * q, ghl_m1_powell_params * p);
+
+int prepare_sources(gsl_vector const * q, ghl_m1_powell_params * p);
+
+int prepare(const gsl_vector *q, ghl_m1_powell_params *p);
+
+void evaluate_zjac(ghl_m1_powell_params * p, gsl_matrix *J);
+
+void evaluate_zfunc(ghl_m1_powell_params * p, gsl_vector *f);
+
+int impl_func_jac(gsl_vector const * q, void * params, gsl_matrix * J);
+
+int impl_func_val(const gsl_vector *q, void *params, gsl_vector *f);
+
+int impl_func_val_jac(gsl_vector const * q, void * params, gsl_vector * f, gsl_matrix * J);
+
+void explicit_update(
+        ghl_m1_powell_params * p,
+        double * E_new,
+        ghl_radiation_flux_vector * F4_new);
+        
+int ghl_source_update_test(
+  const ghl_m1_thc_params *thc_params,
+  ghl_m1_powell_params *p);
+  
+int ghl_source_update(
+      const double cdt,
+      const ghl_m1_closure_t closure,
+      const gsl_multiroot_fdfsolver *gsl_solver_nd,
+      const ghl_m1_thc_params *thc_params,
+      ghl_m1_powell_params *p);
+      
+
+
+
 
 #endif // GHL_RADIATION_H_
