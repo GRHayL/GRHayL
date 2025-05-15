@@ -4,7 +4,6 @@ inputs:
   compiler:
     description: compiler for test
     required: true
-    default: 'gcc'
 
 runs:
   using: "composite"
@@ -12,21 +11,31 @@ runs:
     - if: runner.os == 'Linux' && inputs.compiler == 'gcc'
       run: |
         sudo apt-get install gcovr
-        gcovr -r . --keep
+        # Newer versions need a new flag; we can get rid of
+        # this once we move past Ubuntu 22
+        if [ $ImageOS == "ubuntu22" ]; then
+          gcovr -r . --keep
+        else
+          gcovr -r . --keep --gcov-ignore-errors no_working_dir_found
+        fi
       shell: bash
 
     # This still doesn't generate expected cov. files
     - if: runner.os == 'Linux' && inputs.compiler == 'clang'
       run: |
-        sudo apt-get install gcovr
-        gcovr -r .  --gcov-executable "llvm-cov-14 gcov" --keep
+        llvm-profdata-14 merge -sparse default.profraw -o coverage.profdata
+        llvm-cov-14 export ./build/lib/libgrhayl.so -instr-profile=coverage.profdata -format=lcov > coverage.lcov
       shell: bash
 
     # Try Intel's codecov tool? Not sure if this is compatible with gcovr
     - if: runner.os == 'Linux' && inputs.compiler == 'intel'
       run: |
-        sudo apt-get install gcovr
-        gcovr -r . --keep
+        #sudo apt-get install gcovr
+        #if [ $ImageOS == "ubuntu22" ]; then
+        #  gcovr -r . --keep
+        #else
+        #  gcovr -r . --keep --gcov-ignore-errors no_working_dir_found
+        #fi
       shell: bash
 
     # These probably fail because we need to tell gcovr to
@@ -34,14 +43,14 @@ runs:
     # ships with
     - if: runner.os == 'MacOS' && inputs.compiler == 'gcc'
       run: |
-        brew install gcovr
-        gcovr -r ./build --keep
+        #brew install gcovr
+        #gcovr -r ./build --keep
       shell: bash
 
     - if: runner.os == 'MacOS' && inputs.compiler == 'clang'
       run: |
-        brew install gcovr
-        gcovr -r . --gcov-executable "llvm-cov-14 gcov" --keep
+        #brew install gcovr
+        #gcovr -r . --gcov-executable "llvm-cov-14 gcov" --keep
       shell: bash
 
-    - uses: codecov/codecov-action@v4
+    - uses: codecov/codecov-action@v5

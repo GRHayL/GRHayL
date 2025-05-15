@@ -1,5 +1,13 @@
 #include "ghl_reconstruction.h"
 
+/*
+ * Function     : ghl_ppm_reconstruction()
+ * Description  : reconstructs variables at the points
+ *                    Ur(i) = U(i-1/2+epsilon)
+ *                    Ul(i) = U(i-1/2-epsilon)
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_ppm_reconstruction
+*/
+
 void ghl_ppm_reconstruction(
       const double ftilde[2],
       const double var_data[6],

@@ -1,22 +1,10 @@
 #include "ghl_con2prim.h"
 
-/* Function    : ghl_enforce_primitive_limits_and_compute_u0()
- * Description : Applies limits to rho_b, pressure, and v^i, then
-                 recomputes epsilon and (if needed) entropy
-
- * Inputs      : params         - ghl_parameters struct with parameters
- *                                for the simulation
- *             : eos            - ghl_eos_parameters struct with data for the
- *                                EOS of the simulation
- *             : metric         - ghl_metric_quantities struct with data for
- *                                the gridpoint of interest
- *             : prims          - ghl_primitive_quantities struct with data
- *                                for the gridpoint of interest
- *
- * Outputs     : prims          - returns primitives within floors and ceilings
- *             : speed_limited  - tracks whether velocity was speed-limited
- *
- */
+/* Function     : ghl_enforce_primitive_limits_and_compute_u0()
+ * Description  : Applies limits to rho_b, pressure, and v^i, then
+                  recomputes epsilon and (if needed) entropy
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_enforce_primitive_limits_and_compute_u0
+*/
 
 ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
@@ -53,11 +41,9 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       }
 
       // Now recompute eps and, if needed, entropy
-      prims->eps
-            = eps_cold + (prims->press - P_cold) / (eos->Gamma_th - 1.0) / prims->rho;
+      prims->eps = eps_cold + (prims->press - P_cold) / (eos->Gamma_th - 1.0) / prims->rho;
       if(params->evolve_entropy) {
-        prims->entropy
-              = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
+        prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
       }
       break;
 
@@ -85,12 +71,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       prims->rho = MIN(MAX(prims->rho, eos->rho_min), eos->rho_max);
 
       // Apply floors and ceilings to P
-      if(prims->press < eos->press_min) {
-        prims->press = eos->press_min;
-      }
-      else if(prims->press > eos->press_max) {
-        prims->press = eos->press_max;
-      }
+      prims->press = MIN(MAX(prims->press, eos->press_min), eos->press_max);
 
       // Now recompute eps and, if needed, entropy
       prims->eps = prims->press / (prims->rho * (eos->Gamma_th - 1.0));

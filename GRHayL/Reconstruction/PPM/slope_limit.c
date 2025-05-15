@@ -1,5 +1,12 @@
 #include "ghl_reconstruction.h"
 
+/*
+ * Function     : ghl_slope_limit()
+ * Description  : applies a slope limiter to the computed values of
+ *                Ur and U
+ * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_slope_limit
+*/
+
 //Eq. 60 in JOURNAL OF COMPUTATIONAL PHYSICS 123, 1-14 (1996)
 //   [note the factor of 2 missing in the |a_{j+1} - a_{j}| term].
 //   Recall that dU = U_{i} - U_{i-1}.

@@ -6,6 +6,9 @@ on:
     branches: main
   pull_request:
     paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+  # Run workflow on the 1st and 15th of every month at 7:33 AM PST (UTC-8)
+  schedule:
+    - cron: '33 15 1,15 * *'
 
 jobs:
   ET-Legacy:
@@ -17,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -47,7 +50,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -78,7 +81,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -102,7 +105,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -128,7 +131,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -152,7 +155,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -180,7 +183,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -211,7 +214,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -241,7 +244,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -270,7 +273,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -313,7 +316,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -349,7 +352,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
@@ -380,7 +383,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup OS and compiler
         uses: ./.github/actions/OS_setup
         with:
