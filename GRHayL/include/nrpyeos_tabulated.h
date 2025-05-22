@@ -12,13 +12,26 @@
 
 // Table keys
 enum eos_keys {
-  NRPyEOS_press_key, NRPyEOS_eps_key, NRPyEOS_entropy_key,
-  NRPyEOS_munu_key, NRPyEOS_cs2_key, NRPyEOS_depsdT_key,
-  NRPyEOS_dPdrho_key, NRPyEOS_dPdeps_key, NRPyEOS_muhat_key,
-  NRPyEOS_mu_e_key, NRPyEOS_mu_p_key, NRPyEOS_mu_n_key,
-  NRPyEOS_X_a_key, NRPyEOS_X_h_key, NRPyEOS_X_n_key,
-  NRPyEOS_X_p_key, NRPyEOS_Abar_key, NRPyEOS_Zbar_key,
-  NRPyEOS_Gamma_key, NRPyEOS_ntablekeys
+  NRPyEOS_press_key,
+  NRPyEOS_eps_key,
+  NRPyEOS_entropy_key,
+  NRPyEOS_munu_key,
+  NRPyEOS_cs2_key,
+  NRPyEOS_depsdT_key,
+  NRPyEOS_dPdrho_key,
+  NRPyEOS_dPdeps_key,
+  NRPyEOS_muhat_key,
+  NRPyEOS_mu_e_key,
+  NRPyEOS_mu_p_key,
+  NRPyEOS_mu_n_key,
+  NRPyEOS_X_a_key,
+  NRPyEOS_X_h_key,
+  NRPyEOS_X_n_key,
+  NRPyEOS_X_p_key,
+  NRPyEOS_Abar_key,
+  NRPyEOS_Zbar_key,
+  NRPyEOS_Gamma_key,
+  NRPyEOS_ntablekeys
 };
 
 // Unit conversion
