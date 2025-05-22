@@ -194,9 +194,8 @@ void flavor_mix_adjustment(double *rN_e,
 void ghl_m1_set_equilibrium(
     const double rho,
     const double T,
-    const double eta_nue,
-    const double eta_nuae,
-    const double eta_nux,
+    const double num_dens,
+    const double e_dens,
     const double w_lorentz,
     const double *u4D,
     const double *n4U,
@@ -414,7 +413,12 @@ int ghl_source_update(
       const ghl_m1_thc_params *thc_params,
       ghl_m1_powell_params *p);
       
-
+void calc_neutrino_densities(
+      const bool heavy,
+      const double eta,
+      const double T,
+      double *num_dens,
+      double *e_dens);
 
 
 
