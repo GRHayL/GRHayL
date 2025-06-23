@@ -11,6 +11,12 @@
  *
  * @section macros Defined Macros
  *
+ * **Must have macros**
+ * - GHL_TEST_LOG_START - Initialize binary log file for current function
+ * - GHL_TEST_LOG_END - Close and finalize log file
+ * - GHL_TEST_LOG_WRITE_METRIC_AND_PRIMS(index_) - Log both metric and primitives
+ * - GHL_TEST_LOG_WRITE(var) - Write variable to binary log file
+ *
  * **Logging and Output:**
  * - GHL_PRINTF(...) - Printf wrapper with GHL_TEST prefix
  * - GHL_TEST_LOG_START - Initialize binary log file for current function
@@ -43,9 +49,11 @@
 
 #include "GRHayLib.h"
 
+#define GHL_TEST_MAGIC_NUMBER (4224)
+
 #define GHL_PRINTF(...)    \
     printf("(GHL_TEST) "); \
-    printf(__VA__ARGS__);
+    printf(__VA_ARGS__);
 
 // Create log file. This must appear at the beginning of every tested function.
 #define GHL_TEST_LOG_START                                          \
@@ -60,10 +68,18 @@
 // Close log file. This must appear at the end of every tested function.
 #define GHL_TEST_LOG_END                                             \
     fclose(ghl_test_fp_);                                            \
-    GHL_PRINTF("Successfully closed file %s\n", ghl_test_filename_);
+    GHL_PRINTF("Successfully closed file %s\n", ghl_test_filename_); \
+    exit(0);
 
 // Generic macro to output "anything" to file. Uses decltype instead of typeof.
 #define GHL_TEST_LOG_WRITE(var) fwrite(&var, sizeof(decltype(var)), 1, ghl_test_fp_);
+
+// Write a magic number, for sanity checks
+#define GHL_TEST_LOG_WRITE_MAGIC_NUMBER                           \
+    {                                                             \
+        const int ghl_test_magic_number_ = GHL_TEST_MAGIC_NUMBER; \
+        GHL_TEST_LOG_WRITE(ghl_test_magic_number_);               \
+    }
 
 // Generate random number between a and b
 #define GHL_TEST_RAND_IN_RANGE(a, b) ((a) + ((double)rand() / RAND_MAX) * ((b) - (a)))
@@ -102,23 +118,24 @@
     GHL_TEST_LOG_WRITE(ghl_test_curv_);
 
 // Log GRHayL struct for primitives
-#define GHL_TEST_LOG_PRIMS(index_)                                           \
-    const CCTK_INT ghl_test_size_ = cctk_lsh[0] * cctk_lsh[1] * cctk_lsh[2]; \
-    ghl_initialize_primitives(                                               \
-        rho[index_],                                                         \
-        press[index_],                                                       \
-        epsilon[index_],                                                     \
-        vel[index_ + 0 * ghl_test_size_],                                    \
-        vel[index_ + 1 * ghl_test_size_],                                    \
-        vel[index_ + 2 * ghl_test_size_],                                    \
-        Bvec[index_ + 0 * ghl_test_size_],                                   \
-        Bvec[index_ + 1 * ghl_test_size_],                                   \
-        Bvec[index_ + 2 * ghl_test_size_],                                   \
-        entropy[index_],                                                     \
-        Y_e[index_],                                                         \
-        temperature[index_],                                                 \
-        &ghl_test_prims_                                                     \
-    );                                                                       \
+#define GHL_TEST_LOG_PRIMS(index_)                                                      \
+    const CCTK_INT           ghl_test_size_  = cctk_lsh[0] * cctk_lsh[1] * cctk_lsh[2]; \
+    ghl_primitive_quantities ghl_test_prims_ = {0};                                     \
+    ghl_initialize_primitives(                                                          \
+        rho[index_],                                                                    \
+        press[index_],                                                                  \
+        eps[index_],                                                                    \
+        vel[index_ + 0 * ghl_test_size_],                                               \
+        vel[index_ + 1 * ghl_test_size_],                                               \
+        vel[index_ + 2 * ghl_test_size_],                                               \
+        Bvec[index_ + 0 * ghl_test_size_],                                              \
+        Bvec[index_ + 1 * ghl_test_size_],                                              \
+        Bvec[index_ + 2 * ghl_test_size_],                                              \
+        entropy[index_],                                                                \
+        Y_e[index_],                                                                    \
+        temperature[index_],                                                            \
+        &ghl_test_prims_                                                                \
+    );                                                                                  \
     GHL_TEST_LOG_WRITE(ghl_test_prims_);
 
 // Set metric to flat space
