@@ -3,3 +3,4 @@
 implements: GRHayLib
 
 INCLUDE HEADER: GRHayLib.h in GRHayLib.h
+INCLUDE HEADER: GRHayLib_test.h in GRHayLib_test.h
