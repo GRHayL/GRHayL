@@ -1,7 +1,45 @@
+/**
+ * @file GRHayLib_test.h
+ * @author Leo Werneck
+ * @email wernecklr@gmail.com
+ * @brief Testing utilities and macros for GRHayLib
+ *
+ * This header file provides a comprehensive set of macros for outputting quantities
+ * in any Einstein Toolkit thorn in a format that is GRHayL-friendly. Functionality
+ * includes logging, random number generation, and metric/primitive variable manipulation
+ * for unit tests and validation.
+ *
+ * @section macros Defined Macros
+ *
+ * **Logging and Output:**
+ * - GHL_PRINTF(...) - Printf wrapper with GHL_TEST prefix
+ * - GHL_TEST_LOG_START - Initialize binary log file for current function
+ * - GHL_TEST_LOG_END - Close and finalize log file
+ * - GHL_TEST_LOG_WRITE(var) - Write variable to binary log file
+ * - GHL_TEST_LOG_WRITE_METRIC_AND_PRIMS(index_) - Log both metric and primitives
+ * - GHL_TEST_LOG_METRIC(index_) - Log metric quantities to file
+ * - GHL_TEST_LOG_PRIMS(index_) - Log primitive variables to file
+ *
+ * **Random Number Generation:**
+ * - GHL_TEST_RAND_IN_RANGE(a, b) - Generate random double between a and b
+ *
+ * **Metric Manipulation:**
+ * - GHL_TEST_SET_METRIC_TO_FLAT(index_) - Set metric to flat spacetime
+ * - GHL_TEST_SET_METRIC_TO_RANDOM(index_) - Set metric to random values
+ *
+ * **Primitive Variable Manipulation:**
+ * - GHL_TEST_SET_PRIMS_TO_RANDOM(index_) - Set primitives to random values
+ *
+ * @note Random number generation requires proper seeding with srand().
+ * @warning The random metric generation may not produce physically reasonable
+ *          extrinsic curvature values in all cases.
+ */
+
 #ifndef GRHAYLIB_TEST_H
 #define GRHAYLIB_TEST_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "GRHayLib.h"
 
