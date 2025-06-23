@@ -1,0 +1,45 @@
+---
+BasedOnStyle: Microsoft
+---
+Language: Cpp
+AlignAfterOpenBracket: BlockIndent               # clang-format v.3.8
+AlignArrayOfStructures: Left                     # clang-format v.13
+AlignConsecutiveAssignments:                     # clang-format v.3.8
+  Enabled:       true                            # clang-format v.3.8
+  AlignCompound: true                            # clang-format v.3.8
+AlignConsecutiveDeclarations: Consecutive        # clang-format v.3.8
+AlignConsecutiveMacros: Consecutive              # clang-format v.9
+AlignEscapedNewlines: LeftWithLastLine           # clang-format v.5
+AlignOperands: AlignAfterOperator                # clang-format v.3.5
+AllowAllArgumentsOnNextLine: false               # clang-format v.9
+AllowAllParametersOfDeclarationOnNextLine: false # clang-format v.3.3
+AllowShortBlocksOnASingleLine: Empty             # clang-format v.3.5
+AllowShortCaseExpressionOnASingleLine: false     # clang-format v.19
+AllowShortFunctionsOnASingleLine: Inline         # clang-format v.3.5
+BinPackArguments: false                          # clang-format v.3.7
+BinPackParameters: false                         # clang-format v.3.7
+BraceWrapping:                                   # clang-format v.3.8
+  AfterCaseLabel:        true                    # clang-format v.3.8
+  AfterControlStatement: Never                   # clang-format v.3.8
+  AfterExternBlock:      false                   # clang-format v.3.8
+  AfterNamespace:        false                   # clang-format v.3.8
+  AfterUnion:            true                    # clang-format v.3.8
+  SplitEmptyFunction:    false                   # clang-format v.3.8
+  SplitEmptyRecord:      false                   # clang-format v.3.8
+  SplitEmptyNamespace:   false                   # clang-format v.3.8
+BreakAfterReturnType: TopLevelDefinitions        # clang-format v.19
+BreakConstructorInitializers: AfterColon         # clang-format v.5
+BreakTemplateDeclarations: Yes                   # clang-format v.19
+IndentCaseLabels: true                           # clang-format v.3.3
+IndentPPDirectives: AfterHash                    # clang-format v.6
+InsertBraces: true                               # clang-format v.15
+InsertTrailingCommas: Wrapped                    # clang-format v.11
+PackConstructorInitializers: Never               # clang-format v.14
+SeparateDefinitionBlocks: Always                 # clang-format v.14
+SpaceAfterTemplateKeyword: false                 # clang-format v.4
+SpaceBeforeParens: Custom                        # clang-format v.3.5
+SpaceBeforeParensOptions:                        # clang-format v.14
+  AfterControlStatements: false                  # clang-format v.14
+  AfterForeachMacros:     false                  # clang-format v.14
+  AfterIfMacros:          false                  # clang-format v.14
+...
