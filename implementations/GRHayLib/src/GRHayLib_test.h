@@ -69,6 +69,7 @@
 #define GHL_TEST_LOG_END                                             \
     fclose(ghl_test_fp_);                                            \
     GHL_PRINTF("Successfully closed file %s\n", ghl_test_filename_); \
+    GHL_PRINTF("Terminating run\n");                                 \
     exit(0);
 
 // Generic macro to output "anything" to file. Uses decltype instead of typeof.
