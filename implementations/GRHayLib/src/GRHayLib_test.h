@@ -52,7 +52,7 @@
 #define GHL_TEST_MAGIC_NUMBER (4224)
 
 #define GHL_PRINTF(...)    \
-    printf("(GHL_TEST) "); \
+    printf("(GHL TEST) "); \
     printf(__VA_ARGS__);
 
 // Create log file. This must appear at the beginning of every tested function.

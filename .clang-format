@@ -87,7 +87,7 @@ BreakStringLiterals: true
 ColumnLimit: 89
 CommentPragmas: "^ IWYU pragma:"
 CompactNamespaces: false
-ConstructorInitializerIndentWidth: 4
+ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 6
 Cpp11BracedListStyle: false
 DerivePointerAlignment: false
@@ -221,7 +221,7 @@ StatementAttributeLikeMacros:
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION
-TabWidth: 4
+TabWidth: 2
 UseTab: Never
 VerilogBreakBetweenInstancePorts: true
 WhitespaceSensitiveMacros:
