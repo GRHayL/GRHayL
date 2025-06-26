@@ -45,6 +45,10 @@
 
 // Read metric and primitives from log file
 #define GHL_TEST_LOG_READ_METRIC_AND_PRIMS(adm_, aux_, curv_, prims_) \
+  ghl_metric_quantities adm_ = { 0 };                                 \
+  ghl_ADM_aux_quantities aux_ = { 0 };                                \
+  ghl_extrinsic_curvature curv_ = { 0 };                              \
+  ghl_primitive_quantities prims_ = { 0 };                            \
   GHL_TEST_LOG_READ(adm_);                                            \
   GHL_TEST_LOG_READ(aux_);                                            \
   GHL_TEST_LOG_READ(curv_);                                           \
