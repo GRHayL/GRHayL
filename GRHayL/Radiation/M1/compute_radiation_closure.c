@@ -230,7 +230,6 @@ static inline double froot(const double xi, void *restrict fparams_in) {
     }
   }
   ghl_radiation_metric_tensor proj4;
-
   for(int a = 0; a < 4; a++) {
     for(int b = 0; b < 4; b++) {
       proj4.UD[a][b] = (int)(a == b) + u4U[a] * u4D[b];

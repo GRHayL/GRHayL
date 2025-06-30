@@ -13,12 +13,19 @@
   printf(__VA_ARGS__);
 
 // Initialize unit testing for the Einstein Toolkit.
-#define GHL_TEST_INITIALIZE(ghl_test_filename)                \
-  FILE *ghl_test_fp_ = fopen(ghl_test_filename, "rb");        \
-  if(ghl_test_fp_ == NULL) {                                  \
-    ghl_error("Failed to open file %s\n", ghl_test_filename); \
-  }                                                           \
-  GHL_PRINTF("Succesfully opened file %s\n", ghl_test_filename);
+#define GHL_TEST_INITIALIZE(ghl_tablepath, ghl_test_filename)                     \
+  FILE *ghl_test_fp_ = fopen(ghl_test_filename, "rb");                            \
+  if(ghl_test_fp_ == NULL) {                                                      \
+    ghl_error("Failed to open file %s\n", ghl_test_filename);                     \
+  }                                                                               \
+  GHL_PRINTF("Succesfully opened file %s\n", ghl_test_filename);                  \
+  ghl_eos_parameters *ghl_eos = malloc(sizeof(ghl_eos_parameters));               \
+  const double rho_atm = 1e-12;                                                   \
+  const double Y_e_atm = 0.5;                                                     \
+  const double T_atm = 1e-2;                                                      \
+  ghl_initialize_tabulated_eos_functions_and_params(                              \
+        ghl_tablepath, rho_atm, -1, -1, Y_e_atm, -1, -1, T_atm, -1, -1, ghl_eos); \
+  GHL_PRINTF("Succesfully initialized tabulated EOS struct and functions\n");
 
 // Close log file. This must appear at the end of every tested function.
 #define GHL_TEST_FINALIZE(ghl_test_filename) \

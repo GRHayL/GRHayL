@@ -40,7 +40,7 @@ void calc_K4DD_from_rT(
     const ghl_stress_energy *rT4DD,
     ghl_radiation_pressure_tensor *K4);
 
-    int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in);
+int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in);
 
 
 // compute_radiation_flux.c functions

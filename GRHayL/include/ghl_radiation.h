@@ -5,8 +5,8 @@
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_math.h>
-#include <gsl/gsl_roots.h>
 #include <gsl/gsl_multiroots.h>
+#include <gsl/gsl_roots.h>
 
 // Choice of closure scheme
 typedef enum { Eddington, Kershaw, Minerbo, Thin } ghl_m1_closure_t;
@@ -112,7 +112,6 @@ typedef struct ghl_m1_powell_params {
   double kabs;
   double kscat;
 
-
   // Paraters derived in init_params
   double u4U[4];
   double n4D[4];
@@ -129,7 +128,7 @@ typedef struct ghl_m1_powell_params {
   // SE tensor in the fluid frame, will be updated in impl solve
   // double J;
   // ghl_radiation_flux_vector *H4;
-  
+
   // sources
   // ghl_radiation_con_source_vector *S4;
   double rE_source;
@@ -155,83 +154,85 @@ extern double (*ghl_m1_closure)(double);
 
 ghl_error_codes_t ghl_initialize_m1_closure(ghl_m1_closure_t ghl_m1_closure_type);
 
-void add_rad_to_Tmunu(ghl_stress_energy *T4DD, 
-                      const ghl_stress_energy *rT4DD, 
-                      const ghl_metric_quantities *metric);
+void add_rad_to_Tmunu(
+      ghl_stress_energy *T4DD,
+      const ghl_stress_energy *rT4DD,
+      const ghl_metric_quantities *metric);
 
-void calc_density_ratios(const double mb,
-                         const double rho,
-                         const double eps,
-                         const ghl_metric_quantities *metric,
-                         const double n_e,
-                         const double n_ae,
-                         const double n_x,
-                         const double J_e,
-                         const double J_ae,
-                         const double J_x,
-                         double *number_ratio_e,
-                         double *number_ratio_ae,
-                         double *number_ratio_x,
-                         double *energy_ratio_e,
-                         double *energy_ratio_ae,
-                         double *energy_ratio_x);
+void calc_density_ratios(
+      const double mb,
+      const double rho,
+      const double eps,
+      const ghl_metric_quantities *metric,
+      const double n_e,
+      const double n_ae,
+      const double n_x,
+      const double J_e,
+      const double J_ae,
+      const double J_x,
+      double *number_ratio_e,
+      double *number_ratio_ae,
+      double *number_ratio_x,
+      double *energy_ratio_e,
+      double *energy_ratio_ae,
+      double *energy_ratio_x);
 
-void flavor_mix_adjustment(double *rN_e,
-                           double *rN_ae,
-                           double *rN_x,
-                           double *rN_ax,
-                           const double Nmin,
-                           double *rE_e,
-                           double *rE_ae,
-                           double *rE_x,
-                           double *rE_ax,
-                           ghl_radiation_flux_vector *rF_e,
-                           ghl_radiation_flux_vector *rF_ae,
-                           ghl_radiation_flux_vector *rF_x,
-                           ghl_radiation_flux_vector *rF_ax,
-                           const bool mix_type);
+void flavor_mix_adjustment(
+      double *rN_e,
+      double *rN_ae,
+      double *rN_x,
+      double *rN_ax,
+      const double Nmin,
+      double *rE_e,
+      double *rE_ae,
+      double *rE_x,
+      double *rE_ax,
+      ghl_radiation_flux_vector *rF_e,
+      ghl_radiation_flux_vector *rF_ae,
+      ghl_radiation_flux_vector *rF_x,
+      ghl_radiation_flux_vector *rF_ax,
+      const bool mix_type);
 
 void ghl_m1_set_equilibrium(
-    const double rho,
-    const double T,
-    const double num_dens,
-    const double e_dens,
-    const double w_lorentz,
-    const double *u4D,
-    const double *n4U,
-    const ghl_radiation_metric_tensor *proj4,
-    const ghl_ADM_aux_quantities *adm_aux,
-    const ghl_metric_quantities *metric,
-    double *rN,
-    double *rnnu,
-    double *rE,
-    double *rJ,
-    ghl_radiation_flux_vector *rF4,
-    ghl_radiation_flux_vector *rH4,
-    ghl_radiation_pressure_tensor *rP4);
+      const ghl_eos_parameters *restrict eos,
+      const ghl_primitive_quantities *restrict prims,
+      const ghl_metric_quantities *restrict adm_metric,
+      const ghl_ADM_aux_quantities *restrict aux_metric,
+      const double nudens_0,
+      const double nudens_1,
+      double *restrict rN,
+      double *restrict rnnu,
+      double *restrict rE,
+      double *restrict rJ,
+      ghl_radiation_flux_vector *restrict rF4,
+      ghl_radiation_flux_vector *restrict rH4,
+      ghl_radiation_pressure_tensor *restrict rP4);
 
-void ghl_M1_update(double cdt,
-    ghl_neutrino_optical_depths *restrict tau,
-    ghl_neutrino_opacities *restrict kappa,
-    ghl_metric_quantities *metric,
-    ghl_ADM_aux_quantities *adm_aux,
-    ghl_radiation_metric_tensor *proj4,
-    ghl_primitive_quantities *prims);
+void ghl_M1_update(
+      double cdt,
+      ghl_neutrino_optical_depths *restrict tau,
+      ghl_neutrino_opacities *restrict kappa,
+      ghl_metric_quantities *metric,
+      ghl_ADM_aux_quantities *adm_aux,
+      ghl_radiation_metric_tensor *proj4,
+      ghl_primitive_quantities *prims);
 
-void assemble_fnu(const ghl_ADM_aux_quantities *adm_aux,
-    const double *u4U,
-    const double J,
-    const ghl_radiation_flux_vector *H4,
-    ghl_radiation_con_flux_vector *fnu4);
+void assemble_fnu(
+      const ghl_ADM_aux_quantities *adm_aux,
+      const double *u4U,
+      const double J,
+      const ghl_radiation_flux_vector *H4,
+      ghl_radiation_con_flux_vector *fnu4);
 
-double compute_Gamma(const double W,
-    const double *v4U,
-    const double J,
-    const double E,
-    const double rad_E_floor,
-    const double rad_eps,
-    const ghl_radiation_flux_vector *F4);
-    
+double compute_Gamma(
+      const double W,
+      const double *v4U,
+      const double J,
+      const double E,
+      const double rad_E_floor,
+      const double rad_eps,
+      const ghl_radiation_flux_vector *F4);
+
 void ghl_radiation_compute_pressure_tensor_thick(
       const ghl_metric_quantities *metric,
       const ghl_ADM_aux_quantities *adm_aux,
@@ -239,7 +240,7 @@ void ghl_radiation_compute_pressure_tensor_thick(
       const double E,
       const ghl_radiation_flux_vector *F4,
       ghl_radiation_pressure_tensor *P_thick);
-      
+
 void ghl_radiation_compute_pressure_tensor_thin(
       const ghl_metric_quantities *metric,
       const ghl_ADM_aux_quantities *adm_aux,
@@ -247,7 +248,7 @@ void ghl_radiation_compute_pressure_tensor_thin(
       const double E,
       const ghl_radiation_flux_vector *F4,
       ghl_radiation_pressure_tensor *P_thin);
-      
+
 void ghl_radiation_apply_closure(
       const ghl_metric_quantities *metric,
       const ghl_ADM_aux_quantities *adm_aux,
@@ -256,7 +257,7 @@ void ghl_radiation_apply_closure(
       const ghl_radiation_flux_vector *F4,
       const double chi,
       ghl_radiation_pressure_tensor *P4);
-      
+
 double eddington(const double xi);
 double kershaw(const double xi);
 double minerbo(const double xi);
@@ -280,7 +281,7 @@ double calc_J_from_rT(
       const double *u4U,
       const ghl_radiation_metric_tensor *proj4,
       const ghl_stress_energy *rT4DD);
-      
+
 void calc_H4D_from_rT(
       const double *u4U,
       const ghl_radiation_metric_tensor *proj4,
@@ -295,14 +296,12 @@ void calc_K4DD_from_rT(
 
 int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in);
 
-void get_FU(
-  const ghl_ADM_aux_quantities *adm_aux,
-  ghl_radiation_flux_vector *F4);
+void get_FU(const ghl_ADM_aux_quantities *adm_aux, ghl_radiation_flux_vector *F4);
 
 void get_PUD_and_PUU(
-    const ghl_ADM_aux_quantities *adm_aux,
-    ghl_radiation_pressure_tensor *P4);
-    
+      const ghl_ADM_aux_quantities *adm_aux,
+      ghl_radiation_pressure_tensor *P4);
+
 void calc_rad_sources(
       const double eta,
       const double kabs,
@@ -311,30 +310,30 @@ void calc_rad_sources(
       const double J,
       const ghl_radiation_flux_vector *H4,
       ghl_radiation_con_source_vector *S4);
-      
+
 double calc_E_flux(
       const ghl_metric_quantities *metric,
       const double E,
       const ghl_radiation_flux_vector *F4,
       const int dir);
-      
+
 double calc_F_flux(
       const ghl_metric_quantities *metric,
       const ghl_radiation_flux_vector *F4,
       const ghl_radiation_pressure_tensor *P4,
       const int dir,
       const int comp);
-      
+
 double calc_rE_source(
       const ghl_metric_quantities *metric,
       const ghl_radiation_con_source_vector *S4);
-      
+
 void calc_rF_source(
       const ghl_metric_quantities *metric,
       const ghl_ADM_aux_quantities *adm_aux,
       const ghl_radiation_con_source_vector *S4,
       ghl_radiation_con_source_vector *rF_source);
-      
+
 double calc_GE_source(
       const ghl_metric_quantities *metric,
       const ghl_metric_quantities *metric_derivs_x,
@@ -343,7 +342,7 @@ double calc_GE_source(
       const ghl_radiation_pressure_tensor *P4,
       const ghl_radiation_flux_vector *F4,
       const ghl_extrinsic_curvature *curv);
-      
+
 void calc_GF_source(
       const ghl_metric_quantities *metric,
       const ghl_metric_quantities *metric_derivs_x,
@@ -353,7 +352,7 @@ void calc_GF_source(
       const ghl_radiation_flux_vector *F4,
       const ghl_radiation_pressure_tensor *P4,
       ghl_radiation_con_source_vector *GF_source);
-      
+
 void init_params(ghl_m1_powell_params *p);
 
 void apply_floor(
@@ -362,7 +361,7 @@ void apply_floor(
       ghl_radiation_flux_vector *F4,
       const double rad_E_floor,
       const double rad_eps);
-      
+
 void __source_jacobian_low_level(
       double qpre[4],
       double Fup[4],
@@ -378,48 +377,45 @@ void __source_jacobian_low_level(
       double cdt,
       double qstar[4],
       gsl_matrix *J);
-      
+
 double dot(double *a, double *b, int length);
 
-int prepare_closure(gsl_vector const * q, ghl_m1_powell_params * p);
+int prepare_closure(const gsl_vector *q, ghl_m1_powell_params *p);
 
-int prepare_sources(gsl_vector const * q, ghl_m1_powell_params * p);
+int prepare_sources(const gsl_vector *q, ghl_m1_powell_params *p);
 
 int prepare(const gsl_vector *q, ghl_m1_powell_params *p);
 
-void evaluate_zjac(ghl_m1_powell_params * p, gsl_matrix *J);
+void evaluate_zjac(ghl_m1_powell_params *p, gsl_matrix *J);
 
-void evaluate_zfunc(ghl_m1_powell_params * p, gsl_vector *f);
+void evaluate_zfunc(ghl_m1_powell_params *p, gsl_vector *f);
 
-int impl_func_jac(gsl_vector const * q, void * params, gsl_matrix * J);
+int impl_func_jac(const gsl_vector *q, void *params, gsl_matrix *J);
 
 int impl_func_val(const gsl_vector *q, void *params, gsl_vector *f);
 
-int impl_func_val_jac(gsl_vector const * q, void * params, gsl_vector * f, gsl_matrix * J);
+int impl_func_val_jac(const gsl_vector *q, void *params, gsl_vector *f, gsl_matrix *J);
 
 void explicit_update(
-        ghl_m1_powell_params * p,
-        double * E_new,
-        ghl_radiation_flux_vector * F4_new);
-        
-int ghl_source_update_test(
-  const ghl_m1_thc_params *thc_params,
-  ghl_m1_powell_params *p);
-  
+      ghl_m1_powell_params *p,
+      double *E_new,
+      ghl_radiation_flux_vector *F4_new);
+
+int ghl_source_update_test(const ghl_m1_thc_params *thc_params, ghl_m1_powell_params *p);
+
 int ghl_source_update(
       const double cdt,
       const ghl_m1_closure_t closure,
       const gsl_multiroot_fdfsolver *gsl_solver_nd,
       const ghl_m1_thc_params *thc_params,
       ghl_m1_powell_params *p);
-      
-void calc_neutrino_densities(
-      const bool heavy,
-      const double eta,
+
+void ghl_calc_neutrino_densities(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
       const double T,
-      double *num_dens,
-      double *e_dens);
-
-
+      double *nudens_0,
+      double *nudens_1);
 
 #endif // GHL_RADIATION_H_
