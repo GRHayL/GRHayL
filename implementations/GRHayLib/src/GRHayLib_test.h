@@ -119,24 +119,26 @@
     GHL_TEST_LOG_WRITE(ghl_test_curv_);
 
 // Log GRHayL struct for primitives
-#define GHL_TEST_LOG_PRIMS(index_)                                                      \
-    const CCTK_INT           ghl_test_size_  = cctk_lsh[0] * cctk_lsh[1] * cctk_lsh[2]; \
-    ghl_primitive_quantities ghl_test_prims_ = {0};                                     \
-    ghl_initialize_primitives(                                                          \
-        rho[index_],                                                                    \
-        press[index_],                                                                  \
-        eps[index_],                                                                    \
-        vel[index_ + 0 * ghl_test_size_],                                               \
-        vel[index_ + 1 * ghl_test_size_],                                               \
-        vel[index_ + 2 * ghl_test_size_],                                               \
-        Bvec[index_ + 0 * ghl_test_size_],                                              \
-        Bvec[index_ + 1 * ghl_test_size_],                                              \
-        Bvec[index_ + 2 * ghl_test_size_],                                              \
-        entropy[index_],                                                                \
-        Y_e[index_],                                                                    \
-        temperature[index_],                                                            \
-        &ghl_test_prims_                                                                \
-    );                                                                                  \
+#define GHL_TEST_LOG_PRIMS(index_)                                                                             \
+    const CCTK_INT           ghl_test_size_  = cctk_lsh[0] * cctk_lsh[1] * cctk_lsh[2];                        \
+    ghl_primitive_quantities ghl_test_prims_ = {0};                                                            \
+    ghl_initialize_primitives(                                                                                 \
+        rho[index_],                                                                                           \
+        press[index_],                                                                                         \
+        eps[index_],                                                                                           \
+        vel[index_ + 0 * ghl_test_size_],                                                                      \
+        vel[index_ + 1 * ghl_test_size_],                                                                      \
+        vel[index_ + 2 * ghl_test_size_],                                                                      \
+        Bvec[index_ + 0 * ghl_test_size_],                                                                     \
+        Bvec[index_ + 1 * ghl_test_size_],                                                                     \
+        Bvec[index_ + 2 * ghl_test_size_],                                                                     \
+        entropy[index_],                                                                                       \
+        Y_e[index_],                                                                                           \
+        temperature[index_],                                                                                   \
+        &ghl_test_prims_                                                                                       \
+    );                                                                                                         \
+    bool ghl_test_speed_limited_ = false;                                                                      \
+    ghl_limit_v_and_compute_u0(ghl_params, &ghl_test_adm_metric_, &ghl_test_prims_, &ghl_test_speed_limited_); \
     GHL_TEST_LOG_WRITE(ghl_test_prims_);
 
 // Set metric to flat space
