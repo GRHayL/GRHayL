@@ -248,7 +248,7 @@ static inline double froot(const double xi, void *restrict fparams_in) {
   }
   double resid = xi * xi * J * J - H2;
 
-  printf("xi = %f, residual = %f\n", xi, resid);
+  // printf("xi = %f, residual = %f\n", xi, resid);
   return resid;
 } // static inline double froot
 
@@ -269,8 +269,7 @@ int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in) {
   // Step 3: Run Brent root solver and print the root and residual
   ghl_brent(froot, fparams_in, xi_low, xi_up, &rparams);
   double xi_root = rparams.root;
-  printf("root = %f\n", xi_root);
-  printf("residual = %f\n", rparams.residual);
+  printf("root = %f residual = %f ", xi_root, rparams.residual);
   fparams_in->chi = ghl_m1_closure(xi_root);
 
   // TODO: add error message when ghl_brent fails

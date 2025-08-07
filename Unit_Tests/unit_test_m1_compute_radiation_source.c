@@ -79,9 +79,17 @@ void test_source_update() {
   double E_thin = 3.0;
   ghl_radiation_flux_vector F4_thin;
   F4_thin.D[0] = 0.0;
-  F4_thin.D[1] = E_thin; //When set exactly to E, the root is found but not swapped
+  F4_thin.D[1] = E_thin;
   F4_thin.D[2] = 0.0;
   F4_thin.D[3] = 0.0;
+  
+
+  // For verifying test cases, these are not needed for source_update
+  double u4U[4] = { prims.u0, prims.u0 * prims.vU[0], prims.u0 * prims.vU[1],
+                          prims.u0 * prims.vU[2] };
+  double n4D[4] = { -metric.lapse, 0, 0, 0 };
+  double W = 0;
+  ///////////////////////////////////////
   
   
   double cdt = 0.1;
@@ -104,18 +112,24 @@ void test_source_update() {
       P4_0.DD[a][b] = 0.0;
     }
   }
+  // Initialize E and F4 that will be updated by ghl_source_update
+  double E_new;
   ghl_radiation_flux_vector F4_new;
-  F4_new.D[0] = F4_thin.D[0];
-  F4_new.D[1] = F4_thin.D[1];
-  F4_new.D[2] = F4_thin.D[2];
-  F4_new.D[3] = F4_thin.D[3];
+
+  ghl_radiation_flux_vector F4_star_0;
+  F4_star_0.D[0] = F4_thin.D[0];
+  F4_star_0.D[1] = F4_thin.D[1];
+  F4_star_0.D[2] = F4_thin.D[2];
+  F4_star_0.D[3] = F4_thin.D[3];
+
+  ghl_radiation_con_source_vector rF_source_0 = {0};
 
   // Initialize param struct to 0
   ghl_m1_powell_params p_TestZero     = {0}; 
   ghl_m1_powell_params p_TestExplicit = {0};
   ghl_m1_powell_params p_TestImplicit = {0};
 
-  // Test Zero case
+  ///////////////////////////////// Test Zero case ////////////////////////////////
   // All source is zero
   p_TestZero.chi    = 0.0; // initial chi value
   p_TestZero.eta    = 0.0;
@@ -128,18 +142,31 @@ void test_source_update() {
   p_TestZero.metric         = &metric;
   p_TestZero.adm_aux        = &adm_aux;
   p_TestZero.prims          = &prims;
-  p_TestZero.E_new          = E_thin;
-  p_TestZero.F4_new         = &F4_new;
+  p_TestZero.rF_source      = &rF_source_0;
+  // p_TestZero.E_new          = E_thin;
+  // p_TestZero.F4_new         = &F4_new_0;
+  p_TestZero.E_star         = E_thin;
+  p_TestZero.F4_star        = &F4_star_0;
   p_TestZero.cdt            = cdt;
   p_TestZero.closure        = closure;
   p_TestZero.gsl_solver_1d  = gsl_solver_1d;
   p_TestZero.gsl_solver_nd  = gsl_solver_nd;
 
-  printf("\nSource test: TestZero\n");
-  int ierr_TestZero = ghl_source_update_test(&thc_params, &p_TestZero);
-  printf("E_new expected: %f\n",E_thin);
+  E_new = E_thin;
+  F4_new.D[0] = F4_thin.D[0];
+  F4_new.D[1] = F4_thin.D[1];
+  F4_new.D[2] = F4_thin.D[2];
+  F4_new.D[3] = F4_thin.D[3];
 
-  // Test Explicit case
+  printf("\nSource test: TestZero\n");
+  int ierr_TestZero = ghl_source_update(&thc_params, &p_TestZero, &E_new, &F4_new);
+  printf("E_new: expected=%f  solution=%f  \n",E_thin, E_new);
+  printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
+         F4_thin.D[0], F4_thin.D[1], F4_thin.D[2], F4_thin.D[3],
+         F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+  /////////////////////////////////////////////////////////////////////////////////////
+
+  ///////////////////////////////// Test Explicit case ////////////////////////////////
   // cdt * kabs < 1 && cdt * kscat < 1
   p_TestExplicit.chi    = 0.0;
   p_TestExplicit.eta    = 0.5;
@@ -151,41 +178,67 @@ void test_source_update() {
   p_TestExplicit.metric         = &metric;
   p_TestExplicit.adm_aux        = &adm_aux;
   p_TestExplicit.prims          = &prims;
-  p_TestExplicit.E_new          = E_thin;
-  p_TestExplicit.F4_new         = &F4_new;
+  p_TestExplicit.E_star         = E_thin;
+  p_TestExplicit.F4_star        = &F4_star_0;
+  p_TestExplicit.rF_source      = &rF_source_0;
   p_TestExplicit.cdt            = cdt;
   p_TestExplicit.closure        = closure;
   p_TestExplicit.gsl_solver_1d  = gsl_solver_1d;
   p_TestExplicit.gsl_solver_nd  = gsl_solver_nd;
 
-  printf("\nSource test: TestImplicit\n");
-  int ierr_TestExplicit = ghl_source_update_test(&thc_params, &p_TestExplicit);
-  double rE_source_0 = + p_TestExplicit.eta * p_TestExplicit.prims->u0;
-  double E_TestExplicit = p_TestExplicit.E_new + p_TestExplicit.cdt * rE_source_0;
-  printf("E_new expected: %f\n",E_TestExplicit);
+  E_new = E_thin;
+  F4_new.D[0] = F4_thin.D[0];
+  F4_new.D[1] = F4_thin.D[1];
+  F4_new.D[2] = F4_thin.D[2];
+  F4_new.D[3] = F4_thin.D[3];
 
-  // Test Implicit case
+  printf("\nSource test: TestImplicit\n");
+  int ierr_TestExplicit = ghl_source_update(&thc_params, &p_TestExplicit, &E_new, &F4_new);
+  // Eq (29)-0 rE_source = - alp * volfrom * (S^mu n_mu) = - eta * u^0
+  double rE_source_0 = + p_TestExplicit.eta * p_TestExplicit.prims->u0;
+  double E_TestExplicit = E_thin + p_TestExplicit.cdt * rE_source_0;
+  printf("E_new: expected=%f  solution=%f  \n",E_TestExplicit, E_new);
+  printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
+         F4_thin.D[0], F4_thin.D[1], F4_thin.D[2], F4_thin.D[3],
+         F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+  /////////////////////////////////////////////////////////////////////////////////////
+
+  ///////////////////////////////// Test Implicit case ////////////////////////////////
   // not (cdt * kabs < 1 && cdt * kscat < 1)
   p_TestImplicit.chi    = 0.0;
-  p_TestImplicit.eta    = 11.0;
-  p_TestImplicit.kabs   = 11.0;
-  p_TestImplicit.kscat  = 0.0;
+  p_TestImplicit.eta    = 120.0;
+  p_TestImplicit.kabs   = 17.0;
+  p_TestImplicit.kscat  = 19.0;
   p_TestImplicit.E              = E_thin;
   p_TestImplicit.F4             = &F4_thin;
   p_TestImplicit.P4             = &P4_0;
   p_TestImplicit.metric         = &metric;
   p_TestImplicit.adm_aux        = &adm_aux;
   p_TestImplicit.prims          = &prims;
-  p_TestImplicit.E_new          = E_thin;
-  p_TestImplicit.F4_new         = &F4_new;
+  p_TestImplicit.E_star         = E_thin;
+  p_TestImplicit.F4_star        = &F4_star_0;
+  p_TestImplicit.rF_source      = &rF_source_0;
   p_TestImplicit.cdt            = cdt;
   p_TestImplicit.closure        = closure;
   p_TestImplicit.gsl_solver_1d  = gsl_solver_1d;
   p_TestImplicit.gsl_solver_nd  = gsl_solver_nd;
 
-  // printf("\nSource test: TestExplicit\n");
-  // int ierr_TestImplicit = ghl_source_update_test(&thc_params, &p_TestImplicit);
-  // //TODO: This is only explicit limit, need to find a test case with exact implicit result
-  // double E_TestImplicit = p_TestImplicit.E_new + p_TestImplicit.cdt * p_TestImplicit.eta * p_TestImplicit.prims->u0;
-  // printf("E_new expected: %f\n",E_TestImplicit);
+  E_new = E_thin;
+  F4_new.D[0] = F4_thin.D[0];
+  F4_new.D[1] = F4_thin.D[1];
+  F4_new.D[2] = F4_thin.D[2];
+  F4_new.D[3] = F4_thin.D[3];
+
+  printf("\nSource test: TestExplicit\n");
+  int ierr_TestImplicit = ghl_source_update(&thc_params, &p_TestImplicit, &E_new, &F4_new);
+  //TODO: This is only explicit limit, need to find a test case with exact implicit result
+  double E_TestImplicit = E_new + p_TestImplicit.cdt * p_TestImplicit.eta * p_TestImplicit.prims->u0;
+  printf("E_new: expected=%f  solution=%f  \n",E_TestImplicit, E_new);
+  printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
+         F4_thin.D[0], F4_thin.D[1], F4_thin.D[2], F4_thin.D[3],
+         F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
+  /////////////////////////////////////////////////////////////////////////////////////
+
+
   }
+  

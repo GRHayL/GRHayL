@@ -99,8 +99,8 @@ void calc_rad_sources(
 // compute_radiation_source.c functions
 void init_params(ghl_m1_powell_params *p);
 
-int ghl_source_update_test(const ghl_m1_thc_params *thc_params,
-    ghl_m1_powell_params *p);
+// int ghl_source_update_test(const ghl_m1_thc_params *thc_params,
+//     ghl_m1_powell_params *p);
 
 int prepare(gsl_vector const * q, ghl_m1_powell_params * p);
 
