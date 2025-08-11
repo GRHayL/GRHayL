@@ -392,7 +392,7 @@ int prepare(const gsl_vector *q, ghl_m1_powell_params *p);
 
 void evaluate_zjac(ghl_m1_powell_params *p, gsl_matrix *J);
 
-void evaluate_zfunc(ghl_m1_powell_params *p, gsl_vector *f);
+void evaluate_zfunc(gsl_vector const * q, ghl_m1_powell_params *p, gsl_vector *f);
 
 int impl_func_jac(const gsl_vector *q, void *params, gsl_matrix *J);
 

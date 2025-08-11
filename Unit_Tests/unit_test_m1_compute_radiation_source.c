@@ -108,20 +108,14 @@ void test_source_update() {
   // Initialize the pressure tensor to 0, will be updated at prepare_closure
   ghl_radiation_pressure_tensor P4_0;
   for (int a = 0; a < 4; a++){
-    for (int b = 0; b < 4; b++){
-      P4_0.DD[a][b] = 0.0;
-    }
+    
   }
+  ghl_radiation_flux_vector F4_0;
+  
   // Initialize E and F4 that will be updated by ghl_source_update
   double E_new;
   ghl_radiation_flux_vector F4_new;
-
   ghl_radiation_flux_vector F4_star_0;
-  F4_star_0.D[0] = F4_thin.D[0];
-  F4_star_0.D[1] = F4_thin.D[1];
-  F4_star_0.D[2] = F4_thin.D[2];
-  F4_star_0.D[3] = F4_thin.D[3];
-
   ghl_radiation_con_source_vector rF_source_0 = {0};
 
   // Initialize param struct to 0
@@ -131,13 +125,24 @@ void test_source_update() {
 
   ///////////////////////////////// Test Zero case ////////////////////////////////
   // All source is zero
+
+  // Initialize all the vectors
+  for (int a = 0; a < 4; a++) {
+    F4_0.D[a]      = F4_thin.D[a];
+    F4_star_0.D[a] = F4_thin.D[a];
+    rF_source_0.D[a] = 0.0; // rF_source is initialized to 0
+    for (int b = 0; b < 4; b++){
+      P4_0.DD[a][b] = 0.0;
+    }
+  }
+
   p_TestZero.chi    = 0.0; // initial chi value
   p_TestZero.eta    = 0.0;
   p_TestZero.kabs   = 0.0;
   p_TestZero.kscat  = 0.0;
   
   p_TestZero.E              = E_thin;
-  p_TestZero.F4             = &F4_thin;
+  p_TestZero.F4             = &F4_0;
   p_TestZero.P4             = &P4_0;
   p_TestZero.metric         = &metric;
   p_TestZero.adm_aux        = &adm_aux;
@@ -160,6 +165,7 @@ void test_source_update() {
 
   printf("\nSource test: TestZero\n");
   int ierr_TestZero = ghl_source_update(&thc_params, &p_TestZero, &E_new, &F4_new);
+  printf("\nResults:\n");
   printf("E_new: expected=%f  solution=%f  \n",E_thin, E_new);
   printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
          F4_thin.D[0], F4_thin.D[1], F4_thin.D[2], F4_thin.D[3],
@@ -168,12 +174,23 @@ void test_source_update() {
 
   ///////////////////////////////// Test Explicit case ////////////////////////////////
   // cdt * kabs < 1 && cdt * kscat < 1
+
+  // Initialize all the vectors
+  for (int a = 0; a < 4; a++) {
+    F4_0.D[a]      = F4_thin.D[a];
+    F4_star_0.D[a] = F4_thin.D[a];
+    rF_source_0.D[a] = 0.0; // rF_source is initialized to 0
+    for (int b = 0; b < 4; b++){
+      P4_0.DD[a][b] = 0.0;
+    }
+  }
+
   p_TestExplicit.chi    = 0.0;
   p_TestExplicit.eta    = 0.5;
-  p_TestExplicit.kabs   = 0.0;
+  p_TestExplicit.kabs   = 9.999999;
   p_TestExplicit.kscat  = 0.0;
   p_TestExplicit.E              = E_thin;
-  p_TestExplicit.F4             = &F4_thin;
+  p_TestExplicit.F4             = &F4_0;
   p_TestExplicit.P4             = &P4_0;
   p_TestExplicit.metric         = &metric;
   p_TestExplicit.adm_aux        = &adm_aux;
@@ -192,23 +209,37 @@ void test_source_update() {
   F4_new.D[2] = F4_thin.D[2];
   F4_new.D[3] = F4_thin.D[3];
 
-  printf("\nSource test: TestImplicit\n");
-  int ierr_TestExplicit = ghl_source_update(&thc_params, &p_TestExplicit, &E_new, &F4_new);
+  printf("\nSource test: TestExplicit\n");
   // Eq (29)-0 rE_source = - alp * volfrom * (S^mu n_mu) = - eta * u^0
   double rE_source_0 = + p_TestExplicit.eta * p_TestExplicit.prims->u0;
   double E_TestExplicit = E_thin + p_TestExplicit.cdt * rE_source_0;
+  double Fx_TestExplicit = F4_thin.D[1] + p_TestExplicit.cdt * rE_source_0 * vx;
+
+  int ierr_TestExplicit = ghl_source_update(&thc_params, &p_TestExplicit, &E_new, &F4_new);
+  printf("\nResults:\n");
   printf("E_new: expected=%f  solution=%f  \n",E_TestExplicit, E_new);
   printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
-         F4_thin.D[0], F4_thin.D[1], F4_thin.D[2], F4_thin.D[3],
+         0.0, Fx_TestExplicit, 0.0, 0.0,
          F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
   /////////////////////////////////////////////////////////////////////////////////////
 
   ///////////////////////////////// Test Implicit case ////////////////////////////////
   // not (cdt * kabs < 1 && cdt * kscat < 1)
+
+  // Initialize all the vectors
+  for (int a = 0; a < 4; a++) {
+    F4_0.D[a]      = F4_thin.D[a];
+    F4_star_0.D[a] = F4_thin.D[a];
+    rF_source_0.D[a] = 0.0; // rF_source is initialized to 0
+    for (int b = 0; b < 4; b++){
+      P4_0.DD[a][b] = 0.0;
+    }
+  }
+
   p_TestImplicit.chi    = 0.0;
-  p_TestImplicit.eta    = 120.0;
-  p_TestImplicit.kabs   = 17.0;
-  p_TestImplicit.kscat  = 19.0;
+  p_TestImplicit.eta    = 0.5;
+  p_TestImplicit.kabs   = 11.0;
+  p_TestImplicit.kscat  = 26.0;
   p_TestImplicit.E              = E_thin;
   p_TestImplicit.F4             = &F4_thin;
   p_TestImplicit.P4             = &P4_0;
@@ -229,13 +260,15 @@ void test_source_update() {
   F4_new.D[2] = F4_thin.D[2];
   F4_new.D[3] = F4_thin.D[3];
 
-  printf("\nSource test: TestExplicit\n");
+  printf("\nSource test: TestImplicit\n");
   int ierr_TestImplicit = ghl_source_update(&thc_params, &p_TestImplicit, &E_new, &F4_new);
   //TODO: This is only explicit limit, need to find a test case with exact implicit result
   double E_TestImplicit = E_new + p_TestImplicit.cdt * p_TestImplicit.eta * p_TestImplicit.prims->u0;
+  double Fx_TestImplicit = F4_thin.D[1] + p_TestExplicit.cdt * rE_source_0 * vx;
+  printf("\nResults:\n");
   printf("E_new: expected=%f  solution=%f  \n",E_TestImplicit, E_new);
   printf("F4_new: expected=(%f, %f, %f, %f)  solution=(%f, %f, %f, %f)\n",
-         F4_thin.D[0], F4_thin.D[1], F4_thin.D[2], F4_thin.D[3],
+         0.0, Fx_TestImplicit, 0.0, 0.0,
          F4_new.D[0], F4_new.D[1], F4_new.D[2], F4_new.D[3]);
   /////////////////////////////////////////////////////////////////////////////////////
 
