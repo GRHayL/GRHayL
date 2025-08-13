@@ -322,6 +322,7 @@ int prepare_sources(gsl_vector const * q, ghl_m1_powell_params * p) {
   
   p->rE_source = calc_rE_source(p->metric, &S4);
   
+  
   ghl_radiation_con_source_vector rF_source={0};
   calc_rF_source(p->metric, p->adm_aux, &S4, &rF_source);
   for (int a = 0; a < 4; ++a) {
@@ -481,8 +482,6 @@ void explicit_update(
     F4_new->D[1] = p->F4_star->D[1] + p->cdt * p->rF_source->D[1];
     F4_new->D[2] = p->F4_star->D[2] + p->cdt * p->rF_source->D[2];
     F4_new->D[3] = p->F4_star->D[3] + p->cdt * p->rF_source->D[3];
-    printf("rF_source: %f %f %f\n",
-           p->rF_source->D[1], p->rF_source->D[2], p->rF_source->D[3]);
 
     // F_0 = g_0i F^i = beta_i F^i = beta^i F_i
     // F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
@@ -501,37 +500,73 @@ void explicit_update(
 // In THC: _old is equivalent to _star, so remove _star here
 int ghl_source_update(
   const ghl_m1_thc_params *thc_params,
-  ghl_m1_powell_params *p,
+  // ghl_m1_powell_params *p_tmp,
   // double *chi,
+  double chi,
+  double eta,
+  double kabs,
+  double kscat,
+  double cdt,
+  const ghl_metric_quantities *metric,
+  const ghl_ADM_aux_quantities *adm_aux,
+  const ghl_primitive_quantities *prims,
+  const double E_star,
+  const ghl_radiation_flux_vector *F4_star,
+  const ghl_m1_closure_t closure,
+  const gsl_multiroot_fdfsolver *gsl_solver_1d,
+  const gsl_multiroot_fdfsolver *gsl_solver_nd,
   double *E_new,
   ghl_radiation_flux_vector *F4_new
 ) {
+  ghl_m1_powell_params p_powell = {0};
+  
+
+  double E_0 = 0.0;
+  ghl_radiation_flux_vector F4_0 = {0};
+  ghl_radiation_pressure_tensor P4_0 = {0};
+  ghl_radiation_con_source_vector rF_source_0 ={0};
+  p_powell.E              = E_0;
+  p_powell.F4             = &F4_0;
+  p_powell.P4             = &P4_0;
+  p_powell.rF_source      = &rF_source_0;
+
+  p_powell.chi    = chi;
+  p_powell.eta    = eta;
+  p_powell.kabs   = kabs;
+  p_powell.kscat  = kscat;
+  p_powell.metric         = metric;
+  p_powell.adm_aux        = adm_aux;
+  p_powell.prims          = prims;
+  p_powell.E_star         = E_star;
+  p_powell.F4_star        = F4_star;
+  p_powell.cdt            = cdt;
+  p_powell.closure        = closure;
+  p_powell.gsl_solver_1d  = gsl_solver_1d;
+  p_powell.gsl_solver_nd  = gsl_solver_nd;
+
   // printf("Begin ghl_source_update\n");
-  // double *E_new = &p->E;
-  // ghl_radiation_flux_vector *F4_new = p->F4;
-  init_params(p);
+  init_params(&p_powell);
 
   gsl_multiroot_function_fdf zfunc
-        = { impl_func_val, impl_func_jac, impl_func_val_jac, 4, p };
-  double E_old = p->E_star;
+        = { impl_func_val, impl_func_jac, impl_func_val_jac, 4, &p_powell };
+  double E_old = p_powell.E_star;
   ghl_radiation_flux_vector F4_old;
-  F4_old.D[0] = p->F4_star->D[0];
-  F4_old.D[1] = p->F4_star->D[1];
-  F4_old.D[2] = p->F4_star->D[2];
-  F4_old.D[3] = p->F4_star->D[3];
+  F4_old.D[0] = p_powell.F4_star->D[0];
+  F4_old.D[1] = p_powell.F4_star->D[1];
+  F4_old.D[2] = p_powell.F4_star->D[2];
+  F4_old.D[3] = p_powell.F4_star->D[3];
   // Old solution
   double qold[4] = { E_old, F4_old.D[1], F4_old.D[2], F4_old.D[3] };
   gsl_vector_view xold = gsl_vector_view_array(qold, 4);
   // Non stiff limit, use explicit update
-  if(p->cdt * p->kabs < 1 && p->cdt * p->kscat < 1) {
+  if(p_powell.cdt * p_powell.kabs < 1 && p_powell.cdt * p_powell.kscat < 1) {
     printf("Non stiff limit, use explicit update\n");
-    printf("\n");
-    prepare(&xold.vector, p);
-    explicit_update(p, E_new, F4_new);
-    
+    prepare(&xold.vector, &p_powell);
+    explicit_update(&p_powell, E_new, F4_new);
+
     double q[4] = { *E_new, F4_new->D[1], F4_new->D[2], F4_new->D[3] };
     gsl_vector_view x = gsl_vector_view_array(q, 4);
-    prepare_closure(&x.vector, p);
+    prepare_closure(&x.vector, &p_powell);
     return -1;
     // return THC_M1_SOURCE_THIN; // TODO
   }
@@ -539,25 +574,25 @@ int ghl_source_update(
   // Initial guess for the solution
   double q[4] = { *E_new, F4_new->D[1], F4_new->D[2], F4_new->D[3] };
   gsl_vector_view x = gsl_vector_view_array(q, 4);
-  if (p->gsl_solver_nd == NULL) {
+  if (p_powell.gsl_solver_nd == NULL) {
     printf("Solver not initialized!\n");
   }
   printf("\n");
   if(zfunc.f == NULL) {
     printf("Function pointer is NULL\n");
   }
-  int ierr = gsl_multiroot_fdfsolver_set(p->gsl_solver_nd, &zfunc, &x.vector);
+  int ierr = gsl_multiroot_fdfsolver_set(p_powell.gsl_solver_nd, &zfunc, &x.vector);
   int iter = 0;
   printf("\n\n Start gsl_multiroot_test_delta\n");
   do {
     printf("iter: %3d ",iter); 
-    printf("E_new: %f ",gsl_vector_get(p->gsl_solver_nd->x, 0));
+    printf("E_new: %f ",gsl_vector_get(p_powell.gsl_solver_nd->x, 0));
     printf("F4_new: %f %f %f ", 
-           gsl_vector_get(p->gsl_solver_nd->x, 1),
-           gsl_vector_get(p->gsl_solver_nd->x, 2),
-           gsl_vector_get(p->gsl_solver_nd->x, 3));
+           gsl_vector_get(p_powell.gsl_solver_nd->x, 1),
+           gsl_vector_get(p_powell.gsl_solver_nd->x, 2),
+           gsl_vector_get(p_powell.gsl_solver_nd->x, 3));
     if(iter < thc_params->source_maxiter) {
-      ierr = gsl_multiroot_fdfsolver_iterate(p->gsl_solver_nd);
+      ierr = gsl_multiroot_fdfsolver_iterate(p_powell.gsl_solver_nd);
       iter++;
     }
     if (ierr == GSL_ENOPROG || ierr == GSL_ENOPROGJ ||
@@ -582,22 +617,22 @@ int ghl_source_update(
     }
     // TODO: removed error handling for now
     ierr = gsl_multiroot_test_delta(
-          p->gsl_solver_nd->dx, p->gsl_solver_nd->x, thc_params->source_epsabs, thc_params->source_epsrel);
+          p_powell.gsl_solver_nd->dx, p_powell.gsl_solver_nd->x, thc_params->source_epsabs, thc_params->source_epsrel);
     printf("\n");
   } while(ierr == GSL_CONTINUE);
   // printf("After gsl_multiroot_test_delta\n");
-  *E_new = gsl_vector_get(p->gsl_solver_nd->x, 0);
-  F4_new->D[1] = gsl_vector_get(p->gsl_solver_nd->x, 1);
-  F4_new->D[2] = gsl_vector_get(p->gsl_solver_nd->x, 2);
-  F4_new->D[3] = gsl_vector_get(p->gsl_solver_nd->x, 3);
+  *E_new       = gsl_vector_get(p_powell.gsl_solver_nd->x, 0);
+  F4_new->D[1] = gsl_vector_get(p_powell.gsl_solver_nd->x, 1);
+  F4_new->D[2] = gsl_vector_get(p_powell.gsl_solver_nd->x, 2);
+  F4_new->D[3] = gsl_vector_get(p_powell.gsl_solver_nd->x, 3);
   // F_0 = g_0i F^i = beta_i F^i = beta^i F_i
   // F4_new->D[0] = - alp * n4U[1] * F4_new->D[1]
   //                - alp * n4U[2] * F4_new->D[2]
   //                - alp * n4U[3] * F4_new->D[3];
-  F4_new->D[0] = p->metric->betaU[0] * F4_new->D[1] \
-               + p->metric->betaU[1] * F4_new->D[2] \
-               + p->metric->betaU[2] * F4_new->D[3];
+  F4_new->D[0] = p_powell.metric->betaU[0] * F4_new->D[1] \
+               + p_powell.metric->betaU[1] * F4_new->D[2] \
+               + p_powell.metric->betaU[2] * F4_new->D[3];
 
-  prepare_closure(p->gsl_solver_nd->x, p);
+  prepare_closure(p_powell.gsl_solver_nd->x, &p_powell);
   return -4;
 }

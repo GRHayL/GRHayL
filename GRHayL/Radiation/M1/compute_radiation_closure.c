@@ -210,11 +210,9 @@ static inline double froot(const double xi, void *restrict fparams_in) {
   double E = fparams->E;
   ghl_radiation_flux_vector *F4 = fparams->F4;
   ghl_radiation_pressure_tensor *P4 = fparams->P4;
-
   // Apply closure (TODO: change this so other functions can be used)
   double chi = ghl_m1_closure(xi);
   ghl_radiation_apply_closure(metric, adm_aux, prims, E, F4, chi, P4);
-
   ghl_stress_energy rT4DD;
   const double n4D[4] = { -metric->lapse, 0, 0, 0 };
   assemble_rT_lab_frame(n4D, E, F4, P4, &rT4DD);
@@ -247,7 +245,6 @@ static inline double froot(const double xi, void *restrict fparams_in) {
     }
   }
   double resid = xi * xi * J * J - H2;
-
   // printf("xi = %f, residual = %f\n", xi, resid);
   return resid;
 } // static inline double froot
@@ -265,9 +262,9 @@ int ghl_radiation_rootSolve_closure(m1_root_params *restrict fparams_in) {
   roots_params rparams;
   rparams.tol = 1e-15;
   rparams.max_iters = 300;
-
   // Step 3: Run Brent root solver and print the root and residual
   ghl_brent(froot, fparams_in, xi_low, xi_up, &rparams);
+  
   double xi_root = rparams.root;
   // printf("root = %f residual = %f ", xi_root, rparams.residual);
   fparams_in->chi = ghl_m1_closure(xi_root);

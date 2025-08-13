@@ -136,8 +136,6 @@ typedef struct ghl_m1_powell_params {
   //   ghl_radiation_con_source_vector *S4;
   double rE_source;
   ghl_radiation_con_flux_vector *rF_source;
-  double GE_source;
-  ghl_radiation_con_flux_vector *GF_source;
 
 
   double E_new;
@@ -214,13 +212,16 @@ void ghl_m1_set_equilibrium(
       ghl_radiation_pressure_tensor *restrict rP4);
 
 void ghl_M1_update(
-      double cdt,
-      ghl_neutrino_optical_depths *restrict tau,
-      ghl_neutrino_opacities *restrict kappa,
-      ghl_metric_quantities *metric,
-      ghl_ADM_aux_quantities *adm_aux,
-      ghl_radiation_metric_tensor *proj4,
-      ghl_primitive_quantities *prims);
+    double cdt,
+    const ghl_metric_quantities *metric,
+    const ghl_metric_quantities *metric_derivs_x,
+    const ghl_metric_quantities *metric_derivs_y,
+    const ghl_metric_quantities *metric_derivs_z,
+    const ghl_extrinsic_curvature *curv,
+    const ghl_ADM_aux_quantities *adm_aux,
+    const ghl_primitive_quantities *prims,
+    const ghl_m1_thc_params *thc_params
+    );
 
 void assemble_fnu(
       const ghl_ADM_aux_quantities *adm_aux,
@@ -413,7 +414,20 @@ int ghl_source_update_test(const ghl_m1_thc_params *thc_params, ghl_m1_powell_pa
 
 int ghl_source_update(
       const ghl_m1_thc_params *thc_params,
-      ghl_m1_powell_params *p,
+      // ghl_m1_powell_params *p,
+      double chi,
+      double eta,
+      double kabs,
+      double kscat,
+      double cdt,
+      const ghl_metric_quantities *metric,
+      const ghl_ADM_aux_quantities *adm_aux,
+      const ghl_primitive_quantities *prims,
+      const double E_star,
+      const ghl_radiation_flux_vector *F4_star,
+      const ghl_m1_closure_t closure,
+      const gsl_multiroot_fdfsolver *gsl_solver_1d,
+      const gsl_multiroot_fdfsolver *gsl_solver_nd,
       double *E_new,
       ghl_radiation_flux_vector *F4_new
 );

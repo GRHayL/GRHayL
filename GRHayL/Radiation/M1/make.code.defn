@@ -5,4 +5,5 @@ SRCS = compute_radiation_closure.c \
        add_rad_to_Tmunu.c \
        calc_density_ratios.c \
        flavor_mix_adjustment.c \
-       set_equilibrium.c
+       set_equilibrium.c \
+       calc_update.c
