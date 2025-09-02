@@ -7,9 +7,17 @@ ghl_error_codes_t (*ghl_compute_h_and_cs2)(
       double *restrict h,
       double *restrict cs2);
 
+bool (*ghl_hybrid_enforce_bounds__rho)(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho);
+
 int  (*ghl_hybrid_find_polytropic_index)(
       const ghl_eos_parameters *restrict eos,
       const double rho_in);
+
+int  (*ghl_hybrid_find_polytropic_index_from_P)(
+      const ghl_eos_parameters *restrict eos,
+      const double P_in);
 
 void (*ghl_hybrid_get_K_and_Gamma)(
       const ghl_eos_parameters *restrict eos,
@@ -30,6 +38,10 @@ void (*ghl_hybrid_compute_P_cold_and_eps_cold)(
       const double rho_in,
       double *restrict P_cold_ptr,
       double *restrict eps_cold_ptr);
+
+double (*ghl_hybrid_compute_rho_cold_from_P_cold)(
+      const ghl_eos_parameters *restrict eos,
+      const double P_in);
 
 double (*ghl_hybrid_compute_epsilon)(
       const ghl_eos_parameters *restrict eos,
@@ -296,5 +308,13 @@ void (*ghl_tabulated_enforce_bounds_rho_Ye_P)(
       double *restrict rho,
       double *restrict Y_e,
       double *restrict P );
+
+double (*ghl_tabulated_compute_deps_dP_from_rho)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
+
+double (*ghl_tabulated_compute_dP_drho_from_rho)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho );
 
 #endif // GHL_EOS_FUNCTIONS_DECLARATION_H_
