@@ -4,7 +4,7 @@ int main(int argc, char **argv) {
   const int arraylength = 3;
 
   ghl_error_codes_t *expected_errors = (ghl_error_codes_t*) malloc(sizeof(ghl_error_codes_t)*arraylength);
-  expected_errors[0] = 1;
+  expected_errors[0] = ghl_error_invalid_utsq;
   expected_errors[1] = ghl_error_c2p_max_iter;
   expected_errors[2] = ghl_error_c2p_singular;
 
