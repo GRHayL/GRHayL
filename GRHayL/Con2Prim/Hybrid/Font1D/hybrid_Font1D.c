@@ -61,7 +61,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
 
     const int maxits = 300;
     double tol = 1.e-15;
-    int error;
+    ghl_error_codes_t error = ghl_success;
     const int Font1D_attempts = 5;
     for(int n=0; n<Font1D_attempts; n++) {
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
@@ -70,12 +70,12 @@ ghl_error_codes_t ghl_hybrid_Font1D(
             eos, loop_maxits, loop_tol, W0, Sf20, Psim6,
             sdots, BdotS2, B2, cons, rhob0, &rhob);
       rhob0 = rhob;
-      if(!error) break;
+      if(error == ghl_success) break;
     }
 
     //****************************************************************
 
-    if(error)
+    if(error != ghl_success)
       return error;
 
     /* First compute P_cold, eps_cold, then h = h_cold */

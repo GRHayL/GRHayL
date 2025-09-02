@@ -1,6 +1,6 @@
 #include "ghl.h"
 
-char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key) {
+const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key) {
   switch(key) {
     case None:
       return "None";

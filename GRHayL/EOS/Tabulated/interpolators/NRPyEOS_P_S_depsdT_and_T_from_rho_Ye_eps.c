@@ -20,7 +20,7 @@ ghl_error_codes_t NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(
 
   // Step 3: Perform the interpolation
   const double root_finding_precision = eos->root_finding_precision;
-  const int error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(eos, 3, root_finding_precision,
+  const ghl_error_codes_t error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(eos, 3, root_finding_precision,
                                                                                 rho, Y_e, eps, NRPyEOS_eps_key,
                                                                                 keys, outvars, T);
 

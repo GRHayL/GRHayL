@@ -192,7 +192,7 @@ void ghl_func_2D(
       double *restrict f,
       double *restrict df);
 
-int ghl_initialize_Noble(
+ghl_error_codes_t ghl_initialize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -202,7 +202,7 @@ int ghl_initialize_Noble(
       harm_aux_vars_struct *restrict harm_aux,
       double *restrict Z_ptr);
 
-int ghl_initialize_Noble_entropy(
+ghl_error_codes_t ghl_initialize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,

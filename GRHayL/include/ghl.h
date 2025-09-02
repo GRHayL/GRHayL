@@ -48,7 +48,10 @@ typedef enum {
   ghl_error_exceed_table_vars,
   ghl_error_table_neg_energy,
   ghl_error_table_bisection,
-  ghl_error_u0_singular
+  ghl_error_u0_singular,
+  ghl_error_invalid_utsq,
+  ghl_error_invalid_Z,
+  ghl_error_newman_invalid_discriminant,
 } ghl_error_codes_t;
 
 typedef enum {
@@ -263,7 +266,7 @@ typedef struct ghl_eos_parameters {
 extern "C" {
 #endif
 
-char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
+const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 
 void ghl_initialize_eos_functions(
     const ghl_eos_t eos_type);

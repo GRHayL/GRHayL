@@ -16,6 +16,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
   // Hybrid EOS specific floors and ceilings
   switch(eos->eos_type) {
     case ghl_eos_hybrid:
+    {
       // Apply floors and ceilings to rho
       prims->rho = MIN(MAX(prims->rho, eos->rho_min), eos->rho_max);
 
@@ -46,6 +47,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
         prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
       }
       break;
+    }
 
     // Tabulated EOS specific floors and ceilings
     case ghl_eos_tabulated:
