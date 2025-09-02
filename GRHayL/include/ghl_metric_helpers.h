@@ -1,6 +1,10 @@
 #ifndef GHL_METRIC_HELPERS_H_
 #define GHL_METRIC_HELPERS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static inline void ghl_raise_lower_vector_4D(
       const double g4[][4],
       const double vec[4],
@@ -8,13 +12,13 @@ static inline void ghl_raise_lower_vector_4D(
 
   vec_inv[0] = g4[0][0] * vec[0] + g4[0][1] * vec[1]
              + g4[0][2] * vec[2] + g4[0][3] * vec[3];
-                                                     
+
   vec_inv[1] = g4[0][1] * vec[0] + g4[1][1] * vec[1]
              + g4[1][2] * vec[2] + g4[1][3] * vec[3];
-                                                     
+
   vec_inv[2] = g4[0][2] * vec[0] + g4[1][2] * vec[1]
              + g4[2][2] * vec[2] + g4[2][3] * vec[3];
-                                                     
+
   vec_inv[3] = g4[0][3] * vec[0] + g4[1][3] * vec[1]
              + g4[2][3] * vec[2] + g4[3][3] * vec[3];
 }
@@ -27,11 +31,11 @@ static inline void ghl_raise_lower_vector_3D(
   vec_inv[0] = gamma[0][0] * vec[0]
              + gamma[0][1] * vec[1]
              + gamma[0][2] * vec[2];
-                                    
+
   vec_inv[1] = gamma[0][1] * vec[0]
              + gamma[1][1] * vec[1]
              + gamma[1][2] * vec[2];
-                                    
+
   vec_inv[2] = gamma[0][2] * vec[0]
              + gamma[1][2] * vec[1]
              + gamma[2][2] * vec[2];
@@ -64,5 +68,9 @@ static inline double ghl_compute_vec2_from_vec3D(
                  gamma[0][2] * vec[0] * vec[2] +
                  gamma[1][2] * vec[1] * vec[2]));
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GHL_METRIC_HELPERS_H

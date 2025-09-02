@@ -3,6 +3,9 @@
 
 #include "ghl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 //------------- Con2Prim struct --------------------
 /*
    The struct ghl_con2prim_diagnostics contains variables for error-checking and
@@ -36,11 +39,6 @@ typedef struct ghl_con2prim_diagnostics {
 typedef struct ghl_palenzuela_quantities {
   double q, r, s, t, D, Y_e, S;
 } ghl_palenzuela_quantities;
-
-//--------------------------------------------------
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 //--------- Initialization routines ----------------
 
@@ -87,9 +85,8 @@ void ghl_compute_conservs(
       const ghl_primitive_quantities *restrict prims,
       ghl_conservative_quantities *restrict cons);
 
-//--------------------------------------------------
-
 //-------------- Con2Prim routines -----------------
+
 ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -227,8 +224,6 @@ ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
-//--------------------------------------------------
-
 //------------ Auxiliary Functions -----------------
 
 bool ghl_limit_utilde_and_compute_v(
@@ -236,10 +231,6 @@ bool ghl_limit_utilde_and_compute_v(
       const ghl_metric_quantities *restrict metric,
       double utU[3],
       ghl_primitive_quantities *restrict prims);
-
-#ifdef __cplusplus
-}
-#endif
 
 extern ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_parameters *restrict params,
@@ -249,5 +240,9 @@ extern ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GHL_CON2PRIM_H

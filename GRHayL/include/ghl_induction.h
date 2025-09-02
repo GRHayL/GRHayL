@@ -3,6 +3,12 @@
 
 #include "ghl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+//------------------ Structs ---------------------
+//
 typedef struct ghl_HLL_vars {
   double B1r, B1l;
   double B2r, B2l;
@@ -20,10 +26,6 @@ typedef struct ghl_induction_interp_vars {
 } ghl_induction_interp_vars;
 
 //------------------ Functions ---------------------
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 double ghl_HLL_flux_with_B(
       const double psi6,

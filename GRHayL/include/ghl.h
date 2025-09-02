@@ -27,6 +27,7 @@
 #ifndef restrict
 #define restrict __restrict__
 #endif
+extern "C" {
 #endif
 
 typedef enum {
@@ -69,7 +70,11 @@ typedef enum {
   Newman1D_entropy
 } ghl_con2prim_method_t;
 
-typedef enum {ghl_eos_simple, ghl_eos_hybrid, ghl_eos_tabulated} ghl_eos_t;
+typedef enum {
+  ghl_eos_simple,
+  ghl_eos_hybrid,
+  ghl_eos_tabulated
+} ghl_eos_t;
 
 /*
  * Struct        : ghl_parameters
@@ -261,10 +266,6 @@ typedef struct ghl_eos_parameters {
   //------------------------------------------------
 
 } ghl_eos_parameters;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 
