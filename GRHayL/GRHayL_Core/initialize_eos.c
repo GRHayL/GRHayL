@@ -87,6 +87,9 @@ void ghl_initialize_simple_eos(
   init_common_eos_quantities;
 
   // Step 3: Set basic ideal fluid EOS parameters.
+  eos->rho_atm = rho_atm;
+  eos->rho_min = rho_min;
+  eos->rho_max = rho_max;
   eos->press_atm = press_atm;
   eos->press_min = press_min;
   eos->press_max = press_max;
@@ -94,6 +97,7 @@ void ghl_initialize_simple_eos(
   eos->neos = 1;
   eos->K_ppoly[0] = 1;
   eos->rho_ppoly[0] = 0.0;
+  eos->p_ppoly[0] = 0.0;
   eos->eps_integ_const[0] = 0.0;
 
   const double Gm1 = Gamma - 1.0;
@@ -161,6 +165,19 @@ void ghl_initialize_hybrid_eos(
 
   // Step 4: Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
+
+  // Initialize tabulated specific enthalpy.  We do it here to make sure
+  // eps_integ_consts are initialized.
+  for(int j=0; j<eos->neos; j++) {
+    double P, eps;
+    double rho = rho_ppoly[j];
+    if(rho > 0) {
+      ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P, &eps);
+      eos->p_ppoly[j] = P;
+    } else {
+      eos->p_ppoly[j] = 0.0;
+    }
+  }
 
   // -------------- Ceilings --------------
   // Compute maximum P and eps
@@ -286,6 +303,7 @@ void ghl_initialize_tabulated_eos(
   eos->Ye_of_lr = NULL;
   eos->lp_of_lr = NULL;
   eos->le_of_lr = NULL;
+  eos->lh_of_lr = NULL;
 }
 
 /*
