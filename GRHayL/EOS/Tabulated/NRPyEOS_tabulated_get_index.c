@@ -1,4 +1,4 @@
-#include "nrpyeos_tabulated.h"
+#include "ghl_nrpyeos_tabulated.h"
 
 // Set up the criterion for whether two elements are the same
 static bool comp(const double a, const double b) {

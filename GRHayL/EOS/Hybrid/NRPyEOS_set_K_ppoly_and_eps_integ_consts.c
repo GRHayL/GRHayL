@@ -1,4 +1,4 @@
-#include "nrpyeos_hybrid.h"
+#include "ghl_nrpyeos_hybrid.h"
 
 /*
  * Function     : NRPyEOS_set_K_ppoly_and_eps_integ_consts()

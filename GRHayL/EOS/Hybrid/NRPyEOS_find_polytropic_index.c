@@ -1,4 +1,4 @@
-#include "nrpyeos_hybrid.h"
+#include "ghl_nrpyeos_hybrid.h"
 
 /*
  * Function     : NRPyEOS_find_polytropic_index()

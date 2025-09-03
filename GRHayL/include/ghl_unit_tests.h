@@ -7,8 +7,8 @@
 #include "ghl_reconstruction.h"
 #include "ghl_flux_source.h"
 #include "ghl_radiation.h"
-#include "nrpyeos_tabulated.h"
-#include "nrpyeos_hybrid.h"
+#include "ghl_nrpyeos_tabulated.h"
+#include "ghl_nrpyeos_hybrid.h"
 
 #ifdef __cplusplus
 extern "C" {
