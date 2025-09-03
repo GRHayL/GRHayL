@@ -3,16 +3,16 @@
 
 #include "ghl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Integer constants to keep track of stencil.
 enum reconstruction_stencil {
   MINUS2, MINUS1,
   PLUS_0, PLUS_1,
   PLUS_2
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 // PPM functions
 void ghl_ppm_reconstruction(

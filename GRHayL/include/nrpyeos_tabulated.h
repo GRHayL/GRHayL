@@ -1,6 +1,8 @@
 #ifndef NRPYEOS_TABULATED_H_
 #define NRPYEOS_TABULATED_H_
+
 #include "ghl.h"
+
 #ifndef GRHAYL_USE_HDF5
 #define HDF5_ERROR_IF_USED \
   ghl_error("HDF5 is disabled, so this function cannot be used\n")
@@ -8,7 +10,22 @@
 
 #include <string.h>
 #include <hdf5.h>
+
 #define H5_USE_16_API 1
+
+// Unit conversion
+#define CODE_TO_CGS_DENSITY  6.17714470405638e+17 // [Density]    = M_sun / L^3
+#define CODE_TO_CGS_ENERGY   8.98755178736818e+20 // [Energy]     = c^2
+#define CODE_TO_CGS_PRESSURE 5.55174079257738e+38 // [Pressure]   = M_sun / (L T^2)
+#define CGS_TO_CODE_LENGTH   6.77269222552442e-06 // 1/[Length]   = c^2 / (G M_sun)
+#define CGS_TO_CODE_TIME     2.03040204956746e+05 // 1/[Time]     = c / L
+#define CGS_TO_CODE_DENSITY  1.61887093132742e-18 // 1/[Density]  = L^3 / M_sun
+#define CGS_TO_CODE_PRESSURE 1.80123683248503e-39 // 1/[Pressure] = (L T^2) / M_sun
+#define CGS_TO_CODE_ENERGY   1.11265005605362e-21 // 1/[Energy]   = 1 / c^2
+//
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Table keys
 enum eos_keys {
@@ -21,16 +38,6 @@ enum eos_keys {
   NRPyEOS_Gamma_key, NRPyEOS_ntablekeys
 };
 
-// Unit conversion
-#define CODE_TO_CGS_DENSITY  6.17714470405638e+17 // [Density]    = M_sun / L^3
-#define CODE_TO_CGS_ENERGY   8.98755178736818e+20 // [Energy]     = c^2
-#define CODE_TO_CGS_PRESSURE 5.55174079257738e+38 // [Pressure]   = M_sun / (L T^2)
-#define CGS_TO_CODE_LENGTH   6.77269222552442e-06 // 1/[Length]   = c^2 / (G M_sun)
-#define CGS_TO_CODE_TIME     2.03040204956746e+05 // 1/[Time]     = c / L
-#define CGS_TO_CODE_DENSITY  1.61887093132742e-18 // 1/[Density]  = L^3 / M_sun
-#define CGS_TO_CODE_PRESSURE 1.80123683248503e-39 // 1/[Pressure] = (L T^2) / M_sun
-#define CGS_TO_CODE_ENERGY   1.11265005605362e-21 // 1/[Energy]   = 1 / c^2
-
 // Name of the variables. This is only used to print
 // information about the keys during startup
 static const char table_var_names[NRPyEOS_ntablekeys][10] = {
@@ -40,10 +47,6 @@ static const char table_var_names[NRPyEOS_ntablekeys][10] = {
 };
 //********************************************
 #endif // GRHAYL_USE_HDF5
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 // Function prototypes
 void NRPyEOS_read_table_set_EOS_params(
@@ -323,4 +326,5 @@ double NRPyEOS_tabulated_compute_deps_dP_from_rho(
 #ifdef __cplusplus
 }
 #endif
+
 #endif // NRPYEOS_TABULATED_H_

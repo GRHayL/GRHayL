@@ -1,6 +1,6 @@
 #include "../../utils_Noble.h"
 
-int ghl_initialize_Noble(
+ghl_error_codes_t ghl_initialize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -57,7 +57,7 @@ int ghl_initialize_Noble(
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
     utsq = fabs(utsq);
   } else if(utsq < 0.0 || utsq > 10.0) {
-    return 1;
+    return ghl_error_invalid_utsq;
   }
 
   const double Wsq = 1.0 + utsq;   // Lorentz factor squared
@@ -82,10 +82,10 @@ int ghl_initialize_Noble(
     i_increase++;
   }
   *Z_ptr = Z_last;
-  return 0;
+  return ghl_success;
 }
 
-int ghl_initialize_Noble_entropy(
+ghl_error_codes_t ghl_initialize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -145,7 +145,7 @@ int ghl_initialize_Noble_entropy(
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
     utsq = fabs(utsq);
   } else if(utsq < 0.0 || utsq > 10.0) {
-    return 1;
+    return ghl_error_invalid_utsq;
   }
 
   const double Wsq = 1.0 + utsq;   // Lorentz factor squared
@@ -173,5 +173,5 @@ int ghl_initialize_Noble_entropy(
 
   *rho_ptr = rho0;
   *Z_ptr = w*Wsq;
-  return 0;
+  return ghl_success;
 }

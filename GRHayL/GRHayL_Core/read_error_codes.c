@@ -60,5 +60,14 @@ void ghl_read_error_codes(
     case ghl_error_table_neg_energy:
       ghl_abort("While interpolating temperature, found eps+energy_shift < 0.0. Interpolation cannot be performed.\n");
       break;
+    case ghl_error_invalid_utsq:
+      ghl_abort("While computing u^0 squared in Con2Prim, found an invalid value (<0 or >>1)");
+      break;
+    case ghl_error_invalid_Z:
+      ghl_abort("While computing Z in Con2Prim, found an invalid value (<0 or >>1)");
+      break;
+    case ghl_error_newman_invalid_discriminant:
+      ghl_abort("Found negative discriminant inside Newman1D Con2Prim");
+      break;
   }
 }

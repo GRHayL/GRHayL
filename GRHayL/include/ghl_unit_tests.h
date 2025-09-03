@@ -10,6 +10,10 @@
 #include "nrpyeos_tabulated.h"
 #include "nrpyeos_hybrid.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void ghl_test_compute_A_flux_with_B(
       const int dirlength,
       const int A_dir,
@@ -77,7 +81,7 @@ void ghl_test_compute_ccc_ADM(
       double *restrict sqrtg_Ax_interp,
       double *restrict sqrtg_Ay_interp,
       double *restrict sqrtg_Az_interp);
-    
+
 void ghl_test_compute_vvv_ADM(
       const int dirlength,
       const double *restrict lapse,
@@ -334,4 +338,9 @@ fopen_with_check(const char *filename, const char *mode) {
   if(!fp) ghl_error("Could not open file %s.\n", filename);
   return fp;
 }
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif // GHL_UNIT_TESTS_H_

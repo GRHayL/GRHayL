@@ -1,6 +1,10 @@
 #ifndef GHL_EOS_FUNCTIONS_H_
 #define GHL_EOS_FUNCTIONS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern ghl_error_codes_t (*ghl_compute_h_and_cs2)(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
@@ -317,5 +321,10 @@ extern double (*ghl_tabulated_compute_deps_dP_from_rho)(
 extern double (*ghl_tabulated_compute_dP_drho_from_rho)(
       const ghl_eos_parameters *restrict eos,
       const double rho );
+  
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // GHL_EOS_FUNCTIONS_H_

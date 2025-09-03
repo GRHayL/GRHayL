@@ -46,9 +46,11 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
   harm_aux_vars_struct harm_aux;
 
   // Calculate Z:
-  if( ghl_initialize_Noble(params, eos, ADM_metric, metric_aux, cons_undens,
-                           prims, &harm_aux, &gnr_out[0]) )
-    return 1;
+  ghl_error_codes_t error = ghl_initialize_Noble(
+        params, eos, ADM_metric, metric_aux, cons_undens,
+        prims, &harm_aux, &gnr_out[0]);
+  if(error)
+    return error;
 
   // To be consistent with entropy variants, unused argument 0.0 is needed
   const ghl_error_codes_t retval = ghl_general_newton_raphson(eos, &harm_aux, 1, 0.0, gnr_out, ghl_validate_1D, ghl_func_1D);
@@ -59,7 +61,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
   if(retval != 0) {
     return retval;
   } else if(Z <= 0. || Z > 1e20) {
-    return 4;
+    return ghl_error_invalid_Z;
   }
 
   // Calculate v^2:

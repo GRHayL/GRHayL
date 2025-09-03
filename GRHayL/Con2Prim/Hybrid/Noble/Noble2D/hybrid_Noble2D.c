@@ -46,9 +46,11 @@ ghl_error_codes_t ghl_hybrid_Noble2D(
   harm_aux_vars_struct harm_aux;
 
   // Calculate Z and vsq:
-  if( ghl_initialize_Noble(params, eos, ADM_metric, metric_aux, cons_undens,
-                           prims, &harm_aux, &gnr_out[0]) )
-    return 1;
+  ghl_error_codes_t error = ghl_initialize_Noble(
+        params, eos, ADM_metric, metric_aux, cons_undens,
+        prims, &harm_aux, &gnr_out[0]);
+  if(error)
+    return error;
 
   gnr_out[1] = fabs(ghl_vsq_calc(&harm_aux, gnr_out[0]));
   gnr_out[1] = (gnr_out[1] > 1.0) ? (1.0 - 1.e-15) : gnr_out[1];
@@ -62,7 +64,7 @@ ghl_error_codes_t ghl_hybrid_Noble2D(
   if(retval != 0) {
     return retval;
   } else if(Z <= 0. || Z > 1e20) {
-    return 4;
+    return ghl_error_invalid_Z;
   }
 
   // Calculate v^2:

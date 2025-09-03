@@ -3,6 +3,10 @@
 
 #include "ghl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Neutrino quantities
 typedef struct ghl_neutrino_luminosities {
   double nue, anue, nux;
@@ -13,6 +17,10 @@ typedef struct ghl_neutrino_opacities {
 } ghl_neutrino_opacities;
 
 typedef ghl_neutrino_opacities ghl_neutrino_optical_depths;
+
+#ifdef __cplusplus
+}
+#endif
 
 #include "nrpyleakage.h"
 

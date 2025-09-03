@@ -59,7 +59,7 @@ static ghl_error_codes_t ghl_newman_energy(
     double a = e + xprs + 0.5*B_squared;
 
     // Eq. (5.9) of Newman & Hamlin 2014
-    if(d > 4.0*a*a*a/27.0) return 1;
+    if(d > 4.0*a*a*a/27.0) return ghl_error_newman_invalid_discriminant;
 
     // phi = acos( sqrt(27d/4a^{3}) ) (eq. 5.10 in Newman & Hamlin 2014)
     double phi = acos( sqrt(27.0*d/(4.0*a*a*a)) );

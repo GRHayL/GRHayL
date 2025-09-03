@@ -22,6 +22,10 @@
           _indent_1(f), "", _indent_2(f), f,                                     \
           _indent_1(g), "", _indent_2(g), g);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static inline void ghl_debug_print_prims(
       const ghl_primitive_quantities *restrict p) {
 
@@ -47,6 +51,10 @@ static inline void ghl_debug_print_cons(
 ".------------------------.------------------------.------------------------.------------------------.------------------------.------------------------.------------------------.\n\n",
           c->tau, c->SD[0], c->SD[1], c->SD[2], c->rho, c->entropy, c->Y_e);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #define ghl_debug_print_primitives(p) {                                \
   fprintf(stderr, "DEBUG (Primitive Quantities) func: %s, line: %d\n", \

@@ -46,9 +46,11 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
   harm_aux_vars_struct harm_aux;
 
   double rho0, Z_last;
-  if( ghl_initialize_Noble_entropy(params, eos, ADM_metric, metric_aux,
-                                   cons_undens, prims, &harm_aux, &rho0, &Z_last) )
-    return 1;
+  ghl_error_codes_t error = ghl_initialize_Noble_entropy(
+        params, eos, ADM_metric, metric_aux, cons_undens,
+        prims, &harm_aux, &rho0, &Z_last);
+  if(error)
+    return error;
 
   // Make sure that Z is large enough so that v^2 < 1 :
   int i_increase = 0;
@@ -69,7 +71,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
   if(retval != 0) {
     return retval;
   } else if(Z <= 0. || Z > 1e20) {
-    return 4;
+    return ghl_error_invalid_Z;
   }
 
   const int n_iter = harm_aux.n_iter;

@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void ghl_info(const char *format, ...);
 
 void ghl_Warn_Error(
@@ -31,5 +35,9 @@ typedef enum  {
 
 #define ghl_Error(exit_code, ...) \
   ghl_Warn_Error("Error", exit_code, __FILE__, __LINE__, __func__, __VA_ARGS__)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GHL_IO_H_
