@@ -1,4 +1,4 @@
-#include "nrpyeos_tabulated.h"
+#include "ghl_nrpyeos_tabulated.h"
 
 #define munu_index(ir, it, iy) \
   (NRPyEOS_munu_key            \

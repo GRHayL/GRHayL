@@ -758,7 +758,7 @@ if [ $silent -eq 1 ]; then
     LINKEXE_MESSAGE="${TAB}${ALWAYS_SILENT}echo 'Linking executable \$@'"
     LINKLIB_MESSAGE="${TAB}${ALWAYS_SILENT}echo 'Linking GRHayL shared library'"
     CLEAN_MESSAGE="${TAB}${ALWAYS_SILENT}echo 'Cleaning up build files'"
-    REALCLEAN_MESSAGE="${TAB}${ALWAYS_SILENT}echo 'Cleaning up Makefile'"
+    REALCLEAN_MESSAGE="${TAB}${ALWAYS_SILENT}echo 'Cleaning up build directory and Makefile'"
 fi
 
 if [ "$tests" != "" ]; then
@@ -855,10 +855,11 @@ ${Makefile_datagen_targets}
 
 clean:
 ${CLEAN_MESSAGE}
-${TAB}${SILENT}rm -rf \$(BUILDDIR)
+${TAB}${SILENT}rm -rf \$(OBJ) \$(TEXES) \$(TOBJS) \$(BUILDLIBSO) \$(BUILDLIBSOV)
 
 realclean: clean
 ${REALCLEAN_MESSAGE}
+${TAB}${SILENT}rm -rf \$(BUILDDIR)
 ${TAB}${SILENT}rm -f Makefile
 
 install: grhayl
