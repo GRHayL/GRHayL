@@ -18,7 +18,6 @@ ignore:
   - "Unit_Tests"
   - "GRHayL/include/ghl_unit_tests.h"
   - "GRHayL/include/ghl_debug.h"
-  - "GRHayL/Con2Prim/toms748.c"
 
 component_management:
   default_rules:  # default rules that will be inherited by all components

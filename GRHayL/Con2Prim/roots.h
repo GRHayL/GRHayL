@@ -152,21 +152,4 @@ ghl_error_codes_t ghl_brent(
       double b,
       roots_params *restrict r);
 
-ghl_error_codes_t ghl_toms748(
-      double f(
-            const double x,
-            const ghl_parameters *restrict params,
-            const ghl_eos_parameters *restrict eos,
-            const ghl_conservative_quantities *restrict cons_undens,
-            fparams_struct *restrict fparams,
-            ghl_primitive_quantities *restrict prims),
-      const ghl_parameters *restrict params,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_conservative_quantities *restrict cons_undens,
-      fparams_struct *restrict fparams,
-      ghl_primitive_quantities *restrict prims,
-      double a,
-      double b,
-      roots_params *restrict r);
-
 #endif // ROOTS_H_
