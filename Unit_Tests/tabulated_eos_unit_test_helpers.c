@@ -1,4 +1,4 @@
-#include "nrpyeos_tabulated.h"
+#include "ghl_nrpyeos_tabulated.h"
 
 double get_table_quantity(
       const int which_var,

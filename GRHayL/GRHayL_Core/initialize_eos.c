@@ -1,6 +1,6 @@
 #include "ghl_con2prim.h"
-#include "nrpyeos_hybrid.h"
-#include "nrpyeos_tabulated.h"
+#include "ghl_nrpyeos_hybrid.h"
+#include "ghl_nrpyeos_tabulated.h"
 #include "ghl_eos_functions_declaration.h"
 
 #define init_common_eos_quantities         \

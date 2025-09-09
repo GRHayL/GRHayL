@@ -1,4 +1,4 @@
-#include "nrpyeos_hybrid.h"
+#include "ghl_nrpyeos_hybrid.h"
 
 /*
  * Function     : NRPyEOS_compute_P_cold()

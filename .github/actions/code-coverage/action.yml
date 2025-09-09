@@ -24,7 +24,7 @@ runs:
     - if: runner.os == 'Linux' && inputs.compiler == 'clang'
       run: |
         llvm-profdata-14 merge -sparse default.profraw -o coverage.profdata
-        llvm-cov-14 export ./build/lib/libgrhayl.so -instr-profile=coverage.profdata -format=lcov > coverage.lcov
+        llvm-cov-14 export ./build/lib/libghl.so -instr-profile=coverage.profdata -format=lcov > coverage.lcov
       shell: bash
 
     # Try Intel's codecov tool? Not sure if this is compatible with gcovr

@@ -1,4 +1,4 @@
-#include "nrpyeos_tabulated.h"
+#include "ghl_nrpyeos_tabulated.h"
 
 ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,

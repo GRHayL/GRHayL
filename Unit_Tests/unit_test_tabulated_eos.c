@@ -1,4 +1,4 @@
-#include "nrpyeos_tabulated.h"
+#include "ghl_nrpyeos_tabulated.h"
 #include "ghl_unit_tests.h"
 
 /*
