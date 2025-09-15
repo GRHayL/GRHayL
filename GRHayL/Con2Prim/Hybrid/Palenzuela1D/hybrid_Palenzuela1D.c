@@ -69,12 +69,13 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
 
   double SU[3], B_squared, S_squared, BdotS;
   compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims, SU, &B_squared, &S_squared, &BdotS);
+  const double tau = MAX(cons_undens->tau, eos->tau_atm);
 
   // Set specific quantities for this routine (Eq. A7 of [1])
   fparams_struct fparams;
   const double invD           = 1.0/cons_undens->rho;
   fparams.compute_rho_P_eps_W = compute_rho_P_eps_W;
-  fparams.q                   = cons_undens->tau * invD;
+  fparams.q                   = tau * invD;
   fparams.r                   = S_squared * invD * invD;
   fparams.s                   = B_squared * invD;
   fparams.t                   = BdotS/pow(cons_undens->rho, 1.5);
