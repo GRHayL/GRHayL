@@ -1,4 +1,4 @@
-#include "nrpyeos_tabulated.h"
+#include "ghl_nrpyeos_tabulated.h"
 
 void NRPyEOS_initialize_tabulated_functions() {
 #ifndef GRHAYL_USE_HDF5

@@ -22,6 +22,6 @@ typedef ghl_neutrino_opacities ghl_neutrino_optical_depths;
 }
 #endif
 
-#include "nrpyleakage.h"
+#include "ghl_nrpyleakage.h"
 
 #endif // GHL_RADIATION_H_
