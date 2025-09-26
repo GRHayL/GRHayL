@@ -1,10 +1,13 @@
 #ifndef GHL_METRIC_HELPERS_H_
 #define GHL_METRIC_HELPERS_H_
 
+#include "ghl.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+__device__
 static inline void ghl_raise_lower_vector_4D(
       const double g4[][4],
       const double vec[4],
@@ -23,6 +26,7 @@ static inline void ghl_raise_lower_vector_4D(
              + g4[2][3] * vec[2] + g4[3][3] * vec[3];
 }
 
+__device__
 static inline void ghl_raise_lower_vector_3D(
       const double gamma[][3],
       const double vec[3],
@@ -41,6 +45,7 @@ static inline void ghl_raise_lower_vector_3D(
              + gamma[2][2] * vec[2];
 }
 
+__device__
 static inline double ghl_compute_vec2_from_vec4D(
       const double g4[][4],
       const double vec[4]) {
@@ -57,6 +62,7 @@ static inline double ghl_compute_vec2_from_vec4D(
                  g4[2][3] * vec[2] * vec[3]));
 }
 
+__device__
 static inline double ghl_compute_vec2_from_vec3D(
       const double gamma[][3],
       const double vec[3]) {

@@ -20,7 +20,7 @@ typedef struct _harm_auxiliary_vars_ {
 /**************************************************
   The following functions assume a Gamma-law EOS:
 ***************************************************/
-
+GHL_DEVICE
 static inline void ghl_compute_func_auxiliaries(
       const ghl_eos_parameters *restrict eos,
       const double Z,
@@ -93,6 +93,7 @@ static inline void ghl_compute_func_auxiliaries(
    pressure as a function of rho0 and w = rho0 + u + p
    this is used by primtoU and Utoprim_1D
 */
+GHL_DEVICE
 static inline double ghl_pressure_rho0_w(
       const ghl_eos_parameters *restrict eos,
       const double rho0,
@@ -118,6 +119,7 @@ static inline double ghl_pressure_rho0_w(
             Z = \gamma^2 w
 
 ****************************************************************************/
+GHL_DEVICE
 static inline double ghl_vsq_calc(
       const harm_aux_vars_struct *restrict harm_aux,
       const double Z) {
@@ -127,6 +129,7 @@ static inline double ghl_vsq_calc(
   return(  ( Zsq * harm_aux->Qtsq  + harm_aux->QdotBsq * (harm_aux->Bsq + 2.*Z)) / (Zsq*Xsq) );
 }
 
+GHL_DEVICE
 ghl_error_codes_t ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
@@ -147,6 +150,7 @@ ghl_error_codes_t ghl_general_newton_raphson(
             double *restrict,
             double *restrict));
 
+GHL_DEVICE
 void ghl_func_Z(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
@@ -156,6 +160,7 @@ void ghl_func_Z(
       double *restrict f,
       double *restrict df);
 
+GHL_DEVICE
 void ghl_func_rho(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
@@ -165,6 +170,7 @@ void ghl_func_rho(
       double *restrict f,
       double *restrict df);
 
+GHL_DEVICE
 void ghl_func_rho2(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
@@ -174,6 +180,7 @@ void ghl_func_rho2(
       double *restrict f,
       double *restrict df);
 
+GHL_DEVICE
 void ghl_func_1D(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
@@ -183,6 +190,7 @@ void ghl_func_1D(
       double *restrict f,
       double *restrict df);
 
+GHL_DEVICE
 void ghl_func_2D(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
@@ -192,6 +200,7 @@ void ghl_func_2D(
       double *restrict f,
       double *restrict df);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_initialize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -202,6 +211,7 @@ ghl_error_codes_t ghl_initialize_Noble(
       harm_aux_vars_struct *restrict harm_aux,
       double *restrict Z_ptr);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_initialize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -213,6 +223,7 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
       double *restrict rho_ptr,
       double *restrict Z_ptr);
 
+GHL_DEVICE
 bool ghl_finalize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -224,6 +235,7 @@ bool ghl_finalize_Noble(
       const double vsq,
       ghl_primitive_quantities *restrict prims);
 
+GHL_DEVICE
 bool ghl_finalize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -235,18 +247,21 @@ bool ghl_finalize_Noble_entropy(
       const double W,
       ghl_primitive_quantities *restrict prims);
 
+GHL_DEVICE
 void ghl_validate_1D(
       const harm_aux_vars_struct *restrict harm_aux,
       const double dx[1],
       const double x_old[1],
       double x[1]);
 
+GHL_DEVICE
 void ghl_validate_1D_entropy(
       const harm_aux_vars_struct *restrict harm_aux,
       const double dx[1],
       const double x_old[1],
       double x[1]);
 
+GHL_DEVICE
 void ghl_validate_2D(
       const harm_aux_vars_struct *restrict harm_aux,
       const double dx[2],

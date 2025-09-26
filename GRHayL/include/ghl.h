@@ -23,6 +23,15 @@
 #define GRHAYL_USE_HDF5
 #endif
 
+#ifdef __CUDACC__
+#  define GHL_HOST __host__
+#  define GHL_DEVICE __device__
+#else
+#  define GHL_HOST
+#  define GHL_DEVICE
+#endif
+#define GHL_HOST_DEVICE GHL_HOST GHL_DEVICE
+
 #ifdef __cplusplus
 #ifndef restrict
 #define restrict __restrict__
@@ -53,6 +62,7 @@ typedef enum {
   ghl_error_invalid_utsq,
   ghl_error_invalid_Z,
   ghl_error_newman_invalid_discriminant,
+  ghl_error_newton_raphson_ndim_too_large,
 } ghl_error_codes_t;
 
 typedef enum {
@@ -240,11 +250,11 @@ typedef struct ghl_eos_parameters {
   int N_rho, N_T, N_Ye;
 
   // Tabulated quantities
-  double *restrict table_all;
-  double *restrict table_logrho;
-  double *restrict table_logT;
-  double *restrict table_Y_e;
-  double *restrict table_eps;
+  double *table_all;
+  double *table_logrho;
+  double *table_logT;
+  double *table_Y_e;
+  double *table_eps;
 
   // Table bounds
   double table_rho_min, table_rho_max;
@@ -270,11 +280,14 @@ typedef struct ghl_eos_parameters {
 
 } ghl_eos_parameters;
 
+GHL_HOST
 const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 
+GHL_DEVICE
 void ghl_initialize_eos_functions(
     const ghl_eos_t eos_type);
 
+GHL_DEVICE
 void ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
@@ -285,6 +298,7 @@ void ghl_initialize_simple_eos(
       const double Gamma,
       ghl_eos_parameters *restrict eos);
 
+GHL_DEVICE
 void ghl_initialize_hybrid_eos(
       const double rho_atm,
       const double rho_min,
@@ -296,6 +310,7 @@ void ghl_initialize_hybrid_eos(
       const double Gamma_th,
       ghl_eos_parameters *restrict eos);
 
+GHL_HOST
 void ghl_initialize_tabulated_eos(
       const char *table_path,
       const double rho_atm,
@@ -309,6 +324,7 @@ void ghl_initialize_tabulated_eos(
       const double T_max,
       ghl_eos_parameters *restrict eos);
 
+GHL_DEVICE
 void ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
@@ -319,6 +335,7 @@ void ghl_initialize_simple_eos_functions_and_params(
       const double Gamma,
       ghl_eos_parameters *restrict eos);
 
+GHL_DEVICE
 void ghl_initialize_hybrid_eos_functions_and_params(
       const double rho_atm,
       const double rho_min,
@@ -330,6 +347,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
       const double Gamma_th,
       ghl_eos_parameters *restrict eos);
 
+GHL_HOST
 void ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
       const double rho_atm,
@@ -344,6 +362,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
       ghl_eos_parameters *restrict eos);
 
 //---- Basic struct packing/unpacking functions ----
+GHL_DEVICE
 void ghl_initialize_params(
       const ghl_con2prim_method_t main_routine,
       const ghl_con2prim_method_t backup_routine[3],
@@ -355,6 +374,7 @@ void ghl_initialize_params(
       const double Lorenz_damping_factor,
       ghl_parameters *restrict params);
 
+GHL_DEVICE
 void ghl_initialize_primitives(
       const double rho,
       const double press,
@@ -370,6 +390,7 @@ void ghl_initialize_primitives(
       const double temp,
       ghl_primitive_quantities *restrict prims);
 
+GHL_DEVICE
 void ghl_initialize_conservatives(
       const double rho,
       const double tau,
@@ -380,6 +401,7 @@ void ghl_initialize_conservatives(
       const double Y_e,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_return_primitives(
       const ghl_primitive_quantities *restrict prims,
       double *restrict rho,
@@ -395,6 +417,7 @@ void ghl_return_primitives(
       double *restrict Y_e,
       double *restrict temp);
 
+GHL_DEVICE
 void ghl_return_conservatives(
       const ghl_conservative_quantities *restrict cons,
       double *restrict rho,
@@ -405,6 +428,7 @@ void ghl_return_conservatives(
       double *restrict entropy,
       double *restrict Y_e);
 
+GHL_DEVICE
 void ghl_initialize_metric(
       const double lapse,
       const double betax,
@@ -418,10 +442,12 @@ void ghl_initialize_metric(
       const double gzz,
       ghl_metric_quantities *restrict metric);
 
+GHL_DEVICE
 void ghl_compute_ADM_auxiliaries(
       const ghl_metric_quantities *restrict ADM_metric,
       ghl_ADM_aux_quantities *restrict metric_aux);
 
+GHL_DEVICE
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax,
@@ -435,6 +461,7 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double gzz,
       ghl_metric_quantities *restrict ADM_metric);
 
+GHL_DEVICE
 void ghl_initialize_extrinsic_curvature(
       const double Kxx,
       const double Kxy,
@@ -444,6 +471,7 @@ void ghl_initialize_extrinsic_curvature(
       const double Kzz,
       ghl_extrinsic_curvature *restrict curv);
 
+GHL_DEVICE
 void ghl_initialize_stress_energy(
       const double Ttt,
       const double Ttx,
@@ -457,6 +485,7 @@ void ghl_initialize_stress_energy(
       const double Tzz,
       ghl_stress_energy *restrict Tmunu);
 
+GHL_DEVICE
 void ghl_return_stress_energy(
       const ghl_stress_energy *restrict Tmunu,
       double *restrict Ttt,
@@ -470,24 +499,28 @@ void ghl_return_stress_energy(
       double *restrict Tyz,
       double *restrict Tzz);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,
       ghl_primitive_quantities *restrict prims,
       bool *restrict speed_limited);
 
+GHL_DEVICE
 void ghl_compute_TDNmunu(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_primitive_quantities *restrict prims,
       ghl_stress_energy *restrict Tmunu);
 
+GHL_DEVICE
 void ghl_compute_TUPmunu(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_primitive_quantities *restrict prims,
       ghl_stress_energy *restrict Tmunu);
 
+GHL_DEVICE
 void ghl_compute_smallb_and_b2(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_primitive_quantities *restrict prims,
@@ -495,8 +528,8 @@ void ghl_compute_smallb_and_b2(
       double smallb[4],
       double *restrict smallb2);
 
-void ghl_read_error_codes(
-      const ghl_error_codes_t error);
+GHL_DEVICE
+void ghl_read_error_codes(const ghl_error_codes_t error);
 
 #ifdef __cplusplus
 }

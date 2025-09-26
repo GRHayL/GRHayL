@@ -665,6 +665,11 @@ parse_mcd()
     done
 }
 
+case ${CC} in
+  *nvcc*) FPIC_FLAG="--compiler-options -fPIC"; FILETYPE_FLAG=" -x cu -rdc=true";;
+  *) FPIC_FLAG="-fPIC"; FILETYPE_FLAG="";;
+esac
+
 printf "Creating build directory tree (build directory: $builddir):\n"
 count=0
 srcs=""
@@ -814,7 +819,7 @@ BUILDLIBSOV  = \$(BUILDDIR)/lib/\$(LIBSOV)
 BUILDLIBSO   = \$(BUILDDIR)/lib/\$(LIBSO)
 PREFIXLIBSOV = \$(PREFIX)/lib/\$(LIBSOV)
 PREFIXLIBSO  = \$(PREFIX)/lib/\$(LIBSO)
-CC           = ${CC}
+CC           = ${CC}${FILETYPE_FLAG}
 CFLAGS       = ${cflags} -I./GRHayL/include
 CCOMPILE     = \$(CC) \$(CFLAGS)
 CCOMPILEOMP  = \$(CC) \$(CFLAGS)${ompcflag}
@@ -844,11 +849,11 @@ ${TAB}${SILENT}rm -f \$(BUILDLIBSO) && ln -s \$(LIBSOV) \$(BUILDLIBSO)
 
 \$(BUILDLIBSOV): \$(OBJ)
 ${LINKLIB_MESSAGE}
-${TAB}${SILENT}\$(CCOMPILE) -fPIC -shared \$(OBJ) -o \$@ \$(LD_FLAGS)
+${TAB}${SILENT}\$(CCOMPILE) ${FPIC_FLAG} -shared \$(OBJ) -o \$@ \$(LD_FLAGS)
 
 \$(OBJ): \$(BUILDDIR)/%.o : GRHayL/%.c \$(INC)
 ${COMPILE_MESSAGE}
-${TAB}${SILENT}\$(CCOMPILE) -fPIC -c \$< -o \$@
+${TAB}${SILENT}\$(CCOMPILE) ${FPIC_FLAG} -c \$< -o \$@
 
 ${Makefile_tests_targets}
 ${Makefile_datagen_targets}

@@ -1,5 +1,6 @@
 #include "../../../utils_Noble.h"
 
+GHL_DEVICE
 void ghl_func_2D(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,

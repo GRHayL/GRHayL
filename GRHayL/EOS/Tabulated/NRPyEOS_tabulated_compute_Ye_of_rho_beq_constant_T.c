@@ -4,6 +4,7 @@
   (NRPyEOS_munu_key            \
    + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
 
+GHL_DEVICE
 static double find_Ye_st_munu_is_zero(
       const int n,
       const double *restrict Ye,
@@ -31,6 +32,7 @@ static double find_Ye_st_munu_is_zero(
   return (y0 * x1 - y1 * x0) / (y0 - y1);
 }
 
+GHL_DEVICE
 static int find_left_index_uniform_array(
       const int nx,
       const double *restrict x_arr,
@@ -39,8 +41,11 @@ static int find_left_index_uniform_array(
   return (x - x_arr[0]) / (x_arr[1] - x_arr[0]) + 0.5;
 }
 
-static int
-find_left_index_bisection(const int nx, const double *restrict x_arr, const double x) {
+GHL_DEVICE
+static int find_left_index_bisection(
+      const int nx,
+      const double *restrict x_arr,
+      const double x) {
 
   int ia = 0;
   double a = x_arr[ia] - x;
@@ -55,7 +60,7 @@ find_left_index_bisection(const int nx, const double *restrict x_arr, const doub
   }
 
   if(a * b >= 0) {
-    ghl_error("Interval [%g, %g] does not bracket the root %g\n", a, b, x);
+    return ghl_error_root_not_bracketed;
   }
 
   do {
@@ -76,12 +81,13 @@ find_left_index_bisection(const int nx, const double *restrict x_arr, const doub
   } while(ib - ia > 1);
 
   if(a > 0 || b < 0) {
-    ghl_error("Bisection failed: %g not in [%g, %g]\n", x, a, b);
+    return ghl_error_root_not_bracketed;
   }
   return ia;
 }
 
 // This is a simple linear interpolation (linterp) function.
+GHL_DEVICE
 static double linterp(
       const int nx,
       const double *restrict x_arr,
@@ -90,7 +96,7 @@ static double linterp(
       int (*find_left_index)(const int, const double *restrict, const double)) {
 
   if(x < x_arr[0] || x > x_arr[nx - 1]) {
-    ghl_error("Point (%e) out of array bounds [%e, %e]\n", x, x_arr[0], x_arr[nx - 1]);
+    return ghl_error_root_not_bracketed;
   }
 
   // Set up basic quantities for the interpolation
@@ -106,6 +112,7 @@ static double linterp(
 }
 
 // This is a simple discrete derivative.
+GHL_DEVICE
 static double discrete_derivative(
       const int nx,
       const double *restrict x_arr,
@@ -130,6 +137,7 @@ static double discrete_derivative(
 }
 
 // Compute Ye(logrho) using linear interpolation
+GHL_DEVICE
 double NRPyEOS_tabulated_compute_Ye_from_rho(
       const ghl_eos_parameters *restrict eos,
       const double rho) {
@@ -140,6 +148,7 @@ double NRPyEOS_tabulated_compute_Ye_from_rho(
 }
 
 // Interpolate logP(logrho) using linear interpolation
+GHL_DEVICE
 double NRPyEOS_tabulated_compute_P_from_rho(
       const ghl_eos_parameters *restrict eos,
       const double rho) {
@@ -150,6 +159,7 @@ double NRPyEOS_tabulated_compute_P_from_rho(
 }
 
 // Interpolate logrho(logP) using linear interpolation
+GHL_DEVICE
 double NRPyEOS_tabulated_compute_rho_from_P(
       const ghl_eos_parameters *restrict eos,
       const double P) {
@@ -160,6 +170,7 @@ double NRPyEOS_tabulated_compute_rho_from_P(
 }
 
 // Interpolate logeps(logrho) using linear interpolation
+GHL_DEVICE
 double NRPyEOS_tabulated_compute_eps_from_rho(
       const ghl_eos_parameters *restrict eos,
       const double rho) {
@@ -170,6 +181,7 @@ double NRPyEOS_tabulated_compute_eps_from_rho(
          - eos->energy_shift;
 }
 
+GHL_DEVICE
 void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos) {
@@ -192,6 +204,7 @@ void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
   free(munu_of_Ye);
 }
 
+GHL_DEVICE
 void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos) {
@@ -222,6 +235,7 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
   }
 }
 
+GHL_HOST_DEVICE
 void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos) {
   if(eos->Ye_of_lr) {
     free(eos->Ye_of_lr);
@@ -241,6 +255,7 @@ void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos) {
   }
 }
 
+GHL_DEVICE
 double NRPyEOS_tabulated_compute_dP_drho_from_rho(
       const ghl_eos_parameters *restrict eos,
       const double rho) {
@@ -256,6 +271,7 @@ double NRPyEOS_tabulated_compute_dP_drho_from_rho(
   return dP_drho;
 }
 
+GHL_DEVICE
 double NRPyEOS_tabulated_compute_deps_dP_from_rho(
       const ghl_eos_parameters *restrict eos,
       const double rho) {

@@ -6,6 +6,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_metric
 */
 
+GHL_HOST_DEVICE
 void ghl_initialize_metric(
       const double lapse,
       const double betax,

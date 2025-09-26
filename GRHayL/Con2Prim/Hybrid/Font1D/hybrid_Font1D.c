@@ -1,5 +1,6 @@
 #include "ghl_con2prim.h"
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol, const double W_in,
@@ -13,6 +14,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  * Description   : Determines rhob using the Font et al prescription
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_Font1D
 */
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Font1D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

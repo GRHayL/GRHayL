@@ -1,5 +1,6 @@
 #include "ghl_nrpyeos_tabulated.h"
 
+GHL_DEVICE
 ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,

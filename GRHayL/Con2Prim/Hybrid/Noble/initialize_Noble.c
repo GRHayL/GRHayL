@@ -1,5 +1,6 @@
 #include "../../utils_Noble.h"
 
+GHL_DEVICE
 ghl_error_codes_t ghl_initialize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -85,6 +86,7 @@ ghl_error_codes_t ghl_initialize_Noble(
   return ghl_success;
 }
 
+GHL_DEVICE
 ghl_error_codes_t ghl_initialize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

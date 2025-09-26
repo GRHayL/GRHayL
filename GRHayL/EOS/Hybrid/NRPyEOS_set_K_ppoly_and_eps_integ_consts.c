@@ -7,7 +7,7 @@
  *                usually aliased as ghl_hybrid_set_K_ppoly_and_eps_integ_consts
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_set_K_ppoly_and_eps_integ_consts
 */
-
+GHL_DEVICE
 void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {
 
   /* When neos = 1, we will only need the value K_ppoly[0] and eps_integ_const[0].

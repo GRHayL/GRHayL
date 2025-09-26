@@ -41,11 +41,11 @@ typedef struct ghl_palenzuela_quantities {
 } ghl_palenzuela_quantities;
 
 //--------- Initialization routines ----------------
-
+GHL_DEVICE
 void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
-
+GHL_DEVICE
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -54,17 +54,20 @@ void ghl_apply_conservative_limits(
       ghl_conservative_quantities *restrict cons,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 void ghl_undensitize_conservatives(
       const double psi6,
       const ghl_conservative_quantities *restrict cons,
       ghl_conservative_quantities *restrict cons_undens);
 
+GHL_DEVICE
 void ghl_guess_primitives(
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -72,6 +75,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       ghl_primitive_quantities *restrict prims,
       bool *restrict speed_limited);
 
+GHL_DEVICE
 void ghl_compute_conservs_and_Tmunu(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,
@@ -79,6 +83,7 @@ void ghl_compute_conservs_and_Tmunu(
       ghl_conservative_quantities *restrict cons,
       ghl_stress_energy *restrict Tmunu);
 
+GHL_DEVICE
 void ghl_compute_conservs(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,
@@ -86,7 +91,7 @@ void ghl_compute_conservs(
       ghl_conservative_quantities *restrict cons);
 
 //-------------- Con2Prim routines -----------------
-
+GHL_DEVICE
 ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -96,6 +101,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -105,6 +111,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_con2prim_hybrid_select_method(
       const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
@@ -115,6 +122,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics );
 
+GHL_DEVICE
 ghl_error_codes_t ghl_con2prim_tabulated_select_method(
       const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
@@ -125,6 +133,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics );
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Noble2D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -134,6 +143,7 @@ ghl_error_codes_t ghl_hybrid_Noble2D(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Noble1D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -143,6 +153,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -152,6 +163,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -161,6 +173,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Palenzuela1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -170,6 +183,7 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D_energy(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Palenzuela1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -179,6 +193,7 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D_entropy(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Font1D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -188,6 +203,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Palenzuela1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -197,6 +213,7 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D_energy(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Palenzuela1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -206,6 +223,7 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D_entropy(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Newman1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -215,6 +233,7 @@ ghl_error_codes_t ghl_tabulated_Newman1D_energy(
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -225,13 +244,14 @@ ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
       ghl_con2prim_diagnostics *restrict diagnostics);
 
 //------------ Auxiliary Functions -----------------
-
+GHL_DEVICE
 bool ghl_limit_utilde_and_compute_v(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict metric,
       double utU[3],
       ghl_primitive_quantities *restrict prims);
 
+GHL_DEVICE
 extern ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

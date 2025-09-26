@@ -5,7 +5,7 @@
  * Description  : Computes the conservatives and T_munu from the given primitives
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_conservs_and_Tmunu
 */
-
+GHL_DEVICE
 void ghl_compute_conservs_and_Tmunu(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,

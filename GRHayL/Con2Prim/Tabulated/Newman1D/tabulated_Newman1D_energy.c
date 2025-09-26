@@ -1,5 +1,6 @@
 #include "../../utils_Palenzuela1D.h"
 
+GHL_DEVICE
 static ghl_error_codes_t ghl_newman_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -140,6 +141,7 @@ static ghl_error_codes_t ghl_newman_energy(
   return ghl_success;
 }
 
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Newman1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -164,7 +166,7 @@ ghl_error_codes_t ghl_tabulated_Newman1D_energy(
   if(error) {
     prims->temperature = eos->T_min;
     error = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
-			      cons_undens, prims, tol_x, diagnostics);
+            cons_undens, prims, tol_x, diagnostics);
   }
   return error;
 }

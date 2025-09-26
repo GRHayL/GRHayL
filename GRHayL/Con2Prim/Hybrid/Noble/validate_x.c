@@ -1,5 +1,6 @@
 #include "../../utils_Noble.h"
 
+GHL_DEVICE
 void ghl_validate_1D(
       const harm_aux_vars_struct *restrict harm_aux,
       const double dx[1],
@@ -19,6 +20,7 @@ void ghl_validate_1D(
   x[0] = fabs(x[0]);
 }
 
+GHL_DEVICE
 void ghl_validate_1D_entropy(
       const harm_aux_vars_struct *restrict harm_aux,
       const double dx[1],
@@ -28,6 +30,7 @@ void ghl_validate_1D_entropy(
   x[0] = fabs(x[0]);
 }
 
+GHL_DEVICE
 void ghl_validate_2D(
       const harm_aux_vars_struct *restrict harm_aux,
       const double dx[2],

@@ -6,7 +6,7 @@
  *                usually aliased as ghl_hybrid_compute_enthalpy_and_cs2
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_enthalpy_and_cs2
 */
-
+GHL_DEVICE
 ghl_error_codes_t NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,

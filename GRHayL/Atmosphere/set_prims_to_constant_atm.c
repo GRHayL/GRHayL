@@ -7,6 +7,7 @@
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_set_prims_to_constant_atm
 */
 
+GHL_DEVICE
 void ghl_set_prims_to_constant_atm(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims) {

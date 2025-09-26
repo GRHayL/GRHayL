@@ -2,11 +2,11 @@
 
 /*
  * Function     : NRPyEOS_hybrid_compute_epsilon()
- * Description  : Computes epsilon from rho and P; usually aliased as 
+ * Description  : Computes epsilon from rho and P; usually aliased as
  *                ghl_hybrid_compute_epsilon
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_epsilon
 */
-
+GHL_DEVICE
 double NRPyEOS_hybrid_compute_epsilon(
       const ghl_eos_parameters *restrict eos,
       const double rho,

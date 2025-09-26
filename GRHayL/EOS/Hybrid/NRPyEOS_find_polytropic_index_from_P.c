@@ -5,7 +5,7 @@
  * Description  : For a given value of pressure, find the appropriate polytropic index;
  *                usually aliased as ghl_hybrid_find_polytropic_index
 */
-
+GHL_DEVICE
 int NRPyEOS_find_polytropic_index_from_P(
     const ghl_eos_parameters *restrict eos,
     const double P_in) {

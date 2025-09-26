@@ -1,11 +1,12 @@
 #include "ghl_nrpyeos_tabulated.h"
 
+GHL_DEVICE
 void NRPyEOS_initialize_tabulated_functions() {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
 #else
   // clang-format off
-  ghl_tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;
+  // ghl_tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;
   ghl_tabulated_free_memory                            = &NRPyEOS_free_memory;
   ghl_tabulated_compute_P_from_T                       = &NRPyEOS_P_from_rho_Ye_T;
   ghl_tabulated_compute_eps_from_T                     = &NRPyEOS_eps_from_rho_Ye_T;

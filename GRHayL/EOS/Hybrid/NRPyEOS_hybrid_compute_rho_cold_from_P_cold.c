@@ -6,7 +6,7 @@
  *                ghl_hybrid_compute_rho_cold_from_P_cold
  * Documentation:
 */
-
+GHL_DEVICE
 double NRPyEOS_hybrid_compute_rho_cold_from_P_cold(
       const ghl_eos_parameters *restrict eos,
       const double P_in) {

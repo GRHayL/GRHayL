@@ -14,6 +14,7 @@
         df    = -2*f;  (on output)
          n    = dimension of x[];
 *********************************************************************************/
+GHL_DEVICE
 void ghl_func_Z(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,

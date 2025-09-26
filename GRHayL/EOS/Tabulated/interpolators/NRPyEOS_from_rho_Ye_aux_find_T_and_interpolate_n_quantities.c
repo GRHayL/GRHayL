@@ -17,7 +17,7 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
 
   // This function will interpolate n table quantities from
   // (rho,Ye,aux). It replaces EOS_Omni calls with keytemp != 1
-  if(n > NRPyEOS_ntablekeys) 
+  if(n > NRPyEOS_ntablekeys)
     return ghl_error_exceed_table_vars;
 
   // Check table bounds for input variables
@@ -40,7 +40,7 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
     // Compute eps+eps0
     aux += eos->energy_shift;
     // At this point, aux *must* be positive. If not, error out.
-    if(aux < 0.0) 
+    if(aux < 0.0)
       return ghl_error_table_neg_energy;
 
     // Compute log(eps+eps0)

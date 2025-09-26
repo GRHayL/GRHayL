@@ -1,5 +1,8 @@
 #include "../../utils_Noble.h"
 
+#define NDIM_MAX 5
+
+GHL_DEVICE
 ghl_error_codes_t ghl_general_newton_raphson(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,
@@ -20,7 +23,11 @@ ghl_error_codes_t ghl_general_newton_raphson(
             double *restrict,
             double *restrict)) {
 
-  double dx[ndim], x_old[ndim];
+  if(ndim > NDIM_MAX) {
+    return ghl_error_newton_raphson_ndim_too_large;
+  }
+
+  double dx[NDIM_MAX], x_old[NDIM_MAX];
 
   // Initialize various parameters and variables:
   double errx = 1.0;

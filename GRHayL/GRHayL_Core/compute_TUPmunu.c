@@ -6,6 +6,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_TUPmunu
 */
 
+GHL_HOST_DEVICE
 void ghl_compute_TUPmunu(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,

@@ -1,5 +1,6 @@
 #include "ghl_con2prim.h"
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol,

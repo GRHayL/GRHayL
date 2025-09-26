@@ -7,7 +7,7 @@
  *                usually aliased as ghl_hybrid_get_K_and_Gamma
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_get_K_and_Gamma
 */
-
+GHL_DEVICE
 void NRPyEOS_get_K_and_Gamma(
       const ghl_eos_parameters *restrict eos,
       const double rho_in,

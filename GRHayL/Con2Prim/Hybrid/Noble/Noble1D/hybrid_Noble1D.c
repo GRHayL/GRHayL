@@ -11,7 +11,7 @@
 ******************************* HARM License ***************************************
 ************************************************************************************
 
-    Copyright 2005 Scott C. Noble, Charles F. Gammie, 
+    Copyright 2005 Scott C. Noble, Charles F. Gammie,
                    Jonathan C. McKinney, and Luca Del Zanna
 
     This file is part of PVS-GRMHD.
@@ -31,7 +31,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 ***********************************************************************************/
-
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Noble1D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

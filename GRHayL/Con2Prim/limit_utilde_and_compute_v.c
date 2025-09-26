@@ -6,6 +6,7 @@
 
 //Now that we have found some solution, we first limit velocity:
 //FIXME: Probably want to use exactly the same velocity limiter function here as in mhdflux.C
+GHL_DEVICE
 bool ghl_limit_utilde_and_compute_v(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,

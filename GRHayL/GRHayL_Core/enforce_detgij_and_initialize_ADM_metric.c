@@ -1,5 +1,6 @@
 #include "ghl.h"
 
+GHL_HOST_DEVICE
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax,

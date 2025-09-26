@@ -76,7 +76,7 @@ typedef struct roots_params {
  *
  * Returns    : Nothing.
  */
-static inline void
+GHL_DEVICE static inline void
 roots_info(const roots_params *restrict r) {
 
   // Step 1: Print basic message to the user
@@ -103,7 +103,7 @@ roots_info(const roots_params *restrict r) {
  *
  * Returns    : Nothing.
  */
-static inline void
+GHL_DEVICE static inline void
 swap(
     double *restrict a,
     double *restrict b) {
@@ -126,7 +126,7 @@ swap(
  *
  * Returns    : +1 if x>=0, -1 otherwise.
  */
-static inline int
+GHL_DEVICE static inline int
 sign(const double x) {
 
   return (x>0) - (x<0);
@@ -135,6 +135,7 @@ sign(const double x) {
 /*
  * Function prototypes
  */
+GHL_DEVICE
 ghl_error_codes_t ghl_brent(
       double f(
             const double x,

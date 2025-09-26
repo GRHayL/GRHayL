@@ -6,7 +6,7 @@
  *                usually aliased as ghl_hybrid_find_polytropic_index
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_find_polytropic_index
 */
-
+GHL_DEVICE
 int NRPyEOS_find_polytropic_index(
       const ghl_eos_parameters *restrict eos,
       const double rho_in) {

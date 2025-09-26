@@ -21,6 +21,7 @@
  *            : [2] Siegel et al. (2018) arXiv:1712.07538
  *            : [3] Werneck et al. (2023) arXiv:2208.14487
  */
+GHL_DEVICE
 static void
 compute_rho_P_eps_T_W_entropy(
       const double x,
@@ -62,6 +63,7 @@ compute_rho_P_eps_T_W_entropy(
  * entropy to recover the temperature. See file ghl_tabulated_Palenzuela1D.c for
  * further details.
  */
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Palenzuela1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

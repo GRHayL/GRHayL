@@ -1,5 +1,6 @@
 #include "../../utils_Palenzuela1D.h"
 
+GHL_DEVICE
 static ghl_error_codes_t ghl_newman_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -132,6 +133,7 @@ static ghl_error_codes_t ghl_newman_entropy(
   return ghl_success;
 }
 
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -151,12 +153,12 @@ ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
   diagnostics->which_routine = Newman1D_entropy;
 
   ghl_error_codes_t error = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
-				 cons_undens, prims, tol_x, diagnostics);
+                                               cons_undens, prims, tol_x, diagnostics);
 
   if(error) {
     prims->temperature = eos->T_min;
     error = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
-			       cons_undens, prims, tol_x, diagnostics);
+                               cons_undens, prims, tol_x, diagnostics);
   }
 
   return error;

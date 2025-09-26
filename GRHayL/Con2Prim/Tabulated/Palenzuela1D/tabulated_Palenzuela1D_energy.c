@@ -21,6 +21,7 @@
  * References : [1] Palenzuela et al. (2015) arXiv:1505.01607
  *            : [2] Siegel et al. (2018) arXiv:1712.07538
  */
+GHL_DEVICE
 static void
 compute_rho_P_eps_T_W_energy(
       const double x,
@@ -68,6 +69,7 @@ compute_rho_P_eps_T_W_energy(
  * energy to recover the temperature. See file ghl_tabulated_Palenzuela1D.c for
  * further details.
  */
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Palenzuela1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

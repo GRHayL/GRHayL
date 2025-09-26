@@ -6,6 +6,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_primitives
 */
 
+GHL_HOST_DEVICE
 void ghl_initialize_primitives(
       const double rho, const double press, const double epsilon,
       const double vx, const double vy, const double vz,

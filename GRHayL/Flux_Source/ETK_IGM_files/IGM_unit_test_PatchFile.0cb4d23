@@ -8,12 +8,12 @@ diff -ruN src/add_fluxes_and_source_terms_to_hydro_rhss.C ET_2022_12/Cactus/repo
 +  char out_filename[100];
 +  sprintf(out_filename, "fluxes_dirn%d.txt", flux_dirn);
 +  FILE *out3D = fopen(out_filename, "wb");
-+   
++
  #pragma omp parallel for
    for(int k=cctk_nghostzones[2];k<cctk_lsh[2]-(cctk_nghostzones[2]-1);k++) for(int j=cctk_nghostzones[1];j<cctk_lsh[1]-(cctk_nghostzones[1]-1);j++) for(int i=cctk_nghostzones[0];i<cctk_lsh[0]-(cctk_nghostzones[0]-1);i++) {
  	int index = CCTK_GFINDEX3D(cctkGH,i,j,k);
 @@ -73,7 +77,7 @@
- 
+
  	// Next compute the metric values at the {i,j,k} +/- 1/2 faces (i.e., the "face values" of the metric)
  	CCTK_REAL FACEVAL[NUMVARS_FOR_METRIC_FACEVALS],FACEVALp1[NUMVARS_FOR_METRIC_FACEVALS];
 -	for(int w=0;w<NUMVARS_FOR_METRIC_FACEVALS;w++) FACEVAL[w]   = COMPUTE_FCVAL(METRICm2[w],METRICm1[w],METRIC[w],METRICp1[w]);
@@ -27,16 +27,16 @@ diff -ruN src/add_fluxes_and_source_terms_to_hydro_rhss.C ET_2022_12/Cactus/repo
  	//    Also, this if() statement should speed up the computation slightly.
 +
  	if(k<cctk_lsh[2]-cctk_nghostzones[2] && j<cctk_lsh[1]-cctk_nghostzones[1] && i<cctk_lsh[0]-cctk_nghostzones[0]) {
- 
+
  	  CCTK_REAL Psi6 = METRIC_LAP_PSI4[PSI2]*METRIC_LAP_PSI4[PSI4];
 @@ -115,6 +120,18 @@
  	  partial_i_gmunu[2][3] = (g4yz_fp1 - g4yz_f)*dxi[flux_dirn];
  	  partial_i_gmunu[3][3] = (g4zz_fp1 - g4zz_f)*dxi[flux_dirn];
- 
+
 +	  // printf("%.15e %.15e\n", g4yy_fp1 - g4yy_f, g4tt_fp1 - g4tt_f);
 +	  // printf("%.15e\n", dxi[flux_dirn]);
 +
-+	  fprintf(out3D,"%d %d %d %.15e %.15e %.15e %.15e %.15e %.15e %.15e\n", 
++	  fprintf(out3D,"%d %d %d %.15e %.15e %.15e %.15e %.15e %.15e %.15e\n",
 +        i, j, k,
 +				st_x_flux[index],
 +				st_y_flux[index],
@@ -50,10 +50,10 @@ diff -ruN src/add_fluxes_and_source_terms_to_hydro_rhss.C ET_2022_12/Cactus/repo
  	  lapse_deriv[flux_dirn] = (FACEVALp1[LAPM1] - FACEVAL[LAPM1])*dxi[flux_dirn];
 @@ -148,6 +165,7 @@
  	}
- 
+
        }
 +    fclose(out3D);
- 
+
    // Notice in the loop below that we go from 3 to cctk_lsh-3 for i, j, AND k, even though
    //   we are only computing the flux in one direction. This is because in the end,
 diff -ruN src/compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C
@@ -62,7 +62,7 @@ diff -ruN src/compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C ET_2022_12
 @@ -37,9 +37,11 @@
          CCTK_REAL U[8]; // 8 primitives in the set: {rho_b,P,vx,vy,vz,Bx,By,Bz}
          for(int ii=0;ii<8;ii++) U[ii] = prims[ii].gf[index];
- 
+
 -        struct output_stats stats; stats.failure_checker=0;
 -        CCTK_REAL u0L;
 -        impose_speed_limit_output_u0(METRIC,U,METRIC_LAP_PSI4[PSI4],METRIC_LAP_PSI4[LAPSEINV],stats, u0L);
@@ -71,7 +71,7 @@ diff -ruN src/compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C ET_2022_12
 +        CCTK_REAL u0L = U[RHOB]*U[BX_CENTER]/U[VY];
 +        CCTK_REAL h   = U[PRESSURE]*U[VX]/U[VZ];
 +        // impose_speed_limit_output_u0(METRIC,U,METRIC_LAP_PSI4[PSI4],METRIC_LAP_PSI4[LAPSEINV],stats, u0L);
- 
+
          /***********************************************************/
          // Compute b^{\mu} and b^2
 @@ -53,10 +55,12 @@
@@ -83,12 +83,12 @@ diff -ruN src/compute_tau_rhs_extrinsic_curvature_terms_and_TUPmunu.C ET_2022_12
 -                                                                        *    in this function. */
 -        compute_P_cold__eps_cold__dPcold_drho__eps_th__h__gamma_cold(U,eos,P_cold,eps_cold,dPcold_drho,eps_th,h,gamma_cold);
 +        // TPJ made a change here
-+        // CCTK_REAL h=0,  P_cold,eps_cold,dPcold_drho,eps_th,gamma_cold; 
++        // CCTK_REAL h=0,  P_cold,eps_cold,dPcold_drho,eps_th,gamma_cold;
 +        /* <- Note that in setting h, we need to define several
 +        *    other variables, even though they will be unused later
 +        *    in this function. */
 +        // compute_P_cold__eps_cold__dPcold_drho__eps_th__h__gamma_cold(U,eos,P_cold,eps_cold,dPcold_drho,eps_th,h,gamma_cold);
- 
+
          CCTK_REAL Psi6 = METRIC_LAP_PSI4[PSI2]*METRIC_LAP_PSI4[PSI4];
          CCTK_REAL Psim4 = 1.0/METRIC_LAP_PSI4[PSI4];
 diff -ruN src/convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij.C ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij.C
@@ -102,10 +102,10 @@ diff -ruN src/convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij.C ET
 -          gtxzL * gtyyL * gtxzL - gtxyL * gtxyL * gtzzL - gtxxL * gtyzL * gtyzL;
 +        // CCTK_REAL gtijdet = gtxxL * gtyyL * gtzzL + gtxyL * gtyzL * gtxzL + gtxzL * gtxyL * gtyzL -
 +        //   gtxzL * gtyyL * gtxzL - gtxyL * gtxyL * gtzzL - gtxxL * gtyzL * gtyzL;
- 
+
 -        CCTK_REAL gtijdet_Fm1o3 = fabs(1.0/cbrt(gtijdet));
 +        // CCTK_REAL gtijdet_Fm1o3 = fabs(1.0/cbrt(gtijdet));
- 
+
 -        gtxxL = gtxxL * gtijdet_Fm1o3;
 -        gtxyL = gtxyL * gtijdet_Fm1o3;
 -        gtxzL = gtxzL * gtijdet_Fm1o3;
@@ -118,14 +118,14 @@ diff -ruN src/convert_ADM_to_BSSN__enforce_detgtij_eq_1__and_compute_gtupij.C ET
 +        // gtyyL = gtyyL * gtijdet_Fm1o3;
 +        // gtyzL = gtyzL * gtijdet_Fm1o3;
 +        // gtzzL = gtzzL * gtijdet_Fm1o3;
- 
+
 -        if(gtijdet<0.0) { CCTK_VWarn(CCTK_WARN_ALERT,__LINE__, __FILE__, CCTK_THORNSTRING,
 -                                     "WARNING: det[3-metric]<0.0 at point  %d %d %d | cctk_lsh: %d %d %d. Hopefully this is occurring in gz's! gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e",
 -				     i,j,k,cctk_lsh[0],cctk_lsh[1],cctk_lsh[2],gxx_physL,gxy_physL,gxz_physL,gyy_physL,gyz_physL,gzz_physL,gtxxL,gtxyL,gtxzL,gtyyL,gtyzL,gtzzL,-gijdet,gtijdet); }
 +        // if(gtijdet<0.0) { CCTK_VWarn(CCTK_WARN_ALERT,__LINE__, __FILE__, CCTK_THORNSTRING,
 +        //                              "WARNING: det[3-metric]<0.0 at point  %d %d %d | cctk_lsh: %d %d %d. Hopefully this is occurring in gz's! gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e",
 +				//      i,j,k,cctk_lsh[0],cctk_lsh[1],cctk_lsh[2],gxx_physL,gxy_physL,gxz_physL,gyy_physL,gyz_physL,gzz_physL,gtxxL,gtxyL,gtxzL,gtyyL,gtyzL,gtzzL,-gijdet,gtijdet); }
- 
+
          CCTK_REAL Psi4 = psiL*psiL*psiL*psiL;
          /*****************************************
 diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/driver_evaluate_MHD_rhs.C
@@ -134,7 +134,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 @@ -45,6 +45,157 @@
  #include "driver_evaluate_MHD_rhs.h" /* Function prototypes for this file only */
  #include "inlined_functions.C"
- 
+
 +
 +inline double randf(double scale) {
 +    return fabs((rand()/(double)(RAND_MAX))*scale);
@@ -291,7 +291,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
    DECLARE_CCTK_PARAMETERS;
 @@ -61,15 +212,31 @@
    CCTK_REAL dX[3] = { CCTK_DELTA_SPACE(0), CCTK_DELTA_SPACE(1), CCTK_DELTA_SPACE(2) };
- 
+
    // FIXME: only for single gamma-law EOS.
 +  // eos_struct eos;
 +  // eos.neos=neos;
@@ -326,7 +326,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 +  char dirn1_filename[100];
 +  sprintf(dirn1_filename, "input_data1.txt");
 +  inject_and_output_random_data_all(dirn1_filename);
- 
+
    // in_prims,out_prims_r, and out_prims_l are arrays of pointers to the actual gridfunctions.
    gf_and_gz_struct in_prims[MAXNUMVARS],out_prims_r[MAXNUMVARS],out_prims_l[MAXNUMVARS];
 @@ -79,6 +246,8 @@
@@ -353,8 +353,8 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 -  ftilde_gf_compute(cctkGH,cctk_lsh,flux_dirn, in_prims, ftilde_gf);
 +  // TPJ made a change here
 +  // ftilde_gf_compute(cctkGH,cctk_lsh,flux_dirn, in_prims, ftilde_gf);
- 
- 
+
+
    /* There are two stories going on here:
 @@ -201,14 +372,15 @@
    which_prims_to_reconstruct[ww]=BY_STAGGER;ww++;
@@ -392,7 +392,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 -  ftilde_gf_compute(cctkGH,cctk_lsh,flux_dirn, in_prims, ftilde_gf);
 +  // TPJ made a change here
 +  // ftilde_gf_compute(cctkGH,cctk_lsh,flux_dirn, in_prims, ftilde_gf);
- 
+
    // in_prims[{VXR,VXL,VYR,VYL}].gammaDD[2]_{lo,hi} ghostzones are set to all zeros, which
    //    is incorrect. We fix this below.
 @@ -261,8 +438,9 @@
@@ -431,7 +431,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
    add_fluxes_and_source_terms_to_hydro_rhss(flux_dirn,cctkGH,cctk_lsh,cctk_nghostzones,dX,   metric,in_prims,TUPmunu,
 @@ -330,9 +509,14 @@
    in_prims[VZL]=out_prims_l[VZ];
- 
+
    flux_dirn=3;
 +  char dirn3_filename[100];
 +  sprintf(dirn3_filename, "input_data3.txt");
@@ -442,7 +442,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 -  ftilde_gf_compute(cctkGH,cctk_lsh,flux_dirn, in_prims, ftilde_gf);
 +  // TPJ made a change here
 +  // ftilde_gf_compute(cctkGH,cctk_lsh,flux_dirn, in_prims, ftilde_gf);
- 
+
    /* There are two stories going on here:
     * 1) Single reconstruction to (i,j,k-1/2) for {rho,P,vx,vy,vz,Bx,By,Bz} to compute
 @@ -358,8 +542,9 @@
@@ -482,7 +482,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 @@ -390,6 +576,45 @@
                                              rho_star_flux,tau_flux,st_x_flux,st_y_flux,st_z_flux,
                                              rho_star_rhs,tau_rhs,st_x_rhs,st_y_rhs,st_z_rhs);
- 
+
 +  // char out_filename[100];
 +  // sprintf(out_filename, "output_rhs_data.txt");
 +  // FILE *out3D = fopen(out_filename, "wb");
@@ -491,7 +491,7 @@ diff -ruN src/driver_evaluate_MHD_rhs.C ET_2022_12/Cactus/repos/wvuthorns/Illino
 +  // for(int k=0;k<cctk_lsh[2];k++) for(int j=0;j<cctk_lsh[1];j++) for(int i=0;i<cctk_lsh[0];i++) {
 +  //   int index=CCTK_GFINDEX3D(cctkGH,i,j,k);
 +
-+  //  fprintf(out3D,"%d %d %d %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e\n", 
++  //  fprintf(out3D,"%d %d %d %.15e %.15e %.15e %.15e %.15e %.15e %.15e %.15e\n",
 +  //           i, j, k,
 +  //           x[index], y[index], z[index],
 +  //           rho_star_rhs[index], tau_rhs[index],
@@ -530,7 +530,7 @@ diff -ruN src/inlined_functions.C ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMH
 +++ ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/inlined_functions.C	2023-02-15 12:14:45.196722963 -0800
 @@ -61,7 +61,8 @@
    if(U[RHOB]<=0) { v02L=1.0; return; }
- 
+
    /* c_s = sound speed = (dP_c/drho + \Gamma(\Gamma-1) \epsilon_th)/h */
 -  CCTK_REAL c_s_squared  = (dPcold_drho + gamma_th*(gamma_th-1.0)*eps_th)/(h);
 +  // CCTK_REAL c_s_squared  = (dPcold_drho + gamma_th*(gamma_th-1.0)*eps_th)/(h);
@@ -542,7 +542,7 @@ diff -ruN src/mhdflux.C ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/mhdf
 --- src/mhdflux.C	2023-02-16 12:41:44.392842042 -0800
 +++ ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/mhdflux.C	2023-02-15 15:01:36.589003777 -0800
 @@ -17,17 +17,26 @@
- 
+
    // First compute P_{cold}, \epsilon_{cold}, dP_{cold}/drho, \epsilon_{th}, h, and \Gamma_{cold},
    // for right and left faces:
 -  CCTK_REAL P_coldr,eps_coldr,dPcold_drhor=0,eps_thr=0,h_r=0,gamma_coldr;
@@ -554,7 +554,7 @@ diff -ruN src/mhdflux.C ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/mhdf
 +  // compute_P_cold__eps_cold__dPcold_drho__eps_th__h__gamma_cold(Ur,eos,P_coldr,eps_coldr,dPcold_drhor,eps_thr,h_r,gamma_coldr);
 +  // CCTK_REAL dPcold_drhol=1.0,eps_thl=1.0,h_l=1.0; //,gamma_coldl, P_coldl,eps_coldl;
 +  // compute_P_cold__eps_cold__dPcold_drho__eps_th__h__gamma_cold(Ul,eos,P_coldl,eps_coldl,dPcold_drhol,eps_thl,h_l,gamma_coldl);
- 
+
    //Compute face velocities
    // Begin by computing u0
 -  output_stats stats; stats.failure_checker=0;
@@ -573,16 +573,16 @@ diff -ruN src/mhdflux.C ET_2022_12/Cactus/repos/wvuthorns/IllinoisGRMHD/src/mhdf
 +  CCTK_REAL dPcold_drhol=0.0/0.0, eps_thl=0.0/0.0;
 +  // impose_speed_limit_output_u0(FACEVAL,Ur,psi4,ONE_OVER_LAPSE,stats,u0_r);
 +  // impose_speed_limit_output_u0(FACEVAL,Ul,psi4,ONE_OVER_LAPSE,stats,u0_l);
- 
+
    //Next compute b^{\mu}, the magnetic field measured in the comoving fluid frame:
    CCTK_REAL ONE_OVER_LAPSE_SQRT_4PI = ONE_OVER_LAPSE*ONE_OVER_SQRT_4PI;
 @@ -75,6 +84,9 @@
               Ul[VX+offset],ONE_OVER_LAPSE_SQUARED,FACEVAL[SHIFTX+offset],psim4,FACEVAL[GUPXX+offset]);
- 
+
    // Then compute cmax, cmin. This is required for the HLL flux.
 +  // TPJ MADE A CHANGE HERE
 +  // CCTK_REAL cmaxL = 1.0;
 +  // CCTK_REAL cminL = 1.0;
    CCTK_REAL cmaxL =  MAX(0.0,MAX(cplusl,cplusr));
    CCTK_REAL cminL = -MIN(0.0,MIN(cminusl,cminusr));
- 
+

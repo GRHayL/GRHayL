@@ -1,5 +1,5 @@
 #include "ghl.h"
-
+GHL_DEVICE
 void NRPyEOS_enforce_table_bounds_rho_Ye_T(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,

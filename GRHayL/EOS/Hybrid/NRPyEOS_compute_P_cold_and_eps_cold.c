@@ -6,7 +6,7 @@
  *                ghl_hybrid_compute_P_cold_and_eps_cold
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_P_cold_and_eps_cold
 */
-
+GHL_DEVICE
 void NRPyEOS_compute_P_cold_and_eps_cold(
       const ghl_eos_parameters *restrict eos,
       const double rho_in,

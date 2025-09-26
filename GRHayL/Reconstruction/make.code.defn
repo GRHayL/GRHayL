@@ -1,6 +1,6 @@
 # Primary make.code.defn for gem Reconstruction
 
 # Source files in this directory that need compiled:
-SRC = 
+SRC =
 
 SUBDIRS = PPM PLM WENOZ

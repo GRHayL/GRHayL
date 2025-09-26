@@ -7,6 +7,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_return_stress_energy
 */
 
+GHL_HOST_DEVICE
 void ghl_return_stress_energy(
       const ghl_stress_energy *restrict Tmunu,
       double *restrict Ttt, double *restrict Ttx, double *restrict Tty,

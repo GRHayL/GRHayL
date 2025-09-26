@@ -26,6 +26,7 @@
   fclose(fp);                                             \
 }
 
+GHL_HOST
 static inline double get_EOS_table_max(
       const ghl_eos_parameters *restrict eos,
       const int var_key) {
@@ -45,6 +46,7 @@ static inline double get_EOS_table_max(
 #endif
 }
 
+GHL_HOST
 static inline double get_EOS_table_min(
       const ghl_eos_parameters *restrict eos,
       const int var_key) {
@@ -66,6 +68,7 @@ static inline double get_EOS_table_min(
 /*
  * (c) 2022 Leo Werneck
  */
+GHL_HOST
 void NRPyEOS_read_table_set_EOS_params(const char *EOS_tablename, ghl_eos_parameters *restrict eos_params) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;

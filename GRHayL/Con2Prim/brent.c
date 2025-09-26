@@ -13,6 +13,7 @@
  *
  * Returns    : Nothing.
  */
+GHL_DEVICE
 static inline void
 ensure_b_is_closest_to_root(
     double *restrict a,
@@ -38,6 +39,7 @@ ensure_b_is_closest_to_root(
  *
  * Returns    : Nothing.
  */
+GHL_DEVICE
 static inline void
 cycle(
     double *restrict a,
@@ -70,6 +72,7 @@ cycle(
  *            : r        - Pointer to Roots parameters.
  *
  */
+GHL_DEVICE
 static inline ghl_error_codes_t
 check_a_b_compute_fa_fb(
       double f(
@@ -149,6 +152,7 @@ check_a_b_compute_fa_fb(
  *              Freely available at: http://numerical.recipes/book/book.html
  *            : Brent, Algorithms for Minimization Without Derivatives (1973)
  */
+GHL_DEVICE
 ghl_error_codes_t
 ghl_brent(
       double f(
@@ -168,7 +172,6 @@ ghl_brent(
       roots_params *restrict r) {
 
   // Step 0: Set basic info to the roots_params struct
-  sprintf(r->routine_name, __func__);
   r->a = a;
   r->b = b;
 

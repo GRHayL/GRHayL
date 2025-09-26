@@ -1,5 +1,6 @@
 #include "ghl.h"
 
+GHL_HOST
 const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key) {
   switch(key) {
     case None:

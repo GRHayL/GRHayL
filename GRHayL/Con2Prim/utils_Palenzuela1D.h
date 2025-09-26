@@ -18,6 +18,7 @@
  *
  * Returns    : Nothing.
  */
+GHL_DEVICE
 static inline void
 compute_rho_W_from_x_and_conservatives(
   const double x,
@@ -61,6 +62,7 @@ compute_rho_W_from_x_and_conservatives(
  *
  * Returns    : Nothing.
  */
+GHL_DEVICE
 static inline void
 compute_SU_Bsq_Ssq_BdotS(
       const ghl_metric_quantities *restrict ADM_metric,
@@ -103,6 +105,7 @@ compute_SU_Bsq_Ssq_BdotS(
 /*
  * Function prototypes
  */
+GHL_DEVICE
 ghl_error_codes_t ghl_tabulated_Palenzuela1D(
       void compute_rho_P_eps_T_W(
             const double x,
@@ -119,6 +122,7 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Palenzuela1D(
       void compute_rho_P_eps_W(
             const double x,

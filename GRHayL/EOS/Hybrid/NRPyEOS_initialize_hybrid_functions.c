@@ -1,5 +1,6 @@
 #include "ghl_nrpyeos_hybrid.h"
 
+GHL_DEVICE
 void NRPyEOS_initialize_hybrid_functions() {
   ghl_hybrid_find_polytropic_index            = &NRPyEOS_find_polytropic_index;
   ghl_hybrid_find_polytropic_index_from_P     = &NRPyEOS_find_polytropic_index_from_P;

@@ -4,7 +4,7 @@
  * Description  : Computes undensitized conservatives using the metric
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_undensitize_conservatives
 */
-
+GHL_DEVICE
 void ghl_undensitize_conservatives(
       const double psi6,
       const ghl_conservative_quantities *restrict cons,

@@ -7,7 +7,7 @@
  *                               initialized with zeros in preparation
  *                               for tracking Con2Prim diagnostics
  */
-
+GHL_DEVICE
 void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics) {
   diagnostics->tau_fix       = false;
   diagnostics->Stilde_fix    = false;

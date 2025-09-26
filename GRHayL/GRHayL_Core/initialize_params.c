@@ -6,6 +6,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_params
 */
 
+GHL_HOST_DEVICE
 void ghl_initialize_params(
       const ghl_con2prim_method_t main_routine,
       const ghl_con2prim_method_t backup_routine[3],

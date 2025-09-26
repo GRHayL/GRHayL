@@ -11,7 +11,7 @@
 ******************************* HARM License ***************************************
 ************************************************************************************
 
-    Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble, 
+    Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble,
                    Gabor Toth, and Luca Del Zanna
 
                         HARM  version 1.0   (released May 1, 2006)
@@ -31,7 +31,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 ***********************************************************************************/
-
+GHL_DEVICE
 ghl_error_codes_t ghl_hybrid_Noble2D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

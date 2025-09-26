@@ -6,6 +6,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_stress_energy
 */
 
+GHL_HOST_DEVICE
 void ghl_initialize_stress_energy(
       const double Ttt,
       const double Ttx, const double Tty, const double Ttz,

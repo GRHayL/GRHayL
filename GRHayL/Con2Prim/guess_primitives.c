@@ -3,8 +3,8 @@
 /* Function     : ghl_guess_primitives()
  * Description  : Computes initial guesses for the primitives
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_guess_primitives
-*/
-
+ */
+GHL_DEVICE
 void ghl_guess_primitives(
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,

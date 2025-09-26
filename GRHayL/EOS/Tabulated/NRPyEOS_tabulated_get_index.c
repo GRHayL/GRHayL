@@ -1,6 +1,7 @@
 #include "ghl_nrpyeos_tabulated.h"
 
 // Set up the criterion for whether two elements are the same
+GHL_DEVICE
 static bool comp(const double a, const double b) {
   if(a == 0 || b == 0) {
     return (fabs(a - b) < 1e-15);
@@ -11,6 +12,7 @@ static bool comp(const double a, const double b) {
 // For a given array x_arr and an input value x, this function returns the
 // index i such that x in (x_arr[i],  x_arr[i+1]), unless x is equal to one
 // of the elements in x_arr, in which case the element index is returned.
+GHL_DEVICE
 static int bisect_left(
     const int n,
     const double *restrict x_arr,
@@ -50,21 +52,9 @@ static int bisect_left(
   return ia;
 }
 
+GHL_DEVICE
 int NRPyEOS_tabulated_get_index_T(
     const ghl_eos_parameters *restrict eos,
     const double T) {
   return bisect_left(eos->N_T, eos->table_logT, log(T), comp);
 }
-
-// Uncomment these functions if we ever need them
-// int NRPyEOS_tabulated_get_index_rho(
-//     const ghl_eos_parameters *restrict eos,
-//     const double rho) {
-//   return bisect_left(eos->N_rho, eos->table_logrho, log(rho), comp);
-// }
-//
-// int NRPyEOS_tabulated_get_index_Ye(
-//     const ghl_eos_parameters *restrict eos,
-//     const double Y_e) {
-//   return bisect_left(eos->N_Ye, eos->table_Y_e, Y_e, comp);
-// }

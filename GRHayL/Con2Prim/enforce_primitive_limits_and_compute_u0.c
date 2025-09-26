@@ -2,10 +2,10 @@
 
 /* Function     : ghl_enforce_primitive_limits_and_compute_u0()
  * Description  : Applies limits to rho_b, pressure, and v^i, then
-                  recomputes epsilon and (if needed) entropy
+ *                recomputes epsilon and (if needed) entropy
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_enforce_primitive_limits_and_compute_u0
 */
-
+GHL_DEVICE
 ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

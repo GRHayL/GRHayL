@@ -5,7 +5,7 @@
  * Description  : Calls the Con2Prim routine designated by c2p_key
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_hybrid_select_method
 */
-
+GHL_DEVICE
 ghl_error_codes_t ghl_con2prim_hybrid_select_method(
       const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
@@ -21,7 +21,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
     case Noble2D:
       return ghl_hybrid_Noble2D(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics);
     case Noble1D:
-      return ghl_hybrid_Noble1D(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics); 
+      return ghl_hybrid_Noble1D(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics);
     // Font routine (see https://arxiv.org/abs/gr-qc/9811015)
     case Font1D:
       return ghl_hybrid_Font1D(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics);
@@ -30,9 +30,9 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
       return ghl_hybrid_Palenzuela1D_energy(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics);
     // Entropy routines (see https://arxiv.org/abs/2208.14487)
     case Noble1D_entropy:
-      return ghl_hybrid_Noble1D_entropy(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics); 
+      return ghl_hybrid_Noble1D_entropy(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics);
     //case Noble1D_entropy2:
-    //  return ghl_hybrid_Noble1D_entropy2(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics); 
+    //  return ghl_hybrid_Noble1D_entropy2(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics);
     case Palenzuela1D_entropy:
       return ghl_hybrid_Palenzuela1D_entropy(params, eos, ADM_metric, metric_aux, cons_undens, prims, diagnostics);
     default:
@@ -45,7 +45,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
  * Description  : Calls the Con2Prim routine designated by c2p_key
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
 */
-
+GHL_DEVICE
 ghl_error_codes_t ghl_con2prim_tabulated_select_method(
       const ghl_con2prim_method_t c2p_key,
       const ghl_parameters *restrict params,
@@ -78,7 +78,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
  * Description  : Calls the Con2Prim routine designated by c2p_key
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
 */
-
+GHL_DEVICE
 ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -130,7 +130,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
  * Description  : Calls the Con2Prim routine designated by c2p_key
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
 */
-
+GHL_DEVICE
 ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

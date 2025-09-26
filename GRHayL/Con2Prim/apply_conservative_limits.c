@@ -8,7 +8,7 @@
  *                and updates the diagnostic data.
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_apply_conservative_limits
 */
-
+GHL_DEVICE
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

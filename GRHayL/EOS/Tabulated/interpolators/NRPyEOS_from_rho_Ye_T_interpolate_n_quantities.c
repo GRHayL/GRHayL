@@ -16,7 +16,7 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
 
   // This function will interpolate n table quantities from
   // (rho,Ye,T). It replaces EOS_Omni calls with keytemp = 1
-  if(n > NRPyEOS_ntablekeys) 
+  if(n > NRPyEOS_ntablekeys)
     return ghl_error_exceed_table_vars;
 
   // Check table bounds for input variables
