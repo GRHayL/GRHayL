@@ -1,7 +1,7 @@
 #include "ghl.h"
 
 GHL_DEVICE
-void ghl_enforce_detgtij_and_initialize_ADM_metric(
+ghl_error_codes_t ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax,
       const double betay,
@@ -49,6 +49,10 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
                        - gtxy * gtxy * gtzz
                        - gtxx * gtyz * gtyz;
 
+  if(gtijdet < 0.0) {
+    return ghl_error_negative_metric_determinant;
+  }
+
   const double gtijdet_Fm1o3 = fabs(1.0/cbrt(gtijdet));
 
   const double gxx_new = gtxx * gtijdet_Fm1o3 * psi4;
@@ -64,8 +68,5 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
                     gyy_new, gyz_new, gzz_new,
                     ADM_metric);
 
-  if(gtijdet<0.0) ghl_warn(
-                      "WARNING: det[3-metric]<0.0. Hopefully this is occurring in gz's! "
-                      "gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e\n",
-                      gxx, gxy, gxz, gyy, gyz, gzz, gtxx, gtxy, gtxz, gtyy, gtyz, gtzz, ADM_metric->detgamma, gtijdet);
+  return ghl_success;
 }

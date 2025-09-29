@@ -63,6 +63,7 @@ typedef enum {
   ghl_error_invalid_Z,
   ghl_error_newman_invalid_discriminant,
   ghl_error_newton_raphson_ndim_too_large,
+  ghl_error_negative_metric_determinant,
 } ghl_error_codes_t;
 
 typedef enum {
@@ -448,7 +449,7 @@ void ghl_compute_ADM_auxiliaries(
       ghl_ADM_aux_quantities *restrict metric_aux);
 
 GHL_DEVICE
-void ghl_enforce_detgtij_and_initialize_ADM_metric(
+ghl_error_codes_t ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax,
       const double betay,
