@@ -6,7 +6,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_limit_v_and_compute_u0
 */
 
-GHL_HOST_DEVICE
+GHL_DEVICE
 ghl_error_codes_t ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict ADM_metric,

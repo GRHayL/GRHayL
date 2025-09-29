@@ -7,7 +7,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_return_conservatives
 */
 
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_return_conservatives(
       const ghl_conservative_quantities *restrict cons,
       double *restrict rho,

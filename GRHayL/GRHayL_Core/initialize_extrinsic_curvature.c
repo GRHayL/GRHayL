@@ -6,7 +6,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_extrinsic_curvature
 */
 
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_extrinsic_curvature(
       const double Kxx,
       const double Kxy,

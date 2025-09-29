@@ -6,8 +6,7 @@
  *                and 24 in https://arxiv.org/abs/astro-ph/0503420).
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_smallb_and_b2
 */
-
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_compute_smallb_and_b2(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_primitive_quantities *restrict prims,

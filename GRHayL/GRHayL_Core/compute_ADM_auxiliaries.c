@@ -5,8 +5,7 @@
  * Description  : Initialize the metric struct from user input
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_ADM_auxiliaries
 */
-
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_compute_ADM_auxiliaries(
       const ghl_metric_quantities *restrict ADM_metric,
       ghl_ADM_aux_quantities *restrict metric_aux) {

@@ -16,6 +16,7 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_T(
   *T = fmin(fmax(*T, eos->T_min), eos->T_max);
 }
 
+GHL_DEVICE
 void NRPyEOS_enforce_table_bounds_rho_Ye_eps(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
@@ -32,6 +33,7 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_eps(
   *eps = fmin(fmax(*eps, eos->eps_min), eos->eps_max);
 }
 
+GHL_DEVICE
 void NRPyEOS_enforce_table_bounds_rho_Ye_S(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
@@ -48,6 +50,7 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_S(
   *S = fmin(fmax(*S, eos->entropy_min), eos->entropy_max);
 }
 
+GHL_DEVICE
 void NRPyEOS_enforce_table_bounds_rho_Ye_P(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,

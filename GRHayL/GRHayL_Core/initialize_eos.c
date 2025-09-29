@@ -25,7 +25,7 @@ ghl_error_codes_t (*ghl_con2prim_multi_method)(
  * Input/Output: eos - ghl_eos_parameters struct with the function pointers
  *                     initialized
  */
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_eos_functions(
       const ghl_eos_t eos_type) {
 
@@ -49,7 +49,7 @@ void ghl_initialize_eos_functions(
  * Function    : ghl_initialize_simple_eos()
  * Description : Initializes EOS struct elements for a simple EOS
 */
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
@@ -125,7 +125,7 @@ void ghl_initialize_simple_eos(
  * Function    : ghl_initialize_hybrid_eos()
  * Description : Initializes EOS struct elements for a hybrid EOS
 */
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_hybrid_eos(
       const double rho_atm,
       double rho_min,
@@ -215,7 +215,7 @@ void ghl_initialize_hybrid_eos(
  * Function    : ghl_initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
 */
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_tabulated_eos(
       const char *table_filepath,
       const double rho_atm,
@@ -315,7 +315,7 @@ void ghl_initialize_tabulated_eos(
  * Function    : ghl_initialize_hybrid_eos_functions_and_params()
  * Description : Fully initializes EOS struct elements for a hybrid EOS
 */
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
@@ -340,7 +340,7 @@ void ghl_initialize_simple_eos_functions_and_params(
  * Function    : ghl_initialize_hybrid_eos_functions_and_params()
  * Description : Fully initializes EOS struct elements for a hybrid EOS
 */
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_hybrid_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
@@ -365,7 +365,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
 /* Function    : ghl_initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
 */
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_filepath,
       const double rho_atm,

@@ -121,7 +121,7 @@ static double discrete_derivative(
       int (*find_left_index)(const int, const double *restrict, const double)) {
 
   if(x < x_arr[0] || x > x_arr[nx - 1]) {
-    ghl_error("Point (%e) out of array bounds [%e, %e]\n", x, x_arr[0], x_arr[nx - 1]);
+    return ghl_error_root_not_bracketed;
   }
 
   // Set up basic quantities for the interpolation

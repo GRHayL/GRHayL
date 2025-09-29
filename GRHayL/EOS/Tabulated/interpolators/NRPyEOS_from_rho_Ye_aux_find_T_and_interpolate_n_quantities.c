@@ -3,6 +3,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
+GHL_DEVICE
 ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       const ghl_eos_parameters *restrict eos,
       const int n,

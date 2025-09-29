@@ -1,6 +1,6 @@
 #include "ghl.h"
 
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax,
@@ -29,10 +29,9 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
   const double psi4inv = 1.0/psi4;
 
 
-        /**********************************************************************
-         * Compute \tilde{\gamma_{ij}}, phi, and psi (BSSN) from g_{ij} (ADM) *
-         **********************************************************************/
-
+  /**********************************************************************
+   * Compute \tilde{\gamma_{ij}}, phi, and psi (BSSN) from g_{ij} (ADM) *
+   **********************************************************************/
   const double gtxx = gxx*psi4inv;
   const double gtxy = gxy*psi4inv;
   const double gtxz = gxz*psi4inv;
@@ -68,5 +67,5 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
   if(gtijdet<0.0) ghl_warn(
                       "WARNING: det[3-metric]<0.0. Hopefully this is occurring in gz's! "
                       "gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e\n",
-  			     gxx, gxy, gxz, gyy, gyz, gzz, gtxx, gtxy, gtxz, gtyy, gtyz, gtzz, ADM_metric->detgamma, gtijdet);
+                      gxx, gxy, gxz, gyy, gyz, gzz, gtxx, gtxy, gtxz, gtyy, gtyz, gtzz, ADM_metric->detgamma, gtijdet);
 }

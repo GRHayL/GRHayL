@@ -6,7 +6,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_conservatives
 */
 
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_initialize_conservatives(
       const double rho,
       const double tau,

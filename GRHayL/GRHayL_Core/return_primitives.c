@@ -7,7 +7,7 @@
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_return_primitives
 */
 
-GHL_HOST_DEVICE
+GHL_DEVICE
 void ghl_return_primitives(const ghl_primitive_quantities *restrict prims,
       double *restrict rho, double *restrict press, double *restrict epsilon,
       double *restrict vx, double *restrict vy, double *restrict vz,

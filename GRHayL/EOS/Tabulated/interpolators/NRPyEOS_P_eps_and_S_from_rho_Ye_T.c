@@ -2,6 +2,7 @@
 /*
  * (c) 2022 Leo Werneck
  */
+GHL_DEVICE
 ghl_error_codes_t NRPyEOS_P_eps_and_S_from_rho_Ye_T(
       const ghl_eos_parameters *restrict eos,
       const double rho,

@@ -1,6 +1,6 @@
 #include "ghl.h"
 
-GHL_HOST_DEVICE
+GHL_HOST
 void ghl_read_error_codes(
       const ghl_error_codes_t error) {
   switch(error) {

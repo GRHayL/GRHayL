@@ -8,7 +8,8 @@
  */
 
 //------------------------------------------
-static inline __attribute__((always_inline))
+GHL_DEVICE
+static inline
 ghl_error_codes_t NRPyEOS_checkbounds(
       const ghl_eos_parameters *restrict eos,
       const double xrho,
@@ -36,7 +37,8 @@ ghl_error_codes_t NRPyEOS_checkbounds(
   return ghl_success;
 }
 //------------------------------------------
-static inline __attribute__((always_inline))
+GHL_DEVICE
+static inline
 ghl_error_codes_t NRPyEOS_checkbounds_kt0_noTcheck(const ghl_eos_parameters *restrict eos,
                                      const double xrho,
                                      const double xye) {
@@ -56,7 +58,8 @@ ghl_error_codes_t NRPyEOS_checkbounds_kt0_noTcheck(const ghl_eos_parameters *res
   return ghl_success;
 }
 //------------------------------------------
-static inline __attribute__((always_inline))
+GHL_DEVICE
+static inline
 void NRPyEOS_get_interp_spots(
       const ghl_eos_parameters *restrict eos,
       const double x,
@@ -91,7 +94,8 @@ void NRPyEOS_get_interp_spots(
 
 }
 //------------------------------------------
-static inline __attribute__((always_inline))
+GHL_DEVICE
+static inline
 void NRPyEOS_linterp_one(
       const ghl_eos_parameters *restrict eos,
       const int *restrict idx,
@@ -136,7 +140,8 @@ void NRPyEOS_linterp_one(
 
 }
 //------------------------------------------
-static inline __attribute__((always_inline))
+GHL_DEVICE
+static inline
 double NRPyEOS_linterp2D(
       const double *restrict xs,
       const double *restrict ys,
@@ -160,7 +165,8 @@ double NRPyEOS_linterp2D(
   return (t2 - t1)*dyi * (y-ys[0]) + t1;
 }
 //------------------------------------------
-static inline __attribute__((always_inline))
+GHL_DEVICE
+static inline
 ghl_error_codes_t NRPyEOS_bisection(
       const ghl_eos_parameters *restrict eos,
       const double lr,
@@ -277,8 +283,9 @@ ghl_error_codes_t NRPyEOS_bisection(
   return ghl_error_table_bisection;
 } // bisection
 
-  //------------------------------------------
-static inline __attribute__((always_inline))
+//------------------------------------------
+GHL_DEVICE
+static inline
 ghl_error_codes_t NRPyEOS_findtemp_from_any(
       const ghl_eos_parameters *restrict eos,
       const int tablevar_key,

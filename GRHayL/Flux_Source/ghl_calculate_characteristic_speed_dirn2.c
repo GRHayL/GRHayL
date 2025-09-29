@@ -2,6 +2,7 @@
 /*
  * Compute the characteristic speeds in direction 2
  */
+GHL_DEVICE
 void ghl_calculate_characteristic_speed_dirn2(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, double *cmin_dirn2, double *cmax_dirn2) {
 
 {

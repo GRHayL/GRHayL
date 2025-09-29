@@ -11,6 +11,7 @@ static const double SQRT_4_PI = 1; //3.544907701811032054596334966682290365L;
 extern "C" {
 #endif
 
+GHL_DEVICE
 void ghl_calculate_source_terms(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
@@ -21,6 +22,7 @@ void ghl_calculate_source_terms(
       const ghl_extrinsic_curvature *restrict curv,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_characteristic_speed_dirn0(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -29,6 +31,7 @@ void ghl_calculate_characteristic_speed_dirn0(
       double *cmin_dirn0,
       double *cmax_dirn0);
 
+GHL_DEVICE
 void ghl_calculate_characteristic_speed_dirn1(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -37,6 +40,7 @@ void ghl_calculate_characteristic_speed_dirn1(
       double *cmin_dirn1,
       double *cmax_dirn1);
 
+GHL_DEVICE
 void ghl_calculate_characteristic_speed_dirn2(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -45,6 +49,7 @@ void ghl_calculate_characteristic_speed_dirn2(
       double *cmin_dirn2,
       double *cmax_dirn2);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn0_hybrid(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -54,6 +59,7 @@ void ghl_calculate_HLLE_fluxes_dirn0_hybrid(
       const double cmax_dirn0,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn1_hybrid(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -63,6 +69,7 @@ void ghl_calculate_HLLE_fluxes_dirn1_hybrid(
       const double cmax_dirn1,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn2_hybrid(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -72,6 +79,7 @@ void ghl_calculate_HLLE_fluxes_dirn2_hybrid(
       const double cmax_dirn2,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -81,6 +89,7 @@ void ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy(
       const double cmax_dirn0,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -90,6 +99,7 @@ void ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy(
       const double cmax_dirn1,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -99,6 +109,7 @@ void ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy(
       const double cmax_dirn2,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn0_tabulated(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -108,6 +119,7 @@ void ghl_calculate_HLLE_fluxes_dirn0_tabulated(
       const double cmax_dirn0,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn1_tabulated(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -117,6 +129,7 @@ void ghl_calculate_HLLE_fluxes_dirn1_tabulated(
       const double cmax_dirn1,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn2_tabulated(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -126,6 +139,7 @@ void ghl_calculate_HLLE_fluxes_dirn2_tabulated(
       const double cmax_dirn2,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -135,6 +149,7 @@ void ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy(
       const double cmax_dirn0,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
@@ -144,6 +159,7 @@ void ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy(
       const double cmax_dirn1,
       ghl_conservative_quantities *restrict cons);
 
+GHL_DEVICE
 void ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy(
       ghl_primitive_quantities *restrict prims_r,
       ghl_primitive_quantities *restrict prims_l,
