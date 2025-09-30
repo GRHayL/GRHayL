@@ -1,5 +1,6 @@
 #include "ghl_radiation.h"
 
+GHL_DEVICE
 static double EnsureFinite(const double x) {
   if(isfinite(x))
     return x;
@@ -12,6 +13,7 @@ static double EnsureFinite(const double x) {
  * Compute GRMHD source terms following Ruffert et al. (1996)
  * https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
  */
+GHL_DEVICE
 void NRPyLeakage_compute_neutrino_opacities(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -65,26 +67,26 @@ void NRPyLeakage_compute_neutrino_opacities(
   const double tmp_1 = (1.0/(T));
   const double tmp_2 = mu_e*tmp_1;
   const double tmp_4 = NRPyLeakage_eta_nue_0*tmp_0 + (1 - tmp_0)*(-muhat*tmp_1 + tmp_2);
-  const double tmp_5 = NRPyLeakage_Fermi_Dirac_integrals(4, tmp_4);
+  const double tmp_5 = NRPyLeakage_Fermi_Dirac_integrals_k4(tmp_4);
   const double tmp_6 = NRPyLeakage_N_A*NRPyLeakage_sigma_0*((T)*(T))*rho_cgs/((NRPyLeakage_m_e_c2)*(NRPyLeakage_m_e_c2));
-  const double tmp_7 = tmp_5*tmp_6/NRPyLeakage_Fermi_Dirac_integrals(2, tmp_4);
+  const double tmp_7 = tmp_5*tmp_6/NRPyLeakage_Fermi_Dirac_integrals_k2(tmp_4);
   const double tmp_9 = (5.0/24.0)*((NRPyLeakage_alpha)*(NRPyLeakage_alpha));
   const double tmp_10 = (1 - Y_e)*(tmp_9 + 1.0/24.0)/((2.0/3.0)*MAX(mu_n*tmp_1, 0) + 1);
   const double tmp_11 = Y_e*(tmp_9 + (1.0/6.0)*((NRPyLeakage_C_V - 1)*(NRPyLeakage_C_V - 1)))/((2.0/3.0)*MAX(mu_p*tmp_1, 0) + 1);
-  const double tmp_12 = NRPyLeakage_Fermi_Dirac_integrals(5, tmp_4);
+  const double tmp_12 = NRPyLeakage_Fermi_Dirac_integrals_k5(tmp_4);
   const double tmp_13 = (3.0/4.0)*((NRPyLeakage_alpha)*(NRPyLeakage_alpha)) + 1.0/4.0;
   const double tmp_14 = Y_np*tmp_13/(exp(-tmp_12/tmp_5 + tmp_2) + 1);
-  const double tmp_15 = tmp_12/NRPyLeakage_Fermi_Dirac_integrals(3, tmp_4);
+  const double tmp_15 = tmp_12/NRPyLeakage_Fermi_Dirac_integrals_k3(tmp_4);
   const double tmp_17 = tmp_11*tmp_6;
   const double tmp_18 = exp(-tau->anue[0]);
   const double tmp_20 = NRPyLeakage_eta_anue_0*tmp_18 + (1 - tmp_18)*(muhat*tmp_1 - tmp_2);
-  const double tmp_21 = NRPyLeakage_Fermi_Dirac_integrals(4, tmp_20);
-  const double tmp_22 = tmp_21/NRPyLeakage_Fermi_Dirac_integrals(2, tmp_20);
-  const double tmp_24 = NRPyLeakage_Fermi_Dirac_integrals(5, tmp_20);
+  const double tmp_21 = NRPyLeakage_Fermi_Dirac_integrals_k4(tmp_20);
+  const double tmp_22 = tmp_21/NRPyLeakage_Fermi_Dirac_integrals_k2(tmp_20);
+  const double tmp_24 = NRPyLeakage_Fermi_Dirac_integrals_k5(tmp_20);
   const double tmp_25 = Y_pn*tmp_13/(exp(-tmp_2 - tmp_24/tmp_21) + 1);
-  const double tmp_26 = tmp_24/NRPyLeakage_Fermi_Dirac_integrals(3, tmp_20);
-  const double tmp_28 = NRPyLeakage_Fermi_Dirac_integrals(4, 0)/NRPyLeakage_Fermi_Dirac_integrals(2, 0);
-  const double tmp_30 = NRPyLeakage_Fermi_Dirac_integrals(5, 0)/NRPyLeakage_Fermi_Dirac_integrals(3, 0);
+  const double tmp_26 = tmp_24/NRPyLeakage_Fermi_Dirac_integrals_k3(tmp_20);
+  const double tmp_28 = NRPyLeakage_Fermi_Dirac_integrals_k4(0)/NRPyLeakage_Fermi_Dirac_integrals_k2(0);
+  const double tmp_30 = NRPyLeakage_Fermi_Dirac_integrals_k5(0)/NRPyLeakage_Fermi_Dirac_integrals_k3(0);
   kappa->nue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_10*tmp_7) + EnsureFinite(tmp_11*tmp_7) + EnsureFinite(tmp_14*tmp_7));
   kappa->nue[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_15*tmp_17) + EnsureFinite(tmp_10*tmp_15*tmp_6) + EnsureFinite(tmp_14*tmp_15*tmp_6));
   kappa->anue[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_17*tmp_22) + EnsureFinite(tmp_10*tmp_22*tmp_6) + EnsureFinite(tmp_22*tmp_25*tmp_6));

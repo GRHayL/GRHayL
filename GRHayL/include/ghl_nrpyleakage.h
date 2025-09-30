@@ -65,8 +65,25 @@ extern "C" {
 #endif
 
 // Function prototypes
-double NRPyLeakage_Fermi_Dirac_integrals(const int k, const double z);
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k0(const double z);
 
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k1(const double z);
+
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k2(const double z);
+
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k3(const double z);
+
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k4(const double z);
+
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k5(const double z);
+
+GHL_DEVICE
 void NRPyLeakage_compute_neutrino_opacities(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -75,6 +92,7 @@ void NRPyLeakage_compute_neutrino_opacities(
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_opacities *restrict kappa );
 
+GHL_DEVICE
 void NRPyLeakage_compute_neutrino_luminosities(
       const ghl_eos_parameters *restrict eos,
       const double alpha,
@@ -91,6 +109,7 @@ void NRPyLeakage_compute_neutrino_luminosities(
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_luminosities *restrict lum );
 
+GHL_DEVICE
 void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       const ghl_eos_parameters *restrict eos,
       const double rho_b,
@@ -101,6 +120,7 @@ void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       double *restrict R_source,
       double *restrict Q_source );
 
+GHL_DEVICE
 void NRPyLeakage_optical_depths_PathOfLeastResistance(
       const double *restrict dxx,
       const double *restrict stencil_gxx,
@@ -120,18 +140,6 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
       const ghl_neutrino_opacities *restrict tau_i_j_kp1,
       const ghl_neutrino_opacities *restrict kappa_i_j_k,
       ghl_neutrino_optical_depths *restrict tau_i_j_k );
-
-static inline int robust_isnan(double x) {
-  unsigned long *pbits = (unsigned long *)&x;
-  return( (*pbits & 0x7ff0000000000000UL) == 0x7ff0000000000000UL &&
-          (*pbits & 0x000fffffffffffffUL) );
-}
-
-static inline int robust_isfinite(double x) {
-  unsigned long *pbits = (unsigned long *)&x;
-  return( !((*pbits & 0x7ff0000000000000UL) == 0x7ff0000000000000UL &&
-            ((*pbits & 0x7ff0000000000000UL) || (*pbits & 0xfff0000000000000UL))) );
-}
 
 #ifdef __cplusplus
 } // extern "C"

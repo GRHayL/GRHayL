@@ -10,6 +10,7 @@
  * Compute GRMHD source terms following Ruffert et al. (1996)
  * https://adsabs.harvard.edu/pdf/1996A%26A...311..532R
  */
+GHL_DEVICE
 void NRPyLeakage_optical_depths_PathOfLeastResistance(
       const double *restrict dxx,
       const double *restrict stencil_gxx,

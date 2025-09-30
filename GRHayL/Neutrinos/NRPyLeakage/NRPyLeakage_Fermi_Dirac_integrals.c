@@ -1,63 +1,82 @@
 #include "ghl_radiation.h"
+#include <math.h>
 
 /*
  * (c) Leo Werneck
  * Compute Fermi-Dirac integrals according to the approximations
  * in Takahashi, Eid, and Hillebrandt (1978)
  * https://adsabs.harvard.edu/pdf/1978A%26A....67..185T
+ *
+ * For all functions below, see Eqs. (A2) in the reference above
+ * for eta > 1e-3, and Eqs. (A3) otherwise. For k=0, see Eq. (A4).
  */
-double NRPyLeakage_Fermi_Dirac_integrals(const int k, const double z) {
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k0(const double eta) {
+  // Note: Eq. (A4) reads eta + log(1 + exp(-eta)). But we have:
+  //
+  // eta + log(1 + exp(-eta)) = eta + log( (1 + exp(eta))/exp(eta) )
+  //                          = eta + log(1 + exp(eta)) - log(exp(eta))
+  //                          = eta + log(1 + exp(eta)) - eta
+  //                          = log(1 + exp(eta))
+  return log1p(exp(eta)); // log(1.0 + exp(eta))
+}
 
-
-  double Fermi_Dirac_integral = 0.0;
-  if(z>1e-3) {
-    switch(k) {
-    case(0):
-      Fermi_Dirac_integral = 1.0*log(exp(z) + 1);
-      break;
-    case(1):
-      Fermi_Dirac_integral = ((1.0/2.0)*((z)*(z)) + 1.6449)/(1 + exp(-1.6855*z));
-      break;
-    case(2):
-      Fermi_Dirac_integral = ((1.0/3.0)*((z)*(z)*(z)) + 3.2898999999999998*z)/(1 - exp(-1.8246*z));
-      break;
-    case(3):
-      Fermi_Dirac_integral = ((1.0/4.0)*((z)*(z)*(z)*(z)) + 4.9348000000000001*((z)*(z)) + 11.3644)/(1 + exp(-1.9038999999999999*z));
-      break;
-    case(4):
-      Fermi_Dirac_integral = ((1.0/5.0)*((z)*(z)*(z)*(z)*(z)) + 6.5796999999999999*((z)*(z)*(z)) + 45.457599999999999*z)/(1 - exp(-1.9483999999999999*z));
-      break;
-    case(5):
-      Fermi_Dirac_integral = ((1.0/6.0)*pow(z, 6) + 8.2247000000000003*((z)*(z)*(z)*(z)) + 113.6439*((z)*(z)) + 236.53229999999999)/(1 + exp(-1.9726999999999999*z));
-      break;
-    default:
-      ghl_error("Unsuported value of k: %d\n", k);
-    }
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k1(const double eta) {
+  if(eta > 1e-3) {
+    const double eta2 = eta * eta;
+    const double numer = eta2 / 2.0 + 1.6449;
+    const double denom = 1.0 + exp(-1.6855 * eta);
+    return numer / denom;
   }
-  else {
-    switch(k) {
-    case(0):
-      Fermi_Dirac_integral = 1.0*log(exp(z) + 1);
-      break;
-    case(1):
-      Fermi_Dirac_integral = exp(z)/(0.21590000000000001*exp(0.88570000000000004*z) + 1);
-      break;
-    case(2):
-      Fermi_Dirac_integral = 2*exp(z)/(0.10920000000000001*exp(0.89080000000000004*z) + 1);
-      break;
-    case(3):
-      Fermi_Dirac_integral = 6*exp(z)/(0.055899999999999998*exp(0.90690000000000004*z) + 1);
-      break;
-    case(4):
-      Fermi_Dirac_integral = 24*exp(z)/(0.0287*exp(0.92569999999999997*z) + 1);
-      break;
-    case(5):
-      Fermi_Dirac_integral = 120*exp(z)/(0.0147*exp(0.94310000000000005*z) + 1);
-      break;
-    default:
-      ghl_error("Unsuported value of k: %d\n", k);
-    }
-  }
+  return exp(eta) / (1.0 + 0.2159 * exp(0.8857 * eta));
+}
 
-  return Fermi_Dirac_integral;
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k2(const double eta) {
+  if(eta > 1e-3) {
+    const double eta3 = eta * eta * eta;
+    const double numer = eta3 / 3.0 + 3.2899 * eta;
+    const double denom = - expm1(-1.8246 * eta); // 1.0 - exp(-1.8246 * eta)
+    return numer / denom;
+  }
+  return 2.0 * exp(eta) / (1.0 + 0.1092 * exp(0.8908 * eta));
+}
+
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k3(const double eta) {
+  if(eta > 1e-3) {
+    const double eta2 = eta * eta;
+    const double eta4 = eta2 * eta2;
+    const double numer = eta4 / 4.0 + 4.9348 * eta2 + 11.3644;
+    const double denom = 1.0 + exp(-1.9039 * eta);
+    return numer / denom;
+  }
+  return 6.0 * exp(eta) / (1.0 + 0.0559 * exp(0.9069 * eta));
+}
+
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k4(const double eta) {
+  if(eta > 1e-3) {
+    const double eta2 = eta * eta;
+    const double eta3 = eta * eta2;
+    const double eta5 = eta2 * eta3;
+    const double numer = eta5 / 5.0 + 6.5797 * eta3 + 45.4576 * eta;
+    const double denom = - expm1(-1.9484 * eta); // 1.0 - exp(-1.9484 * eta)
+    return numer / denom;
+  }
+  return 24.0 * exp(eta) / (1.0 + 0.0287 * exp(0.9257 * eta));
+}
+
+GHL_DEVICE
+double NRPyLeakage_Fermi_Dirac_integrals_k5(const double eta) {
+  if(eta > 1e-3) {
+    const double eta2 = eta * eta;
+    const double eta4 = eta2 * eta2;
+    const double eta6 = eta2 * eta4;
+    const double numer = eta6 / 6.0 + 8.2247 * eta4 + 113.6439 * eta2 + 236.5323;
+    const double denom = 1.0 + exp(-1.9727 * eta);
+    return numer / denom;
+  }
+  return 120.0 * exp(eta) / (1.0 + 0.0147 * exp(0.9431 * eta));
 }

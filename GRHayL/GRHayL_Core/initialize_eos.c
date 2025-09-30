@@ -26,7 +26,7 @@ ghl_error_codes_t (*ghl_con2prim_multi_method)(
  *                     initialized
  */
 GHL_DEVICE
-void ghl_initialize_eos_functions(
+ghl_error_codes_t ghl_initialize_eos_functions(
       const ghl_eos_t eos_type) {
 
   // Step 1: Hybrid EOS functions (always available)
@@ -43,6 +43,8 @@ void ghl_initialize_eos_functions(
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
     ghl_compute_h_and_cs2 = NRPyEOS_tabulated_compute_enthalpy_and_cs2;
   }
+
+  return ghl_success;
 }
 
 /*
@@ -50,7 +52,7 @@ void ghl_initialize_eos_functions(
  * Description : Initializes EOS struct elements for a simple EOS
 */
 GHL_DEVICE
-void ghl_initialize_simple_eos(
+ghl_error_codes_t ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -61,27 +63,27 @@ void ghl_initialize_simple_eos(
       ghl_eos_parameters *restrict eos) {
 
   // Step 0: Enforce default values
-  if(rho_atm < 0) ghl_error("rho_atm must be specified\n");
-  if(rho_min < 0) {
-    ghl_warn("Minimum density not provided. Disabling density floor (rho_min = 0)\n");
-    rho_min = 0.0;
-  }
-  if(rho_max < 0) {
-    ghl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
-    rho_max = 1e300;
-  }
-  if(rho_min > rho_max) ghl_error("rho_min cannot be greater than rho_max\n");
-
-  if(press_atm < 0) ghl_error("press_atm must be specified\n");
-  if(press_min < 0) {
-    ghl_warn("Minimum pressure not provided. Disabling pressure floor (press_min = 0)\n");
-    press_min = 0.0;
-  }
-  if(press_max < 0) {
-    ghl_warn("Maximum pressure not provided. Disabling pressure ceiling (press_max = 1e300)\n");
-    press_max = 1e300;
-  }
-  if(press_min > press_max) ghl_error("press_min cannot be greater than press_max\n");
+  // if(rho_atm < 0) ghl_error("rho_atm must be specified\n");
+  // if(rho_min < 0) {
+  //   ghl_warn("Minimum density not provided. Disabling density floor (rho_min = 0)\n");
+  //   rho_min = 0.0;
+  // }
+  // if(rho_max < 0) {
+  //   ghl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
+  //   rho_max = 1e300;
+  // }
+  // if(rho_min > rho_max) ghl_error("rho_min cannot be greater than rho_max\n");
+  //
+  // if(press_atm < 0) ghl_error("press_atm must be specified\n");
+  // if(press_min < 0) {
+  //   ghl_warn("Minimum pressure not provided. Disabling pressure floor (press_min = 0)\n");
+  //   press_min = 0.0;
+  // }
+  // if(press_max < 0) {
+  //   ghl_warn("Maximum pressure not provided. Disabling pressure ceiling (press_max = 1e300)\n");
+  //   press_max = 1e300;
+  // }
+  // if(press_min > press_max) ghl_error("press_min cannot be greater than press_max\n");
 
   // Step 1: Set EOS type to Ideal Fluid
   eos->eos_type = ghl_eos_simple;
@@ -118,7 +120,8 @@ void ghl_initialize_simple_eos(
 
   // Compute atmospheric tau
   eos->tau_atm = eos->rho_atm * eos->eps_atm;
-  // --------------------------------------
+
+  return ghl_success;
 }
 
 /*
@@ -126,7 +129,7 @@ void ghl_initialize_simple_eos(
  * Description : Initializes EOS struct elements for a hybrid EOS
 */
 GHL_DEVICE
-void ghl_initialize_hybrid_eos(
+ghl_error_codes_t ghl_initialize_hybrid_eos(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -138,16 +141,18 @@ void ghl_initialize_hybrid_eos(
       ghl_eos_parameters *restrict eos) {
 
   // Step 0: Enforce default values
-  if(rho_atm < 0) ghl_error("rho_atm must be specified\n");
-  if(rho_min < 0) {
-    ghl_warn("Minimum density not provided. Disabling density floor (rho_min = 0)\n");
+  if(rho_atm < 0.0) {
+    return ghl_error_eos_rho_atm_unset;
+  }
+  if(rho_min > rho_max) {
+    return ghl_error_eos_rho_range_error;
+  }
+  if(rho_min < 0.0) {
     rho_min = 0.0;
   }
-  if(rho_max < 0) {
-    ghl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
+  if(rho_max < 0.0) {
     rho_max = 1e300;
   }
-  if(rho_min > rho_max) ghl_error("rho_min cannot be greater than rho_max\n");
 
   // Step 1: Set EOS type to Hybrid
   eos->eos_type = ghl_eos_hybrid;
@@ -189,7 +194,6 @@ void ghl_initialize_hybrid_eos(
 
   // Compute maximum entropy
   eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
-  // --------------------------------------
 
   // --------------- Floors ---------------
   // Compute maximum P and eps
@@ -197,7 +201,6 @@ void ghl_initialize_hybrid_eos(
 
   // Compute maximum entropy
   eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
-  // --------------------------------------
 
   // --------- Atmospheric values ---------
   // Compute atmospheric P and eps
@@ -208,7 +211,8 @@ void ghl_initialize_hybrid_eos(
 
   // Compute atmospheric tau
   eos->tau_atm = eos->rho_atm * eos->eps_atm;
-  // --------------------------------------
+
+  return ghl_success;
 }
 
 /*
@@ -216,7 +220,7 @@ void ghl_initialize_hybrid_eos(
  * Description : Initializes EOS struct elements for tabulated EOS
 */
 GHL_DEVICE
-void ghl_initialize_tabulated_eos(
+ghl_error_codes_t ghl_initialize_tabulated_eos(
       const char *table_filepath,
       const double rho_atm,
       double rho_min,
@@ -233,46 +237,46 @@ void ghl_initialize_tabulated_eos(
   eos->eos_type = ghl_eos_tabulated;
 
   // Step 2: Read the EOS table
-  ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
+  // ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
 
   // Step 3: Enforce default values for (rho, Y_e, T) min, max, and atm
   // Step 3.a: Atmosphere values
-  if(rho_atm < 0) ghl_error("rho_atm must be specified\n");
-  if(Y_e_atm < 0) ghl_error("Y_e_atm must be specified\n");
-  if(  T_atm < 0) ghl_error("T_atm must be specified\n");
+  if(rho_atm < 0.0) {
+    return ghl_error_eos_rho_atm_unset;
+  }
+  if(Y_e_atm < 0.0) {
+    return ghl_error_eos_Y_e_atm_unset;
+  }
+  if(T_atm < 0.0) {
+    return ghl_error_eos_T_atm_unset;
+  }
 
   // Step 3.b: Minimum values
-  if(rho_min < eos->table_rho_min) {
-    ghl_warn("Minimum density is less than table bounds; using table bounds (%.15e)\n", eos->table_rho_min);
-    rho_min = eos->table_rho_min;
-  }
-  if(Y_e_min < eos->table_Y_e_min) {
-    ghl_warn("Minimum electron fraction is less than table bounds; using table bounds (%.15e)\n", eos->table_Y_e_min);
-    Y_e_min = eos->table_Y_e_min;
-  }
-  if(T_min < eos->table_T_min) {
-    ghl_warn("Minimum temperature is less than table bounds; using table bounds (%.15e)\n", eos->table_T_min);
-    T_min = eos->table_T_min;
-  }
+  rho_min = fmax(rho_min, eos->table_rho_min);
+  Y_e_min = fmax(Y_e_min, eos->table_Y_e_min);
+  T_min = fmax(T_min, eos->table_T_min);
 
   // Step 3.c: Maximum values
-  if(rho_max < 0 || rho_max > eos->table_rho_max) {
-    ghl_warn("Invalid maximum density; using table bounds (%.15e)\n", eos->table_rho_max);
+  if(rho_max < 0.0 || rho_max > eos->table_rho_max) {
     rho_max = eos->table_rho_max;
   }
-  if(Y_e_max < 0 || Y_e_max > eos->table_Y_e_max) {
-    ghl_warn("Invalid maximum electron fraction; using table bounds (%.15e)\n", eos->table_Y_e_max);
+  if(Y_e_max < 0.0 || Y_e_max > eos->table_Y_e_max) {
     Y_e_max = eos->table_Y_e_max;
   }
-  if(T_max < 0 || T_max > eos->table_T_max) {
-    ghl_warn("Invalid maximum temperature; using table bounds (%.15e)\n", eos->table_T_max);
+  if(T_max < 0.0 || T_max > eos->table_T_max) {
     T_max = eos->table_T_max;
   }
 
   // Step 3.d: Sanity check mins and maxs
-  if(rho_min > rho_max) ghl_error("rho_min cannot be greater than rho_max\n");
-  if(Y_e_min > Y_e_max) ghl_error("Y_e_min cannot be greater than Y_e_max\n");
-  if(  T_min >   T_max) ghl_error("T_min cannot be greater than T_max\n");
+  if(rho_min > rho_max) {
+    return ghl_error_eos_rho_range_error;
+  }
+  if(Y_e_min > Y_e_max) {
+    return ghl_error_eos_Y_e_range_error;
+  }
+  if(T_min > T_max) {
+    return ghl_error_eos_T_range_error;
+  }
 
   // Step 4: Initialize quantities which are common to all EOSs.
   init_common_eos_quantities;
@@ -309,6 +313,8 @@ void ghl_initialize_tabulated_eos(
   eos->lp_of_lr = NULL;
   eos->le_of_lr = NULL;
   eos->lh_of_lr = NULL;
+
+  return ghl_success;
 }
 
 /*
@@ -316,7 +322,7 @@ void ghl_initialize_tabulated_eos(
  * Description : Fully initializes EOS struct elements for a hybrid EOS
 */
 GHL_DEVICE
-void ghl_initialize_simple_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -341,7 +347,7 @@ void ghl_initialize_simple_eos_functions_and_params(
  * Description : Fully initializes EOS struct elements for a hybrid EOS
 */
 GHL_DEVICE
-void ghl_initialize_hybrid_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_hybrid_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -356,7 +362,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
   ghl_initialize_eos_functions(ghl_eos_hybrid);
 
   // Step 2: Initialize Hybrid EOS parameters
-  ghl_initialize_hybrid_eos(
+  return ghl_initialize_hybrid_eos(
         rho_atm, rho_min, rho_max,
         neos, rho_ppoly, Gamma_ppoly,
         K_ppoly0, Gamma_th, eos);
@@ -366,7 +372,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
  * Description : Initializes EOS struct elements for tabulated EOS
 */
 GHL_DEVICE
-void ghl_initialize_tabulated_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_filepath,
       const double rho_atm,
       const double rho_min,
@@ -385,7 +391,7 @@ void ghl_initialize_tabulated_eos_functions_and_params(
   ghl_initialize_eos_functions(ghl_eos_tabulated);
 
   // Step 2: Initialize Tabulated EOS parameters
-  ghl_initialize_tabulated_eos(
+  return ghl_initialize_tabulated_eos(
         table_filepath,
         rho_atm, rho_min, rho_max,
         Ye_atm, Ye_min, Ye_max,
