@@ -31,6 +31,7 @@ static inline double get_EOS_table_max(
       const int var_key) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
+  return NAN;
 #else
   // Loop over the table, searching for the maximum value
   const int totalsize  = eos->N_rho * eos->N_Ye * eos->N_T;
@@ -50,6 +51,7 @@ static inline double get_EOS_table_min(
       const int var_key) {
 #ifndef GRHAYL_USE_HDF5
   HDF5_ERROR_IF_USED;
+  return NAN;
 #else
   // Loop over the table, searching for the minimum value
   const int totalsize  = eos->N_rho * eos->N_Ye * eos->N_T;

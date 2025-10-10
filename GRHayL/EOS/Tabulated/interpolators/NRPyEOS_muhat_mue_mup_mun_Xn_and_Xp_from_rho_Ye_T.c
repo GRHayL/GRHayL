@@ -13,6 +13,10 @@ ghl_error_codes_t NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
       double *restrict mu_n,
       double *restrict X_n,
       double *restrict X_p) {
+#ifndef GRHAYL_USE_HDF5
+  HDF5_ERROR_IF_USED;
+  return ghl_error_hdf5_is_disabled;
+#else
 
   // Step 1: Set EOS table keys
   const int keys[6] = {NRPyEOS_muhat_key,NRPyEOS_mu_e_key,NRPyEOS_mu_p_key,NRPyEOS_mu_n_key,NRPyEOS_X_n_key,NRPyEOS_X_p_key};
@@ -37,4 +41,5 @@ ghl_error_codes_t NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
   *X_p = outvars[5];
 
   return ghl_success;
+#endif
 }

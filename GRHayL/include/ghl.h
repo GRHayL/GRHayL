@@ -53,6 +53,7 @@ typedef enum {
   ghl_error_invalid_utsq,
   ghl_error_invalid_Z,
   ghl_error_newman_invalid_discriminant,
+  ghl_error_hdf5_is_disabled,
 } ghl_error_codes_t;
 
 typedef enum {
