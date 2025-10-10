@@ -4,6 +4,7 @@
   (NRPyEOS_munu_key            \
    + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
 
+#ifndef GRHAYL_DISABLE_HDF5
 static double find_Ye_st_munu_is_zero(
       const int n,
       const double *restrict Ye,
@@ -30,6 +31,7 @@ static double find_Ye_st_munu_is_zero(
 
   return (y0 * x1 - y1 * x0) / (y0 - y1);
 }
+#endif
 
 static int find_left_index_uniform_array(
       const int nx,
