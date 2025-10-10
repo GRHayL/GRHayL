@@ -11,8 +11,8 @@ ghl_error_codes_t NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(
       double *restrict eps,
       double *restrict S,
       double *restrict cs2) {
-#ifndef GRHAYL_USE_HDF5
-  HDF5_ERROR_IF_USED;
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
   return ghl_error_hdf5_is_disabled;
 #else
 

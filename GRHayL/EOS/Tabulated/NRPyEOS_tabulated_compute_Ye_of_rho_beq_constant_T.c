@@ -173,8 +173,8 @@ double NRPyEOS_tabulated_compute_eps_from_rho(
 void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos) {
-#ifndef GRHAYL_USE_HDF5
-  HDF5_ERROR_IF_USED;
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
 #else
   const int it = ghl_tabulated_get_index_T(eos, T);
   const int nr = eos->N_rho;
@@ -198,8 +198,8 @@ void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
 void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos) {
-#ifndef GRHAYL_USE_HDF5
-  HDF5_ERROR_IF_USED;
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
 #else
   // Start by obtaining Ye(logrho)
   NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(T, eos);
