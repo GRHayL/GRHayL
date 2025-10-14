@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
       Fermi_Dirac_integral = NRPyLeakage_Fermi_Dirac_integrals(-1, 1e-2);
       break;
   }
+  (void)Fermi_Dirac_integral; // TODO: I'm not sure that's the way to go here
 
   ghl_metric_quantities ADM_metric;
   ghl_primitive_quantities prims;
@@ -106,6 +107,7 @@ int main(int argc, char **argv) {
         ghl_read_error_codes(error);
       break;
   }
+#ifndef GRHAYL_DISABLE_HDF5
 /*
 rho: 2.718281828459045e+00, 1.096633158428459e+03
  T : 2.718281828459045e+00, 1.484131591025766e+02
@@ -340,6 +342,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   if(test_key > 33 && test_key < 61) {
     read_table_error_test(test_key);
   }
+#endif
 
   /*
      initialize_*_eos_functions_and_params::
@@ -369,6 +372,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             neos, rho_ppoly, Gamma_ppoly,
             k_ppoly0, Gamma_th, &hybrid_eos);
       break;
+#ifndef GRHAYL_DISABLE_HDF5
     case 63:
       ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
@@ -376,6 +380,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             Y_e_atm, Y_e_min, Y_e_max,
             T_atm, T_min, T_max, &tab_eos);
       break;
+#endif
     case 64:
       ghl_initialize_simple_eos_functions_and_params(
             rho_b_atm, rho_b_max, rho_b_min,
@@ -388,6 +393,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             neos, rho_ppoly, Gamma_ppoly,
             k_ppoly0, Gamma_th, &hybrid_eos);
       break;
+#ifndef GRHAYL_DISABLE_HDF5
     case 66:
       ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
@@ -395,6 +401,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             Y_e_atm, Y_e_min, Y_e_max,
             T_atm, T_min, T_max, &tab_eos);
       break;
+#endif
     case 67:
       ghl_initialize_simple_eos_functions_and_params(
             rho_b_atm, rho_b_min, rho_b_max,
@@ -407,6 +414,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             press_atm, press_max, press_min,
             Gamma_th, &hybrid_eos);
       break;
+#ifndef GRHAYL_DISABLE_HDF5
     case 69:
       ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
@@ -435,15 +443,19 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             Y_e_atm, Y_e_min, Y_e_max,
             T_atm, T_max, T_min, &tab_eos);
       break;
+#endif
   }
 
+#ifndef GRHAYL_DISABLE_HDF5
   printf("Code failure test has failed for code test %d\n", test_key);
   printf("We shouldn't be here, so I'll get rid of some compilation warnings :)\n"
          "%e %d %e %e %e %e\n", Fermi_Dirac_integral, speed_limited, rho, Y_e, eps, T);
+#endif
   return 0;
 }
 // clang-format on
 
+#ifndef GRHAYL_DISABLE_HDF5
 void create_dataset(char *name, int dim, hid_t datatype_id, hid_t file_id) {
   hsize_t dims[dim];
   for(int i=0;i<dim;i++) {
@@ -464,7 +476,9 @@ void create_dataset(char *name, int dim, hid_t datatype_id, hid_t file_id) {
   H5Dclose(dataset_id);
   H5Sclose(dataspace_id);
 }
+#endif
 
+#ifndef GRHAYL_DISABLE_HDF5
 void read_table_error_test(int test_key) {
 
   test_key -= 34;
@@ -509,3 +523,4 @@ void read_table_error_test(int test_key) {
   ghl_eos_parameters eos;
   NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
 }
+#endif

@@ -5,6 +5,10 @@ double get_table_quantity(
       const double rho,
       const double Y_e,
       const double T ) {
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
+  return NAN;
+#else
   switch (which_var) {
     case NRPyEOS_press_key:
       return rho + Y_e + T;
@@ -48,4 +52,5 @@ double get_table_quantity(
       ghl_error("Invalid variable %d\n", which_var);
       return -1;
   }
+#endif
 }
