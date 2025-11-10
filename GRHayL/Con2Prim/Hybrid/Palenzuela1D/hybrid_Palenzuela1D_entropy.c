@@ -68,7 +68,7 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
-  diagnostics->which_routine = Palenzuela1D;
+  diagnostics->which_routine = Palenzuela1D_entropy;
   return ghl_hybrid_Palenzuela1D(compute_rho_P_eps_W_entropy,
                                  params,
                                  eos,
