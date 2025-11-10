@@ -36,7 +36,7 @@ static int find_left_index_uniform_array(
       const double *restrict x_arr,
       const double x) {
 
-  return (x - x_arr[0]) / (x_arr[1] - x_arr[0]) + 0.5;
+  return (x - x_arr[0]) / (x_arr[1] - x_arr[0]);
 }
 
 static int
