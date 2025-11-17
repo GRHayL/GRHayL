@@ -4,6 +4,7 @@
   (NRPyEOS_munu_key            \
    + NRPyEOS_ntablekeys * ((ir) + eos->N_rho * ((it) + eos->N_T * (iy))))
 
+#ifndef GRHAYL_DISABLE_HDF5
 static double find_Ye_st_munu_is_zero(
       const int n,
       const double *restrict Ye,
@@ -30,6 +31,7 @@ static double find_Ye_st_munu_is_zero(
 
   return (y0 * x1 - y1 * x0) / (y0 - y1);
 }
+#endif
 
 static int find_left_index_uniform_array(
       const int nx,
@@ -173,7 +175,9 @@ double NRPyEOS_tabulated_compute_eps_from_rho(
 void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos) {
-
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
+#else
   const int it = ghl_tabulated_get_index_T(eos, T);
   const int nr = eos->N_rho;
   const int ny = eos->N_Ye;
@@ -190,12 +194,15 @@ void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
     eos->Ye_of_lr[ir] = find_Ye_st_munu_is_zero(ny, eos->table_Y_e, munu_of_Ye);
   }
   free(munu_of_Ye);
+#endif
 }
 
 void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos) {
-
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
+#else
   // Start by obtaining Ye(logrho)
   NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(T, eos);
 
@@ -220,6 +227,7 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
     eos->le_of_lr[ir] = log(eps + eos->energy_shift);
     eos->lh_of_lr[ir] = log(1.0 + eps + P / rho);
   }
+#endif
 }
 
 void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos) {

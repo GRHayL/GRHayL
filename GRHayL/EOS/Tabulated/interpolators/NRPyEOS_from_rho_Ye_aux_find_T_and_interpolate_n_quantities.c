@@ -14,6 +14,10 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
       const int *restrict tablevars_keys,
       double *restrict tablevars,
       double *restrict T) {
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
+  return ghl_error_hdf5_is_disabled;
+#else
 
   // This function will interpolate n table quantities from
   // (rho,Ye,aux). It replaces EOS_Omni calls with keytemp != 1
@@ -61,4 +65,5 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
   // Then interpolate the quantities we want from (rho,Ye,T)
   NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, n, rho, Y_e, *T, tablevars_keys, tablevars);
   return ghl_success;
+#endif
 }

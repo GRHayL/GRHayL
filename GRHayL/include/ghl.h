@@ -19,10 +19,6 @@
 #define M_PI 3.141592653589793238462643383279502884L
 #endif
 
-#ifndef GRHAYL_DISABLE_HDF5
-#define GRHAYL_USE_HDF5
-#endif
-
 #ifdef __cplusplus
 #ifndef restrict
 #define restrict __restrict__
@@ -53,6 +49,7 @@ typedef enum {
   ghl_error_invalid_utsq,
   ghl_error_invalid_Z,
   ghl_error_newman_invalid_discriminant,
+  ghl_error_hdf5_is_disabled,
 } ghl_error_codes_t;
 
 typedef enum {

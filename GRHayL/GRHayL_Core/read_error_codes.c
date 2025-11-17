@@ -69,5 +69,8 @@ void ghl_read_error_codes(
     case ghl_error_newman_invalid_discriminant:
       ghl_abort("Found negative discriminant inside Newman1D Con2Prim");
       break;
+    case ghl_error_hdf5_is_disabled:
+      ghl_abort("HDF5 is disabled, so tabulated EOS functions are not allowed");
+      break;
   }
 }

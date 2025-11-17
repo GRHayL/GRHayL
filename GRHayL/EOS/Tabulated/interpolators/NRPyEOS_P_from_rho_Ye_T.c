@@ -8,6 +8,10 @@ ghl_error_codes_t NRPyEOS_P_from_rho_Ye_T(
       const double Y_e,
       const double T,
       double *restrict P) {
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
+  return ghl_error_hdf5_is_disabled;
+#else
 
   // Step 1: Set EOS table keys
   const int keys[1] = {NRPyEOS_press_key};
@@ -26,4 +30,5 @@ ghl_error_codes_t NRPyEOS_P_from_rho_Ye_T(
   // Step 5: Update output variables
   *P = outvars[0];
   return ghl_success;
+#endif
 }
