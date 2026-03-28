@@ -125,10 +125,10 @@ void ghl_wenoz_reconstruction_for_cell(
   qr += w1 * (w5alpha[1][0] * q1 + w5alpha[1][1] * q2 + w5alpha[1][2] * q3);
   qr += w2 * (w5alpha[2][0] * q2 + w5alpha[2][1] * q3 + w5alpha[2][2] * q4);
   qr *= wsum;
-  const double alpha_l =
-      3.0 * wsum * w0 * w1 * w2 /
-          (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2) +
-      eps;
+//   const double alpha_l =
+//       3.0 * wsum * w0 * w1 * w2 /
+//           (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2) +
+//       eps;
 
   w0 = w5gamma[0] * beta2 + eps;
   w1 = w5gamma[1] * beta1 + eps;
@@ -138,15 +138,15 @@ void ghl_wenoz_reconstruction_for_cell(
   ql += w1 * (w5alpha[1][0] * q3 + w5alpha[1][1] * q2 + w5alpha[1][2] * q1);
   ql += w2 * (w5alpha[2][0] * q2 + w5alpha[2][1] * q1 + w5alpha[2][2] * q0);
   ql *= wsum;
-  const double alpha_r =
-      3.0 * wsum * w0 * w1 * w2 /
-          (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2) +
-      eps;
+//   const double alpha_r =
+//       3.0 * wsum * w0 * w1 * w2 /
+//           (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2) +
+//       eps;
 
-  double dq = q3 - q2;
-  dq = mc(q2 - q1, dq, 2.0);
+//   double dq = q3 - q2;
+//   dq = mc(q2 - q1, dq, 2.0);
 
-  const double alpha_lin = 2.0 * alpha_l * alpha_r / (alpha_l + alpha_r);
-  *Ur = alpha_lin * qr + (1.0 - alpha_lin) * (q2 + 0.5 * dq);
-  *Ul = alpha_lin * ql + (1.0 - alpha_lin) * (q2 - 0.5 * dq);
+//   const double alpha_lin = 2.0 * alpha_l * alpha_r / (alpha_l + alpha_r);
+  *Ur = qr; //alpha_lin * qr + (1.0 - alpha_lin) * (q2 + 0.5 * dq);
+  *Ul = ql; //alpha_lin * ql + (1.0 - alpha_lin) * (q2 - 0.5 * dq);
  }
