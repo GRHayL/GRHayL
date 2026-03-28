@@ -3,16 +3,22 @@
 
 #include "ghl.h"
 
+/**
+ * @ingroup recon_internal
+ * @enum reconstruction_stencil
+ * @brief Integer constants for indexing stencil arrays
+ */
+enum reconstruction_stencil {
+  MINUS2, /**< Stencil index \f$ i-2 \f$ */
+  MINUS1, /**< Stencil index \f$ i-1 \f$ */
+  PLUS_0, /**< Stencil index \f$ i   \f$ */
+  PLUS_1, /**< Stencil index \f$ i+1 \f$ */
+  PLUS_2  /**< Stencil index \f$ i+2 \f$ */
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// Integer constants to keep track of stencil.
-enum reconstruction_stencil {
-  MINUS2, MINUS1,
-  PLUS_0, PLUS_1,
-  PLUS_2
-};
 
 // PPM functions
 void ghl_ppm_reconstruction(
@@ -92,13 +98,34 @@ void ghl_superbee_reconstruction(
       double *restrict Ur,
       double *restrict Ul);
 
+// WENO functions
 void ghl_wenoz_reconstruction(
       const double U[6],
       double *restrict Ur,
       double *restrict Ul);
 
-void ghl_wenoz_reconstruction_right_left_faces(
+void ghl_wenoz_reconstruction_for_cell(
       const double U[5],
+      double *restrict Ur,
+      double *restrict Ul);
+
+void ghl_weno7z_reconstruction(
+      const double U[8],
+      double *restrict Ur,
+      double *restrict Ul);
+
+void ghl_weno7z_reconstruction_for_cell(
+      const double U[7],
+      double *restrict Ur,
+      double *restrict Ul);
+
+void ghl_weno9z_reconstruction(
+      const double U[10],
+      double *restrict Ur,
+      double *restrict Ul);
+
+void ghl_weno9z_reconstruction_for_cell(
+      const double U[9],
       double *restrict Ur,
       double *restrict Ul);
 

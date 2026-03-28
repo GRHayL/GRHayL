@@ -1,0 +1,9 @@
+# Primary make.code.defn for gem Reconstruction
+
+# Source files in this directory that need compiled:
+SRCS = wenoz_reconstruction.c                  \
+       wenoz_reconstruction_for_cell.c         \
+       weno7z_reconstruction.c                 \
+       weno7z_reconstruction_for_cell.c        \
+       weno9z_reconstruction.c                 \
+       weno9z_reconstruction_for_cell.c
