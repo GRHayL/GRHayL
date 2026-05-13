@@ -135,12 +135,12 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
   const double tau_1_nux_i_j_km1 = tau_i_j_km1->nux[1] + ds_i_j_kmhalf*kappa_1_nux_i_j_kmhalf;
 
   // Step 8: Select path of least resistance
-  const double new_tau_0_nue_i_j_k  = MIN(MIN(MIN(MIN(MIN(tau_0_nue_ip1_j_k,tau_0_nue_im1_j_k),tau_0_nue_i_jp1_k),tau_0_nue_i_jm1_k),tau_0_nue_i_j_kp1),tau_0_nue_i_j_km1);
-  const double new_tau_1_nue_i_j_k  = MIN(MIN(MIN(MIN(MIN(tau_1_nue_ip1_j_k,tau_1_nue_im1_j_k),tau_1_nue_i_jp1_k),tau_1_nue_i_jm1_k),tau_1_nue_i_j_kp1),tau_1_nue_i_j_km1);
-  const double new_tau_0_anue_i_j_k = MIN(MIN(MIN(MIN(MIN(tau_0_anue_ip1_j_k,tau_0_anue_im1_j_k),tau_0_anue_i_jp1_k),tau_0_anue_i_jm1_k),tau_0_anue_i_j_kp1),tau_0_anue_i_j_km1);
-  const double new_tau_1_anue_i_j_k = MIN(MIN(MIN(MIN(MIN(tau_1_anue_ip1_j_k,tau_1_anue_im1_j_k),tau_1_anue_i_jp1_k),tau_1_anue_i_jm1_k),tau_1_anue_i_j_kp1),tau_1_anue_i_j_km1);
-  const double new_tau_0_nux_i_j_k  = MIN(MIN(MIN(MIN(MIN(tau_0_nux_ip1_j_k,tau_0_nux_im1_j_k),tau_0_nux_i_jp1_k),tau_0_nux_i_jm1_k),tau_0_nux_i_j_kp1),tau_0_nux_i_j_km1);
-  const double new_tau_1_nux_i_j_k  = MIN(MIN(MIN(MIN(MIN(tau_1_nux_ip1_j_k,tau_1_nux_im1_j_k),tau_1_nux_i_jp1_k),tau_1_nux_i_jm1_k),tau_1_nux_i_j_kp1),tau_1_nux_i_j_km1);
+  const double new_tau_0_nue_i_j_k  = fmin(fmin(fmin(fmin(fmin(tau_0_nue_ip1_j_k,tau_0_nue_im1_j_k),tau_0_nue_i_jp1_k),tau_0_nue_i_jm1_k),tau_0_nue_i_j_kp1),tau_0_nue_i_j_km1);
+  const double new_tau_1_nue_i_j_k  = fmin(fmin(fmin(fmin(fmin(tau_1_nue_ip1_j_k,tau_1_nue_im1_j_k),tau_1_nue_i_jp1_k),tau_1_nue_i_jm1_k),tau_1_nue_i_j_kp1),tau_1_nue_i_j_km1);
+  const double new_tau_0_anue_i_j_k = fmin(fmin(fmin(fmin(fmin(tau_0_anue_ip1_j_k,tau_0_anue_im1_j_k),tau_0_anue_i_jp1_k),tau_0_anue_i_jm1_k),tau_0_anue_i_j_kp1),tau_0_anue_i_j_km1);
+  const double new_tau_1_anue_i_j_k = fmin(fmin(fmin(fmin(fmin(tau_1_anue_ip1_j_k,tau_1_anue_im1_j_k),tau_1_anue_i_jp1_k),tau_1_anue_i_jm1_k),tau_1_anue_i_j_kp1),tau_1_anue_i_j_km1);
+  const double new_tau_0_nux_i_j_k  = fmin(fmin(fmin(fmin(fmin(tau_0_nux_ip1_j_k,tau_0_nux_im1_j_k),tau_0_nux_i_jp1_k),tau_0_nux_i_jm1_k),tau_0_nux_i_j_kp1),tau_0_nux_i_j_km1);
+  const double new_tau_1_nux_i_j_k  = fmin(fmin(fmin(fmin(fmin(tau_1_nux_ip1_j_k,tau_1_nux_im1_j_k),tau_1_nux_i_jp1_k),tau_1_nux_i_jm1_k),tau_1_nux_i_j_kp1),tau_1_nux_i_j_km1);
 
   // Step 9: Write results
   tau_i_j_k->nue[0]  = new_tau_0_nue_i_j_k;

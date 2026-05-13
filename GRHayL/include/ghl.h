@@ -6,14 +6,13 @@
 #include "ghl_io.h"
 #include "ghl_metric_helpers.h"
 
-#ifndef MIN
-#define MIN(A, B) (((A) < (B)) ? (A) : (B))
-#endif
-#ifndef MAX
-#define MAX(A, B) (((A) > (B)) ? (A) : (B))
-#endif
+#ifndef SQR
 #define SQR(x) ((x) * (x))
+#endif
+
+#ifndef ONE_OVER_SQRT_4PI
 #define ONE_OVER_SQRT_4PI 0.282094791773878143474039725780
+#endif
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643383279502884L

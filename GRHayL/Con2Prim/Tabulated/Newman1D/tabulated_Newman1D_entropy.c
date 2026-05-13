@@ -26,7 +26,7 @@ static ghl_error_codes_t ghl_newman_entropy(
   int AtStep=0;
 
   // Floor tau
-  const double tau = MAX(con->tau, eos->tau_atm);
+  const double tau = fmax(con->tau, eos->tau_atm);
 
   // d = 0.5( S^{2}*B^{2} - (B.S)^{2} ) (eq. 5.7 in Newman & Hamlin 2014)
   double d = 0.5*(S_squared*B_squared-BdotS*BdotS);
@@ -72,7 +72,7 @@ static ghl_error_codes_t ghl_newman_entropy(
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
 
     // Impose physical limits and compute W
-    invW = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor), 1.0);
+    invW = fmin(fmax(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor), 1.0);
     W    = 1.0/invW;
 
     // Then compute rho = D/W
@@ -109,7 +109,7 @@ static ghl_error_codes_t ghl_newman_entropy(
     const double Epssq = Eps*Eps;
     const double zsq   = z*z;
     const double vsq   = (zsq * S_squared + (z+Eps)*BdotSsq)/(zsq*Epssq);
-    invW               = MIN(MAX(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor), 1.0);
+    invW               = fmin(fmax(sqrt(1.0-vsq), 1.0/params->max_Lorentz_factor), 1.0);
     W                  = 1.0/invW;
   }
 
