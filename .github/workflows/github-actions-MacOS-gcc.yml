@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         test-function: [conservs, primitives, induction_gauge_rhs, HLL_flux, reconstruction, flux_source]
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -46,7 +46,7 @@ jobs:
       fail-fast: false
       matrix:
         test-function: [apply_conservative_limits, con2prim_multi_method_hybrid, enforce_primitive_limits_and_compute_u0, compute_conservs_and_Tmunu]
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -77,7 +77,7 @@ jobs:
       fail-fast: false
       matrix:
         test-function: [hybrid_failure]
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -101,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -127,7 +127,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -151,7 +151,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -179,7 +179,7 @@ jobs:
       fail-fast: false
       matrix:
         test-function: [hybrid_flux, tabulated_flux]
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -210,7 +210,7 @@ jobs:
       fail-fast: false
       matrix:
         test-function: [PLM_reconstruction, WENOZ_reconstruction]
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -240,7 +240,7 @@ jobs:
       fail-fast: false
       matrix:
         test-function: [nrpyleakage_optically_thin_gas, nrpyleakage_constant_density_sphere, nrpyleakage_luminosities]
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -269,7 +269,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -312,7 +312,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -345,7 +345,7 @@ jobs:
       matrix:
         metric: [BSSN, ADM]
         centering: [ccc, vvv]
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
         exclude:
           - metric: BSSN
             centering: vvv
@@ -379,7 +379,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-latest]
+        os: [macos-14, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
