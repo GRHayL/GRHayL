@@ -61,8 +61,6 @@ typedef enum {
   Noble1D_entropy,
   Noble1D_entropy2,
   Font1D,
-  CerdaDuran2D,
-  CerdaDuran3D,
   Palenzuela1D,
   Palenzuela1D_entropy,
   Newman1D,
@@ -74,6 +72,11 @@ typedef enum {
   ghl_eos_hybrid,
   ghl_eos_tabulated
 } ghl_eos_t;
+
+typedef enum {
+  ghl_eos_table_stellarcollapse,
+  ghl_eos_table_types,
+} ghl_eos_table_t;
 
 /*
  * Struct        : ghl_parameters
@@ -213,6 +216,8 @@ typedef struct ghl_eos_parameters {
 
   //-------------- General parameters --------------
   ghl_eos_t eos_type;
+  ghl_eos_table_t table_type;
+  bool clean_sound_speed;
   double rho_atm, rho_min, rho_max;
   double tau_atm;
   double press_atm, press_min, press_max;
@@ -244,6 +249,7 @@ typedef struct ghl_eos_parameters {
   double *restrict table_logT;
   double *restrict table_Y_e;
   double *restrict table_eps;
+  double *restrict table_logh;
 
   // Table bounds
   double table_rho_min, table_rho_max;
@@ -493,6 +499,15 @@ void ghl_compute_smallb_and_b2(
       const double uDN[4],
       double smallb[4],
       double *restrict smallb2);
+
+void ghl_compute_SU_Bsq_Ssq_BdotS(
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const ghl_primitive_quantities *restrict prims,
+      double *restrict SU,
+      double *restrict Bsq,
+      double *restrict Ssq,
+      double *restrict BdotS);
 
 void ghl_read_error_codes(
       const ghl_error_codes_t error);

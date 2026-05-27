@@ -8,7 +8,6 @@
   ghl_error("HDF5 is disabled, so this function cannot be used\n")
 #else
 
-#include <string.h>
 #include <hdf5.h>
 
 #define H5_USE_16_API 1
@@ -22,29 +21,42 @@
 #define CGS_TO_CODE_DENSITY  1.61887093132742e-18 // 1/[Density]  = L^3 / M_sun
 #define CGS_TO_CODE_PRESSURE 1.80123683248503e-39 // 1/[Pressure] = (L T^2) / M_sun
 #define CGS_TO_CODE_ENERGY   1.11265005605362e-21 // 1/[Energy]   = 1 / c^2
+
+#define NRPYEOS_IDX1D(eos_, ir_, it_, iy_)      ((ir_) + eos_->N_rho * (it_ + eos_->N_T * (iy_)))
+#define NRPYEOS_IDX3D(eos_, ir_, it_, iy_, iv_) ((iv_) + NRPyEOS_ntablekeys * NRPYEOS_IDX1D(eos_, ir_, it_, iy_))
+
 //
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // Table keys
-enum eos_keys {
-  NRPyEOS_press_key, NRPyEOS_eps_key, NRPyEOS_entropy_key,
-  NRPyEOS_munu_key, NRPyEOS_cs2_key, NRPyEOS_depsdT_key,
-  NRPyEOS_dPdrho_key, NRPyEOS_dPdeps_key, NRPyEOS_muhat_key,
-  NRPyEOS_mu_e_key, NRPyEOS_mu_p_key, NRPyEOS_mu_n_key,
-  NRPyEOS_X_a_key, NRPyEOS_X_h_key, NRPyEOS_X_n_key,
-  NRPyEOS_X_p_key, NRPyEOS_Abar_key, NRPyEOS_Zbar_key,
-  NRPyEOS_Gamma_key, NRPyEOS_ntablekeys
-};
+typedef enum {
+  NRPyEOS_press_key,
+  NRPyEOS_eps_key,
+  NRPyEOS_entropy_key,
+  NRPyEOS_munu_key,
+  NRPyEOS_cs2_key,
+  NRPyEOS_depsdT_key,
+  NRPyEOS_dPdrho_key,
+  NRPyEOS_dPdeps_key,
+  NRPyEOS_muhat_key,
+  NRPyEOS_mu_e_key,
+  NRPyEOS_mu_p_key,
+  NRPyEOS_mu_n_key,
+  NRPyEOS_X_a_key,
+  NRPyEOS_X_h_key,
+  NRPyEOS_X_n_key,
+  NRPyEOS_X_p_key,
+  NRPyEOS_Abar_key,
+  NRPyEOS_Zbar_key,
+  NRPyEOS_Gamma_key,
+  NRPyEOS_enthalpy_key,
+  NRPyEOS_dPdT_key,
+  NRPyEOS_dhdT_key,
+  NRPyEOS_ntablekeys
+} NRPyEOS_keys;
 
-// Name of the variables. This is only used to print
-// information about the keys during startup
-static const char table_var_names[NRPyEOS_ntablekeys][10] = {
-  "logpress","logenergy","entropy","munu","cs2","dedt",
-  "dpdrhoe", "dpderho", "muhat", "mu_e", "mu_p", "mu_n",
-  "Xa","Xh","Xn","Xp","Abar","Zbar","Gamma"
-};
 //********************************************
 #endif // GRHAYL_USE_HDF5
 
@@ -253,67 +265,73 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy_and_cs2(
 
 int NRPyEOS_tabulated_get_index_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho);
 
 int NRPyEOS_tabulated_get_index_T(
       const ghl_eos_parameters *restrict eos,
-      const double T );
+      const double T);
 
 int NRPyEOS_tabulated_get_index_Ye(
       const ghl_eos_parameters *restrict eos,
-      const double Ye );
+      const double Ye);
 
 void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const double T,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
       const double T,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
-void NRPyEOS_tabulated_free_beq_quantities( ghl_eos_parameters *restrict eos );
+void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos);
 
 double NRPyEOS_tabulated_compute_Ye_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho);
 
 double NRPyEOS_tabulated_compute_P_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho);
 
 double NRPyEOS_tabulated_compute_rho_from_P(
       const ghl_eos_parameters *restrict eos,
-      const double P );
+      const double P);
 
 double NRPyEOS_tabulated_compute_eps_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho);
 
-void NRPyEOS_tabulated_free_beq_quantities( ghl_eos_parameters *restrict eos );
+void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_enforce_table_bounds_rho_Ye_T(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
       double *restrict Y_e,
-      double *restrict T );
+      double *restrict T);
 
 void NRPyEOS_enforce_table_bounds_rho_Ye_eps(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
       double *restrict Y_e,
-      double *restrict eps );
+      double *restrict eps);
 
 void NRPyEOS_enforce_table_bounds_rho_Ye_S(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
       double *restrict Y_e,
-      double *restrict S );
+      double *restrict S);
 
 void NRPyEOS_enforce_table_bounds_rho_Ye_P(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,
       double *restrict Y_e,
-      double *restrict P );
+      double *restrict P);
+
+void NRPyEOS_enforce_table_bounds_rho_Ye_h(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict h);
 
 double NRPyEOS_tabulated_compute_dP_drho_from_rho(
       const ghl_eos_parameters *restrict eos,
@@ -322,6 +340,12 @@ double NRPyEOS_tabulated_compute_dP_drho_from_rho(
 double NRPyEOS_tabulated_compute_deps_dP_from_rho(
       const ghl_eos_parameters *restrict eos,
       const double rho);
+
+void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos);
+
+void NRPyEOS_tabulated_recompute_derivatives(ghl_eos_parameters *restrict eos);
+
+void NRPyEOS_tabulated_clean_sound_speed(ghl_eos_parameters *restrict eos, bool cs2_is_relativistic);
 
 #ifdef __cplusplus
 }
