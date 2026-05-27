@@ -2,9 +2,8 @@
 
 set -e
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
-
-BASE_URL="https://raw.githubusercontent.com/GRHayL/TestData/main"
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
+export LD_LIBRARY_PATH
 
 download_file() {
   url="$1"
@@ -27,9 +26,10 @@ download_file() {
   curl -O "$url"
 }
 
+test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/main"
 download_test_data() {
   filepath="$1"
-  url="${BASE_URL}/${filepath}"
+  url="${test_data_base_url}/${filepath}"
   download_file "$url"
 }
 
