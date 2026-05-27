@@ -52,8 +52,6 @@ typedef enum {
   NRPyEOS_Zbar_key,
   NRPyEOS_Gamma_key,
   NRPyEOS_enthalpy_key,
-  NRPyEOS_dPdT_key,
-  NRPyEOS_dhdT_key,
   NRPyEOS_ntablekeys
 } NRPyEOS_keys;
 
