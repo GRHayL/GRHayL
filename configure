@@ -427,7 +427,7 @@ fi
     [ "$silent" -ne 0 ] && local_prefix="@"
 
   append "\$(TEXES): test/%: \$(BUILDDIR)/Unit_Tests/%.o \$(TOBJS) \$(LIBS)"
-  tab_append "${local_prefix}\$(CCOMPILEOMP) \$(TOBJS) \$< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -lgrhayl"
+  tab_append "${local_prefix}\$(CCOMPILEOMP) \$(TOBJS) \$< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -lghl"
   append ""
 
   append "\$(TOBJS): \$(BUILDDIR)/%.o: %.c"
@@ -445,7 +445,7 @@ fi
   [ "$silent" -ne 0 ] && local_prefix="@"
 
   append "\$(DGEXES): test/data_gen/%: \$(BUILDDIR)/Unit_Tests/data_gen/%.o \$(DGOBJS) \$(TOBJS) \$(LIBS)"
-  tab_append "${local_prefix}\$(CCOMPILEOMP) \$(DGOBJS) \$(TOBJS) \$< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -lgrhayl"
+  tab_append "${local_prefix}\$(CCOMPILEOMP) \$(DGOBJS) \$(TOBJS) \$< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -lghl"
   append ""
 
   append "\$(DGOBJS): \$(BUILDDIR)/%.o: %.c"

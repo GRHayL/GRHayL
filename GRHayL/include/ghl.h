@@ -30,6 +30,16 @@
 extern "C" {
 #endif
 
+static inline __attribute__((always_inline))
+int imin(int a, int b) {
+  return a < b ? a : b;
+}
+
+static inline __attribute__((always_inline))
+int imax(int a, int b) {
+  return a > b ? a : b;
+}
+
 static inline int ghl_iclamp(
       int a,
       int lo,
@@ -80,7 +90,7 @@ typedef enum {
   ghl_error_exceed_table_vars,           /**< Requested more output variables than exist in the @ref tab_eos table */
   ghl_error_table_neg_energy,            /**< Negative energy found after energy shift in @ref tab_eos routine */
   ghl_error_table_bisection,             /**< Failure to find solution via bisection in @ref tab_eos routine */
-  ghl_error_u0_singular                  /**< TODO@LEO: Please describe */
+  ghl_error_u0_singular,                 /**< TODO@LEO: Please describe */
   ghl_error_invalid_utsq,                /**< TODO@LEO: Please describe */
   ghl_error_invalid_Z,                   /**< TODO@LEO: Please describe */
   ghl_error_newman_invalid_discriminant, /**< TODO@LEO: Please describe */

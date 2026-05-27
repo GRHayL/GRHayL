@@ -51,6 +51,12 @@ void ghl_apply_conservative_limits(
 
   const double B2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
 
+  /**
+   * To prevent possible [floating-point underflow](https://en.wikipedia.org/wiki/Arithmetic_underflow)
+   * or division by zero errors, we check if \f$ B^2 < 10^{-150} \f$. For the
+   * case of very small \f$ B \f$, we compute the previous values using
+   * expressions with \f$ B=0 \f$.
+   */
   double BdotS, hatBdotS, half_psi6_B2, tau_fluid_term3;
   if(B2 < 1e-150) {
     BdotS = hatBdotS = half_psi6_B2 = tau_fluid_term3 = 0.0;
@@ -100,11 +106,6 @@ void ghl_apply_conservative_limits(
   }
 
   /**
-   * To prevent possible [floating-point underflow](https://en.wikipedia.org/wiki/Arithmetic_underflow)
-   * or division by zero errors, we check if \f$ B^2 < 10^{-150} \f$. For the
-   * case of very small \f$ B \f$, we compute the previous values using
-   * expressions with \f$ B=0 \f$.
-   *
    * ## Modifying Energy variable
    *
    * To start, we enforce that \f$ \tilde{\tau} > \tilde{\tau}_\mathrm{atm} \f$.

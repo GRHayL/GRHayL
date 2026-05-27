@@ -12,13 +12,13 @@
  * @todo
  * Add more comments like in @ref ghl_limit_v_and_compute_u0
  *
- * @param[in] params:         pointer to ghl_parameters struct
+ * @param[in] params:     pointer to ghl_parameters struct
  *
- * @param[in] ADM_metric:     pointer to ghl_metric_quantities struct with ADM metric data
+ * @param[in] ADM_metric: pointer to ghl_metric_quantities struct with ADM metric data
  *
- * @param[in,out] utU:        3-velocity \f$ u^i \f$
+ * @param[in,out] utU:    3-velocity \f$ u^i \f$
  *
- * @param[out] prims:         pointer to ghl_primitive_quantities struct
+ * @param[out] prims:     pointer to ghl_primitive_quantities struct
  *
  * @returns whether speed limiter was triggered (True) or not (False)
  */

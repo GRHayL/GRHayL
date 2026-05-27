@@ -60,7 +60,7 @@ typedef struct fparams_struct {
  *
  * @todo
  * Several of these are included in ghl_parameters and ghl_con2prim_diagnostics.
- * I think these duplications should be reduced as much as possible.
+ * These duplications should be reduced as much as possible.
  */
 typedef struct roots_params {
   unsigned n_iters;   /**< Number of iterations used to find the root */

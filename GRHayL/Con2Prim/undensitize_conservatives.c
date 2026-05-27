@@ -1,10 +1,5 @@
 #include "ghl_con2prim.h"
 
-/* Function     : ghl_undensitize_conservatives()
- * Description  : Computes undensitized conservatives using the metric
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_undensitize_conservatives
-*/
-
 /**
  * @ingroup Con2Prim
  * @brief Computes undensitized conservatives using the metric quantity \f$ \psi^6 \f$

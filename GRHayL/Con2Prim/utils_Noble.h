@@ -10,6 +10,8 @@
 /**
  * @ingroup c2p_internal
  * @brief Stores HARM auxiliary variables for smaller argument lists.
+ * @todo
+ * Please document
  */
 typedef struct _harm_auxiliary_vars_ {
   double QU[4];

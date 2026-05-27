@@ -4,24 +4,22 @@
 #include "ghl_con2prim.h"
 #include "roots.h"
 
-/*
- * Function   : compute_rho_W_from_x_and_conservatives
- * Author     : Leo Werneck
- *
- * Computes rho and W from x and the conservative variables using Eq. (42)
- * of https://arxiv.org/pdf/1712.07538.pdf and rho = D/W.
- *
- * Parameters : x        - Pointer to fparams_struct.
- *            : fparams  - Array containing v_{i}.
- *            : rho_ptr  - Stores the output of rho.
- *            : W_ptr    - Stores the output of W.
- *
- * Returns    : Nothing.
- */
 /**
  * @ingroup c2p_internal
+ * @brief Computes rho and W from x and the conservative variables using Eq. (42)
+ *        of https://arxiv.org/pdf/1712.07538.pdf and rho = D/W.
  * @todo
- * Please document
+ * Add in/out information to params
+ *
+ * @param x:       pointer to fparams_struct.
+ *
+ * @param fparams: array containing v_{i}.
+ *
+ * @param rho_ptr: stores the output of rho.
+ *
+ * @param W_ptr:   stores the output of W.
+ *
+ * @returns void
  */
 static inline void
 compute_rho_W_from_x_and_conservatives(
@@ -50,22 +48,6 @@ compute_rho_W_from_x_and_conservatives(
   *W_ptr   = W;
 }
 
-/*
- * Function : compute_BU_SU_Bsq_Ssq_BdotS
- * Author   : Leo Werneck
- *
- * Computes B^{i}, S^{i}, B^2, S^2, B.S = B^{i}S_{i}.
- *
- * Parameters : metric       - Metric quantities
- *            : cons_undens  - Undensitized conservatives
- *            : prims        - Input primitives (for B^{i})
- *            : SU           - Stores S^{i}.
- *            : Bsq          - Stores B^2.
- *            : Ssq          - Stores S^2.
- *            : BdotS        - Stores B.S = B^{i}S_{i}.
- *
- * Returns    : Nothing.
- */
 /**
  * @ingroup c2p_internal
  * @brief Computes auxiliary quantities of \f$ B^i \f$ and \f$ S_i \f$
@@ -103,6 +85,8 @@ compute_rho_W_from_x_and_conservatives(
  * @param[out] Ssq:        returned quantity \f$ S^2 \f$
  *
  * @param[out] BdotS:      returned quantity \f$ B \cdot S \f$
+ *
+ * @returns void
  */
 static inline void
 compute_SU_Bsq_Ssq_BdotS(
@@ -114,6 +98,7 @@ compute_SU_Bsq_Ssq_BdotS(
       double *restrict Ssq,
       double *restrict BdotS) {
 
+  // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
   double S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
 
@@ -127,15 +112,19 @@ compute_SU_Bsq_Ssq_BdotS(
       SD[i] *= rescale_factor;
     }
 
+    // Step 2.3: Recompute S^{2}
     S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
   }
 
   *Ssq = S_squared;
 
+  // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
   *Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
 
+  // Step 4: Compute B.S = B^{i}S_{i}
   *BdotS = prims->BU[0]*SD[0] + prims->BU[1]*SD[1] + prims->BU[2]*SD[2];
 
+  // Step 5: Compute S^{i}
   ghl_raise_lower_vector_3D(ADM_metric->gammaUU, SD, SU);
 }
 
