@@ -94,7 +94,7 @@ download_test_data EOS/simple_table.h5
 
 ./test/unit_test_piecewise_polytrope
 
-download_test_data grhayl_core grhayl_core_test_suite_input.bin
+download_test_data grhayl_core/grhayl_core_test_suite_input.bin
 ./test/unit_test_grhayl_core_test_suite
 
 download_file https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2
