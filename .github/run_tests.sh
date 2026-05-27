@@ -1,6 +1,9 @@
 #!/bin/bash
 
-set -e
+set -Eeuxo pipefail
+
+./configure -r
+make tests
 
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
 export LD_LIBRARY_PATH
@@ -90,7 +93,7 @@ download_test_data con2prim/compute_conservs_and_Tmunu_output_pert.bin
 ./test/unit_test_hybrid_failure
 
 download_test_data EOS/simple_table.h5
-./test/unit_test_tabulated_eos simple_table.h5
+./test/unit_test_tabulated_eos Unit_Tests/sample_table/simple_table.h5
 
 ./test/unit_test_piecewise_polytrope
 

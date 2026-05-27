@@ -69,8 +69,7 @@ void NRPyEOS_read_table_set_EOS_params(
   }
 
   if(eos->eos_type != ghl_eos_tabulated) {
-    ghl_warn("EOS type is not tabulated. Nothing to do.\n");
-    return;
+    ghl_error("EOS type is not tabulated.\n");
   }
 
   bool cs2_is_relativistic = false;

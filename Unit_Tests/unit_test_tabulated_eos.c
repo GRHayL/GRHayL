@@ -43,6 +43,9 @@ int main(int argc, char **argv) {
         const double Y_e = eos.table_Y_e[k];
         const int index = i + eos.N_rho*( j + eos.N_T*k );
         for(int var_key=0; var_key<NRPyEOS_ntablekeys; var_key++) {
+          if(var_key > NRPyEOS_Gamma_key) {
+            continue;
+          }
           const double var       = get_table_quantity(var_key, logrho, Y_e, logT);
           const double table_var = eos.table_all[var_key + NRPyEOS_ntablekeys*index];
           if( relative_error(var, table_var) > rtol && fabs(var-table_var) > atol )

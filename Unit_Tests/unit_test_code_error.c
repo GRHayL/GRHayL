@@ -438,8 +438,15 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   }
 
   printf("Code failure test has failed for code test %d\n", test_key);
-  printf("We shouldn't be here, so I'll get rid of some compilation warnings :)\n"
-         "%e %d %e %e %e %e\n", Fermi_Dirac_integral, speed_limited, rho, Y_e, eps, T);
+
+  // Silence warnings
+  (void)Fermi_Dirac_integral;
+  (void)speed_limited;
+  (void)rho;
+  (void)Y_e;
+  (void)eps;
+  (void)T;
+
   return 0;
 }
 // clang-format on
@@ -467,6 +474,8 @@ void create_dataset(char *name, int dim, hid_t datatype_id, hid_t file_id) {
 
 void read_table_error_test(int test_key) {
 
+  printf("read_table_error_test: %d\n", test_key);
+
   test_key -= 34;
   FILE *fp = fopen("test.h5", "r");
   if(fp) {
@@ -475,6 +484,8 @@ void read_table_error_test(int test_key) {
   }
   if(test_key==0) {
     ghl_eos_parameters eos;
+    eos.eos_type = ghl_eos_tabulated;
+    eos.table_type = ghl_eos_table_stellarcollapse;
     NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
   }
   test_key--;
@@ -507,5 +518,7 @@ void read_table_error_test(int test_key) {
   H5Fclose(file_id);
 
   ghl_eos_parameters eos;
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
   NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
 }
