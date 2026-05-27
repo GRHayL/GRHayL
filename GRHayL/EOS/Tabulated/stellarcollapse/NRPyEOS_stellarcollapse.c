@@ -82,25 +82,6 @@ void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table) {
   free(table);
 }
 
-static double validate_increasing_monotonically(
-      const size_t size,
-      const double *data,
-      const char *name) {
-  size_t count = 0;
-  for(int i = 1; i < size; i++) {
-    const double left = data[i - 1];
-    const double right = data[i];
-    if(left > right) {
-      ghl_warn("%s not increasing monotonically! %g > %g\n", name, left, right);
-      count++;
-    }
-  }
-  if(count) {
-    ghl_warn("Found %lu problematic points in %lu for %s\n", count, size, name);
-  }
-  return count;
-}
-
 #define CHECK_DATASETS_ARE_FINITE(func)                                                \
   for(int n = 0; n < NRPyEOS_sc_n_quantities; n++) {                                   \
     const char *name = dataset_names[n];                                               \
@@ -127,60 +108,6 @@ void NRPyEOS_stellarcollapse_validate_table(NRPyEOS_stellarcollapse_t *table) {
   const int ny = table->n_ye;
   const size_t size = nr * nt * ny;
 
-  validate_increasing_monotonically(nr, table->log10_rho, "logrho");
-  validate_increasing_monotonically(nt, table->log10_temperature, "logtemp");
-  validate_increasing_monotonically(ny, table->ye, "ye");
-
   CHECK_DATASETS_ARE_FINITE(nan);
   CHECK_DATASETS_ARE_FINITE(inf);
-}
-
-void NRPyEOS_stellarcollapse_recompute_derivs(NRPyEOS_stellarcollapse_t *table) {
-  (void)table;
-  ghl_error("Recompute derivatives it not yet supported.\n");
-}
-
-char *NRPyEOS_stellarcollapse_qty_to_str(NRPyEOS_stellarcollapse_quantity qty) {
-  switch(qty) {
-    case NRPyEOS_sc_Abar:
-      return "Abar";
-    case NRPyEOS_sc_Xa:
-      return "Xa";
-    case NRPyEOS_sc_Xh:
-      return "Xh";
-    case NRPyEOS_sc_Xn:
-      return "Xn";
-    case NRPyEOS_sc_Xp:
-      return "Xp";
-    case NRPyEOS_sc_Zbar:
-      return "Zbar";
-    case NRPyEOS_sc_cs2:
-      return "cs2";
-    case NRPyEOS_sc_dedt:
-      return "dedt";
-    case NRPyEOS_sc_dpderho:
-      return "dpderho";
-    case NRPyEOS_sc_dpdrhoe:
-      return "dpdrhoe";
-    case NRPyEOS_sc_entropy:
-      return "entropy";
-    case NRPyEOS_sc_gamma:
-      return "gamma";
-    case NRPyEOS_sc_logenergy:
-      return "logenergy";
-    case NRPyEOS_sc_logpress:
-      return "logpress";
-    case NRPyEOS_sc_mu_e:
-      return "mu_e";
-    case NRPyEOS_sc_mu_n:
-      return "mu_n";
-    case NRPyEOS_sc_mu_p:
-      return "mu_p";
-    case NRPyEOS_sc_muhat:
-      return "muhat";
-    case NRPyEOS_sc_munu:
-      return "munu";
-    default:
-      return "invalid table quantity";
-  }
 }

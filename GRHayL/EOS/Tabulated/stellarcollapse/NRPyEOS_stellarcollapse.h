@@ -82,13 +82,6 @@ NRPyEOS_stellarcollapse_t *NRPyEOS_stellarcollapse_read_table(const char *filepa
 void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table);
 
 /**
- * @brief Returns a string version of the enumeration value.
- *
- * @param qty NRPyEOS_stellarcollapse_quantity enumeration value.
- */
-char *NRPyEOS_stellarcollapse_qty_to_str(NRPyEOS_stellarcollapse_quantity qty);
-
-/**
  * @brief Convert stellar collapse EOS struct to GRHayL EOS struct.
  *
  * @param sc Pointer to input NRPyEOS_stellarcollapse_t struct.
