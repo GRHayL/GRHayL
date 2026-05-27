@@ -14,10 +14,6 @@ const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key) {
       return "Noble1D_entropy2";
     case Font1D:
       return "Font1D";
-    case CerdaDuran2D:
-      return "CerdaDuran2D";
-    case CerdaDuran3D:
-      return "CerdaDuran3D";
     case Palenzuela1D:
       return "Palenzuela1D";
     case Palenzuela1D_entropy:

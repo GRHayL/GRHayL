@@ -244,12 +244,10 @@ int main(int argc, char **argv) {
   valid_char[3] = "Noble1D_entropy";
   valid_char[4] = "Noble1D_entropy2";
   valid_char[5] = "Font1D";
-  valid_char[6] = "CerdaDuran2D";
-  valid_char[7] = "CerdaDuran3D";
-  valid_char[8] = "Palenzuela1D";
-  valid_char[9] = "Palenzuela1D_entropy";
-  valid_char[10] = "Newman1D";
-  valid_char[11] = "Newman1D_entropy";
+  valid_char[6] = "Palenzuela1D";
+  valid_char[7] = "Palenzuela1D_entropy";
+  valid_char[8] = "Newman1D";
+  valid_char[9] = "Newman1D_entropy";
   for(int i = None; i <= Newman1D_entropy; i++) {
     const char *test_char = ghl_get_con2prim_routine_name(i);
     if(strcmp(valid_char[i+1], test_char)) {
