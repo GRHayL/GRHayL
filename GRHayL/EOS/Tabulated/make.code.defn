@@ -12,4 +12,4 @@ SRCS = NRPyEOS_enforce_table_bounds.c                       \
        NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c \
        NRPyEOS_tabulated_get_index.c
 
-SUBDIRS = interpolators smoothing stellarcollapse
+SUBDIRS = interpolators stellarcollapse
