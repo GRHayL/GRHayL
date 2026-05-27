@@ -81,33 +81,3 @@ void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table) {
   }
   free(table);
 }
-
-#define CHECK_DATASETS_ARE_FINITE(func)                                                \
-  for(int n = 0; n < NRPyEOS_sc_n_quantities; n++) {                                   \
-    const char *name = dataset_names[n];                                               \
-    size_t local_errors = 0;                                                           \
-    for(size_t i = 0; i < size; i++) {                                                 \
-      if(isnan(table->data[n][i])) {                                                   \
-        ghl_warn("Found %s in dataset '%s', index %lu\n", #func, name, i);             \
-        local_errors++;                                                                \
-      }                                                                                \
-    }                                                                                  \
-    if(local_errors) {                                                                 \
-      ghl_warn(                                                                        \
-            "Dataset '%s' has %lu %ss out of %lu points\n", name, local_errors, #func, \
-            size);                                                                     \
-    }                                                                                  \
-    else {                                                                             \
-      ghl_info("Dataset '%s' does not contain %ss!\n", name, #func);                   \
-    }                                                                                  \
-  }
-
-void NRPyEOS_stellarcollapse_validate_table(NRPyEOS_stellarcollapse_t *table) {
-  const int nr = table->n_rho;
-  const int nt = table->n_temperature;
-  const int ny = table->n_ye;
-  const size_t size = nr * nt * ny;
-
-  CHECK_DATASETS_ARE_FINITE(nan);
-  CHECK_DATASETS_ARE_FINITE(inf);
-}
