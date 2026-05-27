@@ -79,13 +79,13 @@ void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
   const double tmp_36 = (1.0/3.0)*((M_PI)*(M_PI)*(M_PI))*NRPyLeakage_beta*pow(NRPyLeakage_gamma_0, 6)*tmp_24*tmp_26*((tmp_31)*(tmp_31)*(tmp_31))*(tmp_32 + 1)*exp(-tmp_32)/NRPyLeakage_alpha_fs;
   const double tmp_37 = NRPyLeakage_enable_plasmon_nue_anue*EnsureFinite(((NRPyLeakage_C_V)*(NRPyLeakage_C_V))*tmp_36/((exp(tmp_15 + tmp_35) + 1)*(exp(tmp_35 + tmp_6) + 1)));
   const double tmp_38 = tmp_12 + tmp_29 + tmp_37;
-  const double tmp_41 = (1 - Y_e)*((5.0/24.0)*tmp_7 + 1.0/24.0)/((2.0/3.0)*MAX(mu_n*tmp_0, 0) + 1);
+  const double tmp_41 = (1 - Y_e)*((5.0/24.0)*tmp_7 + 1.0/24.0)/((2.0/3.0)*fmax(mu_n*tmp_0, 0) + 1);
   const double tmp_42 = NRPyLeakage_N_A*NRPyLeakage_sigma_0*((T)*(T))*rho_cgs/((NRPyLeakage_m_e_c2)*(NRPyLeakage_m_e_c2));
   const double tmp_43 = NRPyLeakage_Fermi_Dirac_integrals(2, tmp_6);
   const double tmp_44 = NRPyLeakage_Fermi_Dirac_integrals(4, tmp_6);
   const double tmp_45 = tmp_44/tmp_43;
   const double tmp_47 = ((NRPyLeakage_C_V - 1)*(NRPyLeakage_C_V - 1));
-  const double tmp_48 = Y_e*((1.0/6.0)*tmp_47 + (5.0/24.0)*tmp_7)/((2.0/3.0)*MAX(mu_p*tmp_0, 0) + 1);
+  const double tmp_48 = Y_e*((1.0/6.0)*tmp_47 + (5.0/24.0)*tmp_7)/((2.0/3.0)*fmax(mu_p*tmp_0, 0) + 1);
   const double tmp_49 = tmp_42*tmp_48;
   const double tmp_50 = (3.0/4.0)*tmp_7 + 1.0/4.0;
   const double tmp_51 = NRPyLeakage_Fermi_Dirac_integrals(5, tmp_6);
@@ -119,8 +119,8 @@ void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
   const double tmp_84 = tmp_63/tmp_83;
   const double tmp_86 = EnsureFinite(tmp_49*tmp_84) + EnsureFinite(tmp_41*tmp_42*tmp_84) + EnsureFinite(tmp_42*tmp_64*tmp_84);
   const double tmp_87 = NRPyLeakage_Fermi_Dirac_integrals(4, 0)/NRPyLeakage_Fermi_Dirac_integrals(2, 0);
-  *R_source = NRPyLeakage_amu*NRPyLeakage_units_cgs_to_geom_R*(-(tmp_11 + tmp_38)/(((tau->nue[0])*(tau->nue[0]))*tmp_56*(tmp_11 + tmp_38)/(tmp_53*MAX(tmp_43*tmp_55, 1.0000000000000001e-15)) + 1) + (tmp_38 + tmp_58)/(((tau->anue[0])*(tau->anue[0]))*tmp_56*(tmp_38 + tmp_58)/(tmp_65*MAX(tmp_55*tmp_60, 1.0000000000000001e-15)) + 1));
-  *Q_source = NRPyLeakage_units_cgs_to_geom_Q*(-tmp_76/(((tau->nue[1])*(tau->nue[1]))*tmp_56*tmp_76/(tmp_81*MAX(tmp_74*tmp_78, 1.0000000000000001e-15)) + 1) - tmp_82/(((tau->anue[1])*(tau->anue[1]))*tmp_56*tmp_82/(tmp_86*MAX(tmp_74*tmp_83, 1.0000000000000001e-15)) + 1) - 4*(tmp_66 + EnsureFinite(NRPyLeakage_enable_pair_nux_anux*tmp_68*EnsureFinite(NRPyLeakage_C1pC2_nux_anux*tmp_28/((exp(tmp_21) + 1)*(exp(tmp_21) + 1)))) + EnsureFinite(NRPyLeakage_enable_plasmon_nux_anux*tmp_69*EnsureFinite(tmp_36*tmp_47/((exp(tmp_35) + 1)*(exp(tmp_35) + 1)))))/(((tau->nux[1])*(tau->nux[1]))*tmp_56*tmp_76/(tmp_73*MAX(tmp_70*tmp_74, 1.0000000000000001e-15)) + 1));
+  *R_source = NRPyLeakage_amu*NRPyLeakage_units_cgs_to_geom_R*(-(tmp_11 + tmp_38)/(((tau->nue[0])*(tau->nue[0]))*tmp_56*(tmp_11 + tmp_38)/(tmp_53*fmax(tmp_43*tmp_55, 1.0000000000000001e-15)) + 1) + (tmp_38 + tmp_58)/(((tau->anue[0])*(tau->anue[0]))*tmp_56*(tmp_38 + tmp_58)/(tmp_65*fmax(tmp_55*tmp_60, 1.0000000000000001e-15)) + 1));
+  *Q_source = NRPyLeakage_units_cgs_to_geom_Q*(-tmp_76/(((tau->nue[1])*(tau->nue[1]))*tmp_56*tmp_76/(tmp_81*fmax(tmp_74*tmp_78, 1.0000000000000001e-15)) + 1) - tmp_82/(((tau->anue[1])*(tau->anue[1]))*tmp_56*tmp_82/(tmp_86*fmax(tmp_74*tmp_83, 1.0000000000000001e-15)) + 1) - 4*(tmp_66 + EnsureFinite(NRPyLeakage_enable_pair_nux_anux*tmp_68*EnsureFinite(NRPyLeakage_C1pC2_nux_anux*tmp_28/((exp(tmp_21) + 1)*(exp(tmp_21) + 1)))) + EnsureFinite(NRPyLeakage_enable_plasmon_nux_anux*tmp_69*EnsureFinite(tmp_36*tmp_47/((exp(tmp_35) + 1)*(exp(tmp_35) + 1)))))/(((tau->nux[1])*(tau->nux[1]))*tmp_56*tmp_76/(tmp_73*fmax(tmp_70*tmp_74, 1.0000000000000001e-15)) + 1));
   kappa->nue[0] = NRPyLeakage_units_geom_to_cgs_L*tmp_53;
   kappa->nue[1] = NRPyLeakage_units_geom_to_cgs_L*tmp_81;
   kappa->anue[0] = NRPyLeakage_units_geom_to_cgs_L*tmp_65;

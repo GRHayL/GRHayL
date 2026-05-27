@@ -347,7 +347,7 @@ void NR_2D_WT(
       }
 
     }
-    maxerror = MAX(error[0], error[1]);
+    maxerror = fmax(error[0], error[1]);
     count++;
 
     // termination criterion

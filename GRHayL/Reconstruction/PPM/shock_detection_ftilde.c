@@ -29,12 +29,12 @@ double ghl_shock_detection_ftilde(
   if (dP2 != 0.0) dP1_over_dP2 = dP1/dP2;
 
   const double q1 = (dP1_over_dP2 - params->ppm_flattening_omega1) * params->ppm_flattening_omega2;
-  const double q2 = fabs(dP1)/MIN(P[PLUS_1], P[MINUS1]);
+  const double q2 = fabs(dP1)/fmin(P[PLUS_1], P[MINUS1]);
 
   // this if statement is equivalent to the w_j variable in the original Colella and Woodward paper
   if (q2 > params->ppm_flattening_epsilon && q2*( (v_flux_dirn[MINUS1]) - (v_flux_dirn[PLUS_1]) ) > 0.0) {
     // inside a shock
-    return MIN(1.0, MAX(0.0, q1));
+    return fmin(1.0, fmax(0.0, q1));
   } else {
     // NOT inside a shock
     return 0.0;

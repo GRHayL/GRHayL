@@ -62,7 +62,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static double mc(const double dm, const double dp, const double alpha) {
   const double dc = (dm * dp > 0.0) * 0.5 * (dm + dp);
   return copysign(
-      MIN(fabs(dc), alpha * MIN(fabs(dm), fabs(dp))), dc);
+      fmin(fabs(dc), alpha * fmin(fabs(dm), fabs(dp))), dc);
 }
 
 void ghl_wenoz_reconstruction_right_left_faces(

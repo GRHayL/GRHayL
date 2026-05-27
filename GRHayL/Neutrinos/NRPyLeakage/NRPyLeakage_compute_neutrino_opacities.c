@@ -54,7 +54,7 @@ void NRPyLeakage_compute_neutrino_opacities(
   //   Y_pn = 1-Y_e;
   // }
   // // Step 3.a.ii: Make sure Y_{pn} is nonzero
-  // Y_pn = MAX(Y_pn,0.0);
+  // Y_pn = fmax(Y_pn,0.0);
 
   // // Step 3.b: Compute Y_{np} (Eq. A13 in https://adsabs.harvard.edu/pdf/1996A%26A...311..532R)
   // const double Y_np = exp(muhat/T) * Y_pn;
@@ -69,8 +69,8 @@ void NRPyLeakage_compute_neutrino_opacities(
   const double tmp_6 = NRPyLeakage_N_A*NRPyLeakage_sigma_0*((T)*(T))*rho_cgs/((NRPyLeakage_m_e_c2)*(NRPyLeakage_m_e_c2));
   const double tmp_7 = tmp_5*tmp_6/NRPyLeakage_Fermi_Dirac_integrals(2, tmp_4);
   const double tmp_9 = (5.0/24.0)*((NRPyLeakage_alpha)*(NRPyLeakage_alpha));
-  const double tmp_10 = (1 - Y_e)*(tmp_9 + 1.0/24.0)/((2.0/3.0)*MAX(mu_n*tmp_1, 0) + 1);
-  const double tmp_11 = Y_e*(tmp_9 + (1.0/6.0)*((NRPyLeakage_C_V - 1)*(NRPyLeakage_C_V - 1)))/((2.0/3.0)*MAX(mu_p*tmp_1, 0) + 1);
+  const double tmp_10 = (1 - Y_e)*(tmp_9 + 1.0/24.0)/((2.0/3.0)*fmax(mu_n*tmp_1, 0) + 1);
+  const double tmp_11 = Y_e*(tmp_9 + (1.0/6.0)*((NRPyLeakage_C_V - 1)*(NRPyLeakage_C_V - 1)))/((2.0/3.0)*fmax(mu_p*tmp_1, 0) + 1);
   const double tmp_12 = NRPyLeakage_Fermi_Dirac_integrals(5, tmp_4);
   const double tmp_13 = (3.0/4.0)*((NRPyLeakage_alpha)*(NRPyLeakage_alpha)) + 1.0/4.0;
   const double tmp_14 = Y_np*tmp_13/(exp(-tmp_12/tmp_5 + tmp_2) + 1);

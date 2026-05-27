@@ -36,7 +36,7 @@ void ghl_apply_conservative_limits(
     tau_fluid_term3 = (B2*sdots - SQR(BdotS))*0.5/(ADM_metric->sqrt_detgamma*SQR(Wmin+B2));
   }
 
-  cons->tau = MAX(cons->tau, eos->tau_atm);
+  cons->tau = fmax(cons->tau, eos->tau_atm);
 
   //tau fix, applicable when B==0 and B!=0:
   if(cons->tau < half_psi6_B2) {

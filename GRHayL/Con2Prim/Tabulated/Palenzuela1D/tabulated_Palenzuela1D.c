@@ -69,7 +69,7 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
 
   double SU[3], B_squared, S_squared, BdotS;
   compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims, SU, &B_squared, &S_squared, &BdotS);
-  const double tau = MAX(cons_undens->tau, eos->tau_atm);
+  const double tau = fmax(cons_undens->tau, eos->tau_atm);
 
   // Set specific quantities for this routine (Eq. A7 of [1])
   fparams_struct fparams;

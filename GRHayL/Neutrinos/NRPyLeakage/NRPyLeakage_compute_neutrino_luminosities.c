@@ -90,9 +90,9 @@ void NRPyLeakage_compute_neutrino_luminosities(
   const double tmp_41 = NRPyLeakage_Fermi_Dirac_integrals(3, tmp_6);
   const double tmp_42 = NRPyLeakage_N_A*NRPyLeakage_sigma_0*((T)*(T))*rho_cgs/((NRPyLeakage_m_e_c2)*(NRPyLeakage_m_e_c2));
   const double tmp_43 = tmp_40*tmp_42/tmp_41;
-  const double tmp_45 = (1 - Y_e)*((5.0/24.0)*tmp_7 + 1.0/24.0)/((2.0/3.0)*MAX(mu_n*tmp_0, 0) + 1);
+  const double tmp_45 = (1 - Y_e)*((5.0/24.0)*tmp_7 + 1.0/24.0)/((2.0/3.0)*fmax(mu_n*tmp_0, 0) + 1);
   const double tmp_46 = ((NRPyLeakage_C_V - 1)*(NRPyLeakage_C_V - 1));
-  const double tmp_47 = Y_e*((1.0/6.0)*tmp_46 + (5.0/24.0)*tmp_7)/((2.0/3.0)*MAX(mu_p*tmp_0, 0) + 1);
+  const double tmp_47 = Y_e*((1.0/6.0)*tmp_46 + (5.0/24.0)*tmp_7)/((2.0/3.0)*fmax(mu_p*tmp_0, 0) + 1);
   const double tmp_48 = (3.0/4.0)*tmp_7 + 1.0/4.0;
   const double tmp_49 = 4*((T)*(T)*(T)*(T))*tmp_8;
   const double tmp_50 = 6/NRPyLeakage_units_geom_to_cgs_L;
@@ -104,7 +104,7 @@ void NRPyLeakage_compute_neutrino_luminosities(
   const double tmp_57 = tmp_55/tmp_56;
   const double tmp_60 = NRPyLeakage_Fermi_Dirac_integrals(3, 0);
   const double tmp_61 = NRPyLeakage_Fermi_Dirac_integrals(5, 0)/tmp_60;
-  lum->nue = tmp_39*tmp_52/(((tau->nue[1])*(tau->nue[1]))*tmp_39*tmp_50/((EnsureFinite(tmp_43*tmp_45) + EnsureFinite(tmp_43*tmp_47) + EnsureFinite(Y_np*tmp_43*tmp_48/(exp(tmp_1 - tmp_40/NRPyLeakage_Fermi_Dirac_integrals(4, tmp_6)) + 1)))*MAX(tmp_41*tmp_49, 1.0000000000000001e-15)) + 1);
-  lum->anue = tmp_52*tmp_54/(((tau->anue[1])*(tau->anue[1]))*tmp_50*tmp_54/((EnsureFinite(tmp_42*tmp_45*tmp_57) + EnsureFinite(tmp_42*tmp_47*tmp_57) + EnsureFinite(Y_pn*tmp_42*tmp_48*tmp_57/(exp(-tmp_1 - tmp_55/NRPyLeakage_Fermi_Dirac_integrals(4, tmp_14)) + 1)))*MAX(tmp_49*tmp_56, 1.0000000000000001e-15)) + 1);
-  lum->nux = tmp_52*(tmp_11 + EnsureFinite(NRPyLeakage_enable_pair_nux_anux*tmp_37*EnsureFinite(NRPyLeakage_C1pC2_nux_anux*tmp_35/((exp(tmp_33) + 1)*(exp(tmp_33) + 1)))) + EnsureFinite(NRPyLeakage_enable_plasmon_nux_anux*tmp_27*EnsureFinite(tmp_26*tmp_46/((exp(tmp_21) + 1)*(exp(tmp_21) + 1)))))/(((tau->nux[1])*(tau->nux[1]))*tmp_39*tmp_50/((EnsureFinite(tmp_42*tmp_45*tmp_61) + EnsureFinite(tmp_42*tmp_47*tmp_61))*MAX(tmp_49*tmp_60, 1.0000000000000001e-15)) + 1);
+  lum->nue = tmp_39*tmp_52/(((tau->nue[1])*(tau->nue[1]))*tmp_39*tmp_50/((EnsureFinite(tmp_43*tmp_45) + EnsureFinite(tmp_43*tmp_47) + EnsureFinite(Y_np*tmp_43*tmp_48/(exp(tmp_1 - tmp_40/NRPyLeakage_Fermi_Dirac_integrals(4, tmp_6)) + 1)))*fmax(tmp_41*tmp_49, 1.0000000000000001e-15)) + 1);
+  lum->anue = tmp_52*tmp_54/(((tau->anue[1])*(tau->anue[1]))*tmp_50*tmp_54/((EnsureFinite(tmp_42*tmp_45*tmp_57) + EnsureFinite(tmp_42*tmp_47*tmp_57) + EnsureFinite(Y_pn*tmp_42*tmp_48*tmp_57/(exp(-tmp_1 - tmp_55/NRPyLeakage_Fermi_Dirac_integrals(4, tmp_14)) + 1)))*fmax(tmp_49*tmp_56, 1.0000000000000001e-15)) + 1);
+  lum->nux = tmp_52*(tmp_11 + EnsureFinite(NRPyLeakage_enable_pair_nux_anux*tmp_37*EnsureFinite(NRPyLeakage_C1pC2_nux_anux*tmp_35/((exp(tmp_33) + 1)*(exp(tmp_33) + 1)))) + EnsureFinite(NRPyLeakage_enable_plasmon_nux_anux*tmp_27*EnsureFinite(tmp_26*tmp_46/((exp(tmp_21) + 1)*(exp(tmp_21) + 1)))))/(((tau->nux[1])*(tau->nux[1]))*tmp_39*tmp_50/((EnsureFinite(tmp_42*tmp_45*tmp_61) + EnsureFinite(tmp_42*tmp_47*tmp_61))*fmax(tmp_49*tmp_60, 1.0000000000000001e-15)) + 1);
 }
