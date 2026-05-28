@@ -6,6 +6,7 @@
 #include "ghl_io.h"
 #include "ghl_metric_helpers.h"
 
+/** @cond DOXYGEN_IGNORE */
 #ifndef SQR
 #define SQR(x) ((x) * (x))
 #endif
@@ -29,243 +30,423 @@
 extern "C" {
 #endif
 
+static inline __attribute__((always_inline))
+int imin(int a, int b) {
+  return a < b ? a : b;
+}
+
+static inline __attribute__((always_inline))
+int imax(int a, int b) {
+  return a > b ? a : b;
+}
+
+static inline int ghl_iclamp(
+      int a,
+      int lo,
+      int hi) {
+  return imax( imin(a, hi), lo);
+}
+static inline float ghl_fclamp(
+      float a,
+      float lo,
+      float hi) {
+  return fmaxf( fminf(a, hi), lo);
+}
+static inline double ghl_clamp(
+      double a,
+      double lo,
+      double hi) {
+  return fmax( fmin(a, hi), lo);
+}
+/** @endcond */
+
+/**
+ * @ingroup GRHayL_Core
+ * @enum ghl_error_codes_t
+ * @brief Integer constants to track error types
+ *
+ * @todo
+ * S.Cupp: The tabulated error codes should be reviewed by Leo Werneck for validity
+ * and to check if any should be split or merged with other error codes. E.g. does
+ * ghl_error_table_bisection actually only represent a single error, or should it
+ * be divided into two?
+ */
 typedef enum {
-  ghl_success,
-  ghl_error_unknown_eos_type,
-  ghl_error_invalid_c2p_key,
-  ghl_error_neg_rho,
-  ghl_error_neg_pressure,
-  ghl_error_neg_vsq,
-  ghl_error_c2p_max_iter,
-  ghl_error_c2p_singular,
-  ghl_error_root_not_bracketed,
-  ghl_error_table_max_rho,
-  ghl_error_table_min_rho,
-  ghl_error_table_max_ye,
-  ghl_error_table_min_ye,
-  ghl_error_table_max_T,
-  ghl_error_table_min_T,
-  ghl_error_exceed_table_vars,
-  ghl_error_table_neg_energy,
-  ghl_error_table_bisection,
-  ghl_error_u0_singular,
-  ghl_error_invalid_utsq,
-  ghl_error_invalid_Z,
-  ghl_error_newman_invalid_discriminant,
+  ghl_success,                           /**< Success/no error found */
+  ghl_error_unknown_eos_type,            /**< Found an invalid @ref ghl_eos_t key */
+  ghl_error_invalid_c2p_key,             /**< Found an invalid @ref ghl_con2prim_method_t key */
+  ghl_error_neg_rho,                     /**< Negative density from @ref Con2Prim routine */
+  ghl_error_neg_pressure,                /**< Negative pressure from @ref Con2Prim routine */
+  ghl_error_neg_vsq,                     /**< Imaginary velocity from @ref Con2Prim routine */
+  ghl_error_c2p_max_iter,                /**< Maximum iterations reached in @ref Con2Prim routine */
+  ghl_error_c2p_singular,                /**< Singular value found in @ref Con2Prim routine */
+  ghl_error_root_not_bracketed,          /**< Value not contained by bounds in @ref Con2Prim root finder routine */
+  ghl_error_table_max_rho,               /**< Density above table bounds in @ref tab_eos routine */
+  ghl_error_table_min_rho,               /**< Density below table bounds in @ref tab_eos routine */
+  ghl_error_table_max_ye,                /**< Electron fraction above table bounds in @ref tab_eos routine */
+  ghl_error_table_min_ye,                /**< Electron fraction below table bounds in @ref tab_eos routine */
+  ghl_error_table_max_T,                 /**< Temperature above table bounds in @ref tab_eos routine */
+  ghl_error_table_min_T,                 /**< Temperature below table bounds in @ref tab_eos routine */
+  ghl_error_exceed_table_vars,           /**< Requested more output variables than exist in the @ref tab_eos table */
+  ghl_error_table_neg_energy,            /**< Negative energy found after energy shift in @ref tab_eos routine */
+  ghl_error_table_bisection,             /**< Failure to find solution via bisection in @ref tab_eos routine */
+  ghl_error_u0_singular,                 /**< @todo Please describe */
+  ghl_error_invalid_utsq,                /**< @todo Please describe */
+  ghl_error_invalid_Z,                   /**< @todo Please describe */
+  ghl_error_newman_invalid_discriminant, /**< @todo Please describe */
 } ghl_error_codes_t;
 
+/**
+ * @ingroup Con2Prim
+ * @enum ghl_con2prim_method_t
+ * @brief Integer constants to specify conservative-to-primitive method
+ */
 typedef enum {
-  None = -1,
-  Noble2D,
-  Noble1D,
-  Noble1D_entropy,
-  Noble1D_entropy2,
-  Font1D,
-  CerdaDuran2D,
-  CerdaDuran3D,
-  Palenzuela1D,
-  Palenzuela1D_entropy,
-  Newman1D,
-  Newman1D_entropy
+  None = -1,            /**< No method (for disabling backups) */
+  Noble2D,              /**< The @ref ghl_hybrid_Noble2D routine */
+  Noble1D,              /**< The @ref ghl_hybrid_Noble1D routine */
+  Noble1D_entropy,      /**< The @ref ghl_hybrid_Noble1D routine */
+  Font1D,               /**< The @ref ghl_hybrid_Font1D routine */
+  Palenzuela1D,         /**< The @ref ghl_hybrid_Palenzuela1D_energy or @ref ghl_tabulated_Palenzuela1D_energy routine */
+  Palenzuela1D_entropy, /**< The @ref ghl_hybrid_Palenzuela1D_entropy or @ref ghl_tabulated_Palenzuela1D_entropy routine */
+  Newman1D,             /**< The @ref ghl_tabulated_Newman1D_energy routine */
+  Newman1D_entropy      /**< The @ref ghl_tabulated_Newman1D_entropy routine */
 } ghl_con2prim_method_t;
 
+/**
+ * @ingroup EOS
+ * @enum ghl_eos_t
+ * @brief Integer constants to track EOS type
+ */
 typedef enum {
-  ghl_eos_simple,
-  ghl_eos_hybrid,
-  ghl_eos_tabulated
+  ghl_eos_simple,   /**< Simple EOS */ 
+  ghl_eos_hybrid,   /**< Hybrid EOS */ 
+  ghl_eos_tabulated /**< Tabulated EOS */ 
 } ghl_eos_t;
 
-/*
- * Struct        : ghl_parameters
- * Description   : stores basic GRHayL parameters
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_parameters
-*/
+/**
+ * @ingroup GRHayL_Core
+ * @struct ghl_parameters
+ * @brief Stores basic GRHayL parameters
+ */
 typedef struct ghl_parameters {
-  ghl_con2prim_method_t main_routine, backup_routine[3];
+  /** Primary @ref Con2Prim method */
+  ghl_con2prim_method_t main_routine;
+  /** Secondary @ref Con2Prim methods */
+  ghl_con2prim_method_t backup_routine[3];
+  /** Whether entropy is evolved (true) or not (false) */
   bool evolve_entropy;
+  /** Whether temperature is evolved (true) or not (false) */
   bool evolve_temp;
-  bool calc_prim_guess;
+  /** Maximum Lorentz factor for velocity limiters */
   double max_Lorentz_factor;
+  /** Pre-computed value of the inverse square of max_Lorenz_factor */
   double inv_sq_max_Lorentz_factor;
+  /** Threshold of \f$ \psi^6 \f$ above which limits on primitives and
+      conservatives change. Approximates whether the point is inside the horizon. */
   double psi6threshold;
+  /** Damping factor for the generalized Lorenz gauge in the @ref Induction */
   double Lorenz_damping_factor;
 
   // Con2Prim parameters
+  /** Whether @ref ghl_con2prim_multi_method should calculate an initial
+      primitive variable guess (true) or use user input (false) */
+  bool calc_prim_guess;
+  /** Maximum number of iterations allowed in @ref Con2Prim solvers */
   int con2prim_max_iterations;
+  /** Convergence tolerance in @ref Con2Prim solvers */
   double con2prim_solver_tolerance;
 
   // PPM parameters
+  /** Parameter controlling the flattening algorithm in @ref ghl_shock_detection_ftilde */
   double ppm_flattening_epsilon;
+  /** Parameter controlling the flattening algorithm in @ref ghl_shock_detection_ftilde */
   double ppm_flattening_omega1;
+  /** Parameter controlling the flattening algorithm in @ref ghl_shock_detection_ftilde */
   double ppm_flattening_omega2;
+  /** Parameter controlling the steepening algorithm in @ref ghl_steepen_var */
   double ppm_shock_k0;
+  /** Parameter controlling the steepening algorithm in @ref ghl_steepen_var */
   double ppm_shock_eta1;
+  /** Parameter controlling the steepening algorithm in @ref ghl_steepen_var */
   double ppm_shock_eta2;
+  /** Parameter controlling the steepening algorithm in @ref ghl_steepen_var */
   double ppm_shock_epsilon;
 } ghl_parameters;
 
-/*
- * Struct        : ghl_primitive_quantities
- * Description   : stores pointwise information about the primitive variables
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_primitive_quantities
-*/
+/**
+ * @ingroup GRHayL_Core
+ * @struct ghl_primitive_quantities
+ * @brief Stores pointwise data for hydrodynamic primitive variables
+ */
 typedef struct ghl_primitive_quantities {
-  double rho, press, eps;
-  double u0, vU[3];
+  /** Baryonic density \f$ \rho \f$ of the fluid */
+  double rho;
+  /** Pressure \f$ P \f$ of the fluid */
+  double press;
+  /** Specific internal energy \f$ \epsilon \f$ of the fluid */
+  double eps;
+  /** 0th component of fluid 4-velocity \f$ u^0 \f$ */
+  double u0;
+  /** Fluid 3-velocity \f$ \frac{u^i}{u^0} \f$ */
+  double vU[3];
+  /** Magnetic field \f$ B^i \f$ */
   double BU[3];
-  double Y_e, temperature, entropy;
+  /** Entropy \f$ S \f$ */
+  double entropy;
+  /** Electron fraction \f$ Y_e \f$ */
+  double Y_e;
+  /** Temperature \f$ T \f$ */
+  double temperature;
 } ghl_primitive_quantities;
 
-/*
- * Struct        : ghl_conservative_quantities
- * Description   : stores pointwise information about the conservative variables
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_conservative_quantities
-*/
+/**
+ * @ingroup GRHayL_Core
+ * @struct ghl_conservative_quantities
+ * @brief Stores pointwise data for hydrodynamic conservative variables
+ *
+ * @details
+ * This struct can be used to store both the densitized and
+ * undensitized versions of these variables. Densitized is the standard
+ * expectation. Functions expecting or returning undensitized variants
+ * will explicitly note this in the documentation and variable name.
+ */
 typedef struct ghl_conservative_quantities {
-  double rho, tau, Y_e;
+  /** Conservative density variable \f$ \tilde{D} \f$ (also called \f$ \rho_* \f$) */
+  double rho;
+  /** Conservative energy variable \f$ \tilde{\tau} \f$ */
+  double tau;
+  /** Conservative electron fraction variable \f$ \tilde{Y_e} \f$ */
+  double Y_e;
+  /** Conservative momentum variable \f$ \tilde{S}_i \f$ */
   double SD[3];
+  /** Conservative entropy \f$ \tilde{S} \f$ */
   double entropy;
 } ghl_conservative_quantities;
 
-/*
- * Struct        : ghl_metric_quantities
- * Description   : stores pointwise information about the spacetime
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_metric_quantities
-*/
+/**
+ * @ingroup GRHayL_Core
+ * @struct ghl_metric_quantities
+ * @brief Stores pointwise data for spacetime quantities
+ *
+ * @details
+ * This metric can be used to store any 3-metric, but
+ * most @grhayl functions expect the ADM metric. Any exceptions
+ * (such as taking the BSSN metric as an input) will be
+ * explicitly noted in the documentation. The auxiliary quantities
+ * can be automatically computed by @grhayl, so we recommend using
+ * @ref ghl_initialize_metric to initialize this struct.
+ */
 typedef struct ghl_metric_quantities {
-  double lapse, lapseinv, lapseinv2;
-  double detgamma, sqrt_detgamma;
+  /** The lapse \f$ \alpha \f$ */
+  double lapse;
+  /** The inverse lapse \f$ \frac{1}{\alpha} \f$ */
+  double lapseinv;
+  /** The inverse squared lapse \f$ \frac{1}{\alpha^2} \f$ */
+  double lapseinv2;
+  /** The determinant of the metric \f$ \left| \gamma \right| \f$ */
+  double detgamma;
+  /** The square root of the determinant of the metric \f$ \sqrt{\left| \gamma \right|} \f$ */
+  double sqrt_detgamma;
+  /** The shift \f$ \beta^i \f$ */
   double betaU[3];
+  /** The 3-metric \f$ \gamma_{ij} \f$ */
   double gammaDD[3][3];
+  /** The inverse 3-metric \f$ \gamma^{ij} \f$ */
   double gammaUU[3][3];
 } ghl_metric_quantities;
 
-/*
- * Struct        : ghl_ADM_aux_quantities
- * Description   : stores auxiliary information based on ADM metric quantities
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_ADM_aux_quantities
-*/
+/**
+ * @ingroup GRHayL_Core
+ * @struct ghl_ADM_aux_quantities
+ * @brief Stores auxiliary data derived from ADM metric quantities
+ *
+ * @details
+ * This struct is usually used in concert with an instance of ghl_metric_quantities.
+ * As such, using @ref ghl_compute_ADM_auxiliaries is highly recommended.
+ */
 typedef struct ghl_ADM_aux_quantities {
-  double g4DD[4][4], g4UU[4][4];
+  /** 4-metric \f$ g_{\mu\nu} \f$ */
+  double g4DD[4][4];
+  /** Inverse 4-metric \f$ g^{\mu\nu} \f$ */
+  double g4UU[4][4];
 } ghl_ADM_aux_quantities;
 
-/*
- * Struct        : ghl_extrinsic_curvature
- * Description   : stores pointwise information about the extrinsic curvature
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_extrinsic_curvature
-*/
+/**
+ * @ingroup GRHayL_Core
+ * @struct ghl_extrinsic_curvature
+ * @brief Stores pointwise data for extrinsic curvature
+ *
+ * @details
+ * This array is used for both the raised and lowered variant
+ * of this tensor, and individual functions specify their output or
+ * expected input.
+ */
 typedef struct ghl_extrinsic_curvature {
+  /** Extrinsic curvature array \f$ K^{ij} \f$ or \f$ K_{ij} \f$ */
   double K[3][3];
 } ghl_extrinsic_curvature;
 
-/*
- * Struct        : ghl_stress_energy
- * Description   : stores pointwise information about the stress energy tensor
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_stress_energy
-*/
+/**
+ * @ingroup GRHayL_Core
+ * @struct ghl_stress_energy
+ * @brief Stores pointwise data for stress-energy tensor
+ *
+ * @details
+ * This array is used for both the raised and lowered variant
+ * of this tensor, and individual functions specify their output or
+ * expected input.
+ */
 typedef struct ghl_stress_energy {
+  /** Stress-energy tensor array \f$ T^{\mu\nu} \f$ or \f$ T_{\mu\nu} \f$ */
   double T4[4][4];
 } ghl_stress_energy;
 
-// Maxmimum number of polytropic EOS pieces
-#define MAX_EOS_PARAMS (10)
-/*
-   The struct ghl_eos_parameters contains information about the eos being used
-   by the simulation. The struct elements are detailed below:
-
- --type: selects the type of EOS (hybrid or tabulated) where
-   Hybrid = 0, Tabulated = 1.
-
- --rho_atm, tau_atm, press_atm, Ye_atm, temp_atm, eps_atm, entropy_atm: all
-   variables marked by "_atm" are the values for those quantities at
-   atmosphere.
-
- --rho_min, tau_min, press_min, Ye_min, temp_min, eps_min, entropy_min: all
-   variables marked by "_min" are the minimum value for these quantities.
-   This is often just the atmospheric value. If the simulation does not have
-   a separate minimum value, simply pass the atmospheric value for these
-   parameters.
-
- --rho_max, tau_max, press_max, Ye_max, temp_max, eps_max, entropy_max:
-   all variables marked by "_max" are the maximum value for these quantities.
-
-           ----------- Hybrid Equation of State -----------
- --neos: sets the number of polytropic pieces for the hybrid EOS.
-   The maximum number of polytropic pieces is controlled by MAX_EOS_PARAMS below.
-
- --rho_ppoly: array of the density values which divide the polytropic pieces
-
- --Gamma_ppoly: array of the polytropic indices
-
- --K_ppoly: array of the adiabatic constants
-
- --eps_integ_const: array of the integration constants for specific internal energy
-
- --p_ppoly: array of pressure values which divide the polytropic pieces
-
- --Gamma_th: thermal adiabatic index
-
-         ----------- Tabulated Equation of State -----------
- --root_finding_precision: root-finding precision for table inversions
-*/
-
+/**
+ * @ingroup EOS
+ * @struct ghl_eos_parameters
+ * @brief Stores parameters controlling the @ref EOS
+ *
+ * @details
+ *
+ * @todo
+ * Tabulated variables need descriptions
+ */
 typedef struct ghl_eos_parameters {
-
-  //-------------- General parameters --------------
+  /** @name General Parameters */
+  /** @ref ghl_eos_t setting the EOS type */
   ghl_eos_t eos_type;
-  double rho_atm, rho_min, rho_max;
+  /** Atmospheric value of the density \f$ \rho \f$ */
+  double rho_atm;
+  /** Minimum allowed density \f$ \rho \f$ */
+  double rho_min;
+  /** Maximum allowed density \f$ \rho \f$ */
+  double rho_max;
+  /** Atmospheric value of the conservative energy variable \f$ \tau \f$ */
   double tau_atm;
-  double press_atm, press_min, press_max;
-  //------------------------------------------------
+  /** Atmospheric value of the eps \f$ \epsilon \f$ */
+  double eps_atm;
+  /** Minimum allowed eps \f$ \epsilon \f$ */
+  double eps_min;
+  /** Maximum allowed eps \f$ \epsilon \f$ */
+  double eps_max;
+  /** Atmospheric value of the pressure \f$ P \f$ */
+  double press_atm;
+  /** Minimum allowed pressure \f$ P \f$ */
+  double press_min;
+  /** Maximum allowed pressure \f$ P \f$ */
+  double press_max;
+  /** Atmospheric value of the entropy \f$ S \f$ */
+  double entropy_atm;
+  /** Minimum allowed entropy \f$ S \f$ */
+  double entropy_min;
+  /** Maximum allowed entropy \f$ S \f$ */
+  double entropy_max;
 
-  //----------- Hybrid Equation of State -----------
+  /** @name Hybrid EOS Parameters */
+  /** Maximum allowed number of polytropic pieces */
+#define MAX_EOS_PARAMS (10)
+  /** Number of polytropic pieces (must be \f$ \eq \f$ @ref MAX_EOS_PARAMS) */
   int neos;
+  /** Density boundaries for each polytropic piece */
   double rho_ppoly[MAX_EOS_PARAMS - 1];
+  /** Polytropic indices \f$ \Gamma \f$ for each polytropic piece */
   double Gamma_ppoly[MAX_EOS_PARAMS];
+  /** Polytropic indices \f$ \Gamma \f$ for each polytropic piece */
   double K_ppoly[MAX_EOS_PARAMS];
+  /** Integration constants for specific internal energy \f$ \epsilon \f$ for each polytropic piece */
   double eps_integ_const[MAX_EOS_PARAMS];
+  /** @todo please describe */
   double p_ppoly[MAX_EOS_PARAMS];
+  /** Adiabatic index\f$ \Gamma_th \f$ defining the thermal contribution to the EOS */
   double Gamma_th;
-  //------------------------------------------------
 
-  //---------- Tabulated Equation of State ---------
-  double Y_e_atm, Y_e_min, Y_e_max;
-  double T_atm, T_min, T_max;
-  double eps_atm, eps_min, eps_max;
-  double entropy_atm, entropy_min, entropy_max;
+  /** @name Tabulated EOS Parameters */
+  /** Atmospheric value of the electron fraction \f$ Y_e \f$ */
+  double Y_e_atm;
+  /** Minimum allowed electron fraction \f$ Y_e \f$ */
+  double Y_e_min;
+  /** Maximum allowed electron fraction \f$ Y_e \f$ */
+  double Y_e_max;
+  /** Atmospheric value of the temperature \f$ T \f$ */
+  double T_atm;
+  /** Minimum allowed temperature \f$ T \f$ */
+  double T_min;
+  /** Maximum allowed temperature \f$ T \f$ */
+  double T_max;
+  /** root_finding_precision: root-finding precision for table inversions */
   double root_finding_precision;
 
-  // Table size
-  int N_rho, N_T, N_Ye;
+  /** @name Internal Tabulated EOS Variables */
+  /** Number of density points in the EOS table */
+  int N_rho;
+  /** Number of temperature points in the EOS table */
+  int N_T;
+  /** Number of electron fraction points in the EOS table */
+  int N_Ye;
 
-  // Tabulated quantities
+  /** Pointer to full EOS data table */
   double *restrict table_all;
+  /** @todo needs documentation */
   double *restrict table_logrho;
+  /** @todo needs documentation */
   double *restrict table_logT;
+  /** @todo needs documentation */
   double *restrict table_Y_e;
+  /** @todo needs documentation */
   double *restrict table_eps;
 
-  // Table bounds
-  double table_rho_min, table_rho_max;
-  double table_T_min, table_T_max;
-  double table_Y_e_min, table_Y_e_max;
-  double table_P_min, table_P_max;
-  double table_eps_min, table_eps_max;
-  double table_ent_min, table_ent_max;
+  /** Minimum density in the table */
+  double table_rho_min;
+  /** Maximum density in the table */
+  double table_rho_max;
+  /** Minimum temperature in the table */
+  double table_T_min;
+  /** Maximum temperature in the table */
+  double table_T_max;
+  /** Minimum electron fraction in the table */
+  double table_Y_e_min;
+  /** Maximum electron fraction in the table */
+  double table_Y_e_max;
+  /** Minimum pressure in the table */
+  double table_P_min;
+  /** Maximum pressure in the table */
+  double table_P_max;
+  /** Minimum specific internal energy in the table */
+  double table_eps_min;
+  /** Maximum specific internal energy in the table */
+  double table_eps_max;
+  /** Minimum entropy in the table */
+  double table_ent_min;
+  /** Maximum entropy in the table */
+  double table_ent_max;
 
-  // Auxiliary variables
+  /** The energy shift \f$ \epsilon_0 \f$ such that \f$ \epsilon + \epsilon_0 \f$ is always positive */
   double energy_shift;
+  /** Inverse of the temperature difference \f$ \Delta T = \log{T_1} - \log{T_0} \f$ for the table */
   double dtempi;
+  /** Inverse of the density difference \f$ \Delta \rho = \log{\rho_1} - \log{\rho_0} \f$ for the table */
   double drhoi;
+  /** Inverse of the electron fraction difference \f$ \Delta Y_e = {Y_e}_1 - {Y_e}_0 \f$ for the table */
   double dyei;
+  /** Value of ghl_eos_parameters::drhoi * ghl_eos_parameters::dtempi */
   double drhotempi;
+  /** Value of ghl_eos_parameters::drhoi * ghl_eos_parameters::dyei */
   double drhoyei;
+  /** Value of ghl_eos_parameters::dtempi * ghl_eos_parameters::dyei */
   double dtempyei;
+  /** Value of ghl_eos_parameters::drhoi * ghl_eos_parameters::dtempi * ghl_eos_parameters::dyei */
   double drhotempyei;
 
   // These are used for beta-equilibrium
-  double *lp_of_lr, *le_of_lr, *Ye_of_lr, *lh_of_lr;
-  //------------------------------------------------
+  /** @todo please describe */
+  double *lp_of_lr;
+  /** @todo please describe */
+  double *le_of_lr;
+  /** @todo please describe */
+  double *Ye_of_lr;
+  /** @todo please describe */
+  double *lh_of_lr;
 
 } ghl_eos_parameters;
 

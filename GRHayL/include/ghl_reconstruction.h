@@ -7,11 +7,17 @@
 extern "C" {
 #endif
 
-// Integer constants to keep track of stencil.
+/**
+ * @ingroup recon_internal
+ * @enum reconstruction_stencil
+ * @brief Integer constants for indexing stencil arrays
+ */
 enum reconstruction_stencil {
-  MINUS2, MINUS1,
-  PLUS_0, PLUS_1,
-  PLUS_2
+  MINUS2, /**< Stencil index \f$ i-2 \f$ */
+  MINUS1, /**< Stencil index \f$ i-1 \f$ */
+  PLUS_0, /**< Stencil index \f$ i   \f$ */
+  PLUS_1, /**< Stencil index \f$ i+1 \f$ */
+  PLUS_2  /**< Stencil index \f$ i+2 \f$ */
 };
 
 // PPM functions
@@ -92,12 +98,13 @@ void ghl_superbee_reconstruction(
       double *restrict Ur,
       double *restrict Ul);
 
+// WENO functions
 void ghl_wenoz_reconstruction(
       const double U[6],
       double *restrict Ur,
       double *restrict Ul);
 
-void ghl_wenoz_reconstruction_right_left_faces(
+void ghl_wenoz_reconstruction_for_cell(
       const double U[5],
       double *restrict Ur,
       double *restrict Ul);

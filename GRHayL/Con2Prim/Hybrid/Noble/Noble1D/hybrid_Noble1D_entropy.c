@@ -1,12 +1,5 @@
 #include "../../../utils_Noble.h"
-
-/* Function    :  Hybrid_Noble1D_entropy()
- * Description :  Unpacks the ghl_primitive_quantities struct into the variables
- *                needed by the Newton-Rapson solver, then repacks the  primitives.
- *                This function is adapted from the HARM function provided by IllinoisGRMHD.
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_Noble1D_entropy
-*/
-
+// Adapted from HARM
 /***********************************************************************************
 ******************************* HARM License ***************************************
 ************************************************************************************
@@ -32,6 +25,37 @@
 
 ***********************************************************************************/
 
+/**
+ * @ingroup Con2Prim
+ * @brief Solves for the primitive variables using an entropy variant
+ *        of the Noble1D method
+ *
+ * @todo
+ * Needs and in-line descriptions; internal functions also need documentation.
+ *
+ * @param[in] c2p_key: key from @ref ghl_con2prim_method_t selecting a method
+ *
+ * @param[in] params:       pointer to ghl_parameters struct
+ *
+ * @param[in] eos:          pointer to ghl_eos_parameters struct
+ *
+ * @param[in] ADM_metric:   pointer to ghl_metric_quantities struct with ADM metric
+ *
+ * @param[in] metric_aux:   pointer to ghl_ADM_aux_quantities struct
+ *
+ * @param[in] cons_undens:  pointer to ghl_conservative_quantities struct with
+ *                          **undensitized** conservative variables
+ *
+ * @param[in,out] prims:    pointer to ghl_primitive_quantities struct;
+ *                          input is initial guess for iterative solver;
+ *                          output is the primitives consistent with the
+ *                          input conservatives
+ *
+ * @param[out] diagnostics: pointer to ghl_con2prim_diagnostics struct; returns
+ *                          with several Con2Prim solver diagnostics
+ *
+ * @returns error code for any Con2Prim failures
+ */
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

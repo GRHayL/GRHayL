@@ -1,6 +1,8 @@
 #ifndef NRPYLEAKAGE_H_
 #define NRPYLEAKAGE_H_
 
+#include "ghl.h"
+
 // "Primary" parameters
 #define NRPyLeakage_enable_beta_nue (1)
 #define NRPyLeakage_enable_beta_anue (1)

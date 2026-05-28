@@ -1,14 +1,45 @@
 #include "ghl_reconstruction.h"
 
-/*
- * Function     : ghl_ppm_reconstruction_with_steepening()
- * Description  : reconstructs variables at the points
- *                    Ur(i) = U(i-1/2+epsilon)
- *                    Ul(i) = U(i-1/2-epsilon)
- *                and applies the additional steepening algorithm
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_ppm_reconstruction_with_steepening
-*/
-
+/**
+ * @ingroup ppm
+ * @brief Reconstructs variables at the points  
+ * @sp10 \f$ Ur(i) = U \left(i-\frac{1}{2} + \epsilon \right) \f$  
+ * @sp10 \f$ Ul(i) = U \left(i-\frac{1}{2} - \epsilon \right) \f$
+ * and applies the additional steepening algorithm.
+ *
+ * @details
+ * This function computes face values of a variable using the piecewise
+ * parabolic method (PPM). The returned face depends on the provided stencil.
+ * For example, providing a data stencil from \f$ (i-3) \f$ to \f$ (i+2) \f$ of the cell
+ * centers will return the right and left values for the face at \f$ i-\frac{1}{2} \f$.
+ * This involves two calls to @ref ghl_ppm_compute_for_cell_with_steepening, and this
+ * function filters the returned data to provide the desired return values. For more
+ * detail on the implemented PPM routine, see documentation on the
+ * @ref ghl_ppm_compute_for_cell_with_steepening function.
+ *
+ * The input `ftilde` can be computed by using @ref ghl_compute_ftilde, which uses
+ * the same stencil range as this function and populates the `ftilde` array with
+ * the needed data.
+ *
+ * This differs from @ref ghl_ppm_reconstruction by applying an additional
+ * steepening algorithm and is normally used for the density reconstruction.
+ *
+ * @param[in] params:   pointer to ghl_parameters struct
+ *
+ * @param[in] pressure: 1D array containing stencil for the pressure
+ *
+ * @param[in] Gamma_eff: value of \f$ \Gamma \f$ to be used during the steepening procedure
+ *
+ * @param[in] ftilde:    1D array containing \f$ \tilde{f} \f$ values for flattening procedure
+ *
+ * @param[in] var_data:  1D array containing stencil of variable to reconstruct
+ *
+ * @param[out] var_datar: pointer to a double; set to the value of the right side of the face
+ *
+ * @param[out] var_datal: pointer to a double; set to the value of the left side of the face
+ *
+ * @returns void
+ */
 void ghl_ppm_reconstruction_with_steepening(
       const ghl_parameters *restrict params,
       const double pressure[6],

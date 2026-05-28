@@ -4,19 +4,22 @@
 #include "ghl_con2prim.h"
 #include "roots.h"
 
-/*
- * Function   : compute_rho_W_from_x_and_conservatives
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Computes rho and W from x and the conservative variables using Eq. (42)
+ *        of https://arxiv.org/pdf/1712.07538.pdf and rho = D/W.
+ * @todo
+ * Add in/out information to params
  *
- * Computes rho and W from x and the conservative variables using Eq. (42)
- * of https://arxiv.org/pdf/1712.07538.pdf and rho = D/W.
+ * @param x:       pointer to fparams_struct.
  *
- * Parameters : x        - Pointer to fparams_struct.
- *            : fparams  - Array containing v_{i}.
- *            : rho_ptr  - Stores the output of rho.
- *            : W_ptr    - Stores the output of W.
+ * @param fparams: array containing v_{i}.
  *
- * Returns    : Nothing.
+ * @param rho_ptr: stores the output of rho.
+ *
+ * @param W_ptr:   stores the output of W.
+ *
+ * @returns void
  */
 static inline void
 compute_rho_W_from_x_and_conservatives(
@@ -45,33 +48,56 @@ compute_rho_W_from_x_and_conservatives(
   *W_ptr   = W;
 }
 
-/*
- * Function : compute_BU_SU_Bsq_Ssq_BdotS
- * Author   : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Computes auxiliary quantities of \f$ B^i \f$ and \f$ S_i \f$
  *
- * Computes B^{i}, S^{i}, B^2, S^2, B.S = B^{i}S_{i}.
+ * @details
+ * This function computes the quantities \f$ S^i \f$, \f$ B^2 \f$, \f$ S^2 \f$,
+ * and \f$ B\cdot S \f$ using the functions @ref ghl_raise_lower_vector_3D and
+ * @ref ghl_compute_vec2_from_vec3D. It also enforces that
  *
- * Parameters : metric       - Metric quantities
- *            : cons_undens  - Undensitized conservatives
- *            : prims        - Input primitives (for B^{i})
- *            : SU           - Stores S^{i}.
- *            : Bsq          - Stores B^2.
- *            : Ssq          - Stores S^2.
- *            : BdotS        - Stores B.S = B^{i}S_{i}.
+ * \f[
+ * S^2 < \left| \gamma \right| \left( \tilde{\tau} + \rho_* \right)^2
+ * \f]
  *
- * Returns    : Nothing.
+ * @todo
+ * I (SCupp) compared this limit to @ref ghl_apply_conservative_limits, and the
+ * two seem to disagree. Should this \f$ S_i \f$ limiter just do the same as
+ * @ref ghl_apply_conservative_limits? It seems to me like one of them should be
+ * wrong unless someone can explain why they would differ between EOS. This
+ * should be looked at and, if true, that function should be properly extended
+ * to work for any EOS and the two limits should converge to the 'correct'
+ * version. It also references eq. A5 of [1], but I don't know what [1]
+ * represents here.
+ *
+ * @param[in] ADM_metric:  pointer to ghl_metric_quantities containing the ADM metric
+ *
+ * @param[in] cons_undens: pointer to ghl_conservative_quantities containing
+ *                         **undensitized** conservative variables
+ *
+ * @param[in] prims:       pointer to ghl_primitive_quantities (only magnetic field is used)
+ *
+ * @param[out] SU:         returned quantity \f$ S^i \f$
+ *
+ * @param[out] Bsq:        returned quantity \f$ B^2 \f$
+ *
+ * @param[out] Ssq:        returned quantity \f$ S^2 \f$
+ *
+ * @param[out] BdotS:      returned quantity \f$ B \cdot S \f$
+ *
+ * @returns void
  */
 static inline void
 compute_SU_Bsq_Ssq_BdotS(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
-      double *restrict SU,
+      double SU[restrict 3],
       double *restrict Bsq,
       double *restrict Ssq,
       double *restrict BdotS) {
 
-  //Does this limit just do the same as apply_conservative_limits?
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
   double S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
@@ -82,12 +108,14 @@ compute_SU_Bsq_Ssq_BdotS(
   if(S_squared > S_squared_max) {
     // Step 2.2: Rescale S_{i}
     const double rescale_factor = sqrt(0.9999*S_squared_max/S_squared);
-    for(int i=0;i<3;i++)
+    for(int i=0;i<3;i++) {
       SD[i] *= rescale_factor;
+    }
 
     // Step 2.3: Recompute S^{2}
     S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
   }
+
   *Ssq = S_squared;
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}

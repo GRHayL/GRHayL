@@ -1,11 +1,32 @@
 #include "ghl.h"
 
-/*
- * Function     : ghl_compute_TDNmunu()
- * Description  : computes stress-energy tensor T_{\mu\nu}
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_compute_TDNmunu
-*/
-
+/**
+ * @ingroup pack_struct
+ * @brief Computes stress-energy tensor \f$ T_{\mu\nu} \f$
+ *
+ * @details
+ * This function computes \f$ T_{\mu\nu} \f$:
+ * \f[
+ * T_{\mu\nu} = \left( \rho_b h + b^2 \right)u_\mu u_\nu + \left( P + \frac{b^2}{2} \right) g_{\mu\nu} - b_\mu b_\nu
+ * \f]
+ * where \f$ h \f$ is the enthalpy
+ * \f[
+ * h = 1 + \epsilon + \frac{P}{\rho_b}
+ * \f]
+ * and \f$ b \f$ is computed using @ref ghl_compute_smallb_and_b2.
+ *
+ * @param[in] ADM_metric: pointer to a ghl_metric_quantities struct containing the ADM metric
+ *
+ * @param[in] metric_aux: pointer to a ghl_ADM_aux_quantities struct
+ *
+ * @param[in] prims:      pointer to a ghl_primitive_quantities struct. Note that both
+ *                        ghl_primitive_quantities::eps and ghl_primitive_quantities::u0
+ *                        **must** be valid for this function.
+ *
+ * @param[out] Tmunu:     pointer to ghl_stress_energy struct
+ *
+ * @returns void
+ */
 void ghl_compute_TDNmunu(
       const ghl_metric_quantities *restrict ADM_metric,
       const ghl_ADM_aux_quantities *restrict metric_aux,

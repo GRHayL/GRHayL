@@ -73,11 +73,11 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D_entropy(
 
   diagnostics->which_routine = Palenzuela1D_entropy;
   return ghl_tabulated_Palenzuela1D(
-               compute_rho_P_eps_T_W_entropy,
-               params,
-               eos,
-               ADM_metric,
-               cons_undens,
-               prims,
-               diagnostics);
+        compute_rho_P_eps_T_W_entropy,
+        params,
+        eos,
+        ADM_metric,
+        cons_undens,
+        prims,
+        diagnostics);
 }
