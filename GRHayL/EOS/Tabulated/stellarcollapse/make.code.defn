@@ -1,0 +1,2 @@
+# Source files in this directory that need compiled:
+SRCS = NRPyEOS_stellarcollapse.c NRPyEOS_stellarcollapse_to_ghl.c

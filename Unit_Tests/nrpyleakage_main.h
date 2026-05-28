@@ -28,7 +28,9 @@ int main(int argc, char **argv) {
   const double T_min     = -1;
   const double T_max     = -1;
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
   ghl_initialize_tabulated_eos_functions_and_params(
         tablepath,
         rho_b_atm, rho_b_min, rho_b_max,

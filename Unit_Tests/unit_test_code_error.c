@@ -4,7 +4,11 @@
 void read_table_error_test(int test_key);
 
 int main(int argc, char **argv) {
-  const int test_key    = atoi(argv[1]);
+
+  const int test_key = atoi(argv[1]);
+  if((test_key > 33 && test_key < 61) || test_key == 73 || test_key == 74) {
+    read_table_error_test(test_key);
+  }
 
   ghl_error_codes_t error = ghl_success;
 
@@ -337,10 +341,6 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
   }
 
-  if(test_key > 33 && test_key < 61) {
-    read_table_error_test(test_key);
-  }
-
   /*
      initialize_*_eos_functions_and_params::
          61-63: Invalid rho_atm
@@ -438,8 +438,15 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   }
 
   printf("Code failure test has failed for code test %d\n", test_key);
-  printf("We shouldn't be here, so I'll get rid of some compilation warnings :)\n"
-         "%e %d %e %e %e %e\n", Fermi_Dirac_integral, speed_limited, rho, Y_e, eps, T);
+
+  // Silence warnings
+  (void)Fermi_Dirac_integral;
+  (void)speed_limited;
+  (void)rho;
+  (void)Y_e;
+  (void)eps;
+  (void)T;
+
   return 0;
 }
 // clang-format on
@@ -465,8 +472,34 @@ void create_dataset(char *name, int dim, hid_t datatype_id, hid_t file_id) {
   H5Sclose(dataspace_id);
 }
 
+void create_scalar_dataset(char *name, hid_t datatype_id, hid_t file_id) {
+  hid_t dataspace_id = H5Screate(H5S_SCALAR);
+  hid_t dataset_id = H5Dcreate2(file_id, name, datatype_id, dataspace_id,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  int data = 1;
+  H5Dwrite(dataset_id, datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
+  H5Dclose(dataset_id);
+  H5Sclose(dataspace_id);
+}
+
+void create_opaque_dataset(char *name, hid_t file_id) {
+  hsize_t dims[1] = {1};
+  hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
+  hid_t datatype_id = H5Tcreate(H5T_OPAQUE, 1);
+  hid_t dataset_id = H5Dcreate2(file_id, name, datatype_id, dataspace_id,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  char data = 1;
+  H5Dwrite(dataset_id, datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
+  H5Dclose(dataset_id);
+  H5Tclose(datatype_id);
+  H5Sclose(dataspace_id);
+}
+
 void read_table_error_test(int test_key) {
 
+  printf("read_table_error_test: %d\n", test_key);
+
+  int original_test_key = test_key;
   test_key -= 34;
   FILE *fp = fopen("test.h5", "r");
   if(fp) {
@@ -475,11 +508,16 @@ void read_table_error_test(int test_key) {
   }
   if(test_key==0) {
     ghl_eos_parameters eos;
+    eos.eos_type = ghl_eos_tabulated;
+    eos.table_type = ghl_eos_table_stellarcollapse;
     NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
   }
   test_key--;
+  if(original_test_key == 73 || original_test_key == 74) {
+    test_key = original_test_key;
+  }
 
-  if (test_key < 0 || test_key > 25) {
+  if (test_key < 0 || (test_key > 25 && test_key != 73 && test_key != 74)) {
     ghl_info("read_table_error_test: unknown test_key\n");
     return;
   }
@@ -493,19 +531,31 @@ void read_table_error_test(int test_key) {
                       "ye",        "energy_shift"};
 
   hid_t file_id = H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  int imax = test_key > 3 ? 3 : test_key;
-  for (int i = 0; i < imax; i++) {
-    create_dataset(binnames[i], 1, H5T_NATIVE_INT, file_id);
+  if(test_key < 73) {
+    int imax = test_key > 3 ? 3 : test_key;
+    for (int i = 0; i < imax; i++) {
+      create_dataset(binnames[i], 1, H5T_NATIVE_INT, file_id);
+    }
+    imax = test_key > 22 ? 22 : test_key;
+    for (int i = 3; i < imax; i++) {
+      create_dataset(binnames[i], 3, H5T_NATIVE_DOUBLE, file_id);
+    }
+    for(int i=22;i<test_key;i++) {
+      create_dataset(binnames[i], 1, H5T_NATIVE_DOUBLE, file_id);
+    }
   }
-  imax = test_key > 22 ? 22 : test_key;
-  for (int i = 3; i < imax; i++) {
-    create_dataset(binnames[i], 3, H5T_NATIVE_DOUBLE, file_id); 
+  else if(test_key == 73) {
+    // ndims failure test, line 21 of NRPyEOS_hdf5_helpers.c
+    create_scalar_dataset(binnames[0], H5T_NATIVE_INT, file_id);
   }
-  for(int i=22;i<test_key;i++) {
-    create_dataset(binnames[i], 1, H5T_NATIVE_DOUBLE, file_id);
+  else if(test_key == 74) {
+    // status < 0 failure test, line 39 of current version of NRPyEOS_hdf5_helpers.c
+    create_opaque_dataset(binnames[0], file_id);
   }
   H5Fclose(file_id);
 
   ghl_eos_parameters eos;
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
   NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
 }

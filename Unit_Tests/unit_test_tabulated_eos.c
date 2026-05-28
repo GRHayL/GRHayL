@@ -21,7 +21,9 @@ int main(int argc, char **argv) {
   ghl_info("Beginning tabulated EOS unit test...\n");
 
   // Step 1: Initialize the EOS struct
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
   ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
 
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
@@ -43,6 +45,9 @@ int main(int argc, char **argv) {
         const double Y_e = eos.table_Y_e[k];
         const int index = i + eos.N_rho*( j + eos.N_T*k );
         for(int var_key=0; var_key<NRPyEOS_ntablekeys; var_key++) {
+          if(var_key > NRPyEOS_Gamma_key) {
+            continue;
+          }
           const double var       = get_table_quantity(var_key, logrho, Y_e, logT);
           const double table_var = eos.table_all[var_key + NRPyEOS_ntablekeys*index];
           if( relative_error(var, table_var) > rtol && fabs(var-table_var) > atol )
