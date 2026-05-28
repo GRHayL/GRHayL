@@ -33,18 +33,10 @@ NRPyEOS_hdf5_read_dataset(hid_t file_id, ghl_hdf5_t dtype, const char *dataset_n
     total_size *= dims[i];
   }
 
-  // We don't use malloc_or_error so we can close the HDF5 file first.
-  void *array = malloc(total_size * dtype_size[dtype]);
-  if(!array) {
-    H5Sclose(dataspace_id);
-    H5Dclose(dataset_id);
-    ghl_error("Memory allocation failed for dataset '%s'.\n", dataset_name);
-  }
-
   // Read the 3D array
+  void *array = malloc(total_size * dtype_size[dtype]);
   herr_t status = H5Dread(dataset_id, hdf5_dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, array);
   if(status < 0) {
-
     H5Sclose(dataspace_id);
     H5Dclose(dataset_id);
     ghl_error("Problem reading dataset '%s'.\n", dataset_name);
