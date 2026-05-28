@@ -14,7 +14,7 @@
  *
  * @param[in] press:       fluid pressure \f$ P \f$
  *
- * @param[in] epsilon:     TODO: \f$ \epsilon \f$
+ * @param[in] epsilon:     specific internal energy \f$ \epsilon \f$
  *
  * @param[in] vx, vy, vz:  components of the fluid velocity \f$ v^i \f$
  *

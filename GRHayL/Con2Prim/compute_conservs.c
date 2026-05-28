@@ -2,7 +2,7 @@
 
 /**
  * @ingroup Con2Prim
- * Computes conservative variables from primitive variables
+ * @brief Computes conservative variables from primitive variables
  *
  * @details
  * This function computes the conservative variables from the primitive

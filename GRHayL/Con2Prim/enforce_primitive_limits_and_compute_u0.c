@@ -1,11 +1,27 @@
 #include "ghl_con2prim.h"
 
-/* Function     : ghl_enforce_primitive_limits_and_compute_u0()
- * Description  : Applies limits to rho_b, pressure, and v^i, then
-                  recomputes epsilon and (if needed) entropy
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_enforce_primitive_limits_and_compute_u0
-*/
-
+/**
+ * @ingroup Con2Prim
+ * @brief Applies limits to density, pressure, and velocity, then
+          recomputes epsilon and (if needed) entropy.
+ *
+ * @details
+ * This function applies limits to the primitive variables, generally used
+ * after solving for them with a conservative-to-primitive method. It
+ * then speed-limits the velocity and solves for the 0th component of the
+ * 4-velocity, which is needed for computing the conservatives and stress-
+ * energy tensor.
+ *
+ * @param[in] params:     pointer to ghl_parameters struct
+ *
+ * @param[in] eos:        pointer to ghl_eos_parameters struct
+ *
+ * @param[in] ADM_metric: pointer to ghl_metric_quantities struct with ADM metric
+ *
+ * @param[in,out] prims: pointer to ghl_primitive_quantities struct
+ *
+ * @returns GRHayL error code
+ */
 ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -13,27 +29,50 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       ghl_primitive_quantities *restrict prims,
       bool *restrict speed_limited) {
 
-  // Hybrid EOS specific floors and ceilings
+  /**
+   * # Step-by-step Procedure
+   * First, the code splits based on EOS type.
+   */
   switch(eos->eos_type) {
     case ghl_eos_hybrid:
     {
-      // Apply floors and ceilings to rho
+      /**
+       * ## Hybrid EOS
+       * The code
+       * 1. Applies floors and ceilings to the density
+       */
       prims->rho = ghl_clamp(prims->rho, eos->rho_min, eos->rho_max);
 
-      // Pressure and epsilon must be recomputed
-      // Compute P and eps
+      /**
+       * 2. Recomputes the cold pressure and epsilon
+       */
       double P_cold;
       double eps_cold;
       ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &P_cold, &eps_cold);
 
-      // Set P_min and P_max
+      /**
+       * 3. Sets pressure limits:
+       *    \f$ P_{\mathrm{min}} = P_{\mathrm{cold}} \f$
+       *
+       *    \f$
+       *    P_{\mathrm{max}} = \begin{cases}
+       *    10^5 P_{\mathrm{cold}} & \psi^6 > \psi^6_\mathrm{threshold} \\
+       *    100P_{\mathrm{cold}} & \mathrm{otherwise}
+       *    \end{cases}
+       *    \f$
+       *    For the maximum pressure, the estimate is dependent on whether the point
+       *    is approximately within the horizon.
+       */
       const double P_min = P_cold;
 
       const bool inhorizon = ADM_metric->sqrt_detgamma > params->psi6threshold;
-      // Adjust P_max based on Psi6
       const double P_max = inhorizon ? 1e5 * P_cold : 100.0 * P_cold;
 
-      // Now apply floors and ceilings to P
+      /**
+       * 4. Apply pressure limits. Again, the upper limit is more complicated. It
+       *    is only applied if either the point is in the horizon or the density
+       *    is small (\f$ < 100 \rho_\mathrm{atm} \f$).
+       */
       if(prims->press < P_min) {
         prims->press = P_min;
       }
@@ -41,7 +80,9 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
         prims->press = P_max;
       }
 
-      // Now recompute eps and, if needed, entropy
+      /**
+       * 4. For consistency, recompute eps and, if needed, entropy.
+       */ 
       prims->eps = eps_cold + (prims->press - P_cold) / (eos->Gamma_th - 1.0) / prims->rho;
       if(params->evolve_entropy) {
         prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
@@ -49,13 +90,18 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       break;
     }
 
-    // Tabulated EOS specific floors and ceilings
     case ghl_eos_tabulated:
-      // Apply floors and ceilings to rho, Y_e and T
+      /**
+       * ## Tabulated EOS
+       * The code
+       * 1. Applies floors and ceilings to density, \f$ Y_e \f$, and temperature.
+       */
       ghl_tabulated_enforce_bounds_rho_Ye_T(
             eos, &prims->rho, &prims->Y_e, &prims->temperature);
 
-      // Additional variables used for the EOS call
+      /**
+       * 2. Compute pressure, epsilon, and optionally entropy.
+       */ 
       if(params->evolve_entropy) {
         ghl_tabulated_compute_P_eps_S_from_T(
               eos, prims->rho, prims->Y_e, prims->temperature, &prims->press,
@@ -69,13 +115,17 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       break;
 
     case ghl_eos_simple:
-      // Apply floors and ceilings to rho
-      prims->rho = ghl_clamp(prims->rho, eos->rho_min, eos->rho_max);
-
-      // Apply floors and ceilings to P
+      /**
+       * ## Simple EOS
+       * The code
+       * 1. Applies floors and ceilings to density and pressure.
+       */
+      prims->rho   = ghl_clamp(prims->rho,   eos->rho_min,   eos->rho_max);
       prims->press = ghl_clamp(prims->press, eos->press_min, eos->press_max);
 
-      // Now recompute eps and, if needed, entropy
+      /**
+       * 2. For consistency, recompute eps and, if needed, entropy.
+       */ 
       prims->eps = prims->press / (prims->rho * (eos->Gamma_th - 1.0));
       if(params->evolve_entropy) {
         prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
@@ -85,6 +135,6 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       return ghl_error_unknown_eos_type;
   }
 
-  // Finally, apply speed limit to v and compute u^0
+  /** Finally, we speed limit the velocity and compute \f$ u^0 \f$ */
   return ghl_limit_v_and_compute_u0(params, ADM_metric, prims, speed_limited);
 }

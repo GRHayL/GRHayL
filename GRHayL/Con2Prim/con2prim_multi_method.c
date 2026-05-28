@@ -2,7 +2,7 @@
 
 /**
  * @ingroup hyb_c2p
- * @brief Calls the requested Con2Prim routine
+ * @brief Calls the requested hybrid EOS Con2Prim routine
  *
  * @details
  * This function selects the appropriate conservative-to-primitive solver
@@ -65,15 +65,9 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
   }
 }
 
-/*
- * Function     : ghl_con2prim_tabulated_select_method()
- * Description  : Calls the Con2Prim routine designated by c2p_key
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
-*/
-
 /**
  * @ingroup tab_c2p
- * @brief Calls the requested Con2Prim routine
+ * @brief Calls the requested tabulated EOS Con2Prim routine
  *
  * @details
  * This function selects the appropriate conservative-to-primitive solver
@@ -131,7 +125,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
 
 /**
  * @ingroup hyb_c2p
- * @brief Calls Con2Prim routines using the @grhayl parameter settings.
+ * @brief Calls hybrid EOS Con2Prim routines using the @grhayl parameter settings.
  *
  * @details
  * This function calls the conservative-to-primitive solvers
@@ -212,7 +206,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
 
 /**
  * @ingroup tab_c2p
- * @brief Calls Con2Prim routines using the @grhayl parameter settings.
+ * @brief Calls tabulated EOS Con2Prim routines using the @grhayl parameter settings.
  *
  * @details
  * This function calls the conservative-to-primitive solvers

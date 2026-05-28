@@ -90,10 +90,10 @@ typedef enum {
   ghl_error_exceed_table_vars,           /**< Requested more output variables than exist in the @ref tab_eos table */
   ghl_error_table_neg_energy,            /**< Negative energy found after energy shift in @ref tab_eos routine */
   ghl_error_table_bisection,             /**< Failure to find solution via bisection in @ref tab_eos routine */
-  ghl_error_u0_singular,                 /**< TODO@LEO: Please describe */
-  ghl_error_invalid_utsq,                /**< TODO@LEO: Please describe */
-  ghl_error_invalid_Z,                   /**< TODO@LEO: Please describe */
-  ghl_error_newman_invalid_discriminant, /**< TODO@LEO: Please describe */
+  ghl_error_u0_singular,                 /**< @todo Please describe */
+  ghl_error_invalid_utsq,                /**< @todo Please describe */
+  ghl_error_invalid_Z,                   /**< @todo Please describe */
+  ghl_error_newman_invalid_discriminant, /**< @todo Please describe */
 } ghl_error_codes_t;
 
 /**
@@ -356,7 +356,7 @@ typedef struct ghl_eos_parameters {
   double K_ppoly[MAX_EOS_PARAMS];
   /** Integration constants for specific internal energy \f$ \epsilon \f$ for each polytropic piece */
   double eps_integ_const[MAX_EOS_PARAMS];
-  /** TODO@LEO: please describe */
+  /** @todo please describe */
   double p_ppoly[MAX_EOS_PARAMS];
   /** Adiabatic index\f$ \Gamma_th \f$ defining the thermal contribution to the EOS */
   double Gamma_th;
@@ -439,13 +439,13 @@ typedef struct ghl_eos_parameters {
   double drhotempyei;
 
   // These are used for beta-equilibrium
-  /** TODO@LEO: please describe */
+  /** @todo please describe */
   double *lp_of_lr;
-  /** TODO@LEO: please describe */
+  /** @todo please describe */
   double *le_of_lr;
-  /** TODO@LEO: please describe */
+  /** @todo please describe */
   double *Ye_of_lr;
-  /** TODO@LEO: please describe */
+  /** @todo please describe */
   double *lh_of_lr;
 
 } ghl_eos_parameters;

@@ -2,7 +2,7 @@
 
 /**
  * @ingroup c2p_internal
- * @brief Ensures $\f |f(b)| < |f(a)| \f$ while finding root of \f$ f \f$.
+ * @brief Ensures \f$ |f(b)| < |f(a)| \f$ while finding root of \f$ f \f$.
  *
  * @param[in,out] a:  first evaluated point f(x)
  * @param[in,out] b:  second evaluated point of f(x)
@@ -58,6 +58,8 @@ cycle(
  * - Check if either a or b are roots of f;
  * - Check if the root is in the interval [a,b];
  * - Ensure |f(b)| < |f(a)| by swapping a and b if necessary.
+ *
+ *   @todo properly define parameters, return
  *
  * Parameters : f        - Function for which the root is computed.
  *            : fparams  - Object containing all parameters needed by the
@@ -132,6 +134,7 @@ check_a_b_compute_fa_fb(
  * - Press et al., Numerical Recipes, Ch. 9.3. Freely available at
  *   http://numerical.recipes/book/book.html
  * - Brent, Algorithms for Minimization Without Derivatives (1973)
+ *   @todo consider converting to doxygen citation
  *
  * param[in] f:           function for which the root is computed
  *

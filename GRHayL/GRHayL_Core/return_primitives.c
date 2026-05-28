@@ -15,7 +15,7 @@
  *
  * @param[out] press:       pointer to fluid pressure \f$ P \f$
  *
- * @param[out] epsilon:     pointer to TODO: \f$ \epsilon \f$
+ * @param[out] epsilon:     pointer to specific internal energy \f$ \epsilon \f$
  *
  * @param[out] vx, vy, vz:  pointer to components of the fluid velocity \f$ v^i \f$
  *

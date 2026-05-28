@@ -1,30 +1,37 @@
 #include "ghl_nrpyeos_hybrid.h"
 
-/*
- * Function     : NRPyEOS_find_polytropic_index_from_P()
- * Description  : For a given value of pressure, find the appropriate polytropic index;
- *                usually aliased as ghl_hybrid_find_polytropic_index
-*/
-
+/**
+ * @ingroup hyb_eos
+ * @brief For a given pressure, find the appropriate polytropic index;
+ *        usually aliased as ghl_hybrid_find_polytropic_index_from_P
+ *
+ * @details
+ * This function finds the appropriate polytropic EOS for the input pressure:
+ *
+ * \f[
+ * i = \begin{cases}
+ *     0 & \text{if } P < P_0 \\
+ *     1 & \text{if } P_0 \le P < P_1 \\
+ *     2 & \text{if } P_1 \le P < P_2 \\
+ *                 \quad \vdots & \quad \vdots \\
+ *     j & \text{if } P_{j-1} \le P < P_j
+ * \end{cases}
+ * \f]
+ *
+ * Then, a simple way of determining the index is through the formula
+ * 
+ * \f$ i = (P \ge P_0) + (P \ge P_1) + \vdots + (P \ge P_{j-1})
+ *
+ * @param[in] eos:  pointer to ghl_eos_parameters struct
+ *
+ * @param[in] P_in: pressure value
+ *
+ * @returns the index corresponding to the polytropic piece for the given pressure
+ */
 int NRPyEOS_find_polytropic_index_from_P(
     const ghl_eos_parameters *restrict eos,
     const double P_in) {
 
-    /* We want to find the appropriate polytropic EOS for the
-    * input value P_in. Remember that:
-    *
-    * if P < P_{0}:                P_{0} , index: 0
-    * if P >= P_{0} but < P_{1}: P_{1} , index: 1
-    * if P >= P_{1} but < P_{2}: P_{2} , index: 2
-    *                      ...
-    * if P >= P_{j-1} but < P_{j}: P_{j} , index: j
-    *
-    * Then, a simple way of determining the index is through
-    * the formula:
-    *  ---------------------------------------------------------------------------
-    * | index = (P >= P_{0}) + (P >= P_{1}) + ... + (P >= P_{neos-2}) |
-    *  ---------------------------------------------------------------------------
-    */
     if(eos->neos == 1) return 0;
 
     int polytropic_index = 0;

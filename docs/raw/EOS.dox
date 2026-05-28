@@ -29,7 +29,7 @@
  */
 
 /**
- * @defgroup hybrid_eos Hybrid EOS
+ * @defgroup hyb_eos Hybrid EOS
  * @ingroup EOS
  *
  * The hybrid EOS splits the pressure into cold and thermal components, and
