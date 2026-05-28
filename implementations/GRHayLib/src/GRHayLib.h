@@ -15,4 +15,12 @@
 extern ghl_eos_parameters *ghl_eos;
 extern ghl_parameters *ghl_params;
 
+static inline int ghl_imax(int a, int b) {
+  return a > b ? a : b; 
+}
+
+static inline int ghl_imin(int a, int b) {
+  return a < b ? a : b; 
+}
+
 #endif // GRHAYLIB_H_
