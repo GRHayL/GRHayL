@@ -145,15 +145,15 @@ int main(int argc, char **argv) {
     prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
     prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
 
-    ghl_calculate_characteristic_speed_dirn0(
-          &prims_r, &prims_l, &eos,
-          &ADM_metric, &cxmin[index], &cxmax[index]);
-    ghl_calculate_characteristic_speed_dirn1(
-          &prims_r, &prims_l, &eos,
-          &ADM_metric, &cymin[index], &cymax[index]);
-    ghl_calculate_characteristic_speed_dirn2(
-          &prims_r, &prims_l, &eos,
-          &ADM_metric, &czmin[index], &czmax[index]);
+    ghl_calculate_characteristic_speed(
+          0, &eos, &ADM_metric,
+          &prims_r, &prims_l, &cxmin[index], &cxmax[index]);
+    ghl_calculate_characteristic_speed(
+          1, &eos, &ADM_metric,
+          &prims_r, &prims_l, &cymin[index], &cymax[index]);
+    ghl_calculate_characteristic_speed(
+          1,&eos, &ADM_metric,
+          &prims_r, &prims_l, &czmin[index], &czmax[index]);
   }
 
   double *cmin;
@@ -247,31 +247,31 @@ int main(int argc, char **argv) {
     FILE *outfile = fopen_with_check(filename, "wb");
 
     void (*calculate_HLLE_fluxes)(
-          ghl_primitive_quantities *restrict,
-          ghl_primitive_quantities *restrict,
+          const int,
           const ghl_eos_parameters *restrict,
           const ghl_metric_quantities *restrict,
+          ghl_primitive_quantities *restrict,
+          ghl_primitive_quantities *restrict,
           const double,
           const double,
           ghl_conservative_quantities *restrict);
 
     for(int entropy=0; entropy<2; entropy++) {
+      calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_hybrid_entropy : &ghl_calculate_HLLE_fluxes_hybrid;
+
       for(int flux_dir=0; flux_dir<3; flux_dir++) {
         switch(flux_dir) {
           case 0:
             cmin = cxmin;
             cmax = cxmax;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn0_hybrid;
             break;
           case 1:
             cmin = cymin;
             cmax = cymax;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn1_hybrid;
             break;
           case 2:
             cmin = czmin;
             cmax = czmax;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy : &ghl_calculate_HLLE_fluxes_dirn2_hybrid;
             break;
         }
 
@@ -314,8 +314,8 @@ int main(int argc, char **argv) {
 
           ghl_conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(
-                &prims_r, &prims_l, &eos,
-                &ADM_metric, cmin[index], cmax[index],
+                flux_dir, &eos, &ADM_metric,
+                &prims_r, &prims_l, cmin[index], cmax[index],
                 &cons_fluxes);
 
           rho_star_flux[index] = cons_fluxes.rho;
