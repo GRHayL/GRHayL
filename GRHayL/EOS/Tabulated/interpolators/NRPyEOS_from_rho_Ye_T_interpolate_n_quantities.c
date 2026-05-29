@@ -11,6 +11,10 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
       const double T,
       const int *restrict tablevars_keys,
       double *restrict tablevars) {
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
+  return ghl_error_hdf5_is_disabled;
+#else
 
   if(!n) return ghl_success;
 
@@ -50,4 +54,5 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
     tablevars[i] = tablevar_out;
   }
   return ghl_success;
+#endif
 }

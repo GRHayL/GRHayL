@@ -5,6 +5,7 @@
  * (c) 2023 Leo Werneck
  */
 int main(int argc, char **argv) {
+#ifndef GRHAYL_DISABLE_HDF5
 
   double rtol = 1.5e-12;
   double atol = 1e-14;
@@ -603,6 +604,7 @@ int main(int argc, char **argv) {
   ghl_tabulated_free_memory(&eos);
 
   ghl_info("Test finished with no errors!\n");
+#endif
 
   // All done!
   return 0;

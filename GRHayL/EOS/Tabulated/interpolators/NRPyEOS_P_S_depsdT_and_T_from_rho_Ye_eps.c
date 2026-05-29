@@ -11,6 +11,10 @@ ghl_error_codes_t NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(
       double *restrict S,
       double *restrict depsdT,
       double *restrict T) {
+#ifdef GRHAYL_DISABLE_HDF5
+  GRHAYL_HDF5_ERROR_IF_USED;
+  return ghl_error_hdf5_is_disabled;
+#else
 
   // Step 1: Set EOS table keys
   const int keys[3] = {NRPyEOS_press_key,NRPyEOS_entropy_key,NRPyEOS_depsdT_key};
@@ -34,4 +38,5 @@ ghl_error_codes_t NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(
   *depsdT = outvars[2];
 
   return ghl_success;
+#endif
 }
