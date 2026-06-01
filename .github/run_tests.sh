@@ -5,8 +5,10 @@ set -Eeuxo pipefail
 ./configure -r
 make tests
 
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
+LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export LD_LIBRARY_PATH
+
+echo $LD_LIBRARY_PATH
 
 download_file() {
   url="$1"
