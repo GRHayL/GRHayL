@@ -409,8 +409,8 @@ int main(int argc, char **argv) {
         const double h = 1.0 + eps + P/rho;
         double h_test, cs2_test;
         ghl_compute_h_and_cs2(&eos, &prims, &h_test, &cs2_test);
-        if((relative_error(h    , h_test  ) > rtol && fabs(h     - h_test  ) > atol) ||
-           (relative_error(cs2/h, cs2_test) > rtol && fabs(cs2/h - cs2_test) > atol)) {
+        if((relative_error(h  , h_test  ) > rtol && fabs(h   - h_test  ) > atol) ||
+           (relative_error(cs2, cs2_test) > rtol && fabs(cs2 - cs2_test) > atol)) {
           ghl_error("Function ghl_compute_h_and_cs2 failed: %e %e, %e %e\n", h, h_test, cs2, cs2_test);
         }
 
