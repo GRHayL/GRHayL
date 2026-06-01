@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
   ghl_eos_parameters eos = { 0 };
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.clean_sound_speed = true;
   ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
 
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )

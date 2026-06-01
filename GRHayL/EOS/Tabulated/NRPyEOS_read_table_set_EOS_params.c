@@ -109,7 +109,9 @@ void NRPyEOS_read_table_set_EOS_params(
   }
 
   NRPyEOS_tabulate_enthalpy(eos);
-  NRPyEOS_tabulated_clean_sound_speed(eos, cs2_is_relativistic);
+  if(eos->clean_sound_speed) {
+    NRPyEOS_tabulated_clean_sound_speed(eos, cs2_is_relativistic);
+  }
 
   const double dtemp = eos->table_logT[1] - eos->table_logT[0];
   const double drho = eos->table_logrho[1] - eos->table_logrho[0];

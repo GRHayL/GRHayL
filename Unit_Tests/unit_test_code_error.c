@@ -510,6 +510,7 @@ void read_table_error_test(int test_key) {
     ghl_eos_parameters eos;
     eos.eos_type = ghl_eos_tabulated;
     eos.table_type = ghl_eos_table_stellarcollapse;
+    eos.clean_sound_speed = true;
     NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
   }
   test_key--;
@@ -557,5 +558,6 @@ void read_table_error_test(int test_key) {
   ghl_eos_parameters eos;
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.clean_sound_speed = true;
   NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
 }
