@@ -96,10 +96,11 @@ void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table) {
     return;
   }
   for(int n = 0; n < NRPyEOS_sc_n_quantities; n++) {
-    if(table->data[n]) {
-      free(table->data[n]);
-    }
+    free(table->data[n]);
   }
+  free(table->log10_rho);
+  free(table->log10_temperature);
+  free(table->ye);
   free(table);
 #endif
 }
