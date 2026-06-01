@@ -25,19 +25,20 @@ NRPyEOS_hdf5_read_dataset(
   hid_t dataspace_id = H5Dget_space(dataset_id);
 
   int ndims = H5Sget_simple_extent_ndims(dataspace_id);
-  if(ndims < 1) {
+  if(ndims < 0) {
     H5Sclose(dataspace_id);
     H5Dclose(dataset_id);
     ghl_error("Invalid dimension for dataset '%s' (%d)\n", dataset_name, ndims);
   }
 
-  hsize_t dims[ndims];
-  H5Sget_simple_extent_dims(dataspace_id, dims, NULL);
-
-  // Allocate memory for the 3D array
   size_t total_size = 1;
-  for(int i = 0; i < ndims; i++) {
-    total_size *= dims[i];
+  if(ndims > 0) {
+    hsize_t dims[ndims];
+    H5Sget_simple_extent_dims(dataspace_id, dims, NULL);
+
+    for(int i = 0; i < ndims; i++) {
+      total_size *= dims[i];
+    }
   }
 
   if(total_size != expected_size) {
