@@ -337,7 +337,7 @@ void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_tabulated_recompute_derivatives(ghl_eos_parameters *restrict eos);
 
-void NRPyEOS_tabulated_clean_sound_speed(ghl_eos_parameters *restrict eos, bool cs2_is_relativistic);
+void NRPyEOS_tabulated_adjust_sound_speed(ghl_eos_parameters *restrict eos, bool cs2_is_relativistic);
 
 #ifdef __cplusplus
 }
