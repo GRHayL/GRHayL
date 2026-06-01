@@ -12,6 +12,20 @@ static const char *dataset_names[NRPyEOS_sc_n_quantities] = {
   "mu_e", "mu_n",    "mu_p",    "muhat",   "munu",
 };
 
+static int NRPyEOS_hdf5_read_single_int_dataset(hid_t file_id, const char *dataset_name) {
+  int *to_free = (int *)NRPyEOS_hdf5_read_int_dataset(file_id, dataset_name);
+  int out = *to_free;
+  free(to_free);
+  return out;
+}
+
+static double NRPyEOS_hdf5_read_single_double_dataset(hid_t file_id, const char *dataset_name) {
+  double *to_free = (double *)NRPyEOS_hdf5_read_double_dataset(file_id, dataset_name);
+  double out = *to_free;
+  free(to_free);
+  return out;
+}
+
 // This function checks for the existence of the "have_rel_cs2" flag in
 // the input HDF5 file. If it's not present, the sound speed squared is
 // assumed to be non relativistic. Otherwise, the dataset value is used.
@@ -49,10 +63,10 @@ NRPyEOS_stellarcollapse_t *NRPyEOS_stellarcollapse_read_table(const char *filepa
 
   // Scalar quantities
   table->cs2_is_relativistic = table_has_rel_cs2(file_id);
-  table->n_rho = *NRPyEOS_hdf5_read_int_dataset(file_id, "pointsrho");
-  table->n_temperature = *NRPyEOS_hdf5_read_int_dataset(file_id, "pointstemp");
-  table->n_ye = *NRPyEOS_hdf5_read_int_dataset(file_id, "pointsye");
-  table->energy_shift = *NRPyEOS_hdf5_read_double_dataset(file_id, "energy_shift");
+  table->n_rho = NRPyEOS_hdf5_read_single_int_dataset(file_id, "pointsrho");
+  table->n_temperature = NRPyEOS_hdf5_read_single_int_dataset(file_id, "pointstemp");
+  table->n_ye = NRPyEOS_hdf5_read_single_int_dataset(file_id, "pointsye");
+  table->energy_shift = NRPyEOS_hdf5_read_single_double_dataset(file_id, "energy_shift");
 
   ghl_info("Table '%s' contains %srelativistic sound speed\n",
            filepath,
