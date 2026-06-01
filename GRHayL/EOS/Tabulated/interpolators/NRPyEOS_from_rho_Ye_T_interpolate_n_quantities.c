@@ -40,7 +40,7 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
     // We have the result, but we must convert appropriately.
     // The only edge cases are P and eps, for which we obtain
     // log(P) and log(eps+eps0). We must check for them here
-    if(key == NRPyEOS_press_key) {
+    if(key == NRPyEOS_press_key || key == NRPyEOS_enthalpy_key) {
       tablevar_out = exp(tablevar_out);
     } else if(key == NRPyEOS_eps_key) {
       tablevar_out = exp(tablevar_out) - eos->energy_shift;
