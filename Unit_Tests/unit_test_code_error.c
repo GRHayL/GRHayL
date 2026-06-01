@@ -153,7 +153,28 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
   }
 
+  /*
+     NRPyEOS_read_table_set_EOS_params:
+         75: NULL EOS parameter struct
+         76: non-tabulated EOS type
+         77: invalid table type
+   */
   ghl_eos_parameters tab_eos;
+  switch (test_key) {
+    case 75:
+      NRPyEOS_read_table_set_EOS_params(tablepath, NULL);
+      break;
+    case 76:
+      tab_eos.eos_type = ghl_eos_hybrid;
+      NRPyEOS_read_table_set_EOS_params(tablepath, &tab_eos);
+      break;
+    case 77:
+      tab_eos.eos_type = ghl_eos_tabulated;
+      tab_eos.table_type = ghl_eos_table_types;
+      NRPyEOS_read_table_set_EOS_params(tablepath, &tab_eos);
+      break;
+  }
+
   ghl_initialize_tabulated_eos_functions_and_params(
         tablepath,
         rho_b_atm, rho_b_min, rho_b_max,

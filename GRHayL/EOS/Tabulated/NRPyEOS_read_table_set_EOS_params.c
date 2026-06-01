@@ -21,9 +21,6 @@ static void ghl_eos_read_stellarcollapse_table(
       ghl_eos_parameters *restrict eos,
       bool *restrict cs2_is_relativistic) {
   NRPyEOS_stellarcollapse_t *sc = NRPyEOS_stellarcollapse_read_table(filepath);
-  if(sc == NULL) {
-    ghl_error("Could not read EOS table from '%s'\n", filepath);
-  }
   NRPyEOS_stellarcollapse_to_ghl(sc, eos);
   *cs2_is_relativistic = sc->cs2_is_relativistic;
   NRPyEOS_stellarcollapse_free_table(sc);
@@ -78,7 +75,7 @@ void NRPyEOS_read_table_set_EOS_params(
       ghl_eos_read_stellarcollapse_table(filepath, eos, &cs2_is_relativistic);
       break;
     default:
-      ghl_info("Unsupported EOS table type. Supported types:\n");
+      ghl_info("Unsupported EOS table type '%s'. Supported types:\n", table_str(eos->table_type));
       for(ghl_eos_table_t n = 0; n < ghl_eos_table_types; n++) {
         ghl_info("  - %s\n", table_str(n));
       }
