@@ -26,7 +26,8 @@ typedef enum {
  * @param dataset_name The name of the dataset to read.
  *
  * @return A pointer to the allocated memory containing the dataset data.
- *         The caller is responsible for freeing this memory. Returns NULL on error.
+ *         The caller is responsible for freeing this memory.
+ *         On error this routine calls ghl_error() and does not return.
  */
 void *NRPyEOS_hdf5_read_dataset(
       hid_t file_id,
