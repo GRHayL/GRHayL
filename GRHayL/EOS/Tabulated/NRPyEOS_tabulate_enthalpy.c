@@ -24,4 +24,3 @@ void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos) {
     }
   }
 }
-
