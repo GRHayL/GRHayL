@@ -77,10 +77,10 @@ Options:'
                           <type>     : compiler flags
                           -----------:---------------
                           nocflags   : None
-                          debug      : -Wall -Werror -std=c99 -O0 -g
-                          debug-opt  : -Wall -Werror -std=c99 -march=native -fno-finite-math-only -O2 -g
-                          opt        : -Wall -Werror -std=c99 -march=native -fno-finite-math-only -O2
-                          production : -Wall -Werror -std=c99 -march=native -fno-finite-math-only -O3
+                          debug      : -Wall -std=c99 -O0 -g
+                          debug-opt  : -Wall -std=c99 -march=native -fno-finite-math-only -O2 -g
+                          opt        : -Wall -std=c99 -march=native -fno-finite-math-only -O2
+                          production : -Wall -std=c99 -march=native -fno-finite-math-only -O3
     --cflags            Additional compilation flags
     --clibs             Additional linker flags
     --hdf5dir           Sets the HDF5 base directory. Possible values:
@@ -483,10 +483,10 @@ prefix=$(Realpath $prefix)
 printf "Checking if build type is valid... "
 case $buildtype in
          plain) ;;
-         debug) BUILDCFLAGS="-Wall -Werror -std=c99 -O0 -g" ;;
-     debug-opt) BUILDCFLAGS="-Wall -Werror -std=c99 -march=native -fno-finite-math-only -O2 -g" ;;
-           opt) BUILDCFLAGS="-Wall -Werror -std=c99 -march=native -fno-finite-math-only -O2" ;;
-    production) BUILDCFLAGS="-Wall -Werror -std=c99 -march=native -O3" ;;
+         debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g" ;;
+     debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2 -g" ;;
+           opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2" ;;
+    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3" ;;
              *) printf "%s\nUnsupported built type, use ./configure -h for help\n" "$(red "$buildtype")"
                 exit 1;;
 esac
