@@ -13,14 +13,14 @@ static const char *dataset_names[NRPyEOS_sc_n_quantities] = {
 };
 
 static int NRPyEOS_hdf5_read_single_int_dataset(hid_t file_id, const char *dataset_name) {
-  int *to_free = (int *)NRPyEOS_hdf5_read_int_dataset(file_id, dataset_name);
+  int *to_free = (int *)NRPyEOS_hdf5_read_int_dataset(file_id, dataset_name, 1);
   int out = *to_free;
   free(to_free);
   return out;
 }
 
 static double NRPyEOS_hdf5_read_single_double_dataset(hid_t file_id, const char *dataset_name) {
-  double *to_free = (double *)NRPyEOS_hdf5_read_double_dataset(file_id, dataset_name);
+  double *to_free = (double *)NRPyEOS_hdf5_read_double_dataset(file_id, dataset_name, 1);
   double out = *to_free;
   free(to_free);
   return out;
@@ -73,13 +73,14 @@ NRPyEOS_stellarcollapse_t *NRPyEOS_stellarcollapse_read_table(const char *filepa
            table->cs2_is_relativistic ? "" : "non-");
 
   // Basic tabulated quantities
-  table->ye = NRPyEOS_hdf5_read_double_dataset(file_id, "ye");
-  table->log10_temperature = NRPyEOS_hdf5_read_double_dataset(file_id, "logtemp");
-  table->log10_rho = NRPyEOS_hdf5_read_double_dataset(file_id, "logrho");
+  table->log10_rho = NRPyEOS_hdf5_read_double_dataset(file_id, "logrho", table->n_rho);
+  table->log10_temperature = NRPyEOS_hdf5_read_double_dataset(file_id, "logtemp", table->n_temperature);
+  table->ye = NRPyEOS_hdf5_read_double_dataset(file_id, "ye", table->n_ye);
 
   // Tabulated data
+  const size_t size = table->n_rho * table->n_temperature * table->n_ye;
   for(int n = 0; n < NRPyEOS_sc_n_quantities; n++) {
-    table->data[n] = NRPyEOS_hdf5_read_double_dataset(file_id, dataset_names[n]);
+    table->data[n] = NRPyEOS_hdf5_read_double_dataset(file_id, dataset_names[n], size);
   }
 
   H5Fclose(file_id);

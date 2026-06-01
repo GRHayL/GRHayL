@@ -28,10 +28,21 @@ typedef enum {
  * @return A pointer to the allocated memory containing the dataset data.
  *         The caller is responsible for freeing this memory. Returns NULL on error.
  */
-void *NRPyEOS_hdf5_read_dataset(hid_t file_id, ghl_hdf5_t dtype, const char *dataset_name);
+void *NRPyEOS_hdf5_read_dataset(
+      hid_t file_id,
+      ghl_hdf5_t dtype,
+      const char *dataset_name,
+      const size_t expected_size);
 
 // Convenience functions
-int *NRPyEOS_hdf5_read_int_dataset(hid_t file_id, const char *dataset_name);
-double *NRPyEOS_hdf5_read_double_dataset(hid_t file_id, const char *dataset_name);
+int *NRPyEOS_hdf5_read_int_dataset(
+      hid_t file_id,
+      const char *dataset_name,
+      const size_t expected_size);
+
+double *NRPyEOS_hdf5_read_double_dataset(
+      hid_t file_id,
+      const char *dataset_name,
+      const size_t expected_size);
 
 #endif // NRPYEOS_HDF5_HELPERS_H

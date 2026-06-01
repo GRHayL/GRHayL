@@ -2,7 +2,11 @@
 #include "NRPyEOS_hdf5_helpers.h"
 
 void *
-NRPyEOS_hdf5_read_dataset(hid_t file_id, ghl_hdf5_t dtype, const char *dataset_name) {
+NRPyEOS_hdf5_read_dataset(
+      hid_t file_id,
+      ghl_hdf5_t dtype,
+      const char *dataset_name,
+      const size_t expected_size) {
 #ifndef GHL_USE_HDF5
   GHL_HDF5_ERROR_IF_USED;
 #else
@@ -36,6 +40,13 @@ NRPyEOS_hdf5_read_dataset(hid_t file_id, ghl_hdf5_t dtype, const char *dataset_n
     total_size *= dims[i];
   }
 
+  if(total_size != expected_size) {
+    H5Sclose(dataspace_id);
+    H5Dclose(dataset_id);
+    ghl_error("Dataset '%s' size mismatch: expect %zu, got %zu\n",
+              dataset_name, expected_size, total_size);
+  }
+
   // Read the 3D array
   void *array = malloc(total_size * dtype_size[dtype]);
   herr_t status = H5Dread(dataset_id, hdf5_dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, array);
@@ -53,10 +64,18 @@ NRPyEOS_hdf5_read_dataset(hid_t file_id, ghl_hdf5_t dtype, const char *dataset_n
 #endif
 }
 
-int *NRPyEOS_hdf5_read_int_dataset(hid_t file_id, const char *dataset_name) {
-  return (int *)NRPyEOS_hdf5_read_dataset(file_id, GHL_HDF5_INT, dataset_name);
+int *NRPyEOS_hdf5_read_int_dataset(
+      hid_t file_id,
+      const char *dataset_name,
+      const size_t expected_size) {
+  return (int *)NRPyEOS_hdf5_read_dataset(
+    file_id, GHL_HDF5_INT, dataset_name, expected_size);
 }
 
-double *NRPyEOS_hdf5_read_double_dataset(hid_t file_id, const char *dataset_name) {
-  return (double *)NRPyEOS_hdf5_read_dataset(file_id, GHL_HDF5_DOUBLE, dataset_name);
+double *NRPyEOS_hdf5_read_double_dataset(
+      hid_t file_id,
+      const char *dataset_name,
+      const size_t expected_size) {
+  return (double *)NRPyEOS_hdf5_read_dataset(
+    file_id, GHL_HDF5_DOUBLE, dataset_name, expected_size);
 }
