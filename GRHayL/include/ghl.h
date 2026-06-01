@@ -19,7 +19,7 @@
 #endif
 
 #ifndef GRHAYL_DISABLE_HDF5
-#define GRHAYL_USE_HDF5
+#define GHL_USE_HDF5
 #endif
 
 #ifdef __cplusplus

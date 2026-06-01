@@ -37,6 +37,9 @@ static NRPyEOS_stellarcollapse_t *NRPyEOS_new_stellarcollapse_table() {
 }
 
 NRPyEOS_stellarcollapse_t *NRPyEOS_stellarcollapse_read_table(const char *filepath) {
+#ifndef GHL_USE_HDF5
+  GHL_HDF5_ERROR_IF_USED;
+#else
   hid_t file_id = H5Fopen(filepath, H5F_ACC_RDONLY, H5P_DEFAULT);
   if(file_id < 0) {
     ghl_error("Could not open file '%s'\n", filepath);
@@ -68,9 +71,13 @@ NRPyEOS_stellarcollapse_t *NRPyEOS_stellarcollapse_read_table(const char *filepa
   H5Fclose(file_id);
 
   return table;
+#endif
 }
 
 void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table) {
+#ifndef GHL_USE_HDF5
+  GHL_HDF5_ERROR_IF_USED;
+#else
   if(!table) {
     return;
   }
@@ -80,4 +87,5 @@ void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table) {
     }
   }
   free(table);
+#endif
 }

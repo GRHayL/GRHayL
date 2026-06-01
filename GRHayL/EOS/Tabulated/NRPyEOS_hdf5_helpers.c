@@ -1,8 +1,11 @@
+#include "ghl_nrpyeos_tabulated.h"
 #include "NRPyEOS_hdf5_helpers.h"
-#include "ghl_io.h"
 
 void *
 NRPyEOS_hdf5_read_dataset(hid_t file_id, ghl_hdf5_t dtype, const char *dataset_name) {
+#ifndef GHL_USE_HDF5
+  GHL_HDF5_ERROR_IF_USED;
+#else
   const hid_t dataset_types[2] = { H5T_NATIVE_INT, H5T_NATIVE_DOUBLE };
   const size_t dtype_size[2] = { sizeof(int), sizeof(double) };
 
@@ -47,6 +50,7 @@ NRPyEOS_hdf5_read_dataset(hid_t file_id, ghl_hdf5_t dtype, const char *dataset_n
   H5Dclose(dataset_id);
 
   return array;
+#endif
 }
 
 int *NRPyEOS_hdf5_read_int_dataset(hid_t file_id, const char *dataset_name) {
