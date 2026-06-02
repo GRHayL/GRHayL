@@ -1,6 +1,33 @@
 #include "ghl_nrpyeos_tabulated.h"
 #include "ghl_unit_tests.h"
 
+#define GHL_CASE(name_) case NRPyEOS_ ## name_ ##_key: return #name_
+static const char *table_key_to_str(NRPyEOS_keys key) {
+  switch(key) {
+    GHL_CASE(press);
+    GHL_CASE(eps);
+    GHL_CASE(entropy);
+    GHL_CASE(munu);
+    GHL_CASE(cs2);
+    GHL_CASE(depsdT);
+    GHL_CASE(dPdrho);
+    GHL_CASE(dPdeps);
+    GHL_CASE(muhat);
+    GHL_CASE(mu_e);
+    GHL_CASE(mu_p);
+    GHL_CASE(mu_n);
+    GHL_CASE(X_a);
+    GHL_CASE(X_h);
+    GHL_CASE(X_n);
+    GHL_CASE(X_p);
+    GHL_CASE(Abar);
+    GHL_CASE(Zbar);
+    GHL_CASE(Gamma);
+    GHL_CASE(enthalpy);
+    default: return "Unknown key";
+  }
+}
+
 /*
  * (c) 2023 Leo Werneck
  */
@@ -24,7 +51,7 @@ int main(int argc, char **argv) {
   ghl_eos_parameters eos = { 0 };
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
-  eos.clean_sound_speed = true;
+  eos.clean_sound_speed = false;
   ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
 
   if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
@@ -52,8 +79,8 @@ int main(int argc, char **argv) {
           const double var       = get_table_quantity(var_key, logrho, Y_e, logT);
           const double table_var = eos.table_all[var_key + NRPyEOS_ntablekeys*index];
           if( relative_error(var, table_var) > rtol && fabs(var-table_var) > atol )
-            ghl_error("Errors in variable %d exceed tolernaces: %.15e vs. %.15e\n",
-                         var_key, var, table_var);
+            ghl_error("Errors in variable '%s' exceed tolernaces: %.15e vs. %.15e\n",
+                         table_key_to_str(var_key), var, table_var);
         }
       }
     }

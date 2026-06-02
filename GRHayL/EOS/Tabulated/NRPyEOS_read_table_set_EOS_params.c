@@ -1,19 +1,14 @@
 #include "ghl_nrpyeos_tabulated.h"
 #include "stellarcollapse/NRPyEOS_stellarcollapse.h"
 
+#define GHL_CASE(name_) case name_: return #name_
+
 static const char *table_str(ghl_eos_table_t type) {
-
-#define GHL_EOS_CASE(name_) \
-  case name_:               \
-    return #name_;
-
   switch(type) {
-    GHL_EOS_CASE(ghl_eos_table_stellarcollapse);
+    GHL_CASE(ghl_eos_table_stellarcollapse);
     default:
       return "Unknown";
   }
-
-#undef GHL_EOS_CASE
 }
 
 static void ghl_eos_read_stellarcollapse_table(

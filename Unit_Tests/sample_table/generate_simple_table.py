@@ -17,8 +17,7 @@ def set_table_quantity(i, rho, T, Y_e):
     elif i==3:
         return rho - Y_e - T # munu
     elif i==4:
-        cs2 = ((rho - 1) + 7*(T - 1) + 35*(Y_e - 1)) / (105 - 1)
-        return cs2 / (CGS_TO_CODE_LENGTH*CGS_TO_CODE_LENGTH/CGS_TO_CODE_TIME/CGS_TO_CODE_TIME) # cs2
+        return (-rho + Y_e + T) / (CGS_TO_CODE_LENGTH*CGS_TO_CODE_LENGTH/CGS_TO_CODE_TIME/CGS_TO_CODE_TIME) # cs2
     elif i==5:
         return (-rho + Y_e - T) / (CGS_TO_CODE_ENERGY)  # deps/dT
     elif i==6:

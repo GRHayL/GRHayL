@@ -15,7 +15,7 @@ double get_table_quantity(
     case NRPyEOS_munu_key:
       return rho - Y_e - T;
     case NRPyEOS_cs2_key:
-      return ((rho - 1) + 7*(T - 1) + 35*(Y_e - 1)) / (105 - 1);
+      return -rho + Y_e + T;
     case NRPyEOS_depsdT_key:
       return -rho + Y_e - T;
     case NRPyEOS_dPdrho_key:
