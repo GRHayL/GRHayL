@@ -74,6 +74,7 @@ typedef enum {
 } ghl_eos_t;
 
 typedef enum {
+  ghl_eos_table_unknown,
   ghl_eos_table_stellarcollapse,
   ghl_eos_table_types,
 } ghl_eos_table_t;

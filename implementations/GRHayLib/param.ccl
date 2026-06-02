@@ -72,6 +72,11 @@ KEYWORD EOS_type "The type of EOS for the simulation"
   "Tabulated" :: "Tabulated EOS"
 } ""
 
+KEYWORD eos_table_type "The type of EOS table for the simulation"
+{
+  "stellarcollapse" :: "Table format from Stellar Collapse (stellarcollapse.org)"
+} "stellarcollapse"
+
 CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b (required). If this is unset, the run will die."
 {
   0:* :: "Atmosphere density; must be positive"

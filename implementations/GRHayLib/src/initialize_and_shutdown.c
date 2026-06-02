@@ -7,7 +7,8 @@
 ghl_parameters *ghl_params;
 ghl_eos_parameters *ghl_eos;
 
-int parse_C2P_routine_keyword(const char *restrict routine_name);
+static int parse_C2P_routine_keyword(const char *restrict routine_name);
+static int parse_eos_table_type_keyword(const char *restrict table_type);
 
 void GRHayLib_paramcheck() {
   DECLARE_CCTK_PARAMETERS;
@@ -194,6 +195,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
 
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
+    ghl_eos->table_type = parse_eos_table_type_keyword(eos_table_type);
     ghl_initialize_tabulated_eos_functions_and_params(
           EOS_tablepath,
           rho_b_atm, rho_b_min, rho_b_max,
@@ -243,4 +245,11 @@ int parse_C2P_routine_keyword(const char *restrict routine_name) {
     return Newman1D_entropy;
   }
   return -100;
+}
+
+static int parse_eos_table_type_keyword(const char *restrict table_type) {
+  if(CCTK_EQUALS(table_type, "stellarcollapse")) {
+    return ghl_eos_table_stellarcollapse;
+  }
+  return ghl_eos_table_unknown;
 }

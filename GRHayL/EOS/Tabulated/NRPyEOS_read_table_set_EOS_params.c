@@ -71,7 +71,7 @@ void NRPyEOS_read_table_set_EOS_params(
       break;
     default:
       ghl_info("Unsupported EOS table type '%s'. Supported table types:\n", table_str(eos->table_type));
-      for(ghl_eos_table_t n = 0; n < ghl_eos_table_types; n++) {
+      for(ghl_eos_table_t n = ghl_eos_table_unknown + 1; n < ghl_eos_table_types; n++) {
         ghl_info("  - %s\n", table_str(n));
       }
       ghl_error("Please set the EOS table type to one of the known values above\n");

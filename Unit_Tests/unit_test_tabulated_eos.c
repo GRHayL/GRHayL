@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
   ghl_eos_parameters eos = { 0 };
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
+  printf("eos.table_type = %d\n", eos.table_type);
   eos.clean_sound_speed = false;
   ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
 
