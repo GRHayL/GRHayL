@@ -70,11 +70,11 @@ void NRPyEOS_read_table_set_EOS_params(
       ghl_eos_read_stellarcollapse_table(filepath, eos, &cs2_is_relativistic);
       break;
     default:
-      ghl_info("Unsupported EOS table type '%s'. Supported types:\n", table_str(eos->table_type));
+      ghl_info("Unsupported EOS table type '%s'. Supported table types:\n", table_str(eos->table_type));
       for(ghl_eos_table_t n = 0; n < ghl_eos_table_types; n++) {
         ghl_info("  - %s\n", table_str(n));
       }
-      ghl_error("Please set the EOS type to one of the known values above\n");
+      ghl_error("Please set the EOS table type to one of the known values above\n");
   }
 
   const int npoints = eos->N_rho * eos->N_T * eos->N_Ye;
