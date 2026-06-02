@@ -212,11 +212,8 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
 void GRHayLib_terminate(CCTK_ARGUMENTS) {
   if(ghl_eos->eos_type == ghl_eos_tabulated) {
-    free(ghl_eos->table_all);
-    free(ghl_eos->table_logrho);
-    free(ghl_eos->table_logT);
-    free(ghl_eos->table_Y_e);
-    free(ghl_eos->table_eps);
+    ghl_tabulated_free_memory(&ghl_eos);
+    ghl_eos = NULL; // This makes the next free safe
   }
   free(ghl_eos);
   free(ghl_params);
