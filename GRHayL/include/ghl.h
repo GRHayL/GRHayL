@@ -52,6 +52,15 @@ typedef enum {
   ghl_error_invalid_utsq,
   ghl_error_invalid_Z,
   ghl_error_newman_invalid_discriminant,
+  ghl_error_used_disabled_hdf5,
+  ghl_error_out_of_memory,
+  ghl_error_eos_struct_is_null,
+  ghl_error_invalid_eos_type,
+  ghl_error_invalid_eos_table_type,
+  ghl_error_could_not_open_file,
+  ghl_error_hdf5_dataset_could_not_open,
+  ghl_error_hdf5_dataset_invalid_ndims,
+  ghl_error_hdf5_dataset_size_mismatch,
 } ghl_error_codes_t;
 
 typedef enum {

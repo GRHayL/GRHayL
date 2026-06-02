@@ -22,7 +22,7 @@ static int bisect_left(
   double a = x_arr[ia];
   double b = x_arr[ib];
   if(x < a || x > b) {
-    ghl_error("Value %g is out of array bounds [%g, %g]\n", x, a, b);
+    return -1;
   }
 
   if(comp(a, x)) {

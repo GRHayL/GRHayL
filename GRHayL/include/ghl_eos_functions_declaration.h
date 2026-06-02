@@ -58,7 +58,7 @@ double (*ghl_hybrid_compute_entropy_function)(
       const double press);
 
   // Function prototypes
-void (*ghl_tabulated_read_table_set_EOS_params)(
+ghl_error_codes_t (*ghl_tabulated_read_table_set_EOS_params)(
       const char *nuceos_table_name,
       ghl_eos_parameters *restrict eos);
 
@@ -237,27 +237,31 @@ int (*ghl_tabulated_get_index_T)(
 
 void (*ghl_tabulated_compute_Ye_of_rho_beq_constant_T)(
       const double T,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
 void (*ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T)(
       const double T,
-      ghl_eos_parameters *restrict eos );
+      ghl_eos_parameters *restrict eos);
 
-double (*ghl_tabulated_compute_Ye_from_rho)(
+ghl_error_codes_t (*ghl_tabulated_compute_Ye_from_rho)(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho,
+      double *restrict Ye);
 
-double (*ghl_tabulated_compute_P_from_rho)(
+ghl_error_codes_t (*ghl_tabulated_compute_P_from_rho)(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho,
+      double *restrict P);
 
-double (*ghl_tabulated_compute_rho_from_P)(
+ghl_error_codes_t (*ghl_tabulated_compute_rho_from_P)(
       const ghl_eos_parameters *restrict eos,
-      const double P );
+      const double P,
+      double *restrict rho);
 
-double (*ghl_tabulated_compute_eps_from_rho)(
+ghl_error_codes_t (*ghl_tabulated_compute_eps_from_rho)(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho,
+      double *restrict eps);
 
 void (*ghl_tabulated_free_beq_quantities)(
       ghl_eos_parameters *restrict eos);
@@ -313,13 +317,15 @@ void (*ghl_tabulated_enforce_bounds_rho_Ye_P)(
       double *restrict Y_e,
       double *restrict P );
 
-double (*ghl_tabulated_compute_deps_dP_from_rho)(
+ghl_error_codes_t (*ghl_tabulated_compute_deps_dP_from_rho)(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho,
+      double *restrict deps_dP);
 
-double (*ghl_tabulated_compute_dP_drho_from_rho)(
+ghl_error_codes_t (*ghl_tabulated_compute_dP_drho_from_rho)(
       const ghl_eos_parameters *restrict eos,
-      const double rho );
+      const double rho,
+      double *restrict dP_drho);
 
 #ifdef __cplusplus
 }

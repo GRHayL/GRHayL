@@ -23,7 +23,6 @@ const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key) {
     case Newman1D_entropy:
       return "Newman1D_entropy";
     default:
-      ghl_error("Unknown routine key %d\n", key);
+      return NULL;
   }
-  return NULL;
 }

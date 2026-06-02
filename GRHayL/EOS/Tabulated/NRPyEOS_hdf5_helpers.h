@@ -8,6 +8,7 @@
 #ifndef NRPYEOS_HDF5_HELPERS_H
 #define NRPYEOS_HDF5_HELPERS_H
 
+#include "ghl.h"
 #include <hdf5.h>
 
 /*
@@ -29,21 +30,23 @@ typedef enum {
  *         The caller is responsible for freeing this memory.
  *         On error this routine calls ghl_error() and does not return.
  */
-void *NRPyEOS_hdf5_read_dataset(
+ghl_error_codes_t NRPyEOS_hdf5_read_dataset(
       hid_t file_id,
       ghl_hdf5_t dtype,
       const char *dataset_name,
-      const size_t expected_size);
+      const size_t expected_size,
+      void **data);
 
-// Convenience functions
-int *NRPyEOS_hdf5_read_int_dataset(
+ghl_error_codes_t NRPyEOS_hdf5_read_int_dataset(
       hid_t file_id,
       const char *dataset_name,
-      const size_t expected_size);
+      const size_t expected_size,
+      void **data);
 
-double *NRPyEOS_hdf5_read_double_dataset(
+ghl_error_codes_t NRPyEOS_hdf5_read_double_dataset(
       hid_t file_id,
       const char *dataset_name,
-      const size_t expected_size);
+      const size_t expected_size,
+      void **data);
 
 #endif // NRPYEOS_HDF5_HELPERS_H

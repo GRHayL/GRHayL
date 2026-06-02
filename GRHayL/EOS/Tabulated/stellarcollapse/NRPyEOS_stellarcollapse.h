@@ -66,10 +66,16 @@ typedef struct {
  *
  * @param filepath Path to the EOS table file (HDF5 format).
  *
- * @return Pointer to the allocated and populated NRPyEOS_stellarcollapse_t structure, or
- * NULL on failure.
+ * @param Pointer-to-pointer to NRPyEOS_stellarcollapse_t structure.
+ *
+ * @return Return code, indicating success or failure.
+ * @retval ghl_success Success.
+ * @retval ghl_error_could_not_open_file Could not open input file.
+ * @retval ghl_error_out_of_memory Could not allocate memory for the EOS table.
  */
-NRPyEOS_stellarcollapse_t *NRPyEOS_stellarcollapse_read_table(const char *filepath);
+ghl_error_codes_t NRPyEOS_stellarcollapse_read_table(
+      const char *filepath,
+      NRPyEOS_stellarcollapse_t **sc);
 
 /**
  * @brief Frees the memory allocated for a stellar collapse EOS table.
@@ -85,8 +91,15 @@ void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table);
  * @brief Convert stellar collapse EOS struct to GRHayL EOS struct.
  *
  * @param sc Pointer to input NRPyEOS_stellarcollapse_t struct.
+ *
  * @param eos Pointer to output ghl_eos_parameters struct.
+ *
+ * @return Return code, indicating success or failure.
+ * @retval ghl_success Success.
+ * @retval ghl_error_out_of_memory Could not allocate memory for the EOS table.
  */
-void NRPyEOS_stellarcollapse_to_ghl(NRPyEOS_stellarcollapse_t *restrict sc, ghl_eos_parameters *restrict eos);
+ghl_error_codes_t NRPyEOS_stellarcollapse_to_ghl(
+      NRPyEOS_stellarcollapse_t *restrict sc,
+      ghl_eos_parameters *restrict eos);
 
 #endif // NRPYEOS_STELLARCOLLAPSE_H

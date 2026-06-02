@@ -51,7 +51,6 @@ int main(int argc, char **argv) {
   ghl_eos_parameters eos = { 0 };
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
-  printf("eos.table_type = %d\n", eos.table_type);
   eos.clean_sound_speed = false;
   ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
 
@@ -611,23 +610,38 @@ int main(int argc, char **argv) {
       }
     }
 
+    ghl_error_codes_t err = ghl_success;
     // Now test the interpolators
     const double rho_interp = exp(0.5*(eos.table_logrho[0] + eos.table_logrho[1]));
 
-    const double Ye_interp = ghl_tabulated_compute_Ye_from_rho(&eos, rho_interp);
-    const double Ye_expect = 0.5*(Y_e_expected[0] + Y_e_expected[1]);
+    double Ye_expect = 0.5*(Y_e_expected[0] + Y_e_expected[1]);
+    double Ye_interp = NAN;
+    err = ghl_tabulated_compute_Ye_from_rho(&eos, rho_interp, &Ye_interp);
+    if(err != ghl_success) {
+      ghl_read_error_codes(err);
+    }
     if(relative_error(Ye_interp, Ye_expect) > 1e-14) {
       ghl_error("Failed to interpolate Y_e(rho): %.15e %.15e\n", Ye_interp, Ye_expect);
     }
 
-    const double P_interp   = log(ghl_tabulated_compute_P_from_rho(  &eos, rho_interp));
-    const double P_expect   = 0.5*(P_expected[0] + P_expected[1]); 
+    double P_expect = 0.5*(P_expected[0] + P_expected[1]); 
+    double P_interp = NAN;
+    err = ghl_tabulated_compute_P_from_rho(&eos, rho_interp, &P_interp);
+    if(err != ghl_success) {
+      ghl_read_error_codes(err);
+    }
+    P_interp = log(P_interp);
     if(relative_error(P_interp, P_expect) > 1e-14) {
       ghl_error("Failed to interpolate P(rho): %.15e %.15e\n", P_interp, P_expect);
     }
 
-    const double eps_interp = log(ghl_tabulated_compute_eps_from_rho(&eos, rho_interp));
-    const double eps_expect = 0.5*(eps_expected[0] + eps_expected[1]); 
+    double eps_expect = 0.5*(eps_expected[0] + eps_expected[1]); 
+    double eps_interp = NAN;
+    err = ghl_tabulated_compute_eps_from_rho(&eos, rho_interp, &eps_interp);
+    if(err != ghl_success) {
+      ghl_read_error_codes(err);
+    }
+    eps_interp = log(eps_interp);
     if(relative_error(eps_interp, eps_expect) > 1e-14) {
       ghl_error("Failed to interpolate eps(rho): %.15e %.15e\n", eps_interp, eps_expect);
     }

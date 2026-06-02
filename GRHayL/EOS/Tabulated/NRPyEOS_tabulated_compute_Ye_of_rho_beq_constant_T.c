@@ -34,28 +34,37 @@ static double find_Ye_st_munu_is_zero(
 static int find_left_index_uniform_array(
       const int nx,
       const double *restrict x_arr,
-      const double x) {
+      const double x,
+      int *restrict ix) {
 
-  return (x - x_arr[0]) / (x_arr[1] - x_arr[0]);
+  *ix = (x - x_arr[0]) / (x_arr[1] - x_arr[0]);
+  return ghl_success;
 }
 
-static int
-find_left_index_bisection(const int nx, const double *restrict x_arr, const double x) {
+static int find_left_index_bisection(
+      const int nx,
+      const double *restrict x_arr,
+      const double x,
+      int *restrict ix) {
+
+  *ix = -1;
 
   int ia = 0;
   double a = x_arr[ia] - x;
   if(a == 0) {
-    return ia;
+    *ix = ia;
+    return ghl_success;
   }
 
   int ib = nx - 1;
   double b = x_arr[ib] - x;
   if(b == 0) {
-    return ib;
+    *ix = ib;
+    return ghl_success;
   }
 
   if(a * b >= 0) {
-    ghl_error("Interval [%g, %g] does not bracket the root %g\n", a, b, x);
+    return ghl_error_root_not_bracketed;
   }
 
   do {
@@ -63,7 +72,8 @@ find_left_index_bisection(const int nx, const double *restrict x_arr, const doub
     double c = x_arr[ic] - x;
 
     if(c == 0) {
-      return ic;
+      *ix = ic;
+      return ghl_success;
     }
     else if(b * c < 0) {
       ia = ic;
@@ -76,25 +86,32 @@ find_left_index_bisection(const int nx, const double *restrict x_arr, const doub
   } while(ib - ia > 1);
 
   if(a > 0 || b < 0) {
-    ghl_error("Bisection failed: %g not in [%g, %g]\n", x, a, b);
+    return ghl_error_table_bisection;
   }
-  return ia;
+
+  *ix = ia;
+  return ghl_success;
 }
 
 // This is a simple linear interpolation (linterp) function.
-static double linterp(
+ghl_error_codes_t linterp(
       const int nx,
       const double *restrict x_arr,
       const double *restrict y_arr,
       const double x,
-      int (*find_left_index)(const int, const double *restrict, const double)) {
+      double *restrict y,
+      int (*find_left_index)(const int, const double *restrict, const double, int *restrict)) {
 
   if(x < x_arr[0] || x > x_arr[nx - 1]) {
-    ghl_error("Point (%e) out of array bounds [%e, %e]\n", x, x_arr[0], x_arr[nx - 1]);
+    return ghl_error_root_not_bracketed;
   }
 
   // Set up basic quantities for the interpolation
-  const int i0 = find_left_index(nx, x_arr, x);
+  int i0 = -1;
+  ghl_error_codes_t err = find_left_index(nx, x_arr, x, &i0);
+  if(err != ghl_success) {
+    return err;
+  }
   const int i1 = i0 + 1;
   const double x0 = x_arr[i0];
   const double x1 = x_arr[i1];
@@ -102,23 +119,29 @@ static double linterp(
   const double y1 = y_arr[i1];
 
   // Perform the linear interpolation
-  return (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
+  *y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
+  return ghl_success;
 }
 
 // This is a simple discrete derivative.
-static double discrete_derivative(
+ghl_error_codes_t discrete_derivative(
       const int nx,
       const double *restrict x_arr,
       const double *restrict y_arr,
       const double x,
-      int (*find_left_index)(const int, const double *restrict, const double)) {
+      double *restrict dydx,
+      int (*find_left_index)(const int, const double *restrict, const double, int *restrict)) {
 
   if(x < x_arr[0] || x > x_arr[nx - 1]) {
-    ghl_error("Point (%e) out of array bounds [%e, %e]\n", x, x_arr[0], x_arr[nx - 1]);
+    return ghl_error_root_not_bracketed;
   }
 
   // Set up basic quantities for the interpolation
-  const int i0 = find_left_index(nx, x_arr, x);
+  int i0 = -1;
+  ghl_error_codes_t err = find_left_index(nx, x_arr, x, &i0);
+  if(err != ghl_success) {
+    return err;
+  }
   const int i1 = i0 + 1;
   const double x0 = x_arr[i0];
   const double x1 = x_arr[i1];
@@ -126,48 +149,67 @@ static double discrete_derivative(
   const double y1 = y_arr[i1];
 
   // Perform the derivative
-  return (y1 - y0) / (x1 - x0);
+  *dydx = (y1 - y0) / (x1 - x0);
+  return ghl_success;
 }
 
 // Compute Ye(logrho) using linear interpolation
-double NRPyEOS_tabulated_compute_Ye_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho) {
+      const double rho,
+      double *restrict Ye) {
 
-  return linterp(
-        eos->N_rho, eos->table_logrho, eos->Ye_of_lr, log(rho),
-        find_left_index_uniform_array);
+  *Ye = NAN;
+  ghl_error_codes_t err = linterp(
+                          eos->N_rho, eos->table_logrho, eos->Ye_of_lr, log(rho),
+                          Ye, find_left_index_uniform_array);
+
+  return err;
 }
 
 // Interpolate logP(logrho) using linear interpolation
-double NRPyEOS_tabulated_compute_P_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_P_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho) {
+      const double rho,
+      double *restrict P) {
 
-  return exp(linterp(
-        eos->N_rho, eos->table_logrho, eos->lp_of_lr, log(rho),
-        find_left_index_uniform_array));
+  *P = NAN;
+  double logP = NAN;
+  ghl_error_codes_t err = linterp(
+                          eos->N_rho, eos->table_logrho, eos->lp_of_lr, log(rho),
+                          &logP, find_left_index_uniform_array);
+  *P = exp(logP);
+  return err;
 }
 
 // Interpolate logrho(logP) using linear interpolation
-double NRPyEOS_tabulated_compute_rho_from_P(
+ghl_error_codes_t NRPyEOS_tabulated_compute_rho_from_P(
       const ghl_eos_parameters *restrict eos,
-      const double P) {
+      const double P,
+      double *restrict rho) {
 
-  return exp(linterp(
-        eos->N_rho, eos->lp_of_lr, eos->table_logrho, log(P),
-        find_left_index_bisection));
+  *rho = NAN;
+  double logrho = NAN;
+  ghl_error_codes_t err = linterp(
+                          eos->N_rho, eos->lp_of_lr, eos->table_logrho, log(P),
+                          &logrho, find_left_index_bisection);
+  *rho = exp(logrho);
+  return err;
 }
 
 // Interpolate logeps(logrho) using linear interpolation
-double NRPyEOS_tabulated_compute_eps_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_eps_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho) {
+      const double rho,
+      double *restrict eps) {
 
-  return exp(linterp(
-               eos->N_rho, eos->table_logrho, eos->le_of_lr, log(rho),
-               find_left_index_bisection))
-         - eos->energy_shift;
+  *eps = NAN;
+  double logeps_shifted = NAN;
+  ghl_error_codes_t err = linterp(
+                          eos->N_rho, eos->table_logrho, eos->le_of_lr, log(rho),
+                          &logeps_shifted, find_left_index_bisection);
+  *eps = exp(logeps_shifted) - eos->energy_shift;
+  return err;
 }
 
 void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
@@ -223,49 +265,52 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
 }
 
 void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos) {
-  if(eos->Ye_of_lr) {
-    free(eos->Ye_of_lr);
-    eos->Ye_of_lr = NULL;
-  }
-  if(eos->lp_of_lr) {
-    free(eos->lp_of_lr);
-    eos->lp_of_lr = NULL;
-  }
-  if(eos->le_of_lr) {
-    free(eos->le_of_lr);
-    eos->le_of_lr = NULL;
-  }
-  if(eos->lh_of_lr) {
-    free(eos->lh_of_lr);
-    eos->lh_of_lr = NULL;
-  }
+  free(eos->Ye_of_lr);
+  free(eos->lp_of_lr);
+  free(eos->le_of_lr);
+  free(eos->lh_of_lr);
+
+  eos->Ye_of_lr = NULL;
+  eos->lp_of_lr = NULL;
+  eos->le_of_lr = NULL;
+  eos->lh_of_lr = NULL;
 }
 
-double NRPyEOS_tabulated_compute_dP_drho_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_dP_drho_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho) {
+      const double rho,
+      double *restrict dP_drho) {
 
-  double const dlogP_dlogrho = discrete_derivative(
-        eos->N_rho, eos->table_logrho, eos->lp_of_lr, log(rho),
-        find_left_index_uniform_array);
+  double P = NAN;
+  double dlogP_dlogrho = NAN;
 
-  double const P = NRPyEOS_tabulated_compute_P_from_rho(eos, rho);
+  ghl_error_codes_t err = ghl_success;
 
-  double const dP_drho = dlogP_dlogrho * P / rho;
+  err = NRPyEOS_tabulated_compute_P_from_rho(eos, rho, &P);
+  err = discrete_derivative(eos->N_rho, eos->table_logrho, eos->lp_of_lr, log(rho),
+                            &dlogP_dlogrho, find_left_index_uniform_array);
 
-  return dP_drho;
+  *dP_drho = dlogP_dlogrho * P / rho;
+  return err;
 }
 
-double NRPyEOS_tabulated_compute_deps_dP_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_deps_dP_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho) {
+      const double rho,
+      double *restrict deps_dP) {
 
-  double const eps = NRPyEOS_tabulated_compute_eps_from_rho(eos, rho);
-  double const dP_drho = NRPyEOS_tabulated_compute_dP_drho_from_rho(eos, rho);
-  double const P = NRPyEOS_tabulated_compute_P_from_rho(eos, rho);
+  double P = NAN;
+  double eps = NAN;
+  double dP_drho = NAN;
+  ghl_error_codes_t err = ghl_success;
 
-  double const energy = rho*(1.+eps);
-  double const rhoh = energy + P;
+  err = NRPyEOS_tabulated_compute_P_from_rho(eos, rho, &P);
+  err = NRPyEOS_tabulated_compute_eps_from_rho(eos, rho, &eps);
+  err = NRPyEOS_tabulated_compute_dP_drho_from_rho(eos, rho, &dP_drho);
 
-  return rhoh / (dP_drho*rho);
+  const double energy = rho*(1.+eps);
+  const double rhoh = energy + P;
+
+  *deps_dP = rhoh / (dP_drho*rho);
+  return err;
 }

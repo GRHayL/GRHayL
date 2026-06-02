@@ -12,20 +12,6 @@ static const char *dataset_names[NRPyEOS_sc_n_quantities] = {
   "mu_e", "mu_n",    "mu_p",    "muhat",   "munu",
 };
 
-static int NRPyEOS_hdf5_read_single_int_dataset(hid_t file_id, const char *dataset_name) {
-  int *to_free = (int *)NRPyEOS_hdf5_read_int_dataset(file_id, dataset_name, 1);
-  int out = *to_free;
-  free(to_free);
-  return out;
-}
-
-static double NRPyEOS_hdf5_read_single_double_dataset(hid_t file_id, const char *dataset_name) {
-  double *to_free = (double *)NRPyEOS_hdf5_read_double_dataset(file_id, dataset_name, 1);
-  double out = *to_free;
-  free(to_free);
-  return out;
-}
-
 // This function checks for the existence of the "have_rel_cs2" flag in
 // the input HDF5 file. If it's not present, the sound speed squared is
 // assumed to be non relativistic. Otherwise, the dataset value is used.
@@ -41,51 +27,82 @@ static bool table_has_rel_cs2(hid_t file) {
   return (flag != 0);
 }
 
-static NRPyEOS_stellarcollapse_t *NRPyEOS_new_stellarcollapse_table() {
-  NRPyEOS_stellarcollapse_t *t = NULL;
-  t = (NRPyEOS_stellarcollapse_t *)malloc(sizeof(NRPyEOS_stellarcollapse_t));
-  if(t == NULL) {
-    ghl_error("Could not allocate memory for stellar collapse table\n");
-  }
-  return t;
-}
+#define GHL_GOTO_CLEANUP_IF_ERROR(call) \
+  err = call;                           \
+  if(err != ghl_success) {              \
+    goto cleanup;                       \
+  }                                     \
 
-NRPyEOS_stellarcollapse_t *NRPyEOS_stellarcollapse_read_table(const char *filepath) {
+ghl_error_codes_t NRPyEOS_stellarcollapse_read_table(
+      const char *filepath,
+      NRPyEOS_stellarcollapse_t **sc) {
 #ifndef GHL_USE_HDF5
   GHL_HDF5_ERROR_IF_USED;
 #else
   hid_t file_id = H5Fopen(filepath, H5F_ACC_RDONLY, H5P_DEFAULT);
   if(file_id < 0) {
-    ghl_error("Could not open file '%s'\n", filepath);
+    return ghl_error_could_not_open_file;
   }
 
-  NRPyEOS_stellarcollapse_t *table = NRPyEOS_new_stellarcollapse_table();
+  NRPyEOS_stellarcollapse_t *table = (NRPyEOS_stellarcollapse_t *)malloc(sizeof(NRPyEOS_stellarcollapse_t));
+  if(table == NULL) {
+    return ghl_error_out_of_memory;
+  }
 
-  // Scalar quantities
   table->cs2_is_relativistic = table_has_rel_cs2(file_id);
-  table->n_rho = NRPyEOS_hdf5_read_single_int_dataset(file_id, "pointsrho");
-  table->n_temperature = NRPyEOS_hdf5_read_single_int_dataset(file_id, "pointstemp");
-  table->n_ye = NRPyEOS_hdf5_read_single_int_dataset(file_id, "pointsye");
-  table->energy_shift = NRPyEOS_hdf5_read_single_double_dataset(file_id, "energy_shift");
-
   ghl_info("Table '%s' contains %srelativistic sound speed\n",
            filepath,
            table->cs2_is_relativistic ? "" : "non-");
 
+  ghl_error_codes_t err = ghl_success;
+
+  // Scalar quantities
+  int *nr_ptr = NULL;
+  int *ny_ptr = NULL;
+  int *nt_ptr = NULL;
+  double *es_ptr = NULL;
+
+  GHL_GOTO_CLEANUP_IF_ERROR(NRPyEOS_hdf5_read_int_dataset(file_id, "pointsrho", 1, (void **)&nr_ptr));
+  GHL_GOTO_CLEANUP_IF_ERROR(NRPyEOS_hdf5_read_int_dataset(file_id, "pointstemp", 1, (void **)&nt_ptr));
+  GHL_GOTO_CLEANUP_IF_ERROR(NRPyEOS_hdf5_read_int_dataset(file_id, "pointsye", 1, (void **)&ny_ptr));
+  GHL_GOTO_CLEANUP_IF_ERROR(NRPyEOS_hdf5_read_double_dataset(file_id, "energy_shift", 1, (void **)&es_ptr));
+
+  table->n_rho = *nr_ptr;
+  table->n_temperature = *nt_ptr;
+  table->n_ye = *ny_ptr;
+  table->energy_shift = *es_ptr;
+
   // Basic tabulated quantities
-  table->log10_rho = NRPyEOS_hdf5_read_double_dataset(file_id, "logrho", table->n_rho);
-  table->log10_temperature = NRPyEOS_hdf5_read_double_dataset(file_id, "logtemp", table->n_temperature);
-  table->ye = NRPyEOS_hdf5_read_double_dataset(file_id, "ye", table->n_ye);
+  GHL_GOTO_CLEANUP_IF_ERROR(NRPyEOS_hdf5_read_double_dataset(file_id, "logrho", table->n_rho, (void **)&table->log10_rho));
+  GHL_GOTO_CLEANUP_IF_ERROR(NRPyEOS_hdf5_read_double_dataset(file_id, "logtemp", table->n_temperature, (void **)&table->log10_temperature));
+  GHL_GOTO_CLEANUP_IF_ERROR(NRPyEOS_hdf5_read_double_dataset(file_id, "ye", table->n_ye, (void **)&table->ye));
 
   // Tabulated data
   const size_t size = table->n_rho * table->n_temperature * table->n_ye;
   for(int n = 0; n < NRPyEOS_sc_n_quantities; n++) {
-    table->data[n] = NRPyEOS_hdf5_read_double_dataset(file_id, dataset_names[n], size);
+    GHL_GOTO_CLEANUP_IF_ERROR(NRPyEOS_hdf5_read_double_dataset(file_id, dataset_names[n], size, (void **)&table->data[n]));
+  }
+
+cleanup:
+
+  free(nr_ptr);
+  free(ny_ptr);
+  free(nt_ptr);
+  free(es_ptr);
+  if(err != ghl_success) {
+    free(table->log10_rho);
+    free(table->log10_temperature);
+    free(table->ye);
+    for(int n = 0; n < NRPyEOS_sc_n_quantities; n++) {
+      free(table->data[n]);
+    }
+    free(table);
+    table = NULL;
   }
 
   H5Fclose(file_id);
-
-  return table;
+  *sc = table;
+  return err;
 #endif
 }
 

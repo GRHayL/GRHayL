@@ -69,5 +69,32 @@ void ghl_read_error_codes(
     case ghl_error_newman_invalid_discriminant:
       ghl_abort("Found negative discriminant inside Newman1D Con2Prim");
       break;
+    case ghl_error_used_disabled_hdf5:
+      ghl_abort("Tried to use HDF5 function, but HDF5 is disabled");
+      break;
+    case ghl_error_out_of_memory:
+      ghl_abort("Failed to allocate memory");
+      break;
+    case ghl_error_eos_struct_is_null:
+      ghl_abort("Provided EOS struct pointer is NULL");
+      break;
+    case ghl_error_invalid_eos_type:
+      ghl_abort("Invalid EOS type");
+      break;
+    case ghl_error_invalid_eos_table_type:
+      ghl_abort("Invalid EOS table type");
+      break;
+    case ghl_error_could_not_open_file:
+      ghl_abort("Could not open file");
+      break;
+    case ghl_error_hdf5_dataset_could_not_open:
+      ghl_abort("Could not open HDF5 dataset");
+      break;
+    case ghl_error_hdf5_dataset_invalid_ndims:
+      ghl_abort("HDF5 dataset had invalid number of dimensions");
+      break;
+    case ghl_error_hdf5_dataset_size_mismatch:
+      ghl_abort("HDF5 dataset size mismatch");
+      break;
   }
 }

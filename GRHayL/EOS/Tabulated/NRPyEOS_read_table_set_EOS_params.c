@@ -3,22 +3,21 @@
 
 #define GHL_CASE(name_) case name_: return #name_
 
-static const char *table_str(ghl_eos_table_t type) {
-  switch(type) {
-    GHL_CASE(ghl_eos_table_stellarcollapse);
-    default:
-      return "Unknown";
-  }
-}
-
-static void ghl_eos_read_stellarcollapse_table(
+static ghl_error_codes_t ghl_eos_read_stellarcollapse_table(
       const char *filepath,
       ghl_eos_parameters *restrict eos,
       bool *restrict cs2_is_relativistic) {
-  NRPyEOS_stellarcollapse_t *sc = NRPyEOS_stellarcollapse_read_table(filepath);
+
+  NRPyEOS_stellarcollapse_t *sc = NULL;
+  ghl_error_codes_t err = NRPyEOS_stellarcollapse_read_table(filepath, &sc);
+  if(err != ghl_success) {
+    return err;
+  }
   NRPyEOS_stellarcollapse_to_ghl(sc, eos);
   *cs2_is_relativistic = sc->cs2_is_relativistic;
   NRPyEOS_stellarcollapse_free_table(sc);
+
+  return ghl_success;
 }
 
 static inline double
@@ -49,32 +48,33 @@ get_EOS_table_min(const ghl_eos_parameters *restrict eos, const int var_key) {
   return var_min_value;
 }
 
-void NRPyEOS_read_table_set_EOS_params(
+ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(
       const char *filepath,
       ghl_eos_parameters *restrict eos) {
 #ifndef GHL_USE_HDF5
-  GHL_HDF5_ERROR_IF_USED;
+  return
 #else
 
   if(eos == NULL) {
-    ghl_error("Input EOS parameter struct is NULL\n");
+    return ghl_error_eos_struct_is_null;
   }
 
   if(eos->eos_type != ghl_eos_tabulated) {
-    ghl_error("EOS type is not tabulated.\n");
+    return ghl_error_invalid_eos_type;
   }
 
   bool cs2_is_relativistic = false;
+  ghl_error_codes_t err = ghl_success;
   switch(eos->table_type) {
     case ghl_eos_table_stellarcollapse:
-      ghl_eos_read_stellarcollapse_table(filepath, eos, &cs2_is_relativistic);
+      err = ghl_eos_read_stellarcollapse_table(filepath, eos, &cs2_is_relativistic);
       break;
     default:
-      ghl_info("Unsupported EOS table type '%s'. Supported table types:\n", table_str(eos->table_type));
-      for(ghl_eos_table_t n = ghl_eos_table_unknown + 1; n < ghl_eos_table_types; n++) {
-        ghl_info("  - %s\n", table_str(n));
-      }
-      ghl_error("Please set the EOS table type to one of the known values above\n");
+      return ghl_error_invalid_eos_table_type;
+  }
+
+  if(err != ghl_success) {
+    return err;
   }
 
   const int npoints = eos->N_rho * eos->N_T * eos->N_Ye;
@@ -128,5 +128,7 @@ void NRPyEOS_read_table_set_EOS_params(
   eos->table_eps_max = exp(get_EOS_table_max(eos, NRPyEOS_eps_key)) - eos->energy_shift;
   eos->table_ent_min = get_EOS_table_min(eos, NRPyEOS_entropy_key);
   eos->table_ent_max = get_EOS_table_max(eos, NRPyEOS_entropy_key);
+
+  return ghl_success;
 #endif
 }

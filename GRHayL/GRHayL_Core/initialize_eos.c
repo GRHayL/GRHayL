@@ -228,7 +228,10 @@ void ghl_initialize_tabulated_eos(
   eos->eos_type = ghl_eos_tabulated;
 
   // Step 2: Read the EOS table
-  ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
+  ghl_error_codes_t err = ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
+  if(err != ghl_success) {
+    ghl_read_error_codes(err);
+  }
 
   // Step 3: Enforce default values for (rho, Y_e, T) min, max, and atm
   // Step 3.a: Atmosphere values

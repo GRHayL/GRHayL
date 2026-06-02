@@ -59,7 +59,7 @@ typedef enum {
 #endif // GHL_USE_HDF5
 
 // Function prototypes
-void NRPyEOS_read_table_set_EOS_params(
+ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(
       const char *nuceos_table_name,
       ghl_eos_parameters *restrict eos_params);
 
@@ -283,21 +283,25 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
 
 void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos);
 
-double NRPyEOS_tabulated_compute_Ye_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho);
+      const double rho,
+      double *restrict Ye);
 
-double NRPyEOS_tabulated_compute_P_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_P_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho);
+      const double rho,
+      double *restrict P);
 
-double NRPyEOS_tabulated_compute_rho_from_P(
+ghl_error_codes_t NRPyEOS_tabulated_compute_rho_from_P(
       const ghl_eos_parameters *restrict eos,
-      const double P);
+      const double P,
+      double *restrict rho);
 
-double NRPyEOS_tabulated_compute_eps_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_eps_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho);
+      const double rho,
+      double *restrict eps);
 
 void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos);
 
@@ -325,13 +329,15 @@ void NRPyEOS_enforce_table_bounds_rho_Ye_P(
       double *restrict Y_e,
       double *restrict P);
 
-double NRPyEOS_tabulated_compute_dP_drho_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_dP_drho_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho);
+      const double rho,
+      double *restrict dP_drho);
 
-double NRPyEOS_tabulated_compute_deps_dP_from_rho(
+ghl_error_codes_t NRPyEOS_tabulated_compute_deps_dP_from_rho(
       const ghl_eos_parameters *restrict eos,
-      const double rho);
+      const double rho,
+      double *restrict deps_dP);
 
 void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos);
 

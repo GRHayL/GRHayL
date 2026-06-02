@@ -1,7 +1,9 @@
 #include "ghl_nrpyeos_tabulated.h"
 #include "NRPyEOS_stellarcollapse.h"
 
-void NRPyEOS_stellarcollapse_to_ghl(NRPyEOS_stellarcollapse_t *restrict sc, ghl_eos_parameters *restrict eos) {
+ghl_error_codes_t NRPyEOS_stellarcollapse_to_ghl(
+      NRPyEOS_stellarcollapse_t *restrict sc,
+      ghl_eos_parameters *restrict eos) {
 
   eos->N_rho = sc->n_rho;
   eos->N_T = sc->n_temperature;
@@ -18,7 +20,13 @@ void NRPyEOS_stellarcollapse_to_ghl(NRPyEOS_stellarcollapse_t *restrict sc, ghl_
 
   if(eos->table_logrho == NULL || eos->table_logT == NULL || eos->table_Y_e == NULL
      || eos->table_all == NULL || eos->table_eps == NULL || eos->table_logh == NULL) {
-    ghl_error("Cannot allocate memory for EOS table\n");
+    free(eos->table_logrho);
+    free(eos->table_logT);
+    free(eos->table_Y_e);
+    free(eos->table_all);
+    free(eos->table_eps);
+    free(eos->table_logh);
+    return ghl_error_out_of_memory;
   }
 
   for(int ir = 0; ir < eos->N_rho; ir++) {
@@ -65,4 +73,6 @@ void NRPyEOS_stellarcollapse_to_ghl(NRPyEOS_stellarcollapse_t *restrict sc, ghl_
       eos->table_all[key + NRPyEOS_ntablekeys * i] = sc->data[n][i];
     }
   }
+
+  return ghl_success;
 }
