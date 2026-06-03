@@ -59,6 +59,7 @@ typedef enum {
   ghl_error_invalid_eos_table_type,
   ghl_error_could_not_open_file,
   ghl_error_hdf5_dataset_could_not_open,
+  ghl_error_hdf5_dataset_could_not_read,
   ghl_error_hdf5_dataset_invalid_ndims,
   ghl_error_hdf5_dataset_size_mismatch,
   ghl_error_invalid_rho_atm,

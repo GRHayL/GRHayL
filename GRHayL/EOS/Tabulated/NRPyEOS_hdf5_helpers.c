@@ -66,7 +66,7 @@ ghl_error_codes_t NRPyEOS_hdf5_read_dataset(
   herr_t status = H5Dread(dataset_id, hdf5_dtype,
                          H5S_ALL, H5S_ALL, H5P_DEFAULT, array);
   if(status < 0) {
-    error = ghl_error_hdf5_dataset_could_not_open; /* ideally: could_not_read */
+    error = ghl_error_hdf5_dataset_could_not_read;
     goto cleanup_and_return;
   }
 
