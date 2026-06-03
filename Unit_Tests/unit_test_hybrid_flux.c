@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   params.max_Lorentz_factor = W_max;
   params.inv_sq_max_Lorentz_factor = 1.0/SQR(W_max);
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
         rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,

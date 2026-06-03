@@ -107,12 +107,16 @@ int main(int argc, char **argv) {
         Lorenz_damping_factor,
         &params);
 
-  ghl_eos_parameters eos;
-  ghl_initialize_tabulated_eos_functions_and_params(
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.clean_sound_speed = true;
+  ghl_error_codes_t err = ghl_initialize_tabulated_eos_functions_and_params(
         tablepath,
         rho_b_atm, rho_b_min, rho_b_max,
         Y_e_atm, Y_e_min, Y_e_max,
         T_atm, T_min, T_max, &eos);
+  ghl_abort_if_error(err);
   eos.root_finding_precision=1e-10;
 
   const char *lapse_shift_string = "8.787479e-01 8.657114e-03 -2.066025e-02 2.384216e-04";

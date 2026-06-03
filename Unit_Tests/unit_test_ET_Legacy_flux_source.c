@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 
   const double poison = 1e300;
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   ghl_compute_h_and_cs2 = &compute_h_and_cs2;
 
   // Allocate memory for metric

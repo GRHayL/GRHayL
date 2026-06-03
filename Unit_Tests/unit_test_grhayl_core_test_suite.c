@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     prims.Y_e = poison;
     prims.temperature = poison;
 
-    ghl_eos_parameters eos;
+    ghl_eos_parameters eos = { 0 };
     char *eos_name;
     switch(eos_type) {
       case 0:
