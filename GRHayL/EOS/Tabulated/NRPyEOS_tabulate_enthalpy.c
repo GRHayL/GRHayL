@@ -15,7 +15,7 @@ void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos) {
         const double P = exp(eos->table_all[iprs]);
         const double eps = exp(eos->table_all[ieps]) - eps0;
         const double h = 1.0 + eps + P / rho;
-        if(h < 0.0 || !isfinite(h)) {
+        if(h <= 0.0 || !isfinite(h)) {
           ghl_warn("Invalid enthalpy in EOS table: h = %.15e\n", h);
         }
 
