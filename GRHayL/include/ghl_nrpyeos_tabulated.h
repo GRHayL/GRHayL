@@ -273,11 +273,11 @@ int NRPyEOS_tabulated_get_index_Ye(
       const ghl_eos_parameters *restrict eos,
       const double Ye);
 
-void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
+ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos);
 
-void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
+ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos);
 

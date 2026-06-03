@@ -236,11 +236,11 @@ extern int (*ghl_tabulated_get_index_T)(
       const ghl_eos_parameters *restrict eos,
       const double T);
 
-extern void (*ghl_tabulated_compute_Ye_of_rho_beq_constant_T)(
+extern ghl_error_codes_t (*ghl_tabulated_compute_Ye_of_rho_beq_constant_T)(
       const double T,
       ghl_eos_parameters *restrict eos );
 
-extern void (*ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T)(
+extern ghl_error_codes_t (*ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T)(
       const double T,
       ghl_eos_parameters *restrict eos );
 

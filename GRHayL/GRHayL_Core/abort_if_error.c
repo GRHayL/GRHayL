@@ -88,6 +88,9 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
     case ghl_error_hdf5_dataset_could_not_open:
       ghl_abort("Could not open HDF5 dataset");
       break;
+    case ghl_error_hdf5_dataset_could_not_read:
+      ghl_abort("Could not read HDF5 dataset");
+      break;
     case ghl_error_hdf5_dataset_invalid_ndims:
       ghl_abort("HDF5 dataset had invalid number of dimensions");
       break;

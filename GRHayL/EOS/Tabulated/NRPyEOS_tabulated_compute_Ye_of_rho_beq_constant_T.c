@@ -222,7 +222,7 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_eps_from_rho(
   return err;
 }
 
-void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
+ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos) {
 
@@ -235,6 +235,12 @@ void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
   }
   double *munu_of_Ye = (double *)malloc(sizeof(double) * ny);
 
+  if(eos->Ye_of_lr == NULL || munu_of_Ye == NULL) {
+    free(eos->Ye_of_lr);
+    free(munu_of_Ye);
+    return ghl_error_out_of_memory;
+  }
+
   for(int ir = 0; ir < nr; ir++) {
     for(int iy = 0; iy < ny; iy++) {
       munu_of_Ye[iy] = eos->table_all[munu_index(ir, it, iy)];
@@ -242,9 +248,11 @@ void NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
     eos->Ye_of_lr[ir] = find_Ye_st_munu_is_zero(ny, eos->table_Y_e, munu_of_Ye);
   }
   free(munu_of_Ye);
+
+  return ghl_success;
 }
 
-void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
+ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
       const double T,
       ghl_eos_parameters *restrict eos) {
 
@@ -261,17 +269,31 @@ void NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
   if(eos->lh_of_lr == NULL) {
     eos->lh_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
   }
+  if(eos->lp_of_lr == NULL || eos->le_of_lr == NULL || eos->lh_of_lr == NULL) {
+    free(eos->lp_of_lr);
+    free(eos->le_of_lr);
+    free(eos->lh_of_lr);
+    return ghl_error_out_of_memory;
+  }
 
   // Compute logP(logrho) and logeps(logrho) and logh(logrho)
   for(int ir = 0; ir < eos->N_rho; ir++) {
     const double rho = exp(eos->table_logrho[ir]);
     const double Y_e = eos->Ye_of_lr[ir];
     double P, eps;
-    ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
+    ghl_error_codes_t err = ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
+    if(err != ghl_success) {
+      free(eos->lp_of_lr);
+      free(eos->le_of_lr);
+      free(eos->lh_of_lr);
+      return err;
+    }
     eos->lp_of_lr[ir] = log(P);
     eos->le_of_lr[ir] = log(eps + eos->energy_shift);
     eos->lh_of_lr[ir] = log(1.0 + eps + P / rho);
   }
+
+  return ghl_success;
 }
 
 void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos) {
