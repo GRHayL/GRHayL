@@ -22,18 +22,23 @@ void NRPyEOS_tabulated_adjust_sound_speed(ghl_eos_parameters *restrict eos, bool
           eos->table_all[ics2] /= h;
         }
 
-        if(eos->clean_sound_speed) {
           if(!isfinite(eos->table_all[ics2])) {
             nonfinite_cs2_count++;
-            eos->table_all[ics2] = 1.0 - 1e-15;
+            if(eos->clean_sound_speed) {
+              eos->table_all[ics2] = 1.0 - 1e-15;
+            }
           }
           else if(eos->table_all[ics2] > 1.0) {
             superluminal_cs2_count++;
-            eos->table_all[ics2] = 1.0;
+            if(eos->clean_sound_speed) {
+              eos->table_all[ics2] = 1.0;
+            }
           }
           else if(eos->table_all[ics2] < 0.0) {
             negative_cs2_count++;
-            eos->table_all[ics2] = 0.0;
+            if(eos->clean_sound_speed) {
+              eos->table_all[ics2] = 0.0;
+            }
           }
         }
       }
