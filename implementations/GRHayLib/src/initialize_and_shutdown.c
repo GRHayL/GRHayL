@@ -196,6 +196,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
     ghl_eos->table_type = parse_eos_table_type_keyword(eos_table_type);
+    ghl_eos->clean_sound_speed = eos_table_clean_sound_speed;
     ghl_abort_if_error(ghl_initialize_tabulated_eos_functions_and_params(
           EOS_tablepath,
           rho_b_atm, rho_b_min, rho_b_max,

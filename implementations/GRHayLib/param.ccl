@@ -77,6 +77,12 @@ KEYWORD eos_table_type "The type of EOS table for the simulation"
   "stellarcollapse" :: "Table format from Stellar Collapse (stellarcollapse.org)"
 } "stellarcollapse"
 
+BOOLEAN eos_table_clean_sound_speed "Whether or not to clean the tabulated sound speed squared."
+{
+  "no"  :: "Do not clean/adjust the tabulated sound speed squared."
+  "yes" :: "Clean/adjust the tabulated sound speed squared (NAN/INF -> 1, cs2 > 1 -> 1, cs2 < 0 -> 0)."
+} "no"
+
 CCTK_REAL rho_b_atm "Atmosphere value on the baryonic rest mass density rho_b (required). If this is unset, the run will die."
 {
   0:* :: "Atmosphere density; must be positive"
