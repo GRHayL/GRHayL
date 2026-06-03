@@ -179,29 +179,29 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     if(main == Font1D || backups[0] == Font1D || backups[1] == Font1D || backups[2] == Font1D)
       CCTK_VERROR("Error: Font1D routine is incompatible with ideal fluid EOS. Please choose a different Con2Prim routine.");
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
-    ghl_initialize_simple_eos_functions_and_params(
+    ghl_abort_if_error(ghl_initialize_simple_eos_functions_and_params(
           rho_b_atm, rho_b_min, rho_b_max,
           P_atm, P_min, P_max,
-          Gamma, ghl_eos);
+          Gamma, ghl_eos));
   } else if (CCTK_EQUALS(EOS_type, "Hybrid")) {
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
-    ghl_initialize_hybrid_eos_functions_and_params(
+    ghl_abort_if_error(ghl_initialize_hybrid_eos_functions_and_params(
           rho_b_atm, rho_b_min, rho_b_max,
           neos, rho_ppoly_in,
           Gamma_ppoly_in, k_ppoly0,
-          Gamma_th, ghl_eos);
+          Gamma_th, ghl_eos));
   } else if (CCTK_EQUALS(EOS_type, "Tabulated")) {
     if( CCTK_EQUALS(EOS_tablepath, "") )
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
 
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
     ghl_eos->table_type = parse_eos_table_type_keyword(eos_table_type);
-    ghl_initialize_tabulated_eos_functions_and_params(
+    ghl_abort_if_error(ghl_initialize_tabulated_eos_functions_and_params(
           EOS_tablepath,
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,
           T_atm, T_min, T_max,
-          ghl_eos);
+          ghl_eos));
   } else if (CCTK_EQUALS(EOS_type, "")) {
     CCTK_VERROR("GRHayLib parameter EOS_type is unset. Please set an EOS type.");
   } else {
