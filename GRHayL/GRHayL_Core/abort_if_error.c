@@ -32,7 +32,7 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
       ghl_abort("Interval in the root-finding method does not bracket a root.");
       break;
     case ghl_error_table_bisection:
-      ghl_abort("???");
+      ghl_abort("Table bisection failed while locating the interpolation interval.");
       break;
     case ghl_error_table_max_ye:
       ghl_abort("Input Y_e is too large and outside table bounds. Table interpolation cannot be performed.");
