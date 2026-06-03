@@ -162,7 +162,7 @@ download_test_data con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_pert
 
 for i in {0..77}
 do
-  ./Unit_Tests/failure.sh "./test/unit_test_code_error $i"
+  ./test/unit_test_code_error "$i"
 done
 
 download_test_data induction/induction_interpolation_input.bin

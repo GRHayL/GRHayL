@@ -2,14 +2,17 @@
 #include "ghl_unit_tests.h"
 
 void read_table_error_test(int test_key);
+static ghl_error_codes_t expected_error_code(const int test_key);
 static void expect_error_code(ghl_error_codes_t error, int test_key, const char *call);
+static void pass_test(int test_key, const char *message);
+static void fail_test(int test_key, const char *message);
 
 int main(int argc, char **argv) {
 
   const int test_key = atoi(argv[1]);
   if((test_key > 33 && test_key < 61) || test_key == 73 || test_key == 74) {
     read_table_error_test(test_key);
-    ghl_error("Code failure test %d returned from read_table_error_test without failing\n", test_key);
+    fail_test(test_key, "read_table_error_test returned unexpectedly");
   }
 
   ghl_error_codes_t error = ghl_success;
@@ -60,7 +63,8 @@ int main(int argc, char **argv) {
     expect_error_code(error, test_key, "ghl_initialize_hybrid_eos_functions_and_params");
   }
   else if(error != ghl_success) {
-    ghl_abort_if_error(error);
+    fprintf(stderr, "Unexpected setup error %d before test %d\n", error, test_key);
+    return 1;
   }
 
   evolve_temperature = true;
@@ -197,7 +201,8 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
     expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
   }
   else if(error != ghl_success) {
-    ghl_abort_if_error(error);
+    fprintf(stderr, "Unexpected tabulated EOS setup error %d before test %d\n", error, test_key);
+    return 1;
   }
 
   /*
@@ -359,10 +364,12 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
     {
       const char *routine_name = ghl_get_con2prim_routine_name(-5);
       if(routine_name == NULL) {
-        ghl_error("ghl_get_con2prim_routine_name returned NULL for code test %d\n", test_key);
+        pass_test(test_key, "ghl_get_con2prim_routine_name returned NULL for invalid key");
       }
-      printf("%s\n", routine_name);
-      break;
+      fprintf(stderr,
+              "Test %d failed: ghl_get_con2prim_routine_name returned \"%s\" for invalid key\n",
+              test_key, routine_name);
+      return 1;
     }
   }
 
@@ -474,7 +481,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
   }
 
-  printf("Code failure test has failed for code test %d\n", test_key);
+  fprintf(stderr, "Code failure test %d did not trigger its expected failure path\n", test_key);
 
   // Silence warnings
   (void)Fermi_Dirac_integral;
@@ -484,7 +491,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   (void)eps;
   (void)T;
 
-  return 0;
+  return 1;
 }
 // clang-format on
 
@@ -532,15 +539,120 @@ void create_opaque_dataset(char *name, hid_t file_id) {
   H5Sclose(dataspace_id);
 }
 
-static void expect_error_code(ghl_error_codes_t error, int test_key, const char *call) {
-  if(error == ghl_success) {
-    ghl_error("Expected %s to fail for code test %d, but it returned ghl_success\n",
-              call, test_key);
+static ghl_error_codes_t expected_error_code(const int test_key) {
+  switch(test_key) {
+    case  0:
+    case  6:
+    case 61:
+    case 62:
+    case 63: return ghl_error_invalid_rho_atm;
+    case  1:
+    case  9:
+    case 64:
+    case 65:
+    case 66: return ghl_error_rho_min_gt_rho_max;
+    case  2:
+    case  3: return ghl_error_invalid_fermi_dirac_integral_key;
+    case  4: return ghl_error_u0_singular;
+    case  5:
+    case 32: return ghl_error_invalid_c2p_key;
+    case  7:
+    case 69: return ghl_error_invalid_Y_e_atm;
+    case  8:
+    case 71: return ghl_error_invalid_T_atm;
+    case 10:
+    case 70: return ghl_error_Y_e_min_gt_Y_e_max;
+    case 11:
+    case 72: return ghl_error_T_min_gt_T_max;
+    case 12:
+    case 23: return ghl_error_exceed_table_vars;
+    case 13:
+    case 19:
+    case 20:
+    case 21:
+    case 22:
+    case 24:
+    case 28:
+    case 29:
+    case 30:
+    case 31: return ghl_error_table_min_rho;
+    case 14:
+    case 25: return ghl_error_table_max_rho;
+    case 15:
+    case 26: return ghl_error_table_min_ye;
+    case 16:
+    case 27: return ghl_error_table_max_ye;
+    case 17: return ghl_error_table_min_T;
+    case 18: return ghl_error_table_max_T;
+    case 34: return ghl_error_could_not_open_file;
+    case 35:
+    case 36:
+    case 37:
+    case 38:
+    case 39:
+    case 40:
+    case 41:
+    case 42:
+    case 43:
+    case 44:
+    case 45:
+    case 46:
+    case 47:
+    case 48:
+    case 49:
+    case 50:
+    case 51:
+    case 52:
+    case 53:
+    case 54:
+    case 55:
+    case 56:
+    case 57:
+    case 58:
+    case 59:
+    case 60: return ghl_error_hdf5_dataset_could_not_open;
+    case 67: return ghl_error_invalid_press_atm;
+    case 68: return ghl_error_press_min_gt_press_max;
+    case 73: return ghl_error_hdf5_dataset_could_not_open;
+    case 74: return ghl_error_hdf5_dataset_could_not_read;
+    case 75: return ghl_error_eos_struct_is_null;
+    case 76: return ghl_error_invalid_eos_type;
+    case 77: return ghl_error_invalid_eos_table_type;
   }
 
-  ghl_abort_if_error(error);
-  ghl_error("ghl_abort_if_error returned unexpectedly for code test %d after %s returned error code %d\n",
-            test_key, call, error);
+  fprintf(stderr, "No expected error code configured for test %d\n", test_key);
+  exit(1);
+}
+
+static void expect_error_code(ghl_error_codes_t error, int test_key, const char *call) {
+  const ghl_error_codes_t expected = expected_error_code(test_key);
+  if(error == ghl_success) {
+    fprintf(stderr,
+            "Test %d failed: %s returned ghl_success, expected error code %d\n",
+            test_key, call, expected);
+    exit(1);
+  }
+
+  if(error != expected) {
+    fprintf(stderr,
+            "Test %d failed: %s returned error code %d, expected %d\n",
+            test_key, call, error, expected);
+    exit(1);
+  }
+
+  printf("Test %d passed: %s returned expected error code %d\n",
+         test_key, call, error);
+  exit(0);
+}
+
+static void pass_test(int test_key, const char *message) {
+  printf("Test %d passed: %s\n", test_key, message);
+  exit(0);
+}
+
+static void fail_test(int test_key, const char *message) {
+  fprintf(stderr, "Test %d failed: %s\n", test_key, message);
+  exit(1);
 }
 
 void read_table_error_test(int test_key) {

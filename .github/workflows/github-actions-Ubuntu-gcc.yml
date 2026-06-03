@@ -337,7 +337,7 @@ jobs:
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
           for i in {0..77}
           do
-            ./Unit_Tests/failure.sh "./test/unit_test_code_error "+$i
+            ./test/unit_test_code_error "$i"
           done
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
