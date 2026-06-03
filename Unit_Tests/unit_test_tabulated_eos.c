@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
           const double var       = get_table_quantity(var_key, logrho, Y_e, logT);
           const double table_var = eos.table_all[var_key + NRPyEOS_ntablekeys*index];
           if( relative_error(var, table_var) > rtol && fabs(var-table_var) > atol )
-            ghl_error("Errors in variable '%s' exceed tolernaces: %.15e vs. %.15e\n",
+            ghl_error("Errors in variable '%s' exceed tolerances: %.15e vs. %.15e\n",
                          table_key_to_str(var_key), var, table_var);
         }
       }

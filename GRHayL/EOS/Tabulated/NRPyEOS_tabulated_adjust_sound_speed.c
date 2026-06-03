@@ -1,7 +1,7 @@
 #include "ghl_nrpyeos_tabulated.h"
 
 // This function performs the following tasks on the sound speed squared:
-//   * Make the sound speed relativistic, if requested
+//   * Convert non-relativistic table values to relativistic values
 //   * NAN          -> 1.0 - 1e-15
 //   * INF          -> 1.0 - 1e-15
 //   * Superluminal -> 1.0
