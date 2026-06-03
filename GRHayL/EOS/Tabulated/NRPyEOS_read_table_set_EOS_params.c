@@ -13,11 +13,11 @@ static ghl_error_codes_t ghl_eos_read_stellarcollapse_table(
   if(err != ghl_success) {
     return err;
   }
-  NRPyEOS_stellarcollapse_to_ghl(sc, eos);
   *cs2_is_relativistic = sc->cs2_is_relativistic;
+  err = NRPyEOS_stellarcollapse_to_ghl(sc, eos);
   NRPyEOS_stellarcollapse_free_table(sc);
 
-  return ghl_success;
+  return err;
 }
 
 static inline double
