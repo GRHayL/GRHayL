@@ -212,7 +212,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
 void GRHayLib_terminate(CCTK_ARGUMENTS) {
   if(ghl_eos->eos_type == ghl_eos_tabulated) {
-    ghl_tabulated_free_memory(&ghl_eos);
+    ghl_tabulated_free_memory(ghl_eos);
     ghl_eos = NULL; // This makes the next free safe
   }
   free(ghl_eos);
