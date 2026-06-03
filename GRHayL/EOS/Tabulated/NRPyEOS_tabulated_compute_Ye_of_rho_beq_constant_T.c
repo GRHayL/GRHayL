@@ -319,11 +319,17 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_dP_drho_from_rho(
   ghl_error_codes_t err = ghl_success;
 
   err = NRPyEOS_tabulated_compute_P_from_rho(eos, rho, &P);
+  if(err != ghl_success) {
+    return err;
+  }
   err = discrete_derivative(eos->N_rho, eos->table_logrho, eos->lp_of_lr, log(rho),
                             &dlogP_dlogrho, find_left_index_uniform_array);
+  if(err != ghl_success) {
+    return err;
+  }
 
   *dP_drho = dlogP_dlogrho * P / rho;
-  return err;
+  return ghl_success;
 }
 
 ghl_error_codes_t NRPyEOS_tabulated_compute_deps_dP_from_rho(
