@@ -163,8 +163,7 @@ generate_test_data(
                                 xent, xye, xtemp,
                                 &prims_orig);
           ghl_error_codes_t error = ghl_limit_v_and_compute_u0(params, &ADM_metric, &prims_orig, &diagnostics.speed_limited);
-	  if(error)
-            ghl_read_error_codes(error);
+          ghl_abort_if_error(error);
 
           // Set prim guesses
           ghl_primitive_quantities prims;

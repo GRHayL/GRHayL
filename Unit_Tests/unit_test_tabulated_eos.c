@@ -138,8 +138,7 @@ int main(int argc, char **argv) {
         // Now perform the interpolations, validating the results
         P_interp = 0.0/0.0;
         ghl_error_codes_t error = ghl_tabulated_compute_P_from_T(&eos, rho, Y_e, T, &P_interp);
-	if(error)
-          ghl_read_error_codes(error);
+        ghl_abort_if_error(error);
 	
         if( relative_error(P, P_interp) > rtol && fabs(P - P_interp) > atol )
           ghl_error("tabulated_compute_P_from_T validation failed:\n"
@@ -484,8 +483,7 @@ int main(int argc, char **argv) {
       prims.Y_e = 0.9 * eos.Y_e_min;
       prims.temperature = 0.9 * eos.T_min;
       ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
       if(prims.rho != eos.rho_min || prims.Y_e != eos.Y_e_min || prims.temperature != eos.T_min) {
         ghl_error("enforce bounds (rho, Y_e, T) failed for small values: %e != %e or %e != %e or %e != %e\n",
                   prims.rho, eos.rho_min, prims.Y_e, eos.Y_e_min, prims.temperature, eos.T_min);
@@ -496,8 +494,7 @@ int main(int argc, char **argv) {
       prims.Y_e = 1.1 * eos.Y_e_max;
       prims.temperature = 1.1 * eos.T_max;
       error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
       if(prims.rho != eos.rho_max || prims.Y_e != eos.Y_e_max || prims.temperature != eos.T_max) {
         ghl_error("enforce bounds (rho, Y_e, T) failed for large values: %e != %e or %e != %e or %e != %e\n",
                   prims.rho, eos.rho_max, prims.Y_e, eos.Y_e_max, prims.temperature, eos.T_max);
@@ -508,8 +505,7 @@ int main(int argc, char **argv) {
       prims.Y_e = 0.9 * eos.Y_e_max;
       prims.temperature = 0.9 * eos.T_max;
       error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
       if(prims.rho != 0.9 * eos.rho_max || prims.Y_e != 0.9 * eos.Y_e_max || prims.temperature != 0.9 * eos.T_max) {
         ghl_error("enforce bounds (rho, Y_e, T) changed values that it shouldn't have");
       }
@@ -617,9 +613,7 @@ int main(int argc, char **argv) {
     double Ye_expect = 0.5*(Y_e_expected[0] + Y_e_expected[1]);
     double Ye_interp = NAN;
     err = ghl_tabulated_compute_Ye_from_rho(&eos, rho_interp, &Ye_interp);
-    if(err != ghl_success) {
-      ghl_read_error_codes(err);
-    }
+    ghl_abort_if_error(err);
     if(relative_error(Ye_interp, Ye_expect) > 1e-14) {
       ghl_error("Failed to interpolate Y_e(rho): %.15e %.15e\n", Ye_interp, Ye_expect);
     }
@@ -627,9 +621,7 @@ int main(int argc, char **argv) {
     double P_expect = 0.5*(P_expected[0] + P_expected[1]); 
     double P_interp = NAN;
     err = ghl_tabulated_compute_P_from_rho(&eos, rho_interp, &P_interp);
-    if(err != ghl_success) {
-      ghl_read_error_codes(err);
-    }
+    ghl_abort_if_error(err);
     P_interp = log(P_interp);
     if(relative_error(P_interp, P_expect) > 1e-14) {
       ghl_error("Failed to interpolate P(rho): %.15e %.15e\n", P_interp, P_expect);
@@ -638,9 +630,7 @@ int main(int argc, char **argv) {
     double eps_expect = 0.5*(eps_expected[0] + eps_expected[1]); 
     double eps_interp = NAN;
     err = ghl_tabulated_compute_eps_from_rho(&eos, rho_interp, &eps_interp);
-    if(err != ghl_success) {
-      ghl_read_error_codes(err);
-    }
+    ghl_abort_if_error(err);
     eps_interp = log(eps_interp);
     if(relative_error(eps_interp, eps_expect) > 1e-14) {
       ghl_error("Failed to interpolate eps(rho): %.15e %.15e\n", eps_interp, eps_expect);

@@ -235,12 +235,10 @@ int main(int argc, char **argv) {
         bool speed_limited;
         ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
               &params, &metric_face, &prims_r, &speed_limited);
-        if(error)
-          ghl_read_error_codes(error);
+        ghl_abort_if_error(error);
         error = ghl_limit_v_and_compute_u0(
               &params, &metric_face, &prims_l, &speed_limited);
-        if(error)
-          ghl_read_error_codes(error);
+        ghl_abort_if_error(error);
 
         ghl_conservative_quantities cons_fluxes;
         calculate_HLLE_fluxes(

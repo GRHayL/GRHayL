@@ -163,12 +163,10 @@ int main(int argc, char **argv) {
     bool speed_limit;
     ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
           &params, &ADM_metric, &prims_r, &speed_limit);
-    if(error)
-      ghl_read_error_codes(error);
+    ghl_abort_if_error(error);
     error = ghl_limit_v_and_compute_u0(
           &params, &ADM_metric, &prims_l, &speed_limit);
-    if(error)
-      ghl_read_error_codes(error);
+    ghl_abort_if_error(error);
 
     ghl_calculate_characteristic_speed_dirn0(
           &prims_r, &prims_l, &eos,
@@ -343,12 +341,10 @@ int main(int argc, char **argv) {
           bool speed_limit;
           ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
                 &params, &ADM_metric, &prims_r, &speed_limit);
-          if(error)
-            ghl_read_error_codes(error);
+          ghl_abort_if_error(error);
           error = ghl_limit_v_and_compute_u0(
                 &params, &ADM_metric, &prims_l, &speed_limit);
-          if(error)
-            ghl_read_error_codes(error);
+          ghl_abort_if_error(error);
 
           ghl_conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(

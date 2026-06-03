@@ -54,9 +54,12 @@ extern "C" {
 #endif
 
 // Function prototypes
-double NRPyLeakage_Fermi_Dirac_integrals(const int k, const double z);
+ghl_error_codes_t NRPyLeakage_Fermi_Dirac_integrals(
+      const int k,
+      const double z,
+      double *restrict Fermi_Dirac_integral);
 
-void NRPyLeakage_compute_neutrino_opacities(
+ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double Y_e,
@@ -64,7 +67,7 @@ void NRPyLeakage_compute_neutrino_opacities(
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_opacities *restrict kappa );
 
-void NRPyLeakage_compute_neutrino_luminosities(
+ghl_error_codes_t NRPyLeakage_compute_neutrino_luminosities(
       const ghl_eos_parameters *restrict eos,
       const double alpha,
       const double gammaxx,
@@ -80,7 +83,7 @@ void NRPyLeakage_compute_neutrino_luminosities(
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_luminosities *restrict lum );
 
-void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       const ghl_eos_parameters *restrict eos,
       const double rho_b,
       const double Y_e,
@@ -121,6 +124,15 @@ static inline int robust_isfinite(double x) {
   return( !((*pbits & 0x7ff0000000000000UL) == 0x7ff0000000000000UL &&
             ((*pbits & 0x7ff0000000000000UL) || (*pbits & 0xfff0000000000000UL))) );
 }
+
+// Helper macro for Fermi-Dirac integrals
+#define NRPYLEAKAGE_FD_OR_RETURN(out, k, z)                                \
+  do {                                                                     \
+    ghl_error_codes_t err = NRPyLeakage_Fermi_Dirac_integrals(k, z, &out); \
+    if(err != ghl_success) {                                               \
+      return err;                                                          \
+    }                                                                      \
+  } while(0)
 
 #ifdef __cplusplus
 } // extern "C"

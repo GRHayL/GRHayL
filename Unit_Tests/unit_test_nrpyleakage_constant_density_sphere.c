@@ -111,13 +111,15 @@ void constantdensitysphere_test(
 
   // Step 4.a: Interior
   ghl_neutrino_opacities kappa_interior;
-  NRPyLeakage_compute_neutrino_opacities(eos,rho_interior,Y_e_interior,T_interior,
-                                         &tau_in, &kappa_interior);
+  ghl_error_codes_t error = NRPyLeakage_compute_neutrino_opacities(eos,rho_interior,Y_e_interior,T_interior,
+                                                                   &tau_in, &kappa_interior);
+  ghl_abort_if_error(error);
 
   // Step 4.b: Exterior
   ghl_neutrino_opacities kappa_exterior;
-  NRPyLeakage_compute_neutrino_opacities(eos,rho_exterior,Y_e_exterior,T_exterior,
-                                         &tau_in, &kappa_exterior);
+  error = NRPyLeakage_compute_neutrino_opacities(eos,rho_exterior,Y_e_exterior,T_exterior,
+                                                &tau_in, &kappa_exterior);
+  ghl_abort_if_error(error);
 
   // Step 5: Print basic information
   ghl_info("Test information:\n");

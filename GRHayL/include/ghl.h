@@ -61,6 +61,15 @@ typedef enum {
   ghl_error_hdf5_dataset_could_not_open,
   ghl_error_hdf5_dataset_invalid_ndims,
   ghl_error_hdf5_dataset_size_mismatch,
+  ghl_error_invalid_rho_atm,
+  ghl_error_rho_min_gt_rho_max,
+  ghl_error_invalid_press_atm,
+  ghl_error_press_min_gt_press_max,
+  ghl_error_invalid_Y_e_atm,
+  ghl_error_Y_e_min_gt_Y_e_max,
+  ghl_error_invalid_T_atm,
+  ghl_error_T_min_gt_T_max,
+  ghl_error_invalid_fermi_dirac_integral_key,
 } ghl_error_codes_t;
 
 typedef enum {
@@ -290,7 +299,7 @@ const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 void ghl_initialize_eos_functions(
     const ghl_eos_t eos_type);
 
-void ghl_initialize_simple_eos(
+ghl_error_codes_t ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -300,7 +309,7 @@ void ghl_initialize_simple_eos(
       const double Gamma,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_hybrid_eos(
+ghl_error_codes_t ghl_initialize_hybrid_eos(
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -311,7 +320,7 @@ void ghl_initialize_hybrid_eos(
       const double Gamma_th,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_tabulated_eos(
+ghl_error_codes_t ghl_initialize_tabulated_eos(
       const char *table_path,
       const double rho_atm,
       const double rho_min,
@@ -324,7 +333,7 @@ void ghl_initialize_tabulated_eos(
       const double T_max,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_simple_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -334,7 +343,7 @@ void ghl_initialize_simple_eos_functions_and_params(
       const double Gamma,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_hybrid_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_hybrid_eos_functions_and_params(
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -345,7 +354,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
       const double Gamma_th,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_tabulated_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
       const double rho_atm,
       const double rho_min,
@@ -519,8 +528,7 @@ void ghl_compute_SU_Bsq_Ssq_BdotS(
       double *restrict Ssq,
       double *restrict BdotS);
 
-void ghl_read_error_codes(
-      const ghl_error_codes_t error);
+void ghl_abort_if_error(const ghl_error_codes_t error);
 
 #ifdef __cplusplus
 }

@@ -52,10 +52,16 @@ int main(int argc, char **argv) {
         Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters hybrid_eos;
-  ghl_initialize_hybrid_eos_functions_and_params(
+  error = ghl_initialize_hybrid_eos_functions_and_params(
         rho_b_atm, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,
         k_ppoly0, Gamma_th, &hybrid_eos);
+  if(test_key == 0 || test_key == 1) {
+    expect_error_code(error, test_key, "ghl_initialize_hybrid_eos_functions_and_params");
+  }
+  else if(error != ghl_success) {
+    ghl_abort_if_error(error);
+  }
 
   evolve_temperature = true;
   ghl_parameters tab_params;
@@ -71,10 +77,12 @@ int main(int argc, char **argv) {
   double Fermi_Dirac_integral = 0.0;
   switch (test_key) {
     case 2:
-      Fermi_Dirac_integral = NRPyLeakage_Fermi_Dirac_integrals(-1, 1e-4);
+      error = NRPyLeakage_Fermi_Dirac_integrals(-1, 1e-4, &Fermi_Dirac_integral);
+      expect_error_code(error, test_key, "NRPyLeakage_Fermi_Dirac_integrals");
       break;
     case 3:
-      Fermi_Dirac_integral = NRPyLeakage_Fermi_Dirac_integrals(-1, 1e-2);
+      error = NRPyLeakage_Fermi_Dirac_integrals(-1, 1e-2, &Fermi_Dirac_integral);
+      expect_error_code(error, test_key, "NRPyLeakage_Fermi_Dirac_integrals");
       break;
   }
 
@@ -180,11 +188,17 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   }
 
   tab_eos.table_type = ghl_eos_table_stellarcollapse;
-  ghl_initialize_tabulated_eos_functions_and_params(
+  error = ghl_initialize_tabulated_eos_functions_and_params(
         tablepath,
         rho_b_atm, rho_b_min, rho_b_max,
         Y_e_atm, Y_e_min, Y_e_max,
         T_atm, T_min, T_max, &tab_eos);
+  if(test_key >= 6 && test_key <= 11) {
+    expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
+  }
+  else if(error != ghl_success) {
+    ghl_abort_if_error(error);
+  }
 
   /*
      NRPyEOS interpolators:
@@ -369,82 +383,94 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   const double press_max = 1e4;
   switch (test_key) {
     case 61:
-      ghl_initialize_simple_eos_functions_and_params(
+      error = ghl_initialize_simple_eos_functions_and_params(
             -1, rho_b_min, rho_b_max,
             press_atm, press_min, press_max,
             Gamma_th, &hybrid_eos);
+      expect_error_code(error, test_key, "ghl_initialize_simple_eos_functions_and_params");
       break;
     case 62:
-      ghl_initialize_hybrid_eos_functions_and_params(
+      error = ghl_initialize_hybrid_eos_functions_and_params(
             -1, rho_b_min, rho_b_max,
             neos, rho_ppoly, Gamma_ppoly,
             k_ppoly0, Gamma_th, &hybrid_eos);
+      expect_error_code(error, test_key, "ghl_initialize_hybrid_eos_functions_and_params");
       break;
     case 63:
-      ghl_initialize_tabulated_eos_functions_and_params(
+      error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
             -1, rho_b_min, rho_b_max,
             Y_e_atm, Y_e_min, Y_e_max,
             T_atm, T_min, T_max, &tab_eos);
+      expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
     case 64:
-      ghl_initialize_simple_eos_functions_and_params(
+      error = ghl_initialize_simple_eos_functions_and_params(
             rho_b_atm, rho_b_max, rho_b_min,
             press_atm, press_min, press_max,
             Gamma_th, &hybrid_eos);
+      expect_error_code(error, test_key, "ghl_initialize_simple_eos_functions_and_params");
       break;
     case 65:
-      ghl_initialize_hybrid_eos_functions_and_params(
+      error = ghl_initialize_hybrid_eos_functions_and_params(
             rho_b_atm, rho_b_max, rho_b_min,
             neos, rho_ppoly, Gamma_ppoly,
             k_ppoly0, Gamma_th, &hybrid_eos);
+      expect_error_code(error, test_key, "ghl_initialize_hybrid_eos_functions_and_params");
       break;
     case 66:
-      ghl_initialize_tabulated_eos_functions_and_params(
+      error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
             rho_b_atm, rho_b_max, rho_b_min,
             Y_e_atm, Y_e_min, Y_e_max,
             T_atm, T_min, T_max, &tab_eos);
+      expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
     case 67:
-      ghl_initialize_simple_eos_functions_and_params(
+      error = ghl_initialize_simple_eos_functions_and_params(
             rho_b_atm, rho_b_min, rho_b_max,
             -1, press_min, press_max,
             Gamma_th, &hybrid_eos);
+      expect_error_code(error, test_key, "ghl_initialize_simple_eos_functions_and_params");
       break;
     case 68:
-      ghl_initialize_simple_eos_functions_and_params(
+      error = ghl_initialize_simple_eos_functions_and_params(
             rho_b_atm, rho_b_min, rho_b_max,
             press_atm, press_max, press_min,
             Gamma_th, &hybrid_eos);
+      expect_error_code(error, test_key, "ghl_initialize_simple_eos_functions_and_params");
       break;
     case 69:
-      ghl_initialize_tabulated_eos_functions_and_params(
+      error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
             rho_b_atm, rho_b_min, rho_b_max,
             -1, Y_e_min, Y_e_max,
             T_atm, T_min, T_max, &tab_eos);
+      expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
     case 70:
-      ghl_initialize_tabulated_eos_functions_and_params(
+      error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
             rho_b_atm, rho_b_min, rho_b_max,
             Y_e_atm, Y_e_max, Y_e_min,
             T_atm, T_min, T_max, &tab_eos);
+      expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
     case 71:
-      ghl_initialize_tabulated_eos_functions_and_params(
+      error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
             rho_b_atm, rho_b_min, rho_b_max,
             Y_e_atm, Y_e_min, Y_e_max,
             -1, T_min, T_max, &tab_eos);
+      expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
     case 72:
-      ghl_initialize_tabulated_eos_functions_and_params(
+      error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
             rho_b_atm, rho_b_min, rho_b_max,
             Y_e_atm, Y_e_min, Y_e_max,
             T_atm, T_max, T_min, &tab_eos);
+      expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
   }
 
@@ -512,8 +538,8 @@ static void expect_error_code(ghl_error_codes_t error, int test_key, const char 
               call, test_key);
   }
 
-  ghl_read_error_codes(error);
-  ghl_error("ghl_read_error_codes returned unexpectedly for code test %d after %s returned error code %d\n",
+  ghl_abort_if_error(error);
+  ghl_error("ghl_abort_if_error returned unexpectedly for code test %d after %s returned error code %d\n",
             test_key, call, error);
 }
 

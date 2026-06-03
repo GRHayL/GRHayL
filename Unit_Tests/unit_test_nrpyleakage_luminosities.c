@@ -64,11 +64,12 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 
       // Compute luminosities
       ghl_neutrino_luminosities lum;
-      NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
-                                                gammaxx, gammaxy, gammaxz,
-                                                gammayy, gammayz, gammazz,
-                                                rho, Y_e, T, W,
-                                                &tau, &lum);
+      ghl_error_codes_t error = NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
+                                                                          gammaxx, gammaxy, gammaxz,
+                                                                          gammayy, gammayz, gammazz,
+                                                                          rho, Y_e, T, W,
+                                                                          &tau, &lum);
+      ghl_abort_if_error(error);
 
       // Output to file
       if( !perturb ) {
@@ -139,11 +140,12 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
 
     // Compute luminosities
     ghl_neutrino_luminosities lum;
-    NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
-                                              gammaxx, gammaxy, gammaxz,
-                                              gammayy, gammayz, gammazz,
-                                              rho, Y_e, T, W,
-                                              &tau, &lum);
+    ghl_error_codes_t error = NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
+                                                                        gammaxx, gammaxy, gammaxz,
+                                                                        gammayy, gammayz, gammazz,
+                                                                        rho, Y_e, T, W,
+                                                                        &tau, &lum);
+    ghl_abort_if_error(error);
 
     // Now read luminosities from unperturbed and perturbed data files
     ghl_neutrino_luminosities lum_trusted, lum_pert;

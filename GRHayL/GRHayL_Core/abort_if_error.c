@@ -1,16 +1,14 @@
 #include "ghl.h"
 
-void ghl_read_error_codes(
-      const ghl_error_codes_t error) {
+void ghl_abort_if_error(const ghl_error_codes_t error) {
   switch(error) {
     case ghl_success:
-      ghl_info("Success! No errors here.");
       break;
     case ghl_error_u0_singular:
       ghl_abort("u^0 evaluated to NaN while speed-limiting the velocity.");
       break;
     case ghl_error_unknown_eos_type:
-      ghl_error("Unknown EOS found in struct element 'eos_type'.");
+      ghl_abort("Unknown EOS found in struct element 'eos_type'.");
       break;
     case ghl_error_invalid_c2p_key:
       ghl_abort("Con2Prim select_method function received an invalid con2prim method key.");
@@ -95,6 +93,33 @@ void ghl_read_error_codes(
       break;
     case ghl_error_hdf5_dataset_size_mismatch:
       ghl_abort("HDF5 dataset size mismatch");
+      break;
+    case ghl_error_invalid_rho_atm:
+      ghl_abort("rho_atm must be specified.");
+      break;
+    case ghl_error_rho_min_gt_rho_max:
+      ghl_abort("rho_min cannot be greater than rho_max.");
+      break;
+    case ghl_error_invalid_press_atm:
+      ghl_abort("press_atm must be specified.");
+      break;
+    case ghl_error_press_min_gt_press_max:
+      ghl_abort("press_min cannot be greater than press_max.");
+      break;
+    case ghl_error_invalid_Y_e_atm:
+      ghl_abort("Y_e_atm must be specified.");
+      break;
+    case ghl_error_Y_e_min_gt_Y_e_max:
+      ghl_abort("Y_e_min cannot be greater than Y_e_max.");
+      break;
+    case ghl_error_invalid_T_atm:
+      ghl_abort("T_atm must be specified.");
+      break;
+    case ghl_error_T_min_gt_T_max:
+      ghl_abort("T_min cannot be greater than T_max.");
+      break;
+    case ghl_error_invalid_fermi_dirac_integral_key:
+      ghl_abort("Unsupported Fermi-Dirac integral key.");
       break;
   }
 }

@@ -217,11 +217,9 @@ int main(int argc, char **argv) {
         bool speed_limited;
         ghl_error_codes_t __attribute__((unused)) error;
         error = ghl_limit_v_and_compute_u0(&params, &metric_face, &prims_r, &speed_limited);
-        if(error)
-          ghl_read_error_codes(error);
+        ghl_abort_if_error(error);
         error = ghl_limit_v_and_compute_u0(&params, &metric_face, &prims_l, &speed_limited);
-        if(error)
-          ghl_read_error_codes(error);
+        ghl_abort_if_error(error);
 
         prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
         prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);

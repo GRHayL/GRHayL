@@ -141,8 +141,7 @@ int main(int argc, char **argv) {
       bool speed_limit;
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
             &params, &ADM_metric, &prims, &speed_limit);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
 
       // Compute conservatives based on these primitives
       ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
