@@ -22,6 +22,10 @@ static double find_Ye_st_munu_is_zero(
     return Ye[0];
   }
 
+  if(i0 == n - 1) {
+    i0--;
+  }
+
   const int i1 = i0 + 1;
   const double x0 = Ye[i0];
   const double x1 = Ye[i1];
@@ -112,6 +116,9 @@ ghl_error_codes_t linterp(
   if(err != ghl_success) {
     return err;
   }
+  if(i0 == nx - 1) {
+    i0--;
+  }
   const int i1 = i0 + 1;
   const double x0 = x_arr[i0];
   const double x1 = x_arr[i1];
@@ -141,6 +148,9 @@ ghl_error_codes_t discrete_derivative(
   ghl_error_codes_t err = find_left_index(nx, x_arr, x, &i0);
   if(err != ghl_success) {
     return err;
+  }
+  if(i0 == nx - 1) {
+    i0--;
   }
   const int i1 = i0 + 1;
   const double x0 = x_arr[i0];
