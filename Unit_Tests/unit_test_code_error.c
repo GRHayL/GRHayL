@@ -2,12 +2,14 @@
 #include "ghl_unit_tests.h"
 
 void read_table_error_test(int test_key);
+static void expect_error_code(ghl_error_codes_t error, int test_key, const char *call);
 
 int main(int argc, char **argv) {
 
   const int test_key = atoi(argv[1]);
   if((test_key > 33 && test_key < 61) || test_key == 73 || test_key == 74) {
     read_table_error_test(test_key);
+    ghl_error("Code failure test %d returned from read_table_error_test without failing\n", test_key);
   }
 
   ghl_error_codes_t error = ghl_success;
@@ -101,13 +103,11 @@ int main(int argc, char **argv) {
       prims.vU[1] = 0.0/0.0;
       prims.vU[2] = 0.0/0.0;
       error = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims, &speed_limited);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "ghl_limit_v_and_compute_u0");
       break;
     case 5:
       error = ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "ghl_con2prim_hybrid_select_method");
       break;
   }
 /*
@@ -159,22 +159,27 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
          76: non-tabulated EOS type
          77: invalid table type
    */
-  ghl_eos_parameters tab_eos;
+  ghl_eos_parameters tab_eos = { 0 };
+  tab_eos.clean_sound_speed = true;
   switch (test_key) {
     case 75:
-      NRPyEOS_read_table_set_EOS_params(tablepath, NULL);
+      error = NRPyEOS_read_table_set_EOS_params(tablepath, NULL);
+      expect_error_code(error, test_key, "NRPyEOS_read_table_set_EOS_params");
       break;
     case 76:
       tab_eos.eos_type = ghl_eos_hybrid;
-      NRPyEOS_read_table_set_EOS_params(tablepath, &tab_eos);
+      error = NRPyEOS_read_table_set_EOS_params(tablepath, &tab_eos);
+      expect_error_code(error, test_key, "NRPyEOS_read_table_set_EOS_params");
       break;
     case 77:
       tab_eos.eos_type = ghl_eos_tabulated;
       tab_eos.table_type = ghl_eos_table_types;
-      NRPyEOS_read_table_set_EOS_params(tablepath, &tab_eos);
+      error = NRPyEOS_read_table_set_EOS_params(tablepath, &tab_eos);
+      expect_error_code(error, test_key, "NRPyEOS_read_table_set_EOS_params");
       break;
   }
 
+  tab_eos.table_type = ghl_eos_table_stellarcollapse;
   ghl_initialize_tabulated_eos_functions_and_params(
         tablepath,
         rho_b_atm, rho_b_min, rho_b_max,
@@ -208,68 +213,57 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   switch (test_key) {
     case 12:
       error = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(&tab_eos, nvars, rho, Y_e, T, keys, outvars);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_from_rho_Ye_T_interpolate_n_quantities");
       break;
     case 13:
       rho = rho_b_min-1.0;
       error = NRPyEOS_P_and_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_and_eps_from_rho_Ye_T");
       break;
     case 14:
       rho = rho_b_max+1e2;
       error = NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &S, &cs2);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_eps_S_and_cs2_from_rho_Ye_T");
       break;
     case 15:
       Y_e = Y_e_min-1.0;
       error = NRPyEOS_P_eps_and_S_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &S);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_eps_and_S_from_rho_Ye_T");
       break;
     case 16:
       Y_e = Y_e_max+1e2;
       error = NRPyEOS_P_eps_and_cs2_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &cs2);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_eps_and_cs2_from_rho_Ye_T");
       break;
     case 17:
       T = T_min-1.0;
       error = NRPyEOS_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &eps);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_eps_from_rho_Ye_T");
       break;
     case 18:
       T = T_max+1e5;
       error = NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &depsdT);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_eps_and_depsdT_from_rho_Ye_T");
       break;
     case 19:
       rho = rho_b_min-1.0;
       error = NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P, &eps, &muhat, &mu_e, &mu_p, &mu_n);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_eps_muhat_mue_mup_and_mun_from_rho_Ye_T");
       break;
     case 20:
       rho = rho_b_min-1.0;
       error = NRPyEOS_P_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &P);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_from_rho_Ye_T");
       break;
     case 21:
       rho = rho_b_min-1.0;
       error = NRPyEOS_eps_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &eps);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_eps_from_rho_Ye_T");
       break;
     case 22:
       rho = rho_b_min-1.0;
       error = NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(&tab_eos, rho, Y_e, T, &muhat, &mu_e, &mu_p, &mu_n, &X_n, &X_p);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T");
       break;
   }
 
@@ -291,56 +285,47 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
     case 23:
       error = NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(&tab_eos, nvars, tab_eos.root_finding_precision,
                                                                rho, Y_e, eps, NRPyEOS_eps_key, keys, outvars, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities");
       break;
     case 24:
       rho = rho_b_min-1.0;
       error = NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &S, &depsdT, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_S_depsdT_and_T_from_rho_Ye_eps");
       break;
     case 25:
       rho = rho_b_max+1e2;
       error = NRPyEOS_P_and_T_from_rho_Ye_S(&tab_eos, rho, Y_e, S, &P, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_and_T_from_rho_Ye_S");
       break;
     case 26:
       Y_e = Y_e_min-1.0;
       error = NRPyEOS_P_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_and_T_from_rho_Ye_eps");
       break;
     case 27:
       Y_e = Y_e_max+1e2;
       error = NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &P, &cs2, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_cs2_and_T_from_rho_Ye_eps");
       break;
     case 28:
       rho = rho_b_min-1.0;
       error = NRPyEOS_P_eps_and_T_from_rho_Ye_S(&tab_eos, rho, Y_e, S, &P, &eps, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_P_eps_and_T_from_rho_Ye_S");
       break;
     case 29:
       rho = rho_b_min-1.0;
       error = NRPyEOS_T_from_rho_Ye_eps(&tab_eos, rho, Y_e, eps, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_T_from_rho_Ye_eps");
       break;
     case 30:
       rho = rho_b_min-1.0;
       error = NRPyEOS_eps_S_and_T_from_rho_Ye_P(&tab_eos, rho, Y_e, P, &eps, &S, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_eps_S_and_T_from_rho_Ye_P");
       break;
     case 31:
       rho = rho_b_min-1.0;
       error = NRPyEOS_eps_cs2_and_T_from_rho_Ye_P(&tab_eos, rho, Y_e, P, &eps, &cs2, &T);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "NRPyEOS_eps_cs2_and_T_from_rho_Ye_P");
       break;
   }
 
@@ -354,12 +339,17 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   switch (test_key) {
     case 32:
       error = ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
-      if( error )
-        ghl_read_error_codes(error);
+      expect_error_code(error, test_key, "ghl_con2prim_tabulated_select_method");
       break;
     case 33:
-      printf("%s\n", ghl_get_con2prim_routine_name(-5));
+    {
+      const char *routine_name = ghl_get_con2prim_routine_name(-5);
+      if(routine_name == NULL) {
+        ghl_error("ghl_get_con2prim_routine_name returned NULL for code test %d\n", test_key);
+      }
+      printf("%s\n", routine_name);
       break;
+    }
   }
 
   /*
@@ -516,6 +506,17 @@ void create_opaque_dataset(char *name, hid_t file_id) {
   H5Sclose(dataspace_id);
 }
 
+static void expect_error_code(ghl_error_codes_t error, int test_key, const char *call) {
+  if(error == ghl_success) {
+    ghl_error("Expected %s to fail for code test %d, but it returned ghl_success\n",
+              call, test_key);
+  }
+
+  ghl_read_error_codes(error);
+  ghl_error("ghl_read_error_codes returned unexpectedly for code test %d after %s returned error code %d\n",
+            test_key, call, error);
+}
+
 void read_table_error_test(int test_key) {
 
   printf("read_table_error_test: %d\n", test_key);
@@ -528,11 +529,12 @@ void read_table_error_test(int test_key) {
     remove("test.h5");
   }
   if(test_key==0) {
-    ghl_eos_parameters eos;
+    ghl_eos_parameters eos = { 0 };
     eos.eos_type = ghl_eos_tabulated;
     eos.table_type = ghl_eos_table_stellarcollapse;
     eos.clean_sound_speed = true;
-    NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
+    ghl_error_codes_t error = NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
+    expect_error_code(error, original_test_key, "NRPyEOS_read_table_set_EOS_params");
   }
   test_key--;
   if(original_test_key == 73 || original_test_key == 74) {
@@ -576,9 +578,10 @@ void read_table_error_test(int test_key) {
   }
   H5Fclose(file_id);
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
   eos.clean_sound_speed = true;
-  NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
+  ghl_error_codes_t error = NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
+  expect_error_code(error, original_test_key, "NRPyEOS_read_table_set_EOS_params");
 }
