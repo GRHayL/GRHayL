@@ -45,7 +45,7 @@ ghl_error_codes_t NRPyEOS_stellarcollapse_read_table(
   }
 
   // We use calloc here because of the cleanup on failure. free() works fine
-  // on NULL pointers, but tabla->data[n] would be uninitialized with malloc(),
+  // on NULL pointers, but table->data[n] would be uninitialized with malloc(),
   // which would cause free() to segfault if we encounter an error.
   NRPyEOS_stellarcollapse_t *table = (NRPyEOS_stellarcollapse_t *)calloc(1, sizeof(NRPyEOS_stellarcollapse_t));
   if(table == NULL) {
