@@ -330,10 +330,13 @@ jobs:
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for error-catching
         run: |
-          for i in {0..82}
-          do
-            ./test/unit_test_code_error "$i"
-          done
+          for i in {0..82}; do
+            if ./test/unit_test_code_error "$i"; then
+              echo "Failed to fail!"
+              exit 1
+            else
+              echo "Failed successfully!"
+            fi
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
         with:

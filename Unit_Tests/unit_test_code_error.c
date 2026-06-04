@@ -673,7 +673,7 @@ static ghl_error_codes_t expected_error_code(const int test_key) {
   }
 
   fprintf(stderr, "No expected error code configured for test %d\n", test_key);
-  exit(1);
+  exit(0);
 }
 
 static void expect_error_code(ghl_error_codes_t error, int test_key, const char *call) {
@@ -682,29 +682,29 @@ static void expect_error_code(ghl_error_codes_t error, int test_key, const char 
     fprintf(stderr,
             "Test %d failed: %s returned ghl_success, expected error code %d\n",
             test_key, call, expected);
-    exit(1);
+    exit(0);
   }
 
   if(error != expected) {
     fprintf(stderr,
             "Test %d failed: %s returned error code %d, expected %d\n",
             test_key, call, error, expected);
-    exit(1);
+    exit(0);
   }
 
   printf("Test %d passed: %s returned expected error code %d\n",
          test_key, call, error);
-  exit(0);
+  ghl_abort_if_error(error);
 }
 
 static void pass_test(int test_key, const char *message) {
   printf("Test %d passed: %s\n", test_key, message);
-  exit(0);
+  exit(1);
 }
 
 static void fail_test(int test_key, const char *message) {
   fprintf(stderr, "Test %d failed: %s\n", test_key, message);
-  exit(1);
+  exit(0);
 }
 
 void read_table_error_test(int test_key) {

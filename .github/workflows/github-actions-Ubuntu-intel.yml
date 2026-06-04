@@ -335,9 +335,13 @@ jobs:
       - name: Run unit test for error-catching
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          for i in {0..82}
-          do
-            ./test/unit_test_code_error "$i"
+          for i in {0..82}; do
+            if ./test/unit_test_code_error "$i"; then
+              echo "Failed to fail!"
+              exit 1
+            else
+              echo "Failed successfully!"
+            fi
           done
 #      - name: Generate coverage report
 #        uses: ./.github/actions/code-coverage
