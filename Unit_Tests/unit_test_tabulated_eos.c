@@ -52,16 +52,19 @@ int main(int argc, char **argv) {
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
   eos.clean_sound_speed = false;
-  ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
+  ghl_error_codes_t err = ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
+  ghl_abort_if_error(err);
 
-  if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
+  if(eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3) {
     ghl_error("Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
                  eos.N_rho, eos.N_T, eos.N_Ye);
+  }
   ghl_info("Table dimensions read in correctly\n");
 
-  if( relative_error(eos.energy_shift, 123e-45) > rtol )
+  if(relative_error(eos.energy_shift, 123e-45) > rtol) {
     ghl_error("Error in energy shift exceeds tolerance: %.15e vs. %.15e\n",
                  eos.energy_shift, 123e-45);
+  }
   ghl_info("Energy shift read in correctly\n");
 
   // Step 2: Begin test
@@ -654,9 +657,9 @@ int main(int argc, char **argv) {
     }
 
     const int mid_idx = eos.N_rho / 2;
-    const double P_lo = exp(P_expected[0]);
-    const double P_mid = exp(P_expected[mid_idx]);
-    const double P_hi = exp(P_expected[eos.N_rho - 1]);
+    const double P_lo = exp(eos.lp_of_lr[0]);
+    const double P_mid = exp(eos.lp_of_lr[mid_idx]);
+    const double P_hi = exp(eos.lp_of_lr[eos.N_rho - 1]);
     double rho_from_P = NAN;
 
     err = ghl_tabulated_compute_rho_from_P(&eos, P_lo, &rho_from_P);
