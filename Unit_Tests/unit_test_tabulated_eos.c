@@ -545,7 +545,8 @@ int main(int argc, char **argv) {
 
   // Now test beta equilibrium stuff
   {
-    ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(exp(4), &eos);
+    ghl_error_codes_t err = ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(exp(4), &eos);
+    ghl_abort_if_error(err);
     const double Y_e_expected[7] = {
       1.000000000000000e+00,
       1.000000000000000e+00,
@@ -606,7 +607,6 @@ int main(int argc, char **argv) {
       }
     }
 
-    ghl_error_codes_t err = ghl_success;
     // Now test the interpolators
     const double rho_interp = exp(0.5*(eos.table_logrho[0] + eos.table_logrho[1]));
 
@@ -634,6 +634,68 @@ int main(int argc, char **argv) {
     eps_interp = log(eps_interp);
     if(relative_error(eps_interp, eps_expect) > 1e-14) {
       ghl_error("Failed to interpolate eps(rho): %.15e %.15e\n", eps_interp, eps_expect);
+    }
+
+    Ye_interp = NAN;
+    err = ghl_tabulated_compute_Ye_from_rho(&eos, eos.rho_max, &Ye_interp);
+    ghl_abort_if_error(err);
+    if(relative_error(Ye_interp, Y_e_expected[eos.N_rho - 1]) > 1e-14) {
+      ghl_error("Failed to interpolate Y_e(rho_max): %.15e %.15e\n",
+                Ye_interp, Y_e_expected[eos.N_rho - 1]);
+    }
+
+    P_interp = NAN;
+    err = ghl_tabulated_compute_P_from_rho(&eos, eos.rho_max, &P_interp);
+    ghl_abort_if_error(err);
+    P_interp = log(P_interp);
+    if(relative_error(P_interp, P_expected[eos.N_rho - 1]) > 1e-14) {
+      ghl_error("Failed to interpolate P(rho_max): %.15e %.15e\n",
+                P_interp, P_expected[eos.N_rho - 1]);
+    }
+
+    const int mid_idx = eos.N_rho / 2;
+    const double P_lo = exp(P_expected[0]);
+    const double P_mid = exp(P_expected[mid_idx]);
+    const double P_hi = exp(P_expected[eos.N_rho - 1]);
+    double rho_from_P = NAN;
+
+    err = ghl_tabulated_compute_rho_from_P(&eos, P_lo, &rho_from_P);
+    ghl_abort_if_error(err);
+    if(relative_error(log(rho_from_P), eos.table_logrho[0]) > 1e-14) {
+      ghl_error("Failed to invert rho(P_min): %.15e %.15e\n", log(rho_from_P), eos.table_logrho[0]);
+    }
+
+    err = ghl_tabulated_compute_rho_from_P(&eos, P_mid, &rho_from_P);
+    ghl_abort_if_error(err);
+    if(relative_error(log(rho_from_P), eos.table_logrho[mid_idx]) > 1e-14) {
+      ghl_error("Failed to invert rho(P_mid): %.15e %.15e\n",
+                log(rho_from_P), eos.table_logrho[mid_idx]);
+    }
+
+    err = ghl_tabulated_compute_rho_from_P(&eos, P_hi, &rho_from_P);
+    ghl_abort_if_error(err);
+    if(relative_error(log(rho_from_P), eos.table_logrho[eos.N_rho - 1]) > 1e-14) {
+      ghl_error("Failed to invert rho(P_max): %.15e %.15e\n",
+                log(rho_from_P), eos.table_logrho[eos.N_rho - 1]);
+    }
+
+    double dP_drho = NAN;
+    err = ghl_tabulated_compute_dP_drho_from_rho(&eos, eos.rho_max, &dP_drho);
+    ghl_abort_if_error(err);
+    if(relative_error(dP_drho, exp(P_expected[eos.N_rho - 1] - eos.table_logrho[eos.N_rho - 1])) > 1e-14) {
+      ghl_error("Failed to compute dP/drho(rho_max): %.15e %.15e\n",
+                dP_drho, exp(P_expected[eos.N_rho - 1] - eos.table_logrho[eos.N_rho - 1]));
+    }
+
+    double deps_dP = NAN;
+    const double rho_mid = exp(eos.table_logrho[mid_idx]);
+    const double eps_mid = exp(eps_expected[mid_idx]);
+    const double expected_deps_dP = (rho_mid * (1.0 + eps_mid) + P_mid) / P_mid;
+    err = ghl_tabulated_compute_deps_dP_from_rho(&eos, rho_mid, &deps_dP);
+    ghl_abort_if_error(err);
+    if(relative_error(deps_dP, expected_deps_dP) > 1e-14) {
+      ghl_error("Failed to compute deps/dP(rho_mid): %.15e %.15e\n",
+                deps_dP, expected_deps_dP);
     }
   }
 

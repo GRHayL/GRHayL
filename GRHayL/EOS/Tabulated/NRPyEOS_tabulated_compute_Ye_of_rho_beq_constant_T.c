@@ -22,10 +22,6 @@ static double find_Ye_st_munu_is_zero(
     return Ye[0];
   }
 
-  if(i0 == n - 1) {
-    i0--;
-  }
-
   const int i1 = i0 + 1;
   const double x0 = Ye[i0];
   const double x1 = Ye[i1];
@@ -41,7 +37,17 @@ static int find_left_index_uniform_array(
       const double x,
       int *restrict ix) {
 
-  *ix = (x - x_arr[0]) / (x_arr[1] - x_arr[0]);
+  const double dx = x_arr[1] - x_arr[0];
+  int idx = (int)((x - x_arr[0]) / dx);
+
+  if(idx < 0) {
+    idx = 0;
+  }
+  else if(idx > nx - 1) {
+    idx = nx - 1;
+  }
+
+  *ix = idx;
   return ghl_success;
 }
 
@@ -232,12 +238,12 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
 
   if(eos->Ye_of_lr == NULL) {
     eos->Ye_of_lr = (double *)malloc(sizeof(double) * nr);
+    if(eos->Ye_of_lr == NULL) {
+      return ghl_error_out_of_memory;
+    }
   }
   double *munu_of_Ye = (double *)malloc(sizeof(double) * ny);
-
-  if(eos->Ye_of_lr == NULL || munu_of_Ye == NULL) {
-    free(eos->Ye_of_lr);
-    free(munu_of_Ye);
+  if(munu_of_Ye == NULL) {
     return ghl_error_out_of_memory;
   }
 
@@ -257,22 +263,19 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
       ghl_eos_parameters *restrict eos) {
 
   // Start by obtaining Ye(logrho)
-  NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(T, eos);
+  ghl_error_codes_t err = NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(T, eos);
+  if(err != ghl_success) {
+    return err;
+  }
 
   // Now allocate memory for logP(logrho) and logeps(logrho)
-  if(eos->lp_of_lr == NULL) {
-    eos->lp_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
-  }
-  if(eos->le_of_lr == NULL) {
-    eos->le_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
-  }
-  if(eos->lh_of_lr == NULL) {
-    eos->lh_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
-  }
-  if(eos->lp_of_lr == NULL || eos->le_of_lr == NULL || eos->lh_of_lr == NULL) {
-    free(eos->lp_of_lr);
-    free(eos->le_of_lr);
-    free(eos->lh_of_lr);
+  double *lp_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
+  double *le_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
+  double *lh_of_lr = (double *)malloc(sizeof(double) * eos->N_rho);
+  if(lp_of_lr == NULL || le_of_lr == NULL || lh_of_lr == NULL) {
+    free(lp_of_lr);
+    free(le_of_lr);
+    free(lh_of_lr);
     return ghl_error_out_of_memory;
   }
 
@@ -281,17 +284,24 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(
     const double rho = exp(eos->table_logrho[ir]);
     const double Y_e = eos->Ye_of_lr[ir];
     double P, eps;
-    ghl_error_codes_t err = ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
+    err = ghl_tabulated_compute_P_eps_from_T(eos, rho, Y_e, T, &P, &eps);
     if(err != ghl_success) {
-      free(eos->lp_of_lr);
-      free(eos->le_of_lr);
-      free(eos->lh_of_lr);
+      free(lp_of_lr);
+      free(le_of_lr);
+      free(lh_of_lr);
       return err;
     }
-    eos->lp_of_lr[ir] = log(P);
-    eos->le_of_lr[ir] = log(eps + eos->energy_shift);
-    eos->lh_of_lr[ir] = log(1.0 + eps + P / rho);
+    lp_of_lr[ir] = log(P);
+    le_of_lr[ir] = log(eps + eos->energy_shift);
+    lh_of_lr[ir] = log(1.0 + eps + P / rho);
   }
+
+  free(eos->lp_of_lr);
+  free(eos->le_of_lr);
+  free(eos->lh_of_lr);
+  eos->lp_of_lr = lp_of_lr;
+  eos->le_of_lr = le_of_lr;
+  eos->lh_of_lr = lh_of_lr;
 
   return ghl_success;
 }
@@ -343,12 +353,21 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_deps_dP_from_rho(
   ghl_error_codes_t err = ghl_success;
 
   err = NRPyEOS_tabulated_compute_P_from_rho(eos, rho, &P);
+  if(err != ghl_success) {
+    return err;
+  }
   err = NRPyEOS_tabulated_compute_eps_from_rho(eos, rho, &eps);
+  if(err != ghl_success) {
+    return err;
+  }
   err = NRPyEOS_tabulated_compute_dP_drho_from_rho(eos, rho, &dP_drho);
+  if(err != ghl_success) {
+    return err;
+  }
 
   const double energy = rho*(1.+eps);
   const double rhoh = energy + P;
 
   *deps_dP = rhoh / (dP_drho*rho);
-  return err;
+  return ghl_success;
 }

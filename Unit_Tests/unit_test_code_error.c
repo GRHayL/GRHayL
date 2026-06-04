@@ -170,6 +170,12 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
          75: NULL EOS parameter struct
          76: non-tabulated EOS type
          77: invalid table type
+     Beta-equilibrium interpolators:
+         78: rho too small with ghl_tabulated_compute_Ye_from_rho
+         79: rho too large with ghl_tabulated_compute_P_from_rho
+         80: P too small with ghl_tabulated_compute_rho_from_P
+         81: rho too small with ghl_tabulated_compute_dP_drho_from_rho
+         82: rho too large with ghl_tabulated_compute_deps_dP_from_rho
    */
   ghl_eos_parameters tab_eos = { 0 };
   tab_eos.clean_sound_speed = true;
@@ -479,6 +485,47 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             T_atm, T_max, T_min, &tab_eos);
       expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
+    case 78:
+    case 79:
+    case 80:
+    case 81:
+    case 82:
+      error = ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(exp(4.0), &tab_eos);
+      if(error != ghl_success) {
+        fprintf(stderr,
+                "Failed to initialize beta-equilibrium interpolators before test %d: %d\n",
+                test_key, error);
+        return 1;
+      }
+      break;
+  }
+
+  switch (test_key) {
+    case 78:
+      error = ghl_tabulated_compute_Ye_from_rho(&tab_eos, 0.5 * tab_eos.table_rho_min, &Y_e);
+      expect_error_code(error, test_key, "ghl_tabulated_compute_Ye_from_rho");
+      break;
+    case 79:
+      error = ghl_tabulated_compute_P_from_rho(&tab_eos, 2.0 * tab_eos.table_rho_max, &P);
+      expect_error_code(error, test_key, "ghl_tabulated_compute_P_from_rho");
+      break;
+    case 80:
+      error = ghl_tabulated_compute_P_from_rho(&tab_eos, tab_eos.table_rho_min, &P);
+      if(error != ghl_success) {
+        fprintf(stderr, "Failed to compute minimum pressure before test %d: %d\n", test_key, error);
+        return 1;
+      }
+      error = ghl_tabulated_compute_rho_from_P(&tab_eos, 0.5 * P, &rho);
+      expect_error_code(error, test_key, "ghl_tabulated_compute_rho_from_P");
+      break;
+    case 81:
+      error = ghl_tabulated_compute_dP_drho_from_rho(&tab_eos, 0.5 * tab_eos.table_rho_min, &depsdT);
+      expect_error_code(error, test_key, "ghl_tabulated_compute_dP_drho_from_rho");
+      break;
+    case 82:
+      error = ghl_tabulated_compute_deps_dP_from_rho(&tab_eos, 2.0 * tab_eos.table_rho_max, &depsdT);
+      expect_error_code(error, test_key, "ghl_tabulated_compute_deps_dP_from_rho");
+      break;
   }
 
   fprintf(stderr, "Code failure test %d did not trigger its expected failure path\n", test_key);
@@ -618,6 +665,11 @@ static ghl_error_codes_t expected_error_code(const int test_key) {
     case 75: return ghl_error_eos_struct_is_null;
     case 76: return ghl_error_invalid_eos_type;
     case 77: return ghl_error_invalid_eos_table_type;
+    case 78:
+    case 79:
+    case 80:
+    case 81:
+    case 82: return ghl_error_root_not_bracketed;
   }
 
   fprintf(stderr, "No expected error code configured for test %d\n", test_key);
