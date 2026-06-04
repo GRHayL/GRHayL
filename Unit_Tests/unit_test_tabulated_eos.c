@@ -465,11 +465,19 @@ int main(int argc, char **argv) {
 
   // Enforce limit tests
   {
+    const int backup_routine[3] = {None, None, None};
+    const bool calc_prims_guess = true;
+    const double Psi6threshold = 1e100;
+    const double W_max = 10.0;
+    const double Lorenz_damping_factor = 0.0;
+
     for(int evolve_entropy=0;evolve_entropy<=1;evolve_entropy++) {
       ghl_parameters params;
-      params.evolve_entropy = evolve_entropy;
+      ghl_initialize_params(
+            None, backup_routine, evolve_entropy, true, calc_prims_guess,
+            Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
-      ghl_metric_quantities metric;
+      ghl_metric_quantities metric = { 0 };
       metric.lapse = metric.lapseinv = metric.lapseinv2 = 1;
       metric.betaU[0] = metric.betaU[1] = metric.betaU[2] = 0;
       metric.detgamma = metric.sqrt_detgamma = 1;
@@ -478,8 +486,9 @@ int main(int argc, char **argv) {
       metric.gammaUU[0][0] = metric.gammaUU[1][1] = metric.gammaUU[2][2] = 1;
       metric.gammaUU[0][1] = metric.gammaUU[0][2] = metric.gammaUU[1][2] = 1;
 
-      ghl_primitive_quantities prims;
+      ghl_primitive_quantities prims = { 0 };
       prims.vU[0] = prims.vU[1] = prims.vU[2] = 0;
+      speed_limited = false;
 
       // Test 1
       prims.rho = 0.9 * eos.rho_min;
@@ -496,6 +505,7 @@ int main(int argc, char **argv) {
       prims.rho = 1.1 * eos.rho_max;
       prims.Y_e = 1.1 * eos.Y_e_max;
       prims.temperature = 1.1 * eos.T_max;
+      speed_limited = false;
       error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
       ghl_abort_if_error(error);
       if(prims.rho != eos.rho_max || prims.Y_e != eos.Y_e_max || prims.temperature != eos.T_max) {
@@ -507,6 +517,7 @@ int main(int argc, char **argv) {
       prims.rho = 0.9 * eos.rho_max;
       prims.Y_e = 0.9 * eos.Y_e_max;
       prims.temperature = 0.9 * eos.T_max;
+      speed_limited = false;
       error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
       ghl_abort_if_error(error);
       if(prims.rho != 0.9 * eos.rho_max || prims.Y_e != 0.9 * eos.Y_e_max || prims.temperature != 0.9 * eos.T_max) {
