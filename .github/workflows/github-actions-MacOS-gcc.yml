@@ -337,6 +337,7 @@ jobs:
             else
               echo "Failed successfully!"
             fi
+          done
       - name: Generate coverage report
         uses: ./.github/actions/code-coverage
         with:
