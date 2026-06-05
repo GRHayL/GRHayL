@@ -218,6 +218,9 @@ void GRHayLib_terminate(CCTK_ARGUMENTS) {
   }
   free(ghl_eos);
   free(ghl_params);
+
+  ghl_eos = NULL;
+  ghl_params = NULL;
 }
 
 int parse_C2P_routine_keyword(const char *restrict routine_name) {
