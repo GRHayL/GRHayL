@@ -52,8 +52,12 @@ void NRPyEOS_tabulated_adjust_sound_speed(ghl_eos_parameters *restrict eos, bool
       ghl_info("No points in table have a %s cs2 value\n", #property);    \
     }                                                                     \
     else {                                                                \
-      ghl_warn("Table has %zu points (~%.1f%%) with %s cs2; set to %s\n", \
-               count_, percent_, #property, fix);                         \
+      char set_to_[128] = { 0 };                                          \
+      if(eos->clean_sound_speed) {                                        \
+        sprintf(set_to_, "; set to %s", fix);                             \
+      }                                                                   \
+      ghl_warn("Table has %zu points (~%.1f%%) with %s cs2%s\n",          \
+               count_, percent_, #property, set_to_);                     \
     }                                                                     \
   }
 
