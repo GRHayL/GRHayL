@@ -29,6 +29,10 @@ void NRPyLeakage_compute_neutrino_luminosities(
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_luminosities *restrict lum) {
 
+#ifndef GRHAYL_ENABLE_HDF5
+  ghl_error("NRPyLeakage tabulated EOS support requires GRHayL to be configured with HDF5 support\n");
+#endif
+
   // Step 1: Get chemical potentials and mass
   //         fractions using the EOS
   double muhat, mu_e, mu_p, mu_n, X_n, X_p;

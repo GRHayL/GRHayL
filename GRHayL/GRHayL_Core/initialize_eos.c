@@ -1,6 +1,6 @@
 #include "ghl_con2prim.h"
 #include "ghl_nrpyeos_hybrid.h"
-#ifndef GRHAYL_DISABLE_HDF5
+#ifdef GRHAYL_ENABLE_HDF5
 #include "ghl_nrpyeos_tabulated.h"
 #endif
 #include "ghl_eos_functions_declaration.h"
@@ -33,7 +33,7 @@ void ghl_initialize_eos_functions(
   NRPyEOS_initialize_hybrid_functions();
 
   // Step 2: Tabulated EOS functions require HDF5-backed NRPyEOS tables.
-#ifndef GRHAYL_DISABLE_HDF5
+#ifdef GRHAYL_ENABLE_HDF5
   NRPyEOS_initialize_tabulated_functions();
 #endif
 
@@ -41,10 +41,13 @@ void ghl_initialize_eos_functions(
   if(eos_type == ghl_eos_hybrid || eos_type == ghl_eos_simple) {
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
     ghl_compute_h_and_cs2 = NRPyEOS_hybrid_compute_enthalpy_and_cs2;
-#ifndef GRHAYL_DISABLE_HDF5
+#ifdef GRHAYL_ENABLE_HDF5
   } else if(eos_type == ghl_eos_tabulated) {
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
     ghl_compute_h_and_cs2 = NRPyEOS_tabulated_compute_enthalpy_and_cs2;
+#else
+  } else if(eos_type == ghl_eos_tabulated) {
+    ghl_error("Tabulated EOS requires GRHayL to be configured with HDF5 support\n");
 #endif
   }
 }
@@ -213,7 +216,7 @@ void ghl_initialize_hybrid_eos(
   // --------------------------------------
 }
 
-#ifndef GRHAYL_DISABLE_HDF5
+#ifdef GRHAYL_ENABLE_HDF5
 /*
  * Function    : ghl_initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
@@ -364,7 +367,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
         K_ppoly0, Gamma_th, eos);
 }
 
-#ifndef GRHAYL_DISABLE_HDF5
+#ifdef GRHAYL_ENABLE_HDF5
 /* Function    : ghl_initialize_tabulated_eos()
  * Description : Initializes EOS struct elements for tabulated EOS
 */

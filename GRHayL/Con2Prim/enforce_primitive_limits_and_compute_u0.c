@@ -51,6 +51,9 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
 
     // Tabulated EOS specific floors and ceilings
     case ghl_eos_tabulated:
+#ifndef GRHAYL_ENABLE_HDF5
+      ghl_error("Tabulated EOS requires GRHayL to be configured with HDF5 support\n");
+#else
       // Apply floors and ceilings to rho, Y_e and T
       ghl_tabulated_enforce_bounds_rho_Ye_T(
             eos, &prims->rho, &prims->Y_e, &prims->temperature);
@@ -66,6 +69,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
               eos, prims->rho, prims->Y_e, prims->temperature, &prims->press,
               &prims->eps);
       }
+#endif
       break;
 
     case ghl_eos_simple:

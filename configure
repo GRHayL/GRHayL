@@ -59,7 +59,7 @@ help_message()
     cat <<EOF
 This is the configuration script for GRHayL
 Syntax: ./configure [-h,--help] [-l,--license] [-r,--reconfigure] [-s,--silent]
-                    [--noomp] [--nohdf5] [--prefix=<dir>] [--builddir=<dir>]
+                    [--noomp] [--disable-hdf5] [--prefix=<dir>] [--builddir=<dir>]
                     [--buildtype=<type>] [--cflags="<flag1> <flag2>..."]
                     [--clibs="<lib1> <lib2>..."] [--hdf5dir=<dir>]
                     [--hdf5inc=<dir>] [--hdf5lib=<dir>]
@@ -70,7 +70,7 @@ Options:'
     -r,--reconfigure    Force overwrite of previous configuration
     -s,--silent         Generate a less verbose Makefile
     --noomp             Disables OpenMP flags when linking unit tests
-    --nohdf5            Disables HDF5; for now this means no tabulated EOS
+    --disable-hdf5      Disables HDF5; for now this means no tabulated EOS
     --prefix            Installation directory
     --builddir          Build directory (default build)
     --buildtype         Build type (default debug-opt). Supported values:
@@ -245,7 +245,7 @@ the include and lib directories of your HDF5 installation using
 If you are interested in hybrid EOS only, the HDF5 dependency might be
 undesirable. To disable HDF5, simply run
 
-  ./configure --nohdf5.
+  ./configure --disable-hdf5.
 
 -----------------------
 Specific configurations
@@ -314,7 +314,19 @@ c_compiles()
 
 Realpath()
 {
-    echo $(cd $(dirname $1); pwd)/$(basename $1)
+    case "$1" in
+        /*) path="$1";;
+         *) path="$(pwd)/$1";;
+    esac
+
+    dir=$(dirname "$path")
+    base=$(basename "$path")
+    while [ ! -d "$dir" ] && [ "$dir" != "/" ]; do
+        base="$(basename "$dir")/$base"
+        dir=$(dirname "$dir")
+    done
+
+    echo "$(cd "$dir"; pwd)/$base"
 }
 
 NL='
@@ -402,7 +414,7 @@ while [ $# -gt 0 ]; do
         -r|--reconfigure) reconfigure=1;;
         -s|--silent) silent=1;;
         --noomp) ompcflag=""; useomp=0;;
-        --nohdf5) usehdf5=0;;
+        --disable-hdf5) usehdf5=0;;
         --prefix=*) prefix=$(echo "$1" | cut -d= -f2);;
         --buildtype=*) buildtype=$(echo "$1" | cut -d= -f2);;
         --builddir=*) builddir=$(echo "$1" | cut -d= -f2);;
@@ -420,6 +432,7 @@ while [ $# -gt 0 ]; do
         --hdf5inc) hdf5inc=$2; shift;;
         --hdf5lib) hdf5lib=$2; shift;;
         --) shift; break;;
+        --*) error "Unknown option: $1";;
         -*)
             opt=$1
             opt_length=$(echo "$opt" | awk '{print length}')
@@ -554,9 +567,7 @@ int main() {
     fi
 fi
 
-if [ $usehdf5 -eq 0 ]; then
-    cflags="$cflags -DGRHAYL_DISABLE_HDF5"
-else
+if [ $usehdf5 -ne 0 ]; then
     if [ "$hdf5dir" = "" ]; then
         if [ "$hdf5inc" = "" ] && [ "$hdf5lib" = "" ]; then
             check_command pkg-config
@@ -632,10 +643,11 @@ int main() {
 '
     c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with hdf5... "
     if [ $? -ne 0 ]; then
-        msg="C compiler does not work with hdf5. Use ./configure --nohdf5 to disable hdf5 or
+        msg="C compiler does not work with hdf5. Use ./configure --disable-hdf5 to disable hdf5 or
        run ./configure -h for more information on how to specify your hdf5 installation."
         error "$msg"
     fi
+    cflags="$cflags -DGRHAYL_ENABLE_HDF5"
 fi
 
 parse_mcd()
@@ -671,9 +683,13 @@ srcs=""
 incs=""
 ihds=""
 parse_mcd "  " "GRHayL" 0
-printf "Symlinking header files in GRHayL/include/ghl to $builddir/include/ghl... "
+printf "Symlinking header files in GRHayL/include to $builddir/include/ghl... "
+if [ -L "${builddir}"/include/ghl ]; then
+    rm -f "${builddir}"/include/ghl
+fi
+mkdir -p "${builddir}"/include/ghl
 rm -f "${builddir}"/include/ghl/*
-ln -s "$(pwd)"/GRHayL/include/ghl/* "${builddir}"/include/ghl
+ln -s "$(pwd)"/GRHayL/include/*.h "${builddir}"/include/ghl
 green "DONE\n"
 printf "Creating directory $builddir/lib... "
 mkdir -p $builddir/lib
@@ -692,16 +708,14 @@ if [ $usehdf5 -eq 0 ]; then
       }
       printf "\n"
     }')
-    ihds=$(printf "%s" "$ihds" | awk '{
-      for(i=1;i<=NF;i++) {
-        if($i !~ /ghl_nrpyeos_tabulated/) {
-          printf "%s%s", sep, $i
-          sep=" "
-        }
-      }
-      printf "\n"
-    }')
-    tests=$(find Unit_Tests -maxdepth 1 -name 'unit_test_*.c' ! -name '*tabulated*')
+    tests=$(find Unit_Tests -maxdepth 1 \
+        -name 'unit_test_*.c' \
+        ! -name '*tabulated*' \
+        ! -name 'unit_test_code_error.c' \
+        ! -name 'unit_test_con2prim_debug.c' \
+        ! -name 'unit_test_nrpyleakage_constant_density_sphere.c' \
+        ! -name 'unit_test_nrpyleakage_luminosities.c' \
+        ! -name 'unit_test_nrpyleakage_optically_thin_gas.c')
     datagen=$(find Unit_Tests/data_gen -maxdepth 1 -name 'unit_test_data_*.c' ! -name '*tabulated*')
 else
     tests=$(find Unit_Tests -maxdepth 1 -name 'unit_test_*.c')
@@ -736,15 +750,15 @@ END { print tests }
     else
         tsrcs=$(echo $(find Unit_Tests -maxdepth 1 -name '*.c' ! -name 'unit_test_*.c'))
     fi
-    tobjs=$(printf "$tsrcs" | awk '{
+    tobjs=$(printf "$tsrcs" | awk -v bd=$builddir '{
     gsub(/\.c/, ".o", $0)
     for(i=1;i<=NF;i++) {
-      tobjs=sprintf("%s%s%s ", tobjs, "build/", $i)
+      tobjs=sprintf("%s%s/%s ", tobjs, bd, $i)
     }
     print tobjs
 }')
     texes=$(printf "$tests" | awk '{ gsub(/\.c/, "", $0); gsub(/Unit_Tests\//, "test/", $0); print }')
-    texeobjs=$(printf "$tests" | awk '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\//, "build/Unit_Tests/", $0); print }')
+    texeobjs=$(printf "$tests" | awk -v bd=$builddir '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\//, bd "/Unit_Tests/", $0); print }')
     mkdir -p $builddir/Unit_Tests test
 fi
 
@@ -769,15 +783,15 @@ END { print tests }
     else
         dgsrcs=$(echo $(find Unit_Tests/data_gen -maxdepth 1 -name '*.c' ! -name 'unit_test_data_*.c'))
     fi
-    dgobjs=$(printf "$dgsrcs" | awk '{
+    dgobjs=$(printf "$dgsrcs" | awk -v bd=$builddir '{
     gsub(/\.c/, ".o", $0)
     for(i=1;i<=NF;i++) {
-      dgobjs=sprintf("%s%s%s ", dgobjs, "build/", $i)
+      dgobjs=sprintf("%s%s/%s ", dgobjs, bd, $i)
     }
     print dgobjs
 }')
     dgexes=$(printf "$datagen" | awk '{ gsub(/\.c/, "", $0); gsub(/Unit_Tests\/data_gen\//, "test/data_gen/", $0); print }')
-    dgexeobjs=$(printf "$datagen" | awk '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\/data_gen\//, "build/Unit_Tests/data_gen/", $0); print }')
+    dgexeobjs=$(printf "$datagen" | awk -v bd=$builddir '{ gsub(/\.c/, ".o", $0); gsub(/Unit_Tests\/data_gen\//, bd "/Unit_Tests/data_gen/", $0); print }')
     mkdir -p $builddir/Unit_Tests/data_gen test/data_gen
 fi
 

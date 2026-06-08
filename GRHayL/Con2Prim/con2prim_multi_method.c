@@ -40,7 +40,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
   }
 }
 
-#ifndef GRHAYL_DISABLE_HDF5
+#ifdef GRHAYL_ENABLE_HDF5
 
 /*
  * Function     : ghl_con2prim_tabulated_select_method()
@@ -129,7 +129,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
   return error;
 }
 
-#ifndef GRHAYL_DISABLE_HDF5
+#ifdef GRHAYL_ENABLE_HDF5
 
 /*
  * Function     : ghl_con2prim_tabulated_select_method()

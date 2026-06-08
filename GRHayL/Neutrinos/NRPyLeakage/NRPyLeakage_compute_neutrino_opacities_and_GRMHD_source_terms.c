@@ -22,6 +22,9 @@ void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       double *restrict R_source,
       double *restrict Q_source) {
 
+#ifndef GRHAYL_ENABLE_HDF5
+  ghl_error("NRPyLeakage tabulated EOS support requires GRHayL to be configured with HDF5 support\n");
+#endif
 
   // Step 1: Get chemical potentials and mass
   //         fractions using the EOS

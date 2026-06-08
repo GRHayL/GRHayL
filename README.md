@@ -31,7 +31,7 @@ use the `-h` option for a list of all compilation flags.
 ### Dependencies
 
 `GRHayL` contains an optional `HDF5` dependency, and the default configuration builds with `HDF5`
-active. To compile without `HDF5` use the `--nohdf5` flag. To compile `HDF5` on your local machine
+active. To compile without `HDF5` use the `--disable-hdf5` flag. To compile `HDF5` on your local machine
 use the command
 
 ```shell
@@ -52,6 +52,12 @@ The `HDF5` dependency arises from the tabulated Equation of State (EOS) gem, as
 it currently only supports EOS tables in that format. We are also
 working supporting tables in the [CompOSE](https://compose.obspm.fr/table)
 format, which would allow for use of the tabulated EOS without `HDF5`.
+
+Configured builds define `GRHAYL_ENABLE_HDF5` automatically when `HDF5` support
+is enabled. Manual builds or downstream projects that bypass `configure` must
+define `GRHAYL_ENABLE_HDF5` and provide the required `HDF5` include and link
+flags when using `HDF5`-backed tabulated EOS APIs. Builds configured with
+`--disable-hdf5` do not support tabulated EOS runtime paths.
 
 ### System-wide Installation (default)
 

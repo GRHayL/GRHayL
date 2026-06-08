@@ -3,7 +3,7 @@
 
 #include "ghl.h"
 
-#ifndef GRHAYL_USE_HDF5
+#ifndef GRHAYL_ENABLE_HDF5
 #define HDF5_ERROR_IF_USED \
   ghl_error("HDF5 is disabled, so this function cannot be used\n")
 #else
@@ -46,7 +46,7 @@ static const char table_var_names[NRPyEOS_ntablekeys][10] = {
   "Xa","Xh","Xn","Xp","Abar","Zbar","Gamma"
 };
 //********************************************
-#endif // GRHAYL_USE_HDF5
+#endif // GRHAYL_ENABLE_HDF5
 
 // Function prototypes
 void NRPyEOS_read_table_set_EOS_params(
