@@ -27,12 +27,13 @@ int main(int argc, char **argv) {
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
   eos.clean_sound_speed = true;
-  ghl_initialize_tabulated_eos_functions_and_params(
+  ghl_error_codes_t error = ghl_initialize_tabulated_eos_functions_and_params(
         tablepath,
         rho_b_min, rho_b_min, rho_b_max,
         Ye_min, Ye_min, Ye_max,
         T_min, T_min, T_max,
         &eos);
+  ghl_abort_if_error(error);
 
   ghl_compute_h_and_cs2 = &ghl_test_compute_h_and_cs2;
 

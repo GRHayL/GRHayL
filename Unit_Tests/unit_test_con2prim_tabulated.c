@@ -1,8 +1,7 @@
 #include <string.h>
 #include "ghl_unit_tests.h"
 
-const char *
-get_routine_string(const ghl_con2prim_method_t key) {
+const char *get_routine_string(const ghl_con2prim_method_t key) {
   switch(key) {
     case Palenzuela1D:
       return "Palenzuela1D";
@@ -18,8 +17,7 @@ get_routine_string(const ghl_con2prim_method_t key) {
   }
 }
 
-void
-generate_test_data(
+void generate_test_data(
     const ghl_parameters *restrict params,
     const ghl_eos_parameters *restrict eos ) {
 
@@ -202,8 +200,7 @@ generate_test_data(
   }
 }
 
-void
-run_unit_test(
+void run_unit_test(
     const ghl_parameters *restrict params,
     const ghl_eos_parameters *restrict eos ) {
 
@@ -291,7 +288,7 @@ run_unit_test(
 
 int main(int argc, char **argv) {
 
-  if( argc != 3 ) {
+  if(argc != 3) {
     ghl_info("Usage: %s <EOS table path> <test key>\n", argv[0]);
     ghl_info("Available test keys:\n");
     ghl_info("  0 : Generate data\n");
@@ -325,7 +322,7 @@ int main(int argc, char **argv) {
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
-  ghl_parameters params;
+  ghl_parameters params = { 0 };
   ghl_initialize_params(
         main_routine,
         backup_routines,
@@ -341,11 +338,12 @@ int main(int argc, char **argv) {
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
   eos.clean_sound_speed = true;
-  ghl_initialize_tabulated_eos_functions_and_params(
+  ghl_error_codes_t error = ghl_initialize_tabulated_eos_functions_and_params(
         tablepath,
         rho_b_atm, rho_b_min, rho_b_max,
         Y_e_atm, Y_e_min, Y_e_max,
         T_atm, T_min, T_max, &eos);
+  ghl_abort_if_error(error);
   eos.root_finding_precision=1e-10;
 
   if( test_key ) {
