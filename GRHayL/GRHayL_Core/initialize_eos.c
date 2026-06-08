@@ -1,8 +1,6 @@
 #include "ghl_con2prim.h"
 #include "ghl_nrpyeos_hybrid.h"
-#ifdef GRHAYL_ENABLE_HDF5
 #include "ghl_nrpyeos_tabulated.h"
-#endif
 #include "ghl_eos_functions_declaration.h"
 
 #define init_common_eos_quantities         \
@@ -47,7 +45,7 @@ void ghl_initialize_eos_functions(
     ghl_compute_h_and_cs2 = NRPyEOS_tabulated_compute_enthalpy_and_cs2;
 #else
   } else if(eos_type == ghl_eos_tabulated) {
-    ghl_error("Tabulated EOS requires GRHayL to be configured with HDF5 support\n");
+    HDF5_ERROR_IF_USED;
 #endif
   }
 }

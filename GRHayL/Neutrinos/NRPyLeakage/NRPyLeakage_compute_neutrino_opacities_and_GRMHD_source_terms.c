@@ -1,4 +1,5 @@
 #include "ghl_radiation.h"
+#include "ghl_nrpyeos_tabulated.h"
 
 static double EnsureFinite(const double x) {
   if(robust_isfinite(x))
@@ -23,7 +24,7 @@ void NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       double *restrict Q_source) {
 
 #ifndef GRHAYL_ENABLE_HDF5
-  ghl_error("NRPyLeakage tabulated EOS support requires GRHayL to be configured with HDF5 support\n");
+  HDF5_ERROR_IF_USED;
 #endif
 
   // Step 1: Get chemical potentials and mass
