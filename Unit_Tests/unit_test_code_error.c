@@ -4,8 +4,16 @@
 void read_table_error_test(int test_key);
 static ghl_error_codes_t expected_error_code(const int test_key);
 static void expect_error_code(ghl_error_codes_t error, int test_key, const char *call);
-static void pass_test(int test_key, const char *message);
-static void fail_test(int test_key, const char *message);
+
+static void pass_test(int test_key, const char *message) {
+  printf("Test %d passed: %s\n", test_key, message);
+  exit(1);
+}
+
+static void fail_test(int test_key, const char *message) {
+  fprintf(stderr, "Test %d failed: %s\n", test_key, message);
+  exit(0);
+}
 
 int main(int argc, char **argv) {
 
@@ -208,7 +216,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   }
   else if(error != ghl_success) {
     fprintf(stderr, "Unexpected tabulated EOS setup error %d before test %d\n", error, test_key);
-    return 1;
+    return 0;
   }
 
   /*
@@ -492,10 +500,9 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
     case 82:
       error = ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(exp(4.0), &tab_eos);
       if(error != ghl_success) {
-        fprintf(stderr,
-                "Failed to initialize beta-equilibrium interpolators before test %d: %d\n",
-                test_key, error);
-        return 1;
+        char message[128];
+        snprintf(message, sizeof(message), "Unexpected tabulated EOS setup error %d", error);
+        fail_test(test_key, message);
       }
       break;
   }
@@ -528,8 +535,6 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
   }
 
-  fprintf(stderr, "Code failure test %d did not trigger its expected failure path\n", test_key);
-
   // Silence warnings
   (void)Fermi_Dirac_integral;
   (void)speed_limited;
@@ -538,7 +543,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
   (void)eps;
   (void)T;
 
-  return 1;
+  fail_test(test_key, "did not trigger its expected failure path");
 }
 // clang-format on
 
@@ -695,16 +700,6 @@ static void expect_error_code(ghl_error_codes_t error, int test_key, const char 
   printf("Test %d passed: %s returned expected error code %d\n",
          test_key, call, error);
   ghl_abort_if_error(error);
-}
-
-static void pass_test(int test_key, const char *message) {
-  printf("Test %d passed: %s\n", test_key, message);
-  exit(1);
-}
-
-static void fail_test(int test_key, const char *message) {
-  fprintf(stderr, "Test %d failed: %s\n", test_key, message);
-  exit(0);
 }
 
 void read_table_error_test(int test_key) {
