@@ -40,6 +40,8 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
   }
 }
 
+#ifndef GRHAYL_DISABLE_HDF5
+
 /*
  * Function     : ghl_con2prim_tabulated_select_method()
  * Description  : Calls the Con2Prim routine designated by c2p_key
@@ -72,6 +74,8 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
       return ghl_error_invalid_c2p_key;
   }
 }
+
+#endif
 
 /*
  * Function     : ghl_con2prim_tabulated_select_method()
@@ -125,6 +129,8 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
   return error;
 }
 
+#ifndef GRHAYL_DISABLE_HDF5
+
 /*
  * Function     : ghl_con2prim_tabulated_select_method()
  * Description  : Calls the Con2Prim routine designated by c2p_key
@@ -176,3 +182,4 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
   }
   return error;
 }
+#endif
