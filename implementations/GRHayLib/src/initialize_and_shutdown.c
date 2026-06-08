@@ -195,14 +195,15 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
 
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
-    ghl_eos->table_type = parse_eos_table_type_keyword(eos_table_type);
-    ghl_eos->clean_sound_speed = eos_table_clean_sound_speed;
     ghl_abort_if_error(ghl_initialize_tabulated_eos_functions_and_params(
           EOS_tablepath,
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,
           T_atm, T_min, T_max,
           ghl_eos));
+    // FIXME: change this once the API to the function above is updated
+    ghl_eos->table_type = parse_eos_table_type_keyword(eos_table_type);
+    ghl_eos->clean_sound_speed = eos_table_clean_sound_speed;
   } else if (CCTK_EQUALS(EOS_type, "")) {
     CCTK_VERROR("GRHayLib parameter EOS_type is unset. Please set an EOS type.");
   } else {

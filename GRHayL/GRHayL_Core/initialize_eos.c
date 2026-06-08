@@ -215,6 +215,8 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
 */
 ghl_error_codes_t ghl_initialize_tabulated_eos(
       const char *table_filepath,
+      const ghl_eos_table_t table_type,
+      const bool clean_sound_speed,
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -226,8 +228,10 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
       double T_max,
       ghl_eos_parameters *restrict eos) {
 
-  // Step 1: Set EOS type to Tabulated.
+  // Step 1: Set EOS type and whether or not to clean sound speed
   eos->eos_type = ghl_eos_tabulated;
+  eos->table_type = table_type;
+  eos->clean_sound_speed = clean_sound_speed;
 
   // Step 2: Read the EOS table
   ghl_error_codes_t err = ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
@@ -380,11 +384,17 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
 
   eos->eos_type = ghl_eos_tabulated;
 
+  // FIXME: these are hard-coded default values for now
+  const ghl_eos_table_t default_table_type = ghl_eos_table_stellarcollapse;
+  const bool default_clean_sound_speed = false;
+
   // Step 1: Initialize Tabulated EOS functions
   ghl_initialize_eos_functions(ghl_eos_tabulated);
 
   // Step 2: Initialize Tabulated EOS parameters
   return ghl_initialize_tabulated_eos(table_filepath,
+                                      default_table_type,
+                                      default_clean_sound_speed,
                                       rho_atm, rho_min, rho_max,
                                       Ye_atm, Ye_min, Ye_max,
                                       T_atm, T_min, T_max,

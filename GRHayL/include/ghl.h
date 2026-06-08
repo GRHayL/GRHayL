@@ -323,6 +323,8 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
 
 ghl_error_codes_t ghl_initialize_tabulated_eos(
       const char *table_path,
+      const ghl_eos_table_t table_type,
+      const bool clean_sound_speed,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
