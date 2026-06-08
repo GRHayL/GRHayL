@@ -241,12 +241,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   if(Y_e_atm < 0) return ghl_error_invalid_Y_e_atm;
   if(  T_atm < 0) return ghl_error_invalid_T_atm;
 
-  // Step 3.b: Sanity check mins and maxs
-  if(rho_min > rho_max) return ghl_error_rho_min_gt_rho_max;
-  if(Y_e_min > Y_e_max) return ghl_error_Y_e_min_gt_Y_e_max;
-  if(  T_min >   T_max) return ghl_error_T_min_gt_T_max;
-
-  // Step 3.c: Minimum values
+  // Step 3.b: Minimum values
   if(rho_min < eos->table_rho_min) {
     ghl_warn("Minimum density is less than table bounds; using table bounds (%.15e)\n", eos->table_rho_min);
     rho_min = eos->table_rho_min;
@@ -260,7 +255,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
     T_min = eos->table_T_min;
   }
 
-  // Step 3.d: Maximum values
+  // Step 3.c: Maximum values
   if(rho_max < 0 || rho_max > eos->table_rho_max) {
     ghl_warn("Invalid maximum density; using table bounds (%.15e)\n", eos->table_rho_max);
     rho_max = eos->table_rho_max;
@@ -273,6 +268,11 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
     ghl_warn("Invalid maximum temperature; using table bounds (%.15e)\n", eos->table_T_max);
     T_max = eos->table_T_max;
   }
+
+  // Step 3.d: Sanity check mins and maxs
+  if(rho_min > rho_max) return ghl_error_rho_min_gt_rho_max;
+  if(Y_e_min > Y_e_max) return ghl_error_Y_e_min_gt_Y_e_max;
+  if(  T_min >   T_max) return ghl_error_T_min_gt_T_max;
 
   // Step 4: Initialize quantities which are common to all EOSs.
   init_common_eos_quantities;
