@@ -124,7 +124,7 @@ END {
   print "HDF5_DIR="hdf5_dir >> "Makefile"
   print "HDF5_INC_DIR=$(HDF5_DIR)/include\nHDF5_LIB_DIR=$(HDF5_DIR)/lib\n" >> "Makefile"
   print "# Now adjust CFLAGS and LD_FLAGS" >> "Makefile"
-  print "CFLAGS += -I./include -I$(HDF5_INC_DIR)" >> "Makefile"
+  print "CFLAGS += -DGRHAYL_ENABLE_HDF5 -I./include -I$(HDF5_INC_DIR)" >> "Makefile"
   print "LD_FLAGS += -L$(HDF5_LIB_DIR) -lhdf5\n" >> "Makefile"
   print "# Source files\nSRC ="src"\n" >> "Makefile"
   print "# Object files\nOBJ ="obj"\n" >> "Makefile"
