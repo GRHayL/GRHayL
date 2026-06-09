@@ -4,7 +4,7 @@
  * Function : compute_BU_SU_Bsq_Ssq_BdotS
  * Author   : Leo Werneck
  *
- * Computes B^{i}, S^{i}, B^2, S^2, B.S = B^{i}S_{i}.
+ * Compute S^{i}, B^2, S^2, B.S = B^{i}S_{i}.
  *
  * Parameters : metric       - Metric quantities
  *            : cons_undens  - Undensitized conservatives
@@ -25,7 +25,6 @@ void ghl_compute_SU_Bsq_Ssq_BdotS(
       double *restrict Ssq,
       double *restrict BdotS) {
 
-  //Does this limit just do the same as apply_conservative_limits?
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
   double S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
