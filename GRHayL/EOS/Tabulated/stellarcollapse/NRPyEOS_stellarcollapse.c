@@ -4,6 +4,7 @@
 
 #include "../NRPyEOS_hdf5_helpers.h"
 #include "NRPyEOS_stellarcollapse.h"
+#include "ghl_nrpyeos_tabulated.h"
 #include "ghl_io.h"
 
 static const char *dataset_names[NRPyEOS_sc_n_quantities] = {
@@ -36,8 +37,8 @@ static bool table_has_rel_cs2(hid_t file) {
 ghl_error_codes_t NRPyEOS_stellarcollapse_read_table(
       const char *filepath,
       NRPyEOS_stellarcollapse_t **sc) {
-#ifndef GHL_USE_HDF5
-  GHL_HDF5_ERROR_IF_USED;
+#ifndef GRHAYL_ENABLE_HDF5
+  return ghl_error_used_disabled_hdf5;
 #else
   hid_t file_id = H5Fopen(filepath, H5F_ACC_RDONLY, H5P_DEFAULT);
   if(file_id < 0) {
@@ -111,8 +112,8 @@ cleanup:
 }
 
 void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table) {
-#ifndef GHL_USE_HDF5
-  GHL_HDF5_ERROR_IF_USED;
+#ifndef GRHAYL_ENABLE_HDF5
+  HDF5_ERROR_IF_USED;
 #else
   if(!table) {
     return;

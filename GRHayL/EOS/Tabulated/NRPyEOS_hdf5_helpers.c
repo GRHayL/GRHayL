@@ -6,8 +6,8 @@ ghl_error_codes_t NRPyEOS_hdf5_read_dataset(
       const char *dataset_name,
       const size_t expected_size,
       void **data) {
-#ifndef GHL_USE_HDF5
-  GHL_HDF5_ERROR_IF_USED;
+#ifndef GRHAYL_ENABLE_HDF5
+  return ghl_error_used_disabled_hdf5;
 #else
   ghl_error_codes_t error = ghl_success;
 
