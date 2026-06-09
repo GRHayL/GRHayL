@@ -234,7 +234,7 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
 
   const int it = ghl_tabulated_get_index_T(eos, T);
   if(it < 0) {
-    return ghl_error_exceed_table_vars;
+    return T < eos->table_T_min ? ghl_error_table_min_T : ghl_error_table_max_T;
   }
   const int nr = eos->N_rho;
   const int ny = eos->N_Ye;
