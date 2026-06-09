@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         None, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
         Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
         rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,

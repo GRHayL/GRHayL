@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
   params.max_Lorentz_factor = W_max;
   params.inv_sq_max_Lorentz_factor = 1.0/SQR(W_max);
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
         rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,
@@ -135,12 +135,10 @@ int main(int argc, char **argv) {
     bool speed_limit;
     ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
           &params, &ADM_metric, &prims_r, &speed_limit);
-    if(error)
-      ghl_read_error_codes(error);
+    ghl_abort_if_error(error);
     error = ghl_limit_v_and_compute_u0(
           &params, &ADM_metric, &prims_l, &speed_limit);
-    if(error)
-      ghl_read_error_codes(error);
+    ghl_abort_if_error(error);
 
     prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
     prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
@@ -302,12 +300,10 @@ int main(int argc, char **argv) {
           bool speed_limit;
           ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
                 &params, &ADM_metric, &prims_r, &speed_limit);
-          if(error)
-            ghl_read_error_codes(error);
+          ghl_abort_if_error(error);
           error = ghl_limit_v_and_compute_u0(
                 &params, &ADM_metric, &prims_l, &speed_limit);
-          if(error)
-            ghl_read_error_codes(error);
+          ghl_abort_if_error(error);
 
           prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
           prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);

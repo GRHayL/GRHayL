@@ -1,5 +1,42 @@
 #include "ghl_unit_tests.h"
 
+static inline void check_fermi_dirac_integral(
+    const int k,
+    const double z,
+    const double expected) {
+
+  double integral = 0.0;
+  const ghl_error_codes_t error =
+    NRPyLeakage_Fermi_Dirac_integrals(k, z, &integral);
+  if(error != ghl_success) {
+    ghl_error("NRPyLeakage_Fermi_Dirac_integrals(k=%d, z=%.17e) returned error code %d\n",
+              k, z, error);
+  }
+
+  const double atol = 1e-15;
+  const double rtol = 1e-14;
+  if(fabs(integral - expected) > atol + rtol*fabs(expected)) {
+    ghl_error("Incorrect Fermi-Dirac integral for k=%d, z=%.17e: expected %.17e, got %.17e\n",
+              k, z, expected, integral);
+  }
+}
+
+static inline void test_fermi_dirac_integrals(void) {
+  const double z_large = 1.0e-2;
+  const double z_small = 1.0e-4;
+
+  check_fermi_dirac_integral(0, z_large, log(exp(z_large) + 1.0));
+  check_fermi_dirac_integral(1, z_large,
+                             (0.5*z_large*z_large + 1.6449)/(1.0 + exp(-1.6855*z_large)));
+  check_fermi_dirac_integral(2, z_large,
+                             (((1.0/3.0)*z_large*z_large*z_large) + 3.2898999999999998*z_large)
+                             /(1.0 - exp(-1.8246*z_large)));
+
+  check_fermi_dirac_integral(0, z_small, log(exp(z_small) + 1.0));
+  check_fermi_dirac_integral(1, z_small,
+                             exp(z_small)/(0.21590000000000001*exp(0.88570000000000004*z_small) + 1.0));
+}
+
 void
 generate_test_data(const ghl_eos_parameters *restrict eos) {
 
@@ -64,11 +101,12 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 
       // Compute luminosities
       ghl_neutrino_luminosities lum;
-      NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
-                                                gammaxx, gammaxy, gammaxz,
-                                                gammayy, gammayz, gammazz,
-                                                rho, Y_e, T, W,
-                                                &tau, &lum);
+      ghl_error_codes_t error = NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
+                                                                          gammaxx, gammaxy, gammaxz,
+                                                                          gammayy, gammayz, gammazz,
+                                                                          rho, Y_e, T, W,
+                                                                          &tau, &lum);
+      ghl_abort_if_error(error);
 
       // Output to file
       if( !perturb ) {
@@ -93,6 +131,7 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 
 void
 run_unit_test(const ghl_eos_parameters *restrict eos) {
+  test_fermi_dirac_integrals();
 
   int n1, n2;
 
@@ -139,11 +178,12 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
 
     // Compute luminosities
     ghl_neutrino_luminosities lum;
-    NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
-                                              gammaxx, gammaxy, gammaxz,
-                                              gammayy, gammayz, gammazz,
-                                              rho, Y_e, T, W,
-                                              &tau, &lum);
+    ghl_error_codes_t error = NRPyLeakage_compute_neutrino_luminosities(eos, alpha,
+                                                                        gammaxx, gammaxy, gammaxz,
+                                                                        gammayy, gammayz, gammazz,
+                                                                        rho, Y_e, T, W,
+                                                                        &tau, &lum);
+    ghl_abort_if_error(error);
 
     // Now read luminosities from unperturbed and perturbed data files
     ghl_neutrino_luminosities lum_trusted, lum_pert;

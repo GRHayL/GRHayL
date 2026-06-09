@@ -7,7 +7,8 @@
 ghl_parameters *ghl_params;
 ghl_eos_parameters *ghl_eos;
 
-int parse_C2P_routine_keyword(const char *restrict routine_name);
+static int parse_C2P_routine_keyword(const char *restrict routine_name);
+static int parse_eos_table_type_keyword(const char *restrict table_type);
 
 void GRHayLib_paramcheck() {
   DECLARE_CCTK_PARAMETERS;
@@ -178,28 +179,33 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
     if(main == Font1D || backups[0] == Font1D || backups[1] == Font1D || backups[2] == Font1D)
       CCTK_VERROR("Error: Font1D routine is incompatible with ideal fluid EOS. Please choose a different Con2Prim routine.");
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
-    ghl_initialize_simple_eos_functions_and_params(
+    ghl_abort_if_error(ghl_initialize_simple_eos_functions_and_params(
           rho_b_atm, rho_b_min, rho_b_max,
           P_atm, P_min, P_max,
-          Gamma, ghl_eos);
+          Gamma, ghl_eos));
   } else if (CCTK_EQUALS(EOS_type, "Hybrid")) {
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
-    ghl_initialize_hybrid_eos_functions_and_params(
+    ghl_abort_if_error(ghl_initialize_hybrid_eos_functions_and_params(
           rho_b_atm, rho_b_min, rho_b_max,
           neos, rho_ppoly_in,
           Gamma_ppoly_in, k_ppoly0,
-          Gamma_th, ghl_eos);
+          Gamma_th, ghl_eos));
   } else if (CCTK_EQUALS(EOS_type, "Tabulated")) {
     if( CCTK_EQUALS(EOS_tablepath, "") )
       CCTK_ERROR("Parameter EOS_tablepath uninitialized.");
 
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
-    ghl_initialize_tabulated_eos_functions_and_params(
+
+    // FIXME: change this once the API to the wrapper function is updated
+    ghl_initialize_eos_functions(ghl_eos_tabulated);
+    ghl_abort_if_error(ghl_initialize_tabulated_eos(
           EOS_tablepath,
+          parse_eos_table_type_keyword(eos_table_type),
+          eos_table_clean_sound_speed,
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,
           T_atm, T_min, T_max,
-          ghl_eos);
+          ghl_eos));
   } else if (CCTK_EQUALS(EOS_type, "")) {
     CCTK_VERROR("GRHayLib parameter EOS_type is unset. Please set an EOS type.");
   } else {
@@ -210,14 +216,13 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
 
 void GRHayLib_terminate(CCTK_ARGUMENTS) {
   if(ghl_eos->eos_type == ghl_eos_tabulated) {
-    free(ghl_eos->table_all);
-    free(ghl_eos->table_logrho);
-    free(ghl_eos->table_logT);
-    free(ghl_eos->table_Y_e);
-    free(ghl_eos->table_eps);
+    ghl_tabulated_free_memory(ghl_eos);
   }
   free(ghl_eos);
   free(ghl_params);
+
+  ghl_eos = NULL;
+  ghl_params = NULL;
 }
 
 int parse_C2P_routine_keyword(const char *restrict routine_name) {
@@ -233,10 +238,6 @@ int parse_C2P_routine_keyword(const char *restrict routine_name) {
     return Noble1D_entropy2;
   } else if (CCTK_EQUALS(routine_name, "Font1D")) {
     return Font1D;
-  } else if (CCTK_EQUALS(routine_name, "CerdaDuran2D")) {
-    return CerdaDuran2D;
-  } else if (CCTK_EQUALS(routine_name, "CerdaDuran3D")) {
-    return CerdaDuran3D;
   } else if (CCTK_EQUALS(routine_name, "Palenzuela1D")) {
     return Palenzuela1D;
   } else if (CCTK_EQUALS(routine_name, "Palenzuela1D_entropy")) {
@@ -247,4 +248,11 @@ int parse_C2P_routine_keyword(const char *restrict routine_name) {
     return Newman1D_entropy;
   }
   return -100;
+}
+
+static int parse_eos_table_type_keyword(const char *restrict table_type) {
+  if(CCTK_EQUALS(table_type, "stellarcollapse")) {
+    return ghl_eos_table_stellarcollapse;
+  }
+  return ghl_eos_table_unknown;
 }

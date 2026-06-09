@@ -1,6 +1,33 @@
 #include "ghl_nrpyeos_tabulated.h"
 #include "ghl_unit_tests.h"
 
+#define GHL_CASE(name_) case NRPyEOS_ ## name_ ##_key: return #name_
+static const char *table_key_to_str(NRPyEOS_keys key) {
+  switch(key) {
+    GHL_CASE(press);
+    GHL_CASE(eps);
+    GHL_CASE(entropy);
+    GHL_CASE(munu);
+    GHL_CASE(cs2);
+    GHL_CASE(depsdT);
+    GHL_CASE(dPdrho);
+    GHL_CASE(dPdeps);
+    GHL_CASE(muhat);
+    GHL_CASE(mu_e);
+    GHL_CASE(mu_p);
+    GHL_CASE(mu_n);
+    GHL_CASE(X_a);
+    GHL_CASE(X_h);
+    GHL_CASE(X_n);
+    GHL_CASE(X_p);
+    GHL_CASE(Abar);
+    GHL_CASE(Zbar);
+    GHL_CASE(Gamma);
+    GHL_CASE(enthalpy);
+    default: return "Unknown key";
+  }
+}
+
 /*
  * (c) 2023 Leo Werneck
  */
@@ -21,17 +48,23 @@ int main(int argc, char **argv) {
   ghl_info("Beginning tabulated EOS unit test...\n");
 
   // Step 1: Initialize the EOS struct
-  ghl_eos_parameters eos;
-  ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.clean_sound_speed = false;
+  ghl_error_codes_t err = ghl_initialize_tabulated_eos_functions_and_params(argv[1], exp(1), -1, -1, 1, -1, -1, exp(1), -1, -1, &eos);
+  ghl_abort_if_error(err);
 
-  if( eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3 )
+  if(eos.N_rho != 7 || eos.N_T != 5 || eos.N_Ye != 3) {
     ghl_error("Table dimension error: expected 7 x 5 x 3, but got %d x %d x %d\n",
                  eos.N_rho, eos.N_T, eos.N_Ye);
+  }
   ghl_info("Table dimensions read in correctly\n");
 
-  if( relative_error(eos.energy_shift, 123e-45) > rtol )
+  if(relative_error(eos.energy_shift, 123e-45) > rtol) {
     ghl_error("Error in energy shift exceeds tolerance: %.15e vs. %.15e\n",
                  eos.energy_shift, 123e-45);
+  }
   ghl_info("Energy shift read in correctly\n");
 
   // Step 2: Begin test
@@ -43,11 +76,14 @@ int main(int argc, char **argv) {
         const double Y_e = eos.table_Y_e[k];
         const int index = i + eos.N_rho*( j + eos.N_T*k );
         for(int var_key=0; var_key<NRPyEOS_ntablekeys; var_key++) {
+          if(var_key > NRPyEOS_Gamma_key) {
+            continue;
+          }
           const double var       = get_table_quantity(var_key, logrho, Y_e, logT);
           const double table_var = eos.table_all[var_key + NRPyEOS_ntablekeys*index];
           if( relative_error(var, table_var) > rtol && fabs(var-table_var) > atol )
-            ghl_error("Errors in variable %d exceed tolernaces: %.15e vs. %.15e\n",
-                         var_key, var, table_var);
+            ghl_error("Errors in variable '%s' exceed tolerances: %.15e vs. %.15e\n",
+                         table_key_to_str(var_key), var, table_var);
         }
       }
     }
@@ -105,8 +141,7 @@ int main(int argc, char **argv) {
         // Now perform the interpolations, validating the results
         P_interp = 0.0/0.0;
         ghl_error_codes_t error = ghl_tabulated_compute_P_from_T(&eos, rho, Y_e, T, &P_interp);
-	if(error)
-          ghl_read_error_codes(error);
+        ghl_abort_if_error(error);
 	
         if( relative_error(P, P_interp) > rtol && fabs(P - P_interp) > atol )
           ghl_error("tabulated_compute_P_from_T validation failed:\n"
@@ -403,8 +438,8 @@ int main(int argc, char **argv) {
         const double h = 1.0 + eps + P/rho;
         double h_test, cs2_test;
         ghl_compute_h_and_cs2(&eos, &prims, &h_test, &cs2_test);
-        if((relative_error(h    , h_test  ) > rtol && fabs(h     - h_test  ) > atol) ||
-           (relative_error(cs2/h, cs2_test) > rtol && fabs(cs2/h - cs2_test) > atol)) {
+        if((relative_error(h  , h_test  ) > rtol && fabs(h   - h_test  ) > atol) ||
+           (relative_error(cs2, cs2_test) > rtol && fabs(cs2 - cs2_test) > atol)) {
           ghl_error("Function ghl_compute_h_and_cs2 failed: %e %e, %e %e\n", h, h_test, cs2, cs2_test);
         }
 
@@ -430,11 +465,19 @@ int main(int argc, char **argv) {
 
   // Enforce limit tests
   {
+    const int backup_routine[3] = {None, None, None};
+    const bool calc_prims_guess = true;
+    const double Psi6threshold = 1e100;
+    const double W_max = 10.0;
+    const double Lorenz_damping_factor = 0.0;
+
     for(int evolve_entropy=0;evolve_entropy<=1;evolve_entropy++) {
       ghl_parameters params;
-      params.evolve_entropy = evolve_entropy;
+      ghl_initialize_params(
+            None, backup_routine, evolve_entropy, true, calc_prims_guess,
+            Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
-      ghl_metric_quantities metric;
+      ghl_metric_quantities metric = { 0 };
       metric.lapse = metric.lapseinv = metric.lapseinv2 = 1;
       metric.betaU[0] = metric.betaU[1] = metric.betaU[2] = 0;
       metric.detgamma = metric.sqrt_detgamma = 1;
@@ -443,16 +486,16 @@ int main(int argc, char **argv) {
       metric.gammaUU[0][0] = metric.gammaUU[1][1] = metric.gammaUU[2][2] = 1;
       metric.gammaUU[0][1] = metric.gammaUU[0][2] = metric.gammaUU[1][2] = 1;
 
-      ghl_primitive_quantities prims;
+      ghl_primitive_quantities prims = { 0 };
       prims.vU[0] = prims.vU[1] = prims.vU[2] = 0;
+      speed_limited = false;
 
       // Test 1
       prims.rho = 0.9 * eos.rho_min;
       prims.Y_e = 0.9 * eos.Y_e_min;
       prims.temperature = 0.9 * eos.T_min;
       ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
       if(prims.rho != eos.rho_min || prims.Y_e != eos.Y_e_min || prims.temperature != eos.T_min) {
         ghl_error("enforce bounds (rho, Y_e, T) failed for small values: %e != %e or %e != %e or %e != %e\n",
                   prims.rho, eos.rho_min, prims.Y_e, eos.Y_e_min, prims.temperature, eos.T_min);
@@ -462,9 +505,9 @@ int main(int argc, char **argv) {
       prims.rho = 1.1 * eos.rho_max;
       prims.Y_e = 1.1 * eos.Y_e_max;
       prims.temperature = 1.1 * eos.T_max;
+      speed_limited = false;
       error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
       if(prims.rho != eos.rho_max || prims.Y_e != eos.Y_e_max || prims.temperature != eos.T_max) {
         ghl_error("enforce bounds (rho, Y_e, T) failed for large values: %e != %e or %e != %e or %e != %e\n",
                   prims.rho, eos.rho_max, prims.Y_e, eos.Y_e_max, prims.temperature, eos.T_max);
@@ -474,9 +517,9 @@ int main(int argc, char **argv) {
       prims.rho = 0.9 * eos.rho_max;
       prims.Y_e = 0.9 * eos.Y_e_max;
       prims.temperature = 0.9 * eos.T_max;
+      speed_limited = false;
       error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric, &prims, &speed_limited);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
       if(prims.rho != 0.9 * eos.rho_max || prims.Y_e != 0.9 * eos.Y_e_max || prims.temperature != 0.9 * eos.T_max) {
         ghl_error("enforce bounds (rho, Y_e, T) changed values that it shouldn't have");
       }
@@ -516,7 +559,8 @@ int main(int argc, char **argv) {
 
   // Now test beta equilibrium stuff
   {
-    ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(exp(4), &eos);
+    ghl_error_codes_t err = ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T(exp(4), &eos);
+    ghl_abort_if_error(err);
     const double Y_e_expected[7] = {
       1.000000000000000e+00,
       1.000000000000000e+00,
@@ -580,22 +624,92 @@ int main(int argc, char **argv) {
     // Now test the interpolators
     const double rho_interp = exp(0.5*(eos.table_logrho[0] + eos.table_logrho[1]));
 
-    const double Ye_interp = ghl_tabulated_compute_Ye_from_rho(&eos, rho_interp);
-    const double Ye_expect = 0.5*(Y_e_expected[0] + Y_e_expected[1]);
+    double Ye_expect = 0.5*(Y_e_expected[0] + Y_e_expected[1]);
+    double Ye_interp = NAN;
+    err = ghl_tabulated_compute_Ye_from_rho(&eos, rho_interp, &Ye_interp);
+    ghl_abort_if_error(err);
     if(relative_error(Ye_interp, Ye_expect) > 1e-14) {
       ghl_error("Failed to interpolate Y_e(rho): %.15e %.15e\n", Ye_interp, Ye_expect);
     }
 
-    const double P_interp   = log(ghl_tabulated_compute_P_from_rho(  &eos, rho_interp));
-    const double P_expect   = 0.5*(P_expected[0] + P_expected[1]); 
+    double P_expect = 0.5*(P_expected[0] + P_expected[1]); 
+    double P_interp = NAN;
+    err = ghl_tabulated_compute_P_from_rho(&eos, rho_interp, &P_interp);
+    ghl_abort_if_error(err);
+    P_interp = log(P_interp);
     if(relative_error(P_interp, P_expect) > 1e-14) {
       ghl_error("Failed to interpolate P(rho): %.15e %.15e\n", P_interp, P_expect);
     }
 
-    const double eps_interp = log(ghl_tabulated_compute_eps_from_rho(&eos, rho_interp));
-    const double eps_expect = 0.5*(eps_expected[0] + eps_expected[1]); 
+    double eps_expect = 0.5*(eps_expected[0] + eps_expected[1]); 
+    double eps_interp = NAN;
+    err = ghl_tabulated_compute_eps_from_rho(&eos, rho_interp, &eps_interp);
+    ghl_abort_if_error(err);
+    eps_interp = log(eps_interp);
     if(relative_error(eps_interp, eps_expect) > 1e-14) {
       ghl_error("Failed to interpolate eps(rho): %.15e %.15e\n", eps_interp, eps_expect);
+    }
+
+    Ye_interp = NAN;
+    err = ghl_tabulated_compute_Ye_from_rho(&eos, eos.rho_max, &Ye_interp);
+    ghl_abort_if_error(err);
+    if(relative_error(Ye_interp, Y_e_expected[eos.N_rho - 1]) > 1e-14) {
+      ghl_error("Failed to interpolate Y_e(rho_max): %.15e %.15e\n",
+                Ye_interp, Y_e_expected[eos.N_rho - 1]);
+    }
+
+    P_interp = NAN;
+    err = ghl_tabulated_compute_P_from_rho(&eos, eos.rho_max, &P_interp);
+    ghl_abort_if_error(err);
+    P_interp = log(P_interp);
+    if(relative_error(P_interp, P_expected[eos.N_rho - 1]) > 1e-14) {
+      ghl_error("Failed to interpolate P(rho_max): %.15e %.15e\n",
+                P_interp, P_expected[eos.N_rho - 1]);
+    }
+
+    const int mid_idx = eos.N_rho / 2;
+    const double P_lo = exp(eos.lp_of_lr[0]);
+    const double P_mid = exp(eos.lp_of_lr[mid_idx]);
+    const double P_hi = exp(eos.lp_of_lr[eos.N_rho - 1]);
+    double rho_from_P = NAN;
+
+    err = ghl_tabulated_compute_rho_from_P(&eos, P_lo, &rho_from_P);
+    ghl_abort_if_error(err);
+    if(relative_error(log(rho_from_P), eos.table_logrho[0]) > 1e-14) {
+      ghl_error("Failed to invert rho(P_min): %.15e %.15e\n", log(rho_from_P), eos.table_logrho[0]);
+    }
+
+    err = ghl_tabulated_compute_rho_from_P(&eos, P_mid, &rho_from_P);
+    ghl_abort_if_error(err);
+    if(relative_error(log(rho_from_P), eos.table_logrho[mid_idx]) > 1e-14) {
+      ghl_error("Failed to invert rho(P_mid): %.15e %.15e\n",
+                log(rho_from_P), eos.table_logrho[mid_idx]);
+    }
+
+    err = ghl_tabulated_compute_rho_from_P(&eos, P_hi, &rho_from_P);
+    ghl_abort_if_error(err);
+    if(relative_error(log(rho_from_P), eos.table_logrho[eos.N_rho - 1]) > 1e-14) {
+      ghl_error("Failed to invert rho(P_max): %.15e %.15e\n",
+                log(rho_from_P), eos.table_logrho[eos.N_rho - 1]);
+    }
+
+    double dP_drho = NAN;
+    err = ghl_tabulated_compute_dP_drho_from_rho(&eos, eos.rho_max, &dP_drho);
+    ghl_abort_if_error(err);
+    if(relative_error(dP_drho, exp(P_expected[eos.N_rho - 1] - eos.table_logrho[eos.N_rho - 1])) > 1e-14) {
+      ghl_error("Failed to compute dP/drho(rho_max): %.15e %.15e\n",
+                dP_drho, exp(P_expected[eos.N_rho - 1] - eos.table_logrho[eos.N_rho - 1]));
+    }
+
+    double deps_dP = NAN;
+    const double rho_mid = exp(eos.table_logrho[mid_idx]);
+    const double eps_mid = exp(eps_expected[mid_idx]);
+    const double expected_deps_dP = (rho_mid * (1.0 + eps_mid) + P_mid) / P_mid;
+    err = ghl_tabulated_compute_deps_dP_from_rho(&eos, rho_mid, &deps_dP);
+    ghl_abort_if_error(err);
+    if(relative_error(deps_dP, expected_deps_dP) > 1e-14) {
+      ghl_error("Failed to compute deps/dP(rho_mid): %.15e %.15e\n",
+                deps_dP, expected_deps_dP);
     }
   }
 

@@ -68,7 +68,7 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
   double SU[3], B_squared, S_squared, BdotS;
-  compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims, SU, &B_squared, &S_squared, &BdotS);
+  ghl_compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims, SU, &B_squared, &S_squared, &BdotS);
   const double tau = fmax(cons_undens->tau, eos->tau_atm);
 
   // Set specific quantities for this routine (Eq. A7 of [1])

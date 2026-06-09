@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 
   // Here, we initialize the structs that are (usually) static during
   // a simulation.
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
         rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,

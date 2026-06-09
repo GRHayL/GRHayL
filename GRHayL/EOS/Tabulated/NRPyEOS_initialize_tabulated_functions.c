@@ -1,8 +1,8 @@
 #include "ghl_nrpyeos_tabulated.h"
 
 void NRPyEOS_initialize_tabulated_functions() {
-#ifndef GRHAYL_USE_HDF5
-  HDF5_ERROR_IF_USED;
+#ifndef GHL_USE_HDF5
+  GHL_HDF5_ERROR_IF_USED;
 #else
   // clang-format off
   ghl_tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;

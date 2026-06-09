@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
   const double k_ppoly0 = 1.0;
   const double Gamma_th = 2.0;
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
         poison, poison, poison,
         neos, rho_ppoly, Gamma_ppoly,

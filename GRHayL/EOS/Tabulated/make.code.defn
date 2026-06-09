@@ -3,10 +3,13 @@
 # Source files in this directory that need compiled:
 SRCS = NRPyEOS_enforce_table_bounds.c                       \
        NRPyEOS_free_memory.c                                \
+       NRPyEOS_hdf5_helpers.c                               \
        NRPyEOS_initialize_tabulated_functions.c             \
        NRPyEOS_read_table_set_EOS_params.c                  \
+       NRPyEOS_tabulate_enthalpy.c                          \
+       NRPyEOS_tabulated_adjust_sound_speed.c               \
        NRPyEOS_tabulated_compute_enthalpy_and_cs2.c         \
        NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T.c \
        NRPyEOS_tabulated_get_index.c
 
-SUBDIRS = interpolators
+SUBDIRS = interpolators stellarcollapse

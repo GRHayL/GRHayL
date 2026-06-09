@@ -18,6 +18,5 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy_and_cs2(
 
   // Step 4: Set the output
   *enthalpy_ptr = h;
-  *cs2_ptr /= h;
   return error;
 }

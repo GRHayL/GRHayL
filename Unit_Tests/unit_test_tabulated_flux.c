@@ -23,13 +23,17 @@ int main(int argc, char **argv) {
   params.max_Lorentz_factor = W_max;
   params.inv_sq_max_Lorentz_factor = 1.0/SQR(W_max);
 
-  ghl_eos_parameters eos;
-  ghl_initialize_tabulated_eos_functions_and_params(
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.clean_sound_speed = true;
+  ghl_error_codes_t error = ghl_initialize_tabulated_eos_functions_and_params(
         tablepath,
         rho_b_min, rho_b_min, rho_b_max,
         Ye_min, Ye_min, Ye_max,
         T_min, T_min, T_max,
         &eos);
+  ghl_abort_if_error(error);
 
   ghl_compute_h_and_cs2 = &ghl_test_compute_h_and_cs2;
 
@@ -232,12 +236,10 @@ int main(int argc, char **argv) {
         bool speed_limited;
         ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
               &params, &metric_face, &prims_r, &speed_limited);
-        if(error)
-          ghl_read_error_codes(error);
+        ghl_abort_if_error(error);
         error = ghl_limit_v_and_compute_u0(
               &params, &metric_face, &prims_l, &speed_limited);
-        if(error)
-          ghl_read_error_codes(error);
+        ghl_abort_if_error(error);
 
         ghl_conservative_quantities cons_fluxes;
         calculate_HLLE_fluxes(
