@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
         main_routine, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
         Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
         rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,
@@ -225,8 +225,7 @@ int main(int argc, char **argv) {
       bool speed_limited;
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
             &params, &ADM_metric, &prims, &speed_limited);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
 
       // We need epsilon to compute the enthalpy in ghl_compute_conservs_and_Tmunu;
       // This normally happens in the ghl_enforce_primitive_limits_and_compute_u0 function
@@ -579,8 +578,7 @@ int main(int argc, char **argv) {
       bool speed_limited;
       ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(
             &params, &eos, &ADM_metric, &prims, &speed_limited);
-      if(error)
-        ghl_read_error_codes(error);
+      ghl_abort_if_error(error);
 
       ghl_return_primitives(
             &prims, &rho_b[i], &press[i], &eps[i],

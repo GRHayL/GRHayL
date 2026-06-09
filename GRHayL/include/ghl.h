@@ -48,6 +48,25 @@ typedef enum {
   ghl_error_invalid_utsq,
   ghl_error_invalid_Z,
   ghl_error_newman_invalid_discriminant,
+  ghl_error_used_disabled_hdf5,
+  ghl_error_out_of_memory,
+  ghl_error_eos_struct_is_null,
+  ghl_error_invalid_eos_type,
+  ghl_error_invalid_eos_table_type,
+  ghl_error_could_not_open_file,
+  ghl_error_hdf5_dataset_could_not_open,
+  ghl_error_hdf5_dataset_could_not_read,
+  ghl_error_hdf5_dataset_invalid_ndims,
+  ghl_error_hdf5_dataset_size_mismatch,
+  ghl_error_invalid_rho_atm,
+  ghl_error_rho_min_gt_rho_max,
+  ghl_error_invalid_press_atm,
+  ghl_error_press_min_gt_press_max,
+  ghl_error_invalid_Y_e_atm,
+  ghl_error_Y_e_min_gt_Y_e_max,
+  ghl_error_invalid_T_atm,
+  ghl_error_T_min_gt_T_max,
+  ghl_error_invalid_fermi_dirac_integral_key,
 } ghl_error_codes_t;
 
 typedef enum {
@@ -57,8 +76,6 @@ typedef enum {
   Noble1D_entropy,
   Noble1D_entropy2,
   Font1D,
-  CerdaDuran2D,
-  CerdaDuran3D,
   Palenzuela1D,
   Palenzuela1D_entropy,
   Newman1D,
@@ -70,6 +87,12 @@ typedef enum {
   ghl_eos_hybrid,
   ghl_eos_tabulated
 } ghl_eos_t;
+
+typedef enum {
+  ghl_eos_table_unknown,
+  ghl_eos_table_stellarcollapse,
+  ghl_eos_table_types,
+} ghl_eos_table_t;
 
 /*
  * Struct        : ghl_parameters
@@ -209,6 +232,8 @@ typedef struct ghl_eos_parameters {
 
   //-------------- General parameters --------------
   ghl_eos_t eos_type;
+  ghl_eos_table_t table_type;
+  bool clean_sound_speed;
   double rho_atm, rho_min, rho_max;
   double tau_atm;
   double press_atm, press_min, press_max;
@@ -240,6 +265,7 @@ typedef struct ghl_eos_parameters {
   double *restrict table_logT;
   double *restrict table_Y_e;
   double *restrict table_eps;
+  double *restrict table_logh;
 
   // Table bounds
   double table_rho_min, table_rho_max;
@@ -270,7 +296,7 @@ const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
 void ghl_initialize_eos_functions(
     const ghl_eos_t eos_type);
 
-void ghl_initialize_simple_eos(
+ghl_error_codes_t ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -280,7 +306,7 @@ void ghl_initialize_simple_eos(
       const double Gamma,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_hybrid_eos(
+ghl_error_codes_t ghl_initialize_hybrid_eos(
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -291,8 +317,10 @@ void ghl_initialize_hybrid_eos(
       const double Gamma_th,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_tabulated_eos(
+ghl_error_codes_t ghl_initialize_tabulated_eos(
       const char *table_path,
+      const ghl_eos_table_t table_type,
+      const bool clean_sound_speed,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -304,7 +332,7 @@ void ghl_initialize_tabulated_eos(
       const double T_max,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_simple_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_simple_eos_functions_and_params(
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -314,7 +342,7 @@ void ghl_initialize_simple_eos_functions_and_params(
       const double Gamma,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_hybrid_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_hybrid_eos_functions_and_params(
       const double rho_atm,
       const double rho_min,
       const double rho_max,
@@ -325,7 +353,7 @@ void ghl_initialize_hybrid_eos_functions_and_params(
       const double Gamma_th,
       ghl_eos_parameters *restrict eos);
 
-void ghl_initialize_tabulated_eos_functions_and_params(
+ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
       const double rho_atm,
       const double rho_min,
@@ -490,8 +518,16 @@ void ghl_compute_smallb_and_b2(
       double smallb[4],
       double *restrict smallb2);
 
-void ghl_read_error_codes(
-      const ghl_error_codes_t error);
+void ghl_compute_SU_Bsq_Ssq_BdotS(
+      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const ghl_primitive_quantities *restrict prims,
+      double *restrict SU,
+      double *restrict Bsq,
+      double *restrict Ssq,
+      double *restrict BdotS);
+
+void ghl_abort_if_error(const ghl_error_codes_t error);
 
 #ifdef __cplusplus
 }

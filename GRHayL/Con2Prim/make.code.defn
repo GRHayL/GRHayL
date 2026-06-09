@@ -3,15 +3,16 @@
 
 # Source files in this directory that need compiled:
 SRCS = apply_conservative_limits.c               \
+       brent.c                                   \
        compute_conservs.c                        \
        compute_conservs_and_Tmunu.c              \
+       compute_SU_Bsq_Ssq_BdotS.c                \
        con2prim_multi_method.c                   \
        enforce_primitive_limits_and_compute_u0.c \
+       get_con2prim_routine_name.c               \
        guess_primitives.c                        \
        initialize_diagnostics.c                  \
        limit_utilde_and_compute_v.c              \
-       undensitize_conservatives.c               \
-       get_con2prim_routine_name.c               \
-       brent.c
+       undensitize_conservatives.c
 
 SUBDIRS = Hybrid Tabulated

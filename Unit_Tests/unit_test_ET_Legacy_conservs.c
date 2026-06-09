@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
         Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
         Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
-  ghl_eos_parameters eos;
+  ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
         rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,
@@ -262,8 +262,7 @@ int main(int argc, char **argv) {
 
     // Enforce limits on primitive variables and recompute conservatives.
     int error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &diagnostics.speed_limited);
-    if(error)
-      ghl_read_error_codes(error);
+    ghl_abort_if_error(error);
     ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
 
     // Here, we call the ghl_return_* functions and then repack the struct from that data. These functions are too

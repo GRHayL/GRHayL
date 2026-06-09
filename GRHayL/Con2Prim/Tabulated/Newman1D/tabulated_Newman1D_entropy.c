@@ -143,8 +143,7 @@ ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
 
   // Step 1: Compute auxiliary quantities
   double SU[3], Bsq, Ssq, BdotS;
-  compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims,
-                           SU, &Bsq, &Ssq, &BdotS);
+  ghl_compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims, SU, &Bsq, &Ssq, &BdotS);
 
   // Step 2: Call the Newman routine that uses the entropy to recover T
   const double tol_x = 1e-15;

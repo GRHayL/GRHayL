@@ -495,12 +495,12 @@ prefix=$(Realpath $prefix)
 
 printf "Checking if build type is valid... "
 case $buildtype in
-         plain) break;;
-         debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g"; break;;
-     debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2 -g"; break;;
-           opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2"; break;;
-    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3"; break;;
-             *) printf "%s\nUnsupported built type, use ./configure -h for help\n" $(red $buildtype)
+         plain) ;;
+         debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g" ;;
+     debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2 -g" ;;
+           opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2" ;;
+    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3" ;;
+             *) printf "%s\nUnsupported built type, use ./configure -h for help\n" "$(red "$buildtype")"
                 exit 1;;
 esac
 YES "buildtype: $buildtype; build flags: $BUILDCFLAGS"

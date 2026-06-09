@@ -53,7 +53,6 @@ def create_simple_table():
     N_rho   = 7
     N_T     = 5
     N_Y_e   = 3
-    npoints = N_rho * N_T * N_Y_e
     dims    = (N_Y_e, N_T, N_rho)
 
     # Set rho, T, and Y_e
@@ -94,6 +93,7 @@ def create_simple_table():
     # Now create the output table
     with H5File("simple_table.h5", "w") as f:
         # Create basic datasets
+        f.create_dataset("have_rel_cs2", shape=1    , dtype="i4", data=1              )
         f.create_dataset("pointsrho"   , shape=1    , dtype="i4", data=N_rho          )
         f.create_dataset("pointstemp"  , shape=1    , dtype="i4", data=N_T            )
         f.create_dataset("pointsye"    , shape=1    , dtype="i4", data=N_Y_e          )
@@ -125,59 +125,3 @@ def create_simple_table():
 
 if __name__ == '__main__':
     create_simple_table()
-
-# string = """
-# double set_table_quantity(
-#       const int which_var,
-#       const double rho,
-#       const double Y_e,
-#       const double T ) {
-#   switch (which_var) {
-#     if i==0:
-#       return rho + Y_e + T # Pressure
-#     elif i==1:
-#       return rho + Y_e - T # eps
-#     elif i==2:
-#       return rho - Y_e + T # entropy
-#     elif i==3:
-#       return rho - Y_e - T # munu
-#     elif i==4:
-#       return -rho + Y_e + T # cs2
-#     elif i==5:
-#       return -rho + Y_e - T  # deps/dT
-#     elif i==6:
-#       return -rho - Y_e + T # dP/drho
-#     elif i==7:
-#       return -rho - Y_e - T # dP/deps
-#     elif i==8:
-#       return 2*rho + Y_e + T # muhat
-#     elif i==9:
-#       return 2*rho + Y_e - T # mu_e
-#     elif i==10:
-#       return 2*rho - Y_e + T # mu_p
-#     elif i==11:
-#       return 2*rho - Y_e - T # mu_n
-#     elif i==12:
-#       return -2*rho + Y_e + T # X_a
-#     elif i==13:
-#       return -2*rho + Y_e - T # X_h
-#     elif i==14:
-#       return -2*rho - Y_e + T # X_n
-#     elif i==15:
-#       return -2*rho - Y_e - T # X_p
-#     elif i==16:
-#       return rho + 3*Y_e - T # Abar
-#     elif i==17:
-#       return rho - 3*Y_e + T # Zbar
-#     elif i==18:
-#       return rho - 3*Y_e - T # Gamma
-#     default:
-#       ghl_error("Invalid variable %d\\n", which_var);
-#   }
-# }\n"""
-
-# string = string.replace("elif ", "case ")
-# string = string.replace("if ", "case ")
-# string = string.replace("i==", "")
-# string = string.replace(" #", "; //")
-# print(string)

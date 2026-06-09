@@ -23,8 +23,14 @@ runs:
     # This still doesn't generate expected cov. files
     - if: runner.os == 'Linux' && inputs.compiler == 'clang'
       run: |
-        llvm-profdata-14 merge -sparse default.profraw -o coverage.profdata
-        llvm-cov-14 export ./build/lib/libghl.so -instr-profile=coverage.profdata -format=lcov > coverage.lcov
+        LLVM_PROFDATA="$(ls /usr/bin/llvm-profdata-* | sort -V | tail -n 1)"
+        LLVM_COV="$(ls /usr/bin/llvm-cov-* | sort -V | tail -n 1)"
+
+        test -x "$LLVM_PROFDATA"
+        test -x "$LLVM_COV"
+
+        "$LLVM_PROFDATA" merge -sparse default.profraw -o coverage.profdata
+        "$LLVM_COV" export ./build/lib/libghl.so -instr-profile=coverage.profdata -format=lcov > coverage.lcov
       shell: bash
 
     # Try Intel's codecov tool? Not sure if this is compatible with gcovr
@@ -50,7 +56,7 @@ runs:
     - if: runner.os == 'MacOS' && inputs.compiler == 'clang'
       run: |
         #brew install gcovr
-        #gcovr -r . --gcov-executable "llvm-cov-14 gcov" --keep
+        #gcovr -r . --gcov-executable "llvm-cov gcov" --keep
       shell: bash
 
     - uses: codecov/codecov-action@v5
