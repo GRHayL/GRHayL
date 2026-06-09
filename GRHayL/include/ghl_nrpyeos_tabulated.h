@@ -3,7 +3,7 @@
 
 #include "ghl.h"
 
-#ifndef GHL_USE_HDF5
+#ifdef GHL_DISABLE_HDF5
 #define GHL_HDF5_ERROR_IF_USED \
   ghl_error("HDF5 is disabled, so this function cannot be used\n")
 #else
@@ -24,11 +24,6 @@
 
 #define NRPYEOS_IDX1D(eos_, ir_, it_, iy_)      ((ir_) + eos_->N_rho * (it_ + eos_->N_T * (iy_)))
 #define NRPYEOS_IDX3D(eos_, ir_, it_, iy_, iv_) ((iv_) + NRPyEOS_ntablekeys * NRPYEOS_IDX1D(eos_, ir_, it_, iy_))
-
-//
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 // Table keys
 typedef enum {
@@ -56,7 +51,11 @@ typedef enum {
 } NRPyEOS_keys;
 
 //********************************************
-#endif // GHL_USE_HDF5
+#endif // GHL_DISABLE_HDF5
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Function prototypes
 ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(

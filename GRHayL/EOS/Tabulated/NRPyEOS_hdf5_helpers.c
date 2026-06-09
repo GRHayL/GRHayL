@@ -1,14 +1,13 @@
 #include "NRPyEOS_hdf5_helpers.h"
 
+#ifndef GHL_DISABLE_HDF5
+
 ghl_error_codes_t NRPyEOS_hdf5_read_dataset(
       hid_t file_id,
       ghl_hdf5_t dtype,
       const char *dataset_name,
       const size_t expected_size,
       void **data) {
-#ifndef GHL_USE_HDF5
-  GHL_HDF5_ERROR_IF_USED;
-#else
   ghl_error_codes_t error = ghl_success;
 
   const hid_t dataset_types[2] = { H5T_NATIVE_INT, H5T_NATIVE_DOUBLE };
@@ -85,7 +84,6 @@ cleanup_and_return:
   }
 
  return error;
-#endif
 }
 
 ghl_error_codes_t NRPyEOS_hdf5_read_int_dataset(
@@ -105,3 +103,5 @@ ghl_error_codes_t NRPyEOS_hdf5_read_double_dataset(
   return NRPyEOS_hdf5_read_dataset(
     file_id, GHL_HDF5_DOUBLE, dataset_name, expected_size, data);
 }
+
+#endif

@@ -1,4 +1,5 @@
 #include "ghl_radiation.h"
+#include "ghl_nrpyeos_tabulated.h"
 
 static double EnsureFinite(const double x) {
   if(isfinite(x))
@@ -19,6 +20,10 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
       const double T,
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_opacities *restrict kappa) {
+
+#ifdef GHL_DISABLE_HDF5
+  return ghl_error_used_disabled_hdf5;
+#endif
 
   // Step 1: Get chemical potentials and mass
   //         fractions using the EOS

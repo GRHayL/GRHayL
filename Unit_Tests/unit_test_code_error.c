@@ -1,9 +1,22 @@
 // clang-format off
 #include "ghl_unit_tests.h"
 
+#ifndef GHL_DISABLE_HDF5
 void read_table_error_test(int test_key);
+#endif
+
 static ghl_error_codes_t expected_error_code(const int test_key);
 static void expect_error_code(ghl_error_codes_t error, int test_key, const char *call);
+
+#ifdef GHL_DISABLE_HDF5
+static bool hdf5_only_test(int test_key) {
+  return (test_key >= 6 && test_key <= 32)
+      || (test_key >= 34 && test_key <= 60)
+      || test_key == 63
+      || test_key == 66
+      || (test_key >= 69 && test_key <= 82);
+}
+#endif
 
 static void pass_test(int test_key, const char *message) {
   printf("Test %d passed: %s\n", test_key, message);
@@ -18,10 +31,17 @@ static void fail_test(int test_key, const char *message) {
 int main(int argc, char **argv) {
 
   const int test_key = atoi(argv[1]);
+#ifdef GHL_DISABLE_HDF5
+  if(hdf5_only_test(test_key)) {
+    pass_test(test_key, "requires HDF5; skipped in no-HDF5 build");
+  }
+#endif
+#ifndef GHL_DISABLE_HDF5
   if((test_key > 33 && test_key < 61) || test_key == 73 || test_key == 74) {
     read_table_error_test(test_key);
     fail_test(test_key, "read_table_error_test returned unexpectedly");
   }
+#endif
 
   ghl_error_codes_t error = ghl_success;
 
@@ -130,6 +150,7 @@ int main(int argc, char **argv) {
       expect_error_code(error, test_key, "ghl_con2prim_hybrid_select_method");
       break;
   }
+#ifndef GHL_DISABLE_HDF5
 /*
 rho: 2.718281828459045e+00, 1.096633158428459e+03
  T : 2.718281828459045e+00, 1.484131591025766e+02
@@ -368,12 +389,16 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
      ghl_get_con2prim_routine_name:
          33: Invalid C2P key
    */
-  
+
   switch (test_key) {
     case 32:
       error = ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
       expect_error_code(error, test_key, "ghl_con2prim_tabulated_select_method");
       break;
+  }
+#endif
+
+  switch (test_key) {
     case 33:
     {
       const char *routine_name = ghl_get_con2prim_routine_name(-5);
@@ -417,6 +442,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             k_ppoly0, Gamma_th, &hybrid_eos);
       expect_error_code(error, test_key, "ghl_initialize_hybrid_eos_functions_and_params");
       break;
+#ifndef GHL_DISABLE_HDF5
     case 63:
       error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
@@ -425,6 +451,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             T_atm, T_min, T_max, &tab_eos);
       expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
+#endif
     case 64:
       error = ghl_initialize_simple_eos_functions_and_params(
             rho_b_atm, rho_b_max, rho_b_min,
@@ -439,6 +466,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             k_ppoly0, Gamma_th, &hybrid_eos);
       expect_error_code(error, test_key, "ghl_initialize_hybrid_eos_functions_and_params");
       break;
+#ifndef GHL_DISABLE_HDF5
     case 66:
       error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
@@ -447,6 +475,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             T_atm, T_min, T_max, &tab_eos);
       expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
+#endif
     case 67:
       error = ghl_initialize_simple_eos_functions_and_params(
             rho_b_atm, rho_b_min, rho_b_max,
@@ -461,6 +490,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             Gamma_th, &hybrid_eos);
       expect_error_code(error, test_key, "ghl_initialize_simple_eos_functions_and_params");
       break;
+#ifndef GHL_DISABLE_HDF5
     case 69:
       error = ghl_initialize_tabulated_eos_functions_and_params(
             tablepath,
@@ -493,6 +523,8 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
             T_atm, T_max, T_min, &tab_eos);
       expect_error_code(error, test_key, "ghl_initialize_tabulated_eos_functions_and_params");
       break;
+#endif
+#ifndef GHL_DISABLE_HDF5
     case 78:
     case 79:
     case 80:
@@ -505,8 +537,10 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
         fail_test(test_key, message);
       }
       break;
+#endif
   }
 
+#ifndef GHL_DISABLE_HDF5
   switch (test_key) {
     case 78:
       error = ghl_tabulated_compute_Ye_from_rho(&tab_eos, 0.5 * tab_eos.table_rho_min, &Y_e);
@@ -534,19 +568,23 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       expect_error_code(error, test_key, "ghl_tabulated_compute_deps_dP_from_rho");
       break;
   }
+#endif
 
   // Silence warnings
   (void)Fermi_Dirac_integral;
   (void)speed_limited;
+#ifndef GHL_DISABLE_HDF5
   (void)rho;
   (void)Y_e;
   (void)eps;
   (void)T;
+#endif
 
   fail_test(test_key, "did not trigger its expected failure path");
 }
 // clang-format on
 
+#ifndef GHL_DISABLE_HDF5
 void create_dataset(char *name, int dim, hid_t datatype_id, hid_t file_id) {
   hsize_t dims[dim];
   for(int i=0;i<dim;i++) {
@@ -590,6 +628,8 @@ void create_opaque_dataset(char *name, hid_t file_id) {
   H5Tclose(datatype_id);
   H5Sclose(dataspace_id);
 }
+
+#endif
 
 static ghl_error_codes_t expected_error_code(const int test_key) {
   switch(test_key) {
@@ -702,6 +742,8 @@ static void expect_error_code(ghl_error_codes_t error, int test_key, const char 
   ghl_abort_if_error(error);
 }
 
+#ifndef GHL_DISABLE_HDF5
+
 void read_table_error_test(int test_key) {
 
   printf("read_table_error_test: %d\n", test_key);
@@ -770,3 +812,5 @@ void read_table_error_test(int test_key) {
   ghl_error_codes_t error = NRPyEOS_read_table_set_EOS_params("test.h5", &eos);
   expect_error_code(error, original_test_key, "NRPyEOS_read_table_set_EOS_params");
 }
+
+#endif

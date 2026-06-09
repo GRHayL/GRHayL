@@ -9,6 +9,8 @@
 #define NRPYEOS_HDF5_HELPERS_H
 
 #include "ghl.h"
+
+#ifndef GHL_DISABLE_HDF5
 #include <hdf5.h>
 
 /*
@@ -56,5 +58,7 @@ ghl_error_codes_t NRPyEOS_hdf5_read_double_dataset(
       const char *dataset_name,
       const size_t expected_size,
       void **data);
+
+#endif
 
 #endif // NRPYEOS_HDF5_HELPERS_H

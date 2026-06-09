@@ -30,16 +30,23 @@ void ghl_initialize_eos_functions(
   // Step 1: Hybrid EOS functions (always available)
   NRPyEOS_initialize_hybrid_functions();
 
-  // Step 2: Tabulated EOS functions (always available)
+  // Step 2: Tabulated EOS functions require HDF5-backed NRPyEOS tables.
+#ifndef GHL_DISABLE_HDF5
   NRPyEOS_initialize_tabulated_functions();
+#endif
 
   // Step 3: General functions (same interface for all EOSs)
   if(eos_type == ghl_eos_hybrid || eos_type == ghl_eos_simple) {
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
     ghl_compute_h_and_cs2 = NRPyEOS_hybrid_compute_enthalpy_and_cs2;
+#ifndef GHL_DISABLE_HDF5
   } else if(eos_type == ghl_eos_tabulated) {
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
     ghl_compute_h_and_cs2 = NRPyEOS_tabulated_compute_enthalpy_and_cs2;
+#else
+  } else if(eos_type == ghl_eos_tabulated) {
+    GHL_HDF5_ERROR_IF_USED;
+#endif
   }
 }
 
@@ -228,6 +235,9 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
       double T_max,
       ghl_eos_parameters *restrict eos) {
 
+#ifdef GHL_DISABLE_HDF5
+  return ghl_error_used_disabled_hdf5;
+#else
   // Step 1: Set EOS type and whether or not to clean sound speed
   eos->eos_type = ghl_eos_tabulated;
   eos->table_type = table_type;
@@ -317,6 +327,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   eos->le_of_lr = NULL;
   eos->lh_of_lr = NULL;
   return ghl_success;
+#endif
 }
 
 /*
@@ -382,6 +393,9 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
       const double T_max,
       ghl_eos_parameters *restrict eos) {
 
+#ifdef GHL_DISABLE_HDF5
+  return ghl_error_used_disabled_hdf5;
+#else
   eos->eos_type = ghl_eos_tabulated;
 
   // FIXME: these are hard-coded default values for now
@@ -399,4 +413,5 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
                                       Ye_atm, Ye_min, Ye_max,
                                       T_atm, T_min, T_max,
                                       eos);
+#endif
 }

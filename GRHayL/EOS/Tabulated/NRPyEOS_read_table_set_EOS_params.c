@@ -51,8 +51,8 @@ get_EOS_table_min(const ghl_eos_parameters *restrict eos, const int var_key) {
 ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(
       const char *filepath,
       ghl_eos_parameters *restrict eos) {
-#ifndef GHL_USE_HDF5
-  return
+#ifdef GHL_DISABLE_HDF5
+  return ghl_error_used_disabled_hdf5;
 #else
 
   if(eos == NULL) {

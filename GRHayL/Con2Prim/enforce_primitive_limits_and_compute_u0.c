@@ -1,4 +1,5 @@
 #include "ghl_con2prim.h"
+#include "ghl_nrpyeos_tabulated.h"
 
 /* Function     : ghl_enforce_primitive_limits_and_compute_u0()
  * Description  : Applies limits to rho_b, pressure, and v^i, then
@@ -51,6 +52,9 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
 
     // Tabulated EOS specific floors and ceilings
     case ghl_eos_tabulated:
+#ifdef GHL_DISABLE_HDF5
+      return ghl_error_used_disabled_hdf5;
+#else
       // Apply floors and ceilings to rho, Y_e and T
       ghl_tabulated_enforce_bounds_rho_Ye_T(
             eos, &prims->rho, &prims->Y_e, &prims->temperature);
@@ -66,6 +70,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
               eos, prims->rho, prims->Y_e, prims->temperature, &prims->press,
               &prims->eps);
       }
+#endif
       break;
 
     case ghl_eos_simple:
