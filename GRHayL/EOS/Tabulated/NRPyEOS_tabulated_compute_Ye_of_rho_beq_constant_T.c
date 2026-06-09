@@ -104,7 +104,7 @@ static int find_left_index_bisection(
 }
 
 // This is a simple linear interpolation (linterp) function.
-ghl_error_codes_t linterp(
+static ghl_error_codes_t linterp(
       const int nx,
       const double *restrict x_arr,
       const double *restrict y_arr,
@@ -137,7 +137,7 @@ ghl_error_codes_t linterp(
 }
 
 // This is a simple discrete derivative.
-ghl_error_codes_t discrete_derivative(
+static ghl_error_codes_t discrete_derivative(
       const int nx,
       const double *restrict x_arr,
       const double *restrict y_arr,
