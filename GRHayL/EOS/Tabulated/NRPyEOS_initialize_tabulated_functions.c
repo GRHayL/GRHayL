@@ -2,7 +2,7 @@
 
 void NRPyEOS_initialize_tabulated_functions() {
 #ifndef GRHAYL_ENABLE_HDF5
-  HDF5_ERROR_IF_USED;
+  GHL_HDF5_ERROR_IF_USED;
 #else
   // clang-format off
   ghl_tabulated_read_table_set_EOS_params              = &NRPyEOS_read_table_set_EOS_params;
