@@ -56,7 +56,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
-#ifndef GHL_ENABLE_HDF5
+#ifdef GHL_DISABLE_HDF5
   return ghl_error_used_disabled_hdf5;
 #else
   switch(c2p_key) {
@@ -144,7 +144,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
-#ifndef GHL_ENABLE_HDF5
+#ifdef GHL_DISABLE_HDF5
   return ghl_error_used_disabled_hdf5;
 #else
   if(params->calc_prim_guess)

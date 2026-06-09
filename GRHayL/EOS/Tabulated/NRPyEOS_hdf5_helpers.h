@@ -10,7 +10,7 @@
 
 #include "ghl.h"
 
-#ifdef GHL_ENABLE_HDF5
+#ifndef GHL_DISABLE_HDF5
 #include <hdf5.h>
 
 /*

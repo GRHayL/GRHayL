@@ -23,7 +23,7 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       double *restrict R_source,
       double *restrict Q_source) {
 
-#ifndef GHL_ENABLE_HDF5
+#ifdef GHL_DISABLE_HDF5
   return ghl_error_used_disabled_hdf5;
 #endif
 

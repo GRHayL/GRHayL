@@ -1,4 +1,4 @@
-#ifdef GHL_ENABLE_HDF5
+#ifndef GHL_DISABLE_HDF5
 /*
  * (c) 2022 Leo Werneck
  *

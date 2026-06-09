@@ -1,6 +1,6 @@
 #include "NRPyEOS_hdf5_helpers.h"
 
-#ifdef GHL_ENABLE_HDF5
+#ifndef GHL_DISABLE_HDF5
 
 ghl_error_codes_t NRPyEOS_hdf5_read_dataset(
       hid_t file_id,

@@ -3,7 +3,7 @@
  * (c) 2022 Leo Werneck
  */
 void NRPyEOS_free_memory(ghl_eos_parameters *restrict eos) {
-#ifndef GHL_ENABLE_HDF5
+#ifdef GHL_DISABLE_HDF5
   GHL_HDF5_ERROR_IF_USED;
 #else
   ghl_info("*******************************\n");
