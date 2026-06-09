@@ -25,11 +25,6 @@
 #define NRPYEOS_IDX1D(eos_, ir_, it_, iy_)      ((ir_) + eos_->N_rho * (it_ + eos_->N_T * (iy_)))
 #define NRPYEOS_IDX3D(eos_, ir_, it_, iy_, iv_) ((iv_) + NRPyEOS_ntablekeys * NRPYEOS_IDX1D(eos_, ir_, it_, iy_))
 
-//
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // Table keys
 typedef enum {
   NRPyEOS_press_key,
@@ -57,6 +52,10 @@ typedef enum {
 
 //********************************************
 #endif // GRHAYL_ENABLE_HDF5
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Function prototypes
 ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(

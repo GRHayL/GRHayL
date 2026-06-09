@@ -2,9 +2,7 @@
 #include "ghl_unit_tests.h"
 
 #ifdef GRHAYL_ENABLE_HDF5
-#ifdef GRHAYL_ENABLE_HDF5
 void read_table_error_test(int test_key);
-#endif
 #endif
 
 static ghl_error_codes_t expected_error_code(const int test_key);
@@ -391,12 +389,16 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
      ghl_get_con2prim_routine_name:
          33: Invalid C2P key
    */
-  
+
   switch (test_key) {
     case 32:
       error = ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
       expect_error_code(error, test_key, "ghl_con2prim_tabulated_select_method");
       break;
+  }
+#endif
+
+  switch (test_key) {
     case 33:
     {
       const char *routine_name = ghl_get_con2prim_routine_name(-5);
@@ -409,8 +411,6 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       return 1;
     }
   }
-
-#endif
 
   /*
      initialize_*_eos_functions_and_params::
