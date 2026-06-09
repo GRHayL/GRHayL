@@ -53,7 +53,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
     // Tabulated EOS specific floors and ceilings
     case ghl_eos_tabulated:
 #ifndef GRHAYL_ENABLE_HDF5
-      HDF5_ERROR_IF_USED;
+      return ghl_error_used_disabled_hdf5;
 #else
       // Apply floors and ceilings to rho, Y_e and T
       ghl_tabulated_enforce_bounds_rho_Ye_T(

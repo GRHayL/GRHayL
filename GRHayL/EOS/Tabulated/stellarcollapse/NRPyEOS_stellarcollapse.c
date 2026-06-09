@@ -1,11 +1,13 @@
+#include "NRPyEOS_stellarcollapse.h"
+#include "ghl_nrpyeos_tabulated.h"
+#include "ghl_io.h"
+
+#ifdef GRHAYL_ENABLE_HDF5
 #include <hdf5.h>
 #include <math.h>
 #include <stdlib.h>
 
 #include "../NRPyEOS_hdf5_helpers.h"
-#include "NRPyEOS_stellarcollapse.h"
-#include "ghl_nrpyeos_tabulated.h"
-#include "ghl_io.h"
 
 static const char *dataset_names[NRPyEOS_sc_n_quantities] = {
   "Abar", "Xa",      "Xh",      "Xn",      "Xp",    "Zbar",      "cs2",
@@ -27,6 +29,8 @@ static bool table_has_rel_cs2(hid_t file) {
 
   return (flag != 0);
 }
+
+#endif
 
 #define GHL_GOTO_CLEANUP_IF_ERROR(call) \
   err = call;                           \
@@ -113,7 +117,7 @@ cleanup:
 
 void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table) {
 #ifndef GRHAYL_ENABLE_HDF5
-  HDF5_ERROR_IF_USED;
+  GHL_HDF5_ERROR_IF_USED;
 #else
   if(!table) {
     return;

@@ -24,7 +24,7 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       double *restrict Q_source) {
 
 #ifndef GRHAYL_ENABLE_HDF5
-  HDF5_ERROR_IF_USED;
+  return ghl_error_used_disabled_hdf5;
 #endif
 
   // Step 1: Get chemical potentials and mass

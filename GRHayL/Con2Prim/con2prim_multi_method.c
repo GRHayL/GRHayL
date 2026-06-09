@@ -40,8 +40,6 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
   }
 }
 
-#ifdef GRHAYL_ENABLE_HDF5
-
 /*
  * Function     : ghl_con2prim_tabulated_select_method()
  * Description  : Calls the Con2Prim routine designated by c2p_key
@@ -58,6 +56,9 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
+#ifndef GRHAYL_ENABLE_HDF5
+  return ghl_error_used_disabled_hdf5;
+#else
   switch(c2p_key) {
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case Palenzuela1D:
@@ -73,9 +74,8 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
     default:
       return ghl_error_invalid_c2p_key;
   }
-}
-
 #endif
+}
 
 /*
  * Function     : ghl_con2prim_tabulated_select_method()
@@ -129,8 +129,6 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
   return error;
 }
 
-#ifdef GRHAYL_ENABLE_HDF5
-
 /*
  * Function     : ghl_con2prim_tabulated_select_method()
  * Description  : Calls the Con2Prim routine designated by c2p_key
@@ -146,6 +144,9 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
+#ifndef GRHAYL_ENABLE_HDF5
+  return ghl_error_used_disabled_hdf5;
+#else
   if(params->calc_prim_guess)
     ghl_guess_primitives(eos, ADM_metric, cons_undens, prims);
 
@@ -181,5 +182,5 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
     }
   }
   return error;
-}
 #endif
+}

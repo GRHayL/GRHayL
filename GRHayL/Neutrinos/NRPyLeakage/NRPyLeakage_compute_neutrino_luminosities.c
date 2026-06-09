@@ -31,7 +31,7 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_luminosities(
       ghl_neutrino_luminosities *restrict lum) {
 
 #ifndef GRHAYL_ENABLE_HDF5
-  HDF5_ERROR_IF_USED;
+  return ghl_error_used_disabled_hdf5;
 #endif
 
   // Step 1: Get chemical potentials and mass

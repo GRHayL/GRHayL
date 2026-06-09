@@ -4,7 +4,7 @@
 #include "ghl.h"
 
 #ifndef GRHAYL_ENABLE_HDF5
-#define HDF5_ERROR_IF_USED \
+#define GHL_HDF5_ERROR_IF_USED \
   ghl_error("HDF5 is disabled, so this function cannot be used\n")
 #else
 

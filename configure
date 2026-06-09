@@ -711,7 +711,6 @@ if [ $usehdf5 -eq 0 ]; then
     tests=$(find Unit_Tests -maxdepth 1 \
         -name 'unit_test_*.c' \
         ! -name '*tabulated*' \
-        ! -name 'unit_test_code_error.c' \
         ! -name 'unit_test_con2prim_debug.c' \
         ! -name 'unit_test_nrpyleakage_constant_density_sphere.c' \
         ! -name 'unit_test_nrpyleakage_luminosities.c' \
