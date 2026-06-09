@@ -18,6 +18,7 @@ SUBDIRS = Atmosphere                      \
           EOS/Hybrid                      \
           EOS/Tabulated                   \
           EOS/Tabulated/interpolators     \
+          EOS/Tabulated/stellarcollapse   \
           Flux_Source                     \
           Flux_Source/hybrid              \
           Flux_Source/hybrid_entropy      \
