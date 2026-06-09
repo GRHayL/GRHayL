@@ -647,7 +647,7 @@ int main() {
        run ./configure -h for more information on how to specify your hdf5 installation."
         error "$msg"
     fi
-    cflags="$cflags -DGRHAYL_ENABLE_HDF5"
+    cflags="$cflags -DGHL_ENABLE_HDF5"
 fi
 
 parse_mcd()

@@ -2,7 +2,7 @@
 #include "ghl_nrpyeos_tabulated.h"
 #include "ghl_io.h"
 
-#ifdef GRHAYL_ENABLE_HDF5
+#ifdef GHL_ENABLE_HDF5
 #include <hdf5.h>
 #include <math.h>
 #include <stdlib.h>
@@ -41,7 +41,7 @@ static bool table_has_rel_cs2(hid_t file) {
 ghl_error_codes_t NRPyEOS_stellarcollapse_read_table(
       const char *filepath,
       NRPyEOS_stellarcollapse_t **sc) {
-#ifndef GRHAYL_ENABLE_HDF5
+#ifndef GHL_ENABLE_HDF5
   return ghl_error_used_disabled_hdf5;
 #else
   hid_t file_id = H5Fopen(filepath, H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -116,7 +116,7 @@ cleanup:
 }
 
 void NRPyEOS_stellarcollapse_free_table(NRPyEOS_stellarcollapse_t *table) {
-#ifndef GRHAYL_ENABLE_HDF5
+#ifndef GHL_ENABLE_HDF5
   GHL_HDF5_ERROR_IF_USED;
 #else
   if(!table) {

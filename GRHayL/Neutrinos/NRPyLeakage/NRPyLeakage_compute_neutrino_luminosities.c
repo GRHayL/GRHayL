@@ -30,7 +30,7 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_luminosities(
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_luminosities *restrict lum) {
 
-#ifndef GRHAYL_ENABLE_HDF5
+#ifndef GHL_ENABLE_HDF5
   return ghl_error_used_disabled_hdf5;
 #endif
 

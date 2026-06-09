@@ -53,9 +53,9 @@ it currently only supports EOS tables in that format. We are also
 working supporting tables in the [CompOSE](https://compose.obspm.fr/table)
 format, which would allow for use of the tabulated EOS without `HDF5`.
 
-Configured builds define `GRHAYL_ENABLE_HDF5` automatically when `HDF5` support
+Configured builds define `GHL_ENABLE_HDF5` automatically when `HDF5` support
 is enabled. Manual builds or downstream projects that bypass `configure` must
-define `GRHAYL_ENABLE_HDF5` and provide the required `HDF5` include and link
+define `GHL_ENABLE_HDF5` and provide the required `HDF5` include and link
 flags when using `HDF5`-backed tabulated EOS APIs. Builds configured with
 `--disable-hdf5` do not support tabulated EOS runtime paths.
 

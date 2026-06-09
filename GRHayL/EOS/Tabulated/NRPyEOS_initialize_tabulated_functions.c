@@ -1,7 +1,7 @@
 #include "ghl_nrpyeos_tabulated.h"
 
 void NRPyEOS_initialize_tabulated_functions() {
-#ifndef GRHAYL_ENABLE_HDF5
+#ifndef GHL_ENABLE_HDF5
   GHL_HDF5_ERROR_IF_USED;
 #else
   // clang-format off

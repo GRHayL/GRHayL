@@ -5,7 +5,7 @@ SRCS = initialize_and_shutdown.c
 
 # GRHayLib requires HDF5, so compile all thorn sources with the
 # corresponding positive feature macro enabled.
-CPPFLAGS += -DGRHAYL_ENABLE_HDF5
+CPPFLAGS += -DGHL_ENABLE_HDF5
 
 # Subdirectories containing source files
 SUBDIRS = Atmosphere                      \

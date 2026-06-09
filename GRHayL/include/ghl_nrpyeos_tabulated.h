@@ -3,7 +3,7 @@
 
 #include "ghl.h"
 
-#ifndef GRHAYL_ENABLE_HDF5
+#ifndef GHL_ENABLE_HDF5
 #define GHL_HDF5_ERROR_IF_USED \
   ghl_error("HDF5 is disabled, so this function cannot be used\n")
 #else
@@ -51,7 +51,7 @@ typedef enum {
 } NRPyEOS_keys;
 
 //********************************************
-#endif // GRHAYL_ENABLE_HDF5
+#endif // GHL_ENABLE_HDF5
 
 #ifdef __cplusplus
 extern "C" {
