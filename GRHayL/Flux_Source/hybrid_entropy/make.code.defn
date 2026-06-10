@@ -1,4 +1,0 @@
-
-SRCS = ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy.c \
-       ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy.c \
-       ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy.c
