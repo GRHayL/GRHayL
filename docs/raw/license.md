@@ -27,7 +27,7 @@ description of the citations.
  | Tabulated EOS                         | Werneck _et al_. \cite Werneck_IGM                                     |
  | Noble Con2Prim routines               | HARM \cite HARM and its solver \cite Noble_2006                        |
  | Palenzuela & Newman Con2Prim routines | GRMHD_con2prim \cite Siegel_2018_code and the method \cite Siegel_2018 |
- | PPM method                            | method paper \cite Siegel_2018_code                                    |
+ | PPM method                            | corrected method/reference papers \cite Marti_1996 and \cite DelZanna_2003 |
 
 Any work using GRHayL should cite its release paper [TBD](). Additionally,
 all components of the library contain elements adapted from IllinoisGRMHD
@@ -56,6 +56,9 @@ the [code](https://zenodo.org/records/1213306) and associated
 The PPM method is adapted from the work by Del Zanna et al, and the
 [release paper](https://www.aanda.org/articles/aa/abs/2003/11/aa3107/aa3107.html)
 ([arxiv](https://arxiv.org/abs/astro-ph/0210618)) should be cited.
+The original Colella and Woodward PPM reference \cite Colella_1984 contains
+known formula errors; later papers and implementation references correct these,
+so the table above points PPM users to \cite Marti_1996 and \cite DelZanna_2003.
 
 The WENO-z method is adapted from the Phoebus code developed by
 Los Alamos National Lab.

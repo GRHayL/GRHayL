@@ -100,7 +100,7 @@
  *
  * - ghl_interpolate_with_cell_centered_ADM
  * - ghl_interpolate_with_cell_centered_BSSN
- * - ghl_interpolate_with_cell_vertex_ADM
+ * - ghl_interpolate_with_vertex_centered_ADM
  *
  * These functions all compute the quantities in the @ref ghl_induction_interp_vars
  * struct. The different flavors of these functions depend on the metric

@@ -5,7 +5,7 @@
  *        schemes.
  *
  * This includes all the core routines to implement GRMHD code for both
- * [hybrid](@ref hybrid_eos) and [tabulated](@ref tab_eos) equations of state.
+ * [hybrid](@ref hyb_eos) and [tabulated](@ref tab_eos) equations of state.
  * Additionally, we provide a simplified hybrid EOS. This is often referred
  * to as the 'ideal fluid' or 'ideal gas' EOS despite the fact that all of
  * these are ideal fluid EOS. This EOS is primarily only of interest for

@@ -1,6 +1,5 @@
 #include "ghl_nrpyeos_hybrid.h"
 
-void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {
 /**
  * @ingroup hyb_eos
  * @brief For a given set of EOS inputs, determine values of K_ppoly that will
@@ -13,6 +12,7 @@ void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) 
  * @param[in] eos:   pointer to ghl_eos_parameters struct
  *
  */
+void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {
 
   /* When neos = 1, we will only need the value K_ppoly[0] and eps_integ_const[0].
    * Since our only polytropic EOS is given by
@@ -95,4 +95,3 @@ void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) 
     eos->eps_integ_const[j] = eos->eps_integ_const[j-1] + aux_epsm1 - aux_epsp0;
   }
 }
-

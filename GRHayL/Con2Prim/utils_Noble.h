@@ -100,8 +100,10 @@ static inline void ghl_compute_func_auxiliaries(
   *dPdZ = Gth_m1*inv_Wsq/eos->Gamma_th;
 }
 
+/*
    pressure as a function of rho0 and w = rho0 + u + p
    this is used by primtoU and Utoprim_1D
+*/
 /**
  * @ingroup c2p_internal
  * @brief Computes \f$ P \f$ from \f$ \rho \f$ and \f$ w = h \rho \f$

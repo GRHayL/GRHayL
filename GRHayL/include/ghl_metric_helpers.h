@@ -12,8 +12,8 @@ extern "C" {
  * @details
  * This function can compute both raising or lowering:
  *
- * - \f$ v^\nu = g^{\mu \nu} v_\nu \f$
- * - \f$ v_\nu = g_{\mu \nu} v^\nu \f$
+ * - \f$ v^\mu = g^{\mu \nu} v_\nu \f$
+ * - \f$ v_\mu = g_{\mu \nu} v^\nu \f$
  *
  * The exact operation being done is simply determined by the input
  * quantities. This function works for any input arrays, though it

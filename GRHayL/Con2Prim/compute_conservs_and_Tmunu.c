@@ -46,8 +46,8 @@ void ghl_compute_conservs_and_Tmunu(
    *
    * \f[
    * \begin{aligned}
-   * u^i = \frac{v^i}{u^0} \\
-   * u_i = \gamma_{ij} u^j
+   * u^i = u^0 v^i \\
+   * u_\mu = g_{\mu\nu} u^\nu
    * \end{aligned}
    * \f]
    *
@@ -82,8 +82,8 @@ void ghl_compute_conservs_and_Tmunu(
    * \f[
    * \begin{aligned}
    * \rho_*       &= \alpha \sqrt{| \gamma |} \rho u^0 \\
-   * \tilde{S}_i  &= h \rho u_i + \alpha \sqrt{| \gamma |} \left( b^2 u^0 u_i - b^0 b_i \right) \\
-   * \tilde{\tau} &= \alpha \sqrt{| \gamma |} \left[ \left( h \rho + b^2 \right) \left( u^0 \right)^2
+   * \tilde{S}_i  &= \rho_* h u_i + \alpha \sqrt{| \gamma |} \left( b^2 u^0 u_i - b^0 b_i \right) \\
+   * \tilde{\tau} &= \alpha^2 \sqrt{| \gamma |} \left[ \left( h \rho + b^2 \right) \left( u^0 \right)^2
    *                                              - \frac{P}{\alpha^2} - \frac{b^2}{2\alpha^2}
    *                                              - \left( b^0 \right)^2 \right]
    *               - \rho_* \\

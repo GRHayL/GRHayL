@@ -11,7 +11,7 @@
  *
  * @param[in] Kxx, Kxy, Kxz, Kyy, Kyz, Kzz: individual components of the extrinsic curvature \f$ K_{ij} \f$
  *
- * @param[out] curv: pointer to ghl_conservative_quantities struct
+ * @param[out] curv: pointer to ghl_extrinsic_curvature struct
  *
  */
 void ghl_initialize_extrinsic_curvature(

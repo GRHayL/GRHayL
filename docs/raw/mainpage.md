@@ -36,7 +36,7 @@ list of options, use the `-h` option for a list of all compilation flags.
 ### Dependencies
 
 @grhayl contains an optional HDF5 dependency, and the default configuration
-builds with `HDF5` active. To compile without `HDF5` use the `--nohdf5`
+builds with `HDF5` active. To compile without `HDF5` use the `--disable-hdf5`
 flag. To compile `HDF5` on your local machine use the command
 
 ```shell

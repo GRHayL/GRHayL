@@ -51,6 +51,7 @@ void ghl_interpolate_with_cell_centered_ADM(
       const double Az_stencil[3][3][3],
       const double phitilde,
       ghl_induction_interp_vars *restrict interp_vars) {
+  /*
      We need to interpolate several quantities to several different points depending on the quantities
      we're computing. The staggered gridpoints for these variables are
        phitilde: (i+1/2, j+1/2, k+1/2)
@@ -70,6 +71,7 @@ void ghl_interpolate_with_cell_centered_ADM(
      These two averaging loops are split because the stencils are of different sizes. The stencils are
      centered around the staggered point. This means that the metric have an even stencil, and the A_i
      have an odd stencil.
+  */
   ghl_metric_quantities metric_interp;
   double lapse_over_psi6_interp;
   ghl_ADM_cell_interp(metric_stencil, &metric_interp, &lapse_over_psi6_interp);

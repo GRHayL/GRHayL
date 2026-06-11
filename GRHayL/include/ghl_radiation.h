@@ -8,7 +8,11 @@ extern "C" {
 #endif
 
 /**
- * @ingroup Radiation
+ * @defgroup Neutrinos Neutrinos Gem
+ */
+
+/**
+ * @ingroup Neutrinos
  * @brief  Neutrino quantities
  *
  * @todo
@@ -19,7 +23,7 @@ typedef struct ghl_neutrino_luminosities {
 } ghl_neutrino_luminosities;
 
 /**
- * @ingroup Radiation
+ * @ingroup Neutrinos
  * @brief  Neutrino quantities
  *
  * @todo

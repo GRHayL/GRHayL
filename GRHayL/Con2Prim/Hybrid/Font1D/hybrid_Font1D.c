@@ -112,7 +112,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     const int Font1D_attempts = 5;
     for(int n=0; n<Font1D_attempts; n++) {
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
-      const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
+      const double loop_tol = tol*pow(4,n); // tolerance multipliers are {1,4,16,64,256}
       error = ghl_hybrid_Font1D_loop(
             eos, loop_maxits, loop_tol, W0, Sf20, Psim6,
             sdots, BdotS2, B2, cons, rhob0, &rhob);

@@ -6,7 +6,7 @@
  *
  * @details
  * This routine is the core algorithm used by @ref ghl_hybrid_Font1D . It
- * solves for the primitive density by assuming that there are now thermal
+ * solves for the primitive density by assuming that there are no thermal
  * contributions to the solution.
  *
  * @param[in] eos:          pointer to ghl_eos_parameters struct
@@ -23,7 +23,7 @@
  *
  * @param[in] sdots:        conservative quantity \f$ S^2 \f$
  *
- * @param[in] BdotS2:       conservative quantity \f$ B \cdot S\f$
+ * @param[in] BdotS2:       conservative quantity \f$ \left(B \cdot S\right)^2 \f$
  *
  * @param[in] B2:           magnetic quantity \f$ B^2 \f$
  *
@@ -71,7 +71,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * the next guess for the density using eq. (A62) of \cite Etienne_2012
      *
      * \f[
-     * \rho_1 = \frac{D}{\psi^6 \sqrt{1 + \left(\frac{S_\mathrm{fluid}^2}{D h}\right)^2}}
+     * \rho_1 = \frac{D}{\psi^6 \sqrt{1 + \frac{S_\mathrm{fluid}^2}{\left(D h\right)^2}}}
      * \f]
      *
      * where
@@ -114,7 +114,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      *
      * \f[
      * \begin{aligned}
-     * W &= \frac{\sqrt{S_\mathrm{fluid}^4 + \left( D h \right)^2}}{\psi^6} \\
+     * W &= \frac{\sqrt{S_\mathrm{fluid}^2 + \left( D h \right)^2}}{\psi^6} \\
      * S_\mathrm{fluid}^2 &= \frac{W^2 S^2
      *                           + \left( B \cdot S \right)^2 \left( B^2 + 2W \right)}
      *                           {\left( W + B^2 \right)^2}

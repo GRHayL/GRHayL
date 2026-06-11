@@ -1,6 +1,7 @@
 #include "ghl_induction.h"
 #include "ghl_induction_helpers.h"
 
+/*
    Recall that
        Ax is staggered to (i, j+1/2, k+1/2)
        Ay is staggered to (i+1/2, j, k+1/2)
@@ -8,6 +9,7 @@
        \tilde{\Phi} is staggered to (i+1/2, j+1/2, k+1/2)
    We need the A_i values at all four of these gridpoints, so we interpolate the three
    components and store them in A_to_location variables.
+*/
 /**
  * @ingroup induction_internal
  * @brief Interpolates vector potential to all staggered grid points
@@ -102,6 +104,7 @@ void ghl_A_i_avg(
   A_to_Az[1]       /= 4.0;
 }
 
+/*
    All of the following code aims to compute metric quantities
    at several points:
      1) lapse psi^2 (BSSN) or sqrt{-g} (ADM) at each A_i gridpoint
@@ -109,6 +112,7 @@ void ghl_A_i_avg(
         at the location of \tilde{\Phi}
    The cell-centered metric code requires more interpolations since \tilde{\Phi}
    is vertex-centered.
+*/
 /**
  * @ingroup induction_internal
  * @brief Interpolates cell-centered BSSN quantities to staggered grid points

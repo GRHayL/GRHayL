@@ -41,8 +41,8 @@
  *
  * \f[
  * \begin{aligned}
- * s_- &= \mathrm{slope\_limit} \left( U_{i-1} U_{i-2}, U_{i} - U_{i-1} \right) \\
- * s_+ &= \mathrm{slope\_limit} \left( U_{i+1} U_{i}, U_{i+2} - U_{i+1} \right)
+ * s_- &= \mathrm{slope\_limit} \left( U_{i-1} - U_{i-2}, U_{i} - U_{i-1} \right) \\
+ * s_+ &= \mathrm{slope\_limit} \left( U_{i+1} - U_{i}, U_{i+2} - U_{i+1} \right)
  * \end{aligned}
  * \f]
  *

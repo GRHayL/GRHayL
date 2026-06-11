@@ -81,7 +81,8 @@ void ghl_apply_conservative_limits(
     /**
      * \f[
      * S_m^2 \equiv \mathrm{\texttt{Sm2}}
-     *   = \frac{W_m^2 \tilde{S}^2 + \Omega^2 (B^2 + 2 W_m)}{W_m + B^2}
+     *   = \frac{W_m^2 \tilde{S}^2 + \Omega^2 (B^2 + 2 W_m)}
+     *          {\left(W_m + B^2\right)^2}
      * \f]
      */
     const double Sm2 = (SQR(Wm)*sdots + SQR(BdotS)*(B2+2.0*Wm))/SQR(Wm+B2);
@@ -107,10 +108,10 @@ void ghl_apply_conservative_limits(
    * ## Modifying Energy variable
    *
    * To start, we enforce that \f$ \tilde{\tau} > \tilde{\tau}_\mathrm{atm} \f$.
-   * Afterwards, if \f$ \tilde{\tau} < \frac{\psi^6 B^2}{2} \f$ then
+   * Afterwards, if \f$ \tilde{\tau} < \frac{\sqrt{\gamma} B^2}{2} \f$ then
    *
    * \f[
-   * \tilde{\tau} = \tilde{\tau}_\mathrm{atm} + \frac{\psi^6 B^2}{2}
+   * \tilde{\tau} = \tilde{\tau}_\mathrm{atm} + \frac{\sqrt{\gamma} B^2}{2}
    * \f]
    */
   cons->tau = fmax(cons->tau, eos->tau_atm);
@@ -128,7 +129,7 @@ void ghl_apply_conservative_limits(
    * the magnetic field:
    *
    * If \f$ B^2 < \frac{P_\mathrm{atm}}{10^{32}} \f$ and
-   * \f$ \tilde{S}^2 > \tilde{\tau}(\tilde{\tau} + 2\tilde{\tilde{D}}) \f$
+   * \f$ \tilde{S}^2 > \tilde{\tau}(\tilde{\tau} + 2\tilde{D}) \f$
    * then
    *
    * \f[
@@ -150,26 +151,27 @@ void ghl_apply_conservative_limits(
    * Otherwise, If \f$ \sqrt{\gamma} > \psi^6_\mathrm{threshold} \f$ then
    *
    * \f[
-   * \tilde{\tau}_\mathrm{min} = \tilde{\tau} + \frac{\sqrt{\gamma}B^2}{2} + \tilde{\tau}_3
+   * \tilde{\tau}_\mathrm{fluid,min}
+   *   = \tilde{\tau} - \frac{\sqrt{\gamma}B^2}{2} - \tilde{\tau}_3
    * \f]
    *
-   * If \f$ \tilde{\tau}_\mathrm{min} < 1.001 \tilde{\tau}_\mathrm{atm} \f$ then
+   * If \f$ \tilde{\tau}_\mathrm{fluid,min} < 1.001 \tilde{\tau}_\mathrm{atm} \f$ then
    *
    * \f[
-   * \tilde{\tau}_\mathrm{min} = 1.001 \tilde{\tau}_\mathrm{atm}
+   * \tilde{\tau}_\mathrm{fluid,min} = 1.001 \tilde{\tau}_\mathrm{atm}
    * \f]
    *
    * \f[
-   * \tilde{\tau} = \tilde{\tau}_\mathrm{min} + \frac{\psi^6 B^2}{2} + \tilde{\tau}_3
+   * \tilde{\tau} = \tilde{\tau}_\mathrm{fluid,min} + \frac{\sqrt{\gamma}B^2}{2} + \tilde{\tau}_3
    * \f]
    *
-   * Finally, if \f$ \tilde{S}^2 > \tilde{\tau}_\mathrm{min}
-   *                               (\tilde{\tau}_\mathrm{min} + 2\tilde{\tilde{D}}) \f$
+   * Finally, if \f$ \tilde{S}^2 > \tilde{\tau}_\mathrm{fluid,min}
+   *                               (\tilde{\tau}_\mathrm{fluid,min} + 2\tilde{D}) \f$
    * then
    *
    * \f[
-   * \tilde{S}_i = \tilde{S}_i\sqrt{\frac{\tilde{\tau}_\mathrm{min}
-   *               (\tilde{\tau}_\mathrm{min} + 2\tilde{D})}{\tilde{S}^2}}
+   * \tilde{S}_i = \tilde{S}_i\sqrt{\frac{\tilde{\tau}_\mathrm{fluid,min}
+   *               (\tilde{\tau}_\mathrm{fluid,min} + 2\tilde{D})}{\tilde{S}^2}}
    * \f]
    */
   } else if(ADM_metric->sqrt_detgamma>params->psi6threshold) {

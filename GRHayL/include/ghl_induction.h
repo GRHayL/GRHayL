@@ -11,9 +11,6 @@ extern "C" {
  * @ingroup mag_flux
  * @brief Stores all quantities needed to compute the magnetic flux term.
  *
- * @todo
- * References @ref ghl_calculate_characteristic_speed instead of specific flavors
- *
  * @details
  * This struct is used by the @ref Induction to pass needed quantities
  * into the @ref mag_flux functions that compute the \f$ A_k^\mathrm{RHS} \f$
@@ -36,7 +33,11 @@ extern "C" {
  * Of course, this notation is inconvenient for vectors as it can be confused
  * with exponents. We use e.g. B1 instead of \f$ B^1 \f$ for clarity. The
  * variable reconstruction procedure to get the correct l/r suffixes is
- * described in more detail in @ref ghl_HLL_flux_with_Btilde .
+ * described in more detail in @ref ghl_HLL_flux_with_Btilde . The
+ * characteristic speeds are computed by
+ * @ref ghl_calculate_characteristic_speed_dirn0,
+ * @ref ghl_calculate_characteristic_speed_dirn1, and
+ * @ref ghl_calculate_characteristic_speed_dirn2.
  */
 typedef struct ghl_HLL_vars {
   double B1r, B1l;

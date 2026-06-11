@@ -18,7 +18,7 @@
  *
  * @param[in] rho_in:      density value
  *
- * @param[out] P_cold_ptr: pointer to ghl_eos_parameters struct
+ * @param[out] P_cold_ptr: pointer to the returned cold pressure
  *
  */
 void NRPyEOS_compute_P_cold(

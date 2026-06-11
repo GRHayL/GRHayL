@@ -126,7 +126,7 @@ simpler term
 
 \f[
 \begin{aligned}
-\frac{1}{\sqrt{4\pi}} F_{\alpha\beta}F^{\alpha\beta}
+\frac{1}{4\pi} F_{\alpha\beta}F^{\alpha\beta}
 &= \left(\xi_\alpha E_\beta
        - \xi_\beta E_\alpha
        + \xi_\gamma \epsilon^{\gamma\hphantom{\alpha\beta}\delta}_{\hphantom{\gamma}\alpha\beta} B_{\delta}
@@ -159,7 +159,7 @@ tensor, we can further simplify this expression:
 
 \f[
 \begin{aligned}
-\frac{1}{\sqrt{4\pi}} F_{\alpha\beta}F^{\alpha\beta}
+\frac{1}{4\pi} F_{\alpha\beta}F^{\alpha\beta}
 &= - 2E_\beta E^\beta
    + 4\xi_\alpha \xi_\sigma \epsilon^{\sigma\alpha\beta\mu} E_\beta B_{\mu}
    + 2\xi_\sigma \xi^\gamma (\delta^\sigma_\delta \delta^\mu_\gamma
@@ -192,7 +192,7 @@ since any components of the Levi-Civita tensor with repeated indices are zero.
 Therefore,
 
 \f[
-\frac{1}{\sqrt{4\pi}} F_{\alpha\beta}F^{\alpha\beta} = -2E^\beta E_\beta + 2B^{\mu} B_{\mu}
+\frac{1}{4\pi} F_{\alpha\beta}F^{\alpha\beta} = -2E^\beta E_\beta + 2B^{\mu} B_{\mu}
 \f]
 
 ---
@@ -204,7 +204,7 @@ in the energy-momentum tensor.
 
 \f[
 \begin{aligned}
-\frac{1}{\sqrt{4\pi}} F^{\mu\lambda}F^{\nu}_{\hphantom{\nu}\lambda}
+\frac{1}{4\pi} F^{\mu\lambda}F^{\nu}_{\hphantom{\nu}\lambda}
 &= \left(\xi^\mu E^\lambda
        - \xi^\lambda E^\mu
        + \xi_\gamma \epsilon^{\gamma\mu\lambda\delta} B_{\delta}
@@ -285,7 +285,7 @@ which leaves us with
 
 \f[
 \begin{aligned}
-\frac{1}{\sqrt{4\pi}} F^{\mu\lambda}F^{\nu}_{\hphantom{\nu}\lambda}
+\frac{1}{4\pi} F^{\mu\lambda}F^{\nu}_{\hphantom{\nu}\lambda}
 &= \xi^\mu \xi^\nu E^\lambda E_\lambda
  - E^\mu E^\nu
  + \xi_\alpha E_\lambda B_{\beta} \left(\xi^\mu \epsilon^{\alpha\nu\lambda\beta}
@@ -418,7 +418,7 @@ is used for GRMHD evolution. The metric is given by the line element
 
 \f[
 ds^2 = -\alpha^2 dt^2
-     + \gamma_{i j}\left(dx^i + \beta^j dt\right)\left(dx^j + \beta^i dt\right)
+     + \gamma_{i j}\left(dx^i + \beta^i dt\right)\left(dx^j + \beta^j dt\right)
 \f]
 
 where \f$ \alpha \f$, \f$ \beta^i \f$, and \f$ \gamma_{i j} \f$ are the lapse,
@@ -442,7 +442,7 @@ used `GRHydro` thorn in the Einstein Toolkit uses the Valencia formalism defined
 \tilde{v}^i = \frac{u^i}{W} + \frac{\beta^i}{\alpha}
 \f]
 
-where \f$ W=\sqrt{1-\tilde{v}^i \tilde{v}_i} \f$ is the Lorentz factor. The
+where \f$ W=\left(1-\tilde{v}^i \tilde{v}_i\right)^{-1/2} \f$ is the Lorentz factor. The
 quantity \f$ v^i \f$ used by `IllinoisGRMHD` is **not** the Valencia
 three-velocity, so those interested in seeing more about the Valencia
 formulation of the evolution equations can look to GRHydro\cite GRHydro and

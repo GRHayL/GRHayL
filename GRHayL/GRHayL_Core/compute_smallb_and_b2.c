@@ -21,9 +21,7 @@
  * b^i &= B^i_u \\
  *     &= \frac{1}{u^0} \left( B^i/\alpha + B^0_u u^i \right) \\
  *     &= \frac{1}{u^0} \left( B^i/\alpha + b^t u^i \right) \\
- *     &= \frac{1}{\alpha u^0} \left( B^i + b^t u^i \right) \\
- *     &= \frac{1}{\alpha} \left( B^i/u^0 + b^t u^i/u^0 \right) \\
- *     &= \frac{1}{\alpha} \left( B^i/u^0 + b^t v^i \right) \\
+ *     &= \frac{1}{\alpha u^0} \left( B^i + \alpha b^t u^i \right) \\
  *     &= \frac{B^i}{\alpha u^0} + b^t v^i
  * \end{align}
  * \f]
@@ -32,7 +30,7 @@
  *
  * \f[
  * \begin{align}
- * b^2 &= g_{\mu\nu} \\
+ * b^2 &= g_{\mu\nu} b^\mu b^\nu \\
  *     &= g_{tt}\left(b^t\right)^2 + g_{xx}\left(b^x\right)^2 + g_{yy}\left(b^y\right)^2 + g_{zz}\left(b^z\right)^2 + 2\left(g_{ti} b^t b^i + g_{xy} b^x b^y + g_{xz} b^x b^z + g_{yz} b^y b^z\right) \\
  *     &= \left( -\alpha^2 + \gamma_{i j} \beta^i \beta^j \right) \left(b^t\right)^2 + \gamma_{i j} b^i b^j + 2 g_{t i} b^t b^i \\
  *     &= -\left( \alpha b^t \right)^2 + \gamma_{i j} \beta^i \beta^j \left(b^t\right)^2 + \gamma_{i j} b^i b^j + 2 b^t (\gamma_{i j}\beta^j) b^i \\

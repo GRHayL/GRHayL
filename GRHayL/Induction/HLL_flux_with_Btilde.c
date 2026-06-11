@@ -5,10 +5,6 @@
  * @brief Compute RHS for \f$ A_i \f$, excluding gauge contributions; e.g.
  * @sp10 \f$ A_y^\mathrm{rhs} = \partial_t A_y = v^z \tilde{B}^x - v^x \tilde{B}^z \f$
  *
- * @todo
- * This function has "\@ref ghl_calculate_characteristic_speed", which is divided
- * by direction. Thus, the reference doesn't resolve.
- *
  * @details
  * This function computes the right-hand side of the induction equation for a
  * single direction of \f$ A_i \f$ using the densitized magnetic field
@@ -56,7 +52,7 @@
  * equation naturally uses \f$ \tilde{B}^i \f$. Additionally, we know that e.g.
  *
  * \f[
- * E^{LR}_3 = - \left( v^1_{LR} B^2_R - v^2_{LR} B^1_R \right)
+ * E^{LR}_3 = - \left( v^1_{LR} B^2_L - v^2_{LR} B^1_R \right)
  * \f]
  *
  * To evaluate this, derivative, we can therefore use the HLL flux from
@@ -64,13 +60,15 @@
  *
  * \f[
  * \begin{aligned}
- * E^\mathrm{HLL}_3 = &\frac{c^+_1 c^-_1}{c_1^\mathrm{sum}} \left( B^R_2 - B^R_2 \right) - \frac{c^+_2 c^-_2}{c_2^\mathrm{sum}} \left( B^R_1 - B^R_1 \right) \\
+ * E^\mathrm{HLL}_3 = &\frac{c^+_1 c^-_1}{c_1^\mathrm{sum}} \left( B^R_2 - B^L_2 \right) - \frac{c^+_2 c^-_2}{c_2^\mathrm{sum}} \left( B^R_1 - B^L_1 \right) \\
  * &+ \frac{1}{c_1^\mathrm{sum} c_2^\mathrm{sum}}\left( c^+_1 c^+_2 E^{LL}_3 + c^+_1 c^-_2 E^{LR}_3 + c^-_1 c^+_2 E^{RL}_3 + c^-_1 c^-_2 E^{RR}_3 \right)
  * \end{aligned}
  * \f]
  *
- * where \f$ c_i^\pm \f$ represents the characteristic speeds returned by the
- * @ref ghl_calculate_characteristic_speed functions and \f$ c_i^\mathrm{sum} \f$
+ * where \f$ c_i^\pm \f$ represents the characteristic speeds returned by
+ * @ref ghl_calculate_characteristic_speed_dirn0,
+ * @ref ghl_calculate_characteristic_speed_dirn1, and
+ * @ref ghl_calculate_characteristic_speed_dirn2, and \f$ c_i^\mathrm{sum} \f$
  * is given by
  *
  * \f[
@@ -98,19 +96,23 @@ double ghl_HLL_flux_with_Btilde(
   const double c1_sum = vars->c1_min+vars->c1_max;
   const double c2_sum = vars->c2_min+vars->c2_max;
 
+  /*
     To compute A_i_rhs, we use the HLL flux from Eq. 44 of
       Del Zanna, Bucciantini & Londrillo A&A 400, 397 (2003)
     To explain the terms, let's consider the flux RHS for the z component. Then,
     1->x, 2->y, and 3->z. We first compute the B field contributions
     Bxterm = cy_min * cy_max (Bx^R - Bx^L)/ (cy_min + cy_max)
     Byterm = cx_min * cx_max (By^R - By^L)/ (cx_min + cx_max)
+  */
   const double B1term = vars->c2_min * vars->c2_max * (vars->B1r - vars->B1l) / c2_sum;
   const double B2term = vars->c1_min * vars->c1_max * (vars->B2r - vars->B2l) / c1_sum;
 
+  /*
      Additionally, we need the electric field contribution
      E_z = -(v_x B_y - v_y B_x)
      For the 2D flux, that means we need to compute
      E^LL, E^LR, E^RL, and E^RR.
+  */
   const double A3_rhs_rr = vars->v1rr*vars->B2r - vars->v2rr*vars->B1r;
   const double A3_rhs_rl = vars->v1rl*vars->B2r - vars->v2rl*vars->B1l;
   const double A3_rhs_lr = vars->v1lr*vars->B2l - vars->v2lr*vars->B1r;

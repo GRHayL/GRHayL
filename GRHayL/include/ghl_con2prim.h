@@ -6,21 +6,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-   The struct ghl_con2prim_diagnostics contains variables for error-checking and
-   diagnostic feedback. The struct elements are detailed below:
- --TODO
-TODO: consider changing failure_checker to be bitwise; failure modes are currently
-      1: atmosphere reset when rho_star < 0
-      10: reseting P when P<P_min in enforce_...
-      100: reseting P when P>P_max in enforce_...
-      1k: Limiting velocity u~ after C2P/Font Fix or v in enforce_...
-      10k: Font Fix was applied
-      100k: Both C2P and Font Fix failed
-      1M: tau~ was reset in ghl_apply_conservative_limits
-      10M: S~ was reset in ghl_apply_conservative_limits via the first case
-      100M: S~ was reset in ghl_apply_conservative_limits via the second case
-For bitwise, would become 1, 2, 4, 8, 16, 32. 64, 128, and 256
-https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm
 
 /**
  * @ingroup Con2Prim
