@@ -1,14 +1,18 @@
 #include "ghl_nrpyeos_hybrid.h"
 
-/*
- * Function     : NRPyEOS_set_K_ppoly_and_eps_integ_consts()
- * Description  : For a given set of EOS inputs, determine values of K_ppoly
- *                that will result in an everywhere-continuous P_cold function;
- *                usually aliased as ghl_hybrid_set_K_ppoly_and_eps_integ_consts
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_set_K_ppoly_and_eps_integ_consts
-*/
-
 void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {
+/**
+ * @ingroup hyb_eos
+ * @brief For a given set of EOS inputs, determine values of K_ppoly that will
+ *        result in an everywhere-continuous P_cold function; usually aliased
+ *        as ghl_hybrid_set_K_ppoly_and_eps_integ_consts
+ *
+ * @details
+ * @todo convert to doxygen comments (there's a lot)
+ *
+ * @param[in] eos:   pointer to ghl_eos_parameters struct
+ *
+ */
 
   /* When neos = 1, we will only need the value K_ppoly[0] and eps_integ_const[0].
    * Since our only polytropic EOS is given by

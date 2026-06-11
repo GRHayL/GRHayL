@@ -7,7 +7,10 @@
 extern "C" {
 #endif
 
-// Integer constants to keep track of stencil.
+/**
+ * @ingroup recon_internal
+ * @brief Integer constants for indexing stencil arrays
+ */
 enum reconstruction_stencil {
   MINUS2, MINUS1,
   PLUS_0, PLUS_1,
@@ -92,6 +95,7 @@ void ghl_superbee_reconstruction(
       double *restrict Ur,
       double *restrict Ul);
 
+// WENO functions
 void ghl_wenoz_reconstruction(
       const double U[6],
       double *restrict Ur,

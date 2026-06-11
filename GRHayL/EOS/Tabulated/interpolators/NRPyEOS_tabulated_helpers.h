@@ -11,12 +11,10 @@ static inline __attribute__((always_inline))
 int imin(int a, int b) {
   return a < b ? a : b;
 }
-
 static inline __attribute__((always_inline))
 int imax(int a, int b) {
   return a > b ? a : b;
 }
-
 //------------------------------------------
 static inline __attribute__((always_inline))
 ghl_error_codes_t NRPyEOS_checkbounds(

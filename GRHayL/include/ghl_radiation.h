@@ -7,11 +7,24 @@
 extern "C" {
 #endif
 
-// Neutrino quantities
+/**
+ * @ingroup Radiation
+ * @brief  Neutrino quantities
+ *
+ * @todo
+ * Leo, please comment this :).
+ */
 typedef struct ghl_neutrino_luminosities {
   double nue, anue, nux;
 } ghl_neutrino_luminosities;
 
+/**
+ * @ingroup Radiation
+ * @brief  Neutrino quantities
+ *
+ * @todo
+ * Leo, please comment this :).
+ */
 typedef struct ghl_neutrino_opacities {
   double nue[2], anue[2], nux[2];
 } ghl_neutrino_opacities;

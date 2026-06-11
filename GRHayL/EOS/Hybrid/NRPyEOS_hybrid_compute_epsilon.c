@@ -1,12 +1,22 @@
 #include "ghl_nrpyeos_hybrid.h"
 
-/*
- * Function     : NRPyEOS_hybrid_compute_epsilon()
- * Description  : Computes epsilon from rho and P; usually aliased as 
- *                ghl_hybrid_compute_epsilon
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_epsilon
-*/
-
+/**
+ * @ingroup hyb_eos
+ * @brief Computes epsilon from rho and P; usually aliased as ghl_hybrid_compute_epsilon
+ *
+ * @details
+ * This function computes the specific internal energy using
+ *
+ * \f$ \epsilon = \epsilon_\mathrm{cold} + \frac{P - P_\mathrm{cold}}{\rho(\Gamma_\mathrm{th} - 1)} \f$
+ *
+ * @param[in] eos:   pointer to ghl_eos_parameters struct
+ *
+ * @param[in] rho:   density value
+ *
+ * @param[in] press: pressure value
+ *
+ * @returns the specific internal energy
+ */
 double NRPyEOS_hybrid_compute_epsilon(
       const ghl_eos_parameters *restrict eos,
       const double rho,

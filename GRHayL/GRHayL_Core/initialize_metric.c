@@ -1,11 +1,24 @@
 #include "ghl.h"
 
-/*
- * Function     : ghl_initialize_metric()
- * Description  : Initialize the ghl_metric_quantities struct from user input
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_initialize_metric
-*/
-
+/**
+ * @ingroup pack_struct
+ * @brief Initialize the metric struct from user input
+ *
+ * @details
+ * This function takes pointwise information about the spacetime and uses it
+ * to initialize every element of the given ghl_metric_quantities struct.
+ * It also computes all the additional struct elements which are derived
+ * from these inputs.
+ *
+ * @param[in] lapse: lapse \f$ \alpha \f$
+ *
+ * @param[in] betax, betay, betaz: components of the shift \f$ \beta^i \f$
+ *
+ * @param[in] gxx, gxy, gxz, gyy, gyz, gzz: components of the 3-metric \f$ g_{i j} \f$
+ *
+ * @param[out] metric: pointer to ghl_metric_quantities struct
+ *
+ */
 void ghl_initialize_metric(
       const double lapse,
       const double betax,
