@@ -49,8 +49,8 @@ We have not tested `GRHayL` with [macports](https://www.macports.org/), although
 we do not expect users to have issues when using it.
 
 The `HDF5` dependency arises from the tabulated Equation of State (EOS) gem, as
-it currently only supports EOS tables in that format. We are also
-working supporting tables in the [CompOSE](https://compose.obspm.fr/table)
+it currently only supports EOS tables in that format. We are also working on
+supporting tables in the [CompOSE](https://compose.obspm.fr/table)
 format, which would allow for use of the tabulated EOS without `HDF5`.
 
 `HDF5` support is enabled by default. Default configured builds require an

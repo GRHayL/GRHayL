@@ -22,7 +22,7 @@
  * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
- * @param[in] psi_stencil:    3D stencil array of \f$ \psi^6 \f$ from
+ * @param[in] psi_stencil:    3D stencil array of \f$ \psi \f$ from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
  * @param[in] Ax_stencil:     3D stencil array containing \f$ A_x \f$ from

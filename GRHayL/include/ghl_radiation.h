@@ -8,15 +8,15 @@ extern "C" {
 #endif
 
 /**
- * @defgroup Neutrinos Neutrinos Gem
+ * @defgroup Neutrinos Neutrinos
  */
 
 /**
  * @ingroup Neutrinos
- * @brief  Neutrino quantities
+ * @brief  Neutrino luminosities
  *
- * @todo
- * Leo, please comment this :).
+ * Luminosities for electron neutrinos, electron antineutrinos, and
+ * heavy-lepton neutrinos.
  */
 typedef struct ghl_neutrino_luminosities {
   double nue, anue, nux;
@@ -24,10 +24,10 @@ typedef struct ghl_neutrino_luminosities {
 
 /**
  * @ingroup Neutrinos
- * @brief  Neutrino quantities
+ * @brief  Neutrino opacities
  *
- * @todo
- * Leo, please comment this :).
+ * Opacities for electron neutrinos, electron antineutrinos, and
+ * heavy-lepton neutrinos.
  */
 typedef struct ghl_neutrino_opacities {
   double nue[2], anue[2], nux[2];

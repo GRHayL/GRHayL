@@ -26,11 +26,14 @@
 typedef struct fparams_struct {
   /** Whether or not to evolve the temperature. */
   bool evolve_T;
-  double q, r, s, t;
   /** Auxiliary quantity \f$ \frac{\tau}{D} \f$ */
+  double q;
   /** Auxiliary quantity \f$ \frac{S^2}{D^2} \f$ */
+  double r;
   /** Auxiliary quantity \f$ \frac{B^2}{D} \f$ */
+  double s;
   /** Auxiliary quantity \f$ \frac{B \cdot S}{D^{3/2}} \f$ */
+  double t;
   /** Function pointer provided by the surrounding functions */
   void (*compute_rho_P_eps_T_W)(
       const double x,

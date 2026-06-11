@@ -17,7 +17,7 @@
  *
  * @param[in] W_in:         initial guess for quantity \f$ W \f$
  *
- * @param[in] Sf2_in:       initial guess for quantityf \f$ S_\mathrm{fluid}^2 \f$
+ * @param[in] Sf2_in:       initial guess for quantity \f$ S_\mathrm{fluid}^2 \f$
  *
  * @param[in] Psim6:        inverse of \f$ \psi^6 = \sqrt{|\gamma|} \f$
  *

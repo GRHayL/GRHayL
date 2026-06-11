@@ -124,7 +124,7 @@ void ghl_A_i_avg(
  * - \f$ \alpha \f$, \f$ \beta^i \f$, and \f$ \frac{\alpha}{\psi^6} \f$ to
  *   - \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$
  *
- * - \f$ \gamma^{ij} \f$ and \f$ \frac{\alpha}{\psi^2} \f$ to
+ * - \f$ \gamma^{ij} \f$ and \f$ \alpha\psi^2 \f$ to
  *   - \f$ (i,             j+\frac{1}{2}, k+\frac{1}{2}) \f$
  *   - \f$ (i+\frac{1}{2}, j,             k+\frac{1}{2}) \f$
  *   - \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k) \f$
@@ -135,7 +135,7 @@ void ghl_A_i_avg(
  * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
- * @param[in] psi_stencil:    3D stencil array of \f$ \psi^6 \f$ from
+ * @param[in] psi_stencil:    3D stencil array of \f$ \psi \f$ from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
  * @param[out] metric_interp: ghl_metric_quantities containing interpolated
@@ -143,7 +143,7 @@ void ghl_A_i_avg(
  *                            and \f$ \gamma^{ij} \f$
  *
  * @param[out] lapse_psi2_interp: 1D array containing interpolated values
- *                                for \f$ \frac{\alpha}{\psi^2} \f$
+ *                                for \f$ \alpha\psi^2 \f$
  *
  * @param[out] lapse_over_psi6_interp: interpolated value of \f$ \frac{\alpha}{\psi^6} \f$
  *

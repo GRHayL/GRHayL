@@ -71,7 +71,7 @@ ALIASES += "sp10=\htmlonly &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp
 
 # HTML
 GENERATE_HTML          = YES
-HTML_EXTRA_STYLESHEET = docs/raw/doxygen-awesome.css
+HTML_EXTRA_STYLESHEET = docs/raw/doxygen-awesome.css docs/raw/custom.css
 HTML_COLORSTYLE        = LIGHT
 USE_MATHJAX            = YES
 

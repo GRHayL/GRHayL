@@ -44,7 +44,7 @@
  *
  * @param[in] psi6threshold:         upper limit of \f$ \psi^6 = \sqrt{|\gamma|} \f$ above which the limits on conservatives and primitives are adjusted
  *
- * @param[in] max_Lorentz_factor:    maximum allowed Lorenz factor \f$ W \f$ in the simulation
+ * @param[in] max_Lorentz_factor:    maximum allowed Lorentz factor \f$ W \f$ in the simulation
  *
  * @param[in] Lorenz_damping_factor: sets the damping factor for the Lorenz gauge term in \f$ \tilde{\Phi}^\mathrm{RHS} \f$
  *

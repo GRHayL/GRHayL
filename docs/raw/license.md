@@ -26,7 +26,7 @@ description of the citations.
  | @grhayl                               | TBD and IllinoisGRMHD \cite Etienne_IGM                                |
  | Tabulated EOS                         | Werneck _et al_. \cite Werneck_IGM                                     |
  | Noble Con2Prim routines               | HARM \cite HARM and its solver \cite Noble_2006                        |
- | Palenzuela & Newman Con2Prim routines | GRMHD_con2prim \cite Siegel_2018_code and the method \cite Siegel_2018 |
+ | Palenzuela & Newman Con2Prim routines | GRMHD_con2prim \cite siegel_2018 and the method \cite Siegel_2018_code |
  | PPM method                            | corrected method/reference papers \cite Marti_1996 and \cite DelZanna_2003 |
 
 Any work using GRHayL should cite its release paper [TBD](). Additionally,

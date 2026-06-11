@@ -25,9 +25,10 @@
  * stencil
  *
  * \f[
- * -\frac{\alpha\sqrt{\gamma}}{dx^i} \partial_i A^i = \alpha\sqrt{\gamma} \left( \frac{A^1_{(i,j,k)} - A^1_{(i+1,j,k)}}{\Delta x^1}
- *                                                                             + \frac{A^2_{(i,j,k)} - A^2_{(i,j+1,k)}}{\Delta x^2}
- *                                                                             + \frac{A^3_{(i,j,k)} - A^3_{(i,j,k+1)}}{\Delta x^3} \right)
+ * -\partial_i\left(\alpha\sqrt{\gamma} A^i\right)
+ * = \frac{(\alpha\sqrt{\gamma}A^1)_{(i,j,k)} - (\alpha\sqrt{\gamma}A^1)_{(i+1,j,k)}}{\Delta x^1}
+ * + \frac{(\alpha\sqrt{\gamma}A^2)_{(i,j,k)} - (\alpha\sqrt{\gamma}A^2)_{(i,j+1,k)}}{\Delta x^2}
+ * + \frac{(\alpha\sqrt{\gamma}A^3)_{(i,j,k)} - (\alpha\sqrt{\gamma}A^3)_{(i,j,k+1)}}{\Delta x^3}
  *  \f]
  *
  *  while the shift term is instead upwinded in a similar manner to
@@ -60,14 +61,15 @@
  *                                   in the x direction from \f$ i-2 \f$ to \f$ i+2 \f$
  *
  * @param[in] shifty_interp:         1D stencil array of \f$ \beta^y \f$ (on the same grid as \f$ \tilde{\Phi} \f$)
- *                                   in the y direction from \f$ i-2 \f$ to \f$ i+2 \f$
+ *                                   in the y direction from \f$ j-2 \f$ to \f$ j+2 \f$
  *
  * @param[in] shiftz_interp:         1D stencil array of \f$ \beta^z \f$ (on the same grid as \f$ \tilde{\Phi} \f$)
- *                                   in the z direction from \f$ i-2 \f$ to \f$ i+2 \f$
+ *                                   in the z direction from \f$ k-2 \f$ to \f$ k+2 \f$
  *
- * @param[in] sqrtg_Ai_stencil:      2D stencil array of \f$ \sqrt{-g} A_i \f$. The first dimension represents the
+ * @param[in] sqrtg_Ai_stencil:      2D stencil array of \f$ \sqrt{-g} A^i \f$. The first dimension represents the
  *                                   spatial component \f$ i \f$, and the second dimension represents the stencil.
- *                                   The stencil goes from \f$ j \f$ to \f$ j+1 \f$ in the direction of the spatial component.
+ *                                   The stencil spans the current point and one point forward in the direction
+ *                                   of the spatial component.
  *
  * @param[in] phitilde_stencil:      2D stencil array of \f$ \tilde{\Phi} \f$. The first dimension represents the
  *                                   direction of the stencil, and the second dimension represents the stencil itself.

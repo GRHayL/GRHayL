@@ -40,7 +40,8 @@
  * @defgroup unpack_struct Struct unpacking functions
  * @ingroup GRHayL_Core
  *
- * @gcore provides routines to pack structs or compute them from input values.
+ * @gcore provides routines to unpack or copy values from existing structs into
+ * output variables.
  */
 
 /**

@@ -17,7 +17,7 @@
  *
  * \f[
  * \begin{aligned}
- * \partial_t A_i &= \epsilon_{ijk} v^j \tilde{B^k} - \partial_i \left( \alpha\Phi - \beta^j A_j \right) \\
+ * \partial_t A_i &= \epsilon_{ijk} v^j \tilde{B}^k - \partial_i \left( \alpha\Phi - \beta^j A_j \right) \\
  * \partial_t \tilde{\Phi} &= -\partial_i \left( \alpha \sqrt{\gamma} A^i - \beta^i\tilde{\Phi} \right) - \lambda \alpha \tilde{\Phi}
  * \end{aligned}
  * \f]
@@ -27,7 +27,7 @@
  * potential, \f$ \epsilon_{ijk} \f$ is the standard permutation symbol, and
  *
  * \f[
- * \tilde{B^i} = \sqrt{\gamma} B^i
+ * \tilde{B}^i = \sqrt{\gamma} B^i
  * \f]
  *
  * is the densitized magnetic field. As seen, this vector potential is the
@@ -158,8 +158,8 @@
  *   - The third is the gauge contribution to \f$ A_i^\mathrm{RHS} \f$. While
  *     \f$ A_i \f$ all exist at different staggered points, this interpolation
  *     allows for computing derivatives for all of them.
- * - \f$ \sqrt{g} A^i \f$ are interpolated to the same point as \f$ A_i \f$
- *   - Since different compponents are at different grid locations, raising
+ * - \f$ \alpha\sqrt{\gamma} A^i = \sqrt{-g} A^i \f$ are interpolated to the same point as \f$ A_i \f$
+ *   - Since different components are at different grid locations, raising
  *     the index requires interpolation of both the metric and the vector
  *     potential
  *

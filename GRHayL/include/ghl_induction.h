@@ -40,28 +40,22 @@ extern "C" {
  * @ref ghl_calculate_characteristic_speed_dirn2.
  */
 typedef struct ghl_HLL_vars {
-  double B1r, B1l;
-  double B2r, B2l;
-  double c1_min, c1_max;
-  double c2_min, c2_max;
-  double v1rr, v1rl, v1lr, v1ll;
-  double v2rr, v2rl, v2lr, v2ll;
-  /* Value of B1 on the right side */
-  /* Value of B1 on the left side */
-  /* Value of B2 on the right side */
-  /* Value of B2 on the left side */
-  /* Minimal characteristic speed in direction 1 */
-  /* Maximal characteristic speed in direction 1 */
-  /* Minimal characteristic speed in direction 2 */
-  /* Maximal characteristic speed in direction 2 */
-  /* Value of v1 on the right side of both reconstructions */
-  /* Value of v1 on the right (left) side of the first (second) reconstruction */
-  /* Value of v1 on the left (right) side of the first (second) reconstruction */
-  /* Value of v1 on the left side of both reconstructions */
-  /* Value of v2 on the right side of both reconstructions */
-  /* Value of v2 on the right (left) side of the first (second) reconstruction */
-  /* Value of v2 on the left (right) side of the first (second) reconstruction */
-  /* Value of v2 on the left side of both reconstructions */
+  double B1r;    /**< Value of B1 on the right side */
+  double B1l;    /**< Value of B1 on the left side */
+  double B2r;    /**< Value of B2 on the right side */
+  double B2l;    /**< Value of B2 on the left side */
+  double c1_min; /**< Minimal characteristic speed in direction 1 */
+  double c1_max; /**< Maximal characteristic speed in direction 1 */
+  double c2_min; /**< Minimal characteristic speed in direction 2 */
+  double c2_max; /**< Maximal characteristic speed in direction 2 */
+  double v1rr;   /**< Value of v1 on the right side of both reconstructions */
+  double v1rl;   /**< Value of v1 on the right (left) side of the first (second) reconstruction */
+  double v1lr;   /**< Value of v1 on the left (right) side of the first (second) reconstruction */
+  double v1ll;   /**< Value of v1 on the left side of both reconstructions */
+  double v2rr;   /**< Value of v2 on the right side of both reconstructions */
+  double v2rl;   /**< Value of v2 on the right (left) side of the first (second) reconstruction */
+  double v2lr;   /**< Value of v2 on the left (right) side of the first (second) reconstruction */
+  double v2ll;   /**< Value of v2 on the left side of both reconstructions */
 } ghl_HLL_vars;
 
 /**
@@ -78,7 +72,7 @@ typedef struct ghl_induction_interp_vars {
   double alpha;
   /** Interpolated quantity \f$ \alpha \Phi - \beta^j A_j \f$ */
   double alpha_Phi_minus_betaj_A_j;
-  /** Interpolated quantity \f$ \sqrt{g} A^i \f$ */
+  /** Interpolated quantity \f$ \alpha\sqrt{\gamma} A^i = \sqrt{-g} A^i \f$ */
   double sqrtg_Ai[3];
   /** Interpolated shift \f$ \beta^i \f$ */
   double betai[3];

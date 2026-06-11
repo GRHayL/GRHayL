@@ -55,7 +55,7 @@ we do not expect users to have issues when using it.
 
 The `HDF5` dependency arises from the tabulated equation of state
 implementation, as it currently only supports EOS tables in that format. We are
-also working supporting tables in the [CompOSE](https://compose.obspm.fr/table)
+also working on supporting tables in the [CompOSE](https://compose.obspm.fr/table)
 format, which would allow for use of the tabulated EOS without `HDF5`.
 
 ### System-wide Installation (default)

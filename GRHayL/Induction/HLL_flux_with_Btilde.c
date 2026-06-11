@@ -13,7 +13,7 @@
  * The specific direction \f$ i \f$ is based on the data in @ref ghl_HLL_vars.
  * Since filling this struct is less trivial than for most functions, we
  * give a specific example assuming that we are calculating the \f$ A_z \f$ term.
- * In the  case,
+ * In this case,
  *
  * \f[
  * v_1 = v_x \\
@@ -48,14 +48,15 @@
  * \f]
  *
  * where these quantities must be evaluated at the staggered gridpoints. Recall
- * from the @ref Induction page that \f$ A_i \f$ is densitized. Due to this, the
- * equation naturally uses \f$ \tilde{B}^i \f$. Additionally, we know that e.g.
+ * from the @ref Induction page that \f$ A_i \f$ is the vector potential
+ * associated with \f$ \tilde{B}^i \f$. Due to this, the equation naturally
+ * uses \f$ \tilde{B}^i \f$. Additionally, we know that e.g.
  *
  * \f[
  * E^{LR}_3 = - \left( v^1_{LR} B^2_L - v^2_{LR} B^1_R \right)
  * \f]
  *
- * To evaluate this, derivative, we can therefore use the HLL flux from
+ * To evaluate this derivative, we can therefore use the HLL flux from
  * equation 44 of \cite DelZanna_2003 :
  *
  * \f[
@@ -83,7 +84,7 @@
  * The \f$ R \f$ and \f$ L \f$ superscripts refer to the right/left reconstructed values for
  * an edge. As discussed before, the velocities have to be reconstructed twice, and so we have
  * to list the superscript for each reconstruction. This is used to compute \f$ E \f$, leading
- * the the notation in the equation above. This defines our prescription for computing the
+ * the notation in the equation above. This defines our prescription for computing the
  * flux contributions to the RHS of \f$ A_i \f$.
  *
  * @param[in] vars: pointer to a ghl_HLL_vars struct
