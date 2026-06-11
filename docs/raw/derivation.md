@@ -1,4 +1,4 @@
-/*! @page derivation GRMHD Derivation
+@page derivation GRMHD Derivation
 
 Re-derived and written by Samuel Cupp
 
@@ -1217,26 +1217,16 @@ show. First, consider the contraction of the Christoffel symbol with
 \f[
 \begin{aligned}
 \beta^j \Gamma^k_{ij}\beta_k
-&= \beta^j \beta^k \left( \gamma_{k i,j} + \gamma_{k j,i} - \gamma_{i j,k} \right) \\
+&= \frac{1}{2}\beta^j \beta^k
+   \left( \gamma_{k i,j} + \gamma_{k j,i} - \gamma_{i j,k} \right) \\
 
-&= \beta^j \beta^k \gamma_{k j,i} \\
-
-&= \alpha^2 \left( \gamma^{jk} - g^{jk} \right) \gamma_{k j,i} \\
-
-&\propto \gamma^{jk}\partial_i \gamma_{k j} - g_{jk} \partial_i \gamma^{k j} \\
-
-&\propto \gamma^{jk}\partial_i \gamma_{k j} - \gamma_{jk} \partial_i \gamma^{k j} \\
-
-&\propto \gamma^{jk} \partial_i \gamma_{k j} - \gamma^{jk} \partial_i \gamma_{k j} \\
-
-&= 0
+&= \frac{1}{2}\beta^j \beta^k \partial_i \gamma_{jk}
 \end{aligned}
 \f]
 
-The change \f$ g_{jk}\rightarrow\gamma_{jk} \f$ is allowed because the 3-metric
-is identical to the 4-metric with only spatial indices. We can use this to find
-a relationship between the partial derivative of \f$ \beta_j \f$ and the
-extrinsic curvature:
+where the second step uses the symmetry of \f$ \beta^j\beta^k \f$ and
+\f$ \gamma_{jk} \f$. Using this identity, we can relate the partial derivative
+of \f$ \beta_j \f$ to the extrinsic curvature:
 
 \f[
 \begin{aligned}
@@ -1251,16 +1241,15 @@ extrinsic curvature:
                        - \partial_i\beta_j
                        + 2\Gamma^k_{ij}\beta_k \right) \\
 
-&= \beta^i \beta^j \left(2\alpha K_{ij}
-                       + \partial_t \gamma_{ij} \right)
- - \beta^i \beta^j\partial_i\beta_j \\
+&= \alpha \beta^i \beta^j K_{ij}
+ + \frac{1}{2}\beta^i \beta^j \partial_t \gamma_{ij}
+ + \beta^i \beta^j \Gamma^k_{ij}\beta_k \\
 
-&= \beta^i \beta^j \left(\alpha K_{ij} + \frac{1}{2}\partial_t \gamma_{ij} \right) \\
-
-&= \beta^i \beta^j \alpha K_{ij}
+&= \alpha \beta^i \beta^j K_{ij}
+ + \frac{1}{2}\beta^i \beta^j \partial_t \gamma_{ij}
+ + \frac{1}{2}\beta^i \beta^j \beta^k \partial_i \gamma_{jk}
 \end{aligned}
 \f]
 
-where in the second step we use the symmetry of \f$ \beta^i \beta^j \f$. The
-final step uses the same trick as with \f$ \beta^j \Gamma^k_{ij}\beta_k \f$,
-just with the derivative being \f$ \partial_t\f$ instead of \f$\partial_i \f$.
+where in the second step we use the symmetry of \f$ \beta^i \beta^j \f$, and
+in the final step we substitute the contracted Christoffel identity above.

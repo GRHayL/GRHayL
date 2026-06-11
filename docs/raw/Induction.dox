@@ -36,7 +36,7 @@
  * in the last term of the RHS of \f$ \tilde{\Phi} \f$ is a parameter
  * introduced by the gauge condition and has units of \f$ [Length]^{-1} \f$
  * and is typically set to be \f$ \frac{3}{2\Delta t_\mathrm{max}} \f$ where
- * \f$ t_\mathrm{max} \f$ is the timestep of the simulation. In simulations
+ * \f$ \Delta t_\mathrm{max} \f$ is the timestep of the simulation. In simulations
  * with multiple meshes (such as adaptive or fixed mesh refinement grids),
  * this is the timestep of the coarsest grid.
  *
