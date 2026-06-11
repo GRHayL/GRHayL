@@ -5,20 +5,20 @@
  * @brief Applies speed limit to \f$ \tilde{u}^i \f$ and computes \f$ u^0 \f$ and \f$ v^i \f$.
  *
  * @details
- * This function applies a speed limit to the Valencia velocity \f$ \tilde{u}^i \f$
- * based on ghl_parameters::max_Lorentz_factor and then computes
+ * This function applies a speed limit to \f$ \tilde{u}^i \f$ based on
+ * ghl_parameters::max_Lorentz_factor and then computes
  * ghl_primitive_quantities::u0 and ghl_primitive_quantities::vU.
  *
  * @todo
  * Add more comments like in @ref ghl_limit_v_and_compute_u0
  *
- * @param[in] params:     pointer to ghl_parameters struct
+ * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] ADM_metric: pointer to ghl_metric_quantities struct with ADM metric data
+ * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric data
  *
- * @param[in,out] utU:    3-velocity \f$ u^i \f$
+ * @param[in,out] utU spatial utilde variable \f$ \tilde{u}^i \f$
  *
- * @param[out] prims:     pointer to ghl_primitive_quantities struct
+ * @param[out] prims pointer to ghl_primitive_quantities struct
  *
  * @returns whether speed limiter was triggered (True) or not (False)
  */

@@ -18,20 +18,20 @@
  * \end{aligned}
  * \f]
  *
- * Note that this value of \f$ v^i \f$ implies that \f$ u^i=0 \f$, which leads
- * to the given value of \f$ \rho \f$. Also, the quantity \f$ T_\mathrm{max} \f$
- * uses ghl_eos_parameters::T_max. Finally, for hybrid or simple EOS,
+ * This choice sets the transport/utilde velocity \f$ v^i+\beta^i \f$ to zero;
+ * it is only an initial guess for the Con2Prim solve. Also, the quantity
+ * \f$ T_\mathrm{max} \f$ uses ghl_eos_parameters::T_max. Finally, for hybrid or simple EOS,
  * we set the pressure and specific internal energy \f$ \epsilon \f$ to the
  * cold values.
  *
- * @param[in] eos: pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] ADM_metric: pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
  *
- * @param[in] cons_undens: pointer to ghl_conservative_quantities struct with
- *                         **undensitized** conservative variables
+ * @param[in] cons_undens pointer to ghl_conservative_quantities struct with
+ *                        **undensitized** conservative variables
  *
- * @param[out] prims: pointer to ghl_primitive_quantities containing initial guess
+ * @param[out] prims pointer to ghl_primitive_quantities containing the initial guess
  */
 void ghl_guess_primitives(
       const ghl_eos_parameters *restrict eos,

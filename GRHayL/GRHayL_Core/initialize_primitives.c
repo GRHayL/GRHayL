@@ -10,23 +10,31 @@
  * given ghl_primitive_quantities struct. Note that it does not initialize
  * ghl_primitive_quantities::u0.
  *
- * @param[in] rho:         baryonic density \f$ \rho \f$
+ * @param[in] rho baryonic density \f$ \rho \f$
  *
- * @param[in] press:       fluid pressure \f$ P \f$
+ * @param[in] press fluid pressure \f$ P \f$
  *
- * @param[in] epsilon:     specific internal energy \f$ \epsilon \f$
+ * @param[in] epsilon specific internal energy \f$ \epsilon \f$
  *
- * @param[in] vx, vy, vz:  components of the fluid velocity \f$ v^i \f$
+ * @param[in] vx x-component of the fluid velocity \f$ v^i \f$
  *
- * @param[in] Bx, By, Bz:  components of the magnetic field \f$ B^i \f$
+ * @param[in] vy y-component of the fluid velocity \f$ v^i \f$
  *
- * @param[in] entropy:     fluid entropy
+ * @param[in] vz z-component of the fluid velocity \f$ v^i \f$
  *
- * @param[in] Y_e:         fluid electron fraction
+ * @param[in] Bx x-component of the magnetic field \f$ B^i \f$
  *
- * @param[in] temperature: fluid temperature
+ * @param[in] By y-component of the magnetic field \f$ B^i \f$
  *
- * @param[out] prims:      pointer to ghl_primitive_quantities struct
+ * @param[in] Bz z-component of the magnetic field \f$ B^i \f$
+ *
+ * @param[in] entropy fluid entropy
+ *
+ * @param[in] Y_e fluid electron fraction
+ *
+ * @param[in] temperature fluid temperature
+ *
+ * @param[out] prims pointer to ghl_primitive_quantities struct
  *
  */
 void ghl_initialize_primitives(

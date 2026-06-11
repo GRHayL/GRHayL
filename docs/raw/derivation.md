@@ -535,10 +535,10 @@ The first evolution equation comes from the baryon number conservation equation
 &= \frac{1}{\sqrt{-g}}\partial_\nu \left(\sqrt{-g}\rho_b u^\nu \right) \\
 
 &= \partial_t \left( \alpha\sqrt{\gamma}\rho_b u^0 \right)
- + \partial_i \left( \alpha\sqrt{\gamma}\rho_0 u^i \right) \\
+ + \partial_i \left( \alpha\sqrt{\gamma}\rho_b u^i \right) \\
 
 &= \partial_t \left( \sqrt{\gamma} W \rho_b \right)
- + \partial_i \left( \sqrt{\gamma} u^i \frac{W}{u^0} \rho_0 \right) \\
+ + \partial_i \left( \sqrt{\gamma} u^i \frac{W}{u^0} \rho_b \right) \\
 
 &= \partial_t \tilde{D} + \partial_i \left( \frac{\tilde{D}}{u^0} u^i \right) \\
 

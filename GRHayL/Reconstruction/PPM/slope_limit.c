@@ -56,9 +56,9 @@
  *
  * where the slope magnitude is limited by the second equation.
  *
- * @param[in] dU: value of the difference \f$ U_{i} - U_{i-1} \f$
+ * @param[in] dU value of the difference \f$ U_{i} - U_{i-1} \f$
  *
- * @param[in] dUp1: value of the difference \f$ U_{i+1} - U_{i} \f$
+ * @param[in] dUp1 value of the difference \f$ U_{i+1} - U_{i} \f$
  *
  * @returns value of the limited slope at point \f$ i \f$
  */

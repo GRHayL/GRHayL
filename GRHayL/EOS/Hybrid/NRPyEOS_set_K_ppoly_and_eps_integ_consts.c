@@ -7,9 +7,11 @@
  *        as ghl_hybrid_set_K_ppoly_and_eps_integ_consts
  *
  * @details
- * @todo convert to doxygen comments (there's a lot)
+ * This routine fills the piecewise-polytropic constants needed to keep the
+ * cold pressure and integrated cold internal energy continuous across EOS
+ * segment boundaries.
  *
- * @param[in] eos:   pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
  */
 void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {

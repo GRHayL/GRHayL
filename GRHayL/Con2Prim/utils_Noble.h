@@ -9,9 +9,12 @@
 // arguments.
 /**
  * @ingroup c2p_internal
- * @brief Stores HARM auxiliary variables for smaller argument lists.
- * @todo
- * Please document
+ * @brief Stores HARM auxiliary variables for the Noble-style Con2Prim solvers.
+ *
+ * @details
+ * This struct bundles frequently reused contractions, solver settings, and
+ * iteration state so the internal residual and validation routines can share
+ * a compact argument list.
  */
 typedef struct _harm_auxiliary_vars_ {
   double QU[4];
@@ -29,8 +32,12 @@ typedef struct _harm_auxiliary_vars_ {
 
 /**
  * @ingroup c2p_internal
- * @todo
- * Please document
+ * @brief Computes pressure and pressure derivatives for the Noble residuals.
+ *
+ * @details
+ * Given the auxiliary variables \f$ Z \f$, \f$ v^2 \f$, and \f$ D \f$, this
+ * function evaluates the hybrid-EOS pressure together with the derivatives
+ * needed by the Noble-style Newton solves.
  */
 static inline void ghl_compute_func_auxiliaries(
       const ghl_eos_parameters *restrict eos,
@@ -120,11 +127,11 @@ static inline void ghl_compute_func_auxiliaries(
  *                                         \left( w - \rho \left(1 + \epsilon_\mathrm{cold}\right) \right) \right]
  * \f]
  *
- * @param[in] eos: pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] rho0: the density \f$ \rho \f$
+ * @param[in] rho0 the density \f$ \rho \f$
  *
- * @param[in] w: enthalpy times the density \f$ h \rho \f$
+ * @param[in] w enthalpy times the density \f$ h \rho \f$
  *
  * @returns pressure
  */
@@ -148,8 +155,11 @@ static inline double ghl_pressure_rho0_w(
 ****************************************************************************/
 /**
  * @ingroup c2p_internal
- * @todo
- * Please document
+ * @brief Computes \f$ v^2 \f$ from the Noble auxiliary variables and \f$ Z \f$.
+ *
+ * @details
+ * This helper evaluates the closed-form expression for the squared transport
+ * velocity used by the Noble-style Con2Prim residual equations.
  */
 static inline double ghl_vsq_calc(
       const harm_aux_vars_struct *restrict harm_aux,

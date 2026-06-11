@@ -13,7 +13,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  * @brief Computes primitive variables using the Font1D method
  *
  * @details
- * This function uses the method described in Appendix A.4 of \cite Etienne_IGM
+ * This function uses the method described in Appendix A.4 of \cite Etienne_2012
  * to recover the primitive variables from the conservative variables. This
  * method comes from \cite Font_2000, which outlines the idea of the method in
  * the text preceding Eq. 84. This method serves as a backup for very low
@@ -25,24 +25,24 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  * The return value gives information on the success or failure of the
  * recovery attempt.
  *
- * @param[in] params: pointer to ghl_parameters struct
+ * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] eos:    pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] ADM_metric:   pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
  *
- * @param[in] metric_aux:   pointer to ghl_ADM_aux_quantities struct
+ * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  *
- * @param[in] cons:         pointer to ghl_conservative_quantities struct with
- *                          **undensitized** conservative variables
+ * @param[in] cons pointer to ghl_conservative_quantities struct with
+ *                 **undensitized** conservative variables
  *
- * @param[in,out] prims:    pointer to ghl_primitive_quantities struct;
- *                          input is initial guess for iterative solver;
- *                          output is the primitives consistent with the
- *                          input conservatives
+ * @param[in,out] prims pointer to ghl_primitive_quantities struct;
+ *                      input is the initial guess for the iterative solver;
+ *                      output is the primitives consistent with the
+ *                      input conservatives
  *
- * @param[out] diagnostics: pointer to ghl_con2prim_diagnostics struct; returns
- *                          with several Con2Prim solver diagnostics
+ * @param[out] diagnostics pointer to ghl_con2prim_diagnostics struct; returns
+ *                         with several Con2Prim solver diagnostics
  *
  * @returns error code for any Con2Prim failures
  */

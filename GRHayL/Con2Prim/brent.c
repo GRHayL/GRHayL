@@ -4,10 +4,10 @@
  * @ingroup c2p_internal
  * @brief Ensures \f$ |f(b)| < |f(a)| \f$ while finding root of \f$ f \f$.
  *
- * @param[in,out] a:  first evaluated point f(x)
- * @param[in,out] b:  second evaluated point of f(x)
- * @param[in,out] fa: f(a)
- * @param[in,out] fb: f(b)
+ * @param[in,out] a first evaluated point f(x)
+ * @param[in,out] b second evaluated point of f(x)
+ * @param[in,out] fa f(a)
+ * @param[in,out] fb f(b)
  */
 static inline void
 ensure_b_is_closest_to_root(
@@ -29,9 +29,9 @@ ensure_b_is_closest_to_root(
  * @details
  * This cycles a,b = b,c. It also resets c = b.
  *
- * @param[in,out] a: bounding point to replace
- * @param[in,out] b: bounding point to keep
- * @param[in,out] c: new bounding point
+ * @param[in,out] a bounding point to replace
+ * @param[in,out] b bounding point to keep
+ * @param[in,out] c new bounding point
  */
 static inline void
 cycle(
@@ -132,25 +132,25 @@ check_a_b_compute_fa_fb(
  * - Brent, Algorithms for Minimization Without Derivatives (1973)
  *   @todo consider converting to doxygen citation
  *
- * @param[in] f:          function for which the root is computed
+ * @param[in] f function for which the root is computed
  *
- * @param[in] params:     pointer to ghl_parameters
+ * @param[in] params pointer to ghl_parameters
  *
- * @param[in] eos:        pointer to ghl_eos_parameters
+ * @param[in] eos pointer to ghl_eos_parameters
  *
- * @param[in] cons_undens: pointer to ghl_conservative_quantities containing
+ * @param[in] cons_undens pointer to ghl_conservative_quantities containing
  *                        **undensitized** conservative variables
  *
- * @param[in,out] fparams: object containing all parameters needed by f
+ * @param[in,out] fparams object containing all parameters needed by f
  *                        other than the variable x
  *
- * @param[in,out] prims:   primitive quantities used by f
+ * @param[in,out] prims primitive quantities used by f
  *
- * @param[in,out] a:      lower limit of the initial interval
+ * @param[in,out] a lower limit of the initial interval
  *
- * @param[in,out] b:      upper limit of the initial interval
+ * @param[in,out] b upper limit of the initial interval
  *
- * @param[in,out] r:      pointer to roots_params
+ * @param[in,out] r pointer to roots_params
  *
  * @returns a ghl_error_codes_t code; possible codes:
  * - ghl_success if the root is found

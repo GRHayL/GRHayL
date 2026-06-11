@@ -1,17 +1,35 @@
 #include "ghl.h"
 
 /**
- * @ingroup pack_struct
+ * @ingroup unpack_struct
  * @brief Unpacks stress-energy tensor struct data into provided memory locations
  *
  * @details
  * This function takes data from the ghl_stress_energy struct and unpacks
  * (i.e. copies) the data into the memory locations passed to the function.
  *
- * @param[in] Tmunu: pointer to ghl_stress_energy struct
+ * @param[in] Tmunu pointer to ghl_stress_energy struct
  *
- * @param[out] Ttt, Ttx, Tty, Ttz, Txx, Txy, Txz, Tyy, Tyz, Tzz:
- *            components of the stress-energy tensor \f$ T^{\mu\nu} \f$ or \f$ T_{\mu\nu} \f$
+ * @param[out] Ttt pointer to the tt-component of the stress-energy tensor
+ *                 \f$ T^{\mu\nu} \f$ or \f$ T_{\mu\nu} \f$
+ *
+ * @param[out] Ttx pointer to the tx-component of the stress-energy tensor
+ *
+ * @param[out] Tty pointer to the ty-component of the stress-energy tensor
+ *
+ * @param[out] Ttz pointer to the tz-component of the stress-energy tensor
+ *
+ * @param[out] Txx pointer to the xx-component of the stress-energy tensor
+ *
+ * @param[out] Txy pointer to the xy-component of the stress-energy tensor
+ *
+ * @param[out] Txz pointer to the xz-component of the stress-energy tensor
+ *
+ * @param[out] Tyy pointer to the yy-component of the stress-energy tensor
+ *
+ * @param[out] Tyz pointer to the yz-component of the stress-energy tensor
+ *
+ * @param[out] Tzz pointer to the zz-component of the stress-energy tensor
  *
  */
 void ghl_return_stress_energy(

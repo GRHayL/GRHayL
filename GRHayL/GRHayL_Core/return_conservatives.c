@@ -1,7 +1,7 @@
 #include "ghl.h"
 
 /**
- * @ingroup pack_struct
+ * @ingroup unpack_struct
  * @brief Unpack conservative variable struct into provided memory locations
  *
  * @details
@@ -9,17 +9,21 @@
  * and unpacks (i.e. copies) the data into the memory locations passed
  * to the function.
  *
- * @param[in] cons:           pointer to ghl_conservative_quantities struct
+ * @param[in] cons pointer to ghl_conservative_quantities struct
  *
- * @param[out] rho:           pointer to density variable \f$ \rho_* \f$ (also called \f$ \tilde{D} \f$
+ * @param[out] rho pointer to density variable \f$ \rho_* \f$ (also called \f$ \tilde{D} \f$)
  *
- * @param[out] tau:           pointer to energy variable \f$ \tau \f$
+ * @param[out] tau pointer to energy variable \f$ \tau \f$
  *
- * @param[out] S_x, S_y, S_z: pointer to components of the momentum variable \f$ S_i \f$
+ * @param[out] S_x pointer to the x-component of the momentum variable \f$ S_i \f$
  *
- * @param[out] entropy:       pointer to fluid entropy variable \f$ \tilde{S} \f$
+ * @param[out] S_y pointer to the y-component of the momentum variable \f$ S_i \f$
  *
- * @param[out] Y_e:           pointer to electron fraction variable \f$ \tilde{Y}_e \f$
+ * @param[out] S_z pointer to the z-component of the momentum variable \f$ S_i \f$
+ *
+ * @param[out] entropy pointer to fluid entropy variable \f$ \tilde{S} \f$
+ *
+ * @param[out] Y_e pointer to electron fraction variable \f$ \tilde{Y}_e \f$
  *
  */
 void ghl_return_conservatives(

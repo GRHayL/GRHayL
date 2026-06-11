@@ -6,13 +6,13 @@
  *        Gamma_ppoly and K_ppoly by determining the appropriate index;
  *        usually aliased as ghl_hybrid_get_K_and_Gamma
  *
- * @param[in] eos:    pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] rho_in: density value
+ * @param[in] rho_in density value
  *
- * @param[out] K:     @todo define this
+ * @param[out] K polytropic constant \f$ K_j \f$ for the density's EOS segment
  *
- * @param[out] Gamma: @todo define this
+ * @param[out] Gamma adiabatic index \f$ \Gamma_j \f$ for the density's EOS segment
  *
  */
 void NRPyEOS_get_K_and_Gamma(

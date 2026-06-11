@@ -1,7 +1,7 @@
 #include "ghl.h"
 
 /**
- * @ingroup pack_struct
+ * @ingroup unpack_struct
  * @brief Unpacks primitive variable struct into provided memory locations
  *
  * @details
@@ -9,23 +9,31 @@
  * unpacks (i.e. copies) the data into the memory locations passed to the
  * function.
  *
- * @param[in] prims:        pointer to ghl_primitive_quantities struct
+ * @param[in] prims pointer to ghl_primitive_quantities struct
  *
- * @param[out] rho:         pointer to baryonic density \f$ \rho \f$
+ * @param[out] rho pointer to baryonic density \f$ \rho \f$
  *
- * @param[out] press:       pointer to fluid pressure \f$ P \f$
+ * @param[out] press pointer to fluid pressure \f$ P \f$
  *
- * @param[out] epsilon:     pointer to specific internal energy \f$ \epsilon \f$
+ * @param[out] epsilon pointer to specific internal energy \f$ \epsilon \f$
  *
- * @param[out] vx, vy, vz:  pointer to components of the fluid velocity \f$ v^i \f$
+ * @param[out] vx pointer to the x-component of the fluid velocity \f$ v^i \f$
  *
- * @param[out] Bx, By, Bz:  pointer to components of the magnetic field \f$ B^i \f$
+ * @param[out] vy pointer to the y-component of the fluid velocity \f$ v^i \f$
  *
- * @param[out] entropy:     pointer to fluid entropy
+ * @param[out] vz pointer to the z-component of the fluid velocity \f$ v^i \f$
  *
- * @param[out] Y_e:         pointer to fluid electron fraction
+ * @param[out] Bx pointer to the x-component of the magnetic field \f$ B^i \f$
  *
- * @param[out] temperature: pointer to fluid temperature
+ * @param[out] By pointer to the y-component of the magnetic field \f$ B^i \f$
+ *
+ * @param[out] Bz pointer to the z-component of the magnetic field \f$ B^i \f$
+ *
+ * @param[out] entropy pointer to fluid entropy
+ *
+ * @param[out] Y_e pointer to fluid electron fraction
+ *
+ * @param[out] temperature pointer to fluid temperature
  *
  */
 void ghl_return_primitives(const ghl_primitive_quantities *restrict prims,

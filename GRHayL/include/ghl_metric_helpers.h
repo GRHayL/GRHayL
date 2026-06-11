@@ -20,11 +20,11 @@ extern "C" {
  * is defined with ghl_ADM_aux_quantities::g4DD and
  * ghl_ADM_aux_quantities::g4UU in mind.
  *
- * @param[in] g4:       2D array containing the 4-metric or its inverse
+ * @param[in] g4 2D array containing the 4-metric or its inverse
  *
- * @param[in] vec:      1D array containing a 4-vector to be raised/lowered
+ * @param[in] vec 1D array containing a 4-vector to be raised/lowered
  *
- * @param[out] vec_inv: 1D array containing the dual of `vec`
+ * @param[out] vec_inv 1D array containing the dual of `vec`
  *
  */
 static inline void ghl_raise_lower_vector_4D(
@@ -60,11 +60,11 @@ static inline void ghl_raise_lower_vector_4D(
  * is defined with ghl_metric_quantities::gammaDD and
  * ghl_metric_quantities::gammaUU in mind.
  *
- * @param[in] gamma:    2D array containing the 3-metric or its inverse
+ * @param[in] gamma 2D array containing the 3-metric or its inverse
  *
- * @param[in] vec:      1D array containing a 3-vector to be raised/lowered
+ * @param[in] vec 1D array containing a 3-vector to be raised/lowered
  *
- * @param[out] vec_inv: 1D array containing the dual of `vec`
+ * @param[out] vec_inv 1D array containing the dual of `vec`
  *
  */
 static inline void ghl_raise_lower_vector_3D(
@@ -106,9 +106,9 @@ static inline void ghl_raise_lower_vector_3D(
  * is defined with ghl_ADM_aux_quantities::g4DD and
  * ghl_ADM_aux_quantities::g4UU in mind.
  *
- * @param[in] g4:  2D array containing the 4-metric or its inverse
+ * @param[in] g4 2D array containing the 4-metric or its inverse
  *
- * @param[in] vec: 1D array containing a 4-vector to be squared
+ * @param[in] vec 1D array containing a 4-vector to be squared
  *
  * @returns the value \f$  v^2 \f$
  */
@@ -149,9 +149,9 @@ static inline double ghl_compute_vec2_from_vec4D(
  * is defined with ghl_metric_quantities::gammaDD and
  * ghl_metric_quantities::gammaUU in mind.
  *
- * @param[in] gamma: 2D array containing the 3-metric or its inverse
+ * @param[in] gamma 2D array containing the 3-metric or its inverse
  *
- * @param[in] vec:   1D array containing a 3-vector to be squared
+ * @param[in] vec 1D array containing a 3-vector to be squared
  *
  * @returns the value \f$  v^2 \f$
  */

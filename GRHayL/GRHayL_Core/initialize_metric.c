@@ -10,13 +10,27 @@
  * It also computes all the additional struct elements which are derived
  * from these inputs.
  *
- * @param[in] lapse: lapse \f$ \alpha \f$
+ * @param[in] lapse lapse \f$ \alpha \f$
  *
- * @param[in] betax, betay, betaz: components of the shift \f$ \beta^i \f$
+ * @param[in] betax x-component of the shift \f$ \beta^i \f$
  *
- * @param[in] gxx, gxy, gxz, gyy, gyz, gzz: components of the 3-metric \f$ g_{i j} \f$
+ * @param[in] betay y-component of the shift \f$ \beta^i \f$
  *
- * @param[out] metric: pointer to ghl_metric_quantities struct
+ * @param[in] betaz z-component of the shift \f$ \beta^i \f$
+ *
+ * @param[in] gxx xx-component of the 3-metric \f$ g_{i j} \f$
+ *
+ * @param[in] gxy xy-component of the 3-metric \f$ g_{i j} \f$
+ *
+ * @param[in] gxz xz-component of the 3-metric \f$ g_{i j} \f$
+ *
+ * @param[in] gyy yy-component of the 3-metric \f$ g_{i j} \f$
+ *
+ * @param[in] gyz yz-component of the 3-metric \f$ g_{i j} \f$
+ *
+ * @param[in] gzz zz-component of the 3-metric \f$ g_{i j} \f$
+ *
+ * @param[out] metric pointer to ghl_metric_quantities struct
  *
  */
 void ghl_initialize_metric(

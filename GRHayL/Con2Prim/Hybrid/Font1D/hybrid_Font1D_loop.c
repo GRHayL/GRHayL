@@ -9,30 +9,30 @@
  * solves for the primitive density by assuming that there are no thermal
  * contributions to the solution.
  *
- * @param[in] eos:          pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] maxits:       maximum number of iterations
+ * @param[in] maxits maximum number of iterations
  *
- * @param[in] tol:          maximum allowed error for convergence
+ * @param[in] tol maximum allowed error for convergence
  *
- * @param[in] W_in:         initial guess for quantity \f$ W \f$
+ * @param[in] W_in initial guess for quantity \f$ W \f$
  *
- * @param[in] Sf2_in:       initial guess for quantity \f$ S_\mathrm{fluid}^2 \f$
+ * @param[in] Sf2_in initial guess for quantity \f$ S_\mathrm{fluid}^2 \f$
  *
- * @param[in] Psim6:        inverse of \f$ \psi^6 = \sqrt{|\gamma|} \f$
+ * @param[in] Psim6 inverse of \f$ \psi^6 = \sqrt{|\gamma|} \f$
  *
- * @param[in] sdots:        conservative quantity \f$ S^2 \f$
+ * @param[in] sdots conservative quantity \f$ S^2 \f$
  *
- * @param[in] BdotS2:       conservative quantity \f$ \left(B \cdot S\right)^2 \f$
+ * @param[in] BdotS2 conservative quantity \f$ \left(B \cdot S\right)^2 \f$
  *
- * @param[in] B2:           magnetic quantity \f$ B^2 \f$
+ * @param[in] B2 magnetic quantity \f$ B^2 \f$
  *
- * @param[in] cons:         pointer to ghl_conservative_quantities struct with
- *                          **undensitized** conservative variables
+ * @param[in] cons pointer to ghl_conservative_quantities struct with
+ *                 **undensitized** conservative variables
  *
- * @param[in] rhob_in:      initial guess for the density \f$ \rho \f$
+ * @param[in] rhob_in initial guess for the density \f$ \rho \f$
  *
- * @param[out] rhob_out_ptr: returned density value
+ * @param[out] rhob_out_ptr returned density value
  *
  * @returns error code for any Con2Prim failures
  */
