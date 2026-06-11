@@ -53,17 +53,22 @@
  * uses \f$ \tilde{B}^i \f$. Additionally, we know that e.g.
  *
  * \f[
- * E^{LR}_3 = - \left( v^1_{LR} B^2_L - v^2_{LR} B^1_R \right)
+ * A^{LR}_{3,\mathrm{rhs}} = v^1_{LR} B^2_L - v^2_{LR} B^1_R
  * \f]
  *
- * To evaluate this derivative, we can therefore use the HLL flux from
- * equation 44 of \cite DelZanna_2003 :
+ * To evaluate this derivative, we use the HLL electric-field flux from
+ * equation 44 of \cite DelZanna_2003, negated since
+ * \f$ A^\mathrm{rhs}_3 = -E_3 \f$:
  *
  * \f[
- * \begin{aligned}
- * E^\mathrm{HLL}_3 = &\frac{c^+_1 c^-_1}{c_1^\mathrm{sum}} \left( B^R_2 - B^L_2 \right) - \frac{c^+_2 c^-_2}{c_2^\mathrm{sum}} \left( B^R_1 - B^L_1 \right) \\
- * &+ \frac{1}{c_1^\mathrm{sum} c_2^\mathrm{sum}}\left( c^+_1 c^+_2 E^{LL}_3 + c^+_1 c^-_2 E^{LR}_3 + c^-_1 c^+_2 E^{RL}_3 + c^-_1 c^-_2 E^{RR}_3 \right)
- * \end{aligned}
+ * A^\mathrm{HLL}_{3,\mathrm{rhs}} =
+ * \frac{c^+_2 c^-_2}{c_2^\mathrm{sum}} \left( B^R_1 - B^L_1 \right)
+ * - \frac{c^+_1 c^-_1}{c_1^\mathrm{sum}} \left( B^R_2 - B^L_2 \right)
+ * + \frac{1}{c_1^\mathrm{sum} c_2^\mathrm{sum}}\left(
+ * c^+_1 c^+_2 A^{LL}_{3,\mathrm{rhs}}
+ * + c^+_1 c^-_2 A^{LR}_{3,\mathrm{rhs}}
+ * + c^-_1 c^+_2 A^{RL}_{3,\mathrm{rhs}}
+ * + c^-_1 c^-_2 A^{RR}_{3,\mathrm{rhs}} \right)
  * \f]
  *
  * where \f$ c_i^\pm \f$ represents the characteristic speeds returned by
@@ -83,8 +88,8 @@
  *
  * The \f$ R \f$ and \f$ L \f$ superscripts refer to the right/left reconstructed values for
  * an edge. As discussed before, the velocities have to be reconstructed twice, and so we have
- * to list the superscript for each reconstruction. This is used to compute \f$ E \f$, leading
- * the notation in the equation above. This defines our prescription for computing the
+ * to list the superscript for each reconstruction. This leads to the notation in the
+ * equation above and defines our prescription for computing the
  * flux contributions to the RHS of \f$ A_i \f$.
  *
  * @param[in] vars: pointer to a ghl_HLL_vars struct

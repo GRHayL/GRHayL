@@ -2,7 +2,7 @@
 
 /**
  * @ingroup pack_struct
- * @brief Unpacks primitive variable struct into provided provided memory locations
+ * @brief Unpacks primitive variable struct into provided memory locations
  *
  * @details
  * This function takes data from the ghl_primitive_quantities struct and

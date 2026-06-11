@@ -8,7 +8,7 @@
  *
  * @details
  * This function computes the right and left values of the left face of variable \f$ U \f$
- * using the monotized-central method. For example, to reconstruct the values
+ * using the monotonized-central method. For example, to reconstruct the values
  * for the face \f$ i-\frac{1}{2} \f$, the array \f$ U \f$ should contain a
  * stencil centered around that face (i.e. values from \f$ i-2 \f$ to \f$ i+1 \f$).
  * For the right side value `Ur`,
@@ -24,7 +24,7 @@
  *
  * Similarly, the left side value `Ul` chooses the smallest magnitude \f$ \Delta U \f$
  * from \f$ \frac{1}{2}(U_{i} - U_{i-2}) \f$, \f$ 2(U_{i-1} - U_{i-2}) \f$, and
- * \f$ (U_{i}-U_{i-1}) \f$ to compute
+ * \f$ 2(U_{i}-U_{i-1}) \f$ to compute
  *
  * \f[
  * U_L \equiv U_{i-\epsilon-1/2} = U_{i-1} + \frac{\Delta U}{2}

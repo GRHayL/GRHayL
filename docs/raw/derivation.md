@@ -1055,8 +1055,8 @@ B^{i}_{(u)} &= \frac{B^i + u^i u_\nu B^\nu}{\alpha u^0} \\
 \end{aligned}
 \f]
 
-where \f$ v^i \f$ is the conservative variable \f$ u^i/u^0 \f$. Finally, the
-spatial components of the dual of Maxwell's equations gives the induction
+where \f$ v^i \f$ is the primitive transport velocity \f$ u^i/u^0 \f$. Finally, the
+spatial components of the dual of Maxwell's equations give the induction
 equation for the magnetic field:
 
 \f[

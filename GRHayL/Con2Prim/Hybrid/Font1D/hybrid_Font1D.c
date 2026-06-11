@@ -20,7 +20,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  * densities where other hybrid Con2Prim routines might recover a negative
  * pressure. Font1D assumes that \f$ P=P_\mathrm{cold} \f$ and solves for
  * \f$ \rho \f$ using an iterative method. This method is guaranteed to
- * succeeds so long as the conservatives are physically reasonable:
+ * succeed so long as the conservatives are physically reasonable:
  * \f$ \rho_* > 0 \f$ and \f$ \tilde{S}_i \in (-\infty, \infty) \f$.
  * The return value gives information on the success or failure of the
  * recovery attempt.

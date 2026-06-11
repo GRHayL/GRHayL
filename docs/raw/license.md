@@ -23,13 +23,14 @@ description of the citations.
 
  | Component                             | Additional Citation                                                    |
  |:-------------------------------------:|:----------------------------------------------------------------------:|
- | @grhayl                               | TBD and IllinoisGRMHD \cite Etienne_IGM                                |
+ | @grhayl                               | GRHayL release paper and IllinoisGRMHD \cite Etienne_IGM               |
  | Tabulated EOS                         | Werneck _et al_. \cite Werneck_IGM                                     |
  | Noble Con2Prim routines               | HARM \cite HARM and its solver \cite Noble_2006                        |
- | Palenzuela & Newman Con2Prim routines | GRMHD_con2prim \cite siegel_2018 and the method \cite Siegel_2018_code |
+ | Palenzuela & Newman Con2Prim routines | GRMHD_con2prim \cite Siegel_2018_GRMHD_con2prim and the method \cite Siegel_2018_recovery_schemes |
  | PPM method                            | corrected method/reference papers \cite Marti_1996 and \cite DelZanna_2003 |
 
-Any work using GRHayL should cite its release paper [TBD](). Additionally,
+Any work using GRHayL should cite its release paper
+[arXiv:2512.15846](https://arxiv.org/abs/2512.15846). Additionally,
 all components of the library contain elements adapted from IllinoisGRMHD
 and should cite its [release paper](https://iopscience.iop.org/article/10.1088/0264-9381/32/17/175009)
 ([arxiv](https://arxiv.org/abs/1501.07276)) as well.
@@ -53,9 +54,8 @@ the [code](https://zenodo.org/records/1213306) and associated
 ([arxiv](https://arxiv.org/abs/1712.07538)) should be cited.
 
 ### Reconstruction citations:
-The PPM method is adapted from the work by Del Zanna et al, and the
-[release paper](https://www.aanda.org/articles/aa/abs/2003/11/aa3107/aa3107.html)
-([arxiv](https://arxiv.org/abs/astro-ph/0210618)) should be cited.
+For the PPM method, cite the corrected method/reference papers listed in the
+table above.
 The original Colella and Woodward PPM reference \cite Colella_1984 contains
 known formula errors; later papers and implementation references correct these,
 so the table above points PPM users to \cite Marti_1996 and \cite DelZanna_2003.

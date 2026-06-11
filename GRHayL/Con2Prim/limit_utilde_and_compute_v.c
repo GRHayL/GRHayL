@@ -7,7 +7,7 @@
  * @details
  * This function applies a speed limit to the Valencia velocity \f$ \tilde{u}^i \f$
  * based on ghl_parameters::max_Lorentz_factor and then computes
- * ghl_primitive_quantities::u0 and ghl_primitive_quantities::VU.
+ * ghl_primitive_quantities::u0 and ghl_primitive_quantities::vU.
  *
  * @todo
  * Add more comments like in @ref ghl_limit_v_and_compute_u0
