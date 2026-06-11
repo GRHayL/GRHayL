@@ -22,14 +22,14 @@
  * 5-element stencil of the input values to compute \f$ \tilde{f} \f$, and the
  * method for computing \f$ \tilde{f} \f$ is discussed in detail in its documentation.
  *
- * @param[in] params:      pointer to ghl_parameters struct
+ * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] pressure:    1D array containing stencil for the pressure
+ * @param[in] pressure 1D array containing stencil for the pressure
  *
- * @param[in] v_flux_dirn: 1D array containing stencil for the fluid
+ * @param[in] v_flux_dirn 1D array containing stencil for the fluid
  *                         velocity in the direction of the reconstruction
  *
- * @param[out] ftilde:     1D array containing \f$ \tilde{f} \f$ values
+ * @param[out] ftilde 1D array containing \f$ \tilde{f} \f$ values
  *
  */
 void ghl_compute_ftilde(

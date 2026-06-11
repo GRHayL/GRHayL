@@ -20,13 +20,13 @@
  * the same stencil range as this function and populates the `ftilde` array with
  * the needed data.
  *
- * @param[in] ftilde:    1D array containing \f$ \tilde{f} \f$ values for flattening procedure
+ * @param[in] ftilde 1D array containing \f$ \tilde{f} \f$ values for flattening procedure
  *
- * @param[in] var_data:  1D array containing stencil of variable to reconstruct
+ * @param[in] var_data 1D array containing stencil of variable to reconstruct
  *
- * @param[out] var_datar: pointer to a double; set to the value of the right side of the face
+ * @param[out] var_datar pointer to a double; set to the value of the right side of the face
  *
- * @param[out] var_datal: pointer to a double; set to the value of the left side of the face
+ * @param[out] var_datal pointer to a double; set to the value of the left side of the face
  *
  */
 void ghl_ppm_reconstruction(

@@ -14,19 +14,19 @@
  * This is used before the Con2Prim solver, so \f$ B^i \f$ is the only available
  * primitive.
  *
- * @param[in] params: pointer to ghl_parameters struct
+ * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] eos: pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] ADM_metric: pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
  *
- * @param[in] prims: pointer to ghl_primitive_quantities struct
+ * @param[in] prims pointer to ghl_primitive_quantities struct
  *
- * @param[in,out] cons: pointer to ghl_conservative_quantities struct; returned
+ * @param[in,out] cons pointer to ghl_conservative_quantities struct; returned
  *                      struct contains limit-enforced \f$ \tilde{tau} \f$ and
  *                      \f$ \tilde{S}_i \f$
  *
- * @param[out] diagnostics: pointer to ghl_con2prim_diagnostics struct; returns
+ * @param[out] diagnostics pointer to ghl_con2prim_diagnostics struct; returns
  *                          whether any limits were applied
  */
 void ghl_apply_conservative_limits(
@@ -129,11 +129,11 @@ void ghl_apply_conservative_limits(
    * the magnetic field:
    *
    * If \f$ B^2 < \frac{P_\mathrm{atm}}{10^{32}} \f$ and
-   * \f$ \tilde{S}^2 > \tilde{\tau}(\tilde{\tau} + 2\tilde{D}) \f$
+   * \f$ \tilde{S}^2 > 0.999999\,\tilde{\tau}(\tilde{\tau} + 2\tilde{D}) \f$
    * then
    *
    * \f[
-   * \tilde{S}_i = \tilde{S}_i\sqrt{\frac{\tilde{\tau}(\tilde{\tau}
+   * \tilde{S}_i = \tilde{S}_i\sqrt{\frac{0.999999\,\tilde{\tau}(\tilde{\tau}
    *                                                   + 2\tilde{D})}{\tilde{S}^2}}
    * \f]
    */
@@ -165,12 +165,12 @@ void ghl_apply_conservative_limits(
    * \tilde{\tau} = \tilde{\tau}_\mathrm{fluid,min} + \frac{\sqrt{\gamma}B^2}{2} + \tilde{\tau}_3
    * \f]
    *
-   * Finally, if \f$ \tilde{S}^2 > \tilde{\tau}_\mathrm{fluid,min}
+   * Finally, if \f$ \tilde{S}^2 > 0.999999\,\tilde{\tau}_\mathrm{fluid,min}
    *                               (\tilde{\tau}_\mathrm{fluid,min} + 2\tilde{D}) \f$
    * then
    *
    * \f[
-   * \tilde{S}_i = \tilde{S}_i\sqrt{\frac{\tilde{\tau}_\mathrm{fluid,min}
+   * \tilde{S}_i = \tilde{S}_i\sqrt{\frac{0.999999\,\tilde{\tau}_\mathrm{fluid,min}
    *               (\tilde{\tau}_\mathrm{fluid,min} + 2\tilde{D})}{\tilde{S}^2}}
    * \f]
    */

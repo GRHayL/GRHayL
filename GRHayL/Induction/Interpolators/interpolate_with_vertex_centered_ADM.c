@@ -23,9 +23,12 @@
  * \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$ instead of \f$ \gamma^{ij} \f$
  * to condense some of the mathematical operations needed.
  *
- * @param[in] metric_stencil 3D stencil array of ghl_metric_quantities from
- *                           \f$ (i-\frac{1}{2}, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to
- *                           \f$ (i+\frac{3}{2}, j+\frac{3}{2}, k+\frac{3}{2}) \f$
+ * @param[in] metric_stencil 2x2x2 stencil of vertex-centered ADM quantities.
+ *                           The interpolation uses metric_stencil[0][0][0] at
+ *                           the \f$ \tilde{\Phi} \f$ point and the adjacent
+ *                           vertices metric_stencil[0][0][1],
+ *                           metric_stencil[0][1][0], and
+ *                           metric_stencil[1][0][0].
  *
  * @param[in] Ax_stencil 3D stencil array containing \f$ A_x \f$ from
  *                       \f$ (i-1, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to

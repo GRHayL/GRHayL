@@ -17,38 +17,38 @@
  * The spatial components are computed using Eq. 24:
  *
  * \f[
- * \begin{align}
+ * \begin{aligned}
  * b^i &= B^i_u \\
  *     &= \frac{1}{u^0} \left( B^i/\alpha + B^0_u u^i \right) \\
  *     &= \frac{1}{u^0} \left( B^i/\alpha + b^t u^i \right) \\
  *     &= \frac{1}{\alpha u^0} \left( B^i + \alpha b^t u^i \right) \\
  *     &= \frac{B^i}{\alpha u^0} + b^t v^i
- * \end{align}
+ * \end{aligned}
  * \f]
  *
  * Then, we compute \f$ b^2 \f$ with
  *
  * \f[
- * \begin{align}
+ * \begin{aligned}
  * b^2 &= g_{\mu\nu} b^\mu b^\nu \\
  *     &= g_{tt}\left(b^t\right)^2 + g_{xx}\left(b^x\right)^2 + g_{yy}\left(b^y\right)^2 + g_{zz}\left(b^z\right)^2 + 2\left(g_{ti} b^t b^i + g_{xy} b^x b^y + g_{xz} b^x b^z + g_{yz} b^y b^z\right) \\
  *     &= \left( -\alpha^2 + \gamma_{i j} \beta^i \beta^j \right) \left(b^t\right)^2 + \gamma_{i j} b^i b^j + 2 g_{t i} b^t b^i \\
  *     &= -\left( \alpha b^t \right)^2 + \gamma_{i j} \beta^i \beta^j \left(b^t\right)^2 + \gamma_{i j} b^i b^j + 2 b^t (\gamma_{i j}\beta^j) b^i \\
  *     &= -\left( \alpha b^t \right)^2 + \gamma_{i j} \left( \beta^i \beta^j \left(b^t\right)^2 + b^i b^j + 2 b^t \beta^j b^i \right) \\
  *     &= -\left( \alpha b^t \right)^2 + \gamma_{i j} \left(b^i + b^t\beta^i\right) \left(b^j + b^t\beta^j\right)
- * \end{align}
+ * \end{aligned}
  * \f]
  *
- * @param[in] ADM_metric: pointer to a ghl_metric_quantities struct containing the ADM metric
+ * @param[in] ADM_metric pointer to a ghl_metric_quantities struct containing the ADM metric
  *
- * @param[in] prims:      pointer to a ghl_primitive_quantities struct. Note that
- *                        ghl_primitive_quantities::u0 **must** be valid for this function.
+ * @param[in] prims pointer to a ghl_primitive_quantities struct. Note that
+ *                  ghl_primitive_quantities::u0 **must** be valid for this function.
  *
- * @param[in] uDN:        lowered 4-velocity \f$ u_\mu \f$
+ * @param[in] uDN lowered 4-velocity \f$ u_\mu \f$
  *
- * @param[out] smallb:    returned 4-vector \f$ b^\mu \f$
+ * @param[out] smallb returned 4-vector \f$ b^\mu \f$
  *
- * @param[out] smallb2:   returned scalar \f$ b^2 \f$
+ * @param[out] smallb2 returned scalar \f$ b^2 \f$
  *
  */
 void ghl_compute_smallb_and_b2(

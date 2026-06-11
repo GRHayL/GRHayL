@@ -11,12 +11,12 @@
  * is usually taken from ghl_metric_quantities::sqrt_detgamma, though note that this
  * instance must contain the ADM metric.
  *
- * @param[in] psi6: spacetime quantity \f$ \psi^6 = \sqrt{|\gamma|} \f$
+ * @param[in] psi6 spacetime quantity \f$ \psi^6 = \sqrt{|\gamma|} \f$
  *
- * @param[in] cons: pointer to ghl_conservative_quantities containing the densitized
+ * @param[in] cons pointer to ghl_conservative_quantities containing the densitized
  *                  conservative variables
  *
- * @param[out] cons_undens: pointer to ghl_conservative_quantities containing the
+ * @param[out] cons_undens pointer to ghl_conservative_quantities containing the
  *                          **undensitized** conservative variables
  */
 void ghl_undensitize_conservatives(

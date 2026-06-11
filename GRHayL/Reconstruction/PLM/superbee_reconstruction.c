@@ -60,11 +60,11 @@
  * \sigma_2 = \mathrm{minmod}\left( 2(U_{i-1} - U_{i-2}),\ U_{i} - U_{i-1} \right)
  * \f]
  *
- * @param[in] U:   1D array containing values of variable \f$ U \f$
+ * @param[in] U 1D array containing values of variable \f$ U \f$
  *
- * @param[out] Ur: pointer to a double; set to the value of the right side of the face
+ * @param[out] Ur pointer to a double; set to the value of the right side of the face
  *
- * @param[out] Ul: pointer to a double; set to the value of the left side of the face
+ * @param[out] Ul pointer to a double; set to the value of the left side of the face
  *
  */
 void ghl_superbee_reconstruction(

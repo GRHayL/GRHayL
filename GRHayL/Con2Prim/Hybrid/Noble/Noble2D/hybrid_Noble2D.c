@@ -32,23 +32,23 @@
  * @todo
  * Needs in-line descriptions
  *
- * @param[in] params:       pointer to ghl_parameters struct
+ * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] eos:          pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] ADM_metric:   pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
  *
- * @param[in] metric_aux:   pointer to ghl_ADM_aux_quantities struct
+ * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  *
- * @param[in] cons_undens:  pointer to ghl_conservative_quantities struct with
+ * @param[in] cons_undens pointer to ghl_conservative_quantities struct with
  *                          **undensitized** conservative variables
  *
- * @param[in,out] prims:    pointer to ghl_primitive_quantities struct;
+ * @param[in,out] prims pointer to ghl_primitive_quantities struct;
  *                          input is initial guess for iterative solver;
  *                          output is the primitives consistent with the
  *                          input conservatives
  *
- * @param[out] diagnostics: pointer to ghl_con2prim_diagnostics struct; returns
+ * @param[out] diagnostics pointer to ghl_con2prim_diagnostics struct; returns
  *                          with several Con2Prim solver diagnostics
  *
  * @returns error code for any Con2Prim failures

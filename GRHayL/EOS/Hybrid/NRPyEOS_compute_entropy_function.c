@@ -12,11 +12,11 @@
  * See eq. (20) in https://arxiv.org/pdf/0808.3140.pdf for more details.
  * @todo use doxygen citation
  *
- * @param[in] eos: pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] rho: density value
+ * @param[in] rho density value
  *
- * @param[in] P:   pressure value
+ * @param[in] P pressure value
  *
  * @returns entropy
  */

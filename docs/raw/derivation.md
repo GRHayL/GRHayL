@@ -180,12 +180,12 @@ Now, since we are in the rest frame of the observer, the spatial components of
 the observer's velocity are zero. Then,
 
 \f[
-\begin{align}
+\begin{aligned}
 \xi_\alpha \xi_\sigma \epsilon^{\sigma\alpha\beta\mu}
 &= \xi_0 \xi_\sigma \epsilon^{\sigma 0\beta\mu} \\
 &= \xi_0 \xi_0 \epsilon^{0 0\beta\mu} \\
 &= 0
-\end{align}
+\end{aligned}
 \f]
 
 since any components of the Levi-Civita tensor with repeated indices are zero.

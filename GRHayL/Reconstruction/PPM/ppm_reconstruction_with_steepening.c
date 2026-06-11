@@ -24,19 +24,19 @@
  * This differs from @ref ghl_ppm_reconstruction by applying an additional
  * steepening algorithm and is normally used for the density reconstruction.
  *
- * @param[in] params:   pointer to ghl_parameters struct
+ * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] pressure: 1D array containing stencil for the pressure
+ * @param[in] pressure 1D array containing stencil for the pressure
  *
- * @param[in] Gamma_eff: value of \f$ \Gamma \f$ to be used during the steepening procedure
+ * @param[in] Gamma_eff value of \f$ \Gamma \f$ to be used during the steepening procedure
  *
- * @param[in] ftilde:    1D array containing \f$ \tilde{f} \f$ values for flattening procedure
+ * @param[in] ftilde 1D array containing \f$ \tilde{f} \f$ values for flattening procedure
  *
- * @param[in] var_data:  1D array containing stencil of variable to reconstruct
+ * @param[in] var_data 1D array containing stencil of variable to reconstruct
  *
- * @param[out] var_datar: pointer to a double; set to the value of the right side of the face
+ * @param[out] var_datar pointer to a double; set to the value of the right side of the face
  *
- * @param[out] var_datal: pointer to a double; set to the value of the left side of the face
+ * @param[out] var_datal pointer to a double; set to the value of the left side of the face
  *
  */
 void ghl_ppm_reconstruction_with_steepening(

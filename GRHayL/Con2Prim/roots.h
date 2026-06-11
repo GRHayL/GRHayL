@@ -72,7 +72,7 @@ typedef struct roots_params {
  * @ingroup c2p_internal
  * @brief Prints information about the root-finding process.
  *
- * @param[in] r: pointer to roots_params
+ * @param[in] r pointer to roots_params
  *
  */
 static inline void
@@ -95,8 +95,8 @@ roots_info(const roots_params *restrict r) {
  * @ingroup c2p_internal
  * @brief Swaps the value of two doubles
  *
- * @param[in,out] a: first number
- * @param[in,out] b: second number
+ * @param[in,out] a first number
+ * @param[in,out] b second number
  */
 static inline void
 swap(
@@ -112,9 +112,9 @@ swap(
  * @ingroup c2p_internal
  * @brief Returns the sign of a double
  *
- * @param[in] x: value
+ * @param[in] x value
  *
- * @returns +1 if x>=0, -1 otherwise
+ * @returns +1 if x > 0, -1 if x < 0, and 0 if x == 0
  */
 static inline int
 sign(const double x) {

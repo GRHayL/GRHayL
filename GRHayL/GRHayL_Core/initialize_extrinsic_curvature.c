@@ -9,9 +9,9 @@
  * and uses it to initialize every element of the given ghl_extrinsic_curvature
  * struct.
  *
- * @param[in] Kxx, Kxy, Kxz, Kyy, Kyz, Kzz: individual components of the extrinsic curvature \f$ K_{ij} \f$
+ * @param[in] Kxx,Kxy,Kxz,Kyy,Kyz,Kzz individual components of the extrinsic curvature \f$ K_{ij} \f$
  *
- * @param[out] curv: pointer to ghl_extrinsic_curvature struct
+ * @param[out] curv pointer to ghl_extrinsic_curvature struct
  *
  */
 void ghl_initialize_extrinsic_curvature(

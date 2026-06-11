@@ -19,27 +19,27 @@
  * point. This means that the metric quantities have an even stencil,
  * and the \f$ A_i \f$ have an odd stencil.
  *
- * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
+ * @param[in] metric_stencil 3D stencil array of ghl_metric_quantities from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
- * @param[in] psi_stencil:    3D stencil array of \f$ \psi \f$ from
+ * @param[in] psi_stencil 3D stencil array of \f$ \psi \f$ from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
- * @param[in] Ax_stencil:     3D stencil array containing \f$ A_x \f$ from
+ * @param[in] Ax_stencil 3D stencil array containing \f$ A_x \f$ from
  *                            \f$ (i-1, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to
  *                            \f$ (i+1, j+\frac{3}{2}, k+\frac{3}{2}) \f$
  *
- * @param[in] Ay_stencil:     3D stencil array containing \f$ A_y \f$ from
+ * @param[in] Ay_stencil 3D stencil array containing \f$ A_y \f$ from
  *                            \f$ (i-\frac{1}{2}, j-1, k-\frac{1}{2}) \f$ to
  *                            \f$ (i+\frac{3}{2}, j+1, k+\frac{3}{2}) \f$
  *
- * @param[in] Az_stencil:     3D stencil array containing \f$ A_z \f$ from
+ * @param[in] Az_stencil 3D stencil array containing \f$ A_z \f$ from
  *                            \f$ (i-\frac{1}{2}, j-\frac{1}{2}, k-1) \f$ to
  *                            \f$ (i+\frac{3}{2}, j+\frac{3}{2}, k+1) \f$
  *
- * @param[in] phitilde:       value of \f$ \tilde{\Phi} \f$ at the staggered point
+ * @param[in] phitilde value of \f$ \tilde{\Phi} \f$ at the staggered point
  *
- * @param[out] interp_vars:   ghl_induction_interp_vars with interpolated values
+ * @param[out] interp_vars ghl_induction_interp_vars with interpolated values
  *                            needed by @ref ghl_calculate_phitilde_rhs
  *
  */

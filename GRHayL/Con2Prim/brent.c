@@ -22,7 +22,7 @@ ensure_b_is_closest_to_root(
   }
 }
 
-/*
+/**
  * @ingroup c2p_internal
  * @brief Keeps best guesses of a,b,c for root-finding.
  *
@@ -55,16 +55,34 @@ cycle(
  * - Check if the root is in the interval [a,b];
  * - Ensure |f(b)| < |f(a)| by swapping a and b if necessary.
  *
- *   @todo properly define parameters, return
+ * @param[in] f function for which the root is computed
  *
- * Parameters : f        - Function for which the root is computed.
- *            : fparams  - Object containing all parameters needed by the
- *                         function f other than the variable x.
- *            : a        - Lower limit of the initial interval.
- *            : b        - Upper limit of the initial interval.
- *            : fa       - f(a)
- *            : fb       - f(b)
- *            : r        - Pointer to Roots parameters.
+ * @param[in] params pointer to ghl_parameters
+ *
+ * @param[in] eos pointer to ghl_eos_parameters
+ *
+ * @param[in] cons_undens pointer to ghl_conservative_quantities containing
+ *                        **undensitized** conservative variables
+ *
+ * @param[in,out] fparams object containing all parameters needed by f
+ *                        other than the variable x
+ *
+ * @param[in,out] prims primitive quantities used by f
+ *
+ * @param[in,out] a lower limit of the initial interval; may be swapped with b
+ *
+ * @param[in,out] b upper limit of the initial interval; may be swapped with a
+ *
+ * @param[out] fa value of \f$ f(a) \f$
+ *
+ * @param[out] fb value of \f$ f(b) \f$
+ *
+ * @param[in,out] r pointer to roots_params updated when an endpoint is a root
+ *                  or when the interval is already below tolerance
+ *
+ * @returns ghl_success if an endpoint or sufficiently small interval provides
+ *          the root, ghl_error_root_not_bracketed if [a,b] does not bracket a
+ *          root, or ghl_error_c2p_max_iter when Brent iterations should proceed
  *
  */
 static inline ghl_error_codes_t

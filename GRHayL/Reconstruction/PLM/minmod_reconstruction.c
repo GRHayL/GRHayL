@@ -12,7 +12,7 @@
  * \f$ i-\frac{1}{2} \f$, the array \f$ U \f$ should contain a stencil centered
  * around that face (i.e. values from \f$ i-2 \f$ to \f$ i+1 \f$). This method
  * chooses the smaller \f$ \Delta U \f$ between \f$ U_i - U_{i-1} \f$ and
- * \f$ U_{i+1}-U \f$ to use to take a half-step backwards to the right side:
+ * \f$ U_{i+1}-U_i \f$ to use to take a half-step backwards to the right side:
  *
  * \f[
  * U_R \equiv U_{i+\epsilon-1/2} = U_i - \frac{\Delta U}{2}
@@ -29,11 +29,11 @@
  * sets \f$ \Delta U=0 \f$. The actual value selection is done via the @ref ghl_minmod
  * function.
  *
- * @param[in] U:   1D array containing values of variable \f$ U \f$
+ * @param[in] U 1D array containing values of variable \f$ U \f$
  *
- * @param[out] Ur: pointer to a double; set to the value of the right side of the face
+ * @param[out] Ur pointer to a double; set to the value of the right side of the face
  *
- * @param[out] Ul: pointer to a double; set to the value of the left side of the face
+ * @param[out] Ul pointer to a double; set to the value of the left side of the face
  *
  */
 void ghl_minmod_reconstruction(

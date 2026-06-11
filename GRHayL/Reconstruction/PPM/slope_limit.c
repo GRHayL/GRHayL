@@ -39,7 +39,7 @@
  * Then, we determine the sign and magnitude of the slope using
  *
  * \f[
- * \begin{align}
+ * \begin{aligned}
  * sgn(\mathrm{slope}) &= (0 < \Delta U) - (\Delta U < 0) \\
  * &=
  * \begin{cases}
@@ -47,7 +47,7 @@
  *   -1 & \mathrm{if\ } \Delta U < 0 \\
  *    0 & \mathrm{otherwise}
  * \end{cases}
- * \end{align}
+ * \end{aligned}
  * \f]
  *
  * \f[

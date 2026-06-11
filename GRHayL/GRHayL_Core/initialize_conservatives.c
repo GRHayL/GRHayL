@@ -12,17 +12,17 @@
  * the undensitized values explicitly state this in their documentation and variable
  * names.
  *
- * @param[in] rho:           density variable \f$ \rho_* \f$ (also called \f$ \tilde{D} \f$
+ * @param[in] rho density variable \f$ \rho_* \f$ (also called \f$ \tilde{D} \f$)
  *
- * @param[in] tau:           energy variable \f$ \tau \f$
+ * @param[in] tau energy variable \f$ \tau \f$
  *
- * @param[in] S_x, S_y, S_z: components of the momentum variable \f$ S_i \f$
+ * @param[in] S_x,S_y,S_z components of the momentum variable \f$ S_i \f$
  *
- * @param[in] entropy:       fluid entropy variable \f$ \tilde{S} \f$
+ * @param[in] entropy fluid entropy variable \f$ \tilde{S} \f$
  *
- * @param[in] Y_e:           electron fraction variable \f$ \tilde{Y}_e \f$
+ * @param[in] Y_e electron fraction variable \f$ \tilde{Y}_e \f$
  *
- * @param[out] cons:         pointer to ghl_conservative_quantities struct
+ * @param[out] cons pointer to ghl_conservative_quantities struct
  *
  */
 void ghl_initialize_conservatives(

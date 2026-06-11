@@ -7,9 +7,9 @@
  * @details
  * This function returns the name of a conservative-to-primitive solver method
  * given a @ref ghl_con2prim_method_t key. If key matches nothing in the enum,
- * then the code will fail with a message giving the value of the failed key.
+ * then the function returns NULL.
  *
- * @param[in] key: key from @ref ghl_con2prim_method_t selecting a method
+ * @param[in] key key from @ref ghl_con2prim_method_t selecting a method
  *
  * @returns the name of the conservative-to-primitive solver method
  */

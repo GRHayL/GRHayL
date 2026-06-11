@@ -11,10 +11,10 @@
  * as neither this function nor the struct distinguish between raised or
  * lowered indices.
  *
- * @param[in] Ttt, Ttx, Tty, Ttz, Txx, Txy, Txz, Tyy, Tyz, Tzz:
- *            components of the stress-energy tensor \f$ T^{\mu\nu} \f$ or \f$ T_{\mu\nu} \f$
+ * @param[in] Ttt,Ttx,Tty,Ttz,Txx,Txy,Txz,Tyy,Tyz,Tzz components of the
+ *            stress-energy tensor \f$ T^{\mu\nu} \f$ or \f$ T_{\mu\nu} \f$
  *
- * @param[out] Tmunu: pointer to ghl_stress_energy struct
+ * @param[out] Tmunu pointer to ghl_stress_energy struct
  *
  */
 void ghl_initialize_stress_energy(

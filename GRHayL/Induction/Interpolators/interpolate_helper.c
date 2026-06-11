@@ -22,28 +22,28 @@
  * The function will average the values at the points \f$ i \f$ and
  * \f$ i+1 \f$ to get the value at \f$ i+\frac{1}{2} \f$.
  *
- * @param[in] Ax_stencil:     3D stencil array containing \f$ A_x \f$ from
+ * @param[in] Ax_stencil 3D stencil array containing \f$ A_x \f$ from
  *                            \f$ (i-1, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to
  *                            \f$ (i+1, j+\frac{3}{2}, k+\frac{3}{2}) \f$
  *
- * @param[in] Ay_stencil:     3D stencil array containing \f$ A_y \f$ from
+ * @param[in] Ay_stencil 3D stencil array containing \f$ A_y \f$ from
  *                            \f$ (i-\frac{1}{2}, j-1, k-\frac{1}{2}) \f$ to
  *                            \f$ (i+\frac{3}{2}, j+1, k+\frac{3}{2}) \f$
  *
- * @param[in] Az_stencil:     3D stencil array containing \f$ A_z \f$ from
+ * @param[in] Az_stencil 3D stencil array containing \f$ A_z \f$ from
  *                            \f$ (i-\frac{1}{2}, j-\frac{1}{2}, k-1) \f$ to
  *                            \f$ (i+\frac{3}{2}, j+\frac{3}{2}, k+1) \f$
  *
- * @param[out] A_to_phitilde: \f$ A_i \f$ interpolated to
+ * @param[out] A_to_phitilde \f$ A_i \f$ interpolated to
  *                            \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$
  *
- * @param[out] A_to_Ax:       \f$ A_i \f$ interpolated to
+ * @param[out] A_to_Ax \f$ A_i \f$ interpolated to
  *                            \f$ (i, j+\frac{1}{2}, k+\frac{1}{2}) \f$
  *
- * @param[out] A_to_Ay:       \f$ A_i \f$ interpolated to
+ * @param[out] A_to_Ay \f$ A_i \f$ interpolated to
  *                            \f$ (i+\frac{1}{2}, j, k+\frac{1}{2}) \f$
  *
- * @param[out] A_to_Az:       \f$ A_i \f$ interpolated to
+ * @param[out] A_to_Az \f$ A_i \f$ interpolated to
  *                            \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k) \f$
  *
  */
@@ -132,20 +132,20 @@ void ghl_A_i_avg(
  * Note that the last quantity is returned in ghl_metric_quantities::gammaUU
  * with the first index corresponding to the non-staggered component.
  *
- * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
+ * @param[in] metric_stencil 3D stencil array of ghl_metric_quantities from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
- * @param[in] psi_stencil:    3D stencil array of \f$ \psi \f$ from
+ * @param[in] psi_stencil 3D stencil array of \f$ \psi \f$ from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
- * @param[out] metric_interp: ghl_metric_quantities containing interpolated
+ * @param[out] metric_interp ghl_metric_quantities containing interpolated
  *                            quantities \f$ \alpha \f$, \f$ \beta^i \f$,
  *                            and \f$ \gamma^{ij} \f$
  *
- * @param[out] lapse_psi2_interp: 1D array containing interpolated values
+ * @param[out] lapse_psi2_interp 1D array containing interpolated values
  *                                for \f$ \alpha\psi^2 \f$
  *
- * @param[out] lapse_over_psi6_interp: interpolated value of \f$ \frac{\alpha}{\psi^6} \f$
+ * @param[out] lapse_over_psi6_interp interpolated value of \f$ \frac{\alpha}{\psi^6} \f$
  *
  */
 void ghl_BSSN_cell_interp(
@@ -253,14 +253,14 @@ void ghl_BSSN_cell_interp(
  * Note that the last quantity is returned in ghl_metric_quantities::gammaUU
  * with the first index corresponding to the non-staggered component.
  *
- * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
+ * @param[in] metric_stencil 3D stencil array of ghl_metric_quantities from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
  *
- * @param[out] metric_interp: ghl_metric_quantities containing interpolated
+ * @param[out] metric_interp ghl_metric_quantities containing interpolated
  *                            quantities \f$ \alpha \f$, \f$ \beta^i \f$,
  *                            and \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$
  *
- * @param[out] lapse_over_psi6_interp: interpolated value of \f$ \frac{\alpha}{\psi^6} \f$
+ * @param[out] lapse_over_psi6_interp interpolated value of \f$ \frac{\alpha}{\psi^6} \f$
  *
  */
 void ghl_ADM_cell_interp(
@@ -345,11 +345,14 @@ void ghl_ADM_cell_interp(
  * Note that this quantity is returned in ghl_metric_quantities::gammaUU
  * with the first index corresponding to the non-staggered component.
  *
- * @param[in] metric_stencil: 3D stencil array of ghl_metric_quantities from
- *                            \f$ (i-\frac{1}{2}, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to
- *                            \f$ (i+\frac{3}{2}, j+\frac{3}{2}, k+\frac{3}{2}) \f$
+ * @param[in] metric_stencil 2x2x2 stencil of vertex-centered ADM quantities.
+ *                           The interpolation uses metric_stencil[0][0][0] at
+ *                           the \f$ \tilde{\Phi} \f$ point and the adjacent
+ *                           vertices metric_stencil[0][0][1],
+ *                           metric_stencil[0][1][0], and
+ *                           metric_stencil[1][0][0].
  *
- * @param[out] gammaUU_interp: 2D array containing interpolated
+ * @param[out] gammaUU_interp 2D array containing interpolated
  *                            quantity \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$
  *
  */

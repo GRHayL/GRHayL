@@ -15,15 +15,15 @@
  * \f]
  * and \f$ b \f$ is computed using @ref ghl_compute_smallb_and_b2.
  *
- * @param[in] ADM_metric: pointer to a ghl_metric_quantities struct containing the ADM metric
+ * @param[in] ADM_metric pointer to a ghl_metric_quantities struct containing the ADM metric
  *
- * @param[in] metric_aux: pointer to a ghl_ADM_aux_quantities struct
+ * @param[in] metric_aux pointer to a ghl_ADM_aux_quantities struct
  *
- * @param[in] prims:      pointer to a ghl_primitive_quantities struct. Note that both
+ * @param[in] prims pointer to a ghl_primitive_quantities struct. Note that both
  *                        ghl_primitive_quantities::eps and ghl_primitive_quantities::u0
  *                        **must** be valid for this function.
  *
- * @param[out] Tmunu:     pointer to ghl_stress_energy struct
+ * @param[out] Tmunu pointer to ghl_stress_energy struct
  *
  */
 void ghl_compute_TDNmunu(

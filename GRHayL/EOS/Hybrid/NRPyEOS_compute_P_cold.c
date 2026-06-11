@@ -14,11 +14,11 @@
  *
  * \f$ P_\mathrm{cold} = K_i \rho^{\Gamma_i} \f$
  *
- * @param[in] eos:         pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] rho_in:      density value
+ * @param[in] rho_in density value
  *
- * @param[out] P_cold_ptr: pointer to the returned cold pressure
+ * @param[out] P_cold_ptr pointer to the returned cold pressure
  *
  */
 void NRPyEOS_compute_P_cold(

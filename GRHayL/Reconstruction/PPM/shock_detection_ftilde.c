@@ -72,11 +72,11 @@
  * sets these to reasonable default values based on the original
  * Colella & Woodward paper \cite Colella_1984.
  *
- * @param[in] params:      pointer to ghl_parameters struct
+ * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] P:           1D array containing stencil for the pressure
+ * @param[in] P 1D array containing stencil for the pressure
  *
- * @param[in] v_flux_dirn: 1D array containing stencil for the fluid
+ * @param[in] v_flux_dirn 1D array containing stencil for the fluid
  *                         velocity in the direction of the reconstruction
  *
  * @returns the computed \f$ \tilde{f} \f$ value

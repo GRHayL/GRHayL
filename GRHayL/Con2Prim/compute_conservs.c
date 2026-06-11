@@ -9,16 +9,16 @@
  * variables, which is recommended after applying primitive limits to ensure
  * that the two variable sets are self-consistent.
  *
- * @param[in] ADM_metric: pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
  *
- * @param[in] metric_aux: pointer to ghl_ADM_aux_quantities struct
+ * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  *
- * @param[in] prims: pointer to ghl_primitive_quantities struct; note that
+ * @param[in] prims pointer to ghl_primitive_quantities struct; note that
  *                   this function requires that ghl_primitive_quantities::eps
  *                   and ghl_primitive_quantities::u0 must be initialized for
  *                   this function.
  *
- * @param[out] cons: pointer to ghl_conservative_quantities struct
+ * @param[out] cons pointer to ghl_conservative_quantities struct
  */
 void ghl_compute_conservs(
       const ghl_metric_quantities *restrict ADM_metric,

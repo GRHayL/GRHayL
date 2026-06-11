@@ -92,7 +92,7 @@
  * equation above and defines our prescription for computing the
  * flux contributions to the RHS of \f$ A_i \f$.
  *
- * @param[in] vars: pointer to a ghl_HLL_vars struct
+ * @param[in] vars pointer to a ghl_HLL_vars struct
  *
  * @returns flux contribution to \f$ A_i^\mathrm{rhs} \f$
  */

@@ -91,17 +91,17 @@
  * sets these to reasonable default values based on the original
  * Colella & Woodward paper \cite Colella_1984.
  *
- * @param[in] params:    pointer to a ghl_parameters struct
+ * @param[in] params pointer to a ghl_parameters struct
  *
- * @param[in] rho:       1D array containing stencil of the reconstructed variable
+ * @param[in] rho 1D array containing stencil of the reconstructed variable
  *
- * @param[in] pressure:  1D array containing stencil of the pressure
+ * @param[in] pressure 1D array containing stencil of the pressure
  *
- * @param[in] Gamma_eff: value of \f$ \Gamma \f$ to use
+ * @param[in] Gamma_eff value of \f$ \Gamma \f$ to use
  *
- * @param[in,out] rhor:  pointer to reconstructed value of the right face
+ * @param[in,out] rhor pointer to reconstructed value of the right face
  *
- * @param[in,out] rhol:  pointer to reconstructed value of the left face
+ * @param[in,out] rhol pointer to reconstructed value of the left face
  *
 */
 void ghl_steepen_var(

@@ -9,11 +9,11 @@
  *
  * \f$ \epsilon = \epsilon_\mathrm{cold} + \frac{P - P_\mathrm{cold}}{\rho(\Gamma_\mathrm{th} - 1)} \f$
  *
- * @param[in] eos:   pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] rho:   density value
+ * @param[in] rho density value
  *
- * @param[in] press: pressure value
+ * @param[in] press pressure value
  *
  * @returns the specific internal energy
  */

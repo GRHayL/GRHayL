@@ -51,27 +51,27 @@
  * To ensure consistency within the code, we recommend using
  * the stored value within an instance of the ghl_parameters struct.
  *
- * @param[in] dxi:                   1D array of the inverse grid spacing
+ * @param[in] dxi 1D array of the inverse grid spacing
  *
- * @param[in] Lorenz_damping_factor: sets the damping factor for the generalized Lorenz gauge term
+ * @param[in] Lorenz_damping_factor sets the damping factor for the generalized Lorenz gauge term
  *
- * @param[in] alpha_interp:          value of the lapse at the location of \f$ \tilde{\Phi} \f$
+ * @param[in] alpha_interp value of the lapse at the location of \f$ \tilde{\Phi} \f$
  *
- * @param[in] shiftx_interp:         1D stencil array of \f$ \beta^x \f$ (on the same grid as \f$ \tilde{\Phi} \f$)
+ * @param[in] shiftx_interp 1D stencil array of \f$ \beta^x \f$ (on the same grid as \f$ \tilde{\Phi} \f$)
  *                                   in the x direction from \f$ i-2 \f$ to \f$ i+2 \f$
  *
- * @param[in] shifty_interp:         1D stencil array of \f$ \beta^y \f$ (on the same grid as \f$ \tilde{\Phi} \f$)
+ * @param[in] shifty_interp 1D stencil array of \f$ \beta^y \f$ (on the same grid as \f$ \tilde{\Phi} \f$)
  *                                   in the y direction from \f$ j-2 \f$ to \f$ j+2 \f$
  *
- * @param[in] shiftz_interp:         1D stencil array of \f$ \beta^z \f$ (on the same grid as \f$ \tilde{\Phi} \f$)
+ * @param[in] shiftz_interp 1D stencil array of \f$ \beta^z \f$ (on the same grid as \f$ \tilde{\Phi} \f$)
  *                                   in the z direction from \f$ k-2 \f$ to \f$ k+2 \f$
  *
- * @param[in] sqrtg_Ai_stencil:      2D stencil array of \f$ \sqrt{-g} A^i \f$. The first dimension represents the
+ * @param[in] sqrtg_Ai_stencil 2D stencil array of \f$ \sqrt{-g} A^i \f$. The first dimension represents the
  *                                   spatial component \f$ i \f$, and the second dimension represents the stencil.
  *                                   The stencil spans the current point and one point forward in the direction
  *                                   of the spatial component.
  *
- * @param[in] phitilde_stencil:      2D stencil array of \f$ \tilde{\Phi} \f$. The first dimension represents the
+ * @param[in] phitilde_stencil 2D stencil array of \f$ \tilde{\Phi} \f$. The first dimension represents the
  *                                   direction of the stencil, and the second dimension represents the stencil itself.
  *                                   The stencil goes from \f$ i-2 \f$ to \f$ i+2 \f$.
  *

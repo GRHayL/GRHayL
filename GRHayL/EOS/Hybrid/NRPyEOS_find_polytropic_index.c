@@ -22,9 +22,9 @@
  *
  * \f$ i = (\rho \ge \rho_0) + (\rho \ge \rho_1) + \vdots + (\rho \ge \rho_{j-1}) \f$
  *
- * @param[in] eos:    pointer to ghl_eos_parameters struct
+ * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] rho_in: density value
+ * @param[in] rho_in density value
  *
  * @returns the index corresponding to the polytropic piece for the given density
  */

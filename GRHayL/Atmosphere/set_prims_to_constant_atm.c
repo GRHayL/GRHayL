@@ -9,9 +9,9 @@
  * density atmosphere using the provided EOS information. Velocities
  * are set to zero.
  *
- * @param[in] eos:     pointer to ghl_eos_parameters struct.
+ * @param[in] eos pointer to ghl_eos_parameters struct.
  *
- * @param[out] prims: pointer to ghl_primitive_quantities struct.
+ * @param[out] prims pointer to ghl_primitive_quantities struct.
  *
 */
 

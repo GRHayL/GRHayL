@@ -14,10 +14,10 @@
  * this function differs by requiring \f$ \psi^6 \f$ to compute the returned
  * value. The final equation is just multiplied by this factor.
  *
- * @param[in] psi6: spacetime quantity \f$ \psi^6 = \sqrt{|\gamma|} \f$ at the
+ * @param[in] psi6 spacetime quantity \f$ \psi^6 = \sqrt{|\gamma|} \f$ at the
  *                  gridpoint of \f$ A_i \f$
  *
- * @param[in] vars: pointer to a ghl_HLL_vars struct
+ * @param[in] vars pointer to a ghl_HLL_vars struct
  *
  * @returns flux contribution to \f$ A_i^\mathrm{rhs} \f$
  */

@@ -19,19 +19,19 @@
  * of \cite Marti_1996.
  * This procedure is implemented via the @ref ghl_steepen_var function.
  *
- * @param[in] params:   pointer to ghl_parameters struct
+ * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] pressure: 1D array containing stencil for the pressure
+ * @param[in] pressure 1D array containing stencil for the pressure
  *
- * @param[in] Gamma_eff: value of \f$ \Gamma \f$ to be used during the steepening procedure
+ * @param[in] Gamma_eff value of \f$ \Gamma \f$ to be used during the steepening procedure
  *
- * @param[in] ftilde:  \f$ \tilde{f} \f$ for the flattening procedure
+ * @param[in] ftilde \f$ \tilde{f} \f$ for the flattening procedure
  *
- * @param[in] U:       1D array containing stencil of variable to reconstruct
+ * @param[in] U 1D array containing stencil of variable to reconstruct
  *
- * @param[out] Ur_ptr: pointer to a double; set to the value of the right face
+ * @param[out] Ur_ptr pointer to a double; set to the value of the right face
  *
- * @param[out] Ul_ptr: pointer to a double; set to the value of the left face
+ * @param[out] Ul_ptr pointer to a double; set to the value of the left face
  *
  */
 void ghl_ppm_compute_for_cell_with_steepening(

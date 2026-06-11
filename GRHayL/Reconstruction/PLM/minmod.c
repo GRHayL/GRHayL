@@ -18,9 +18,9 @@
  * \f]
  * to determine what should be used to approximate \f$ \Delta U \f$.
  *
- * @param[in] a: first approximation of \f$ \Delta U \f$
+ * @param[in] a first approximation of \f$ \Delta U \f$
  *
- * @param[in] b: second approximation of \f$ \Delta U \f$
+ * @param[in] b second approximation of \f$ \Delta U \f$
  *
  * @returns approximate \f$ \Delta U \f$ value
  */
