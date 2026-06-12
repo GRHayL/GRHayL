@@ -328,7 +328,7 @@ ghl_error_codes_t ghl_tabulated_Noble2D(
   }
 
   diagnostics->n_iter = harm_aux.n_iter;
-  diagnostics->which_routine = Noble2D;
+  diagnostics->which_routine = ghl_Noble2D;
 
   return ghl_success;
 }
