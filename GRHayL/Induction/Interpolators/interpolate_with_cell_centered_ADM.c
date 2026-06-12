@@ -9,7 +9,7 @@
  * @details
  * This function computes the elements of ghl_induction_interp_vars
  * using a cell-centered ADM metric input. The `metric_stencil` elements
- * requires some auxiliary quantities to be filled, so it is recommended
+ * require some auxiliary quantities to be filled, so it is recommended
  * to use the @ref ghl_initialize_metric function to fill each element
  * of this struct. Interpolations are handled by the internal
  * functions @ref ghl_ADM_cell_interp and @ref ghl_A_i_avg .

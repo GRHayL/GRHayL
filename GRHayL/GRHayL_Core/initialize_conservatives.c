@@ -10,17 +10,17 @@
  * ghl_conservative_quantities struct. This struct is used for both densitized
  * and undensitized conservative variables, and Con2Prim functions which expect
  * the undensitized values explicitly state this in their documentation and variable
- * names.
+ * names. All input values use the caller's storage convention.
  *
- * @param[in] rho density variable \f$ \rho_* \f$ (also called \f$ \tilde{D} \f$)
+ * @param[in] rho density conservative value
  *
- * @param[in] tau energy variable \f$ \tau \f$
+ * @param[in] tau energy conservative value
  *
- * @param[in] S_x,S_y,S_z components of the momentum variable \f$ S_i \f$
+ * @param[in] S_x,S_y,S_z momentum conservative components
  *
- * @param[in] entropy fluid entropy variable \f$ \tilde{S} \f$
+ * @param[in] entropy entropy conservative value
  *
- * @param[in] Y_e electron fraction variable \f$ \tilde{Y}_e \f$
+ * @param[in] Y_e electron-fraction conservative value
  *
  * @param[out] cons pointer to ghl_conservative_quantities struct
  *

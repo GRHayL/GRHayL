@@ -1052,7 +1052,7 @@ P^\mu_\nu B^\nu
 &= n_\alpha u^\mu B^{\alpha}_{(u)} \left(1 + u_\nu u^\nu \right)
  - n_\alpha u^\alpha \left( B^{\mu}_{(u)} + u^\mu u_\nu B^{\nu}_{(u)} \right) \\
 
-&= - \alpha u^0 B^{\mu}_{(u)} \\
+&= \alpha u^0 B^{\mu}_{(u)} \\
 
 \Rightarrow B^{\mu}_{(u)} &= \frac{B^\mu + u^\mu u_\nu B^\nu}{\alpha u^0}
 \end{aligned}

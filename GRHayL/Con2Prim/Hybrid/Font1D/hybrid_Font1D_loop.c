@@ -20,15 +20,18 @@
  * @param[in] Sf2_in initial guess for quantity \f$ S_\mathrm{fluid}^2 \f$
  *
  * @param[in] Psim6 inverse of \f$ \psi^6 = \sqrt{|\gamma|} \f$
+ *                  (denoted \f$ \psi^{-6} \f$ below)
  *
- * @param[in] sdots conservative quantity \f$ S^2 \f$
+ * @param[in] sdots conservative quantity \f$ S_\mathrm{in}^2 \f$
  *
- * @param[in] BdotS2 conservative quantity \f$ \left(B \cdot S\right)^2 \f$
+ * @param[in] BdotS2 conservative quantity \f$ \left(B \cdot S_\mathrm{in}\right)^2 \f$
  *
  * @param[in] B2 magnetic quantity \f$ B^2 \f$
  *
- * @param[in] cons pointer to ghl_conservative_quantities struct with
- *                 **undensitized** conservative variables
+ * @param[in] cons pointer to ghl_conservative_quantities struct containing
+ *                 the input conservative variables; its density component is
+ *                 denoted \f$ D_\mathrm{in} \f$ and its momentum components
+ *                 are denoted \f$ S^\mathrm{in}_i \f$ below
  *
  * @param[in] rhob_in initial guess for the density \f$ \rho \f$
  *
@@ -71,7 +74,9 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * the next guess for the density using eq. (A62) of \cite Etienne_2012
      *
      * \f[
-     * \rho_1 = \frac{D}{\psi^6 \sqrt{1 + \frac{S_\mathrm{fluid}^2}{\left(D h\right)^2}}}
+     * \rho_1 = \frac{D_\mathrm{in}\psi^{-6}}
+     *               {\sqrt{1 + \frac{S_\mathrm{fluid}^2}
+     *               {\left(D_\mathrm{in} h\right)^2}}}
      * \f]
      *
      * where
@@ -114,9 +119,11 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      *
      * \f[
      * \begin{aligned}
-     * W &= \frac{\sqrt{S_\mathrm{fluid}^2 + \left( D h \right)^2}}{\psi^6} \\
-     * S_\mathrm{fluid}^2 &= \frac{W^2 S^2
-     *                           + \left( B \cdot S \right)^2 \left( B^2 + 2W \right)}
+     * W &= \psi^{-6}\sqrt{S_\mathrm{fluid}^2
+     *             + \left( D_\mathrm{in} h \right)^2} \\
+     * S_\mathrm{fluid}^2 &= \frac{W^2 S_\mathrm{in}^2
+     *                           + \left( B \cdot S_\mathrm{in} \right)^2
+     *                             \left( B^2 + 2W \right)}
      *                           {\left( W + B^2 \right)^2}
      * \end{aligned}
      * \f]

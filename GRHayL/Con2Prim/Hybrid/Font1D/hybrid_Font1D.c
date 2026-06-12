@@ -20,10 +20,15 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  * densities where other hybrid Con2Prim routines might recover a negative
  * pressure. Font1D assumes that \f$ P=P_\mathrm{cold} \f$ and solves for
  * \f$ \rho \f$ using an iterative method. This method is guaranteed to
- * succeed so long as the conservatives are physically reasonable:
- * \f$ \rho_* > 0 \f$ and \f$ \tilde{S}_i \in (-\infty, \infty) \f$.
+ * succeed so long as the input conservative density is positive and the
+ * momentum components are finite.
  * The return value gives information on the success or failure of the
- * recovery attempt.
+ * recovery attempt. The public Con2Prim dispatchers pass the local
+ * `cons_undens` struct to this routine. In the formulas below,
+ * \f$ D_\mathrm{in} \f$ denotes the density value stored in
+ * \f$ \mathrm{\texttt{cons->rho}} \f$, \f$ S^\mathrm{in}_i \f$ denotes the
+ * momentum stored in \f$ \mathrm{\texttt{cons->SD}} \f$, and
+ * \f$ \psi^{-6} \f$ denotes \f$ \mathrm{\texttt{Psim6}} = 1/\sqrt{|\gamma|} \f$.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -33,8 +38,9 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  *
  * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  *
- * @param[in] cons pointer to ghl_conservative_quantities struct with
- *                 **undensitized** conservative variables
+ * @param[in] cons pointer to ghl_conservative_quantities struct containing
+ *                 the input conservative variables; public dispatchers pass
+ *                 their `cons_undens` argument here
  *
  * @param[in,out] prims pointer to ghl_primitive_quantities struct;
  *                      input is the initial guess for the iterative solver;
@@ -61,9 +67,10 @@ ghl_error_codes_t ghl_hybrid_Font1D(
   /**
    * # Function Step-by-Step
    *
-   * We start by computing several intermediate quantities dependent on
-   * \f$ B^i \f$ and \f$ S^i \f$ using @ref ghl_compute_vec2_from_vec3D().
-   * Additionally, if \f$ S^2 \approx 0 \f$ we can immediately assume the
+     * We start by computing several intermediate quantities dependent on
+     * \f$ B^i \f$ and \f$ S^\mathrm{in}_i \f$ using
+     * @ref ghl_compute_vec2_from_vec3D(). Additionally, if
+     * \f$ S_\mathrm{in}^2 \approx 0 \f$ we can immediately assume the
    * velocity is zero and skip the iterative solve.
    */
 
@@ -142,7 +149,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      * We then compute \f$ \gamma_v \f$ using equation (A19) in \cite Etienne_2012 :
      *
      * \f[
-     * \gamma_v = \frac{D}{\psi^6 \rho}
+     * \gamma_v = \frac{D_\mathrm{in}\psi^{-6}}{\rho}
      * \f]
      */
     double gammav = cons->rho*Psim6/rhob;
@@ -151,19 +158,21 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     /**
      * Finally, we compute and speed-limit the velocity
      * \f[
-     * \tilde{u}^i = f_2 \left( S^i + f_1 B^i \right)
+     * \tilde{u}^i = f_2 \left( \left(S_\mathrm{in}\right)^i + f_1 B^i \right)
      * \f]
      *
      * where
      *
      * \f[
-     * f_1 = \frac{\sqrt{|\gamma|} B \cdot S}{\gamma_v D h}
+     * f_1 = \frac{\sqrt{|\gamma|} B \cdot S_\mathrm{in}}
+     *            {\gamma_v D_\mathrm{in} h}
      * \f]
      *
      * and
      *
      * \f[
-     * f_2 = \left[ D h +  \frac{\sqrt{|\gamma|} B^2}{\gamma_v} \right]^{-1}
+     * f_2 = \left[ D_\mathrm{in} h
+     *              + \frac{\sqrt{|\gamma|} B^2}{\gamma_v} \right]^{-1}
      * \f]
      */
     double fac1 = ADM_metric->sqrt_detgamma*BdotS/(gammav*rhosh);
@@ -186,7 +195,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
    *
    * \f[
    * \begin{aligned}
-   * \rho &= \frac{D}{\alpha u^0 \sqrt{|\gamma|}} \\
+   * \rho &= \frac{D_\mathrm{in}}{\alpha u^0 \sqrt{|\gamma|}} \\
    * \epsilon &= \frac{P}{\rho (\Gamma - 1)}
    * \end{aligned}
    * \f]

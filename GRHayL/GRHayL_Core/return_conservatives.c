@@ -7,23 +7,24 @@
  * @details
  * This function takes data from the ghl_conservative_quantities struct
  * and unpacks (i.e. copies) the data into the memory locations passed
- * to the function.
+ * to the function. Output values use the same storage convention as the
+ * input struct.
  *
  * @param[in] cons pointer to ghl_conservative_quantities struct
  *
- * @param[out] rho pointer to density variable \f$ \rho_* \f$ (also called \f$ \tilde{D} \f$)
+ * @param[out] rho pointer to density conservative value
  *
- * @param[out] tau pointer to energy variable \f$ \tau \f$
+ * @param[out] tau pointer to energy conservative value
  *
- * @param[out] S_x pointer to the x-component of the momentum variable \f$ S_i \f$
+ * @param[out] S_x pointer to the x-component of the momentum conservative value
  *
- * @param[out] S_y pointer to the y-component of the momentum variable \f$ S_i \f$
+ * @param[out] S_y pointer to the y-component of the momentum conservative value
  *
- * @param[out] S_z pointer to the z-component of the momentum variable \f$ S_i \f$
+ * @param[out] S_z pointer to the z-component of the momentum conservative value
  *
- * @param[out] entropy pointer to fluid entropy variable \f$ \tilde{S} \f$
+ * @param[out] entropy pointer to entropy conservative value
  *
- * @param[out] Y_e pointer to electron fraction variable \f$ \tilde{Y}_e \f$
+ * @param[out] Y_e pointer to electron-fraction conservative value
  *
  */
 void ghl_return_conservatives(
