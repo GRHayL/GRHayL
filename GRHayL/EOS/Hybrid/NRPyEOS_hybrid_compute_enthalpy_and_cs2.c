@@ -1,12 +1,25 @@
 #include "ghl_nrpyeos_hybrid.h"
 
-/*
- * Function     : NRPyEOS_hybrid_compute_enthalpy_and_cs2()
- * Description  : Computes the enthalpy and the sound speed squared;
- *                usually aliased as ghl_hybrid_compute_enthalpy_and_cs2
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_enthalpy_and_cs2
-*/
-
+/**
+ * @ingroup hyb_eos
+ * @brief Computes the enthalpy and the sound speed squared;
+ *        usually aliased as ghl_hybrid_compute_enthalpy_and_cs2
+ *
+ * @details
+ * This function computes the specific enthalpy and sound speed squared for the
+ * hybrid EOS by combining the cold EOS contribution with the thermal piece
+ * implied by the primitive variables.
+ *
+ * @param[in] eos pointer to ghl_eos_parameters struct
+ *
+ * @param[in] prims pointer to ghl_primitive_quantities struct
+ *
+ * @param[out] enthalpy_ptr pointer to enthalpy
+ *
+ * @param[out] cs2_ptr pointer to squared sound speed
+ *
+ * @returns an error code (the hybrid version always succeeds)
+ */
 ghl_error_codes_t NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,

@@ -1,14 +1,48 @@
 #include "ghl_induction.h"
 #include "ghl_induction_helpers.h"
 
-/*
- * Function      : ghl_interpolate_with_cell_centered_BSSN()
- * Description   : computes several interpolated quantities for computing the RHS
- *                 for tilde{phi} and the gauge contributions to A_i; these are
- *                 used in ghl_calculate_phitilde_rhs() function
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_interpolate_with_cell_centered_BSSN
-*/
-
+/**
+ * @ingroup mag_gauge
+ * @brief Interpolate induction gauge quantities using a
+ *        cell-centered BSSN metric.
+ *
+ * @details
+ * This function computes the elements of ghl_induction_interp_vars
+ * using a cell-centered BSSN metric input. The `metric_stencil` elements
+ * require some auxiliary quantities to be filled, so it is recommended
+ * to use the @ref ghl_initialize_metric function to fill each element
+ * of this struct. Interpolations are handled by the internal
+ * functions @ref ghl_BSSN_cell_interp and @ref ghl_A_i_avg .
+ *
+ * These two averaging loops are split because the stencils are of
+ * different sizes. The stencils are centered around the staggered
+ * point. This means that the metric quantities have an even stencil,
+ * and the \f$ A_i \f$ have an odd stencil.
+ *
+ * @param[in] metric_stencil 3D stencil array of ghl_metric_quantities from
+ *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
+ *
+ * @param[in] psi_stencil 3D stencil array of \f$ \psi \f$ from
+ *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
+ *
+ * @param[in] Ax_stencil 3D stencil array containing \f$ A_x \f$ from
+ *                            \f$ (i-1, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to
+ *                            \f$ (i+1, j+\frac{3}{2}, k+\frac{3}{2}) \f$
+ *
+ * @param[in] Ay_stencil 3D stencil array containing \f$ A_y \f$ from
+ *                            \f$ (i-\frac{1}{2}, j-1, k-\frac{1}{2}) \f$ to
+ *                            \f$ (i+\frac{3}{2}, j+1, k+\frac{3}{2}) \f$
+ *
+ * @param[in] Az_stencil 3D stencil array containing \f$ A_z \f$ from
+ *                            \f$ (i-\frac{1}{2}, j-\frac{1}{2}, k-1) \f$ to
+ *                            \f$ (i+\frac{3}{2}, j+\frac{3}{2}, k+1) \f$
+ *
+ * @param[in] phitilde value of \f$ \tilde{\Phi} \f$ at the staggered point
+ *
+ * @param[out] interp_vars ghl_induction_interp_vars with interpolated values
+ *                            needed by @ref ghl_calculate_phitilde_rhs
+ *
+ */
 void ghl_interpolate_with_cell_centered_BSSN(
       const ghl_metric_quantities metric_stencil[2][2][2],
       const double psi_stencil[2][2][2],
@@ -17,20 +51,6 @@ void ghl_interpolate_with_cell_centered_BSSN(
       const double Az_stencil[3][3][3],
       const double phitilde,
       ghl_induction_interp_vars *restrict interp_vars) {
-  /* Compute \partial_t psi6phi = -\partial_i (  \alpha psi^6 A^i - psi6phi \beta^i)
-   *    (Eq 13 of http://arxiv.org/pdf/1110.4633.pdf), using Lorenz gauge.
-   * Note that the RHS consists of a shift advection term on psi6phi and
-   *    a term depending on the vector potential.
-   * psi6phi is defined at (i+1/2,j+1/2,k+1/2), but instead of reconstructing
-   *    to compute the RHS of \partial_t psi6phi, we instead use standard
-   *    interpolations.
-   */
-
-  // First compute \partial_j \alpha \sqrt{\gamma} A^j (RHS of \partial_i psi6phi)
-  // FIXME: Would be much cheaper & easier to unstagger A_i, raise, then interpolate A^i.
-  //        However, we keep it this way to be completely compatible with the original
-  //        Illinois GRMHD thorn, called mhd_evolve.
-
   /*
      We need to interpolate several quantities to several different points depending on the quantities
      we're computing. The staggered gridpoints for these variables are
@@ -44,7 +64,6 @@ void ghl_interpolate_with_cell_centered_BSSN(
        gammaUU[0][i] is at A_x's location
        gammaUU[1][i] is at A_y's location
        gammaUU[2][i] is at A_z's location
-
      Similarly, the function ghl_A_i_avg() interpolates A_i to these points, storing the interpolated
      data in the 4 arrays A_to_phitilde, A_to_Ax, A_to_Ay, and A_to_Az.
 
@@ -65,6 +84,7 @@ void ghl_interpolate_with_cell_centered_BSSN(
   interp_vars->betai[1] = metric_interp.betaU[1];
   interp_vars->betai[2] = metric_interp.betaU[2];
 
+  // Compute \partial_t phitilde = -\partial_i (  \alpha psi^6 A^i - phitilde \beta^i)
   // A^x term (interpolated to (i, j+1/2, k+1/2) )
   // \alpha \sqrt{\gamma} A^x = \alpha psi^6 A^x (RHS of \partial_i psi6phi)
   // Note that gupij is \tilde{\gamma}^{ij}, so we need to multiply by \psi^{-4}.

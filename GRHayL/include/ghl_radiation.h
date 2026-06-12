@@ -7,11 +7,28 @@
 extern "C" {
 #endif
 
-// Neutrino quantities
+/**
+ * @defgroup Neutrinos Neutrinos
+ */
+
+/**
+ * @ingroup Neutrinos
+ * @brief  Neutrino luminosities
+ *
+ * Luminosities for electron neutrinos, electron antineutrinos, and
+ * heavy-lepton neutrinos.
+ */
 typedef struct ghl_neutrino_luminosities {
   double nue, anue, nux;
 } ghl_neutrino_luminosities;
 
+/**
+ * @ingroup Neutrinos
+ * @brief  Neutrino opacities
+ *
+ * Opacities for electron neutrinos, electron antineutrinos, and
+ * heavy-lepton neutrinos.
+ */
 typedef struct ghl_neutrino_opacities {
   double nue[2], anue[2], nux[2];
 } ghl_neutrino_opacities;

@@ -1,21 +1,32 @@
 #include "ghl_induction.h"
 
-/* Function      : ghl_HLL_flux_with_B()
- * Description   : compute RHS for A_i, excluding gauge contributions; i.e., we
- *                 set A_y_rhs = \partial_t A_y = \psi^{6} (v^z B^x - v^x B^z).
- *                 This is direction-agnostic, and the stencils just need
- *                 to contain the correct information; see an implementation for
- *                 examples of usage
- * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_HLL_flux_with_B
-*/
-
+/**
+ * @ingroup mag_flux
+ * @brief Compute RHS for \f$ A_i \f$, excluding gauge contributions; e.g.
+ * @sp10 \f$ A_y^\mathrm{rhs} = \partial_t A_y = \psi^{6} (v^z B^x - v^x B^z) \f$
+ *
+ * @details
+ * This function computes the right-hand side of the induction equation for a
+ * single direction of \f$ A_i \f$ using the undensitized magnetic field
+ * \f$ B^i \f$. The specific direction \f$ i \f$ is based on the data in @ref ghl_HLL_vars.
+ *
+ * As this is nearly identical to @ref ghl_HLL_flux_with_Btilde, we only note that
+ * this function differs by requiring \f$ \psi^6 \f$ to compute the returned
+ * value. The final equation is just multiplied by this factor.
+ *
+ * @param[in] psi6 spacetime quantity \f$ \psi^6 = \sqrt{|\gamma|} \f$ at the
+ *                  gridpoint of \f$ A_i \f$
+ *
+ * @param[in] vars pointer to a ghl_HLL_vars struct
+ *
+ * @returns flux contribution to \f$ A_i^\mathrm{rhs} \f$
+ */
 double ghl_HLL_flux_with_B(
       const double psi6,
       const ghl_HLL_vars *restrict vars) {
 
   const double c1_sum = vars->c1_min+vars->c1_max;
   const double c2_sum = vars->c2_min+vars->c2_max;
-
 
   /*
     To compute A_i_rhs, we use the HLL flux from Eq. 44 of
@@ -39,7 +50,6 @@ double ghl_HLL_flux_with_B(
   const double A3_rhs_lr = vars->v1lr*vars->B2l - vars->v2lr*vars->B1r;
   const double A3_rhs_ll = vars->v1ll*vars->B2l - vars->v2ll*vars->B1l;
 
-  /* Using Eq. 44 gives the final final RHS value: */
   return psi6*(B1term - B2term
               + ( vars->c2_max*vars->c1_max*A3_rhs_ll
                 + vars->c2_min*vars->c1_max*A3_rhs_lr

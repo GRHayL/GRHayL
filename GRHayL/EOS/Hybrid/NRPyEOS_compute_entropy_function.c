@@ -1,22 +1,31 @@
 #include "ghl_nrpyeos_hybrid.h"
 
-/*
- * Function     : NRPyEOS_compute_entropy_function()
- * Description  : Computes entropy; usually aliased as ghl_hybrid_compute_entropy_function
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_compute_entropy_function
-*/
-
+/**
+ * @ingroup hyb_eos
+ * @brief Computes entropy; usually aliased as ghl_hybrid_compute_entropy_function
+ *
+ * @details
+ * This function computes the entropy using
+ *
+ * \f$ S = \frac{P}{\rho^{\Gamma - 1}} \f$
+ *
+ * See Eq. (20) of \cite Noble_2009 for more details.
+ *
+ * @param[in] eos pointer to ghl_eos_parameters struct
+ *
+ * @param[in] rho density value
+ *
+ * @param[in] P pressure value
+ *
+ * @returns entropy
+ */
 double NRPyEOS_compute_entropy_function(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       const double P) {
-  // This function sets the entropy funtion:
-  //
-  // S = P / rho^(Gamma-1)
-  //
-  // See eq. (20) in https://arxiv.org/pdf/0808.3140.pdf
+
   const int index    = NRPyEOS_find_polytropic_index(eos, rho);
   const double Gamma = eos->Gamma_ppoly[index];
-  // Now compute S
+
   return P / pow(rho,Gamma-1.0);
 }

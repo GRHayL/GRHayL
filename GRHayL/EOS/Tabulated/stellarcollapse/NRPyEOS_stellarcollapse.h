@@ -64,9 +64,9 @@ typedef struct {
  * Allocates memory for the table structure and reads the data from the specified HDF5
  * file.
  *
- * @param filepath Path to the EOS table file (HDF5 format).
+ * @param[in] filepath Path to the EOS table file (HDF5 format).
  *
- * @param Pointer-to-pointer to NRPyEOS_stellarcollapse_t structure.
+ * @param[out] sc Pointer-to-pointer to NRPyEOS_stellarcollapse_t structure.
  *
  * @return Return code, indicating success or failure.
  * @retval ghl_success Success.

@@ -1,17 +1,13 @@
 #include "roots.h"
 
-/*
- * Function   : ensure_b_is_closest_to_root
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Ensures \f$ |f(b)| < |f(a)| \f$ while finding root of \f$ f \f$.
  *
- * Given a, b, f(a), f(b), ensures |f(b)| < |f(a)|.
- *
- * Parameters : a        - First point where f(x) is evaluated at.
- *            : b        - Second point where f(x) is evaluated at.
- *            : fa       - f(a).
- *            : fb       - f(b).
- *
- * Returns    : Nothing.
+ * @param[in,out] a first evaluated point f(x)
+ * @param[in,out] b second evaluated point of f(x)
+ * @param[in,out] fa f(a)
+ * @param[in,out] fb f(b)
  */
 static inline void
 ensure_b_is_closest_to_root(
@@ -26,17 +22,16 @@ ensure_b_is_closest_to_root(
   }
 }
 
-/*
- * Function   : cycle
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Keeps best guesses of a,b,c for root-finding.
  *
- * From inputs a, b, c, cycle a, b, c = b, c, b.
+ * @details
+ * This cycles a,b = b,c. It also resets c = b.
  *
- * Parameters : a        - First number.
- *            : b        - Second number.
- *            : c        - Third number.
- *
- * Returns    : Nothing.
+ * @param[in,out] a bounding point to replace
+ * @param[in,out] b bounding point to keep
+ * @param[in,out] c new bounding point
  */
 static inline void
 cycle(
@@ -49,25 +44,45 @@ cycle(
   *c = *a;
 }
 
-/*
- * Function   : check_a_b_compute_fa_fb
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Used to initialize/check root-finding variables.
  *
- * This function is used at the beginning of the root-finding methods. It
- * performs the following tasks:
+ * @details
+ * This function performs the following tasks:
  *
- *   1. Check if either a or b are roots of f;
- *   2. Check if the root is in the interval [a,b];
- *   3. Ensure |f(b)| < |f(a)| by swapping a and b if necessary.
+ * - Check if either a or b are roots of f;
+ * - Check if the root is in the interval [a,b];
+ * - Ensure |f(b)| < |f(a)| by swapping a and b if necessary.
  *
- * Parameters : f        - Function for which the root is computed.
- *            : fparams  - Object containing all parameters needed by the
- *                         function f other than the variable x.
- *            : a        - Lower limit of the initial interval.
- *            : b        - Upper limit of the initial interval.
- *            : fa       - f(a)
- *            : fb       - f(b)
- *            : r        - Pointer to Roots parameters.
+ * @param[in] f function for which the root is computed
+ *
+ * @param[in] params pointer to ghl_parameters
+ *
+ * @param[in] eos pointer to ghl_eos_parameters
+ *
+ * @param[in] cons_undens pointer to ghl_conservative_quantities containing
+ *                        **undensitized** conservative variables
+ *
+ * @param[in,out] fparams object containing all parameters needed by f
+ *                        other than the variable x
+ *
+ * @param[in,out] prims primitive quantities used by f
+ *
+ * @param[in,out] a lower limit of the initial interval; may be swapped with b
+ *
+ * @param[in,out] b upper limit of the initial interval; may be swapped with a
+ *
+ * @param[out] fa value of \f$ f(a) \f$
+ *
+ * @param[out] fb value of \f$ f(b) \f$
+ *
+ * @param[in,out] r pointer to roots_params updated when an endpoint is a root
+ *                  or when the interval is already below tolerance
+ *
+ * @returns ghl_success if an endpoint or sufficiently small interval provides
+ *          the root, ghl_error_root_not_bracketed if [a,b] does not bracket a
+ *          root, or ghl_error_c2p_max_iter when Brent iterations should proceed
  *
  */
 static inline ghl_error_codes_t
@@ -124,30 +139,41 @@ check_a_b_compute_fa_fb(
   return ghl_error_c2p_max_iter;
 }
 
-/*
- * Function   : brent
- * Author     : Leo Werneck
+/**
+ * @ingroup c2p_internal
+ * @brief Find the root of f(x) in the interval [a,b] using Brent's method
  *
- * Find the root of f(x) in the interval [a,b] using Brent's method.
+ * @details
+ * References
+ * - Press et al., Numerical Recipes, Ch. 9.3. Freely available at
+ *   http://numerical.recipes/book/book.html
+ * - Brent, Algorithms for Minimization Without Derivatives (1973)
+ *   @todo consider converting to doxygen citation
  *
- * Parameters : f        - Function for which the root is computed.
- *            : fparams  - Object containing all parameters needed by the
- *                         function f other than the variable x.
- *            : a        - Lower limit of the initial interval.
- *            : b        - Upper limit of the initial interval.
- *            : r        - Pointer to roots parameters (see roots.h).
- *                         The root is stored in r->root.
+ * @param[in] f function for which the root is computed
  *
- * Returns    : One the following error keys:
- *                 - roots_success if the root is found
- *                 - roots_error_root_not_bracketed if the interval [a,b]
- *                   does not bracket a root of f(x)
- *                 - roots_error_max_iter if the maximum allowed number of
- *                   iterations is exceeded
+ * @param[in] params pointer to ghl_parameters
  *
- * References : Press et al., Numerical Recipes, Ch. 9.3
- *              Freely available at: http://numerical.recipes/book/book.html
- *            : Brent, Algorithms for Minimization Without Derivatives (1973)
+ * @param[in] eos pointer to ghl_eos_parameters
+ *
+ * @param[in] cons_undens pointer to ghl_conservative_quantities containing
+ *                        **undensitized** conservative variables
+ *
+ * @param[in,out] fparams object containing all parameters needed by f
+ *                        other than the variable x
+ *
+ * @param[in,out] prims primitive quantities used by f
+ *
+ * @param[in,out] a lower limit of the initial interval
+ *
+ * @param[in,out] b upper limit of the initial interval
+ *
+ * @param[in,out] r pointer to roots_params
+ *
+ * @returns a ghl_error_codes_t code; possible codes:
+ * - ghl_success if the root is found
+ * - ghl_error_root_not_bracketed if the interval [a,b] does not bracket a root of f(x)
+ * - ghl_error_c2p_max_iter if the maximum allowed number of iterations is exceeded
  */
 ghl_error_codes_t
 ghl_brent(

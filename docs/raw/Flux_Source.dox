@@ -1,0 +1,29 @@
+/**
+ * @defgroup Flux_Source Flux_Source Gem
+ *
+ * @brief The @gfs gem provides functions for computing the flux and
+          source terms in the evolution equations of the hydrodynamic
+          variables.
+ *
+ * This includes computing characteristic speeds, fluxes, and RHS source terms.
+ * The currently available flux method uses HLLE flux-conservative approach,
+ * and the primitive variable inputs are expected to be at cell faces. To compute
+ * these, see the @ref Reconstruction gem on how to reconstruct variables
+ * using @grhayl. The source terms also require metric derivatives, and these
+ * can be computed in whatever way is most natural to the surrounding code
+ * and provided as input to those functions.
+ *
+ * # EOS-specific functions
+ *
+ * While most of the functions in this gem are independent of EOS, the actual
+ * HLLE flux calculations are not. Depending on EOS and whether the entropy
+ * is being evolved, additional fluxes need to be computed by the function.
+ * The EOS function pointers are automatically set to the correct function by
+ * the @ref GRHayL_Core EOS initialization functions, but the public HLLE flux
+ * entry points can also be directly accessed by using e.g.
+ *
+ * - @ref ghl_calculate_HLLE_fluxes_dirn0_hybrid
+ * - @ref ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy
+ * - @ref ghl_calculate_HLLE_fluxes_dirn0_tabulated
+ * - @ref ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy
+ */

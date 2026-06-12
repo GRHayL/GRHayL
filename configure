@@ -245,7 +245,7 @@ the include and lib directories of your HDF5 installation using
 If you are interested in hybrid EOS only, the HDF5 dependency might be
 undesirable. To disable HDF5, simply run
 
-  ./configure --disable-hdf5.
+  ./configure --disable-hdf5
 
 -----------------------
 Specific configurations

@@ -7,6 +7,15 @@
 // allow us to pass useful quantities to the con2prim
 // functions without having a large number of function
 // arguments.
+/**
+ * @ingroup c2p_internal
+ * @brief Stores HARM auxiliary variables for the Noble-style Con2Prim solvers.
+ *
+ * @details
+ * This struct bundles frequently reused contractions, solver settings, and
+ * iteration state so the internal residual and validation routines can share
+ * a compact argument list.
+ */
 typedef struct _harm_auxiliary_vars_ {
   double QU[4];
   double Bsq, QdotBsq, QdotB;
@@ -21,6 +30,15 @@ typedef struct _harm_auxiliary_vars_ {
   The following functions assume a Gamma-law EOS:
 ***************************************************/
 
+/**
+ * @ingroup c2p_internal
+ * @brief Computes pressure and pressure derivatives for the Noble residuals.
+ *
+ * @details
+ * Given the auxiliary variables \f$ Z \f$, \f$ v^2 \f$, and \f$ D \f$, this
+ * function evaluates the hybrid-EOS pressure together with the derivatives
+ * needed by the Noble-style Newton solves.
+ */
 static inline void ghl_compute_func_auxiliaries(
       const ghl_eos_parameters *restrict eos,
       const double Z,
@@ -93,21 +111,38 @@ static inline void ghl_compute_func_auxiliaries(
    pressure as a function of rho0 and w = rho0 + u + p
    this is used by primtoU and Utoprim_1D
 */
+/**
+ * @ingroup c2p_internal
+ * @brief Computes \f$ P \f$ from \f$ \rho \f$ and \f$ w = h \rho \f$
+ *
+ * @details
+ * This function takes the density and the quantity \f$ w \f$ (density times
+ * the enthalpy) and computes the pressure for the hybrid equation of state.
+ * We first compute the cold pieces using @ref ghl_hybrid_compute_P_cold_and_eps_cold
+ * and then calculate the full pressure:
+ *
+ * \f[
+ * P = \frac{1}{\Gamma_\mathrm{th}}\left[P_\mathrm{cold}
+ *                                       + \left( \Gamma_\mathrm{th} - 1 \right)
+ *                                         \left( w - \rho \left(1 + \epsilon_\mathrm{cold}\right) \right) \right]
+ * \f]
+ *
+ * @param[in] eos pointer to ghl_eos_parameters struct
+ *
+ * @param[in] rho0 the density \f$ \rho \f$
+ *
+ * @param[in] w enthalpy times the density \f$ h \rho \f$
+ *
+ * @returns pressure
+ */
 static inline double ghl_pressure_rho0_w(
       const ghl_eos_parameters *restrict eos,
       const double rho0,
       const double w) {
 
-  // Compute P_cold, eps_cold
   double P_cold, eps_cold;
   ghl_hybrid_compute_P_cold_and_eps_cold(eos,rho0, &P_cold, &eps_cold);
 
-  /* Compute the pressure as a function of rho_b (rho0) and
-   * w = u + rho_b + p, using our hybrid EOS:
-   *  ----------------------------------------------------------------------------
-   * | p(rho_b,w) = ( P_cold + (Gamma_th-1)*( w - rho_b*(1+eps_cold) ) )/Gamma_th |
-   *  ----------------------------------------------------------------------------
-   */
   return( (P_cold + (eos->Gamma_th-1.0)*( w - rho0*(1.0 + eps_cold) ) )/eos->Gamma_th );
 }
 
@@ -118,6 +153,14 @@ static inline double ghl_pressure_rho0_w(
             Z = \gamma^2 w
 
 ****************************************************************************/
+/**
+ * @ingroup c2p_internal
+ * @brief Computes \f$ v^2 \f$ from the Noble auxiliary variables and \f$ Z \f$.
+ *
+ * @details
+ * This helper evaluates the closed-form expression for the squared transport
+ * velocity used by the Noble-style Con2Prim residual equations.
+ */
 static inline double ghl_vsq_calc(
       const harm_aux_vars_struct *restrict harm_aux,
       const double Z) {

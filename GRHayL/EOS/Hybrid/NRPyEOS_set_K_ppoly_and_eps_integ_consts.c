@@ -1,13 +1,20 @@
 #include "ghl_nrpyeos_hybrid.h"
 
-/*
- * Function     : NRPyEOS_set_K_ppoly_and_eps_integ_consts()
- * Description  : For a given set of EOS inputs, determine values of K_ppoly
- *                that will result in an everywhere-continuous P_cold function;
- *                usually aliased as ghl_hybrid_set_K_ppoly_and_eps_integ_consts
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_hybrid_set_K_ppoly_and_eps_integ_consts
-*/
-
+/**
+ * @ingroup hyb_eos
+ * @brief For a given set of EOS inputs, determine values of K_ppoly that will
+ *        result in an everywhere-continuous P_cold function; usually aliased
+ *        as ghl_hybrid_set_K_ppoly_and_eps_integ_consts
+ *
+ * @details
+ * This routine fills the piecewise-polytropic constants needed to keep the
+ * cold pressure and integrated cold internal energy continuous across EOS
+ * segment boundaries.
+ *
+ * @param[in,out] eos pointer to ghl_eos_parameters struct whose K_ppoly and
+ *                    eps_integ_const arrays are filled
+ *
+ */
 void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {
 
   /* When neos = 1, we will only need the value K_ppoly[0] and eps_integ_const[0].
@@ -91,4 +98,3 @@ void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) 
     eos->eps_integ_const[j] = eos->eps_integ_const[j-1] + aux_epsm1 - aux_epsp0;
   }
 }
-
