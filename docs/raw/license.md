@@ -16,6 +16,10 @@ International License. These routines also use a modified version of the toms748
 routine from the Boost library, which is subject to the Boost Software License,
 Version 1.0.
 
+The WENO-z implementation includes source adapted from the Phoebus code
+developed by Los Alamos National Lab; that adapted source is subject to the
+BSD 3-Clause License.
+
 ## Citations
 
 The following chart gives a quick reference guide, followed by a more detailed
@@ -25,7 +29,8 @@ description of the citations.
  |:-------------------------------------:|:----------------------------------------------------------------------:|
  | @grhayl                               | GRHayL release paper and IllinoisGRMHD \cite Etienne_IGM               |
  | Tabulated EOS                         | Werneck _et al_. \cite Werneck_IGM                                     |
- | Noble Con2Prim routines               | HARM \cite HARM and its solver \cite Noble_2006                        |
+ | Noble Con2Prim routines               | HARM \cite HARM and Noble et al. \cite Noble_2006                     |
+ | Noble entropy Con2Prim routine        | entropy definition from Noble et al. \cite Noble_2009                 |
  | Palenzuela & Newman Con2Prim routines | GRMHD_con2prim \cite Siegel_2018_GRMHD_con2prim and the method \cite Siegel_2018_recovery_schemes |
  | PPM method                            | corrected method/reference papers \cite Marti_1996 and \cite DelZanna_2003 |
 
@@ -45,7 +50,9 @@ The Noble routines are adapted from the HARM code, and the code papers
 [here](https://iopscience.iop.org/article/10.1086/374594)
 ([arxiv](https://arxiv.org/abs/astro-ph/0301509)) and
 [here](https://iopscience.iop.org/article/10.1086/500349)
-([arxiv](https://arxiv.org/abs/astro-ph/0512420)) should be cited.
+([arxiv](https://arxiv.org/abs/astro-ph/0512420)) should be cited. The
+entropy-based Noble routine also uses the entropy definition from
+Noble et al. \cite Noble_2009 ([arxiv](https://arxiv.org/abs/0808.3140)).
 
 The Palenzuela and Newman routines are adapted from the
 [GRMHD_con2prim](https://bitbucket.org/dsiegel/grmhd_con2prim/src/master/) code, and

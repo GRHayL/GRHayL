@@ -8,10 +8,9 @@
  * As with @ref ghl_initialize_metric, this function takes pointwise
  * information about the spacetime and uses it to initialize every
  * element of the given ghl_metric_quantities struct. However, this
- * function takes the additional steps of ensuring that the metric
- * is conformally flat by computing the BSSN metric and enforcing
- * that the determinant is 1. It then computes the ADM metric from
- * the resulting BSSN metric.
+ * function takes the additional steps of forming the BSSN conformal metric,
+ * enforcing the unit-determinant constraint on that conformal metric, and
+ * then recomputing the ADM metric from the corrected conformal data.
  *
  * @param[in] lapse lapse \f$ \alpha \f$
  *

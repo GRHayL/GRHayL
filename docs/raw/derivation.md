@@ -810,7 +810,7 @@ all this together and multiplying through by \f$ \alpha \f$,
               + \alpha\sqrt{\gamma} T^{ij} K_{ij} \\
 
 \alpha\sqrt{\gamma} T^{00}\partial_t \alpha
-  + 2\alpha\sqrt{\gamma} T^{0i}\partial_i \alpha
+  + \alpha\sqrt{\gamma} T^{0i}\partial_i \alpha
   + \alpha\partial_t \left(\alpha\sqrt{\gamma} T^{00} \right)
   + \alpha\partial_i \left(\alpha\sqrt{\gamma} T^{0i} \right)
 &= \alpha\sqrt{\gamma} T^{00} \left(\beta^i \beta^j K_{ij}

@@ -11,7 +11,8 @@
  * cold pressure and integrated cold internal energy continuous across EOS
  * segment boundaries.
  *
- * @param[in] eos pointer to ghl_eos_parameters struct
+ * @param[in,out] eos pointer to ghl_eos_parameters struct whose K_ppoly and
+ *                    eps_integ_const arrays are filled
  *
  */
 void NRPyEOS_set_K_ppoly_and_eps_integ_consts(ghl_eos_parameters *restrict eos) {

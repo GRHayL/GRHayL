@@ -13,7 +13,7 @@
  * face and uses those to compute the fluxes. These reconstructions can be
  * handled far more carefully in the presence of shocks than interpolations,
  * allowing for more accurate numerics. We currently provide several total
- * variation diminishing (TVD) methods, with others (such as WENO) planned
+ * variation diminishing (TVD) methods and WENO-z, with other methods planned
  * for future inclusion. For general information on these types of methods,
  * see e.g. [flux limiters](https://en.wikipedia.org/wiki/Flux_limiter) and
  * [shock-capturing methods](https://en.wikipedia.org/wiki/Shock-capturing_method)

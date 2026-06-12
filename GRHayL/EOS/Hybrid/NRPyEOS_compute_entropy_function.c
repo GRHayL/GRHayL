@@ -9,8 +9,7 @@
  *
  * \f$ S = \frac{P}{\rho^{\Gamma - 1}} \f$
  *
- * See eq. (20) in https://arxiv.org/pdf/0808.3140.pdf for more details.
- * @todo use doxygen citation
+ * See Eq. (20) of \cite Noble_2009 for more details.
  *
  * @param[in] eos pointer to ghl_eos_parameters struct
  *
