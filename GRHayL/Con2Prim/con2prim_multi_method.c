@@ -96,33 +96,33 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
   // Store primitive guesses (used if con2prim fails)
   const ghl_primitive_quantities prims_guess = *prims;
 
-  ghl_error_codes_t error = ghl_con2prim_hybrid_select_method(params->main_routine, params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
+  ghl_error_codes_t error;
+  error = ghl_con2prim_hybrid_select_method(params->main_routine,
+                                            params, eos, metric_adm, metric_aux,
+                                            cons_undens, prims, diagnostics);
 
-  if(error && params->backup_routine[0] != ghl_con2prim_id_None) {
-    // Backup 1 triggered
-    diagnostics->backup[0] = true;
+  // Note(Leo): this updated backup strategy works for any number of backup
+  //            routines, cleaning up the logic, removing duplicated code, and
+  //            minimizing the chances of a bug. The variable `n_backups` can
+  //            be set from `params`, but since this requires an API change
+  //            I have not implemented it yet. This comment and the variable
+  //            should be removed in a future PR.
+  const size_t n_backups = 3;
+  for(size_t n = 0; (n < n_backups) && (error != ghl_success); n++) {
+    // FIXME(Leo): once the comment above is addressed, this if statement can
+    //             be removed, as the backup routines will be set at startup
+    //             and we won't need to check if they are None anymore.
+    if(params->backup_routine[n] != ghl_con2prim_id_None) {
+      break;
+    }
+    // Backup triggered
+    diagnostics->backup[n] = true;
     // Reset guesses
     *prims = prims_guess;
-    // Backup routine #1
-    error = ghl_con2prim_hybrid_select_method(params->backup_routine[0], params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
-
-    if(error && params->backup_routine[1] != ghl_con2prim_id_None) {
-      // Backup 2 triggered
-      diagnostics->backup[1] = true;
-      // Reset guesses
-      *prims = prims_guess;
-      // Backup routine #2
-      error = ghl_con2prim_hybrid_select_method(params->backup_routine[1], params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
-
-      if(error && params->backup_routine[2] != ghl_con2prim_id_None) {
-        // Backup 3 triggered
-        diagnostics->backup[2] = true;
-        // Reset guesses
-        *prims = prims_guess;
-        // Backup routine #3
-        error = ghl_con2prim_hybrid_select_method(params->backup_routine[2], params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
-      }
-    }
+    // Backup routine
+    error = ghl_con2prim_hybrid_select_method(params->backup_routine[n],
+                                              params, eos, metric_adm, metric_aux,
+                                              cons_undens, prims, diagnostics);
   }
   return error;
 }
@@ -151,33 +151,33 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
   // Store primitive guesses (used if con2prim fails)
   const ghl_primitive_quantities prims_guess = *prims;
 
-  ghl_error_codes_t error = ghl_con2prim_tabulated_select_method(params->main_routine, params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
+  ghl_error_codes_t error;
+  error = ghl_con2prim_tabulated_select_method(params->main_routine,
+                                               params, eos, metric_adm, metric_aux,
+                                               cons_undens, prims, diagnostics);
 
-  if(error && params->backup_routine[0] != ghl_con2prim_id_None) {
-    // Backup 1 triggered
-    diagnostics->backup[0] = true;
+  // Note(Leo): this updated backup strategy works for any number of backup
+  //            routines, cleaning up the logic, removing duplicated code, and
+  //            minimizing the chances of a bug. The variable `n_backups` can
+  //            be set from `params`, but since this requires an API change
+  //            I have not implemented it yet. This comment and the variable
+  //            should be removed in a future PR.
+  const size_t n_backups = 3;
+  for(size_t n = 0; (n < n_backups) && (error != ghl_success); n++) {
+    // FIXME(Leo): once the comment above is addressed, this if statement can
+    //             be removed, as the backup routines will be set at startup
+    //             and we won't need to check if they are None anymore.
+    if(params->backup_routine[n] != ghl_con2prim_id_None) {
+      break;
+    }
+    // Backup triggered
+    diagnostics->backup[n] = true;
     // Reset guesses
     *prims = prims_guess;
-    // Backup routine #1
-    error = ghl_con2prim_tabulated_select_method(params->backup_routine[0], params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
-
-    if(error && params->backup_routine[1] != ghl_con2prim_id_None) {
-      // Backup 2 triggered
-      diagnostics->backup[1] = true;
-      // Reset guesses
-      *prims = prims_guess;
-      // Backup routine #2
-      error = ghl_con2prim_tabulated_select_method(params->backup_routine[1], params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
-
-      if(error && params->backup_routine[2] != ghl_con2prim_id_None) {
-        // Backup 3 triggered
-        diagnostics->backup[2] = true;
-        // Reset guesses
-        *prims = prims_guess;
-        // Backup routine #3
-        error = ghl_con2prim_tabulated_select_method(params->backup_routine[2], params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
-      }
-    }
+    // Backup routine
+    error = ghl_con2prim_tabulated_select_method(params->backup_routine[n],
+                                                 params, eos, metric_adm, metric_aux,
+                                                 cons_undens, prims, diagnostics);
   }
   return error;
 #endif
