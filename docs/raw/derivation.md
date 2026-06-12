@@ -5,8 +5,8 @@ Re-derived and written by Samuel Cupp
 \section toc Table of Contents
 1. @ref intro
 2. @ref tmunu
-   1. @ref tmunu_term_1 "Solving for F squared"
-   2. @ref tmunu_term_2 "Solving for contracted field tensors"
+   1. @ref tmunu_term_1 "Solving for \\(F^2\\)"
+   2. @ref tmunu_term_2 "Solving for \\(F^{a i} F^b{}_{i}\\)"
    3. @ref tmunu_final
 3. @ref cons_eq
    1. @ref dens_eq
