@@ -16,8 +16,6 @@ int main(int argc, char **argv) {
   uses_entropy[3] = true;
   methods[4] = ghl_con2prim_id_Noble1D;
   uses_entropy[4] = false;
-  //methods[5] = Noble1D_entropy2;
-  //uses_entropy[5] = true;
   methods[num_methods-1] = ghl_con2prim_id_Noble2D;
   uses_entropy[num_methods-1] = false;
 

@@ -176,6 +176,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
       ghl_params->ppm_shock_k0      = ppm_shock_k0;
 
   if (CCTK_EQUALS(EOS_type, "Simple")) {
+    const ghl_con2prim_id_t Font1D = ghl_con2prim_id_Font1D;
     if(main == Font1D || backups[0] == Font1D || backups[1] == Font1D || backups[2] == Font1D)
       CCTK_VERROR("Error: Font1D routine is incompatible with ideal fluid EOS. Please choose a different Con2Prim routine.");
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
@@ -227,25 +228,25 @@ void GRHayLib_terminate(CCTK_ARGUMENTS) {
 
 int parse_C2P_routine_keyword(const char *restrict routine_name) {
   if (CCTK_EQUALS(routine_name, "None")) {
-    return None;
+    return ghl_con2prim_id_None;
   } else if (CCTK_EQUALS(routine_name, "Noble2D")) {
-    return Noble2D;
+    return ghl_con2prim_id_Noble2D;
   } else if (CCTK_EQUALS(routine_name, "Noble1D")) {
-    return Noble1D;
+    return ghl_con2prim_id_Noble1D;
   } else if (CCTK_EQUALS(routine_name, "Noble1D_entropy")) {
-    return Noble1D_entropy;
+    return ghl_con2prim_id_Noble1D_entropy;
   } else if (CCTK_EQUALS(routine_name, "Noble1D_entropy2")) {
-    return Noble1D_entropy2;
+    return ghl_con2prim_id_Noble1D_entropy2;
   } else if (CCTK_EQUALS(routine_name, "Font1D")) {
-    return Font1D;
+    return ghl_con2prim_id_Font1D;
   } else if (CCTK_EQUALS(routine_name, "Palenzuela1D")) {
-    return Palenzuela1D;
+    return ghl_con2prim_id_Palenzuela1D;
   } else if (CCTK_EQUALS(routine_name, "Palenzuela1D_entropy")) {
-    return Palenzuela1D_entropy;
+    return ghl_con2prim_id_Palenzuela1D_entropy;
   } else if (CCTK_EQUALS(routine_name, "Newman1D")) {
-    return Newman1D;
+    return ghl_con2prim_id_Newman1D;
   } else if (CCTK_EQUALS(routine_name, "Newman1D_entropy")) {
-    return Newman1D_entropy;
+    return ghl_con2prim_id_Newman1D_entropy;
   }
   return -100;
 }

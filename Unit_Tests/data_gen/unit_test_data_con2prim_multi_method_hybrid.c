@@ -35,8 +35,6 @@ int main(int argc, char **argv) {
   uses_entropy[3] = true;
   methods[4] = ghl_con2prim_id_Noble1D;
   uses_entropy[4] = false;
-  //methods[5] = Noble1D_entropy2;
-  //uses_entropy[5] = true;
 
   // To ensure the behavior remains the same for functions after Con2Prim,
   // we explicitly set a routine to always be last.

@@ -336,7 +336,6 @@ int main(int argc, char **argv) {
     params.main_routine = ghl_con2prim_id_Newman1D_entropy; run_unit_test(&params, &eos);
     // The routines below fail for high temperatures/magnetizations,
     // respectively. We use the standard Palenzuela routine as a backup.
-    // params.backup_routine[0] = Palenzuela1D;
     params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
     params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
     params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
