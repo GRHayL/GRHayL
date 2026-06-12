@@ -6,13 +6,13 @@ static double eos_Gamma_eff(const ghl_eos_parameters *restrict eos, const double
 int main(int argc, char **argv) {
   const double poison = 1e300;
 
-  const int backups[3] = {None, None, None};
+  const ghl_con2prim_id_t None = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t backups[3] = {None, None, None};
 
   // None of these parameters actually matter. We are only using
   // the default values set in the initialize function for PPM.
   ghl_parameters params;
-  ghl_initialize_params(
-        None, backups, false, false, true, 0, 10, 0.0, &params);
+  ghl_initialize_params(None, backups, false, false, true, 0, 10, 0.0, &params);
 
   const int neos = 1;
   const double rho_ppoly_in[1] = {0.0};

@@ -127,6 +127,6 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
 
   /* Done! */
   diagnostics->n_iter = harm_aux.n_iter;
-  diagnostics->which_routine = Noble1D_entropy2;
+  diagnostics->which_routine = ghl_con2prim_id_Noble1D_entropy2;
   return ghl_success;
 }

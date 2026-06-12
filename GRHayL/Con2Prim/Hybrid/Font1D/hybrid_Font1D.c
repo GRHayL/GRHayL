@@ -210,6 +210,6 @@ ghl_error_codes_t ghl_hybrid_Font1D(
   if(params->evolve_entropy)
     prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 
-  diagnostics->which_routine = Font1D;
+  diagnostics->which_routine = ghl_con2prim_id_Font1D;
   return ghl_success;
 }

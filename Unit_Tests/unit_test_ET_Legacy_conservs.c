@@ -21,7 +21,8 @@ int main(int argc, char **argv) {
   const double poison = 1e300;
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int backup_routine[3] = {None,None,None};
+  const ghl_con2prim_id_t None = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t backup_routine[3] = {None, None, None};
   const bool calc_prims_guess = true;
   const double Psi6threshold = 1e100; //Taken from magnetizedTOV.par
   const double W_max = 10.0; //IGM default
@@ -41,8 +42,8 @@ int main(int argc, char **argv) {
   // a simulation.
   ghl_parameters params;
   ghl_initialize_params(
-        Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
-        Psi6threshold, W_max, Lorenz_damping_factor, &params);
+        ghl_con2prim_id_Noble2D, backup_routine, evolve_entropy, evolve_temperature,
+        calc_prims_guess, Psi6threshold, W_max, Lorenz_damping_factor, &params);
 
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(

@@ -75,8 +75,9 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const ghl_con2prim_method_t main_routine       = Newman1D;
-  const ghl_con2prim_method_t backup_routines[3] = {None,None,None};
+  const ghl_con2prim_id_t None               = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t main_routine       = ghl_con2prim_id_Newman1D;
+  const ghl_con2prim_id_t backup_routines[3] = {None, None, None};
   const bool calc_prims_guess                = false;
   const bool evolve_entropy                  = false;
   const bool evolve_temperature              = true;

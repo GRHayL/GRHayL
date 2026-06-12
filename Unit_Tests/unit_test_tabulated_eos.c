@@ -465,7 +465,8 @@ int main(int argc, char **argv) {
 
   // Enforce limit tests
   {
-    const int backup_routine[3] = {None, None, None};
+    const ghl_con2prim_id_t None = ghl_con2prim_id_None;
+    const ghl_con2prim_id_t backup_routine[3] = {None, None, None};
     const bool calc_prims_guess = true;
     const double Psi6threshold = 1e100;
     const double W_max = 10.0;

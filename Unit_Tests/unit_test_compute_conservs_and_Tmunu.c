@@ -13,7 +13,8 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int backup_routine[3] = {None,None,None};
+  const ghl_con2prim_id_t None = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t backup_routine[3] = {None, None, None};
   const bool evolve_entropy = true;
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;

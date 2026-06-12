@@ -23,7 +23,7 @@ typedef struct ghl_con2prim_diagnostics {
   /** Whether a speed limiter was triggered (true) or not (false) */
   bool speed_limited;
   /** The Con2Prim routine which successfully found the primitive variables */
-  ghl_con2prim_method_t which_routine;
+  ghl_con2prim_id_t which_routine;
   /** Whether a given backup routine was used (true) or not (false) */
   bool backup[3];
   /** Number of iterations required to find the solution */
@@ -104,7 +104,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       ghl_con2prim_diagnostics *restrict diagnostics);
 
 ghl_error_codes_t ghl_con2prim_hybrid_select_method(
-      const ghl_con2prim_method_t c2p_key,
+      const ghl_con2prim_id_t c2p_key,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,
@@ -114,7 +114,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
       ghl_con2prim_diagnostics *restrict diagnostics );
 
 ghl_error_codes_t ghl_con2prim_tabulated_select_method(
-      const ghl_con2prim_method_t c2p_key,
+      const ghl_con2prim_id_t c2p_key,
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict ADM_metric,

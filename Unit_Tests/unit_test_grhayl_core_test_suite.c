@@ -248,7 +248,7 @@ int main(int argc, char **argv) {
   valid_char[7] = "Palenzuela1D_entropy";
   valid_char[8] = "Newman1D";
   valid_char[9] = "Newman1D_entropy";
-  for(int i = None; i <= Newman1D_entropy; i++) {
+  for(int i = ghl_con2prim_id_None; i <= ghl_con2prim_id_Newman1D_entropy; i++) {
     const char *test_char = ghl_get_con2prim_routine_name(i);
     if(strcmp(valid_char[i+1], test_char)) {
       ghl_error("ghl_get_con2prim_routine_name failed:\n    expected %s, got %s\n", valid_char[i+1], test_char);

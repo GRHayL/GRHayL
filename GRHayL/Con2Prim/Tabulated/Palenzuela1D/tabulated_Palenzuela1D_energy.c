@@ -77,7 +77,7 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D_energy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
-  diagnostics->which_routine = Palenzuela1D;
+  diagnostics->which_routine = ghl_con2prim_id_Palenzuela1D;
   return ghl_tabulated_Palenzuela1D(compute_rho_P_eps_T_W_energy,
                                 params,
                                 eos,

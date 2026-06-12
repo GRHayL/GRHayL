@@ -155,7 +155,7 @@ ghl_error_codes_t ghl_tabulated_Newman1D_energy(
 
   // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
-  diagnostics->which_routine = Newman1D;
+  diagnostics->which_routine = ghl_con2prim_id_Newman1D;
 
   ghl_error_codes_t error = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
 				cons_undens, prims, tol_x, diagnostics);
