@@ -445,7 +445,7 @@ void ghl_compute_ADM_auxiliaries(
       const ghl_metric_quantities *restrict metric_adm,
       ghl_ADM_aux_quantities *restrict metric_aux);
 
-void ghl_enforce_detgtij_and_initialize_metric_adm(
+void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double lapse,
       const double betax,
       const double betay,
