@@ -6,7 +6,7 @@
  *
  * @todo
  * IllinoisGRMHD claimed that the `if` logic for the advection term
- * was to avoid cache misses. However, this seems like would have no
+ * was to avoid cache misses. However, this seems like it would have no
  * benefit for @grhayl given the explicit passing of stencils. This
  * should be revisited to check if a better implementation exists
  * for @grhayl.
@@ -35,7 +35,7 @@
  *  the usual BSSN treatment. For example,
  *
  *  \f[
- *  \partial_1\beta^1\tilde{\Phi} = \begin{cases}
+ *  \partial_1\left(\beta^1\tilde{\Phi}\right) = \begin{cases}
  *            \frac{1}{2\Delta x^1} \left( \beta^1_{(i-2,j,k)}\tilde{\Phi}_{(i-2,j,k)}
  *                                       - 4\beta^1_{(i-1,j,k)}\tilde{\Phi}_{(i-1,j,k)}
  *                                       + 3\beta^1_{(i,j,k)}\tilde{\Phi}_{(i,j,k)} \right) \ , & \beta^1_{(i,j,k)} < 0 \\

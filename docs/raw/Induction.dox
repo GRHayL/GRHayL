@@ -131,7 +131,7 @@
  *
  * </div>
  *
- * In addition to these variables, we need to know where the  spacetime
+ * In addition to these variables, we need to know where the spacetime
  * quantities live. This actually differs from code to code. For example, the
  * `Cactus/Carpet` environment in the Einstein Toolkit implicitly assumes the
  * hydrodynamical and spacetime variables are on the same grid because it only

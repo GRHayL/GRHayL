@@ -29,8 +29,8 @@
  * components. Since the velocities are cell-centered---which we can refer
  * to as having index \f$ (i, j, k) \f$---they need to be computed at the
  * correct index for \f$ A_i \f$ (staggered in perpendicular directions).
- * Generally, the hydrodynamic variables cannot simply be interpolated to
- * due the possible presence of shocks. As such, these quantities are
+ * Generally, the hydrodynamic variables cannot simply be interpolated
+ * due to the possible presence of shocks. As such, these quantities are
  * reconstructed to faces. Thus, we have a left and right value for a
  * given point. The velocities have to be reconstructed twice, leading
  * to four values.

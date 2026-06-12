@@ -2,7 +2,7 @@
 
 /**
  * @ingroup pack_struct
- * @brief Initialize the metric struct from user input
+ * @brief Compute ADM auxiliary metric quantities from an ADM metric struct
  *
  * @details
  * This function takes a ghl_metric_quantities struct with ADM metric

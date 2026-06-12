@@ -120,7 +120,7 @@ to the [Appendix](@ref levi_civita) for more details about these identities.
 
 \subsection tmunu_term_1 Solving for F^2
 
-Now, we simply want to find an expression for of \f$ T_{EM}^{\mu\nu} \f$ in terms
+Now, we simply want to find an expression for \f$ T_{EM}^{\mu\nu} \f$ in terms
 of \f$ \xi \f$, \f$ E \f$, and \f$ B \f$. Let's first consider the relatively
 simpler term
 
@@ -638,8 +638,11 @@ Setting \f$ \mu=0 \f$,
 
 where the final step follows from the fact that \f$ T^{\sigma\nu} \f$ is
 symmetric. Now, we will consider the right-hand side for various components of
-\f$ T^{\sigma\nu} \f$. For these derivations, we will use derivations relating
-to the extrinsic curvature in the [Appendix](@ref curv_id). For \f$ T^{00} \f$,
+\f$ T^{\sigma\nu} \f$. For these derivations, we will use
+\f$ \partial_a\beta^2 =
+2\beta^i\partial_a\beta_i
+- \beta^i\beta^j\partial_a\gamma_{ij} \f$ and derivations relating to the
+extrinsic curvature in the [Appendix](@ref curv_id). For \f$ T^{00} \f$,
 
 \f[
 \begin{aligned}
@@ -672,6 +675,9 @@ to the extrinsic curvature in the [Appendix](@ref curv_id). For \f$ T^{00} \f$,
 &= -\frac{\sqrt{\gamma}}{\alpha} T^{00} \left(\alpha\partial_t \alpha
                                             + \beta^i \alpha\partial_i \alpha
                                             - \beta^i \beta^j \partial_i \beta_j
+                                            + \frac{1}{2}\beta^i\beta^j\partial_t\gamma_{ij}
+                                            + \frac{1}{2}\beta^i\beta^j\beta^k
+                                               \partial_i\gamma_{jk}
                                          \right) \\
 
 &= \sqrt{\gamma} T^{00} \left(\beta^i \beta^j K_{ij}
@@ -712,20 +718,27 @@ at the mixed term \f$ T^{0i} + T^{i0} \f$:
                                                           - \partial_i \beta_j
                                                           - \partial_j \beta_i
                                                       \right)
+                                            + \beta^j\beta^k\partial_i\gamma_{jk}
                                         \right] \\
 
 &= -\frac{\sqrt{\gamma}}{\alpha} T^{0i} \left[2\alpha\partial_i \alpha
                                             + \beta^j \left(-2\alpha K_{ij}
                                                            - 2\Gamma^k_{ij}\beta_k
                                                       \right)
+                                            + \beta^j\beta^k\partial_i\gamma_{jk}
                                         \right] \\
 
 &= 2\sqrt{\gamma} T^{0i} \left( \beta^j K_{ij} - \partial_i \alpha \right)
- + \frac{2\sqrt{\gamma}}{\alpha} T^{0i} \beta^j \Gamma^k_{ij}\beta_k \\
+ + \frac{2\sqrt{\gamma}}{\alpha} T^{0i} \beta^j \Gamma^k_{ij}\beta_k
+ - \frac{\sqrt{\gamma}}{\alpha} T^{0i} \beta^j\beta^k\partial_i\gamma_{jk} \\
 
 &= 2\sqrt{\gamma} T^{0i} \left( \beta^j K_{ij} - \partial_i \alpha \right)
 \end{aligned}
 \f]
+
+where the final step uses the contracted Christoffel identity
+\f$ 2\beta^j\Gamma^k_{ij}\beta_k =
+\beta^j\beta^k\partial_i\gamma_{jk} \f$ from the [Appendix](@ref curv_id).
 
 Finally, for \f$ T^{ij} \f$ we have
 

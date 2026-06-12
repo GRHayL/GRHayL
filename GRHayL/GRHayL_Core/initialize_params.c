@@ -39,8 +39,10 @@
  *
  * @param[in] evolve_temp whether temperature should be evolved (True) or not (False)
  *
- * @param[in] calc_prim_guess sets whether the provided ghl_primitive_quantities struct contains an initial
- *                                   Con2Prim guess for the ghl_con2prim_multi_method function
+ * @param[in] calc_prim_guess if true, compute an initial primitive guess with
+ *                            ghl_guess_primitives before calling the selected
+ *                            Con2Prim routine; if false, use the
+ *                            caller-provided primitive values as the initial guess
  *
  * @param[in] psi6threshold upper limit of \f$ \psi^6 = \sqrt{|\gamma|} \f$ above which the limits on conservatives and primitives are adjusted
  *

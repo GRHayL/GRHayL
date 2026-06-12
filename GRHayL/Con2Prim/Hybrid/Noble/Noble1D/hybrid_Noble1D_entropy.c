@@ -31,7 +31,7 @@
  *        of the Noble1D method
  *
  * @todo
- * Needs and in-line descriptions; internal functions also need documentation.
+ * Needs inline descriptions; internal functions also need documentation.
  *
  * @param[in] params pointer to ghl_parameters struct
  *

@@ -19,7 +19,7 @@
  * point. This means that the metric quantities have an even stencil,
  * and the \f$ A_i \f$ have an odd stencil.
  *
- * We also note for completion that the metric interpolation returns
+ * We also note for completeness that the metric interpolation returns
  * \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$ instead of \f$ \gamma^{ij} \f$
  * to condense some of the mathematical operations needed.
  *

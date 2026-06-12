@@ -74,7 +74,7 @@ void ghl_apply_conservative_limits(
     hatBdotS = BdotS/Bmag;
     /**
      * \f[
-     * W_m \equiv \mathrm{\texttt{Wm}} = \frac{\sqrt{\hat{\Omega}^2 + \rho^2}}{\sqrt{\gamma}}
+     * W_m \equiv \mathrm{\texttt{Wm}} = \frac{\sqrt{\hat{\Omega}^2 + \tilde{D}^2}}{\sqrt{\gamma}}
      * \f]
      */
     const double Wm = sqrt(SQR(hatBdotS) + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
@@ -89,7 +89,7 @@ void ghl_apply_conservative_limits(
     /**
      * \f[
      * W_\mathrm{min} \equiv \mathrm{\texttt{Wmin}}
-     *   = \frac{\sqrt{S_m^2 + \rho^2}}{\sqrt{\gamma}}
+     *   = \frac{\sqrt{S_m^2 + \tilde{D}^2}}{\sqrt{\gamma}}
      * \f]
      */
     const double Wmin = sqrt(Sm2 + SQR(cons->rho))/ADM_metric->sqrt_detgamma;

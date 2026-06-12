@@ -7,7 +7,7 @@
  * This function takes the right and left face values of a variable and applies
  * a steepening algorithm. This is normally used for the density, as the density
  * profile should be narrowed in the presence of the contact discontinuity
- * (see e.g. Appendix I of \cite Marti_1996. To determine if there is a shock
+ * (see e.g. Appendix I of \cite Marti_1996). To determine if there is a shock
  * that requires steepening, several conditions must be met. The primary
  * equation is eq. 63 from \cite Marti_1996 :
  *

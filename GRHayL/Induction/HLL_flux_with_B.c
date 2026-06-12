@@ -10,7 +10,7 @@
  * single direction of \f$ A_i \f$ using the undensitized magnetic field
  * \f$ B^i \f$. The specific direction \f$ i \f$ is based on the data in @ref ghl_HLL_vars.
  *
- * As this nearly is identical to @ref ghl_HLL_flux_with_Btilde, we only note that
+ * As this is nearly identical to @ref ghl_HLL_flux_with_Btilde, we only note that
  * this function differs by requiring \f$ \psi^6 \f$ to compute the returned
  * value. The final equation is just multiplied by this factor.
  *
