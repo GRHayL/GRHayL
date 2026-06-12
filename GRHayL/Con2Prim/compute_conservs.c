@@ -9,7 +9,7 @@
  * variables, which is recommended after applying primitive limits to ensure
  * that the two variable sets are self-consistent.
  *
- * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] metric_adm pointer to ghl_metric_quantities struct with ADM metric
  *
  * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  *
@@ -21,7 +21,7 @@
  * @param[out] cons pointer to ghl_conservative_quantities struct
  */
 void ghl_compute_conservs(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_primitive_quantities *restrict prims,
       ghl_conservative_quantities *restrict cons) {
@@ -65,10 +65,10 @@ void ghl_compute_conservs(
    * the conservative variables:
    */
   double smallb[4], smallb2;
-  ghl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
+  ghl_compute_smallb_and_b2(metric_adm, prims, uD, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
-  const double alpha_sqrt_gamma = ADM_metric->lapse*ADM_metric->sqrt_detgamma;
+  const double alpha_sqrt_gamma = metric_adm->lapse*metric_adm->sqrt_detgamma;
   const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);
   const double P_plus_half_b2 = (prims->press+0.5*smallb2);
 
@@ -93,7 +93,7 @@ void ghl_compute_conservs(
   cons->SD[0] = cons->rho*h_enthalpy*uD[1] + alpha_sqrt_gamma*(uU[0]*smallb2*uD[1] - smallb[0]*smallb_lower[1]);
   cons->SD[1] = cons->rho*h_enthalpy*uD[2] + alpha_sqrt_gamma*(uU[0]*smallb2*uD[2] - smallb[0]*smallb_lower[2]);
   cons->SD[2] = cons->rho*h_enthalpy*uD[3] + alpha_sqrt_gamma*(uU[0]*smallb2*uD[3] - smallb[0]*smallb_lower[3]);
-  cons->tau = ADM_metric->lapse*alpha_sqrt_gamma*(rho0_h_plus_b2*SQR(uU[0]) - P_plus_half_b2*ADM_metric->lapseinv2 - SQR(smallb[0])) - cons->rho;
+  cons->tau = metric_adm->lapse*alpha_sqrt_gamma*(rho0_h_plus_b2*SQR(uU[0]) - P_plus_half_b2*metric_adm->lapseinv2 - SQR(smallb[0])) - cons->rho;
   cons->entropy = alpha_sqrt_gamma * prims->entropy * uU[0];
   cons->Y_e = cons->rho * prims->Y_e;
 }

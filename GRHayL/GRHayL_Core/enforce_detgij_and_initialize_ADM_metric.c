@@ -18,7 +18,7 @@
  *
  * @param[in] gxx,gxy,gxz,gyy,gyz,gzz components of the 3-metric \f$ g_{i j} \f$
  *
- * @param[out] ADM_metric pointer to ghl_metric_quantities struct
+ * @param[out] metric_adm pointer to ghl_metric_quantities struct
  *
  */
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
@@ -32,17 +32,17 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double gyy,
       const double gyz,
       const double gzz,
-      ghl_metric_quantities *restrict ADM_metric) {
+      ghl_metric_quantities *restrict metric_adm) {
 
   ghl_initialize_metric(
         lapse, betax, betay, betaz,
         gxx, gxy, gxz,
         gyy, gyz, gzz,
-        ADM_metric);
+        metric_adm);
 
   ghl_ADM_aux_quantities metric_aux;
-  ghl_compute_ADM_auxiliaries(ADM_metric, &metric_aux);
-  const double phi = (1.0/12.0) * log(ADM_metric->detgamma);
+  ghl_compute_ADM_auxiliaries(metric_adm, &metric_aux);
+  const double phi = (1.0/12.0) * log(metric_adm->detgamma);
 
   const double psi2 = exp(2.0*phi);
   const double psi4 = SQR(psi2);
@@ -83,10 +83,10 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
                     betax, betay, betaz,
                     gxx_new, gxy_new, gxz_new,
                     gyy_new, gyz_new, gzz_new,
-                    ADM_metric);
+                    metric_adm);
 
   if(gtijdet<0.0) ghl_warn(
                       "WARNING: det[3-metric]<0.0. Hopefully this is occurring in gz's! "
                       "gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e\n",
-  			     gxx, gxy, gxz, gyy, gyz, gzz, gtxx, gtxy, gtxz, gtyy, gtyz, gtzz, ADM_metric->detgamma, gtijdet);
+  			     gxx, gxy, gxz, gyy, gyz, gzz, gtxx, gtxy, gtxz, gtyy, gtyz, gtzz, metric_adm->detgamma, gtijdet);
 }

@@ -39,7 +39,7 @@
  * \end{aligned}
  * \f]
  *
- * @param[in] ADM_metric pointer to a ghl_metric_quantities struct containing the ADM metric
+ * @param[in] metric_adm pointer to a ghl_metric_quantities struct containing the ADM metric
  *
  * @param[in] prims pointer to a ghl_primitive_quantities struct. Note that
  *                  ghl_primitive_quantities::u0 **must** be valid for this function.
@@ -52,13 +52,13 @@
  *
  */
 void ghl_compute_smallb_and_b2(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_primitive_quantities *restrict prims,
       const double uDN[4],
       double smallb[4],
       double *restrict smallb2) {
 
-  const double one_over_W = ADM_metric->lapseinv/prims->u0;
+  const double one_over_W = metric_adm->lapseinv/prims->u0;
 
   /*
      Compute b^t (Eqs. 23 and 31 in http://arxiv.org/pdf/astro-ph/0503420.pdf):
@@ -66,7 +66,7 @@ void ghl_compute_smallb_and_b2(
      Note that our B = B/sqrt(4pi) of the paper's B. Then,
        b^t = u_i B^i/alpha
   */
-  smallb[0] = (uDN[1]*prims->BU[0] + uDN[2]*prims->BU[1] + uDN[3]*prims->BU[2])*ADM_metric->lapseinv;
+  smallb[0] = (uDN[1]*prims->BU[0] + uDN[2]*prims->BU[1] + uDN[3]*prims->BU[2])*metric_adm->lapseinv;
 
   /*
      Eq. 24 in http://arxiv.org/pdf/astro-ph/0503420.pdf
@@ -93,9 +93,9 @@ void ghl_compute_smallb_and_b2(
   //     = - (alpha b^t)^2 + gamma_{ij} ((b^t)^2 beta^i beta^j + b^i b^j + 2 b^t beta^j b^i)
   //     = - (alpha b^t)^2 + gamma_{ij} ((b^t)^2 beta^i beta^j + 2 b^t beta^j b^i + b^i b^j)
   //     = - (alpha b^t)^2 + gamma_{ij} (b^i + b^t beta^i) (b^j + b^t beta^j)
-  const double bi_plus_bt_betai[3] = {smallb[1] + smallb[0]*ADM_metric->betaU[0],
-                                      smallb[2] + smallb[0]*ADM_metric->betaU[1],
-                                      smallb[3] + smallb[0]*ADM_metric->betaU[2]};
+  const double bi_plus_bt_betai[3] = {smallb[1] + smallb[0]*metric_adm->betaU[0],
+                                      smallb[2] + smallb[0]*metric_adm->betaU[1],
+                                      smallb[3] + smallb[0]*metric_adm->betaU[2]};
 
-  *smallb2 = -SQR(ADM_metric->lapse*smallb[0]) + ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, bi_plus_bt_betai);
+  *smallb2 = -SQR(metric_adm->lapse*smallb[0]) + ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, bi_plus_bt_betai);
 }

@@ -18,7 +18,7 @@
  *
  * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] metric_adm pointer to ghl_metric_quantities struct with ADM metric
  *
  * @param[in] prims pointer to ghl_primitive_quantities struct
  *
@@ -32,7 +32,7 @@
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_primitive_quantities *restrict prims,
       ghl_conservative_quantities *restrict cons,
       ghl_con2prim_diagnostics *restrict diagnostics) {
@@ -45,9 +45,9 @@ void ghl_apply_conservative_limits(
    * @ref ghl_compute_vec2_from_vec3D(). Then, we compute \f$ B\cdot S \f$,
    * \f$ \hat{B}\cdot S \f$ and some other intermediate quantities:
    */
-  const double sdots = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, cons->SD);
+  const double sdots = ghl_compute_vec2_from_vec3D(metric_adm->gammaUU, cons->SD);
 
-  const double B2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
+  const double B2 = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, prims->BU);
 
   /**
    * To prevent possible [floating-point underflow](https://en.wikipedia.org/wiki/Arithmetic_underflow)
@@ -77,7 +77,7 @@ void ghl_apply_conservative_limits(
      * W_m \equiv \mathrm{\texttt{Wm}} = \frac{\sqrt{\hat{\Omega}^2 + \tilde{D}^2}}{\sqrt{\gamma}}
      * \f]
      */
-    const double Wm = sqrt(SQR(hatBdotS) + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
+    const double Wm = sqrt(SQR(hatBdotS) + SQR(cons->rho))/metric_adm->sqrt_detgamma;
     /**
      * \f[
      * S_m^2 \equiv \mathrm{\texttt{Sm2}}
@@ -92,8 +92,8 @@ void ghl_apply_conservative_limits(
      *   = \frac{\sqrt{S_m^2 + \tilde{D}^2}}{\sqrt{\gamma}}
      * \f]
      */
-    const double Wmin = sqrt(Sm2 + SQR(cons->rho))/ADM_metric->sqrt_detgamma;
-    half_psi6_B2 = 0.5*ADM_metric->sqrt_detgamma*B2;
+    const double Wmin = sqrt(Sm2 + SQR(cons->rho))/metric_adm->sqrt_detgamma;
+    half_psi6_B2 = 0.5*metric_adm->sqrt_detgamma*B2;
     /**
      * \f[
      * \tilde{\tau}_3 \equiv \mathrm{\texttt{tau_fluid_term3}}
@@ -101,7 +101,7 @@ void ghl_apply_conservative_limits(
      *   - \Omega^2}{2 \sqrt{\gamma}\left( W_\mathrm{min} + B^2\right)^2}
      * \f]
      */
-    tau_fluid_term3 = (B2*sdots - SQR(BdotS))*0.5/(ADM_metric->sqrt_detgamma*SQR(Wmin+B2));
+    tau_fluid_term3 = (B2*sdots - SQR(BdotS))*0.5/(metric_adm->sqrt_detgamma*SQR(Wmin+B2));
   }
 
   /**
@@ -174,7 +174,7 @@ void ghl_apply_conservative_limits(
    *               (\tilde{\tau}_\mathrm{fluid,min} + 2\tilde{D})}{\tilde{S}^2}}
    * \f]
    */
-  } else if(ADM_metric->sqrt_detgamma>params->psi6threshold) {
+  } else if(metric_adm->sqrt_detgamma>params->psi6threshold) {
     double tau_fluid_min = cons->tau - half_psi6_B2 - tau_fluid_term3;
     if (tau_fluid_min < eos->tau_atm*1.001) {
       tau_fluid_min = eos->tau_atm*1.001;

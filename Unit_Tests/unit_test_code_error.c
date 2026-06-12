@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
       break;
   }
 
-  ghl_metric_quantities ADM_metric;
+  ghl_metric_quantities metric_adm;
   ghl_primitive_quantities prims;
   ghl_conservative_quantities cons;
   ghl_con2prim_diagnostics diagnostics;
@@ -127,10 +127,10 @@ int main(int argc, char **argv) {
         1.0, 0.0, 0.0, 0.0,
         1.0, 0.0, 0.0,
         1.0, 0.0, 1.0,
-        &ADM_metric);
+        &metric_adm);
 
   ghl_ADM_aux_quantities metric_aux;
-  ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+  ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
   /*
      ghl_limit_v_and_compute_u0:
@@ -143,11 +143,11 @@ int main(int argc, char **argv) {
       prims.vU[0] = 0.0/0.0;
       prims.vU[1] = 0.0/0.0;
       prims.vU[2] = 0.0/0.0;
-      error = ghl_limit_v_and_compute_u0(&params, &ADM_metric, &prims, &speed_limited);
+      error = ghl_limit_v_and_compute_u0(&params, &metric_adm, &prims, &speed_limited);
       expect_error_code(error, test_key, "ghl_limit_v_and_compute_u0");
       break;
     case 5:
-      error = ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      error = ghl_con2prim_hybrid_select_method(-5, &params, &hybrid_eos, &metric_adm, &metric_aux, &cons, &prims, &diagnostics);
       expect_error_code(error, test_key, "ghl_con2prim_hybrid_select_method");
       break;
   }
@@ -393,7 +393,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
 
   switch (test_key) {
     case 32:
-      error = ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &ADM_metric, &metric_aux, &cons, &prims, &diagnostics);
+      error = ghl_con2prim_tabulated_select_method(-10, &params, &tab_eos, &metric_adm, &metric_aux, &cons, &prims, &diagnostics);
       expect_error_code(error, test_key, "ghl_con2prim_tabulated_select_method");
       break;
   }

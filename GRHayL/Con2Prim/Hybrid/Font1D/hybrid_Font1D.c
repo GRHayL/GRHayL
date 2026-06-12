@@ -34,7 +34,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  *
  * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] metric_adm pointer to ghl_metric_quantities struct with ADM metric
  *
  * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  *
@@ -55,7 +55,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
 ghl_error_codes_t ghl_hybrid_Font1D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims,
@@ -63,7 +63,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
 
   double utU[3];
 
-  const double sdots = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, cons->SD);
+  const double sdots = ghl_compute_vec2_from_vec3D(metric_adm->gammaUU, cons->SD);
   /**
    * # Function Step-by-Step
    *
@@ -74,7 +74,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
    * velocity is zero and skip the iterative solve.
    */
 
-  const double B2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
+  const double B2 = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, prims->BU);
 
   double BdotS, BdotS2, hatBdotS;
   if(B2 < 1e-150) {
@@ -86,17 +86,17 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     hatBdotS = BdotS/B_mag;
   }
 
-  double Psim6 = 1.0/ADM_metric->sqrt_detgamma;
+  double Psim6 = 1.0/metric_adm->sqrt_detgamma;
 
   double rhob;
   if (sdots<1.e-300) {
     utU[0] = 0.0;
     utU[1] = 0.0;
     utU[2] = 0.0;
-    prims->u0    = ADM_metric->lapseinv;
-    prims->vU[0] = -ADM_metric->betaU[0];
-    prims->vU[1] = -ADM_metric->betaU[1];
-    prims->vU[2] = -ADM_metric->betaU[2];
+    prims->u0    = metric_adm->lapseinv;
+    prims->vU[0] = -metric_adm->betaU[0];
+    prims->vU[1] = -metric_adm->betaU[1];
+    prims->vU[2] = -metric_adm->betaU[2];
   } else {
     double W0    = sqrt( SQR(hatBdotS) + SQR(cons->rho) ) * Psim6;
     double Sf20  = (SQR(W0)*sdots + BdotS2*(B2 + 2.0*W0))/SQR(W0+B2);
@@ -175,19 +175,19 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      *              + \frac{\sqrt{|\gamma|} B^2}{\gamma_v} \right]^{-1}
      * \f]
      */
-    double fac1 = ADM_metric->sqrt_detgamma*BdotS/(gammav*rhosh);
-    double fac2 = 1.0/(rhosh + ADM_metric->sqrt_detgamma*B2/gammav);
+    double fac1 = metric_adm->sqrt_detgamma*BdotS/(gammav*rhosh);
+    double fac2 = 1.0/(rhosh + metric_adm->sqrt_detgamma*B2/gammav);
 
     double SU[3];
-    ghl_raise_lower_vector_3D(ADM_metric->gammaUU, cons->SD, SU);
+    ghl_raise_lower_vector_3D(metric_adm->gammaUU, cons->SD, SU);
 
     utU[0] = fac2*(SU[0] + fac1*prims->BU[0]);
     utU[1] = fac2*(SU[1] + fac1*prims->BU[1]);
     utU[2] = fac2*(SU[2] + fac1*prims->BU[2]);
-    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
+    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
   }
 
-  prims->rho = cons->rho/(ADM_metric->lapse*prims->u0*ADM_metric->sqrt_detgamma);
+  prims->rho = cons->rho/(metric_adm->lapse*prims->u0*metric_adm->sqrt_detgamma);
   /**
    * The Font fix only sets the velocities. We set the remaining primitives using
    * @ref ghl_hybrid_compute_P_cold, @ref ghl_hybrid_compute_entropy_function,

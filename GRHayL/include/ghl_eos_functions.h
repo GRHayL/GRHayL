@@ -271,7 +271,7 @@ extern void (*ghl_calculate_HLLE_fluxes_dirn0)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric_face,
+      const ghl_metric_quantities *restrict metric_adm_face,
       const double cmin,
       const double cmax,
       ghl_conservative_quantities *restrict cons_fluxes);
@@ -280,7 +280,7 @@ extern void (*ghl_calculate_HLLE_fluxes_dirn1)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric_face,
+      const ghl_metric_quantities *restrict metric_adm_face,
       const double cmin,
       const double cmax,
       ghl_conservative_quantities *restrict cons_fluxes);
@@ -289,7 +289,7 @@ extern void (*ghl_calculate_HLLE_fluxes_dirn2)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric_face,
+      const ghl_metric_quantities *restrict metric_adm_face,
       const double cmin,
       const double cmax,
       ghl_conservative_quantities *restrict cons_fluxes);

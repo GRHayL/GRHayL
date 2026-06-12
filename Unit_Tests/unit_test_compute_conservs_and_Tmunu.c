@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
     // Define the various GRHayL structs for the unit tests
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    ghl_metric_quantities ADM_metric;
+    ghl_metric_quantities metric_adm;
     ghl_primitive_quantities prims;
     ghl_conservative_quantities cons;
     ghl_stress_energy Tmunu;
@@ -212,10 +212,10 @@ int main(int argc, char **argv) {
           betax[i], betay[i], betaz[i],
           gxx[i], gxy[i], gxz[i],
           gyy[i], gyz[i], gzz[i],
-          &ADM_metric);
+          &metric_adm);
 
     ghl_ADM_aux_quantities metric_aux;
-    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
     ghl_initialize_primitives(
           rho_b[i], press[i], eps[i],
@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
     prims.u0 = u0[i];
 
     // This computes the conservatives and stress-energy tensor from the new primitives
-    ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+    ghl_compute_conservs_and_Tmunu(&metric_adm, &metric_aux, &prims, &cons, &Tmunu);
 
     ghl_conservative_quantities cons_trusted, cons_pert;
     ghl_stress_energy Tmunu_trusted, Tmunu_pert;
@@ -268,8 +268,8 @@ int main(int argc, char **argv) {
             requiring some sort of interpolation which the user handles separately.
        We can easily use this test to also check these functions.
     */
-    ghl_compute_conservs(&ADM_metric, &metric_aux, &prims, &cons);
-    ghl_compute_TDNmunu(&ADM_metric, &metric_aux, &prims, &Tmunu);
+    ghl_compute_conservs(&metric_adm, &metric_aux, &prims, &cons);
+    ghl_compute_TDNmunu(&metric_adm, &metric_aux, &prims, &Tmunu);
     ghl_pert_test_fail_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
     ghl_pert_test_fail_stress_energy(&Tmunu_trusted, &Tmunu, &Tmunu_pert);
   }

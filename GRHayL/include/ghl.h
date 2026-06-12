@@ -442,7 +442,7 @@ void ghl_initialize_metric(
       ghl_metric_quantities *restrict metric);
 
 void ghl_compute_ADM_auxiliaries(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       ghl_ADM_aux_quantities *restrict metric_aux);
 
 void ghl_enforce_detgtij_and_initialize_ADM_metric(
@@ -456,7 +456,7 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
       const double gyy,
       const double gyz,
       const double gzz,
-      ghl_metric_quantities *restrict ADM_metric);
+      ghl_metric_quantities *restrict metric_adm);
 
 void ghl_initialize_extrinsic_curvature(
       const double Kxx,
@@ -495,31 +495,31 @@ void ghl_return_stress_energy(
 
 ghl_error_codes_t ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       ghl_primitive_quantities *restrict prims,
       bool *restrict speed_limited);
 
 void ghl_compute_TDNmunu(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_primitive_quantities *restrict prims,
       ghl_stress_energy *restrict Tmunu);
 
 void ghl_compute_TUPmunu(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_primitive_quantities *restrict prims,
       ghl_stress_energy *restrict Tmunu);
 
 void ghl_compute_smallb_and_b2(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_primitive_quantities *restrict prims,
       const double uDN[4],
       double smallb[4],
       double *restrict smallb2);
 
 void ghl_compute_SU_Bsq_Ssq_BdotS(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
       double *restrict SU,

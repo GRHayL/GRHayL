@@ -10,7 +10,7 @@
 ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       ghl_primitive_quantities *restrict prims,
       bool *restrict speed_limited) {
 
@@ -30,7 +30,7 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       // Set P_min and P_max
       const double P_min = P_cold;
 
-      const bool inhorizon = ADM_metric->sqrt_detgamma > params->psi6threshold;
+      const bool inhorizon = metric_adm->sqrt_detgamma > params->psi6threshold;
       // Adjust P_max based on Psi6
       const double P_max = inhorizon ? 1e5 * P_cold : 100.0 * P_cold;
 
@@ -91,5 +91,5 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
   }
 
   // Finally, apply speed limit to v and compute u^0
-  return ghl_limit_v_and_compute_u0(params, ADM_metric, prims, speed_limited);
+  return ghl_limit_v_and_compute_u0(params, metric_adm, prims, speed_limited);
 }

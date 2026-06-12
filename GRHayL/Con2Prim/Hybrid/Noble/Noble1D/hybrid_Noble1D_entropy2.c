@@ -64,7 +64,7 @@ TODO: needs remaining error codes
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
@@ -75,7 +75,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
   harm_aux_vars_struct harm_aux;
 
   double rho0, Z_last;
-  if( ghl_initialize_Noble_entropy(params, eos, ADM_metric, metric_aux,
+  if( ghl_initialize_Noble_entropy(params, eos, metric_adm, metric_aux,
                                    cons_undens, prims, &harm_aux, &rho0, &Z_last) )
     return 1;
 
@@ -120,7 +120,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
     return ghl_error_neg_rho;
   }
 
-  diagnostics->speed_limited = ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
+  diagnostics->speed_limited = ghl_finalize_Noble_entropy(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, W, prims);
   if(prims->press <= 0.0) {
     return ghl_error_neg_pressure;
   }

@@ -62,13 +62,13 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
             double *restrict W_ptr),
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
   double SU[3], B_squared, S_squared, BdotS;
-  ghl_compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims, SU, &B_squared, &S_squared, &BdotS);
+  ghl_compute_SU_Bsq_Ssq_BdotS(metric_adm, cons_undens, prims, SU, &B_squared, &S_squared, &BdotS);
   const double tau = fmax(cons_undens->tau, eos->tau_atm);
 
   // Set specific quantities for this routine (Eq. A7 of [1])
@@ -116,7 +116,7 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
 
   // Set prims struct
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 

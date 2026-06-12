@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
     // Define the various GRHayL structs for the unit tests
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    ghl_metric_quantities ADM_metric;
+    ghl_metric_quantities metric_adm;
     ghl_primitive_quantities prims;
     ghl_conservative_quantities cons;
 
@@ -154,10 +154,10 @@ int main(int argc, char **argv) {
           betax[i], betay[i], betaz[i],
           gxx[i], gxy[i], gxz[i],
           gyy[i], gyz[i], gzz[i],
-          &ADM_metric);
+          &metric_adm);
 
     ghl_ADM_aux_quantities metric_aux;
-    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
     ghl_initialize_primitives(
           poison, poison, poison,
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
     //This applies inequality fixes on the conservatives
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = 0.0;
-    ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &prims, &cons, &diagnostics);
+    ghl_apply_conservative_limits(&params, &eos, &metric_adm, &prims, &cons, &diagnostics);
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = Psi6threshold;
 

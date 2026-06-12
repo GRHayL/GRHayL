@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
   for(int i=0; i<arraylength; i++) {
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    ghl_metric_quantities ADM_metric;
+    ghl_metric_quantities metric_adm;
     ghl_primitive_quantities prims;
     ghl_conservative_quantities cons, cons_undens;
 
@@ -99,10 +99,10 @@ int main(int argc, char **argv) {
                       betax[i], betay[i], betaz[i],
                       gxx[i], gxy[i], gxz[i],
                       gyy[i], gyz[i], gzz[i],
-                      &ADM_metric);
+                      &metric_adm);
 
     ghl_ADM_aux_quantities metric_aux;
-    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
     ghl_initialize_primitives(
                         poison, poison, poison,
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
     if (i==0) {
       params.calc_prim_guess = false;
-      prims.rho   = cons.rho/ADM_metric.sqrt_detgamma;
+      prims.rho   = cons.rho/metric_adm.sqrt_detgamma;
       prims.u0    = 1.0;
       prims.vU[0] = 2.0;
       prims.vU[1] = 2.0;
@@ -126,21 +126,21 @@ int main(int argc, char **argv) {
              S_x[i], S_y[i], S_z[i],
              poison, poison, &cons);
 
-    ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
-    int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+    ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
+    int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
     if(check != expected_errors[i])
       ghl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);
 
     if(i==0) {
       // This just gets coverage for the success branches
       params.main_routine = ghl_con2prim_id_Font1D;
-      int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+      int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != 0)
         ghl_error("Font1D has returned a different failure code: old %d and new %d", 0, check);
       params.main_routine = ghl_con2prim_id_Noble2D;
       for (int j=0; j<3; j++) {
         params.backup_routine[2-j] = ghl_con2prim_id_Font1D;
-        int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+        int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
         if(check != 0)
           ghl_error("Font1D has returned a different failure code: old %d and new %d", 0, check);
         params.backup_routine[2-j] = ghl_con2prim_id_Noble2D;
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     } else if (i==3) {
       // Here, we can check the Font Fix failure condition (there's just one return value)
       params.backup_routine[0] = ghl_con2prim_id_Font1D;
-      int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+      int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != ghl_error_c2p_max_iter)
         ghl_error("Font1D has returned a different failure code: old %d and new %d", 1, check);
       params.backup_routine[0] = ghl_con2prim_id_None;

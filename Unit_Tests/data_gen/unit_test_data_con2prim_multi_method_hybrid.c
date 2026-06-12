@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
       //WVU_EOS_P_and_eps_from_rho_Ye_T( xrho,xye,xtemp, &xpress,&xeps );
 
       // Define the various GRHayL structs for the unit tests
-      ghl_metric_quantities ADM_metric;
+      ghl_metric_quantities metric_adm;
       ghl_primitive_quantities prims;
       ghl_conservative_quantities cons;
 
@@ -209,10 +209,10 @@ int main(int argc, char **argv) {
           local_lapse, local_betax, local_betay, local_betaz,
           local_gxx, local_gxy, local_gxz,
           local_gyy, local_gyz, local_gzz,
-          &ADM_metric);
+          &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
       ghl_initialize_primitives(
             xrho, xpress, poison,
@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
 
       bool speed_limited;
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
-            &params, &ADM_metric, &prims, &speed_limited);
+            &params, &metric_adm, &prims, &speed_limited);
       ghl_abort_if_error(error);
 
       // We need epsilon to compute the enthalpy in ghl_compute_conservs_and_Tmunu;
@@ -232,19 +232,19 @@ int main(int argc, char **argv) {
       prims.entropy = ghl_hybrid_compute_entropy_function(&eos, prims.rho, prims.press);
 
       // Compute conservatives based on these primitives
-      ghl_compute_conservs(&ADM_metric, &metric_aux, &prims, &cons);
+      ghl_compute_conservs(&metric_adm, &metric_aux, &prims, &cons);
 
-      lapse[index] = ADM_metric.lapse;
-      betax[index] = ADM_metric.betaU[0];
-      betay[index] = ADM_metric.betaU[1];
-      betaz[index] = ADM_metric.betaU[2];
+      lapse[index] = metric_adm.lapse;
+      betax[index] = metric_adm.betaU[0];
+      betay[index] = metric_adm.betaU[1];
+      betaz[index] = metric_adm.betaU[2];
 
-      gxx[index] = ADM_metric.gammaDD[0][0];
-      gxy[index] = ADM_metric.gammaDD[0][1];
-      gxz[index] = ADM_metric.gammaDD[0][2];
-      gyy[index] = ADM_metric.gammaDD[1][1];
-      gyz[index] = ADM_metric.gammaDD[1][2];
-      gzz[index] = ADM_metric.gammaDD[2][2];
+      gxx[index] = metric_adm.gammaDD[0][0];
+      gxy[index] = metric_adm.gammaDD[0][1];
+      gxz[index] = metric_adm.gammaDD[0][2];
+      gyy[index] = metric_adm.gammaDD[1][1];
+      gyz[index] = metric_adm.gammaDD[1][2];
+      gzz[index] = metric_adm.gammaDD[2][2];
 
       ghl_return_primitives(&prims,
             &rho_b[index], &press[index], &eps[index],
@@ -415,7 +415,7 @@ int main(int argc, char **argv) {
 
       ghl_con2prim_diagnostics diagnostics;
       ghl_initialize_diagnostics(&diagnostics);
-      ghl_metric_quantities ADM_metric;
+      ghl_metric_quantities metric_adm;
       ghl_primitive_quantities prims;
       ghl_conservative_quantities cons;
 
@@ -423,10 +423,10 @@ int main(int argc, char **argv) {
             lapse[i], betax[i], betay[i], betaz[i],
             gxx[i], gxy[i], gxz[i],
             gyy[i], gyz[i], gzz[i],
-            &ADM_metric);
+            &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
       ghl_initialize_primitives(
             rho_b_orig[i], press_orig[i], eps_orig[i],
@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
       if(i == arraylength-1 || i == arraylength-2)
         params.psi6threshold = 0.0;
       ghl_apply_conservative_limits(
-            &params, &eos, &ADM_metric,
+            &params, &eos, &metric_adm,
             &prims, &cons, &diagnostics);
       if(i == arraylength-1 || i == arraylength-2)
         params.psi6threshold = Psi6threshold;
@@ -486,7 +486,7 @@ int main(int argc, char **argv) {
       for(int i=0; i<arraylength; i++) {
         ghl_con2prim_diagnostics diagnostics;
         ghl_initialize_diagnostics(&diagnostics);
-        ghl_metric_quantities ADM_metric;
+        ghl_metric_quantities metric_adm;
         ghl_primitive_quantities prims;
         ghl_conservative_quantities cons, cons_undens;
 
@@ -494,10 +494,10 @@ int main(int argc, char **argv) {
               lapse[i], betax[i], betay[i], betaz[i],
               gxx[i], gxy[i], gxz[i],
               gyy[i], gyz[i], gzz[i],
-              &ADM_metric);
+              &metric_adm);
 
         ghl_ADM_aux_quantities metric_aux;
-        ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+        ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
         ghl_initialize_primitives(
               poison, poison, poison,
@@ -510,11 +510,11 @@ int main(int argc, char **argv) {
               S_x_orig[i], S_y_orig[i], S_z_orig[i],
               ent_star[i], poison, &cons);
 
-        ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
+        ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
         if(params.calc_prim_guess)
-          ghl_guess_primitives(&eos, &ADM_metric, &cons, &prims);
+          ghl_guess_primitives(&eos, &metric_adm, &cons, &prims);
         c2p_check[i] = ghl_con2prim_hybrid_select_method(
-              methods[routine], &params, &eos, &ADM_metric, &metric_aux,
+              methods[routine], &params, &eos, &metric_adm, &metric_aux,
               &cons_undens, &prims, &diagnostics);
 
         ghl_return_primitives(
@@ -556,17 +556,17 @@ int main(int argc, char **argv) {
       S_z_orig[i] = S_z[i];
       ent_star_orig[i] = ent_star[i];
 
-      ghl_metric_quantities ADM_metric;
+      ghl_metric_quantities metric_adm;
       ghl_primitive_quantities prims;
 
       ghl_initialize_metric(
             lapse[i], betax[i], betay[i], betaz[i],
             gxx[i], gxy[i], gxz[i],
             gyy[i], gyz[i], gzz[i],
-            &ADM_metric);
+            &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
       ghl_initialize_primitives(
             rho_b_orig[i], press_orig[i], eps_orig[i],
@@ -576,7 +576,7 @@ int main(int argc, char **argv) {
 
       bool speed_limited;
       ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(
-            &params, &eos, &ADM_metric, &prims, &speed_limited);
+            &params, &eos, &metric_adm, &prims, &speed_limited);
       ghl_abort_if_error(error);
 
       ghl_return_primitives(
@@ -611,7 +611,7 @@ int main(int argc, char **argv) {
       S_z_orig[i] = S_z[i];
       ent_star_orig[i] = ent_star[i];
 
-      ghl_metric_quantities ADM_metric;
+      ghl_metric_quantities metric_adm;
       ghl_primitive_quantities prims;
       ghl_conservative_quantities cons;
       ghl_stress_energy Tmunu;
@@ -620,10 +620,10 @@ int main(int argc, char **argv) {
             lapse[i], betax[i], betay[i], betaz[i],
             gxx[i], gxy[i], gxz[i],
             gyy[i], gyz[i], gzz[i],
-            &ADM_metric);
+            &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
       ghl_initialize_primitives(
             rho_b_orig[i], press_orig[i], eps_orig[i],
@@ -633,7 +633,7 @@ int main(int argc, char **argv) {
       prims.u0 = u0[i];
 
       ghl_compute_conservs_and_Tmunu(
-            &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+            &metric_adm, &metric_aux, &prims, &cons, &Tmunu);
 
       ghl_return_conservatives(
             &cons, &rho_star[i], &tau[i],

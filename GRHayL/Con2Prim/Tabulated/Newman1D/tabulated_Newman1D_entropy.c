@@ -7,7 +7,7 @@ static ghl_error_codes_t ghl_newman_entropy(
       const double BdotS,
       const double B_squared,
       const double *restrict SU,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_conservative_quantities *restrict con,
       ghl_primitive_quantities *restrict prims,
       const double tol_x,
@@ -125,7 +125,7 @@ static ghl_error_codes_t ghl_newman_entropy(
   prims->Y_e         = xye;
   prims->temperature = xtemp;
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utildeU, prims);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
@@ -135,7 +135,7 @@ static ghl_error_codes_t ghl_newman_entropy(
 ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
@@ -143,18 +143,18 @@ ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
 
   // Step 1: Compute auxiliary quantities
   double SU[3], Bsq, Ssq, BdotS;
-  ghl_compute_SU_Bsq_Ssq_BdotS(ADM_metric, cons_undens, prims, SU, &Bsq, &Ssq, &BdotS);
+  ghl_compute_SU_Bsq_Ssq_BdotS(metric_adm, cons_undens, prims, SU, &Bsq, &Ssq, &BdotS);
 
   // Step 2: Call the Newman routine that uses the entropy to recover T
   const double tol_x = 1e-15;
   diagnostics->which_routine = ghl_con2prim_id_Newman1D_entropy;
 
-  ghl_error_codes_t error = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
+  ghl_error_codes_t error = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, metric_adm,
 				 cons_undens, prims, tol_x, diagnostics);
 
   if(error) {
     prims->temperature = eos->T_min;
-    error = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, ADM_metric,
+    error = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, metric_adm,
 			       cons_undens, prims, tol_x, diagnostics);
   }
 

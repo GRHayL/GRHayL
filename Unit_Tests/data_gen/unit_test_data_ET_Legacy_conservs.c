@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
 
       eps[index] = eps_cold + (press[index]-P_cold)/(eos.Gamma_th-1.0)/rho_b[index];
 
-      ghl_metric_quantities ADM_metric;
+      ghl_metric_quantities metric_adm;
       ghl_primitive_quantities prims;
       ghl_conservative_quantities cons;
       ghl_stress_energy Tmunu;
@@ -127,10 +127,10 @@ int main(int argc, char **argv) {
             lapse[index], betax[index], betay[index], betaz[index],
             gxx[index], gxy[index], gxz[index],
             gyy[index], gyz[index], gzz[index],
-            &ADM_metric);
+            &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
       ghl_initialize_primitives(
             rho_b[index], press[index], eps[index],
@@ -141,11 +141,11 @@ int main(int argc, char **argv) {
 
       bool speed_limit;
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
-            &params, &ADM_metric, &prims, &speed_limit);
+            &params, &metric_adm, &prims, &speed_limit);
       ghl_abort_if_error(error);
 
       // Compute conservatives based on these primitives
-      ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+      ghl_compute_conservs_and_Tmunu(&metric_adm, &metric_aux, &prims, &cons, &Tmunu);
 
       double dummy1, dummy2, dummy3;
       ghl_return_primitives(

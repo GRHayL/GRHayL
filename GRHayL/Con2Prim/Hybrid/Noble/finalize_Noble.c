@@ -3,7 +3,7 @@
 bool ghl_finalize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const harm_aux_vars_struct *restrict harm_aux,
@@ -15,10 +15,10 @@ bool ghl_finalize_Noble(
   const double W = 1.0/gtmp;
   const double w = Z * (1.0 - vsq);
 
-  const double nU[4] = {ADM_metric->lapseinv,
-                       -ADM_metric->lapseinv*ADM_metric->betaU[0],
-                       -ADM_metric->lapseinv*ADM_metric->betaU[1],
-                       -ADM_metric->lapseinv*ADM_metric->betaU[2]};
+  const double nU[4] = {metric_adm->lapseinv,
+                       -metric_adm->lapseinv*metric_adm->betaU[0],
+                       -metric_adm->lapseinv*metric_adm->betaU[1],
+                       -metric_adm->lapseinv*metric_adm->betaU[2]};
 
   const double g_o_ZBsq = W/(Z+harm_aux->Bsq);
   const double QdB_o_Z  = harm_aux->QdotB / Z;
@@ -32,11 +32,11 @@ bool ghl_finalize_Noble(
                    g_o_ZBsq * (Qtcon[2] + QdB_o_Z*prims->BU[1]),
                    g_o_ZBsq * (Qtcon[3] + QdB_o_Z*prims->BU[2])};
 
-  const bool speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
+  const bool speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
 
   prims->rho = harm_aux->D * gtmp;
   if(speed_limited)
-    prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);
+    prims->rho = cons_undens->rho/(metric_adm->lapse*prims->u0);
 
   /*  Assumes hybrid EOS */
   prims->press = ghl_pressure_rho0_w(eos, prims->rho, w);
@@ -50,7 +50,7 @@ bool ghl_finalize_Noble(
 bool ghl_finalize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const harm_aux_vars_struct *restrict harm_aux,
@@ -58,10 +58,10 @@ bool ghl_finalize_Noble_entropy(
       const double W,
       ghl_primitive_quantities *restrict prims) {
 
-  const double nU[4] = {ADM_metric->lapseinv,                                                         
-                       -ADM_metric->lapseinv*ADM_metric->betaU[0],                                    
-                       -ADM_metric->lapseinv*ADM_metric->betaU[1],                                    
-                       -ADM_metric->lapseinv*ADM_metric->betaU[2]};                                   
+  const double nU[4] = {metric_adm->lapseinv,                                                         
+                       -metric_adm->lapseinv*metric_adm->betaU[0],                                    
+                       -metric_adm->lapseinv*metric_adm->betaU[1],                                    
+                       -metric_adm->lapseinv*metric_adm->betaU[2]};                                   
 
   const double g_o_ZBsq = W/(Z+harm_aux->Bsq);
   const double QdB_o_Z  = harm_aux->QdotB / Z;
@@ -77,10 +77,10 @@ bool ghl_finalize_Noble_entropy(
 
   //Additional tabulated code here
 
-  const bool speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
+  const bool speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
 
   if(speed_limited)
-    prims->rho = cons_undens->rho/(ADM_metric->lapse*prims->u0);                                      
+    prims->rho = cons_undens->rho/(metric_adm->lapse*prims->u0);                                      
 
   /*  Assumes hybrid EOS */
   const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, prims->rho)];
