@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
       for(int i=0; i<dirlength; i++) {
         const int index = indexf(dirlength,i,j,k);
 
-        ghl_metric_quantities ADM_metric;
+        ghl_metric_quantities metric_adm;
         ghl_randomize_metric(
               &lapse[index], &betax[index], &betay[index], &betaz[index],
               &gxx[index], &gxy[index], &gxz[index],
@@ -71,23 +71,23 @@ int main(int argc, char **argv) {
               lapse[index], betax[index], betay[index], betaz[index],
               gxx[index], gxy[index], gxz[index],
               gyy[index], gyz[index], gzz[index],
-              &ADM_metric);
+              &metric_adm);
 
         ghl_ADM_aux_quantities metric_aux;
-        ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+        ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
-        const double phi = (1.0/12.0) * log(ADM_metric.detgamma);
+        const double phi = (1.0/12.0) * log(metric_adm.detgamma);
 
         const double psi2 = exp(2.0*phi);
         const double psi4 = SQR(psi2);
 
         psi[index]    = sqrt(psi2);
-        gtupxx[index] = psi4*ADM_metric.gammaUU[0][0];
-        gtupxy[index] = psi4*ADM_metric.gammaUU[0][1];
-        gtupxz[index] = psi4*ADM_metric.gammaUU[0][2];
-        gtupyy[index] = psi4*ADM_metric.gammaUU[1][1];
-        gtupyz[index] = psi4*ADM_metric.gammaUU[1][2];
-        gtupzz[index] = psi4*ADM_metric.gammaUU[2][2];
+        gtupxx[index] = psi4*metric_adm.gammaUU[0][0];
+        gtupxy[index] = psi4*metric_adm.gammaUU[0][1];
+        gtupxz[index] = psi4*metric_adm.gammaUU[0][2];
+        gtupyy[index] = psi4*metric_adm.gammaUU[1][1];
+        gtupyz[index] = psi4*metric_adm.gammaUU[1][2];
+        gtupzz[index] = psi4*metric_adm.gammaUU[2][2];
 
         const int x = abs(i-gauss_center)*dX[0];
         const int y = abs(j-gauss_center)*dX[1];

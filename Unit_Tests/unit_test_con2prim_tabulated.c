@@ -85,15 +85,15 @@ void generate_test_data(
       }
 
       // Set metric quantities to Minkowski
-      ghl_metric_quantities ADM_metric;
+      ghl_metric_quantities metric_adm;
       ghl_initialize_metric(1,
                         0, 0, 0,
                         1, 0, 0,
                         1, 0, 1,
-                        &ADM_metric);
+                        &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
       srand(0);
       for(int i=0;i<npoints;i++) {
@@ -144,7 +144,7 @@ void generate_test_data(
                                 Bx, By, Bz,
                                 xent, xye, xtemp,
                                 &prims_orig);
-          ghl_error_codes_t error = ghl_limit_v_and_compute_u0(params, &ADM_metric, &prims_orig, &diagnostics.speed_limited);
+          ghl_error_codes_t error = ghl_limit_v_and_compute_u0(params, &metric_adm, &prims_orig, &diagnostics.speed_limited);
           ghl_abort_if_error(error);
 
           // Set prim guesses
@@ -159,14 +159,14 @@ void generate_test_data(
           // Compute conserved variables and Tmunu
           ghl_conservative_quantities cons;
           __attribute__((unused)) ghl_stress_energy dummy;
-          ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims_orig, &cons, &dummy);
+          ghl_compute_conservs_and_Tmunu(&metric_adm, &metric_aux, &prims_orig, &cons, &dummy);
 
           // Undensitize the conserved variables
           ghl_conservative_quantities cons_undens;
-          ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
+          ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
 
           // Now perform the con2prim
-          if( ghl_con2prim_tabulated_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
+          if( ghl_con2prim_tabulated_multi_method(params, eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics) )
             ghl_error("Con2Prim failed\n");
 
           prims.vU[0] = prims.vU[0]/prims.u0;
@@ -208,15 +208,15 @@ void run_unit_test(
       ghl_error("Problem reading input data files (%d != %d)\n", n1, n2);
 
     const int npoints = n1;
-    ghl_metric_quantities ADM_metric;
+    ghl_metric_quantities metric_adm;
     ghl_initialize_metric(1,
                       0, 0, 0,
                       1, 0, 0,
                       1, 0, 1,
-                      &ADM_metric);
+                      &metric_adm);
 
     ghl_ADM_aux_quantities metric_aux;
-    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
     for(int i=0;i<npoints;i++) {
       for(int j=0;j<npoints;j++) {
@@ -232,14 +232,14 @@ void run_unit_test(
         // Compute conserved variables and Tmunu
         ghl_conservative_quantities cons;
         __attribute__((unused)) ghl_stress_energy dummy;
-        ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &dummy);
+        ghl_compute_conservs_and_Tmunu(&metric_adm, &metric_aux, &prims, &cons, &dummy);
 
         // Undensitize the conserved variables
         ghl_conservative_quantities cons_undens;
-        ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
+        ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
 
         // Now perform the con2prim
-        if( ghl_con2prim_tabulated_multi_method(params, eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics) )
+        if( ghl_con2prim_tabulated_multi_method(params, eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics) )
           ghl_error("Con2Prim failed\n");
 
         prims.vU[0] = prims.vU[0]/prims.u0;

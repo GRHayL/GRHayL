@@ -4,7 +4,7 @@
 
 void init_metric_from_string( const char *lapse_shift_string_in,
                               const char *metric_string_in,
-                              ghl_metric_quantities *ADM_metric ) {
+                              ghl_metric_quantities *metric_adm ) {
 
   char *token;
   char lapse_shift_string[strlen(lapse_shift_string_in)+1];
@@ -28,7 +28,7 @@ void init_metric_from_string( const char *lapse_shift_string_in,
 
   ghl_initialize_metric(lapse, betaU0, betaU1, betaU2,
                         gxx, gxy, gxz, gyy, gyz, gzz,
-                        ADM_metric);
+                        metric_adm);
 }
 
 void init_conservs_from_string( const char *conservs_string_in,
@@ -125,17 +125,17 @@ int main(int argc, char **argv) {
   const char *conservs_string    = "5.132187e-10 -2.636040e-05 2.826288e-06 2.442308e-06 1.950662e-06 -1.984531e+06 3.046700e-10";
   const char *B_string           = "-2.447595e-03 8.354818e-03 -4.903698e-03";
 
-  ghl_metric_quantities ADM_metric;
-  init_metric_from_string(lapse_shift_string, metric_string, &ADM_metric);
+  ghl_metric_quantities metric_adm;
+  init_metric_from_string(lapse_shift_string, metric_string, &metric_adm);
 
   ghl_ADM_aux_quantities metric_aux;
-  ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+  ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
   ghl_conservative_quantities cons;
   init_conservs_from_string(conservs_string, &cons);
 
   ghl_conservative_quantities cons_undens;
-  ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
+  ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
 
   ghl_primitive_quantities prims;
   init_Bfield_from_string(B_string, &prims);
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
   ghl_con2prim_diagnostics diagnostics;
   ghl_initialize_diagnostics(&diagnostics);
 
-  int check = ghl_con2prim_tabulated_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+  int check = ghl_con2prim_tabulated_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
 
   ghl_debug_print_cons(&cons);
 

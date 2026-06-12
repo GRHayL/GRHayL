@@ -238,7 +238,7 @@ void ghl_func_2D(
 ghl_error_codes_t ghl_initialize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
@@ -248,7 +248,7 @@ ghl_error_codes_t ghl_initialize_Noble(
 ghl_error_codes_t ghl_initialize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
@@ -259,7 +259,7 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
 bool ghl_finalize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const harm_aux_vars_struct *restrict harm_aux,
@@ -270,7 +270,7 @@ bool ghl_finalize_Noble(
 bool ghl_finalize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const harm_aux_vars_struct *restrict harm_aux,

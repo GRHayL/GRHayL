@@ -14,7 +14,7 @@
  *
  * @param[in] params pointer to ghl_parameters struct
  *
- * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric data
+ * @param[in] metric_adm pointer to ghl_metric_quantities struct with ADM metric data
  *
  * @param[in,out] utU spatial utilde variable \f$ \tilde{u}^i \f$
  *
@@ -24,13 +24,13 @@
  */
 bool ghl_limit_utilde_and_compute_v(
       const ghl_parameters *restrict params,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       double utU[3],
       ghl_primitive_quantities *restrict prims) {
 
   bool speed_limited = false;
   //Velocity limiter:
-  double ut2 = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU);
+  double ut2 = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU);
   double au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
 
   // *** Limit velocity
@@ -45,9 +45,9 @@ bool ghl_limit_utilde_and_compute_v(
   } //Finished limiting velocity
 
   // Calculate v^i and u^0 from \tilde{u}^i
-  prims->u0 = (au0m1+1.0)*ADM_metric->lapseinv;
-  prims->vU[0] = utU[0]/prims->u0 - ADM_metric->betaU[0];
-  prims->vU[1] = utU[1]/prims->u0 - ADM_metric->betaU[1];
-  prims->vU[2] = utU[2]/prims->u0 - ADM_metric->betaU[2];
+  prims->u0 = (au0m1+1.0)*metric_adm->lapseinv;
+  prims->vU[0] = utU[0]/prims->u0 - metric_adm->betaU[0];
+  prims->vU[1] = utU[1]/prims->u0 - metric_adm->betaU[1];
+  prims->vU[2] = utU[2]/prims->u0 - metric_adm->betaU[2];
   return speed_limited;
 }

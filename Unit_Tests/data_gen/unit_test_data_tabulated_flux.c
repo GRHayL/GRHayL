@@ -133,13 +133,13 @@ int main(int argc, char **argv) {
           &vx_l[index], &vy_l[index], &vz_l[index],
           &Bx_l[index], &By_l[index], &Bz_l[index]);
 
-    ghl_metric_quantities ADM_metric;
+    ghl_metric_quantities metric_adm;
     ghl_initialize_metric(
           lapse[index],
           betax[index], betay[index], betaz[index],
           gxx[index], gxy[index], gxz[index],
           gyy[index], gyz[index], gzz[index],
-          &ADM_metric);
+          &metric_adm);
 
     ghl_primitive_quantities prims_r, prims_l;
     ghl_initialize_primitives(
@@ -166,23 +166,23 @@ int main(int argc, char **argv) {
 
     bool speed_limit;
     error = ghl_limit_v_and_compute_u0(
-          &params, &ADM_metric, &prims_r, &speed_limit);
+          &params, &metric_adm, &prims_r, &speed_limit);
     ghl_abort_if_error(error);
     error = ghl_limit_v_and_compute_u0(
-          &params, &ADM_metric, &prims_l, &speed_limit);
+          &params, &metric_adm, &prims_l, &speed_limit);
     ghl_abort_if_error(error);
 
     ghl_calculate_characteristic_speed_dirn0(
           &prims_r, &prims_l, &eos,
-          &ADM_metric, &cxmin[index], &cxmax[index]);
+          &metric_adm, &cxmin[index], &cxmax[index]);
 
     ghl_calculate_characteristic_speed_dirn1(
           &prims_r, &prims_l, &eos,
-          &ADM_metric, &cymin[index], &cymax[index]);
+          &metric_adm, &cymin[index], &cymax[index]);
 
     ghl_calculate_characteristic_speed_dirn2(
           &prims_r, &prims_l, &eos,
-          &ADM_metric, &czmin[index], &czmax[index]);
+          &metric_adm, &czmin[index], &czmax[index]);
   }
 
   char filename[100];
@@ -311,13 +311,13 @@ int main(int argc, char **argv) {
         }
 
         for(int index=0; index<arraylength; index++) {
-          ghl_metric_quantities ADM_metric;
+          ghl_metric_quantities metric_adm;
           ghl_initialize_metric(
                 lapse[index],
                 betax[index], betay[index], betaz[index],
                 gxx[index], gxy[index], gxz[index],
                 gyy[index], gyz[index], gzz[index],
-                &ADM_metric);
+                &metric_adm);
 
           ghl_primitive_quantities prims_r, prims_l;
           ghl_initialize_primitives(
@@ -344,16 +344,16 @@ int main(int argc, char **argv) {
 
           bool speed_limit;
           error = ghl_limit_v_and_compute_u0(
-                &params, &ADM_metric, &prims_r, &speed_limit);
+                &params, &metric_adm, &prims_r, &speed_limit);
           ghl_abort_if_error(error);
           error = ghl_limit_v_and_compute_u0(
-                &params, &ADM_metric, &prims_l, &speed_limit);
+                &params, &metric_adm, &prims_l, &speed_limit);
           ghl_abort_if_error(error);
 
           ghl_conservative_quantities cons_fluxes;
           calculate_HLLE_fluxes(
                 &prims_r, &prims_l, &eos,
-                &ADM_metric, cmin[index], cmax[index],
+                &metric_adm, cmin[index], cmax[index],
                 &cons_fluxes);
 
           rho_star_flux[index] = cons_fluxes.rho;

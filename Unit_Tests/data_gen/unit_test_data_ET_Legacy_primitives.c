@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
 
       ghl_con2prim_diagnostics diagnostics;
       ghl_initialize_diagnostics(&diagnostics);
-      ghl_metric_quantities ADM_metric;
+      ghl_metric_quantities metric_adm;
       ghl_primitive_quantities prims;
       ghl_conservative_quantities cons;
       ghl_stress_energy Tmunu;
@@ -125,10 +125,10 @@ int main(int argc, char **argv) {
             lapse[index], betax[index], betay[index], betaz[index],
             gxx[index], gxy[index], gxz[index],
             gyy[index], gyz[index], gzz[index],
-            &ADM_metric);
+            &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
       ghl_initialize_primitives(
             rho_b[index], press[index], poison,
@@ -142,12 +142,12 @@ int main(int argc, char **argv) {
       prims.eps = eps_cold + (prims.press-P_cold)/(eos.Gamma_th-1.0)/prims.rho;
 
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
-            &params, &ADM_metric, &prims, &diagnostics.speed_limited);
+            &params, &metric_adm, &prims, &diagnostics.speed_limited);
       ghl_abort_if_error(error);
 
       // Compute conservatives based on these primitives
       ghl_compute_conservs_and_Tmunu(
-            &ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+            &metric_adm, &metric_aux, &prims, &cons, &Tmunu);
 
       ghl_return_primitives(
             &prims, &rho_b[index], &press[index], &dummy,
@@ -171,14 +171,14 @@ int main(int argc, char **argv) {
   //   Subcase a) \tau fix 1 & 2, don't fix S
   //   Subcase b) Don't fix \tau, S fix 2
 
-  ghl_metric_quantities ADM_metric;
+  ghl_metric_quantities metric_adm;
   ghl_initialize_metric(
         1.0, 0.0, 0.0, 0.0,
         1.0, 0.0, 0.0,
         1.0, 0.0, 1.0,
-        &ADM_metric);
+        &metric_adm);
   ghl_ADM_aux_quantities metric_aux;
-  ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+  ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
   // Ouput data to files and generate perturbed data
   FILE* input = fopen_with_check("ET_Legacy_primitives_input.bin", "wb");

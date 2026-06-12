@@ -64,7 +64,7 @@ compute_rho_P_eps_W_energy(
 ghl_error_codes_t ghl_hybrid_Palenzuela1D_energy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
@@ -74,7 +74,7 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D_energy(
   return ghl_hybrid_Palenzuela1D(compute_rho_P_eps_W_energy,
                                  params,
                                  eos,
-                                 ADM_metric,
+                                 metric_adm,
                                  cons_undens,
                                  prims,
                                  diagnostics);

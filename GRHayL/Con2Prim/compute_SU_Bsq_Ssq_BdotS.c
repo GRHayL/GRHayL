@@ -17,7 +17,7 @@
  * Returns    : Nothing.
  */
 void ghl_compute_SU_Bsq_Ssq_BdotS(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
       double *restrict SU,
@@ -27,7 +27,7 @@ void ghl_compute_SU_Bsq_Ssq_BdotS(
 
   // Step 1: Compute S^{2} = gamma^{ij}S_{i}S_{j}
   double SD[3] = {cons_undens->SD[0], cons_undens->SD[1], cons_undens->SD[2]};
-  double S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
+  double S_squared = ghl_compute_vec2_from_vec3D(metric_adm->gammaUU, SD);
 
   // Step 2: Enforce ceiling on S^{2} (Eq. A5 of [1])
   // Step 2.1: Compute maximum allowed value for S^{2}
@@ -39,16 +39,16 @@ void ghl_compute_SU_Bsq_Ssq_BdotS(
       SD[i] *= rescale_factor;
 
     // Step 2.3: Recompute S^{2}
-    S_squared = ghl_compute_vec2_from_vec3D(ADM_metric->gammaUU, SD);
+    S_squared = ghl_compute_vec2_from_vec3D(metric_adm->gammaUU, SD);
   }
   *Ssq = S_squared;
 
   // Step 3: Compute B^{2} = gamma_{ij}B^{i}B^{j}
-  *Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
+  *Bsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, prims->BU);
 
   // Step 4: Compute B.S = B^{i}S_{i}
   *BdotS = prims->BU[0]*SD[0] + prims->BU[1]*SD[1] + prims->BU[2]*SD[2];
 
   // Step 5: Compute S^{i}
-  ghl_raise_lower_vector_3D(ADM_metric->gammaUU, SD, SU);
+  ghl_raise_lower_vector_3D(metric_adm->gammaUU, SD, SU);
 }

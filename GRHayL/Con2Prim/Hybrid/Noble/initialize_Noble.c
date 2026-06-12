@@ -3,7 +3,7 @@
 ghl_error_codes_t ghl_initialize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
@@ -14,13 +14,13 @@ ghl_error_codes_t ghl_initialize_Noble(
   harm_aux->max_iterations = params->con2prim_max_iterations;
   harm_aux->solver_tolerance = params->con2prim_solver_tolerance;
 
-  harm_aux->Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
+  harm_aux->Bsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, prims->BU);
 
-  const double uu = - cons_undens->tau*ADM_metric->lapse
-                    - ADM_metric->lapse*cons_undens->rho
-                    + ADM_metric->betaU[0]*cons_undens->SD[0]
-                    + ADM_metric->betaU[1]*cons_undens->SD[1]
-                    + ADM_metric->betaU[2]*cons_undens->SD[2];
+  const double uu = - cons_undens->tau*metric_adm->lapse
+                    - metric_adm->lapse*cons_undens->rho
+                    + metric_adm->betaU[0]*cons_undens->SD[0]
+                    + metric_adm->betaU[1]*cons_undens->SD[1]
+                    + metric_adm->betaU[2]*cons_undens->SD[2];
 
   const double QD[4] = {uu,
                         cons_undens->SD[0],
@@ -40,17 +40,17 @@ ghl_error_codes_t ghl_initialize_Noble(
   harm_aux->QdotBsq = harm_aux->QdotB*harm_aux->QdotB;
 
   // n_{\mu}Q^{\mu} = -alpha Q^{0}, since n_{\mu} = (-alpha,0,0,0)
-  harm_aux->Qdotn = -ADM_metric->lapse*harm_aux->QU[0];
+  harm_aux->Qdotn = -metric_adm->lapse*harm_aux->QU[0];
 
   harm_aux->Qtsq = Qsq + harm_aux->Qdotn*harm_aux->Qdotn;
 
   harm_aux->D    = cons_undens->rho;
 
   /* calculate Z from last timestep and use for guess */
-  const double utU_guess[3] = {prims->u0*(prims->vU[0] + ADM_metric->betaU[0]),
-                               prims->u0*(prims->vU[1] + ADM_metric->betaU[1]),
-                               prims->u0*(prims->vU[2] + ADM_metric->betaU[2])};
-  const double tmp_u = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU_guess);
+  const double utU_guess[3] = {prims->u0*(prims->vU[0] + metric_adm->betaU[0]),
+                               prims->u0*(prims->vU[1] + metric_adm->betaU[1]),
+                               prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
+  const double tmp_u = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
   double utsq = tmp_u/(1.0-tmp_u);
 
@@ -88,7 +88,7 @@ ghl_error_codes_t ghl_initialize_Noble(
 ghl_error_codes_t ghl_initialize_Noble_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
@@ -100,15 +100,15 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
   harm_aux->max_iterations = params->con2prim_max_iterations;
   harm_aux->solver_tolerance = params->con2prim_solver_tolerance;
 
-  harm_aux->Bsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, prims->BU);
+  harm_aux->Bsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, prims->BU);
 
   harm_aux->W_times_S = cons_undens->entropy;
 
-  const double uu = - cons_undens->tau*ADM_metric->lapse
-                    - ADM_metric->lapse*cons_undens->rho
-                    + ADM_metric->betaU[0]*cons_undens->SD[0]
-                    + ADM_metric->betaU[1]*cons_undens->SD[1]
-                    + ADM_metric->betaU[2]*cons_undens->SD[2];
+  const double uu = - cons_undens->tau*metric_adm->lapse
+                    - metric_adm->lapse*cons_undens->rho
+                    + metric_adm->betaU[0]*cons_undens->SD[0]
+                    + metric_adm->betaU[1]*cons_undens->SD[1]
+                    + metric_adm->betaU[2]*cons_undens->SD[2];
 
   const double QD[4] = {uu,
                         cons_undens->SD[0],
@@ -128,17 +128,17 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
   harm_aux->QdotBsq = harm_aux->QdotB*harm_aux->QdotB;
 
   // n_{\mu}Q^{\mu} = -alpha Q^{0}, since n_{\mu} = (-alpha,0,0,0)
-  harm_aux->Qdotn = -ADM_metric->lapse*harm_aux->QU[0];
+  harm_aux->Qdotn = -metric_adm->lapse*harm_aux->QU[0];
 
   harm_aux->Qtsq = Qsq + harm_aux->Qdotn*harm_aux->Qdotn;
 
   harm_aux->D    = cons_undens->rho;
 
   /* calculate Z from last timestep and use for guess */
-  const double utU_guess[3] = {prims->u0*(prims->vU[0] + ADM_metric->betaU[0]),
-                               prims->u0*(prims->vU[1] + ADM_metric->betaU[1]),
-                               prims->u0*(prims->vU[2] + ADM_metric->betaU[2])};
-  const double tmp_u = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, utU_guess);
+  const double utU_guess[3] = {prims->u0*(prims->vU[0] + metric_adm->betaU[0]),
+                               prims->u0*(prims->vU[1] + metric_adm->betaU[1]),
+                               prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
+  const double tmp_u = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
   double utsq = tmp_u/(1.0-tmp_u);
 

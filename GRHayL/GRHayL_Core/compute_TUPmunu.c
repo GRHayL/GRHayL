@@ -15,7 +15,7 @@
  * \f]
  * and \f$ b \f$ is computed using @ref ghl_compute_smallb_and_b2.
  *
- * @param[in] ADM_metric pointer to a ghl_metric_quantities struct containing the ADM metric
+ * @param[in] metric_adm pointer to a ghl_metric_quantities struct containing the ADM metric
  *
  * @param[in] metric_aux pointer to a ghl_ADM_aux_quantities struct
  *
@@ -27,7 +27,7 @@
  *
  */
 void ghl_compute_TUPmunu(
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_primitive_quantities *restrict prims,
       ghl_stress_energy *restrict Tmunu) {
@@ -50,7 +50,7 @@ void ghl_compute_TUPmunu(
   /***************************************************************/
   // Compute b^{\mu} and b^2
   double smallb[4], smallb2;
-  ghl_compute_smallb_and_b2(ADM_metric, prims, uD, smallb, &smallb2);
+  ghl_compute_smallb_and_b2(metric_adm, prims, uD, smallb, &smallb2);
 
   // Precompute some useful quantities, for later:
   const double rho0_h_plus_b2 = (prims->rho*h_enthalpy + smallb2);

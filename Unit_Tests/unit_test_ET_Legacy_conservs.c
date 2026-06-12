@@ -236,7 +236,7 @@ int main(int argc, char **argv) {
     // Define the various GRHayL structs for the unit tests
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    ghl_metric_quantities ADM_metric;
+    ghl_metric_quantities metric_adm;
     ghl_primitive_quantities prims;
     ghl_conservative_quantities cons;
     ghl_stress_energy Tmunu;
@@ -245,10 +245,10 @@ int main(int argc, char **argv) {
                       betax[index], betay[index], betaz[index],
                       gxx[index], gxy[index], gxz[index],
                       gyy[index], gyz[index], gzz[index],
-                      &ADM_metric);
+                      &metric_adm);
 
     ghl_ADM_aux_quantities metric_aux;
-    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
     // B's get rescaled to match IGM's definition of B
     ghl_initialize_primitives(rho_b[index], press[index], eps[index],
@@ -262,9 +262,9 @@ int main(int argc, char **argv) {
                              poison, poison, &cons);
 
     // Enforce limits on primitive variables and recompute conservatives.
-    int error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &ADM_metric, &prims, &diagnostics.speed_limited);
+    int error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric_adm, &prims, &diagnostics.speed_limited);
     ghl_abort_if_error(error);
-    ghl_compute_conservs_and_Tmunu(&ADM_metric, &metric_aux, &prims, &cons, &Tmunu);
+    ghl_compute_conservs_and_Tmunu(&metric_adm, &metric_aux, &prims, &cons, &Tmunu);
 
     // Here, we call the ghl_return_* functions and then repack the struct from that data. These functions are too
     // small to need an individual test, and they are primarily used by Con2Prim anyways.

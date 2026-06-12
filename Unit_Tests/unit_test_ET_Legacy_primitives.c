@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
     // Define the various GRHayL structs for the unit tests
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
-    ghl_metric_quantities ADM_metric;
+    ghl_metric_quantities metric_adm;
     ghl_primitive_quantities prims;
     ghl_conservative_quantities cons, cons_undens;
 
@@ -168,10 +168,10 @@ int main(int argc, char **argv) {
                       betax[index], betay[index], betaz[index],
                       gxx[index], gxy[index], gxz[index],
                       gyy[index], gyz[index], gzz[index],
-                      &ADM_metric);
+                      &metric_adm);
 
     ghl_ADM_aux_quantities metric_aux;
-    ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+    ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
     // B's get rescaled to match IGM's definition of B
     ghl_initialize_primitives(
@@ -192,18 +192,18 @@ int main(int argc, char **argv) {
       if(eos.eos_type == ghl_eos_hybrid) { //Hybrid-only
         if(index == arraylength-2 || index == arraylength-1) {
           params.psi6threshold = 1e-1; // Artificially triggering fix
-          ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &prims, &cons, &diagnostics);
+          ghl_apply_conservative_limits(&params, &eos, &metric_adm, &prims, &cons, &diagnostics);
           params.psi6threshold = Psi6threshold;
         } else {
-          ghl_apply_conservative_limits(&params, &eos, &ADM_metric, &prims, &cons, &diagnostics);
+          ghl_apply_conservative_limits(&params, &eos, &metric_adm, &prims, &cons, &diagnostics);
         }
       }
 
       // The Con2Prim routines require the undensitized variables, but IGM evolves the densitized variables.
-      ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
+      ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
 
       /************* Conservative-to-primitive recovery ************/
-      check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+      check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
 
       if(check)
         printf("Con2Prim failed!");

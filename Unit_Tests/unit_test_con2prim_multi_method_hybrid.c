@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
       // Define the various GRHayL structs for the unit tests
       ghl_con2prim_diagnostics diagnostics;
       ghl_initialize_diagnostics(&diagnostics);
-      ghl_metric_quantities ADM_metric;
+      ghl_metric_quantities metric_adm;
       ghl_primitive_quantities prims;
       ghl_conservative_quantities cons, cons_undens;
 
@@ -197,10 +197,10 @@ int main(int argc, char **argv) {
             betax[i], betay[i], betaz[i],
             gxx[i], gxy[i], gxz[i],
             gyy[i], gyz[i], gzz[i],
-            &ADM_metric);
+            &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
-      ghl_compute_ADM_auxiliaries(&ADM_metric, &metric_aux);
+      ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
       ghl_initialize_primitives(
             poison, poison, poison,
@@ -214,10 +214,10 @@ int main(int argc, char **argv) {
             S_x[i], S_y[i], S_z[i],
             ent_star[i], poison, &cons);
 
-      ghl_undensitize_conservatives(ADM_metric.sqrt_detgamma, &cons, &cons_undens);
-      ghl_guess_primitives(&eos, &ADM_metric, &cons, &prims);
+      ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
+      ghl_guess_primitives(&eos, &metric_adm, &cons, &prims);
 
-      const int check = ghl_con2prim_hybrid_select_method(methods[method], &params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
+      const int check = ghl_con2prim_hybrid_select_method(methods[method], &params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
       // This complicated mess is because failure mode 6 in Noble is very unpredictable. As such, whether it fails
       // or not can change by simply using a different compiler. The following bypasses errors associated with
       // different return values and doesn't skip the comparison of returned values for non-zero values.

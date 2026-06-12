@@ -11,7 +11,7 @@
 ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prim,

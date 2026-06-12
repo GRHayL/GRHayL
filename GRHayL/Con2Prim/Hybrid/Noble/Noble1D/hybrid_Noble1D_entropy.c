@@ -37,7 +37,7 @@
  *
  * @param[in] eos pointer to ghl_eos_parameters struct
  *
- * @param[in] ADM_metric pointer to ghl_metric_quantities struct with ADM metric
+ * @param[in] metric_adm pointer to ghl_metric_quantities struct with ADM metric
  *
  * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  *
@@ -57,7 +57,7 @@
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
@@ -69,7 +69,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
 
   double rho0, Z_last;
   ghl_error_codes_t error = ghl_initialize_Noble_entropy(
-        params, eos, ADM_metric, metric_aux, cons_undens,
+        params, eos, metric_adm, metric_aux, cons_undens,
         prims, &harm_aux, &rho0, &Z_last);
   if(error)
     return error;
@@ -137,7 +137,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
     return ghl_error_neg_rho;
   }
 
-  diagnostics->speed_limited = ghl_finalize_Noble_entropy(params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, W, prims);
+  diagnostics->speed_limited = ghl_finalize_Noble_entropy(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, W, prims);
   if(prims->press <= 0.0) {
     return ghl_error_neg_pressure;
   }
