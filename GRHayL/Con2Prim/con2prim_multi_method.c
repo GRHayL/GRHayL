@@ -112,7 +112,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
     // FIXME(Leo): once the comment above is addressed, this if statement can
     //             be removed, as the backup routines will be set at startup
     //             and we won't need to check if they are None anymore.
-    if(params->backup_routine[n] != ghl_con2prim_id_None) {
+    if(params->backup_routine[n] == ghl_con2prim_id_None) {
       break;
     }
     // Backup triggered
@@ -167,7 +167,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
     // FIXME(Leo): once the comment above is addressed, this if statement can
     //             be removed, as the backup routines will be set at startup
     //             and we won't need to check if they are None anymore.
-    if(params->backup_routine[n] != ghl_con2prim_id_None) {
+    if(params->backup_routine[n] == ghl_con2prim_id_None) {
       break;
     }
     // Backup triggered
