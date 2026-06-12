@@ -92,7 +92,7 @@ static void enforce_bounds_rho_Ye_h(
 static ghl_error_codes_t tabulated_initialize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
@@ -100,17 +100,17 @@ static ghl_error_codes_t tabulated_initialize_Noble(
       double *restrict Z_ptr) {
 
   ghl_error_codes_t error = ghl_initialize_Noble(
-        params, eos, ADM_metric, metric_aux, cons_undens, prims, harm_aux, Z_ptr);
+        params, eos, metric_adm, metric_aux, cons_undens, prims, harm_aux, Z_ptr);
   if(error) {
     return error;
   }
 
   const double v_valenciaU[3] = {
-    ADM_metric->lapseinv * (prims->vU[0] + ADM_metric->betaU[0]),
-    ADM_metric->lapseinv * (prims->vU[1] + ADM_metric->betaU[1]),
-    ADM_metric->lapseinv * (prims->vU[2] + ADM_metric->betaU[2]),
+    metric_adm->lapseinv * (prims->vU[0] + metric_adm->betaU[0]),
+    metric_adm->lapseinv * (prims->vU[1] + metric_adm->betaU[1]),
+    metric_adm->lapseinv * (prims->vU[2] + metric_adm->betaU[2]),
   };
-  double vsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, v_valenciaU);
+  double vsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, v_valenciaU);
   vsq = fmin(fmax(vsq, 0.0), 1.0 - 1e-15);
   double Wsq = 1.0 / (1.0 - vsq);
   double W = sqrt(Wsq);
@@ -207,7 +207,7 @@ static void tabulated_func_2D(
 static ghl_error_codes_t tabulated_finalize_Noble(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const harm_aux_vars_struct *restrict harm_aux,
@@ -222,10 +222,10 @@ static ghl_error_codes_t tabulated_finalize_Noble(
   const double w = Z * (1.0 - vsq);
 
   const double nU[4] = {
-    ADM_metric->lapseinv,
-   -ADM_metric->lapseinv * ADM_metric->betaU[0],
-   -ADM_metric->lapseinv * ADM_metric->betaU[1],
-   -ADM_metric->lapseinv * ADM_metric->betaU[2],
+    metric_adm->lapseinv,
+   -metric_adm->lapseinv * metric_adm->betaU[0],
+   -metric_adm->lapseinv * metric_adm->betaU[1],
+   -metric_adm->lapseinv * metric_adm->betaU[2],
   };
 
   const double g_o_ZBsq = W / (Z + harm_aux->Bsq);
@@ -242,11 +242,11 @@ static ghl_error_codes_t tabulated_finalize_Noble(
     g_o_ZBsq * (Qtcon[3] + QdB_o_Z * prims->BU[2]),
   };
 
-  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, ADM_metric, utU, prims);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
 
   if(diagnostics->speed_limited) {
     // Recompute W so its compatible with new velocity
-    W = ADM_metric->lapse * prims->u0;
+    W = metric_adm->lapse * prims->u0;
   }
 
   prims->rho = harm_aux->D / W;
@@ -276,7 +276,7 @@ static ghl_error_codes_t tabulated_finalize_Noble(
 ghl_error_codes_t ghl_tabulated_Noble2D(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict ADM_metric,
+      const ghl_metric_quantities *restrict metric_adm,
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
@@ -286,17 +286,17 @@ ghl_error_codes_t ghl_tabulated_Noble2D(
   harm_aux_vars_struct harm_aux;
 
   ghl_error_codes_t error = tabulated_initialize_Noble(
-        params, eos, ADM_metric, metric_aux, cons_undens, prims, &harm_aux, &gnr_out[0]);
+        params, eos, metric_adm, metric_aux, cons_undens, prims, &harm_aux, &gnr_out[0]);
   if(error) {
     return error;
   }
 
   const double v_valenciaU[3] = {
-    ADM_metric->lapseinv * (prims->vU[0] + ADM_metric->betaU[0]),
-    ADM_metric->lapseinv * (prims->vU[1] + ADM_metric->betaU[1]),
-    ADM_metric->lapseinv * (prims->vU[2] + ADM_metric->betaU[2]),
+    metric_adm->lapseinv * (prims->vU[0] + metric_adm->betaU[0]),
+    metric_adm->lapseinv * (prims->vU[1] + metric_adm->betaU[1]),
+    metric_adm->lapseinv * (prims->vU[2] + metric_adm->betaU[2]),
   };
-  double vsq = ghl_compute_vec2_from_vec3D(ADM_metric->gammaDD, v_valenciaU);
+  double vsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, v_valenciaU);
   gnr_out[1] = fmin(fmax(vsq, 0.0), 1.0);
 
   const ghl_error_codes_t retval = ghl_general_newton_raphson(
@@ -319,7 +319,7 @@ ghl_error_codes_t ghl_tabulated_Noble2D(
   }
 
   error = tabulated_finalize_Noble(
-        params, eos, ADM_metric, metric_aux, cons_undens, &harm_aux, Z, vsq, prims, diagnostics);
+        params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, vsq, prims, diagnostics);
   if(error) {
     return error;
   }
