@@ -45,7 +45,8 @@ int main(int argc, char **argv) {
 
   ghl_error_codes_t error = ghl_success;
 
-  int backup_routine[3] = {None,None,None};
+  const ghl_con2prim_id_t None = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t backup_routine[3] = {None, None, None};
   bool evolve_entropy = false;
   bool evolve_temperature = false;
   bool calc_prims_guess = true;

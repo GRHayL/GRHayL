@@ -70,22 +70,22 @@ typedef enum {
 } ghl_error_codes_t;
 
 typedef enum {
-  None = -1,
-  Noble2D,
-  Noble1D,
-  Noble1D_entropy,
-  Noble1D_entropy2,
-  Font1D,
-  Palenzuela1D,
-  Palenzuela1D_entropy,
-  Newman1D,
-  Newman1D_entropy
-} ghl_con2prim_method_t;
+  ghl_con2prim_id_None = -1,
+  ghl_con2prim_id_Noble2D,
+  ghl_con2prim_id_Noble1D,
+  ghl_con2prim_id_Noble1D_entropy,
+  ghl_con2prim_id_Noble1D_entropy2,
+  ghl_con2prim_id_Font1D,
+  ghl_con2prim_id_Palenzuela1D,
+  ghl_con2prim_id_Palenzuela1D_entropy,
+  ghl_con2prim_id_Newman1D,
+  ghl_con2prim_id_Newman1D_entropy,
+} ghl_con2prim_id_t;
 
 typedef enum {
   ghl_eos_simple,
   ghl_eos_hybrid,
-  ghl_eos_tabulated
+  ghl_eos_tabulated,
 } ghl_eos_t;
 
 typedef enum {
@@ -100,7 +100,7 @@ typedef enum {
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_parameters
 */
 typedef struct ghl_parameters {
-  ghl_con2prim_method_t main_routine, backup_routine[3];
+  ghl_con2prim_id_t main_routine, backup_routine[3];
   bool evolve_entropy;
   bool evolve_temp;
   bool calc_prim_guess;
@@ -291,7 +291,7 @@ typedef struct ghl_eos_parameters {
 
 } ghl_eos_parameters;
 
-const char *ghl_get_con2prim_routine_name(const ghl_con2prim_method_t key);
+const char *ghl_get_con2prim_routine_name(const ghl_con2prim_id_t key);
 
 void ghl_initialize_eos_functions(
     const ghl_eos_t eos_type);
@@ -368,8 +368,8 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
 
 //---- Basic struct packing/unpacking functions ----
 void ghl_initialize_params(
-      const ghl_con2prim_method_t main_routine,
-      const ghl_con2prim_method_t backup_routine[3],
+      const ghl_con2prim_id_t main_routine,
+      const ghl_con2prim_id_t backup_routine[3],
       const bool evolve_entropy,
       const bool evolve_temp,
       const bool calc_prim_guess,

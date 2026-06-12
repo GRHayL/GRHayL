@@ -1,27 +1,11 @@
 #include <string.h>
 #include "ghl_unit_tests.h"
 
-const char *get_routine_string(const ghl_con2prim_method_t key) {
-  switch(key) {
-    case Palenzuela1D:
-      return "Palenzuela1D";
-    case Palenzuela1D_entropy:
-      return "Palenzuela1D_entropy";
-    case Newman1D:
-      return "Newman1D";
-    case Newman1D_entropy:
-      return "Newman1D_entropy";
-    default:
-      ghl_error("Unsupported key %d\n", key);
-      return NULL;
-  }
-}
-
 void generate_test_data(
     const ghl_parameters *restrict params,
     const ghl_eos_parameters *restrict eos ) {
 
-  const char *routine = get_routine_string(params->main_routine);
+  const char *routine = ghl_get_con2prim_routine_name(params->main_routine);
   ghl_info("Beginning data generation for %s\n", routine);
 
   const int npoints = 32; // must be > 1
@@ -204,7 +188,7 @@ void run_unit_test(
     const ghl_parameters *restrict params,
     const ghl_eos_parameters *restrict eos ) {
 
-  const char *routine = get_routine_string(params->main_routine);
+  const char *routine = ghl_get_con2prim_routine_name(params->main_routine);
   ghl_info("Beginning unit test for %s\n", routine);
 
   for(int vars_key=0;vars_key<=1;vars_key++) {
@@ -301,8 +285,9 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const ghl_con2prim_method_t main_routine       = None;
-  const ghl_con2prim_method_t backup_routines[3] = {None,None,None};
+  const ghl_con2prim_id_t None               = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t main_routine       = None;
+  const ghl_con2prim_id_t backup_routines[3] = {None,None,None};
   const bool calc_prims_guess                = true;
   const bool evolve_entropy                  = false;
   const bool evolve_temperature              = true;
@@ -347,24 +332,24 @@ int main(int argc, char **argv) {
   eos.root_finding_precision=1e-10;
 
   if( test_key ) {
-    params.main_routine = Palenzuela1D;     run_unit_test(&params, &eos);
-    params.main_routine = Newman1D_entropy; run_unit_test(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Palenzuela1D;     run_unit_test(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Newman1D_entropy; run_unit_test(&params, &eos);
     // The routines below fail for high temperatures/magnetizations,
     // respectively. We use the standard Palenzuela routine as a backup.
     // params.backup_routine[0] = Palenzuela1D;
-    params.backup_routine[0] = Palenzuela1D;
-    params.main_routine = Newman1D;             run_unit_test(&params, &eos);
-    params.main_routine = Palenzuela1D_entropy; run_unit_test(&params, &eos);
+    params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
+    params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
     ghl_info("All tests succeeded\n");
   }
   else {
-    params.main_routine = Palenzuela1D;     generate_test_data(&params, &eos);
-    params.main_routine = Newman1D_entropy; generate_test_data(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Palenzuela1D;     generate_test_data(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Newman1D_entropy; generate_test_data(&params, &eos);
     // The routines below fail for high temperatures/magnetizations,
     // respectively. We use the standard Palenzuela routine as a backup.
-    params.backup_routine[0] = Palenzuela1D;
-    params.main_routine = Newman1D;             generate_test_data(&params, &eos);
-    params.main_routine = Palenzuela1D_entropy; generate_test_data(&params, &eos);
+    params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
+    params.main_routine = ghl_con2prim_id_Newman1D;             generate_test_data(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; generate_test_data(&params, &eos);
   }
 
   ghl_tabulated_free_memory(&eos);

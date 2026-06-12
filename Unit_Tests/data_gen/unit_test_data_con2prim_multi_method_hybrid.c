@@ -25,22 +25,22 @@ int main(int argc, char **argv) {
   int methods[num_routines];
   bool uses_entropy[num_routines];
 
-  methods[0] = Font1D;
+  methods[0] = ghl_con2prim_id_Font1D;
   uses_entropy[0] = false;
-  methods[1] = Palenzuela1D;
+  methods[1] = ghl_con2prim_id_Palenzuela1D;
   uses_entropy[1] = false;
-  methods[2] = Noble1D_entropy;
+  methods[2] = ghl_con2prim_id_Noble1D_entropy;
   uses_entropy[2] = true;
-  methods[3] = Palenzuela1D_entropy;
+  methods[3] = ghl_con2prim_id_Palenzuela1D_entropy;
   uses_entropy[3] = true;
-  methods[4] = Noble1D;
+  methods[4] = ghl_con2prim_id_Noble1D;
   uses_entropy[4] = false;
   //methods[5] = Noble1D_entropy2;
   //uses_entropy[5] = true;
 
   // To ensure the behavior remains the same for functions after Con2Prim,
   // we explicitly set a routine to always be last.
-  methods[num_routines-1] = Noble2D;
+  methods[num_routines-1] = ghl_con2prim_id_Noble2D;
   uses_entropy[num_routines-1] = false;
 
   double dummy2, dummy3;
@@ -48,8 +48,9 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int main_routine = None;
-  const int backup_routine[3] = {None,None,None};
+  const ghl_con2prim_id_t None = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t main_routine = None;
+  const ghl_con2prim_id_t backup_routine[3] = {None, None, None};
   const bool evolve_entropy = true;
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;

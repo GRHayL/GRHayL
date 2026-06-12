@@ -12,7 +12,8 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int backup_routine[3] = {Noble2D,Noble2D,Noble2D};
+  const ghl_con2prim_id_t Noble2D = ghl_con2prim_id_Noble2D;
+  const ghl_con2prim_id_t backup_routine[3] = {Noble2D, Noble2D, Noble2D};
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
@@ -132,26 +133,26 @@ int main(int argc, char **argv) {
 
     if(i==0) {
       // This just gets coverage for the success branches
-      params.main_routine = Font1D;
+      params.main_routine = ghl_con2prim_id_Font1D;
       int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != 0)
         ghl_error("Font1D has returned a different failure code: old %d and new %d", 0, check);
-      params.main_routine = Noble2D;
+      params.main_routine = ghl_con2prim_id_Noble2D;
       for (int j=0; j<3; j++) {
-        params.backup_routine[2-j] = Font1D;
+        params.backup_routine[2-j] = ghl_con2prim_id_Font1D;
         int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
         if(check != 0)
           ghl_error("Font1D has returned a different failure code: old %d and new %d", 0, check);
-        params.backup_routine[2-j] = Noble2D;
+        params.backup_routine[2-j] = ghl_con2prim_id_Noble2D;
       }
       params.calc_prim_guess = true;
     } else if (i==3) {
       // Here, we can check the Font Fix failure condition (there's just one return value)
-      params.backup_routine[0] = Font1D;
+      params.backup_routine[0] = ghl_con2prim_id_Font1D;
       int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &ADM_metric, &metric_aux, &cons_undens, &prims, &diagnostics);
       if(check != ghl_error_c2p_max_iter)
         ghl_error("Font1D has returned a different failure code: old %d and new %d", 1, check);
-      params.backup_routine[0] = None;
+      params.backup_routine[0] = ghl_con2prim_id_None;
     }
   }
   return 0;

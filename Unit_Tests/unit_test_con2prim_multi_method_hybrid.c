@@ -6,19 +6,19 @@ int main(int argc, char **argv) {
   int methods[num_methods];
   bool uses_entropy[num_methods];
 
-  methods[0] = Font1D;
+  methods[0] = ghl_con2prim_id_Font1D;
   uses_entropy[0] = false;
-  methods[1] = Palenzuela1D;
+  methods[1] = ghl_con2prim_id_Palenzuela1D;
   uses_entropy[1] = false;
-  methods[2] = Noble1D_entropy;
+  methods[2] = ghl_con2prim_id_Noble1D_entropy;
   uses_entropy[2] = true;
-  methods[3] = Palenzuela1D_entropy;
+  methods[3] = ghl_con2prim_id_Palenzuela1D_entropy;
   uses_entropy[3] = true;
-  methods[4] = Noble1D;
+  methods[4] = ghl_con2prim_id_Noble1D;
   uses_entropy[4] = false;
   //methods[5] = Noble1D_entropy2;
   //uses_entropy[5] = true;
-  methods[num_methods-1] = Noble2D;
+  methods[num_methods-1] = ghl_con2prim_id_Noble2D;
   uses_entropy[num_methods-1] = false;
 
   FILE* infile = fopen_with_check("metric_Bfield_initial_data.bin","rb");
@@ -32,8 +32,9 @@ int main(int argc, char **argv) {
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.
-  const int main_routine = None;
-  const int backup_routine[3] = {None,None,None};
+  const ghl_con2prim_id_t None = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t main_routine = None;
+  const ghl_con2prim_id_t backup_routine[3] = {None, None, None};
   const bool evolve_entropy = false;
   const bool evolve_temperature = false;
   const bool calc_prims_guess = true;
@@ -223,7 +224,9 @@ int main(int argc, char **argv) {
       // or not can change by simply using a different compiler. The following bypasses errors associated with
       // different return values and doesn't skip the comparison of returned values for non-zero values.
       if(check != c2p_check[i]) {
-        if(methods[method] != Noble1D && methods[method] != Noble1D_entropy && methods[method] != Noble2D) {
+        if(methods[method] != ghl_con2prim_id_Noble1D &&
+           methods[method] != ghl_con2prim_id_Noble1D_entropy &&
+           methods[method] != ghl_con2prim_id_Noble2D) {
           ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
         } else if(check != ghl_error_neg_pressure && c2p_check[i] != 6) {
           ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
@@ -252,7 +255,7 @@ int main(int argc, char **argv) {
 
       double pressure_cutoff = 1.0e-30; // Set defaults and change them for Noble2D
       double eps_cutoff = 1.0e-30;
-      if(params.main_routine != Font1D) {
+      if(params.main_routine != ghl_con2prim_id_Font1D) {
         // Some routines have problems with losing accuracy in pressure, especially with small values
         // We relax the requirements because simply using a different compiler can cause the
         // test to fail for some inputs.
