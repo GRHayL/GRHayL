@@ -1,8 +1,33 @@
 /* custom.css */
 .highlighted-code {
   background-color: #D8BFD8;
+  color: #3b173b;
   padding: 0px 1px;
   border-radius: 4px;
   font-family: monospace;
   font-weight: bold;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light-mode) {
+    --primary-color: #82cfff;
+    --primary-dark-color: #b9e4ff;
+    --primary-light-color: #4da7df;
+  }
+
+  html:not(.light-mode) .highlighted-code {
+    background-color: #4a3450;
+    color: #f1ddf5;
+  }
+}
+
+html.dark-mode {
+  --primary-color: #82cfff;
+  --primary-dark-color: #b9e4ff;
+  --primary-light-color: #4da7df;
+}
+
+html.dark-mode .highlighted-code {
+  background-color: #4a3450;
+  color: #f1ddf5;
 }

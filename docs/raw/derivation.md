@@ -5,8 +5,8 @@ Re-derived and written by Samuel Cupp
 \section toc Table of Contents
 1. @ref intro
 2. @ref tmunu
-   1. @ref tmunu_term_1 "Solving for \\(F^2\\)"
-   2. @ref tmunu_term_2 "Solving for \\(F^{a i} F^b{}_{i}\\)"
+   1. @ref tmunu_term_1 "Solving for \\(F_{\\alpha\\beta}F^{\\alpha\\beta}\\)"
+   2. @ref tmunu_term_2 "Solving for \\(F^{\\mu\\lambda}F^\\nu{}_{\\lambda}\\)"
    3. @ref tmunu_final
 3. @ref cons_eq
    1. @ref dens_eq
@@ -119,7 +119,7 @@ to the [Appendix](@ref levi_civita) for more details about these identities.
 ---
 
 \anchor tmunu_term_1
-<h2>Solving for \\(F^2\\)</h2>
+<h2>Solving for \\(F_{\\alpha\\beta}F^{\\alpha\\beta}\\)</h2>
 
 Now, we simply want to find an expression for \f$ T_{EM}^{\mu\nu} \f$ in terms
 of \f$ \xi \f$, \f$ E \f$, and \f$ B \f$. Let's first consider the relatively
@@ -199,7 +199,7 @@ Therefore,
 ---
 
 \anchor tmunu_term_2
-<h2>Solving for \\(F^{a i} F^b{}_{i}\\)</h2>
+<h2>Solving for \\(F^{\\mu\\lambda}F^\\nu{}_{\\lambda}\\)</h2>
 
 In this section, we tackle the term \f$ F^{\mu\lambda}F^{\nu}_{\hphantom{\nu}\lambda} \f$
 in the energy-momentum tensor.
