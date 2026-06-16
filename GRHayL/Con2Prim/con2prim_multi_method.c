@@ -58,6 +58,9 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
   return ghl_error_used_disabled_hdf5;
 #else
   switch(c2p_key) {
+    // Noble routine (see https://arxiv.org/pdf/astro-ph/0512420.pdf)
+    case ghl_con2prim_id_Noble2D:
+      return ghl_tabulated_Noble2D(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     // Palenzuela1D routine (see https://arxiv.org/pdf/1712.07538.pdf)
     case ghl_con2prim_id_Palenzuela1D:
       return ghl_tabulated_Palenzuela1D_energy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
