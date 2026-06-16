@@ -4,9 +4,6 @@
 #include <float.h>
 #include <limits.h>
 
-static int imin(int a, int b) { return a < b ? a : b; }
-static int imax(int a, int b) { return a > b ? a : b; }
-
 static int get_min_max(
       const int nx,
       const int ny,
@@ -26,8 +23,8 @@ static int get_min_max(
   const double dx = x_arr[1] - x_arr[0];
   const double dy = y_arr[1] - y_arr[0];
 
-  const int ix = imin(imax((x - x_arr[0]) / dx, 0), nx - 2);
-  const int iy = imin(imax((y - y_arr[0]) / dy, 0), ny - 2);
+  const int ix = ghl_iclamp((x - x_arr[0]) / dx, 0, nx - 2);
+  const int iy = ghl_iclamp((y - y_arr[0]) / dy, 0, ny - 2);
 
   const double tx = (x - x_arr[ix]) / dx;
   const double ty = (y - y_arr[iy]) / dy;
@@ -40,13 +37,13 @@ static int get_min_max(
   double min = +DBL_MAX;
   double max = -DBL_MAX;
 
-#define IDX(ix, iy, iz) ((ix) + nx*((iy) + ny*(iz)))
-
   for(int iz = 0; iz < nz; iz++) {
-    const int i00 = IDX(ix + 0, iy + 0, iz);
-    const int i01 = IDX(ix + 0, iy + 1, iz);
-    const int i10 = IDX(ix + 1, iy + 0, iz);
-    const int i11 = IDX(ix + 1, iy + 1, iz);
+#define GHL_IDX3D(ix, iy, iz) ((ix) + nx*((iy) + ny*(iz)))
+    const int i00 = GHL_IDX3D(ix + 0, iy + 0, iz);
+    const int i01 = GHL_IDX3D(ix + 0, iy + 1, iz);
+    const int i10 = GHL_IDX3D(ix + 1, iy + 0, iz);
+    const int i11 = GHL_IDX3D(ix + 1, iy + 1, iz);
+#undef GHL_IDX3D
 
     const double f = w00 * f_arr[i00] +
                      w10 * f_arr[i10] +
@@ -74,8 +71,8 @@ static void enforce_bounds_rho_Ye_h(
   double *h
 ) {
 
-  *rho = fmin(fmax(*rho, eos->rho_min), eos->rho_max);
-  *Y_e = fmin(fmax(*Y_e, eos->Y_e_min), eos->Y_e_max);
+  *rho = ghl_clamp(*rho, eos->rho_min, eos->rho_max);
+  *Y_e = ghl_clamp(*Y_e, eos->Y_e_min, eos->Y_e_max);
   
   double logh_min = 0.0;
   double logh_max = 0.0;
@@ -86,7 +83,7 @@ static void enforce_bounds_rho_Ye_h(
     ghl_error("Could not enforce table bounds\n");
   }
 
-  *h = fmin(fmax(*h, exp(logh_min)), exp(logh_max));
+  *h = ghl_clamp(*h, exp(logh_min), exp(logh_max));
 }
 
 static ghl_error_codes_t tabulated_initialize_Noble(
@@ -111,7 +108,7 @@ static ghl_error_codes_t tabulated_initialize_Noble(
     metric_adm->lapseinv * (prims->vU[2] + metric_adm->betaU[2]),
   };
   double vsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, v_valenciaU);
-  vsq = fmin(fmax(vsq, 0.0), 1.0 - 1e-15);
+  vsq = ghl_clamp(vsq, 0.0, 1.0 - 1e-15);
   double Wsq = 1.0 / (1.0 - vsq);
   double W = sqrt(Wsq);
 
@@ -297,7 +294,7 @@ ghl_error_codes_t ghl_tabulated_Noble2D(
     metric_adm->lapseinv * (prims->vU[2] + metric_adm->betaU[2]),
   };
   double vsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, v_valenciaU);
-  gnr_out[1] = fmin(fmax(vsq, 0.0), 1.0);
+  gnr_out[1] = ghl_clamp(vsq, 0.0, 1.0 - 1e-15);
 
   const ghl_error_codes_t retval = ghl_general_newton_raphson(
         eos, &harm_aux, 2, 0.0, gnr_out, ghl_validate_2D, tabulated_func_2D);
