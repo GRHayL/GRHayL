@@ -34,7 +34,7 @@ compute_rho_W_from_x_and_conservatives(
 
   // Step 2: Compute W
   double Wminus2 = 1.0 - ( x*x*r + (2*x+s)*t*t )/ (x*x*(x+s)*(x+s));
-  Wminus2        = fmin(fmax(Wminus2, params->inv_sq_max_Lorentz_factor ), 1.0);
+  Wminus2        = ghl_clamp(Wminus2, params->inv_sq_max_Lorentz_factor, 1.0);
   const double W = pow(Wminus2, -0.5);
 
   // Step 3: Compute rho

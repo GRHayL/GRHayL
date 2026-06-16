@@ -48,7 +48,7 @@ static inline double compute_W_from_cons(
   const double x = 2.0+2.0*q-s;
 
   double Wminus2 = 1.0 - ( x*x*r + (2*x+s)*t*t ) / ( x*x*(x+s)*(x+s) );
-  Wminus2           = fmin(fmax(Wminus2, eos.inv_W_max_squared), 1.0);
+  Wminus2        = ghl_clamp(Wminus2, eos.inv_W_max_squared, 1.0);
   const double W = pow(Wminus2, -0.5);
   return W;
 
