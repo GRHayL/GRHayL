@@ -38,7 +38,7 @@ static int get_min_max(
   double max = -DBL_MAX;
 
   for(int iz = 0; iz < nz; iz++) {
-#define GHL_IDX3D(ix, iy, iz) ((ix) + nx*((iy) + ny*(iz)))
+#define GHL_IDX3D(ix, iy, iz) ((ix) + nx*((iz) + nz*(iy)))
     const int i00 = GHL_IDX3D(ix + 0, iy + 0, iz);
     const int i01 = GHL_IDX3D(ix + 0, iy + 1, iz);
     const int i10 = GHL_IDX3D(ix + 1, iy + 0, iz);
