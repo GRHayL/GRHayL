@@ -241,8 +241,12 @@ void run_unit_test(
         ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
 
         // Now perform the con2prim
-        if( ghl_con2prim_tabulated_multi_method(params, eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics) )
-          ghl_error("Con2Prim failed\n");
+        ghl_error_codes_t err = ghl_con2prim_tabulated_multi_method(params, eos,
+                                                                    &metric_adm, &metric_aux,
+                                                                    &cons_undens, &prims, &diagnostics);
+        if(err != ghl_success) {
+          ghl_error("Con2Prim failed for routine %s\n", routine);
+        }
         if(diagnostics.which_routine == params->main_routine) {
           main_routine_successes++;
         }
@@ -264,20 +268,16 @@ void run_unit_test(
         }
 
         // Validate results
-        ghl_pert_test_fail(prims_trusted.rho        , prims.rho        , prims_pert.rho        );
-        ghl_pert_test_fail(prims_trusted.Y_e        , prims.Y_e        , prims_pert.Y_e        );
-        ghl_pert_test_fail(prims_trusted.temperature, prims.temperature, prims_pert.temperature);
-        ghl_pert_test_fail(prims_trusted.press      , prims.press      , prims_pert.press      );
-        ghl_pert_test_fail(prims_trusted.eps        , prims.eps        , prims_pert.eps        );
-        ghl_pert_test_fail(prims_trusted.vU[0]      , prims.vU[0]      , prims_pert.vU[0]      );
-        ghl_pert_test_fail(prims_trusted.vU[1]      , prims.vU[1]      , prims_pert.vU[1]      );
-        ghl_pert_test_fail(prims_trusted.vU[2]      , prims.vU[2]      , prims_pert.vU[2]      );
+        ghl_pert_test_fail_primitives(params->evolve_entropy, eos, &prims_trusted, &prims, &prims_pert);
       }
     }
     total_main_routine_successes += main_routine_successes;
     if(params->backup_routine[0] == ghl_con2prim_id_None && backup_successes != 0) {
       ghl_error("%s unexpectedly reported a backup routine in test %s\n", routine, vars_string);
     }
+    const double total_points = npoints * npoints;
+    const double failure_rate = 100.0 * (1.0 - main_routine_successes / total_points);
+    ghl_info("    %s failure rate: %.2f%%\n", routine, failure_rate);
 
     fclose(fp_unpert);
     fclose(fp_pert);
