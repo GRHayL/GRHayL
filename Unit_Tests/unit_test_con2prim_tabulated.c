@@ -1,4 +1,4 @@
-#include <string.h>
+#include <assert.h>
 #include "ghl_unit_tests.h"
 
 void generate_test_data(
@@ -167,10 +167,6 @@ void generate_test_data(
           if( ghl_con2prim_tabulated_multi_method(params, eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics) )
             ghl_error("Con2Prim failed\n");
 
-          prims.vU[0] /= prims.u0;
-          prims.vU[1] /= prims.u0;
-          prims.vU[2] /= prims.u0;
-
           // Write input and output primitives
           if( !perturb ) {
             fwrite(&prims_orig, sizeof(ghl_primitive_quantities), 1, fp);
@@ -253,10 +249,6 @@ void run_unit_test(
         else {
           backup_successes++;
         }
-
-        prims.vU[0] /= prims.u0;
-        prims.vU[1] /= prims.u0;
-        prims.vU[2] /= prims.u0;
 
         // Read unperturbed and perturbed results from file
         ghl_primitive_quantities prims_trusted, prims_pert;
