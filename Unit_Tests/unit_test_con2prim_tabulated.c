@@ -259,8 +259,37 @@ void run_unit_test(
           ghl_error("Failed to read perturbed primitives from file\n");
         }
 
+#define CHECK_WITH_TOLS(q_)                                              \
+  if(ghl_pert_test_fail_with_tolerance(prims_trusted.q_,                 \
+                                             prims.q_,                   \
+                                             prims_pert.q_,              \
+                                             rtol, atol)) {              \
+    ghl_info("%s exceeds error tolerance: %.15e %.15e %.15e -> %e %e\n", \
+             #q_, prims_trusted.q_, prims_pert.q_, prims.q_,             \
+             fabs(prims_trusted.q_ - prims.q_),                          \
+             fabs(1.0 - prims.q_ / prims_trusted.q_));                   \
+    failed = true;                                                       \
+  }
         // Validate results
-        ghl_pert_test_fail_primitives(params->evolve_entropy, eos, &prims_trusted, &prims, &prims_pert);
+        double atol = 2e-7;
+        double rtol = 1e-7;
+        bool failed = false;
+        CHECK_WITH_TOLS(rho);
+        CHECK_WITH_TOLS(Y_e);
+        CHECK_WITH_TOLS(press);
+        CHECK_WITH_TOLS(vU[0]);
+        CHECK_WITH_TOLS(vU[1]);
+        CHECK_WITH_TOLS(vU[2]);
+
+        // Temperature and specific internal energy are more sensitive to errors
+        // due to table inversions, so we make the tolerances less strict.
+        atol = 1e-4;
+        rtol = 2e-4;
+        CHECK_WITH_TOLS(temperature);
+        CHECK_WITH_TOLS(eps);
+        if(failed) {
+          ghl_error("%s Con2Prim test for failed\n", routine);
+        }
       }
     }
     total_main_routine_successes += main_routine_successes;
@@ -279,6 +308,7 @@ void run_unit_test(
     ghl_error("%s was always replaced by a backup\n", routine);
   }
 }
+
 
 int main(int argc, char **argv) {
 
