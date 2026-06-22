@@ -242,7 +242,7 @@ static ghl_error_codes_t tabulated_finalize_Noble(
   diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
 
   if(diagnostics->speed_limited) {
-    // Recompute W so its compatible with new velocity
+    // Recompute W so it's compatible with new velocity
     W = metric_adm->lapse * prims->u0;
   }
 

@@ -288,7 +288,7 @@ void run_unit_test(
         CHECK_WITH_TOLS(temperature);
         CHECK_WITH_TOLS(eps);
         if(failed) {
-          ghl_error("%s Con2Prim test for failed\n", routine);
+          ghl_error("%s Con2Prim test failed\n", routine);
         }
       }
     }
@@ -374,8 +374,8 @@ int main(int argc, char **argv) {
   if( test_key ) {
     params.main_routine = ghl_con2prim_id_Palenzuela1D;         run_unit_test(&params, &eos);
     params.main_routine = ghl_con2prim_id_Newman1D_entropy;     run_unit_test(&params, &eos);
-    // The routines below fail for high temperatures/magnetizations,
-    // respectively. We use the standard Palenzuela routine as a backup.
+    // The routines below fail for high temperatures/magnetizations.
+    // We use the standard Palenzuela routine as a backup.
     params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
     params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
     params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
@@ -385,8 +385,8 @@ int main(int argc, char **argv) {
   else {
     params.main_routine = ghl_con2prim_id_Palenzuela1D;         generate_test_data(&params, &eos);
     params.main_routine = ghl_con2prim_id_Newman1D_entropy;     generate_test_data(&params, &eos);
-    // The routines below fail for high temperatures/magnetizations,
-    // respectively. We use the standard Palenzuela routine as a backup.
+    // The routines below fail for high temperatures/magnetizations.
+    // We use the standard Palenzuela routine as a backup.
     params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
     params.main_routine = ghl_con2prim_id_Newman1D;             generate_test_data(&params, &eos);
     params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; generate_test_data(&params, &eos);
