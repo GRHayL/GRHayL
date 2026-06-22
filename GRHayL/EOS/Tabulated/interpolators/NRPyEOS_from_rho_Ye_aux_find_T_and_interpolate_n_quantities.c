@@ -31,8 +31,8 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
   // using (rho,Ye,eps).
   double aux = tablevar_in;
 
-  if(tablevar_in_key == NRPyEOS_press_key) {
-    // If aux = P, then we need log(P).
+  if(tablevar_in_key == NRPyEOS_press_key || tablevar_in_key == NRPyEOS_enthalpy_key) {
+    // If aux = P or aux = h, then we need log(P) or log(h).
     aux = log(aux);
   }
   else if(tablevar_in_key == NRPyEOS_eps_key) {

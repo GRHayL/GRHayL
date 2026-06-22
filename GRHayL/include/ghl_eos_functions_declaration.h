@@ -203,6 +203,27 @@ ghl_error_codes_t (*ghl_tabulated_compute_P_T_from_S)(
       double *restrict P,
       double *restrict T);
 
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_S_T_from_h)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double h,
+      double *restrict P,
+      double *restrict eps,
+      double *restrict S,
+      double *restrict T);
+
+ghl_error_codes_t (*ghl_tabulated_compute_P_eps_dPdrho_dPdeps_T_from_h)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double h,
+      double *restrict P,
+      double *restrict eps,
+      double *restrict dPdrho,
+      double *restrict dPdeps,
+      double *restrict T);
+
 ghl_error_codes_t (*ghl_tabulated_compute_P_S_depsdT_T_from_eps)(
       const ghl_eos_parameters *restrict eos,
       const double rho,

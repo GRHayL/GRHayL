@@ -109,18 +109,16 @@ void GRHayLib_paramcheck() {
     if(T_max < 0 && T_max != -1)
       CCTK_ERROR("Parameter T_max must be non-negative.");
 
-    if( CCTK_EQUALS(con2prim_routine, "Noble2D")  ||
-        CCTK_EQUALS(con2prim_routine, "Noble1D") ||
-        CCTK_EQUALS(con2prim_routine, "Noble1D_entropy") ||
-        CCTK_EQUALS(con2prim_routine, "Font1D") ) {
+    if(CCTK_EQUALS(con2prim_routine, "Noble1D") ||
+       CCTK_EQUALS(con2prim_routine, "Noble1D_entropy") ||
+       CCTK_EQUALS(con2prim_routine, "Font1D")) {
       CCTK_VERROR("Selected parameter option for con2prim_routine %s is incompatible with\n"
                   "tabulated EOS. Please change the routine.", con2prim_routine);
     }
     for(int i=0; i<3; i++) {
-      if( CCTK_EQUALS(con2prim_backup_routines[i], "Noble2D")  ||
-          CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D") ||
-          CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy") ||
-          CCTK_EQUALS(con2prim_backup_routines[i], "Font1D") ) {
+      if(CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D") ||
+         CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy") ||
+         CCTK_EQUALS(con2prim_backup_routines[i], "Font1D")) {
          CCTK_VERROR("Selected parameter option for con2prim_backup_routines[%d] = %s is incompatible with\n"
                      "tabulated EOS. Please change the routine.", i, con2prim_backup_routines[0]);
       }

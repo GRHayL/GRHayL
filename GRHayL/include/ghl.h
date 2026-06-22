@@ -529,6 +529,14 @@ void ghl_compute_SU_Bsq_Ssq_BdotS(
 
 void ghl_abort_if_error(const ghl_error_codes_t error);
 
+int ghl_imin(int a, int b);
+
+int ghl_imax(int a, int b);
+
+int ghl_iclamp(int x, int x_min, int x_max);
+
+double ghl_clamp(double x, double x_min, double x_max);
+
 #ifdef __cplusplus
 }
 #endif

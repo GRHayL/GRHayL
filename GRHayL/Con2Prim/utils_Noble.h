@@ -16,11 +16,11 @@
  * iteration state so the internal residual and validation routines can share
  * a compact argument list.
  */
-typedef struct _harm_auxiliary_vars_ {
+typedef struct harm_auxiliary_vars {
   double QU[4];
   double Bsq, QdotBsq, QdotB;
   double Qtsq, Qdotn;
-  double D, W_times_S;
+  double D, W_times_S, Y_e, temp_guess;
   int n_iter;
   int max_iterations;
   double solver_tolerance;

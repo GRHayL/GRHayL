@@ -1,3 +1,3 @@
 SRCS =
 
-SUBDIRS = Newman1D Palenzuela1D
+SUBDIRS = Newman1D Noble2D Palenzuela1D

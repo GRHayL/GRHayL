@@ -1,4 +1,4 @@
-#include <string.h>
+#include <assert.h>
 #include "ghl_unit_tests.h"
 
 void generate_test_data(
@@ -148,13 +148,11 @@ void generate_test_data(
           ghl_abort_if_error(error);
 
           // Set prim guesses
-          ghl_primitive_quantities prims;
-          ghl_initialize_primitives(0.0/0.0, 0.0/0.0, 0.0/0.0,
-                                0.0/0.0, 0.0/0.0, 0.0/0.0,
-                                Bx, By, Bz,
-                                0.0/0.0, 0.0/0.0, 0.0/0.0,
-                                &prims);
+          ghl_primitive_quantities prims = { 0 };
           prims.u0 = prims_orig.u0;
+          prims.BU[0] = Bx;
+          prims.BU[1] = By;
+          prims.BU[2] = Bz;
 
           // Compute conserved variables and Tmunu
           ghl_conservative_quantities cons;
@@ -169,14 +167,11 @@ void generate_test_data(
           if( ghl_con2prim_tabulated_multi_method(params, eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics) )
             ghl_error("Con2Prim failed\n");
 
-          prims.vU[0] = prims.vU[0]/prims.u0;
-          prims.vU[1] = prims.vU[1]/prims.u0;
-          prims.vU[2] = prims.vU[2]/prims.u0;
-
           // Write input and output primitives
-          if( !perturb )
+          if( !perturb ) {
             fwrite(&prims_orig, sizeof(ghl_primitive_quantities), 1, fp);
-          fwrite(&prims     , sizeof(ghl_primitive_quantities), 1, fp);
+          }
+          fwrite(&prims, sizeof(ghl_primitive_quantities), 1, fp);
         }
       }
       fclose(fp);
@@ -191,6 +186,7 @@ void run_unit_test(
   const char *routine = ghl_get_con2prim_routine_name(params->main_routine);
   ghl_info("Beginning unit test for %s\n", routine);
 
+  int total_main_routine_successes = 0;
   for(int vars_key=0;vars_key<=1;vars_key++) {
 
     const char *vars_string = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
@@ -218,6 +214,8 @@ void run_unit_test(
     ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
+    int main_routine_successes = 0;
+    int backup_successes       = 0;
     for(int i=0;i<npoints;i++) {
       for(int j=0;j<npoints;j++) {
 
@@ -239,36 +237,78 @@ void run_unit_test(
         ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
 
         // Now perform the con2prim
-        if( ghl_con2prim_tabulated_multi_method(params, eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics) )
-          ghl_error("Con2Prim failed\n");
-
-        prims.vU[0] = prims.vU[0]/prims.u0;
-        prims.vU[1] = prims.vU[1]/prims.u0;
-        prims.vU[2] = prims.vU[2]/prims.u0;
+        ghl_error_codes_t err = ghl_con2prim_tabulated_multi_method(params, eos,
+                                                                    &metric_adm, &metric_aux,
+                                                                    &cons_undens, &prims, &diagnostics);
+        if(err != ghl_success) {
+          ghl_error("Con2Prim failed for routine %s\n", routine);
+        }
+        if(diagnostics.which_routine == params->main_routine) {
+          main_routine_successes++;
+        }
+        else {
+          backup_successes++;
+        }
 
         // Read unperturbed and perturbed results from file
         ghl_primitive_quantities prims_trusted, prims_pert;
-        if( fread(&prims_trusted, sizeof(ghl_primitive_quantities), 1, fp_unpert) != 1 )
+        if( fread(&prims_trusted, sizeof(ghl_primitive_quantities), 1, fp_unpert) != 1 ) {
           ghl_error("Failed to read trusted primitives from file\n");
-        if( fread(&prims_pert   , sizeof(ghl_primitive_quantities), 1, fp_pert) != 1 )
+        }
+        if( fread(&prims_pert   , sizeof(ghl_primitive_quantities), 1, fp_pert) != 1 ) {
           ghl_error("Failed to read perturbed primitives from file\n");
+        }
 
+#define CHECK_WITH_TOLS(q_)                                              \
+  if(ghl_pert_test_fail_with_tolerance(prims_trusted.q_,                 \
+                                             prims.q_,                   \
+                                             prims_pert.q_,              \
+                                             rtol, atol)) {              \
+    ghl_info("%s exceeds error tolerance: %.15e %.15e %.15e -> %e %e\n", \
+             #q_, prims_trusted.q_, prims_pert.q_, prims.q_,             \
+             fabs(prims_trusted.q_ - prims.q_),                          \
+             fabs(1.0 - prims.q_ / prims_trusted.q_));                   \
+    failed = true;                                                       \
+  }
         // Validate results
-        ghl_pert_test_fail(prims_trusted.rho        , prims.rho        , prims_pert.rho        );
-        ghl_pert_test_fail(prims_trusted.Y_e        , prims.Y_e        , prims_pert.Y_e        );
-        ghl_pert_test_fail(prims_trusted.temperature, prims.temperature, prims_pert.temperature);
-        ghl_pert_test_fail(prims_trusted.press      , prims.press      , prims_pert.press      );
-        ghl_pert_test_fail(prims_trusted.eps        , prims.eps        , prims_pert.eps        );
-        ghl_pert_test_fail(prims_trusted.vU[0]         , prims.vU[0]         , prims_pert.vU[0]);
-        ghl_pert_test_fail(prims_trusted.vU[1]         , prims.vU[1]         , prims_pert.vU[1]);
-        ghl_pert_test_fail(prims_trusted.vU[2]         , prims.vU[2]         , prims_pert.vU[2]);
+        double atol = 2e-7;
+        double rtol = 1e-7;
+        bool failed = false;
+        CHECK_WITH_TOLS(rho);
+        CHECK_WITH_TOLS(Y_e);
+        CHECK_WITH_TOLS(press);
+        CHECK_WITH_TOLS(vU[0]);
+        CHECK_WITH_TOLS(vU[1]);
+        CHECK_WITH_TOLS(vU[2]);
+
+        // Temperature and specific internal energy are more sensitive to errors
+        // due to table inversions, so we make the tolerances less strict.
+        atol = 1e-4;
+        rtol = 2e-4;
+        CHECK_WITH_TOLS(temperature);
+        CHECK_WITH_TOLS(eps);
+        if(failed) {
+          ghl_error("%s Con2Prim test failed\n", routine);
+        }
       }
     }
+    total_main_routine_successes += main_routine_successes;
+    if(params->backup_routine[0] == ghl_con2prim_id_None && backup_successes != 0) {
+      ghl_error("%s unexpectedly reported a backup routine in test %s\n", routine, vars_string);
+    }
+    const double total_points = npoints * npoints;
+    const double failure_rate = 100.0 * (1.0 - main_routine_successes / total_points);
+    ghl_info("    %s failure rate: %.2f%%\n", routine, failure_rate);
 
     fclose(fp_unpert);
     fclose(fp_pert);
   }
+
+  if(total_main_routine_successes == 0) {
+    ghl_error("%s was always replaced by a backup\n", routine);
+  }
 }
+
 
 int main(int argc, char **argv) {
 
@@ -332,23 +372,25 @@ int main(int argc, char **argv) {
   eos.root_finding_precision=1e-10;
 
   if( test_key ) {
-    params.main_routine = ghl_con2prim_id_Palenzuela1D;     run_unit_test(&params, &eos);
-    params.main_routine = ghl_con2prim_id_Newman1D_entropy; run_unit_test(&params, &eos);
-    // The routines below fail for high temperatures/magnetizations,
-    // respectively. We use the standard Palenzuela routine as a backup.
+    params.main_routine = ghl_con2prim_id_Palenzuela1D;         run_unit_test(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Newman1D_entropy;     run_unit_test(&params, &eos);
+    // The routines below fail for high temperatures/magnetizations.
+    // We use the standard Palenzuela routine as a backup.
     params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
     params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
     params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Noble2D;              run_unit_test(&params, &eos);
     ghl_info("All tests succeeded\n");
   }
   else {
-    params.main_routine = ghl_con2prim_id_Palenzuela1D;     generate_test_data(&params, &eos);
-    params.main_routine = ghl_con2prim_id_Newman1D_entropy; generate_test_data(&params, &eos);
-    // The routines below fail for high temperatures/magnetizations,
-    // respectively. We use the standard Palenzuela routine as a backup.
+    params.main_routine = ghl_con2prim_id_Palenzuela1D;         generate_test_data(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Newman1D_entropy;     generate_test_data(&params, &eos);
+    // The routines below fail for high temperatures/magnetizations.
+    // We use the standard Palenzuela routine as a backup.
     params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
     params.main_routine = ghl_con2prim_id_Newman1D;             generate_test_data(&params, &eos);
     params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; generate_test_data(&params, &eos);
+    params.main_routine = ghl_con2prim_id_Noble2D;              generate_test_data(&params, &eos);
   }
 
   ghl_tabulated_free_memory(&eos);

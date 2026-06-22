@@ -14,6 +14,7 @@ SUBDIRS = Atmosphere                      \
           Con2Prim/Hybrid/Palenzuela1D    \
           Con2Prim/Tabulated              \
           Con2Prim/Tabulated/Newman1D     \
+          Con2Prim/Tabulated/Noble2D      \
           Con2Prim/Tabulated/Palenzuela1D \
           EOS/Hybrid                      \
           EOS/Tabulated                   \
