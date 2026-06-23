@@ -58,6 +58,7 @@ void ghl_undensitize_conservatives(
       ghl_conservative_quantities *restrict cons_undens);
 
 void ghl_guess_primitives(
+      const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric_adm,
       const ghl_conservative_quantities *restrict cons,

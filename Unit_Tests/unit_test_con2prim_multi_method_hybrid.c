@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
             ent_star[i], poison, &cons);
 
       ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
-      ghl_guess_primitives(&eos, &metric_adm, &cons, &prims);
+      ghl_guess_primitives(&params, &eos, &metric_adm, &cons, &prims);
 
       const int check = ghl_con2prim_hybrid_select_method(methods[method], &params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
       // This complicated mess is because failure mode 6 in Noble is very unpredictable. As such, whether it fails

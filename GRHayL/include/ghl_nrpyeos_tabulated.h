@@ -169,6 +169,15 @@ ghl_error_codes_t NRPyEOS_P_and_T_from_rho_Ye_eps(
       double *restrict P,
       double *restrict T);
 
+ghl_error_codes_t NRPyEOS_P_S_and_T_from_rho_Ye_eps(
+      const ghl_eos_parameters *restrict eos_params,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict P,
+      double *restrict S,
+      double *restrict T);
+
 ghl_error_codes_t NRPyEOS_P_cs2_and_T_from_rho_Ye_eps(
       const ghl_eos_parameters *restrict eos_params,
       const double rho,

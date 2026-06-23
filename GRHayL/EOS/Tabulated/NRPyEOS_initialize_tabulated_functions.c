@@ -19,6 +19,7 @@ void NRPyEOS_initialize_tabulated_functions() {
   ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = &NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T;
   ghl_tabulated_compute_T_from_eps                     = &NRPyEOS_T_from_rho_Ye_eps;
   ghl_tabulated_compute_P_T_from_eps                   = &NRPyEOS_P_and_T_from_rho_Ye_eps;
+  ghl_tabulated_compute_P_S_T_from_eps                 = &NRPyEOS_P_S_and_T_from_rho_Ye_eps;
   ghl_tabulated_compute_P_T_from_S                     = &NRPyEOS_P_and_T_from_rho_Ye_S;
   ghl_tabulated_compute_P_eps_S_T_from_h               = &NRPyEOS_P_eps_S_and_T_from_rho_Ye_h;
   ghl_tabulated_compute_P_eps_dPdrho_dPdeps_T_from_h   = &NRPyEOS_P_eps_dPdrho_dPdeps_and_T_from_rho_Ye_h;

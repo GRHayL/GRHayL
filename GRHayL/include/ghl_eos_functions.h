@@ -170,6 +170,15 @@ extern ghl_error_codes_t (*ghl_tabulated_compute_P_T_from_eps)(
       double *restrict P,
       double *restrict T);
 
+extern ghl_error_codes_t (*ghl_tabulated_compute_P_S_T_from_eps)(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict P,
+      double *restrict S,
+      double *restrict T);
+
 extern ghl_error_codes_t (*ghl_tabulated_compute_P_cs2_T_from_eps)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
