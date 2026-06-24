@@ -49,8 +49,6 @@ static void ghl_guess_primitives_hybrid_simple(
   prims->vU[0]       = -metric_adm->betaU[0];
   prims->vU[1]       = -metric_adm->betaU[1];
   prims->vU[2]       = -metric_adm->betaU[2];
-  prims->Y_e         = cons_undens->Y_e/cons_undens->rho;
-  prims->temperature = eos->T_max;
 
   // Compute remaining primitives
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prims->press, &prims->eps);
@@ -93,7 +91,9 @@ static void ghl_guess_primitives_tabulated(
   prims->eps = - 1.0 + (1.0 - W * W) * x / W
              + W * (1.0 + q - s + t * t / (2.0 * x * x) + s / (2.0 * W * W));
 
-  // Enforce table bounds, then compute missing hydrodynamic quantities
+  // Enforce table bounds, then compute missing hydrodynamic quantities, using
+  // T = T_max as an initial guess.
+  prims->temperature = eos->T_max;
   ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &prims->rho, &prims->Y_e, &prims->eps);
   ghl_tabulated_compute_P_S_T_from_eps(eos, prims->rho, prims->Y_e, prims->eps,
                                        &prims->press, &prims->entropy, &prims->temperature);

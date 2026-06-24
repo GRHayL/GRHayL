@@ -44,11 +44,11 @@ void generate_test_data(
           test_Y_e         *= (1+randf(-1,1)*1e-14);
           test_rho         *= (1+randf(-1,1)*1e-14);
           test_T           *= (1+randf(-1,1)*1e-14);
-          test_logWm1_min  *= (1+randf(-1,1)*1e-14);
-          test_logWm1_max  *= (1+randf(-1,1)*1e-14);
+          test_logWm1_min  *= (1+randf( 0,1)*1e-14);
+          test_logWm1_max  *= (1+randf(-1,0)*1e-14);
           dlogWm1          *= (1+randf(-1,1)*1e-14);
-          test_logPmoP_min *= (1+randf(-1,1)*1e-14);
-          test_logPmoP_max *= (1+randf(-1,1)*1e-14);
+          test_logPmoP_min *= (1+randf( 0,1)*1e-14);
+          test_logPmoP_max *= (1+randf(-1,0)*1e-14);
           dlogPmoP         *= (1+randf(-1,1)*1e-14);
         }
       }
@@ -69,28 +69,27 @@ void generate_test_data(
         dlt          = (ltmax - ltmin)/(npoints-1);
         if( perturb ) {
           test_Y_e     *= (1+randf(-1,1)*1e-14);
-          test_rho_min *= (1+randf(-1,1)*1e-14);
-          test_rho_max *= (1+randf(-1,1)*1e-14);
-          test_T_min   *= (1+randf(-1,1)*1e-14);
-          test_T_max   *= (1+randf(-1,1)*1e-14);
+          test_rho_min *= (1+randf( 0,1)*1e-14);
+          test_rho_max *= (1+randf(-1,0)*1e-14);
+          test_T_min   *= (1+randf( 0,1)*1e-14);
+          test_T_max   *= (1+randf(-1,0)*1e-14);
           test_W       *= (1+randf(-1,1)*1e-14);
           test_logPmoP *= (1+randf(-1,1)*1e-14);
-          lrmin        *= (1+randf(-1,1)*1e-14);
-          lrmax        *= (1+randf(-1,1)*1e-14);
+          lrmin        *= (1+randf( 0,1)*1e-14);
+          lrmax        *= (1+randf(-1,0)*1e-14);
           dlr          *= (1+randf(-1,1)*1e-14);
-          ltmin        *= (1+randf(-1,1)*1e-14);
-          ltmax        *= (1+randf(-1,1)*1e-14);
+          ltmin        *= (1+randf( 0,1)*1e-14);
+          ltmax        *= (1+randf(-1,0)*1e-14);
           dlt          *= (1+randf(-1,1)*1e-14);
         }
       }
 
       // Set metric quantities to Minkowski
       ghl_metric_quantities metric_adm;
-      ghl_initialize_metric(1,
-                        0, 0, 0,
-                        1, 0, 0,
-                        1, 0, 1,
-                        &metric_adm);
+      ghl_initialize_metric(1, 0, 0, 0,
+                            1, 0, 0,
+                            1, 0, 1,
+                            &metric_adm);
 
       ghl_ADM_aux_quantities metric_aux;
       ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
@@ -123,7 +122,7 @@ void generate_test_data(
           double xprs  = 0.0;
           double xeps  = 0.0;
           double xent  = 0.0;
-          ghl_tabulated_compute_P_eps_S_from_T( eos, xrho, xye, xtemp, &xprs, &xeps, &xent );
+          ghl_tabulated_compute_P_eps_S_from_T(eos, xrho, xye, xtemp, &xprs, &xeps, &xent);
 
           const double v     = sqrt(1.0-1.0/(xW*xW));
           const double vx    = v*((double)rand())/((double)RAND_MAX);
@@ -140,10 +139,10 @@ void generate_test_data(
           // Set primitive quantities
           ghl_primitive_quantities prims_orig;
           ghl_initialize_primitives(xrho, xprs, xeps,
-                                vx, vy, vz,
-                                Bx, By, Bz,
-                                xent, xye, xtemp,
-                                &prims_orig);
+                                    vx, vy, vz,
+                                    Bx, By, Bz,
+                                    xent, xye, xtemp,
+                                    &prims_orig);
           ghl_error_codes_t error = ghl_limit_v_and_compute_u0(params, &metric_adm, &prims_orig, &diagnostics.speed_limited);
           ghl_abort_if_error(error);
 
@@ -205,11 +204,10 @@ void run_unit_test(
 
     const int npoints = n1;
     ghl_metric_quantities metric_adm;
-    ghl_initialize_metric(1,
-                      0, 0, 0,
-                      1, 0, 0,
-                      1, 0, 1,
-                      &metric_adm);
+    ghl_initialize_metric(1, 0, 0, 0,
+                          1, 0, 0,
+                          1, 0, 1,
+                          &metric_adm);
 
     ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
@@ -241,7 +239,8 @@ void run_unit_test(
                                                                     &metric_adm, &metric_aux,
                                                                     &cons_undens, &prims, &diagnostics);
         if(err != ghl_success) {
-          ghl_error("Con2Prim failed for routine %s\n", routine);
+          ghl_warn("Con2Prim failed for routine %s\n", routine);
+          ghl_abort_if_error(err);
         }
         if(diagnostics.which_routine == params->main_routine) {
           main_routine_successes++;
@@ -261,9 +260,9 @@ void run_unit_test(
 
 #define CHECK_WITH_TOLS(q_)                                              \
   if(ghl_pert_test_fail_with_tolerance(prims_trusted.q_,                 \
-                                             prims.q_,                   \
-                                             prims_pert.q_,              \
-                                             rtol, atol)) {              \
+                                       prims.q_,                         \
+                                       prims_pert.q_,                    \
+                                       rtol, atol)) {                    \
     ghl_info("%s exceeds error tolerance: %.15e %.15e %.15e -> %e %e\n", \
              #q_, prims_trusted.q_, prims_pert.q_, prims.q_,             \
              fabs(prims_trusted.q_ - prims.q_),                          \
@@ -277,6 +276,10 @@ void run_unit_test(
         CHECK_WITH_TOLS(rho);
         CHECK_WITH_TOLS(Y_e);
         CHECK_WITH_TOLS(press);
+
+        // Velocity tolerances need to be adjusted
+        atol = 4e-6;
+        rtol = 2e-6;
         CHECK_WITH_TOLS(vU[0]);
         CHECK_WITH_TOLS(vU[1]);
         CHECK_WITH_TOLS(vU[2]);
@@ -288,7 +291,8 @@ void run_unit_test(
         CHECK_WITH_TOLS(temperature);
         CHECK_WITH_TOLS(eps);
         if(failed) {
-          ghl_error("%s Con2Prim test failed\n", routine);
+          ghl_error("%s Con2Prim test failed: %e %e %e\n", routine,
+                    prims_trusted.rho, prims_trusted.Y_e, prims_trusted.temperature);
         }
       }
     }

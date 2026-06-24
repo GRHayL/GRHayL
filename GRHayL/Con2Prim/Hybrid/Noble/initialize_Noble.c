@@ -52,7 +52,7 @@ ghl_error_codes_t ghl_initialize_Noble(
                                prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
   const double tmp_u = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
-  double utsq = tmp_u/(1.0-tmp_u);
+  double utsq = tmp_u;
 
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
     utsq = fabs(utsq);
@@ -140,7 +140,7 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
                                prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
   const double tmp_u = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
-  double utsq = tmp_u/(1.0-tmp_u);
+  double utsq = tmp_u;
 
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
     utsq = fabs(utsq);
