@@ -44,11 +44,11 @@ static void ghl_guess_primitives_hybrid_simple(
   (void)params;
 
   // Use atmosphere as initial guess:
-  prims->rho         = cons_undens->rho;
-  prims->u0          = 1.0;
-  prims->vU[0]       = -metric_adm->betaU[0];
-  prims->vU[1]       = -metric_adm->betaU[1];
-  prims->vU[2]       = -metric_adm->betaU[2];
+  prims->rho   = cons_undens->rho;
+  prims->u0    = 1.0;
+  prims->vU[0] = -metric_adm->betaU[0];
+  prims->vU[1] = -metric_adm->betaU[1];
+  prims->vU[2] = -metric_adm->betaU[2];
 
   // Compute remaining primitives
   ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prims->press, &prims->eps);
@@ -83,9 +83,10 @@ static void ghl_guess_primitives_tabulated(
   Wminus2 = ghl_clamp(Wminus2, params->inv_sq_max_Lorentz_factor, 1.0);
   const double W = pow(Wminus2, -0.5);
 
-  // Compute rho and Y_e
+  // Compute rho Y_e, and u^0
   prims->rho = cons_undens->rho / W;
   prims->Y_e = cons_undens->Y_e / cons_undens->rho;
+  prims->u0  = W * metric_adm->lapseinv;
 
   // Compute eps, Eq. (43-44) of 1712.07538
   prims->eps = - 1.0 + (1.0 - W * W) * x / W
