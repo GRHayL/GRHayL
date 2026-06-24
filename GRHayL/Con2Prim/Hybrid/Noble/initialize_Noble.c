@@ -50,9 +50,7 @@ ghl_error_codes_t ghl_initialize_Noble(
   const double utU_guess[3] = {prims->u0*(prims->vU[0] + metric_adm->betaU[0]),
                                prims->u0*(prims->vU[1] + metric_adm->betaU[1]),
                                prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
-  const double tmp_u = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
-
-  double utsq = tmp_u;
+  double utsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
     utsq = fabs(utsq);
@@ -138,9 +136,7 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
   const double utU_guess[3] = {prims->u0*(prims->vU[0] + metric_adm->betaU[0]),
                                prims->u0*(prims->vU[1] + metric_adm->betaU[1]),
                                prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
-  const double tmp_u = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
-
-  double utsq = tmp_u;
+  double utsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
   if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
     utsq = fabs(utsq);
