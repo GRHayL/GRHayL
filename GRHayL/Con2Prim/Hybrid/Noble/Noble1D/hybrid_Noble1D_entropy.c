@@ -4,7 +4,7 @@
 ******************************* HARM License ***************************************
 ************************************************************************************
 
-    Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble, 
+    Copyright 2006 Charles F. Gammie, Jonathan C. McKinney, Scott C. Noble,
                    Gabor Toth, and Luca Del Zanna
 
                         HARM  version 1.0   (released May 1, 2006)

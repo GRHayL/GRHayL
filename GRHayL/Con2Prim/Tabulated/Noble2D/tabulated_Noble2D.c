@@ -73,7 +73,7 @@ static void enforce_bounds_rho_Ye_h(
 
   *rho = ghl_clamp(*rho, eos->rho_min, eos->rho_max);
   *Y_e = ghl_clamp(*Y_e, eos->Y_e_min, eos->Y_e_max);
-  
+
   double logh_min = 0.0;
   double logh_max = 0.0;
   int err = get_min_max(eos->N_rho, eos->N_Ye, eos->N_T,

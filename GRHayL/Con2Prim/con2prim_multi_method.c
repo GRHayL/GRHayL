@@ -21,7 +21,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
     case ghl_con2prim_id_Noble2D:
       return ghl_hybrid_Noble2D(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     case ghl_con2prim_id_Noble1D:
-      return ghl_hybrid_Noble1D(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics); 
+      return ghl_hybrid_Noble1D(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     // Font routine (see https://arxiv.org/abs/gr-qc/9811015)
     case ghl_con2prim_id_Font1D:
       return ghl_hybrid_Font1D(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
@@ -30,7 +30,7 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
       return ghl_hybrid_Palenzuela1D_energy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     // Entropy routines (see https://arxiv.org/abs/2208.14487)
     case ghl_con2prim_id_Noble1D_entropy:
-      return ghl_hybrid_Noble1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics); 
+      return ghl_hybrid_Noble1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     case ghl_con2prim_id_Palenzuela1D_entropy:
       return ghl_hybrid_Palenzuela1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     default:

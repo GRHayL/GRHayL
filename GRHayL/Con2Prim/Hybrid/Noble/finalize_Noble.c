@@ -58,18 +58,18 @@ bool ghl_finalize_Noble_entropy(
       const double W,
       ghl_primitive_quantities *restrict prims) {
 
-  const double nU[4] = {metric_adm->lapseinv,                                                         
-                       -metric_adm->lapseinv*metric_adm->betaU[0],                                    
-                       -metric_adm->lapseinv*metric_adm->betaU[1],                                    
-                       -metric_adm->lapseinv*metric_adm->betaU[2]};                                   
+  const double nU[4] = {metric_adm->lapseinv,
+                       -metric_adm->lapseinv*metric_adm->betaU[0],
+                       -metric_adm->lapseinv*metric_adm->betaU[1],
+                       -metric_adm->lapseinv*metric_adm->betaU[2]};
 
   const double g_o_ZBsq = W/(Z+harm_aux->Bsq);
   const double QdB_o_Z  = harm_aux->QdotB / Z;
 
-  const double Qtcon[4] = {harm_aux->QU[0] + nU[0] * harm_aux->Qdotn,                                 
-                           harm_aux->QU[1] + nU[1] * harm_aux->Qdotn,                                 
-                           harm_aux->QU[2] + nU[2] * harm_aux->Qdotn,                                 
-                           harm_aux->QU[3] + nU[3] * harm_aux->Qdotn};                                
+  const double Qtcon[4] = {harm_aux->QU[0] + nU[0] * harm_aux->Qdotn,
+                           harm_aux->QU[1] + nU[1] * harm_aux->Qdotn,
+                           harm_aux->QU[2] + nU[2] * harm_aux->Qdotn,
+                           harm_aux->QU[3] + nU[3] * harm_aux->Qdotn};
 
   double utU[3] = {g_o_ZBsq * (Qtcon[1] + QdB_o_Z*prims->BU[0]),
                    g_o_ZBsq * (Qtcon[2] + QdB_o_Z*prims->BU[1]),
@@ -80,14 +80,14 @@ bool ghl_finalize_Noble_entropy(
   const bool speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
 
   if(speed_limited)
-    prims->rho = cons_undens->rho/(metric_adm->lapse*prims->u0);                                      
+    prims->rho = cons_undens->rho/(metric_adm->lapse*prims->u0);
 
   /*  Assumes hybrid EOS */
   const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, prims->rho)];
   const double Gm1 = Gamma_ppoly - 1.0;
-  const double rho_Gm1 = pow(prims->rho,Gm1);                                                                         
+  const double rho_Gm1 = pow(prims->rho,Gm1);
   prims->press = cons_undens->entropy * rho_Gm1/W;
-  prims->eps = ghl_hybrid_compute_epsilon(eos, prims->rho, prims->press);                             
+  prims->eps = ghl_hybrid_compute_epsilon(eos, prims->rho, prims->press);
   prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
   /*  Assumes hybrid EOS */
 

@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
         P_interp = 0.0/0.0;
         ghl_error_codes_t error = ghl_tabulated_compute_P_from_T(&eos, rho, Y_e, T, &P_interp);
         ghl_abort_if_error(error);
-	
+
         if( relative_error(P, P_interp) > rtol && fabs(P - P_interp) > atol )
           ghl_error("tabulated_compute_P_from_T validation failed:\n"
                        "---------:------------------------:------------------------:------------------------:-----------------------\n"
@@ -633,7 +633,7 @@ int main(int argc, char **argv) {
       ghl_error("Failed to interpolate Y_e(rho): %.15e %.15e\n", Ye_interp, Ye_expect);
     }
 
-    double P_expect = 0.5*(P_expected[0] + P_expected[1]); 
+    double P_expect = 0.5*(P_expected[0] + P_expected[1]);
     double P_interp = NAN;
     err = ghl_tabulated_compute_P_from_rho(&eos, rho_interp, &P_interp);
     ghl_abort_if_error(err);
@@ -642,7 +642,7 @@ int main(int argc, char **argv) {
       ghl_error("Failed to interpolate P(rho): %.15e %.15e\n", P_interp, P_expect);
     }
 
-    double eps_expect = 0.5*(eps_expected[0] + eps_expected[1]); 
+    double eps_expect = 0.5*(eps_expected[0] + eps_expected[1]);
     double eps_interp = NAN;
     err = ghl_tabulated_compute_eps_from_rho(&eos, rho_interp, &eps_interp);
     ghl_abort_if_error(err);

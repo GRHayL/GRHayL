@@ -158,12 +158,12 @@ ghl_error_codes_t ghl_tabulated_Newman1D_energy(
   diagnostics->which_routine = ghl_con2prim_id_Newman1D;
 
   ghl_error_codes_t error = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, metric_adm,
-				cons_undens, prims, tol_x, diagnostics);
+                                              cons_undens, prims, tol_x, diagnostics);
 
   if(error) {
     prims->temperature = eos->T_min;
     error = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, metric_adm,
-			      cons_undens, prims, tol_x, diagnostics);
+                              cons_undens, prims, tol_x, diagnostics);
   }
   return error;
 }

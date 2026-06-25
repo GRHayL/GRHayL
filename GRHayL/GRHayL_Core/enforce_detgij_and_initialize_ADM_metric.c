@@ -85,8 +85,9 @@ void ghl_enforce_detgtij_and_initialize_ADM_metric(
                     gyy_new, gyz_new, gzz_new,
                     metric_adm);
 
-  if(gtijdet<0.0) ghl_warn(
-                      "WARNING: det[3-metric]<0.0. Hopefully this is occurring in gz's! "
-                      "gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e\n",
-  			     gxx, gxy, gxz, gyy, gyz, gzz, gtxx, gtxy, gtxz, gtyy, gtyz, gtzz, metric_adm->detgamma, gtijdet);
+  if(gtijdet<0.0) {
+    ghl_warn("WARNING: det[3-metric]<0.0. Hopefully this is occurring in gz's! "
+             "gtij_phys = %.2e %.2e %.2e %.2e %.2e %.2e gtij_new = %.2e %.2e %.2e %.2e %.2e %.2e | gijdet = %.2e | gtijdet = %.2e\n",
+             gxx, gxy, gxz, gyy, gyz, gzz, gtxx, gtxy, gtxz, gtyy, gtyz, gtzz, metric_adm->detgamma, gtijdet);
+  }
 }

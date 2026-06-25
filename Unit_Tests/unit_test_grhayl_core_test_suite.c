@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
   const double vec[4] = {-1.0, 2.0, -3.0, 4.0};
 
   const double v2 = ghl_compute_vec2_from_vec4D(g4, vec);
-  if(relative_error(v2, 55.0) > rel_tol) 
+  if(relative_error(v2, 55.0) > rel_tol)
     ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_compute_vec2_from_vec4D().\n"
               "  Expected result is 55, but computed value is %e.\n",
               v2);
@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
                            || relative_error(vec_inv[1], 18.0) > rel_tol
                            || relative_error(vec_inv[2], 21.0) > rel_tol
                            || relative_error(vec_inv[3], 23.0) > rel_tol);
-  if(check_inverse) 
+  if(check_inverse)
     ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_raise_lower_vector_4D().\n"
               "  Expected values are 10, 18, 21, 23. Computed values are %e %e %e %e.\n",
               vec_inv[0], vec_inv[1], vec_inv[2], vec_inv[3]);

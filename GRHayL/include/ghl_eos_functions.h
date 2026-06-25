@@ -357,7 +357,7 @@ extern ghl_error_codes_t (*ghl_tabulated_compute_dP_drho_from_rho)(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       double *restrict dP_drho);
-  
+
 #ifdef __cplusplus
 }
 #endif

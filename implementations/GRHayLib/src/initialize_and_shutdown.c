@@ -28,10 +28,10 @@ void GRHayLib_paramcheck() {
 
     if(P_atm < 0)
       CCTK_ERROR("Parameter P_atm must be set in the parameter file and be non-negative.");
-  
+
     if(P_min < 0 && P_min != -1)
       CCTK_ERROR("Parameter P_min must be non-negative.");
-  
+
     if(P_max < 0 && P_max != -1)
       CCTK_ERROR("Parameter P_max must be non-negative.");
 
