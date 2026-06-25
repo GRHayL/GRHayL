@@ -50,13 +50,9 @@ ghl_error_codes_t ghl_initialize_Noble(
   const double utU_guess[3] = {prims->u0*(prims->vU[0] + metric_adm->betaU[0]),
                                prims->u0*(prims->vU[1] + metric_adm->betaU[1]),
                                prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
-  const double tmp_u = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
+  const double utsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
-  double utsq = tmp_u/(1.0-tmp_u);
-
-  if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
-    utsq = fabs(utsq);
-  } else if(utsq < 0.0 || utsq > 10.0) {
+  if(utsq < 0.0 || utsq > 10.0) {
     return ghl_error_invalid_utsq;
   }
 
@@ -138,13 +134,9 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
   const double utU_guess[3] = {prims->u0*(prims->vU[0] + metric_adm->betaU[0]),
                                prims->u0*(prims->vU[1] + metric_adm->betaU[1]),
                                prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
-  const double tmp_u = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
+  const double utsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
-  double utsq = tmp_u/(1.0-tmp_u);
-
-  if( (utsq < 0.) && (fabs(utsq) < 1.0e-13) ) {
-    utsq = fabs(utsq);
-  } else if(utsq < 0.0 || utsq > 10.0) {
+  if(utsq < 0.0 || utsq > 10.0) {
     return ghl_error_invalid_utsq;
   }
 
@@ -155,9 +147,9 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
   //   i.e. you don't get positive values for dP/d(vsq).
   const double rho0 = harm_aux->D / W;
   const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, rho0)];
-  const double Gm1        = Gamma_ppoly - 1.0;
+  const double Gm1 = Gamma_ppoly - 1.0;
 
-  const double rho_Gm1     = pow(rho0,Gm1);     // HARM auxiliary variable
+  const double rho_Gm1 = pow(rho0,Gm1);     // HARM auxiliary variable
 
   /* The definition of the entropy density, S, is
    *

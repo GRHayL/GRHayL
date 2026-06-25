@@ -511,8 +511,9 @@ int main(int argc, char **argv) {
               ent_star[i], poison, &cons);
 
         ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
-        if(params.calc_prim_guess)
-          ghl_guess_primitives(&eos, &metric_adm, &cons, &prims);
+        if(params.calc_prim_guess) {
+          ghl_guess_primitives(&params, &eos, &metric_adm, &cons, &prims);
+        }
         c2p_check[i] = ghl_con2prim_hybrid_select_method(
               methods[routine], &params, &eos, &metric_adm, &metric_aux,
               &cons_undens, &prims, &diagnostics);

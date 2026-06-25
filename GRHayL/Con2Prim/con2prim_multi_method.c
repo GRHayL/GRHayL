@@ -93,8 +93,9 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
-  if(params->calc_prim_guess)
-    ghl_guess_primitives(eos, metric_adm, cons_undens, prims);
+  if(params->calc_prim_guess) {
+    ghl_guess_primitives(params, eos, metric_adm, cons_undens, prims);
+  }
 
   // Store primitive guesses (used if con2prim fails)
   const ghl_primitive_quantities prims_guess = *prims;
@@ -148,8 +149,9 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
 #ifdef GHL_DISABLE_HDF5
   return ghl_error_used_disabled_hdf5;
 #else
-  if(params->calc_prim_guess)
-    ghl_guess_primitives(eos, metric_adm, cons_undens, prims);
+  if(params->calc_prim_guess) {
+    ghl_guess_primitives(params, eos, metric_adm, cons_undens, prims);
+  }
 
   // Store primitive guesses (used if con2prim fails)
   const ghl_primitive_quantities prims_guess = *prims;
