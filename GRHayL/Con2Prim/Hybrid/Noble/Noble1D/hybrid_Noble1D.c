@@ -4,7 +4,7 @@
 ******************************* HARM License ***************************************
 ************************************************************************************
 
-    Copyright 2005 Scott C. Noble, Charles F. Gammie, 
+    Copyright 2005 Scott C. Noble, Charles F. Gammie,
                    Jonathan C. McKinney, and Luca Del Zanna
 
     This file is part of PVS-GRMHD.

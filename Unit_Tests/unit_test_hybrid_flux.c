@@ -173,11 +173,11 @@ int main(int argc, char **argv) {
       key += fread(trusted_S_z_flux,      sizeof(double), arraylength, outfile);
       if(entropy)
         key += fread(trusted_ent_flux,    sizeof(double), arraylength, outfile);
-      
+
       if(key != arraylength*(5+entropy))
         ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                      "is up-to-date with current test version.\n");
-      
+
       key  = fread(pert_rho_star_flux, sizeof(double), arraylength, pertfile);
       key += fread(pert_tau_flux,      sizeof(double), arraylength, pertfile);
       key += fread(pert_S_x_flux,      sizeof(double), arraylength, pertfile);
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
       key += fread(pert_S_z_flux,      sizeof(double), arraylength, pertfile);
       if(entropy)
         key += fread(pert_ent_flux,    sizeof(double), arraylength, pertfile);
-      
+
       if(key != arraylength*(5+entropy))
         ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                      "is up-to-date with current test version.\n");

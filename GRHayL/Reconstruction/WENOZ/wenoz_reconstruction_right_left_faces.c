@@ -6,7 +6,7 @@
  *                    Ur(i) = U(i+1/2+epsilon)
  *                    Ul(i) = U(i-1/2-epsilon)
  *                using the WENO-z reconstruction algorithm,
- *                i.e. it reconstructs at x-1/2*delta x and 
+ *                i.e. it reconstructs at x-1/2*delta x and
  *                x+1/2*delta x
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/wenoz
 

@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
   for(int index=NGHOSTS; index<arraylength-2; index++) {
     ghl_wenoz_reconstruction(&varpert[index-3], &var_r[index], &var_l[index]);
   }
-  
+
   fwrite(var_r, sizeof(double), arraylength, outpert);
   fwrite(var_l, sizeof(double), arraylength, outpert);
 

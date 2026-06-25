@@ -7,7 +7,7 @@
  *                    Ul(i) = U(i-1/2-epsilon)
  *                using the WENO-z reconstruction algorithm
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/wenoz
- * 
+ *
 */
 
 void ghl_wenoz_reconstruction(
@@ -15,7 +15,7 @@ void ghl_wenoz_reconstruction(
       double *restrict Ur,
       double *restrict Ul) {
 
-  double tmpr, tmpl;        
+  double tmpr, tmpl;
 
   ghl_wenoz_reconstruction_right_left_faces(&U[0], &tmpr, &tmpl);
   *Ul = tmpr;

@@ -906,7 +906,7 @@ ${TAB}${SILENT}rm -rf \$(OBJ) \$(TEXES) \$(TOBJS) \$(BUILDLIBSO) \$(BUILDLIBSOV)
 
 realclean: clean
 ${REALCLEAN_MESSAGE}
-${TAB}${SILENT}rm -rf \$(BUILDDIR)
+${TAB}${SILENT}rm -rf \$(BUILDDIR) test/
 ${TAB}${SILENT}rm -f Makefile
 
 install: grhayl
