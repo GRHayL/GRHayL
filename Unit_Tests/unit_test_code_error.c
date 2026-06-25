@@ -14,7 +14,7 @@ static bool hdf5_only_test(int test_key) {
       || (test_key >= 34 && test_key <= 60)
       || test_key == 63
       || test_key == 66
-      || (test_key >= 69 && test_key <= 82);
+      || (test_key >= 69 && test_key <= 85);
 }
 #endif
 
@@ -200,6 +200,11 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
          75: NULL EOS parameter struct
          76: non-tabulated EOS type
          77: invalid table type
+     ghl_c2p_nn_load_hdf5:
+         83: NULL EOS parameter struct
+         84: empty NN filepath
+     ghl_initialize_tabulated_eos:
+         85: NN enabled, but table has no embedded NN group
      Beta-equilibrium interpolators:
          78: rho too small with ghl_tabulated_compute_Ye_from_rho
          79: rho too large with ghl_tabulated_compute_P_from_rho
@@ -224,6 +229,26 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       tab_eos.table_type = ghl_eos_table_types;
       error = NRPyEOS_read_table_set_EOS_params(tablepath, &tab_eos);
       expect_error_code(error, test_key, "NRPyEOS_read_table_set_EOS_params");
+      break;
+    case 83:
+      error = ghl_c2p_nn_load_hdf5(tablepath, NULL);
+      expect_error_code(error, test_key, "ghl_c2p_nn_load_hdf5");
+      break;
+    case 84:
+      error = ghl_c2p_nn_load_hdf5("", &tab_eos);
+      expect_error_code(error, test_key, "ghl_c2p_nn_load_hdf5");
+      break;
+    case 85:
+      ghl_initialize_eos_functions(ghl_eos_tabulated);
+      error = ghl_initialize_tabulated_eos(
+            tablepath,
+            ghl_eos_table_stellarcollapse,
+            false,
+            true,
+            rho_b_atm, rho_b_min, rho_b_max,
+            Y_e_atm, Y_e_min, Y_e_max,
+            T_atm, T_min, T_max, &tab_eos);
+      expect_error_code(error, test_key, "ghl_initialize_tabulated_eos");
       break;
   }
 
@@ -711,6 +736,9 @@ static ghl_error_codes_t expected_error_code(const int test_key) {
     case 75: return ghl_error_eos_struct_is_null;
     case 76: return ghl_error_invalid_eos_type;
     case 77: return ghl_error_invalid_eos_table_type;
+    case 83: return ghl_error_eos_struct_is_null;
+    case 84: return ghl_error_could_not_open_file;
+    case 85: return ghl_error_hdf5_dataset_could_not_open;
     case 78:
     case 79:
     case 80:

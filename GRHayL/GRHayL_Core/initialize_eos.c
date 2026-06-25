@@ -3,10 +3,10 @@
 #include "ghl_nrpyeos_tabulated.h"
 #include "ghl_eos_functions_declaration.h"
 
-#define init_common_eos_quantities         \
-  eos->rho_atm           = rho_atm;        \
-  eos->rho_min           = rho_min;        \
-  eos->rho_max           = rho_max;
+#define init_common_eos_quantities \
+  eos->rho_atm = rho_atm;          \
+  eos->rho_min = rho_min;          \
+  eos->rho_max = rho_max;
 
 ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_parameters *restrict params,
@@ -224,6 +224,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
       const char *table_filepath,
       const ghl_eos_table_t table_type,
       const bool clean_sound_speed,
+      const bool enable_neural_net_c2p,
       const double rho_atm,
       double rho_min,
       double rho_max,
@@ -242,11 +243,23 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   eos->eos_type = ghl_eos_tabulated;
   eos->table_type = table_type;
   eos->clean_sound_speed = clean_sound_speed;
+  eos->enable_neural_net_c2p = enable_neural_net_c2p;
+  eos->c2p_nn = NULL;
 
   // Step 2: Read the EOS table
   ghl_error_codes_t err = ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
   if(err != ghl_success) {
     return err;
+  }
+
+  if(eos->enable_neural_net_c2p) {
+    ghl_info("Loading neural-network parameters from '%s'\n", table_filepath);
+    err = ghl_c2p_nn_load_from_eos_hdf5(table_filepath, eos);
+    if(err != ghl_success) {
+      return err;
+    }
+    ghl_info("Loaded neural-network Con2Prim model: %d hidden layer(s) of width %d\n",
+             eos->c2p_nn->n_hidden, eos->c2p_nn->hidden_dim);
   }
 
   // Step 3: Enforce default values for (rho, Y_e, T) min, max, and atm
@@ -401,6 +414,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
   // FIXME: these are hard-coded default values for now
   const ghl_eos_table_t default_table_type = ghl_eos_table_stellarcollapse;
   const bool default_clean_sound_speed = false;
+  const bool default_enable_neural_net_c2p = false;
 
   // Step 1: Initialize Tabulated EOS functions
   ghl_initialize_eos_functions(ghl_eos_tabulated);
@@ -409,6 +423,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
   return ghl_initialize_tabulated_eos(table_filepath,
                                       default_table_type,
                                       default_clean_sound_speed,
+                                      default_enable_neural_net_c2p,
                                       rho_atm, rho_min, rho_max,
                                       Ye_atm, Ye_min, Ye_max,
                                       T_atm, T_min, T_max,
