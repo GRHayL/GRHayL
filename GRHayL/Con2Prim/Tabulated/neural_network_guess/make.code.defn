@@ -1,5 +1,6 @@
 SRCS = c2p_nn_free.c               \
        c2p_nn_guess_x.c            \
+       c2p_nn_guess_primitives.c   \
        c2p_nn_load_from_eos_hdf5.c \
        c2p_nn_validate_model.c
 

@@ -38,6 +38,18 @@ typedef struct ghl_palenzuela_quantities {
   double q, r, s, t, D, Y_e, S;
 } ghl_palenzuela_quantities;
 
+/**
+ * @ingroup c2p_internal
+ * @brief Stores shared auxiliary quantities for tabulated primitive guesses.
+ */
+typedef struct ghl_tabulated_primitive_guess_aux {
+  double SU[3];
+  double B_squared;
+  double S_squared;
+  double BdotS;
+  double q, r, s, t;
+} ghl_tabulated_primitive_guess_aux;
+
 //--------- Initialization routines ----------------
 void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics);
 
@@ -236,6 +248,22 @@ bool ghl_limit_utilde_and_compute_v(
       double utU[3],
       ghl_primitive_quantities *restrict prims);
 
+void ghl_tabulated_compute_primitive_guess_auxiliaries(
+      const ghl_metric_quantities *restrict metric_adm,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_tabulated_primitive_guess_aux *restrict aux);
+
+void ghl_tabulated_primitive_guess_from_x_and_W(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const ghl_tabulated_primitive_guess_aux *restrict aux,
+      double x,
+      double W,
+      ghl_primitive_quantities *restrict prims);
+
 extern ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -293,6 +321,13 @@ typedef struct ghl_c2p_nn_model {
 ghl_nn_c2p_guess_t ghl_c2p_nn_guess(
       const ghl_c2p_nn_model *restrict model,
       ghl_nn_c2p_input_t input);
+
+void ghl_c2p_nn_guess_primitives(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims);
 
 ghl_error_codes_t ghl_c2p_nn_validate_model(const ghl_c2p_nn_model *restrict model);
 
