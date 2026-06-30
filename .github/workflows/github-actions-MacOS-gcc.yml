@@ -334,7 +334,7 @@ jobs:
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for error-catching
         run: |
-            for i in {0..85}; do
+          for i in {0..85}; do
             if ./test/unit_test_code_error "$i"; then
               echo "Failed to fail!"
               exit 1
