@@ -22,6 +22,7 @@ ghl_error_codes_t ghl_c2p_nn_load_from_eos_hdf5(
 
 #define GHL_NN_EOS_GROUP "grhayl_nn_c2p"
 #define NN_C2P_OUT_X_BOUNDED 0
+#define GHL_MAX_DIM_SIZE 8 // Leo says: out nets are tiny, so this is safe
 
 static ghl_error_codes_t nn__build_dataset_path(
       const char *group_prefix,
@@ -178,7 +179,10 @@ static ghl_error_codes_t nn__load_model_from_hdf5(
   err = nn__read_scalar(file_id, dataset_path, H5T_NATIVE_FLOAT, &model->dx_eps);
   if(err != ghl_success) goto cleanup_and_return;
 
-  if(model->in_dim <= 0 || model->hidden_dim <= 0 || model->n_hidden <= 0 || model->out_dim <= 0) {
+  if(model->in_dim     <= 0 || model->in_dim     > GHL_MAX_DIM_SIZE ||
+     model->hidden_dim <= 0 || model->hidden_dim > GHL_MAX_DIM_SIZE ||
+     model->n_hidden   <= 0 || model->n_hidden   > GHL_MAX_DIM_SIZE ||
+     model->out_dim    <= 0 || model->out_dim    > GHL_MAX_DIM_SIZE) {
     err = ghl_error_nn_c2p_invalid_dimensions;
     goto cleanup_and_return;
   }
