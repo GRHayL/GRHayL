@@ -93,6 +93,7 @@ download_test_data con2prim/compute_conservs_and_Tmunu_output_pert.bin
 ./test/unit_test_compute_conservs_and_Tmunu
 
 ./test/unit_test_hybrid_failure
+./test/unit_test_c2p_nn_guess
 
 download_test_data EOS/simple_table.h5
 ./test/unit_test_tabulated_eos simple_table.h5
@@ -169,7 +170,7 @@ download_test_data con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
 
 ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
 
-for i in {0..82}; do
+for i in {0..85}; do
   if ./test/unit_test_code_error "$i"; then
     echo "Failed to fail!"
     exit 1

@@ -76,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-function: [hybrid_failure]
+        test-function: [hybrid_failure, c2p_nn_guess]
         os: [ubuntu-22.04, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
 
@@ -339,7 +339,7 @@ jobs:
       - name: Run unit test for error-catching
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          for i in {0..82}; do
+          for i in {0..85}; do
             if ./test/unit_test_code_error "$i"; then
               echo "Failed to fail!"
               exit 1
