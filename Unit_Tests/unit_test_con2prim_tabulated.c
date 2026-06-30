@@ -376,14 +376,22 @@ int main(int argc, char **argv) {
   eos.root_finding_precision=1e-10;
 
   if( test_key ) {
-    params.main_routine = ghl_con2prim_id_Palenzuela1D;         run_unit_test(&params, &eos);
-    params.main_routine = ghl_con2prim_id_Newman1D_entropy;     run_unit_test(&params, &eos);
-    // The routines below fail for high temperatures/magnetizations.
-    // We use the standard Palenzuela routine as a backup.
-    params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
-    params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
-    params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
-    params.main_routine = ghl_con2prim_id_Noble2D;              run_unit_test(&params, &eos);
+    for(int nn_guess_enabled = 0; nn_guess_enabled <= 1; nn_guess_enabled++) {
+      eos.enable_neural_net_c2p = nn_guess_enabled;
+      params.backup_routine[0] = ghl_con2prim_id_None;
+
+      ghl_info("Running tabulated C2P tests with neural-network guesses %s\n",
+               nn_guess_enabled ? "enabled" : "disabled");
+
+      params.main_routine = ghl_con2prim_id_Palenzuela1D;         run_unit_test(&params, &eos);
+      params.main_routine = ghl_con2prim_id_Newman1D_entropy;     run_unit_test(&params, &eos);
+      // The routines below fail for high temperatures/magnetizations.
+      // We use the standard Palenzuela routine as a backup.
+      params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
+      params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
+      params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
+      params.main_routine = ghl_con2prim_id_Noble2D;              run_unit_test(&params, &eos);
+    }
     ghl_info("All tests succeeded\n");
   }
   else {
