@@ -33,12 +33,12 @@ void generate_test_data(
         // These variables are used in the Pmag vs W test
         test_Y_e         = 0.1;
         test_rho         = 1.6192159535484857e-07;
-        test_T           = 5;
+        test_T           = 5.0;
         test_logWm1_min  = -5.5;
         test_logWm1_max  = +1.5;
         dlogWm1          = (test_logWm1_max - test_logWm1_min)/(npoints-1);
-        test_logPmoP_min = -5;
-        test_logPmoP_max = +9;
+        test_logPmoP_min = -5.0;
+        test_logPmoP_max = +9.0;
         dlogPmoP         = (test_logPmoP_max - test_logPmoP_min)/(npoints-1);
         if( perturb ) {
           test_Y_e         *= (1+randf(-1,1)*1e-14);
@@ -59,7 +59,7 @@ void generate_test_data(
         test_rho_max = 1e-3;
         test_T_min   = 1e-2;
         test_T_max   = 1e+2;
-        test_W       = 2;
+        test_W       = 2.0;
         test_logPmoP = -5.0;
         lrmin        = log10(test_rho_min);
         lrmax        = log10(test_rho_max);
@@ -337,8 +337,8 @@ int main(int argc, char **argv) {
   const bool evolve_entropy                  = false;
   const bool evolve_temperature              = true;
   const bool clean_sound_speed               = false;
-  const bool enable_neural_net_c2p           = true;
-  const double Psi6threshold                 = 1e100; //Taken from magnetizedTOV.par
+  const bool enable_neural_net_c2p           = true;  // Enable so we read the neural net dataset
+  const double Psi6threshold                 = 1e100; // Taken from magnetizedTOV.par
   const double Lorenz_damping_factor         = 0.0;
 
   const double W_max     = 100.0; //IGM default: 10

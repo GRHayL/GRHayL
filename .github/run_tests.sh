@@ -168,8 +168,6 @@ download_test_data con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_unperturbed.b
 download_test_data con2prim/con2prim_tabulated_Noble2D_rho_vs_T_perturbed.bin
 download_test_data con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
 
-./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
-
 for i in {0..85}; do
   if ./test/unit_test_code_error "$i"; then
     echo "Failed to fail!"
@@ -178,6 +176,9 @@ for i in {0..85}; do
     echo "Failed successfully!"
   fi
 done
+
+pyghl append SLy4_3335_rho391_temp163_ye66.h5
+./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
 
 download_test_data induction/induction_interpolation_input.bin
 

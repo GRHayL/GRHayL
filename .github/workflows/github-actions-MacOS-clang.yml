@@ -273,6 +273,8 @@ jobs:
         uses: ./.github/actions/compile_GRHayL
         with:
           compiler: 'clang'
+      - name: Install pyghl
+        run: python3 -m pip install pyghl
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin
@@ -296,6 +298,7 @@ jobs:
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_perturbed.bin
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
+          pyghl append SLy4_3335_rho391_temp163_ye66.h5
       - name: Run unit test for tabulated EOS Con2Prim routines
         run: |
           ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1

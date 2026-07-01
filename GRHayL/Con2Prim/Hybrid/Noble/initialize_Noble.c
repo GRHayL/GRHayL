@@ -52,7 +52,7 @@ ghl_error_codes_t ghl_initialize_Noble(
                                prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
   const double utsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
-  if(utsq < 0.0 || utsq > 10.0) {
+  if(utsq < 0.0) {
     return ghl_error_invalid_utsq;
   }
 
