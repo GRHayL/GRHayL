@@ -85,5 +85,17 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
                    "T_min cannot be greater than T_max.\n");
     GHL_CASE_ERROR(ghl_error_invalid_fermi_dirac_integral_key,
                    "Unsupported Fermi-Dirac integral key.\n");
+    GHL_CASE_ERROR(ghl_error_nn_c2p_model_is_null,
+                   "Neural-network Con2Prim model pointer is NULL.\n");
+    GHL_CASE_ERROR(ghl_error_nn_c2p_invalid_dimensions,
+                   "Neural-network Con2Prim model has invalid layer dimensions.\n");
+    GHL_CASE_ERROR(ghl_error_nn_c2p_invalid_input_index,
+                   "Neural-network Con2Prim model has an invalid input index.\n");
+    GHL_CASE_ERROR(ghl_error_nn_c2p_missing_array,
+                   "Neural-network Con2Prim model is missing one or more arrays.\n");
+    GHL_CASE_ERROR(ghl_error_nn_c2p_invalid_kind,
+                   "Neural-network Con2Prim model has an unsupported transform or output kind.\n");
+    GHL_CASE_ERROR(ghl_error_nn_c2p_invalid_number,
+                   "Neural-network Con2Prim model contains non-finite or invalid numeric data.\n");
   }
 }

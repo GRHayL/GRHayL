@@ -33,12 +33,12 @@ void generate_test_data(
         // These variables are used in the Pmag vs W test
         test_Y_e         = 0.1;
         test_rho         = 1.6192159535484857e-07;
-        test_T           = 5;
+        test_T           = 5.0;
         test_logWm1_min  = -5.5;
         test_logWm1_max  = +1.5;
         dlogWm1          = (test_logWm1_max - test_logWm1_min)/(npoints-1);
-        test_logPmoP_min = -5;
-        test_logPmoP_max = +9;
+        test_logPmoP_min = -5.0;
+        test_logPmoP_max = +9.0;
         dlogPmoP         = (test_logPmoP_max - test_logPmoP_min)/(npoints-1);
         if( perturb ) {
           test_Y_e         *= (1+randf(-1,1)*1e-14);
@@ -59,7 +59,7 @@ void generate_test_data(
         test_rho_max = 1e-3;
         test_T_min   = 1e-2;
         test_T_max   = 1e+2;
-        test_W       = 2;
+        test_W       = 2.0;
         test_logPmoP = -5.0;
         lrmin        = log10(test_rho_min);
         lrmax        = log10(test_rho_max);
@@ -332,10 +332,13 @@ int main(int argc, char **argv) {
   const ghl_con2prim_id_t None               = ghl_con2prim_id_None;
   const ghl_con2prim_id_t main_routine       = None;
   const ghl_con2prim_id_t backup_routines[3] = {None,None,None};
+  const ghl_eos_table_t table_type           = ghl_eos_table_stellarcollapse;
   const bool calc_prims_guess                = true;
   const bool evolve_entropy                  = false;
   const bool evolve_temperature              = true;
-  const double Psi6threshold                 = 1e100; //Taken from magnetizedTOV.par
+  const bool clean_sound_speed               = false;
+  const bool enable_neural_net_c2p           = true;  // Enable so we read the neural net dataset
+  const double Psi6threshold                 = 1e100; // Taken from magnetizedTOV.par
   const double Lorenz_damping_factor         = 0.0;
 
   const double W_max     = 100.0; //IGM default: 10
@@ -364,11 +367,12 @@ int main(int argc, char **argv) {
         &params);
 
   ghl_eos_parameters eos = { 0 };
-  eos.eos_type = ghl_eos_tabulated;
-  eos.table_type = ghl_eos_table_stellarcollapse;
-  eos.clean_sound_speed = true;
-  ghl_error_codes_t error = ghl_initialize_tabulated_eos_functions_and_params(
+  ghl_initialize_eos_functions(ghl_eos_tabulated);
+  ghl_error_codes_t error = ghl_initialize_tabulated_eos(
         tablepath,
+        table_type,
+        clean_sound_speed,
+        enable_neural_net_c2p,
         rho_b_atm, rho_b_min, rho_b_max,
         Y_e_atm, Y_e_min, Y_e_max,
         T_atm, T_min, T_max, &eos);
@@ -376,17 +380,26 @@ int main(int argc, char **argv) {
   eos.root_finding_precision=1e-10;
 
   if( test_key ) {
-    params.main_routine = ghl_con2prim_id_Palenzuela1D;         run_unit_test(&params, &eos);
-    params.main_routine = ghl_con2prim_id_Newman1D_entropy;     run_unit_test(&params, &eos);
-    // The routines below fail for high temperatures/magnetizations.
-    // We use the standard Palenzuela routine as a backup.
-    params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
-    params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
-    params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
-    params.main_routine = ghl_con2prim_id_Noble2D;              run_unit_test(&params, &eos);
+    for(int nn_guess_enabled = 0; nn_guess_enabled <= 1; nn_guess_enabled++) {
+      eos.enable_neural_net_c2p = nn_guess_enabled;
+      params.backup_routine[0] = ghl_con2prim_id_None;
+
+      ghl_info("Running tabulated C2P tests with neural-network guesses %s\n",
+               nn_guess_enabled ? "enabled" : "disabled");
+
+      params.main_routine = ghl_con2prim_id_Palenzuela1D;         run_unit_test(&params, &eos);
+      params.main_routine = ghl_con2prim_id_Newman1D_entropy;     run_unit_test(&params, &eos);
+      // The routines below fail for high temperatures/magnetizations.
+      // We use the standard Palenzuela routine as a backup.
+      params.backup_routine[0] = ghl_con2prim_id_Palenzuela1D;
+      params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
+      params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
+      params.main_routine = ghl_con2prim_id_Noble2D;              run_unit_test(&params, &eos);
+    }
     ghl_info("All tests succeeded\n");
   }
   else {
+    eos.enable_neural_net_c2p = false;
     params.main_routine = ghl_con2prim_id_Palenzuela1D;         generate_test_data(&params, &eos);
     params.main_routine = ghl_con2prim_id_Newman1D_entropy;     generate_test_data(&params, &eos);
     // The routines below fail for high temperatures/magnetizations.

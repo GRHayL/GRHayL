@@ -85,56 +85,16 @@ static void ghl_guess_primitives_tabulated(
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims) {
 
-  // Compute auxiliary variables
-  double SU[3], B_squared, S_squared, BdotS;
-  ghl_compute_SU_Bsq_Ssq_BdotS(metric_adm, cons_undens, prims,
-                               SU, &B_squared, &S_squared, &BdotS);
-
-  // Compute Palenzuela variables {q, r, s, t}
-  const double invD = 1.0 / cons_undens->rho;
-  const double q = cons_undens->tau * invD;
-  const double r = S_squared * invD * invD;
-  const double s = B_squared * invD;
-  const double t = BdotS / pow(cons_undens->rho, 1.5);
+  ghl_tabulated_primitive_guess_aux aux = { 0 };
+  ghl_tabulated_compute_primitive_guess_auxiliaries(metric_adm, cons_undens, prims, &aux);
 
   // Compute the lower bound of the x variable, Eq. (35) of 1712.07538
-  const double x = 1.0 + q - s;
+  const double x = 1.0 + aux.q - aux.s;
 
-  // Compute W, Eq. (42) of 1712.07538
-  const double tmp_numer = x * x * r + (2.0 * x + s) * t * t;
-  const double tmp_denom = x * x * (x + s) * (x + s);
-  double Wminus2 = 1.0 - tmp_numer / tmp_denom;
-  Wminus2 = ghl_clamp(Wminus2, params->inv_sq_max_Lorentz_factor, 1.0);
-  const double W = pow(Wminus2, -0.5);
-
-  // Compute rho Y_e, and u^0
-  prims->rho = cons_undens->rho / W;
-  prims->Y_e = cons_undens->Y_e / cons_undens->rho;
-  prims->u0  = W * metric_adm->lapseinv;
-
-  // Compute eps, Eq. (43-44) of 1712.07538
-  prims->eps = - 1.0 + (1.0 - W * W) * x / W
-             + W * (1.0 + q - s + t * t / (2.0 * x * x) + s / (2.0 * W * W));
-
-  // Enforce table bounds, then compute missing hydrodynamic quantities, using
-  // T = T_max as an initial guess.
-  prims->temperature = eos->T_max;
-  ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &prims->rho, &prims->Y_e, &prims->eps);
-  ghl_tabulated_compute_P_S_T_from_eps(eos, prims->rho, prims->Y_e, prims->eps,
-                                       &prims->press, &prims->entropy, &prims->temperature);
-
-  // Compute the velocities. We start by computing the Valencia velocity v_n^i
-  // using Eq. (24) of 1712.07538, with z = x rho W. We use it to compute
-  // \tilde{u}^i = W * v_n^i, following the discussion below Eq. (15) of
-  // astro-ph/0512420. Finally, we use a GRHayL function to limit the velocity
-  // and compute the appropriate primitive variable v^i = u^i / u^0.
-  const double z = x * prims->rho * W;
-  double utildeU[3] = {
-    W * (SU[0] + BdotS * prims->BU[0] / z) / (z + B_squared),
-    W * (SU[1] + BdotS * prims->BU[1] / z) / (z + B_squared),
-    W * (SU[2] + BdotS * prims->BU[2] / z) / (z + B_squared),
-  };
-  ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
+  // Complete the primitive guess using Eqs. (24), (42), (43), and (44) of
+  // 1712.07538.
+  ghl_tabulated_primitive_guess_from_x(params, eos, metric_adm,
+                                       cons_undens, &aux, x, prims);
 }
 
 /**

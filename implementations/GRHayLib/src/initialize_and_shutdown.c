@@ -201,6 +201,7 @@ void GRHayLib_initialize(CCTK_ARGUMENTS) {
           EOS_tablepath,
           parse_eos_table_type_keyword(eos_table_type),
           eos_table_clean_sound_speed,
+          enable_backup_nn_primitive_guess,
           rho_b_atm, rho_b_min, rho_b_max,
           Y_e_atm, Y_e_min, Y_e_max,
           T_atm, T_min, T_max,

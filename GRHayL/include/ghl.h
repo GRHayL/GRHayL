@@ -67,6 +67,12 @@ typedef enum {
   ghl_error_invalid_T_atm,
   ghl_error_T_min_gt_T_max,
   ghl_error_invalid_fermi_dirac_integral_key,
+  ghl_error_nn_c2p_model_is_null,
+  ghl_error_nn_c2p_invalid_dimensions,
+  ghl_error_nn_c2p_invalid_input_index,
+  ghl_error_nn_c2p_missing_array,
+  ghl_error_nn_c2p_invalid_kind,
+  ghl_error_nn_c2p_invalid_number,
 } ghl_error_codes_t;
 
 typedef enum {
@@ -93,6 +99,8 @@ typedef enum {
   ghl_eos_table_stellarcollapse,
   ghl_eos_table_types,
 } ghl_eos_table_t;
+
+typedef struct ghl_c2p_nn_model ghl_c2p_nn_model;
 
 /*
  * Struct        : ghl_parameters
@@ -287,8 +295,10 @@ typedef struct ghl_eos_parameters {
 
   // These are used for beta-equilibrium
   double *lp_of_lr, *le_of_lr, *Ye_of_lr, *lh_of_lr;
-  //------------------------------------------------
 
+  bool enable_neural_net_c2p;
+  ghl_c2p_nn_model *restrict c2p_nn;
+  //------------------------------------------------
 } ghl_eos_parameters;
 
 const char *ghl_get_con2prim_routine_name(const ghl_con2prim_id_t key);
@@ -321,6 +331,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
       const char *table_path,
       const ghl_eos_table_t table_type,
       const bool clean_sound_speed,
+      const bool enable_neural_net_c2p,
       const double rho_atm,
       const double rho_min,
       const double rho_max,
