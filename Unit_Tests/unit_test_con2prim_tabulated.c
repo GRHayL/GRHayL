@@ -332,9 +332,12 @@ int main(int argc, char **argv) {
   const ghl_con2prim_id_t None               = ghl_con2prim_id_None;
   const ghl_con2prim_id_t main_routine       = None;
   const ghl_con2prim_id_t backup_routines[3] = {None,None,None};
+  const ghl_eos_table_t table_type           = ghl_eos_table_stellarcollapse;
   const bool calc_prims_guess                = true;
   const bool evolve_entropy                  = false;
   const bool evolve_temperature              = true;
+  const bool clean_sound_speed               = false;
+  const bool enable_neural_net_c2p           = true;
   const double Psi6threshold                 = 1e100; //Taken from magnetizedTOV.par
   const double Lorenz_damping_factor         = 0.0;
 
@@ -364,11 +367,12 @@ int main(int argc, char **argv) {
         &params);
 
   ghl_eos_parameters eos = { 0 };
-  eos.eos_type = ghl_eos_tabulated;
-  eos.table_type = ghl_eos_table_stellarcollapse;
-  eos.clean_sound_speed = true;
-  ghl_error_codes_t error = ghl_initialize_tabulated_eos_functions_and_params(
+  ghl_initialize_eos_functions(ghl_eos_tabulated);
+  ghl_error_codes_t error = ghl_initialize_tabulated_eos(
         tablepath,
+        table_type,
+        clean_sound_speed,
+        enable_neural_net_c2p,
         rho_b_atm, rho_b_min, rho_b_max,
         Y_e_atm, Y_e_min, Y_e_max,
         T_atm, T_min, T_max, &eos);
@@ -395,6 +399,7 @@ int main(int argc, char **argv) {
     ghl_info("All tests succeeded\n");
   }
   else {
+    eos.enable_neural_net_c2p = false;
     params.main_routine = ghl_con2prim_id_Palenzuela1D;         generate_test_data(&params, &eos);
     params.main_routine = ghl_con2prim_id_Newman1D_entropy;     generate_test_data(&params, &eos);
     // The routines below fail for high temperatures/magnetizations.
