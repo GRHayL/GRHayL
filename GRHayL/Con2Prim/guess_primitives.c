@@ -92,11 +92,9 @@ static void ghl_guess_primitives_tabulated(
   const double x = 1.0 + aux.q - aux.s;
 
   // Complete the primitive guess using Eqs. (24), (42), (43), and (44) of
-  // 1712.07538. We set W = 0.0 as a guess to ensure it's computed from x
-  // and the conserved quantities in the function below.
-  const double W = 0.0;
-  ghl_tabulated_primitive_guess_from_x_and_W(params, eos, metric_adm,
-                                             cons_undens, &aux, x, W, prims);
+  // 1712.07538.
+  ghl_tabulated_primitive_guess_from_x(params, eos, metric_adm,
+                                       cons_undens, &aux, x, prims);
 }
 
 /**

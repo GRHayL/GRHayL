@@ -7,7 +7,7 @@ ghl_error_codes_t ghl_c2p_nn_validate_model(const ghl_c2p_nn_model *restrict mod
   if(model->in_dim != 4) {
     return ghl_error_nn_c2p_invalid_dimensions;
   }
-  if(model->hidden_dim <= 0 || model->n_hidden <= 0 || model->out_dim <= 0 || model->out_dim > 2) {
+  if(model->hidden_dim <= 0 || model->n_hidden <= 0 || model->out_dim <= 0) {
     return ghl_error_nn_c2p_invalid_dimensions;
   }
   if(model->q_idx < 0 || model->q_idx >= model->in_dim) {
@@ -58,7 +58,7 @@ ghl_error_codes_t ghl_c2p_nn_validate_model(const ghl_c2p_nn_model *restrict mod
         return ghl_error_nn_c2p_invalid_kind;
       }
     }
-    else if(i == 1u) {
+    else {
       if(kind != GHL_NN_C2P_OUT_LINEAR && kind != GHL_NN_C2P_OUT_LOG_LINEAR) {
         return ghl_error_nn_c2p_invalid_kind;
       }

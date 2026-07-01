@@ -254,14 +254,13 @@ void ghl_tabulated_compute_primitive_guess_auxiliaries(
       const ghl_primitive_quantities *restrict prims,
       ghl_tabulated_primitive_guess_aux *restrict aux);
 
-void ghl_tabulated_primitive_guess_from_x_and_W(
+void ghl_tabulated_primitive_guess_from_x(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric_adm,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_tabulated_primitive_guess_aux *restrict aux,
       double x,
-      double W,
       ghl_primitive_quantities *restrict prims);
 
 extern ghl_error_codes_t (*ghl_con2prim_multi_method)(
@@ -283,7 +282,6 @@ typedef struct ghl_nn_c2p_input_t {
 
 typedef struct ghl_nn_c2p_guess_t {
   float x;
-  float W;
 } ghl_nn_c2p_guess_t;
 
 typedef struct ghl_c2p_nn_model {

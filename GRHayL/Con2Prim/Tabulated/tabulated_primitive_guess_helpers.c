@@ -17,14 +17,13 @@ void ghl_tabulated_compute_primitive_guess_auxiliaries(
   aux->t = aux->BdotS / pow(cons_undens->rho, 1.5);
 }
 
-void ghl_tabulated_primitive_guess_from_x_and_W(
+void ghl_tabulated_primitive_guess_from_x(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric_adm,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_tabulated_primitive_guess_aux *restrict aux,
       double x,
-      double W,
       ghl_primitive_quantities *restrict prims) {
 
   const double q = aux->q;
@@ -32,15 +31,10 @@ void ghl_tabulated_primitive_guess_from_x_and_W(
   const double s = aux->s;
   const double t = aux->t;
 
-  if(!(W > 0.0) || !isfinite(W)) {
-    double Wminus2 = 1.0 - (x * x * r + (2.0 * x + s) * t * t)
-                   / (x * x * (x + s) * (x + s));
-    Wminus2 = ghl_clamp(Wminus2, params->inv_sq_max_Lorentz_factor, 1.0);
-    W = pow(Wminus2, -0.5);
-  }
-  else {
-    W = ghl_clamp(W, 1.0, params->max_Lorentz_factor);
-  }
+  double Wminus2 = 1.0 - (x * x * r + (2.0 * x + s) * t * t)
+                 / (x * x * (x + s) * (x + s));
+  Wminus2 = ghl_clamp(Wminus2, params->inv_sq_max_Lorentz_factor, 1.0);
+  const double W = pow(Wminus2, -0.5);
 
   prims->rho = cons_undens->rho / W;
   prims->Y_e = cons_undens->Y_e / cons_undens->rho;

@@ -172,8 +172,6 @@ static void test_guess_model(void) {
   ghl_nn_c2p_guess_t guess = ghl_c2p_nn_guess(&model, input);
   CHECK(fabsf(guess.x - 4.0f) < 1e-6f,
         "x-bounded guess mismatch: %.9g", guess.x);
-  CHECK(fabsf(guess.W - 3.0f) < 1e-5f,
-        "linear W guess mismatch: %.9g", guess.W);
 
   model = valid_stack_model();
   model.out_kind[1] = 2;
@@ -182,15 +180,14 @@ static void test_guess_model(void) {
   model.out_invrng[1] = invrng(model.out_lo[1], model.out_hi[1]);
   model.b_out[1] = 0.0f;
   guess = ghl_c2p_nn_guess(&model, input);
-  CHECK(fabsf(guess.W - 4.0f) < 1e-5f,
-        "log-linear W guess mismatch: %.9g", guess.W);
+  CHECK(fabsf(guess.x - 4.0f) < 1e-6f,
+        "x guess with extra log-linear output mismatch: %.9g", guess.x);
 
   model = valid_stack_model();
   input.r = NAN;
   guess = ghl_c2p_nn_guess(&model, input);
   CHECK(fabsf(guess.x - 4.0f) < 1e-6f,
         "finite fallback x mismatch: %.9g", guess.x);
-  CHECK(isnan(guess.W), "fallback W should be NaN");
 
   model = valid_stack_model();
   model.x_kind[1] = 9;
@@ -198,10 +195,9 @@ static void test_guess_model(void) {
   guess = ghl_c2p_nn_guess(&model, input);
   CHECK(fabsf(guess.x - 4.0f) < 1e-6f,
         "invalid transform fallback x mismatch: %.9g", guess.x);
-  CHECK(isnan(guess.W), "invalid transform fallback W should be NaN");
 
   guess = ghl_c2p_nn_guess(NULL, input);
-  CHECK(guess.x == 0.0f && isnan(guess.W), "NULL model fallback failed");
+  CHECK(guess.x == 0.0f, "NULL model fallback failed");
 }
 
 #ifndef GHL_DISABLE_HDF5
@@ -393,6 +389,7 @@ static void create_hdf5_file(
 
 static void test_hdf5_loaders(void) {
   const ghl_nn_c2p_input_t input = { 2.0f, 0.25f, 0.5f, 0.1f };
+  const int out_kind_linear = 1;
 
   const char root_path[] = "/tmp/unit_test_c2p_nn_root.h5";
   const char embedded_path[] = "/tmp/unit_test_c2p_nn_embedded.h5";
@@ -402,9 +399,11 @@ static void test_hdf5_loaders(void) {
   ghl_eos_parameters eos = { 0 };
   CHECK_ERROR(ghl_c2p_nn_load_hdf5(root_path, &eos), ghl_success);
   CHECK(eos.c2p_nn != NULL, "direct NN HDF5 load returned NULL model");
+  CHECK(eos.c2p_nn->out_dim == 2, "direct HDF5 out_dim mismatch");
+  CHECK(eos.c2p_nn->out_kind[1] == out_kind_linear,
+        "direct HDF5 output-kind metadata mismatch");
   ghl_nn_c2p_guess_t guess = ghl_c2p_nn_guess(eos.c2p_nn, input);
   CHECK(fabsf(guess.x - 4.0f) < 1e-6f, "direct HDF5 x mismatch");
-  CHECK(fabsf(guess.W - 3.0f) < 1e-5f, "direct HDF5 W mismatch");
   ghl_c2p_nn_free(eos.c2p_nn);
   eos.c2p_nn = NULL;
 
@@ -412,18 +411,20 @@ static void test_hdf5_loaders(void) {
   CHECK_ERROR(ghl_c2p_nn_load_from_eos_hdf5(embedded_path, &eos),
               ghl_success);
   CHECK(eos.c2p_nn != NULL, "embedded NN HDF5 load returned NULL model");
+  CHECK(eos.c2p_nn->out_dim == 2, "embedded HDF5 out_dim mismatch");
+  CHECK(eos.c2p_nn->out_kind[1] == out_kind_linear,
+        "embedded HDF5 output-kind metadata mismatch");
   guess = ghl_c2p_nn_guess(eos.c2p_nn, input);
   CHECK(fabsf(guess.x - 4.0f) < 1e-6f, "embedded HDF5 x mismatch");
-  CHECK(fabsf(guess.W - 3.0f) < 1e-5f, "embedded HDF5 W mismatch");
   ghl_c2p_nn_free(eos.c2p_nn);
   eos.c2p_nn = NULL;
 
   create_hdf5_file(legacy_path, "", false, 1);
   CHECK_ERROR(ghl_c2p_nn_load_hdf5(legacy_path, &eos), ghl_success);
   CHECK(eos.c2p_nn != NULL, "legacy NN HDF5 load returned NULL model");
+  CHECK(eos.c2p_nn->out_dim == 1, "legacy HDF5 out_dim mismatch");
   guess = ghl_c2p_nn_guess(eos.c2p_nn, input);
   CHECK(fabsf(guess.x - 4.0f) < 1e-6f, "legacy HDF5 x mismatch");
-  CHECK(isnan(guess.W), "legacy HDF5 W should be NaN");
   ghl_c2p_nn_free(eos.c2p_nn);
   eos.c2p_nn = NULL;
 }

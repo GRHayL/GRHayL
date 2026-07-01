@@ -3,7 +3,7 @@
 ghl_nn_c2p_guess_t ghl_c2p_nn_guess(
       const ghl_c2p_nn_model *restrict model,
       ghl_nn_c2p_input_t input) {
-  ghl_nn_c2p_guess_t guess = { 0.0f, NAN };
+  ghl_nn_c2p_guess_t guess = { 0.0f };
   const float q = input.q;
   const float r = input.r;
   const float s = input.s;
@@ -40,13 +40,6 @@ ghl_nn_c2p_guess_t ghl_c2p_nn_guess(
   const float x_pred = x_lo + y01[0] * width;
   if(isfinite(x_pred)) {
     guess.x = x_pred;
-  }
-
-  if(model->out_dim > 1) {
-    const float W_pred = nn__decode_output(model, 1u, y01[1]);
-    if(isfinite(W_pred) && W_pred > 0.0f) {
-      guess.W = W_pred;
-    }
   }
 
   return guess;
