@@ -285,7 +285,9 @@ jobs:
         with:
           compiler: 'intel'
       - name: Install pyghl
-        run: python3 -m pip install pyghl
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pyghl
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin
