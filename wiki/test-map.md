@@ -5,6 +5,8 @@ Repo ground truth: `Unit_Tests/`, `.github/run_tests.sh`, `.github/workflows/`,
 
 Con2Prim-specific test selection, fixture names, HDF5 gates, and debug-test
 caveats route through [Con2Prim tests and fixtures](gems/con2prim/tests-and-fixtures.md).
+Neutrinos-specific CLI keys, fixture pairs, SLy4 table setup, HDF5 gates, and
+CI downloads route through [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md).
 
 ## Unit Tests
 
@@ -32,9 +34,9 @@ caveats route through [Con2Prim tests and fixtures](gems/con2prim/tests-and-fixt
 | `Unit_Tests/unit_test_induction_ccc_ADM.c` | `GRHayL/Induction/Interpolators/` | Cell-centered ADM interpolation. | `induction_interpolation_input.bin`, `induction_interpolation_ADM_input.bin`, `induction_interpolation_ccc_ADM_output*.bin`. | Uses helper implementation in `Unit_Tests/compute_ccc_ADM.c`. |
 | `Unit_Tests/unit_test_induction_ccc_BSSN.c` | `GRHayL/Induction/Interpolators/` | Cell-centered BSSN interpolation. | `induction_interpolation_input.bin`, `induction_interpolation_BSSN_input.bin`, `induction_interpolation_ccc_BSSN_output*.bin`. | Uses helper implementation in `Unit_Tests/compute_ccc_BSSN.c`. |
 | `Unit_Tests/unit_test_induction_vvv_ADM.c` | `GRHayL/Induction/Interpolators/` | Vertex-centered ADM interpolation. | `induction_interpolation_input.bin`, `induction_interpolation_ADM_input.bin`, `induction_interpolation_vvv_ADM_output*.bin`. | Uses helper implementation in `Unit_Tests/compute_vvv_ADM.c`. |
-| `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Constant-density sphere leakage evolution. | CLI EOS table path plus `nrpyleakage_constant_density_sphere_{unperturbed,perturbed}.bin`. | Test can generate data internally; CI downloads fixtures. |
-| `Unit_Tests/unit_test_nrpyleakage_luminosities.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Fermi-Dirac integrals and neutrino luminosity computation. | CLI EOS table path plus `nrpyleakage_luminosities_{unperturbed,perturbed}.bin`. | Test can generate data internally; CI downloads fixtures. |
-| `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Optically thin gas leakage source evolution. | CLI EOS table path plus `nrpyleakage_optically_thin_gas_{unperturbed,perturbed}.bin`. | Test can generate data internally; CI downloads fixtures. |
+| `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Constant-density sphere opacities and optical-depth iteration; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_constant_density_sphere_{unperturbed,perturbed}.bin`. | Key `0` generates data; key `1` replays fixtures. |
+| `Unit_Tests/unit_test_nrpyleakage_luminosities.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Fermi-Dirac branch checks and neutrino luminosity replay; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_luminosities_{unperturbed,perturbed}.bin`. | Key `0` generates data; key `1` replays fixtures. |
+| `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Optically thin gas leakage source evolution; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_optically_thin_gas_{unperturbed,perturbed}.bin`. | Key `0` generates data; key `1` replays fixtures. |
 | `Unit_Tests/unit_test_piecewise_polytrope.c` | `GRHayL/EOS/Hybrid/` | Piecewise-polytrope pressure, energy, and enthalpy-related EOS behavior. | None visible. | No external fixture. |
 | `Unit_Tests/unit_test_tabulated_eos.c` | `GRHayL/EOS/Tabulated/` | HDF5 table read, analytic table quantity checks, and tabulated interpolation routines. | CLI table path, normally `simple_table.h5` from CI or local sample generator. | HDF5-only. |
 | `Unit_Tests/unit_test_tabulated_flux.c` | `GRHayL/Flux_Source/tabulated*`, `GRHayL/EOS/Tabulated/` | HLLE fluxes for tabulated EOS, with entropy and three directions. | `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5`, `tabulated_flux_{input,output,output_pert}.bin`. | HDF5-only; EOS table downloaded by `run_tests.sh`. |
@@ -75,7 +77,7 @@ caveats route through [Con2Prim tests and fixtures](gems/con2prim/tests-and-fixt
 | `Unit_Tests/compute_ccc_ADM.c` | `GRHayL/Induction/Interpolators/` | Cell-centered ADM interpolation helper. | Used by induction interpolation tests. | Helper, not standalone test. |
 | `Unit_Tests/compute_ccc_BSSN.c` | `GRHayL/Induction/Interpolators/` | Cell-centered BSSN interpolation helper. | Used by induction interpolation tests. | Helper, not standalone test. |
 | `Unit_Tests/compute_vvv_ADM.c` | `GRHayL/Induction/Interpolators/` | Vertex-centered ADM interpolation helper. | Used by induction interpolation tests. | Helper, not standalone test. |
-| `Unit_Tests/nrpyleakage_main.h` | `GRHayL/Neutrinos/NRPyLeakage/` | Shared main/argument handling for NRPyLeakage tests. | CLI EOS table path. | Header helper. |
+| `Unit_Tests/nrpyleakage_main.h` | `GRHayL/Neutrinos/NRPyLeakage/` | Shared main/argument handling for NRPyLeakage tests; see [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path. | Header helper owns key `0` generation mode and key `1` unit-test mode. |
 | `Unit_Tests/pert_test_fail_conservatives.c` | test harness | Conservative quantity perturbation-bar comparison. | Called by multiple tests. | Helper, not standalone test. |
 | `Unit_Tests/pert_test_fail_primitives.c` | test harness | Primitive quantity perturbation-bar comparison, including EOS-dependent fields. | Called by multiple tests. | Helper, not standalone test. |
 | `Unit_Tests/pert_test_fail_stress_energy.c` | test harness | Stress-energy perturbation-bar comparison. | Called by stress-energy tests. | Helper, not standalone test. |

@@ -2,22 +2,39 @@
 
 ## Purpose
 
-Neutrinos provides NRPyLeakage support for neutrino opacities, luminosities, optical depths, and GRMHD source terms.
+This page routes Neutrinos KB work. It summarizes where to read first for
+NRPyLeakage public data, implementation flow, and tests without replacing
+source, headers, tests, CI, or Doxygen source.
 
-## Read First
+## Read Order
 
-- `GRHayL/include/ghl_radiation.h`
-- `GRHayL/include/ghl_nrpyleakage.h`
-- `GRHayL/include/ghl_nrpyeos_tabulated.h`
-- `GRHayL/Neutrinos/NRPyLeakage/`
+1. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
+   `NRPyLeakage_*` declarations, constants ownership, errors, and HDF5/EOS
+   dependency.
+2. [Implementation Flow](neutrinos/implementation-flow.md) for the five
+   `GRHayL/Neutrinos/NRPyLeakage/` source files and their writeback paths.
+3. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
+   fixture pairs, EOS table setup, and CI downloads.
 
-## Public Headers
+## Ground Truth
 
-- `GRHayL/include/ghl_radiation.h`
-- `GRHayL/include/ghl_nrpyleakage.h`
-- `GRHayL/include/ghl.h`
+- Source: `GRHayL/Neutrinos/NRPyLeakage/`
+- Public radiation structs: `GRHayL/include/ghl_radiation.h`
+- Public leakage declarations and constants: `GRHayL/include/ghl_nrpyleakage.h`
+- Error codes and EOS parameter types: `GRHayL/include/ghl.h`
+- Direct tabulated EOS dependencies: `GRHayL/include/ghl_nrpyeos_tabulated.h`
+  and `GRHayL/include/ghl_eos_functions.h`
+- Tests: `Unit_Tests/nrpyleakage_main.h` and
+  `Unit_Tests/unit_test_nrpyleakage_*.c`
+- Fermi-Dirac error coverage: `Unit_Tests/unit_test_code_error.c`
+- Build and CI gates: `configure`, `.github/run_tests.sh`, and
+  `.github/workflows/`
 
-Key public surface:
+If this page or a child page conflicts with those files, trust the repo-local
+ground truth and update the KB.
+
+## Public Surface
+
 - `ghl_neutrino_luminosities`
 - `ghl_neutrino_opacities`
 - `ghl_neutrino_optical_depths`
@@ -27,37 +44,11 @@ Key public surface:
 - `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`
 - `NRPyLeakage_optical_depths_PathOfLeastResistance`
 
-## Implementation Paths
+## Scope Notes
 
-- `GRHayL/Neutrinos/NRPyLeakage/`
-- `GRHayL/Neutrinos/make.code.defn`
-- `GRHayL/Neutrinos/NRPyLeakage/make.code.defn`
-
-## Test Paths
-
-- `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
-- `Unit_Tests/unit_test_nrpyleakage_luminosities.c`
-- `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`
-- `Unit_Tests/nrpyleakage_main.h`
-
-## Key Contracts
-
-- Leakage routines depend on density, `Y_e`, temperature, EOS table access, and optical-depth/opacities structs.
-- `ghl_neutrino_optical_depths` is an alias of `ghl_neutrino_opacities`; shape changes affect both concepts.
-- Constants and unit conversions are centralized in `GRHayL/include/ghl_nrpyleakage.h`.
-
-## Common Edit Routes
-
-- Change opacity or luminosity formula: update implementation, constants if needed, and targeted leakage unit tests.
-- Change radiation structs: update `ghl_radiation.h`, all NRPyLeakage callers, tests, and downstream includes.
-- Change EOS dependencies: coordinate with tabulated EOS tests and Con2Prim/primitive variable assumptions.
-
-## Drift Risks
-
-- EOS table variable changes can break leakage even when hydrodynamic tests pass.
-- Unit conversion constants are shared by all leakage routines.
-- GRHayLib includes radiation and NRPyLeakage headers; public API changes require downstream coordination.
-
-## Do Not Duplicate
-
-Keep formula details and constants in source and public headers. This page gives routing and invariants.
+- This KB fill is wiki-only and does not modify `docs/**`.
+- Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
+- Keep constants and unit conversions in `GRHayL/include/ghl_nrpyleakage.h`;
+  do not copy them into KB tables.
+- Treat HDF5-enabled tabulated EOS access as part of the direct Neutrinos
+  dependency surface because public leakage routines call it.

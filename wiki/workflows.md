@@ -190,6 +190,10 @@ Pitfalls/contracts:
 ## NRPyLeakage/Neutrino Path
 
 Read first:
+- `wiki/gems/neutrinos.md`
+- `wiki/gems/neutrinos/api-and-data.md`
+- `wiki/gems/neutrinos/implementation-flow.md`
+- `wiki/gems/neutrinos/tests-and-fixtures.md`
 - `GRHayL/include/ghl_radiation.h`
 - `GRHayL/include/ghl_nrpyleakage.h`
 - `GRHayL/Neutrinos/NRPyLeakage/`
@@ -207,9 +211,15 @@ Tests/data generators:
 - `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`
 - `Unit_Tests/nrpyleakage_main.h`
 
-Docs to update:
+Wiki routes:
 - `wiki/gems/neutrinos.md`
-- `docs/raw/mainpage.md` only if gem-level navigation changes
+- `wiki/gems/neutrinos/api-and-data.md` for radiation structs, public leakage
+  entry points, constants ownership, errors, and HDF5/EOS dependency
+- `wiki/gems/neutrinos/implementation-flow.md` for Fermi-Dirac,
+  PathOfLeastResistance, source terms, luminosities, opacities, and finite
+  handling
+- `wiki/gems/neutrinos/tests-and-fixtures.md` for `nrpyleakage_main.h`,
+  fixture pairs, SLy4 table setup, CI downloads, and key `0`/key `1` behavior
 
 Pitfalls/contracts:
 - Leakage routines depend on EOS access to `rho`, `Y_e`, and temperature.

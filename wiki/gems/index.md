@@ -131,6 +131,9 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: NRPyLeakage neutrino opacities, luminosities, optical-depth updates,
   and source terms.
+- KB routes: [hub](neutrinos.md), [API and data](neutrinos/api-and-data.md),
+  [implementation flow](neutrinos/implementation-flow.md), and
+  [tests and fixtures](neutrinos/tests-and-fixtures.md).
 - Docs path: coverage gap: no dedicated `docs/raw/Neutrinos.dox` exists;
   `GRHayL/include/ghl_radiation.h` defines the Doxygen group.
 - Source path: `GRHayL/Neutrinos/`.
@@ -140,10 +143,14 @@ source, headers, tests, and common edit routes before wider search.
 - Likely tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
   `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`,
   `Unit_Tests/unit_test_nrpyleakage_luminosities.c`,
-  `Unit_Tests/nrpyleakage_main.h`.
+  `Unit_Tests/nrpyleakage_main.h`; route fixture details through
+  [tests and fixtures](neutrinos/tests-and-fixtures.md).
 - Common edit routes: add or change leakage routines in
   `GRHayL/Neutrinos/NRPyLeakage/`, expose API in leakage/radiation headers,
-  update tests and downstream header aggregation.
+  update tests and downstream header aggregation. Use
+  [API and data](neutrinos/api-and-data.md) for public structs, entry points,
+  and HDF5/EOS contracts, and [implementation flow](neutrinos/implementation-flow.md)
+  for the five built source files.
 - Drift/contract notes: leakage uses tabulated EOS quantities and table-backed
   test data. HDF5/EOS changes can break Neutrinos even if leakage source is
   untouched.

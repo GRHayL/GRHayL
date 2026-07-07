@@ -75,6 +75,10 @@ With `--disable-hdf5`, `configure`:
   NRPyLeakage unit tests from the generated unit-test list;
 - excludes tabulated data generators from the generated data-generator list.
 
+For Neutrinos-specific HDF5/EOS details, route public table-backed API behavior
+through [Neutrinos API and data](gems/neutrinos/api-and-data.md), and fixture or
+SLy4 table setup through [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md).
+
 Manual or downstream no-HDF5 builds must mirror both parts visible in repo
 docs and script behavior: define `GHL_DISABLE_HDF5` and exclude HDF5/tabulated
 sources that require HDF5 runtime paths.
@@ -108,7 +112,7 @@ Common job groups across workflows:
 | `grhayl-core` | core struct/metric/stress-energy suite |
 | `flux` | `hybrid_flux`, `tabulated_flux` |
 | `reconstruction` | `PLM_reconstruction`, `WENOZ_reconstruction` |
-| `neutrinos` | NRPyLeakage optically thin gas, constant density sphere, luminosities |
+| `neutrinos` | NRPyLeakage optically thin gas, constant density sphere, luminosities; see [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md) |
 | `con-to-prim-tabulated` | tabulated C2P routines |
 | `code-failure` | expected error-code failures |
 | `induction-interpolators` | cell/vertex interpolation variants |
