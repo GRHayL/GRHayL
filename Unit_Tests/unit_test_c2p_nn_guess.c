@@ -233,6 +233,25 @@ static void write_scalar_f32(hid_t file_id, const char *name, float value) {
   H5Sclose(space_id);
 }
 
+static void write_scalar_string(hid_t file_id, const char *name) {
+  const char value[] = "bad";
+  hid_t string_type = H5Tcopy(H5T_C_S1);
+  CHECK(string_type >= 0, "failed to create string datatype");
+  CHECK(H5Tset_size(string_type, sizeof(value)) >= 0,
+        "failed to set string datatype size");
+  hid_t space_id = H5Screate(H5S_SCALAR);
+  CHECK(space_id >= 0, "failed to create scalar dataspace");
+  hid_t dataset_id = H5Dcreate2(file_id, name, string_type, space_id,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  CHECK(dataset_id >= 0, "failed to create HDF5 dataset %s", name);
+  CHECK(H5Dwrite(dataset_id, string_type, H5S_ALL, H5S_ALL,
+                 H5P_DEFAULT, value) >= 0,
+        "failed to write HDF5 dataset %s", name);
+  H5Dclose(dataset_id);
+  H5Sclose(space_id);
+  H5Tclose(string_type);
+}
+
 static void write_array_i32(
       hid_t file_id,
       const char *name,
@@ -267,6 +286,29 @@ static void write_array_f32(
         "failed to write HDF5 dataset %s", name);
   H5Dclose(dataset_id);
   H5Sclose(space_id);
+}
+
+static void write_array_string(
+      hid_t file_id,
+      const char *name,
+      int rank,
+      const hsize_t *restrict dims) {
+  const char values[4][4] = { "bad", "bad", "bad", "bad" };
+  hid_t string_type = H5Tcopy(H5T_C_S1);
+  CHECK(string_type >= 0, "failed to create string datatype");
+  CHECK(H5Tset_size(string_type, sizeof(values[0])) >= 0,
+        "failed to set string datatype size");
+  hid_t space_id = H5Screate_simple(rank, dims, NULL);
+  CHECK(space_id >= 0, "failed to create array dataspace");
+  hid_t dataset_id = H5Dcreate2(file_id, name, string_type, space_id,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  CHECK(dataset_id >= 0, "failed to create HDF5 dataset %s", name);
+  CHECK(H5Dwrite(dataset_id, string_type, H5S_ALL, H5S_ALL,
+                 H5P_DEFAULT, values) >= 0,
+        "failed to write HDF5 dataset %s", name);
+  H5Dclose(dataset_id);
+  H5Sclose(space_id);
+  H5Tclose(string_type);
 }
 
 static void prefixed_name(
@@ -387,6 +429,81 @@ static void create_hdf5_file(
   CHECK(H5Fclose(file_id) >= 0, "failed to close HDF5 file %s", path);
 }
 
+static void replace_dataset_i32(
+      const char *restrict path,
+      const char *restrict name,
+      const int value) {
+  hid_t file_id = H5Fopen(path, H5F_ACC_RDWR, H5P_DEFAULT);
+  CHECK(file_id >= 0, "failed to open HDF5 file %s", path);
+  CHECK(H5Ldelete(file_id, name, H5P_DEFAULT) >= 0,
+        "failed to delete HDF5 dataset %s", name);
+  write_scalar_i32(file_id, name, value);
+  CHECK(H5Fclose(file_id) >= 0, "failed to close HDF5 file %s", path);
+}
+
+static void delete_dataset(
+      const char *restrict path,
+      const char *restrict name) {
+  hid_t file_id = H5Fopen(path, H5F_ACC_RDWR, H5P_DEFAULT);
+  CHECK(file_id >= 0, "failed to open HDF5 file %s", path);
+  CHECK(H5Ldelete(file_id, name, H5P_DEFAULT) >= 0,
+        "failed to delete HDF5 dataset %s", name);
+  CHECK(H5Fclose(file_id) >= 0, "failed to close HDF5 file %s", path);
+}
+
+static void replace_dataset_with_scalar_string(
+      const char *restrict path,
+      const char *restrict name) {
+  hid_t file_id = H5Fopen(path, H5F_ACC_RDWR, H5P_DEFAULT);
+  CHECK(file_id >= 0, "failed to open HDF5 file %s", path);
+  CHECK(H5Ldelete(file_id, name, H5P_DEFAULT) >= 0,
+        "failed to delete HDF5 dataset %s", name);
+  write_scalar_string(file_id, name);
+  CHECK(H5Fclose(file_id) >= 0, "failed to close HDF5 file %s", path);
+}
+
+static void replace_dataset_with_i32_array(
+      const char *restrict path,
+      const char *restrict name,
+      const int rank,
+      const hsize_t *restrict dims,
+      const int *restrict values) {
+  hid_t file_id = H5Fopen(path, H5F_ACC_RDWR, H5P_DEFAULT);
+  CHECK(file_id >= 0, "failed to open HDF5 file %s", path);
+  CHECK(H5Ldelete(file_id, name, H5P_DEFAULT) >= 0,
+        "failed to delete HDF5 dataset %s", name);
+  write_array_i32(file_id, name, rank, dims, values);
+  CHECK(H5Fclose(file_id) >= 0, "failed to close HDF5 file %s", path);
+}
+
+static void replace_dataset_with_string_array(
+      const char *restrict path,
+      const char *restrict name,
+      const int rank,
+      const hsize_t *restrict dims) {
+  hid_t file_id = H5Fopen(path, H5F_ACC_RDWR, H5P_DEFAULT);
+  CHECK(file_id >= 0, "failed to open HDF5 file %s", path);
+  CHECK(H5Ldelete(file_id, name, H5P_DEFAULT) >= 0,
+        "failed to delete HDF5 dataset %s", name);
+  write_array_string(file_id, name, rank, dims);
+  CHECK(H5Fclose(file_id) >= 0, "failed to close HDF5 file %s", path);
+}
+
+static void check_hdf5_load_failure_preserves_model(
+      const char *restrict path,
+      const ghl_error_codes_t expected_error) {
+  ghl_eos_parameters eos = { 0 };
+  create_hdf5_file("/tmp/unit_test_c2p_nn_preserved.h5", "", true, 2);
+  CHECK_ERROR(ghl_c2p_nn_load_hdf5("/tmp/unit_test_c2p_nn_preserved.h5", &eos),
+              ghl_success);
+  ghl_c2p_nn_model *const preserved_model = eos.c2p_nn;
+  CHECK(preserved_model != NULL, "initial NN HDF5 load returned NULL model");
+  CHECK_ERROR(ghl_c2p_nn_load_hdf5(path, &eos), expected_error);
+  CHECK(eos.c2p_nn == preserved_model,
+        "failed HDF5 load should preserve existing model");
+  ghl_c2p_nn_free(eos.c2p_nn);
+}
+
 static void test_hdf5_loaders(void) {
   const ghl_nn_c2p_input_t input = { 2.0f, 0.25f, 0.5f, 0.1f };
   const int out_kind_linear = 1;
@@ -428,6 +545,78 @@ static void test_hdf5_loaders(void) {
   ghl_c2p_nn_free(eos.c2p_nn);
   eos.c2p_nn = NULL;
 }
+
+static void test_hdf5_loader_error_paths(void) {
+  H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+
+  const hsize_t one_dim[1] = { 1 };
+  const hsize_t three_dims[1] = { 3 };
+  const hsize_t four_dims[1] = { 4 };
+  const int one_value[1] = { 4 };
+  const int three_values[3] = { 0, 1, 0 };
+
+  const char missing_scalar[] = "/tmp/unit_test_c2p_nn_missing_scalar.h5";
+  create_hdf5_file(missing_scalar, "", true, 2);
+  delete_dataset(missing_scalar, "dims/in_dim");
+  check_hdf5_load_failure_preserves_model(
+        missing_scalar, ghl_error_hdf5_dataset_could_not_open);
+
+  const char scalar_bad_rank[] = "/tmp/unit_test_c2p_nn_scalar_bad_rank.h5";
+  create_hdf5_file(scalar_bad_rank, "", true, 2);
+  replace_dataset_with_i32_array(
+        scalar_bad_rank, "dims/in_dim", 1, one_dim, one_value);
+  check_hdf5_load_failure_preserves_model(
+        scalar_bad_rank, ghl_error_hdf5_dataset_invalid_ndims);
+
+  const char scalar_bad_type[] = "/tmp/unit_test_c2p_nn_scalar_bad_type.h5";
+  create_hdf5_file(scalar_bad_type, "", true, 2);
+  replace_dataset_with_scalar_string(scalar_bad_type, "dims/in_dim");
+  check_hdf5_load_failure_preserves_model(
+        scalar_bad_type, ghl_error_hdf5_dataset_could_not_read);
+
+  const char invalid_dims[] = "/tmp/unit_test_c2p_nn_invalid_dims.h5";
+  create_hdf5_file(invalid_dims, "", true, 2);
+  replace_dataset_i32(invalid_dims, "dims/in_dim", 9);
+  check_hdf5_load_failure_preserves_model(
+        invalid_dims, ghl_error_nn_c2p_invalid_dimensions);
+
+  const char missing_array[] = "/tmp/unit_test_c2p_nn_missing_array.h5";
+  create_hdf5_file(missing_array, "", true, 2);
+  delete_dataset(missing_array, "scaling/x_kind");
+  check_hdf5_load_failure_preserves_model(
+        missing_array, ghl_error_hdf5_dataset_could_not_open);
+
+  const char array_bad_rank[] = "/tmp/unit_test_c2p_nn_array_bad_rank.h5";
+  create_hdf5_file(array_bad_rank, "", true, 2);
+  replace_dataset_i32(array_bad_rank, "scaling/x_kind", 0);
+  check_hdf5_load_failure_preserves_model(
+        array_bad_rank, ghl_error_hdf5_dataset_invalid_ndims);
+
+  const char array_bad_size[] = "/tmp/unit_test_c2p_nn_array_bad_size.h5";
+  create_hdf5_file(array_bad_size, "", true, 2);
+  replace_dataset_with_i32_array(
+        array_bad_size, "scaling/x_kind", 1, three_dims, three_values);
+  check_hdf5_load_failure_preserves_model(
+        array_bad_size, ghl_error_hdf5_dataset_size_mismatch);
+
+  const char array_bad_type[] = "/tmp/unit_test_c2p_nn_array_bad_type.h5";
+  create_hdf5_file(array_bad_type, "", true, 2);
+  replace_dataset_with_string_array(
+        array_bad_type, "scaling/x_kind", 1, four_dims);
+  check_hdf5_load_failure_preserves_model(
+        array_bad_type, ghl_error_hdf5_dataset_could_not_read);
+
+  const char missing_out_scaling[] = "/tmp/unit_test_c2p_nn_missing_out_scaling.h5";
+  create_hdf5_file(missing_out_scaling, "", false, 2);
+  check_hdf5_load_failure_preserves_model(
+        missing_out_scaling, ghl_error_hdf5_dataset_could_not_open);
+
+  const char validation_failure[] = "/tmp/unit_test_c2p_nn_validation_failure.h5";
+  create_hdf5_file(validation_failure, "", true, 2);
+  replace_dataset_i32(validation_failure, "meta/q_idx", 4);
+  check_hdf5_load_failure_preserves_model(
+        validation_failure, ghl_error_nn_c2p_invalid_input_index);
+}
 #endif
 
 int main(void) {
@@ -435,6 +624,7 @@ int main(void) {
   test_guess_model();
 #ifndef GHL_DISABLE_HDF5
   test_hdf5_loaders();
+  test_hdf5_loader_error_paths();
 #endif
   printf("All c2p neural-network guess tests succeeded\n");
   return 0;

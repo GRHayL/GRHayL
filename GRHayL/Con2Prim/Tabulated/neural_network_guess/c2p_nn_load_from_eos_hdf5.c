@@ -286,16 +286,15 @@ static ghl_error_codes_t nn__load_model_from_hdf5(
   }
 
   err = ghl_c2p_nn_validate_model(model);
-  if(err != ghl_success) {
-    goto cleanup_and_return;
-  }
-
-  ghl_c2p_nn_free(eos->c2p_nn);
-  eos->c2p_nn = model;
-  return ghl_success;
 
 cleanup_and_return:
-  ghl_c2p_nn_free(model);
+  if(err == ghl_success) {
+    ghl_c2p_nn_free(eos->c2p_nn);
+    eos->c2p_nn = model;
+  }
+  else {
+    ghl_c2p_nn_free(model);
+  }
   return err;
 
 #undef NN_BUILD_PATH
