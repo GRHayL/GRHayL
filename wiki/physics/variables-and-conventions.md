@@ -12,6 +12,8 @@ Physics orientation:
 Primary code paths:
 - Initialization/unpacking: `GRHayL/GRHayL_Core/initialize_primitives.c`, `GRHayL/GRHayL_Core/return_primitives.c`
 - Primitive bounds and `u0`: `GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`
+- Recovery route: [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md)
+- Limit route: [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md)
 - Atmosphere reset: `GRHayL/Atmosphere/`
 - Reconstruction inputs: `GRHayL/Reconstruction/`
 
@@ -32,6 +34,8 @@ Primary code paths:
 - Primitive-to-conservative: `GRHayL/Con2Prim/compute_conservs.c`, `GRHayL/Con2Prim/compute_conservs_and_Tmunu.c`
 - Conservative limits: `GRHayL/Con2Prim/apply_conservative_limits.c`
 - Conservative-to-primitive recovery: `GRHayL/Con2Prim/`
+- Recovery and conversion routes: [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md),
+  [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md)
 
 Contracts:
 - Densitized hydrodynamic fields depend on `sqrt_detgamma`.
@@ -64,6 +68,7 @@ Physics orientation:
 Primary code paths:
 - Metric setup: `GRHayL/GRHayL_Core/initialize_metric.c`, `GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c`
 - Conservative conversion: `GRHayL/Con2Prim/compute_conservs.c`, `GRHayL/Con2Prim/undensitize_conservatives.c`
+- Con2Prim densitization route: [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md)
 - Induction flux variants: `GRHayL/Induction/HLL_flux_with_B.c`, `GRHayL/Induction/HLL_flux_with_Btilde.c`
 - Gauge RHS: `GRHayL/Induction/calculate_phitilde_rhs.c`
 

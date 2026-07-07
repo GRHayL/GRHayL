@@ -1,73 +1,54 @@
 # Con2Prim Gem
 
-## Purpose
-
-Con2Prim recovers primitive variables from conservative variables and provides related primitive-to-conservative helpers. Recovery is numerical and EOS-dependent.
+Compact hub for conservative-to-primitive recovery, dispatch, helper contracts,
+tests, and public docs. Keep detailed method status and equations out of this
+page; source, raw Doxygen, and tests remain authority.
 
 ## Read First
 
-- `docs/raw/Con2Prim.dox`
-- `docs/raw/derivation.md`
-- `wiki/physics/variables-and-conventions.md`
-- `wiki/physics/evolution-equation-map.md`
+- Method support and dispatch: [solver matrix](con2prim/solver-matrix.md)
+- Recovery order, backups, diagnostics: [recovery flow](con2prim/recovery-flow.md)
+- Limits, guesses, and conversions: [limits and conversions](con2prim/limits-and-conversions.md)
+- Tests, fixtures, and HDF5 caveats: [tests and fixtures](con2prim/tests-and-fixtures.md)
+- Public docs: `docs/raw/Con2Prim.dox`
+- Physics background: `docs/raw/derivation.md`
 
-## Public Headers
+## Source Authority
 
-- `GRHayL/include/ghl_con2prim.h`
-- `GRHayL/include/ghl.h`
+Treat a Con2Prim method as supported only when local evidence agrees across
+`ghl_con2prim_id_t`/name mapping, public declaration, selector dispatch, build
+lists, and tests where applicable. File presence alone is not support.
 
-Key public surface:
-- `ghl_con2prim_hybrid_multi_method`
-- `ghl_con2prim_tabulated_multi_method`
-- `ghl_con2prim_hybrid_select_method`
-- `ghl_con2prim_tabulated_select_method`
-- `ghl_apply_conservative_limits`
-- `ghl_guess_primitives`
-- `ghl_enforce_primitive_limits_and_compute_u0`
-- `ghl_compute_conservs`
-- `ghl_compute_conservs_and_Tmunu`
+## Public Surface
 
-## Implementation Paths
+- Headers: `GRHayL/include/ghl_con2prim.h`, `GRHayL/include/ghl.h`
+- Drivers: `ghl_con2prim_hybrid_multi_method`,
+  `ghl_con2prim_tabulated_multi_method`
+- Selectors: `ghl_con2prim_hybrid_select_method`,
+  `ghl_con2prim_tabulated_select_method`
+- Helpers: `ghl_apply_conservative_limits`,
+  `ghl_undensitize_conservatives`, `ghl_guess_primitives`,
+  `ghl_enforce_primitive_limits_and_compute_u0`, `ghl_compute_conservs`,
+  `ghl_compute_conservs_and_Tmunu`
 
-- Shared routines: `GRHayL/Con2Prim/`
-- Hybrid Noble: `GRHayL/Con2Prim/Hybrid/Noble/`
-- Hybrid Font1D: `GRHayL/Con2Prim/Hybrid/Font1D/`
-- Hybrid Palenzuela1D: `GRHayL/Con2Prim/Hybrid/Palenzuela1D/`
-- Tabulated Newman1D: `GRHayL/Con2Prim/Tabulated/Newman1D/`
-- Tabulated Noble2D: `GRHayL/Con2Prim/Tabulated/Noble2D/`
-- Tabulated Palenzuela1D: `GRHayL/Con2Prim/Tabulated/Palenzuela1D/`
-- Tabulated Cerda-Duran path: `GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`
+## Source Inventory
 
-## Test Paths
-
-- `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`
-- `Unit_Tests/unit_test_con2prim_tabulated.c`
-- `Unit_Tests/unit_test_con2prim_debug.c`
-- `Unit_Tests/unit_test_hybrid_failure.c`
-- `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`
-- `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`
+- Shared recovery and helper routines: `GRHayL/Con2Prim/`
+- Hybrid solvers: `GRHayL/Con2Prim/Hybrid/`
+- Tabulated solvers: `GRHayL/Con2Prim/Tabulated/`
+- Build lists: `GRHayL/Con2Prim/**/make.code.defn`
+- Tests and data: `Unit_Tests/unit_test_con2prim_*.c`,
+  `Unit_Tests/unit_test_apply_conservative_limits.c`,
+  `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`,
+  `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`,
+  `.github/run_tests.sh`
 
 ## Key Contracts
 
-- Initialize diagnostics with `ghl_initialize_diagnostics`.
-- Use `ghl_con2prim_id_t` values in `GRHayL/include/ghl.h` consistently with dispatch and routine-name helpers.
-- Respect densitized versus undensitized conservative inputs for each method.
-- Always enforce primitive limits and compute `u0` before returning usable primitives.
-- Entropy methods must match `params->evolve_entropy` and EOS support.
-
-## Common Edit Routes
-
-- Add hybrid method: update `ghl_con2prim_id_t`, declarations, select/multi-method dispatch, method implementation, build lists, tests, and `docs/raw/Con2Prim.dox`.
-- Add tabulated method: same route, plus tabulated EOS variable and bounds assumptions.
-- Change conservative limiting: update `apply_conservative_limits`, affected tests, and physics pages if variable meaning changes.
-- Change diagnostics: update struct users and tests that assert failure, backup, or iteration behavior.
-
-## Drift Risks
-
-- EOS function-pointer changes can break Con2Prim without local compiler errors in every method.
-- Entropy and temperature recovery paths must stay aligned with flux entropy variants and tabulated EOS.
-- GRHayLib directly includes Con2Prim public headers and compiles Con2Prim subdirectories; new subdirectories may need downstream build-list coordination.
-
-## Do Not Duplicate
-
-Doxygen pages and source are authority for method references, arguments, and equations. Keep this page as routing and contract guidance only.
+- Initialize `ghl_con2prim_diagnostics` with `ghl_initialize_diagnostics`.
+- Track densitized versus undensitized conservative inputs before calling
+  selectors or helpers.
+- Multi-method drivers may reset primitive guesses and try up to three backup
+  routines.
+- Enforce primitive bounds and compute `u0` before using recovered primitives.
+- Tabulated recovery is HDF5-gated and depends on table-backed EOS setup.

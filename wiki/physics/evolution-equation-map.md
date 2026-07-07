@@ -14,6 +14,7 @@ Code map:
 - Conversion plus stress-energy: `GRHayL/Con2Prim/compute_conservs_and_Tmunu.c`
 - Conservative limiting: `GRHayL/Con2Prim/apply_conservative_limits.c`
 - Undensitization for recovery: `GRHayL/Con2Prim/undensitize_conservatives.c`
+- Con2Prim helper route: [limits and conversions](../gems/con2prim/limits-and-conversions.md)
 
 Tests:
 - `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`
@@ -115,6 +116,9 @@ Code map:
 - Tabulated methods: `GRHayL/Con2Prim/Tabulated/`
 - Guess and bounds: `GRHayL/Con2Prim/guess_primitives.c`, `GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`
 - Diagnostics: `GRHayL/Con2Prim/initialize_diagnostics.c`
+- KB routes: [solver matrix](../gems/con2prim/solver-matrix.md),
+  [recovery flow](../gems/con2prim/recovery-flow.md),
+  [limits and conversions](../gems/con2prim/limits-and-conversions.md)
 
 Tests:
 - `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`
@@ -122,3 +126,4 @@ Tests:
 - `Unit_Tests/unit_test_con2prim_debug.c`
 - `Unit_Tests/unit_test_hybrid_failure.c`
 - `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`
+- Fixture route: [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md)

@@ -44,6 +44,9 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: conservative-to-primitive inversion methods, method selection,
   diagnostics, primitive/conservative helpers, and limit enforcement.
+- KB routes: [hub](con2prim.md), [solver matrix](con2prim/solver-matrix.md),
+  [recovery flow](con2prim/recovery-flow.md), [limits and conversions](con2prim/limits-and-conversions.md),
+  [tests and fixtures](con2prim/tests-and-fixtures.md).
 - Docs path: `docs/raw/Con2Prim.dox`, with physics background in
   `docs/raw/derivation.md`.
 - Source path: `GRHayL/Con2Prim/`.
@@ -53,13 +56,16 @@ source, headers, tests, and common edit routes before wider search.
   `Unit_Tests/unit_test_con2prim_tabulated.c`,
   `Unit_Tests/unit_test_apply_conservative_limits.c`,
   `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`,
-  `Unit_Tests/unit_test_hybrid_failure.c`, related data generators.
+  `Unit_Tests/unit_test_hybrid_failure.c`, related data generators; route
+  fixture details through [tests and fixtures](con2prim/tests-and-fixtures.md).
 - Common edit routes: new method means add implementation, expose/select it in
   `GRHayL/include/ghl_con2prim.h` and `ghl_con2prim_id_t`, update method-name
-  mapping, update docs/tests, and check `GRHayLib` parameter mapping.
+  mapping, update docs/tests, and check `GRHayLib` parameter mapping. Use
+  [solver matrix](con2prim/solver-matrix.md) for method-support evidence.
 - Drift/contract notes: solver IDs, backup routine behavior, entropy/temp
   assumptions, and tabulated EOS support are externally visible through
-  downstream configuration.
+  downstream configuration. Use [recovery flow](con2prim/recovery-flow.md) for
+  diagnostics, dispatch, backups, and densitized/undensitized boundaries.
 
 ## EOS
 

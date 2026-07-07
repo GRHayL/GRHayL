@@ -40,6 +40,11 @@ Pitfalls/contracts:
 ## Con2Prim Method
 
 Read first:
+- `wiki/gems/con2prim.md`
+- `wiki/gems/con2prim/solver-matrix.md` for solver names, support status, dispatch, and diagnostics
+- `wiki/gems/con2prim/recovery-flow.md` for recovery order, backups, and densitized/undensitized boundaries
+- `wiki/gems/con2prim/limits-and-conversions.md` for conservative limits, primitive limits, guesses, and conversion helpers
+- `wiki/gems/con2prim/tests-and-fixtures.md` for Con2Prim test and fixture routing
 - `docs/raw/Con2Prim.dox`
 - `docs/raw/derivation.md`
 - `GRHayL/include/ghl_con2prim.h`
@@ -62,12 +67,16 @@ Tests/data generators:
 
 Docs to update:
 - `docs/raw/Con2Prim.dox` for method availability, EOS support, or references
-- `wiki/gems/con2prim.md` for routing changes
+- `wiki/gems/con2prim.md` for hub routing changes
+- `wiki/gems/con2prim/solver-matrix.md` for method support, dispatch, diagnostics, or backup-status changes
+- `wiki/gems/con2prim/recovery-flow.md` for driver order, backup behavior, and densitized/undensitized contracts
+- `wiki/gems/con2prim/limits-and-conversions.md` for helper contract or conversion changes
+- `wiki/gems/con2prim/tests-and-fixtures.md` for fixture, HDF5, or targeted-test changes
 - `wiki/physics/variables-and-conventions.md` if variable meaning changes
 
 Pitfalls/contracts:
 - `ghl_con2prim_diagnostics` must identify limits, backups, selected routine, and iteration count consistently.
-- Some routines take densitized conservatives; others use undensitized values. Check `ghl_undensitize_conservatives` call sites before editing.
+- Some routines take densitized conservatives; others use undensitized values. Check `ghl_undensitize_conservatives` call sites and [recovery flow](gems/con2prim/recovery-flow.md) before editing.
 - Entropy methods depend on `params->evolve_entropy` and EOS entropy support.
 - Primitive recovery must return bounded primitives and a valid `u0` through `ghl_enforce_primitive_limits_and_compute_u0`.
 
