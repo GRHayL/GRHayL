@@ -6,6 +6,7 @@ Atmosphere routines reset primitive variables to prescribed low-density floor st
 
 ## Read First
 
+- [Atmosphere prescription contract](atmosphere/prescription-contract.md)
 - `docs/raw/Atmosphere.dox`
 - `GRHayL/include/ghl_atmosphere.h`
 - `GRHayL/include/ghl.h`
@@ -17,13 +18,16 @@ Atmosphere routines reset primitive variables to prescribed low-density floor st
 - `GRHayL/include/ghl.h`
 
 Key active public surface:
-- `ghl_set_prims_to_constant_atm`
+- `ghl_set_prims_to_constant_atm`; see
+  [prescription contract](atmosphere/prescription-contract.md).
 
 Declared/unbuilt drift candidate:
 - `ghl_set_prims_to_radial_falloff_atm` is declared in
   `GRHayL/include/ghl_atmosphere.h` and has a source file, but
   `GRHayL/Atmosphere/make.code.defn` does not compile it and
-  `docs/raw/Atmosphere.dox` says only one prescription is provided.
+  `docs/raw/Atmosphere.dox` says only one prescription is provided. Route
+  radial falloff questions to
+  [prescription contract](atmosphere/prescription-contract.md).
 
 ## Implementation Paths
 

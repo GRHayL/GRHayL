@@ -28,6 +28,7 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: atmosphere prescriptions for resetting primitive variables to
   atmosphere values.
+- KB routes: [hub](atmosphere.md), [prescription contract](atmosphere/prescription-contract.md).
 - Docs path: `docs/raw/Atmosphere.dox`.
 - Source path: `GRHayL/Atmosphere/`.
 - Primary headers: `GRHayL/include/ghl_atmosphere.h`, `GRHayL/include/ghl.h`.
@@ -71,6 +72,11 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: simple, hybrid, and tabulated equation-of-state support, including
   bounds, table reading, function-pointer dispatch, enthalpy, and sound speed.
+- KB routes: [hub](eos.md), [initialization and dispatch](eos/initialization-and-dispatch.md),
+  [hybrid piecewise-polytrope](eos/hybrid-piecewise-polytrope.md),
+  [tabulated table contract](eos/tabulated-table-contract.md),
+  [tabulated interpolation and bounds](eos/tabulated-interpolation-and-bounds.md),
+  [tests and fixtures](eos/tests-and-fixtures.md).
 - Docs path: `docs/raw/EOS.dox`, plus HDF5 build notes in `README.md`.
 - Source path: `GRHayL/EOS/`.
 - Primary headers: `GRHayL/include/ghl.h`,
