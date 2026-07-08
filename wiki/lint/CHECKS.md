@@ -36,8 +36,8 @@ rg -n -o '\[[^]]+\]\(([^)#][^)]*)\)' AGENTS.md wiki \
     done
 ```
 
-During parallel KB work, do not fail solely because links to other agents'
-pages are temporarily missing. Report them.
+If KB pages are being authored concurrently, do not fail solely because
+links to in-progress pages are temporarily missing. Report them.
 
 ## Forbidden Policy Terms
 
@@ -45,13 +45,13 @@ Search for terms tied to banned source tracking. Hits in policy statements are
 allowed only when they say the practice is forbidden.
 
 ```bash
-rg -n '(sha[0-9]*|md5|hash(es|ing)?|checksum|digest|mtime|fingerprint|maintenance log|separate log)' AGENTS.md wiki || true
+rg -n '(\bsha([0-9]+)?(sum)?\b|\bmd5(sum)?\b|\bhash(es|ing)?\b|checksum|digest|\bmtime\b|fingerprint|maintenance log|separate log)' AGENTS.md wiki || true
 ```
 
 Inspect each hit:
 
 ```bash
-rg -n -C 2 '(sha[0-9]*|md5|hash(es|ing)?|checksum|digest|mtime|fingerprint|maintenance log|separate log)' AGENTS.md wiki || true
+rg -n -C 2 '(\bsha([0-9]+)?(sum)?\b|\bmd5(sum)?\b|\bhash(es|ing)?\b|checksum|digest|\bmtime\b|fingerprint|maintenance log|separate log)' AGENTS.md wiki || true
 ```
 
 Policy must remain:
@@ -103,10 +103,9 @@ rg -n '\]\(([^)]*wiki/|[^)]*\.md)' AGENTS.md wiki || true
 
 Manual review:
 
-- every KB page should be reachable from `wiki/index.md`, `wiki/catalog.md`,
-  or a task-specific router page
-- pages owned by other agents may be linked before they exist
-- do not create placeholder files for pages owned by other agents
+- every KB page should be reachable from `wiki/index.md` or `wiki/catalog.md`
+- links to planned-but-unwritten pages may exist temporarily; report them
+- do not create placeholder files for pages you are not writing
 
 ## Doxygen Duplication Checks
 

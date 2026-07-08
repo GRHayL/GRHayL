@@ -114,7 +114,9 @@ hybrid EOS sources.
 `Unit_Tests/unit_test_piecewise_polytrope.c` directly initializes a four-piece
 hybrid EOS and checks computed `K_ppoly` and `eps_integ_const` entries against
 reference values from the NRPyEOS Python path. This is the direct regression
-route for `ghl_hybrid_set_K_ppoly_and_eps_integ_consts`.
+route for the `ghl_hybrid_set_K_ppoly_and_eps_integ_consts` function pointer
+(`GRHayL/include/ghl_eos_functions.h`), whose installed implementation is
+`NRPyEOS_set_K_ppoly_and_eps_integ_consts` from the Helper Map above.
 
 `Unit_Tests/test_compute_h_and_cs2.c` provides a small test helper for
 `ghl_compute_h_and_cs2` call sites; it is not the direct piecewise-polytrope

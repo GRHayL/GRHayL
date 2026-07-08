@@ -152,7 +152,7 @@ binary metadata, hashes, `mtime`, fingerprints, or copied fixture contents here.
   for primitives, conservatives, and stress energy.
 - Clamp helpers: no direct Core clamp test is visible in the listed ground
   truth. Keep `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp` coverage as
-  weak unless a test is added or found outside this task's source set.
+  weak unless a direct test is added or found elsewhere in the repo.
 - Standalone 3D metric helpers: direct fixed-value coverage in
   [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
   is for the 4D helper paths. Standalone `ghl_raise_lower_vector_3D` and

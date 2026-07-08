@@ -137,7 +137,3 @@ simple_table.h5`, and larger downloaded stellar-collapse tables in
 - [`docs/raw/EOS.dox`](../../../docs/raw/EOS.dox)
 - [`Unit_Tests/unit_test_tabulated_eos.c`](../../../Unit_Tests/unit_test_tabulated_eos.c)
 - [`Unit_Tests/sample_table/`](../../../Unit_Tests/sample_table/)
-
-## External References
-
-None used. Repo-local files above are the authority for this page.

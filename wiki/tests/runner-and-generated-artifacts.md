@@ -135,7 +135,3 @@ manual-only tests, HDF5 needs, and expected failures:
 - [.github/run_tests.sh](../../.github/run_tests.sh)
 - [.github/workflows](../../.github/workflows/)
 - [.github/actions/compile_GRHayL/action.yml](../../.github/actions/compile_GRHayL/action.yml)
-
-## External References
-
-None used. Repo-local files above are the authority for this page.

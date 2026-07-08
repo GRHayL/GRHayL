@@ -46,7 +46,8 @@ ground truth and update the KB.
 
 ## Scope Notes
 
-- This KB fill is wiki-only and does not modify `docs/**`.
+- Neutrinos KB pages live under `wiki/` only; Doxygen source under `docs/**`
+  is a separate authority (currently no dedicated Neutrinos page exists there).
 - Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
 - Keep constants and unit conversions in `GRHayL/include/ghl_nrpyleakage.h`;
   do not copy them into KB tables.

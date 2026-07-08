@@ -112,7 +112,3 @@ Dependent tests are impact signals for EOS changes, not primary EOS contracts:
 - [configure](../../../configure)
 - [wiki/test-map.md](../../test-map.md)
 - [wiki/build-and-ci.md](../../build-and-ci.md)
-
-## External References
-
-None used. Repo-local files above are the authority for this page.

@@ -322,7 +322,7 @@ Tests/data generators:
 
 Docs to update:
 - Relevant gem page under `wiki/gems/`
-- `wiki/test-map.md` is outside this task scope; coordinate with its owner before editing.
+- `wiki/test-map.md` when the new test, generator, or fixture changes the top-level test inventory.
 
 Pitfalls/contracts:
 - Test data often validates outputs against perturbed input ranges.
@@ -343,7 +343,11 @@ Edit paths:
 - Public API comments: `GRHayL/include/`
 
 Tests/data generators:
-- Run Doxygen locally if the build tooling is available.
+- Run Doxygen locally if the build tooling is available: `doxygen Doxyfile`
+  from repo root; treat any warning output as a failure to review. Generated
+  HTML/output artifacts land under `docs/` (e.g. `docs/html/`) alongside the
+  tracked source docs in `docs/raw/` -- do not commit the generated artifacts
+  (see `wiki/generated-boundaries.md`).
 - At minimum, search links and group names after edits.
 
 Docs to update:
@@ -369,8 +373,8 @@ Read first:
 - `wiki/implementations/grhaylib/verification-and-drift.md`
 
 Edit paths:
-- None in this task scope. Implementation edits are out of scope unless
-  separately requested; coordinate with the owner before editing
+- Normally none. Edits under `implementations/GRHayLib/` need downstream
+  coordination; coordinate with the maintainers before editing
   `implementations/GRHayLib/`.
 
 Tests/data generators:

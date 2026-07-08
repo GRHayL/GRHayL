@@ -19,12 +19,15 @@ The accepted keys are:
 - `1`: call `run_unit_test(&eos)` and compare against existing binary fixtures.
 
 Any other key is rejected by the shared harness. The harness also initializes a
-tabulated, stellar-collapse EOS before dispatching either mode:
-`eos.eos_type = ghl_eos_tabulated`, `eos.table_type =
-ghl_eos_table_stellarcollapse`, `eos.clean_sound_speed = true`, and
-`ghl_initialize_tabulated_eos_functions_and_params(...)` with atmosphere values
-for `rho_b`, `Y_e`, and `T`. It frees table memory with
-`ghl_tabulated_free_memory(&eos)` after test or generation mode completes.
+tabulated, stellar-collapse EOS before dispatching either mode. Note: the
+harness pre-sets `eos.eos_type`, `eos.table_type`, and
+`eos.clean_sound_speed = true`, but the subsequent
+`ghl_initialize_tabulated_eos_functions_and_params(...)` call overwrites all
+three -- it hard-codes `ghl_eos_table_stellarcollapse` and
+`clean_sound_speed = false` (`GRHayL/GRHayL_Core/initialize_eos.c`), so the
+effective EOS runs with sound-speed cleaning disabled. The harness then
+passes atmosphere values for `rho_b`, `Y_e`, and `T`, and frees table memory
+with `ghl_tabulated_free_memory(&eos)` after either mode completes.
 
 Ground truth:
 

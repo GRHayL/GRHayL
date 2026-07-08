@@ -63,5 +63,5 @@ schedule timing, global lifecycle, or Einstein Toolkit runtime behavior.
   [contradictions.md](../contradictions.md).
 - ET Legacy provenance wording about TestData, IllinoisGRMHD, `GRHayLTestPatch`,
   and Einstein Toolkit should stay source-backed. Use repo-visible runner/docs
-  evidence unless a future task explicitly verifies external repositories.
+  evidence unless the external repositories have been explicitly verified.
 - Perturbation wording drift also routes to [contradictions.md](../contradictions.md).

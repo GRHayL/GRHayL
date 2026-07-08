@@ -32,6 +32,10 @@ it does not duplicate function-level docs.
   `GRHayL/include/ghl_nrpyleakage.h` after defining radiation structs.
 - `GRHayL/include/ghl_unit_tests.h` aggregates module headers for tests and is
   intentionally excluded from generated Doxygen API pages.
+- Caveat: struct doc comments in `GRHayL/include/ghl.h` link an external
+  GitHub wiki (`https://github.com/GRHayL/GRHayL/wiki/<struct>`). Treat
+  repo-local Doxygen source and KB routes as authority; the external wiki is
+  not tracked by this repository.
 - `implementations/GRHayLib/src/GRHayLib.h` aggregates module headers for the
   Cactus thorn, so any public header rename or split needs a downstream update.
 

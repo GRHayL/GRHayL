@@ -193,7 +193,12 @@ source changes:
   `Noble1D_entropy2`.
 - `GRHayLib_paramcheck` contains compatibility checks for
   `Newman1D_energy`, while exposed Cactus keywords include `Newman1D` and
-  `Newman1D_entropy`.
+  `Newman1D_entropy`. Consequence: `EOS_type = "Simple"` or `"Hybrid"` with
+  `con2prim_routine = "Newman1D"` passes paramcheck, then fails at runtime
+  on every point through the hybrid selector's
+  `ghl_error_invalid_c2p_key` path (no hybrid `Newman1D` case in
+  `GRHayL/Con2Prim/con2prim_multi_method.c`). Needs a maintainer decision:
+  fix the paramcheck strings or restrict the `param.ccl` keyword lists.
 
 ## Local Ground Truth
 

@@ -135,6 +135,10 @@ Composite actions:
   datagen`, and `make install`.
 - `.github/actions/code-coverage/action.yml` runs coverage tooling and then
   `codecov/codecov-action@v5`.
+- `codecov.yml` at repo root configures Codecov report behavior for those
+  uploads, including per-gem coverage components and ignored test paths. Its
+  header comment requires validating any change with
+  `curl -X POST --data-binary @codecov.yml https://codecov.io/validate`.
 
 ## `.github/run_tests.sh`
 

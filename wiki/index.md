@@ -28,7 +28,7 @@ and update the KB page.
 | [Workflows](workflows.md) | Common agent workflows for docs, tests, builds, and review. | `README.md`, `configure`, `.github/run_tests.sh` |
 | [Physics Variables](physics/variables-and-conventions.md) | Primitive/conservative variables, stress-energy notation, magnetic rescaling. | `docs/raw/derivation.md`, `GRHayL/include/ghl.h` |
 | [Evolution Equation Map](physics/evolution-equation-map.md) | Flux/source/evolution equation routes and implementation entry points. | `docs/raw/derivation.md`, `docs/raw/Flux_Source.dox`, `GRHayL/Flux_Source/` |
-| [KB Checks](lint/CHECKS.md) | Manual checks for links, policy, page contracts, source authority, and duplication. | `AGENTS.md`, `tasks*.md`, `docs/raw/`, KB pages |
+| [KB Checks](lint/CHECKS.md) | Manual checks for links, policy, page contracts, source authority, and duplication. | `AGENTS.md`, `docs/raw/`, KB pages |
 
 ## Where Do I Start?
 

@@ -35,12 +35,12 @@ links in view because repo-local files remain the ground truth.
 | Understand generated outputs and build products | [Doxyfile](Doxyfile), [docs/raw](docs/raw/) |
 | Check style and contribution rules | [.clang-format](.clang-format), [.editorconfig](.editorconfig) |
 | Work on Core/chalice shared structs, packing, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, or debug utilities | [Core KB](wiki/core/index.md), [Core API Docs](docs/raw/GRHayL_Core.dox), [public headers](GRHayL/include/) |
-| Work on atmosphere prescriptions | [Atmosphere docs](docs/raw/Atmosphere.dox), [Atmosphere source](GRHayL/Atmosphere/) |
-| Work on conservative-to-primitive solvers | [Con2Prim docs](docs/raw/Con2Prim.dox), [Con2Prim source](GRHayL/Con2Prim/) |
-| Work on equation-of-state routines | [EOS docs](docs/raw/EOS.dox), [EOS source](GRHayL/EOS/) |
-| Work on fluxes, source terms, or characteristic speeds | [Flux Source docs](docs/raw/Flux_Source.dox), [Flux Source source](GRHayL/Flux_Source/) |
+| Work on atmosphere prescriptions | [Atmosphere KB hub](wiki/gems/atmosphere.md), [Atmosphere docs](docs/raw/Atmosphere.dox), [Atmosphere source](GRHayL/Atmosphere/) |
+| Work on conservative-to-primitive solvers | [Con2Prim KB hub](wiki/gems/con2prim.md), [Con2Prim docs](docs/raw/Con2Prim.dox), [Con2Prim source](GRHayL/Con2Prim/) |
+| Work on equation-of-state routines | [EOS KB hub](wiki/gems/eos.md), [EOS docs](docs/raw/EOS.dox), [EOS source](GRHayL/EOS/) |
+| Work on fluxes, source terms, or characteristic speeds | [Flux Source KB hub](wiki/gems/flux-source.md), [Flux Source docs](docs/raw/Flux_Source.dox), [Flux Source source](GRHayL/Flux_Source/) |
 | Work on vector-potential induction routines | [Induction KB hub](wiki/gems/induction.md), [Induction docs](docs/raw/Induction.dox), [Induction source](GRHayL/Induction/) |
-| Work on neutrino leakage support | [Neutrinos source](GRHayL/Neutrinos/), [radiation header](GRHayL/include/ghl_radiation.h) |
+| Work on neutrino leakage support | [Neutrinos KB hub](wiki/gems/neutrinos.md), [Neutrinos source](GRHayL/Neutrinos/), [radiation header](GRHayL/include/ghl_radiation.h) |
 | Work on shock-capturing reconstruction | [Reconstruction hub](wiki/gems/reconstruction.md), [face/stencil contract](wiki/gems/reconstruction/face-and-stencil-contract.md), [Reconstruction source](GRHayL/Reconstruction/), [Reconstruction docs as read-only evidence](docs/raw/Reconstruction.dox) |
 | Understand the GRMHD derivation | [GRMHD Derivation](docs/raw/derivation.md) |
 | Connect GRHayL to downstream infrastructure | [GRHayLib implementation](implementations/GRHayLib/) |
