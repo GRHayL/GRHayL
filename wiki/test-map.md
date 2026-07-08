@@ -17,6 +17,13 @@ and PPM coverage caveats route through [Reconstruction tests and fixtures](gems/
 Induction-specific fixture/test details route through [Induction tests and fixtures](gems/induction/tests-and-fixtures.md);
 targeted build, run, and CI job guidance routes through [Induction verification workflows](gems/induction/verification-workflows.md).
 
+GRHayLib/Cactus thorn coverage caveat: ET_Legacy tests are related legacy
+comparisons for upstream GRHayL behavior, not direct GRHayLib thorn coverage.
+Implementation-only changes under `implementations/GRHayLib/` need manual
+downstream verification, including Cactus or Einstein Toolkit checks when
+available. Route that checklist through
+[GRHayLib verification and drift](implementations/grhaylib/verification-and-drift.md).
+
 ## Unit Tests
 
 | Test | Likely source area | Behavior covered | Fixture dependencies | Notes/gaps |

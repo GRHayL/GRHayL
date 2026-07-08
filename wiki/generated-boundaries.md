@@ -43,6 +43,20 @@ anything under `docs`.
 Do not hand-edit generated Makefiles as durable docs. Update `configure`,
 `generate_makefile.sh`, or `make.code.defn` sources instead.
 
+## GRHayLib Thorn Build List
+
+`implementations/GRHayLib/src/make.code.defn` is an implementation-specific
+thorn source registry/direct-compile boundary, not a generated output. It
+lists `SRCS` and `SUBDIRS` for the Cactus thorn build path; route detailed
+interpretation through
+[GRHayLib Cactus build boundary](implementations/grhaylib/cactus-build-boundary.md).
+
+Do not infer that listed GRHayLib `SUBDIRS` exist in this checkout or are
+generated. The local `implementations/GRHayLib/` tree has only `doc/` and
+`src/` under it at `-maxdepth 2`, so the absent-subdir caveat on the GRHayLib
+boundary page remains the routing authority until maintainers confirm the
+direct-compile/copy layout.
+
 ## Test Binaries And Downloaded Data
 
 `configure` discovers `Unit_Tests/unit_test_*.c` and

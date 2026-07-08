@@ -359,20 +359,38 @@ Pitfalls/contracts:
 
 Read first:
 - `implementations/GRHayLib/README`
-- `implementations/GRHayLib/src/GRHayLib.h`
-- `implementations/GRHayLib/src/make.code.defn`
+- `implementations/GRHayLib/configuration.ccl`
+- `implementations/GRHayLib/interface.ccl`
 - `implementations/GRHayLib/param.ccl`
 - `implementations/GRHayLib/schedule.ccl`
+- `implementations/GRHayLib/src/GRHayLib.h`
+- `implementations/GRHayLib/src/initialize_and_shutdown.c`
+- `implementations/GRHayLib/src/make.code.defn`
+- `wiki/implementations/grhaylib/verification-and-drift.md`
 
 Edit paths:
-- None in this task scope. Coordinate with the owner before editing `implementations/GRHayLib/`.
+- None in this task scope. Implementation edits are out of scope unless
+  separately requested; coordinate with the owner before editing
+  `implementations/GRHayLib/`.
 
 Tests/data generators:
 - Check whether changed headers are included through `implementations/GRHayLib/src/GRHayLib.h`.
 - Check whether new source subdirectories need corresponding downstream `SUBDIRS` entries.
+- Compare Cactus parameters in `implementations/GRHayLib/param.ccl` with parser
+  and initialization logic in `implementations/GRHayLib/src/initialize_and_shutdown.c`.
+- Use upstream targeted `Unit_Tests/` only for upstream public API or behavior
+  changes that may affect GRHayLib. These tests do not verify Cactus thorn
+  build, scheduling, parameter parsing, or runtime behavior.
+- For Cactus thorn verification, use the manual hierarchy in
+  [GRHayLib verification and drift](implementations/grhaylib/verification-and-drift.md),
+  including manual source/link checks and an external Cactus or Einstein Toolkit
+  build when one is available. Do not invent a local Cactus build command.
 
 Docs to update:
-- Relevant gem page drift-risk section.
+- Relevant GRHayLib implementation KB page when thorn routing, lifecycle, CCL,
+  or verification guidance changes.
+- Relevant gem page drift-risk section when upstream gem behavior or public API
+  changes.
 - Downstream docs only with coordination.
 
 Pitfalls/contracts:

@@ -83,6 +83,12 @@ Manual or downstream no-HDF5 builds must mirror both parts visible in repo
 docs and script behavior: define `GHL_DISABLE_HDF5` and exclude HDF5/tabulated
 sources that require HDF5 runtime paths.
 
+GRHayLib is separate implementation-specific build routing. Its Cactus
+`configuration.ccl` hard-codes `requires HDF5`; that thorn requirement is not
+the same contract as core GRHayL configured `--disable-hdf5` support. Route
+Cactus CCL, aggregate header, and thorn source-registry questions through
+[GRHayLib Cactus build boundary](implementations/grhaylib/cactus-build-boundary.md).
+
 ## GitHub Actions Matrix
 
 Workflows live in `.github/workflows/`:
@@ -99,6 +105,10 @@ Each workflow ignores pushes and pull requests that touch only paths listed in
 `paths-ignore`, including `docs/**`, `*.md`, and `implementations/**`. Scheduled
 runs are also configured. Do not infer project support beyond the OS/compiler
 pairs encoded in these workflow matrices and the usage examples in `configure`.
+Because `implementations/**` is path-ignored, repository CI does not validate
+GRHayLib implementation-only changes unless another touched path or a scheduled
+run causes jobs to execute. Even then, the listed jobs are core
+`configure`/unit-test jobs, not a GRHayLib Cactus thorn build.
 
 Common job groups across workflows:
 

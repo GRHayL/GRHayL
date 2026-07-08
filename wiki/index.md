@@ -19,6 +19,7 @@ and update the KB page.
 | [Public API Map](public-api-map.md) | Public headers, structs, function families, and callable surface. | `GRHayL/include/`, `docs/raw/GRHayL_Core.dox` |
 | [Core/Chalice](core/index.md) | Shared Core structs, pack/unpack helpers, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, debug utilities, and Core fixtures. | `GRHayL/GRHayL_Core/`, `GRHayL/include/ghl.h`, `docs/raw/GRHayL_Core.dox`, `Unit_Tests/unit_test_grhayl_core_test_suite.c` |
 | [Gems](gems/index.md) | Gem-by-gem module summaries. | `GRHayL/Atmosphere/`, `GRHayL/Con2Prim/`, `GRHayL/EOS/`, `GRHayL/Flux_Source/`, `GRHayL/Induction/`, `GRHayL/Neutrinos/`, `GRHayL/Reconstruction/` |
+| [Implementations](implementations/index.md) | Downstream/direct-compile implementation routers, including the [GRHayLib Cactus thorn](implementations/grhaylib.md). | `implementations/GRHayLib/` |
 | [Build And CI](build-and-ci.md) | Configure, HDF5, Makefile, install, and CI workflow routes. | `README.md`, `configure`, `.github/workflows/`, `.github/run_tests.sh` |
 | [Test Map](test-map.md) | Unit tests, generated reference-data programs, sample EOS table, and fixture routing. | `Unit_Tests/`, `.github/run_tests.sh` |
 | [Generated Boundaries](generated-boundaries.md) | Generated outputs, Doxygen output, NRPy-derived files, and build products. | `Doxyfile`, `docs/raw/`, `GRHayL/Flux_Source/nrpy/`, `GRHayL/*/make.code.defn`, [Flux_Source generated NRPy boundary](gems/flux-source/generated-nrpy-boundary.md) |
@@ -46,7 +47,7 @@ and update the KB page.
 | Work on neutrino leakage | [Gems](gems/index.md), `GRHayL/Neutrinos/`, `GRHayL/include/ghl_radiation.h` |
 | Work on reconstruction | [Reconstruction hub](gems/reconstruction.md), [face/stencil contract](gems/reconstruction/face-and-stencil-contract.md), `GRHayL/include/ghl_reconstruction.h`, `GRHayL/Reconstruction/`, `docs/raw/Reconstruction.dox` as read-only evidence |
 | Understand GRMHD equations | [Physics Variables](physics/variables-and-conventions.md), [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/derivation.md` |
-| Connect to downstream infrastructure | `implementations/GRHayLib/` |
+| Connect to downstream infrastructure | [Implementations](implementations/index.md), [GRHayLib Cactus thorn](implementations/grhaylib.md), `implementations/GRHayLib/` |
 | Run tests or inspect reference data | [Test Map](test-map.md), `Unit_Tests/`, `.github/run_tests.sh` |
 | Check generated-output boundaries | [Generated Boundaries](generated-boundaries.md), `Doxyfile`, `GRHayL/*/make.code.defn` |
 | Review likely impact of a change | [Change Impact](change-impact.md), [Contradictions](contradictions.md) |

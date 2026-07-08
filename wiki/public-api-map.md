@@ -34,3 +34,20 @@ it does not duplicate function-level docs.
   intentionally excluded from generated Doxygen API pages.
 - `implementations/GRHayLib/src/GRHayLib.h` aggregates module headers for the
   Cactus thorn, so any public header rename or split needs a downstream update.
+
+## GRHayLib Downstream Impact
+
+- `implementations/GRHayLib/src/GRHayLib.h` is the GRHayLib public aggregation
+  boundary. It includes GRHayL public headers and exposes the thorn globals
+  `ghl_params` and `ghl_eos`.
+- Global pointer allocation, EOS setup, Con2Prim keyword parsing, and shutdown
+  ownership route through
+  [GRHayLib runtime parameter contract](implementations/grhaylib/runtime-parameter-contract.md).
+- Con2Prim API changes involving `ghl_con2prim_id_t`, selector dispatch,
+  multi-method signatures, diagnostics, or entropy-gated methods require
+  GRHayLib `param.ccl` and `parse_C2P_routine_keyword` review.
+- EOS API changes involving `ghl_eos_parameters`,
+  `ghl_initialize_simple_eos_functions_and_params`,
+  `ghl_initialize_hybrid_eos_functions_and_params`,
+  `ghl_initialize_tabulated_eos`, table-type handling, or tabulated memory
+  cleanup require GRHayLib parameter/parser and lifecycle review.
