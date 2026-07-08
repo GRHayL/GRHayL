@@ -256,6 +256,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
     ghl_info("Loading neural-network parameters from '%s'\n", table_filepath);
     err = ghl_c2p_nn_load_from_eos_hdf5(table_filepath, eos);
     if(err != ghl_success) {
+      ghl_tabulated_free_memory(eos);
       return err;
     }
     ghl_info("Loaded neural-network Con2Prim model: %d hidden layer(s) of width %d\n",
