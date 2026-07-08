@@ -17,6 +17,7 @@ and update the KB page.
 | [Catalog](catalog.md) | Query routing by term, alias, gem, and workflow. | `README.md`, `docs/raw/`, `GRHayL/`, `Unit_Tests/` |
 | [Source Map](source-map.md) | Source tree ownership and dependency routing. | `GRHayL/`, `GRHayL/include/`, `GRHayL/make.code.defn` |
 | [Public API Map](public-api-map.md) | Public headers, structs, function families, and callable surface. | `GRHayL/include/`, `docs/raw/GRHayL_Core.dox` |
+| [Core/Chalice](core/index.md) | Shared Core structs, pack/unpack helpers, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, debug utilities, and Core fixtures. | `GRHayL/GRHayL_Core/`, `GRHayL/include/ghl.h`, `docs/raw/GRHayL_Core.dox`, `Unit_Tests/unit_test_grhayl_core_test_suite.c` |
 | [Gems](gems/index.md) | Gem-by-gem module summaries. | `GRHayL/Atmosphere/`, `GRHayL/Con2Prim/`, `GRHayL/EOS/`, `GRHayL/Flux_Source/`, `GRHayL/Induction/`, `GRHayL/Neutrinos/`, `GRHayL/Reconstruction/` |
 | [Build And CI](build-and-ci.md) | Configure, HDF5, Makefile, install, and CI workflow routes. | `README.md`, `configure`, `.github/workflows/`, `.github/run_tests.sh` |
 | [Test Map](test-map.md) | Unit tests, generated reference-data programs, sample EOS table, and fixture routing. | `Unit_Tests/`, `.github/run_tests.sh` |
@@ -35,6 +36,7 @@ and update the KB page.
 | Find a term or alias | [Catalog](catalog.md) |
 | Build or install GRHayL | [Build And CI](build-and-ci.md), `README.md`, `configure` |
 | Understand modular design | `README.md`, `docs/raw/mainpage.md`, [Gems](gems/index.md) |
+| Work on Core/chalice shared structs, packing, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, or debug utilities | [Core/Chalice](core/index.md), `docs/raw/GRHayL_Core.dox`, `GRHayL/include/ghl.h` |
 | Inspect public structs or API entry points | [Public API Map](public-api-map.md), `GRHayL/include/`, `docs/raw/GRHayL_Core.dox` |
 | Work on atmosphere prescriptions | [Gems](gems/index.md), `docs/raw/Atmosphere.dox`, `GRHayL/Atmosphere/` |
 | Work on conservative-to-primitive solvers | [Gems](gems/index.md), `docs/raw/Con2Prim.dox`, `GRHayL/Con2Prim/` |

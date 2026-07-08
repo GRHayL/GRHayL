@@ -2,6 +2,58 @@
 
 Use these playbooks for cross-module edits. They route to local source of truth and avoid duplicating Doxygen API text.
 
+## Core/Chalice
+
+Read first:
+- `wiki/core/index.md`
+- `wiki/core/struct-pack-unpack-contract.md` for shared structs, packing, and unpacking
+- `wiki/core/metric-adm-contract.md` for metric initialization, determinant handling, and ADM auxiliaries
+- `wiki/core/velocity-u0-contract.md` for `ghl_limit_v_and_compute_u0`, speed limiting, Lorentz factor, and `u0`
+- `wiki/core/stress-energy-smallb-contract.md` for `smallb`, `b2`, `Tmunu`, `TDNmunu`, and `TUPmunu`
+- `wiki/core/eos-dispatch-contract.md` for Core EOS wrappers and global function-pointer dispatch
+- `wiki/core/errors-io-debug-utilities.md` for `ghl_abort_if_error`, `ghl_warn`, `ghl_error`, `ghl_info`, debug helpers, and `ghl_clamp`
+- `wiki/core/tests-and-fixtures.md` for Core fixture and coverage routing
+- `docs/raw/GRHayL_Core.dox`
+- `GRHayL/GRHayL_Core/make.code.defn`
+- `GRHayL/include/ghl.h`
+- `GRHayL/include/ghl_metric_helpers.h`
+- `GRHayL/include/ghl_io.h`
+- `GRHayL/include/ghl_debug.h`
+- `GRHayL/include/ghl_eos_functions.h`
+- `GRHayL/include/ghl_eos_functions_declaration.h`
+- `GRHayL/include/make.code.defn`
+
+Edit paths:
+- Core source: `GRHayL/GRHayL_Core/`
+- Shared public headers: `GRHayL/include/ghl.h`, `GRHayL/include/ghl_metric_helpers.h`, `GRHayL/include/ghl_io.h`, `GRHayL/include/ghl_debug.h`, `GRHayL/include/ghl_eos_functions.h`, `GRHayL/include/ghl_eos_functions_declaration.h`
+- Public header install list: `GRHayL/include/make.code.defn`
+- Core build list: `GRHayL/GRHayL_Core/make.code.defn`
+- Downstream integration only with owner coordination: `implementations/GRHayLib/`
+
+Tests/data generators:
+- `Unit_Tests/unit_test_grhayl_core_test_suite.c`
+- `Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c`
+- `Unit_Tests/unit_test_code_error.c`
+- `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`
+- `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`
+- `Unit_Tests/pert_test_fail_conservatives.c`
+- `Unit_Tests/pert_test_fail_primitives.c`
+- `Unit_Tests/pert_test_fail_stress_energy.c`
+- `Unit_Tests/randomize_metric.c`
+- `Unit_Tests/randomize_primitives.c`
+
+KB to update:
+- Core KB child pages under `wiki/core/` when routing, prerequisites, coverage, or ownership changes.
+- `wiki/catalog.md`, `wiki/source-map.md`, and `wiki/test-map.md` when Core term routes, source ownership, or fixture routes change.
+- Keep `docs/raw/GRHayL_Core.dox` and `docs/raw/derivation.md` as source context only for this KB scope; do not edit Doxygen source or copy equations into KB router pages.
+
+Pitfalls/contracts:
+- Public header blast radius is broad. `ghl.h` owns shared structs, enums, Core declarations, and some declarations whose implementations live outside Core.
+- Global EOS dispatch is initialized through Core wrappers. `ghl_initialize_eos_functions` writes function pointers such as `ghl_compute_h_and_cs2` and `ghl_con2prim_multi_method`; mismatched EOS selection can break Con2Prim and Flux_Source.
+- `u0` validity depends on initialized parameters, metric data, primitive velocities, and caller-managed `speed_limited`. Separate Core `ghl_limit_v_and_compute_u0` from Con2Prim `ghl_enforce_primitive_limits_and_compute_u0`.
+- Metric determinant behavior matters. `ghl_enforce_detgtij_and_initialize_ADM_metric` enforces conformal determinant behavior before rebuilding ADM metric quantities; check `detgamma`, `sqrt_detgamma`, and `detgtij` expectations.
+- `ghl.h` declares non-Core implementations including `ghl_get_con2prim_routine_name` and `ghl_compute_SU_Bsq_Ssq_BdotS`; route implementation changes to Con2Prim unless ownership is re-verified.
+
 ## EOS Routine
 
 Read first:

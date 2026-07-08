@@ -14,9 +14,10 @@ links in view because repo-local files remain the ground truth.
 | [Source Map](wiki/source-map.md) | Source tree ownership and dependency routing. |
 | [Workflows](wiki/workflows.md) | Common build, test, docs, and review workflows for agents. |
 | [Test Map](wiki/test-map.md) | Unit test, reference-data, fixture, and CI test routing. |
+| [Core KB](wiki/core/index.md) | Core/chalice router for shared structs, packing/unpacking, metric/ADM helpers, velocity `u0`, stress-energy/smallb, EOS dispatch, errors, IO, debug utilities, and Core fixtures. |
 | [README](README.md) | Project purpose, gem overview, build/install paths, HDF5 configuration, CI testing, and implementation overview. |
 | [Doxygen Main Page](docs/raw/mainpage.md) | Documentation source entry point used by `Doxyfile`; links gem groups, derivation, build/install, CI, and implementation notes. |
-| [Core API Docs](docs/raw/GRHayL_Core.dox) | Core Doxygen groups for EOS initialization, struct packing/unpacking, metric helpers, and stress-energy helpers. |
+| [Core API Docs](docs/raw/GRHayL_Core.dox) | Doxygen/source context for Core EOS initialization, struct packing/unpacking, metric helpers, and stress-energy helpers. |
 | [Gems](GRHayL/) | Source tree for Atmosphere, Con2Prim, EOS, Flux_Source, Induction, Neutrinos, and Reconstruction modules. |
 | [Equations](docs/raw/derivation.md) | GRMHD variables, stress-energy tensor, conservative equations, flux/source terms, and magnetic-field rescaling. |
 | [Implementations](implementations/GRHayLib/) | GRHayLib downstream integration files. |
@@ -33,7 +34,7 @@ links in view because repo-local files remain the ground truth.
 | Understand GRHayL's modular design | [README](README.md), [Doxygen Main Page](docs/raw/mainpage.md) |
 | Understand generated outputs and build products | [Doxyfile](Doxyfile), [docs/raw](docs/raw/) |
 | Check style and contribution rules | [.clang-format](.clang-format), [.editorconfig](.editorconfig) |
-| Find structs, EOS setup, metric helpers, or stress-energy helpers | [Core API Docs](docs/raw/GRHayL_Core.dox), [public headers](GRHayL/include/) |
+| Work on Core/chalice shared structs, packing, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, or debug utilities | [Core KB](wiki/core/index.md), [Core API Docs](docs/raw/GRHayL_Core.dox), [public headers](GRHayL/include/) |
 | Work on atmosphere prescriptions | [Atmosphere docs](docs/raw/Atmosphere.dox), [Atmosphere source](GRHayL/Atmosphere/) |
 | Work on conservative-to-primitive solvers | [Con2Prim docs](docs/raw/Con2Prim.dox), [Con2Prim source](GRHayL/Con2Prim/) |
 | Work on equation-of-state routines | [EOS docs](docs/raw/EOS.dox), [EOS source](GRHayL/EOS/) |
