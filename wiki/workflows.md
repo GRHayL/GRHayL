@@ -135,7 +135,13 @@ Pitfalls/contracts:
 ## Reconstruction Routine
 
 Read first:
-- `docs/raw/Reconstruction.dox`
+- `wiki/gems/reconstruction.md`
+- `wiki/gems/reconstruction/face-and-stencil-contract.md`
+- `wiki/gems/reconstruction/plm-limiters.md`
+- `wiki/gems/reconstruction/ppm-flow.md`
+- `wiki/gems/reconstruction/wenoz-contract.md`
+- `wiki/gems/reconstruction/tests-and-fixtures.md`
+- `docs/raw/Reconstruction.dox` as read-only evidence
 - `GRHayL/include/ghl_reconstruction.h`
 - `GRHayL/Reconstruction/`
 
@@ -154,10 +160,13 @@ Tests/data generators:
 - `Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c`
 - `Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c`
 
-Docs to update:
-- `docs/raw/Reconstruction.dox`
-- `wiki/gems/reconstruction.md`
-- `wiki/workflows.md` if method routing changes
+KB routes to update:
+- `wiki/gems/reconstruction.md` when hub routes change
+- Reconstruction child pages under `wiki/gems/reconstruction/` when method,
+  stencil, caller-impact, or fixture routing changes
+- Required routers such as `wiki/catalog.md`, `wiki/source-map.md`,
+  `wiki/test-map.md`, and `wiki/change-impact.md` when aliases, source
+  ownership, fixtures, or impact routes change
 
 Pitfalls/contracts:
 - Public reconstruction routines return left/right values for the left face of a cell.

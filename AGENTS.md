@@ -41,7 +41,7 @@ links in view because repo-local files remain the ground truth.
 | Work on fluxes, source terms, or characteristic speeds | [Flux Source docs](docs/raw/Flux_Source.dox), [Flux Source source](GRHayL/Flux_Source/) |
 | Work on vector-potential induction routines | [Induction docs](docs/raw/Induction.dox), [Induction source](GRHayL/Induction/) |
 | Work on neutrino leakage support | [Neutrinos source](GRHayL/Neutrinos/), [radiation header](GRHayL/include/ghl_radiation.h) |
-| Work on shock-capturing reconstruction | [Reconstruction docs](docs/raw/Reconstruction.dox), [Reconstruction source](GRHayL/Reconstruction/) |
+| Work on shock-capturing reconstruction | [Reconstruction hub](wiki/gems/reconstruction.md), [face/stencil contract](wiki/gems/reconstruction/face-and-stencil-contract.md), [Reconstruction source](GRHayL/Reconstruction/), [Reconstruction docs as read-only evidence](docs/raw/Reconstruction.dox) |
 | Understand the GRMHD derivation | [GRMHD Derivation](docs/raw/derivation.md) |
 | Connect GRHayL to downstream infrastructure | [GRHayLib implementation](implementations/GRHayLib/) |
 | Run unit tests or inspect CI coverage | [Test Map](wiki/test-map.md), [Unit tests](Unit_Tests/), [CI workflows](.github/workflows/), [run_tests.sh](.github/run_tests.sh) |

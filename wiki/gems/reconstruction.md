@@ -2,14 +2,20 @@
 
 ## Purpose
 
-Reconstruction computes shock-aware left/right face values for hydrodynamic variables before flux evaluation.
+Reconstruction routes shock-aware left/right face-value methods used before
+flux evaluation. Keep method detail in the child pages, source, and read-only
+Doxygen evidence.
 
 ## Read First
 
-- `docs/raw/Reconstruction.dox`
+- [Face and stencil contract](reconstruction/face-and-stencil-contract.md)
+- [PLM limiters](reconstruction/plm-limiters.md)
+- [PPM flow](reconstruction/ppm-flow.md)
+- [WENOZ contract](reconstruction/wenoz-contract.md)
+- [Tests and fixtures](reconstruction/tests-and-fixtures.md)
+- `docs/raw/Reconstruction.dox` is read-only evidence for this KB work.
 - `GRHayL/include/ghl_reconstruction.h`
-- `wiki/gems/flux-source.md`
-- `wiki/gems/induction.md`
+- `GRHayL/Reconstruction/`
 
 ## Public Headers
 
@@ -27,9 +33,9 @@ Key public surface:
 
 ## Implementation Paths
 
-- PLM: `GRHayL/Reconstruction/PLM/`
-- PPM: `GRHayL/Reconstruction/PPM/`
-- WENO-z: `GRHayL/Reconstruction/WENOZ/`
+- PLM: `GRHayL/Reconstruction/PLM/`; route through [PLM limiters](reconstruction/plm-limiters.md).
+- PPM: `GRHayL/Reconstruction/PPM/`; route through [PPM flow](reconstruction/ppm-flow.md).
+- WENO-z: `GRHayL/Reconstruction/WENOZ/`; route through [WENOZ contract](reconstruction/wenoz-contract.md).
 - Build lists: `GRHayL/Reconstruction/make.code.defn` and method-local `make.code.defn` files
 
 ## Test Paths
@@ -40,20 +46,21 @@ Key public surface:
 - `Unit_Tests/data_gen/unit_test_data_PLM_reconstruction.c`
 - `Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c`
 - `Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c`
+- Route fixture and CI details through [Tests and fixtures](reconstruction/tests-and-fixtures.md).
 
 ## Key Contracts
 
-- Public routines return left/right values for the left face of the current cell.
-- PLM methods use compact stencils; PPM and WENO-z use wider stencils.
-- PPM steepening depends on pressure, effective Gamma, and PPM parameters in `ghl_parameters`.
+- Public routines return left/right values for the left face of the current cell; see [Face and stencil contract](reconstruction/face-and-stencil-contract.md).
+- PLM, PPM, and WENO-z have different stencil widths; route by method page before changing callers.
+- PPM steepening depends on pressure, effective Gamma, and PPM parameters in `ghl_parameters`; see [PPM flow](reconstruction/ppm-flow.md).
 - Flux_Source and Induction callers rely on face orientation and stencil size.
 
 ## Common Edit Routes
 
-- Add PLM limiter: implement in `GRHayL/Reconstruction/PLM/`, declare it, add tests, and update Doxygen.
+- Add PLM limiter: start with [PLM limiters](reconstruction/plm-limiters.md), then implement in `GRHayL/Reconstruction/PLM/`, declare it, and update tests/routes as needed.
 - Change PPM behavior: update PPM helpers and both steepened/non-steepened call paths as applicable.
 - Change WENO-z behavior: update both main and right-left face variants when the math applies to both.
-- Change face orientation: coordinate with Flux_Source, Induction, tests, and Doxygen before landing.
+- Change face orientation: start with [Face and stencil contract](reconstruction/face-and-stencil-contract.md), then coordinate Flux_Source, Induction, and tests before landing.
 
 ## Drift Risks
 
@@ -63,4 +70,4 @@ Key public surface:
 
 ## Do Not Duplicate
 
-Keep method derivation and detailed API docs in `docs/raw/Reconstruction.dox` and source. This page remains edit-routing guidance.
+Keep method derivation and detailed API reference in `docs/raw/Reconstruction.dox` and source. This page remains routing guidance.

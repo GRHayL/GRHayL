@@ -165,6 +165,10 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: PLM, PPM, and WENO-z shock-capturing reconstruction routines that
   produce face values for flux calculations.
+- KB routes: [hub](reconstruction.md), [face and stencil contract](reconstruction/face-and-stencil-contract.md),
+  [PLM limiters](reconstruction/plm-limiters.md), [PPM flow](reconstruction/ppm-flow.md),
+  [WENOZ contract](reconstruction/wenoz-contract.md), and
+  [tests and fixtures](reconstruction/tests-and-fixtures.md).
 - Docs path: `docs/raw/Reconstruction.dox`.
 - Source path: `GRHayL/Reconstruction/`.
 - Primary headers: `GRHayL/include/ghl_reconstruction.h`,
@@ -175,8 +179,8 @@ source, headers, tests, and common edit routes before wider search.
   generators.
 - Common edit routes: PLM changes go through `GRHayL/Reconstruction/PLM/`,
   PPM through `GRHayL/Reconstruction/PPM/`, WENO-z through
-  `GRHayL/Reconstruction/WENOZ/`; update header, docs, tests, and
-  `make.code.defn`.
+  `GRHayL/Reconstruction/WENOZ/`; use the method pages for route-specific
+  source, header, test, and build-list checks.
 - Drift/contract notes: PPM parameters live in `ghl_parameters`; stencil sizes,
   face orientation, and left/right naming are external caller contracts.
   Coverage gap: no dedicated PPM unit test file is obvious in `Unit_Tests/`.

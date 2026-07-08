@@ -44,7 +44,7 @@ and update the KB page.
 | Work on fluxes, characteristic speeds, or source terms | [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/Flux_Source.dox`, `GRHayL/Flux_Source/` |
 | Work on vector-potential induction | [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/Induction.dox`, `GRHayL/Induction/` |
 | Work on neutrino leakage | [Gems](gems/index.md), `GRHayL/Neutrinos/`, `GRHayL/include/ghl_radiation.h` |
-| Work on reconstruction | [Gems](gems/index.md), `docs/raw/Reconstruction.dox`, `GRHayL/Reconstruction/` |
+| Work on reconstruction | [Reconstruction hub](gems/reconstruction.md), [face/stencil contract](gems/reconstruction/face-and-stencil-contract.md), `GRHayL/include/ghl_reconstruction.h`, `GRHayL/Reconstruction/`, `docs/raw/Reconstruction.dox` as read-only evidence |
 | Understand GRMHD equations | [Physics Variables](physics/variables-and-conventions.md), [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/derivation.md` |
 | Connect to downstream infrastructure | `implementations/GRHayLib/` |
 | Run tests or inspect reference data | [Test Map](test-map.md), `Unit_Tests/`, `.github/run_tests.sh` |
