@@ -1,4 +1,6 @@
 #include "ghl_nrpyeos_tabulated.h"
+#include "ghl_con2prim.h"
+
 #include "stellarcollapse/NRPyEOS_stellarcollapse.h"
 
 #define GHL_CASE(name_) case name_: return #name_

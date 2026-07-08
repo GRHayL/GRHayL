@@ -262,6 +262,25 @@ static ghl_error_codes_t tabulated_finalize_Noble(
     return ghl_error_table_bisection;
   }
 
+  // The enthalpy inversion above is only restricted by the *table* bounds, so
+  // it may return a temperature outside the *runtime* bounds [T_min, T_max]
+  // (e.g., the table minimum temperature when h is below the tabulated value
+  // at T_min). Enforce the runtime bounds and, if the temperature changed,
+  // recompute the thermodynamic quantities so they remain consistent with the
+  // bounded temperature. This mirrors the finalization of the Palenzuela and
+  // Newman routines, which call ghl_tabulated_enforce_bounds_rho_Ye_T before
+  // computing the final pressure and specific internal energy.
+  const double T_bounded = ghl_clamp(T, eos->T_min, eos->T_max);
+  if(T_bounded != T) {
+    T = T_bounded;
+    const ghl_error_codes_t T_error = ghl_tabulated_compute_P_eps_S_from_T(
+                                         eos, prims->rho, prims->Y_e, T,
+                                         &press, &eps, &S);
+    if(T_error != ghl_success) {
+      return ghl_error_table_bisection;
+    }
+  }
+
   prims->press = press;
   prims->eps = eps;
   prims->entropy = S;

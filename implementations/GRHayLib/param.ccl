@@ -61,6 +61,12 @@ CCTK_BOOLEAN calc_primitive_guess "Do we want to calculate estimates for the pri
   "yes" :: "Calculates primitive guesses from the current conservatives."
 } "yes"
 
+CCTK_BOOLEAN enable_backup_nn_primitive_guess "Do we want a backup primitive guess using neural networks in Con2Prim?" STEERABLE=RECOVER
+{
+  "no"  :: "Do not use neural-network primitive guess."
+  "yes" :: "Use neural-network primitive guess if default guess fails."
+} "no"
+
 #########################################################
 
 # EOS parameters

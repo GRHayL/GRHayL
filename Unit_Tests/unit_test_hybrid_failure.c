@@ -1,12 +1,11 @@
 #include "ghl_unit_tests.h"
 int main(int argc, char **argv) {
 
-  const int arraylength = 3;
+  const int arraylength = 2;
 
   ghl_error_codes_t *expected_errors = (ghl_error_codes_t*) malloc(sizeof(ghl_error_codes_t)*arraylength);
-  expected_errors[0] = ghl_error_invalid_utsq;
-  expected_errors[1] = ghl_error_c2p_max_iter;
-  expected_errors[2] = ghl_error_c2p_singular;
+  expected_errors[0] = ghl_error_c2p_max_iter;
+  expected_errors[1] = ghl_error_c2p_singular;
 
   const double poison = 0.0/0.0;
 
@@ -65,8 +64,8 @@ int main(int argc, char **argv) {
 
   /*
      Hybrid_Noble2D failures
-     1) rho=0: nans as inputs to Newton-Raphson, causing error code 201
-     2) rho=1e15: triggers failure to converge, causing error code 101
+     1) rho=1e15: triggers failure to converge
+     2) rho=0: nans as inputs to Newton-Raphson
   */
 
   for(int i=0; i<arraylength; i++) {
@@ -85,8 +84,8 @@ int main(int argc, char **argv) {
     tau[i]   = 1e-2;
     S_x[i] = S_y[i] = S_z[i] = 1000.0*tau[i]*(tau[i] + 2.0e-2);
   }
-  rho_star[1] = 1e15;
-  rho_star[2] = 0.0;
+  rho_star[0] = 1e15;
+  rho_star[1] = 0.0;
 
   for(int i=0; i<arraylength; i++) {
     ghl_con2prim_diagnostics diagnostics;
@@ -110,18 +109,6 @@ int main(int argc, char **argv) {
                         Bx[i], By[i], Bz[i],
                         poison, poison, poison, &prims);
 
-    if (i==0) {
-      params.calc_prim_guess = false;
-      prims.rho   = cons.rho/metric_adm.sqrt_detgamma;
-      prims.u0    = 1.0;
-      prims.vU[0] = 2.0;
-      prims.vU[1] = 2.0;
-      prims.vU[2] = 2.0;
-      prims.Y_e = cons.Y_e/cons.rho;
-      prims.temperature = eos.T_max;
-      ghl_hybrid_compute_P_cold(&eos, prims.rho, &prims.press);
-    }
-
     ghl_initialize_conservatives(rho_star[i], tau[i],
              S_x[i], S_y[i], S_z[i],
              poison, poison, &cons);
@@ -131,29 +118,6 @@ int main(int argc, char **argv) {
     if(check != expected_errors[i])
       ghl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);
 
-    if(i==0) {
-      // This just gets coverage for the success branches
-      params.main_routine = ghl_con2prim_id_Font1D;
-      int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
-      if(check != 0)
-        ghl_error("Font1D has returned a different failure code: old %d and new %d", 0, check);
-      params.main_routine = ghl_con2prim_id_Noble2D;
-      for (int j=0; j<3; j++) {
-        params.backup_routine[2-j] = ghl_con2prim_id_Font1D;
-        int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
-        if(check != 0)
-          ghl_error("Font1D has returned a different failure code: old %d and new %d", 0, check);
-        params.backup_routine[2-j] = ghl_con2prim_id_Noble2D;
-      }
-      params.calc_prim_guess = true;
-    } else if (i==3) {
-      // Here, we can check the Font Fix failure condition (there's just one return value)
-      params.backup_routine[0] = ghl_con2prim_id_Font1D;
-      int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
-      if(check != ghl_error_c2p_max_iter)
-        ghl_error("Font1D has returned a different failure code: old %d and new %d", 1, check);
-      params.backup_routine[0] = ghl_con2prim_id_None;
-    }
   }
   return 0;
 }

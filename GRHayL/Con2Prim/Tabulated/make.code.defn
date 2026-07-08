@@ -1,3 +1,3 @@
-SRCS =
+SRCS = tabulated_primitive_guess_helpers.c
 
-SUBDIRS = Newman1D Noble2D Palenzuela1D
+SUBDIRS = neural_network_guess Newman1D Noble2D Palenzuela1D

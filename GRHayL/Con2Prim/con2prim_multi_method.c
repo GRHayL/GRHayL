@@ -83,7 +83,6 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
  * Description  : Calls the Con2Prim routine designated by c2p_key
  * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
 */
-
 ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -156,10 +155,23 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
   // Store primitive guesses (used if con2prim fails)
   const ghl_primitive_quantities prims_guess = *prims;
 
+
   ghl_error_codes_t error;
   error = ghl_con2prim_tabulated_select_method(params->main_routine,
                                                params, eos, metric_adm, metric_aux,
                                                cons_undens, prims, diagnostics);
+
+  // If Con2Prim failed and the user requested neural networks, try again using
+  // the neural network initial guess. We start by copying prims_guess into
+  // prims_guess_nn to ensure it has the correct magnetic field values.
+  ghl_primitive_quantities prims_guess_nn = prims_guess;
+  if(error != ghl_success && eos->enable_neural_net_c2p) {
+    ghl_c2p_nn_guess_primitives(params, eos, metric_adm, cons_undens, &prims_guess_nn);
+    *prims = prims_guess_nn;
+    error = ghl_con2prim_tabulated_select_method(params->main_routine,
+                                                 params, eos, metric_adm, metric_aux,
+                                                 cons_undens, prims, diagnostics);
+  }
 
   // Note(Leo): this updated backup strategy works for any number of backup
   //            routines, cleaning up the logic, removing duplicated code, and
@@ -183,6 +195,14 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
     error = ghl_con2prim_tabulated_select_method(params->backup_routine[n],
                                                  params, eos, metric_adm, metric_aux,
                                                  cons_undens, prims, diagnostics);
+
+    // If we failed and the user requested neural network guesses, use them as a backup
+    if(error != ghl_success && eos->enable_neural_net_c2p) {
+      *prims = prims_guess_nn;
+      error = ghl_con2prim_tabulated_select_method(params->backup_routine[n],
+                                                   params, eos, metric_adm, metric_aux,
+                                                   cons_undens, prims, diagnostics);
+    }
   }
   return error;
 #endif

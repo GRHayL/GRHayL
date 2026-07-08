@@ -38,12 +38,22 @@ typedef struct ghl_palenzuela_quantities {
   double q, r, s, t, D, Y_e, S;
 } ghl_palenzuela_quantities;
 
-//--------- Initialization routines ----------------
+/**
+ * @ingroup c2p_internal
+ * @brief Stores shared auxiliary quantities for tabulated primitive guesses.
+ */
+typedef struct ghl_tabulated_primitive_guess_aux {
+  double SU[3];
+  double B_squared;
+  double S_squared;
+  double BdotS;
+  double q, r, s, t;
+} ghl_tabulated_primitive_guess_aux;
 
+//--------- Initialization routines ----------------
 void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
-
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -85,7 +95,6 @@ void ghl_compute_conservs(
       ghl_conservative_quantities *restrict cons);
 
 //-------------- Con2Prim routines -----------------
-
 ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -233,11 +242,25 @@ ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
       ghl_con2prim_diagnostics *restrict diagnostics);
 
 //------------ Auxiliary Functions -----------------
-
 bool ghl_limit_utilde_and_compute_v(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict metric,
       double utU[3],
+      ghl_primitive_quantities *restrict prims);
+
+void ghl_tabulated_compute_primitive_guess_auxiliaries(
+      const ghl_metric_quantities *restrict metric_adm,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const ghl_primitive_quantities *restrict prims,
+      ghl_tabulated_primitive_guess_aux *restrict aux);
+
+void ghl_tabulated_primitive_guess_from_x(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm,
+      const ghl_conservative_quantities *restrict cons_undens,
+      const ghl_tabulated_primitive_guess_aux *restrict aux,
+      double x,
       ghl_primitive_quantities *restrict prims);
 
 extern ghl_error_codes_t (*ghl_con2prim_multi_method)(
@@ -248,6 +271,73 @@ extern ghl_error_codes_t (*ghl_con2prim_multi_method)(
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prim,
       ghl_con2prim_diagnostics *restrict diagnostics);
+
+//------------ Neural Network Initial Guesses -----------------
+typedef struct ghl_nn_c2p_input_t {
+  float q;
+  float r;
+  float s;
+  float t;
+} ghl_nn_c2p_input_t;
+
+typedef struct ghl_nn_c2p_guess_t {
+  float x;
+} ghl_nn_c2p_guess_t;
+
+typedef struct ghl_c2p_nn_model {
+  int in_dim;
+  int hidden_dim;
+  int n_hidden;
+  int out_dim;
+  int q_idx;
+  int s_idx;
+  float x_eps;
+  float y_eps;
+  float dx_eps;
+
+  int *x_kind;
+  float *x_lo;
+  float *x_hi;
+
+  int *out_kind;
+  float *x_invrng;
+  float *out_lo;
+  float *out_hi;
+  float *out_invrng;
+
+  float *W_in;
+  float *b_in;
+  float *W_hid;
+  float *b_hid;
+  float *W_out;
+  float *b_out;
+} ghl_c2p_nn_model;
+
+/* Public API version for the on-disk HDF5 schema/output-kind semantics. */
+#define GHL_NN_C2P_API_VERSION 3u
+
+ghl_nn_c2p_guess_t ghl_c2p_nn_guess(
+      const ghl_c2p_nn_model *restrict model,
+      ghl_nn_c2p_input_t input);
+
+void ghl_c2p_nn_guess_primitives(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm,
+      const ghl_conservative_quantities *restrict cons_undens,
+      ghl_primitive_quantities *restrict prims);
+
+ghl_error_codes_t ghl_c2p_nn_validate_model(const ghl_c2p_nn_model *restrict model);
+
+void ghl_c2p_nn_free(ghl_c2p_nn_model *restrict model);
+
+ghl_error_codes_t ghl_c2p_nn_load_hdf5(
+      const char *nn_model_filepath,
+      ghl_eos_parameters *restrict eos);
+
+ghl_error_codes_t ghl_c2p_nn_load_from_eos_hdf5(
+      const char *eos_table_filepath,
+      ghl_eos_parameters *restrict eos);
 
 #ifdef __cplusplus
 }

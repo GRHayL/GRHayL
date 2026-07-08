@@ -20,10 +20,11 @@ ghl_error_codes_t ghl_general_newton_raphson(
             double *restrict,
             double *restrict)) {
 
-  double dx[ndim], x_old[ndim];
+  double dx[ndim], dx_resid[ndim], x_old[ndim];
 
   // Initialize various parameters and variables:
   double errx = 1.0;
+  double residual = 1.0;
   double df = 1.0;
   double f = 1.0;
   for(int id = 0; id < ndim; id++)
@@ -48,11 +49,19 @@ ghl_error_codes_t ghl_general_newton_raphson(
     /***************************************/
     /* Calculate the convergence criterion */
     /***************************************/
-    errx = (x[0]==0.0) ? fabs(dx[0]) : fabs(dx[0]/x[0]);
+    errx = 0.0;
+    for(int id = 0; id < ndim; id++) {
+      const double x_scale = fabs(x[id]);
+      const double errx_id = (x_scale == 0.0) ? fabs(dx[id]) : fabs(dx[id])/x_scale;
+      errx = fmax(errx, errx_id);
+    }
+    funcd(eos, harm_aux, indep_var_in, x, dx_resid, &f, &df);
+    residual = fabs(f);
 
     harm_aux->n_iter++;
 
-    if( (fabs(errx) <= harm_aux->solver_tolerance) || (harm_aux->n_iter >= harm_aux->max_iterations) ) {
+    if( ((errx <= harm_aux->solver_tolerance) && (residual <= harm_aux->solver_tolerance))
+        || (harm_aux->n_iter >= harm_aux->max_iterations) ) {
       keep_iterating = 0;
     }
   }   // END of while(keep_iterating)
@@ -60,7 +69,7 @@ ghl_error_codes_t ghl_general_newton_raphson(
   /*  Check for bad untrapped divergences : */
   if(!isfinite(f) ||  !isfinite(df)) {
     return ghl_error_c2p_singular;
-  } else if(fabs(errx) <= harm_aux->solver_tolerance) {
+  } else if(errx <= harm_aux->solver_tolerance && residual <= harm_aux->solver_tolerance) {
     return ghl_success;
   } else {
     return ghl_error_c2p_max_iter;

@@ -4,31 +4,32 @@
 SRCS = initialize_and_shutdown.c
 
 # Subdirectories containing source files
-SUBDIRS = Atmosphere                      \
-          Con2Prim                        \
-          Con2Prim/Hybrid                 \
-          Con2Prim/Hybrid/Font1D          \
-          Con2Prim/Hybrid/Noble           \
-          Con2Prim/Hybrid/Noble/Noble1D   \
-          Con2Prim/Hybrid/Noble/Noble2D   \
-          Con2Prim/Hybrid/Palenzuela1D    \
-          Con2Prim/Tabulated              \
-          Con2Prim/Tabulated/Newman1D     \
-          Con2Prim/Tabulated/Noble2D      \
-          Con2Prim/Tabulated/Palenzuela1D \
-          EOS/Hybrid                      \
-          EOS/Tabulated                   \
-          EOS/Tabulated/interpolators     \
-          EOS/Tabulated/stellarcollapse   \
-          Flux_Source                     \
-          Flux_Source/hybrid              \
-          Flux_Source/hybrid_entropy      \
-          Flux_Source/tabulated           \
-          Flux_Source/tabulated_entropy   \
-          GRHayL_Core                     \
-          Induction                       \
-          Induction/Interpolators         \
-          Neutrinos/NRPyLeakage           \
-          Reconstruction/PPM              \
-          Reconstruction/PLM              \
+SUBDIRS = Atmosphere                              \
+          Con2Prim                                \
+          Con2Prim/Hybrid                         \
+          Con2Prim/Hybrid/Font1D                  \
+          Con2Prim/Hybrid/Noble                   \
+          Con2Prim/Hybrid/Noble/Noble1D           \
+          Con2Prim/Hybrid/Noble/Noble2D           \
+          Con2Prim/Hybrid/Palenzuela1D            \
+          Con2Prim/Tabulated                      \
+          Con2Prim/Tabulated/Newman1D             \
+          Con2Prim/Tabulated/Noble2D              \
+          Con2Prim/Tabulated/Palenzuela1D         \
+          Con2Prim/Tabulated/neural_network_guess \
+          EOS/Hybrid                              \
+          EOS/Tabulated                           \
+          EOS/Tabulated/interpolators             \
+          EOS/Tabulated/stellarcollapse           \
+          Flux_Source                             \
+          Flux_Source/hybrid                      \
+          Flux_Source/hybrid_entropy              \
+          Flux_Source/tabulated                   \
+          Flux_Source/tabulated_entropy           \
+          GRHayL_Core                             \
+          Induction                               \
+          Induction/Interpolators                 \
+          Neutrinos/NRPyLeakage                   \
+          Reconstruction/PPM                      \
+          Reconstruction/PLM                      \
           Reconstruction/WENOZ

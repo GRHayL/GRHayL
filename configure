@@ -698,10 +698,12 @@ if [ $usehdf5 -eq 0 ]; then
     cflags="$cflags -DGHL_DISABLE_HDF5"
     srcs=$(printf "%s" "$srcs" | awk '{
       for(i=1;i<=NF;i++) {
-        if($i !~ /\/Tabulated\// && $i !~ /\/tabulated\// &&
+        if($i ~ /\/Con2Prim\/Tabulated\/tabulated_primitive_guess_helpers.c/ ||
+           $i ~ /\/Tabulated\/neural_network_guess\// ||
+          ($i !~ /\/Tabulated\// && $i !~ /\/tabulated\// &&
            $i !~ /_tabulated/ && $i !~ /tabulated_/ &&
            $i !~ /tabulated_eos/ && $i !~ /tabulated_flux/ &&
-           $i !~ /ghl_nrpyeos_tabulated/) {
+           $i !~ /ghl_nrpyeos_tabulated/)) {
           printf "%s%s", sep, $i
           sep=" "
         }
