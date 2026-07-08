@@ -9,6 +9,7 @@ Flux_Source computes characteristic speeds, HLLE fluxes, and hydrodynamic source
 - [Characteristic speeds contract](flux-source/characteristic-speeds-contract.md)
 - [HLLE flux variant matrix](flux-source/hlle-flux-variant-matrix.md)
 - [Source-term contract](flux-source/source-terms-contract.md)
+- [Tests and fixtures](flux-source/tests-and-fixtures.md)
 - [Generated NRPy boundary](flux-source/generated-nrpy-boundary.md)
 - `docs/raw/Flux_Source.dox`
 - `docs/raw/derivation.md`
@@ -45,15 +46,23 @@ Key public surface:
 
 ## Test Paths
 
-- `Unit_Tests/unit_test_HLL_flux.c`
 - `Unit_Tests/unit_test_hybrid_flux.c`
 - `Unit_Tests/unit_test_tabulated_flux.c`
-- `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`
 - `Unit_Tests/unit_test_ET_Legacy_flux_source.c`
-- `Unit_Tests/data_gen/unit_test_data_HLL_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_tabulated_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c`
+
+Route Flux_Source HLLE fixtures, ET Legacy flux/source replay, HDF5 table
+needs, and characteristic-speed fixture evidence through
+[tests and fixtures](flux-source/tests-and-fixtures.md).
+
+Explicit exclusion: `Unit_Tests/unit_test_HLL_flux.c`,
+`Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`, and
+`Unit_Tests/data_gen/unit_test_data_HLL_flux.c` are Induction
+vector-potential HLL evidence, not Flux_Source HLLE coverage. Route them
+through [Induction HLL flux contract](induction/hll-flux-contract.md) and
+[Induction tests and fixtures](induction/tests-and-fixtures.md).
 
 ## Key Contracts
 
@@ -64,7 +73,7 @@ Key public surface:
 
 ## Common Edit Routes
 
-- Change characteristic speed: update all affected direction files and tests that cover HLL fluxes and induction flux inputs.
+- Change characteristic speed: update all affected direction files and tests that cover Flux_Source HLLE fluxes and induction flux inputs.
 - Add EOS-specific flux variant: add direction implementations, declarations, build-list entries, function-pointer wiring if needed, tests, and docs.
 - Change source term: update NRPy source if generated, C output, source tests, and equation map.
 - Change reconstruction assumptions: coordinate with `GRHayL/Reconstruction/` and update docs on face orientation.
