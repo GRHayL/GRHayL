@@ -6,11 +6,19 @@ Induction computes magnetic-vector-potential flux contributions, gauge terms, an
 
 ## Read First
 
-- `docs/raw/Induction.dox`
+- `docs/raw/Induction.dox` as read-only evidence for KB work
 - `docs/raw/derivation.md`
 - `GRHayL/include/ghl_induction.h`
 - `wiki/physics/variables-and-conventions.md`
 - `wiki/physics/evolution-equation-map.md`
+
+## KB Routes
+
+- [HLL flux contract](induction/hll-flux-contract.md)
+- [Interpolation and staggering contract](induction/interpolation-and-staggering-contract.md)
+- [Gauge RHS contract](induction/gauge-rhs-contract.md)
+- [Tests and fixtures](induction/tests-and-fixtures.md)
+- [Verification workflows](induction/verification-workflows.md)
 
 ## Public Headers
 
@@ -36,6 +44,8 @@ Key public surface:
 
 ## Test Paths
 
+- `Unit_Tests/unit_test_HLL_flux.c`
+- `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`
 - `Unit_Tests/unit_test_induction_ccc_ADM.c`
 - `Unit_Tests/unit_test_induction_ccc_BSSN.c`
 - `Unit_Tests/unit_test_induction_vvv_ADM.c`
@@ -45,6 +55,8 @@ Key public surface:
 - `Unit_Tests/compute_ccc_ADM.c`
 - `Unit_Tests/compute_ccc_BSSN.c`
 - `Unit_Tests/compute_vvv_ADM.c`
+- `Unit_Tests/data_gen/unit_test_data_HLL_flux.c`
+- `Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_induction_interpolation.c`
 - `Unit_Tests/data_gen/unit_test_data_ET_Legacy_induction_gauge_rhs.c`
 
@@ -59,10 +71,10 @@ Key public surface:
 
 ## Common Edit Routes
 
-- Change HLL flux formula: update both `B` and `Btilde` variants or explain why only one changes, then update flux tests.
-- Change interpolation assumptions: update the matching interpolator, helper, Doxygen grid-location text, and interpolation tests.
-- Change scalar-potential RHS: update `calculate_phitilde_rhs`, gauge RHS tests, and Induction Doxygen.
-- Add metric staggering support: add interpolator, declarations, build list, tests, and docs.
+- Change HLL flux formula: use [HLL flux contract](induction/hll-flux-contract.md), check both `B` and `Btilde` variants or explain why only one changes, then route tests through [tests and fixtures](induction/tests-and-fixtures.md).
+- Change interpolation assumptions: use [interpolation and staggering contract](induction/interpolation-and-staggering-contract.md), then check matching interpolator, helper, declaration, build list, and interpolation tests.
+- Change scalar-potential RHS: use [gauge RHS contract](induction/gauge-rhs-contract.md), then check `calculate_phitilde_rhs`, ET Legacy gauge RHS coverage, and targeted runs in [verification workflows](induction/verification-workflows.md).
+- Add metric staggering support: check public declarations, interpolator source, local build lists, and test/fixture routing.
 
 ## Drift Risks
 
@@ -72,4 +84,4 @@ Key public surface:
 
 ## Do Not Duplicate
 
-Keep stencil diagrams, formulas, and function details in `docs/raw/Induction.dox` and source comments. This page stays routing-focused.
+Keep stencil diagrams, formulas, and function details in source/Doxygen evidence. This page stays routing-focused.

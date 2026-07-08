@@ -115,8 +115,8 @@ Common job groups across workflows:
 | `neutrinos` | NRPyLeakage optically thin gas, constant density sphere, luminosities; see [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md) |
 | `con-to-prim-tabulated` | tabulated C2P routines |
 | `code-failure` | expected error-code failures |
-| `induction-interpolators` | cell/vertex interpolation variants |
-| `induction-flux` | vector-potential HLL flux variants |
+| `induction-interpolators` | cell/vertex interpolation variants; see [Induction verification workflows](gems/induction/verification-workflows.md) |
+| `induction-flux` | vector-potential HLL flux variants; see [Induction verification workflows](gems/induction/verification-workflows.md) |
 
 Composite actions:
 

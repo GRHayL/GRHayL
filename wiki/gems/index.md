@@ -117,6 +117,11 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: vector-potential magnetic fluxes, scalar-potential RHS, Lorenz gauge
   terms, and interpolation between metric/vector-potential staggerings.
+- KB routes: [hub](induction.md), [HLL flux contract](induction/hll-flux-contract.md),
+  [interpolation and staggering](induction/interpolation-and-staggering-contract.md),
+  [gauge RHS](induction/gauge-rhs-contract.md),
+  [tests and fixtures](induction/tests-and-fixtures.md), and
+  [verification workflows](induction/verification-workflows.md).
 - Docs path: `docs/raw/Induction.dox`, with magnetic-field conventions in
   `docs/raw/derivation.md`.
 - Source path: `GRHayL/Induction/`.
@@ -126,10 +131,13 @@ source, headers, tests, and common edit routes before wider search.
   `Unit_Tests/unit_test_induction_ccc_ADM.c`,
   `Unit_Tests/unit_test_induction_ccc_BSSN.c`,
   `Unit_Tests/unit_test_induction_vvv_ADM.c`,
-  `Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c`.
+  `Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c`; route fixture
+  details through [tests and fixtures](induction/tests-and-fixtures.md).
 - Common edit routes: interpolation changes start in
   `GRHayL/Induction/Interpolators/` and `GRHayL/include/ghl_induction.h`;
-  magnetic flux changes need characteristic-speed and HLL tests.
+  magnetic flux changes need characteristic-speed checks and HLL tests; use
+  [verification workflows](induction/verification-workflows.md) for targeted
+  run guidance.
 - Drift/contract notes: staggered-grid assumptions are public caller contracts.
   Keep docs, stencil shapes, and tests synchronized.
 

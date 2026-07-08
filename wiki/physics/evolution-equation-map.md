@@ -86,12 +86,13 @@ Tests:
 Concept:
 - Magnetic evolution uses vector potential and densitized scalar potential paths documented in `docs/raw/Induction.dox`.
 - The induction gem separates magnetic HLL flux terms from gauge/scalar-potential RHS terms.
+- Keep equation authority in `docs/raw/Induction.dox` and `docs/raw/derivation.md`; use KB pages only for routing.
 
 Code map:
 - Public induction API: `GRHayL/include/ghl_induction.h`
-- Magnetic HLL flux: `GRHayL/Induction/HLL_flux_with_B.c`, `GRHayL/Induction/HLL_flux_with_Btilde.c`
+- Magnetic HLL flux: `GRHayL/Induction/HLL_flux_with_B.c`, `GRHayL/Induction/HLL_flux_with_Btilde.c`; route caller contract through [Induction HLL flux contract](../gems/induction/hll-flux-contract.md)
 - Interpolation: `GRHayL/Induction/Interpolators/`
-- Scalar-potential RHS: `GRHayL/Induction/calculate_phitilde_rhs.c`
+- Scalar-potential RHS: `GRHayL/Induction/calculate_phitilde_rhs.c`; route gauge/scalar RHS contract through [Induction gauge RHS contract](../gems/induction/gauge-rhs-contract.md)
 - Characteristic speed dependency: `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn*.c`
 
 Tests:
@@ -102,6 +103,8 @@ Tests:
 - `Unit_Tests/compute_A_flux_with_B.c`
 - `Unit_Tests/compute_A_flux_with_Btilde.c`
 - `Unit_Tests/data_gen/unit_test_data_induction_interpolation.c`
+- Fixture and run routes: [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md),
+  [Induction verification workflows](../gems/induction/verification-workflows.md)
 
 ## Conservative-to-Primitive Recovery
 

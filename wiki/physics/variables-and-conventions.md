@@ -52,7 +52,8 @@ Physics orientation:
 Primary code paths:
 - Stress-energy helpers: `GRHayL/GRHayL_Core/compute_smallb_and_b2.c`, `GRHayL/GRHayL_Core/compute_TDNmunu.c`, `GRHayL/GRHayL_Core/compute_TUPmunu.c`
 - Flux/source terms: `GRHayL/Flux_Source/`
-- Induction: `GRHayL/Induction/`
+- Induction: `GRHayL/Induction/`; for `Btilde` and vector-potential HLL
+  densitization, use [Induction HLL flux contract](../gems/induction/hll-flux-contract.md)
 
 Contracts:
 - Do not reintroduce `4*pi` factors into GRMHD evolution paths unless the convention itself changes.
@@ -69,8 +70,8 @@ Primary code paths:
 - Metric setup: `GRHayL/GRHayL_Core/initialize_metric.c`, `GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c`
 - Conservative conversion: `GRHayL/Con2Prim/compute_conservs.c`, `GRHayL/Con2Prim/undensitize_conservatives.c`
 - Con2Prim densitization route: [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md)
-- Induction flux variants: `GRHayL/Induction/HLL_flux_with_B.c`, `GRHayL/Induction/HLL_flux_with_Btilde.c`
-- Gauge RHS: `GRHayL/Induction/calculate_phitilde_rhs.c`
+- Induction flux variants: `GRHayL/Induction/HLL_flux_with_B.c`, `GRHayL/Induction/HLL_flux_with_Btilde.c`; route `Btilde` and `psi6` details through [Induction HLL flux contract](../gems/induction/hll-flux-contract.md)
+- Gauge RHS: `GRHayL/Induction/calculate_phitilde_rhs.c`; route `tildePhi`/`phitilde` details through [Induction gauge RHS contract](../gems/induction/gauge-rhs-contract.md)
 
 Contracts:
 - `psi6` and `sqrt_detgamma` are common names for the same densitization factor in these paths.

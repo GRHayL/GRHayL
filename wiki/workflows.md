@@ -214,6 +214,12 @@ Pitfalls/contracts:
 ## Induction Path
 
 Read first:
+- `wiki/gems/induction.md`
+- `wiki/gems/induction/hll-flux-contract.md`
+- `wiki/gems/induction/interpolation-and-staggering-contract.md`
+- `wiki/gems/induction/gauge-rhs-contract.md`
+- `wiki/gems/induction/tests-and-fixtures.md`
+- `wiki/gems/induction/verification-workflows.md`
 - `docs/raw/Induction.dox`
 - `docs/raw/derivation.md`
 - `GRHayL/include/ghl_induction.h`
@@ -226,6 +232,8 @@ Edit paths:
 - Public declarations: `GRHayL/include/ghl_induction.h`
 
 Tests/data generators:
+- `Unit_Tests/unit_test_HLL_flux.c`
+- `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`
 - `Unit_Tests/unit_test_induction_ccc_ADM.c`
 - `Unit_Tests/unit_test_induction_ccc_BSSN.c`
 - `Unit_Tests/unit_test_induction_vvv_ADM.c`
@@ -235,12 +243,19 @@ Tests/data generators:
 - `Unit_Tests/compute_ccc_ADM.c`
 - `Unit_Tests/compute_ccc_BSSN.c`
 - `Unit_Tests/compute_vvv_ADM.c`
+- `Unit_Tests/data_gen/unit_test_data_HLL_flux.c`
+- `Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_induction_interpolation.c`
+- `Unit_Tests/data_gen/unit_test_data_ET_Legacy_induction_gauge_rhs.c`
 
-Docs to update:
-- `docs/raw/Induction.dox`
-- `wiki/gems/induction.md`
-- `wiki/physics/evolution-equation-map.md`
+KB routes to update:
+- `wiki/gems/induction.md` when hub routes change
+- `wiki/gems/induction/hll-flux-contract.md` for HLL flux API, packing, or densitization contracts
+- `wiki/gems/induction/interpolation-and-staggering-contract.md` for interpolator, stencil, or staggering contracts
+- `wiki/gems/induction/gauge-rhs-contract.md` for scalar/gauge RHS contracts
+- `wiki/gems/induction/tests-and-fixtures.md` for fixture, helper, or coverage routing
+- `wiki/gems/induction/verification-workflows.md` for targeted run and CI job routing
+- `wiki/physics/evolution-equation-map.md` and `wiki/physics/variables-and-conventions.md` when equation or variable routing changes
 
 Pitfalls/contracts:
 - Magnetic variables use GRHayL's rescaled magnetic-field convention from `docs/raw/derivation.md`.
