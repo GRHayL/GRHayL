@@ -21,7 +21,7 @@ and update the KB page.
 | [Gems](gems/index.md) | Gem-by-gem module summaries. | `GRHayL/Atmosphere/`, `GRHayL/Con2Prim/`, `GRHayL/EOS/`, `GRHayL/Flux_Source/`, `GRHayL/Induction/`, `GRHayL/Neutrinos/`, `GRHayL/Reconstruction/` |
 | [Build And CI](build-and-ci.md) | Configure, HDF5, Makefile, install, and CI workflow routes. | `README.md`, `configure`, `.github/workflows/`, `.github/run_tests.sh` |
 | [Test Map](test-map.md) | Unit tests, generated reference-data programs, sample EOS table, and fixture routing. | `Unit_Tests/`, `.github/run_tests.sh` |
-| [Generated Boundaries](generated-boundaries.md) | Generated outputs, Doxygen output, NRPy-derived files, and build products. | `Doxyfile`, `docs/raw/`, `GRHayL/Flux_Source/nrpy/`, `GRHayL/*/make.code.defn` |
+| [Generated Boundaries](generated-boundaries.md) | Generated outputs, Doxygen output, NRPy-derived files, and build products. | `Doxyfile`, `docs/raw/`, `GRHayL/Flux_Source/nrpy/`, `GRHayL/*/make.code.defn`, [Flux_Source generated NRPy boundary](gems/flux-source/generated-nrpy-boundary.md) |
 | [Change Impact](change-impact.md) | Which docs/tests to inspect after source changes. | `GRHayL/`, `GRHayL/include/`, `docs/raw/`, `Unit_Tests/` |
 | [Contradictions](contradictions.md) | Known mismatches and review notes that need source-backed resolution. | Repo-local files named by each contradiction |
 | [Workflows](workflows.md) | Common agent workflows for docs, tests, builds, and review. | `README.md`, `configure`, `.github/run_tests.sh` |
@@ -36,12 +36,12 @@ and update the KB page.
 | Find a term or alias | [Catalog](catalog.md) |
 | Build or install GRHayL | [Build And CI](build-and-ci.md), `README.md`, `configure` |
 | Understand modular design | `README.md`, `docs/raw/mainpage.md`, [Gems](gems/index.md) |
-| Work on Core/chalice shared structs, packing, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, or debug utilities | [Core/Chalice](core/index.md), `docs/raw/GRHayL_Core.dox`, `GRHayL/include/ghl.h` |
+| Work on Core/chalice shared structs, public enums, parameters, packing, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, or debug utilities | [Core/Chalice](core/index.md), [Shared parameters and enums](core/shared-parameters-and-enums.md), `docs/raw/GRHayL_Core.dox`, `GRHayL/include/ghl.h` |
 | Inspect public structs or API entry points | [Public API Map](public-api-map.md), `GRHayL/include/`, `docs/raw/GRHayL_Core.dox` |
 | Work on atmosphere prescriptions | [Gems](gems/index.md), `docs/raw/Atmosphere.dox`, `GRHayL/Atmosphere/` |
 | Work on conservative-to-primitive solvers | [Gems](gems/index.md), `docs/raw/Con2Prim.dox`, `GRHayL/Con2Prim/` |
-| Work on EOS routines or HDF5 behavior | [Gems](gems/index.md), `docs/raw/EOS.dox`, `GRHayL/EOS/`, `configure` |
-| Work on fluxes, characteristic speeds, or source terms | [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/Flux_Source.dox`, `GRHayL/Flux_Source/` |
+| Work on EOS routines, tabulated interpolators, table adapters, or HDF5 behavior | [Gems](gems/index.md), [Stellarcollapse table adapter](gems/eos/stellarcollapse-table-adapter.md), [Tabulated interpolator catalog](gems/eos/tabulated-interpolator-catalog.md), `docs/raw/EOS.dox`, `GRHayL/EOS/`, `configure` |
+| Work on fluxes, characteristic speeds, source terms, or Flux_Source generators | [Evolution Equation Map](physics/evolution-equation-map.md), [Flux_Source hub](gems/flux-source.md), `docs/raw/Flux_Source.dox`, `GRHayL/Flux_Source/` |
 | Work on vector-potential induction | [Induction hub](gems/induction.md), [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/Induction.dox`, `GRHayL/Induction/` |
 | Work on neutrino leakage | [Gems](gems/index.md), `GRHayL/Neutrinos/`, `GRHayL/include/ghl_radiation.h` |
 | Work on reconstruction | [Reconstruction hub](gems/reconstruction.md), [face/stencil contract](gems/reconstruction/face-and-stencil-contract.md), `GRHayL/include/ghl_reconstruction.h`, `GRHayL/Reconstruction/`, `docs/raw/Reconstruction.dox` as read-only evidence |

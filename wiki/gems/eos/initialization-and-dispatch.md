@@ -130,7 +130,6 @@ Keep dependent content routed, not expanded here:
 ## Source-Of-Truth Paths
 
 - `AGENTS.md`
-- `plan_synth.md`
 - `wiki/index.md`
 - `wiki/catalog.md`
 - `wiki/gems/eos.md`

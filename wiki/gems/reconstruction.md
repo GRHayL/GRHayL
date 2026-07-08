@@ -9,7 +9,8 @@ Doxygen evidence.
 ## Read First
 
 - [Face and stencil contract](reconstruction/face-and-stencil-contract.md)
-- [PLM limiters](reconstruction/plm-limiters.md)
+- [PLM limiters](reconstruction/plm-limiters.md) for minmod, maxmod, MC, and
+  superbee lookup.
 - [PPM flow](reconstruction/ppm-flow.md)
 - [WENOZ contract](reconstruction/wenoz-contract.md)
 - [Tests and fixtures](reconstruction/tests-and-fixtures.md)

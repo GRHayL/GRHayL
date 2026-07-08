@@ -6,6 +6,10 @@ Flux_Source computes characteristic speeds, HLLE fluxes, and hydrodynamic source
 
 ## Read First
 
+- [Characteristic speeds contract](flux-source/characteristic-speeds-contract.md)
+- [HLLE flux variant matrix](flux-source/hlle-flux-variant-matrix.md)
+- [Source-term contract](flux-source/source-terms-contract.md)
+- [Generated NRPy boundary](flux-source/generated-nrpy-boundary.md)
 - `docs/raw/Flux_Source.dox`
 - `docs/raw/derivation.md`
 - `docs/raw/Reconstruction.dox`
@@ -29,12 +33,15 @@ Key public surface:
 
 ## Implementation Paths
 
-- Shared speeds/source: `GRHayL/Flux_Source/`
-- Hybrid fluxes: `GRHayL/Flux_Source/hybrid/`
-- Hybrid entropy fluxes: `GRHayL/Flux_Source/hybrid_entropy/`
-- Tabulated fluxes: `GRHayL/Flux_Source/tabulated/`
-- Tabulated entropy fluxes: `GRHayL/Flux_Source/tabulated_entropy/`
-- NRPy generation/support: `GRHayL/Flux_Source/*.py`, `GRHayL/Flux_Source/nrpy/`
+- Shared speeds: `GRHayL/Flux_Source/`; route through
+  [characteristic speeds contract](flux-source/characteristic-speeds-contract.md).
+- Source terms: `GRHayL/Flux_Source/ghl_calculate_source_terms.c`; route
+  through [source-term contract](flux-source/source-terms-contract.md).
+- Hybrid, hybrid entropy, tabulated, and tabulated entropy fluxes: route
+  through [HLLE flux variant matrix](flux-source/hlle-flux-variant-matrix.md).
+- NRPy generation/support: `GRHayL/Flux_Source/*.py`,
+  `GRHayL/Flux_Source/nrpy/`; route through
+  [generated NRPy boundary](flux-source/generated-nrpy-boundary.md).
 
 ## Test Paths
 

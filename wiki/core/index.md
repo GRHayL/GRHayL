@@ -11,6 +11,7 @@ trust the underlying repo files and update the KB route.
 
 | Page | Route there for |
 | --- | --- |
+| [Shared parameters and enums](shared-parameters-and-enums.md) | `ghl_parameters`, `ghl_eos_parameters`, public enums, shared structs, public header surface, and cross-gem field routing. |
 | [Struct pack/unpack contract](struct-pack-unpack-contract.md) | `ghl_parameters`, primitive/conservative structs, extrinsic curvature packing, and field-copy return helpers from `ghl.h`. |
 | [Metric/ADM contract](metric-adm-contract.md) | ADM metric initialization, determinant-enforced setup, ADM auxiliaries, and inline vector metric helpers. |
 | [Velocity/u0 contract](velocity-u0-contract.md) | Core `ghl_limit_v_and_compute_u0`, velocity limiting, `u0`, and singular-`u0` error routing. |

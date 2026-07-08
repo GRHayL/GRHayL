@@ -9,7 +9,9 @@ EOS provides hybrid, simple, and tabulated equation-of-state support through ini
 - [EOS initialization and dispatch](eos/initialization-and-dispatch.md)
 - [Hybrid piecewise-polytrope EOS](eos/hybrid-piecewise-polytrope.md)
 - [Tabulated EOS table contract](eos/tabulated-table-contract.md)
+- [Stellarcollapse table adapter](eos/stellarcollapse-table-adapter.md)
 - [Tabulated EOS interpolation and bounds](eos/tabulated-interpolation-and-bounds.md)
+- [Tabulated interpolator catalog](eos/tabulated-interpolator-catalog.md)
 - [EOS tests and fixtures](eos/tests-and-fixtures.md)
 - `docs/raw/EOS.dox`
 - `docs/raw/GRHayL_Core.dox`
@@ -48,8 +50,14 @@ Focused routes:
   [hybrid piecewise-polytrope EOS](eos/hybrid-piecewise-polytrope.md).
 - Tabulated HDF5 table lifecycle, sample table roles, energy shift, and memory:
   [tabulated table contract](eos/tabulated-table-contract.md).
+- Stellar-collapse table-type dispatch, HDF5 helper boundary, dataset
+  ownership, and conversion into `ghl_eos_parameters`:
+  [stellarcollapse table adapter](eos/stellarcollapse-table-adapter.md).
 - Tabulated bounds, interpolators, temperature recovery, and beta equilibrium:
   [tabulated interpolation and bounds](eos/tabulated-interpolation-and-bounds.md).
+- Built tabulated interpolator wrappers by input tuple, beta-equilibrium/rho
+  maps, enthalpy tabulation, and sound-speed cleaning:
+  [tabulated interpolator catalog](eos/tabulated-interpolator-catalog.md).
 - EOS unit tests, helper-only files, sample tables, generated `simple_table.h5`,
   and no-HDF5 error behavior: [tests and fixtures](eos/tests-and-fixtures.md).
 

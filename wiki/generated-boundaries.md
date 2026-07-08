@@ -68,6 +68,11 @@ is a sample table file, not a build artifact from `configure`.
 
 ## Flux Source Python And NRPy
 
+Route Flux_Source-specific generator/script questions through
+[Flux Source generated NRPy boundary](gems/flux-source/generated-nrpy-boundary.md).
+This page keeps repository-wide generated-output boundaries; the child page
+owns Flux_Source generator-script, NRPy support, and checked-in kernel routing.
+
 `GRHayL/Flux_Source/*.py` and `GRHayL/Flux_Source/nrpy/` are source/generator
 inputs for symbolic/NRPy-derived flux-source code. `Doxyfile` excludes `*.py`
 from generated docs.

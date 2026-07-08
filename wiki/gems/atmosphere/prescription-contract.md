@@ -120,7 +120,6 @@ Atmosphere prescription contracts:
 ## Source Of Truth
 
 - [AGENTS.md](../../../AGENTS.md)
-- [plan_synth.md](../../../plan_synth.md)
 - [wiki/index.md](../../index.md)
 - [wiki/catalog.md](../../catalog.md)
 - [wiki/gems/atmosphere.md](../atmosphere.md)

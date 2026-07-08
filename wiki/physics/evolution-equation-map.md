@@ -48,11 +48,9 @@ Concept:
 
 Code map:
 - Public flux API: `GRHayL/include/ghl_flux_source.h`
-- Characteristic speeds: `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c`, `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn1.c`, `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn2.c`
-- Hybrid HLLE: `GRHayL/Flux_Source/hybrid/`
-- Hybrid entropy HLLE: `GRHayL/Flux_Source/hybrid_entropy/`
-- Tabulated HLLE: `GRHayL/Flux_Source/tabulated/`
-- Tabulated entropy HLLE: `GRHayL/Flux_Source/tabulated_entropy/`
+- Characteristic speeds: `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c`, `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn1.c`, `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn2.c`; route caller contract through [Flux_Source characteristic speeds](../gems/flux-source/characteristic-speeds-contract.md)
+- Hybrid, hybrid entropy, tabulated, and tabulated entropy HLLE variants: route
+  direction/EOS variant mapping through [Flux_Source HLLE flux variant matrix](../gems/flux-source/hlle-flux-variant-matrix.md)
 - Reconstruction sources: `GRHayL/Reconstruction/`
 
 Tests:
@@ -72,9 +70,13 @@ Concept:
 
 Code map:
 - Public source API: `GRHayL/include/ghl_flux_source.h`
-- Source implementation: `GRHayL/Flux_Source/ghl_calculate_source_terms.c`
+- Source implementation: `GRHayL/Flux_Source/ghl_calculate_source_terms.c`;
+  route caller-owned metric derivative and extrinsic-curvature contract through
+  [Flux_Source source-term contract](../gems/flux-source/source-terms-contract.md)
 - Stress-energy inputs: `GRHayL/GRHayL_Core/compute_TDNmunu.c`, `GRHayL/GRHayL_Core/compute_TUPmunu.c`
-- NRPy source helpers: `GRHayL/Flux_Source/IGM_All_Source_Terms.py`, `GRHayL/Flux_Source/GRHayL_rhs.py`
+- NRPy source helpers: `GRHayL/Flux_Source/IGM_All_Source_Terms.py`,
+  `GRHayL/Flux_Source/GRHayL_rhs.py`; route generator boundaries through
+  [Flux_Source generated NRPy boundary](../gems/flux-source/generated-nrpy-boundary.md)
 
 Tests:
 - `Unit_Tests/unit_test_ET_Legacy_flux_source.c`
@@ -93,7 +95,8 @@ Code map:
 - Magnetic HLL flux: `GRHayL/Induction/HLL_flux_with_B.c`, `GRHayL/Induction/HLL_flux_with_Btilde.c`; route caller contract through [Induction HLL flux contract](../gems/induction/hll-flux-contract.md)
 - Interpolation: `GRHayL/Induction/Interpolators/`
 - Scalar-potential RHS: `GRHayL/Induction/calculate_phitilde_rhs.c`; route gauge/scalar RHS contract through [Induction gauge RHS contract](../gems/induction/gauge-rhs-contract.md)
-- Characteristic speed dependency: `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn*.c`
+- Characteristic speed dependency:
+  [Flux_Source characteristic speeds](../gems/flux-source/characteristic-speeds-contract.md)
 
 Tests:
 - `Unit_Tests/unit_test_induction_ccc_ADM.c`

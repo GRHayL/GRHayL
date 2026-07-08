@@ -47,6 +47,7 @@ source, headers, tests, and common edit routes before wider search.
   diagnostics, primitive/conservative helpers, and limit enforcement.
 - KB routes: [hub](con2prim.md), [solver matrix](con2prim/solver-matrix.md),
   [recovery flow](con2prim/recovery-flow.md), [limits and conversions](con2prim/limits-and-conversions.md),
+  [internal numerics and root-finding](con2prim/internal-numerics-and-root-finding.md),
   [tests and fixtures](con2prim/tests-and-fixtures.md).
 - Docs path: `docs/raw/Con2Prim.dox`, with physics background in
   `docs/raw/derivation.md`.
@@ -75,7 +76,9 @@ source, headers, tests, and common edit routes before wider search.
 - KB routes: [hub](eos.md), [initialization and dispatch](eos/initialization-and-dispatch.md),
   [hybrid piecewise-polytrope](eos/hybrid-piecewise-polytrope.md),
   [tabulated table contract](eos/tabulated-table-contract.md),
+  [stellarcollapse table adapter](eos/stellarcollapse-table-adapter.md),
   [tabulated interpolation and bounds](eos/tabulated-interpolation-and-bounds.md),
+  [tabulated interpolator catalog](eos/tabulated-interpolator-catalog.md),
   [tests and fixtures](eos/tests-and-fixtures.md).
 - Docs path: `docs/raw/EOS.dox`, plus HDF5 build notes in `README.md`.
 - Source path: `GRHayL/EOS/`.
@@ -99,6 +102,11 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: characteristic speeds, GRMHD source terms, and EOS-specific HLLE
   fluxes for hydrodynamic evolution.
+- KB routes: [hub](flux-source.md),
+  [characteristic speeds](flux-source/characteristic-speeds-contract.md),
+  [HLLE flux variants](flux-source/hlle-flux-variant-matrix.md),
+  [source terms](flux-source/source-terms-contract.md), and
+  [generated NRPy boundary](flux-source/generated-nrpy-boundary.md).
 - Docs path: `docs/raw/Flux_Source.dox`, with equations in
   `docs/raw/derivation.md`.
 - Source path: `GRHayL/Flux_Source/`.
@@ -148,7 +156,7 @@ source, headers, tests, and common edit routes before wider search.
 - KB routes: [hub](neutrinos.md), [API and data](neutrinos/api-and-data.md),
   [implementation flow](neutrinos/implementation-flow.md), and
   [tests and fixtures](neutrinos/tests-and-fixtures.md).
-- Docs path: coverage gap: no dedicated `docs/raw/Neutrinos.dox` exists;
+- Docs path: coverage gap: no dedicated Neutrinos raw Doxygen page exists;
   `GRHayL/include/ghl_radiation.h` defines the Doxygen group.
 - Source path: `GRHayL/Neutrinos/`.
 - Primary headers: `GRHayL/include/ghl_radiation.h`,

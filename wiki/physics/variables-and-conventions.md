@@ -51,7 +51,8 @@ Physics orientation:
 
 Primary code paths:
 - Stress-energy helpers: `GRHayL/GRHayL_Core/compute_smallb_and_b2.c`, `GRHayL/GRHayL_Core/compute_TDNmunu.c`, `GRHayL/GRHayL_Core/compute_TUPmunu.c`
-- Flux/source terms: `GRHayL/Flux_Source/`
+- Flux/source terms: `GRHayL/Flux_Source/`; route characteristic speeds, HLLE
+  variants, and source terms through [Flux_Source hub](../gems/flux-source.md)
 - Induction: `GRHayL/Induction/`; for `Btilde` and vector-potential HLL
   densitization, use [Induction HLL flux contract](../gems/induction/hll-flux-contract.md)
 
@@ -89,7 +90,9 @@ Primary code paths:
 - Public helpers: `GRHayL/include/ghl_metric_helpers.h`
 - Metric packing: `GRHayL/GRHayL_Core/initialize_metric.c`, `GRHayL/GRHayL_Core/enforce_detgij_and_initialize_ADM_metric.c`
 - ADM auxiliaries: `GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c`
-- Source terms: `GRHayL/Flux_Source/ghl_calculate_source_terms.c`
+- Source terms: `GRHayL/Flux_Source/ghl_calculate_source_terms.c`; caller-owned
+  metric derivative routing lives in
+  [Flux_Source source-term contract](../gems/flux-source/source-terms-contract.md)
 
 Contracts:
 - Raise/lower helpers work with arrays matching GRHayL metric array layout.
@@ -106,7 +109,8 @@ Physics orientation:
 Primary code paths:
 - Function pointers: `GRHayL/include/ghl_eos_functions.h`
 - Hybrid EOS: `GRHayL/EOS/Hybrid/`
-- Tabulated EOS: `GRHayL/EOS/Tabulated/`
+- Tabulated EOS: `GRHayL/EOS/Tabulated/`; route built interpolation wrappers
+  through [tabulated interpolator catalog](../gems/eos/tabulated-interpolator-catalog.md)
 - Neutrino leakage EOS inputs: `GRHayL/Neutrinos/NRPyLeakage/`
 
 Contracts:

@@ -9,6 +9,8 @@ page; source, raw Doxygen, and tests remain authority.
 - Method support and dispatch: [solver matrix](con2prim/solver-matrix.md)
 - Recovery order, backups, diagnostics: [recovery flow](con2prim/recovery-flow.md)
 - Limits, guesses, and conversions: [limits and conversions](con2prim/limits-and-conversions.md)
+- Internal numerics and root-finding:
+  [internal numerics and root-finding](con2prim/internal-numerics-and-root-finding.md)
 - Tests, fixtures, and HDF5 caveats: [tests and fixtures](con2prim/tests-and-fixtures.md)
 - Public docs: `docs/raw/Con2Prim.dox`
 - Physics background: `docs/raw/derivation.md`
@@ -36,6 +38,9 @@ lists, and tests where applicable. File presence alone is not support.
 - Shared recovery and helper routines: `GRHayL/Con2Prim/`
 - Hybrid solvers: `GRHayL/Con2Prim/Hybrid/`
 - Tabulated solvers: `GRHayL/Con2Prim/Tabulated/`
+- Internal Brent/root helpers, Noble/Palenzuela utilities, Font/Newman helper
+  paths, and magnetic/momentum contractions route through
+  [internal numerics and root-finding](con2prim/internal-numerics-and-root-finding.md).
 - Build lists: `GRHayL/Con2Prim/**/make.code.defn`
 - Tests and data: `Unit_Tests/unit_test_con2prim_*.c`,
   `Unit_Tests/unit_test_apply_conservative_limits.c`,
