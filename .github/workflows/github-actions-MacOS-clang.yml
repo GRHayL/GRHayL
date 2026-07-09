@@ -2,10 +2,10 @@ name: MacOS-clang
 
 on:
   push:
-    paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
     branches: main
   pull_request:
-    paths-ignore: ['docs/**', '*.md', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
   # Run workflow on the 1st and 15th of every month at 7:33 AM PST (UTC-8)
   schedule:
     - cron: '33 15 1,15 * *'
