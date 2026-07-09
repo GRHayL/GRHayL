@@ -42,7 +42,11 @@ Read with [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md),
   `SLy4_3335_rho391_temp163_ye66.h5.bz2` from
   `https://stellarcollapse.org/EOS/`, unpacks
   `SLy4_3335_rho391_temp163_ye66.h5`, then uses that table for Neutrinos,
-  Con2Prim tabulated recovery, and expected-error keys that need a table.
+  Con2Prim tabulated recovery, and expected-error keys that need a table. The
+  runner and workflows also run
+  `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before NN-enabled tabulated
+  C2P replay; no repo-local page should describe `pyghl` internals or model
+  provenance from that command alone.
 
 ## `table_info.txt`
 
@@ -67,7 +71,9 @@ instead.
 - `unit_test_con2prim_tabulated.c` consumes
   `SLy4_3335_rho391_temp163_ye66.h5` with downloaded
   `con2prim_tabulated_*` fixtures. Key `0` generates local data; the default
-  runner uses key `1`.
+  runner uses key `1` after the visible `pyghl append` setup command, and the
+  test replays both disabled and enabled NN primitive-guess modes when the key
+  is nonzero.
 - `unit_test_con2prim_debug.c` is a manual tabulated debug route that accepts a
   caller-provided EOS table path.
 - `unit_test_nrpyleakage_*.c` use
@@ -76,9 +82,15 @@ instead.
   `SLy4_3335_rho391_temp163_ye66.h5` and key `1`.
 - `unit_test_code_error.c` uses `SLy4_3335_rho391_temp163_ye66.h5` for
   HDF5-enabled tabulated setup, interpolation-bound, invalid table state, and
-  root-bracketing error paths. Its table-read failure keys use `test.h5`
-  instead: key `34` checks the missing-file path, while later read-table keys
-  create malformed temporary `test.h5` inputs.
+  root-bracketing error paths. NN key `85` uses the same table to cover the
+  error path where NN initialization is enabled but the table lacks embedded
+  `grhayl_nn_c2p`. Its table-read failure keys use `test.h5` instead: key `34`
+  checks the missing-file path, while later read-table keys create malformed
+  temporary `test.h5` inputs.
+- `unit_test_c2p_nn_guess.c` creates temporary HDF5 model files under `/tmp`
+  for root, embedded `grhayl_nn_c2p`, legacy, malformed-dataset, and
+  failed-load-preservation cases. These are direct test artifacts, not external
+  sample tables or downloaded binary fixtures.
 
 ## No-HDF5 Build Effects
 
@@ -107,6 +119,7 @@ compiled expected-skip path.
 - [Unit_Tests/unit_test_tabulated_flux.c](../../Unit_Tests/unit_test_tabulated_flux.c)
 - [Unit_Tests/unit_test_con2prim_tabulated.c](../../Unit_Tests/unit_test_con2prim_tabulated.c)
 - [Unit_Tests/unit_test_con2prim_debug.c](../../Unit_Tests/unit_test_con2prim_debug.c)
+- [Unit_Tests/unit_test_c2p_nn_guess.c](../../Unit_Tests/unit_test_c2p_nn_guess.c)
 - [Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c](../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
 - [Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c](../../Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c)
 - [Unit_Tests/unit_test_nrpyleakage_luminosities.c](../../Unit_Tests/unit_test_nrpyleakage_luminosities.c)

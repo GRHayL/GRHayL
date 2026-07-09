@@ -9,6 +9,8 @@ page; source, raw Doxygen, and tests remain authority.
 - Method support and dispatch: [solver matrix](con2prim/solver-matrix.md)
 - Recovery order, backups, diagnostics: [recovery flow](con2prim/recovery-flow.md)
 - Limits, guesses, and conversions: [limits and conversions](con2prim/limits-and-conversions.md)
+- Tabulated neural-network primitive-guess routing:
+  [neural-network primitive guess](con2prim/neural-network-primitive-guess.md)
 - Internal numerics and root-finding:
   [internal numerics and root-finding](con2prim/internal-numerics-and-root-finding.md)
 - Tests, fixtures, and HDF5 caveats: [tests and fixtures](con2prim/tests-and-fixtures.md)
@@ -32,12 +34,19 @@ lists, and tests where applicable. File presence alone is not support.
   `ghl_undensitize_conservatives`, `ghl_guess_primitives`,
   `ghl_enforce_primitive_limits_and_compute_u0`, `ghl_compute_conservs`,
   `ghl_compute_conservs_and_Tmunu`
+- Tabulated NN primitive-guess API: `GHL_NN_C2P_API_VERSION`,
+  `ghl_c2p_nn_model`, `ghl_c2p_nn_guess`,
+  `ghl_c2p_nn_guess_primitives`, `ghl_c2p_nn_validate_model`,
+  `ghl_c2p_nn_load_hdf5`, `ghl_c2p_nn_load_from_eos_hdf5`,
+  `ghl_c2p_nn_free`
 
 ## Source Inventory
 
 - Shared recovery and helper routines: `GRHayL/Con2Prim/`
 - Hybrid solvers: `GRHayL/Con2Prim/Hybrid/`
 - Tabulated solvers: `GRHayL/Con2Prim/Tabulated/`
+- Tabulated NN primitive guesses:
+  `GRHayL/Con2Prim/Tabulated/neural_network_guess/`
 - Internal Brent/root helpers, Noble/Palenzuela utilities, Font/Newman helper
   paths, and magnetic/momentum contractions route through
   [internal numerics and root-finding](con2prim/internal-numerics-and-root-finding.md).

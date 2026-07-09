@@ -37,6 +37,11 @@ Tests and fixtures:
 
 Route: `GRHayL/Con2Prim/guess_primitives.c`.
 
+For the tabulated neural-network fallback path, route to
+[neural-network primitive guess](neural-network-primitive-guess.md). That page
+owns `ghl_c2p_nn_guess_primitives`, `c2p_nn`, and HDF5 model routing; this
+section only covers the ordinary `ghl_guess_primitives` helper.
+
 Contract:
 - Inputs: `ghl_parameters`, `ghl_eos_parameters`, ADM metric, undensitized conservatives, and primitives.
 - Required conservative fields: undensitized `rho`, `tau`, `SD`, and `Y_e` where the tabulated path needs electron fraction.
@@ -130,6 +135,11 @@ for tabulated primitive guesses and Palenzuela-style quantities:
 - Inputs: ADM metric, undensitized conservatives, and primitives with `BU`.
 - Outputs: raised `SU`, `Bsq`, `Ssq`, and `BdotS`.
 - It may locally rescale a copy of `SD` before computing contractions, but it does not update the caller's conservative struct.
+
+The tabulated NN path reuses the same aux quantities (`q`, `r`, `s`, `t`) and
+finishes through `ghl_tabulated_primitive_guess_from_x`; keep detailed NN
+schema and retry policy on
+[neural-network primitive guess](neural-network-primitive-guess.md).
 
 ## Direct Ground Truth
 

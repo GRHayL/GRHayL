@@ -62,10 +62,15 @@ local route:
 3. Export `LD_LIBRARY_PATH` with `build/lib`.
 4. Download root-level `*.bin` fixtures and HDF5/EOS tables.
 5. Decompress downloaded `*.bz2` EOS tables.
-6. Run selected binaries under `test/`.
-7. Run `unit_test_code_error` keys `0` through `82` as expected process
+6. Run selected binaries under `test/`, including the direct
+   `unit_test_c2p_nn_guess` route.
+7. Run `unit_test_code_error` keys `0` through `85` as expected process
    failures.
-8. Remove root-level `*.bin`, `*.h5`, and `*.bz2`.
+8. Run `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before the tabulated
+   C2P replay. This page records only that visible setup command, not `pyghl`
+   internals.
+9. Continue selected compiled-test runs.
+10. Remove root-level `*.bin`, `*.h5`, and `*.bz2`.
 
 The cleanup is explicit:
 
@@ -92,6 +97,12 @@ with routing detail in
 Treat `.github/run_tests.sh` as one full local-style driver, not a complete
 enumeration of every workflow job. Treat workflows as CI matrices, not proof
 that normal local runs regenerate trusted fixtures.
+
+NN primitive-guess coverage appears in both paths: `.github/run_tests.sh` runs
+`./test/unit_test_c2p_nn_guess`, while workflow `c2p-failure` matrices include
+`c2p_nn_guess`. The tabulated replay path is separate: runner and workflows run
+`pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
+`./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`.
 
 ## HDF5 Filtering
 
@@ -120,6 +131,7 @@ manual-only tests, HDF5 needs, and expected failures:
 - [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h)
 - [Unit_Tests/unit_test_con2prim_tabulated.c](../../Unit_Tests/unit_test_con2prim_tabulated.c)
 - [Unit_Tests/unit_test_con2prim_debug.c](../../Unit_Tests/unit_test_con2prim_debug.c)
+- [Unit_Tests/unit_test_c2p_nn_guess.c](../../Unit_Tests/unit_test_c2p_nn_guess.c)
 - [Unit_Tests/unit_test_tabulated_eos.c](../../Unit_Tests/unit_test_tabulated_eos.c)
 - [Unit_Tests/unit_test_code_error.c](../../Unit_Tests/unit_test_code_error.c)
 

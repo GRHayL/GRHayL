@@ -116,7 +116,7 @@ Common job groups across workflows:
 | --- | --- |
 | `ET-Legacy` | `conservs`, `primitives`, `induction_gauge_rhs`, `HLL_flux`, `reconstruction`, `flux_source` |
 | `c2p-routines` | `apply_conservative_limits`, `con2prim_multi_method_hybrid`, `enforce_primitive_limits_and_compute_u0`, `compute_conservs_and_Tmunu` |
-| `c2p-failure` | `hybrid_failure` |
+| `c2p-failure` | `hybrid_failure`, `c2p_nn_guess` |
 | `tabulated-eos` | tabulated EOS table read/interpolation |
 | `piecewise-polytrope-eos` | piecewise-polytrope EOS |
 | `grhayl-core` | core struct/metric/stress-energy suite |
@@ -151,10 +151,16 @@ Composite actions:
    base.
 5. Downloads EOS tables from the repo-visible `stellarcollapse.org/EOS` URLs
    where needed, decompressing `*.bz2` files.
-6. Runs the compiled tests under `test/`.
-7. Runs `unit_test_code_error` over error-code keys `0` through `82`, expecting
+6. Runs the compiled tests under `test/`, including the direct
+   `unit_test_c2p_nn_guess` route.
+7. Runs `unit_test_code_error` over error-code keys `0` through `85`, expecting
    each invocation to fail at process level.
-8. Removes downloaded `*.bin`, `*.h5`, and `*.bz2` files from the repo root.
+8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
+   `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;
+   this records only the visible runner/workflow setup command for NN-enabled
+   tabulated replay.
+9. Continues selected compiled-test runs.
+10. Removes downloaded `*.bin`, `*.h5`, and `*.bz2` files from the repo root.
 
 ## Coverage Caveats
 

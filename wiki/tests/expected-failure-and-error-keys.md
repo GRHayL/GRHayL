@@ -15,7 +15,7 @@ Read with [Core tests and fixtures](../core/tests-and-fixtures.md),
 
 ## Harness Contract
 
-The full runner invokes `./test/unit_test_code_error "$i"` for keys `0..82`.
+The full runner invokes `./test/unit_test_code_error "$i"` for keys `0..85`.
 Each key is treated as an expected-error case: if the executable exits
 successfully, `.github/run_tests.sh` prints `Failed to fail!` and fails the
 runner; if the executable exits nonzero, the runner treats that as the expected
@@ -37,7 +37,7 @@ these HDF5-only keys:
 - `34..60`
 - `63`
 - `66`
-- `69..82`
+- `69..85`
 
 Those skipped HDF5-only keys exit as the test harness expects under a no-HDF5
 build. Treat them as expected-skip confirmations for HDF5-only paths, not as
@@ -77,6 +77,12 @@ filters tabulated/HDF5 tests and sources.
   beta-equilibrium helpers, then force out-of-range density or pressure routes
   that return root not bracketed. Route detailed root behavior to tabulated EOS
   interpolation/bounds pages.
+- NN loader/init failures: key `83` passes a NULL EOS parameter struct to
+  `ghl_c2p_nn_load_hdf5`; key `84` passes an empty NN filepath to
+  `ghl_c2p_nn_load_hdf5`; key `85` initializes tabulated EOS with
+  `enable_neural_net_c2p` true while the table has no embedded
+  `grhayl_nn_c2p` group. Route runtime replay coverage to Con2Prim tests and
+  initialization behavior to EOS/Core initialization pages.
 
 ## Ownership Routes
 
@@ -90,6 +96,9 @@ filters tabulated/HDF5 tests and sources.
 - Con2Prim owns invalid C2P key dispatch and recovery-selection semantics.
   Start with [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md)
   and [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md).
+- Con2Prim/EOS jointly route NN primitive-guess error keys: the loader lives in
+  Con2Prim tabulated NN source, while key `85` is reached through tabulated EOS
+  initialization.
 - Neutrinos owns `Fermi` invalid-key coverage and NRPyLeakage fixture routes.
   Start with [Neutrinos tests and fixtures](../gems/neutrinos/tests-and-fixtures.md).
 
@@ -109,6 +118,7 @@ filters tabulated/HDF5 tests and sources.
 - [Unit_Tests/unit_test_tabulated_flux.c](../../Unit_Tests/unit_test_tabulated_flux.c)
 - [Unit_Tests/unit_test_con2prim_tabulated.c](../../Unit_Tests/unit_test_con2prim_tabulated.c)
 - [Unit_Tests/unit_test_con2prim_debug.c](../../Unit_Tests/unit_test_con2prim_debug.c)
+- [Unit_Tests/unit_test_c2p_nn_guess.c](../../Unit_Tests/unit_test_c2p_nn_guess.c)
 - [wiki/gems/eos/tests-and-fixtures.md](../gems/eos/tests-and-fixtures.md)
 - [wiki/gems/con2prim/tests-and-fixtures.md](../gems/con2prim/tests-and-fixtures.md)
 - [wiki/gems/neutrinos/tests-and-fixtures.md](../gems/neutrinos/tests-and-fixtures.md)

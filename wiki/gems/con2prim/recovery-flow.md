@@ -64,6 +64,25 @@ tests; repo-local source remains authority.
    tests: `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`,
    `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`.
 
+## Tabulated NN Retry Hook
+
+Tabulated neural-network primitive guesses route through
+[neural-network primitive guess](neural-network-primitive-guess.md). They do
+not replace `params->calc_prim_guess`: that flag controls the ordinary
+`ghl_guess_primitives` call before the first main routine attempt.
+`eos->enable_neural_net_c2p` instead controls fallback retries for tabulated
+recovery. After the first failed tabulated main attempt, the driver computes
+`prims_guess_nn` with `ghl_c2p_nn_guess_primitives`, resets `*prims` to that
+guess, and retries the main selector. If later tabulated backup attempts fail,
+the driver reuses the stored `prims_guess_nn` and calls the same backup
+selector again.
+
+Sources: `GRHayL/Con2Prim/con2prim_multi_method.c`,
+`GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c`,
+`GRHayL/include/ghl.h`, `GRHayL/include/ghl_con2prim.h`.
+Tests: `Unit_Tests/unit_test_c2p_nn_guess.c`,
+`Unit_Tests/unit_test_con2prim_tabulated.c`.
+
 ## Selector And Multi-Method Split
 
 - Selectors are single-shot dispatchers. They map one `ghl_con2prim_id_t` to

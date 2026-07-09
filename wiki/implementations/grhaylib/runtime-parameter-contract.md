@@ -59,6 +59,10 @@ GRHayLib maps Cactus controls into `ghl_initialize_params` at routing level:
 - Limit and gauge controls: `Psi6threshold`, `max_Lorentz_factor`, and
   `Lorenz_damping_factor`.
 
+The tabulated NN fallback toggle `enable_backup_nn_primitive_guess` is not
+part of `ghl_initialize_params`; GRHayLib passes it to
+`ghl_initialize_tabulated_eos` as the `enable_neural_net_c2p` argument.
+
 Core then stores these in `ghl_params` as `main_routine`,
 `backup_routine[3]`, `evolve_entropy`, `evolve_temp`, `calc_prim_guess`,
 `psi6threshold`, `max_Lorentz_factor`, derived
@@ -124,13 +128,17 @@ PPM behavior there; this page only records GRHayLib parameter plumbing.
 - It calls `ghl_initialize_eos_functions(ghl_eos_tabulated)` directly.
 - It then calls `ghl_initialize_tabulated_eos(EOS_tablepath,
   parse_eos_table_type_keyword(eos_table_type),
-  eos_table_clean_sound_speed, rho_b_atm, rho_b_min, rho_b_max, Y_e_atm,
-  Y_e_min, Y_e_max, T_atm, T_min, T_max, ghl_eos)`.
+  eos_table_clean_sound_speed, enable_backup_nn_primitive_guess, rho_b_atm,
+  rho_b_min, rho_b_max, Y_e_atm, Y_e_min, Y_e_max, T_atm, T_min, T_max,
+  ghl_eos)`.
 - `parse_eos_table_type_keyword` maps `eos_table_type = "stellarcollapse"` to
   `ghl_eos_table_stellarcollapse`; unknown values return
   `ghl_eos_table_unknown`.
 - `eos_table_clean_sound_speed` passes the clean-sound-speed flag into
   `ghl_initialize_tabulated_eos`.
+- `enable_backup_nn_primitive_guess` passes the downstream neural-network
+  primitive-guess flag into `ghl_initialize_tabulated_eos` as
+  `enable_neural_net_c2p`.
 - Tabulated min/max defaults are table-bound aware: requested lower bounds
   below table limits are replaced by table lower bounds, and missing or
   oversized upper bounds are replaced by table upper bounds.
@@ -182,6 +190,27 @@ selector dispatch, build-list evidence, and tests before claiming support.
 Recovery order and backup behavior route to
 [Con2Prim recovery flow](../../gems/con2prim/recovery-flow.md).
 
+### Tabulated Neural-Network Primitive Guess
+
+GRHayLib exposes `enable_backup_nn_primitive_guess` as a Cactus parameter. In
+the tabulated EOS branch, `GRHayLib_initialize` passes it into
+`ghl_initialize_tabulated_eos` as the core `enable_neural_net_c2p` field on
+`ghl_eos_parameters`. Core tabulated EOS initialization stores the flag and, if
+enabled, loads the embedded NN model from the EOS HDF5 table.
+
+This route applies only to tabulated EOS initialization and the tabulated
+Con2Prim fallback-guess path. It is not a separate `ghl_con2prim_id_t` solver,
+does not alter simple or hybrid EOS setup, and does not imply simple/hybrid NN
+support. The tabulated multi-method still runs the selected main and backup
+Con2Prim routines; after failure, `enable_neural_net_c2p` allows retry with
+`ghl_c2p_nn_guess_primitives`.
+
+The focused Con2Prim route is
+[neural-network primitive guess](../../gems/con2prim/neural-network-primitive-guess.md).
+GRHayLib direct-compile build routing also includes
+`Con2Prim/Tabulated/neural_network_guess` in
+[`implementations/GRHayLib/src/make.code.defn`](../../../implementations/GRHayLib/src/make.code.defn).
+
 ## Drift Evidence
 
 Record these source facts as drift evidence only; this page does not propose
@@ -212,6 +241,7 @@ source changes:
 - [`implementations/GRHayLib/param.ccl`](../../../implementations/GRHayLib/param.ccl)
 - [`implementations/GRHayLib/src/GRHayLib.h`](../../../implementations/GRHayLib/src/GRHayLib.h)
 - [`implementations/GRHayLib/src/initialize_and_shutdown.c`](../../../implementations/GRHayLib/src/initialize_and_shutdown.c)
+- [`implementations/GRHayLib/src/make.code.defn`](../../../implementations/GRHayLib/src/make.code.defn)
 - [`implementations/GRHayLib/doc/documentation.tex`](../../../implementations/GRHayLib/doc/documentation.tex)
 - [`GRHayL/include/ghl.h`](../../../GRHayL/include/ghl.h)
 - [`GRHayL/include/ghl_con2prim.h`](../../../GRHayL/include/ghl_con2prim.h)
