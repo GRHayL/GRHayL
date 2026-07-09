@@ -28,6 +28,8 @@ typedef struct ghl_con2prim_diagnostics {
   bool backup[3];
   /** Number of iterations required to find the solution */
   int n_iter;
+  /** Whether the tabulated multi-method driver attempted a neural-network retry */
+  bool nn_guess_used;
 } ghl_con2prim_diagnostics;
 
 /**

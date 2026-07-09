@@ -166,6 +166,7 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
   // prims_guess_nn to ensure it has the correct magnetic field values.
   ghl_primitive_quantities prims_guess_nn = prims_guess;
   if(error != ghl_success && eos->enable_neural_net_c2p) {
+    diagnostics->nn_guess_used = true;
     ghl_c2p_nn_guess_primitives(params, eos, metric_adm, cons_undens, &prims_guess_nn);
     *prims = prims_guess_nn;
     error = ghl_con2prim_tabulated_select_method(params->main_routine,

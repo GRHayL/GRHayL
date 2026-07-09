@@ -13,7 +13,7 @@
  * The Con2Prim parameters are set to the defaults of
  * ```
  * con2prim_max_iterations   = 30
- * con2prim_solver_tolerance = 1e-10
+ * con2prim_solver_tolerance = 1e-8
  * ```
  *
  * The PPM reconstruction parameters are set to the defaults of
@@ -78,7 +78,7 @@ void ghl_initialize_params(
 
   // Initialize default Con2Prim values
   params->con2prim_max_iterations   = 30;
-  params->con2prim_solver_tolerance = 1e-10;
+  params->con2prim_solver_tolerance = 1e-8;
 
   // Initialize default PPM values (from Colella & Woodward)
   params->ppm_flattening_epsilon = 0.33;

@@ -16,4 +16,5 @@ void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics) 
   diagnostics->backup[1]     = false;
   diagnostics->backup[2]     = false;
   diagnostics->which_routine = ghl_con2prim_id_None;
+  diagnostics->nn_guess_used = false;
 }
