@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(
         main_routine, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
         Psi6threshold, W_max, Lorenz_damping_factor, &params);
+  params.con2prim_solver_tolerance = 1e-10;
 
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
