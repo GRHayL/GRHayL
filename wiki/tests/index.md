@@ -22,7 +22,7 @@ those files, trust repo-local ground truth and update this router.
 | [HDF5 sample tables](hdf5-sample-tables.md) | Checked-in sample table inputs, generated `simple_table.h5`, downloaded stellar-collapse tables, and no-HDF5 gates. |
 | [ET Legacy comparison contract](et-legacy-comparison-contract.md) | `unit_test_ET_Legacy_*` replay semantics, trusted legacy output fixtures, and downstream/compatibility caveats. |
 | [Expected-failure and error keys](expected-failure-and-error-keys.md) | `unit_test_code_error` key ranges, expected process failures, HDF5-only skips, and error-path routing. |
-| [Unit-test coverage and gap matrix](unit-test-coverage-and-gap-matrix.md) | Behavior-family coverage, weak spots, missing direct tests, and review impact paths. |
+| [Unit-test coverage and gap matrix](unit-test-coverage-and-gap-matrix.md) | Behavior-family coverage, weak spots, missing direct tests, installed `ghl_unit_tests.h` caveats, and review impact paths. |
 
 ## Existing Per-Gem Fixture Pages
 

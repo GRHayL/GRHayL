@@ -14,6 +14,22 @@ NRPyEOS declarations, table keys, index macros, and table-bound helpers are in
 Assignments from public pointers to NRPyEOS implementations are in
 [`GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c).
 
+## Registry Seam Audit
+
+| Seam | Current evidence | Classification |
+| --- | --- | --- |
+| Public tabulated pointer declarations | 38 `ghl_tabulated_*` pointer names in `ghl_eos_functions.h` | Declared |
+| Pointer storage | Same 38 names in `ghl_eos_functions_declaration.h` | Defined global storage |
+| Initializer assignments | 37 names in `NRPyEOS_initialize_tabulated_functions.c` | Assigned when HDF5 enabled |
+| Missing assignment | `ghl_tabulated_free_beq_quantities` has declaration/storage but no initializer assignment | Declared/defined, not initialized; global storage remains null unless another owner assigns it |
+| Direct cleanup implementation | `NRPyEOS_tabulated_free_beq_quantities` is built and called directly by `NRPyEOS_free_memory` | Internal callable implementation; not evidence that the public pointer is usable |
+| Duplicate prototype | `ghl_nrpyeos_tabulated.h` declares `NRPyEOS_tabulated_free_beq_quantities` twice | Header duplication |
+| Index prototypes | Header declares rho, temperature, and electron-fraction NRPyEOS index functions | Temperature alone has definition/build/pointer-assignment evidence; rho and electron-fraction are prototype-only |
+
+No absent seam establishes maintainer intent. Do not call the unassigned
+public free pointer or the prototype-only rho/electron-fraction index names as
+if they were supported symbols.
+
 ## Built Wrapper Groups
 
 The built interpolator source list is
@@ -77,6 +93,11 @@ Header prototypes for `NRPyEOS_tabulated_get_index_rho` and
 only the `NRPyEOS_tabulated_get_index_T` implementation. Treat this as
 prototype-only API drift, not a new page.
 
+The implemented temperature index takes `log(T)`, rejects values outside the
+stored log-temperature endpoints with `-1`, and computes an integer bin using
+the first grid spacing. It therefore relies on positive input and a uniform
+log-temperature grid; the function itself does not validate either condition.
+
 Bounds enforcement helpers live in
 [`GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c).
 They mutate caller-provided `(rho,Y_e,T)`, `(rho,Y_e,eps)`, `(rho,Y_e,S)`, or
@@ -96,7 +117,14 @@ constant temperature. `NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T`
 extends that cache with `lp_of_lr`, `le_of_lr`, and `lh_of_lr`. Consumer routes
 include `Ye_of_rho`, `P_from_rho`, `rho_from_P`, `eps_from_rho`,
 `dP_drho_from_rho`, and `deps_dP_from_rho`. Memory cleanup is
-`NRPyEOS_tabulated_free_beq_quantities`.
+`NRPyEOS_tabulated_free_beq_quantities`. The similarly named public pointer
+`ghl_tabulated_free_beq_quantities` is not assigned; full table cleanup calls
+the concrete NRPyEOS routine directly.
+
+Cache consumers do not allocate on demand. Call the `Ye_of_rho` builder before
+`Ye_from_rho`; call the combined `Ye_P_eps_of_rho` builder before pressure,
+energy, inverse-pressure, or derivative consumers. Calling consumers with null
+cache fields is outside the implemented contract.
 
 ## Enthalpy And Sound Speed
 
@@ -116,6 +144,18 @@ Runtime `compute_h_and_cs2` routing for tabulated EOS is
 It enforces `(rho,Y_e,T)` bounds on `ghl_primitive_quantities`, computes
 pressure, internal energy, and `cs2` through the `(rho,Y_e,T)` wrapper, and
 returns enthalpy to the caller.
+
+## Direct Test Evidence
+
+`Unit_Tests/unit_test_tabulated_eos.c` directly calls many assigned public
+wrappers, but source search finds no direct public-pointer call for
+`ghl_tabulated_compute_P_S_T_from_eps`, either enthalpy-input wrapper,
+`ghl_tabulated_compute_Ye_of_rho_beq_constant_T`, the `T`/`eps`/`S`
+bound-enforcement pointers, `ghl_tabulated_get_index_T`,
+`ghl_tabulated_read_table_set_EOS_params`, or the unassigned
+free-beta-equilibrium pointer. Some are exercised indirectly by initialization
+or other calls; direct-call absence remains a coverage distinction, not
+evidence of failure.
 
 ## Source-Of-Truth Paths
 

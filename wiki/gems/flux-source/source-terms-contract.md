@@ -36,9 +36,15 @@ The caller supplies:
 - `cons`: caller-owned conservative output. The kernel writes source
   contributions to `cons->SD[0..2]` and `cons->tau`.
 
+`cons->rho`, `cons->Y_e`, and `cons->entropy` are untouched. The routine does
+not zero or initialize the complete conservative struct.
+
 The kernel calls `ghl_compute_h_and_cs2(eos, prims, &h, &cs2)` before building
-the source terms. EOS dispatch details belong to the EOS/Core routes; this page
-only records the dependency.
+the source terms. Its `prims` argument is mutable: production tabulated dispatch
+clamps `rho`, `Y_e`, and `temperature`, then recomputes `press` and `eps` in
+place. The `void` source routine discards the EOS callback's error code. Callers
+needing unchanged primitives must pass a copy and validate EOS/table inputs
+before this call. EOS dispatch details otherwise belong to EOS/Core routes.
 
 Metric derivatives are not computed inside Flux_Source. Callers own their
 discretization, staggering, and consistency with `metric`, `curv`, and
@@ -56,7 +62,9 @@ long expressions into KB pages.
 Local generator provenance:
 
 - [GRHayL/Flux_Source/GRHayL_rhs.py](../../../GRHayL/Flux_Source/GRHayL_rhs.py)
-  calls source-term C generation into the Flux_Source directory.
+  calls source-term C generation into its current directory. See
+  [generated NRPy boundary](generated-nrpy-boundary.md) for verified command,
+  working-directory requirement, and output drift.
 - [GRHayL/Flux_Source/IGM_All_Source_Terms.py](../../../GRHayL/Flux_Source/IGM_All_Source_Terms.py)
   contains the `ghl_calculate_source_terms` generation path.
 - [GRHayL/Flux_Source/nrpy/](../../../GRHayL/Flux_Source/nrpy/) supplies local
@@ -73,6 +81,14 @@ editing only one expression copy.
 - [Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c](../../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c)
   shows fixture packing for primitives, metric, metric_derivs, extrinsic curv,
   and conservative outputs.
+
+Evidence status: declaration, definition, and normal/no-HDF5 manifest membership
+are present. `unit_test_ET_Legacy_flux_source` directly calls the routine inside
+a combined flux-divergence/source replay; it installs a test-local
+`compute_h_and_cs2` callback and is not a production EOS-dispatch test. The
+ordinary runner and all compiler workflows configure this replay, but no test
+isolates source terms, error propagation, primitive mutation, or untouched
+conservative fields. Static evidence does not establish a current run result.
 
 ## Evidence Links
 

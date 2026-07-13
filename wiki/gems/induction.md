@@ -35,6 +35,11 @@ Key public surface:
 - `ghl_HLL_vars`
 - `ghl_induction_interp_vars`
 
+All direct Induction routines are declared, defined, and in normal/no-HDF5
+manifests. GRHayLib lists their directories for compilation but contains no
+checked-in call sites. Tests and workflow routes are configured evidence, not
+an observed pass.
+
 ## Implementation Paths
 
 - Magnetic HLL flux: `GRHayL/Induction/HLL_flux_with_B.c`, `GRHayL/Induction/HLL_flux_with_Btilde.c`
@@ -67,7 +72,11 @@ Key public surface:
 - `B` may be staggered by direction; GRHayL only sees the stencils passed into its functions.
 - `ghl_HLL_vars` uses cross-product component labels `1` and `2`; do not treat those names as fixed coordinate indices.
 - `ghl_HLL_flux_with_B` needs `psi6`; `ghl_HLL_flux_with_Btilde` expects densitized magnetic input.
+- HLL denominators require nonzero `cmin+cmax`; visible HLL fixtures use random
+  speeds and do not test Flux_Source-to-Induction coupling.
 - `Lorenz_damping_factor` controls scalar-potential damping in `ghl_calculate_phitilde_rhs`.
+- Vertex-centered ADM interpolation intentionally leaves output `alpha` and
+  `betai` unwritten; see interpolation contract before unpacking output.
 
 ## Common Edit Routes
 
@@ -81,6 +90,8 @@ Key public surface:
 - Staggering assumptions are easy to break because callers pass stencils without grid metadata.
 - Characteristic-speed changes in Flux_Source can affect induction HLL inputs.
 - Downstream GRHayLib includes `ghl_induction.h` and compiles Induction subdirectories; new source locations require coordination.
+- Legacy `generate_makefile.sh` emits bogus Induction targets; normal
+  `configure` parsing remains separate. Use [verification workflows](induction/verification-workflows.md).
 
 ## Do Not Duplicate
 

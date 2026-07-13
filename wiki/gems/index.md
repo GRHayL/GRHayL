@@ -39,7 +39,9 @@ source, headers, tests, and common edit routes before wider search.
   `GRHayL/include/ghl_atmosphere.h`, update `GRHayL/Atmosphere/make.code.defn`,
   then update docs.
 - Drift/contract notes: atmosphere values live in `ghl_eos_parameters`; changes
-  can affect primitive-limit behavior and downstream setup.
+  can affect primitive-limit behavior and downstream setup. Constant atmosphere
+  is built; radial is declaration/incomplete-source only. Simple/hybrid EOS do
+  not initialize composition fields copied by constant reset.
 
 ## Con2Prim
 
@@ -68,6 +70,9 @@ source, headers, tests, and common edit routes before wider search.
   assumptions, and tabulated EOS support are externally visible through
   downstream configuration. Use [recovery flow](con2prim/recovery-flow.md) for
   diagnostics, dispatch, backups, and densitized/undensitized boundaries.
+  Source-present `Noble1D_entropy2` and Cerda-Duran paths are not supported by
+  current build/dispatch. Tabulated Noble2D is supported but missing from its
+  Doxygen table.
 
 ## EOS
 
@@ -94,9 +99,10 @@ source, headers, tests, and common edit routes before wider search.
 - Common edit routes: hybrid changes touch `GRHayL/EOS/Hybrid/`, hybrid header,
   and piecewise-polytrope tests; tabulated changes touch `GRHayL/EOS/Tabulated/`,
   HDF5 build setup, tabulated tests, and Neutrinos/Con2Prim callers.
-- Drift/contract notes: `GHL_DISABLE_HDF5`, omitted tabulated sources, and
-  function-pointer initialization must stay consistent across build scripts,
-  docs, and downstream `GRHayLib` HDF5 requirements.
+- Drift/contract notes: `GHL_DISABLE_HDF5`, exact mode filtering, partial table
+  lifecycle, hybrid breakpoint bounds, and function-pointer initialization
+  must stay consistent. One tabulated cleanup pointer is unassigned and two
+  index prototypes are definition-free.
 
 ## Flux_Source
 
@@ -115,11 +121,16 @@ source, headers, tests, and common edit routes before wider search.
 - Likely tests: `Unit_Tests/unit_test_hybrid_flux.c`,
   `Unit_Tests/unit_test_tabulated_flux.c`,
   `Unit_Tests/unit_test_ET_Legacy_flux_source.c`,
-  `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`, flux data generators.
+  `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`,
+  `Unit_Tests/data_gen/unit_test_data_tabulated_flux.c`, and
+  `Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c`.
 - Common edit routes: change generated equations or C kernels together; update
   EOS-specific flux variants, function-pointer setup, tests, and Doxygen.
 - Drift/contract notes: flux inputs expect reconstructed face primitives.
-  Entropy and tabulated variants must match EOS initialization choices.
+  Entropy and tabulated variants must match EOS initialization choices. Generic
+  HLLE pointer globals are unwired/signature-incompatible; direct variants are
+  owner routes. Source-term regeneration is probe-verified but drifted;
+  speed/HLLE regeneration commands remain unknown.
 
 ## Induction
 
@@ -136,6 +147,7 @@ source, headers, tests, and common edit routes before wider search.
 - Primary headers: `GRHayL/include/ghl_induction.h`,
   `GRHayL/include/ghl_flux_source.h`, `GRHayL/include/ghl.h`.
 - Likely tests: `Unit_Tests/unit_test_HLL_flux.c`,
+  `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`,
   `Unit_Tests/unit_test_induction_ccc_ADM.c`,
   `Unit_Tests/unit_test_induction_ccc_BSSN.c`,
   `Unit_Tests/unit_test_induction_vvv_ADM.c`,
@@ -147,7 +159,8 @@ source, headers, tests, and common edit routes before wider search.
   [verification workflows](induction/verification-workflows.md) for targeted
   run guidance.
 - Drift/contract notes: staggered-grid assumptions are public caller contracts.
-  Keep docs, stencil shapes, and tests synchronized.
+  Keep docs, stencil shapes, and tests synchronized. Current `Az` helper comment
+  conflicts with arithmetic/test face mapping.
 
 ## Neutrinos
 
@@ -175,7 +188,8 @@ source, headers, tests, and common edit routes before wider search.
   for the five built source files.
 - Drift/contract notes: leakage uses tabulated EOS quantities and table-backed
   test data. HDF5/EOS changes can break Neutrinos even if leakage source is
-  untouched.
+  untouched. Current tests discard all numerical comparison returns; constant
+  sphere also reverses trusted/perturbed and neighbor arguments.
 
 ## Reconstruction
 
@@ -200,3 +214,5 @@ source, headers, tests, and common edit routes before wider search.
 - Drift/contract notes: PPM parameters live in `ghl_parameters`; stencil sizes,
   face orientation, and left/right naming are external caller contracts.
   Coverage gap: no dedicated PPM unit test file is obvious in `Unit_Tests/`.
+  Built routines have no production source caller in this repo; generator
+  bounds, PPM face comments, and Doxygen category wording remain defective.

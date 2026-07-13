@@ -28,6 +28,11 @@ readers to implementation sources and Cactus metadata; they do not replace
 | [Runtime parameter contract](grhaylib/runtime-parameter-contract.md) | Global state, lifecycle, EOS setup, Con2Prim routing, and Cactus parameter mapping. | [`param.ccl`](../../implementations/GRHayLib/param.ccl), [`src/initialize_and_shutdown.c`](../../implementations/GRHayLib/src/initialize_and_shutdown.c), [`src/GRHayLib.h`](../../implementations/GRHayLib/src/GRHayLib.h) |
 | [Verification and drift](grhaylib/verification-and-drift.md) | Manual downstream verification and implementation drift checks. | [`README`](../../implementations/GRHayLib/README), [`doc/documentation.tex`](../../implementations/GRHayLib/doc/documentation.tex), repo CI/test maps |
 
+Current boundary: source registry and aggregate-header names have static parity
+with upstream files, but copied thorn module/include layout is absent locally.
+No Cactus build or runtime result is established by this repository's
+ET_Legacy/upstream tests.
+
 ## Source Notes
 
 - [`README.md`](../../README.md) distinguishes installed-library use from

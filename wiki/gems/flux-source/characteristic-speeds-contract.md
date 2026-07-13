@@ -22,6 +22,12 @@ The parent build list
 [GRHayL/Flux_Source/make.code.defn](../../../GRHayL/Flux_Source/make.code.defn)
 compiles all three direction files.
 
+All three rows have the same surface status: public declaration, checked-in
+definition, normal and `--disable-hdf5` build membership, direct calls from the
+hybrid and tabulated data generators, and direct replay calls from the ET
+Legacy flux/source test. The ordinary hybrid and tabulated flux tests do **not**
+call these routines; they read precomputed speed arrays from their fixtures.
+
 ## Caller Contract
 
 Each direction function takes:
@@ -31,7 +37,11 @@ Each direction function takes:
 - `eos`: EOS parameters compatible with the active EOS function table.
 - `metric_face`: ADM metric quantities evaluated at the same face.
 - `cmin_dirn*` and `cmax_dirn*`: caller-owned output pointers receiving the
-  minimum and maximum characteristic speeds.
+  non-negative left-going and right-going speed magnitudes used by the HLL
+  formulas. Despite the names, `cmin` is not a signed minimum eigenvalue: the
+  generator defines it as the negated minimum of zero and the two left-going
+  speeds. Both outputs can be zero, but downstream HLL formulas divide by
+  `cmin + cmax` and do not guard a zero sum.
 
 The kernels call `ghl_compute_h_and_cs2` for both reconstructed states. That
 function pointer is declared in
@@ -40,6 +50,14 @@ and assigned to hybrid or tabulated enthalpy/sound-speed implementations in
 [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
 Keep EOS behavior routed through EOS pages; this page only records that the
 speed kernels depend on `h` and `cs2`.
+
+The primitive pointers are intentionally non-`const`. The production tabulated
+enthalpy/sound-speed implementation clamps `rho`, `Y_e`, and `temperature` and
+recomputes `press` and `eps` in place. The three `void` speed routines discard
+the `ghl_error_codes_t` returned by `ghl_compute_h_and_cs2`; callers cannot
+recover an EOS failure from these APIs. Callers needing unchanged face states
+must pass copies, and must validate EOS initialization and table-domain inputs
+before the call.
 
 The outputs are direction-specific `cmin` and `cmax` speeds. HLLE flux kernels
 consume these same values through their `cmin_dirn*` and `cmax_dirn*`
@@ -62,6 +80,26 @@ where `ghl_HLL_vars` stores `c1_min`, `c1_max`, `c2_min`, and `c2_max` and
 points readers back to the three `ghl_calculate_characteristic_speed_dirn*`
 functions. Direction or sign changes here can therefore affect hydrodynamic
 HLLE fluxes and vector-potential HLL flux setup.
+
+This is a contract coupling, not end-to-end test evidence. The Induction HLL
+fixture generators fill `cmin` and `cmax` with random values (including negative
+values) and never call these characteristic-speed routines. No visible test
+passes production characteristic-speed outputs into an Induction HLL routine.
+
+## Evidence Status
+
+- **Built:** all three declarations, definitions, and manifest entries exist in
+  both HDF5 modes.
+- **Direct execution route:** `unit_test_ET_Legacy_flux_source` calls all three,
+  and the ordinary runner plus all five compiler workflows configure that
+  replay. That test installs its own `compute_h_and_cs2` callback rather than
+  production EOS dispatch.
+- **Fixture-generation only:** hybrid and tabulated data generators call all
+  three; normal test jobs download rather than regenerate those fixtures.
+- **Replay only:** `unit_test_hybrid_flux` and `unit_test_tabulated_flux` consume
+  stored speed arrays.
+- **Coverage gap:** no standalone error/mutation test, no direct production
+  tabulated-dispatch test here, and no Flux_Source-to-Induction end-to-end test.
 
 ## Evidence Links
 

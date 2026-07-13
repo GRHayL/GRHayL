@@ -27,6 +27,32 @@ extrinsic-curvature-only pages.
   provides inline raise/lower and vector-square helpers for 3D and 4D metric
   arrays.
 
+[`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn) lists
+all four headers above for installation. Installation is only header
+availability: declarations still require matching library storage/definitions,
+and function-pointer declarations still require runtime assignment before a
+call.
+
+Two installed-header cases need narrower labels:
+
+- [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h)
+  contains `extern` function-pointer declarations. Storage is emitted by the
+  built Core translation unit through
+  [`ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h),
+  but pointer values are zero-initialized until an initializer or caller
+  assigns them; use the [EOS dispatch contract](eos-dispatch-contract.md) for
+  lifecycle and known unassigned entries.
+- [`GRHayL/include/ghl_unit_tests.h`](../../GRHayL/include/ghl_unit_tests.h) is
+  also named by the install list, but its non-inline helper definitions live
+  under [`Unit_Tests/`](../../Unit_Tests/), not in the Core or gem library
+  manifests. Treat it as an installed test-support declaration header, not
+  evidence that those helpers are linkable from the installed GRHayL library.
+
+`ghl.h` also exposes guarded utility/normalization macros (`SQR`,
+`ONE_OVER_SQRT_4PI`, and `M_PI`) and the `MAX_EOS_PARAMS` layout bound. Route
+magnetic normalization to [stress-energy/smallb](stress-energy-smallb-contract.md)
+and the EOS array bound to EOS pages; the header remains layout authority.
+
 ## Enum Routes
 
 | Public enum | Primary route | Use for |
@@ -36,6 +62,10 @@ extrinsic-curvature-only pages.
 | `ghl_eos_t` | [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md) | EOS family selection: simple, hybrid, or tabulated. |
 | `ghl_eos_table_t` | [EOS initialization and dispatch](../gems/eos/initialization-and-dispatch.md) and tabulated EOS pages | Table-family selection, currently including `ghl_eos_table_stellarcollapse` and unknown/type-count sentinels. |
 | `ghl_error_keys` | [errors, IO, debug, utilities](errors-io-debug-utilities.md) | IO macro control values in `ghl_io.h`, separate from recoverable `ghl_error_codes_t` returns. |
+
+The forward-declared opaque `ghl_c2p_nn_model` type is also shared public
+surface in `ghl.h`; its allocation and model lifecycle belong to Con2Prim
+neural-network routes, not Core packing.
 
 ## `ghl_parameters`
 
@@ -73,6 +103,11 @@ Default values belong in
 existing [struct pack/unpack contract](struct-pack-unpack-contract.md), not in
 new duplicated tables.
 
+The initializer returns `void` and performs no enum, pointer, finiteness, or
+range validation. In particular, it reads all three entries of the caller's
+`backup_routine` array and computes `1.0 / max_Lorentz_factor^2` directly.
+Callers own those preconditions; the implementation provides no failure code.
+
 ## `ghl_eos_parameters`
 
 `ghl_eos_parameters` is declared in
@@ -101,6 +136,13 @@ Use field groups as routes:
 Core EOS setup entry points are declared in
 [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) and implemented in
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
+They initialize family-relevant subsets, not every byte/field of the public
+struct. In particular, simple/hybrid setup does not set `Y_e_atm` or `T_atm`,
+though the constant Atmosphere routine reads them. Callers must initialize
+cross-family fields they later consume; use the
+[Atmosphere prescription contract](../gems/atmosphere/prescription-contract.md)
+for that gap and the [EOS dispatch contract](eos-dispatch-contract.md) for
+ordering and partial-failure behavior.
 
 ## Shared Struct Routes
 

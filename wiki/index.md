@@ -10,6 +10,11 @@ KB pages summarize navigation and review impact. If a KB page conflicts with
 source, headers, tests, CI, or Doxygen source, trust the underlying repo files
 and update the KB page.
 
+Availability claims are layered: declaration, definition, build inclusion,
+dispatch/initialization, test selection, execution, and downstream proof are
+distinct. Current unresolved product choices live only in
+[Contradictions](contradictions.md); owner leaves state safe observed behavior.
+
 ## Router
 
 | Go to | Use it for | Primary ground truth |
@@ -24,7 +29,7 @@ and update the KB page.
 | [Test Map](test-map.md) | Unit tests, the [Unit_Tests hub](tests/index.md), generated reference-data programs, sample EOS table, and fixture routing. | `Unit_Tests/`, `.github/run_tests.sh` |
 | [Generated Boundaries](generated-boundaries.md) | Generated outputs, Doxygen output, NRPy-derived files, and build products. | `Doxyfile`, `docs/raw/`, `GRHayL/Flux_Source/nrpy/`, `GRHayL/*/make.code.defn`, [Flux_Source generated NRPy boundary](gems/flux-source/generated-nrpy-boundary.md) |
 | [Change Impact](change-impact.md) | Which docs/tests to inspect after source changes. | `GRHayL/`, `GRHayL/include/`, `docs/raw/`, `Unit_Tests/` |
-| [Contradictions](contradictions.md) | Known mismatches and review notes that need source-backed resolution. | Repo-local files named by each contradiction |
+| [Contradictions](contradictions.md) | Current unresolved repo conflicts and smallest maintainer decisions; no resolved history. | Exact competing repo-local files named by each row |
 | [Workflows](workflows.md) | Common agent workflows for docs, tests, builds, and review. | `README.md`, `configure`, `.github/run_tests.sh` |
 | [Physics Variables](physics/variables-and-conventions.md) | Primitive/conservative variables, stress-energy notation, magnetic rescaling. | `docs/raw/derivation.md`, `GRHayL/include/ghl.h` |
 | [Evolution Equation Map](physics/evolution-equation-map.md) | Flux/source/evolution equation routes and implementation entry points. | `docs/raw/derivation.md`, `docs/raw/Flux_Source.dox`, `GRHayL/Flux_Source/` |
@@ -36,11 +41,13 @@ and update the KB page.
 | --- | --- |
 | Find a term or alias | [Catalog](catalog.md) |
 | Build or install GRHayL | [Build And CI](build-and-ci.md), `README.md`, `configure` |
+| Understand default/no-HDF5 callable surface | [Build And CI](build-and-ci.md), [Public API Map](public-api-map.md), `configure`, recursive `GRHayL/**/make.code.defn` |
 | Understand modular design | `README.md`, `docs/raw/mainpage.md`, [Gems](gems/index.md) |
 | Work on Core/chalice shared structs, public enums, parameters, packing, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, or debug utilities | [Core/Chalice](core/index.md), [Shared parameters and enums](core/shared-parameters-and-enums.md), `docs/raw/GRHayL_Core.dox`, `GRHayL/include/ghl.h` |
 | Inspect public structs or API entry points | [Public API Map](public-api-map.md), `GRHayL/include/`, `docs/raw/GRHayL_Core.dox` |
 | Work on atmosphere prescriptions | [Gems](gems/index.md), `docs/raw/Atmosphere.dox`, `GRHayL/Atmosphere/` |
 | Work on conservative-to-primitive solvers | [Gems](gems/index.md), `docs/raw/Con2Prim.dox`, `GRHayL/Con2Prim/` |
+| Add or select a Con2Prim solver | [Con2Prim solver matrix](gems/con2prim/solver-matrix.md), [GRHayLib runtime contract](implementations/grhaylib/runtime-parameter-contract.md), `GRHayL/include/ghl.h`, `GRHayL/include/ghl_con2prim.h`, selector/manifests/tests |
 | Work on EOS routines, tabulated interpolators, table adapters, or HDF5 behavior | [Gems](gems/index.md), [Stellarcollapse table adapter](gems/eos/stellarcollapse-table-adapter.md), [Tabulated interpolator catalog](gems/eos/tabulated-interpolator-catalog.md), `docs/raw/EOS.dox`, `GRHayL/EOS/`, `configure` |
 | Work on fluxes, characteristic speeds, source terms, or Flux_Source generators | [Evolution Equation Map](physics/evolution-equation-map.md), [Flux_Source hub](gems/flux-source.md), `docs/raw/Flux_Source.dox`, `GRHayL/Flux_Source/` |
 | Work on vector-potential induction | [Induction hub](gems/induction.md), [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/Induction.dox`, `GRHayL/Induction/` |
@@ -48,9 +55,12 @@ and update the KB page.
 | Work on reconstruction | [Reconstruction hub](gems/reconstruction.md), [face/stencil contract](gems/reconstruction/face-and-stencil-contract.md), `GRHayL/include/ghl_reconstruction.h`, `GRHayL/Reconstruction/`, `docs/raw/Reconstruction.dox` as read-only evidence |
 | Understand GRMHD equations | [Physics Variables](physics/variables-and-conventions.md), [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/derivation.md` |
 | Connect to downstream infrastructure | [Implementations](implementations/index.md), [GRHayLib Cactus thorn](implementations/grhaylib.md), `implementations/GRHayLib/` |
+| Verify GRHayLib layout/parameters/runtime | [Cactus build boundary](implementations/grhaylib/cactus-build-boundary.md), [runtime parameter contract](implementations/grhaylib/runtime-parameter-contract.md), [verification and drift](implementations/grhaylib/verification-and-drift.md); Cactus proof requires real environment |
 | Run tests or inspect reference data | [Test Map](test-map.md), [Unit_Tests hub](tests/index.md), `Unit_Tests/`, `.github/run_tests.sh` |
+| Distinguish fixture generation, replay, and workflow evidence | [Runner and generated artifacts](tests/runner-and-generated-artifacts.md), [fixture lifecycle](tests/fixture-lifecycle-and-harness-contract.md), [Test Map](test-map.md) |
 | Check generated-output boundaries | [Generated Boundaries](generated-boundaries.md), `Doxyfile`, `GRHayL/*/make.code.defn` |
 | Review likely impact of a change | [Change Impact](change-impact.md), [Contradictions](contradictions.md) |
+| Investigate an unresolved unsafe seam | [Contradictions](contradictions.md), then named owner leaf and both competing source authorities |
 | Maintain the KB | [KB Checks](lint/CHECKS.md), `AGENTS.md` |
 
 ## Source And Date Policy

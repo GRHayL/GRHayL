@@ -25,7 +25,7 @@ Common flags visible in `configure`:
 | `--disable-hdf5` | Disable HDF5 and omit tabulated sources/tests selected by the script. |
 | `--prefix=<dir>` | Installation prefix. |
 | `--builddir=<dir>` | Build directory; default is `build`. |
-| `--buildtype=<type>` | Compiler flag preset. Supported values in help are `nocflags`, `debug`, `debug-opt`, `opt`, and `production`; implementation also accepts `plain` while help names `nocflags`. |
+| `--buildtype=<type>` | Compiler flag preset. Current help and parser disagree: help advertises `nocflags`, but the parser rejects it; the parser accepts undocumented `plain`, which supplies no preset flags. |
 | `--cflags="<flags>"` | Extra compiler flags. |
 | `--clibs="<libs>"` | Extra linker flags. |
 | `--hdf5dir=<dir>` | HDF5 base directory containing include and lib subdirectories. |
@@ -37,16 +37,50 @@ Common flags visible in `configure`:
 populated from `Unit_Tests/unit_test_*.c` and
 `Unit_Tests/data_gen/unit_test_data_*.c`, filtered by the HDF5 setting.
 
+Build-type flags have another live help/parser mismatch. Help advertises
+`-fno-finite-math-only` for `production`; the parser currently generates
+`-Wall -std=c99 -march=native -O3` without that flag. Treat `nocflags` and the
+documented production flag string as broken documentation routes. `plain` and
+the parser's emitted production flags describe current behavior; maintainer
+intent remains unknown.
+
+Configuration, compilation, installation, consumer linking, and execution are
+separate evidence classes:
+
+- successful `configure` proves generated target selection only;
+- `make grhayl`, `make tests`, and `make datagen` prove compilation/linking of
+  selected targets, not test execution;
+- `make install` proves only files copied into the chosen prefix;
+- a consumer compile/link against that prefix proves a referenced symbol is
+  linkable in that host/mode; and
+- only running the consumer or test proves the exercised runtime path.
+
+Do not infer a later class from an earlier one. Workflow YAML and a configured
+target likewise prove intent/selection, not a successful historical run.
+
 ## Legacy Makefile Generator
 
-`generate_makefile.sh` is a separate Makefile generator. It finds
-`make.code.defn` files, excludes paths matching `ET/`, scans `SRCS` blocks, and
-writes a top-level `Makefile` that builds `lib/libgrhayl.a`.
+`generate_makefile.sh` is a separate, currently **broken** Makefile generator.
+It finds every path containing `make.code.defn`, excludes paths matching
+`ET/`, scans `SRCS` blocks, and writes a top-level `Makefile` intended to build
+`lib/libgrhayl.a`.
 
-This script is not the same path as `configure`: it creates a static archive,
-expects HDF5 include/lib locations in the generated Makefile, and warns the
-user to add HDF5 paths when no HDF5 directory argument is given. It does not
-implement the no-HDF5 source filtering done by `configure`.
+This script is not the same path as `configure`. A clean disposable-tree
+reproduction currently:
+
+- turns comment words in `GRHayL/Induction/make.code.defn` into source/object
+  targets;
+- includes `implementations/GRHayLib/src/initialize_and_shutdown.c` because it
+  scans manifests outside `GRHayL/`;
+- emits `-I./include`, although public headers live under `GRHayL/include/` in
+  this checkout;
+- has no shebang while using Bash `[[ ... ]]` syntax, so interpreter selection
+  depends on caller-shell fallback; and
+- has no no-HDF5 source filtering.
+
+Generation itself exits successfully, so exit status alone does not validate
+the Makefile. Do not run `make` from this output. Exact repair-versus-retirement
+intent is unknown and needs maintainer confirmation.
 
 ## `make.code.defn` Inclusion
 
@@ -55,6 +89,23 @@ implement the no-HDF5 source filtering done by `configure`.
 each child `sources`, `headers`, and `install_headers` entry. The generated
 Makefile compiles listed C sources under `GRHayL/` into the configured build
 directory and links `build/lib/libghl.so` or the host shared-library extension.
+
+During configuration, every `GRHayL/include/*.h` is symlinked into
+`<builddir>/include/ghl`. `make install` instead copies the headers parsed from
+`GRHayL/include/make.code.defn` into `<prefix>/include/ghl`. Both mechanisms
+currently select the same 16 headers, including `ghl_unit_tests.h`, but they
+are separate lists and can drift. Installation then copies the versioned
+shared library and symlink into `<prefix>/lib`. Installed presence does not by
+itself classify a header as production versus test-only API.
+
+`ghl_unit_tests.h` is a concrete installed-surface caveat. Its `static inline`
+helpers are caller-compiled, but its non-inline test-helper declarations are
+not part of any GRHayL library source manifest. Several are defined only by
+helper files under `Unit_Tests/`; no repo definition is visible for the
+declared binary read/write family or `ghl_initial_random_data`. Therefore an
+installed header compile is not proof those declarations link against
+`libghl`. Treat them as test-only or unresolved, not production library API,
+until install intent and definitions are reconciled.
 
 `generate_makefile.sh` instead scans all repo `make.code.defn` files found by
 `find`, except `ET/` paths, and turns listed sources into static-library object
@@ -70,7 +121,10 @@ probe program.
 With `--disable-hdf5`, `configure`:
 
 - adds `-DGHL_DISABLE_HDF5` to `CFLAGS`;
-- removes tabulated implementation sources by path/name pattern;
+- filters implementation sources with the exact path/name predicate in
+  `configure`; despite their paths, it explicitly retains
+  `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` and sources under
+  `Con2Prim/Tabulated/neural_network_guess/`;
 - excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, and the
   NRPyLeakage unit tests from the generated unit-test list;
 - excludes tabulated data generators from the generated data-generator list.
@@ -79,9 +133,10 @@ For Neutrinos-specific HDF5/EOS details, route public table-backed API behavior
 through [Neutrinos API and data](gems/neutrinos/api-and-data.md), and fixture or
 SLy4 table setup through [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md).
 
-Manual or downstream no-HDF5 builds must mirror both parts visible in repo
-docs and script behavior: define `GHL_DISABLE_HDF5` and exclude HDF5/tabulated
-sources that require HDF5 runtime paths.
+Manual or downstream no-HDF5 builds must mirror current script behavior: define
+`GHL_DISABLE_HDF5` and reproduce its source-selection predicate. The broader
+README wording that all tabulated implementation sources are omitted is not an
+exact description of the current generated source list.
 
 GRHayLib is separate implementation-specific build routing. Its Cactus
 `configuration.ccl` hard-codes `requires HDF5`; that thorn requirement is not
@@ -95,15 +150,23 @@ Workflows live in `.github/workflows/`:
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | enabled in jobs |
-| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | enabled in jobs |
-| `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | mixed; most coverage steps are commented, but `c2p-failure` and `reconstruction` are enabled |
-| `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | enabled in jobs |
-| `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | commented out in jobs |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
+| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
+| `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | 2 of 13 jobs invoke coverage action |
+| `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
+| `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | no jobs invoke coverage action |
 
-Each workflow ignores pushes and pull requests that touch only paths listed in
-`paths-ignore`, including `docs/**`, `*.md`, and `implementations/**`. Scheduled
-runs are also configured. Do not infer project support beyond the OS/compiler
+Each workflow ignores pushes and pull requests when **all** changed paths match
+its `paths-ignore` list, including `docs/**`, `wiki/**`, Markdown/reStructuredText
+patterns, and `implementations/**`. A mixed change with any non-ignored path can
+trigger the workflow; path filters apply to `push`/`pull_request`, while the
+separately declared schedule remains eligible independently. These semantics
+come from the
+[GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore),
+not merely from local YAML key names. All five workflows use cron
+`33 15 1,15 * *`. Their `push` event is restricted to branch `main`; their
+`pull_request` event has no branch filter in local YAML. Do not infer project
+support beyond the OS/compiler
 pairs encoded in these workflow matrices and the usage examples in `configure`.
 Because `implementations/**` is path-ignored, repository CI does not validate
 GRHayLib implementation-only changes unless another touched path or a scheduled
@@ -133,8 +196,11 @@ Composite actions:
 - `.github/actions/OS_setup/action.yml` installs compiler/HDF5 dependencies.
 - `.github/actions/compile_GRHayL/action.yml` runs `configure`, `make tests
   datagen`, and `make install`.
-- `.github/actions/code-coverage/action.yml` runs coverage tooling and then
-  `codecov/codecov-action@v5`.
+- `.github/actions/code-coverage/action.yml` selects compiler/OS-specific
+  collection steps, several of which contain only comments, then invokes
+  `codecov/codecov-action@v5` unconditionally when the composite action itself
+  is called. Action invocation is not proof that a usable coverage artifact was
+  collected or uploaded.
 - `codecov.yml` at repo root configures Codecov report behavior for those
   uploads, including per-gem coverage components and ignored test paths. Its
   header comment requires validating any change with
@@ -142,7 +208,8 @@ Composite actions:
 
 ## `.github/run_tests.sh`
 
-`.github/run_tests.sh` is a full local-style CI driver:
+`.github/run_tests.sh` is a broad repository replay driver, not a complete
+workflow matrix and not a fixture generator:
 
 1. Runs `./configure -r`.
 2. Runs `make tests`.
@@ -160,7 +227,23 @@ Composite actions:
    this records only the visible runner/workflow setup command for NN-enabled
    tabulated replay.
 9. Continues selected compiled-test runs.
-10. Removes downloaded `*.bin`, `*.h5`, and `*.bz2` files from the repo root.
+10. Removes root-level `*.bin`, `*.h5`, and `*.bz2` files if execution reaches
+    the final cleanup command. Because `set -Eeuxo pipefail` exits on an earlier
+    failure, cleanup is not guaranteed.
+
+That cleanup is indiscriminate: an already-present matching file is skipped by
+the downloader but still removed by the final glob. Run this driver only in a
+disposable checkout without user-owned root-level `.bin`, `.h5`, or `.bz2`
+files.
+
+The runner directly invokes 27 of the 29 configured default test binaries. It
+does not invoke `unit_test_WENOZ_reconstruction` (workflow matrices do) or
+`unit_test_con2prim_debug` (no runner/workflow invocation is visible). The
+composite-action YAML configures `tests` and `datagen` compilation, but neither
+that action nor the local runner executes data-generator binaries. Tracked YAML
+therefore establishes a workflow-configured compile route only. After an
+observed successful action or local `make datagen`, those binaries are
+`compiled-unrun` until a separate command executes them.
 
 ## Coverage Caveats
 
@@ -177,3 +260,8 @@ Repo evidence shows these caveats:
   most Ubuntu Intel jobs.
 - Workflows ignore docs-only and implementation-only pull-request changes, so
   CI coverage does not prove those paths are exercised.
+
+## Ground Truth References
+
+- GitHub Actions path-filter semantics:
+  https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore

@@ -109,6 +109,41 @@ for `neos`, `rho_ppoly`, `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`,
 to these helpers, and `GRHayL/EOS/Hybrid/make.code.defn` lists the compiled
 hybrid EOS sources.
 
+Registry comparison finds 10 `ghl_hybrid_*` declarations, the same 10 storage
+definitions, and assignments for all 10 in the hybrid initializer. The general
+`ghl_compute_h_and_cs2` pointer is assigned there too, then selected again by
+Core EOS-family dispatch. Assignment/build agreement does not supply direct
+tests for every helper; coverage below is narrower.
+
+Simple/hybrid initialization performs no unit conversion: densities,
+pressures, `K_ppoly0`, and derived quantities remain in caller-supplied GRHayL
+code units. Tabulated stellar-collapse conversion macros do not apply to this
+path.
+
+`NRPyEOS_hybrid_compute_enthalpy_and_cs2` returns `ghl_success` unconditionally
+after algebra using primitive density/pressure and EOS coefficients. It does
+not clamp density, validate finiteness, or clean negative/superluminal `cs2`;
+those are caller/EOS-domain preconditions, distinct from tabulated sound-speed
+cleaning.
+
+## Preconditions And Breakpoint Contradiction
+
+`ghl_eos_parameters.rho_ppoly` has `MAX_EOS_PARAMS - 1` entries, and the piece
+lookup/set-constant helpers consume `neos - 1` density breakpoints. Callers
+therefore supply one `Gamma_ppoly` per piece and one fewer density breakpoint
+for multi-piece EOSs. Source does not validate `1 <= neos <= MAX_EOS_PARAMS`,
+pointer lengths, increasing breakpoints, or gamma/constant domains; invalid
+inputs can reach array indexing, `pow`, and division by `Gamma - 1`.
+
+Current `ghl_initialize_hybrid_eos` copies `rho_ppoly[0..neos-2]`, but its
+later `p_ppoly` initialization loop runs through `j < neos` and reads
+`rho_ppoly[neos-1]`. For `neos > 1`, that final read conflicts with the
+`neos - 1` breakpoint storage and with the three-element input used by the
+four-piece unit test. `p_ppoly[neos-1]` is not consumed by the pressure-piece
+lookup, which reads only through `neos - 2`, but the extra input read remains
+an unresolved source defect. Do not reinterpret it as a requirement for an
+extra caller element.
+
 ## Test Coverage
 
 `Unit_Tests/unit_test_piecewise_polytrope.c` directly initializes a four-piece
@@ -117,6 +152,10 @@ reference values from the NRPyEOS Python path. This is the direct regression
 route for the `ghl_hybrid_set_K_ppoly_and_eps_integ_consts` function pointer
 (`GRHayL/include/ghl_eos_functions.h`), whose installed implementation is
 `NRPyEOS_set_K_ppoly_and_eps_integ_consts` from the Helper Map above.
+
+That test checks only `K_ppoly[1..3]` and `eps_integ_const[1..3]`. It neither
+checks the initializer return code nor exercises `p_ppoly`, invalid `neos`,
+breakpoint ordering, or gamma-domain failures. Treat those as coverage gaps.
 
 `Unit_Tests/test_compute_h_and_cs2.c` provides a small test helper for
 `ghl_compute_h_and_cs2` call sites; it is not the direct piecewise-polytrope

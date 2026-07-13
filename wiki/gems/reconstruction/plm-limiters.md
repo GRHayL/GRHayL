@@ -27,6 +27,11 @@ The helper routines are shared slope-selection utilities, not reconstruction ent
 
 Changing either helper can affect multiple PLM methods. Treat helper edits as shared-behavior changes and verify every direct PLM method, not only the method that motivated the edit.
 
+PLM has no runtime parameter struct. Limiter coefficients are fixed by each
+source: minmod compares adjacent one-sided slopes, MC includes centered and
+twice-one-sided candidates, and superbee combines minmod candidates with
+maxmod. Exact arithmetic and tie behavior stay in the five PLM sources.
+
 ## Build Membership
 
 PLM source membership is listed in [`GRHayL/Reconstruction/PLM/make.code.defn`](../../../GRHayL/Reconstruction/PLM/make.code.defn). The build list includes:
@@ -54,6 +59,17 @@ the three PLM methods.
 The broader test routing table is [`wiki/test-map.md`](../../test-map.md),
 which records PLM reconstruction as direct Reconstruction/PLM coverage and
 notes that this PLM test does not cover PPM.
+
+Coverage limits:
+
+- Replay checks only `index=2` through `arraylength-2`, the valid four-point
+  stencil range, and branches to `ghl_error` when a comparison fails.
+- The data generator instead calls `&var[index-2]` for every index from `0`
+  through `arraylength-1`. Its first two and final calls access outside the
+  allocated input. Boundary fixture entries are ignored by replay, but the
+  generator itself has an out-of-bounds coverage/tooling gap.
+- No direct test isolates `ghl_minmod` or `ghl_maxmod`; wrapper tests exercise
+  them transitively.
 
 ## Repo-Local References
 

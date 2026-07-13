@@ -10,10 +10,11 @@ declarations in
 and the method sources under
 [`GRHayL/Reconstruction/`](../../../GRHayL/Reconstruction/) as the ground truth.
 
-## Public Left-Face Contract
+## Standard Wrapper Left-Face Contract
 
-The public reconstruction wrappers return the right and left states on the left
-face of the current cell. For cell `i`, that face is `i-1/2`:
+The standard PLM, PPM, and WENOZ reconstruction wrappers return the right and
+left states on the left face of the current cell. For cell `i`, that face is
+`i-1/2`:
 
 - `Ur` is the value on the right side of that left face, from the current-cell
   side: `U(i-1/2 + epsilon)`.
@@ -74,16 +75,30 @@ and
 
 PPM and WENOZ both adapt 6-point public inputs through 5-point helper calls:
 
-- `ghl_ppm_compute_for_cell(ftilde, U[5], Ur_ptr, Ul_ptr)` computes one
-  cell-centered PPM right/left face pair.
+- `ghl_ppm_compute_for_cell(ftilde, U[5], Ur_ptr, Ul_ptr)` computes both faces
+  around the stencil center. For center `c`, its implementation writes the
+  left state at `c+1/2` to `Ur_ptr` and the right state at `c-1/2` to
+  `Ul_ptr`. Here `Ur`/`Ul` are helper variable names, not the standard
+  wrapper's right/left states at one face.
 - `ghl_ppm_compute_for_cell_with_steepening(params, pressure[5], Gamma_eff,
   ftilde, U[5], Ur_ptr, Ul_ptr)` adds steepening before flattening and
-  monotonization.
+  monotonization and has the same two-face output mapping.
 - `ghl_shock_detection_ftilde(params, P[5], v_flux_dirn[5])`,
   `ghl_slope_limit`, and `ghl_steepen_var` support the PPM helpers.
-- `ghl_wenoz_reconstruction_right_left_faces(U[5], Ur, Ul)` computes a
-  centered WENOZ right/left face pair; the 6-point wrapper calls it on adjacent
-  windows and filters the outputs into the public left-face `Ur`/`Ul` contract.
+- `ghl_wenoz_reconstruction_right_left_faces(U[5], Ur, Ul)` likewise writes
+  the left state at `c+1/2` to `Ur` and the right state at `c-1/2` to `Ul`.
+  The 6-point wrapper calls it on adjacent windows and filters outputs into the
+  standard left-face `Ur`/`Ul` contract.
+
+For either wrapper, the first 5-point slice is centered on `i-1`; its helper
+`Ur` is therefore `Ul` at `i-1/2`. The shifted slice is centered on `i`; its
+helper `Ul` is therefore `Ur` at `i-1/2`. This source-level mapping explains
+the apparently crossed assignments in the PPM and WENOZ wrappers.
+
+The legacy comment atop `ppm_compute_for_cell.c` labels helper `Ur` as
+`U(i-1/2+epsilon)`, but its arithmetic constructs that value from `U[i]` and
+`U[i+1]`; the steepened helper documentation and both wrappers confirm the
+two-face mapping above. Treat the old comment as conflicting evidence.
 
 For 5-point helper stencils, use `enum reconstruction_stencil` from
 [`GRHayL/include/ghl_reconstruction.h`](../../../GRHayL/include/ghl_reconstruction.h):
@@ -109,19 +124,23 @@ standard public left-face wrapper contract.
 
 ## Caller Impact
 
-- Flux_Source: HLLE flux routines operate on right/left states at a left face,
-  so any `Ur`/`Ul` orientation change must be coordinated with
-  [`GRHayL/Flux_Source/`](../../../GRHayL/Flux_Source/) and flux tests. The
-  source map records reconstructed face primitives as a Flux_Source dependency:
-  [`wiki/source-map.md`](../../source-map.md).
-- Induction: HLL magnetic flux support also uses reconstructed right/left edge
-  states and reconstructs velocities in direction-dependent ways. Orientation
-  or stencil changes can break the assumptions documented in
-  [`GRHayL/Induction/HLL_flux_with_Btilde.c`](../../../GRHayL/Induction/HLL_flux_with_Btilde.c).
+- In-tree direct callers: exact symbol search finds only Reconstruction tests
+  and data generators. ET Legacy PPM passes six-point arrays filled by
+  `ind-3`; PLM passes `&var[index-2]`; WENOZ passes `&var[index-3]`.
+- Flux_Source and Induction: `docs/raw/Reconstruction.dox` identifies these as
+  consumers of reconstructed states, and the gems expose APIs that accept face
+  states, but this repository has no direct production call from either gem to
+  a Reconstruction symbol. Coordinate orientation changes with downstream
+  integrators without claiming an in-tree call edge.
 - Tests: PLM, WENOZ, and ET Legacy reconstruction tests encode stencil offsets
   and orientation. PPM paths are exercised through
   [`Unit_Tests/unit_test_ET_Legacy_reconstruction.c`](../../../Unit_Tests/unit_test_ET_Legacy_reconstruction.c),
   which builds 6-point PPM stencils from `i-3` through `i+2`.
+- Helper coverage: no test directly calls either 5-point PPM helper, any PPM
+  shock/steepening helper, or the 5-point WENOZ helper. PPM helpers are
+  exercised transitively by ET Legacy; WENOZ helper is exercised transitively
+  by its wrapper test. This is coverage evidence, not a promise that each
+  helper contract is independently checked.
 - Public header users: signature, array-width, or output-orientation changes in
   `ghl_reconstruction.h` are public API changes for downstream users and for
   `GRHayL/include/ghl_unit_tests.h`.

@@ -2,6 +2,39 @@
 
 Use these playbooks for cross-module edits. They route to local source of truth and avoid duplicating Doxygen API text.
 
+## Build, Install, Test, Or CI Change
+
+Read first:
+
+- [Build And CI](build-and-ci.md)
+- [Generated Boundaries](generated-boundaries.md)
+- [Runner and generated artifacts](tests/runner-and-generated-artifacts.md)
+- `configure`, `scripts/parser`, and recursive `GRHayL/**/make.code.defn`
+- `.github/actions/*/action.yml`, `.github/workflows/*.yml`, and
+  `.github/run_tests.sh`
+
+Use unique disposable trees for commands that generate Makefiles, build/test
+trees, fixtures, tables, or docs. Keep separate results for configuration,
+library compile, test compile, data-generator compile, install, forced-symbol
+consumer link, and runtime. `make tests` and `make datagen` do not execute their
+binaries.
+
+For target or mode changes, compare generated `SRC`, `TEXES`, `DGEXES`, and
+`IHDS` sets against manifests/files in both default and `--disable-hdf5` modes.
+Current no-HDF5 predicate explicitly retains selected Con2Prim Tabulated/NN
+sources. Re-open the exact predicate instead of filtering by a guessed name.
+
+For CI changes, parse YAML and compare every job command with composite action
+bodies and actual targets. Distinguish ignored-only push/pull-request changes,
+mixed-path changes, and scheduled events. Workflow presence proves selection,
+not execution. Do not use upstream Unit_Tests as proof of a GRHayLib Cactus
+build.
+
+Current `generate_makefile.sh` output is broken. Reproduce generation only in a
+disposable tree; never run `make` after malformed targets or invalid paths are
+found. Product-script, workflow, CI-policy, or Doxygen-source repairs require
+their owning authorization; a KB-only task documents current safe behavior.
+
 ## Core/Chalice
 
 Read first:
@@ -343,11 +376,12 @@ Edit paths:
 - Public API comments: `GRHayL/include/`
 
 Tests/data generators:
-- Run Doxygen locally if the build tooling is available: `doxygen Doxyfile`
-  from repo root; treat any warning output as a failure to review. Generated
-  HTML/output artifacts land under `docs/` (e.g. `docs/html/`) alongside the
-  tracked source docs in `docs/raw/` -- do not commit the generated artifacts
-  (see `wiki/generated-boundaries.md`).
+- Run Doxygen from repo root only with `OUTPUT_DIRECTORY` overridden to a
+  unique temporary directory. Use the status-preserving command in
+  [Generated Boundaries](generated-boundaries.md); do not run `doxygen
+  Doxyfile` directly for validation because it writes generated output beside
+  `docs/raw/`. Record `doxygen --version`, review warning output, and compare
+  warning sets only against the same version/configuration.
 - At minimum, search links and group names after edits.
 
 Docs to update:
@@ -355,7 +389,9 @@ Docs to update:
 - Avoid copying long equations or full function docs into wiki pages.
 
 Pitfalls/contracts:
-- Doxygen is authoritative for function-level API docs.
+- Doxygen source and public-header comments document function-level API intent;
+  declarations, definitions, build inclusion, and tests remain claim-specific
+  behavior evidence when they disagree.
 - `docs/raw/derivation.md` is authoritative for GRMHD variable definitions and equation concepts.
 - Generated output is not source; edit raw docs and headers instead.
 

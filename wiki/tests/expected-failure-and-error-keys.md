@@ -21,6 +21,11 @@ successfully, `.github/run_tests.sh` prints `Failed to fail!` and fails the
 runner; if the executable exits nonzero, the runner treats that as the expected
 failure and continues.
 
+Therefore process exit alone is inverted harness evidence, not proof of the
+specific library error code. The test body must first compare returned code
+with `expected_error_code(...)`; preserve captured output when distinguishing an
+expected harness exit from an unrelated crash or setup failure.
+
 Inside `unit_test_code_error.c`, `expect_error_code(...)` checks that a call
 returned the expected GRHayL error code, then routes through
 `ghl_abort_if_error(error)` so the process exits as the expected-error harness
@@ -68,8 +73,11 @@ filters tabulated/HDF5 tests and sources.
 - HDF5 table-read failures: key `34` removes any existing `test.h5` and checks
   the missing-file path; keys `35..60`, `73`, and `74` create temporary
   malformed `test.h5` files to cover dataset-open, dataset-rank, and
-  dataset-read failures. Route table-shape and HDF5 questions to EOS tests and
-  HDF5 sample table routing.
+  dataset-read failures. Successful expected-error handling exits the process
+  before a post-test removal, so an individual key invocation can leave
+  root-level `test.h5`; the full runner removes it only if final cleanup is
+  reached. Route table-shape and HDF5 questions to EOS tests and HDF5 sample
+  table routing.
 - Invalid tabulated EOS/table state: keys `75..77` cover null EOS parameter
   struct, non-tabulated EOS type, and invalid table type before or during table
   setup. Route to EOS initialization and Core shared parameter pages.

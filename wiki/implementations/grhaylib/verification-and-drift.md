@@ -35,18 +35,15 @@ Einstein Toolkit.
    and [src/make.code.defn](../../../implementations/GRHayLib/src/make.code.defn).
 2. Manual repo-relative link check. Verify new wiki links resolve and avoid
    generated docs or external-only paths.
-3. Header aggregation parity check. Compare public header changes under
-   `GRHayL/include/` against `src/GRHayLib.h`; downstream thorns include
-   GRHayL through that aggregate thorn header.
-4. Direct-compile source-list check. Compare new or moved upstream source
-   directories against `src/make.code.defn`. Absent-subdir caveat: this
-   checkout shows only `README`, CCL files, `doc/`, and `src/` under
-   `implementations/GRHayLib/`, while `src/make.code.defn` lists direct-compile
-   subdirectories such as `Atmosphere`, `Con2Prim`, `EOS/Tabulated`,
-   `Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`, and
-   `Reconstruction`. Treat that as a downstream direct-compile/copy-layout
-   boundary needing maintainer confirmation, not proof those subdirectories
-   exist locally.
+3. Header aggregation parity check. Current static comparison finds all ten
+   headers directly included by `src/GRHayLib.h` in both `GRHayL/include/` and
+   the upstream install manifest. Recheck after public-header changes. This
+   does not create the absent `src/include/` copy layout.
+4. Direct-compile source-list check. Current static comparison finds that all
+   29 GRHayLib `SUBDIRS` name upstream directories and every one of the 28
+   upstream source-bearing manifest directories is listed. The checkout still
+   lacks those copied directories below the thorn, so this is registry parity,
+   not a successful build or proof of an external copy process.
 5. Parameter/parser parity check. Compare Cactus keywords in `param.ccl` with
    `parse_C2P_routine_keyword`, `parse_eos_table_type_keyword`,
    `GRHayLib_paramcheck`, and `GRHayLib_initialize` in
@@ -95,6 +92,16 @@ Einstein Toolkit.
 - Cactus schedule timing: initialization is scheduled at `CCTK_WRAGH` unless
   `ID_converter_ILGRMHD` is active; termination is scheduled at
   `CCTK_TERMINATE`. Global-pointer consumers depend on this timing.
+
+## Current Proof State
+
+| Claim | Current state |
+| --- | --- |
+| CCL/header/source-registry parity | Static source cross-check only; current names agree as bounded above. |
+| Thorn files locally form a compilable copied layout | False for this checkout: module subdirectories and `src/include/` are absent. |
+| Cactus compile/link | Unverified; no real Cactus build environment or owner command is supplied here. |
+| Schedule/parameter/runtime behavior | Unverified; source describes intended Cactus behavior, but no Cactus execution evidence exists. |
+| ET_Legacy or upstream Unit_Tests prove GRHayLib | False; they test upstream GRHayL behavior, not this thorn integration. |
 
 ## Local Ground Truth
 

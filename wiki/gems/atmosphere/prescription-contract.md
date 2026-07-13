@@ -9,10 +9,19 @@ without copying full APIs or implementation blocks.
 
 Read with [wiki/gems/atmosphere.md](../atmosphere.md) for the module router.
 
+## Surface Status
+
+| Path | Current evidence status |
+| --- | --- |
+| Constant | Public installed-header declaration; manifest-built definition; Doxygen entry; test calls. |
+| Radial | Public installed-header declaration and incomplete source; absent from Atmosphere manifest, Doxygen, calls, and tests. |
+| Internal-only | No evidence supports this label for radial: its declaration is installed, but implementation intent remains unknown. |
+| Broken runtime path | Standard manifest does not build radial, so no standard radial runtime path exists; direct/manual compilation exposes the incomplete behavior below. |
+
 ## Active Prescription
 
-`ghl_set_prims_to_constant_atm` is the only Atmosphere prescription that is both
-built and documented.
+`ghl_set_prims_to_constant_atm` is the only Atmosphere prescription that is
+declared, built, documented, and called by repo tests.
 
 - Public declaration:
   [GRHayL/include/ghl_atmosphere.h](../../../GRHayL/include/ghl_atmosphere.h).
@@ -20,6 +29,8 @@ built and documented.
   [GRHayL/Atmosphere/set_prims_to_constant_atm.c](../../../GRHayL/Atmosphere/set_prims_to_constant_atm.c).
 - Build list:
   [GRHayL/Atmosphere/make.code.defn](../../../GRHayL/Atmosphere/make.code.defn).
+- Installed-header list:
+  [GRHayL/include/make.code.defn](../../../GRHayL/include/make.code.defn).
 - Doxygen source:
   [docs/raw/Atmosphere.dox](../../../docs/raw/Atmosphere.dox).
 
@@ -40,10 +51,26 @@ source does not assign either field. Callers that need a complete primitive
 state must preserve magnetic fields separately and compute or refresh `u0`
 through the primitive-limit path.
 
+The routine returns `void`, dereferences both pointers, and performs no null,
+EOS-family, bounds, or finiteness validation. It always reads all six
+atmosphere thermodynamic/composition fields listed above, regardless of
+`eos->eos_type`.
+
+For simple and hybrid EOS setup,
+[GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)
+populates `rho_atm`, `press_atm`, `eps_atm`, and `entropy_atm` but does not
+populate `Y_e_atm` or `T_atm`. Because constant reset still reads those two
+fields, callers must initialize them separately (or zero-initialize the full
+EOS struct before setup). Zero-initialization makes the values defined as zero;
+it does not establish that zero has valid physical meaning for the caller.
+This is a current contract gap, not evidence that the fields are intentionally
+irrelevant to simple/hybrid callers.
+
 ## Unsupported Radial Falloff
 
-`ghl_set_prims_to_radial_falloff_atm` is a source-present drift candidate, not a
-supported Atmosphere prescription.
+`ghl_set_prims_to_radial_falloff_atm` is declared and source-present, but
+current repository evidence does not establish a built or supported
+prescription.
 
 - It is declared in
   [GRHayL/include/ghl_atmosphere.h](../../../GRHayL/include/ghl_atmosphere.h).
@@ -55,13 +82,22 @@ supported Atmosphere prescription.
 - It is absent from
   [docs/raw/Atmosphere.dox](../../../docs/raw/Atmosphere.dox), which says only
   one prescription is provided and links only the constant-density routine.
+- Repository declaration/definition/call search finds no call or unit test for
+  the radial name.
 
-The radial-falloff source leaves the core atmosphere values unresolved: the
-assignments for `rho`, `press`, and `eps` are commented or unset, while
-`entropy`, `Y_e`, `temperature`, and `vU[0..2]` are assigned from the same
-atmosphere-style EOS fields used by the constant prescription. Treat this file
-as unfinished until declaration, build list, documentation, implementation, and
-tests agree.
+This status was reproduced by comparing the two `*.c` basenames in
+`GRHayL/Atmosphere/` with `SRCS` in its manifest: only
+`set_prims_to_radial_falloff_atm.c` remains in the source-minus-manifest set.
+That proves standard manifest absence only; it does not decide whether the
+routine should be completed, internalized, or removed.
+
+If compiled and called directly, current source does not implement a radial
+thermodynamic falloff: `r` is unused, and `rho`, `press`, and `eps` assignments
+are commented out. It copies `entropy`, `Y_e`, and `temperature`, zeros
+`vU[0..2]`, and leaves `BU[0..2]`, `u0`, `rho`, `press`, and `eps` at their
+entry values. This makes the source incomplete for its stated reset purpose;
+it is not evidence for a usable dormant algorithm. Maintainer intent remains
+unknown.
 
 ## EOS Field Coupling
 
@@ -74,10 +110,12 @@ copies into primitives.
   stores them on `ghl_eos_parameters`, then derives `eps_atm`,
   `entropy_atm`, and `tau_atm` from the one-piece ideal-fluid setup in
   [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
+  It does not initialize `Y_e_atm` or `T_atm`.
 - Hybrid EOS: `ghl_initialize_hybrid_eos` accepts `rho_atm`, stores it, then
   computes `press_atm`, `eps_atm`, `entropy_atm`, and `tau_atm` through the
   hybrid cold-pressure/entropy helpers in
   [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
+  It does not initialize `Y_e_atm` or `T_atm`.
 - Tabulated EOS: `ghl_initialize_tabulated_eos` accepts `rho_atm`, `Y_e_atm`,
   and `T_atm`, clamps min/max bounds against table bounds, stores the
   atmosphere values on `ghl_eos_parameters`, and computes `press_atm`,
@@ -94,7 +132,12 @@ initialization source.
 Direct constant-atmosphere coverage lives in
 [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../../Unit_Tests/unit_test_grhayl_core_test_suite.c).
 That test poisons primitive fields, calls `ghl_set_prims_to_constant_atm`, and
-checks the simple and hybrid EOS cases.
+checks density, pressure, epsilon, entropy, and zero velocity for simple and
+hybrid EOS cases. Its `Y_e` and temperature assertions are inside an
+`eos_type == 2` branch, but the loop stops before that value; those assignments
+are not directly checked. The simple/hybrid EOS locals are not zero-initialized,
+so their setup does not establish the two values before constant reset reads
+them.
 
 Do not claim direct tabulated Atmosphere test coverage from that file. Its
 tabulated setup branch is commented out, includes a TODO about adding
@@ -104,6 +147,13 @@ tabulated case.
 [Unit_Tests/unit_test_tabulated_eos.c](../../../Unit_Tests/unit_test_tabulated_eos.c)
 covers tabulated EOS initialization and table behavior, not a direct Atmosphere
 reset call.
+
+[Unit_Tests/unit_test_ET_Legacy_primitives.c](../../../Unit_Tests/unit_test_ET_Legacy_primitives.c)
+calls constant reset in its negative-conservative-density branch. The source
+contains a TODO to validate that reset explicitly, so treat this as indirect
+legacy-path coverage rather than a focused Atmosphere contract test.
+
+No direct radial test or call is present in repo-local test evidence.
 
 ## Impact Links Only
 

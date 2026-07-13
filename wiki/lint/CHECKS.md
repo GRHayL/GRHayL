@@ -5,36 +5,37 @@ are shell examples only, not a maintained script.
 
 ## Broken Repo-Relative Markdown Links
 
-List Markdown links in KB pages:
+This dependency-free check resolves `../` links relative to each page, rejects
+absolute/escaping paths, and reports missing targets:
 
 ```bash
-rg -n '\[[^]]+\]\([^)]+\)' AGENTS.md wiki
+python3 - <<'PY'
+from pathlib import Path
+import re
+
+root = Path.cwd().resolve()
+pages = [Path("AGENTS.md"), *sorted(Path("wiki").rglob("*.md"))]
+link = re.compile(r"\[[^]]+\]\(([^)]+)\)")
+for page in pages:
+    for line_number, line in enumerate(page.read_text().splitlines(), 1):
+        for raw in link.findall(line):
+            target = raw.split("#", 1)[0]
+            if not target or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
+                continue
+            candidate = (page.parent / target).resolve()
+            try:
+                candidate.relative_to(root)
+            except ValueError:
+                print(f"{page}:{line_number}: escaping target: {raw}")
+                continue
+            if not candidate.exists():
+                print(f"{page}:{line_number}: missing target: {raw}")
+PY
 ```
 
-Extract likely repo-relative Markdown link targets. Ignore external URLs,
-anchors, and Doxygen `@ref` links in source docs:
-
-```bash
-rg -n -o '\[[^]]+\]\(([^)#][^)]*)\)' AGENTS.md wiki \
-  | sed -E 's/.*\]\(([^)#]+).*/\1/' \
-  | rg -v '^[a-z]+://|^mailto:' \
-  | sort -u
-```
-
-Check each extracted target with `test -e`, resolving links relative to the
-page that contains them:
-
-```bash
-rg -n -o '\[[^]]+\]\(([^)#][^)]*)\)' AGENTS.md wiki \
-  | rg -v '\]\([a-z]+://|\]\(mailto:' \
-  | while IFS=: read -r page line match; do
-      target=$(printf '%s\n' "$match" | sed -E 's/.*\]\(([^)#]+).*/\1/')
-      case "$target" in
-        /*|../*) printf '%s:%s: review non-local target %s\n' "$page" "$line" "$target" ;;
-        *) test -e "$(dirname "$page")/$target" || printf '%s:%s: missing %s\n' "$page" "$line" "$target" ;;
-      esac
-    done
-```
+This is a conservative Markdown regex, not a full GitHub-Flavored Markdown
+parser. Manually review links containing escaped/nested parentheses, reference
+definitions, HTML, or titles; do not turn uncertain syntax into a hard failure.
 
 If KB pages are being authored concurrently, do not fail solely because
 links to in-progress pages are temporarily missing. Report them.
@@ -74,7 +75,7 @@ Each KB page should state purpose, link ground truth, and avoid replacing
 Doxygen or source.
 
 ```bash
-find wiki -name '*.md' -maxdepth 4 -print | sort
+find wiki -maxdepth 4 -name '*.md' -print | sort
 ```
 
 For each page, verify:
@@ -123,6 +124,63 @@ replace the copy with a link to the relevant Doxygen source:
 ```bash
 find docs/raw -maxdepth 1 -type f | sort
 ```
+
+## Build, Workflow, And Generated-Boundary Checks
+
+Read-only option/parser checks:
+
+```bash
+./configure --help
+./scripts/parser awk GRHayL/make.code.defn subdirs
+./scripts/parser awk GRHayL/include/make.code.defn install_headers
+find GRHayL -name make.code.defn -print | sort
+find Unit_Tests -maxdepth 1 -name 'unit_test_*.c' -print | sort
+find Unit_Tests/data_gen -maxdepth 1 -name 'unit_test_data_*.c' -print | sort
+```
+
+Compare help against `configure`'s build-type `case` manually. Current known
+faults are help-only `nocflags`, parser-only `plain`, and differing production
+flag strings; do not call either spelling supported without reopening source.
+
+Check shell syntax without execution:
+
+```bash
+sh -n configure scripts/parser
+bash -n generate_makefile.sh .github/run_tests.sh
+```
+
+Parse workflow YAML when PyYAML is available. `BaseLoader` preserves the key
+`on` as text instead of applying YAML 1.1 boolean conversion:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import yaml
+
+for path in sorted(Path(".github/workflows").glob("*.yml")):
+    data = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
+    print(path, "events=", sorted(data["on"]), "jobs=", len(data["jobs"]))
+PY
+```
+
+Workflow/job presence is selection evidence, not execution evidence. Compare
+job commands with `.github/actions/*/action.yml`, `.github/run_tests.sh`, and
+actual generated Makefile targets before claiming compile, run, or coverage.
+
+Run Doxygen only with the unique temporary-output procedure in
+[Generated Boundaries](../generated-boundaries.md). Record `doxygen --version`
+and compare warnings only with the same version/configuration. Confirm no
+generated workspace outputs remain:
+
+```bash
+find . -maxdepth 2 \( -name Makefile -o -name build -o -name test \
+  -o -path './docs/html' -o -path './docs/latex' -o -path './lib' \) -print
+```
+
+`generate_makefile.sh` is currently broken. Reproduce it only in a unique
+disposable checkout, inspect generated variables/targets, and never invoke
+`make` when malformed targets, outside-`GRHayL` sources, or invalid include
+roots are present.
 
 ## Source Authority Checks
 

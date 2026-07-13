@@ -16,8 +16,8 @@ trust the underlying repo files and update the KB route.
 | [Metric/ADM contract](metric-adm-contract.md) | ADM metric initialization, determinant-enforced setup, ADM auxiliaries, and inline vector metric helpers. |
 | [Velocity/u0 contract](velocity-u0-contract.md) | Core `ghl_limit_v_and_compute_u0`, velocity limiting, `u0`, and singular-`u0` error routing. |
 | [Stress-energy/smallb contract](stress-energy-smallb-contract.md) | `smallb`, `b2`, stress-energy packing, and `Tmunu` compute/return helpers. |
-| [EOS dispatch contract](eos-dispatch-contract.md) | Core EOS initialization wrappers, EOS/flux function-pointer dispatch, and HDF5-disabled tabulated routes. |
-| [Errors/IO/debug/utilities](errors-io-debug-utilities.md) | Core logging, abort-on-error, min/max/clamp helpers, and debug-print headers. |
+| [EOS dispatch contract](eos-dispatch-contract.md) | Core EOS wrappers, process-wide pointer storage/assignment lifecycle, unassigned pointer gaps, and HDF5-disabled tabulated routes. |
+| [Errors/IO/debug/utilities](errors-io-debug-utilities.md) | Core return-code termination, logging, min/max/clamp preconditions, and current debug-print output hazards. |
 | [Tests and fixtures](tests-and-fixtures.md) | Core unit suite, fixture generation, perturbation checks, and adjacent Con2Prim/stress-energy tests. |
 
 ## Source Inventory
@@ -35,6 +35,20 @@ trust the underlying repo files and update the KB route.
 
 Related routers: [KB index](../index.md), [catalog](../catalog.md),
 [source map](../source-map.md), and [public API map](../public-api-map.md).
+
+## Current Status Boundaries
+
+- Header installation, library definition, and runtime initialization are
+  separate evidence. Installed test-support declarations and zero-initialized
+  function-pointer storage are not automatically linkable/callable behavior.
+- Core numeric helpers largely return `void` and assume valid metric,
+  thermodynamic, pointer, and representation inputs. Focused pages name the
+  checked and unchecked boundaries.
+- Stress-energy compute routines write ten upper-triangle components, not a
+  freshly mirrored 4-by-4 matrix.
+- Atmosphere build status is owned by the
+  [Atmosphere prescription contract](../gems/atmosphere/prescription-contract.md);
+  declaration or source presence alone does not prove build inclusion.
 
 ## Boundary Audit
 

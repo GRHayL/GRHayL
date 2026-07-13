@@ -25,6 +25,12 @@ binary metadata, hashes, `mtime`, fingerprints, or copied fixture contents here.
 - [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
   has a commented tabulated EOS atmosphere setup and a TODO before extending the
   atmosphere reset loop to tabulated EOS.
+- Its simple/hybrid Atmosphere checks assert density, pressure, epsilon,
+  entropy, and zero velocity. The `Y_e` and temperature assertions are guarded
+  by `eos_type == 2`, which the loop never reaches, so this suite does not
+  directly validate those two assignments for any EOS family. Its simple and
+  hybrid EOS structs are not zero-initialized, and their initializers do not set
+  those fields before the Atmosphere call reads them.
 
 ### Core fixture generator
 
@@ -120,6 +126,19 @@ binary metadata, hashes, `mtime`, fingerprints, or copied fixture contents here.
 
 ## Helper-only files
 
+### Installed test-support header
+
+- [GRHayL/include/ghl_unit_tests.h](../../GRHayL/include/ghl_unit_tests.h) is
+  named by [GRHayL/include/make.code.defn](../../GRHayL/include/make.code.defn),
+  so it is in the configured install-header set.
+- Some non-inline declarations are implemented by helper files under
+  [Unit_Tests/](../../Unit_Tests/), including interpolation helpers,
+  perturbation comparators, randomizers, and `get_table_quantity`. The declared
+  binary read/write family and `ghl_initial_random_data` have no visible
+  definitions. None of these test helpers appears in the Core/gem library
+  source manifests, so install-header membership does not establish linkability
+  from `libghl`; tests link only the helper sources selected by the test build.
+
 ### Perturbation helpers
 
 - [Unit_Tests/pert_test_fail_conservatives.c](../../Unit_Tests/pert_test_fail_conservatives.c)
@@ -150,6 +169,17 @@ binary metadata, hashes, `mtime`, fingerprints, or copied fixture contents here.
   repack route is indirect in
   [Unit_Tests/unit_test_ET_Legacy_conservs.c](../../Unit_Tests/unit_test_ET_Legacy_conservs.c)
   for primitives, conservatives, and stress energy.
+- Parameter initialization: callers use `ghl_initialize_params` throughout the
+  suite, but no focused test in the listed Core ground truth asserts all copied
+  fields, the `1e-8` default solver tolerance, the 30-iteration default, or all
+  PPM defaults.
+- EOS dispatch lifecycle: no focused test in the listed Core evidence calls a
+  pointer before initialization, asserts all pointer targets after each EOS
+  selection, or checks an invalid `ghl_eos_t` passed to the `void`
+  `ghl_initialize_eos_functions` entry point.
+- Simple EOS derived defaults: the Core suite asserts default `rho`/pressure
+  floor and ceiling fields, but not the derived epsilon/entropy values produced
+  after zero floors or other unchecked inputs such as `Gamma == 1`.
 - Clamp helpers: no direct Core clamp test is visible in the listed ground
   truth. Keep `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp` coverage as
   weak unless a direct test is added or found elsewhere in the repo.

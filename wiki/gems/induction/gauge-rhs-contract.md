@@ -32,6 +32,11 @@ Signature contract:
 - `phitilde_stencil[3][5]`: direction-major `phitilde` stencils; first index is
   x, y, or z direction and second index spans the five-point line stencil.
 
+The function returns one scalar and performs no validation. `dxi` is `1/dx`,
+not spacing; all arrays must be non-null and consistently centered. The damping
+factor is passed directly rather than read from `ghl_parameters`, so caller
+owns consistency with `params->Lorenz_damping_factor`.
+
 ## Branch And Stencil Rules
 
 Shift upwinding branches on the center element `[2]` of each shift line:
@@ -54,6 +59,10 @@ The damping term uses `Lorenz_damping_factor`, `alpha_interp`, and the center
 `phitilde` value, implemented as the center entry `phitilde_stencil[0][2]`.
 Because the x, y, and z `phitilde_stencil` lines share the same center point
 when assembled correctly, this is a caller-side consistency check.
+
+Routine-local reach is two points backward and forward for each shift and
+`phitilde` line, plus one forward point for each `sqrtg_Ai` component. No
+routine-local ghost-zone check exists.
 
 ## Relation To Interpolators
 
@@ -89,9 +98,28 @@ direction. In that loop, the test:
   `-2..+2`;
 - calls `ghl_calculate_phitilde_rhs`.
 
+The interpolation stage runs on `1 <= i,j,k < dirlength-1`; combined RHS replay
+runs on `3 <= i,j,k < dirlength-3`. Three excluded points per side reflect
+composition with the preceding interpolation stage, while the scalar RHS
+routine itself has the two-back/two-forward reach described above.
+
 There is no visible standalone direct unit test that isolates only
 `ghl_calculate_phitilde_rhs`; coverage is through the ET Legacy induction gauge
 RHS path.
+
+That replay uses the cell-centered BSSN interpolator and a fixed nonzero damping
+factor (`0.1`). Its generator randomizes positive and negative shifts with the
+stated intent of exercising sign-dependent code, but static source review does
+not prove both branches occur in the downloaded fixture. It does not cover ADM
+or vertex-centered assembly into this routine. Its local data generator writes
+input-side fixtures; trusted outputs are downloaded ET Legacy fixtures. Runner
+and all five compiler workflows configure replay, but tracked files alone do
+not establish a current execution result.
+
+Evidence status: public declaration, definition, and build membership exist in
+both HDF5 modes; direct coverage is combined ET Legacy replay; standalone,
+error/precondition, alternative-interpolator, and explicit center-mismatch
+coverage are gaps.
 
 ## Repo-Local References
 

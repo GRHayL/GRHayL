@@ -35,6 +35,19 @@ compiled tests. Workflow jobs use the composite compile action, which runs
 `make tests datagen` and `make install`; jobs then invoke binaries under
 `test/`, often with `LD_LIBRARY_PATH` pointing at the installed `lib/`.
 
+These stages are not interchangeable:
+
+| Status | What repo evidence establishes |
+| --- | --- |
+| `targeted` | Generated Makefile selected source/binary. |
+| `compiled` | Exact `make` child target completed and executable exists. |
+| `compiled-unrun` | Binary exists, but no runner/workflow command executed it. |
+| `executed` | Exact binary ran with recorded arguments and prerequisites. |
+| `workflow-only` | YAML contains a job/matrix command; presence gives no local execution result. |
+
+Aggregate `make tests`/`make datagen` success is compile/link evidence only.
+`make datagen` never generates fixture data unless its executables are then run.
+
 ## Artifact Classes
 
 | Class | Normal location | Source evidence | Notes |
@@ -54,8 +67,8 @@ its generation mode. Normal CI replay downloads fixtures and runs test mode.
 
 ## Runtime Runner
 
-[.github/run_tests.sh](../../.github/run_tests.sh) is the compact full-suite
-local route:
+[.github/run_tests.sh](../../.github/run_tests.sh) is the broad local replay
+route, not a complete workflow matrix:
 
 1. Run `./configure -r`.
 2. Run `make tests`.
@@ -70,7 +83,8 @@ local route:
    C2P replay. This page records only that visible setup command, not `pyghl`
    internals.
 9. Continue selected compiled-test runs.
-10. Remove root-level `*.bin`, `*.h5`, and `*.bz2`.
+10. Remove root-level `*.bin`, `*.h5`, and `*.bz2` only if execution reaches
+    the final cleanup command.
 
 The cleanup is explicit:
 
@@ -81,6 +95,17 @@ rm -f ./*.bin ./*.h5 ./*.bz2
 If the runner exits early, root-level downloaded or decompressed fixtures may
 remain. `make realclean` removes build products such as `build/`, `test/`, and
 the generated `Makefile`; it does not own remote fixture cleanup.
+
+The final globs are not provenance-aware: they remove every matching root-level
+file, including a pre-existing file that `download_file` detected and skipped.
+Run the full script only in a disposable checkout with no user-owned root-level
+`.bin`, `.h5`, or `.bz2` files.
+
+`make clean` is narrower: current generated rules omit data-generator
+executables and their objects from its removal list. `make realclean` removes
+their parent `test/` and build directories. `unit_test_c2p_nn_guess` also uses
+fixed `/tmp/unit_test_c2p_nn_*.h5` paths in HDF5 mode and does not remove them;
+runner's root-level cleanup does not reach those files.
 
 ## Workflow Matrix Differences
 
@@ -94,9 +119,15 @@ and [Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c](../../Unit_Tests
 with routing detail in
 [Reconstruction tests and fixtures](../gems/reconstruction/tests-and-fixtures.md).
 
-Treat `.github/run_tests.sh` as one full local-style driver, not a complete
+Treat `.github/run_tests.sh` as one broad local-style driver, not a complete
 enumeration of every workflow job. Treat workflows as CI matrices, not proof
 that normal local runs regenerate trusted fixtures.
+
+Set comparison is exact in current sources: default `configure` targets all 29
+`Unit_Tests/unit_test_*.c` files, while the runner directly invokes 27. Its two
+uninvoked compiled targets are `unit_test_WENOZ_reconstruction` and
+`unit_test_con2prim_debug`; workflows invoke WENOZ, while no normal
+runner/workflow invocation for the debug binary is visible.
 
 NN primitive-guess coverage appears in both paths: `.github/run_tests.sh` runs
 `./test/unit_test_c2p_nn_guess`, while workflow `c2p-failure` matrices include
@@ -108,8 +139,10 @@ NN primitive-guess coverage appears in both paths: `.github/run_tests.sh` runs
 
 By default, `configure` expects HDF5 and includes tabulated/HDF5 tests and data
 generators. With `--disable-hdf5`, `configure` adds `-DGHL_DISABLE_HDF5`,
-filters tabulated implementation sources, and changes the generated test and
-data-generator target lists:
+applies its exact implementation-source predicate, and changes generated test
+and data-generator target lists. That predicate retains
+`tabulated_primitive_guess_helpers.c` and the
+`Con2Prim/Tabulated/neural_network_guess/` sources despite their paths:
 
 - Excludes `unit_test_*tabulated*.c`.
 - Excludes `unit_test_con2prim_debug.c`.

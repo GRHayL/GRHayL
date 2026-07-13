@@ -22,6 +22,11 @@ That header aggregates GRHayL module headers and exposes the global pointers
 `GRHayLib_terminate` frees them, including `ghl_tabulated_free_memory` for
 tabulated EOS state.
 
+That ownership statement describes the normal initialized path. Allocation is
+unchecked, the schedule can skip initialization when `ID_converter_ILGRMHD` is
+active while still scheduling termination, and no alternate owner is present
+in this checkout. Use the runtime contract before assuming globals are valid.
+
 The implementation README says GRHayLib provides core library features and
 initializes the GRHayL parameter and EOS structs used through the simulation.
 It also records a CarpetX caveat: GRHayLib currently provides functions on the
@@ -104,3 +109,5 @@ global lifecycle.
 - Cactus parameter keywords and parser cases do not prove a Con2Prim method is
   fully supported. Compare against the Con2Prim solver matrix, selector
   dispatch, build lists, and tests.
+- Current checkout proves static CCL/header/source-registry parity only. Copied
+  module/include layout is absent; Cactus compile/runtime remain unverified.

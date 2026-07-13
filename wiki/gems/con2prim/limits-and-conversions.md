@@ -25,7 +25,11 @@ Contract:
 - Required EOS bounds/atmosphere fields: `tau_atm` and `press_atm`.
 - Required parameter: `psi6threshold`, used with `metric_adm->sqrt_detgamma` to choose the high-`psi6` momentum/energy limiting branch.
 - Writes conservative outputs in place: limited `tau` and possibly rescaled `SD`.
-- Writes diagnostics: `tau_fix` when `tau` is raised by the magnetic/atmosphere floor path, and `Stilde_fix` when `SD` is rescaled.
+- Writes diagnostics: `tau_fix` for the magnetic-energy or high-`psi6`
+  fluid-energy correction, and `Stilde_fix` when `SD` is rescaled. The initial
+  unconditional `cons->tau = fmax(cons->tau, eos->tau_atm)` can raise `tau`
+  without setting `tau_fix`; do not interpret `tau_fix == false` as proof that
+  `tau` was unchanged.
 - Caller should initialize diagnostics first with `ghl_initialize_diagnostics`; the helper only sets flags true when a fix occurs.
 
 Tests and fixtures:

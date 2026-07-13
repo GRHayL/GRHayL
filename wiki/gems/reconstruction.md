@@ -51,10 +51,22 @@ Key public surface:
 
 ## Key Contracts
 
-- Public routines return left/right values for the left face of the current cell; see [Face and stencil contract](reconstruction/face-and-stencil-contract.md).
+- Standard PLM, PPM, and WENOZ wrappers return right/left states for the left
+  face of the current cell; centered helper routines declared in the same
+  public header have a different two-face contract. See
+  [Face and stencil contract](reconstruction/face-and-stencil-contract.md).
 - PLM, PPM, and WENO-z have different stencil widths; route by method page before changing callers.
 - PPM steepening depends on pressure, effective Gamma, and PPM parameters in `ghl_parameters`; see [PPM flow](reconstruction/ppm-flow.md).
-- Flux_Source and Induction callers rely on face orientation and stencil size.
+- Repo-local searches find Reconstruction calls in unit tests and data
+  generators, but no production call from `GRHayL/Flux_Source/`,
+  `GRHayL/Induction/`, or `implementations/GRHayLib/`. Doxygen describes those
+  gems as intended consumers; do not turn that architecture statement into an
+  in-tree caller claim.
+
+`docs/raw/Reconstruction.dox` also says the current method categories are only
+PLM and PPM, then defines a WENO group. The manifest, header, source, direct
+test, and five workflow matrices all contain WENOZ. Treat the two-category
+sentence as stale Doxygen evidence, not current support truth.
 
 ## Common Edit Routes
 
@@ -68,6 +80,9 @@ Key public surface:
 - Reconstruction output orientation can break flux tests without obvious local failures.
 - PPM parameter changes in `ghl_parameters` affect initialization and downstream GRHayLib parameters.
 - New source subdirectories require GRHayLib build-list coordination.
+- Reconstruction replay tests branch on `ghl_pert_test_fail`, so numerical
+  mismatches can fail them. Their generators still have boundary-safety gaps
+  documented in [Tests and fixtures](reconstruction/tests-and-fixtures.md).
 
 ## Do Not Duplicate
 

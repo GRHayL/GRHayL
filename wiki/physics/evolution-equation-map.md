@@ -53,6 +53,17 @@ Code map:
   direction/EOS variant mapping through [Flux_Source HLLE flux variant matrix](../gems/flux-source/hlle-flux-variant-matrix.md)
 - Reconstruction sources: `GRHayL/Reconstruction/`
 
+Availability boundary:
+
+- Direction/EOS-specific direct HLLE functions are current callable routes.
+- Three generic HLLE pointer globals are declared/stored but unwired and have
+  incompatible signatures; do not use them as equation-dispatch entry points.
+- No-HDF5 builds exclude six direct tabulated HLLE definitions while public
+  declarations remain; hybrid variants stay built.
+- Reconstruction is built public caller API, but no production source caller is
+  visible in this repository. Tests demonstrate family kernels with documented
+  assertion/generator limits; they do not prove an evolution integration.
+
 Tests:
 - `Unit_Tests/unit_test_HLL_flux.c`
 - `Unit_Tests/unit_test_hybrid_flux.c`
@@ -61,6 +72,9 @@ Tests:
 - `Unit_Tests/data_gen/unit_test_data_HLL_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_tabulated_flux.c`
+
+Generic pointer dispatch and zero-denominator/error propagation have no direct
+test. `make tests` compilation or workflow selection is not runtime proof.
 
 ## Source Terms
 
@@ -133,3 +147,7 @@ Tests:
 - `Unit_Tests/unit_test_hybrid_failure.c`
 - `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`
 - Fixture route: [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md)
+
+Recovery floor note: `apply_conservative_limits` may raise tau to `tau_atm`
+without setting `diagnostics->tau_fix`; family-dependent `tau_atm` setup is
+routed through [EOS dispatch](../core/eos-dispatch-contract.md).

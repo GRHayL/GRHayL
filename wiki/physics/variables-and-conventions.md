@@ -21,6 +21,9 @@ Contracts:
 - `vU` is the transport velocity used in evolution fluxes.
 - `BU` follows GRHayL's rescaled magnetic-field convention.
 - Primitive bounds come from `ghl_eos_parameters` and `ghl_parameters`.
+- Constant atmosphere copies all scalar composition fields, but simple/hybrid
+  EOS initialization does not set `Y_e_atm` or `T_atm`; these are unresolved
+  initialization preconditions outside tabulated EOS.
 
 ## Conservative Variables
 
@@ -41,6 +44,9 @@ Contracts:
 - Densitized hydrodynamic fields depend on `sqrt_detgamma`.
 - Conservative momentum and energy include magnetic contributions through primitive `BU` and metric data.
 - Magnetic evolution is handled through induction/vector-potential paths, not by a `BU` member in `ghl_conservative_quantities`.
+- `tau_atm` is used as a conservative energy floor, but initialization is
+  family-dependent: simple/hybrid use `rho_atm*eps_atm`; tabulated uses
+  `rho_min*eps_min`. Intended atmosphere-versus-floor meaning is unresolved.
 
 ## Magnetic Field Rescaling
 
@@ -98,6 +104,9 @@ Contracts:
 - Raise/lower helpers work with arrays matching GRHayL metric array layout.
 - Source terms require metric derivatives supplied by callers.
 - Metric helper changes can affect stress-energy, Con2Prim, flux/source, and induction interpolation.
+- Physics callers require a positive-definite spatial metric. Current Core
+  initializers do not return an error for zero/negative determinants, and the
+  determinant-enforced path can preserve a negative sign after warning.
 
 ## EOS Variables
 
@@ -117,3 +126,6 @@ Contracts:
 - Entropy evolution is controlled by `ghl_parameters::evolve_entropy`.
 - Temperature evolution is controlled by `ghl_parameters::evolve_temp`.
 - `Y_e`, temperature, and entropy are especially coupled between tabulated EOS, Con2Prim, flux entropy variants, and neutrino leakage.
+- Function-pointer declaration/storage does not establish initialization:
+  `ghl_tabulated_free_beq_quantities` is unassigned; use concrete built cleanup
+  as documented by EOS owner page.

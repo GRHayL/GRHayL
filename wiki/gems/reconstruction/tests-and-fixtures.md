@@ -29,7 +29,9 @@ Read with the [Reconstruction gem hub](../reconstruction.md).
   `ET_Legacy_reconstruction_output_pert.bin`.
   [Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c](../../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c)
   writes `ET_Legacy_reconstruction_input.bin` and
-  `ET_Legacy_reconstruction_input_pert.bin`; trusted output is fixture data.
+  `ET_Legacy_reconstruction_input_pert.bin`; it does not produce either output
+  fixture. Replay and CI do not consume the generated perturbed-input file.
+  Trusted and perturbed outputs come from downloaded fixture data.
 
 ## Method Coverage
 
@@ -43,6 +45,17 @@ Read with the [Reconstruction gem hub](../reconstruction.md).
   left/right face values across three flux directions using
   `ET_Legacy_reconstruction` fixtures.
 - ET Legacy exercises PPM paths; no dedicated `unit_test_PPM_reconstruction.c` or PPM data generator is visible.
+
+All three replay tests use `ghl_pert_test_fail` in an `if` condition and call
+`ghl_error` on mismatch. Numerical comparisons can therefore fail these test
+binaries. Coverage is still bounded:
+
+- PLM replay checks valid interior stencils, but its generator evaluates every
+  array index and accesses outside the allocation at both ends.
+- WENOZ replay checks valid interior stencils, but its generator writes full
+  output arrays whose boundary entries were never initialized.
+- PPM helper routines have only transitive ET Legacy coverage; no dedicated
+  PPM or helper test exists.
 
 ## Configure Versus Runtime Data
 
@@ -73,6 +86,11 @@ working directory, and run the compiled test executables.
   define a `reconstruction` job matrix for `PLM_reconstruction` and
   `WENOZ_reconstruction`, and an `ET-Legacy` matrix that includes
   `reconstruction`.
+
+Thus WENOZ is workflow-only relative to the aggregate local runner, while PPM
+is reached through ET Legacy in both routes. `run_tests.sh` removes downloaded
+`*.bin`, `*.h5`, and `*.bz2` artifacts at its end; individual workflow jobs use
+fresh workspaces and contain no corresponding cleanup step.
 
 ## Repo-Local References
 

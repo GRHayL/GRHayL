@@ -35,6 +35,15 @@ Stress-energy compute paths require initialized primitive and metric state:
   energy declarations in `GRHayL/include/ghl.h`, plus the compute routines in
   `GRHayL/GRHayL_Core/compute_TDNmunu.c` and
   `GRHayL/GRHayL_Core/compute_TUPmunu.c`).
+- The `uDN` argument to `ghl_compute_smallb_and_b2` must be the lowered
+  4-velocity consistent with the supplied metric and primitives. The helper
+  trusts this caller-provided representation and does not derive or validate
+  it (`GRHayL/include/ghl.h` and
+  `GRHayL/GRHayL_Core/compute_smallb_and_b2.c`).
+- Stress-energy enthalpy evaluation divides by `prims->rho`; callers must
+  provide finite thermodynamic values and nonzero density. No Core stress
+  routine checks these conditions (`GRHayL/GRHayL_Core/compute_TDNmunu.c` and
+  `GRHayL/GRHayL_Core/compute_TUPmunu.c`).
 
 ## `smallb` and `b2`
 
@@ -49,6 +58,9 @@ magnetic quantities rescaled by `sqrt(4*pi)`, documented in
 `GRHayL/include/ghl.h`. The helper comments in
 `GRHayL/GRHayL_Core/compute_smallb_and_b2.c` also call out the same
 normalization relative to the Duez et al. expressions.
+
+The helper returns `void`, overwrites all four `smallb` entries and `smallb2`,
+and reports no error for null, non-finite, inconsistent, or singular inputs.
 
 Equation details belong in `docs/raw/derivation.md` as source context, especially
 magnetic rescaling, `b^mu`, and ideal-MHD stress-energy background. Do not copy
@@ -73,6 +85,15 @@ Both routines populate the ten documented/returned symmetric components in
 `GRHayL/GRHayL_Core/compute_TUPmunu.c`. They do not independently write every
 symmetric matrix slot, so callers must not infer fresh writes to entries such as
 `[1][0]` from these compute routines alone.
+
+Both compute routines return `void` and perform no validation or finite-result
+check. On entry, the six lower-triangle slots not named above may be
+uninitialized; on return, they retain their prior contents.
+`ghl_initialize_stress_energy` can build a mirrored matrix from ten supplied
+values, but it is not part of either compute routine. Calling it before a
+compute does not mirror the newly computed upper triangle; callers needing a
+fully symmetric computed matrix must explicitly mirror those results or
+unpack/reinitialize after computation.
 
 ## Packing and Return Helpers
 
@@ -102,3 +123,8 @@ matrix slot is independently written.
 components used by the initialize/return contract (`Ttt`, `Ttx`, `Tty`, `Ttz`,
 `Txx`, `Txy`, `Txz`, `Tyy`, `Tyz`, `Tzz`) and reports failures component by
 component (`Unit_Tests/pert_test_fail_stress_energy.c`).
+
+No direct fixture assertion for `ghl_compute_smallb_and_b2` or
+`ghl_compute_TUPmunu` is visible in the listed Core test routes. Their use in
+other computation paths is indirect coverage, not a standalone check of all
+outputs or invalid-input behavior.

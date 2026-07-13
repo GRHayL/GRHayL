@@ -39,7 +39,8 @@ to
 
 1. Public init: `ghl_initialize_tabulated_eos_functions_and_params` initializes
    tabulated function pointers, selects the current default table adapter, and
-   passes `clean_sound_speed=false` to the low-level initializer in
+   passes `clean_sound_speed=false` and `enable_neural_net_c2p=false` to the
+   low-level initializer in
    [`GRHayL/GRHayL_Core/initialize_eos.c`](../../../GRHayL/GRHayL_Core/initialize_eos.c).
 2. Low-level init: `ghl_initialize_tabulated_eos` records EOS type, table type,
    and `clean_sound_speed`, then calls the table read function and derives EOS
@@ -65,6 +66,30 @@ to
 7. Cleanup: the temporary stellar-collapse table is freed after conversion, and
    GRHayL table memory is later released through `NRPyEOS_free_memory`; see
    [`GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c).
+
+## Success And Failure Ownership
+
+After successful initialization, caller owns table arrays and optional NN
+model in `ghl_eos_parameters` and should call `ghl_tabulated_free_memory`
+exactly once. `NRPyEOS_free_memory` frees table arrays, cached beta-equilibrium
+arrays, and NN model; it nulls beta-equilibrium and NN pointers, but does not
+null main table-array pointers.
+
+Initialization does not provide one transactional rollback path:
+
+- table-reader/adapter failures clean temporary adapter allocation;
+- NN-model load failure calls full table cleanup;
+- atmosphere/bounds validation and atmosphere-interpolation failures occurring
+  after successful table read return without full cleanup;
+- beta-equilibrium pointers are initialized to `NULL` only at final success
+  step, so full cleanup after arbitrary partial failure is not documented safe
+  for an otherwise uninitialized `ghl_eos_parameters` object;
+- conversion allocation failure frees allocated table arrays but does not reset
+  their fields to `NULL`.
+
+Callers should provide valid, in-table initialization inputs and treat failed
+initialization as partial state whose cleanup needs source-aware handling. This
+documents current behavior; uniform rollback remains a product handoff.
 
 ## Units And Energy Shift
 
@@ -98,12 +123,16 @@ the table values. The implementation is
 
 Tabulated EOS runtime table support depends on HDF5. The default `configure`
 path builds with HDF5, while `./configure --disable-hdf5` defines
-`GHL_DISABLE_HDF5` and omits tabulated/HDF5 implementation sources from the
-generated build. The EOS source list for HDF5-enabled tabulated builds is
+`GHL_DISABLE_HDF5` and omits most tabulated/HDF5 implementation sources from
+the generated build. Con2Prim's tabulated primitive-guess helper and NN sources
+are explicit retained exceptions; loader stubs return the disabled-HDF5 error.
+The EOS source list for HDF5-enabled tabulated builds is
 [`GRHayL/EOS/Tabulated/make.code.defn`](../../../GRHayL/EOS/Tabulated/make.code.defn);
 build behavior is routed through [`configure`](../../../configure) and
 [`README.md`](../../../README.md). Under `GHL_DISABLE_HDF5`, HDF5-backed entry
-points return or raise disabled-HDF5 errors instead of loading tables.
+points return or raise disabled-HDF5 errors instead of loading tables. Header
+declarations alone do not prove a concrete tabulated EOS symbol was linked in
+this mode.
 
 ## Tests And Fixtures
 

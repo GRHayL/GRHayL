@@ -45,6 +45,16 @@ Source provenance and license details are in
 [`GRHayL/Reconstruction/WENOZ/wenoz_reconstruction_right_left_faces.c`](../../../GRHayL/Reconstruction/WENOZ/wenoz_reconstruction_right_left_faces.c).
 Route readers there instead of duplicating the license block in KB text.
 
+There is one built WENOZ variant and no caller-set WENO parameter object. The
+helper fixes linear weights to `{0.1, 0.6, 0.3}`, regularization epsilon to
+`1e-100`, and MC fallback coefficient to `2.0` in source. Any change to these
+is an implementation change, not runtime configuration.
+
+`docs/raw/Reconstruction.dox` defines a WENO group and says only WENO-z is
+supported, but an earlier sentence says current categories are only PLM and
+PPM. Header, manifest, two source files, direct test, and workflows resolve
+that wording conflict in favor of current WENOZ build/test membership.
+
 ## Build And Coverage
 
 WENOZ source membership is listed in
@@ -60,6 +70,11 @@ WENOZ fixture generation is in
 [`Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c`](../../../Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c).
 The generator writes `WENOZ_reconstruction` input, output, and perturbed output
 fixtures using `ghl_wenoz_reconstruction`.
+
+The generator initializes wrapper outputs only for indices `3` through
+`arraylength-3`, then writes full allocated arrays. Replay reads full arrays but
+compares only that valid interior range. Boundary fixture values are therefore
+indeterminate and untested. No test calls the 5-point helper directly.
 
 CI nuance: standalone reconstruction workflow jobs run `WENOZ_reconstruction`
 through the matrix in

@@ -16,6 +16,26 @@ these source files:
 - `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c`
 - `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c`
 
+All five names have matching public declarations in `ghl_nrpyleakage.h`; no
+extra Neutrinos `.c` file sits outside the manifest.
+
+## Shared Failure Boundary
+
+The three EOS-dependent routines return immediately with
+`ghl_error_used_disabled_hdf5` in no-HDF5 builds. With HDF5, they return the
+tabulated EOS error unchanged, and generated Fermi calls return an invalid-key
+error through `NRPYLEAKAGE_FD_OR_RETURN`. Output writes occur only after those
+calls, so these error exits leave caller outputs unchanged. None checks null
+pointers, EOS initialization, table bounds independently of the EOS call, or
+physical/finiteness preconditions.
+
+`robust_isfinite` is used only by the combined source-term file;
+`robust_isnan` has no active repo-local caller. Both public inline helpers
+inspect a `double` by casting its address to `unsigned long *`, with no size or
+representation check. Treat them as current platform-dependent implementation,
+not a portable finiteness contract. Tests do not inject NaN/Inf into any
+leakage routine or directly exercise these helpers.
+
 ## `NRPyLeakage_compute_neutrino_luminosities.c`
 
 Public routine: `NRPyLeakage_compute_neutrino_luminosities`.
@@ -43,8 +63,9 @@ array scrub in this file.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` directly
 checks selected Fermi-Dirac branches, generates luminosity fixtures, recomputes
-`NRPyLeakage_compute_neutrino_luminosities`, and validates `nue`, `anue`, and
-`nux`.
+`NRPyLeakage_compute_neutrino_luminosities`, and reads `nue`, `anue`, and `nux`
+fixtures. Its three `ghl_pert_test_fail` return values are discarded, so
+numerical luminosity mismatches do not currently fail the test.
 
 ## `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`
 
@@ -73,8 +94,10 @@ with a small positive value. There is no final output array scrub after
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` calls
 this routine in its RHS, divides `R_source` and `Q_source` by `rho`, advances
-`Y_e` and `eps` with RK4, and validates fixture replay. Opacity writes get
-indirect coverage there through the same call.
+`Y_e` and `eps` with RK4, and reads fixture replay. Its comparison helper also
+discards every `ghl_pert_test_fail` result, so the test supplies execution and
+file-shape evidence, not an effective numerical assertion. Opacity writes get
+execution coverage there through the same call but are not compared.
 
 ## `NRPyLeakage_compute_neutrino_opacities.c`
 
@@ -100,9 +123,10 @@ subexpressions, then the final loop handles non-finite output entries.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 directly calls this routine for interior and exterior states, stores the six
-opacity fields on the grid, and validates opacity/depth fixtures. Source-term
-tests cover this file only indirectly because the combined source-term routine
-has its own opacity write path.
+opacity fields on the grid, and reads opacity/depth fixtures. Its comparison
+return values are discarded, so those fixture values cannot currently fail the
+test. Source-term tests do not cover this implementation: the combined
+source-term routine has its own opacity write path.
 
 ## `NRPyLeakage_Fermi_Dirac_integrals.c`
 
@@ -122,10 +146,17 @@ Generated formula role: each branch contains source-owned approximation
 expressions for the selected key; do not duplicate those expressions into KB
 pages.
 
-Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` checks
-selected valid keys across both branch families. `Unit_Tests/unit_test_code_error.c`
+Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` checks valid
+keys `0`, `1`, and `2` in the high-`z` branch and keys `0` and `1` in the
+low-`z` branch. Keys `3` through `5` lack direct valid-result assertions.
+`Unit_Tests/unit_test_code_error.c`
 directly checks invalid-key behavior for both `z < 1e-3` and `z > 1e-3`, and
 maps those cases to `ghl_error_invalid_fermi_dirac_integral_key`.
+
+The helper performs no null or finiteness check. Supported keys return
+`ghl_success` even if extreme `z` makes approximation arithmetic non-finite.
+The branch boundary itself is exact: `z > 1e-3` uses the high branch;
+`z <= 1e-3` uses the low branch.
 
 ## `NRPyLeakage_optical_depths_PathOfLeastResistance.c`
 
@@ -136,7 +167,8 @@ Flow:
 1. Accept cell widths `dxx[0..2]`, three-point metric stencils
    `stencil_gxx`, `stencil_gyy`, and `stencil_gzz`, six neighbor opacity
    structs, six neighbor optical-depth structs, current-cell opacity, and the
-   current-cell optical-depth output.
+   current-cell optical-depth output. Each metric stencil uses
+   `[minus-one, center, plus-one]`; `dxx` uses coordinate order `x`, `y`, `z`.
 2. Average same-direction metric stencil entries to get face-centered
    diagonal metric components.
 3. Convert face metrics and cell widths into six face path lengths.
@@ -149,6 +181,11 @@ Flow:
 7. Write `tau_i_j_k->nue[0..1]`, `tau_i_j_k->anue[0..1]`, and
    `tau_i_j_k->nux[0..1]`.
 
+The routine returns `void` and has no failure channel. It does not validate
+pointer lengths, metric sign, grid spacing, opacity sign, or finiteness.
+Negative face-averaged diagonal metric values enter `sqrt`; any resulting
+non-finite propagation is not scrubbed before output.
+
 Input shape note: the six-neighbor shape is explicit in the signature:
 `im1`, `ip1`, `jm1`, `jp1`, `km1`, and `kp1` opacity/depth pointers surround
 the current cell.
@@ -156,4 +193,9 @@ the current cell.
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 directly computes opacities, iterates optical-depth updates with flat metric
 stencils, calls `NRPyLeakage_optical_depths_PathOfLeastResistance`, writes all
-six output depth fields back to grid storage, and validates fixture replay.
+six output depth fields back to grid storage, and reads fixture replay. That
+caller passes each neighbor pair in plus-then-minus order, opposite the public
+minus-then-plus signature. Its flat metric and minimum over symmetric
+directions hide this reversal, so current test evidence does not verify
+directional argument mapping for unequal plus/minus metrics. It also discards
+all comparison results, as noted above.

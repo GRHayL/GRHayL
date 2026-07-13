@@ -100,8 +100,9 @@ Core Noble helper files are built from
 
 Hybrid Noble 1D residual files live in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/):
-`func_1D.c`, `func_Z.c`, `func_rho.c`, and `func_rho2.c`. The built wrappers
-are `hybrid_Noble1D.c` and `hybrid_Noble1D_entropy.c`; both initialize Noble
+`func_1D.c`, `func_Z.c`, `func_rho.c`, and source-present `func_rho2.c`.
+The manifest builds the first three, not `func_rho2.c`. Built wrappers are
+`hybrid_Noble1D.c` and `hybrid_Noble1D_entropy.c`; both initialize Noble
 state, run `ghl_general_newton_raphson`, finalize primitives, then set
 `diagnostics->speed_limited`, `diagnostics->n_iter`, and
 `diagnostics->which_routine`.
@@ -185,6 +186,9 @@ It is absent from
 and has no selector case in
 [`GRHayL/Con2Prim/con2prim_multi_method.c`](../../../GRHayL/Con2Prim/con2prim_multi_method.c).
 Do not claim it as supported unless build-list and selector evidence change.
+Its apparent companion `func_rho2.c` is also absent from the same manifest.
+Manifest absence establishes configured-build exclusion only; it does not
+establish whether maintainers intend integration, internalization, or removal.
 
 `con2prim_CerdaDuran3D.cc` is source-present at
 [`GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`](../../../GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc),
@@ -195,6 +199,10 @@ the public selector in
 [`GRHayL/Con2Prim/con2prim_multi_method.c`](../../../GRHayL/Con2Prim/con2prim_multi_method.c)
 has no Cerda-Duran case. Treat this as source-present unresolved code, not
 public support.
+
+The configured source inventory is manifest-driven and currently contains no
+`.cc` entry for this file. File presence alone therefore supplies neither C++
+compilation nor linkage evidence.
 
 ## Read-Only Evidence Routes
 

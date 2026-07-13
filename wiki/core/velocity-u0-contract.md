@@ -28,9 +28,10 @@ Inputs expected before call:
   `GRHayL/include/ghl.h` and
   `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 - Primitive velocity fields `prims->vU[0..2]`; these are the mutable transport
-  velocities stored in `ghl_primitive_quantities`
+  velocities `v^i = u^i/u^0` stored in `ghl_primitive_quantities`
   (`GRHayL/include/ghl.h` and
-  `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
+  `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`; representation source:
+  `docs/raw/derivation.md`).
 - Caller-initialized `speed_limited`. The routine OR-updates the bool when it
   applies the speed cap; it does not reset the flag to `false`
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
@@ -48,6 +49,15 @@ Outputs and mutation:
   the metric-indexed 3-vector square in
   `GRHayL/include/ghl_metric_helpers.h`
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
+
+Checked failure behavior is narrow. The routine does not validate pointers,
+metric signature/invertibility, lapse, velocities, or
+`inv_sq_max_Lorentz_factor`; the square-root formulas assume a finite positive
+lapse, a positive-definite spatial metric, and a finite Lorentz cap at least
+one.
+Only `isnan(prims->u0)` produces `ghl_error_u0_singular`. An infinite `u0` is
+not rejected, and invalid inputs can mutate velocity or `u0` before an error is
+returned (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 
 ## Not Con2Prim Limits
 
@@ -70,7 +80,10 @@ then calls `ghl_enforce_primitive_limits_and_compute_u0` and checks `prims.u0`
 against fixture data
 (`Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`). Treat this
 as wrapper-path coverage for the Core limiter, not standalone full coverage of
-all Core inputs.
+all Core inputs. Hybrid and tabulated flux tests also call the Core routine,
+but their assertions target flux behavior rather than a complete standalone
+limiter contract (`Unit_Tests/unit_test_hybrid_flux.c` and
+`Unit_Tests/unit_test_tabulated_flux.c`).
 
 Error-path routing: `Unit_Tests/unit_test_code_error.c` initializes metric data,
 sets primitive velocities to `NaN`, calls `ghl_limit_v_and_compute_u0`

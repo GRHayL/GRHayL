@@ -29,8 +29,10 @@ by Reconstruction callers:
 - `ghl_ppm_compute_for_cell` in
   [ppm_compute_for_cell.c](../../../GRHayL/Reconstruction/PPM/ppm_compute_for_cell.c)
   is the 5-point helper. It slope-limits neighboring differences, computes
-  parabolic right/left face values for the helper cell, flattens them with one
-  `ftilde` value, then applies monotonicity limiting.
+  parabolic values at both faces of the helper cell, flattens them with one
+  `ftilde` value, then applies monotonicity limiting. For helper center `c`,
+  `Ur_ptr` receives the left state at `c+1/2` and `Ul_ptr` receives the right
+  state at `c-1/2`; wrapper output names regain the one-face convention.
 - `ghl_ppm_compute_for_cell_with_steepening` in
   [ppm_compute_for_cell_with_steepening.c](../../../GRHayL/Reconstruction/PPM/ppm_compute_for_cell_with_steepening.c)
   is the steepened 5-point helper. It computes the same provisional face
@@ -46,6 +48,11 @@ The wrapper stencil is 6 points, documented in source comments as `(i-3)` to
 the `MINUS2`, `MINUS1`, `PLUS_0`, `PLUS_1`, and `PLUS_2` stencil indices from
 [ghl_reconstruction.h](../../../GRHayL/include/ghl_reconstruction.h). Keep
 wrapper and helper indexing aligned when changing caller loops.
+
+`ppm_compute_for_cell.c` has an older comment that labels its helper `Ur` as a
+left-face right state. That conflicts with its `U[c]`/`U[c+1]` arithmetic, the
+steepened helper docs, and wrapper filtering. Use the implementation mapping
+above.
 
 ## Flattening
 
@@ -102,6 +109,12 @@ PPM parameter storage is in
 - `ppm_shock_eta2`
 - `ppm_shock_epsilon`
 
+`ghl_initialize_params` sets these defaults: flattening epsilon `0.33`, omega1
+`0.75`, omega2 `10.0`; shock `k0` `0.1`, eta1 `20.0`, eta2 `0.05`, and epsilon
+`0.01`. GRHayLib exposes matching defaults and then overwrites the initialized
+fields from Cactus parameters. PPM routines do not validate these values;
+caller-owned `ghl_parameters` is a precondition.
+
 Changing these fields affects both flattening and steepening behavior. Downstream
 parameter plumbing is visible in
 [GRHayLib initialize_and_shutdown.c](../../../implementations/GRHayLib/src/initialize_and_shutdown.c)
@@ -119,6 +132,20 @@ PPM data generator is visible. The relevant test is
 and its generator is
 [unit_test_data_ET_Legacy_reconstruction.c](../../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_reconstruction.c).
 The broader test routing is in [test-map.md](../../test-map.md).
+
+Execution status is split:
+
+- `.github/run_tests.sh` executes ET Legacy reconstruction, which directly
+  exercises both PPM wrappers and `ghl_compute_ftilde`.
+- All five compiler/OS workflow files include `reconstruction` in their
+  ET-Legacy matrix. Standalone Reconstruction matrices contain only PLM and
+  WENOZ, not PPM.
+- ET Legacy data generation writes input and perturbed-input files only. Replay
+  consumes downloaded input, trusted output, and perturbed-output fixtures;
+  it never consumes `ET_Legacy_reconstruction_input_pert.bin`.
+- No direct test isolates flattening, slope limiting, steepening, or either
+  5-point helper. Current evidence is transitive through ET Legacy fixture
+  replay.
 
 ## Repo-Local References
 

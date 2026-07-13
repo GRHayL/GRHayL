@@ -38,6 +38,12 @@ Con2Prim/EOS compatibility, and entropy-gated methods.
 6. Copies PPM Cactus parameters into `ghl_params`.
 7. Initializes EOS parameters and EOS-dependent dispatch for `EOS_type`.
 
+Both allocations use unchecked `malloc`, not zero-initializing allocation.
+There is no local rollback path if setup later errors. Tabulated initialization
+can itself leave partial table state on several failures; see the
+[tabulated table contract](../../gems/eos/tabulated-table-contract.md). Treat
+successful initialization as a precondition for consumers and termination.
+
 `GRHayLib_terminate` owns shutdown:
 
 1. If `ghl_eos->eos_type == ghl_eos_tabulated`, call
@@ -47,6 +53,10 @@ Con2Prim/EOS compatibility, and entropy-gated methods.
 4. Set both globals to `NULL`.
 
 No other owner is visible for these two global allocations in GRHayLib source.
+The schedule skips `GRHayLib_initialize` when `ID_converter_ILGRMHD` is active,
+but still schedules `GRHayLib_terminate`; this repository does not contain that
+thorn or prove who initializes these globals on the skipped path. Safe ownership
+there needs downstream confirmation before runtime claims.
 
 ## `ghl_initialize_params` Map
 
@@ -116,6 +126,9 @@ PPM behavior there; this page only records GRHayLib parameter plumbing.
 - Core wrapper installs EOS function pointers through
   `ghl_initialize_eos_functions(ghl_eos_hybrid)`, then calls
   `ghl_initialize_hybrid_eos`.
+- Current upstream hybrid initialization can read `rho_ppoly[neos-1]` after
+  copying only `neos-1` breakpoints. GRHayLib's CCL bound on `neos` does not
+  resolve that upstream source defect.
 
 `EOS_type = "Tabulated"`:
 
@@ -180,6 +193,12 @@ those inputs differently for main and backup parameters:
   `Newman1D_entropy`.
 - Unknown strings return `-100`.
 
+`GRHayLib_paramcheck` error formatting has a separate backup-index defect: each
+loop identifies `con2prim_backup_routines[i]` in the label but prints
+`con2prim_backup_routines[0]` as the value. For failures at index 1 or 2, the
+message can therefore report the wrong routine. Use index and parser evidence,
+not the printed value alone, when diagnosing a rejected backup.
+
 Entropy methods require `evolve_entropy`. `GRHayLib_paramcheck` rejects
 `Noble1D_entropy`, `Palenzuela1D_entropy`, and `Newman1D_entropy` as main or
 backup choices when `evolve_entropy` is false.
@@ -228,6 +247,16 @@ source changes:
   `ghl_error_invalid_c2p_key` path (no hybrid `Newman1D` case in
   `GRHayL/Con2Prim/con2prim_multi_method.c`). Needs a maintainer decision:
   fix the paramcheck strings or restrict the `param.ccl` keyword lists.
+- `schedule.ccl` conditionally skips initialization for
+  `ID_converter_ILGRMHD` but always schedules termination. Local files do not
+  establish alternate allocation ownership or a safe terminate precondition.
+- Simple/hybrid upstream EOS initialization does not set `Y_e_atm` or `T_atm`,
+  while the built constant-atmosphere routine copies both fields. GRHayLib does
+  not seed the allocations before EOS setup, so those two fields remain
+  indeterminate on its simple/hybrid path before atmosphere reset.
+- `GRHayLib_terminate` calls tabulated cleanup only after successful state is
+  assumed; neither global-pointer null checks nor partial-initialization guards
+  are present.
 
 ## Local Ground Truth
 

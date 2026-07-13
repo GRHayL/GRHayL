@@ -12,19 +12,28 @@ where applicable.
 
 ## Method-Support Matrix
 
-| method/key | enum evidence | routine-name mapping | public declaration | selector case | build-list evidence | Doxygen table status | test evidence | status |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `None` | `ghl_con2prim_id_None` in `GRHayL/include/ghl.h` | `"None"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | No solver declaration; used in `ghl_parameters.backup_routine[3]` | No solver dispatch; multi-method stops backup loop when a backup slot is `None` in `GRHayL/Con2Prim/con2prim_multi_method.c` | No solver build entry | Not listed | Used as no-backup sentinel in `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`, `Unit_Tests/unit_test_con2prim_tabulated.c`, and `Unit_Tests/unit_test_con2prim_debug.c` | Sentinel only, not solver |
-| `Noble2D` | `ghl_con2prim_id_Noble2D` in `GRHayL/include/ghl.h` | `"Noble2D"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_hybrid_Noble2D` and `ghl_tabulated_Noble2D` in `GRHayL/include/ghl_con2prim.h` | Hybrid and tabulated selector cases in `GRHayL/Con2Prim/con2prim_multi_method.c` | Hybrid: `GRHayL/Con2Prim/Hybrid/Noble/Noble2D/make.code.defn`; tabulated: `GRHayL/Con2Prim/Tabulated/Noble2D/make.code.defn` | Hybrid and tabulated tables list it in `docs/raw/Con2Prim.dox` | Hybrid coverage in `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`; failure/backup coverage in `Unit_Tests/unit_test_hybrid_failure.c`; tabulated run/data coverage in `Unit_Tests/unit_test_con2prim_tabulated.c` and `.github/run_tests.sh` | Hybrid supported; tabulated supported when HDF5 enabled |
-| `Noble1D` | `ghl_con2prim_id_Noble1D` in `GRHayL/include/ghl.h` | `"Noble1D"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_hybrid_Noble1D` in `GRHayL/include/ghl_con2prim.h` | Hybrid selector case in `GRHayL/Con2Prim/con2prim_multi_method.c`; no tabulated case | `GRHayL/Con2Prim/Hybrid/Noble/Noble1D/make.code.defn` | Hybrid table lists it | `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c` | Hybrid supported |
-| `Noble1D_entropy` | `ghl_con2prim_id_Noble1D_entropy` in `GRHayL/include/ghl.h` | `"Noble1D_entropy"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_hybrid_Noble1D_entropy` in `GRHayL/include/ghl_con2prim.h` | Hybrid selector case in `GRHayL/Con2Prim/con2prim_multi_method.c`; no tabulated case | `GRHayL/Con2Prim/Hybrid/Noble/Noble1D/make.code.defn` | Hybrid table lists it | `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c` | Hybrid supported when entropy path is intended |
-| `Noble1D_entropy2` | `ghl_con2prim_id_Noble1D_entropy2` in `GRHayL/include/ghl.h` | `"Noble1D_entropy2"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_hybrid_Noble1D_entropy2` in `GRHayL/include/ghl_con2prim.h` | No hybrid or tabulated selector case found in `GRHayL/Con2Prim/con2prim_multi_method.c` | Source file `GRHayL/Con2Prim/Hybrid/Noble/Noble1D/hybrid_Noble1D_entropy2.c` exists, but it is absent from `GRHayL/Con2Prim/Hybrid/Noble/Noble1D/make.code.defn` | Not listed | No direct Con2Prim solver test found | Unresolved/source-present: enum, name, declaration, and source exist; selector/build/test evidence missing |
-| `Font1D` | `ghl_con2prim_id_Font1D` in `GRHayL/include/ghl.h` | `"Font1D"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_hybrid_Font1D` in `GRHayL/include/ghl_con2prim.h` | Hybrid selector case in `GRHayL/Con2Prim/con2prim_multi_method.c`; no tabulated case | `GRHayL/Con2Prim/Hybrid/Font1D/make.code.defn` | Hybrid table lists it | `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`; backup/failure coverage in `Unit_Tests/unit_test_hybrid_failure.c` | Hybrid supported |
-| `Palenzuela1D` | `ghl_con2prim_id_Palenzuela1D` in `GRHayL/include/ghl.h` | `"Palenzuela1D"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_hybrid_Palenzuela1D_energy` and `ghl_tabulated_Palenzuela1D_energy` in `GRHayL/include/ghl_con2prim.h` | Hybrid and tabulated selector cases in `GRHayL/Con2Prim/con2prim_multi_method.c` | Hybrid: `GRHayL/Con2Prim/Hybrid/Palenzuela1D/make.code.defn`; tabulated: `GRHayL/Con2Prim/Tabulated/Palenzuela1D/make.code.defn` | Hybrid and tabulated tables list it | Hybrid coverage in `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`; tabulated coverage in `Unit_Tests/unit_test_con2prim_tabulated.c` and `.github/run_tests.sh` | Hybrid supported; tabulated supported when HDF5 enabled |
-| `Palenzuela1D_entropy` | `ghl_con2prim_id_Palenzuela1D_entropy` in `GRHayL/include/ghl.h` | `"Palenzuela1D_entropy"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_hybrid_Palenzuela1D_entropy` and `ghl_tabulated_Palenzuela1D_entropy` in `GRHayL/include/ghl_con2prim.h` | Hybrid and tabulated selector cases in `GRHayL/Con2Prim/con2prim_multi_method.c` | Hybrid: `GRHayL/Con2Prim/Hybrid/Palenzuela1D/make.code.defn`; tabulated: `GRHayL/Con2Prim/Tabulated/Palenzuela1D/make.code.defn` | Hybrid and tabulated tables list it | Hybrid coverage in `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`; tabulated coverage in `Unit_Tests/unit_test_con2prim_tabulated.c` and `.github/run_tests.sh` | Hybrid supported; tabulated supported when HDF5 enabled and entropy path is intended |
-| `Newman1D` | `ghl_con2prim_id_Newman1D` in `GRHayL/include/ghl.h` | `"Newman1D"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_tabulated_Newman1D_energy` in `GRHayL/include/ghl_con2prim.h` | Tabulated selector case in `GRHayL/Con2Prim/con2prim_multi_method.c`; no hybrid case | `GRHayL/Con2Prim/Tabulated/Newman1D/make.code.defn` | Tabulated table lists it | `Unit_Tests/unit_test_con2prim_tabulated.c` uses it with `Palenzuela1D` backup; fixture routes in `.github/run_tests.sh`; debug-only route in `Unit_Tests/unit_test_con2prim_debug.c` | Tabulated supported when HDF5 enabled |
-| `Newman1D_entropy` | `ghl_con2prim_id_Newman1D_entropy` in `GRHayL/include/ghl.h` | `"Newman1D_entropy"` in `GRHayL/Con2Prim/get_con2prim_routine_name.c` | `ghl_tabulated_Newman1D_entropy` in `GRHayL/include/ghl_con2prim.h` | Tabulated selector case in `GRHayL/Con2Prim/con2prim_multi_method.c`; no hybrid case | `GRHayL/Con2Prim/Tabulated/Newman1D/make.code.defn` | Tabulated table lists it | `Unit_Tests/unit_test_con2prim_tabulated.c`; fixture routes in `.github/run_tests.sh` | Tabulated supported when HDF5 enabled and entropy path is intended |
-| Source-present non-enum Cerda-Duran file | No `ghl_con2prim_id_*` enum found for Cerda-Duran | No `ghl_get_con2prim_routine_name` case found | No public `ghl_*Cerda*` declaration found | No selector dispatch case found | `GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc` exists, but `GRHayL/Con2Prim/Tabulated/make.code.defn` lists only `Newman1D Noble2D Palenzuela1D` subdirs | Not listed | No direct test or CI runner evidence found | Source-present unresolved; not documented as supported |
+| method/key | enum/name/declaration/definition | selector/build | Doxygen/test evidence | GRHayLib seam | status |
+| --- | --- | --- | --- | --- | --- |
+| `None` | Enum and `"None"` name exist; no solver declaration or definition. | No dispatch/build entry; first `None` backup stops retries. | Not in Doxygen solver tables; tests use it as no-backup sentinel. | Allowed only for backup keyword; parser maps it. | Sentinel only, not solver. |
+| `Noble2D` | Enum/name plus hybrid and tabulated declarations and definitions exist. | Both selector cases and both manifest entries exist. | Hybrid Doxygen table lists it. Tabulated Doxygen table omits it despite direct tabulated test coverage. Hybrid selected-method, hybrid failure/backup-attempt, and tabulated tests exercise it. | Main/backup keywords and parser accept it; family checks allow it for simple, hybrid, and tabulated EOS. | Hybrid/simple supported; tabulated supported when HDF5 enabled. Doxygen tabulated omission is documentation drift. |
+| `Noble1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; tabulated parameter check rejects it. | Hybrid/simple supported. |
+| `Noble1D_entropy` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; tabulated check rejects it and GRHayLib requires `evolve_entropy`. | Hybrid/simple supported with valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
+| `Noble1D_entropy2` | Enum/name/declaration and source definition exist. | No selector case; definition source and sibling `func_rho2.c` are absent from manifest. | Absent from Doxygen and direct tests. | Keyword entries are commented out, but parser still maps the string; family/entropy checks do not classify it. | Source-present unresolved; not supported by current build/dispatch. |
+| `Font1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. `unit_test_hybrid_failure.c` does **not** use Font; it retries Noble2D. | Main/backup keywords and parser accept it; simple and tabulated checks reject it. | Hybrid supported; raw Doxygen says simple excludes it. |
+| `Palenzuela1D` | Enum/name plus hybrid/tabulated energy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it for all EOS families. | Hybrid/simple supported; tabulated supported when HDF5 enabled. |
+| `Palenzuela1D_entropy` | Enum/name plus hybrid/tabulated entropy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it; GRHayLib requires `evolve_entropy`. | Hybrid/simple supported; tabulated supported when HDF5 is enabled. Both require valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
+| `Newman1D` | Enum/name plus tabulated energy declaration and definition exist. | Tabulated selector/build only. | Tabulated Doxygen table and tabulated tests list it; debug binary uses it. | Main/backup keywords and parser accept `Newman1D`, but simple/hybrid checks test nonexistent keyword `Newman1D_energy`; incompatible selection can pass parameter validation and later fail hybrid selector dispatch. | Tabulated supported when HDF5 enabled; downstream validation drift. |
+| `Newman1D_entropy` | Enum/name plus tabulated entropy declaration and definition exist. | Tabulated selector/build only. | Tabulated Doxygen table and tabulated tests list it. | Main/backup keywords and parser accept it; simple/hybrid checks reject it and GRHayLib requires `evolve_entropy`. | Tabulated supported when HDF5 is enabled with valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
+| Source-present Cerda-Duran path | No enum/name/public declaration; source contains old-style definitions using identifiers that do not match current public types. | No selector; `con2prim_CerdaDuran3D.cc` is absent from manifest. | Absent from Doxygen/tests. | Cerda-Duran keyword entries are commented out and parser has no case. | Source-present unresolved; no configured compile/support evidence. |
+
+All matrix seams come from `GRHayL/include/ghl.h`,
+`GRHayL/include/ghl_con2prim.h`,
+`GRHayL/Con2Prim/get_con2prim_routine_name.c`,
+`GRHayL/Con2Prim/con2prim_multi_method.c`, recursive Con2Prim
+`make.code.defn` files, `docs/raw/Con2Prim.dox`, direct tests,
+`implementations/GRHayLib/param.ccl`, and
+`implementations/GRHayLib/src/initialize_and_shutdown.c`. GRHayLib mismatches
+describe downstream evidence; this page does not assign maintainer intent.
 
 ## `ghl_con2prim_id_t`
 
@@ -80,7 +89,10 @@ Public declarations are in `GRHayL/include/ghl_con2prim.h`:
 - `ghl_con2prim_tabulated_multi_method`: same backup structure for tabulated
   methods, with the same HDF5-disabled guard.
 - `ghl_con2prim_multi_method`: exported function pointer declaration; confirm
-  assignment at integration/configuration sites before relying on it.
+  assignment before relying on it. `ghl_initialize_eos_functions` assigns the
+  hybrid driver for simple/hybrid EOS and the tabulated driver for tabulated
+  EOS in HDF5-enabled builds. GRHayLib also assigns it explicitly. This global
+  pointer is process-wide state, not a member of `ghl_eos_parameters`.
 
 Both selector functions receive undensitized conservative quantities by local
 parameter naming in `GRHayL/Con2Prim/con2prim_multi_method.c`. Callers that
@@ -92,9 +104,10 @@ start from densitized conservatives should route through
 `ghl_con2prim_diagnostics` is declared in `GRHayL/include/ghl_con2prim.h` and
 initialized by `GRHayL/Con2Prim/initialize_diagnostics.c`.
 
-- `tau_fix`: initialized false; set true by
-  `GRHayL/Con2Prim/apply_conservative_limits.c` when conservative energy is
-  adjusted.
+- `tau_fix`: initialized false; set true only for the later magnetic-energy
+  or high-`psi6` corrections in
+  `GRHayL/Con2Prim/apply_conservative_limits.c`. The initial unconditional
+  `fmax` floor can raise `cons->tau` without setting this flag.
 - `Stilde_fix`: initialized false; set true by
   `GRHayL/Con2Prim/apply_conservative_limits.c` when momentum is rescaled.
 - `speed_limited`: initialized false; set by solver finalization paths and by

@@ -46,13 +46,26 @@ Use these as copy contracts, not physics transforms:
 - `ghl_initialize_extrinsic_curvature` copies six inputs into symmetric
   `K[i][j]` slots (`GRHayL/GRHayL_Core/initialize_extrinsic_curvature.c`).
 
+All functions in this section return `void`, dereference caller-provided
+pointers, and perform no null, alias, range, or finiteness checks. They copy
+values without changing densitization or physical representation. The
+conservative struct is explicitly representation-neutral: its fields may hold
+densitized or undensitized values, and the caller must track which convention
+is present (`GRHayL/GRHayL_Core/initialize_conservatives.c` and
+`GRHayL/GRHayL_Core/return_conservatives.c`).
+
+Current `ghl_return_primitives` writes `*epsilon = prims->eps` twice. Both
+writes use the same value, so this is not a second output or transform; retain
+it as a source-review anomaly rather than a distinct API contract
+(`GRHayL/GRHayL_Core/return_primitives.c`).
+
 ## Derived-Data Packers
 
 - `ghl_initialize_params` copies caller-selected routines and booleans, computes
   `inv_sq_max_Lorentz_factor`, and sets default Con2Prim and PPM controls
   (`GRHayL/GRHayL_Core/initialize_params.c`).
 - Its Con2Prim defaults are `con2prim_max_iterations = 30` and
-  `con2prim_solver_tolerance = 1e-10`
+  `con2prim_solver_tolerance = 1e-8`
   (`GRHayL/GRHayL_Core/initialize_params.c`).
 - Its PPM defaults are `ppm_flattening_epsilon = 0.33`,
   `ppm_flattening_omega1 = 0.75`, `ppm_flattening_omega2 = 10.0`,
@@ -66,9 +79,19 @@ Use these as copy contracts, not physics transforms:
 - Stress-energy initialization and compute/return contracts route to
   `wiki/core/stress-energy-smallb-contract.md`.
 
+`ghl_initialize_params` returns `void`, reads exactly three backup-routine
+entries, computes `inv_sq_max_Lorentz_factor` by direct division, and performs
+no validation. A null/short backup array, null output, zero or non-finite
+Lorentz-factor input, or unsupported enum is outside its checked contract
+(`GRHayL/include/ghl.h`; `GRHayL/GRHayL_Core/initialize_params.c`).
+
 ## Test Routes
 
 - Core suite coverage around Core initialization and public helpers starts in
   `Unit_Tests/unit_test_grhayl_core_test_suite.c`.
 - Reference-data generation for Core metric fixtures starts in
   `Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c`.
+- The direct Core suite does not assert `ghl_initialize_params` defaults or a
+  complete pack/return round trip. Legacy and generated-data paths exercise
+  several helpers indirectly; use [Core tests and fixtures](tests-and-fixtures.md)
+  for bounded coverage status.

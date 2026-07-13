@@ -36,6 +36,14 @@ exact relative-error cutoff, absolute cutoff, custom cutoffs, and per-quantity
 exceptions route to `GRHayL/include/ghl_unit_tests.h` plus the Unit_Tests helper
 source above. Wiki pages should describe roles, not duplicate tolerance logic.
 
+[GRHayL/include/make.code.defn](../../GRHayL/include/make.code.defn) installs
+`ghl_unit_tests.h`, but library
+manifests do not compile the non-inline helpers it declares. Existing
+definitions live in `Unit_Tests/` helper files, while the declared binary
+read/write family and `ghl_initial_random_data` have no visible definition.
+Classify these as test-only or unresolved surface; installation alone does not
+make them linkable production API.
+
 ## Helper-Only Files
 
 These files are helper-only evidence. They are compiled into tests or data
@@ -64,7 +72,7 @@ handling and routes through [Neutrinos tests and fixtures](../gems/neutrinos/tes
 | Source class | Meaning | Evidence |
 | --- | --- | --- |
 | Local data generators | `Unit_Tests/data_gen/unit_test_data_*.c` programs write local fixture files when built and run through data-generation paths. | [Unit_Tests/data_gen](../../Unit_Tests/data_gen/) |
-| Generation modes in tests | Some test binaries generate their own `*_unperturbed.bin` and `*_perturbed.bin` families when invoked with a generation key, then replay when invoked with test key. | NRPyLeakage tests and tabulated Con2Prim tests |
+| Generation modes in tests | Some test binaries generate their own `*_unperturbed.bin` and `*_perturbed.bin` families when invoked with a generation key, then replay when invoked with test key. | [NRPyLeakage harness](../../Unit_Tests/nrpyleakage_main.h), [tabulated Con2Prim test](../../Unit_Tests/unit_test_con2prim_tabulated.c) |
 | Downloaded TestData fixtures | Normal CI/script runs download binary fixtures from `GRHayL/TestData` into the repo root before running tests. | [run_tests.sh](../../.github/run_tests.sh), workflows |
 | Downloaded EOS tables | Scripted runs download large HDF5 tables from `stellarcollapse.org/EOS`; these are test inputs, not generated binary bars. | [run_tests.sh](../../.github/run_tests.sh) |
 | Checked-in sample tables | Reduced/analytic sample table assets live under `Unit_Tests/sample_table/`; they are input assets, not replay output bars. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
@@ -72,6 +80,10 @@ handling and routes through [Neutrinos tests and fixtures](../gems/neutrinos/tes
 Downloaded `TestData` fixtures and locally generated fixtures may share names.
 Normal runner behavior uses downloads; generator presence does not mean CI
 regenerates trusted data.
+
+Likewise, `make datagen` compiles generator executables but does not run them.
+Fixture provenance requires an executed producer command plus the produced
+file, not aggregate target success.
 
 ## Fixture Families By Owner
 

@@ -89,8 +89,11 @@ instead.
   temporary `test.h5` inputs.
 - `unit_test_c2p_nn_guess.c` creates temporary HDF5 model files under `/tmp`
   for root, embedded `grhayl_nn_c2p`, legacy, malformed-dataset, and
-  failed-load-preservation cases. These are direct test artifacts, not external
-  sample tables or downloaded binary fixtures.
+  failed-load-preservation cases. These are fixed-name direct test artifacts,
+  not external sample tables or downloaded binary fixtures. Current test source
+  does not remove them, and `.github/run_tests.sh` cleans only root-level
+  `*.h5`; after an isolated run, review and remove only exact
+  `/tmp/unit_test_c2p_nn_*.h5` artifacts.
 
 ## No-HDF5 Build Effects
 
@@ -104,6 +107,12 @@ HDF5 and, for now, means no tabulated EOS.
 Do not infer extra runtime exclusions from table filenames or workflow absence;
 use `configure` for the build-list gate and use the test source for any
 compiled expected-skip path.
+
+The implementation filter is not equivalent to removing every path containing
+`Tabulated`: it explicitly keeps `tabulated_primitive_guess_helpers.c` and the
+Con2Prim neural-network-guess sources. Their no-HDF5 compile guards and runtime
+behavior belong to source; do not summarize the mode as “all tabulated sources
+removed.”
 
 ## Repo-Local References
 

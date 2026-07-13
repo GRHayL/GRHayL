@@ -21,6 +21,11 @@ low-level parameter initializer. The low-level functions
 `ghl_initialize_tabulated_eos` populate `ghl_eos_parameters` fields but do not,
 by themselves, install the global function-pointer dispatch layer.
 
+Function-pointer dispatch is process-wide global state defined through
+`GRHayL/include/ghl_eos_functions_declaration.h`; it is not stored per EOS
+object. Initializing a different EOS family replaces general pointers such as
+`ghl_compute_h_and_cs2` and `ghl_con2prim_multi_method` for all callers.
+
 Sources: `GRHayL/GRHayL_Core/initialize_eos.c`, `GRHayL/include/ghl.h`,
 `docs/raw/EOS.dox`, `docs/raw/GRHayL_Core.dox`.
 
@@ -39,6 +44,13 @@ pressure atmosphere/floor/ceiling values from inputs or defaults, computes
 epsilon values from the ideal-fluid pressure relation, computes entropy through
 the hybrid entropy helper, and sets `tau_atm = rho_atm * eps_atm`.
 
+Simple and hybrid initializers do not assign tabulated-only `Y_e_atm` or
+`T_atm`. Built `ghl_set_prims_to_constant_atm` nevertheless copies both fields
+for every EOS type. The Core test uses non-zero-initialized simple/hybrid EOS
+objects and does not assert those two outputs for those families. Callers that
+need deterministic atmosphere composition/temperature with simple or hybrid
+EOS must initialize/own those fields; current wrappers do not.
+
 Hybrid EOS setup sets `eos_type` to `ghl_eos_hybrid`, stores the requested
 piece count and piece arrays, computes derived `K_ppoly`,
 `eps_integ_const`, `p_ppoly`, atmosphere values, floors, and ceilings through
@@ -51,8 +63,40 @@ energy, and entropy through tabulated interpolation, sets table-derived
 pressure/energy/entropy bounds, initializes beta-equilibrium arrays to `NULL`,
 and sets `root_finding_precision = 1e-10`.
 
+Tabulated initialization sets `tau_atm = rho_min * eps_min`, unlike the
+simple/hybrid `rho_atm * eps_atm` assignment. `ghl.h` describes `_atm` fields
+as atmosphere values and Con2Prim consumes `tau_atm` as a floor, but repo-local
+evidence does not resolve whether this family difference is intended.
+
 The current tabulated public wrapper hard-codes `ghl_eos_table_stellarcollapse`
-and `clean_sound_speed = false` before calling `ghl_initialize_tabulated_eos`.
+and both `clean_sound_speed = false` and `enable_neural_net_c2p = false` before
+calling `ghl_initialize_tabulated_eos`.
+
+## Caller-Visible Validation Boundary
+
+- Simple initialization validates atmosphere density/pressure and min/max
+  ordering. Negative minima become zero and negative maxima become `1e300`.
+  It does not validate `Gamma`; formulas divide by `Gamma - 1` and by density.
+  If both minima use negative/default sentinels, the resulting zero density and
+  zero pressure feed `eps_min = press_min/(rho_min*(Gamma-1))` and the entropy
+  formula, so derived minima can be non-finite even though initialization
+  returns success.
+- Hybrid initialization validates only atmosphere density and density min/max
+  ordering. It does not validate `neos`, input pointers/lengths, breakpoint
+  ordering, `Gamma_ppoly`, `K_ppoly0`, or `Gamma_th`. See
+  [hybrid piecewise-polytrope EOS](hybrid-piecewise-polytrope.md) for the
+  current breakpoint-read contradiction. Its negative/default density minimum
+  also becomes zero before cold-energy/entropy helpers divide by density.
+- Tabulated initialization reads/allocates the table before validating
+  atmosphere and requested bounds. Requested min/max values are clamped to
+  table bounds, but atmosphere `(rho,Y_e,T)` is not clamped before its direct
+  interpolation call and therefore must already lie inside table bounds.
+- `ghl_initialize_eos_functions` returns `void` and has no final unknown-type
+  branch. Pass only a declared `ghl_eos_t`; an invalid value still installs the
+  hybrid helper family, leaves `ghl_con2prim_multi_method` at its prior value,
+  and does not report an error.
+
+These are observed checks, not an endorsement of missing validation.
 
 Sources: `GRHayL/include/ghl.h`,
 `GRHayL/GRHayL_Core/initialize_eos.c`.
@@ -80,6 +124,10 @@ piece lookup, cold pressure and energy, entropy, epsilon, rho bounds, and
 enthalpy/sound-speed routing. The tabulated pointer initializer installs the
 table read/free routines, interpolation families, table-bound enforcement,
 beta-equilibrium rho-map helpers, and tabulated enthalpy/sound-speed routing.
+One declared tabulated pointer,
+`ghl_tabulated_free_beq_quantities`, is not assigned by the current tabulated
+initializer; use [tabulated interpolator catalog](tabulated-interpolator-catalog.md)
+for the exact registry seam.
 
 EOS-specific HLLE flux pointer declarations live beside the EOS function
 pointers as `ghl_calculate_HLLE_fluxes_dirn0`,
@@ -99,10 +147,13 @@ Sources: `GRHayL/GRHayL_Core/initialize_eos.c`,
 ## HDF5 Build And Runtime Contract
 
 Default configured builds expect HDF5 support for tabulated EOS. Passing
-`--disable-hdf5` to `configure` defines `GHL_DISABLE_HDF5` and filters
-tabulated/HDF5 source and test paths out of the generated build. Downstream or
-manual builds that bypass `configure` must mirror both parts of that contract:
-define `GHL_DISABLE_HDF5` and omit tabulated/HDF5 implementation sources.
+`--disable-hdf5` to `configure` defines `GHL_DISABLE_HDF5` and filters most
+tabulated/HDF5 implementation and test paths out of the generated build. It
+intentionally retains Con2Prim's tabulated primitive-guess helper and
+neural-network sources so non-HDF5 validation/inference code and loader stubs
+remain linkable. Downstream or manual builds that bypass `configure` must
+reproduce the actual filtered source set, not assume every path containing
+`Tabulated` disappears.
 
 When `GHL_DISABLE_HDF5` is defined, tabulated EOS runtime paths are disabled.
 `ghl_initialize_tabulated_eos` and

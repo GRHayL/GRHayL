@@ -13,7 +13,15 @@ cross-cutting Unit_Tests pages for fixture/run details:
 [expected-failure and error keys](expected-failure-and-error-keys.md).
 
 Test helpers are test-only evidence. Helper APIs and helper files under
-`Unit_Tests/` are not production public API.
+`Unit_Tests/` are not production public API. `ghl_unit_tests.h` is nevertheless
+listed by the install manifest; this creates installed-header presence, not a
+linkable production helper surface.
+
+Matrix evidence types describe repository structure: `direct test` means the
+test body directly calls/exercises the named family when executed;
+`workflow-only` means YAML selects a command. Neither label records a passing
+historical run. Missing direct evidence is a `coverage-gap`, not proof of a
+behavior defect.
 
 ## Coverage Matrix
 
@@ -28,7 +36,7 @@ Test helpers are test-only evidence. Helper APIs and helper files under
 | Reconstruction | `unit_test_PLM_reconstruction.c`, `unit_test_WENOZ_reconstruction.c`, `unit_test_ET_Legacy_reconstruction.c`, matching data generators | direct test; replay fixture test; generator evidence; workflow-only | [Reconstruction tests and fixtures](../gems/reconstruction/tests-and-fixtures.md) | PLM and WENOZ have direct fixture tests, but `run_tests.sh` runs PLM and ET Legacy while workflows include WENOZ. ET Legacy exercises PPM paths; no dedicated `unit_test_PPM_reconstruction.c` or PPM data generator is visible. |
 | ET Legacy | `unit_test_ET_Legacy_conservs.c`, `unit_test_ET_Legacy_primitives.c`, `unit_test_ET_Legacy_flux_source.c`, `unit_test_ET_Legacy_HLL_flux.c`, `unit_test_ET_Legacy_induction_gauge_rhs.c`, `unit_test_ET_Legacy_reconstruction.c`, matching data generators | replay fixture test; generator evidence | [ET Legacy comparison contract](et-legacy-comparison-contract.md), [Test Map](../test-map.md) | ET Legacy tests are upstream GRHayL regression evidence. Visible local generators often write input-side data; normal runs download trusted outputs. Do not treat them as direct GRHayLib/Cactus verification. |
 | Error paths | `unit_test_code_error.c` keys `0..85`; runner loop in `.github/run_tests.sh`; workflows' expected-failure jobs | expected-failure; HDF5-only; no-HDF5 skip; workflow-only | [expected-failure and error keys](expected-failure-and-error-keys.md), [Core tests and fixtures](../core/tests-and-fixtures.md), [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) | These tests intentionally expect failure/error returns, including NN loader/init keys `83..85`. In no-HDF5 builds, HDF5-only keys are skipped as expected by the harness, not counted as ordinary behavior coverage. |
-| Fixtures/helpers | `pert_test_fail_conservatives.c`, `pert_test_fail_primitives.c`, `pert_test_fail_stress_energy.c`, `randomize_metric.c`, `randomize_primitives.c`, `compute_A_flux_with_B*.c`, `compute_ccc_*.c`, `compute_vvv_ADM.c`, EOS helper files | helper-only; generator evidence | [fixture lifecycle and harness contract](fixture-lifecycle-and-harness-contract.md), per-gem test pages | Helper files support comparisons, random inputs, and fixture generation. They are test-only and not production public API. |
+| Fixtures/helpers | `ghl_unit_tests.h`; `pert_test_fail_conservatives.c`, `pert_test_fail_primitives.c`, `pert_test_fail_stress_energy.c`, `randomize_metric.c`, `randomize_primitives.c`, `compute_A_flux_with_B*.c`, `compute_ccc_*.c`, `compute_vvv_ADM.c`, EOS helper files | installed header; helper-only; generator evidence | [fixture lifecycle and harness contract](fixture-lifecycle-and-harness-contract.md), [Build And CI](../build-and-ci.md), per-gem test pages | Header's inline helpers are caller-compiled. Non-inline helper definitions live outside library manifests, and some declared binary read/write helpers plus `ghl_initial_random_data` have no visible definition. Installed presence must not be cited as linkable production API. |
 | Data generators | `Unit_Tests/data_gen/unit_test_data_*.c`; generation modes in `unit_test_con2prim_tabulated.c` and NRPyLeakage harness | generator evidence; HDF5-only where table-backed | [runner and generated artifacts](runner-and-generated-artifacts.md), [fixture lifecycle and harness contract](fixture-lifecycle-and-harness-contract.md) | Generator presence does not mean CI regenerates trusted data. `run_tests.sh` downloads many root-level `.bin` fixtures before replay. |
 | Sample tables | `Unit_Tests/sample_table/Hempel_*.h5`, `generate_simple_table.py`, `table_info.txt`; runner downloads `simple_table.h5`, LS220, and SLy4 tables | sample-table asset; HDF5-only | [HDF5 sample tables](hdf5-sample-tables.md), [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) | Checked-in sample-table assets and downloaded runtime tables support EOS, Flux_Source, Con2Prim, Neutrinos, and error-path tests. Table API behavior belongs in EOS pages. |
 | Run modes | `configure`, `make tests`, `make datagen`, `.github/run_tests.sh`, `.github/workflows/*.yml` | workflow-only; manual-only; HDF5-only; no-HDF5 skip | [runner and generated artifacts](runner-and-generated-artifacts.md), [Test Map](../test-map.md) | `configure --disable-hdf5` filters tabulated/HDF5 targets. `run_tests.sh` is broad replay coverage but omits some workflow matrix tests such as WENOZ. Manual-only debug routes must not be counted as default runner coverage. |
@@ -43,7 +51,9 @@ Test helpers are test-only evidence. Helper APIs and helper files under
   Unit_Tests direct variant tests. Existing tests select concrete hybrid,
   hybrid-entropy, tabulated, or tabulated-entropy direction functions.
 - Helper APIs/helpers in `Unit_Tests/` are test-only and not production public
-  API. Do not cite helper-only files as library API coverage.
+  API. Do not cite helper-only files as library API coverage. Installed
+  `ghl_unit_tests.h` non-inline declarations are a `coverage-gap`/surface
+  contradiction, not proof of implementation behavior.
 - Core weak areas already routed in [Core tests and fixtures](../core/tests-and-fixtures.md):
   clamp helpers, standalone 3D metric helpers, direct `ghl_compute_TUPmunu`
   fixture validation, and tabulated atmosphere reset branch.
@@ -76,6 +86,8 @@ Test helpers are test-only evidence. Helper APIs and helper files under
 - [Unit_Tests/data_gen/](../../Unit_Tests/data_gen/)
 - [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h)
 - [Unit_Tests/sample_table/](../../Unit_Tests/sample_table/)
+- [GRHayL/include/ghl_unit_tests.h](../../GRHayL/include/ghl_unit_tests.h)
+- [GRHayL/include/make.code.defn](../../GRHayL/include/make.code.defn)
 - [configure](../../configure)
 - [.github/run_tests.sh](../../.github/run_tests.sh)
 - [.github/workflows/](../../.github/workflows/)

@@ -9,7 +9,8 @@ tests; repo-local source remains authority.
 1. Initialize `ghl_con2prim_diagnostics` with
    `ghl_initialize_diagnostics`. It clears `tau_fix`, `Stilde_fix`,
    `speed_limited`, all three `backup` slots, and sets `which_routine` to
-   `ghl_con2prim_id_None`; the diagnostics struct and public helper list are
+   `ghl_con2prim_id_None`. It also clears `nn_guess_used`; it does not
+   initialize `n_iter`. The diagnostics struct and public helper list are
    declared in `GRHayL/include/ghl_con2prim.h`.
    Source: `GRHayL/Con2Prim/initialize_diagnostics.c`.
 2. Apply conservative limits when the caller has densitized conservative data
@@ -73,9 +74,11 @@ not replace `params->calc_prim_guess`: that flag controls the ordinary
 `eos->enable_neural_net_c2p` instead controls fallback retries for tabulated
 recovery. After the first failed tabulated main attempt, the driver computes
 `prims_guess_nn` with `ghl_c2p_nn_guess_primitives`, resets `*prims` to that
-guess, and retries the main selector. If later tabulated backup attempts fail,
-the driver reuses the stored `prims_guess_nn` and calls the same backup
-selector again.
+guess, sets `diagnostics->nn_guess_used = true`, and retries the main selector.
+If later tabulated backup attempts fail, the driver reuses the stored
+`prims_guess_nn` and calls the same backup selector again. `nn_guess_used`
+records that the main NN retry was attempted; it is not set again per backup
+and does not prove the NN retry succeeded.
 
 Sources: `GRHayL/Con2Prim/con2prim_multi_method.c`,
 `GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_primitives.c`,
@@ -123,7 +126,7 @@ Sources: `GRHayL/Con2Prim/con2prim_multi_method.c`,
 | --- | --- | --- | --- |
 | `ghl_apply_conservative_limits` | Densitized `cons`; only `prims->BU` required from primitives | Mutates densitized `cons` | Pre-recovery limiter for evolved `tau` and `SD`; records `tau_fix` and `Stilde_fix`. Source: `GRHayL/Con2Prim/apply_conservative_limits.c`; test: `Unit_Tests/unit_test_apply_conservative_limits.c`. |
 | `ghl_undensitize_conservatives` | Densitized `cons` plus `psi6` | Undensitized `cons_undens` | Divides `rho`, `SD`, `tau`, `Y_e`, and `entropy` by `psi6`; use before Con2Prim solvers. Source: `GRHayL/Con2Prim/undensitize_conservatives.c`. |
-| `ghl_guess_primitives` | Undensitized `cons_undens` by source contract | Primitive guess only | Multi-method drivers pass undensitized data. Some direct hybrid fixture code calls the helper separately while also calling the selector; use the source/helper contract for new calls. Source: `GRHayL/Con2Prim/guess_primitives.c`, `GRHayL/Con2Prim/con2prim_multi_method.c`; fixture: `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`. |
+| `ghl_guess_primitives` | Undensitized `cons_undens` by source contract | Primitive guess only | Multi-method drivers pass undensitized data. `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c` computes `cons_undens` but passes densitized `cons` to its separate guess call before direct selector use; that call is not evidence for the helper's representation contract. Source: `GRHayL/Con2Prim/guess_primitives.c`, `GRHayL/Con2Prim/con2prim_multi_method.c`; fixture: `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`. |
 | Hybrid select and multi-method | Undensitized `cons_undens` | Primitive recovery result | Select dispatches one hybrid key; multi-method owns optional guess and backup loop. Source: `GRHayL/Con2Prim/con2prim_multi_method.c`; tests: `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`, `Unit_Tests/unit_test_hybrid_failure.c`. |
 | Tabulated select and multi-method | Undensitized `cons_undens` | Primitive recovery result | Same selector versus multi-method split as hybrid, but compiled-out HDF5 paths return `ghl_error_used_disabled_hdf5`. Source: `GRHayL/Con2Prim/con2prim_multi_method.c`; tests: `Unit_Tests/unit_test_con2prim_tabulated.c`, `Unit_Tests/unit_test_code_error.c`. |
 | `ghl_enforce_primitive_limits_and_compute_u0` | No conservative input | No conservative output | Post-recovery primitive limiter; recomputes EOS fields and `u0`, and reports speed limiting through the caller-provided flag. Source: `GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`; tests: `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`. |

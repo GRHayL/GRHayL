@@ -14,13 +14,15 @@ links in view because repo-local files remain the ground truth.
 | [Source Map](wiki/source-map.md) | Source tree ownership and dependency routing. |
 | [Workflows](wiki/workflows.md) | Common build, test, docs, and review workflows for agents. |
 | [Test Map](wiki/test-map.md) | Unit test, reference-data, fixture, and CI test routing. |
+| [Public API Map](wiki/public-api-map.md) | Header-family ownership and declared/installed/conditional/unwired surface routing. |
+| [Current Contradictions](wiki/contradictions.md) | Only unresolved current repo conflicts, safe wording, and smallest maintainer decisions. |
 | [Core KB](wiki/core/index.md) | Core/chalice router for shared structs, packing/unpacking, metric/ADM helpers, velocity `u0`, stress-energy/smallb, EOS dispatch, errors, IO, debug utilities, and Core fixtures. |
 | [README](README.md) | Project purpose, gem overview, build/install paths, HDF5 configuration, CI testing, and implementation overview. |
 | [Doxygen Main Page](docs/raw/mainpage.md) | Documentation source entry point used by `Doxyfile`; links gem groups, derivation, build/install, CI, and implementation notes. |
 | [Core API Docs](docs/raw/GRHayL_Core.dox) | Doxygen/source context for Core EOS initialization, struct packing/unpacking, metric helpers, and stress-energy helpers. |
 | [Gems](GRHayL/) | Source tree for Atmosphere, Con2Prim, EOS, Flux_Source, Induction, Neutrinos, and Reconstruction modules. |
 | [Equations](docs/raw/derivation.md) | GRMHD variables, stress-energy tensor, conservative equations, flux/source terms, and magnetic-field rescaling. |
-| [Implementations](implementations/GRHayLib/) | GRHayLib downstream integration files. |
+| [Implementations](implementations/GRHayLib/) | GRHayLib downstream integration files; static parity is not Cactus build/runtime proof. |
 | [Testing](Unit_Tests/) | Unit tests, generated reference-data programs, perturbation checks, and sample EOS table. |
 | [CI Workflows](.github/workflows/) | GitHub Actions build and test coverage. |
 | [Doxygen Configuration](Doxyfile) | Documentation input/output configuration and generated-output boundary. |
@@ -44,7 +46,9 @@ links in view because repo-local files remain the ground truth.
 | Work on shock-capturing reconstruction | [Reconstruction hub](wiki/gems/reconstruction.md), [face/stencil contract](wiki/gems/reconstruction/face-and-stencil-contract.md), [Reconstruction source](GRHayL/Reconstruction/), [Reconstruction docs as read-only evidence](docs/raw/Reconstruction.dox) |
 | Understand the GRMHD derivation | [GRMHD Derivation](docs/raw/derivation.md) |
 | Connect GRHayL to downstream infrastructure | [GRHayLib implementation](implementations/GRHayLib/) |
+| Audit GRHayLib CCL/build/lifecycle | [GRHayLib KB hub](wiki/implementations/grhaylib.md), [Cactus build boundary](wiki/implementations/grhaylib/cactus-build-boundary.md), [runtime contract](wiki/implementations/grhaylib/runtime-parameter-contract.md), [verification boundary](wiki/implementations/grhaylib/verification-and-drift.md) |
 | Run unit tests or inspect CI coverage | [Test Map](wiki/test-map.md), [Unit tests](Unit_Tests/), [CI workflows](.github/workflows/), [run_tests.sh](.github/run_tests.sh) |
+| Investigate unresolved source/docs/test conflict | [Current Contradictions](wiki/contradictions.md), then exact owner leaf and competing repo files named there |
 | Update documentation pages | [docs/raw](docs/raw/), [Doxyfile](Doxyfile) |
 
 ## Source-Tracking And Date Policy

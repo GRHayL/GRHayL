@@ -52,6 +52,12 @@ after
 [`GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c`](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c)
 allocates `ghl_eos_parameters` arrays.
 
+The reader uses zero-initialized temporary storage and frees all successfully
+read datasets on a read error. Conversion separately allocates six GRHayL
+arrays. On conversion allocation failure it frees those allocations and
+returns `ghl_error_out_of_memory`, but does not reset corresponding EOS fields
+to `NULL`; this is partial-state evidence, not a safe retry/cleanup contract.
+
 Conversion responsibilities split this way:
 
 - `NRPyEOS_stellarcollapse_to_ghl` copies table dimensions into
@@ -76,8 +82,10 @@ tabulated table read path returns a disabled-HDF5 error instead of opening
 files, and HDF5-only code is excluded by preprocessor guards. The configured
 no-HDF5 build path is controlled by `--disable-hdf5` in
 [`configure`](../../../configure), which defines `GHL_DISABLE_HDF5` and omits
-tabulated/HDF5 implementation sources from generated builds. This is a source
-and build contract, not a Doxygen task.
+this adapter and other HDF5-dependent EOS sources from generated builds.
+Con2Prim retains specific non-HDF5 tabulated helper/NN exceptions; none makes
+the stellar-collapse adapter available. This is a source and build contract,
+not a Doxygen task.
 
 Built stellar-collapse adapter sources are listed in
 [`GRHayL/EOS/Tabulated/stellarcollapse/make.code.defn`](../../../GRHayL/EOS/Tabulated/stellarcollapse/make.code.defn).

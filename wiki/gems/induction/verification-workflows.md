@@ -5,6 +5,10 @@ verification. Fixture ownership and exact fixture families belong in
 [tests and fixtures](tests-and-fixtures.md); this page only says which commands
 to run after the normal build and fixture placement route is satisfied.
 
+Commands below are supported repository routes, not claims of current
+execution. Keep configured, compiled-unrun, locally executed, and CI-configured
+statuses separate.
+
 ## Build Route
 
 Use the repo-wide configure/build workflow before targeted Induction replay:
@@ -21,6 +25,10 @@ or platform-specific setup after their compile action. For repo-wide configure
 flags, HDF5 probing, and CI compile details, see [build and CI](../../build-and-ci.md),
 [workflows](../../workflows.md), and [`configure`](../../../configure).
 
+All Induction library sources and named tests are build-configured in both
+default and `--disable-hdf5` modes. This page does not upgrade manifest or
+configured-target evidence into a compile pass.
+
 ## Full Local Route
 
 Run the full local-style sequence when an Induction change may interact with
@@ -33,6 +41,8 @@ other GRHayL modules:
 That script runs `./configure -r`, runs `make tests`, sets the runtime library
 path, downloads binary fixtures and EOS tables needed by the full suite, runs
 all compiled tests it owns, then removes downloaded root-level fixture files.
+It ends with `rm -f ./*.bin ./*.h5 ./*.bz2`; run it only in a clean disposable
+worktree, never beside caller-owned root-level data with those suffixes.
 Use [tests and fixtures](tests-and-fixtures.md) for Induction fixture names
 instead of duplicating them here.
 
@@ -81,6 +91,28 @@ Repo-visible workflow evidence maps Induction coverage this way:
 
 These workflow files are evidence only; do not edit CI scripts or workflow
 definitions for a KB-only verification-route update.
+
+All five workflow files carry these jobs. Push and pull-request triggers ignore
+`wiki/**` and Markdown-only changes, so KB-only updates are workflow-only
+configuration evidence rather than an automatic Induction run. Scheduled
+triggers remain independent of path filters.
+
+## Legacy Generator Boundary
+
+The normal build uses `configure` plus `scripts/parser`; that route parses
+Induction manifests correctly. The separate legacy
+[`generate_makefile.sh`](../../../generate_makefile.sh) route is **broken** for
+current Induction manifests. A clean disposable run exits zero but interprets
+the comment `# Primary make.code.defn for GRHayL chalice` as source tokens,
+emitting bogus targets such as `GRHayL/Induction/#`, `Primary`, `for`, `GRHayL`,
+and `chalice`.
+
+Cause is the trailing continuation on the last `SRCS` line in
+[`Interpolators/make.code.defn`](../../../GRHayL/Induction/Interpolators/make.code.defn):
+the legacy AWK range continues into the next manifest. Do not run `make` from
+that generated file. Maintainer choice remains whether to repair legacy parser,
+change manifest formatting, or retire the legacy route; normal `configure`
+build evidence is separate.
 
 ## HDF5 Note
 

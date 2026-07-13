@@ -12,7 +12,7 @@ repo-local headers, source files, tests, and build scripts.
 
 - `ghl_neutrino_luminosities` has scalar `nue`, `anue`, and `nux` fields for
   electron neutrino, electron antineutrino, and heavy-lepton neutrino
-  luminosities.
+  luminosities, in that declaration order.
 - `ghl_neutrino_opacities` has `nue[2]`, `anue[2]`, and `nux[2]`.
 - `ghl_neutrino_optical_depths` is a typedef alias of
   `ghl_neutrino_opacities`, so depth and opacity storage share the same shape.
@@ -20,6 +20,16 @@ repo-local headers, source files, tests, and build scripts.
 Use `[0]` and `[1]` as two entries per species unless implementation source
 proves stronger semantics for a specific call path. Current public headers name
 the arrays but do not publish semantic labels for those two entries.
+
+Implementation usage is stronger but still not a named public contract:
+combined source terms use slot `[0]` with `R_source` and slot `[1]` with
+`Q_source`; luminosity suppression uses slot `[1]`, while slot `[0]` also
+enters degeneracy factors. Treat “number” and “energy” labels as an inference
+from formulas, not stable field names, until the public header documents them.
+
+Because tests write `ghl_neutrino_luminosities` as a raw struct, field order
+is part of current fixture layout. Opacity/depth fixtures are written as 12
+separate arrays in species-then-slot order rather than raw structs.
 
 `ghl_radiation.h` includes `ghl.h` first, defines the radiation structs, then
 includes `ghl_nrpyleakage.h`; leakage declarations can therefore use the
@@ -37,6 +47,32 @@ radiation types.
 
 The first four return `ghl_error_codes_t`. The optical-depth path routine
 returns `void` and writes `ghl_neutrino_optical_depths` output.
+
+## Input And Unit Preconditions
+
+The public declarations carry no unit comments and routines perform no general
+null, range, or finiteness validation. Source establishes these caller
+preconditions:
+
+- `rho`/`rho_b` is GRHayL geometric density; leakage source multiplies it by
+  `NRPyLeakage_units_geom_to_cgs_D` before cgs formulas.
+- `Y_e` and `T` must be valid for the initialized tabulated EOS. `T` is passed
+  unchanged to EOS lookup and used directly with EOS chemical potentials; the
+  source divides by `T`, so positive nonzero temperature is required.
+- Opacity results are multiplied by `NRPyLeakage_units_geom_to_cgs_L`, giving
+  the inverse-code-length representation paired with code-coordinate path
+  lengths. Optical depths are dimensionless sums of neighbor depth plus
+  `ds*kappa`.
+- `R_source`, `Q_source`, and luminosities use the source-owned cgs-to-geometric
+  conversion macros. Luminosity additionally contains
+  `W*alpha^2*sqrt(det(gamma_ij))`; callers must supply a metric with nonnegative
+  determinant for a real result.
+- Optical-depth update requires `dxx[3]` and metric stencils ordered
+  `[minus-one, center, plus-one]`. Face-averaged diagonal metric values must be
+  nonnegative before `sqrt`.
+
+Route exact conversion factors to `ghl_nrpyleakage.h`; do not infer alternate
+unit systems from external leakage implementations.
 
 ## Constants And Units
 
@@ -74,6 +110,13 @@ Those three routines call
 potentials and composition. Under `GHL_DISABLE_HDF5`, each returns
 `ghl_error_used_disabled_hdf5` before table access.
 
+With HDF5 enabled, callers must first initialize tabulated EOS function
+pointers and a compatible loaded table. An EOS interpolation error is returned
+unchanged. HDF5-disabled and EOS-error exits occur before output writeback, so
+caller-provided output objects retain their prior contents. Later Fermi-Dirac
+errors also propagate before final writeback. No routine initializes outputs on
+failure.
+
 The optical-depth path routine does not call EOS or HDF5. It consumes local and
 neighbor `ghl_neutrino_opacities`/`ghl_neutrino_optical_depths`, metric stencil
 arrays, and grid spacing, then writes one optical-depth struct.
@@ -91,3 +134,7 @@ for fixture generation or replay:
 `unit_test_nrpyleakage_*.c` tests when HDF5 is disabled. `.github/run_tests.sh`
 downloads the SLy4 EOS table and Neutrinos fixture pairs before running the
 three NRPyLeakage unit tests with key `1`.
+
+No-HDF5 builds still compile the guarded NRPyLeakage implementation files; they
+exclude only the three HDF5-dependent unit tests. Current error tests cover
+invalid Fermi keys, not the three leakage routines' disabled-HDF5 return paths.

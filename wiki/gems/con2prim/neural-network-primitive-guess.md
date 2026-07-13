@@ -51,7 +51,7 @@ The backup loop in [GRHayL/Con2Prim/con2prim_multi_method.c](../../../GRHayL/Con
 
 [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c) computes shared auxiliaries from conservative variables and the metric: `q = tau / D`, `r = S_squared / D^2`, `s = B_squared / D`, and `t = BdotS / D^(3/2)`, where `D` is `cons_undens->rho`.
 
-[GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c) uses `q`, `r`, `s`, and `t` as NN inputs. If the model is `NULL`, `q` or `s` is non-finite, or the derived `x_lo = 1 + q - s` or width `1 + q` is non-finite, it returns the zero-initialized guess. Otherwise it sets fallback `x` to the midpoint of `x_lo` and the width, with width floored by `model->dx_eps`; that midpoint fallback is returned when `r` or `t` is non-finite, feature transforms fail, prediction fails, or the predicted `x` is non-finite.
+[GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_guess_x.c) uses `q`, `r`, `s`, and `t` as NN inputs. If the model is `NULL`, `q` or `s` is non-finite, or the derived `x_lo = 1 + q - s` or width `1 + q` is non-finite, it returns the zero-initialized guess. Otherwise it floors the width by `model->dx_eps` and sets fallback `x = x_lo + 0.5 * width`; that fallback is returned when `r` or `t` is non-finite, feature transforms fail, prediction fails, or the predicted `x` is non-finite.
 
 [GRHayL/Con2Prim/Tabulated/neural_network_guess/ghl_c2p_nn.h](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/ghl_c2p_nn.h) transforms input features by kind `0` as identity and kind `1` as `log10` after an `x_eps` floor, clips transformed inputs into the configured scaling interval, applies hard-tanh hidden layers, applies sigmoid output activation, and clamps each output into `(y_eps, 1 - y_eps)`.
 
@@ -83,6 +83,10 @@ When HDF5 is disabled, [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_lo
 ## Tests/CI
 
 [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c) covers model validation errors, direct `ghl_c2p_nn_guess`, fallback behavior for invalid/non-finite inputs, root HDF5 loading, embedded `grhayl_nn_c2p` loading, legacy one-output loading, malformed HDF5 datasets, validation failure after load, and preservation of an existing model after a failed load.
+
+HDF5-enabled test cases write `/tmp/unit_test_c2p_nn_*.h5` files. No
+`remove`/`unlink` path appears in the test, so reruns overwrite named artifacts
+but the test does not clean them up.
 
 [Unit_Tests/unit_test_con2prim_tabulated.c](../../../Unit_Tests/unit_test_con2prim_tabulated.c) enables embedded NN loading when the run key is nonzero, then replays tabulated Con2Prim tests with `eos.enable_neural_net_c2p` both disabled and enabled. Its generation path explicitly disables NN guesses.
 

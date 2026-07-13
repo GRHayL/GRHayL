@@ -44,6 +44,28 @@ ground truth and update the KB.
 - `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`
 - `NRPyLeakage_optical_depths_PathOfLeastResistance`
 
+The `NRPyLeakage_*` spelling is the exported family; no `ghl_*` wrapper family
+exists for these calls. Radiation container types retain the `ghl_` prefix.
+
+## Contract Summary
+
+- Radiation struct order is `nue`, `anue`, `nux`; opacity/depth has two slots
+  per species. Slot meanings are used differently by number and energy source
+  formulas but remain unnamed in the public header, so keep `[0]`/`[1]`
+  wording in caller contracts.
+- EOS-dependent routines expect initialized HDF5-backed tabulated EOS state,
+  geometric density, EOS-compatible positive temperature, and valid output
+  pointers. They return before writeback on HDF5, EOS, or generated Fermi
+  errors.
+- Optical-depth update is a `void` six-neighbor stencil call with no validation
+  or failure channel. Metric stencil order is minus/center/plus.
+- All five implementation files match their manifest and header declarations.
+- The aggregate runner invokes all three HDF5 test binaries, and all five
+  workflow families configure those commands. Command presence is not a
+  historical execution result. When executed, their main fixture comparisons
+  discard `ghl_pert_test_fail` results, so a completed run establishes setup,
+  execution, and fixture reads but not successful numerical replay.
+
 ## Scope Notes
 
 - Neutrinos KB pages live under `wiki/` only; Doxygen source under `docs/**`

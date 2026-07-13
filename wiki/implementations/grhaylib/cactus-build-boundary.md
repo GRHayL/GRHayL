@@ -46,6 +46,11 @@ These schedule names define thorn startup/shutdown placement for downstream
 Cactus users. They do not prove standalone repo CI exercises GRHayLib; use
 [verification and drift](verification-and-drift.md) for that boundary.
 
+All statements above are static CCL observations. This checkout supplies no
+Cactus flesh/configuration, thorn-list build, parameter file, or runtime result.
+ET_Legacy unit tests are upstream regression comparisons and cannot substitute
+for a real Cactus build or scheduled run.
+
 ## Aggregate Header Boundary
 
 `implementations/GRHayLib/src/GRHayLib.h` aggregates public GRHayL headers for
@@ -60,6 +65,12 @@ header rather than individual upstream headers. Route ownership of the upstream
 headers through [Public API Map](../../public-api-map.md); route lifecycle and
 parameter details through [runtime parameter contract](runtime-parameter-contract.md).
 
+Static parity in this checkout: all ten headers named directly by `GRHayLib.h`
+exist under `GRHayL/include/` and all ten appear in the upstream install-header
+manifest. `ghl.h` also supplies several transitive Core includes. This confirms
+names only; the thorn header spells them as `./include/...`, and no such copied
+`implementations/GRHayLib/src/include/` tree exists locally.
+
 ## Thorn Source Registry
 
 `implementations/GRHayLib/src/make.code.defn` is the GRHayLib thorn source
@@ -72,13 +83,28 @@ It also lists `SUBDIRS` for module paths including `Atmosphere`, `Con2Prim`,
 `Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`, and
 `Reconstruction` variants.
 
-Absent-subdir caveat: this checkout has only `doc/` and `src/` below
-`implementations/GRHayLib/` when checked with
-`find implementations/GRHayLib -maxdepth 2 -type d | sort`. Therefore the
-`SUBDIRS` list must be treated as a direct-compile/copy-layout boundary needing
-maintainer confirmation, not proof those subdirectories exist locally. Do not
-describe those listed paths as generated output, and do not infer a local
-Cactus copy step unless source evidence is added.
+Static registry parity is complete at directory level: each of the 29 listed
+`SUBDIRS` exists under upstream `GRHayL/`, and every one of the 28 upstream
+directories whose reachable manifest has a nonempty `SRCS` block is listed.
+`Con2Prim/Hybrid` is the one extra intermediate directory. This proves current
+registry-name agreement, not that Cactus received copied source.
+
+Absent-copy-layout caveat: this checkout has only `doc/` and `src/` below
+`implementations/GRHayLib/`. None of the 29 listed module subdirectories and no
+`src/include/` aggregate-header dependency are present there. Therefore the
+registry is a direct-compile/copy-layout contract, not a locally complete thorn
+build tree. Do not call the absent layout a successful build, describe it as
+generated output, or infer a copy step not present in repository source.
+
+## Verification Status
+
+- Static CCL/header/source-registry parity: checked against this checkout.
+- Local thorn layout: incomplete, so no local Cactus compile claim.
+- Cactus build, schedule execution, parameter parsing, and runtime cleanup:
+  unverified; require a real Cactus/Einstein Toolkit environment and its
+  owner-provided command.
+- Core GRHayL and ET_Legacy test results: inapplicable as proof of those thorn
+  states.
 
 ## Local Ground Truth
 
