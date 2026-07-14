@@ -290,7 +290,7 @@ ghl_error_codes_t NRPyEOS_findtemp_from_any(
       double *restrict ltout) {
 
   // local variables
-  const int itmax = 200; // use at most 10 iterations, then go to bisection
+  const int itmax = 10; // use at most 10 iterations, then go to bisection
   double dtablevardlti; // 1 / derivative dlogeps/dlogT
   double ldt;
   double tablevar; // temp vars for eps
