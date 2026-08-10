@@ -120,7 +120,9 @@ Primary code paths:
 - Hybrid EOS: `GRHayL/EOS/Hybrid/`
 - Tabulated EOS: `GRHayL/EOS/Tabulated/`; route built interpolation wrappers
   through [tabulated interpolator catalog](../gems/eos/tabulated-interpolator-catalog.md)
-- Neutrino leakage EOS inputs: `GRHayL/Neutrinos/NRPyLeakage/`
+- Neutrino leakage EOS inputs: `GRHayL/Neutrinos/NRPyLeakage/`; route chemical
+  potentials, free-nucleon fractions, units, species ordering, and source-term
+  signs through the [physics and EOS contract](../gems/neutrinos/physics-and-eos-contract.md)
 
 Contracts:
 - Entropy evolution is controlled by `ghl_parameters::evolve_entropy`.

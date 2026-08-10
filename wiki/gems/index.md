@@ -166,7 +166,9 @@ source, headers, tests, and common edit routes before wider search.
 
 - Purpose: NRPyLeakage neutrino opacities, luminosities, optical-depth updates,
   and source terms.
-- KB routes: [hub](neutrinos.md), [API and data](neutrinos/api-and-data.md),
+- KB routes: [hub](neutrinos.md), [physics and EOS contract](neutrinos/physics-and-eos-contract.md),
+  [generator provenance](neutrinos/generator-provenance.md),
+  [API and data](neutrinos/api-and-data.md),
   [implementation flow](neutrinos/implementation-flow.md), and
   [tests and fixtures](neutrinos/tests-and-fixtures.md).
 - Docs path: coverage gap: no dedicated Neutrinos raw Doxygen page exists;
@@ -185,10 +187,15 @@ source, headers, tests, and common edit routes before wider search.
   update tests and downstream header aggregation. Use
   [API and data](neutrinos/api-and-data.md) for public structs, entry points,
   and HDF5/EOS contracts, and [implementation flow](neutrinos/implementation-flow.md)
-  for the five built source files.
+  for the five built source files. Route physics meanings and EOS conventions
+  through [physics and EOS contract](neutrinos/physics-and-eos-contract.md), and
+  Python/notebook/code-generation questions through
+  [generator provenance](neutrinos/generator-provenance.md).
 - Drift/contract notes: leakage uses tabulated EOS quantities and table-backed
   test data. HDF5/EOS changes can break Neutrinos even if leakage source is
-  untouched. Current tests discard all numerical comparison returns; constant
+  untouched. All 19 `ghl_pert_test_fail` fixture-replay results are discarded,
+  so those numerical replays cannot fail their executables; selected
+  Fermi-Dirac value checks and CI invalid-key checks remain effective. Constant
   sphere also reverses trusted/perturbed and neighbor arguments.
 
 ## Reconstruction

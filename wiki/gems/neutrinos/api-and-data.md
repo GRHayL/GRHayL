@@ -6,6 +6,11 @@ This page maps Neutrinos public data shapes, callable entry points, constants,
 error behavior, and HDF5/EOS dependencies. Ground truth remains the named
 repo-local headers, source files, tests, and build scripts.
 
+For generator origin and regeneration limits, continue to
+[Generator Provenance](generator-provenance.md). For chemical-potential,
+composition, source-sign, species, and slot semantics needed by another EOS,
+continue to [Physics And EOS Contract](physics-and-eos-contract.md).
+
 ## Radiation Data
 
 `GRHayL/include/ghl_radiation.h` owns the public radiation structs:
@@ -47,6 +52,62 @@ radiation types.
 
 The first four return `ghl_error_codes_t`. The optical-depth path routine
 returns `void` and writes `ghl_neutrino_optical_depths` output.
+
+## Portability Boundary
+
+Leakage rate algebra is separable from GRHayL's hydrodynamics, but the current
+C files are not a drop-in standalone library. Every file includes
+`ghl_radiation.h`, which brings in `ghl.h` and `ghl_nrpyleakage.h`. The current
+signatures and bodies therefore depend on:
+
+- `ghl_eos_parameters`, `ghl_neutrino_opacities`,
+  `ghl_neutrino_optical_depths`, `ghl_neutrino_luminosities`, and
+  `ghl_error_codes_t`;
+- GRHayL success/error values, including
+  `ghl_error_used_disabled_hdf5` and
+  `ghl_error_invalid_fermi_dirac_integral_key`;
+- constants, unit macros, finiteness helpers, and
+  `NRPYLEAKAGE_FD_OR_RETURN` from `ghl_nrpyleakage.h`; and
+- C math facilities exposed through the GRHayL headers and the `-lm` link
+  configured by `configure`.
+
+The opacity, combined source/opacity, and luminosity files also include
+`ghl_nrpyeos_tabulated.h`. In an HDF5-enabled GRHayL build that header includes
+`hdf5.h`, creating a compile dependency even though the routines obtain EOS
+quantities through a callback rather than reading datasets. HDF5 is therefore
+part of the current adapter and build guard, not the physical leakage algebra.
+
+A port using another EOS must replace or wrap that callback, choose a host
+error policy, and remove or reinterpret the GRHayL HDF5 guard. Copying the
+three C files unchanged still requires the GRHayL types, callback symbol, error
+enum, headers, and compile environment. See [HDF5 And EOS](#hdf5-and-eos) for
+callback initialization and guarded-return behavior.
+
+Repo-local portability authority is
+[`ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h),
+[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h),
+[`ghl_nrpyeos_tabulated.h`](../../../GRHayL/include/ghl_nrpyeos_tabulated.h),
+[`ghl_eos_functions.h`](../../../GRHayL/include/ghl_eos_functions.h),
+[`ghl_eos_functions_declaration.h`](../../../GRHayL/include/ghl_eos_functions_declaration.h),
+[`NRPyEOS_initialize_tabulated_functions.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c),
+and [`configure`](../../../configure).
+
+Minimum local adapter responsibilities are:
+
+1. Provide the six EOS outputs with meanings and units specified in
+   [Physics And EOS Contract](physics-and-eos-contract.md).
+2. Preserve the three-species/two-slot data contract or translate at the call
+   boundary.
+3. Replace GRHayL return codes and early-return macro with the host error
+   policy without changing partial-write behavior accidentally.
+4. Validate density, opacity, source, and luminosity conversions as one
+   coherent set. Separately choose whether to preserve the current mixed-unit
+   suppression factor for exact GRHayL equivalence or replace it with a
+   unit-coherent convention; do not change this
+   [suppression-ratio seam](physics-and-eos-contract.md#current-suppression-ratio-unit-seam)
+   accidentally.
+5. Revalidate finite-value handling, metric conventions, and optical-depth
+   path lengths in the host ABI and unit system.
 
 ## Input And Unit Preconditions
 
@@ -138,3 +199,8 @@ three NRPyLeakage unit tests with key `1`.
 No-HDF5 builds still compile the guarded NRPyLeakage implementation files; they
 exclude only the three HDF5-dependent unit tests. Current error tests cover
 invalid Fermi keys, not the three leakage routines' disabled-HDF5 return paths.
+
+For extraction, see [Implementation Flow](implementation-flow.md) for the
+smallest file set per entry point and [Generator Provenance](generator-provenance.md)
+before treating upstream generated output as a replacement for current GRHayL
+source.

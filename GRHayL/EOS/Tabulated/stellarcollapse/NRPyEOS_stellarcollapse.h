@@ -37,7 +37,7 @@ typedef enum {
   NRPyEOS_sc_mu_n,        ///< Neutron chemical potential, mu_n
   NRPyEOS_sc_mu_p,        ///< Proton chemical potential, mu_p
   NRPyEOS_sc_muhat,       ///< Chemical potential difference, mu_hat = mu_n - mu_p
-  NRPyEOS_sc_munu,        ///< Neutrino chemical potential, mu_nu = mu_n - mu_p + mu_e
+  NRPyEOS_sc_munu,        ///< Neutrino chemical potential, mu_nu = mu_e - mu_n + mu_p
   NRPyEOS_sc_n_quantities ///< Total number of EOS quantities
 } NRPyEOS_stellarcollapse_quantity;
 

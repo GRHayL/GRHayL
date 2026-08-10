@@ -3,17 +3,25 @@
 ## Purpose
 
 This page routes Neutrinos KB work. It summarizes where to read first for
-NRPyLeakage public data, implementation flow, and tests without replacing
-source, headers, tests, CI, or Doxygen source.
+NRPyLeakage physics, generated-code provenance, public data, implementation
+flow, portability, and tests without replacing source, headers, tests, CI, or
+Doxygen source.
 
 ## Read Order
 
-1. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
+1. [Physics And EOS Contract](neutrinos/physics-and-eos-contract.md) for
+   species, chemical potentials, free-nucleon fractions, units, and the
+   number and energy source-term conventions.
+2. [Generator Provenance](neutrinos/generator-provenance.md) for the original
+   Python notebooks, symbolic common-subexpression temporaries, and the
+   boundary between ancestral generators and current checked-in C.
+3. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
    `NRPyLeakage_*` declarations, constants ownership, errors, and HDF5/EOS
    dependency.
-2. [Implementation Flow](neutrinos/implementation-flow.md) for the five
-   `GRHayL/Neutrinos/NRPyLeakage/` source files and their writeback paths.
-3. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
+4. [Implementation Flow](neutrinos/implementation-flow.md) for the five
+   `GRHayL/Neutrinos/NRPyLeakage/` source files, their writeback paths, and
+   the minimal direct-compilation boundary.
+5. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
    fixture pairs, EOS table setup, and CI downloads.
 
 ## Ground Truth
@@ -29,9 +37,15 @@ source, headers, tests, CI, or Doxygen source.
 - Fermi-Dirac error coverage: `Unit_Tests/unit_test_code_error.c`
 - Build and CI gates: `configure`, `.github/run_tests.sh`, and
   `.github/workflows/`
+- Ancestral derivation and generator evidence: the
+  [Tabulated_EOS_IllinoisGRMHD repository](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD),
+  with durable roles and conventions summarized in
+  [Generator Provenance](neutrinos/generator-provenance.md) and
+  [Physics And EOS Contract](neutrinos/physics-and-eos-contract.md)
 
-If this page or a child page conflicts with those files, trust the repo-local
-ground truth and update the KB.
+If this page, a child page, or external evidence conflicts with current
+repo-local source, headers, manifests, or tests, trust the repo-local ground
+truth and update the KB.
 
 ## Public Surface
 
@@ -71,7 +85,16 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
 - Neutrinos KB pages live under `wiki/` only; Doxygen source under `docs/**`
   is a separate authority (currently no dedicated Neutrinos page exists there).
 - Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
+- The external notebooks are provenance, not the authority for current GRHayL
+  signatures or behavior. Preserve the durable derivation and interface facts
+  in child pages so routine KB use does not depend on that repository remaining
+  available.
 - Keep constants and unit conversions in `GRHayL/include/ghl_nrpyleakage.h`;
   do not copy them into KB tables.
-- Treat HDF5-enabled tabulated EOS access as part of the direct Neutrinos
-  dependency surface because public leakage routines call it.
+- Treat HDF5-enabled tabulated EOS access as part of the direct dependency
+  surface for the opacity, combined source/opacity, and luminosity routines;
+  the Fermi helper and optical-depth update do not call the EOS.
+
+## Ground Truth References
+
+- [Original Tabulated_EOS_IllinoisGRMHD repository](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD)

@@ -17,6 +17,7 @@ links in view because repo-local files remain the ground truth.
 | [Public API Map](wiki/public-api-map.md) | Header-family ownership and declared/installed/conditional/unwired surface routing. |
 | [Current Contradictions](wiki/contradictions.md) | Only unresolved current repo conflicts, safe wording, and smallest maintainer decisions. |
 | [Core KB](wiki/core/index.md) | Core/chalice router for shared structs, packing/unpacking, metric/ADM helpers, velocity `u0`, stress-energy/smallb, EOS dispatch, errors, IO, debug utilities, and Core fixtures. |
+| [Neutrinos KB](wiki/gems/neutrinos.md) | NRPyLeakage API, physics/EOS contracts, generated-code provenance, implementation flow, portability, and tests. |
 | [README](README.md) | Project purpose, gem overview, build/install paths, HDF5 configuration, CI testing, and implementation overview. |
 | [Doxygen Main Page](docs/raw/mainpage.md) | Documentation source entry point used by `Doxyfile`; links gem groups, derivation, build/install, CI, and implementation notes. |
 | [Core API Docs](docs/raw/GRHayL_Core.dox) | Doxygen/source context for Core EOS initialization, struct packing/unpacking, metric helpers, and stress-energy helpers. |
@@ -42,7 +43,9 @@ links in view because repo-local files remain the ground truth.
 | Work on equation-of-state routines | [EOS KB hub](wiki/gems/eos.md), [EOS docs](docs/raw/EOS.dox), [EOS source](GRHayL/EOS/) |
 | Work on fluxes, source terms, or characteristic speeds | [Flux Source KB hub](wiki/gems/flux-source.md), [Flux Source docs](docs/raw/Flux_Source.dox), [Flux Source source](GRHayL/Flux_Source/) |
 | Work on vector-potential induction routines | [Induction KB hub](wiki/gems/induction.md), [Induction docs](docs/raw/Induction.dox), [Induction source](GRHayL/Induction/) |
-| Work on neutrino leakage support | [Neutrinos KB hub](wiki/gems/neutrinos.md), [Neutrinos source](GRHayL/Neutrinos/), [radiation header](GRHayL/include/ghl_radiation.h) |
+| Work on neutrino leakage support | [Neutrinos KB hub](wiki/gems/neutrinos.md), [physics and EOS contract](wiki/gems/neutrinos/physics-and-eos-contract.md), [Neutrinos source](GRHayL/Neutrinos/), [radiation header](GRHayL/include/ghl_radiation.h) |
+| Find NRPyLeakage Python generators, notebook derivations, or `tmp_*` provenance | [NRPyLeakage generator provenance](wiki/gems/neutrinos/generator-provenance.md), [generated boundaries](wiki/generated-boundaries.md) |
+| Port or directly compile only the NRPyLeakage pieces | [Neutrinos API and data](wiki/gems/neutrinos/api-and-data.md), [implementation flow](wiki/gems/neutrinos/implementation-flow.md), [physics and EOS contract](wiki/gems/neutrinos/physics-and-eos-contract.md) |
 | Work on shock-capturing reconstruction | [Reconstruction hub](wiki/gems/reconstruction.md), [face/stencil contract](wiki/gems/reconstruction/face-and-stencil-contract.md), [Reconstruction source](GRHayL/Reconstruction/), [Reconstruction docs as read-only evidence](docs/raw/Reconstruction.dox) |
 | Understand the GRMHD derivation | [GRMHD Derivation](docs/raw/derivation.md) |
 | Connect GRHayL to downstream infrastructure | [GRHayLib implementation](implementations/GRHayLib/) |

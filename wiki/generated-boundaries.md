@@ -136,6 +136,17 @@ from analytic arrays. The checked-in
 `Unit_Tests/sample_table/Hempel_SFHoEOS_rho222_temp180_ye60_version_1.1_20120817_simple.h5`
 is a sample table file, not a build artifact from `configure`.
 
+## Neutrino Leakage Python And Generated C
+
+Route notebook identity, exact generation coverage, symbolic `tmp_*` variables,
+regeneration limits, and current-authority questions through
+[Neutrino generator provenance](gems/neutrinos/generator-provenance.md). Route
+formula meanings and EOS quantities through the
+[physics and EOS contract](gems/neutrinos/physics-and-eos-contract.md).
+
+The checked-in C and public headers own current signatures and behavior. Do not
+infer byte-for-byte reproducibility from generator provenance alone.
+
 ## Flux Source Python And NRPy
 
 Route Flux_Source-specific generator/script questions through

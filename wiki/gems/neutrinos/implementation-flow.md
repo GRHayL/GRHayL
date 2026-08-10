@@ -4,6 +4,11 @@ This page maps the built NRPyLeakage implementation files listed by
 `GRHayL/Neutrinos/NRPyLeakage/make.code.defn`. Source remains authority; the
 large generated formula blocks are described by role instead of copied.
 
+Use [Generator Provenance](generator-provenance.md) to trace notebook source
+and regeneration limits. Use
+[Physics And EOS Contract](physics-and-eos-contract.md) when replacing the
+GRHayL tabulated EOS or interpreting leakage outputs.
+
 ## Build List
 
 `GRHayL/Neutrinos/make.code.defn` routes Neutrinos to the `NRPyLeakage`
@@ -18,6 +23,45 @@ these source files:
 
 All five names have matching public declarations in `ghl_nrpyleakage.h`; no
 extra Neutrinos `.c` file sits outside the manifest.
+
+## Smallest File Sets And Data Dependencies
+
+The five manifest entries do not form one indivisible link unit. Current
+source has these narrower boundaries:
+
+| Requested operation | Required implementation files | Additional current-GRHayL dependencies | Not required by that entry point |
+| --- | --- | --- | --- |
+| Fermi-Dirac approximation | `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation/leakage headers, GRHayL error enum, math functions | EOS, HDF5, opacity, depth, source, luminosity files |
+| Opacities only | `NRPyLeakage_compute_neutrino_opacities.c` and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, math functions | Combined source/opacity, optical-depth, and luminosity files |
+| GRMHD sources plus opacities | `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c` and `NRPyLeakage_Fermi_Dirac_integrals.c` | Same EOS, type, constant, error/HDF5, and math adapter | Standalone-opacity, optical-depth, and luminosity files |
+| One path-of-least-resistance depth update | `NRPyLeakage_optical_depths_PathOfLeastResistance.c` | Opacity/depth struct definitions and math functions | EOS, HDF5, Fermi helper, source, standalone-opacity, and luminosity files |
+| Pointwise luminosities | `NRPyLeakage_compute_neutrino_luminosities.c` and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, metric inputs, math functions | Source, standalone-opacity, and optical-depth implementation files |
+
+These are link and call boundaries, not a complete simulation workflow. The
+optical-depth routine needs opacity and neighbor-depth *data*, but does not
+call the standalone-opacity routine. Source/opacity and luminosity routines
+consume optical-depth data, but do not call the optical-depth implementation.
+The combined routine owns a separate generated opacity write path; it does not
+delegate to `NRPyLeakage_compute_neutrino_opacities`.
+
+For a host with its own EOS and hydrodynamics, retain the Fermi helper wherever
+generated rate code calls `NRPYLEAKAGE_FD_OR_RETURN`; port the optical-depth
+file independently if its six-neighbor update is wanted. The exact ABI,
+callback, error, HDF5, and unit substitutions are mapped in
+[API And Data](api-and-data.md).
+
+## Generator Versus Current Source Authority
+
+The separate
+[Tabulated_EOS_IllinoisGRMHD repository](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD)
+contains NRPy/Python development material absent from this tree.
+[Generator Provenance](generator-provenance.md) preserves the notebook roles,
+output paths, unit construction, `tmp_*` origin, and reviewed generator
+coverage.
+Use it for ancestry only. Current repo-local C, headers, manifests, and tests
+remain authority; generate into a disposable directory, compare formulas and
+constants, and deliberately reapply the GRHayL ABI, EOS, error, and unit
+adapter before replacing any current file.
 
 ## Shared Failure Boundary
 
@@ -199,3 +243,10 @@ minus-then-plus signature. Its flat metric and minimum over symmetric
 directions hide this reversal, so current test evidence does not verify
 directional argument mapping for unequal plus/minus metrics. It also discards
 all comparison results, as noted above.
+
+## Ground Truth References
+
+- Original NRPyLeakage development repository:
+  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD
+- NRPyLeakage symbolic implementation and C-generation notebook:
+  https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD/blob/master/Tutorial-Leakage_Scheme-Implementation.ipynb
