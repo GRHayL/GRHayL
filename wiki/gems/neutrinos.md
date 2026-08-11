@@ -18,10 +18,13 @@ Doxygen source.
 3. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
    `NRPyLeakage_*` declarations, constants ownership, errors, and HDF5/EOS
    dependency.
-4. [Implementation Flow](neutrinos/implementation-flow.md) for the five
+4. [CompOSE EOS Adapter How-To](neutrinos/compose-eos-adapter-how-to.md) for
+   adapting CompOSE state, composition, and chemical-potential outputs to the
+   NRPyLeakage EOS callback and validating that boundary.
+5. [Implementation Flow](neutrinos/implementation-flow.md) for the five
    `GRHayL/Neutrinos/NRPyLeakage/` source files, their writeback paths, and
    the minimal direct-compilation boundary.
-5. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
+6. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
    fixture pairs, EOS table setup, and CI downloads.
 
 ## Ground Truth

@@ -53,6 +53,25 @@ implemented through NRPyEOS functions declared in
 `GRHayL/EOS/Tabulated/interpolators/make.code.defn` owns the built
 interpolator source list for these wrapper families.
 
+## Current StellarCollapse Grid Contract
+
+The live StellarCollapse path stores coordinate arrays as `logrho`, `logtemp`,
+and `ye`. For current interpolation to be correct, each stored coordinate
+array must be uniformly linearly spaced, strictly increasing, and contain at
+least two points. The physical density and temperature values must be
+positive, so uniform spacing in `logrho` and `logtemp` means logarithmically
+spaced physical `rho` and `T`; `ye` is uniformly spaced directly.
+
+`NRPyEOS_read_table_set_EOS_params.c` takes coordinate bounds from the first
+and last array entries and derives each inverse spacing from the first
+interval. `NRPyEOS_tabulated_helpers.h` then uses those values to select an
+adjacent cell and perform eight-point trilinear interpolation. The current
+path does not recover a nonuniform grid from all coordinate entries.
+
+For CompOSE conversion-specific consequences, including the density and
+charge-coordinate maps, read the
+[CompOSE EOS adapter how-to](../neutrinos/compose-eos-adapter-how-to.md#grid-and-interpolation-contract).
+
 ## Temperature Recovery
 
 Auxiliary-input wrappers recover temperature before interpolation. They pass

@@ -82,6 +82,7 @@ source, headers, tests, and common edit routes before wider search.
   [hybrid piecewise-polytrope](eos/hybrid-piecewise-polytrope.md),
   [tabulated table contract](eos/tabulated-table-contract.md),
   [stellarcollapse table adapter](eos/stellarcollapse-table-adapter.md),
+  [CompOSE-to-NRPyLeakage adapter how-to](neutrinos/compose-eos-adapter-how-to.md),
   [tabulated interpolation and bounds](eos/tabulated-interpolation-and-bounds.md),
   [tabulated interpolator catalog](eos/tabulated-interpolator-catalog.md),
   [tests and fixtures](eos/tests-and-fixtures.md).
@@ -169,6 +170,7 @@ source, headers, tests, and common edit routes before wider search.
 - KB routes: [hub](neutrinos.md), [physics and EOS contract](neutrinos/physics-and-eos-contract.md),
   [generator provenance](neutrinos/generator-provenance.md),
   [API and data](neutrinos/api-and-data.md),
+  [CompOSE EOS adapter how-to](neutrinos/compose-eos-adapter-how-to.md),
   [implementation flow](neutrinos/implementation-flow.md), and
   [tests and fixtures](neutrinos/tests-and-fixtures.md).
 - Docs path: coverage gap: no dedicated Neutrinos raw Doxygen page exists;

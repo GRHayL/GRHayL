@@ -46,6 +46,7 @@ links in view because repo-local files remain the ground truth.
 | Work on neutrino leakage support | [Neutrinos KB hub](wiki/gems/neutrinos.md), [physics and EOS contract](wiki/gems/neutrinos/physics-and-eos-contract.md), [Neutrinos source](GRHayL/Neutrinos/), [radiation header](GRHayL/include/ghl_radiation.h) |
 | Find NRPyLeakage Python generators, notebook derivations, or `tmp_*` provenance | [NRPyLeakage generator provenance](wiki/gems/neutrinos/generator-provenance.md), [generated boundaries](wiki/generated-boundaries.md) |
 | Port or directly compile only the NRPyLeakage pieces | [Neutrinos API and data](wiki/gems/neutrinos/api-and-data.md), [implementation flow](wiki/gems/neutrinos/implementation-flow.md), [physics and EOS contract](wiki/gems/neutrinos/physics-and-eos-contract.md) |
+| Adapt a CompOSE EOS for NRPyLeakage | [CompOSE EOS adapter how-to](wiki/gems/neutrinos/compose-eos-adapter-how-to.md), [physics and EOS contract](wiki/gems/neutrinos/physics-and-eos-contract.md), [current StellarCollapse loader boundary](wiki/gems/eos/stellarcollapse-table-adapter.md) |
 | Work on shock-capturing reconstruction | [Reconstruction hub](wiki/gems/reconstruction.md), [face/stencil contract](wiki/gems/reconstruction/face-and-stencil-contract.md), [Reconstruction source](GRHayL/Reconstruction/), [Reconstruction docs as read-only evidence](docs/raw/Reconstruction.dox) |
 | Understand the GRMHD derivation | [GRMHD Derivation](docs/raw/derivation.md) |
 | Connect GRHayL to downstream infrastructure | [GRHayLib implementation](implementations/GRHayLib/) |

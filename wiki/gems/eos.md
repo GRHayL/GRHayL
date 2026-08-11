@@ -12,6 +12,7 @@ EOS provides hybrid, simple, and tabulated equation-of-state support through ini
 - [Stellarcollapse table adapter](eos/stellarcollapse-table-adapter.md)
 - [Tabulated EOS interpolation and bounds](eos/tabulated-interpolation-and-bounds.md)
 - [Tabulated interpolator catalog](eos/tabulated-interpolator-catalog.md)
+- [CompOSE-to-NRPyLeakage adapter how-to](neutrinos/compose-eos-adapter-how-to.md)
 - [EOS tests and fixtures](eos/tests-and-fixtures.md)
 - `docs/raw/EOS.dox`
 - `docs/raw/GRHayL_Core.dox`
@@ -58,6 +59,8 @@ Focused routes:
 - Built tabulated interpolator wrappers by input tuple, beta-equilibrium/rho
   maps, enthalpy tabulation, and sound-speed cleaning:
   [tabulated interpolator catalog](eos/tabulated-interpolator-catalog.md).
+- CompOSE-to-NRPyLeakage EOS mapping, native-adapter boundary, integration
+  routes, and validation: [CompOSE EOS adapter how-to](neutrinos/compose-eos-adapter-how-to.md).
 - EOS unit tests, helper-only files, sample tables, generated `simple_table.h5`,
   and no-HDF5 error behavior: [tests and fixtures](eos/tests-and-fixtures.md).
 

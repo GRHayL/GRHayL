@@ -10,6 +10,8 @@ For generator origin and regeneration limits, continue to
 [Generator Provenance](generator-provenance.md). For chemical-potential,
 composition, source-sign, species, and slot semantics needed by another EOS,
 continue to [Physics And EOS Contract](physics-and-eos-contract.md).
+For CompOSE adapter design, integration routes, and validation, continue to the
+[CompOSE EOS Adapter How-To](compose-eos-adapter-how-to.md).
 
 ## Radiation Data
 
