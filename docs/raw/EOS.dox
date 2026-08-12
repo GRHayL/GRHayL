@@ -51,6 +51,17 @@
  * approximating a given nuclear data table compared to e.g. hybrid EOS,
  * but at significant computational expense. @grhayl provides all the code
  * required to both read, interpolate, and compute variables in the table.
+ *
+ * The offline `tools/compose/compose_to_grhayl.py` utility can produce this
+ * existing StellarCollapse HDF5 schema from one fixed CompOSE-generated
+ * SRO(SLy4) SNA table-141 schema. Its production profile is explicitly a
+ * physics-changing regularized surrogate: it enforces strict temperature-ray
+ * inversion, positive heat capacity and enthalpy, causal derivative/sound-speed
+ * identities, chemical identities, and node composition closure. It does not
+ * add a native CompOSE backend or change the public C API. Runtime sound-speed
+ * cleaning must remain disabled for its already-relativistic output. See
+ * `tools/compose/README.md` for the exact policy, limitations, and qualification
+ * commands.
  */
 
 /**

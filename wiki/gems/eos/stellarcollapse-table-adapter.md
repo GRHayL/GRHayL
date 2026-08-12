@@ -75,6 +75,34 @@ Do not duplicate unit constants or dataset maps in KB pages. Use
 [`GRHayL/include/ghl_nrpyeos_tabulated.h`](../../../GRHayL/include/ghl_nrpyeos_tabulated.h)
 and the stellar-collapse source files for exact names and values.
 
+## Offline CompOSE Regularization
+
+[`tools/compose/compose_to_grhayl.py`](../../../tools/compose/compose_to_grhayl.py)
+produces this same StellarCollapse schema from one fixed CompOSE-generated
+SRO(SLy4) SNA table-141 schema. The production identity is
+`sro-sly4-sna-141-regularized-v1`. It is a physics-changing surrogate, not an
+unmodified CompOSE artifact or a native table backend. Exact input controls,
+regularization equations, distortion disclosure, and commands belong to the
+[`tools/compose` README](../../../tools/compose/README.md).
+
+No runtime dispatch or public C surface changes for this route. The output sets
+`have_rel_cs2=1`, so the loader retains its relativistic sound speed; callers
+must leave optional runtime sound-speed cleaning disabled. The reader consumes
+the standard axes, scalars, and 19 fields and ignores the converter's diagnostic
+`grhayl_compose/manifest_json` group.
+
+Composition mass and charge closure are hard node gates. Independent
+trilinear interpolation of `Abar`, `Zbar`, and `Xh` cannot preserve the
+nonlinear heavy-charge product off grid. Current NRPyLeakage calls instead use
+the six-value `muhat,mu_e,mu_p,mu_n,Xn,Xp` wrapper; do not generalize this into
+an off-grid equilibrium-composition claim. The auto-discovered
+[`unit_test_tabulated_eos_compose.c`](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
+checks every serialized node and all 19 mappings, storage-space interpolation
+and inversions, the six-value ABI order and range failures, no-fallback
+Palenzuela recovery, analytic characteristic-speed, HLLE/entropy-flux, and
+source goldens, all eight combined-leakage outputs against an independent
+high-precision Ruffert-equation oracle, and cleanup.
+
 ## Build Gate
 
 The adapter is an HDF5 source/build boundary. With `GHL_DISABLE_HDF5`, the
@@ -96,6 +124,8 @@ The parent tabulated source list is
 
 Sample tables and tests are evidence only. Use
 [`Unit_Tests/unit_test_tabulated_eos.c`](../../../Unit_Tests/unit_test_tabulated_eos.c),
+[`Unit_Tests/unit_test_tabulated_eos_compose.c`](../../../Unit_Tests/unit_test_tabulated_eos_compose.c),
+[`Unit_Tests/compose/`](../../../Unit_Tests/compose/),
 [`Unit_Tests/sample_table/`](../../../Unit_Tests/sample_table/), and
 [`.github/run_tests.sh`](../../../.github/run_tests.sh) to verify how repo-local
 fixtures and CI exercise table loading. Do not treat fixture contents as adapter
@@ -111,3 +141,5 @@ API authority.
 - [`GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.h`](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.h)
 - [`GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c`](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c)
 - [`GRHayL/EOS/Tabulated/stellarcollapse/make.code.defn`](../../../GRHayL/EOS/Tabulated/stellarcollapse/make.code.defn)
+- [`tools/compose/compose_to_grhayl.py`](../../../tools/compose/compose_to_grhayl.py)
+- [`tools/compose/README.md`](../../../tools/compose/README.md)
