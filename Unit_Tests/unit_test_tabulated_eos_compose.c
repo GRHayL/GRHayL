@@ -226,24 +226,26 @@ static void check_inverses(
     ghl_error("Forward EOS returned inadmissible state\n");
   }
 
-  const double alternate_T
-        = T == eos->table_T_min ? eos->table_T_max : eos->table_T_min;
-  const double initial_T
-        = exp(0.75 * log(T) + 0.25 * log(alternate_T));
-  if(initial_T == T || initial_T < eos->table_T_min
-        || initial_T > eos->table_T_max) {
+  const double alternate_T = T == eos->table_T_min ? eos->table_T_max : eos->table_T_min;
+  const double initial_T = exp(0.75 * log(T) + 0.25 * log(alternate_T));
+  if(initial_T == T || initial_T < eos->table_T_min || initial_T > eos->table_T_max) {
     ghl_error("Inverse-search initial temperature is not distinct and valid\n");
   }
   const int inverse_keys[4] = {
-    NRPyEOS_eps_key, NRPyEOS_press_key, NRPyEOS_entropy_key,
+    NRPyEOS_eps_key,
+    NRPyEOS_press_key,
+    NRPyEOS_entropy_key,
     NRPyEOS_enthalpy_key,
   };
-  double initial_auxiliary[4] = {NAN, NAN, NAN, NAN};
+  double initial_auxiliary[4] = { NAN, NAN, NAN, NAN };
   err = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
         eos, 4, rho, Y_e, initial_T, inverse_keys, initial_auxiliary);
   ghl_abort_if_error(err);
   const double target_search_values[4] = {
-    log(eps + eos->energy_shift), log(P), S, log(stored_h),
+    log(eps + eos->energy_shift),
+    log(P),
+    S,
+    log(stored_h),
   };
   const double initial_search_values[4] = {
     log(initial_auxiliary[0] + eos->energy_shift),
@@ -253,7 +255,7 @@ static void check_inverses(
   };
   for(int i = 0; i < 4; i++) {
     if(fabs(initial_search_values[i] - target_search_values[i])
-          <= eos->root_finding_precision * fabs(target_search_values[i])) {
+       <= eos->root_finding_precision * fabs(target_search_values[i])) {
       ghl_error("Inverse search %d would take the initial-match shortcut\n", i);
     }
   }
