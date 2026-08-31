@@ -24,6 +24,7 @@ MAX_PLANE_CELLS = 65_536
 MAX_CONTROL_BYTES = 4_096
 MAX_CONTROL_TOKENS = 128
 ROOT_RELATIVE_TOLERANCE = 1.0e-10
+CGS_TO_CODE_PRESSURE = 1.80123683248503e-39
 LOW_BULK_FRACTION = 1.0e-14
 HIGH_BULK_FRACTION = 1.0 - 1.0e-12
 NODE_CLOSURE_TOLERANCE = 1.0e-12
@@ -151,7 +152,7 @@ REGULARIZATION_POLICY = {
     "entropy_integrator": "logarithmic-temperature mean",
     "isotonic_weights": "equal",
     "heavy_charge_roundoff": "clip Z to [0,A] within 1e-8*max(1,A)",
-    "log_step": "max(64*float64-epsilon*scale,8e-10/ln(10))",
+    "log_step": "pressure inverse margin uses 8e-10*max(1,abs(ln(P_code)))/ln(10)",
     "node_closure_tolerance": NODE_CLOSURE_TOLERANCE,
     "offgrid_charge_closure": "diagnostic only; current consumers use Xn/Xp",
     "temperature_derivative": "PCHIP weighted harmonic",
@@ -183,6 +184,15 @@ def _regularization_log_step(values):
     floating_margin = 64.0 * np.finfo(np.float64).eps * scale
     inverse_margin = 8.0 * ROOT_RELATIVE_TOLERANCE / math.log(10.0)
     return max(floating_margin, inverse_margin)
+
+
+def _pressure_regularization_log_step(values):
+    values = np.asarray(values, dtype=np.float64)
+    base_step = _regularization_log_step(values)
+    loaded_logpressure = values * math.log(10.0) + math.log(CGS_TO_CODE_PRESSURE)
+    loaded_scale = max(1.0, float(np.max(np.abs(loaded_logpressure))))
+    inverse_margin = 8.0 * ROOT_RELATIVE_TOLERANCE * loaded_scale / math.log(10.0)
+    return max(base_step, inverse_margin)
 
 
 def _strict_isotonic(values, minimum_step):
@@ -619,7 +629,9 @@ def _regularize_plane(raw, rho, temperature, ye_value, energy_shift, profile):
         energy_ray = raw_logenergy[:, rho_index]
         pressure_ray = raw_logpress[:, rho_index]
         logenergy[:, rho_index] = _strict_isotonic(energy_ray, _regularization_log_step(energy_ray))
-        logpress[:, rho_index] = _strict_isotonic(pressure_ray, _regularization_log_step(pressure_ray))
+        logpress[:, rho_index] = _strict_isotonic(
+            pressure_ray, _pressure_regularization_log_step(pressure_ray)
+        )
     energy = np.power(10.0, logenergy) - energy_shift
     pressure = np.power(10.0, logpress)
 
@@ -902,6 +914,18 @@ def _validate_output(path, profile, expected_distortion=None):
             for values in (energy, pressure, fields["entropy"], enthalpy):
                 if not np.all(np.diff(values, axis=0) > 0.0):
                     raise ConversionError("reopened output temperature ray is not strictly invertible")
+            loaded_logpressure = (
+                fields["logpress"] * math.log(10.0) + math.log(CGS_TO_CODE_PRESSURE)
+            )
+            pressure_inverse_scale = np.maximum(
+                np.abs(loaded_logpressure[:-1, :]),
+                np.abs(loaded_logpressure[1:, :]),
+            )
+            if np.any(
+                np.diff(loaded_logpressure, axis=0)
+                <= ROOT_RELATIVE_TOLERANCE * pressure_inverse_scale
+            ):
+                raise ConversionError("reopened pressure inverse gap is insufficient")
 
             enthalpy_density = density * (C_SQUARED + energy) + pressure
             bulk = density * fields["dpdrhoe"] + pressure / density * fields["dpderho"]

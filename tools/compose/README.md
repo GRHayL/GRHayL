@@ -63,6 +63,11 @@ from the regularized energy using a logarithmic-temperature mean.  Positive
 temperature derivatives use a monotone PCHIP-style stencil; density
 derivatives use second-order nonuniform stencils.
 
+The pressure minimum spacing uses the magnitude of the loader-transformed
+`ln(P_code)` and an eightfold safety margin over the loader's `1e-10` inverse
+tolerance.  Reopened-output validation rejects adjacent pressure gaps that
+the inverse routine could mistake for an exact initial-temperature match.
+
 Writing `e_j` for regularized energy in MeV per baryon and `S_j` for entropy
 in units of Boltzmann's constant per baryon, the entropy update is
 
