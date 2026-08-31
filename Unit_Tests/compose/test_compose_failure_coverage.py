@@ -347,6 +347,17 @@ class FailureCoverageTest(unittest.TestCase):
         self._corrupt_output("scalar", lambda h5: h5["have_rel_cs2"].__setitem__(0, 0))
         self._corrupt_output("positive", lambda h5: h5["logpress"].__setitem__((0, 0, 0), -400.0))
         self._corrupt_output("inverse", lambda h5: h5["entropy"].__setitem__((0, 1, 0), h5["entropy"][0, 0, 0]))
+
+        insufficient_gap = self.root / "corrupt-pressure-inverse-gap.h5"
+        shutil.copy2(self.output, insufficient_gap)
+        with h5py.File(insufficient_gap, "r+") as h5:
+            h5["logpress"][1, 2, 2] = (
+                h5["logpress"][1, 1, 2]
+                + 8.0 * compose.ROOT_RELATIVE_TOLERANCE / math.log(10.0)
+            )
+        with self.assertRaisesRegex(compose.ConversionError, "pressure inverse"):
+            compose._validate_output(insufficient_gap, self.profile)
+
         self._corrupt_output("cs-low", lambda h5: h5["cs2"].__setitem__((0, 0, 0), 0.0))
         self._corrupt_output("derivative-negative", lambda h5: h5["dpdrhoe"].__setitem__((0, 0, 0), -1.0))
         self._corrupt_output("identity", lambda h5: h5["gamma"].__setitem__((0, 0, 0), 0.0))

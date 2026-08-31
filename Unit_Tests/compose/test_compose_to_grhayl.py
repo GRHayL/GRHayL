@@ -24,6 +24,7 @@ C_SQUARED = 8.987551787368176e20
 MEV_TO_GRAM = MEV_TO_ERG / C_SQUARED
 M_REF_MEV = 939.5654
 M_REF_GRAM = M_REF_MEV * MEV_TO_GRAM
+CGS_TO_CODE_PRESSURE = 1.80123683248503e-39
 
 THERMO_IDS = np.array([1, 2, 3, 4, 5, 10, 11, 12, 13, 21], dtype=np.int32)
 PAIR_IDS = np.array([10, 11, 4002], dtype=np.int32)
@@ -402,9 +403,13 @@ class ComposeConverterTest(unittest.TestCase):
             expected_loge[2] = 0.5 * (raw_loge[1] + raw_loge[2]) + 0.5 * delta_e
             np.testing.assert_allclose(h5["logenergy"][1, :, 2], expected_loge, rtol=0.0, atol=2.0e-14)
 
-            delta_p = compose._regularization_log_step(np.log10(1.0e-2 * np.array([1.0, 4.0, 2.0, 3.0]) * MEV_TO_ERG * 1.0e39))
             raw_logp = np.log10(1.0e-2 * np.array([1.0, 4.0, 2.0, 3.0]) * MEV_TO_ERG * 1.0e39)
-            expected_delta_p = max(64.0 * np.finfo(float).eps * max(1.0, np.max(np.abs(raw_logp))), 8.0e-10 / np.log(10.0))
+            delta_p = compose._pressure_regularization_log_step(raw_logp)
+            loaded_logp = raw_logp * np.log(10.0) + np.log(CGS_TO_CODE_PRESSURE)
+            expected_delta_p = max(
+                64.0 * np.finfo(float).eps * max(1.0, np.max(np.abs(raw_logp))),
+                8.0e-10 * max(1.0, np.max(np.abs(loaded_logp))) / np.log(10.0),
+            )
             self.assertEqual(delta_p, expected_delta_p)
             expected_logp = raw_logp.copy()
             expected_logp[1] = 0.5 * (raw_logp[1] + raw_logp[2]) - 0.5 * delta_p
@@ -441,7 +446,7 @@ class ComposeConverterTest(unittest.TestCase):
                 "entropy_integrator": "logarithmic-temperature mean",
                 "isotonic_weights": "equal",
                 "heavy_charge_roundoff": "clip Z to [0,A] within 1e-8*max(1,A)",
-                "log_step": "max(64*float64-epsilon*scale,8e-10/ln(10))",
+                "log_step": "pressure inverse margin uses 8e-10*max(1,abs(ln(P_code)))/ln(10)",
                 "node_closure_tolerance": 1.0e-12,
                 "offgrid_charge_closure": "diagnostic only; current consumers use Xn/Xp",
                 "temperature_derivative": "PCHIP weighted harmonic",

@@ -296,6 +296,38 @@ static void check_inverses(
   check_close("enthalpy inverse entropy", S, recovered_S, 2.0e-9, 2.0e-13);
 }
 
+static void
+check_synthetic_pressure_pava_inverse(const ghl_eos_parameters *restrict eos) {
+  if(eos->N_rho != 5 || eos->N_T != 4 || eos->N_Ye != 3) {
+    return;
+  }
+
+  const int ir = 2;
+  const int target_it = 2;
+  const int initial_it = 1;
+  const int iy = 1;
+  const double rho = exp(eos->table_logrho[ir]);
+  const double Y_e = eos->table_Y_e[iy];
+  const double target_T = exp(eos->table_logT[target_it]);
+  const double initial_T = exp(eos->table_logT[initial_it]);
+
+  double target_P = NAN, target_eps = NAN, target_S = NAN, target_cs2 = NAN;
+  ghl_error_codes_t err = ghl_tabulated_compute_P_eps_S_cs2_from_T(
+        eos, rho, Y_e, target_T, &target_P, &target_eps, &target_S, &target_cs2);
+  ghl_abort_if_error(err);
+
+  double recovered_T = initial_T;
+  double recovered_eps = NAN, recovered_S = NAN;
+  err = ghl_tabulated_compute_eps_S_T_from_P(
+        eos, rho, Y_e, target_P, &recovered_eps, &recovered_S, &recovered_T);
+  ghl_abort_if_error(err);
+  check_close(
+        "pressure PAVA inverse temperature", target_T, recovered_T, 2.0e-9, 2.0e-12);
+  check_close(
+        "pressure PAVA inverse energy", target_eps, recovered_eps, 2.0e-9, 2.0e-13);
+  check_close("pressure PAVA inverse entropy", target_S, recovered_S, 2.0e-9, 2.0e-13);
+}
+
 static void check_downstream_consumers(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -593,6 +625,7 @@ int main(int argc, char **argv) {
   check_inverses(
         &eos, rho, ye, T, exp(midpoint_value(&eos, NRPyEOS_enthalpy_key, ir, it, iy)));
   check_inverses(&eos, rho, ye, eos.table_T_max, exp(logh_max / 4.0));
+  check_synthetic_pressure_pava_inverse(&eos);
 
   free(raw);
   free(logrho);
