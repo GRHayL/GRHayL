@@ -239,8 +239,9 @@ the downloader but still removed by the final glob. Run this driver only in a
 disposable checkout without user-owned root-level `.bin`, `.h5`, or `.bz2`
 files.
 
-The runner directly invokes 27 of the 29 configured default test binaries. It
-does not invoke `unit_test_WENOZ_reconstruction` (workflow matrices do) or
+The runner directly invokes 27 of the 30 configured default test binaries. It
+does not invoke `unit_test_WENOZ_reconstruction` (workflow matrices do),
+`unit_test_tabulated_eos_compose` (the focused CompOSE workflow does), or
 `unit_test_con2prim_debug` (no runner/workflow invocation is visible). The
 composite-action YAML configures `tests` and `datagen` compilation, but neither
 that action nor the local runner executes data-generator binaries. Tracked YAML

@@ -66,14 +66,10 @@ class FailureCoverageTest(unittest.TestCase):
         with self.assertRaises(compose.ConversionError):
             compose._monotone_derivative([1.0, np.nan, 3.0], [1.0, 2.0, 3.0])
         with self.assertRaises(compose.ConversionError):
-            compose._energy_shift_mev([np.inf])
-        with self.assertRaises(compose.ConversionError):
             compose._energy_shift_from_extrema(np.inf, 1.0)
         with np.errstate(over="ignore"):
             with self.assertRaises(compose.ConversionError):
                 compose._energy_shift_from_extrema(-np.finfo(float).max, np.finfo(float).max)
-        with self.assertRaises(compose.ConversionError):
-            compose._inverse_temperature([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], 4.0)
         with self.assertRaises(compose.ConversionError):
             compose._project_bulk([1.0], [1.0, 2.0], [1.0])
         with self.assertRaises(compose.ConversionError):
@@ -91,6 +87,12 @@ class FailureCoverageTest(unittest.TestCase):
         with mock.patch.object(compose.np, "max", return_value=1.0):
             with self.assertRaises(compose.ConversionError):
                 compose._project_composition(np.full((4, 1), 0.25), np.array([0.25]), np.array([0.25]))
+
+        def cleanup_failure():
+            raise RuntimeError("cleanup action failed")
+
+        with self.assertRaisesRegex(compose.ConversionError, "cleanup action failed"):
+            compose._cleanup((("cleanup action", cleanup_failure),))
 
     def test_control_read_and_parse_rejections(self):
         with self.assertRaises(compose.ConversionError):
@@ -149,6 +151,20 @@ class FailureCoverageTest(unittest.TestCase):
         invalid.write_text("not hdf", encoding="ascii")
         with self.assertRaises(compose.ConversionError):
             compose._open_validated_input(invalid, self.profile)
+
+        class CloseFailingInput:
+            def keys(self):
+                return ()
+
+            def close(self):
+                raise OSError("input close failed")
+
+        with mock.patch.object(compose.h5py, "File", return_value=CloseFailingInput()):
+            with self.assertRaisesRegex(
+                compose.ConversionError, "root groups"
+            ) as context:
+                compose._open_validated_input(invalid, self.profile)
+        self.assertIn("input close failed", context.exception.cleanup_failures[0])
 
         self._mutated_input("root-not-group", lambda h5: (h5.__delitem__("metadata"), h5.create_dataset("metadata", data=np.array([1]))))
         self._mutated_input("thermo-extra", lambda h5: h5["Thermo_qty"].create_dataset("extra", data=[1]))
@@ -290,6 +306,24 @@ class FailureCoverageTest(unittest.TestCase):
                 compose._create_output(owned, self.profile, rho, temperature, ye, 1.0)
         self.assertFalse(owned.exists())
 
+        class CloseFailingFile(BadFile):
+            def close(self):
+                raise OSError("partial close failed")
+
+        def create_close_failing_file(*args, **kwargs):
+            owned.write_bytes(b"converter partial")
+            return CloseFailingFile()
+
+        with mock.patch.object(
+            compose.h5py, "File", side_effect=create_close_failing_file
+        ):
+            with self.assertRaisesRegex(RuntimeError, "write failed") as context:
+                compose._create_output(
+                    owned, self.profile, rho, temperature, ye, 1.0
+                )
+        self.assertFalse(owned.exists())
+        self.assertIn("partial close failed", context.exception.cleanup_failures[0])
+
         with mock.patch.object(compose.h5py, "File", return_value=BadFile()):
             with self.assertRaises(RuntimeError):
                 compose._create_output(self.root / "missing-partial.h5", self.profile, rho, temperature, ye, 1.0)
@@ -360,6 +394,20 @@ class FailureCoverageTest(unittest.TestCase):
         with self.assertRaises(compose.ConversionError):
             compose._validate_output(self.root / "missing-output.h5", self.profile)
 
+        class CloseFailingOutput:
+            def keys(self):
+                return ()
+
+            def close(self):
+                raise OSError("validated close failed")
+
+        with mock.patch.object(compose.h5py, "File", return_value=CloseFailingOutput()):
+            with self.assertRaisesRegex(
+                compose.ConversionError, "output root"
+            ) as context:
+                compose._validate_output(self.output, self.profile)
+        self.assertIn("validated close failed", context.exception.cleanup_failures[0])
+
     def test_conversion_exception_and_entrypoint_paths(self):
         with self.assertRaises(compose.ConversionError):
             compose.convert(self.input_dir, "does-not-exist", self.output)
@@ -370,6 +418,74 @@ class FailureCoverageTest(unittest.TestCase):
         with mock.patch.object(compose, "_write_plane", side_effect=compose.ConversionError("stop")), mock.patch.object(compose.os, "unlink", side_effect=FileNotFoundError):
             with self.assertRaisesRegex(compose.ConversionError, "stop"):
                 compose.convert(self.input_dir, "test-analytic", self.output)
+
+        events = []
+
+        class CloseFailingHandle:
+            def __init__(self, name):
+                self.name = name
+
+            def __getitem__(self, key):
+                return self
+
+            def close(self):
+                events.append(self.name)
+                raise OSError(f"{self.name} close failed")
+
+        temporary = self.root / "cleanup.tmp"
+        temporary.write_bytes(b"partial")
+        input_h5 = CloseFailingHandle("input")
+        output_h5 = CloseFailingHandle("output")
+        with mock.patch.object(
+            compose,
+            "_open_validated_input",
+            return_value=(
+                input_h5,
+                np.logspace(-5.0, -1.0, 5),
+                np.logspace(-2.0, 1.0, 4),
+                np.array([0.2, 0.3, 0.4]),
+            ),
+        ), mock.patch.object(
+            compose, "_scan_energy_extrema", return_value=(1.0, 1.0)
+        ), mock.patch.object(
+            compose,
+            "_create_exclusive_output",
+            return_value=(temporary, output_h5),
+        ), mock.patch.object(
+            compose,
+            "_read_raw_plane",
+            side_effect=compose.ConversionError("primary conversion failure"),
+        ):
+            with self.assertRaisesRegex(
+                compose.ConversionError, "primary conversion failure"
+            ) as context:
+                compose.convert(self.input_dir, "test-analytic", self.output)
+        self.assertEqual(events, ["output", "input"])
+        self.assertFalse(temporary.exists())
+        self.assertEqual(len(context.exception.cleanup_failures), 2)
+        self.assertIn("output close failed", context.exception.cleanup_failures[0])
+        self.assertIn("input close failed", context.exception.cleanup_failures[1])
+
+        noted_error = compose.ConversionError("primary")
+        noted_error.cleanup_failures = ("close failed",)
+        stderr = io.StringIO()
+        with mock.patch.object(compose, "convert", side_effect=noted_error):
+            with contextlib.redirect_stderr(stderr):
+                self.assertEqual(
+                    compose.main(
+                        [
+                            "--profile",
+                            "test-analytic",
+                            "--input-dir",
+                            str(self.input_dir),
+                            "--output",
+                            str(self.output),
+                        ]
+                    ),
+                    1,
+                )
+        self.assertIn("primary", stderr.getvalue())
+        self.assertIn("cleanup: close failed", stderr.getvalue())
 
         stderr = io.StringIO()
         old_argv = list(os.sys.argv)

@@ -226,7 +226,39 @@ static void check_inverses(
     ghl_error("Forward EOS returned inadmissible state\n");
   }
 
-  double recovered_T = T;
+  const double alternate_T
+        = T == eos->table_T_min ? eos->table_T_max : eos->table_T_min;
+  const double initial_T
+        = exp(0.75 * log(T) + 0.25 * log(alternate_T));
+  if(initial_T == T || initial_T < eos->table_T_min
+        || initial_T > eos->table_T_max) {
+    ghl_error("Inverse-search initial temperature is not distinct and valid\n");
+  }
+  const int inverse_keys[4] = {
+    NRPyEOS_eps_key, NRPyEOS_press_key, NRPyEOS_entropy_key,
+    NRPyEOS_enthalpy_key,
+  };
+  double initial_auxiliary[4] = {NAN, NAN, NAN, NAN};
+  err = NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
+        eos, 4, rho, Y_e, initial_T, inverse_keys, initial_auxiliary);
+  ghl_abort_if_error(err);
+  const double target_search_values[4] = {
+    log(eps + eos->energy_shift), log(P), S, log(stored_h),
+  };
+  const double initial_search_values[4] = {
+    log(initial_auxiliary[0] + eos->energy_shift),
+    log(initial_auxiliary[1]),
+    initial_auxiliary[2],
+    log(initial_auxiliary[3]),
+  };
+  for(int i = 0; i < 4; i++) {
+    if(fabs(initial_search_values[i] - target_search_values[i])
+          <= eos->root_finding_precision * fabs(target_search_values[i])) {
+      ghl_error("Inverse search %d would take the initial-match shortcut\n", i);
+    }
+  }
+
+  double recovered_T = initial_T;
   double recovered_P = NAN;
   err = ghl_tabulated_compute_P_T_from_eps(
         eos, rho, Y_e, eps, &recovered_P, &recovered_T);
@@ -235,7 +267,7 @@ static void check_inverses(
   check_close("eps inverse pressure", P, recovered_P, 2.0e-9, 2.0e-13);
 
   double recovered_eps = NAN, recovered_S = NAN;
-  recovered_T = T;
+  recovered_T = initial_T;
   err = ghl_tabulated_compute_eps_S_T_from_P(
         eos, rho, Y_e, P, &recovered_eps, &recovered_S, &recovered_T);
   ghl_abort_if_error(err);
@@ -243,7 +275,7 @@ static void check_inverses(
   check_close("pressure inverse energy", eps, recovered_eps, 2.0e-9, 2.0e-13);
   check_close("pressure inverse entropy", S, recovered_S, 2.0e-9, 2.0e-13);
 
-  recovered_T = T;
+  recovered_T = initial_T;
   recovered_P = recovered_eps = NAN;
   err = ghl_tabulated_compute_P_eps_T_from_S(
         eos, rho, Y_e, S, &recovered_P, &recovered_eps, &recovered_T);
@@ -252,7 +284,7 @@ static void check_inverses(
   check_close("entropy inverse pressure", P, recovered_P, 2.0e-9, 2.0e-13);
   check_close("entropy inverse energy", eps, recovered_eps, 2.0e-9, 2.0e-13);
 
-  recovered_T = T;
+  recovered_T = initial_T;
   recovered_P = recovered_eps = recovered_S = NAN;
   err = ghl_tabulated_compute_P_eps_S_T_from_h(
         eos, rho, Y_e, stored_h, &recovered_P, &recovered_eps, &recovered_S,
@@ -385,8 +417,8 @@ static void check_downstream_consumers(
     opacities.nue[0], opacities.nue[1], opacities.anue[0], opacities.anue[1],
     opacities.nux[0], opacities.nux[1], R_source,          Q_source,
   };
-  // Independent high-precision Ruffert-equation oracle with numerical
-  // Fermi-Dirac quadrature. The tolerance covers the production TEH fits.
+  // Fixed regression goldens for the two qualified table dimensions.
+  // The tolerance covers the production TEH fits.
   static const double analytic_expected[8] = {
     1.29265593927696647e-03,  2.06728788589579618e-03,  2.10755462947867636e-02,
     3.43634428155397380e-02,  1.27577464301964489e-03,  2.05212276868065074e-03,

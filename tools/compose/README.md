@@ -107,12 +107,12 @@ Routine tests use an asymmetric official-schema-shaped synthetic fixture and
 require 100% production Python line and branch coverage:
 
 ```sh
-python3 -m pip install coverage
-python3 -m coverage run --branch --source=tools/compose \
+compose-venv/bin/python -m pip install coverage
+compose-venv/bin/python -m coverage run --branch --source=tools/compose \
   --omit='Unit_Tests/*' -m unittest discover \
   -s Unit_Tests/compose -p 'test_*.py'
-python3 -m coverage report --fail-under=100
-python3 -m coverage xml -o compose-coverage.xml
+compose-venv/bin/python -m coverage report --fail-under=100
+compose-venv/bin/python -m coverage xml -o compose-coverage.xml
 ```
 
 After producing a table, build GRHayL with HDF5 and run the auto-discovered C
@@ -128,11 +128,12 @@ LD_LIBRARY_PATH="$PWD/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
 The C test independently reads every output node and all 19 fields, verifies
 the unchanged loader mapping and units, derived enthalpy, relativistic
 sound-speed path, off-grid storage-space interpolation, `eps/P/S/h`
-temperature inversions at endpoints and an interior point, the six-value
+temperature inversions from distinct valid initial guesses at endpoints and
+an interior point, the six-value
 NRPyLeakage callback order and range failures, and memory cleanup.  It also
 checks a no-fallback Con2Prim recovery, analytic tabulated flux and source
-goldens, and all eight combined-NRPyLeakage outputs against an independent
-high-precision Ruffert-equation oracle with numerical Fermi-Dirac quadrature.
+goldens, and all eight combined-NRPyLeakage outputs against fixed regression
+goldens for the two qualified table dimensions.
 
 On the qualified table-141 artifact, regularization changed at most
 0.0341587 in `logenergy`, 0.0338011 in `logpress`, and 0.00547615 in a mass

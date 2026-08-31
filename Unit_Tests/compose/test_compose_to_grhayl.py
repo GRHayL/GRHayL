@@ -500,20 +500,15 @@ class ComposeConverterTest(unittest.TestCase):
             ):
                 np.testing.assert_array_equal(base_h5[field], mu_h5[field])
 
-    def test_energy_shift_and_inverse_helpers(self):
-        self.assertEqual(compose._energy_shift_mev(np.array([1.0, -3.0])), 20.0)
+    def test_energy_shift_and_bulk_projection(self):
+        self.assertEqual(compose._energy_shift_from_extrema(1.0, 1.0), 20.0)
         for values in (np.array([-25.0, 1.0]), np.array([-1.0e12, 1.0]), np.array([-25.0, 1.0e12])):
             minimum = float(np.min(values))
             scale = max(1.0, float(np.max(np.abs(values))))
             expected = -minimum + 64.0 * np.finfo(float).eps * scale
-            self.assertEqual(compose._energy_shift_mev(values), expected)
-        axis = np.array([1.0, 2.0, 4.0, 8.0])
-        values = np.array([3.0, 5.0, 9.0, 17.0])
-        self.assertEqual(compose._inverse_temperature(axis, values, 3.0), 1.0)
-        self.assertEqual(compose._inverse_temperature(axis, values, 17.0), 8.0)
-        self.assertAlmostEqual(compose._inverse_temperature(axis, values, 7.0), 3.0)
-        with self.assertRaisesRegex(compose.ConversionError, "invertible"):
-            compose._inverse_temperature(axis, np.array([1.0, 2.0, 2.0, 4.0]), 2.0)
+            self.assertEqual(
+                compose._energy_shift_from_extrema(minimum, scale), expected
+            )
 
         u, v, low_count, high_count = compose._project_bulk(
             np.array([-2.0, 9.0]), np.array([1.0, 9.0]), np.array([10.0, 10.0])
@@ -534,7 +529,6 @@ class ComposeConverterTest(unittest.TestCase):
         self.assertEqual((profile.m_n_mev, profile.m_p_mev, profile.i_l), (939.5654, 938.2754, 1))
         self.assertEqual((profile.m_ref_rho_mev, profile.m_ref_mu_mev), (939.5654, 939.5654))
         self.assertEqual((profile.rho_axis, profile.temperature_axis, profile.ye_axis), ("log", "log", "linear"))
-        self.assertEqual(profile.interpolation_order, 1)
         self.assertFalse(profile.beta_equilibrium)
         self.assertFalse(profile.fixed_entropy)
         self.assertEqual(profile.nn, None)

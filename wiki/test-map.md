@@ -6,9 +6,10 @@ Repo ground truth: `Unit_Tests/`, `.github/run_tests.sh`, `.github/workflows/`,
 Evidence labels are strict: `configure` selects targets; `make tests` and
 `make datagen` compile/link; only an exact invocation establishes execution.
 Workflow commands are workflow-only evidence, not historical pass results.
-Default configuration selects 29 unit-test binaries; `.github/run_tests.sh`
-directly invokes 27, omitting WENOZ reconstruction and Con2Prim debug. WENOZ
-is workflow-selected; no normal invocation for the debug binary is visible.
+Default configuration selects 30 unit-test binaries; `.github/run_tests.sh`
+directly invokes 27, omitting WENOZ reconstruction, Con2Prim debug, and the
+CompOSE integration test. WENOZ and CompOSE are workflow-selected; no normal
+invocation for the debug binary is visible.
 
 Core/chalice test selection, fixture naming, helper-only files, and weak
 coverage notes route through [Core tests and fixtures](core/tests-and-fixtures.md).
@@ -76,7 +77,7 @@ available. Route that checklist through
 | `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Optically thin gas leakage source evolution; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_optically_thin_gas_{unperturbed,perturbed}.bin`. | Comparison result is discarded, so numerical mismatch cannot fail executable. |
 | `Unit_Tests/unit_test_piecewise_polytrope.c` | `GRHayL/EOS/Hybrid/` | Piecewise-polytrope `K_ppoly` and `eps_integ_const` setup; see [EOS tests and fixtures](gems/eos/tests-and-fixtures.md). | None visible. | No external fixture. |
 | `Unit_Tests/unit_test_tabulated_eos.c` | `GRHayL/EOS/Tabulated/` | HDF5 table read, analytic table quantity checks, tabulated interpolation routines, bounds, `ghl_compute_h_and_cs2`, and beta-equilibrium helpers; see [EOS tests and fixtures](gems/eos/tests-and-fixtures.md). | CLI table path, normally `simple_table.h5` from CI or local sample generator. | HDF5-only. |
-| `Unit_Tests/unit_test_tabulated_eos_compose.c` | `tools/compose/`, unchanged tabulated EOS, Con2Prim, Flux_Source, and NRPyLeakage runtimes | Reads every node/all 19 fields independently; checks loader units/order, enthalpy, relativistic sound speed, midpoint interpolation, `eps/P/S/h` inverses, and six-output order/ranges; requires no-fallback Palenzuela recovery; compares characteristic speed, HLLE/entropy fluxes, and source terms with analytic goldens; compares all eight combined-leakage outputs with an independent high-precision Ruffert-equation oracle; and checks cleanup. Python failure and 100% branch coverage lives under `Unit_Tests/compose/`. | CLI regularized StellarCollapse table path; focused Ubuntu GCC CI builds an asymmetric synthetic table, while full table 141 is external manual qualification data. | HDF5-only; converter output must pass with runtime sound-speed cleaning disabled. |
+| `Unit_Tests/unit_test_tabulated_eos_compose.c` | `tools/compose/`, unchanged tabulated EOS, Con2Prim, Flux_Source, and NRPyLeakage runtimes | Reads every node/all 19 fields independently; checks loader units/order, enthalpy, relativistic sound speed, midpoint interpolation, `eps/P/S/h` inverses from distinct valid initial guesses, and six-output order/ranges; requires no-fallback Palenzuela recovery; compares characteristic speed, HLLE/entropy fluxes, and source terms with analytic goldens; compares all eight combined-leakage outputs with fixed regression goldens for the two qualified table dimensions; and checks cleanup. Python failure and 100% branch coverage lives under `Unit_Tests/compose/`. | CLI regularized StellarCollapse table path; focused Ubuntu GCC CI builds an asymmetric synthetic table, while full table 141 is external manual qualification data. | HDF5-only; converter output must pass with runtime sound-speed cleaning disabled. |
 | `Unit_Tests/unit_test_tabulated_flux.c` | `GRHayL/Flux_Source/tabulated*`, `GRHayL/EOS/Tabulated/` | HLLE fluxes for tabulated EOS, with entropy and three directions; see [Flux_Source tests and fixtures](gems/flux-source/tests-and-fixtures.md). | `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5`, `tabulated_flux_{input,output,output_pert}.bin`. | HDF5-only; EOS table downloaded by `run_tests.sh`. |
 
 ## Data Generators

@@ -30,12 +30,13 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   independently reads a converter-produced StellarCollapse file, checks every
   node of all 19 serialized fields against GRHayL's loader mapping and units,
   validates derived enthalpy and the relativistic sound-speed route, exercises
-  midpoint storage-space interpolation and `eps/P/S/h` inversions, checks the
-  six-value NRPyLeakage interpolation order and range errors, requires a
+  midpoint storage-space interpolation and `eps/P/S/h` inversions from
+  distinct valid initial guesses, checks the six-value NRPyLeakage interpolation
+  order and range errors, requires a
   no-fallback Palenzuela recovery, compares characteristic speeds, tabulated
   HLLE and entropy fluxes, and source terms with analytic goldens, compares all
-  eight combined-leakage outputs with an independent high-precision
-  Ruffert-equation oracle, and frees table memory. `configure` auto-discovers
+  eight combined-leakage outputs with fixed regression goldens for the two
+  qualified table dimensions, and frees table memory. `configure` auto-discovers
   it only in HDF5-enabled builds.
 - [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c)
   covers EOS initialization errors for simple, hybrid, and tabulated setup;

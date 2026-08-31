@@ -43,6 +43,28 @@ class ConversionError(Exception):
     """Raised when input, regularization, or publication fails."""
 
 
+def _remove_owned_file(path):
+    try:
+        os.unlink(path)
+    except FileNotFoundError:
+        pass
+
+
+def _cleanup(actions, primary_error=None):
+    failures = []
+    for description, action in actions:
+        try:
+            action()
+        except Exception as error:
+            failures.append(f"{description} failed: {error}")
+    if not failures:
+        return
+    if primary_error is None:
+        raise ConversionError("; ".join(failures))
+    previous = getattr(primary_error, "cleanup_failures", ())
+    primary_error.cleanup_failures = (*previous, *failures)
+
+
 Profile = namedtuple(
     "Profile",
     (
@@ -50,7 +72,7 @@ Profile = namedtuple(
         "temperature_min temperature_max ye_min ye_max thermo_ids pair_ids "
         "quadruple_ids thermo_index_name m_n_mev m_p_mev i_l "
         "m_ref_rho_mev m_ref_mu_mev rho_axis temperature_axis ye_axis "
-        "interpolation_order beta_equilibrium fixed_entropy nn"
+        "beta_equilibrium fixed_entropy nn"
     ),
 )
 
@@ -82,7 +104,6 @@ PROFILES = {
         rho_axis="log",
         temperature_axis="log",
         ye_axis="linear",
-        interpolation_order=1,
         beta_equilibrium=False,
         fixed_entropy=False,
         nn=None,
@@ -113,7 +134,6 @@ PROFILES = {
         rho_axis="log",
         temperature_axis="log",
         ye_axis="linear",
-        interpolation_order=1,
         beta_equilibrium=False,
         fixed_entropy=False,
         nn=None,
@@ -221,15 +241,6 @@ def _monotone_derivative(axis, values):
     return derivative
 
 
-def _energy_shift_mev(energy_mev):
-    energy_mev = np.asarray(energy_mev, dtype=np.float64)
-    if energy_mev.size == 0 or not np.all(np.isfinite(energy_mev)):
-        raise ConversionError("energy values must be finite")
-    return _energy_shift_from_extrema(
-        float(np.min(energy_mev)), float(np.max(np.abs(energy_mev)))
-    )
-
-
 def _energy_shift_from_extrema(minimum, maximum_absolute):
     if not math.isfinite(minimum) or not math.isfinite(maximum_absolute):
         raise ConversionError("energy extrema must be finite")
@@ -239,23 +250,6 @@ def _energy_shift_from_extrema(minimum, maximum_absolute):
     if not math.isfinite(shift):
         raise ConversionError("energy shift is not finite")
     return shift
-
-
-def _inverse_temperature(axis, values, target):
-    axis = np.asarray(axis, dtype=np.float64)
-    values = np.asarray(values, dtype=np.float64)
-    if axis.shape != values.shape or axis.ndim != 1 or not np.all(np.diff(values) > 0.0):
-        raise ConversionError("temperature ray is not uniquely invertible")
-    if target < values[0] or target > values[-1]:
-        raise ConversionError("inverse target is outside the supported domain")
-    if target == values[0]:
-        return float(axis[0])
-    if target == values[-1]:
-        return float(axis[-1])
-    upper = int(np.searchsorted(values, target, side="right"))
-    lower = upper - 1
-    fraction = (target - values[lower]) / (values[upper] - values[lower])
-    return float(axis[lower] + fraction * (axis[upper] - axis[lower]))
 
 
 def _project_bulk(first_contribution, second_contribution, enthalpy_density):
@@ -584,8 +578,8 @@ def _open_validated_input(path, profile):
         _validate_axis(temperature, profile.temperature_axis, profile.temperature_min, profile.temperature_max, "temperature")
         _validate_axis(ye, profile.ye_axis, profile.ye_min, profile.ye_max, "Y_q")
         return h5, nb, temperature, ye
-    except Exception:
-        h5.close()
+    except Exception as error:
+        _cleanup((("input HDF5 close", h5.close),), error)
         raise
 
 
@@ -797,14 +791,13 @@ def _create_output(path, profile, rho, temperature, ye, energy_shift):
         for name in OUTPUT_FIELDS:
             h5.create_dataset(name, shape=shape, dtype=np.float64)
         return h5
-    except Exception:
+    except Exception as error:
+        actions = []
         if h5 is not None:
-            h5.close()
+            actions.append(("partial output close", h5.close))
         if owned:
-            try:
-                os.unlink(path)
-            except FileNotFoundError:
-                pass
+            actions.append(("partial output removal", lambda: _remove_owned_file(path)))
+        _cleanup(actions, error)
         raise
 
 
@@ -985,7 +978,7 @@ def _validate_output(path, profile, expected_distortion=None):
         if expected_distortion is not None and distortion != expected_distortion:
             raise ConversionError("reopened manifest distortion does not match converter results")
     finally:
-        output.close()
+        _cleanup((("validated output close", output.close),), sys.exc_info()[1])
 
 
 def _create_exclusive_output(output, profile, rho, temperature, ye, energy_shift):
@@ -1101,17 +1094,20 @@ def convert(input_dir, profile_name, output):
     except ConversionError:
         raise
     except Exception as error:
-        raise ConversionError(str(error)) from error
+        converted = ConversionError(str(error))
+        converted.cleanup_failures = getattr(error, "cleanup_failures", ())
+        raise converted from error
     finally:
+        actions = []
         if output_h5 is not None:
-            output_h5.close()
+            actions.append(("temporary output close", output_h5.close))
         if input_h5 is not None:
-            input_h5.close()
+            actions.append(("input HDF5 close", input_h5.close))
         if temporary is not None:
-            try:
-                os.unlink(temporary)
-            except FileNotFoundError:
-                pass
+            actions.append(
+                ("temporary output removal", lambda: _remove_owned_file(temporary))
+            )
+        _cleanup(actions, sys.exc_info()[1])
 
 
 class _ArgumentParser(argparse.ArgumentParser):
@@ -1143,6 +1139,8 @@ def main(argv=None):
         report = convert(arguments.input_dir, arguments.profile, arguments.output)
     except ConversionError as error:
         print(f"compose_to_grhayl: {error}", file=sys.stderr)
+        for failure in getattr(error, "cleanup_failures", ()):
+            print(f"compose_to_grhayl: cleanup: {failure}", file=sys.stderr)
         return 1
     print(json.dumps(report, sort_keys=True))
     return 0

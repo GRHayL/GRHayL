@@ -98,10 +98,11 @@ the six-value `muhat,mu_e,mu_p,mu_n,Xn,Xp` wrapper; do not generalize this into
 an off-grid equilibrium-composition claim. The auto-discovered
 [`unit_test_tabulated_eos_compose.c`](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
 checks every serialized node and all 19 mappings, storage-space interpolation
-and inversions, the six-value ABI order and range failures, no-fallback
+and inversions from distinct valid initial guesses, the six-value ABI order
+and range failures, no-fallback
 Palenzuela recovery, analytic characteristic-speed, HLLE/entropy-flux, and
-source goldens, all eight combined-leakage outputs against an independent
-high-precision Ruffert-equation oracle, and cleanup.
+source goldens, all eight combined-leakage outputs against fixed regression
+goldens for the two qualified table dimensions, and cleanup.
 
 ## Build Gate
 

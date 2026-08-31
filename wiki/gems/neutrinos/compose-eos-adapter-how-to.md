@@ -90,9 +90,9 @@ recorded diagnostic, not a supported equilibrium-composition claim. Current
 NRPyLeakage consumes `Xn` and `Xp`, not those three heavy-nucleus fields. The
 fixed Python suite and
 [`unit_test_tabulated_eos_compose.c`](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
-qualify the serialization, unchanged runtime interpolation and inversion, and
-the six-output callback order and range failures with runtime sound-speed
-cleaning disabled.
+qualify the serialization, unchanged runtime interpolation and temperature
+searches from distinct valid initial guesses, and the six-output callback order
+and range failures with runtime sound-speed cleaning disabled.
 
 ## Prerequisites
 
