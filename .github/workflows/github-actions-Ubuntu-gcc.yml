@@ -426,3 +426,53 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
+
+  compose-regularized-eos:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'gcc'
+      - name: Install converter test dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r tools/compose/requirements.txt coverage
+      - name: Test converter with 100% branch coverage
+        run: |
+          python3 -m coverage run --branch --source=tools/compose \
+            --omit='Unit_Tests/*' -m unittest discover \
+            -s Unit_Tests/compose -p 'test_*.py'
+          python3 -m coverage report --fail-under=100
+          python3 -m coverage xml -o compose-coverage.xml
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'gcc'
+      - name: Build synthetic regularized table
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from Unit_Tests.compose.test_compose_to_grhayl import _write_fixture
+
+          input_dir = Path("compose-test-input")
+          input_dir.mkdir()
+          _write_fixture(input_dir)
+          PY
+          python3 tools/compose/compose_to_grhayl.py \
+            --input-dir compose-test-input \
+            --profile test-analytic \
+            --output compose-test-table.h5
+      - name: Test unchanged StellarCollapse runtime
+        run: |
+          export LD_LIBRARY_PATH="$PWD/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          ./test/unit_test_tabulated_eos_compose compose-test-table.h5
+      - name: Upload converter coverage only
+        uses: codecov/codecov-action@v5
+        with:
+          files: compose-coverage.xml
+          flags: compose
+          disable_search: true
+          fail_ci_if_error: true

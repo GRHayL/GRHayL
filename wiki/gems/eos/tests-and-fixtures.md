@@ -26,6 +26,18 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   exercises direct `(rho,Y_e,T)` wrappers, auxiliary wrappers from `eps`, `P`,
   and `S`, `ghl_compute_h_and_cs2`, selected bound-enforcement paths, and
   beta-equilibrium rho-map helpers.
+- [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
+  independently reads a converter-produced StellarCollapse file, checks every
+  node of all 19 serialized fields against GRHayL's loader mapping and units,
+  validates derived enthalpy and the relativistic sound-speed route, exercises
+  midpoint storage-space interpolation and `eps/P/S/h` inversions from
+  distinct valid initial guesses, checks the six-value NRPyLeakage interpolation
+  order and range errors, requires a
+  no-fallback Palenzuela recovery, compares characteristic speeds, tabulated
+  HLLE and entropy fluxes, and source terms with analytic goldens, compares all
+  eight combined-leakage outputs with fixed regression goldens for the two
+  qualified table dimensions, and frees table memory. `configure` auto-discovers
+  it only in HDF5-enabled builds.
 - [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c)
   covers EOS initialization errors for simple, hybrid, and tabulated setup;
   tabulated interpolation/helper errors including out-of-table and
@@ -35,6 +47,16 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
 The tabulated test directly calls many, but not all, registered wrappers.
 [Tabulated interpolator catalog](tabulated-interpolator-catalog.md) separates
 declaration, storage, assignment, build, and direct-call evidence.
+
+The Python suite under
+[Unit_Tests/compose/](../../../Unit_Tests/compose/) uses an asymmetric
+official-schema-shaped CompOSE fixture. It covers fixed profile and control
+validation, HDF5 structure and security boundaries, every output mapping and
+regularization branch, publication failures and cleanup, and every CLI result.
+The focused Ubuntu GCC workflow requires 100% production Python line and
+branch coverage and uses that fixture to feed the C integration test. The full
+table-141 artifact remains external and is a manual qualification input, not a
+repository fixture.
 
 ## Helper-Only Files
 
@@ -110,6 +132,9 @@ Dependent tests are impact signals for EOS changes, not primary EOS contracts:
 
 - [Unit_Tests/unit_test_piecewise_polytrope.c](../../../Unit_Tests/unit_test_piecewise_polytrope.c)
 - [Unit_Tests/unit_test_tabulated_eos.c](../../../Unit_Tests/unit_test_tabulated_eos.c)
+- [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
+- [Unit_Tests/compose/](../../../Unit_Tests/compose/)
+- [tools/compose/compose_to_grhayl.py](../../../tools/compose/compose_to_grhayl.py)
 - [Unit_Tests/test_compute_h_and_cs2.c](../../../Unit_Tests/test_compute_h_and_cs2.c)
 - [Unit_Tests/tabulated_eos_unit_test_helpers.c](../../../Unit_Tests/tabulated_eos_unit_test_helpers.c)
 - [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c)

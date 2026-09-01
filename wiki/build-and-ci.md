@@ -150,7 +150,7 @@ Workflows live in `.github/workflows/`:
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | 13 existing job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML |
 | `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
 | `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | 2 of 13 jobs invoke coverage action |
 | `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
@@ -190,6 +190,7 @@ Common job groups across workflows:
 | `code-failure` | expected error-code failures |
 | `induction-interpolators` | cell/vertex interpolation variants; see [Induction verification workflows](gems/induction/verification-workflows.md) |
 | `induction-flux` | vector-potential HLL flux variants; see [Induction verification workflows](gems/induction/verification-workflows.md) |
+| `compose-regularized-eos` | 100% Python line/branch coverage, synthetic fixed-profile conversion, and unchanged StellarCollapse C integration |
 
 Composite actions:
 
@@ -205,6 +206,8 @@ Composite actions:
   uploads, including per-gem coverage components and ignored test paths. Its
   header comment requires validating any change with
   `curl -X POST --data-binary @codecov.yml https://codecov.io/validate`.
+  The CompOSE flag and component require project and patch coverage of 100%
+  with zero threshold; global patch coverage also targets 100%.
 
 ## `.github/run_tests.sh`
 
@@ -236,8 +239,9 @@ the downloader but still removed by the final glob. Run this driver only in a
 disposable checkout without user-owned root-level `.bin`, `.h5`, or `.bz2`
 files.
 
-The runner directly invokes 27 of the 29 configured default test binaries. It
-does not invoke `unit_test_WENOZ_reconstruction` (workflow matrices do) or
+The runner directly invokes 27 of the 30 configured default test binaries. It
+does not invoke `unit_test_WENOZ_reconstruction` (workflow matrices do),
+`unit_test_tabulated_eos_compose` (the focused CompOSE workflow does), or
 `unit_test_con2prim_debug` (no runner/workflow invocation is visible). The
 composite-action YAML configures `tests` and `datagen` compilation, but neither
 that action nor the local runner executes data-generator binaries. Tracked YAML
@@ -258,6 +262,9 @@ Repo evidence shows these caveats:
   installed tool versions or `llvm-cov gcov`.
 - Some workflow coverage steps are commented out, especially macOS clang and
   most Ubuntu Intel jobs.
+- The focused Ubuntu GCC CompOSE job bypasses coverage-file discovery: it
+  uploads only `compose-coverage.xml` under the `compose` flag, disables
+  search, and fails the job on an upload error.
 - Workflows ignore docs-only and implementation-only pull-request changes, so
   CI coverage does not prove those paths are exercised.
 
