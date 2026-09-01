@@ -13,6 +13,24 @@ coverage:
       default:
         target: auto
         threshold: 5%
+    patch:
+      default:
+        target: 100%
+        threshold: 0%
+
+flag_management:
+  individual_flags:
+    - name: compose
+      paths:
+        - tools/compose/**
+      carryforward: false
+      statuses:
+        - type: project
+          target: 100%
+          threshold: 0%
+        - type: patch
+          target: 100%
+          threshold: 0%
 
 ignore:
   - "Unit_Tests"
@@ -59,3 +77,14 @@ component_management:
       name: reconstruction
       paths:
         - GRHayL/Reconstruction/**
+    - component_id: compose
+      name: CompOSE regularizer
+      paths:
+        - tools/compose/**
+      statuses:
+        - type: project
+          target: 100%
+          threshold: 0%
+        - type: patch
+          target: 100%
+          threshold: 0%

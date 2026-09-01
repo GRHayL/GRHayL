@@ -66,6 +66,34 @@ CompOSE-backed adapter instead of writing placeholders. Grouped nuclear
 quantities required by the full file do not replace the individual
 free-neutron and free-proton fractions required by leakage.
 
+### Implemented Fixed Offline Profile
+
+The repository now implements only one production instance of the offline
+route:
+[`sro-sly4-sna-141-regularized-v1`](../../../tools/compose/README.md).
+[`compose_to_grhayl.py`](../../../tools/compose/compose_to_grhayl.py) consumes
+the fixed official generated-HDF5 schema and controls for CompOSE table 141,
+then emits the existing StellarCollapse schema. It adds no native CompOSE
+runtime backend, mapping language, resampling, or public C API.
+
+This profile is intentionally a physics-changing regularized surrogate. Strict
+temperature-ray regression, entropy reconstruction, joint causal derivative
+projection, chemical canonicalization, and constrained composition projection
+replace invalid raw fields. Do not identify its output with official table 141
+or use it as an oracle for unchanged CompOSE values. The embedded manifest and
+tool report disclose the fixed policy and measured changes.
+
+For current leakage, node composition closure and the six returned values are
+the hard interface. Independent trilinear interpolation of `Abar`, `Zbar`, and
+`Xh` does not preserve nonlinear charge closure away from nodes; this is a
+recorded diagnostic, not a supported equilibrium-composition claim. Current
+NRPyLeakage consumes `Xn` and `Xp`, not those three heavy-nucleus fields. The
+fixed Python suite and
+[`unit_test_tabulated_eos_compose.c`](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
+qualify the serialization, unchanged runtime interpolation and temperature
+searches from distinct valid initial guesses, and the six-output callback order
+and range failures with runtime sound-speed cleaning disabled.
+
 ## Prerequisites
 
 Requirements depend on the selected route:
@@ -589,6 +617,12 @@ Do not present these cases as mechanical conversions:
   [`NRPyEOS_stellarcollapse_to_ghl.c`](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c)
 - Current interpolation grid assumptions:
   [`NRPyEOS_tabulated_helpers.h`](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_tabulated_helpers.h)
+- Fixed offline converter and policy:
+  [`tools/compose/compose_to_grhayl.py`](../../../tools/compose/compose_to_grhayl.py) and
+  [`tools/compose/README.md`](../../../tools/compose/README.md)
+- Converter and runtime integration tests:
+  [`Unit_Tests/compose/`](../../../Unit_Tests/compose/) and
+  [`Unit_Tests/unit_test_tabulated_eos_compose.c`](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
 - Leakage constants and unit conversions:
   [`GRHayL/include/ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h)
 - EOS and leakage behavior:

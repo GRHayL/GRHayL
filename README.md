@@ -50,8 +50,17 @@ we do not expect users to have issues when using it.
 
 The `HDF5` dependency arises from the tabulated Equation of State (EOS) gem, as
 it currently only supports EOS tables in that format. We are also working on
-supporting tables in the [CompOSE](https://compose.obspm.fr/table)
-format, which would allow for use of the tabulated EOS without `HDF5`.
+supporting additional table formats. The offline
+[CompOSE regularizer](tools/compose/README.md) converts one fixed
+CompOSE-generated HDF5 schema for SRO(SLy4) SNA table 141 into the existing
+StellarCollapse HDF5 schema. Both conversion and runtime loading still require
+`HDF5`; no native or no-`HDF5` CompOSE backend is provided.
+
+The converter's production output is named
+`sro-sly4-sna-141-regularized-v1`. It deliberately changes thermodynamic,
+derivative, chemical, and composition fields to satisfy the legacy runtime's
+causality, positivity, closure, and temperature-inversion gates. Treat it as a
+regularized surrogate EOS, not as the unmodified official table 141.
 
 `HDF5` support is enabled by default. Default configured builds require an
 available `HDF5` installation and add the necessary `HDF5` include and link
