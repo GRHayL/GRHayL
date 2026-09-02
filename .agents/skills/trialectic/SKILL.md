@@ -1,6 +1,6 @@
 ---
 name: trialectic
-description: Use when the user explicitly asks to engage tri, run tri, run or engage the GRHayL trialectic, requests three-seat independent GRHayL review, or repository policy requires it. Produce or review one GRHayL change through three fresh-context seats, repo-local evidence, proportionate validation, at most three candidate cycles, and unanimous acceptance except for one tightly bounded terminal correction of mechanical defects. Do not invoke for routine edits without an explicit trigger or policy requirement.
+description: Use when the user explicitly asks to use tri, engage tri, run tri, run or engage the GRHayL trialectic, requests three-seat independent GRHayL review, or repository policy requires it. Produce or review one GRHayL change through three fresh-context seats, repo-local evidence, proportionate validation, at most three candidate cycles, and unanimous acceptance except for one tightly bounded terminal correction of mechanical defects. Do not invoke for routine edits without an explicit trigger or policy requirement.
 ---
 
 # GRHayL Trialectic
