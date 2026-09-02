@@ -1,6 +1,6 @@
 ---
 name: dialectic
-description: Use when the user explicitly asks to run or engage the GRHayL dialectic, requests paired independent GRHayL review, or repository policy requires it. Produce or review one GRHayL change through two fresh-context seats, repo-local evidence, proportionate validation, at most three candidate cycles, and unanimous acceptance except for one tightly bounded terminal correction of mechanical defects. Do not invoke for routine edits without an explicit trigger or policy requirement.
+description: Use when the user explicitly asks to use di, run or engage the GRHayL dialectic, requests paired independent GRHayL review, or repository policy requires it. Produce or review one GRHayL change through two fresh-context seats, repo-local evidence, proportionate validation, at most three candidate cycles, and unanimous acceptance except for one tightly bounded terminal correction of mechanical defects. Do not invoke for routine edits without an explicit trigger or policy requirement.
 ---
 
 # GRHayL Dialectic
