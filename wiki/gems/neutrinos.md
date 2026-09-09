@@ -2,101 +2,115 @@
 
 ## Purpose
 
-This page routes Neutrinos KB work. It summarizes where to read first for
-NRPyLeakage physics, generated-code provenance, public data, implementation
-flow, portability, and tests without replacing source, headers, tests, CI, or
-Doxygen source.
+This page routes the legacy NRPyLeakage interfaces and the neutrino M1 rate
+provider. It records source, header, build, HDF5, cache, and local-test
+boundaries without replacing the repository files that define them.
 
 ## Read Order
 
-1. [Physics And EOS Contract](neutrinos/physics-and-eos-contract.md) for
-   species, chemical potentials, free-nucleon fractions, units, and the
-   number and energy source-term conventions.
-2. [Generator Provenance](neutrinos/generator-provenance.md) for the original
-   Python notebooks, symbolic common-subexpression temporaries, and the
-   boundary between ancestral generators and current checked-in C.
-3. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
-   `NRPyLeakage_*` declarations, constants ownership, errors, and HDF5/EOS
-   dependency.
-4. [CompOSE EOS Adapter How-To](neutrinos/compose-eos-adapter-how-to.md) for
-   adapting CompOSE state, composition, and chemical-potential outputs to the
-   NRPyLeakage EOS callback and validating that boundary.
-5. [Implementation Flow](neutrinos/implementation-flow.md) for the five
-   `GRHayL/Neutrinos/NRPyLeakage/` source files, their writeback paths, and
-   the minimal direct-compilation boundary.
-6. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
-   fixture pairs, EOS table setup, and CI downloads.
+1. [Physics And EOS Contract](neutrinos/physics-and-eos-contract.md) for species,
+   chemical potentials, free-nucleon fractions, units, and source conventions.
+2. [Generator Provenance](neutrinos/generator-provenance.md) for the ancestral
+   notebooks and the boundary between generated expressions and checked-in C.
+3. [API And Data](neutrinos/api-and-data.md) for public structs, declarations,
+   errors, constants, and HDF5/EOS dependencies.
+4. [Implementation Flow](neutrinos/implementation-flow.md) for the five legacy
+   source files, raw-rate bridge, and neutrino M1 provider flow.
+5. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for the checked-in local
+   tests and fixture setup.
+6. [NRPyLeakage `bns_nurates`-Class Future Work](../future_work/index.md)
+   for explicitly future, not-implemented enhancements.
 
 ## Ground Truth
 
-- Source: `GRHayL/Neutrinos/NRPyLeakage/`
-- Public radiation structs: `GRHayL/include/ghl_radiation.h`
-- Public leakage declarations and constants: `GRHayL/include/ghl_nrpyleakage.h`
-- Error codes and EOS parameter types: `GRHayL/include/ghl.h`
-- Direct tabulated EOS dependencies: `GRHayL/include/ghl_nrpyeos_tabulated.h`
-  and `GRHayL/include/ghl_eos_functions.h`
-- Tests: `Unit_Tests/nrpyleakage_main.h` and
-  `Unit_Tests/unit_test_nrpyleakage_*.c`
-- Fermi-Dirac error coverage: `Unit_Tests/unit_test_code_error.c`
-- Build and CI gates: `configure`, `.github/run_tests.sh`, and
-  `.github/workflows/`
-- Ancestral derivation and generator evidence: the
-  [Tabulated_EOS_IllinoisGRMHD repository](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD),
-  with durable roles and conventions summarized in
-  [Generator Provenance](neutrinos/generator-provenance.md) and
-  [Physics And EOS Contract](neutrinos/physics-and-eos-contract.md)
+- Legacy source manifest: `GRHayL/Neutrinos/NRPyLeakage/make.code.defn`
+  lists five C files.
+- Neutrino M1 source manifest: `GRHayL/Radiation/Neutrinos/make.code.defn`
+  lists thirteen C files; shared E/F helpers are listed by
+  `GRHayL/Radiation/make.code.defn`.
+- Public aggregate and legacy interfaces: `GRHayL/include/ghl_radiation.h`
+  and `GRHayL/include/ghl_nrpyleakage.h`.
+- M1 and provider interfaces: `GRHayL/include/ghl_m1.h` and
+  `GRHayL/include/ghl_neutrino_rate_provider.h`.
+- Legacy leakage tests are
+  `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
+  `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`, and
+  `Unit_Tests/unit_test_nrpyleakage_luminosities.c`.
+- Doxygen source: `docs/raw/Radiation.dox` owns the neutrino M1 group, while
+  `ghl_radiation.h` declares the legacy `Neutrinos` group.
 
-If this page, a child page, or external evidence conflicts with current
-repo-local source, headers, manifests, or tests, trust the repo-local ground
-truth and update the KB.
+If this page conflicts with current source, headers, manifests, or tests, trust
+the repo-local files and narrow the claim. A declaration or local test does not
+by itself prove dispatch, workflow execution, downstream integration, or an
+external verification result.
 
-## Public Surface
+## Provider Boundary
 
-- `ghl_neutrino_luminosities`
-- `ghl_neutrino_opacities`
-- `ghl_neutrino_optical_depths`
-- `NRPyLeakage_Fermi_Dirac_integrals`
-- `NRPyLeakage_compute_neutrino_opacities`
-- `NRPyLeakage_compute_neutrino_luminosities`
-- `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`
-- `NRPyLeakage_optical_depths_PathOfLeastResistance`
+`ghl_neutrino_rate_provider_compute_cell` is the boundary between microphysics
+and transport. The provider owns EOS/table lookup, unit conversion, channel
+selection, equilibrium targets, and production weak-rate calculations. It
+returns a validated, frozen `ghl_m1_neutrino_rates` bundle for `nue`, `anue`,
+and already-summed `nux`. The transport operators consume that bundle and do
+not perform the production weak-rate calculation.
 
-The `NRPyLeakage_*` spelling is the exported family; no `ghl_*` wrapper family
-exists for these calls. Radiation container types retain the `ghl_` prefix.
+The exact provider names are: `ghl_neutrino_rate_backend_reference` for the
+deterministic reference/test backend selected by
+`ghl_neutrino_rate_provider_initialize_default` and
+`ghl_neutrino_rate_backend_nrpyleakage` for the table-backed production path
+selected by `ghl_neutrino_rate_provider_initialize_nrpyleakage`.
+Both paths require `nu_x_multiplicity == 4.0` and return an already-summed
+heavy-lepton bundle; callers must not multiply it again.
 
-## Contract Summary
+## HDF5, Cache, And Diagnostics
 
-- Radiation struct order is `nue`, `anue`, `nux`; opacity/depth has two slots
-  per species. Slot meanings are used differently by number and energy source
-  formulas but remain unnamed in the public header, so keep `[0]`/`[1]`
-  wording in caller contracts.
-- EOS-dependent routines expect initialized HDF5-backed tabulated EOS state,
-  geometric density, EOS-compatible positive temperature, and valid output
-  pointers. They return before writeback on HDF5, EOS, or generated Fermi
-  errors.
-- Optical-depth update is a `void` six-neighbor stencil call with no validation
-  or failure channel. Metric stencil order is minus/center/plus.
-- All five implementation files match their manifest and header declarations.
-- The aggregate runner invokes all three HDF5 test binaries, and all five
-  workflow families configure those commands. Command presence is not a
-  historical execution result. When executed, their main fixture comparisons
-  discard `ghl_pert_test_fail` results, so a completed run establishes setup,
-  execution, and fixture reads but not successful numerical replay.
+`ghl_nrpyeos_tabulated.h` includes `<hdf5.h>` only when HDF5 is enabled, so
+`ghl_radiation.h`, `ghl_m1.h`, and the provider header remain includable in a
+`GHL_DISABLE_HDF5` build. Table-backed EOS/provider operations still return
+`ghl_error_used_disabled_hdf5`; the production initializer cannot provide its
+normal path without HDF5. The reference provider can be used with
+`use_tabulated_eos = false` for table-free calls.
+
+The cache and diagnostics objects are caller-owned. Initialize the cache with
+`ghl_neutrino_rate_provider_cache_initialize`; diagnostics have no initializer
+function and should be zero-initialized (for example,
+`ghl_neutrino_rate_provider_diagnostics diagnostics = {0}`). Both objects may
+be omitted by passing `NULL` where the API permits. Diagnostics counters
+accumulate until the caller resets the object. Cache reuse and hold-last recovery
+require an exact primitive/context snapshot, matching EOS pointer, and matching
+caller-managed `eos_generation`; increment that generation after every in-place
+EOS/table mutation. Provider output and cache state are committed only after a
+complete validated bundle succeeds.
+
+## Legacy Public Surface
+
+- Data: `ghl_neutrino_luminosities`, `ghl_neutrino_opacities`, and the
+  `ghl_neutrino_optical_depths` alias.
+- Functions: `NRPyLeakage_Fermi_Dirac_integrals`,
+  `NRPyLeakage_compute_neutrino_opacities`,
+  `NRPyLeakage_compute_neutrino_luminosities`,
+  `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`, and
+  `NRPyLeakage_optical_depths_PathOfLeastResistance`.
+
+The M1 provider's private thermo builder requires an initialized tabulated EOS
+and HDF5. Its private
+`ghl_m1_nrpyleakage_compute_raw_rates_from_thermo` adapter consumes an already
+validated thermo state and does not perform a table lookup. The five-file
+`GRHayL/Neutrinos/NRPyLeakage/make.code.defn` manifest is the legacy build
+boundary.
 
 ## Scope Notes
 
-- Neutrinos KB pages live under `wiki/` only; Doxygen source under `docs/**`
-  is a separate authority (currently no dedicated Neutrinos page exists there).
-- Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
-- The external notebooks are provenance, not the authority for current GRHayL
-  signatures or behavior. Preserve the durable derivation and interface facts
-  in child pages so routine KB use does not depend on that repository remaining
-  available.
-- Keep constants and unit conversions in `GRHayL/include/ghl_nrpyleakage.h`;
-  do not copy them into KB tables.
-- Treat HDF5-enabled tabulated EOS access as part of the direct dependency
-  surface for the opacity, combined source/opacity, and luminosity routines;
-  the Fermi helper and optical-depth update do not call the EOS.
+The current contribution documented through this route is neutrino-only and
+library-level. Shared E/F M1 helpers are dependencies of the neutrino path, not
+evidence of a separate non-neutrino implementation. Nothing here establishes
+downstream host integration or an external verification campaign.
+
+## Future Work
+
+The [NRPyLeakage `bns_nurates`-Class Future Work](../future_work/index.md)
+folder remains a to-do catalog. It does not add dependencies, source formulas,
+build entries, or validated capabilities to the current five-file legacy model
+or the current neutrino M1 provider boundary.
 
 ## Ground Truth References
 

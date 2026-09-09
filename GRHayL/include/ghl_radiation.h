@@ -2,6 +2,8 @@
 #define GHL_RADIATION_H_
 
 #include "ghl.h"
+#include "ghl_m1.h"
+#include "ghl_neutrino_rate_provider.h"
 
 #ifdef __cplusplus
 extern "C" {

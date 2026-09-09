@@ -1,0 +1,25 @@
+# Subdirectory make.code.defn for Radiation/Neutrinos (neutrino-specific M1 kernels).
+# This is a SUBDIR of the Radiation gem, not a separate build subsystem: the
+# neutrino code reuses the shared M1 transport kernels in place (no duplication),
+# shares the Radiation build unit, and shares the ghl_m1.h public header.
+#! INCS = ghl_m1_neutrino_implicit.h ghl_m1_nrpyleakage_kernel.h
+
+# Neutrino kernels also include shared headers from the parent Radiation gem.
+# Keep this path relative to the gem so every host build sees the same layout.
+CFLAGS += -I$(SRCDIR)/..
+
+# Source files in this directory that need compiled:
+SRCS = ghl_m1_nrpyleakage_kernel.c \
+       ghl_neutrino_rate_provider.c \
+       ghl_m1_neutrino_rates.c \
+       ghl_m1_neutrino_repair.c \
+       ghl_m1_neutrino_number_flux.c \
+       ghl_m1_neutrino_rusanov_flux.c \
+       ghl_m1_neutrino_sources.c \
+       ghl_m1_neutrino_source_update.c \
+       ghl_m1_neutrino_lepton_increment.c \
+       ghl_m1_neutrino_implicit_residual.c \
+       ghl_m1_neutrino_implicit_jacobian.c \
+       ghl_m1_neutrino_implicit_solve.c \
+       ghl_m1_neutrino_pair_source.c \
+       ghl_m1_neutrino_exchange.c
