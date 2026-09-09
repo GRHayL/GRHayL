@@ -1,0 +1,65 @@
+/**
+ * @defgroup Radiation Neutrino M1 Radiation Gem
+ *
+ * The Radiation contribution documented here is a grey, one-group,
+ * three-species neutrino M1 surface. It provides transported number and
+ * energy/momentum moments, symmetric Rusanov transport, realizability repair,
+ * explicit source helpers, lepton-number exchange, and a frozen-rate local
+ * implicit update.
+ *
+ * The neutrino operators consume provider-supplied
+ * @c ghl_m1_neutrino_rates. The provider owns EOS lookup, unit conversion,
+ * weak-rate channel selection, equilibrium targets, and the production
+ * microphysics boundary. The installed public surface is declared in
+ * @ref ghl_m1.h, @ref ghl_neutrino_rate_provider.h, and
+ * @ref ghl_nrpyleakage.h.
+ *
+ * Electron-flavor pair, plasmon, and bremsstrahlung emissivities are stored
+ * separately in @c ghl_m1_neutrino_rates::eta_N_pair and
+ * @c ghl_m1_neutrino_rates::eta_E_pair. Use
+ * @ref ghl_m1_solve_neutrino_pair_source_update for the two electron species
+ * together. It includes the independent charged-current/scattering update
+ * and the grey paired collision update, conserving the pair number difference
+ * and publishing both species atomically. Single-species source operations
+ * reject electron pair rates. The equations and approximation are documented
+ * in @c GRHayL/Radiation/PAIR_SOURCE_MODEL.md.
+ * The closure enforces the radiation trace at zero flux, using its flagged
+ * Eulerian admissibility fallback when necessary. The neutrino Newton solve
+ * can use an admissible source predictor at an exact-zero-flux start without
+ * changing the source base or residual equation.
+ *
+ * The deterministic, table-free provider is initialized by
+ * @ref ghl_neutrino_rate_provider_initialize_default; the table-backed
+ * provider path is initialized by
+ * @ref ghl_neutrino_rate_provider_initialize_nrpyleakage. A caller initializes
+ * its cache with @ref ghl_neutrino_rate_provider_cache_initialize and may
+ * zero-initialize its diagnostics with
+ * @c ghl_neutrino_rate_provider_diagnostics diagnostics = {0}. The caller
+ * increments @c eos_generation after mutating an EOS/table object in place so
+ * cache reuse and hold-last recovery cannot cross a changed table state.
+ *
+ * HDF5 is a build-time dependency of tabulated EOS lookup, not of the public
+ * header aggregate. In a @c GHL_DISABLE_HDF5 build the headers remain
+ * includable and the production provider returns
+ * @c ghl_error_used_disabled_hdf5 without publishing rates.
+ *
+ * This group documents library-level neutrino behavior only. This contribution
+ * includes focused closure and pair-conservation regressions run by
+ * @c scripts/test_radiation.py. They do not establish downstream host
+ * integration or external physical validation.
+ *
+ * The public declarations in @ref ghl_m1.h and
+ * @ref ghl_neutrino_rate_provider.h are members of this group. The shared
+ * component-wise @ref ghl_calculate_Rusanov_flux belongs to the
+ * @ref Flux_Source group; the neutrino face operation uses the M1-specific
+ * four-point transport contract described above.
+ *
+ * Source callers may enable final comoving mean-energy bounds through
+ * @c ghl_m1_neutrino_parameters::enforce_mean_energy_bounds. Positive bounds
+ * reject an out-of-range repaired endpoint, nonpositive bounds disable that
+ * side, and @c N == 0 retains the ratio-check skip. The branched source
+ * option @c ghl_m1_neutrino_source_options::thermalized_number_threshold uses
+ * a negative value to disable equilibrium number projection; zero selects it
+ * even for zero opacity or timestep. That projection remains distinct from
+ * backward-Euler number integration and @c N_floor repair.
+ */

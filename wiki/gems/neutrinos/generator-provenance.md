@@ -187,6 +187,16 @@ lists five adapted C files:
   calculation seen in the external Einstein Toolkit routine into a
   GRHayL struct-based call.
 
+The GRHayL-owned M1 raw thermo/rate adapter is implemented separately in
+[`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c)
+and built by the
+[Radiation/Neutrinos manifest](../../../GRHayL/Radiation/Neutrinos/make.code.defn).
+It is not a direct notebook output. Its thermodynamic-state and raw-rate
+declarations are in a
+[private header](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.h);
+the public entry point is the
+[rate-provider API](../../../GRHayL/include/ghl_neutrino_rate_provider.h).
+
 GRHayL adaptations include different public types and argument shapes,
 tabulated-EOS dispatch, HDF5-disabled returns, propagated Fermi/EOS errors,
 struct writeback, and finite-value handling. Current constants have one
@@ -200,8 +210,9 @@ ancestral formula or failure mode survived unchanged.
 
 ## Regeneration Rule
 
-No current repo-local command regenerates all five GRHayL files. If a formula
-must change:
+No current repo-local command regenerates all five legacy GRHayL files. The
+separate M1 raw-rate adapter is GRHayL-owned rather than notebook-generated.
+If a formula must change:
 
 1. edit or reconstruct the named symbolic expression using the external
    implementation notebook and vendored `nrpy_core` as provenance;

@@ -37,6 +37,13 @@ source has these narrower boundaries:
 | One path-of-least-resistance depth update | `NRPyLeakage_optical_depths_PathOfLeastResistance.c` | Opacity/depth struct definitions and math functions | EOS, HDF5, Fermi helper, source, standalone-opacity, and luminosity files |
 | Pointwise luminosities | `NRPyLeakage_compute_neutrino_luminosities.c` and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, metric inputs, math functions | Source, standalone-opacity, and optical-depth implementation files |
 
+The M1 provider's thermodynamic-state and optical-depth-independent raw-rate
+adapter is implemented separately in
+[`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c),
+under the [Radiation/Neutrinos manifest](../../../GRHayL/Radiation/Neutrinos/make.code.defn).
+Its declarations are private to Radiation; callers use the public
+[rate-provider API](../../../GRHayL/include/ghl_neutrino_rate_provider.h).
+
 These are link and call boundaries, not a complete simulation workflow. The
 optical-depth routine needs opacity and neighbor-depth *data*, but does not
 call the standalone-opacity routine. Source/opacity and luminosity routines
@@ -65,7 +72,8 @@ adapter before replacing any current file.
 
 ## Shared Failure Boundary
 
-The three EOS-dependent routines return immediately with
+The legacy table-backed opacity, combined source/opacity, and luminosity routines
+return immediately with
 `ghl_error_used_disabled_hdf5` in no-HDF5 builds. With HDF5, they return the
 tabulated EOS error unchanged, and generated Fermi calls return an invalid-key
 error through `NRPYLEAKAGE_FD_OR_RETURN`. Output writes occur only after those
@@ -80,6 +88,53 @@ representation check. Treat them as current platform-dependent implementation,
 not a portable finiteness contract. Tests do not inject NaN/Inf into any
 leakage routine or directly exercise these helpers.
 
+## Neutrino M1 Provider Flow
+
+The neutrino M1 source boundary is `GRHayL/Radiation/Neutrinos/make.code.defn`,
+which lists these implementation files:
+
+- `ghl_m1_nrpyleakage_kernel.c`
+- `ghl_neutrino_rate_provider.c`
+- `ghl_m1_neutrino_rates.c`
+- `ghl_m1_neutrino_repair.c`
+- `ghl_m1_neutrino_number_flux.c`
+- `ghl_m1_neutrino_rusanov_flux.c`
+- `ghl_m1_neutrino_sources.c`
+- `ghl_m1_neutrino_source_update.c`
+- `ghl_m1_neutrino_lepton_increment.c`
+- `ghl_m1_neutrino_implicit_residual.c`
+- `ghl_m1_neutrino_implicit_jacobian.c`
+- `ghl_m1_neutrino_implicit_solve.c`
+- `ghl_m1_neutrino_exchange.c`
+
+The provider is initialized with `ghl_neutrino_rate_provider_initialize_default`
+for the deterministic reference backend or
+`ghl_neutrino_rate_provider_initialize_nrpyleakage` for the table-backed
+production backend. The provider owns EOS/table lookup, channel microphysics,
+unit conversion, and equilibrium targets; M1 transport consumes the resulting
+validated `ghl_m1_neutrino_rates` bundle. The returned `nux` rates are already
+summed for four heavy-lepton flavors and must not be multiplied again.
+
+The production initializer and table-backed compute path require HDF5. In a
+`GHL_DISABLE_HDF5` build they return `ghl_error_used_disabled_hdf5`; the public
+headers remain includable because the tabulated-EOS header guards its HDF5
+include. The reference context can use `use_tabulated_eos = false` for
+table-free calls.
+
+Cache and diagnostics are caller-owned objects. Initialize the cache with
+`ghl_neutrino_rate_provider_cache_initialize`; diagnostics have no initializer
+function and should be zero-initialized (for example,
+`ghl_neutrino_rate_provider_diagnostics diagnostics = {0}`). Pass `NULL` when
+either facility is not wanted. Diagnostics accumulate until reset. Cache hits
+and hold-last recovery require an exact primitive/context snapshot, matching
+EOS pointer, and matching caller-managed `eos_generation`; advance that
+generation after every in-place EOS/table mutation. Provider output and cache
+state are committed only after a complete validated rate bundle succeeds.
+
+The M1 implicit path uses frozen primitives and frozen provider rates. It updates
+the local neutrino state and returns a matter exchange recommendation; it does
+not call Con2Prim or update host matter state. Shared E/F helpers under
+`GRHayL/Radiation/` are dependencies of this neutrino path.
 ## `NRPyLeakage_compute_neutrino_luminosities.c`
 
 Public routine: `NRPyLeakage_compute_neutrino_luminosities`.
