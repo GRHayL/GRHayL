@@ -123,9 +123,9 @@ Treat `.github/run_tests.sh` as one broad local-style driver, not a complete
 enumeration of every workflow job. Treat workflows as CI matrices, not proof
 that normal local runs regenerate trusted fixtures.
 
-Set comparison is exact in current sources: default `configure` targets all 30
-`Unit_Tests/unit_test_*.c` files, while the runner directly invokes 27. Its
-three uninvoked compiled targets are `unit_test_WENOZ_reconstruction`,
+Set comparison is exact in current sources: default `configure` targets the
+`Unit_Tests/unit_test_*.c` set, while the runner directly invokes all except
+`unit_test_WENOZ_reconstruction`,
 `unit_test_tabulated_eos_compose`, and `unit_test_con2prim_debug`; workflows
 invoke WENOZ and the focused CompOSE test, while no normal runner/workflow
 invocation for the debug binary is visible.

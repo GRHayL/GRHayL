@@ -6,7 +6,7 @@ authority.
 
 ## Shared Harness
 
-All three NRPyLeakage unit-test files include `Unit_Tests/nrpyleakage_main.h`.
+Every NRPyLeakage unit-test file includes `Unit_Tests/nrpyleakage_main.h`.
 That helper owns the common CLI:
 
 ```sh
@@ -50,14 +50,14 @@ Fixture names are hard-coded by each test and are downloaded by
 
 The same set can be written locally by running the corresponding executable with
 key `0`; CI and standard unit-test replay use key `1`. These producers live in
-the three test translation units themselves; there are no matching
+the test translation units themselves; there are no matching
 `Unit_Tests/data_gen/unit_test_data_nrpyleakage_*.c` targets.
 
 ## HDF5 And EOS Setup
 
 NRPyLeakage tests require an HDF5-backed tabulated EOS path. The repo-local CI
 route downloads `SLy4_3335_rho391_temp163_ye66.h5.bz2`, unpacks it to
-`SLy4_3335_rho391_temp163_ye66.h5`, downloads the six Neutrinos fixture files,
+`SLy4_3335_rho391_temp163_ye66.h5`, downloads the Neutrinos fixture set,
 then runs:
 
 ```sh
@@ -73,14 +73,14 @@ repo-local script is the cited route.
 No-HDF5 builds set `GHL_DISABLE_HDF5` and apply `configure`'s exact
 implementation-source filter. That filter removes many tabulated EOS/Flux_Source
 sources but retains selected Con2Prim Tabulated/NN helpers and all NRPyLeakage
-implementation files. It also excludes all three NRPyLeakage tests:
+implementation files. It also excludes the NRPyLeakage tests:
 
 - `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`
 - `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 - `Unit_Tests/unit_test_nrpyleakage_luminosities.c`
 
 NRPyLeakage implementation sources remain compiled so their early
-`ghl_error_used_disabled_hdf5` paths exist, but exclusion of all three tests
+`ghl_error_used_disabled_hdf5` paths exist, but exclusion of those tests
 means those paths have no direct no-HDF5 test. `unit_test_code_error` keys `2`
 and `3` cover only invalid Fermi keys and remain available without HDF5.
 
@@ -119,7 +119,7 @@ for both `z < 1e-3` and `z > 1e-3` cases and maps those keys to
 
 ### Effective Assertion Gap
 
-All three NRPyLeakage replay tests call `ghl_pert_test_fail`, which returns a
+Every NRPyLeakage replay test calls `ghl_pert_test_fail`, which returns a
 boolean, but discard that return value instead of branching to `ghl_error`.
 Consequences:
 
@@ -131,8 +131,8 @@ Consequences:
   numerical mismatch cannot fail the executable.
 
 File-open/read failures, EOS/leakage errors passed to `ghl_abort_if_error`, and
-the luminosity test's explicit valid Fermi checks can still fail. Classify all
-three as compile + execute + fixture-read evidence with ineffective main
+the luminosity test's explicit valid Fermi checks can still fail. Classify
+these tests as compile + execute + fixture-read evidence with ineffective main
 numerical replay assertions, not validated numerical replay.
 
 Further bounded gaps:
@@ -171,8 +171,8 @@ citations beyond the Ubuntu GCC example, verify exact locations with:
 rg -n "neutrinos|nrpyleakage" .github/workflows
 ```
 
-Exact workflow set is five files: Ubuntu GCC, Ubuntu Clang, Ubuntu Intel,
-macOS GCC, and macOS Clang. Each uses two OS versions and all three test names.
+The exact workflow set is Ubuntu GCC, Ubuntu Clang, Ubuntu Intel, macOS GCC,
+and macOS Clang. Each uses its supported OS versions and every test name.
 Coverage upload is active for GCC and Ubuntu Clang Neutrinos jobs; it is
 commented out for Intel and macOS Clang. This does not repair the discarded
 comparison results.

@@ -93,7 +93,7 @@ directory and links `build/lib/libghl.so` or the host shared-library extension.
 During configuration, every `GRHayL/include/*.h` is symlinked into
 `<builddir>/include/ghl`. `make install` instead copies the headers parsed from
 `GRHayL/include/make.code.defn` into `<prefix>/include/ghl`. Both mechanisms
-currently select the same 16 headers, including `ghl_unit_tests.h`, but they
+currently select the same headers, including `ghl_unit_tests.h`, but they
 are separate lists and can drift. Installation then copies the versioned
 shared library and symlink into `<prefix>/lib`. Installed presence does not by
 itself classify a header as production versus test-only API.
@@ -163,7 +163,7 @@ trigger the workflow; path filters apply to `push`/`pull_request`, while the
 separately declared schedule remains eligible independently. These semantics
 come from the
 [GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore),
-not merely from local YAML key names. All five workflows use cron
+not merely from local YAML key names. Every compiler workflow uses cron
 `33 15 1,15 * *`. Their `push` event is restricted to branch `main`; their
 `pull_request` event has no branch filter in local YAML. Do not infer project
 support beyond the OS/compiler
@@ -239,8 +239,8 @@ the downloader but still removed by the final glob. Run this driver only in a
 disposable checkout without user-owned root-level `.bin`, `.h5`, or `.bz2`
 files.
 
-The runner directly invokes 27 of the 30 configured default test binaries. It
-does not invoke `unit_test_WENOZ_reconstruction` (workflow matrices do),
+The runner directly invokes every configured default test binary except
+`unit_test_WENOZ_reconstruction` (workflow matrices invoke it),
 `unit_test_tabulated_eos_compose` (the focused CompOSE workflow does), or
 `unit_test_con2prim_debug` (no runner/workflow invocation is visible). The
 composite-action YAML configures `tests` and `datagen` compilation, but neither

@@ -17,7 +17,13 @@ root = Path.cwd().resolve()
 pages = [Path("AGENTS.md"), *sorted(Path("wiki").rglob("*.md"))]
 link = re.compile(r"\[[^]]+\]\(([^)]+)\)")
 for page in pages:
+    in_fence = False
     for line_number, line in enumerate(page.read_text().splitlines(), 1):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
         for raw in link.findall(line):
             target = raw.split("#", 1)[0]
             if not target or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
@@ -40,34 +46,52 @@ definitions, HTML, or titles; do not turn uncertain syntax into a hard failure.
 If KB pages are being authored concurrently, do not fail solely because
 links to in-progress pages are temporarily missing. Report them.
 
-## Forbidden Policy Terms
+## Forbidden KB Metadata
 
-Search for terms tied to banned source tracking. Hits in policy statements are
-allowed only when they say the practice is forbidden.
+Run all scans across `AGENTS.md` and `wiki/`. Mentions are allowed only in
+prohibition or supersession statements, except reviewed technical hash facts.
+Technical hash facts must not include stored digest values.
+Immutable external citation URLs may contain opaque, hash-shaped path segments;
+preserve the full link and do not treat or copy those segments as tracking
+digests.
+
+Find banned metadata terms and inspect every hit with context:
 
 ```bash
-rg -n '(\bsha([0-9]+)?(sum)?\b|\bmd5(sum)?\b|\bhash(es|ing)?\b|checksum|digest|\bmtime\b|fingerprint|maintenance log|separate log)' AGENTS.md wiki || true
+rg -n -i -C 2 '(sha-?[0-9]+|md-?5|checksum|digest|hash(es|ing)?|mtime|fingerprint|(file|source)[ _-]?counts?|count of (files|sources)|number of (files|sources)|time[ _-]?stamps?|date[ _-]?stamps?|date[ _-]?time|last[ _-]?(modified|updated|checked|reviewed|verified|validated|audited|reconciled)|created[ _-]?at|updated[ _-]?at|modified[ _-]?at|opened[ _-]?at|resolved[ _-]?at|reviewed[ _-]?at|checked[ _-]?at|audited[ _-]?at|accessed[ _-]?at|maintenance log|separate log)' AGENTS.md wiki || true
 ```
 
-Inspect each hit:
+Find stored checksum, digest, and VCS revision values:
 
 ```bash
-rg -n -C 2 '(\bsha([0-9]+)?(sum)?\b|\bmd5(sum)?\b|\bhash(es|ing)?\b|checksum|digest|\bmtime\b|fingerprint|maintenance log|separate log)' AGENTS.md wiki || true
+rg -n -i -P '((sha(?:-?3)?-?[0-9]+|md-?5|blake-?[0-9a-z]*|xxh[0-9]*|crc-?[0-9]+)\s*[:=]?\s*`?[0-9a-f]{8,}|(checksum|hash|digest)( value)?\s*[:=]\s*`?\S+|(commit|revision)[ _-]?(id|pin|identifier)?\s*[:=]\s*`?\S+|\b(commit|revision)\s+`?[0-9a-f]{7,40}\b|/(commit|blob|tree)/[0-9a-f]{7,40}\b|(?<![0-9a-f])(?:[0-9a-f]{32}|[0-9a-f]{40}|[0-9a-f]{56}|[0-9a-f]{64}|[0-9a-f]{96}|[0-9a-f]{128})(?![0-9a-f]))' AGENTS.md wiki || true
+```
+
+Find file or source counts used as metadata:
+
+```bash
+rg -n -U -i -P '(?(DEFINE)(?<N>(?:[0-9][0-9,]*|(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|dozen)(?:[ -](?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|dozen))*)))(?:\b(?:file|source)[ _-]?counts?\s*[:=|]\s*(?&N)\b|\b(?:files?|sources?|headers?|directories|dirs|workflows?|binaries|executables|fixtures?|translation[ _-]?units?|manifest[ _-]?entries?|kernels?|subdirs)\s*[:=|]\s*(?&N)\b|\b(?&N)(?:\s*/\s*(?&N))?(?:(?!\n\s*\n|[.!?;:])[\s\S])*?\b(?:files?|headers?|directories|dirs|workflows?|binaries|executables|fixtures?|translation[ _-]?units?|manifest[ _-]?entries?|kernels?|subdirs)\b|\bcount of (?:files|sources)\b|\bnumber of (?:files|sources)\b)' AGENTS.md wiki || true
+```
+
+Find full calendar date stamps, timestamps, and maintenance-date fields. Review
+date-like source or version identifiers and publication years as allowed facts.
+
+```bash
+rg -n -i -P '((?<![[:alnum:]_./-])[0-9]{4}[-/.][0-9]{2}[-/.][0-9]{2}([T ][0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]+)?)?(Z|[+-][0-9]{2}:?[0-9]{2})?)?(?![[:alnum:]_./-])|(?<![[:alnum:]_./-])[0-9]{2}[-/.][0-9]{2}[-/.][0-9]{4}(?![[:alnum:]_./-])|\b(Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?|Aug(ust)?|Sep(tember)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)\.? [0-9]{1,2}(st|nd|rd|th)?,? [0-9]{4}\b|\b[0-9]{1,2}(st|nd|rd|th)? (Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?|Aug(ust)?|Sep(tember)?|Oct(ober)?|Nov(ember)?|Dec(ember)?),? [0-9]{4}\b|\b(time[ _-]?stamp|date[ _-]?stamp|date[ _-]?time|accessed|run date|validation date|last[ _-]?(reconciled|checked|audited|reviewed|verified|validated|updated|modified)|created[ _-]?at|updated[ _-]?at|modified[ _-]?at|opened[ _-]?at|resolved[ _-]?at|reviewed[ _-]?at|checked[ _-]?at|audited[ _-]?at|accessed[ _-]?at)\s*[:=|])' AGENTS.md wiki || true
 ```
 
 Policy must remain:
 
-- no source-tracking hashes or hashing of sources
-- no `mtime`
+- no source-tracking checksums, hashes, digests, or VCS revision pins
+- no file or source counts for tracking, coverage, or freshness
+- no `mtime` columns or values
 - no stored fingerprints
+- no timestamps, timestamp fields or values, or KB maintenance/source-tracking date stamps
 - no separate maintenance logs
-- dates only when absolutely necessary, and retained dates use `MM-DD-YYYY`
+- no instruction to compute or compare any forbidden metadata
 
-Find date-like text for manual review:
-
-```bash
-rg -n '([0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{2}[/-][0-9]{2}[/-][0-9]{4}|[A-Z][a-z]+ [0-9]{1,2}, [0-9]{4})' AGENTS.md wiki || true
-```
+Handle source drift through changed paths and dependency-aware review. Use git
+history as the durable change record.
 
 ## Page Contract Checks
 

@@ -137,7 +137,7 @@ Execution status is split:
 
 - `.github/run_tests.sh` executes ET Legacy reconstruction, which directly
   exercises both PPM wrappers and `ghl_compute_ftilde`.
-- All five compiler/OS workflow files include `reconstruction` in their
+- Every compiler/OS workflow includes `reconstruction` in its
   ET-Legacy matrix. Standalone Reconstruction matrices contain only PLM and
   WENOZ, not PPM.
 - ET Legacy data generation writes input and perturbed-input files only. Replay

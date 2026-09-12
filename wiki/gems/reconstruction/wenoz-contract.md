@@ -52,7 +52,7 @@ is an implementation change, not runtime configuration.
 
 `docs/raw/Reconstruction.dox` defines a WENO group and says only WENO-z is
 supported, but an earlier sentence says current categories are only PLM and
-PPM. Header, manifest, two source files, direct test, and workflows resolve
+PPM. Header, manifest, source files, direct test, and workflows resolve
 that wording conflict in favor of current WENOZ build/test membership.
 
 ## Build And Coverage

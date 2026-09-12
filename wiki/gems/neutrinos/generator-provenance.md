@@ -49,8 +49,8 @@ develops the leakage model from GRMHD source terms through:
 - free, diffusion-limited, and effective number/energy rates; and
 - the final lepton-number source `R` and cooling source `Q`.
 
-It also discusses neutrino pressure, which is broader than the five-file
-current GRHayL NRPyLeakage build boundary. Use it to recover the meaning and
+It also discusses neutrino pressure, which is broader than the current GRHayL
+NRPyLeakage build boundary. Use it to recover the meaning and
 derivation of expressions, not to infer an additional GRHayL API.
 
 ### Symbolic Implementation And C Generation
@@ -165,7 +165,7 @@ individual `tmp_N`.
 
 The current build manifest
 [`GRHayL/Neutrinos/NRPyLeakage/make.code.defn`](../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn)
-lists five adapted C files:
+lists these adapted C files:
 
 - [`NRPyLeakage_Fermi_Dirac_integrals.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c)
   retains the generated approximation expressions, but GRHayL returns
@@ -200,7 +200,7 @@ ancestral formula or failure mode survived unchanged.
 
 ## Regeneration Rule
 
-No current repo-local command regenerates all five GRHayL files. If a formula
+No current repo-local command regenerates the complete GRHayL file set. If a formula
 must change:
 
 1. edit or reconstruct the named symbolic expression using the external

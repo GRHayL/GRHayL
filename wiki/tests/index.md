@@ -51,9 +51,11 @@ This hub is a router. Keep source, tests, runner scripts, CI workflows,
 `README.md`, `configure`, and Doxygen source as authority; update this page when
 those authoritative files change or when routing needs clarification.
 
-Do not add source-tracking hashes, source hashes, `mtime`, stored fingerprints,
-unnecessary dates, or separate maintenance logs. Git history is the durable
-operation log.
+Follow the [source-tracking metadata policy](../index.md#source-tracking-metadata-policy):
+do not add source-tracking checksums, hashes, digests, VCS revision pins, file
+or source counts, `mtime`, stored fingerprints, date stamps or timestamps as KB
+metadata, or separate maintenance logs. Git history is the
+durable operation log.
 
 ## Repo-Local References
 

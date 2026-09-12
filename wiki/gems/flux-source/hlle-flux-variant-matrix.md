@@ -118,9 +118,9 @@ Python source together when formulas, variables, or output fields change.
 
 ## Evidence Status
 
-- **Build-configured:** all 12 in default builds; six hybrid symbols in
-  no-HDF5 builds. Tracked files alone do not establish a compile pass.
-- **Direct replay:** each row's three directions are called by the named test;
+- **Build-configured:** every listed symbol is in default builds; the hybrid
+  symbols are in no-HDF5 builds. Tracked files alone do not establish a compile pass.
+- **Direct replay:** every direction in each row is called by the named test;
   runner and compiler workflows configure those executions.
 - **Fixture-generation:** matching data generators call every row/direction,
   but generated outputs use the same implementation and are not an independent

@@ -113,7 +113,7 @@ stated intent of exercising sign-dependent code, but static source review does
 not prove both branches occur in the downloaded fixture. It does not cover ADM
 or vertex-centered assembly into this routine. Its local data generator writes
 input-side fixtures; trusted outputs are downloaded ET Legacy fixtures. Runner
-and all five compiler workflows configure replay, but tracked files alone do
+and every compiler workflow configures replay, but tracked files alone do
 not establish a current execution result.
 
 Evidence status: public declaration, definition, and build membership exist in

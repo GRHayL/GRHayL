@@ -81,7 +81,7 @@ part of the current adapter and build guard, not the physical leakage algebra.
 
 A port using another EOS must replace or wrap that callback, choose a host
 error policy, and remove or reinterpret the GRHayL HDF5 guard. Copying the
-three C files unchanged still requires the GRHayL types, callback symbol, error
+EOS-dependent C files unchanged still requires the GRHayL types, callback symbol, error
 enum, headers, and compile environment. See [HDF5 And EOS](#hdf5-and-eos) for
 callback initialization and guarded-return behavior.
 
@@ -193,10 +193,10 @@ for fixture generation or replay:
   `ghl_tabulated_compute_eps_from_T` and `ghl_tabulated_compute_T_from_eps`
   from `GRHayL/include/ghl_eos_functions.h`.
 
-`configure` adds `GHL_DISABLE_HDF5` and excludes the three
+`configure` adds `GHL_DISABLE_HDF5` and excludes the
 `unit_test_nrpyleakage_*.c` tests when HDF5 is disabled. `.github/run_tests.sh`
 downloads the SLy4 EOS table and Neutrinos fixture pairs before running the
-three NRPyLeakage unit tests with key `1`.
+NRPyLeakage unit tests with key `1`.
 
 No-HDF5 builds still compile the guarded NRPyLeakage implementation files; they
 exclude only the three HDF5-dependent unit tests. Current error tests cover

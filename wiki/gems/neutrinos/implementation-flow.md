@@ -21,12 +21,12 @@ these source files:
 - `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c`
 - `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c`
 
-All five names have matching public declarations in `ghl_nrpyleakage.h`; no
+Every listed name has a matching public declaration in `ghl_nrpyleakage.h`; no
 extra Neutrinos `.c` file sits outside the manifest.
 
 ## Smallest File Sets And Data Dependencies
 
-The five manifest entries do not form one indivisible link unit. Current
+The manifest entries do not form one indivisible link unit. Current
 source has these narrower boundaries:
 
 | Requested operation | Required implementation files | Additional current-GRHayL dependencies | Not required by that entry point |

@@ -92,7 +92,7 @@ Repo-visible workflow evidence maps Induction coverage this way:
 These workflow files are evidence only; do not edit CI scripts or workflow
 definitions for a KB-only verification-route update.
 
-All five workflow files carry these jobs. Push and pull-request triggers ignore
+Every compiler workflow carries these jobs. Push and pull-request triggers ignore
 `wiki/**` and Markdown-only changes, so KB-only updates are workflow-only
 configuration evidence rather than an automatic Induction run. Scheduled
 triggers remain independent of path filters.

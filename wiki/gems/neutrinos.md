@@ -21,8 +21,8 @@ Doxygen source.
 4. [CompOSE EOS Adapter How-To](neutrinos/compose-eos-adapter-how-to.md) for
    adapting CompOSE state, composition, and chemical-potential outputs to the
    NRPyLeakage EOS callback and validating that boundary.
-5. [Implementation Flow](neutrinos/implementation-flow.md) for the five
-   `GRHayL/Neutrinos/NRPyLeakage/` source files, their writeback paths, and
+5. [Implementation Flow](neutrinos/implementation-flow.md) for the
+   `GRHayL/Neutrinos/NRPyLeakage/` source set, its writeback paths, and
    the minimal direct-compilation boundary.
 6. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
    fixture pairs, EOS table setup, and CI downloads.
@@ -76,9 +76,9 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
   errors.
 - Optical-depth update is a `void` six-neighbor stencil call with no validation
   or failure channel. Metric stencil order is minus/center/plus.
-- All five implementation files match their manifest and header declarations.
-- The aggregate runner invokes all three HDF5 test binaries, and all five
-  workflow families configure those commands. Command presence is not a
+- Every implementation file matches its manifest and header declarations.
+- The aggregate runner invokes each HDF5 test binary, and every compiler
+  workflow family configures those commands. Command presence is not a
   historical execution result. When executed, their main fixture comparisons
   discard `ghl_pert_test_fail` results, so a completed run establishes setup,
   execution, and fixture reads but not successful numerical replay.

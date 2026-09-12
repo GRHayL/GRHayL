@@ -35,13 +35,13 @@ Einstein Toolkit.
    and [src/make.code.defn](../../../implementations/GRHayLib/src/make.code.defn).
 2. Manual repo-relative link check. Verify new wiki links resolve and avoid
    generated docs or external-only paths.
-3. Header aggregation parity check. Current static comparison finds all ten
-   headers directly included by `src/GRHayLib.h` in both `GRHayL/include/` and
+3. Header aggregation parity check. Current static comparison finds every
+   header directly included by `src/GRHayLib.h` in both `GRHayL/include/` and
    the upstream install manifest. Recheck after public-header changes. This
    does not create the absent `src/include/` copy layout.
-4. Direct-compile source-list check. Current static comparison finds that all
-   29 GRHayLib `SUBDIRS` name upstream directories and every one of the 28
-   upstream source-bearing manifest directories is listed. The checkout still
+4. Direct-compile source-list check. Current static comparison finds that every
+   GRHayLib `SUBDIRS` entry names an upstream directory and every upstream
+   source-bearing manifest directory is listed. The checkout still
    lacks those copied directories below the thorn, so this is registry parity,
    not a successful build or proof of an external copy process.
 5. Parameter/parser parity check. Compare Cactus keywords in `param.ccl` with

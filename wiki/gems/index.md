@@ -189,7 +189,7 @@ source, headers, tests, and common edit routes before wider search.
   update tests and downstream header aggregation. Use
   [API and data](neutrinos/api-and-data.md) for public structs, entry points,
   and HDF5/EOS contracts, and [implementation flow](neutrinos/implementation-flow.md)
-  for the five built source files. Route physics meanings and EOS conventions
+  for the built source set. Route physics meanings and EOS conventions
   through [physics and EOS contract](neutrinos/physics-and-eos-contract.md), and
   Python/notebook/code-generation questions through
   [generator provenance](neutrinos/generator-provenance.md).

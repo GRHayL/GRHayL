@@ -6,8 +6,8 @@ Repo ground truth: `Unit_Tests/`, `.github/run_tests.sh`, `.github/workflows/`,
 Evidence labels are strict: `configure` selects targets; `make tests` and
 `make datagen` compile/link; only an exact invocation establishes execution.
 Workflow commands are workflow-only evidence, not historical pass results.
-Default configuration selects 30 unit-test binaries; `.github/run_tests.sh`
-directly invokes 27, omitting WENOZ reconstruction, Con2Prim debug, and the
+Default configuration selects the unit-test targets; `.github/run_tests.sh`
+directly invokes all except WENOZ reconstruction, Con2Prim debug, and the
 CompOSE integration test. WENOZ and CompOSE are workflow-selected; no normal
 invocation for the debug binary is visible.
 
@@ -96,7 +96,7 @@ available. Route that checklist through
 | `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c` | `GRHayL/Con2Prim/Hybrid/` | Generates hybrid C2P plus shared metric/B-field and limit fixtures; see [tests and fixtures](gems/con2prim/tests-and-fixtures.md). | None visible beyond generated files. | Also writes inputs used by conservative limit and primitive limit tests. |
 | `Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c` | `GRHayL/GRHayL_Core/` | Generates core suite input fixture; see [Core tests and fixtures](core/tests-and-fixtures.md). | None visible beyond generated files. | Output spelling in source appears as `grhayL_core_test_suite_input.bin`; downloaded fixture path uses `grhayl_core_test_suite_input.bin`. |
 | `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c` | `GRHayL/Flux_Source/hybrid*` | Generates hybrid HLLE flux inputs and output bars; see [Flux_Source tests and fixtures](gems/flux-source/tests-and-fixtures.md). | None visible beyond generated files. | Covers entropy and directional combinations. |
-| `Unit_Tests/data_gen/unit_test_data_induction_interpolation.c` | `GRHayL/Induction/Interpolators/` | Generates interpolation inputs and output bars for ADM/BSSN cell/vertex cases; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md) and [tests and fixtures](gems/induction/tests-and-fixtures.md). | None visible beyond generated files. | Feeds three induction interpolation tests. |
+| `Unit_Tests/data_gen/unit_test_data_induction_interpolation.c` | `GRHayL/Induction/Interpolators/` | Generates interpolation inputs and output bars for ADM/BSSN cell/vertex cases; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md) and [tests and fixtures](gems/induction/tests-and-fixtures.md). | None visible beyond generated files. | Feeds the induction interpolation tests. |
 | `Unit_Tests/data_gen/unit_test_data_tabulated_flux.c` | `GRHayL/Flux_Source/tabulated*` | Generates tabulated HLLE flux inputs and output bars; see [Flux_Source tests and fixtures](gems/flux-source/tests-and-fixtures.md). | Requires `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5`. | HDF5-only. |
 
 ## Sample EOS Table Files

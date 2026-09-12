@@ -479,9 +479,9 @@ contract instead of returning an unrelated value.
 When adding a native GRHayL backend, register the callback where tabulated EOS
 function pointers are initialized; current registration lives in
 [`NRPyEOS_initialize_tabulated_functions.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c).
-The three EOS-dependent leakage C files return
+The EOS-dependent leakage C files return
 `ghl_error_used_disabled_hdf5` before calling the callback in no-HDF5 builds.
-Those three guards are only the first boundary. A non-HDF5 native backend must
+Those guards are only the first boundary. A non-HDF5 native backend must
 also replace or restructure the current tabulated-EOS gates in
 `ghl_initialize_eos_functions`, both tabulated initializers, function-pointer
 registration, table read/free/interpolation paths, and `configure` source and

@@ -127,7 +127,7 @@ applies. Leakage adapters should supply the six named quantities above instead
 of substituting the table's `munu` field.
 
 `ghl_nrpyleakage.h` declares `NRPyLeakage_Q_npmass` and
-`NRPyLeakage_ZL_Q_npmass`, but none of the five current leakage C files uses
+`NRPyLeakage_ZL_Q_npmass`, but no current leakage C file uses
 either constant. The current generated blocks consume table `muhat` directly;
 do not infer an implicit neutron-proton mass-gap correction from those
 declarations or insert one into `(mu_e-muhat)/T` without changing and

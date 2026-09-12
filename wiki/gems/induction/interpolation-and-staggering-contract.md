@@ -134,7 +134,7 @@ stencils, then call wrappers only for `1 <= i,j,k < dirlength-1`; this bounds
 their `-1..+1` A reach and `0..+1` metric reach. Fixture outputs are produced by
 the same helper/wrapper path and are regression references rather than an
 independent interpolation oracle. Runner and all compiler workflows configure
-the three supported replays; tracked files alone do not establish a current
+the supported replays; tracked files alone do not establish a current
 execution result.
 
 ## Repo-Local References

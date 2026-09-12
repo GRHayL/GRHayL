@@ -1,5 +1,9 @@
 # GRHayL Query Catalog
 
+This catalog follows the Karpathy LLM Wiki query-output filing principle:
+durable answers belong in a content-oriented KB instead of disappearing into
+chat history.
+
 Use this catalog to route common terms and aliases to KB pages, source or
 headers, and docs or tests. It is a router, not a replacement for Doxygen or
 source.
@@ -96,3 +100,7 @@ source.
 - Route to KB pages first, then source/header, then docs/tests.
 - Keep paths repo-relative.
 - Do not copy Doxygen tables or source bodies; link to them.
+
+## Ground Truth References
+
+- [Karpathy LLM Wiki approach](https://gist.githubusercontent.com/karpathy/442a6bf555914893e9891c11519de94f/raw/ac46de1ad27f92b28ac95459c782c07f6b8c964a/llm-wiki.md) — query-output filing principle.
