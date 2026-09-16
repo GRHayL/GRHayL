@@ -451,8 +451,9 @@ static void check_downstream_consumers(
     opacities.nue[0], opacities.nue[1], opacities.anue[0], opacities.anue[1],
     opacities.nux[0], opacities.nux[1], R_source,          Q_source,
   };
-  // Fixed regression goldens for the two qualified table dimensions.
-  // The tolerance covers the production TEH fits.
+  // Historical regression goldens for the two recognized table dimensions.
+  // Keep them unchanged until the revised leakage model is independently
+  // qualified; candidate source changes are expected to fail this comparison.
   static const double analytic_expected[8] = {
     1.29265593927696647e-03,  2.06728788589579618e-03,  2.10755462947867636e-02,
     3.43634428155397380e-02,  1.27577464301964489e-03,  2.05212276868065074e-03,

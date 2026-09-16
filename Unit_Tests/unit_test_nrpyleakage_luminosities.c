@@ -15,7 +15,8 @@ static inline void check_fermi_dirac_integral(
 
   const double atol = 1e-15;
   const double rtol = 1e-14;
-  if(fabs(integral - expected) > atol + rtol*fabs(expected)) {
+  if(!isfinite(expected) ||
+     !(fabs(integral - expected) <= atol + rtol*fabs(expected))) {
     ghl_error("Incorrect Fermi-Dirac integral for k=%d, z=%.17e: expected %.17e, got %.17e\n",
               k, z, expected, integral);
   }
@@ -44,40 +45,41 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 
   const int npoints = 1024;
 
-  for(int perturb=0;perturb<=1;perturb++) {
-    char filename[64];
-    if( perturb )
-      sprintf(filename, "nrpyleakage_luminosities_perturbed.bin");
-    else
-      sprintf(filename, "nrpyleakage_luminosities_unperturbed.bin");
+  FILE *fp[2];
+  fp[0] = fopen_with_check("nrpyleakage_luminosities_unperturbed.bin", "wb");
+  fp[1] = fopen_with_check("nrpyleakage_luminosities_perturbed.bin"  , "wb");
+  fwrite(&npoints, sizeof(int), 1, fp[0]);
+  fwrite(&npoints, sizeof(int), 1, fp[1]);
 
-    FILE *fp = fopen_with_check(filename, "wb");
-    fwrite(&npoints, sizeof(int), 1, fp);
-    for(int n=0;n<npoints;n++) {
+  for(int n=0;n<npoints;n++) {
 
-      // Get random metric values
-      double alpha;
-      __attribute__((unused)) double betax, betay, betaz;
-      double gammaxx, gammaxy, gammaxz, gammayy, gammayz, gammazz;
-      ghl_randomize_metric(
-            &alpha, &betax, &betay, &betaz,
-            &gammaxx, &gammaxy, &gammaxz,
-            &gammayy, &gammayz, &gammazz);
+    // Get random metric values
+    double alpha;
+    __attribute__((unused)) double betax, betay, betaz;
+    double gammaxx, gammaxy, gammaxz, gammayy, gammayz, gammazz;
+    ghl_randomize_metric(
+          &alpha, &betax, &betay, &betaz,
+          &gammaxx, &gammaxy, &gammaxz,
+          &gammayy, &gammayz, &gammazz);
 
-      // Get random primitive values
-      double rho = pow(10, randf(log10(eos->rho_min), log10(eos->rho_max)));
-      double Y_e = randf(eos->Y_e_min, eos->Y_e_max);
-      double T   = pow(10, randf(log10(eos->T_min), log10(eos->T_max)));
-      double W   = randf(1, 10);
+    // Get random primitive values
+    double rho = pow(10, randf(log10(eos->rho_min), log10(eos->rho_max)));
+    double Y_e = randf(eos->Y_e_min, eos->Y_e_max);
+    double T   = pow(10, randf(log10(eos->T_min), log10(eos->T_max)));
+    double W   = randf(1, 10);
 
-      // Get random optical depths (not sure these are reasonable values)
-      ghl_neutrino_optical_depths tau;
-      tau.nue [0] = randf(1, 1000);
-      tau.nue [1] = randf(1, 1000);
-      tau.anue[0] = randf(1, 1000);
-      tau.anue[1] = randf(1, 1000);
-      tau.nux [0] = randf(1, 1000);
-      tau.nux [1] = randf(1, 1000);
+    // Get random optical depths (not sure these are reasonable values)
+    ghl_neutrino_optical_depths tau;
+    tau.nue [0] = randf(1, 1000);
+    tau.nue [1] = randf(1, 1000);
+    tau.anue[0] = randf(1, 1000);
+    tau.anue[1] = randf(1, 1000);
+    tau.nux [0] = randf(1, 1000);
+    tau.nux [1] = randf(1, 1000);
+
+    // Evaluate this base state, then its small perturbation, so that the two
+    // output rows always form a matched pair.
+    for(int perturb=0;perturb<=1;perturb++) {
 
       if( perturb ) {
         alpha       *= (1+randf(-1,1)*1e-14);
@@ -110,23 +112,24 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 
       // Output to file
       if( !perturb ) {
-        fwrite(&alpha  , sizeof(double)                 , 1, fp);
-        fwrite(&gammaxx, sizeof(double)                 , 1, fp);
-        fwrite(&gammaxy, sizeof(double)                 , 1, fp);
-        fwrite(&gammaxz, sizeof(double)                 , 1, fp);
-        fwrite(&gammayy, sizeof(double)                 , 1, fp);
-        fwrite(&gammayz, sizeof(double)                 , 1, fp);
-        fwrite(&gammazz, sizeof(double)                 , 1, fp);
-        fwrite(&rho    , sizeof(double)                 , 1, fp);
-        fwrite(&Y_e    , sizeof(double)                 , 1, fp);
-        fwrite(&T      , sizeof(double)                 , 1, fp);
-        fwrite(&W      , sizeof(double)                 , 1, fp);
-        fwrite(&tau    , sizeof(ghl_neutrino_optical_depths), 1, fp);
+        fwrite(&alpha  , sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&gammaxx, sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&gammaxy, sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&gammaxz, sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&gammayy, sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&gammayz, sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&gammazz, sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&rho    , sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&Y_e    , sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&T      , sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&W      , sizeof(double)                 , 1, fp[perturb]);
+        fwrite(&tau    , sizeof(ghl_neutrino_optical_depths), 1, fp[perturb]);
       }
-      fwrite(&lum      , sizeof(ghl_neutrino_luminosities)  , 1, fp);
+      fwrite(&lum      , sizeof(ghl_neutrino_luminosities)  , 1, fp[perturb]);
     }
-    fclose(fp);
   }
+  fclose(fp[0]);
+  fclose(fp[1]);
 }
 
 void
@@ -197,9 +200,21 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
       ghl_error("Failed to read luminosities from perturbed data file\n");
     }
 
-    ghl_pert_test_fail(lum_trusted.nue , lum.nue , lum_pert.nue );
-    ghl_pert_test_fail(lum_trusted.anue, lum.anue, lum_pert.anue);
-    ghl_pert_test_fail(lum_trusted.nux , lum.nux , lum_pert.nux );
+    if( ghl_pert_test_fail(lum_trusted.nue, lum.nue, lum_pert.nue) ) {
+      fclose(fp_unpert); fclose(fp_pert);
+      ghl_error("Validation failed for lum.nue at row %d: trusted %.17e, computed %.17e, perturbed %.17e\n",
+                n, lum_trusted.nue, lum.nue, lum_pert.nue);
+    }
+    if( ghl_pert_test_fail(lum_trusted.anue, lum.anue, lum_pert.anue) ) {
+      fclose(fp_unpert); fclose(fp_pert);
+      ghl_error("Validation failed for lum.anue at row %d: trusted %.17e, computed %.17e, perturbed %.17e\n",
+                n, lum_trusted.anue, lum.anue, lum_pert.anue);
+    }
+    if( ghl_pert_test_fail(lum_trusted.nux, lum.nux, lum_pert.nux) ) {
+      fclose(fp_unpert); fclose(fp_pert);
+      ghl_error("Validation failed for lum.nux at row %d: trusted %.17e, computed %.17e, perturbed %.17e\n",
+                n, lum_trusted.nux, lum.nux, lum_pert.nux);
+    }
   }
   fclose(fp_unpert);
   fclose(fp_pert);

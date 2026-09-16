@@ -67,7 +67,8 @@ signatures and bodies therefore depend on:
   `ghl_error_codes_t`;
 - GRHayL success/error values, including
   `ghl_error_used_disabled_hdf5` and
-  `ghl_error_invalid_fermi_dirac_integral_key`;
+  `ghl_error_invalid_fermi_dirac_integral_key` and
+  `ghl_error_nrpyleakage_blocking`;
 - constants, unit macros, finiteness helpers, and
   `NRPYLEAKAGE_FD_OR_RETURN` from `ghl_nrpyleakage.h`; and
 - C math facilities exposed through the GRHayL headers and the `-lm` link
@@ -103,18 +104,17 @@ Minimum local adapter responsibilities are:
 3. Replace GRHayL return codes and early-return macro with the host error
    policy without changing partial-write behavior accidentally.
 4. Validate density, opacity, source, and luminosity conversions as one
-   coherent set. Separately choose whether to preserve the current mixed-unit
-   suppression factor for exact GRHayL equivalence or replace it with a
-   unit-coherent convention; do not change this
-   [suppression-ratio seam](physics-and-eos-contract.md#current-suppression-ratio-unit-seam)
-   accidentally.
+   coherent set. Keep the suppression ratio in one time unit, as the current
+   cgs form does; see
+   [Suppression-Ratio Units](physics-and-eos-contract.md#suppression-ratio-units).
 5. Revalidate finite-value handling, metric conventions, and optical-depth
    path lengths in the host ABI and unit system.
 
 ## Input And Unit Preconditions
 
 The public declarations carry no unit comments and routines perform no general
-null, range, or finiteness validation. Source establishes these caller
+null-pointer validation. The shared blocking helper performs focused range and
+finiteness checks described below. Source establishes these caller
 preconditions:
 
 - `rho`/`rho_b` is GRHayL geometric density; leakage source multiplies it by
@@ -160,6 +160,24 @@ output value before branch dispatch. Unsupported keys return
 `Unit_Tests/unit_test_code_error.c` exercises invalid Fermi-Dirac keys on both
 `z` branches and maps them to `ghl_error_invalid_fermi_dirac_integral_key`.
 
+## Nucleon-Blocking Error Behavior
+
+The three EOS-dependent public routines include the source-private
+`NRPyLeakage_nucleon_blocking.h`. Public function signatures and radiation
+structs remain unchanged; the helper is not installed as public API.
+
+After EOS lookup and density conversion, the helper requires finite positive
+cgs density and temperature and finite `X_n`, `X_p` values in `[0,1]`. It also
+rejects non-finite kinetic-degeneracy inversion, overlap, or population-bound
+results. A failure returns `ghl_error_nrpyleakage_blocking` before any public
+output is written. This distinct error identifies failure of the blocking
+evaluator rather than an EOS interpolation or generated Fermi-moment key.
+
+Ports of any opacity, combined source/opacity, or luminosity entry point must
+carry this private header or provide equivalent blocking and error behavior.
+The motivation and equations are in
+[Physics And EOS Contract](physics-and-eos-contract.md).
+
 ## HDF5 And EOS
 
 Neutrinos source routines use tabulated EOS calls directly:
@@ -176,9 +194,9 @@ potentials and composition. Under `GHL_DISABLE_HDF5`, each returns
 With HDF5 enabled, callers must first initialize tabulated EOS function
 pointers and a compatible loaded table. An EOS interpolation error is returned
 unchanged. HDF5-disabled and EOS-error exits occur before output writeback, so
-caller-provided output objects retain their prior contents. Later Fermi-Dirac
-errors also propagate before final writeback. No routine initializes outputs on
-failure.
+caller-provided output objects retain their prior contents. Later blocking and
+Fermi-Dirac errors also propagate before final writeback. No routine
+initializes outputs on failure.
 
 The optical-depth path routine does not call EOS or HDF5. It consumes local and
 neighbor `ghl_neutrino_opacities`/`ghl_neutrino_optical_depths`, metric stencil

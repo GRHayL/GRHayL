@@ -138,9 +138,14 @@ an interior point, the six-value
 NRPyLeakage callback order and range failures, and memory cleanup.  It also
 checks a no-fallback Con2Prim recovery, analytic tabulated flux and source
 goldens, and all eight combined-NRPyLeakage outputs against fixed regression
-goldens for the two qualified table dimensions.
+historical regression goldens selected by the two recognized table dimensions.
+Recognition by dimensions is not physical qualification. The blocking
+candidate changes these downstream values and is expected to fail this part of
+the test until the selected model is independently qualified and replacement
+values are accepted. CI selects only the synthetic table.
 
-On the qualified table-141 artifact, regularization changed at most
+On the previously qualified table-141 artifact, the historical distortion
+summary records that regularization changed at most
 0.0341587 in `logenergy`, 0.0338011 in `logpress`, and 0.00547615 in a mass
 fraction; maximum entropy change was `1.1608683721e10`.  The deterministic
 energy shift was `30.0518 MeV` per baryon.  Regularization applied the high

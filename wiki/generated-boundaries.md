@@ -145,7 +145,10 @@ formula meanings and EOS quantities through the
 [physics and EOS contract](gems/neutrinos/physics-and-eos-contract.md).
 
 The checked-in C and public headers own current signatures and behavior. Do not
-infer byte-for-byte reproducibility from generator provenance alone.
+infer byte-for-byte reproducibility from generator provenance alone. Some
+leakage formulas have been corrected directly in the adapted C without
+regenerating an ancestral source; see
+[Hand-Applied Corrections To The Adapted C](gems/neutrinos/generator-provenance.md#hand-applied-corrections-to-the-adapted-c).
 
 ## Flux Source Python And NRPy
 

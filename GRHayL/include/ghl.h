@@ -73,6 +73,7 @@ typedef enum {
   ghl_error_nn_c2p_missing_array,
   ghl_error_nn_c2p_invalid_kind,
   ghl_error_nn_c2p_invalid_number,
+  ghl_error_nrpyleakage_blocking,
 } ghl_error_codes_t;
 
 typedef enum {

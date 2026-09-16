@@ -186,6 +186,10 @@ lists these adapted C files:
   extracts the pointwise face-average, neighbor-candidate, and minimum-path
   calculation seen in the external Einstein Toolkit routine into a
   GRHayL struct-based call.
+- [`NRPyLeakage_nucleon_blocking.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
+  is hand-maintained GRHayL code, not output recovered from the ancestral
+  notebooks. All three EOS-dependent routines include it, and the manifest
+  tracks it through `#! INCS`.
 
 GRHayL adaptations include different public types and argument shapes,
 tabulated-EOS dispatch, HDF5-disabled returns, propagated Fermi/EOS errors,
@@ -214,6 +218,53 @@ must change:
    [Tests And Fixtures](tests-and-fixtures.md).
 
 Do not treat generated C replacement as a mechanical copy operation.
+
+### Hand-Applied Corrections To The Adapted C
+
+Some formula corrections were applied directly to the checked-in C because no
+maintained repo-local producer exists. The ancestral symbolic sources were not
+re-run and are not synchronized with these edits:
+
+- the shared diffusion prefactor is `6.0/NRPyLeakage_c_light`, keeping the
+  suppression ratio in cgs;
+- nucleon-nucleon bremsstrahlung carries `rho_cgs*rho_cgs`;
+- each emission routine computes one heavy-lepton free energy rate, the local
+  `Q_free_nux`, and uses it in both the `nux` numerator and its own inverse
+  loss time;
+- the order-zero Fermi-Dirac integral uses the stable `log1p` form.
+- nucleon blocking derives common-mass kinetic degeneracies from `rho`, `T`,
+  `X_n`, and `X_p`, then evaluates bounded same-energy transition populations
+  with an algebraic overlap identity.
+
+Treat the current C as authority for these expressions. Regenerating from an
+ancestral notebook would reintroduce the uncorrected forms, so any future
+regeneration must reapply them and compare against
+[the physics and EOS contract](physics-and-eos-contract.md).
+
+### Nucleon-Blocking Sources And Adaptation Boundary
+
+The blocking helper follows the density-derived free-nucleon construction in
+A. Ardevol-Pulpillo et al., *MNRAS* 485 (2019), 4754--4787,
+[doi:10.1093/mnras/stz613](https://doi.org/10.1093/mnras/stz613), Appendix B,
+Eqs. (69)--(71). Appendix C, Eqs. (100)--(109), supplies the cited precedent
+for a possible future shifted spectral emission/absorption pair; current
+GRHayL does not implement that extension.
+
+The helper ports scalar `fdm1h` and `ifd1h` rational fits from Scott Maddox's
+[FDINT implementation](https://github.com/scott-maddox/fdint/blob/master/fdint/_fdint.pyx).
+FDINT attributes those fits to T. Fukushima's minimax approximations
+([half-odd Fermi integrals](https://doi.org/10.1016/j.amc.2015.03.009) and
+[inverse Fermi integrals](https://doi.org/10.1016/j.amc.2015.03.015)). The
+source header retains FDINT's full BSD-3 notice because coefficients and fit
+code were ported.
+
+GRHayL's common density normalization, fraction-ordering, `expm1` overlap, and
+equal-population limit are local adaptations. Do not attribute that complete
+evaluator to FDINT or ILEAS. The nearby-positive-number subtraction relies on
+the exact-subtraction condition described by P. H. Sterbenz,
+*Floating-Point Computation*, Prentice-Hall, 1974, Sec. 4.3. These techniques
+were chosen to remove the old reference dependence and quotient pole without
+adding quadrature, iterative roots, or tables to a leakage hot path.
 
 ## Ground Truth References
 

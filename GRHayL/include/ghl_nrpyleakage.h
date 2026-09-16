@@ -115,15 +115,11 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
       ghl_neutrino_optical_depths *restrict tau_i_j_k );
 
 static inline int robust_isnan(double x) {
-  unsigned long *pbits = (unsigned long *)&x;
-  return( (*pbits & 0x7ff0000000000000UL) == 0x7ff0000000000000UL &&
-          (*pbits & 0x000fffffffffffffUL) );
+  return isnan(x) != 0;
 }
 
 static inline int robust_isfinite(double x) {
-  unsigned long *pbits = (unsigned long *)&x;
-  return( !((*pbits & 0x7ff0000000000000UL) == 0x7ff0000000000000UL &&
-            ((*pbits & 0x7ff0000000000000UL) || (*pbits & 0xfff0000000000000UL))) );
+  return isfinite(x) != 0;
 }
 
 // Helper macro for Fermi-Dirac integrals

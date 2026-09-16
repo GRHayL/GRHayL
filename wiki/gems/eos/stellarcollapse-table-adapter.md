@@ -75,6 +75,58 @@ Do not duplicate unit constants or dataset maps in KB pages. Use
 [`GRHayL/include/ghl_nrpyeos_tabulated.h`](../../../GRHayL/include/ghl_nrpyeos_tabulated.h)
 and the stellar-collapse source files for exact names and values.
 
+## Producer Energy Conventions
+
+Reading a StellarCollapse-format file does not establish its producer's energy
+reference or qualify a leakage blocking approximation. The actual legacy
+SLy4 fixture and the regularized SRO-141 input have the following conventions;
+these are not defaults for arbitrary files accepted by the loader.
+
+| Input / component | Individual nucleon chemical potentials | Rest energies and consequence |
+| --- | --- | --- |
+| `SLy4_3335_rho391_temp163_ye66.h5`, SNA component | Both are referenced to the free-neutron rest energy. The proton mean field includes the negative neutron–proton rest gap; interactions remain in both potentials. | The embedded input/source selects `m_n=939.56540`, `m_p=938.27204 MeV`, giving `Q=1.29336 MeV`. Removing the proton rest offset does not remove its mean field. |
+| Same legacy artifact, NSE component | The writer subtracts one neutron reference from both full potentials using its nuclear partition data. The delivered artifact blends SNA and NSE. | Neutron reference `939.5654133 MeV`; nominal proton mass `938.2720813 MeV` minus its isotope's `0.00006 MeV` binding entry gives `938.2720213 MeV`, hence `Q=1.293392 MeV`. The blend has no single exact component-independent rest gap. |
+| CompOSE SRO SLy4 SNA table 141, regularized profile | Both potentials use the common reference `939.5654 MeV`; `muhat=-mu_q` retains the full difference. The electron potential includes its rest energy. | Header/profile masses are `939.5654,938.2754 MeV`, formally a `1.2900 MeV` gap. Dilute raw proton effective-mass data approaches a kinetic mass near `938.27204 MeV`; the approximately `-0.00336 MeV` residual is in the mean-field convention. Header-gap subtraction alone does not produce kinetic degeneracies. |
+
+The legacy convention follows the actual HDF5-embedded producers:
+`SNA-skyrme.in` selects non-default constants;
+`SNA-src.tar.gz!src/read_input/read_skyrme_coefficients.f90` sets the masses;
+`SNA-src.tar.gz!src/bulk_matter/Skyrme_bulk.f90` constructs the proton field;
+`NSE-src.tar.gz!src/read_input/nse_read_nuclear_data.F90` reads nuclear masses;
+and `NSE-src.tar.gz!src/make_table/write_to_table.F90` applies the common
+output reference. The [SRO distribution](https://stellarcollapse.org/SROEOS.html)
+distinguishes SNA, NSE and merged products. Do not infer these masses by
+fitting a single `muhat(Ye=.5)` value.
+
+For [CompOSE table 141](https://compose.obspm.fr/eos/141), the
+[published raw archive](https://zenodo.org/records/14811397),
+[table description](https://compose.obspm.fr/download/3D/SRO/SLy4/eos.pdf) and
+[manual, sections 3.5 and 4.2.2](https://compose.obspm.fr/download/pdf/manual_v3.00.pdf)
+establish the header and microscopic conventions. In
+[`compose_to_grhayl.py`](../../../tools/compose/compose_to_grhayl.py),
+`raw["mu_b"]` is the generated, already rest-shifted quantity, not the full
+thermodynamic baryon potential. The converter restores `profile.m_n_mev`
+before subtracting `profile.m_ref_mu_mev`, then writes
+`mu_p=mu_n-muhat`. Raw microscopic identifiers `10040/11040` supply
+effective-mass ratios and `10050/11050` supply mean fields. The converter
+does not serialize these into the runtime chemistry contract. Legacy HDF5
+also contains effective-mass data not returned by the six-output callback.
+
+The legacy internal-energy writer adds `20 MeV/baryon` before conversion to
+`erg/g` and logarithmic storage; its `energy_shift` is approximately
+`1.91312955e19 erg/g`. The regularized SRO conversion selects a storage
+shift of `30.051798127348633 MeV/baryon`. Neither shift is a chemical-potential
+reference. The reader and conversion source above do not infer a chemical
+reference or a microscopic spectrum from it.
+
+These established producer conventions do not remove the generic loader's
+missing-reference boundary: EOSmaker's SFHo atomic-mass reference is a
+counterexample to a universal neutron reference; see the
+[CompOSE chemical mapping](../neutrinos/compose-eos-adapter-how-to.md#nucleon-chemical-potentials-and-muhat).
+The separate consequences for rest corrections, mean fields, effective masses,
+free fractions, and the installed reference-invariant approximation belong to
+the [Neutrinos Physics And EOS Contract](../neutrinos/physics-and-eos-contract.md#chemical-potentials-and-density-derived-blocking).
+
 ## Offline CompOSE Regularization
 
 [`tools/compose/compose_to_grhayl.py`](../../../tools/compose/compose_to_grhayl.py)
@@ -101,8 +153,14 @@ checks every serialized node and all 19 mappings, storage-space interpolation
 and inversions from distinct valid initial guesses, the six-value ABI order
 and range failures, no-fallback
 Palenzuela recovery, analytic characteristic-speed, HLLE/entropy-flux, and
-source goldens, all eight combined-leakage outputs against fixed regression
-goldens for the two qualified table dimensions, and cleanup.
+source goldens, all eight combined-leakage outputs against regression goldens
+for the analytic and regularized SRO-141 inputs, and cleanup. Those leakage
+expectations predate the installed density-derived blocking correction and do
+not qualify it. The correction uses `rho`, `T`, `Xn`, and `Xp`, rather than raw
+`mu_n` and `mu_p`, because the free fractions determine the available nucleon
+populations without depending on the producer's chemical-energy zero. Its
+interacting-EOS and spectral-pairing limits still require the independent
+comparisons listed in [Current Contradictions](../../contradictions.md).
 
 ## Build Gate
 
@@ -144,3 +202,9 @@ API authority.
 - [`GRHayL/EOS/Tabulated/stellarcollapse/make.code.defn`](../../../GRHayL/EOS/Tabulated/stellarcollapse/make.code.defn)
 - [`tools/compose/compose_to_grhayl.py`](../../../tools/compose/compose_to_grhayl.py)
 - [`tools/compose/README.md`](../../../tools/compose/README.md)
+
+## Ground Truth References
+
+- [SRO EOS distribution](https://stellarcollapse.org/SROEOS.html): legacy SNA, NSE and merged products with embedded producer evidence.
+- [CompOSE SRO SLy4 table 141](https://compose.obspm.fr/eos/141), [raw archive](https://zenodo.org/records/14811397) and [table description](https://compose.obspm.fr/download/3D/SRO/SLy4/eos.pdf): actual input identity, header and microscopic data.
+- [CompOSE manual](https://compose.obspm.fr/download/pdf/manual_v3.00.pdf): thermodynamic, chemical-potential and microscopic quantity conventions.

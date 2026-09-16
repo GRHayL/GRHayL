@@ -36,10 +36,18 @@ ghl_pert_test_fail_computed_values(
     ghl_error("Failed to read perturbed data from file\n");
 
   // Perform validation
-  ghl_pert_test_fail(t_unperturbed  , t  , t_perturbed  );
-  ghl_pert_test_fail(Y_e_unperturbed, Y_e, Y_e_perturbed);
-  ghl_pert_test_fail(eps_unperturbed, eps, eps_perturbed);
-  ghl_pert_test_fail(T_unperturbed  , T  , T_perturbed  );
+  if( ghl_pert_test_fail(t_unperturbed, t, t_perturbed) )
+    ghl_error("Validation failed for t at t = %.17e: trusted %.17e, computed %.17e, perturbed %.17e\n",
+              t, t_unperturbed, t, t_perturbed);
+  if( ghl_pert_test_fail(Y_e_unperturbed, Y_e, Y_e_perturbed) )
+    ghl_error("Validation failed for Y_e at t = %.17e: trusted %.17e, computed %.17e, perturbed %.17e\n",
+              t, Y_e_unperturbed, Y_e, Y_e_perturbed);
+  if( ghl_pert_test_fail(eps_unperturbed, eps, eps_perturbed) )
+    ghl_error("Validation failed for eps at t = %.17e: trusted %.17e, computed %.17e, perturbed %.17e\n",
+              t, eps_unperturbed, eps, eps_perturbed);
+  if( ghl_pert_test_fail(T_unperturbed, T, T_perturbed) )
+    ghl_error("Validation failed for T at t = %.17e: trusted %.17e, computed %.17e, perturbed %.17e\n",
+              t, T_unperturbed, T, T_perturbed);
 }
 
 static inline
@@ -85,28 +93,28 @@ rk4_step_ode(
   *T = eos->T_max;
   Y_e = gfs[Y_E];
   eps = gfs[EPS];
-  ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  ghl_abort_if_error(ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T));
   rhs(eos, rho, Y_e, eps, *T, k1);
 
   // RK4 - substep 2;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + 0.5*dt*k1[Y_E];
   eps = gfs[EPS] + 0.5*dt*k1[EPS];
-  ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  ghl_abort_if_error(ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T));
   rhs(eos, rho, Y_e, eps, *T, k2);
 
   // RK4 - substep 3;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + 0.5*dt*k2[Y_E];
   eps = gfs[EPS] + 0.5*dt*k2[EPS];
-  ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  ghl_abort_if_error(ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T));
   rhs(eos, rho, Y_e, eps, *T, k3);
 
   // RK4 - substep 4;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + dt*k3[Y_E];
   eps = gfs[EPS] + dt*k3[EPS];
-  ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  ghl_abort_if_error(ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T));
   rhs(eos, rho, Y_e, eps, *T, k4);
 
   // RK4 - update step
@@ -140,7 +148,7 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
     }
 
     double eps;
-    ghl_tabulated_compute_eps_from_T(eos, initial_rho, initial_Y_e, initial_T, &eps);
+    ghl_abort_if_error(ghl_tabulated_compute_eps_from_T(eos, initial_rho, initial_Y_e, initial_T, &eps));
 
     double gfs[2] = {initial_Y_e, eps};
     fwrite(&n_steps  , sizeof(int)   , 1, fp);

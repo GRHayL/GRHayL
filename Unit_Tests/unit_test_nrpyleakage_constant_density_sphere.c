@@ -95,15 +95,18 @@ void constantdensitysphere_test(
   // Step 3.b: Exterior of the sphere (sec. 4.2.1 of above referece)
   double rho_exterior = 6.0e7 * NRPyLeakage_units_cgs_to_geom_D;
   double Y_e_exterior = 0.5;
-  double T_exterior   = 0.01;
+  const double perturbation_amplitude = 1e-14;
+  const double minimum_safe_T = nextafter(
+      eos->T_min/(1.0-perturbation_amplitude), INFINITY);
+  double T_exterior   = fmax(0.01, minimum_safe_T);
 
   if( test_key == 1 ) {
-    rho_interior *= (1+randf(-1,1)*1e-14);
-    Y_e_interior *= (1+randf(-1,1)*1e-14);
-    T_interior   *= (1+randf(-1,1)*1e-14);
-    rho_exterior *= (1+randf(-1,1)*1e-14);
-    Y_e_exterior *= (1+randf(-1,1)*1e-14);
-    T_exterior   *= (1+randf(-1,1)*1e-14);
+    rho_interior *= (1+randf(-1,1)*perturbation_amplitude);
+    Y_e_interior *= (1+randf(-1,1)*perturbation_amplitude);
+    T_interior   *= (1+randf(-1,1)*perturbation_amplitude);
+    rho_exterior *= (1+randf(-1,1)*perturbation_amplitude);
+    Y_e_exterior *= (1+randf(-1,1)*perturbation_amplitude);
+    T_exterior   *= (1+randf(-1,1)*perturbation_amplitude);
   }
 
   // Step 4: Compute opacities in the interior and exterior
@@ -300,12 +303,12 @@ void constantdensitysphere_test(
 
           ghl_neutrino_optical_depths tau_i_j_k;
           NRPyLeakage_optical_depths_PathOfLeastResistance(dxx, stencil_gxx, stencil_gyy, stencil_gzz,
-                                                           &kappa_ip1_j_k, &kappa_im1_j_k,
-                                                           &kappa_i_jp1_k, &kappa_i_jm1_k,
-                                                           &kappa_i_j_kp1, &kappa_i_j_km1,
-                                                           &tau_ip1_j_k  , &tau_im1_j_k,
-                                                           &tau_i_jp1_k  , &tau_i_jm1_k,
-                                                           &tau_i_j_kp1  , &tau_i_j_km1,
+                                                           &kappa_im1_j_k, &kappa_ip1_j_k,
+                                                           &kappa_i_jm1_k, &kappa_i_jp1_k,
+                                                           &kappa_i_j_km1, &kappa_i_j_kp1,
+                                                           &tau_im1_j_k  , &tau_ip1_j_k,
+                                                           &tau_i_jm1_k  , &tau_i_jp1_k,
+                                                           &tau_i_j_km1  , &tau_i_j_kp1,
                                                            &kappa_i_j_k  , &tau_i_j_k);
 
           tau_nue [0][i_j_k] = tau_i_j_k.nue [0];
@@ -407,23 +410,70 @@ void constantdensitysphere_test(
     fclose(fp_pert);
 
     // Perform the validation
-#pragma omp parallel for
     for(int i2=0;i2<Nt2;i2++) {
       for(int i1=0;i1<Nt1;i1++) {
         for(int i0=0;i0<Nt0;i0++) {
           const int index = IDX3D(i0,i1,i2);
-          ghl_pert_test_fail(kappa_nue_pert [0][index], kappa_nue [0][index], kappa_nue_unpert [0][index]);
-          ghl_pert_test_fail(kappa_nue_pert [1][index], kappa_nue [1][index], kappa_nue_unpert [1][index]);
-          ghl_pert_test_fail(kappa_anue_pert[0][index], kappa_anue[0][index], kappa_anue_unpert[0][index]);
-          ghl_pert_test_fail(kappa_anue_pert[1][index], kappa_anue[1][index], kappa_anue_unpert[1][index]);
-          ghl_pert_test_fail(kappa_nux_pert [0][index], kappa_nux [0][index], kappa_nux_unpert [0][index]);
-          ghl_pert_test_fail(kappa_nux_pert [1][index], kappa_nux [1][index], kappa_nux_unpert [1][index]);
-          ghl_pert_test_fail(tau_nue_pert   [0][index], tau_nue   [0][index], tau_nue_unpert   [0][index]);
-          ghl_pert_test_fail(tau_nue_pert   [1][index], tau_nue   [1][index], tau_nue_unpert   [1][index]);
-          ghl_pert_test_fail(tau_anue_pert  [0][index], tau_anue  [0][index], tau_anue_unpert  [0][index]);
-          ghl_pert_test_fail(tau_anue_pert  [1][index], tau_anue  [1][index], tau_anue_unpert  [1][index]);
-          ghl_pert_test_fail(tau_nux_pert   [0][index], tau_nux   [0][index], tau_nux_unpert   [0][index]);
-          ghl_pert_test_fail(tau_nux_pert   [1][index], tau_nux   [1][index], tau_nux_unpert   [1][index]);
+          if( ghl_pert_test_fail(kappa_nue_unpert[0][index], kappa_nue[0][index], kappa_nue_pert[0][index]) )
+            ghl_error("Validation failed for kappa_nue[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      kappa_nue_unpert[0][index], kappa_nue[0][index], kappa_nue_pert[0][index]);
+          if( ghl_pert_test_fail(kappa_nue_unpert[1][index], kappa_nue[1][index], kappa_nue_pert[1][index]) )
+            ghl_error("Validation failed for kappa_nue[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      kappa_nue_unpert[1][index], kappa_nue[1][index], kappa_nue_pert[1][index]);
+          if( ghl_pert_test_fail(kappa_anue_unpert[0][index], kappa_anue[0][index], kappa_anue_pert[0][index]) )
+            ghl_error("Validation failed for kappa_anue[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      kappa_anue_unpert[0][index], kappa_anue[0][index], kappa_anue_pert[0][index]);
+          if( ghl_pert_test_fail(kappa_anue_unpert[1][index], kappa_anue[1][index], kappa_anue_pert[1][index]) )
+            ghl_error("Validation failed for kappa_anue[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      kappa_anue_unpert[1][index], kappa_anue[1][index], kappa_anue_pert[1][index]);
+          if( ghl_pert_test_fail(kappa_nux_unpert[0][index], kappa_nux[0][index], kappa_nux_pert[0][index]) )
+            ghl_error("Validation failed for kappa_nux[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      kappa_nux_unpert[0][index], kappa_nux[0][index], kappa_nux_pert[0][index]);
+          if( ghl_pert_test_fail(kappa_nux_unpert[1][index], kappa_nux[1][index], kappa_nux_pert[1][index]) )
+            ghl_error("Validation failed for kappa_nux[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      kappa_nux_unpert[1][index], kappa_nux[1][index], kappa_nux_pert[1][index]);
+          if( ghl_pert_test_fail(tau_nue_unpert[0][index], tau_nue[0][index], tau_nue_pert[0][index]) )
+            ghl_error("Validation failed for tau_nue[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      tau_nue_unpert[0][index], tau_nue[0][index], tau_nue_pert[0][index]);
+          if( ghl_pert_test_fail(tau_nue_unpert[1][index], tau_nue[1][index], tau_nue_pert[1][index]) )
+            ghl_error("Validation failed for tau_nue[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      tau_nue_unpert[1][index], tau_nue[1][index], tau_nue_pert[1][index]);
+          if( ghl_pert_test_fail(tau_anue_unpert[0][index], tau_anue[0][index], tau_anue_pert[0][index]) )
+            ghl_error("Validation failed for tau_anue[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      tau_anue_unpert[0][index], tau_anue[0][index], tau_anue_pert[0][index]);
+          if( ghl_pert_test_fail(tau_anue_unpert[1][index], tau_anue[1][index], tau_anue_pert[1][index]) )
+            ghl_error("Validation failed for tau_anue[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      tau_anue_unpert[1][index], tau_anue[1][index], tau_anue_pert[1][index]);
+          if( ghl_pert_test_fail(tau_nux_unpert[0][index], tau_nux[0][index], tau_nux_pert[0][index]) )
+            ghl_error("Validation failed for tau_nux[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      tau_nux_unpert[0][index], tau_nux[0][index], tau_nux_pert[0][index]);
+          if( ghl_pert_test_fail(tau_nux_unpert[1][index], tau_nux[1][index], tau_nux_pert[1][index]) )
+            ghl_error("Validation failed for tau_nux[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
+                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                      i0, i1, i2, index,
+                      tau_nux_unpert[1][index], tau_nux[1][index], tau_nux_pert[1][index]);
         }
       }
     }

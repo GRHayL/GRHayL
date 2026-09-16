@@ -253,6 +253,9 @@ jobs:
         uses: ./.github/actions/compile_GRHayL
         with:
           compiler: 'gcc'
+      - name: Run table-free neutrino physics checks
+        if: matrix.test-function == 'nrpyleakage_optically_thin_gas'
+        run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_nrpyleakage_physics
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
