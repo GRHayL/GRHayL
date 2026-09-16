@@ -182,6 +182,7 @@ source, headers, tests, and common edit routes before wider search.
 - Likely tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
   `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`,
   `Unit_Tests/unit_test_nrpyleakage_luminosities.c`,
+  `Unit_Tests/unit_test_nrpyleakage_physics.c`,
   `Unit_Tests/nrpyleakage_main.h`; route fixture details through
   [tests and fixtures](neutrinos/tests-and-fixtures.md).
 - Common edit routes: add or change leakage routines in
@@ -196,9 +197,9 @@ source, headers, tests, and common edit routes before wider search.
 - Drift/contract notes: leakage uses tabulated EOS quantities and table-backed
   test data. HDF5/EOS changes can break Neutrinos even if leakage source is
   untouched. All 19 `ghl_pert_test_fail` fixture-replay results are
-  consumed, so a numerical mismatch fails its executable. The published
-  `GRHayL/TestData` fixtures predate the current arithmetic corrections; see
-  [Current Contradictions](../contradictions.md).
+  consumed, so a numerical mismatch fails its executable. Published
+  `GRHayL/TestData` fixtures and owner-accepted CompOSE goldens reflect the
+  selected density-derived blocking implementation.
 
 ## Reconstruction
 

@@ -153,14 +153,16 @@ checks every serialized node and all 19 mappings, storage-space interpolation
 and inversions from distinct valid initial guesses, the six-value ABI order
 and range failures, no-fallback
 Palenzuela recovery, analytic characteristic-speed, HLLE/entropy-flux, and
-source goldens, all eight combined-leakage outputs against regression goldens
-for the analytic and regularized SRO-141 inputs, and cleanup. Those leakage
-expectations predate the installed density-derived blocking correction and do
-not qualify it. The correction uses `rho`, `T`, `Xn`, and `Xp`, rather than raw
+source goldens, all eight combined-leakage outputs against owner-accepted
+regression goldens for the analytic and regularized SRO-141 inputs, and
+cleanup. Those goldens lock the selected implementation after external rate
+and thin-gas qualification; they do not independently qualify its physics.
+The correction uses `rho`, `T`, `Xn`, and `Xp`, rather than raw
 `mu_n` and `mu_p`, because the free fractions determine the available nucleon
 populations without depending on the producer's chemical-energy zero. Its
-interacting-EOS and spectral-pairing limits still require the independent
-comparisons listed in [Current Contradictions](../../contradictions.md).
+interacting-EOS and spectral-pairing limits, and the external qualification's
+reproducibility boundary, are documented in the
+[nucleon-blocking conventions leaf](../neutrinos/nucleon-blocking-and-eos-conventions.md).
 
 ## Build Gate
 

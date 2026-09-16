@@ -7,11 +7,12 @@
 
 /**
  * @file unit_test_nrpyleakage_physics.c
- * @brief Table-free physical checks for NRPyLeakage charged-current helpers.
+ * @brief Table-free physical checks for NRPyLeakage kernels and stencils.
  *
- * These checks use high-precision blocking references and exact equilibrium
- * identities. They complement EOS-table golden replays, which only detect
- * changes relative to one earlier implementation.
+ * These checks use high-precision blocking references, exact equilibrium
+ * identities, stable order-zero Fermi values, and a hand-calculated
+ * asymmetric optical-depth stencil. They complement EOS-table golden replays,
+ * which only detect changes relative to one earlier implementation.
  */
 
 /**
@@ -34,6 +35,105 @@ static void check_close(
   }
 }
 
+/** Check the stable order-zero Fermi expression at numerical edge cases. */
+static void check_fermi_dirac_zero_order(void) {
+  static const double z[] = { 710.0, -40.0, 0.0, 1.0e-3 };
+  static const double expected[] = {
+    7.10000000000000000e2,
+    4.24835425529158887e-18,
+    6.93147180559945286e-1,
+    6.93647305559940142e-1,
+  };
+
+  for(int i = 0; i < 4; i++) {
+    double computed;
+    ghl_abort_if_error(NRPyLeakage_Fermi_Dirac_integrals(0, z[i], &computed));
+    /* Relative scaling remains meaningful for the tiny z=-40 result. */
+    check_close(
+          "order-zero Fermi integral", computed, expected[i],
+          8.0 * DBL_EPSILON * fabs(expected[i]));
+  }
+}
+
+/** Check roundoff normalization and rejection of an unphysical fraction. */
+static void check_mass_fraction_validation(void) {
+  double B_n, B_p, Y_np, Y_pn, eta_n_minus_eta_p;
+  ghl_error_codes_t error = NRPyLeakage_compute_nucleon_blocking(
+        1.0e14, 1.0, -8.237492054256009e-17, 0.1, &B_n, &B_p, &Y_np, &Y_pn,
+        &eta_n_minus_eta_p);
+  ghl_abort_if_error(error);
+  if(B_n != 0.0 || Y_np != 0.0 || Y_pn != 0.1 || !isfinite(B_p)
+     || !isfinite(eta_n_minus_eta_p)) {
+    ghl_error("Roundoff-sized nucleon fraction did not reach its physical endpoint\n");
+  }
+
+  error = NRPyLeakage_compute_nucleon_blocking(
+        1.0e14, 1.0, -1.0e-6, 0.1, &B_n, &B_p, &Y_np, &Y_pn, &eta_n_minus_eta_p);
+  if(error != ghl_error_nrpyleakage_blocking) {
+    ghl_error("Materially negative nucleon fraction returned error code %d\n", error);
+  }
+}
+
+/** Check neighbor ordering with distinct data and unequal face metrics. */
+static void check_asymmetric_optical_depth_stencil(void) {
+  const double dxx[3] = { 1.0, 1.0, 1.0 };
+  const double gxx[3] = { 1.0, 4.0, 16.0 };
+  const double gyy[3] = { 4.0, 9.0, 25.0 };
+  const double gzz[3] = { 9.0, 16.0, 36.0 };
+  const ghl_neutrino_opacities kappa_im1
+        = { .nue = { 4.0, 4.0 }, .anue = { 4.0, 4.0 }, .nux = { 4.0, 4.0 } };
+  const ghl_neutrino_opacities kappa_ip1
+        = { .nue = { 6.0, 6.0 }, .anue = { 6.0, 6.0 }, .nux = { 6.0, 6.0 } };
+  const ghl_neutrino_opacities kappa_jm1
+        = { .nue = { 8.0, 8.0 }, .anue = { 8.0, 8.0 }, .nux = { 8.0, 8.0 } };
+  const ghl_neutrino_opacities kappa_jp1
+        = { .nue = { 10.0, 10.0 }, .anue = { 10.0, 10.0 }, .nux = { 10.0, 10.0 } };
+  const ghl_neutrino_opacities kappa_km1
+        = { .nue = { 12.0, 12.0 }, .anue = { 12.0, 12.0 }, .nux = { 12.0, 12.0 } };
+  const ghl_neutrino_opacities kappa_kp1
+        = { .nue = { 14.0, 14.0 }, .anue = { 14.0, 14.0 }, .nux = { 14.0, 14.0 } };
+  const ghl_neutrino_opacities kappa_center
+        = { .nue = { 2.0, 2.0 }, .anue = { 2.0, 2.0 }, .nux = { 2.0, 2.0 } };
+  /* Each field selects a different direction; 1000 excludes every other path. */
+  const ghl_neutrino_optical_depths tau_im1 = { .nue = { 0.0, 1000.0 },
+                                                .anue = { 1000.0, 1000.0 },
+                                                .nux = { 1000.0, 1000.0 } };
+  const ghl_neutrino_optical_depths tau_ip1 = { .nue = { 1000.0, 0.0 },
+                                                .anue = { 1000.0, 1000.0 },
+                                                .nux = { 1000.0, 1000.0 } };
+  const ghl_neutrino_optical_depths tau_jm1 = { .nue = { 1000.0, 1000.0 },
+                                                .anue = { 0.0, 1000.0 },
+                                                .nux = { 1000.0, 1000.0 } };
+  const ghl_neutrino_optical_depths tau_jp1 = { .nue = { 1000.0, 1000.0 },
+                                                .anue = { 1000.0, 0.0 },
+                                                .nux = { 1000.0, 1000.0 } };
+  const ghl_neutrino_optical_depths tau_km1 = { .nue = { 1000.0, 1000.0 },
+                                                .anue = { 1000.0, 1000.0 },
+                                                .nux = { 0.0, 1000.0 } };
+  const ghl_neutrino_optical_depths tau_kp1 = { .nue = { 1000.0, 1000.0 },
+                                                .anue = { 1000.0, 1000.0 },
+                                                .nux = { 1000.0, 0.0 } };
+  ghl_neutrino_optical_depths computed;
+
+  NRPyLeakage_optical_depths_PathOfLeastResistance(
+        dxx, gxx, gyy, gzz, &kappa_im1, &kappa_ip1, &kappa_jm1, &kappa_jp1, &kappa_km1,
+        &kappa_kp1, &tau_im1, &tau_ip1, &tau_jm1, &tau_jp1, &tau_km1, &tau_kp1,
+        &kappa_center, &computed);
+
+  const double expected[6] = {
+    3.0 * sqrt(2.5),  4.0 * sqrt(10.0), 5.0 * sqrt(6.5),
+    6.0 * sqrt(17.0), 7.0 * sqrt(12.5), 8.0 * sqrt(26.0),
+  };
+  const double computed_values[6]
+        = { computed.nue[0],  computed.nue[1], computed.anue[0],
+            computed.anue[1], computed.nux[0], computed.nux[1] };
+  for(int i = 0; i < 6; i++) {
+    check_close(
+          "asymmetric optical depth", computed_values[i], expected[i],
+          16.0 * DBL_EPSILON * expected[i]);
+  }
+}
+
 /**
  * Check one high-precision nucleon-blocking reference state.
  *
@@ -41,8 +141,8 @@ static void check_close(
  * @param[in] T Temperature in MeV.
  * @param[in] X_n Free-neutron mass fraction.
  * @param[in] X_p Free-proton mass fraction.
- * @param[in] expected_B_n Expected neutron vacancy fraction.
- * @param[in] expected_B_p Expected proton vacancy fraction.
+ * @param[in] expected_B_n Expected effective neutron scattering population.
+ * @param[in] expected_B_p Expected effective proton scattering population.
  * @param[in] expected_Y_np Expected neutron-to-proton transition population.
  * @param[in] expected_Y_pn Expected proton-to-neutron transition population.
  */
@@ -144,7 +244,8 @@ static void check_spectral_detailed_balance(void) {
 }
 
 /**
- * Check the production beta-moment helpers against independent references.
+ * Check the production beta-moment helpers against high-precision arithmetic
+ * references.
  *
  * The references are 100-digit evaluations of the published Takahashi
  * complete-Fermi fits followed by the documented shifted-moment and vacancy
@@ -298,6 +399,9 @@ static void check_strongly_blocked_channel_limit(void) {
  * @return Zero after every check passes.
  */
 int main(void) {
+  check_fermi_dirac_zero_order();
+  check_mass_fraction_validation();
+  check_asymmetric_optical_depth_stencil();
   check_blocking_state(
         1.0e14, 10.0, 0.5, 0.5, 0.260084127753509933, 0.260084127753509933,
         0.299113719948796048, 0.299113719948796048);

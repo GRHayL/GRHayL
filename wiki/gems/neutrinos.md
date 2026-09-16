@@ -13,19 +13,22 @@ Doxygen source.
    species, chemical potentials, density-derived free-nucleon blocking,
    producer energy conventions, physical qualification limits, units, and the
    number and energy source-term conventions.
-2. [Generator Provenance](neutrinos/generator-provenance.md) for the original
+2. [Nucleon Blocking And EOS Conventions](neutrinos/nucleon-blocking-and-eos-conventions.md)
+   for the installed approximation, detailed-balance pairing, performance
+   motivation, qualification evidence, and dense-matter limitation.
+3. [Generator Provenance](neutrinos/generator-provenance.md) for the original
    Python notebooks, symbolic common-subexpression temporaries, and the
    boundary between ancestral generators and current checked-in C.
-3. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
+4. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
    `NRPyLeakage_*` declarations, constants ownership, errors, and HDF5/EOS
    dependency.
-4. [CompOSE EOS Adapter How-To](neutrinos/compose-eos-adapter-how-to.md) for
+5. [CompOSE EOS Adapter How-To](neutrinos/compose-eos-adapter-how-to.md) for
    adapting CompOSE state, composition, and chemical-potential outputs to the
    NRPyLeakage EOS callback and validating that boundary.
-5. [Implementation Flow](neutrinos/implementation-flow.md) for the
+6. [Implementation Flow](neutrinos/implementation-flow.md) for the
    `GRHayL/Neutrinos/NRPyLeakage/` source set, its writeback paths, and
    the minimal direct-compilation boundary.
-6. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
+7. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
    fixture pairs, EOS table setup, and CI downloads.
 
 ## Ground Truth
@@ -33,6 +36,8 @@ Doxygen source.
 - Source: `GRHayL/Neutrinos/NRPyLeakage/`
 - Private blocking evaluator:
   `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h`
+- Installed blocking model and qualification:
+  [Nucleon Blocking And EOS Conventions](neutrinos/nucleon-blocking-and-eos-conventions.md)
 - Public radiation structs: `GRHayL/include/ghl_radiation.h`
 - Public leakage declarations and constants: `GRHayL/include/ghl_nrpyleakage.h`
 - Error codes and EOS parameter types: `GRHayL/include/ghl.h`
@@ -81,10 +86,11 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
   produce finite, bounded factors.
 - All three EOS-dependent routines obtain blocking from `rho`, `T`, `Xn`, and
   `Xp`. This avoids using producer-dependent absolute `mu_n` and `mu_p` as
-  kinetic occupations. `muhat` remains in the grey equilibrium moments so the
-  existing EOS beta-equilibrium convention is preserved while the full
-  emission/absorption spectral pairing remains a documented qualification
-  boundary.
+  kinetic occupations. They combine the density-derived kinetic degeneracy
+  difference with `muhat` to form one reaction-energy shift, then apply it to
+  paired algebraic charged-current emission and absorption moments. The
+  remaining qualification boundary is the accuracy of that grey approximation,
+  recorded in the blocking-conventions page.
 - Optical-depth update is a `void` six-neighbor stencil call with no validation
   or failure channel. Metric stencil order is minus/center/plus.
 - Every implementation file matches its manifest and header declarations.

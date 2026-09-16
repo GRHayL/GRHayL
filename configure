@@ -499,7 +499,7 @@ case $buildtype in
          debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g" ;;
      debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2 -g" ;;
            opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2" ;;
-    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3" ;;
+    production) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O3" ;;
              *) printf "%s\nUnsupported built type, use ./configure -h for help\n" "$(red "$buildtype")"
                 exit 1;;
 esac
@@ -821,11 +821,11 @@ TEXEOBJS = ${texeobjs}
 ${LINKEXE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) \$(TOBJS) $< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -l${libname}
 
-\$(TOBJS): \$(BUILDDIR)/%.o: %.c
+\$(TOBJS): \$(BUILDDIR)/%.o: %.c \$(INC)
 ${COMPILE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) -c $< -o \$@
 
-\$(TEXEOBJS): \$(BUILDDIR)/%.o: %.c
+\$(TEXEOBJS): \$(BUILDDIR)/%.o: %.c \$(INC)
 ${COMPILE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) -c $< -o \$@
 "
@@ -918,12 +918,18 @@ ${TAB}${SILENT}cp \$(IHDS) \$(PREFIX)/include/ghl
 ${TAB}${ALWAYS_SILENT}echo "Installing GRHayL libraries in \$(PREFIX)/lib"
 ${TAB}${ALWAYS_SILENT}mkdir -p \$(PREFIX)/lib
 ${TAB}${SILENT}cp -a \$(BUILDDIR)/lib/* \$(PREFIX)/lib
+${TAB}${ALWAYS_SILENT}echo "Installing third-party notices in \$(PREFIX)/share/doc/grhayl"
+${TAB}${SILENT}mkdir -p \$(PREFIX)/share/doc/grhayl
+${TAB}${SILENT}install -m 0644 THIRD_PARTY_NOTICES \$(PREFIX)/share/doc/grhayl
 
 uninstall:
 ${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL headers from \$(PREFIX)/include/ghl"
 ${TAB}${SILENT}rm -rf \$(PREFIX)/include/ghl
 ${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL libraries from \$(PREFIX)/lib"
 ${TAB}${SILENT}rm -rf \$(PREFIXLIBSO) \$(PREFIXLIBSOV)
+${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL third-party notices"
+${TAB}${SILENT}rm -f \$(PREFIX)/share/doc/grhayl/THIRD_PARTY_NOTICES
+${TAB}${SILENT}rmdir \$(PREFIX)/share/doc/grhayl 2>/dev/null || true
 EOF
 green "DONE\n"
 

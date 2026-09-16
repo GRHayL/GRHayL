@@ -49,13 +49,10 @@ key `0`; CI and standard unit-test replay use key `1`. These producers live in
 the test translation units themselves; there are no matching
 `Unit_Tests/data_gen/unit_test_data_nrpyleakage_*.c` targets.
 
-The historical published `GRHayL/TestData` copies predate the current
-diffusion-time, bremsstrahlung-density, heavy-species, and nucleon-blocking
-corrections. The owner accepted regenerated outputs from the corrected model as
-the replacement golden baseline. Those replacements are installed in the local
-`TestData` checkout and await publication to the separate repository. Until
-publication, remote CI still downloads the historical data. No new scenario or
-tolerance change accompanies the replacement.
+The published `GRHayL/TestData` copies contain the owner-accepted regenerated
+outputs for the current diffusion-time, bremsstrahlung-density, heavy-species,
+and nucleon-blocking corrections. CI downloads those replacement goldens. No
+new scenario or tolerance change accompanied the replacement.
 
 ## Blocking-Correction Qualification
 
@@ -69,8 +66,9 @@ chemical potential. Those mathematical properties do not establish
 interacting-EOS accuracy for the algebraic grey reduction.
 
 `Unit_Tests/unit_test_nrpyleakage_physics.c` supplies persistent, table-free
-physics checks. It compares blocking and ordinary beta moments with independent
-high-precision references, checks population bounds and the transition
+physics checks. It compares blocking with independent high-precision
+references and ordinary beta moments with high-precision evaluations of the
+same fitted formulas, checks population bounds and the transition
 normalization identity, checks both reaction-threshold orientations, and
 verifies spectral detailed balance for electron-neutrino and
 electron-antineutrino kernels. It also exercises the zero-emission,
@@ -108,6 +106,10 @@ toward the lower-density points, but several antineutrino channels still
 differ by `12--39%` at the three lowest-density published states. Widened
 scratch-only BNS_NURATES quadrature changed the reported full-DD2 channels by
 at most `6.4e-6` relative from 96 to 128 nodes.
+
+These measurements are external qualification evidence. Their scratch drivers,
+DD2 state data, and modified BNS_NURATES quadrature are not present in this
+checkout, so this repository cannot reproduce those numerical comparisons.
 
 This record does not invent a universal physical pass limit. Neither project
 policy, ILEAS, nor BNS_NURATES supplies a per-kernel or one-zone evolution
@@ -159,8 +161,8 @@ then runs:
 ```
 
 Use `.github/run_tests.sh` as the primary command route for fixture and table
-downloads. Do not claim current remote fixture availability from this page; the
-repo-local script is the cited route.
+downloads. Its named TestData paths are the reproducible publication route for
+the current fixtures described above.
 
 No-HDF5 builds set `GHL_DISABLE_HDF5` and apply `configure`'s exact
 implementation-source filter. That filter removes many tabulated EOS/Flux_Source
@@ -185,12 +187,15 @@ For wider build context, see `wiki/build-and-ci.md` and `wiki/test-map.md`.
 
 `Unit_Tests/unit_test_nrpyleakage_physics.c` covers density-derived nucleon
 blocking and shifted charged-current algebra without an EOS table or binary
-fixture. Independent reference values include an equal-population state, a
-near-equal state that exercises cancellation handling, a degenerate state,
-an asymmetric dilute-proton state, and all four ordinary beta-moment helper
-paths. Exact checks cover population bounds, transition normalization,
-zero-shift recovery, threshold orientation, and spectral Kirchhoff pairing for
-both beta channels. Cold trace-population states cover common moment underflow,
+fixture. Independent blocking reference values include an equal-population
+state, a near-equal state that exercises cancellation handling, a degenerate
+state, and an asymmetric dilute-proton state. High-precision arithmetic
+references cover all four ordinary beta-moment helper paths. Exact checks cover
+the stable order-zero Fermi expression, roundoff-sized fraction normalization,
+population bounds, transition normalization, zero-shift recovery, threshold
+orientation, and spectral Kirchhoff pairing for both beta channels. A
+hand-calculated asymmetric stencil checks optical-depth neighbor ordering with
+unequal face metrics. Cold trace-population states cover common moment underflow,
 numerator-only underflow with representable Fermi normalization, the finite
 normalized Boltzmann limit, and finite ratios of subnormal moments.
 

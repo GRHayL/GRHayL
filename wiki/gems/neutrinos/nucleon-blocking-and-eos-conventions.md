@@ -203,7 +203,7 @@ would then assess the full evolution effect.
 ILEAS's reported scheme-level transport agreement is not a per-kernel GRHayL
 error allowance and is not reused as one.
 
-## Ground-Truth References
+## Ground Truth References
 
 - [ILEAS](https://arxiv.org/html/1808.00006v2), especially Appendices B and C:
   density-derived gas degeneracies, algebraic shifted moments, and detailed

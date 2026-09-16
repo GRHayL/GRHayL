@@ -137,12 +137,13 @@ temperature inversions from distinct valid initial guesses at endpoints and
 an interior point, the six-value
 NRPyLeakage callback order and range failures, and memory cleanup.  It also
 checks a no-fallback Con2Prim recovery, analytic tabulated flux and source
-goldens, and all eight combined-NRPyLeakage outputs against fixed regression
-historical regression goldens selected by the two recognized table dimensions.
-Recognition by dimensions is not physical qualification. The blocking
-candidate changes these downstream values and is expected to fail this part of
-the test until the selected model is independently qualified and replacement
-values are accepted. CI selects only the synthetic table.
+goldens, and all eight combined-NRPyLeakage outputs against fixed,
+owner-accepted regression goldens selected by the two recognized table
+dimensions. Recognition by dimensions and agreement with those values detect
+implementation drift; they are not independent physical qualification. The
+selected blocking model was qualified separately against external rate and
+thin-gas references. CI selects only the synthetic table; the SRO-141 replay
+requires external manual data.
 
 On the previously qualified table-141 artifact, the historical distortion
 summary records that regularization changed at most

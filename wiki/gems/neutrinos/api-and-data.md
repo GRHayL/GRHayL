@@ -167,11 +167,13 @@ The three EOS-dependent public routines include the source-private
 structs remain unchanged; the helper is not installed as public API.
 
 After EOS lookup and density conversion, the helper requires finite positive
-cgs density and temperature and finite `X_n`, `X_p` values in `[0,1]`. It also
-rejects non-finite kinetic-degeneracy inversion, overlap, or population-bound
-results. A failure returns `ghl_error_nrpyleakage_blocking` before any public
-output is written. This distinct error identifies failure of the blocking
-evaluator rather than an EOS interpolation or generated Fermi-moment key.
+cgs density and temperature. It accepts finite `X_n`, `X_p` in `[0,1]` and
+normalizes only endpoint excursions within the forward-error bound of the
+eight-corner interpolation arithmetic. It rejects larger excursions and any
+non-finite kinetic-degeneracy inversion, overlap, or population-bound result.
+A failure returns `ghl_error_nrpyleakage_blocking` before any public output is
+written. This distinct error identifies failure of the blocking evaluator
+rather than an EOS interpolation or generated Fermi-moment key.
 
 Ports of any opacity, combined source/opacity, or luminosity entry point must
 carry this private header or provide equivalent blocking and error behavior.
@@ -211,10 +213,12 @@ for fixture generation or replay:
   `ghl_tabulated_compute_eps_from_T` and `ghl_tabulated_compute_T_from_eps`
   from `GRHayL/include/ghl_eos_functions.h`.
 
-`configure` adds `GHL_DISABLE_HDF5` and excludes the
-`unit_test_nrpyleakage_*.c` tests when HDF5 is disabled. `.github/run_tests.sh`
+`configure` adds `GHL_DISABLE_HDF5` and excludes the three table-backed fixture
+tests when HDF5 is disabled. The self-contained
+`unit_test_nrpyleakage_physics.c` remains available. `.github/run_tests.sh`
 downloads the SLy4 EOS table and Neutrinos fixture pairs before running the
-NRPyLeakage unit tests with key `1`.
+table-backed NRPyLeakage tests with key `1`, and runs the physics executable
+without table arguments.
 
 No-HDF5 builds still compile the guarded NRPyLeakage implementation files; they
 exclude only the three HDF5-dependent unit tests. Current error tests cover

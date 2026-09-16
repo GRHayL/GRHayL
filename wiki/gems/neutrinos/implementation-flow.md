@@ -72,7 +72,8 @@ adapter before replacing any current file.
 The three EOS-dependent routines return immediately with
 `ghl_error_used_disabled_hdf5` in no-HDF5 builds. With HDF5, they return the
 tabulated EOS error unchanged. The blocking helper then validates finite,
-positive cgs density and temperature; finite free fractions in `[0,1]`; and
+positive cgs density and temperature; finite free fractions in `[0,1]`, apart
+from endpoint excursions within the interpolation forward-error bound; and
 finite, bounded inversion and overlap results. Failure returns
 `ghl_error_nrpyleakage_blocking`. Generated Fermi calls return an invalid-key
 error through `NRPYLEAKAGE_FD_OR_RETURN`. Output writes occur only after these
@@ -97,11 +98,14 @@ retaining finite and population-bound checks. The source header records ILEAS,
 FDINT/Fukushima, Sterbenz, and BSD-3 provenance; the exact equations and model
 limits are in [Physics And EOS Contract](physics-and-eos-contract.md).
 
-The helper does not replace `muhat` in the existing grey equilibrium-neutrino
-moments. That separation preserves EOS beta-equilibrium information and avoids
-silently introducing reaction-energy shifts into only one side of an
-emission/absorption pair. Full shifted spectral Kirchhoff pairing remains a
-separate physical-model change.
+The callers retain `muhat` in the grey equilibrium-neutrino degeneracy and use
+the helper's kinetic degeneracy difference to form the reaction shift
+`q = muhat - T*(eta_n-eta_p)`. Private algebraic moment evaluators apply that
+same shift and its particle-energy threshold to the paired charged-current
+emission and absorption kernels. This enforces their spectral Kirchhoff
+relation without quadrature. It remains a grey leakage approximation: emitted
+neutrino vacancy is sampled at the mean energy, and the independent physical
+qualification bounds the resulting model error.
 
 `robust_isfinite` is used only by the combined source-term file;
 `robust_isnan` has no active repo-local caller. Both public inline helpers now
@@ -120,17 +124,22 @@ Flow:
    `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; return any EOS
    error directly.
 3. Convert `rho` to cgs units through `NRPyLeakage_units_geom_to_cgs_D`, then
-   derive scattering and transition populations from `rho_cgs`, `T`, `X_n`,
-   and `X_p` through the private blocking helper. Return its error before
-   output writes. Keep `muhat` for the existing grey equilibrium moments.
-4. Run source-owned generated formula blocks for emissivity, opacity-like
-   denominators, Fermi-Dirac factors, and optical-depth suppression. These
-   blocks call `NRPYLEAKAGE_FD_OR_RETURN`, so Fermi-Dirac errors propagate.
-5. Use metric/lapse/Lorentz input in the luminosity scaling:
+   derive scattering and transition populations and the kinetic degeneracy
+   difference from `rho_cgs`, `T`, `X_n`, and `X_p`. Return helper errors before
+   output writes and normalize only accepted endpoint roundoff for all later
+   uses of the fractions.
+4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate the paired shifted beta
+   emission and absorption moments algebraically when both free populations
+   are positive. Zero populations retain zero charged-current moments.
+5. Run the remaining source-owned generated formula blocks for emissivity,
+   opacity-like denominators, Fermi-Dirac factors, and optical-depth
+   suppression. Calls through `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid
+   Fermi-Dirac keys.
+6. Use metric/lapse/Lorentz input in the luminosity scaling:
    `alpha`, the six spatial metric components, and `W` enter the
    `NRPyLeakage_units_cgs_to_geom_Q` luminosity prefactor before writeback;
    `NRPyLeakage_units_geom_to_cgs_D` is the earlier density conversion.
-6. Write `lum->nue`, `lum->anue`, and `lum->nux`.
+7. Write `lum->nue`, `lum->anue`, and `lum->nux`.
 
 Finite handling: local `EnsureFinite` wraps selected generated subexpressions
 with `isfinite` fallback to a small positive value; there is no final output
@@ -156,15 +165,17 @@ Flow:
    `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; return any EOS
    error directly.
 3. Convert `rho` to cgs units, then derive scattering and transition
-   populations from `rho_cgs`, `T`, `X_n`, and `X_p` through the private
-   blocking helper. Return its error before output writes. Keep `muhat` for
-   the existing grey equilibrium moments.
-4. Run source-owned generated formula blocks for rate terms, opacity terms,
-   optical-depth limited source terms, and Fermi-Dirac factors. Calls through
-   `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid Fermi-Dirac keys if they ever
-   occur.
-5. Write `*R_source` and `*Q_source`.
-6. Write all six opacity entries: `kappa->nue[0..1]`,
+   populations and the kinetic degeneracy difference from `rho_cgs`, `T`,
+   `X_n`, and `X_p`. Return helper errors before output writes and normalize
+   only accepted endpoint roundoff for all later fraction uses.
+4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate paired shifted beta
+   emission and absorption moments algebraically when both free populations
+   are positive. Zero populations retain zero charged-current moments.
+5. Run the remaining source-owned generated formula blocks for rate terms,
+   opacity terms, optical-depth limited source terms, and Fermi-Dirac factors.
+   Calls through `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid keys.
+6. Write `*R_source` and `*Q_source`.
+7. Write all six opacity entries: `kappa->nue[0..1]`,
    `kappa->anue[0..1]`, and `kappa->nux[0..1]`.
 
 Finite handling: this file's `EnsureFinite` uses `robust_isfinite` from
@@ -192,15 +203,19 @@ Flow:
    `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; return any EOS
    error directly.
 3. Convert `rho` to cgs units through `NRPyLeakage_units_geom_to_cgs_D`, then
-   derive scattering and transition populations from `rho_cgs`, `T`, `X_n`,
-   and `X_p` through the private blocking helper. Return its error before
-   output writes. Keep `muhat` for the existing grey equilibrium moments.
-4. Run source-owned generated formula blocks for absorption/scattering opacity
-   entries. These generated blocks call `NRPYLEAKAGE_FD_OR_RETURN`, so
-   Fermi-Dirac errors propagate.
-5. Write all six opacity entries: `kappa->nue[0..1]`,
+   derive scattering and transition populations and the kinetic degeneracy
+   difference from `rho_cgs`, `T`, `X_n`, and `X_p`. Return helper errors before
+   output writes and normalize only accepted endpoint roundoff for all later
+   fraction uses.
+4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate paired shifted beta
+   absorption moments algebraically when both free populations are positive.
+   Zero populations retain zero charged-current moments.
+5. Run the remaining source-owned generated formula blocks for
+   absorption/scattering opacity entries. Calls through
+   `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid keys.
+6. Write all six opacity entries: `kappa->nue[0..1]`,
    `kappa->anue[0..1]`, and `kappa->nux[0..1]`.
-6. Scrub each written opacity entry with `isfinite`; any non-finite final
+7. Scrub each written opacity entry with `isfinite`; any non-finite final
    value is reset to a small positive value.
 
 Finite handling: local `EnsureFinite` handles selected generated
