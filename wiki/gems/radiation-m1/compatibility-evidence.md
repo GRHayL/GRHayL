@@ -17,11 +17,15 @@ that path; they do not establish a downstream grid evolution.
 - separate total-number and charged-current lepton exchange.
 
 The corresponding implementations are listed in
-[`TRACEABILITY.md`](../../../GRHayL/Radiation/TRACEABILITY.md).
-The focused tests in `scripts/test_radiation.py` cover the zero-flux tensor
-invariants, coupled pair source conservation, and provider channel mapping.
-The list above is broader than that regression coverage; it does not imply
-that every transport or source branch is tested.
+[`TRACEABILITY.md`](../../../GRHayL/Radiation/TRACEABILITY.md). The complete
+test, fixture, runner, and CI inventory is in
+[M1 tests and fixtures](tests-and-fixtures.md). `configure` discovers the nine
+M1 sources as ordinary `unit_test_*.c` targets, subject to its HDF5 filtering;
+`Unit_Tests/run_m1_tests.sh` selects and runs them, and the normal runner and
+dedicated Radiation action invoke that route. The checked-in fixture package is
+validated by `Unit_Tests/data/m1_thcm1/audit_package.py` before replay.
+Configured execution and a local run remain scoped evidence rather than
+downstream host or physical-validation evidence.
 
 ## What is not claimed
 
@@ -34,8 +38,10 @@ any such campaign and its reporting.
 
 The host must use the four-point transport operation for neutrino M1 faces and
 provide uncapped metric light-cone speeds. The operation does not provide a
-separate diffusion correction. The existing finite-difference/Newton source
-solver remains the local implicit solver. Legacy policy fields may remain for
+separate diffusion correction. The public diffusion helper is tested
+separately and is not selected by this canonical route. The existing
+finite-difference/Newton source solver remains the local implicit solver.
+Legacy policy fields may remain for
 source or ABI compatibility, but cannot select a different numerical method.
 The host must apply one limiter scalar to every coupled species, matter, and
 `Y_e` increment; no host implementation is included here.

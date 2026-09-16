@@ -642,6 +642,60 @@ ghl_error_codes_t ghl_m1_compute_neutrino_four_point_transport_flux(
       double flux_tilde[ghl_m1_neutrino_transport_component_count],
       ghl_m1_four_point_transport_diagnostics *restrict diagnostics);
 
+/** Evaluate a four-point blended face flux from volume-weighted operands.
+ *
+ * The caller must supply the four stencil states after applying the desired
+ * cell-volume factors and both physical face fluxes after applying the
+ * desired face-volume factor. The stencil is {j-1,j,j+1,j+2}; the prepared
+ * physical_flux_L/R and speed_L/R belong to j and j+1. The function applies
+ * the same Rusanov flux, componentwise limiter, opacity suppression, and
+ * high/low blend as
+ * @c ghl_m1_compute_neutrino_four_point_transport_flux, but does not inspect
+ * or multiply by a face metric. The returned flux is therefore already
+ * weighted according to the caller's volume-weighted operands. The opacity
+ * and coordinate-spacing controls retain the same units and meaning as in
+ * the pointwise API. The canonical caller supplies uncapped light-cone
+ * speeds and disables the separate diffusion correction; requests for that
+ * unsupported policy are rejected.
+ *
+ * This entry point is intentionally separate from the pointwise API: do not
+ * pass volume-weighted operands to the pointwise function, which applies its
+ * one face-metric densitization factor.
+ *
+ * @param m1_params Initialized M1 limiter parameters. The canonical
+ *        four-point controls are read from this bundle.
+ * @param state_stencil Four already volume-weighted states in stencil order
+ *        {j-1,j,j+1,j+2}; each row uses {N,E,Fx,Fy,Fz}.
+ * @param physical_flux_L Volume-weighted physical flux at cell j.
+ * @param physical_flux_R Volume-weighted physical flux at cell j+1.
+ * @param speed_L Uncapped light-cone speed associated with cell j.
+ * @param speed_R Uncapped light-cone speed associated with cell j+1.
+ * @param kappa_face Face transport opacity in code inverse-length units,
+ *        consistent with @p delta_x.
+ * @param delta_x Coordinate spacing in the selected direction. This is not
+ *        proper normal spacing.
+ * @param diffusion_correction_enabled Must be false for the canonical
+ *        operation; true is rejected.
+ * @param flux_tilde Output volume-weighted face flux in {N,E,Fx,Fy,Fz} order.
+ * @param diagnostics Optional output diagnostics. Pass NULL when they are not
+ *        needed.
+ * @return @c ghl_success on publication; otherwise the output flux and
+ *         diagnostics remain unchanged.
+ */
+ghl_error_codes_t
+ghl_m1_compute_neutrino_four_point_volume_weighted_transport_flux(
+      const ghl_m1_parameters *restrict m1_params,
+      const double state_stencil[4][ghl_m1_neutrino_transport_component_count],
+      const double physical_flux_L[ghl_m1_neutrino_transport_component_count],
+      const double physical_flux_R[ghl_m1_neutrino_transport_component_count],
+      const double speed_L,
+      const double speed_R,
+      const double kappa_face,
+      const double delta_x,
+      const bool diffusion_correction_enabled,
+      double flux_tilde[ghl_m1_neutrino_transport_component_count],
+      ghl_m1_four_point_transport_diagnostics *restrict diagnostics);
+
 /** Componentwise stages exposed for focused diagnostics and testing. */
 ghl_error_codes_t ghl_m1_compute_four_point_flux_limiter(
       const ghl_m1_parameters *restrict m1_params,
@@ -742,7 +796,17 @@ double ghl_m1_newton_weighted_merit(
       const double U_base[4],
       const double residual[4]);
 
-/** Project a densitized E/F_i vector into the configured admissible domain. */
+/**
+ * Project a densitized E/F_i vector into the configured admissible domain.
+ *
+ * @param m1_params M1 parameters; required.
+ * @param metric Metric quantities with a positive finite sqrt_detgamma;
+ *        required.
+ * @param U Densitized E/F_i vector in {tilde E, tilde F_i} order; required.
+ * @return @c ghl_success on publication, or
+ *         @c ghl_error_m1_null_pointer when a required pointer is NULL.
+ *         On every error, @p U is unchanged.
+ */
 ghl_error_codes_t ghl_m1_newton_project_admissible(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,

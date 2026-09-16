@@ -1,8 +1,9 @@
 #ifndef GHL_M1_NRPYLEAKAGE_KERNEL_H_
 #define GHL_M1_NRPYLEAKAGE_KERNEL_H_
 
-#include "ghl_radiation.h"
+#include "ghl.h"
 #include "ghl_eos_functions.h"
+#include "ghl_radiation.h"
 
 /*
  * Private M1 adapter types.  These intentionally do not extend the public
@@ -62,8 +63,7 @@ typedef struct {
 } ghl_m1_nrpyleakage_species_raw_rates;
 
 typedef struct {
-  ghl_m1_nrpyleakage_species_raw_rates
-      species[ghl_m1_nrpyleakage_species_count];
+  ghl_m1_nrpyleakage_species_raw_rates species[ghl_m1_nrpyleakage_species_count];
   int nux_single_species_multiplicity;
 } ghl_m1_nrpyleakage_raw_rates;
 
@@ -120,4 +120,3 @@ ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
       ghl_m1_nrpyleakage_raw_rates *restrict raw);
 
 #endif
-

@@ -6,6 +6,12 @@ Repo ground truth: `Unit_Tests/`, `.github/run_tests.sh`, `.github/workflows/`,
 Evidence labels are strict: `configure` selects targets; `make tests` and
 `make datagen` compile/link; only an exact invocation establishes execution.
 Workflow commands are workflow-only evidence, not historical pass results.
+Radiation M1 execution is selected by
+[`Unit_Tests/run_m1_tests.sh`](../Unit_Tests/run_m1_tests.sh), including its
+invocation from the normal runner and dedicated compiler/OS workflow jobs.
+See the [M1 test guide](../Unit_Tests/README.m1.md) for scoped execution and
+reference-data boundaries. The legacy inventory counts below do not include
+these added M1 selections.
 Default configuration selects 30 unit-test binaries; `.github/run_tests.sh`
 directly invokes 27, omitting WENOZ reconstruction, Con2Prim debug, and the
 CompOSE integration test. WENOZ and CompOSE are workflow-selected; no normal
@@ -27,6 +33,9 @@ targeted build, run, and CI job guidance routes through [Induction verification 
 Flux_Source-specific hybrid/tabulated HLLE fixtures, ET Legacy flux/source
 replay, characteristic-speed fixture evidence, and the Induction HLL exclusion
 route through [Flux_Source tests and fixtures](gems/flux-source/tests-and-fixtures.md).
+Radiation M1 test selection, stored pointwise/source/transport/Rusanov fixtures,
+the generated provider table, CI routes, and coverage limits route through
+[Radiation M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md).
 
 Cross-cutting Unit_Tests routes live under [Unit_Tests Hub](tests/index.md):
 [runner and generated artifacts](tests/runner-and-generated-artifacts.md),
@@ -37,6 +46,25 @@ Cross-cutting Unit_Tests routes live under [Unit_Tests Hub](tests/index.md):
 and [unit-test coverage and gap matrix](tests/unit-test-coverage-and-gap-matrix.md).
 This page remains the top-level inventory; use the detailed pages for fixture
 lifecycle, run modes, tables, and coverage caveats.
+
+## Radiation M1 scoped inventory
+
+The focused M1 runner executes the nine targets documented in
+[`Unit_Tests/README.m1.md`](../Unit_Tests/README.m1.md). The current claim
+ownership is:
+
+| Disposition | Owners | Fixture/evidence boundary |
+| --- | --- | --- |
+| Local analytic, invariant, transactional, solver, or provider checks | `unit_test_m1_diffusion_flux`, `unit_test_m1_error_handling`, `unit_test_m1_fd_jacobian`, `unit_test_m1_neutrino_source_update`, `unit_test_m1_rate_provider` | Cases are constructed locally. The provider's generated EOS table is test input, not an independent M1 reference. |
+| Local checks plus stored THC_M1 replay | `unit_test_m1_neutrino_seeded_invariants`, `unit_test_m1_neutrino_rusanov_flux`, `unit_test_m1_thcm1_blended_rusanov`, `unit_test_rusanov_flux` | Repository-local families under [`Unit_Tests/data/m1_thcm1/`](../Unit_Tests/data/m1_thcm1/), with one-current-baseline and operation-specific response-envelope checks. |
+
+The stored package documents retained producer receipts and input/output
+provenance, but the Unit_Tests runner does not invoke THC_M1, `THCM1_ROOT`,
+Verification, or an external reference-data download. A passing replay is not
+current Verification admission or a full cross-code result. Host evolution,
+discrete-operator equivalence, provider/rate validation, and continuum or
+whole-code claims remain separate. No stored finite-step or implicit-endpoint
+corpus is asserted by this inventory.
 
 GRHayLib/Cactus thorn coverage caveat: ET_Legacy tests are related legacy
 comparisons for upstream GRHayL behavior, not direct GRHayLib thorn coverage.
@@ -72,9 +100,9 @@ available. Route that checklist through
 | `Unit_Tests/unit_test_induction_ccc_ADM.c` | `GRHayL/Induction/Interpolators/` | Cell-centered ADM interpolation; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md). | Fixture family `induction_interpolation_*`; details in [Induction tests and fixtures](gems/induction/tests-and-fixtures.md). | Uses helper implementation in `Unit_Tests/compute_ccc_ADM.c`. |
 | `Unit_Tests/unit_test_induction_ccc_BSSN.c` | `GRHayL/Induction/Interpolators/` | Cell-centered BSSN interpolation; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md). | `induction_interpolation_input.bin`, `induction_interpolation_BSSN_input.bin`, `induction_interpolation_ccc_BSSN_output*.bin`; route fixture details through [Induction tests and fixtures](gems/induction/tests-and-fixtures.md). | Uses helper implementation in `Unit_Tests/compute_ccc_BSSN.c`. |
 | `Unit_Tests/unit_test_induction_vvv_ADM.c` | `GRHayL/Induction/Interpolators/` | Vertex-centered ADM interpolation; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md). | `induction_interpolation_input.bin`, `induction_interpolation_ADM_input.bin`, `induction_interpolation_vvv_ADM_output*.bin`; route fixture details through [Induction tests and fixtures](gems/induction/tests-and-fixtures.md). | Uses helper implementation in `Unit_Tests/compute_vvv_ADM.c`. |
-| `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Constant-density sphere opacities and optical-depth iteration; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_constant_density_sphere_{unperturbed,perturbed}.bin`. | Comparison result is discarded; trusted/perturbed and neighbor-direction arguments are reversed. Execution is not numerical-pass evidence. |
-| `Unit_Tests/unit_test_nrpyleakage_luminosities.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Fermi-Dirac branch checks and neutrino luminosity replay; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_luminosities_{unperturbed,perturbed}.bin`. | Comparison result is discarded, so numerical mismatch cannot fail executable. |
-| `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Optically thin gas leakage source evolution; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_optically_thin_gas_{unperturbed,perturbed}.bin`. | Comparison result is discarded, so numerical mismatch cannot fail executable. |
+| `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Constant-density sphere opacities and optical-depth iteration; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_constant_density_sphere_{unperturbed,perturbed}.bin`. | Comparison failures now terminate the test; trusted/perturbed and neighbor-direction arguments remain reversed. |
+| `Unit_Tests/unit_test_nrpyleakage_luminosities.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Fermi-Dirac branch checks and neutrino luminosity replay; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_luminosities_{unperturbed,perturbed}.bin`. | Comparison failures terminate the executable. |
+| `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Optically thin gas leakage source evolution; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_optically_thin_gas_{unperturbed,perturbed}.bin`. | Comparison failures terminate the executable. |
 | `Unit_Tests/unit_test_piecewise_polytrope.c` | `GRHayL/EOS/Hybrid/` | Piecewise-polytrope `K_ppoly` and `eps_integ_const` setup; see [EOS tests and fixtures](gems/eos/tests-and-fixtures.md). | None visible. | No external fixture. |
 | `Unit_Tests/unit_test_tabulated_eos.c` | `GRHayL/EOS/Tabulated/` | HDF5 table read, analytic table quantity checks, tabulated interpolation routines, bounds, `ghl_compute_h_and_cs2`, and beta-equilibrium helpers; see [EOS tests and fixtures](gems/eos/tests-and-fixtures.md). | CLI table path, normally `simple_table.h5` from CI or local sample generator. | HDF5-only. |
 | `Unit_Tests/unit_test_tabulated_eos_compose.c` | `tools/compose/`, unchanged tabulated EOS, Con2Prim, Flux_Source, and NRPyLeakage runtimes | Reads every node/all 19 fields independently; checks loader units/order, enthalpy, relativistic sound speed, midpoint interpolation, `eps/P/S/h` inverses from distinct valid initial guesses, and six-output order/ranges; requires no-fallback Palenzuela recovery; compares characteristic speed, HLLE/entropy fluxes, and source terms with analytic goldens; compares all eight combined-leakage outputs with fixed regression goldens for the two qualified table dimensions; and checks cleanup. Python failure and 100% branch coverage lives under `Unit_Tests/compose/`. | CLI regularized StellarCollapse table path; focused Ubuntu GCC CI builds an asymmetric synthetic table, while full table 141 is external manual qualification data. | HDF5-only; converter output must pass with runtime sound-speed cleaning disabled. |

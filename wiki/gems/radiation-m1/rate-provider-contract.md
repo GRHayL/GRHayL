@@ -85,18 +85,14 @@ Charged-current lepton bookkeeping comes from the provider's charged-current
 number fields and the species lepton weights.
 
 The raw beta emissivity is retained as a provider diagnostic, not added
-independently to the M1 source. Because the Ruffert beta-emission and
-charged-current absorption fits use different blocking averages, their local
-equilibrium Kirchhoff reconstructions are checked diagnostically within a
-factor of ten (`|eta_beta-eta_cc|/max(eta_beta,eta_cc) <= 0.9`) at the sample
-EOS point. The public bundle remains exactly Kirchhoff-consistent through
-`eta_N_cc = kappa_a_N_cc*n_eq`; the two approximations are never averaged into
-a new formula. This sample-point comparison checks internal rate consistency;
-it is not physical validation of the weak-rate model.
-
-On successful table-backed provider calls the runtime diagnostic is
-`abs(beta-kirchhoff)/max(abs(beta),abs(kirchhoff),DBL_MIN)`. Only electron
-flavors are valid; `nu_x` and reference-backend entries remain invalid. The
+independently to the M1 source. On successful table-backed provider calls,
+the provider stores
+`abs(beta-kirchhoff)/max(abs(beta),abs(kirchhoff),DBL_MIN)` in
+`beta_kirchhoff_relative_mismatch` and sets
+`beta_kirchhoff_mismatch_valid` for electron flavors. The `nu_x` and
+reference-backend entries remain invalid. The public bundle remains exactly
+Kirchhoff-consistent through `eta_N_cc = kappa_a_N_cc*n_eq`; the beta and
+Kirchhoff approximations are never averaged into a new formula. The
 unmasked charged-current reconstruction makes the diagnostic independent of
 the active thermal or charged-current mask.
 
@@ -110,9 +106,9 @@ When `use_tabulated_eos` is true, the provider reads table bounds from
 and computes thermodynamic quantities through current `NRPyEOS_*` entry
 points. If matter inputs fall outside table bounds, the provider either aborts
 or clamps according to `table_bounds_policy`. Clamping increments diagnostics.
-The reference backend preserves its historical pressure/energy/chemical-
-potential lookup followed by the composition lookup. NRPyLeakage alone uses
-the single six-quantity chemical-potential/composition interpolation.
+Both built-in backends use the single six-quantity
+chemical-potential/composition interpolation when table-backed. The reference
+backend remains table-free by default.
 
 When `use_tabulated_eos` is false, only the reference provider uses deterministic
 primitive-state formulas for controlled tests and table-free paths. This mode
@@ -162,8 +158,10 @@ Provider diagnostics record:
 - cache hits and misses;
 - transparent, equilibrium, and hold-last recoveries;
 - active channel mask and the most recent call's explicit recovery status;
-- beta/Kirchhoff relative mismatches and validity flags from the last fully
-  validated table-backed provider result.
+- beta/Kirchhoff relative mismatches and validity flags from the most recent
+  successfully published production-call diagnostic. Table-backed calls may
+  publish valid electron-flavor entries; reference-backend calls publish
+  invalid entries for this table-specific diagnostic.
 
 These diagnostics are provider-owned. They complement, but do not replace,
 `ghl_m1_neutrino_diagnostics.provider_validation_failures` from the Radiation

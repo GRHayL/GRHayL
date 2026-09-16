@@ -149,6 +149,7 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
   }
 
   const int npoints=n1;
+  bool failed = false;
   for(int n=0;n<npoints;n++) {
 
     // Read metric and primitive quantities from the unperturbed data file
@@ -197,12 +198,14 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
       ghl_error("Failed to read luminosities from perturbed data file\n");
     }
 
-    ghl_pert_test_fail(lum_trusted.nue , lum.nue , lum_pert.nue );
-    ghl_pert_test_fail(lum_trusted.anue, lum.anue, lum_pert.anue);
-    ghl_pert_test_fail(lum_trusted.nux , lum.nux , lum_pert.nux );
+    failed |= ghl_pert_test_fail(lum_trusted.nue , lum.nue , lum_pert.nue );
+    failed |= ghl_pert_test_fail(lum_trusted.anue, lum.anue, lum_pert.anue);
+    failed |= ghl_pert_test_fail(lum_trusted.nux , lum.nux , lum_pert.nux );
   }
   fclose(fp_unpert);
   fclose(fp_pert);
+  if(failed)
+    ghl_error("NRPyLeakage luminosity fixture comparison failed\n");
 }
 
 #include "nrpyleakage_main.h"

@@ -43,10 +43,11 @@
  * includable and the production provider returns
  * @c ghl_error_used_disabled_hdf5 without publishing rates.
  *
- * This group documents library-level neutrino behavior only. This contribution
- * includes focused closure and pair-conservation regressions run by
- * @c scripts/test_radiation.py. They do not establish downstream host
- * integration or external physical validation.
+ * This group documents library-level neutrino behavior only. Focused M1 unit
+ * test sources are shipped under @c Unit_Tests/ and are discovered by
+ * @c configure as ordinary @c unit_test_*.c targets, subject to its HDF5
+ * filtering. Source and target-selection evidence do not establish test
+ * execution, downstream host integration, or external physical validation.
  *
  * The public declarations in @ref ghl_m1.h and
  * @ref ghl_neutrino_rate_provider.h are members of this group. The shared

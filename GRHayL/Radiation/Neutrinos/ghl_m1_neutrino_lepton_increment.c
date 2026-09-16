@@ -21,21 +21,24 @@
  *
  */
 
-static ghl_error_codes_t ghl_m1_neutrino_validate_lepton_weight(
-      const ghl_m1_neutrino_rates *restrict rates) {
+static ghl_error_codes_t
+ghl_m1_neutrino_validate_lepton_weight(const ghl_m1_neutrino_rates *restrict rates) {
 
   switch(rates->species) {
     case ghl_m1_neutrino_nue:
-      if(rates->lepton_weight != 1.0)
+      if(rates->lepton_weight != 1.0) {
         return ghl_error_m1_microphysics_failure;
+      }
       return ghl_success;
     case ghl_m1_neutrino_anue:
-      if(rates->lepton_weight != -1.0)
+      if(rates->lepton_weight != -1.0) {
         return ghl_error_m1_microphysics_failure;
+      }
       return ghl_success;
     case ghl_m1_neutrino_nux:
-      if(rates->lepton_weight != 0.0)
+      if(rates->lepton_weight != 0.0) {
         return ghl_error_m1_microphysics_failure;
+      }
       return ghl_success;
     default:
       return ghl_error_m1_microphysics_failure;
@@ -48,25 +51,31 @@ ghl_error_codes_t ghl_m1_compute_neutrino_lepton_increment(
       const double baryon_density_conserved,
       double *restrict dYe_matter) {
 
-  if(rates == NULL || dYe_matter == NULL)
+  if(rates == NULL || dYe_matter == NULL) {
     return ghl_error_m1_null_pointer;
+  }
 
-  if(!isfinite(dL_rad_cc) || !isfinite(baryon_density_conserved))
+  if(!isfinite(dL_rad_cc) || !isfinite(baryon_density_conserved)) {
     return ghl_error_m1_invalid_state;
+  }
 
-  if(baryon_density_conserved <= 0.0)
+  if(baryon_density_conserved <= 0.0) {
     return ghl_error_m1_invalid_state;
+  }
 
   ghl_error_codes_t error = ghl_m1_neutrino_validate_lepton_weight(rates);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
-  if(!isfinite(rates->lepton_weight))
+  if(!isfinite(rates->lepton_weight)) {
     return ghl_error_m1_microphysics_failure;
+  }
 
   const double candidate = -dL_rad_cc / baryon_density_conserved;
-  if(!isfinite(candidate))
+  if(!isfinite(candidate)) {
     return ghl_error_m1_invalid_state;
+  }
 
   *dYe_matter = candidate;
   return ghl_success;

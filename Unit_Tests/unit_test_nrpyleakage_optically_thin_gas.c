@@ -5,7 +5,7 @@
 #define EPS 1
 
 static inline
-void
+bool
 ghl_pert_test_fail_computed_values(
     FILE *fp_unperturbed,
     FILE *fp_perturbed,
@@ -36,10 +36,12 @@ ghl_pert_test_fail_computed_values(
     ghl_error("Failed to read perturbed data from file\n");
 
   // Perform validation
-  ghl_pert_test_fail(t_unperturbed  , t  , t_perturbed  );
-  ghl_pert_test_fail(Y_e_unperturbed, Y_e, Y_e_perturbed);
-  ghl_pert_test_fail(eps_unperturbed, eps, eps_perturbed);
-  ghl_pert_test_fail(T_unperturbed  , T  , T_perturbed  );
+  bool failed = false;
+  failed |= ghl_pert_test_fail(t_unperturbed  , t  , t_perturbed  );
+  failed |= ghl_pert_test_fail(Y_e_unperturbed, Y_e, Y_e_perturbed);
+  failed |= ghl_pert_test_fail(eps_unperturbed, eps, eps_perturbed);
+  failed |= ghl_pert_test_fail(T_unperturbed  , T  , T_perturbed  );
+  return failed;
 }
 
 static inline
@@ -197,12 +199,17 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
     ghl_error("Failed to read initial data from unperturbed data file\n");
   }
   double t = 0.0;
+  bool failed = false;
   for(int n=0;n<n_steps;n++) {
     double T;
     rk4_step_ode(eos, dt, initial_rho, gfs, &T);
     t += dt;
-    ghl_pert_test_fail_computed_values(fp_unpert, fp_pert, t, gfs[Y_E], gfs[EPS], T);
+    failed |= ghl_pert_test_fail_computed_values(fp_unpert, fp_pert, t, gfs[Y_E], gfs[EPS], T);
   }
+  fclose(fp_unpert);
+  fclose(fp_pert);
+  if(failed)
+    ghl_error("NRPyLeakage optically thin gas fixture comparison failed\n");
 }
 
 #include "nrpyleakage_main.h"

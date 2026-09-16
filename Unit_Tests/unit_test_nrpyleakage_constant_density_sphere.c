@@ -407,27 +407,27 @@ void constantdensitysphere_test(
     fclose(fp_pert);
 
     // Perform the validation
-#pragma omp parallel for
+    int failed = 0;
+#pragma omp parallel for reduction(|:failed)
     for(int i2=0;i2<Nt2;i2++) {
       for(int i1=0;i1<Nt1;i1++) {
         for(int i0=0;i0<Nt0;i0++) {
           const int index = IDX3D(i0,i1,i2);
-          ghl_pert_test_fail(kappa_nue_pert [0][index], kappa_nue [0][index], kappa_nue_unpert [0][index]);
-          ghl_pert_test_fail(kappa_nue_pert [1][index], kappa_nue [1][index], kappa_nue_unpert [1][index]);
-          ghl_pert_test_fail(kappa_anue_pert[0][index], kappa_anue[0][index], kappa_anue_unpert[0][index]);
-          ghl_pert_test_fail(kappa_anue_pert[1][index], kappa_anue[1][index], kappa_anue_unpert[1][index]);
-          ghl_pert_test_fail(kappa_nux_pert [0][index], kappa_nux [0][index], kappa_nux_unpert [0][index]);
-          ghl_pert_test_fail(kappa_nux_pert [1][index], kappa_nux [1][index], kappa_nux_unpert [1][index]);
-          ghl_pert_test_fail(tau_nue_pert   [0][index], tau_nue   [0][index], tau_nue_unpert   [0][index]);
-          ghl_pert_test_fail(tau_nue_pert   [1][index], tau_nue   [1][index], tau_nue_unpert   [1][index]);
-          ghl_pert_test_fail(tau_anue_pert  [0][index], tau_anue  [0][index], tau_anue_unpert  [0][index]);
-          ghl_pert_test_fail(tau_anue_pert  [1][index], tau_anue  [1][index], tau_anue_unpert  [1][index]);
-          ghl_pert_test_fail(tau_nux_pert   [0][index], tau_nux   [0][index], tau_nux_unpert   [0][index]);
-          ghl_pert_test_fail(tau_nux_pert   [1][index], tau_nux   [1][index], tau_nux_unpert   [1][index]);
+          failed |= ghl_pert_test_fail(kappa_nue_pert [0][index], kappa_nue [0][index], kappa_nue_unpert [0][index]);
+          failed |= ghl_pert_test_fail(kappa_nue_pert [1][index], kappa_nue [1][index], kappa_nue_unpert [1][index]);
+          failed |= ghl_pert_test_fail(kappa_anue_pert[0][index], kappa_anue[0][index], kappa_anue_unpert[0][index]);
+          failed |= ghl_pert_test_fail(kappa_anue_pert[1][index], kappa_anue[1][index], kappa_anue_unpert[1][index]);
+          failed |= ghl_pert_test_fail(kappa_nux_pert [0][index], kappa_nux [0][index], kappa_nux_unpert [0][index]);
+          failed |= ghl_pert_test_fail(kappa_nux_pert [1][index], kappa_nux [1][index], kappa_nux_unpert [1][index]);
+          failed |= ghl_pert_test_fail(tau_nue_pert   [0][index], tau_nue   [0][index], tau_nue_unpert   [0][index]);
+          failed |= ghl_pert_test_fail(tau_nue_pert   [1][index], tau_nue   [1][index], tau_nue_unpert   [1][index]);
+          failed |= ghl_pert_test_fail(tau_anue_pert  [0][index], tau_anue  [0][index], tau_anue_unpert  [0][index]);
+          failed |= ghl_pert_test_fail(tau_anue_pert  [1][index], tau_anue  [1][index], tau_anue_unpert  [1][index]);
+          failed |= ghl_pert_test_fail(tau_nux_pert   [0][index], tau_nux   [0][index], tau_nux_unpert   [0][index]);
+          failed |= ghl_pert_test_fail(tau_nux_pert   [1][index], tau_nux   [1][index], tau_nux_unpert   [1][index]);
         }
       }
     }
-
     for(int i=0;i<2;i++) {
       free(kappa_nue_unpert [i]);
       free(kappa_anue_unpert[i]);
@@ -454,6 +454,8 @@ void constantdensitysphere_test(
     free(tau_nue_pert     );
     free(tau_anue_pert    );
     free(tau_nux_pert     );
+    if(failed)
+      ghl_error("NRPyLeakage constant-density-sphere fixture comparison failed\n");
   }
 
   // Step 6: Free memory

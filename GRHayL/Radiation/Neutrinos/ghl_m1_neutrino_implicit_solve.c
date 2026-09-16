@@ -1,6 +1,6 @@
+#include "../ghl_m1_utils.h"
 #include "ghl_m1.h"
 #include "ghl_m1_neutrino_implicit.h"
-#include "../ghl_m1_utils.h"
 
 /*
  * Local homogeneous source solve for one neutrino species. It solves
@@ -36,10 +36,11 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
       ghl_m1_neutrino_exchange *restrict exchange,
       ghl_m1_neutrino_diagnostics *restrict diagnostics) {
 
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims == NULL ||
-     rates == NULL || state_in == NULL || thin_inequalities_hold == NULL ||
-     state_out == NULL || exchange == NULL)
+  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims == NULL
+     || rates == NULL || state_in == NULL || thin_inequalities_hold == NULL
+     || state_out == NULL || exchange == NULL) {
     return ghl_error_m1_null_pointer;
+  }
 
   *state_out = *state_in;
   *exchange = (ghl_m1_neutrino_exchange){ 0 };
@@ -52,53 +53,60 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
     candidate_diagnostics_ptr = &candidate_diagnostics;
   }
 
-  if(!isfinite(dt) || dt < 0.0 || !isfinite(n_b_cons) || n_b_cons <= 0.0)
+  if(!isfinite(dt) || dt < 0.0 || !isfinite(n_b_cons) || n_b_cons <= 0.0) {
     return ghl_error_m1_invalid_state;
-  const ghl_error_codes_t rates_error =
-        ghl_m1_neutrino_validate_single_species_rates(rates, NULL);
-  if(rates_error != ghl_success)
+  }
+  const ghl_error_codes_t rates_error
+        = ghl_m1_neutrino_validate_single_species_rates(rates, NULL);
+  if(rates_error != ghl_success) {
     return rates_error;
+  }
 
   const double dt_alpha = metric->lapse * dt;
-  if(!isfinite(dt_alpha) || dt_alpha < 0.0)
+  if(!isfinite(dt_alpha) || dt_alpha < 0.0) {
     return ghl_error_m1_invalid_state;
+  }
 
   /* This is the two-inequality four-point reference branch selector. A thick packet is a
    * successful non-selection so the validation host can retain its implicit
    * source solve without changing the default GRHayL algorithm. */
-  if(!(dt_alpha * rates->kappa_a_E < 1.0) ||
-     !(dt_alpha * rates->kappa_s < 1.0))
+  if(!(dt_alpha * rates->kappa_a_E < 1.0) || !(dt_alpha * rates->kappa_s < 1.0)) {
     return ghl_success;
+  }
   *thin_inequalities_hold = 1;
 
   const ghl_m1_rad_state rad_state = ghl_m1_neutrino_project_rad_state(state_in);
   ghl_m1_closure closure;
   ghl_error_codes_t error = ghl_m1_compute_closure_with_primitives(
         m1_params, metric, prims, &rad_state, &closure);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
   ghl_m1_sources EF_sources = { 0 };
   double ignored_N_source = 0.0;
   error = ghl_m1_compute_neutrino_interaction_sources_from_closure(
-        m1_params, nu_params, metric, prims, state_in, &closure, rates,
-        &EF_sources, &ignored_N_source);
-  if(error != ghl_success)
+        m1_params, nu_params, metric, prims, state_in, &closure, rates, &EF_sources,
+        &ignored_N_source);
+  if(error != ghl_success) {
     return error;
+  }
 
   ghl_m1_neutrino_state candidate = *state_in;
   candidate.E += dt_alpha * EF_sources.S_E;
-  for(int direction = 0; direction < 3; ++direction)
+  for(int direction = 0; direction < 3; ++direction) {
     candidate.F[direction] += dt_alpha * EF_sources.S[direction];
+  }
 
   /* The explicit source increment can move a near-streaming state a few
    * ulps outside the realizability cone even when the input was repaired.
    * Repair the complete candidate transactionally so the diagnostics-aware
    * API accounts for both E/F and N mutations. */
   error = ghl_m1_repair_neutrino_state(
-      m1_params, nu_params, metric, &candidate, candidate_diagnostics_ptr);
-  if(error != ghl_success)
+        m1_params, nu_params, metric, &candidate, candidate_diagnostics_ptr);
+  if(error != ghl_success) {
     return error;
+  }
 
   /* The implicit source route updates N after the explicit E/F endpoint.
    * Gamma_N therefore belongs to the repaired endpoint current, and the
@@ -106,47 +114,56 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
   ghl_m1_neutrino_current endpoint_current;
   error = ghl_m1_neutrino_derive_current(
         m1_params, nu_params, metric, prims, &candidate, &endpoint_current);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
+  const double number_endpoint_gamma = endpoint_current.Gamma_N;
   error = ghl_m1_update_neutrino_number_backward_euler(
-        nu_params, rates, dt_alpha, endpoint_current.Gamma_N,
-        state_in->N, &candidate.N);
-  if(error != ghl_success)
+        nu_params, rates, dt_alpha, number_endpoint_gamma, state_in->N, &candidate.N);
+  if(error != ghl_success) {
     return error;
+  }
+  const double physical_number_endpoint = candidate.N;
 
   /* Apply the configured number floor before constructing the exchange packet.
    * E/F are already repaired above; this second repair is consequently an
    * N-only operation for the successful thin branch. */
   error = ghl_m1_repair_neutrino_state(
         m1_params, nu_params, metric, &candidate, candidate_diagnostics_ptr);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
   error = ghl_m1_neutrino_derive_current(
-      m1_params, nu_params, metric, prims, &candidate, &endpoint_current);
-  if(error != ghl_success)
+        m1_params, nu_params, metric, prims, &candidate, &endpoint_current);
+  if(error != ghl_success) {
     return error;
-  error = ghl_m1_neutrino_check_EN_bounds(
-      &candidate, nu_params, &endpoint_current);
-  if(error != ghl_success)
+  }
+  error = ghl_m1_neutrino_check_EN_bounds(&candidate, nu_params, &endpoint_current);
+  if(error != ghl_success) {
     return error;
+  }
 
-  /* The charged-current exchange packet remains endpoint-based, as required
-   * by the public GRHayL exchange contract. */
-  const double dN_cc = dt_alpha *
-        (rates->eta_N_cc - rates->kappa_a_N_cc * candidate.N /
-         endpoint_current.Gamma_N);
+  /* Use the un-repaired backward-Euler endpoint for charged-current exchange.
+   * A number-floor increment is numerical repair bookkeeping and must not be
+   * counted again as a physical matter-lepton source. */
+  const double dN_cc
+        = dt_alpha
+          * (rates->eta_N_cc
+             - rates->kappa_a_N_cc * physical_number_endpoint / number_endpoint_gamma);
   const double dL_rad_cc = rates->lepton_weight * dN_cc;
   error = ghl_m1_neutrino_assemble_exchange(
-        state_in, &candidate, rates, dL_rad_cc, metric->sqrt_detgamma,
-        n_b_cons, exchange);
-  if(error != ghl_success)
+        state_in, &candidate, rates, dL_rad_cc, metric->sqrt_detgamma, n_b_cons,
+        exchange);
+  if(error != ghl_success) {
     return error;
+  }
 
   *state_out = candidate;
-  if(diagnostics != NULL)
+  if(diagnostics != NULL) {
     *diagnostics = candidate_diagnostics;
+  }
   return ghl_success;
 }
 
@@ -163,8 +180,8 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update(
       ghl_m1_neutrino_state *restrict state_out,
       ghl_m1_neutrino_exchange *restrict exchange) {
   return ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
-      m1_params, nu_params, metric, prims, rates, dt, n_b_cons, state_in,
-      thin_inequalities_hold, state_out, exchange, NULL);
+        m1_params, nu_params, metric, prims, rates, dt, n_b_cons, state_in,
+        thin_inequalities_hold, state_out, exchange, NULL);
 }
 
 typedef struct {
@@ -194,8 +211,8 @@ static ghl_error_codes_t ghl_m1_neutrino_newton_jacobian(
 
   const ghl_m1_neutrino_newton_context *restrict solve_context = context;
   return ghl_m1_neutrino_compute_implicit_jacobian_validated(
-        &solve_context->validated, solve_context->dt_sub, solve_context->U_base,
-        U, residual, jacobian);
+        &solve_context->validated, solve_context->dt_sub, solve_context->U_base, U,
+        residual, jacobian);
 }
 
 static ghl_error_codes_t ghl_m1_neutrino_build_EF_initial_guess(
@@ -364,18 +381,21 @@ void ghl_m1_neutrino_populate_mean_energy_diagnostics(
   const double tol_meandiff = 1.0e-3;
 
   /* The post-update comoving grey mean energy is J Gamma_N / N. */
-  if(!isfinite(state_out->N) || state_out->N <= nu_params->N_floor ||
-     !isfinite(current->J) || !isfinite(current->Gamma_N))
+  if(!isfinite(state_out->N) || state_out->N <= nu_params->N_floor
+     || !isfinite(current->J) || !isfinite(current->Gamma_N)) {
     return;
+  }
 
   const double mean_energy_diag = current->J * current->Gamma_N / state_out->N;
-  if(!isfinite(mean_energy_diag))
+  if(!isfinite(mean_energy_diag)) {
     return;
+  }
   neutrino_diagnostics->mean_energy_diag = mean_energy_diag;
   neutrino_diagnostics->mean_energy_diag_invalid = 0;
 
-  if(!isfinite(rates->mean_energy) || rates->mean_energy <= 0.0)
+  if(!isfinite(rates->mean_energy) || rates->mean_energy <= 0.0) {
     return;
+  }
 
   const double ref = rates->mean_energy;
   const double rel = fabs(mean_energy_diag - ref) / ref;
@@ -455,7 +475,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
   }
 
   /* Validate frozen rates. */
-  ghl_error_codes_t rates_error = ghl_m1_neutrino_validate_single_species_rates(rates, NULL);
+  ghl_error_codes_t rates_error
+        = ghl_m1_neutrino_validate_single_species_rates(rates, NULL);
   if(rates_error != ghl_success) {
     return ghl_m1_neutrino_publish_hard_failure(rates_error, neutrino_diagnostics);
   }
@@ -472,11 +493,11 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
           input_current_error, neutrino_diagnostics);
   }
 
-  const ghl_m1_neutrino_implicit_context validated_context = {
-        .m1_params = m1_params,
-        .metric = metric,
-        .prims_frozen = prims_frozen,
-        .rates = rates };
+  const ghl_m1_neutrino_implicit_context validated_context
+        = { .m1_params = m1_params,
+            .metric = metric,
+            .prims_frozen = prims_frozen,
+            .rates = rates };
 
   const double sqrt_detgamma = metric->sqrt_detgamma;
 
@@ -523,9 +544,9 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
       any_projection = any_projection || step_diagnostics.used_projection;
       any_closure_fallback = any_closure_fallback || closure_fallback_used;
       if(error != ghl_success) {
-        if(!ghl_m1_schedule_error_allows_retry(error))
-          return ghl_m1_neutrino_publish_hard_failure(
-              error, neutrino_diagnostics);
+        if(!ghl_m1_schedule_error_allows_retry(error)) {
+          return ghl_m1_neutrino_publish_hard_failure(error, neutrino_diagnostics);
+        }
         solve_failed = true;
         break;
       }
@@ -572,30 +593,27 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
     if(n_error != ghl_success) {
       return ghl_m1_neutrino_publish_hard_failure(n_error, neutrino_diagnostics);
     }
+    const double number_endpoint_gamma = endpoint_current.Gamma_N;
     n_error = ghl_m1_update_neutrino_number_backward_euler(
-          nu_params, rates, dt_alpha, endpoint_current.Gamma_N, state_in->N, &N_out);
+          nu_params, rates, dt_alpha, number_endpoint_gamma, state_in->N, &N_out);
     if(n_error != ghl_success) {
       return ghl_m1_neutrino_publish_hard_failure(n_error, neutrino_diagnostics);
     }
+    const double physical_number_endpoint = N_out;
     candidate.N = N_out;
 
-    /* The Newton solve only evolves E/F_i.  Apply the same transactional
-     * post-update repair used by the explicit compatibility branches so the
-     * general implicit route cannot publish N below the configured floor. */
-    n_error = ghl_m1_repair_neutrino_state(
-          m1_params, nu_params, metric, &candidate,
-          &candidate_neutrino_diagnostics);
-    if(n_error != ghl_success) {
-      return ghl_m1_neutrino_publish_hard_failure(n_error, neutrino_diagnostics);
-    }
+    /* The current calculation above strictly validated these unchanged E/F_i
+     * and the configuration; backward Euler returned finite N. Repair cannot
+     * fail or change E/F_i here, but may floor N and must retain the shared
+     * diagnostic accounting. */
+    (void)ghl_m1_repair_neutrino_state(
+          m1_params, nu_params, metric, &candidate, &candidate_neutrino_diagnostics);
 
-    /* Repair may have changed N (and, for a marginal E/F endpoint, the
-     * realizability projection may change E/F as well).  All endpoint-based
-     * diagnostics and charged-current exchange must use the published
-     * candidate. */
+    /* Repair may have changed N. Endpoint diagnostics use the published
+     * candidate, while charged-current exchange below uses the un-repaired
+     * backward-Euler number endpoint. */
     n_error = ghl_m1_neutrino_derive_current(
-          m1_params, nu_params, metric, prims_frozen, &candidate,
-          &endpoint_current);
+          m1_params, nu_params, metric, prims_frozen, &candidate, &endpoint_current);
     if(n_error != ghl_success) {
       return ghl_m1_neutrino_publish_hard_failure(n_error, neutrino_diagnostics);
     }
@@ -606,8 +624,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
     ghl_m1_neutrino_populate_mean_energy_diagnostics(
           &candidate, &endpoint_current, nu_params, rates,
           &candidate_neutrino_diagnostics);
-    const ghl_error_codes_t en_error =
-          ghl_m1_neutrino_check_EN_bounds(&candidate, nu_params, &endpoint_current);
+    const ghl_error_codes_t en_error
+          = ghl_m1_neutrino_check_EN_bounds(&candidate, nu_params, &endpoint_current);
     if(en_error != ghl_success) {
       return ghl_m1_neutrino_publish_hard_failure(en_error, neutrino_diagnostics);
     }
@@ -617,7 +635,7 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
     const double dN_cc
           = dt_alpha
             * (rates->eta_N_cc
-               - rates->kappa_a_N_cc * candidate.N / endpoint_current.Gamma_N);
+               - rates->kappa_a_N_cc * physical_number_endpoint / number_endpoint_gamma);
     const double dL_rad_cc = rates->lepton_weight * dN_cc;
     const ghl_error_codes_t ye_error = ghl_m1_neutrino_assemble_exchange(
           state_in, &candidate, rates, dL_rad_cc, sqrt_detgamma, n_b_cons,

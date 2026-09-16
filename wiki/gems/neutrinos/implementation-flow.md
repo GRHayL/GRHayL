@@ -163,8 +163,8 @@ array scrub in this file.
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` directly
 checks selected Fermi-Dirac branches, generates luminosity fixtures, recomputes
 `NRPyLeakage_compute_neutrino_luminosities`, and reads `nue`, `anue`, and `nux`
-fixtures. Its three `ghl_pert_test_fail` return values are discarded, so
-numerical luminosity mismatches do not currently fail the test.
+fixtures. Its three `ghl_pert_test_fail` results are accumulated and a
+numerical luminosity mismatch fails the test.
 
 ## `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`
 
@@ -193,10 +193,10 @@ with a small positive value. There is no final output array scrub after
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` calls
 this routine in its RHS, divides `R_source` and `Q_source` by `rho`, advances
-`Y_e` and `eps` with RK4, and reads fixture replay. Its comparison helper also
-discards every `ghl_pert_test_fail` result, so the test supplies execution and
-file-shape evidence, not an effective numerical assertion. Opacity writes get
-execution coverage there through the same call but are not compared.
+`Y_e` and `eps` with RK4, and reads fixture replay. Its comparison helper
+accumulates every `ghl_pert_test_fail` result and fails the executable after
+replay when any comparison fails. Opacity writes get execution coverage there
+through the same call but are not compared.
 
 ## `NRPyLeakage_compute_neutrino_opacities.c`
 
@@ -223,8 +223,8 @@ subexpressions, then the final loop handles non-finite output entries.
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 directly calls this routine for interior and exterior states, stores the six
 opacity fields on the grid, and reads opacity/depth fixtures. Its comparison
-return values are discarded, so those fixture values cannot currently fail the
-test. Source-term tests do not cover this implementation: the combined
+results are accumulated and a fixture mismatch fails the test. Source-term
+tests do not cover this implementation: the combined
 source-term routine has its own opacity write path.
 
 ## `NRPyLeakage_Fermi_Dirac_integrals.c`
@@ -293,11 +293,12 @@ Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 directly computes opacities, iterates optical-depth updates with flat metric
 stencils, calls `NRPyLeakage_optical_depths_PathOfLeastResistance`, writes all
 six output depth fields back to grid storage, and reads fixture replay. That
-caller passes each neighbor pair in plus-then-minus order, opposite the public
-minus-then-plus signature. Its flat metric and minimum over symmetric
-directions hide this reversal, so current test evidence does not verify
-directional argument mapping for unequal plus/minus metrics. It also discards
-all comparison results, as noted above.
+  caller passes each neighbor pair in plus-then-minus order, opposite the public
+  minus-then-plus signature. Its flat metric and minimum over symmetric
+  directions hide this reversal, so current test evidence does not verify
+  directional argument mapping for unequal plus/minus metrics. It accumulates
+  the fixture comparison results and fails the executable if any comparison
+  fails.
 
 ## Ground Truth References
 

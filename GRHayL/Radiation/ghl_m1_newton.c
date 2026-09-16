@@ -49,6 +49,9 @@ ghl_error_codes_t ghl_m1_newton_project_admissible(
       const ghl_metric_quantities *restrict metric,
       double U[4]) {
 
+  if(m1_params == NULL || metric == NULL || U == NULL) {
+    return ghl_error_m1_null_pointer;
+  }
   if(!isfinite(metric->sqrt_detgamma) || metric->sqrt_detgamma <= 0.0) {
     return ghl_error_m1_invalid_metric;
   }
@@ -69,13 +72,17 @@ ghl_error_codes_t ghl_m1_newton_project_admissible(
     return error;
   }
 
-  U[0] = state.E * metric->sqrt_detgamma;
-  for(int i = 0; i < 3; i++) {
-    U[i + 1] = state.F[i] * metric->sqrt_detgamma;
+  const double projected[4]
+        = { state.E * metric->sqrt_detgamma, state.F[0] * metric->sqrt_detgamma,
+            state.F[1] * metric->sqrt_detgamma, state.F[2] * metric->sqrt_detgamma };
+
+  if(!isfinite(projected[0]) || !isfinite(projected[1]) || !isfinite(projected[2])
+     || !isfinite(projected[3])) {
+    return ghl_error_m1_implicit_admissibility;
   }
 
-  if(!isfinite(U[0]) || !isfinite(U[1]) || !isfinite(U[2]) || !isfinite(U[3])) {
-    return ghl_error_m1_implicit_admissibility;
+  for(int i = 0; i < 4; i++) {
+    U[i] = projected[i];
   }
   return ghl_success;
 }

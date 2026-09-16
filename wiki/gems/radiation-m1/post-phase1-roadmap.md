@@ -23,12 +23,17 @@ host responsibilities. They must not be added to `GRHayL/Radiation`.
 
 ## Current status
 
-The core route and public API are present. The scoped
-`scripts/test_radiation.py` runner covers closure and pair-source invariants
-and the pair provider mapping. No production evolution host is required or
-selected in this checkout, and no external comparison or full-evolution result is claimed. A
-downstream project may perform its own composed or multidimensional validation
-without becoming a GRHayL build dependency.
+The core route and public API are present. Nine focused M1 unit-test sources
+are shipped under `Unit_Tests/`, selected by
+[`Unit_Tests/run_m1_tests.sh`](../../../Unit_Tests/run_m1_tests.sh), and
+invoked by both the repository's [normal runner](../../../.github/run_tests.sh)
+and the dedicated [Radiation CI action](../../../.github/actions/run_m1/action.yml).
+These sources and runner provide library-level test routes; source and runner
+selection alone do not establish a remote pass, downstream host integration,
+or physical validation. No production evolution host is required or selected in
+this checkout, and no external comparison or full-evolution result is claimed.
+A downstream project may perform its own composed or multidimensional
+validation without becoming a GRHayL build dependency.
 
 See [`M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)
 and [`host-integration-and-downstream.md`](host-integration-and-downstream.md).

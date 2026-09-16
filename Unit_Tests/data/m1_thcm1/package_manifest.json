@@ -1,0 +1,118 @@
+{
+  "schema": "grhayl_m1_thcm1_fixture_package_manifest",
+  "version": 1,
+  "digest": {
+    "algorithm": "sha256",
+    "purpose": "fixture_payload_integrity_only"
+  },
+  "provenance": {
+    "producer_state": "retained_historical",
+    "admission_status": "not_current_verification_admission"
+  },
+  "payloads": [
+    {
+      "path": "pointwise_closure_moments.m1",
+      "owner": "unit_test_m1_neutrino_seeded_invariants",
+      "operation": "pointwise_closure_moments",
+      "policy": "pointwise_a1_a2_v1",
+      "record_count": 56,
+      "sha256": "387f384fc36cb34a90f2f08ae0cf7f7bdfc091831185a02a7b69751a3073b0c8"
+    },
+    {
+      "path": "m1_thcm1_instantaneous_sources.m1",
+      "owner": "unit_test_m1_neutrino_seeded_invariants",
+      "operation": "instantaneous_interaction_sources",
+      "policy": "source_a1_a2_rate_normalized_v1",
+      "record_count": 168,
+      "sha256": "e1a376a547465dd3f13a302785399aa7cb13be4366d4e758aba7b43901671a19"
+    },
+    {
+      "path": "stress_energy.m1",
+      "owner": "unit_test_m1_neutrino_seeded_invariants",
+      "operation": "stress_energy",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 1024,
+      "sha256": "edfbd2f173a8763482516f98ab0bf6985d4f08ba81305a1766881e01f07e7b0d"
+    },
+    {
+      "path": "rusanov_neutrino.dat",
+      "owner": "unit_test_m1_neutrino_rusanov_flux",
+      "operation": "neutrino_rusanov_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 1024,
+      "sha256": "43d66cc71b0b30235412230cc7cd31c2c92e9f632ed2bdc889ea551f37e3b6d9"
+    },
+    {
+      "path": "rusanov_neutrino_current.dat",
+      "owner": "unit_test_m1_neutrino_rusanov_flux",
+      "operation": "neutrino_rusanov_flux_current_v2",
+      "policy": "strict_relative_2e-12_propagated_response_current_v2",
+      "record_count": 1024,
+      "sha256": "7c0055290591028f48726c962271d385802d8695b220192d795057ad13de7023"
+    },
+    {
+      "path": "transport_four_point_d0.dat",
+      "owner": "unit_test_m1_thcm1_blended_rusanov",
+      "operation": "neutrino_four_point_transport_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 19128,
+      "sha256": "450efdb5847b51fe4f25a5afccdad83fbcbbbac6182fd4608b2370cd69eefb9a"
+    },
+    {
+      "path": "transport_four_point_d1.dat",
+      "owner": "unit_test_m1_thcm1_blended_rusanov",
+      "operation": "neutrino_four_point_transport_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 19128,
+      "sha256": "259e0a64e343c5a9d4f1fd8731254aa050a11f693b61773b1b335a1133a51471"
+    },
+    {
+      "path": "transport_four_point_d2.dat",
+      "owner": "unit_test_m1_thcm1_blended_rusanov",
+      "operation": "neutrino_four_point_transport_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 19128,
+      "sha256": "907145c6c1097b9ff4da65050a84eed2b1f921d151540333e81e6287d7513f15"
+    },
+    {
+      "path": "transport_four_point_varying_d0.dat",
+      "owner": "unit_test_m1_thcm1_blended_rusanov",
+      "operation": "neutrino_four_point_prepared_transport_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 12960,
+      "sha256": "a3f6a2bad3c343a94a2d7f6e1b3a9e2c9b278b79bcff550efd3568a84fb593a8"
+    },
+    {
+      "path": "transport_four_point_varying_d1.dat",
+      "owner": "unit_test_m1_thcm1_blended_rusanov",
+      "operation": "neutrino_four_point_prepared_transport_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 12960,
+      "sha256": "de9569886d47a30a622b1ba8338b6bd9bd0803426988d5f5fb666d1f1756766b"
+    },
+    {
+      "path": "transport_four_point_varying_d2.dat",
+      "owner": "unit_test_m1_thcm1_blended_rusanov",
+      "operation": "neutrino_four_point_prepared_transport_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 12960,
+      "sha256": "74f1d64ab2c1d42290bcf9598bd20aa27e8305a32e2b13b527d114865410a12b"
+    },
+    {
+      "path": "transport_four_point_varying_controls.dat",
+      "owner": "unit_test_m1_thcm1_blended_rusanov",
+      "operation": "neutrino_four_point_prepared_transport_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 23112,
+      "sha256": "68080825cbe6aa3c85bcecbc7c381549163cc3e0b8181e3f435fd293f84609a2"
+    },
+    {
+      "path": "rusanov_generic.dat",
+      "owner": "unit_test_rusanov_flux",
+      "operation": "rusanov_flux",
+      "policy": "strict_relative_2e-12_propagated_response_v1",
+      "record_count": 1024,
+      "sha256": "c7f9ca077ae640eec2f405ce9f94305bd0311fefeaef5c3a0c4a4f266eafee02"
+    }
+  ]
+}

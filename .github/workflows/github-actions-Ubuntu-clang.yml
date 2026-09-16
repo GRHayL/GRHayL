@@ -11,6 +11,24 @@ on:
     - cron: '33 15 1,15 * *'
 
 jobs:
+  radiation-m1:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        hdf5: [enabled, disabled]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'clang'
+      - uses: ./.github/actions/run_m1
+        with:
+          compiler: 'clang'
+          hdf5: ${{ matrix.hdf5 }}
+          platform: ${{ matrix.os }}
+
   ET-Legacy:
     strategy:
       fail-fast: false

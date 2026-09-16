@@ -17,7 +17,7 @@ The accepted keys are:
 
 - `0`: call `generate_test_data(&eos)` and write local binary reference data.
 - `1`: call `run_unit_test(&eos)` and attempt comparison against existing
-  binary fixtures; see the assertion gap below.
+  binary fixtures; comparison failures terminate the test.
 
 Any other key is rejected by the shared harness. The harness also initializes a
 tabulated, stellar-collapse EOS before dispatching either mode. Note: the
@@ -117,23 +117,24 @@ Fermi-Dirac key coverage: it calls `NRPyLeakage_Fermi_Dirac_integrals(-1, ...)`
 for both `z < 1e-3` and `z > 1e-3` cases and maps those keys to
 `ghl_error_invalid_fermi_dirac_integral_key`.
 
-### Effective Assertion Gap
+### Replay Assertion Coverage
 
-All three NRPyLeakage replay tests call `ghl_pert_test_fail`, which returns a
-boolean, but discard that return value instead of branching to `ghl_error`.
-Consequences:
+All three NRPyLeakage replay tests accumulate the boolean returned by
+`ghl_pert_test_fail` and call `ghl_error` after the replay if any comparison
+fails. Consequently:
 
-- Optically thin replay reads and recomputes time, `Y_e`, `eps`, and `T`, but a
-  numerical mismatch cannot fail the executable.
+- Optically thin replay reads and recomputes time, `Y_e`, `eps`, and `T`, and
+  fails on any comparison failure.
 - Constant-density-sphere replay reads and recomputes all six opacity and six
-  optical-depth arrays, but a numerical mismatch cannot fail the executable.
-- Luminosity replay reads and recomputes `nue`, `anue`, and `nux`, but a
-  numerical mismatch cannot fail the executable.
+  optical-depth arrays, and fails on any comparison failure.
+- Luminosity replay reads and recomputes `nue`, `anue`, and `nux`, and reports
+  any comparison failure.
 
-File-open/read failures, EOS/leakage errors passed to `ghl_abort_if_error`, and
-the luminosity test's explicit valid Fermi checks can still fail. Classify all
-three as compile + execute + fixture-read evidence with ineffective main
-numerical replay assertions, not validated numerical replay.
+File-open/read failures, EOS/leakage errors passed to `ghl_abort_if_error`, the
+luminosity test's explicit valid Fermi checks, and fixture comparison failures
+can fail. Classify all three as compile + execute + fixture-read evidence with
+numerical replay assertions; the constant-sphere trusted/perturbed argument
+ordering remains a separate open issue.
 
 Further bounded gaps:
 
@@ -145,9 +146,8 @@ Further bounded gaps:
   untested.
 - Constant-density-sphere also passes perturbed fixture values as the
   `trusted` argument and unperturbed values as the `perturbed` argument to
-  `ghl_pert_test_fail`, opposite the helper contract. Discarded return values
-  already make these calls ineffective; fixing only the discard would leave
-  this argument-order fault.
+  `ghl_pert_test_fail`, opposite the helper contract. The comparisons now fail
+  on mismatches, but this argument-order fault remains separate.
 - Combined source-term opacity outputs are computed but never compared in the
   optically thin test.
 - No Neutrinos test deliberately exercises EOS-error propagation,
@@ -171,11 +171,10 @@ citations beyond the Ubuntu GCC example, verify exact locations with:
 rg -n "neutrinos|nrpyleakage" .github/workflows
 ```
 
-Exact workflow set is five files: Ubuntu GCC, Ubuntu Clang, Ubuntu Intel,
-macOS GCC, and macOS Clang. Each uses two OS versions and all three test names.
+Exact workflow set is three files: Ubuntu GCC, Ubuntu Clang, and Ubuntu Intel. Each uses two OS versions and all three test names.
 Coverage upload is active for GCC and Ubuntu Clang Neutrinos jobs; it is
-commented out for Intel and macOS Clang. This does not repair the discarded
-comparison results.
+commented out for Intel. Coverage upload status is separate
+from the numerical comparison results.
 
 The aggregate runner deletes working-directory `*.bin`, `*.h5`, and `*.bz2`
 files at the end. Individual workflow jobs rely on fresh workspaces and do not

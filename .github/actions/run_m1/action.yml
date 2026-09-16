@@ -1,0 +1,64 @@
+name: Radiation M1 tests
+description: Build and run only the existing Radiation test targets
+inputs:
+  compiler:
+    description: Compiler family selected by the workflow
+    required: true
+  hdf5:
+    description: Whether HDF5 is enabled
+    required: true
+  platform:
+    description: Workflow OS label used to distinguish coverage artifacts
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Configure and run Radiation tests
+      shell: bash
+      env:
+        M1_COMPILER: ${{ inputs.compiler }}
+        M1_HDF5: ${{ inputs.hdf5 }}
+      run: |
+        configure_args=(--noomp --prefix="$PWD")
+        case "$M1_HDF5" in
+          disabled) configure_args+=(--disable-hdf5) ;;
+          enabled) ;;
+          *) echo "Unsupported HDF5 mode: $M1_HDF5" >&2; exit 1 ;;
+        esac
+        case "$M1_COMPILER" in
+          gcc) export CC=gcc ;;
+          clang) export CC=clang ;;
+          intel)
+            source /opt/intel/oneapi/setvars.sh
+            export CC=icx
+            ;;
+          *) echo "Unsupported compiler: $M1_COMPILER" >&2; exit 1 ;;
+        esac
+        if [[ "$M1_COMPILER" == gcc ]]; then
+          configure_args+=(--cflags=--coverage --clibs=--coverage)
+        fi
+        ./configure "${configure_args[@]}"
+        bash Unit_Tests/run_m1_tests.sh --build
+    - name: Report Radiation coverage
+      if: runner.os == 'Linux' && inputs.compiler == 'gcc'
+      shell: bash
+      run: |
+        python3 -m pip install gcovr
+        gcovr --root . --filter 'GRHayL/Radiation/' --txt --json-pretty --json radiation-coverage.json build
+        # Include public inline headers and shared flux kernels in the PR report.
+        # Search build/ so configure's temporary compiler probes are not collected.
+        gcovr --root . --xml m1-coverage.xml build
+    - name: Retain Radiation coverage
+      if: runner.os == 'Linux' && inputs.compiler == 'gcc'
+      uses: actions/upload-artifact@v4
+      with:
+        name: radiation-coverage-${{ inputs.platform }}-${{ inputs.hdf5 }}
+        path: radiation-coverage.json
+        if-no-files-found: error
+    - name: Submit M1 coverage to the PR gate
+      if: runner.os == 'Linux' && inputs.compiler == 'gcc'
+      uses: codecov/codecov-action@v5
+      with:
+        files: m1-coverage.xml
+        disable_search: true
+        fail_ci_if_error: true

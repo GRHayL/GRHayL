@@ -163,3 +163,32 @@ source, headers, tests, and common edit routes before wider search.
   Keep docs, stencil shapes, and tests synchronized. Current `Az` helper comment
   conflicts with arithmetic/test face mapping.
 
+## Radiation M1
+
+- Purpose: grey, one-group, three-species neutrino M1 transport with frozen-rate
+  provider input, explicit and local implicit source updates, pair exchange,
+  lepton coupling, canonical four-point blended Rusanov transport, and shared
+  closure/moment/stress/diagnostic helpers.
+- KB routes: [hub](radiation-m1.md), [neutrino M1 contract](radiation-m1/neutrino-m1-contract.md),
+  [rate provider](radiation-m1/rate-provider-contract.md),
+  [API/build boundary](radiation-m1/api-build-boundary.md),
+  [host boundary](radiation-m1/host-integration-and-downstream.md),
+  [tests and fixtures](radiation-m1/tests-and-fixtures.md), and
+  [compatibility evidence](radiation-m1/compatibility-evidence.md).
+- Docs path: `docs/raw/Radiation.dox`, with transport/provider details in
+  `GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md`,
+  `GRHayL/Radiation/PAIR_SOURCE_MODEL.md`, and
+  `GRHayL/Radiation/TRACEABILITY.md`.
+- Source path: `GRHayL/Radiation/` and `GRHayL/Radiation/Neutrinos/`.
+- Primary headers: `GRHayL/include/ghl_m1.h`,
+  `GRHayL/include/ghl_neutrino_rate_provider.h`,
+  `GRHayL/include/ghl_radiation.h`, and
+  `GRHayL/include/ghl_nrpyleakage.h`.
+- Test route: `Unit_Tests/run_m1_tests.sh` selects nine targets; detailed
+  behavior and fixture ownership are in [tests and fixtures](radiation-m1/tests-and-fixtures.md).
+- Drift/contract notes: the canonical neutrino face route is four-point blended
+  Rusanov with uncapped metric light-cone speeds and no separate diffusion
+  correction; optional diffusion helpers remain public. Host mesh loops,
+  reconstruction, AMR, schedules, matter recovery, and coupled limiter policy
+  remain downstream responsibilities. Unit tests do not prove host integration
+  or full-evolution equivalence.

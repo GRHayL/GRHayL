@@ -32,7 +32,10 @@ ratio `J*Gamma_N/N` after repair. This applies to the ordinary implicit update,
 the thin/thick/scattering compatibility paths, and both thin-update wrappers.
 Each positive bound is enforced independently; a nonpositive lower or upper
 bound disables that bound. An out-of-bounds endpoint is rejected without
-clamping, while `N == 0` retains the existing skip of the ratio check.
+clamping. Endpoint validation rejects nonfinite `N` and `N < N_floor`; after
+that floor check, only `N == 0` skips the ratio calculation. Any other
+accepted nonzero `N`, including `N == N_floor`, is checked against the enabled
+bounds. The separate mean-energy diagnostic may mark `N <= N_floor` invalid.
 
 In the branched source policy, `thermalized_number_threshold < 0` disables the
 equilibrium mean-energy projection for the number update. Zero selects it even
@@ -42,7 +45,7 @@ integration and the separate `N_floor` repair.
 
 ## Fixed numerical path
 
-Every neutrino M1 call uses the same primary numerical method:
+Canonical neutrino transport calls use the same primary numerical method:
 
 - metric light-cone wave speeds, with no optical-depth cap;
 - realizability repair by the `E^2(1-epsilon)/F^2` flux rescale;
@@ -52,6 +55,10 @@ Every neutrino M1 call uses the same primary numerical method:
   the built-in Eulerian Minerbo admissibility fallback and is reported with
   `four_point_compatibility=false`; and
 - four-point blended Rusanov transport, with no separate diffusion correction.
+
+`ghl_m1_compute_neutrino_diffusion_flux` is a public optional helper and is
+tested separately; it is not selected by the canonical four-point transport
+operation and does not define an alternative neutrino transport route.
 
 The existing finite-difference Jacobian and Newton source solver remains in
 use for the local implicit source update, including its line search and

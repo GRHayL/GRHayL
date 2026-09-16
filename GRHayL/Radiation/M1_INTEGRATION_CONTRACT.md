@@ -139,14 +139,38 @@ implement that boundary in their own projects; GRHayL remains host agnostic.
 
 ## Current evidence boundary
 
-The focused invariant tests are built and run with
-`python3 scripts/test_radiation.py --hdf5 disabled --mode debug` (or
-`--hdf5 enabled --mode opt`). The runner follows the Radiation source manifests
-and compiles only the required Core, Flux_Source, and EOS dependencies. These
-regressions cover the zero-flux closure and coupled pair-source contracts. The
-production library boundary remains defined by the installed header
+The checkout ships these focused M1 unit-test sources under `Unit_Tests/`:
+
+- `unit_test_m1_diffusion_flux.c`
+- `unit_test_m1_error_handling.c`
+- `unit_test_m1_fd_jacobian.c`
+- `unit_test_m1_neutrino_rusanov_flux.c`
+- `unit_test_m1_neutrino_seeded_invariants.c`
+- `unit_test_m1_neutrino_source_update.c`
+- `unit_test_m1_rate_provider.c`
+- `unit_test_m1_thcm1_blended_rusanov.c`
+- `unit_test_rusanov_flux.c`
+
+`configure` discovers `Unit_Tests/unit_test_*.c` for its generated `tests`
+target, subject to its HDF5 filtering, and maps discovered sources to
+`test/unit_test_*` targets. Compilation alone is target-selection evidence.
+`Unit_Tests/run_m1_tests.sh` explicitly runs the listed M1 tests and is invoked by
+`.github/run_tests.sh` and the Radiation jobs in the compiler/OS workflows. The
+runner selects the rate-provider test's generated-table mode in HDF5 builds
+and its available table-free checks without HDF5. See
+[the M1 test guide](../../Unit_Tests/README.m1.md) for scoped build commands and
+the stored-reference boundary. CI selection alone does not establish a remote
+pass, measured coverage, complete mesh evolution, or framework integration.
+
+The production library boundary remains defined by the installed header
 `GRHayL/include/ghl_m1.h`, the active manifests
 `GRHayL/Radiation/make.code.defn` and
 `GRHayL/Radiation/Neutrinos/make.code.defn`, and the source files named by
-those manifests. This library-level boundary does not establish a complete
-mesh evolution, framework integration, or physical validation.
+those manifests. These configured library-level checks do not establish a
+complete mesh evolution, framework integration, physical validation, or
+line/branch coverage.
+
+The test sources provide local checks for closure and realizability, transport,
+source updates, error handling, finite-difference Jacobians, and the rate
+provider boundary. Those available source checks do not establish downstream
+integration or external physical validation.

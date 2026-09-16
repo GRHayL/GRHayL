@@ -232,9 +232,9 @@ routines have this exception. Describe it as current observable behavior;
 source provenance alone does not establish whether it is intentional.
 
 The luminosity fixture generator exercises nonzero optical depths drawn from
-1 through 1000, including this suppression branch. Its replay calls
-`ghl_pert_test_fail` for all three luminosities but discards the returned
-booleans, so a numerical mismatch cannot fail that executable. The
+1 through 1000, including this suppression branch. Its replay accumulates the
+`ghl_pert_test_fail` result for all three luminosities and fails the executable
+after replay if a numerical mismatch occurs. The
 optically-thin matter-source evolution constructs all optical depths as zero
 and therefore does not exercise diffusion suppression.
 

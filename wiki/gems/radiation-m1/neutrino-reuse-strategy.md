@@ -16,11 +16,13 @@ The reuse strategy names no new API. It explains the ownership split that the
 landed surface already embodies:
 
 - Shared Radiation framework: the `ghl_m1_*` pointwise closure, repair,
-  moments, geometry, wave-speed, prepared-face, stress-energy, diagnostics,
-  and Newton families used by neutrino transport.
+  moments, geometry, wave-speed, four-point/prepared-face transport,
+  stress-energy, diagnostics, and Newton families used by neutrino transport.
 - Neutrino-specific kernels: `ghl_m1_neutrino_*` (state, rates, number flux,
-  repair, prepared-face transport, sources, implicit, exchange, and lepton
-  increment).
+  repair, pointwise combined five-component Rusanov flux, sources, implicit,
+  exchange, and lepton increment). The four-point/prepared-face APIs remain in
+  the shared Radiation family; the Neutrinos family does not own a prepared-
+  face wrapper.
 - Provider boundary: `ghl_neutrino_rate_provider_*` — the frozen-rate solve
   kept separate from the pointwise Radiation kernels.
 
@@ -65,5 +67,8 @@ Recorded discrepancy (doctrine vs landed):
 
 - [`GRHayL/include/ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
 - [`GRHayL/Radiation/Neutrinos/make.code.defn`](../../../GRHayL/Radiation/Neutrinos/make.code.defn)
+- [`GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c`](../../../GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c)
+- [`GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rusanov_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rusanov_flux.c)
+- [`GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c`](../../../GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c)
 - [`GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c)
 - [`GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)

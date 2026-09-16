@@ -342,9 +342,7 @@ static ghl_error_codes_t ghl_m1_pair_attempt_schedule(
       const ghl_m1_neutrino_state before_repair = repaired_state;
       ghl_m1_rad_state rad_state = ghl_m1_neutrino_project_rad_state(&repaired_state);
       error = ghl_m1_realizability_repair(m1_params, metric, &rad_state);
-      if(error != ghl_success) {
-        return error;
-      }
+      if(error != ghl_success) return error;
       repaired_state.E = rad_state.E;
       for(int i = 0; i < 3; ++i) {
         repaired_state.F[i] = rad_state.F[i];
@@ -455,10 +453,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
   }
   for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
     error = ghl_m1_validate_neutrino_rates(&rates[species], NULL);
-    if(error != ghl_success) {
-      return ghl_m1_pair_publish_failure(
-            error, state_transport, state_out, exchange, diagnostics);
-    }
+    if(error != ghl_success) return ghl_m1_pair_publish_failure(
+          error, state_transport, state_out, exchange, diagnostics);
   }
   for(int process = 0; process < ghl_m1_neutrino_pair_process_count; ++process) {
     if(rates[0].eta_N_pair[process] != rates[1].eta_N_pair[process]) {
@@ -479,9 +475,16 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
   ghl_m1_neutrino_exchange nonpair_exchange[ghl_m1_pair_species_count];
   ghl_m1_neutrino_diagnostics stage_diagnostics[ghl_m1_pair_species_count]
         = { neutrino_diagnostics[0], neutrino_diagnostics[1] };
+  const bool pair_rates_active = ghl_m1_pair_rates_are_active(rates);
   for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
+    ghl_m1_neutrino_parameters independent_params = nu_params[species];
+    /* With an active pair stage this endpoint is intermediate. Keep the
+     * caller's bounds for the final pair endpoint check below. */
+    if(pair_rates_active) {
+      independent_params.enforce_mean_energy_bounds = 0;
+    }
     error = ghl_m1_solve_neutrino_source_update(
-          NULL, m1_params, &nu_params[species], metric, prims_frozen,
+          NULL, m1_params, &independent_params, metric, prims_frozen,
           &base_rates[species], &state_input[species], &state_transport[species], dt,
           n_b_cons, &nonpair_state[species], &nonpair_exchange[species],
           &diagnostics[species], &stage_diagnostics[species]);
@@ -497,23 +500,12 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
     }
   }
 
-  if(!ghl_m1_pair_rates_are_active(rates)) {
-    ghl_m1_neutrino_state final_state[ghl_m1_pair_species_count]
-          = { nonpair_state[0], nonpair_state[1] };
-    ghl_m1_neutrino_exchange final_exchange[ghl_m1_pair_species_count];
+  if(!pair_rates_active) {
+    /* The independent updates already validated these exact exchange packets;
+     * without a pair stage neither endpoint nor charged-current policy changes. */
     for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
-      error = ghl_m1_neutrino_assemble_exchange(
-            &state_transport[species], &final_state[species], &base_rates[species],
-            nonpair_exchange[species].dL_rad_cc, metric->sqrt_detgamma, n_b_cons,
-            &final_exchange[species]);
-      if(error != ghl_success) {
-        return ghl_m1_pair_publish_failure(
-              error, state_transport, state_out, exchange, diagnostics);
-      }
-    }
-    for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
-      state_out[species] = final_state[species];
-      exchange[species] = final_exchange[species];
+      state_out[species] = nonpair_state[species];
+      exchange[species] = nonpair_exchange[species];
       diagnostics[species].path = ghl_m1_neutrino_source_path_general_implicit;
       neutrino_diagnostics[species] = stage_diagnostics[species];
     }
@@ -573,10 +565,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
           &state_transport[species], &final_state[species], &base_rates[species],
           nonpair_exchange[species].dL_rad_cc, metric->sqrt_detgamma, n_b_cons,
           &final_exchange[species]);
-    if(error != ghl_success) {
-      return ghl_m1_pair_publish_failure(
-            error, state_transport, state_out, exchange, diagnostics);
-    }
+    if(error != ghl_success) return ghl_m1_pair_publish_failure(
+          error, state_transport, state_out, exchange, diagnostics);
   }
   for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
     state_out[species] = final_state[species];

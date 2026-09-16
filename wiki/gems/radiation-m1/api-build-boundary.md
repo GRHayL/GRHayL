@@ -30,16 +30,23 @@ declaration is required.
 
 `GRHayL/make.code.defn` includes the `Radiation` gem. The shared manifest
 `GRHayL/Radiation/make.code.defn` contains the shared closure, moments,
-source-geometry, wave-speed, prepared-face transport, stress-energy,
-diagnostics, Newton, and utility implementations used by the neutrino path.
+source-geometry, wave-speed, prepared-face transport, `Jthick`, diffusion,
+stress-energy, diagnostics, Newton, and utility implementations used by the
+neutrino path.
 
 The nested manifest `GRHayL/Radiation/Neutrinos/make.code.defn` contains the
-provider, rate validation, repair, number flux, prepared-face wrapper, source,
-lepton-exchange, and local implicit-solve files.
+provider, rate validation, repair, number flux, pointwise five-component
+Rusanov wrapper, source, lepton-exchange, and local implicit-solve files.
 
-The component-wise Rusanov arithmetic required by the prepared neutrino
-transport operation is compiled by `GRHayL/Flux_Source/make.code.defn` from
-`GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c`.
+The canonical four-point/prepared-face transport implementation, including
+both four-point APIs and their component-wise low-flux arithmetic, is compiled
+by the shared Radiation manifest from
+`GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c`. Its private low-flux
+helper remains local because the prepared volume-weighted operands have units
+distinct from the public generic helper contract. The generic
+`GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c` is compiled separately by the
+Flux_Source manifest and is used by pointwise Rusanov wrappers, not by the
+four-point/prepared operation.
 
 The Radiation/Neutrinos manifest includes the private
 `ghl_m1_nrpyleakage_kernel.c` adapter. It provides the EOS-to-thermodynamic-
@@ -68,7 +75,9 @@ production build surface described here. The neutrino M1 implementation has one
 primary pointwise numerical path: metric light-cone speeds, the linear
 `E^2(1-epsilon)/F^2` realizability rescale, the full four-dimensional closure,
 and four-point blended Rusanov transport without a separate diffusion
-correction. A finite full-four-dimensional closure candidate that fails the
+correction. The public `Jthick` and diffusion functions are separate optional
+helpers and are not selected by that canonical transport operation. A finite
+full-four-dimensional closure candidate that fails the
 physical PSD check is replaced by the built-in Eulerian Minerbo admissibility
 fallback and marked in the returned closure; this is not a user-selectable
 alternative. Its local implicit source update uses the existing
@@ -88,6 +97,8 @@ additional private M1 header is installed for these routes.
 - `GRHayL/make.code.defn`
 - `GRHayL/Radiation/make.code.defn`
 - `GRHayL/Radiation/Neutrinos/make.code.defn`
+- `GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c`
+- `GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rusanov_flux.c`
 - `GRHayL/Flux_Source/make.code.defn`
 - `GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c`
 - `GRHayL/Neutrinos/NRPyLeakage/make.code.defn`

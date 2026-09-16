@@ -1,30 +1,49 @@
 # Radiation M1 Host Boundary
 
-`GRHayL/Radiation` is a host-neutral, pointwise library. It does not own mesh
-loops, reconstruction, ghost zones, boundaries, AMR, schedules, stage
-sequencing, matter variables, or `Con2Prim`.
+`GRHayL/Radiation` is a host-neutral library exposing pointwise and
+host-prepared transport operations. It does not own mesh loops, reconstruction,
+ghost zones, boundaries, AMR, schedules, stage sequencing, matter variables, or
+`Con2Prim`.
 
 ## Host-owned transport
 
 The host stores or converts its evolved variables, assembles the four-point
 stencil, prepares the two adjacent physical fluxes and uncapped speeds, and
-calls `ghl_m1_compute_neutrino_four_point_transport_flux` for every canonical
-neutrino M1 face. The operation returns all five components in
-`{N,E,Fx,Fy,Fz}` and densitizes the face flux exactly once. The host performs
-the final divergence. The operation always uses the metric light-cone speeds,
-the four-point blended Rusanov formula, and no separate diffusion correction.
+selects the transport boundary that matches its discretization. For pointwise
+operands it calls `ghl_m1_compute_neutrino_four_point_transport_flux`; this
+returns all five components in `{N,E,Fx,Fy,Fz}` and densitizes the face flux
+exactly once. For distinct cell and face volumes, it instead forms
+`U_prepared[j] = V_cell[j] * U[j]` and
+`F_prepared[L/R] = V_face * F[L/R]`, then calls
+`ghl_m1_compute_neutrino_four_point_volume_weighted_transport_flux`. The latter
+returns an already volume-weighted face flux and applies no metric factor.
+The host performs the final finite-volume divergence/update and owns the
+finite-positive volume and finite-product checks. It must not pass prepared
+operands through the pointwise API. Both operations use metric light-cone
+speeds, the four-point blended Rusanov formula, and no separate diffusion
+correction.
 
 The generic two-state Rusanov route remains available to other shared callers,
 but it is not the canonical neutrino M1 transport route. No host policy choice
 can replace the canonical face operation with an optical-depth speed cap or a
-separate diffusion correction.
+separate diffusion correction; the optional diffusion helper is not a
+replacement for that face operation.
 
 ## Host-owned source stage
 
-For each species, the host supplies frozen primitives, rates, the pre-transport
-state, the transport-predicted state, `dt`, and the conserved baryon-density
-normalization. `ghl_m1_solve_neutrino_source_update` returns a temporary state,
-an exchange packet, and diagnostics. It never updates matter or tracks a stage.
+For each one-body update, the host supplies frozen primitives, rates, the
+pre-transport state, the transport-predicted state, `dt`, and the conserved
+baryon-density normalization. For `nux`, and for electron-flavor rates that
+contain only the independent charged-current/scattering fields, call
+`ghl_m1_solve_neutrino_source_update`; it returns a temporary state, an
+exchange packet, and diagnostics. If separated electron-flavor pair, plasmon,
+or bremsstrahlung fields are present, call
+`ghl_m1_solve_neutrino_pair_source_update` for `nue` and `anue` together. The
+paired operation returns both temporary states, exchange packets, and
+diagnostics transactionally and includes the independent one-body sources.
+Legacy non-charged-current electron-number rates are rejected by the
+single-species contract and are not a substitute for the paired fields.
+Neither operation updates matter or tracks a host stage.
 
 `dt` is the coordinate-time stage timestep. The library applies the metric
 lapse once, as `dt_alpha = alpha * dt`, for source-policy decisions, predictors,
@@ -66,3 +85,4 @@ schedule-level, AMR, complete-evolution, or physical-validation claim.
 
 - [`M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)
 - [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h)
+- [`PAIR_SOURCE_MODEL.md`](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md)

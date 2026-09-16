@@ -10,6 +10,8 @@ export LD_LIBRARY_PATH
 
 echo $LD_LIBRARY_PATH
 
+bash Unit_Tests/run_m1_tests.sh
+
 download_file() {
   url="$1"
   filename="${url##*/}"
