@@ -96,7 +96,7 @@ currently select the same headers, including `ghl_unit_tests.h`, but they
 are separate lists and can drift. Installation then copies the versioned
 shared library and symlink into `<prefix>/lib`. Installed presence does not by
 itself classify a header as production versus test-only API.
-`make install` also copies `THIRD_PARTY_NOTICES` into
+`make install` also copies the FDINT notice, stored as `THIRD_PARTY_NOTICES`, into
 `<prefix>/share/doc/grhayl` so binary installations retain the FDINT BSD-3
 notice.
 

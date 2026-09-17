@@ -138,10 +138,10 @@ an interior point, the six-value
 NRPyLeakage callback order and range failures, and memory cleanup.  It also
 checks a no-fallback Con2Prim recovery, analytic tabulated flux and source
 goldens, and all eight combined-NRPyLeakage outputs against fixed,
-owner-accepted regression goldens selected by the two recognized table
-dimensions. Recognition by dimensions and agreement with those values detect
-implementation drift; they are not independent physical qualification. The
-selected blocking model was qualified separately against external rate and
+implementation-derived regression goldens selected by the two recognized
+table dimensions. Recognition by dimensions and agreement with those values
+detect implementation drift; they are not independent physical qualification.
+The selected blocking model was qualified separately against external rate and
 thin-gas references. CI selects only the synthetic table; the SRO-141 replay
 requires external manual data.
 

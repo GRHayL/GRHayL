@@ -148,7 +148,8 @@ Flow:
 Finite handling: local `EnsureFinite` wraps selected generated subexpressions
 with `robust_isfinite` fallback to a small positive value. After writeback,
 `nrpyl_sanitize_luminosities` maps any non-finite luminosity output to the
-neutral zero-emission value.
+neutral zero-emission value. A replacement returns
+`ghl_error_nrpyleakage_nonfinite_output` with the finite fallback retained.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` directly
 checks selected Fermi-Dirac branches, generates luminosity fixtures, recomputes
@@ -188,7 +189,9 @@ Finite handling: this file's `EnsureFinite` uses `robust_isfinite` from
 terms with a small positive value. After writeback, `nrpyl_sanitize_sources`
 maps either non-finite signed source to neutral zero, while
 `nrpyl_sanitize_opacities` maps non-finite opacities to the established small
-positive floor.
+positive cgs inverse-length floor converted to the public geometrized unit.
+Any replacement returns `ghl_error_nrpyleakage_nonfinite_output` after both
+output groups have been sanitized.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` calls
 this routine in its RHS, divides `R_source` and `Q_source` by `rho`, advances
@@ -227,7 +230,8 @@ Flow:
 
 Finite handling: local `EnsureFinite` handles selected generated
 subexpressions, then `nrpyl_sanitize_opacities` handles non-finite output
-entries.
+entries with the same converted cgs floor used by generated opacity terms. A
+replacement returns `ghl_error_nrpyleakage_nonfinite_output`.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 directly calls this routine for interior and exterior states, stores the six

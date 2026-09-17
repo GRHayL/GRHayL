@@ -604,6 +604,9 @@ static inline double nrpyl_fermi_vacancy(const double mu_minus_E_over_T) {
  *
  * The shift \f$q=\hat\mu-T(\eta_n-\eta_p)\f$ makes the paired spectral beta
  * kernels obey detailed balance with the EOS chemical-potential difference.
+ * No physical clamp is applied: the current EOS API supplies no authoritative
+ * mean-field bound. Large finite \f$|q/T|\f$ can remain poorly conditioned;
+ * downstream helpers reject nonfinite inputs and results.
  *
  * @param[in] T Temperature in MeV.
  * @param[in] muhat EOS neutron-minus-proton chemical potential in MeV.

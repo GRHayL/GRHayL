@@ -5,6 +5,14 @@
 
 #include "ghl_nrpyleakage.h"
 
+/** Small positive fallback used by generated cgs leakage expressions. */
+static const double nrpyl_cgs_numerical_floor = 1.0e-15;
+
+/** Convert the cgs inverse-length floor to the public geometrized unit. */
+static inline double nrpyl_opacity_floor_geom(void) {
+  return NRPyLeakage_units_geom_to_cgs_L * nrpyl_cgs_numerical_floor;
+}
+
 /**
  * Compute the unsuppressed nucleon-bremsstrahlung number-emission rate.
  *
@@ -91,7 +99,7 @@ static inline double nrpyl_matter_energy_source(
 
 /** Replace a nonfinite opacity with the established positive floor. */
 static inline double nrpyl_finite_opacity_or_floor(const double value) {
-  return robust_isfinite(value) ? value : 1.0e-15;
+  return robust_isfinite(value) ? value : nrpyl_opacity_floor_geom();
 }
 
 /** Replace a nonfinite emitted or signed rate with the neutral value. */
@@ -100,29 +108,41 @@ static inline double nrpyl_finite_rate_or_zero(const double value) {
 }
 
 /** Apply the finite-output contract to every public opacity component. */
-static inline void nrpyl_sanitize_opacities(
+static inline bool nrpyl_sanitize_opacities(
   ghl_neutrino_opacities *restrict kappa) {
+  bool replaced = false;
   for(int i = 0; i < 2; i++) {
+    replaced |= !robust_isfinite(kappa->nue[i]);
+    replaced |= !robust_isfinite(kappa->anue[i]);
+    replaced |= !robust_isfinite(kappa->nux[i]);
     kappa->nue[i] = nrpyl_finite_opacity_or_floor(kappa->nue[i]);
     kappa->anue[i] = nrpyl_finite_opacity_or_floor(kappa->anue[i]);
     kappa->nux[i] = nrpyl_finite_opacity_or_floor(kappa->nux[i]);
   }
+  return replaced;
 }
 
 /** Apply the finite-output contract to every public luminosity component. */
-static inline void nrpyl_sanitize_luminosities(
+static inline bool nrpyl_sanitize_luminosities(
       ghl_neutrino_luminosities *restrict lum) {
+  const bool replaced = !robust_isfinite(lum->nue)
+                        || !robust_isfinite(lum->anue)
+                        || !robust_isfinite(lum->nux);
   lum->nue = nrpyl_finite_rate_or_zero(lum->nue);
   lum->anue = nrpyl_finite_rate_or_zero(lum->anue);
   lum->nux = nrpyl_finite_rate_or_zero(lum->nux);
+  return replaced;
 }
 
 /** Apply the finite-output contract to both public GRMHD source terms. */
-static inline void nrpyl_sanitize_sources(
+static inline bool nrpyl_sanitize_sources(
       double *restrict R_source,
       double *restrict Q_source) {
+  const bool replaced = !robust_isfinite(*R_source)
+                        || !robust_isfinite(*Q_source);
   *R_source = nrpyl_finite_rate_or_zero(*R_source);
   *Q_source = nrpyl_finite_rate_or_zero(*Q_source);
+  return replaced;
 }
 
 #endif // NRPYLEAKAGE_RATE_HELPERS_H_

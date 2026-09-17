@@ -140,6 +140,7 @@ download_test_data Neutrinos/nrpyleakage_luminosities_unperturbed.bin
 download_test_data Neutrinos/nrpyleakage_luminosities_perturbed.bin
 
 ./test/unit_test_nrpyleakage_physics
+./test/unit_test_nrpyleakage_classifier_fallback
 ./test/unit_test_nrpyleakage_optically_thin_gas SLy4_3335_rho391_temp163_ye66.h5 1
 ./test/unit_test_nrpyleakage_constant_density_sphere SLy4_3335_rho391_temp163_ye66.h5 1
 ./test/unit_test_nrpyleakage_luminosities SLy4_3335_rho391_temp163_ye66.h5 1

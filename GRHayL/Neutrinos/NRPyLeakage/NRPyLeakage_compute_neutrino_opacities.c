@@ -7,7 +7,7 @@ static double EnsureFinite(const double x) {
   if(robust_isfinite(x))
     return x;
   else
-    return 1e-15;
+    return nrpyl_cgs_numerical_floor;
 }
 
 /*
@@ -121,6 +121,6 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
   kappa->nux[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_17*tmp_30) + EnsureFinite(tmp_10*tmp_30*tmp_6));
 
   // Step 5: Make sure public results are finite; otherwise use the established floor.
-  nrpyl_sanitize_opacities(kappa);
-  return ghl_success;
+  return nrpyl_sanitize_opacities(kappa)
+         ? ghl_error_nrpyleakage_nonfinite_output : ghl_success;
 }

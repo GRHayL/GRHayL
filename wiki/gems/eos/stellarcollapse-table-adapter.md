@@ -153,7 +153,7 @@ checks every serialized node and all 19 mappings, storage-space interpolation
 and inversions from distinct valid initial guesses, the six-value ABI order
 and range failures, no-fallback
 Palenzuela recovery, analytic characteristic-speed, HLLE/entropy-flux, and
-source goldens, all eight combined-leakage outputs against owner-accepted
+source goldens, all eight combined-leakage outputs against implementation-derived
 regression goldens for the analytic and regularized SRO-141 inputs, and
 cleanup. Those goldens lock the selected implementation after external rate
 and thin-gas qualification; they do not independently qualify its physics.

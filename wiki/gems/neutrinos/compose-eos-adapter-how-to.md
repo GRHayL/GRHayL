@@ -592,8 +592,8 @@ For each state:
    separately. Do not infer their coherence from opacity agreement.
 9. After callback validation, compare all six opacity slots, `R_source`,
    `Q_source`, and all three luminosities at zero and nonzero optical depth.
-   Pressure or energy agreement alone does not test this interface. The
-   all three EOS-dependent routines consume `X_n` and `X_p` for blocking; the
+   Pressure or energy agreement alone does not test this interface. All three
+   EOS-dependent routines consume `X_n` and `X_p` for blocking; the
    combined source-term and luminosity routines also use them for
    bremsstrahlung. Validate every path to exercise free-nucleon composition.
 

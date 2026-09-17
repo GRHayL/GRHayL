@@ -7,7 +7,7 @@ static double EnsureFinite(const double x) {
   if(robust_isfinite(x))
     return x;
   else
-    return 1e-15;
+    return nrpyl_cgs_numerical_floor;
 }
 
 /*
@@ -210,7 +210,8 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
                   (EnsureFinite(tmp_49*tmp_87)
                    + EnsureFinite(tmp_41*tmp_42*tmp_87));
   kappa->nux[1] = NRPyLeakage_units_geom_to_cgs_L*tmp_73;
-  nrpyl_sanitize_sources(R_source, Q_source);
-  nrpyl_sanitize_opacities(kappa);
-  return ghl_success;
+  const bool replaced_sources = nrpyl_sanitize_sources(R_source, Q_source);
+  const bool replaced_opacities = nrpyl_sanitize_opacities(kappa);
+  return replaced_sources || replaced_opacities
+         ? ghl_error_nrpyleakage_nonfinite_output : ghl_success;
 }

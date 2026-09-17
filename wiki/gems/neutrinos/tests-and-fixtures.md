@@ -49,10 +49,13 @@ key `0`; CI and standard unit-test replay use key `1`. These producers live in
 the test translation units themselves; there are no matching
 `Unit_Tests/data_gen/unit_test_data_nrpyleakage_*.c` targets.
 
-The published `GRHayL/TestData` copies contain the owner-accepted regenerated
-outputs for the current diffusion-time, bremsstrahlung-density, heavy-species,
-and nucleon-blocking corrections. CI downloads those replacement goldens. No
-new scenario or tolerance change accompanied the replacement.
+The published `GRHayL/TestData` copies contain regenerated outputs for the
+current diffusion-time, bremsstrahlung-density, heavy-species, and
+nucleon-blocking corrections. CI downloads those replacement goldens. Replay
+scenarios remain the established three, but sphere and luminosity comparisons
+now use `1024*DBL_EPSILON` with zero absolute tolerance, and the sphere exterior
+temperature respects the EOS-table lower bound. These implementation-generated
+baselines detect drift; they do not independently validate corrected physics.
 
 ## Blocking-Correction Qualification
 
@@ -128,7 +131,7 @@ limitation. EOS-consistent effective masses or mean-field shifts remain an
 optional future accuracy improvement.
 
 All established NRPyLeakage replay fixtures were regenerated from the accepted
-model. A second independent generation produced byte-identical files, and the
+model. A second generation using the same implementation produced byte-identical files, and the
 optically thin, constant-density sphere, and luminosity replays passed against
 the installed local `TestData` results.
 

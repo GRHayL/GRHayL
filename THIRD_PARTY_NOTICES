@@ -1,5 +1,9 @@
-GRHayL third-party notices
-===========================
+FDINT-derived NRPyLeakage code notice
+=====================================
+
+This file records the notice for FDINT-derived code added by the NRPyLeakage
+nucleon-blocking implementation. It is not a complete inventory of licenses
+for pre-existing GRHayL source; source-local notices remain authoritative.
 
 FDINT minimax approximations
 ----------------------------

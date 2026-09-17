@@ -7,7 +7,7 @@ static double EnsureFinite(const double x) {
   if(robust_isfinite(x))
     return x;
   else
-    return 1e-15;
+    return nrpyl_cgs_numerical_floor;
 }
 
 /*
@@ -176,6 +176,6 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_luminosities(
   lum->nue = tmp_52*Q_eff_nue;
   lum->anue = tmp_52*Q_eff_anue;
   lum->nux = tmp_52*Q_eff_nux;
-  nrpyl_sanitize_luminosities(lum);
-  return ghl_success;
+  return nrpyl_sanitize_luminosities(lum)
+         ? ghl_error_nrpyleakage_nonfinite_output : ghl_success;
 }

@@ -196,9 +196,10 @@ source, headers, tests, and common edit routes before wider search.
   [generator provenance](neutrinos/generator-provenance.md).
 - Drift/contract notes: leakage uses tabulated EOS quantities and table-backed
   test data. HDF5/EOS changes can break Neutrinos even if leakage source is
-  untouched. All 19 `ghl_pert_test_fail` fixture-replay results are
-  consumed, so a numerical mismatch fails its executable. Published
-  `GRHayL/TestData` fixtures and owner-accepted CompOSE goldens reflect the
+  untouched. All 19 fixture-replay results are consumed: optically thin uses
+  `ghl_pert_test_fail`; sphere and luminosity use local wrappers around
+  `ghl_pert_test_fail_with_tolerance`. A numerical mismatch fails its executable. Published
+  `GRHayL/TestData` fixtures and implementation-derived CompOSE drift goldens reflect the
   selected density-derived blocking implementation.
 
 ## Reconstruction

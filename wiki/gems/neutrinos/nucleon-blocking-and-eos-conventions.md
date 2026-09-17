@@ -6,10 +6,11 @@ Nucleon blocking estimates how occupied neutron and proton states suppress
 scattering and charged-current reactions. Three separate questions matter:
 which nucleons participate, what kinetic spectrum represents them, and how
 the reaction energy is paired between emission and absorption. The installed
-model answers these questions with a fast ideal-gas approximation. It is
-numerically stable and reference-invariant. The owner accepted its measured
-qualification results for leakage use while retaining the dense interacting-
-matter limitation.
+model answers these questions with a fast ideal-gas approximation. Its density
+inversion and population-overlap algebra are numerically stable and reference-
+invariant; the reaction-energy shift can remain poorly conditioned at large
+finite `|q/T|`. The owner accepted its measured qualification results for
+leakage use while retaining the dense interacting-matter limitation.
 
 See the [physics contract](physics-and-eos-contract.md) for species, units, and
 equilibrium conventions, the [table adapter](../eos/stellarcollapse-table-adapter.md#producer-energy-conventions)
@@ -197,6 +198,10 @@ deciding the effect on a full leakage evolution.
 - Dense DD2 rates and opacities show that the common-bare-mass model does not
   reproduce mean-field physics. This limits microscopic accuracy claims but
   does not block the accepted leakage approximation.
+- The reaction shift is not physically clamped because the current EOS API
+  supplies no authoritative mean-field bound. Large finite `|q/T|` remains a
+  conditioning limitation; observable nonfinite-output errors do not remove
+  that finite-value sensitivity.
 - Scattering uses only the EOS free-neutron and free-proton fractions. Bound
   nucleons and coherent nuclear scattering are outside the accepted model.
 - Replacing the common-bare-mass inversion or expanding the scattering targets

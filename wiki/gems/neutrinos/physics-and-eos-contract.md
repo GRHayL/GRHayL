@@ -210,7 +210,12 @@ potential. Production moments neglect charged-lepton mass in the phase-space
 factor and use representative-energy final-state blocking. This follows the
 algebraic shifted-moment structure in ILEAS Appendix B and the pairing in
 Appendix C, Eqs. (100)--(109); it does not reproduce a finite-mass spectral
-rate exactly.
+rate exactly. No physical clamp is applied to `q` or `q/T`: the current EOS
+API exposes no authoritative mean-field bound. Large finite ratios therefore
+remain a conditioning limitation. Nonfinite final results are repaired to
+documented finite fallbacks and reported with
+`ghl_error_nrpyleakage_nonfinite_output`; this status does not establish
+accuracy for large finite ratios.
 
 Independent qualification against the beta kernels in
 [BNS_NURATES](https://github.com/RelNucAs/bns_nurates) found `2.0--4.0%`

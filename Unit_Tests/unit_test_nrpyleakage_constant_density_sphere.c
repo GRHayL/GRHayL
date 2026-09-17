@@ -553,6 +553,10 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
      || sphere_pert_test_fail(0.0, 0.0, 0.0)) {
     ghl_error("Sphere comparison did not enforce exact-zero references\n");
   }
+  if(!sphere_pert_test_fail(1.0, NAN, NAN)
+     || sphere_pert_test_fail(NAN, NAN, 1.0)) {
+    ghl_error("Sphere comparison did not preserve reference argument roles\n");
+  }
   constantdensitysphere_test(eos, 2);
 }
 

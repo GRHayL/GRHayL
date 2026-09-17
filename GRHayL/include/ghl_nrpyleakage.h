@@ -126,10 +126,18 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
  * memcpy preserves strict aliasing and optimizes to an integer move. Other
  * floating-point representations retain the standard C classifier.
  */
+#if defined(UINT64_MAX) && defined(UINT64_C)
+# if UINT64_MAX == UINT64_C(0xffffffffffffffff)
+#  define GHL_NRPYLEAKAGE_HAVE_UINT64_BITS 1
+# endif
+#endif
+#ifndef GHL_NRPYLEAKAGE_HAVE_UINT64_BITS
+# define GHL_NRPYLEAKAGE_HAVE_UINT64_BITS 0
+#endif
+
 static inline int robust_isnan(const double x) {
-#if FLT_RADIX == 2 && DBL_MANT_DIG == 53 && DBL_MIN_EXP == -1021                  \
-      && DBL_MAX_EXP == 1024 && defined(UINT64_MAX)                              \
-      && UINT64_MAX == UINT64_C(0xffffffffffffffff)
+#if GHL_NRPYLEAKAGE_HAVE_UINT64_BITS && FLT_RADIX == 2 && DBL_MANT_DIG == 53       \
+      && DBL_MIN_EXP == -1021 && DBL_MAX_EXP == 1024
   typedef char ghl_nrpyleakage_binary64_size_check[
         sizeof(double) == sizeof(uint64_t) ? 1 : -1];
   (void)sizeof(ghl_nrpyleakage_binary64_size_check);
@@ -148,9 +156,8 @@ static inline int robust_isnan(const double x) {
  * @see robust_isnan() for the fast-math and representation contract.
  */
 static inline int robust_isfinite(const double x) {
-#if FLT_RADIX == 2 && DBL_MANT_DIG == 53 && DBL_MIN_EXP == -1021                  \
-      && DBL_MAX_EXP == 1024 && defined(UINT64_MAX)                              \
-      && UINT64_MAX == UINT64_C(0xffffffffffffffff)
+#if GHL_NRPYLEAKAGE_HAVE_UINT64_BITS && FLT_RADIX == 2 && DBL_MANT_DIG == 53       \
+      && DBL_MIN_EXP == -1021 && DBL_MAX_EXP == 1024
   typedef char ghl_nrpyleakage_binary64_size_check[
         sizeof(double) == sizeof(uint64_t) ? 1 : -1];
   (void)sizeof(ghl_nrpyleakage_binary64_size_check);
@@ -162,6 +169,8 @@ static inline int robust_isfinite(const double x) {
   return isfinite(x) != 0;
 #endif
 }
+
+#undef GHL_NRPYLEAKAGE_HAVE_UINT64_BITS
 
 // Helper macro for Fermi-Dirac integrals
 #define NRPYLEAKAGE_FD_OR_RETURN(out, k, z)                                \

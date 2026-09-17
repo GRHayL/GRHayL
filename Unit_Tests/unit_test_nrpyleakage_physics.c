@@ -195,16 +195,19 @@ static void check_output_fallbacks(void) {
   double R_source = NAN;
   double Q_source = -INFINITY;
 
-  nrpyl_sanitize_opacities(&kappa);
-  nrpyl_sanitize_luminosities(&lum);
-  nrpyl_sanitize_sources(&R_source, &Q_source);
+  if(!nrpyl_sanitize_opacities(&kappa)
+     || !nrpyl_sanitize_luminosities(&lum)
+     || !nrpyl_sanitize_sources(&R_source, &Q_source)) {
+    ghl_error("Nonfinite sanitizer did not report a replaced output\n");
+  }
 
   const double opacity_outputs[] = {
     kappa.nue[0], kappa.nue[1], kappa.anue[0], kappa.anue[1],
     kappa.nux[0], kappa.nux[1],
   };
   for(size_t i = 0; i < sizeof(opacity_outputs)/sizeof(opacity_outputs[0]); i++) {
-    if(opacity_outputs[i] != 1.0e-15)
+    if(opacity_outputs[i]
+       != NRPyLeakage_units_geom_to_cgs_L * 1.0e-15)
       ghl_error("Opacity did not use the nonfinite floor\n");
   }
   const double rate_outputs[] = {
@@ -239,6 +242,24 @@ static ghl_error_codes_t mock_eos_success(
   *X_n = 0.7;
   *X_p = 0.2;
   return ghl_success;
+}
+
+static ghl_error_codes_t mock_eos_shifted_reference(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict muhat,
+      double *restrict mu_e,
+      double *restrict mu_p,
+      double *restrict mu_n,
+      double *restrict X_n,
+      double *restrict X_p) {
+  const ghl_error_codes_t error = mock_eos_success(
+        eos, rho, Y_e, T, muhat, mu_e, mu_p, mu_n, X_n, X_p);
+  *mu_p += 100.0;
+  *mu_n += 100.0;
+  return error;
 }
 
 static ghl_error_codes_t mock_eos_failure(
@@ -354,10 +375,95 @@ static void check_public_api_contracts(void) {
         "public heavy-lepton source suppression", Q_source,
         -8.44271649383971011e-13, 1.0e-12*8.44271649383971011e-13);
 
+  const ghl_neutrino_optical_depths depths[2] = { tau, thick_tau };
+  ghl_neutrino_opacities reference_standalone[2] = { 0 };
+  ghl_neutrino_opacities reference_combined[2] = { 0 };
+  ghl_neutrino_opacities shifted_standalone[2] = { 0 };
+  ghl_neutrino_opacities shifted_combined[2] = { 0 };
+  ghl_neutrino_luminosities reference_lum[2] = { 0 };
+  ghl_neutrino_luminosities shifted_lum[2] = { 0 };
+  double reference_R_source[2] = { 0.0 }, reference_Q_source[2] = { 0.0 };
+  double shifted_R_source[2] = { 0.0 }, shifted_Q_source[2] = { 0.0 };
+  bool reference_error = false, shifted_error = false;
+  for(int d = 0; d < 2; d++) {
+    reference_error |= NRPyLeakage_compute_neutrino_opacities(
+          &eos, 1.0e-5, 0.1, 3.0, &depths[d], &reference_standalone[d])
+          != ghl_success;
+    reference_error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+          &eos, 1.0e-5, 0.1, 3.0, &depths[d], &reference_combined[d],
+          &reference_R_source[d], &reference_Q_source[d]) != ghl_success;
+    reference_error |= NRPyLeakage_compute_neutrino_luminosities(
+          &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
+          3.0, 1.0, &depths[d], &reference_lum[d]) != ghl_success;
+  }
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T
+        = mock_eos_shifted_reference;
+  for(int d = 0; d < 2; d++) {
+    shifted_error |= NRPyLeakage_compute_neutrino_opacities(
+          &eos, 1.0e-5, 0.1, 3.0, &depths[d], &shifted_standalone[d])
+          != ghl_success;
+    shifted_error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+          &eos, 1.0e-5, 0.1, 3.0, &depths[d], &shifted_combined[d],
+          &shifted_R_source[d], &shifted_Q_source[d]) != ghl_success;
+    shifted_error |= NRPyLeakage_compute_neutrino_luminosities(
+          &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
+          3.0, 1.0, &depths[d], &shifted_lum[d]) != ghl_success;
+  }
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_success;
+  if(reference_error || shifted_error) {
+    ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_eos_callback;
+    ghl_error("Common chemical-potential shift returned an error\n");
+  }
+  for(int d = 0; d < 2; d++) {
+    const double reference_standalone_values[6] = {
+      reference_standalone[d].nue[0], reference_standalone[d].nue[1],
+      reference_standalone[d].anue[0], reference_standalone[d].anue[1],
+      reference_standalone[d].nux[0], reference_standalone[d].nux[1],
+    };
+    const double shifted_standalone_values[6] = {
+      shifted_standalone[d].nue[0], shifted_standalone[d].nue[1],
+      shifted_standalone[d].anue[0], shifted_standalone[d].anue[1],
+      shifted_standalone[d].nux[0], shifted_standalone[d].nux[1],
+    };
+    const double reference_combined_values[6] = {
+      reference_combined[d].nue[0], reference_combined[d].nue[1],
+      reference_combined[d].anue[0], reference_combined[d].anue[1],
+      reference_combined[d].nux[0], reference_combined[d].nux[1],
+    };
+    const double shifted_combined_values[6] = {
+      shifted_combined[d].nue[0], shifted_combined[d].nue[1],
+      shifted_combined[d].anue[0], shifted_combined[d].anue[1],
+      shifted_combined[d].nux[0], shifted_combined[d].nux[1],
+    };
+    for(int i = 0; i < 6; i++) {
+      check_close(
+            "standalone common-reference invariance",
+            shifted_standalone_values[i], reference_standalone_values[i], 0.0);
+      check_close(
+            "combined common-reference invariance",
+            shifted_combined_values[i], reference_combined_values[i], 0.0);
+    }
+    check_close(
+          "number-source common-reference invariance",
+          shifted_R_source[d], reference_R_source[d], 0.0);
+    check_close(
+          "energy-source common-reference invariance",
+          shifted_Q_source[d], reference_Q_source[d], 0.0);
+    check_close(
+          "nue luminosity common-reference invariance",
+          shifted_lum[d].nue, reference_lum[d].nue, 0.0);
+    check_close(
+          "anue luminosity common-reference invariance",
+          shifted_lum[d].anue, reference_lum[d].anue, 0.0);
+    check_close(
+          "nux luminosity common-reference invariance",
+          shifted_lum[d].nux, reference_lum[d].nux, 0.0);
+  }
+
   error = NRPyLeakage_compute_neutrino_luminosities(
         &eos, NAN, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
         3.0, 1.0, &tau, &lum);
-  if(error != ghl_success)
+  if(error != ghl_error_nrpyleakage_nonfinite_output)
     ghl_error("Nonfinite luminosity mock returned error %d\n", error);
   ghl_neutrino_optical_depths nonfinite_tau = tau;
   nonfinite_tau.nue[1] = NAN;
@@ -365,7 +471,7 @@ static void check_public_api_contracts(void) {
   nonfinite_tau.nux[1] = NAN;
   error = NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
         &eos, 1.0e-5, 0.1, 3.0, &nonfinite_tau, &combined, &R_source, &Q_source);
-  if(error != ghl_success)
+  if(error != ghl_error_nrpyleakage_nonfinite_output)
     ghl_error("Nonfinite combined leakage mock returned error %d\n", error);
   ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_eos_callback;
 

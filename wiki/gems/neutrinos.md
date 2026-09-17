@@ -84,6 +84,8 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
   errors. They also return `ghl_error_nrpyleakage_blocking` before writeback
   when density-derived nucleon blocking receives invalid state or cannot
   produce finite, bounded factors.
+  If final output sanitization replaces a nonfinite value, it retains finite
+  fallback outputs and returns `ghl_error_nrpyleakage_nonfinite_output`.
 - All three EOS-dependent routines obtain blocking from `rho`, `T`, `Xn`, and
   `Xp`. This avoids using producer-dependent absolute `mu_n` and `mu_p` as
   kinetic occupations. They combine the density-derived kinetic degeneracy

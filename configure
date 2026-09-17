@@ -918,7 +918,7 @@ ${TAB}${SILENT}cp \$(IHDS) \$(PREFIX)/include/ghl
 ${TAB}${ALWAYS_SILENT}echo "Installing GRHayL libraries in \$(PREFIX)/lib"
 ${TAB}${ALWAYS_SILENT}mkdir -p \$(PREFIX)/lib
 ${TAB}${SILENT}cp -a \$(BUILDDIR)/lib/* \$(PREFIX)/lib
-${TAB}${ALWAYS_SILENT}echo "Installing third-party notices in \$(PREFIX)/share/doc/grhayl"
+${TAB}${ALWAYS_SILENT}echo "Installing FDINT notice in \$(PREFIX)/share/doc/grhayl"
 ${TAB}${SILENT}mkdir -p \$(PREFIX)/share/doc/grhayl
 ${TAB}${SILENT}install -m 0644 THIRD_PARTY_NOTICES \$(PREFIX)/share/doc/grhayl
 
@@ -927,7 +927,7 @@ ${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL headers from \$(PREFIX)/include/
 ${TAB}${SILENT}rm -rf \$(PREFIX)/include/ghl
 ${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL libraries from \$(PREFIX)/lib"
 ${TAB}${SILENT}rm -rf \$(PREFIXLIBSO) \$(PREFIXLIBSOV)
-${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL third-party notices"
+${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL FDINT notice"
 ${TAB}${SILENT}rm -f \$(PREFIX)/share/doc/grhayl/THIRD_PARTY_NOTICES
 ${TAB}${SILENT}rmdir \$(PREFIX)/share/doc/grhayl 2>/dev/null || true
 EOF

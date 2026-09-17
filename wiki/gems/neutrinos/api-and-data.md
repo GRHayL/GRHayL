@@ -68,7 +68,8 @@ signatures and bodies therefore depend on:
 - GRHayL success/error values, including
   `ghl_error_used_disabled_hdf5` and
   `ghl_error_invalid_fermi_dirac_integral_key` and
-  `ghl_error_nrpyleakage_blocking`;
+  `ghl_error_nrpyleakage_blocking` and
+  `ghl_error_nrpyleakage_nonfinite_output`;
 - constants, unit macros, finiteness helpers, and
   `NRPYLEAKAGE_FD_OR_RETURN` from `ghl_nrpyleakage.h`; and
 - C math facilities exposed through the GRHayL headers and the `-lm` link
@@ -177,6 +178,16 @@ non-finite kinetic-degeneracy inversion, overlap, or population-bound result.
 A failure returns `ghl_error_nrpyleakage_blocking` before any public output is
 written. This distinct error identifies failure of the blocking evaluator
 rather than an EOS interpolation or generated Fermi-moment key.
+
+## Nonfinite-Output Error Behavior
+
+After ordinary writeback, all three EOS-dependent routines sanitize their
+public outputs. Nonfinite opacities become one named cgs inverse-length floor
+converted to the public geometrized unit. Nonfinite luminosities and signed
+sources become neutral zero. If any replacement occurs, the routine returns
+`ghl_error_nrpyleakage_nonfinite_output`; otherwise it returns `ghl_success`.
+Callers can inspect deterministic finite fallback outputs without mistaking
+repaired arithmetic for successful evaluation.
 
 Ports of any opacity, combined source/opacity, or luminosity entry point must
 carry this private header or provide equivalent blocking and error behavior.

@@ -451,7 +451,8 @@ static void check_downstream_consumers(
     opacities.nue[0], opacities.nue[1], opacities.anue[0], opacities.anue[1],
     opacities.nux[0], opacities.nux[1], R_source,          Q_source,
   };
-  // Owner-accepted regression goldens for the qualified leakage model.
+  // Implementation-derived regression goldens, not independent physics
+  // oracles. The analytic-table values run in CI; SRO-141 remains manual.
   static const double analytic_expected[8] = {
     1.93200871426378118e-03,  3.08942651809676529e-03,  1.97229910836136616e-03,
     3.30072726097116118e-03,  1.90653729388707942e-03,  3.06660657858069891e-03,

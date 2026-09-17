@@ -247,7 +247,9 @@ jobs:
           compiler: 'clang'
       - name: Run table-free neutrino physics checks
         if: matrix.test-function == 'nrpyleakage_optically_thin_gas'
-        run: ./test/unit_test_nrpyleakage_physics
+        run: |
+          ./test/unit_test_nrpyleakage_physics
+          ./test/unit_test_nrpyleakage_classifier_fallback
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
