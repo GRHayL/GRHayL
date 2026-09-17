@@ -456,7 +456,7 @@ while [ $# -gt 0 ]; do
         --prefix=*) prefix=$(echo "$1" | cut -d= -f2);;
         --buildtype=*) buildtype=$(echo "$1" | cut -d= -f2);;
         --builddir=*) builddir=$(echo "$1" | cut -d= -f2);;
-        --cflags=*) cflags=$(echo "$1" | cut -d= -f2);;
+        --cflags=*) cflags=${1#*=};;
         --clibs=*) clibs=$(echo "$1" | cut -d= -f2);;
         --hdf5dir=*) hdf5dir=$(echo "$1" | cut -d= -f2);;
         --hdf5inc=*) hdf5inc=$(echo "$1" | cut -d= -f2);;

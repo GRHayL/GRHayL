@@ -12,6 +12,9 @@ runs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+    - if: runner.os == 'Linux'
+      run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+      shell: bash
     - if: runner.os == 'Linux' && inputs.compiler == 'gcc'
       run: |
         sudo apt-get update
