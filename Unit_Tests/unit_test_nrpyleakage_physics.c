@@ -70,7 +70,8 @@ static void check_robust_classifiers(void) {
 
   for(size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
     const double value = double_from_bits(cases[i].bits);
-    if(robust_isfinite(value) != cases[i].finite || robust_isnan(value) != cases[i].nan) {
+    if(robust_isfinite(value) != cases[i].finite
+       || robust_isnan(value) != cases[i].nan) {
       ghl_error("Robust classifier failed for %s\n", cases[i].name);
     }
   }
@@ -84,38 +85,33 @@ static void check_robust_classifiers(void) {
  */
 static void check_emission_rate_identities(void) {
   check_close(
-        "zero free-rate endpoint",
-        nrpyl_effective_emission_rate(0.0, 0.0, 0.0, 0.0), 0.0, 0.0);
+        "zero free-rate endpoint", nrpyl_effective_emission_rate(0.0, 0.0, 0.0, 0.0),
+        0.0, 0.0);
   check_close(
-        "transparent endpoint",
-        nrpyl_effective_emission_rate(2.0, 0.0, 0.0, 0.0), 2.0, 0.0);
+        "transparent endpoint", nrpyl_effective_emission_rate(2.0, 0.0, 0.0, 0.0), 2.0,
+        0.0);
   check_close(
-        "zero-opacity endpoint",
-        nrpyl_effective_emission_rate(2.0, 1.0, 0.0, 1.0), 0.0, 0.0);
+        "zero-opacity endpoint", nrpyl_effective_emission_rate(2.0, 1.0, 0.0, 1.0), 0.0,
+        0.0);
 
   const double free_rate = NRPyLeakage_c_light / 6.0;
-  const double effective_rate
-        = nrpyl_effective_emission_rate(free_rate, 2.0, 2.0, 1.0);
+  const double effective_rate = nrpyl_effective_emission_rate(free_rate, 2.0, 2.0, 1.0);
   check_close(
         "diffusion suppression factor", effective_rate, free_rate / 3.0,
         16.0 * DBL_EPSILON * free_rate);
 
   const double Q_free_nux = 11.0;
-  const double Q_eff_nux
-        = nrpyl_effective_emission_rate(Q_free_nux, 3.0, 5.0, 7.0);
+  const double Q_eff_nux = nrpyl_effective_emission_rate(Q_free_nux, 3.0, 5.0, 7.0);
   const double expected_Q_eff_nux
-        = Q_free_nux
-          / (1.0 + 9.0 * (6.0 / NRPyLeakage_c_light) * Q_free_nux / 35.0);
+        = Q_free_nux / (1.0 + 9.0 * (6.0 / NRPyLeakage_c_light) * Q_free_nux / 35.0);
   check_close(
         "heavy-lepton self-rate suppression", Q_eff_nux, expected_Q_eff_nux,
         16.0 * DBL_EPSILON * Q_free_nux);
 
-  const double brems_rate
-        = nrpyl_bremsstrahlung_number_rate(1.0, 2.0, 1.0, 0.0);
+  const double brems_rate = nrpyl_bremsstrahlung_number_rate(1.0, 2.0, 1.0, 0.0);
   const double doubled_density_rate
         = nrpyl_bremsstrahlung_number_rate(1.0, 4.0, 1.0, 0.0);
-  const double expected_brems_rate
-        = 4.0 * NRPyLeakage_Brems_C1 * NRPyLeakage_Brems_zeta;
+  const double expected_brems_rate = 4.0 * NRPyLeakage_Brems_C1 * NRPyLeakage_Brems_zeta;
   check_close(
         "bremsstrahlung analytic rate", brems_rate, expected_brems_rate,
         16.0 * DBL_EPSILON * expected_brems_rate);
@@ -126,8 +122,8 @@ static void check_emission_rate_identities(void) {
   const double expected_brems_energy
         = NRPyLeakage_Brems_C2 * 3.0 * 7.0 / NRPyLeakage_Brems_C1;
   check_close(
-        "bremsstrahlung energy conversion", brems_energy,
-        expected_brems_energy, 16.0 * DBL_EPSILON * expected_brems_energy);
+        "bremsstrahlung energy conversion", brems_energy, expected_brems_energy,
+        16.0 * DBL_EPSILON * expected_brems_energy);
 
   const double source = nrpyl_matter_energy_source(2.0, 3.0, 5.0);
   const double expected_source = -25.0 * NRPyLeakage_units_cgs_to_geom_Q;
@@ -160,28 +156,177 @@ static void check_fermi_dirac_zero_order(void) {
 static void check_all_fermi_dirac_keys(void) {
   static const double z[] = { 1.0e-2, 1.0e-4 };
   static const double expected[2][6] = {
-    { 6.98159680507862257e-1, 8.29406243971260060e-1,
-      1.81959808582090532e0, 5.73653915904569534e0,
-      2.35590999834500465e1, 1.19438368623386765e2 },
-    { 6.93197181809945384e-1, 8.22505367332569515e-1,
-      1.80326583833903631e0, 5.68289726190304290e0,
-      2.33326899268987837e1, 1.18273220285188671e2 },
+    { 6.98159680507862257e-1, 8.29406243971260060e-1, 1.81959808582090532e0,
+      5.73653915904569534e0, 2.35590999834500465e1, 1.19438368623386765e2 },
+    { 6.93197181809945384e-1, 8.22505367332569515e-1, 1.80326583833903631e0,
+      5.68289726190304290e0, 2.33326899268987837e1, 1.18273220285188671e2 },
   };
 
   for(int branch = 0; branch < 2; branch++) {
     for(int key = 0; key < 6; key++) {
       double computed;
-      ghl_abort_if_error(
-            NRPyLeakage_Fermi_Dirac_integrals(key, z[branch], &computed));
+      ghl_abort_if_error(NRPyLeakage_Fermi_Dirac_integrals(key, z[branch], &computed));
       check_close(
             "Fermi integral branch/key", computed, expected[branch][key],
-            16.0*DBL_EPSILON*fabs(expected[branch][key]));
+            16.0 * DBL_EPSILON * fabs(expected[branch][key]));
     }
+  }
+}
+
+/** Check every Fukushima F_{-1/2} fit interval against quadrature references. */
+static void check_fdm1h_references(void) {
+  /*
+   * References are 80-digit evaluations of
+   *   2 integral_0^infinity du / (1 + exp(u^2 - phi)).
+   * Interior points exercise every rational fit. Values adjacent to each seam
+   * verify that both neighboring fits retain the same independently evaluated
+   * limit. Fukushima reports errors below 13 double-precision ulps; 64 epsilon
+   * also covers correctly rounded decimal conversion and libm variation.
+   */
+  static const struct {
+    double phi;
+    double expected;
+  } interior[] = {
+    { -4.0, 3.20493740378828292e-2 }, { -1.0, 5.21150383107991240e-1 },
+    { 1.0, 1.82041135714696264e0 },   { 3.0, 3.28521678288771168e0 },
+    { 7.0, 5.24155514109372471e0 },   { 15.0, 7.73151305717372871e0 },
+    { 30.0, 1.09494213044066106e1 },  { 42.0, 1.29584522773487764e1 },
+  };
+  static const struct {
+    double phi;
+    double expected;
+  } seams[] = {
+    { -2.0, 2.19191607586179700e-1 }, { 0.0, 1.07215492994019134e0 },
+    { 2.0, 2.59539458328847844e0 },   { 5.0, 4.38325643471157062e0 },
+    { 10.0, 6.29713724453384784e0 },  { 20.0, 8.93497266616697025e0 },
+    { 40.0, 1.26458506884979468e1 },
+  };
+
+  for(size_t i = 0; i < sizeof(interior) / sizeof(interior[0]); i++) {
+    const double computed = nrpyl_fdm1h(interior[i].phi);
+    check_close(
+          "F_{-1/2} interior reference", computed, interior[i].expected,
+          64.0 * DBL_EPSILON * interior[i].expected);
+  }
+  for(size_t i = 0; i < sizeof(seams) / sizeof(seams[0]); i++) {
+    const double left = nrpyl_fdm1h(nextafter(seams[i].phi, -INFINITY));
+    const double center = nrpyl_fdm1h(seams[i].phi);
+    const double right = nrpyl_fdm1h(nextafter(seams[i].phi, INFINITY));
+    const double tolerance = 64.0 * DBL_EPSILON * seams[i].expected;
+    check_close("F_{-1/2} left seam", left, seams[i].expected, tolerance);
+    check_close("F_{-1/2} exact seam", center, seams[i].expected, tolerance);
+    check_close("F_{-1/2} right seam", right, seams[i].expected, tolerance);
+  }
+}
+
+/** Check private blocking helpers at their finite-domain and error boundaries. */
+static void check_blocking_helper_contracts(void) {
+  nrpyl_nucleon_population population = { 123.0 };
+  ghl_error_codes_t error = nrpyl_compute_population(-800.0, &population);
+  check_close(
+        "logarithmic population underflow", population.eta, -7.99879217762364813e2,
+        4.0 * DBL_EPSILON * 800.0);
+  if(error != ghl_success) {
+    ghl_error("Logarithmic population underflow returned error %d\n", error);
+  }
+  if(nrpyl_compute_population(INFINITY, &population) != ghl_error_nrpyleakage_blocking
+     || nrpyl_compute_population(-INFINITY, &population)
+              != ghl_error_nrpyleakage_blocking
+     || nrpyl_compute_population(NAN, &population) != ghl_error_nrpyleakage_blocking) {
+    ghl_error("Population helper accepted a nonfinite or overflowing input\n");
+  }
+
+  const double derivative_log = nrpyl_log_fd1h_derivative(-1000.0);
+  check_close(
+        "underflowing Fermi derivative", derivative_log, -1.00012078223763525e3,
+        4.0 * DBL_EPSILON * 1000.0);
+  check_close(
+        "positive Fermi vacancy", nrpyl_fermi_vacancy(3.0), 4.74258731775667820e-2,
+        8.0 * DBL_EPSILON);
+  check_close(
+        "negative Fermi vacancy", nrpyl_fermi_vacancy(-3.0), 9.52574126822433218e-1,
+        8.0 * DBL_EPSILON);
+
+  nrpyl_beta_moments invalid_moments = { INFINITY, 1.0 };
+  double invalid_Y_np = NAN;
+  double valid_Y_pn = 0.25;
+  if(nrpyl_validate_beta_moments(&invalid_moments) != ghl_error_nrpyleakage_blocking
+     || nrpyl_validate_blocking_outputs(0.5, 0.5, 0.25, 0.25, &invalid_Y_np, &valid_Y_pn)
+              != ghl_error_nrpyleakage_blocking) {
+    ghl_error("Blocking validators accepted a nonphysical result\n");
+  }
+
+  nrpyl_beta_moments moments = { 17.0, 19.0 };
+  error = nrpyl_compute_shifted_fermi_moments(DBL_MAX, DBL_MAX, 0.0, &moments);
+  if(error != ghl_error_nrpyleakage_blocking) {
+    ghl_error("Shifted-moment helper accepted overflowing thresholds\n");
+  }
+
+  static const struct {
+    double T;
+    double mu_e;
+    double eta_nu;
+    int sign;
+    double q;
+  } invalid[] = {
+    { 0.0, 1.0, 1.0, 1, 1.0 }, { 1.0, NAN, 1.0, 1, 1.0 }, { 1.0, 1.0, NAN, 1, 1.0 },
+    { 1.0, 1.0, 1.0, 0, 1.0 }, { 1.0, 1.0, 1.0, 1, NAN },
+  };
+  for(size_t i = 0; i < sizeof(invalid) / sizeof(invalid[0]); i++) {
+    moments.number = 17.0;
+    moments.energy = 19.0;
+    if(nrpyl_compute_beta_emission_moments(
+             invalid[i].T, invalid[i].mu_e, invalid[i].eta_nu, invalid[i].sign,
+             invalid[i].q, &moments)
+             != ghl_error_nrpyleakage_blocking
+       || moments.number != 17.0 || moments.energy != 19.0) {
+      ghl_error("Emission helper violated its invalid-input contract\n");
+    }
+    if(nrpyl_compute_beta_absorption_moments(
+             invalid[i].T, invalid[i].mu_e, invalid[i].eta_nu, invalid[i].sign,
+             invalid[i].q, &moments)
+             != ghl_error_nrpyleakage_blocking
+       || moments.number != 17.0 || moments.energy != 19.0) {
+      ghl_error("Absorption helper violated its invalid-input contract\n");
+    }
+  }
+
+  if(nrpyl_compute_beta_emission_moments(1.0, 0.0, 0.0, 1, -DBL_MAX, &moments)
+           != ghl_error_nrpyleakage_blocking
+     || nrpyl_compute_beta_absorption_moments(1.0, 0.0, 0.0, 1, DBL_MAX, &moments)
+              != ghl_error_nrpyleakage_blocking
+     || nrpyl_compute_beta_absorption_moments(1.0, 0.0, -1000.0, 1, -1.0e155, &moments)
+              != ghl_error_nrpyleakage_blocking) {
+    ghl_error("Beta helper did not propagate an internal overflow\n");
+  }
+
+  double B_n, B_p, Y_np, Y_pn, eta_n_minus_eta_p;
+  const double true_min = double_from_bits(UINT64_C(1));
+  if(NRPyLeakage_compute_nucleon_blocking(
+           DBL_MAX, true_min, 1.0, 0.0, &B_n, &B_p, &Y_np, &Y_pn, &eta_n_minus_eta_p)
+           != ghl_error_nrpyleakage_blocking
+     || NRPyLeakage_compute_nucleon_blocking(
+              DBL_MAX, true_min, 0.0, 1.0, &B_n, &B_p, &Y_np, &Y_pn, &eta_n_minus_eta_p)
+              != ghl_error_nrpyleakage_blocking
+     || NRPyLeakage_compute_nucleon_blocking(
+              true_min, DBL_MAX, 0.5, 0.5, &B_n, &B_p, &Y_np, &Y_pn, &eta_n_minus_eta_p)
+              != ghl_error_nrpyleakage_blocking
+     || NRPyLeakage_compute_nucleon_blocking(
+              0x1p-100, true_min, DBL_MIN, DBL_MIN, &B_n, &B_p, &Y_np, &Y_pn,
+              &eta_n_minus_eta_p)
+              != ghl_error_nrpyleakage_blocking) {
+    ghl_error("Blocking helper accepted an unrepresentable boundary state\n");
   }
 }
 
 /** Check every public leakage result's deterministic nonfinite fallback. */
 static void check_output_fallbacks(void) {
+  if(nrpyl_finite_cgs_or_floor(2.0) != 2.0
+     || nrpyl_finite_cgs_or_floor(NAN) != nrpyl_cgs_numerical_floor
+     || nrpyl_finite_cgs_or_floor(INFINITY) != nrpyl_cgs_numerical_floor) {
+    ghl_error("Generated cgs intermediate did not use its finite fallback\n");
+  }
+
   ghl_neutrino_opacities kappa = {
     .nue = { NAN, INFINITY },
     .anue = { -INFINITY, NAN },
@@ -195,33 +340,34 @@ static void check_output_fallbacks(void) {
   double R_source = NAN;
   double Q_source = -INFINITY;
 
-  if(!nrpyl_sanitize_opacities(&kappa)
-     || !nrpyl_sanitize_luminosities(&lum)
+  if(!nrpyl_sanitize_opacities(&kappa) || !nrpyl_sanitize_luminosities(&lum)
      || !nrpyl_sanitize_sources(&R_source, &Q_source)) {
     ghl_error("Nonfinite sanitizer did not report a replaced output\n");
   }
 
   const double opacity_outputs[] = {
-    kappa.nue[0], kappa.nue[1], kappa.anue[0], kappa.anue[1],
-    kappa.nux[0], kappa.nux[1],
+    kappa.nue[0], kappa.nue[1], kappa.anue[0], kappa.anue[1], kappa.nux[0], kappa.nux[1],
   };
-  for(size_t i = 0; i < sizeof(opacity_outputs)/sizeof(opacity_outputs[0]); i++) {
-    if(opacity_outputs[i]
-       != NRPyLeakage_units_geom_to_cgs_L * 1.0e-15)
+  for(size_t i = 0; i < sizeof(opacity_outputs) / sizeof(opacity_outputs[0]); i++) {
+    if(opacity_outputs[i] != NRPyLeakage_units_geom_to_cgs_L * 1.0e-15) {
       ghl_error("Opacity did not use the nonfinite floor\n");
+    }
   }
   const double rate_outputs[] = {
     lum.nue, lum.anue, lum.nux, R_source, Q_source,
   };
-  for(size_t i = 0; i < sizeof(rate_outputs)/sizeof(rate_outputs[0]); i++) {
-    if(rate_outputs[i] != 0.0)
+  for(size_t i = 0; i < sizeof(rate_outputs) / sizeof(rate_outputs[0]); i++) {
+    if(rate_outputs[i] != 0.0) {
       ghl_error("Emission or source output did not use the neutral fallback\n");
+    }
   }
 }
 
 #ifndef GHL_DISABLE_HDF5
 static double mock_X_n = 0.7;
 static double mock_X_p = 0.2;
+static double mock_muhat = 5.0;
+static double mock_mu_e = 2.0;
 
 static ghl_error_codes_t mock_eos_success(
       const ghl_eos_parameters *restrict eos,
@@ -238,8 +384,8 @@ static ghl_error_codes_t mock_eos_success(
   (void)rho;
   (void)Y_e;
   (void)T;
-  *muhat = 5.0;
-  *mu_e = 2.0;
+  *muhat = mock_muhat;
+  *mu_e = mock_mu_e;
   *mu_p = 1.0;
   *mu_n = 6.0;
   *X_n = mock_X_n;
@@ -258,8 +404,8 @@ static ghl_error_codes_t mock_eos_shifted_reference(
       double *restrict mu_n,
       double *restrict X_n,
       double *restrict X_p) {
-  const ghl_error_codes_t error = mock_eos_success(
-        eos, rho, Y_e, T, muhat, mu_e, mu_p, mu_n, X_n, X_p);
+  const ghl_error_codes_t error
+        = mock_eos_success(eos, rho, Y_e, T, muhat, mu_e, mu_p, mu_n, X_n, X_p);
   *mu_p += 100.0;
   *mu_n += 100.0;
   return error;
@@ -299,12 +445,10 @@ static void check_public_api_contracts(void) {
   double R_source = 0.0, Q_source = 0.0;
 
 #ifdef GHL_DISABLE_HDF5
-  if(NRPyLeakage_compute_neutrino_opacities(
-           &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone)
+  if(NRPyLeakage_compute_neutrino_opacities(&eos, 1.0e-5, 0.1, 3.0, &tau, &standalone)
            != ghl_error_used_disabled_hdf5
      || NRPyLeakage_compute_neutrino_luminosities(
-              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
-              3.0, 1.0, &tau, &lum)
+              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &tau, &lum)
               != ghl_error_used_disabled_hdf5
      || NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
               &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source)
@@ -313,18 +457,15 @@ static void check_public_api_contracts(void) {
   }
 #else
   ghl_error_codes_t (*saved_eos_callback)(
-        const ghl_eos_parameters *restrict, double, double, double,
+        const ghl_eos_parameters *restrict, double, double, double, double *restrict,
         double *restrict, double *restrict, double *restrict, double *restrict,
-        double *restrict, double *restrict)
-        = ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
+        double *restrict) = ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
 
   ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_failure;
-  if(NRPyLeakage_compute_neutrino_opacities(
-           &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone)
+  if(NRPyLeakage_compute_neutrino_opacities(&eos, 1.0e-5, 0.1, 3.0, &tau, &standalone)
            != ghl_error_table_max_rho
      || NRPyLeakage_compute_neutrino_luminosities(
-              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
-              3.0, 1.0, &tau, &lum)
+              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &tau, &lum)
               != ghl_error_table_max_rho
      || NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
               &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source)
@@ -334,26 +475,91 @@ static void check_public_api_contracts(void) {
   }
 
   ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_success;
+  const ghl_neutrino_opacities opacity_sentinel = {
+    .nue = { 2.0, 3.0 },
+    .anue = { 5.0, 7.0 },
+    .nux = { 11.0, 13.0 },
+  };
+  const ghl_neutrino_luminosities luminosity_sentinel = {
+    .nue = 17.0,
+    .anue = 19.0,
+    .nux = 23.0,
+  };
+  standalone = opacity_sentinel;
+  combined = opacity_sentinel;
+  lum = luminosity_sentinel;
+  R_source = 29.0;
+  Q_source = 31.0;
+  mock_X_n = -1.0e-6;
   ghl_error_codes_t error = NRPyLeakage_compute_neutrino_opacities(
         &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone);
-  if(error != ghl_success)
+  error |= NRPyLeakage_compute_neutrino_luminosities(
+        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &tau, &lum);
+  error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+        &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source);
+  if(error != ghl_error_nrpyleakage_blocking
+     || memcmp(&standalone, &opacity_sentinel, sizeof(standalone)) != 0
+     || memcmp(&combined, &opacity_sentinel, sizeof(combined)) != 0
+     || memcmp(&lum, &luminosity_sentinel, sizeof(lum)) != 0 || R_source != 29.0
+     || Q_source != 31.0) {
+    ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_eos_callback;
+    ghl_error("Leakage API modified output after a blocking-input error\n");
+  }
+  mock_X_n = 0.7;
+  mock_X_p = 0.2;
+
+  /* A finite EOS state can still overflow the charged-current moments. */
+  standalone = opacity_sentinel;
+  combined = opacity_sentinel;
+  lum = luminosity_sentinel;
+  R_source = 29.0;
+  Q_source = 31.0;
+  mock_muhat = DBL_MAX;
+  mock_mu_e = 0.0;
+  const ghl_error_codes_t opacity_error = NRPyLeakage_compute_neutrino_opacities(
+        &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone);
+  const ghl_error_codes_t luminosity_error = NRPyLeakage_compute_neutrino_luminosities(
+        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &tau, &lum);
+  const ghl_error_codes_t combined_error
+        = NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+              &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source);
+  if(opacity_error != ghl_error_nrpyleakage_blocking
+     || luminosity_error != ghl_error_nrpyleakage_blocking
+     || combined_error != ghl_error_nrpyleakage_blocking
+     || memcmp(&standalone, &opacity_sentinel, sizeof(standalone)) != 0
+     || memcmp(&combined, &opacity_sentinel, sizeof(combined)) != 0
+     || memcmp(&lum, &luminosity_sentinel, sizeof(lum)) != 0 || R_source != 29.0
+     || Q_source != 31.0) {
+    ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_eos_callback;
+    ghl_error(
+          "Leakage beta-moment contract failed: statuses %d %d %d\n", opacity_error,
+          luminosity_error, combined_error);
+  }
+  mock_muhat = 5.0;
+  mock_mu_e = 2.0;
+
+  error = NRPyLeakage_compute_neutrino_opacities(
+        &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone);
+  if(error != ghl_success) {
     ghl_error("Standalone opacity mock returned error %d\n", error);
+  }
   error = NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
         &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     ghl_error("Combined leakage mock returned error %d\n", error);
+  }
   const double standalone_values[6] = {
-    standalone.nue[0], standalone.nue[1], standalone.anue[0],
+    standalone.nue[0],  standalone.nue[1], standalone.anue[0],
     standalone.anue[1], standalone.nux[0], standalone.nux[1],
   };
   const double combined_values[6] = {
-    combined.nue[0], combined.nue[1], combined.anue[0],
+    combined.nue[0],  combined.nue[1], combined.anue[0],
     combined.anue[1], combined.nux[0], combined.nux[1],
   };
   for(int i = 0; i < 6; i++) {
     check_close(
           "combined opacity", combined_values[i], standalone_values[i],
-          128.0*DBL_EPSILON*fmax(DBL_MIN, fabs(standalone_values[i])));
+          128.0 * DBL_EPSILON * fmax(DBL_MIN, fabs(standalone_values[i])));
   }
 
   const ghl_neutrino_optical_depths thick_tau = {
@@ -362,59 +568,57 @@ static void check_public_api_contracts(void) {
     .nux = { 11.0, 13.0 },
   };
   error = NRPyLeakage_compute_neutrino_luminosities(
-        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
-        3.0, 1.0, &thick_tau, &lum);
-  if(error != ghl_success)
+        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &thick_tau,
+        &lum);
+  if(error != ghl_success) {
     ghl_error("Finite-depth luminosity mock returned error %d\n", error);
+  }
   check_close(
-        "public heavy-lepton luminosity suppression", lum.nux,
-        7.42012378328398818e-15, 1.0e-12*7.42012378328398818e-15);
+        "public heavy-lepton luminosity suppression", lum.nux, 7.42012378328398818e-15,
+        1.0e-12 * 7.42012378328398818e-15);
   error = NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
-        &eos, 1.0e-5, 0.1, 3.0, &thick_tau, &combined,
-        &R_source, &Q_source);
-  if(error != ghl_success)
+        &eos, 1.0e-5, 0.1, 3.0, &thick_tau, &combined, &R_source, &Q_source);
+  if(error != ghl_success) {
     ghl_error("Finite-depth combined leakage mock returned error %d\n", error);
+  }
   check_close(
-        "public heavy-lepton source suppression", Q_source,
-        -8.44271649383971011e-13, 1.0e-12*8.44271649383971011e-13);
+        "public heavy-lepton source suppression", Q_source, -8.44271649383971011e-13,
+        1.0e-12 * 8.44271649383971011e-13);
 
   ghl_neutrino_luminosities free_lum = { 0 }, oracle_lum = { 0 };
   ghl_neutrino_opacities free_kappa = { 0 }, oracle_kappa = { 0 };
   double free_R = 0.0, free_Q = 0.0, oracle_R = 0.0, oracle_Q = 0.0;
   const ghl_neutrino_optical_depths oracle_tau = { .nux = { 0.0, 1000.0 } };
   error = NRPyLeakage_compute_neutrino_luminosities(
-        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
-        3.0, 1.0, &tau, &free_lum);
+        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &tau, &free_lum);
   error |= NRPyLeakage_compute_neutrino_luminosities(
-        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
-        3.0, 1.0, &oracle_tau, &oracle_lum);
+        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &oracle_tau,
+        &oracle_lum);
   error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
         &eos, 1.0e-5, 0.1, 3.0, &tau, &free_kappa, &free_R, &free_Q);
   error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
-        &eos, 1.0e-5, 0.1, 3.0, &oracle_tau, &oracle_kappa,
-        &oracle_R, &oracle_Q);
-  if(error != ghl_success)
+        &eos, 1.0e-5, 0.1, 3.0, &oracle_tau, &oracle_kappa, &oracle_R, &oracle_Q);
+  if(error != ghl_success) {
     ghl_error("Public diffusion-oracle setup returned error %d\n", error);
+  }
   double F3_zero;
   ghl_abort_if_error(NRPyLeakage_Fermi_Dirac_integrals(3, 0.0, &F3_zero));
   const double Q_free_nux = free_lum.nux / NRPyLeakage_units_cgs_to_geom_Q;
   const double equilibrium_energy_density
-        = 4.0*M_PI*pow(3.0, 4)*F3_zero/NRPyLeakage_hc3;
-  const double kappa_cgs
-        = free_kappa.nux[1]/NRPyLeakage_units_geom_to_cgs_L;
-  const double Q_diff_nux = kappa_cgs*equilibrium_energy_density
-                            * NRPyLeakage_c_light/(6.0*1000.0*1000.0);
-  const double Q_eff_nux = Q_free_nux/(1.0 + Q_free_nux/Q_diff_nux);
-  const double expected_lum_nux
-        = NRPyLeakage_units_cgs_to_geom_Q*Q_eff_nux;
+        = 4.0 * M_PI * pow(3.0, 4) * F3_zero / NRPyLeakage_hc3;
+  const double kappa_cgs = free_kappa.nux[1] / NRPyLeakage_units_geom_to_cgs_L;
+  const double Q_diff_nux = kappa_cgs * equilibrium_energy_density * NRPyLeakage_c_light
+                            / (6.0 * 1000.0 * 1000.0);
+  const double Q_eff_nux = Q_free_nux / (1.0 + Q_free_nux / Q_diff_nux);
+  const double expected_lum_nux = NRPyLeakage_units_cgs_to_geom_Q * Q_eff_nux;
   const double expected_source_change
-        = 4.0*NRPyLeakage_units_cgs_to_geom_Q*(Q_free_nux - Q_eff_nux);
+        = 4.0 * NRPyLeakage_units_cgs_to_geom_Q * (Q_free_nux - Q_eff_nux);
   check_close(
-        "public heavy-lepton diffusion oracle", oracle_lum.nux,
-        expected_lum_nux, 1.0e-12*fabs(expected_lum_nux));
+        "public heavy-lepton diffusion oracle", oracle_lum.nux, expected_lum_nux,
+        1.0e-12 * fabs(expected_lum_nux));
   check_close(
         "public heavy-lepton source diffusion oracle", oracle_Q - free_Q,
-        expected_source_change, 1.0e-12*fabs(expected_source_change));
+        expected_source_change, 1.0e-12 * fabs(expected_source_change));
 
   const ghl_neutrino_optical_depths depths[2] = { tau, thick_tau };
   ghl_neutrino_opacities reference_standalone[2] = { 0 };
@@ -427,28 +631,32 @@ static void check_public_api_contracts(void) {
   double shifted_R_source[2] = { 0.0 }, shifted_Q_source[2] = { 0.0 };
   bool reference_error = false, shifted_error = false;
   for(int d = 0; d < 2; d++) {
-    reference_error |= NRPyLeakage_compute_neutrino_opacities(
-          &eos, 1.0e-5, 0.1, 3.0, &depths[d], &reference_standalone[d])
-          != ghl_success;
+    reference_error
+          |= NRPyLeakage_compute_neutrino_opacities(
+                   &eos, 1.0e-5, 0.1, 3.0, &depths[d], &reference_standalone[d])
+             != ghl_success;
     reference_error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
-          &eos, 1.0e-5, 0.1, 3.0, &depths[d], &reference_combined[d],
-          &reference_R_source[d], &reference_Q_source[d]) != ghl_success;
+                             &eos, 1.0e-5, 0.1, 3.0, &depths[d], &reference_combined[d],
+                             &reference_R_source[d], &reference_Q_source[d])
+                       != ghl_success;
     reference_error |= NRPyLeakage_compute_neutrino_luminosities(
-          &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
-          3.0, 1.0, &depths[d], &reference_lum[d]) != ghl_success;
+                             &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0,
+                             1.0, &depths[d], &reference_lum[d])
+                       != ghl_success;
   }
-  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T
-        = mock_eos_shifted_reference;
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_shifted_reference;
   for(int d = 0; d < 2; d++) {
     shifted_error |= NRPyLeakage_compute_neutrino_opacities(
-          &eos, 1.0e-5, 0.1, 3.0, &depths[d], &shifted_standalone[d])
-          != ghl_success;
+                           &eos, 1.0e-5, 0.1, 3.0, &depths[d], &shifted_standalone[d])
+                     != ghl_success;
     shifted_error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
-          &eos, 1.0e-5, 0.1, 3.0, &depths[d], &shifted_combined[d],
-          &shifted_R_source[d], &shifted_Q_source[d]) != ghl_success;
+                           &eos, 1.0e-5, 0.1, 3.0, &depths[d], &shifted_combined[d],
+                           &shifted_R_source[d], &shifted_Q_source[d])
+                     != ghl_success;
     shifted_error |= NRPyLeakage_compute_neutrino_luminosities(
-          &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
-          3.0, 1.0, &depths[d], &shifted_lum[d]) != ghl_success;
+                           &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0,
+                           1.0, &depths[d], &shifted_lum[d])
+                     != ghl_success;
   }
   ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_success;
   if(reference_error || shifted_error) {
@@ -457,78 +665,91 @@ static void check_public_api_contracts(void) {
   }
   for(int d = 0; d < 2; d++) {
     const double reference_standalone_values[6] = {
-      reference_standalone[d].nue[0], reference_standalone[d].nue[1],
+      reference_standalone[d].nue[0],  reference_standalone[d].nue[1],
       reference_standalone[d].anue[0], reference_standalone[d].anue[1],
-      reference_standalone[d].nux[0], reference_standalone[d].nux[1],
+      reference_standalone[d].nux[0],  reference_standalone[d].nux[1],
     };
     const double shifted_standalone_values[6] = {
-      shifted_standalone[d].nue[0], shifted_standalone[d].nue[1],
+      shifted_standalone[d].nue[0],  shifted_standalone[d].nue[1],
       shifted_standalone[d].anue[0], shifted_standalone[d].anue[1],
-      shifted_standalone[d].nux[0], shifted_standalone[d].nux[1],
+      shifted_standalone[d].nux[0],  shifted_standalone[d].nux[1],
     };
     const double reference_combined_values[6] = {
-      reference_combined[d].nue[0], reference_combined[d].nue[1],
+      reference_combined[d].nue[0],  reference_combined[d].nue[1],
       reference_combined[d].anue[0], reference_combined[d].anue[1],
-      reference_combined[d].nux[0], reference_combined[d].nux[1],
+      reference_combined[d].nux[0],  reference_combined[d].nux[1],
     };
     const double shifted_combined_values[6] = {
-      shifted_combined[d].nue[0], shifted_combined[d].nue[1],
+      shifted_combined[d].nue[0],  shifted_combined[d].nue[1],
       shifted_combined[d].anue[0], shifted_combined[d].anue[1],
-      shifted_combined[d].nux[0], shifted_combined[d].nux[1],
+      shifted_combined[d].nux[0],  shifted_combined[d].nux[1],
     };
     for(int i = 0; i < 6; i++) {
       check_close(
-            "standalone common-reference invariance",
-            shifted_standalone_values[i], reference_standalone_values[i], 0.0);
+            "standalone common-reference invariance", shifted_standalone_values[i],
+            reference_standalone_values[i], 0.0);
       check_close(
-            "combined common-reference invariance",
-            shifted_combined_values[i], reference_combined_values[i], 0.0);
+            "combined common-reference invariance", shifted_combined_values[i],
+            reference_combined_values[i], 0.0);
     }
     check_close(
-          "number-source common-reference invariance",
-          shifted_R_source[d], reference_R_source[d], 0.0);
+          "number-source common-reference invariance", shifted_R_source[d],
+          reference_R_source[d], 0.0);
     check_close(
-          "energy-source common-reference invariance",
-          shifted_Q_source[d], reference_Q_source[d], 0.0);
+          "energy-source common-reference invariance", shifted_Q_source[d],
+          reference_Q_source[d], 0.0);
     check_close(
-          "nue luminosity common-reference invariance",
-          shifted_lum[d].nue, reference_lum[d].nue, 0.0);
+          "nue luminosity common-reference invariance", shifted_lum[d].nue,
+          reference_lum[d].nue, 0.0);
     check_close(
-          "anue luminosity common-reference invariance",
-          shifted_lum[d].anue, reference_lum[d].anue, 0.0);
+          "anue luminosity common-reference invariance", shifted_lum[d].anue,
+          reference_lum[d].anue, 0.0);
     check_close(
-          "nux luminosity common-reference invariance",
-          shifted_lum[d].nux, reference_lum[d].nux, 0.0);
+          "nux luminosity common-reference invariance", shifted_lum[d].nux,
+          reference_lum[d].nux, 0.0);
   }
 
   error = NRPyLeakage_compute_neutrino_luminosities(
-        &eos, NAN, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
-        3.0, 1.0, &tau, &lum);
-  if(error != ghl_error_nrpyleakage_nonfinite_output)
+        &eos, NAN, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &tau, &lum);
+  if(error != ghl_error_nrpyleakage_nonfinite_output) {
     ghl_error("Nonfinite luminosity mock returned error %d\n", error);
+  }
   ghl_neutrino_optical_depths nonfinite_tau = tau;
   nonfinite_tau.nue[1] = NAN;
   nonfinite_tau.anue[1] = NAN;
   nonfinite_tau.nux[1] = NAN;
   error = NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
         &eos, 1.0e-5, 0.1, 3.0, &nonfinite_tau, &combined, &R_source, &Q_source);
-  if(error != ghl_error_nrpyleakage_nonfinite_output)
+  if(error != ghl_error_nrpyleakage_nonfinite_output) {
     ghl_error("Nonfinite combined leakage mock returned error %d\n", error);
+  }
   ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_eos_callback;
 
   const double finite_outputs[] = {
-    standalone.nue[0], standalone.nue[1], standalone.anue[0],
-    standalone.anue[1], standalone.nux[0], standalone.nux[1],
-    lum.nue, lum.anue, lum.nux, R_source, Q_source,
-    combined.nue[0], combined.nue[1], combined.anue[0],
-    combined.anue[1], combined.nux[0], combined.nux[1],
+    standalone.nue[0],
+    standalone.nue[1],
+    standalone.anue[0],
+    standalone.anue[1],
+    standalone.nux[0],
+    standalone.nux[1],
+    lum.nue,
+    lum.anue,
+    lum.nux,
+    R_source,
+    Q_source,
+    combined.nue[0],
+    combined.nue[1],
+    combined.anue[0],
+    combined.anue[1],
+    combined.nux[0],
+    combined.nux[1],
   };
-  for(size_t i = 0; i < sizeof(finite_outputs)/sizeof(finite_outputs[0]); i++) {
-    if(!robust_isfinite(finite_outputs[i]))
+  for(size_t i = 0; i < sizeof(finite_outputs) / sizeof(finite_outputs[0]); i++) {
+    if(!robust_isfinite(finite_outputs[i])) {
       ghl_error("Leakage API exposed a nonfinite final output\n");
+    }
   }
-  if(lum.nue != 0.0 || lum.anue != 0.0 || lum.nux != 0.0
-     || Q_source != 0.0) {
+  if(lum.nue != 0.0 || lum.anue != 0.0 || lum.nux != 0.0 || Q_source != 0.0) {
     ghl_error("Leakage API did not apply its nonfinite-output fallback\n");
   }
 #endif
@@ -542,11 +763,11 @@ static void evaluate_mock_public_outputs(double outputs[17]) {
   ghl_neutrino_opacities standalone, combined;
   ghl_neutrino_luminosities lum;
   double R_source, Q_source;
-  if(NRPyLeakage_compute_neutrino_opacities(
-           &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone) != ghl_success
+  if(NRPyLeakage_compute_neutrino_opacities(&eos, 1.0e-5, 0.1, 3.0, &tau, &standalone)
+           != ghl_success
      || NRPyLeakage_compute_neutrino_luminosities(
-              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
-              1.0e-5, 0.1, 3.0, 1.0, &tau, &lum) != ghl_success
+              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1, 3.0, 1.0, &tau, &lum)
+              != ghl_success
      || NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
               &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source)
               != ghl_success) {
@@ -554,15 +775,28 @@ static void evaluate_mock_public_outputs(double outputs[17]) {
   }
 
   const double values[17] = {
-    standalone.nue[0], standalone.nue[1], standalone.anue[0],
-    standalone.anue[1], standalone.nux[0], standalone.nux[1],
-    lum.nue, lum.anue, lum.nux,
-    combined.nue[0], combined.nue[1], combined.anue[0],
-    combined.anue[1], combined.nux[0], combined.nux[1], R_source, Q_source,
+    standalone.nue[0],
+    standalone.nue[1],
+    standalone.anue[0],
+    standalone.anue[1],
+    standalone.nux[0],
+    standalone.nux[1],
+    lum.nue,
+    lum.anue,
+    lum.nux,
+    combined.nue[0],
+    combined.nue[1],
+    combined.anue[0],
+    combined.anue[1],
+    combined.nux[0],
+    combined.nux[1],
+    R_source,
+    Q_source,
   };
   for(size_t i = 0; i < 17; i++) {
-    if(!robust_isfinite(values[i]))
+    if(!robust_isfinite(values[i])) {
       ghl_error("Public endpoint-limit output %zu is nonfinite\n", i);
+    }
     outputs[i] = values[i];
   }
 }
@@ -570,10 +804,9 @@ static void evaluate_mock_public_outputs(double outputs[17]) {
 /** Check the analytic public limit at single-species free-nucleon endpoints. */
 static void check_public_single_species_endpoints(void) {
   ghl_error_codes_t (*saved_eos_callback)(
-        const ghl_eos_parameters *restrict, double, double, double,
+        const ghl_eos_parameters *restrict, double, double, double, double *restrict,
         double *restrict, double *restrict, double *restrict, double *restrict,
-        double *restrict, double *restrict)
-        = ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
+        double *restrict) = ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
   ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_success;
 
   const double endpoint_pairs[][2] = {
@@ -581,33 +814,35 @@ static void check_public_single_species_endpoints(void) {
     { 0.0, 0.2 },
   };
   const double minority_trace[] = { 1.0e-12, 1.0e-40, 1.0e-100, 1.0e-200, 1.0e-300 };
-  for(size_t i = 0; i < sizeof(endpoint_pairs)/sizeof(endpoint_pairs[0]); i++) {
+  for(size_t i = 0; i < sizeof(endpoint_pairs) / sizeof(endpoint_pairs[0]); i++) {
     double endpoint[17];
     mock_X_n = endpoint_pairs[i][0];
     mock_X_p = endpoint_pairs[i][1];
     evaluate_mock_public_outputs(endpoint);
 
-    const double opacity_floor
-          = NRPyLeakage_units_geom_to_cgs_L * 1.0e-15;
+    const double opacity_floor = NRPyLeakage_units_geom_to_cgs_L * 1.0e-15;
     for(size_t j = 0; j < 6; j++) {
-      if(endpoint[j] <= opacity_floor)
-        ghl_error("Standalone endpoint opacity %zu lost occupied-species scattering\n", j);
+      if(endpoint[j] <= opacity_floor) {
+        ghl_error(
+              "Standalone endpoint opacity %zu lost occupied-species scattering\n", j);
+      }
     }
     for(size_t j = 9; j < 15; j++) {
-      if(endpoint[j] <= opacity_floor)
-        ghl_error("Combined endpoint opacity %zu lost occupied-species scattering\n", j - 9);
+      if(endpoint[j] <= opacity_floor) {
+        ghl_error(
+              "Combined endpoint opacity %zu lost occupied-species scattering\n", j - 9);
+      }
     }
     if(!(endpoint[6] > 0.0) || !(endpoint[7] > 0.0) || !(endpoint[8] > 0.0)
-       || endpoint[15] != 0.0 || endpoint[16] == 0.0)
+       || endpoint[15] != 0.0 || endpoint[16] == 0.0) {
       ghl_error("Endpoint lost non-beta emission or gained a beta source\n");
+    }
 
     double previous_error = INFINITY;
     double near_endpoint[17];
-    for(size_t k = 0; k < sizeof(minority_trace)/sizeof(minority_trace[0]); k++) {
-      mock_X_n = endpoint_pairs[i][0] == 0.0
-                       ? minority_trace[k] : endpoint_pairs[i][0];
-      mock_X_p = endpoint_pairs[i][1] == 0.0
-                       ? minority_trace[k] : endpoint_pairs[i][1];
+    for(size_t k = 0; k < sizeof(minority_trace) / sizeof(minority_trace[0]); k++) {
+      mock_X_n = endpoint_pairs[i][0] == 0.0 ? minority_trace[k] : endpoint_pairs[i][0];
+      mock_X_p = endpoint_pairs[i][1] == 0.0 ? minority_trace[k] : endpoint_pairs[i][1];
       evaluate_mock_public_outputs(near_endpoint);
       double trace_error = 0.0;
       for(size_t j = 0; j < 17; j++) {
@@ -615,8 +850,9 @@ static void check_public_single_species_endpoints(void) {
               = fabs(near_endpoint[j] - endpoint[j]) / fmax(1.0, fabs(endpoint[j]));
         trace_error = fmax(trace_error, scaled_error);
       }
-      if(trace_error > previous_error + 512.0 * DBL_EPSILON)
+      if(trace_error > previous_error + 512.0 * DBL_EPSILON) {
         ghl_error("Single-species limit trace did not converge monotonically\n");
+      }
       previous_error = trace_error;
     }
     for(size_t j = 0; j < 17; j++) {
@@ -652,16 +888,15 @@ static void check_mass_fraction_validation(void) {
   ghl_error_codes_t error = NRPyLeakage_compute_nucleon_blocking(
         1.0e14, 1.0, -8.237492054256009e-17, 0.1, &B_n, &B_p, &Y_np, &Y_pn,
         &eta_n_minus_eta_p);
-  if(error != ghl_success || B_n != 0.0 || !(B_p > 0.0) || Y_np != 0.0
-     || Y_pn != 0.1 || eta_n_minus_eta_p != 0.0) {
+  if(error != ghl_success || B_n != 0.0 || !(B_p > 0.0) || Y_np != 0.0 || Y_pn != 0.1
+     || eta_n_minus_eta_p != 0.0) {
     ghl_error("Roundoff-sized endpoint did not use the proton-only limit\n");
   }
 
   error = NRPyLeakage_compute_nucleon_blocking(
-        1.0e14, 1.0, 0.8, 0.0, &B_n, &B_p, &Y_np, &Y_pn,
-        &eta_n_minus_eta_p);
-  if(error != ghl_success || !(B_n > 0.0) || B_p != 0.0 || Y_np != 0.8
-     || Y_pn != 0.0 || eta_n_minus_eta_p != 0.0) {
+        1.0e14, 1.0, 0.8, 0.0, &B_n, &B_p, &Y_np, &Y_pn, &eta_n_minus_eta_p);
+  if(error != ghl_success || !(B_n > 0.0) || B_p != 0.0 || Y_np != 0.8 || Y_pn != 0.0
+     || eta_n_minus_eta_p != 0.0) {
     ghl_error("Neutron-only endpoint did not use its analytic overlap limit\n");
   }
 
@@ -672,10 +907,9 @@ static void check_mass_fraction_validation(void) {
   }
 
   error = NRPyLeakage_compute_nucleon_blocking(
-        1.0e14, 1.0, 0.0, 0.0, &B_n, &B_p, &Y_np, &Y_pn,
-        &eta_n_minus_eta_p);
-  if(error != ghl_success || B_n != 0.0 || B_p != 0.0 || Y_np != 0.0
-     || Y_pn != 0.0 || eta_n_minus_eta_p != 0.0) {
+        1.0e14, 1.0, 0.0, 0.0, &B_n, &B_p, &Y_np, &Y_pn, &eta_n_minus_eta_p);
+  if(error != ghl_success || B_n != 0.0 || B_p != 0.0 || Y_np != 0.0 || Y_pn != 0.0
+     || eta_n_minus_eta_p != 0.0) {
     ghl_error("Both-zero nucleon endpoint did not remain the neutral state\n");
   }
 }
@@ -912,6 +1146,13 @@ static void check_beta_moment_references(void) {
  * subnormal moments.
  */
 static void check_strongly_blocked_channel_limit(void) {
+  volatile double minimum_normal = DBL_MIN;
+  volatile double half = 0.5;
+  volatile double subnormal = minimum_normal * half;
+  if(!(subnormal > 0.0)) {
+    ghl_error("NRPyLeakage requires gradual underflow\n");
+  }
+
   // Cold trace-proton state exposed by the existing luminosity replay.
   const double rho_cgs = 8.65629955239776193e-9 * NRPyLeakage_units_geom_to_cgs_D;
   const double T = 1.13314052232918786e-3;
@@ -989,15 +1230,29 @@ static void check_strongly_blocked_channel_limit(void) {
         trace_neutron_T, trace_neutron_muhat, eta_n_minus_eta_p);
   const double trace_neutron_eta_anue
         = (trace_neutron_muhat - trace_neutron_mu_e) / trace_neutron_T;
+  double trace_F3, trace_F5;
+  ghl_abort_if_error(
+        NRPyLeakage_Fermi_Dirac_integrals(3, trace_neutron_eta_anue, &trace_F3));
+  ghl_abort_if_error(
+        NRPyLeakage_Fermi_Dirac_integrals(5, trace_neutron_eta_anue, &trace_F5));
+  if(!(trace_F3 > 0.0) || !(trace_F5 > 0.0)) {
+    ghl_error("Trace-neutron Fermi moments did not retain gradual underflow\n");
+  }
+  check_close(
+        "trace-neutron F5/F3 ratio", trace_F5 / trace_F3, 20.0,
+        128.0 * DBL_EPSILON * 20.0);
+
   nrpyl_beta_moments subnormal_ratio;
   ghl_abort_if_error(nrpyl_compute_beta_absorption_moments(
         trace_neutron_T, trace_neutron_mu_e, trace_neutron_eta_anue, -1, trace_neutron_q,
         &subnormal_ratio));
-  if(!(subnormal_ratio.number > 0.0) || !(subnormal_ratio.energy > 0.0)
-     || !robust_isfinite(subnormal_ratio.number)
-     || !robust_isfinite(subnormal_ratio.energy)) {
-    ghl_error("Paired subnormal beta moments did not produce a finite ratio\n");
-  }
+  const double ratio_tolerance = 256.0 * DBL_EPSILON;
+  check_close(
+        "trace-neutron absorption number", subnormal_ratio.number, 6.44214171122994685e3,
+        ratio_tolerance * 6.44214171122994685e3);
+  check_close(
+        "trace-neutron absorption energy", subnormal_ratio.energy, 6.60463190730837778e3,
+        ratio_tolerance * 6.60463190730837778e3);
 }
 
 /**
@@ -1010,6 +1265,8 @@ int main(void) {
   check_emission_rate_identities();
   check_fermi_dirac_zero_order();
   check_all_fermi_dirac_keys();
+  check_fdm1h_references();
+  check_blocking_helper_contracts();
   check_output_fallbacks();
   check_public_api_contracts();
 #ifndef GHL_DISABLE_HDF5

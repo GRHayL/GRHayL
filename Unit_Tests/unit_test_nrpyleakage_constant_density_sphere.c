@@ -6,10 +6,11 @@ static inline bool sphere_pert_test_fail(
       const double trusted,
       const double computed,
       const double perturbed) {
-  if(trusted == 0.0 && perturbed == 0.0)
+  if(trusted == 0.0 && perturbed == 0.0) {
     return computed != 0.0;
+  }
   return ghl_pert_test_fail_with_tolerance(
-      trusted, computed, perturbed, 1024.0*DBL_EPSILON, 0.0);
+        trusted, computed, perturbed, 1024.0 * DBL_EPSILON, 0.0);
 }
 
 #define IDX3D(i0,i1,i2) ( (i0) + Nt0*( (i1) + Nt1*(i2) ) )
@@ -68,24 +69,26 @@ static void update_optical_depth_cell(
       double *restrict const tau_anue[restrict static 2],
       double *restrict const tau_nux[restrict static 2],
       ghl_neutrino_optical_depths *restrict tau_i_j_k) {
-  const int i_j_k   = IDX3D(i0  , i1, i2  );
-  const int im1_j_k = IDX3D(i0-1, i1, i2  );
-  const int ip1_j_k = IDX3D(i0+1, i1, i2  );
-  const int i_jm1_k = IDX3D(i0, i1-1, i2  );
-  const int i_jp1_k = IDX3D(i0, i1+1, i2  );
-  const int i_j_km1 = IDX3D(i0, i1  , i2-1);
-  const int i_j_kp1 = IDX3D(i0, i1  , i2+1);
+  const int i_j_k = IDX3D(i0, i1, i2);
+  const int im1_j_k = IDX3D(i0 - 1, i1, i2);
+  const int ip1_j_k = IDX3D(i0 + 1, i1, i2);
+  const int i_jm1_k = IDX3D(i0, i1 - 1, i2);
+  const int i_jp1_k = IDX3D(i0, i1 + 1, i2);
+  const int i_j_km1 = IDX3D(i0, i1, i2 - 1);
+  const int i_j_kp1 = IDX3D(i0, i1, i2 + 1);
 
   ghl_neutrino_opacities kappa_center, kappa_im1, kappa_ip1;
   ghl_neutrino_opacities kappa_jm1, kappa_jp1, kappa_km1, kappa_kp1;
   ghl_neutrino_optical_depths tau_im1, tau_ip1, tau_jm1, tau_jp1;
   ghl_neutrino_optical_depths tau_km1, tau_kp1;
-#define LOAD_KAPPA(index, value) set_opacity_struct_from_gfs(              \
-      index, kappa_nue[0], kappa_nue[1], kappa_anue[0], kappa_anue[1],    \
-      kappa_nux[0], kappa_nux[1], value)
-#define LOAD_TAU(index, value) set_optical_depths_struct_from_gfs(          \
-      index, tau_nue[0], tau_nue[1], tau_anue[0], tau_anue[1],            \
-      tau_nux[0], tau_nux[1], value)
+#define LOAD_KAPPA(index, value)                                                       \
+  set_opacity_struct_from_gfs(                                                         \
+        index, kappa_nue[0], kappa_nue[1], kappa_anue[0], kappa_anue[1], kappa_nux[0], \
+        kappa_nux[1], value)
+#define LOAD_TAU(index, value)                                               \
+  set_optical_depths_struct_from_gfs(                                        \
+        index, tau_nue[0], tau_nue[1], tau_anue[0], tau_anue[1], tau_nux[0], \
+        tau_nux[1], value)
   LOAD_KAPPA(i_j_k, &kappa_center);
   LOAD_KAPPA(im1_j_k, &kappa_im1);
   LOAD_KAPPA(ip1_j_k, &kappa_ip1);
@@ -103,11 +106,9 @@ static void update_optical_depth_cell(
 #undef LOAD_TAU
 
   NRPyLeakage_optical_depths_PathOfLeastResistance(
-        dxx, stencil_gxx, stencil_gyy, stencil_gzz,
-        &kappa_im1, &kappa_ip1, &kappa_jm1, &kappa_jp1,
-        &kappa_km1, &kappa_kp1, &tau_im1, &tau_ip1,
-        &tau_jm1, &tau_jp1, &tau_km1, &tau_kp1, &kappa_center,
-        tau_i_j_k);
+        dxx, stencil_gxx, stencil_gyy, stencil_gzz, &kappa_im1, &kappa_ip1, &kappa_jm1,
+        &kappa_jp1, &kappa_km1, &kappa_kp1, &tau_im1, &tau_ip1, &tau_jm1, &tau_jp1,
+        &tau_km1, &tau_kp1, &kappa_center, tau_i_j_k);
 }
 
 /** Check the sphere gather/call path with an order-sensitive stencil. */
@@ -146,16 +147,17 @@ static void check_sphere_caller_neighbor_order(void) {
   const double gzz[3] = { 1.0, 1.0, 1.0 };
   ghl_neutrino_optical_depths result;
   update_optical_depth_cell(
-        1, 1, 1, Nt0, Nt1, dxx, gxx, gyy, gzz,
-        kappa[0], kappa[1], kappa[2], tau[0], tau[1], tau[2], &result);
-  const double expected = 3.0*sqrt(2.5);
+        1, 1, 1, Nt0, Nt1, dxx, gxx, gyy, gzz, kappa[0], kappa[1], kappa[2], tau[0],
+        tau[1], tau[2], &result);
+  const double expected = 3.0 * sqrt(2.5);
   const double values[] = {
-    result.nue[0], result.nue[1], result.anue[0],
+    result.nue[0],  result.nue[1], result.anue[0],
     result.anue[1], result.nux[0], result.nux[1],
   };
-  for(size_t i = 0; i < sizeof(values)/sizeof(values[0]); i++) {
-    if(fabs(values[i] - expected) > 32.0*DBL_EPSILON*expected)
+  for(size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++) {
+    if(fabs(values[i] - expected) > 32.0 * DBL_EPSILON * expected) {
       ghl_error("Sphere caller reversed neighbor %zu\n", i);
+    }
   }
 }
 
@@ -217,17 +219,17 @@ void constantdensitysphere_test(
   double rho_exterior = 6.0e7 * NRPyLeakage_units_cgs_to_geom_D;
   double Y_e_exterior = 0.5;
   const double perturbation_amplitude = 1e-14;
-  const double minimum_safe_T = nextafter(
-      eos->T_min/(1.0-perturbation_amplitude), INFINITY);
-  double T_exterior   = fmax(0.01, minimum_safe_T);
+  const double minimum_safe_T
+        = nextafter(eos->T_min / (1.0 - perturbation_amplitude), INFINITY);
+  double T_exterior = fmax(0.01, minimum_safe_T);
 
   if( test_key == 1 ) {
-    rho_interior *= (1+randf(-1,1)*perturbation_amplitude);
-    Y_e_interior *= (1+randf(-1,1)*perturbation_amplitude);
-    T_interior   *= (1+randf(-1,1)*perturbation_amplitude);
-    rho_exterior *= (1+randf(-1,1)*perturbation_amplitude);
-    Y_e_exterior *= (1+randf(-1,1)*perturbation_amplitude);
-    T_exterior   *= (1+randf(-1,1)*perturbation_amplitude);
+    rho_interior *= (1 + randf(-1, 1) * perturbation_amplitude);
+    Y_e_interior *= (1 + randf(-1, 1) * perturbation_amplitude);
+    T_interior *= (1 + randf(-1, 1) * perturbation_amplitude);
+    rho_exterior *= (1 + randf(-1, 1) * perturbation_amplitude);
+    Y_e_exterior *= (1 + randf(-1, 1) * perturbation_amplitude);
+    T_exterior *= (1 + randf(-1, 1) * perturbation_amplitude);
   }
 
   // Step 4: Compute opacities in the interior and exterior
@@ -394,10 +396,9 @@ void constantdensitysphere_test(
 
           ghl_neutrino_optical_depths tau_i_j_k;
           update_optical_depth_cell(
-                i0, i1, i2, Nt0, Nt1, dxx,
-                stencil_gxx, stencil_gyy, stencil_gzz,
-                kappa_nue, kappa_anue, kappa_nux,
-                tau_nue_p, tau_anue_p, tau_nux_p, &tau_i_j_k);
+                i0, i1, i2, Nt0, Nt1, dxx, stencil_gxx, stencil_gyy, stencil_gzz,
+                kappa_nue, kappa_anue, kappa_nux, tau_nue_p, tau_anue_p, tau_nux_p,
+                &tau_i_j_k);
 
           const int i_j_k = IDX3D(i0, i1, i2);
 
@@ -504,66 +505,126 @@ void constantdensitysphere_test(
       for(int i1=0;i1<Nt1;i1++) {
         for(int i0=0;i0<Nt0;i0++) {
           const int index = IDX3D(i0,i1,i2);
-          if( sphere_pert_test_fail(kappa_nue_unpert[0][index], kappa_nue[0][index], kappa_nue_pert[0][index]) )
-            ghl_error("Validation failed for kappa_nue[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      kappa_nue_unpert[0][index], kappa_nue[0][index], kappa_nue_pert[0][index]);
-          if( sphere_pert_test_fail(kappa_nue_unpert[1][index], kappa_nue[1][index], kappa_nue_pert[1][index]) )
-            ghl_error("Validation failed for kappa_nue[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      kappa_nue_unpert[1][index], kappa_nue[1][index], kappa_nue_pert[1][index]);
-          if( sphere_pert_test_fail(kappa_anue_unpert[0][index], kappa_anue[0][index], kappa_anue_pert[0][index]) )
-            ghl_error("Validation failed for kappa_anue[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      kappa_anue_unpert[0][index], kappa_anue[0][index], kappa_anue_pert[0][index]);
-          if( sphere_pert_test_fail(kappa_anue_unpert[1][index], kappa_anue[1][index], kappa_anue_pert[1][index]) )
-            ghl_error("Validation failed for kappa_anue[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      kappa_anue_unpert[1][index], kappa_anue[1][index], kappa_anue_pert[1][index]);
-          if( sphere_pert_test_fail(kappa_nux_unpert[0][index], kappa_nux[0][index], kappa_nux_pert[0][index]) )
-            ghl_error("Validation failed for kappa_nux[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      kappa_nux_unpert[0][index], kappa_nux[0][index], kappa_nux_pert[0][index]);
-          if( sphere_pert_test_fail(kappa_nux_unpert[1][index], kappa_nux[1][index], kappa_nux_pert[1][index]) )
-            ghl_error("Validation failed for kappa_nux[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      kappa_nux_unpert[1][index], kappa_nux[1][index], kappa_nux_pert[1][index]);
-          if( sphere_pert_test_fail(tau_nue_unpert[0][index], tau_nue[0][index], tau_nue_pert[0][index]) )
-            ghl_error("Validation failed for tau_nue[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      tau_nue_unpert[0][index], tau_nue[0][index], tau_nue_pert[0][index]);
-          if( sphere_pert_test_fail(tau_nue_unpert[1][index], tau_nue[1][index], tau_nue_pert[1][index]) )
-            ghl_error("Validation failed for tau_nue[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      tau_nue_unpert[1][index], tau_nue[1][index], tau_nue_pert[1][index]);
-          if( sphere_pert_test_fail(tau_anue_unpert[0][index], tau_anue[0][index], tau_anue_pert[0][index]) )
-            ghl_error("Validation failed for tau_anue[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      tau_anue_unpert[0][index], tau_anue[0][index], tau_anue_pert[0][index]);
-          if( sphere_pert_test_fail(tau_anue_unpert[1][index], tau_anue[1][index], tau_anue_pert[1][index]) )
-            ghl_error("Validation failed for tau_anue[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      tau_anue_unpert[1][index], tau_anue[1][index], tau_anue_pert[1][index]);
-          if( sphere_pert_test_fail(tau_nux_unpert[0][index], tau_nux[0][index], tau_nux_pert[0][index]) )
-            ghl_error("Validation failed for tau_nux[0] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      tau_nux_unpert[0][index], tau_nux[0][index], tau_nux_pert[0][index]);
-          if( sphere_pert_test_fail(tau_nux_unpert[1][index], tau_nux[1][index], tau_nux_pert[1][index]) )
-            ghl_error("Validation failed for tau_nux[1] at (i0, i1, i2) = (%d, %d, %d), index %d: "
-                      "trusted %.17e, computed %.17e, perturbed %.17e\n",
-                      i0, i1, i2, index,
-                      tau_nux_unpert[1][index], tau_nux[1][index], tau_nux_pert[1][index]);
+          if(sphere_pert_test_fail(
+                   kappa_nue_unpert[0][index], kappa_nue[0][index],
+                   kappa_nue_pert[0][index])) {
+            ghl_error(
+                  "Validation failed for kappa_nue[0] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, kappa_nue_unpert[0][index], kappa_nue[0][index],
+                  kappa_nue_pert[0][index]);
+          }
+          if(sphere_pert_test_fail(
+                   kappa_nue_unpert[1][index], kappa_nue[1][index],
+                   kappa_nue_pert[1][index])) {
+            ghl_error(
+                  "Validation failed for kappa_nue[1] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, kappa_nue_unpert[1][index], kappa_nue[1][index],
+                  kappa_nue_pert[1][index]);
+          }
+          if(sphere_pert_test_fail(
+                   kappa_anue_unpert[0][index], kappa_anue[0][index],
+                   kappa_anue_pert[0][index])) {
+            ghl_error(
+                  "Validation failed for kappa_anue[0] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, kappa_anue_unpert[0][index], kappa_anue[0][index],
+                  kappa_anue_pert[0][index]);
+          }
+          if(sphere_pert_test_fail(
+                   kappa_anue_unpert[1][index], kappa_anue[1][index],
+                   kappa_anue_pert[1][index])) {
+            ghl_error(
+                  "Validation failed for kappa_anue[1] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, kappa_anue_unpert[1][index], kappa_anue[1][index],
+                  kappa_anue_pert[1][index]);
+          }
+          if(sphere_pert_test_fail(
+                   kappa_nux_unpert[0][index], kappa_nux[0][index],
+                   kappa_nux_pert[0][index])) {
+            ghl_error(
+                  "Validation failed for kappa_nux[0] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, kappa_nux_unpert[0][index], kappa_nux[0][index],
+                  kappa_nux_pert[0][index]);
+          }
+          if(sphere_pert_test_fail(
+                   kappa_nux_unpert[1][index], kappa_nux[1][index],
+                   kappa_nux_pert[1][index])) {
+            ghl_error(
+                  "Validation failed for kappa_nux[1] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, kappa_nux_unpert[1][index], kappa_nux[1][index],
+                  kappa_nux_pert[1][index]);
+          }
+          if(sphere_pert_test_fail(
+                   tau_nue_unpert[0][index], tau_nue[0][index],
+                   tau_nue_pert[0][index])) {
+            ghl_error(
+                  "Validation failed for tau_nue[0] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, tau_nue_unpert[0][index], tau_nue[0][index],
+                  tau_nue_pert[0][index]);
+          }
+          if(sphere_pert_test_fail(
+                   tau_nue_unpert[1][index], tau_nue[1][index],
+                   tau_nue_pert[1][index])) {
+            ghl_error(
+                  "Validation failed for tau_nue[1] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, tau_nue_unpert[1][index], tau_nue[1][index],
+                  tau_nue_pert[1][index]);
+          }
+          if(sphere_pert_test_fail(
+                   tau_anue_unpert[0][index], tau_anue[0][index],
+                   tau_anue_pert[0][index])) {
+            ghl_error(
+                  "Validation failed for tau_anue[0] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, tau_anue_unpert[0][index], tau_anue[0][index],
+                  tau_anue_pert[0][index]);
+          }
+          if(sphere_pert_test_fail(
+                   tau_anue_unpert[1][index], tau_anue[1][index],
+                   tau_anue_pert[1][index])) {
+            ghl_error(
+                  "Validation failed for tau_anue[1] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, tau_anue_unpert[1][index], tau_anue[1][index],
+                  tau_anue_pert[1][index]);
+          }
+          if(sphere_pert_test_fail(
+                   tau_nux_unpert[0][index], tau_nux[0][index],
+                   tau_nux_pert[0][index])) {
+            ghl_error(
+                  "Validation failed for tau_nux[0] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, tau_nux_unpert[0][index], tau_nux[0][index],
+                  tau_nux_pert[0][index]);
+          }
+          if(sphere_pert_test_fail(
+                   tau_nux_unpert[1][index], tau_nux[1][index],
+                   tau_nux_pert[1][index])) {
+            ghl_error(
+                  "Validation failed for tau_nux[1] at (i0, i1, i2) = (%d, %d, %d), "
+                  "index %d: "
+                  "trusted %.17e, computed %.17e, perturbed %.17e\n",
+                  i0, i1, i2, index, tau_nux_unpert[1][index], tau_nux[1][index],
+                  tau_nux_pert[1][index]);
+          }
         }
       }
     }
@@ -628,12 +689,10 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 void
 run_unit_test(const ghl_eos_parameters *restrict eos) {
   check_sphere_caller_neighbor_order();
-  if(!sphere_pert_test_fail(0.0, DBL_MIN, 0.0)
-     || sphere_pert_test_fail(0.0, 0.0, 0.0)) {
+  if(!sphere_pert_test_fail(0.0, DBL_MIN, 0.0) || sphere_pert_test_fail(0.0, 0.0, 0.0)) {
     ghl_error("Sphere comparison did not enforce exact-zero references\n");
   }
-  if(!sphere_pert_test_fail(1.0, NAN, NAN)
-     || sphere_pert_test_fail(NAN, NAN, 1.0)) {
+  if(!sphere_pert_test_fail(1.0, NAN, NAN) || sphere_pert_test_fail(NAN, NAN, 1.0)) {
     ghl_error("Sphere comparison did not preserve reference argument roles\n");
   }
   constantdensitysphere_test(eos, 2);

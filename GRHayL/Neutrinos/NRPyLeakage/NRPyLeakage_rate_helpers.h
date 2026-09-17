@@ -8,6 +8,11 @@
 /** Small positive fallback used by generated cgs leakage expressions. */
 static const double nrpyl_cgs_numerical_floor = 1.0e-15;
 
+/** Replace a nonfinite generated cgs intermediate with the numerical floor. */
+static inline double nrpyl_finite_cgs_or_floor(const double value) {
+  return robust_isfinite(value) ? value : nrpyl_cgs_numerical_floor;
+}
+
 /** Convert the cgs inverse-length floor to the public geometrized unit. */
 static inline double nrpyl_opacity_floor_geom(void) {
   return NRPyLeakage_units_geom_to_cgs_L * nrpyl_cgs_numerical_floor;
@@ -27,10 +32,9 @@ static inline double nrpyl_bremsstrahlung_number_rate(
       const double rho_cgs,
       const double X_n,
       const double X_p) {
-  const double composition
-        = X_n * X_n + (28.0 / 3.0) * X_n * X_p + X_p * X_p;
-  return NRPyLeakage_Brems_C1 * NRPyLeakage_Brems_zeta * pow(T, 4.5) * rho_cgs
-         * rho_cgs * composition;
+  const double composition = X_n * X_n + (28.0 / 3.0) * X_n * X_p + X_p * X_p;
+  return NRPyLeakage_Brems_C1 * NRPyLeakage_Brems_zeta * pow(T, 4.5) * rho_cgs * rho_cgs
+         * composition;
 }
 
 /**
@@ -40,9 +44,8 @@ static inline double nrpyl_bremsstrahlung_number_rate(
  * @param[in] number_rate Number-emission rate in cgs units.
  * @return Energy-emission rate in cgs units.
  */
-static inline double nrpyl_bremsstrahlung_energy_rate(
-      const double T,
-      const double number_rate) {
+static inline double
+nrpyl_bremsstrahlung_energy_rate(const double T, const double number_rate) {
   return NRPyLeakage_Brems_C2 * T * number_rate / NRPyLeakage_Brems_C1;
 }
 
@@ -64,12 +67,15 @@ static inline double nrpyl_effective_emission_rate(
       const double tau,
       const double opacity,
       const double phase_space) {
-  if(free_rate == 0.0)
+  if(free_rate == 0.0) {
     return 0.0;
-  if(tau == 0.0)
+  }
+  if(tau == 0.0) {
     return free_rate;
-  if(opacity == 0.0)
+  }
+  if(opacity == 0.0) {
     return 0.0;
+  }
 
   const double diffusion_factor = 6.0 / NRPyLeakage_c_light;
   return free_rate
@@ -93,8 +99,7 @@ static inline double nrpyl_matter_energy_source(
       const double Q_eff_nue,
       const double Q_eff_anue,
       const double Q_eff_nux) {
-  return NRPyLeakage_units_cgs_to_geom_Q
-         * (-Q_eff_nue - Q_eff_anue - 4.0 * Q_eff_nux);
+  return NRPyLeakage_units_cgs_to_geom_Q * (-Q_eff_nue - Q_eff_anue - 4.0 * Q_eff_nux);
 }
 
 /** Replace a nonfinite opacity with the established positive floor. */
@@ -108,8 +113,7 @@ static inline double nrpyl_finite_rate_or_zero(const double value) {
 }
 
 /** Apply the finite-output contract to every public opacity component. */
-static inline bool nrpyl_sanitize_opacities(
-  ghl_neutrino_opacities *restrict kappa) {
+static inline bool nrpyl_sanitize_opacities(ghl_neutrino_opacities *restrict kappa) {
   bool replaced = false;
   for(int i = 0; i < 2; i++) {
     replaced |= !robust_isfinite(kappa->nue[i]);
@@ -123,10 +127,8 @@ static inline bool nrpyl_sanitize_opacities(
 }
 
 /** Apply the finite-output contract to every public luminosity component. */
-static inline bool nrpyl_sanitize_luminosities(
-      ghl_neutrino_luminosities *restrict lum) {
-  const bool replaced = !robust_isfinite(lum->nue)
-                        || !robust_isfinite(lum->anue)
+static inline bool nrpyl_sanitize_luminosities(ghl_neutrino_luminosities *restrict lum) {
+  const bool replaced = !robust_isfinite(lum->nue) || !robust_isfinite(lum->anue)
                         || !robust_isfinite(lum->nux);
   lum->nue = nrpyl_finite_rate_or_zero(lum->nue);
   lum->anue = nrpyl_finite_rate_or_zero(lum->anue);
@@ -135,11 +137,9 @@ static inline bool nrpyl_sanitize_luminosities(
 }
 
 /** Apply the finite-output contract to both public GRMHD source terms. */
-static inline bool nrpyl_sanitize_sources(
-      double *restrict R_source,
-      double *restrict Q_source) {
-  const bool replaced = !robust_isfinite(*R_source)
-                        || !robust_isfinite(*Q_source);
+static inline bool
+nrpyl_sanitize_sources(double *restrict R_source, double *restrict Q_source) {
+  const bool replaced = !robust_isfinite(*R_source) || !robust_isfinite(*Q_source);
   *R_source = nrpyl_finite_rate_or_zero(*R_source);
   *Q_source = nrpyl_finite_rate_or_zero(*Q_source);
   return replaced;

@@ -118,10 +118,13 @@ All leakage finite-value guards use `robust_isfinite` or `robust_isnan`. On
 IEEE binary64 platforms the public inline helpers copy the representation with
 `memcpy` and classify exponent/fraction bits through `uint64_t`; this is
 alias-safe. Unsafe math modes can corrupt earlier arithmetic, so `configure`
-rejects the documented unsafe flag set and probes final flags for fast/finite-
-only predefined macros. Direct builds, including Cactus builds, must enforce
-the same restriction. Compile-time representation guards select the C99
-predicates on other platforms. The table-free physics executable directly checks finite
+rejects documented unsafe flag tokens supplied through `CC` or `--cflags` and
+probes final flags for fast/finite-only predefined macros. Direct builds,
+including Cactus builds, must enforce the same restriction. Supported builds
+also execute a gradual-underflow probe; Intel LLVM uses
+`-fp-model=precise -no-ftz`, with `-no-ftz` retained when linking the program
+containing `main`. Compile-time representation guards select the C99 predicates
+on other platforms. The table-free physics executable directly checks finite
 values, infinities, quiet and signaling NaNs, signed zeros, and signed minimum
 subnormals.
 

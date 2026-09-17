@@ -151,12 +151,16 @@ The same header defines `robust_isnan`, `robust_isfinite`, and
 helper fails. On IEEE binary64 systems the robust classifiers use alias-safe
 `memcpy` plus integer exponent/fraction checks. This does not make preceding
 floating-point arithmetic safe under finite-only or other unsafe math modes.
-Supported `configure` builds reject `-ffast-math`, `-Ofast`,
-`-ffinite-math-only`, `-funsafe-math-optimizations`, `-fassociative-math`,
-`-freciprocal-math`, `-fno-signed-zeros`, and `-fno-trapping-math`, then probe
-the final flags for fast/finite-only predefined macros. Direct builds must
-enforce the same restriction. Compile-time representation checks retain the
-C99 predicates as the portable fallback.
+Supported `configure` builds reject explicit `CC` or `--cflags` tokens for
+`-ffast-math`, `-Ofast`, `-ffinite-math-only`,
+`-funsafe-math-optimizations`, `-fassociative-math`, `-freciprocal-math`,
+`-fno-signed-zeros`, `-fno-trapping-math`, Intel `-ftz`, and Intel fast
+floating-point models. The final configuration probes both fast/finite-only
+predefined macros and gradual underflow. Intel LLVM builds receive
+`-fp-model=precise -no-ftz` after user flags. Direct builds must enforce the
+same restriction, and Intel executable links must retain `-no-ftz`.
+Compile-time representation checks retain the C99 predicates as the portable
+fallback.
 
 ## Fermi-Dirac Error Behavior
 

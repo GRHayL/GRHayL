@@ -223,6 +223,11 @@ documented finite fallbacks and reported with
 `ghl_error_nrpyleakage_nonfinite_output`; this status does not establish
 accuracy for large finite ratios.
 
+Normalized absorption can divide two representable subnormal Fermi moments.
+Supported builds therefore require gradual underflow; flushing either operand
+to zero changes a finite physical ratio before final-output sanitization can
+detect the loss.
+
 Independent qualification against the beta kernels in
 [BNS_NURATES](https://github.com/RelNucAs/bns_nurates) found `2.0--4.0%`
 differences in the four dilute emission moments and an absolute `Ye`

@@ -170,7 +170,7 @@ download_test_data con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_unperturbed.b
 download_test_data con2prim/con2prim_tabulated_Noble2D_rho_vs_T_perturbed.bin
 download_test_data con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
 
-for i in {0..85}; do
+for i in {0..87}; do
   if ./test/unit_test_code_error "$i"; then
     echo "Failed to fail!"
     exit 1

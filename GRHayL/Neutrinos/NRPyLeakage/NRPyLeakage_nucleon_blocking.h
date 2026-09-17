@@ -311,6 +311,14 @@ typedef struct {
   double energy;
 } nrpyl_beta_moments;
 
+static inline ghl_error_codes_t
+nrpyl_validate_beta_moments(const nrpyl_beta_moments *restrict moments) {
+  return robust_isfinite(moments->number) && robust_isfinite(moments->energy)
+                     && moments->number >= 0.0 && moments->energy >= 0.0
+               ? ghl_success
+               : ghl_error_nrpyleakage_blocking;
+}
+
 static inline double nrpyl_fdm1h(const double phi) {
   if(phi < -2.0) {
     return nrpyl_fdm1h_lt_m2(phi);
@@ -491,22 +499,23 @@ static inline double nrpyl_ifd1h(const double nu) {
   return y;
 }
 
-static inline ghl_error_codes_t nrpyl_compute_population(
-      const double log_y,
-      nrpyl_nucleon_population *restrict population) {
+static inline double nrpyl_population_eta_from_log_y(const double log_y) {
   // Below DBL_MIN, the first fugacity term determines eta to much better than
   // double precision; keeping the normalization logarithmic avoids underflow.
   if(log_y < log(DBL_MIN)) {
-    population->eta = log_y - log(0.886226925452758014);
-    return robust_isfinite(population->eta) ? ghl_success : ghl_error_nrpyleakage_blocking;
+    return log_y - log(0.886226925452758014);
   }
+  return nrpyl_ifd1h(exp(log_y));
+}
 
+static inline ghl_error_codes_t nrpyl_compute_population(
+      const double log_y,
+      nrpyl_nucleon_population *restrict population) {
   if(log_y > log(DBL_MAX)) {
     return ghl_error_nrpyleakage_blocking;
   }
 
-  const double y = exp(log_y);
-  population->eta = nrpyl_ifd1h(y);
+  population->eta = nrpyl_population_eta_from_log_y(log_y);
   if(!robust_isfinite(population->eta)) {
     return ghl_error_nrpyleakage_blocking;
   }
@@ -545,22 +554,11 @@ static inline ghl_error_codes_t nrpyl_compute_shifted_fermi_moments(
       const double eta,
       nrpyl_beta_moments *restrict moments) {
   double F2, F3, F4, F5;
-  ghl_error_codes_t error = NRPyLeakage_Fermi_Dirac_integrals(2, eta, &F2);
-  if(error != ghl_success) {
-    return error;
-  }
-  error = NRPyLeakage_Fermi_Dirac_integrals(3, eta, &F3);
-  if(error != ghl_success) {
-    return error;
-  }
-  error = NRPyLeakage_Fermi_Dirac_integrals(4, eta, &F4);
-  if(error != ghl_success) {
-    return error;
-  }
-  error = NRPyLeakage_Fermi_Dirac_integrals(5, eta, &F5);
-  if(error != ghl_success) {
-    return error;
-  }
+  /* Literal keys 2--5 are the complete valid domain of these calls. */
+  (void)NRPyLeakage_Fermi_Dirac_integrals(2, eta, &F2);
+  (void)NRPyLeakage_Fermi_Dirac_integrals(3, eta, &F3);
+  (void)NRPyLeakage_Fermi_Dirac_integrals(4, eta, &F4);
+  (void)NRPyLeakage_Fermi_Dirac_integrals(5, eta, &F5);
 
   /*
    * In a strongly blocked channel all complete moments can underflow
@@ -578,11 +576,7 @@ static inline ghl_error_codes_t nrpyl_compute_shifted_fermi_moments(
   moments->number = F4 + 2.0 * (a + b) * F3 + (a * a + b * b) * F2;
   moments->energy
         = F5 + (3.0 * a + 2.0 * b) * F4 + (3.0 * a * a + b * b) * F3 + a * a * a * F2;
-  if(!robust_isfinite(moments->number) || !robust_isfinite(moments->energy) || moments->number < 0.0
-     || moments->energy < 0.0) {
-    return ghl_error_nrpyleakage_blocking;
-  }
-  return ghl_success;
+  return nrpyl_validate_beta_moments(moments);
 }
 
 /**
@@ -646,8 +640,7 @@ static inline ghl_error_codes_t nrpyl_compute_beta_emission_moments(
       const double q,
       nrpyl_beta_moments *restrict moments) {
   if(!(T > 0.0) || !robust_isfinite(T) || !robust_isfinite(mu_e)
-     || !robust_isfinite(eta_nu) || !robust_isfinite(q)
-     || (sign != 1 && sign != -1)) {
+     || !robust_isfinite(eta_nu) || !robust_isfinite(q) || (sign != 1 && sign != -1)) {
     return ghl_error_nrpyleakage_blocking;
   }
 
@@ -694,8 +687,7 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
       const double q,
       nrpyl_beta_moments *restrict moments) {
   if(!(T > 0.0) || !robust_isfinite(T) || !robust_isfinite(mu_e)
-     || !robust_isfinite(eta_nu) || !robust_isfinite(q)
-     || (sign != 1 && sign != -1)) {
+     || !robust_isfinite(eta_nu) || !robust_isfinite(q) || (sign != 1 && sign != -1)) {
     return ghl_error_nrpyleakage_blocking;
   }
 
@@ -709,14 +701,9 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
   }
 
   double F2, F3;
-  error = NRPyLeakage_Fermi_Dirac_integrals(2, eta_nu, &F2);
-  if(error != ghl_success) {
-    return error;
-  }
-  error = NRPyLeakage_Fermi_Dirac_integrals(3, eta_nu, &F3);
-  if(error != ghl_success) {
-    return error;
-  }
+  /* Literal keys 2 and 3 are the complete valid domain of these calls. */
+  (void)NRPyLeakage_Fermi_Dirac_integrals(2, eta_nu, &F2);
+  (void)NRPyLeakage_Fermi_Dirac_integrals(3, eta_nu, &F3);
 
   if(moments->number == 0.0) {
     /*
@@ -744,12 +731,7 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
                      : log(energy_polynomial) - a;
     moments->number = exp(log_number_ratio) * vacancy;
     moments->energy = exp(log_energy_ratio) * vacancy;
-    if(!robust_isfinite(moments->number) || !robust_isfinite(moments->energy)
-       || moments->number < 0.0
-       || moments->energy < 0.0) {
-      return ghl_error_nrpyleakage_blocking;
-    }
-    return ghl_success;
+    return nrpyl_validate_beta_moments(moments);
   }
 
   const double mean_energy_over_T = moments->energy / moments->number;
@@ -761,9 +743,26 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
    */
   moments->number = (moments->number / F2) * vacancy;
   moments->energy = (moments->energy / F3) * vacancy;
-  if(!robust_isfinite(moments->number) || !robust_isfinite(moments->energy)) {
+  return nrpyl_validate_beta_moments(moments);
+}
+
+static inline ghl_error_codes_t nrpyl_validate_blocking_outputs(
+      const double physical_X_n,
+      const double physical_X_p,
+      const double B_n,
+      const double B_p,
+      double *restrict Y_np,
+      double *restrict Y_pn) {
+  if(!robust_isfinite(B_n) || !robust_isfinite(B_p) || !robust_isfinite(*Y_np)
+     || !robust_isfinite(*Y_pn) || B_n < 0.0 || B_n > physical_X_n || B_p < 0.0
+     || B_p > physical_X_p || *Y_np < 0.0 || *Y_pn < 0.0) {
     return ghl_error_nrpyleakage_blocking;
   }
+  /* Project small fit and rounding errors onto the exact population bounds;
+   * independent qualification, rather than this projection, bounds fit error.
+   */
+  *Y_np = fmin(*Y_np, physical_X_n);
+  *Y_pn = fmin(*Y_pn, physical_X_p);
   return ghl_success;
 }
 
@@ -809,8 +808,9 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
   const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
   const double fraction_roundoff = 27.0 * gamma_64;
   if(!robust_isfinite(rho_cgs) || !(rho_cgs > 0.0) || !robust_isfinite(T) || !(T > 0.0)
-     || !robust_isfinite(X_n) || X_n < -fraction_roundoff || X_n > 1.0 + fraction_roundoff
-     || !robust_isfinite(X_p) || X_p < -fraction_roundoff || X_p > 1.0 + fraction_roundoff) {
+     || !robust_isfinite(X_n) || X_n < -fraction_roundoff
+     || X_n > 1.0 + fraction_roundoff || !robust_isfinite(X_p)
+     || X_p < -fraction_roundoff || X_p > 1.0 + fraction_roundoff) {
     return ghl_error_nrpyleakage_blocking;
   }
 
@@ -876,9 +876,6 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
   const double X_high = neutron_is_high ? physical_X_n : physical_X_p;
   const double X_low = neutron_is_high ? physical_X_p : physical_X_n;
   double a = high.eta - low.eta;
-  if(!robust_isfinite(a)) {
-    return ghl_error_nrpyleakage_blocking;
-  }
 
   const double population_difference = X_high - X_low;
   if(population_difference <= sqrt(DBL_EPSILON) * X_high) {
@@ -890,23 +887,18 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
      * roundoff; it is a machine-precision criterion, not a physical tuning
      * parameter.
      */
-    nrpyl_nucleon_population midpoint;
     const double X_midpoint = 0.5 * (X_high + X_low);
-    ghl_error_codes_t error = nrpyl_compute_population(
-          log_number_density + log(X_midpoint) - log_C, &midpoint);
-    if(error != ghl_success) {
-      return error;
-    }
+    // Both endpoint inversions succeeded, so monotonicity brackets this
+    // midpoint inversion inside the same finite log-density interval.
+    const double midpoint_eta = nrpyl_population_eta_from_log_y(
+          log_number_density + log(X_midpoint) - log_C);
     const double log_midpoint_overlap
-          = log_C - log_number_density + nrpyl_log_fd1h_derivative(midpoint.eta);
+          = log_C - log_number_density + nrpyl_log_fd1h_derivative(midpoint_eta);
     const double midpoint_overlap = exp(log_midpoint_overlap);
     if(!(midpoint_overlap > 0.0) || !robust_isfinite(midpoint_overlap)) {
       return ghl_error_nrpyleakage_blocking;
     }
     a = population_difference / midpoint_overlap;
-  }
-  else if(a < 0.0) {
-    return ghl_error_nrpyleakage_blocking;
   }
   *eta_n_minus_eta_p = neutron_is_high ? a : -a;
 
@@ -915,10 +907,6 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
     // lim_{a->0} C*J/n_b = C*F'_{1/2}(eta)/n_b.
     const double log_overlap
           = log_C - log_number_density + nrpyl_log_fd1h_derivative(high.eta);
-    if(robust_isnan(log_overlap)
-       || (!robust_isfinite(log_overlap) && !signbit(log_overlap))) {
-      return ghl_error_nrpyleakage_blocking;
-    }
     Y_high_to_low = exp(log_overlap);
     Y_low_to_high = Y_high_to_low;
   }
@@ -935,18 +923,9 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
      */
     const double overlap = population_difference / (-expm1(-a));
     const double reverse_overlap = overlap * exp(-a);
-    if(!(overlap >= 0.0) || !robust_isfinite(overlap) || !(reverse_overlap >= 0.0)
-       || !robust_isfinite(reverse_overlap)) {
-      return ghl_error_nrpyleakage_blocking;
-    }
     Y_high_to_low = overlap;
     Y_low_to_high = reverse_overlap;
   }
-  // Exact overlaps cannot exceed their initial populations. Project small fit
-  // and rounding errors back onto that physical interval; independent
-  // qualification, rather than this runtime projection, bounds fit error.
-  Y_high_to_low = fmin(Y_high_to_low, X_high);
-  Y_low_to_high = fmin(Y_low_to_high, X_low);
   if(neutron_is_high) {
     *Y_np = Y_high_to_low;
     *Y_pn = Y_low_to_high;
@@ -956,14 +935,8 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
     *Y_np = Y_low_to_high;
   }
 
-  if(!robust_isfinite(*B_n) || !robust_isfinite(*B_p)
-     || !robust_isfinite(*Y_np) || !robust_isfinite(*Y_pn)
-     || *B_n < 0.0 || *B_n > physical_X_n || *B_p < 0.0 || *B_p > physical_X_p
-     || *Y_np < 0.0 || *Y_np > physical_X_n || *Y_pn < 0.0 || *Y_pn > physical_X_p) {
-    return ghl_error_nrpyleakage_blocking;
-  }
-
-  return ghl_success;
+  return nrpyl_validate_blocking_outputs(
+        physical_X_n, physical_X_p, *B_n, *B_p, Y_np, Y_pn);
 }
 
 #endif // NRPYLEAKAGE_NUCLEON_BLOCKING_H_

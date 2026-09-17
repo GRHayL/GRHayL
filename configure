@@ -11,7 +11,7 @@ pkg="GRHayL"
 pkg_short="GRHayL"
 pkg_version="1.0.0"
 libname="ghl"
-nrpyleakage_unsafe_cflags='-ffast-math -Ofast -ffinite-math-only -funsafe-math-optimizations -fassociative-math -freciprocal-math -fno-signed-zeros -fno-trapping-math'
+nrpyleakage_unsafe_cflags='-ffast-math -Ofast -ffinite-math-only -funsafe-math-optimizations -fassociative-math -freciprocal-math -fno-signed-zeros -fno-trapping-math -ftz -fp-model=fast -fp-model=fast=1 -fp-model=fast=2'
 
 red()
 {
@@ -83,8 +83,10 @@ Options:'
                           opt        : -Wall -std=c99 -march=native -fno-finite-math-only -O2
                           production : -Wall -std=c99 -march=native -fno-finite-math-only -O3
     --cflags            Additional compilation flags; NRPyLeakage requires
-                        IEEE exceptional-value semantics
+                        IEEE exceptional-value semantics. Explicit unsafe
+                        tokens in CC or --cflags are rejected
     NRPyLeakage rejects: $nrpyleakage_unsafe_cflags
+    NRPyLeakage rejects separate Intel spelling: -fp-model fast[=1|=2]
     --clibs             Additional linker flags
     --hdf5dir           Sets the HDF5 base directory. Possible values:
                           <dir> : assumes <dir>/include and <dir>/lib exist
@@ -315,6 +317,21 @@ c_compiles()
     fi
 }
 
+c_runs()
+{
+    printf "$5"
+    printf "$1" | $2 $3 -x c - $4 >/dev/null 2>&1
+    if [ $? -eq 0 ] && ./a.out >/dev/null 2>&1; then
+        YES "$2$3<objs>$4"
+        rm -f a.out
+        return 0
+    else
+        NO "$2$3<objs>$4"
+        rm -f a.out
+        return 1
+    fi
+}
+
 Realpath()
 {
     case "$1" in
@@ -514,13 +531,18 @@ if [ "$cflags" = "" ]; then
 else
     YES "$cflags"
 fi
-for flag in $cflags; do
+for flag in $CC $cflags; do
     for unsafe_flag in $nrpyleakage_unsafe_cflags; do
         if [ "$flag" = "$unsafe_flag" ]; then
             error "Unsupported floating-point compiler flag '$flag': NRPyLeakage requires IEEE exceptional-value semantics\n"
         fi
     done
 done
+case " $CC $cflags " in
+    *" -fp-model fast "*|*" -fp-model fast=1 "*|*" -fp-model fast=2 "*)
+        error "Unsupported floating-point compiler mode '-fp-model fast': NRPyLeakage requires IEEE exceptional-value semantics\n"
+        ;;
+esac
 cflags="$BUILDCFLAGS $cflags"
 
 printf "Checking if clibs were provided... "
@@ -531,12 +553,26 @@ else
 fi
 
 for compiler in gcc clang icc icx cc; do
-    if [ -z $CC ]; then
+    if [ -z "$CC" ]; then
         check_compiler $compiler
     else
         break
     fi
 done
+
+code='
+#ifndef __INTEL_LLVM_COMPILER
+#error "not Intel LLVM"
+#endif
+int main(void) { return 0; }
+'
+c_compiles "$code" $CC " -O0 " "" "Checking if C compiler is Intel LLVM... "
+if [ $? -eq 0 ]; then
+    # ICX otherwise defaults to fast arithmetic and flush-to-zero at optimized
+    # levels. Keep these last so supported configure builds retain gradual
+    # underflow even when CC contains compiler options.
+    cflags="$cflags -fp-model=precise -no-ftz"
+fi
 
 clibs=$(printf "%s" "-lm $clibs" | awk '{sub(/ *$/, "", $0); print}')
 
@@ -567,6 +603,19 @@ int main(void) { return 0; }
 c_compiles "$code" $CC " $cflags " "" "Checking floating-point semantics... "
 if [ $? -ne 0 ]; then
     error "Unsupported floating-point compiler mode: NRPyLeakage requires IEEE exceptional-value semantics\n"
+fi
+code='
+#include <float.h>
+int main(void) {
+  volatile double minimum_normal = DBL_MIN;
+  volatile double half = 0.5;
+  volatile double subnormal = minimum_normal * half;
+  return subnormal > 0.0 ? 0 : 1;
+}
+'
+c_runs "$code" $CC " $cflags " "" "Checking gradual underflow... "
+if [ $? -ne 0 ]; then
+    error "Unsupported floating-point compiler mode: NRPyLeakage requires gradual underflow (ICX: -fp-model=precise -no-ftz)\n"
 fi
 if [ "$ompcflag" != "" ]; then
     code='

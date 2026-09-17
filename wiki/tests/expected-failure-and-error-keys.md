@@ -15,7 +15,7 @@ Read with [Core tests and fixtures](../core/tests-and-fixtures.md),
 
 ## Harness Contract
 
-The full runner invokes `./test/unit_test_code_error "$i"` for keys `0..85`.
+The full runner invokes `./test/unit_test_code_error "$i"` for keys `0..87`.
 Each key is treated as an expected-error case: if the executable exits
 successfully, `.github/run_tests.sh` prints `Failed to fail!` and fails the
 runner; if the executable exits nonzero, the runner treats that as the expected
@@ -25,6 +25,10 @@ Therefore process exit alone is inverted harness evidence, not proof of the
 specific library error code. The test body must first compare returned code
 with `expected_error_code(...)`; preserve captured output when distinguishing an
 expected harness exit from an unrelated crash or setup failure.
+
+Keys `86` and `87` directly supply the expected NRPyLeakage blocking and
+nonfinite-output enum values. They cover message mapping and termination in
+`ghl_abort_if_error`; the NRPyLeakage physics test covers producer returns.
 
 Inside `unit_test_code_error.c`, `expect_error_code(...)` checks that a call
 returned the expected GRHayL error code, then routes through

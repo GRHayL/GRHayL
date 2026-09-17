@@ -42,11 +42,16 @@ The remaining build-type mismatch concerns the no-flags name: help advertises
 Production emits its documented
 `-Wall -std=c99 -march=native -fno-finite-math-only -O3` flags so runtime
 finite-value checks retain their required semantics.
-All build types reject the unsafe floating-point flags listed by
-`./configure --help`, including fast-math and finite-only umbrella modes and
-the individual transformations on which those modes rely. A compile probe also
-rejects final flag sets that define fast-math or positive finite-only macros. Build
-routes that bypass `configure`, including Cactus, must apply the same policy.
+All build types reject explicit unsafe floating-point flag tokens listed by
+`./configure --help` when supplied through `CC` or `--cflags`, including
+fast-math and finite-only umbrella modes and the individual transformations on
+which those modes rely. A compile probe also rejects final flag sets that define
+fast-math or positive finite-only macros, and an execution probe requires
+gradual underflow. For Intel LLVM, `configure` appends
+`-fp-model=precise -no-ftz` after user flags because optimized ICX builds
+otherwise use fast arithmetic and flush subnormals. Build routes that bypass
+`configure`, including Cactus and downstream executable links, must enforce the
+same semantics; `-no-ftz` must reach the program containing `main`.
 
 Configuration, compilation, installation, consumer linking, and execution are
 separate evidence classes:
@@ -230,7 +235,7 @@ workflow matrix and not a fixture generator:
    where needed, decompressing `*.bz2` files.
 6. Runs the compiled tests under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Runs `unit_test_code_error` over error-code keys `0` through `85`, expecting
+7. Runs `unit_test_code_error` over error-code keys `0` through `87`, expecting
    each invocation to fail at process level.
 8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
    `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;

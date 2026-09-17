@@ -265,6 +265,14 @@ jobs:
           done
           case_dir=$(mktemp -d)
           git archive HEAD | tar -x -C "$case_dir"
+          if (cd "$case_dir" && CC='gcc -fno-signed-zeros' ./configure --disable-hdf5) >"$case_dir/configure.log" 2>&1; then
+            echo "configure accepted unsupported flag from CC"
+            exit 1
+          fi
+          grep -q "Unsupported floating-point compiler flag" "$case_dir/configure.log"
+          test ! -e "$case_dir/Makefile"
+          case_dir=$(mktemp -d)
+          git archive HEAD | tar -x -C "$case_dir"
           (cd "$case_dir" && ./configure --disable-hdf5 --cflags="-Wextra")
       - name: Compile GRHayL
         uses: ./.github/actions/compile_GRHayL
@@ -374,7 +382,7 @@ jobs:
       - name: Run unit test for error-catching
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          for i in {0..85}; do
+          for i in {0..87}; do
             if ./test/unit_test_code_error "$i"; then
               echo "Failed to fail!"
               exit 1

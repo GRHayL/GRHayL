@@ -38,18 +38,30 @@ ghl_pert_test_fail_computed_values(
     ghl_error("Failed to read perturbed data from file\n");
 
   // Perform validation
-  if( ghl_pert_test_fail(t_unperturbed, t, t_perturbed) )
-    ghl_error("Validation failed for t at t = %.17e: trusted %.17e, computed %.17e, perturbed %.17e\n",
-              t, t_unperturbed, t, t_perturbed);
-  if( ghl_pert_test_fail(Y_e_unperturbed, Y_e, Y_e_perturbed) )
-    ghl_error("Validation failed for Y_e at t = %.17e: trusted %.17e, computed %.17e, perturbed %.17e\n",
-              t, Y_e_unperturbed, Y_e, Y_e_perturbed);
-  if( ghl_pert_test_fail(eps_unperturbed, eps, eps_perturbed) )
-    ghl_error("Validation failed for eps at t = %.17e: trusted %.17e, computed %.17e, perturbed %.17e\n",
-              t, eps_unperturbed, eps, eps_perturbed);
-  if( ghl_pert_test_fail(T_unperturbed, T, T_perturbed) )
-    ghl_error("Validation failed for T at t = %.17e: trusted %.17e, computed %.17e, perturbed %.17e\n",
-              t, T_unperturbed, T, T_perturbed);
+  if(ghl_pert_test_fail(t_unperturbed, t, t_perturbed)) {
+    ghl_error(
+          "Validation failed for t at t = %.17e: trusted %.17e, computed %.17e, "
+          "perturbed %.17e\n",
+          t, t_unperturbed, t, t_perturbed);
+  }
+  if(ghl_pert_test_fail(Y_e_unperturbed, Y_e, Y_e_perturbed)) {
+    ghl_error(
+          "Validation failed for Y_e at t = %.17e: trusted %.17e, computed %.17e, "
+          "perturbed %.17e\n",
+          t, Y_e_unperturbed, Y_e, Y_e_perturbed);
+  }
+  if(ghl_pert_test_fail(eps_unperturbed, eps, eps_perturbed)) {
+    ghl_error(
+          "Validation failed for eps at t = %.17e: trusted %.17e, computed %.17e, "
+          "perturbed %.17e\n",
+          t, eps_unperturbed, eps, eps_perturbed);
+  }
+  if(ghl_pert_test_fail(T_unperturbed, T, T_perturbed)) {
+    ghl_error(
+          "Validation failed for T at t = %.17e: trusted %.17e, computed %.17e, "
+          "perturbed %.17e\n",
+          t, T_unperturbed, T, T_perturbed);
+  }
 }
 
 static inline ghl_error_codes_t
@@ -58,7 +70,7 @@ rhs(const ghl_eos_parameters *restrict eos,
     const double Y_e,
     const double eps,
     const double T,
-    double *restrict rhs_gfs ) {
+    double *restrict rhs_gfs) {
   ghl_neutrino_optical_depths tau = {{0,0},{0,0},{0,0}};
   ghl_neutrino_opacities kappa;
   double R_source, Q_source;
@@ -66,21 +78,21 @@ rhs(const ghl_eos_parameters *restrict eos,
   const ghl_error_codes_t error =
     NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(eos, rho, Y_e, T,
                                                                   &tau, &kappa, &R_source, &Q_source);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
   rhs_gfs[Y_E] = R_source/rho;
   rhs_gfs[EPS] = Q_source/rho;
   return ghl_success;
 }
 
-static inline ghl_error_codes_t
-rk4_step_ode(
-    const ghl_eos_parameters *restrict eos,
-    const double dt,
-    const double rho,
-    double *restrict gfs,
-    double *restrict T ) {
+static inline ghl_error_codes_t rk4_step_ode(
+      const ghl_eos_parameters *restrict eos,
+      const double dt,
+      const double rho,
+      double *restrict gfs,
+      double *restrict T) {
 
   // RK4 (no explicit time dependence on rhs):
   //
@@ -96,46 +108,53 @@ rk4_step_ode(
   *T = eos->T_max;
   Y_e = gfs[Y_E];
   eps = gfs[EPS];
-  ghl_error_codes_t error = ghl_tabulated_compute_T_from_eps(
-        eos, rho, Y_e, eps, T);
-  if(error != ghl_success)
+  ghl_error_codes_t error = ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
+  if(error != ghl_success) {
     return error;
+  }
   error = rhs(eos, rho, Y_e, eps, *T, k1);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
   // RK4 - substep 2;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + 0.5*dt*k1[Y_E];
   eps = gfs[EPS] + 0.5*dt*k1[EPS];
   error = ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
   error = rhs(eos, rho, Y_e, eps, *T, k2);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
   // RK4 - substep 3;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + 0.5*dt*k2[Y_E];
   eps = gfs[EPS] + 0.5*dt*k2[EPS];
   error = ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
   error = rhs(eos, rho, Y_e, eps, *T, k3);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
   // RK4 - substep 4;
   *T = eos->T_max;
   Y_e = gfs[Y_E] + dt*k3[Y_E];
   eps = gfs[EPS] + dt*k3[EPS];
   error = ghl_tabulated_compute_T_from_eps(eos, rho, Y_e, eps, T);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
   error = rhs(eos, rho, Y_e, eps, *T, k4);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
   // RK4 - update step
   for(int i=0;i<2;i++)
@@ -154,19 +173,20 @@ static ghl_error_codes_t generate_one_fixture(
   double initial_Y_e = 0.5;
   double initial_T = 1.0;
   if(perturb) {
-    initial_rho *= (1+randf(-1,1)*1e-14);
-    initial_Y_e *= (1+randf(-1,1)*1e-14);
-    initial_T *= (1+randf(-1,1)*1e-14);
+    initial_rho *= (1 + randf(-1, 1) * 1e-14);
+    initial_Y_e *= (1 + randf(-1, 1) * 1e-14);
+    initial_T *= (1 + randf(-1, 1) * 1e-14);
   }
 
   double eps;
   ghl_error_codes_t error = ghl_tabulated_compute_eps_from_T(
         eos, initial_rho, initial_Y_e, initial_T, &eps);
-  if(error != ghl_success)
+  if(error != ghl_success) {
     return error;
+  }
 
   FILE *fp = fopen_with_check(filename, "wb");
-  double gfs[2] = {initial_Y_e, eps};
+  double gfs[2] = { initial_Y_e, eps };
   fwrite(&n_steps, sizeof(int), 1, fp);
   if(!perturb) {
     fwrite(&dt, sizeof(double), 1, fp);
@@ -177,7 +197,7 @@ static ghl_error_codes_t generate_one_fixture(
     fwrite(&gfs[EPS], sizeof(double), 1, fp);
   }
   double t = 0.0;
-  for(int n=0;n<n_steps;n++) {
+  for(int n = 0; n < n_steps; n++) {
     double T;
     error = rk4_step_ode(eos, dt, initial_rho, gfs, &T);
     if(error != ghl_success) {
@@ -208,8 +228,8 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
     else
       sprintf(filename, "nrpyleakage_optically_thin_gas_unperturbed.bin");
 
-    ghl_abort_if_error(generate_one_fixture(
-          eos, perturb, filename, t_final, dt, n_steps));
+    ghl_abort_if_error(
+          generate_one_fixture(eos, perturb, filename, t_final, dt, n_steps));
     ghl_info("Finished %s evolution\n", perturb ? "perturbed" : "unperturbed");
   }
 }
@@ -217,7 +237,10 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 static int injected_T_failure_call;
 static int injected_T_call_count;
 static ghl_error_codes_t (*saved_compute_T_from_eps)(
-      const ghl_eos_parameters *restrict, double, double, double,
+      const ghl_eos_parameters *restrict,
+      double,
+      double,
+      double,
       double *restrict);
 
 static ghl_error_codes_t injected_compute_T_from_eps(
@@ -227,8 +250,9 @@ static ghl_error_codes_t injected_compute_T_from_eps(
       const double eps,
       double *restrict T) {
   injected_T_call_count++;
-  if(injected_T_call_count == injected_T_failure_call)
+  if(injected_T_call_count == injected_T_failure_call) {
     return ghl_error_table_max_T;
+  }
   return saved_compute_T_from_eps(eos, rho, Y_e, eps, T);
 }
 
@@ -248,8 +272,8 @@ static ghl_error_codes_t injected_compute_eps_from_T(
 
 static void check_lookup_failures(const ghl_eos_parameters *restrict eos) {
   double initial_eps;
-  ghl_abort_if_error(ghl_tabulated_compute_eps_from_T(
-        eos, 1e-12, 0.5, 1.0, &initial_eps));
+  ghl_abort_if_error(
+        ghl_tabulated_compute_eps_from_T(eos, 1e-12, 0.5, 1.0, &initial_eps));
   saved_compute_T_from_eps = ghl_tabulated_compute_T_from_eps;
   ghl_tabulated_compute_T_from_eps = injected_compute_T_from_eps;
   for(int failure_call = 1; failure_call <= 4; failure_call++) {
@@ -258,13 +282,12 @@ static void check_lookup_failures(const ghl_eos_parameters *restrict eos) {
     injected_T_failure_call = failure_call;
     injected_T_call_count = 0;
     rhs_call_count = 0;
-    const ghl_error_codes_t error = rk4_step_ode(
-          eos, 1.0e-8, 1e-12, gfs, &T);
+    const ghl_error_codes_t error = rk4_step_ode(eos, 1.0e-8, 1e-12, gfs, &T);
     if(error != ghl_error_table_max_T || rhs_call_count != failure_call - 1) {
       ghl_tabulated_compute_T_from_eps = saved_compute_T_from_eps;
       ghl_error(
-            "RK lookup failure %d returned %d after %d RHS calls\n",
-            failure_call, error, rhs_call_count);
+            "RK lookup failure %d returned %d after %d RHS calls\n", failure_call, error,
+            rhs_call_count);
     }
   }
   ghl_tabulated_compute_T_from_eps = saved_compute_T_from_eps;
@@ -275,11 +298,10 @@ static void check_lookup_failures(const ghl_eos_parameters *restrict eos) {
   fwrite(marker, sizeof(marker), 1, marker_file);
   fclose(marker_file);
   ghl_error_codes_t (*saved_compute_eps_from_T)(
-        const ghl_eos_parameters *restrict, double, double, double,
-        double *restrict) = ghl_tabulated_compute_eps_from_T;
+        const ghl_eos_parameters *restrict, double, double, double, double *restrict)
+        = ghl_tabulated_compute_eps_from_T;
   ghl_tabulated_compute_eps_from_T = injected_compute_eps_from_T;
-  const ghl_error_codes_t error = generate_one_fixture(
-        eos, 0, marker_path, 0.0, 1.0, 0);
+  const ghl_error_codes_t error = generate_one_fixture(eos, 0, marker_path, 0.0, 1.0, 0);
   ghl_tabulated_compute_eps_from_T = saved_compute_eps_from_T;
   unsigned char observed[sizeof(marker)] = { 0 };
   marker_file = fopen_with_check(marker_path, "rb");

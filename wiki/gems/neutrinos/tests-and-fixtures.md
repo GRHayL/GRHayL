@@ -86,7 +86,11 @@ avoid dependence on optimizer finite-value assumptions.
 It also exercises the zero-emission,
 finite-normalized Boltzmann, mixed numerator-only underflow, and
 paired-subnormal limits of strongly blocked channels, preventing `0/0`,
-premature underflow, and overflow. Its
+premature underflow, and overflow. The trace-neutron case checks the numerical
+number and energy ratios that reproduce the luminosity replay's most strongly
+blocked antineutrino row. Independent high-precision quadrature references
+exercise every Fukushima `F_{-1/2}` fit interval and both sides of each
+dispatcher seam. Its
 floating-point tolerance follows the published Fermi-fit error bound plus an
 allowance for the small fixed operation chain. It runs in no-HDF5 builds and
 once per compiler and OS neutrino CI matrix.
@@ -240,10 +244,10 @@ comparison helpers for `nue`, `anue`, and `nux` values against
 Generation retains each base value, applies a bounded perturbation, and asserts
 the pair distance and EOS/input bounds before evaluating the perturbed row.
 
-`Unit_Tests/unit_test_code_error.c` belongs here only for direct invalid
-Fermi-Dirac key coverage: it calls `NRPyLeakage_Fermi_Dirac_integrals(-1, ...)`
-for both `z < 1e-3` and `z > 1e-3` cases and maps those keys to
-`ghl_error_invalid_fermi_dirac_integral_key`.
+`Unit_Tests/unit_test_code_error.c` covers direct invalid Fermi-Dirac keys by
+calling `NRPyLeakage_Fermi_Dirac_integrals(-1, ...)` for both `z < 1e-3` and
+`z > 1e-3`. Keys `86` and `87` also verify the terminating error-message paths
+for NRPyLeakage blocking and nonfinite-output statuses.
 
 ### Replay Assertion Strength
 
