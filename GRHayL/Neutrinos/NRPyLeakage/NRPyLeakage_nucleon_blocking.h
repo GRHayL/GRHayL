@@ -498,7 +498,7 @@ static inline ghl_error_codes_t nrpyl_compute_population(
   // double precision; keeping the normalization logarithmic avoids underflow.
   if(log_y < log(DBL_MIN)) {
     population->eta = log_y - log(0.886226925452758014);
-    return isfinite(population->eta) ? ghl_success : ghl_error_nrpyleakage_blocking;
+    return robust_isfinite(population->eta) ? ghl_success : ghl_error_nrpyleakage_blocking;
   }
 
   if(log_y > log(DBL_MAX)) {
@@ -507,7 +507,7 @@ static inline ghl_error_codes_t nrpyl_compute_population(
 
   const double y = exp(log_y);
   population->eta = nrpyl_ifd1h(y);
-  if(!isfinite(population->eta)) {
+  if(!robust_isfinite(population->eta)) {
     return ghl_error_nrpyleakage_blocking;
   }
   return ghl_success;
@@ -515,7 +515,7 @@ static inline ghl_error_codes_t nrpyl_compute_population(
 
 static inline double nrpyl_log_fd1h_derivative(const double eta) {
   const double derivative = 0.5 * nrpyl_fdm1h(eta);
-  if(derivative > 0.0 && isfinite(derivative)) {
+  if(derivative > 0.0 && robust_isfinite(derivative)) {
     return log(derivative);
   }
 
@@ -578,7 +578,7 @@ static inline ghl_error_codes_t nrpyl_compute_shifted_fermi_moments(
   moments->number = F4 + 2.0 * (a + b) * F3 + (a * a + b * b) * F2;
   moments->energy
         = F5 + (3.0 * a + 2.0 * b) * F4 + (3.0 * a * a + b * b) * F3 + a * a * a * F2;
-  if(!isfinite(moments->number) || !isfinite(moments->energy) || moments->number < 0.0
+  if(!robust_isfinite(moments->number) || !robust_isfinite(moments->energy) || moments->number < 0.0
      || moments->energy < 0.0) {
     return ghl_error_nrpyleakage_blocking;
   }
@@ -642,7 +642,8 @@ static inline ghl_error_codes_t nrpyl_compute_beta_emission_moments(
       const int sign,
       const double q,
       nrpyl_beta_moments *restrict moments) {
-  if(!(T > 0.0) || !isfinite(T) || !isfinite(mu_e) || !isfinite(eta_nu) || !isfinite(q)
+  if(!(T > 0.0) || !robust_isfinite(T) || !robust_isfinite(mu_e)
+     || !robust_isfinite(eta_nu) || !robust_isfinite(q)
      || (sign != 1 && sign != -1)) {
     return ghl_error_nrpyleakage_blocking;
   }
@@ -689,7 +690,8 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
       const int sign,
       const double q,
       nrpyl_beta_moments *restrict moments) {
-  if(!(T > 0.0) || !isfinite(T) || !isfinite(mu_e) || !isfinite(eta_nu) || !isfinite(q)
+  if(!(T > 0.0) || !robust_isfinite(T) || !robust_isfinite(mu_e)
+     || !robust_isfinite(eta_nu) || !robust_isfinite(q)
      || (sign != 1 && sign != -1)) {
     return ghl_error_nrpyleakage_blocking;
   }
@@ -724,7 +726,7 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
     const double energy_polynomial
           = 20.0 + 12.0 * a + 8.0 * b + 3.0 * a * a + b * b + a * a * a / 3.0;
     if(!(number_polynomial > 0.0) || !(energy_polynomial > 0.0)
-       || !isfinite(number_polynomial) || !isfinite(energy_polynomial)) {
+       || !robust_isfinite(number_polynomial) || !robust_isfinite(energy_polynomial)) {
       return ghl_error_nrpyleakage_blocking;
     }
 
@@ -739,7 +741,8 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
                      : log(energy_polynomial) - a;
     moments->number = exp(log_number_ratio) * vacancy;
     moments->energy = exp(log_energy_ratio) * vacancy;
-    if(!isfinite(moments->number) || !isfinite(moments->energy) || moments->number < 0.0
+    if(!robust_isfinite(moments->number) || !robust_isfinite(moments->energy)
+       || moments->number < 0.0
        || moments->energy < 0.0) {
       return ghl_error_nrpyleakage_blocking;
     }
@@ -755,7 +758,7 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
    */
   moments->number = (moments->number / F2) * vacancy;
   moments->energy = (moments->energy / F3) * vacancy;
-  if(!isfinite(moments->number) || !isfinite(moments->energy)) {
+  if(!robust_isfinite(moments->number) || !robust_isfinite(moments->energy)) {
     return ghl_error_nrpyleakage_blocking;
   }
   return ghl_success;
@@ -800,9 +803,9 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
    */
   const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
   const double fraction_roundoff = 27.0 * gamma_64;
-  if(!isfinite(rho_cgs) || !(rho_cgs > 0.0) || !isfinite(T) || !(T > 0.0)
-     || !isfinite(X_n) || X_n < -fraction_roundoff || X_n > 1.0 + fraction_roundoff
-     || !isfinite(X_p) || X_p < -fraction_roundoff || X_p > 1.0 + fraction_roundoff) {
+  if(!robust_isfinite(rho_cgs) || !(rho_cgs > 0.0) || !robust_isfinite(T) || !(T > 0.0)
+     || !robust_isfinite(X_n) || X_n < -fraction_roundoff || X_n > 1.0 + fraction_roundoff
+     || !robust_isfinite(X_p) || X_p < -fraction_roundoff || X_p > 1.0 + fraction_roundoff) {
     return ghl_error_nrpyleakage_blocking;
   }
 
@@ -819,7 +822,7 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
   const double log_C
         = log(4.0 * M_PI / NRPyLeakage_hc3) + 1.5 * log(2.0 * nucleon_mass_MeV * T);
   const double log_number_density = log(NRPyLeakage_N_A) + log(rho_cgs);
-  if(!isfinite(log_C) || !isfinite(log_number_density)) {
+  if(!robust_isfinite(log_C) || !robust_isfinite(log_number_density)) {
     return ghl_error_nrpyleakage_blocking;
   }
 
@@ -860,7 +863,7 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
   const double X_high = neutron_is_high ? physical_X_n : physical_X_p;
   const double X_low = neutron_is_high ? physical_X_p : physical_X_n;
   double a = high.eta - low.eta;
-  if(!isfinite(a)) {
+  if(!robust_isfinite(a)) {
     return ghl_error_nrpyleakage_blocking;
   }
 
@@ -884,7 +887,7 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
     const double log_midpoint_overlap
           = log_C - log_number_density + nrpyl_log_fd1h_derivative(midpoint.eta);
     const double midpoint_overlap = exp(log_midpoint_overlap);
-    if(!(midpoint_overlap > 0.0) || !isfinite(midpoint_overlap)) {
+    if(!(midpoint_overlap > 0.0) || !robust_isfinite(midpoint_overlap)) {
       return ghl_error_nrpyleakage_blocking;
     }
     a = population_difference / midpoint_overlap;
@@ -899,7 +902,8 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
     // lim_{a->0} C*J/n_b = C*F'_{1/2}(eta)/n_b.
     const double log_overlap
           = log_C - log_number_density + nrpyl_log_fd1h_derivative(high.eta);
-    if(isnan(log_overlap) || log_overlap == INFINITY) {
+    if(robust_isnan(log_overlap)
+       || (!robust_isfinite(log_overlap) && !signbit(log_overlap))) {
       return ghl_error_nrpyleakage_blocking;
     }
     Y_high_to_low = exp(log_overlap);
@@ -918,8 +922,8 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
      */
     const double overlap = population_difference / (-expm1(-a));
     const double reverse_overlap = overlap * exp(-a);
-    if(!(overlap >= 0.0) || !isfinite(overlap) || !(reverse_overlap >= 0.0)
-       || !isfinite(reverse_overlap)) {
+    if(!(overlap >= 0.0) || !robust_isfinite(overlap) || !(reverse_overlap >= 0.0)
+       || !robust_isfinite(reverse_overlap)) {
       return ghl_error_nrpyleakage_blocking;
     }
     Y_high_to_low = overlap;
@@ -939,7 +943,8 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
     *Y_np = Y_low_to_high;
   }
 
-  if(!isfinite(*B_n) || !isfinite(*B_p) || !isfinite(*Y_np) || !isfinite(*Y_pn)
+  if(!robust_isfinite(*B_n) || !robust_isfinite(*B_p)
+     || !robust_isfinite(*Y_np) || !robust_isfinite(*Y_pn)
      || *B_n < 0.0 || *B_n > physical_X_n || *B_p < 0.0 || *B_p > physical_X_p
      || *Y_np < 0.0 || *Y_np > physical_X_n || *Y_pn < 0.0 || *Y_pn > physical_X_p) {
     return ghl_error_nrpyleakage_blocking;

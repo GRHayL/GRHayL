@@ -190,6 +190,10 @@ lists these adapted C files:
   is hand-maintained GRHayL code, not output recovered from the ancestral
   notebooks. All three EOS-dependent routines include it, and the manifest
   tracks it through `#! INCS`.
+- [`NRPyLeakage_rate_helpers.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h)
+  is also hand-maintained. It centralizes corrected bremsstrahlung, diffusion,
+  and heavy-lepton source identities so production and the independent
+  analytic checks use one production entry point.
 
 GRHayL adaptations include different public types and argument shapes,
 tabulated-EOS dispatch, HDF5-disabled returns, propagated Fermi/EOS errors,
@@ -231,10 +235,16 @@ re-run and are not synchronized with these edits:
 - each emission routine computes one heavy-lepton free energy rate, the local
   `Q_free_nux`, and uses it in both the `nux` numerator and its own inverse
   loss time;
-- the order-zero Fermi-Dirac integral uses the stable `log1p` form.
+- the order-zero Fermi-Dirac integral uses the stable `log1p` form;
 - nucleon blocking derives common-mass kinetic degeneracies from `rho`, `T`,
   `X_n`, and `X_p`, then evaluates bounded same-energy transition populations
-  with an algebraic overlap identity.
+  with an algebraic overlap identity; and
+- charged-current emission and ordinary-absorption moments use the common
+  reaction shift `q = muhat - T*(eta_n-eta_p)`, opposite particle-threshold
+  orientations, and algebraic shifted moments from a single spectral parent.
+  The paired construction enforces its Kirchhoff relation while retaining the
+  existing grey representative-energy treatment of final-state lepton
+  blocking.
 
 Treat the current C as authority for these expressions. Regenerating from an
 ancestral notebook would reintroduce the uncorrected forms, so any future
@@ -247,8 +257,11 @@ The blocking helper follows the density-derived free-nucleon construction in
 A. Ardevol-Pulpillo et al., *MNRAS* 485 (2019), 4754--4787,
 [doi:10.1093/mnras/stz613](https://doi.org/10.1093/mnras/stz613), Appendix B,
 Eqs. (69)--(71). Appendix C, Eqs. (100)--(109), supplies the cited precedent
-for a possible future shifted spectral emission/absorption pair; current
-GRHayL does not implement that extension.
+for thresholded shifted reaction pairs and the distinction between ordinary
+and stimulated absorption used in Kirchhoff pairing. Current GRHayL implements
+an algebraic grey reduction of that structure. It does not implement a full
+energy-dependent spectral kernel with finite charged-lepton mass, EOS
+effective masses, or mean-field single-particle energies.
 
 The helper ports scalar `fdm1h` and `ifd1h` rational fits from Scott Maddox's
 [FDINT implementation](https://github.com/scott-maddox/fdint/blob/master/fdint/_fdint.pyx).

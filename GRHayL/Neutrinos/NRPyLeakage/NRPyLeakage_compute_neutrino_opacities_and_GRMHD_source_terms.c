@@ -1,28 +1,13 @@
 #include "ghl_radiation.h"
 #include "ghl_nrpyeos_tabulated.h"
 #include "NRPyLeakage_nucleon_blocking.h"
+#include "NRPyLeakage_rate_helpers.h"
 
 static double EnsureFinite(const double x) {
   if(robust_isfinite(x))
     return x;
   else
     return 1e-15;
-}
-
-static double NRPyLeakage_effective_emission_rate(
-      const double free_rate,
-      const double tau,
-      const double diffusion_factor,
-      const double opacity,
-      const double phase_space) {
-  if(free_rate == 0.0)
-    return 0.0;
-  if(tau == 0.0)
-    return free_rate;
-  if(opacity == 0.0)
-    return 0.0;
-  return free_rate/(tau*tau*diffusion_factor*free_rate/
-                   (opacity*fmax(phase_space, 1.0000000000000001e-15)) + 1.0);
 }
 
 /*
@@ -85,7 +70,9 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
   const double tmp_7 = ((NRPyLeakage_alpha)*(NRPyLeakage_alpha));
   const double tmp_8 = M_PI/NRPyLeakage_hc3;
   const double tmp_10 = 8*NRPyLeakage_N_A*NRPyLeakage_beta*((T)*(T)*(T)*(T)*(T))*rho_cgs*tmp_8*((3.0/8.0)*tmp_7 + 1.0/8.0);
-  const double tmp_12 = NRPyLeakage_enable_brems_nui_anui*EnsureFinite(NRPyLeakage_Brems_C1*NRPyLeakage_Brems_zeta*pow(T, 4.5)*rho_cgs*rho_cgs*(((X_n)*(X_n)) + (28.0/3.0)*X_n*X_p + ((X_p)*(X_p))));
+  const double tmp_12 = NRPyLeakage_enable_brems_nui_anui
+                        * EnsureFinite(nrpyl_bremsstrahlung_number_rate(
+                              T, rho_cgs, X_n, X_p));
   const double tmp_13 = exp(-tau->anue[0]);
   const double tmp_15 = NRPyLeakage_eta_anue_0*tmp_13 + (1 - tmp_13)*(muhat*tmp_0 - tmp_1);
   nrpyl_beta_moments beta_nue_emission = {0.0, 0.0};
@@ -161,8 +148,6 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
                       + EnsureFinite(tmp_42*Y_np*tmp_50*
                                      beta_nue_absorption.number);
   const double tmp_55 = 4*((T)*(T)*(T))*tmp_8;
-  // cgs diffusion-time factor: t_diff = 6*tau^2/(c*kappa_cgs).
-  const double tmp_56 = 6.0/NRPyLeakage_c_light;
   const double tmp_58 = NRPyLeakage_enable_beta_anue*
                         EnsureFinite(Y_np*tmp_10*beta_anue_emission.number);
   const double tmp_60 = tmp_60_fd;
@@ -173,7 +158,7 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
                       + EnsureFinite(tmp_48*tmp_62)
                       + EnsureFinite(tmp_42*Y_pn*tmp_50*
                                      beta_anue_absorption.number);
-  const double tmp_66 = EnsureFinite(NRPyLeakage_Brems_C2*T*tmp_12/NRPyLeakage_Brems_C1);
+  const double tmp_66 = EnsureFinite(nrpyl_bremsstrahlung_energy_rate(T, tmp_12));
   const double tmp_67 = 32*pow(T, 9);
   const double tmp_68 = (1.0/64.0)*((NRPyLeakage_hc3)*(NRPyLeakage_hc3))*tmp_17*tmp_20*(tmp_18*tmp_25*tmp_67 + tmp_19*tmp_2*tmp_22*tmp_24*tmp_67)/(tmp_22*tmp_26);
   const double tmp_69 = (1.0/2.0)*T*(tmp_34 + 2);
@@ -204,25 +189,28 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
   const double Q_free_nux = tmp_66 + EnsureFinite(NRPyLeakage_enable_pair_nux_anux*tmp_68*EnsureFinite(NRPyLeakage_C1pC2_nux_anux*tmp_28/((exp(tmp_21) + 1)*(exp(tmp_21) + 1)))) + EnsureFinite(NRPyLeakage_enable_plasmon_nux_anux*tmp_69*EnsureFinite(tmp_36*tmp_47/((exp(tmp_35) + 1)*(exp(tmp_35) + 1))));
   const double R_free_nue = tmp_11 + tmp_38;
   const double R_free_anue = tmp_38 + tmp_58;
-  const double R_eff_nue = NRPyLeakage_effective_emission_rate(
-      R_free_nue, tau->nue[0], tmp_56, tmp_53, tmp_43*tmp_55);
-  const double R_eff_anue = NRPyLeakage_effective_emission_rate(
-      R_free_anue, tau->anue[0], tmp_56, tmp_65, tmp_55*tmp_60);
-  const double Q_eff_nue = NRPyLeakage_effective_emission_rate(
-      tmp_76, tau->nue[1], tmp_56, tmp_81, tmp_74*tmp_78);
-  const double Q_eff_anue = NRPyLeakage_effective_emission_rate(
-      tmp_82, tau->anue[1], tmp_56, tmp_86, tmp_74*tmp_83);
-  const double Q_eff_nux = NRPyLeakage_effective_emission_rate(
-      Q_free_nux, tau->nux[1], tmp_56, tmp_73, tmp_70*tmp_74);
+  const double R_eff_nue = nrpyl_effective_emission_rate(
+      R_free_nue, tau->nue[0], tmp_53, tmp_43*tmp_55);
+  const double R_eff_anue = nrpyl_effective_emission_rate(
+      R_free_anue, tau->anue[0], tmp_65, tmp_55*tmp_60);
+  const double Q_eff_nue = nrpyl_effective_emission_rate(
+      tmp_76, tau->nue[1], tmp_81, tmp_74*tmp_78);
+  const double Q_eff_anue = nrpyl_effective_emission_rate(
+      tmp_82, tau->anue[1], tmp_86, tmp_74*tmp_83);
+  const double Q_eff_nux = nrpyl_effective_emission_rate(
+      Q_free_nux, tau->nux[1], tmp_73, tmp_70*tmp_74);
   *R_source = NRPyLeakage_amu*NRPyLeakage_units_cgs_to_geom_R*
               (-R_eff_nue + R_eff_anue);
-  *Q_source = NRPyLeakage_units_cgs_to_geom_Q*
-              (-Q_eff_nue - Q_eff_anue - 4*Q_eff_nux);
+  *Q_source = nrpyl_matter_energy_source(Q_eff_nue, Q_eff_anue, Q_eff_nux);
   kappa->nue[0] = NRPyLeakage_units_geom_to_cgs_L*tmp_53;
   kappa->nue[1] = NRPyLeakage_units_geom_to_cgs_L*tmp_81;
   kappa->anue[0] = NRPyLeakage_units_geom_to_cgs_L*tmp_65;
   kappa->anue[1] = NRPyLeakage_units_geom_to_cgs_L*tmp_86;
-  kappa->nux[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_49*tmp_87) + EnsureFinite(tmp_41*tmp_42*tmp_87));
+  kappa->nux[0] = NRPyLeakage_units_geom_to_cgs_L*
+                  (EnsureFinite(tmp_49*tmp_87)
+                   + EnsureFinite(tmp_41*tmp_42*tmp_87));
   kappa->nux[1] = NRPyLeakage_units_geom_to_cgs_L*tmp_73;
+  nrpyl_sanitize_sources(R_source, Q_source);
+  nrpyl_sanitize_opacities(kappa);
   return ghl_success;
 }

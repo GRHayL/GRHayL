@@ -71,7 +71,14 @@ references and ordinary beta moments with high-precision evaluations of the
 same fitted formulas, checks population bounds and the transition
 normalization identity, checks both reaction-threshold orientations, and
 verifies spectral detailed balance for electron-neutrino and
-electron-antineutrino kernels. It also exercises the zero-emission,
+electron-antineutrino kernels. Direct analytic identities independently catch
+loss of the `6/c` diffusion factor, the bremsstrahlung `rho^2` scaling, use of
+the wrong free rate in heavy-lepton suppression, and omission of the four
+heavy-lepton species from the matter-energy source. Exact binary64 patterns
+exercise finite values, infinities, quiet and signaling NaNs, both signed
+zeros, and both signed minimum subnormals. The representation-based checks
+avoid dependence on optimizer finite-value assumptions.
+It also exercises the zero-emission,
 finite-normalized Boltzmann, mixed numerator-only underflow, and
 paired-subnormal limits of strongly blocked channels, preventing `0/0`,
 premature underflow, and overflow. Its
@@ -127,24 +134,19 @@ the installed local `TestData` results.
 
 ### Cost Evidence
 
-An isolated alternating benchmark ran 500 process invocations of the existing
+An earlier alternating benchmark ran 500 whole-process invocations of the
 optically-thin key-`0` executable for the candidate and an `LD_PRELOAD`
-no-blocking stub. Mean wall time was `3.315 s` for the candidate and `3.205 s`
-for the stub, a `3.43%` local leakage cost. Using the user-supplied estimate
-that leakage consumes `35%` of a BNS run gives the back-of-the-envelope total
-runtime impact
+no-blocking stub. Mean wall times were `3.315 s` and `3.205 s`. Each invocation
+also loaded an approximately 879 MB EOS table, so the observed `3.43%`
+difference is not a leakage-kernel measurement. Multiplying it by the
+user-supplied `35%` leakage share does not establish whole-BNS overhead.
 
-$$
-0.35\times3.43\%\simeq1.20\%.
-$$
-
-The owner accepts this estimate as sufficient performance evidence for the
-blocking correction. It supports the requested `1--2%` whole-run budget under
-that runtime attribution. It is not an end-to-end BNS measurement. Initialization,
-call frequency, compiler, hardware, and the share of leakage work spent in the
-three EOS-dependent routines can change the result. The evaluator was selected
-for this cost constraint: it uses rational approximations and algebraic
+No repeated production-kernel benchmark or end-to-end BNS timing is recorded
+in this checkout. Whole-BNS impact therefore remains unmeasured. The evaluator
+was selected to control cost: it uses rational approximations and algebraic
 overlaps, with no quadrature, iterative root solve, or extra EOS/table lookup.
+That design fact supports a low-cost expectation but is not a quantitative
+runtime acceptance result.
 
 ## HDF5 And EOS Setup
 
@@ -177,9 +179,10 @@ The table-free `Unit_Tests/unit_test_nrpyleakage_physics.c` remains compiled
 and runnable without HDF5.
 
 NRPyLeakage implementation sources remain compiled so their early
-`ghl_error_used_disabled_hdf5` paths exist, but exclusion of those tests
-means those paths have no direct no-HDF5 test. `unit_test_code_error` keys `2`
-and `3` cover only invalid Fermi keys and remain available without HDF5.
+`ghl_error_used_disabled_hdf5` paths exist. The table-free physics test calls
+all three public leakage routines in its no-HDF5 build and checks those return
+codes directly. `unit_test_code_error` keys `2` and `3` separately cover the
+invalid Fermi keys.
 
 For wider build context, see `wiki/build-and-ci.md` and `wiki/test-map.md`.
 
@@ -230,9 +233,18 @@ for both `z < 1e-3` and `z > 1e-3` cases and maps those keys to
 
 ### Replay Assertion Strength
 
-Every NRPyLeakage replay test consumes the boolean returned by
-`ghl_pert_test_fail` and calls `ghl_error` on the first mismatch, reporting the
-field, its location, and the trusted, computed, and perturbed values:
+Every NRPyLeakage replay test calls `ghl_error` on the first comparison mismatch,
+reporting the field, its location, and the trusted, computed, and perturbed
+values. The optically thin replay uses `ghl_pert_test_fail`. The luminosity and
+constant-density-sphere replays use `ghl_pert_test_fail_with_tolerance` with a
+local relative floor of `1024*DBL_EPSILON`. Both local policies set the
+absolute tolerance to zero, so very small opacity, optical-depth, and
+luminosity values remain subject to a relative comparison instead of passing
+through the generic `1e-30` absolute floor:
+
+- When both trusted and perturbed fixtures are exactly zero, the local policy
+  requires the computed value to be exactly zero. A focused negative control
+  verifies that even `DBL_MIN` is rejected in this case.
 
 - Optically thin replay fails on time, `Y_e`, `eps`, or `T` mismatch, reporting
   the evolution time.
@@ -253,18 +265,14 @@ The luminosity test's explicit Fermi-Dirac assertion rejects a nonfinite
 computed integral or a nonfinite reference in addition to an out-of-tolerance
 difference.
 
-Remaining bounded gaps:
-
-- Luminosity explicitly checks only high-branch Fermi keys `0`, `1`, `2` and
-  low-branch keys `0`, `1`; valid keys `3` through `5` are indirect only.
-- The constant-density-sphere stencils remain flat, so unequal-direction face
-  metrics are still untested even though its neighbor pairs now match the
-  `NRPyLeakage_optical_depths_PathOfLeastResistance` minus-then-plus signature.
-- Combined source-term opacity outputs are computed but never compared in the
-  optically thin test.
-- No Neutrinos test deliberately exercises EOS-error propagation,
-  disabled-HDF5 returns, non-finite final luminosity/source outputs, or the
-  `EnsureFinite`/`robust_isfinite` fallback paths.
+The table-free physics test checks valid Fermi keys `0` through `5` on both
+sides of the fit branch, a hand-computed stencil with distinct neighbors and
+unequal face metrics, and equality of standalone and combined opacity outputs.
+It also injects EOS success and failure callbacks, checks the opacity floor and
+neutral rate/source fallback for every public output, verifies public
+finite-depth heavy-lepton suppression against manufactured regression values,
+checks the effective-rate endpoints and bremsstrahlung energy conversion, and
+verifies all three disabled-HDF5 returns.
 
 ## CI Routes
 

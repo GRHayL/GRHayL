@@ -186,15 +186,23 @@ deciding the effect on a full leakage evolution.
 
 - The evaluator's algebra, endpoint behavior, spectral-parent Kirchhoff
   pairing, and reported numerical comparisons pass their stated checks.
-- The measured `3.43%` leakage-local cost maps to about `1.20%` of a BNS run
-  under the user-supplied `35%` leakage share and satisfies the accepted cost
-  budget.
+- Whole-BNS overhead is unmeasured. The earlier `3.43%` whole-process timing
+  includes loading an approximately 879 MB EOS table and cannot be treated as
+  leakage-local cost or scaled by the user-supplied `35%` leakage share. The
+  production evaluator remains algebraic and adds no quadrature, root solve,
+  or EOS lookup.
 - The owner accepts the measured dilute rates, thin trajectory, and dense DD2
   comparison set for this approximate leakage model. Regenerated replay results
   are the authorized golden baseline.
 - Dense DD2 rates and opacities show that the common-bare-mass model does not
   reproduce mean-field physics. This limits microscopic accuracy claims but
   does not block the accepted leakage approximation.
+- Scattering uses only the EOS free-neutron and free-proton fractions. Bound
+  nucleons and coherent nuclear scattering are outside the accepted model.
+- Replacing the common-bare-mass inversion or expanding the scattering targets
+  requires an owner decision and a richer EOS/API contract. The current EOS
+  boundary does not expose the effective masses, mean-field shifts, or bound
+  nuclear composition needed to implement either change unambiguously.
 
 An optional future accuracy change may expose EOS-consistent effective masses
 or mean-field shifts at the leakage boundary, or define a separately justified

@@ -1,6 +1,10 @@
 #ifndef NRPYLEAKAGE_H_
 #define NRPYLEAKAGE_H_
 
+#include <float.h>
+#include <math.h>
+#include <stdint.h>
+#include <string.h>
 
 // "Primary" parameters
 #define NRPyLeakage_enable_beta_nue (1)
@@ -114,12 +118,49 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
       const ghl_neutrino_opacities *restrict kappa_i_j_k,
       ghl_neutrino_optical_depths *restrict tau_i_j_k );
 
-static inline int robust_isnan(double x) {
+/**
+ * Classify a double as NaN without floating-point comparison semantics.
+ *
+ * Fast-math permits compilers to assume that floating-point values are never
+ * NaNs. On IEEE binary64 targets, inspect the object representation instead;
+ * memcpy preserves strict aliasing and optimizes to an integer move. Other
+ * floating-point representations retain the standard C classifier.
+ */
+static inline int robust_isnan(const double x) {
+#if FLT_RADIX == 2 && DBL_MANT_DIG == 53 && DBL_MIN_EXP == -1021                  \
+      && DBL_MAX_EXP == 1024 && defined(UINT64_MAX)                              \
+      && UINT64_MAX == UINT64_C(0xffffffffffffffff)
+  typedef char ghl_nrpyleakage_binary64_size_check[
+        sizeof(double) == sizeof(uint64_t) ? 1 : -1];
+  (void)sizeof(ghl_nrpyleakage_binary64_size_check);
+  uint64_t bits;
+  memcpy(&bits, &x, sizeof(bits));
+  bits &= UINT64_C(0x7fffffffffffffff);
+  return bits > UINT64_C(0x7ff0000000000000);
+#else
   return isnan(x) != 0;
+#endif
 }
 
-static inline int robust_isfinite(double x) {
+/**
+ * Classify a double as finite without floating-point comparison semantics.
+ *
+ * @see robust_isnan() for the fast-math and representation contract.
+ */
+static inline int robust_isfinite(const double x) {
+#if FLT_RADIX == 2 && DBL_MANT_DIG == 53 && DBL_MIN_EXP == -1021                  \
+      && DBL_MAX_EXP == 1024 && defined(UINT64_MAX)                              \
+      && UINT64_MAX == UINT64_C(0xffffffffffffffff)
+  typedef char ghl_nrpyleakage_binary64_size_check[
+        sizeof(double) == sizeof(uint64_t) ? 1 : -1];
+  (void)sizeof(ghl_nrpyleakage_binary64_size_check);
+  uint64_t bits;
+  memcpy(&bits, &x, sizeof(bits));
+  bits &= UINT64_C(0x7fffffffffffffff);
+  return bits < UINT64_C(0x7ff0000000000000);
+#else
   return isfinite(x) != 0;
+#endif
 }
 
 // Helper macro for Fermi-Dirac integrals

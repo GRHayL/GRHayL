@@ -3,6 +3,7 @@
 // clang-format off: the private header requires GRHayL's public type setup.
 #include "ghl_unit_tests.h"
 #include "../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h"
+#include "../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h"
 // clang-format on
 
 /**
@@ -28,11 +29,111 @@ static void check_close(
       const double computed,
       const double expected,
       const double tolerance) {
-  if(!isfinite(computed) || fabs(computed - expected) > tolerance) {
+  if(!robust_isfinite(computed) || fabs(computed - expected) > tolerance) {
     ghl_error(
           "%s mismatch: expected %.17e, got %.17e, tolerance %.17e\n", quantity,
           expected, computed, tolerance);
   }
+}
+
+/**
+ * Construct a double from its object representation.
+ *
+ * @param[in] bits IEEE binary64 bit pattern.
+ * @return Double with the requested representation.
+ */
+static double double_from_bits(const uint64_t bits) {
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+/** Check finite and NaN classification from exact IEEE binary64 patterns. */
+static void check_robust_classifiers(void) {
+  static const struct {
+    const char *name;
+    uint64_t bits;
+    int finite;
+    int nan;
+  } cases[] = {
+    { "positive finite", UINT64_C(0x3ff0000000000000), 1, 0 },
+    { "maximum finite", UINT64_C(0x7fefffffffffffff), 1, 0 },
+    { "positive zero", UINT64_C(0x0000000000000000), 1, 0 },
+    { "negative zero", UINT64_C(0x8000000000000000), 1, 0 },
+    { "positive subnormal", UINT64_C(0x0000000000000001), 1, 0 },
+    { "negative subnormal", UINT64_C(0x8000000000000001), 1, 0 },
+    { "positive infinity", UINT64_C(0x7ff0000000000000), 0, 0 },
+    { "negative infinity", UINT64_C(0xfff0000000000000), 0, 0 },
+    { "quiet NaN", UINT64_C(0x7ff8000000000001), 0, 1 },
+    { "signaling NaN", UINT64_C(0x7ff0000000000001), 0, 1 },
+  };
+
+  for(size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    const double value = double_from_bits(cases[i].bits);
+    if(robust_isfinite(value) != cases[i].finite || robust_isnan(value) != cases[i].nan) {
+      ghl_error("Robust classifier failed for %s\n", cases[i].name);
+    }
+  }
+}
+
+/**
+ * Check analytic identities behind corrected production emission rates.
+ *
+ * These manufactured values independently expose the diffusion coefficient,
+ * bremsstrahlung density power, and four-species heavy-lepton convention.
+ */
+static void check_emission_rate_identities(void) {
+  check_close(
+        "zero free-rate endpoint",
+        nrpyl_effective_emission_rate(0.0, 0.0, 0.0, 0.0), 0.0, 0.0);
+  check_close(
+        "transparent endpoint",
+        nrpyl_effective_emission_rate(2.0, 0.0, 0.0, 0.0), 2.0, 0.0);
+  check_close(
+        "zero-opacity endpoint",
+        nrpyl_effective_emission_rate(2.0, 1.0, 0.0, 1.0), 0.0, 0.0);
+
+  const double free_rate = NRPyLeakage_c_light / 6.0;
+  const double effective_rate
+        = nrpyl_effective_emission_rate(free_rate, 2.0, 2.0, 1.0);
+  check_close(
+        "diffusion suppression factor", effective_rate, free_rate / 3.0,
+        16.0 * DBL_EPSILON * free_rate);
+
+  const double Q_free_nux = 11.0;
+  const double Q_eff_nux
+        = nrpyl_effective_emission_rate(Q_free_nux, 3.0, 5.0, 7.0);
+  const double expected_Q_eff_nux
+        = Q_free_nux
+          / (1.0 + 9.0 * (6.0 / NRPyLeakage_c_light) * Q_free_nux / 35.0);
+  check_close(
+        "heavy-lepton self-rate suppression", Q_eff_nux, expected_Q_eff_nux,
+        16.0 * DBL_EPSILON * Q_free_nux);
+
+  const double brems_rate
+        = nrpyl_bremsstrahlung_number_rate(1.0, 2.0, 1.0, 0.0);
+  const double doubled_density_rate
+        = nrpyl_bremsstrahlung_number_rate(1.0, 4.0, 1.0, 0.0);
+  const double expected_brems_rate
+        = 4.0 * NRPyLeakage_Brems_C1 * NRPyLeakage_Brems_zeta;
+  check_close(
+        "bremsstrahlung analytic rate", brems_rate, expected_brems_rate,
+        16.0 * DBL_EPSILON * expected_brems_rate);
+  check_close(
+        "bremsstrahlung density scaling", doubled_density_rate, 4.0 * brems_rate,
+        16.0 * DBL_EPSILON * doubled_density_rate);
+  const double brems_energy = nrpyl_bremsstrahlung_energy_rate(3.0, 7.0);
+  const double expected_brems_energy
+        = NRPyLeakage_Brems_C2 * 3.0 * 7.0 / NRPyLeakage_Brems_C1;
+  check_close(
+        "bremsstrahlung energy conversion", brems_energy,
+        expected_brems_energy, 16.0 * DBL_EPSILON * expected_brems_energy);
+
+  const double source = nrpyl_matter_energy_source(2.0, 3.0, 5.0);
+  const double expected_source = -25.0 * NRPyLeakage_units_cgs_to_geom_Q;
+  check_close(
+        "four-species heavy-lepton source", source, expected_source,
+        16.0 * DBL_EPSILON * fabs(expected_source));
 }
 
 /** Check the stable order-zero Fermi expression at numerical edge cases. */
@@ -55,6 +156,237 @@ static void check_fermi_dirac_zero_order(void) {
   }
 }
 
+/** Check every supported Fermi key on both sides of the fit branch. */
+static void check_all_fermi_dirac_keys(void) {
+  static const double z[] = { 1.0e-2, 1.0e-4 };
+  static const double expected[2][6] = {
+    { 6.98159680507862257e-1, 8.29406243971260060e-1,
+      1.81959808582090532e0, 5.73653915904569534e0,
+      2.35590999834500465e1, 1.19438368623386765e2 },
+    { 6.93197181809945384e-1, 8.22505367332569515e-1,
+      1.80326583833903631e0, 5.68289726190304290e0,
+      2.33326899268987837e1, 1.18273220285188671e2 },
+  };
+
+  for(int branch = 0; branch < 2; branch++) {
+    for(int key = 0; key < 6; key++) {
+      double computed;
+      ghl_abort_if_error(
+            NRPyLeakage_Fermi_Dirac_integrals(key, z[branch], &computed));
+      check_close(
+            "Fermi integral branch/key", computed, expected[branch][key],
+            16.0*DBL_EPSILON*fabs(expected[branch][key]));
+    }
+  }
+}
+
+/** Check every public leakage result's deterministic nonfinite fallback. */
+static void check_output_fallbacks(void) {
+  ghl_neutrino_opacities kappa = {
+    .nue = { NAN, INFINITY },
+    .anue = { -INFINITY, NAN },
+    .nux = { INFINITY, -INFINITY },
+  };
+  ghl_neutrino_luminosities lum = {
+    .nue = NAN,
+    .anue = INFINITY,
+    .nux = -INFINITY,
+  };
+  double R_source = NAN;
+  double Q_source = -INFINITY;
+
+  nrpyl_sanitize_opacities(&kappa);
+  nrpyl_sanitize_luminosities(&lum);
+  nrpyl_sanitize_sources(&R_source, &Q_source);
+
+  const double opacity_outputs[] = {
+    kappa.nue[0], kappa.nue[1], kappa.anue[0], kappa.anue[1],
+    kappa.nux[0], kappa.nux[1],
+  };
+  for(size_t i = 0; i < sizeof(opacity_outputs)/sizeof(opacity_outputs[0]); i++) {
+    if(opacity_outputs[i] != 1.0e-15)
+      ghl_error("Opacity did not use the nonfinite floor\n");
+  }
+  const double rate_outputs[] = {
+    lum.nue, lum.anue, lum.nux, R_source, Q_source,
+  };
+  for(size_t i = 0; i < sizeof(rate_outputs)/sizeof(rate_outputs[0]); i++) {
+    if(rate_outputs[i] != 0.0)
+      ghl_error("Emission or source output did not use the neutral fallback\n");
+  }
+}
+
+#ifndef GHL_DISABLE_HDF5
+static ghl_error_codes_t mock_eos_success(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict muhat,
+      double *restrict mu_e,
+      double *restrict mu_p,
+      double *restrict mu_n,
+      double *restrict X_n,
+      double *restrict X_p) {
+  (void)eos;
+  (void)rho;
+  (void)Y_e;
+  (void)T;
+  *muhat = 5.0;
+  *mu_e = 2.0;
+  *mu_p = 1.0;
+  *mu_n = 6.0;
+  *X_n = 0.7;
+  *X_p = 0.2;
+  return ghl_success;
+}
+
+static ghl_error_codes_t mock_eos_failure(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double T,
+      double *restrict muhat,
+      double *restrict mu_e,
+      double *restrict mu_p,
+      double *restrict mu_n,
+      double *restrict X_n,
+      double *restrict X_p) {
+  (void)eos;
+  (void)rho;
+  (void)Y_e;
+  (void)T;
+  (void)muhat;
+  (void)mu_e;
+  (void)mu_p;
+  (void)mu_n;
+  (void)X_n;
+  (void)X_p;
+  return ghl_error_table_max_rho;
+}
+#endif
+
+/** Check public leakage error, consistency, and finite-output contracts. */
+static void check_public_api_contracts(void) {
+  const ghl_eos_parameters eos = { 0 };
+  const ghl_neutrino_optical_depths tau = { 0 };
+  ghl_neutrino_opacities standalone = { 0 }, combined = { 0 };
+  ghl_neutrino_luminosities lum = { 0 };
+  double R_source = 0.0, Q_source = 0.0;
+
+#ifdef GHL_DISABLE_HDF5
+  if(NRPyLeakage_compute_neutrino_opacities(
+           &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone)
+           != ghl_error_used_disabled_hdf5
+     || NRPyLeakage_compute_neutrino_luminosities(
+              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
+              3.0, 1.0, &tau, &lum)
+              != ghl_error_used_disabled_hdf5
+     || NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+              &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source)
+              != ghl_error_used_disabled_hdf5) {
+    ghl_error("Leakage API did not reject a disabled-HDF5 build\n");
+  }
+#else
+  ghl_error_codes_t (*saved_eos_callback)(
+        const ghl_eos_parameters *restrict, double, double, double,
+        double *restrict, double *restrict, double *restrict, double *restrict,
+        double *restrict, double *restrict)
+        = ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
+
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_failure;
+  if(NRPyLeakage_compute_neutrino_opacities(
+           &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone)
+           != ghl_error_table_max_rho
+     || NRPyLeakage_compute_neutrino_luminosities(
+              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
+              3.0, 1.0, &tau, &lum)
+              != ghl_error_table_max_rho
+     || NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+              &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source)
+              != ghl_error_table_max_rho) {
+    ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_eos_callback;
+    ghl_error("Leakage API did not propagate its EOS error\n");
+  }
+
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_success;
+  ghl_error_codes_t error = NRPyLeakage_compute_neutrino_opacities(
+        &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone);
+  if(error != ghl_success)
+    ghl_error("Standalone opacity mock returned error %d\n", error);
+  error = NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+        &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source);
+  if(error != ghl_success)
+    ghl_error("Combined leakage mock returned error %d\n", error);
+  const double standalone_values[6] = {
+    standalone.nue[0], standalone.nue[1], standalone.anue[0],
+    standalone.anue[1], standalone.nux[0], standalone.nux[1],
+  };
+  const double combined_values[6] = {
+    combined.nue[0], combined.nue[1], combined.anue[0],
+    combined.anue[1], combined.nux[0], combined.nux[1],
+  };
+  for(int i = 0; i < 6; i++) {
+    check_close(
+          "combined opacity", combined_values[i], standalone_values[i],
+          128.0*DBL_EPSILON*fmax(DBL_MIN, fabs(standalone_values[i])));
+  }
+
+  const ghl_neutrino_optical_depths thick_tau = {
+    .nue = { 2.0, 3.0 },
+    .anue = { 5.0, 7.0 },
+    .nux = { 11.0, 13.0 },
+  };
+  error = NRPyLeakage_compute_neutrino_luminosities(
+        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
+        3.0, 1.0, &thick_tau, &lum);
+  if(error != ghl_success)
+    ghl_error("Finite-depth luminosity mock returned error %d\n", error);
+  check_close(
+        "public heavy-lepton luminosity suppression", lum.nux,
+        7.42012378328398818e-15, 1.0e-12*7.42012378328398818e-15);
+  error = NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+        &eos, 1.0e-5, 0.1, 3.0, &thick_tau, &combined,
+        &R_source, &Q_source);
+  if(error != ghl_success)
+    ghl_error("Finite-depth combined leakage mock returned error %d\n", error);
+  check_close(
+        "public heavy-lepton source suppression", Q_source,
+        -8.44271649383971011e-13, 1.0e-12*8.44271649383971011e-13);
+
+  error = NRPyLeakage_compute_neutrino_luminosities(
+        &eos, NAN, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
+        3.0, 1.0, &tau, &lum);
+  if(error != ghl_success)
+    ghl_error("Nonfinite luminosity mock returned error %d\n", error);
+  ghl_neutrino_optical_depths nonfinite_tau = tau;
+  nonfinite_tau.nue[1] = NAN;
+  nonfinite_tau.anue[1] = NAN;
+  nonfinite_tau.nux[1] = NAN;
+  error = NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+        &eos, 1.0e-5, 0.1, 3.0, &nonfinite_tau, &combined, &R_source, &Q_source);
+  if(error != ghl_success)
+    ghl_error("Nonfinite combined leakage mock returned error %d\n", error);
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_eos_callback;
+
+  const double finite_outputs[] = {
+    standalone.nue[0], standalone.nue[1], standalone.anue[0],
+    standalone.anue[1], standalone.nux[0], standalone.nux[1],
+    lum.nue, lum.anue, lum.nux, R_source, Q_source,
+    combined.nue[0], combined.nue[1], combined.anue[0],
+    combined.anue[1], combined.nux[0], combined.nux[1],
+  };
+  for(size_t i = 0; i < sizeof(finite_outputs)/sizeof(finite_outputs[0]); i++) {
+    if(!robust_isfinite(finite_outputs[i]))
+      ghl_error("Leakage API exposed a nonfinite final output\n");
+  }
+  if(lum.nue != 0.0 || lum.anue != 0.0 || lum.nux != 0.0
+     || Q_source != 0.0) {
+    ghl_error("Leakage API did not apply its nonfinite-output fallback\n");
+  }
+#endif
+}
+
 /** Check roundoff normalization and rejection of an unphysical fraction. */
 static void check_mass_fraction_validation(void) {
   double B_n, B_p, Y_np, Y_pn, eta_n_minus_eta_p;
@@ -62,8 +394,8 @@ static void check_mass_fraction_validation(void) {
         1.0e14, 1.0, -8.237492054256009e-17, 0.1, &B_n, &B_p, &Y_np, &Y_pn,
         &eta_n_minus_eta_p);
   ghl_abort_if_error(error);
-  if(B_n != 0.0 || Y_np != 0.0 || Y_pn != 0.1 || !isfinite(B_p)
-     || !isfinite(eta_n_minus_eta_p)) {
+  if(B_n != 0.0 || Y_np != 0.0 || Y_pn != 0.1 || !robust_isfinite(B_p)
+     || !robust_isfinite(eta_n_minus_eta_p)) {
     ghl_error("Roundoff-sized nucleon fraction did not reach its physical endpoint\n");
   }
 
@@ -331,7 +663,7 @@ static void check_strongly_blocked_channel_limit(void) {
         nrpyl_compute_beta_absorption_moments(T, mu_e, eta_anue, -1, q, &moments[3]));
 
   for(int i = 0; i < 4; i++) {
-    if(!isfinite(moments[i].number) || !isfinite(moments[i].energy)
+    if(!robust_isfinite(moments[i].number) || !robust_isfinite(moments[i].energy)
        || moments[i].number < 0.0 || moments[i].energy < 0.0) {
       ghl_error("Strongly blocked channel produced invalid moments\n");
     }
@@ -388,7 +720,8 @@ static void check_strongly_blocked_channel_limit(void) {
         trace_neutron_T, trace_neutron_mu_e, trace_neutron_eta_anue, -1, trace_neutron_q,
         &subnormal_ratio));
   if(!(subnormal_ratio.number > 0.0) || !(subnormal_ratio.energy > 0.0)
-     || !isfinite(subnormal_ratio.number) || !isfinite(subnormal_ratio.energy)) {
+     || !robust_isfinite(subnormal_ratio.number)
+     || !robust_isfinite(subnormal_ratio.energy)) {
     ghl_error("Paired subnormal beta moments did not produce a finite ratio\n");
   }
 }
@@ -399,7 +732,12 @@ static void check_strongly_blocked_channel_limit(void) {
  * @return Zero after every check passes.
  */
 int main(void) {
+  check_robust_classifiers();
+  check_emission_rate_identities();
   check_fermi_dirac_zero_order();
+  check_all_fermi_dirac_keys();
+  check_output_fallbacks();
+  check_public_api_contracts();
   check_mass_fraction_validation();
   check_asymmetric_optical_depth_stencil();
   check_blocking_state(

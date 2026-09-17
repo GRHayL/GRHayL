@@ -1,9 +1,10 @@
 #include "ghl_radiation.h"
 #include "ghl_nrpyeos_tabulated.h"
 #include "NRPyLeakage_nucleon_blocking.h"
+#include "NRPyLeakage_rate_helpers.h"
 
 static double EnsureFinite(const double x) {
-  if(isfinite(x))
+  if(robust_isfinite(x))
     return x;
   else
     return 1e-15;
@@ -119,11 +120,7 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
   kappa->nux[0] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_17*tmp_28) + EnsureFinite(tmp_10*tmp_28*tmp_6));
   kappa->nux[1] = NRPyLeakage_units_geom_to_cgs_L*(EnsureFinite(tmp_17*tmp_30) + EnsureFinite(tmp_10*tmp_30*tmp_6));
 
-  // Step 5: Make sure results are finite; if not reset to small value
-  for(int i=0;i<2;i++) {
-    if( !isfinite(kappa->nue [i]) ) kappa->nue [i] = 1e-15;
-    if( !isfinite(kappa->anue[i]) ) kappa->anue[i] = 1e-15;
-    if( !isfinite(kappa->nux [i]) ) kappa->nux [i] = 1e-15;
-  }
+  // Step 5: Make sure public results are finite; otherwise use the established floor.
+  nrpyl_sanitize_opacities(kappa);
   return ghl_success;
 }

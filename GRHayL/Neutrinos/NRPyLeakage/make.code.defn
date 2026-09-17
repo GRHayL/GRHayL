@@ -4,4 +4,4 @@ SRCS = NRPyLeakage_compute_neutrino_luminosities.c \
        NRPyLeakage_Fermi_Dirac_integrals.c \
        NRPyLeakage_optical_depths_PathOfLeastResistance.c
 
-#! INCS = NRPyLeakage_nucleon_blocking.h
+#! INCS = NRPyLeakage_nucleon_blocking.h NRPyLeakage_rate_helpers.h

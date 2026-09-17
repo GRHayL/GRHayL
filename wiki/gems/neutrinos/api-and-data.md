@@ -147,7 +147,10 @@ constants live in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
 The same header defines `robust_isnan`, `robust_isfinite`, and
 `NRPYLEAKAGE_FD_OR_RETURN`. That macro calls
 `NRPyLeakage_Fermi_Dirac_integrals` and returns the error immediately when the
-helper fails.
+helper fails. On IEEE binary64 systems the robust classifiers use alias-safe
+`memcpy` plus integer exponent/fraction checks, so finite-math compiler
+assumptions cannot remove leakage guards. Compile-time representation checks
+retain the C99 predicates as the portable fallback.
 
 ## Fermi-Dirac Error Behavior
 
@@ -222,7 +225,8 @@ without table arguments.
 
 No-HDF5 builds still compile the guarded NRPyLeakage implementation files; they
 exclude only the three HDF5-dependent unit tests. Current error tests cover
-invalid Fermi keys, not the three leakage routines' disabled-HDF5 return paths.
+invalid Fermi keys. The table-free physics test directly checks the three
+leakage routines' disabled-HDF5 return paths.
 
 For extraction, see [Implementation Flow](implementation-flow.md) for the
 smallest file set per entry point and [Generator Provenance](generator-provenance.md)

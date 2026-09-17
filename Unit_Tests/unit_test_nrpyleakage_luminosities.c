@@ -1,4 +1,18 @@
+#include <float.h>
+
 #include "ghl_unit_tests.h"
+
+static inline bool luminosity_pert_test_fail(
+      const double trusted,
+      const double computed,
+      const double perturbed) {
+  if(trusted == 0.0 && perturbed == 0.0)
+    return computed != 0.0;
+  const double rel_tol = 1024.0*DBL_EPSILON;
+  const double abs_tol = 0.0;
+  return ghl_pert_test_fail_with_tolerance(
+      trusted, computed, perturbed, rel_tol, abs_tol);
+}
 
 static inline void check_fermi_dirac_integral(
     const int k,
@@ -134,6 +148,10 @@ generate_test_data(const ghl_eos_parameters *restrict eos) {
 
 void
 run_unit_test(const ghl_eos_parameters *restrict eos) {
+  if(!luminosity_pert_test_fail(0.0, DBL_MIN, 0.0)
+     || luminosity_pert_test_fail(0.0, 0.0, 0.0)) {
+    ghl_error("Luminosity comparison did not enforce exact-zero references\n");
+  }
   test_fermi_dirac_integrals();
 
   int n1, n2;
@@ -200,17 +218,17 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
       ghl_error("Failed to read luminosities from perturbed data file\n");
     }
 
-    if( ghl_pert_test_fail(lum_trusted.nue, lum.nue, lum_pert.nue) ) {
+    if( luminosity_pert_test_fail(lum_trusted.nue, lum.nue, lum_pert.nue) ) {
       fclose(fp_unpert); fclose(fp_pert);
       ghl_error("Validation failed for lum.nue at row %d: trusted %.17e, computed %.17e, perturbed %.17e\n",
                 n, lum_trusted.nue, lum.nue, lum_pert.nue);
     }
-    if( ghl_pert_test_fail(lum_trusted.anue, lum.anue, lum_pert.anue) ) {
+    if( luminosity_pert_test_fail(lum_trusted.anue, lum.anue, lum_pert.anue) ) {
       fclose(fp_unpert); fclose(fp_pert);
       ghl_error("Validation failed for lum.anue at row %d: trusted %.17e, computed %.17e, perturbed %.17e\n",
                 n, lum_trusted.anue, lum.anue, lum_pert.anue);
     }
-    if( ghl_pert_test_fail(lum_trusted.nux, lum.nux, lum_pert.nux) ) {
+    if( luminosity_pert_test_fail(lum_trusted.nux, lum.nux, lum_pert.nux) ) {
       fclose(fp_unpert); fclose(fp_pert);
       ghl_error("Validation failed for lum.nux at row %d: trusted %.17e, computed %.17e, perturbed %.17e\n",
                 n, lum_trusted.nux, lum.nux, lum_pert.nux);
