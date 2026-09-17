@@ -321,10 +321,16 @@ static void check_blocking_helper_contracts(void) {
 
 /** Check every public leakage result's deterministic nonfinite fallback. */
 static void check_output_fallbacks(void) {
-  if(nrpyl_finite_cgs_or_floor(2.0) != 2.0
-     || nrpyl_finite_cgs_or_floor(NAN) != nrpyl_cgs_numerical_floor
-     || nrpyl_finite_cgs_or_floor(INFINITY) != nrpyl_cgs_numerical_floor) {
-    ghl_error("Generated cgs intermediate did not use its finite fallback\n");
+  volatile double inputs[] = { 2.0, NAN, INFINITY };
+  const double expected[] = {
+    2.0,
+    nrpyl_cgs_numerical_floor,
+    nrpyl_cgs_numerical_floor,
+  };
+  for(size_t i = 0; i < sizeof(inputs) / sizeof(inputs[0]); i++) {
+    if(nrpyl_finite_cgs_or_floor(inputs[i]) != expected[i]) {
+      ghl_error("Generated cgs intermediate did not use its finite fallback\n");
+    }
   }
 
   ghl_neutrino_opacities kappa = {
