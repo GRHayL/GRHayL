@@ -64,6 +64,22 @@ ghl_error_codes_t NRPyLeakage_Fermi_Dirac_integrals(
       const double z,
       double *restrict Fermi_Dirac_integral);
 
+/**
+ * Compute neutrino opacities.
+ *
+ * `rho` is in GRHayL geometric density units, `T` and EOS chemical potentials
+ * are in MeV, and `tau` is dimensionless. `kappa` is returned in inverse
+ * GRHayL length units. `ghl_success` means no public output required final
+ * sanitization; internal expression guards can still apply.
+ * `ghl_error_used_disabled_hdf5`, EOS errors, Fermi-integral errors,
+ * and `ghl_error_nrpyleakage_blocking` return before modifying `kappa`.
+ * At an exactly-one-zero normalized free-nucleon endpoint, the routine uses
+ * the analytic zero limit of this closure's charged-current products while
+ * retaining the occupied-species scattering and other channels.
+ * `ghl_error_nrpyleakage_nonfinite_output` replaces each nonfinite
+ * opacity moment with the finite opacity floor; finite sibling moments remain
+ * unchanged. Fallback values are not certified physically valid.
+ */
 ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -72,6 +88,23 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_opacities *restrict kappa );
 
+/**
+ * Compute neutrino luminosities.
+ *
+ * Density and temperature use the units described for
+ * NRPyLeakage_compute_neutrino_opacities(). `tau` is dimensionless. Each
+ * returned luminosity is a geometrized energy-emission rate multiplied by
+ * `W*alpha^2*sqrt(det(gamma_ij))`. `ghl_success` means no public output
+ * required final sanitization; internal expression guards can still apply.
+ * `ghl_error_used_disabled_hdf5`, EOS errors,
+ * Fermi-integral errors, and `ghl_error_nrpyleakage_blocking` return before
+ * modifying `lum`. At an exactly-one-zero normalized free-nucleon endpoint,
+ * the routine uses the analytic zero limit of this closure's charged-current
+ * products while retaining the other emission channels.
+ * `ghl_error_nrpyleakage_nonfinite_output` sets each
+ * nonfinite luminosity to zero; finite sibling luminosities remain unchanged.
+ * Fallback values are not certified physically valid.
+ */
 ghl_error_codes_t NRPyLeakage_compute_neutrino_luminosities(
       const ghl_eos_parameters *restrict eos,
       const double alpha,
@@ -88,6 +121,23 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_luminosities(
       const ghl_neutrino_optical_depths *restrict tau,
       ghl_neutrino_luminosities *restrict lum );
 
+/**
+ * Compute neutrino opacities and GRMHD source terms.
+ *
+ * Density, temperature, opacity, and optical-depth units match
+ * NRPyLeakage_compute_neutrino_opacities(). `R_source` and `Q_source` are
+ * geometrized matter source terms. `ghl_success` means no public output
+ * required final sanitization; internal expression guards can still apply.
+ * `ghl_error_used_disabled_hdf5`, EOS errors,
+ * Fermi-integral errors, and `ghl_error_nrpyleakage_blocking` return before
+ * modifying any output. At an exactly-one-zero normalized free-nucleon
+ * endpoint, the routine uses the analytic zero limit of this closure's
+ * charged-current products while retaining occupied-species scattering and
+ * the other emission channels. `ghl_error_nrpyleakage_nonfinite_output`
+ * replaces each nonfinite opacity with the finite opacity floor and each
+ * nonfinite source with zero; finite sibling outputs remain unchanged.
+ * Fallback values are not certified physically valid.
+ */
 ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       const ghl_eos_parameters *restrict eos,
       const double rho_b,
@@ -98,6 +148,14 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
       double *restrict R_source,
       double *restrict Q_source );
 
+/**
+ * Update one optical-depth cell from six ordered neighbors.
+ *
+ * `dxx` stores `{dx, dy, dz}`. Each metric stencil stores
+ * `{minus-neighbor, center, plus-neighbor}`. Neighbor parameters are ordered
+ * minus, then plus, for the x, y, and z axes; each opacity must remain paired
+ * with the optical depth from the same neighbor.
+ */
 void NRPyLeakage_optical_depths_PathOfLeastResistance(
       const double *restrict dxx,
       const double *restrict stencil_gxx,
@@ -126,7 +184,9 @@ void NRPyLeakage_optical_depths_PathOfLeastResistance(
  * memcpy preserves strict aliasing and optimizes to an integer move. Other
  * floating-point representations retain the standard C classifier.
  */
-#if defined(UINT64_MAX) && defined(UINT64_C)
+/* Test-only selector for direct coverage of the portable fallback. */
+#if !defined(GHL_NRPYLEAKAGE_FORCE_PORTABLE_CLASSIFIERS)                    \
+      && defined(UINT64_MAX) && defined(UINT64_C)
 # if UINT64_MAX == UINT64_C(0xffffffffffffffff)
 #  define GHL_NRPYLEAKAGE_HAVE_UINT64_BITS 1
 # endif

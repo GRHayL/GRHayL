@@ -149,9 +149,14 @@ The same header defines `robust_isnan`, `robust_isfinite`, and
 `NRPYLEAKAGE_FD_OR_RETURN`. That macro calls
 `NRPyLeakage_Fermi_Dirac_integrals` and returns the error immediately when the
 helper fails. On IEEE binary64 systems the robust classifiers use alias-safe
-`memcpy` plus integer exponent/fraction checks, so finite-math compiler
-assumptions cannot remove leakage guards. Compile-time representation checks
-retain the C99 predicates as the portable fallback.
+`memcpy` plus integer exponent/fraction checks. This does not make preceding
+floating-point arithmetic safe under finite-only or other unsafe math modes.
+Supported `configure` builds reject `-ffast-math`, `-Ofast`,
+`-ffinite-math-only`, `-funsafe-math-optimizations`, `-fassociative-math`,
+`-freciprocal-math`, `-fno-signed-zeros`, and `-fno-trapping-math`, then probe
+the final flags for fast/finite-only predefined macros. Direct builds must
+enforce the same restriction. Compile-time representation checks retain the
+C99 predicates as the portable fallback.
 
 ## Fermi-Dirac Error Behavior
 
@@ -173,8 +178,13 @@ structs remain unchanged; the helper is not installed as public API.
 After EOS lookup and density conversion, the helper requires finite positive
 cgs density and temperature. It accepts finite `X_n`, `X_p` in `[0,1]` and
 normalizes only endpoint excursions within the forward-error bound of the
-eight-corner interpolation arithmetic. It rejects larger excursions and any
-non-finite kinetic-degeneracy inversion, overlap, or population-bound result.
+eight-corner interpolation arithmetic. The both-zero composition is a neutral
+success. For exactly one normalized zero, it returns the exact overlap limit,
+retains occupied-species scattering, and leaves the degeneracy-difference
+placeholder unused while public callers apply the analytic zero limit of every
+charged-current product. The helper also rejects larger excursions and any
+non-finite kinetic-degeneracy
+inversion, overlap, or population-bound result.
 A failure returns `ghl_error_nrpyleakage_blocking` before any public output is
 written. This distinct error identifies failure of the blocking evaluator
 rather than an EOS interpolation or generated Fermi-moment key.

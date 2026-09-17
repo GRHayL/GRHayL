@@ -26,7 +26,7 @@ Common flags visible in `configure`:
 | `--prefix=<dir>` | Installation prefix. |
 | `--builddir=<dir>` | Build directory; default is `build`. |
 | `--buildtype=<type>` | Compiler flag preset. Current help and parser disagree: help advertises `nocflags`, but the parser rejects it; the parser accepts undocumented `plain`, which supplies no preset flags. |
-| `--cflags="<flags>"` | Extra compiler flags. |
+| `--cflags="<flags>"` | Extra safe compiler flags. Unsafe floating-point modes are rejected. |
 | `--clibs="<libs>"` | Extra linker flags. |
 | `--hdf5dir=<dir>` | HDF5 base directory containing include and lib subdirectories. |
 | `--hdf5inc=<dir>` | HDF5 include directory. Must be paired with `--hdf5lib` for custom paths. |
@@ -42,6 +42,11 @@ The remaining build-type mismatch concerns the no-flags name: help advertises
 Production emits its documented
 `-Wall -std=c99 -march=native -fno-finite-math-only -O3` flags so runtime
 finite-value checks retain their required semantics.
+All build types reject the unsafe floating-point flags listed by
+`./configure --help`, including fast-math and finite-only umbrella modes and
+the individual transformations on which those modes rely. A compile probe also
+rejects final flag sets that define fast-math or positive finite-only macros. Build
+routes that bypass `configure`, including Cactus, must apply the same policy.
 
 Configuration, compilation, installation, consumer linking, and execution are
 separate evidence classes:

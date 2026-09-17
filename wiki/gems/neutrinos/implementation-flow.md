@@ -82,6 +82,12 @@ calls, so all these error exits leave caller outputs unchanged. The routines
 do not check null pointers, EOS initialization, or table bounds independently
 of the EOS call.
 
+After roundoff normalization, a both-zero free-nucleon state returns the
+neutral blocking result. At an exactly-one-zero state, occupied-species
+scattering and non-beta channels remain active while charged-current products
+take their analytic zero limit. The code does not form the divergent endpoint
+degeneracy difference or reaction-energy shift.
+
 ## Shared Nucleon-Blocking Evaluator
 
 `NRPyLeakage_nucleon_blocking.h` reconstructs kinetic degeneracies from cgs
@@ -111,9 +117,11 @@ qualification bounds the resulting model error.
 All leakage finite-value guards use `robust_isfinite` or `robust_isnan`. On
 IEEE binary64 platforms the public inline helpers copy the representation with
 `memcpy` and classify exponent/fraction bits through `uint64_t`; this is
-alias-safe and remains effective when user flags enable finite-math
-assumptions. Compile-time representation guards select the C99 predicates on
-other platforms. The table-free physics executable directly checks finite
+alias-safe. Unsafe math modes can corrupt earlier arithmetic, so `configure`
+rejects the documented unsafe flag set and probes final flags for fast/finite-
+only predefined macros. Direct builds, including Cactus builds, must enforce
+the same restriction. Compile-time representation guards select the C99
+predicates on other platforms. The table-free physics executable directly checks finite
 values, infinities, quiet and signaling NaNs, signed zeros, and signed minimum
 subnormals.
 
@@ -134,7 +142,9 @@ Flow:
    uses of the fractions.
 4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate the paired shifted beta
    emission and absorption moments algebraically when both free populations
-   are positive. Zero populations retain zero charged-current moments.
+   are positive. Exactly-one-zero populations use the analytic zero limit of
+   the charged-current products without forming `q`; both-zero populations
+   retain neutral moments.
 5. Run the remaining source-owned generated formula blocks for emissivity,
    opacity-like denominators, Fermi-Dirac factors, and optical-depth
    suppression. Calls through `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid
@@ -176,7 +186,9 @@ Flow:
    only accepted endpoint roundoff for all later fraction uses.
 4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate paired shifted beta
    emission and absorption moments algebraically when both free populations
-   are positive. Zero populations retain zero charged-current moments.
+   are positive. Exactly-one-zero populations use the analytic zero limit of
+   the charged-current products without forming `q`; both-zero populations
+   retain neutral moments.
 5. Run the remaining source-owned generated formula blocks for rate terms,
    opacity terms, optical-depth limited source terms, and Fermi-Dirac factors.
    Calls through `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid keys.
@@ -219,7 +231,9 @@ Flow:
    fraction uses.
 4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate paired shifted beta
    absorption moments algebraically when both free populations are positive.
-   Zero populations retain zero charged-current moments.
+   Exactly-one-zero populations use the analytic zero limit of the charged-
+   current products without forming `q`; both-zero populations retain neutral
+   moments.
 5. Run the remaining source-owned generated formula blocks for
    absorption/scattering opacity entries. Calls through
    `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid keys.

@@ -220,6 +220,9 @@ static void check_output_fallbacks(void) {
 }
 
 #ifndef GHL_DISABLE_HDF5
+static double mock_X_n = 0.7;
+static double mock_X_p = 0.2;
+
 static ghl_error_codes_t mock_eos_success(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -239,8 +242,8 @@ static ghl_error_codes_t mock_eos_success(
   *mu_e = 2.0;
   *mu_p = 1.0;
   *mu_n = 6.0;
-  *X_n = 0.7;
-  *X_p = 0.2;
+  *X_n = mock_X_n;
+  *X_p = mock_X_p;
   return ghl_success;
 }
 
@@ -375,6 +378,44 @@ static void check_public_api_contracts(void) {
         "public heavy-lepton source suppression", Q_source,
         -8.44271649383971011e-13, 1.0e-12*8.44271649383971011e-13);
 
+  ghl_neutrino_luminosities free_lum = { 0 }, oracle_lum = { 0 };
+  ghl_neutrino_opacities free_kappa = { 0 }, oracle_kappa = { 0 };
+  double free_R = 0.0, free_Q = 0.0, oracle_R = 0.0, oracle_Q = 0.0;
+  const ghl_neutrino_optical_depths oracle_tau = { .nux = { 0.0, 1000.0 } };
+  error = NRPyLeakage_compute_neutrino_luminosities(
+        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
+        3.0, 1.0, &tau, &free_lum);
+  error |= NRPyLeakage_compute_neutrino_luminosities(
+        &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0e-5, 0.1,
+        3.0, 1.0, &oracle_tau, &oracle_lum);
+  error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+        &eos, 1.0e-5, 0.1, 3.0, &tau, &free_kappa, &free_R, &free_Q);
+  error |= NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+        &eos, 1.0e-5, 0.1, 3.0, &oracle_tau, &oracle_kappa,
+        &oracle_R, &oracle_Q);
+  if(error != ghl_success)
+    ghl_error("Public diffusion-oracle setup returned error %d\n", error);
+  double F3_zero;
+  ghl_abort_if_error(NRPyLeakage_Fermi_Dirac_integrals(3, 0.0, &F3_zero));
+  const double Q_free_nux = free_lum.nux / NRPyLeakage_units_cgs_to_geom_Q;
+  const double equilibrium_energy_density
+        = 4.0*M_PI*pow(3.0, 4)*F3_zero/NRPyLeakage_hc3;
+  const double kappa_cgs
+        = free_kappa.nux[1]/NRPyLeakage_units_geom_to_cgs_L;
+  const double Q_diff_nux = kappa_cgs*equilibrium_energy_density
+                            * NRPyLeakage_c_light/(6.0*1000.0*1000.0);
+  const double Q_eff_nux = Q_free_nux/(1.0 + Q_free_nux/Q_diff_nux);
+  const double expected_lum_nux
+        = NRPyLeakage_units_cgs_to_geom_Q*Q_eff_nux;
+  const double expected_source_change
+        = 4.0*NRPyLeakage_units_cgs_to_geom_Q*(Q_free_nux - Q_eff_nux);
+  check_close(
+        "public heavy-lepton diffusion oracle", oracle_lum.nux,
+        expected_lum_nux, 1.0e-12*fabs(expected_lum_nux));
+  check_close(
+        "public heavy-lepton source diffusion oracle", oracle_Q - free_Q,
+        expected_source_change, 1.0e-12*fabs(expected_source_change));
+
   const ghl_neutrino_optical_depths depths[2] = { tau, thick_tau };
   ghl_neutrino_opacities reference_standalone[2] = { 0 };
   ghl_neutrino_opacities reference_combined[2] = { 0 };
@@ -493,22 +534,149 @@ static void check_public_api_contracts(void) {
 #endif
 }
 
-/** Check roundoff normalization and rejection of an unphysical fraction. */
+#ifndef GHL_DISABLE_HDF5
+/** Evaluate all three public leakage paths with the current mock fractions. */
+static void evaluate_mock_public_outputs(double outputs[17]) {
+  const ghl_eos_parameters eos = { 0 };
+  const ghl_neutrino_optical_depths tau = { 0 };
+  ghl_neutrino_opacities standalone, combined;
+  ghl_neutrino_luminosities lum;
+  double R_source, Q_source;
+  if(NRPyLeakage_compute_neutrino_opacities(
+           &eos, 1.0e-5, 0.1, 3.0, &tau, &standalone) != ghl_success
+     || NRPyLeakage_compute_neutrino_luminosities(
+              &eos, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
+              1.0e-5, 0.1, 3.0, 1.0, &tau, &lum) != ghl_success
+     || NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms(
+              &eos, 1.0e-5, 0.1, 3.0, &tau, &combined, &R_source, &Q_source)
+              != ghl_success) {
+    ghl_error("Public leakage API rejected an endpoint-limit state\n");
+  }
+
+  const double values[17] = {
+    standalone.nue[0], standalone.nue[1], standalone.anue[0],
+    standalone.anue[1], standalone.nux[0], standalone.nux[1],
+    lum.nue, lum.anue, lum.nux,
+    combined.nue[0], combined.nue[1], combined.anue[0],
+    combined.anue[1], combined.nux[0], combined.nux[1], R_source, Q_source,
+  };
+  for(size_t i = 0; i < 17; i++) {
+    if(!robust_isfinite(values[i]))
+      ghl_error("Public endpoint-limit output %zu is nonfinite\n", i);
+    outputs[i] = values[i];
+  }
+}
+
+/** Check the analytic public limit at single-species free-nucleon endpoints. */
+static void check_public_single_species_endpoints(void) {
+  ghl_error_codes_t (*saved_eos_callback)(
+        const ghl_eos_parameters *restrict, double, double, double,
+        double *restrict, double *restrict, double *restrict, double *restrict,
+        double *restrict, double *restrict)
+        = ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = mock_eos_success;
+
+  const double endpoint_pairs[][2] = {
+    { 0.8, 0.0 },
+    { 0.0, 0.2 },
+  };
+  const double minority_trace[] = { 1.0e-12, 1.0e-40, 1.0e-100, 1.0e-200, 1.0e-300 };
+  for(size_t i = 0; i < sizeof(endpoint_pairs)/sizeof(endpoint_pairs[0]); i++) {
+    double endpoint[17];
+    mock_X_n = endpoint_pairs[i][0];
+    mock_X_p = endpoint_pairs[i][1];
+    evaluate_mock_public_outputs(endpoint);
+
+    const double opacity_floor
+          = NRPyLeakage_units_geom_to_cgs_L * 1.0e-15;
+    for(size_t j = 0; j < 6; j++) {
+      if(endpoint[j] <= opacity_floor)
+        ghl_error("Standalone endpoint opacity %zu lost occupied-species scattering\n", j);
+    }
+    for(size_t j = 9; j < 15; j++) {
+      if(endpoint[j] <= opacity_floor)
+        ghl_error("Combined endpoint opacity %zu lost occupied-species scattering\n", j - 9);
+    }
+    if(!(endpoint[6] > 0.0) || !(endpoint[7] > 0.0) || !(endpoint[8] > 0.0)
+       || endpoint[15] != 0.0 || endpoint[16] == 0.0)
+      ghl_error("Endpoint lost non-beta emission or gained a beta source\n");
+
+    double previous_error = INFINITY;
+    double near_endpoint[17];
+    for(size_t k = 0; k < sizeof(minority_trace)/sizeof(minority_trace[0]); k++) {
+      mock_X_n = endpoint_pairs[i][0] == 0.0
+                       ? minority_trace[k] : endpoint_pairs[i][0];
+      mock_X_p = endpoint_pairs[i][1] == 0.0
+                       ? minority_trace[k] : endpoint_pairs[i][1];
+      evaluate_mock_public_outputs(near_endpoint);
+      double trace_error = 0.0;
+      for(size_t j = 0; j < 17; j++) {
+        const double scaled_error
+              = fabs(near_endpoint[j] - endpoint[j]) / fmax(1.0, fabs(endpoint[j]));
+        trace_error = fmax(trace_error, scaled_error);
+      }
+      if(trace_error > previous_error + 512.0 * DBL_EPSILON)
+        ghl_error("Single-species limit trace did not converge monotonically\n");
+      previous_error = trace_error;
+    }
+    for(size_t j = 0; j < 17; j++) {
+      check_close(
+            "single-species analytic limit", endpoint[j], near_endpoint[j],
+            512.0 * DBL_EPSILON * fmax(1.0, fabs(endpoint[j])));
+    }
+  }
+
+  double normalized[17], exact[17];
+  mock_X_n = -8.237492054256009e-17;
+  mock_X_p = 0.2;
+  evaluate_mock_public_outputs(normalized);
+  mock_X_n = 0.0;
+  evaluate_mock_public_outputs(exact);
+  for(size_t i = 0; i < 17; i++) {
+    check_close("normalized endpoint", normalized[i], exact[i], 0.0);
+  }
+
+  mock_X_n = 0.0;
+  mock_X_p = 0.0;
+  evaluate_mock_public_outputs(exact);
+
+  mock_X_n = 0.7;
+  mock_X_p = 0.2;
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_eos_callback;
+}
+#endif
+
+/** Check roundoff normalization and exact endpoint overlap limits. */
 static void check_mass_fraction_validation(void) {
   double B_n, B_p, Y_np, Y_pn, eta_n_minus_eta_p;
   ghl_error_codes_t error = NRPyLeakage_compute_nucleon_blocking(
         1.0e14, 1.0, -8.237492054256009e-17, 0.1, &B_n, &B_p, &Y_np, &Y_pn,
         &eta_n_minus_eta_p);
-  ghl_abort_if_error(error);
-  if(B_n != 0.0 || Y_np != 0.0 || Y_pn != 0.1 || !robust_isfinite(B_p)
-     || !robust_isfinite(eta_n_minus_eta_p)) {
-    ghl_error("Roundoff-sized nucleon fraction did not reach its physical endpoint\n");
+  if(error != ghl_success || B_n != 0.0 || !(B_p > 0.0) || Y_np != 0.0
+     || Y_pn != 0.1 || eta_n_minus_eta_p != 0.0) {
+    ghl_error("Roundoff-sized endpoint did not use the proton-only limit\n");
+  }
+
+  error = NRPyLeakage_compute_nucleon_blocking(
+        1.0e14, 1.0, 0.8, 0.0, &B_n, &B_p, &Y_np, &Y_pn,
+        &eta_n_minus_eta_p);
+  if(error != ghl_success || !(B_n > 0.0) || B_p != 0.0 || Y_np != 0.8
+     || Y_pn != 0.0 || eta_n_minus_eta_p != 0.0) {
+    ghl_error("Neutron-only endpoint did not use its analytic overlap limit\n");
   }
 
   error = NRPyLeakage_compute_nucleon_blocking(
         1.0e14, 1.0, -1.0e-6, 0.1, &B_n, &B_p, &Y_np, &Y_pn, &eta_n_minus_eta_p);
   if(error != ghl_error_nrpyleakage_blocking) {
     ghl_error("Materially negative nucleon fraction returned error code %d\n", error);
+  }
+
+  error = NRPyLeakage_compute_nucleon_blocking(
+        1.0e14, 1.0, 0.0, 0.0, &B_n, &B_p, &Y_np, &Y_pn,
+        &eta_n_minus_eta_p);
+  if(error != ghl_success || B_n != 0.0 || B_p != 0.0 || Y_np != 0.0
+     || Y_pn != 0.0 || eta_n_minus_eta_p != 0.0) {
+    ghl_error("Both-zero nucleon endpoint did not remain the neutral state\n");
   }
 }
 
@@ -844,6 +1012,9 @@ int main(void) {
   check_all_fermi_dirac_keys();
   check_output_fallbacks();
   check_public_api_contracts();
+#ifndef GHL_DISABLE_HDF5
+  check_public_single_species_endpoints();
+#endif
   check_mass_fraction_validation();
   check_asymmetric_optical_depth_stencil();
   check_blocking_state(

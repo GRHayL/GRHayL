@@ -33,10 +33,19 @@ Y_{pn}=e^{-(\eta_n-\eta_p)}Y_{np}.
 $$
 
 The implementation evaluates this identity with stable `expm1` algebra and an
-analytic equal-population limit. Empty populations have exact zero limits, and
-the returned overlaps are projected to their initial free populations. This
-removes the former pole near equal populations, keeps the result bounded, and
-makes blocking independent of a common chemical-energy reference.
+analytic equal-population limit. At an exactly-one-zero endpoint, the occupied-
+to-empty overlap tends to the occupied fraction, the reverse overlap tends to
+zero, and every overlap-times-shifted-beta-moment product tends to zero. The
+code applies that analytic product limit directly instead of constructing the
+divergent kinetic-degeneracy difference or reaction-energy shift. The both-zero
+state returns a neutral result. For evaluated two-species states, overlaps are
+projected to their initial free populations. This removes the former pole near
+equal populations, keeps the result bounded, and makes blocking independent
+of a common chemical-energy reference.
+
+This endpoint is the continuous extension of GRHayL's installed density-
+derived closure. It is not a claim that charged-current rates at a
+single-species composition are generally zero for a richer interacting EOS.
 
 The inverse half-order Fermi integral uses scalar minimax fits from FDINT and
 Fukushima. No numerical quadrature, root iteration, or additional EOS lookup

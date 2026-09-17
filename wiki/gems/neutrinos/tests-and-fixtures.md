@@ -74,10 +74,12 @@ references and ordinary beta moments with high-precision evaluations of the
 same fitted formulas, checks population bounds and the transition
 normalization identity, checks both reaction-threshold orientations, and
 verifies spectral detailed balance for electron-neutrino and
-electron-antineutrino kernels. Direct analytic identities independently catch
-loss of the `6/c` diffusion factor, the bremsstrahlung `rho^2` scaling, use of
-the wrong free rate in heavy-lepton suppression, and omission of the four
-heavy-lepton species from the matter-energy source. Exact binary64 patterns
+electron-antineutrino kernels. Direct analytic identities catch loss of the
+`6/c` diffusion factor, the bremsstrahlung `rho^2` scaling, and omission of the
+four heavy-lepton species from the matter-energy source. An independent
+public-API thick-limit reconstruction uses public opacity, equilibrium energy
+density, and a zero-depth free rate to catch wrong species or units at both
+production emission call sites. Exact binary64 patterns
 exercise finite values, infinities, quiet and signaling NaNs, both signed
 zeros, and both signed minimum subnormals. The representation-based checks
 avoid dependence on optimizer finite-value assumptions.
@@ -160,14 +162,18 @@ then runs:
 
 ```sh
 ./test/unit_test_nrpyleakage_physics
+./test/unit_test_nrpyleakage_classifier_fallback
 ./test/unit_test_nrpyleakage_optically_thin_gas SLy4_3335_rho391_temp163_ye66.h5 1
 ./test/unit_test_nrpyleakage_constant_density_sphere SLy4_3335_rho391_temp163_ye66.h5 1
 ./test/unit_test_nrpyleakage_luminosities SLy4_3335_rho391_temp163_ye66.h5 1
 ```
 
-Use `.github/run_tests.sh` as the primary command route for fixture and table
-downloads. Its named TestData paths are the reproducible publication route for
-the current fixtures described above.
+Use `.github/run_tests.sh` as the local aggregate command route for fixture and
+table downloads. Current workflows do not invoke that script; their neutrino
+jobs run the same table-free and table-backed executables directly. Command
+presence proves configured intent, while actual execution requires a local log
+or workflow result. The script's named TestData paths are the reproducible
+publication route for the current fixtures described above.
 
 No-HDF5 builds set `GHL_DISABLE_HDF5` and apply `configure`'s exact
 implementation-source filter. That filter removes many tabulated EOS/Flux_Source
@@ -210,6 +216,9 @@ gas source replay. Its RHS calls
 `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`, divides
 `R_source` and `Q_source` by `rho`, and evolves `Y_e` and `eps` through RK4.
 Each RK4 substep recomputes temperature through `ghl_tabulated_compute_T_from_eps`.
+Failure injection verifies the four lookup sites return before 0, 1, 2, or 3
+right-hand-side calls. A separate injection verifies the initial energy lookup
+occurs before opening the fixture output, so failure cannot truncate it.
 Generation writes the time series; key `1` replays and calls comparison helpers
 against
 `nrpyleakage_optically_thin_gas_{unperturbed,perturbed}.bin`.
@@ -228,6 +237,8 @@ small `z`. Then it replays random metric, primitive, optical-depth, and
 luminosity cases through `NRPyLeakage_compute_neutrino_luminosities`, then calls
 comparison helpers for `nue`, `anue`, and `nux` values against
 `nrpyleakage_luminosities_{unperturbed,perturbed}.bin`.
+Generation retains each base value, applies a bounded perturbation, and asserts
+the pair distance and EOS/input bounds before evaluating the perturbed row.
 
 `Unit_Tests/unit_test_code_error.c` belongs here only for direct invalid
 Fermi-Dirac key coverage: it calls `NRPyLeakage_Fermi_Dirac_integrals(-1, ...)`
@@ -259,10 +270,10 @@ through the generic `1e-30` absolute floor:
 
 All three pass the unperturbed fixture value as `trusted`, the recomputed value
 as `computed`, and the perturbed fixture value as `perturbed`, matching the
-helper contract. The optically thin test also checks every
+helper contract. The optically thin test propagates every
 `ghl_tabulated_compute_T_from_eps` and `ghl_tabulated_compute_eps_from_T`
-status through `ghl_abort_if_error`, so a failed inversion cannot silently
-evaluate a right-hand side at a stale temperature.
+status, so a failed inversion cannot evaluate a right-hand side at a stale
+temperature or truncate a fixture before the initial lookup succeeds.
 
 The luminosity test's explicit Fermi-Dirac assertion rejects a nonfinite
 computed integral or a nonfinite reference in addition to an out-of-tolerance
@@ -274,7 +285,10 @@ unequal face metrics, and equality of standalone and combined opacity outputs.
 It also injects EOS success and failure callbacks, checks the opacity floor and
 neutral rate/source fallback for every public output, verifies public
 finite-depth heavy-lepton suppression against manufactured regression values,
-checks the effective-rate endpoints and bremsstrahlung energy conversion, and
+reconstructs the public heavy-lepton diffusion limit independently, checks
+both single-species endpoint orientations against the tiny-positive analytic
+limit through all three public APIs, checks the effective-rate
+endpoints and bremsstrahlung energy conversion, and
 verifies all three disabled-HDF5 returns.
 
 ## CI Routes

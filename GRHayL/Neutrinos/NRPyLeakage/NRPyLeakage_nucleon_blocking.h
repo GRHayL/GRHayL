@@ -782,7 +782,9 @@ static inline ghl_error_codes_t nrpyl_compute_beta_absorption_moments(
  * @param[out] B_p Effective proton population for neutral-current scattering.
  * @param[out] Y_np Effective neutron-to-proton transition population.
  * @param[out] Y_pn Effective proton-to-neutron transition population.
- * @param[out] eta_n_minus_eta_p Kinetic nucleon degeneracy difference.
+ * @param[out] eta_n_minus_eta_p Kinetic nucleon degeneracy difference. This
+ * is zero and must not be used at an exact single-species endpoint, where
+ * the charged-current products have their analytic zero limit.
  * @return `ghl_success` on success, otherwise a blocking-evaluator error.
  */
 static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
@@ -831,8 +833,9 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
 
   nrpyl_nucleon_population neutron = { 0.0 };
   nrpyl_nucleon_population proton = { 0.0 };
+  ghl_error_codes_t error;
   if(physical_X_n > 0.0) {
-    const ghl_error_codes_t error = nrpyl_compute_population(
+    error = nrpyl_compute_population(
           log_number_density + log(physical_X_n) - log_C, &neutron);
     if(error != ghl_success) {
       return error;
@@ -840,7 +843,7 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
     *B_n = physical_X_n / (1.0 + (2.0 / 3.0) * fmax(neutron.eta, 0.0));
   }
   if(physical_X_p > 0.0) {
-    const ghl_error_codes_t error = nrpyl_compute_population(
+    error = nrpyl_compute_population(
           log_number_density + log(physical_X_p) - log_C, &proton);
     if(error != ghl_success) {
       return error;
@@ -848,7 +851,14 @@ static inline ghl_error_codes_t NRPyLeakage_compute_nucleon_blocking(
     *B_p = physical_X_p / (1.0 + (2.0 / 3.0) * fmax(proton.eta, 0.0));
   }
 
-  // Empty final states have unit vacancy; empty initial states cannot react.
+  /*
+   * As one fraction tends to zero, its kinetic degeneracy tends to -infinity.
+   * The occupied-to-empty overlap tends to the occupied fraction and the
+   * reverse overlap tends to zero. The associated shifted beta moments and
+   * reverse overlap make every charged-current product vanish exponentially,
+   * so callers apply that analytic zero limit without forming an infinite
+   * reaction shift. eta_n_minus_eta_p is consequently unused here.
+   */
   if(physical_X_n == 0.0) {
     *Y_pn = physical_X_p;
     return ghl_success;

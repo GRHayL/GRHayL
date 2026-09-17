@@ -93,7 +93,7 @@ source.
 | Doxygen, docs output, generated docs boundary | [Generated Boundaries](generated-boundaries.md) | `Doxyfile`, `docs/raw/` | `docs/raw/mainpage.md`, `docs/raw/*.dox` |
 | `make.code.defn`, build source lists, generated Makefile inputs | [Generated Boundaries](generated-boundaries.md) | `GRHayL/make.code.defn`, `GRHayL/*/make.code.defn`, `GRHayL/include/make.code.defn` | `configure`, `generate_makefile.sh` |
 | CI workflows, GitHub Actions, test runner | [Build And CI](build-and-ci.md) | `.github/workflows/`, `.github/actions/`, `.github/run_tests.sh` | `README.md`, `Unit_Tests/` |
-| licensing, citations, inherited sources | [Source Map](source-map.md) | `LICENSE`, `AUTHORS` | `docs/raw/license.md`, `docs/raw/ref.bib`, `docs/raw/mainpage.md` |
+| licensing, citations, inherited sources | [Source Map](source-map.md) | `LICENSE`, `AUTHORS`, `THIRD_PARTY_NOTICES`, `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h` | `docs/raw/license.md`, `docs/raw/ref.bib`, `docs/raw/mainpage.md` |
 
 ## Catalog Rules
 

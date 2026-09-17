@@ -78,6 +78,8 @@ ghl_error_codes_t NRPyLeakage_compute_neutrino_opacities(
   const double tmp_20 = NRPyLeakage_eta_anue_0*tmp_18 + (1 - tmp_18)*(muhat*tmp_1 - tmp_2);
   nrpyl_beta_moments beta_nue_absorption = {0.0, 0.0};
   nrpyl_beta_moments beta_anue_absorption = {0.0, 0.0};
+  // At an exact single-species endpoint these moments take their analytic
+  // zero-product limit; do not form the divergent reaction shift.
   if(X_n > 0.0 && X_p > 0.0) {
     const double reaction_shift = nrpyl_compute_reaction_shift(
         T, muhat, eta_n_minus_eta_p);

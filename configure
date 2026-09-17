@@ -11,6 +11,7 @@ pkg="GRHayL"
 pkg_short="GRHayL"
 pkg_version="1.0.0"
 libname="ghl"
+nrpyleakage_unsafe_cflags='-ffast-math -Ofast -ffinite-math-only -funsafe-math-optimizations -fassociative-math -freciprocal-math -fno-signed-zeros -fno-trapping-math'
 
 red()
 {
@@ -81,7 +82,9 @@ Options:'
                           debug-opt  : -Wall -std=c99 -march=native -fno-finite-math-only -O2 -g
                           opt        : -Wall -std=c99 -march=native -fno-finite-math-only -O2
                           production : -Wall -std=c99 -march=native -fno-finite-math-only -O3
-    --cflags            Additional compilation flags
+    --cflags            Additional compilation flags; NRPyLeakage requires
+                        IEEE exceptional-value semantics
+    NRPyLeakage rejects: $nrpyleakage_unsafe_cflags
     --clibs             Additional linker flags
     --hdf5dir           Sets the HDF5 base directory. Possible values:
                           <dir> : assumes <dir>/include and <dir>/lib exist
@@ -511,6 +514,13 @@ if [ "$cflags" = "" ]; then
 else
     YES "$cflags"
 fi
+for flag in $cflags; do
+    for unsafe_flag in $nrpyleakage_unsafe_cflags; do
+        if [ "$flag" = "$unsafe_flag" ]; then
+            error "Unsupported floating-point compiler flag '$flag': NRPyLeakage requires IEEE exceptional-value semantics\n"
+        fi
+    done
+done
 cflags="$BUILDCFLAGS $cflags"
 
 printf "Checking if clibs were provided... "
@@ -547,6 +557,16 @@ fi
 c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with build flags... "
 if [ $? -ne 0 ]; then
     error "The C compiler does not work with the build flags\n"
+fi
+code='
+#if defined(__FAST_MATH__) || (defined(__FINITE_MATH_ONLY__) && __FINITE_MATH_ONLY__ > 0)
+#error "unsupported floating-point mode"
+#endif
+int main(void) { return 0; }
+'
+c_compiles "$code" $CC " $cflags " "" "Checking floating-point semantics... "
+if [ $? -ne 0 ]; then
+    error "Unsupported floating-point compiler mode: NRPyLeakage requires IEEE exceptional-value semantics\n"
 fi
 if [ "$ompcflag" != "" ]; then
     code='

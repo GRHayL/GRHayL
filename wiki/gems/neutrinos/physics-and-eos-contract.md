@@ -150,10 +150,16 @@ $$
 The common normalization converts the difference of Fermi integrals into
 `X_h-X_l`; `expm1` retains digits when the degeneracies are close. Equal
 degeneracies use the analytic limit
-$X F'_{1/2}(\eta)/F_{1/2}(\eta)$. Exact empty populations use the physical
-endpoint: no occupied initial state gives zero transition population, while
-an empty final population has unit vacancy. The implementation checks finite
-inputs and results and enforces $0\leq B_N,Y_{N\rightarrow N'}\leq X_N$.
+$X F'_{1/2}(\eta)/F_{1/2}(\eta)$. As the lower population tends to zero,
+the occupied-to-empty overlap tends to the occupied fraction and the reverse
+overlap tends to zero. The degeneracy difference diverges, but each overlap-
+times-shifted-beta-moment product tends to zero exponentially. At an exact
+endpoint, the implementation applies that product limit without constructing
+the divergent reaction shift; the both-zero state remains a neutral success.
+This is the continuous extension of the installed density-derived closure,
+not a general claim about interacting-EOS endpoint rates. The implementation
+checks finite inputs and results and enforces
+$0\leq B_N,Y_{N\rightarrow N'}\leq X_N$ for evaluated two-species states.
 These identities avoid numerical quadrature, root iteration, and a new lookup
 table in the leakage hot path.
 
