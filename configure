@@ -305,14 +305,21 @@ check_compiler()
 c_compiles()
 {
     printf "$5"
-    printf "$1" | $2 $3 -x c - $4 >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    probe_dir=$(mktemp -d "${TMPDIR:-/tmp}/grhayl-configure.XXXXXX")
+    if [ $? -ne 0 ]; then
+        NO "could not create temporary probe directory"
+        return 1
+    fi
+    probe_exe="$probe_dir/probe"
+    printf "$1" | $2 $3 -x c - $4 -o "$probe_exe" >/dev/null 2>&1
+    probe_status=$?
+    rm -f "$probe_dir"/*
+    rmdir "$probe_dir"
+    if [ $probe_status -eq 0 ]; then
         YES "$2$3<objs>$4"
-        rm -f a.out
         return 0
     else
         NO "$2$3<objs>$4"
-        rm -f a.out
         return 1
     fi
 }
@@ -320,14 +327,25 @@ c_compiles()
 c_runs()
 {
     printf "$5"
-    printf "$1" | $2 $3 -x c - $4 >/dev/null 2>&1
-    if [ $? -eq 0 ] && ./a.out >/dev/null 2>&1; then
+    probe_dir=$(mktemp -d "${TMPDIR:-/tmp}/grhayl-configure.XXXXXX")
+    if [ $? -ne 0 ]; then
+        NO "could not create temporary probe directory"
+        return 1
+    fi
+    probe_exe="$probe_dir/probe"
+    printf "$1" | $2 $3 -x c - $4 -o "$probe_exe" >/dev/null 2>&1
+    if [ $? -eq 0 ] && "$probe_exe" >/dev/null 2>&1; then
+        probe_status=0
+    else
+        probe_status=1
+    fi
+    rm -f "$probe_dir"/*
+    rmdir "$probe_dir"
+    if [ $probe_status -eq 0 ]; then
         YES "$2$3<objs>$4"
-        rm -f a.out
         return 0
     else
         NO "$2$3<objs>$4"
-        rm -f a.out
         return 1
     fi
 }
