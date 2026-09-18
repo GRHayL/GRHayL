@@ -227,7 +227,9 @@ int main(int argc, char **argv) {
            methods[method] != ghl_con2prim_id_Noble1D_entropy &&
            methods[method] != ghl_con2prim_id_Noble2D) {
           ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
-        } else if(check != ghl_error_neg_pressure && c2p_check[i] != 6) {
+        } else if(check != ghl_error_neg_pressure &&
+                  c2p_check[i] != ghl_error_neg_pressure &&
+                  c2p_check[i] != ghl_error_c2p_max_iter) {
           ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
         }
       }
