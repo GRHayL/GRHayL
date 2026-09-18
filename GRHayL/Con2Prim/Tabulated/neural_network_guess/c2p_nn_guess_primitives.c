@@ -29,12 +29,12 @@ void ghl_c2p_nn_guess_primitives(
       const ghl_nn_c2p_input_t nn_input = { aux.q, aux.r, aux.s, aux.t };
       const ghl_nn_c2p_guess_t nn_guess = ghl_c2p_nn_guess(eos->c2p_nn, nn_input);
 
-      // Enforce physical bounds on x before completing the primitive guess.
+      // Enforce the NN training bracket before completing the primitive guess.
       const double x_lo = 1.0 + aux.q - aux.s;
       const double x_hi = 2.0 + 2.0 * aux.q - aux.s;
       if(isfinite(x_lo) && isfinite(x_hi) && x_lo <= x_hi && isfinite(nn_guess.x)) {
         const double x = ghl_clamp(nn_guess.x, x_lo, x_hi);
-        if(isfinite(x) && x > 0.0) {
+        if(isfinite(x)) {
           ghl_tabulated_primitive_guess_from_x(params, eos, metric_adm,
                                                cons_undens, &aux, x, prims);
           return;

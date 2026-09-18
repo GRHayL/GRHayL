@@ -55,6 +55,13 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
   if(retval != ghl_success) {
     return retval;
   }
+  /* Defensive postcondition: the Newton validator applies fabs() and the
+   * solver rejects nonfinite residual/Jacobian values, so a successful solve
+   * cannot presently reach this branch with an invalid density. Keep the
+   * check local to the consumer in case those solver invariants change. */
+  if(!isfinite(rho0) || rho0 <= 0.0) {
+    return ghl_error_c2p_singular;
+  }
   // Calculate v^2:
 
   const double rel_err = fabs((harm_aux.D - rho0) / harm_aux.D);

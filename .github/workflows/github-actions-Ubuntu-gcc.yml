@@ -31,7 +31,7 @@ jobs:
               -o "$RUNNER_TEMP/ghl_con2prim_header.o"
       - name: Replay Con2Prim fixture generator
         run: |
-          testdata_ref=340ffed8717f40c0d59bed57b693b528909bae70
+          testdata_ref=9fbd03ecedd5b161d1216e973d6a91f25f852a04
           git init "$RUNNER_TEMP/grhayl-testdata"
           git -C "$RUNNER_TEMP/grhayl-testdata" remote add origin \
             https://github.com/GRHayL/TestData.git
@@ -447,7 +447,7 @@ jobs:
       - name: Install pyghl
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install pyghl
+          python3 -m pip install pyghl==0.4.0
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin

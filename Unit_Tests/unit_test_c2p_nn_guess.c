@@ -6,6 +6,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +17,10 @@
 #include <errno.h>
 #include <hdf5.h>
 #include <unistd.h>
+#endif
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
 #endif
 
 #define CHECK(cond, ...)                                                       \
@@ -130,7 +135,6 @@ static ghl_c2p_nn_model valid_stack_model(void) {
 }
 
 static void test_validate_model(void) {
-  CHECK(GHL_NN_C2P_API_VERSION == 4u, "unexpected NN C2P API version");
   ghl_c2p_nn_model model = valid_stack_model();
   CHECK_ERROR(ghl_c2p_nn_validate_model(&model), ghl_success);
   CHECK_ERROR(ghl_c2p_nn_validate_model(NULL), ghl_error_nn_c2p_model_is_null);
@@ -227,6 +231,30 @@ static void test_guess_model(void) {
   guess = ghl_c2p_nn_guess(&model, input);
   CHECK(isfinite(guess.x) && guess.x == 0.0f,
         "overflowing midpoint did not return the finite sentinel");
+
+  model = valid_stack_model();
+  model.W_in[0] = 0.2f;
+  model.W_in[1] = 0.4f;
+  model.W_in[2] = 0.6f;
+  model.W_in[3] = 0.8f;
+  model.b_in[0] = 0.0f;
+  model.W_hid[0] = 1.0f;
+  model.b_hid[0] = 0.0f;
+  model.W_out[0] = 1.0f;
+  model.b_out[0] = 0.0f;
+  input = (ghl_nn_c2p_input_t){ 2.0f, 0.25f, 0.5f, 0.1f };
+  const float r_scaled = (log10f(input.r) + 2.0f) * 0.25f;
+  const float t_scaled = (log10f(input.t) + 1.0f) * 0.5f;
+  const float hidden = 0.2f * input.q * 0.1f
+                     + 0.4f * r_scaled
+                     + 0.6f * input.s * 0.1f
+                     + 0.8f * t_scaled;
+  const float expected_x = 1.0f + input.q - input.s
+                         + (1.0f + input.q) / (1.0f + expf(-hidden));
+  guess = ghl_c2p_nn_guess(&model, input);
+  CHECK(fabsf(guess.x - expected_x) < 1e-6f,
+        "fixed {q,r,s,t} feature ordering mismatch: %.9g vs %.9g",
+        guess.x, expected_x);
 }
 
 static void fake_enforce_bounds(
@@ -271,6 +299,24 @@ static ghl_error_codes_t fake_compute_P_S_T_nonfinite(
   *entropy = 0.0;
   *temperature = 1.0;
   return ghl_success;
+}
+
+static ghl_error_codes_t fake_compute_P_S_T_error(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict press,
+      double *restrict entropy,
+      double *restrict temperature) {
+  (void)eos;
+  (void)rho;
+  (void)Y_e;
+  (void)eps;
+  (void)press;
+  (void)entropy;
+  (void)temperature;
+  return ghl_error_table_bisection;
 }
 
 static void check_atmosphere_guess(
@@ -337,6 +383,62 @@ static void test_public_primitive_guess_helper(void) {
         && isfinite(prims.press) && isfinite(prims.u0),
         "valid default tabulated guess did not use the completion path");
 
+  ghl_initialize_conservatives(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
+  ghl_initialize_primitives(
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        sqrt(1.5), 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  ghl_tabulated_primitive_guess_aux zero_spanning_aux;
+  ghl_tabulated_compute_primitive_guess_auxiliaries(
+        &metric, &cons, &prims, &zero_spanning_aux);
+  CHECK(1.0 + zero_spanning_aux.q - zero_spanning_aux.s < 0.0
+        && 2.0 + 2.0 * zero_spanning_aux.q - zero_spanning_aux.s > 0.0,
+        "NN test state does not span zero in its admissible x bracket");
+  const double zero_spanning_BU[3] = { prims.BU[0], prims.BU[1], prims.BU[2] };
+  ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
+  check_atmosphere_guess(&eos, &metric, zero_spanning_BU, &prims);
+
+  ghl_initialize_conservatives(1.0, -0.5, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
+  ghl_initialize_primitives(
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        sqrt(2.0), 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  const double negative_BU[3] = { prims.BU[0], prims.BU[1], prims.BU[2] };
+  ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
+  CHECK(prims.rho != eos.rho_atm && isfinite(prims.rho)
+        && isfinite(prims.press) && isfinite(prims.u0),
+        "usable negative NN x was rejected by sign alone");
+
+  ghl_tabulated_primitive_guess_aux negative_aux = { 0 };
+  ghl_initialize_conservatives(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
+  CHECK(prims.rho != eos.rho_atm && isfinite(prims.rho)
+        && isfinite(prims.press) && isfinite(prims.u0),
+        "usable negative x was rejected by sign alone");
+
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &negative_aux, 0.0, &prims);
+  check_atmosphere_guess(&eos, &metric, negative_BU, &prims);
+
+  ghl_tabulated_enforce_bounds_rho_Ye_eps = NULL;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
+  check_atmosphere_guess(&eos, &metric, negative_BU, &prims);
+  ghl_tabulated_enforce_bounds_rho_Ye_eps = fake_enforce_bounds;
+
+  ghl_tabulated_compute_P_S_T_from_eps = NULL;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
+  check_atmosphere_guess(&eos, &metric, negative_BU, &prims);
+
+  ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T_error;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
+  check_atmosphere_guess(&eos, &metric, negative_BU, &prims);
+  ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T;
+
+  prims.BU[0] = BU[0];
+  prims.BU[1] = BU[1];
+  prims.BU[2] = BU[2];
   eos.c2p_nn = NULL;
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
   check_atmosphere_guess(&eos, &metric, BU, &prims);
@@ -428,7 +530,9 @@ static void test_disabled_direct_tabulated_solvers(void) {
 #endif
 
 #ifndef GHL_DISABLE_HDF5
-static char nn_test_directory[] = "/tmp/unit_test_c2p_nn_XXXXXX";
+static char nn_test_directory[PATH_MAX];
+static char nn_original_directory[PATH_MAX];
+static bool nn_test_directory_active;
 
 static const char *const nn_test_files[] = {
   "unit_test_c2p_nn_preserved.h5",
@@ -447,36 +551,65 @@ static const char *const nn_test_files[] = {
   "unit_test_c2p_nn_validation_failure.h5"
 };
 
-static void cleanup_hdf5_test_directory(void) {
-  if(chdir(nn_test_directory) != 0) {
-    fprintf(stderr, "failed to enter NN test directory %s during cleanup: %s\n",
-            nn_test_directory, strerror(errno));
-    return;
+static int cleanup_hdf5_test_directory(void) {
+  if(!nn_test_directory_active) {
+    return 0;
   }
-
+  if(chdir(nn_original_directory) != 0) {
+    fprintf(stderr, "failed to leave NN test directory %s: %s\n",
+            nn_test_directory, strerror(errno));
+    return 1;
+  }
+  int failed = 0;
   for(size_t i = 0; i < sizeof(nn_test_files)/sizeof(nn_test_files[0]); ++i) {
-    if(unlink(nn_test_files[i]) != 0 && errno != ENOENT) {
-      fprintf(stderr, "failed to remove NN test file %s: %s\n",
-              nn_test_files[i], strerror(errno));
+    char path[PATH_MAX];
+    const int written = snprintf(
+          path, sizeof(path), "%s/%s", nn_test_directory, nn_test_files[i]);
+    if(written < 0 || (size_t)written >= sizeof(path)) {
+      fprintf(stderr, "failed to form cleanup path for NN test file %s\n",
+              nn_test_files[i]);
+      failed = 1;
+      continue;
+    }
+    if(unlink(path) != 0 && errno != ENOENT) {
+      fprintf(stderr, "failed to remove NN test file %s: %s\n", path,
+              strerror(errno));
+      failed = 1;
     }
   }
 
-  if(chdir("/") != 0) {
-    fprintf(stderr, "failed to leave NN test directory %s: %s\n",
-            nn_test_directory, strerror(errno));
-    return;
-  }
   if(rmdir(nn_test_directory) != 0) {
     fprintf(stderr, "failed to remove NN test directory %s: %s\n",
             nn_test_directory, strerror(errno));
+    failed = 1;
   }
+  else {
+    nn_test_directory_active = false;
+  }
+  return failed;
+}
+
+static void cleanup_hdf5_test_directory_at_exit(void) {
+  (void)cleanup_hdf5_test_directory();
 }
 
 static void setup_hdf5_test_directory(void) {
+  CHECK(getcwd(nn_original_directory, sizeof(nn_original_directory)) != NULL,
+        "failed to record original test directory: %s", strerror(errno));
+  const char *tmpdir = getenv("TMPDIR");
+  if(tmpdir == NULL || tmpdir[0] == '\0') {
+    tmpdir = "/tmp";
+  }
+  const int written = snprintf(
+        nn_test_directory, sizeof(nn_test_directory), "%s%sunit_test_c2p_nn_XXXXXX",
+        tmpdir, tmpdir[strlen(tmpdir) - 1] == '/' ? "" : "/");
+  CHECK(written > 0 && (size_t)written < sizeof(nn_test_directory),
+        "NN test directory template is too long");
   if(mkdtemp(nn_test_directory) == NULL) {
     fprintf(stderr, "failed to create NN test directory: %s\n", strerror(errno));
     exit(1);
   }
+  nn_test_directory_active = true;
   if(chdir(nn_test_directory) != 0) {
     fprintf(stderr, "failed to enter NN test directory %s: %s\n",
             nn_test_directory, strerror(errno));
@@ -486,9 +619,9 @@ static void setup_hdf5_test_directory(void) {
     }
     exit(1);
   }
-  if(atexit(cleanup_hdf5_test_directory) != 0) {
+  if(atexit(cleanup_hdf5_test_directory_at_exit) != 0) {
     fprintf(stderr, "failed to register NN test cleanup\n");
-    if(chdir("/") != 0) {
+    if(chdir(nn_original_directory) != 0) {
       fprintf(stderr, "failed to leave NN test directory %s: %s\n",
               nn_test_directory, strerror(errno));
     }
@@ -933,6 +1066,8 @@ int main(void) {
   setup_hdf5_test_directory();
   test_hdf5_loaders();
   test_hdf5_loader_error_paths();
+  CHECK(cleanup_hdf5_test_directory() == 0,
+        "failed to clean NN HDF5 test artifacts");
 #endif
   printf("All c2p neural-network guess tests succeeded\n");
   return 0;

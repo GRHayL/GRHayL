@@ -396,6 +396,59 @@ void run_unit_test(
   }
 }
 
+static void check_failed_wrappers_leave_routine_unset(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos) {
+
+  ghl_metric_quantities metric_adm;
+  ghl_initialize_metric(1, 0, 0, 0,
+                        1, 0, 0,
+                        1, 0, 1,
+                        &metric_adm);
+  ghl_ADM_aux_quantities metric_aux;
+  ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
+
+  const ghl_conservative_quantities invalid_cons = {
+    .rho = NAN,
+    .tau = NAN,
+    .SD = {NAN, NAN, NAN},
+    .entropy = NAN,
+    .Y_e = NAN,
+  };
+
+#define CHECK_FAILED_WRAPPER(name_, call_)                              \
+  do {                                                                 \
+    ghl_primitive_quantities prims = { 0 };                             \
+    ghl_con2prim_diagnostics diagnostics;                              \
+    ghl_initialize_diagnostics(&diagnostics);                          \
+    const ghl_error_codes_t wrapper_error = (call_);                    \
+    if(wrapper_error == ghl_success                                    \
+          || diagnostics.which_routine != ghl_con2prim_id_None) {      \
+      ghl_error("%s failure set which_routine=%d (error=%d)\n",         \
+                (name_), (int)diagnostics.which_routine,               \
+                (int)wrapper_error);                                   \
+    }                                                                  \
+  } while(0)
+
+  CHECK_FAILED_WRAPPER("Noble2D",
+        ghl_tabulated_Noble2D(params, eos, &metric_adm, &metric_aux,
+                              &invalid_cons, &prims, &diagnostics));
+  CHECK_FAILED_WRAPPER("Palenzuela1D",
+        ghl_tabulated_Palenzuela1D_energy(params, eos, &metric_adm, &metric_aux,
+                                          &invalid_cons, &prims, &diagnostics));
+  CHECK_FAILED_WRAPPER("Palenzuela1D_entropy",
+        ghl_tabulated_Palenzuela1D_entropy(params, eos, &metric_adm, &metric_aux,
+                                           &invalid_cons, &prims, &diagnostics));
+  CHECK_FAILED_WRAPPER("Newman1D",
+        ghl_tabulated_Newman1D_energy(params, eos, &metric_adm, &metric_aux,
+                                      &invalid_cons, &prims, &diagnostics));
+  CHECK_FAILED_WRAPPER("Newman1D_entropy",
+        ghl_tabulated_Newman1D_entropy(params, eos, &metric_adm, &metric_aux,
+                                       &invalid_cons, &prims, &diagnostics));
+
+#undef CHECK_FAILED_WRAPPER
+}
+
 
 int main(int argc, char **argv) {
 
@@ -463,6 +516,7 @@ int main(int argc, char **argv) {
   eos.root_finding_precision=1e-10;
 
   if( test_key ) {
+    check_failed_wrappers_leave_routine_unset(&params, &eos);
     for(int nn_guess_enabled = 0; nn_guess_enabled <= 1; nn_guess_enabled++) {
       observed_nn_retries = 0;
       observed_nn_main_retry_successes = 0;

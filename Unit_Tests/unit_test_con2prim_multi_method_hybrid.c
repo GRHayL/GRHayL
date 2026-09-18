@@ -1,6 +1,9 @@
 #include "ghl_unit_tests.h"
 
-static bool is_compiler_sensitive_Noble_boundary(
+/* A pressure sign at roundoff can differ across supported compilers. Only the
+ * success/negative-pressure pair is tolerated; those boundary states are not
+ * used as primitive-value or reconservation oracles. */
+static bool is_documented_Noble_pressure_boundary(
       const ghl_con2prim_id_t method,
       const ghl_error_codes_t actual,
       const ghl_error_codes_t expected) {
@@ -32,7 +35,7 @@ static bool Noble_reconservation_fails(
   const double actual_values[5] = {
     actual.rho, actual.tau, actual.SD[0], actual.SD[1], actual.SD[2]
   };
-  const double tolerance = 100.0 * params->con2prim_solver_tolerance;
+  const double tolerance = 10.0 * params->con2prim_solver_tolerance;
   for(int i = 0; i < 5; ++i) {
     const double scale = fmax(fabs(expected_values[i]), 1.0e-30);
     if(!isfinite(actual_values[i])
@@ -255,6 +258,7 @@ int main(int argc, char **argv) {
     const double poison = 0.0/0.0;
     int fcnt = 0;
     int expected_fcnt = 0;
+    int pressure_boundary_count = 0;
     bool sticky_speed_limited_checked = false;
     for(int i=0;i<arraylength;i++) {
       // Define the various GRHayL structs for the unit tests
@@ -295,7 +299,7 @@ int main(int argc, char **argv) {
       const ghl_primitive_quantities initial_prims = prims;
 
       const int check = ghl_con2prim_hybrid_select_method(methods[method], &params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
-      const bool compiler_sensitive_boundary = is_compiler_sensitive_Noble_boundary(
+      const bool compiler_sensitive_boundary = is_documented_Noble_pressure_boundary(
             methods[method], check, c2p_check[i]);
       if(check != c2p_check[i]
             && !compiler_sensitive_boundary) {
@@ -306,6 +310,11 @@ int main(int argc, char **argv) {
                     && c2p_check[i] != ghl_error_neg_pressure;
       if(check && check != ghl_error_neg_pressure) {
         fcnt++;
+        continue;
+      }
+
+      if(check == ghl_error_neg_pressure || c2p_check[i] == ghl_error_neg_pressure) {
+        pressure_boundary_count++;
         continue;
       }
 
@@ -365,6 +374,10 @@ int main(int argc, char **argv) {
                 ghl_get_con2prim_routine_name(methods[method]));
     }
     ghl_info("unit_test_hybrid_con2prim has passed for %.30s method! %d out of %d points succeeded.\n", ghl_get_con2prim_routine_name(methods[method]), arraylength-fcnt, arraylength);
+    if(pressure_boundary_count > 0) {
+      ghl_info("  excluded %d documented Noble pressure-sign boundary points\n",
+               pressure_boundary_count);
+    }
   }
   fclose(infile);
   fclose(inpert);

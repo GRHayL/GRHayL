@@ -13,7 +13,6 @@ bool ghl_finalize_Noble(
 
   const double gtmp = sqrt(1. - vsq);
   const double W = 1.0/gtmp;
-  const double w = Z * (1.0 - vsq);
 
   const double nU[4] = {metric_adm->lapseinv,
                        -metric_adm->lapseinv*metric_adm->betaU[0],
@@ -35,8 +34,12 @@ bool ghl_finalize_Noble(
   const bool speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
 
   prims->rho = harm_aux->D * gtmp;
-  if(speed_limited)
-    prims->rho = cons_undens->rho/(metric_adm->lapse*prims->u0);
+  double w = Z * (1.0 - vsq);
+  if(speed_limited) {
+    const double W_final = metric_adm->lapse*prims->u0;
+    prims->rho = cons_undens->rho/W_final;
+    w = Z/(W_final*W_final);
+  }
 
   /*  Assumes hybrid EOS */
   prims->press = ghl_pressure_rho0_w(eos, prims->rho, w);
@@ -79,14 +82,17 @@ bool ghl_finalize_Noble_entropy(
 
   const bool speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
 
-  if(speed_limited)
-    prims->rho = cons_undens->rho/(metric_adm->lapse*prims->u0);
+  double W_final = W;
+  if(speed_limited) {
+    W_final = metric_adm->lapse*prims->u0;
+    prims->rho = cons_undens->rho/W_final;
+  }
 
   /*  Assumes hybrid EOS */
   const double Gamma_ppoly = eos->Gamma_ppoly[ghl_hybrid_find_polytropic_index(eos, prims->rho)];
   const double Gm1 = Gamma_ppoly - 1.0;
   const double rho_Gm1 = pow(prims->rho,Gm1);
-  prims->press = cons_undens->entropy * rho_Gm1/W;
+  prims->press = cons_undens->entropy * rho_Gm1/W_final;
   prims->eps = ghl_hybrid_compute_epsilon(eos, prims->rho, prims->press);
   prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
   /*  Assumes hybrid EOS */

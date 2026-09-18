@@ -27,8 +27,8 @@
  *
  * @param[in] cons pointer to ghl_conservative_quantities struct containing
  *                 the input conservative variables; its density component is
- *                 denoted \f$ D_\mathrm{in} \f$ and its momentum components
- *                 are denoted \f$ S^\mathrm{in}_i \f$ below
+ *                 denoted \f$ D \f$ and its momentum components
+ *                 are denoted \f$ S_i \f$ below
  *
  * @param[in] rhob_in initial guess for the density \f$ \rho \f$
  *

@@ -69,6 +69,11 @@ GRHayLib maps Cactus controls into `ghl_initialize_params` at routing level:
 - Limit and gauge controls: `Psi6threshold`, `max_Lorentz_factor`, and
   `Lorenz_damping_factor`.
 
+Before initialization, `GRHayLib_paramcheck` rejects a
+`max_Lorentz_factor` that is nonfinite or less than `1`. Thus the admitted
+boundary is finite `max_Lorentz_factor >= 1`; this prevents the derived
+`inv_sq_max_Lorentz_factor` from receiving an invalid runtime value.
+
 The tabulated NN fallback toggle `enable_backup_nn_primitive_guess` is not
 part of `ghl_initialize_params`; GRHayLib passes it to
 `ghl_initialize_tabulated_eos` as the `enable_neural_net_c2p` argument.

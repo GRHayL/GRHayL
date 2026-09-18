@@ -45,7 +45,7 @@ static void ghl_guess_primitives_hybrid_simple(
   // params is not used by this function
   (void)params;
 
-  // Use atmosphere as initial guess:
+  // Use a cold, stationary state at the undensitized conserved density.
   prims->rho   = cons_undens->rho;
   prims->u0    = 1.0;
   prims->vU[0] = -metric_adm->betaU[0];

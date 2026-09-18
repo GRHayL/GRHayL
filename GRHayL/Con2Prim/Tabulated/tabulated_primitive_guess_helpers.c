@@ -86,11 +86,21 @@ void ghl_tabulated_primitive_guess_from_x(
     return;
   }
 
+  if(ghl_tabulated_enforce_bounds_rho_Ye_eps == NULL
+        || ghl_tabulated_compute_P_S_T_from_eps == NULL) {
+    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    return;
+  }
+
   prims->temperature = eos->T_max;
   ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &prims->rho, &prims->Y_e, &prims->eps);
-  ghl_tabulated_compute_P_S_T_from_eps(
+  const ghl_error_codes_t eos_error = ghl_tabulated_compute_P_S_T_from_eps(
         eos, prims->rho, prims->Y_e, prims->eps,
         &prims->press, &prims->entropy, &prims->temperature);
+  if(eos_error != ghl_success) {
+    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
+    return;
+  }
 
   const double z = x * prims->rho * W;
   const double velocity_denominator = z + aux->B_squared;

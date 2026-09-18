@@ -143,6 +143,14 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
     // Define the various GRHayL structs for the unit tests
     ghl_con2prim_diagnostics diagnostics;
+    diagnostics.tau_fix = true;
+    diagnostics.Stilde_fix = true;
+    diagnostics.speed_limited = true;
+    diagnostics.backup[0] = true;
+    diagnostics.backup[1] = true;
+    diagnostics.backup[2] = true;
+    diagnostics.nn_guess_used = true;
+    diagnostics.which_routine = ghl_con2prim_id_Font1D;
     diagnostics.n_iter = -1;
     ghl_initialize_diagnostics(&diagnostics);
     if(diagnostics.tau_fix || diagnostics.Stilde_fix || diagnostics.speed_limited
@@ -250,6 +258,42 @@ int main(int argc, char **argv) {
           || floor_cons.tau != (expect_floor ? eos.tau_atm : tau_inputs[i])) {
       ghl_error("tau atmosphere floor contract failed for synthetic case %d\n", i);
     }
+  }
+
+  ghl_primitive_quantities magnetic_prims = sticky_prims;
+  magnetic_prims.BU[0] = 2.0;
+  ghl_conservative_quantities magnetic_cons;
+  ghl_initialize_conservatives(
+        1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, &magnetic_cons);
+  ghl_con2prim_diagnostics magnetic_diagnostics;
+  ghl_initialize_diagnostics(&magnetic_diagnostics);
+  ghl_apply_conservative_limits(
+        &params, &eos, &sticky_metric, &magnetic_prims, &magnetic_cons,
+        &magnetic_diagnostics);
+  const double magnetic_tau = eos.tau_atm + 2.0;
+  if(!magnetic_diagnostics.tau_fix || magnetic_diagnostics.Stilde_fix
+        || magnetic_cons.tau != magnetic_tau) {
+    ghl_error("isolated magnetic-energy tau correction was not diagnosed\n");
+  }
+
+  ghl_primitive_quantities psi6_prims = sticky_prims;
+  psi6_prims.BU[0] = 1.0;
+  ghl_conservative_quantities psi6_cons;
+  const double psi6_tau = 0.5 + 1.0005*eos.tau_atm;
+  ghl_initialize_conservatives(
+        1.0, psi6_tau, 0.0, 0.0, 0.0, 0.0, 0.0, &psi6_cons);
+  ghl_con2prim_diagnostics psi6_diagnostics;
+  ghl_initialize_diagnostics(&psi6_diagnostics);
+  const double saved_psi6threshold = params.psi6threshold;
+  params.psi6threshold = 0.0;
+  ghl_apply_conservative_limits(
+        &params, &eos, &sticky_metric, &psi6_prims, &psi6_cons,
+        &psi6_diagnostics);
+  params.psi6threshold = saved_psi6threshold;
+  const double corrected_psi6_tau = 0.5 + 1.001*eos.tau_atm;
+  if(!psi6_diagnostics.tau_fix || psi6_diagnostics.Stilde_fix
+        || psi6_cons.tau != corrected_psi6_tau) {
+    ghl_error("isolated high-psi6 tau correction was not diagnosed\n");
   }
   ghl_info("ghl_apply_conservative_limits function test has passed!\n");
   free(lapse);
