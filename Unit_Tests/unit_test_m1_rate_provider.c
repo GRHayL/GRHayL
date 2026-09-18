@@ -1,5 +1,7 @@
 #include "ghl_radiation.h"
 #include "../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.h"
+#include "../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h"
+#include "../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h"
 #ifndef GHL_DISABLE_HDF5
 #include <hdf5.h>
 #include "ghl_nrpyeos_tabulated.h"
@@ -101,6 +103,56 @@ static bool provider_values_close(const double lhs, const double rhs) {
       4096.0 * DBL_EPSILON * fmax(fabs(lhs), fabs(rhs));
 }
 
+static bool same_nrpyleakage_raw_species(
+      const ghl_m1_nrpyleakage_species_raw_rates *restrict lhs,
+      const ghl_m1_nrpyleakage_species_raw_rates *restrict rhs) {
+  const double lhs_values[] = {
+      lhs->neutrino_degeneracy, lhs->F2, lhs->F3, lhs->F4, lhs->F5,
+      lhs->n_eq_cgs, lhs->J_eq_mev_cgs, lhs->mean_energy_mev,
+      lhs->eta_N_beta_cgs, lhs->eta_N_pair_cgs, lhs->eta_N_plasmon_cgs,
+      lhs->eta_N_brems_cgs, lhs->eta_E_beta_mev_cgs, lhs->eta_E_pair_mev_cgs,
+      lhs->eta_E_plasmon_mev_cgs, lhs->eta_E_brems_mev_cgs,
+      lhs->kappa_a_N_cc_cgs, lhs->kappa_a_E_cc_cgs,
+      lhs->kappa_s_N_neutron_cgs, lhs->kappa_s_N_proton_cgs,
+      lhs->kappa_s_E_neutron_cgs, lhs->kappa_s_E_proton_cgs};
+  const double rhs_values[] = {
+      rhs->neutrino_degeneracy, rhs->F2, rhs->F3, rhs->F4, rhs->F5,
+      rhs->n_eq_cgs, rhs->J_eq_mev_cgs, rhs->mean_energy_mev,
+      rhs->eta_N_beta_cgs, rhs->eta_N_pair_cgs, rhs->eta_N_plasmon_cgs,
+      rhs->eta_N_brems_cgs, rhs->eta_E_beta_mev_cgs, rhs->eta_E_pair_mev_cgs,
+      rhs->eta_E_plasmon_mev_cgs, rhs->eta_E_brems_mev_cgs,
+      rhs->kappa_a_N_cc_cgs, rhs->kappa_a_E_cc_cgs,
+      rhs->kappa_s_N_neutron_cgs, rhs->kappa_s_N_proton_cgs,
+      rhs->kappa_s_E_neutron_cgs, rhs->kappa_s_E_proton_cgs};
+  for(size_t i = 0; i < sizeof(lhs_values) / sizeof(lhs_values[0]); ++i)
+    if(lhs_values[i] != rhs_values[i])
+      return false;
+  return true;
+}
+
+static bool same_nrpyleakage_raw_rates(
+      const ghl_m1_nrpyleakage_raw_rates *restrict lhs,
+      const ghl_m1_nrpyleakage_raw_rates *restrict rhs) {
+  if(lhs->nux_single_species_multiplicity != rhs->nux_single_species_multiplicity)
+    return false;
+  for(int species = 0; species < ghl_m1_nrpyleakage_species_count; ++species)
+    if(!same_nrpyleakage_raw_species(&lhs->species[species], &rhs->species[species]))
+      return false;
+  return true;
+}
+
+static double nrpyleakage_fraction_roundoff_envelope(void) {
+  /* Keep this oracle identical to NRPyLeakage_normalize_nucleon_fractions(). */
+  const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
+  return 27.0 * gamma_64;
+}
+
+static void require_value_close(
+      const double actual, const double expected, const char *restrict label,
+      const int case_index) {
+  require_condition(provider_values_close(actual, expected), label, case_index);
+}
+
 #ifndef GHL_DISABLE_HDF5
 enum {
   PROVIDER_FIXTURE_NRHO = 3,
@@ -109,13 +161,6 @@ enum {
   PROVIDER_FIXTURE_CELL_COUNT =
       PROVIDER_FIXTURE_NRHO * PROVIDER_FIXTURE_NTEMP * PROVIDER_FIXTURE_NYE
 };
-
-typedef ghl_error_codes_t (*provider_legacy_eos_callback)(
-      const ghl_eos_parameters *restrict eos,
-      double rho, double Ye, double T,
-      double *restrict muhat, double *restrict mu_e,
-      double *restrict mu_p, double *restrict mu_n,
-      double *restrict X_n, double *restrict X_p);
 
 /* Keep malformed-table witnesses in memory only.  Each witness changes the
  * eight interpolation corners used by the authenticated interior point and
@@ -306,54 +351,6 @@ static bool create_provider_fixture(char *restrict path, const size_t path_size)
   return ok;
 }
 
-static ghl_error_codes_t provider_test_legacy_eos_callback_failure(
-      const ghl_eos_parameters *restrict eos,
-      const double rho, const double Ye, const double T,
-      double *restrict muhat, double *restrict mu_e,
-      double *restrict mu_p, double *restrict mu_n,
-      double *restrict X_n, double *restrict X_p) {
-  (void)eos;
-  (void)rho;
-  (void)Ye;
-  (void)T;
-  (void)muhat;
-  (void)mu_e;
-  (void)mu_p;
-  (void)mu_n;
-  (void)X_n;
-  (void)X_p;
-  return ghl_error_m1_microphysics_failure;
-}
-
-static int provider_test_legacy_invalid_field = -1;
-
-static ghl_error_codes_t provider_test_legacy_eos_callback_values(
-      const ghl_eos_parameters *restrict eos,
-      const double rho, const double Ye, const double T,
-      double *restrict muhat, double *restrict mu_e,
-      double *restrict mu_p, double *restrict mu_n,
-      double *restrict X_n, double *restrict X_p) {
-  (void)eos;
-  (void)rho;
-  (void)Ye;
-  (void)T;
-  *muhat = 12.0;
-  *mu_e = 8.0;
-  *mu_p = 5.0;
-  *mu_n = 20.0;
-  *X_n = 0.66;
-  *X_p = 0.34;
-  switch(provider_test_legacy_invalid_field) {
-    case 0: *muhat = NAN; break;
-    case 1: *mu_e = NAN; break;
-    case 2: *mu_p = NAN; break;
-    case 3: *mu_n = NAN; break;
-    case 4: *X_n = -DBL_MIN; break;
-    case 5: *X_p = -DBL_MIN; break;
-    default: break;
-  }
-  return ghl_success;
-}
 #endif
 
 static void validate_rate_bundle(
@@ -374,29 +371,14 @@ static void validate_rate_bundle(
 }
 
 static void test_nrpyleakage_raw_kernel(void) {
-  /* For Ye=3/4 and -muhat/T=log(2), the proton-rich composition
-   * formula is Y_pn=(2*Ye-1)/(1-exp(-log(2)))=1 and Y_np=1-Ye.
-   * This independently checks the positive-exponent branch without using
-   * the kernel's expm1 expression as its oracle. */
-  ghl_m1_nrpyleakage_thermo_state proton_rich;
-  require_error(
-      ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
-          1.0e-4, 0.75, 1.0, -log(2.0), 18.0, 5.0, 20.0,
-          0.25, 0.75, true, &proton_rich),
-      ghl_success, "proton-rich positive-exponent composition", 3082);
-  require_condition(
-      provider_values_close(proton_rich.Y_np, 0.25) &&
-      provider_values_close(proton_rich.Y_pn, 1.0),
-      "proton-rich composition differs from analytic populations", 3082);
-
   ghl_m1_nrpyleakage_thermo_state thermo;
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
           1.0e-4, 0.20, 8.0, 12.0, 18.0, 5.0, 20.0, 0.70, 0.20,
-          true, &thermo),
+          &thermo),
       ghl_success, "direct NRPyLeakage thermo construction", 3070);
   const double eta[ghl_m1_nrpyleakage_species_count] = {
-      -(thermo.mu_e - thermo.muhat) / thermo.T, 0.0, 0.0};
+      0.30, -0.20, 0.10};
   ghl_m1_nrpyleakage_raw_rates raw;
   require_error(
       ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
@@ -411,22 +393,271 @@ static void test_nrpyleakage_raw_kernel(void) {
         raw.species[species].mean_energy_mev > 0.0,
         "direct NRPyLeakage mean energy is not positive", 3071);
 
-  ghl_m1_nrpyleakage_legacy_kernel_result legacy;
+  ghl_m1_nrpyleakage_thermo_state roundoff_thermo = thermo;
+  roundoff_thermo.X_n = -nrpyleakage_fraction_roundoff_envelope();
+  ghl_m1_nrpyleakage_raw_rates roundoff_raw;
+  ghl_m1_nrpyleakage_raw_rates normalized_raw;
   require_error(
-      ghl_m1_nrpyleakage_compute_legacy_kernel_from_thermo(
-          &thermo, eta, &legacy),
-      ghl_success, "direct NRPyLeakage legacy kernel", 3072);
-  require_condition(
-      memcmp(&raw, &legacy.raw, sizeof(raw)) == 0,
-      "strict and legacy NRPyLeakage raw records differ", 3072);
-  ghl_m1_nrpyleakage_raw_rates legacy_raw;
+      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+          &roundoff_thermo, eta, &roundoff_raw),
+      ghl_success, "direct NRPyLeakage roundoff composition", 3071);
+  ghl_m1_nrpyleakage_thermo_state normalized_thermo = roundoff_thermo;
+  normalized_thermo.X_n = 0.0;
   require_error(
-      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_legacy(
-          &thermo, eta, &legacy_raw),
-      ghl_success, "direct NRPyLeakage legacy raw rates", 3073);
+      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+          &normalized_thermo, eta, &normalized_raw),
+      ghl_success, "direct NRPyLeakage exact normalized composition", 3071);
   require_condition(
-      memcmp(&raw, &legacy_raw, sizeof(raw)) == 0,
-      "legacy NRPyLeakage raw wrapper changed the record", 3073);
+      same_nrpyleakage_raw_rates(&roundoff_raw, &normalized_raw),
+      "roundoff composition raw rates differ from exact normalized rates", 3071);
+
+  /* Use the maintained NRPyLeakage helpers as the oracle for every changed
+   * local microphysics component.  The M1 adapter is expected to retain only
+   * its channel prefactors and unit bookkeeping around these helpers. */
+  const double rho_cgs = thermo.rho * NRPyLeakage_units_geom_to_cgs_D;
+  double B_n, B_p, Y_np, Y_pn, eta_n_minus_eta_p;
+  require_error(
+      NRPyLeakage_compute_nucleon_blocking(
+          rho_cgs, thermo.T, thermo.X_n, thermo.X_p, &B_n, &B_p, &Y_np,
+          &Y_pn, &eta_n_minus_eta_p),
+      ghl_success, "canonical mixed-composition nucleon blocking", 3072);
+  const double reaction_shift = nrpyl_compute_reaction_shift(
+      thermo.T, thermo.muhat, eta_n_minus_eta_p);
+  require_condition(isfinite(reaction_shift) &&
+                        fabs(reaction_shift - thermo.muhat) > 1.0e-12,
+                    "canonical kinetic reaction shift was not exercised", 3072);
+
+  nrpyl_beta_moments beta_nue_emission, beta_anue_emission;
+  nrpyl_beta_moments beta_nue_absorption, beta_anue_absorption;
+  require_error(
+      nrpyl_compute_beta_emission_moments(
+          thermo.T, thermo.mu_e, eta[ghl_m1_nrpyleakage_nue], 1,
+          reaction_shift, &beta_nue_emission),
+      ghl_success, "canonical nue emission moments", 3072);
+  require_error(
+      nrpyl_compute_beta_emission_moments(
+          thermo.T, thermo.mu_e, eta[ghl_m1_nrpyleakage_anue], -1,
+          reaction_shift, &beta_anue_emission),
+      ghl_success, "canonical anue emission moments", 3072);
+  require_error(
+      nrpyl_compute_beta_absorption_moments(
+          thermo.T, thermo.mu_e, eta[ghl_m1_nrpyleakage_nue], 1,
+          reaction_shift, &beta_nue_absorption),
+      ghl_success, "canonical nue absorption moments", 3072);
+  require_error(
+      nrpyl_compute_beta_absorption_moments(
+          thermo.T, thermo.mu_e, eta[ghl_m1_nrpyleakage_anue], -1,
+          reaction_shift, &beta_anue_absorption),
+      ghl_success, "canonical anue absorption moments", 3072);
+
+  const double beta_prefactor =
+      8.0 * NRPyLeakage_N_A * NRPyLeakage_beta * pow(thermo.T, 5)
+      * rho_cgs * (M_PI / NRPyLeakage_hc3)
+      * ((3.0 / 8.0) * NRPyLeakage_alpha * NRPyLeakage_alpha + 1.0 / 8.0);
+  const double opacity_prefactor =
+      NRPyLeakage_N_A * NRPyLeakage_sigma_0 * thermo.T * thermo.T * rho_cgs
+      / (NRPyLeakage_m_e_c2 * NRPyLeakage_m_e_c2);
+  const double cc_prefactor = opacity_prefactor
+      * ((3.0 / 4.0) * NRPyLeakage_alpha * NRPyLeakage_alpha + 1.0 / 4.0);
+  const double neutron_scattering_factor =
+      B_n * ((5.0 / 24.0) * NRPyLeakage_alpha * NRPyLeakage_alpha + 1.0 / 24.0);
+  const double proton_scattering_factor =
+      B_p * ((1.0 / 6.0) * (NRPyLeakage_C_V - 1.0) * (NRPyLeakage_C_V - 1.0)
+             + (5.0 / 24.0) * NRPyLeakage_alpha * NRPyLeakage_alpha);
+
+  double nue_F2, nue_F3, nue_F4, nue_F5;
+  double anue_F2, anue_F3, anue_F4, anue_F5;
+  double nux_F2, nux_F3, nux_F4, nux_F5;
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(2, eta[0], &nue_F2),
+                ghl_success, "canonical nue F2 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(3, eta[0], &nue_F3),
+                ghl_success, "canonical nue F3 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(4, eta[0], &nue_F4),
+                ghl_success, "canonical nue F4 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(5, eta[0], &nue_F5),
+                ghl_success, "canonical nue F5 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(2, eta[1], &anue_F2),
+                ghl_success, "canonical anue F2 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(3, eta[1], &anue_F3),
+                ghl_success, "canonical anue F3 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(4, eta[1], &anue_F4),
+                ghl_success, "canonical anue F4 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(5, eta[1], &anue_F5),
+                ghl_success, "canonical anue F5 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(2, 0.0, &nux_F2),
+                ghl_success, "canonical nux F2 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(3, 0.0, &nux_F3),
+                ghl_success, "canonical nux F3 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(4, 0.0, &nux_F4),
+                ghl_success, "canonical nux F4 oracle", 3072);
+  require_error(NRPyLeakage_Fermi_Dirac_integrals(5, 0.0, &nux_F5),
+                ghl_success, "canonical nux F5 oracle", 3072);
+
+  const double expected_nue_scattering_n = opacity_prefactor * neutron_scattering_factor
+                                           * nue_F4 / nue_F2;
+  const double expected_nue_scattering_p = opacity_prefactor * proton_scattering_factor
+                                           * nue_F4 / nue_F2;
+  const double expected_anue_scattering_n = opacity_prefactor * neutron_scattering_factor
+                                            * anue_F4 / anue_F2;
+  const double expected_anue_scattering_p = opacity_prefactor * proton_scattering_factor
+                                            * anue_F4 / anue_F2;
+  const double expected_nux_scattering_n = opacity_prefactor * neutron_scattering_factor
+                                           * nux_F4 / nux_F2;
+  const double expected_nux_scattering_p = opacity_prefactor * proton_scattering_factor
+                                           * nux_F4 / nux_F2;
+  const double expected_nue_energy_n = opacity_prefactor * neutron_scattering_factor
+                                       * nue_F5 / nue_F3;
+  const double expected_nue_energy_p = opacity_prefactor * proton_scattering_factor
+                                       * nue_F5 / nue_F3;
+  const double expected_anue_energy_n = opacity_prefactor * neutron_scattering_factor
+                                        * anue_F5 / anue_F3;
+  const double expected_anue_energy_p = opacity_prefactor * proton_scattering_factor
+                                        * anue_F5 / anue_F3;
+  const double expected_nux_energy_n = opacity_prefactor * neutron_scattering_factor
+                                       * nux_F5 / nux_F3;
+  const double expected_nux_energy_p = opacity_prefactor * proton_scattering_factor
+                                       * nux_F5 / nux_F3;
+  require_value_close(raw.species[0].kappa_s_N_neutron_cgs,
+                      expected_nue_scattering_n,
+                      "canonical neutron blocking was not used for nue scattering", 3072);
+  require_value_close(raw.species[0].kappa_s_N_proton_cgs,
+                      expected_nue_scattering_p,
+                      "canonical proton blocking was not used for nue scattering", 3072);
+  require_value_close(raw.species[1].kappa_s_N_neutron_cgs,
+                      expected_anue_scattering_n,
+                      "canonical neutron blocking was not used for anue scattering", 3072);
+  require_value_close(raw.species[1].kappa_s_N_proton_cgs,
+                      expected_anue_scattering_p,
+                      "canonical proton blocking was not used for anue scattering", 3072);
+  require_value_close(raw.species[2].kappa_s_N_neutron_cgs,
+                      expected_nux_scattering_n,
+                      "canonical neutron blocking was not used for nux scattering", 3072);
+  require_value_close(raw.species[2].kappa_s_N_proton_cgs,
+                      expected_nux_scattering_p,
+                      "canonical proton blocking was not used for nux scattering", 3072);
+  require_value_close(raw.species[0].kappa_s_E_neutron_cgs,
+                      expected_nue_energy_n,
+                      "canonical neutron blocking was not used for nue energy scattering", 3072);
+  require_value_close(raw.species[0].kappa_s_E_proton_cgs,
+                      expected_nue_energy_p,
+                      "canonical proton blocking was not used for nue energy scattering", 3072);
+  require_value_close(raw.species[1].kappa_s_E_neutron_cgs,
+                      expected_anue_energy_n,
+                      "canonical neutron blocking was not used for anue energy scattering", 3072);
+  require_value_close(raw.species[1].kappa_s_E_proton_cgs,
+                      expected_anue_energy_p,
+                      "canonical proton blocking was not used for anue energy scattering", 3072);
+  require_value_close(raw.species[2].kappa_s_E_neutron_cgs,
+                      expected_nux_energy_n,
+                      "canonical neutron blocking was not used for nux energy scattering", 3072);
+  require_value_close(raw.species[2].kappa_s_E_proton_cgs,
+                      expected_nux_energy_p,
+                      "canonical proton blocking was not used for nux energy scattering", 3072);
+
+  require_value_close(raw.species[0].eta_N_beta_cgs,
+                      Y_pn * beta_prefactor * beta_nue_emission.number,
+                      "canonical nue emission number moment was not used", 3072);
+  require_value_close(raw.species[1].eta_N_beta_cgs,
+                      Y_np * beta_prefactor * beta_anue_emission.number,
+                      "canonical anue emission number moment was not used", 3072);
+  require_value_close(raw.species[0].eta_E_beta_mev_cgs,
+                      thermo.T * Y_pn * beta_prefactor * beta_nue_emission.energy,
+                      "canonical nue emission energy moment was not used", 3072);
+  require_value_close(raw.species[1].eta_E_beta_mev_cgs,
+                      thermo.T * Y_np * beta_prefactor * beta_anue_emission.energy,
+                      "canonical anue emission energy moment was not used", 3072);
+  require_value_close(raw.species[0].kappa_a_N_cc_cgs,
+                      cc_prefactor * Y_np * beta_nue_absorption.number,
+                      "canonical nue absorption number moment was not used", 3072);
+  require_value_close(raw.species[1].kappa_a_N_cc_cgs,
+                      cc_prefactor * Y_pn * beta_anue_absorption.number,
+                      "canonical anue absorption number moment was not used", 3072);
+  require_value_close(raw.species[0].kappa_a_E_cc_cgs,
+                      cc_prefactor * Y_np * beta_nue_absorption.energy,
+                      "canonical nue absorption energy moment was not used", 3072);
+  require_value_close(raw.species[1].kappa_a_E_cc_cgs,
+                      cc_prefactor * Y_pn * beta_anue_absorption.energy,
+                      "canonical anue absorption energy moment was not used", 3072);
+
+  const double expected_brems_number = nrpyl_bremsstrahlung_number_rate(
+      thermo.T, rho_cgs, thermo.X_n, thermo.X_p);
+  const double expected_brems_energy = nrpyl_bremsstrahlung_energy_rate(
+      thermo.T, expected_brems_number);
+  for(int species = 0; species < ghl_m1_nrpyleakage_species_count; ++species) {
+    require_value_close(raw.species[species].eta_N_brems_cgs,
+                        expected_brems_number,
+                        "canonical bremsstrahlung number helper was not used", 3072);
+    require_value_close(raw.species[species].eta_E_brems_mev_cgs,
+                        expected_brems_energy,
+                        "canonical bremsstrahlung energy helper was not used", 3072);
+  }
+
+  ghl_m1_nrpyleakage_thermo_state doubled_density = thermo;
+  doubled_density.rho *= 2.0;
+  ghl_m1_nrpyleakage_raw_rates doubled_raw;
+  require_error(
+      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+          &doubled_density, eta, &doubled_raw),
+      ghl_success, "doubled-density NRPyLeakage raw rates", 3073);
+  require_value_close(
+      doubled_raw.species[0].eta_N_brems_cgs / raw.species[0].eta_N_brems_cgs,
+      4.0, "bremsstrahlung number rate is not quadratic in density", 3073);
+  require_value_close(
+      doubled_raw.species[0].eta_E_brems_mev_cgs / raw.species[0].eta_E_brems_mev_cgs,
+      4.0, "bremsstrahlung energy rate is not quadratic in density", 3073);
+
+  /* Exact one-species endpoints must take the helper's analytic zero-product
+   * limit.  DBL_MAX chemical shifts make any accidental reaction-shift
+   * evaluation observable as a failure without changing the endpoint oracle. */
+  const struct {
+    const char *label;
+    double X_n;
+    double X_p;
+    double Ye;
+    double muhat;
+  } endpoints[] = {
+      {"pure-neutron beta endpoint", 1.0, 0.0, 0.0, DBL_MAX},
+      {"pure-proton beta endpoint", 0.0, 1.0, 1.0, -DBL_MAX}
+  };
+  for(size_t endpoint = 0;
+      endpoint < sizeof(endpoints) / sizeof(endpoints[0]); ++endpoint) {
+    ghl_m1_nrpyleakage_thermo_state endpoint_thermo;
+    require_error(
+        ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+            thermo.rho, endpoints[endpoint].Ye, thermo.T,
+            endpoints[endpoint].muhat, thermo.mu_e, thermo.mu_p, thermo.mu_n,
+            endpoints[endpoint].X_n, endpoints[endpoint].X_p,
+            &endpoint_thermo),
+        ghl_success, endpoints[endpoint].label, 3078 + (int)endpoint);
+    double endpoint_B_n, endpoint_B_p, endpoint_Y_np, endpoint_Y_pn;
+    double endpoint_eta_difference;
+    require_error(
+        NRPyLeakage_compute_nucleon_blocking(
+            endpoint_thermo.rho * NRPyLeakage_units_geom_to_cgs_D,
+            endpoint_thermo.T, endpoint_thermo.X_n, endpoint_thermo.X_p,
+            &endpoint_B_n, &endpoint_B_p, &endpoint_Y_np, &endpoint_Y_pn,
+            &endpoint_eta_difference),
+        ghl_success, "canonical endpoint nucleon blocking", 3078 + (int)endpoint);
+    require_condition(endpoint_eta_difference == 0.0 &&
+                          endpoint_Y_np == endpoint_thermo.X_n &&
+                          endpoint_Y_pn == endpoint_thermo.X_p,
+                      "canonical endpoint transition populations are wrong",
+                      3078 + (int)endpoint);
+    ghl_m1_nrpyleakage_raw_rates endpoint_raw;
+    require_error(
+        ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+            &endpoint_thermo, eta, &endpoint_raw),
+        ghl_success, "endpoint NRPyLeakage raw rates", 3078 + (int)endpoint);
+    for(int species = ghl_m1_nrpyleakage_nue;
+        species <= ghl_m1_nrpyleakage_anue; ++species) {
+      require_condition(
+          endpoint_raw.species[species].eta_N_beta_cgs == 0.0 &&
+              endpoint_raw.species[species].eta_E_beta_mev_cgs == 0.0 &&
+              endpoint_raw.species[species].kappa_a_N_cc_cgs == 0.0 &&
+              endpoint_raw.species[species].kappa_a_E_cc_cgs == 0.0,
+          "endpoint beta channels are not exactly zero", 3078 + (int)endpoint);
+    }
+  }
 
   const ghl_m1_nrpyleakage_raw_rates untouched = {
       .nux_single_species_multiplicity = 17};
@@ -470,7 +701,7 @@ static void test_nrpyleakage_raw_kernel(void) {
         ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
             1.0e-4, 0.20, 8.0, 12.0, 18.0, 5.0, 20.0,
             invalid_fractions[case_index][0], invalid_fractions[case_index][1],
-            true, &thermo),
+            &thermo),
         ghl_error_m1_microphysics_failure,
         "NRPyLeakage out-of-range free-nucleon fraction",
         3076 + (int)case_index);
@@ -480,118 +711,157 @@ static void test_nrpyleakage_raw_kernel(void) {
         3076 + (int)case_index);
   }
 
-#ifdef GHL_DISABLE_HDF5
-  /* Both EOS-callback wrapper conventions must report the disabled-HDF5
-   * boundary without publishing a partial thermodynamic state. */
-  const ghl_m1_nrpyleakage_thermo_state disabled_before = {
-      .rho = 11.0, .rho_cgs = 12.0, .T = 13.0, .Ye = 14.0,
-      .muhat = 15.0, .mu_e = 16.0, .mu_p = 17.0, .mu_n = 18.0,
-      .X_n = 19.0, .X_p = 20.0, .Y_np = 21.0, .Y_pn = 22.0};
-  ghl_m1_nrpyleakage_thermo_state disabled_thermo = disabled_before;
-  ghl_eos_parameters disabled_eos = {0};
-  require_error(
-      ghl_m1_nrpyleakage_compute_thermo_state(
-          &disabled_eos, 1.0e-4, 0.2, 8.0, &disabled_thermo),
-      ghl_error_used_disabled_hdf5,
-      "disabled-HDF5 strict thermo wrapper", 3080);
-  require_condition(
-      memcmp(&disabled_thermo, &disabled_before, sizeof(disabled_thermo)) == 0,
-      "disabled-HDF5 strict thermo wrapper changed output", 3080);
-
-  disabled_thermo = disabled_before;
-  require_error(
-      ghl_m1_nrpyleakage_compute_thermo_state_legacy(
-          &disabled_eos, 1.0e-4, 0.2, 8.0, &disabled_thermo),
-      ghl_error_used_disabled_hdf5,
-      "disabled-HDF5 legacy thermo wrapper", 3081);
-  require_condition(
-      memcmp(&disabled_thermo, &disabled_before, sizeof(disabled_thermo)) == 0,
-      "disabled-HDF5 legacy thermo wrapper changed output", 3081);
-#endif
 }
 
 static void test_nrpyleakage_supported_thermo_boundaries(void) {
-#ifndef GHL_DISABLE_HDF5
-  /* The adapter builder is private.  Its input guard is reached here through
-   * the supported legacy EOS callback wrapper, while malformed callback
-   * fields are subsequently rejected by the supported strict raw-rate
-   * wrapper.  Do not treat direct private-builder calls as public coverage. */
+  /* The builder is the strict adapter boundary used after the provider owns
+   * EOS lookup.  Exercise its input and EOS-quantity validation directly while
+   * checking that rejected candidates never reach the caller-owned state. */
   const ghl_m1_nrpyleakage_thermo_state untouched = {
-      .rho = 31.0, .rho_cgs = 32.0, .T = 33.0, .Ye = 0.34,
+      .rho = 31.0, .T = 33.0, .Ye = 0.34,
       .muhat = 35.0, .mu_e = 36.0, .mu_p = 37.0, .mu_n = 38.0,
-      .X_n = 0.66, .X_p = 0.34, .Y_np = 40.0, .Y_pn = 41.0};
-  ghl_eos_parameters eos = {0};
-  const provider_legacy_eos_callback saved_callback =
-      ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
-  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T =
-      provider_test_legacy_eos_callback_values;
-
+      .X_n = 0.66, .X_p = 0.34};
   const struct {
     const char *label;
     double rho;
     double Ye;
     double T;
   } invalid_inputs[] = {
-      {"legacy callback NaN density", NAN, 0.34, 1.0},
-      {"legacy callback nonpositive density", 0.0, 0.34, 1.0},
-      {"legacy callback NaN temperature", 1.0, 0.34, NAN},
-      {"legacy callback nonpositive temperature", 1.0, 0.34, 0.0},
-      {"legacy callback NaN electron fraction", 1.0, NAN, 1.0},
-      {"legacy callback negative electron fraction", 1.0, -DBL_MIN, 1.0},
-      {"legacy callback electron fraction above one", 1.0,
+      {"strict adapter NaN density", NAN, 0.34, 1.0},
+      {"strict adapter nonpositive density", 0.0, 0.34, 1.0},
+      {"strict adapter NaN temperature", 1.0, 0.34, NAN},
+      {"strict adapter nonpositive temperature", 1.0, 0.34, 0.0},
+      {"strict adapter NaN electron fraction", 1.0, NAN, 1.0},
+      {"strict adapter negative electron fraction", 1.0, -DBL_MIN, 1.0},
+      {"strict adapter electron fraction above one", 1.0,
        1.0 + DBL_EPSILON, 1.0}
   };
-  provider_test_legacy_invalid_field = -1;
   for(size_t i = 0; i < sizeof(invalid_inputs) / sizeof(invalid_inputs[0]); ++i) {
     ghl_m1_nrpyleakage_thermo_state staged = untouched;
     const ghl_error_codes_t error =
-        ghl_m1_nrpyleakage_compute_thermo_state_legacy(
-            &eos, invalid_inputs[i].rho, invalid_inputs[i].Ye,
-            invalid_inputs[i].T, &staged);
+        ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+            invalid_inputs[i].rho, invalid_inputs[i].Ye, invalid_inputs[i].T,
+            12.0, 8.0, 5.0, 20.0, 0.66, 0.34, &staged);
     require_error(error, ghl_error_m1_microphysics_failure,
                   invalid_inputs[i].label, 3130 + (int)i);
     require_condition(memcmp(&staged, &untouched, sizeof(staged)) == 0,
-                      "invalid legacy input changed thermodynamic output",
+                      "invalid strict adapter input changed thermodynamic output",
                       3130 + (int)i);
   }
 
-  /* Legacy intentionally accepts these callback fields.  The supported
-   * strict raw-rate caller owns the finite/range check and must not publish a
-   * result when any one is malformed. */
-  const char *const invalid_labels[] = {
-      "strict raw wrapper NaN muhat",
-      "strict raw wrapper NaN electron chemical potential",
-      "strict raw wrapper NaN proton chemical potential",
-      "strict raw wrapper NaN neutron chemical potential",
-      "strict raw wrapper negative neutron fraction",
-      "strict raw wrapper negative proton fraction"
+  const struct {
+    const char *label;
+    double muhat;
+    double mu_e;
+    double mu_p;
+    double mu_n;
+    double X_n;
+    double X_p;
+  } invalid_eos_quantities[] = {
+      {"strict adapter NaN muhat", NAN, 8.0, 5.0, 20.0, 0.66, 0.34},
+      {"strict adapter NaN electron chemical potential", 12.0, NAN,
+       5.0, 20.0, 0.66, 0.34},
+      {"strict adapter NaN proton chemical potential", 12.0, 8.0,
+       NAN, 20.0, 0.66, 0.34},
+      {"strict adapter NaN neutron chemical potential", 12.0, 8.0,
+       5.0, NAN, 0.66, 0.34},
+      {"strict adapter NaN neutron fraction", 12.0, 8.0,
+       5.0, 20.0, NAN, 0.34},
+      {"strict adapter positive-infinite neutron fraction", 12.0, 8.0,
+       5.0, 20.0, INFINITY, 0.34},
+      {"strict adapter negative-infinite neutron fraction", 12.0, 8.0,
+       5.0, 20.0, -INFINITY, 0.34},
+      {"strict adapter NaN proton fraction", 12.0, 8.0,
+       5.0, 20.0, 0.66, NAN},
+      {"strict adapter positive-infinite proton fraction", 12.0, 8.0,
+       5.0, 20.0, 0.66, INFINITY},
+      {"strict adapter negative-infinite proton fraction", 12.0, 8.0,
+       5.0, 20.0, 0.66, -INFINITY}
   };
-  const double eta[ghl_m1_nrpyleakage_species_count] = {0.0, 0.0, 0.0};
-  const ghl_m1_nrpyleakage_raw_rates raw_untouched = {
-      .nux_single_species_multiplicity = 29};
-  for(provider_test_legacy_invalid_field = 0;
-      provider_test_legacy_invalid_field < 6;
-      ++provider_test_legacy_invalid_field) {
-    ghl_m1_nrpyleakage_thermo_state malformed;
+  for(size_t i = 0;
+      i < sizeof(invalid_eos_quantities) / sizeof(invalid_eos_quantities[0]);
+      ++i) {
+    ghl_m1_nrpyleakage_thermo_state staged = untouched;
     require_error(
-        ghl_m1_nrpyleakage_compute_thermo_state_legacy(
-            &eos, 1.0e-4, 0.34, 8.0, &malformed),
-        ghl_success, "legacy callback malformed thermo state", 3140 +
-        provider_test_legacy_invalid_field);
-    ghl_m1_nrpyleakage_raw_rates raw = raw_untouched;
-    require_error(
-        ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
-            &malformed, eta, &raw),
-        ghl_error_m1_microphysics_failure, invalid_labels[
-        provider_test_legacy_invalid_field], 3140 +
-        provider_test_legacy_invalid_field);
-    require_condition(memcmp(&raw, &raw_untouched, sizeof(raw)) == 0,
-                      "strict raw wrapper published malformed callback state",
-                      3140 + provider_test_legacy_invalid_field);
+        ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+            1.0e-4, 0.34, 8.0, invalid_eos_quantities[i].muhat,
+            invalid_eos_quantities[i].mu_e, invalid_eos_quantities[i].mu_p,
+            invalid_eos_quantities[i].mu_n, invalid_eos_quantities[i].X_n,
+            invalid_eos_quantities[i].X_p, &staged),
+        ghl_error_m1_microphysics_failure, invalid_eos_quantities[i].label,
+        3140 + (int)i);
+    require_condition(
+        memcmp(&staged, &untouched, sizeof(staged)) == 0,
+        "invalid strict adapter EOS quantity changed thermodynamic output",
+        3140 + (int)i);
   }
-  provider_test_legacy_invalid_field = -1;
-  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_callback;
-#endif
+
+  const double fraction_roundoff = nrpyleakage_fraction_roundoff_envelope();
+  const struct {
+    const char *label;
+    double X_n;
+    double X_p;
+    double normalized_X_n;
+    double normalized_X_p;
+  } accepted_roundoff_compositions[] = {
+      {"strict adapter lower composition roundoff",
+       -fraction_roundoff, 0.34, 0.0, 0.34},
+      {"strict adapter upper composition roundoff",
+       0.66, 1.0 + fraction_roundoff, 0.66, 1.0},
+      {"strict adapter lower proton composition roundoff",
+       0.66, -fraction_roundoff, 0.66, 0.0},
+      {"strict adapter upper neutron composition roundoff",
+       1.0 + fraction_roundoff, 0.34, 1.0, 0.34}
+  };
+  for(size_t i = 0;
+      i < sizeof(accepted_roundoff_compositions) /
+              sizeof(accepted_roundoff_compositions[0]);
+      ++i) {
+    ghl_m1_nrpyleakage_thermo_state staged = untouched;
+    require_error(
+        ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+            1.0e-4, 0.34, 8.0, 12.0, 8.0, 5.0, 20.0,
+            accepted_roundoff_compositions[i].X_n,
+            accepted_roundoff_compositions[i].X_p, &staged),
+        ghl_success, accepted_roundoff_compositions[i].label, 3150 + (int)i);
+    require_condition(
+        staged.X_n == accepted_roundoff_compositions[i].normalized_X_n &&
+        staged.X_p == accepted_roundoff_compositions[i].normalized_X_p,
+        "accepted composition roundoff was not normalized",
+        3150 + (int)i);
+  }
+
+  const struct {
+    const char *label;
+    double X_n;
+    double X_p;
+  } rejected_adjacent_compositions[] = {
+      {"strict adapter below lower neutron envelope",
+       nextafter(-fraction_roundoff, -INFINITY), 0.34},
+      {"strict adapter above upper neutron envelope",
+       nextafter(1.0 + fraction_roundoff, INFINITY), 0.34},
+      {"strict adapter below lower proton envelope",
+       0.66, nextafter(-fraction_roundoff, -INFINITY)},
+      {"strict adapter above upper proton envelope",
+       0.66, nextafter(1.0 + fraction_roundoff, INFINITY)}
+  };
+  for(size_t i = 0;
+      i < sizeof(rejected_adjacent_compositions) /
+              sizeof(rejected_adjacent_compositions[0]);
+      ++i) {
+    ghl_m1_nrpyleakage_thermo_state staged = untouched;
+    require_error(
+        ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+            1.0e-4, 0.34, 8.0, 12.0, 8.0, 5.0, 20.0,
+            rejected_adjacent_compositions[i].X_n,
+            rejected_adjacent_compositions[i].X_p, &staged),
+        ghl_error_m1_microphysics_failure,
+        rejected_adjacent_compositions[i].label, 3154 + (int)i);
+    require_condition(
+        memcmp(&staged, &untouched, sizeof(staged)) == 0,
+        "adjacent out-of-envelope composition changed thermodynamic output",
+        3154 + (int)i);
+  }
 }
 
 static void test_nrpyleakage_boundary_paths(void) {
@@ -602,11 +872,11 @@ static void test_nrpyleakage_boundary_paths(void) {
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
           1.0e-4, 0.20, 8.0, 12.0, 18.0, 5.0, 20.0, 0.70, 0.20,
-          false, &thermo),
-      ghl_success, "non-strict NRPyLeakage thermo construction", 3090);
+          &thermo),
+      ghl_success, "strict NRPyLeakage thermo construction", 3090);
   require_condition(
       thermo.X_n == 0.70 && thermo.X_p == 0.20,
-      "non-strict thermo construction changed composition inputs", 3090);
+      "strict thermo construction changed composition inputs", 3090);
 
   const double composition_cases[][2] = {
       {0.80, 12.0},
@@ -621,21 +891,18 @@ static void test_nrpyleakage_boundary_paths(void) {
     require_error(
         ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
             1.0e-4, Ye, 8.0, muhat, 18.0, 5.0, 20.0,
-            1.0 - Ye, Ye, true, &thermo),
+            1.0 - Ye, Ye, &thermo),
         ghl_success, "thermo composition branch", 3091 + (int)case_index);
     require_condition(
-        isfinite(thermo.Y_np) && isfinite(thermo.Y_pn) &&
-        thermo.Y_np >= 0.0 && thermo.Y_pn >= 0.0 &&
-         ((Ye == 0.5 && thermo.Y_np == 0.5 && thermo.Y_pn == 0.5) ||
-         (Ye != 0.5 && thermo.Y_np == 1.0 - Ye)),
-        "thermo composition branch produced an invalid ratio",
+        thermo.Ye == Ye && thermo.X_n == 1.0 - Ye && thermo.X_p == Ye,
+        "thermo composition branch changed primitive composition",
         3091 + (int)case_index);
   }
 
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
           1.0e-4, 0.20, 8.0, 12.0, 18.0, 5.0, 20.0, 0.70, 0.20,
-          true, NULL),
+          NULL),
       ghl_error_m1_null_pointer, "NULL thermo output", 3094);
 
   const ghl_m1_nrpyleakage_raw_rates untouched = {
@@ -659,45 +926,6 @@ static void test_nrpyleakage_boundary_paths(void) {
           &thermo, eta, NULL),
       ghl_error_m1_null_pointer, "NULL raw output", 3097);
 
-  const ghl_m1_nrpyleakage_legacy_kernel_result legacy_untouched = {
-      .raw.nux_single_species_multiplicity = 29};
-  ghl_m1_nrpyleakage_legacy_kernel_result legacy = legacy_untouched;
-  require_error(
-      ghl_m1_nrpyleakage_compute_legacy_kernel_from_thermo(
-          NULL, eta, &legacy),
-      ghl_error_m1_null_pointer, "NULL legacy thermo input", 3098);
-  require_condition(memcmp(&legacy, &legacy_untouched, sizeof(legacy)) == 0,
-                    "NULL legacy thermo input changed output", 3098);
-  legacy = legacy_untouched;
-  require_error(
-      ghl_m1_nrpyleakage_compute_legacy_kernel_from_thermo(
-          &thermo, NULL, &legacy),
-      ghl_error_m1_null_pointer, "NULL legacy degeneracy input", 3099);
-  require_condition(memcmp(&legacy, &legacy_untouched, sizeof(legacy)) == 0,
-                    "NULL legacy degeneracy input changed output", 3099);
-  require_error(
-      ghl_m1_nrpyleakage_compute_legacy_kernel_from_thermo(
-          &thermo, eta, NULL),
-      ghl_error_m1_null_pointer, "NULL legacy output", 3100);
-  ghl_m1_nrpyleakage_raw_rates legacy_raw_untouched = untouched;
-  require_error(
-      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_legacy(
-          NULL, eta, &legacy_raw_untouched),
-      ghl_error_m1_null_pointer, "NULL legacy raw thermo input", 3101);
-  require_condition(memcmp(&legacy_raw_untouched, &untouched, sizeof(raw)) == 0,
-                    "NULL legacy raw thermo input changed output", 3101);
-  legacy_raw_untouched = untouched;
-  require_error(
-      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_legacy(
-          &thermo, NULL, &legacy_raw_untouched),
-      ghl_error_m1_null_pointer, "NULL legacy raw degeneracy input", 3102);
-  require_condition(memcmp(&legacy_raw_untouched, &untouched, sizeof(raw)) == 0,
-                    "NULL legacy raw degeneracy input changed output", 3102);
-  require_error(
-      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_legacy(
-          &thermo, eta, NULL),
-      ghl_error_m1_null_pointer, "NULL legacy raw output", 3103);
-
   ghl_m1_nrpyleakage_thermo_state invalid_thermo = thermo;
   invalid_thermo.rho = NAN;
   raw = untouched;
@@ -708,30 +936,29 @@ static void test_nrpyleakage_boundary_paths(void) {
   require_condition(memcmp(&raw, &untouched, sizeof(raw)) == 0,
                     "nonfinite raw thermo state changed output", 3104);
 
-#ifndef GHL_DISABLE_HDF5
-  ghl_eos_parameters invalid_eos = {0};
-  invalid_eos.eos_type = ghl_eos_hybrid;
-  const ghl_m1_nrpyleakage_thermo_state invalid_eos_before = thermo;
+  /* The public raw interface accepts a finite thermodynamic record but still
+   * owns the strict nucleon-fraction normalization at the kernel boundary. */
+  ghl_m1_nrpyleakage_thermo_state invalid_composition = thermo;
+  invalid_composition.X_n = 1.0 + 1.0e-6;
+  raw = untouched;
   require_error(
-      ghl_m1_nrpyleakage_compute_thermo_state(
-          &invalid_eos, 1.0e-4, 0.2, 8.0, &thermo),
-      ghl_error_m1_microphysics_failure, "invalid NRPyLeakage EOS type", 3105);
-  require_condition(
-      memcmp(&thermo, &invalid_eos_before, sizeof(thermo)) == 0,
-      "invalid NRPyLeakage EOS type changed output", 3105);
-#endif
+      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+          &invalid_composition, eta, &raw),
+      ghl_error_m1_microphysics_failure,
+      "out-of-range raw nucleon composition", 3105);
+  require_condition(memcmp(&raw, &untouched, sizeof(raw)) == 0,
+                    "out-of-range raw composition changed output", 3105);
+
 }
 
-static void test_nrpyleakage_rate_overflow_policy(void) {
+static void test_nrpyleakage_rate_overflow(void) {
   /* The strict raw interface must reject an intermediate rate overflow and
-   * leave its caller-owned record untouched.  The legacy wrapper retains its
-   * historical finite-rate substitution, so this same finite thermodynamic
-   * state remains a useful compatibility witness. */
+   * leave its caller-owned record untouched. */
   ghl_m1_nrpyleakage_thermo_state thermo;
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
           1.0e-4, 0.20, 1.0e100, 12.0, 8.0, 18.0, 5.0,
-          0.70, 0.20, true, &thermo),
+          0.70, 0.20, &thermo),
       ghl_success, "large finite NRPyLeakage thermo construction", 3110);
   const double eta[ghl_m1_nrpyleakage_species_count] = {
       -(thermo.mu_e - thermo.muhat) / thermo.T, 0.0, 0.0};
@@ -747,38 +974,41 @@ static void test_nrpyleakage_rate_overflow_policy(void) {
       memcmp(&strict_raw, &untouched, sizeof(strict_raw)) == 0,
       "strict NRPyLeakage rate overflow changed output", 3110);
 
-  ghl_m1_nrpyleakage_legacy_kernel_result legacy;
-  require_error(
-      ghl_m1_nrpyleakage_compute_legacy_kernel_from_thermo(
-          &thermo, eta, &legacy),
-      ghl_success, "legacy NRPyLeakage rate-overflow substitution", 3111);
-  require_condition(
-      legacy.raw.nux_single_species_multiplicity == 1 &&
-      isfinite(legacy.raw.species[ghl_m1_nrpyleakage_nue].F2) &&
-      legacy.raw.species[ghl_m1_nrpyleakage_nue].F2 > 0.0,
-      "legacy NRPyLeakage overflow result lost its finite FD moments", 3111);
 }
 
 static void test_nrpyleakage_kernel_representability_edges(void) {
+  /* The public state remains finite, but the cgs density conversion can
+   * overflow before the canonical blocking helper is entered. */
+  ghl_m1_nrpyleakage_thermo_state blocking_failure_thermo;
+  require_error(
+      ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+          DBL_MAX, 0.50, 1.0, 0.0, 0.0, 0.0, 0.0,
+          0.50, 0.50, &blocking_failure_thermo),
+      ghl_success, "finite thermo with overflowing blocking density", 3127);
+  const double blocking_failure_eta[ghl_m1_nrpyleakage_species_count] = {
+      0.0, 0.0, 0.0};
+  const ghl_m1_nrpyleakage_raw_rates blocking_untouched = {
+      .nux_single_species_multiplicity = 43};
+  ghl_m1_nrpyleakage_raw_rates blocking_staged = blocking_untouched;
+  require_error(
+      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+          &blocking_failure_thermo, blocking_failure_eta, &blocking_staged),
+      ghl_error_m1_microphysics_failure,
+      "strict rejection of overflowing blocking density", 3127);
+  require_condition(
+      memcmp(&blocking_staged, &blocking_untouched, sizeof(blocking_staged)) == 0,
+      "overflowing blocking density changed raw output", 3127);
+
   /* A positive FD moment can be representable while its product with T
-   * underflows. The raw mean energy must stay positive, so reject this
+   * underflows. The strict raw mean energy must stay positive, so reject this
    * finite-input endpoint without publishing the partially computed rates. */
   ghl_m1_nrpyleakage_thermo_state cold_thermo;
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
           1.0e-4, 0.50, 1.0e-30, 0.0, 0.0, 0.0, 0.0,
-          0.50, 0.50, true, &cold_thermo),
+          0.50, 0.50, &cold_thermo),
       ghl_success, "cold thermo with nonrepresentable mean energy", 3124);
   const double cold_eta[ghl_m1_nrpyleakage_species_count] = {-700.0, 0.0, 0.0};
-  ghl_m1_nrpyleakage_legacy_kernel_result cold_legacy;
-  require_error(
-      ghl_m1_nrpyleakage_compute_legacy_kernel_from_thermo(
-          &cold_thermo, cold_eta, &cold_legacy),
-      ghl_success, "legacy mean-energy underflow witness", 3124);
-  require_condition(
-      cold_legacy.raw.species[0].F3 > 0.0
-          && cold_legacy.raw.species[0].mean_energy_mev == 0.0,
-      "cold endpoint did not isolate mean-energy underflow", 3124);
   const ghl_m1_nrpyleakage_raw_rates cold_untouched = {
       .nux_single_species_multiplicity = 41};
   ghl_m1_nrpyleakage_raw_rates cold_staged = cold_untouched;
@@ -791,6 +1021,27 @@ static void test_nrpyleakage_kernel_representability_edges(void) {
       memcmp(&cold_staged, &cold_untouched, sizeof(cold_staged)) == 0,
       "underflowing mean energy changed raw output", 3124);
 
+  /* Keep the first FD group and all Fermi factors representable, then make a
+   * later species moment underflow.  The adapter must collect that later
+   * helper failure and preserve the caller-owned record. */
+  ghl_m1_nrpyleakage_thermo_state late_fd_thermo;
+  require_error(
+      ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+          1.0e-4, 0.50, 1.0, 0.0, 0.0, 0.0, 0.0,
+          1.0, 0.0, &late_fd_thermo),
+      ghl_success, "thermo for later FD failure", 3126);
+  const double late_fd_eta[ghl_m1_nrpyleakage_species_count] = {
+      -1000.0, 0.0, 0.0};
+  ghl_m1_nrpyleakage_raw_rates late_fd_staged = cold_untouched;
+  require_error(
+      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+          &late_fd_thermo, late_fd_eta, &late_fd_staged),
+      ghl_error_m1_microphysics_failure,
+      "strict rejection of later nonpositive FD moment", 3126);
+  require_condition(
+      memcmp(&late_fd_staged, &cold_untouched, sizeof(late_fd_staged)) == 0,
+      "later nonpositive FD moment changed raw output", 3126);
+
   /* These are finite caller-owned thermo states.  The first case makes the
    * generated FD polynomial overflow; the strict wrapper must report that
    * loss of a positive FD moment without publishing a partial record. */
@@ -798,7 +1049,7 @@ static void test_nrpyleakage_kernel_representability_edges(void) {
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
           1.0e-4, 0.50, 1.0, 0.0, 0.0, 0.0, 0.0,
-          0.50, 0.50, true, &thermo),
+          0.50, 0.50, &thermo),
       ghl_success, "finite thermo with overflowing FD moment", 3120);
   thermo.mu_e = 1.0e100;
   const double eta[ghl_m1_nrpyleakage_species_count] = {0.0, 0.0, 0.0};
@@ -833,11 +1084,9 @@ static void test_nrpyleakage_kernel_representability_edges(void) {
    * nonfinite FD-argument guard rather than the caller-side state validation. */
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
-          1.0e-4, 0.50, 1.0, 0.0, 0.0, 0.0, 0.0,
-          0.50, 0.50, true, &thermo),
+          1.0e-4, 0.50, 1.0e-4, 0.0, DBL_MAX, 0.0, 0.0,
+          0.50, 0.50, &thermo),
       ghl_success, "finite thermo with nonrepresentable FD argument", 3121);
-  thermo.T = 1.0e-308;
-  thermo.mu_e = 1.0e308;
   staged = untouched;
   require_error(
       ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
@@ -854,7 +1103,7 @@ static void test_nrpyleakage_kernel_representability_edges(void) {
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
           1.0e-4, 0.20, 8.0, 12.0, 18.0, 5.0, 20.0,
-          0.70, 0.20, true, &thermo),
+          0.70, 0.20, &thermo),
       ghl_success, "finite thermo for FD-factor tail", 3122);
   const double extreme_eta[ghl_m1_nrpyleakage_species_count] = {
       1000.0, 0.0, 0.0};
@@ -868,6 +1117,22 @@ static void test_nrpyleakage_kernel_representability_edges(void) {
       memcmp(&staged, &untouched, sizeof(staged)) == 0,
       "underflowing FD factor changed raw output", 3122);
 
+  /* Exercise the representable positive-x branch of the Fermi blocking
+   * factor.  The extreme case above deliberately stops before assigning the
+   * factor; this moderate degeneracy must reach the finite assignment and
+   * publish a positive pair rate. */
+  const double positive_factor_eta[ghl_m1_nrpyleakage_species_count] = {
+      10.0, 0.0, 0.0};
+  ghl_m1_nrpyleakage_raw_rates positive_factor_rates = untouched;
+  require_error(
+      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+          &thermo, positive_factor_eta, &positive_factor_rates),
+      ghl_success, "strict acceptance of representable positive FD factor", 3122);
+  require_condition(
+      isfinite(positive_factor_rates.species[ghl_m1_nrpyleakage_nue].eta_N_pair_cgs)
+          && positive_factor_rates.species[ghl_m1_nrpyleakage_nue].eta_N_pair_cgs > 0.0,
+      "representable positive FD factor did not produce a pair rate", 3122);
+
   /* The equilibrium moments are products of positive FD moments and powers
    * of T.  At this finite positive temperature, the generated pair-energy
    * ratio is 0/0 before the raw moments can be published; preserve the caller
@@ -875,7 +1140,7 @@ static void test_nrpyleakage_kernel_representability_edges(void) {
   require_error(
       ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
           1.0e-4, 0.50, 1.0e-100, 0.0, 0.0, 0.0, 0.0,
-          0.50, 0.50, true, &thermo),
+          0.50, 0.50, &thermo),
       ghl_success, "finite thermo at pair-ratio underflow boundary", 3123);
   staged = untouched;
   require_error(
@@ -886,6 +1151,29 @@ static void test_nrpyleakage_kernel_representability_edges(void) {
   require_condition(
       memcmp(&staged, &untouched, sizeof(staged)) == 0,
       "nonrepresentable pair ratio changed raw output", 3123);
+
+  /* A finite EOS state can still make the canonical reaction-energy shift
+   * nonfinite: use the smallest representable neutron fraction to produce a
+   * large negative kinetic degeneracy difference, then add it to DBL_MAX.
+   * The adapter must translate the beta-helper error and keep its output
+   * transactionally untouched. */
+  ghl_m1_nrpyleakage_thermo_state shift_failure_thermo;
+  require_error(
+      ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+          1.0e-4, 0.50, 9.0e304, DBL_MAX, 0.0, 0.0, 0.0,
+          DBL_MIN, 1.0, &shift_failure_thermo),
+      ghl_success, "finite thermo with overflowing reaction shift", 3125);
+  const double shift_failure_eta[ghl_m1_nrpyleakage_species_count] = {
+      0.0, 0.0, 0.0};
+  ghl_m1_nrpyleakage_raw_rates shift_failure_staged = untouched;
+  require_error(
+      ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+          &shift_failure_thermo, shift_failure_eta, &shift_failure_staged),
+      ghl_error_m1_microphysics_failure,
+      "strict rejection of nonfinite reaction shift", 3125);
+  require_condition(
+      memcmp(&shift_failure_staged, &untouched, sizeof(shift_failure_staged)) == 0,
+      "nonfinite reaction shift changed raw output", 3125);
 }
 
 static void make_primitives(
@@ -1272,14 +1560,15 @@ static void test_invalid_primitive_keys(void) {
                 ghl_success, "invalid-key cache seed", 4100);
 
   ghl_primitive_quantities invalid[] = {
-      prims, prims, prims, prims, prims};
+      prims, prims, prims, prims, prims, prims};
   invalid[0].rho = 0.0;
   invalid[1].temperature = -1.0;
   invalid[1].eps = 0.0;
   invalid[2].Y_e = -0.01;
   invalid[3].Y_e = 1.01;
   invalid[4].rho = NAN;
-  for(int case_index = 0; case_index < 5; ++case_index) {
+  invalid[5].Y_e = NAN;
+  for(int case_index = 0; case_index < 6; ++case_index) {
     ghl_neutrino_rate_provider_cache cache_before = cache;
     ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
     memcpy(rates, valid_rates, sizeof(rates));
@@ -1314,6 +1603,39 @@ static void test_temperature_recovery(void) {
   ghl_primitive_quantities expected_prims = prims;
   expected_prims.temperature = prims.eps;
   compare_reference_rates(&provider, &expected_prims, rates, 4200);
+
+  const double nonpositive_temperatures[] = {0.0, -1.0};
+  for(size_t i = 0; i < sizeof(nonpositive_temperatures) /
+                              sizeof(nonpositive_temperatures[0]); ++i) {
+    prims.temperature = nonpositive_temperatures[i];
+    prims.eps = 0.65;
+    require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+            &provider, NULL, NULL, NULL, &prims, rates),
+        ghl_success, "nonpositive temperature recovered from epsilon",
+        4201 + (int)i);
+    validate_rate_bundle(rates, 4201 + (int)i);
+    expected_prims = prims;
+    expected_prims.temperature = prims.eps;
+    compare_reference_rates(&provider, &expected_prims, rates, 4201 + (int)i);
+  }
+
+  const double invalid_eps[] = {0.0, NAN, -1.0};
+  for(size_t i = 0; i < sizeof(invalid_eps) / sizeof(invalid_eps[0]); ++i) {
+    prims.temperature = NAN;
+    prims.eps = invalid_eps[i];
+    initialize_sentinel_rates(rates);
+    const ghl_m1_neutrino_rates rates_before[ghl_m1_neutrino_species_count] = {
+        rates[0], rates[1], rates[2]};
+    require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+            &provider, NULL, NULL, NULL, &prims, rates),
+        ghl_error_m1_microphysics_failure,
+        "invalid epsilon rejected during temperature recovery", 4203 + (int)i);
+    require_condition(
+        same_rate_bundle(rates, rates_before),
+        "invalid epsilon changed rates during temperature recovery", 4203 + (int)i);
+  }
 }
 
 static void test_default_provider(provider_rng *restrict rng) {
@@ -1334,9 +1656,9 @@ static void test_default_provider(provider_rng *restrict rng) {
       0,
       ghl_neutrino_rate_channel_charged_current |
           ghl_neutrino_rate_channel_nucleon_scattering,
-      ghl_neutrino_rate_channel_pair |
-          ghl_neutrino_rate_channel_plasmon |
-          ghl_neutrino_rate_channel_bremsstrahlung,
+      ghl_neutrino_rate_channel_pair,
+      ghl_neutrino_rate_channel_plasmon,
+      ghl_neutrino_rate_channel_bremsstrahlung,
       ghl_neutrino_rate_channel_charged_current |
           ghl_neutrino_rate_channel_nucleon_scattering |
           ghl_neutrino_rate_channel_pair |
@@ -1505,6 +1827,7 @@ static void test_provider_cache_snapshot_mismatches(void) {
       "cached density conversion mismatch",
       "cached opacity conversion mismatch",
       "cached emissivity conversion mismatch",
+      "cached backend mismatch",
       "cached EOS pointer mismatch"
   };
   for(int variant = 0; variant < (int)(sizeof(labels) / sizeof(labels[0]));
@@ -1534,6 +1857,9 @@ static void test_provider_cache_snapshot_mismatches(void) {
       cache.provider_snapshot.opacity_cgs_to_code = 2.0;
     else if(variant == 2)
       cache.provider_snapshot.emissivity_cgs_to_code = 2.0;
+    else if(variant == 3) {
+      cache.provider_snapshot.backend = ghl_neutrino_rate_backend_nrpyleakage;
+    }
     else {
       eos_argument = &dummy_eos;
       require_condition(cache.eos_snapshot == NULL,
@@ -1584,6 +1910,46 @@ static void test_provider_cache_same_rho_temperature_changed_ye(void) {
                     diagnostics.cache_misses == 2 &&
                     cache.thermo_Ye == prims.Y_e && cache.Ye == prims.Y_e,
                     "changed Ye reused a cached key", 1131);
+}
+
+static void test_provider_cache_incomplete_rate_record(void) {
+  /* A cache can carry valid thermodynamics before its rate bundle has been
+   * published.  Keep the provenance and thermo key valid so same_rates_key()
+   * must reject only the missing rates_valid flag. */
+  ghl_neutrino_rate_provider_context provider;
+  require_error(ghl_neutrino_rate_provider_initialize_default(&provider),
+                ghl_success, "incomplete-cache provider initialization", 1140);
+  ghl_neutrino_rate_provider_cache cache;
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  cache.thermo_valid = true;
+  cache.thermo_rho = 1.25;
+  cache.thermo_T = 0.8;
+  cache.thermo_Ye = 0.37;
+  cache.muhat = 0.0;
+  cache.mu_e = 0.0;
+  cache.mu_p = 0.0;
+  cache.mu_n = 0.0;
+  cache.X_n = 0.63;
+  cache.X_p = 0.37;
+  cache.provider_snapshot = provider;
+  cache.eos_snapshot = NULL;
+
+  ghl_primitive_quantities prims = {0};
+  prims.rho = cache.thermo_rho;
+  prims.temperature = cache.thermo_T;
+  prims.Y_e = cache.thermo_Ye;
+  prims.eps = prims.temperature;
+  ghl_neutrino_rate_provider_diagnostics diagnostics = {0};
+  ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+  require_error(
+      ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, &diagnostics, NULL, &prims, rates),
+      ghl_success, "incomplete-cache rate publication", 1140);
+  validate_rate_bundle(rates, 1140);
+  require_condition(
+      diagnostics.cache_hits == 0 && diagnostics.cache_misses == 1 &&
+      cache.rates_valid && cache.thermo_valid,
+      "incomplete cache was treated as a complete rate record", 1140);
 }
 
 static void test_recovery_and_transactional_failures(void) {
@@ -2107,7 +2473,7 @@ static void test_production_equilibrium_moments(
     ghl_m1_nrpyleakage_thermo_state thermo;
     require_error(
           ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
-                rho, Ye, T, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, true, &thermo),
+                rho, Ye, T, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, &thermo),
           ghl_success, "equilibrium fixture thermodynamic state", case_index);
     const double eta[ghl_m1_nrpyleakage_species_count] = { 0.0, 0.0, 0.0 };
     ghl_m1_nrpyleakage_raw_rates raw;
@@ -2248,7 +2614,7 @@ static void test_production_representability_transaction(
   ghl_m1_nrpyleakage_thermo_state thermo;
   require_error(
         ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
-              prims.rho, prims.Y_e, T, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, true, &thermo),
+              prims.rho, prims.Y_e, T, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, &thermo),
         ghl_success, "representability thermodynamic state", 3060);
   const double eta[ghl_m1_nrpyleakage_species_count] = { 0.0, 0.0, 0.0 };
   /* The strict raw kernel rejects this unrepresentable positive FD target
@@ -2375,6 +2741,41 @@ static void test_table_provider(const char *restrict table_path) {
     }
   }
 
+  /* Each production channel is independently optional.  Exercise masks that
+   * enter the raw-rate assembly with a single channel as well as the empty
+   * mask, so every species/channel predicate is observed true and false. */
+  const int production_channel_masks[] = {
+      0,
+      ghl_neutrino_rate_channel_charged_current,
+      ghl_neutrino_rate_channel_nucleon_scattering,
+      ghl_neutrino_rate_channel_pair,
+      ghl_neutrino_rate_channel_plasmon,
+      ghl_neutrino_rate_channel_bremsstrahlung,
+      ghl_neutrino_rate_channel_pair | ghl_neutrino_rate_channel_plasmon,
+      ghl_neutrino_rate_channel_pair | ghl_neutrino_rate_channel_bremsstrahlung,
+      ghl_neutrino_rate_channel_plasmon | ghl_neutrino_rate_channel_bremsstrahlung};
+  const int saved_channel_mask = provider.channel_mask;
+  for(size_t mask_index = 0;
+      mask_index < sizeof(production_channel_masks) /
+                       sizeof(production_channel_masks[0]); ++mask_index) {
+    provider.channel_mask = production_channel_masks[mask_index];
+    ghl_neutrino_rate_provider_cache mask_cache;
+    ghl_neutrino_rate_provider_cache_initialize(&mask_cache);
+    ghl_neutrino_rate_provider_diagnostics mask_diagnostics = {0};
+    ghl_m1_neutrino_rates mask_rates[ghl_m1_neutrino_species_count];
+    require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+            &provider, &mask_cache, &mask_diagnostics, &eos, &context_prims,
+            mask_rates),
+        ghl_success, "production channel-mask assembly", 3030 + (int)mask_index);
+    validate_rate_bundle(mask_rates, 3030 + (int)mask_index);
+    require_condition(
+        mask_diagnostics.cache_misses == 1 && mask_diagnostics.cache_hits == 0,
+        "production channel-mask call did not publish a fresh bundle",
+        3030 + (int)mask_index);
+  }
+  provider.channel_mask = saved_channel_mask;
+
   /* A repeated table key must reuse the cached thermodynamics and final rates. */
   ghl_primitive_quantities cached_prims = {0};
   cached_prims.rho = sqrt(eos.table_rho_min * eos.table_rho_max);
@@ -2382,40 +2783,14 @@ static void test_table_provider(const char *restrict table_path) {
   cached_prims.Y_e = 0.5 * (eos.table_Y_e_min + eos.table_Y_e_max);
   cached_prims.eps = 1.0;
 
-  /* Exercise both EOS callback conventions against the same authenticated
-   * interior table point.  The legacy callback intentionally has a different
-   * validation contract, so this checks successful finite thermodynamics
-   * rather than asserting bitwise equality between the two paths. */
-  ghl_m1_nrpyleakage_thermo_state table_thermo;
-  ghl_m1_nrpyleakage_thermo_state legacy_table_thermo;
-  require_error(
-      ghl_m1_nrpyleakage_compute_thermo_state(
-          &eos, cached_prims.rho, cached_prims.Y_e,
-          cached_prims.temperature, &table_thermo),
-      ghl_success, "strict table thermodynamics", 3038);
-  require_error(
-      ghl_m1_nrpyleakage_compute_thermo_state_legacy(
-          &eos, cached_prims.rho, cached_prims.Y_e,
-          cached_prims.temperature, &legacy_table_thermo),
-      ghl_success, "legacy table thermodynamics", 3039);
-  require_condition(
-      isfinite(table_thermo.mu_e) && isfinite(legacy_table_thermo.mu_e) &&
-      isfinite(table_thermo.muhat) && isfinite(legacy_table_thermo.muhat),
-      "table thermodynamics callback returned non-finite chemical potentials",
-      3039);
-
-  /* The strict table caller is the supported route to the adapter's
-   * representability checks.  Corrupt only the interpolation corners in
-   * memory, assert the rejected output is transactional, and restore the
-   * authenticated fixture bytes immediately after each witness. */
-  const ghl_m1_nrpyleakage_thermo_state malformed_table_untouched = {
-      .rho = 71.0, .rho_cgs = 72.0, .T = 73.0, .Ye = 0.74,
-      .muhat = 75.0, .mu_e = 76.0, .mu_p = 77.0, .mu_n = 78.0,
-      .X_n = 0.26, .X_p = 0.74, .Y_np = 80.0, .Y_pn = 81.0};
+  /* The public provider owns table lookup and then passes the resulting EOS
+   * quantities through the strict adapter.  Corrupt only the interpolation
+   * corners in memory, assert the rejected provider call is transactional, and
+   * restore every authenticated fixture value before the next witness. */
   const int malformed_table_keys[] = {
       NRPyEOS_mu_e_key, NRPyEOS_X_n_key, NRPyEOS_X_p_key};
   const double malformed_table_values[] = {
-      NAN, -DBL_MIN, 1.0 + DBL_EPSILON};
+      NAN, -1.0e-6, 1.0 + 1.0e-6};
   const char *const malformed_table_names[] = {
       "table NaN chemical potential", "table negative neutron fraction",
       "table super-unit proton fraction"};
@@ -2424,57 +2799,76 @@ static void test_table_provider(const char *restrict table_path) {
     provider_set_table_corners(
         &eos, malformed_table_keys[malformed],
         malformed_table_values[malformed], saved_table_corners);
-    ghl_m1_nrpyleakage_thermo_state malformed_table_staged =
-        malformed_table_untouched;
+    ghl_neutrino_rate_provider_cache malformed_cache;
+    ghl_neutrino_rate_provider_cache_initialize(&malformed_cache);
+    const ghl_neutrino_rate_provider_cache malformed_cache_before = malformed_cache;
+    ghl_m1_neutrino_rates malformed_rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(malformed_rates);
+    const ghl_m1_neutrino_rates malformed_rates_before[
+        ghl_m1_neutrino_species_count] = {
+            malformed_rates[0], malformed_rates[1], malformed_rates[2]};
+    ghl_neutrino_rate_provider_diagnostics malformed_diagnostics = {0};
     const ghl_error_codes_t malformed_table_error =
-        ghl_m1_nrpyleakage_compute_thermo_state(
-            &eos, cached_prims.rho, cached_prims.Y_e,
-            cached_prims.temperature, &malformed_table_staged);
+        ghl_neutrino_rate_provider_compute_cell(
+            &provider, &malformed_cache, &malformed_diagnostics, &eos,
+            &cached_prims, malformed_rates);
     require_error(malformed_table_error, ghl_error_m1_microphysics_failure,
                   malformed_table_names[malformed], 3150 + malformed);
     require_condition(
-        memcmp(&malformed_table_staged, &malformed_table_untouched,
-               sizeof(malformed_table_staged)) == 0,
-        "malformed table changed strict thermo output", 3150 + malformed);
+        memcmp(&malformed_cache, &malformed_cache_before,
+               sizeof(malformed_cache)) == 0 &&
+        same_rate_bundle(malformed_rates, malformed_rates_before) &&
+        malformed_diagnostics.failures == 1 &&
+        malformed_diagnostics.last_error == malformed_table_error,
+        "malformed table changed public provider outputs", 3150 + malformed);
     provider_restore_table_corners(
         &eos, malformed_table_keys[malformed], saved_table_corners);
   }
 
-  /* The legacy callback is an installed function-pointer boundary.  Exercise
-   * both callback failure outcomes through the public thermo wrapper and
-   * restore the process-global hook before making any further table calls. */
-  const provider_legacy_eos_callback saved_callback =
-      ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
-  const ghl_m1_nrpyleakage_thermo_state callback_untouched = {
-      .rho = 51.0, .rho_cgs = 52.0, .T = 53.0, .Ye = 0.54,
-      .muhat = 55.0, .mu_e = 56.0, .mu_p = 57.0, .mu_n = 58.0,
-      .X_n = 0.46, .X_p = 0.54, .Y_np = 60.0, .Y_pn = 61.0};
-  ghl_m1_nrpyleakage_thermo_state callback_staged = callback_untouched;
-  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = NULL;
-  const ghl_error_codes_t null_callback_error =
-      ghl_m1_nrpyleakage_compute_thermo_state_legacy(
-          &eos, cached_prims.rho, cached_prims.Y_e,
-          cached_prims.temperature, &callback_staged);
-  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_callback;
-  require_error(null_callback_error, ghl_error_m1_microphysics_failure,
-                "NULL legacy EOS callback", 3048);
-  require_condition(memcmp(&callback_staged, &callback_untouched,
-                           sizeof(callback_staged)) == 0,
-                    "NULL legacy EOS callback changed output", 3048);
+  const double fraction_roundoff = nrpyleakage_fraction_roundoff_envelope();
+  double saved_roundoff_table_corners[8];
+  provider_set_table_corners(
+      &eos, NRPyEOS_X_n_key, -fraction_roundoff,
+      saved_roundoff_table_corners);
+  ghl_neutrino_rate_provider_cache roundoff_cache;
+  ghl_neutrino_rate_provider_cache_initialize(&roundoff_cache);
+  ghl_neutrino_rate_provider_diagnostics roundoff_diagnostics = {0};
+  ghl_m1_neutrino_rates roundoff_rates[ghl_m1_neutrino_species_count];
+  initialize_sentinel_rates(roundoff_rates);
+  require_error(
+      ghl_neutrino_rate_provider_compute_cell(
+          &provider, &roundoff_cache, &roundoff_diagnostics, &eos,
+          &cached_prims, roundoff_rates),
+      ghl_success, "table roundoff composition", 3153);
+  validate_rate_bundle(roundoff_rates, 3153);
+  require_condition(
+      roundoff_cache.thermo_valid && roundoff_cache.X_n == 0.0 &&
+      roundoff_cache.X_p > 0.0 && roundoff_cache.X_p <= 1.0,
+      "table roundoff composition was not normalized in the cache", 3153);
+  provider_restore_table_corners(
+      &eos, NRPyEOS_X_n_key, saved_roundoff_table_corners);
 
-  callback_staged = callback_untouched;
-  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T =
-      provider_test_legacy_eos_callback_failure;
-  const ghl_error_codes_t callback_error =
-      ghl_m1_nrpyleakage_compute_thermo_state_legacy(
-          &eos, cached_prims.rho, cached_prims.Y_e,
-          cached_prims.temperature, &callback_staged);
-  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_callback;
-  require_error(callback_error, ghl_error_m1_microphysics_failure,
-                "failing legacy EOS callback", 3049);
-  require_condition(memcmp(&callback_staged, &callback_untouched,
-                           sizeof(callback_staged)) == 0,
-                    "failing legacy EOS callback changed output", 3049);
+  /* Re-run the same table point with exact zero corners and an independent
+   * cache.  The two published bundles must be identical after normalization. */
+  double saved_exact_table_corners[8];
+  provider_set_table_corners(
+      &eos, NRPyEOS_X_n_key, 0.0, saved_exact_table_corners);
+  ghl_neutrino_rate_provider_cache exact_cache;
+  ghl_neutrino_rate_provider_cache_initialize(&exact_cache);
+  ghl_neutrino_rate_provider_diagnostics exact_diagnostics = {0};
+  ghl_m1_neutrino_rates exact_rates[ghl_m1_neutrino_species_count];
+  initialize_sentinel_rates(exact_rates);
+  require_error(
+      ghl_neutrino_rate_provider_compute_cell(
+          &provider, &exact_cache, &exact_diagnostics, &eos,
+          &cached_prims, exact_rates),
+      ghl_success, "table exact normalized composition", 3154);
+  validate_rate_bundle(exact_rates, 3154);
+  require_condition(
+      same_rate_bundle(roundoff_rates, exact_rates),
+      "table roundoff rates differ from exact normalized rates", 3154);
+  provider_restore_table_corners(
+      &eos, NRPyEOS_X_n_key, saved_exact_table_corners);
 
   ghl_neutrino_rate_provider_cache_initialize(&cache);
   diagnostics = (ghl_neutrino_rate_provider_diagnostics){0};
@@ -2625,6 +3019,150 @@ static void test_table_provider(const char *restrict table_path) {
       same_rate_bundle(malformed_rates, malformed_rates_before),
       "malformed table bounds changed transactional outputs", 3046);
 
+  /* Temperature recovery validates table metadata before the inverse EOS. */
+  ghl_eos_parameters malformed_recovery_bounds = eos;
+  malformed_recovery_bounds.table_T_min = NAN;
+  malformed_recovery_bounds.T_min = NAN;
+  ghl_primitive_quantities malformed_recovery_prims = cached_prims;
+  malformed_recovery_prims.temperature = NAN;
+  malformed_recovery_prims.eps = 1.0;
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  initialize_sentinel_rates(malformed_rates);
+  diagnostics = (ghl_neutrino_rate_provider_diagnostics){0};
+  require_error(
+      ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, &diagnostics, &malformed_recovery_bounds,
+          &malformed_recovery_prims, malformed_rates),
+      ghl_error_m1_microphysics_failure,
+      "malformed recovery temperature bounds", 3047);
+
+  static const char *const recovery_failure_names[] = {
+      "nonfinite upper recovery temperature bound",
+      "nonpositive lower recovery temperature bound",
+      "reversed recovery temperature bounds",
+      "nonfinite recovery epsilon"};
+  for(size_t recovery_case = 0;
+      recovery_case < sizeof(recovery_failure_names) /
+                          sizeof(recovery_failure_names[0]); ++recovery_case) {
+    ghl_eos_parameters bad_recovery = eos;
+    ghl_primitive_quantities bad_recovery_prims = cached_prims;
+    bad_recovery_prims.temperature = NAN;
+    bad_recovery_prims.eps = 1.0;
+    switch(recovery_case) {
+      case 0: bad_recovery.table_T_max = NAN; bad_recovery.T_max = NAN; break;
+      case 1: bad_recovery.table_T_min = 0.0; bad_recovery.T_min = 0.0; break;
+      case 2: bad_recovery.table_T_min = 2.0 * eos.table_T_max; break;
+      case 3: bad_recovery_prims.eps = NAN; break;
+      default:
+        ghl_error("M1 rate-provider recovery test has an unknown variant\n");
+    }
+    ghl_neutrino_rate_provider_cache_initialize(&cache);
+    initialize_sentinel_rates(malformed_rates);
+    diagnostics = (ghl_neutrino_rate_provider_diagnostics){0};
+    require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+            &provider, &cache, &diagnostics, &bad_recovery,
+            &bad_recovery_prims, malformed_rates),
+        ghl_error_m1_microphysics_failure, recovery_failure_names[recovery_case],
+        3055 + (int)recovery_case);
+  }
+
+  /* A recovered temperature can also fail validation after the provisional
+   * geometric temperature is formed, or fail inside the inverse EOS itself. */
+  ghl_primitive_quantities out_of_bounds_recovery = cached_prims;
+  out_of_bounds_recovery.temperature = NAN;
+  out_of_bounds_recovery.eps = 1.0;
+  out_of_bounds_recovery.rho = 0.5 * eos.table_rho_min;
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  initialize_sentinel_rates(malformed_rates);
+  diagnostics = (ghl_neutrino_rate_provider_diagnostics){0};
+  require_error(
+      ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, &diagnostics, &eos, &out_of_bounds_recovery,
+          malformed_rates),
+      ghl_error_m1_microphysics_failure,
+      "out-of-bounds recovered temperature input", 3048);
+
+  ghl_primitive_quantities inverse_failure_prims = cached_prims;
+  inverse_failure_prims.temperature = NAN;
+  inverse_failure_prims.eps = DBL_MAX;
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  initialize_sentinel_rates(malformed_rates);
+  diagnostics = (ghl_neutrino_rate_provider_diagnostics){0};
+  const ghl_error_codes_t inverse_failure_error =
+      ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, &diagnostics, &eos, &inverse_failure_prims,
+          malformed_rates);
+  require_condition(inverse_failure_error != ghl_success,
+                    "inverse EOS failure was silently accepted", 3049);
+
+  /* Exercise each table-bound metadata disjunct independently.  The table
+   * lookup must reject malformed bounds before it can inspect any payload. */
+  static const char *const malformed_bound_names[] = {
+      "nonfinite lower density bound", "nonfinite upper density bound",
+      "nonpositive lower density bound", "reversed density bounds",
+      "nonfinite lower temperature bound", "nonfinite upper temperature bound",
+      "nonpositive lower temperature bound", "reversed temperature bounds",
+      "nonfinite lower electron-fraction bound",
+      "nonfinite upper electron-fraction bound",
+      "negative lower electron-fraction bound",
+      "super-unit upper electron-fraction bound",
+      "reversed electron-fraction bounds"};
+  for(size_t bound_case = 0;
+      bound_case < sizeof(malformed_bound_names) /
+                       sizeof(malformed_bound_names[0]); ++bound_case) {
+    ghl_eos_parameters bad_bounds = eos;
+    switch(bound_case) {
+      case 0: bad_bounds.table_rho_min = NAN; bad_bounds.rho_min = NAN; break;
+      case 1: bad_bounds.table_rho_max = NAN; bad_bounds.rho_max = NAN; break;
+      case 2: bad_bounds.table_rho_min = 0.0; bad_bounds.rho_min = 0.0; break;
+      case 3:
+        bad_bounds.table_rho_min = 2.0 * eos.table_rho_max;
+        break;
+      case 4: bad_bounds.table_T_min = NAN; bad_bounds.T_min = NAN; break;
+      case 5: bad_bounds.table_T_max = NAN; bad_bounds.T_max = NAN; break;
+      case 6: bad_bounds.table_T_min = 0.0; bad_bounds.T_min = 0.0; break;
+      case 7:
+        bad_bounds.table_T_min = 2.0 * eos.table_T_max;
+        break;
+      case 8: bad_bounds.table_Y_e_min = NAN; bad_bounds.Y_e_min = NAN; break;
+      case 9: bad_bounds.table_Y_e_max = NAN; bad_bounds.Y_e_max = NAN; break;
+      case 10:
+        bad_bounds.table_Y_e_min = -1.0;
+        bad_bounds.Y_e_min = -1.0;
+        break;
+      case 11: bad_bounds.table_Y_e_max = 2.0; break;
+      case 12:
+        bad_bounds.table_Y_e_min = 0.8;
+        bad_bounds.table_Y_e_max = 0.2;
+        break;
+      default:
+        ghl_error("M1 rate-provider malformed-bound test has an unknown variant\n");
+    }
+    ghl_neutrino_rate_provider_cache bad_bounds_cache;
+    ghl_neutrino_rate_provider_cache_initialize(&bad_bounds_cache);
+    const ghl_neutrino_rate_provider_cache bad_bounds_cache_before = bad_bounds_cache;
+    ghl_m1_neutrino_rates bad_bounds_rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(bad_bounds_rates);
+    const ghl_m1_neutrino_rates bad_bounds_rates_before[
+        ghl_m1_neutrino_species_count] = {
+            bad_bounds_rates[0], bad_bounds_rates[1], bad_bounds_rates[2]};
+    ghl_neutrino_rate_provider_diagnostics bad_bounds_diagnostics = {0};
+    const ghl_error_codes_t bad_bounds_error =
+        ghl_neutrino_rate_provider_compute_cell(
+            &provider, &bad_bounds_cache, &bad_bounds_diagnostics, &bad_bounds,
+            &cached_prims, bad_bounds_rates);
+    require_error(bad_bounds_error, ghl_error_m1_microphysics_failure,
+                  malformed_bound_names[bound_case], 3048 + (int)bound_case);
+    require_condition(
+        memcmp(&bad_bounds_cache, &bad_bounds_cache_before,
+               sizeof(bad_bounds_cache)) == 0 &&
+        same_rate_bundle(bad_bounds_rates, bad_bounds_rates_before) &&
+        bad_bounds_diagnostics.failures == 1,
+        "malformed table metadata changed transactional outputs",
+        3048 + (int)bound_case);
+  }
+
   const double out_of_bounds_values[3] = {
       0.5 * eos.table_rho_min,
       0.5 * eos.table_T_min,
@@ -2701,6 +3239,15 @@ static void test_table_provider(const char *restrict table_path) {
                     diagnostics.clamped_inputs > 0,
                     "clamped table bounds were not diagnosed", 3043);
 
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  ghl_primitive_quantities null_diagnostics_input = cached_prims;
+  null_diagnostics_input.rho = out_of_bounds_values[0];
+  require_error(
+      ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, NULL, &eos, &null_diagnostics_input, rates),
+      ghl_success, "clamped table bounds without diagnostics", 3049);
+  validate_rate_bundle(rates, 3049);
+
   ghl_tabulated_free_memory(&eos);
 }
 #endif
@@ -2714,12 +3261,13 @@ int main(int argc, char **argv) {
   test_nrpyleakage_raw_kernel();
   test_nrpyleakage_boundary_paths();
   test_nrpyleakage_supported_thermo_boundaries();
-  test_nrpyleakage_rate_overflow_policy();
+  test_nrpyleakage_rate_overflow();
   test_nrpyleakage_kernel_representability_edges();
   test_default_provider(&rng);
   test_provider_cache_provenance();
   test_provider_cache_snapshot_mismatches();
   test_provider_cache_same_rho_temperature_changed_ye();
+  test_provider_cache_incomplete_rate_record();
   test_recovery_and_transactional_failures();
   test_recovery_publication_and_post_thermo_failures();
   test_temperature_recovery();

@@ -56,10 +56,8 @@ ghl_error_codes_t ghl_m1_compute_diffusion_flux(
     return ghl_error_m1_invalid_state;
   }
 
-  *corrected_flux_tildeE = hll_flux_tildeE;
-  if(a_face != NULL) {
-    *a_face = 1.0;
-  }
+  double corrected_flux_candidate = hll_flux_tildeE;
+  double a_candidate = 1.0;
 
   ghl_error_codes_t error = ghl_m1_validate_direction(direction);
   if(error != ghl_success) {
@@ -74,13 +72,25 @@ ghl_error_codes_t ghl_m1_compute_diffusion_flux(
     return ghl_error_m1_invalid_state;
   }
   if(tau_face < m1_params->zeta_min) {
+    *corrected_flux_tildeE = corrected_flux_candidate;
+    if(a_face != NULL) {
+      *a_face = a_candidate;
+    }
     return ghl_success;
   }
   if(!(Jthick_L_is_valid && isfinite(Jthick_L) && Jthick_L > 0.0)
      || !(Jthick_R_is_valid && isfinite(Jthick_R) && Jthick_R > 0.0)) {
+    *corrected_flux_tildeE = corrected_flux_candidate;
+    if(a_face != NULL) {
+      *a_face = a_candidate;
+    }
     return ghl_success;
   }
   if(!ghl_m1_face_velocity_is_valid(metric_face, W_face, V_face)) {
+    *corrected_flux_tildeE = corrected_flux_candidate;
+    if(a_face != NULL) {
+      *a_face = a_candidate;
+    }
     return ghl_success;
   }
   for(int i = 0; i < 3; ++i) {
@@ -120,12 +130,14 @@ ghl_error_codes_t ghl_m1_compute_diffusion_flux(
   if(!isfinite(flux_asym)) {
     return ghl_error_m1_invalid_state;
   }
-  *corrected_flux_tildeE = a * hll_flux_tildeE + (1.0 - a) * flux_asym;
-  if(!isfinite(*corrected_flux_tildeE)) {
+  corrected_flux_candidate = a * hll_flux_tildeE + (1.0 - a) * flux_asym;
+  if(!isfinite(corrected_flux_candidate)) {
     return ghl_error_m1_invalid_state;
   }
+  a_candidate = a;
+  *corrected_flux_tildeE = corrected_flux_candidate;
   if(a_face != NULL) {
-    *a_face = a;
+    *a_face = a_candidate;
   }
   return ghl_success;
 }

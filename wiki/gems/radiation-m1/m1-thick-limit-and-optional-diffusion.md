@@ -60,6 +60,10 @@ It returns the original input energy flux unchanged when `tau_face` is below
 velocity fails the timelike consistency check. In these no-op cases the blend
 factor is `a_face = 1` when that output is requested.
 
+These no-op cases return `ghl_success` and publish the input flux and blend
+factor. Every non-success return, including direction, metric, gradient, and
+late arithmetic failures, leaves each non-NULL output argument unchanged.
+
 When the inputs are valid, it uses
 
 ```text
@@ -86,7 +90,8 @@ f_tilde = a * f_input_tilde + (1 - a) * f_asym_tilde.
 Thus the input numerical flux dominates at small optical depth and the
 thick-limit asymptotic flux dominates as `tau_face` grows. The helper validates
 the spatial metric, finite gradients, positive length, and face velocity
-normalization before publishing a corrected value.
+normalization before publishing a corrected value; active-path arithmetic is
+also completed and checked before either output is published.
 
 ## Scope of the correction
 

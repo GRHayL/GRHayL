@@ -2,13 +2,15 @@
 #define GHL_M1_NRPYLEAKAGE_KERNEL_H_
 
 #include "ghl.h"
-#include "ghl_eos_functions.h"
 #include "ghl_radiation.h"
 
 /*
  * Private M1 adapter types.  These intentionally do not extend the public
  * NRPyLeakage API: legacy leakage keeps its original source and header
  * contract, while the M1 provider consumes channel-resolved rates here.
+ * The primitive thermodynamic state is kept separate from density-derived
+ * NRPyLeakage blocking populations; the latter are evaluated at the raw-rate
+ * boundary so callers cannot publish stale derived values.
  */
 typedef enum {
   ghl_m1_nrpyleakage_nue = 0,
@@ -19,7 +21,6 @@ typedef enum {
 
 typedef struct {
   double rho;
-  double rho_cgs;
   double T;
   double Ye;
   double muhat;
@@ -28,8 +29,6 @@ typedef struct {
   double mu_n;
   double X_n;
   double X_p;
-  double Y_np;
-  double Y_pn;
 } ghl_m1_nrpyleakage_thermo_state;
 
 typedef struct {
@@ -67,16 +66,6 @@ typedef struct {
   int nux_single_species_multiplicity;
 } ghl_m1_nrpyleakage_raw_rates;
 
-typedef struct {
-  ghl_m1_nrpyleakage_raw_rates raw;
-  double eta_N[ghl_m1_nrpyleakage_species_count];
-  double eta_E[ghl_m1_nrpyleakage_species_count];
-  double kappa_N[ghl_m1_nrpyleakage_species_count];
-  double kappa_E[ghl_m1_nrpyleakage_species_count];
-  double n_eq[ghl_m1_nrpyleakage_species_count];
-  double J_eq[ghl_m1_nrpyleakage_species_count];
-} ghl_m1_nrpyleakage_legacy_kernel_result;
-
 ghl_error_codes_t ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
       double rho,
       double Ye,
@@ -87,32 +76,7 @@ ghl_error_codes_t ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
       double mu_n,
       double X_n,
       double X_p,
-      bool strict_validation,
       ghl_m1_nrpyleakage_thermo_state *restrict thermo);
-
-ghl_error_codes_t ghl_m1_nrpyleakage_compute_thermo_state(
-      const ghl_eos_parameters *restrict eos,
-      double rho,
-      double Ye,
-      double T,
-      ghl_m1_nrpyleakage_thermo_state *restrict thermo);
-
-ghl_error_codes_t ghl_m1_nrpyleakage_compute_thermo_state_legacy(
-      const ghl_eos_parameters *restrict eos,
-      double rho,
-      double Ye,
-      double T,
-      ghl_m1_nrpyleakage_thermo_state *restrict thermo);
-
-ghl_error_codes_t ghl_m1_nrpyleakage_compute_legacy_kernel_from_thermo(
-      const ghl_m1_nrpyleakage_thermo_state *restrict thermo,
-      const double neutrino_degeneracy[ghl_m1_nrpyleakage_species_count],
-      ghl_m1_nrpyleakage_legacy_kernel_result *restrict result);
-
-ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_legacy(
-      const ghl_m1_nrpyleakage_thermo_state *restrict thermo,
-      const double neutrino_degeneracy[ghl_m1_nrpyleakage_species_count],
-      ghl_m1_nrpyleakage_raw_rates *restrict raw);
 
 ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
       const ghl_m1_nrpyleakage_thermo_state *restrict thermo,

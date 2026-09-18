@@ -8,7 +8,7 @@ charged-current channels; the corrections below are candidates to investigate.
 
 ## Purpose And Position In The Gap
 
-In the capability-gap ranking of [The Capability Gap, Stated](index.md#the-capability-gap-stated),
+In the capability-gap ranking of [The Capability Gap, Stated](../index.md#the-capability-gap-stated),
 this leaf is where **the larger advantage of `bns_nurates` lives**: it
 provides **substantially more accurate physics for several of the dominant
 interactions that both providers already contain**. Unlike the inelastic
@@ -59,9 +59,9 @@ Relevant facts about the shared channels:
   chemical potential or the density normalization.
 
 The relevant constants live in
-[`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h); the
-relevant rate blocks live in the six built files named in
-[Implementation Flow](../implementation-flow.md).
+[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h); the
+relevant rate blocks live in the five built files named in
+[Implementation Flow](../../gems/neutrinos/implementation-flow.md).
 
 ## The Four Correction Families
 
@@ -89,7 +89,7 @@ To investigate:
 - The neutron-proton mass gap and the weak-magnetism coefficient both touch the
   neutron-proton chemical-potential combination; this interacts with the
   chemical-potential convention hazard in
-  [Physics And EOS Contract](../physics-and-eos-contract.md) and with the
+  [Physics And EOS Contract](../../gems/neutrinos/physics-and-eos-contract.md) and with the
   per-channel structure in
   [Distinct Nucleon Decay Contributions](distinct-nucleon-decay-contributions.md).
 
@@ -137,7 +137,7 @@ To investigate:
   `NRPyLeakage_Fermi_Dirac_integrals` (keys 0-5) is sufficient for the new
   occupancy factors or whether additional moments are required, and route any
   new key through the invalid-key error contract in
-  [Implementation Flow](../implementation-flow.md).
+  [Implementation Flow](../../gems/neutrinos/implementation-flow.md).
 
 ### Relativistic Mean-Field Effects
 
@@ -155,7 +155,7 @@ To investigate:
 - Determine which mean-field quantities the EOS already provides (some tabulated
   EOS return effective masses or potentials) and which would have to be added
   to the callback. Route any new EOS output through
-  [API And Data](../api-and-data.md).
+  [API And Data](../../gems/neutrinos/api-and-data.md).
 - Decide whether the mean-field correction is folded into the rate as an
   effective-mass and potential shift, or whether it changes the density and
   chemical-potential normalization upstream of the rate.
@@ -172,26 +172,26 @@ To investigate:
   mean) must be stated per correction; otherwise the correction is not
   reproducible.
 - Each belongs to the symbolic kernel, not to the C `tmp_*` block directly. Per
-  the regeneration rule in [Generator Provenance](../generator-provenance.md),
+  the regeneration rule in [Generator Provenance](../../gems/neutrinos/generator-provenance.md),
   the corrected forms should be derived symbolically, generated into a
   disposable directory, compared against the current kernel, and recombined
   with the GRHayL ABI, EOS, error, unit, and finite-handling contracts reapplied.
 - Each preserves the current exact-equivalence property: with the correction
   disabled (coefficient set to its leading-order value or the correction term
-  removed), the current six-file kernel results must be reproduced unchanged.
+  removed), the current five-file kernel results must be reproduced unchanged.
 
 ## Architectural And Contract Impact
 
 The change would touch, or would have to be audited against, the following:
 
 - The scattering and charged-current rate blocks inside
-  [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
+  [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
   and the matching luminosity block in
-  [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c).
+  [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c).
 - The opacity blocks in
-  [`NRPyLeakage_compute_neutrino_opacities.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c)
+  [`NRPyLeakage_compute_neutrino_opacities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c)
   for the scattering corrections.
-- The constants in [`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h):
+- The constants in [`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h):
   weak-magnetism coefficients, recoil factors, Fermi-function parameters, and
   mean-field potential inputs, each with the `NRPyLeakage_` prefix.
 - The EOS boundary if a mean-field or effective-mass quantity is required, via
@@ -216,7 +216,7 @@ A correction is not validated until it can be isolated, bounded, and routed:
   not move the weak-equilibrium fixed point.
 - A unit-system and finite-handling check consistent with the existing
   `EnsureFinite`/`robust_isfinite` usage and the
-  [`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h)
+  [`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h)
   conversion macros.
 - A cross-code diagnostic, not an equivalence claim, against a
   `bns_nurates`-class or independent corrected reference, with the difference
@@ -234,7 +234,7 @@ A correction is not validated until it can be isolated, bounded, and routed:
 - Can the averaging be done with the existing Fermi-Dirac integral helper, or
   does a new moment or a tabulated mean energy have to be introduced? A
   tabulated mean energy is a larger architecture change routed to
-  [The Capability Gap, Stated](index.md#the-capability-gap-stated).
+  [The Capability Gap, Stated](../index.md#the-capability-gap-stated).
 - Stop and route to the architecture leaf if a correction requires a quantity
   the current EOS callback does not return or a radiation struct field that
   does not exist.
@@ -243,12 +243,12 @@ A correction is not validated until it can be isolated, bounded, and routed:
 
 Repo-local implementation authority (current behavior):
 
-- [`GRHayL/Neutrinos/NRPyLeakage/`](../../../../GRHayL/Neutrinos/NRPyLeakage/)
-- [`GRHayL/include/ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h)
-- [`GRHayL/include/ghl_radiation.h`](../../../../GRHayL/include/ghl_radiation.h)
-- [`GRHayL/include/ghl_eos_functions.h`](../../../../GRHayL/include/ghl_eos_functions.h)
-- [`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`](../../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
-- [`Unit_Tests/unit_test_code_error.c`](../../../../Unit_Tests/unit_test_code_error.c)
+- [`GRHayL/Neutrinos/NRPyLeakage/`](../../../GRHayL/Neutrinos/NRPyLeakage/)
+- [`GRHayL/include/ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h)
+- [`GRHayL/include/ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h)
+- [`GRHayL/include/ghl_eos_functions.h`](../../../GRHayL/include/ghl_eos_functions.h)
+- [`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`](../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
+- [`Unit_Tests/unit_test_code_error.c`](../../../Unit_Tests/unit_test_code_error.c)
 
 External capability and physics references (recheck before relying on any
 detail; the `bns_nurates` name is a lookup seed, not an asserted URL):

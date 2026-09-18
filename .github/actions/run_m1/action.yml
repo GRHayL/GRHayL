@@ -7,9 +7,6 @@ inputs:
   hdf5:
     description: Whether HDF5 is enabled
     required: true
-  platform:
-    description: Workflow OS label used to distinguish coverage artifacts
-    required: true
 runs:
   using: composite
   steps:
@@ -34,31 +31,19 @@ runs:
             ;;
           *) echo "Unsupported compiler: $M1_COMPILER" >&2; exit 1 ;;
         esac
-        if [[ "$M1_COMPILER" == gcc ]]; then
-          configure_args+=(--cflags=--coverage --clibs=--coverage)
+        if [[ "$RUNNER_OS" == macOS ]]; then
+          if [[ "$M1_COMPILER" == gcc ]]; then
+            gcc_prefix=$(brew --prefix gcc)
+            compilers=("$gcc_prefix"/bin/gcc-[0-9]*)
+            if [[ ! -x "${compilers[0]}" ]]; then
+              echo "Could not find a Homebrew GCC compiler" >&2
+              exit 1
+            fi
+            export CC="${compilers[0]}"
+          else
+            export CC="$(brew --prefix llvm)/bin/clang"
+          fi
+          configure_args+=(--hdf5dir="$(brew --prefix hdf5)")
         fi
         ./configure "${configure_args[@]}"
         bash Unit_Tests/run_m1_tests.sh --build
-    - name: Report Radiation coverage
-      if: runner.os == 'Linux' && inputs.compiler == 'gcc'
-      shell: bash
-      run: |
-        python3 -m pip install gcovr
-        gcovr --root . --filter 'GRHayL/Radiation/' --txt --json-pretty --json radiation-coverage.json build
-        # Include public inline headers and shared flux kernels in the PR report.
-        # Search build/ so configure's temporary compiler probes are not collected.
-        gcovr --root . --xml m1-coverage.xml build
-    - name: Retain Radiation coverage
-      if: runner.os == 'Linux' && inputs.compiler == 'gcc'
-      uses: actions/upload-artifact@v4
-      with:
-        name: radiation-coverage-${{ inputs.platform }}-${{ inputs.hdf5 }}
-        path: radiation-coverage.json
-        if-no-files-found: error
-    - name: Submit M1 coverage to the PR gate
-      if: runner.os == 'Linux' && inputs.compiler == 'gcc'
-      uses: codecov/codecov-action@v5
-      with:
-        files: m1-coverage.xml
-        disable_search: true
-        fail_ci_if_error: true

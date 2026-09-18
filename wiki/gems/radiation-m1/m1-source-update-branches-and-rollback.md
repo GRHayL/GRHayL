@@ -11,9 +11,12 @@ public options, path values, and diagnostics are declared in
 
 The zero-valued default is
 `ghl_m1_neutrino_source_grhayl_implicit`. It invokes the established local
-implicit E/F solve, followed by endpoint number evolution, repair, endpoint
-checks, and exchange assembly. The default is not a thin/thick branch
-selector.
+implicit E/F solve, followed by ordinary backward-Euler endpoint number
+evolution, repair, endpoint checks, and exchange assembly. The default is not a
+thin/thick branch selector. The public
+`ghl_m1_solve_neutrino_implicit_homogeneous_update` entry point retains this
+same signature and behavior; the thermalized-number projection is introduced
+only by the opt-in branched dispatcher.
 
 The opt-in
 `ghl_m1_neutrino_source_branched_compatibility` policy exposes the following
@@ -21,16 +24,22 @@ internal choices:
 
 | path | selection and operation |
 | --- | --- |
-| thin explicit | selected when `dt_alpha*kappa_a_E < 1` and `dt_alpha*kappa_s < 1`; E/F receives an explicit interaction update, then N uses endpoint backward Euler |
-| thick equilibrium | enabled only by a positive host threshold and selected when `dt_alpha*sqrt(kappa_a_E*kappa_tr)` exceeds it; a stiff comoving predictor is used before the endpoint number step |
-| scattering dominated | enabled only by a positive host threshold and selected when `dt_alpha*kappa_s` exceeds it; it uses the same stiff predictor machinery |
-| general implicit | the fallback branch when no compatibility shortcut is selected |
+| thin explicit | selected when `dt_alpha*kappa_a_E < 1` and `dt_alpha*kappa_s < 1`; E/F receives an explicit interaction update, then N uses the shared endpoint-number policy |
+| thick equilibrium | enabled only by a positive host threshold and selected when `dt_alpha*sqrt(kappa_a_E*kappa_tr)` exceeds it; a stiff comoving predictor is used before the shared endpoint-number policy |
+| scattering dominated | enabled only by a positive host threshold and selected when `dt_alpha*kappa_s` exceeds it; it uses the same stiff predictor machinery and endpoint-number policy |
+| general implicit | the fallback branch when no compatibility shortcut is selected; it uses the policy-aware implicit E/F solve and the same endpoint-number policy |
 
 All branches use `dt_alpha = alpha*dt`, frozen matter/rates, endpoint repair,
 endpoint mean-energy checks when enabled, and the same exchange assembly. A
 nonpositive thick or scattering threshold disables that shortcut. The default
 options use zero for both and therefore do not opt into those compatibility
 branches.
+
+The configured thick/scattering shortcut and thermalized-number policy products
+are compared in a scaled representation, so finite inputs are not
+misclassified solely because a direct multiplication overflows or underflows.
+This selection protection does not make a final state valid: a genuinely
+nonrepresentable endpoint remains an error and is rolled back.
 
 The branched policy is fail-closed on a closure fallback unless
 `allow_closure_fallback` is explicitly enabled. That choice affects whether a
@@ -39,11 +48,14 @@ candidate is accepted; it does not change the closure algorithm.
 ## Number projection is separate
 
 `thermalized_number_threshold` controls an optional equilibrium mean-energy
-projection in the branched policy. A negative value disables it. A
-nonnegative value enables the projection when
-`dt_alpha*kappa_a_N` reaches the threshold; zero therefore selects it even for
-zero opacity or zero timestep. It is distinct from backward-Euler number
-evolution and from the separate `N_floor` repair. The default is negative.
+projection in every opt-in branched endpoint: thin, thick, scattering, and the
+general implicit fallback. A negative value disables it. A nonnegative value
+selects the projection when `dt_alpha*kappa_a_N` reaches the threshold; zero
+therefore selects it even for zero opacity or zero timestep. The policy
+comparison uses scaled products to avoid overflow or underflow during
+selection. It is distinct from backward-Euler number evolution and from the
+separate `N_floor` repair. A nonrepresentable final endpoint remains an error;
+the default is negative.
 
 The optional endpoint mean-energy bound checks use the final repaired ratio
 

@@ -22,20 +22,20 @@ NRPyLeakage surface breaks down as follows:
   the most important one.** The current kernel carries elastic
   neutral-current scattering on free neutrons and protons only; there is no
   scattering on electrons or positrons at all. See
-  [Inelastic Neutrino-Electron/Positron Scattering](inelastic-neutrino-electron-scattering.md).
+  [Inelastic Neutrino-Electron/Positron Scattering](interactions/inelastic-neutrino-electron-scattering.md).
 - **`bns_nurates` also adds nucleon decay / inverse decay** as separately
   parameterized charged-current channels (forward capture, inverse absorption,
   and free beta decay, each with its own phase space, blocking, and
   weak-magnetism factors). **That is generally more situational:** it is most
   important near threshold and at high degeneracy, and less important in the
   non-degenerate low-temperature limit. See
-  [Distinct Nucleon Decay Contributions](distinct-nucleon-decay-contributions.md).
+  [Distinct Nucleon Decay Contributions](interactions/distinct-nucleon-decay-contributions.md).
 - **The larger advantage of `bns_nurates` is that it provides substantially
   more accurate physics for several of the dominant interactions that both
   providers already contain:** weak-magnetism, recoil, phase-space
   (blocking/Fermi-function), and relativistic mean-field corrections to the
   shared scattering and charged-current channels. See
-  [Weak-Magnetism, Recoil, Phase-Space, And Mean-Field Corrections](weak-magnetism-recoil-phase-space-mean-field.md).
+  [Weak-Magnetism, Recoil, Phase-Space, And Mean-Field Corrections](interactions/weak-magnetism-recoil-phase-space-mean-field.md).
 - **The transverse plasmon decay that NRPyLeakage includes is not one of the
   dominant processes in BNS mergers.** It is one of the checked-in thermal
   channels, but it does not set the BNS-neutrino budget, and its absence from a
@@ -91,7 +91,7 @@ documentedly changes, each of the following and then revalidates them:
 - the `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T` EOS callback and
   the `GHL_DISABLE_HDF5` guard on the three EOS-dependent routines;
 - the geometric-to-cgs unit conversions owned by
-  [`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h);
+  [`ghl_nrpyleakage.h`](../../GRHayL/include/ghl_nrpyleakage.h);
 - the `NRPyLeakage_*` public spelling and the radiation-struct `ghl_*`
   spelling; and
 - the build manifest and the unit-test and CI route.
@@ -102,29 +102,29 @@ Each leaf below is a separate "to do" workstream. None is implemented.
 
 | Leaf | Future capability | Primary risk if done carelessly |
 | --- | --- | --- |
-| [Inelastic neutrino-electron/positron scattering](inelastic-neutrino-electron-scattering.md) | Add energy-exchanging `nu_i`/`anti-nu_i` scattering on thermal electrons and positrons. | Implies a spectral/mean-energy structure that grey leakage does not carry; risks inventing a fake grey channel. |
-| [Distinct nucleon decay contributions](distinct-nucleon-decay-contributions.md) | Separate charged-current capture and decay channels on free neutrons from those on free protons, with distinct blocking, phase space, and weak-magnetism factors. | Lumping neutrons and protons hides channel-specific thresholds, blocking, and sign structure. |
-| [Weak-magnetism, recoil, phase-space, and mean-field corrections](weak-magnetism-recoil-phase-space-mean-field.md) | Upgrade the shared scattering and charged-current channels beyond the current leading-order approximation. | A correction folded into a grey rate without a stated averaging rule is unquantifiable and untestable. |
+| [Inelastic neutrino-electron/positron scattering](interactions/inelastic-neutrino-electron-scattering.md) | Add energy-exchanging `nu_i`/`anti-nu_i` scattering on thermal electrons and positrons. | Implies a spectral/mean-energy structure that grey leakage does not carry; risks inventing a fake grey channel. |
+| [Distinct nucleon decay contributions](interactions/distinct-nucleon-decay-contributions.md) | Separate charged-current capture and decay channels on free neutrons from those on free protons, with distinct blocking, phase space, and weak-magnetism factors. | Lumping neutrons and protons hides channel-specific thresholds, blocking, and sign structure. |
+| [Weak-magnetism, recoil, phase-space, and mean-field corrections](interactions/weak-magnetism-recoil-phase-space-mean-field.md) | Upgrade the shared scattering and charged-current channels beyond the current leading-order approximation. | A correction folded into a grey rate without a stated averaging rule is unquantifiable and untestable. |
 
 ## Cross-Cutting Ground Truth
 
-- Source: `GRHayL/Neutrinos/NRPyLeakage/` (the six built files named in
-  [Implementation Flow](../implementation-flow.md)).
+- Source: `GRHayL/Neutrinos/NRPyLeakage/` (the five built files named in
+  [Implementation Flow](../gems/neutrinos/implementation-flow.md)).
 - Public radiation structs:
-  [`GRHayL/include/ghl_radiation.h`](../../../../GRHayL/include/ghl_radiation.h)
+  [`GRHayL/include/ghl_radiation.h`](../../GRHayL/include/ghl_radiation.h)
 - Public leakage declarations, constants, and unit conversions:
-  [`GRHayL/include/ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h)
-- Error codes: [`GRHayL/include/ghl.h`](../../../../GRHayL/include/ghl.h)
+  [`GRHayL/include/ghl_nrpyleakage.h`](../../GRHayL/include/ghl_nrpyleakage.h)
+- Error codes: [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h)
 - EOS callback:
-  [`GRHayL/include/ghl_eos_functions.h`](../../../../GRHayL/include/ghl_eos_functions.h)
+  [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h)
   and
-  [`GRHayL/include/ghl_eos_functions_declaration.h`](../../../../GRHayL/include/ghl_eos_functions_declaration.h)
+  [`GRHayL/include/ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h)
 - Build manifest:
-  [`GRHayL/Neutrinos/NRPyLeakage/make.code.defn`](../../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn)
+  [`GRHayL/Neutrinos/NRPyLeakage/make.code.defn`](../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn)
 - Tests: `Unit_Tests/nrpyleakage_main.h` and
   `Unit_Tests/unit_test_nrpyleakage_*.c`
 - Ancestral derivation and generator evidence:
-  [Generator Provenance](../generator-provenance.md)
+  [Generator Provenance](../gems/neutrinos/generator-provenance.md)
 
 ## Shared Rules For This Folder
 

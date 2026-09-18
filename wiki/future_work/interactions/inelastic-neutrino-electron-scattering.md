@@ -63,11 +63,11 @@ scattering kernel is computed or consumed.
 
 Ground truth for the current boundary:
 
-- [`NRPyLeakage_compute_neutrino_opacities.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c)
-- [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
-- [`ghl_radiation.h`](../../../../GRHayL/include/ghl_radiation.h)
-- [Physics And EOS Contract](../physics-and-eos-contract.md)
-- [Implementation Flow](../implementation-flow.md)
+- [`NRPyLeakage_compute_neutrino_opacities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities.c)
+- [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
+- [`ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h)
+- [Physics And EOS Contract](../../gems/neutrinos/physics-and-eos-contract.md)
+- [Implementation Flow](../../gems/neutrinos/implementation-flow.md)
 
 ## The Capability To Investigate
 
@@ -134,7 +134,7 @@ Consequences for the to-do:
 - If a faithful treatment is required, the change is not a leakage extension at
   all: it requires a mean-energy or multigroup quantity to be transported or
   supplied, which is a larger architecture decision that changes the
-  thermodynamic-state-only contract of the current six-file kernel.
+  thermodynamic-state-only contract of the current five-file kernel.
 - The emissivity-versus-inverse asymmetry also applies: an inelastic scattering
   kernel is harder to fold into an inverse absorption than a pure emissivity
   would be. Do not present the scattering as if it were a local source.
@@ -169,7 +169,7 @@ Investigating this capability would require, at minimum:
    must not be silently altered.
 6. A unit and finite-handling path consistent with the existing
    `EnsureFinite`/`robust_isfinite` usage and the conversion macros owned by
-   [`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h). Do not
+   [`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h). Do not
    invent a new conversion set; route to the existing `NRPyLeakage_units_*`
    macros.
 
@@ -184,13 +184,13 @@ The change would touch, or would have to be audited against, the following:
 - The EOS boundary: new electron/positron density inputs would either extend
   `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T` or add a new callback,
   which is a contract change with downstream EOS and GRHayLib consequences.
-  See [API And Data](../api-and-data.md) for the current callback and the
+  See [API And Data](../../gems/neutrinos/api-and-data.md) for the current callback and the
   `GHL_DISABLE_HDF5` guard.
 - The build manifest
-  [`make.code.defn`](../../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn):
+  [`make.code.defn`](../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn):
   a new channel is a formula change inside an existing generated block or a new
   generated block. Per the regeneration rule in
-  [Generator Provenance](../generator-provenance.md), it should be derived
+  [Generator Provenance](../../gems/neutrinos/generator-provenance.md), it should be derived
   from a symbolic expression and compared against the current kernel, not
   hand-written into a `tmp_*` block.
 - The public header `ghl_nrpyleakage.h`: any new constant or helper belongs
@@ -202,14 +202,14 @@ This capability is not validated until it can be isolated, bounded, and
 routed:
 
 - A standalone test that sets the new channel on and off and shows the current
-  six-file kernel results are byte-for-byte unchanged when the channel is off
+  five-file kernel results are byte-for-byte unchanged when the channel is off
   (exact-equivalence preservation).
 - A small optically thin or single-state case with a hand or externally
   computed inelastic-electron opacity or energy-transfer term, replayed as a
   fixture in the existing `Unit_Tests/unit_test_nrpyleakage_*.c` harness, with
-  the comparison result actually checked (the current harness discards
-  `ghl_pert_test_fail` results; see the assertion gap in
-  [Tests And Fixtures](../tests-and-fixtures.md)).
+  the comparison result actually checked (the harness accumulates
+  `ghl_pert_test_fail` results and reports mismatches; see
+  [Tests And Fixtures](../../gems/neutrinos/tests-and-fixtures.md)).
 - A bounded statement of the grey approximation: the assumed mean energy, the
   angular assumption, and the density/temperature regime where the closure is
   expected to be acceptable, plus where it is expected to fail.
@@ -239,12 +239,12 @@ routed:
 
 Repo-local implementation authority (current behavior):
 
-- [`GRHayL/Neutrinos/NRPyLeakage/`](../../../../GRHayL/Neutrinos/NRPyLeakage/)
-- [`GRHayL/include/ghl_radiation.h`](../../../../GRHayL/include/ghl_radiation.h)
-- [`GRHayL/include/ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h)
-- [`GRHayL/include/ghl_eos_functions.h`](../../../../GRHayL/include/ghl_eos_functions.h)
-- [`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`](../../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
-- [`Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`](../../../../Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c)
+- [`GRHayL/Neutrinos/NRPyLeakage/`](../../../GRHayL/Neutrinos/NRPyLeakage/)
+- [`GRHayL/include/ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h)
+- [`GRHayL/include/ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h)
+- [`GRHayL/include/ghl_eos_functions.h`](../../../GRHayL/include/ghl_eos_functions.h)
+- [`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`](../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
+- [`Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`](../../../Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c)
 
 External capability and physics references (recheck before relying on any
 detail; the `bns_nurates` name is a lookup seed, not an asserted URL):

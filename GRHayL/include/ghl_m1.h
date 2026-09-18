@@ -285,25 +285,32 @@ typedef enum {
 } ghl_m1_neutrino_source_path_t;
 
 /** Host-supplied controls for the opt-in branched source policy.
- * A nonpositive thick or scattering threshold disables that shortcut.  A
- * negative thermalized-number threshold disables the optional equilibrium
- * mean-energy number update. A nonnegative threshold selects that projection
- * when dt_alpha*kappa_a_N is at least the threshold; zero therefore invokes
- * it even when the opacity or dt is zero, and may change N. The projection
- * uses the repaired endpoint E/F current and is distinct from both backward-
- * Euler number integration and the N_floor repair, which remains a separate
- * step. The zero-valued Y_e policy preserves GRHayL's charged-current-only contract;
- * the signed-total option is available when signed-total composition
- * bookkeeping is required. */
+ * A nonpositive thick or scattering threshold disables that shortcut. For
+ * every opt-in branched endpoint-number path (thin, thick, scattering, and the
+ * general implicit fallback), a negative thermalized-number threshold disables
+ * the optional equilibrium mean-energy number update. A nonnegative threshold
+ * selects that projection when dt_alpha*kappa_a_N is at least the threshold;
+ * zero therefore invokes it even when the opacity or dt is zero, and may
+ * change N. The configured thick/scattering and thermalized-number threshold
+ * products are compared in scaled form, so finite inputs are not misclassified
+ * solely because a direct product overflows or underflows; a genuinely
+ * nonrepresentable final endpoint remains an error. The projection uses the
+ * repaired endpoint E/F current and is
+ * distinct from both backward-Euler number integration and the N_floor repair,
+ * which remains a separate step. The zero-valued Y_e policy preserves
+ * GRHayL's charged-current-only contract; the signed-total option is available
+ * when signed-total composition bookkeeping is required. */
 typedef struct {
   ghl_m1_neutrino_source_policy_t policy;
   double thick_equilibrium_threshold;
   double scattering_threshold;
   /**
-   * Number-stiffness threshold for equilibrium mean-energy projection.
-   * Negative disables the projection; zero selects it even for zero
-   * opacity or zero timestep. The value is compared with the dimensionless
-   * product dt_alpha*kappa_a_N.
+   * Number-stiffness threshold for equilibrium mean-energy projection on every
+   * opt-in branched endpoint, including the general implicit fallback.
+   * Negative disables the projection; a nonnegative value selects it when the
+   * dimensionless product dt_alpha*kappa_a_N is at least the threshold. Scaled
+   * product comparison avoids overflow or underflow during selection; it does
+   * not make a nonrepresentable final endpoint valid.
    */
   double thermalized_number_threshold;
   bool allow_closure_fallback;
@@ -748,7 +755,10 @@ ghl_error_codes_t ghl_m1_compute_harmonic_diffusion_coefficient(
 
 /** Apply the optional Fick diffusion correction to an HLL energy flux.
  * The caller selects this route explicitly; the ordinary public HLL/Rusanov
- * fluxes remain unchanged. */
+ * fluxes remain unchanged. On any non-success return, every non-NULL output
+ * argument is left unchanged. A successful no-op publishes the input HLL
+ * flux and `a_face = 1` when requested; a successful active path publishes
+ * the corrected flux and its blend factor. */
 ghl_error_codes_t ghl_m1_compute_diffusion_flux(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric_face,
@@ -934,18 +944,28 @@ typedef struct {
  * degeneracy, weak equilibrium, and channel-specific microphysics. Radiation
  * consumes the bundle; it does not perform EOS lookup or evaluate production
  * weak-rate formulas. Field semantics:
- *   - eta_N, eta_E     : one-body grey number and energy emissivities (>= 0)
+ *   - eta_N, eta_E     : scalar grey number and energy emissivities (>= 0);
+ *                        electron flavors contain charged-current-only
+ *                        emission,
+ *                        while nu_x contains the enabled aggregate
+ *                        pair/plasmon/bremsstrahlung emission.
  *   - kappa_a_N,
- *     kappa_a_E        : one-body grey number and energy absorption opacities
- *                        (>= 0); for electron flavors these are the
- *                        independent charged-current/scattering channels.
- *   - kappa_s          : isoenergetic scattering opacity (>= 0)
- *   - kappa_tr         : kappa_a_E + kappa_s
+ *     kappa_a_E        : scalar grey number and energy absorption opacities
+ *                        (>= 0); for electron flavors these are
+ *                        charged-current-only. For nu_x, the scalar
+ *                        coefficients include enabled pair, plasmon, and
+ *                        bremsstrahlung contributions.
+ *   - kappa_s          : separate isoenergetic scattering opacity (>= 0)
+ *   - kappa_tr         : transport opacity, kappa_a_E + kappa_s
  *   - n_eq, J_eq       : grey comoving-frame equilibrium number and energy
  *                        density targets (>= 0); the provider supplies
- *                        neutrino weak-equilibrium targets.
- *   - mean_energy      : positive grey mean neutrino energy used for the
- *                        reduced number-flux closure and as a diagnostic.
+ *                        neutrino weak-equilibrium targets with
+ *                        J_eq = n_eq*mean_energy.
+ *   - mean_energy      : positive grey mean neutrino energy used in provider
+ *                        construction and diagnostics, in equilibrium
+ *                        validation through J_eq = n_eq*mean_energy, and by
+ *                        the optional stiff endpoint-number projection; it
+ *                        is not used to construct the number current.
  *   - lepton_weight    : species lepton weight (+1, -1, or 0).
  *   - eta_N_cc, kappa_a_N_cc: charged-current subset used exclusively for
  *                        electron-lepton exchange; both are zero for nu_x.
@@ -1165,7 +1185,10 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_Jthick(
       m1_params, metric, prims, &rad_state, Jthick, Jthick_is_valid);
 }
 
-/** Neutrino-state wrapper for the optional energy-flux diffusion correction. */
+/** Neutrino-state wrapper for the optional energy-flux diffusion correction.
+ * It has the same output contract as ghl_m1_compute_diffusion_flux: every
+ * non-NULL output is unchanged on non-success, while successful no-op and
+ * active paths publish the corresponding shared-helper results. */
 ghl_error_codes_t ghl_m1_compute_neutrino_diffusion_flux(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric_face,
@@ -1683,12 +1706,15 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
  * `dt_alpha = metric->lapse * dt`) and conserved baryon-number normalization;
  * this operation owns neither stage counters nor matter publication. The
  * source options select whether dYe_matter follows the default charged-current
- * packet or signed total-number bookkeeping. For the branched policy,
- * thermalized_number_threshold controls the separate endpoint number
- * projection: negative disables it, while zero selects it even for zero
- * opacity or dt. The selected final repaired endpoint is then checked against
- * any enabled mean-energy bounds; violations are rejected rather than
- * clamped.
+ * packet or signed total-number bookkeeping. For the opt-in branched policy,
+ * thermalized_number_threshold controls the separate endpoint-number
+ * projection on every branched endpoint, including the general implicit
+ * fallback: negative disables it, while a nonnegative value selects it when
+ * dt_alpha*kappa_a_N >= thermalized_number_threshold. The configured product
+ * comparison is scaled to avoid overflow or underflow during selection; a
+ * genuinely nonrepresentable final endpoint is still rejected. The selected
+ * final repaired endpoint is then checked against any enabled mean-energy
+ * bounds; violations are rejected rather than clamped.
  *
  * @param options Optional source policy; NULL selects the established implicit
  *        path and its default options.
@@ -1815,7 +1841,11 @@ ghl_error_codes_t ghl_m1_compute_neutrino_lepton_increment(
  * explicit conserved baryon-number density used for the signed Y_e packet.
  * The final repaired endpoint is checked against enabled mean-energy bounds;
  * an out-of-bounds endpoint is rejected without clamping, and N == 0 retains
- * the existing skip of that ratio check.
+ * the existing skip of that ratio check. This public entry point has no
+ * source-policy options: its established endpoint number update remains
+ * ordinary backward Euler, and its signature and default behavior are
+ * unchanged. The thermalized-number projection is available only through the
+ * opt-in branched dispatcher.
  *
  * @param m1_params Initialized shared M1 parameters.
  * @param nu_params Neutrino number, floor, and mean-energy parameters.

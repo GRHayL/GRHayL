@@ -9,7 +9,7 @@ claimed here.
 
 `bns_nurates`-class codes also add **nucleon decay / inverse decay** as
 separately parameterized channels relative to the current single beta rate. In
-the capability-gap ranking of [The Capability Gap, Stated](index.md#the-capability-gap-stated),
+the capability-gap ranking of [The Capability Gap, Stated](../index.md#the-capability-gap-stated),
 this addition is **generally more situational** than the inelastic ν−e±
 scattering that the current model completely lacks: the per-channel structure
 is most important near threshold and at high degeneracy, and less important in
@@ -56,11 +56,11 @@ equilibrium neutrino degeneracy.
 
 Ground truth for the current boundary:
 
-- [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
-- [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
-- [`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h)
-- [Physics And EOS Contract](../physics-and-eos-contract.md)
-- [Implementation Flow](../implementation-flow.md)
+- [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
+- [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
+- [`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h)
+- [Physics And EOS Contract](../../gems/neutrinos/physics-and-eos-contract.md)
+- [Implementation Flow](../../gems/neutrinos/implementation-flow.md)
 
 ## The Capability To Investigate
 
@@ -101,11 +101,11 @@ Investigating this capability would require, at minimum:
    `muhat` directly in the equilibrium combination `(mu_e - muhat)/T` and does
    not subtract a rest-mass gap `Q_npmass` in the leakage routine. The
    constants `NRPyLeakage_Q_npmass` and `NRPyLeakage_ZL_Q_npmass` are declared
-   in [`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h) but
-   are not consumed by any of the six built files. Introducing `Q_npmass` into
+   in [`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h) but
+   are not consumed by any of the five built files. Introducing `Q_npmass` into
    channel thresholds is a convention change that must be made deliberately and
    revalidated; see the chemical-potential convention hazard in
-   [Physics And EOS Contract](../physics-and-eos-contract.md).
+   [Physics And EOS Contract](../../gems/neutrinos/physics-and-eos-contract.md).
 3. Distinct blocking factors per channel, with the final-state particle named
    for each, not a single shared `fmax(mu_N/T, 0)` term.
 4. A distinct weak-magnetism coefficient per channel, which is shared with
@@ -126,7 +126,7 @@ couple of prefactors. It is not. The current kernel's beta rate is a single
 symbolic expression whose `tmp_*` graph assumes a particular channel structure.
 Separating the channels changes the structure of that expression, not just its
 constants. Per the regeneration rule in
-[Generator Provenance](../generator-provenance.md), the per-channel forms
+[Generator Provenance](../../gems/neutrinos/generator-provenance.md), the per-channel forms
 should be derived from symbolic expressions and compared against the current
 kernel, then recombined. Hand-editing the `tmp_*` block to split channels
 destroys the provenance link to the ancestral generator and makes the
@@ -137,23 +137,23 @@ exact-equivalence property of the current kernel impossible to check.
 The change would touch, or would have to be audited against, the following:
 
 - The charged-current rate block inside
-  [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
+  [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
   and the matching luminosity block in
-  [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c).
+  [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c).
 - The `R_source`/`Q_source` assembly and the heavy-lepton factor of four in the
   combined source routine.
-- The constants in [`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h):
+- The constants in [`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h):
   per-channel weak-magnetism and phase-space coefficients, and a decision on
   whether `Q_npmass` becomes live.
 - The EOS boundary if a channel needs a composition quantity not returned by
   `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T` (for example, separate
   neutron and proton number fractions distinct from `X_n`/`X_p` and
   `Y_n`/`Y_p`). Route that through
-  [API And Data](../api-and-data.md).
+  [API And Data](../../gems/neutrinos/api-and-data.md).
 - The build manifest
-  [`make.code.defn`](../../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn)
+  [`make.code.defn`](../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn)
   and the unit tests and CI route in
-  [Tests And Fixtures](../tests-and-fixtures.md).
+  [Tests And Fixtures](../../gems/neutrinos/tests-and-fixtures.md).
 
 ## Validation Requirements
 
@@ -173,7 +173,7 @@ This capability is not validated until:
   independent calculation at high degeneracy.
 - A unit-system and finite-handling check consistent with the existing
   `EnsureFinite`/`robust_isfinite` usage and the
-  [`ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h)
+  [`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h)
   conversion macros.
 - A cross-code diagnostic, not an equivalence claim, against a
   `bns_nurates`-class or independent per-channel reference, with the
@@ -200,11 +200,11 @@ This capability is not validated until:
 
 Repo-local implementation authority (current behavior):
 
-- [`GRHayL/Neutrinos/NRPyLeakage/`](../../../../GRHayL/Neutrinos/NRPyLeakage/)
-- [`GRHayL/include/ghl_nrpyleakage.h`](../../../../GRHayL/include/ghl_nrpyleakage.h)
-- [`GRHayL/include/ghl_radiation.h`](../../../../GRHayL/include/ghl_radiation.h)
-- [`GRHayL/include/ghl_eos_functions.h`](../../../../GRHayL/include/ghl_eos_functions.h)
-- [`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`](../../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
+- [`GRHayL/Neutrinos/NRPyLeakage/`](../../../GRHayL/Neutrinos/NRPyLeakage/)
+- [`GRHayL/include/ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h)
+- [`GRHayL/include/ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h)
+- [`GRHayL/include/ghl_eos_functions.h`](../../../GRHayL/include/ghl_eos_functions.h)
+- [`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`](../../../Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c)
 
 External capability and physics references (recheck before relying on any
 detail; the `bns_nurates` name is a lookup seed, not an asserted URL):

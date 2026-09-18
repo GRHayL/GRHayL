@@ -78,6 +78,32 @@ ghl_error_codes_t ghl_m1_neutrino_derive_current(
       const ghl_m1_neutrino_state *restrict state,
       ghl_m1_neutrino_current *restrict current);
 
+/* Apply the shared endpoint-number policy used by source shortcuts and the
+ * implicit fallback. A negative threshold preserves endpoint-Gamma
+ * backward-Euler behavior; a nonnegative threshold selects the equilibrium
+ * mean-energy projection when dt_alpha*kappa_a_N reaches it. The rate bundle
+ * and endpoint current are expected to have crossed their owning validation
+ * boundaries. */
+ghl_error_codes_t ghl_m1_neutrino_update_endpoint_number_with_policy(
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      const ghl_m1_neutrino_rates *restrict rates,
+      const double dt,
+      const double dt_alpha,
+      const double thermalized_number_threshold,
+      const ghl_m1_neutrino_state *restrict state_base,
+      const ghl_m1_neutrino_current *restrict endpoint_current,
+      double *restrict N_out);
+
+/* Compare two nonnegative finite products without forming a range-limited
+ * intermediate. This is shared by source-policy selection and endpoint-number
+ * policy selection; inclusive controls whether equality selects the policy. */
+bool ghl_m1_neutrino_scaled_product_meets_threshold(
+      const double *restrict left_values,
+      int left_count,
+      const double *restrict right_values,
+      int right_count,
+      bool inclusive);
+
 /* Private final-endpoint validation shared by all local source routes. */
 ghl_error_codes_t ghl_m1_neutrino_check_EN_bounds(
       const ghl_m1_neutrino_state *restrict state,
@@ -126,6 +152,25 @@ ghl_error_codes_t ghl_m1_neutrino_compute_EF_interaction_sources_validated(
       const ghl_m1_neutrino_rates *restrict rates,
       bool *restrict closure_fallback_observed,
       ghl_m1_sources *restrict EF_sources);
+
+/* Private production entry point for the branched source dispatcher. The
+ * installed public solver remains the compatibility wrapper below in the
+ * implementation and passes a negative threshold, preserving ordinary
+ * backward-Euler number integration. */
+ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_policy(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_primitive_quantities *restrict prims_frozen,
+      const ghl_m1_neutrino_rates *restrict rates,
+      const double dt,
+      const double n_b_cons,
+      const double thermalized_number_threshold,
+      const ghl_m1_neutrino_state *restrict state_in,
+      ghl_m1_neutrino_state *restrict state_out,
+      ghl_m1_neutrino_exchange *restrict exchange,
+      ghl_m1_implicit_solve_diagnostics *restrict solve_diagnostics,
+      ghl_m1_neutrino_diagnostics *restrict neutrino_diagnostics);
 
 /**
  * Compute the same residual using an explicit densitized substep base U_base.

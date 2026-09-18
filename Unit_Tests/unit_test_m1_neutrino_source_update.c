@@ -436,6 +436,371 @@ static void test_thermalized_number_projection(
       1101);
 }
 
+static void test_branched_general_thermalized_number_projection(
+      const ghl_m1_parameters *restrict m1_params) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
+      1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  ghl_m1_neutrino_parameters nu_params;
+  make_neutrino_parameters(&nu_params);
+  ghl_m1_neutrino_rates rates;
+  make_rates(ghl_m1_neutrino_nue, 1.0, 2.0, 0.0, 1.0, 2.0,
+             0.0, 0.0, &rates);
+
+  const ghl_m1_neutrino_state state_transport = {
+      .N = 0.5, .E = 4.0, .F = {0.0, 0.0, 0.0}};
+  const ghl_m1_neutrino_state state_input = state_transport;
+
+  /* Make both stiff shortcuts ineligible without testing their private
+   * selector order. The flat/rest-frame E/F endpoint is independently
+   * (4 + 1*4)/(1 + 1*2) = 8/3. */
+  ghl_m1_neutrino_source_options projected_options = branched_options();
+  projected_options.thick_equilibrium_threshold = DBL_MAX;
+  projected_options.scattering_threshold = DBL_MAX;
+  projected_options.thermalized_number_threshold = 0.0;
+  ghl_m1_neutrino_source_options disabled_options = projected_options;
+  disabled_options.thermalized_number_threshold = -1.0;
+  const ghl_m1_neutrino_source_options *const options[3] = {
+      &disabled_options, NULL, &projected_options};
+  const double expected_N[3] = {0.75, 0.75, 4.0 / 3.0};
+  const double expected_dL_rad_cc[3] = {0.25, 0.25, -1.0 / 3.0};
+  const double expected_dYe_matter[3] = {-1.0 / 12.0, -1.0 / 12.0, 1.0 / 9.0};
+  const char *const labels[3] = {
+      "branched general disabled thermalized endpoint",
+      "default implicit disabled thermalized endpoint",
+      "branched general thermalized endpoint"};
+
+  for(int case_index = 0; case_index < 3; ++case_index) {
+    ghl_m1_neutrino_state state_out;
+    ghl_m1_neutrino_exchange exchange;
+    ghl_m1_neutrino_source_diagnostics diagnostics;
+    ghl_m1_neutrino_diagnostics neutrino_diagnostics;
+    ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+    const ghl_error_codes_t error = ghl_m1_solve_neutrino_source_update(
+        options[case_index], m1_params, &nu_params, &metric, &prims, &rates,
+        &state_input, &state_transport, 1.0, 3.0, &state_out, &exchange,
+        &diagnostics, &neutrino_diagnostics);
+    require_error(error, ghl_success, labels[case_index], 1102 + case_index);
+    require_condition(
+        diagnostics.path == ghl_m1_neutrino_source_path_general_implicit &&
+        !diagnostics.terminal_no_update,
+        "thermalized general case did not use the general endpoint",
+        1102 + case_index);
+    require_close(state_out.E, 8.0 / 3.0, 2.0e-11, 2.0e-13,
+                  "thermalized general energy endpoint", 1102 + case_index);
+    require_close(state_out.N, expected_N[case_index],
+                  2.0e-11, 2.0e-13, "thermalized general number endpoint",
+                  1102 + case_index);
+    for(int direction = 0; direction < 3; ++direction)
+      require_close(state_out.F[direction], 0.0, 0.0, 0.0,
+                    "thermalized general flux endpoint", 1102 + case_index);
+    require_exchange_contract(
+        &state_transport, &state_out, &exchange, &metric, 3.0,
+        1102 + case_index);
+    require_close(exchange.dL_rad_cc, expected_dL_rad_cc[case_index],
+                  2.0e-11, 2.0e-13, "thermalized endpoint charged-current exchange",
+                  1102 + case_index);
+    require_close(exchange.dYe_matter, expected_dYe_matter[case_index],
+                  2.0e-11, 2.0e-13, "thermalized endpoint Y_e exchange",
+                  1102 + case_index);
+  }
+}
+
+static void test_stiff_branch_arithmetic_boundaries(
+      const ghl_m1_parameters *restrict m1_params) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
+      1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  ghl_m1_neutrino_parameters nu_params;
+  make_neutrino_parameters(&nu_params);
+  const ghl_m1_neutrino_state state_transport = {
+      .N = 1.0, .E = 2.0, .F = {0.0, 0.0, 0.0}};
+  const ghl_m1_neutrino_state state_input = state_transport;
+
+  /* Powers of two make the intended products exact before the deliberately
+   * overflowing/underflowing intermediate. All three rate bundles remain
+   * finite and satisfy the public rate identities. */
+  const double opacity_large = ldexp(1.0, 600);
+  const double opacity_small = ldexp(1.0, -600);
+  const double dt_large = ldexp(1.0, 600);
+  const double dt_small = ldexp(1.0, -600);
+  require_condition(isfinite(opacity_large) && isfinite(opacity_small) &&
+                        isfinite(dt_large) && isfinite(dt_small),
+                    "stiff arithmetic fixture is not finite", 1290);
+
+  ghl_m1_neutrino_rates rates[3];
+  make_rates(ghl_m1_neutrino_nue, 0.0, opacity_large, 0.0,
+             1.0, 1.0, 0.0, 0.0, &rates[0]);
+  make_rates(ghl_m1_neutrino_nue, 0.0, opacity_small, 0.0,
+             1.0, 1.0, 0.0, 0.0, &rates[1]);
+  make_rates(ghl_m1_neutrino_nue, 0.0, 0.0, opacity_large,
+             1.0, 1.0, 0.0, 0.0, &rates[2]);
+  const double dt[3] = {dt_small, dt_large, dt_large};
+  const double expected_E[3] = {1.5, 1.5, 2.0};
+  const ghl_m1_neutrino_source_path_t expected_path[3] = {
+      ghl_m1_neutrino_source_path_thick_equilibrium,
+      ghl_m1_neutrino_source_path_thick_equilibrium,
+      ghl_m1_neutrino_source_path_scattering_dominated};
+  const char *const labels[3] = {
+      "thick opacity-product overflow",
+      "thick opacity-product underflow",
+      "scattering optical-depth overflow"};
+
+  for(int case_index = 0; case_index < 3; ++case_index) {
+    ghl_m1_neutrino_source_options options = branched_options();
+    ghl_m1_neutrino_state state_out;
+    ghl_m1_neutrino_exchange exchange;
+    ghl_m1_neutrino_source_diagnostics diagnostics;
+    ghl_m1_neutrino_diagnostics neutrino_diagnostics;
+    ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+    const ghl_error_codes_t error = ghl_m1_solve_neutrino_source_update(
+        &options, m1_params, &nu_params, &metric, &prims, &rates[case_index],
+        &state_input, &state_transport, dt[case_index], 3.0, &state_out,
+        &exchange, &diagnostics, &neutrino_diagnostics);
+    require_error(error, ghl_success, labels[case_index], 1291 + case_index);
+    require_condition(diagnostics.path == expected_path[case_index] &&
+                          !diagnostics.terminal_no_update,
+                      "stiff arithmetic selected the wrong public path",
+                      1291 + case_index);
+    require_close(state_out.N, state_transport.N, 0.0, 0.0,
+                  "stiff arithmetic number endpoint", 1291 + case_index);
+    require_close(state_out.E, expected_E[case_index],
+                  2.0e-11, 2.0e-13, "stiff arithmetic energy endpoint",
+                  1291 + case_index);
+    for(int direction = 0; direction < 3; ++direction)
+      require_close(state_out.F[direction], 0.0, 0.0, 0.0,
+                    "stiff arithmetic flux endpoint", 1291 + case_index);
+    require_exchange_contract(
+        &state_transport, &state_out, &exchange, &metric, 3.0,
+        1291 + case_index);
+  }
+
+  /* The raw proper-time products in the thick predictor can overflow even
+   * though the equilibrium ratio remains finite: with W=1, both dtau and the
+   * opacity are 2^600, so (2 + dtau*eta_E)/(1 + dtau*kappa_a_E) is exactly
+   * one in the scaled limit. */
+  ghl_m1_neutrino_source_options scaled_predictor_options = branched_options();
+  ghl_m1_neutrino_state scaled_predictor_out;
+  ghl_m1_neutrino_exchange scaled_predictor_exchange;
+  ghl_m1_neutrino_source_diagnostics scaled_predictor_diagnostics;
+  ghl_m1_neutrino_diagnostics scaled_predictor_nd;
+  ghl_m1_neutrino_diagnostics_initialize(&scaled_predictor_nd);
+  const ghl_error_codes_t scaled_predictor_error = ghl_m1_solve_neutrino_source_update(
+      &scaled_predictor_options, m1_params, &nu_params, &metric, &prims, &rates[0],
+      &state_input, &state_transport, dt_large, 3.0, &scaled_predictor_out,
+      &scaled_predictor_exchange, &scaled_predictor_diagnostics, &scaled_predictor_nd);
+  require_error(scaled_predictor_error, ghl_success,
+                "thick predictor optical-depth overflow", 1294);
+  require_condition(
+      scaled_predictor_diagnostics.path == ghl_m1_neutrino_source_path_thick_equilibrium &&
+          !scaled_predictor_diagnostics.terminal_no_update,
+      "scaled thick predictor selected the wrong public path", 1294);
+  require_close(scaled_predictor_out.N, state_transport.N, 0.0, 0.0,
+                "scaled thick predictor number endpoint", 1294);
+  require_close(scaled_predictor_out.E, 1.0, 2.0e-11, 2.0e-13,
+                "scaled thick predictor energy endpoint", 1294);
+  for(int direction = 0; direction < 3; ++direction) {
+    require_close(scaled_predictor_out.F[direction], 0.0, 0.0, 0.0,
+                  "scaled thick predictor flux endpoint", 1294);
+  }
+  require_exchange_contract(
+      &state_transport, &scaled_predictor_out, &scaled_predictor_exchange, &metric, 3.0,
+      1294);
+
+  /* The endpoint below is genuinely above DBL_MAX, not merely an overflowing
+   * intermediate. In flat space with v=3/5 and chi=1/3, the independent
+   * isotropic boost oracle gives W^2(1+v^2/3)=7/4,
+   * J_transport=(7/8) DBL_MAX, J_endpoint=(67/72) DBL_MAX, and
+   * E_endpoint=(469/288) DBL_MAX. The margins are deliberately wide enough
+   * that the failure does not depend on compiler expression contraction. */
+  prims.vU[0] = 0.6;
+  prims.u0 = 1.25;
+  const long double velocity = 0.6L;
+  const long double W_squared = 1.0L / (1.0L - velocity * velocity);
+  const long double isotropic_boost_factor =
+      W_squared * (1.0L + velocity * velocity / 3.0L);
+  const long double J_transport =
+      isotropic_boost_factor * (0.5L * (long double)DBL_MAX);
+  const long double dtau = 4.0L / 5.0L;
+  const long double J_endpoint =
+      (J_transport + dtau * (long double)DBL_MAX) / (1.0L + dtau);
+  const long double E_endpoint = isotropic_boost_factor * J_endpoint;
+  require_condition(E_endpoint > 1.5L * (long double)DBL_MAX,
+                    "nonrepresentable endpoint oracle is not above DBL_MAX",
+                    1295);
+
+  ghl_m1_neutrino_rates nonrepresentable_rates;
+  make_rates(ghl_m1_neutrino_nue, 0.0, 1.0, 0.0,
+             DBL_MAX, 1.0, 0.0, 0.0, &nonrepresentable_rates);
+  const ghl_m1_neutrino_state nonrepresentable_state = {
+      .N = 1.0, .E = 0.5 * DBL_MAX, .F = {0.0, 0.0, 0.0}};
+  ghl_m1_neutrino_source_options nonrepresentable_options = branched_options();
+  ghl_m1_neutrino_state state_out = {
+      .N = -41.0, .E = -42.0, .F = {-43.0, -44.0, -45.0}};
+  ghl_m1_neutrino_exchange exchange = {
+      .dN_rad_total = -46.0, .dL_rad_cc = -47.0, .dE_rad = -48.0,
+      .dF_rad = {-49.0, -50.0, -51.0}, .dTau_matter = -52.0,
+      .dS_matter = {-53.0, -54.0, -55.0}, .dYe_matter = -56.0};
+  ghl_m1_neutrino_source_diagnostics diagnostics;
+  ghl_m1_neutrino_diagnostics neutrino_diagnostics;
+  ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+  require_error(ghl_m1_solve_neutrino_source_update(
+                    &nonrepresentable_options, m1_params, &nu_params, &metric,
+                    &prims, &nonrepresentable_rates, &nonrepresentable_state,
+                    &nonrepresentable_state, 1.0, 3.0, &state_out, &exchange,
+                    &diagnostics, &neutrino_diagnostics),
+                ghl_error_m1_invalid_state,
+                "genuinely nonrepresentable thick endpoint", 1295);
+  require_condition(memcmp(&state_out, &nonrepresentable_state,
+                           sizeof(state_out)) == 0,
+                    "nonrepresentable thick endpoint changed state", 1295);
+  require_zero_exchange(&exchange,
+                        "nonrepresentable thick endpoint exchange", 1295);
+  require_condition(diagnostics.path == ghl_m1_neutrino_source_path_hard_failure &&
+                        !diagnostics.terminal_no_update &&
+                        neutrino_diagnostics.source_failures == 1,
+                    "nonrepresentable endpoint failure was not transactional",
+                    1295);
+}
+
+static void test_stiff_branch_zero_emission_scaled_add(
+      const ghl_m1_parameters *restrict m1_params) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
+      1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  ghl_m1_neutrino_parameters nu_params;
+  make_neutrino_parameters(&nu_params);
+
+  /* A zero equilibrium target makes eta_E zero while the large opacity and
+   * timestep force the backward-Euler predictor through its scaled fallback.
+   * The numerator then takes the right-zero addition path. */
+  const double opacity_large = ldexp(1.0, 600);
+  const double dt_large = ldexp(1.0, 600);
+  ghl_m1_neutrino_rates rates;
+  make_rates(ghl_m1_neutrino_nue, 0.0, opacity_large, 0.0,
+             0.0, 1.0, 0.0, 0.0, &rates);
+  const ghl_m1_neutrino_state state_transport = {
+      .N = 1.0, .E = 2.0, .F = {0.0, 0.0, 0.0}};
+  const ghl_m1_neutrino_state state_input = state_transport;
+  ghl_m1_neutrino_source_options options = branched_options();
+  ghl_m1_neutrino_state state_out;
+  ghl_m1_neutrino_exchange exchange;
+  ghl_m1_neutrino_source_diagnostics diagnostics;
+  ghl_m1_neutrino_diagnostics neutrino_diagnostics;
+  ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+
+  const ghl_error_codes_t error = ghl_m1_solve_neutrino_source_update(
+      &options, m1_params, &nu_params, &metric, &prims, &rates,
+      &state_input, &state_transport, dt_large, 3.0, &state_out,
+      &exchange, &diagnostics, &neutrino_diagnostics);
+  require_error(error, ghl_success, "zero-emission scaled numerator", 1296);
+  require_condition(
+      diagnostics.path == ghl_m1_neutrino_source_path_thick_equilibrium &&
+          !diagnostics.terminal_no_update,
+      "zero-emission scaled numerator selected the wrong path", 1296);
+  require_close(state_out.E, m1_params->E_floor, 0.0, 0.0,
+                "zero-emission scaled numerator energy floor", 1296);
+  require_state_finite_and_admissible(
+      m1_params, &nu_params, &metric, &state_out, 1296);
+  require_exchange_contract(
+      &state_transport, &state_out, &exchange, &metric, 3.0, 1296);
+}
+
+static void test_reachable_scaled_ratio_failure(
+      const ghl_m1_parameters *restrict m1_params) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
+      1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  ghl_m1_neutrino_parameters nu_params;
+  make_neutrino_parameters(&nu_params);
+
+  /* The one-ULP excess in eta_E is within the provider validator's stated
+   * representational slack, but makes the exact endpoint eta_E/kappa_a_E
+   * exceed DBL_MAX.  The direct BE products overflow, so the public thick
+   * branch must use the scaled fallback and reject that nonrepresentable
+   * quotient transactionally. */
+  ghl_m1_neutrino_rates rates;
+  make_rates(ghl_m1_neutrino_nux, 0.0, 0.5, 0.0,
+             DBL_MAX, 1.0, 0.0, 0.0, &rates);
+  rates.eta_E = nextafter(0.5 * DBL_MAX, INFINITY);
+  ghl_m1_neutrino_diagnostics rate_diagnostics;
+  ghl_m1_neutrino_diagnostics_initialize(&rate_diagnostics);
+  require_error(ghl_m1_validate_neutrino_rates(&rates, &rate_diagnostics),
+                ghl_success, "representational-slack rates were rejected", 1297);
+
+  const ghl_m1_neutrino_state state_transport = {
+      .N = 1.0, .E = DBL_MAX, .F = {0.0, 0.0, 0.0}};
+  const ghl_m1_neutrino_state state_input = state_transport;
+  ghl_m1_neutrino_source_options options = branched_options();
+  ghl_m1_neutrino_state state_out = {
+      .N = -41.0, .E = -42.0, .F = {-43.0, -44.0, -45.0}};
+  ghl_m1_neutrino_exchange exchange = {
+      .dN_rad_total = -46.0, .dL_rad_cc = -47.0, .dE_rad = -48.0,
+      .dF_rad = {-49.0, -50.0, -51.0}, .dTau_matter = -52.0,
+      .dS_matter = {-53.0, -54.0, -55.0}, .dYe_matter = -56.0};
+  ghl_m1_neutrino_source_diagnostics diagnostics;
+  ghl_m1_neutrino_diagnostics neutrino_diagnostics;
+  ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+
+  require_error(ghl_m1_solve_neutrino_source_update(
+                    &options, m1_params, &nu_params, &metric, &prims, &rates,
+                    &state_input, &state_transport, DBL_MAX, 3.0, &state_out,
+                    &exchange, &diagnostics, &neutrino_diagnostics),
+                ghl_error_m1_invalid_state,
+                "representational-slack thick endpoint was accepted", 1297);
+  require_condition(memcmp(&state_out, &state_transport, sizeof(state_out)) == 0,
+                    "scaled-ratio failure changed the state", 1297);
+  require_zero_exchange(&exchange, "scaled-ratio failure exchange", 1297);
+  require_condition(diagnostics.path == ghl_m1_neutrino_source_path_hard_failure &&
+                        !diagnostics.terminal_no_update &&
+                        neutrino_diagnostics.source_failures == 1,
+                    "scaled-ratio failure was not published transactionally", 1297);
+}
+
+static void test_scaled_product_helper_boundaries(void) {
+  const double one[] = {1.0};
+  const double three_halves[] = {1.5};
+  const double invalid[] = {-1.0};
+
+  /* 1.0 and 1.5 have the same frexp exponent, so these calls exercise the
+   * mantissa less-than, greater-than, and equality comparisons. */
+  require_condition(
+      !ghl_m1_neutrino_scaled_product_meets_threshold(
+          one, 1, three_halves, 1, false),
+      "equal-exponent less-than comparison was mishandled", 1297);
+  require_condition(
+      ghl_m1_neutrino_scaled_product_meets_threshold(
+          three_halves, 1, one, 1, false),
+      "equal-exponent greater-than comparison was mishandled", 1298);
+  require_condition(
+      ghl_m1_neutrino_scaled_product_meets_threshold(
+          one, 1, one, 1, true),
+      "inclusive equal-exponent comparison was mishandled", 1299);
+  require_condition(
+      !ghl_m1_neutrino_scaled_product_meets_threshold(
+          one, 1, one, 1, false),
+      "exclusive equal-exponent comparison was mishandled", 1300);
+
+  /* The exported helper must reject an invalid factor on either side rather
+   * than allowing the scaled-product loop to publish a partial result. */
+  require_condition(
+      !ghl_m1_neutrino_scaled_product_meets_threshold(
+          invalid, 1, one, 1, false),
+      "invalid left product factor was accepted", 1301);
+  require_condition(
+      !ghl_m1_neutrino_scaled_product_meets_threshold(
+          one, 1, invalid, 1, false),
+      "invalid right product factor was accepted", 1302);
+}
+
 static void test_public_source_api_boundaries(
       const ghl_m1_parameters *restrict m1_params,
       source_rng *restrict rng) {
@@ -935,53 +1300,6 @@ static void test_source_compatibility_and_selector_failures(
       m1_params, &nu_params, &metric, &strict_out, 1280);
   require_exchange_contract(
       &state, &strict_out, &strict_exchange, &metric, 3.0, 1280);
-
-  /* The selector calculations deliberately accept finite provider rates. The
-   * first case has finite kappa_a_E*kappa_tr but an overflowing
-   * dt_alpha*sqrt(product); the second has an overflowing scattering
-   * stiffness. Both therefore select their documented stiff route and then
-   * publish a transactional invalid-state failure when its BE denominator is
-   * nonfinite. */
-  const double kappa = sqrt(DBL_MAX);
-  ghl_m1_neutrino_rates thick_overflow_rates;
-  make_rates(ghl_m1_neutrino_nue, 0.0, kappa, 0.0, DBL_MIN, 1.0,
-             0.0, 0.0, &thick_overflow_rates);
-  ghl_m1_neutrino_rates scattering_overflow_rates;
-  make_rates(ghl_m1_neutrino_nue, 0.0, 0.0, DBL_MAX, 1.0, 2.0,
-             0.0, 0.0, &scattering_overflow_rates);
-  const ghl_m1_neutrino_rates *const overflow_cases[2] = {
-      &thick_overflow_rates, &scattering_overflow_rates};
-  const char *const overflow_labels[2] = {
-      "thick selector overflow", "scattering selector overflow"};
-  for(int overflow_case = 0; overflow_case < 2; ++overflow_case) {
-    ghl_m1_neutrino_source_options options = branched_options();
-    ghl_m1_neutrino_state output = {
-        .N = -21.0, .E = -22.0, .F = {-23.0, -24.0, -25.0}};
-    ghl_m1_neutrino_exchange overflow_exchange = {
-        .dN_rad_total = -26.0, .dL_rad_cc = -27.0, .dE_rad = -28.0,
-        .dF_rad = {-29.0, -30.0, -31.0}, .dTau_matter = -32.0,
-        .dS_matter = {-33.0, -34.0, -35.0}, .dYe_matter = -36.0};
-    ghl_m1_neutrino_source_diagnostics overflow_diagnostics;
-    ghl_m1_neutrino_diagnostics overflow_nd;
-    ghl_m1_neutrino_diagnostics_initialize(&overflow_nd);
-    require_error(ghl_m1_solve_neutrino_source_update(
-                      &options, m1_params, &nu_params, &metric, &prims,
-                      overflow_cases[overflow_case], &state, &state,
-                      DBL_MAX, 3.0, &output, &overflow_exchange,
-                      &overflow_diagnostics, &overflow_nd),
-                  ghl_error_m1_invalid_state, overflow_labels[overflow_case],
-                  1281 + overflow_case);
-    require_condition(memcmp(&output, &state, sizeof(output)) == 0,
-                      "selector overflow changed transport state",
-                      1281 + overflow_case);
-    require_zero_exchange(&overflow_exchange, overflow_labels[overflow_case],
-                          1281 + overflow_case);
-    require_condition(overflow_diagnostics.path ==
-                          ghl_m1_neutrino_source_path_hard_failure &&
-                      !overflow_diagnostics.terminal_no_update,
-                      "selector overflow did not publish hard failure",
-                      1281 + overflow_case);
-  }
 
   /* Compatibility mode performs a strict pre-closure check when fallback is
    * disabled. Exercise both the closure error and the documented fallback
@@ -4115,6 +4433,11 @@ int main(void) {
   test_source_regimes(&m1_params, &rng);
   test_source_base_and_lapse_scaling(&m1_params, &rng);
   test_thermalized_number_projection(&m1_params);
+  test_stiff_branch_arithmetic_boundaries(&m1_params);
+  test_stiff_branch_zero_emission_scaled_add(&m1_params);
+  test_reachable_scaled_ratio_failure(&m1_params);
+  test_scaled_product_helper_boundaries();
+  test_branched_general_thermalized_number_projection(&m1_params);
   /* Coverage-only public API checks must not perturb the established corpus
    * consumed by the pre-existing randomized tests below. */
   source_rng public_source_rng = rng;

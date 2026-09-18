@@ -2,11 +2,14 @@
 # This is a SUBDIR of the Radiation gem, not a separate build subsystem: the
 # neutrino code reuses the shared M1 transport kernels in place (no duplication),
 # shares the Radiation build unit, and shares the ghl_m1.h public header.
-#! INCS = ghl_m1_neutrino_implicit.h ghl_m1_nrpyleakage_kernel.h
+#! INCS = ghl_m1_neutrino_implicit.h ghl_m1_nrpyleakage_kernel.h \
+          ../../Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h \
+          ../../Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h
 
-# Neutrino kernels also include shared headers from the parent Radiation gem.
-# Keep this path relative to the gem so every host build sees the same layout.
-CFLAGS += -I$(SRCDIR)/..
+# The canonical NRPyLeakage helper headers are source-private dependencies of
+# this adapter.  They remain owned by the NRPyLeakage manifest and are tracked
+# here as relative prerequisites; they are not copied into Radiation or the
+# installed include surface.
 
 # Source files in this directory that need compiled:
 SRCS = ghl_m1_nrpyleakage_kernel.c \

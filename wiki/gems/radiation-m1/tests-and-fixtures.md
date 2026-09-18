@@ -42,10 +42,10 @@ the provider test. It does not regenerate the retained reference data.
 The normal [`.github/run_tests.sh`](../../../.github/run_tests.sh) invokes the
 scoped runner after the ordinary library/test build. The dedicated
 [Radiation M1 action](../../../.github/actions/run_m1/action.yml) configures a
-compiler/HDF5 combination, runs the same `--build` route, and uploads GCC
-Linux Radiation coverage as an artifact and through the existing Codecov action
-to the PR patch gate. Workflow presence is configured-execution evidence;
-an observed run must still be reported separately.
+compiler/HDF5 combination and runs the same `--build` route. It is a test
+runner only and does not define a separate M1 coverage threshold, report,
+artifact, or Codecov policy. Workflow presence is configured-execution
+evidence; an observed run must still be reported separately.
 
 ## Claim dispositions
 

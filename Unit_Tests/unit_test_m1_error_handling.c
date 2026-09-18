@@ -1568,6 +1568,38 @@ static void check_closure_shift_overflow(void) {
     fail_test("workspace overflow diagnostic accounting mismatch");
 }
 
+static void check_comoving_energy_failure(void) {
+  ghl_m1_parameters params;
+  /* DBL_MIN is accepted by the public epsilon_c contract, but
+   * 1 - epsilon_c rounds to one.  Thus the unit-flux state remains accepted
+   * by the realizability check and can reach the comoving-energy guard. */
+  require_error_code(ghl_m1_initialize(
+      DBL_MIN, DBL_MIN, 1.0e-8, 1.0e-6, 1.0e-12, 20, 1.0e-10, &params),
+      ghl_success, "comoving-energy boundary initializer failed");
+
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  ghl_primitive_quantities prims = {
+      .u0 = 1.0, .vU = {nextafter(1.0, 0.0), 0.0, 0.0}};
+  const ghl_m1_rad_state rad = {.E = 1.0, .F = {1.0, 0.0, 0.0}};
+  ghl_m1_closure closure = {.xi = -17.0, .chi = -19.0};
+
+  ghl_m1_reset_closure_counters();
+  require_error_code(ghl_m1_compute_closure_with_primitives(
+      &params, &metric, &prims, &rad, &closure),
+      ghl_error_m1_invalid_state, "comoving-energy boundary was accepted");
+
+  ghl_m1_closure_failure_stage_t stage;
+  ghl_m1_get_last_closure_failure_stage(&stage);
+  ghl_m1_closure_counters counters;
+  ghl_m1_get_closure_counters(&counters);
+  if(stage != ghl_m1_closure_failure_comoving_energy ||
+     counters.invalid_state != 1 || counters.ordinary_convergence ||
+     counters.endpoint_fallback || counters.iteration_exhaustion ||
+     counters.downstream_repair || counters.residual_rejection)
+    fail_test("comoving-energy failure diagnostic accounting mismatch");
+}
+
 int main(void) {
   check_success_returns();
 
@@ -1588,6 +1620,7 @@ int main(void) {
   check_comoving_arithmetic_rejections();
   check_scalar_boundary_rejections();
   check_closure_shift_overflow();
+  check_comoving_energy_failure();
 
   ghl_info("unit_test_m1_error_handling: fatal mappings, fixture rejection, and "
            "shared M1 validation checks passed\n");

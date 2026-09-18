@@ -5,8 +5,8 @@
 /*
  * Local homogeneous source solve for one neutrino species. It solves
  * E/F_i first, derives the endpoint Gamma_N from the fresh shared current,
- * then updates N and constructs one signed charged-current exchange packet in
- * temporary storage.
+ * applies the selected endpoint-number policy, and constructs one signed
+ * charged-current exchange packet in temporary storage.
  *
  * The solve follows the shared Newton/line-search/substep pattern but uses
  * frozen rates and primitives instead of Con2Prim or opacity callbacks. After
@@ -119,8 +119,9 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
   }
 
   const double number_endpoint_gamma = endpoint_current.Gamma_N;
-  error = ghl_m1_update_neutrino_number_backward_euler(
-        nu_params, rates, dt_alpha, number_endpoint_gamma, state_in->N, &candidate.N);
+  error = ghl_m1_neutrino_update_endpoint_number_with_policy(
+        nu_params, rates, dt, dt_alpha, -1.0, state_in, &endpoint_current,
+        &candidate.N);
   if(error != ghl_success) {
     return error;
   }
@@ -410,7 +411,7 @@ void ghl_m1_neutrino_populate_mean_energy_diagnostics(
   }
 }
 
-ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
+ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_policy(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_m1_neutrino_parameters *restrict nu_params,
       const ghl_metric_quantities *restrict metric,
@@ -418,6 +419,7 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
       const ghl_m1_neutrino_rates *restrict rates,
       const double dt,
       const double n_b_cons,
+      const double thermalized_number_threshold,
       const ghl_m1_neutrino_state *restrict state_in,
       ghl_m1_neutrino_state *restrict state_out,
       ghl_m1_neutrino_exchange *restrict exchange,
@@ -442,7 +444,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
   ghl_m1_neutrino_diagnostics candidate_neutrino_diagnostics = *neutrino_diagnostics;
 
   /* Validate basic inputs. */
-  if(!isfinite(dt) || dt < 0.0 || !isfinite(n_b_cons) || n_b_cons <= 0.0) {
+  if(!isfinite(dt) || dt < 0.0 || !isfinite(n_b_cons) || n_b_cons <= 0.0
+     || !isfinite(thermalized_number_threshold)) {
     return ghl_m1_neutrino_publish_hard_failure(
           ghl_error_m1_invalid_state, neutrino_diagnostics);
   }
@@ -584,8 +587,9 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
       candidate.F[i] = U_final[i + 1] * inv_sqrt_detgamma;
     }
 
-    /* Backward-Euler N update with dt_alpha = dt*lapse and the fresh endpoint
-     * current normalization. Gamma_N is not a fluid Lorentz factor. */
+    /* Apply the selected endpoint-number policy with dt_alpha = dt*lapse and
+     * the fresh endpoint current normalization. Gamma_N is not a fluid
+     * Lorentz factor. A negative threshold selects ordinary backward Euler. */
     double N_out = 0.0;
     ghl_m1_neutrino_current endpoint_current;
     ghl_error_codes_t n_error = ghl_m1_neutrino_derive_current(
@@ -594,24 +598,27 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
       return ghl_m1_neutrino_publish_hard_failure(n_error, neutrino_diagnostics);
     }
     const double number_endpoint_gamma = endpoint_current.Gamma_N;
-    n_error = ghl_m1_update_neutrino_number_backward_euler(
-          nu_params, rates, dt_alpha, number_endpoint_gamma, state_in->N, &N_out);
+    n_error = ghl_m1_neutrino_update_endpoint_number_with_policy(
+          nu_params, rates, dt, dt_alpha, thermalized_number_threshold, state_in,
+          &endpoint_current, &N_out);
     if(n_error != ghl_success) {
       return ghl_m1_neutrino_publish_hard_failure(n_error, neutrino_diagnostics);
     }
     const double physical_number_endpoint = N_out;
     candidate.N = N_out;
 
-    /* The current calculation above strictly validated these unchanged E/F_i
-     * and the configuration; backward Euler returned finite N. Repair cannot
-     * fail or change E/F_i here, but may floor N and must retain the shared
-     * diagnostic accounting. */
-    (void)ghl_m1_repair_neutrino_state(
+    /* The current calculation above strictly validated these unchanged E/F_i.
+     * Repair may floor the selected endpoint number and must remain
+     * transactional with the candidate diagnostics. */
+    n_error = ghl_m1_repair_neutrino_state(
           m1_params, nu_params, metric, &candidate, &candidate_neutrino_diagnostics);
+    if(n_error != ghl_success) {
+      return ghl_m1_neutrino_publish_hard_failure(n_error, neutrino_diagnostics); /* GCOVR_EXCL_LINE -- defensive */
+    }
 
     /* Repair may have changed N. Endpoint diagnostics use the published
      * candidate, while charged-current exchange below uses the un-repaired
-     * backward-Euler number endpoint. */
+     * physical endpoint selected by the number policy. */
     n_error = ghl_m1_neutrino_derive_current(
           m1_params, nu_params, metric, prims_frozen, &candidate, &endpoint_current);
     if(n_error != ghl_success) {
@@ -681,4 +688,22 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
   *solve_diagnostics = candidate_solve_diagnostics;
   *neutrino_diagnostics = candidate_neutrino_diagnostics;
   return ghl_error_m1_implicit_terminal_fallback;
+}
+
+ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_primitive_quantities *restrict prims_frozen,
+      const ghl_m1_neutrino_rates *restrict rates,
+      const double dt,
+      const double n_b_cons,
+      const ghl_m1_neutrino_state *restrict state_in,
+      ghl_m1_neutrino_state *restrict state_out,
+      ghl_m1_neutrino_exchange *restrict exchange,
+      ghl_m1_implicit_solve_diagnostics *restrict solve_diagnostics,
+      ghl_m1_neutrino_diagnostics *restrict neutrino_diagnostics) {
+  return ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_policy(
+        m1_params, nu_params, metric, prims_frozen, rates, dt, n_b_cons, -1.0,
+        state_in, state_out, exchange, solve_diagnostics, neutrino_diagnostics);
 }

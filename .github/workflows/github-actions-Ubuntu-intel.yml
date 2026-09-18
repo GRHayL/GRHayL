@@ -27,7 +27,6 @@ jobs:
         with:
           compiler: 'intel'
           hdf5: ${{ matrix.hdf5 }}
-          platform: ${{ matrix.os }}
 
   ET-Legacy:
     strategy:

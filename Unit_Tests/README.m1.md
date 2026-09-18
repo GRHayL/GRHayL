@@ -42,6 +42,23 @@ Without HDF5, the same invocation runs the available table-free checks. The
 provider executable retains its optional external EOS-table argument. This
 table is provider-test input, not an independent reference output.
 
+## NRPyLeakage adapter scope
+
+The M1 NRPyLeakage backend uses the NRPyLeakage-owned, source-private helper
+headers for local nucleon blocking, reaction-shifted beta moments, and
+bremsstrahlung moments:
+
+- [`NRPyLeakage_nucleon_blocking.h`](../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
+- [`NRPyLeakage_rate_helpers.h`](../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h)
+
+Direct source-private cross-gem inclusion is an approved boundary for this
+adapter. The M1 manifest records the dependency; the helper implementations
+remain owned by NRPyLeakage, are not copied into Radiation, and are not
+installed as public API. M1 remains tau-free: optical-depth suppression,
+leakage luminosity/source assembly, and legacy leakage finite-output fallback
+policies do not enter the M1 rate bundle. M1 keeps its own validation and
+provider recovery behavior.
+
 ## Stored reference boundary
 
 Normal fixture replay requires neither THC_M1 source nor `THCM1_ROOT` nor the
@@ -129,17 +146,13 @@ fixture family, and [STRESS_ENERGY.md](data/m1_thcm1/STRESS_ENERGY.md) for the
 covariant stress-energy corpus. The runner validates the retained package with
 `audit_package.py` before executing its consumers.
 
-## CI and coverage
+## CI
 
 `.github/run_tests.sh` invokes the M1 runner. The existing compiler/OS workflows
 also select dedicated Radiation jobs through `.github/actions/run_m1`; these
-build the same named targets and execute both HDF5 configurations. Linux GCC jobs
-retain a Radiation-filtered coverage JSON artifact and submit the executed M1
-coverage through the existing Codecov action to the PR patch gate. Workflow selection is not a
-claim that a remote CI run has already passed.
-
-Assess function, line, and branch coverage from actual executions. Every
-reachable uncovered Radiation branch must be assessed for a meaningful fixture
-or local test. Record a concrete reason for each remaining gap, including build
-configuration and source location. Absence of a matching THC operation alone is
-not a reason to omit a reachable local check. No coverage percentage is presumed.
+configure the selected compiler and HDF5 mode, then build and execute the same
+scoped M1 targets. The M1 action does not define a separate coverage threshold,
+report, artifact, Codecov submission, or changed-path gate. Any future coverage
+reporting should use the shared GRHayL coverage action and its repository-wide
+expectations. Workflow selection is not a claim that a remote CI run has
+already passed.

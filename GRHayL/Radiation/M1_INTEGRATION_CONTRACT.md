@@ -100,12 +100,21 @@ endpoint ratio `J*Gamma_N/N`; a nonpositive lower or upper bound disables that
 bound. The bounds reject an invalid endpoint and never clamp it; when `N == 0`,
 the existing ratio-check skip is retained.
 
-For the branched source policy, `thermalized_number_threshold < 0` disables the
-optional equilibrium mean-energy number projection. A threshold of zero selects
-that projection whenever `dt_alpha*kappa_a_N >= 0`, including zero opacity and
-`dt == 0`, so it can change `N` even without a time-integrated number source.
-The projection is separate from both backward-Euler number integration and the
-subsequent `N_floor` repair. The default policy keeps the threshold negative.
+For the opt-in branched source policy, `thermalized_number_threshold` applies to
+the endpoint-number step on every branch: thin, thick-equilibrium,
+scattering-dominated, and the general implicit fallback. A negative value
+disables the optional equilibrium mean-energy projection. A nonnegative value
+selects it when `dt_alpha*kappa_a_N >= thermalized_number_threshold`; zero
+therefore selects it even for zero opacity or `dt == 0`, so it can change `N`
+without a time-integrated number source. The configured thick/scattering
+shortcut and thermalized-number policy comparisons use scaled products,
+avoiding overflow or underflow solely during route selection. This protects
+policy selection, not endpoint publication: a genuinely nonrepresentable final
+endpoint remains an error and is rolled back.
+The projection is separate from backward-Euler number integration and the
+subsequent `N_floor` repair. The default policy keeps the threshold negative,
+and the public homogeneous implicit API remains unchanged and continues its
+ordinary backward-Euler number update.
 
 On failure, the caller's output state remains the transport state and the
 exchange packet is zero. A successful packet contains the undensitized
@@ -158,9 +167,10 @@ target, subject to its HDF5 filtering, and maps discovered sources to
 `.github/run_tests.sh` and the Radiation jobs in the compiler/OS workflows. The
 runner selects the rate-provider test's generated-table mode in HDF5 builds
 and its available table-free checks without HDF5. See
-[the M1 test guide](../../Unit_Tests/README.m1.md) for scoped build commands and
-the stored-reference boundary. CI selection alone does not establish a remote
-pass, measured coverage, complete mesh evolution, or framework integration.
+[the M1 test guide](https://github.com/GRHayL/GRHayL/blob/main/Unit_Tests/README.m1.md)
+for scoped build commands and the stored-reference boundary. CI selection alone
+does not establish a remote pass, measured coverage, complete mesh evolution, or
+framework integration.
 
 The production library boundary remains defined by the installed header
 `GRHayL/include/ghl_m1.h`, the active manifests

@@ -4,8 +4,9 @@
 #include <float.h>
 
 /*
- * Aggregate neutrino E/F_i and N interaction sources plus the
- * endpoint-Gamma_N backward-Euler N update.
+ * Aggregate neutrino E/F_i and N interaction sources plus the shared
+ * endpoint-number policy (ordinary endpoint-Gamma_N backward Euler or the
+ * optional thermalized mean-energy projection).
  *
  *   Q   = eta_E - kappa_a_E * J
  *   S_E = Q * W + kappa_tr * h_n
@@ -307,4 +308,45 @@ ghl_error_codes_t ghl_m1_update_neutrino_number_backward_euler(
 
   *N_out = candidate_N_out;
   return ghl_success;
+}
+
+ghl_error_codes_t ghl_m1_neutrino_update_endpoint_number_with_policy(
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      const ghl_m1_neutrino_rates *restrict rates,
+      const double dt,
+      const double dt_alpha,
+      const double thermalized_number_threshold,
+      const ghl_m1_neutrino_state *restrict state_base,
+      const ghl_m1_neutrino_current *restrict endpoint_current,
+      double *restrict N_out) {
+
+  if(nu_params == NULL || rates == NULL || state_base == NULL || endpoint_current == NULL
+     || N_out == NULL) {
+    return ghl_error_m1_null_pointer;
+  }
+  if(!isfinite(dt) || dt < 0.0 || !isfinite(dt_alpha) || dt_alpha < 0.0
+     || !isfinite(thermalized_number_threshold)) {
+    return ghl_error_m1_invalid_state;
+  }
+
+  /* Keep the policy comparison and endpoint formula in one production helper
+   * so shortcut and implicit callers cannot silently diverge. */
+  const double number_factors[2] = { dt_alpha, rates->kappa_a_N };
+  const double threshold_factor[1] = { thermalized_number_threshold };
+  if(thermalized_number_threshold >= 0.0
+     && ghl_m1_neutrino_scaled_product_meets_threshold(
+           number_factors, 2, threshold_factor, 1, true)) {
+    const double candidate
+          = rates->mean_energy > 0.0
+                  ? endpoint_current->Gamma_N * endpoint_current->J / rates->mean_energy
+                  : 0.0;
+    if(!isfinite(candidate)) {
+      return ghl_error_m1_invalid_state;
+    }
+    *N_out = candidate;
+    return ghl_success;
+  }
+
+  return ghl_m1_update_neutrino_number_backward_euler(
+        nu_params, rates, dt_alpha, endpoint_current->Gamma_N, state_base->N, N_out);
 }

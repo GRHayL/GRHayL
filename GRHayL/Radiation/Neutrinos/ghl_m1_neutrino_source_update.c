@@ -3,6 +3,268 @@
 #include "ghl_m1_neutrino_implicit.h"
 
 #include <float.h>
+#include <math.h>
+
+/* A nonnegative finite binary64 value represented without a range-limited
+ * exponent.  The mantissa is normalized to [0.5, 1), except for zero. */
+typedef struct {
+  double mantissa;
+  int exponent;
+} ghl_m1_scaled_positive;
+
+static bool ghl_m1_scaled_positive_from_double(
+      const double value,
+      ghl_m1_scaled_positive *restrict scaled) {
+  if(scaled == NULL || !isfinite(value) || value < 0.0) {
+    return false;
+  }
+  if(value == 0.0) {
+    *scaled = (ghl_m1_scaled_positive){ .mantissa = 0.0, .exponent = 0 };
+    return true;
+  }
+  scaled->mantissa = frexp(value, &scaled->exponent);
+  return true;
+}
+
+static bool ghl_m1_scaled_positive_multiply(
+      const ghl_m1_scaled_positive *restrict left,
+      const ghl_m1_scaled_positive *restrict right,
+      ghl_m1_scaled_positive *restrict product) {
+  if(left == NULL || right == NULL || product == NULL) {
+    return false;
+  }
+  if(left->mantissa == 0.0 || right->mantissa == 0.0) {
+    *product = (ghl_m1_scaled_positive){ .mantissa = 0.0, .exponent = 0 };
+    return true;
+  }
+  int normalization = 0;
+  const double mantissa = frexp(left->mantissa * right->mantissa, &normalization);
+  product->mantissa = mantissa;
+  product->exponent = left->exponent + right->exponent + normalization;
+  return true;
+}
+
+static bool ghl_m1_scaled_positive_add(
+      const ghl_m1_scaled_positive *restrict left,
+      const ghl_m1_scaled_positive *restrict right,
+      ghl_m1_scaled_positive *restrict sum) {
+  if(left == NULL || right == NULL || sum == NULL) {
+    return false;
+  }
+  if(left->mantissa == 0.0) {
+    *sum = *right; /* GCOVR_EXCL_LINE -- unreachable */
+    return true; /* GCOVR_EXCL_LINE -- unreachable */
+  }
+  if(right->mantissa == 0.0) {
+    *sum = *left;
+    return true;
+  }
+
+  const ghl_m1_scaled_positive *larger = left;
+  const ghl_m1_scaled_positive *smaller = right;
+  if(right->exponent > left->exponent) {
+    larger = right;
+    smaller = left;
+  }
+  const double mantissa = larger->mantissa
+                          + scalbn(smaller->mantissa,
+                                   smaller->exponent - larger->exponent);
+  int normalization = 0;
+  sum->mantissa = frexp(mantissa, &normalization);
+  sum->exponent = larger->exponent + normalization;
+  return true;
+}
+
+static bool ghl_m1_scaled_positive_divide(
+      const ghl_m1_scaled_positive *restrict numerator,
+      const ghl_m1_scaled_positive *restrict denominator,
+      double *restrict quotient) {
+  if(numerator == NULL || denominator == NULL || quotient == NULL
+     || denominator->mantissa == 0.0) {
+    return false;
+  }
+  if(numerator->mantissa == 0.0) {
+    *quotient = 0.0;
+    return true;
+  }
+  *quotient = scalbn(numerator->mantissa / denominator->mantissa,
+                     numerator->exponent - denominator->exponent);
+  return isfinite(*quotient) && *quotient >= 0.0;
+}
+
+static int ghl_m1_scaled_positive_compare(
+      const ghl_m1_scaled_positive *restrict left,
+      const ghl_m1_scaled_positive *restrict right) {
+  if(left->mantissa == 0.0) {
+    return right->mantissa == 0.0 ? 0 : -1;
+  }
+  if(right->mantissa == 0.0) {
+    return 1;
+  }
+  if(left->exponent != right->exponent) {
+    return left->exponent < right->exponent ? -1 : 1;
+  }
+  return left->mantissa < right->mantissa
+               ? -1
+               : (left->mantissa > right->mantissa ? 1 : 0);
+}
+
+static bool ghl_m1_scaled_positive_product(
+      const double *restrict values,
+      const int value_count,
+      ghl_m1_scaled_positive *restrict product) {
+  if(values == NULL || value_count <= 0 || product == NULL) {
+    return false;
+  }
+  if(!ghl_m1_scaled_positive_from_double(1.0, product)) {
+    return false;
+  }
+  for(int i = 0; i < value_count; ++i) {
+    ghl_m1_scaled_positive factor;
+    ghl_m1_scaled_positive next_product;
+    if(!ghl_m1_scaled_positive_from_double(values[i], &factor)
+       || !ghl_m1_scaled_positive_multiply(product, &factor, &next_product)) {
+      return false;
+    }
+    *product = next_product;
+  }
+  return true;
+}
+
+bool ghl_m1_neutrino_scaled_product_meets_threshold(
+      const double *restrict left_values,
+      const int left_count,
+      const double *restrict right_values,
+      const int right_count,
+      const bool inclusive) {
+  ghl_m1_scaled_positive left;
+  ghl_m1_scaled_positive right;
+  if(!ghl_m1_scaled_positive_product(left_values, left_count, &left)
+     || !ghl_m1_scaled_positive_product(right_values, right_count, &right)) {
+    return false;
+  }
+  const int comparison = ghl_m1_scaled_positive_compare(&left, &right);
+  return inclusive ? comparison >= 0 : comparison > 0;
+}
+
+static bool ghl_m1_scaled_positive_sqrt(
+      const ghl_m1_scaled_positive *restrict value,
+      ghl_m1_scaled_positive *restrict root) {
+  if(value == NULL || root == NULL) {
+    return false;
+  }
+  if(value->mantissa == 0.0) {
+    *root = (ghl_m1_scaled_positive){ .mantissa = 0.0, .exponent = 0 }; /* GCOVR_EXCL_LINE -- zero product */
+    return true; /* GCOVR_EXCL_LINE -- zero product */
+  }
+
+  double mantissa = value->mantissa;
+  int exponent = value->exponent;
+  if(exponent % 2 != 0) {
+    mantissa *= 2.0;
+    --exponent;
+  }
+  int normalization = 0;
+  root->mantissa = frexp(sqrt(mantissa), &normalization);
+  root->exponent = exponent / 2 + normalization;
+  return true;
+}
+
+/* Compute (initial + dtau * source) / (1 + dtau * opacity).  The direct
+ * expression is retained when all intermediates are representable so normal
+ * range results keep their established evaluation order. */
+static bool ghl_m1_neutrino_compute_be_ratio(
+      const double initial,
+      const double source,
+      const double dtau,
+      const double opacity,
+      double *restrict ratio) {
+  if(ratio == NULL || !isfinite(initial) || initial < 0.0 || !isfinite(source)
+     || source < 0.0 || !isfinite(dtau) || dtau < 0.0 || !isfinite(opacity)
+     || opacity < 0.0) {
+    return false;
+  }
+
+  const double source_product = dtau * source;
+  const double opacity_product = dtau * opacity;
+  const double numerator = initial + source_product;
+  const double denominator = 1.0 + opacity_product;
+  if(isfinite(source_product) && isfinite(opacity_product) && isfinite(numerator)
+     && isfinite(denominator) && denominator > 0.0) {
+    *ratio = numerator / denominator;
+    return isfinite(*ratio) && *ratio >= 0.0;
+  }
+
+  ghl_m1_scaled_positive initial_scaled;
+  ghl_m1_scaled_positive source_scaled;
+  ghl_m1_scaled_positive dtau_scaled;
+  ghl_m1_scaled_positive opacity_scaled;
+  ghl_m1_scaled_positive one_scaled;
+  ghl_m1_scaled_positive source_product_scaled;
+  ghl_m1_scaled_positive opacity_product_scaled;
+  ghl_m1_scaled_positive numerator_scaled;
+  ghl_m1_scaled_positive denominator_scaled;
+  if(!ghl_m1_scaled_positive_from_double(initial, &initial_scaled)
+     || !ghl_m1_scaled_positive_from_double(source, &source_scaled)
+     || !ghl_m1_scaled_positive_from_double(dtau, &dtau_scaled)
+     || !ghl_m1_scaled_positive_from_double(opacity, &opacity_scaled)
+     || !ghl_m1_scaled_positive_from_double(1.0, &one_scaled)
+     || !ghl_m1_scaled_positive_multiply(&dtau_scaled, &source_scaled,
+                                         &source_product_scaled)
+     || !ghl_m1_scaled_positive_multiply(&dtau_scaled, &opacity_scaled,
+                                         &opacity_product_scaled)
+     || !ghl_m1_scaled_positive_add(&initial_scaled, &source_product_scaled,
+                                    &numerator_scaled)
+     || !ghl_m1_scaled_positive_add(&one_scaled, &opacity_product_scaled,
+                                    &denominator_scaled)
+     || !ghl_m1_scaled_positive_divide(&numerator_scaled, &denominator_scaled,
+                                       ratio)) {
+    return false;
+  }
+  return true;
+}
+
+static bool ghl_m1_neutrino_compute_be_damping(
+      const double initial,
+      const double dtau,
+      const double opacity,
+      double *restrict damped) {
+  if(damped == NULL || !isfinite(initial) || !isfinite(dtau) || dtau < 0.0
+     || !isfinite(opacity) || opacity < 0.0) {
+    return false;
+  }
+
+  const double opacity_product = dtau * opacity;
+  const double denominator = 1.0 + opacity_product;
+  if(isfinite(opacity_product) && isfinite(denominator) && denominator > 0.0) {
+    *damped = initial / denominator;
+    return isfinite(*damped);
+  }
+
+  ghl_m1_scaled_positive initial_scaled;
+  ghl_m1_scaled_positive dtau_scaled;
+  ghl_m1_scaled_positive opacity_scaled;
+  ghl_m1_scaled_positive one_scaled;
+  ghl_m1_scaled_positive opacity_product_scaled;
+  ghl_m1_scaled_positive denominator_scaled;
+  if(!ghl_m1_scaled_positive_from_double(fabs(initial), &initial_scaled)
+     || !ghl_m1_scaled_positive_from_double(dtau, &dtau_scaled)
+     || !ghl_m1_scaled_positive_from_double(opacity, &opacity_scaled)
+     || !ghl_m1_scaled_positive_from_double(1.0, &one_scaled)
+     || !ghl_m1_scaled_positive_multiply(&dtau_scaled, &opacity_scaled,
+                                         &opacity_product_scaled)
+     || !ghl_m1_scaled_positive_add(&one_scaled, &opacity_product_scaled,
+                                    &denominator_scaled)) {
+    return false; /* GCOVR_EXCL_LINE -- validated inputs */
+  }
+  double magnitude = 0.0;
+  if(!ghl_m1_scaled_positive_divide(&initial_scaled, &denominator_scaled,
+                                    &magnitude)) {
+    return false;
+  }
+  *damped = copysign(magnitude, initial);
+  return isfinite(*damped);
+}
 
 /*
  * Host-neutral source-policy dispatcher for one grey neutrino species.
@@ -222,45 +484,6 @@ static ghl_error_codes_t ghl_m1_neutrino_apply_ye_policy(
         rates, dL_rad_total, n_b_cons, &exchange->dYe_matter);
 }
 
-static ghl_error_codes_t ghl_m1_neutrino_update_endpoint_number(
-      const ghl_m1_neutrino_parameters *restrict nu_params,
-      const ghl_m1_neutrino_rates *restrict rates,
-      const double dt,
-      const double dt_alpha,
-      const double thermalized_number_threshold,
-      const ghl_m1_neutrino_state *restrict state_base,
-      const ghl_m1_neutrino_current *restrict endpoint_current,
-      double *restrict N_out) {
-  if(nu_params == NULL || rates == NULL || state_base == NULL || endpoint_current == NULL
-     || N_out == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
-  if(!isfinite(dt) || dt < 0.0 || !isfinite(dt_alpha) || dt_alpha < 0.0
-     || !isfinite(thermalized_number_threshold)) {
-    return ghl_error_m1_invalid_state;
-  }
-
-  /* The endpoint neutrino mean energy may be treated as thermalized.  A
-   * negative threshold disables that option, preserving the
-   * ordinary endpoint-Gamma backward-Euler update. */
-  const double number_stiffness = dt_alpha * rates->kappa_a_N;
-  if(thermalized_number_threshold >= 0.0
-     && number_stiffness >= thermalized_number_threshold) {
-    const double candidate
-          = rates->mean_energy > 0.0
-                  ? endpoint_current->Gamma_N * endpoint_current->J / rates->mean_energy
-                  : 0.0;
-    if(!isfinite(candidate)) {
-      return ghl_error_m1_invalid_state;
-    }
-    *N_out = candidate;
-    return ghl_success;
-  }
-
-  return ghl_m1_update_neutrino_number_backward_euler(
-        nu_params, rates, dt_alpha, endpoint_current->Gamma_N, state_base->N, N_out);
-}
-
 /*
  * This is the default local predictor for the thick/scattering shortcuts. It
  * first advances transport to Estar/Fstar,
@@ -313,21 +536,22 @@ static ghl_error_codes_t ghl_m1_neutrino_build_stiff_predictor(
   }
 
   const double dtau = dt_alpha / W;
-  const double J_denominator = 1.0 + dtau * rates->kappa_a_E;
-  const double H_denominator = 1.0 + dtau * rates->kappa_tr;
-  if(!isfinite(dtau) || dtau < 0.0 || !isfinite(J_denominator) || J_denominator <= 0.0
-     || !isfinite(H_denominator) || H_denominator <= 0.0) {
+  if(!isfinite(dtau) || dtau < 0.0) {
     return ghl_error_m1_invalid_state;
   }
 
-  const double J_new = (comoving.J + dtau * rates->eta_E) / J_denominator;
-  if(!isfinite(J_new) || J_new < 0.0) {
+  double J_new = 0.0;
+  if(!ghl_m1_neutrino_compute_be_ratio(
+           comoving.J, rates->eta_E, dtau, rates->kappa_a_E, &J_new)) {
     return ghl_error_m1_invalid_state;
   }
 
   double HD_new[3], HU_new[3];
   for(int i = 0; i < 3; ++i) {
-    HD_new[i] = comoving.HD[i] / H_denominator;
+    if(!ghl_m1_neutrino_compute_be_damping(
+             comoving.HD[i], dtau, rates->kappa_tr, &HD_new[i])) {
+      return ghl_error_m1_invalid_state;
+    }
   }
   ghl_raise_lower_vector_3D(metric->gammaUU, HD_new, HU_new);
   double Hn_new = 0.0;
@@ -464,7 +688,7 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thin_branch(
     return error;
   }
   const double number_endpoint_gamma = endpoint_current.Gamma_N;
-  error = ghl_m1_neutrino_update_endpoint_number(
+  error = ghl_m1_neutrino_update_endpoint_number_with_policy(
         nu_params, rates, dt, dt_alpha, thermalized_number_threshold, state_transport,
         &endpoint_current, &candidate.N);
   if(error != ghl_success) {
@@ -554,7 +778,7 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thick_branch(
 
   double N_out = 0.0;
   const double number_endpoint_gamma = endpoint_current.Gamma_N;
-  error = ghl_m1_neutrino_update_endpoint_number(
+  error = ghl_m1_neutrino_update_endpoint_number_with_policy(
         nu_params, rates, dt, dt_alpha, thermalized_number_threshold, state_transport,
         &endpoint_current, &N_out);
   if(error != ghl_success) {
@@ -642,26 +866,44 @@ static bool ghl_m1_neutrino_thick_limit_selected(
       const double dt_alpha,
       const ghl_m1_neutrino_rates *restrict rates,
       const double threshold) {
-  if(threshold <= 0.0) {
+  if(rates == NULL || !isfinite(dt_alpha) || dt_alpha < 0.0
+     || !isfinite(threshold) || threshold <= 0.0) {
     return false;
   }
-  const double opacity_product = rates->kappa_a_E * rates->kappa_tr;
-  if(!isfinite(opacity_product) || opacity_product <= 0.0) {
+
+  const double opacity_factors[2] = { rates->kappa_a_E, rates->kappa_tr };
+  ghl_m1_scaled_positive opacity_product;
+  if(!ghl_m1_scaled_positive_product(opacity_factors, 2, &opacity_product)
+     || opacity_product.mantissa == 0.0) {
     return false;
   }
-  const double stiffness = dt_alpha * sqrt(opacity_product);
-  return isfinite(stiffness) ? stiffness > threshold : true;
+
+  ghl_m1_scaled_positive opacity_root;
+  ghl_m1_scaled_positive dt_alpha_scaled;
+  ghl_m1_scaled_positive threshold_scaled;
+  ghl_m1_scaled_positive stiffness;
+  if(!ghl_m1_scaled_positive_sqrt(&opacity_product, &opacity_root)
+     || !ghl_m1_scaled_positive_from_double(dt_alpha, &dt_alpha_scaled)
+     || !ghl_m1_scaled_positive_from_double(threshold, &threshold_scaled)
+     || !ghl_m1_scaled_positive_multiply(
+           &dt_alpha_scaled, &opacity_root, &stiffness)) {
+    return false; /* GCOVR_EXCL_LINE -- validated inputs */
+  }
+  return ghl_m1_scaled_positive_compare(&stiffness, &threshold_scaled) > 0;
 }
 
 static bool ghl_m1_neutrino_scattering_limit_selected(
       const double dt_alpha,
       const ghl_m1_neutrino_rates *restrict rates,
       const double threshold) {
-  if(threshold <= 0.0) {
+  if(rates == NULL || !isfinite(dt_alpha) || dt_alpha < 0.0
+     || !isfinite(threshold) || threshold <= 0.0) {
     return false;
   }
-  const double stiffness = dt_alpha * rates->kappa_s;
-  return isfinite(stiffness) ? stiffness > threshold : true;
+  const double stiffness_factors[2] = { dt_alpha, rates->kappa_s };
+  const double threshold_factor[1] = { threshold };
+  return ghl_m1_neutrino_scaled_product_meets_threshold(
+        stiffness_factors, 2, threshold_factor, 1, false);
 }
 
 ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
@@ -865,10 +1107,10 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
   else {
     ghl_m1_implicit_solve_diagnostics implicit_diagnostics;
     ghl_m1_initialize_implicit_solve_diagnostics(&implicit_diagnostics);
-    error = ghl_m1_solve_neutrino_implicit_homogeneous_update(
+    error = ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_policy(
           m1_params, nu_params, metric, prims_frozen, rates, dt, n_b_cons,
-          state_transport, state_out, exchange, &implicit_diagnostics,
-          &candidate_neutrino_diagnostics);
+          selected.thermalized_number_threshold, state_transport, state_out,
+          exchange, &implicit_diagnostics, &candidate_neutrino_diagnostics);
     diagnostics->implicit = implicit_diagnostics;
     closure_fallback_used |= (implicit_diagnostics.solution_path_flags
                               & ghl_m1_solution_path_closure_fallback)
@@ -891,6 +1133,7 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
             error, state_transport, state_out, exchange, diagnostics,
             closure_fallback_used, neutrino_diagnostics, false);
     }
+
   }
 
   diagnostics->path = path;

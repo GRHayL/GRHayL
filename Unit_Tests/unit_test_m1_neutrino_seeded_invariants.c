@@ -1029,22 +1029,35 @@ static void check_closure_arithmetic_boundaries(void) {
       "fallback overflow diagnostic accounting failed", -1, -1);
 
   /* Finite, realizable inputs can still exceed the representable range of
-   * individual closure operations. Exercise representative arithmetic
-   * failures through the public API and require transactional output and
-   * useful diagnostics. */
+   * individual closure operations. Each row explicitly documents both the
+   * invalid-state result and the checked arithmetic stage that must reject it.
+   * The stage assertions keep this portability oracle from accepting a
+   * different evaluation path that merely happens to return the same error. */
   const struct {
     double energy, lapse, shift, velocity;
+    ghl_error_codes_t expected_error;
+    ghl_m1_closure_failure_stage_t expected_failure_stage;
   } arithmetic_cases[] = {
-      {DBL_MAX, 1.0, 2.0, 0.0},
-      {DBL_MAX, 2.0, 0.0, 0.0},
-      {sqrt(DBL_MAX), 1.0e100, 0.0, 0.0},
-      {sqrt(DBL_MAX), 1.0, 0.0, 0.8},
-      /* Near-light Eulerian motion makes the comoving-energy arithmetic
-       * overflow while all input fields remain finite and realizable. */
-      {1.0e100, 1.0, 0.0, 0.999999999},
-      /* The same motion at the scaled-energy boundary exercises the
-       * long-double comoving-flux norm rejection. */
-      {sqrt(DBL_MAX), 1.0, 0.0, 0.999999999}};
+      /* Finite shifted coordinates reach a checked non-finite workspace
+       * operation. */
+      {DBL_MAX, 1.0, 2.0, 0.0, ghl_error_m1_invalid_state,
+          ghl_m1_closure_failure_workspace},
+      /* A finite high-energy state reaches the checked workspace arithmetic
+       * bound. */
+      {DBL_MAX, 2.0, 0.0, 0.0, ghl_error_m1_invalid_state,
+          ghl_m1_closure_failure_workspace},
+      /* A finite lapse and energy at the binary64 square boundary fail in
+       * the checked workspace arithmetic. */
+      {sqrt(DBL_MAX), 1.0e100, 0.0, 0.0, ghl_error_m1_invalid_state,
+          ghl_m1_closure_failure_workspace},
+      /* A subluminal moving state at that energy boundary reaches a checked
+       * non-finite residual operation. */
+      {sqrt(DBL_MAX), 1.0, 0.0, 0.8, ghl_error_m1_invalid_state,
+          ghl_m1_closure_failure_residual},
+      /* Near-light motion makes the checked comoving-flux-square value
+       * non-finite when converted back from long double to binary64. */
+      {sqrt(DBL_MAX), 1.0, 0.0, 0x1.fffffffffffffp-1, ghl_error_m1_invalid_state,
+          ghl_m1_closure_failure_comoving_flux_norm}};
   for(size_t i = 0; i < sizeof(arithmetic_cases)/sizeof(arithmetic_cases[0]); ++i) {
     ghl_initialize_metric(arithmetic_cases[i].lapse,
         arithmetic_cases[i].shift, 0.0, 0.0,
@@ -1059,50 +1072,49 @@ static void check_closure_arithmetic_boundaries(void) {
         .F = {0.3 * arithmetic_cases[i].energy, 0.0, 0.0}};
     closure = sentinel;
     ghl_m1_reset_closure_counters();
-    require_condition(ghl_m1_compute_closure_with_primitives(
-        &params, &metric, &prims, &state, &closure) == ghl_error_m1_invalid_state,
-        "closure arithmetic failure was accepted", (int)i, -1);
+    const ghl_error_codes_t arithmetic_error = ghl_m1_compute_closure_with_primitives(
+        &params, &metric, &prims, &state, &closure);
+    require_condition(arithmetic_error == arithmetic_cases[i].expected_error,
+        "closure arithmetic result did not match documented result", (int)i, -1);
     require_condition(memcmp(&closure, &sentinel, sizeof(closure)) == 0,
         "closure arithmetic failure published partial output", (int)i, -1);
     ghl_m1_get_last_closure_failure_stage(&failure_stage);
     ghl_m1_get_last_closure_validation_reason(&validation_reason);
     ghl_m1_get_closure_counters(&counters);
-    /* FP contraction can change which intermediate first loses range.
-     * Require a recorded arithmetic failure without prescribing the
-     * compiler's evaluation order. */
-    require_condition(failure_stage >= ghl_m1_closure_failure_workspace &&
-        failure_stage <= ghl_m1_closure_failure_residual &&
+    require_condition(failure_stage == arithmetic_cases[i].expected_failure_stage &&
         validation_reason == 0 && counters.invalid_state == 1 &&
         counters.ordinary_convergence == 0 && counters.endpoint_fallback == 0 &&
-        counters.iteration_exhaustion == 0 && counters.residual_rejection == 0,
+        counters.iteration_exhaustion == 0 && counters.downstream_repair == 0 &&
+        counters.residual_rejection == 0,
         "closure arithmetic failure diagnostics", (int)i, -1);
   }
 
-  /* A near-light-speed fluid in a small-lapse coordinate system reaches
-   * the unbracketed endpoint policy, whose residual must still be accepted
-   * before any pressure is published. Depending on contraction, arithmetic
-   * can instead become invalid before that endpoint is reached. */
-  const double speed = nextafter(1.0, 0.0);
-  ghl_initialize_metric(1.0e-100, 0.0, 0.0, 0.0,
+  /* At the exact binary64 speed endpoint, a flat metric reaches the
+   * unbracketed endpoint policy and then fails its residual gate. This keeps
+   * the endpoint contract separate from coordinate-scaling arithmetic and
+   * gives every supported compiler one documented result. */
+  const double speed = 0x1.fffffffffffffp-1;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
       1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
-  prims = (ghl_primitive_quantities){.vU = {1.0e-100 * speed, 0.0, 0.0},
-      .u0 = 1.0 / sqrt(1.0 - speed * speed) / 1.0e-100};
+  prims = (ghl_primitive_quantities){
+      .vU = {speed, 0.0, 0.0},
+      .u0 = 1.0 / sqrt((1.0 - speed) * (1.0 + speed))};
   const ghl_m1_rad_state endpoint_state = {.E = 1.0, .F = {0.3, 0.0, 0.0}};
   closure = sentinel;
   ghl_m1_reset_closure_counters();
   const ghl_error_codes_t endpoint_error = ghl_m1_compute_closure_with_primitives(
       &params, &metric, &prims, &endpoint_state, &closure);
-  require_condition(endpoint_error == ghl_error_m1_closure_residual_too_large ||
-      endpoint_error == ghl_error_m1_invalid_state,
+  require_condition(endpoint_error == ghl_error_m1_closure_residual_too_large,
       "unbracketed endpoint bypassed residual gate", -1, -1);
+  ghl_m1_get_last_closure_failure_stage(&failure_stage);
+  ghl_m1_get_last_closure_validation_reason(&validation_reason);
   ghl_m1_get_closure_counters(&counters);
   require_condition(memcmp(&closure, &sentinel, sizeof(closure)) == 0 &&
-      counters.endpoint_fallback ==
-          (endpoint_error == ghl_error_m1_closure_residual_too_large) &&
-      counters.residual_rejection ==
-          (endpoint_error == ghl_error_m1_closure_residual_too_large) &&
-      counters.invalid_state == (endpoint_error == ghl_error_m1_invalid_state) &&
-      counters.ordinary_convergence == 0 && counters.iteration_exhaustion == 0,
+      failure_stage == ghl_m1_closure_failure_residual_gate &&
+      validation_reason == 0 && counters.endpoint_fallback == 1 &&
+      counters.residual_rejection == 1 && counters.invalid_state == 0 &&
+      counters.ordinary_convergence == 0 && counters.iteration_exhaustion == 0 &&
+      counters.downstream_repair == 0,
       "rejected endpoint output/counter contract", -1, -1);
 
   /* In a sheared SPD metric, raising the primary tensor loses enough

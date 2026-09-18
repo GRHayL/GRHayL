@@ -19,11 +19,14 @@ extern "C" {
  * provider. The explicit NRPyLeakage initializer selects the production
  * Ruffert backend. Both accept only nu_x_multiplicity == 4 and return an
  * already-summed nu_x bundle; hosts must not multiply the returned
- * heavy-flavor state or exchange a second time. Electron-flavor pair,
- * plasmon, and bremsstrahlung emission is carried in the process-indexed
- * fields of ghl_m1_neutrino_rates, while its scalar absorption/emissivity
- * fields contain charged-current and scattering contributions only.
- * For electron-flavor face transport, add the partner-dependent inverse pair
+ * heavy-flavor state or exchange a second time. For electron flavors, scalar
+ * absorption and emissivity fields contain charged-current contributions only;
+ * isoenergetic nucleon scattering is separate in kappa_s, and kappa_tr is the
+ * transport sum kappa_a_E + kappa_s. Electron-flavor pair, plasmon, and
+ * bremsstrahlung emission is carried in the process-indexed fields of
+ * ghl_m1_neutrino_rates. For nu_x, the scalar coefficients include the
+ * enabled aggregate pair, plasmon, and bremsstrahlung contributions. For
+ * electron-flavor face transport, add the partner-dependent inverse pair
  * energy opacity to scalar kappa_tr; see Radiation/PAIR_SOURCE_MODEL.md.
  */
 

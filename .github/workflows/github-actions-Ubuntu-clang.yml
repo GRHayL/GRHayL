@@ -27,7 +27,6 @@ jobs:
         with:
           compiler: 'clang'
           hdf5: ${{ matrix.hdf5 }}
-          platform: ${{ matrix.os }}
 
   ET-Legacy:
     strategy:

@@ -216,69 +216,102 @@ static void check_diffusion_transport_boundaries(
   if(ghl_m1_compute_diffusion_flux(
          NULL, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          grad, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_null_pointer ||
-     ghl_m1_compute_diffusion_flux(
+         ghl_error_m1_null_pointer || corrected != 61.0 || a_face != 62.0)
+    fail_test("diffusion NULL arguments were not rejected");
+  corrected = 63.0;
+  a_face = 64.0;
+  if(ghl_m1_compute_diffusion_flux(
          params, NULL, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          grad, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_null_pointer ||
-     ghl_m1_compute_diffusion_flux(
+         ghl_error_m1_null_pointer || corrected != 63.0 || a_face != 64.0)
+    fail_test("diffusion NULL metric changed outputs");
+  corrected = 65.0;
+  a_face = 66.0;
+  if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          NULL, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_null_pointer ||
-     ghl_m1_compute_diffusion_flux(
+         ghl_error_m1_null_pointer || corrected != 65.0 || a_face != 66.0)
+    fail_test("diffusion NULL gradient changed outputs");
+  corrected = 67.0;
+  a_face = 68.0;
+  if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          grad, valid_W, NULL, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_null_pointer ||
-     ghl_m1_compute_diffusion_flux(
+         ghl_error_m1_null_pointer || corrected != 67.0 || a_face != 68.0)
+    fail_test("diffusion NULL velocity changed outputs");
+  a_face = 69.0;
+  if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          grad, valid_W, V, 1.0, 0.2, 1.0, NULL, &a_face) !=
-         ghl_error_m1_null_pointer)
-    fail_test("diffusion NULL arguments were not rejected");
+         ghl_error_m1_null_pointer || a_face != 69.0)
+    fail_test("diffusion NULL corrected output changed optional output");
 
+  corrected = 61.0;
+  a_face = 62.0;
   if(ghl_m1_compute_diffusion_flux(
          params, metric, (ghl_m1_direction_t)3, 0.4, 0.1, 1.0, true, 1.0,
          true, grad, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_invalid_state)
-    fail_test("invalid diffusion direction was accepted");
+         ghl_error_m1_invalid_state || corrected != 61.0 || a_face != 62.0)
+    fail_test("invalid diffusion direction changed outputs");
   invalid_metric = *metric;
   invalid_metric.gammaDD[0][0] = -1.0;
+  corrected = 63.0;
+  a_face = 64.0;
   if(ghl_m1_compute_diffusion_flux(
          params, &invalid_metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0,
          true, grad, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_invalid_metric)
-    fail_test("invalid diffusion metric was accepted");
+         ghl_error_m1_invalid_metric || corrected != 63.0 || a_face != 64.0)
+    fail_test("invalid diffusion metric changed outputs");
+  corrected = 81.0;
+  a_face = 82.0;
   if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, NAN, 0.1, 1.0, true, 1.0, true,
          grad, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_invalid_state ||
-     ghl_m1_compute_diffusion_flux(
+         ghl_error_m1_invalid_state || corrected != 81.0 || a_face != 82.0)
+    fail_test("nonfinite diffusion HLL/star inputs were accepted");
+  corrected = 83.0;
+  a_face = 84.0;
+  if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, NAN, 1.0, true, 1.0, true,
          grad, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_invalid_state)
-    fail_test("nonfinite diffusion HLL/star inputs were accepted");
+         ghl_error_m1_invalid_state || corrected != 83.0 || a_face != 84.0)
+    fail_test("nonfinite diffusion star energy changed outputs");
   const double invalid_chi[] = {NAN, -1.0};
   const double invalid_D[] = {NAN, -1.0};
   const double invalid_delta[] = {NAN, 0.0};
   for(int case_index = 0; case_index < 2; ++case_index) {
+    corrected = 85.0;
+    a_face = 86.0;
     if(ghl_m1_compute_diffusion_flux(
            params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
            grad, valid_W, V, invalid_chi[case_index], 0.2, 1.0,
            &corrected, &a_face) != ghl_error_m1_invalid_state ||
-       ghl_m1_compute_diffusion_flux(
+       corrected != 85.0 || a_face != 86.0)
+      fail_test("invalid diffusion opacity changed outputs");
+    corrected = 87.0;
+    a_face = 88.0;
+    if(ghl_m1_compute_diffusion_flux(
            params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
            grad, valid_W, V, 1.0, invalid_D[case_index], 1.0,
            &corrected, &a_face) != ghl_error_m1_invalid_state ||
-       ghl_m1_compute_diffusion_flux(
+       corrected != 87.0 || a_face != 88.0)
+      fail_test("invalid diffusion coefficient changed outputs");
+    corrected = 89.0;
+    a_face = 90.0;
+    if(ghl_m1_compute_diffusion_flux(
            params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
            grad, valid_W, V, 1.0, 0.2, invalid_delta[case_index],
-           &corrected, &a_face) != ghl_error_m1_invalid_state)
-      fail_test("invalid diffusion scalar was accepted");
+           &corrected, &a_face) != ghl_error_m1_invalid_state ||
+       corrected != 89.0 || a_face != 90.0)
+      fail_test("invalid diffusion cell width changed outputs");
   }
 
+  corrected = 71.0;
+  a_face = 72.0;
   if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          grad, valid_W, V, DBL_MAX, 0.2, DBL_MAX, &corrected, &a_face) !=
-         ghl_error_m1_invalid_state)
+         ghl_error_m1_invalid_state || corrected != 71.0 || a_face != 72.0)
     fail_test("overflowing diffusion optical width was accepted");
 
   const bool validity_cases[3] = {false, true, true};
@@ -298,27 +331,33 @@ static void check_diffusion_transport_boundaries(
   }
 
   const double bad_grad[3] = {NAN, 0.0, 0.0};
+  corrected = 73.0;
+  a_face = 74.0;
   if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          bad_grad, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_invalid_state)
+         ghl_error_m1_invalid_state || corrected != 73.0 || a_face != 74.0)
     fail_test("nonfinite diffusion gradient was accepted");
   const double huge_grad[3] = {2.0, 0.0, 0.0};
+  corrected = 65.0;
+  a_face = 66.0;
   if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          huge_grad, valid_W, V, 1.0, DBL_MAX, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_invalid_state)
-    fail_test("overflowing diffusion asymptotic flux was accepted");
+         ghl_error_m1_invalid_state || corrected != 65.0 || a_face != 66.0)
+    fail_test("overflowing diffusion asymptotic flux changed outputs");
   ghl_metric_quantities huge_volume_metric = *metric;
   huge_volume_metric.gammaDD[0][0] = 4.0;
   huge_volume_metric.gammaUU[0][0] = 0.25;
   huge_volume_metric.detgamma = 4.0;
   huge_volume_metric.sqrt_detgamma = 2.0;
   huge_volume_metric.betaU[0] = -2.0;
+  corrected = 75.0;
+  a_face = 76.0;
   if(ghl_m1_compute_diffusion_flux(
          params, &huge_volume_metric, ghl_m1_dirn0, 0.4, DBL_MAX, 1.0, true,
          1.0, true, grad, valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_invalid_state)
+         ghl_error_m1_invalid_state || corrected != 75.0 || a_face != 76.0)
     fail_test("overflowing diffusion volume flux was accepted");
 
   if(ghl_m1_compute_diffusion_flux(
@@ -359,24 +398,45 @@ static void check_diffusion_transport_boundaries(
      !isfinite(corrected_without_a) || !isfinite(corrected_with_a) ||
      !isfinite(observed_a) || corrected_without_a != corrected_with_a)
     fail_test("optional diffusion a_face output changed the flux");
+  corrected = 77.0;
+  a_face = 78.0;
   if(ghl_m1_compute_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, DBL_MAX, true, DBL_MAX,
          true, grad, moving_W, moving_velocity, 1.0, 0.2, 1.0,
-         &corrected, &a_face) != ghl_error_m1_invalid_state)
+         &corrected, &a_face) != ghl_error_m1_invalid_state ||
+     corrected != 77.0 || a_face != 78.0)
     fail_test("overflowing positive Jthick average was accepted");
 
   ghl_m1_neutrino_rates rates = {0};
   rates.kappa_tr = 1.0;
+  corrected = 79.0;
+  a_face = 80.0;
   if(ghl_m1_compute_neutrino_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          grad, valid_W, V, NULL, 0.2, 1.0, &corrected, &a_face) !=
-         ghl_error_m1_null_pointer)
+         ghl_error_m1_null_pointer || corrected != 79.0 || a_face != 80.0)
     fail_test("neutrino diffusion NULL rates were accepted");
   if(ghl_m1_compute_neutrino_diffusion_flux(
          params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
          grad, valid_W, V, &rates, 0.2, 1.0, &corrected, &a_face) !=
          ghl_success)
     fail_test("valid neutrino diffusion wrapper failed");
+  corrected = 67.0;
+  a_face = 68.0;
+  if(ghl_m1_compute_neutrino_diffusion_flux(
+         params, metric, (ghl_m1_direction_t)3, 0.4, 0.1, 1.0, true, 1.0,
+         true, grad, valid_W, V, &rates, 0.2, 1.0, &corrected, &a_face) !=
+         ghl_error_m1_invalid_state || corrected != 67.0 || a_face != 68.0)
+    fail_test("invalid neutrino diffusion direction changed outputs");
+  const double wrapper_huge_grad[3] = {2.0, 0.0, 0.0};
+  corrected = 69.0;
+  a_face = 70.0;
+  if(ghl_m1_compute_neutrino_diffusion_flux(
+         params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true,
+         wrapper_huge_grad, valid_W, V, &rates, DBL_MAX, 1.0,
+         &corrected, &a_face) != ghl_error_m1_invalid_state ||
+     corrected != 69.0 || a_face != 70.0)
+    fail_test("overflowing neutrino diffusion flux changed outputs");
 }
 
 int main(void) {

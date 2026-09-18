@@ -37,11 +37,16 @@ that floor check, only `N == 0` skips the ratio calculation. Any other
 accepted nonzero `N`, including `N == N_floor`, is checked against the enabled
 bounds. The separate mean-energy diagnostic may mark `N <= N_floor` invalid.
 
-In the branched source policy, `thermalized_number_threshold < 0` disables the
-equilibrium mean-energy projection for the number update. Zero selects it even
-when opacity and `dt` are zero, so the projection can change `N` without a
-time-integrated number source. It remains distinct from backward-Euler number
-integration and the separate `N_floor` repair.
+In the branched source policy, the endpoint-number projection applies to the
+thin, thick, scattering, and general implicit endpoints. A
+`thermalized_number_threshold < 0` disables the equilibrium mean-energy
+projection for the number update. A nonnegative threshold selects it when
+`dt_alpha*kappa_a_N >= thermalized_number_threshold`; zero selects it even when
+opacity and `dt` are zero, so the projection can change `N` without a
+time-integrated number source. The threshold comparison is scaled to avoid
+overflow or underflow during selection, but a genuinely nonrepresentable final
+endpoint remains an error. The projection remains distinct from backward-Euler
+number integration and the separate `N_floor` repair.
 
 ## Fixed numerical path
 
