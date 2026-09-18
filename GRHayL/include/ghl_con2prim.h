@@ -26,7 +26,8 @@ typedef struct ghl_con2prim_diagnostics {
   ghl_con2prim_id_t which_routine;
   /** Whether a given backup routine was used (true) or not (false) */
   bool backup[3];
-  /** Number of iterations required to find the solution */
+  /** Number of solver iterations. Font1D totals outer iterations across all
+   *  internal attempts and reports zero on its zero-momentum shortcut. */
   int n_iter;
   /** Whether the tabulated multi-method driver attempted a neural-network retry */
   bool nn_guess_used;
@@ -76,6 +77,11 @@ void ghl_guess_primitives(
       const ghl_conservative_quantities *restrict cons,
       ghl_primitive_quantities *restrict prims);
 
+/**
+ * Enforce primitive limits and compute u0. speed_limited is an initialized
+ * [in,out] OR accumulator: incoming true is preserved; start each logical
+ * group false.
+ */
 ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -291,7 +297,9 @@ typedef struct ghl_c2p_nn_model {
   int hidden_dim;
   int n_hidden;
   int out_dim;
+  /** Fixed input layout is {q, r, s, t}; q_idx must be 0. */
   int q_idx;
+  /** Fixed input layout is {q, r, s, t}; s_idx must be 2. */
   int s_idx;
   float x_eps;
   float y_eps;
@@ -322,6 +330,16 @@ ghl_nn_c2p_guess_t ghl_c2p_nn_guess(
       const ghl_c2p_nn_model *restrict model,
       ghl_nn_c2p_input_t input);
 
+/**
+ * Build a tabulated primitive initial guess. A present model must already be
+ * validated and uses fixed {q, r, s, t} inference. A missing model or unusable
+ * numerical state/candidate returns the atmosphere initial guess, preserving
+ * magnetic components. Arguments must be non-NULL; parameters, the tabulated
+ * EOS atmosphere, metric, and incoming magnetic fields must be valid and
+ * finite. Inference additionally requires finite usable contractions. This
+ * helper does not validate corrupted EOS/model objects, and its fallback is
+ * not a recovery result.
+ */
 void ghl_c2p_nn_guess_primitives(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

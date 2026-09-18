@@ -87,13 +87,12 @@ instead.
   `grhayl_nn_c2p`. Its table-read failure keys use `test.h5` instead: key `34`
   checks the missing-file path, while later read-table keys create malformed
   temporary `test.h5` inputs.
-- `unit_test_c2p_nn_guess.c` creates temporary HDF5 model files under `/tmp`
-  for root, embedded `grhayl_nn_c2p`, legacy, malformed-dataset, and
-  failed-load-preservation cases. These are fixed-name direct test artifacts,
-  not external sample tables or downloaded binary fixtures. Current test source
-  does not remove them, and `.github/run_tests.sh` cleans only root-level
-  `*.h5`; after an isolated run, review and remove only exact
-  `/tmp/unit_test_c2p_nn_*.h5` artifacts.
+- `unit_test_c2p_nn_guess.c` creates a unique private temporary directory for
+  root, embedded `grhayl_nn_c2p`, legacy, malformed-dataset, and
+  failed-load-preservation model files. These are direct test artifacts, not
+  external sample tables or downloaded fixtures. The test removes its fixed
+  basenames and directory on normal or handled failure exit; no-HDF5 builds
+  skip the temporary setup.
 
 ## No-HDF5 Build Effects
 

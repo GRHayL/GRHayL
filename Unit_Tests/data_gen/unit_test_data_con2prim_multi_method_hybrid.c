@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   const int sampling = npoints*npoints;
 
   // number of additional points for ensuring we hit all logic branches
-  const int ineq_edge_cases = 5;
+  const int ineq_edge_cases = 3;
 
   const int arraylength = sampling + ineq_edge_cases;
 
@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
 
-      bool speed_limited;
+      bool speed_limited = false;
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
             &params, &metric_adm, &prims, &speed_limited);
       ghl_abort_if_error(error);
@@ -307,6 +307,12 @@ int main(int argc, char **argv) {
     gzz[i] = 1.0;
 
     rho_star[i] = 1e-2;
+    rho_b[i] = rho_star[i];
+    vx[i] = vy[i] = vz[i] = 0.0;
+    ghl_hybrid_compute_P_cold_and_eps_cold(
+          &eos, rho_b[i], &press[i], &eps[i]);
+    entropy[i] = ghl_hybrid_compute_entropy_function(
+          &eos, rho_b[i], press[i]);
   }
 
   Bx[sampling] = By[sampling] = Bz[sampling] = 1e-160;
@@ -325,7 +331,9 @@ int main(int argc, char **argv) {
   tau[sampling+2] = 2.0*flat_metric.sqrt_detgamma*Bbar2;
   S_x[sampling+2] = S_y[sampling+2] = S_z[sampling+2] = 1000*tau[sampling+2]*(tau[sampling+2] + 2.0*rho_star[sampling+2]);
 
-  ent_star[sampling] = ent_star[sampling+1] = ent_star[sampling+2] = 1e-8; // no idea what it should be...
+  // Intentional limiter-input override, not the conservative image of the
+  // cold primitive seed.
+  ent_star[sampling] = ent_star[sampling+1] = ent_star[sampling+2] = 1e-8;
 
   for(int i=sampling; i<arraylength; i++) {
     rho_b_orig[i] = rho_b[i];
@@ -360,6 +368,11 @@ int main(int argc, char **argv) {
     S_y_pert[i] = S_y[i]*(1.0 + randf(-1,1)*1.0e-14);
     S_z_pert[i] = S_z[i]*(1.0 + randf(-1,1)*1.0e-14);
     ent_star_pert[i] = ent_star[i]*(1.0 + randf(-1,1)*1.0e-14);
+  }
+  for(int i=0; i<arraylength; i++) {
+    Bx_pert[i] = Bx[i]*(1.0 + randf(-1,1)*1.0e-14);
+    By_pert[i] = By[i]*(1.0 + randf(-1,1)*1.0e-14);
+    Bz_pert[i] = Bz[i]*(1.0 + randf(-1,1)*1.0e-14);
   }
 
   const int metric_length = 10;
@@ -512,7 +525,7 @@ int main(int argc, char **argv) {
 
         ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
         if(params.calc_prim_guess) {
-          ghl_guess_primitives(&params, &eos, &metric_adm, &cons, &prims);
+          ghl_guess_primitives(&params, &eos, &metric_adm, &cons_undens, &prims);
         }
         c2p_check[i] = ghl_con2prim_hybrid_select_method(
               methods[routine], &params, &eos, &metric_adm, &metric_aux,
@@ -528,7 +541,8 @@ int main(int argc, char **argv) {
       write_to_file(prims_array, arraylength, prims_length, outfile);
       if(params.evolve_entropy)
         fwrite(entropy, sizeof(double), arraylength, outfile);
-      fwrite(c2p_check, sizeof(int), arraylength, outfile);
+      if(!perturb)
+        fwrite(c2p_check, sizeof(int), arraylength, outfile);
       printf("Routine %s had %d failures out of %d points.\n", ghl_get_con2prim_routine_name(methods[routine]), fcnt, arraylength);
     }
     fclose(outfile);
@@ -575,7 +589,7 @@ int main(int argc, char **argv) {
             Bx[i], By[i], Bz[i],
             ent_orig[i], poison, poison, &prims);
 
-      bool speed_limited;
+      bool speed_limited = false;
       ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(
             &params, &eos, &metric_adm, &prims, &speed_limited);
       ghl_abort_if_error(error);

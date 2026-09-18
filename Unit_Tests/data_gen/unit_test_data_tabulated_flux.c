@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
           prims_l.rho, prims_l.Y_e, prims_l.temperature,
           &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
-    bool speed_limit;
+    bool speed_limit = false;
     error = ghl_limit_v_and_compute_u0(
           &params, &metric_adm, &prims_r, &speed_limit);
     ghl_abort_if_error(error);
@@ -342,7 +342,7 @@ int main(int argc, char **argv) {
                 prims_l.rho, prims_l.Y_e, prims_l.temperature,
                 &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
-          bool speed_limit;
+          bool speed_limit = false;
           error = ghl_limit_v_and_compute_u0(
                 &params, &metric_adm, &prims_r, &speed_limit);
           ghl_abort_if_error(error);

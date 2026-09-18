@@ -27,12 +27,8 @@ Current seams needing explicit review:
 
 - `Noble1D_entropy2`, its `func_rho2.c` companion, and Cerda-Duran source are
   present but absent current configured dispatch/build support.
-- Tabulated `Noble2D` is built, dispatched, and tested but omitted from the raw
-  Doxygen tabulated method table.
-- GRHayLib keyword/parser/family checks drift for `Newman1D` and the commented
-  entropy2 option; downstream acceptance is not identical to library support.
-- Hybrid selected-method test passes densitized data to its separate primitive
-  guess call; production multi-method passes undensitized conservatives.
+- The GRHayLib parser retains the commented-out entropy2 option; downstream
+  keyword presence is not identical to library support.
 
 Use [solver matrix](con2prim/solver-matrix.md) for exact seams rather than
 inferring status from any single layer.
@@ -74,9 +70,9 @@ inferring status from any single layer.
 ## Key Contracts
 
 - Initialize `ghl_con2prim_diagnostics` with `ghl_initialize_diagnostics`.
-- `n_iter` is not initialized by that helper; read it only after a solver known
-  to assign it. `nn_guess_used` records an attempted tabulated NN retry, not
-  success.
+- `n_iter` starts at zero. Font1D reports the total iterations for its current
+  invocation; other solvers retain their documented local counters.
+  `nn_guess_used` records an attempted tabulated NN retry, not success.
 - Track densitized versus undensitized conservative inputs before calling
   selectors or helpers.
 - Multi-method drivers may reset primitive guesses and try up to three backup

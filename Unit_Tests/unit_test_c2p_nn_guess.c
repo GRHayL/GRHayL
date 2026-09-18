@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 700
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,7 +8,9 @@
 #include "ghl_con2prim.h"
 
 #ifndef GHL_DISABLE_HDF5
+#include <errno.h>
 #include <hdf5.h>
+#include <unistd.h>
 #endif
 
 #define CHECK(cond, ...)                                                       \
@@ -201,6 +205,78 @@ static void test_guess_model(void) {
 }
 
 #ifndef GHL_DISABLE_HDF5
+static char nn_test_directory[] = "/tmp/unit_test_c2p_nn_XXXXXX";
+
+static const char *const nn_test_files[] = {
+  "unit_test_c2p_nn_preserved.h5",
+  "unit_test_c2p_nn_root.h5",
+  "unit_test_c2p_nn_embedded.h5",
+  "unit_test_c2p_nn_legacy.h5",
+  "unit_test_c2p_nn_missing_scalar.h5",
+  "unit_test_c2p_nn_scalar_bad_rank.h5",
+  "unit_test_c2p_nn_scalar_bad_type.h5",
+  "unit_test_c2p_nn_invalid_dims.h5",
+  "unit_test_c2p_nn_missing_array.h5",
+  "unit_test_c2p_nn_array_bad_rank.h5",
+  "unit_test_c2p_nn_array_bad_size.h5",
+  "unit_test_c2p_nn_array_bad_type.h5",
+  "unit_test_c2p_nn_missing_out_scaling.h5",
+  "unit_test_c2p_nn_validation_failure.h5"
+};
+
+static void cleanup_hdf5_test_directory(void) {
+  if(chdir(nn_test_directory) != 0) {
+    fprintf(stderr, "failed to enter NN test directory %s during cleanup: %s\n",
+            nn_test_directory, strerror(errno));
+    return;
+  }
+
+  for(size_t i = 0; i < sizeof(nn_test_files)/sizeof(nn_test_files[0]); ++i) {
+    if(unlink(nn_test_files[i]) != 0 && errno != ENOENT) {
+      fprintf(stderr, "failed to remove NN test file %s: %s\n",
+              nn_test_files[i], strerror(errno));
+    }
+  }
+
+  if(chdir("/") != 0) {
+    fprintf(stderr, "failed to leave NN test directory %s: %s\n",
+            nn_test_directory, strerror(errno));
+    return;
+  }
+  if(rmdir(nn_test_directory) != 0) {
+    fprintf(stderr, "failed to remove NN test directory %s: %s\n",
+            nn_test_directory, strerror(errno));
+  }
+}
+
+static void setup_hdf5_test_directory(void) {
+  if(mkdtemp(nn_test_directory) == NULL) {
+    fprintf(stderr, "failed to create NN test directory: %s\n", strerror(errno));
+    exit(1);
+  }
+  if(chdir(nn_test_directory) != 0) {
+    fprintf(stderr, "failed to enter NN test directory %s: %s\n",
+            nn_test_directory, strerror(errno));
+    if(rmdir(nn_test_directory) != 0) {
+      fprintf(stderr, "failed to remove unused NN test directory %s: %s\n",
+              nn_test_directory, strerror(errno));
+    }
+    exit(1);
+  }
+  if(atexit(cleanup_hdf5_test_directory) != 0) {
+    fprintf(stderr, "failed to register NN test cleanup\n");
+    if(chdir("/") != 0) {
+      fprintf(stderr, "failed to leave NN test directory %s: %s\n",
+              nn_test_directory, strerror(errno));
+    }
+    else if(rmdir(nn_test_directory) != 0) {
+      fprintf(stderr, "failed to remove unused NN test directory %s: %s\n",
+              nn_test_directory, strerror(errno));
+    }
+    exit(1);
+  }
+}
+
 static void create_group_checked(hid_t file_id, const char *name) {
   hid_t group_id = H5Gcreate2(file_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   CHECK(group_id >= 0, "failed to create HDF5 group %s", name);
@@ -493,8 +569,8 @@ static void check_hdf5_load_failure_preserves_model(
       const char *restrict path,
       const ghl_error_codes_t expected_error) {
   ghl_eos_parameters eos = { 0 };
-  create_hdf5_file("/tmp/unit_test_c2p_nn_preserved.h5", "", true, 2);
-  CHECK_ERROR(ghl_c2p_nn_load_hdf5("/tmp/unit_test_c2p_nn_preserved.h5", &eos),
+  create_hdf5_file("unit_test_c2p_nn_preserved.h5", "", true, 2);
+  CHECK_ERROR(ghl_c2p_nn_load_hdf5("unit_test_c2p_nn_preserved.h5", &eos),
               ghl_success);
   ghl_c2p_nn_model *const preserved_model = eos.c2p_nn;
   CHECK(preserved_model != NULL, "initial NN HDF5 load returned NULL model");
@@ -508,9 +584,9 @@ static void test_hdf5_loaders(void) {
   const ghl_nn_c2p_input_t input = { 2.0f, 0.25f, 0.5f, 0.1f };
   const int out_kind_linear = 1;
 
-  const char root_path[] = "/tmp/unit_test_c2p_nn_root.h5";
-  const char embedded_path[] = "/tmp/unit_test_c2p_nn_embedded.h5";
-  const char legacy_path[] = "/tmp/unit_test_c2p_nn_legacy.h5";
+  const char root_path[] = "unit_test_c2p_nn_root.h5";
+  const char embedded_path[] = "unit_test_c2p_nn_embedded.h5";
+  const char legacy_path[] = "unit_test_c2p_nn_legacy.h5";
 
   create_hdf5_file(root_path, "", true, 2);
   ghl_eos_parameters eos = { 0 };
@@ -555,63 +631,63 @@ static void test_hdf5_loader_error_paths(void) {
   const int one_value[1] = { 4 };
   const int three_values[3] = { 0, 1, 0 };
 
-  const char missing_scalar[] = "/tmp/unit_test_c2p_nn_missing_scalar.h5";
+  const char missing_scalar[] = "unit_test_c2p_nn_missing_scalar.h5";
   create_hdf5_file(missing_scalar, "", true, 2);
   delete_dataset(missing_scalar, "dims/in_dim");
   check_hdf5_load_failure_preserves_model(
         missing_scalar, ghl_error_hdf5_dataset_could_not_open);
 
-  const char scalar_bad_rank[] = "/tmp/unit_test_c2p_nn_scalar_bad_rank.h5";
+  const char scalar_bad_rank[] = "unit_test_c2p_nn_scalar_bad_rank.h5";
   create_hdf5_file(scalar_bad_rank, "", true, 2);
   replace_dataset_with_i32_array(
         scalar_bad_rank, "dims/in_dim", 1, one_dim, one_value);
   check_hdf5_load_failure_preserves_model(
         scalar_bad_rank, ghl_error_hdf5_dataset_invalid_ndims);
 
-  const char scalar_bad_type[] = "/tmp/unit_test_c2p_nn_scalar_bad_type.h5";
+  const char scalar_bad_type[] = "unit_test_c2p_nn_scalar_bad_type.h5";
   create_hdf5_file(scalar_bad_type, "", true, 2);
   replace_dataset_with_scalar_string(scalar_bad_type, "dims/in_dim");
   check_hdf5_load_failure_preserves_model(
         scalar_bad_type, ghl_error_hdf5_dataset_could_not_read);
 
-  const char invalid_dims[] = "/tmp/unit_test_c2p_nn_invalid_dims.h5";
+  const char invalid_dims[] = "unit_test_c2p_nn_invalid_dims.h5";
   create_hdf5_file(invalid_dims, "", true, 2);
   replace_dataset_i32(invalid_dims, "dims/in_dim", 9);
   check_hdf5_load_failure_preserves_model(
         invalid_dims, ghl_error_nn_c2p_invalid_dimensions);
 
-  const char missing_array[] = "/tmp/unit_test_c2p_nn_missing_array.h5";
+  const char missing_array[] = "unit_test_c2p_nn_missing_array.h5";
   create_hdf5_file(missing_array, "", true, 2);
   delete_dataset(missing_array, "scaling/x_kind");
   check_hdf5_load_failure_preserves_model(
         missing_array, ghl_error_hdf5_dataset_could_not_open);
 
-  const char array_bad_rank[] = "/tmp/unit_test_c2p_nn_array_bad_rank.h5";
+  const char array_bad_rank[] = "unit_test_c2p_nn_array_bad_rank.h5";
   create_hdf5_file(array_bad_rank, "", true, 2);
   replace_dataset_i32(array_bad_rank, "scaling/x_kind", 0);
   check_hdf5_load_failure_preserves_model(
         array_bad_rank, ghl_error_hdf5_dataset_invalid_ndims);
 
-  const char array_bad_size[] = "/tmp/unit_test_c2p_nn_array_bad_size.h5";
+  const char array_bad_size[] = "unit_test_c2p_nn_array_bad_size.h5";
   create_hdf5_file(array_bad_size, "", true, 2);
   replace_dataset_with_i32_array(
         array_bad_size, "scaling/x_kind", 1, three_dims, three_values);
   check_hdf5_load_failure_preserves_model(
         array_bad_size, ghl_error_hdf5_dataset_size_mismatch);
 
-  const char array_bad_type[] = "/tmp/unit_test_c2p_nn_array_bad_type.h5";
+  const char array_bad_type[] = "unit_test_c2p_nn_array_bad_type.h5";
   create_hdf5_file(array_bad_type, "", true, 2);
   replace_dataset_with_string_array(
         array_bad_type, "scaling/x_kind", 1, four_dims);
   check_hdf5_load_failure_preserves_model(
         array_bad_type, ghl_error_hdf5_dataset_could_not_read);
 
-  const char missing_out_scaling[] = "/tmp/unit_test_c2p_nn_missing_out_scaling.h5";
+  const char missing_out_scaling[] = "unit_test_c2p_nn_missing_out_scaling.h5";
   create_hdf5_file(missing_out_scaling, "", false, 2);
   check_hdf5_load_failure_preserves_model(
         missing_out_scaling, ghl_error_hdf5_dataset_could_not_open);
 
-  const char validation_failure[] = "/tmp/unit_test_c2p_nn_validation_failure.h5";
+  const char validation_failure[] = "unit_test_c2p_nn_validation_failure.h5";
   create_hdf5_file(validation_failure, "", true, 2);
   replace_dataset_i32(validation_failure, "meta/q_idx", 4);
   check_hdf5_load_failure_preserves_model(
@@ -623,6 +699,7 @@ int main(void) {
   test_validate_model();
   test_guess_model();
 #ifndef GHL_DISABLE_HDF5
+  setup_hdf5_test_directory();
   test_hdf5_loaders();
   test_hdf5_loader_error_paths();
 #endif

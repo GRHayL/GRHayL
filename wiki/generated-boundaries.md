@@ -126,10 +126,10 @@ reaches cleanup, the globs also remove pre-existing matching files even when a
 download was skipped; the full runner therefore belongs only in a disposable
 checkout.
 
-`unit_test_c2p_nn_guess` separately creates fixed-name HDF5 files under `/tmp`
-and does not remove them. They are outside runner's root-level cleanup glob;
-use an isolated host/container or remove only those exact
-`/tmp/unit_test_c2p_nn_*.h5` test artifacts after a reviewed run.
+`unit_test_c2p_nn_guess` separately creates a unique private temporary directory
+in HDF5 mode. It writes only its fixed model basenames there and removes those
+files and the directory on normal or handled failure exit; no-HDF5 runs skip
+that setup.
 
 `Unit_Tests/sample_table/generate_simple_table.py` creates `simple_table.h5`
 from analytic arrays. The checked-in

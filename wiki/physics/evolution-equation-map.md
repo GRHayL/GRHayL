@@ -148,6 +148,6 @@ Tests:
 - `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`
 - Fixture route: [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md)
 
-Recovery floor note: `apply_conservative_limits` may raise tau to `tau_atm`
-without setting `diagnostics->tau_fix`; family-dependent `tau_atm` setup is
-routed through [EOS dispatch](../core/eos-dispatch-contract.md).
+Recovery floor note: `apply_conservative_limits` sets and accumulates
+`diagnostics->tau_fix` when raising tau to `tau_atm`; family-dependent
+`tau_atm` setup is routed through [EOS dispatch](../core/eos-dispatch-contract.md).

@@ -25,11 +25,8 @@ Contract:
 - Required EOS bounds/atmosphere fields: `tau_atm` and `press_atm`.
 - Required parameter: `psi6threshold`, used with `metric_adm->sqrt_detgamma` to choose the high-`psi6` momentum/energy limiting branch.
 - Writes conservative outputs in place: limited `tau` and possibly rescaled `SD`.
-- Writes diagnostics: `tau_fix` for the magnetic-energy or high-`psi6`
-  fluid-energy correction, and `Stilde_fix` when `SD` is rescaled. The initial
-  unconditional `cons->tau = fmax(cons->tau, eos->tau_atm)` can raise `tau`
-  without setting `tau_fix`; do not interpret `tau_fix == false` as proof that
-  `tau` was unchanged.
+- Writes diagnostics: `tau_fix` when the atmosphere floor, magnetic-energy, or
+  high-`psi6` correction changes `tau`, and `Stilde_fix` when `SD` is rescaled.
 - Caller should initialize diagnostics first with `ghl_initialize_diagnostics`; the helper only sets flags true when a fix occurs.
 
 Tests and fixtures:
@@ -51,6 +48,8 @@ Contract:
 - Required conservative fields: undensitized `rho`, `tau`, `SD`, and `Y_e` where the tabulated path needs electron fraction.
 - Required primitive field for tabulated guess: `BU`, because the Palenzuela-style estimate computes magnetic contractions before velocity construction.
 - Simple/hybrid EOS path sets `rho` from undensitized conservative density, sets `u0 = 1`, sets `vU = -betaU`, and computes cold `press` and `eps`.
+- That simple/hybrid path is a partial update: incoming `BU`, entropy, `Y_e`,
+  and temperature remain unchanged.
 - Tabulated EOS path computes metric/magnetic contractions through `ghl_compute_SU_Bsq_Ssq_BdotS`, uses `T_max` as the temperature guess, enforces table bounds on `rho`, `Y_e`, and `eps`, computes `press`, `entropy`, and `temperature` from `eps`, then calls `ghl_limit_utilde_and_compute_v`.
 - Required tabulated EOS bounds: table-backed `rho`, `Y_e`, and `eps` bounds exposed through `ghl_tabulated_enforce_bounds_rho_Ye_eps`; required temperature bound/guess: `T_max`.
 - Required parameter for tabulated guess: `max_Lorentz_factor` through `ghl_limit_utilde_and_compute_v`.

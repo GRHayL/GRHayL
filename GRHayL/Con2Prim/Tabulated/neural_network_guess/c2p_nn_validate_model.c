@@ -10,10 +10,10 @@ ghl_error_codes_t ghl_c2p_nn_validate_model(const ghl_c2p_nn_model *restrict mod
   if(model->hidden_dim <= 0 || model->n_hidden <= 0 || model->out_dim <= 0) {
     return ghl_error_nn_c2p_invalid_dimensions;
   }
-  if(model->q_idx < 0 || model->q_idx >= model->in_dim) {
+  if(model->q_idx != 0) {
     return ghl_error_nn_c2p_invalid_input_index;
   }
-  if(model->s_idx < 0 || model->s_idx >= model->in_dim) {
+  if(model->s_idx != 2) {
     return ghl_error_nn_c2p_invalid_input_index;
   }
   if(!isfinite(model->x_eps) || !(model->x_eps > 0.0f)) {

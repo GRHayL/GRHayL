@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
                       &prims);
 
     //This applies limits on the primitives
-    bool speed_limited;
+    bool speed_limited = false;
     ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric_adm, &prims, &speed_limited);
     ghl_abort_if_error(error);
 
@@ -239,7 +239,7 @@ int main(int argc, char **argv) {
         &prims);
 
   params.psi6threshold = 0;
-  bool speed_limited;
+  bool speed_limited = false;
   ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric_adm, &prims, &speed_limited);
   ghl_abort_if_error(error);
   if( relative_error(1e5*P_cold, prims.press) > 1e-20 )

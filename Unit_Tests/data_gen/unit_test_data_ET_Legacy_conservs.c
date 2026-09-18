@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
 
-      bool speed_limit;
+      bool speed_limit = false;
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
             &params, &metric_adm, &prims, &speed_limit);
       ghl_abort_if_error(error);

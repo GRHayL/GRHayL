@@ -10,17 +10,19 @@
  *
  * \f[
  * \begin{aligned}
- * \rho &= \frac{\rho_*}{\sqrt{|\gamma|}} \\
+ * \rho &= D \\
  * u^0 &= 1 \\
- * v^i &= -\beta^i \\
- * Y_e &= \frac{\tilde{Y_e}}{\rho_*} \\
- * T &= T_\mathrm{max}
+ * v^i &= -\beta^i
  * \end{aligned}
  * \f]
  *
- * This choice sets the transport/utilde velocity \f$ v^i+\beta^i \f$ to zero;
- * it is only an initial guess for the Con2Prim solve. We set the pressure and
- * specific internal energy \f$ \epsilon \f$ to the cold values.
+ * The input is already undensitized, so
+ * \f$D=\rho_{\ast}/\sqrt{|\gamma|}\f$ and no
+ * additional determinant division is needed. This choice sets transport/utilde
+ * velocity \f$ v^i+\beta^i \f$ to zero; it is only an initial guess for the
+ * Con2Prim solve. Pressure and specific internal energy \f$ \epsilon \f$ use
+ * cold values. Magnetic field, entropy, electron fraction, and temperature
+ * retain their incoming values.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -31,7 +33,7 @@
  * @param[in] cons_undens pointer to ghl_conservative_quantities struct with
  *                        **undensitized** conservative variables
  *
- * @param[out] prims pointer to ghl_primitive_quantities containing the initial guess
+ * @param[in,out] prims pointer to partially updated ghl_primitive_quantities
  */
 static void ghl_guess_primitives_hybrid_simple(
       const ghl_parameters *restrict params,

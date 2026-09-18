@@ -146,9 +146,10 @@ through [Neutrinos API and data](gems/neutrinos/api-and-data.md), and fixture or
 SLy4 table setup through [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md).
 
 Manual or downstream no-HDF5 builds must mirror current script behavior: define
-`GHL_DISABLE_HDF5` and reproduce its source-selection predicate. The broader
-README wording that all tabulated implementation sources are omitted is not an
-exact description of the current generated source list.
+`GHL_DISABLE_HDF5` and reproduce its source-selection predicate. The README
+lists the retained Con2Prim helpers and the exact exclusion patterns. Loader
+entry points become disabled-feature stubs; pure NN inference from an
+independently valid in-memory model does not inherently require HDF5.
 
 GRHayLib is separate implementation-specific build routing. Its Cactus
 `configuration.ccl` hard-codes `requires HDF5`; that thorn requirement is not

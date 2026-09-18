@@ -128,16 +128,17 @@ hybrid/tabulated Palenzuela shared solver signatures. It depends on
 
 Hybrid Palenzuela files live in
 [`GRHayL/Con2Prim/Hybrid/Palenzuela1D/`](../../../GRHayL/Con2Prim/Hybrid/Palenzuela1D/).
-`hybrid_Palenzuela1D_energy.c` and `hybrid_Palenzuela1D_entropy.c` set
-`diagnostics->which_routine`, then call the shared
-`hybrid_Palenzuela1D.c` path with an energy or entropy EOS callback. The shared
-path computes contractions through `ghl_compute_SU_Bsq_Ssq_BdotS`, brackets the
+`hybrid_Palenzuela1D_energy.c` and `hybrid_Palenzuela1D_entropy.c` call the
+shared `hybrid_Palenzuela1D.c` path with an energy or entropy EOS callback and
+set `diagnostics->which_routine` only after it succeeds. The shared path
+computes contractions through `ghl_compute_SU_Bsq_Ssq_BdotS`, brackets the
 root, calls `ghl_brent`, records `n_iter`, computes utilde, and records
 `speed_limited`.
 
 Tabulated Palenzuela files live in
 [`GRHayL/Con2Prim/Tabulated/Palenzuela1D/`](../../../GRHayL/Con2Prim/Tabulated/Palenzuela1D/).
-The energy and entropy wrappers mirror the hybrid wrapper split, while
+The energy and entropy wrappers mirror the hybrid success-only diagnostic
+assignment, while
 `tabulated_Palenzuela1D.c` adds table bounds, tabulated EOS calls, an optional
 second Brent attempt from `T_min`, and the same `n_iter` and `speed_limited`
 diagnostics ownership.
@@ -149,14 +150,15 @@ contains the hybrid Font path. `hybrid_Font1D.c` handles the public wrapper,
 calls `hybrid_Font1D_loop.c` for the density iteration, computes the remaining
 primitives, writes `diagnostics->speed_limited` when utilde limiting is called,
 and sets `diagnostics->which_routine = ghl_con2prim_id_Font1D` on success.
-Source search shows no `diagnostics->n_iter` assignment in this wrapper.
+It resets `diagnostics->n_iter` at entry and accumulates density-loop iterations;
+the stationary shortcut therefore reports zero.
 
 [`GRHayL/Con2Prim/Tabulated/Newman1D/`](../../../GRHayL/Con2Prim/Tabulated/Newman1D/)
 contains the tabulated Newman energy and entropy paths. Both compute
 `SU/Bsq/Ssq/BdotS` through `ghl_compute_SU_Bsq_Ssq_BdotS`, use local iterative
 pressure updates with a maximum step count, set `diagnostics->n_iter = step`
 inside the local helper, write `speed_limited` through utilde limiting, and set
-`which_routine` in the public wrapper before the helper call.
+`which_routine` in the public wrapper only after the retry sequence succeeds.
 
 ## Diagnostics Ownership
 
@@ -170,7 +172,7 @@ For this internal page, only source-proven writes are routed:
   [recovery flow](recovery-flow.md).
 - `n_iter`: set from `harm_aux.n_iter` in built Noble paths, from
   `rparams.n_iters` in built Palenzuela paths, and from local `step` in Newman
-  paths. Font1D does not show an `n_iter` write in its wrapper.
+  paths. Font1D reports its invocation-local accumulated density iterations.
 - `speed_limited`: written where solver finalization or utilde limiting calls
   `ghl_limit_utilde_and_compute_v`.
 

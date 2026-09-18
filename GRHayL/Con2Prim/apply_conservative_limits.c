@@ -26,8 +26,8 @@
  *                      struct contains limit-enforced \f$ \tilde{tau} \f$ and
  *                      \f$ \tilde{S}_i \f$
  *
- * @param[out] diagnostics pointer to ghl_con2prim_diagnostics struct; returns
- *                          whether any limits were applied
+ * @param[in,out] diagnostics pointer to initialized ghl_con2prim_diagnostics
+ *                            struct; accumulates whether any limits were applied
  */
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
@@ -114,7 +114,9 @@ void ghl_apply_conservative_limits(
    * \tilde{\tau} = \tilde{\tau}_\mathrm{atm} + \frac{\sqrt{\gamma} B^2}{2}
    * \f]
    */
+  const double tau_before_floor = cons->tau;
   cons->tau = fmax(cons->tau, eos->tau_atm);
+  diagnostics->tau_fix |= (cons->tau != tau_before_floor);
 
   //tau fix, applicable when B==0 and B!=0:
   if(cons->tau < half_psi6_B2) {

@@ -193,11 +193,9 @@ those inputs differently for main and backup parameters:
   `Newman1D_entropy`.
 - Unknown strings return `-100`.
 
-`GRHayLib_paramcheck` error formatting has a separate backup-index defect: each
-loop identifies `con2prim_backup_routines[i]` in the label but prints
-`con2prim_backup_routines[0]` as the value. For failures at index 1 or 2, the
-message can therefore report the wrong routine. Use index and parser evidence,
-not the printed value alone, when diagnosing a rejected backup.
+`GRHayLib_paramcheck` reports the rejected backup using the matching
+`con2prim_backup_routines[i]` value and slot number in each compatibility and
+entropy-required diagnostic family.
 
 Entropy methods require `evolve_entropy`. `GRHayLib_paramcheck` rejects
 `Noble1D_entropy`, `Palenzuela1D_entropy`, and `Newman1D_entropy` as main or
@@ -239,14 +237,6 @@ source changes:
   `con2prim_backup_routines[3]`.
 - `parse_C2P_routine_keyword` still has a parser case for
   `Noble1D_entropy2`.
-- `GRHayLib_paramcheck` contains compatibility checks for
-  `Newman1D_energy`, while exposed Cactus keywords include `Newman1D` and
-  `Newman1D_entropy`. Consequence: `EOS_type = "Simple"` or `"Hybrid"` with
-  `con2prim_routine = "Newman1D"` passes paramcheck, then fails at runtime
-  on every point through the hybrid selector's
-  `ghl_error_invalid_c2p_key` path (no hybrid `Newman1D` case in
-  `GRHayL/Con2Prim/con2prim_multi_method.c`). Needs a maintainer decision:
-  fix the paramcheck strings or restrict the `param.ccl` keyword lists.
 - `schedule.ccl` conditionally skips initialization for
   `ID_converter_ILGRMHD` but always schedules termination. Local files do not
   establish alternate allocation ownership or a safe terminate precondition.
