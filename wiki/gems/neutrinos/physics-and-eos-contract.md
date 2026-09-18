@@ -45,6 +45,7 @@ No heavy-lepton number rate enters the electron-fraction source.
 Ground truth:
 
 - [`GRHayL/include/ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h)
+- [`NRPyLeakage_nucleon_blocking.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
 - [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
 - [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
 
@@ -60,22 +61,22 @@ The returned values mean:
 | Value | Required meaning | Direct use in current leakage source |
 | --- | --- | --- |
 | `mu_e` | Electron chemical potential, including electron rest-mass energy for the current O'Connor-Ott/StellarCollapse table contract | Electron degeneracy `mu_e/T`, equilibrium neutrino degeneracy, beta rates, pair/plasmon rates |
-| `mu_n` | Neutron chemical potential | Neutron degeneracy/blocking factors |
-| `mu_p` | Proton chemical potential | Proton degeneracy/blocking factors |
-| `muhat` | Neutron-proton chemical-potential difference; GRHayL's StellarCollapse adapter defines `muhat = mu_n - mu_p` | `muhat/T` in nucleon fraction factors and `(mu_e-muhat)/T` in equilibrium electron-neutrino degeneracy |
-| `X_n` | Free-neutron mass fraction | Nucleon-nucleon bremsstrahlung composition factor |
-| `X_p` | Free-proton mass fraction | Nucleon-nucleon bremsstrahlung composition factor |
+| `mu_n` | Neutron chemical potential | Returned by the callback for ABI compatibility; current leakage rates do not consume it directly |
+| `mu_p` | Proton chemical potential | Returned by the callback for ABI compatibility; current leakage rates do not consume it directly |
+| `muhat` | Neutron-proton chemical-potential difference; GRHayL's StellarCollapse adapter defines `muhat = mu_n - mu_p` | `(mu_e-muhat)/T` in the retained grey equilibrium-neutrino degeneracies and spectral moments |
+| `X_n` | Free-neutron mass fraction | Neutron scattering population, charged-current transition overlap, and nucleon-nucleon bremsstrahlung composition factor |
+| `X_p` | Free-proton mass fraction | Proton scattering population, charged-current transition overlap, and nucleon-nucleon bremsstrahlung composition factor |
 
-`X_n` and `X_p` are free-nucleon mass fractions, not the total neutron and
-proton number fractions. Current source separately sets `Y_p = Y_e` and
-`Y_n = 1-Y_e` for charged-current/scattering factors. An EOS adapter must not
-substitute `Y_n`/`Y_p` for `X_n`/`X_p`, particularly where nuclei or other
-bound species are present.
+`X_n` and `X_p` are free-nucleon mass fractions, not total neutron and proton
+fractions. Current blocking uses these values so bound nucleons are not counted
+as free scattering or capture targets. An EOS adapter must not substitute
+`1-Y_e` and `Y_e`, particularly where nuclei or other bound species are
+present.
 
 The chemical potentials and temperature must share MeV units because current
-source forms their ratios without conversion. `Y_e`, `X_n`, and `X_p` are
-dimensionless. The source performs no chemical-potential zero-point or
-rest-mass adjustment after the EOS call.
+source forms `mu_e/T` and `(mu_e-muhat)/T` without conversion. `Y_e`, `X_n`,
+and `X_p` are dimensionless. Blocking does not use the absolute values of
+`mu_n` or `mu_p`.
 
 For the O'Connor-Ott/StellarCollapse table format read by GRHayL, the format
 documentation specifies `mu_e` including electron rest-mass energy. GRHayL
@@ -92,7 +93,7 @@ Ground truth:
 - [`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c`](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T.c)
 - [`GRHayL/Neutrinos/NRPyLeakage/`](../../../GRHayL/Neutrinos/NRPyLeakage/)
 
-### Chemical-Potential Convention Hazard
+### Chemical Potentials And Density-Derived Blocking
 
 An alternative EOS must reproduce the combinations consumed by the code, not
 only similarly named outputs. In current source the equilibrium degeneracies
@@ -103,14 +104,76 @@ $$
 \eta_{\bar\nu_e}^{\rm eq}=-\eta_{\nu_e}^{\rm eq},
 $$
 
-with `muhat` consumed directly as $\widehat\mu$. The original implementation
-notebook's displayed derivation also writes this in a convention with an
-explicit neutron-proton rest-mass gap $Q$, while its generator code sets
-`eta_hat = muhat/T`. GRHayL's StellarCollapse adapter reads the table's
-`muhat` field and defines it as `mu_n - mu_p`; it does not subtract `Q` in the
-leakage routine.
+with `muhat` consumed directly as $\widehat\mu$. GRHayL's StellarCollapse
+adapter reads the table's `muhat` field and defines it as `mu_n - mu_p`, and
+the CompOSE converter writes the same difference. That stored difference
+retains the neutron-proton rest-mass gap, so it is the correct argument here.
 
-Therefore, do not independently add or subtract $Q$, or reconstruct
+Blocking requires kinetic occupations. Full thermodynamic nucleon chemical
+potentials also contain rest-energy, interaction, and producer-reference
+contributions. The former implementation used `mu_n/T` and `mu_p/T` directly
+for scattering and used full `muhat/T` in a same-spectrum transition quotient.
+That made scattering change under a common chemical-energy-zero shift and made
+the transition expression singular near equal populations. Rest-gap
+subtraction alone would not remove interaction, effective-mass, or
+available-volume ambiguity.
+
+Current source instead reconstructs effective kinetic degeneracies from the
+free populations. For species $N$,
+
+$$
+n_N=N_A\rho X_N=C(T)F_{1/2}(\eta_N),\qquad
+C(T)=\frac{4\pi(2m_NT)^{3/2}}{(hc)^3},
+$$
+
+using the common bare mass $m_N=938.91872\,\mathrm{MeV}$. This choice follows
+the density-derived free-gas blocking construction in ILEAS Appendix B,
+Eqs. (69)--(71). It removes the arbitrary chemical-energy reference and uses
+only the EOS population identified as free. It remains an ideal-gas
+approximation: it does not recover EOS mean fields, effective masses,
+available-volume corrections, or microscopic spectra.
+
+The scattering populations are
+
+$$
+B_N=\frac{X_N}{1+\frac{2}{3}\max(\eta_N,0)}.
+$$
+
+For ordered free fractions $X_h\geq X_l$ and
+$a=\eta_h-\eta_l\geq0$, the stable same-energy transition populations are
+
+$$
+Y_{h\rightarrow l}=\frac{X_h-X_l}{-\operatorname{expm1}(-a)},\qquad
+Y_{l\rightarrow h}=e^{-a}Y_{h\rightarrow l}.
+$$
+
+The common normalization converts the difference of Fermi integrals into
+`X_h-X_l`; `expm1` retains digits when the degeneracies are close. Equal
+degeneracies use the analytic limit
+$X F'_{1/2}(\eta)/F_{1/2}(\eta)$. As the lower population tends to zero,
+the occupied-to-empty overlap tends to the occupied fraction and the reverse
+overlap tends to zero. The degeneracy difference diverges, but each overlap-
+times-shifted-beta-moment product tends to zero exponentially. At an exact
+endpoint, the implementation applies that product limit without constructing
+the divergent reaction shift; the both-zero state remains a neutral success.
+This is the continuous extension of the installed density-derived closure,
+not a general claim about interacting-EOS endpoint rates. The implementation
+checks finite inputs and results and enforces
+$0\leq B_N,Y_{N\rightarrow N'}\leq X_N$ for evaluated two-species states.
+These identities avoid numerical quadrature, root iteration, and a new lookup
+table in the leakage hot path.
+
+The scalar $F_{-1/2}$ and inverse-$F_{1/2}$ rational fits come from Scott
+Maddox's [FDINT implementation](https://github.com/scott-maddox/fdint/blob/master/fdint/_fdint.pyx),
+which implements Fukushima's minimax approximations
+([inverse integral](https://doi.org/10.1016/j.amc.2015.03.015),
+[half-odd integral](https://doi.org/10.1016/j.amc.2015.03.009)). GRHayL's
+density normalization and overlap identities are local adaptations; FDINT and
+ILEAS do not supply that combined evaluator. The close-population subtraction
+uses Sterbenz's exact-subtraction result (P. H. Sterbenz,
+*Floating-Point Computation*, Prentice-Hall, 1974, Sec. 4.3).
+
+Do not independently add or subtract $Q$ elsewhere, or reconstruct
 `muhat` from differently zeroed `mu_n` and `mu_p`, without first mapping the
 EOS convention to the current table convention. The StellarCollapse table
 documentation recommends
@@ -127,16 +190,70 @@ applies. Leakage adapters should supply the six named quantities above instead
 of substituting the table's `munu` field.
 
 `ghl_nrpyleakage.h` declares `NRPyLeakage_Q_npmass` and
-`NRPyLeakage_ZL_Q_npmass`, but no current leakage C file uses
-either constant. The current generated blocks consume table `muhat` directly;
-do not infer an implicit neutron-proton mass-gap correction from those
-declarations or insert one into `(mu_e-muhat)/T` without changing and
-revalidating the formulation. These constants are unrelated to `Q_source`.
+`NRPyLeakage_ZL_Q_npmass`, and no current leakage C file uses either. Do not
+insert a gap into `(mu_e-muhat)/T` or into the transition argument without a
+paired reaction-model change. These constants are unrelated to
+`Q_source`. In particular, `muhat(Ye=.5)` is not a rest-mass measurement:
+even a classical unequal-mass gas has a temperature-dependent kinetic term.
 
-Practical adapter validation should compare all six returned quantities and
-the combinations `mu_e/T`, `mu_n/T`, `mu_p/T`, and `(mu_e-muhat)/T` against a
-known StellarCollapse-table state before comparing final rates. Merely matching
-pressure and internal energy does not validate this interface.
+The actual legacy SLy4 SNA/NSE and CompOSE SRO-141 energy conventions are
+established in the [table adapter](../eos/stellarcollapse-table-adapter.md#producer-energy-conventions).
+They remain relevant to `muhat` and equilibrium moments, but absolute `mu_n`
+and `mu_p` no longer control blocking.
+
+The overlap equations obey same-energy detailed balance within the selected
+common-spectrum gas because
+$Y_{l\rightarrow h}/Y_{h\rightarrow l}=e^{-a}$. Charged-current emission and
+ordinary absorption use a shared reaction shift
+
+$$
+q=\widehat\mu-T(\eta_n-\eta_p),
+$$
+
+paired threshold orientation, and algebraic shifted Fermi moments. Their
+spectral parent satisfies Kirchhoff balance with the EOS equilibrium chemical
+potential. Production moments neglect charged-lepton mass in the phase-space
+factor and use representative-energy final-state blocking. This follows the
+algebraic shifted-moment structure in ILEAS Appendix B and the pairing in
+Appendix C, Eqs. (100)--(109); it does not reproduce a finite-mass spectral
+rate exactly. No physical clamp is applied to `q` or `q/T`: the current EOS
+API exposes no authoritative mean-field bound. Large finite ratios therefore
+remain a conditioning limitation. Nonfinite final results are repaired to
+documented finite fallbacks and reported with
+`ghl_error_nrpyleakage_nonfinite_output`; this status does not establish
+accuracy for large finite ratios.
+
+Normalized absorption can divide two representable subnormal Fermi moments.
+Supported builds therefore require gradual underflow; flushing either operand
+to zero changes a finite physical ratio before final-output sanitization can
+detect the loss.
+
+Independent qualification against the beta kernels in
+[BNS_NURATES](https://github.com/RelNucAs/bns_nurates) found `2.0--4.0%`
+differences in the four dilute emission moments and an absolute `Ye`
+difference of `0.00559` after a `0.5 s` thin-gas evolution. At the published
+DD2 merger points, agreement improves toward lower density, but the densest
+point fails badly: common-bare-mass inversion gives `q=117.10 MeV`, while the
+DD2 mean-field/effective-mass reference gives `20.22 MeV`; charged-current
+rate and opacity differences range from factors of about `58` to `356` for
+electron neutrinos and `11` to `26` for electron antineutrinos. The reported
+128-node reference changed by at most `6.4e-6` relative from 96 nodes, so this
+is physical-model disagreement rather than integration noise.
+
+The density-derived model is numerically qualified. After reviewing the named
+rate and thin-evolution comparisons, their uncertainties, and the dense DD2
+failure, the owner accepted the results for this approximate leakage model and
+authorized them as the golden baseline. This outcome-specific decision does not
+define a transferable per-kernel tolerance or claim dense interacting-EOS
+microscopic accuracy. EOS-consistent effective masses or mean-field shifts
+remain an optional future accuracy improvement. See
+[blocking qualification](tests-and-fixtures.md#blocking-correction-qualification).
+
+Practical adapter validation should compare all six returned quantities,
+`mu_e/T`, `(mu_e-muhat)/T`, and the derived blocking populations against known
+states before comparing final rates. Raw `mu_n` and `mu_p` still belong to the
+six-output ABI, but matching their ratios no longer validates active blocking.
+Merely matching pressure and internal energy does not validate this interface.
 
 ## Number And Energy Slots
 
@@ -197,15 +314,15 @@ Q_{\nu_i}^{\rm eff}=\frac{Q_{\nu_i}^{\rm free}}
  {1+t_{\nu_i,1}^{\rm diff}/t_{\nu_i,1}^{\rm loss}}.
 $$
 
-The checked-in implementation has the species and unit exceptions documented
-in [Current Heavy-Lepton Exception](#current-heavy-lepton-exception) and
-[Current Suppression-Ratio Unit Seam](#current-suppression-ratio-unit-seam).
+The checked-in implementation applies this form to every species, including
+`nux`; see [Heavy-Lepton Timescale](#heavy-lepton-timescale).
 
-The ideal geometric-unit form uses
-$t_{\nu_i,j}^{\rm diff}=6(\tau_j^{\nu_i})^2/\kappa_{t,j}^{\nu_i}$
-in geometric units. Small optical depth recovers the free rate; large optical
-depth gives diffusion-limited leakage. This is a local interpolation between
-limits, not explicit neutrino propagation.
+The implementation evaluates the ratio entirely in cgs, where
+$t_{\nu_i,j}^{\rm diff}=6(\tau_j^{\nu_i})^2/(c\,\kappa_{t,j}^{\nu_i})$;
+see [Suppression-Ratio Units](#suppression-ratio-units). Small optical depth
+recovers the free rate; large optical depth gives diffusion-limited leakage.
+This is a local interpolation between limits, not explicit neutrino
+propagation.
 
 The loss time is defined through its inverse: for number leakage,
 $1/t_{\nu_i,0}^{\rm loss}=R_{\nu_i}^{\rm free}/n_{\nu_i}$; for energy
@@ -214,29 +331,26 @@ $n_{\nu_i}$ and $e_{\nu_i}$ are the equilibrium neutrino number and energy
 densities. Thus rate divided by density is an inverse loss time, not a loss
 time.
 
-### Current Heavy-Lepton Exception
+### Heavy-Lepton Timescale
 
-The checked-in source does not apply the ideal same-species energy-loss ratio
-to `nux`. Its `nux` effective-energy numerator is the free heavy-lepton rate,
-and its suppression factor uses `nux` energy optical depth, `nux`
-energy-transport opacity, and `nux` equilibrium energy density. However, the
-inverse loss time in that factor uses the free `nue` energy rate:
+Both the matter-source and luminosity routines compute the free energy rate of
+one heavy-lepton species once, as the local `Q_free_nux`, and use it both as
+the `nux` effective-energy numerator and in its own inverse loss time:
 
 $$
-\left(t_{\nu_x,1}^{\rm loss}\right)^{-1}_{\rm current}
-=\frac{Q_{\nu_e}^{\rm free}}{e_{\nu_x}},
+\left(t_{\nu_x,1}^{\rm loss}\right)^{-1}
+=\frac{Q_{\nu_x}^{\rm free}}{e_{\nu_x}}.
 $$
 
-not $Q_{\nu_x}^{\rm free}/e_{\nu_x}$. Both the matter-source and luminosity
-routines have this exception. Describe it as current observable behavior;
-source provenance alone does not establish whether it is intentional.
+The suppression factor uses `nux` energy optical depth, `nux`
+energy-transport opacity, and `nux` equilibrium energy density. `lum->nux`
+remains one heavy species; the matter-source cooling term multiplies the
+single-species effective rate by four.
 
 The luminosity fixture generator exercises nonzero optical depths drawn from
-1 through 1000, including this suppression branch. Its replay calls
-`ghl_pert_test_fail` for all three luminosities but discards the returned
-booleans, so a numerical mismatch cannot fail that executable. The
-optically-thin matter-source evolution constructs all optical depths as zero
-and therefore does not exercise diffusion suppression.
+1 through 1000, including this suppression branch, and its replay fails on a
+numerical mismatch. The optically-thin matter-source evolution constructs all
+optical depths as zero and therefore does not exercise diffusion suppression.
 
 The electron-neutrino degeneracy is also interpolated between a transparent
 value of zero and equilibrium using `exp(-tau->nue[0])`; the antineutrino uses
@@ -304,25 +418,22 @@ NRPyLeakage owns a separate geometric-unit conversion set in
 leakage density, length, number-rate, and energy-rate conversions coherently
 rather than borrowing EOS conversion macros piecemeal.
 
-### Current Suppression-Ratio Unit Seam
+### Suppression-Ratio Units
 
-In the generated source-term and luminosity effective-rate expressions, the
-current code multiplies the code-time diffusion factor
-$6\tau^2/\kappa_{\rm geom}$ by an inverse loss rate obtained as a cgs rate
-divided by a cgs density, hence expressed in $s^{-1}$. It does not convert that
-inverse loss rate to inverse code time before forming the nominally
-dimensionless suppression ratio. Holding the other quantities fixed, the
-implemented ratio is larger than the unit-coherent ratio by
-`NRPyLeakage_units_cgs_to_geom_T`, approximately $2.03\times10^5$.
+The generated source-term and luminosity effective-rate expressions build the
+suppression ratio entirely in cgs. Their shared diffusion prefactor is
+`6.0/NRPyLeakage_c_light`, so the diffusion time is
+$6\tau^2/(c\,\kappa_{\rm cgs})$ and multiplies an inverse loss rate obtained as
+a cgs rate divided by a cgs density, in $s^{-1}$. The ratio is therefore
+dimensionless without any further conversion. Opacity is converted to
+geometric inverse length only on writeback to `kappa`, after the ratio is
+formed.
 
-The source does not state whether exact historical equivalence or a
-unit-coherent physical ratio is intended. A port seeking exact GRHayL behavior
-must preserve the current factor. A port seeking the unit-coherent formulation
-must make and validate an explicit correction, for example by converting the
-cgs inverse loss rate with `NRPyLeakage_units_geom_to_cgs_T`, or by expressing
-both diffusion and loss times consistently in cgs. This is tracked as a
-maintainer decision in [Current Contradictions](../../contradictions.md); no
-single repair is prescribed here.
+A port must not additionally apply `NRPyLeakage_units_geom_to_cgs_T` or
+`NRPyLeakage_units_geom_to_cgs_L` to this prefactor: `6/L_unit` and
+`6*T_unit/L_unit` differ by `NRPyLeakage_units_cgs_to_geom_T`, approximately
+$2.03\times10^5$. Either express both times in cgs, as here, or convert both
+consistently to code time.
 
 ## Assumptions And Limitations
 

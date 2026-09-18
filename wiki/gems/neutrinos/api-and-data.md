@@ -67,7 +67,9 @@ signatures and bodies therefore depend on:
   `ghl_error_codes_t`;
 - GRHayL success/error values, including
   `ghl_error_used_disabled_hdf5` and
-  `ghl_error_invalid_fermi_dirac_integral_key`;
+  `ghl_error_invalid_fermi_dirac_integral_key` and
+  `ghl_error_nrpyleakage_blocking` and
+  `ghl_error_nrpyleakage_nonfinite_output`;
 - constants, unit macros, finiteness helpers, and
   `NRPYLEAKAGE_FD_OR_RETURN` from `ghl_nrpyleakage.h`; and
 - C math facilities exposed through the GRHayL headers and the `-lm` link
@@ -103,18 +105,17 @@ Minimum local adapter responsibilities are:
 3. Replace GRHayL return codes and early-return macro with the host error
    policy without changing partial-write behavior accidentally.
 4. Validate density, opacity, source, and luminosity conversions as one
-   coherent set. Separately choose whether to preserve the current mixed-unit
-   suppression factor for exact GRHayL equivalence or replace it with a
-   unit-coherent convention; do not change this
-   [suppression-ratio seam](physics-and-eos-contract.md#current-suppression-ratio-unit-seam)
-   accidentally.
+   coherent set. Keep the suppression ratio in one time unit, as the current
+   cgs form does; see
+   [Suppression-Ratio Units](physics-and-eos-contract.md#suppression-ratio-units).
 5. Revalidate finite-value handling, metric conventions, and optical-depth
    path lengths in the host ABI and unit system.
 
 ## Input And Unit Preconditions
 
 The public declarations carry no unit comments and routines perform no general
-null, range, or finiteness validation. Source establishes these caller
+null-pointer validation. The shared blocking helper performs focused range and
+finiteness checks described below. Source establishes these caller
 preconditions:
 
 - `rho`/`rho_b` is GRHayL geometric density; leakage source multiplies it by
@@ -147,7 +148,19 @@ constants live in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
 The same header defines `robust_isnan`, `robust_isfinite`, and
 `NRPYLEAKAGE_FD_OR_RETURN`. That macro calls
 `NRPyLeakage_Fermi_Dirac_integrals` and returns the error immediately when the
-helper fails.
+helper fails. On IEEE binary64 systems the robust classifiers use alias-safe
+`memcpy` plus integer exponent/fraction checks. This does not make preceding
+floating-point arithmetic safe under finite-only or other unsafe math modes.
+Supported `configure` builds reject explicit `CC` or `--cflags` tokens for
+`-ffast-math`, `-Ofast`, `-ffinite-math-only`,
+`-funsafe-math-optimizations`, `-fassociative-math`, `-freciprocal-math`,
+`-fno-signed-zeros`, `-fno-trapping-math`, Intel `-ftz`, and Intel fast
+floating-point models. The final configuration probes both fast/finite-only
+predefined macros and gradual underflow. Intel LLVM builds receive
+`-fp-model=precise -no-ftz` after user flags. Direct builds must enforce the
+same restriction, and Intel executable links must retain `-no-ftz`.
+Compile-time representation checks retain the C99 predicates as the portable
+fallback.
 
 ## Fermi-Dirac Error Behavior
 
@@ -159,6 +172,41 @@ output value before branch dispatch. Unsupported keys return
 
 `Unit_Tests/unit_test_code_error.c` exercises invalid Fermi-Dirac keys on both
 `z` branches and maps them to `ghl_error_invalid_fermi_dirac_integral_key`.
+
+## Nucleon-Blocking Error Behavior
+
+The three EOS-dependent public routines include the source-private
+`NRPyLeakage_nucleon_blocking.h`. Public function signatures and radiation
+structs remain unchanged; the helper is not installed as public API.
+
+After EOS lookup and density conversion, the helper requires finite positive
+cgs density and temperature. It accepts finite `X_n`, `X_p` in `[0,1]` and
+normalizes only endpoint excursions within the forward-error bound of the
+eight-corner interpolation arithmetic. The both-zero composition is a neutral
+success. For exactly one normalized zero, it returns the exact overlap limit,
+retains occupied-species scattering, and leaves the degeneracy-difference
+placeholder unused while public callers apply the analytic zero limit of every
+charged-current product. The helper also rejects larger excursions and any
+non-finite kinetic-degeneracy
+inversion, overlap, or population-bound result.
+A failure returns `ghl_error_nrpyleakage_blocking` before any public output is
+written. This distinct error identifies failure of the blocking evaluator
+rather than an EOS interpolation or generated Fermi-moment key.
+
+## Nonfinite-Output Error Behavior
+
+After ordinary writeback, all three EOS-dependent routines sanitize their
+public outputs. Nonfinite opacities become one named cgs inverse-length floor
+converted to the public geometrized unit. Nonfinite luminosities and signed
+sources become neutral zero. If any replacement occurs, the routine returns
+`ghl_error_nrpyleakage_nonfinite_output`; otherwise it returns `ghl_success`.
+Callers can inspect deterministic finite fallback outputs without mistaking
+repaired arithmetic for successful evaluation.
+
+Ports of any opacity, combined source/opacity, or luminosity entry point must
+carry this private header or provide equivalent blocking and error behavior.
+The motivation and equations are in
+[Physics And EOS Contract](physics-and-eos-contract.md).
 
 ## HDF5 And EOS
 
@@ -176,9 +224,9 @@ potentials and composition. Under `GHL_DISABLE_HDF5`, each returns
 With HDF5 enabled, callers must first initialize tabulated EOS function
 pointers and a compatible loaded table. An EOS interpolation error is returned
 unchanged. HDF5-disabled and EOS-error exits occur before output writeback, so
-caller-provided output objects retain their prior contents. Later Fermi-Dirac
-errors also propagate before final writeback. No routine initializes outputs on
-failure.
+caller-provided output objects retain their prior contents. Later blocking and
+Fermi-Dirac errors also propagate before final writeback. No routine
+initializes outputs on failure.
 
 The optical-depth path routine does not call EOS or HDF5. It consumes local and
 neighbor `ghl_neutrino_opacities`/`ghl_neutrino_optical_depths`, metric stencil
@@ -193,14 +241,17 @@ for fixture generation or replay:
   `ghl_tabulated_compute_eps_from_T` and `ghl_tabulated_compute_T_from_eps`
   from `GRHayL/include/ghl_eos_functions.h`.
 
-`configure` adds `GHL_DISABLE_HDF5` and excludes the
-`unit_test_nrpyleakage_*.c` tests when HDF5 is disabled. `.github/run_tests.sh`
+`configure` adds `GHL_DISABLE_HDF5` and excludes the three table-backed fixture
+tests when HDF5 is disabled. The self-contained
+`unit_test_nrpyleakage_physics.c` remains available. `.github/run_tests.sh`
 downloads the SLy4 EOS table and Neutrinos fixture pairs before running the
-NRPyLeakage unit tests with key `1`.
+table-backed NRPyLeakage tests with key `1`, and runs the physics executable
+without table arguments.
 
 No-HDF5 builds still compile the guarded NRPyLeakage implementation files; they
 exclude only the three HDF5-dependent unit tests. Current error tests cover
-invalid Fermi keys, not the three leakage routines' disabled-HDF5 return paths.
+invalid Fermi keys. The table-free physics test directly checks the three
+leakage routines' disabled-HDF5 return paths.
 
 For extraction, see [Implementation Flow](implementation-flow.md) for the
 smallest file set per entry point and [Generator Provenance](generator-provenance.md)

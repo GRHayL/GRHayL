@@ -253,6 +253,11 @@ jobs:
         uses: ./.github/actions/compile_GRHayL
         with:
           compiler: 'gcc'
+      - name: Run table-free neutrino physics checks
+        if: matrix.test-function == 'nrpyleakage_optically_thin_gas'
+        run: |
+          ./test/unit_test_nrpyleakage_physics
+          ./test/unit_test_nrpyleakage_classifier_fallback
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
@@ -339,7 +344,7 @@ jobs:
           curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for error-catching
         run: |
-          for i in {0..85}; do
+          for i in {0..87}; do
             if ./test/unit_test_code_error "$i"; then
               echo "Failed to fail!"
               exit 1

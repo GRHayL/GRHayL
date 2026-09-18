@@ -11,6 +11,7 @@ pkg="GRHayL"
 pkg_short="GRHayL"
 pkg_version="1.0.0"
 libname="ghl"
+nrpyleakage_unsafe_cflags='-ffast-math -Ofast -ffinite-math-only -funsafe-math-optimizations -fassociative-math -freciprocal-math -fno-signed-zeros -fno-trapping-math -ftz -fp-model=fast -fp-model=fast=1 -fp-model=fast=2'
 
 red()
 {
@@ -81,7 +82,11 @@ Options:'
                           debug-opt  : -Wall -std=c99 -march=native -fno-finite-math-only -O2 -g
                           opt        : -Wall -std=c99 -march=native -fno-finite-math-only -O2
                           production : -Wall -std=c99 -march=native -fno-finite-math-only -O3
-    --cflags            Additional compilation flags
+    --cflags            Additional compilation flags; NRPyLeakage requires
+                        IEEE exceptional-value semantics. Explicit unsafe
+                        tokens in CC or --cflags are rejected
+    NRPyLeakage rejects: $nrpyleakage_unsafe_cflags
+    NRPyLeakage rejects separate Intel spelling: -fp-model fast[=1|=2]
     --clibs             Additional linker flags
     --hdf5dir           Sets the HDF5 base directory. Possible values:
                           <dir> : assumes <dir>/include and <dir>/lib exist
@@ -300,14 +305,47 @@ check_compiler()
 c_compiles()
 {
     printf "$5"
-    printf "$1" | $2 $3 -x c - $4 >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    probe_dir=$(mktemp -d "${TMPDIR:-/tmp}/grhayl-configure.XXXXXX")
+    if [ $? -ne 0 ]; then
+        NO "could not create temporary probe directory"
+        return 1
+    fi
+    probe_exe="$probe_dir/probe"
+    printf "$1" | $2 $3 -x c - $4 -o "$probe_exe" >/dev/null 2>&1
+    probe_status=$?
+    rm -f "$probe_dir"/*
+    rmdir "$probe_dir"
+    if [ $probe_status -eq 0 ]; then
         YES "$2$3<objs>$4"
-        rm -f a.out
         return 0
     else
         NO "$2$3<objs>$4"
-        rm -f a.out
+        return 1
+    fi
+}
+
+c_runs()
+{
+    printf "$5"
+    probe_dir=$(mktemp -d "${TMPDIR:-/tmp}/grhayl-configure.XXXXXX")
+    if [ $? -ne 0 ]; then
+        NO "could not create temporary probe directory"
+        return 1
+    fi
+    probe_exe="$probe_dir/probe"
+    printf "$1" | $2 $3 -x c - $4 -o "$probe_exe" >/dev/null 2>&1
+    if [ $? -eq 0 ] && "$probe_exe" >/dev/null 2>&1; then
+        probe_status=0
+    else
+        probe_status=1
+    fi
+    rm -f "$probe_dir"/*
+    rmdir "$probe_dir"
+    if [ $probe_status -eq 0 ]; then
+        YES "$2$3<objs>$4"
+        return 0
+    else
+        NO "$2$3<objs>$4"
         return 1
     fi
 }
@@ -418,7 +456,7 @@ while [ $# -gt 0 ]; do
         --prefix=*) prefix=$(echo "$1" | cut -d= -f2);;
         --buildtype=*) buildtype=$(echo "$1" | cut -d= -f2);;
         --builddir=*) builddir=$(echo "$1" | cut -d= -f2);;
-        --cflags=*) cflags=$(echo "$1" | cut -d= -f2);;
+        --cflags=*) cflags=${1#*=};;
         --clibs=*) clibs=$(echo "$1" | cut -d= -f2);;
         --hdf5dir=*) hdf5dir=$(echo "$1" | cut -d= -f2);;
         --hdf5inc=*) hdf5inc=$(echo "$1" | cut -d= -f2);;
@@ -499,7 +537,7 @@ case $buildtype in
          debug) BUILDCFLAGS="-Wall -std=c99 -O0 -g" ;;
      debug-opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2 -g" ;;
            opt) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O2" ;;
-    production) BUILDCFLAGS="-Wall -std=c99 -march=native -O3" ;;
+    production) BUILDCFLAGS="-Wall -std=c99 -march=native -fno-finite-math-only -O3" ;;
              *) printf "%s\nUnsupported built type, use ./configure -h for help\n" "$(red "$buildtype")"
                 exit 1;;
 esac
@@ -511,6 +549,18 @@ if [ "$cflags" = "" ]; then
 else
     YES "$cflags"
 fi
+for flag in $CC $cflags; do
+    for unsafe_flag in $nrpyleakage_unsafe_cflags; do
+        if [ "$flag" = "$unsafe_flag" ]; then
+            error "Unsupported floating-point compiler flag '$flag': NRPyLeakage requires IEEE exceptional-value semantics\n"
+        fi
+    done
+done
+case " $CC $cflags " in
+    *" -fp-model fast "*|*" -fp-model fast=1 "*|*" -fp-model fast=2 "*)
+        error "Unsupported floating-point compiler mode '-fp-model fast': NRPyLeakage requires IEEE exceptional-value semantics\n"
+        ;;
+esac
 cflags="$BUILDCFLAGS $cflags"
 
 printf "Checking if clibs were provided... "
@@ -521,12 +571,26 @@ else
 fi
 
 for compiler in gcc clang icc icx cc; do
-    if [ -z $CC ]; then
+    if [ -z "$CC" ]; then
         check_compiler $compiler
     else
         break
     fi
 done
+
+code='
+#ifndef __INTEL_LLVM_COMPILER
+#error "not Intel LLVM"
+#endif
+int main(void) { return 0; }
+'
+c_compiles "$code" $CC " -O0 " "" "Checking if C compiler is Intel LLVM... "
+if [ $? -eq 0 ]; then
+    # ICX otherwise defaults to fast arithmetic and flush-to-zero at optimized
+    # levels. Keep these last so supported configure builds retain gradual
+    # underflow even when CC contains compiler options.
+    cflags="$cflags -fp-model=precise -no-ftz"
+fi
 
 clibs=$(printf "%s" "-lm $clibs" | awk '{sub(/ *$/, "", $0); print}')
 
@@ -547,6 +611,29 @@ fi
 c_compiles "$code" $CC " $cflags " " $clibs" "Checking if compiler works with build flags... "
 if [ $? -ne 0 ]; then
     error "The C compiler does not work with the build flags\n"
+fi
+code='
+#if defined(__FAST_MATH__) || (defined(__FINITE_MATH_ONLY__) && __FINITE_MATH_ONLY__ > 0)
+#error "unsupported floating-point mode"
+#endif
+int main(void) { return 0; }
+'
+c_compiles "$code" $CC " $cflags " "" "Checking floating-point semantics... "
+if [ $? -ne 0 ]; then
+    error "Unsupported floating-point compiler mode: NRPyLeakage requires IEEE exceptional-value semantics\n"
+fi
+code='
+#include <float.h>
+int main(void) {
+  volatile double minimum_normal = DBL_MIN;
+  volatile double half = 0.5;
+  volatile double subnormal = minimum_normal * half;
+  return subnormal > 0.0 ? 0 : 1;
+}
+'
+c_runs "$code" $CC " $cflags " "" "Checking gradual underflow... "
+if [ $? -ne 0 ]; then
+    error "Unsupported floating-point compiler mode: NRPyLeakage requires gradual underflow (ICX: -fp-model=precise -no-ftz)\n"
 fi
 if [ "$ompcflag" != "" ]; then
     code='
@@ -821,11 +908,11 @@ TEXEOBJS = ${texeobjs}
 ${LINKEXE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) \$(TOBJS) $< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -l${libname}
 
-\$(TOBJS): \$(BUILDDIR)/%.o: %.c
+\$(TOBJS): \$(BUILDDIR)/%.o: %.c \$(INC)
 ${COMPILE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) -c $< -o \$@
 
-\$(TEXEOBJS): \$(BUILDDIR)/%.o: %.c
+\$(TEXEOBJS): \$(BUILDDIR)/%.o: %.c \$(INC)
 ${COMPILE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) -c $< -o \$@
 "
@@ -918,12 +1005,18 @@ ${TAB}${SILENT}cp \$(IHDS) \$(PREFIX)/include/ghl
 ${TAB}${ALWAYS_SILENT}echo "Installing GRHayL libraries in \$(PREFIX)/lib"
 ${TAB}${ALWAYS_SILENT}mkdir -p \$(PREFIX)/lib
 ${TAB}${SILENT}cp -a \$(BUILDDIR)/lib/* \$(PREFIX)/lib
+${TAB}${ALWAYS_SILENT}echo "Installing FDINT notice in \$(PREFIX)/share/doc/grhayl"
+${TAB}${SILENT}mkdir -p \$(PREFIX)/share/doc/grhayl
+${TAB}${SILENT}install -m 0644 THIRD_PARTY_NOTICES \$(PREFIX)/share/doc/grhayl
 
 uninstall:
 ${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL headers from \$(PREFIX)/include/ghl"
 ${TAB}${SILENT}rm -rf \$(PREFIX)/include/ghl
 ${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL libraries from \$(PREFIX)/lib"
 ${TAB}${SILENT}rm -rf \$(PREFIXLIBSO) \$(PREFIXLIBSOV)
+${TAB}${ALWAYS_SILENT}echo "Uninstalling GRHayL FDINT notice"
+${TAB}${SILENT}rm -f \$(PREFIX)/share/doc/grhayl/THIRD_PARTY_NOTICES
+${TAB}${SILENT}rmdir \$(PREFIX)/share/doc/grhayl 2>/dev/null || true
 EOF
 green "DONE\n"
 

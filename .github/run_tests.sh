@@ -139,6 +139,8 @@ download_test_data Neutrinos/nrpyleakage_constant_density_sphere_perturbed.bin
 download_test_data Neutrinos/nrpyleakage_luminosities_unperturbed.bin
 download_test_data Neutrinos/nrpyleakage_luminosities_perturbed.bin
 
+./test/unit_test_nrpyleakage_physics
+./test/unit_test_nrpyleakage_classifier_fallback
 ./test/unit_test_nrpyleakage_optically_thin_gas SLy4_3335_rho391_temp163_ye66.h5 1
 ./test/unit_test_nrpyleakage_constant_density_sphere SLy4_3335_rho391_temp163_ye66.h5 1
 ./test/unit_test_nrpyleakage_luminosities SLy4_3335_rho391_temp163_ye66.h5 1
@@ -168,7 +170,7 @@ download_test_data con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_unperturbed.b
 download_test_data con2prim/con2prim_tabulated_Noble2D_rho_vs_T_perturbed.bin
 download_test_data con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
 
-for i in {0..85}; do
+for i in {0..87}; do
   if ./test/unit_test_code_error "$i"; then
     echo "Failed to fail!"
     exit 1

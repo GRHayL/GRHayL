@@ -182,6 +182,7 @@ source, headers, tests, and common edit routes before wider search.
 - Likely tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
   `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`,
   `Unit_Tests/unit_test_nrpyleakage_luminosities.c`,
+  `Unit_Tests/unit_test_nrpyleakage_physics.c`,
   `Unit_Tests/nrpyleakage_main.h`; route fixture details through
   [tests and fixtures](neutrinos/tests-and-fixtures.md).
 - Common edit routes: add or change leakage routines in
@@ -195,10 +196,11 @@ source, headers, tests, and common edit routes before wider search.
   [generator provenance](neutrinos/generator-provenance.md).
 - Drift/contract notes: leakage uses tabulated EOS quantities and table-backed
   test data. HDF5/EOS changes can break Neutrinos even if leakage source is
-  untouched. All 19 `ghl_pert_test_fail` fixture-replay results are discarded,
-  so those numerical replays cannot fail their executables; selected
-  Fermi-Dirac value checks and CI invalid-key checks remain effective. Constant
-  sphere also reverses trusted/perturbed and neighbor arguments.
+  untouched. All 19 fixture-replay results are consumed: optically thin uses
+  `ghl_pert_test_fail`; sphere and luminosity use local wrappers around
+  `ghl_pert_test_fail_with_tolerance`. A numerical mismatch fails its executable. Published
+  `GRHayL/TestData` fixtures and implementation-derived CompOSE drift goldens reflect the
+  selected density-derived blocking implementation.
 
 ## Reconstruction
 

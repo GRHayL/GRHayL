@@ -24,6 +24,11 @@ these source files:
 Every listed name has a matching public declaration in `ghl_nrpyleakage.h`; no
 extra Neutrinos `.c` file sits outside the manifest.
 
+The same manifest records `NRPyLeakage_nucleon_blocking.h` and
+`NRPyLeakage_rate_helpers.h` through `#! INCS`. These source-private headers
+are not installed public headers and add no public functions. Both headers
+serve all three EOS-dependent routines.
+
 ## Smallest File Sets And Data Dependencies
 
 The manifest entries do not form one indivisible link unit. Current
@@ -32,10 +37,10 @@ source has these narrower boundaries:
 | Requested operation | Required implementation files | Additional current-GRHayL dependencies | Not required by that entry point |
 | --- | --- | --- | --- |
 | Fermi-Dirac approximation | `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation/leakage headers, GRHayL error enum, math functions | EOS, HDF5, opacity, depth, source, luminosity files |
-| Opacities only | `NRPyLeakage_compute_neutrino_opacities.c` and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, math functions | Combined source/opacity, optical-depth, and luminosity files |
-| GRMHD sources plus opacities | `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c` and `NRPyLeakage_Fermi_Dirac_integrals.c` | Same EOS, type, constant, error/HDF5, and math adapter | Standalone-opacity, optical-depth, and luminosity files |
+| Opacities only | `NRPyLeakage_compute_neutrino_opacities.c`, `NRPyLeakage_nucleon_blocking.h`, `NRPyLeakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, math functions | Combined source/opacity, optical-depth, and luminosity files |
+| GRMHD sources plus opacities | `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`, `NRPyLeakage_nucleon_blocking.h`, `NRPyLeakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Same EOS, type, constant, error/HDF5, and math adapter | Standalone-opacity, optical-depth, and luminosity files |
 | One path-of-least-resistance depth update | `NRPyLeakage_optical_depths_PathOfLeastResistance.c` | Opacity/depth struct definitions and math functions | EOS, HDF5, Fermi helper, source, standalone-opacity, and luminosity files |
-| Pointwise luminosities | `NRPyLeakage_compute_neutrino_luminosities.c` and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, metric inputs, math functions | Source, standalone-opacity, and optical-depth implementation files |
+| Pointwise luminosities | `NRPyLeakage_compute_neutrino_luminosities.c`, `NRPyLeakage_nucleon_blocking.h`, `NRPyLeakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, metric inputs, math functions | Source, standalone-opacity, and optical-depth implementation files |
 
 These are link and call boundaries, not a complete simulation workflow. The
 optical-depth routine needs opacity and neighbor-depth *data*, but does not
@@ -44,10 +49,10 @@ consume optical-depth data, but do not call the optical-depth implementation.
 The combined routine owns a separate generated opacity write path; it does not
 delegate to `NRPyLeakage_compute_neutrino_opacities`.
 
-For a host with its own EOS and hydrodynamics, retain the Fermi helper wherever
-generated rate code calls `NRPYLEAKAGE_FD_OR_RETURN`; port the optical-depth
-file independently if its six-neighbor update is wanted. The exact ABI,
-callback, error, HDF5, and unit substitutions are mapped in
+For a host with its own EOS and hydrodynamics, retain the private blocking and
+rate headers and the Fermi helper for each EOS-dependent entry point. Port the
+optical-depth file independently if its six-neighbor update is wanted. The
+exact ABI, callback, error, HDF5, and unit substitutions are mapped in
 [API And Data](api-and-data.md).
 
 ## Generator Versus Current Source Authority
@@ -67,18 +72,61 @@ adapter before replacing any current file.
 
 The three EOS-dependent routines return immediately with
 `ghl_error_used_disabled_hdf5` in no-HDF5 builds. With HDF5, they return the
-tabulated EOS error unchanged, and generated Fermi calls return an invalid-key
-error through `NRPYLEAKAGE_FD_OR_RETURN`. Output writes occur only after those
-calls, so these error exits leave caller outputs unchanged. None checks null
-pointers, EOS initialization, table bounds independently of the EOS call, or
-physical/finiteness preconditions.
+tabulated EOS error unchanged. The blocking helper then validates finite,
+positive cgs density and temperature; finite free fractions in `[0,1]`, apart
+from endpoint excursions within the interpolation forward-error bound; and
+finite, bounded inversion and overlap results. Failure returns
+`ghl_error_nrpyleakage_blocking`. Generated Fermi calls return an invalid-key
+error through `NRPYLEAKAGE_FD_OR_RETURN`. Output writes occur only after these
+calls, so all these error exits leave caller outputs unchanged. The routines
+do not check null pointers, EOS initialization, or table bounds independently
+of the EOS call.
 
-`robust_isfinite` is used only by the combined source-term file;
-`robust_isnan` has no active repo-local caller. Both public inline helpers
-inspect a `double` by casting its address to `unsigned long *`, with no size or
-representation check. Treat them as current platform-dependent implementation,
-not a portable finiteness contract. Tests do not inject NaN/Inf into any
-leakage routine or directly exercise these helpers.
+After roundoff normalization, a both-zero free-nucleon state returns the
+neutral blocking result. At an exactly-one-zero state, occupied-species
+scattering and non-beta channels remain active while charged-current products
+take their analytic zero limit. The code does not form the divergent endpoint
+degeneracy difference or reaction-energy shift.
+
+## Shared Nucleon-Blocking Evaluator
+
+`NRPyLeakage_nucleon_blocking.h` reconstructs kinetic degeneracies from cgs
+density, temperature, and EOS free-neutron/free-proton fractions. This removes
+dependence on the arbitrary common energy zero of `mu_n` and `mu_p`, avoids
+counting bound nucleons as free targets, and removes the old equal-population
+quotient pole. One private helper keeps opacity, source, and luminosity paths
+on the same blocking model instead of maintaining three copies.
+
+The evaluator uses piecewise rational fits for inverse $F_{1/2}$ and
+$F_{-1/2}$, an `expm1` overlap identity, and an analytic equal-population
+limit. It adds no quadrature, iterative root solve, or EOS/table lookup. This
+choice keeps blocking cost compatible with a leakage approximation while
+retaining finite and population-bound checks. The source header records ILEAS,
+FDINT/Fukushima, Sterbenz, and BSD-3 provenance; the exact equations and model
+limits are in [Physics And EOS Contract](physics-and-eos-contract.md).
+
+The callers retain `muhat` in the grey equilibrium-neutrino degeneracy and use
+the helper's kinetic degeneracy difference to form the reaction shift
+`q = muhat - T*(eta_n-eta_p)`. Private algebraic moment evaluators apply that
+same shift and its particle-energy threshold to the paired charged-current
+emission and absorption kernels. This enforces their spectral Kirchhoff
+relation without quadrature. It remains a grey leakage approximation: emitted
+neutrino vacancy is sampled at the mean energy, and the independent physical
+qualification bounds the resulting model error.
+
+All leakage finite-value guards use `robust_isfinite` or `robust_isnan`. On
+IEEE binary64 platforms the public inline helpers copy the representation with
+`memcpy` and classify exponent/fraction bits through `uint64_t`; this is
+alias-safe. Unsafe math modes can corrupt earlier arithmetic, so `configure`
+rejects documented unsafe flag tokens supplied through `CC` or `--cflags` and
+probes final flags for fast/finite-only predefined macros. Direct builds,
+including Cactus builds, must enforce the same restriction. Supported builds
+also execute a gradual-underflow probe; Intel LLVM uses
+`-fp-model=precise -no-ftz`, with `-no-ftz` retained when linking the program
+containing `main`. Compile-time representation guards select the C99 predicates
+on other platforms. The table-free physics executable directly checks finite
+values, infinities, quiet and signaling NaNs, signed zeros, and signed minimum
+subnormals.
 
 ## `NRPyLeakage_compute_neutrino_luminosities.c`
 
@@ -91,25 +139,38 @@ Flow:
    `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; return any EOS
    error directly.
 3. Convert `rho` to cgs units through `NRPyLeakage_units_geom_to_cgs_D`, then
-   derive proton/neutron fractions used by the leakage rates.
-4. Run source-owned generated formula blocks for emissivity, opacity-like
-   denominators, Fermi-Dirac factors, and optical-depth suppression. These
-   blocks call `NRPYLEAKAGE_FD_OR_RETURN`, so Fermi-Dirac errors propagate.
-5. Use metric/lapse/Lorentz input in the luminosity scaling:
+   derive scattering and transition populations and the kinetic degeneracy
+   difference from `rho_cgs`, `T`, `X_n`, and `X_p`. Return helper errors before
+   output writes and normalize only accepted endpoint roundoff for all later
+   uses of the fractions.
+4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate the paired shifted beta
+   emission and absorption moments algebraically when both free populations
+   are positive. Exactly-one-zero populations use the analytic zero limit of
+   the charged-current products without forming `q`; both-zero populations
+   retain neutral moments.
+5. Run the remaining source-owned generated formula blocks for emissivity,
+   opacity-like denominators, Fermi-Dirac factors, and optical-depth
+   suppression. Calls through `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid
+   Fermi-Dirac keys.
+6. Use metric/lapse/Lorentz input in the luminosity scaling:
    `alpha`, the six spatial metric components, and `W` enter the
    `NRPyLeakage_units_cgs_to_geom_Q` luminosity prefactor before writeback;
    `NRPyLeakage_units_geom_to_cgs_D` is the earlier density conversion.
-6. Write `lum->nue`, `lum->anue`, and `lum->nux`.
+7. Write `lum->nue`, `lum->anue`, and `lum->nux`.
 
 Finite handling: local `EnsureFinite` wraps selected generated subexpressions
-with `isfinite` fallback to a small positive value; there is no final output
-array scrub in this file.
+with `robust_isfinite` fallback to a small positive value. After writeback,
+`nrpyl_sanitize_luminosities` maps any non-finite luminosity output to the
+neutral zero-emission value. A replacement returns
+`ghl_error_nrpyleakage_nonfinite_output` with the finite fallback retained.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` directly
 checks selected Fermi-Dirac branches, generates luminosity fixtures, recomputes
 `NRPyLeakage_compute_neutrino_luminosities`, and reads `nue`, `anue`, and `nux`
-fixtures. Its three `ghl_pert_test_fail` return values are discarded, so
-numerical luminosity mismatches do not currently fail the test.
+fixtures. It consumes all three local `luminosity_pert_test_fail` return values
+and aborts with the row index on the first mismatch. Its generator draws each
+base state once and evaluates it unperturbed and perturbed before drawing the
+next row, so the two files are matched row by row.
 
 ## `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`
 
@@ -122,26 +183,39 @@ Flow:
 2. Query tabulated EOS composition and chemical potentials with
    `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; return any EOS
    error directly.
-3. Convert `rho` to cgs units, then build proton/neutron fraction inputs.
-4. Run source-owned generated formula blocks for rate terms, opacity terms,
-   optical-depth limited source terms, and Fermi-Dirac factors. Calls through
-   `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid Fermi-Dirac keys if they ever
-   occur.
-5. Write `*R_source` and `*Q_source`.
-6. Write all six opacity entries: `kappa->nue[0..1]`,
+3. Convert `rho` to cgs units, then derive scattering and transition
+   populations and the kinetic degeneracy difference from `rho_cgs`, `T`,
+   `X_n`, and `X_p`. Return helper errors before output writes and normalize
+   only accepted endpoint roundoff for all later fraction uses.
+4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate paired shifted beta
+   emission and absorption moments algebraically when both free populations
+   are positive. Exactly-one-zero populations use the analytic zero limit of
+   the charged-current products without forming `q`; both-zero populations
+   retain neutral moments.
+5. Run the remaining source-owned generated formula blocks for rate terms,
+   opacity terms, optical-depth limited source terms, and Fermi-Dirac factors.
+   Calls through `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid keys.
+6. Write `*R_source` and `*Q_source`.
+7. Write all six opacity entries: `kappa->nue[0..1]`,
    `kappa->anue[0..1]`, and `kappa->nux[0..1]`.
 
 Finite handling: this file's `EnsureFinite` uses `robust_isfinite` from
-`GRHayL/include/ghl_nrpyleakage.h` and replaces non-finite intermediate terms
-with a small positive value. There is no final output array scrub after
-`R_source`, `Q_source`, or opacity writes.
+`GRHayL/include/ghl_nrpyleakage.h` and replaces selected non-finite intermediate
+terms with a small positive value. After writeback, `nrpyl_sanitize_sources`
+maps either non-finite signed source to neutral zero, while
+`nrpyl_sanitize_opacities` maps non-finite opacities to the established small
+positive cgs inverse-length floor converted to the public geometrized unit.
+Any replacement returns `ghl_error_nrpyleakage_nonfinite_output` after both
+output groups have been sanitized.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` calls
 this routine in its RHS, divides `R_source` and `Q_source` by `rho`, advances
 `Y_e` and `eps` with RK4, and reads fixture replay. Its comparison helper also
-discards every `ghl_pert_test_fail` result, so the test supplies execution and
-file-shape evidence, not an effective numerical assertion. Opacity writes get
-execution coverage there through the same call but are not compared.
+consumes every `ghl_pert_test_fail` result and aborts with the evolution time
+on the first mismatch. Every EOS temperature inversion and the generator's
+initial energy lookup are checked with `ghl_abort_if_error`, so a failed lookup
+cannot feed a later right-hand side. Opacity writes get execution coverage
+there through the same call but are not compared.
 
 ## `NRPyLeakage_compute_neutrino_opacities.c`
 
@@ -153,23 +227,35 @@ Flow:
 2. Query tabulated EOS composition and chemical potentials with
    `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T`; return any EOS
    error directly.
-3. Convert `rho` to cgs units through `NRPyLeakage_units_geom_to_cgs_D`.
-4. Build the proton/neutron fraction inputs and run source-owned generated
-   formula blocks for absorption/scattering opacity entries. These generated
-   blocks call `NRPYLEAKAGE_FD_OR_RETURN`, so Fermi-Dirac errors propagate.
-5. Write all six opacity entries: `kappa->nue[0..1]`,
+3. Convert `rho` to cgs units through `NRPyLeakage_units_geom_to_cgs_D`, then
+   derive scattering and transition populations and the kinetic degeneracy
+   difference from `rho_cgs`, `T`, `X_n`, and `X_p`. Return helper errors before
+   output writes and normalize only accepted endpoint roundoff for all later
+   fraction uses.
+4. Form `q = muhat - T*(eta_n-eta_p)` and evaluate paired shifted beta
+   absorption moments algebraically when both free populations are positive.
+   Exactly-one-zero populations use the analytic zero limit of the charged-
+   current products without forming `q`; both-zero populations retain neutral
+   moments.
+5. Run the remaining source-owned generated formula blocks for
+   absorption/scattering opacity entries. Calls through
+   `NRPYLEAKAGE_FD_OR_RETURN` propagate invalid keys.
+6. Write all six opacity entries: `kappa->nue[0..1]`,
    `kappa->anue[0..1]`, and `kappa->nux[0..1]`.
-6. Scrub each written opacity entry with `isfinite`; any non-finite final
-   value is reset to a small positive value.
+7. Pass all written opacity entries through `nrpyl_sanitize_opacities`; any
+   non-finite final value is reset to a small positive value.
 
 Finite handling: local `EnsureFinite` handles selected generated
-subexpressions, then the final loop handles non-finite output entries.
+subexpressions, then `nrpyl_sanitize_opacities` handles non-finite output
+entries with the same converted cgs floor used by generated opacity terms. A
+replacement returns `ghl_error_nrpyleakage_nonfinite_output`.
 
 Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 directly calls this routine for interior and exterior states, stores the six
 opacity fields on the grid, and reads opacity/depth fixtures. Its comparison
-return values are discarded, so those fixture values cannot currently fail the
-test. Source-term tests do not cover this implementation: the combined
+return values are consumed, and the serial validation loop aborts with the grid
+coordinates on the first mismatch. Source-term tests do not cover this
+implementation: the combined
 source-term routine has its own opacity write path.
 
 ## `NRPyLeakage_Fermi_Dirac_integrals.c`
@@ -190,9 +276,9 @@ Generated formula role: each branch contains source-owned approximation
 expressions for the selected key; do not duplicate those expressions into KB
 pages.
 
-Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` checks valid
-keys `0`, `1`, and `2` in the high-`z` branch and keys `0` and `1` in the
-low-`z` branch. Keys `3` through `5` lack direct valid-result assertions.
+Nearest tests: `Unit_Tests/unit_test_nrpyleakage_luminosities.c` checks selected
+valid keys. `Unit_Tests/unit_test_nrpyleakage_physics.c` checks every valid key
+from `0` through `5` in both approximation branches.
 `Unit_Tests/unit_test_code_error.c`
 directly checks invalid-key behavior for both `z < 1e-3` and `z > 1e-3`, and
 maps those cases to `ghl_error_invalid_fermi_dirac_integral_key`.
@@ -238,11 +324,9 @@ Nearest tests: `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`
 directly computes opacities, iterates optical-depth updates with flat metric
 stencils, calls `NRPyLeakage_optical_depths_PathOfLeastResistance`, writes all
 six output depth fields back to grid storage, and reads fixture replay. That
-caller passes each neighbor pair in plus-then-minus order, opposite the public
-minus-then-plus signature. Its flat metric and minimum over symmetric
-directions hide this reversal, so current test evidence does not verify
-directional argument mapping for unequal plus/minus metrics. It also discards
-all comparison results, as noted above.
+caller passes each neighbor pair in the public minus-then-plus order. Its flat
+metric makes the minimum invariant under a paired swap, so this test still does
+not verify directional argument mapping for unequal plus/minus face metrics.
 
 ## Ground Truth References
 

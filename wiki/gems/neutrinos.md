@@ -10,26 +10,34 @@ Doxygen source.
 ## Read Order
 
 1. [Physics And EOS Contract](neutrinos/physics-and-eos-contract.md) for
-   species, chemical potentials, free-nucleon fractions, units, and the
+   species, chemical potentials, density-derived free-nucleon blocking,
+   producer energy conventions, physical qualification limits, units, and the
    number and energy source-term conventions.
-2. [Generator Provenance](neutrinos/generator-provenance.md) for the original
+2. [Nucleon Blocking And EOS Conventions](neutrinos/nucleon-blocking-and-eos-conventions.md)
+   for the installed approximation, detailed-balance pairing, performance
+   motivation, qualification evidence, and dense-matter limitation.
+3. [Generator Provenance](neutrinos/generator-provenance.md) for the original
    Python notebooks, symbolic common-subexpression temporaries, and the
    boundary between ancestral generators and current checked-in C.
-3. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
+4. [API And Data](neutrinos/api-and-data.md) for radiation structs, public
    `NRPyLeakage_*` declarations, constants ownership, errors, and HDF5/EOS
    dependency.
-4. [CompOSE EOS Adapter How-To](neutrinos/compose-eos-adapter-how-to.md) for
+5. [CompOSE EOS Adapter How-To](neutrinos/compose-eos-adapter-how-to.md) for
    adapting CompOSE state, composition, and chemical-potential outputs to the
    NRPyLeakage EOS callback and validating that boundary.
-5. [Implementation Flow](neutrinos/implementation-flow.md) for the
+6. [Implementation Flow](neutrinos/implementation-flow.md) for the
    `GRHayL/Neutrinos/NRPyLeakage/` source set, its writeback paths, and
    the minimal direct-compilation boundary.
-6. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
+7. [Tests And Fixtures](neutrinos/tests-and-fixtures.md) for unit tests,
    fixture pairs, EOS table setup, and CI downloads.
 
 ## Ground Truth
 
 - Source: `GRHayL/Neutrinos/NRPyLeakage/`
+- Private blocking evaluator:
+  `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h`
+- Installed blocking model and qualification:
+  [Nucleon Blocking And EOS Conventions](neutrinos/nucleon-blocking-and-eos-conventions.md)
 - Public radiation structs: `GRHayL/include/ghl_radiation.h`
 - Public leakage declarations and constants: `GRHayL/include/ghl_nrpyleakage.h`
 - Error codes and EOS parameter types: `GRHayL/include/ghl.h`
@@ -73,21 +81,37 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
 - EOS-dependent routines expect initialized HDF5-backed tabulated EOS state,
   geometric density, EOS-compatible positive temperature, and valid output
   pointers. They return before writeback on HDF5, EOS, or generated Fermi
-  errors.
+  errors. They also return `ghl_error_nrpyleakage_blocking` before writeback
+  when density-derived nucleon blocking receives invalid state or cannot
+  produce finite, bounded factors.
+  If final output sanitization replaces a nonfinite value, it retains finite
+  fallback outputs and returns `ghl_error_nrpyleakage_nonfinite_output`.
+- All three EOS-dependent routines obtain blocking from `rho`, `T`, `Xn`, and
+  `Xp`. This avoids using producer-dependent absolute `mu_n` and `mu_p` as
+  kinetic occupations. They combine the density-derived kinetic degeneracy
+  difference with `muhat` to form one reaction-energy shift, then apply it to
+  paired algebraic charged-current emission and absorption moments. The
+  remaining qualification boundary is the accuracy of that grey approximation,
+  recorded in the blocking-conventions page.
 - Optical-depth update is a `void` six-neighbor stencil call with no validation
   or failure channel. Metric stencil order is minus/center/plus.
 - Every implementation file matches its manifest and header declarations.
 - The aggregate runner invokes each HDF5 test binary, and every compiler
   workflow family configures those commands. Command presence is not a
   historical execution result. When executed, their main fixture comparisons
-  discard `ghl_pert_test_fail` results, so a completed run establishes setup,
-  execution, and fixture reads but not successful numerical replay.
+  consume `ghl_pert_test_fail` results and abort on the first mismatch, so a
+  completed run establishes numerical agreement with the fixtures actually
+  supplied.
 
 ## Scope Notes
 
 - Neutrinos KB pages live under `wiki/` only; Doxygen source under `docs/**`
   is a separate authority (currently no dedicated Neutrinos page exists there).
 - Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
+- Keep the shared nucleon-blocking evaluator source-private. Its algebraic
+  density inversion is shared by the three EOS-dependent routines to avoid
+  duplicated corrections and the runtime cost of per-call quadrature or root
+  solves; `make.code.defn` tracks it through `#! INCS`.
 - The external notebooks are provenance, not the authority for current GRHayL
   signatures or behavior. Preserve the durable derivation and interface facts
   in child pages so routine KB use does not depend on that repository remaining

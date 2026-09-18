@@ -97,5 +97,12 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
                    "Neural-network Con2Prim model has an unsupported transform or output kind.\n");
     GHL_CASE_ERROR(ghl_error_nn_c2p_invalid_number,
                    "Neural-network Con2Prim model contains non-finite or invalid numeric data.\n");
+    GHL_CASE_ERROR(
+          ghl_error_nrpyleakage_blocking,
+          "NRPyLeakage nucleon-blocking evaluator received invalid data or failed "
+          "numerically.\n");
+    GHL_CASE_ERROR(
+          ghl_error_nrpyleakage_nonfinite_output,
+          "NRPyLeakage replaced one or more non-finite outputs.\n");
   }
 }

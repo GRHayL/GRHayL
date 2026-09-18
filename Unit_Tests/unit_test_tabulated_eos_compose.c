@@ -451,17 +451,17 @@ static void check_downstream_consumers(
     opacities.nue[0], opacities.nue[1], opacities.anue[0], opacities.anue[1],
     opacities.nux[0], opacities.nux[1], R_source,          Q_source,
   };
-  // Fixed regression goldens for the two qualified table dimensions.
-  // The tolerance covers the production TEH fits.
+  // Implementation-derived regression goldens, not independent physics
+  // oracles. The analytic-table values run in CI; SRO-141 remains manual.
   static const double analytic_expected[8] = {
-    1.29265593927696647e-03,  2.06728788589579618e-03,  2.10755462947867636e-02,
-    3.43634428155397380e-02,  1.27577464301964489e-03,  2.05212276868065074e-03,
-    -1.28383988566382909e-17, -5.54094954548167941e-21,
+    1.93200871426378118e-03,  3.08942651809676529e-03,  1.97229910836136616e-03,
+    3.30072726097116118e-03,  1.90653729388707942e-03,  3.06660657858069891e-03,
+    -3.67965130614588038e-12, -1.67438728714388913e-15,
   };
   static const double sro141_expected[8] = {
-    2.58057523839381463e-05,  4.16887059307055122e-05,  6.22605413998306228e-05,
-    9.86193518381971975e-05,  2.58186010234441992e-05,  4.15300141804711669e-05,
-    -8.13615027117866091e-19, -6.05367209040713332e-22,
+    5.08945057657657406e-06, 7.38836211787472581e-06,  2.48089014090686826e-06,
+    3.92014919629386464e-06, 2.38320218170118920e-06,  3.83330738503015120e-06,
+    6.98121278719261798e-21, -4.37565306859165187e-23,
   };
   const double *expected = NULL;
   if(eos->N_rho == 5 && eos->N_T == 4 && eos->N_Ye == 3) {
