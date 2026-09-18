@@ -1,6 +1,9 @@
 #include <assert.h>
 #include "ghl_unit_tests.h"
 
+static int observed_nn_retries;
+static int observed_backup_successes;
+
 void generate_test_data(
     const ghl_parameters *restrict params,
     const ghl_eos_parameters *restrict eos ) {
@@ -186,6 +189,7 @@ void run_unit_test(
   ghl_info("Beginning unit test for %s\n", routine);
 
   int total_main_routine_successes = 0;
+  bool sticky_speed_limited_checked = false;
   for(int vars_key=0;vars_key<=1;vars_key++) {
 
     const char *vars_string = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
@@ -224,6 +228,7 @@ void run_unit_test(
         ghl_primitive_quantities prims;
         if( fread(&prims, sizeof(ghl_primitive_quantities), 1, fp_unpert) != 1 )
           ghl_error("Failed to read input primitives from file\n");
+        const ghl_primitive_quantities initial_prims = prims;
 
         // Compute conserved variables and Tmunu
         ghl_conservative_quantities cons;
@@ -242,11 +247,45 @@ void run_unit_test(
           ghl_warn("Con2Prim failed for routine %s\n", routine);
           ghl_abort_if_error(err);
         }
+        if(diagnostics.which_routine == params->main_routine
+              && !diagnostics.speed_limited && !sticky_speed_limited_checked) {
+          ghl_primitive_quantities sticky_prims = initial_prims;
+          ghl_con2prim_diagnostics sticky_diagnostics;
+          ghl_initialize_diagnostics(&sticky_diagnostics);
+          sticky_diagnostics.speed_limited = true;
+          err = ghl_con2prim_tabulated_multi_method(
+                params, eos, &metric_adm, &metric_aux, &cons_undens,
+                &sticky_prims, &sticky_diagnostics);
+          if(err != ghl_success
+                || sticky_diagnostics.which_routine != params->main_routine
+                || !sticky_diagnostics.speed_limited) {
+            ghl_error("%s did not preserve an incoming speed-limit diagnostic\n", routine);
+          }
+          sticky_speed_limited_checked = true;
+        }
         if(diagnostics.which_routine == params->main_routine) {
           main_routine_successes++;
+          if(diagnostics.backup[0] || diagnostics.backup[1] || diagnostics.backup[2]) {
+            ghl_error("main-routine success carried a backup diagnostic\n");
+          }
         }
         else {
           backup_successes++;
+          observed_backup_successes++;
+          if(params->backup_routine[0] == ghl_con2prim_id_None
+                || diagnostics.which_routine != params->backup_routine[0]
+                || !diagnostics.backup[0]) {
+            ghl_error("backup success did not identify its attempted backup\n");
+          }
+        }
+        if(diagnostics.backup[1] || diagnostics.backup[2]) {
+          ghl_error("unused tabulated backup slot was marked attempted\n");
+        }
+        if(diagnostics.nn_guess_used) {
+          observed_nn_retries++;
+          if(!eos->enable_neural_net_c2p) {
+            ghl_error("NN retry reported while neural-network guesses were disabled\n");
+          }
         }
 
         // Read unperturbed and perturbed results from file
@@ -310,6 +349,9 @@ void run_unit_test(
 
   if(total_main_routine_successes == 0) {
     ghl_error("%s was always replaced by a backup\n", routine);
+  }
+  if(!sticky_speed_limited_checked) {
+    ghl_error("%s had no successful non-limiting case for sticky diagnostics\n", routine);
   }
 }
 
@@ -381,6 +423,8 @@ int main(int argc, char **argv) {
 
   if( test_key ) {
     for(int nn_guess_enabled = 0; nn_guess_enabled <= 1; nn_guess_enabled++) {
+      observed_nn_retries = 0;
+      observed_backup_successes = 0;
       eos.enable_neural_net_c2p = nn_guess_enabled;
       params.backup_routine[0] = ghl_con2prim_id_None;
 
@@ -395,6 +439,12 @@ int main(int argc, char **argv) {
       params.main_routine = ghl_con2prim_id_Newman1D;             run_unit_test(&params, &eos);
       params.main_routine = ghl_con2prim_id_Palenzuela1D_entropy; run_unit_test(&params, &eos);
       params.main_routine = ghl_con2prim_id_Noble2D;              run_unit_test(&params, &eos);
+      if(nn_guess_enabled && observed_nn_retries == 0) {
+        ghl_error("NN-enabled tabulated suite never exercised an NN retry\n");
+      }
+      if(observed_backup_successes == 0) {
+        ghl_error("tabulated suite never exercised a successful backup\n");
+      }
     }
     ghl_info("All tests succeeded\n");
   }

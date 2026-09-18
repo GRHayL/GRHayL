@@ -44,8 +44,10 @@ tests; repo-local source remains authority.
    slots, or immediately at the first `ghl_con2prim_id_None`. For each backup
    actually tried, it sets `diagnostics->backup[n] = true`, resets `*prims` to
    the saved primitive guess, and calls the same selector layer again. The
-   successful solver updates `diagnostics->which_routine`; solver bodies also
-   update `diagnostics->n_iter` where applicable.
+   successful solver updates `diagnostics->which_routine` and its applicable
+   `diagnostics->n_iter`. Attempt flags are sticky over the logical recovery:
+   `speed_limited`, `backup[]`, and `nn_guess_used` record whether the event
+   occurred in any attempt, including failed attempts.
    Source: `GRHayL/Con2Prim/con2prim_multi_method.c`;
    tests: `Unit_Tests/unit_test_hybrid_failure.c`,
    `Unit_Tests/unit_test_con2prim_tabulated.c`.
@@ -97,10 +99,12 @@ Tests: `Unit_Tests/unit_test_c2p_nn_guess.c`,
   Source: `GRHayL/include/ghl.h`,
   `GRHayL/GRHayL_Core/initialize_params.c`,
   `GRHayL/Con2Prim/con2prim_multi_method.c`.
-- Diagnostics lifecycle is split. Callers initialize diagnostics; conservative
-  limits record `tau_fix` and `Stilde_fix`; multi-method records backup slots;
-  successful solver implementations set `which_routine` and often `n_iter`;
-  post-limits write `speed_limited`.
+- Diagnostics lifecycle is split. Callers initialize diagnostics once per
+  logical recovery; conservative limits accumulate `tau_fix` and `Stilde_fix`;
+  multi-method records attempted backup slots and NN retry; solver and
+  post-limit speed limiting accumulate `speed_limited`. The successful solver
+  owns `which_routine` and its applicable `n_iter`; when no solver succeeds,
+  `which_routine` remains `None` and `n_iter` is unspecified.
   Source: `GRHayL/include/ghl_con2prim.h`,
   `GRHayL/Con2Prim/initialize_diagnostics.c`,
   `GRHayL/Con2Prim/apply_conservative_limits.c`,
@@ -112,7 +116,8 @@ Tests: `Unit_Tests/unit_test_c2p_nn_guess.c`,
 
 When built with `GHL_DISABLE_HDF5`, tabulated select and tabulated
 multi-method return `ghl_error_used_disabled_hdf5` before solver dispatch or
-backup behavior. The tabulated branch in
+backup behavior. The five public direct tabulated solver symbols remain
+link-visible as non-mutating stubs returning the same error. The tabulated branch in
 `ghl_enforce_primitive_limits_and_compute_u0` returns the same error. The
 code-error tests skip HDF5-only cases in no-HDF5 builds.
 

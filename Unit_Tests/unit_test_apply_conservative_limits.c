@@ -144,6 +144,12 @@ int main(int argc, char **argv) {
     // Define the various GRHayL structs for the unit tests
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
+    if(diagnostics.tau_fix || diagnostics.Stilde_fix || diagnostics.speed_limited
+          || diagnostics.backup[0] || diagnostics.backup[1] || diagnostics.backup[2]
+          || diagnostics.nn_guess_used || diagnostics.n_iter != 0
+          || diagnostics.which_routine != ghl_con2prim_id_None) {
+      ghl_error("ghl_initialize_diagnostics did not clear every field\n");
+    }
     ghl_metric_quantities metric_adm;
     ghl_primitive_quantities prims;
     ghl_conservative_quantities cons;
@@ -170,6 +176,7 @@ int main(int argc, char **argv) {
           rho_star[i], tau[i],
           S_x[i], S_y[i], S_z[i],
           poison, poison, &cons);
+    const ghl_conservative_quantities cons_before = cons;
 
     //This applies inequality fixes on the conservatives
     if(i == arraylength-1 || i == arraylength-2)
@@ -177,6 +184,15 @@ int main(int argc, char **argv) {
     ghl_apply_conservative_limits(&params, &eos, &metric_adm, &prims, &cons, &diagnostics);
     if(i == arraylength-1 || i == arraylength-2)
       params.psi6threshold = Psi6threshold;
+
+    const bool tau_changed = cons.tau != cons_before.tau;
+    const bool momentum_changed = cons.SD[0] != cons_before.SD[0]
+                               || cons.SD[1] != cons_before.SD[1]
+                               || cons.SD[2] != cons_before.SD[2];
+    if(diagnostics.tau_fix != tau_changed
+          || diagnostics.Stilde_fix != momentum_changed) {
+      ghl_error("conservative-limit diagnostics disagree with actual changes at point %d\n", i);
+    }
 
     ghl_conservative_quantities cons_trusted, cons_pert;
     ghl_initialize_conservatives(
@@ -191,6 +207,28 @@ int main(int argc, char **argv) {
 
 
     ghl_pert_test_fail_conservatives(params.evolve_entropy, &cons_trusted, &cons, &cons_pert);
+  }
+
+  ghl_metric_quantities sticky_metric;
+  ghl_initialize_metric(
+        1.0, 0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &sticky_metric);
+  ghl_primitive_quantities sticky_prims;
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &sticky_prims);
+  ghl_conservative_quantities sticky_cons;
+  ghl_initialize_conservatives(
+        1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, &sticky_cons);
+  ghl_con2prim_diagnostics sticky_diagnostics;
+  ghl_initialize_diagnostics(&sticky_diagnostics);
+  sticky_diagnostics.tau_fix = true;
+  sticky_diagnostics.Stilde_fix = true;
+  ghl_apply_conservative_limits(
+        &params, &eos, &sticky_metric, &sticky_prims, &sticky_cons,
+        &sticky_diagnostics);
+  if(!sticky_diagnostics.tau_fix || !sticky_diagnostics.Stilde_fix) {
+    ghl_error("conservative-limit diagnostics did not preserve incoming true values\n");
   }
   ghl_info("ghl_apply_conservative_limits function test has passed!\n");
   free(lapse);

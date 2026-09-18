@@ -71,8 +71,9 @@ source, headers, tests, and common edit routes before wider search.
   downstream configuration. Use [recovery flow](con2prim/recovery-flow.md) for
   diagnostics, dispatch, backups, and densitized/undensitized boundaries.
   `Noble1D_entropy2` is supported for Simple and Hybrid EOS. The retained
-  Cerda-Duran file is archival, unbuilt, and unsupported. Tabulated Noble2D is
-  supported but missing from its Doxygen table.
+  Cerda-Duran file is archival, unbuilt, unsupported, and excluded from
+  generated API documentation. Tabulated Noble2D is supported and listed in
+  its Doxygen table.
 
 ## EOS
 

@@ -98,7 +98,7 @@ ghl_error_codes_t ghl_hybrid_Noble2D(
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  diagnostics->speed_limited = ghl_finalize_Noble(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
+  diagnostics->speed_limited |= ghl_finalize_Noble(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
   if(prims->press <= 0.0) {
     return ghl_error_neg_pressure;
   }

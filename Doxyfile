@@ -30,7 +30,8 @@ PROJECT_NAME           = "GRHayL"
 CITE_BIB_FILES         = docs/raw/ref.bib
 INPUT                  = GRHayL docs/raw
 RECURSIVE              = YES
-EXCLUDE                = GRHayL/include/ghl_unit_tests.h
+EXCLUDE                = GRHayL/include/ghl_unit_tests.h \
+                         GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc
 EXCLUDE_PATTERNS       = *.py
 USE_MDFILE_AS_MAINPAGE = docs/raw/mainpage.md
 

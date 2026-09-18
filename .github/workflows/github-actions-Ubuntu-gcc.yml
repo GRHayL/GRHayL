@@ -2,15 +2,92 @@ name: Ubuntu-gcc
 
 on:
   push:
-    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE']
     branches: main
   pull_request:
-    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE']
   # Run workflow on the 1st and 15th of every month at 7:33 AM PST (UTC-8)
   schedule:
     - cron: '33 15 1,15 * *'
 
 jobs:
+  con2prim-contracts:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'gcc'
+      - name: Compile GRHayL
+        uses: ./.github/actions/compile_GRHayL
+        with:
+          compiler: 'gcc'
+      - name: Check strict C99 public header
+        run: |
+          printf '#include "ghl_con2prim.h"\nint main(void) { return 0; }\n' |
+            gcc -std=c99 -pedantic-errors -I./GRHayL/include -x c - -c \
+              -o "$RUNNER_TEMP/ghl_con2prim_header.o"
+      - name: Replay Con2Prim fixture generator
+        run: |
+          git clone --depth=1 https://github.com/GRHayL/TestData.git \
+            "$RUNNER_TEMP/grhayl-testdata"
+          generated="$RUNNER_TEMP/con2prim-generated"
+          mkdir "$generated"
+          cd "$generated"
+          LD_LIBRARY_PATH="$GITHUB_WORKSPACE/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+            "$GITHUB_WORKSPACE/test/data_gen/unit_test_data_con2prim_multi_method_hybrid"
+          for fixture in \
+            metric_Bfield_initial_data.bin \
+            apply_conservative_limits_input.bin \
+            apply_conservative_limits_output.bin \
+            apply_conservative_limits_output_pert.bin \
+            con2prim_multi_method_hybrid_input.bin \
+            con2prim_multi_method_hybrid_output.bin \
+            con2prim_multi_method_hybrid_output_pert.bin \
+            enforce_primitive_limits_and_compute_u0_input.bin \
+            enforce_primitive_limits_and_compute_u0_output.bin \
+            enforce_primitive_limits_and_compute_u0_output_pert.bin \
+            compute_conservs_and_Tmunu_input.bin \
+            compute_conservs_and_Tmunu_output.bin \
+            compute_conservs_and_Tmunu_output_pert.bin; do
+            cmp "$fixture" "$RUNNER_TEMP/grhayl-testdata/con2prim/$fixture"
+          done
+      - name: Check GRHayLib source links
+        run: |
+          for path in Atmosphere Con2Prim EOS Flux_Source GRHayL_Core \
+                      Induction Neutrinos Reconstruction include; do
+            test -L "implementations/GRHayLib/src/$path"
+            test -e "implementations/GRHayLib/src/$path"
+          done
+      - name: Build and test without HDF5
+        run: |
+          make realclean
+          CC=gcc ./configure --disable-hdf5 --prefix="$RUNNER_TEMP/grhayl-nohdf" \
+            --builddir=build-nohdf --cflags='-ftest-coverage -fprofile-arcs'
+          make tests install
+          LD_LIBRARY_PATH="$PWD/build-nohdf/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+            ./test/unit_test_c2p_nn_guess
+          for symbol in \
+            ghl_tabulated_Noble2D \
+            ghl_tabulated_Palenzuela1D_energy \
+            ghl_tabulated_Palenzuela1D_entropy \
+            ghl_tabulated_Newman1D_energy \
+            ghl_tabulated_Newman1D_entropy \
+            ghl_calculate_HLLE_fluxes_dirn0_tabulated \
+            ghl_calculate_HLLE_fluxes_dirn1_tabulated \
+            ghl_calculate_HLLE_fluxes_dirn2_tabulated \
+            ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy \
+            ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy \
+            ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy; do
+            nm -D --defined-only build-nohdf/lib/libghl.so | grep -w "$symbol"
+          done
+      - name: Generate no-HDF5 coverage report
+        uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'gcc'
+
   ET-Legacy:
     strategy:
       fail-fast: false

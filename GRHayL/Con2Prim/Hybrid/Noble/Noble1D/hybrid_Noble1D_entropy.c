@@ -137,7 +137,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
     return ghl_error_neg_rho;
   }
 
-  diagnostics->speed_limited = ghl_finalize_Noble_entropy(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, W, prims);
+  diagnostics->speed_limited |= ghl_finalize_Noble_entropy(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, W, prims);
   if(prims->press <= 0.0) {
     return ghl_error_neg_pressure;
   }

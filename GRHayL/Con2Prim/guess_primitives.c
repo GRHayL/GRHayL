@@ -88,10 +88,13 @@ static void ghl_guess_primitives_tabulated(
       ghl_primitive_quantities *restrict prims) {
 
   ghl_tabulated_primitive_guess_aux aux = { 0 };
-  ghl_tabulated_compute_primitive_guess_auxiliaries(metric_adm, cons_undens, prims, &aux);
+  double x = NAN;
+  if(isfinite(cons_undens->rho) && cons_undens->rho > 0.0) {
+    ghl_tabulated_compute_primitive_guess_auxiliaries(metric_adm, cons_undens, prims, &aux);
 
-  // Compute the lower bound of the x variable, Eq. (35) of 1712.07538
-  const double x = 1.0 + aux.q - aux.s;
+    // Compute the lower bound of the x variable, Eq. (35) of 1712.07538
+    x = 1.0 + aux.q - aux.s;
+  }
 
   // Complete the primitive guess using Eqs. (24), (42), (43), and (44) of
   // 1712.07538.

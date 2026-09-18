@@ -29,9 +29,9 @@ readers to implementation sources and Cactus metadata; they do not replace
 | [Verification and drift](grhaylib/verification-and-drift.md) | Manual downstream verification and implementation drift checks. | [`README`](../../implementations/GRHayLib/README), [`doc/documentation.tex`](../../implementations/GRHayLib/doc/documentation.tex), repo CI/test maps |
 
 Current boundary: source registry and aggregate-header names have static parity
-with upstream files, but copied thorn module/include layout is absent locally.
-No Cactus build or runtime result is established by this repository's
-ET_Legacy/upstream tests.
+with upstream files, and nine tracked thorn `src/include` and module symlinks
+resolve to those upstream paths. No Cactus build or runtime result is
+established by this repository's ET_Legacy/upstream tests.
 
 ## Source Notes
 

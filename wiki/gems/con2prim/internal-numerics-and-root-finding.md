@@ -186,9 +186,10 @@ For this internal page, only source-proven writes are routed:
 with a prominent archival header. It is retained only to preserve potentially
 useful numerical work. It uses identifiers incompatible with the current API;
 [`GRHayL/Con2Prim/Tabulated/make.code.defn`](../../../GRHayL/Con2Prim/Tabulated/make.code.defn)
-intentionally builds only the `Newman1D`, `Noble2D`, and `Palenzuela1D`
-subdirectories, and
-the public selector in
+intentionally builds the shared tabulated guess helper, the
+`neural_network_guess` support, and the `Newman1D`, `Noble2D`, and
+`Palenzuela1D` subdirectories, but not the archival file. The
+public selector in
 [`GRHayL/Con2Prim/con2prim_multi_method.c`](../../../GRHayL/Con2Prim/con2prim_multi_method.c)
 has no Cerda-Duran case. There is no public declaration, method ID, active
 GRHayLib keyword, or test. Treat it as unbuilt, unsupported archival source.

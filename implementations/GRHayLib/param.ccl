@@ -6,7 +6,7 @@ restricted:
 # Speed limit: set maximum Lorentz factor
 CCTK_REAL max_Lorentz_factor "Maximum Lorentz factor."
 {
- 1:* :: "Finite and >= 1, though you'll likely have troubles far above 10."
+ 1:* :: ">= 1; GRHayLib_paramcheck separately requires a finite value."
 } 10.0
 
 # generalized Lorenz gauge damping factor

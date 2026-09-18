@@ -5,6 +5,7 @@
 #endif
 
 #include <math.h>
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -129,6 +130,7 @@ static ghl_c2p_nn_model valid_stack_model(void) {
 }
 
 static void test_validate_model(void) {
+  CHECK(GHL_NN_C2P_API_VERSION == 4u, "unexpected NN C2P API version");
   ghl_c2p_nn_model model = valid_stack_model();
   CHECK_ERROR(ghl_c2p_nn_validate_model(&model), ghl_success);
   CHECK_ERROR(ghl_c2p_nn_validate_model(NULL), ghl_error_nn_c2p_model_is_null);
@@ -140,6 +142,16 @@ static void test_validate_model(void) {
 
   model = valid_stack_model();
   model.q_idx = model.in_dim;
+  CHECK_ERROR(ghl_c2p_nn_validate_model(&model),
+              ghl_error_nn_c2p_invalid_input_index);
+
+  model = valid_stack_model();
+  model.q_idx = 1;
+  CHECK_ERROR(ghl_c2p_nn_validate_model(&model),
+              ghl_error_nn_c2p_invalid_input_index);
+
+  model = valid_stack_model();
+  model.s_idx = 0;
   CHECK_ERROR(ghl_c2p_nn_validate_model(&model),
               ghl_error_nn_c2p_invalid_input_index);
 
@@ -206,7 +218,214 @@ static void test_guess_model(void) {
 
   guess = ghl_c2p_nn_guess(NULL, input);
   CHECK(guess.x == 0.0f, "NULL model fallback failed");
+
+  model = valid_stack_model();
+  input.q = FLT_MAX;
+  input.s = 0.0f;
+  input.r = 0.0f;
+  input.t = 0.0f;
+  guess = ghl_c2p_nn_guess(&model, input);
+  CHECK(isfinite(guess.x) && guess.x == 0.0f,
+        "overflowing midpoint did not return the finite sentinel");
 }
+
+static void fake_enforce_bounds(
+      const ghl_eos_parameters *restrict eos,
+      double *restrict rho,
+      double *restrict Y_e,
+      double *restrict eps) {
+  (void)eos;
+  (void)rho;
+  (void)Y_e;
+  (void)eps;
+}
+
+static ghl_error_codes_t fake_compute_P_S_T(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict press,
+      double *restrict entropy,
+      double *restrict temperature) {
+  (void)eos;
+  *press = rho * (1.0 + eps);
+  *entropy = Y_e + eps;
+  *temperature = 1.0 + eps;
+  return ghl_success;
+}
+
+static ghl_error_codes_t fake_compute_P_S_T_nonfinite(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Y_e,
+      const double eps,
+      double *restrict press,
+      double *restrict entropy,
+      double *restrict temperature) {
+  (void)eos;
+  (void)rho;
+  (void)Y_e;
+  (void)eps;
+  *press = NAN;
+  *entropy = 0.0;
+  *temperature = 1.0;
+  return ghl_success;
+}
+
+static void check_atmosphere_guess(
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric,
+      const double BU[3],
+      const ghl_primitive_quantities *restrict prims) {
+  CHECK(prims->rho == eos->rho_atm && prims->press == eos->press_atm
+        && prims->eps == eos->eps_atm && prims->entropy == eos->entropy_atm
+        && prims->Y_e == eos->Y_e_atm && prims->temperature == eos->T_atm,
+        "tabulated guess did not return atmosphere thermodynamics");
+  CHECK(prims->vU[0] == -metric->betaU[0]
+        && prims->vU[1] == -metric->betaU[1]
+        && prims->vU[2] == -metric->betaU[2]
+        && prims->u0 == metric->lapseinv,
+        "tabulated guess did not return atmosphere velocity");
+  CHECK(prims->BU[0] == BU[0] && prims->BU[1] == BU[1] && prims->BU[2] == BU[2],
+        "tabulated guess did not preserve magnetic fields");
+}
+
+static void test_public_primitive_guess_helper(void) {
+  const ghl_con2prim_id_t backups[3] = {
+    ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None
+  };
+  ghl_parameters params;
+  ghl_initialize_params(
+        ghl_con2prim_id_None, backups, false, false, false, 1e100, 20.0, 0.0,
+        &params);
+
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(
+        0.8, 0.03, -0.02, 0.01,
+        1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.rho_atm = 0.01;
+  eos.press_atm = 0.02;
+  eos.eps_atm = 0.03;
+  eos.entropy_atm = 0.04;
+  eos.Y_e_atm = 0.05;
+  eos.T_atm = 0.06;
+  eos.T_max = 10.0;
+
+  ghl_c2p_nn_model model = valid_stack_model();
+  eos.c2p_nn = &model;
+  ghl_tabulated_enforce_bounds_rho_Ye_eps = fake_enforce_bounds;
+  ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T;
+
+  ghl_conservative_quantities cons;
+  ghl_initialize_conservatives(1.0, 1.0, 0.05, -0.03, 0.02, 0.0, 0.2, &cons);
+  ghl_primitive_quantities prims;
+  ghl_initialize_primitives(
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.1, -0.2, 0.3, 0.0, 0.0, 0.0, &prims);
+  const double BU[3] = { prims.BU[0], prims.BU[1], prims.BU[2] };
+  ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
+  CHECK(isfinite(prims.rho) && prims.rho > 0.0 && prims.rho != eos.rho_atm
+        && isfinite(prims.press) && isfinite(prims.u0),
+        "valid public NN primitive guess did not use the completion path");
+
+  ghl_guess_primitives(&params, &eos, &metric, &cons, &prims);
+  CHECK(isfinite(prims.rho) && prims.rho > 0.0 && prims.rho != eos.rho_atm
+        && isfinite(prims.press) && isfinite(prims.u0),
+        "valid default tabulated guess did not use the completion path");
+
+  eos.c2p_nn = NULL;
+  ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+
+  cons.rho = 0.0;
+  ghl_guess_primitives(&params, &eos, &metric, &cons, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+
+  ghl_tabulated_primitive_guess_aux aux = { 0 };
+  cons.rho = 1.0;
+  aux.q = aux.r = aux.s = aux.t = 1.0;
+  aux.B_squared = 1.0;
+  aux.BdotS = 1.0;
+  aux.SU[0] = aux.SU[1] = aux.SU[2] = 1.0;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &aux, 1e200, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &aux, DBL_MIN, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+
+  aux.r = DBL_MAX;
+  aux.q = aux.s = aux.t = 0.0;
+  aux.B_squared = aux.BdotS = 0.0;
+  aux.SU[0] = aux.SU[1] = aux.SU[2] = 0.0;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &aux, pow(DBL_MIN, 0.25), &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+
+  aux.q = aux.r = aux.s = aux.t = 1.0;
+  aux.B_squared = aux.BdotS = 1.0;
+  aux.SU[0] = aux.SU[1] = aux.SU[2] = 1.0;
+  cons.Y_e = DBL_MAX;
+  cons.rho = DBL_MIN;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &aux, 2.0, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+  cons.rho = 1.0;
+  cons.Y_e = 0.2;
+
+  ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T_nonfinite;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &aux, 2.0, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+
+  ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T;
+  aux.q = aux.r = aux.s = aux.t = 0.0;
+  aux.B_squared = aux.BdotS = 0.0;
+  aux.SU[0] = DBL_MAX;
+  aux.SU[1] = aux.SU[2] = 0.0;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &aux, 1e-70, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+
+  aux.SU[0] = 1e200;
+  ghl_tabulated_primitive_guess_from_x(
+        &params, &eos, &metric, &cons, &aux, 1.0, &prims);
+  check_atmosphere_guess(&eos, &metric, BU, &prims);
+}
+
+#ifdef GHL_DISABLE_HDF5
+static void test_disabled_direct_tabulated_solvers(void) {
+  ghl_parameters params = { 0 };
+  ghl_eos_parameters eos = { 0 };
+  ghl_metric_quantities metric = { 0 };
+  ghl_ADM_aux_quantities metric_aux = { 0 };
+  ghl_conservative_quantities cons = { 0 };
+  ghl_primitive_quantities prims = { .rho = 1.0, .press = 2.0 };
+  ghl_con2prim_diagnostics diagnostics = { .tau_fix = true, .n_iter = 7 };
+  const ghl_primitive_quantities prims_before = prims;
+  const ghl_con2prim_diagnostics diagnostics_before = diagnostics;
+
+#define CHECK_DISABLED_SOLVER(name)                                          \
+  CHECK_ERROR(name(&params, &eos, &metric, &metric_aux, &cons,              \
+                   &prims, &diagnostics), ghl_error_used_disabled_hdf5)
+  CHECK_DISABLED_SOLVER(ghl_tabulated_Noble2D);
+  CHECK_DISABLED_SOLVER(ghl_tabulated_Palenzuela1D_energy);
+  CHECK_DISABLED_SOLVER(ghl_tabulated_Palenzuela1D_entropy);
+  CHECK_DISABLED_SOLVER(ghl_tabulated_Newman1D_energy);
+  CHECK_DISABLED_SOLVER(ghl_tabulated_Newman1D_entropy);
+#undef CHECK_DISABLED_SOLVER
+
+  CHECK(memcmp(&prims, &prims_before, sizeof(prims)) == 0,
+        "disabled direct solver mutated primitives");
+  CHECK(memcmp(&diagnostics, &diagnostics_before, sizeof(diagnostics)) == 0,
+        "disabled direct solver mutated diagnostics");
+}
+#endif
 
 #ifndef GHL_DISABLE_HDF5
 static char nn_test_directory[] = "/tmp/unit_test_c2p_nn_XXXXXX";
@@ -696,12 +915,20 @@ static void test_hdf5_loader_error_paths(void) {
   replace_dataset_i32(validation_failure, "meta/q_idx", 4);
   check_hdf5_load_failure_preserves_model(
         validation_failure, ghl_error_nn_c2p_invalid_input_index);
+  replace_dataset_i32(validation_failure, "meta/q_idx", 0);
+  replace_dataset_i32(validation_failure, "meta/s_idx", 0);
+  check_hdf5_load_failure_preserves_model(
+        validation_failure, ghl_error_nn_c2p_invalid_input_index);
 }
 #endif
 
 int main(void) {
   test_validate_model();
   test_guess_model();
+  test_public_primitive_guess_helper();
+#ifdef GHL_DISABLE_HDF5
+  test_disabled_direct_tabulated_solvers();
+#endif
 #ifndef GHL_DISABLE_HDF5
   setup_hdf5_test_directory();
   test_hdf5_loaders();

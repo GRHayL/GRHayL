@@ -55,7 +55,6 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
   if(retval != ghl_success) {
     return retval;
   }
-
   // Calculate v^2:
 
   const double rel_err = fabs((harm_aux.D - rho0) / harm_aux.D);
@@ -79,7 +78,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
 
   prims->rho = rho0;
 
-  diagnostics->speed_limited = ghl_finalize_Noble_entropy(
+  diagnostics->speed_limited |= ghl_finalize_Noble_entropy(
         params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, W, prims);
   if(prims->press <= 0.0) {
     return ghl_error_neg_pressure;

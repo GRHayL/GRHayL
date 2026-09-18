@@ -13,21 +13,25 @@ extern "C" {
  * @brief Tracks @ref Con2Prim diagnostics
  *
  * @details
- * This struct should be initialized with @ref ghl_initialize_diagnostics .
+ * This struct must be initialized with @ref ghl_initialize_diagnostics before
+ * each logical recovery. tau_fix, Stilde_fix, and speed_limited are sticky OR
+ * accumulators for that recovery. backup and nn_guess_used record attempted
+ * retry paths. which_routine and n_iter describe the successful solver;
+ * n_iter is unspecified when which_routine is ghl_con2prim_id_None.
  */
 typedef struct ghl_con2prim_diagnostics {
-  /** Whether a limit was applied to \f$ \tilde{\tau} \f$ (true) or not (false) */
+  /** Whether any call limited \f$ \tilde{\tau} \f$ during this recovery */
   bool tau_fix;
-  /** Whether a limit was applied to \f$ \tilde{S}_i \f$ (true) or not (false) */
+  /** Whether any call limited \f$ \tilde{S}_i \f$ during this recovery */
   bool Stilde_fix;
-  /** Whether a speed limiter was triggered (true) or not (false) */
+  /** Whether any attempted solver triggered the speed limiter */
   bool speed_limited;
   /** The Con2Prim routine which successfully found the primitive variables */
   ghl_con2prim_id_t which_routine;
   /** Whether a given backup routine was used (true) or not (false) */
   bool backup[3];
-  /** Number of solver iterations. Font1D totals outer iterations across all
-   *  internal attempts and reports zero on its zero-momentum shortcut. */
+  /** Iterations used by which_routine. Font1D totals outer iterations across
+   *  its internal attempts and reports zero on its zero-momentum shortcut. */
   int n_iter;
   /** Whether the tabulated multi-method driver attempted a neural-network retry */
   bool nn_guess_used;
@@ -57,6 +61,10 @@ typedef struct ghl_tabulated_primitive_guess_aux {
 void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
+/**
+ * Apply conservative limits. diagnostics must be initialized. tau_fix and
+ * Stilde_fix are [in,out] OR accumulators: incoming true values are preserved.
+ */
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -70,11 +78,12 @@ void ghl_undensitize_conservatives(
       const ghl_conservative_quantities *restrict cons,
       ghl_conservative_quantities *restrict cons_undens);
 
+/** Build an initial guess from undensitized conservative variables. */
 void ghl_guess_primitives(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric_adm,
-      const ghl_conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims);
 
 /**
@@ -168,6 +177,12 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+/**
+ * Density-based entropy recovery. A successful direct solve returns its
+ * positive mathematical root, which may lie outside configured EOS density
+ * limits. Call ghl_enforce_primitive_limits_and_compute_u0 to apply those
+ * limits after recovery.
+ */
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -292,7 +307,7 @@ typedef struct ghl_nn_c2p_guess_t {
   float x;
 } ghl_nn_c2p_guess_t;
 
-typedef struct ghl_c2p_nn_model {
+struct ghl_c2p_nn_model {
   int in_dim;
   int hidden_dim;
   int n_hidden;
@@ -321,10 +336,10 @@ typedef struct ghl_c2p_nn_model {
   float *b_hid;
   float *W_out;
   float *b_out;
-} ghl_c2p_nn_model;
+};
 
 /* Public API version for the on-disk HDF5 schema/output-kind semantics. */
-#define GHL_NN_C2P_API_VERSION 3u
+#define GHL_NN_C2P_API_VERSION 4u
 
 ghl_nn_c2p_guess_t ghl_c2p_nn_guess(
       const ghl_c2p_nn_model *restrict model,

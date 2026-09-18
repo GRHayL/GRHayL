@@ -97,8 +97,9 @@ instead.
 ## No-HDF5 Build Effects
 
 No-HDF5 behavior is described only from [configure](../../configure). Passing
-`./configure --disable-hdf5` adds `GHL_DISABLE_HDF5`, filters tabulated/HDF5
-implementation sources, excludes `*tabulated*` unit tests, excludes
+`./configure --disable-hdf5` adds `GHL_DISABLE_HDF5`, filters table-dependent
+tabulated/HDF5 implementation sources while retaining the documented helpers,
+direct-C2P stubs, and tabulated flux kernels, excludes `*tabulated*` unit tests, excludes
 `unit_test_con2prim_debug.c`, excludes the three `unit_test_nrpyleakage_*.c`
 tests, and filters tabulated data generators. `configure` says this disables
 HDF5 and, for now, means no tabulated EOS.

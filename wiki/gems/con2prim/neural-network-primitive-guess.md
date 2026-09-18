@@ -29,7 +29,8 @@ Primary source paths:
 - `ghl_nn_c2p_input_t`: four `float` inputs `q`, `r`, `s`, and `t`.
 - `ghl_nn_c2p_guess_t`: one `float x` prediction.
 - `ghl_c2p_nn_model`: dimensions, input indices, numeric epsilons, scaling arrays, output metadata, and layer weights/biases.
-- `GHL_NN_C2P_API_VERSION`: public schema/output-kind version, currently `3u`.
+- `GHL_NN_C2P_API_VERSION`: public schema/output-kind version, currently `4u`;
+  version 4 fixes the input order to `{q, r, s, t}` (`q_idx=0`, `s_idx=2`).
 - `ghl_c2p_nn_guess`: maps `ghl_nn_c2p_input_t` plus `ghl_c2p_nn_model` to an `x` guess.
 - `ghl_c2p_nn_guess_primitives`: computes tabulated auxiliaries and completes
   primitives only for a finite positive bounded candidate; otherwise it returns

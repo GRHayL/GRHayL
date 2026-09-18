@@ -136,7 +136,8 @@ With `--disable-hdf5`, `configure`:
 - filters implementation sources with the exact path/name predicate in
   `configure`; despite their paths, it explicitly retains
   `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` and sources under
-  `Con2Prim/Tabulated/neural_network_guess/`;
+  `Con2Prim/Tabulated/neural_network_guess/`, the disabled direct-tabulated-
+  solver stubs, and the six direct tabulated HLLE flux implementations;
 - excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, and the
   NRPyLeakage unit tests from the generated unit-test list;
 - excludes tabulated data generators from the generated data-generator list.
@@ -149,7 +150,10 @@ Manual or downstream no-HDF5 builds must mirror current script behavior: define
 `GHL_DISABLE_HDF5` and reproduce its source-selection predicate. The README
 lists the retained Con2Prim helpers and the exact exclusion patterns. Loader
 entry points become disabled-feature stubs; pure NN inference from an
-independently valid in-memory model does not inherently require HDF5.
+independently valid in-memory model does not inherently require HDF5. The five
+public direct tabulated solver entry points are non-mutating disabled-feature
+stubs, while the six public direct tabulated HLLE flux variants retain their
+real implementations.
 
 GRHayLib is separate implementation-specific build routing. Its Cactus
 `configuration.ccl` hard-codes `requires HDF5`; that thorn requirement is not
@@ -163,16 +167,18 @@ Workflows live in `.github/workflows/`:
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | 13 existing job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | 15 job groups total; 14 invoke the shared coverage action, including the no-HDF5 `con2prim-contracts` job; the focused CompOSE job uploads only its Python XML |
 | `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
 | `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | 2 of 13 jobs invoke coverage action |
 | `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
 | `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | no jobs invoke coverage action |
 
 Each workflow ignores pushes and pull requests when **all** changed paths match
-its `paths-ignore` list, including `docs/**`, `wiki/**`, Markdown/reStructuredText
-patterns, and `implementations/**`. A mixed change with any non-ignored path can
-trigger the workflow; path filters apply to `push`/`pull_request`, while the
+its `paths-ignore` list, including `docs/**`, `wiki/**`, and
+Markdown/reStructuredText patterns. The Ubuntu-GCC workflow no longer ignores
+`implementations/**`; the other four compiler workflows still do. A mixed
+change with any non-ignored path can trigger the workflow; path filters apply
+to `push`/`pull_request`, while the
 separately declared schedule remains eligible independently. These semantics
 come from the
 [GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore),
@@ -181,10 +187,11 @@ not merely from local YAML key names. Every compiler workflow uses cron
 `pull_request` event has no branch filter in local YAML. Do not infer project
 support beyond the OS/compiler
 pairs encoded in these workflow matrices and the usage examples in `configure`.
-Because `implementations/**` is path-ignored, repository CI does not validate
-GRHayLib implementation-only changes unless another touched path or a scheduled
-run causes jobs to execute. Even then, the listed jobs are core
-`configure`/unit-test jobs, not a GRHayLib Cactus thorn build.
+An implementation-only change therefore triggers Ubuntu-GCC, whose
+`con2prim-contracts` job validates the nine tracked GRHayLib source symlinks.
+The other compiler workflows remain skipped for such a change. This is static
+topology plus core `configure`/unit-test evidence, not a GRHayLib Cactus thorn
+build.
 
 Common job groups across workflows:
 
@@ -278,8 +285,9 @@ Repo evidence shows these caveats:
 - The focused Ubuntu GCC CompOSE job bypasses coverage-file discovery: it
   uploads only `compose-coverage.xml` under the `compose` flag, disables
   search, and fails the job on an upload error.
-- Workflows ignore docs-only and implementation-only pull-request changes, so
-  CI coverage does not prove those paths are exercised.
+- All workflows ignore docs-only pull-request changes. Only Ubuntu-GCC runs for
+  implementation-only changes, and its GRHayLib check proves symlink topology,
+  not a Cactus build or runtime.
 
 ## Ground Truth References
 

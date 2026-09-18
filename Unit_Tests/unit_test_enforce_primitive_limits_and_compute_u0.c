@@ -278,6 +278,30 @@ int main(int argc, char **argv) {
   if(fabs(prims.rho - rho_max) > 1e-50 || fabs(prims.press - press_max) > 1e-50)
     ghl_error("Maximum test failed for simple eos: %e %e\n", prims.rho, prims.press);
 
+  ghl_parameters limiting_params = params;
+  limiting_params.max_Lorentz_factor = 2.0;
+  limiting_params.inv_sq_max_Lorentz_factor = 0.25;
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 10.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_enforce_primitive_limits_and_compute_u0(
+        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  if(!speed_limited) {
+    ghl_error("speed-limit diagnostic did not report a real limit\n");
+  }
+
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  error = ghl_enforce_primitive_limits_and_compute_u0(
+        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  if(!speed_limited) {
+    ghl_error("speed-limit diagnostic did not preserve incoming true\n");
+  }
+
   ghl_info("ghl_enforce_primitive_limits_and_compute_u0 function test has passed!\n");
   free(lapse);
   free(betax); free(betay); free(betaz);

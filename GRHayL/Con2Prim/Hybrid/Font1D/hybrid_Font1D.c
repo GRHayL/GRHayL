@@ -182,7 +182,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     utU[0] = fac2*(SU[0] + fac1*prims->BU[0]);
     utU[1] = fac2*(SU[1] + fac1*prims->BU[1]);
     utU[2] = fac2*(SU[2] + fac1*prims->BU[2]);
-    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
+    diagnostics->speed_limited |= ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
   }
 
   prims->rho = cons->rho/(metric_adm->lapse*prims->u0);
