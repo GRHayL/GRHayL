@@ -1,4 +1,8 @@
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE
+#else
 #define _XOPEN_SOURCE 700
+#endif
 
 #include <math.h>
 #include <stdio.h>
