@@ -23,12 +23,9 @@ Treat a Con2Prim method as supported only when local evidence agrees across
 `ghl_con2prim_id_t`/name mapping, public declaration, selector dispatch, build
 lists, and tests where applicable. File presence alone is not support.
 
-Current seams needing explicit review:
-
-- `Noble1D_entropy2`, its `func_rho2.c` companion, and Cerda-Duran source are
-  present but absent current configured dispatch/build support.
-- The GRHayLib parser retains the commented-out entropy2 option; downstream
-  keyword presence is not identical to library support.
+The retained Cerda-Duran source is an archival numerical reference only. It is
+intentionally unbuilt and unsupported: there is no public declaration, method
+ID, selector case, test, or active GRHayLib keyword.
 
 Use [solver matrix](con2prim/solver-matrix.md) for exact seams rather than
 inferring status from any single layer.

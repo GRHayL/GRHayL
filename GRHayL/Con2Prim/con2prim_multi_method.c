@@ -31,6 +31,8 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
     // Entropy routines (see https://arxiv.org/abs/2208.14487)
     case ghl_con2prim_id_Noble1D_entropy:
       return ghl_hybrid_Noble1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
+    case ghl_con2prim_id_Noble1D_entropy2:
+      return ghl_hybrid_Noble1D_entropy2(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     case ghl_con2prim_id_Palenzuela1D_entropy:
       return ghl_hybrid_Palenzuela1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     default:

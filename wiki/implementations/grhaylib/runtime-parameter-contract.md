@@ -186,11 +186,9 @@ those inputs differently for main and backup parameters:
 
 - `None` is exposed only for `con2prim_backup_routines[3]`; the parser still
   maps it to `ghl_con2prim_id_None`.
-- `Noble1D_entropy2` is a parser case, but it is commented out in both local
-  `param.ccl` keyword lists.
 - Exposed method strings include `Noble2D`, `Noble1D`, `Noble1D_entropy`,
-  `Font1D`, `Palenzuela1D`, `Palenzuela1D_entropy`, `Newman1D`, and
-  `Newman1D_entropy`.
+  `Noble1D_entropy2`, `Font1D`, `Palenzuela1D`, `Palenzuela1D_entropy`,
+  `Newman1D`, and `Newman1D_entropy`.
 - Unknown strings return `-100`.
 
 `GRHayLib_paramcheck` reports the rejected backup using the matching
@@ -198,8 +196,10 @@ those inputs differently for main and backup parameters:
 entropy-required diagnostic family.
 
 Entropy methods require `evolve_entropy`. `GRHayLib_paramcheck` rejects
-`Noble1D_entropy`, `Palenzuela1D_entropy`, and `Newman1D_entropy` as main or
-backup choices when `evolve_entropy` is false.
+`Noble1D_entropy`, `Noble1D_entropy2`, `Palenzuela1D_entropy`, and
+`Newman1D_entropy` as main or backup choices when `evolve_entropy` is false.
+`Noble1D_entropy2` is available for Simple and Hybrid EOS and is rejected for
+tabulated EOS, matching its core selector and implementation family.
 
 Parser/parameter keyword existence does not imply supported solver. Compare
 any GRHayLib keyword against [Con2Prim solver matrix](../../gems/con2prim/solver-matrix.md),
@@ -233,10 +233,6 @@ GRHayLib direct-compile build routing also includes
 Record these source facts as drift evidence only; this page does not propose
 source changes:
 
-- `param.ccl` comments out `Noble1D_entropy2` in both `con2prim_routine` and
-  `con2prim_backup_routines[3]`.
-- `parse_C2P_routine_keyword` still has a parser case for
-  `Noble1D_entropy2`.
 - `schedule.ccl` conditionally skips initialization for
   `ID_converter_ILGRMHD` but always schedules termination. Local files do not
   establish alternate allocation ownership or a safe terminate precondition.

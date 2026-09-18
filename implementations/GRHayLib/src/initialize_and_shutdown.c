@@ -111,6 +111,7 @@ void GRHayLib_paramcheck() {
 
     if(CCTK_EQUALS(con2prim_routine, "Noble1D") ||
        CCTK_EQUALS(con2prim_routine, "Noble1D_entropy") ||
+       CCTK_EQUALS(con2prim_routine, "Noble1D_entropy2") ||
        CCTK_EQUALS(con2prim_routine, "Font1D")) {
       CCTK_VERROR("Selected parameter option for con2prim_routine %s is incompatible with\n"
                   "tabulated EOS. Please change the routine.", con2prim_routine);
@@ -118,6 +119,7 @@ void GRHayLib_paramcheck() {
     for(int i=0; i<3; i++) {
       if(CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D") ||
          CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy") ||
+         CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy2") ||
          CCTK_EQUALS(con2prim_backup_routines[i], "Font1D")) {
          CCTK_VERROR("Selected parameter option for con2prim_backup_routines[%d] = %s is incompatible with\n"
                      "tabulated EOS. Please change the routine.", i, con2prim_backup_routines[i]);
@@ -127,6 +129,7 @@ void GRHayLib_paramcheck() {
 
   if(!evolve_entropy) {
     if( CCTK_EQUALS(con2prim_routine, "Noble1D_entropy")  ||
+        CCTK_EQUALS(con2prim_routine, "Noble1D_entropy2") ||
         CCTK_EQUALS(con2prim_routine, "Newman1D_entropy") ||
         CCTK_EQUALS(con2prim_routine, "Palenzuela1D_entropy") ) {
       CCTK_VERROR("Selected parameter option for con2prim_routine %s requires entropy.\n"
@@ -134,6 +137,7 @@ void GRHayLib_paramcheck() {
     }
     for(int i=0; i<3; i++) {
       if( CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy")  ||
+          CCTK_EQUALS(con2prim_backup_routines[i], "Noble1D_entropy2") ||
           CCTK_EQUALS(con2prim_backup_routines[i], "Newman1D_entropy") ||
           CCTK_EQUALS(con2prim_backup_routines[i], "Palenzuela1D_entropy") ) {
          CCTK_VERROR("Selected parameter option for con2prim_backup_routines[%d] = %s requires entropy.\n"

@@ -100,12 +100,15 @@ Core Noble helper files are built from
 
 Hybrid Noble 1D residual files live in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/):
-`func_1D.c`, `func_Z.c`, `func_rho.c`, and source-present `func_rho2.c`.
-The manifest builds the first three, not `func_rho2.c`. Built wrappers are
-`hybrid_Noble1D.c` and `hybrid_Noble1D_entropy.c`; both initialize Noble
-state, run `ghl_general_newton_raphson`, finalize primitives, then set
+`func_1D.c`, `func_Z.c`, `func_rho.c`, and `func_rho2.c`. The manifest builds
+all four plus `hybrid_Noble1D.c`, `hybrid_Noble1D_entropy.c`, and
+`hybrid_Noble1D_entropy2.c`. The entropy2 path solves the momentum equation
+directly for density. Its `Z(rho)` and analytic derivative use the active
+piecewise-polytropic cold pressure, cold-energy integration constant, and
+thermal Gamma. Each wrapper initializes Noble state, runs
+`ghl_general_newton_raphson`, finalizes primitives, then sets
 `diagnostics->speed_limited`, `diagnostics->n_iter`, and
-`diagnostics->which_routine`.
+`diagnostics->which_routine` on success.
 
 Hybrid Noble 2D lives in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble2D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble2D/).
@@ -176,31 +179,19 @@ For this internal page, only source-proven writes are routed:
 - `speed_limited`: written where solver finalization or utilde limiting calls
   `ghl_limit_utilde_and_compute_v`.
 
-## Source-Present Drift Notes
-
-`Noble1D_entropy2` has enum/name/declaration/source evidence in
-[`GRHayL/include/ghl.h`](../../../GRHayL/include/ghl.h),
-[`GRHayL/Con2Prim/get_con2prim_routine_name.c`](../../../GRHayL/Con2Prim/get_con2prim_routine_name.c),
-[`GRHayL/include/ghl_con2prim.h`](../../../GRHayL/include/ghl_con2prim.h), and
-[`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/hybrid_Noble1D_entropy2.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/hybrid_Noble1D_entropy2.c).
-It is absent from
-[`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/make.code.defn`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/make.code.defn)
-and has no selector case in
-[`GRHayL/Con2Prim/con2prim_multi_method.c`](../../../GRHayL/Con2Prim/con2prim_multi_method.c).
-Do not claim it as supported unless build-list and selector evidence change.
-Its apparent companion `func_rho2.c` is also absent from the same manifest.
-Manifest absence establishes configured-build exclusion only; it does not
-establish whether maintainers intend integration, internalization, or removal.
+## Archival Source
 
 `con2prim_CerdaDuran3D.cc` is source-present at
 [`GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`](../../../GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc),
-but
+with a prominent archival header. It is retained only to preserve potentially
+useful numerical work. It uses identifiers incompatible with the current API;
 [`GRHayL/Con2Prim/Tabulated/make.code.defn`](../../../GRHayL/Con2Prim/Tabulated/make.code.defn)
-builds only the `Newman1D`, `Noble2D`, and `Palenzuela1D` subdirectories, and
+intentionally builds only the `Newman1D`, `Noble2D`, and `Palenzuela1D`
+subdirectories, and
 the public selector in
 [`GRHayL/Con2Prim/con2prim_multi_method.c`](../../../GRHayL/Con2Prim/con2prim_multi_method.c)
-has no Cerda-Duran case. Treat this as source-present unresolved code, not
-public support.
+has no Cerda-Duran case. There is no public declaration, method ID, active
+GRHayLib keyword, or test. Treat it as unbuilt, unsupported archival source.
 
 The configured source inventory is manifest-driven and currently contains no
 `.cc` entry for this file. File presence alone therefore supplies neither C++

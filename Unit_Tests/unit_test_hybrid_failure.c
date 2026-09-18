@@ -1,4 +1,271 @@
 #include "ghl_unit_tests.h"
+
+static void check_close(
+      const char *restrict name,
+      const double expected,
+      const double actual,
+      const double tolerance) {
+
+  const double scale = fmax(1.0, fabs(expected));
+  if(!isfinite(actual) || fabs(actual - expected) > tolerance * scale) {
+    ghl_error(
+          "Noble1D_entropy2 %s mismatch: expected %.17e, got %.17e\n", name, expected,
+          actual);
+  }
+}
+
+static void check_entropy2_roundtrip(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_primitive_quantities *restrict source,
+      const ghl_conservative_quantities *restrict cons_undens) {
+
+  ghl_primitive_quantities recovered = *source;
+  recovered.rho *= 1.1;
+  recovered.press *= 0.8;
+  recovered.eps *= 0.9;
+  for(int i = 0; i < 3; i++) {
+    recovered.vU[i] *= 0.7;
+  }
+  bool speed_limited = false;
+  ghl_error_codes_t error
+        = ghl_limit_v_and_compute_u0(params, metric_adm, &recovered, &speed_limited);
+  ghl_abort_if_error(error);
+
+  ghl_con2prim_diagnostics diagnostics;
+  ghl_initialize_diagnostics(&diagnostics);
+  error = ghl_con2prim_hybrid_select_method(
+        ghl_con2prim_id_Noble1D_entropy2, params, eos, metric_adm, metric_aux,
+        cons_undens, &recovered, &diagnostics);
+  if(error != ghl_success) {
+    ghl_error("Noble1D_entropy2 round trip failed with error %d\n", error);
+  }
+  if(diagnostics.which_routine != ghl_con2prim_id_Noble1D_entropy2
+     || diagnostics.n_iter < 1 || diagnostics.speed_limited) {
+    ghl_error("Noble1D_entropy2 returned inconsistent success diagnostics\n");
+  }
+
+  check_close("rho", source->rho, recovered.rho, 2e-9);
+  check_close("press", source->press, recovered.press, 2e-9);
+  check_close("eps", source->eps, recovered.eps, 2e-9);
+  check_close("entropy", source->entropy, recovered.entropy, 2e-9);
+  for(int i = 0; i < 3; i++) {
+    check_close("velocity", source->vU[i], recovered.vU[i], 2e-9);
+    check_close("magnetic field", source->BU[i], recovered.BU[i], 0.0);
+  }
+
+  ghl_conservative_quantities recovered_cons;
+  ghl_compute_conservs(metric_adm, metric_aux, &recovered, &recovered_cons);
+  ghl_conservative_quantities recovered_cons_undens;
+  ghl_undensitize_conservatives(
+        metric_adm->sqrt_detgamma, &recovered_cons, &recovered_cons_undens);
+  check_close("conservative rho", cons_undens->rho, recovered_cons_undens.rho, 3e-9);
+  check_close("conservative tau", cons_undens->tau, recovered_cons_undens.tau, 3e-9);
+  check_close(
+        "conservative entropy", cons_undens->entropy, recovered_cons_undens.entropy,
+        3e-9);
+  for(int i = 0; i < 3; i++) {
+    check_close(
+          "conservative momentum", cons_undens->SD[i], recovered_cons_undens.SD[i],
+          3e-9);
+  }
+}
+
+static void test_Noble1D_entropy2(void) {
+  const ghl_con2prim_id_t None = ghl_con2prim_id_None;
+  const ghl_con2prim_id_t backups[3] = { None, None, None };
+  ghl_parameters params;
+  ghl_initialize_params(
+        ghl_con2prim_id_Noble1D_entropy2, backups, true, false, false, 1e100, 20.0, 0.0,
+        &params);
+  params.con2prim_solver_tolerance = 1e-12;
+
+  // Distinct cold and thermal Gammas make this a genuine hybrid-EOS test.
+  const double rho_ppoly[2] = { 1.0, 0.0 };
+  const double Gamma_ppoly[2] = { 1.8, 2.2 };
+  ghl_eos_parameters eos = { 0 };
+  ghl_initialize_hybrid_eos_functions_and_params(
+        1e-6, 1e-6, 1e6, 2, rho_ppoly, Gamma_ppoly, 0.4, 1.6, &eos);
+
+  for(int test = 0; test < 2; test++) {
+    ghl_metric_quantities metric_adm;
+    if(test == 0) {
+      ghl_initialize_metric(
+            1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric_adm);
+    }
+    else {
+      ghl_initialize_metric(
+            0.93, 0.02, -0.01, 0.015, 1.2, 0.04, 0.02, 1.1, 0.03, 0.95, &metric_adm);
+    }
+    ghl_ADM_aux_quantities metric_aux;
+    ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
+
+    const double rho = test == 0 ? 0.3 : 3.0;
+    double P_cold, eps_cold;
+    ghl_hybrid_compute_P_cold_and_eps_cold(&eos, rho, &P_cold, &eps_cold);
+    const double press = (test == 0 ? 1.35 : 1.8) * P_cold;
+    const double eps = eps_cold + (press - P_cold) / ((eos.Gamma_th - 1.0) * rho);
+    const double entropy = ghl_hybrid_compute_entropy_function(&eos, rho, press);
+    const double vx = test == 0 ? 0.0 : 0.18;
+    const double vy = test == 0 ? 0.0 : -0.11;
+    const double vz = test == 0 ? 0.0 : 0.07;
+    const double Bx = test == 0 ? 0.0 : 0.3;
+    const double By = test == 0 ? 0.0 : -0.2;
+    const double Bz = test == 0 ? 0.0 : 0.15;
+
+    ghl_primitive_quantities source;
+    ghl_initialize_primitives(
+          rho, press, eps, vx, vy, vz, Bx, By, Bz, entropy, 0.1, 0.0, &source);
+    bool speed_limited = false;
+    ghl_error_codes_t error
+          = ghl_limit_v_and_compute_u0(&params, &metric_adm, &source, &speed_limited);
+    ghl_abort_if_error(error);
+    if(speed_limited) {
+      ghl_error("Noble1D_entropy2 source state was unexpectedly speed limited\n");
+    }
+
+    ghl_conservative_quantities cons;
+    ghl_compute_conservs(&metric_adm, &metric_aux, &source, &cons);
+    ghl_conservative_quantities cons_undens;
+    ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
+
+    check_entropy2_roundtrip(
+          &params, &eos, &metric_adm, &metric_aux, &source, &cons_undens);
+
+    if(test == 1) {
+      ghl_parameters backup_params = params;
+      backup_params.calc_prim_guess = true;
+      backup_params.main_routine = ghl_con2prim_id_Newman1D;
+      backup_params.backup_routine[0] = ghl_con2prim_id_Noble1D_entropy2;
+      ghl_primitive_quantities recovered = source;
+      ghl_con2prim_diagnostics diagnostics;
+      ghl_initialize_diagnostics(&diagnostics);
+      error = ghl_con2prim_hybrid_multi_method(
+            &backup_params, &eos, &metric_adm, &metric_aux, &cons_undens, &recovered,
+            &diagnostics);
+      if(error != ghl_success || !diagnostics.backup[0] || diagnostics.backup[1]
+         || diagnostics.backup[2]
+         || diagnostics.which_routine != ghl_con2prim_id_Noble1D_entropy2) {
+        ghl_error("Noble1D_entropy2 backup routing failed\n");
+      }
+      check_close("backup rho", source.rho, recovered.rho, 2e-9);
+
+      ghl_primitive_quantities bad_guess = source;
+      bad_guess.u0 = 1.0;
+      bad_guess.vU[0] = 4.0;
+      ghl_initialize_diagnostics(&diagnostics);
+      error = ghl_con2prim_hybrid_select_method(
+            ghl_con2prim_id_Noble1D_entropy2, &params, &eos, &metric_adm, &metric_aux,
+            &cons_undens, &bad_guess, &diagnostics);
+      if(error != ghl_error_invalid_utsq) {
+        ghl_error("Noble1D_entropy2 did not propagate its initialization error\n");
+      }
+
+      ghl_conservative_quantities zero_density = cons_undens;
+      zero_density.rho = 0.0;
+      bad_guess = source;
+      ghl_initialize_diagnostics(&diagnostics);
+      error = ghl_con2prim_hybrid_select_method(
+            ghl_con2prim_id_Noble1D_entropy2, &params, &eos, &metric_adm, &metric_aux,
+            &zero_density, &bad_guess, &diagnostics);
+      if(error != ghl_error_neg_rho) {
+        ghl_error("Noble1D_entropy2 did not reject nonpositive density\n");
+      }
+
+      ghl_parameters iteration_params = params;
+      iteration_params.con2prim_max_iterations = 1;
+      iteration_params.con2prim_solver_tolerance = 1e-30;
+      bad_guess = source;
+      bad_guess.vU[0] *= 0.5;
+      speed_limited = false;
+      error = ghl_limit_v_and_compute_u0(
+            &iteration_params, &metric_adm, &bad_guess, &speed_limited);
+      ghl_abort_if_error(error);
+      ghl_initialize_diagnostics(&diagnostics);
+      error = ghl_con2prim_hybrid_select_method(
+            ghl_con2prim_id_Noble1D_entropy2, &iteration_params, &eos, &metric_adm,
+            &metric_aux, &cons_undens, &bad_guess, &diagnostics);
+      if(error != ghl_error_c2p_max_iter) {
+        ghl_error("Noble1D_entropy2 did not propagate its iteration failure\n");
+      }
+
+      ghl_conservative_quantities negative_entropy = cons_undens;
+      negative_entropy.entropy = -fabs(negative_entropy.entropy);
+      bad_guess = source;
+      ghl_initialize_diagnostics(&diagnostics);
+      error = ghl_con2prim_hybrid_select_method(
+            ghl_con2prim_id_Noble1D_entropy2, &params, &eos, &metric_adm, &metric_aux,
+            &negative_entropy, &bad_guess, &diagnostics);
+      if(error != ghl_error_neg_pressure) {
+        ghl_error("Noble1D_entropy2 did not reject negative recovered pressure\n");
+      }
+    }
+  }
+
+  ghl_eos_parameters simple_eos = { 0 };
+  ghl_initialize_simple_eos_functions_and_params(
+        1e-6, 1e-6, 1e6, 1e-8, 1e-10, 1e6, 1.7, &simple_eos);
+  ghl_metric_quantities simple_metric;
+  ghl_initialize_metric(
+        1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &simple_metric);
+  ghl_ADM_aux_quantities simple_aux;
+  ghl_compute_ADM_auxiliaries(&simple_metric, &simple_aux);
+  ghl_primitive_quantities simple_source;
+  const double simple_rho = 0.7;
+  const double simple_press = 0.2;
+  ghl_initialize_primitives(
+        simple_rho, simple_press,
+        simple_press / (simple_rho * (simple_eos.Gamma_th - 1.0)), 0.12, -0.04, 0.08,
+        0.15, 0.07, -0.11,
+        ghl_hybrid_compute_entropy_function(&simple_eos, simple_rho, simple_press), 0.1,
+        0.0, &simple_source);
+  bool simple_speed_limited = false;
+  ghl_error_codes_t simple_error = ghl_limit_v_and_compute_u0(
+        &params, &simple_metric, &simple_source, &simple_speed_limited);
+  ghl_abort_if_error(simple_error);
+  if(simple_speed_limited) {
+    ghl_error("Noble1D_entropy2 simple-EOS source was speed limited\n");
+  }
+  ghl_conservative_quantities simple_cons, simple_cons_undens;
+  ghl_compute_conservs(&simple_metric, &simple_aux, &simple_source, &simple_cons);
+  ghl_undensitize_conservatives(
+        simple_metric.sqrt_detgamma, &simple_cons, &simple_cons_undens);
+  check_entropy2_roundtrip(
+        &params, &simple_eos, &simple_metric, &simple_aux, &simple_source,
+        &simple_cons_undens);
+
+  // This malformed state has a positive-entropy momentum-equation root at
+  // rho=2D, where the inferred velocity norm is negative.
+  const double invalid_rho_ppoly[1] = { 0.0 };
+  const double invalid_Gamma_ppoly[1] = { 2.0 };
+  ghl_eos_parameters invalid_eos = { 0 };
+  ghl_initialize_hybrid_eos_functions_and_params(
+        1e-6, 1e-6, 1e6, 1, invalid_rho_ppoly, invalid_Gamma_ppoly, 1.0, 1.5,
+        &invalid_eos);
+  ghl_primitive_quantities invalid_guess;
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0 / 12.0, 0.1, 0.0,
+        &invalid_guess);
+  bool invalid_speed_limited = false;
+  ghl_error_codes_t invalid_error = ghl_limit_v_and_compute_u0(
+        &params, &simple_metric, &invalid_guess, &invalid_speed_limited);
+  ghl_abort_if_error(invalid_error);
+  ghl_conservative_quantities invalid_cons;
+  ghl_initialize_conservatives(1.0, 0.0, 1.0, 0.0, 0.0, 1.0 / 12.0, 0.0, &invalid_cons);
+  ghl_parameters invalid_params = params;
+  invalid_params.con2prim_max_iterations = 100;
+  ghl_con2prim_diagnostics invalid_diagnostics;
+  ghl_initialize_diagnostics(&invalid_diagnostics);
+  invalid_error = ghl_con2prim_hybrid_select_method(
+        ghl_con2prim_id_Noble1D_entropy2, &invalid_params, &invalid_eos, &simple_metric,
+        &simple_aux, &invalid_cons, &invalid_guess, &invalid_diagnostics);
+  if(invalid_error != ghl_error_neg_vsq) {
+    ghl_error("Noble1D_entropy2 did not reject a negative velocity norm\n");
+  }
+}
+
 int main(int argc, char **argv) {
 
   const int arraylength = 2;
@@ -119,5 +386,6 @@ int main(int argc, char **argv) {
       ghl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);
 
   }
+  test_Noble1D_entropy2();
   return 0;
 }
