@@ -11,6 +11,8 @@
 #!                   ghl_metric_helpers.h
 #!                   ghl_induction.h
 #!                   ghl_radiation.h
+#!                   ghl_m1.h
+#!                   ghl_neutrino_rate_provider.h
 #!                   ghl_nrpyeos_hybrid.h
 #!                   ghl_nrpyeos_tabulated.h
 #!                   ghl_nrpyleakage.h

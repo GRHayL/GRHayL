@@ -11,6 +11,38 @@ static const double SQRT_4_PI = 1; //3.544907701811032054596334966682290365L;
 extern "C" {
 #endif
 
+/**
+ * Compute a component-wise symmetric Rusanov interface flux.
+ * @ingroup Flux_Source
+ *
+ * The component arrays contain undensitized conserved quantities and their
+ * corresponding physical fluxes on the left and right sides. The same
+ * nonnegative speed is applied to every component. The output buffer must be
+ * distinct from the input buffers. Inputs and candidates are validated before
+ * publication, so an error leaves the output buffer unchanged.
+ *
+ * @param state_L Undensitized left state with @p component_count components.
+ * @param state_R Undensitized right state with @p component_count components.
+ * @param physical_flux_L Undensitized physical flux corresponding to
+ *        @p state_L.
+ * @param physical_flux_R Undensitized physical flux corresponding to
+ *        @p state_R.
+ * @param component_count Number of components in each input and output
+ *        array; it must be positive.
+ * @param speed Nonnegative interface speed applied componentwise.
+ * @param flux Output numerical flux with @p component_count components. It is
+ *        not densitized by this helper.
+ * @return @c ghl_success on publication; otherwise @p flux is unchanged.
+ */
+ghl_error_codes_t ghl_calculate_Rusanov_flux(
+      const double *restrict state_L,
+      const double *restrict state_R,
+      const double *restrict physical_flux_L,
+      const double *restrict physical_flux_R,
+      const int component_count,
+      const double speed,
+      double *restrict flux);
+
 void ghl_calculate_source_terms(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
