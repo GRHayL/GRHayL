@@ -65,8 +65,8 @@ header rather than individual upstream headers. Route ownership of the upstream
 headers through [Public API Map](../../public-api-map.md); route lifecycle and
 parameter details through [runtime parameter contract](runtime-parameter-contract.md).
 
-Static parity in this checkout: all ten headers named directly by `GRHayLib.h`
-exist under `GRHayL/include/` and all ten appear in the upstream install-header
+Static parity in this checkout: every header named directly by `GRHayLib.h`
+exists under `GRHayL/include/` and appears in the upstream install-header
 manifest. `ghl.h` also supplies several transitive Core includes. This confirms
 names only; the thorn header spells them as `./include/...`, and no such copied
 `implementations/GRHayLib/src/include/` tree exists locally.
@@ -83,14 +83,14 @@ It also lists `SUBDIRS` for module paths including `Atmosphere`, `Con2Prim`,
 `Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`, and
 `Reconstruction` variants.
 
-Static registry parity is complete at directory level: each of the 29 listed
-`SUBDIRS` exists under upstream `GRHayL/`, and every one of the 28 upstream
-directories whose reachable manifest has a nonempty `SRCS` block is listed.
-`Con2Prim/Hybrid` is the one extra intermediate directory. This proves current
+Static registry parity is complete at directory level: each listed `SUBDIRS`
+entry exists under upstream `GRHayL/`, and every upstream directory whose
+reachable manifest has a nonempty `SRCS` block is listed. `Con2Prim/Hybrid` is
+an extra intermediate directory. This proves current
 registry-name agreement, not that Cactus received copied source.
 
-Absent-copy-layout caveat: this checkout has only `doc/` and `src/` below
-`implementations/GRHayLib/`. None of the 29 listed module subdirectories and no
+Absent-copy-layout caveat: this checkout has `doc/` and `src/` below
+`implementations/GRHayLib/`. None of the listed module subdirectories and no
 `src/include/` aggregate-header dependency are present there. Therefore the
 registry is a direct-compile/copy-layout contract, not a locally complete thorn
 build tree. Do not call the absent layout a successful build, describe it as

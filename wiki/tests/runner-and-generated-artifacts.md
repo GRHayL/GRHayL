@@ -77,7 +77,7 @@ route, not a complete workflow matrix:
 5. Decompress downloaded `*.bz2` EOS tables.
 6. Run selected binaries under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Run `unit_test_code_error` keys `0` through `85` as expected process
+7. Run `unit_test_code_error` keys `0` through `87` as expected process
    failures.
 8. Run `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before the tabulated
    C2P replay. This page records only that visible setup command, not `pyghl`
@@ -123,9 +123,9 @@ Treat `.github/run_tests.sh` as one broad local-style driver, not a complete
 enumeration of every workflow job. Treat workflows as CI matrices, not proof
 that normal local runs regenerate trusted fixtures.
 
-Set comparison is exact in current sources: default `configure` targets all 30
-`Unit_Tests/unit_test_*.c` files, while the runner directly invokes 27. Its
-three uninvoked compiled targets are `unit_test_WENOZ_reconstruction`,
+Set comparison is exact in current sources: default `configure` targets the
+`Unit_Tests/unit_test_*.c` set, while the runner directly invokes all except
+`unit_test_WENOZ_reconstruction`,
 `unit_test_tabulated_eos_compose`, and `unit_test_con2prim_debug`; workflows
 invoke WENOZ and the focused CompOSE test, while no normal runner/workflow
 invocation for the debug binary is visible.

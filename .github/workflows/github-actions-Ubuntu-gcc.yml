@@ -267,10 +267,48 @@ jobs:
         uses: ./.github/actions/OS_setup
         with:
           compiler: 'gcc'
+      - name: Check NRPyLeakage floating-point flag policy
+        if: matrix.test-function == 'nrpyleakage_optically_thin_gas' && matrix.os == 'ubuntu-22.04'
+        run: |
+          unsafe_flags=$(./configure --help | sed -n 's/^    NRPyLeakage rejects: //p')
+          test -n "$unsafe_flags"
+          for flag in $unsafe_flags; do
+            case_dir=$(mktemp -d)
+            git archive HEAD | tar -x -C "$case_dir"
+            if (cd "$case_dir" && ./configure --disable-hdf5 --cflags="$flag") >"$case_dir/configure.log" 2>&1; then
+              echo "configure accepted unsupported flag $flag"
+              exit 1
+            fi
+            grep -q "Unsupported floating-point compiler flag" "$case_dir/configure.log"
+          done
+          case_dir=$(mktemp -d)
+          git archive HEAD | tar -x -C "$case_dir"
+          if (cd "$case_dir" && CC='gcc -fno-signed-zeros' ./configure --disable-hdf5) >"$case_dir/configure.log" 2>&1; then
+            echo "configure accepted unsupported flag from CC"
+            exit 1
+          fi
+          grep -q "Unsupported floating-point compiler flag" "$case_dir/configure.log"
+          test ! -e "$case_dir/Makefile"
+          case_dir=$(mktemp -d)
+          git archive HEAD | tar -x -C "$case_dir"
+          (cd "$case_dir" && ./configure --disable-hdf5 --cflags="-Wextra")
       - name: Compile GRHayL
         uses: ./.github/actions/compile_GRHayL
         with:
           compiler: 'gcc'
+      - name: Check NRPyLeakage strict-aliasing compilation
+        if: matrix.test-function == 'nrpyleakage_optically_thin_gas' && matrix.os == 'ubuntu-22.04'
+        run: |
+          gcc -std=c99 -O2 -DGHL_DISABLE_HDF5 -fstrict-aliasing \
+            -Wstrict-aliasing=2 -Werror=strict-aliasing \
+            -I./GRHayL/include \
+            -c Unit_Tests/unit_test_nrpyleakage_physics.c \
+            -o "$RUNNER_TEMP/unit_test_nrpyleakage_physics.o"
+      - name: Run table-free neutrino physics checks
+        if: matrix.test-function == 'nrpyleakage_optically_thin_gas'
+        run: |
+          LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_nrpyleakage_physics
+          LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_nrpyleakage_classifier_fallback
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
@@ -362,7 +400,7 @@ jobs:
       - name: Run unit test for error-catching
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          for i in {0..85}; do
+          for i in {0..87}; do
             if ./test/unit_test_code_error "$i"; then
               echo "Failed to fail!"
               exit 1

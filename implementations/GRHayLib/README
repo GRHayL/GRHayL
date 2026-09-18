@@ -15,7 +15,10 @@ License       : GPLv2 for Noble conservative-to-primitive routines adapted from 
                 Creative Commons Attribution-ShareAlike 4.0 International License
                 for Palenzuela and Newman conservative-to-primitive routines adapted
                 from GRMHD_con2prim
-                BSD2 for all other code
+                Boost Software License 1.0 for their adapted toms748 routine
+                BSD 2-Clause for remaining GRHayL code
+                BSD 3-Clause for adapted Phoebus WENO-z code (see its source
+                header) and FDINT code (see GRHayL's THIRD_PARTY_NOTICES)
 --------------------------------------------------------------------------
 
 ==========

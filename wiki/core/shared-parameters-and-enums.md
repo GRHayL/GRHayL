@@ -28,12 +28,12 @@ extrinsic-curvature-only pages.
   arrays.
 
 [`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn) lists
-all four headers above for installation. Installation is only header
+the headers above for installation. Installation is only header
 availability: declarations still require matching library storage/definitions,
 and function-pointer declarations still require runtime assignment before a
 call.
 
-Two installed-header cases need narrower labels:
+Some installed-header cases need narrower labels:
 
 - [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h)
   contains `extern` function-pointer declarations. Storage is emitted by the

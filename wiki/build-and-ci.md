@@ -26,7 +26,7 @@ Common flags visible in `configure`:
 | `--prefix=<dir>` | Installation prefix. |
 | `--builddir=<dir>` | Build directory; default is `build`. |
 | `--buildtype=<type>` | Compiler flag preset. Current help and parser disagree: help advertises `nocflags`, but the parser rejects it; the parser accepts undocumented `plain`, which supplies no preset flags. |
-| `--cflags="<flags>"` | Extra compiler flags. |
+| `--cflags="<flags>"` | Extra safe compiler flags. Unsafe floating-point modes are rejected. |
 | `--clibs="<libs>"` | Extra linker flags. |
 | `--hdf5dir=<dir>` | HDF5 base directory containing include and lib subdirectories. |
 | `--hdf5inc=<dir>` | HDF5 include directory. Must be paired with `--hdf5lib` for custom paths. |
@@ -37,12 +37,21 @@ Common flags visible in `configure`:
 populated from `Unit_Tests/unit_test_*.c` and
 `Unit_Tests/data_gen/unit_test_data_*.c`, filtered by the HDF5 setting.
 
-Build-type flags have another live help/parser mismatch. Help advertises
-`-fno-finite-math-only` for `production`; the parser currently generates
-`-Wall -std=c99 -march=native -O3` without that flag. Treat `nocflags` and the
-documented production flag string as broken documentation routes. `plain` and
-the parser's emitted production flags describe current behavior; maintainer
-intent remains unknown.
+The remaining build-type mismatch concerns the no-flags name: help advertises
+`nocflags`, while the parser rejects it and accepts undocumented `plain`.
+Production emits its documented
+`-Wall -std=c99 -march=native -fno-finite-math-only -O3` flags so runtime
+finite-value checks retain their required semantics.
+All build types reject explicit unsafe floating-point flag tokens listed by
+`./configure --help` when supplied through `CC` or `--cflags`, including
+fast-math and finite-only umbrella modes and the individual transformations on
+which those modes rely. A compile probe also rejects final flag sets that define
+fast-math or positive finite-only macros, and an execution probe requires
+gradual underflow. For Intel LLVM, `configure` appends
+`-fp-model=precise -no-ftz` after user flags because optimized ICX builds
+otherwise use fast arithmetic and flush subnormals. Build routes that bypass
+`configure`, including Cactus and downstream executable links, must enforce the
+same semantics; `-no-ftz` must reach the program containing `main`.
 
 Configuration, compilation, installation, consumer linking, and execution are
 separate evidence classes:
@@ -93,10 +102,13 @@ directory and links `build/lib/libghl.so` or the host shared-library extension.
 During configuration, every `GRHayL/include/*.h` is symlinked into
 `<builddir>/include/ghl`. `make install` instead copies the headers parsed from
 `GRHayL/include/make.code.defn` into `<prefix>/include/ghl`. Both mechanisms
-currently select the same 16 headers, including `ghl_unit_tests.h`, but they
+currently select the same headers, including `ghl_unit_tests.h`, but they
 are separate lists and can drift. Installation then copies the versioned
 shared library and symlink into `<prefix>/lib`. Installed presence does not by
 itself classify a header as production versus test-only API.
+`make install` also copies the FDINT notice, stored as `THIRD_PARTY_NOTICES`, into
+`<prefix>/share/doc/grhayl` so binary installations retain the FDINT BSD-3
+notice.
 
 `ghl_unit_tests.h` is a concrete installed-surface caveat. Its `static inline`
 helpers are caller-compiled, but its non-inline test-helper declarations are
@@ -163,7 +175,7 @@ trigger the workflow; path filters apply to `push`/`pull_request`, while the
 separately declared schedule remains eligible independently. These semantics
 come from the
 [GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore),
-not merely from local YAML key names. All five workflows use cron
+not merely from local YAML key names. Every compiler workflow uses cron
 `33 15 1,15 * *`. Their `push` event is restricted to branch `main`; their
 `pull_request` event has no branch filter in local YAML. Do not infer project
 support beyond the OS/compiler
@@ -185,7 +197,7 @@ Common job groups across workflows:
 | `grhayl-core` | core struct/metric/stress-energy suite |
 | `flux` | `hybrid_flux`, `tabulated_flux` |
 | `reconstruction` | `PLM_reconstruction`, `WENOZ_reconstruction` |
-| `neutrinos` | NRPyLeakage optically thin gas, constant density sphere, luminosities; see [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md) |
+| `neutrinos` | Table-free NRPyLeakage physics checks (blocking, Fermi edges, detailed balance, invalid inputs, asymmetric optical-depth stencil), optically thin gas, constant density sphere, and luminosities; see [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md) |
 | `con-to-prim-tabulated` | tabulated C2P routines |
 | `code-failure` | expected error-code failures |
 | `induction-interpolators` | cell/vertex interpolation variants; see [Induction verification workflows](gems/induction/verification-workflows.md) |
@@ -223,7 +235,7 @@ workflow matrix and not a fixture generator:
    where needed, decompressing `*.bz2` files.
 6. Runs the compiled tests under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Runs `unit_test_code_error` over error-code keys `0` through `85`, expecting
+7. Runs `unit_test_code_error` over error-code keys `0` through `87`, expecting
    each invocation to fail at process level.
 8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
    `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;
@@ -239,8 +251,8 @@ the downloader but still removed by the final glob. Run this driver only in a
 disposable checkout without user-owned root-level `.bin`, `.h5`, or `.bz2`
 files.
 
-The runner directly invokes 27 of the 30 configured default test binaries. It
-does not invoke `unit_test_WENOZ_reconstruction` (workflow matrices do),
+The runner directly invokes every configured default test binary except
+`unit_test_WENOZ_reconstruction` (workflow matrices invoke it),
 `unit_test_tabulated_eos_compose` (the focused CompOSE workflow does), or
 `unit_test_con2prim_debug` (no runner/workflow invocation is visible). The
 composite-action YAML configures `tests` and `datagen` compilation, but neither

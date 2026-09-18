@@ -137,10 +137,16 @@ temperature inversions from distinct valid initial guesses at endpoints and
 an interior point, the six-value
 NRPyLeakage callback order and range failures, and memory cleanup.  It also
 checks a no-fallback Con2Prim recovery, analytic tabulated flux and source
-goldens, and all eight combined-NRPyLeakage outputs against fixed regression
-goldens for the two qualified table dimensions.
+goldens, and all eight combined-NRPyLeakage outputs against fixed,
+implementation-derived regression goldens selected by the two recognized
+table dimensions. Recognition by dimensions and agreement with those values
+detect implementation drift; they are not independent physical qualification.
+The selected blocking model was qualified separately against external rate and
+thin-gas references. CI selects only the synthetic table; the SRO-141 replay
+requires external manual data.
 
-On the qualified table-141 artifact, regularization changed at most
+On the previously qualified table-141 artifact, the historical distortion
+summary records that regularization changed at most
 0.0341587 in `logenergy`, 0.0338011 in `logpress`, and 0.00547615 in a mass
 fraction; maximum entropy change was `1.1608683721e10`.  The deterministic
 energy shift was `30.0518 MeV` per baryon.  Regularization applied the high

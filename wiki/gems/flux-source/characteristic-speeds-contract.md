@@ -20,9 +20,9 @@ The public declarations live in
 
 The parent build list
 [GRHayL/Flux_Source/make.code.defn](../../../GRHayL/Flux_Source/make.code.defn)
-compiles all three direction files.
+compiles the `dirn0`, `dirn1`, and `dirn2` files.
 
-All three rows have the same surface status: public declaration, checked-in
+Every row has the same surface status: public declaration, checked-in
 definition, normal and `--disable-hdf5` build membership, direct calls from the
 hybrid and tabulated data generators, and direct replay calls from the ET
 Legacy flux/source test. The ordinary hybrid and tabulated flux tests do **not**
@@ -88,14 +88,14 @@ passes production characteristic-speed outputs into an Induction HLL routine.
 
 ## Evidence Status
 
-- **Built:** all three declarations, definitions, and manifest entries exist in
+- **Built:** each listed declaration, definition, and manifest entry exists in
   both HDF5 modes.
-- **Direct execution route:** `unit_test_ET_Legacy_flux_source` calls all three,
-  and the ordinary runner plus all five compiler workflows configure that
+- **Direct execution route:** `unit_test_ET_Legacy_flux_source` calls every
+  listed function, and the ordinary runner plus every compiler workflow configures that
   replay. That test installs its own `compute_h_and_cs2` callback rather than
   production EOS dispatch.
-- **Fixture-generation only:** hybrid and tabulated data generators call all
-  three; normal test jobs download rather than regenerate those fixtures.
+- **Fixture-generation only:** hybrid and tabulated data generators call every
+  listed function; normal test jobs download rather than regenerate those fixtures.
 - **Replay only:** `unit_test_hybrid_flux` and `unit_test_tabulated_flux` consume
   stored speed arrays.
 - **Coverage gap:** no standalone error/mutation test, no direct production

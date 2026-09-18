@@ -66,6 +66,9 @@ Check agent metadata, links/anchors, activation, precedence, coverage, budgets, 
 exit/delivery paths. Use affected link/policy checks and `git diff --check` when Git
 is available, not unrelated numerical suites. Keep repo-relative KB links and the
 runtime-path exception in [AGENTS.md](../AGENTS.md#agent-execution-contract).
-No source hashing/tracking timestamps/fingerprints, `mtime`, or separate KB logs;
-only necessary dates, in `MM-DD-YYYY`. Operational checkpoints are task state,
-not permanent KB logs. Do not import NRPy-only tools, schema, or file protections.
+No source-tracking checksums, hashes, digests, VCS revision pins, file or source
+counts, `mtime`, stored fingerprints, date stamps or timestamps as KB metadata,
+or separate KB logs. Technical hash facts may be documented only
+as reviewed domain facts, never stored digest values. Operational checkpoints
+are task state, not permanent KB logs. Do not import NRPy-only tools, schema, or
+file protections.

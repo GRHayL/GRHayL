@@ -163,32 +163,67 @@ source, headers, tests, and common edit routes before wider search.
   Keep docs, stencil shapes, and tests synchronized. Current `Az` helper comment
   conflicts with arithmetic/test face mapping.
 
-## Radiation M1
+## Neutrinos
 
-- Purpose: grey, one-group, three-species neutrino M1 transport with frozen-rate
-  provider input, explicit and local implicit source updates, pair exchange,
-  lepton coupling, canonical four-point blended Rusanov transport, and shared
-  closure/moment/stress/diagnostic helpers.
-- KB routes: [hub](radiation-m1.md), [neutrino M1 contract](radiation-m1/neutrino-m1-contract.md),
-  [rate provider](radiation-m1/rate-provider-contract.md),
-  [API/build boundary](radiation-m1/api-build-boundary.md),
-  [host boundary](radiation-m1/host-integration-and-downstream.md),
-  [tests and fixtures](radiation-m1/tests-and-fixtures.md), and
-  [compatibility evidence](radiation-m1/compatibility-evidence.md).
-- Docs path: `docs/raw/Radiation.dox`, with transport/provider details in
-  `GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md`,
-  `GRHayL/Radiation/PAIR_SOURCE_MODEL.md`, and
-  `GRHayL/Radiation/TRACEABILITY.md`.
-- Source path: `GRHayL/Radiation/` and `GRHayL/Radiation/Neutrinos/`.
-- Primary headers: `GRHayL/include/ghl_m1.h`,
-  `GRHayL/include/ghl_neutrino_rate_provider.h`,
-  `GRHayL/include/ghl_radiation.h`, and
-  `GRHayL/include/ghl_nrpyleakage.h`.
-- Test route: `Unit_Tests/run_m1_tests.sh` selects nine targets; detailed
-  behavior and fixture ownership are in [tests and fixtures](radiation-m1/tests-and-fixtures.md).
-- Drift/contract notes: the canonical neutrino face route is four-point blended
-  Rusanov with uncapped metric light-cone speeds and no separate diffusion
-  correction; optional diffusion helpers remain public. Host mesh loops,
-  reconstruction, AMR, schedules, matter recovery, and coupled limiter policy
-  remain downstream responsibilities. Unit tests do not prove host integration
-  or full-evolution equivalence.
+- Purpose: NRPyLeakage neutrino opacities, luminosities, optical-depth updates,
+  and source terms.
+- KB routes: [hub](neutrinos.md), [physics and EOS contract](neutrinos/physics-and-eos-contract.md),
+  [generator provenance](neutrinos/generator-provenance.md),
+  [API and data](neutrinos/api-and-data.md),
+  [CompOSE EOS adapter how-to](neutrinos/compose-eos-adapter-how-to.md),
+  [implementation flow](neutrinos/implementation-flow.md), and
+  [tests and fixtures](neutrinos/tests-and-fixtures.md).
+- Docs path: coverage gap: no dedicated Neutrinos raw Doxygen page exists;
+  `GRHayL/include/ghl_radiation.h` defines the Doxygen group.
+- Source path: `GRHayL/Neutrinos/`.
+- Primary headers: `GRHayL/include/ghl_radiation.h`,
+  `GRHayL/include/ghl_nrpyleakage.h`,
+  `GRHayL/include/ghl_nrpyeos_tabulated.h`.
+- Likely tests: `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
+  `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`,
+  `Unit_Tests/unit_test_nrpyleakage_luminosities.c`,
+  `Unit_Tests/unit_test_nrpyleakage_physics.c`,
+  `Unit_Tests/nrpyleakage_main.h`; route fixture details through
+  [tests and fixtures](neutrinos/tests-and-fixtures.md).
+- Common edit routes: add or change leakage routines in
+  `GRHayL/Neutrinos/NRPyLeakage/`, expose API in leakage/radiation headers,
+  update tests and downstream header aggregation. Use
+  [API and data](neutrinos/api-and-data.md) for public structs, entry points,
+  and HDF5/EOS contracts, and [implementation flow](neutrinos/implementation-flow.md)
+  for the built source set. Route physics meanings and EOS conventions
+  through [physics and EOS contract](neutrinos/physics-and-eos-contract.md), and
+  Python/notebook/code-generation questions through
+  [generator provenance](neutrinos/generator-provenance.md).
+- Drift/contract notes: leakage uses tabulated EOS quantities and table-backed
+  test data. HDF5/EOS changes can break Neutrinos even if leakage source is
+  untouched. All 19 fixture-replay results are consumed: optically thin uses
+  `ghl_pert_test_fail`; sphere and luminosity use local wrappers around
+  `ghl_pert_test_fail_with_tolerance`. A numerical mismatch fails its executable. Published
+  `GRHayL/TestData` fixtures and implementation-derived CompOSE drift goldens reflect the
+  selected density-derived blocking implementation.
+
+## Reconstruction
+
+- Purpose: PLM, PPM, and WENO-z shock-capturing reconstruction routines that
+  produce face values for flux calculations.
+- KB routes: [hub](reconstruction.md), [face and stencil contract](reconstruction/face-and-stencil-contract.md),
+  [PLM limiters](reconstruction/plm-limiters.md), [PPM flow](reconstruction/ppm-flow.md),
+  [WENOZ contract](reconstruction/wenoz-contract.md), and
+  [tests and fixtures](reconstruction/tests-and-fixtures.md).
+- Docs path: `docs/raw/Reconstruction.dox`.
+- Source path: `GRHayL/Reconstruction/`.
+- Primary headers: `GRHayL/include/ghl_reconstruction.h`,
+  `GRHayL/include/ghl.h`.
+- Likely tests: `Unit_Tests/unit_test_PLM_reconstruction.c`,
+  `Unit_Tests/unit_test_WENOZ_reconstruction.c`,
+  `Unit_Tests/unit_test_ET_Legacy_reconstruction.c`, reconstruction data
+  generators.
+- Common edit routes: PLM changes go through `GRHayL/Reconstruction/PLM/`,
+  PPM through `GRHayL/Reconstruction/PPM/`, WENO-z through
+  `GRHayL/Reconstruction/WENOZ/`; use the method pages for route-specific
+  source, header, test, and build-list checks.
+- Drift/contract notes: PPM parameters live in `ghl_parameters`; stencil sizes,
+  face orientation, and left/right naming are external caller contracts.
+  Coverage gap: no dedicated PPM unit test file is obvious in `Unit_Tests/`.
+  Built routines have no production source caller in this repo; generator
+  bounds, PPM face comments, and Doxygen category wording remain defective.

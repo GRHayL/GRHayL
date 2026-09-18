@@ -43,6 +43,16 @@ int main(int argc, char **argv) {
   }
 #endif
 
+  if(test_key == 86) {
+    expect_error_code(
+          ghl_error_nrpyleakage_blocking, test_key, "NRPyLeakage blocking failure");
+  }
+  if(test_key == 87) {
+    expect_error_code(
+          ghl_error_nrpyleakage_nonfinite_output, test_key,
+          "NRPyLeakage nonfinite-output fallback");
+  }
+
   ghl_error_codes_t error = ghl_success;
 
   const ghl_con2prim_id_t None = ghl_con2prim_id_None;
@@ -739,6 +749,8 @@ static ghl_error_codes_t expected_error_code(const int test_key) {
     case 83: return ghl_error_eos_struct_is_null;
     case 84: return ghl_error_could_not_open_file;
     case 85: return ghl_error_hdf5_dataset_could_not_open;
+    case 86: return ghl_error_nrpyleakage_blocking;
+    case 87: return ghl_error_nrpyleakage_nonfinite_output;
     case 78:
     case 79:
     case 80:

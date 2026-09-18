@@ -65,7 +65,7 @@ Key public surface:
 
 `docs/raw/Reconstruction.dox` also says the current method categories are only
 PLM and PPM, then defines a WENO group. The manifest, header, source, direct
-test, and five workflow matrices all contain WENOZ. Treat the two-category
+test, and every compiler workflow matrix contain WENOZ. Treat the two-category
 sentence as stale Doxygen evidence, not current support truth.
 
 ## Common Edit Routes

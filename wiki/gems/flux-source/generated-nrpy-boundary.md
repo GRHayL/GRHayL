@@ -64,12 +64,12 @@ compiles shared Flux_Source kernels and routes variant subdirectories:
 - `tabulated/`
 - `tabulated_entropy/`
 
-Variant-local `make.code.defn` files compile the 12 checked-in
+Variant-local `make.code.defn` files compile the checked-in
 `ghl_calculate_HLLE_fluxes_dirn*_<variant>.c` kernels. These C files are part
 of the built source tree even when they are generated or derived from Python
 scripts.
 
-`configure --disable-hdf5` filters the six tabulated and tabulated-entropy
+`configure --disable-hdf5` filters the tabulated and tabulated-entropy
 sources from generated build targets. Their files and public declarations
 remain present; source presence is not link evidence in that mode.
 

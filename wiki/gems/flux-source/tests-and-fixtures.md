@@ -49,7 +49,7 @@ test jobs also download fixture files before execution.
 ## Characteristic-Speed Evidence
 
 Characteristic speeds are fixture evidence here. The hybrid and tabulated data
-generators call the three `ghl_calculate_characteristic_speed_dirn*` kernels and
+generators call every `ghl_calculate_characteristic_speed_dirn*` kernel and
 store `cxmin/cxmax`, `cymin/cymax`, and `czmin/czmax` in the flux input
 fixtures. The hybrid and tabulated tests consume those stored speed arrays while
 checking HLLE output. The ET Legacy flux/source test instead computes `cmin` and
@@ -98,7 +98,7 @@ routes belong to [characteristic-speeds-contract.md](characteristic-speeds-contr
   `unit_test_ET_Legacy_flux_source`, separate from the workflow matrix entry
   named `HLL_flux`.
 
-All five workflow files configure these jobs. Push and pull-request triggers
+Every compiler workflow configures these jobs. Push and pull-request triggers
 ignore `wiki/**` and Markdown-only changes; scheduled triggers remain. Thus a
 KB-only change does not itself exercise Flux_Source on push/PR.
 

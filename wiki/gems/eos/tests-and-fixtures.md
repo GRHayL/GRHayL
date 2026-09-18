@@ -35,9 +35,14 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   order and range errors, requires a
   no-fallback Palenzuela recovery, compares characteristic speeds, tabulated
   HLLE and entropy fluxes, and source terms with analytic goldens, compares all
-  eight combined-leakage outputs with fixed regression goldens for the two
-  qualified table dimensions, and frees table memory. `configure` auto-discovers
-  it only in HDF5-enabled builds.
+  eight combined-leakage outputs against implementation-derived regression
+  goldens for the analytic and regularized SRO-141 inputs, and frees table
+  memory. The goldens lock the selected density-derived blocking
+  implementation after its external rate and thin-gas qualification; they are
+  regression evidence, not an independent physics model. CI selects only the
+  analytic table. The full
+  SRO-141 replay remains an external manual check.
+  `configure` auto-discovers the test only in HDF5-enabled builds.
 - [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c)
   covers EOS initialization errors for simple, hybrid, and tabulated setup;
   tabulated interpolation/helper errors including out-of-table and

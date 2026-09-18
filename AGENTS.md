@@ -57,7 +57,7 @@ exact clause, distinguish interpretation from requirement, and finish separable 
 
 | Go to | Use it for |
 | --- | --- |
-| [KB Index](wiki/index.md) | Root router for KB pages, source authority, page contracts, and source/date policy. |
+| [KB Index](wiki/index.md) | Root router for KB pages, source authority, page contracts, and source-tracking metadata policy. |
 | [KB Catalog](wiki/catalog.md) | Query-routing table for aliases, gems, source paths, docs, and tests. |
 | [Source Map](wiki/source-map.md) | Source tree ownership and dependency routing. |
 | [Workflows](wiki/workflows.md) | Common build, test, docs, and review workflows for agents. |
@@ -103,17 +103,33 @@ exact clause, distinguish interpretation from requirement, and finish separable 
 | Investigate unresolved source/docs/test conflict | [Current Contradictions](wiki/contradictions.md), then exact owner leaf and competing repo files named there |
 | Update documentation pages | [docs/raw](docs/raw/), [Doxyfile](Doxyfile) |
 
-## Source-Tracking And Date Policy
+## Source-Tracking Metadata Policy
 
 These rules bind `AGENTS.md`, `wiki/`, and any future GRHayL KB manifest or
 governance pages added to this repository:
 
-- No source-tracking hashes or hashing of sources.
-- No `mtime`.
-- Avoid KB dates unless they are absolutely necessary. When retained dates are
-  necessary, use `MM-DD-YYYY`.
+- No source-tracking checksums, hash or digest columns, or stored values of any
+  kind, including VCS commit or revision identifiers used as pins. Do not hash
+  sources.
+- No file or source counts as KB metadata. Do not count sources or files for
+  tracking, coverage, or freshness.
+- No `mtime` columns or values.
+- No date stamps or timestamps as KB metadata, including fields or values. Do
+  not record access, audit, check, reconciliation,
+  opening, resolution, or validation-run dates. Publication years and
+  date-like source or version identifiers remain allowed; full calendar date
+  stamps do not.
 - Do not output KB maintenance notes to a separate maintenance log. This
   repository already lives in git, so commit history records durable operations.
+
+Technical, non-source-tracking hash facts remain allowed as reviewed domain
+facts, but never as stored digest values.
+Immutable external citation URLs may retain opaque identifiers, including
+hash-shaped path segments. Preserve the link; do not extract the identifier
+into source-tracking metadata.
+
+Git history already records when KB content changed and what changed. Duplicate
+hashes, counts, and timestamps add maintenance burden without authority.
 
 Source drift is handled by dependency-aware review of changed repository paths
 and affected documentation pages, not by stored fingerprints.

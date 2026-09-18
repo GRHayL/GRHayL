@@ -20,6 +20,12 @@ The WENO-z implementation includes source adapted from the Phoebus code
 developed by Los Alamos National Lab; that adapted source is subject to the
 BSD 3-Clause License.
 
+The NRPyLeakage nucleon-blocking helper includes scalar rational
+approximations adapted from Scott Maddox's FDINT implementation of Fukushima's
+Fermi-Dirac fits. That adapted code is subject to the BSD 3-Clause License.
+The full notice is distributed in `THIRD_PARTY_NOTICES` and installed under
+`share/doc/grhayl`.
+
 ## Citations
 
 The following chart gives a quick reference guide, followed by a more detailed

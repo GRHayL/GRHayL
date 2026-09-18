@@ -38,7 +38,7 @@ leakage source consumes those values.
 | --- | --- | --- | --- |
 | Convert offline to StellarCollapse HDF5 | Existing GRHayL tabulated-EOS reader should remain unchanged | Generate a compatible regular grid, convert units and chemical-potential zero points, derive or aggregate fields that CompOSE does not provide in the target convention, and write every dataset required by `NRPyEOS_stellarcollapse_read_table` | Current reader requires the complete StellarCollapse dataset family, not only the six leakage fields |
 | Add a native CompOSE-backed GRHayL adapter | GRHayL should own table loading and expose the existing leakage callback | Add table storage/loading, state conversion, interpolation, callback registration, and GRHayL error mapping | Current three leakage entry points retain an HDF5 compile guard even though the physical callback need not use HDF5 |
-| Port NRPyLeakage into another host | Host already owns GRHD, EOS, table interpolation, and errors | Implement the equivalent six-output EOS adapter and translate GRHayL types, errors, units, and the HDF5 guard | Exact equivalence requires preserving current source formulas and all boundary conventions, including the documented suppression-ratio seam |
+| Port NRPyLeakage into another host | Host already owns GRHD, EOS, table interpolation, and errors | Implement the equivalent six-output EOS adapter and translate GRHayL types, errors, units, and the HDF5 guard | Exact equivalence requires preserving current source formulas and all boundary conventions, including the documented chemical-potential convention seams |
 
 The first route gives closest reuse of current GRHayL. The second avoids
 forcing CompOSE data into an unrelated file schema. The third is the narrowest
@@ -341,6 +341,27 @@ defined density reference $m_{\rm ref}^{\rho}$ equals $m_{\rm ref}^{E}$.
 Subtracting $m_n$ from the neutron and $m_p$ from the proton would change their
 difference and is not the Hempel EOSmaker target contract.
 
+Current leakage consumes $\widehat\mu$ in the retained grey equilibrium
+degeneracies and spectral moments. Blocking no longer consumes
+$\widehat\mu$, $\mu_n$, or $\mu_p$. It reconstructs kinetic degeneracies from
+`rho`, `T`, `X_n`, and `X_p`. This separation matters because thermodynamic
+chemical potentials contain rest-energy, interaction, and producer-reference
+terms that are not kinetic occupations. The free-density construction removes
+common energy-zero dependence and avoids counting bound nucleons as free
+targets. Do not compensate for reaction-energy shifts in the adapter; a shift
+must be introduced consistently in both emission and absorption kernels.
+
+For the actual legacy SLy4 and SRO-141 inputs, the
+[producer energy conventions](../eos/stellarcollapse-table-adapter.md#producer-energy-conventions)
+are established and remain required for equilibrium quantities and ABI
+validation. Raw SRO microscopic effective masses and mean fields are absent
+from the current converter and runtime chemistry callback. Moreover, the fixed
+profile's closure-adjusted `Xn,Xp` are surrogate composition fields, not
+unchanged microscopic gas occupancies. Free fractions fix the reference and
+target-counting defects within the common-mass gas approximation; they do not
+qualify interacting-EOS blocking. See
+[Physics And EOS Contract](physics-and-eos-contract.md#chemical-potentials-and-density-derived-blocking).
+
 For that target convention, the direct formulas from raw CompOSE fields are
 
 $$
@@ -387,8 +408,9 @@ substitute generic particle masses.
 Test both common zero-point failure modes. Separate neutron/proton rest-mass
 subtraction shifts $\widehat\mu$ by approximately $-(m_n-m_p)$, about
 $-1.293$ MeV. Choosing the wrong common $m_{\rm ref}^{E}$ leaves
-$\widehat\mu$ unchanged but shifts both individual potentials, corrupting the
-`mu_n/T` and `mu_p/T` blocking factors.
+$\widehat\mu$ unchanged but shifts both individual potentials. That shift no
+longer changes blocking, but it still violates the six-output ABI and can
+mislead other consumers.
 
 ### Electron Chemical Potential
 
@@ -479,9 +501,9 @@ contract instead of returning an unrelated value.
 When adding a native GRHayL backend, register the callback where tabulated EOS
 function pointers are initialized; current registration lives in
 [`NRPyEOS_initialize_tabulated_functions.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c).
-The three EOS-dependent leakage C files return
+The EOS-dependent leakage C files return
 `ghl_error_used_disabled_hdf5` before calling the callback in no-HDF5 builds.
-Those three guards are only the first boundary. A non-HDF5 native backend must
+Those guards are only the first boundary. A non-HDF5 native backend must
 also replace or restructure the current tabulated-EOS gates in
 `ghl_initialize_eos_functions`, both tabulated initializers, function-pointer
 registration, table read/free/interpolation paths, and `configure` source and
@@ -556,8 +578,9 @@ For each state:
 4. If an independently converted StellarCollapse oracle exists for the same
    raw table release, CompOSE version, grid and interpolation policy, and
    density and chemical-potential conventions, compare all callback outputs in
-   ABI order and the leakage combinations `mu_e/T`, `mu_n/T`, `mu_p/T`,
-   `muhat/T`, and `(mu_e-muhat)/T`.
+   ABI order and the active leakage combinations `mu_e/T`, `muhat/T`, and
+   `(mu_e-muhat)/T`. Compare `mu_n` and `mu_p` as ABI outputs, not as active
+   blocking inputs.
 5. Check $0\le X_n\le1$, $0\le X_p\le1$, and table-specific composition
    identities. Do not require $X_n+X_p=1$ where nuclei or other baryons exist.
 6. Test electron-only and no-lepton closures independently. Treat muon-bearing
@@ -569,15 +592,15 @@ For each state:
    separately. Do not infer their coherence from opacity agreement.
 9. After callback validation, compare all six opacity slots, `R_source`,
    `Q_source`, and all three luminosities at zero and nonzero optical depth.
-   Pressure or energy agreement alone does not test this interface. The
-   opacity-only routine reads but does not consume `X_n` or `X_p`; their live
-   bremsstrahlung use is in the combined source-term and luminosity routines,
-   so validate those paths to exercise free-nucleon composition.
+   Pressure or energy agreement alone does not test this interface. All three
+   EOS-dependent routines consume `X_n` and `X_p` for blocking; the
+   combined source-term and luminosity routines also use them for
+   bremsstrahlung. Validate every path to exercise free-nucleon composition.
 
 For a direct NRPyLeakage port, validate density, opacity, optical-depth,
-source, and luminosity conversions together. Separately decide whether exact
-compatibility requires preserving the current
-[suppression-ratio unit seam](physics-and-eos-contract.md#current-suppression-ratio-unit-seam).
+source, and luminosity conversions together, and keep the suppression ratio in
+a single time unit; see
+[Suppression-Ratio Units](physics-and-eos-contract.md#suppression-ratio-units).
 
 ## Unsupported Without More Physics Or Data
 

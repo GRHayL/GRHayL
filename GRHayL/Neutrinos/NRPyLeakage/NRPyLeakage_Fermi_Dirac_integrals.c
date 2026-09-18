@@ -16,7 +16,8 @@ ghl_error_codes_t NRPyLeakage_Fermi_Dirac_integrals(
   if(z>1e-3) {
     switch(k) {
     case(0):
-      *Fermi_Dirac_integral = 1.0*log(exp(z) + 1);
+      // Numerically stable form of log(exp(z) + 1).
+      *Fermi_Dirac_integral = (z > 0.0) ? z + log1p(exp(-z)) : log1p(exp(z));
       break;
     case(1):
       *Fermi_Dirac_integral = ((1.0/2.0)*((z)*(z)) + 1.6449)/(1 + exp(-1.6855*z));
@@ -40,7 +41,8 @@ ghl_error_codes_t NRPyLeakage_Fermi_Dirac_integrals(
   else {
     switch(k) {
     case(0):
-      *Fermi_Dirac_integral = 1.0*log(exp(z) + 1);
+      // Numerically stable form of log(exp(z) + 1).
+      *Fermi_Dirac_integral = (z > 0.0) ? z + log1p(exp(-z)) : log1p(exp(z));
       break;
     case(1):
       *Fermi_Dirac_integral = exp(z)/(0.21590000000000001*exp(0.88570000000000004*z) + 1);

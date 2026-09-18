@@ -99,9 +99,9 @@ files only.
 
 ## Configured Execution Status
 
-- **Runner-listed:** `.github/run_tests.sh` invokes both ET Legacy tests, three
-  interpolation tests, and local HLL test after downloading fixtures.
-- **CI-configured:** all five compiler workflows contain `ET-Legacy`,
+- **Runner-listed:** `.github/run_tests.sh` invokes the ET Legacy,
+  interpolation, and local HLL tests after downloading fixtures.
+- **CI-configured:** every compiler workflow contains `ET-Legacy`,
   `induction-interpolators`, and `induction-flux` jobs. Shared compile action
   builds tests and data generators; jobs execute downloaded fixtures.
 - **Workflow-only for this change:** push/PR triggers ignore `wiki/**` and

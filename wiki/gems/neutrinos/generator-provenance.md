@@ -49,8 +49,8 @@ develops the leakage model from GRMHD source terms through:
 - free, diffusion-limited, and effective number/energy rates; and
 - the final lepton-number source `R` and cooling source `Q`.
 
-It also discusses neutrino pressure, which is broader than the five-file
-current GRHayL NRPyLeakage build boundary. Use it to recover the meaning and
+It also discusses neutrino pressure, which is broader than the current GRHayL
+NRPyLeakage build boundary. Use it to recover the meaning and
 derivation of expressions, not to infer an additional GRHayL API.
 
 ### Symbolic Implementation And C Generation
@@ -165,7 +165,7 @@ individual `tmp_N`.
 
 The current build manifest
 [`GRHayL/Neutrinos/NRPyLeakage/make.code.defn`](../../../GRHayL/Neutrinos/NRPyLeakage/make.code.defn)
-lists five adapted C files:
+lists these adapted C files:
 
 - [`NRPyLeakage_Fermi_Dirac_integrals.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_Fermi_Dirac_integrals.c)
   retains the generated approximation expressions, but GRHayL returns
@@ -186,16 +186,14 @@ lists five adapted C files:
   extracts the pointwise face-average, neighbor-candidate, and minimum-path
   calculation seen in the external Einstein Toolkit routine into a
   GRHayL struct-based call.
-
-The GRHayL-owned M1 raw thermo/rate adapter is implemented separately in
-[`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c)
-and built by the
-[Radiation/Neutrinos manifest](../../../GRHayL/Radiation/Neutrinos/make.code.defn).
-It is not a direct notebook output. Its thermodynamic-state and raw-rate
-declarations are in a
-[private header](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.h);
-the public entry point is the
-[rate-provider API](../../../GRHayL/include/ghl_neutrino_rate_provider.h).
+- [`NRPyLeakage_nucleon_blocking.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
+  is hand-maintained GRHayL code, not output recovered from the ancestral
+  notebooks. All three EOS-dependent routines include it, and the manifest
+  tracks it through `#! INCS`.
+- [`NRPyLeakage_rate_helpers.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h)
+  is also hand-maintained. It centralizes corrected bremsstrahlung, diffusion,
+  and heavy-lepton source identities so production and the independent
+  analytic checks use one production entry point.
 
 GRHayL adaptations include different public types and argument shapes,
 tabulated-EOS dispatch, HDF5-disabled returns, propagated Fermi/EOS errors,
@@ -210,9 +208,8 @@ ancestral formula or failure mode survived unchanged.
 
 ## Regeneration Rule
 
-No current repo-local command regenerates all five legacy GRHayL files. The
-separate M1 raw-rate adapter is GRHayL-owned rather than notebook-generated.
-If a formula must change:
+No current repo-local command regenerates the complete GRHayL file set. If a formula
+must change:
 
 1. edit or reconstruct the named symbolic expression using the external
    implementation notebook and vendored `nrpy_core` as provenance;
@@ -225,6 +222,62 @@ If a formula must change:
    [Tests And Fixtures](tests-and-fixtures.md).
 
 Do not treat generated C replacement as a mechanical copy operation.
+
+### Hand-Applied Corrections To The Adapted C
+
+Some formula corrections were applied directly to the checked-in C because no
+maintained repo-local producer exists. The ancestral symbolic sources were not
+re-run and are not synchronized with these edits:
+
+- the shared diffusion prefactor is `6.0/NRPyLeakage_c_light`, keeping the
+  suppression ratio in cgs;
+- nucleon-nucleon bremsstrahlung carries `rho_cgs*rho_cgs`;
+- each emission routine computes one heavy-lepton free energy rate, the local
+  `Q_free_nux`, and uses it in both the `nux` numerator and its own inverse
+  loss time;
+- the order-zero Fermi-Dirac integral uses the stable `log1p` form;
+- nucleon blocking derives common-mass kinetic degeneracies from `rho`, `T`,
+  `X_n`, and `X_p`, then evaluates bounded same-energy transition populations
+  with an algebraic overlap identity; and
+- charged-current emission and ordinary-absorption moments use the common
+  reaction shift `q = muhat - T*(eta_n-eta_p)`, opposite particle-threshold
+  orientations, and algebraic shifted moments from a single spectral parent.
+  The paired construction enforces its Kirchhoff relation while retaining the
+  existing grey representative-energy treatment of final-state lepton
+  blocking.
+
+Treat the current C as authority for these expressions. Regenerating from an
+ancestral notebook would reintroduce the uncorrected forms, so any future
+regeneration must reapply them and compare against
+[the physics and EOS contract](physics-and-eos-contract.md).
+
+### Nucleon-Blocking Sources And Adaptation Boundary
+
+The blocking helper follows the density-derived free-nucleon construction in
+A. Ardevol-Pulpillo et al., *MNRAS* 485 (2019), 4754--4787,
+[doi:10.1093/mnras/stz613](https://doi.org/10.1093/mnras/stz613), Appendix B,
+Eqs. (69)--(71). Appendix C, Eqs. (100)--(109), supplies the cited precedent
+for thresholded shifted reaction pairs and the distinction between ordinary
+and stimulated absorption used in Kirchhoff pairing. Current GRHayL implements
+an algebraic grey reduction of that structure. It does not implement a full
+energy-dependent spectral kernel with finite charged-lepton mass, EOS
+effective masses, or mean-field single-particle energies.
+
+The helper ports scalar `fdm1h` and `ifd1h` rational fits from Scott Maddox's
+[FDINT implementation](https://github.com/scott-maddox/fdint/blob/master/fdint/_fdint.pyx).
+FDINT attributes those fits to T. Fukushima's minimax approximations
+([half-odd Fermi integrals](https://doi.org/10.1016/j.amc.2015.03.009) and
+[inverse Fermi integrals](https://doi.org/10.1016/j.amc.2015.03.015)). The
+source header retains FDINT's full BSD-3 notice because coefficients and fit
+code were ported.
+
+GRHayL's common density normalization, fraction-ordering, `expm1` overlap, and
+equal-population limit are local adaptations. Do not attribute that complete
+evaluator to FDINT or ILEAS. The nearby-positive-number subtraction relies on
+the exact-subtraction condition described by P. H. Sterbenz,
+*Floating-Point Computation*, Prentice-Hall, 1974, Sec. 4.3. These techniques
+were chosen to remove the old reference dependence and quotient pole without
+adding quadrature, iterative roots, or tables to a leakage hot path.
 
 ## Ground Truth References
 

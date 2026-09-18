@@ -437,3 +437,15 @@ Pitfalls/contracts:
 - GRHayLib directly compiles GRHayL-like subdirectories; new source directories can require downstream build-list changes.
 - Public header changes affect Cactus thorns that include `GRHayLib.h`.
 - Parameter or EOS initialization changes can require Cactus parameter/schedule updates.
+
+## KB Maintenance
+
+Read [KB Index](index.md), [KB Checks](lint/CHECKS.md), and exact source owners
+before editing KB pages. Reopen ground truth for changed claims, update affected
+routes and owner pages, then run affected link, policy, and whitespace checks.
+
+Never compute or record source-tracking checksums, hashes, digests, VCS revision
+pins, file or source counts, `mtime`, stored fingerprints, date stamps, or
+timestamps. Do not create separate KB maintenance logs. Track source drift by
+changed paths and dependency-aware review; use git history for durable change
+history.

@@ -30,7 +30,7 @@ Changing either helper can affect multiple PLM methods. Treat helper edits as sh
 PLM has no runtime parameter struct. Limiter coefficients are fixed by each
 source: minmod compares adjacent one-sided slopes, MC includes centered and
 twice-one-sided candidates, and superbee combines minmod candidates with
-maxmod. Exact arithmetic and tie behavior stay in the five PLM sources.
+maxmod. Exact arithmetic and tie behavior stay in the listed PLM sources.
 
 ## Build Membership
 
