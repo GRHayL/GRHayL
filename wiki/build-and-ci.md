@@ -137,7 +137,7 @@ With `--disable-hdf5`, `configure`:
   `configure`; despite their paths, it explicitly retains
   `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` and sources under
   `Con2Prim/Tabulated/neural_network_guess/`, the disabled direct-tabulated-
-  solver stubs, and the six direct tabulated HLLE flux implementations;
+  solver stubs, and the direct tabulated HLLE flux implementations;
 - excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, and the
   NRPyLeakage unit tests from the generated unit-test list;
 - excludes tabulated data generators from the generated data-generator list.
@@ -167,8 +167,8 @@ Workflows live in `.github/workflows/`:
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | 15 job groups total; 14 invoke the shared coverage action, including the no-HDF5 `con2prim-contracts` job; the focused CompOSE job uploads only its Python XML |
-| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | `con2prim-contracts` uploads coverage before its plain Valgrind build and again after its no-HDF5 phase; other jobs retain their listed shared coverage actions |
+| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | includes a dedicated no-HDF5 Con2Prim build/test with coverage; other jobs retain their shared coverage actions |
 | `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | 2 of 13 jobs invoke coverage action |
 | `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
 | `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | no jobs invoke coverage action |
@@ -188,7 +188,14 @@ not merely from local YAML key names. Every compiler workflow uses cron
 support beyond the OS/compiler
 pairs encoded in these workflow matrices and the usage examples in `configure`.
 An implementation-only change therefore triggers Ubuntu-GCC, whose
-`con2prim-contracts` job validates the nine tracked GRHayLib source symlinks.
+`con2prim-contracts` job validates the tracked GRHayLib source symlinks and
+checks that its source registry covers every upstream source-bearing manifest
+directory. The same job byte-compares generated Con2Prim fixtures against a
+pinned companion-repository revision. That byte gate is tied to the configured
+GCC toolchain and environment; compiler, library, or runner changes require
+reviewing the fixture contract even when source is unchanged. Its plain-build
+Valgrind phase checks the Con2Prim generator and focused recovery tests for
+memory errors and uninitialized reads.
 The other compiler workflows remain skipped for such a change. This is static
 topology plus core `configure`/unit-test evidence, not a GRHayLib Cactus thorn
 build.

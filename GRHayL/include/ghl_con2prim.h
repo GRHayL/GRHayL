@@ -31,7 +31,8 @@ typedef struct ghl_con2prim_diagnostics {
   /** Whether a given backup routine was used (true) or not (false) */
   bool backup[3];
   /** Iterations used by which_routine. Font1D totals outer iterations across
-   *  its internal attempts and reports zero on its zero-momentum shortcut. */
+   *  its internal attempts and reports zero when its conservative momentum
+   *  norm satisfies S_i gamma^ij S_j < 1e-300. */
   int n_iter;
   /** Whether the tabulated multi-method driver attempted a neural-network retry */
   bool nn_guess_used;
@@ -277,6 +278,27 @@ void ghl_tabulated_compute_primitive_guess_auxiliaries(
       const ghl_primitive_quantities *restrict prims,
       ghl_tabulated_primitive_guess_aux *restrict aux);
 
+/**
+ * Complete a tabulated primitive initial guess from a finite Palenzuela
+ * variable `x`. This helper accepts any algebraically usable finite `x`; its
+ * sign is not an EOS admissibility test. In particular, tabulated EOS energy
+ * reference conventions may admit negative internal energy and conservative
+ * energy. Admissibility depends on EOS bounds local to density and
+ * composition. This routine supplies a solver seed, not that decision.
+ * Nonfinite `x`, invalid conservative input, or unusable intermediate/output
+ * values return the initialized EOS atmosphere while preserving incoming
+ * magnetic components.
+ *
+ * @param[in] params Con2Prim parameters
+ * @param[in] eos tabulated EOS parameters
+ * @param[in] metric_adm ADM metric
+ * @param[in] cons_undens undensitized conservatives
+ * @param[in] aux precomputed algebraic contractions
+ * @param[in] x finite Palenzuela variable; sign alone does not determine EOS
+ *              admissibility
+ * @param[in,out] prims primitive guess; incoming magnetic components are
+ *                      preserved
+ */
 void ghl_tabulated_primitive_guess_from_x(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -338,7 +360,9 @@ struct ghl_c2p_nn_model {
   float *b_out;
 };
 
-/* Public API version for the on-disk HDF5 schema/output-kind semantics. */
+/* Informational version for the expected HDF5 schema/output-kind semantics.
+ * The current loader validates fields but does not negotiate this value from
+ * an on-disk version dataset. */
 #define GHL_NN_C2P_API_VERSION 4u
 
 ghl_nn_c2p_guess_t ghl_c2p_nn_guess(

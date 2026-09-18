@@ -12,7 +12,7 @@ to replace the implementation files or upstream tests.
 Ubuntu-GCC GitHub Actions run for implementation-only source changes;
 documentation-only paths remain ignored, and the other four compiler workflows
 still ignore `implementations/**`. Ubuntu-GCC runs the normal library jobs and a
-focused contract job that verifies the nine tracked GRHayLib source symlinks.
+focused contract job that verifies the tracked GRHayLib source symlinks.
 `.github/run_tests.sh` is a separate scripted test driver. These checks build
 and test GRHayL library programs, not a Cactus thorn.
 
@@ -39,7 +39,7 @@ Einstein Toolkit.
 3. Header aggregation parity check. Current static comparison finds every
    header directly included by `src/GRHayLib.h` in both `GRHayL/include/` and
    the upstream install manifest. Recheck after public-header changes. This
-   also verify that the tracked `src/include` symlink resolves.
+   check also verifies that the tracked `src/include` symlink resolves.
 4. Direct-compile source-list check. Current static comparison finds that every
    GRHayLib `SUBDIRS` entry names an upstream directory and every upstream
    source-bearing manifest directory is listed. Tracked symlinks expose those
@@ -69,7 +69,7 @@ Einstein Toolkit.
   induction, reconstruction, flux/source, radiation, hybrid/tabulated EOS, and
   NRPyLeakage headers. Header rename/split/addition can require parity review.
 - Source list: `src/make.code.defn` must track upstream direct-compile source
-  directories and new module subdirectories; all nine tracked module/include
+  directories and new module subdirectories; all tracked module/include
   symlinks must continue to resolve.
 - EOS signatures: check calls to `ghl_initialize_simple_eos_functions_and_params`,
   `ghl_initialize_hybrid_eos_functions_and_params`,

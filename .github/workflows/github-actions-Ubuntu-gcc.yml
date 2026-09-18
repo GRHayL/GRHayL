@@ -31,8 +31,12 @@ jobs:
               -o "$RUNNER_TEMP/ghl_con2prim_header.o"
       - name: Replay Con2Prim fixture generator
         run: |
-          git clone --depth=1 https://github.com/GRHayL/TestData.git \
-            "$RUNNER_TEMP/grhayl-testdata"
+          testdata_ref=340ffed8717f40c0d59bed57b693b528909bae70
+          git init "$RUNNER_TEMP/grhayl-testdata"
+          git -C "$RUNNER_TEMP/grhayl-testdata" remote add origin \
+            https://github.com/GRHayL/TestData.git
+          git -C "$RUNNER_TEMP/grhayl-testdata" fetch --depth=1 origin "$testdata_ref"
+          git -C "$RUNNER_TEMP/grhayl-testdata" checkout --detach FETCH_HEAD
           generated="$RUNNER_TEMP/con2prim-generated"
           mkdir "$generated"
           cd "$generated"
@@ -61,6 +65,47 @@ jobs:
             test -L "implementations/GRHayLib/src/$path"
             test -e "implementations/GRHayLib/src/$path"
           done
+          python3 - <<'PY'
+          import pathlib
+          import re
+
+          root = pathlib.Path("GRHayL")
+          registry = pathlib.Path("implementations/GRHayLib/src/make.code.defn").read_text()
+          block = re.search(r"(?ms)^SUBDIRS\s*=\s*(.*?)(?=^\S|\Z)", registry)
+          if block is None:
+              raise SystemExit("GRHayLib SUBDIRS registry is missing")
+          registered = set(re.findall(r"[A-Za-z0-9_./-]+", block.group(1).replace("\\", " ")))
+
+          expected = set()
+          for manifest in root.rglob("make.code.defn"):
+              text = manifest.read_text()
+              sources = re.search(r"(?ms)^SRCS\s*=\s*(.*?)(?=^\S|\Z)", text)
+              if sources and re.search(r"\.(?:c|cc)\b", sources.group(1)):
+                  expected.add(str(manifest.parent.relative_to(root)))
+
+          missing = sorted(expected - registered)
+          if missing:
+              raise SystemExit("GRHayLib SUBDIRS misses source-bearing directories: "
+                               + ", ".join(missing))
+          PY
+      - name: Generate HDF5 coverage report
+        uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'gcc'
+      - name: Run Con2Prim memory checks
+        run: |
+          sudo apt-get install -y valgrind
+          make realclean
+          CC=gcc ./configure --buildtype=plain --prefix="$RUNNER_TEMP/grhayl-valgrind" \
+            --builddir=build-valgrind
+          make tests datagen
+          export LD_LIBRARY_PATH="$PWD/build-valgrind/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          valgrind --error-exitcode=1 --track-origins=yes \
+            ./test/data_gen/unit_test_data_con2prim_multi_method_hybrid
+          valgrind --error-exitcode=1 --track-origins=yes \
+            ./test/unit_test_hybrid_failure
+          valgrind --error-exitcode=1 --track-origins=yes \
+            ./test/unit_test_c2p_nn_guess
       - name: Build and test without HDF5
         run: |
           make realclean

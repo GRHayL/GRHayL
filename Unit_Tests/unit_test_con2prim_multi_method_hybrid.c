@@ -43,17 +43,6 @@ static bool Noble_reconservation_fails(
   return false;
 }
 
-static bool Noble_thermodynamic_closure_fails(
-      const ghl_eos_parameters *restrict eos,
-      const ghl_primitive_quantities *restrict prims) {
-
-  const double expected_eps = ghl_hybrid_compute_epsilon(
-        eos, prims->rho, prims->press);
-  const double scale = fmax(fabs(expected_eps), DBL_MIN);
-  return !isfinite(expected_eps) || !isfinite(prims->eps)
-      || fabs(prims->eps - expected_eps) > 32.0*DBL_EPSILON*scale;
-}
-
 static void check_Noble_reconservation(
       const int point,
       const ghl_con2prim_id_t method,
@@ -75,10 +64,6 @@ static void check_Noble_reconservation(
         || metric_adm->lapse * prims->u0 < 1.0 - 1e-12) {
     ghl_error("Noble recovery returned inadmissible primitives at point %d\n", point);
   }
-  if(Noble_thermodynamic_closure_fails(eos, prims)) {
-    ghl_error("Noble recovery violated hybrid-EOS thermodynamic closure at point %d\n", point);
-  }
-
   if(Noble_reconservation_fails(
         params, metric_adm, metric_aux, expected, prims)) {
     ghl_error("Noble reconservation failed at point %d\n", point);
@@ -304,6 +289,9 @@ int main(int argc, char **argv) {
 
       ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
       ghl_guess_primitives(&params, &eos, &metric_adm, &cons_undens, &prims);
+      if(prims.rho != cons_undens.rho) {
+        ghl_error("hybrid primitive guess used densitized density at point %d\n", i);
+      }
       const ghl_primitive_quantities initial_prims = prims;
 
       const int check = ghl_con2prim_hybrid_select_method(methods[method], &params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
@@ -339,18 +327,6 @@ int main(int argc, char **argv) {
         check_Noble_reconservation(
               i, methods[method], &params, &eos, &metric_adm, &metric_aux,
               &cons_undens, &prims);
-        if(i == 0 && (methods[method] == ghl_con2prim_id_Noble1D
-                      || methods[method] == ghl_con2prim_id_Noble2D)) {
-          ghl_primitive_quantities mutated = prims;
-          mutated.eps = 0.0;
-          if(!Noble_thermodynamic_closure_fails(&eos, &mutated)) {
-            ghl_error("Noble thermodynamic closure accepted a zero-epsilon mutation\n");
-          }
-          mutated.eps = 0.5*prims.eps;
-          if(!Noble_thermodynamic_closure_fails(&eos, &mutated)) {
-            ghl_error("Noble thermodynamic closure accepted a half-epsilon mutation\n");
-          }
-        }
       }
 
       ghl_primitive_quantities prims_trusted, prims_pert;

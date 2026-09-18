@@ -2,6 +2,7 @@
 #include "ghl_unit_tests.h"
 
 static int observed_nn_retries;
+static int observed_nn_main_retry_successes;
 static int observed_backup_successes;
 
 void generate_test_data(
@@ -286,6 +287,46 @@ void run_unit_test(
           if(!eos->enable_neural_net_c2p) {
             ghl_error("NN retry reported while neural-network guesses were disabled\n");
           }
+
+          ghl_primitive_quantities direct_initial = initial_prims;
+          if(params->calc_prim_guess) {
+            ghl_guess_primitives(
+                  params, eos, &metric_adm, &cons_undens, &direct_initial);
+          }
+          ghl_primitive_quantities direct_without_nn = direct_initial;
+          ghl_con2prim_diagnostics direct_diagnostics;
+          ghl_initialize_diagnostics(&direct_diagnostics);
+          const ghl_error_codes_t direct_initial_error
+                = ghl_con2prim_tabulated_select_method(
+                      params->main_routine, params, eos, &metric_adm, &metric_aux,
+                      &cons_undens, &direct_without_nn, &direct_diagnostics);
+          if(direct_initial_error == ghl_success) {
+            ghl_error("NN retry was reported although the initial main solve succeeds\n");
+          }
+
+          ghl_primitive_quantities direct_with_nn = direct_initial;
+          ghl_c2p_nn_guess_primitives(
+                params, eos, &metric_adm, &cons_undens, &direct_with_nn);
+          ghl_initialize_diagnostics(&direct_diagnostics);
+          const ghl_error_codes_t direct_nn_error
+                = ghl_con2prim_tabulated_select_method(
+                      params->main_routine, params, eos, &metric_adm, &metric_aux,
+                      &cons_undens, &direct_with_nn, &direct_diagnostics);
+          if(direct_nn_error == ghl_success) {
+            observed_nn_main_retry_successes++;
+            if(diagnostics.which_routine != params->main_routine
+                  || diagnostics.backup[0] || diagnostics.backup[1]
+                  || diagnostics.backup[2]
+                  || direct_with_nn.rho != prims.rho
+                  || direct_with_nn.press != prims.press
+                  || direct_with_nn.eps != prims.eps
+                  || direct_with_nn.u0 != prims.u0
+                  || direct_with_nn.vU[0] != prims.vU[0]
+                  || direct_with_nn.vU[1] != prims.vU[1]
+                  || direct_with_nn.vU[2] != prims.vU[2]) {
+              ghl_error("NN retry result disagrees with the direct NN-started solve\n");
+            }
+          }
         }
 
         // Read unperturbed and perturbed results from file
@@ -424,6 +465,7 @@ int main(int argc, char **argv) {
   if( test_key ) {
     for(int nn_guess_enabled = 0; nn_guess_enabled <= 1; nn_guess_enabled++) {
       observed_nn_retries = 0;
+      observed_nn_main_retry_successes = 0;
       observed_backup_successes = 0;
       eos.enable_neural_net_c2p = nn_guess_enabled;
       params.backup_routine[0] = ghl_con2prim_id_None;
@@ -441,6 +483,9 @@ int main(int argc, char **argv) {
       params.main_routine = ghl_con2prim_id_Noble2D;              run_unit_test(&params, &eos);
       if(nn_guess_enabled && observed_nn_retries == 0) {
         ghl_error("NN-enabled tabulated suite never exercised an NN retry\n");
+      }
+      if(nn_guess_enabled && observed_nn_main_retry_successes == 0) {
+        ghl_error("NN-enabled tabulated suite never exercised a successful main retry\n");
       }
       if(observed_backup_successes == 0) {
         ghl_error("tabulated suite never exercised a successful backup\n");

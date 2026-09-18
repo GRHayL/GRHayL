@@ -23,6 +23,10 @@ Contract:
 - Required primitive field before recovery: `BU`. The source comments state this is the only primitive expected before the Con2Prim solve.
 - Required conservative fields: densitized `rho`, `tau`, and `SD`.
 - Required EOS bounds/atmosphere fields: `tau_atm` and `press_atm`.
+- For tabulated EOS recovery, a negative energy or `tau` is not by itself
+  invalid. Admissibility depends on the table's local bounds at the state's
+  density and composition. Solver-specific sign clipping must not be inferred
+  from the generic atmosphere-limit route.
 - Required parameter: `psi6threshold`, used with `metric_adm->sqrt_detgamma` to choose the high-`psi6` momentum/energy limiting branch.
 - Writes conservative outputs in place: limited `tau` and possibly rescaled `SD`.
 - Writes diagnostics: `tau_fix` when the atmosphere floor, magnetic-energy, or

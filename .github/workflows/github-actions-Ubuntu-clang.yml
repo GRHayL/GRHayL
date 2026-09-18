@@ -11,6 +11,28 @@ on:
     - cron: '33 15 1,15 * *'
 
 jobs:
+  con2prim-nohdf:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup OS and compiler
+        uses: ./.github/actions/OS_setup
+        with:
+          compiler: 'clang'
+      - name: Build and test without HDF5
+        run: |
+          CC=clang ./configure --disable-hdf5 --prefix="$RUNNER_TEMP/grhayl-nohdf" \
+            --cflags='-fprofile-instr-generate -fcoverage-mapping'
+          make tests install
+          LLVM_PROFILE_FILE=default.profraw \
+            LD_LIBRARY_PATH="$PWD/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+            ./test/unit_test_c2p_nn_guess
+      - name: Generate coverage report
+        uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'clang'
+
   ET-Legacy:
     strategy:
       fail-fast: false

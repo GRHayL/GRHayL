@@ -1,4 +1,16 @@
 #include "ghl_unit_tests.h"
+#include "../GRHayL/Con2Prim/utils_Noble.h"
+
+static void test_Noble_pressure_validation(void) {
+  volatile double press[] = {1.0, 0.0, -1.0, INFINITY, -INFINITY, NAN};
+  const bool expected[]   = {true, false, false, false, false, false};
+
+  for(size_t i=0; i<sizeof(press)/sizeof(press[0]); i++) {
+    if(ghl_Noble_pressure_is_valid(press[i]) != expected[i]) {
+      ghl_error("Noble finalized-pressure validation failed case %zu\n", i);
+    }
+  }
+}
 
 static void check_close(
       const char *restrict name,
@@ -27,6 +39,13 @@ static void test_Font1D_roundtrips(void) {
   ghl_initialize_hybrid_eos_functions_and_params(
         1e-8, 1e-8, 1e6, 1, rho_ppoly, Gamma_ppoly, 0.7, 2.0, &eos);
 
+  const double piecewise_rho_ppoly[2] = { 1.0, 0.0 };
+  const double piecewise_Gamma_ppoly[2] = { 2.0, 2.5 };
+  ghl_eos_parameters piecewise_eos = { 0 };
+  ghl_initialize_hybrid_eos_functions_and_params(
+        1e-8, 1e-8, 1e6, 2, piecewise_rho_ppoly,
+        piecewise_Gamma_ppoly, 0.7, 2.0, &piecewise_eos);
+
   ghl_metric_quantities metric;
   ghl_initialize_metric(
         0.91, 0.0, 0.0, 0.0,
@@ -34,10 +53,11 @@ static void test_Font1D_roundtrips(void) {
   ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(&metric, &metric_aux);
 
-  for(int test = 0; test < 2; ++test) {
+  for(int test = 0; test < 3; ++test) {
+    const ghl_eos_parameters *test_eos = test == 2 ? &piecewise_eos : &eos;
     const double rho = test == 0 ? 0.4 : 1.3;
     double press, eps;
-    ghl_hybrid_compute_P_cold_and_eps_cold(&eos, rho, &press, &eps);
+    ghl_hybrid_compute_P_cold_and_eps_cold(test_eos, rho, &press, &eps);
     ghl_primitive_quantities source;
     ghl_initialize_primitives(
           rho, press, eps,
@@ -71,17 +91,19 @@ static void test_Font1D_roundtrips(void) {
     ghl_con2prim_diagnostics diagnostics;
     ghl_initialize_diagnostics(&diagnostics);
     const ghl_error_codes_t error = ghl_hybrid_Font1D(
-          &params, &eos, &metric, &metric_aux, &cons_undens, &recovered, &diagnostics);
+          &params, test_eos, &metric, &metric_aux, &cons_undens, &recovered, &diagnostics);
     if(error != ghl_success || diagnostics.which_routine != ghl_con2prim_id_Font1D
-          || diagnostics.speed_limited || (test == 0 && diagnostics.n_iter != 0)) {
+          || diagnostics.speed_limited || (test == 0 && diagnostics.n_iter != 0)
+          || (test != 0 && diagnostics.n_iter < 1)) {
       ghl_error("Font1D independent roundtrip failed for case %d\n", test);
     }
 
-    check_close("Font rho", source.rho, recovered.rho, 3e-9);
-    check_close("Font press", source.press, recovered.press, 3e-9);
-    check_close("Font eps", source.eps, recovered.eps, 3e-9);
+    const double tolerance = 1e-11;
+    check_close("Font rho", source.rho, recovered.rho, tolerance);
+    check_close("Font press", source.press, recovered.press, tolerance);
+    check_close("Font eps", source.eps, recovered.eps, tolerance);
     for(int i = 0; i < 3; ++i) {
-      check_close("Font velocity", source.vU[i], recovered.vU[i], 3e-9);
+      check_close("Font velocity", source.vU[i], recovered.vU[i], tolerance);
       check_close("Font magnetic field", source.BU[i], recovered.BU[i], 0.0);
     }
 
@@ -89,10 +111,11 @@ static void test_Font1D_roundtrips(void) {
     ghl_compute_conservs(&metric, &metric_aux, &recovered, &recovered_cons);
     ghl_undensitize_conservatives(
           metric.sqrt_detgamma, &recovered_cons, &recovered_undens);
-    check_close("Font conservative rho", cons_undens.rho, recovered_undens.rho, 3e-9);
+    check_close("Font conservative rho", cons_undens.rho, recovered_undens.rho, tolerance);
+    check_close("Font conservative tau", cons_undens.tau, recovered_undens.tau, tolerance);
     for(int i = 0; i < 3; ++i) {
       check_close("Font conservative momentum", cons_undens.SD[i],
-                  recovered_undens.SD[i], 3e-9);
+                  recovered_undens.SD[i], tolerance);
     }
   }
 }
@@ -281,6 +304,7 @@ static void test_Noble1D_entropy2(void) {
       if(error != ghl_success) {
         ghl_error("Noble1D reference backup failed with error %d\n", error);
       }
+      const int expected_n_iter = diagnostics.n_iter;
 
       ghl_primitive_quantities recovered = pristine_guess;
       ghl_initialize_diagnostics(&diagnostics);
@@ -289,7 +313,8 @@ static void test_Noble1D_entropy2(void) {
             &recovered, &diagnostics);
       if(error != ghl_success || !diagnostics.backup[0] || diagnostics.backup[1]
             || diagnostics.backup[2]
-            || diagnostics.which_routine != ghl_con2prim_id_Noble1D) {
+            || diagnostics.which_routine != ghl_con2prim_id_Noble1D
+            || diagnostics.n_iter != expected_n_iter) {
         ghl_error("hybrid backup restoration routing failed\n");
       }
       check_close("backup rho", expected.rho, recovered.rho, 2e-12);
@@ -444,7 +469,8 @@ int main(int argc, char **argv) {
   // a simulation.
   ghl_parameters params;
   ghl_initialize_params(
-        Noble2D, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
+        ghl_con2prim_id_Palenzuela1D, backup_routine,
+        evolve_entropy, evolve_temperature, calc_prims_guess,
         Psi6threshold, W_max, 0.0, &params);
 
   ghl_eos_parameters eos = { 0 };
@@ -528,11 +554,14 @@ int main(int argc, char **argv) {
 
     ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
     int check = ghl_con2prim_hybrid_multi_method(&params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
-    if(check != expected_errors[i])
-      ghl_error("Noble2D has returned a different failure code: old %d and new %d", i+1, check);
+    if(check != expected_errors[i]
+          || diagnostics.which_routine != ghl_con2prim_id_None)
+      ghl_error("hybrid all-method failure contract failed: expected %d, got %d",
+                expected_errors[i], check);
 
   }
   test_Font1D_roundtrips();
+  test_Noble_pressure_validation();
   test_Noble1D_entropy2();
   return 0;
 }

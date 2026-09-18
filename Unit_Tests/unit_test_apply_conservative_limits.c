@@ -143,6 +143,7 @@ int main(int argc, char **argv) {
   for(int i=0;i<arraylength;i++) {
     // Define the various GRHayL structs for the unit tests
     ghl_con2prim_diagnostics diagnostics;
+    diagnostics.n_iter = -1;
     ghl_initialize_diagnostics(&diagnostics);
     if(diagnostics.tau_fix || diagnostics.Stilde_fix || diagnostics.speed_limited
           || diagnostics.backup[0] || diagnostics.backup[1] || diagnostics.backup[2]
@@ -229,6 +230,26 @@ int main(int argc, char **argv) {
         &sticky_diagnostics);
   if(!sticky_diagnostics.tau_fix || !sticky_diagnostics.Stilde_fix) {
     ghl_error("conservative-limit diagnostics did not preserve incoming true values\n");
+  }
+
+  const double tau_inputs[3] = {
+    0.5*eos.tau_atm, eos.tau_atm, 10.0*eos.tau_atm
+  };
+  for(int i = 0; i < 3; ++i) {
+    ghl_conservative_quantities floor_cons;
+    ghl_initialize_conservatives(
+          1.0, tau_inputs[i], 0.0, 0.0, 0.0, 0.0, 0.0, &floor_cons);
+    ghl_con2prim_diagnostics floor_diagnostics;
+    ghl_initialize_diagnostics(&floor_diagnostics);
+    ghl_apply_conservative_limits(
+          &params, &eos, &sticky_metric, &sticky_prims, &floor_cons,
+          &floor_diagnostics);
+    const bool expect_floor = i == 0;
+    if(floor_diagnostics.tau_fix != expect_floor
+          || floor_diagnostics.Stilde_fix
+          || floor_cons.tau != (expect_floor ? eos.tau_atm : tau_inputs[i])) {
+      ghl_error("tau atmosphere floor contract failed for synthetic case %d\n", i);
+    }
   }
   ghl_info("ghl_apply_conservative_limits function test has passed!\n");
   free(lapse);

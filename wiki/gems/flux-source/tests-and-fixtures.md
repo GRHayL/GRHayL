@@ -76,7 +76,7 @@ routes belong to [characteristic-speeds-contract.md](characteristic-speeds-contr
 - The workflow flux jobs download the same LS220 table for both
   `hybrid_flux` and `tabulated_flux` matrix entries.
 - [configure](../../../configure) documents `--disable-hdf5` as disabling
-  tabulated EOS. It retains the six algebraic tabulated HLLE source files, while
+  tabulated EOS. It retains the algebraic tabulated HLLE source files, while
   filtering table-dependent tests and data generators, including the
   `tabulated_flux` test and generator.
 

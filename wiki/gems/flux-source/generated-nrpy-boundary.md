@@ -71,7 +71,7 @@ scripts.
 
 `configure --disable-hdf5` retains the tabulated and tabulated-entropy flux
 sources in generated build targets. The focused Ubuntu-GCC contract job checks
-all six public symbols; table-dependent flux tests and generators remain
+the public symbols; table-dependent flux tests and generators remain
 excluded in that mode.
 
 ## Drift Rules

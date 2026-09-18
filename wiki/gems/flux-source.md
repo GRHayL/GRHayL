@@ -74,7 +74,7 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
 
 - Flux routines expect primitive inputs already reconstructed to faces.
 - HLLE variants are split by direction, EOS family, and entropy evolution.
-- `--disable-hdf5` retains the six algebraic tabulated HLLE implementations and
+- `--disable-hdf5` retains the algebraic tabulated HLLE implementations and
   their declarations. It excludes table-dependent tests and data generators;
   the no-HDF5 CI contract link-checks the retained symbols.
 - Source terms require metric derivatives provided by caller-side infrastructure.

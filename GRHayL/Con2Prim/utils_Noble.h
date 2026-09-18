@@ -26,6 +26,12 @@ typedef struct harm_auxiliary_vars {
   double solver_tolerance;
 } harm_aux_vars_struct;
 
+/** Return whether a finalized Noble pressure can be reported as successful. */
+static inline bool ghl_Noble_pressure_is_valid(const double press) {
+  if(!isfinite(press)) return false;
+  return press > 0.0;
+}
+
 /**************************************************
   The following functions assume a Gamma-law EOS:
 ***************************************************/

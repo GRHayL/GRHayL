@@ -21,7 +21,7 @@ metric, direction-specific `cmin`/`cmax`, and a conservative flux output.
 | tabulated entropy | `ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy` | hybrid fields plus `Y_e` and `entropy` | default and no-HDF5 | all three in `unit_test_tabulated_flux` |
 
 Every direct symbol has a public declaration, one checked-in definition, and a
-variant-manifest entry. [configure](../../../configure) retains all six real
+variant-manifest entry. [configure](../../../configure) retains the real
 tabulated flux definitions under `--disable-hdf5`, and the focused Ubuntu-GCC
 contract job checks that they remain linkable. The tabulated flux test and data
 generator still require HDF5/table support and are excluded in that mode.
@@ -118,7 +118,7 @@ Python source together when formulas, variables, or output fields change.
 ## Evidence Status
 
 - **Build-configured:** every listed direct symbol is in default and no-HDF5
-  builds. The focused no-HDF5 CI job link-checks all six tabulated symbols.
+  builds. The focused no-HDF5 CI job link-checks the tabulated symbols.
 - **Direct replay:** every direction in each row is called by the named test;
   runner and compiler workflows configure those executions.
 - **Fixture-generation:** matching data generators call every row/direction,

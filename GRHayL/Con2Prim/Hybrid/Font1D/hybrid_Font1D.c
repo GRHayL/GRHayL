@@ -1,5 +1,8 @@
 #include "ghl_con2prim.h"
 
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((visibility("hidden")))
+#endif
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol, const double W_in,
@@ -194,7 +197,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
    * \f[
    * \begin{aligned}
    * \rho &= \frac{D}{\alpha u^0} \\
-   * \epsilon &= \frac{P}{\rho (\Gamma - 1)}
+   * \epsilon &= \frac{P}{\rho (\Gamma - 1)} + \epsilon_\mathrm{integ}
    * \end{aligned}
    * \f]
    */
@@ -204,7 +207,9 @@ ghl_error_codes_t ghl_hybrid_Font1D(
 
   ghl_hybrid_compute_P_cold(eos, prims->rho, &prims->press);
 
-  prims->eps = prims->press/(prims->rho*(Gamma_ppoly-1.0));
+  const int index = ghl_hybrid_find_polytropic_index(eos, prims->rho);
+  prims->eps = prims->press/(prims->rho*(Gamma_ppoly-1.0))
+             + eos->eps_integ_const[index];
   if(params->evolve_entropy)
     prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 

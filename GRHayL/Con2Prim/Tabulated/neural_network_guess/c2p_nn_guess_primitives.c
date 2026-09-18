@@ -43,11 +43,8 @@ void ghl_c2p_nn_guess_primitives(
     }
   }
 
-  // Return a finite atmosphere initial guess when NN inference is unusable.
-  ghl_initialize_primitives(
-        eos->rho_atm, eos->press_atm, eos->eps_atm,
-        -metric_adm->betaU[0], -metric_adm->betaU[1], -metric_adm->betaU[2],
-        prims->BU[0], prims->BU[1], prims->BU[2],
-        eos->entropy_atm, eos->Y_e_atm, eos->T_atm, prims);
-  prims->u0 = metric_adm->lapseinv;
+  // Reuse the shared completion helper's atmosphere fallback.
+  const ghl_tabulated_primitive_guess_aux aux = { 0 };
+  ghl_tabulated_primitive_guess_from_x(
+        params, eos, metric_adm, cons_undens, &aux, NAN, prims);
 }

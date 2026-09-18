@@ -58,7 +58,7 @@ Availability boundary:
 - Direction/EOS-specific direct HLLE functions are current callable routes.
 - Three generic HLLE pointer globals are declared/stored but unwired and have
   incompatible signatures; do not use them as equation-dispatch entry points.
-- No-HDF5 builds retain all six direct tabulated HLLE definitions; their
+- No-HDF5 builds retain the direct tabulated HLLE definitions; their
   table-dependent tests and generators remain excluded.
 - Reconstruction is built public caller API, but no production source caller is
   visible in this repository. Tests demonstrate family kernels with documented

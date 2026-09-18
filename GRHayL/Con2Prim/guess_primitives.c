@@ -66,8 +66,10 @@ static void ghl_guess_primitives_hybrid_simple(
  * the primitive-recovery strategy of the Palenzuela et al. routine, as outlined
  * in Siegel et al. (2018; https://arxiv.org/pdf/1712.07538).
  *
- * The only required guess is the temperature. We use \f$ T = T_\mathrm{max} \f$,
- * which uses ghl_eos_parameters::T_max.
+ * The normal algebraic path starts the table inversion from
+ * \f$ T = T_\mathrm{max} \f$. Invalid conservative inputs or an unusable
+ * algebraic candidate instead return the initialized EOS atmosphere, including
+ * \f$ T = T_\mathrm{atm} \f$. Incoming magnetic components are preserved.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -78,7 +80,8 @@ static void ghl_guess_primitives_hybrid_simple(
  * @param[in] cons_undens pointer to ghl_conservative_quantities struct with
  *                        **undensitized** conservative variables
  *
- * @param[out] prims pointer to ghl_primitive_quantities containing the initial guess
+ * @param[in,out] prims pointer to ghl_primitive_quantities; incoming magnetic
+ *                      components are preserved in the initial guess
  */
 static void ghl_guess_primitives_tabulated(
       const ghl_parameters *restrict params,
@@ -115,7 +118,8 @@ static void ghl_guess_primitives_tabulated(
  * @param[in] cons_undens pointer to ghl_conservative_quantities struct with
  *                        **undensitized** conservative variables
  *
- * @param[out] prims pointer to ghl_primitive_quantities containing the initial guess
+ * @param[in,out] prims pointer to ghl_primitive_quantities; incoming magnetic
+ *                      components are preserved in the initial guess
  */
 void ghl_guess_primitives(
       const ghl_parameters *restrict params,

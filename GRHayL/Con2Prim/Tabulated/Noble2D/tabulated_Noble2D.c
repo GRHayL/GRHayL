@@ -340,7 +340,7 @@ ghl_error_codes_t ghl_tabulated_Noble2D(
   if(error) {
     return error;
   }
-  if(prims->press <= 0.0) {
+  if(!ghl_Noble_pressure_is_valid(prims->press)) {
     return ghl_error_neg_pressure;
   }
 

@@ -106,20 +106,23 @@ all four plus `hybrid_Noble1D.c`, `hybrid_Noble1D_entropy.c`, and
 directly for density. Its `Z(rho)` and analytic derivative use the active
 piecewise-polytropic cold pressure, cold-energy integration constant, and
 thermal Gamma. Each wrapper initializes Noble state, runs
-`ghl_general_newton_raphson`, finalizes primitives, then sets
-`diagnostics->speed_limited`, `diagnostics->n_iter`, and
-`diagnostics->which_routine` on success.
+`ghl_general_newton_raphson`, and finalizes primitives. Finalization ORs
+`diagnostics->speed_limited` before the wrapper's pressure gate;
+`diagnostics->n_iter` and `diagnostics->which_routine` are set only after that
+gate succeeds.
 
 Hybrid Noble 2D lives in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble2D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble2D/).
 `hybrid_Noble2D.c` uses `func_2D.c`, the same initialize/validate/Newton/finalize
-helpers, and records `n_iter` and `which_routine` on success.
+helpers, ORs `speed_limited` during finalization, and records `n_iter` and
+`which_routine` only after the pressure gate succeeds.
 
 Tabulated Noble 2D lives in
 [`GRHayL/Con2Prim/Tabulated/Noble2D/`](../../../GRHayL/Con2Prim/Tabulated/Noble2D/).
 `tabulated_Noble2D.c` reuses `utils_Noble.h` and `ghl_general_newton_raphson`
 but supplies tabulated-specific initialization, residual, table-bounds, and
-finalization helpers before setting `n_iter` and `which_routine`.
+finalization helpers. Finalization may update `speed_limited`; `n_iter` and
+`which_routine` remain success-only writes after the pressure gate.
 
 ## Palenzuela Internal Route
 
@@ -151,10 +154,11 @@ diagnostics ownership.
 [`GRHayL/Con2Prim/Hybrid/Font1D/`](../../../GRHayL/Con2Prim/Hybrid/Font1D/)
 contains the hybrid Font path. `hybrid_Font1D.c` handles the public wrapper,
 calls `hybrid_Font1D_loop.c` for the density iteration, computes the remaining
-primitives, writes `diagnostics->speed_limited` when utilde limiting is called,
+primitives, ORs `diagnostics->speed_limited` when utilde limiting is called,
 and sets `diagnostics->which_routine = ghl_con2prim_id_Font1D` on success.
 It resets `diagnostics->n_iter` at entry and accumulates density-loop iterations;
-the stationary shortcut therefore reports zero.
+the shortcut reports zero only when the conservative momentum norm satisfies
+`S_i gamma^ij S_j < 1e-300`.
 
 [`GRHayL/Con2Prim/Tabulated/Newman1D/`](../../../GRHayL/Con2Prim/Tabulated/Newman1D/)
 contains the tabulated Newman energy and entropy paths. Both compute
@@ -176,8 +180,8 @@ For this internal page, only source-proven writes are routed:
 - `n_iter`: set from `harm_aux.n_iter` in built Noble paths, from
   `rparams.n_iters` in built Palenzuela paths, and from local `step` in Newman
   paths. Font1D reports its invocation-local accumulated density iterations.
-- `speed_limited`: written where solver finalization or utilde limiting calls
-  `ghl_limit_utilde_and_compute_v`.
+- `speed_limited`: sticky across every attempted solver finalization or utilde
+  limiting call, including attempts that later fail.
 
 ## Archival Source
 

@@ -354,8 +354,10 @@ int main(int argc, char **argv) {
     ent_star_orig[i] = ent_star[i];
   }
 
-  // Keep each positive perturbation close to the intended 1e-14 scale while
-  // retaining small independent variations between inputs.
+  // Keep each perturbation positive and close to 1e-14 so zero-valued random
+  // draws cannot collapse the trusted-vs-perturbed oracle. Because comparison
+  // tolerances scale with this separation, the positive bias deliberately
+  // makes that tolerance wider than the former zero-mean perturbation did.
   for(int i=0; i<arraylength; i++) {
     rho_b_pert[i] = rho_b[i]*(1.0 + 1.0e-14 + 1.0e-15*randf(-1,1));
     press_pert[i] = press[i]*(1.0 + 1.0e-14 + 1.0e-15*randf(-1,1));
