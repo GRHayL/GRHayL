@@ -97,9 +97,10 @@ int main(int argc, char **argv) {
   key += fread(vx, sizeof(double), arraylength, infile);
   key += fread(vy, sizeof(double), arraylength, infile);
   key += fread(vz, sizeof(double), arraylength, infile);
+  key += fread(entropy, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*6)
+  if(key != arraylength*7)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -186,8 +187,8 @@ int main(int argc, char **argv) {
     ghl_initialize_primitives(
           rho_b_trusted[i], press_trusted[i], eps_trusted[i],
           vx_trusted[i], vy_trusted[i], vz_trusted[i],
-          ent_trusted[i], poison, poison,
           poison, poison, poison,
+          ent_trusted[i], poison, poison,
           &prims_trusted);
 
     ghl_initialize_primitives(

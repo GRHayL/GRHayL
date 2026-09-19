@@ -82,5 +82,15 @@ independent evidence for changed solver physics. The fixture-free forward
 primitive-to-conservative round trips in `unit_test_hybrid_failure.c` provide
 the independent Font1D closure check, including a multi-piece cold EOS.
 When a fixture change spans GRHayL and the companion TestData repository,
-publish and merge the companion fixture update before changing the consumer
-workflow reference; otherwise the PR cannot validate its own fixtures.
+publish a compatible immutable companion revision before selecting it in the
+consumer workflows. Coordinate ordinary replay downloads with the generator
+replay reference; do not merge incompatible fixtures into a moving default
+branch merely to make them reachable. Local companion validation is not proof
+that remote CI can retrieve the reviewed data.
+
+The hybrid generator restores its entropy-evolution setting before producing
+the primitive-limits and forward-conversion fixtures. The primitive-limits
+reader consumes the entropy input and compares the trusted entropy field.
+Both producer and reader must change together when correcting that contract.
+Signed perturbations and the field-aligned momentum edge remain part of the
+existing sampling; they must not be changed solely to widen comparison bars.

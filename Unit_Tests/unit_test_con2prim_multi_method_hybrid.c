@@ -3,9 +3,8 @@
 #include "ghl_unit_tests.h"
 
 /* A pressure sign at roundoff can differ across supported compilers. Only the
- * success/negative-pressure pair is tolerated. Pressure and epsilon are not
- * used as value oracles at those boundary states, but the other primitives
- * and conservative closure remain checked. */
+ * success/negative-pressure pair is tolerated. All primitive comparisons and
+ * conservative closure remain checked, including pressure and epsilon. */
 static bool is_documented_Noble_pressure_boundary(
       const ghl_con2prim_id_t method,
       const ghl_error_codes_t actual,
@@ -377,7 +376,7 @@ int main(int argc, char **argv) {
           ghl_error("Noble pressure-boundary state is nonfinite at point %d\n", i);
         }
         const double enthalpy_density
-              = prims.rho * (1.0 + prims.eps) + prims.press;
+              = prims_trusted.rho * (1.0 + prims_trusted.eps) + prims_trusted.press;
         const double pressure_resolution
               = 1.0e4 * DBL_EPSILON
               * fmax(fabs(enthalpy_density), DBL_MIN);
@@ -386,12 +385,6 @@ int main(int argc, char **argv) {
           ghl_error("Noble pressure-boundary state is not roundoff-scale "
                     "relative to enthalpy density at point %d\n", i);
         }
-      }
-      if(pressure_boundary) {
-        prims_trusted.press = prims.press;
-        prims_pert.press = prims.press;
-        prims_trusted.eps = prims.eps;
-        prims_pert.eps = prims.eps;
       }
 
       double pressure_cutoff = 1.0e-30; // Set defaults and change them for Noble2D
@@ -404,7 +397,13 @@ int main(int argc, char **argv) {
         eps_cutoff = 1.0e-11;
       }
 
-      ghl_pert_test_fail_primitives_with_cutoffs(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert, pressure_cutoff, eps_cutoff);
+      /* rho=D/W inherits the W^2 conditioning of W=(1-v^2)^(-1/2).
+       * Use only the input D and trusted rho to set this roundoff allowance;
+       * the result under test must not set its own tolerance. */
+      const double W_trusted = cons_undens.rho/prims_trusted.rho;
+      const double rho_cutoff = fmax(1.0e-30,
+            8.0*DBL_EPSILON*W_trusted*W_trusted*fabs(prims_trusted.rho));
+      ghl_pert_test_fail_primitives_with_cutoffs(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert, rho_cutoff, pressure_cutoff, eps_cutoff);
     }
     if(fcnt != expected_fcnt) {
       ghl_error("unit_test_hybrid_con2prim failure count changed for %.30s method: new %d vs old %d\n",
@@ -412,8 +411,8 @@ int main(int argc, char **argv) {
     }
     const bool Noble_method = methods[method] == ghl_con2prim_id_Noble1D
                            || methods[method] == ghl_con2prim_id_Noble2D;
-    /* Retain a strict majority of full primitive-oracle cases while bounding
-     * compiler-dependent Noble pressure-sign boundary cases. */
+    /* Bound compiler-dependent pressure-sign changes. All primitive value
+     * comparisons still run, including at these boundary states. */
     const int pressure_boundary_limit = Noble_method ? (arraylength - 1)/2 : 0;
     if(pressure_boundary_count > pressure_boundary_limit) {
       ghl_error("%.30s pressure-boundary population %d exceeds reviewed limit %d\n",

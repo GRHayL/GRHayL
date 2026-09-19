@@ -31,7 +31,7 @@ jobs:
               -o "$RUNNER_TEMP/ghl_con2prim_header.o"
       - name: Replay Con2Prim fixture generator
         run: |
-          testdata_ref=e3d1c1f2120e143d0d6e13bd7c6f12d05ff5874b
+          testdata_ref=$(cat .github/con2prim-testdata-ref)
           git init "$RUNNER_TEMP/grhayl-testdata"
           git -C "$RUNNER_TEMP/grhayl-testdata" remote add origin \
             https://github.com/GRHayL/TestData.git
@@ -275,10 +275,11 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/metric_Bfield_initial_data.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output_pert.bin
+          testdata_ref=$(cat .github/con2prim-testdata-ref)
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/metric_Bfield_initial_data.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_output_pert.bin
       - name: Run con2prim unit test for ${{ matrix.test-function }} functions
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
