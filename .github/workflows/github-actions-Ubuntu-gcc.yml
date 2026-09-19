@@ -729,3 +729,77 @@ jobs:
           flags: compose
           disable_search: true
           fail_ci_if_error: true
+
+  codecov-finalize:
+    name: Codecov final status
+    if: ${{ always() }}
+    needs:
+      - con2prim-contracts
+      - ET-Legacy
+      - c2p-routines
+      - c2p-failure
+      - tabulated-eos
+      - piecewise-polytrope-eos
+      - grhayl-core
+      - flux
+      - reconstruction
+      - neutrinos
+      - con-to-prim-tabulated
+      - code-failure
+      - induction-interpolators
+      - induction-flux
+      - compose-regularized-eos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for every coverage workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          created_at=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --jq .created_at)
+          window_start=$(date -u -d "$created_at - 5 minutes" +%Y-%m-%dT%H:%M:%SZ)
+
+          pending=""
+          for attempt in $(seq 1 300); do
+            runs=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs" \
+              --method GET \
+              -f head_sha="$GITHUB_SHA" \
+              -f event="$GITHUB_EVENT_NAME" \
+              -f per_page=100)
+            pending=$(jq -r --arg start "$window_start" '
+              .workflow_runs
+              | map(select(
+                  (.name == "MacOS-gcc"
+                   or .name == "Ubuntu-clang"
+                   or .name == "Ubuntu-intel")
+                  and .created_at >= $start
+                  and .status != "completed"))
+              | map(.name)
+              | unique
+              | join(", ")
+            ' <<<"$runs")
+            if [[ -z "$pending" ]]; then
+              break
+            fi
+            echo "Waiting for coverage workflows: $pending"
+            sleep 30
+          done
+
+          if [[ -n "$pending" ]]; then
+            echo "Timed out waiting for coverage workflows: $pending" >&2
+            exit 1
+          fi
+      - name: Publish final Codecov status
+        uses: codecov/codecov-action@v5
+        with:
+          run_command: send-notifications
+          use_oidc: true
+          fail_ci_if_error: true

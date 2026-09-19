@@ -239,6 +239,11 @@ Composite actions:
   `curl -X POST --data-binary @codecov.yml https://codecov.io/validate`.
   The CompOSE flag and component require project and patch coverage of 100%
   with zero threshold; global patch coverage also targets 100%.
+- `codecov.yml` defers Codecov notifications until an explicit final trigger.
+  The `codecov-finalize` job in the Ubuntu GCC workflow waits for every local
+  job and for the macOS GCC, Ubuntu Clang, and Ubuntu Intel coverage workflows
+  for the same commit, then sends the single final Codecov notification.
+  macOS Clang is excluded because its coverage collection steps are disabled.
 
 ## `.github/run_tests.sh`
 
