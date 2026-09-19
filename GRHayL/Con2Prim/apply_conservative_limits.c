@@ -1,3 +1,5 @@
+#include <float.h>
+
 #include "ghl_con2prim.h"
 
 /**
@@ -101,7 +103,18 @@ void ghl_apply_conservative_limits(
      *   - \Omega^2}{2 \sqrt{\gamma}\left( W_\mathrm{min} + B^2\right)^2}
      * \f]
      */
-    tau_fluid_term3 = (B2*sdots - SQR(BdotS))*0.5/(metric_adm->sqrt_detgamma*SQR(Wmin+B2));
+    /* Cauchy-Schwarz makes this Gram determinant nonnegative. For parallel
+     * B and S, contraction roundoff can leave either sign depending on FMA
+     * generation. Treat only a roundoff-sized residual as exact zero. */
+    const double B2sdots = B2*sdots;
+    const double BdotS2 = SQR(BdotS);
+    double gram_det = B2sdots - BdotS2;
+    const double gram_roundoff = 32.0*DBL_EPSILON*fmax(B2sdots, BdotS2);
+    if(isfinite(gram_det) && isfinite(gram_roundoff)
+          && fabs(gram_det) <= gram_roundoff)
+      gram_det = 0.0;
+    tau_fluid_term3 = gram_det*0.5/
+          (metric_adm->sqrt_detgamma*SQR(Wmin+B2));
   }
 
   /**
