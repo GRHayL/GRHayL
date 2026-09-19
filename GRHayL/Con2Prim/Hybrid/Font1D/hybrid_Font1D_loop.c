@@ -38,9 +38,6 @@
  *
  * @returns error code for any Con2Prim failures
  */
-#if defined(__GNUC__) || defined(__clang__)
-__attribute__((visibility("hidden")))
-#endif
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol,

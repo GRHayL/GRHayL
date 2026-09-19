@@ -135,9 +135,10 @@ With `--disable-hdf5`, `configure`:
 - adds `-DGHL_DISABLE_HDF5` to `CFLAGS`;
 - filters implementation sources with the exact path/name predicate in
   `configure`; despite their paths, it explicitly retains
-  `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` and sources under
-  `Con2Prim/Tabulated/neural_network_guess/`, the disabled direct-tabulated-
-  solver stubs, and the direct tabulated HLLE flux implementations;
+  `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c`, sources under
+  `Con2Prim/Tabulated/neural_network_guess/`, and the direct tabulated HLLE
+  flux implementations. The disabled direct-tabulated-solver stubs also remain
+  because their source path does not match the exclusion tokens;
 - excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, and the
   NRPyLeakage unit tests from the generated unit-test list;
 - excludes tabulated data generators from the generated data-generator list.

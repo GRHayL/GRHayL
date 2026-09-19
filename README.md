@@ -74,8 +74,9 @@ recursive `make.code.defn` source list. Manual no-`HDF5` builds must define
 `GHL_DISABLE_HDF5` and reproduce that manifest-derived filter. The authoritative
 predicate is the `usehdf5=0` block in `configure`: it retains
 `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` and manifest-listed
-sources under `Con2Prim/Tabulated/neural_network_guess/`, the disabled direct-
-solver stubs, and the six direct tabulated HLLE flux implementations; otherwise it excludes
+sources under `Con2Prim/Tabulated/neural_network_guess/` and the six direct
+tabulated HLLE flux implementations. The disabled direct-solver stubs also
+remain because their source path does not match the exclusion tokens. Otherwise it excludes
 paths matching `/Tabulated/`, `/tabulated/`, `_tabulated`, `tabulated_`,
 `tabulated_eos`, `tabulated_flux`, or `ghl_nrpyeos_tabulated`.
 
@@ -83,11 +84,11 @@ Consequently, shared `Con2Prim/guess_primitives.c`, the mixed
 `Con2Prim/con2prim_multi_method.c`, tabulated primitive-guess helpers, and NN
 sources `c2p_nn_free.c`, `c2p_nn_guess_x.c`, `c2p_nn_guess_primitives.c`,
 `c2p_nn_load_from_eos_hdf5.c`, and `c2p_nn_validate_model.c` remain compiled.
-NN HDF5 loaders become disabled-feature stubs. Supported tabulated EOS
+NN HDF5 loaders become stubs that report the disabled feature. Supported tabulated EOS
 initialization and recovery still reject no-`HDF5` use; retained low-level
 symbols do not promise standalone tabulated recovery. The five public direct
-tabulated solver entry points remain link-visible as non-mutating disabled-
-feature stubs; the six direct tabulated HLLE flux variants remain their real
+tabulated solver entry points remain link-visible as non-mutating
+disabled-feature stubs; the six direct tabulated HLLE flux variants remain their real
 implementations. Pure inference from an
 independently valid in-memory model does not itself require HDF5.
 

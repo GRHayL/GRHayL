@@ -98,6 +98,14 @@ Core Noble helper files are built from
   converts solved scalars into primitives and returns whether
   `ghl_limit_utilde_and_compute_v` speed-limited the result.
 
+When ordinary hybrid Noble finalization limits the velocity, it recomputes
+`rho = D/W_final` and `w = Z/W_final^2`. This preserves the defining closure
+`Z = rho h W_final^2` for the limited state instead of mixing the pre-limit
+Lorentz factor with the limited density. Near the cold-pressure boundary, the
+consistent closure can expose a roundoff-sized nonpositive pressure. The Noble
+wrapper then returns `ghl_error_neg_pressure`, allowing configured backup
+recovery; it does not clip conservative energy or impose a tabulated-EOS floor.
+
 Hybrid Noble 1D residual files live in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/):
 `func_1D.c`, `func_Z.c`, `func_rho.c`, and `func_rho2.c`. The manifest builds

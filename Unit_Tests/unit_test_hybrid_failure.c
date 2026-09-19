@@ -47,7 +47,7 @@ static void test_Noble_finalizer_speed_limit(void) {
   harm_aux.QU[1] = 10.0;
 
   ghl_primitive_quantities prims = { 0 };
-  const double Z = 1.0;
+  const double Z = 2.0;
   const double input_W = 2.0;
   const double input_vsq = 1.0 - 1.0/(input_W*input_W);
   if(!ghl_finalize_Noble(
@@ -62,6 +62,12 @@ static void test_Noble_finalizer_speed_limit(void) {
   check_close(
         "limited Noble pressure", ghl_pressure_rho0_w(&eos, expected_rho, expected_w),
         prims.press, 1e-14);
+  if(prims.press <= 0.0) {
+    ghl_error("limited Noble closure test did not recover positive pressure\n");
+  }
+  const double recovered_Z = (prims.rho*(1.0 + prims.eps) + prims.press)
+                           * limited_W*limited_W;
+  check_close("limited Noble Z closure", Z, recovered_Z, 1e-14);
 
   prims = (ghl_primitive_quantities){ 0 };
   prims.rho = cons.rho/input_W;
