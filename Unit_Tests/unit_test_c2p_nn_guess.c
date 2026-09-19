@@ -433,7 +433,13 @@ static void test_public_primitive_guess_helper(void) {
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T_error;
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
-  check_atmosphere_guess(&eos, &metric, negative_BU, &prims);
+  CHECK(prims.rho == cons.rho && prims.Y_e == cons.Y_e / cons.rho
+        && prims.temperature == eos.T_max
+        && prims.press == eos.press_atm && prims.entropy == eos.entropy_atm
+        && isfinite(prims.eps) && isfinite(prims.u0)
+        && isfinite(prims.vU[0]) && isfinite(prims.vU[1])
+        && isfinite(prims.vU[2]),
+        "failed EOS inversion did not preserve recovery seed");
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T;
 
   prims.BU[0] = BU[0];

@@ -98,8 +98,14 @@ void ghl_tabulated_primitive_guess_from_x(
         eos, prims->rho, prims->Y_e, prims->eps,
         &prims->press, &prims->entropy, &prims->temperature);
   if(eos_error != ghl_success) {
-    set_tabulated_atmosphere_guess(eos, metric_adm, prims);
-    return;
+    // A failed inversion only rejects this algebraic initial guess; it does not
+    // make the conserved state invalid. Preserve rho, Y_e, and the established
+    // T_max root-finding seed instead of replacing the composition with
+    // atmosphere values. Pressure and entropy are not used by the recovery
+    // seed, but keep them finite and deterministic.
+    prims->press = eos->press_atm;
+    prims->entropy = eos->entropy_atm;
+    prims->temperature = eos->T_max;
   }
 
   const double z = x * prims->rho * W;
