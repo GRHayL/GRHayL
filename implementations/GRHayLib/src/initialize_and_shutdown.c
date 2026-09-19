@@ -15,8 +15,9 @@ static int parse_eos_table_type_keyword(const char *restrict table_type);
 void GRHayLib_paramcheck() {
   DECLARE_CCTK_PARAMETERS;
 
-  if(!isfinite(max_Lorentz_factor) || max_Lorentz_factor < 1.0)
+  if(!isfinite(max_Lorentz_factor) || max_Lorentz_factor < 1.0) {
     CCTK_ERROR("Parameter max_Lorentz_factor must be finite and at least 1.");
+  }
 
   if(rho_b_atm < 0)
     CCTK_ERROR("Parameter rho_b_atm must be set in the parameter file and be non-negative.");

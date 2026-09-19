@@ -85,7 +85,8 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D_energy(
                                    cons_undens,
                                    prims,
                                    diagnostics);
-  if(error == ghl_success)
+  if(error == ghl_success) {
     diagnostics->which_routine = ghl_con2prim_id_Palenzuela1D;
+  }
   return error;
 }

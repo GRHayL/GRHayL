@@ -28,7 +28,9 @@ typedef struct harm_auxiliary_vars {
 
 /** Return whether a finalized Noble pressure can be reported as successful. */
 static inline bool ghl_Noble_pressure_is_valid(const double press) {
-  if(!isfinite(press)) return false;
+  if(!isfinite(press)) {
+    return false;
+  }
   return press > 0.0;
 }
 

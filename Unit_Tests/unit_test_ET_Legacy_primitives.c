@@ -249,8 +249,9 @@ int main(int argc, char **argv) {
       rho_abs_tol += fabs(prims_trusted.rho)*(W_max/W_min - 1.0);
       const double radial_bound =
             1.0 - sqrt((1.0 - 1.0/(W_min*W_min))/(1.0 - 1.0/(W_max*W_max)));
-      for(int i = 0; i < 3; ++i)
+      for(int i = 0; i < 3; ++i) {
         velocity_abs_tol[i] += fabs(prims_trusted.vU[i] + metric_adm.betaU[i])*radial_bound;
+      }
     }
     if( ghl_pert_test_fail_with_tolerance(prims_trusted.rho, prims.rho, prims_pert.rho, 8.0e-14, rho_abs_tol) )
       ghl_error("Test unit_test_hybrid_Noble2D has failed for variable rho.\n"

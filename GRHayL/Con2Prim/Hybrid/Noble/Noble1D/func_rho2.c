@@ -27,15 +27,21 @@ void ghl_func_rho2(
   const int index = ghl_hybrid_find_polytropic_index(eos, rho);
   const double Gamma = eos->Gamma_ppoly[index];
   const double Gamma_th = eos->Gamma_th;
-  const double P_cold = eos->K_ppoly[index] * pow(rho, Gamma);
-  const double eps_cold = P_cold / (rho * (Gamma - 1.0)) + eos->eps_integ_const[index];
+  double P_cold, eps_cold;
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P_cold, &eps_cold);
   const double press = harm_aux->W_times_S * pow(rho, Gamma) / harm_aux->D;
 
-  // Enthalpy density and its derivative within the active polytropic piece.
+  // Enthalpy density and its derivative for the bounded cold-EOS closure.
   const double w
         = rho * (1.0 + eps_cold) + (Gamma_th * press - P_cold) / (Gamma_th - 1.0);
-  const double dwdrho = 1.0 + eps_cold + P_cold / rho
-                        + Gamma * (Gamma_th * press - P_cold) / ((Gamma_th - 1.0) * rho);
+  double dwdrho;
+  if(rho < eos->rho_min || rho > eos->rho_max) {
+    dwdrho = 1.0 + eps_cold + Gamma_th * Gamma * press / ((Gamma_th - 1.0) * rho);
+  }
+  else {
+    dwdrho = 1.0 + eps_cold + P_cold / rho
+             + Gamma * (Gamma_th * press - P_cold) / ((Gamma_th - 1.0) * rho);
+  }
 
   const double rhosq = rho * rho;
   const double Dsq = harm_aux->D * harm_aux->D;

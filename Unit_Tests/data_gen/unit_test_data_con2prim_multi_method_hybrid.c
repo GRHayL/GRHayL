@@ -545,8 +545,9 @@ int main(int argc, char **argv) {
       write_to_file(prims_array, arraylength, prims_length, outfile);
       if(params.evolve_entropy)
         fwrite(entropy, sizeof(double), arraylength, outfile);
-      if(!perturb)
+      if(!perturb) {
         fwrite(c2p_check, sizeof(int), arraylength, outfile);
+      }
       printf("Routine %s had %d failures out of %d points.\n", ghl_get_con2prim_routine_name(methods[routine]), fcnt, arraylength);
     }
     fclose(outfile);
