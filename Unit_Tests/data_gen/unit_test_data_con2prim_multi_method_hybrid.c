@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   const int sampling = npoints*npoints;
 
   // number of additional points for ensuring we hit all logic branches
-  const int ineq_edge_cases = 5;
+  const int ineq_edge_cases = 3;
 
   const int arraylength = sampling + ineq_edge_cases;
 
@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
   ghl_initialize_params(
         main_routine, backup_routine, evolve_entropy, evolve_temperature, calc_prims_guess,
         Psi6threshold, W_max, Lorenz_damping_factor, &params);
+  params.con2prim_solver_tolerance = 1e-10;
 
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
@@ -221,7 +222,7 @@ int main(int argc, char **argv) {
             poison, poison, poison, // entropy, Y_e, temp
             &prims);
 
-      bool speed_limited;
+      bool speed_limited = false;
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
             &params, &metric_adm, &prims, &speed_limited);
       ghl_abort_if_error(error);
@@ -307,6 +308,12 @@ int main(int argc, char **argv) {
     gzz[i] = 1.0;
 
     rho_star[i] = 1e-2;
+    rho_b[i] = rho_star[i];
+    vx[i] = vy[i] = vz[i] = 0.0;
+    ghl_hybrid_compute_P_cold_and_eps_cold(
+          &eos, rho_b[i], &press[i], &eps[i]);
+    entropy[i] = ghl_hybrid_compute_entropy_function(
+          &eos, rho_b[i], press[i]);
   }
 
   Bx[sampling] = By[sampling] = Bz[sampling] = 1e-160;
@@ -323,9 +330,13 @@ int main(int argc, char **argv) {
   // Flat space B^2 with bar rescaling
   Bbar2 = (Bx[sampling+2]*Bx[sampling+2] + By[sampling+2]*By[sampling+2] + Bz[sampling+2]*Bz[sampling+2])*SQR(ONE_OVER_SQRT_4PI);
   tau[sampling+2] = 2.0*flat_metric.sqrt_detgamma*Bbar2;
-  S_x[sampling+2] = S_y[sampling+2] = S_z[sampling+2] = 1000*tau[sampling+2]*(tau[sampling+2] + 2.0*rho_star[sampling+2]);
+  S_x[sampling+2] = 1000*tau[sampling+2]*(tau[sampling+2] + 2.0*rho_star[sampling+2]);
+  S_y[sampling+2] = S_x[sampling+2];
+  S_z[sampling+2] = S_x[sampling+2];
 
-  ent_star[sampling] = ent_star[sampling+1] = ent_star[sampling+2] = 1e-8; // no idea what it should be...
+  // Intentional limiter-input override, not the conservative image of the
+  // cold primitive seed.
+  ent_star[sampling] = ent_star[sampling+1] = ent_star[sampling+2] = 1e-8;
 
   for(int i=sampling; i<arraylength; i++) {
     rho_b_orig[i] = rho_b[i];
@@ -344,22 +355,28 @@ int main(int argc, char **argv) {
     ent_star_orig[i] = ent_star[i];
   }
 
-  // Generate perturbed initial data
+  // Preserve the symmetric input perturbations. Near-zero draws are legitimate;
+  // the comparison helper supplies the independent roundoff floor.
   for(int i=0; i<arraylength; i++) {
-    rho_b_pert[i] = rho_b[i]*(1.0 + randf(-1,1)*1.0e-14);
-    press_pert[i] = press[i]*(1.0 + randf(-1,1)*1.0e-14);
-    eps_pert[i] = eps[i]*(1.0 + randf(-1,1)*1.0e-14);
-    vx_pert[i] = vx[i]*(1.0 + randf(-1,1)*1.0e-14);
-    vy_pert[i] = vy[i]*(1.0 + randf(-1,1)*1.0e-14);
-    vz_pert[i] = vz[i]*(1.0 + randf(-1,1)*1.0e-14);
-    ent_pert[i] = entropy[i]*(1.0 + randf(-1,1)*1.0e-14);
+    rho_b_pert[i] = rho_b[i]*(1.0 + 1.0e-14*randf(-1,1));
+    press_pert[i] = press[i]*(1.0 + 1.0e-14*randf(-1,1));
+    eps_pert[i] = eps[i]*(1.0 + 1.0e-14*randf(-1,1));
+    vx_pert[i] = vx[i]*(1.0 + 1.0e-14*randf(-1,1));
+    vy_pert[i] = vy[i]*(1.0 + 1.0e-14*randf(-1,1));
+    vz_pert[i] = vz[i]*(1.0 + 1.0e-14*randf(-1,1));
+    ent_pert[i] = entropy[i]*(1.0 + 1.0e-14*randf(-1,1));
 
-    rho_star_pert[i] = rho_star[i]*(1.0 + randf(-1,1)*1.0e-14);
-    tau_pert[i] = tau[i]*(1.0 + randf(-1,1)*1.0e-14);
-    S_x_pert[i] = S_x[i]*(1.0 + randf(-1,1)*1.0e-14);
-    S_y_pert[i] = S_y[i]*(1.0 + randf(-1,1)*1.0e-14);
-    S_z_pert[i] = S_z[i]*(1.0 + randf(-1,1)*1.0e-14);
-    ent_star_pert[i] = ent_star[i]*(1.0 + randf(-1,1)*1.0e-14);
+    rho_star_pert[i] = rho_star[i]*(1.0 + 1.0e-14*randf(-1,1));
+    tau_pert[i] = tau[i]*(1.0 + 1.0e-14*randf(-1,1));
+    S_x_pert[i] = S_x[i]*(1.0 + 1.0e-14*randf(-1,1));
+    S_y_pert[i] = S_y[i]*(1.0 + 1.0e-14*randf(-1,1));
+    S_z_pert[i] = S_z[i]*(1.0 + 1.0e-14*randf(-1,1));
+    ent_star_pert[i] = ent_star[i]*(1.0 + 1.0e-14*randf(-1,1));
+  }
+  for(int i=0; i<arraylength; i++) {
+    Bx_pert[i] = Bx[i]*(1.0 + 1.0e-14*randf(-1,1));
+    By_pert[i] = By[i]*(1.0 + 1.0e-14*randf(-1,1));
+    Bz_pert[i] = Bz[i]*(1.0 + 1.0e-14*randf(-1,1));
   }
 
   const int metric_length = 10;
@@ -512,7 +529,7 @@ int main(int argc, char **argv) {
 
         ghl_undensitize_conservatives(metric_adm.sqrt_detgamma, &cons, &cons_undens);
         if(params.calc_prim_guess) {
-          ghl_guess_primitives(&params, &eos, &metric_adm, &cons, &prims);
+          ghl_guess_primitives(&params, &eos, &metric_adm, &cons_undens, &prims);
         }
         c2p_check[i] = ghl_con2prim_hybrid_select_method(
               methods[routine], &params, &eos, &metric_adm, &metric_aux,
@@ -528,7 +545,9 @@ int main(int argc, char **argv) {
       write_to_file(prims_array, arraylength, prims_length, outfile);
       if(params.evolve_entropy)
         fwrite(entropy, sizeof(double), arraylength, outfile);
-      fwrite(c2p_check, sizeof(int), arraylength, outfile);
+      if(!perturb) {
+        fwrite(c2p_check, sizeof(int), arraylength, outfile);
+      }
       printf("Routine %s had %d failures out of %d points.\n", ghl_get_con2prim_routine_name(methods[routine]), fcnt, arraylength);
     }
     fclose(outfile);
@@ -540,6 +559,8 @@ int main(int argc, char **argv) {
       fclose(outfile);
     }
 
+    // Match the primitive-limits consumer, independently of the last C2P method.
+    params.evolve_entropy = evolve_entropy;
     for(int i=0; i<arraylength; i++) {
       // Cycle data
       rho_b_orig[i] = rho_b[i];
@@ -575,7 +596,7 @@ int main(int argc, char **argv) {
             Bx[i], By[i], Bz[i],
             ent_orig[i], poison, poison, &prims);
 
-      bool speed_limited;
+      bool speed_limited = false;
       ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(
             &params, &eos, &metric_adm, &prims, &speed_limited);
       ghl_abort_if_error(error);

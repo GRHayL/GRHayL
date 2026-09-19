@@ -31,6 +31,8 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
     // Entropy routines (see https://arxiv.org/abs/2208.14487)
     case ghl_con2prim_id_Noble1D_entropy:
       return ghl_hybrid_Noble1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
+    case ghl_con2prim_id_Noble1D_entropy2:
+      return ghl_hybrid_Noble1D_entropy2(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     case ghl_con2prim_id_Palenzuela1D_entropy:
       return ghl_hybrid_Palenzuela1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     default:
@@ -79,10 +81,10 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
 }
 
 /*
- * Function     : ghl_con2prim_tabulated_select_method()
- * Description  : Calls the Con2Prim routine designated by c2p_key
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
-*/
+ * Function    : ghl_con2prim_hybrid_multi_method()
+ * Description : Tries the configured hybrid main routine, then configured
+ *               backups in order until one succeeds.
+ */
 ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -131,10 +133,10 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
 }
 
 /*
- * Function     : ghl_con2prim_tabulated_select_method()
- * Description  : Calls the Con2Prim routine designated by c2p_key
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
-*/
+ * Function    : ghl_con2prim_tabulated_multi_method()
+ * Description : Tries the configured tabulated main routine, its optional
+ *               neural-network retry, then configured backups in order.
+ */
 
 ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       const ghl_parameters *restrict params,

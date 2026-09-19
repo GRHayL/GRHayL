@@ -23,13 +23,14 @@ Contract:
 - Required primitive field before recovery: `BU`. The source comments state this is the only primitive expected before the Con2Prim solve.
 - Required conservative fields: densitized `rho`, `tau`, and `SD`.
 - Required EOS bounds/atmosphere fields: `tau_atm` and `press_atm`.
+- For tabulated EOS recovery, a negative energy or `tau` is not by itself
+  invalid. Admissibility depends on the table's local bounds at the state's
+  density and composition. Solver-specific sign clipping must not be inferred
+  from the generic atmosphere-limit route.
 - Required parameter: `psi6threshold`, used with `metric_adm->sqrt_detgamma` to choose the high-`psi6` momentum/energy limiting branch.
 - Writes conservative outputs in place: limited `tau` and possibly rescaled `SD`.
-- Writes diagnostics: `tau_fix` for the magnetic-energy or high-`psi6`
-  fluid-energy correction, and `Stilde_fix` when `SD` is rescaled. The initial
-  unconditional `cons->tau = fmax(cons->tau, eos->tau_atm)` can raise `tau`
-  without setting `tau_fix`; do not interpret `tau_fix == false` as proof that
-  `tau` was unchanged.
+- Writes diagnostics: `tau_fix` when the atmosphere floor, magnetic-energy, or
+  high-`psi6` correction changes `tau`, and `Stilde_fix` when `SD` is rescaled.
 - Caller should initialize diagnostics first with `ghl_initialize_diagnostics`; the helper only sets flags true when a fix occurs.
 
 Tests and fixtures:
@@ -51,7 +52,14 @@ Contract:
 - Required conservative fields: undensitized `rho`, `tau`, `SD`, and `Y_e` where the tabulated path needs electron fraction.
 - Required primitive field for tabulated guess: `BU`, because the Palenzuela-style estimate computes magnetic contractions before velocity construction.
 - Simple/hybrid EOS path sets `rho` from undensitized conservative density, sets `u0 = 1`, sets `vU = -betaU`, and computes cold `press` and `eps`.
+- That simple/hybrid path is a partial update: incoming `BU`, entropy, `Y_e`,
+  and temperature remain unchanged.
 - Tabulated EOS path computes metric/magnetic contractions through `ghl_compute_SU_Bsq_Ssq_BdotS`, uses `T_max` as the temperature guess, enforces table bounds on `rho`, `Y_e`, and `eps`, computes `press`, `entropy`, and `temperature` from `eps`, then calls `ghl_limit_utilde_and_compute_v`.
+- Invalid or nonfinite algebraic inputs produce a full atmosphere guess. An EOS
+  inversion error instead preserves the bounded `rho`, `Y_e`, and `eps` seed,
+  keeps `T_max`, supplies finite atmosphere pressure and entropy, and continues
+  velocity construction. A later nonfinite or singular derived quantity still
+  replaces that partial seed with the full atmosphere state.
 - Required tabulated EOS bounds: table-backed `rho`, `Y_e`, and `eps` bounds exposed through `ghl_tabulated_enforce_bounds_rho_Ye_eps`; required temperature bound/guess: `T_max`.
 - Required parameter for tabulated guess: `max_Lorentz_factor` through `ghl_limit_utilde_and_compute_v`.
 - Diagnostics: no diagnostics pointer is accepted. The tabulated path invokes utilde limiting but does not store `speed_limited`.
@@ -86,7 +94,9 @@ Contract:
 - Internal helper declared in `GRHayL/include/ghl_con2prim.h`.
 - Inputs: `ghl_parameters`, ADM metric, mutable spatial `utU[3]`, and primitives.
 - Required parameter: `max_Lorentz_factor`.
-- Computes the utilde norm using `metric_adm->gammaDD`; if above the Lorentz cap, rescales `utU`.
+- Computes the utilde norm using `metric_adm->gammaDD`. The roundoff-slack
+  trigger rescales `utU` only when the computed factor is below one, so the
+  helper never increases the supplied speed.
 - Writes primitive outputs: `u0` and `vU`.
 - Returns `true` when speed limiting occurred, otherwise `false`.
 - Used by the tabulated primitive guess path; unlike `ghl_enforce_primitive_limits_and_compute_u0`, it does not write a diagnostics struct by itself.

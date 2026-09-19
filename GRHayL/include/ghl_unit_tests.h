@@ -149,6 +149,7 @@ void ghl_pert_test_fail_primitives_with_cutoffs(
       const ghl_primitive_quantities *restrict prims_trusted,
       const ghl_primitive_quantities *restrict prims,
       const ghl_primitive_quantities *restrict prims_pert,
+      const double rho_cutoff,
       const double pressure_cutoff,
       const double eps_cutoff);
 
@@ -280,9 +281,9 @@ static inline bool ghl_pert_test_fail_with_tolerance(
       const double perturbed,
       const double rel_tol,
       const double abs_tol) {
-  if (isnan(computed) && isfinite(trusted)) return true; // NaN failure
+  // Invalid output or reference data must never manufacture a passing bar.
+  if (!isfinite(trusted) || !isfinite(computed) || !isfinite(perturbed)) return true;
   if (fabs(trusted - computed) < abs_tol) return false;  // Absolute tolerance success
-  if (isnan(perturbed)) return false; // NaN "success"
   return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), rel_tol);
 }
 

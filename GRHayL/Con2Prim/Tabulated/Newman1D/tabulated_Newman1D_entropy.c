@@ -125,7 +125,7 @@ static ghl_error_codes_t ghl_newman_entropy(
   prims->Y_e         = xye;
   prims->temperature = xtemp;
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
+  diagnostics->speed_limited |= ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
@@ -147,8 +147,6 @@ ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
 
   // Step 2: Call the Newman routine that uses the entropy to recover T
   const double tol_x = 1e-15;
-  diagnostics->which_routine = ghl_con2prim_id_Newman1D_entropy;
-
   ghl_error_codes_t error = ghl_newman_entropy(params, eos, Ssq, BdotS, Bsq, SU, metric_adm,
                                                cons_undens, prims, tol_x, diagnostics);
 
@@ -158,5 +156,8 @@ ghl_error_codes_t ghl_tabulated_Newman1D_entropy(
                                cons_undens, prims, tol_x, diagnostics);
   }
 
+  if(error == ghl_success) {
+    diagnostics->which_routine = ghl_con2prim_id_Newman1D_entropy;
+  }
   return error;
 }

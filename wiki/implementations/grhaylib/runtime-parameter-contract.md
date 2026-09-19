@@ -69,6 +69,11 @@ GRHayLib maps Cactus controls into `ghl_initialize_params` at routing level:
 - Limit and gauge controls: `Psi6threshold`, `max_Lorentz_factor`, and
   `Lorenz_damping_factor`.
 
+Before initialization, `GRHayLib_paramcheck` rejects a
+`max_Lorentz_factor` that is nonfinite or less than `1`. Thus the admitted
+boundary is finite `max_Lorentz_factor >= 1`; this prevents the derived
+`inv_sq_max_Lorentz_factor` from receiving an invalid runtime value.
+
 The tabulated NN fallback toggle `enable_backup_nn_primitive_guess` is not
 part of `ghl_initialize_params`; GRHayLib passes it to
 `ghl_initialize_tabulated_eos` as the `enable_neural_net_c2p` argument.
@@ -186,28 +191,32 @@ those inputs differently for main and backup parameters:
 
 - `None` is exposed only for `con2prim_backup_routines[3]`; the parser still
   maps it to `ghl_con2prim_id_None`.
-- `Noble1D_entropy2` is a parser case, but it is commented out in both local
-  `param.ccl` keyword lists.
 - Exposed method strings include `Noble2D`, `Noble1D`, `Noble1D_entropy`,
-  `Font1D`, `Palenzuela1D`, `Palenzuela1D_entropy`, `Newman1D`, and
-  `Newman1D_entropy`.
+  `Noble1D_entropy2`, `Font1D`, `Palenzuela1D`, `Palenzuela1D_entropy`,
+  `Newman1D`, and `Newman1D_entropy`.
 - Unknown strings return `-100`.
 
-`GRHayLib_paramcheck` error formatting has a separate backup-index defect: each
-loop identifies `con2prim_backup_routines[i]` in the label but prints
-`con2prim_backup_routines[0]` as the value. For failures at index 1 or 2, the
-message can therefore report the wrong routine. Use index and parser evidence,
-not the printed value alone, when diagnosing a rejected backup.
+`GRHayLib_paramcheck` reports the rejected backup using the matching
+`con2prim_backup_routines[i]` value and slot number in each compatibility and
+entropy-required diagnostic family.
 
 Entropy methods require `evolve_entropy`. `GRHayLib_paramcheck` rejects
-`Noble1D_entropy`, `Palenzuela1D_entropy`, and `Newman1D_entropy` as main or
-backup choices when `evolve_entropy` is false.
+`Noble1D_entropy`, `Noble1D_entropy2`, `Palenzuela1D_entropy`, and
+`Newman1D_entropy` as main or backup choices when `evolve_entropy` is false.
+`Noble1D_entropy2` is available for Simple and Hybrid EOS and is rejected for
+tabulated EOS, matching its core selector and implementation family.
 
 Parser/parameter keyword existence does not imply supported solver. Compare
 any GRHayLib keyword against [Con2Prim solver matrix](../../gems/con2prim/solver-matrix.md),
 selector dispatch, build-list evidence, and tests before claiming support.
 Recovery order and backup behavior route to
 [Con2Prim recovery flow](../../gems/con2prim/recovery-flow.md).
+
+Ordinary hybrid Noble recovery can reject marginal cold-boundary states after
+the closure-consistent speed-limit finalization exposes a nonpositive pressure.
+Deployments that must recover those states should configure a robust later
+backup such as Font1D; all configured backup slots are subject to the same
+family and entropy compatibility checks above.
 
 ### Tabulated Neural-Network Primitive Guess
 
@@ -235,18 +244,6 @@ GRHayLib direct-compile build routing also includes
 Record these source facts as drift evidence only; this page does not propose
 source changes:
 
-- `param.ccl` comments out `Noble1D_entropy2` in both `con2prim_routine` and
-  `con2prim_backup_routines[3]`.
-- `parse_C2P_routine_keyword` still has a parser case for
-  `Noble1D_entropy2`.
-- `GRHayLib_paramcheck` contains compatibility checks for
-  `Newman1D_energy`, while exposed Cactus keywords include `Newman1D` and
-  `Newman1D_entropy`. Consequence: `EOS_type = "Simple"` or `"Hybrid"` with
-  `con2prim_routine = "Newman1D"` passes paramcheck, then fails at runtime
-  on every point through the hybrid selector's
-  `ghl_error_invalid_c2p_key` path (no hybrid `Newman1D` case in
-  `GRHayL/Con2Prim/con2prim_multi_method.c`). Needs a maintainer decision:
-  fix the paramcheck strings or restrict the `param.ccl` keyword lists.
 - `schedule.ccl` conditionally skips initialization for
   `ID_converter_ILGRMHD` but always schedules termination. Local files do not
   establish alternate allocation ownership or a safe terminate precondition.

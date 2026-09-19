@@ -99,11 +99,10 @@ lists `SRCS` and `SUBDIRS` for the Cactus thorn build path; route detailed
 interpretation through
 [GRHayLib Cactus build boundary](implementations/grhaylib/cactus-build-boundary.md).
 
-Do not infer that listed GRHayLib `SUBDIRS` exist in this checkout or are
-generated. The local `implementations/GRHayLib/` tree has only `doc/` and
-`src/` under it at `-maxdepth 2`, so the absent-subdir caveat on the GRHayLib
-boundary page remains the routing authority until maintainers confirm the
-direct-compile/copy layout.
+The listed GRHayLib `SUBDIRS` and `src/include` resolve through tracked symlinks
+to upstream `GRHayL/` source and headers. They are repository inputs, not
+generated copies. Their presence establishes static path parity only; use the
+GRHayLib boundary page for the separate Cactus build/runtime evidence limit.
 
 ## Test Binaries And Downloaded Data
 
@@ -126,10 +125,10 @@ reaches cleanup, the globs also remove pre-existing matching files even when a
 download was skipped; the full runner therefore belongs only in a disposable
 checkout.
 
-`unit_test_c2p_nn_guess` separately creates fixed-name HDF5 files under `/tmp`
-and does not remove them. They are outside runner's root-level cleanup glob;
-use an isolated host/container or remove only those exact
-`/tmp/unit_test_c2p_nn_*.h5` test artifacts after a reviewed run.
+`unit_test_c2p_nn_guess` separately creates a unique private temporary directory
+in HDF5 mode. It writes only its fixed model basenames there and removes those
+files and the directory on normal or handled failure exit; no-HDF5 runs skip
+that setup.
 
 `Unit_Tests/sample_table/generate_simple_table.py` creates `simple_table.h5`
 from analytic arrays. The checked-in

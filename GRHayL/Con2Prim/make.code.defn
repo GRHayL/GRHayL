@@ -11,6 +11,7 @@ SRCS = apply_conservative_limits.c               \
        enforce_primitive_limits_and_compute_u0.c \
        get_con2prim_routine_name.c               \
        guess_primitives.c                        \
+       hdf5_disabled_stubs.c                     \
        initialize_diagnostics.c                  \
        limit_utilde_and_compute_v.c              \
        undensitize_conservatives.c

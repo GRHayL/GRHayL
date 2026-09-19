@@ -3,10 +3,11 @@
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
       const int maxits, const double tol, const double W_in,
-      const double Sf2_in, const double Psim6, const double sdots,
+      const double Sf2_in, const double sdots,
       const double BdotS2, const double B2,
       const ghl_conservative_quantities *restrict cons,
-      const double rhob_in, double *restrict rhob_out_ptr);
+      const double rhob_in, double *restrict rhob_out_ptr,
+      int *restrict n_iter);
 
 /**
  * @ingroup hyb_c2p
@@ -25,10 +26,9 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  * The return value gives information on the success or failure of the
  * recovery attempt. The public Con2Prim dispatchers pass the local
  * `cons_undens` struct to this routine. In the formulas below,
- * \f$ D_\mathrm{in} \f$ denotes the density value stored in
+ * \f$ D \f$ denotes the undensitized density stored in
  * \f$ \mathrm{\texttt{cons->rho}} \f$, \f$ S^\mathrm{in}_i \f$ denotes the
- * momentum stored in \f$ \mathrm{\texttt{cons->SD}} \f$, and
- * \f$ \psi^{-6} \f$ denotes \f$ \mathrm{\texttt{Psim6}} = 1/\sqrt{|\gamma|} \f$.
+ * undensitized momentum stored in \f$ \mathrm{\texttt{cons->SD}} \f$.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -47,8 +47,8 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
  *                      output is the primitives consistent with the
  *                      input conservatives
  *
- * @param[out] diagnostics pointer to ghl_con2prim_diagnostics struct; returns
- *                         with several Con2Prim solver diagnostics
+ * @param[in,out] diagnostics pointer to ghl_con2prim_diagnostics struct;
+ *                            returns with several Con2Prim solver diagnostics
  *
  * @returns error code for any Con2Prim failures
  */
@@ -61,6 +61,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
+  diagnostics->n_iter = 0;
   double utU[3];
 
   const double sdots = ghl_compute_vec2_from_vec3D(metric_adm->gammaUU, cons->SD);
@@ -86,8 +87,6 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     hatBdotS = BdotS/B_mag;
   }
 
-  double Psim6 = 1.0/metric_adm->sqrt_detgamma;
-
   double rhob;
   if (sdots<1.e-300) {
     utU[0] = 0.0;
@@ -98,9 +97,9 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     prims->vU[1] = -metric_adm->betaU[1];
     prims->vU[2] = -metric_adm->betaU[2];
   } else {
-    double W0    = sqrt( SQR(hatBdotS) + SQR(cons->rho) ) * Psim6;
+    double W0    = sqrt( SQR(hatBdotS) + SQR(cons->rho) );
     double Sf20  = (SQR(W0)*sdots + BdotS2*(B2 + 2.0*W0))/SQR(W0+B2);
-    double rhob0 = cons->rho*Psim6/sqrt(1.0+Sf20/SQR(cons->rho));
+    double rhob0 = cons->rho/sqrt(1.0+Sf20/SQR(cons->rho));
     /**
      * Now we apply core @ref ghl_hybrid_Font1D_loop method with several
      * attempts. As this method is intended as a final resort backup, it tries
@@ -121,8 +120,9 @@ ghl_error_codes_t ghl_hybrid_Font1D(
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
       const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
       error = ghl_hybrid_Font1D_loop(
-            eos, loop_maxits, loop_tol, W0, Sf20, Psim6,
-            sdots, BdotS2, B2, cons, rhob0, &rhob);
+            eos, loop_maxits, loop_tol, W0, Sf20,
+            sdots, BdotS2, B2, cons, rhob0, &rhob,
+            &diagnostics->n_iter);
       rhob0 = rhob;
       if(error == ghl_success) break;
     }
@@ -138,7 +138,10 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      * \f$ \epsilon_\mathrm{cold} \f$, and
      *
      * \f[
-     * h_\mathrm{cold} = 1 + \epsilon_\mathrm{cold} + \frac{P_\mathrm{cold}}{\rho}
+     * \rho_\mathrm{EOS} = \mathrm{clamp}(\rho,\rho_\mathrm{min},\rho_\mathrm{max}),
+     * \qquad
+     * h_\mathrm{cold} = 1 + \epsilon_\mathrm{cold}(\rho_\mathrm{EOS})
+     * + \frac{P_\mathrm{cold}(\rho_\mathrm{EOS})}{\rho}
      * \f]
      */
     double P_cold, eps_cold;
@@ -149,10 +152,10 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      * We then compute \f$ \gamma_v \f$ using equation (A19) in \cite Etienne_2012 :
      *
      * \f[
-     * \gamma_v = \frac{D_\mathrm{in}\psi^{-6}}{\rho}
+     * \gamma_v = \frac{D}{\rho}
      * \f]
      */
-    double gammav = cons->rho*Psim6/rhob;
+    double gammav = cons->rho/rhob;
     double rhosh = cons->rho*h;
 
     /**
@@ -164,19 +167,17 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      * where
      *
      * \f[
-     * f_1 = \frac{\sqrt{|\gamma|} B \cdot S_\mathrm{in}}
-     *            {\gamma_v D_\mathrm{in} h}
+     * f_1 = \frac{B \cdot S}{\gamma_v D h}
      * \f]
      *
      * and
      *
      * \f[
-     * f_2 = \left[ D_\mathrm{in} h
-     *              + \frac{\sqrt{|\gamma|} B^2}{\gamma_v} \right]^{-1}
+     * f_2 = \left[ D h + \frac{B^2}{\gamma_v} \right]^{-1}
      * \f]
      */
-    double fac1 = metric_adm->sqrt_detgamma*BdotS/(gammav*rhosh);
-    double fac2 = 1.0/(rhosh + metric_adm->sqrt_detgamma*B2/gammav);
+    double fac1 = BdotS/(gammav*rhosh);
+    double fac2 = 1.0/(rhosh + B2/gammav);
 
     double SU[3];
     ghl_raise_lower_vector_3D(metric_adm->gammaUU, cons->SD, SU);
@@ -184,31 +185,31 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     utU[0] = fac2*(SU[0] + fac1*prims->BU[0]);
     utU[1] = fac2*(SU[1] + fac1*prims->BU[1]);
     utU[2] = fac2*(SU[2] + fac1*prims->BU[2]);
-    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
+    diagnostics->speed_limited |= ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
   }
 
-  prims->rho = cons->rho/(metric_adm->lapse*prims->u0*metric_adm->sqrt_detgamma);
+  prims->rho = cons->rho/(metric_adm->lapse*prims->u0);
   /**
    * The Font fix only sets the velocities. We set the remaining primitives using
-   * @ref ghl_hybrid_compute_P_cold, @ref ghl_hybrid_compute_entropy_function,
-   * and
+   * @ref ghl_hybrid_compute_P_cold_and_eps_cold and
+   * @ref ghl_hybrid_compute_entropy_function. The cold-EOS helper evaluates
+   * pressure and specific internal energy at the bounded EOS density while the
+   * returned density remains fixed by conservative closure:
    *
    * \f[
    * \begin{aligned}
-   * \rho &= \frac{D_\mathrm{in}}{\alpha u^0 \sqrt{|\gamma|}} \\
-   * \epsilon &= \frac{P}{\rho (\Gamma - 1)}
+   * \rho &= \frac{D}{\alpha u^0} \\
+   * \rho_\mathrm{EOS} &= \mathrm{clamp}(\rho,\rho_\mathrm{min},\rho_\mathrm{max}) \\
+   * (P,\epsilon) &= (P_\mathrm{cold},\epsilon_\mathrm{cold})(\rho_\mathrm{EOS})
    * \end{aligned}
    * \f]
    */
 
-  double K_ppoly, Gamma_ppoly;
-  ghl_hybrid_get_K_and_Gamma(eos, prims->rho, &K_ppoly, &Gamma_ppoly);
-
-  ghl_hybrid_compute_P_cold(eos, prims->rho, &prims->press);
-
-  prims->eps = prims->press/(prims->rho*(Gamma_ppoly-1.0));
+  ghl_hybrid_compute_P_cold_and_eps_cold(
+        eos, prims->rho, &prims->press, &prims->eps);
   if(params->evolve_entropy)
-    prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
+    prims->entropy = ghl_hybrid_compute_entropy_function(
+          eos, prims->rho, prims->press);
 
   diagnostics->which_routine = ghl_con2prim_id_Font1D;
   return ghl_success;

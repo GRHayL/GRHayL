@@ -110,7 +110,7 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D(
   };
 
   // Set prims struct
-  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
+  diagnostics->speed_limited |= ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
   prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 
   return ghl_success;

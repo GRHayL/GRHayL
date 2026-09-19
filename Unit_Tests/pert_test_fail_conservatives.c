@@ -13,6 +13,12 @@ void ghl_pert_test_fail_conservatives(
       const ghl_conservative_quantities *restrict cons,
       const ghl_conservative_quantities *restrict cons_pert) {
 
+  /* Metric contractions can cancel in a small momentum component. Bound only
+   * fixture-scale roundoff by the trusted vector norm; do not raise the shared
+   * relative floor. This is not a forward-error bound for arbitrary metrics. */
+  const double momentum_abs_tol = fmax(1.0e-30, 8.0*DBL_EPSILON*
+        fmax(fabs(cons_trusted->SD[0]),
+        fmax(fabs(cons_trusted->SD[1]), fabs(cons_trusted->SD[2]))));
   bool test_fail = false;
   if( ghl_pert_test_fail(cons_trusted->rho, cons->rho, cons_pert->rho) ) {
     printf("rho trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->rho, cons->rho, cons_pert->rho);
@@ -26,19 +32,19 @@ void ghl_pert_test_fail_conservatives(
     test_fail = true;
   }
 
-  if( ghl_pert_test_fail(cons_trusted->SD[0], cons->SD[0], cons_pert->SD[0]) ) {
+  if( ghl_pert_test_fail_with_tolerance(cons_trusted->SD[0], cons->SD[0], cons_pert->SD[0], 8.0e-14, momentum_abs_tol) ) {
     printf("S[0] trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->SD[0], cons->SD[0], cons_pert->SD[0]);
     printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->SD[0], cons->SD[0]), relative_error(cons_trusted->SD[0], cons_pert->SD[0]));
     test_fail = true;
   }
 
-  if( ghl_pert_test_fail(cons_trusted->SD[1], cons->SD[1], cons_pert->SD[1]) ) {
+  if( ghl_pert_test_fail_with_tolerance(cons_trusted->SD[1], cons->SD[1], cons_pert->SD[1], 8.0e-14, momentum_abs_tol) ) {
     printf("S[1] trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->SD[1], cons->SD[1], cons_pert->SD[1]);
     printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->SD[1], cons->SD[1]), relative_error(cons_trusted->SD[1], cons_pert->SD[1]));
     test_fail = true;
   }
 
-  if( ghl_pert_test_fail(cons_trusted->SD[2], cons->SD[2], cons_pert->SD[2]) ) {
+  if( ghl_pert_test_fail_with_tolerance(cons_trusted->SD[2], cons->SD[2], cons_pert->SD[2], 8.0e-14, momentum_abs_tol) ) {
     printf("S[2] trusted %.14e computed %.14e perturbed %.14e\n", cons_trusted->SD[2], cons->SD[2], cons_pert->SD[2]);
     printf("rel.err. %.14e %.14e\n", relative_error(cons_trusted->SD[2], cons->SD[2]), relative_error(cons_trusted->SD[2], cons_pert->SD[2]));
     test_fail = true;

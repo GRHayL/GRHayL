@@ -97,9 +97,10 @@ int main(int argc, char **argv) {
   key += fread(vx, sizeof(double), arraylength, infile);
   key += fread(vy, sizeof(double), arraylength, infile);
   key += fread(vz, sizeof(double), arraylength, infile);
+  key += fread(entropy, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*6)
+  if(key != arraylength*7)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -178,7 +179,7 @@ int main(int argc, char **argv) {
                       &prims);
 
     //This applies limits on the primitives
-    bool speed_limited;
+    bool speed_limited = false;
     ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric_adm, &prims, &speed_limited);
     ghl_abort_if_error(error);
 
@@ -186,8 +187,8 @@ int main(int argc, char **argv) {
     ghl_initialize_primitives(
           rho_b_trusted[i], press_trusted[i], eps_trusted[i],
           vx_trusted[i], vy_trusted[i], vz_trusted[i],
-          ent_trusted[i], poison, poison,
           poison, poison, poison,
+          ent_trusted[i], poison, poison,
           &prims_trusted);
 
     ghl_initialize_primitives(
@@ -239,7 +240,7 @@ int main(int argc, char **argv) {
         &prims);
 
   params.psi6threshold = 0;
-  bool speed_limited;
+  bool speed_limited = false;
   ghl_error_codes_t error = ghl_enforce_primitive_limits_and_compute_u0(&params, &eos, &metric_adm, &prims, &speed_limited);
   ghl_abort_if_error(error);
   if( relative_error(1e5*P_cold, prims.press) > 1e-20 )
@@ -277,6 +278,39 @@ int main(int argc, char **argv) {
   ghl_abort_if_error(error);
   if(fabs(prims.rho - rho_max) > 1e-50 || fabs(prims.press - press_max) > 1e-50)
     ghl_error("Maximum test failed for simple eos: %e %e\n", prims.rho, prims.press);
+
+  ghl_parameters limiting_params = params;
+  limiting_params.max_Lorentz_factor = 2.0;
+  limiting_params.inv_sq_max_Lorentz_factor = 0.25;
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 10.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_enforce_primitive_limits_and_compute_u0(
+        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  if(!speed_limited) {
+    ghl_error("speed-limit diagnostic did not report a real limit\n");
+  }
+
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_enforce_primitive_limits_and_compute_u0(
+        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  if(speed_limited) {
+    ghl_error("speed-limit diagnostic reported a non-limiting call\n");
+  }
+
+  speed_limited = true;
+  error = ghl_enforce_primitive_limits_and_compute_u0(
+        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  if(!speed_limited) {
+    ghl_error("speed-limit diagnostic did not preserve incoming true\n");
+  }
 
   ghl_info("ghl_enforce_primitive_limits_and_compute_u0 function test has passed!\n");
   free(lapse);
