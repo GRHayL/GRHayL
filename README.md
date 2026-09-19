@@ -91,6 +91,9 @@ tabulated solver entry points remain link-visible as non-mutating
 disabled-feature stubs; the six direct tabulated HLLE flux variants remain their real
 implementations. Pure inference from an
 independently valid in-memory model does not itself require HDF5.
+The tabulated HLLE symbols are retained for link compatibility, not supported
+no-HDF5 execution: they require an initialized compatible tabulated EOS
+dispatch and must not be called in a no-HDF5 build.
 
 ### System-wide Installation (default)
 

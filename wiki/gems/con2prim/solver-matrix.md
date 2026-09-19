@@ -19,7 +19,7 @@ where applicable.
 | `Noble1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; tabulated parameter check rejects it. | Hybrid/simple supported. |
 | `Noble1D_entropy` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; tabulated check rejects it and GRHayLib requires `evolve_entropy`. | Hybrid/simple supported with valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
 | `Noble1D_entropy2` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only; the manifest includes the density residual and wrapper. | Hybrid Doxygen table lists it. The hard-coded hybrid test covers Simple EOS, both pieces of a two-piece Hybrid EOS, magnetized curved-metric recovery, real backup routing, density-limit ownership, and failure codes. | Main/backup keywords and parser accept it; tabulated checks reject it and GRHayLib requires `evolve_entropy`. | Hybrid/simple supported with valid entropy conservative input. Direct recovery returns a positive unclamped root; the standard post-recovery limiter owns configured density bounds. |
-| `Font1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. `unit_test_hybrid_failure.c` independently checks curved zero-momentum and magnetized round trips. | Main/backup keywords and parser accept it; simple and tabulated checks reject it. | Hybrid supported; raw Doxygen says simple excludes it. |
+| `Font1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. `unit_test_hybrid_failure.c` independently checks curved zero-momentum, magnetized, and below-EOS-density round trips. | Main/backup keywords and parser accept it; simple and tabulated checks reject it. | Hybrid supported; cold pressure/energy use bounded EOS density, but `P/rho` in the enthalpy closure uses the recovered conservation-owned density; raw Doxygen says simple excludes it. |
 | `Palenzuela1D` | Enum/name plus hybrid/tabulated energy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it for all EOS families. | Hybrid/simple supported; tabulated supported when HDF5 enabled. |
 | `Palenzuela1D_entropy` | Enum/name plus hybrid/tabulated entropy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it; GRHayLib requires `evolve_entropy`. | Hybrid/simple supported; tabulated supported when HDF5 is enabled. Both require valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
 | `Newman1D` | Enum/name plus tabulated energy declaration and definition exist. | Tabulated selector/build only. | Tabulated Doxygen table and tabulated tests list it; debug binary uses it. | Main/backup keywords and parser accept `Newman1D`; simple/hybrid checks reject it. | Tabulated supported when HDF5 enabled. |
@@ -115,10 +115,11 @@ initialized by `GRHayL/Con2Prim/initialize_diagnostics.c`.
 - `backup[3]`: initialized false; multi-method drivers set slot `n` true before
   trying `params->backup_routine[n]`.
 - `n_iter`: initialized to zero and meaningful only with a successful
-  `which_routine`. Font1D resets it at entry and accumulates its
-  density-loop iterations for that invocation, including zero for its shortcut;
-  other solvers use local counters (`harm_aux.n_iter`, `rparams.n_iters`, or
-  `step`).
+  `which_routine`. Font1D resets it at entry and accumulates outer
+  `W`/fluid-momentum iterations across retries, including zero for its shortcut;
+  its inner density loop is not counted. Newman records the final attempted
+  helper's local `step`, not an aggregate across retries. Other solvers use
+  local counters (`harm_aux.n_iter` or `rparams.n_iters`).
 
 ## Ground Truth
 

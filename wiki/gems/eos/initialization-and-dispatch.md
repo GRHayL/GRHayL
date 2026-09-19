@@ -149,11 +149,11 @@ Sources: `GRHayL/GRHayL_Core/initialize_eos.c`,
 Default configured builds expect HDF5 support for tabulated EOS. Passing
 `--disable-hdf5` to `configure` defines `GHL_DISABLE_HDF5` and filters most
 tabulated/HDF5 implementation and test paths out of the generated build. It
-intentionally retains Con2Prim's tabulated primitive-guess helper and
-neural-network sources so non-HDF5 validation/inference code and loader stubs
-remain linkable. Downstream or manual builds that bypass `configure` must
-reproduce the actual filtered source set, not assume every path containing
-`Tabulated` disappears.
+retains a narrow documented set of low-level helpers, disabled-feature stubs,
+and direct flux symbols. [Build and CI](../../build-and-ci.md) owns the exact
+retained/excluded source and test surface. Downstream or manual builds that
+bypass `configure` must reproduce that actual filtered source set, not assume
+every path containing `Tabulated` disappears.
 
 When `GHL_DISABLE_HDF5` is defined, tabulated EOS runtime paths are disabled.
 `ghl_initialize_tabulated_eos` and

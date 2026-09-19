@@ -295,6 +295,15 @@ int main(int argc, char **argv) {
   ghl_initialize_primitives(
         1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_enforce_primitive_limits_and_compute_u0(
+        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  if(speed_limited) {
+    ghl_error("speed-limit diagnostic reported a non-limiting call\n");
+  }
+
+  speed_limited = true;
   error = ghl_enforce_primitive_limits_and_compute_u0(
         &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
   ghl_abort_if_error(error);

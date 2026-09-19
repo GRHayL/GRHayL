@@ -140,7 +140,9 @@ With `--disable-hdf5`, `configure`:
   flux implementations. The disabled direct-tabulated-solver stubs also remain
   because their source path does not match the exclusion tokens;
 - excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, and the
-  NRPyLeakage unit tests from the generated unit-test list;
+  table-backed NRPyLeakage tests `constant_density_sphere`, `luminosities`, and
+  `optically_thin_gas` from the generated unit-test list. The NRPyLeakage
+  `physics` and `classifier_fallback` tests remain available;
 - excludes tabulated data generators from the generated data-generator list.
 
 For Neutrinos-specific HDF5/EOS details, route public table-backed API behavior
@@ -196,7 +198,8 @@ pinned companion-repository revision. That byte gate is tied to the configured
 GCC toolchain and environment; compiler, library, or runner changes require
 reviewing the fixture contract even when source is unchanged. Its plain-build
 Valgrind phase checks the Con2Prim generator and focused recovery tests for
-memory errors and uninitialized reads.
+invalid memory use and uninitialized reads. It does not enable a leak-failure
+policy, so it is not a general leak gate.
 The other compiler workflows remain skipped for such a change. This is static
 topology plus core `configure`/unit-test evidence, not a GRHayLib Cactus thorn
 build.

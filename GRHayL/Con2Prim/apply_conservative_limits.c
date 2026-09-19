@@ -180,8 +180,9 @@ void ghl_apply_conservative_limits(
     double tau_fluid_min = cons->tau - half_psi6_B2 - tau_fluid_term3;
     if (tau_fluid_min < eos->tau_atm*1.001) {
       tau_fluid_min = eos->tau_atm*1.001;
+      const double tau_before_fix = cons->tau;
       cons->tau = tau_fluid_min + half_psi6_B2 + tau_fluid_term3;
-      diagnostics->tau_fix = true;
+      diagnostics->tau_fix |= (cons->tau != tau_before_fix);
     }
 
     const double rhot = 0.999999*tau_fluid_min*(tau_fluid_min+2.0*cons->rho);

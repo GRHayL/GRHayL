@@ -212,6 +212,12 @@ selector dispatch, build-list evidence, and tests before claiming support.
 Recovery order and backup behavior route to
 [Con2Prim recovery flow](../../gems/con2prim/recovery-flow.md).
 
+Ordinary hybrid Noble recovery can reject marginal cold-boundary states after
+the closure-consistent speed-limit finalization exposes a nonpositive pressure.
+Deployments that must recover those states should configure a robust later
+backup such as Font1D; all configured backup slots are subject to the same
+family and entropy compatibility checks above.
+
 ### Tabulated Neural-Network Primitive Guess
 
 GRHayLib exposes `enable_backup_nn_primitive_guess` as a Cactus parameter. In

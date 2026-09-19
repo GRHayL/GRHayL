@@ -1,3 +1,5 @@
+#include <float.h>
+
 #include "ghl_unit_tests.h"
 
 /* A pressure sign at roundoff can differ across supported compilers. Only the
@@ -10,7 +12,6 @@ static bool is_documented_Noble_pressure_boundary(
       const ghl_error_codes_t expected) {
 
   const bool Noble_method = method == ghl_con2prim_id_Noble1D
-                          || method == ghl_con2prim_id_Noble1D_entropy
                           || method == ghl_con2prim_id_Noble2D;
   const bool success_pressure_pair
         = (actual == ghl_success && expected == ghl_error_neg_pressure)
@@ -317,8 +318,7 @@ int main(int argc, char **argv) {
         continue;
       }
 
-      const bool pressure_boundary = check == ghl_error_neg_pressure
-                                  || c2p_check[i] == ghl_error_neg_pressure;
+      const bool pressure_boundary = compiler_sensitive_boundary;
       if(pressure_boundary) {
         pressure_boundary_count++;
       }
@@ -350,7 +350,7 @@ int main(int argc, char **argv) {
 
       check_Noble_reconservation(
             i, methods[method], &params, &eos, &metric_adm, &metric_aux,
-            &cons_undens, &prims, !pressure_boundary);
+            &cons_undens, &prims, check == ghl_success);
 
       ghl_primitive_quantities prims_trusted, prims_pert;
       ghl_initialize_primitives(
@@ -367,10 +367,27 @@ int main(int argc, char **argv) {
             ent_pert[i], poison, poison,
             &prims_pert);
 
-      if(pressure_boundary) {
+      const bool Noble_pressure_case
+            = (methods[method] == ghl_con2prim_id_Noble1D
+            || methods[method] == ghl_con2prim_id_Noble2D)
+            && (check == ghl_error_neg_pressure
+            || c2p_check[i] == ghl_error_neg_pressure);
+      if(Noble_pressure_case) {
         if(!isfinite(prims.press) || !isfinite(prims.eps)) {
           ghl_error("Noble pressure-boundary state is nonfinite at point %d\n", i);
         }
+        const double enthalpy_density
+              = prims.rho * (1.0 + prims.eps) + prims.press;
+        const double pressure_resolution
+              = 1.0e4 * DBL_EPSILON
+              * fmax(fabs(enthalpy_density), DBL_MIN);
+        if(!isfinite(enthalpy_density)
+              || fabs(prims.press) > pressure_resolution) {
+          ghl_error("Noble pressure-boundary state is not roundoff-scale "
+                    "relative to enthalpy density at point %d\n", i);
+        }
+      }
+      if(pressure_boundary) {
         prims_trusted.press = prims.press;
         prims_pert.press = prims.press;
         prims_trusted.eps = prims.eps;
@@ -394,7 +411,6 @@ int main(int argc, char **argv) {
                 ghl_get_con2prim_routine_name(methods[method]), fcnt, expected_fcnt);
     }
     const bool Noble_method = methods[method] == ghl_con2prim_id_Noble1D
-                           || methods[method] == ghl_con2prim_id_Noble1D_entropy
                            || methods[method] == ghl_con2prim_id_Noble2D;
     /* Retain a strict majority of full primitive-oracle cases while bounding
      * compiler-dependent Noble pressure-sign boundary cases. */

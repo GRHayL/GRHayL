@@ -101,10 +101,13 @@ Core Noble helper files are built from
 When ordinary hybrid Noble finalization limits the velocity, it recomputes
 `rho = D/W_final` and `w = Z/W_final^2`. This preserves the defining closure
 `Z = rho h W_final^2` for the limited state instead of mixing the pre-limit
-Lorentz factor with the limited density. Near the cold-pressure boundary, the
-consistent closure can expose a roundoff-sized nonpositive pressure. The Noble
-wrapper then returns `ghl_error_neg_pressure`, allowing configured backup
-recovery; it does not clip conservative energy or impose a tabulated-EOS floor.
+Lorentz factor with the limited density. Here `w` is enthalpy density, not
+pressure. Near the cold-pressure boundary, its roundoff-sized change can be
+amplified by the subtraction used to recover pressure, making the pressure sign
+toolchain-sensitive. The consistent closure can therefore expose more
+`ghl_error_neg_pressure` cases than the former mixed-state closure. Configure a
+robust later backup, such as Font1D, when marginal states must recover; the
+Noble path does not clip conservative energy or impose a tabulated-EOS floor.
 
 Hybrid Noble 1D residual files live in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/):
@@ -164,9 +167,15 @@ contains the hybrid Font path. `hybrid_Font1D.c` handles the public wrapper,
 calls `hybrid_Font1D_loop.c` for the density iteration, computes the remaining
 primitives, ORs `diagnostics->speed_limited` when utilde limiting is called,
 and sets `diagnostics->which_routine = ghl_con2prim_id_Font1D` on success.
-It resets `diagnostics->n_iter` at entry and accumulates density-loop iterations;
-the shortcut reports zero only when the conservative momentum norm satisfies
-`S_i gamma^ij S_j < 1e-300`.
+Cold-EOS evaluations use density clamped to the configured EOS interval, while
+the recovered density remains conservation-owned. In particular, cold pressure
+and energy are evaluated at the bounded EOS density, but the enthalpy closure
+uses that pressure divided by the recovered density; replacing that denominator
+with the bounded density would break conservative closure below `rho_min`. It resets
+`diagnostics->n_iter` at entry and accumulates outer `W`/fluid-momentum
+iterations across retries; inner density fixed-point iterations are not
+counted. The shortcut reports zero only when the conservative momentum norm
+satisfies `S_i gamma^ij S_j < 1e-300`.
 
 [`GRHayL/Con2Prim/Tabulated/Newman1D/`](../../../GRHayL/Con2Prim/Tabulated/Newman1D/)
 contains the tabulated Newman energy and entropy paths. Both compute
@@ -174,6 +183,8 @@ contains the tabulated Newman energy and entropy paths. Both compute
 pressure updates with a maximum step count, set `diagnostics->n_iter = step`
 inside the local helper, write `speed_limited` through utilde limiting, and set
 `which_routine` in the public wrapper only after the retry sequence succeeds.
+If the first attempt fails and the `T_min` retry runs, `n_iter` is the final
+attempt's local counter rather than the sum of both attempts.
 
 ## Diagnostics Ownership
 
@@ -187,7 +198,8 @@ For this internal page, only source-proven writes are routed:
   [recovery flow](recovery-flow.md).
 - `n_iter`: set from `harm_aux.n_iter` in built Noble paths, from
   `rparams.n_iters` in built Palenzuela paths, and from local `step` in Newman
-  paths. Font1D reports its invocation-local accumulated density iterations.
+  paths. Newman retry writes replace the prior attempt's value. Font1D reports
+  accumulated outer `W`/fluid-momentum iterations, not its inner density loop.
 - `speed_limited`: sticky across every attempted solver finalization or utilde
   limiting call, including attempts that later fail.
 

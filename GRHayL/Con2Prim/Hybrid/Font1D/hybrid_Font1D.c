@@ -138,7 +138,10 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      * \f$ \epsilon_\mathrm{cold} \f$, and
      *
      * \f[
-     * h_\mathrm{cold} = 1 + \epsilon_\mathrm{cold} + \frac{P_\mathrm{cold}}{\rho}
+     * \rho_\mathrm{EOS} = \mathrm{clamp}(\rho,\rho_\mathrm{min},\rho_\mathrm{max}),
+     * \qquad
+     * h_\mathrm{cold} = 1 + \epsilon_\mathrm{cold}(\rho_\mathrm{EOS})
+     * + \frac{P_\mathrm{cold}(\rho_\mathrm{EOS})}{\rho}
      * \f]
      */
     double P_cold, eps_cold;
@@ -188,27 +191,25 @@ ghl_error_codes_t ghl_hybrid_Font1D(
   prims->rho = cons->rho/(metric_adm->lapse*prims->u0);
   /**
    * The Font fix only sets the velocities. We set the remaining primitives using
-   * @ref ghl_hybrid_compute_P_cold, @ref ghl_hybrid_compute_entropy_function,
-   * and
+   * @ref ghl_hybrid_compute_P_cold_and_eps_cold and
+   * @ref ghl_hybrid_compute_entropy_function. The cold-EOS helper evaluates
+   * pressure and specific internal energy at the bounded EOS density while the
+   * returned density remains fixed by conservative closure:
    *
    * \f[
    * \begin{aligned}
    * \rho &= \frac{D}{\alpha u^0} \\
-   * \epsilon &= \frac{P}{\rho (\Gamma - 1)} + \epsilon_\mathrm{integ}
+   * \rho_\mathrm{EOS} &= \mathrm{clamp}(\rho,\rho_\mathrm{min},\rho_\mathrm{max}) \\
+   * (P,\epsilon) &= (P_\mathrm{cold},\epsilon_\mathrm{cold})(\rho_\mathrm{EOS})
    * \end{aligned}
    * \f]
    */
 
-  double K_ppoly, Gamma_ppoly;
-  ghl_hybrid_get_K_and_Gamma(eos, prims->rho, &K_ppoly, &Gamma_ppoly);
-
-  ghl_hybrid_compute_P_cold(eos, prims->rho, &prims->press);
-
-  const int index = ghl_hybrid_find_polytropic_index(eos, prims->rho);
-  prims->eps = prims->press/(prims->rho*(Gamma_ppoly-1.0))
-             + eos->eps_integ_const[index];
+  ghl_hybrid_compute_P_cold_and_eps_cold(
+        eos, prims->rho, &prims->press, &prims->eps);
   if(params->evolve_entropy)
-    prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
+    prims->entropy = ghl_hybrid_compute_entropy_function(
+          eos, prims->rho, prims->press);
 
   diagnostics->which_routine = ghl_con2prim_id_Font1D;
   return ghl_success;

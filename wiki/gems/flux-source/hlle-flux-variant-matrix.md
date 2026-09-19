@@ -95,6 +95,11 @@ Tabulated variants remain built in no-HDF5 targets; only their table-dependent
 tests and generators are filtered. Tabulated EOS initialization is separately
 guarded by `GHL_DISABLE_HDF5` in
 [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
+Link visibility is not runtime support: these real kernels call the global
+`ghl_compute_h_and_cs2` dispatch and discard its error code. A no-HDF5 build
+cannot initialize compatible tabulated EOS dispatch, so callers must not invoke
+the tabulated variants there; a hybrid or unset global dispatch can otherwise
+produce the wrong EOS calculation or a null call.
 
 ## Generated-Source Boundary
 

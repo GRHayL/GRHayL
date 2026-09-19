@@ -31,7 +31,7 @@ jobs:
               -o "$RUNNER_TEMP/ghl_con2prim_header.o"
       - name: Replay Con2Prim fixture generator
         run: |
-          testdata_ref=9fbd03ecedd5b161d1216e973d6a91f25f852a04
+          testdata_ref=e3d1c1f2120e143d0d6e13bd7c6f12d05ff5874b
           git init "$RUNNER_TEMP/grhayl-testdata"
           git -C "$RUNNER_TEMP/grhayl-testdata" remote add origin \
             https://github.com/GRHayL/TestData.git
@@ -184,7 +184,7 @@ jobs:
         uses: ./.github/actions/code-coverage
         with:
           compiler: 'gcc'
-      - name: Run Con2Prim memory checks
+      - name: Run Con2Prim undefined-use checks
         run: |
           sudo apt-get install -y valgrind
           make realclean

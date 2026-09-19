@@ -37,6 +37,10 @@ Primary source paths:
 - `ghl_c2p_nn_guess_primitives`: computes tabulated auxiliaries and completes
   primitives only for a finite bounded candidate; otherwise it returns
   the documented atmosphere initial guess while preserving magnetic fields.
+  If only the EOS inversion fails after a valid algebraic candidate is built,
+  it instead preserves bounded `rho`, `Y_e`, and `eps`, restores `T_max` as
+  the root seed, supplies finite atmosphere pressure/entropy, and completes
+  the velocity seed.
 - `ghl_c2p_nn_validate_model`: validates dimensions, indices, scaling metadata, output kinds, required arrays, and finite weights.
 - `ghl_c2p_nn_free`: releases all model arrays and the model struct.
 - `ghl_c2p_nn_load_hdf5`: loads a standalone/root HDF5 NN model into `eos->c2p_nn`.
@@ -88,7 +92,7 @@ Successful loads free any old `eos->c2p_nn` and replace it with the new model. F
 
 [GRHayL/Con2Prim/Tabulated/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/make.code.defn) includes `neural_network_guess`, and [GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/make.code.defn) lists the NN free, guess, loader, and validation sources.
 
-When HDF5 is disabled, [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c) compiles loader stubs returning `ghl_error_used_disabled_hdf5`. [configure](../../../configure) defines `GHL_DISABLE_HDF5` and filters tabulated source lists while retaining the tabulated primitive-guess helper and `neural_network_guess` sources.
+When HDF5 is disabled, [GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c](../../../GRHayL/Con2Prim/Tabulated/neural_network_guess/c2p_nn_load_from_eos_hdf5.c) compiles loader stubs returning `ghl_error_used_disabled_hdf5`. [configure](../../../configure) defines `GHL_DISABLE_HDF5`; the exact retained and excluded source/test surface is owned by [Build and CI](../../build-and-ci.md).
 Pure inference with an independently valid in-memory model does not itself use
 HDF5; this retained low-level surface is not standalone tabulated recovery.
 
@@ -99,8 +103,8 @@ HDF5; this retained low-level surface is not standalone tabulated recovery.
 [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c) covers model validation errors, direct `ghl_c2p_nn_guess`, fallback behavior for invalid/non-finite inputs, root HDF5 loading, embedded `grhayl_nn_c2p` loading, legacy one-output loading, malformed HDF5 datasets, validation failure after load, and preservation of an existing model after a failed load.
 
 HDF5-enabled test cases create and enter a unique private temporary directory,
-write only the test's fixed model basenames there, and remove those known files
-and the directory on normal or handled failure exit.
+remove every file entry created in that private directory, and then remove the
+directory on normal or handled failure exit.
 
 [Unit_Tests/unit_test_con2prim_tabulated.c](../../../Unit_Tests/unit_test_con2prim_tabulated.c) enables embedded NN loading when the run key is nonzero, then replays tabulated Con2Prim tests with `eos.enable_neural_net_c2p` both disabled and enabled. Its generation path explicitly disables NN guesses.
 

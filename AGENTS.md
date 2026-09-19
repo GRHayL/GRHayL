@@ -22,6 +22,10 @@ authorized work. Do not stop at a plan/draft or ask again for authorized reversi
 edits. Preserve unrelated/concurrent work; no additional external, destructive,
 publishing, or downstream authority is implied.
 
+Do not add, expand, or enable tests, test cases, assertions, fixtures, generators,
+or CI test executions without the user's explicit permission for that specific
+test change.
+
 Map outputs/companions early. Apply/copy the best acceptable version to ALL intended
 authorized locations in the actual `/work/` checkout and verify it there. Plans stay
 documents; artifact-only requests do not authorize live installation. `DRAFT COMPLETE`

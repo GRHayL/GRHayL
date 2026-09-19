@@ -260,6 +260,37 @@ int main(int argc, char **argv) {
     }
   }
 
+  ghl_conservative_quantities momentum_cons;
+  ghl_initialize_conservatives(
+        1.0, 1.0, 10.0, 0.0, 0.0, 0.0, 0.0, &momentum_cons);
+  ghl_con2prim_diagnostics momentum_diagnostics;
+  ghl_initialize_diagnostics(&momentum_diagnostics);
+  ghl_apply_conservative_limits(
+        &params, &eos, &sticky_metric, &sticky_prims, &momentum_cons,
+        &momentum_diagnostics);
+  if(momentum_diagnostics.tau_fix || !momentum_diagnostics.Stilde_fix
+        || !(momentum_cons.SD[0] < 10.0)) {
+    ghl_error("isolated low-field momentum correction was not diagnosed\n");
+  }
+
+  ghl_primitive_quantities high_psi_prims = sticky_prims;
+  high_psi_prims.BU[0] = 1.0;
+  ghl_conservative_quantities high_psi_cons;
+  ghl_initialize_conservatives(
+        1.0, 10.0, 100.0, 0.0, 0.0, 0.0, 0.0, &high_psi_cons);
+  ghl_con2prim_diagnostics high_psi_diagnostics;
+  ghl_initialize_diagnostics(&high_psi_diagnostics);
+  const double saved_psi6threshold = params.psi6threshold;
+  params.psi6threshold = 0.0;
+  ghl_apply_conservative_limits(
+        &params, &eos, &sticky_metric, &high_psi_prims, &high_psi_cons,
+        &high_psi_diagnostics);
+  params.psi6threshold = saved_psi6threshold;
+  if(high_psi_diagnostics.tau_fix || !high_psi_diagnostics.Stilde_fix
+        || !(high_psi_cons.SD[0] < 100.0)) {
+    ghl_error("isolated high-psi6 momentum correction was not diagnosed\n");
+  }
+
   ghl_primitive_quantities magnetic_prims = sticky_prims;
   magnetic_prims.BU[0] = 2.0;
   ghl_conservative_quantities magnetic_cons;
@@ -278,19 +309,21 @@ int main(int argc, char **argv) {
 
   ghl_primitive_quantities psi6_prims = sticky_prims;
   psi6_prims.BU[0] = 1.0;
+  ghl_eos_parameters psi6_eos = eos;
+  psi6_eos.tau_atm = 1.0;
   ghl_conservative_quantities psi6_cons;
-  const double psi6_tau = 0.5 + 1.0005*eos.tau_atm;
+  const double psi6_tau = 0.5 + 1.0005*psi6_eos.tau_atm;
   ghl_initialize_conservatives(
         1.0, psi6_tau, 0.0, 0.0, 0.0, 0.0, 0.0, &psi6_cons);
   ghl_con2prim_diagnostics psi6_diagnostics;
   ghl_initialize_diagnostics(&psi6_diagnostics);
-  const double saved_psi6threshold = params.psi6threshold;
+  const double saved_psi6threshold_for_tau = params.psi6threshold;
   params.psi6threshold = 0.0;
   ghl_apply_conservative_limits(
-        &params, &eos, &sticky_metric, &psi6_prims, &psi6_cons,
+        &params, &psi6_eos, &sticky_metric, &psi6_prims, &psi6_cons,
         &psi6_diagnostics);
-  params.psi6threshold = saved_psi6threshold;
-  const double corrected_psi6_tau = 0.5 + 1.001*eos.tau_atm;
+  params.psi6threshold = saved_psi6threshold_for_tau;
+  const double corrected_psi6_tau = 0.5 + 1.001*psi6_eos.tau_atm;
   if(!psi6_diagnostics.tau_fix || psi6_diagnostics.Stilde_fix
         || psi6_cons.tau != corrected_psi6_tau) {
     ghl_error("isolated high-psi6 tau correction was not diagnosed\n");

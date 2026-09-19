@@ -82,7 +82,10 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * where
      *
      * \f[
-     * h = 1 + \epsilon_\mathrm{cold} + \frac{P_\mathrm{cold}}{\rho}
+     * \rho_\mathrm{EOS} = \mathrm{clamp}(\rho,\rho_\mathrm{min},\rho_\mathrm{max}),
+     * \qquad
+     * h = 1 + \epsilon_\mathrm{cold}(\rho_\mathrm{EOS})
+     * + \frac{P_\mathrm{cold}(\rho_\mathrm{EOS})}{\rho}
      * \f]
      *
      * The subloop continues until the density is in the same polytropic piece

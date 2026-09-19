@@ -14,6 +14,7 @@
 #include "ghl_con2prim.h"
 
 #ifndef GHL_DISABLE_HDF5
+#include <dirent.h>
 #include <errno.h>
 #include <hdf5.h>
 #include <unistd.h>
@@ -507,6 +508,39 @@ static void test_public_primitive_guess_helper(void) {
 }
 
 #ifdef GHL_DISABLE_HDF5
+static bool primitives_equal(
+      const ghl_primitive_quantities *restrict a,
+      const ghl_primitive_quantities *restrict b) {
+  if(a->rho != b->rho || a->press != b->press || a->eps != b->eps
+        || a->u0 != b->u0 || a->Y_e != b->Y_e
+        || a->temperature != b->temperature || a->entropy != b->entropy) {
+    return false;
+  }
+  for(int i = 0; i < 3; ++i) {
+    if(a->vU[i] != b->vU[i] || a->BU[i] != b->BU[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool diagnostics_equal(
+      const ghl_con2prim_diagnostics *restrict a,
+      const ghl_con2prim_diagnostics *restrict b) {
+  if(a->tau_fix != b->tau_fix || a->Stilde_fix != b->Stilde_fix
+        || a->speed_limited != b->speed_limited
+        || a->which_routine != b->which_routine || a->n_iter != b->n_iter
+        || a->nn_guess_used != b->nn_guess_used) {
+    return false;
+  }
+  for(int i = 0; i < 3; ++i) {
+    if(a->backup[i] != b->backup[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static void test_disabled_direct_tabulated_solvers(void) {
   ghl_parameters params = { 0 };
   ghl_eos_parameters eos = { 0 };
@@ -528,9 +562,9 @@ static void test_disabled_direct_tabulated_solvers(void) {
   CHECK_DISABLED_SOLVER(ghl_tabulated_Newman1D_entropy);
 #undef CHECK_DISABLED_SOLVER
 
-  CHECK(memcmp(&prims, &prims_before, sizeof(prims)) == 0,
+  CHECK(primitives_equal(&prims, &prims_before),
         "disabled direct solver mutated primitives");
-  CHECK(memcmp(&diagnostics, &diagnostics_before, sizeof(diagnostics)) == 0,
+  CHECK(diagnostics_equal(&diagnostics, &diagnostics_before),
         "disabled direct solver mutated diagnostics");
 }
 #endif
@@ -539,23 +573,6 @@ static void test_disabled_direct_tabulated_solvers(void) {
 static char nn_test_directory[PATH_MAX];
 static char nn_original_directory[PATH_MAX];
 static bool nn_test_directory_active;
-
-static const char *const nn_test_files[] = {
-  "unit_test_c2p_nn_preserved.h5",
-  "unit_test_c2p_nn_root.h5",
-  "unit_test_c2p_nn_embedded.h5",
-  "unit_test_c2p_nn_legacy.h5",
-  "unit_test_c2p_nn_missing_scalar.h5",
-  "unit_test_c2p_nn_scalar_bad_rank.h5",
-  "unit_test_c2p_nn_scalar_bad_type.h5",
-  "unit_test_c2p_nn_invalid_dims.h5",
-  "unit_test_c2p_nn_missing_array.h5",
-  "unit_test_c2p_nn_array_bad_rank.h5",
-  "unit_test_c2p_nn_array_bad_size.h5",
-  "unit_test_c2p_nn_array_bad_type.h5",
-  "unit_test_c2p_nn_missing_out_scaling.h5",
-  "unit_test_c2p_nn_validation_failure.h5"
-};
 
 static int cleanup_hdf5_test_directory(void) {
   if(!nn_test_directory_active) {
@@ -567,13 +584,23 @@ static int cleanup_hdf5_test_directory(void) {
     return 1;
   }
   int failed = 0;
-  for(size_t i = 0; i < sizeof(nn_test_files)/sizeof(nn_test_files[0]); ++i) {
+  DIR *directory = opendir(nn_test_directory);
+  if(directory == NULL) {
+    fprintf(stderr, "failed to open NN test directory %s: %s\n",
+            nn_test_directory, strerror(errno));
+    return 1;
+  }
+  struct dirent *entry;
+  while((entry = readdir(directory)) != NULL) {
+    if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+      continue;
+    }
     char path[PATH_MAX];
     const int written = snprintf(
-          path, sizeof(path), "%s/%s", nn_test_directory, nn_test_files[i]);
+          path, sizeof(path), "%s/%s", nn_test_directory, entry->d_name);
     if(written < 0 || (size_t)written >= sizeof(path)) {
       fprintf(stderr, "failed to form cleanup path for NN test file %s\n",
-              nn_test_files[i]);
+              entry->d_name);
       failed = 1;
       continue;
     }
@@ -582,6 +609,11 @@ static int cleanup_hdf5_test_directory(void) {
               strerror(errno));
       failed = 1;
     }
+  }
+  if(closedir(directory) != 0) {
+    fprintf(stderr, "failed to close NN test directory %s: %s\n",
+            nn_test_directory, strerror(errno));
+    failed = 1;
   }
 
   if(rmdir(nn_test_directory) != 0) {

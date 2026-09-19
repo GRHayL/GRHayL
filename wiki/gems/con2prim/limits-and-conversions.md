@@ -55,6 +55,11 @@ Contract:
 - That simple/hybrid path is a partial update: incoming `BU`, entropy, `Y_e`,
   and temperature remain unchanged.
 - Tabulated EOS path computes metric/magnetic contractions through `ghl_compute_SU_Bsq_Ssq_BdotS`, uses `T_max` as the temperature guess, enforces table bounds on `rho`, `Y_e`, and `eps`, computes `press`, `entropy`, and `temperature` from `eps`, then calls `ghl_limit_utilde_and_compute_v`.
+- Invalid or nonfinite algebraic inputs produce a full atmosphere guess. An EOS
+  inversion error instead preserves the bounded `rho`, `Y_e`, and `eps` seed,
+  keeps `T_max`, supplies finite atmosphere pressure and entropy, and continues
+  velocity construction. A later nonfinite or singular derived quantity still
+  replaces that partial seed with the full atmosphere state.
 - Required tabulated EOS bounds: table-backed `rho`, `Y_e`, and `eps` bounds exposed through `ghl_tabulated_enforce_bounds_rho_Ye_eps`; required temperature bound/guess: `T_max`.
 - Required parameter for tabulated guess: `max_Lorentz_factor` through `ghl_limit_utilde_and_compute_v`.
 - Diagnostics: no diagnostics pointer is accepted. The tabulated path invokes utilde limiting but does not store `speed_limited`.
@@ -89,7 +94,9 @@ Contract:
 - Internal helper declared in `GRHayL/include/ghl_con2prim.h`.
 - Inputs: `ghl_parameters`, ADM metric, mutable spatial `utU[3]`, and primitives.
 - Required parameter: `max_Lorentz_factor`.
-- Computes the utilde norm using `metric_adm->gammaDD`; if above the Lorentz cap, rescales `utU`.
+- Computes the utilde norm using `metric_adm->gammaDD`. The roundoff-slack
+  trigger rescales `utU` only when the computed factor is below one, so the
+  helper never increases the supplied speed.
 - Writes primitive outputs: `u0` and `vU`.
 - Returns `true` when speed limiting occurred, otherwise `false`.
 - Used by the tabulated primitive guess path; unlike `ghl_enforce_primitive_limits_and_compute_u0`, it does not write a diagnostics struct by itself.

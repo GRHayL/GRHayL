@@ -99,6 +99,38 @@ static void check_close(
   }
 }
 
+static void test_utilde_speed_limit_monotonicity(void) {
+  const ghl_con2prim_id_t backups[3] = {
+    ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None
+  };
+  ghl_parameters params;
+  ghl_initialize_params(
+        ghl_con2prim_id_None, backups, false, false, false, 1e100, 2.0, 0.0,
+        &params);
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(
+        1.0, 0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+
+  const double W_cases[3] = {1.9999998, 1.99999995, 2.0000001};
+  for(int i = 0; i < 3; ++i) {
+    double utU[3] = {sqrt(W_cases[i]*W_cases[i] - 1.0), 0.0, 0.0};
+    const double input_ut = utU[0];
+    ghl_primitive_quantities prims = { 0 };
+    const bool limited = ghl_limit_utilde_and_compute_v(
+          &params, &metric, utU, &prims);
+    if((i < 2 && (limited || utU[0] != input_ut))
+          || (i == 2 && (!limited || utU[0] >= input_ut))
+          || utU[0] > input_ut) {
+      ghl_error("utilde limiter was not monotone in boundary case %d\n", i);
+    }
+    const double output_W = metric.lapse*prims.u0;
+    if(i == 2 && fabs(output_W - params.max_Lorentz_factor) > 1e-14) {
+      ghl_error("utilde limiter did not reach W_max\n");
+    }
+  }
+}
+
 static void test_Font1D_roundtrips(void) {
   const ghl_con2prim_id_t None = ghl_con2prim_id_None;
   const ghl_con2prim_id_t backups[3] = { None, None, None };
@@ -120,7 +152,7 @@ static void test_Font1D_roundtrips(void) {
         1e-8, 1e-8, 1e6, 2, piecewise_rho_ppoly,
         piecewise_Gamma_ppoly, 0.7, 2.0, &piecewise_eos);
 
-  for(int test = 0; test < 4; ++test) {
+  for(int test = 0; test < 5; ++test) {
     ghl_metric_quantities metric;
     if(test == 3) {
       ghl_initialize_metric(
@@ -136,7 +168,7 @@ static void test_Font1D_roundtrips(void) {
     ghl_compute_ADM_auxiliaries(&metric, &metric_aux);
 
     const ghl_eos_parameters *test_eos = test == 2 ? &piecewise_eos : &eos;
-    const double rho = test == 0 ? 0.4 : 1.3;
+    const double rho = test == 0 ? 0.4 : (test == 4 ? 0.5*eos.rho_min : 1.3);
     double press, eps;
     ghl_hybrid_compute_P_cold_and_eps_cold(test_eos, rho, &press, &eps);
     ghl_primitive_quantities source;
@@ -179,7 +211,9 @@ static void test_Font1D_roundtrips(void) {
       ghl_error("Font1D independent roundtrip failed for case %d\n", test);
     }
 
-    const double tolerance = 1e-12;
+    const double tolerance = test == 4
+                           ? params.con2prim_solver_tolerance
+                           : 1e-12;
     check_close("Font rho", source.rho, recovered.rho, tolerance);
     check_close("Font press", source.press, recovered.press, tolerance);
     check_close("Font eps", source.eps, recovered.eps, tolerance);
@@ -699,6 +733,7 @@ int main(int argc, char **argv) {
   test_Font1D_roundtrips();
   test_Noble_pressure_validation();
   test_Noble_finalizer_speed_limit();
+  test_utilde_speed_limit_monotonicity();
   test_Noble1D_entropy2();
   return 0;
 }

@@ -287,7 +287,10 @@ void ghl_tabulated_compute_primitive_guess_auxiliaries(
  * composition. This routine supplies a solver seed, not that decision.
  * Nonfinite `x`, invalid conservative input, or unusable intermediate/output
  * values return the initialized EOS atmosphere while preserving incoming
- * magnetic components.
+ * magnetic components. If the EOS inversion alone fails after the algebraic
+ * state is valid, the helper preserves its bounded `rho`, `Y_e`, and `eps`,
+ * uses `T_max` as the temperature seed, and supplies finite atmosphere
+ * pressure and entropy before completing the velocity seed.
  *
  * @param[in] params Con2Prim parameters
  * @param[in] eos tabulated EOS parameters

@@ -35,11 +35,14 @@
  * assumes that there's a split between cold and thermal parts.
  *
  * Ordinary hybrid Noble finalization keeps a speed-limited state consistent
- * with the solved variable by recomputing \f$\rho=D/W_{\rm final}\f$ and
- * \f$w=Z/W_{\rm final}^2\f$, preserving
- * \f$Z=\rho h W_{\rm final}^2\f$. At the cold-pressure boundary this can expose
- * a roundoff-sized nonpositive pressure; the wrapper reports
- * `ghl_error_neg_pressure` so configured backup recovery can proceed.
+ * with the solved variable by recomputing \f$\rho=D/W_{\rm final}\f$ and the
+ * enthalpy density \f$w=Z/W_{\rm final}^2\f$, preserving
+ * \f$Z=\rho h W_{\rm final}^2\f$. Near the cold-pressure boundary, a
+ * roundoff-sized change in \f$w\f$ can be amplified when pressure is recovered
+ * by subtraction. The resulting pressure sign is toolchain-sensitive and the
+ * consistent closure can expose more `ghl_error_neg_pressure` cases than the
+ * former mixed-state closure. Configure a robust later backup, such as Font1D,
+ * when these marginal states must recover.
  */
 
 /**
