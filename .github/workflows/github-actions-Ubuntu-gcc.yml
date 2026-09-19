@@ -220,11 +220,6 @@ jobs:
             ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy; do
             nm -D --defined-only build-nohdf/lib/libghl.so | grep -w "$symbol"
           done
-      - name: Generate no-HDF5 coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'gcc'
-
   ET-Legacy:
     strategy:
       fail-fast: false
