@@ -31,7 +31,8 @@ download_file() {
   curl -O "$url"
 }
 
-test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/main"
+et_legacy_testdata_ref=$(cat .github/et-legacy-testdata-ref)
+test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/${et_legacy_testdata_ref}"
 download_test_data() {
   filepath="$1"
   url="${test_data_base_url}/${filepath}"

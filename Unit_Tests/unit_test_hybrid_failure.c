@@ -349,7 +349,7 @@ static void test_Noble1D_entropy2(void) {
   ghl_initialize_hybrid_eos_functions_and_params(
         1e-6, 1e-6, 1e6, 2, rho_ppoly, Gamma_ppoly, 0.4, 1.6, &eos);
 
-  for(int test = 0; test < 2; test++) {
+  for(int test = 0; test < 3; test++) {
     ghl_metric_quantities metric_adm;
     if(test == 0) {
       ghl_initialize_metric(
@@ -362,6 +362,7 @@ static void test_Noble1D_entropy2(void) {
     ghl_ADM_aux_quantities metric_aux;
     ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
+    eos.rho_max = test == 2 ? 1.0 : 1e6;
     const double rho = test == 0 ? 0.3 : 3.0;
     double P_cold, eps_cold;
     ghl_hybrid_compute_P_cold_and_eps_cold(&eos, rho, &P_cold, &eps_cold);

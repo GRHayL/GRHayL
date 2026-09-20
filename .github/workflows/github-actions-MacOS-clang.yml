@@ -31,9 +31,10 @@ jobs:
           compiler: 'clang'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
+          testdata_ref=$(cat .github/et-legacy-testdata-ref)
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
       - name: Run ET IllinoisGRMHD unit test for ET_Legacy_${{ matrix.test-function }}
         run: |
           ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
