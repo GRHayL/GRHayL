@@ -170,11 +170,16 @@ Workflows live in `.github/workflows/`:
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | `con2prim-contracts` uploads HDF5 coverage before its plain Valgrind build; its no-HDF5 phase is a non-instrumented build, test, and symbol check; other jobs retain their listed shared coverage actions |
-| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | includes a dedicated no-HDF5 Con2Prim build/test with coverage; other jobs retain their shared coverage actions |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | 13 existing job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML |
+| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
 | `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | 2 of 13 jobs invoke coverage action |
 | `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
 | `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | no jobs invoke coverage action |
+
+The Ubuntu-Clang `c2p-failure` matrix configures its Ubuntu 24.04
+`c2p_nn_guess` variant without HDF5. That existing job variant exercises and
+uploads coverage for the disabled-feature path; the other variants retain
+HDF5-enabled builds.
 
 Each workflow ignores pushes and pull requests when **all** changed paths match
 its `paths-ignore` list, including `docs/**`, `wiki/**`, and
@@ -190,19 +195,10 @@ not merely from local YAML key names. Every compiler workflow uses cron
 `pull_request` event has no branch filter in local YAML. Do not infer project
 support beyond the OS/compiler
 pairs encoded in these workflow matrices and the usage examples in `configure`.
-An implementation-only change therefore triggers Ubuntu-GCC, whose
-`con2prim-contracts` job validates the tracked GRHayLib source symlinks and
-checks that its source registry covers every upstream source-bearing manifest
-directory. The same job byte-compares generated Con2Prim fixtures against a
-pinned companion-repository revision. That byte gate is tied to the configured
-GCC toolchain and environment; compiler, library, or runner changes require
-reviewing the fixture contract even when source is unchanged. Its plain-build
-Valgrind phase checks the Con2Prim generator and focused recovery tests for
-invalid memory use and uninitialized reads. It does not enable a leak-failure
-policy, so it is not a general leak gate.
-The other compiler workflows remain skipped for such a change. This is static
-topology plus core `configure`/unit-test evidence, not a GRHayLib Cactus thorn
-build.
+An implementation-only change therefore triggers Ubuntu-GCC, but its listed
+test jobs are core `configure`/unit-test jobs, not a GRHayLib Cactus thorn build
+or direct GRHayLib validation. The other compiler workflows remain skipped for
+such a change.
 
 Common job groups across workflows:
 

@@ -22,9 +22,10 @@ metric, direction-specific `cmin`/`cmax`, and a conservative flux output.
 
 Every direct symbol has a public declaration, one checked-in definition, and a
 variant-manifest entry. [configure](../../../configure) retains the real
-tabulated flux definitions under `--disable-hdf5`, and the focused Ubuntu-GCC
-contract job checks that they remain linkable. The tabulated flux test and data
-generator still require HDF5/table support and are excluded in that mode.
+tabulated flux definitions under `--disable-hdf5`, and the Ubuntu-Clang
+`c2p-failure` no-HDF5 variant checks that they remain linkable. The tabulated
+flux test and data generator still require HDF5/table support and are excluded
+in that mode.
 
 Variant build lists:
 
@@ -123,7 +124,8 @@ Python source together when formulas, variables, or output fields change.
 ## Evidence Status
 
 - **Build-configured:** every listed direct symbol is in default and no-HDF5
-  builds. The focused no-HDF5 CI job link-checks the tabulated symbols.
+  builds. The Ubuntu-Clang `c2p-failure` no-HDF5 variant link-checks the
+  tabulated symbols.
 - **Direct replay:** every direction in each row is called by the named test;
   runner and compiler workflows configure those executions.
 - **Fixture-generation:** matching data generators call every row/direction,
@@ -131,4 +133,4 @@ Python source together when formulas, variables, or output fields change.
   oracle.
 - **Coverage gaps:** generic pointer globals; ignored EOS error returns;
   primitive mutation; and zero `cmin + cmax` have no focused tests. The
-  no-HDF5 contract link-checks the retained algebraic tabulated symbols.
+  no-HDF5 matrix variant link-checks the retained algebraic tabulated symbols.

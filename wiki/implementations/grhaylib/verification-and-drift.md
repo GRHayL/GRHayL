@@ -11,8 +11,8 @@ to replace the implementation files or upstream tests.
 
 Ubuntu-GCC GitHub Actions run for implementation-only source changes;
 documentation-only paths remain ignored, and the other four compiler workflows
-still ignore `implementations/**`. Ubuntu-GCC runs the normal library jobs and a
-focused contract job that verifies the tracked GRHayLib source symlinks.
+still ignore `implementations/**`. Ubuntu-GCC runs the normal library jobs but
+does not directly verify the tracked GRHayLib source symlinks.
 `.github/run_tests.sh` is a separate scripted test driver. These checks build
 and test GRHayL library programs, not a Cactus thorn.
 

@@ -70,9 +70,9 @@ of the built source tree even when they are generated or derived from Python
 scripts.
 
 `configure --disable-hdf5` retains the tabulated and tabulated-entropy flux
-sources in generated build targets. The focused Ubuntu-GCC contract job checks
-the public symbols; table-dependent flux tests and generators remain
-excluded in that mode.
+sources in generated build targets. The Ubuntu-Clang `c2p-failure` no-HDF5
+variant checks the public symbols; table-dependent flux tests and generators
+remain excluded in that mode.
 
 ## Drift Rules
 

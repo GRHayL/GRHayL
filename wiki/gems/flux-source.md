@@ -76,7 +76,8 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
 - HLLE variants are split by direction, EOS family, and entropy evolution.
 - `--disable-hdf5` retains the algebraic tabulated HLLE implementations and
   their declarations. It excludes table-dependent tests and data generators;
-  the no-HDF5 CI contract link-checks the retained symbols.
+  the Ubuntu-Clang `c2p-failure` no-HDF5 variant link-checks the retained
+  symbols.
 - Source terms require metric derivatives provided by caller-side infrastructure.
 - Characteristic speeds are shared by hydrodynamic flux work and induction HLL flux setup.
 - Flux and speed routines discard EOS callback errors; production tabulated
