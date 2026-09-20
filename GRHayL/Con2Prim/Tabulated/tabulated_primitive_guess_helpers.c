@@ -1,3 +1,4 @@
+#include "ghl_atmosphere.h"
 #include "ghl_con2prim.h"
 
 static void set_tabulated_atmosphere_guess(
@@ -5,12 +6,10 @@ static void set_tabulated_atmosphere_guess(
       const ghl_metric_quantities *restrict metric_adm,
       ghl_primitive_quantities *restrict prims) {
 
-  const double BU[3] = { prims->BU[0], prims->BU[1], prims->BU[2] };
-  ghl_initialize_primitives(
-        eos->rho_atm, eos->press_atm, eos->eps_atm,
-        -metric_adm->betaU[0], -metric_adm->betaU[1], -metric_adm->betaU[2],
-        BU[0], BU[1], BU[2],
-        eos->entropy_atm, eos->Y_e_atm, eos->T_atm, prims);
+  ghl_set_prims_to_constant_atm(eos, prims);
+  prims->vU[0] = -metric_adm->betaU[0];
+  prims->vU[1] = -metric_adm->betaU[1];
+  prims->vU[2] = -metric_adm->betaU[2];
   prims->u0 = metric_adm->lapseinv;
 }
 
@@ -40,13 +39,10 @@ void ghl_tabulated_primitive_guess_from_x(
       double x,
       ghl_primitive_quantities *restrict prims) {
 
-  if(!isfinite(cons_undens->rho) || cons_undens->rho <= 0.0
-        || !isfinite(x)
-        || !isfinite(aux->q) || !isfinite(aux->r)
-        || !isfinite(aux->s) || !isfinite(aux->t)
-        || !isfinite(aux->B_squared) || !isfinite(aux->BdotS)
-        || !isfinite(aux->SU[0]) || !isfinite(aux->SU[1])
-        || !isfinite(aux->SU[2])) {
+  if(!isfinite(cons_undens->rho) || cons_undens->rho <= 0.0 || !isfinite(x)
+     || !isfinite(aux->q) || !isfinite(aux->r) || !isfinite(aux->s) || !isfinite(aux->t)
+     || !isfinite(aux->B_squared) || !isfinite(aux->BdotS) || !isfinite(aux->SU[0])
+     || !isfinite(aux->SU[1]) || !isfinite(aux->SU[2])) {
     set_tabulated_atmosphere_guess(eos, metric_adm, prims);
     return;
   }
@@ -79,15 +75,13 @@ void ghl_tabulated_primitive_guess_from_x(
   prims->eps = - 1.0 + (1.0 - W * W) * x / W
              + W * (1.0 + q - s + t * t / (2.0 * x * x) + s / (2.0 * W * W));
 
-  if(!isfinite(W) || !isfinite(prims->rho) || prims->rho <= 0.0
-        || !isfinite(prims->Y_e) || !isfinite(prims->u0)
-        || !isfinite(prims->eps)) {
+  if(!isfinite(prims->Y_e) || !isfinite(prims->eps)) {
     set_tabulated_atmosphere_guess(eos, metric_adm, prims);
     return;
   }
 
   if(ghl_tabulated_enforce_bounds_rho_Ye_eps == NULL
-        || ghl_tabulated_compute_P_S_T_from_eps == NULL) {
+     || ghl_tabulated_compute_P_S_T_from_eps == NULL) {
     set_tabulated_atmosphere_guess(eos, metric_adm, prims);
     return;
   }
@@ -95,8 +89,8 @@ void ghl_tabulated_primitive_guess_from_x(
   prims->temperature = eos->T_max;
   ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &prims->rho, &prims->Y_e, &prims->eps);
   const ghl_error_codes_t eos_error = ghl_tabulated_compute_P_S_T_from_eps(
-        eos, prims->rho, prims->Y_e, prims->eps,
-        &prims->press, &prims->entropy, &prims->temperature);
+        eos, prims->rho, prims->Y_e, prims->eps, &prims->press, &prims->entropy,
+        &prims->temperature);
   if(eos_error != ghl_success) {
     // A failed inversion only rejects this algebraic initial guess; it does not
     // make the conserved state invalid. Preserve rho, Y_e, and the established
@@ -110,11 +104,10 @@ void ghl_tabulated_primitive_guess_from_x(
 
   const double z = x * prims->rho * W;
   const double velocity_denominator = z + aux->B_squared;
-  if(!isfinite(prims->rho) || !isfinite(prims->Y_e)
-        || !isfinite(prims->eps) || !isfinite(prims->press)
-        || !isfinite(prims->entropy) || !isfinite(prims->temperature)
-        || !isfinite(z) || z == 0.0 || !isfinite(velocity_denominator)
-        || velocity_denominator == 0.0) {
+  if(!isfinite(prims->rho) || !isfinite(prims->Y_e) || !isfinite(prims->eps)
+     || !isfinite(prims->press) || !isfinite(prims->entropy)
+     || !isfinite(prims->temperature) || !isfinite(z) || z == 0.0
+     || !isfinite(velocity_denominator) || velocity_denominator == 0.0) {
     set_tabulated_atmosphere_guess(eos, metric_adm, prims);
     return;
   }
@@ -128,8 +121,8 @@ void ghl_tabulated_primitive_guess_from_x(
     return;
   }
   ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
-  if(!isfinite(prims->u0) || !isfinite(prims->vU[0])
-        || !isfinite(prims->vU[1]) || !isfinite(prims->vU[2])) {
+  if(!isfinite(prims->u0) || !isfinite(prims->vU[0]) || !isfinite(prims->vU[1])
+     || !isfinite(prims->vU[2])) {
     set_tabulated_atmosphere_guess(eos, metric_adm, prims);
   }
 }

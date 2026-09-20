@@ -1,4 +1,72 @@
+#include "../../../roots.h"
 #include "../../../utils_Noble.h"
+
+typedef struct {
+  fparams_struct roots;
+  harm_aux_vars_struct *harm_aux;
+} rho2_root_params;
+
+static double rho2_residual(
+      const double rho,
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_conservative_quantities *restrict cons_undens,
+      fparams_struct *restrict fparams,
+      ghl_primitive_quantities *restrict prims) {
+
+  (void)params;
+  (void)cons_undens;
+  (void)prims;
+  rho2_root_params *restrict root_params = (rho2_root_params *)fparams;
+  double residual, jacobian;
+  ghl_compute_rho2_residual_and_jacobian(
+        eos, root_params->harm_aux, rho, &residual, &jacobian);
+  return residual;
+}
+
+static ghl_error_codes_t find_piecewise_density_root(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      harm_aux_vars_struct *restrict harm_aux,
+      double *restrict rho_root) {
+
+  const double physical_lower = harm_aux->D / params->max_Lorentz_factor;
+  const double physical_upper = harm_aux->D;
+  const int newton_iters = harm_aux->n_iter;
+  rho2_root_params root_params = { .harm_aux = harm_aux };
+  const ghl_conservative_quantities unused_cons = { 0 };
+  ghl_primitive_quantities unused_prims = { 0 };
+  roots_params brent_params = {
+    .max_iters = harm_aux->max_iterations,
+    .tol
+    = fmax(harm_aux->solver_tolerance * physical_lower, DBL_EPSILON * physical_upper),
+  };
+
+  const int first_piece = ghl_hybrid_find_polytropic_index(eos, physical_lower);
+  const int last_piece = ghl_hybrid_find_polytropic_index(eos, physical_upper);
+  for(int piece = first_piece; piece <= last_piece; ++piece) {
+    double lower = physical_lower;
+    if(piece > 0) {
+      lower = fmax(lower, eos->rho_ppoly[piece - 1]);
+    }
+
+    double upper = physical_upper;
+    if(piece < eos->neos - 1) {
+      upper = fmin(upper, nextafter(eos->rho_ppoly[piece], -INFINITY));
+    }
+    brent_params.n_iters = 0;
+    const ghl_error_codes_t error = ghl_brent(
+          rho2_residual, params, eos, &unused_cons, &root_params.roots, &unused_prims,
+          lower, upper, &brent_params);
+    if(error == ghl_success) {
+      *rho_root = brent_params.root;
+      harm_aux->n_iter = newton_iters + brent_params.n_iters;
+      return ghl_success;
+    }
+  }
+
+  return ghl_error_c2p_max_iter;
+}
 
 /**
  * @ingroup Con2Prim
@@ -15,7 +83,8 @@
  * @param[in] metric_aux pointer to ghl_ADM_aux_quantities struct
  * @param[in] cons_undens pointer to undensitized conservative variables
  * @param[in,out] prims initial guess on input and recovered primitives on output
- * @param[out] diagnostics Con2Prim diagnostics, written on successful recovery
+ * @param[in,out] diagnostics initialized diagnostics for the current logical
+ *                            recovery; sticky flags accumulate on output
  *
  * @returns ghl_success or a specific Con2Prim failure code
  */
@@ -46,21 +115,18 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
 
   gnr_out[0] = rho0;
 
-  const ghl_error_codes_t retval = ghl_general_newton_raphson(
+  ghl_error_codes_t retval = ghl_general_newton_raphson(
         eos, &harm_aux, 1, Z_last, gnr_out, ghl_validate_1D_entropy, ghl_func_rho2);
+
+  if(retval == ghl_error_c2p_max_iter && eos->neos > 1) {
+    retval = find_piecewise_density_root(params, eos, &harm_aux, &gnr_out[0]);
+  }
 
   rho0 = gnr_out[0];
 
   /* Problem with solver, so return denoting error before doing anything further */
   if(retval != ghl_success) {
     return retval;
-  }
-  /* Defensive postcondition: the Newton validator applies fabs() and the
-   * solver rejects nonfinite residual/Jacobian values, so a successful solve
-   * cannot presently reach this branch with an invalid density. Keep the
-   * check local to the consumer in case those solver invariants change. */
-  if(!isfinite(rho0) || rho0 <= 0.0) {
-    return ghl_error_c2p_singular;
   }
   // Calculate v^2:
 

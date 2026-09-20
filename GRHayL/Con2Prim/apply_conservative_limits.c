@@ -4,7 +4,8 @@
 
 /**
  * @ingroup Con2Prim
- * @brief Enforces constraining inequalities on \f$ \tilde{\tau} \f$ and \f$ \tilde{S} \f$.
+ * @brief Enforces constraining inequalities on \f$ \tilde{\tau} \f$ and \f$ \tilde{S}
+ * \f$.
  *
  * @details
  * This function applies limits to \f$ \tilde{\tau} \f$ and \f$ \tilde{S_i} \f$
@@ -106,15 +107,15 @@ void ghl_apply_conservative_limits(
     /* Cauchy-Schwarz makes this Gram determinant nonnegative. For parallel
      * B and S, contraction roundoff can leave either sign depending on FMA
      * generation. Treat only a roundoff-sized residual as exact zero. */
-    const double B2sdots = B2*sdots;
+    const double B2sdots = B2 * sdots;
     const double BdotS2 = SQR(BdotS);
     double gram_det = B2sdots - BdotS2;
-    const double gram_roundoff = 32.0*DBL_EPSILON*fmax(B2sdots, BdotS2);
+    const double gram_roundoff = 32.0 * DBL_EPSILON * fmax(B2sdots, BdotS2);
     if(isfinite(gram_det) && isfinite(gram_roundoff)
-          && fabs(gram_det) <= gram_roundoff)
+       && fabs(gram_det) <= gram_roundoff) {
       gram_det = 0.0;
-    tau_fluid_term3 = gram_det*0.5/
-          (metric_adm->sqrt_detgamma*SQR(Wmin+B2));
+    }
+    tau_fluid_term3 = gram_det * 0.5 / (metric_adm->sqrt_detgamma * SQR(Wmin + B2));
   }
 
   /**

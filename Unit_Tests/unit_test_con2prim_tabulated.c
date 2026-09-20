@@ -191,6 +191,7 @@ void run_unit_test(
 
   int total_main_routine_successes = 0;
   bool sticky_speed_limited_checked = false;
+  bool Noble2D_speed_limit_checked = params->main_routine != ghl_con2prim_id_Noble2D;
   for(int vars_key=0;vars_key<=1;vars_key++) {
 
     const char *vars_string = vars_key ? "Pmag_vs_Wm1" : "rho_vs_T";
@@ -268,6 +269,22 @@ void run_unit_test(
           main_routine_successes++;
           if(diagnostics.backup[0] || diagnostics.backup[1] || diagnostics.backup[2]) {
             ghl_error("main-routine success carried a backup diagnostic\n");
+          }
+          if(!Noble2D_speed_limit_checked) {
+            ghl_parameters limiting_params = *params;
+            limiting_params.max_Lorentz_factor = 1.01;
+            limiting_params.inv_sq_max_Lorentz_factor
+                  = 1.0 / SQR(limiting_params.max_Lorentz_factor);
+            ghl_primitive_quantities limiting_prims = initial_prims;
+            ghl_con2prim_diagnostics limiting_diagnostics;
+            ghl_initialize_diagnostics(&limiting_diagnostics);
+            const ghl_error_codes_t limiting_error
+                  = ghl_con2prim_tabulated_select_method(
+                        params->main_routine, &limiting_params, eos, &metric_adm,
+                        &metric_aux, &cons_undens, &limiting_prims,
+                        &limiting_diagnostics);
+            Noble2D_speed_limit_checked
+                  = limiting_error == ghl_success && limiting_diagnostics.speed_limited;
           }
         }
         else {
@@ -393,6 +410,9 @@ void run_unit_test(
   }
   if(!sticky_speed_limited_checked) {
     ghl_error("%s had no successful non-limiting case for sticky diagnostics\n", routine);
+  }
+  if(!Noble2D_speed_limit_checked) {
+    ghl_error("Noble2D did not exercise finalizer speed limiting\n");
   }
 }
 

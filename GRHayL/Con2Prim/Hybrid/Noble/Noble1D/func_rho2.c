@@ -14,16 +14,13 @@
          f    =  resid.resid/2  (on output)
         df    = -2*f;  (on output)
 *********************************************************************************/
-void ghl_func_rho2(
+void ghl_compute_rho2_residual_and_jacobian(
       const ghl_eos_parameters *restrict eos,
-      harm_aux_vars_struct *restrict harm_aux,
-      const double dummy,
-      const double x[],
-      double dx[],
-      double *restrict f,
-      double *restrict df) {
+      const harm_aux_vars_struct *restrict harm_aux,
+      const double rho,
+      double *restrict residual,
+      double *restrict jacobian) {
 
-  const double rho = x[0];
   const int index = ghl_hybrid_find_polytropic_index(eos, rho);
   const double Gamma = eos->Gamma_ppoly[index];
   const double Gamma_th = eos->Gamma_th;
@@ -53,12 +50,23 @@ void ghl_func_rho2(
   const double momentum_resid = harm_aux->Qtsq - vsq * Bsq_plus_Z * Bsq_plus_Z;
 
   // Compute the residual and the needed Jacobian component
-  const double resid
-        = Z * Z * momentum_resid + harm_aux->QdotBsq * (harm_aux->Bsq + 2.0 * Z);
-  const double jac
-        = 2.0 * dZdrho
-                * (Z * momentum_resid - Z * Z * vsq * Bsq_plus_Z + harm_aux->QdotBsq)
-          - Z * Z * dvsqdrho * Bsq_plus_Z * Bsq_plus_Z;
+  *residual = Z * Z * momentum_resid + harm_aux->QdotBsq * (harm_aux->Bsq + 2.0 * Z);
+  *jacobian = 2.0 * dZdrho
+                    * (Z * momentum_resid - Z * Z * vsq * Bsq_plus_Z + harm_aux->QdotBsq)
+              - Z * Z * dvsqdrho * Bsq_plus_Z * Bsq_plus_Z;
+}
+
+void ghl_func_rho2(
+      const ghl_eos_parameters *restrict eos,
+      harm_aux_vars_struct *restrict harm_aux,
+      const double dummy,
+      const double x[],
+      double dx[],
+      double *restrict f,
+      double *restrict df) {
+
+  double resid, jac;
+  ghl_compute_rho2_residual_and_jacobian(eos, harm_aux, x[0], &resid, &jac);
   // Set dx (NR step), f, and df (see function description above)
   dx[0] = -resid / jac;
   *df = -resid * resid;

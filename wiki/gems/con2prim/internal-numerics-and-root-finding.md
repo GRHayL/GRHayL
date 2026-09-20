@@ -119,7 +119,9 @@ all four plus `hybrid_Noble1D.c`, `hybrid_Noble1D_entropy.c`, and
 `hybrid_Noble1D_entropy2.c`. The entropy2 path solves the momentum equation
 directly for density. Its `Z(rho)` and analytic derivative use the active
 piecewise-polytropic cold pressure, cold-energy integration constant, and
-thermal Gamma. Each wrapper initializes Noble state, runs
+thermal Gamma. If Newton iteration exhausts its budget on a multi-piece EOS,
+the wrapper searches each EOS segment over the configured physical density
+interval with a Brent fallback. Each wrapper initializes Noble state, runs
 `ghl_general_newton_raphson`, and finalizes primitives. Finalization ORs
 `diagnostics->speed_limited` before the wrapper's pressure gate;
 `diagnostics->n_iter` and `diagnostics->which_routine` are set only after that

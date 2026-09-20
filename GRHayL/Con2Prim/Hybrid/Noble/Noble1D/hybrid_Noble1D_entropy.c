@@ -49,8 +49,8 @@
  *                          output is the primitives consistent with the
  *                          input conservatives
  *
- * @param[out] diagnostics pointer to ghl_con2prim_diagnostics struct; returns
- *                          with several Con2Prim solver diagnostics
+ * @param[in,out] diagnostics initialized diagnostics for the current logical
+ *                            recovery; sticky flags accumulate on output
  *
  * @returns error code for any Con2Prim failures
  */
