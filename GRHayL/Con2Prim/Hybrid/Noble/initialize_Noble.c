@@ -1,3 +1,5 @@
+#include <float.h>
+
 #include "../../utils_Noble.h"
 
 ghl_error_codes_t ghl_initialize_Noble(
@@ -88,6 +90,7 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
+      const double max_lorentz_factor,
       harm_aux_vars_struct *restrict harm_aux,
       double *restrict rho_ptr,
       double *restrict Z_ptr) {
@@ -136,12 +139,15 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
                                prims->u0*(prims->vU[2] + metric_adm->betaU[2])};
   const double utsq = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, utU_guess);
 
-  if(utsq < 0.0 || utsq > 10.0) {
+  if(!isfinite(utsq) || utsq < 0.0) {
     return ghl_error_invalid_utsq;
   }
 
   const double Wsq = 1.0 + utsq;   // Lorentz factor squared
   const double W = sqrt(Wsq);
+  if(W > max_lorentz_factor * (1.0 + 32.0 * DBL_EPSILON)) {
+    return ghl_error_invalid_utsq;
+  }
 
   // Always calculate rho from D and W so that using D in EOS remains consistent
   //   i.e. you don't get positive values for dP/d(vsq).

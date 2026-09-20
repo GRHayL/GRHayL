@@ -202,7 +202,7 @@ jobs:
         run: |
           make realclean
           CC=gcc ./configure --disable-hdf5 --prefix="$RUNNER_TEMP/grhayl-nohdf" \
-            --builddir=build-nohdf --cflags='-ftest-coverage -fprofile-arcs'
+            --builddir=build-nohdf
           make tests install
           LD_LIBRARY_PATH="$PWD/build-nohdf/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
             ./test/unit_test_c2p_nn_guess
@@ -759,15 +759,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          created_at=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
-            --jq .created_at)
+          current_run=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")
+          created_at=$(jq -r .created_at <<<"$current_run")
+          head_sha=$(jq -r .head_sha <<<"$current_run")
           window_start=$(date -u -d "$created_at - 5 minutes" +%Y-%m-%dT%H:%M:%SZ)
 
           pending=""
           for attempt in $(seq 1 300); do
             runs=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs" \
               --method GET \
-              -f head_sha="$GITHUB_SHA" \
+              -f head_sha="$head_sha" \
               -f event="$GITHUB_EVENT_NAME" \
               -f per_page=100)
             pending=$(jq -r --arg start "$window_start" '

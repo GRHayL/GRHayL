@@ -260,6 +260,7 @@ ghl_error_codes_t ghl_initialize_Noble_entropy(
       const ghl_ADM_aux_quantities *restrict metric_aux,
       const ghl_conservative_quantities *restrict cons_undens,
       const ghl_primitive_quantities *restrict prims,
+      const double max_lorentz_factor,
       harm_aux_vars_struct *restrict harm_aux,
       double *restrict rho_ptr,
       double *restrict Z_ptr);

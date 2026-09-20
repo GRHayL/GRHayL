@@ -338,7 +338,7 @@ static void test_Noble1D_entropy2(void) {
   const ghl_con2prim_id_t backups[3] = { None, None, None };
   ghl_parameters params;
   ghl_initialize_params(
-        ghl_con2prim_id_Noble1D_entropy2, backups, true, false, false, 1e100, 20.0, 0.0,
+        ghl_con2prim_id_Noble1D_entropy2, backups, true, false, false, 1e100, 10.0, 0.0,
         &params);
   params.con2prim_solver_tolerance = 1e-12;
 
@@ -470,8 +470,7 @@ static void test_Noble1D_entropy2(void) {
       }
 
       ghl_primitive_quantities bad_guess = source;
-      bad_guess.u0 = 1.0;
-      bad_guess.vU[0] = 4.0;
+      bad_guess.u0 = NAN;
       ghl_initialize_diagnostics(&diagnostics);
       error = ghl_con2prim_hybrid_select_method(
             ghl_con2prim_id_Noble1D_entropy2, &params, &eos, &metric_adm, &metric_aux,
@@ -561,6 +560,34 @@ static void test_Noble1D_entropy2(void) {
   check_entropy2_roundtrip(
         &params, &simple_eos, &simple_metric, &simple_aux, &simple_source,
         &simple_cons_undens);
+
+  const double high_W = 4.0;
+  ghl_primitive_quantities high_W_source;
+  ghl_initialize_primitives(
+        simple_rho, simple_press,
+        simple_press / (simple_rho * (simple_eos.Gamma_th - 1.0)),
+        sqrt(1.0 - 1.0 / SQR(high_W)), 0.0, 0.0, 0.0, 0.0, 0.0,
+        ghl_hybrid_compute_entropy_function(&simple_eos, simple_rho, simple_press), 0.1,
+        0.0, &high_W_source);
+  simple_speed_limited = false;
+  simple_error = ghl_limit_v_and_compute_u0(
+        &params, &simple_metric, &high_W_source, &simple_speed_limited);
+  ghl_abort_if_error(simple_error);
+  ghl_conservative_quantities high_W_cons, high_W_cons_undens;
+  ghl_compute_conservs(&simple_metric, &simple_aux, &high_W_source, &high_W_cons);
+  ghl_undensitize_conservatives(
+        simple_metric.sqrt_detgamma, &high_W_cons, &high_W_cons_undens);
+  ghl_con2prim_diagnostics high_W_diagnostics;
+  ghl_initialize_diagnostics(&high_W_diagnostics);
+  simple_error = ghl_hybrid_Noble1D_entropy2(
+        &params, &simple_eos, &simple_metric, &simple_aux, &high_W_cons_undens,
+        &high_W_source, &high_W_diagnostics);
+  if(simple_error != ghl_success) {
+    ghl_error("Noble1D_entropy2 rejected an exact W=4 guess\n");
+  }
+  check_close("exact W=4 rho", simple_rho, high_W_source.rho, 1e-12);
+  check_close("exact W=4 press", simple_press, high_W_source.press, 1e-12);
+  check_close("exact W=4 Lorentz factor", high_W, high_W_source.u0, 1e-12);
 
   // This malformed state has a positive-entropy momentum-equation root at
   // rho=2D, where the inferred velocity norm is negative.

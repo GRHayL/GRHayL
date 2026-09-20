@@ -86,7 +86,10 @@ Core Noble helper files are built from
 - [`initialize_Noble.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/initialize_Noble.c)
   sets `harm_aux.n_iter`, copies `params->con2prim_max_iterations` and
   `params->con2prim_solver_tolerance`, forms HARM-style contractions, and
-  produces scalar guesses for ordinary and entropy Noble paths.
+  produces scalar guesses for ordinary and entropy Noble paths. The entropy2
+  wrapper admits finite seed norms through the configured
+  `max_Lorentz_factor`; the older entropy wrapper retains its historical seed
+  ceiling.
 - [`general_newton_raphson.c`](../../../GRHayL/Con2Prim/Hybrid/Noble/general_newton_raphson.c)
   runs the shared Newton loop, calls the supplied residual and validate
   callbacks, increments `harm_aux->n_iter`, and returns success,

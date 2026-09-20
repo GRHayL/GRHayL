@@ -69,8 +69,8 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
 
   double rho0, Z_last;
   ghl_error_codes_t error = ghl_initialize_Noble_entropy(
-        params, eos, metric_adm, metric_aux, cons_undens,
-        prims, &harm_aux, &rho0, &Z_last);
+        params, eos, metric_adm, metric_aux, cons_undens, prims, sqrt(11.0), &harm_aux,
+        &rho0, &Z_last);
   if(error)
     return error;
 

@@ -170,7 +170,7 @@ Workflows live in `.github/workflows/`:
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | `con2prim-contracts` uploads coverage before its plain Valgrind build and again after its no-HDF5 phase; other jobs retain their listed shared coverage actions |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | `con2prim-contracts` uploads HDF5 coverage before its plain Valgrind build; its no-HDF5 phase is a non-instrumented build, test, and symbol check; other jobs retain their listed shared coverage actions |
 | `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | includes a dedicated no-HDF5 Con2Prim build/test with coverage; other jobs retain their shared coverage actions |
 | `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | 2 of 13 jobs invoke coverage action |
 | `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
@@ -242,7 +242,8 @@ Composite actions:
 - `codecov.yml` defers Codecov notifications until an explicit final trigger.
   The `codecov-finalize` job in the Ubuntu GCC workflow waits for every local
   job and for the macOS GCC, Ubuntu Clang, and Ubuntu Intel coverage workflows
-  for the same commit, then sends the single final Codecov notification.
+  for the same source head recorded by the current workflow run, then sends the
+  single final Codecov notification.
   macOS Clang is excluded because its coverage collection steps are disabled.
 
 ## `.github/run_tests.sh`
