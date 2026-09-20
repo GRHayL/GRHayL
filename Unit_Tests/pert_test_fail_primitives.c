@@ -107,11 +107,15 @@ void ghl_pert_test_fail_primitives_with_cutoffs(
    * components. Use a machine-epsilon-scale absolute allowance based only on
    * the trusted vector. The usual relative floor still controls large components.
    * This is a fixture roundoff allowance, not a bound for arbitrary metrics. */
-  const double velocity_abs_tol = fmax(1.0e-30, 8.0*DBL_EPSILON*
-        fmax(fabs(prims_trusted->vU[0]),
-        fmax(fabs(prims_trusted->vU[1]), fabs(prims_trusted->vU[2]))));
+  const double velocity_abs_tol = fmax(
+        1.0e-30,
+        8.0 * DBL_EPSILON
+              * fmax(
+                    fabs(prims_trusted->vU[0]),
+                    fmax(fabs(prims_trusted->vU[1]), fabs(prims_trusted->vU[2]))));
   bool test_fail = false;
-  if( ghl_pert_test_fail_with_tolerance(prims_trusted->rho, prims->rho, prims_pert->rho, 8.0e-14, rho_cutoff) ) {
+  if(ghl_pert_test_fail_with_tolerance(
+           prims_trusted->rho, prims->rho, prims_pert->rho, 8.0e-14, rho_cutoff)) {
     printf("rho_b trusted %.14e computed %.14e perturbed %.14e\n"
            "rel.err. %.14e %.14e\n",
            prims_trusted->rho, prims->rho, prims_pert->rho,
@@ -136,7 +140,9 @@ void ghl_pert_test_fail_primitives_with_cutoffs(
     test_fail = true;
   }
 
-  if( ghl_pert_test_fail_with_tolerance(prims_trusted->vU[0], prims->vU[0], prims_pert->vU[0], min_rel, velocity_abs_tol) ) {
+  if(ghl_pert_test_fail_with_tolerance(
+           prims_trusted->vU[0], prims->vU[0], prims_pert->vU[0], min_rel,
+           velocity_abs_tol)) {
     printf("vel[0] trusted %.14e computed %.14e perturbed %.14e\n"
            "rel.err. %.14e %.14e\n",
             prims_trusted->vU[0], prims->vU[0], prims_pert->vU[0],
@@ -144,7 +150,9 @@ void ghl_pert_test_fail_primitives_with_cutoffs(
     test_fail = true;
   }
 
-  if(ghl_pert_test_fail_with_tolerance(prims_trusted->vU[1], prims->vU[1], prims_pert->vU[1], min_rel, velocity_abs_tol)) {
+  if(ghl_pert_test_fail_with_tolerance(
+           prims_trusted->vU[1], prims->vU[1], prims_pert->vU[1], min_rel,
+           velocity_abs_tol)) {
     printf("vel[1] trusted %.14e computed %.14e perturbed %.14e\n"
            "rel.err. %.14e %.14e\n",
            prims_trusted->vU[1], prims->vU[1], prims_pert->vU[1],
@@ -152,7 +160,9 @@ void ghl_pert_test_fail_primitives_with_cutoffs(
     test_fail = true;
   }
 
-  if( ghl_pert_test_fail_with_tolerance(prims_trusted->vU[2], prims->vU[2], prims_pert->vU[2], min_rel, velocity_abs_tol) ) {
+  if(ghl_pert_test_fail_with_tolerance(
+           prims_trusted->vU[2], prims->vU[2], prims_pert->vU[2], min_rel,
+           velocity_abs_tol)) {
     printf("vel[2] trusted %.14e computed %.14e perturbed %.14e\n"
            "rel.err. %.14e %.14e\n",
            prims_trusted->vU[2], prims->vU[2], prims_pert->vU[2],

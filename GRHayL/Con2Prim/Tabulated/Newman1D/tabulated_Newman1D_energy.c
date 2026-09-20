@@ -133,7 +133,7 @@ static ghl_error_codes_t ghl_newman_energy(
   prims->Y_e         = xye;
   prims->temperature = xtemp;
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  diagnostics->speed_limited |= ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 
@@ -148,6 +148,8 @@ ghl_error_codes_t ghl_tabulated_Newman1D_energy(
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
+
+  diagnostics->speed_limited = false;
 
   // Step 1: Compute auxiliary quantities
   double SU[3], Bsq, Ssq, BdotS;

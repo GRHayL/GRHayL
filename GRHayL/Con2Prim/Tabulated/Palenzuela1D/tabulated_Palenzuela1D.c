@@ -67,6 +67,8 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
+  diagnostics->speed_limited = false;
+
   double SU[3], B_squared, S_squared, BdotS;
   ghl_compute_SU_Bsq_Ssq_BdotS(metric_adm, cons_undens, prims, SU, &B_squared, &S_squared, &BdotS);
   const double tau = fmax(cons_undens->tau, eos->tau_atm);
@@ -116,7 +118,7 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D(
 
   // Set prims struct
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  diagnostics->speed_limited |= ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
+  diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
   ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
                                        &prims->press, &prims->eps, &prims->entropy);
 

@@ -100,9 +100,11 @@ int main(int argc, char **argv) {
   key += fread(entropy, sizeof(double), arraylength, infile);
 
   fclose(infile);
-  if(key != arraylength*7)
-    ghl_error("An error has occured with reading in initial data. Please check that data\n"
-                 "is up-to-date with current test version.\n");
+  if(key != arraylength * 7) {
+    ghl_error(
+          "An error has occured with reading in initial data. Please check that data\n"
+          "is up-to-date with current test version.\n");
+  }
 
   // Allocate memory for the trusted primitive data
   double *rho_b_trusted = (double*) malloc(sizeof(double)*arraylength);
@@ -185,11 +187,9 @@ int main(int argc, char **argv) {
 
     ghl_primitive_quantities prims_trusted, prims_pert;
     ghl_initialize_primitives(
-          rho_b_trusted[i], press_trusted[i], eps_trusted[i],
-          vx_trusted[i], vy_trusted[i], vz_trusted[i],
-          poison, poison, poison,
-          ent_trusted[i], poison, poison,
-          &prims_trusted);
+          rho_b_trusted[i], press_trusted[i], eps_trusted[i], vx_trusted[i],
+          vy_trusted[i], vz_trusted[i], poison, poison, poison, ent_trusted[i], poison,
+          poison, &prims_trusted);
 
     ghl_initialize_primitives(
           rho_b_pert[i], press_pert[i], eps_pert[i],
@@ -283,8 +283,7 @@ int main(int argc, char **argv) {
   limiting_params.max_Lorentz_factor = 2.0;
   limiting_params.inv_sq_max_Lorentz_factor = 0.25;
   ghl_initialize_primitives(
-        1.0, 1.0, 1.0, 10.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+        1.0, 1.0, 1.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
   speed_limited = false;
   error = ghl_enforce_primitive_limits_and_compute_u0(
         &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
@@ -294,8 +293,7 @@ int main(int argc, char **argv) {
   }
 
   ghl_initialize_primitives(
-        1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+        1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
   speed_limited = false;
   error = ghl_enforce_primitive_limits_and_compute_u0(
         &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);

@@ -281,8 +281,8 @@ static void check_entropy2_roundtrip(
   error = ghl_con2prim_hybrid_select_method(
         ghl_con2prim_id_Noble1D_entropy2, params, eos, metric_adm, metric_aux,
         cons_undens, &recovered, &diagnostics);
-  if(error != ghl_success || !diagnostics.speed_limited) {
-    ghl_error("Noble1D_entropy2 did not preserve an incoming speed-limit diagnostic\n");
+  if(error != ghl_success || diagnostics.speed_limited) {
+    ghl_error("Noble1D_entropy2 did not replace an incoming speed-limit diagnostic\n");
   }
 
   check_close("rho", source->rho, recovered.rho, 1e-12);
@@ -320,12 +320,12 @@ static void test_Noble1D_entropy2(void) {
         &params);
   params.con2prim_solver_tolerance = 1e-12;
 
-  // Distinct cold and thermal Gammas make this a genuine hybrid-EOS test.
-  const double rho_ppoly[2] = { 1.0, 0.0 };
-  const double Gamma_ppoly[2] = { 1.8, 2.2 };
+  // One-piece hybrid metadata equivalent to a constant-Gamma EOS is supported.
+  const double rho_ppoly[1] = { 0.0 };
+  const double Gamma_ppoly[1] = { 1.8 };
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
-        1e-6, 1e-6, 1e6, 2, rho_ppoly, Gamma_ppoly, 0.4, 1.6, &eos);
+        1e-6, 1e-6, 1e6, 1, rho_ppoly, Gamma_ppoly, 0.4, 1.8, &eos);
 
   for(int test = 0; test < 3; test++) {
     ghl_metric_quantities metric_adm;
@@ -377,18 +377,20 @@ static void test_Noble1D_entropy2(void) {
 
     if(test == 0) {
       ghl_primitive_quantities recovered = source;
+      ghl_parameters multi_params = params;
+      multi_params.calc_prim_guess = false;
       ghl_con2prim_diagnostics diagnostics;
       ghl_initialize_diagnostics(&diagnostics);
       error = ghl_con2prim_hybrid_multi_method(
-            &params, &eos, &metric_adm, &metric_aux, &cons_undens, &recovered,
+            &multi_params, &eos, &metric_adm, &metric_aux, &cons_undens, &recovered,
             &diagnostics);
       if(error != ghl_success
          || diagnostics.which_routine != ghl_con2prim_id_Noble1D_entropy2
-         || diagnostics.n_iter <= params.con2prim_max_iterations) {
-        ghl_error("Noble1D_entropy2 failed from the default cross-piece guess\n");
+         || diagnostics.n_iter < 1) {
+        ghl_error("Noble1D_entropy2 failed through the multi-method driver\n");
       }
-      check_close("cross-piece rho", source.rho, recovered.rho, 1e-12);
-      check_close("cross-piece pressure", source.press, recovered.press, 1e-12);
+      check_close("multi-method rho", source.rho, recovered.rho, 1e-12);
+      check_close("multi-method pressure", source.press, recovered.press, 1e-12);
 
       ghl_eos_parameters bounded_eos = eos;
       bounded_eos.rho_max = 0.1;
@@ -573,6 +575,7 @@ static void test_Noble1D_entropy2(void) {
   ghl_compute_conservs(&simple_metric, &simple_aux, &simple_source, &simple_cons);
   ghl_undensitize_conservatives(
         simple_metric.sqrt_detgamma, &simple_cons, &simple_cons_undens);
+
   check_entropy2_roundtrip(
         &params, &simple_eos, &simple_metric, &simple_aux, &simple_source,
         &simple_cons_undens);
@@ -627,7 +630,7 @@ static void test_Noble1D_entropy2(void) {
   }
 
   // This malformed state has a positive-entropy momentum-equation root at
-  // rho=2D, where the inferred velocity norm is negative.
+  // rho=2D, but its unequal cold and thermal Gammas are outside this solver's domain.
   const double invalid_rho_ppoly[1] = { 0.0 };
   const double invalid_Gamma_ppoly[1] = { 2.0 };
   ghl_eos_parameters invalid_eos = { 0 };
@@ -651,8 +654,8 @@ static void test_Noble1D_entropy2(void) {
   invalid_error = ghl_con2prim_hybrid_select_method(
         ghl_con2prim_id_Noble1D_entropy2, &invalid_params, &invalid_eos, &simple_metric,
         &simple_aux, &invalid_cons, &invalid_guess, &invalid_diagnostics);
-  if(invalid_error != ghl_error_neg_vsq) {
-    ghl_error("Noble1D_entropy2 did not reject a negative velocity norm\n");
+  if(invalid_error != ghl_error_invalid_eos_type) {
+    ghl_error("Noble1D_entropy2 did not reject incompatible EOS metadata\n");
   }
 }
 

@@ -70,7 +70,8 @@ source, headers, tests, and common edit routes before wider search.
   assumptions, and tabulated EOS support are externally visible through
   downstream configuration. Use [recovery flow](con2prim/recovery-flow.md) for
   diagnostics, dispatch, backups, and densitized/undensitized boundaries.
-  `Noble1D_entropy2` is supported for Simple and Hybrid EOS. The retained
+  `Noble1D_entropy2` is supported only for one-piece constant-Gamma metadata
+  (`Gamma_th == Gamma_ppoly[0]`). The retained
   Cerda-Duran file is archival, unbuilt, unsupported, and excluded from
   generated API documentation. Tabulated Noble2D is supported and listed in
   its Doxygen table.

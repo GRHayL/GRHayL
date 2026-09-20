@@ -203,8 +203,9 @@ entropy-required diagnostic family.
 Entropy methods require `evolve_entropy`. `GRHayLib_paramcheck` rejects
 `Noble1D_entropy`, `Noble1D_entropy2`, `Palenzuela1D_entropy`, and
 `Newman1D_entropy` as main or backup choices when `evolve_entropy` is false.
-`Noble1D_entropy2` is available for Simple and Hybrid EOS and is rejected for
-tabulated EOS, matching its core selector and implementation family.
+`Noble1D_entropy2` is available for Simple EOS and equivalent one-piece Hybrid
+metadata with `Gamma_th == Gamma_ppoly_in[0]`; parameter checks reject other
+Hybrid metadata and tabulated EOS for both main and backup selections.
 
 Parser/parameter keyword existence does not imply supported solver. Compare
 any GRHayLib keyword against [Con2Prim solver matrix](../../gems/con2prim/solver-matrix.md),

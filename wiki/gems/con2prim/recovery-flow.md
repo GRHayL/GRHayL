@@ -101,8 +101,9 @@ Tests: `Unit_Tests/unit_test_c2p_nn_guess.c`,
   `GRHayL/Con2Prim/con2prim_multi_method.c`.
 - Diagnostics lifecycle is split. Callers initialize diagnostics once per
   logical recovery; conservative limits accumulate `tau_fix` and `Stilde_fix`;
-  multi-method records attempted backup slots and NN retry; solver and
-  post-limit speed limiting accumulate `speed_limited`. The successful solver
+  multi-method records attempted backup slots and NN retry and accumulates
+  solver `speed_limited` results; post-limit speed limiting also accumulates it.
+  A successful direct solver alone reports only its current call. The successful solver
   owns `which_routine` and its applicable `n_iter`; when no solver succeeds,
   `which_routine` remains `None` and `n_iter` is unspecified.
   Source: `GRHayL/include/ghl_con2prim.h`,

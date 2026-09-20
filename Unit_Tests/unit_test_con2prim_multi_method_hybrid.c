@@ -10,11 +10,11 @@ static bool is_documented_Noble_pressure_boundary(
       const ghl_error_codes_t actual,
       const ghl_error_codes_t expected) {
 
-  const bool Noble_method = method == ghl_con2prim_id_Noble1D
-                          || method == ghl_con2prim_id_Noble2D;
+  const bool Noble_method
+        = method == ghl_con2prim_id_Noble1D || method == ghl_con2prim_id_Noble2D;
   const bool success_pressure_pair
         = (actual == ghl_success && expected == ghl_error_neg_pressure)
-       || (actual == ghl_error_neg_pressure && expected == ghl_success);
+          || (actual == ghl_error_neg_pressure && expected == ghl_success);
   return Noble_method && success_pressure_pair;
 }
 
@@ -29,18 +29,15 @@ static bool Noble_reconservation_fails(
   ghl_compute_conservs(metric_adm, metric_aux, prims, &densitized);
   ghl_undensitize_conservatives(metric_adm->sqrt_detgamma, &densitized, &actual);
 
-  const double expected_values[5] = {
-    expected->rho, expected->tau,
-    expected->SD[0], expected->SD[1], expected->SD[2]
-  };
-  const double actual_values[5] = {
-    actual.rho, actual.tau, actual.SD[0], actual.SD[1], actual.SD[2]
-  };
+  const double expected_values[5] = { expected->rho, expected->tau, expected->SD[0],
+                                      expected->SD[1], expected->SD[2] };
+  const double actual_values[5]
+        = { actual.rho, actual.tau, actual.SD[0], actual.SD[1], actual.SD[2] };
   const double tolerance = 10.0 * params->con2prim_solver_tolerance;
   for(int i = 0; i < 5; ++i) {
     const double scale = fmax(fabs(expected_values[i]), 1.0e-30);
     if(!isfinite(actual_values[i])
-          || fabs(actual_values[i] - expected_values[i]) > tolerance * scale) {
+       || fabs(actual_values[i] - expected_values[i]) > tolerance * scale) {
       return true;
     }
   }
@@ -61,17 +58,13 @@ static void check_Noble_reconservation(
   if(method != ghl_con2prim_id_Noble1D && method != ghl_con2prim_id_Noble2D) {
     return;
   }
-  if(!isfinite(prims->rho) || prims->rho <= 0.0
-        || !isfinite(prims->press)
-        || (require_positive_pressure && prims->press <= 0.0)
-        || !isfinite(prims->eps) || !isfinite(prims->u0)
-        || !isfinite(prims->vU[0]) || !isfinite(prims->vU[1])
-        || !isfinite(prims->vU[2])
-        || metric_adm->lapse * prims->u0 < 1.0 - 1e-12) {
+  if(!isfinite(prims->rho) || prims->rho <= 0.0 || !isfinite(prims->press)
+     || (require_positive_pressure && prims->press <= 0.0) || !isfinite(prims->eps)
+     || !isfinite(prims->u0) || !isfinite(prims->vU[0]) || !isfinite(prims->vU[1])
+     || !isfinite(prims->vU[2]) || metric_adm->lapse * prims->u0 < 1.0 - 1e-12) {
     ghl_error("Noble recovery returned inadmissible primitives at point %d\n", point);
   }
-  if(Noble_reconservation_fails(
-        params, metric_adm, metric_aux, expected, prims)) {
+  if(Noble_reconservation_fails(params, metric_adm, metric_aux, expected, prims)) {
     ghl_error("Noble reconservation failed at point %d\n", point);
   }
 }
@@ -305,13 +298,15 @@ int main(int argc, char **argv) {
       const int check = ghl_con2prim_hybrid_select_method(methods[method], &params, &eos, &metric_adm, &metric_aux, &cons_undens, &prims, &diagnostics);
       const bool compiler_sensitive_boundary = is_documented_Noble_pressure_boundary(
             methods[method], check, c2p_check[i]);
-      if(check != c2p_check[i]
-            && !compiler_sensitive_boundary) {
-        ghl_error("unit_test_hybrid_con2prim has different return value for %.30s method: new %d vs old %d\n", ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
+      if(check != c2p_check[i] && !compiler_sensitive_boundary) {
+        ghl_error(
+              "unit_test_hybrid_con2prim has different return value for %.30s method: "
+              "new %d vs old %d\n",
+              ghl_get_con2prim_routine_name(methods[method]), check, c2p_check[i]);
       }
 
-      expected_fcnt += c2p_check[i] != ghl_success
-                    && c2p_check[i] != ghl_error_neg_pressure;
+      expected_fcnt
+            += c2p_check[i] != ghl_success && c2p_check[i] != ghl_error_neg_pressure;
       if(check && check != ghl_error_neg_pressure) {
         fcnt++;
         continue;
@@ -327,9 +322,10 @@ int main(int argc, char **argv) {
 
       if(check == ghl_success) {
         if(diagnostics.which_routine != methods[method]) {
-          ghl_error("%.30s reported successful routine %d\n",
-                    ghl_get_con2prim_routine_name(methods[method]),
-                    (int)diagnostics.which_routine);
+          ghl_error(
+                "%.30s reported successful routine %d\n",
+                ghl_get_con2prim_routine_name(methods[method]),
+                (int)diagnostics.which_routine);
         }
         if(!diagnostics.speed_limited && !sticky_speed_limited_checked) {
           ghl_primitive_quantities sticky_prims = initial_prims;
@@ -337,19 +333,20 @@ int main(int argc, char **argv) {
           ghl_initialize_diagnostics(&sticky_diagnostics);
           sticky_diagnostics.speed_limited = true;
           const int sticky_check = ghl_con2prim_hybrid_select_method(
-                methods[method], &params, &eos, &metric_adm, &metric_aux,
-                &cons_undens, &sticky_prims, &sticky_diagnostics);
-          if(sticky_check != ghl_success || !sticky_diagnostics.speed_limited) {
-            ghl_error("%.30s did not preserve an incoming speed-limit diagnostic\n",
-                      ghl_get_con2prim_routine_name(methods[method]));
+                methods[method], &params, &eos, &metric_adm, &metric_aux, &cons_undens,
+                &sticky_prims, &sticky_diagnostics);
+          if(sticky_check != ghl_success || sticky_diagnostics.speed_limited) {
+            ghl_error(
+                  "%.30s did not replace an incoming speed-limit diagnostic\n",
+                  ghl_get_con2prim_routine_name(methods[method]));
           }
           sticky_speed_limited_checked = true;
         }
       }
 
       check_Noble_reconservation(
-            i, methods[method], &params, &eos, &metric_adm, &metric_aux,
-            &cons_undens, &prims, check == ghl_success);
+            i, methods[method], &params, &eos, &metric_adm, &metric_aux, &cons_undens,
+            &prims, check == ghl_success);
 
       ghl_primitive_quantities prims_trusted, prims_pert;
       ghl_initialize_primitives(
@@ -366,11 +363,10 @@ int main(int argc, char **argv) {
             ent_pert[i], poison, poison,
             &prims_pert);
 
-      const bool Noble_pressure_case
-            = (methods[method] == ghl_con2prim_id_Noble1D
-            || methods[method] == ghl_con2prim_id_Noble2D)
-            && (check == ghl_error_neg_pressure
-            || c2p_check[i] == ghl_error_neg_pressure);
+      const bool Noble_pressure_case = (methods[method] == ghl_con2prim_id_Noble1D
+                                        || methods[method] == ghl_con2prim_id_Noble2D)
+                                       && (check == ghl_error_neg_pressure
+                                           || c2p_check[i] == ghl_error_neg_pressure);
       if(Noble_pressure_case) {
         if(!isfinite(prims.press) || !isfinite(prims.eps)) {
           ghl_error("Noble pressure-boundary state is nonfinite at point %d\n", i);
@@ -378,12 +374,12 @@ int main(int argc, char **argv) {
         const double enthalpy_density
               = prims_trusted.rho * (1.0 + prims_trusted.eps) + prims_trusted.press;
         const double pressure_resolution
-              = 1.0e4 * DBL_EPSILON
-              * fmax(fabs(enthalpy_density), DBL_MIN);
-        if(!isfinite(enthalpy_density)
-              || fabs(prims.press) > pressure_resolution) {
-          ghl_error("Noble pressure-boundary state is not roundoff-scale "
-                    "relative to enthalpy density at point %d\n", i);
+              = 1.0e4 * DBL_EPSILON * fmax(fabs(enthalpy_density), DBL_MIN);
+        if(!isfinite(enthalpy_density) || fabs(prims.press) > pressure_resolution) {
+          ghl_error(
+                "Noble pressure-boundary state is not roundoff-scale "
+                "relative to enthalpy density at point %d\n",
+                i);
         }
       }
 
@@ -400,36 +396,43 @@ int main(int argc, char **argv) {
       /* rho=D/W inherits the W^2 conditioning of W=(1-v^2)^(-1/2).
        * Use only the input D and trusted rho to set this roundoff allowance;
        * the result under test must not set its own tolerance. */
-      const double W_trusted = cons_undens.rho/prims_trusted.rho;
-      const double rho_cutoff = fmax(1.0e-30,
-            8.0*DBL_EPSILON*W_trusted*W_trusted*fabs(prims_trusted.rho));
-      ghl_pert_test_fail_primitives_with_cutoffs(params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert, rho_cutoff, pressure_cutoff, eps_cutoff);
+      const double W_trusted = cons_undens.rho / prims_trusted.rho;
+      const double rho_cutoff = fmax(
+            1.0e-30,
+            8.0 * DBL_EPSILON * W_trusted * W_trusted * fabs(prims_trusted.rho));
+      ghl_pert_test_fail_primitives_with_cutoffs(
+            params.evolve_entropy, &eos, &prims_trusted, &prims, &prims_pert, rho_cutoff,
+            pressure_cutoff, eps_cutoff);
     }
     if(fcnt != expected_fcnt) {
-      ghl_error("unit_test_hybrid_con2prim failure count changed for %.30s method: new %d vs old %d\n",
-                ghl_get_con2prim_routine_name(methods[method]), fcnt, expected_fcnt);
+      ghl_error(
+            "unit_test_hybrid_con2prim failure count changed for %.30s method: new %d "
+            "vs old %d\n",
+            ghl_get_con2prim_routine_name(methods[method]), fcnt, expected_fcnt);
     }
     const bool Noble_method = methods[method] == ghl_con2prim_id_Noble1D
-                           || methods[method] == ghl_con2prim_id_Noble2D;
+                              || methods[method] == ghl_con2prim_id_Noble2D;
     /* Bound compiler-dependent pressure-sign changes. All primitive value
      * comparisons still run, including at these boundary states. */
-    const int pressure_boundary_limit = Noble_method ? (arraylength - 1)/2 : 0;
+    const int pressure_boundary_limit = Noble_method ? (arraylength - 1) / 2 : 0;
     if(pressure_boundary_count > pressure_boundary_limit) {
-      ghl_error("%.30s pressure-boundary population %d exceeds reviewed limit %d\n",
-                ghl_get_con2prim_routine_name(methods[method]),
-                pressure_boundary_count, pressure_boundary_limit);
+      ghl_error(
+            "%.30s pressure-boundary population %d exceeds reviewed limit %d\n",
+            ghl_get_con2prim_routine_name(methods[method]), pressure_boundary_count,
+            pressure_boundary_limit);
     }
     if(!sticky_speed_limited_checked) {
-      ghl_error("%.30s had no successful non-limiting case for sticky diagnostics\n",
-                ghl_get_con2prim_routine_name(methods[method]));
+      ghl_error(
+            "%.30s had no successful non-limiting case for direct diagnostics\n",
+            ghl_get_con2prim_routine_name(methods[method]));
     }
-    ghl_info("unit_test_hybrid_con2prim passed for %.30s: %d success, "
-             "%d negative pressure, %d other failures out of %d points "
-             "(%d documented pressure-sign boundary points).\n",
-             ghl_get_con2prim_routine_name(methods[method]),
-             arraylength-negative_pressure_count-fcnt,
-             negative_pressure_count, fcnt, arraylength,
-             pressure_boundary_count);
+    ghl_info(
+          "unit_test_hybrid_con2prim passed for %.30s: %d success, "
+          "%d negative pressure, %d other failures out of %d points "
+          "(%d documented pressure-sign boundary points).\n",
+          ghl_get_con2prim_routine_name(methods[method]),
+          arraylength - negative_pressure_count - fcnt, negative_pressure_count, fcnt,
+          arraylength, pressure_boundary_count);
   }
   fclose(infile);
   fclose(inpert);

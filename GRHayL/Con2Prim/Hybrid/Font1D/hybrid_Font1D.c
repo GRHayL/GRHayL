@@ -2,11 +2,16 @@
 
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
-      const int maxits, const double tol, const double W_in,
-      const double Sf2_in, const double sdots,
-      const double BdotS2, const double B2,
+      const int maxits,
+      const double tol,
+      const double W_in,
+      const double Sf2_in,
+      const double sdots,
+      const double BdotS2,
+      const double B2,
       const ghl_conservative_quantities *restrict cons,
-      const double rhob_in, double *restrict rhob_out_ptr,
+      const double rhob_in,
+      double *restrict rhob_out_ptr,
       int *restrict n_iter);
 
 /**
@@ -61,6 +66,8 @@ ghl_error_codes_t ghl_hybrid_Font1D(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
+  diagnostics->speed_limited = false;
+
   diagnostics->n_iter = 0;
   double utU[3];
 
@@ -97,9 +104,9 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     prims->vU[1] = -metric_adm->betaU[1];
     prims->vU[2] = -metric_adm->betaU[2];
   } else {
-    double W0    = sqrt( SQR(hatBdotS) + SQR(cons->rho) );
+    double W0 = sqrt(SQR(hatBdotS) + SQR(cons->rho));
     double Sf20  = (SQR(W0)*sdots + BdotS2*(B2 + 2.0*W0))/SQR(W0+B2);
-    double rhob0 = cons->rho/sqrt(1.0+Sf20/SQR(cons->rho));
+    double rhob0 = cons->rho / sqrt(1.0 + Sf20 / SQR(cons->rho));
     /**
      * Now we apply core @ref ghl_hybrid_Font1D_loop method with several
      * attempts. As this method is intended as a final resort backup, it tries
@@ -120,8 +127,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
       const int loop_maxits = maxits + n*50; // From 300 to 500 for 5 iterations
       const double loop_tol = tol*pow(4,n); // tolerance multipliers are {0,4,16,64,256}
       error = ghl_hybrid_Font1D_loop(
-            eos, loop_maxits, loop_tol, W0, Sf20,
-            sdots, BdotS2, B2, cons, rhob0, &rhob,
+            eos, loop_maxits, loop_tol, W0, Sf20, sdots, BdotS2, B2, cons, rhob0, &rhob,
             &diagnostics->n_iter);
       rhob0 = rhob;
       if(error == ghl_success) break;
@@ -155,7 +161,7 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      * \gamma_v = \frac{D}{\rho}
      * \f]
      */
-    double gammav = cons->rho/rhob;
+    double gammav = cons->rho / rhob;
     double rhosh = cons->rho*h;
 
     /**
@@ -176,8 +182,8 @@ ghl_error_codes_t ghl_hybrid_Font1D(
      * f_2 = \left[ D h + \frac{B^2}{\gamma_v} \right]^{-1}
      * \f]
      */
-    double fac1 = BdotS/(gammav*rhosh);
-    double fac2 = 1.0/(rhosh + B2/gammav);
+    double fac1 = BdotS / (gammav * rhosh);
+    double fac2 = 1.0 / (rhosh + B2 / gammav);
 
     double SU[3];
     ghl_raise_lower_vector_3D(metric_adm->gammaUU, cons->SD, SU);
@@ -185,10 +191,10 @@ ghl_error_codes_t ghl_hybrid_Font1D(
     utU[0] = fac2*(SU[0] + fac1*prims->BU[0]);
     utU[1] = fac2*(SU[1] + fac1*prims->BU[1]);
     utU[2] = fac2*(SU[2] + fac1*prims->BU[2]);
-    diagnostics->speed_limited |= ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
+    diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utU, prims);
   }
 
-  prims->rho = cons->rho/(metric_adm->lapse*prims->u0);
+  prims->rho = cons->rho / (metric_adm->lapse * prims->u0);
   /**
    * The Font fix only sets the velocities. We set the remaining primitives using
    * @ref ghl_hybrid_compute_P_cold_and_eps_cold and
@@ -205,11 +211,9 @@ ghl_error_codes_t ghl_hybrid_Font1D(
    * \f]
    */
 
-  ghl_hybrid_compute_P_cold_and_eps_cold(
-        eos, prims->rho, &prims->press, &prims->eps);
+  ghl_hybrid_compute_P_cold_and_eps_cold(eos, prims->rho, &prims->press, &prims->eps);
   if(params->evolve_entropy)
-    prims->entropy = ghl_hybrid_compute_entropy_function(
-          eos, prims->rho, prims->press);
+    prims->entropy = ghl_hybrid_compute_entropy_function(eos, prims->rho, prims->press);
 
   diagnostics->which_routine = ghl_con2prim_id_Font1D;
   return ghl_success;

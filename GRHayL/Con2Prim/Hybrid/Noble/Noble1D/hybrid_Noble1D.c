@@ -48,8 +48,7 @@
  *                          output is the primitives consistent with the
  *                          input conservatives
  *
- * @param[in,out] diagnostics initialized diagnostics for the current logical
- *                            recovery; sticky flags accumulate on output
+ * @param[out] diagnostics diagnostics for this direct solver call
  *
  * @returns error code for any Con2Prim failures
  */
@@ -61,6 +60,8 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
       const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
+
+  diagnostics->speed_limited = false;
 
   double gnr_out[1];
 
@@ -99,7 +100,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D(
   }
 
   // Recover the primitive variables from the scalars and conserved variables:
-  diagnostics->speed_limited |= ghl_finalize_Noble(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
+  diagnostics->speed_limited = ghl_finalize_Noble(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, vsq, prims);
   if(!ghl_Noble_pressure_is_valid(prims->press)) {
     return ghl_error_neg_pressure;
   }

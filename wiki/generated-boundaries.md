@@ -10,7 +10,7 @@ Repo ground truth: `Doxyfile`, `configure`, `generate_makefile.sh`,
 
 - `INPUT = GRHayL docs/raw`
 - `RECURSIVE = YES`
-- `EXCLUDE = GRHayL/include/ghl_unit_tests.h`
+- `EXCLUDE = GRHayL/include/ghl_unit_tests.h GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc`
 - `EXCLUDE_PATTERNS = *.py`
 - `USE_MDFILE_AS_MAINPAGE = docs/raw/mainpage.md`
 - Root-level `DoxygenLayout.xml` is auto-parsed by Doxygen when present and

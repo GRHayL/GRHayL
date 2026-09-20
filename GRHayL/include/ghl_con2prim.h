@@ -13,18 +13,20 @@ extern "C" {
  * @brief Tracks @ref Con2Prim diagnostics
  *
  * @details
- * This struct must be initialized with @ref ghl_initialize_diagnostics before
- * each logical recovery. tau_fix, Stilde_fix, and speed_limited are sticky OR
- * accumulators for that recovery. backup and nn_guess_used record attempted
- * retry paths. which_routine and n_iter describe the successful solver;
- * n_iter is unspecified when which_routine is ghl_con2prim_id_None.
+ * Initialize this struct with @ref ghl_initialize_diagnostics before each
+ * logical recovery. tau_fix and Stilde_fix are sticky OR accumulators.
+ * A successful direct solver writes its own speed_limited result; multi-method
+ * drivers accumulate that result across attempts. backup and nn_guess_used
+ * record attempted retry paths. which_routine and n_iter describe the
+ * successful solver; n_iter is unspecified when which_routine is
+ * ghl_con2prim_id_None.
  */
 typedef struct ghl_con2prim_diagnostics {
   /** Whether any call limited \f$ \tilde{\tau} \f$ during this recovery */
   bool tau_fix;
   /** Whether any call limited \f$ \tilde{S}_i \f$ during this recovery */
   bool Stilde_fix;
-  /** Whether any attempted solver triggered the speed limiter */
+  /** Direct-solver speed-limit result, accumulated by multi-method drivers */
   bool speed_limited;
   /** The Con2Prim routine which successfully found the primitive variables */
   ghl_con2prim_id_t which_routine;
@@ -179,10 +181,11 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       ghl_con2prim_diagnostics *restrict diagnostics);
 
 /**
- * Density-based entropy recovery. A successful direct solve returns its
- * positive mathematical root, which may lie outside configured EOS density
- * limits. Call ghl_enforce_primitive_limits_and_compute_u0 to apply those
- * limits after recovery.
+ * Density-based entropy recovery for a one-piece constant-Gamma EOS, requiring
+ * neos == 1 and Gamma_th == Gamma_ppoly[0]. A successful direct solve returns
+ * its positive mathematical root, which may lie outside configured EOS density
+ * limits. Call ghl_enforce_primitive_limits_and_compute_u0 afterward to apply
+ * those limits.
  */
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
       const ghl_parameters *restrict params,

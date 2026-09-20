@@ -282,7 +282,9 @@ static inline bool ghl_pert_test_fail_with_tolerance(
       const double rel_tol,
       const double abs_tol) {
   // Invalid output or reference data must never manufacture a passing bar.
-  if (!isfinite(trusted) || !isfinite(computed) || !isfinite(perturbed)) return true;
+  if(!isfinite(trusted) || !isfinite(computed) || !isfinite(perturbed)) {
+    return true;
+  }
   if (fabs(trusted - computed) < abs_tol) return false;  // Absolute tolerance success
   return relative_error(trusted, computed) > fmax(4.0*relative_error(trusted, perturbed), rel_tol);
 }

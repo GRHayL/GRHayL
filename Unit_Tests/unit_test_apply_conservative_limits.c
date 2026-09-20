@@ -154,9 +154,9 @@ int main(int argc, char **argv) {
     diagnostics.n_iter = -1;
     ghl_initialize_diagnostics(&diagnostics);
     if(diagnostics.tau_fix || diagnostics.Stilde_fix || diagnostics.speed_limited
-          || diagnostics.backup[0] || diagnostics.backup[1] || diagnostics.backup[2]
-          || diagnostics.nn_guess_used || diagnostics.n_iter != 0
-          || diagnostics.which_routine != ghl_con2prim_id_None) {
+       || diagnostics.backup[0] || diagnostics.backup[1] || diagnostics.backup[2]
+       || diagnostics.nn_guess_used || diagnostics.n_iter != 0
+       || diagnostics.which_routine != ghl_con2prim_id_None) {
       ghl_error("ghl_initialize_diagnostics did not clear every field\n");
     }
     ghl_metric_quantities metric_adm;
@@ -196,11 +196,13 @@ int main(int argc, char **argv) {
 
     const bool tau_changed = cons.tau != cons_before.tau;
     const bool momentum_changed = cons.SD[0] != cons_before.SD[0]
-                               || cons.SD[1] != cons_before.SD[1]
-                               || cons.SD[2] != cons_before.SD[2];
+                                  || cons.SD[1] != cons_before.SD[1]
+                                  || cons.SD[2] != cons_before.SD[2];
     if(diagnostics.tau_fix != tau_changed
-          || diagnostics.Stilde_fix != momentum_changed) {
-      ghl_error("conservative-limit diagnostics disagree with actual changes at point %d\n", i);
+       || diagnostics.Stilde_fix != momentum_changed) {
+      ghl_error(
+            "conservative-limit diagnostics disagree with actual changes at point %d\n",
+            i);
     }
 
     ghl_conservative_quantities cons_trusted, cons_pert;
@@ -220,29 +222,23 @@ int main(int argc, char **argv) {
 
   ghl_metric_quantities sticky_metric;
   ghl_initialize_metric(
-        1.0, 0.0, 0.0, 0.0,
-        1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &sticky_metric);
+        1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &sticky_metric);
   ghl_primitive_quantities sticky_prims;
   ghl_initialize_primitives(
-        1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &sticky_prims);
+        1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &sticky_prims);
   ghl_conservative_quantities sticky_cons;
-  ghl_initialize_conservatives(
-        1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, &sticky_cons);
+  ghl_initialize_conservatives(1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, &sticky_cons);
   ghl_con2prim_diagnostics sticky_diagnostics;
   ghl_initialize_diagnostics(&sticky_diagnostics);
   sticky_diagnostics.tau_fix = true;
   sticky_diagnostics.Stilde_fix = true;
   ghl_apply_conservative_limits(
-        &params, &eos, &sticky_metric, &sticky_prims, &sticky_cons,
-        &sticky_diagnostics);
+        &params, &eos, &sticky_metric, &sticky_prims, &sticky_cons, &sticky_diagnostics);
   if(!sticky_diagnostics.tau_fix || !sticky_diagnostics.Stilde_fix) {
     ghl_error("conservative-limit diagnostics did not preserve incoming true values\n");
   }
 
-  const double tau_inputs[3] = {
-    0.5*eos.tau_atm, eos.tau_atm, 10.0*eos.tau_atm
-  };
+  const double tau_inputs[3] = { 0.5 * eos.tau_atm, eos.tau_atm, 10.0 * eos.tau_atm };
   for(int i = 0; i < 3; ++i) {
     ghl_conservative_quantities floor_cons;
     ghl_initialize_conservatives(
@@ -250,34 +246,30 @@ int main(int argc, char **argv) {
     ghl_con2prim_diagnostics floor_diagnostics;
     ghl_initialize_diagnostics(&floor_diagnostics);
     ghl_apply_conservative_limits(
-          &params, &eos, &sticky_metric, &sticky_prims, &floor_cons,
-          &floor_diagnostics);
+          &params, &eos, &sticky_metric, &sticky_prims, &floor_cons, &floor_diagnostics);
     const bool expect_floor = i == 0;
-    if(floor_diagnostics.tau_fix != expect_floor
-          || floor_diagnostics.Stilde_fix
-          || floor_cons.tau != (expect_floor ? eos.tau_atm : tau_inputs[i])) {
+    if(floor_diagnostics.tau_fix != expect_floor || floor_diagnostics.Stilde_fix
+       || floor_cons.tau != (expect_floor ? eos.tau_atm : tau_inputs[i])) {
       ghl_error("tau atmosphere floor contract failed for synthetic case %d\n", i);
     }
   }
 
   ghl_conservative_quantities momentum_cons;
-  ghl_initialize_conservatives(
-        1.0, 1.0, 10.0, 0.0, 0.0, 0.0, 0.0, &momentum_cons);
+  ghl_initialize_conservatives(1.0, 1.0, 10.0, 0.0, 0.0, 0.0, 0.0, &momentum_cons);
   ghl_con2prim_diagnostics momentum_diagnostics;
   ghl_initialize_diagnostics(&momentum_diagnostics);
   ghl_apply_conservative_limits(
         &params, &eos, &sticky_metric, &sticky_prims, &momentum_cons,
         &momentum_diagnostics);
   if(momentum_diagnostics.tau_fix || !momentum_diagnostics.Stilde_fix
-        || !(momentum_cons.SD[0] < 10.0)) {
+     || !(momentum_cons.SD[0] < 10.0)) {
     ghl_error("isolated low-field momentum correction was not diagnosed\n");
   }
 
   ghl_primitive_quantities high_psi_prims = sticky_prims;
   high_psi_prims.BU[0] = 1.0;
   ghl_conservative_quantities high_psi_cons;
-  ghl_initialize_conservatives(
-        1.0, 10.0, 100.0, 0.0, 0.0, 0.0, 0.0, &high_psi_cons);
+  ghl_initialize_conservatives(1.0, 10.0, 100.0, 0.0, 0.0, 0.0, 0.0, &high_psi_cons);
   ghl_con2prim_diagnostics high_psi_diagnostics;
   ghl_initialize_diagnostics(&high_psi_diagnostics);
   const double saved_psi6threshold = params.psi6threshold;
@@ -287,15 +279,14 @@ int main(int argc, char **argv) {
         &high_psi_diagnostics);
   params.psi6threshold = saved_psi6threshold;
   if(high_psi_diagnostics.tau_fix || !high_psi_diagnostics.Stilde_fix
-        || !(high_psi_cons.SD[0] < 100.0)) {
+     || !(high_psi_cons.SD[0] < 100.0)) {
     ghl_error("isolated high-psi6 momentum correction was not diagnosed\n");
   }
 
   ghl_primitive_quantities magnetic_prims = sticky_prims;
   magnetic_prims.BU[0] = 2.0;
   ghl_conservative_quantities magnetic_cons;
-  ghl_initialize_conservatives(
-        1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, &magnetic_cons);
+  ghl_initialize_conservatives(1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, &magnetic_cons);
   ghl_con2prim_diagnostics magnetic_diagnostics;
   ghl_initialize_diagnostics(&magnetic_diagnostics);
   ghl_apply_conservative_limits(
@@ -303,7 +294,7 @@ int main(int argc, char **argv) {
         &magnetic_diagnostics);
   const double magnetic_tau = eos.tau_atm + 2.0;
   if(!magnetic_diagnostics.tau_fix || magnetic_diagnostics.Stilde_fix
-        || magnetic_cons.tau != magnetic_tau) {
+     || magnetic_cons.tau != magnetic_tau) {
     ghl_error("isolated magnetic-energy tau correction was not diagnosed\n");
   }
 
@@ -312,20 +303,18 @@ int main(int argc, char **argv) {
   ghl_eos_parameters psi6_eos = eos;
   psi6_eos.tau_atm = 1.0;
   ghl_conservative_quantities psi6_cons;
-  const double psi6_tau = 0.5 + 1.0005*psi6_eos.tau_atm;
-  ghl_initialize_conservatives(
-        1.0, psi6_tau, 0.0, 0.0, 0.0, 0.0, 0.0, &psi6_cons);
+  const double psi6_tau = 0.5 + 1.0005 * psi6_eos.tau_atm;
+  ghl_initialize_conservatives(1.0, psi6_tau, 0.0, 0.0, 0.0, 0.0, 0.0, &psi6_cons);
   ghl_con2prim_diagnostics psi6_diagnostics;
   ghl_initialize_diagnostics(&psi6_diagnostics);
   const double saved_psi6threshold_for_tau = params.psi6threshold;
   params.psi6threshold = 0.0;
   ghl_apply_conservative_limits(
-        &params, &psi6_eos, &sticky_metric, &psi6_prims, &psi6_cons,
-        &psi6_diagnostics);
+        &params, &psi6_eos, &sticky_metric, &psi6_prims, &psi6_cons, &psi6_diagnostics);
   params.psi6threshold = saved_psi6threshold_for_tau;
-  const double corrected_psi6_tau = 0.5 + 1.001*psi6_eos.tau_atm;
+  const double corrected_psi6_tau = 0.5 + 1.001 * psi6_eos.tau_atm;
   if(!psi6_diagnostics.tau_fix || psi6_diagnostics.Stilde_fix
-        || psi6_cons.tau != corrected_psi6_tau) {
+     || psi6_cons.tau != corrected_psi6_tau) {
     ghl_error("isolated high-psi6 tau correction was not diagnosed\n");
   }
   ghl_info("ghl_apply_conservative_limits function test has passed!\n");

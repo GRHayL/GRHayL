@@ -310,10 +310,8 @@ int main(int argc, char **argv) {
     rho_star[i] = 1e-2;
     rho_b[i] = rho_star[i];
     vx[i] = vy[i] = vz[i] = 0.0;
-    ghl_hybrid_compute_P_cold_and_eps_cold(
-          &eos, rho_b[i], &press[i], &eps[i]);
-    entropy[i] = ghl_hybrid_compute_entropy_function(
-          &eos, rho_b[i], press[i]);
+    ghl_hybrid_compute_P_cold_and_eps_cold(&eos, rho_b[i], &press[i], &eps[i]);
+    entropy[i] = ghl_hybrid_compute_entropy_function(&eos, rho_b[i], press[i]);
   }
 
   Bx[sampling] = By[sampling] = Bz[sampling] = 1e-160;
@@ -330,13 +328,14 @@ int main(int argc, char **argv) {
   // Flat space B^2 with bar rescaling
   Bbar2 = (Bx[sampling+2]*Bx[sampling+2] + By[sampling+2]*By[sampling+2] + Bz[sampling+2]*Bz[sampling+2])*SQR(ONE_OVER_SQRT_4PI);
   tau[sampling+2] = 2.0*flat_metric.sqrt_detgamma*Bbar2;
-  S_x[sampling+2] = 1000*tau[sampling+2]*(tau[sampling+2] + 2.0*rho_star[sampling+2]);
-  S_y[sampling+2] = S_x[sampling+2];
-  S_z[sampling+2] = S_x[sampling+2];
+  S_x[sampling + 2]
+        = 1000 * tau[sampling + 2] * (tau[sampling + 2] + 2.0 * rho_star[sampling + 2]);
+  S_y[sampling + 2] = S_x[sampling + 2];
+  S_z[sampling + 2] = S_x[sampling + 2];
 
   // Intentional limiter-input override, not the conservative image of the
   // cold primitive seed.
-  ent_star[sampling] = ent_star[sampling+1] = ent_star[sampling+2] = 1e-8;
+  ent_star[sampling] = ent_star[sampling + 1] = ent_star[sampling + 2] = 1e-8;
 
   for(int i=sampling; i<arraylength; i++) {
     rho_b_orig[i] = rho_b[i];
@@ -358,25 +357,25 @@ int main(int argc, char **argv) {
   // Preserve the symmetric input perturbations. Near-zero draws are legitimate;
   // the comparison helper supplies the independent roundoff floor.
   for(int i=0; i<arraylength; i++) {
-    rho_b_pert[i] = rho_b[i]*(1.0 + 1.0e-14*randf(-1,1));
-    press_pert[i] = press[i]*(1.0 + 1.0e-14*randf(-1,1));
-    eps_pert[i] = eps[i]*(1.0 + 1.0e-14*randf(-1,1));
-    vx_pert[i] = vx[i]*(1.0 + 1.0e-14*randf(-1,1));
-    vy_pert[i] = vy[i]*(1.0 + 1.0e-14*randf(-1,1));
-    vz_pert[i] = vz[i]*(1.0 + 1.0e-14*randf(-1,1));
-    ent_pert[i] = entropy[i]*(1.0 + 1.0e-14*randf(-1,1));
+    rho_b_pert[i] = rho_b[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    press_pert[i] = press[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    eps_pert[i] = eps[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    vx_pert[i] = vx[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    vy_pert[i] = vy[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    vz_pert[i] = vz[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    ent_pert[i] = entropy[i] * (1.0 + 1.0e-14 * randf(-1, 1));
 
-    rho_star_pert[i] = rho_star[i]*(1.0 + 1.0e-14*randf(-1,1));
-    tau_pert[i] = tau[i]*(1.0 + 1.0e-14*randf(-1,1));
-    S_x_pert[i] = S_x[i]*(1.0 + 1.0e-14*randf(-1,1));
-    S_y_pert[i] = S_y[i]*(1.0 + 1.0e-14*randf(-1,1));
-    S_z_pert[i] = S_z[i]*(1.0 + 1.0e-14*randf(-1,1));
-    ent_star_pert[i] = ent_star[i]*(1.0 + 1.0e-14*randf(-1,1));
+    rho_star_pert[i] = rho_star[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    tau_pert[i] = tau[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    S_x_pert[i] = S_x[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    S_y_pert[i] = S_y[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    S_z_pert[i] = S_z[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    ent_star_pert[i] = ent_star[i] * (1.0 + 1.0e-14 * randf(-1, 1));
   }
-  for(int i=0; i<arraylength; i++) {
-    Bx_pert[i] = Bx[i]*(1.0 + 1.0e-14*randf(-1,1));
-    By_pert[i] = By[i]*(1.0 + 1.0e-14*randf(-1,1));
-    Bz_pert[i] = Bz[i]*(1.0 + 1.0e-14*randf(-1,1));
+  for(int i = 0; i < arraylength; i++) {
+    Bx_pert[i] = Bx[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    By_pert[i] = By[i] * (1.0 + 1.0e-14 * randf(-1, 1));
+    Bz_pert[i] = Bz[i] * (1.0 + 1.0e-14 * randf(-1, 1));
   }
 
   const int metric_length = 10;

@@ -40,12 +40,16 @@
  */
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
-      const int maxits, const double tol,
-      const double W_in, const double Sf2_in,
+      const int maxits,
+      const double tol,
+      const double W_in,
+      const double Sf2_in,
       const double sdots,
-      const double BdotS2, const double B2,
+      const double BdotS2,
+      const double B2,
       const ghl_conservative_quantities *restrict cons,
-      const double rhob_in, double *restrict rhob_out_ptr,
+      const double rhob_in,
+      double *restrict rhob_out_ptr,
       int *restrict n_iter) {
   bool Fontcheck=true;
 
@@ -107,7 +111,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
       ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob0, &P_cold, &eps_cold);
       h = 1.0 + eps_cold + P_cold/rhob0;
 
-      rhob1 = cons->rho/sqrt(1.0+Sf20/SQR(cons->rho*h));
+      rhob1 = cons->rho / sqrt(1.0 + Sf20 / SQR(cons->rho * h));
 
       j1 = ghl_hybrid_find_polytropic_index(eos,rhob1);
 
@@ -135,7 +139,8 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * \f[
      * \begin{aligned}
      * \left| W_1 - W_0 \right| &< t W_1 \\
-     * \left| \left(S^2_\mathrm{fluid}\right)_1 - \left(S^2_\mathrm{fluid}\right)_0 \right|
+     * \left| \left(S^2_\mathrm{fluid}\right)_1 - \left(S^2_\mathrm{fluid}\right)_0
+     * \right|
      *     &< t \left(S^2_\mathrm{fluid}\right)_1
      * \end{aligned}
      * \f]
@@ -147,7 +152,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob_out, &P_cold, &eps_cold);
     h = 1.0 + eps_cold + P_cold/rhob_out;
 
-    W = sqrt(Sf20 + SQR(cons->rho*h));
+    W = sqrt(Sf20 + SQR(cons->rho * h));
     Sf2 = (SQR(W)*sdots + BdotS2*(B2 + 2.0*W))/SQR(W+B2);
 
     if (fabs(W-W0) < W*tol && fabs(Sf20-Sf2) < Sf2*tol) Fontcheck=false;

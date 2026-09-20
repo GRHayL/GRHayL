@@ -41,7 +41,7 @@ bool ghl_limit_utilde_and_compute_v(
       utU[1] *= fac;
       utU[2] *= fac;
       ut2 = ut2 * SQR(fac);
-      au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
+      au0m1 = ut2 / (1.0 + sqrt(1.0 + ut2));
       speed_limited = true;
     }
   } //Finished limiting velocity

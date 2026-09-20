@@ -225,13 +225,6 @@ void ghl_func_rho2(
       double *restrict f,
       double *restrict df);
 
-void ghl_compute_rho2_residual_and_jacobian(
-      const ghl_eos_parameters *restrict eos,
-      const harm_aux_vars_struct *restrict harm_aux,
-      double rho,
-      double *restrict residual,
-      double *restrict jacobian);
-
 void ghl_func_1D(
       const ghl_eos_parameters *restrict eos,
       harm_aux_vars_struct *restrict harm_aux,

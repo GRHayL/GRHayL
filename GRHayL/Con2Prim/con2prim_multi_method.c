@@ -103,9 +103,11 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
   const ghl_primitive_quantities prims_guess = *prims;
 
   ghl_error_codes_t error;
+  const bool previous_speed_limited = diagnostics->speed_limited;
   error = ghl_con2prim_hybrid_select_method(params->main_routine,
                                             params, eos, metric_adm, metric_aux,
                                             cons_undens, prims, diagnostics);
+  diagnostics->speed_limited |= previous_speed_limited;
 
   // Note(Leo): this updated backup strategy works for any number of backup
   //            routines, cleaning up the logic, removing duplicated code, and
@@ -126,9 +128,11 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
     // Reset guesses
     *prims = prims_guess;
     // Backup routine
+    const bool previous_speed_limited = diagnostics->speed_limited;
     error = ghl_con2prim_hybrid_select_method(params->backup_routine[n],
                                               params, eos, metric_adm, metric_aux,
                                               cons_undens, prims, diagnostics);
+    diagnostics->speed_limited |= previous_speed_limited;
   }
   return error;
 }
@@ -160,9 +164,11 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
 
 
   ghl_error_codes_t error;
+  const bool previous_speed_limited = diagnostics->speed_limited;
   error = ghl_con2prim_tabulated_select_method(params->main_routine,
                                                params, eos, metric_adm, metric_aux,
                                                cons_undens, prims, diagnostics);
+  diagnostics->speed_limited |= previous_speed_limited;
 
   // If Con2Prim failed and the user requested neural networks, try again using
   // the neural network initial guess. We start by copying prims_guess into
@@ -172,9 +178,11 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
     diagnostics->nn_guess_used = true;
     ghl_c2p_nn_guess_primitives(params, eos, metric_adm, cons_undens, &prims_guess_nn);
     *prims = prims_guess_nn;
+    const bool previous_speed_limited = diagnostics->speed_limited;
     error = ghl_con2prim_tabulated_select_method(params->main_routine,
                                                  params, eos, metric_adm, metric_aux,
                                                  cons_undens, prims, diagnostics);
+    diagnostics->speed_limited |= previous_speed_limited;
   }
 
   // Note(Leo): this updated backup strategy works for any number of backup
@@ -196,16 +204,20 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
     // Reset guesses
     *prims = prims_guess;
     // Backup routine
+    bool previous_speed_limited = diagnostics->speed_limited;
     error = ghl_con2prim_tabulated_select_method(params->backup_routine[n],
                                                  params, eos, metric_adm, metric_aux,
                                                  cons_undens, prims, diagnostics);
+    diagnostics->speed_limited |= previous_speed_limited;
 
     // If we failed and the user requested neural network guesses, use them as a backup
     if(error != ghl_success && eos->enable_neural_net_c2p) {
       *prims = prims_guess_nn;
+      previous_speed_limited = diagnostics->speed_limited;
       error = ghl_con2prim_tabulated_select_method(params->backup_routine[n],
                                                    params, eos, metric_adm, metric_aux,
                                                    cons_undens, prims, diagnostics);
+      diagnostics->speed_limited |= previous_speed_limited;
     }
   }
   return error;

@@ -117,20 +117,18 @@ Hybrid Noble 1D residual files live in
 `func_1D.c`, `func_Z.c`, `func_rho.c`, and `func_rho2.c`. The manifest builds
 all four plus `hybrid_Noble1D.c`, `hybrid_Noble1D_entropy.c`, and
 `hybrid_Noble1D_entropy2.c`. The entropy2 path solves the momentum equation
-directly for density. Its `Z(rho)` and analytic derivative use the active
-piecewise-polytropic cold pressure, cold-energy integration constant, and
-thermal Gamma. If Newton iteration exhausts its budget on a multi-piece EOS,
-the wrapper searches each EOS segment over the configured physical density
-interval with a Brent fallback. Each wrapper initializes Noble state, runs
-`ghl_general_newton_raphson`, and finalizes primitives. Finalization ORs
-`diagnostics->speed_limited` before the wrapper's pressure gate;
+directly for density and rejects EOS metadata unless `neos == 1` and
+`Gamma_th == Gamma_ppoly[0]`, the constant-Gamma domain of its entropy closure.
+Each wrapper initializes Noble state, runs `ghl_general_newton_raphson`, and
+finalizes primitives. Finalization writes the direct call's `speed_limited`
+result before the wrapper's pressure gate;
 `diagnostics->n_iter` and `diagnostics->which_routine` are set only after that
 gate succeeds.
 
 Hybrid Noble 2D lives in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble2D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble2D/).
 `hybrid_Noble2D.c` uses `func_2D.c`, the same initialize/validate/Newton/finalize
-helpers, ORs `speed_limited` during finalization, and records `n_iter` and
+helpers, writes `speed_limited` during finalization, and records `n_iter` and
 `which_routine` only after the pressure gate succeeds.
 
 Tabulated Noble 2D lives in
@@ -170,7 +168,7 @@ diagnostics ownership.
 [`GRHayL/Con2Prim/Hybrid/Font1D/`](../../../GRHayL/Con2Prim/Hybrid/Font1D/)
 contains the hybrid Font path. `hybrid_Font1D.c` handles the public wrapper,
 calls `hybrid_Font1D_loop.c` for the density iteration, computes the remaining
-primitives, ORs `diagnostics->speed_limited` when utilde limiting is called,
+primitives, writes `diagnostics->speed_limited` when utilde limiting is called,
 and sets `diagnostics->which_routine = ghl_con2prim_id_Font1D` on success.
 Cold-EOS evaluations use density clamped to the configured EOS interval, while
 the recovered density remains conservation-owned. In particular, cold pressure
@@ -205,8 +203,8 @@ For this internal page, only source-proven writes are routed:
   `rparams.n_iters` in built Palenzuela paths, and from local `step` in Newman
   paths. Newman retry writes replace the prior attempt's value. Font1D reports
   accumulated outer `W`/fluid-momentum iterations, not its inner density loop.
-- `speed_limited`: sticky across every attempted solver finalization or utilde
-  limiting call, including attempts that later fail.
+- `speed_limited`: current-call output from direct solvers; multi-method drivers
+  preserve the OR across attempted solvers, including attempts that later fail.
 
 ## Archival Source
 

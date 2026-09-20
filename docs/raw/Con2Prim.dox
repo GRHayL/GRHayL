@@ -26,13 +26,15 @@
  * | Noble2D                   | @ref ghl_hybrid_Noble2D              | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420) |
  * | Noble1D                   | @ref ghl_hybrid_Noble1D              | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420) |
  * | Noble1D with entropy      | @ref ghl_hybrid_Noble1D_entropy      | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420); entropy definition from [Noble _et al._ (2009)](https://arxiv.org/abs/0808.3140) |
- * | Noble1D entropy-rho       | @ref ghl_hybrid_Noble1D_entropy2     | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420); density solve using the entropy closure and momentum equation |
+ * | Noble1D entropy-rho       | @ref ghl_hybrid_Noble1D_entropy2     | [Noble _et al._ (2006)](https://arxiv.org/abs/astro-ph/0512420); density solve for one-piece EOS with \f$\Gamma_{\rm th}=\Gamma_{\rm ppoly}\f$ |
  * | Font1D                    | @ref ghl_hybrid_Font1D               | [Font _et al._ (2000)](https://arxiv.org/abs/gr-qc/9811015) |
  * | Palenzuela1D              | @ref ghl_hybrid_Palenzuela1D_energy  | [Palenzuela _et al._ (2015)](https://arxiv.org/abs/1505.01607) |
  * | Palenzuela1D with entropy | @ref ghl_hybrid_Palenzuela1D_entropy | [Werneck _et al._ (2023)](https://arxiv.org/abs/2208.14487) |
  *
  * The simple EOS can also use all these methods **except** for Font1D which
- * assumes that there's a split between cold and thermal parts.
+ * assumes that there's a split between cold and thermal parts. The entropy-rho
+ * method supports hybrid metadata only when it describes the same one-piece
+ * constant-Gamma law as the simple EOS.
  *
  * Ordinary hybrid Noble finalization keeps a speed-limited state consistent
  * with the solved variable by recomputing \f$\rho=D/W_{\rm final}\f$ and the

@@ -250,18 +250,19 @@ void run_unit_test(
           ghl_abort_if_error(err);
         }
         if(diagnostics.which_routine == params->main_routine
-              && !diagnostics.speed_limited && !sticky_speed_limited_checked) {
+           && !diagnostics.speed_limited && !sticky_speed_limited_checked) {
           ghl_primitive_quantities sticky_prims = initial_prims;
           ghl_con2prim_diagnostics sticky_diagnostics;
           ghl_initialize_diagnostics(&sticky_diagnostics);
           sticky_diagnostics.speed_limited = true;
           err = ghl_con2prim_tabulated_multi_method(
-                params, eos, &metric_adm, &metric_aux, &cons_undens,
-                &sticky_prims, &sticky_diagnostics);
+                params, eos, &metric_adm, &metric_aux, &cons_undens, &sticky_prims,
+                &sticky_diagnostics);
           if(err != ghl_success
-                || sticky_diagnostics.which_routine != params->main_routine
-                || !sticky_diagnostics.speed_limited) {
-            ghl_error("%s did not preserve an incoming speed-limit diagnostic\n", routine);
+             || sticky_diagnostics.which_routine != params->main_routine
+             || !sticky_diagnostics.speed_limited) {
+            ghl_error(
+                  "%s did not preserve an incoming speed-limit diagnostic\n", routine);
           }
           sticky_speed_limited_checked = true;
         }
@@ -291,8 +292,8 @@ void run_unit_test(
           backup_successes++;
           observed_backup_successes++;
           if(params->backup_routine[0] == ghl_con2prim_id_None
-                || diagnostics.which_routine != params->backup_routine[0]
-                || !diagnostics.backup[0]) {
+             || diagnostics.which_routine != params->backup_routine[0]
+             || !diagnostics.backup[0]) {
             ghl_error("backup success did not identify its attempted backup\n");
           }
         }
@@ -318,29 +319,26 @@ void run_unit_test(
                       params->main_routine, params, eos, &metric_adm, &metric_aux,
                       &cons_undens, &direct_without_nn, &direct_diagnostics);
           if(direct_initial_error == ghl_success) {
-            ghl_error("NN retry was reported although the initial main solve succeeds\n");
+            ghl_error(
+                  "NN retry was reported although the initial main solve succeeds\n");
           }
 
           ghl_primitive_quantities direct_with_nn = direct_initial;
           ghl_c2p_nn_guess_primitives(
                 params, eos, &metric_adm, &cons_undens, &direct_with_nn);
           ghl_initialize_diagnostics(&direct_diagnostics);
-          const ghl_error_codes_t direct_nn_error
-                = ghl_con2prim_tabulated_select_method(
-                      params->main_routine, params, eos, &metric_adm, &metric_aux,
-                      &cons_undens, &direct_with_nn, &direct_diagnostics);
+          const ghl_error_codes_t direct_nn_error = ghl_con2prim_tabulated_select_method(
+                params->main_routine, params, eos, &metric_adm, &metric_aux,
+                &cons_undens, &direct_with_nn, &direct_diagnostics);
           if(direct_nn_error == ghl_success) {
             observed_nn_main_retry_successes++;
-            if(diagnostics.which_routine != params->main_routine
-                  || diagnostics.backup[0] || diagnostics.backup[1]
-                  || diagnostics.backup[2]
-                  || direct_with_nn.rho != prims.rho
-                  || direct_with_nn.press != prims.press
-                  || direct_with_nn.eps != prims.eps
-                  || direct_with_nn.u0 != prims.u0
-                  || direct_with_nn.vU[0] != prims.vU[0]
-                  || direct_with_nn.vU[1] != prims.vU[1]
-                  || direct_with_nn.vU[2] != prims.vU[2]) {
+            if(diagnostics.which_routine != params->main_routine || diagnostics.backup[0]
+               || diagnostics.backup[1] || diagnostics.backup[2]
+               || direct_with_nn.rho != prims.rho || direct_with_nn.press != prims.press
+               || direct_with_nn.eps != prims.eps || direct_with_nn.u0 != prims.u0
+               || direct_with_nn.vU[0] != prims.vU[0]
+               || direct_with_nn.vU[1] != prims.vU[1]
+               || direct_with_nn.vU[2] != prims.vU[2]) {
               ghl_error("NN retry result disagrees with the direct NN-started solve\n");
             }
           }
@@ -409,7 +407,8 @@ void run_unit_test(
     ghl_error("%s was always replaced by a backup\n", routine);
   }
   if(!sticky_speed_limited_checked) {
-    ghl_error("%s had no successful non-limiting case for sticky diagnostics\n", routine);
+    ghl_error(
+          "%s had no successful non-limiting case for sticky diagnostics\n", routine);
   }
   if(!Noble2D_speed_limit_checked) {
     ghl_error("Noble2D did not exercise finalizer speed limiting\n");
@@ -421,54 +420,55 @@ static void check_failed_wrappers_leave_routine_unset(
       const ghl_eos_parameters *restrict eos) {
 
   ghl_metric_quantities metric_adm;
-  ghl_initialize_metric(1, 0, 0, 0,
-                        1, 0, 0,
-                        1, 0, 1,
-                        &metric_adm);
+  ghl_initialize_metric(1, 0, 0, 0, 1, 0, 0, 1, 0, 1, &metric_adm);
   ghl_ADM_aux_quantities metric_aux;
   ghl_compute_ADM_auxiliaries(&metric_adm, &metric_aux);
 
   const ghl_conservative_quantities invalid_cons = {
     .rho = NAN,
     .tau = NAN,
-    .SD = {NAN, NAN, NAN},
+    .SD = { NAN, NAN, NAN },
     .entropy = NAN,
     .Y_e = NAN,
   };
 
-#define CHECK_FAILED_WRAPPER(name_, call_)                              \
-  do {                                                                 \
-    ghl_primitive_quantities prims = { 0 };                             \
-    ghl_con2prim_diagnostics diagnostics;                              \
-    ghl_initialize_diagnostics(&diagnostics);                          \
-    const ghl_error_codes_t wrapper_error = (call_);                    \
-    if(wrapper_error == ghl_success                                    \
-          || diagnostics.which_routine != ghl_con2prim_id_None) {      \
-      ghl_error("%s failure set which_routine=%d (error=%d)\n",         \
-                (name_), (int)diagnostics.which_routine,               \
-                (int)wrapper_error);                                   \
-    }                                                                  \
+#define CHECK_FAILED_WRAPPER(name_, call_)                           \
+  do {                                                               \
+    ghl_primitive_quantities prims = { 0 };                          \
+    ghl_con2prim_diagnostics diagnostics;                            \
+    ghl_initialize_diagnostics(&diagnostics);                        \
+    const ghl_error_codes_t wrapper_error = (call_);                 \
+    if(wrapper_error == ghl_success                                  \
+       || diagnostics.which_routine != ghl_con2prim_id_None) {       \
+      ghl_error(                                                     \
+            "%s failure set which_routine=%d (error=%d)\n", (name_), \
+            (int)diagnostics.which_routine, (int)wrapper_error);     \
+    }                                                                \
   } while(0)
 
-  CHECK_FAILED_WRAPPER("Noble2D",
-        ghl_tabulated_Noble2D(params, eos, &metric_adm, &metric_aux,
-                              &invalid_cons, &prims, &diagnostics));
-  CHECK_FAILED_WRAPPER("Palenzuela1D",
-        ghl_tabulated_Palenzuela1D_energy(params, eos, &metric_adm, &metric_aux,
-                                          &invalid_cons, &prims, &diagnostics));
-  CHECK_FAILED_WRAPPER("Palenzuela1D_entropy",
-        ghl_tabulated_Palenzuela1D_entropy(params, eos, &metric_adm, &metric_aux,
-                                           &invalid_cons, &prims, &diagnostics));
-  CHECK_FAILED_WRAPPER("Newman1D",
-        ghl_tabulated_Newman1D_energy(params, eos, &metric_adm, &metric_aux,
+  CHECK_FAILED_WRAPPER(
+        "Noble2D", ghl_tabulated_Noble2D(
+                         params, eos, &metric_adm, &metric_aux, &invalid_cons, &prims,
+                         &diagnostics));
+  CHECK_FAILED_WRAPPER(
+        "Palenzuela1D", ghl_tabulated_Palenzuela1D_energy(
+                              params, eos, &metric_adm, &metric_aux, &invalid_cons,
+                              &prims, &diagnostics));
+  CHECK_FAILED_WRAPPER(
+        "Palenzuela1D_entropy", ghl_tabulated_Palenzuela1D_entropy(
+                                      params, eos, &metric_adm, &metric_aux,
                                       &invalid_cons, &prims, &diagnostics));
-  CHECK_FAILED_WRAPPER("Newman1D_entropy",
-        ghl_tabulated_Newman1D_entropy(params, eos, &metric_adm, &metric_aux,
-                                       &invalid_cons, &prims, &diagnostics));
+  CHECK_FAILED_WRAPPER(
+        "Newman1D", ghl_tabulated_Newman1D_energy(
+                          params, eos, &metric_adm, &metric_aux, &invalid_cons, &prims,
+                          &diagnostics));
+  CHECK_FAILED_WRAPPER(
+        "Newman1D_entropy", ghl_tabulated_Newman1D_entropy(
+                                  params, eos, &metric_adm, &metric_aux, &invalid_cons,
+                                  &prims, &diagnostics));
 
 #undef CHECK_FAILED_WRAPPER
 }
-
 
 int main(int argc, char **argv) {
 
@@ -559,7 +559,8 @@ int main(int argc, char **argv) {
         ghl_error("NN-enabled tabulated suite never exercised an NN retry\n");
       }
       if(nn_guess_enabled && observed_nn_main_retry_successes == 0) {
-        ghl_error("NN-enabled tabulated suite never exercised a successful main retry\n");
+        ghl_error(
+              "NN-enabled tabulated suite never exercised a successful main retry\n");
       }
       if(observed_backup_successes == 0) {
         ghl_error("tabulated suite never exercised a successful backup\n");

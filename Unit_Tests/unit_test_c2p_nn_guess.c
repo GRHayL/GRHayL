@@ -4,9 +4,9 @@
 #define _XOPEN_SOURCE 700
 #endif
 
-#include <math.h>
 #include <float.h>
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -152,13 +152,11 @@ static void test_validate_model(void) {
 
   model = valid_stack_model();
   model.q_idx = 1;
-  CHECK_ERROR(ghl_c2p_nn_validate_model(&model),
-              ghl_error_nn_c2p_invalid_input_index);
+  CHECK_ERROR(ghl_c2p_nn_validate_model(&model), ghl_error_nn_c2p_invalid_input_index);
 
   model = valid_stack_model();
   model.s_idx = 0;
-  CHECK_ERROR(ghl_c2p_nn_validate_model(&model),
-              ghl_error_nn_c2p_invalid_input_index);
+  CHECK_ERROR(ghl_c2p_nn_validate_model(&model), ghl_error_nn_c2p_invalid_input_index);
 
   model = valid_stack_model();
   model.y_eps = 0.5f;
@@ -246,16 +244,13 @@ static void test_guess_model(void) {
   input = (ghl_nn_c2p_input_t){ 2.0f, 0.25f, 0.5f, 0.1f };
   const float r_scaled = (log10f(input.r) + 2.0f) * 0.25f;
   const float t_scaled = (log10f(input.t) + 1.0f) * 0.5f;
-  const float hidden = 0.2f * input.q * 0.1f
-                     + 0.4f * r_scaled
-                     + 0.6f * input.s * 0.1f
-                     + 0.8f * t_scaled;
-  const float expected_x = 1.0f + input.q - input.s
-                         + (1.0f + input.q) / (1.0f + expf(-hidden));
+  const float hidden = 0.2f * input.q * 0.1f + 0.4f * r_scaled + 0.6f * input.s * 0.1f
+                       + 0.8f * t_scaled;
+  const float expected_x
+        = 1.0f + input.q - input.s + (1.0f + input.q) / (1.0f + expf(-hidden));
   guess = ghl_c2p_nn_guess(&model, input);
   CHECK(fabsf(guess.x - expected_x) < 1e-6f,
-        "fixed {q,r,s,t} feature ordering mismatch: %.9g vs %.9g",
-        guess.x, expected_x);
+        "fixed {q,r,s,t} feature ordering mismatch: %.9g vs %.9g", guess.x, expected_x);
 }
 
 static void fake_enforce_bounds(
@@ -326,31 +321,25 @@ static void check_atmosphere_guess(
       const double BU[3],
       const ghl_primitive_quantities *restrict prims) {
   CHECK(prims->rho == eos->rho_atm && prims->press == eos->press_atm
-        && prims->eps == eos->eps_atm && prims->entropy == eos->entropy_atm
-        && prims->Y_e == eos->Y_e_atm && prims->temperature == eos->T_atm,
+              && prims->eps == eos->eps_atm && prims->entropy == eos->entropy_atm
+              && prims->Y_e == eos->Y_e_atm && prims->temperature == eos->T_atm,
         "tabulated guess did not return atmosphere thermodynamics");
-  CHECK(prims->vU[0] == -metric->betaU[0]
-        && prims->vU[1] == -metric->betaU[1]
-        && prims->vU[2] == -metric->betaU[2]
-        && prims->u0 == metric->lapseinv,
+  CHECK(prims->vU[0] == -metric->betaU[0] && prims->vU[1] == -metric->betaU[1]
+              && prims->vU[2] == -metric->betaU[2] && prims->u0 == metric->lapseinv,
         "tabulated guess did not return atmosphere velocity");
   CHECK(prims->BU[0] == BU[0] && prims->BU[1] == BU[1] && prims->BU[2] == BU[2],
         "tabulated guess did not preserve magnetic fields");
 }
 
 static void test_public_primitive_guess_helper(void) {
-  const ghl_con2prim_id_t backups[3] = {
-    ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None
-  };
+  const ghl_con2prim_id_t backups[3]
+        = { ghl_con2prim_id_None, ghl_con2prim_id_None, ghl_con2prim_id_None };
   ghl_parameters params;
   ghl_initialize_params(
-        ghl_con2prim_id_None, backups, false, false, false, 1e100, 20.0, 0.0,
-        &params);
+        ghl_con2prim_id_None, backups, false, false, false, 1e100, 20.0, 0.0, &params);
 
   ghl_metric_quantities metric;
-  ghl_initialize_metric(
-        0.8, 0.03, -0.02, 0.01,
-        1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_initialize_metric(0.8, 0.03, -0.02, 0.01, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
 
   ghl_eos_parameters eos = { 0 };
   eos.eos_type = ghl_eos_tabulated;
@@ -371,28 +360,26 @@ static void test_public_primitive_guess_helper(void) {
   ghl_initialize_conservatives(1.0, 1.0, 0.05, -0.03, 0.02, 0.0, 0.2, &cons);
   ghl_primitive_quantities prims;
   ghl_initialize_primitives(
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        0.1, -0.2, 0.3, 0.0, 0.0, 0.0, &prims);
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, -0.2, 0.3, 0.0, 0.0, 0.0, &prims);
   const double BU[3] = { prims.BU[0], prims.BU[1], prims.BU[2] };
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
   CHECK(isfinite(prims.rho) && prims.rho > 0.0 && prims.rho != eos.rho_atm
-        && isfinite(prims.press) && isfinite(prims.u0),
+              && isfinite(prims.press) && isfinite(prims.u0),
         "valid public NN primitive guess did not use the completion path");
 
   ghl_guess_primitives(&params, &eos, &metric, &cons, &prims);
   CHECK(isfinite(prims.rho) && prims.rho > 0.0 && prims.rho != eos.rho_atm
-        && isfinite(prims.press) && isfinite(prims.u0),
+              && isfinite(prims.press) && isfinite(prims.u0),
         "valid default tabulated guess did not use the completion path");
 
   ghl_initialize_conservatives(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
   ghl_initialize_primitives(
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        sqrt(1.5), 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sqrt(1.5), 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
   ghl_tabulated_primitive_guess_aux zero_spanning_aux;
   ghl_tabulated_compute_primitive_guess_auxiliaries(
         &metric, &cons, &prims, &zero_spanning_aux);
   CHECK(1.0 + zero_spanning_aux.q - zero_spanning_aux.s < 0.0
-        && 2.0 + 2.0 * zero_spanning_aux.q - zero_spanning_aux.s > 0.0,
+              && 2.0 + 2.0 * zero_spanning_aux.q - zero_spanning_aux.s > 0.0,
         "NN test state does not span zero in its admissible x bracket");
   const double zero_spanning_BU[3] = { prims.BU[0], prims.BU[1], prims.BU[2] };
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
@@ -416,20 +403,19 @@ static void test_public_primitive_guess_helper(void) {
 
   ghl_initialize_conservatives(1.0, -0.5, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
   ghl_initialize_primitives(
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        sqrt(2.0), 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sqrt(2.0), 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
   const double negative_BU[3] = { prims.BU[0], prims.BU[1], prims.BU[2] };
   ghl_c2p_nn_guess_primitives(&params, &eos, &metric, &cons, &prims);
-  CHECK(prims.rho != eos.rho_atm && isfinite(prims.rho)
-        && isfinite(prims.press) && isfinite(prims.u0),
+  CHECK(prims.rho != eos.rho_atm && isfinite(prims.rho) && isfinite(prims.press)
+              && isfinite(prims.u0),
         "usable negative NN x was rejected by sign alone");
 
   ghl_tabulated_primitive_guess_aux negative_aux = { 0 };
   ghl_initialize_conservatives(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, &cons);
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
-  CHECK(prims.rho != eos.rho_atm && isfinite(prims.rho)
-        && isfinite(prims.press) && isfinite(prims.u0),
+  CHECK(prims.rho != eos.rho_atm && isfinite(prims.rho) && isfinite(prims.press)
+              && isfinite(prims.u0),
         "usable negative x was rejected by sign alone");
 
   ghl_tabulated_primitive_guess_from_x(
@@ -451,11 +437,10 @@ static void test_public_primitive_guess_helper(void) {
   ghl_tabulated_primitive_guess_from_x(
         &params, &eos, &metric, &cons, &negative_aux, -2.0, &prims);
   CHECK(prims.rho == cons.rho && prims.Y_e == cons.Y_e / cons.rho
-        && prims.temperature == eos.T_max
-        && prims.press == eos.press_atm && prims.entropy == eos.entropy_atm
-        && isfinite(prims.eps) && isfinite(prims.u0)
-        && isfinite(prims.vU[0]) && isfinite(prims.vU[1])
-        && isfinite(prims.vU[2]),
+              && prims.temperature == eos.T_max && prims.press == eos.press_atm
+              && prims.entropy == eos.entropy_atm && isfinite(prims.eps)
+              && isfinite(prims.u0) && isfinite(prims.vU[0]) && isfinite(prims.vU[1])
+              && isfinite(prims.vU[2]),
         "failed EOS inversion did not preserve recovery seed");
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T;
 
@@ -497,8 +482,7 @@ static void test_public_primitive_guess_helper(void) {
   aux.SU[0] = aux.SU[1] = aux.SU[2] = 1.0;
   cons.Y_e = DBL_MAX;
   cons.rho = DBL_MIN;
-  ghl_tabulated_primitive_guess_from_x(
-        &params, &eos, &metric, &cons, &aux, 2.0, &prims);
+  ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 2.0, &prims);
   check_atmosphere_guess(&eos, &metric, BU, &prims);
   cons.rho = 1.0;
   cons.Y_e = 0.2;
@@ -512,8 +496,7 @@ static void test_public_primitive_guess_helper(void) {
   check_atmosphere_guess(&eos, &metric, BU, &prims);
 
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T_nonfinite;
-  ghl_tabulated_primitive_guess_from_x(
-        &params, &eos, &metric, &cons, &aux, 2.0, &prims);
+  ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 2.0, &prims);
   check_atmosphere_guess(&eos, &metric, BU, &prims);
 
   ghl_tabulated_compute_P_S_T_from_eps = fake_compute_P_S_T;
@@ -526,8 +509,7 @@ static void test_public_primitive_guess_helper(void) {
   check_atmosphere_guess(&eos, &metric, BU, &prims);
 
   aux.SU[0] = 1e200;
-  ghl_tabulated_primitive_guess_from_x(
-        &params, &eos, &metric, &cons, &aux, 1.0, &prims);
+  ghl_tabulated_primitive_guess_from_x(&params, &eos, &metric, &cons, &aux, 1.0, &prims);
   check_atmosphere_guess(&eos, &metric, BU, &prims);
 }
 
@@ -535,9 +517,9 @@ static void test_public_primitive_guess_helper(void) {
 static bool primitives_equal(
       const ghl_primitive_quantities *restrict a,
       const ghl_primitive_quantities *restrict b) {
-  if(a->rho != b->rho || a->press != b->press || a->eps != b->eps
-        || a->u0 != b->u0 || a->Y_e != b->Y_e
-        || a->temperature != b->temperature || a->entropy != b->entropy) {
+  if(a->rho != b->rho || a->press != b->press || a->eps != b->eps || a->u0 != b->u0
+     || a->Y_e != b->Y_e || a->temperature != b->temperature
+     || a->entropy != b->entropy) {
     return false;
   }
   for(int i = 0; i < 3; ++i) {
@@ -552,9 +534,8 @@ static bool diagnostics_equal(
       const ghl_con2prim_diagnostics *restrict a,
       const ghl_con2prim_diagnostics *restrict b) {
   if(a->tau_fix != b->tau_fix || a->Stilde_fix != b->Stilde_fix
-        || a->speed_limited != b->speed_limited
-        || a->which_routine != b->which_routine || a->n_iter != b->n_iter
-        || a->nn_guess_used != b->nn_guess_used) {
+     || a->speed_limited != b->speed_limited || a->which_routine != b->which_routine
+     || a->n_iter != b->n_iter || a->nn_guess_used != b->nn_guess_used) {
     return false;
   }
   for(int i = 0; i < 3; ++i) {
@@ -576,9 +557,10 @@ static void test_disabled_direct_tabulated_solvers(void) {
   const ghl_primitive_quantities prims_before = prims;
   const ghl_con2prim_diagnostics diagnostics_before = diagnostics;
 
-#define CHECK_DISABLED_SOLVER(name)                                          \
-  CHECK_ERROR(name(&params, &eos, &metric, &metric_aux, &cons,              \
-                   &prims, &diagnostics), ghl_error_used_disabled_hdf5)
+#define CHECK_DISABLED_SOLVER(name)                                             \
+  CHECK_ERROR(                                                                  \
+        name(&params, &eos, &metric, &metric_aux, &cons, &prims, &diagnostics), \
+        ghl_error_used_disabled_hdf5)
   CHECK_DISABLED_SOLVER(ghl_tabulated_Noble2D);
   CHECK_DISABLED_SOLVER(ghl_tabulated_Palenzuela1D_energy);
   CHECK_DISABLED_SOLVER(ghl_tabulated_Palenzuela1D_entropy);
@@ -603,15 +585,17 @@ static int cleanup_hdf5_test_directory(void) {
     return 0;
   }
   if(chdir(nn_original_directory) != 0) {
-    fprintf(stderr, "failed to leave NN test directory %s: %s\n",
-            nn_test_directory, strerror(errno));
+    fprintf(
+          stderr, "failed to leave NN test directory %s: %s\n", nn_test_directory,
+          strerror(errno));
     return 1;
   }
   int failed = 0;
   DIR *directory = opendir(nn_test_directory);
   if(directory == NULL) {
-    fprintf(stderr, "failed to open NN test directory %s: %s\n",
-            nn_test_directory, strerror(errno));
+    fprintf(
+          stderr, "failed to open NN test directory %s: %s\n", nn_test_directory,
+          strerror(errno));
     return 1;
   }
   struct dirent *entry;
@@ -620,29 +604,30 @@ static int cleanup_hdf5_test_directory(void) {
       continue;
     }
     char path[PATH_MAX];
-    const int written = snprintf(
-          path, sizeof(path), "%s/%s", nn_test_directory, entry->d_name);
+    const int written
+          = snprintf(path, sizeof(path), "%s/%s", nn_test_directory, entry->d_name);
     if(written < 0 || (size_t)written >= sizeof(path)) {
-      fprintf(stderr, "failed to form cleanup path for NN test file %s\n",
-              entry->d_name);
+      fprintf(
+            stderr, "failed to form cleanup path for NN test file %s\n", entry->d_name);
       failed = 1;
       continue;
     }
     if(unlink(path) != 0 && errno != ENOENT) {
-      fprintf(stderr, "failed to remove NN test file %s: %s\n", path,
-              strerror(errno));
+      fprintf(stderr, "failed to remove NN test file %s: %s\n", path, strerror(errno));
       failed = 1;
     }
   }
   if(closedir(directory) != 0) {
-    fprintf(stderr, "failed to close NN test directory %s: %s\n",
-            nn_test_directory, strerror(errno));
+    fprintf(
+          stderr, "failed to close NN test directory %s: %s\n", nn_test_directory,
+          strerror(errno));
     failed = 1;
   }
 
   if(rmdir(nn_test_directory) != 0) {
-    fprintf(stderr, "failed to remove NN test directory %s: %s\n",
-            nn_test_directory, strerror(errno));
+    fprintf(
+          stderr, "failed to remove NN test directory %s: %s\n", nn_test_directory,
+          strerror(errno));
     failed = 1;
   }
   else {
@@ -673,23 +658,27 @@ static void setup_hdf5_test_directory(void) {
   }
   nn_test_directory_active = true;
   if(chdir(nn_test_directory) != 0) {
-    fprintf(stderr, "failed to enter NN test directory %s: %s\n",
-            nn_test_directory, strerror(errno));
+    fprintf(
+          stderr, "failed to enter NN test directory %s: %s\n", nn_test_directory,
+          strerror(errno));
     if(rmdir(nn_test_directory) != 0) {
-      fprintf(stderr, "failed to remove unused NN test directory %s: %s\n",
-              nn_test_directory, strerror(errno));
+      fprintf(
+            stderr, "failed to remove unused NN test directory %s: %s\n",
+            nn_test_directory, strerror(errno));
     }
     exit(1);
   }
   if(atexit(cleanup_hdf5_test_directory_at_exit) != 0) {
     fprintf(stderr, "failed to register NN test cleanup\n");
     if(chdir(nn_original_directory) != 0) {
-      fprintf(stderr, "failed to leave NN test directory %s: %s\n",
-              nn_test_directory, strerror(errno));
+      fprintf(
+            stderr, "failed to leave NN test directory %s: %s\n", nn_test_directory,
+            strerror(errno));
     }
     else if(rmdir(nn_test_directory) != 0) {
-      fprintf(stderr, "failed to remove unused NN test directory %s: %s\n",
-              nn_test_directory, strerror(errno));
+      fprintf(
+            stderr, "failed to remove unused NN test directory %s: %s\n",
+            nn_test_directory, strerror(errno));
     }
     exit(1);
   }
@@ -988,8 +977,7 @@ static void check_hdf5_load_failure_preserves_model(
       const ghl_error_codes_t expected_error) {
   ghl_eos_parameters eos = { 0 };
   create_hdf5_file("unit_test_c2p_nn_preserved.h5", "", true, 2);
-  CHECK_ERROR(ghl_c2p_nn_load_hdf5("unit_test_c2p_nn_preserved.h5", &eos),
-              ghl_success);
+  CHECK_ERROR(ghl_c2p_nn_load_hdf5("unit_test_c2p_nn_preserved.h5", &eos), ghl_success);
   ghl_c2p_nn_model *const preserved_model = eos.c2p_nn;
   CHECK(preserved_model != NULL, "initial NN HDF5 load returned NULL model");
   CHECK_ERROR(ghl_c2p_nn_load_hdf5(path, &eos), expected_error);
@@ -1128,8 +1116,7 @@ int main(void) {
   setup_hdf5_test_directory();
   test_hdf5_loaders();
   test_hdf5_loader_error_paths();
-  CHECK(cleanup_hdf5_test_directory() == 0,
-        "failed to clean NN HDF5 test artifacts");
+  CHECK(cleanup_hdf5_test_directory() == 0, "failed to clean NN HDF5 test artifacts");
 #endif
   printf("All c2p neural-network guess tests succeeded\n");
   return 0;

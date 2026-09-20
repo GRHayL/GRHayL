@@ -71,15 +71,9 @@ ghl_error_codes_t ghl_tabulated_Palenzuela1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
-  const ghl_error_codes_t error =
-        ghl_tabulated_Palenzuela1D(
-              compute_rho_P_eps_T_W_entropy,
-              params,
-              eos,
-              metric_adm,
-              cons_undens,
-              prims,
-              diagnostics);
+  const ghl_error_codes_t error = ghl_tabulated_Palenzuela1D(
+        compute_rho_P_eps_T_W_entropy, params, eos, metric_adm, cons_undens, prims,
+        diagnostics);
   if(error == ghl_success) {
     diagnostics->which_routine = ghl_con2prim_id_Palenzuela1D_entropy;
   }

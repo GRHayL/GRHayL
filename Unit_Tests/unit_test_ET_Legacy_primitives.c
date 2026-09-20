@@ -236,29 +236,33 @@ int main(int argc, char **argv) {
      * v+beta = alpha*n*sqrt(1-1/W^2), where n is the velocity direction.
      * These are compatibility bounds, not a claim of roundoff-sized error. */
     const double W_max = params.max_Lorentz_factor;
-    const double W_min = 1.0 + 0.9999999*(W_max - 1.0);
-    const double W = cons.rho > 0.0 ? metric_adm.lapse*prims.u0 : 0.0;
-    const double W_trusted = cons.rho > 0.0 ? cons_undens.rho/prims_trusted.rho : 0.0;
-    const bool legacy_speed_limit_boundary =
-          cons.rho > 0.0 && !diagnostics.speed_limited
-       && W <= W_max && W > W_min
-       && fabs(W_trusted - W_max) <= 512.0*DBL_EPSILON*W_max;
+    const double W_min = 1.0 + 0.9999999 * (W_max - 1.0);
+    const double W = cons.rho > 0.0 ? metric_adm.lapse * prims.u0 : 0.0;
+    const double W_trusted = cons.rho > 0.0 ? cons_undens.rho / prims_trusted.rho : 0.0;
+    const bool legacy_speed_limit_boundary
+          = cons.rho > 0.0 && !diagnostics.speed_limited && W <= W_max && W > W_min
+            && fabs(W_trusted - W_max) <= 512.0 * DBL_EPSILON * W_max;
     double rho_abs_tol = 1.0e-30;
-    double velocity_abs_tol[3] = {1.0e-30, 1.0e-30, 1.0e-30};
+    double velocity_abs_tol[3] = { 1.0e-30, 1.0e-30, 1.0e-30 };
     if(legacy_speed_limit_boundary) {
-      rho_abs_tol += fabs(prims_trusted.rho)*(W_max/W_min - 1.0);
-      const double radial_bound =
-            1.0 - sqrt((1.0 - 1.0/(W_min*W_min))/(1.0 - 1.0/(W_max*W_max)));
+      rho_abs_tol += fabs(prims_trusted.rho) * (W_max / W_min - 1.0);
+      const double radial_bound
+            = 1.0 - sqrt((1.0 - 1.0 / (W_min * W_min)) / (1.0 - 1.0 / (W_max * W_max)));
       for(int i = 0; i < 3; ++i) {
-        velocity_abs_tol[i] += fabs(prims_trusted.vU[i] + metric_adm.betaU[i])*radial_bound;
+        velocity_abs_tol[i]
+              += fabs(prims_trusted.vU[i] + metric_adm.betaU[i]) * radial_bound;
       }
     }
-    if( ghl_pert_test_fail_with_tolerance(prims_trusted.rho, prims.rho, prims_pert.rho, 8.0e-14, rho_abs_tol) )
-      ghl_error("Test unit_test_hybrid_Noble2D has failed for variable rho.\n"
-                   "  rho trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.rho, prims.rho, prims_pert.rho,
-                                               relative_error(prims_trusted.rho, prims.rho),
-                                               relative_error(prims_trusted.rho, prims_pert.rho));
+    if(ghl_pert_test_fail_with_tolerance(
+             prims_trusted.rho, prims.rho, prims_pert.rho, 8.0e-14, rho_abs_tol)) {
+      ghl_error(
+            "Test unit_test_hybrid_Noble2D has failed for variable rho.\n"
+            "  rho trusted %.14e computed %.14e perturbed %.14e\n"
+            "  rel.err. %.14e %.14e\n",
+            prims_trusted.rho, prims.rho, prims_pert.rho,
+            relative_error(prims_trusted.rho, prims.rho),
+            relative_error(prims_trusted.rho, prims_pert.rho));
+    }
 
     const double min_rel = 8.0e-14; // This is the default relative tolerance cutoff used by ghl_pert_test_fail()
     const double pressure_cutoff = 1.0e-18;
@@ -282,26 +286,41 @@ int main(int argc, char **argv) {
                                                relative_error(prims_trusted.eps, prims.eps),
                                                relative_error(prims_trusted.eps, prims_pert.eps));
 
-    if( ghl_pert_test_fail_with_tolerance(prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0], min_rel, velocity_abs_tol[0]) )
-      ghl_error("Test unit_test_hybrid_Noble2D has failed for variable vx.\n"
-                   "  vx trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0],
-                                               relative_error(prims_trusted.vU[0], prims.vU[0]),
-                                               relative_error(prims_trusted.vU[0], prims_pert.vU[0]));
+    if(ghl_pert_test_fail_with_tolerance(
+             prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0], min_rel,
+             velocity_abs_tol[0])) {
+      ghl_error(
+            "Test unit_test_hybrid_Noble2D has failed for variable vx.\n"
+            "  vx trusted %.14e computed %.14e perturbed %.14e\n"
+            "  rel.err. %.14e %.14e\n",
+            prims_trusted.vU[0], prims.vU[0], prims_pert.vU[0],
+            relative_error(prims_trusted.vU[0], prims.vU[0]),
+            relative_error(prims_trusted.vU[0], prims_pert.vU[0]));
+    }
 
-    if( ghl_pert_test_fail_with_tolerance(prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1], min_rel, velocity_abs_tol[1]) )
-      ghl_error("Test unit_test_hybrid_Noble2D has failed for variable vy.\n"
-                   "  vy trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1],
-                                               relative_error(prims_trusted.vU[1], prims.vU[1]),
-                                               relative_error(prims_trusted.vU[1], prims_pert.vU[1]));
+    if(ghl_pert_test_fail_with_tolerance(
+             prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1], min_rel,
+             velocity_abs_tol[1])) {
+      ghl_error(
+            "Test unit_test_hybrid_Noble2D has failed for variable vy.\n"
+            "  vy trusted %.14e computed %.14e perturbed %.14e\n"
+            "  rel.err. %.14e %.14e\n",
+            prims_trusted.vU[1], prims.vU[1], prims_pert.vU[1],
+            relative_error(prims_trusted.vU[1], prims.vU[1]),
+            relative_error(prims_trusted.vU[1], prims_pert.vU[1]));
+    }
 
-    if( ghl_pert_test_fail_with_tolerance(prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2], min_rel, velocity_abs_tol[2]) )
-      ghl_error("Test unit_test_hybrid_Noble2D has failed for variable vz.\n"
-                   "  vz trusted %.14e computed %.14e perturbed %.14e\n"
-                   "  rel.err. %.14e %.14e\n", prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2],
-                                               relative_error(prims_trusted.vU[2], prims.vU[2]),
-                                               relative_error(prims_trusted.vU[2], prims_pert.vU[2]));
+    if(ghl_pert_test_fail_with_tolerance(
+             prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2], min_rel,
+             velocity_abs_tol[2])) {
+      ghl_error(
+            "Test unit_test_hybrid_Noble2D has failed for variable vz.\n"
+            "  vz trusted %.14e computed %.14e perturbed %.14e\n"
+            "  rel.err. %.14e %.14e\n",
+            prims_trusted.vU[2], prims.vU[2], prims_pert.vU[2],
+            relative_error(prims_trusted.vU[2], prims.vU[2]),
+            relative_error(prims_trusted.vU[2], prims_pert.vU[2]));
+    }
   }
 
   ghl_info("ET_Legacy conservatives-to-primitives test has passed!\n");
