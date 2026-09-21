@@ -19,9 +19,6 @@
  *
  * @param[in] Sf2_in initial guess for quantity \f$ S_\mathrm{fluid}^2 \f$
  *
- * @param[in] Psim6 inverse of \f$ \psi^6 = \sqrt{|\gamma|} \f$
- *                  (denoted \f$ \psi^{-6} \f$ below)
- *
  * @param[in] sdots conservative quantity \f$ S_\mathrm{in}^2 \f$
  *
  * @param[in] BdotS2 conservative quantity \f$ \left(B \cdot S_\mathrm{in}\right)^2 \f$
@@ -30,23 +27,30 @@
  *
  * @param[in] cons pointer to ghl_conservative_quantities struct containing
  *                 the input conservative variables; its density component is
- *                 denoted \f$ D_\mathrm{in} \f$ and its momentum components
- *                 are denoted \f$ S^\mathrm{in}_i \f$ below
+ *                 denoted \f$ D \f$ and its momentum components
+ *                 are denoted \f$ S_i \f$ below
  *
  * @param[in] rhob_in initial guess for the density \f$ \rho \f$
  *
  * @param[out] rhob_out_ptr returned density value
  *
+ * @param[in,out] n_iter initialized accumulator for outer iterations executed
+ *
  * @returns error code for any Con2Prim failures
  */
 ghl_error_codes_t ghl_hybrid_Font1D_loop(
       const ghl_eos_parameters *restrict eos,
-      const int maxits, const double tol,
-      const double W_in, const double Sf2_in,
-      const double Psim6, const double sdots,
-      const double BdotS2, const double B2,
+      const int maxits,
+      const double tol,
+      const double W_in,
+      const double Sf2_in,
+      const double sdots,
+      const double BdotS2,
+      const double B2,
       const ghl_conservative_quantities *restrict cons,
-      const double rhob_in, double *restrict rhob_out_ptr) {
+      const double rhob_in,
+      double *restrict rhob_out_ptr,
+      int *restrict n_iter) {
   bool Fontcheck=true;
 
   int itcount = 0, j0, j1;
@@ -74,15 +78,18 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * the next guess for the density using eq. (A62) of \cite Etienne_2012
      *
      * \f[
-     * \rho_1 = \frac{D_\mathrm{in}\psi^{-6}}
+     * \rho_1 = \frac{D}
      *               {\sqrt{1 + \frac{S_\mathrm{fluid}^2}
-     *               {\left(D_\mathrm{in} h\right)^2}}}
+     *               {\left(D h\right)^2}}}
      * \f]
      *
      * where
      *
      * \f[
-     * h = 1 + \epsilon_\mathrm{cold} + \frac{P_\mathrm{cold}}{\rho}
+     * \rho_\mathrm{EOS} = \mathrm{clamp}(\rho,\rho_\mathrm{min},\rho_\mathrm{max}),
+     * \qquad
+     * h = 1 + \epsilon_\mathrm{cold}(\rho_\mathrm{EOS})
+     * + \frac{P_\mathrm{cold}(\rho_\mathrm{EOS})}{\rho}
      * \f]
      *
      * The subloop continues until the density is in the same polytropic piece
@@ -104,7 +111,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
       ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob0, &P_cold, &eps_cold);
       h = 1.0 + eps_cold + P_cold/rhob0;
 
-      rhob1 = cons->rho*Psim6/sqrt(1.0+Sf20/SQR(cons->rho*h));
+      rhob1 = cons->rho / sqrt(1.0 + Sf20 / SQR(cons->rho * h));
 
       j1 = ghl_hybrid_find_polytropic_index(eos,rhob1);
 
@@ -119,8 +126,7 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      *
      * \f[
      * \begin{aligned}
-     * W &= \psi^{-6}\sqrt{S_\mathrm{fluid}^2
-     *             + \left( D_\mathrm{in} h \right)^2} \\
+     * W &= \sqrt{S_\mathrm{fluid}^2 + \left( D h \right)^2} \\
      * S_\mathrm{fluid}^2 &= \frac{W^2 S_\mathrm{in}^2
      *                           + \left( B \cdot S_\mathrm{in} \right)^2
      *                             \left( B^2 + 2W \right)}
@@ -133,7 +139,8 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
      * \f[
      * \begin{aligned}
      * \left| W_1 - W_0 \right| &< t W_1 \\
-     * \left| \left(S^2_\mathrm{fluid}\right)_1 - \left(S^2_\mathrm{fluid}\right)_0 \right|
+     * \left| \left(S^2_\mathrm{fluid}\right)_1 - \left(S^2_\mathrm{fluid}\right)_0
+     * \right|
      *     &< t \left(S^2_\mathrm{fluid}\right)_1
      * \end{aligned}
      * \f]
@@ -145,12 +152,13 @@ ghl_error_codes_t ghl_hybrid_Font1D_loop(
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, rhob_out, &P_cold, &eps_cold);
     h = 1.0 + eps_cold + P_cold/rhob_out;
 
-    W = sqrt(Sf20 + SQR(cons->rho*h))*Psim6;
+    W = sqrt(Sf20 + SQR(cons->rho * h));
     Sf2 = (SQR(W)*sdots + BdotS2*(B2 + 2.0*W))/SQR(W+B2);
 
     if (fabs(W-W0) < W*tol && fabs(Sf20-Sf2) < Sf2*tol) Fontcheck=false;
   }
 
+  *n_iter += itcount;
   if(Fontcheck || itcount >= maxits) {
     *rhob_out_ptr = rhob_out;
     return ghl_error_c2p_max_iter;

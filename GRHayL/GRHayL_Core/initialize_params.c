@@ -26,14 +26,15 @@
  * ppm_shock_eta2         = 0.05
  * ppm_shock_epsilon      = 0.01
  * ```
- * which come from the original Colella and Woodward [paper](https://www.sciencedirect.com/science/article/abs/pii/0021999184901438?via%3Dihub).
+ * which come from the original Colella and Woodward
+ * [paper](https://www.sciencedirect.com/science/article/abs/pii/0021999184901438?via%3Dihub).
  *
- * @param[in] main_routine selects the primary conservative-to-primitive routine for @ref ghl_con2prim_multi_method
- *                                   function; options are limited to @ref ghl_con2prim_id_t
+ * @param[in] main_routine selects the primary conservative-to-primitive routine for @ref
+ * ghl_con2prim_multi_method function; options are limited to @ref ghl_con2prim_id_t
  *
- * @param[in] backup_routine selects backup conservative-to-primitive routines for @ref ghl_con2prim_multi_method
- *                                   function; up to 3 backups can be selected, with no backup being -1; options are
- *                                   limited to @ref ghl_con2prim_id_t
+ * @param[in] backup_routine selects backup conservative-to-primitive routines for @ref
+ * ghl_con2prim_multi_method function; up to 3 backups can be selected, with no backup
+ * being -1; options are limited to @ref ghl_con2prim_id_t
  *
  * @param[in] evolve_entropy whether entropy should be evolved (True) or not (False)
  *
@@ -44,11 +45,15 @@
  *                            Con2Prim routine; if false, use the
  *                            caller-provided primitive values as the initial guess
  *
- * @param[in] psi6threshold upper limit of \f$ \psi^6 = \sqrt{|\gamma|} \f$ above which the limits on conservatives and primitives are adjusted
+ * @param[in] psi6threshold upper limit of \f$ \psi^6 = \sqrt{|\gamma|} \f$ above which
+ * the limits on conservatives and primitives are adjusted
  *
- * @param[in] max_Lorentz_factor maximum allowed Lorentz factor \f$ W \f$ in the simulation
+ * @param[in] max_Lorentz_factor maximum allowed Lorentz factor \f$ W \f$ in the
+ * simulation; must be finite and at least one. This packing helper does not validate the
+ * precondition.
  *
- * @param[in] Lorenz_damping_factor sets the damping factor for the Lorenz gauge term in \f$ \tilde{\Phi}^\mathrm{RHS} \f$
+ * @param[in] Lorenz_damping_factor sets the damping factor for the Lorenz gauge term in
+ * \f$ \tilde{\Phi}^\mathrm{RHS} \f$
  *
  * @param[out] params pointer to fully initialized ghl_parameters struct
  *

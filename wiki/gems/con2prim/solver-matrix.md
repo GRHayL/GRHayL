@@ -15,16 +15,16 @@ where applicable.
 | method/key | enum/name/declaration/definition | selector/build | Doxygen/test evidence | GRHayLib seam | status |
 | --- | --- | --- | --- | --- | --- |
 | `None` | Enum and `"None"` name exist; no solver declaration or definition. | No dispatch/build entry; first `None` backup stops retries. | Not in Doxygen solver tables; tests use it as no-backup sentinel. | Allowed only for backup keyword; parser maps it. | Sentinel only, not solver. |
-| `Noble2D` | Enum/name plus hybrid and tabulated declarations and definitions exist. | Both selector cases and both manifest entries exist. | Hybrid Doxygen table lists it. Tabulated Doxygen table omits it despite direct tabulated test coverage. Hybrid selected-method, hybrid failure/backup-attempt, and tabulated tests exercise it. | Main/backup keywords and parser accept it; family checks allow it for simple, hybrid, and tabulated EOS. | Hybrid/simple supported; tabulated supported when HDF5 enabled. Doxygen tabulated omission is documentation drift. |
+| `Noble2D` | Enum/name plus hybrid and tabulated declarations and definitions exist. | Both selector cases and both manifest entries exist. | Both Doxygen tables list it. Hybrid selected-method, hybrid failure/backup-attempt, and tabulated tests exercise it. | Main/backup keywords and parser accept it; family checks allow it for simple, hybrid, and tabulated EOS. | Hybrid/simple supported; tabulated supported when HDF5 enabled. |
 | `Noble1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; tabulated parameter check rejects it. | Hybrid/simple supported. |
 | `Noble1D_entropy` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. | Main/backup keywords and parser accept it; tabulated check rejects it and GRHayLib requires `evolve_entropy`. | Hybrid/simple supported with valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
-| `Noble1D_entropy2` | Enum/name/declaration and source definition exist. | No selector case; definition source and sibling `func_rho2.c` are absent from manifest. | Absent from Doxygen and direct tests. | Keyword entries are commented out, but parser still maps the string; family/entropy checks do not classify it. | Source-present unresolved; not supported by current build/dispatch. |
-| `Font1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. `unit_test_hybrid_failure.c` does **not** use Font; it retries Noble2D. | Main/backup keywords and parser accept it; simple and tabulated checks reject it. | Hybrid supported; raw Doxygen says simple excludes it. |
+| `Noble1D_entropy2` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only; the manifest includes the density residual and wrapper. | Hybrid Doxygen table lists it. The hard-coded hybrid test covers compatible Simple/Hybrid recovery and rejects incompatible hybrid metadata. | Main/backup keywords and parser accept it; GRHayLib requires entropy and rejects incompatible hybrid metadata. | Supported only for a one-piece constant-Gamma EOS with `Gamma_th == Gamma_ppoly[0]`. Direct recovery returns a positive unclamped root; the standard post-recovery limiter owns configured density bounds. |
+| `Font1D` | Enum/name plus hybrid declaration and definition exist. | Hybrid selector/build only. | Hybrid Doxygen table and hybrid selected-method test list it. `unit_test_hybrid_failure.c` independently checks curved zero-momentum, magnetized, and below-EOS-density round trips. | Main/backup keywords and parser accept it; simple and tabulated checks reject it. | Hybrid supported; cold pressure/energy use bounded EOS density, but `P/rho` in the enthalpy closure uses the recovered conservation-owned density; raw Doxygen says simple excludes it. |
 | `Palenzuela1D` | Enum/name plus hybrid/tabulated energy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it for all EOS families. | Hybrid/simple supported; tabulated supported when HDF5 enabled. |
 | `Palenzuela1D_entropy` | Enum/name plus hybrid/tabulated entropy declarations and definitions exist. | Both selector/build paths exist. | Both Doxygen tables and hybrid/tabulated tests list it. | Main/backup keywords and parser accept it; GRHayLib requires `evolve_entropy`. | Hybrid/simple supported; tabulated supported when HDF5 is enabled. Both require valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
-| `Newman1D` | Enum/name plus tabulated energy declaration and definition exist. | Tabulated selector/build only. | Tabulated Doxygen table and tabulated tests list it; debug binary uses it. | Main/backup keywords and parser accept `Newman1D`, but simple/hybrid checks test nonexistent keyword `Newman1D_energy`; incompatible selection can pass parameter validation and later fail hybrid selector dispatch. | Tabulated supported when HDF5 enabled; downstream validation drift. |
+| `Newman1D` | Enum/name plus tabulated energy declaration and definition exist. | Tabulated selector/build only. | Tabulated Doxygen table and tabulated tests list it; debug binary uses it. | Main/backup keywords and parser accept `Newman1D`; simple/hybrid checks reject it. | Tabulated supported when HDF5 enabled. |
 | `Newman1D_entropy` | Enum/name plus tabulated entropy declaration and definition exist. | Tabulated selector/build only. | Tabulated Doxygen table and tabulated tests list it. | Main/backup keywords and parser accept it; simple/hybrid checks reject it and GRHayLib requires `evolve_entropy`. | Tabulated supported when HDF5 is enabled with valid entropy conservative input; Core dispatch does not gate on `params->evolve_entropy`. |
-| Source-present Cerda-Duran path | No enum/name/public declaration; source contains old-style definitions using identifiers that do not match current public types. | No selector; `con2prim_CerdaDuran3D.cc` is absent from manifest. | Absent from Doxygen/tests. | Cerda-Duran keyword entries are commented out and parser has no case. | Source-present unresolved; no configured compile/support evidence. |
+| Archival Cerda-Duran path | No enum/name/public declaration; retained source contains old-style definitions using identifiers that do not match current public types. | No selector; `con2prim_CerdaDuran3D.cc` is intentionally absent from manifests. | Explicitly excluded from generated Doxygen and absent from tests. | Cerda-Duran keyword entries are commented out and parser has no case. | Archival numerical reference only; unsupported and unbuilt. |
 
 All matrix seams come from `GRHayL/include/ghl.h`,
 `GRHayL/include/ghl_con2prim.h`,
@@ -104,25 +104,22 @@ start from densitized conservatives should route through
 `ghl_con2prim_diagnostics` is declared in `GRHayL/include/ghl_con2prim.h` and
 initialized by `GRHayL/Con2Prim/initialize_diagnostics.c`.
 
-- `tau_fix`: initialized false; set true only for the later magnetic-energy
-  or high-`psi6` corrections in
-  `GRHayL/Con2Prim/apply_conservative_limits.c`. The initial unconditional
-  `fmax` floor can raise `cons->tau` without setting this flag.
+- `tau_fix`: initialized false and accumulated true whenever the atmosphere
+  floor, magnetic-energy correction, or high-`psi6` correction changes tau.
 - `Stilde_fix`: initialized false; set true by
   `GRHayL/Con2Prim/apply_conservative_limits.c` when momentum is rescaled.
-- `speed_limited`: initialized false; set by solver finalization paths and by
-  `ghl_limit_utilde_and_compute_v` / primitive-limit helpers when speed limiting
-  occurs.
+- `speed_limited`: a successful direct solver writes its current-call result;
+  multi-method drivers OR those results across attempts in one logical recovery.
 - `which_routine`: initialized to `ghl_con2prim_id_None`; set by successful
   solver wrapper paths such as Noble, Font, Palenzuela, and Newman routines.
 - `backup[3]`: initialized false; multi-method drivers set slot `n` true before
   trying `params->backup_routine[n]`.
-- `n_iter`: declared as number of iterations, but
-  `ghl_initialize_diagnostics` does not initialize it. Source shows several
-  solvers assign it from local iteration counters (`harm_aux.n_iter`,
-  `rparams.n_iters`, or `step`), while `Font1D` does not show an assignment in
-  the direct wrapper search. Do not promise stable `n_iter` semantics without
-  checking the specific solver source.
+- `n_iter`: initialized to zero and meaningful only with a successful
+  `which_routine`. Font1D resets it at entry and accumulates outer
+  `W`/fluid-momentum iterations across retries, including zero for its shortcut;
+  its inner density loop is not counted. Newman records the final attempted
+  helper's local `step`, not an aggregate across retries. Other solvers use
+  local counters (`harm_aux.n_iter` or `rparams.n_iters`).
 
 ## Ground Truth
 

@@ -28,6 +28,18 @@ The test sources read downloaded trusted output and perturbed output, compute
 current GRHayL results, then compare with `ghl_pert_test_fail` or related helper
 wrappers. Exact binary ordering stays in paired test/generator source files.
 
+The primitives replay retains the legacy outputs unchanged. Its narrow
+velocity-limiter compatibility path uses a fixed bound derived from the old
+limiter interval; it does not rescale expected values using the recovered
+Lorentz factor. This is an allowance for an intentional behavior change,
+not a compiler-roundoff tolerance. Pressure comparisons remain independent.
+Legacy output does not contain an independent epsilon field.
+
+The induction gauge RHS fixture has finite reference values throughout the
+compared interior. An independently validated IllinoisGRMHD producer generates
+these outputs; GRHayL only replays them. The strict scalar helper rejects any
+nonfinite reference, computed, or perturbed value.
+
 ## Test Families
 
 | Test | Behavior area | Fixture family | Generator evidence | Owner route |

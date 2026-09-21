@@ -787,6 +787,7 @@ if [ $usehdf5 -eq 0 ]; then
       for(i=1;i<=NF;i++) {
         if($i ~ /\/Con2Prim\/Tabulated\/tabulated_primitive_guess_helpers.c/ ||
            $i ~ /\/Tabulated\/neural_network_guess\// ||
+           $i ~ /\/Flux_Source\/tabulated(_entropy)?\/ghl_calculate_HLLE_fluxes_/ ||
           ($i !~ /\/Tabulated\// && $i !~ /\/tabulated\// &&
            $i !~ /_tabulated/ && $i !~ /tabulated_/ &&
            $i !~ /tabulated_eos/ && $i !~ /tabulated_flux/ &&

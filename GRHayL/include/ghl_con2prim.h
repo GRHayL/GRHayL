@@ -13,20 +13,28 @@ extern "C" {
  * @brief Tracks @ref Con2Prim diagnostics
  *
  * @details
- * This struct should be initialized with @ref ghl_initialize_diagnostics .
+ * Initialize this struct with @ref ghl_initialize_diagnostics before each
+ * logical recovery. tau_fix and Stilde_fix are sticky OR accumulators.
+ * A successful direct solver writes its own speed_limited result; multi-method
+ * drivers accumulate that result across attempts. backup and nn_guess_used
+ * record attempted retry paths. which_routine and n_iter describe the
+ * successful solver; n_iter is unspecified when which_routine is
+ * ghl_con2prim_id_None.
  */
 typedef struct ghl_con2prim_diagnostics {
-  /** Whether a limit was applied to \f$ \tilde{\tau} \f$ (true) or not (false) */
+  /** Whether any call limited \f$ \tilde{\tau} \f$ during this recovery */
   bool tau_fix;
-  /** Whether a limit was applied to \f$ \tilde{S}_i \f$ (true) or not (false) */
+  /** Whether any call limited \f$ \tilde{S}_i \f$ during this recovery */
   bool Stilde_fix;
-  /** Whether a speed limiter was triggered (true) or not (false) */
+  /** Direct-solver speed-limit result, accumulated by multi-method drivers */
   bool speed_limited;
   /** The Con2Prim routine which successfully found the primitive variables */
   ghl_con2prim_id_t which_routine;
   /** Whether a given backup routine was used (true) or not (false) */
   bool backup[3];
-  /** Number of iterations required to find the solution */
+  /** Iterations used by which_routine. Font1D totals outer iterations across
+   *  its internal attempts and reports zero when its conservative momentum
+   *  norm satisfies S_i gamma^ij S_j < 1e-300. */
   int n_iter;
   /** Whether the tabulated multi-method driver attempted a neural-network retry */
   bool nn_guess_used;
@@ -56,6 +64,10 @@ typedef struct ghl_tabulated_primitive_guess_aux {
 void ghl_initialize_diagnostics(ghl_con2prim_diagnostics *restrict diagnostics);
 
 //----------- Pre/Post-C2P routines ----------------
+/**
+ * Apply conservative limits. diagnostics must be initialized. tau_fix and
+ * Stilde_fix are [in,out] OR accumulators: incoming true values are preserved.
+ */
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -69,13 +81,19 @@ void ghl_undensitize_conservatives(
       const ghl_conservative_quantities *restrict cons,
       ghl_conservative_quantities *restrict cons_undens);
 
+/** Build an initial guess from undensitized conservative variables. */
 void ghl_guess_primitives(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
       const ghl_metric_quantities *restrict metric_adm,
-      const ghl_conservative_quantities *restrict cons,
+      const ghl_conservative_quantities *restrict cons_undens,
       ghl_primitive_quantities *restrict prims);
 
+/**
+ * Enforce primitive limits and compute u0. speed_limited is an initialized
+ * [in,out] OR accumulator: incoming true is preserved; start each logical
+ * group false.
+ */
 ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -162,6 +180,13 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics);
 
+/**
+ * Density-based entropy recovery for a one-piece constant-Gamma EOS, requiring
+ * neos == 1 and Gamma_th == Gamma_ppoly[0]. A successful direct solve returns
+ * its positive mathematical root, which may lie outside configured EOS density
+ * limits. Call ghl_enforce_primitive_limits_and_compute_u0 afterward to apply
+ * those limits.
+ */
 ghl_error_codes_t ghl_hybrid_Noble1D_entropy2(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -256,6 +281,30 @@ void ghl_tabulated_compute_primitive_guess_auxiliaries(
       const ghl_primitive_quantities *restrict prims,
       ghl_tabulated_primitive_guess_aux *restrict aux);
 
+/**
+ * Complete a tabulated primitive initial guess from a finite Palenzuela
+ * variable `x`. This helper accepts any algebraically usable finite `x`; its
+ * sign is not an EOS admissibility test. In particular, tabulated EOS energy
+ * reference conventions may admit negative internal energy and conservative
+ * energy. Admissibility depends on EOS bounds local to density and
+ * composition. This routine supplies a solver seed, not that decision.
+ * Nonfinite `x`, invalid conservative input, or unusable intermediate/output
+ * values return the initialized EOS atmosphere while preserving incoming
+ * magnetic components. If the EOS inversion alone fails after the algebraic
+ * state is valid, the helper preserves its bounded `rho`, `Y_e`, and `eps`,
+ * uses `T_max` as the temperature seed, and supplies finite atmosphere
+ * pressure and entropy before completing the velocity seed.
+ *
+ * @param[in] params Con2Prim parameters
+ * @param[in] eos tabulated EOS parameters
+ * @param[in] metric_adm ADM metric
+ * @param[in] cons_undens undensitized conservatives
+ * @param[in] aux precomputed algebraic contractions
+ * @param[in] x finite Palenzuela variable; sign alone does not determine EOS
+ *              admissibility
+ * @param[in,out] prims primitive guess; incoming magnetic components are
+ *                      preserved
+ */
 void ghl_tabulated_primitive_guess_from_x(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -286,12 +335,14 @@ typedef struct ghl_nn_c2p_guess_t {
   float x;
 } ghl_nn_c2p_guess_t;
 
-typedef struct ghl_c2p_nn_model {
+struct ghl_c2p_nn_model {
   int in_dim;
   int hidden_dim;
   int n_hidden;
   int out_dim;
+  /** Fixed input layout is {q, r, s, t}; q_idx must be 0. */
   int q_idx;
+  /** Fixed input layout is {q, r, s, t}; s_idx must be 2. */
   int s_idx;
   float x_eps;
   float y_eps;
@@ -313,15 +364,27 @@ typedef struct ghl_c2p_nn_model {
   float *b_hid;
   float *W_out;
   float *b_out;
-} ghl_c2p_nn_model;
+};
 
-/* Public API version for the on-disk HDF5 schema/output-kind semantics. */
-#define GHL_NN_C2P_API_VERSION 3u
+/* Informational version for the expected HDF5 schema/output-kind semantics.
+ * The current loader validates fields but does not negotiate this value from
+ * an on-disk version dataset. */
+#define GHL_NN_C2P_API_VERSION 4u
 
 ghl_nn_c2p_guess_t ghl_c2p_nn_guess(
       const ghl_c2p_nn_model *restrict model,
       ghl_nn_c2p_input_t input);
 
+/**
+ * Build a tabulated primitive initial guess. A present model must already be
+ * validated and uses fixed {q, r, s, t} inference. A missing model or unusable
+ * numerical state/candidate returns the atmosphere initial guess, preserving
+ * magnetic components. Arguments must be non-NULL; parameters, the tabulated
+ * EOS atmosphere, metric, and incoming magnetic fields must be valid and
+ * finite. Inference additionally requires finite usable contractions. This
+ * helper does not validate corrupted EOS/model objects, and its fallback is
+ * not a recovery result.
+ */
 void ghl_c2p_nn_guess_primitives(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,

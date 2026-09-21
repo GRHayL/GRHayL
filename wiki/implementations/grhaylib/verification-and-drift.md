@@ -9,11 +9,12 @@ to replace the implementation files or upstream tests.
 
 ## Coverage Boundary
 
-Repo GitHub Actions ignore implementation-only pull requests and pushes:
-workflow `paths-ignore` entries include `implementations/**`, along with
-`docs/**` and `*.md`. The workflows run `ET-Legacy` jobs and other unit-test
-jobs directly; `.github/run_tests.sh` is a separate scripted test driver. Those
-jobs build and test the GRHayL library test programs, not a Cactus thorn.
+Ubuntu-GCC GitHub Actions run for implementation-only source changes;
+documentation-only paths remain ignored, and the other four compiler workflows
+still ignore `implementations/**`. Ubuntu-GCC runs the normal library jobs but
+does not directly verify the tracked GRHayLib source symlinks.
+`.github/run_tests.sh` is a separate scripted test driver. These checks build
+and test GRHayL library programs, not a Cactus thorn.
 
 `Unit_Tests/` does not directly cover GRHayLib/Cactus thorn behavior. Its tests
 exercise upstream GRHayL source areas, fixture comparisons, generated data, and
@@ -38,12 +39,12 @@ Einstein Toolkit.
 3. Header aggregation parity check. Current static comparison finds every
    header directly included by `src/GRHayLib.h` in both `GRHayL/include/` and
    the upstream install manifest. Recheck after public-header changes. This
-   does not create the absent `src/include/` copy layout.
+   check also verifies that the tracked `src/include` symlink resolves.
 4. Direct-compile source-list check. Current static comparison finds that every
    GRHayLib `SUBDIRS` entry names an upstream directory and every upstream
-   source-bearing manifest directory is listed. The checkout still
-   lacks those copied directories below the thorn, so this is registry parity,
-   not a successful build or proof of an external copy process.
+   source-bearing manifest directory is listed. Tracked symlinks expose those
+   upstream directories below the thorn; this remains registry/path parity,
+   not a successful Cactus build.
 5. Parameter/parser parity check. Compare Cactus keywords in `param.ccl` with
    `parse_C2P_routine_keyword`, `parse_eos_table_type_keyword`,
    `GRHayLib_paramcheck`, and `GRHayLib_initialize` in
@@ -68,8 +69,8 @@ Einstein Toolkit.
   induction, reconstruction, flux/source, radiation, hybrid/tabulated EOS, and
   NRPyLeakage headers. Header rename/split/addition can require parity review.
 - Source list: `src/make.code.defn` must track upstream direct-compile source
-  directories and new module subdirectories, with the absent-subdir caveat
-  above.
+  directories and new module subdirectories; all tracked module/include
+  symlinks must continue to resolve.
 - EOS signatures: check calls to `ghl_initialize_simple_eos_functions_and_params`,
   `ghl_initialize_hybrid_eos_functions_and_params`,
   `ghl_initialize_eos_functions`, `ghl_initialize_tabulated_eos`, and
@@ -98,7 +99,7 @@ Einstein Toolkit.
 | Claim | Current state |
 | --- | --- |
 | CCL/header/source-registry parity | Static source cross-check only; current names agree as bounded above. |
-| Thorn files locally form a compilable copied layout | False for this checkout: module subdirectories and `src/include/` are absent. |
+| Thorn source/header paths resolve locally | True through tracked symlinks; this does not establish Cactus compatibility. |
 | Cactus compile/link | Unverified; no real Cactus build environment or owner command is supplied here. |
 | Schedule/parameter/runtime behavior | Unverified; source describes intended Cactus behavior, but no Cactus execution evidence exists. |
 | ET_Legacy or upstream Unit_Tests prove GRHayLib | False; they test upstream GRHayL behavior, not this thorn integration. |

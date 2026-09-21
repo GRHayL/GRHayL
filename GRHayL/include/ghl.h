@@ -380,6 +380,10 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
       ghl_eos_parameters *restrict eos);
 
 //---- Basic struct packing/unpacking functions ----
+/**
+ * Pack GRHayL parameters. max_Lorentz_factor must be finite and at least one;
+ * this function does not validate that precondition.
+ */
 void ghl_initialize_params(
       const ghl_con2prim_id_t main_routine,
       const ghl_con2prim_id_t backup_routine[3],
@@ -506,6 +510,10 @@ void ghl_return_stress_energy(
       double *restrict Tyz,
       double *restrict Tzz);
 
+/**
+ * Limit velocity and compute u0. speed_limited is an initialized [in,out]
+ * OR accumulator: incoming true is preserved; start each logical group false.
+ */
 ghl_error_codes_t ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,
       const ghl_metric_quantities *restrict metric_adm,

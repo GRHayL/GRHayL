@@ -135,10 +135,14 @@ With `--disable-hdf5`, `configure`:
 - adds `-DGHL_DISABLE_HDF5` to `CFLAGS`;
 - filters implementation sources with the exact path/name predicate in
   `configure`; despite their paths, it explicitly retains
-  `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c` and sources under
-  `Con2Prim/Tabulated/neural_network_guess/`;
+  `Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c`, sources under
+  `Con2Prim/Tabulated/neural_network_guess/`, and the direct tabulated HLLE
+  flux implementations. The disabled direct-tabulated-solver stubs also remain
+  because their source path does not match the exclusion tokens;
 - excludes `unit_test_*tabulated*.c`, `unit_test_con2prim_debug.c`, and the
-  NRPyLeakage unit tests from the generated unit-test list;
+  table-backed NRPyLeakage tests `constant_density_sphere`, `luminosities`, and
+  `optically_thin_gas` from the generated unit-test list. The NRPyLeakage
+  `physics` and `classifier_fallback` tests remain available;
 - excludes tabulated data generators from the generated data-generator list.
 
 For Neutrinos-specific HDF5/EOS details, route public table-backed API behavior
@@ -146,9 +150,13 @@ through [Neutrinos API and data](gems/neutrinos/api-and-data.md), and fixture or
 SLy4 table setup through [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md).
 
 Manual or downstream no-HDF5 builds must mirror current script behavior: define
-`GHL_DISABLE_HDF5` and reproduce its source-selection predicate. The broader
-README wording that all tabulated implementation sources are omitted is not an
-exact description of the current generated source list.
+`GHL_DISABLE_HDF5` and reproduce its source-selection predicate. The README
+lists the retained Con2Prim helpers and the exact exclusion patterns. Loader
+entry points become disabled-feature stubs; pure NN inference from an
+independently valid in-memory model does not inherently require HDF5. The five
+public direct tabulated solver entry points are non-mutating disabled-feature
+stubs, while the six public direct tabulated HLLE flux variants retain their
+real implementations.
 
 GRHayLib is separate implementation-specific build routing. Its Cactus
 `configuration.ccl` hard-codes `requires HDF5`; that thorn requirement is not
@@ -168,10 +176,17 @@ Workflows live in `.github/workflows/`:
 | `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
 | `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | no jobs invoke coverage action |
 
+The Ubuntu-Clang `c2p-failure` matrix configures its Ubuntu 24.04
+`c2p_nn_guess` variant without HDF5. That existing job variant exercises and
+uploads coverage for the disabled-feature path; the other variants retain
+HDF5-enabled builds.
+
 Each workflow ignores pushes and pull requests when **all** changed paths match
-its `paths-ignore` list, including `docs/**`, `wiki/**`, Markdown/reStructuredText
-patterns, and `implementations/**`. A mixed change with any non-ignored path can
-trigger the workflow; path filters apply to `push`/`pull_request`, while the
+its `paths-ignore` list, including `docs/**`, `wiki/**`, and
+Markdown/reStructuredText patterns. The Ubuntu-GCC workflow no longer ignores
+`implementations/**`; the other four compiler workflows still do. A mixed
+change with any non-ignored path can trigger the workflow; path filters apply
+to `push`/`pull_request`, while the
 separately declared schedule remains eligible independently. These semantics
 come from the
 [GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore),
@@ -180,10 +195,10 @@ not merely from local YAML key names. Every compiler workflow uses cron
 `pull_request` event has no branch filter in local YAML. Do not infer project
 support beyond the OS/compiler
 pairs encoded in these workflow matrices and the usage examples in `configure`.
-Because `implementations/**` is path-ignored, repository CI does not validate
-GRHayLib implementation-only changes unless another touched path or a scheduled
-run causes jobs to execute. Even then, the listed jobs are core
-`configure`/unit-test jobs, not a GRHayLib Cactus thorn build.
+An implementation-only change therefore triggers Ubuntu-GCC, but its listed
+test jobs are core `configure`/unit-test jobs, not a GRHayLib Cactus thorn build
+or direct GRHayLib validation. The other compiler workflows remain skipped for
+such a change.
 
 Common job groups across workflows:
 
@@ -220,6 +235,12 @@ Composite actions:
   `curl -X POST --data-binary @codecov.yml https://codecov.io/validate`.
   The CompOSE flag and component require project and patch coverage of 100%
   with zero threshold; global patch coverage also targets 100%.
+- `codecov.yml` defers Codecov notifications until an explicit final trigger.
+  The `codecov-finalize` job in the Ubuntu GCC workflow waits for every local
+  job and for the macOS GCC, Ubuntu Clang, and Ubuntu Intel coverage workflows
+  for the same source head recorded by the current workflow run, then sends the
+  single final Codecov notification.
+  macOS Clang is excluded because its coverage collection steps are disabled.
 
 ## `.github/run_tests.sh`
 
@@ -277,8 +298,9 @@ Repo evidence shows these caveats:
 - The focused Ubuntu GCC CompOSE job bypasses coverage-file discovery: it
   uploads only `compose-coverage.xml` under the `compose` flag, disables
   search, and fails the job on an upload error.
-- Workflows ignore docs-only and implementation-only pull-request changes, so
-  CI coverage does not prove those paths are exercised.
+- All workflows ignore docs-only pull-request changes. Only Ubuntu-GCC runs its
+  normal GRHayL jobs for implementation-only changes; it does not inspect
+  GRHayLib symlinks or build/test the Cactus thorn.
 
 ## Ground Truth References
 

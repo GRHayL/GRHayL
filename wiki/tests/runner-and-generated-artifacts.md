@@ -103,9 +103,9 @@ Run the full script only in a disposable checkout with no user-owned root-level
 
 `make clean` is narrower: current generated rules omit data-generator
 executables and their objects from its removal list. `make realclean` removes
-their parent `test/` and build directories. `unit_test_c2p_nn_guess` also uses
-fixed `/tmp/unit_test_c2p_nn_*.h5` paths in HDF5 mode and does not remove them;
-runner's root-level cleanup does not reach those files.
+their parent `test/` and build directories. In HDF5 mode,
+`unit_test_c2p_nn_guess` owns a unique private temporary directory and removes
+its known model files and directory on normal or handled failure exit.
 
 ## Workflow Matrix Differences
 

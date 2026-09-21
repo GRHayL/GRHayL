@@ -10,17 +10,19 @@
  *
  * \f[
  * \begin{aligned}
- * \rho &= \frac{\rho_*}{\sqrt{|\gamma|}} \\
+ * \rho &= D \\
  * u^0 &= 1 \\
- * v^i &= -\beta^i \\
- * Y_e &= \frac{\tilde{Y_e}}{\rho_*} \\
- * T &= T_\mathrm{max}
+ * v^i &= -\beta^i
  * \end{aligned}
  * \f]
  *
- * This choice sets the transport/utilde velocity \f$ v^i+\beta^i \f$ to zero;
- * it is only an initial guess for the Con2Prim solve. We set the pressure and
- * specific internal energy \f$ \epsilon \f$ to the cold values.
+ * The input is already undensitized, so
+ * \f$D=\rho_{\ast}/\sqrt{|\gamma|}\f$ and no
+ * additional determinant division is needed. This choice sets transport/utilde
+ * velocity \f$ v^i+\beta^i \f$ to zero; it is only an initial guess for the
+ * Con2Prim solve. Pressure and specific internal energy \f$ \epsilon \f$ use
+ * cold values. Magnetic field, entropy, electron fraction, and temperature
+ * retain their incoming values.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -31,7 +33,7 @@
  * @param[in] cons_undens pointer to ghl_conservative_quantities struct with
  *                        **undensitized** conservative variables
  *
- * @param[out] prims pointer to ghl_primitive_quantities containing the initial guess
+ * @param[in,out] prims pointer to partially updated ghl_primitive_quantities
  */
 static void ghl_guess_primitives_hybrid_simple(
       const ghl_parameters *restrict params,
@@ -43,7 +45,7 @@ static void ghl_guess_primitives_hybrid_simple(
   // params is not used by this function
   (void)params;
 
-  // Use atmosphere as initial guess:
+  // Use a cold, stationary state at the undensitized conserved density.
   prims->rho   = cons_undens->rho;
   prims->u0    = 1.0;
   prims->vU[0] = -metric_adm->betaU[0];
@@ -64,8 +66,10 @@ static void ghl_guess_primitives_hybrid_simple(
  * the primitive-recovery strategy of the Palenzuela et al. routine, as outlined
  * in Siegel et al. (2018; https://arxiv.org/pdf/1712.07538).
  *
- * The only required guess is the temperature. We use \f$ T = T_\mathrm{max} \f$,
- * which uses ghl_eos_parameters::T_max.
+ * The normal algebraic path starts the table inversion from
+ * \f$ T = T_\mathrm{max} \f$. Invalid conservative inputs or an unusable
+ * algebraic candidate instead return the initialized EOS atmosphere, including
+ * \f$ T = T_\mathrm{atm} \f$. Incoming magnetic components are preserved.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -76,7 +80,8 @@ static void ghl_guess_primitives_hybrid_simple(
  * @param[in] cons_undens pointer to ghl_conservative_quantities struct with
  *                        **undensitized** conservative variables
  *
- * @param[out] prims pointer to ghl_primitive_quantities containing the initial guess
+ * @param[in,out] prims pointer to ghl_primitive_quantities; incoming magnetic
+ *                      components are preserved in the initial guess
  */
 static void ghl_guess_primitives_tabulated(
       const ghl_parameters *restrict params,
@@ -86,10 +91,14 @@ static void ghl_guess_primitives_tabulated(
       ghl_primitive_quantities *restrict prims) {
 
   ghl_tabulated_primitive_guess_aux aux = { 0 };
-  ghl_tabulated_compute_primitive_guess_auxiliaries(metric_adm, cons_undens, prims, &aux);
+  double x = NAN;
+  if(isfinite(cons_undens->rho) && cons_undens->rho > 0.0) {
+    ghl_tabulated_compute_primitive_guess_auxiliaries(
+          metric_adm, cons_undens, prims, &aux);
 
-  // Compute the lower bound of the x variable, Eq. (35) of 1712.07538
-  const double x = 1.0 + aux.q - aux.s;
+    // Compute the lower bound of the x variable, Eq. (35) of 1712.07538
+    x = 1.0 + aux.q - aux.s;
+  }
 
   // Complete the primitive guess using Eqs. (24), (42), (43), and (44) of
   // 1712.07538.
@@ -110,7 +119,8 @@ static void ghl_guess_primitives_tabulated(
  * @param[in] cons_undens pointer to ghl_conservative_quantities struct with
  *                        **undensitized** conservative variables
  *
- * @param[out] prims pointer to ghl_primitive_quantities containing the initial guess
+ * @param[in,out] prims pointer to ghl_primitive_quantities; incoming magnetic
+ *                      components are preserved in the initial guess
  */
 void ghl_guess_primitives(
       const ghl_parameters *restrict params,

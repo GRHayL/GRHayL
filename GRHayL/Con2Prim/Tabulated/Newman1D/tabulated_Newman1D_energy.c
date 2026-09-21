@@ -149,14 +149,14 @@ ghl_error_codes_t ghl_tabulated_Newman1D_energy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
+  diagnostics->speed_limited = false;
+
   // Step 1: Compute auxiliary quantities
   double SU[3], Bsq, Ssq, BdotS;
   ghl_compute_SU_Bsq_Ssq_BdotS(metric_adm, cons_undens, prims, SU, &Bsq, &Ssq, &BdotS);
 
   // Step 2: Call the Newman routine that uses the energy to recover T
   const double tol_x = 1e-15;
-  diagnostics->which_routine = ghl_con2prim_id_Newman1D;
-
   ghl_error_codes_t error = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, metric_adm,
                                               cons_undens, prims, tol_x, diagnostics);
 
@@ -164,6 +164,9 @@ ghl_error_codes_t ghl_tabulated_Newman1D_energy(
     prims->temperature = eos->T_min;
     error = ghl_newman_energy(params, eos, Ssq, BdotS, Bsq, SU, metric_adm,
                               cons_undens, prims, tol_x, diagnostics);
+  }
+  if(error == ghl_success) {
+    diagnostics->which_routine = ghl_con2prim_id_Newman1D;
   }
   return error;
 }

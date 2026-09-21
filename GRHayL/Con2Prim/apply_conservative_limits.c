@@ -1,8 +1,11 @@
+#include <float.h>
+
 #include "ghl_con2prim.h"
 
 /**
  * @ingroup Con2Prim
- * @brief Enforces constraining inequalities on \f$ \tilde{\tau} \f$ and \f$ \tilde{S} \f$.
+ * @brief Enforces constraining inequalities on \f$ \tilde{\tau} \f$ and \f$ \tilde{S}
+ * \f$.
  *
  * @details
  * This function applies limits to \f$ \tilde{\tau} \f$ and \f$ \tilde{S_i} \f$
@@ -26,8 +29,8 @@
  *                      struct contains limit-enforced \f$ \tilde{tau} \f$ and
  *                      \f$ \tilde{S}_i \f$
  *
- * @param[out] diagnostics pointer to ghl_con2prim_diagnostics struct; returns
- *                          whether any limits were applied
+ * @param[in,out] diagnostics pointer to initialized ghl_con2prim_diagnostics
+ *                            struct; accumulates whether any limits were applied
  */
 void ghl_apply_conservative_limits(
       const ghl_parameters *restrict params,
@@ -101,7 +104,18 @@ void ghl_apply_conservative_limits(
      *   - \Omega^2}{2 \sqrt{\gamma}\left( W_\mathrm{min} + B^2\right)^2}
      * \f]
      */
-    tau_fluid_term3 = (B2*sdots - SQR(BdotS))*0.5/(metric_adm->sqrt_detgamma*SQR(Wmin+B2));
+    /* Cauchy-Schwarz makes this Gram determinant nonnegative. For parallel
+     * B and S, contraction roundoff can leave either sign depending on FMA
+     * generation. Treat only a roundoff-sized residual as exact zero. */
+    const double B2sdots = B2 * sdots;
+    const double BdotS2 = SQR(BdotS);
+    double gram_det = B2sdots - BdotS2;
+    const double gram_roundoff = 32.0 * DBL_EPSILON * fmax(B2sdots, BdotS2);
+    if(isfinite(gram_det) && isfinite(gram_roundoff)
+       && fabs(gram_det) <= gram_roundoff) {
+      gram_det = 0.0;
+    }
+    tau_fluid_term3 = gram_det * 0.5 / (metric_adm->sqrt_detgamma * SQR(Wmin + B2));
   }
 
   /**
@@ -114,7 +128,9 @@ void ghl_apply_conservative_limits(
    * \tilde{\tau} = \tilde{\tau}_\mathrm{atm} + \frac{\sqrt{\gamma} B^2}{2}
    * \f]
    */
+  const double tau_before_floor = cons->tau;
   cons->tau = fmax(cons->tau, eos->tau_atm);
+  diagnostics->tau_fix |= (cons->tau != tau_before_floor);
 
   //tau fix, applicable when B==0 and B!=0:
   if(cons->tau < half_psi6_B2) {
@@ -178,8 +194,9 @@ void ghl_apply_conservative_limits(
     double tau_fluid_min = cons->tau - half_psi6_B2 - tau_fluid_term3;
     if (tau_fluid_min < eos->tau_atm*1.001) {
       tau_fluid_min = eos->tau_atm*1.001;
+      const double tau_before_fix = cons->tau;
       cons->tau = tau_fluid_min + half_psi6_B2 + tau_fluid_term3;
-      diagnostics->tau_fix = true;
+      diagnostics->tau_fix |= (cons->tau != tau_before_fix);
     }
 
     const double rhot = 0.999999*tau_fluid_min*(tau_fluid_min+2.0*cons->rho);

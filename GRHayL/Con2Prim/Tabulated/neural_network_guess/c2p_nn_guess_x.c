@@ -24,6 +24,10 @@ ghl_nn_c2p_guess_t ghl_c2p_nn_guess(
   }
 
   guess.x = x_lo + 0.5f * width;
+  if(!isfinite(guess.x)) {
+    guess.x = 0.0f;
+    return guess;
+  }
   if(!isfinite(r) || !isfinite(t)) {
     return guess;
   }

@@ -49,8 +49,7 @@
  *                          output is the primitives consistent with the
  *                          input conservatives
  *
- * @param[out] diagnostics pointer to ghl_con2prim_diagnostics struct; returns
- *                          with several Con2Prim solver diagnostics
+ * @param[out] diagnostics diagnostics for this direct solver call
  *
  * @returns error code for any Con2Prim failures
  */
@@ -63,14 +62,16 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
+  diagnostics->speed_limited = false;
+
   double gnr_out[1];
 
   harm_aux_vars_struct harm_aux;
 
   double rho0, Z_last;
   ghl_error_codes_t error = ghl_initialize_Noble_entropy(
-        params, eos, metric_adm, metric_aux, cons_undens,
-        prims, &harm_aux, &rho0, &Z_last);
+        params, eos, metric_adm, metric_aux, cons_undens, prims, sqrt(11.0), &harm_aux,
+        &rho0, &Z_last);
   if(error)
     return error;
 
@@ -138,7 +139,7 @@ ghl_error_codes_t ghl_hybrid_Noble1D_entropy(
   }
 
   diagnostics->speed_limited = ghl_finalize_Noble_entropy(params, eos, metric_adm, metric_aux, cons_undens, &harm_aux, Z, W, prims);
-  if(prims->press <= 0.0) {
+  if(!ghl_Noble_pressure_is_valid(prims->press)) {
     return ghl_error_neg_pressure;
   }
 

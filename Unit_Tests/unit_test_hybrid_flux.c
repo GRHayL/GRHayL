@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
               poison, poison, poison, // entropy, Y_e, temp
               &prims_l);
 
-        bool speed_limited;
+        bool speed_limited = false;
         ghl_error_codes_t __attribute__((unused)) error;
         error = ghl_limit_v_and_compute_u0(&params, &metric_face, &prims_r, &speed_limited);
         ghl_abort_if_error(error);

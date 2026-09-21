@@ -2,10 +2,10 @@ name: Ubuntu-gcc
 
 on:
   push:
-    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE']
     branches: main
   pull_request:
-    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE', 'implementations/**']
+    paths-ignore: ['docs/**', 'wiki/**', '**/*.md', '**/*.markdown', '**/*.rst', 'Makefile_old', '.gitattributes', '.gitignore', 'AUTHORS', 'LICENSE']
   # Run workflow on the 1st and 15th of every month at 7:33 AM PST (UTC-8)
   schedule:
     - cron: '33 15 1,15 * *'
@@ -31,9 +31,10 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
+          testdata_ref=$(cat .github/et-legacy-testdata-ref)
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
       - name: Run ET IllinoisGRMHD unit test for ET_Legacy_${{ matrix.test-function }}
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
       - name: Generate coverage report
@@ -61,10 +62,11 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/metric_Bfield_initial_data.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/${{ matrix.test-function }}_output_pert.bin
+          testdata_ref=$(cat .github/con2prim-testdata-ref)
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/metric_Bfield_initial_data.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_input.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_output.bin
+          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_output_pert.bin
       - name: Run con2prim unit test for ${{ matrix.test-function }} functions
         run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
@@ -325,7 +327,7 @@ jobs:
       - name: Install pyghl
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install pyghl
+          python3 -m pip install pyghl==0.4.0
       - name: Copy test data to working directory
         run: |
           curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin
@@ -513,4 +515,78 @@ jobs:
           files: compose-coverage.xml
           flags: compose
           disable_search: true
+          fail_ci_if_error: true
+
+  codecov-finalize:
+    name: Codecov final status
+    if: ${{ always() }}
+    needs:
+      - ET-Legacy
+      - c2p-routines
+      - c2p-failure
+      - tabulated-eos
+      - piecewise-polytrope-eos
+      - grhayl-core
+      - flux
+      - reconstruction
+      - neutrinos
+      - con-to-prim-tabulated
+      - code-failure
+      - induction-interpolators
+      - induction-flux
+      - compose-regularized-eos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for every coverage workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          current_run=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")
+          created_at=$(jq -r .created_at <<<"$current_run")
+          head_sha=$(jq -r .head_sha <<<"$current_run")
+          window_start=$(date -u -d "$created_at - 5 minutes" +%Y-%m-%dT%H:%M:%SZ)
+
+          pending=""
+          for attempt in $(seq 1 300); do
+            runs=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs" \
+              --method GET \
+              -f head_sha="$head_sha" \
+              -f event="$GITHUB_EVENT_NAME" \
+              -f per_page=100)
+            pending=$(jq -r --arg start "$window_start" '
+              .workflow_runs
+              | map(select(
+                  (.name == "MacOS-gcc"
+                   or .name == "Ubuntu-clang"
+                   or .name == "Ubuntu-intel")
+                  and .created_at >= $start
+                  and .status != "completed"))
+              | map(.name)
+              | unique
+              | join(", ")
+            ' <<<"$runs")
+            if [[ -z "$pending" ]]; then
+              break
+            fi
+            echo "Waiting for coverage workflows: $pending"
+            sleep 30
+          done
+
+          if [[ -n "$pending" ]]; then
+            echo "Timed out waiting for coverage workflows: $pending" >&2
+            exit 1
+          fi
+      - name: Publish final Codecov status
+        uses: codecov/codecov-action@v5
+        with:
+          run_command: send-notifications
+          use_oidc: true
           fail_ci_if_error: true

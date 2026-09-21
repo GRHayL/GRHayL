@@ -70,12 +70,11 @@ ghl_error_codes_t ghl_hybrid_Palenzuela1D_energy(
       ghl_primitive_quantities *restrict prims,
       ghl_con2prim_diagnostics *restrict diagnostics) {
 
-  diagnostics->which_routine = ghl_con2prim_id_Palenzuela1D;
-  return ghl_hybrid_Palenzuela1D(compute_rho_P_eps_W_energy,
-                                 params,
-                                 eos,
-                                 metric_adm,
-                                 cons_undens,
-                                 prims,
-                                 diagnostics);
+  const ghl_error_codes_t error = ghl_hybrid_Palenzuela1D(
+        compute_rho_P_eps_W_energy, params, eos, metric_adm, cons_undens, prims,
+        diagnostics);
+  if(error == ghl_success) {
+    diagnostics->which_routine = ghl_con2prim_id_Palenzuela1D;
+  }
+  return error;
 }

@@ -31,7 +31,8 @@ download_file() {
   curl -O "$url"
 }
 
-test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/main"
+et_legacy_testdata_ref=$(cat .github/et-legacy-testdata-ref)
+test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/${et_legacy_testdata_ref}"
 download_test_data() {
   filepath="$1"
   url="${test_data_base_url}/${filepath}"
@@ -69,6 +70,9 @@ download_test_data ET_Legacy/ET_Legacy_flux_source_output_pert.bin
 ./test/unit_test_ET_Legacy_reconstruction
 ./test/unit_test_ET_Legacy_flux_source
 
+# These coupled fixtures must match the generator replay and CI consumers.
+con2prim_testdata_ref=$(cat .github/con2prim-testdata-ref)
+test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/${con2prim_testdata_ref}"
 download_test_data con2prim/metric_Bfield_initial_data.bin
 
 download_test_data con2prim/apply_conservative_limits_input.bin
@@ -86,6 +90,7 @@ download_test_data con2prim/enforce_primitive_limits_and_compute_u0_output_pert.
 download_test_data con2prim/compute_conservs_and_Tmunu_input.bin
 download_test_data con2prim/compute_conservs_and_Tmunu_output.bin
 download_test_data con2prim/compute_conservs_and_Tmunu_output_pert.bin
+test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/main"
 
 ./test/unit_test_apply_conservative_limits
 ./test/unit_test_con2prim_multi_method_hybrid

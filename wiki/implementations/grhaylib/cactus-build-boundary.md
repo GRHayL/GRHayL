@@ -67,9 +67,10 @@ parameter details through [runtime parameter contract](runtime-parameter-contrac
 
 Static parity in this checkout: every header named directly by `GRHayLib.h`
 exists under `GRHayL/include/` and appears in the upstream install-header
-manifest. `ghl.h` also supplies several transitive Core includes. This confirms
-names only; the thorn header spells them as `./include/...`, and no such copied
-`implementations/GRHayLib/src/include/` tree exists locally.
+manifest. `ghl.h` also supplies several transitive Core includes. The tracked
+`implementations/GRHayLib/src/include` symlink points to that upstream header
+tree, so header edits reach the thorn layout directly. This proves path and
+manifest parity, not a Cactus compilation.
 
 ## Thorn Source Registry
 
@@ -83,23 +84,19 @@ It also lists `SUBDIRS` for module paths including `Atmosphere`, `Con2Prim`,
 `Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`, and
 `Reconstruction` variants.
 
-Static registry parity is complete at directory level: each listed `SUBDIRS`
-entry exists under upstream `GRHayL/`, and every upstream directory whose
-reachable manifest has a nonempty `SRCS` block is listed. `Con2Prim/Hybrid` is
-an extra intermediate directory. This proves current
-registry-name agreement, not that Cactus received copied source.
-
-Absent-copy-layout caveat: this checkout has `doc/` and `src/` below
-`implementations/GRHayLib/`. None of the listed module subdirectories and no
-`src/include/` aggregate-header dependency are present there. Therefore the
-registry is a direct-compile/copy-layout contract, not a locally complete thorn
-build tree. Do not call the absent layout a successful build, describe it as
-generated output, or infer a copy step not present in repository source.
+Static registry parity is complete at directory level: tracked symlinks under
+`implementations/GRHayLib/src/` expose the upstream module directories and
+headers named by the thorn. Every listed `SUBDIRS` entry therefore resolves to
+an upstream directory, and every upstream source-bearing manifest directory is
+listed; `Con2Prim/Hybrid` is an extra intermediate directory. This proves
+registry/path agreement only. It does not prove that Cactus accepts the thorn,
+links it, or runs it.
 
 ## Verification Status
 
 - Static CCL/header/source-registry parity: checked against this checkout.
-- Local thorn layout: incomplete, so no local Cactus compile claim.
+- Local thorn layout: upstream source/header symlinks are present and checked
+  statically; no local Cactus compile claim follows.
 - Cactus build, schedule execution, parameter parsing, and runtime cleanup:
   unverified; require a real Cactus/Einstein Toolkit environment and its
   owner-provided command.

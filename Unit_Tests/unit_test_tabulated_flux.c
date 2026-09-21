@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
               prims_l.rho, prims_l.Y_e, prims_l.temperature,
               &prims_l.press, &prims_l.eps, &prims_l.entropy);
 
-        bool speed_limited;
+        bool speed_limited = false;
         ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
               &params, &metric_face, &prims_r, &speed_limited);
         ghl_abort_if_error(error);

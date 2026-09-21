@@ -36,6 +36,15 @@ exact relative-error cutoff, absolute cutoff, custom cutoffs, and per-quantity
 exceptions route to `GRHayL/include/ghl_unit_tests.h` plus the Unit_Tests helper
 source above. Wiki pages should describe roles, not duplicate tolerance logic.
 
+The scalar comparison rejects nonfinite trusted, computed, and perturbed
+values. A nonfinite reference is missing numerical evidence, not a passing
+comparison. Vector wrappers use small absolute roundoff allowances based on
+the trusted vector scale; hybrid density recovery also accounts for Lorentz
+factor conditioning using input mass and trusted density. These allowances
+do not replace the scalar relative floor or derive expectations from the
+result under test. The stress-energy absolute cutoff applies to the
+difference, not to the computed value alone.
+
 [GRHayL/include/make.code.defn](../../GRHayL/include/make.code.defn) installs
 `ghl_unit_tests.h`, but library
 manifests do not compile the non-inline helpers it declares. Existing

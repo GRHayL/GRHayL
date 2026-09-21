@@ -1,3 +1,12 @@
+/*
+ * ARCHIVAL SOURCE -- UNSUPPORTED AND UNBUILT.
+ *
+ * This obsolete Cerda-Duran implementation is retained for possible future
+ * numerical reference. It is not in a build manifest, has no public API or
+ * selector entry, and uses identifiers incompatible with current GRHayL.
+ * File presence must not be interpreted as supported functionality.
+ */
+
 #include "ghl_con2prim.h"
 
 /* Function    : Hybrid_Noble2D()

@@ -36,12 +36,14 @@ bool ghl_limit_utilde_and_compute_v(
   // *** Limit velocity
   if (au0m1 > 0.9999999*(params->max_Lorentz_factor-1.0)) {
     double fac = sqrt((SQR(params->max_Lorentz_factor)-1.0)/(SQR(1.0+au0m1) - 1.0));
-    utU[0] *= fac;
-    utU[1] *= fac;
-    utU[2] *= fac;
-    ut2 = ut2 * SQR(fac);
-    au0m1 = ut2/( 1.0+sqrt(1.0+ut2) );
-    speed_limited = true;
+    if(fac < 1.0) {
+      utU[0] *= fac;
+      utU[1] *= fac;
+      utU[2] *= fac;
+      ut2 = ut2 * SQR(fac);
+      au0m1 = ut2 / (1.0 + sqrt(1.0 + ut2));
+      speed_limited = true;
+    }
   } //Finished limiting velocity
 
   // Calculate v^i and u^0 from \tilde{u}^i

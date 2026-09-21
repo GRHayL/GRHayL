@@ -69,9 +69,10 @@ Variant-local `make.code.defn` files compile the checked-in
 of the built source tree even when they are generated or derived from Python
 scripts.
 
-`configure --disable-hdf5` filters the tabulated and tabulated-entropy
-sources from generated build targets. Their files and public declarations
-remain present; source presence is not link evidence in that mode.
+`configure --disable-hdf5` retains the tabulated and tabulated-entropy flux
+sources in generated build targets. The Ubuntu-Clang `c2p-failure` no-HDF5
+variant checks the public symbols; table-dependent flux tests and generators
+remain excluded in that mode.
 
 ## Drift Rules
 

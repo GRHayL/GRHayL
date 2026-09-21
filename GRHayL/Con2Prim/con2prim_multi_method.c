@@ -31,6 +31,9 @@ ghl_error_codes_t ghl_con2prim_hybrid_select_method(
     // Entropy routines (see https://arxiv.org/abs/2208.14487)
     case ghl_con2prim_id_Noble1D_entropy:
       return ghl_hybrid_Noble1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
+    case ghl_con2prim_id_Noble1D_entropy2:
+      return ghl_hybrid_Noble1D_entropy2(
+            params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     case ghl_con2prim_id_Palenzuela1D_entropy:
       return ghl_hybrid_Palenzuela1D_entropy(params, eos, metric_adm, metric_aux, cons_undens, prims, diagnostics);
     default:
@@ -79,10 +82,10 @@ ghl_error_codes_t ghl_con2prim_tabulated_select_method(
 }
 
 /*
- * Function     : ghl_con2prim_tabulated_select_method()
- * Description  : Calls the Con2Prim routine designated by c2p_key
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
-*/
+ * Function    : ghl_con2prim_hybrid_multi_method()
+ * Description : Tries the configured hybrid main routine, then configured
+ *               backups in order until one succeeds.
+ */
 ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,
       const ghl_eos_parameters *restrict eos,
@@ -100,9 +103,11 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
   const ghl_primitive_quantities prims_guess = *prims;
 
   ghl_error_codes_t error;
+  const bool previous_speed_limited = diagnostics->speed_limited;
   error = ghl_con2prim_hybrid_select_method(params->main_routine,
                                             params, eos, metric_adm, metric_aux,
                                             cons_undens, prims, diagnostics);
+  diagnostics->speed_limited |= previous_speed_limited;
 
   // Note(Leo): this updated backup strategy works for any number of backup
   //            routines, cleaning up the logic, removing duplicated code, and
@@ -123,18 +128,20 @@ ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
     // Reset guesses
     *prims = prims_guess;
     // Backup routine
+    const bool previous_speed_limited = diagnostics->speed_limited;
     error = ghl_con2prim_hybrid_select_method(params->backup_routine[n],
                                               params, eos, metric_adm, metric_aux,
                                               cons_undens, prims, diagnostics);
+    diagnostics->speed_limited |= previous_speed_limited;
   }
   return error;
 }
 
 /*
- * Function     : ghl_con2prim_tabulated_select_method()
- * Description  : Calls the Con2Prim routine designated by c2p_key
- * Documentation: https://github.com/GRHayL/GRHayL/wiki/ghl_con2prim_tabulated_select_method
-*/
+ * Function    : ghl_con2prim_tabulated_multi_method()
+ * Description : Tries the configured tabulated main routine, its optional
+ *               neural-network retry, then configured backups in order.
+ */
 
 ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
       const ghl_parameters *restrict params,
@@ -157,9 +164,11 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
 
 
   ghl_error_codes_t error;
+  const bool previous_speed_limited = diagnostics->speed_limited;
   error = ghl_con2prim_tabulated_select_method(params->main_routine,
                                                params, eos, metric_adm, metric_aux,
                                                cons_undens, prims, diagnostics);
+  diagnostics->speed_limited |= previous_speed_limited;
 
   // If Con2Prim failed and the user requested neural networks, try again using
   // the neural network initial guess. We start by copying prims_guess into
@@ -169,9 +178,11 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
     diagnostics->nn_guess_used = true;
     ghl_c2p_nn_guess_primitives(params, eos, metric_adm, cons_undens, &prims_guess_nn);
     *prims = prims_guess_nn;
+    const bool previous_speed_limited = diagnostics->speed_limited;
     error = ghl_con2prim_tabulated_select_method(params->main_routine,
                                                  params, eos, metric_adm, metric_aux,
                                                  cons_undens, prims, diagnostics);
+    diagnostics->speed_limited |= previous_speed_limited;
   }
 
   // Note(Leo): this updated backup strategy works for any number of backup
@@ -193,16 +204,20 @@ ghl_error_codes_t ghl_con2prim_tabulated_multi_method(
     // Reset guesses
     *prims = prims_guess;
     // Backup routine
+    bool previous_speed_limited = diagnostics->speed_limited;
     error = ghl_con2prim_tabulated_select_method(params->backup_routine[n],
                                                  params, eos, metric_adm, metric_aux,
                                                  cons_undens, prims, diagnostics);
+    diagnostics->speed_limited |= previous_speed_limited;
 
     // If we failed and the user requested neural network guesses, use them as a backup
     if(error != ghl_success && eos->enable_neural_net_c2p) {
       *prims = prims_guess_nn;
+      previous_speed_limited = diagnostics->speed_limited;
       error = ghl_con2prim_tabulated_select_method(params->backup_routine[n],
                                                    params, eos, metric_adm, metric_aux,
                                                    cons_undens, prims, diagnostics);
+      diagnostics->speed_limited |= previous_speed_limited;
     }
   }
   return error;

@@ -17,15 +17,15 @@ metric, direction-specific `cmin`/`cmax`, and a conservative flux output.
 | --- | --- | --- | --- | --- |
 | hybrid | `ghl_calculate_HLLE_fluxes_dirn0_hybrid`<br>`ghl_calculate_HLLE_fluxes_dirn1_hybrid`<br>`ghl_calculate_HLLE_fluxes_dirn2_hybrid` | `rho`, `tau`, `SD[0..2]` | default and no-HDF5 | all three in `unit_test_hybrid_flux`; all three in ET Legacy |
 | hybrid entropy | `ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy` | hybrid fields plus `entropy` | default and no-HDF5 | all three in `unit_test_hybrid_flux` |
-| tabulated | `ghl_calculate_HLLE_fluxes_dirn0_tabulated`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated` | hybrid fields plus `Y_e` | default only | all three in `unit_test_tabulated_flux` |
-| tabulated entropy | `ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy` | hybrid fields plus `Y_e` and `entropy` | default only | all three in `unit_test_tabulated_flux` |
+| tabulated | `ghl_calculate_HLLE_fluxes_dirn0_tabulated`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated` | hybrid fields plus `Y_e` | default and no-HDF5 | all three in `unit_test_tabulated_flux` |
+| tabulated entropy | `ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy` | hybrid fields plus `Y_e` and `entropy` | default and no-HDF5 | all three in `unit_test_tabulated_flux` |
 
 Every direct symbol has a public declaration, one checked-in definition, and a
-variant-manifest entry. [configure](../../../configure) removes both tabulated
-directories' sources, `unit_test_tabulated_flux`, and tabulated data generators
-under `--disable-hdf5`, while their declarations remain in the installed public
-header. A no-HDF5 consumer therefore must not assume declared tabulated flux
-symbols are linkable.
+variant-manifest entry. [configure](../../../configure) retains the real
+tabulated flux definitions under `--disable-hdf5`, and the Ubuntu-Clang
+`c2p-failure` no-HDF5 variant checks that they remain linkable. The tabulated
+flux test and data generator still require HDF5/table support and are excluded
+in that mode.
 
 Variant build lists:
 
@@ -92,10 +92,15 @@ EOS/table inputs before calling.
 
 ## Tabulated And HDF5 Boundary
 
-Tabulated variants live in checked-in source directories, but `configure`
-filters their definitions and tests from no-HDF5 generated targets. Tabulated
-EOS initialization is separately guarded by `GHL_DISABLE_HDF5` in
+Tabulated variants remain built in no-HDF5 targets; only their table-dependent
+tests and generators are filtered. Tabulated EOS initialization is separately
+guarded by `GHL_DISABLE_HDF5` in
 [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
+Link visibility is not runtime support: these real kernels call the global
+`ghl_compute_h_and_cs2` dispatch and discard its error code. A no-HDF5 build
+cannot initialize compatible tabulated EOS dispatch, so callers must not invoke
+the tabulated variants there; a hybrid or unset global dispatch can otherwise
+produce the wrong EOS calculation or a null call.
 
 ## Generated-Source Boundary
 
@@ -118,13 +123,14 @@ Python source together when formulas, variables, or output fields change.
 
 ## Evidence Status
 
-- **Build-configured:** every listed symbol is in default builds; the hybrid
-  symbols are in no-HDF5 builds. Tracked files alone do not establish a compile pass.
+- **Build-configured:** every listed direct symbol is in default and no-HDF5
+  builds. The Ubuntu-Clang `c2p-failure` no-HDF5 variant link-checks the
+  tabulated symbols.
 - **Direct replay:** every direction in each row is called by the named test;
   runner and compiler workflows configure those executions.
 - **Fixture-generation:** matching data generators call every row/direction,
   but generated outputs use the same implementation and are not an independent
   oracle.
 - **Coverage gaps:** generic pointer globals; ignored EOS error returns;
-  primitive mutation; zero `cmin + cmax`; and no-HDF5 declaration/link mismatch
-  have no focused tests.
+  primitive mutation; and zero `cmin + cmax` have no focused tests. The
+  no-HDF5 matrix variant link-checks the retained algebraic tabulated symbols.

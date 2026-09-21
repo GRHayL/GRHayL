@@ -51,8 +51,9 @@ these HDF5-only keys:
 Those skipped HDF5-only keys exit as the test harness expects under a no-HDF5
 build. Treat them as expected-skip confirmations for HDF5-only paths, not as
 ordinary behavior coverage. The build-side no-HDF5 source and test filtering is
-owned by [configure](../../configure), which defines `GHL_DISABLE_HDF5` and
-filters tabulated/HDF5 tests and sources.
+owned by [configure](../../configure), which defines `GHL_DISABLE_HDF5`,
+filters table-dependent tests and sources, and retains selected tabulated
+helpers, disabled direct-C2P stubs, and real tabulated flux kernels.
 
 ## Behavior Families
 
