@@ -298,9 +298,9 @@ Repo evidence shows these caveats:
 - The focused Ubuntu GCC CompOSE job bypasses coverage-file discovery: it
   uploads only `compose-coverage.xml` under the `compose` flag, disables
   search, and fails the job on an upload error.
-- All workflows ignore docs-only pull-request changes. Only Ubuntu-GCC runs for
-  implementation-only changes, and its GRHayLib check proves symlink topology,
-  not a Cactus build or runtime.
+- All workflows ignore docs-only pull-request changes. Only Ubuntu-GCC runs its
+  normal GRHayL jobs for implementation-only changes; it does not inspect
+  GRHayLib symlinks or build/test the Cactus thorn.
 
 ## Ground Truth References
 
