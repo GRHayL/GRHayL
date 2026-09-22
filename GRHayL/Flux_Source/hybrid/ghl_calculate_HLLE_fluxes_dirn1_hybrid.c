@@ -2,7 +2,7 @@
 /*
  * Compute the HLLE-derived fluxes on the left face in direction 1 for all components.
  */
-ghl_error_codes_t ghl_calculate_HLLE_fluxes_dirn1_hybrid(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn1, const double cmax_dirn1, ghl_conservative_quantities *restrict cons) {
+ghl_error_codes_t ghl_calculate_HLLE_fluxes_dirn1_hybrid_checked(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn1, const double cmax_dirn1, ghl_conservative_quantities *restrict cons) {
 
 {
 
@@ -20,19 +20,17 @@ if(cmin_clamped > DBL_MAX - cmax_clamped ||
 const double wavespeed_sum = cmin_clamped + cmax_clamped;
 if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0/DBL_MAX)
   return ghl_error_invalid_hlle_wavespeeds;
-if(!isfinite(1.0/wavespeed_sum))
-  return ghl_error_invalid_hlle_wavespeeds;
 const double cmin_weight = cmin_clamped/wavespeed_sum;
 const double cmax_weight = cmax_clamped/wavespeed_sum;
 const double dissipation_speed =
       cmin_clamped*cmax_clamped/wavespeed_sum;
 
-double h_r, h_l;
+double h_r, h_l, cs2_r, cs2_l;
 
-ghl_error_codes_t error = ghl_compute_h(eos, prims_r, &h_r);
+ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
 if(error != ghl_success)
   return error;
-error = ghl_compute_h(eos, prims_l, &h_l);
+error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 if(error != ghl_success)
   return error;
 const double u4rU0 = prims_r->u0;
@@ -137,4 +135,8 @@ const double gamma_faceDD22 = metric_face->gammaDD[2][2];
   cons->tau = cmax_weight*(-rhob_l*tmp_41*u4lU2 + tmp_33*tmp_80) + cmin_weight*(-rhob_r*tmp_41*u4rU2 + tmp_65*tmp_80) - dissipation_speed*(tmp_40*tmp_6*tmp_73 - tmp_70*tmp_80 + tmp_77 - tmp_79);
 }
 return ghl_success;
+}
+
+void ghl_calculate_HLLE_fluxes_dirn1_hybrid(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn1, const double cmax_dirn1, ghl_conservative_quantities *restrict cons) {
+  ghl_abort_if_error(ghl_calculate_HLLE_fluxes_dirn1_hybrid_checked(prims_r, prims_l, eos, metric_face, cmin_dirn1, cmax_dirn1, cons));
 }

@@ -33,7 +33,6 @@ Key public surface:
 - `ghl_initialize_simple_eos_functions_and_params`
 - `ghl_initialize_hybrid_eos_functions_and_params`
 - `ghl_initialize_tabulated_eos_functions_and_params`
-- `ghl_compute_h`
 - `ghl_compute_h_and_cs2`
 - Hybrid `ghl_hybrid_*` function pointers
 - Tabulated `ghl_tabulated_*` function pointers

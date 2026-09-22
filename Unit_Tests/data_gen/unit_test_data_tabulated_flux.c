@@ -29,7 +29,6 @@ int main(int argc, char **argv) {
         &eos);
   ghl_abort_if_error(error);
 
-  ghl_compute_h = &ghl_test_compute_h;
   ghl_compute_h_and_cs2 = &ghl_test_compute_h_and_cs2;
 
   const int arraylength = 10000;
@@ -117,11 +116,13 @@ int main(int argc, char **argv) {
 
     double press;
     error = ghl_tabulated_compute_P_from_T(
-          &eos, rho_r[index], Ye_r[index], T_r[index],
-          &press);
-    if(error != ghl_success)
-      ghl_error("Tabulated flux generation failed for initial right pressure %d with status %d.\n",
-                index, error);
+          &eos, rho_r[index], Ye_r[index], T_r[index], &press);
+    if(error != ghl_success) {
+      ghl_error(
+            "Tabulated flux generation failed for initial right pressure %d with status "
+            "%d.\n",
+            index, error);
+    }
 
     ghl_randomize_primitives(
           &eos, rho_r[index], press,
@@ -129,11 +130,13 @@ int main(int argc, char **argv) {
           &Bx_r[index], &By_r[index], &Bz_r[index]);
 
     error = ghl_tabulated_compute_P_from_T(
-          &eos, rho_l[index], Ye_l[index], T_l[index],
-          &press);
-    if(error != ghl_success)
-      ghl_error("Tabulated flux generation failed for initial left pressure %d with status %d.\n",
-                index, error);
+          &eos, rho_l[index], Ye_l[index], T_l[index], &press);
+    if(error != ghl_success) {
+      ghl_error(
+            "Tabulated flux generation failed for initial left pressure %d with status "
+            "%d.\n",
+            index, error);
+    }
 
     ghl_randomize_primitives(
           &eos, rho_l[index], press,
@@ -156,12 +159,13 @@ int main(int argc, char **argv) {
           poison, Ye_r[index], T_r[index],
           &prims_r);
     error = ghl_tabulated_compute_P_eps_S_from_T(
-          &eos,
-          prims_r.rho, prims_r.Y_e, prims_r.temperature,
-          &prims_r.press, &prims_r.eps, &prims_r.entropy);
-    if(error != ghl_success)
-      ghl_error("Tabulated speed generation failed for right state %d with status %d.\n",
-                index, error);
+          &eos, prims_r.rho, prims_r.Y_e, prims_r.temperature, &prims_r.press,
+          &prims_r.eps, &prims_r.entropy);
+    if(error != ghl_success) {
+      ghl_error(
+            "Tabulated speed generation failed for right state %d with status %d.\n",
+            index, error);
+    }
 
     ghl_initialize_primitives(
           rho_l[index], poison, poison,
@@ -170,12 +174,13 @@ int main(int argc, char **argv) {
           poison, Ye_l[index], T_l[index],
           &prims_l);
     error = ghl_tabulated_compute_P_eps_S_from_T(
-          &eos,
-          prims_l.rho, prims_l.Y_e, prims_l.temperature,
-          &prims_l.press, &prims_l.eps, &prims_l.entropy);
-    if(error != ghl_success)
-      ghl_error("Tabulated speed generation failed for left state %d with status %d.\n",
-                index, error);
+          &eos, prims_l.rho, prims_l.Y_e, prims_l.temperature, &prims_l.press,
+          &prims_l.eps, &prims_l.entropy);
+    if(error != ghl_success) {
+      ghl_error(
+            "Tabulated speed generation failed for left state %d with status %d.\n",
+            index, error);
+    }
 
     bool speed_limit = false;
     error = ghl_limit_v_and_compute_u0(
@@ -185,19 +190,16 @@ int main(int argc, char **argv) {
           &params, &metric_adm, &prims_l, &speed_limit);
     ghl_abort_if_error(error);
 
-    error = ghl_calculate_characteristic_speed_dirn0(
-          &prims_r, &prims_l, &eos,
-          &metric_adm, &cxmin[index], &cxmax[index]);
+    error = ghl_calculate_characteristic_speed_dirn0_checked(
+          &prims_r, &prims_l, &eos, &metric_adm, &cxmin[index], &cxmax[index]);
     ghl_abort_if_error(error);
 
-    error = ghl_calculate_characteristic_speed_dirn1(
-          &prims_r, &prims_l, &eos,
-          &metric_adm, &cymin[index], &cymax[index]);
+    error = ghl_calculate_characteristic_speed_dirn1_checked(
+          &prims_r, &prims_l, &eos, &metric_adm, &cymin[index], &cymax[index]);
     ghl_abort_if_error(error);
 
-    error = ghl_calculate_characteristic_speed_dirn2(
-          &prims_r, &prims_l, &eos,
-          &metric_adm, &czmin[index], &czmax[index]);
+    error = ghl_calculate_characteristic_speed_dirn2_checked(
+          &prims_r, &prims_l, &eos, &metric_adm, &czmin[index], &czmax[index]);
     ghl_abort_if_error(error);
   }
 
@@ -299,29 +301,34 @@ int main(int argc, char **argv) {
     for(int entropy=0; entropy<2; entropy++) {
       for(int flux_dir=0; flux_dir<3; flux_dir++) {
         ghl_error_codes_t (*calculate_HLLE_fluxes)(
-              ghl_primitive_quantities *restrict,
-              ghl_primitive_quantities *restrict,
-              const ghl_eos_parameters *restrict,
-              const ghl_metric_quantities *restrict,
-              const double,
-              const double,
-              ghl_conservative_quantities *restrict);
+              ghl_primitive_quantities *restrict, ghl_primitive_quantities *restrict,
+              const ghl_eos_parameters *restrict, const ghl_metric_quantities *restrict,
+              const double, const double, ghl_conservative_quantities *restrict);
 
         switch(flux_dir) {
           case 0:
             cmin = cxmin;
             cmax = cxmax;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn0_tabulated;
+            calculate_HLLE_fluxes
+                  = (entropy)
+                          ? &ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy_checked
+                          : &ghl_calculate_HLLE_fluxes_dirn0_tabulated_checked;
             break;
           case 1:
             cmin = cymin;
             cmax = cymax;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn1_tabulated;
+            calculate_HLLE_fluxes
+                  = (entropy)
+                          ? &ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy_checked
+                          : &ghl_calculate_HLLE_fluxes_dirn1_tabulated_checked;
             break;
           case 2:
             cmin = czmin;
             cmax = czmax;
-            calculate_HLLE_fluxes = (entropy) ? &ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy : &ghl_calculate_HLLE_fluxes_dirn2_tabulated;
+            calculate_HLLE_fluxes
+                  = (entropy)
+                          ? &ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy_checked
+                          : &ghl_calculate_HLLE_fluxes_dirn2_tabulated_checked;
             break;
         }
 
@@ -342,12 +349,14 @@ int main(int argc, char **argv) {
                 poison, Ye_r[index], T_r[index],
                 &prims_r);
           error = ghl_tabulated_compute_P_eps_S_from_T(
-                &eos,
-                prims_r.rho, prims_r.Y_e, prims_r.temperature,
-                &prims_r.press, &prims_r.eps, &prims_r.entropy);
-          if(error != ghl_success)
-            ghl_error("Tabulated flux generation failed for right state %d with status %d.\n",
-                      index, error);
+                &eos, prims_r.rho, prims_r.Y_e, prims_r.temperature, &prims_r.press,
+                &prims_r.eps, &prims_r.entropy);
+          if(error != ghl_success) {
+            ghl_error(
+                  "Tabulated flux generation failed for right state %d with status "
+                  "%d.\n",
+                  index, error);
+          }
 
           ghl_initialize_primitives(
                 rho_l[index], poison, poison,
@@ -356,12 +365,13 @@ int main(int argc, char **argv) {
                 poison, Ye_l[index], T_l[index],
                 &prims_l);
           error = ghl_tabulated_compute_P_eps_S_from_T(
-                &eos,
-                prims_l.rho, prims_l.Y_e, prims_l.temperature,
-                &prims_l.press, &prims_l.eps, &prims_l.entropy);
-          if(error != ghl_success)
-            ghl_error("Tabulated flux generation failed for left state %d with status %d.\n",
-                      index, error);
+                &eos, prims_l.rho, prims_l.Y_e, prims_l.temperature, &prims_l.press,
+                &prims_l.eps, &prims_l.entropy);
+          if(error != ghl_success) {
+            ghl_error(
+                  "Tabulated flux generation failed for left state %d with status %d.\n",
+                  index, error);
+          }
 
           bool speed_limit = false;
           error = ghl_limit_v_and_compute_u0(
@@ -373,8 +383,7 @@ int main(int argc, char **argv) {
 
           ghl_conservative_quantities cons_fluxes;
           error = calculate_HLLE_fluxes(
-                &prims_r, &prims_l, &eos,
-                &metric_adm, cmin[index], cmax[index],
+                &prims_r, &prims_l, &eos, &metric_adm, cmin[index], cmax[index],
                 &cons_fluxes);
           ghl_abort_if_error(error);
 

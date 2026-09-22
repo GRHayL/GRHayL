@@ -1,14 +1,5 @@
 #include "ghl_unit_tests.h"
 
-ghl_error_codes_t ghl_test_compute_h(
-      const ghl_eos_parameters *restrict eos,
-      ghl_primitive_quantities *restrict prims,
-      double *restrict h) {
-  (void)eos;
-  *h = 1.0 + prims->eps + prims->press/prims->rho;
-  return ghl_success;
-}
-
 /*
    Simple function for h and cs2 that constructs
    a simple value for cs2 without using the table.

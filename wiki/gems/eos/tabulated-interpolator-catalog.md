@@ -139,12 +139,10 @@ That pass converts non-relativistic table sound speeds using enthalpy, counts
 non-finite, superluminal, and negative values, and only clamps values when
 `eos->clean_sound_speed` is true.
 
-Runtime enthalpy-only and enthalpy/sound-speed routing for tabulated EOS is
+Runtime enthalpy/sound-speed routing for tabulated EOS is
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_compute_enthalpy_and_cs2.c).
-Both callbacks enforce `(rho,Y_e,T)` bounds on `ghl_primitive_quantities` and
-compute pressure and internal energy. `ghl_compute_h_and_cs2` additionally
-computes `cs2`; `ghl_compute_h` avoids that unused output for flux and source
-routines.
+The callback enforces `(rho,Y_e,T)` bounds on `ghl_primitive_quantities`,
+computes pressure and internal energy, and returns enthalpy and `cs2`.
 
 ## Direct Test Evidence
 

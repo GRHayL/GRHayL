@@ -106,7 +106,8 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
           "NRPyLeakage replaced one or more non-finite outputs.\n");
     GHL_CASE_ERROR(
           ghl_error_invalid_hlle_wavespeeds,
-          "HLLE wave speeds must be finite magnitudes (within roundoff of nonnegative) with a "
-          "positive sum, finite reciprocal, and representable product.\n");
+          "HLLE wave speeds must be finite magnitudes (within roundoff of nonnegative) "
+          "with a "
+          "positive sum and representable product.\n");
   }
 }

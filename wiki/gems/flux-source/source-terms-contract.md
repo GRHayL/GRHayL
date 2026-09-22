@@ -8,7 +8,7 @@ and evidence routes; equations remain in source, Doxygen, and derivation notes.
 
 ## Public API
 
-`ghl_calculate_source_terms` is declared in
+`ghl_calculate_source_terms` and `ghl_calculate_source_terms_checked` are declared in
 [GRHayL/include/ghl_flux_source.h](../../../GRHayL/include/ghl_flux_source.h)
 and implemented in
 [GRHayL/Flux_Source/ghl_calculate_source_terms.c](../../../GRHayL/Flux_Source/ghl_calculate_source_terms.c).
@@ -25,7 +25,7 @@ Shared structs come from [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h):
 
 The caller supplies:
 
-- `eos`: EOS parameters compatible with `ghl_compute_h`.
+- `eos`: EOS parameters compatible with `ghl_compute_h_and_cs2`.
 - `prims`: primitive state at the point where source terms are evaluated,
   including density, pressure, velocity, magnetic field, and `u0`.
 - `metric`: ADM metric at the same point.
@@ -39,11 +39,13 @@ The caller supplies:
 `cons->rho`, `cons->Y_e`, and `cons->entropy` are untouched. The routine does
 not zero or initialize the complete conservative struct.
 
-The kernel calls `ghl_compute_h(eos, prims, &h)` before building
-the source terms. Its `prims` argument is mutable: production tabulated dispatch
+The checked kernel calls `ghl_compute_h_and_cs2(eos, prims, &h, &cs2)` before
+building the source terms; `cs2` is unused. Its `prims` argument is mutable:
+production tabulated dispatch
 clamps `rho`, `Y_e`, and `temperature`, then recomputes `press` and `eps` in
-place. The routine returns the callback's exact error and leaves `cons`
-unchanged on failure. Callback mutation of `prims` is not rolled back. Callers
+place. The checked routine returns the callback's exact error and leaves `cons`
+unchanged on failure; the legacy `void` wrapper aborts on that error. Callback
+mutation of `prims` is not rolled back. Callers
 needing unchanged primitives must pass a copy. EOS dispatch details otherwise
 belong to EOS/Core routes.
 
@@ -84,13 +86,13 @@ editing only one expression copy.
 
 Evidence status: declaration, definition, and normal/no-HDF5 manifest membership
 are present. `unit_test_ET_Legacy_flux_source` directly calls the routine inside
-a combined flux-divergence/source replay. It installs test-local `compute_h`
-and `compute_h_and_cs2` callbacks; source terms use the former, so this is not
+a combined flux-divergence/source replay. It installs a test-local
+`compute_h_and_cs2` callback, so this is not
 a production EOS-dispatch test. The ordinary runner and all compiler workflows
 configure that replay. `unit_test_tabulated_eos_compose` also covers a
 production tabulated source call in the Ubuntu-GCC `compose-regularized-eos`
-job. Source inspection establishes error propagation and untouched output on
-failure, but no committed test isolates the source-term callback error path.
+job. `unit_test_hybrid_flux` isolates the checked source callback failure and
+verifies untouched output.
 
 ## Evidence Links
 

@@ -99,11 +99,10 @@ for `neos`, `rho_ppoly`, `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`,
 - Rho bounds: `NRPyEOS_hybrid_enforce_bounds__rho` clamps to `rho_min` and
   `rho_max` and reports whether input was already in range
   (`GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c`).
-- Enthalpy dispatch: `NRPyEOS_hybrid_compute_enthalpy` backs `ghl_compute_h`,
-  while `NRPyEOS_hybrid_compute_enthalpy_and_cs2` backs
-  `ghl_compute_h_and_cs2`. Both combine cold pressure, cold energy, thermal
-  energy, `Gamma_th`, and the active `Gamma_ppoly`; only the latter computes
-  sound speed (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_enthalpy_and_cs2.c`,
+- Enthalpy dispatch: `NRPyEOS_hybrid_compute_enthalpy_and_cs2` backs
+  `ghl_compute_h_and_cs2`. It combines cold pressure, cold energy, thermal
+  energy, `Gamma_th`, and the active `Gamma_ppoly` and computes sound speed
+  (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_enthalpy_and_cs2.c`,
   `GRHayL/GRHayL_Core/initialize_eos.c`).
 
 `NRPyEOS_initialize_hybrid_functions` wires the public hybrid function pointers
@@ -112,8 +111,8 @@ hybrid EOS sources.
 
 Registry comparison finds 10 `ghl_hybrid_*` declarations, the same 10 storage
 definitions, and assignments for all 10 in the hybrid initializer. The general
-`ghl_compute_h` and `ghl_compute_h_and_cs2` pointers are assigned there too,
-then selected again by Core EOS-family dispatch. Assignment/build agreement does not supply direct
+`ghl_compute_h_and_cs2` is assigned there too, then selected again by Core
+EOS-family dispatch. Assignment/build agreement does not supply direct
 tests for every helper; coverage below is narrower.
 
 Simple/hybrid initialization performs no unit conversion: densities,

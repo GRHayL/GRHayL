@@ -15,7 +15,7 @@ Read with [Core tests and fixtures](../core/tests-and-fixtures.md),
 
 ## Harness Contract
 
-The full runner invokes `./test/unit_test_code_error "$i"` for keys `0..87`.
+The full runner invokes `./test/unit_test_code_error "$i"` for keys `0..88`.
 Each key is treated as an expected-error case: if the executable exits
 successfully, `.github/run_tests.sh` prints `Failed to fail!` and fails the
 runner; if the executable exits nonzero, the runner treats that as the expected

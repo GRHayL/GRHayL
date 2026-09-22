@@ -78,9 +78,9 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
   symbols.
 - Source terms require metric derivatives provided by caller-side infrastructure.
 - Characteristic speeds are shared by hydrodynamic flux work and induction HLL flux setup.
-- Flux, speed, and source routines return EOS callback errors; production
-  tabulated dispatch can mutate face primitives. Owner pages state exact
-  output and mutation contracts.
+- Checked flux, speed, and source routines return EOS callback errors; legacy
+  `void` wrappers abort on them. Production tabulated dispatch can mutate face
+  primitives. Owner pages state exact output and mutation contracts.
 
 ## Common Edit Routes
 

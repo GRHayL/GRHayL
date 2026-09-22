@@ -56,12 +56,12 @@ includes it in one built translation unit; it is not installed.
 `ghl_initialize_eos_functions` performs assignment in three stages:
 
 1. It always calls `NRPyEOS_initialize_hybrid_functions`, assigning hybrid
-   pointers plus `ghl_compute_h` and `ghl_compute_h_and_cs2`.
+   pointers plus `ghl_compute_h_and_cs2`.
 2. In HDF5 builds it then calls `NRPyEOS_initialize_tabulated_functions`,
    assigning tabulated pointers and temporarily overwriting
-   `ghl_compute_h` and `ghl_compute_h_and_cs2`.
+   `ghl_compute_h_and_cs2`.
 3. For a recognized EOS type it selects `ghl_con2prim_multi_method` and resets
-   both enthalpy callbacks to the requested family.
+   the enthalpy/sound-speed callback to the requested family.
 
 Sources:
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c),
@@ -71,7 +71,6 @@ and
 
 For `ghl_eos_simple` and `ghl_eos_hybrid`, Core routes
 `ghl_con2prim_multi_method` to `ghl_con2prim_hybrid_multi_method` and
-`ghl_compute_h` to `NRPyEOS_hybrid_compute_enthalpy` and
 `ghl_compute_h_and_cs2` to `NRPyEOS_hybrid_compute_enthalpy_and_cs2`.
 Source:
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
@@ -87,7 +86,7 @@ Sources:
 An unrecognized `ghl_eos_t` value has no `else` error path and does not return
 `ghl_error_unknown_eos_type`. The EOS-selection branch is skipped, so
 `ghl_con2prim_multi_method` retains its prior value (initially null). However,
-family initialization has already overwritten both enthalpy callbacks: it
+family initialization has already overwritten the enthalpy/sound-speed callback: it
 points to the hybrid implementation in a no-HDF5 build and to the tabulated
 implementation in an HDF5 build. The function returns `void` with this
 mode-dependent partial dispatch state

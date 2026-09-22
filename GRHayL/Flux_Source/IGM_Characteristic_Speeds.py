@@ -256,10 +256,11 @@ if(error != ghl_success)
         body += "return ghl_success;\n"
 
         desc = "Compute the characteristic speeds in direction " + str(flux_dirn)
-        name = "ghl_calculate_characteristic_speed_dirn" + str(flux_dirn)
+        legacy_name = "ghl_calculate_characteristic_speed_dirn" + str(flux_dirn)
+        name = legacy_name + "_checked"
 
         outCfunction(
-            outfile=os.path.join(Ccodesdir,name+".c"),
+            outfile=os.path.join(Ccodesdir,legacy_name+".c"),
             includes=includes,
             desc=desc,
             c_type=c_type,
@@ -267,3 +268,10 @@ if(error != ghl_success)
             params=params + cmin_param + cmax_param,
             body= body,
             enableCparameters=False)
+
+        with open(os.path.join(Ccodesdir, legacy_name+".c"), "a") as output_file:
+            output_file.write(f"""
+void {legacy_name}(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, double *{cmins[flux_dirn]}, double *{cmaxs[flux_dirn]}) {{
+  ghl_abort_if_error({name}(prims_r, prims_l, eos, metric_face, {cmins[flux_dirn]}, {cmaxs[flux_dirn]}));
+}}
+""")

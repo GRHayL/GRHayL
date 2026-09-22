@@ -125,8 +125,8 @@ hydrodynamic `unit_test_hybrid_flux`, `unit_test_tabulated_flux`, and
 
 - Magnetized HLLE terms have replay coverage but no independent analytic
   oracle; focused asymmetric HLLE checks use zero magnetic field.
-- No committed check injects `ghl_compute_h_and_cs2` failure into a
-  characteristic-speed routine or `ghl_compute_h` failure into source terms.
+- `unit_test_hybrid_flux` injects `ghl_compute_h_and_cs2` failures into all
+  characteristic-speed directions and the source-term checked routine.
 - Production tabulated mutation is checked for characteristic speeds, not for
   an HLLE call.
 - No direct test connects Flux_Source characteristic-speed output to Induction

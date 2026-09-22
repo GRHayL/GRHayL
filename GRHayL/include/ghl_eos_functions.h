@@ -7,11 +7,6 @@
 extern "C" {
 #endif
 
-extern ghl_error_codes_t (*ghl_compute_h)(
-      const ghl_eos_parameters *restrict eos,
-      ghl_primitive_quantities *restrict prims,
-      double *restrict h);
-
 extern ghl_error_codes_t (*ghl_compute_h_and_cs2)(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
@@ -303,6 +298,36 @@ extern ghl_error_codes_t (*ghl_tabulated_compute_eps_from_rho)(
 
 extern void (*ghl_tabulated_free_beq_quantities)(
       ghl_eos_parameters *restrict eos);
+
+/** Deprecated compatibility storage. GRHayL does not initialize this pointer. */
+extern void (*ghl_calculate_HLLE_fluxes_dirn0)(
+      const ghl_primitive_quantities *restrict prims_r,
+      const ghl_primitive_quantities *restrict prims_l,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm_face,
+      const double cmin,
+      const double cmax,
+      ghl_conservative_quantities *restrict cons_fluxes);
+
+/** Deprecated compatibility storage. GRHayL does not initialize this pointer. */
+extern void (*ghl_calculate_HLLE_fluxes_dirn1)(
+      const ghl_primitive_quantities *restrict prims_r,
+      const ghl_primitive_quantities *restrict prims_l,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm_face,
+      const double cmin,
+      const double cmax,
+      ghl_conservative_quantities *restrict cons_fluxes);
+
+/** Deprecated compatibility storage. GRHayL does not initialize this pointer. */
+extern void (*ghl_calculate_HLLE_fluxes_dirn2)(
+      const ghl_primitive_quantities *restrict prims_r,
+      const ghl_primitive_quantities *restrict prims_l,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm_face,
+      const double cmin,
+      const double cmax,
+      ghl_conservative_quantities *restrict cons_fluxes);
 
 extern void (*ghl_tabulated_enforce_bounds_rho_Ye_T)(
       const ghl_eos_parameters *restrict eos,

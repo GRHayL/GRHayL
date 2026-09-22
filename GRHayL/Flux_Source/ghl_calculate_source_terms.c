@@ -2,13 +2,13 @@
 /*
  * Add source terms for Stilde and tau_tilde
  */
-ghl_error_codes_t ghl_calculate_source_terms(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {
+ghl_error_codes_t ghl_calculate_source_terms_checked(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {
 
 {
 
-double h;
+double h, cs2;
 
-const ghl_error_codes_t error = ghl_compute_h(eos, prims, &h);
+const ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
 if(error != ghl_success)
   return error;
 const double u4U0 = prims->u0;
@@ -136,4 +136,8 @@ const double gammaDD_dD222 = metric_derivs_z->gammaDD[2][2];
   cons->tau = alpha_dD0*tmp_36*(-tmp_31 - tmp_71) + alpha_dD1*tmp_36*(-betaU1*tmp_63 - tmp_40) + alpha_dD2*tmp_36*(-betaU2*tmp_63 - tmp_43) + tmp_36*(KDD00*(((betaU0)*(betaU0))*tmp_63 + tmp_31*tmp_73 + tmp_54) + KDD01*(tmp_40*tmp_73 + tmp_76) + KDD01*(_Integer_2*betaU1*tmp_31 + tmp_76) + KDD02*(tmp_43*tmp_73 + tmp_78) + KDD02*(_Integer_2*betaU2*tmp_31 + tmp_78) + KDD11*(_Integer_2*betaU1*tmp_40 + ((betaU1)*(betaU1))*tmp_63 + tmp_57) + KDD12*(_Integer_2*betaU1*tmp_43 + tmp_79) + KDD12*(_Integer_2*betaU2*tmp_40 + tmp_79) + KDD22*(_Integer_2*betaU2*tmp_43 + ((betaU2)*(betaU2))*tmp_63 + tmp_60));
 }
 return ghl_success;
+}
+
+void ghl_calculate_source_terms(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {
+  ghl_abort_if_error(ghl_calculate_source_terms_checked(eos, prims, metric, metric_derivs_x, metric_derivs_y, metric_derivs_z, curv, cons));
 }

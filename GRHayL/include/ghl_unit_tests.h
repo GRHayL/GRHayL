@@ -129,11 +129,6 @@ void ghl_test_compute_ccc_BSSN(
       double *restrict sqrtg_Ay_interp,
       double *restrict sqrtg_Az_interp);
 
-ghl_error_codes_t ghl_test_compute_h(
-      const ghl_eos_parameters *restrict eos,
-      ghl_primitive_quantities *restrict prims,
-      double *restrict h);
-
 ghl_error_codes_t ghl_test_compute_h_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,

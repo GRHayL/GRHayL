@@ -53,11 +53,6 @@ void NRPyEOS_initialize_hybrid_functions();
 
 bool NRPyEOS_hybrid_enforce_bounds__rho(const ghl_eos_parameters *restrict eos, double *restrict rho);
 
-ghl_error_codes_t NRPyEOS_hybrid_compute_enthalpy(
-      const ghl_eos_parameters *restrict eos,
-      ghl_primitive_quantities *restrict prims,
-      double *restrict enthalpy_ptr);
-
 ghl_error_codes_t NRPyEOS_hybrid_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,

@@ -355,7 +355,7 @@ jobs:
       - name: Run unit test for error-catching
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          for i in {0..87}; do
+          for i in {0..88}; do
             if ./test/unit_test_code_error "$i"; then
               echo "Failed to fail!"
               exit 1

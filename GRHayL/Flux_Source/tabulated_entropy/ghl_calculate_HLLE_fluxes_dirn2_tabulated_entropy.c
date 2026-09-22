@@ -2,7 +2,7 @@
 /*
  * Compute the HLLE-derived fluxes on the left face in direction 2 for all components.
  */
-ghl_error_codes_t ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn2, const double cmax_dirn2, ghl_conservative_quantities *restrict cons) {
+ghl_error_codes_t ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy_checked(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn2, const double cmax_dirn2, ghl_conservative_quantities *restrict cons) {
 
 {
 
@@ -20,19 +20,17 @@ if(cmin_clamped > DBL_MAX - cmax_clamped ||
 const double wavespeed_sum = cmin_clamped + cmax_clamped;
 if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0/DBL_MAX)
   return ghl_error_invalid_hlle_wavespeeds;
-if(!isfinite(1.0/wavespeed_sum))
-  return ghl_error_invalid_hlle_wavespeeds;
 const double cmin_weight = cmin_clamped/wavespeed_sum;
 const double cmax_weight = cmax_clamped/wavespeed_sum;
 const double dissipation_speed =
       cmin_clamped*cmax_clamped/wavespeed_sum;
 
-double h_r, h_l;
+double h_r, h_l, cs2_r, cs2_l;
 
-ghl_error_codes_t error = ghl_compute_h(eos, prims_r, &h_r);
+ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
 if(error != ghl_success)
   return error;
-error = ghl_compute_h(eos, prims_l, &h_l);
+error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 if(error != ghl_success)
   return error;
 const double u4rU0 = prims_r->u0;
@@ -145,4 +143,8 @@ const double gamma_faceDD22 = metric_face->gammaDD[2][2];
   cons->Y_e = Y_e_l*tmp_77 + Y_e_r*tmp_79 - dissipation_speed*(-Y_e_l*tmp_81 + Y_e_r*alpha_face*rhob_r*tmp_40*u4rU0);
 }
 return ghl_success;
+}
+
+void ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double cmin_dirn2, const double cmax_dirn2, ghl_conservative_quantities *restrict cons) {
+  ghl_abort_if_error(ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy_checked(prims_r, prims_l, eos, metric_face, cmin_dirn2, cmax_dirn2, cons));
 }

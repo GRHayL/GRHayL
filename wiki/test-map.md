@@ -125,7 +125,7 @@ available. Route that checklist through
 | `Unit_Tests/randomize_metric.c` | test harness | Random metric generation. | Used by data generators/tests. | Helper, not standalone test. |
 | `Unit_Tests/randomize_primitives.c` | test harness | Random primitive generation. | Used by data generators/tests. | Helper, not standalone test. |
 | `Unit_Tests/tabulated_eos_unit_test_helpers.c` | `GRHayL/EOS/Tabulated/` | Analytic helper functions for tabulated EOS validation. | Used by tabulated EOS tests. | HDF5-adjacent helper. |
-| `Unit_Tests/test_compute_h_and_cs2.c` | `GRHayL/EOS/` | Helpers for enthalpy-only and enthalpy/sound-speed checks. | Used by EOS/flux tests. | Helper, not standalone test. |
+| `Unit_Tests/test_compute_h_and_cs2.c` | `GRHayL/EOS/` | Helper for enthalpy/sound-speed checks. | Used by EOS/flux tests. | Helper, not standalone test. |
 
 ## Repo-Visible External Fixture References
 

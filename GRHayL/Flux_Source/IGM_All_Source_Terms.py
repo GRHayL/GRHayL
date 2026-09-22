@@ -76,9 +76,9 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outC
     prims_GRHayL = ["u0", "vU[0]*u4U0", "vU[1]*u4U0", "vU[2]*u4U0", "BU[0]", "BU[1]", "BU[2]", "press", "rho"]
 
     prestring = r"""
-double h;
+double h, cs2;
 
-const ghl_error_codes_t error = ghl_compute_h(eos, prims, &h);
+const ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
 if(error != ghl_success)
   return error;
 """
@@ -183,7 +183,8 @@ if(error != ghl_success)
 
         desc     = f"Add source terms for Stilde and tau_tilde"
         c_type   = "ghl_error_codes_t"
-        name     = f"ghl_calculate_source_terms"
+        legacy_name = "ghl_calculate_source_terms"
+        name     = legacy_name + "_checked"
         params   = "const ghl_eos_parameters *restrict eos, "
         params  += "ghl_primitive_quantities *restrict prims, "
         params  += "const ghl_metric_quantities *restrict metric, "
@@ -212,12 +213,19 @@ if(error != ghl_success)
         body += "return ghl_success;\n"
 
         outCfunction(
-            outfile=os.path.join(Ccodesdir,name+".c"),
+            outfile=os.path.join(Ccodesdir,legacy_name+".c"),
             includes=includes,
             desc=desc,
             c_type=c_type, name=name, params=params,
             enableCparameters=False,
             body=body)
+
+        with open(os.path.join(Ccodesdir, legacy_name+".c"), "a") as output_file:
+            output_file.write(f"""
+void {legacy_name}(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {{
+  ghl_abort_if_error({name}(eos, prims, metric, metric_derivs_x, metric_derivs_y, metric_derivs_z, curv, cons));
+}}
+""")
 
 # GRHayL structs:
 

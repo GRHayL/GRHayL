@@ -61,7 +61,7 @@ generators but are not standalone unit tests:
 | `pert_test_fail_stress_energy.c` | Stress-energy tensor comparison wrapper. | [Core tests and fixtures](../core/tests-and-fixtures.md) |
 | `randomize_metric.c` | Random metric setup used by generators/tests. | [Core tests and fixtures](../core/tests-and-fixtures.md) |
 | `randomize_primitives.c` | Random primitive setup used by generators/tests. | [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md) |
-| `test_compute_h_and_cs2.c` | EOS enthalpy-only and enthalpy/sound-speed check helpers. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
+| `test_compute_h_and_cs2.c` | EOS enthalpy/sound-speed check helper. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 | `tabulated_eos_unit_test_helpers.c` | Analytic table quantity helper for tabulated EOS checks. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 | `compute_A_flux_with_B.c` | Induction vector-potential HLL helper using `B`. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
 | `compute_A_flux_with_Btilde.c` | Induction vector-potential HLL helper using `Btilde`. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |

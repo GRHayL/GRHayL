@@ -22,11 +22,13 @@ The parent build list
 [GRHayL/Flux_Source/make.code.defn](../../../GRHayL/Flux_Source/make.code.defn)
 compiles the `dirn0`, `dirn1`, and `dirn2` files.
 
-Every row has the same surface status: public declaration, checked-in
-definition, normal and `--disable-hdf5` build membership, direct calls from the
-hybrid and tabulated data generators, and direct replay calls from the ET
-Legacy flux/source test. The ordinary hybrid and tabulated flux tests do **not**
-call these routines; they read precomputed speed arrays from their fixtures.
+Every row has a legacy `void` entry point and a matching `_checked` entry point
+returning `ghl_error_codes_t`; the legacy wrapper aborts on a checked error.
+Both are declared publicly and share a checked-in definition file. The files
+have normal and `--disable-hdf5` build membership. Data generators call checked
+entry points, while the ET Legacy replay exercises legacy wrappers. The
+ordinary hybrid and tabulated flux tests do **not** call these routines; they
+read precomputed speed arrays from their fixtures.
 
 ## Caller Contract
 
@@ -52,9 +54,9 @@ speed kernels depend on `h` and `cs2`.
 
 The primitive pointers are intentionally non-`const`. The production tabulated
 enthalpy/sound-speed implementation clamps `rho`, `Y_e`, and `temperature` and
-recomputes `press` and `eps` in place. The speed routines return the exact
+recomputes `press` and `eps` in place. Checked speed routines return the exact
 `ghl_error_codes_t` from either callback and leave both speed outputs unchanged
-on failure. A successful first callback may mutate its primitive before a
+on failure; legacy wrappers abort instead. A successful first callback may mutate its primitive before a
 failing second callback; rollback is not promised. Callers needing unchanged
 face states must pass copies.
 
@@ -101,8 +103,8 @@ passes production characteristic-speed outputs into an Induction HLL routine.
   analytic magnetized speed bound in every direction and the tabulated
   clamp/mutation behavior. The oracle is implemented separately but uses the
   same magnetosonic model as the kernel.
-- **Coverage gap:** no committed check injects a callback error into these
-  routines.
+- **Focused errors:** `unit_test_hybrid_flux` injects first- and second-callback
+  failures into every checked direction and verifies unchanged outputs.
 - **Coverage gap:** no Flux_Source-to-Induction end-to-end test.
 
 ## Evidence Links

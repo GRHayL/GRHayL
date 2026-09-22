@@ -198,7 +198,7 @@ code_error_workdir=$(mktemp -d)
 created_directories+=("$code_error_workdir")
 ln -s "$repo_root/SLy4_3335_rho391_temp163_ye66.h5" \
   "$code_error_workdir/SLy4_3335_rho391_temp163_ye66.h5"
-for i in {0..87}; do
+for i in {0..88}; do
   if (cd "$code_error_workdir" && "$repo_root/test/unit_test_code_error" "$i"); then
     echo "Failed to fail!"
     exit 1

@@ -36,10 +36,12 @@ Variant build lists:
 
 ## Direct Functions
 
-The direct variant functions above are the complete public HLLE surface. Tests
-may select them through test-local function pointers by EOS family, entropy
-mode, and direction. The former unwired generic direction globals were removed;
-EOS initialization does not select an HLLE family.
+Each direct variant has a legacy `void` entry point and a matching `_checked`
+entry point that returns `ghl_error_codes_t`. The legacy wrapper aborts on a
+checked error. Tests may select checked variants through test-local function
+pointers by EOS family, entropy mode, and direction. Deprecated generic
+direction globals remain exported for compatibility, but EOS initialization
+does not assign them or select an HLLE family.
 
 ## Caller Contract
 
@@ -48,15 +50,16 @@ HLLE flux callers must supply:
 - `prims_r` and `prims_l`: reconstructed face primitive states with `u0`,
   velocity, magnetic field, density, pressure, and EOS-specific fields already
   valid.
-- `eos`: parameters compatible with the active `ghl_compute_h`
+- `eos`: parameters compatible with the active `ghl_compute_h_and_cs2`
   function pointer.
 - `metric_face`: face-centered ADM metric.
 - `cmin_dirn*` and `cmax_dirn*`: characteristic speeds computed for the same
   direction and face. Negative algebraic residue within `DBL_EPSILON` times
   the larger of one and both magnitudes is clamped to zero. Larger negative
-  values are rejected. The clamped values must have a finite positive sum,
-  finite reciprocal, and representable product. Invalid bounds return
-  `ghl_error_invalid_hlle_wavespeeds` before EOS calls or output writes.
+  values are rejected. The clamped values must have a finite positive sum and
+  representable product. Invalid bounds return
+  `ghl_error_invalid_hlle_wavespeeds` from checked entry points before EOS
+  calls or output writes; legacy wrappers abort on that error.
 - `cons`: caller-owned conservative output receiving flux components.
 
 Entropy variants read `prims_r->entropy` and `prims_l->entropy` and write
@@ -67,16 +70,15 @@ momentum, and energy fields look valid.
 Only fields listed in the matrix are written. Other members of `cons` retain
 their prior value; these routines do not initialize the whole struct.
 
-All 12 routines call `ghl_compute_h` twice and return either callback's
-exact error before writing output. Primitive arguments are mutable: production
+All 12 checked routines call `ghl_compute_h_and_cs2` twice and return either
+callback's exact error before writing output. Primitive arguments are mutable: production
 tabulated dispatch clamps `rho`, `Y_e`, and `temperature`, then overwrites
 `press` and `eps`. If the second callback fails, mutation performed by the
 successful first callback is retained. Callers needing immutable reconstructed
 states must pass copies.
 
-Characteristic-speed routines instead use `ghl_compute_h_and_cs2`. Custom EOS
-dispatch must install both callbacks consistently; replacing only the combined
-callback no longer overrides HLLE or source-term thermodynamics.
+Characteristic-speed and source-term routines use the same combined callback,
+so a custom EOS dispatch needs install only `ghl_compute_h_and_cs2`.
 
 ## Tabulated And HDF5 Boundary
 
@@ -85,7 +87,7 @@ tests and generators are filtered. Tabulated EOS initialization is separately
 guarded by `GHL_DISABLE_HDF5` in
 [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
 Link visibility is not runtime support: these real kernels call the global
-`ghl_compute_h` dispatch. A no-HDF5 build
+`ghl_compute_h_and_cs2` dispatch. A no-HDF5 build
 cannot initialize compatible tabulated EOS dispatch, so callers must not invoke
 the tabulated variants there; a hybrid or unset global dispatch can otherwise
 produce the wrong EOS calculation or a null call.

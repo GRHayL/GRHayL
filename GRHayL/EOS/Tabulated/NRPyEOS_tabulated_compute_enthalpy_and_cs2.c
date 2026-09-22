@@ -1,19 +1,5 @@
 #include "ghl_nrpyeos_tabulated.h"
 
-ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy(
-      const ghl_eos_parameters *restrict eos,
-      ghl_primitive_quantities *restrict prims,
-      double *restrict enthalpy_ptr) {
-
-  ghl_tabulated_enforce_bounds_rho_Ye_T(
-        eos, &prims->rho, &prims->Y_e, &prims->temperature);
-  const ghl_error_codes_t error = ghl_tabulated_compute_P_eps_from_T(
-        eos, prims->rho, prims->Y_e, prims->temperature,
-        &prims->press, &prims->eps);
-  *enthalpy_ptr = 1.0 + prims->eps + prims->press/prims->rho;
-  return error;
-}
-
 ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,

@@ -24,23 +24,23 @@
  * Both inputs must therefore be finite and nonnegative. Negative algebraic
  * residue within `DBL_EPSILON` times the larger of one and both magnitudes is
  * clamped to zero; larger negative values are rejected. The clamped values
- * must have a positive finite sum, finite reciprocal, and representable
- * product. Invalid bounds return
+ * must have a positive finite sum and representable product. Invalid bounds return
  * `ghl_error_invalid_hlle_wavespeeds` without changing the output. EOS errors
- * are returned unchanged. See @ref derivation for the conservative-variable,
- * flux, source, and magnetic-field conventions.
+ * are returned unchanged by the `_checked` entry points. The legacy names
+ * preserve their `void` ABI and abort on those errors. See @ref derivation for
+ * the conservative-variable, flux, source, and magnetic-field conventions.
  *
- * HLLE and source-term routines dispatch through `ghl_compute_h`, while
- * characteristic-speed routines dispatch through `ghl_compute_h_and_cs2`.
- * Callers that replace EOS callbacks must install both pointers consistently.
+ * HLLE, source-term, and characteristic-speed routines dispatch through
+ * `ghl_compute_h_and_cs2`.
  *
  * # EOS-specific functions
  *
  * While most of the functions in this gem are independent of EOS, the actual
  * HLLE flux calculations are not. Depending on EOS and whether the entropy
  * is being evolved, additional fluxes need to be computed by the function.
- * Call the public family-specific HLLE entry points directly; there is no
- * generic EOS-selected HLLE dispatch pointer. Available entry points include
+ * Call the public family-specific HLLE entry points directly. Deprecated
+ * generic direction pointers remain exported for binary compatibility but
+ * EOS initialization does not assign them. Available entry points include
  *
  * - @ref ghl_calculate_HLLE_fluxes_dirn0_hybrid
  * - @ref ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy
