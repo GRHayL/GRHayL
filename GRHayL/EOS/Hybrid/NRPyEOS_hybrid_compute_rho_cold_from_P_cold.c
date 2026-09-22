@@ -4,6 +4,8 @@
  * Function     : NRPyEOS_hybrid_compute_rho_cold_from_P_cold()
  * Description  : Computes rho_cold; usually aliased as
  *                ghl_hybrid_compute_rho_cold_from_P_cold
+ * Preconditions: The selected polytropic piece must have nonzero K_ppoly.
+ *                A zero cold-pressure curve has no unique density inverse.
  * Documentation:
 */
 

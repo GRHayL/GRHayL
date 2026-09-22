@@ -197,7 +197,7 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   if(!isfinite(rho_atm) || rho_atm <= 0.0) {
     return ghl_error_invalid_rho_atm;
   }
-  if(!isfinite(rho_min) || !isfinite(rho_max) || !isfinite(K_ppoly0) || K_ppoly0 == 0.0
+  if(!isfinite(rho_min) || !isfinite(rho_max) || !isfinite(K_ppoly0)
      || !isfinite(Gamma_th) || Gamma_th == 1.0 || Gamma_ppoly == NULL
      || (neos > 1 && rho_ppoly == NULL)) {
     return ghl_error_invalid_eos_parameters;
@@ -252,7 +252,7 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   // Step 4: Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
   for(int j = 0; j < neos; j++) {
-    if(!isfinite(eos->K_ppoly[j]) || eos->K_ppoly[j] == 0.0
+    if(!isfinite(eos->K_ppoly[j]) || (K_ppoly0 != 0.0 && eos->K_ppoly[j] == 0.0)
        || !isfinite(eos->eps_integ_const[j])) {
       return ghl_error_invalid_eos_parameters;
     }

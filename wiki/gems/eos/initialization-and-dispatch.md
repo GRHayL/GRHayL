@@ -95,8 +95,10 @@ calling `ghl_initialize_tabulated_eos`.
 - Hybrid setup enforces `1 <= neos <= MAX_EOS_PARAMS`, requires one finite
   nonsingular gamma per piece, and requires `neos - 1` finite, positive,
   strictly increasing breakpoints. The breakpoint pointer may be `NULL` for a
-  one-piece EOS. Constructed `K_ppoly` values must be finite and nonzero,
-  integration constants must be finite, and consumed pressure breakpoints must
+  one-piece EOS. Constructed `K_ppoly` values and integration constants must be
+  finite. A zero `K_ppoly0` intentionally produces a zero cold-pressure curve;
+  otherwise every constructed `K_ppoly` must remain nonzero. The zero curve has
+  no unique cold-pressure density inverse. Consumed pressure breakpoints must
   be finite.
 - Tabulated initialization rejects nonfinite atmosphere and requested bounds
   before reading the table. Requested min/max values are then clamped to

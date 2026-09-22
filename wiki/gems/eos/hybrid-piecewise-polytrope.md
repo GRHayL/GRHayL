@@ -95,7 +95,9 @@ for `neos`, `rho_ppoly`, `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`,
   `GRHayL/GRHayL_Core/initialize_eos.c`).
 - Rho from pressure: `NRPyEOS_hybrid_compute_rho_cold_from_P_cold` selects the
   pressure piece from `p_ppoly`, computes the corresponding cold density, then
-  enforces rho bounds (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c`).
+  enforces rho bounds. It requires a nonzero `K_ppoly` in the selected piece;
+  an identically zero cold-pressure curve has no unique density inverse
+  (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c`).
 - Rho bounds: `NRPyEOS_hybrid_enforce_bounds__rho` clamps to `rho_min` and
   `rho_max` and reports whether input was already in range
   (`GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c`).
@@ -133,9 +135,13 @@ lookup/set-constant helpers consume `neos - 1` density breakpoints. Callers
 therefore supply one `Gamma_ppoly` per piece and one fewer density breakpoint
 for multi-piece EOSs; the breakpoint pointer may be `NULL` for one piece.
 Initialization enforces `1 <= neos <= MAX_EOS_PARAMS`, non-null required
-arrays, finite nonsingular used gammas and coefficients, and finite, positive,
-strictly increasing breakpoints. C callers remain responsible for supplying
-arrays of the documented lengths.
+arrays, finite `Gamma_ppoly` values unequal to zero and one, finite `Gamma_th`
+unequal to one, finite coefficients, and finite, positive, strictly increasing
+breakpoints. A zero `K_ppoly0` intentionally defines a zero cold-pressure
+curve; when `K_ppoly0` is nonzero, every constructed `K_ppoly` must remain
+nonzero. Successful initialization does not exclude consumer-specific
+singularities such as Noble recovery with `Gamma_th = 0`. C callers remain
+responsible for supplying arrays of the documented lengths.
 
 `ghl_initialize_hybrid_eos` copies and computes pressure breakpoints only for
 `rho_ppoly[0..neos-2]`. It never reads a one-piece breakpoint or an unused
