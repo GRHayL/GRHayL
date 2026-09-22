@@ -49,10 +49,7 @@ the `MINUS2`, `MINUS1`, `PLUS_0`, `PLUS_1`, and `PLUS_2` stencil indices from
 [ghl_reconstruction.h](../../../GRHayL/include/ghl_reconstruction.h). Keep
 wrapper and helper indexing aligned when changing caller loops.
 
-`ppm_compute_for_cell.c` has an older comment that labels its helper `Ur` as a
-left-face right state. That conflicts with its `U[c]`/`U[c+1]` arithmetic, the
-steepened helper docs, and wrapper filtering. Use the implementation mapping
-above.
+Both centered-helper comments agree with the implementation mapping above.
 
 ## Flattening
 

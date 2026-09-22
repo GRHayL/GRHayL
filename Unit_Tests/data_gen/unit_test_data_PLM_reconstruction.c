@@ -5,8 +5,8 @@ int main(int argc, char **argv) {
   const int arraylength = 100000;
 
   double *var = (double*) malloc(sizeof(double)*arraylength);
-  double *var_r = (double*) malloc(sizeof(double)*arraylength);
-  double *var_l = (double*) malloc(sizeof(double)*arraylength);
+  double *var_r = (double*) calloc(arraylength, sizeof(double));
+  double *var_l = (double*) calloc(arraylength, sizeof(double));
 
   // Initialize random data.
   for(int index=0; index<arraylength/2; index++) {
@@ -46,13 +46,13 @@ int main(int argc, char **argv) {
         ghl_reconstruction = &ghl_superbee_reconstruction;
         break;
     }
-    for(int index=0; index<arraylength; index++) {
+    for(int index=2; index<arraylength-1; index++) {
       ghl_reconstruction(&var[index-2], &var_r[index], &var_l[index]);
     }
     fwrite(var_r, sizeof(double), arraylength, outfile);
     fwrite(var_l, sizeof(double), arraylength, outfile);
 
-    for(int index=0; index<arraylength; index++) {
+    for(int index=2; index<arraylength-1; index++) {
       ghl_reconstruction(&varpert[index-2], &var_r[index], &var_l[index]);
     }
     fwrite(var_r, sizeof(double), arraylength, outpert);

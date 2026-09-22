@@ -64,10 +64,8 @@ Coverage limits:
 
 - Replay checks only `index=2` through `arraylength-2`, the valid four-point
   stencil range, and branches to `ghl_error` when a comparison fails.
-- The data generator instead calls `&var[index-2]` for every index from `0`
-  through `arraylength-1`. Its first two and final calls access outside the
-  allocated input. Boundary fixture entries are ignored by replay, but the
-  generator itself has an out-of-bounds coverage/tooling gap.
+- The data generator uses the same valid interval and writes deterministic zero
+  placeholders at serialized boundary slots ignored by replay.
 - No direct test isolates `ghl_minmod` or `ghl_maxmod`; wrapper tests exercise
   them transitively.
 
