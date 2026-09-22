@@ -30,7 +30,7 @@ export LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 ```
 
 [.github/run_tests.sh](../../.github/run_tests.sh) runs `./configure -r`, then
-`make tests`, then exports `LD_LIBRARY_PATH` with `build/lib` before invoking
+`make tests datagen`, then exports `LD_LIBRARY_PATH` with `build/lib` before invoking
 compiled tests. Workflow jobs use the composite compile action, which runs
 `make tests datagen` and `make install`; jobs then invoke binaries under
 `test/`, often with `LD_LIBRARY_PATH` pointing at the installed `lib/`.
@@ -71,7 +71,7 @@ its generation mode. Normal CI replay downloads fixtures and runs test mode.
 route, not a complete workflow matrix:
 
 1. Run `./configure -r`.
-2. Run `make tests`.
+2. Run `make tests datagen`.
 3. Export `LD_LIBRARY_PATH` with `build/lib`.
 4. Download root-level `*.bin` fixtures and HDF5/EOS tables.
 5. Decompress downloaded `*.bz2` EOS tables.
@@ -83,23 +83,12 @@ route, not a complete workflow matrix:
    C2P replay. This page records only that visible setup command, not `pyghl`
    internals.
 9. Continue selected compiled-test runs.
-10. Remove root-level `*.bin`, `*.h5`, and `*.bz2` only if execution reaches
-    the final cleanup command.
+10. Use an `EXIT` trap to remove only files downloaded or decompressed by this
+    run and its private expected-error work directory.
 
-The cleanup is explicit:
-
-```sh
-rm -f ./*.bin ./*.h5 ./*.bz2
-```
-
-If the runner exits early, root-level downloaded or decompressed fixtures may
-remain. `make realclean` removes build products such as `build/`, `test/`, and
-the generated `Makefile`; it does not own remote fixture cleanup.
-
-The final globs are not provenance-aware: they remove every matching root-level
-file, including a pre-existing file that `download_file` detected and skipped.
-Run the full script only in a disposable checkout with no user-owned root-level
-`.bin`, `.h5`, or `.bz2` files.
+Cleanup runs on success or failure and preserves every preexisting path.
+`make realclean` separately removes build products such as `build/`, `test/`,
+and the generated `Makefile`.
 
 `make clean` is narrower: current generated rules omit data-generator
 executables and their objects from its removal list. `make realclean` removes

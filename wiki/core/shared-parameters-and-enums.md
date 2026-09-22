@@ -43,10 +43,9 @@ Some installed-header cases need narrower labels:
   assigns them; use the [EOS dispatch contract](eos-dispatch-contract.md) for
   lifecycle and known unassigned entries.
 - [`GRHayL/include/ghl_unit_tests.h`](../../GRHayL/include/ghl_unit_tests.h) is
-  also named by the install list, but its non-inline helper definitions live
-  under [`Unit_Tests/`](../../Unit_Tests/), not in the Core or gem library
-  manifests. Treat it as an installed test-support declaration header, not
-  evidence that those helpers are linkable from the installed GRHayL library.
+  source-tree-only. Its non-inline helper definitions live under
+  [`Unit_Tests/`](../../Unit_Tests/), not in the Core or gem library manifests,
+  and the header is excluded from the install list.
 
 `ghl.h` also exposes guarded utility/normalization macros (`SQR`,
 `ONE_OVER_SQRT_4PI`, and `M_PI`) and the `MAX_EOS_PARAMS` layout bound. Route

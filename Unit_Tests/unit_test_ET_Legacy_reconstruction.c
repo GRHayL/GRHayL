@@ -30,6 +30,8 @@ int main(int argc, char **argv) {
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
+  if(key != 1 || dirlength != 20)
+    ghl_error("Invalid ET_Legacy_reconstruction_input.bin dimension (expected 20)\n");
   const int arraylength = dirlength*dirlength*dirlength;
 
   double *rho = (double*) malloc(sizeof(double)*arraylength);

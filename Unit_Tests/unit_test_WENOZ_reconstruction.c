@@ -5,6 +5,8 @@ int main(int argc, char **argv) {
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
+  if(key != 1 || arraylength != 100000)
+    ghl_error("Invalid WENOZ_reconstruction_input.bin length (expected 100000)\n");
 
   const int NGHOSTS = 3;
 

@@ -127,18 +127,16 @@ fixture contents or metadata forbidden by the
 
 ## Helper-only files
 
-### Installed test-support header
+### Test-support header
 
-- [GRHayL/include/ghl_unit_tests.h](../../GRHayL/include/ghl_unit_tests.h) is
-  named by [GRHayL/include/make.code.defn](../../GRHayL/include/make.code.defn),
-  so it is in the configured install-header set.
+- [GRHayL/include/ghl_unit_tests.h](../../GRHayL/include/ghl_unit_tests.h) is a
+  source-tree test header and is not in the configured install-header set.
 - Some non-inline declarations are implemented by helper files under
   [Unit_Tests/](../../Unit_Tests/), including interpolation helpers,
   perturbation comparators, randomizers, and `get_table_quantity`. The declared
   binary read/write family and `ghl_initial_random_data` have no visible
   definitions. None of these test helpers appears in the Core/gem library
-  source manifests, so install-header membership does not establish linkability
-  from `libghl`; tests link only the helper sources selected by the test build.
+  source manifests; tests link only the helper sources selected by the test build.
 
 ### Perturbation helpers
 

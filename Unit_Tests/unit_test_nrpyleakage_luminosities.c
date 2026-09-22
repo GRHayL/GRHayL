@@ -244,10 +244,11 @@ run_unit_test(const ghl_eos_parameters *restrict eos) {
   int err = 0;
   err += fread(&n1, sizeof(int), 1, fp_unpert);
   err += fread(&n2, sizeof(int), 1, fp_pert  );
-  if( err != 2 || n1 != n2 ) {
+  if( err != 2 || n1 != 1024 || n2 != 1024 ) {
     fclose(fp_unpert);
     fclose(fp_pert);
-    ghl_error("Problem reading number of points from file (err: %d, n1: %d, n2: %d)\n",
+    ghl_error("Invalid nrpyleakage_luminosities_{unperturbed,perturbed}.bin length "
+              "(err: %d, n1: %d, n2: %d; expected 1024)\n",
                  err, n1, n2);
   }
 

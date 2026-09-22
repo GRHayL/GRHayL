@@ -1,11 +1,14 @@
 # Step 0: Add NRPy's directory to the path
 # https://stackoverflow.com/questions/16780014/import-file-from-parent-directory
 import os,sys
-import GRMHD_equations_new_version as GRMHD    # NRPy+: Generate general relativistic magnetohydrodynamics equations
+from pathlib import Path
 
-nrpy_dir_path = os.path.join("nrpy/")
+script_dir = Path(__file__).resolve().parent
+nrpy_dir_path = str(script_dir / "nrpy")
 if nrpy_dir_path not in sys.path:
-    sys.path.append(nrpy_dir_path)
+    sys.path.insert(0, nrpy_dir_path)
+
+import GRMHD_equations_new_version as GRMHD    # NRPy+: Generate general relativistic magnetohydrodynamics equations
 
 from outputC import outputC, outCfunction # NRPy+: Core C code output module
 import sympy as sp               # SymPy: The Python computer algebra package upon which NRPy+ depends
@@ -160,8 +163,12 @@ def Cfunction__GRMHD_characteristic_speeds(Ccodesdir, includes=None, formalism="
     prestring = r"""
 double h_r, h_l, cs2_r, cs2_l;
 
-ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
+if(error != ghl_success)
+  return error;
+error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+if(error != ghl_success)
+  return error;
 """
 
     for i in range(len(prims_NRPy_r)):
@@ -229,12 +236,12 @@ ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
              "cmax_dirn1",
              "cmax_dirn2"]
 
-    c_type = "void"
+    c_type = "ghl_error_codes_t"
 
-    params  =  "const primitive_quantities *restrict prims_r, "
-    params  += "const primitive_quantities *restrict prims_l, "
-    params  += "const eos_parameters *restrict eos, "
-    params  += "const metric_quantities *restrict metric_face, "
+    params  =  "ghl_primitive_quantities *restrict prims_r, "
+    params  += "ghl_primitive_quantities *restrict prims_l, "
+    params  += "const ghl_eos_parameters *restrict eos, "
+    params  += "const ghl_metric_quantities *restrict metric_face, "
 
 
     for flux_dirn in range(3):
@@ -246,6 +253,7 @@ ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
 
         body = outputC(write_speeds_rhs_str, write_speeds_str, params=outCparams,
                        filename="returnstring", prestring=prestring)
+        body += "return ghl_success;\n"
 
         desc = "Compute the characteristic speeds in direction " + str(flux_dirn)
         name = "ghl_calculate_characteristic_speed_dirn" + str(flux_dirn)
@@ -254,6 +262,7 @@ ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
             outfile=os.path.join(Ccodesdir,name+".c"),
             includes=includes,
             desc=desc,
+            c_type=c_type,
             name=name,
             params=params + cmin_param + cmax_param,
             body= body,

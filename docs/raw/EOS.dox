@@ -25,7 +25,9 @@
  * - @ref ghl_initialize_tabulated_eos_functions_and_params
  *
  * which will properly set up all the function pointers and struct parameters
- * for the chosen EOS.
+ * for the chosen EOS. Flux and source routines use `ghl_compute_h`, while
+ * characteristic-speed routines use `ghl_compute_h_and_cs2`; custom dispatch
+ * users must replace both callbacks consistently.
  */
 
 /**

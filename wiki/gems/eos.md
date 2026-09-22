@@ -23,14 +23,17 @@ EOS provides hybrid, simple, and tabulated equation-of-state support through ini
 
 - `GRHayL/include/ghl.h`
 - `GRHayL/include/ghl_eos_functions.h`
-- `GRHayL/include/ghl_eos_functions_declaration.h`
 - `GRHayL/include/ghl_nrpyeos_hybrid.h`
 - `GRHayL/include/ghl_nrpyeos_tabulated.h`
+
+`GRHayL/include/ghl_eos_functions_declaration.h` is an internal,
+non-installed storage-definition companion.
 
 Key public surface:
 - `ghl_initialize_simple_eos_functions_and_params`
 - `ghl_initialize_hybrid_eos_functions_and_params`
 - `ghl_initialize_tabulated_eos_functions_and_params`
+- `ghl_compute_h`
 - `ghl_compute_h_and_cs2`
 - Hybrid `ghl_hybrid_*` function pointers
 - Tabulated `ghl_tabulated_*` function pointers

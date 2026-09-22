@@ -1,5 +1,20 @@
 #include "ghl_nrpyeos_hybrid.h"
 
+ghl_error_codes_t NRPyEOS_hybrid_compute_enthalpy(
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims,
+      double *restrict enthalpy_ptr) {
+
+  double P_cold, eps_cold;
+  ghl_hybrid_compute_P_cold_and_eps_cold(
+        eos, prims->rho, &P_cold, &eps_cold);
+  const double eps_th = (prims->press - P_cold)
+                        / ((eos->Gamma_th - 1.0)*prims->rho);
+  const double eps = eps_cold + eps_th;
+  *enthalpy_ptr = 1.0 + eps + prims->press/prims->rho;
+  return ghl_success;
+}
+
 /**
  * @ingroup hyb_eos
  * @brief Computes the enthalpy and the sound speed squared;

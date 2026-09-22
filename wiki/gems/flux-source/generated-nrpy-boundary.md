@@ -25,21 +25,29 @@ Flux_Source keeps Python generator/source scripts beside generated C kernels:
 
 ## Command Status
 
-Run generation only in a disposable copy. Current repo-local probe classifies
-entry points as follows:
+Install the pinned symbolic dependency in a disposable environment, then
+generate into a new or empty staging directory from the repository root:
+
+```sh
+python3 -m pip install -r GRHayL/Flux_Source/requirements.txt
+python3 GRHayL/Flux_Source/GRHayL_rhs.py /tmp/grhayl-flux-stage
+```
+
+The driver refuses destinations inside `GRHayL/Flux_Source`, never removes an
+existing tree, emits the complete family, and checks exact output-set equality
+against the root and variant Flux_Source build manifests. It rejects other
+SymPy versions: the pin stabilizes symbolic simplification and CSE ordering.
+The source-term generator separately normalizes the printer's known
+`pow(tmp_35, 1.0/2.0)` form to `sqrt(tmp_35)`.
 
 | Family | Status | Evidence |
 | --- | --- | --- |
-| source terms | **supported (disposable probe verified)** | From `GRHayL/Flux_Source`, `python3 GRHayL_rhs.py` exits zero and writes `./ghl_calculate_source_terms.c`. It requires Python, SymPy, and the checked-in `nrpy/` tree. Running from repo root fails the script's relative `nrpy/` import path. |
-| characteristic speeds | **unknown / no supported command** | `GRHayL_rhs.py` imports the module but comments out its generation call. Its callable still spells unprefixed parameter types such as `primitive_quantities`, unlike checked-in public signatures. |
-| four HLLE families | **unknown / no supported command** | Main-loop directory creation and flux calls are commented out. The callable derives both filename and C symbol suffix from `Ccodesdir` and still spells unprefixed parameter types. Do not invent a command from these comments. |
+| source terms | **supported** | Pinned staged regeneration emits the checked-in interface and the explicit normalization preserves its `sqrt` form. |
+| characteristic speeds | **supported** | Pinned staged regeneration emits all three current `ghl_*` status-returning interfaces. |
+| four HLLE families | **supported** | Pinned staged regeneration emits all direct variants with current interfaces. |
 
-Disposable source-term regeneration produced C that passed
-`cc -std=c99 -Wall -Wextra -fsyntax-only` with the public include directory,
-but did not match the checked-in file byte-for-byte: one expression used
-`pow(tmp_35, 1.0/2.0)` where checked-in C uses `sqrt(tmp_35)`. This is a
-generator-drift signal, not permission to overwrite checked-in source. No
-characteristic-speed or HLLE regeneration was run.
+Reviewers must syntax-compile every staged C file and compare it with the
+checked-in generated result before copying any output into the source tree.
 
 ## NRPy Support Modules
 
@@ -90,10 +98,8 @@ readers to [docs/raw/Flux_Source.dox](../../../docs/raw/Flux_Source.dox) and
 equation evidence.
 
 Checked-in C plus active build configuration define current executable
-behavior. Python files define generation intent. Neither side alone proves
-reproducibility. Until speed/flux commands are restored and validated, do not
-hand-edit generated C as though it were primary symbolic authority and do not
-promise full-family regeneration.
+behavior. Python files define generation intent. Review both together and use
+the staging command rather than hand-editing generated C alone.
 
 ## Evidence Links
 
@@ -102,6 +108,7 @@ promise full-family regeneration.
 - [GRHayL/Flux_Source/IGM_All_Source_Terms.py](../../../GRHayL/Flux_Source/IGM_All_Source_Terms.py)
 - [GRHayL/Flux_Source/IGM_All_fluxes.py](../../../GRHayL/Flux_Source/IGM_All_fluxes.py)
 - [GRHayL/Flux_Source/IGM_Characteristic_Speeds.py](../../../GRHayL/Flux_Source/IGM_Characteristic_Speeds.py)
+- [GRHayL/Flux_Source/requirements.txt](../../../GRHayL/Flux_Source/requirements.txt)
 - [GRHayL/Flux_Source/nrpy/](../../../GRHayL/Flux_Source/nrpy/)
 - [GRHayL/Flux_Source/make.code.defn](../../../GRHayL/Flux_Source/make.code.defn)
 - [GRHayL/Flux_Source/hybrid/make.code.defn](../../../GRHayL/Flux_Source/hybrid/make.code.defn)

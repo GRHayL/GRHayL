@@ -1,5 +1,166 @@
 #include "ghl_unit_tests.h"
 
+typedef ghl_error_codes_t (*flux_function)(
+      ghl_primitive_quantities *restrict,
+      ghl_primitive_quantities *restrict,
+      const ghl_eos_parameters *restrict,
+      const ghl_metric_quantities *restrict,
+      double,
+      double,
+      ghl_conservative_quantities *restrict);
+
+static ghl_error_codes_t injected_h_failure(
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims,
+      double *restrict h) {
+  (void)eos; (void)prims; (void)h;
+  return ghl_error_table_max_T;
+}
+
+static bool conservative_is_poisoned(const ghl_conservative_quantities *restrict cons) {
+  return cons->rho == 91.0 && cons->tau == 91.0 && cons->Y_e == 91.0
+         && cons->SD[0] == 91.0 && cons->SD[1] == 91.0 && cons->SD[2] == 91.0
+         && cons->entropy == 91.0;
+}
+
+static bool hybrid_fluxes_differ(
+      const ghl_conservative_quantities *restrict a,
+      const ghl_conservative_quantities *restrict b,
+      const bool entropy) {
+  return a->rho != b->rho || a->tau != b->tau
+         || a->SD[0] != b->SD[0] || a->SD[1] != b->SD[1] || a->SD[2] != b->SD[2]
+         || (entropy && a->entropy != b->entropy);
+}
+
+static bool flux_value_mismatch(const double expected, const double actual) {
+  const double rtol = 8.0e-14;
+  const double atol = 1.0e-30;
+  return !isfinite(expected) || !isfinite(actual)
+         || (fabs(expected - actual) > atol
+             && fabs(expected - actual) > rtol*fmax(fabs(expected), fabs(actual)));
+}
+
+static bool legacy_clamp_mismatch(const double expected, const double actual) {
+  // Compatibility envelope for trusted outputs generated before speed clamping.
+  const double rtol = 8.0e-14;
+  const double atol = 16.0*DBL_EPSILON;
+  return !isfinite(expected) || !isfinite(actual)
+         || (fabs(expected - actual) > atol
+             && fabs(expected - actual) > rtol*fmax(fabs(expected), fabs(actual)));
+}
+
+static bool flux_fixture_mismatch(
+      const double expected,
+      const double actual,
+      const double perturbed,
+      const double cmin,
+      const double cmax) {
+  if(!isfinite(expected) || !isfinite(actual) || !isfinite(perturbed))
+    return true;
+  // The pinned fixtures predate clamping of roundoff-negative wave speeds.
+  if(cmin < 0.0 || cmax < 0.0)
+    return legacy_clamp_mismatch(expected, actual);
+  return ghl_pert_test_fail(expected, actual, perturbed);
+}
+
+static void check_hybrid_flux_contract(const ghl_eos_parameters *restrict eos) {
+  const flux_function functions[2][3] = {
+    {ghl_calculate_HLLE_fluxes_dirn0_hybrid,
+     ghl_calculate_HLLE_fluxes_dirn1_hybrid,
+     ghl_calculate_HLLE_fluxes_dirn2_hybrid},
+    {ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy,
+     ghl_calculate_HLLE_fluxes_dirn1_hybrid_entropy,
+     ghl_calculate_HLLE_fluxes_dirn2_hybrid_entropy}
+  };
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims_r, prims_l;
+  ghl_initialize_primitives(2.0, 5.0, 2.5,
+                            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                            0.7, 0.3, 1.0, &prims_r);
+  prims_r.u0 = 1.0;
+  ghl_initialize_primitives(1.0, 2.0, 2.0,
+                            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                            0.4, 0.2, 1.0, &prims_l);
+  prims_l.u0 = 1.0;
+
+  for(int entropy=0; entropy<2; entropy++) {
+    for(int dir=0; dir<3; dir++) {
+      ghl_conservative_quantities cons = {91.0, 91.0, 91.0, {91.0, 91.0, 91.0}, 91.0};
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric, 0.0, 0.0, &cons)
+            != ghl_error_invalid_hlle_wavespeeds || !conservative_is_poisoned(&cons))
+        ghl_error("HLLE zero-speed contract failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric, -1.0, 1.0, &cons)
+            != ghl_error_invalid_hlle_wavespeeds || !conservative_is_poisoned(&cons))
+        ghl_error("HLLE negative-speed contract failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric, 0.5/DBL_MAX, 0.0, &cons)
+            != ghl_error_invalid_hlle_wavespeeds || !conservative_is_poisoned(&cons))
+        ghl_error("HLLE tiny-speed contract failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric, 1e200, 1e200, &cons)
+            != ghl_error_invalid_hlle_wavespeeds || !conservative_is_poisoned(&cons))
+        ghl_error("HLLE product-overflow contract failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric, 0.0, 1.0, &cons)
+            != ghl_success)
+        ghl_error("HLLE one-sided speed failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      ghl_conservative_quantities zero_clamped = {0};
+      ghl_conservative_quantities residue_clamped = {0};
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric,
+                                 100.0, 0.0, &zero_clamped) != ghl_success
+         || functions[entropy][dir](&prims_r, &prims_l, eos, &metric,
+                                    100.0, -8.0*DBL_EPSILON,
+                                    &residue_clamped) != ghl_success
+         || hybrid_fluxes_differ(&zero_clamped, &residue_clamped, entropy))
+        ghl_error("HLLE roundoff-negative clamp failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric,
+                                 0.0, 100.0, &zero_clamped) != ghl_success
+         || functions[entropy][dir](&prims_r, &prims_l, eos, &metric,
+                                    -8.0*DBL_EPSILON, 100.0,
+                                    &residue_clamped) != ghl_success
+         || hybrid_fluxes_differ(&zero_clamped, &residue_clamped, entropy))
+        ghl_error("HLLE roundoff-negative clamp failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric, 0.4, 0.7, &cons)
+            != ghl_success)
+        ghl_error("HLLE fixed-bound call failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      const double invsum = 1.0/1.1;
+      if(flux_value_mismatch(invsum*(-0.28), cons.rho)
+         || flux_value_mismatch(invsum*(-0.84), cons.tau)
+         || flux_value_mismatch(invsum*(0.4*5.0 + 0.7*2.0), cons.SD[dir])
+         || flux_value_mismatch(0.0, cons.SD[(dir+1)%3])
+         || flux_value_mismatch(0.0, cons.SD[(dir+2)%3]))
+        ghl_error("Independent asymmetric HLLE check failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+      if(entropy && flux_value_mismatch(invsum*(-0.28*(0.7 - 0.4)), cons.entropy))
+        ghl_error("Independent entropy HLLE check failed for hybrid direction=%d\n", dir);
+      if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric, 0.0, 2.0/DBL_MAX, &cons)
+            != ghl_success)
+        ghl_error("HLLE invertible-small speed failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+
+      cons = (ghl_conservative_quantities){91.0, 91.0, 91.0, {91.0, 91.0, 91.0}, 91.0};
+      ghl_error_codes_t (*saved_compute_h)(
+            const ghl_eos_parameters *restrict,
+            ghl_primitive_quantities *restrict,
+            double *restrict) = ghl_compute_h;
+      ghl_compute_h = injected_h_failure;
+      const ghl_error_codes_t error = functions[entropy][dir](
+            &prims_r, &prims_l, eos, &metric, 1.0, 1.0, &cons);
+      ghl_compute_h = saved_compute_h;
+      if(error != ghl_error_table_max_T || !conservative_is_poisoned(&cons))
+        ghl_error("HLLE callback-error contract failed for hybrid entropy=%d direction=%d\n",
+                  entropy, dir);
+    }
+  }
+}
+
 int main(int argc, char **argv) {
 
   // Set up test data
@@ -7,6 +168,8 @@ int main(int argc, char **argv) {
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
+  if(key != 1 || arraylength != 10000)
+    ghl_error("Invalid hybrid_flux_input.bin length (expected 10000)\n");
 
   const double poison = 1e300;
 
@@ -28,6 +191,7 @@ int main(int argc, char **argv) {
         rho_b_min, rho_b_min, rho_b_max,
         neos, rho_ppoly, Gamma_ppoly,
         k_ppoly0, Gamma_th, &eos);
+  check_hybrid_flux_contract(&eos);
 
   // Allocate memory for metric
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
@@ -133,7 +297,7 @@ int main(int argc, char **argv) {
   FILE *pertfile = fopen_with_check("hybrid_flux_output_pert.bin", "rb");
 
   // Function pointer to allow for loop over fluxes
-  void (*calculate_HLLE_fluxes)(
+  ghl_error_codes_t (*calculate_HLLE_fluxes)(
         ghl_primitive_quantities *restrict,
         ghl_primitive_quantities *restrict,
         const ghl_eos_parameters *restrict,
@@ -225,47 +389,48 @@ int main(int argc, char **argv) {
         prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
 
         ghl_conservative_quantities cons_fluxes;
-        calculate_HLLE_fluxes(
+        error = calculate_HLLE_fluxes(
               &prims_r, &prims_l, &eos,
               &metric_face, cmin[index], cmax[index],
               &cons_fluxes);
+        ghl_abort_if_error(error);
 
-        if( ghl_pert_test_fail(trusted_rho_star_flux[index], cons_fluxes.rho, pert_rho_star_flux[index]) )
+        if( flux_fixture_mismatch(trusted_rho_star_flux[index], cons_fluxes.rho, pert_rho_star_flux[index], cmin[index], cmax[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable rho_star_flux.\n"
                     "  rho_star_flux trusted %.14e computed %.14e perturbed %.14e\n"
                     "  rel.err. %.14e %.14e\n", trusted_rho_star_flux[index], cons_fluxes.rho, pert_rho_star_flux[index],
                                                 relative_error(trusted_rho_star_flux[index], cons_fluxes.rho),
                                                 relative_error(trusted_rho_star_flux[index], pert_rho_star_flux[index]));
 
-        if( ghl_pert_test_fail(trusted_tau_flux[index], cons_fluxes.tau, pert_tau_flux[index]) )
+        if( flux_fixture_mismatch(trusted_tau_flux[index], cons_fluxes.tau, pert_tau_flux[index], cmin[index], cmax[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable tau_flux.\n"
                     "  tau_flux trusted %.14e computed %.14e perturbed %.14e\n"
                     "  rel.err. %.14e %.14e\n", trusted_tau_flux[index], cons_fluxes.tau, pert_tau_flux[index],
                                                 relative_error(trusted_tau_flux[index], cons_fluxes.tau),
                                                 relative_error(trusted_tau_flux[index], pert_tau_flux[index]));
 
-        if( ghl_pert_test_fail(trusted_S_x_flux[index], cons_fluxes.SD[0], pert_S_x_flux[index]) )
+        if( flux_fixture_mismatch(trusted_S_x_flux[index], cons_fluxes.SD[0], pert_S_x_flux[index], cmin[index], cmax[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable S_x_flux.\n"
                     "  S_x_flux trusted %.14e computed %.14e perturbed %.14e\n"
                     "  rel.err. %.14e %.14e\n", trusted_S_x_flux[index], cons_fluxes.SD[0], pert_S_x_flux[index],
                                                 relative_error(trusted_S_x_flux[index], cons_fluxes.SD[0]),
                                                 relative_error(trusted_S_x_flux[index], pert_S_x_flux[index]));
 
-        if( ghl_pert_test_fail(trusted_S_y_flux[index], cons_fluxes.SD[1], pert_S_y_flux[index]) )
+        if( flux_fixture_mismatch(trusted_S_y_flux[index], cons_fluxes.SD[1], pert_S_y_flux[index], cmin[index], cmax[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable S_y_flux.\n"
                     "  S_y_flux trusted %.14e computed %.14e perturbed %.14e\n"
                     "  rel.err. %.14e %.14e\n", trusted_S_y_flux[index], cons_fluxes.SD[1], pert_S_y_flux[index],
                                                 relative_error(trusted_S_y_flux[index], cons_fluxes.SD[1]),
                                                 relative_error(trusted_S_y_flux[index], pert_S_y_flux[index]));
 
-        if( ghl_pert_test_fail(trusted_S_z_flux[index], cons_fluxes.SD[2], pert_S_z_flux[index]) )
+        if( flux_fixture_mismatch(trusted_S_z_flux[index], cons_fluxes.SD[2], pert_S_z_flux[index], cmin[index], cmax[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable S_z_flux.\n"
                     "  S_z_flux trusted %.14e computed %.14e perturbed %.14e\n"
                     "  rel.err. %.14e %.14e\n", trusted_S_z_flux[index], cons_fluxes.SD[2], pert_S_z_flux[index],
                                                 relative_error(trusted_S_z_flux[index], cons_fluxes.SD[2]),
                                                 relative_error(trusted_S_z_flux[index], pert_S_z_flux[index]));
 
-        if( entropy && ghl_pert_test_fail(trusted_ent_flux[index], cons_fluxes.entropy, pert_ent_flux[index]) )
+        if( entropy && flux_fixture_mismatch(trusted_ent_flux[index], cons_fluxes.entropy, pert_ent_flux[index], cmin[index], cmax[index]) )
           ghl_error("Test unit_test_hybrid_flux has failed for variable ent_flux.\n"
                     "  ent_flux trusted %.14e computed %.14e perturbed %.14e\n"
                     "  rel.err. %.14e %.14e\n", trusted_ent_flux[index], cons_fluxes.entropy, pert_ent_flux[index],

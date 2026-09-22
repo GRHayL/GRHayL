@@ -29,8 +29,8 @@ trust the underlying repo files and update the KB route.
 | [`GRHayL/include/ghl_metric_helpers.h`](../../GRHayL/include/ghl_metric_helpers.h) | Header-only 3D/4D raise/lower and vector-square helpers. |
 | [`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h) | Logging/error macros and `ghl_Warn_Error` API. |
 | [`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h) | Header-only primitive/conservative debug printing helpers. |
-| [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h) | External declarations for EOS and flux function pointers. |
-| [`GRHayL/include/ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h) | Storage definitions for EOS and flux function pointers. |
+| [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h) | External declarations for EOS function pointers. |
+| [`GRHayL/include/ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h) | Internal storage definitions for EOS function pointers. |
 | [`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn) | Public header install/build availability list. |
 
 Related routers: [KB index](../index.md), [catalog](../catalog.md),

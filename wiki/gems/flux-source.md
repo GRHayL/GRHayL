@@ -32,11 +32,9 @@ Key public surface:
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated`
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy`
 
-Direct suffixed HLLE functions are the repo-proven call surface. Generic
-unsuffixed `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals are declared and have
-storage but no assignment/call/test; their `const` primitive signature also
-differs from direct mutable signatures. Route details and Doxygen contradiction
-to the [HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
+Direct suffixed HLLE functions are the public call surface. The former unwired
+generic direction globals have been removed. Route details to the
+[HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
 
 ## Implementation Paths
 
@@ -80,8 +78,9 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
   symbols.
 - Source terms require metric derivatives provided by caller-side infrastructure.
 - Characteristic speeds are shared by hydrodynamic flux work and induction HLL flux setup.
-- Flux and speed routines discard EOS callback errors; production tabulated
-  dispatch can mutate face primitives. Owner pages state exact preconditions.
+- Flux, speed, and source routines return EOS callback errors; production
+  tabulated dispatch can mutate face primitives. Owner pages state exact
+  output and mutation contracts.
 
 ## Common Edit Routes
 
@@ -95,8 +94,9 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
 - Direction-specific files can diverge when only one axis is edited.
 - Entropy and non-entropy flux variants must stay consistent in conservative field ordering.
 - Generated or NRPy-derived expressions can drift from checked-in C if both are not updated together.
-- Only source-term NRPy command is verified; speed/HLLE regeneration support is
-  unknown. Use [generated boundary](flux-source/generated-nrpy-boundary.md).
+- The staging generator emits source, speed, and all four HLLE families and
+  checks its output set against build manifests. Use the
+  [generated boundary](flux-source/generated-nrpy-boundary.md).
 - GRHayLib compiles Flux_Source subdirectories directly; new directories require downstream coordination.
 
 ## Do Not Duplicate

@@ -58,7 +58,8 @@ Read first:
 
 Edit paths:
 - Core source: `GRHayL/GRHayL_Core/`
-- Shared public headers: `GRHayL/include/ghl.h`, `GRHayL/include/ghl_metric_helpers.h`, `GRHayL/include/ghl_io.h`, `GRHayL/include/ghl_debug.h`, `GRHayL/include/ghl_eos_functions.h`, `GRHayL/include/ghl_eos_functions_declaration.h`
+- Shared public headers: `GRHayL/include/ghl.h`, `GRHayL/include/ghl_metric_helpers.h`, `GRHayL/include/ghl_io.h`, `GRHayL/include/ghl_debug.h`, `GRHayL/include/ghl_eos_functions.h`
+- Internal EOS pointer storage: `GRHayL/include/ghl_eos_functions_declaration.h`
 - Public header install list: `GRHayL/include/make.code.defn`
 - Core build list: `GRHayL/GRHayL_Core/make.code.defn`
 - Downstream integration only with owner coordination: `implementations/GRHayLib/`
@@ -82,7 +83,7 @@ KB to update:
 
 Pitfalls/contracts:
 - Public header blast radius is broad. `ghl.h` owns shared structs, enums, Core declarations, and some declarations whose implementations live outside Core.
-- Global EOS dispatch is initialized through Core wrappers. `ghl_initialize_eos_functions` writes function pointers such as `ghl_compute_h_and_cs2` and `ghl_con2prim_multi_method`; mismatched EOS selection can break Con2Prim and Flux_Source.
+- Global EOS dispatch is initialized through Core wrappers. `ghl_initialize_eos_functions` writes function pointers such as `ghl_compute_h`, `ghl_compute_h_and_cs2`, and `ghl_con2prim_multi_method`; mismatched EOS selection can break Con2Prim and Flux_Source.
 - `u0` validity depends on initialized parameters, metric data, primitive velocities, and caller-managed `speed_limited`. Separate Core `ghl_limit_v_and_compute_u0` from Con2Prim `ghl_enforce_primitive_limits_and_compute_u0`.
 - Metric determinant behavior matters. `ghl_enforce_detgtij_and_initialize_ADM_metric` enforces conformal determinant behavior before rebuilding ADM metric quantities; check `detgamma`, `sqrt_detgamma`, and `detgtij` expectations.
 - `ghl.h` declares non-Core implementations including `ghl_get_con2prim_routine_name` and `ghl_compute_SU_Bsq_Ssq_BdotS`; route implementation changes to Con2Prim unless ownership is re-verified.

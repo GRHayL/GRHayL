@@ -13,9 +13,9 @@ int main(int argc, char **argv) {
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, input);
-  if( key != 1 || arraylength < 1 )
+  if( key != 1 || arraylength != 6400 )
     ghl_error("An error has occured with reading the grid size. "
-                 "Please check that Noble2D_initial_data.bin"
+                 "Please check that ET_Legacy_primitives_input.bin"
                  "is up-to-date with current test version.\n");
 
   const double poison = 1e300;

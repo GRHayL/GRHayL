@@ -45,13 +45,9 @@ do not replace the scalar relative floor or derive expectations from the
 result under test. The stress-energy absolute cutoff applies to the
 difference, not to the computed value alone.
 
-[GRHayL/include/make.code.defn](../../GRHayL/include/make.code.defn) installs
-`ghl_unit_tests.h`, but library
-manifests do not compile the non-inline helpers it declares. Existing
-definitions live in `Unit_Tests/` helper files, while the declared binary
-read/write family and `ghl_initial_random_data` have no visible definition.
-Classify these as test-only or unresolved surface; installation alone does not
-make them linkable production API.
+`ghl_unit_tests.h` is a source-tree test-only header and is excluded from the
+installed public header set. Its non-inline helper definitions live under
+`Unit_Tests/`.
 
 ## Helper-Only Files
 
@@ -65,7 +61,7 @@ generators but are not standalone unit tests:
 | `pert_test_fail_stress_energy.c` | Stress-energy tensor comparison wrapper. | [Core tests and fixtures](../core/tests-and-fixtures.md) |
 | `randomize_metric.c` | Random metric setup used by generators/tests. | [Core tests and fixtures](../core/tests-and-fixtures.md) |
 | `randomize_primitives.c` | Random primitive setup used by generators/tests. | [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md) |
-| `test_compute_h_and_cs2.c` | EOS enthalpy/sound-speed check helper. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
+| `test_compute_h_and_cs2.c` | EOS enthalpy-only and enthalpy/sound-speed check helpers. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 | `tabulated_eos_unit_test_helpers.c` | Analytic table quantity helper for tabulated EOS checks. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 | `compute_A_flux_with_B.c` | Induction vector-potential HLL helper using `B`. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
 | `compute_A_flux_with_Btilde.c` | Induction vector-potential HLL helper using `Btilde`. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |

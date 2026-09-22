@@ -56,8 +56,8 @@ Code map:
 Availability boundary:
 
 - Direction/EOS-specific direct HLLE functions are current callable routes.
-- Three generic HLLE pointer globals are declared/stored but unwired and have
-  incompatible signatures; do not use them as equation-dispatch entry points.
+- Family-specific direct HLLE functions are the only public flux entry points;
+  EOS initialization does not select a generic HLLE dispatch.
 - No-HDF5 builds retain the direct tabulated HLLE definitions; their
   table-dependent tests and generators remain excluded.
 - Reconstruction is built public caller API, but no production source caller is
@@ -73,8 +73,8 @@ Tests:
 - `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_tabulated_flux.c`
 
-Generic pointer dispatch and zero-denominator/error propagation have no direct
-test. `make tests` compilation or workflow selection is not runtime proof.
+Existing flux tests cover wave-bound and callback-error contracts. `make tests`
+compilation or workflow selection alone is not runtime proof.
 
 ## Source Terms
 

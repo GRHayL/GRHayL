@@ -25,7 +25,7 @@ Shared structs come from [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h):
 
 The caller supplies:
 
-- `eos`: EOS parameters compatible with `ghl_compute_h_and_cs2`.
+- `eos`: EOS parameters compatible with `ghl_compute_h`.
 - `prims`: primitive state at the point where source terms are evaluated,
   including density, pressure, velocity, magnetic field, and `u0`.
 - `metric`: ADM metric at the same point.
@@ -39,12 +39,13 @@ The caller supplies:
 `cons->rho`, `cons->Y_e`, and `cons->entropy` are untouched. The routine does
 not zero or initialize the complete conservative struct.
 
-The kernel calls `ghl_compute_h_and_cs2(eos, prims, &h, &cs2)` before building
+The kernel calls `ghl_compute_h(eos, prims, &h)` before building
 the source terms. Its `prims` argument is mutable: production tabulated dispatch
 clamps `rho`, `Y_e`, and `temperature`, then recomputes `press` and `eps` in
-place. The `void` source routine discards the EOS callback's error code. Callers
-needing unchanged primitives must pass a copy and validate EOS/table inputs
-before this call. EOS dispatch details otherwise belong to EOS/Core routes.
+place. The routine returns the callback's exact error and leaves `cons`
+unchanged on failure. Callback mutation of `prims` is not rolled back. Callers
+needing unchanged primitives must pass a copy. EOS dispatch details otherwise
+belong to EOS/Core routes.
 
 Metric derivatives are not computed inside Flux_Source. Callers own their
 discretization, staggering, and consistency with `metric`, `curv`, and
@@ -62,9 +63,8 @@ long expressions into KB pages.
 Local generator provenance:
 
 - [GRHayL/Flux_Source/GRHayL_rhs.py](../../../GRHayL/Flux_Source/GRHayL_rhs.py)
-  calls source-term C generation into its current directory. See
-  [generated NRPy boundary](generated-nrpy-boundary.md) for verified command,
-  working-directory requirement, and output drift.
+  generates source-term C into an explicit empty staging directory. See the
+  [generated NRPy boundary](generated-nrpy-boundary.md) for the command.
 - [GRHayL/Flux_Source/IGM_All_Source_Terms.py](../../../GRHayL/Flux_Source/IGM_All_Source_Terms.py)
   contains the `ghl_calculate_source_terms` generation path.
 - [GRHayL/Flux_Source/nrpy/](../../../GRHayL/Flux_Source/nrpy/) supplies local
@@ -84,11 +84,13 @@ editing only one expression copy.
 
 Evidence status: declaration, definition, and normal/no-HDF5 manifest membership
 are present. `unit_test_ET_Legacy_flux_source` directly calls the routine inside
-a combined flux-divergence/source replay; it installs a test-local
-`compute_h_and_cs2` callback and is not a production EOS-dispatch test. The
-ordinary runner and all compiler workflows configure this replay, but no test
-isolates source terms, error propagation, primitive mutation, or untouched
-conservative fields. Static evidence does not establish a current run result.
+a combined flux-divergence/source replay. It installs test-local `compute_h`
+and `compute_h_and_cs2` callbacks; source terms use the former, so this is not
+a production EOS-dispatch test. The ordinary runner and all compiler workflows
+configure that replay. `unit_test_tabulated_eos_compose` also covers a
+production tabulated source call in the Ubuntu-GCC `compose-regularized-eos`
+job. Source inspection establishes error propagation and untouched output on
+failure, but no committed test isolates the source-term callback error path.
 
 ## Evidence Links
 

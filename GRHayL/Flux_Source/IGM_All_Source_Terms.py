@@ -1,11 +1,14 @@
 # Step 0: Add NRPy's directory to the path
 # https://stackoverflow.com/questions/16780014/import-file-from-parent-directory
 import os,sys
-import GRMHD_equations_new_version as GRMHD    # NRPy+: Generate general relativistic magnetohydrodynamics equations
+from pathlib import Path
 
-nrpy_dir_path = os.path.join("nrpy/")
+script_dir = Path(__file__).resolve().parent
+nrpy_dir_path = str(script_dir / "nrpy")
 if nrpy_dir_path not in sys.path:
-    sys.path.append(nrpy_dir_path)
+    sys.path.insert(0, nrpy_dir_path)
+
+import GRMHD_equations_new_version as GRMHD    # NRPy+: Generate general relativistic magnetohydrodynamics equations
 
 # Step P1: Import needed NRPy+ core modules:
 from outputC import outputC, outCfunction # NRPy+: Core C code output module
@@ -73,9 +76,11 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outC
     prims_GRHayL = ["u0", "vU[0]*u4U0", "vU[1]*u4U0", "vU[2]*u4U0", "BU[0]", "BU[1]", "BU[2]", "press", "rho"]
 
     prestring = r"""
-double h, cs2;
+double h;
 
-ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
+const ghl_error_codes_t error = ghl_compute_h(eos, prims, &h);
+if(error != ghl_success)
+  return error;
 """
 
     for i in range(len(prims_NRPy)):
@@ -177,7 +182,7 @@ ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
             prestring += f"const double gammaDD_dD22{i} = metric_derivs_{chr(ord('x')+i)}->gammaDD[2][2];\n"
 
         desc     = f"Add source terms for Stilde and tau_tilde"
-        c_type   = "void"
+        c_type   = "ghl_error_codes_t"
         name     = f"ghl_calculate_source_terms"
         params   = "const ghl_eos_parameters *restrict eos, "
         params  += "ghl_primitive_quantities *restrict prims, "
@@ -203,6 +208,8 @@ ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
         body = outputC(vars_rhs, vars_to_write,
                        params=outCparams,
                        filename="returnstring", prestring=prestring)
+        body = body.replace("pow(tmp_35, 1.0/2.0)", "sqrt(tmp_35)")
+        body += "return ghl_success;\n"
 
         outCfunction(
             outfile=os.path.join(Ccodesdir,name+".c"),

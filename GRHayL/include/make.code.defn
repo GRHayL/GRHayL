@@ -5,7 +5,6 @@
 #!                   ghl_flux_source.h
 #!                   ghl.h
 #!                   ghl_eos_functions.h
-#!                   ghl_eos_functions_declaration.h
 #!                   ghl_io.h
 #!                   ghl_debug.h
 #!                   ghl_metric_helpers.h
@@ -15,4 +14,7 @@
 #!                   ghl_nrpyeos_tabulated.h
 #!                   ghl_nrpyleakage.h
 #!                   ghl_reconstruction.h
-#!                   ghl_unit_tests.h
+
+# Keep source-tree-only headers in the generated dependency list without
+# installing them as public headers.
+#! INCS = ghl_eos_functions_declaration.h ghl_unit_tests.h

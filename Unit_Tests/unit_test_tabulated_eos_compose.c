@@ -330,6 +330,35 @@ check_synthetic_pressure_pava_inverse(const ghl_eos_parameters *restrict eos) {
   check_close("pressure PAVA inverse entropy", target_S, recovered_S, 2.0e-9, 2.0e-13);
 }
 
+static void reference_minkowski_characteristic_speeds(
+      const ghl_primitive_quantities *restrict prims,
+      const double h,
+      const double cs2,
+      const int dir,
+      double *restrict cmin,
+      double *restrict cmax) {
+  const double uU[3] = {
+    prims->u0*prims->vU[0], prims->u0*prims->vU[1], prims->u0*prims->vU[2]
+  };
+  const double alpha_b0 = prims->BU[0]*uU[0] + prims->BU[1]*uU[1]
+                          + prims->BU[2]*uU[2];
+  double b2 = -alpha_b0*alpha_b0;
+  for(int i=0; i<3; i++) {
+    const double bi = (prims->BU[i] + alpha_b0*uU[i])/prims->u0;
+    b2 += bi*bi;
+  }
+  const double va2 = b2/(prims->rho*h + b2);
+  const double v02 = cs2*(1.0 - va2) + va2;
+  const double A = v02 + (1.0 - v02)*prims->u0*prims->u0;
+  const double B = (1.0 - v02)*prims->u0*uU[dir];
+  const double C = (1.0 - v02)*uU[dir]*uU[dir] - v02;
+  const double discriminant = fmax(B*B - A*C, 0.0);
+  const double lambda_minus = (B - sqrt(discriminant))/A;
+  const double lambda_plus = (B + sqrt(discriminant))/A;
+  *cmin = fmax(-lambda_minus, 0.0);
+  *cmax = fmax(lambda_plus, 0.0);
+}
+
 static void check_downstream_consumers(
       const ghl_eos_parameters *restrict eos,
       const double rho,
@@ -392,7 +421,9 @@ static void check_downstream_consumers(
   ghl_primitive_quantities left = original;
   ghl_primitive_quantities right = original;
   double cmin = NAN, cmax = NAN;
-  ghl_calculate_characteristic_speed_dirn0(&right, &left, eos, &metric, &cmin, &cmax);
+  ghl_error_codes_t flux_error = ghl_calculate_characteristic_speed_dirn0(
+        &right, &left, eos, &metric, &cmin, &cmax);
+  ghl_abort_if_error(flux_error);
   const double sound_speed = sqrt(cs2);
   const double lambda_plus = (velocity + sound_speed) / (1.0 + velocity * sound_speed);
   const double lambda_minus = (velocity - sound_speed) / (1.0 - velocity * sound_speed);
@@ -402,9 +433,71 @@ static void check_downstream_consumers(
         "negative characteristic speed", fmax(-lambda_minus, 0.0), cmin, 2.0e-12,
         2.0e-13);
 
+  ghl_primitive_quantities magnetized = original;
+  magnetized.vU[0] = 0.08;
+  magnetized.vU[1] = -0.04;
+  magnetized.vU[2] = 0.02;
+  magnetized.BU[0] = 0.03;
+  magnetized.BU[1] = 0.05;
+  magnetized.BU[2] = -0.02;
+  magnetized.u0 = 1.0/sqrt(1.0 - 0.08*0.08 - 0.04*0.04 - 0.02*0.02);
+  ghl_primitive_quantities left_magnetized = magnetized;
+  left_magnetized.vU[0] = -0.03;
+  left_magnetized.vU[1] = 0.06;
+  left_magnetized.vU[2] = -0.01;
+  left_magnetized.BU[0] = -0.04;
+  left_magnetized.BU[1] = 0.02;
+  left_magnetized.BU[2] = 0.01;
+  left_magnetized.u0 = 1.0/sqrt(1.0 - 0.03*0.03 - 0.06*0.06 - 0.01*0.01);
+  ghl_error_codes_t (*const speed_functions[3])(
+        ghl_primitive_quantities *restrict,
+        ghl_primitive_quantities *restrict,
+        const ghl_eos_parameters *restrict,
+        const ghl_metric_quantities *restrict,
+        double *restrict,
+        double *restrict) = {
+    ghl_calculate_characteristic_speed_dirn0,
+    ghl_calculate_characteristic_speed_dirn1,
+    ghl_calculate_characteristic_speed_dirn2,
+  };
+  for(int dir=0; dir<3; dir++) {
+    double right_cmin, right_cmax, left_cmin, left_cmax;
+    reference_minkowski_characteristic_speeds(
+          &magnetized, h, cs2, dir, &right_cmin, &right_cmax);
+    reference_minkowski_characteristic_speeds(
+          &left_magnetized, h, cs2, dir, &left_cmin, &left_cmax);
+    const double expected_cmin = fmax(right_cmin, left_cmin);
+    const double expected_cmax = fmax(right_cmax, left_cmax);
+    ghl_primitive_quantities right_magnetized = magnetized;
+    ghl_primitive_quantities left_state = left_magnetized;
+    cmin = cmax = NAN;
+    flux_error = speed_functions[dir](
+          &right_magnetized, &left_state, eos, &metric, &cmin, &cmax);
+    ghl_abort_if_error(flux_error);
+    check_close("magnetized negative characteristic bound", expected_cmin, cmin,
+                2.0e-12, 2.0e-13);
+    check_close("magnetized positive characteristic bound", expected_cmax, cmax,
+                2.0e-12, 2.0e-13);
+  }
+
+  ghl_primitive_quantities clamped_right = original;
+  ghl_primitive_quantities clamped_left = original;
+  clamped_right.rho = nextafter(eos->rho_min, 0.0);
+  clamped_right.Y_e = nextafter(eos->Y_e_max, INFINITY);
+  clamped_right.temperature = nextafter(eos->T_min, 0.0);
+  cmin = cmax = NAN;
+  flux_error = ghl_calculate_characteristic_speed_dirn0(
+        &clamped_right, &clamped_left, eos, &metric, &cmin, &cmax);
+  ghl_abort_if_error(flux_error);
+  if(clamped_right.rho != eos->rho_min || clamped_right.Y_e != eos->Y_e_max
+     || clamped_right.temperature != eos->T_min
+     || !isfinite(clamped_right.press) || !isfinite(clamped_right.eps))
+    ghl_error("Characteristic-speed EOS clamp/mutation contract failed\n");
+
   ghl_conservative_quantities flux;
-  ghl_calculate_HLLE_fluxes_dirn0_tabulated(
+  flux_error = ghl_calculate_HLLE_fluxes_dirn0_tabulated(
         &right, &left, eos, &metric, cmin, cmax, &flux);
+  ghl_abort_if_error(flux_error);
   check_close("mass flux", D * velocity, flux.rho, 2.0e-12, 2.0e-13);
   check_close("electron fraction flux", D * Y_e * velocity, flux.Y_e, 2.0e-12, 2.0e-13);
   check_close(
@@ -412,8 +505,9 @@ static void check_downstream_consumers(
   check_close("x momentum flux", momentum * velocity + P, flux.SD[0], 2.0e-12, 2.0e-13);
   check_close("y momentum flux", 0.0, flux.SD[1], 0.0, 2.0e-13);
   check_close("z momentum flux", 0.0, flux.SD[2], 0.0, 2.0e-13);
-  ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy(
+  flux_error = ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy(
         &right, &left, eos, &metric, cmin, cmax, &flux);
+  ghl_abort_if_error(flux_error);
   check_close("entropy flux", S * W * velocity, flux.entropy, 2.0e-12, 2.0e-13);
 
   ghl_metric_quantities derivative_x = { 0 };
@@ -425,9 +519,10 @@ static void check_downstream_consumers(
   ghl_extrinsic_curvature curvature;
   ghl_initialize_extrinsic_curvature(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &curvature);
   ghl_conservative_quantities source;
-  ghl_calculate_source_terms(
+  flux_error = ghl_calculate_source_terms(
         eos, &original, &metric, &derivative_x, &derivative_y, &derivative_z, &curvature,
         &source);
+  ghl_abort_if_error(flux_error);
   const double energy_density = rho * h * W * W - P;
   check_close(
         "x momentum source", -0.01 * energy_density, source.SD[0], 2.0e-12, 2.0e-13);

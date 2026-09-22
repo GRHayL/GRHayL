@@ -143,15 +143,18 @@ int main(int argc, char **argv) {
     prims_r.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_r.rho, prims_r.press);
     prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
 
-    ghl_calculate_characteristic_speed_dirn0(
+    error = ghl_calculate_characteristic_speed_dirn0(
           &prims_r, &prims_l, &eos,
           &metric_adm, &cxmin[index], &cxmax[index]);
-    ghl_calculate_characteristic_speed_dirn1(
+    ghl_abort_if_error(error);
+    error = ghl_calculate_characteristic_speed_dirn1(
           &prims_r, &prims_l, &eos,
           &metric_adm, &cymin[index], &cymax[index]);
-    ghl_calculate_characteristic_speed_dirn2(
+    ghl_abort_if_error(error);
+    error = ghl_calculate_characteristic_speed_dirn2(
           &prims_r, &prims_l, &eos,
           &metric_adm, &czmin[index], &czmax[index]);
+    ghl_abort_if_error(error);
   }
 
   double *cmin;
@@ -244,7 +247,7 @@ int main(int argc, char **argv) {
       sprintf(filename,"hybrid_flux_output_pert.bin");
     FILE *outfile = fopen_with_check(filename, "wb");
 
-    void (*calculate_HLLE_fluxes)(
+    ghl_error_codes_t (*calculate_HLLE_fluxes)(
           ghl_primitive_quantities *restrict,
           ghl_primitive_quantities *restrict,
           const ghl_eos_parameters *restrict,
@@ -309,10 +312,11 @@ int main(int argc, char **argv) {
           prims_l.entropy = ghl_hybrid_compute_entropy_function(&eos, prims_l.rho, prims_l.press);
 
           ghl_conservative_quantities cons_fluxes;
-          calculate_HLLE_fluxes(
+          error = calculate_HLLE_fluxes(
                 &prims_r, &prims_l, &eos,
                 &metric_adm, cmin[index], cmax[index],
                 &cons_fluxes);
+          ghl_abort_if_error(error);
 
           rho_star_flux[index] = cons_fluxes.rho;
           tau_flux[index]      = cons_fluxes.tau;

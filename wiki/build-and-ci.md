@@ -100,24 +100,18 @@ Makefile compiles listed C sources under `GRHayL/` into the configured build
 directory and links `build/lib/libghl.so` or the host shared-library extension.
 
 During configuration, every `GRHayL/include/*.h` is symlinked into
-`<builddir>/include/ghl`. `make install` instead copies the headers parsed from
-`GRHayL/include/make.code.defn` into `<prefix>/include/ghl`. Both mechanisms
-currently select the same headers, including `ghl_unit_tests.h`, but they
-are separate lists and can drift. Installation then copies the versioned
+`<builddir>/include/ghl`. `make install` instead copies the public headers
+parsed from `GRHayL/include/make.code.defn` into `<prefix>/include/ghl`; it
+excludes `ghl_unit_tests.h` and the internal storage-definition companion
+`ghl_eos_functions_declaration.h`. Installation then copies the versioned
 shared library and symlink into `<prefix>/lib`. Installed presence does not by
 itself classify a header as production versus test-only API.
 `make install` also copies the FDINT notice, stored as `THIRD_PARTY_NOTICES`, into
 `<prefix>/share/doc/grhayl` so binary installations retain the FDINT BSD-3
 notice.
 
-`ghl_unit_tests.h` is a concrete installed-surface caveat. Its `static inline`
-helpers are caller-compiled, but its non-inline test-helper declarations are
-not part of any GRHayL library source manifest. Several are defined only by
-helper files under `Unit_Tests/`; no repo definition is visible for the
-declared binary read/write family or `ghl_initial_random_data`. Therefore an
-installed header compile is not proof those declarations link against
-`libghl`. Treat them as test-only or unresolved, not production library API,
-until install intent and definitions are reconciled.
+`ghl_unit_tests.h` remains available to source-tree tests only; its helpers are
+not production library API.
 
 `generate_makefile.sh` instead scans all repo `make.code.defn` files found by
 `find`, except `ET/` paths, and turns listed sources into static-library object
@@ -219,6 +213,10 @@ Common job groups across workflows:
 | `induction-flux` | vector-potential HLL flux variants; see [Induction verification workflows](gems/induction/verification-workflows.md) |
 | `compose-regularized-eos` | 100% Python line/branch coverage, synthetic fixed-profile conversion, and unchanged StellarCollapse C integration |
 
+Flux fixture downloads use the immutable TestData reference recorded in
+`.github/et-legacy-testdata-ref`; only the `tabulated_flux` matrix leg downloads
+the LS220 EOS table.
+
 Composite actions:
 
 - `.github/actions/OS_setup/action.yml` installs compiler/HDF5 dependencies.
@@ -248,7 +246,7 @@ Composite actions:
 workflow matrix and not a fixture generator:
 
 1. Runs `./configure -r`.
-2. Runs `make tests`.
+2. Runs `make tests datagen` (data generators are compiled, not executed).
 3. Exports `LD_LIBRARY_PATH` with `build/lib`.
 4. Downloads binary fixtures from the repo-visible `GRHayL/TestData` raw URL
    base.
@@ -263,14 +261,8 @@ workflow matrix and not a fixture generator:
    this records only the visible runner/workflow setup command for NN-enabled
    tabulated replay.
 9. Continues selected compiled-test runs.
-10. Removes root-level `*.bin`, `*.h5`, and `*.bz2` files if execution reaches
-    the final cleanup command. Because `set -Eeuxo pipefail` exits on an earlier
-    failure, cleanup is not guaranteed.
-
-That cleanup is indiscriminate: an already-present matching file is skipped by
-the downloader but still removed by the final glob. Run this driver only in a
-disposable checkout without user-owned root-level `.bin`, `.h5`, or `.bz2`
-files.
+10. An `EXIT` trap removes only paths downloaded or decompressed by that run;
+    preexisting files are preserved, including on early failure.
 
 The runner directly invokes every configured default test binary except
 `unit_test_WENOZ_reconstruction` (workflow matrices invoke it),

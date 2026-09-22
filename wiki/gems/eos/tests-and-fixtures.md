@@ -66,7 +66,8 @@ repository fixture.
 ## Helper-Only Files
 
 - [Unit_Tests/test_compute_h_and_cs2.c](../../../Unit_Tests/test_compute_h_and_cs2.c)
-  provides a test-only `ghl_test_compute_h_and_cs2` helper for enthalpy and
+  provides test-only `ghl_test_compute_h` and `ghl_test_compute_h_and_cs2`
+  helpers for enthalpy and
   sound-speed checks. It assumes LS220-style table bounds and is not a
   standalone unit test.
 - [Unit_Tests/tabulated_eos_unit_test_helpers.c](../../../Unit_Tests/tabulated_eos_unit_test_helpers.c)

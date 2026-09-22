@@ -34,32 +34,12 @@ Variant build lists:
 - [GRHayL/Flux_Source/tabulated/make.code.defn](../../../GRHayL/Flux_Source/tabulated/make.code.defn)
 - [GRHayL/Flux_Source/tabulated_entropy/make.code.defn](../../../GRHayL/Flux_Source/tabulated_entropy/make.code.defn)
 
-## Direct Functions And Pointer Surface
+## Direct Functions
 
-The direct variant functions above are source-backed public calls. Tests select
-them through test-local function pointers by EOS family, entropy mode, and flux
-direction; those local pointers are not the generic globals below.
-
-[GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h)
-and
-[GRHayL/include/ghl_eos_functions_declaration.h](../../../GRHayL/include/ghl_eos_functions_declaration.h)
-also declare generic function pointers named
-`ghl_calculate_HLLE_fluxes_dirn0`, `ghl_calculate_HLLE_fluxes_dirn1`, and
-`ghl_calculate_HLLE_fluxes_dirn2`. Source review of
-[GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)
-shows EOS initialization assigning `ghl_compute_h_and_cs2` and
-`ghl_con2prim_multi_method`; no GRHayL-local assignment to the generic HLLE
-flux pointers is present in the checked-in `GRHayL/` tree. The non-`extern`
-declarations in `ghl_eos_functions_declaration.h`, included once by
-`initialize_eos.c`, provide zero-initialized storage, but repo-wide search finds
-no assignment, call, or test. Their signatures also take `const` primitive
-pointers while direct definitions take mutable primitive pointers, so direct
-functions cannot be assigned without an incompatible function-pointer type.
-
-Status: **declared and stored, but unwired and untested**. Do not call these
-generic globals. This contradicts the Doxygen claim that Core EOS
-initialization automatically selects HLLE pointers; maintainer intent is
-unknown. Direct variant symbols are the only repo-proven callable route.
+The direct variant functions above are the complete public HLLE surface. Tests
+may select them through test-local function pointers by EOS family, entropy
+mode, and direction. The former unwired generic direction globals were removed;
+EOS initialization does not select an HLLE family.
 
 ## Caller Contract
 
@@ -68,12 +48,15 @@ HLLE flux callers must supply:
 - `prims_r` and `prims_l`: reconstructed face primitive states with `u0`,
   velocity, magnetic field, density, pressure, and EOS-specific fields already
   valid.
-- `eos`: parameters compatible with the active `ghl_compute_h_and_cs2`
+- `eos`: parameters compatible with the active `ghl_compute_h`
   function pointer.
 - `metric_face`: face-centered ADM metric.
 - `cmin_dirn*` and `cmax_dirn*`: characteristic speeds computed for the same
-  direction and face. They are non-negative magnitudes; each kernel divides by
-  `cmin + cmax` without a zero-denominator check.
+  direction and face. Negative algebraic residue within `DBL_EPSILON` times
+  the larger of one and both magnitudes is clamped to zero. Larger negative
+  values are rejected. The clamped values must have a finite positive sum,
+  finite reciprocal, and representable product. Invalid bounds return
+  `ghl_error_invalid_hlle_wavespeeds` before EOS calls or output writes.
 - `cons`: caller-owned conservative output receiving flux components.
 
 Entropy variants read `prims_r->entropy` and `prims_l->entropy` and write
@@ -84,11 +67,16 @@ momentum, and energy fields look valid.
 Only fields listed in the matrix are written. Other members of `cons` retain
 their prior value; these routines do not initialize the whole struct.
 
-All 12 routines call `ghl_compute_h_and_cs2` twice and discard its returned
-error code. Primitive arguments are mutable: production tabulated dispatch
-clamps `rho`, `Y_e`, and `temperature`, then overwrites `press` and `eps`.
-Callers needing immutable reconstructed states must pass copies and validate
-EOS/table inputs before calling.
+All 12 routines call `ghl_compute_h` twice and return either callback's
+exact error before writing output. Primitive arguments are mutable: production
+tabulated dispatch clamps `rho`, `Y_e`, and `temperature`, then overwrites
+`press` and `eps`. If the second callback fails, mutation performed by the
+successful first callback is retained. Callers needing immutable reconstructed
+states must pass copies.
+
+Characteristic-speed routines instead use `ghl_compute_h_and_cs2`. Custom EOS
+dispatch must install both callbacks consistently; replacing only the combined
+callback no longer overrides HLLE or source-term thermodynamics.
 
 ## Tabulated And HDF5 Boundary
 
@@ -97,7 +85,7 @@ tests and generators are filtered. Tabulated EOS initialization is separately
 guarded by `GHL_DISABLE_HDF5` in
 [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
 Link visibility is not runtime support: these real kernels call the global
-`ghl_compute_h_and_cs2` dispatch and discard its error code. A no-HDF5 build
+`ghl_compute_h` dispatch. A no-HDF5 build
 cannot initialize compatible tabulated EOS dispatch, so callers must not invoke
 the tabulated variants there; a hybrid or unset global dispatch can otherwise
 produce the wrong EOS calculation or a null call.
@@ -131,6 +119,10 @@ Python source together when formulas, variables, or output fields change.
 - **Fixture-generation:** matching data generators call every row/direction,
   but generated outputs use the same implementation and are not an independent
   oracle.
-- **Coverage gaps:** generic pointer globals; ignored EOS error returns;
-  primitive mutation; and zero `cmin + cmax` have no focused tests. The
-  no-HDF5 matrix variant link-checks the retained algebraic tabulated symbols.
+- **Focused contracts:** the hybrid and tabulated replay tests check invalid
+  and one-sided wave bounds, callback errors, unchanged outputs on failure, and
+  independent asymmetric fixed-bound HLLE algebra in every variant and
+  direction.
+- **Coverage gaps:** focused analytic HLLE checks use zero magnetic field, and
+  no committed production-tabulated HLLE check verifies callback mutation.
+- **No-HDF5:** the matrix variant link-checks retained algebraic tabulated symbols.

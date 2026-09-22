@@ -125,7 +125,7 @@ available. Route that checklist through
 | `Unit_Tests/randomize_metric.c` | test harness | Random metric generation. | Used by data generators/tests. | Helper, not standalone test. |
 | `Unit_Tests/randomize_primitives.c` | test harness | Random primitive generation. | Used by data generators/tests. | Helper, not standalone test. |
 | `Unit_Tests/tabulated_eos_unit_test_helpers.c` | `GRHayL/EOS/Tabulated/` | Analytic helper functions for tabulated EOS validation. | Used by tabulated EOS tests. | HDF5-adjacent helper. |
-| `Unit_Tests/test_compute_h_and_cs2.c` | `GRHayL/EOS/` | Helper for enthalpy and sound-speed checks. | Used by EOS/flux tests. | Helper, not standalone test. |
+| `Unit_Tests/test_compute_h_and_cs2.c` | `GRHayL/EOS/` | Helpers for enthalpy-only and enthalpy/sound-speed checks. | Used by EOS/flux tests. | Helper, not standalone test. |
 
 ## Repo-Visible External Fixture References
 
@@ -134,6 +134,6 @@ available. Route that checklist through
 reference EOS tables under `stellarcollapse.org/EOS`. This page records only
 references visible in repo files; no external lookup was used here.
 
-Installed `GRHayL/include/ghl_unit_tests.h` remains test-only/unresolved
-surface: inline helpers compile in callers, but non-inline declarations are not
-generally defined by `libghl`. See [Public API Map](public-api-map.md).
+`GRHayL/include/ghl_unit_tests.h` is a source-tree-only test header. Its
+non-inline declarations are not generally defined by `libghl`, and it is not
+part of the install manifest. See [Public API Map](public-api-map.md).

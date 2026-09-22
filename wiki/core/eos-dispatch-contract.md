@@ -41,7 +41,7 @@ Dispatch uses process-wide mutable function-pointer globals, not fields inside
 [`GRHayL/include/ghl_con2prim.h`](../../GRHayL/include/ghl_con2prim.h) and
 has storage in
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
-The EOS/flux pointer family is declared `extern` in
+The EOS pointer family is declared `extern` in
 [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h)
 and receives storage definitions when Core includes
 [`GRHayL/include/ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h).
@@ -49,20 +49,19 @@ Installed public header routing is listed in
 [`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn).
 
 Storage gives these globals static zero initialization; it does not give them a
-callable target. The file named `ghl_eos_functions_declaration.h` contains
-definitions rather than `extern` declarations, despite its name. Core includes
-it in one built translation unit. Installation of that header is not evidence
-that consumers should include it or that every pointer is assigned.
+callable target. The internal file named `ghl_eos_functions_declaration.h`
+contains definitions rather than `extern` declarations, despite its name. Core
+includes it in one built translation unit; it is not installed.
 
 `ghl_initialize_eos_functions` performs assignment in three stages:
 
 1. It always calls `NRPyEOS_initialize_hybrid_functions`, assigning hybrid
-   pointers and `ghl_compute_h_and_cs2`.
+   pointers plus `ghl_compute_h` and `ghl_compute_h_and_cs2`.
 2. In HDF5 builds it then calls `NRPyEOS_initialize_tabulated_functions`,
    assigning tabulated pointers and temporarily overwriting
-   `ghl_compute_h_and_cs2`.
+   `ghl_compute_h` and `ghl_compute_h_and_cs2`.
 3. For a recognized EOS type it selects `ghl_con2prim_multi_method` and resets
-   `ghl_compute_h_and_cs2` to the requested family.
+   both enthalpy callbacks to the requested family.
 
 Sources:
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c),
@@ -72,6 +71,7 @@ and
 
 For `ghl_eos_simple` and `ghl_eos_hybrid`, Core routes
 `ghl_con2prim_multi_method` to `ghl_con2prim_hybrid_multi_method` and
+`ghl_compute_h` to `NRPyEOS_hybrid_compute_enthalpy` and
 `ghl_compute_h_and_cs2` to `NRPyEOS_hybrid_compute_enthalpy_and_cs2`.
 Source:
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
@@ -87,19 +87,16 @@ Sources:
 An unrecognized `ghl_eos_t` value has no `else` error path and does not return
 `ghl_error_unknown_eos_type`. The EOS-selection branch is skipped, so
 `ghl_con2prim_multi_method` retains its prior value (initially null). However,
-family initialization has already overwritten `ghl_compute_h_and_cs2`: it
+family initialization has already overwritten both enthalpy callbacks: it
 points to the hybrid implementation in a no-HDF5 build and to the tabulated
 implementation in an HDF5 build. The function returns `void` with this
 mode-dependent partial dispatch state
 ([`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c)).
 
 Repository-wide assignment/call search finds no assignment or call for
-`ghl_tabulated_free_beq_quantities` or the three generic
-`ghl_calculate_HLLE_fluxes_dirn*` pointer globals. Their declarations and Core
-storage make symbols available, but current repo evidence does not establish
-initialized or supported dispatch through them. Direct named Flux_Source and
-tabulated functions are separate APIs; route product intent for these four
-globals to EOS/Flux_Source maintainers.
+`ghl_tabulated_free_beq_quantities`; its declaration and Core storage make a
+symbol available, but current repo evidence does not establish supported
+dispatch through it. Flux_Source instead exposes direct family-specific APIs.
 
 ## Ordering, Mutation, And Failure
 

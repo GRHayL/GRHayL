@@ -24,7 +24,8 @@ by themselves, install the global function-pointer dispatch layer.
 Function-pointer dispatch is process-wide global state defined through
 `GRHayL/include/ghl_eos_functions_declaration.h`; it is not stored per EOS
 object. Initializing a different EOS family replaces general pointers such as
-`ghl_compute_h_and_cs2` and `ghl_con2prim_multi_method` for all callers.
+`ghl_compute_h`, `ghl_compute_h_and_cs2`, and `ghl_con2prim_multi_method` for
+all callers.
 
 Sources: `GRHayL/GRHayL_Core/initialize_eos.c`, `GRHayL/include/ghl.h`,
 `docs/raw/EOS.dox`, `docs/raw/GRHayL_Core.dox`.
@@ -111,11 +112,13 @@ initializes the tabulated pointer family through
 For `ghl_eos_simple` and `ghl_eos_hybrid`,
 `ghl_initialize_eos_functions` routes:
 
+- `ghl_compute_h` to `NRPyEOS_hybrid_compute_enthalpy`
 - `ghl_compute_h_and_cs2` to `NRPyEOS_hybrid_compute_enthalpy_and_cs2`
 - `ghl_con2prim_multi_method` to `ghl_con2prim_hybrid_multi_method`
 
 For `ghl_eos_tabulated` with HDF5 enabled, it routes:
 
+- `ghl_compute_h` to `NRPyEOS_tabulated_compute_enthalpy`
 - `ghl_compute_h_and_cs2` to `NRPyEOS_tabulated_compute_enthalpy_and_cs2`
 - `ghl_con2prim_multi_method` to `ghl_con2prim_tabulated_multi_method`
 
@@ -129,13 +132,11 @@ One declared tabulated pointer,
 initializer; use [tabulated interpolator catalog](tabulated-interpolator-catalog.md)
 for the exact registry seam.
 
-EOS-specific HLLE flux pointer declarations live beside the EOS function
-pointers as `ghl_calculate_HLLE_fluxes_dirn0`,
-`ghl_calculate_HLLE_fluxes_dirn1`, and `ghl_calculate_HLLE_fluxes_dirn2`.
-Concrete Flux_Source routines are split into hybrid, hybrid-entropy,
-tabulated, and tabulated-entropy families. Current core EOS initialization does
-not assign those flux pointers; route flux questions to [Flux Source](../flux-source.md)
-and `GRHayL/include/ghl_flux_source.h`.
+Flux_Source routines are direct family-specific APIs split into hybrid,
+hybrid-entropy, tabulated, and tabulated-entropy families. Core EOS
+initialization selects the shared thermodynamic callback, not an HLLE function.
+Route flux questions to [Flux Source](../flux-source.md) and
+`GRHayL/include/ghl_flux_source.h`.
 
 Sources: `GRHayL/GRHayL_Core/initialize_eos.c`,
 `GRHayL/include/ghl_eos_functions.h`,

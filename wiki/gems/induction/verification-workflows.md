@@ -38,11 +38,11 @@ other GRHayL modules:
 .github/run_tests.sh
 ```
 
-That script runs `./configure -r`, runs `make tests`, sets the runtime library
+That script runs `./configure -r`, runs `make tests datagen`, sets the runtime library
 path, downloads binary fixtures and EOS tables needed by the full suite, runs
-all compiled tests it owns, then removes downloaded root-level fixture files.
-It ends with `rm -f ./*.bin ./*.h5 ./*.bz2`; run it only in a clean disposable
-worktree, never beside caller-owned root-level data with those suffixes.
+all compiled tests it owns, then uses an `EXIT` trap to remove only files and
+temporary directories created by that run. Preexisting root-level fixtures are
+preserved.
 Use [tests and fixtures](tests-and-fixtures.md) for Induction fixture names
 instead of duplicating them here.
 

@@ -38,10 +38,12 @@ void ghl_initialize_eos_functions(
   // Step 3: General functions (same interface for all EOSs)
   if(eos_type == ghl_eos_hybrid || eos_type == ghl_eos_simple) {
     ghl_con2prim_multi_method = ghl_con2prim_hybrid_multi_method;
+    ghl_compute_h = NRPyEOS_hybrid_compute_enthalpy;
     ghl_compute_h_and_cs2 = NRPyEOS_hybrid_compute_enthalpy_and_cs2;
 #ifndef GHL_DISABLE_HDF5
   } else if(eos_type == ghl_eos_tabulated) {
     ghl_con2prim_multi_method = ghl_con2prim_tabulated_multi_method;
+    ghl_compute_h = NRPyEOS_tabulated_compute_enthalpy;
     ghl_compute_h_and_cs2 = NRPyEOS_tabulated_compute_enthalpy_and_cs2;
 #else
   } else if(eos_type == ghl_eos_tabulated) {

@@ -284,6 +284,13 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
 
 void NRPyEOS_initialize_tabulated_functions();
 
+#ifndef GHL_DISABLE_HDF5
+ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy(
+      const ghl_eos_parameters *restrict eos,
+      ghl_primitive_quantities *restrict prims,
+      double *restrict enthalpy_ptr);
+#endif
+
 ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       const ghl_eos_parameters *restrict eos,
       ghl_primitive_quantities *restrict prims,
