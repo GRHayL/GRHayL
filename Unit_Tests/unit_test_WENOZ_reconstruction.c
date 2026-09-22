@@ -1,45 +1,63 @@
 #include "ghl_unit_tests.h"
+#include <stdint.h>
 
 int main(int argc, char **argv) {
   FILE* infile = fopen_with_check("WENOZ_reconstruction_input.bin", "rb");
 
   int arraylength;
-  int key = fread(&arraylength, sizeof(int), 1, infile);
-  if(key != 1 || arraylength != 100000)
-    ghl_error("Invalid WENOZ_reconstruction_input.bin length (expected 100000)\n");
+  if(fread(&arraylength, sizeof(int), 1, infile) != 1) {
+    ghl_error(
+          "An error has occurred with reading the array length. Please check that data\n"
+          "is up-to-date with current test version.\n");
+  }
+  if(arraylength < 6) {
+    ghl_error("The WENOZ reconstruction data must contain at least 6 points.\n");
+  }
+
+  const size_t count = (size_t)arraylength;
+  if(count > SIZE_MAX / sizeof(double)) {
+    ghl_error("The WENOZ reconstruction data is too large to allocate safely.\n");
+  }
 
   const int NGHOSTS = 3;
 
-  double *var = (double*) malloc(sizeof(double)*arraylength);
+  double *var = (double *)malloc(sizeof(double) * count);
 
-  double *varr_trusted   = (double*) malloc(sizeof(double)*arraylength);
-  double *varl_trusted   = (double*) malloc(sizeof(double)*arraylength);
-  double *varr_pert   = (double*) malloc(sizeof(double)*arraylength);
-  double *varl_pert   = (double*) malloc(sizeof(double)*arraylength);
+  double *varr_trusted = (double *)malloc(sizeof(double) * count);
+  double *varl_trusted = (double *)malloc(sizeof(double) * count);
+  double *varr_pert = (double *)malloc(sizeof(double) * count);
+  double *varl_pert = (double *)malloc(sizeof(double) * count);
 
-  key = fread(var, sizeof(double), arraylength, infile);
+  if(var == NULL || varr_trusted == NULL || varl_trusted == NULL || varr_pert == NULL
+     || varl_pert == NULL) {
+    ghl_error("Failed to allocate WENOZ reconstruction test data.\n");
+  }
+
+  const size_t items_read = fread(var, sizeof(double), count, infile);
   fclose(infile);
 
-  if(key != arraylength)
-    ghl_error("An error has occured with reading in initial data. Please check that data\n"
-                 "is up-to-date with current test version.\n");
+  if(items_read != count) {
+    ghl_error(
+          "An error has occured with reading in initial data. Please check that data\n"
+          "is up-to-date with current test version.\n");
+  }
 
   infile = fopen_with_check("WENOZ_reconstruction_output.bin","rb");
   FILE* inpert = fopen_with_check("WENOZ_reconstruction_output_pert.bin","rb");
 
-  key  = fread(varr_trusted  , sizeof(double), arraylength, infile);
-  key += fread(varl_trusted  , sizeof(double), arraylength, infile);
+  if(fread(varr_trusted, sizeof(double), count, infile) != count
+     || fread(varl_trusted, sizeof(double), count, infile) != count) {
+    ghl_error(
+          "An error has occured with reading in trusted data. Please check that data\n"
+          "is up-to-date with current test version.\n");
+  }
 
-  if(key != arraylength*2)
-      ghl_error("An error has occured with reading in trusted data. Please check that data\n"
-                  "is up-to-date with current test version.\n");
-
-  key  = fread(varr_pert  , sizeof(double), arraylength, inpert);
-  key += fread(varl_pert  , sizeof(double), arraylength, inpert);
-
-  if(key != arraylength*2)
-      ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
-                  "is up-to-date with current test version.\n");
+  if(fread(varr_pert, sizeof(double), count, inpert) != count
+     || fread(varl_pert, sizeof(double), count, inpert) != count) {
+    ghl_error(
+          "An error has occured with reading in perturbed data. Please check that data\n"
+          "is up-to-date with current test version.\n");
+  }
 
   // These are set up to match the loops in the ET version of IllinoisGRMHD.
   for(int index=NGHOSTS; index<arraylength-2; index++) {

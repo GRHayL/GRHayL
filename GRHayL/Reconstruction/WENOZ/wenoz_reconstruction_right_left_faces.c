@@ -3,8 +3,8 @@
 /*
  * Function     : ghl_wenoz_reconstruction_right_left_faces()
  * Description  : reconstructs variables at the points
- *                    Ur(i) = U(i+1/2+epsilon)
- *                    Ul(i) = U(i-1/2-epsilon)
+ *                    Ur(i) = U(i+1/2-epsilon)
+ *                    Ul(i) = U(i-1/2+epsilon)
  *                using the WENO-z reconstruction algorithm,
  *                i.e. it reconstructs at x-1/2*delta x and
  *                x+1/2*delta x
@@ -60,7 +60,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Implemented by Monika Moscibrodzka
 
 static double mc(const double dm, const double dp, const double alpha) {
-  const double dc = (dm * dp > 0.0) * 0.5 * (dm + dp);
+  const double dc = ((dm > 0.0 && dp > 0.0) || (dm < 0.0 && dp < 0.0)) * 0.5 * (dm + dp);
   return copysign(
       fmin(fabs(dc), alpha * fmin(fabs(dm), fabs(dp))), dc);
 }
@@ -105,27 +105,27 @@ void ghl_wenoz_reconstruction_right_left_faces(
   double w1 = w5gamma[1] * beta1 + eps;
   double w2 = w5gamma[2] * beta2 + eps;
   double wsum = 1.0 / (w0 + w1 + w2);
-  qr =  w0 * (w5alpha[0][0] * q0 + w5alpha[0][1] * q1 + w5alpha[0][2] * q2);
+  qr = w0 * (w5alpha[0][0] * q0 + w5alpha[0][1] * q1 + w5alpha[0][2] * q2);
   qr += w1 * (w5alpha[1][0] * q1 + w5alpha[1][1] * q2 + w5alpha[1][2] * q3);
   qr += w2 * (w5alpha[2][0] * q2 + w5alpha[2][1] * q3 + w5alpha[2][2] * q4);
   qr *= wsum;
-  const double alpha_l =
-      3.0 * wsum * w0 * w1 * w2 /
-          (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2) +
-      eps;
+  const double alpha_l
+        = 3.0 * wsum * w0 * w1 * w2
+                / (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2)
+          + eps;
 
   w0 = w5gamma[0] * beta2 + eps;
   w1 = w5gamma[1] * beta1 + eps;
   w2 = w5gamma[2] * beta0 + eps;
   wsum = 1.0 / (w0 + w1 + w2);
-  ql =  w0 * (w5alpha[0][0] * q4 + w5alpha[0][1] * q3 + w5alpha[0][2] * q2);
+  ql = w0 * (w5alpha[0][0] * q4 + w5alpha[0][1] * q3 + w5alpha[0][2] * q2);
   ql += w1 * (w5alpha[1][0] * q3 + w5alpha[1][1] * q2 + w5alpha[1][2] * q1);
   ql += w2 * (w5alpha[2][0] * q2 + w5alpha[2][1] * q1 + w5alpha[2][2] * q0);
   ql *= wsum;
-  const double alpha_r =
-      3.0 * wsum * w0 * w1 * w2 /
-          (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2) +
-      eps;
+  const double alpha_r
+        = 3.0 * wsum * w0 * w1 * w2
+                / (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2)
+          + eps;
 
   double dq = q3 - q2;
   dq = mc(q2 - q1, dq, 2.0);
@@ -133,4 +133,4 @@ void ghl_wenoz_reconstruction_right_left_faces(
   const double alpha_lin = 2.0 * alpha_l * alpha_r / (alpha_l + alpha_r);
   *Ur = alpha_lin * qr + (1.0 - alpha_lin) * (q2 + 0.5 * dq);
   *Ul = alpha_lin * ql + (1.0 - alpha_lin) * (q2 - 0.5 * dq);
- }
+}
