@@ -1,22 +1,35 @@
 #include "ghl_unit_tests.h"
+#include <stdint.h>
 
 int main(int argc, char **argv) {
   FILE* infile = fopen_with_check("PLM_reconstruction_input.bin", "rb");
 
   int arraylength;
-  int key = fread(&arraylength, sizeof(int), 1, infile);
+  if(fread(&arraylength, sizeof(int), 1, infile) != 1)
+    ghl_error("An error has occured with reading the array length. Please check that data\n"
+                 "is up-to-date with current test version.\n");
+  if(arraylength < 4)
+    ghl_error("The PLM reconstruction data must contain at least 4 points.\n");
 
-  double *var = (double*) malloc(sizeof(double)*arraylength);
+  const size_t count = (size_t)arraylength;
+  if(count > SIZE_MAX/sizeof(double))
+    ghl_error("The PLM reconstruction data is too large to allocate safely.\n");
 
-  double *varr_trusted   = (double*) malloc(sizeof(double)*arraylength);
-  double *varl_trusted   = (double*) malloc(sizeof(double)*arraylength);
-  double *varr_pert   = (double*) malloc(sizeof(double)*arraylength);
-  double *varl_pert   = (double*) malloc(sizeof(double)*arraylength);
+  double *var = (double*) malloc(sizeof(double)*count);
 
-  key = fread(var, sizeof(double), arraylength, infile);
+  double *varr_trusted = (double*) malloc(sizeof(double)*count);
+  double *varl_trusted = (double*) malloc(sizeof(double)*count);
+  double *varr_pert    = (double*) malloc(sizeof(double)*count);
+  double *varl_pert    = (double*) malloc(sizeof(double)*count);
+
+  if(var == NULL || varr_trusted == NULL || varl_trusted == NULL
+      || varr_pert == NULL || varl_pert == NULL)
+    ghl_error("Failed to allocate PLM reconstruction test data.\n");
+
+  const size_t items_read = fread(var, sizeof(double), count, infile);
   fclose(infile);
 
-  if(key != arraylength)
+  if(items_read != count)
     ghl_error("An error has occured with reading in initial data. Please check that data\n"
                  "is up-to-date with current test version.\n");
 
@@ -41,18 +54,14 @@ int main(int argc, char **argv) {
         break;
     }
 
-    key  = fread(varr_trusted  , sizeof(double), arraylength, infile);
-    key += fread(varl_trusted  , sizeof(double), arraylength, infile);
-
-    if(key != arraylength*2)
+    if(fread(varr_trusted, sizeof(double), count, infile) != count
+        || fread(varl_trusted, sizeof(double), count, infile) != count)
       ghl_error("An error has occured with reading in trusted data. Please check that data\n"
                    "is up-to-date with current test version.\n");
 
 
-    key  = fread(varr_pert  , sizeof(double), arraylength, inpert);
-    key += fread(varl_pert  , sizeof(double), arraylength, inpert);
-
-    if(key != arraylength*2)
+    if(fread(varr_pert, sizeof(double), count, inpert) != count
+        || fread(varl_pert, sizeof(double), count, inpert) != count)
       ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
                    "is up-to-date with current test version.\n");
 

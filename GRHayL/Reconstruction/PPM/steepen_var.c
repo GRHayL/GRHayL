@@ -118,12 +118,36 @@ void ghl_steepen_var(
   const double d2rho_b_m1  = rho[PLUS_0] - 2.0*rho[MINUS1] + rho[MINUS2];
   const double d2rho_b_p1  = rho[PLUS_2] - 2.0*rho[PLUS_1] + rho[PLUS_0];
   const double rho_b_min = fmin(rho[PLUS_1], rho[MINUS1]);
+  const double pressure_min = fmin(pressure[PLUS_1], pressure[MINUS1]);
+  const double density_jump = fabs(d1rho_b);
+  const double pressure_jump = fabs(pressure[PLUS_1] - pressure[MINUS1]);
+  const double contact_factor = Gamma_eff * params->ppm_shock_k0;
+
+  const bool normalized_contact_inputs =
+      rho_b_min > 0.0 && pressure_min > 0.0
+      && isfinite(rho_b_min) && isfinite(pressure_min)
+      && isfinite(density_jump) && isfinite(pressure_jump)
+      && isfinite(contact_factor);
+  const double density_ratio = normalized_contact_inputs
+      ? density_jump/rho_b_min : 0.0;
+  const double pressure_ratio = normalized_contact_inputs
+      ? pressure_jump/pressure_min : 0.0;
+  const bool normalized_contact_ratios =
+      normalized_contact_inputs
+      && isfinite(density_ratio) && isfinite(pressure_ratio);
+  const double normalized_contact_lhs = normalized_contact_ratios
+      ? contact_factor*density_ratio : 0.0;
+  const bool use_normalized_contact_check =
+      normalized_contact_ratios && isfinite(normalized_contact_lhs);
 
   // Gamma_eff = (partial P / partial rho0)_s /(P/rho0)
   const bool contact_discontinuity_check =
-                 Gamma_eff * params->ppm_shock_k0 * fabs(d1rho_b) * fmin(pressure[PLUS_1], pressure[MINUS1])
-                 >= fabs(pressure[PLUS_1]-pressure[MINUS1])*rho_b_min;
-  const bool second_deriv_check = d2rho_b_p1*d2rho_b_m1 <= 0.0;
+      use_normalized_contact_check
+      ? normalized_contact_lhs >= pressure_ratio
+      : contact_factor*density_jump*pressure_min >= pressure_jump*rho_b_min;
+  const bool second_deriv_check =
+      (d2rho_b_p1 <= 0.0 && d2rho_b_m1 >= 0.0)
+      || (d2rho_b_p1 >= 0.0 && d2rho_b_m1 <= 0.0);
   const bool relative_change_check = fabs(d1rho_b) >= params->ppm_shock_epsilon*rho_b_min;
 
   if(contact_discontinuity_check && second_deriv_check && relative_change_check) {

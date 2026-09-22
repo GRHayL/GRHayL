@@ -227,5 +227,5 @@ source, headers, tests, and common edit routes before wider search.
 - Drift/contract notes: PPM parameters live in `ghl_parameters`; stencil sizes,
   face orientation, and left/right naming are external caller contracts.
   Coverage gap: no dedicated PPM unit test file is obvious in `Unit_Tests/`.
-  Built routines have no production source caller in this repo; generator
-  bounds, PPM face comments, and Doxygen category wording remain defective.
+  Built routines have no production source caller in this repo. Generator
+  boundary placeholders are serialized but ignored by replay.

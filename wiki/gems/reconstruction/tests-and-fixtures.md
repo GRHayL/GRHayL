@@ -50,10 +50,16 @@ All three replay tests use `ghl_pert_test_fail` in an `if` condition and call
 `ghl_error` on mismatch. Numerical comparisons can therefore fail these test
 binaries. Coverage is still bounded:
 
-- PLM replay checks valid interior stencils, but its generator evaluates every
-  array index and accesses outside the allocation at both ends.
-- WENOZ replay checks valid interior stencils, but its generator writes full
-  output arrays whose boundary entries were never initialized.
+- PLM generation and replay evaluate the valid interval
+  `2 <= index < arraylength-1`; serialized boundary slots are deterministic
+  zero placeholders and are ignored by replay.
+- WENOZ generation and replay evaluate the valid interval
+  `3 <= index < arraylength-2`; serialized boundary slots are deterministic
+  zero placeholders and are ignored by replay.
+- Replay rejects missing headers and dimensions too small to evaluate a
+  stencil: PLM requires at least 4 points, WENOZ at least 6 points, and ET
+  Legacy direction length at least 8. ET Legacy also validates cubic size
+  arithmetic before allocation.
 - PPM helper routines have only transitive ET Legacy coverage; no dedicated
   PPM or helper test exists.
 

@@ -95,10 +95,9 @@ For either wrapper, the first 5-point slice is centered on `i-1`; its helper
 helper `Ul` is therefore `Ur` at `i-1/2`. This source-level mapping explains
 the apparently crossed assignments in the PPM and WENOZ wrappers.
 
-The legacy comment atop `ppm_compute_for_cell.c` labels helper `Ur` as
-`U(i-1/2+epsilon)`, but its arithmetic constructs that value from `U[i]` and
-`U[i+1]`; the steepened helper documentation and both wrappers confirm the
-two-face mapping above. Treat the old comment as conflicting evidence.
+The centered-helper comments and arithmetic use this two-face mapping. Do not
+apply the standard wrapper's one-face `Ur`/`Ul` meanings directly to helper
+outputs.
 
 For 5-point helper stencils, use `enum reconstruction_stencil` from
 [`GRHayL/include/ghl_reconstruction.h`](../../../GRHayL/include/ghl_reconstruction.h):

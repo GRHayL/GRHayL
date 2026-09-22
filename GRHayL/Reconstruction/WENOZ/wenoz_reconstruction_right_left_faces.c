@@ -3,8 +3,8 @@
 /*
  * Function     : ghl_wenoz_reconstruction_right_left_faces()
  * Description  : reconstructs variables at the points
- *                    Ur(i) = U(i+1/2+epsilon)
- *                    Ul(i) = U(i-1/2-epsilon)
+ *                    Ur(i) = U(i+1/2-epsilon)
+ *                    Ul(i) = U(i-1/2+epsilon)
  *                using the WENO-z reconstruction algorithm,
  *                i.e. it reconstructs at x-1/2*delta x and
  *                x+1/2*delta x
@@ -60,9 +60,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Implemented by Monika Moscibrodzka
 
 static double mc(const double dm, const double dp, const double alpha) {
-  const double dc = (dm * dp > 0.0) * 0.5 * (dm + dp);
+  const double dc = ((dm > 0.0 && dp > 0.0) || (dm < 0.0 && dp < 0.0)) * 0.5 * (dm + dp);
   return copysign(
       fmin(fabs(dc), alpha * fmin(fabs(dm), fabs(dp))), dc);
+}
+
+static void wenoz_weights(
+      const double beta[3],
+      const double tau5,
+      const double gamma[3],
+      double weights[3],
+      double *restrict alpha) {
+
+  const double eps = 1e-100;
+  const double beta_min = fmin(beta[0], fmin(beta[1], beta[2]));
+  const double scale = fmax(beta_min, tau5);
+  const double scaled_beta_min = beta_min/scale;
+  const double scaled_tau5 = tau5/scale;
+  const double scaled_sum = scaled_beta_min + scaled_tau5;
+  const double common_beta = scaled_beta_min/scaled_sum;
+  const double common_tau5 = scaled_tau5/scaled_sum;
+
+  for(int i=0; i<3; i++) {
+    weights[i] = gamma[i]*(common_beta + common_tau5*(beta_min/beta[i]))
+               + eps*common_beta;
+  }
+
+  const double weight_sum = weights[0] + weights[1] + weights[2];
+  for(int i=0; i<3; i++) {
+    weights[i] /= weight_sum;
+  }
+
+  const double weight_min = fmin(weights[0], fmin(weights[1], weights[2]));
+  if(weight_min == 0.0) {
+    *alpha = eps;
+  } else {
+    *alpha = 3.0*weight_min /
+        (gamma[2]*(weight_min/weights[2])
+       + gamma[1]*(weight_min/weights[1])
+       + gamma[0]*(weight_min/weights[0])) + eps;
+  }
 }
 
 void ghl_wenoz_reconstruction_right_left_faces(
@@ -97,35 +134,19 @@ void ghl_wenoz_reconstruction_right_left_faces(
   double beta2 = thirteen_thirds * a * a + b * b + eps;
   const double tau5 = fabs(beta2 - beta0);
 
-  beta0 = (beta0 + tau5) / beta0;
-  beta1 = (beta1 + tau5) / beta1;
-  beta2 = (beta2 + tau5) / beta2;
+  const double beta[3] = {beta0, beta1, beta2};
+  double weights[3], alpha_l;
+  wenoz_weights(beta, tau5, w5gamma, weights, &alpha_l);
+  qr =  weights[0] * (w5alpha[0][0] * q0 + w5alpha[0][1] * q1 + w5alpha[0][2] * q2);
+  qr += weights[1] * (w5alpha[1][0] * q1 + w5alpha[1][1] * q2 + w5alpha[1][2] * q3);
+  qr += weights[2] * (w5alpha[2][0] * q2 + w5alpha[2][1] * q3 + w5alpha[2][2] * q4);
 
-  double w0 = w5gamma[0] * beta0 + eps;
-  double w1 = w5gamma[1] * beta1 + eps;
-  double w2 = w5gamma[2] * beta2 + eps;
-  double wsum = 1.0 / (w0 + w1 + w2);
-  qr =  w0 * (w5alpha[0][0] * q0 + w5alpha[0][1] * q1 + w5alpha[0][2] * q2);
-  qr += w1 * (w5alpha[1][0] * q1 + w5alpha[1][1] * q2 + w5alpha[1][2] * q3);
-  qr += w2 * (w5alpha[2][0] * q2 + w5alpha[2][1] * q3 + w5alpha[2][2] * q4);
-  qr *= wsum;
-  const double alpha_l =
-      3.0 * wsum * w0 * w1 * w2 /
-          (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2) +
-      eps;
-
-  w0 = w5gamma[0] * beta2 + eps;
-  w1 = w5gamma[1] * beta1 + eps;
-  w2 = w5gamma[2] * beta0 + eps;
-  wsum = 1.0 / (w0 + w1 + w2);
-  ql =  w0 * (w5alpha[0][0] * q4 + w5alpha[0][1] * q3 + w5alpha[0][2] * q2);
-  ql += w1 * (w5alpha[1][0] * q3 + w5alpha[1][1] * q2 + w5alpha[1][2] * q1);
-  ql += w2 * (w5alpha[2][0] * q2 + w5alpha[2][1] * q1 + w5alpha[2][2] * q0);
-  ql *= wsum;
-  const double alpha_r =
-      3.0 * wsum * w0 * w1 * w2 /
-          (w5gamma[2] * w0 * w1 + w5gamma[1] * w0 * w2 + w5gamma[0] * w1 * w2) +
-      eps;
+  const double beta_reversed[3] = {beta2, beta1, beta0};
+  double alpha_r;
+  wenoz_weights(beta_reversed, tau5, w5gamma, weights, &alpha_r);
+  ql =  weights[0] * (w5alpha[0][0] * q4 + w5alpha[0][1] * q3 + w5alpha[0][2] * q2);
+  ql += weights[1] * (w5alpha[1][0] * q3 + w5alpha[1][1] * q2 + w5alpha[1][2] * q1);
+  ql += weights[2] * (w5alpha[2][0] * q2 + w5alpha[2][1] * q1 + w5alpha[2][2] * q0);
 
   double dq = q3 - q2;
   dq = mc(q2 - q1, dq, 2.0);
