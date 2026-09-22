@@ -71,13 +71,12 @@ staggered `tildePhi` point `(i+1/2,j+1/2,k+1/2)`, physical ranges are:
 Cell-centered metric and BSSN `psi` stencils span `[i..i+1]`, `[j..j+1]`,
 and `[k..k+1]`; all eight entries contribute to lapse/shift quantities. The
 vertex-centered ADM signature is also `2x2x2`, but implementation reads only
-`[0][0][0]`, `[0][0][1]`, `[0][1][0]`, and `[1][0][0]`: current `tildePhi`
-vertex plus forward x/y/z neighbors.
+`[1][1][1]`, `[1][1][0]`, `[1][0][1]`, and `[0][1][1]`: the current
+`tildePhi` vertex plus backward x/y/z neighbors. Callers therefore pack the
+vertex metric stencil over `[i-1..i]`, `[j-1..j]`, and `[k-1..k]`.
 
 `A_i` is staggered in directions perpendicular to its component, and
-`tildePhi` is fully staggered. An opening comment in `interpolate_helper.c`
-mistypes the `A_z` location as `(i+1/2,j,k+1/2)`; function Doxygen, wrapper
-comments, array accesses, and tests consistently use `(i+1/2,j+1/2,k)`.
+`tildePhi` is fully staggered.
 
 ## Public Wrappers And Internal Helpers
 
@@ -107,7 +106,7 @@ metric despite reusing `ghl_metric_quantities` as its container.
 
 ## Coverage
 
-Interpolation coverage is fixture-based:
+Interpolation coverage combines fixture replay with a direct vertex case:
 
 - `ccc_ADM` calls `ghl_interpolate_with_cell_centered_ADM` through
   [`compute_ccc_ADM.c`](../../../Unit_Tests/compute_ccc_ADM.c). The unit test
@@ -119,7 +118,8 @@ Interpolation coverage is fixture-based:
   `sqrtg_Ai` components.
 - `vvv_ADM` calls `ghl_interpolate_with_vertex_centered_ADM` through
   [`compute_vvv_ADM.c`](../../../Unit_Tests/compute_vvv_ADM.c). The unit test
-  compares `alpha_Phi_minus_betaj_A_j` and all `sqrtg_Ai` components only.
+  replays fixture values and directly checks asymmetric affine stencils,
+  coordinate orientation, and that `alpha`/`betai` remain unchanged.
 
 No visible `vvv_BSSN` Induction interpolator test exists in
 [`Unit_Tests/`](../../../Unit_Tests/) or
@@ -129,13 +129,13 @@ More precisely, no public `vvv_BSSN` declaration, definition, manifest entry,
 helper, or test exists. This is an unsupported variant, not merely an untested
 existing API.
 
-Test helpers fill complete `3x3x3` A stencils and complete cell-centered metric
-stencils, then call wrappers only for `1 <= i,j,k < dirlength-1`; this bounds
-their `-1..+1` A reach and `0..+1` metric reach. Fixture outputs are produced by
-the same helper/wrapper path and are regression references rather than an
-independent interpolation oracle. Runner and all compiler workflows configure
-the supported replays; tracked files alone do not establish a current
-execution result.
+Test helpers fill complete `3x3x3` A stencils, then call wrappers only for
+`1 <= i,j,k < dirlength-1`; this bounds their `-1..+1` A reach. Cell-centered
+metric helpers use `0..+1`, while the vertex-centered metric helper uses
+`-1..0`. Fixture outputs are produced by the same helper/wrapper path and are
+regression references rather than independent interpolation oracles. Runner
+and all compiler workflows configure the supported replays; tracked files
+alone do not establish a current execution result.
 
 ## Repo-Local References
 

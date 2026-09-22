@@ -90,8 +90,9 @@ an observed pass.
 - Staggering assumptions are easy to break because callers pass stencils without grid metadata.
 - Characteristic-speed changes in Flux_Source can affect induction HLL inputs.
 - Downstream GRHayLib includes `ghl_induction.h` and compiles Induction subdirectories; new source locations require coordination.
-- Legacy `generate_makefile.sh` emits bogus Induction targets; normal
-  `configure` parsing remains separate. Use [verification workflows](induction/verification-workflows.md).
+- Legacy `generate_makefile.sh` remains broken for non-Induction scope and
+  include-path defects; normal `configure` parsing remains separate. Use
+  [verification workflows](induction/verification-workflows.md).
 
 ## Do Not Duplicate
 

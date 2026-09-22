@@ -36,7 +36,7 @@ void ghl_test_compute_vvv_ADM(
         for(int iterz=0; iterz<2; iterz++) {
           for(int itery=0; itery<2; itery++) {
             for(int iterx=0; iterx<2; iterx++) {
-              const int ind = indexf(dirlength,i+iterx,j+itery,k+iterz);
+              const int ind = indexf(dirlength,i+iterx-1,j+itery-1,k+iterz-1);
               ghl_initialize_metric(
                     lapse[ind], betax[ind], betay[ind], betaz[ind],
                     gxx[ind], gxy[ind], gxz[ind],

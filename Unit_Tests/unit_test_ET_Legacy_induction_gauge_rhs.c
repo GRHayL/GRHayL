@@ -1,15 +1,28 @@
 #include "ghl_unit_tests.h"
+#include <limits.h>
+#include <stdint.h>
+
+static size_t read_grid_size(FILE *restrict infile, int *restrict dirlength) {
+  if(fread(dirlength, sizeof(*dirlength), 1, infile) != 1)
+    ghl_error("Could not read the grid size from ET_Legacy_induction_gauge_rhs_input.bin.\n");
+  if(*dirlength < 7)
+    ghl_error("ET_Legacy_induction_gauge_rhs_input.bin requires a grid size of at least 7; got %d.\n", *dirlength);
+
+  const size_t n = (size_t)*dirlength;
+  if(n > SIZE_MAX/n || n*n > SIZE_MAX/n)
+    ghl_error("The grid size in ET_Legacy_induction_gauge_rhs_input.bin is too large.\n");
+  const size_t arraylength = n*n*n;
+  if(arraylength > INT_MAX || arraylength > SIZE_MAX/sizeof(double) || arraylength > SIZE_MAX/25)
+    ghl_error("The grid size in ET_Legacy_induction_gauge_rhs_input.bin is too large.\n");
+  return arraylength;
+}
 
 int main(int argc, char **argv) {
   FILE* infile = fopen_with_check("ET_Legacy_induction_gauge_rhs_input.bin","rb");
 
   int dirlength;
-  int key = fread(&dirlength, sizeof(int), 1, infile);
-  if( key != 1 || dirlength < 1 )
-    ghl_error("An error has occured with reading the grid size. "
-                 "Please check that Noble2D_initial_data.bin"
-                 "is up-to-date with current test version.\n");
-  const int arraylength = dirlength*dirlength*dirlength;
+  const size_t arraylength = read_grid_size(infile, &dirlength);
+  size_t key;
 
   const double dX[3] = {0.1, 0.1, 0.1};
 

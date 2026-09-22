@@ -1,15 +1,102 @@
 #include "ghl_unit_tests.h"
+#include <limits.h>
+#include <stdint.h>
+
+static size_t read_grid_size(FILE *restrict infile, int *restrict dirlength) {
+  if(fread(dirlength, sizeof(*dirlength), 1, infile) != 1)
+    ghl_error("Could not read the grid size from induction_interpolation_input.bin.\n");
+  if(*dirlength < 3)
+    ghl_error("induction_interpolation_input.bin requires a grid size of at least 3; got %d.\n", *dirlength);
+
+  const size_t n = (size_t)*dirlength;
+  if(n > SIZE_MAX/n || n*n > SIZE_MAX/n)
+    ghl_error("The grid size in induction_interpolation_input.bin is too large.\n");
+  const size_t arraylength = n*n*n;
+  if(arraylength > INT_MAX || arraylength > SIZE_MAX/sizeof(double) || arraylength > SIZE_MAX/25)
+    ghl_error("The grid size in induction_interpolation_input.bin is too large.\n");
+  return arraylength;
+}
+
+static void test_vertex_centering(void) {
+  ghl_metric_quantities metric_stencil[2][2][2] = {{{{0}}}};
+  double Ax_stencil[3][3][3];
+  double Ay_stencil[3][3][3];
+  double Az_stencil[3][3][3];
+
+  for(int k=0; k<2; k++) {
+    for(int j=0; j<2; j++) {
+      for(int i=0; i<2; i++) {
+        const double x = i-1;
+        const double y = j-1;
+        const double z = k-1;
+        metric_stencil[k][j][i].lapse = 10.0 + x + 2.0*y + 3.0*z;
+        metric_stencil[k][j][i].betaU[0] = 0.5;
+        metric_stencil[k][j][i].betaU[1] = -0.25;
+        metric_stencil[k][j][i].betaU[2] = 0.125;
+        metric_stencil[k][j][i].gammaUU[0][0] = 1.0;
+        metric_stencil[k][j][i].gammaUU[0][1] = 0.2;
+        metric_stencil[k][j][i].gammaUU[1][0] = 0.2;
+        metric_stencil[k][j][i].gammaUU[1][1] = 1.0;
+        metric_stencil[k][j][i].gammaUU[2][2] = 25.0/24.0;
+        metric_stencil[k][j][i].sqrt_detgamma = 1.0;
+      }
+    }
+  }
+
+  for(int k=0; k<3; k++) {
+    for(int j=0; j<3; j++) {
+      for(int i=0; i<3; i++) {
+        const double Axx = i-1.5;
+        const double Axy = j-1.0;
+        const double Axz = k-1.0;
+        Ax_stencil[k][j][i] = 1.0 + 2.0*Axx + 3.0*Axy + 4.0*Axz;
+
+        const double Ayx = i-1.0;
+        const double Ayy = j-1.5;
+        const double Ayz = k-1.0;
+        Ay_stencil[k][j][i] = -2.0 + 0.5*Ayx - Ayy + 2.0*Ayz;
+
+        const double Azx = i-1.0;
+        const double Azy = j-1.0;
+        const double Azz = k-1.5;
+        Az_stencil[k][j][i] = 0.25 - 1.5*Azx + 0.75*Azy - 0.5*Azz;
+      }
+    }
+  }
+
+  ghl_induction_interp_vars interp_vars = {
+    .alpha = 123.0,
+    .betai = {124.0, 125.0, 126.0}
+  };
+  ghl_interpolate_with_vertex_centered_ADM(
+        metric_stencil, Ax_stencil, Ay_stencil, Az_stencil, 2.0, &interp_vars);
+
+  const double expected_sqrtg_Ai[3] = {-4.275, -14.4, 425.0/96.0};
+  for(int i=0; i<3; i++) {
+    const double error = fabs(interp_vars.sqrtg_Ai[i]-expected_sqrtg_Ai[i]);
+    if(error > 1e-13*fmax(1.0, fabs(expected_sqrtg_Ai[i])))
+      ghl_error("Vertex-centered ADM coordinate test failed for sqrtg_Ai[%d]: expected %.17e, computed %.17e.\n",
+                i, expected_sqrtg_Ai[i], interp_vars.sqrtg_Ai[i]);
+  }
+
+  const double expected_gauge = 18.96875;
+  if(fabs(interp_vars.alpha_Phi_minus_betaj_A_j-expected_gauge) > 1e-13)
+    ghl_error("Vertex-centered ADM coordinate test failed for the scalar gauge value: expected %.17e, computed %.17e.\n",
+              expected_gauge, interp_vars.alpha_Phi_minus_betaj_A_j);
+
+  if(interp_vars.alpha != 123.0 || interp_vars.betai[0] != 124.0
+     || interp_vars.betai[1] != 125.0 || interp_vars.betai[2] != 126.0)
+    ghl_error("Vertex-centered ADM interpolation overwrote alpha or betai.\n");
+}
 
 int main(int argc, char **argv) {
+  test_vertex_centering();
+
   FILE* infile = fopen_with_check("induction_interpolation_input.bin","rb");
 
   int dirlength;
-  int key = fread(&dirlength, sizeof(int), 1, infile);
-  if( key != 1 || dirlength < 1 )
-    ghl_error("An error has occured with reading the grid size. "
-                 "Please check that Noble2D_initial_data.bin"
-                 "is up-to-date with current test version.\n");
-  const int arraylength = dirlength*dirlength*dirlength;
+  const size_t arraylength = read_grid_size(infile, &dirlength);
+  size_t key;
 
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
   double *betax = (double*) malloc(sizeof(double)*arraylength);

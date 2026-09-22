@@ -24,11 +24,11 @@
  * to condense some of the mathematical operations needed.
  *
  * @param[in] metric_stencil 2x2x2 stencil of vertex-centered ADM quantities.
- *                           The interpolation uses metric_stencil[0][0][0] at
+ *                           The interpolation uses metric_stencil[1][1][1] at
  *                           the \f$ \tilde{\Phi} \f$ point and the adjacent
- *                           vertices metric_stencil[0][0][1],
- *                           metric_stencil[0][1][0], and
- *                           metric_stencil[1][0][0].
+ *                           backward vertices metric_stencil[1][1][0],
+ *                           metric_stencil[1][0][1], and
+ *                           metric_stencil[0][1][1].
  *
  * @param[in] Ax_stencil 3D stencil array containing \f$ A_x \f$ from
  *                       \f$ (i-1, j-\frac{1}{2}, k-\frac{1}{2}) \f$ to
@@ -44,8 +44,10 @@
  *
  * @param[in] phitilde value of \f$ \tilde{\Phi} \f$ at the staggered point
  *
- * @param[out] interp_vars ghl_induction_interp_vars with interpolated values
- *                         needed by @ref ghl_calculate_phitilde_rhs
+ * @param[out] interp_vars ghl_induction_interp_vars with assigned fields
+ *                         `sqrtg_Ai` and `alpha_Phi_minus_betaj_A_j`.
+ *                         Fields `alpha` and `betai` are not assigned; callers
+ *                         needing them must use metric_stencil[1][1][1].
  *
  */
 void ghl_interpolate_with_vertex_centered_ADM(
@@ -63,8 +65,7 @@ void ghl_interpolate_with_vertex_centered_ADM(
        A_y:      (i+1/2, j,     k+1/2)
        A_z:      (i+1/2, j+1/2, k    )
      For metric quantities, we use ghl_ADM_vertex_interp(), which computes most of the needed quantities.
-     It interpolates (via averaging) the lapse and shift to phitilde's location. The metric
-     is interpolated to 3 different points:
+     It interpolates the metric to 3 different points:
        gammaUU[0][i] is at A_x's location
        gammaUU[1][i] is at A_y's location
        gammaUU[2][i] is at A_z's location
@@ -104,8 +105,8 @@ void ghl_interpolate_with_vertex_centered_ADM(
   // Next set \alpha \Phi - \beta^j A_j at (i+1/2,j+1/2,k+1/2)
   // \alpha \Phi = \alpha \tilde{\Phi} / psi^6
   //             = \alpha \tilde{\Phi} / \sqrt{\gamma}
-  interp_vars->alpha_Phi_minus_betaj_A_j = phitilde*metric_stencil[0][0][0].lapse/metric_stencil[0][0][0].sqrt_detgamma
-                                            - ( metric_stencil[0][0][0].betaU[0]*A_to_phitilde[0]
-                                              + metric_stencil[0][0][0].betaU[1]*A_to_phitilde[1]
-                                              + metric_stencil[0][0][0].betaU[2]*A_to_phitilde[2] );
+  interp_vars->alpha_Phi_minus_betaj_A_j = phitilde*metric_stencil[1][1][1].lapse/metric_stencil[1][1][1].sqrt_detgamma
+                                            - ( metric_stencil[1][1][1].betaU[0]*A_to_phitilde[0]
+                                              + metric_stencil[1][1][1].betaU[1]*A_to_phitilde[1]
+                                              + metric_stencil[1][1][1].betaU[2]*A_to_phitilde[2] );
 }
