@@ -44,9 +44,11 @@ Outputs and mutation:
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 - When limiting is required, it returns `ghl_error_u0_singular` before velocity
   mutation if the requested squared-speed bound is nonfinite or not strictly
-  subluminal. After rescaling, it recomputes the achieved metric speed and
-  returns the same error if the speed is nonfinite, luminal/superluminal, or
-  exceeds the stored inverse-square Lorentz cap.
+  subluminal. After rescaling, it recomputes the achieved metric speed. If
+  finite rounding leaves it above the cap, it retries inward rescaling up to
+  16 times with a doubling inward margin and a strictly inward-rounded scale.
+  It returns the same error if the achieved speed remains nonfinite,
+  luminal/superluminal, or above the stored inverse-square Lorentz cap.
 - It returns `ghl_error_u0_singular` for any nonfinite computed `u0`; otherwise
   it returns `ghl_success` (`ghl_error_codes_t` in `GRHayL/include/ghl.h` and
   `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
@@ -82,8 +84,9 @@ Normal-path routing: `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_
 initializes parameters, hybrid EOS, metric, ADM auxiliaries, and primitives,
 then calls `ghl_enforce_primitive_limits_and_compute_u0` and checks `prims.u0`
 against fixture data. It also calls the Core limiter directly for ordinary-cap
-success, extreme rounded-cap failure, achieved-speed/cap enforcement, and an
-already subluminal no-limit case
+success (including the shifted `W_max = 10` rounding regression), extreme
+rounded-cap failure, achieved-speed/cap enforcement, and an already subluminal
+no-limit case
 (`Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`). Treat this
 as focused coverage for the Core limiter, not full coverage of all Core inputs.
 Hybrid and tabulated flux tests also call the Core routine,
