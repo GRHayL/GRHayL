@@ -10,9 +10,9 @@
  * \f[
  * result =
  * \begin{cases}
- *   a & \text{if } |a| > |b| \text{ and } a b > 0 \\
- *   b & \text{if } |a| < |b| \text{ and } a b > 0 \\
- *   0 & \text{if } a b \leq 0
+ *   a & \text{if } |a| > |b| \text{ and } a,b \text{ have the same nonzero sign} \\
+ *   b & \text{if } |a| \leq |b| \text{ and } a,b \text{ have the same nonzero sign} \\
+ *   0 & \text{otherwise}
  * \end{cases}
  * \f]
  * to determine what should be used to approximate \f$ \Delta U \f$.
@@ -27,9 +27,7 @@ double ghl_maxmod(
       const double a,
       const double b) {
 
-  const double ab = a*b;
-
-  if(ab > 0) {
+  if((a > 0.0 && b > 0.0) || (a < 0.0 && b < 0.0)) {
     if(fabs(a) > fabs(b)) {
       return a;
     } else {

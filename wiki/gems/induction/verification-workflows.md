@@ -101,18 +101,11 @@ triggers remain independent of path filters.
 
 The normal build uses `configure` plus `scripts/parser`; that route parses
 Induction manifests correctly. The separate legacy
-[`generate_makefile.sh`](../../../generate_makefile.sh) route is **broken** for
-current Induction manifests. A clean disposable run exits zero but interprets
-the comment `# Primary make.code.defn for GRHayL chalice` as source tokens,
-emitting bogus targets such as `GRHayL/Induction/#`, `Primary`, `for`, `GRHayL`,
-and `chalice`.
-
-Cause is the trailing continuation on the last `SRCS` line in
-[`Interpolators/make.code.defn`](../../../GRHayL/Induction/Interpolators/make.code.defn):
-the legacy AWK range continues into the next manifest. Do not run `make` from
-that generated file. Maintainer choice remains whether to repair legacy parser,
-change manifest formatting, or retire the legacy route; normal `configure`
-build evidence is separate.
+[`generate_makefile.sh`](../../../generate_makefile.sh) route remains broken
+for broader scope and include-path reasons. The Induction interpolator manifest
+now terminates its final `SRCS` entry, so it no longer causes parsing to run
+into the next manifest. Do not run `make` from the legacy generated file;
+normal `configure` build evidence is separate.
 
 ## HDF5 Note
 

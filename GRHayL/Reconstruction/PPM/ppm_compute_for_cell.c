@@ -3,8 +3,8 @@
 /*
  * Function     : ghl_ppm_compute_for_cell()
  * Description  : reconstructs variables at the points
- *                    Ur(i) = U(i-1/2+epsilon)
- *                    Ul(i) = U(i+1/2-epsilon)
+ *                    Ur(i) = U(i+1/2-epsilon)
+ *                    Ul(i) = U(i-1/2+epsilon)
  * Documentation:  https://github.com/GRHayL/GRHayL/wiki/ghl_ppm_compute_for_cell
 */
 
@@ -30,19 +30,19 @@ void ghl_ppm_compute_for_cell(
   Ul = U0*ftilde + Ul*(1.0 - ftilde);
 
   // Then monotonize all variables
-  if ( (Ur - U0)*(U0 - Ul) <= 0.0) {
+  if ( (Ur <= U0 && Ul <= U0) || (Ur >= U0 && Ul >= U0) ) {
     *Ur_ptr = U0;
     *Ul_ptr = U0;
     return;
   }
 
   const double dU = Ur - Ul;
-  const double Utmp = dU*( U0 - 0.5*(Ur + Ul) );
+  const double Utmp = ( U0 - 0.5*(Ur + Ul) )/dU;
 
-  if ( Utmp > (1.0/6.0)*(dU*dU)) {
+  if ( Utmp > 1.0/6.0) {
     *Ur_ptr = Ur;
     *Ul_ptr = 3.0*U0 - 2.0*Ur;
-  } else if ( Utmp < -(1.0/6.0)*(dU*dU)) {
+  } else if ( Utmp < -1.0/6.0) {
     *Ur_ptr = 3.0*U0 - 2.0*Ul;
     *Ul_ptr = Ul;
   } else {

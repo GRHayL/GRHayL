@@ -5,13 +5,13 @@ int main(int argc, char **argv) {
   const int dirlength = 20;
   const int arraylength = dirlength*dirlength*dirlength;
 
-  double *phi_bssn = (double*) malloc(sizeof(double)*arraylength);
+  double *phi_bssn = (double *)calloc(arraylength, sizeof(*phi_bssn));
 
   double *cmin[3];
   double *cmax[3];
   for(int i=0; i<3; i++) {
-    cmin[i] = (double*) malloc(sizeof(double)*arraylength);
-    cmax[i] = (double*) malloc(sizeof(double)*arraylength);
+    cmin[i] = (double *)calloc(arraylength, sizeof(*cmin[i]));
+    cmax[i] = (double *)calloc(arraylength, sizeof(*cmax[i]));
   }
 
   double *vrr[3];
@@ -19,22 +19,22 @@ int main(int argc, char **argv) {
   double *vlr[3];
   double *vll[3];
   for(int i=0; i<3; i++) {
-    vrr[i] = (double*) malloc(sizeof(double)*arraylength);
-    vrl[i] = (double*) malloc(sizeof(double)*arraylength);
-    vlr[i] = (double*) malloc(sizeof(double)*arraylength);
-    vll[i] = (double*) malloc(sizeof(double)*arraylength);
+    vrr[i] = (double *)calloc(arraylength, sizeof(*vrr[i]));
+    vrl[i] = (double *)calloc(arraylength, sizeof(*vrl[i]));
+    vlr[i] = (double *)calloc(arraylength, sizeof(*vlr[i]));
+    vll[i] = (double *)calloc(arraylength, sizeof(*vll[i]));
   }
 
   double *Br[3];
   double *Bl[3];
   for(int i=0; i<3; i++) {
-    Br[i] = (double*) malloc(sizeof(double)*arraylength);
-    Bl[i] = (double*) malloc(sizeof(double)*arraylength);
+    Br[i] = (double *)calloc(arraylength, sizeof(*Br[i]));
+    Bl[i] = (double *)calloc(arraylength, sizeof(*Bl[i]));
   }
 
   double *A_rhs[3];
   for(int i=0; i<3; i++) {
-    A_rhs[i] = (double*) malloc(sizeof(double)*arraylength);
+    A_rhs[i] = (double *)calloc(arraylength, sizeof(*A_rhs[i]));
   }
 
   // Initialize random data. Note that for this test,
