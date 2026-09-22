@@ -54,6 +54,12 @@ is an implementation change, not runtime configuration.
 says only WENO-z is supported. Header, manifest, source files, direct test, and
 workflows agree with that WENOZ build/test membership.
 
+The fixed regularization and unscaled double-precision weight ratios do not
+guarantee finite output for every finite stencil. Extreme smoothness contrasts
+can overflow the weights; for example, `{0, 0, 0, 1e105, 1e105}` can produce
+nonfinite face values. No occurrence at ordinary simulation scales has been
+established, but callers choose units and the API enforces no amplitude bound.
+
 ## Build And Coverage
 
 WENOZ source membership is listed in

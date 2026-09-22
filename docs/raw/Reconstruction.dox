@@ -80,6 +80,12 @@
  * As an alternative to PPM, @grecon also provides WENO (weighted essentially
  * non-oscillatory) methods. Currently, it only supports WENO-z which is called
  * with @ref ghl_wenoz_reconstruction.
+ *
+ * The WENO-z implementation uses a fixed `1e-100` regularization and unscaled
+ * double-precision weight ratios. It does not guarantee finite output for every
+ * finite stencil: extreme smoothness contrasts can overflow the weights. For
+ * example, the stencil `{0, 0, 0, 1e105, 1e105}` can produce nonfinite face
+ * values. No occurrence at ordinary simulation scales has been established.
  */
 
 /**
