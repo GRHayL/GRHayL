@@ -32,7 +32,7 @@ it.
 
 ## Helper-Only Files
 
-These `compute_*` files are helpers, not standalone tests:
+These private helper files are not standalone tests:
 
 - [Unit_Tests/compute_A_flux_with_B.c](../../../Unit_Tests/compute_A_flux_with_B.c)
   supports local and ET Legacy HLL flux replay using undensitized staggered `B`.
@@ -44,6 +44,10 @@ These `compute_*` files are helpers, not standalone tests:
   supports cell-centered BSSN interpolation fixtures and replay.
 - [Unit_Tests/compute_vvv_ADM.c](../../../Unit_Tests/compute_vvv_ADM.c)
   supports vertex-centered ADM interpolation fixtures and replay.
+- [Unit_Tests/ghl_test_helpers.c](../../../Unit_Tests/ghl_test_helpers.c) and
+  [Unit_Tests/ghl_test_helpers.h](../../../Unit_Tests/ghl_test_helpers.h)
+  provide the private grid-header validator shared by the six Induction replay
+  tests. The source is linked through the existing `TOBJS` helper route.
 
 ## Data Generators
 
@@ -137,6 +141,8 @@ files only.
 - [Unit_Tests/compute_ccc_ADM.c](../../../Unit_Tests/compute_ccc_ADM.c)
 - [Unit_Tests/compute_ccc_BSSN.c](../../../Unit_Tests/compute_ccc_BSSN.c)
 - [Unit_Tests/compute_vvv_ADM.c](../../../Unit_Tests/compute_vvv_ADM.c)
+- [Unit_Tests/ghl_test_helpers.c](../../../Unit_Tests/ghl_test_helpers.c)
+- [Unit_Tests/ghl_test_helpers.h](../../../Unit_Tests/ghl_test_helpers.h)
 - [Unit_Tests/data_gen/unit_test_data_HLL_flux.c](../../../Unit_Tests/data_gen/unit_test_data_HLL_flux.c)
 - [Unit_Tests/data_gen/unit_test_data_induction_interpolation.c](../../../Unit_Tests/data_gen/unit_test_data_induction_interpolation.c)
 - [Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c](../../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c)

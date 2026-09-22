@@ -15,7 +15,7 @@ before calling these wrappers.
 
 ## Public API
 
-[`ghl_induction.h`](../../../GRHayL/include/ghl_induction.h) declares three
+[`ghl_induction.h`](../../../GRHayL/include/ghl_induction.h) declares four
 public induction interpolators:
 
 - `ghl_interpolate_with_cell_centered_ADM`: source
@@ -26,7 +26,11 @@ public induction interpolators:
   [`interpolate_with_cell_centered_BSSN.c`](../../../GRHayL/Induction/Interpolators/interpolate_with_cell_centered_BSSN.c),
   test helper [`compute_ccc_BSSN.c`](../../../Unit_Tests/compute_ccc_BSSN.c), and
   test [`unit_test_induction_ccc_BSSN.c`](../../../Unit_Tests/unit_test_induction_ccc_BSSN.c).
-- `ghl_interpolate_with_vertex_centered_ADM`: source
+- `ghl_interpolate_with_vertex_centered_ADM`: deprecated compatibility entry
+  point preserving the historical current/forward metric stencil; source
+  [`interpolate_with_vertex_centered_ADM.c`](../../../GRHayL/Induction/Interpolators/interpolate_with_vertex_centered_ADM.c).
+- `ghl_interpolate_with_vertex_centered_ADM_backward`: corrected
+  current/backward metric-stencil entry point; source
   [`interpolate_with_vertex_centered_ADM.c`](../../../GRHayL/Induction/Interpolators/interpolate_with_vertex_centered_ADM.c),
   test helper [`compute_vvv_ADM.c`](../../../Unit_Tests/compute_vvv_ADM.c), and
   test [`unit_test_induction_vvv_ADM.c`](../../../Unit_Tests/unit_test_induction_vvv_ADM.c).
@@ -40,11 +44,11 @@ The public output type is `ghl_induction_interp_vars`. Its fields are:
 
 The cell-centered ADM and BSSN wrappers fill all of these fields for later
 scalar-potential RHS work and for the gauge contribution to the
-vector-potential RHS. The vertex-centered ADM wrapper fills `sqrtg_Ai[3]` and
+vector-potential RHS. Both vertex-centered ADM wrappers fill `sqrtg_Ai[3]` and
 `alpha_Phi_minus_betaj_A_j` only; callers must not read `alpha` or `betai[3]`
-from that wrapper. Those fields retain prior/uninitialized storage. None of the
-wrappers returns an error or checks stencil bounds. The wrappers do not infer
-grid locations from metadata.
+from either wrapper. Those fields retain prior/uninitialized storage. None of
+the wrappers returns an error or checks stencil bounds. The wrappers do not
+infer grid locations from metadata.
 
 ## Public Stencil Shapes
 
@@ -52,12 +56,12 @@ The public signatures encode these stencil shapes:
 
 | Input | Shape | Used by |
 | --- | --- | --- |
-| `metric_stencil` or `metric` | `2x2x2` `ghl_metric_quantities` | all three wrappers |
+| `metric_stencil` or `metric` | `2x2x2` `ghl_metric_quantities` | all four wrappers |
 | `psi_stencil` | `2x2x2` scalar `psi` | `ghl_interpolate_with_cell_centered_BSSN` only |
-| `Ax_stencil` | `3x3x3` scalar `A_x` | all three wrappers |
-| `Ay_stencil` | `3x3x3` scalar `A_y` | all three wrappers |
-| `Az_stencil` | `3x3x3` scalar `A_z` | all three wrappers |
-| `phitilde` | scalar `tildePhi` value | all three wrappers |
+| `Ax_stencil` | `3x3x3` scalar `A_x` | all four wrappers |
+| `Ay_stencil` | `3x3x3` scalar `A_y` | all four wrappers |
+| `Az_stencil` | `3x3x3` scalar `A_z` | all four wrappers |
+| `phitilde` | scalar `tildePhi` value | all four wrappers |
 
 C array order is `[z][y][x]`, matching test packing. Relative to the fully
 staggered `tildePhi` point `(i+1/2,j+1/2,k+1/2)`, physical ranges are:
@@ -70,10 +74,13 @@ staggered `tildePhi` point `(i+1/2,j+1/2,k+1/2)`, physical ranges are:
 
 Cell-centered metric and BSSN `psi` stencils span `[i..i+1]`, `[j..j+1]`,
 and `[k..k+1]`; all eight entries contribute to lapse/shift quantities. The
-vertex-centered ADM signature is also `2x2x2`, but implementation reads only
-`[1][1][1]`, `[1][1][0]`, `[1][0][1]`, and `[0][1][1]`: the current
+corrected vertex-centered ADM signature is also `2x2x2`, but implementation
+reads only `[1][1][1]`, `[1][1][0]`, `[1][0][1]`, and `[0][1][1]`: the current
 `tildePhi` vertex plus backward x/y/z neighbors. Callers therefore pack the
-vertex metric stencil over `[i-1..i]`, `[j-1..j]`, and `[k-1..k]`.
+corrected vertex metric stencil over `[i-1..i]`, `[j-1..j]`, and `[k-1..k]`.
+The deprecated compatibility entry point retains `[0][0][0]` as current and
+accepts its historical forward stencil over `[i..i+1]`, `[j..j+1]`, and
+`[k..k+1]`; its vector products retain the historical displacement defect.
 
 `A_i` is staggered in directions perpendicular to its component, and
 `tildePhi` is fully staggered.
@@ -116,10 +123,11 @@ Interpolation coverage combines fixture replay with a direct vertex case:
   [`compute_ccc_BSSN.c`](../../../Unit_Tests/compute_ccc_BSSN.c). The unit test
   compares `alpha`, all shift components, `alpha_Phi_minus_betaj_A_j`, and all
   `sqrtg_Ai` components.
-- `vvv_ADM` calls `ghl_interpolate_with_vertex_centered_ADM` through
+- `vvv_ADM` calls `ghl_interpolate_with_vertex_centered_ADM_backward` through
   [`compute_vvv_ADM.c`](../../../Unit_Tests/compute_vvv_ADM.c). The unit test
   replays fixture values and directly checks asymmetric affine stencils,
-  coordinate orientation, and that `alpha`/`betai` remain unchanged.
+  coordinate orientation, the compatibility entry point's historical scalar
+  result, and that `alpha`/`betai` remain unchanged.
 
 No visible `vvv_BSSN` Induction interpolator test exists in
 [`Unit_Tests/`](../../../Unit_Tests/) or

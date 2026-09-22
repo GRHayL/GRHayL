@@ -101,11 +101,17 @@
  * - ghl_interpolate_with_cell_centered_ADM
  * - ghl_interpolate_with_cell_centered_BSSN
  * - ghl_interpolate_with_vertex_centered_ADM
+ * - ghl_interpolate_with_vertex_centered_ADM_backward
  *
  * These functions compute the applicable quantities in the
- * @ref ghl_induction_interp_vars struct. The vertex-centered ADM wrapper writes
- * only `sqrtg_Ai` and `alpha_Phi_minus_betaj_A_j`; it leaves `alpha` and
- * `betai` unchanged. The different flavors depend on the metric
+ * @ref ghl_induction_interp_vars struct. Both vertex-centered ADM wrappers
+ * write only `sqrtg_Ai` and `alpha_Phi_minus_betaj_A_j`; they leave `alpha`
+ * and `betai` unchanged. The established
+ * `ghl_interpolate_with_vertex_centered_ADM` entry point preserves its
+ * historical forward stencil for compatibility. New callers should use
+ * `ghl_interpolate_with_vertex_centered_ADM_backward`, which accepts the
+ * correctly centered backward/current metric stencil. The different flavors
+ * depend on the metric
  * quantities available. Depending on the spacetime code, these quantities
  * could be cell-centered or vertex-centered. Additionally, we provide a
  * cell-centered BSSN variant which mimics the behavior of the original
@@ -148,8 +154,10 @@
  * The interpolators handle the mapping from the given metric type to these
  * variables. The BSSN wrapper expects
  * \f$\tilde{\gamma}^{ij}=\psi^4\gamma^{ij}\f$ in `metric_stencil.gammaUU`
- * and \f$\psi\f$ separately. The vertex-centered ADM wrapper's caller obtains
- * lapse and shift directly from the current vertex `metric_stencil[1][1][1]`.
+ * and \f$\psi\f$ separately. A caller of the corrected vertex-centered ADM
+ * wrapper obtains lapse and shift directly from the current vertex
+ * `metric_stencil[1][1][1]`. The compatibility wrapper instead retains
+ * `metric_stencil[0][0][0]` as the current vertex.
  * As the spacetime variables
  * and vector potential can be assumed to be smooth, all the interpolations
  * are performed via averaging.
@@ -159,7 +167,7 @@
  * - \f$ \alpha \f$, and \f$ \beta^i \f$, and \f$ \alpha\Phi - \beta^i A_i \f$
  *   at the fully staggered grid point \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$
  *   - The first two are used when computing \f$ \tilde{\Phi}^\mathrm{RHS} \f$;
- *     the vertex-centered wrapper leaves them unchanged because they already
+ *     both vertex-centered wrappers leave them unchanged because they already
  *     exist at the required grid locations
  *   - The third is the gauge contribution to \f$ A_i^\mathrm{RHS} \f$. While
  *     \f$ A_i \f$ all exist at different staggered points, this interpolation

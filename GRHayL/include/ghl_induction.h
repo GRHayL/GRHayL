@@ -112,6 +112,14 @@ void ghl_interpolate_with_vertex_centered_ADM(
       const double phitilde,
       ghl_induction_interp_vars *restrict interp_vars);
 
+void ghl_interpolate_with_vertex_centered_ADM_backward(
+      const ghl_metric_quantities metric_stencil[2][2][2],
+      const double Ax_stencil[3][3][3],
+      const double Ay_stencil[3][3][3],
+      const double Az_stencil[3][3][3],
+      const double phitilde,
+      ghl_induction_interp_vars *restrict interp_vars);
+
 double ghl_calculate_phitilde_rhs(
       const double dxi[3],
       const double Lorenz_damping_factor,

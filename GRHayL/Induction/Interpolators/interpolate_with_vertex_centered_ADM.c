@@ -50,7 +50,7 @@
  *                         needing them must use metric_stencil[1][1][1].
  *
  */
-void ghl_interpolate_with_vertex_centered_ADM(
+void ghl_interpolate_with_vertex_centered_ADM_backward(
       const ghl_metric_quantities metric_stencil[2][2][2],
       const double Ax_stencil[3][3][3],
       const double Ay_stencil[3][3][3],
@@ -58,24 +58,24 @@ void ghl_interpolate_with_vertex_centered_ADM(
       const double phitilde,
       ghl_induction_interp_vars *restrict interp_vars) {
   /*
-     We need to interpolate several quantities to several different points depending on the quantities
-     we're computing. The staggered gridpoints for these variables are
+     We need to interpolate several quantities to several different points depending on
+     the quantities we're computing. The staggered gridpoints for these variables are
        phitilde: (i+1/2, j+1/2, k+1/2)
        A_x:      (i,     j+1/2, k+1/2)
        A_y:      (i+1/2, j,     k+1/2)
        A_z:      (i+1/2, j+1/2, k    )
-     For metric quantities, we use ghl_ADM_vertex_interp(), which computes most of the needed quantities.
-     It interpolates the metric to 3 different points:
+     For metric quantities, we use ghl_ADM_vertex_interp(), which computes most of the
+     needed quantities. It interpolates the metric to 3 different points:
        gammaUU[0][i] is at A_x's location
        gammaUU[1][i] is at A_y's location
        gammaUU[2][i] is at A_z's location
      Note that we actually store detg*gammaUU to reduce the memory usage.
-     Similarly, the function ghl_A_i_avg() interpolates A_i to these points, storing the interpolated
-     data in the 4 arrays A_to_phitilde, A_to_Ax, A_to_Ay, and A_to_Az.
+     Similarly, the function ghl_A_i_avg() interpolates A_i to these points, storing the
+     interpolated data in the 4 arrays A_to_phitilde, A_to_Ax, A_to_Ay, and A_to_Az.
 
-     These two averaging loops are split because the stencils are of different sizes. The stencils are
-     centered around the staggered point. This means that the metric have an even stencil, and the A_i
-     have an odd stencil.
+     These two averaging loops are split because the stencils are of different sizes. The
+     stencils are centered around the staggered point. This means that the metric have an
+     even stencil, and the A_i have an odd stencil.
   */
   double gammaUU_interp[3][3];
   ghl_ADM_vertex_interp(metric_stencil, gammaUU_interp);
@@ -105,8 +105,56 @@ void ghl_interpolate_with_vertex_centered_ADM(
   // Next set \alpha \Phi - \beta^j A_j at (i+1/2,j+1/2,k+1/2)
   // \alpha \Phi = \alpha \tilde{\Phi} / psi^6
   //             = \alpha \tilde{\Phi} / \sqrt{\gamma}
-  interp_vars->alpha_Phi_minus_betaj_A_j = phitilde*metric_stencil[1][1][1].lapse/metric_stencil[1][1][1].sqrt_detgamma
-                                            - ( metric_stencil[1][1][1].betaU[0]*A_to_phitilde[0]
-                                              + metric_stencil[1][1][1].betaU[1]*A_to_phitilde[1]
-                                              + metric_stencil[1][1][1].betaU[2]*A_to_phitilde[2] );
+  interp_vars->alpha_Phi_minus_betaj_A_j
+        = phitilde * metric_stencil[1][1][1].lapse
+                / metric_stencil[1][1][1].sqrt_detgamma
+          - (metric_stencil[1][1][1].betaU[0] * A_to_phitilde[0]
+             + metric_stencil[1][1][1].betaU[1] * A_to_phitilde[1]
+             + metric_stencil[1][1][1].betaU[2] * A_to_phitilde[2]);
+}
+
+/**
+ * @ingroup mag_gauge
+ * @brief Interpolate induction gauge quantities using the historical forward
+ *        vertex-centered ADM stencil.
+ *
+ * @deprecated Use @ref ghl_interpolate_with_vertex_centered_ADM_backward for
+ * the correctly centered backward/current metric stencil. This compatibility
+ * entry point preserves the original installed contract.
+ *
+ * @param[in] metric_stencil 2x2x2 stencil of vertex-centered ADM quantities.
+ *                           The interpolation uses metric_stencil[0][0][0] at
+ *                           the \f$ \tilde{\Phi} \f$ point and the adjacent
+ *                           forward vertices metric_stencil[0][0][1],
+ *                           metric_stencil[0][1][0], and
+ *                           metric_stencil[1][0][0].
+ *
+ * @param[in] Ax_stencil 3D stencil array containing \f$ A_x \f$
+ * @param[in] Ay_stencil 3D stencil array containing \f$ A_y \f$
+ * @param[in] Az_stencil 3D stencil array containing \f$ A_z \f$
+ * @param[in] phitilde value of \f$ \tilde{\Phi} \f$ at the staggered point
+ * @param[out] interp_vars ghl_induction_interp_vars with assigned fields
+ *                         `sqrtg_Ai` and `alpha_Phi_minus_betaj_A_j`.
+ *                         Fields `alpha` and `betai` are not assigned; callers
+ *                         needing them must use metric_stencil[0][0][0].
+ */
+void ghl_interpolate_with_vertex_centered_ADM(
+      const ghl_metric_quantities metric_stencil[2][2][2],
+      const double Ax_stencil[3][3][3],
+      const double Ay_stencil[3][3][3],
+      const double Az_stencil[3][3][3],
+      const double phitilde,
+      ghl_induction_interp_vars *restrict interp_vars) {
+  ghl_metric_quantities backward_metric_stencil[2][2][2];
+  for(int k = 0; k < 2; k++) {
+    for(int j = 0; j < 2; j++) {
+      for(int i = 0; i < 2; i++) {
+        backward_metric_stencil[k][j][i] = metric_stencil[1 - k][1 - j][1 - i];
+      }
+    }
+  }
+
+  ghl_interpolate_with_vertex_centered_ADM_backward(
+        backward_metric_stencil, Ax_stencil, Ay_stencil, Az_stencil, phitilde,
+        interp_vars);
 }

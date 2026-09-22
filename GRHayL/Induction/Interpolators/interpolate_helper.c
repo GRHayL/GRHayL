@@ -375,22 +375,25 @@ void ghl_ADM_vertex_interp(
 
   for(int ii=0; ii<2; ii++) {
     // Interpolate xx, xy, xz from vvv to cvv centering for A_x
-    const double detgx = metric_stencil[1][1][ii].lapse*metric_stencil[1][1][ii].sqrt_detgamma;
-    gammaUU_interp[0][0] += detgx*metric_stencil[1][1][ii].gammaUU[0][0];
-    gammaUU_interp[0][1] += detgx*metric_stencil[1][1][ii].gammaUU[0][1];
-    gammaUU_interp[0][2] += detgx*metric_stencil[1][1][ii].gammaUU[0][2];
+    const double detgx
+          = metric_stencil[1][1][ii].lapse * metric_stencil[1][1][ii].sqrt_detgamma;
+    gammaUU_interp[0][0] += detgx * metric_stencil[1][1][ii].gammaUU[0][0];
+    gammaUU_interp[0][1] += detgx * metric_stencil[1][1][ii].gammaUU[0][1];
+    gammaUU_interp[0][2] += detgx * metric_stencil[1][1][ii].gammaUU[0][2];
 
     // Interpolate yx, yy, yz from vvv to vcv centering for A_y
-    const double detgy = metric_stencil[1][ii][1].lapse*metric_stencil[1][ii][1].sqrt_detgamma;
-    gammaUU_interp[1][0] += detgy*metric_stencil[1][ii][1].gammaUU[0][1];
-    gammaUU_interp[1][1] += detgy*metric_stencil[1][ii][1].gammaUU[1][1];
-    gammaUU_interp[1][2] += detgy*metric_stencil[1][ii][1].gammaUU[1][2];
+    const double detgy
+          = metric_stencil[1][ii][1].lapse * metric_stencil[1][ii][1].sqrt_detgamma;
+    gammaUU_interp[1][0] += detgy * metric_stencil[1][ii][1].gammaUU[0][1];
+    gammaUU_interp[1][1] += detgy * metric_stencil[1][ii][1].gammaUU[1][1];
+    gammaUU_interp[1][2] += detgy * metric_stencil[1][ii][1].gammaUU[1][2];
 
     // Interpolate zx, zy, zz from vvv to vvc centering for A_z
-    const double detgz = metric_stencil[ii][1][1].lapse*metric_stencil[ii][1][1].sqrt_detgamma;
-    gammaUU_interp[2][0] += detgz*metric_stencil[ii][1][1].gammaUU[0][2];
-    gammaUU_interp[2][1] += detgz*metric_stencil[ii][1][1].gammaUU[1][2];
-    gammaUU_interp[2][2] += detgz*metric_stencil[ii][1][1].gammaUU[2][2];
+    const double detgz
+          = metric_stencil[ii][1][1].lapse * metric_stencil[ii][1][1].sqrt_detgamma;
+    gammaUU_interp[2][0] += detgz * metric_stencil[ii][1][1].gammaUU[0][2];
+    gammaUU_interp[2][1] += detgz * metric_stencil[ii][1][1].gammaUU[1][2];
+    gammaUU_interp[2][2] += detgz * metric_stencil[ii][1][1].gammaUU[2][2];
   }
   gammaUU_interp[0][0] /= 2.0;
   gammaUU_interp[0][1] /= 2.0;

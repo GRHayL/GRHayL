@@ -15,8 +15,8 @@
  * usual fields, and `psi_stencil` contains physical \f$\psi\f$. A caller with
  * an initialized physical ADM inverse metric must multiply `gammaUU` by
  * \f$\psi^4\f$ before this call, or use
- * @ref ghl_interpolate_with_cell_centered_ADM instead. Interpolations are handled by the internal
- * functions @ref ghl_BSSN_cell_interp and @ref ghl_A_i_avg .
+ * @ref ghl_interpolate_with_cell_centered_ADM instead. Interpolations are handled by the
+ * internal functions @ref ghl_BSSN_cell_interp and @ref ghl_A_i_avg .
  *
  * These two averaging loops are split because the stencils are of
  * different sizes. The stencils are centered around the staggered

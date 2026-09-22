@@ -30,7 +30,10 @@ Key public surface:
 - `ghl_HLL_flux_with_Btilde`
 - `ghl_interpolate_with_cell_centered_ADM`
 - `ghl_interpolate_with_cell_centered_BSSN`
-- `ghl_interpolate_with_vertex_centered_ADM`
+- `ghl_interpolate_with_vertex_centered_ADM` (deprecated forward-stencil
+  compatibility entry point)
+- `ghl_interpolate_with_vertex_centered_ADM_backward` (corrected
+  backward/current stencil)
 - `ghl_calculate_phitilde_rhs`
 - `ghl_HLL_vars`
 - `ghl_induction_interp_vars`
