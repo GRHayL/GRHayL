@@ -16,10 +16,11 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
 
 - [Unit_Tests/unit_test_piecewise_polytrope.c](../../../Unit_Tests/unit_test_piecewise_polytrope.c)
   directly initializes a hybrid piecewise-polytrope EOS and checks derived
-  `K_ppoly` and `eps_integ_const` entries. This is the direct regression route
-  for piecewise-polytrope constant setup. It does not check the return code,
-  `p_ppoly`, or invalid-input behavior; see the hybrid contract's breakpoint
-  contradiction.
+  `K_ppoly` and `eps_integ_const` entries. It checks the initializer return,
+  all real `p_ppoly` transitions for a four-piece EOS, and exact-extent one-
+  and two-piece inputs. This is the direct regression route for
+  piecewise-polytrope constant and transition setup; it does not cover invalid
+  input behavior.
 - [Unit_Tests/unit_test_tabulated_eos.c](../../../Unit_Tests/unit_test_tabulated_eos.c)
   directly initializes a tabulated EOS from a CLI HDF5 table path, checks table
   dimensions and `energy_shift`, validates analytic table quantities,
@@ -47,7 +48,9 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   covers EOS initialization errors for simple, hybrid, and tabulated setup;
   tabulated interpolation/helper errors including out-of-table and
   too-many-variable cases; table-read errors; invalid table/EOS state; and
-  beta-equilibrium rho-map error paths.
+  beta-equilibrium rho-map error paths. Key `85` poisons fresh EOS storage
+  before NN-enabled table initialization fails on a missing embedded model,
+  exercising the early cleanup-owned pointer invariant.
 
 The tabulated test directly calls many, but not all, registered wrappers.
 [Tabulated interpolator catalog](tabulated-interpolator-catalog.md) separates
@@ -119,13 +122,13 @@ instead.
 Dependent tests are impact signals for EOS changes, not primary EOS contracts:
 
 - [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
-  covers `ghl_set_prims_to_constant_atm` for simple and hybrid EOS setup. Its
+  covers simple rectangular extrema, explicit/default zero density floors,
+  hybrid zero-floor metadata, and `ghl_set_prims_to_constant_atm` for simple
+  and hybrid EOS setup. Its
   tabulated Atmosphere branch is commented out, and the file has a TODO to add
   table-based default checks before extending the loop. For simple/hybrid it
   does not assert `Y_e` or temperature, even though constant Atmosphere copies
   `eos.Y_e_atm` and `eos.T_atm` and those initializers do not set the fields.
-  Its simple-EOS default-floor check also does not assert `eps_min` or
-  `entropy_min` after both density and pressure minima default to zero.
 - Con2Prim tabulated tests route through
   [Con2Prim tests and fixtures](../con2prim/tests-and-fixtures.md).
 - Neutrinos table-backed tests route through

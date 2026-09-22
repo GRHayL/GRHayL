@@ -72,7 +72,12 @@ GRHayLib maps Cactus controls into `ghl_initialize_params` at routing level:
 Before initialization, `GRHayLib_paramcheck` rejects a
 `max_Lorentz_factor` that is nonfinite or less than `1`. Thus the admitted
 boundary is finite `max_Lorentz_factor >= 1`; this prevents the derived
-`inv_sq_max_Lorentz_factor` from receiving an invalid runtime value.
+`inv_sq_max_Lorentz_factor` from receiving an invalid runtime value. Finite
+does not guarantee a representable subluminal cap at every extreme magnitude:
+if velocity limiting is required and the requested bound is not strictly
+subluminal, Core returns `ghl_error_u0_singular` before mutation. If storing an
+otherwise representable rescaling rounds the achieved speed over the cap, Core
+tries one inward correction and returns that error only if the recheck fails.
 
 The tabulated NN fallback toggle `enable_backup_nn_primitive_guess` is not
 part of `ghl_initialize_params`; GRHayLib passes it to
@@ -131,9 +136,8 @@ PPM behavior there; this page only records GRHayLib parameter plumbing.
 - Core wrapper installs EOS function pointers through
   `ghl_initialize_eos_functions(ghl_eos_hybrid)`, then calls
   `ghl_initialize_hybrid_eos`.
-- Current upstream hybrid initialization can read `rho_ppoly[neos-1]` after
-  copying only `neos-1` breakpoints. GRHayLib's CCL bound on `neos` does not
-  resolve that upstream source defect.
+- Core consumes exactly the `neos-1` density transitions supplied by GRHayLib
+  and computes the same number of pressure transitions.
 
 `EOS_type = "Tabulated"`:
 

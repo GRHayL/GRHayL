@@ -42,7 +42,11 @@ ideal-fluid setup. `ghl_initialize_simple_eos` sets `eos_type` to
 `Gamma_th` and `Gamma_ppoly[0]`, sets one-piece hybrid constants, stores
 pressure atmosphere/floor/ceiling values from inputs or defaults, computes
 epsilon values from the ideal-fluid pressure relation, computes entropy through
-the hybrid entropy helper, and sets `tau_atm = rho_atm * eps_atm`.
+the hybrid entropy helper, and sets `tau_atm = rho_atm * eps_atm`. For the
+supported `Gamma > 1` domain, minimum epsilon/entropy use maximum density and
+maximum epsilon/entropy use minimum density. A zero density floor uses explicit
+limit values instead of evaluating a zero denominator; positive pressure at
+that floor makes the upper metadata positive infinity.
 
 Simple and hybrid initializers do not assign tabulated-only `Y_e_atm` or
 `T_atm`. Built `ghl_set_prims_to_constant_atm` nevertheless copies both fields
@@ -54,14 +58,17 @@ EOS must initialize/own those fields; current wrappers do not.
 Hybrid EOS setup sets `eos_type` to `ghl_eos_hybrid`, stores the requested
 piece count and piece arrays, computes derived `K_ppoly`,
 `eps_integ_const`, `p_ppoly`, atmosphere values, floors, and ceilings through
-hybrid helpers.
+hybrid helpers. It computes only the `neos - 1` real pressure transitions and
+initializes the unused active slot `p_ppoly[neos-1]` to zero. Its zero density
+floor uses the first-piece analytic cold limit.
 
 Tabulated EOS setup sets `eos_type` to `ghl_eos_tabulated`, stores
-`table_type` and `clean_sound_speed`, reads the table, clamps requested
+`table_type` and `clean_sound_speed`, initializes beta-equilibrium and NN
+cleanup-owned pointers to `NULL` before any fallible table or model operation,
+reads the table, clamps requested
 `rho`, `Y_e`, and `T` bounds to table bounds, initializes atmosphere pressure,
 energy, and entropy through tabulated interpolation, sets table-derived
-pressure/energy/entropy bounds, initializes beta-equilibrium arrays to `NULL`,
-and sets `root_finding_precision = 1e-10`.
+pressure/energy/entropy bounds, and sets `root_finding_precision = 1e-10`.
 
 Tabulated initialization sets `tau_atm = rho_min * eps_min`, unlike the
 simple/hybrid `rho_atm * eps_atm` assignment. `ghl.h` describes `_atm` fields
@@ -76,17 +83,16 @@ calling `ghl_initialize_tabulated_eos`.
 
 - Simple initialization validates atmosphere density/pressure and min/max
   ordering. Negative minima become zero and negative maxima become `1e300`.
-  It does not validate `Gamma`; formulas divide by `Gamma - 1` and by density.
-  If both minima use negative/default sentinels, the resulting zero density and
-  zero pressure feed `eps_min = press_min/(rho_min*(Gamma-1))` and the entropy
-  formula, so derived minima can be non-finite even though initialization
-  returns success.
+  For supported `Gamma > 1`, derived rectangular extrema use opposite density
+  endpoints and the zero-density floor has explicit finite-zero or
+  positive-infinite limit semantics. The initializer does not validate
+  `Gamma`; division by `Gamma - 1` remains unchecked outside that domain.
 - Hybrid initialization validates only atmosphere density and density min/max
   ordering. It does not validate `neos`, input pointers/lengths, breakpoint
-  ordering, `Gamma_ppoly`, `K_ppoly0`, or `Gamma_th`. See
-  [hybrid piecewise-polytrope EOS](hybrid-piecewise-polytrope.md) for the
-  current breakpoint-read contradiction. Its negative/default density minimum
-  also becomes zero before cold-energy/entropy helpers divide by density.
+  ordering, `Gamma_ppoly`, `K_ppoly0`, or `Gamma_th`. It consumes exactly
+  `neos - 1` breakpoints for multi-piece setup and handles a zero floor through
+  the analytic first-piece cold limit. See
+  [hybrid piecewise-polytrope EOS](hybrid-piecewise-polytrope.md) for details.
 - Tabulated initialization reads/allocates the table before validating
   atmosphere and requested bounds. Requested min/max values are clamped to
   table bounds, but atmosphere `(rho,Y_e,T)` is not clamped before its direct

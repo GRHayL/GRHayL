@@ -217,6 +217,8 @@ typedef struct ghl_stress_energy {
 
  --rho_max, tau_max, press_max, Ye_max, temp_max, eps_max, entropy_max:
    all variables marked by "_max" are the maximum value for these quantities.
+   For a simple EOS with a zero density floor and positive pressure ceiling,
+   eps_max and entropy_max are positive infinity.
 
            ----------- Hybrid Equation of State -----------
  --neos: sets the number of polytropic pieces for the hybrid EOS.
@@ -513,6 +515,8 @@ void ghl_return_stress_energy(
 /**
  * Limit velocity and compute u0. speed_limited is an initialized [in,out]
  * OR accumulator: incoming true is preserved; start each logical group false.
+ * Returns ghl_error_u0_singular if a required speed limit is not representable,
+ * or if the achieved speed or u0 is non-finite, luminal, or above the cap.
  */
 ghl_error_codes_t ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,

@@ -84,6 +84,9 @@ Route fields by ownership:
 - `max_Lorentz_factor` and `inv_sq_max_Lorentz_factor`: route velocity limiting
   to [Core velocity/u0 contract](velocity-u0-contract.md) and primitive-limit
   wrapper behavior to [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
+  Initialization stores both requested values, while the limiter rejects a
+  required cap that cannot produce a representably subluminal, within-cap
+  result.
 - `psi6threshold`: route conservative/floor adjustment behavior to
   [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
 - `con2prim_max_iterations` and `con2prim_solver_tolerance`: route solver

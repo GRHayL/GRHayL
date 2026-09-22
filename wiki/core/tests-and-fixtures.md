@@ -15,11 +15,13 @@ fixture contents or metadata forbidden by the
 ### Core suite
 
 - [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
-  is the direct Core suite. It checks simple EOS default handling, hybrid EOS
-  setup, `ghl_set_prims_to_constant_atm` for simple and hybrid EOS, fixed-value
-  4D vector-square and raise/lower helpers, metric determinant enforcement via
+  is the direct Core suite. It checks simple EOS default handling and
+  rectangular extrema, simple/hybrid zero-density floors, hybrid EOS setup,
+  `ghl_set_prims_to_constant_atm` for simple and hybrid EOS, fixed-value 4D
+  vector-square and raise/lower helpers, metric determinant enforcement via
   `ghl_enforce_detgtij_and_initialize_ADM_metric`, and valid
-  `ghl_get_con2prim_routine_name` keys.
+  `ghl_get_con2prim_routine_name` keys. Assertions for outputs expected to be
+  finite reject nonfinite values before applying tolerances.
 - [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
   opens `grhayl_core_test_suite_input.bin` and uses it as the metric fixture for
   determinant-enforced ADM metric initialization.
@@ -38,13 +40,8 @@ fixture contents or metadata forbidden by the
 - [Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c](../../Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c)
   generates random metric inputs through `ghl_randomize_metric` and writes the
   Core-suite metric fixture.
-- Fixture naming drift is visible in repo-local files:
-  [Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c](../../Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c)
-  writes `grhayL_core_test_suite_input.bin`, while
-  [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../Unit_Tests/unit_test_grhayl_core_test_suite.c),
-  [.github/run_tests.sh](../../.github/run_tests.sh), and
-  [.github/workflows/](../../.github/workflows/) use/download
-  `grhayl_core_test_suite_input.bin`.
+- The generator, consumer, runner, and workflows use the lowercase fixture
+  name `grhayl_core_test_suite_input.bin`.
 
 ### Direct helper checks visible in tests
 
@@ -87,7 +84,9 @@ fixture contents or metadata forbidden by the
 
 - [Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c](../../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c)
   routes through Core metric initialization and ADM auxiliaries, then checks
-  Con2Prim primitive limiting plus final `u0` values against fixtures.
+  Con2Prim primitive limiting plus final `u0` values against fixtures. Focused
+  direct limiter cases check ordinary caps, extreme rounded caps, achieved
+  speed/cap consistency, and an already subluminal no-limit state.
 - [Unit_Tests/unit_test_code_error.c](../../Unit_Tests/unit_test_code_error.c)
   directly exercises the Core `ghl_limit_v_and_compute_u0` singular-`u0` error
   path through key `4`.
@@ -178,9 +177,8 @@ fixture contents or metadata forbidden by the
   pointer before initialization, asserts all pointer targets after each EOS
   selection, or checks an invalid `ghl_eos_t` passed to the `void`
   `ghl_initialize_eos_functions` entry point.
-- Simple EOS derived defaults: the Core suite asserts default `rho`/pressure
-  floor and ceiling fields, but not the derived epsilon/entropy values produced
-  after zero floors or other unchecked inputs such as `Gamma == 1`.
+- Invalid simple EOS gamma domains such as `Gamma == 1` remain outside direct
+  Core-suite coverage and initializer validation.
 - Clamp helpers: no direct Core clamp test is visible in the listed ground
   truth. Keep `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp` coverage as
   weak unless a direct test is added or found elsewhere in the repo.

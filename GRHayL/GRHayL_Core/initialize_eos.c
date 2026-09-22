@@ -109,12 +109,17 @@ ghl_error_codes_t ghl_initialize_simple_eos(
 
   const double Gm1 = Gamma - 1.0;
   // -------------- Ceilings --------------
-  eos->eps_max = eos->press_max/(eos->rho_max*Gm1);
-  eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+  if(eos->rho_min == 0.0) {
+    eos->eps_max = eos->press_max > 0.0 ? INFINITY : 0.0;
+    eos->entropy_max = eos->press_max > 0.0 ? INFINITY : 0.0;
+  } else {
+    eos->eps_max = eos->press_max/(eos->rho_min*Gm1);
+    eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_max);
+  }
 
   // --------------- Floors ---------------
-  eos->eps_min = eos->press_min/(eos->rho_min*Gm1);
-  eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  eos->eps_min = eos->press_min/(eos->rho_max*Gm1);
+  eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_min);
 
   // --------- Atmospheric values ---------
   eos->eps_atm = eos->press_atm/(eos->rho_atm*Gm1);
@@ -174,16 +179,14 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   // Step 4: Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
 
-  // Initialize tabulated specific enthalpy.  We do it here to make sure
-  // eps_integ_consts are initialized.
-  for(int j=0; j<eos->neos; j++) {
+  // Initialize pressure transitions after eps_integ_consts are initialized.
+  for(int j=0; j<eos->neos; j++) eos->p_ppoly[j] = 0.0;
+  for(int j=0; j<eos->neos-1; j++) {
     double P, eps;
-    double rho = rho_ppoly[j];
+    const double rho = eos->rho_ppoly[j];
     if(rho > 0) {
       ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P, &eps);
       eos->p_ppoly[j] = P;
-    } else {
-      eos->p_ppoly[j] = 0.0;
     }
   }
 
@@ -196,11 +199,14 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   // --------------------------------------
 
   // --------------- Floors ---------------
-  // Compute maximum P and eps
-  ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
-
-  // Compute maximum entropy
-  eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  if(eos->rho_min == 0.0) {
+    eos->press_min = 0.0;
+    eos->eps_min = eos->eps_integ_const[0];
+    eos->entropy_min = 0.0;
+  } else {
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
+    eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  }
   // --------------------------------------
 
   // --------- Atmospheric values ---------
@@ -244,6 +250,10 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   eos->table_type = table_type;
   eos->clean_sound_speed = clean_sound_speed;
   eos->enable_neural_net_c2p = enable_neural_net_c2p;
+  eos->Ye_of_lr = NULL;
+  eos->lp_of_lr = NULL;
+  eos->le_of_lr = NULL;
+  eos->lh_of_lr = NULL;
   eos->c2p_nn = NULL;
 
   // Step 2: Read the EOS table
@@ -335,11 +345,6 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   eos->entropy_max = eos->table_ent_max;
   eos->tau_atm     = eos->rho_min * eos->eps_min;
 
-  // Step 8: Initialize beta-equilibrium arrays to NULL
-  eos->Ye_of_lr = NULL;
-  eos->lp_of_lr = NULL;
-  eos->le_of_lr = NULL;
-  eos->lh_of_lr = NULL;
   return ghl_success;
 #endif
 }

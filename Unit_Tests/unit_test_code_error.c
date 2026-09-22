@@ -1,4 +1,5 @@
 // clang-format off
+#include <string.h>
 #include "ghl_unit_tests.h"
 
 #ifndef GHL_DISABLE_HDF5
@@ -102,8 +103,9 @@ int main(int argc, char **argv) {
     expect_error_code(error, test_key, "ghl_initialize_hybrid_eos_functions_and_params");
   }
   else if(error != ghl_success) {
-    fprintf(stderr, "Unexpected setup error %d before test %d\n", error, test_key);
-    return 1;
+    char message[128];
+    snprintf(message, sizeof(message), "Unexpected setup error %d", error);
+    fail_test(test_key, message);
   }
 
   evolve_temperature = true;
@@ -250,6 +252,7 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       break;
     case 85:
       ghl_initialize_eos_functions(ghl_eos_tabulated);
+      memset(&tab_eos, 0xA5, sizeof(tab_eos));
       error = ghl_initialize_tabulated_eos(
             tablepath,
             ghl_eos_table_stellarcollapse,
@@ -441,10 +444,11 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       if(routine_name == NULL) {
         pass_test(test_key, "ghl_get_con2prim_routine_name returned NULL for invalid key");
       }
-      fprintf(stderr,
-              "Test %d failed: ghl_get_con2prim_routine_name returned \"%s\" for invalid key\n",
-              test_key, routine_name);
-      return 1;
+      char message[128];
+      snprintf(message, sizeof(message),
+               "ghl_get_con2prim_routine_name returned \"%s\" for invalid key",
+               routine_name);
+      fail_test(test_key, message);
     }
   }
 
@@ -589,8 +593,10 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
     case 80:
       error = ghl_tabulated_compute_P_from_rho(&tab_eos, tab_eos.table_rho_min, &P);
       if(error != ghl_success) {
-        fprintf(stderr, "Failed to compute minimum pressure before test %d: %d\n", test_key, error);
-        return 1;
+        char message[128];
+        snprintf(message, sizeof(message),
+                 "Failed to compute minimum pressure: %d", error);
+        fail_test(test_key, message);
       }
       error = ghl_tabulated_compute_rho_from_P(&tab_eos, 0.5 * P, &rho);
       expect_error_code(error, test_key, "ghl_tabulated_compute_rho_from_P");

@@ -154,12 +154,20 @@ initialization validates density atmosphere/min/max inputs and computes
 pressure/energy/entropy atmosphere and bounds through hybrid helpers. Source:
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
 
-Those checks are not complete domain validation. Simple setup accepts zero
-`rho_atm`, zero floors, and any `Gamma`; later divisions by density and
-`Gamma-1` can therefore produce non-finite `eps` fields. Hybrid setup does not
-validate `neos` against `1..MAX_EOS_PARAMS`, the input array extents, EOS
-coefficients, or output pointer. These are unchecked caller preconditions, not
-documented error-return paths.
+For supported `Gamma > 1`, simple setup derives rectangular-domain epsilon and
+entropy extrema from opposite density endpoints: minima use `rho_max`, while
+maxima use `rho_min`. A zero pressure floor gives zero derived minima. At a
+zero density floor, a positive-pressure upper bound gives positive-infinite
+upper metadata, while a zero-pressure upper bound gives zero. Hybrid setup
+likewise uses the analytic cold limit at a zero density floor instead of
+evaluating its singular helpers there.
+
+Those checks are not complete domain validation. Simple setup still accepts
+zero `rho_atm` and any `Gamma`; atmosphere evaluation or division by
+`Gamma-1` can therefore produce non-finite fields outside the supported
+domain. Hybrid setup does not validate `neos` against `1..MAX_EOS_PARAMS`, the
+input array extents, EOS coefficients, or output pointer. These are unchecked
+caller preconditions, not documented error-return paths.
 
 Tabulated EOS initialization validates `rho_atm`, `Y_e_atm`, and `T_atm`,
 clamps requested `rho`, `Y_e`, and `T` min/max values to table bounds, checks
@@ -180,9 +188,11 @@ equivalent; intended tabulated semantics need maintainer resolution
 
 ## Tests And Coverage
 
-The Core suite tests simple EOS default density/pressure floor and ceiling
-behavior, initializes hybrid EOS atmosphere data, and checks
-`ghl_set_prims_to_constant_atm` for simple and hybrid EOS cases. Source:
+The Core suite tests simple EOS rectangular extrema and explicit/default zero
+floors, hybrid zero-floor metadata, and simple EOS default density/pressure
+floor and ceiling behavior. It initializes hybrid EOS atmosphere data and
+checks `ghl_set_prims_to_constant_atm` for simple and hybrid EOS cases. Finite
+outputs are rejected before tolerance comparisons. Source:
 [`Unit_Tests/unit_test_grhayl_core_test_suite.c`](../../Unit_Tests/unit_test_grhayl_core_test_suite.c).
 
 Do not claim tabulated default or tabulated atmosphere reset coverage from the

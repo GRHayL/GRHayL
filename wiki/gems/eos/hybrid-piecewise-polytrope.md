@@ -52,7 +52,8 @@ piecewise-polytrope fields:
 - `p_ppoly`: pressure breakpoints computed after `K_ppoly` and
   `eps_integ_const` are ready, using
   `ghl_hybrid_compute_P_cold_and_eps_cold` on each positive `rho_ppoly`
-  breakpoint.
+  breakpoint. Only `neos - 1` entries are transitions; the unused active slot
+  `p_ppoly[neos-1]` is initialized to zero.
 - `Gamma_th`: thermal adiabatic index copied from initializer input.
 
 After piece setup, the hybrid initializer computes pressure, internal-energy,
@@ -126,7 +127,7 @@ not clamp density, validate finiteness, or clean negative/superluminal `cs2`;
 those are caller/EOS-domain preconditions, distinct from tabulated sound-speed
 cleaning.
 
-## Preconditions And Breakpoint Contradiction
+## Preconditions And Breakpoint Extent
 
 `ghl_eos_parameters.rho_ppoly` has `MAX_EOS_PARAMS - 1` entries, and the piece
 lookup/set-constant helpers consume `neos - 1` density breakpoints. Callers
@@ -135,14 +136,15 @@ for multi-piece EOSs. Source does not validate `1 <= neos <= MAX_EOS_PARAMS`,
 pointer lengths, increasing breakpoints, or gamma/constant domains; invalid
 inputs can reach array indexing, `pow`, and division by `Gamma - 1`.
 
-Current `ghl_initialize_hybrid_eos` copies `rho_ppoly[0..neos-2]`, but its
-later `p_ppoly` initialization loop runs through `j < neos` and reads
-`rho_ppoly[neos-1]`. For `neos > 1`, that final read conflicts with the
-`neos - 1` breakpoint storage and with the three-element input used by the
-four-piece unit test. `p_ppoly[neos-1]` is not consumed by the pressure-piece
-lookup, which reads only through `neos - 2`, but the extra input read remains
-an unresolved source defect. Do not reinterpret it as a requirement for an
-extra caller element.
+`ghl_initialize_hybrid_eos` copies and consumes `rho_ppoly[0..neos-2]` and
+computes the matching `p_ppoly[0..neos-2]` transitions. It does not require or
+read `rho_ppoly[neos-1]`. A one-piece EOS retains its established one-element
+sentinel input, and the unused `p_ppoly[0]` sentinel remains zero.
+
+For a zero density floor with supported `Gamma_ppoly[0] > 1`, initialization
+sets zero cold pressure and entropy and uses `eps_integ_const[0]` for the cold
+specific-energy limit. It does not call density-dividing cold/entropy helpers
+at that endpoint.
 
 ## Test Coverage
 
@@ -153,9 +155,10 @@ route for the `ghl_hybrid_set_K_ppoly_and_eps_integ_consts` function pointer
 (`GRHayL/include/ghl_eos_functions.h`), whose installed implementation is
 `NRPyEOS_set_K_ppoly_and_eps_integ_consts` from the Helper Map above.
 
-That test checks only `K_ppoly[1..3]` and `eps_integ_const[1..3]`. It neither
-checks the initializer return code nor exercises `p_ppoly`, invalid `neos`,
-breakpoint ordering, or gamma-domain failures. Treat those as coverage gaps.
+The test checks the initializer return code, all three four-piece pressure
+transitions against independent adjacent-piece formulas, and compact one- and
+two-piece cases with exact transition extents. Invalid `neos`, breakpoint
+ordering, and gamma-domain failures remain coverage gaps.
 
 `Unit_Tests/test_compute_h_and_cs2.c` provides a small test helper for
 `ghl_compute_h_and_cs2` call sites; it is not the direct piecewise-polytrope

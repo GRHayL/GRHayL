@@ -76,7 +76,9 @@ Focused routes:
 
 - `ghl_eos_parameters` stores EOS type, table type, atmosphere values, bounds, hybrid pieces, and tabulated table state.
 - Initialize EOS through core initialization helpers so function pointers match EOS type.
-- Hybrid EOS splits cold and thermal behavior; tabulated EOS interpolates table quantities and enforces table bounds.
+- Hybrid EOS splits cold and thermal behavior and uses `neos - 1` density and
+  pressure transitions; tabulated EOS interpolates table quantities and
+  enforces table bounds.
 - Tabulated EOS runtime table support depends on HDF5-enabled builds.
 - `rho`, pressure, internal energy, entropy, temperature, and `Y_e` bounds must stay consistent with primitive and conservative limiters.
 
@@ -85,10 +87,9 @@ Current support boundaries:
 - Tabulated registry has 38 declared/stored pointer names but 37 assignments;
   the free-beta-equilibrium pointer is not initialized. Header also has one
   duplicate free prototype and two prototype-only index helpers.
-- Hybrid initializer's pressure-breakpoint loop reads one density breakpoint
-  beyond the `neos - 1` input/storage contract for multi-piece EOSs.
-- Tabulated initialization allocates/reads before later validation and lacks a
-  uniform safe rollback contract for all failures.
+- Tabulated initialization establishes optional cleanup-pointer null state
+  before fallible table/model work, but still allocates/reads before later
+  validation and lacks a uniform safe rollback contract for all failures.
 - Simple/hybrid initialization leaves atmosphere `Y_e` and temperature fields
   unset even though constant Atmosphere copies them. Tabulated `tau_atm` uses
   minimum density/energy rather than its atmosphere density/energy pair.

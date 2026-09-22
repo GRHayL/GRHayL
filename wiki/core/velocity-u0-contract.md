@@ -42,7 +42,12 @@ Outputs and mutation:
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 - It writes `prims->u0` after the optional velocity cap
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
-- It returns `ghl_error_u0_singular` if the computed `u0` is `NaN`; otherwise
+- When limiting is required, it returns `ghl_error_u0_singular` before velocity
+  mutation if the requested squared-speed bound is nonfinite or not strictly
+  subluminal. After rescaling, it recomputes the achieved metric speed and
+  returns the same error if the speed is nonfinite, luminal/superluminal, or
+  exceeds the stored inverse-square Lorentz cap.
+- It returns `ghl_error_u0_singular` for any nonfinite computed `u0`; otherwise
   it returns `ghl_success` (`ghl_error_codes_t` in `GRHayL/include/ghl.h` and
   `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 - The vector norm uses `ghl_compute_vec2_from_vec3D`, whose helper contract is
@@ -50,14 +55,13 @@ Outputs and mutation:
   `GRHayL/include/ghl_metric_helpers.h`
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 
-Checked failure behavior is narrow. The routine does not validate pointers,
-metric signature/invertibility, lapse, velocities, or
-`inv_sq_max_Lorentz_factor`; the square-root formulas assume a finite positive
-lapse, a positive-definite spatial metric, and a finite Lorentz cap at least
-one.
-Only `isnan(prims->u0)` produces `ghl_error_u0_singular`. An infinite `u0` is
-not rejected, and invalid inputs can mutate velocity or `u0` before an error is
-returned (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
+An already subluminal state that does not require limiting retains its measured
+speed; an extreme stored cap alone does not force failure. Checked failure
+behavior otherwise remains narrow. The routine does not validate pointers,
+metric signature/invertibility, lapse, or every parameter domain; the formulas
+assume a finite positive lapse and a positive-definite spatial metric. Invalid
+inputs outside checked speed/u0 results can still mutate output before an error
+is returned (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 
 ## Not Con2Prim Limits
 
@@ -77,10 +81,12 @@ The public Core declaration for `ghl_limit_v_and_compute_u0` is in
 Normal-path routing: `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`
 initializes parameters, hybrid EOS, metric, ADM auxiliaries, and primitives,
 then calls `ghl_enforce_primitive_limits_and_compute_u0` and checks `prims.u0`
-against fixture data
+against fixture data. It also calls the Core limiter directly for ordinary-cap
+success, extreme rounded-cap failure, achieved-speed/cap enforcement, and an
+already subluminal no-limit case
 (`Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`). Treat this
-as wrapper-path coverage for the Core limiter, not standalone full coverage of
-all Core inputs. Hybrid and tabulated flux tests also call the Core routine,
+as focused coverage for the Core limiter, not full coverage of all Core inputs.
+Hybrid and tabulated flux tests also call the Core routine,
 but their assertions target flux behavior rather than a complete standalone
 limiter contract (`Unit_Tests/unit_test_hybrid_flux.c` and
 `Unit_Tests/unit_test_tabulated_flux.c`).
@@ -88,5 +94,5 @@ limiter contract (`Unit_Tests/unit_test_hybrid_flux.c` and
 Error-path routing: `Unit_Tests/unit_test_code_error.c` initializes metric data,
 sets primitive velocities to `NaN`, calls `ghl_limit_v_and_compute_u0`
 directly, and maps test key 4 to `ghl_error_u0_singular`
-(`Unit_Tests/unit_test_code_error.c`). This covers the singular-`u0` error route
-without implying broader standalone test coverage.
+(`Unit_Tests/unit_test_code_error.c`). This covers one singular-`u0` error route
+without implying that key alone covers extreme-cap behavior.
