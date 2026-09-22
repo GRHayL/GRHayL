@@ -6,7 +6,8 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
   switch(error) {
     case ghl_success: break;
     GHL_CASE_ERROR(ghl_error_u0_singular,
-                   "Velocity limiting or u^0 evaluation produced a singular or non-finite result.\n")
+                   "Velocity limiting could not produce a finite, subluminal, "
+                   "within-cap result, or u^0 was non-finite.\n")
     GHL_CASE_ERROR(ghl_error_unknown_eos_type,
                    "Unknown EOS found in struct element 'eos_type'.\n");
     GHL_CASE_ERROR(ghl_error_invalid_c2p_key,

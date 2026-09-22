@@ -156,11 +156,12 @@ pressure/energy/entropy atmosphere and bounds through hybrid helpers. Source:
 
 For supported `Gamma > 1`, simple setup derives rectangular-domain epsilon and
 entropy extrema from opposite density endpoints: minima use `rho_max`, while
-maxima use `rho_min`. A zero pressure floor gives zero derived minima. At a
-zero density floor, a positive-pressure upper bound gives positive-infinite
-upper metadata, while a zero-pressure upper bound gives zero. Hybrid setup
-likewise uses the analytic cold limit at a zero density floor instead of
-evaluating its singular helpers there.
+maxima use `rho_min`. When `rho_max > 0`, a zero pressure floor gives zero
+derived minima. At a zero density floor, a positive-pressure upper bound gives
+positive-infinite upper metadata, while a zero-pressure upper bound gives zero.
+The accepted zero-width density domain can still produce NaN derived minima
+from `0/0`. Hybrid setup likewise uses the analytic cold limit at a zero density
+floor instead of evaluating its singular helpers there.
 
 Those checks are not complete domain validation. Simple setup still accepts
 zero `rho_atm` and any `Gamma`; atmosphere evaluation or division by

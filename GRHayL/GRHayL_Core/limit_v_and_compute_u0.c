@@ -24,49 +24,55 @@ ghl_error_codes_t ghl_limit_v_and_compute_u0(
   /*** Limit velocity to GAMMA_SPEED_LIMIT ***/
   const double one_minus_one_over_W_max_squared = 1.0 - params->inv_sq_max_Lorentz_factor; // 1 - W_max^{-2}
   if(one_minus_one_over_alpha_u0_squared > one_minus_one_over_W_max_squared
-     || 1.0-one_minus_one_over_alpha_u0_squared < params->inv_sq_max_Lorentz_factor) {
+     || 1.0 - one_minus_one_over_alpha_u0_squared < params->inv_sq_max_Lorentz_factor) {
     if(!isfinite(one_minus_one_over_W_max_squared)
-       || one_minus_one_over_W_max_squared >= 1.0)
+       || one_minus_one_over_W_max_squared >= 1.0) {
       return ghl_error_u0_singular;
+    }
 
-    double correction_fac = sqrt(one_minus_one_over_W_max_squared/one_minus_one_over_alpha_u0_squared);
+    double correction_fac
+          = sqrt(one_minus_one_over_W_max_squared / one_minus_one_over_alpha_u0_squared);
     prims->vU[0] = utU[0]*correction_fac - metric_adm->betaU[0];
     prims->vU[1] = utU[1]*correction_fac - metric_adm->betaU[1];
     prims->vU[2] = utU[2]*correction_fac - metric_adm->betaU[2];
     *speed_limited |= true;
 
-    double limited_utU[3] = {
-      prims->vU[0] + metric_adm->betaU[0],
-      prims->vU[1] + metric_adm->betaU[1],
-      prims->vU[2] + metric_adm->betaU[2]
-    };
-    one_minus_one_over_alpha_u0_squared =
-          ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, limited_utU)*metric_adm->lapseinv2;
+    double limited_utU[3]
+          = { prims->vU[0] + metric_adm->betaU[0], prims->vU[1] + metric_adm->betaU[1],
+              prims->vU[2] + metric_adm->betaU[2] };
+    one_minus_one_over_alpha_u0_squared
+          = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, limited_utU)
+            * metric_adm->lapseinv2;
 
     if(!isfinite(one_minus_one_over_alpha_u0_squared)
        || one_minus_one_over_alpha_u0_squared >= 1.0
-       || 1.0-one_minus_one_over_alpha_u0_squared < params->inv_sq_max_Lorentz_factor) {
+       || 1.0 - one_minus_one_over_alpha_u0_squared
+                < params->inv_sq_max_Lorentz_factor) {
       if(isfinite(one_minus_one_over_alpha_u0_squared)
          && one_minus_one_over_alpha_u0_squared > 0.0) {
         double inward_bound = one_minus_one_over_W_max_squared;
-        for(int i=0; i<4; i++) inward_bound = nextafter(inward_bound, 0.0);
-        correction_fac *= sqrt(inward_bound/one_minus_one_over_alpha_u0_squared);
-        prims->vU[0] = utU[0]*correction_fac - metric_adm->betaU[0];
-        prims->vU[1] = utU[1]*correction_fac - metric_adm->betaU[1];
-        prims->vU[2] = utU[2]*correction_fac - metric_adm->betaU[2];
+        for(int i = 0; i < 4; i++) {
+          inward_bound = nextafter(inward_bound, 0.0);
+        }
+        correction_fac *= sqrt(inward_bound / one_minus_one_over_alpha_u0_squared);
+        prims->vU[0] = utU[0] * correction_fac - metric_adm->betaU[0];
+        prims->vU[1] = utU[1] * correction_fac - metric_adm->betaU[1];
+        prims->vU[2] = utU[2] * correction_fac - metric_adm->betaU[2];
         limited_utU[0] = prims->vU[0] + metric_adm->betaU[0];
         limited_utU[1] = prims->vU[1] + metric_adm->betaU[1];
         limited_utU[2] = prims->vU[2] + metric_adm->betaU[2];
-        one_minus_one_over_alpha_u0_squared =
-              ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, limited_utU)*metric_adm->lapseinv2;
+        one_minus_one_over_alpha_u0_squared
+              = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, limited_utU)
+                * metric_adm->lapseinv2;
       }
     }
   }
 
   if(!isfinite(one_minus_one_over_alpha_u0_squared)
      || one_minus_one_over_alpha_u0_squared >= 1.0
-     || 1.0-one_minus_one_over_alpha_u0_squared < params->inv_sq_max_Lorentz_factor)
+     || 1.0 - one_minus_one_over_alpha_u0_squared < params->inv_sq_max_Lorentz_factor) {
     return ghl_error_u0_singular;
+  }
 
   // A = 1.0-one_minus_one_over_alpha_u0_squared = 1-(1-1/(al u0)^2) = 1/(al u0)^2
   // 1/sqrt(A) = al u0
@@ -74,8 +80,9 @@ ghl_error_codes_t ghl_limit_v_and_compute_u0(
   //u0_out          = (alpha_u0_minus_one + 1.0)*lapseinv;
   const double alpha_u0 = 1.0/sqrt(1.0-one_minus_one_over_alpha_u0_squared);
   prims->u0 = alpha_u0*metric_adm->lapseinv;
-  if(!isfinite(prims->u0))
+  if(!isfinite(prims->u0)) {
     return ghl_error_u0_singular;
+  }
 
   return ghl_success;
 }

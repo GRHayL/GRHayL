@@ -112,14 +112,17 @@ ghl_error_codes_t ghl_initialize_simple_eos(
   if(eos->rho_min == 0.0) {
     eos->eps_max = eos->press_max > 0.0 ? INFINITY : 0.0;
     eos->entropy_max = eos->press_max > 0.0 ? INFINITY : 0.0;
-  } else {
-    eos->eps_max = eos->press_max/(eos->rho_min*Gm1);
-    eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_max);
+  }
+  else {
+    eos->eps_max = eos->press_max / (eos->rho_min * Gm1);
+    eos->entropy_max
+          = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_max);
   }
 
   // --------------- Floors ---------------
-  eos->eps_min = eos->press_min/(eos->rho_max*Gm1);
-  eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_min);
+  eos->eps_min = eos->press_min / (eos->rho_max * Gm1);
+  eos->entropy_min
+        = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_min);
 
   // --------- Atmospheric values ---------
   eos->eps_atm = eos->press_atm/(eos->rho_atm*Gm1);
@@ -180,8 +183,10 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
 
   // Initialize pressure transitions after eps_integ_consts are initialized.
-  for(int j=0; j<eos->neos; j++) eos->p_ppoly[j] = 0.0;
-  for(int j=0; j<eos->neos-1; j++) {
+  for(int j = 0; j < eos->neos; j++) {
+    eos->p_ppoly[j] = 0.0;
+  }
+  for(int j = 0; j < eos->neos - 1; j++) {
     double P, eps;
     const double rho = eos->rho_ppoly[j];
     if(rho > 0) {
@@ -203,9 +208,12 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
     eos->press_min = 0.0;
     eos->eps_min = eos->eps_integ_const[0];
     eos->entropy_min = 0.0;
-  } else {
-    ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
-    eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  }
+  else {
+    ghl_hybrid_compute_P_cold_and_eps_cold(
+          eos, eos->rho_min, &eos->press_min, &eos->eps_min);
+    eos->entropy_min
+          = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
   }
   // --------------------------------------
 

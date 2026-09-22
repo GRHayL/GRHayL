@@ -45,8 +45,9 @@ epsilon values from the ideal-fluid pressure relation, computes entropy through
 the hybrid entropy helper, and sets `tau_atm = rho_atm * eps_atm`. For the
 supported `Gamma > 1` domain, minimum epsilon/entropy use maximum density and
 maximum epsilon/entropy use minimum density. A zero density floor uses explicit
-limit values instead of evaluating a zero denominator; positive pressure at
-that floor makes the upper metadata positive infinity.
+upper-limit values instead of evaluating a zero denominator; positive pressure
+at that floor makes the upper metadata positive infinity. The accepted
+zero-width density domain can still produce NaN derived minima from `0/0`.
 
 Simple and hybrid initializers do not assign tabulated-only `Y_e_atm` or
 `T_atm`. Built `ghl_set_prims_to_constant_atm` nevertheless copies both fields
@@ -84,9 +85,12 @@ calling `ghl_initialize_tabulated_eos`.
 - Simple initialization validates atmosphere density/pressure and min/max
   ordering. Negative minima become zero and negative maxima become `1e300`.
   For supported `Gamma > 1`, derived rectangular extrema use opposite density
-  endpoints and the zero-density floor has explicit finite-zero or
-  positive-infinite limit semantics. The initializer does not validate
-  `Gamma`; division by `Gamma - 1` remains unchecked outside that domain.
+  endpoints. When `rho_max > 0`, a zero pressure floor gives zero derived
+  minima. At a zero density floor, the upper metadata is zero for a zero
+  pressure ceiling or positive infinity for a positive pressure ceiling. The
+  accepted zero-width density domain can still produce NaN derived minima from
+  `0/0`. The initializer does not validate `Gamma`; division by `Gamma - 1`
+  remains unchecked outside that domain.
 - Hybrid initialization validates only atmosphere density and density min/max
   ordering. It does not validate `neos`, input pointers/lengths, breakpoint
   ordering, `Gamma_ppoly`, `K_ppoly0`, or `Gamma_th`. It consumes exactly
