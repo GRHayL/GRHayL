@@ -40,8 +40,8 @@ source, headers, tests, and common edit routes before wider search.
   then update docs.
 - Drift/contract notes: atmosphere values live in `ghl_eos_parameters`; changes
   can affect primitive-limit behavior and downstream setup. Constant atmosphere
-  is built; radial is declaration/incomplete-source only. Simple/hybrid EOS do
-  not initialize composition fields copied by constant reset.
+  is built; radial is declaration/incomplete-source only. Simple/hybrid EOS
+  initialize unused `Y_e_atm` and `T_atm` to zero placeholders.
 
 ## Con2Prim
 
@@ -227,5 +227,5 @@ source, headers, tests, and common edit routes before wider search.
 - Drift/contract notes: PPM parameters live in `ghl_parameters`; stencil sizes,
   face orientation, and left/right naming are external caller contracts.
   Coverage gap: no dedicated PPM unit test file is obvious in `Unit_Tests/`.
-  Built routines have no production source caller in this repo; generator
-  bounds, PPM face comments, and Doxygen category wording remain defective.
+  Built routines have no production source caller in this repo. Generator
+  boundary placeholders are serialized but ignored by replay.

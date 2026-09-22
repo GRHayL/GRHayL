@@ -6,8 +6,8 @@ int main(int argc, char **argv) {
   const int NGHOSTS     = 3;
 
   double *var = (double*) malloc(sizeof(double)*arraylength);
-  double *var_r = (double*) malloc(sizeof(double)*arraylength);
-  double *var_l = (double*) malloc(sizeof(double)*arraylength);
+  double *var_r = (double*) calloc(arraylength, sizeof(double));
+  double *var_l = (double*) calloc(arraylength, sizeof(double));
 
   // Initialize random data.
   for(int index=0; index<arraylength/2; index++) {

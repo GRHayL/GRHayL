@@ -1,10 +1,12 @@
 #include "ghl_unit_tests.h"
+#include <limits.h>
+#include <stdint.h>
 #define IPH(METRICm1,METRICp0,METRICp1,METRICp2) (-0.0625*((METRICm1) + (METRICp2)) + 0.5625*((METRICp0) + (METRICp1)))
 
 static double eos_Gamma_eff(const ghl_eos_parameters *restrict eos, const double rho_in, const double press_in);
 
 int main(int argc, char **argv) {
-  const double poison = 1e300;
+  const double dummy_density = 1.0;
 
   const ghl_con2prim_id_t None = ghl_con2prim_id_None;
   const ghl_con2prim_id_t backups[3] = {None, None, None};
@@ -22,55 +24,91 @@ int main(int argc, char **argv) {
 
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
-        poison, poison, poison,
+        dummy_density, dummy_density, dummy_density,
         neos, rho_ppoly_in, Gamma_ppoly_in,
         k_ppoly0, Gamma_th, &eos);
 
   FILE* infile = fopen_with_check("ET_Legacy_reconstruction_input.bin", "rb");
 
   int dirlength;
-  int key = fread(&dirlength, sizeof(int), 1, infile);
-  const int arraylength = dirlength*dirlength*dirlength;
+  if(fread(&dirlength, sizeof(int), 1, infile) != 1) {
+    ghl_error(
+          "An error has occurred with reading the direction length. Please check that "
+          "data\n"
+          "is up-to-date with current test version.\n");
+  }
+  if(dirlength < 8) {
+    ghl_error(
+          "The ET Legacy reconstruction data must have direction length at least 8.\n");
+  }
 
-  double *rho = (double*) malloc(sizeof(double)*arraylength);
-  double *press = (double*) malloc(sizeof(double)*arraylength);
-  double *vx = (double*) malloc(sizeof(double)*arraylength);
-  double *vy = (double*) malloc(sizeof(double)*arraylength);
-  double *vz = (double*) malloc(sizeof(double)*arraylength);
+  const size_t dir_count = (size_t)dirlength;
+  if(dir_count > SIZE_MAX / dir_count) {
+    ghl_error("The ET Legacy reconstruction dimensions are too large.\n");
+  }
+  const size_t slice_count = dir_count * dir_count;
+  if(slice_count > SIZE_MAX / dir_count) {
+    ghl_error("The ET Legacy reconstruction dimensions are too large.\n");
+  }
+  const size_t count = slice_count * dir_count;
+  if(count > INT_MAX || count > SIZE_MAX / sizeof(double)) {
+    ghl_error(
+          "The ET Legacy reconstruction data is too large to index or allocate "
+          "safely.\n");
+  }
 
-  double *rhor_trusted   = (double*) malloc(sizeof(double)*arraylength);
-  double *rhol_trusted   = (double*) malloc(sizeof(double)*arraylength);
-  double *pressr_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *pressl_trusted = (double*) malloc(sizeof(double)*arraylength);
-  double *vxr_trusted    = (double*) malloc(sizeof(double)*arraylength);
-  double *vxl_trusted    = (double*) malloc(sizeof(double)*arraylength);
-  double *vyr_trusted    = (double*) malloc(sizeof(double)*arraylength);
-  double *vyl_trusted    = (double*) malloc(sizeof(double)*arraylength);
-  double *vzr_trusted    = (double*) malloc(sizeof(double)*arraylength);
-  double *vzl_trusted    = (double*) malloc(sizeof(double)*arraylength);
+  double *rho = (double *)malloc(sizeof(double) * count);
+  double *press = (double *)malloc(sizeof(double) * count);
+  double *vx = (double *)malloc(sizeof(double) * count);
+  double *vy = (double *)malloc(sizeof(double) * count);
+  double *vz = (double *)malloc(sizeof(double) * count);
 
-  double *rhor_pert   = (double*) malloc(sizeof(double)*arraylength);
-  double *rhol_pert   = (double*) malloc(sizeof(double)*arraylength);
-  double *pressr_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *pressl_pert = (double*) malloc(sizeof(double)*arraylength);
-  double *vxr_pert    = (double*) malloc(sizeof(double)*arraylength);
-  double *vxl_pert    = (double*) malloc(sizeof(double)*arraylength);
-  double *vyr_pert    = (double*) malloc(sizeof(double)*arraylength);
-  double *vyl_pert    = (double*) malloc(sizeof(double)*arraylength);
-  double *vzr_pert    = (double*) malloc(sizeof(double)*arraylength);
-  double *vzl_pert    = (double*) malloc(sizeof(double)*arraylength);
+  double *rhor_trusted = (double *)malloc(sizeof(double) * count);
+  double *rhol_trusted = (double *)malloc(sizeof(double) * count);
+  double *pressr_trusted = (double *)malloc(sizeof(double) * count);
+  double *pressl_trusted = (double *)malloc(sizeof(double) * count);
+  double *vxr_trusted = (double *)malloc(sizeof(double) * count);
+  double *vxl_trusted = (double *)malloc(sizeof(double) * count);
+  double *vyr_trusted = (double *)malloc(sizeof(double) * count);
+  double *vyl_trusted = (double *)malloc(sizeof(double) * count);
+  double *vzr_trusted = (double *)malloc(sizeof(double) * count);
+  double *vzl_trusted = (double *)malloc(sizeof(double) * count);
 
-  key  = fread(rho  , sizeof(double), arraylength, infile);
-  key += fread(press, sizeof(double), arraylength, infile);
-  key += fread(vx   , sizeof(double), arraylength, infile);
-  key += fread(vy   , sizeof(double), arraylength, infile);
-  key += fread(vz   , sizeof(double), arraylength, infile);
+  double *rhor_pert = (double *)malloc(sizeof(double) * count);
+  double *rhol_pert = (double *)malloc(sizeof(double) * count);
+  double *pressr_pert = (double *)malloc(sizeof(double) * count);
+  double *pressl_pert = (double *)malloc(sizeof(double) * count);
+  double *vxr_pert = (double *)malloc(sizeof(double) * count);
+  double *vxl_pert = (double *)malloc(sizeof(double) * count);
+  double *vyr_pert = (double *)malloc(sizeof(double) * count);
+  double *vyl_pert = (double *)malloc(sizeof(double) * count);
+  double *vzr_pert = (double *)malloc(sizeof(double) * count);
+  double *vzl_pert = (double *)malloc(sizeof(double) * count);
+
+  if(rho == NULL || press == NULL || vx == NULL || vy == NULL || vz == NULL
+     || rhor_trusted == NULL || rhol_trusted == NULL || pressr_trusted == NULL
+     || pressl_trusted == NULL || vxr_trusted == NULL || vxl_trusted == NULL
+     || vyr_trusted == NULL || vyl_trusted == NULL || vzr_trusted == NULL
+     || vzl_trusted == NULL || rhor_pert == NULL || rhol_pert == NULL
+     || pressr_pert == NULL || pressl_pert == NULL || vxr_pert == NULL
+     || vxl_pert == NULL || vyr_pert == NULL || vyl_pert == NULL || vzr_pert == NULL
+     || vzl_pert == NULL) {
+    ghl_error("Failed to allocate ET Legacy reconstruction test data.\n");
+  }
+
+  const bool initial_data_read = fread(rho, sizeof(double), count, infile) == count
+                                 && fread(press, sizeof(double), count, infile) == count
+                                 && fread(vx, sizeof(double), count, infile) == count
+                                 && fread(vy, sizeof(double), count, infile) == count
+                                 && fread(vz, sizeof(double), count, infile) == count;
 
   fclose(infile);
 
-  if(key != arraylength*5)
-    ghl_error("An error has occured with reading in initial data. Please check that data\n"
-                 "is up-to-date with current test version.\n");
+  if(!initial_data_read) {
+    ghl_error(
+          "An error has occured with reading in initial data. Please check that data\n"
+          "is up-to-date with current test version.\n");
+  }
 
   infile = fopen_with_check("ET_Legacy_reconstruction_output.bin","rb");
 
@@ -84,35 +122,43 @@ int main(int argc, char **argv) {
     const int ydir = (flux_dirn==1);
     const int zdir = (flux_dirn==2);
 
-    key  = fread(rhor_trusted  , sizeof(double), arraylength, infile);
-    key += fread(rhol_trusted  , sizeof(double), arraylength, infile);
-    key += fread(pressr_trusted, sizeof(double), arraylength, infile);
-    key += fread(pressl_trusted, sizeof(double), arraylength, infile);
-    key += fread(vxr_trusted   , sizeof(double), arraylength, infile);
-    key += fread(vxl_trusted   , sizeof(double), arraylength, infile);
-    key += fread(vyr_trusted   , sizeof(double), arraylength, infile);
-    key += fread(vyl_trusted   , sizeof(double), arraylength, infile);
-    key += fread(vzr_trusted   , sizeof(double), arraylength, infile);
-    key += fread(vzl_trusted   , sizeof(double), arraylength, infile);
+    const bool trusted_data_read
+          = fread(rhor_trusted, sizeof(double), count, infile) == count
+            && fread(rhol_trusted, sizeof(double), count, infile) == count
+            && fread(pressr_trusted, sizeof(double), count, infile) == count
+            && fread(pressl_trusted, sizeof(double), count, infile) == count
+            && fread(vxr_trusted, sizeof(double), count, infile) == count
+            && fread(vxl_trusted, sizeof(double), count, infile) == count
+            && fread(vyr_trusted, sizeof(double), count, infile) == count
+            && fread(vyl_trusted, sizeof(double), count, infile) == count
+            && fread(vzr_trusted, sizeof(double), count, infile) == count
+            && fread(vzl_trusted, sizeof(double), count, infile) == count;
 
-    if(key != arraylength*10)
-      ghl_error("An error has occured with reading in comparison data. Please check that data\n"
-                   "is up-to-date with current test version.\n");
+    if(!trusted_data_read) {
+      ghl_error(
+            "An error has occured with reading in comparison data. Please check that "
+            "data\n"
+            "is up-to-date with current test version.\n");
+    }
 
-    key  = fread(rhor_pert  , sizeof(double), arraylength, inpert);
-    key += fread(rhol_pert  , sizeof(double), arraylength, inpert);
-    key += fread(pressr_pert, sizeof(double), arraylength, inpert);
-    key += fread(pressl_pert, sizeof(double), arraylength, inpert);
-    key += fread(vxr_pert   , sizeof(double), arraylength, inpert);
-    key += fread(vxl_pert   , sizeof(double), arraylength, inpert);
-    key += fread(vyr_pert   , sizeof(double), arraylength, inpert);
-    key += fread(vyl_pert   , sizeof(double), arraylength, inpert);
-    key += fread(vzr_pert   , sizeof(double), arraylength, inpert);
-    key += fread(vzl_pert   , sizeof(double), arraylength, inpert);
+    const bool perturbed_data_read
+          = fread(rhor_pert, sizeof(double), count, inpert) == count
+            && fread(rhol_pert, sizeof(double), count, inpert) == count
+            && fread(pressr_pert, sizeof(double), count, inpert) == count
+            && fread(pressl_pert, sizeof(double), count, inpert) == count
+            && fread(vxr_pert, sizeof(double), count, inpert) == count
+            && fread(vxl_pert, sizeof(double), count, inpert) == count
+            && fread(vyr_pert, sizeof(double), count, inpert) == count
+            && fread(vyl_pert, sizeof(double), count, inpert) == count
+            && fread(vzr_pert, sizeof(double), count, inpert) == count
+            && fread(vzl_pert, sizeof(double), count, inpert) == count;
 
-    if(key != arraylength*10)
-      ghl_error("An error has occured with reading in comparison data. Please check that data\n"
-                   "is up-to-date with current test version.\n");
+    if(!perturbed_data_read) {
+      ghl_error(
+            "An error has occured with reading in comparison data. Please check that "
+            "data\n"
+            "is up-to-date with current test version.\n");
+    }
 
     // These are set up to match the loops in the ET version of IllinoisGRMHD.
     const int imin = 3;
