@@ -8,19 +8,24 @@
  *
  * @details
  * This function computes the elements of ghl_induction_interp_vars
- * using a cell-centered BSSN metric input. The `metric_stencil` elements
- * require some auxiliary quantities to be filled, so it is recommended
- * to use the @ref ghl_initialize_metric function to fill each element
- * of this struct. Interpolations are handled by the internal
- * functions @ref ghl_BSSN_cell_interp and @ref ghl_A_i_avg .
+ * using a cell-centered BSSN metric input. Each `metric_stencil.gammaUU`
+ * must contain the conformal inverse metric
+ * \f$ \tilde{\gamma}^{ij} = \psi^4\gamma^{ij} \f$, not the physical inverse
+ * metric produced by @ref ghl_initialize_metric. Lapse and shift retain their
+ * usual fields, and `psi_stencil` contains physical \f$\psi\f$. A caller with
+ * an initialized physical ADM inverse metric must multiply `gammaUU` by
+ * \f$\psi^4\f$ before this call, or use
+ * @ref ghl_interpolate_with_cell_centered_ADM instead. Interpolations are handled by the
+ * internal functions @ref ghl_BSSN_cell_interp and @ref ghl_A_i_avg .
  *
  * These two averaging loops are split because the stencils are of
  * different sizes. The stencils are centered around the staggered
  * point. This means that the metric quantities have an even stencil,
  * and the \f$ A_i \f$ have an odd stencil.
  *
- * @param[in] metric_stencil 3D stencil array of ghl_metric_quantities from
- *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$
+ * @param[in] metric_stencil 3D stencil array from \f$ (i, j, k) \f$ to
+ *                            \f$ (i+1, j+1, k+1) \f$ whose gammaUU fields
+ *                            contain \f$ \tilde{\gamma}^{ij} \f$
  *
  * @param[in] psi_stencil 3D stencil array of \f$ \psi \f$ from
  *                            \f$ (i, j, k) \f$ to \f$ (i+1, j+1, k+1) \f$

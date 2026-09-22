@@ -89,9 +89,9 @@ int main(int argc, char **argv) {
         gtupyz[index] = psi4*metric_adm.gammaUU[1][2];
         gtupzz[index] = psi4*metric_adm.gammaUU[2][2];
 
-        const int x = abs(i-gauss_center)*dX[0];
-        const int y = abs(j-gauss_center)*dX[1];
-        const int z = abs(k-gauss_center)*dX[2];
+        const double x = abs(i - gauss_center) * dX[0];
+        const double y = abs(j - gauss_center) * dX[1];
+        const double z = abs(k - gauss_center) * dX[2];
         const double r2 = x*x + y*y + z*z;
 
         phitilde[index] = exp(-r2/(2.0*1.0));;
@@ -110,6 +110,16 @@ int main(int argc, char **argv) {
         sqrtg_Az_interp[index] = poison;
       }
     }
+  }
+
+  const int center = indexf(dirlength, gauss_center, gauss_center, gauss_center);
+  const int neighbor = indexf(dirlength, gauss_center + 1, gauss_center, gauss_center);
+  if(!isfinite(phitilde[center]) || !isfinite(Ax[center]) || !isfinite(Ay[center])
+     || !isfinite(Az[center]) || !isfinite(phitilde[neighbor]) || !isfinite(Ax[neighbor])
+     || !isfinite(Ay[neighbor]) || !isfinite(Az[neighbor])
+     || (phitilde[center] == phitilde[neighbor] && Ax[center] == Ax[neighbor]
+         && Ay[center] == Ay[neighbor] && Az[center] == Az[neighbor])) {
+    ghl_error("Generated induction potentials must be finite and spatially varying.\n");
   }
 
   // First, I write out the variables that are needed for all the codes.
