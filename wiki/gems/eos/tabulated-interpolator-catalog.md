@@ -129,7 +129,9 @@ It fills the enthalpy table slot and `table_logh` using already converted table
 state and the stored energy shift. `NRPyEOS_tabulate_enthalpy_checked` returns
 `ghl_error_invalid_eos_table` before evaluating or storing `log(h)`; the owning
 loader then discards the table. The original `void NRPyEOS_tabulate_enthalpy`
-function remains as a source-compatible wrapper for direct callers.
+function remains as a source-compatible wrapper for direct callers; it discards
+the status and stops at the first invalid point, leaving that and later entries
+unchanged.
 
 Sound-speed normalization and optional cleaning are owned by
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c).

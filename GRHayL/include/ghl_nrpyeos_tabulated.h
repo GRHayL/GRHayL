@@ -368,6 +368,8 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_deps_dP_from_rho(
 ghl_error_codes_t NRPyEOS_tabulate_enthalpy_checked(ghl_eos_parameters *restrict eos);
 
 // Compatibility wrapper for callers that use the original public function type.
+// It discards the status and stops at the first invalid point, leaving that
+// and later entries unchanged; use NRPyEOS_tabulate_enthalpy_checked instead.
 void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_tabulated_adjust_sound_speed(ghl_eos_parameters *restrict eos, bool cs2_is_relativistic);

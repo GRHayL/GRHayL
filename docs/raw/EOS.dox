@@ -24,9 +24,11 @@
  * - @ref ghl_initialize_hybrid_eos_functions_and_params
  * - @ref ghl_initialize_tabulated_eos_functions_and_params
  *
- * which will properly set up all the function pointers and struct parameters
- * for the chosen EOS. Simple and hybrid parameter initialization publishes a
- * completed object only on success. Their density atmosphere must be finite
+ * which will properly set up the function pointers and struct parameters
+ * for the chosen EOS. The deprecated generic
+ * `ghl_calculate_HLLE_fluxes_dirn0/1/2` pointers are never assigned. Simple
+ * and hybrid parameter initialization publishes a completed object only on
+ * success. Their density atmosphere must be finite
  * and positive. For a disabled simple floor, pressure remains independently
  * configured while derived energy and entropy minima use `-DBL_MAX`; disabled
  * simple ceilings use `DBL_MAX` when either density or pressure is unbounded.
@@ -51,8 +53,10 @@
  * prototype-only `NRPyEOS_tabulated_get_index_rho` and
  * `NRPyEOS_tabulated_get_index_Ye` names and use the supported interpolation
  * routes instead. `NRPyEOS_tabulate_enthalpy` retains its original `void`
- * function type; the table loader uses `NRPyEOS_tabulate_enthalpy_checked` to
- * reject invalid derived enthalpy.
+ * function type but warns and stops at the first invalid point without
+ * returning a status, leaving that and later entries unchanged; the table
+ * loader uses `NRPyEOS_tabulate_enthalpy_checked` to reject invalid derived
+ * enthalpy.
  */
 
 /**

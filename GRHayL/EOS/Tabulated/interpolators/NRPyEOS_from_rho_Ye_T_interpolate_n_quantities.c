@@ -12,8 +12,6 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
       const int *restrict tablevars_keys,
       double *restrict tablevars) {
 
-  if(!n) return ghl_success;
-
   // This function will interpolate n table quantities from
   // (rho,Ye,T). It replaces EOS_Omni calls with keytemp = 1
   if(n > NRPyEOS_ntablekeys)
@@ -23,6 +21,10 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
   const ghl_error_codes_t error = NRPyEOS_checkbounds(eos, rho, T, Y_e);
   if(error)
     return error;
+
+  if(!n) {
+    return ghl_success;
+  }
 
   // Get interpolation spots
   int idx[8];

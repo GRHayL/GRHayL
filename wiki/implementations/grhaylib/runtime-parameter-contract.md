@@ -176,11 +176,19 @@ Optional limits:
 - Simple: `rho_b_min`, `rho_b_max`, `P_min`, and `P_max` may stay `-1`; Core
   defaults density and pressure floors to `0.0` and ceilings to `1e300`.
 - Hybrid: `rho_b_min` and `rho_b_max` may stay `-1`; Core defaults density
-  floor to `0.0` and ceiling to `1e300`. Pressure, epsilon, entropy, and tau
-  bounds are computed from hybrid EOS data.
+  floor to `0.0` and ceiling to `1e300`. Pressure, epsilon, and entropy
+  bounds are computed from hybrid EOS data only for enabled density bounds; a
+  disabled floor maps them to `-DBL_MAX` and a disabled ceiling to `DBL_MAX`.
 - Tabulated: `rho_b_min`, `rho_b_max`, `Y_e_min`, `Y_e_max`, `T_min`, and
   `T_max` are clamped or defaulted against table bounds after table read.
   Pressure, epsilon, and entropy bounds come from table metadata.
+
+Core rejects some values that `param.ccl` ranges and `GRHayLib_paramcheck`
+still admit: simple or hybrid `rho_b_atm = 0`, `Gamma` or any used
+`Gamma_ppoly_in` equal to 0 or 1, `Gamma_th = 1`, and nonpositive or
+nonincreasing used `rho_ppoly_in`. Such runs stop at initialization through
+`ghl_abort_if_error`. Aligning the downstream parameter checks needs
+downstream coordination.
 
 ## Con2Prim Routing
 
