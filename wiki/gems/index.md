@@ -162,8 +162,7 @@ source, headers, tests, and common edit routes before wider search.
   [verification workflows](induction/verification-workflows.md) for targeted
   run guidance.
 - Drift/contract notes: staggered-grid assumptions are public caller contracts.
-  Keep docs, stencil shapes, and tests synchronized. Current `Az` helper comment
-  conflicts with arithmetic/test face mapping.
+  Keep docs, stencil shapes, and tests synchronized.
 
 ## Neutrinos
 

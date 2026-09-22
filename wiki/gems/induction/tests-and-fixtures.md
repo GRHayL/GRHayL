@@ -32,7 +32,7 @@ it.
 
 ## Helper-Only Files
 
-These `compute_*` files are helpers, not standalone tests:
+These private helper files are not standalone tests:
 
 - [Unit_Tests/compute_A_flux_with_B.c](../../../Unit_Tests/compute_A_flux_with_B.c)
   supports local and ET Legacy HLL flux replay using undensitized staggered `B`.
@@ -44,6 +44,10 @@ These `compute_*` files are helpers, not standalone tests:
   supports cell-centered BSSN interpolation fixtures and replay.
 - [Unit_Tests/compute_vvv_ADM.c](../../../Unit_Tests/compute_vvv_ADM.c)
   supports vertex-centered ADM interpolation fixtures and replay.
+- [Unit_Tests/ghl_test_helpers.c](../../../Unit_Tests/ghl_test_helpers.c) and
+  [Unit_Tests/ghl_test_helpers.h](../../../Unit_Tests/ghl_test_helpers.h)
+  provide the private grid-header validator shared by the six Induction replay
+  tests. The source is linked through the existing `TOBJS` helper route.
 
 ## Data Generators
 
@@ -80,16 +84,25 @@ These `compute_*` files are helpers, not standalone tests:
   [HLL flux contract](hll-flux-contract.md).
 - HLL fixture generation chooses `cmin/cmax` independently from `[-10,10]`
   and rejects only exact zero sums. It does not validate production
-  non-negative speed convention or Flux_Source coupling.
+  non-negative speed convention or Flux_Source coupling. Serialized boundary
+  planes are initialized to zero before perturbation.
 - ET Legacy HLL flux coverage replays legacy vector-potential HLL output for
   the `B` helper path.
 - Interpolation coverage covers `ccc_ADM`, `ccc_BSSN`, and `vvv_ADM` fixture
-  groups. Contract detail belongs in
+  groups. Its generated Gaussian potentials use floating-point coordinates and
+  enforce finite spatial variation. Contract detail belongs in
   [interpolation and staggering contract](interpolation-and-staggering-contract.md).
+- The `vvv_ADM` fixture replay uses the backward/current metric packing for
+  `ghl_interpolate_with_vertex_centered_ADM`. Its direct asymmetric affine
+  case independently checks coordinate orientation, all three `sqrtg_Ai`
+  values, the gauge scalar, and untouched `alpha` and `betai` fields.
 - ET Legacy gauge RHS coverage assembles BSSN interpolation, vector-potential
   RHS terms, and `phitilde_rhs` replay. Contract detail belongs in
   [gauge RHS contract](gauge-rhs-contract.md).
 - Induction tests listed here have no visible HDF5-only EOS table dependency.
+- Replay readers reject truncated grid headers, unsafe cube sizes, and grids
+  smaller than their stencil loops require: 5 for HLL, 3 for interpolation,
+  and 7 for ET Legacy gauge RHS.
 
 Local HLL and interpolation reference outputs are produced through the same
 public routines/helpers replayed by their tests. They detect regression against
@@ -104,9 +117,6 @@ files only.
 - **CI-configured:** every compiler workflow contains `ET-Legacy`,
   `induction-interpolators`, and `induction-flux` jobs. Shared compile action
   builds tests and data generators; jobs execute downloaded fixtures.
-- **Workflow-only for this change:** push/PR triggers ignore `wiki/**` and
-  Markdown-only changes. Scheduled workflows still exist, but no execution was
-  implied by tracked workflow configuration.
 
 ## Evidence Gaps
 
@@ -118,8 +128,7 @@ files only.
 - `compute_*` helpers are not standalone tests.
 - No HLL test feeds actual `ghl_calculate_characteristic_speed_dirn*` output
   into `ghl_HLL_vars`.
-- No focused test covers HLL zero denominators, `Btilde` ET Legacy output, or
-  vertex-wrapper `alpha`/`betai` remaining unwritten.
+- No focused test covers HLL zero denominators or `Btilde` ET Legacy output.
 
 ## Repo-Local References
 
@@ -136,6 +145,8 @@ files only.
 - [Unit_Tests/compute_ccc_ADM.c](../../../Unit_Tests/compute_ccc_ADM.c)
 - [Unit_Tests/compute_ccc_BSSN.c](../../../Unit_Tests/compute_ccc_BSSN.c)
 - [Unit_Tests/compute_vvv_ADM.c](../../../Unit_Tests/compute_vvv_ADM.c)
+- [Unit_Tests/ghl_test_helpers.c](../../../Unit_Tests/ghl_test_helpers.c)
+- [Unit_Tests/ghl_test_helpers.h](../../../Unit_Tests/ghl_test_helpers.h)
 - [Unit_Tests/data_gen/unit_test_data_HLL_flux.c](../../../Unit_Tests/data_gen/unit_test_data_HLL_flux.c)
 - [Unit_Tests/data_gen/unit_test_data_induction_interpolation.c](../../../Unit_Tests/data_gen/unit_test_data_induction_interpolation.c)
 - [Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c](../../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c)
