@@ -77,7 +77,9 @@ does not guarantee a representable subluminal cap at every extreme magnitude:
 if velocity limiting is required and the requested bound is not strictly
 subluminal, Core returns `ghl_error_u0_singular` before mutation. If storing an
 otherwise representable rescaling rounds the achieved speed over the cap, Core
-tries one inward correction and returns that error only if the recheck fails.
+may retry inward rescaling up to 16 times before returning that error if the
+achieved speed still fails the final checks. See the owning
+[velocity/u0 contract](../../core/velocity-u0-contract.md).
 
 The tabulated NN fallback toggle `enable_backup_nn_primitive_guess` is not
 part of `ghl_initialize_params`; GRHayLib passes it to
@@ -110,7 +112,8 @@ PPM behavior there; this page only records GRHayLib parameter plumbing.
 
 `EOS_type = "Simple"`:
 
-- `GRHayLib_paramcheck` requires `Gamma`, `rho_b_atm`, and `P_atm`.
+- `GRHayLib_paramcheck` requires finite `Gamma > 1`, plus `rho_b_atm` and
+  `P_atm`.
 - Optional `rho_b_min`, `rho_b_max`, `P_min`, and `P_max` may use `-1`
   sentinel values.
 - `GRHayLib_initialize` sets `ghl_con2prim_multi_method =

@@ -29,8 +29,9 @@ void GRHayLib_paramcheck() {
     CCTK_ERROR("Parameter rho_b_max must be non-negative.");
 
   if( CCTK_EQUALS(EOS_type, "Simple") ) {
-    if(Gamma < 0)
-      CCTK_ERROR("Parameter Gamma must be set in the parameter file and be non-negative.");
+    if(!isfinite(Gamma) || Gamma <= 1.0) {
+      CCTK_ERROR("Parameter Gamma must be finite and greater than 1.");
+    }
 
     if(P_atm < 0)
       CCTK_ERROR("Parameter P_atm must be set in the parameter file and be non-negative.");
