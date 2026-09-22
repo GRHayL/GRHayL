@@ -54,9 +54,8 @@ separate evidence; only the constant routine currently closes those surfaces.
   transport velocities.
 - It does not write magnetic fields or `u0`. Existing magnetic values remain;
   `u0` may be stale until recomputed.
-- Simple/hybrid EOS initialization does not populate `Y_e_atm` or `T_atm`,
-  although constant reset reads both. Callers using those EOS families must
-  initialize the fields or accept that no valid value is established.
+- Simple/hybrid EOS initialization sets the unused `Y_e_atm` and `T_atm`
+  placeholders to zero, so constant reset reads defined values.
 
 ## Common Edit Routes
 

@@ -124,8 +124,6 @@ hydrodynamic `unit_test_hybrid_flux`, `unit_test_tabulated_flux`, and
 
 ## Coverage Gaps
 
-- Generic `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals have storage but no
-  assignment, call, or test.
 - No focused test checks ignored EOS callback errors, tabulated primitive
   mutation, zero `cmin + cmax`, or conservative fields left untouched.
 - No direct test connects Flux_Source characteristic-speed output to Induction

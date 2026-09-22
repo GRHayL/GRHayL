@@ -75,6 +75,9 @@ typedef enum {
   ghl_error_nn_c2p_invalid_number,
   ghl_error_nrpyleakage_blocking,
   ghl_error_nrpyleakage_nonfinite_output,
+  ghl_error_invalid_neos,
+  ghl_error_invalid_eos_parameters,
+  ghl_error_invalid_eos_table,
 } ghl_error_codes_t;
 
 typedef enum {
@@ -202,29 +205,28 @@ typedef struct ghl_stress_energy {
    The struct ghl_eos_parameters contains information about the eos being used
    by the simulation. The struct elements are detailed below:
 
- --type: selects the type of EOS (hybrid or tabulated) where
-   Hybrid = 0, Tabulated = 1.
+ --eos_type: selects the EOS family using ghl_eos_simple, ghl_eos_hybrid, or
+   ghl_eos_tabulated from ghl_eos_t.
 
- --rho_atm, tau_atm, press_atm, Ye_atm, temp_atm, eps_atm, entropy_atm: all
-   variables marked by "_atm" are the values for those quantities at
-   atmosphere.
+ --rho_atm, tau_atm, press_atm, Y_e_atm, T_atm, eps_atm, entropy_atm: the
+   atmosphere fields. tau_atm has family-specific floor semantics; see the EOS
+   initialization documentation.
 
- --rho_min, tau_min, press_min, Ye_min, temp_min, eps_min, entropy_min: all
-   variables marked by "_min" are the minimum value for these quantities.
-   This is often just the atmospheric value. If the simulation does not have
-   a separate minimum value, simply pass the atmospheric value for these
-   parameters.
+ --rho_min, press_min, Y_e_min, T_min, eps_min, entropy_min: minimum values for
+   the fields that exist in this struct. Disabled derived bounds may use finite
+   +/-DBL_MAX sentinels rather than atmosphere values.
 
- --rho_max, tau_max, press_max, Ye_max, temp_max, eps_max, entropy_max:
-   all variables marked by "_max" are the maximum value for these quantities.
+ --rho_max, press_max, Y_e_max, T_max, eps_max, entropy_max: maximum values for
+   the fields that exist in this struct.
 
            ----------- Hybrid Equation of State -----------
  --neos: sets the number of polytropic pieces for the hybrid EOS.
-   The maximum number of polytropic pieces is controlled by MAX_EOS_PARAMS below.
+   The maximum number of polytropic pieces is controlled by MAX_EOS_PARAMS above.
 
- --rho_ppoly: array of the density values which divide the polytropic pieces
+ --rho_ppoly: array of at least neos - 1 density values which divide the
+   polytropic pieces; it may be NULL when neos is one
 
- --Gamma_ppoly: array of the polytropic indices
+ --Gamma_ppoly: array of at least neos polytropic indices
 
  --K_ppoly: array of the adiabatic constants
 
@@ -308,6 +310,8 @@ const char *ghl_get_con2prim_routine_name(const ghl_con2prim_id_t key);
 void ghl_initialize_eos_functions(
     const ghl_eos_t eos_type);
 
+/* The three low-level parameter initializers below require matching EOS
+ * dispatch to be installed first. Prefer a functions-and-params wrapper. */
 ghl_error_codes_t ghl_initialize_simple_eos(
       const double rho_atm,
       double rho_min,
@@ -329,6 +333,15 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
       const double Gamma_th,
       ghl_eos_parameters *restrict eos);
 
+/**
+ * Initialize a fresh, non-owning EOS object with a tabulated EOS. On failure,
+ * eos is an empty object tagged ghl_eos_tabulated. Free a live tabulated EOS
+ * before reinitializing it or switching families. In HDF5-enabled builds this
+ * low-level initializer requires tabulated dispatch to have been installed with
+ * ghl_initialize_eos_functions(ghl_eos_tabulated); the functions-and-params
+ * wrapper performs that step. Without HDF5, the initializer instead publishes
+ * an allocation-free empty object and returns ghl_error_used_disabled_hdf5.
+ */
 ghl_error_codes_t ghl_initialize_tabulated_eos(
       const char *table_path,
       const ghl_eos_table_t table_type,
@@ -366,6 +379,12 @@ ghl_error_codes_t ghl_initialize_hybrid_eos_functions_and_params(
       const double Gamma_th,
       ghl_eos_parameters *restrict eos);
 
+/**
+ * In HDF5-enabled builds, install tabulated dispatch and initialize a fresh,
+ * non-owning EOS object. On failure, eos is an empty object tagged
+ * ghl_eos_tabulated. Without HDF5, publish that empty object and return
+ * ghl_error_used_disabled_hdf5 without installing dispatch.
+ */
 ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
       const char *table_path,
       const double rho_atm,

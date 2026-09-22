@@ -102,10 +102,10 @@ source, headers, tests, and common edit routes before wider search.
 - Common edit routes: hybrid changes touch `GRHayL/EOS/Hybrid/`, hybrid header,
   and piecewise-polytrope tests; tabulated changes touch `GRHayL/EOS/Tabulated/`,
   HDF5 build setup, tabulated tests, and Neutrinos/Con2Prim callers.
-- Drift/contract notes: `GHL_DISABLE_HDF5`, exact mode filtering, partial table
-  lifecycle, hybrid breakpoint bounds, and function-pointer initialization
-  must stay consistent. One tabulated cleanup pointer is unassigned and two
-  index prototypes are definition-free.
+- Drift/contract notes: `GHL_DISABLE_HDF5`, exact mode filtering, fresh-object
+  table lifecycle, hybrid breakpoint bounds, and function-pointer initialization
+  must stay consistent. Beta cleanup is assigned; only the implemented
+  temperature index remains in the installed table header.
 
 ## Flux_Source
 
@@ -130,9 +130,9 @@ source, headers, tests, and common edit routes before wider search.
 - Common edit routes: change generated equations or C kernels together; update
   EOS-specific flux variants, function-pointer setup, tests, and Doxygen.
 - Drift/contract notes: flux inputs expect reconstructed face primitives.
-  Entropy and tabulated variants must match EOS initialization choices. Generic
-  HLLE pointer globals are unwired/signature-incompatible; direct variants are
-  owner routes. Source-term regeneration is probe-verified but drifted;
+  Entropy and tabulated variants must match EOS initialization choices. The
+  former generic HLLE pointer globals were removed; callers select the direct
+  family/direction/entropy variants. Source-term regeneration is probe-verified but drifted;
   speed/HLLE regeneration commands remain unknown.
 
 ## Induction

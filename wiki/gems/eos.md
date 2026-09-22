@@ -82,20 +82,16 @@ Focused routes:
 
 Current support boundaries:
 
-- Tabulated registry has 38 declared/stored pointer names but 37 assignments;
-  the free-beta-equilibrium pointer is not initialized. Header also has one
-  duplicate free prototype and two prototype-only index helpers.
-- Hybrid initializer's pressure-breakpoint loop reads one density breakpoint
-  beyond the `neos - 1` input/storage contract for multi-piece EOSs.
-- Tabulated initialization allocates/reads before later validation and lacks a
-  uniform safe rollback contract for all failures.
-- Simple/hybrid initialization leaves atmosphere `Y_e` and temperature fields
-  unset even though constant Atmosphere copies them. Tabulated `tau_atm` uses
-  minimum density/energy rather than its atmosphere density/energy pair.
+- A live tabulated EOS must be explicitly cleaned before reinitialization or an
+  EOS-family switch; live-object replacement is unsupported.
+- Tabulated `tau_atm` uses minimum density/energy rather than its atmosphere
+  density/energy pair.
+- Table validation establishes the structural and indexing domain used by the
+  interpolators; it is not a complete physical or malformed-HDF5 audit.
 
 Route exact evidence through initialization, hybrid, table, and interpolator
-leaves above; these are unresolved product seams, not supported behavior to
-copy into new code.
+leaves above; do not broaden these statements into guarantees outside the
+documented lifecycle and input domains.
 
 ## Common Edit Routes
 

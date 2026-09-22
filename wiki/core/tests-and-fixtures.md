@@ -29,9 +29,8 @@ fixture contents or metadata forbidden by the
 - Its simple/hybrid Atmosphere checks assert density, pressure, epsilon,
   entropy, and zero velocity. The `Y_e` and temperature assertions are guarded
   by `eos_type == 2`, which the loop never reaches, so this suite does not
-  directly validate those two assignments for any EOS family. Its simple and
-  hybrid EOS structs are not zero-initialized, and their initializers do not set
-  those fields before the Atmosphere call reads them.
+  directly validate those two assignments for any EOS family. The initializers
+  set deterministic zero placeholders, but the suite does not assert them.
 
 ### Core fixture generator
 
@@ -179,8 +178,8 @@ fixture contents or metadata forbidden by the
   selection, or checks an invalid `ghl_eos_t` passed to the `void`
   `ghl_initialize_eos_functions` entry point.
 - Simple EOS derived defaults: the Core suite asserts default `rho`/pressure
-  floor and ceiling fields, but not the derived epsilon/entropy values produced
-  after zero floors or other unchecked inputs such as `Gamma == 1`.
+  floor and ceiling fields, but not the finite-extremum epsilon/entropy metadata
+  produced for disabled bounds or the checked rejection of singular gamma.
 - Clamp helpers: no direct Core clamp test is visible in the listed ground
   truth. Keep `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp` coverage as
   weak unless a direct test is added or found elsewhere in the repo.

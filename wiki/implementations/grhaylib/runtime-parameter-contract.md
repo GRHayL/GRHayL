@@ -39,10 +39,10 @@ Con2Prim/EOS compatibility, and entropy-gated methods.
 7. Initializes EOS parameters and EOS-dependent dispatch for `EOS_type`.
 
 Both allocations use unchecked `malloc`, not zero-initializing allocation.
-There is no local rollback path if setup later errors. Tabulated initialization
-can itself leave partial table state on several failures; see the
-[tabulated table contract](../../gems/eos/tabulated-table-contract.md). Treat
-successful initialization as a precondition for consumers and termination.
+There is no GRHayLib-local rollback path if setup later errors. Core tabulated
+initialization accepts fresh uninitialized storage and publishes an empty tagged
+aggregate after failure; see the [tabulated table contract](../../gems/eos/tabulated-table-contract.md).
+Treat successful initialization as a precondition for consumers.
 
 `GRHayLib_terminate` owns shutdown:
 
@@ -131,9 +131,8 @@ PPM behavior there; this page only records GRHayLib parameter plumbing.
 - Core wrapper installs EOS function pointers through
   `ghl_initialize_eos_functions(ghl_eos_hybrid)`, then calls
   `ghl_initialize_hybrid_eos`.
-- Current upstream hybrid initialization can read `rho_ppoly[neos-1]` after
-  copying only `neos-1` breakpoints. GRHayLib's CCL bound on `neos` does not
-  resolve that upstream source defect.
+- Core validates the CCL-bounded piece count and consumes exactly `neos-1`
+  density breakpoints and `neos` gamma values.
 
 `EOS_type = "Tabulated"`:
 
@@ -248,10 +247,8 @@ source changes:
 - `schedule.ccl` conditionally skips initialization for
   `ID_converter_ILGRMHD` but always schedules termination. Local files do not
   establish alternate allocation ownership or a safe terminate precondition.
-- Simple/hybrid upstream EOS initialization does not set `Y_e_atm` or `T_atm`,
-  while the built constant-atmosphere routine copies both fields. GRHayLib does
-  not seed the allocations before EOS setup, so those two fields remain
-  indeterminate on its simple/hybrid path before atmosphere reset.
+- Simple/hybrid Core EOS initialization sets `Y_e_atm` and `T_atm` to zero
+  placeholders before the built constant-atmosphere routine can copy them.
 - `GRHayLib_terminate` calls tabulated cleanup only after successful state is
   assumed; neither global-pointer null checks nor partial-initialization guards
   are present.

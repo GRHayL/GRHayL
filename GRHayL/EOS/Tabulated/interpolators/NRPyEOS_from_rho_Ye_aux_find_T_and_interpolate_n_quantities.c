@@ -59,6 +59,6 @@ ghl_error_codes_t NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities(
   *T = exp(lt);
 
   // Then interpolate the quantities we want from (rho,Ye,T)
-  NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(eos, n, rho, Y_e, *T, tablevars_keys, tablevars);
-  return ghl_success;
+  return NRPyEOS_from_rho_Ye_T_interpolate_n_quantities(
+        eos, n, rho, Y_e, *T, tablevars_keys, tablevars);
 }

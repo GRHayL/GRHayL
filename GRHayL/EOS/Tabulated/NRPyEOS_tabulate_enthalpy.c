@@ -2,7 +2,7 @@
 
 // This function tabulates the specific enthalpy, assuming geometrized units.
 // We store log(h), so h itself must remain strictly positive.
-void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos) {
+ghl_error_codes_t NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos) {
   const double eps0 = eos->energy_shift;
   for(int iy = 0; iy < eos->N_Ye; iy++) {
     for(int it = 0; it < eos->N_T; it++) {
@@ -16,7 +16,9 @@ void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos) {
         const double eps = exp(eos->table_all[ieps]) - eps0;
         const double h = 1.0 + eps + P / rho;
         if(h <= 0.0 || !isfinite(h)) {
-          ghl_warn("Invalid enthalpy in EOS table: h = %.15e\n", h);
+          ghl_warn("Invalid enthalpy in EOS table at (%d, %d, %d): h = %.15e\n",
+                   ir, it, iy, h);
+          return ghl_error_invalid_eos_table;
         }
 
         const int ih = ir + eos->N_rho * ( it + eos->N_T * iy );
@@ -26,4 +28,5 @@ void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos) {
       }
     }
   }
+  return ghl_success;
 }

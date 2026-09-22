@@ -297,33 +297,6 @@ extern ghl_error_codes_t (*ghl_tabulated_compute_eps_from_rho)(
 extern void (*ghl_tabulated_free_beq_quantities)(
       ghl_eos_parameters *restrict eos);
 
-extern void (*ghl_calculate_HLLE_fluxes_dirn0)(
-      const ghl_primitive_quantities *restrict prims_r,
-      const ghl_primitive_quantities *restrict prims_l,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict metric_adm_face,
-      const double cmin,
-      const double cmax,
-      ghl_conservative_quantities *restrict cons_fluxes);
-
-extern void (*ghl_calculate_HLLE_fluxes_dirn1)(
-      const ghl_primitive_quantities *restrict prims_r,
-      const ghl_primitive_quantities *restrict prims_l,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict metric_adm_face,
-      const double cmin,
-      const double cmax,
-      ghl_conservative_quantities *restrict cons_fluxes);
-
-extern void (*ghl_calculate_HLLE_fluxes_dirn2)(
-      const ghl_primitive_quantities *restrict prims_r,
-      const ghl_primitive_quantities *restrict prims_l,
-      const ghl_eos_parameters *restrict eos,
-      const ghl_metric_quantities *restrict metric_adm_face,
-      const double cmin,
-      const double cmax,
-      ghl_conservative_quantities *restrict cons_fluxes);
-
 extern void (*ghl_tabulated_enforce_bounds_rho_Ye_T)(
       const ghl_eos_parameters *restrict eos,
       double *restrict rho,

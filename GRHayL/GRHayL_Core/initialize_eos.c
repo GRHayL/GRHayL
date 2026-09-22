@@ -2,6 +2,7 @@
 #include "ghl_nrpyeos_hybrid.h"
 #include "ghl_nrpyeos_tabulated.h"
 #include "ghl_eos_functions_declaration.h"
+#include <float.h>
 
 #define init_common_eos_quantities \
   eos->rho_atm = rho_atm;          \
@@ -62,10 +63,18 @@ ghl_error_codes_t ghl_initialize_simple_eos(
       double press_min,
       double press_max,
       const double Gamma,
-      ghl_eos_parameters *restrict eos) {
+      ghl_eos_parameters *eos) {
+
+  if(eos == NULL) return ghl_error_eos_struct_is_null;
+  if(!isfinite(rho_atm) || rho_atm <= 0.0) return ghl_error_invalid_rho_atm;
+  if(!isfinite(press_atm) || press_atm < 0.0) return ghl_error_invalid_press_atm;
+  if(!isfinite(rho_min) || !isfinite(rho_max)
+     || !isfinite(press_min) || !isfinite(press_max)
+     || !isfinite(Gamma) || Gamma == 0.0 || Gamma == 1.0) {
+    return ghl_error_invalid_eos_parameters;
+  }
 
   // Step 0: Enforce default values
-  if(rho_atm < 0) return ghl_error_invalid_rho_atm;
   if(rho_min < 0) {
     ghl_warn("Minimum density not provided. Disabling density floor (rho_min = 0)\n");
     rho_min = 0.0;
@@ -74,9 +83,9 @@ ghl_error_codes_t ghl_initialize_simple_eos(
     ghl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
     rho_max = 1e300;
   }
+  if(rho_max <= 0.0) return ghl_error_invalid_eos_parameters;
   if(rho_min > rho_max) return ghl_error_rho_min_gt_rho_max;
 
-  if(press_atm < 0) return ghl_error_invalid_press_atm;
   if(press_min < 0) {
     ghl_warn("Minimum pressure not provided. Disabling pressure floor (press_min = 0)\n");
     press_min = 0.0;
@@ -86,6 +95,10 @@ ghl_error_codes_t ghl_initialize_simple_eos(
     press_max = 1e300;
   }
   if(press_min > press_max) return ghl_error_press_min_gt_press_max;
+
+  ghl_eos_parameters candidate = {0};
+  ghl_eos_parameters *const output = eos;
+  eos = &candidate;
 
   // Step 1: Set EOS type to Ideal Fluid
   eos->eos_type = ghl_eos_simple;
@@ -106,15 +119,28 @@ ghl_error_codes_t ghl_initialize_simple_eos(
   eos->rho_ppoly[0] = 0.0;
   eos->p_ppoly[0] = 0.0;
   eos->eps_integ_const[0] = 0.0;
+  // Unused-family atmosphere placeholders.
+  eos->Y_e_atm = 0.0;
+  eos->T_atm = 0.0;
 
   const double Gm1 = Gamma - 1.0;
   // -------------- Ceilings --------------
-  eos->eps_max = eos->press_max/(eos->rho_max*Gm1);
-  eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+  if(eos->rho_max == 1e300 || eos->press_max == 1e300) {
+    eos->eps_max = DBL_MAX;
+    eos->entropy_max = DBL_MAX;
+  } else {
+    eos->eps_max = eos->press_max/(eos->rho_max*Gm1);
+    eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+  }
 
   // --------------- Floors ---------------
-  eos->eps_min = eos->press_min/(eos->rho_min*Gm1);
-  eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  if(eos->rho_min == 0.0) {
+    eos->eps_min = -DBL_MAX;
+    eos->entropy_min = -DBL_MAX;
+  } else {
+    eos->eps_min = eos->press_min/(eos->rho_min*Gm1);
+    eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  }
 
   // --------- Atmospheric values ---------
   eos->eps_atm = eos->press_atm/(eos->rho_atm*Gm1);
@@ -123,6 +149,15 @@ ghl_error_codes_t ghl_initialize_simple_eos(
   // Compute atmospheric tau
   eos->tau_atm = eos->rho_atm * eos->eps_atm;
   // --------------------------------------
+
+  if(!isfinite(eos->rho_atm) || !isfinite(eos->rho_min) || !isfinite(eos->rho_max)
+     || !isfinite(eos->press_atm) || !isfinite(eos->press_min) || !isfinite(eos->press_max)
+     || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min) || !isfinite(eos->eps_max)
+     || !isfinite(eos->entropy_atm) || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
+     || !isfinite(eos->tau_atm)) {
+    return ghl_error_invalid_eos_parameters;
+  }
+  *output = candidate;
   return ghl_success;
 }
 
@@ -139,10 +174,30 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
       const double *restrict Gamma_ppoly,
       const double K_ppoly0,
       const double Gamma_th,
-      ghl_eos_parameters *restrict eos) {
+      ghl_eos_parameters *eos) {
+
+  if(eos == NULL) return ghl_error_eos_struct_is_null;
+  if(neos < 1 || neos > MAX_EOS_PARAMS) return ghl_error_invalid_neos;
+  if(!isfinite(rho_atm) || rho_atm <= 0.0) return ghl_error_invalid_rho_atm;
+  if(!isfinite(rho_min) || !isfinite(rho_max)
+     || !isfinite(K_ppoly0) || K_ppoly0 == 0.0
+     || !isfinite(Gamma_th) || Gamma_th == 1.0
+     || Gamma_ppoly == NULL || (neos > 1 && rho_ppoly == NULL)) {
+    return ghl_error_invalid_eos_parameters;
+  }
+  for(int j=0; j<neos; j++) {
+    if(!isfinite(Gamma_ppoly[j]) || Gamma_ppoly[j] == 0.0 || Gamma_ppoly[j] == 1.0) {
+      return ghl_error_invalid_eos_parameters;
+    }
+  }
+  for(int j=0; j<neos-1; j++) {
+    if(!isfinite(rho_ppoly[j]) || rho_ppoly[j] <= 0.0
+       || (j > 0 && rho_ppoly[j] <= rho_ppoly[j-1])) {
+      return ghl_error_invalid_eos_parameters;
+    }
+  }
 
   // Step 0: Enforce default values
-  if(rho_atm < 0) return ghl_error_invalid_rho_atm;
   if(rho_min < 0) {
     ghl_warn("Minimum density not provided. Disabling density floor (rho_min = 0)\n");
     rho_min = 0.0;
@@ -151,7 +206,12 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
     ghl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
     rho_max = 1e300;
   }
+  if(rho_max <= 0.0) return ghl_error_invalid_eos_parameters;
   if(rho_min > rho_max) return ghl_error_rho_min_gt_rho_max;
+
+  ghl_eos_parameters candidate = {0};
+  ghl_eos_parameters *const output = eos;
+  eos = &candidate;
 
   // Step 1: Set EOS type to Hybrid
   eos->eos_type = ghl_eos_hybrid;
@@ -163,44 +223,46 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   eos->neos = neos;
   eos->Gamma_th = Gamma_th;
   eos->K_ppoly[0] = K_ppoly0;
-  if(neos==1) {
-    eos->rho_ppoly[0] = rho_ppoly[0];
-    eos->eps_integ_const[0] = 0.0;
-  } else {
-    for(int j=0; j<=neos-2; j++) eos->rho_ppoly[j] = rho_ppoly[j];
-  }
-  for(int j=0; j<=neos-1; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
+  for(int j=0; j<neos-1; j++) eos->rho_ppoly[j] = rho_ppoly[j];
+  for(int j=0; j<neos; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
 
   // Step 4: Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
-
-  // Initialize tabulated specific enthalpy.  We do it here to make sure
-  // eps_integ_consts are initialized.
-  for(int j=0; j<eos->neos; j++) {
-    double P, eps;
-    double rho = rho_ppoly[j];
-    if(rho > 0) {
-      ghl_hybrid_compute_P_cold_and_eps_cold(eos, rho, &P, &eps);
-      eos->p_ppoly[j] = P;
-    } else {
-      eos->p_ppoly[j] = 0.0;
+  for(int j=0; j<neos; j++) {
+    if(!isfinite(eos->K_ppoly[j]) || eos->K_ppoly[j] == 0.0
+       || !isfinite(eos->eps_integ_const[j])) {
+      return ghl_error_invalid_eos_parameters;
     }
   }
 
-  // -------------- Ceilings --------------
-  // Compute maximum P and eps
-  ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_max, &eos->press_max, &eos->eps_max);
+  // Initialize pressure breakpoints after the piece coefficients.
+  for(int j=0; j<eos->neos-1; j++) {
+    double P, eps;
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_ppoly[j], &P, &eps);
+    eos->p_ppoly[j] = P;
+    if(!isfinite(eos->p_ppoly[j])) return ghl_error_invalid_eos_parameters;
+  }
 
-  // Compute maximum entropy
-  eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+  // -------------- Ceilings --------------
+  if(eos->rho_max == 1e300) {
+    eos->press_max = DBL_MAX;
+    eos->eps_max = DBL_MAX;
+    eos->entropy_max = DBL_MAX;
+  } else {
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_max, &eos->press_max, &eos->eps_max);
+    eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+  }
   // --------------------------------------
 
   // --------------- Floors ---------------
-  // Compute maximum P and eps
-  ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
-
-  // Compute maximum entropy
-  eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  if(eos->rho_min == 0.0) {
+    eos->press_min = -DBL_MAX;
+    eos->eps_min = -DBL_MAX;
+    eos->entropy_min = -DBL_MAX;
+  } else {
+    ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
+    eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  }
   // --------------------------------------
 
   // --------- Atmospheric values ---------
@@ -213,6 +275,18 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   // Compute atmospheric tau
   eos->tau_atm = eos->rho_atm * eos->eps_atm;
   // --------------------------------------
+  // Unused-family atmosphere placeholders.
+  eos->Y_e_atm = 0.0;
+  eos->T_atm = 0.0;
+
+  if(!isfinite(eos->rho_atm) || !isfinite(eos->rho_min) || !isfinite(eos->rho_max)
+     || !isfinite(eos->press_atm) || !isfinite(eos->press_min) || !isfinite(eos->press_max)
+     || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min) || !isfinite(eos->eps_max)
+     || !isfinite(eos->entropy_atm) || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
+     || !isfinite(eos->tau_atm)) {
+    return ghl_error_invalid_eos_parameters;
+  }
+  *output = candidate;
   return ghl_success;
 }
 
@@ -234,11 +308,17 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
       const double T_atm,
       double T_min,
       double T_max,
-      ghl_eos_parameters *restrict eos) {
+      ghl_eos_parameters *eos) {
 
+  if(eos == NULL) return ghl_error_eos_struct_is_null;
 #ifdef GHL_DISABLE_HDF5
+  *eos = (ghl_eos_parameters){.eos_type = ghl_eos_tabulated};
   return ghl_error_used_disabled_hdf5;
 #else
+  ghl_eos_parameters candidate = {0};
+  ghl_eos_parameters *const output = eos;
+  eos = &candidate;
+
   // Step 1: Set EOS type and whether or not to clean sound speed
   eos->eos_type = ghl_eos_tabulated;
   eos->table_type = table_type;
@@ -246,18 +326,26 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   eos->enable_neural_net_c2p = enable_neural_net_c2p;
   eos->c2p_nn = NULL;
 
+  ghl_error_codes_t err;
+
+  if(!isfinite(rho_atm) || !isfinite(rho_min) || !isfinite(rho_max)
+     || !isfinite(Y_e_atm) || !isfinite(Y_e_min) || !isfinite(Y_e_max)
+     || !isfinite(T_atm) || !isfinite(T_min) || !isfinite(T_max)) {
+    err = ghl_error_invalid_eos_parameters;
+    goto cleanup;
+  }
+
   // Step 2: Read the EOS table
-  ghl_error_codes_t err = ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
+  err = ghl_tabulated_read_table_set_EOS_params(table_filepath, eos);
   if(err != ghl_success) {
-    return err;
+    goto cleanup;
   }
 
   if(eos->enable_neural_net_c2p) {
     ghl_info("Loading neural-network parameters from '%s'\n", table_filepath);
     err = ghl_c2p_nn_load_from_eos_hdf5(table_filepath, eos);
     if(err != ghl_success) {
-      ghl_tabulated_free_memory(eos);
-      return err;
+      goto cleanup;
     }
     ghl_info("Loaded neural-network Con2Prim model: %d hidden layer(s) of width %d\n",
              eos->c2p_nn->n_hidden, eos->c2p_nn->hidden_dim);
@@ -265,9 +353,18 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
 
   // Step 3: Enforce default values for (rho, Y_e, T) min, max, and atm
   // Step 3.a: Atmosphere values
-  if(rho_atm < 0) return ghl_error_invalid_rho_atm;
-  if(Y_e_atm < 0) return ghl_error_invalid_Y_e_atm;
-  if(  T_atm < 0) return ghl_error_invalid_T_atm;
+  if(rho_atm < 0) {
+    err = ghl_error_invalid_rho_atm;
+    goto cleanup;
+  }
+  if(Y_e_atm < 0) {
+    err = ghl_error_invalid_Y_e_atm;
+    goto cleanup;
+  }
+  if(T_atm < 0) {
+    err = ghl_error_invalid_T_atm;
+    goto cleanup;
+  }
 
   // Step 3.b: Minimum values
   if(rho_min < eos->table_rho_min) {
@@ -298,9 +395,18 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   }
 
   // Step 3.d: Sanity check mins and maxs
-  if(rho_min > rho_max) return ghl_error_rho_min_gt_rho_max;
-  if(Y_e_min > Y_e_max) return ghl_error_Y_e_min_gt_Y_e_max;
-  if(  T_min >   T_max) return ghl_error_T_min_gt_T_max;
+  if(rho_min > rho_max) {
+    err = ghl_error_rho_min_gt_rho_max;
+    goto cleanup;
+  }
+  if(Y_e_min > Y_e_max) {
+    err = ghl_error_Y_e_min_gt_Y_e_max;
+    goto cleanup;
+  }
+  if(T_min > T_max) {
+    err = ghl_error_T_min_gt_T_max;
+    goto cleanup;
+  }
 
   // Step 4: Initialize quantities which are common to all EOSs.
   init_common_eos_quantities;
@@ -319,7 +425,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
                                              &eos->eps_atm,
                                              &eos->entropy_atm);
   if(err != ghl_success) {
-    return err;
+    goto cleanup;
   }
 
   // Step 6: These parameters are manually set here, but
@@ -340,7 +446,23 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   eos->lp_of_lr = NULL;
   eos->le_of_lr = NULL;
   eos->lh_of_lr = NULL;
+  if(!isfinite(eos->rho_atm) || !isfinite(eos->rho_min) || !isfinite(eos->rho_max)
+     || !isfinite(eos->Y_e_atm) || !isfinite(eos->Y_e_min) || !isfinite(eos->Y_e_max)
+     || !isfinite(eos->T_atm) || !isfinite(eos->T_min) || !isfinite(eos->T_max)
+     || !isfinite(eos->press_atm) || !isfinite(eos->press_min) || !isfinite(eos->press_max)
+     || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min) || !isfinite(eos->eps_max)
+     || !isfinite(eos->entropy_atm) || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
+     || !isfinite(eos->tau_atm)) {
+    err = ghl_error_invalid_eos_parameters;
+    goto cleanup;
+  }
+  *output = candidate;
   return ghl_success;
+
+cleanup:
+  ghl_tabulated_free_memory(&candidate);
+  *output = (ghl_eos_parameters){.eos_type = ghl_eos_tabulated};
+  return err;
 #endif
 }
 
@@ -407,11 +529,11 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
       const double T_max,
       ghl_eos_parameters *restrict eos) {
 
+  if(eos == NULL) return ghl_error_eos_struct_is_null;
 #ifdef GHL_DISABLE_HDF5
+  *eos = (ghl_eos_parameters){.eos_type = ghl_eos_tabulated};
   return ghl_error_used_disabled_hdf5;
 #else
-  eos->eos_type = ghl_eos_tabulated;
-
   // FIXME: these are hard-coded default values for now
   const ghl_eos_table_t default_table_type = ghl_eos_table_stellarcollapse;
   const bool default_clean_sound_speed = false;
