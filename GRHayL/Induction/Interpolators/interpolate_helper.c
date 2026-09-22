@@ -348,12 +348,11 @@ void ghl_ADM_cell_interp(
  * Note that this quantity is returned in ghl_metric_quantities::gammaUU
  * with the first index corresponding to the non-staggered component.
  *
- * @param[in] metric_stencil 2x2x2 stencil of vertex-centered ADM quantities.
- *                           The interpolation uses metric_stencil[1][1][1] at
- *                           the \f$ \tilde{\Phi} \f$ point and the adjacent
- *                           backward vertices metric_stencil[1][1][0],
- *                           metric_stencil[1][0][1], and
- *                           metric_stencil[0][1][1].
+ * @param[in] metric_stencil 2x2x2 stencil of vertex-centered ADM quantities,
+ *                           stored in C array order `[z][y][x]`. The current
+ *                           \f$\tilde{\Phi}\f$ vertex is `[1][1][1]`; its
+ *                           backward x, y, and z neighbors are `[1][1][0]`,
+ *                           `[1][0][1]`, and `[0][1][1]`.
  *
  * @param[out] gammaUU_interp 2D array containing interpolated
  *                            quantity \f$ \alpha\sqrt{\gamma}\gamma^{ij} \f$
@@ -374,26 +373,27 @@ void ghl_ADM_vertex_interp(
   gammaUU_interp[2][2] = 0.0;
 
   for(int ii=0; ii<2; ii++) {
+    const ghl_metric_quantities *metric_x = &metric_stencil[1][1][ii];
+    const ghl_metric_quantities *metric_y = &metric_stencil[1][ii][1];
+    const ghl_metric_quantities *metric_z = &metric_stencil[ii][1][1];
+
     // Interpolate xx, xy, xz from vvv to cvv centering for A_x
-    const double detgx
-          = metric_stencil[1][1][ii].lapse * metric_stencil[1][1][ii].sqrt_detgamma;
-    gammaUU_interp[0][0] += detgx * metric_stencil[1][1][ii].gammaUU[0][0];
-    gammaUU_interp[0][1] += detgx * metric_stencil[1][1][ii].gammaUU[0][1];
-    gammaUU_interp[0][2] += detgx * metric_stencil[1][1][ii].gammaUU[0][2];
+    const double detgx = metric_x->lapse * metric_x->sqrt_detgamma;
+    gammaUU_interp[0][0] += detgx * metric_x->gammaUU[0][0];
+    gammaUU_interp[0][1] += detgx * metric_x->gammaUU[0][1];
+    gammaUU_interp[0][2] += detgx * metric_x->gammaUU[0][2];
 
     // Interpolate yx, yy, yz from vvv to vcv centering for A_y
-    const double detgy
-          = metric_stencil[1][ii][1].lapse * metric_stencil[1][ii][1].sqrt_detgamma;
-    gammaUU_interp[1][0] += detgy * metric_stencil[1][ii][1].gammaUU[0][1];
-    gammaUU_interp[1][1] += detgy * metric_stencil[1][ii][1].gammaUU[1][1];
-    gammaUU_interp[1][2] += detgy * metric_stencil[1][ii][1].gammaUU[1][2];
+    const double detgy = metric_y->lapse * metric_y->sqrt_detgamma;
+    gammaUU_interp[1][0] += detgy * metric_y->gammaUU[0][1];
+    gammaUU_interp[1][1] += detgy * metric_y->gammaUU[1][1];
+    gammaUU_interp[1][2] += detgy * metric_y->gammaUU[1][2];
 
     // Interpolate zx, zy, zz from vvv to vvc centering for A_z
-    const double detgz
-          = metric_stencil[ii][1][1].lapse * metric_stencil[ii][1][1].sqrt_detgamma;
-    gammaUU_interp[2][0] += detgz * metric_stencil[ii][1][1].gammaUU[0][2];
-    gammaUU_interp[2][1] += detgz * metric_stencil[ii][1][1].gammaUU[1][2];
-    gammaUU_interp[2][2] += detgz * metric_stencil[ii][1][1].gammaUU[2][2];
+    const double detgz = metric_z->lapse * metric_z->sqrt_detgamma;
+    gammaUU_interp[2][0] += detgz * metric_z->gammaUU[0][2];
+    gammaUU_interp[2][1] += detgz * metric_z->gammaUU[1][2];
+    gammaUU_interp[2][2] += detgz * metric_z->gammaUU[2][2];
   }
   gammaUU_interp[0][0] /= 2.0;
   gammaUU_interp[0][1] /= 2.0;

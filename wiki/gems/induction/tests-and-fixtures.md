@@ -92,6 +92,10 @@ These private helper files are not standalone tests:
   groups. Its generated Gaussian potentials use floating-point coordinates and
   enforce finite spatial variation. Contract detail belongs in
   [interpolation and staggering contract](interpolation-and-staggering-contract.md).
+- The `vvv_ADM` fixture replay uses the backward/current metric packing for
+  `ghl_interpolate_with_vertex_centered_ADM`. Its direct asymmetric affine
+  case independently checks coordinate orientation, all three `sqrtg_Ai`
+  values, the gauge scalar, and untouched `alpha` and `betai` fields.
 - ET Legacy gauge RHS coverage assembles BSSN interpolation, vector-potential
   RHS terms, and `phitilde_rhs` replay. Contract detail belongs in
   [gauge RHS contract](gauge-rhs-contract.md).

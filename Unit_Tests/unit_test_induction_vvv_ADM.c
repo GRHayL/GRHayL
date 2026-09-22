@@ -50,7 +50,7 @@ static void test_vertex_centering(void) {
 
   ghl_induction_interp_vars interp_vars
         = { .alpha = 123.0, .betai = { 124.0, 125.0, 126.0 } };
-  ghl_interpolate_with_vertex_centered_ADM_backward(
+  ghl_interpolate_with_vertex_centered_ADM(
         metric_stencil, Ax_stencil, Ay_stencil, Az_stencil, 2.0, &interp_vars);
 
   const double expected_sqrtg_Ai[3] = { -4.275, -14.4, 425.0 / 96.0 };
@@ -75,16 +75,6 @@ static void test_vertex_centering(void) {
   if(interp_vars.alpha != 123.0 || interp_vars.betai[0] != 124.0
      || interp_vars.betai[1] != 125.0 || interp_vars.betai[2] != 126.0) {
     ghl_error("Vertex-centered ADM interpolation overwrote alpha or betai.\n");
-  }
-
-  ghl_interpolate_with_vertex_centered_ADM(
-        metric_stencil, Ax_stencil, Ay_stencil, Az_stencil, 2.0, &interp_vars);
-  const double expected_legacy_gauge = 6.96875;
-  if(fabs(interp_vars.alpha_Phi_minus_betaj_A_j - expected_legacy_gauge) > 1e-13) {
-    ghl_error(
-          "Vertex-centered ADM compatibility test failed for the scalar gauge value: "
-          "expected %.17e, computed %.17e.\n",
-          expected_legacy_gauge, interp_vars.alpha_Phi_minus_betaj_A_j);
   }
 }
 

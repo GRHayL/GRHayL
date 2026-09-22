@@ -101,17 +101,11 @@
  * - ghl_interpolate_with_cell_centered_ADM
  * - ghl_interpolate_with_cell_centered_BSSN
  * - ghl_interpolate_with_vertex_centered_ADM
- * - ghl_interpolate_with_vertex_centered_ADM_backward
  *
  * These functions compute the applicable quantities in the
- * @ref ghl_induction_interp_vars struct. Both vertex-centered ADM wrappers
- * write only `sqrtg_Ai` and `alpha_Phi_minus_betaj_A_j`; they leave `alpha`
- * and `betai` unchanged. The established
- * `ghl_interpolate_with_vertex_centered_ADM` entry point preserves its
- * historical forward stencil for compatibility. New callers should use
- * `ghl_interpolate_with_vertex_centered_ADM_backward`, which accepts the
- * correctly centered backward/current metric stencil. The different flavors
- * depend on the metric
+ * @ref ghl_induction_interp_vars struct. The vertex-centered ADM wrapper
+ * writes only `sqrtg_Ai` and `alpha_Phi_minus_betaj_A_j`; it leaves
+ * `alpha` and `betai` unchanged. The different flavors depend on the metric
  * quantities available. Depending on the spacetime code, these quantities
  * could be cell-centered or vertex-centered. Additionally, we provide a
  * cell-centered BSSN variant which mimics the behavior of the original
@@ -139,13 +133,11 @@
  *
  * </div>
  *
- * In addition to these variables, we need to know where the spacetime
- * quantities live. This actually differs from code to code. For example, the
- * `Cactus/Carpet` environment in the Einstein Toolkit implicitly assumes the
- * hydrodynamical and spacetime variables are on the same grid because it only
- * supports a single grid structure. Conversely, the `Cactus/CarpetX` environment
- * sets the hydrodynamical variables and spacetime variables on different grids.
- * We provide interpolators for the following spacetime grid staggerings:
+ * In addition to these variables, callers must know where their spacetime
+ * quantities live. Storage centering is an integration choice made by the
+ * Cactus variable groups and driver configuration; the driver name alone does
+ * not determine which wrapper is correct. We provide interpolators for the
+ * following spacetime grid staggerings:
  *
  * - cell-centered \f$ (i, j, k) \f$ BSSN variables
  * - cell-centered \f$ (i, j, k) \f$ ADM variables
@@ -154,20 +146,20 @@
  * The interpolators handle the mapping from the given metric type to these
  * variables. The BSSN wrapper expects
  * \f$\tilde{\gamma}^{ij}=\psi^4\gamma^{ij}\f$ in `metric_stencil.gammaUU`
- * and \f$\psi\f$ separately. A caller of the corrected vertex-centered ADM
- * wrapper obtains lapse and shift directly from the current vertex
- * `metric_stencil[1][1][1]`. The compatibility wrapper instead retains
- * `metric_stencil[0][0][0]` as the current vertex.
- * As the spacetime variables
- * and vector potential can be assumed to be smooth, all the interpolations
- * are performed via averaging.
+ * and \f$\psi\f$ separately.
+ *
+ * ghl_interpolate_with_vertex_centered_ADM takes a stencil spanning one
+ * vertex backward through the current \f$\tilde{\Phi}\f$ vertex on each
+ * axis. It stores the current vertex in `metric_stencil[1][1][1]` and
+ * averages it with one backward axial neighbor for each \f$A_i\f$ location.
+ * This collocates the metric and vector-potential factors.
  *
  * The end goal of these interpolations is to compute
  *
  * - \f$ \alpha \f$, and \f$ \beta^i \f$, and \f$ \alpha\Phi - \beta^i A_i \f$
  *   at the fully staggered grid point \f$ (i+\frac{1}{2}, j+\frac{1}{2}, k+\frac{1}{2}) \f$
  *   - The first two are used when computing \f$ \tilde{\Phi}^\mathrm{RHS} \f$;
- *     both vertex-centered wrappers leave them unchanged because they already
+ *     the vertex-centered wrapper leaves them unchanged because they already
  *     exist at the required grid locations
  *   - The third is the gauge contribution to \f$ A_i^\mathrm{RHS} \f$. While
  *     \f$ A_i \f$ all exist at different staggered points, this interpolation
@@ -177,12 +169,9 @@
  *     the index requires interpolation of both the metric and the vector
  *     potential
  *
- * @todo
- * For the interpolators, `IllinoisGRMHD` said: "Would be much cheaper &
- * easier to unstagger A_i, raise, then interpolate A^i. However, we keep
- * it this way to be completely compatible with the original Illinois
- * GRMHD thorn, called mhd_evolve." This should be revisited now that
- * there is no need to retain this backward compatibility.
+ * The ordering of averaging and index raising follows the original
+ * IllinoisGRMHD lineage. The metric pair for each component is selected by
+ * the physical location of that staggered vector-potential component.
  */
 
 /**
