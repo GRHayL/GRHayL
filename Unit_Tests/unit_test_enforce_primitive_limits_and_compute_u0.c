@@ -344,6 +344,19 @@ int main(int argc, char **argv) {
     ghl_error("speed-limit diagnostic did not preserve incoming true\n");
   }
 
+  ghl_metric_quantities shifted_metric;
+  ghl_initialize_metric(
+        1.0, 0.60110565395107551, -0.2905985149354946, 0.39986207445943411, 1.0, 0.0,
+        0.0, 1.0, 0.0, 1.0, &shifted_metric);
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, -1.7648921792623411, -0.078576608759423738, -0.45413137379056634,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_limit_v_and_compute_u0(&params, &shifted_metric, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  check_limiter_success(
+        "default cap with shift", &params, &shifted_metric, &prims, speed_limited, true);
+
   ghl_parameters extreme_params = params;
   extreme_params.max_Lorentz_factor = 1e9;
   extreme_params.inv_sq_max_Lorentz_factor = 1.0 / (1e9 * 1e9);

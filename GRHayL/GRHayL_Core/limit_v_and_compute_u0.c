@@ -44,27 +44,30 @@ ghl_error_codes_t ghl_limit_v_and_compute_u0(
           = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, limited_utU)
             * metric_adm->lapseinv2;
 
-    if(!isfinite(one_minus_one_over_alpha_u0_squared)
-       || one_minus_one_over_alpha_u0_squared >= 1.0
-       || 1.0 - one_minus_one_over_alpha_u0_squared
-                < params->inv_sq_max_Lorentz_factor) {
-      if(isfinite(one_minus_one_over_alpha_u0_squared)
-         && one_minus_one_over_alpha_u0_squared > 0.0) {
-        double inward_bound = one_minus_one_over_W_max_squared;
-        for(int i = 0; i < 4; i++) {
-          inward_bound = nextafter(inward_bound, 0.0);
-        }
-        correction_fac *= sqrt(inward_bound / one_minus_one_over_alpha_u0_squared);
-        prims->vU[0] = utU[0] * correction_fac - metric_adm->betaU[0];
-        prims->vU[1] = utU[1] * correction_fac - metric_adm->betaU[1];
-        prims->vU[2] = utU[2] * correction_fac - metric_adm->betaU[2];
-        limited_utU[0] = prims->vU[0] + metric_adm->betaU[0];
-        limited_utU[1] = prims->vU[1] + metric_adm->betaU[1];
-        limited_utU[2] = prims->vU[2] + metric_adm->betaU[2];
-        one_minus_one_over_alpha_u0_squared
-              = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, limited_utU)
-                * metric_adm->lapseinv2;
-      }
+    // Retry at most 16 times, doubling the inward margin to overcome roundoff
+    // in the shift subtraction and the recomputed metric norm.
+    double inward_bound = one_minus_one_over_W_max_squared;
+    double inward_step = inward_bound - nextafter(inward_bound, 0.0);
+    for(int retry = 0; retry < 16 && isfinite(one_minus_one_over_alpha_u0_squared)
+                       && one_minus_one_over_alpha_u0_squared > 0.0
+                       && (one_minus_one_over_alpha_u0_squared >= 1.0
+                           || 1.0 - one_minus_one_over_alpha_u0_squared
+                                    < params->inv_sq_max_Lorentz_factor);
+        retry++) {
+      inward_bound = fmax(0.0, inward_bound - inward_step);
+      inward_step *= 2.0;
+      correction_fac = nextafter(
+            correction_fac * sqrt(inward_bound / one_minus_one_over_alpha_u0_squared),
+            0.0);
+      prims->vU[0] = utU[0] * correction_fac - metric_adm->betaU[0];
+      prims->vU[1] = utU[1] * correction_fac - metric_adm->betaU[1];
+      prims->vU[2] = utU[2] * correction_fac - metric_adm->betaU[2];
+      limited_utU[0] = prims->vU[0] + metric_adm->betaU[0];
+      limited_utU[1] = prims->vU[1] + metric_adm->betaU[1];
+      limited_utU[2] = prims->vU[2] + metric_adm->betaU[2];
+      one_minus_one_over_alpha_u0_squared
+            = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, limited_utU)
+              * metric_adm->lapseinv2;
     }
   }
 
