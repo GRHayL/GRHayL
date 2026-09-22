@@ -478,19 +478,19 @@ static void check_downstream_consumers(
           2.0e-13);
   }
 
-  ghl_primitive_quantities clamped_right = original;
-  ghl_primitive_quantities clamped_left = original;
-  clamped_right.rho = nextafter(eos->rho_min, 0.0);
-  clamped_right.Y_e = nextafter(eos->Y_e_max, INFINITY);
-  clamped_right.temperature = nextafter(eos->T_min, 0.0);
+  ghl_primitive_quantities bounded_right = original;
+  ghl_primitive_quantities bounded_left = original;
+  bounded_right.rho = nextafter(eos->rho_min, 0.0);
+  bounded_right.Y_e = nextafter(eos->Y_e_max, INFINITY);
+  bounded_right.temperature = nextafter(eos->T_min, 0.0);
   cmin = cmax = NAN;
   flux_error = ghl_calculate_characteristic_speed_dirn0_checked(
-        &clamped_right, &clamped_left, eos, &metric, &cmin, &cmax);
+        &bounded_right, &bounded_left, eos, &metric, &cmin, &cmax);
   ghl_abort_if_error(flux_error);
-  if(clamped_right.rho != eos->rho_min || clamped_right.Y_e != eos->Y_e_max
-     || clamped_right.temperature != eos->T_min || !isfinite(clamped_right.press)
-     || !isfinite(clamped_right.eps)) {
-    ghl_error("Characteristic-speed EOS clamp/mutation contract failed\n");
+  if(bounded_right.rho != eos->rho_min || bounded_right.Y_e != eos->Y_e_max
+     || bounded_right.temperature != eos->T_min || !isfinite(bounded_right.press)
+     || !isfinite(bounded_right.eps)) {
+    ghl_error("Characteristic-speed EOS table-bound/mutation contract failed\n");
   }
 
   ghl_conservative_quantities flux;

@@ -41,7 +41,9 @@ entry point that returns `ghl_error_codes_t`. The legacy wrapper aborts on a
 checked error. Tests may select checked variants through test-local function
 pointers by EOS family, entropy mode, and direction. Deprecated generic
 direction globals remain exported for compatibility, but EOS initialization
-does not assign them or select an HLLE family.
+does not assign them or select an HLLE family. Their declared signatures take
+`const ghl_primitive_quantities *`, so the direct variants, which may update
+primitives, are not assignment-compatible with them.
 
 ## Caller Contract
 
@@ -55,9 +57,10 @@ HLLE flux callers must supply:
 - `metric_face`: face-centered ADM metric.
 - `cmin_dirn*` and `cmax_dirn*`: characteristic speeds computed for the same
   direction and face. Negative algebraic residue within `DBL_EPSILON` times
-  the larger of one and both magnitudes is clamped to zero. Larger negative
-  values are rejected. The clamped values must have a finite positive sum and
-  representable product. Invalid bounds return
+  the larger of one and both magnitudes is floored at zero. Larger negative
+  values are rejected. The floored values must have a finite sum of at least
+  `1/DBL_MAX` and a product that does not overflow; the overflow test is exact
+  only to within one rounding. Invalid bounds return
   `ghl_error_invalid_hlle_wavespeeds` from checked entry points before EOS
   calls or output writes; legacy wrappers abort on that error.
 - `cons`: caller-owned conservative output receiving flux components.
@@ -72,13 +75,16 @@ their prior value; these routines do not initialize the whole struct.
 
 All 12 checked routines call `ghl_compute_h_and_cs2` twice and return either
 callback's exact error before writing output. Primitive arguments are mutable: production
-tabulated dispatch clamps `rho`, `Y_e`, and `temperature`, then overwrites
+tabulated dispatch limits `rho`, `Y_e`, and `temperature` to table bounds, then overwrites
 `press` and `eps`. If the second callback fails, mutation performed by the
 successful first callback is retained. Callers needing immutable reconstructed
 states must pass copies.
 
 Characteristic-speed and source-term routines use the same combined callback,
 so a custom EOS dispatch needs install only `ghl_compute_h_and_cs2`.
+HLLE and source-term kernels request `cs2` but do not use it. No enthalpy-only
+callback is offered, because existing custom EOS integrations assign only
+`ghl_compute_h_and_cs2` and would otherwise mix EOS models or call a null pointer.
 
 ## Tabulated And HDF5 Boundary
 

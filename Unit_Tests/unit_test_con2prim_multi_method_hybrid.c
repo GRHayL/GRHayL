@@ -92,10 +92,12 @@ int main(int argc, char **argv) {
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
-  if( key != 1 || arraylength != 90003 )
-    ghl_error("An error has occured with reading the grid size. "
-                 "Please check that metric_Bfield_initial_data.bin"
-                 "is up-to-date with current test version.\n");
+  if(key != 1 || arraylength != 90003) {
+    ghl_error(
+          "An error has occured with reading the grid size. "
+          "Please check that metric_Bfield_initial_data.bin"
+          "is up-to-date with current test version.\n");
+  }
 
   // This section sets up the initial parameters that would normally
   // be provided by the simulation.

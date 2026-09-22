@@ -61,8 +61,8 @@ static bool flux_value_mismatch(const double expected, const double actual) {
              && fabs(expected - actual) > rtol * fmax(fabs(expected), fabs(actual)));
 }
 
-static bool legacy_clamp_mismatch(const double expected, const double actual) {
-  // Compatibility envelope for trusted outputs generated before speed clamping.
+static bool legacy_floor_mismatch(const double expected, const double actual) {
+  // Compatibility envelope for trusted outputs generated before wave-speed flooring.
   const double rtol = 8.0e-14;
   const double atol = 16.0 * DBL_EPSILON;
   return !isfinite(expected) || !isfinite(actual)
@@ -79,9 +79,9 @@ static bool flux_fixture_mismatch(
   if(!isfinite(expected) || !isfinite(actual) || !isfinite(perturbed)) {
     return true;
   }
-  // The pinned fixtures predate clamping of roundoff-negative wave speeds.
+  // The pinned fixtures predate flooring roundoff-negative wave speeds at zero.
   if(cmin < 0.0 || cmax < 0.0) {
-    return legacy_clamp_mismatch(expected, actual);
+    return legacy_floor_mismatch(expected, actual);
   }
   return ghl_pert_test_fail(expected, actual, perturbed);
 }
@@ -152,30 +152,30 @@ static void check_hybrid_flux_contract(const ghl_eos_parameters *restrict eos) {
               entropy, dir);
       }
       legacy_functions[entropy][dir](&prims_r, &prims_l, eos, &metric, 0.0, 1.0, &cons);
-      ghl_conservative_quantities zero_clamped = { 0 };
-      ghl_conservative_quantities residue_clamped = { 0 };
+      ghl_conservative_quantities zero_floored = { 0 };
+      ghl_conservative_quantities residue_floored = { 0 };
       if(functions[entropy][dir](
-               &prims_r, &prims_l, eos, &metric, 100.0, 0.0, &zero_clamped)
+               &prims_r, &prims_l, eos, &metric, 100.0, 0.0, &zero_floored)
                != ghl_success
          || functions[entropy][dir](
                   &prims_r, &prims_l, eos, &metric, 100.0, -8.0 * DBL_EPSILON,
-                  &residue_clamped)
+                  &residue_floored)
                   != ghl_success
-         || hybrid_fluxes_differ(&zero_clamped, &residue_clamped, entropy)) {
+         || hybrid_fluxes_differ(&zero_floored, &residue_floored, entropy)) {
         ghl_error(
-              "HLLE roundoff-negative clamp failed for hybrid entropy=%d direction=%d\n",
+              "HLLE roundoff-negative floor failed for hybrid entropy=%d direction=%d\n",
               entropy, dir);
       }
       if(functions[entropy][dir](
-               &prims_r, &prims_l, eos, &metric, 0.0, 100.0, &zero_clamped)
+               &prims_r, &prims_l, eos, &metric, 0.0, 100.0, &zero_floored)
                != ghl_success
          || functions[entropy][dir](
                   &prims_r, &prims_l, eos, &metric, -8.0 * DBL_EPSILON, 100.0,
-                  &residue_clamped)
+                  &residue_floored)
                   != ghl_success
-         || hybrid_fluxes_differ(&zero_clamped, &residue_clamped, entropy)) {
+         || hybrid_fluxes_differ(&zero_floored, &residue_floored, entropy)) {
         ghl_error(
-              "HLLE roundoff-negative clamp failed for hybrid entropy=%d direction=%d\n",
+              "HLLE roundoff-negative floor failed for hybrid entropy=%d direction=%d\n",
               entropy, dir);
       }
       if(functions[entropy][dir](&prims_r, &prims_l, eos, &metric, 0.4, 0.7, &cons)

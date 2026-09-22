@@ -23,10 +23,10 @@ Status vocabulary on this page:
 
 | Test | Main evidence | Fixture files read | Notes |
 | --- | --- | --- | --- |
-| Hybrid HLLE flux replay | [Unit_Tests/unit_test_hybrid_flux.c](../../../Unit_Tests/unit_test_hybrid_flux.c) | `hybrid_flux_input.bin`, `hybrid_flux_output.bin`, `hybrid_flux_output_pert.bin` | Direct replay of hybrid and hybrid-entropy variants, all three directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. Speeds are fixture inputs, not recomputed. Stored outputs predate roundoff-negative speed clamping; affected cases use a finite-aware relative/absolute compatibility comparison, while nonnegative-speed cases retain perturbation replay. |
-| Tabulated HLLE flux replay | [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Direct replay of tabulated and tabulated-entropy variants, all directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. It initializes LS220, then uses `ghl_test_compute_h_and_cs2`. Stored outputs have the same pre-clamp compatibility boundary as the hybrid fixtures. |
+| Hybrid HLLE flux replay | [Unit_Tests/unit_test_hybrid_flux.c](../../../Unit_Tests/unit_test_hybrid_flux.c) | `hybrid_flux_input.bin`, `hybrid_flux_output.bin`, `hybrid_flux_output_pert.bin` | Direct replay of hybrid and hybrid-entropy variants, all three directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. Speeds are fixture inputs, not recomputed. Stored outputs predate flooring roundoff-negative wave speeds at zero. Samples whose stored `cmin` or `cmax` is negative (roughly half of the per-direction sample comparisons) use a fixed relative/absolute compatibility envelope instead of `ghl_pert_test_fail`: it has no perturbation allowance but a much larger absolute floor (`16*DBL_EPSILON`), so it is usually looser, especially for small fluxes. Nonnegative-speed samples retain perturbation replay. |
+| Tabulated HLLE flux replay | [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Direct replay of tabulated and tabulated-entropy variants, all directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. It initializes LS220, then uses `ghl_test_compute_h_and_cs2`. Stored outputs predate the same wave-speed flooring, and negative-speed samples (roughly half of the per-direction sample comparisons) use the same kind of envelope. Its relative tolerance is much looser than the hybrid one, so tabulated negative-speed samples accept relative differences several orders of magnitude larger than `ghl_pert_test_fail` typically allows. |
 | ET Legacy flux/source replay | [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../../Unit_Tests/unit_test_ET_Legacy_flux_source.c) | `ET_Legacy_flux_source_input.bin`, `ET_Legacy_flux_source_output.bin`, `ET_Legacy_flux_source_output_pert.bin` | Direct combined replay: all speed directions, non-entropy hybrid fluxes, flux divergence, and source terms. It installs one test-local combined enthalpy/sound-speed callback. |
-| CompOSE production-EOS integration | [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c) | Caller-supplied HDF5 path; Ubuntu-GCC builds `compose-test-table.h5` in the workspace root and passes it to the test. | Analytic asymmetric magnetized characteristic-speed expectations in all directions, production tabulated clamp/mutation, identical-state HLLE/entropy flux, and source-term checks. This focused execution exists only in the Ubuntu-GCC `compose-regularized-eos` job. |
+| CompOSE production-EOS integration | [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c) | Caller-supplied HDF5 path; Ubuntu-GCC builds `compose-test-table.h5` in the workspace root and passes it to the test. | Analytic asymmetric magnetized characteristic-speed expectations in all directions, production tabulated table-bound/mutation, identical-state HLLE/entropy flux, and source-term checks. This focused execution exists only in the Ubuntu-GCC `compose-regularized-eos` job. |
 
 Related contract routes:
 
@@ -43,6 +43,16 @@ Related contract routes:
 | [Unit_Tests/data_gen/unit_test_data_tabulated_flux.c](../../../Unit_Tests/data_gen/unit_test_data_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Initializes LS220, replaces production combined enthalpy/sound-speed dispatch with `ghl_test_compute_h_and_cs2`, calls all speed and direct tabulated HLLE variants, and writes same-kernel regression references. |
 | [Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c](../../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c) | `ET_Legacy_flux_source_input.bin`, `ET_Legacy_flux_source_input_pert.bin` | Generates local ET Legacy input-side fixtures for metric, curvature, primitives, and face states. The test consumes downloaded trusted output and perturbed-output fixtures. |
 
+The hybrid and tabulated generators perturb metric, primitive, and stored
+wave-speed inputs; the ET Legacy generator perturbs primitive and face-state
+inputs only. Each perturbed input gets an independent uniform relative factor
+of up to `1e-14` (hybrid, ET Legacy) or `1e-12` (tabulated).
+The repository records no conditioning rationale for the difference. Replay
+through `ghl_pert_test_fail` scales each family's bar with its own
+trusted-versus-perturbed separation, so tabulated replay is correspondingly
+looser. Exact cutoffs and envelopes live in `GRHayL/include/ghl_unit_tests.h`
+and the replay sources.
+
 Generator source presence does not mean CI regenerates trusted data. The
 ordinary runner downloads trusted fixtures before running tests, and workflow
 test jobs also download fixture files before execution.
@@ -58,7 +68,7 @@ checking HLLE output. The ET Legacy flux/source test instead computes `cmin` and
 
 Neither ordinary flux replay recomputes characteristic speeds. ET Legacy does,
 but against its test-local EOS callback. The CompOSE integration test separately
-covers production tabulated speed dispatch and clamp/mutation behavior.
+covers production tabulated speed dispatch and table-bound/mutation behavior.
 `unit_test_hybrid_flux` injects errors at both callback positions in all three
 checked characteristic-speed directions and checks that both outputs stay
 unchanged. No committed check injects a failure into the production tabulated
@@ -129,8 +139,9 @@ hydrodynamic `unit_test_hybrid_flux`, `unit_test_tabulated_flux`, and
 
 - Magnetized HLLE terms have replay coverage but no independent analytic
   oracle; focused asymmetric HLLE checks use zero magnetic field.
-- `unit_test_hybrid_flux` injects `ghl_compute_h_and_cs2` failures into all
-  characteristic-speed directions and the source-term checked routine.
+- ET Legacy flux/source replay uses equal spacings (`dx = dy = dz = 0.1`);
+  direction-specific inverse spacing is checked only by the selector
+  self-check, not by an anisotropic replay.
 - Production tabulated mutation is checked for characteristic speeds, not for
   an HLLE call.
 - No direct test connects Flux_Source characteristic-speed output to Induction

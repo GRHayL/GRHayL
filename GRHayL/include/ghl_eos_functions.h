@@ -299,7 +299,9 @@ extern ghl_error_codes_t (*ghl_tabulated_compute_eps_from_rho)(
 extern void (*ghl_tabulated_free_beq_quantities)(
       ghl_eos_parameters *restrict eos);
 
-/** Deprecated compatibility storage. GRHayL does not initialize this pointer. */
+/** Deprecated compatibility storage. GRHayL does not initialize this pointer.
+ * Its `const` primitive arguments make it incompatible with the direct HLLE
+ * kernels, which may update primitives. */
 extern void (*ghl_calculate_HLLE_fluxes_dirn0)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,
@@ -309,7 +311,9 @@ extern void (*ghl_calculate_HLLE_fluxes_dirn0)(
       const double cmax,
       ghl_conservative_quantities *restrict cons_fluxes);
 
-/** Deprecated compatibility storage. GRHayL does not initialize this pointer. */
+/** Deprecated compatibility storage. GRHayL does not initialize this pointer.
+ * Its `const` primitive arguments make it incompatible with the direct HLLE
+ * kernels, which may update primitives. */
 extern void (*ghl_calculate_HLLE_fluxes_dirn1)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,
@@ -319,7 +323,9 @@ extern void (*ghl_calculate_HLLE_fluxes_dirn1)(
       const double cmax,
       ghl_conservative_quantities *restrict cons_fluxes);
 
-/** Deprecated compatibility storage. GRHayL does not initialize this pointer. */
+/** Deprecated compatibility storage. GRHayL does not initialize this pointer.
+ * Its `const` primitive arguments make it incompatible with the direct HLLE
+ * kernels, which may update primitives. */
 extern void (*ghl_calculate_HLLE_fluxes_dirn2)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,

@@ -42,7 +42,8 @@ Each direction function takes:
   non-negative left-going and right-going speed magnitudes used by the HLL
   formulas. Despite the names, `cmin` is not a signed minimum eigenvalue: the
   generator defines it as the negated minimum of zero and the two left-going
-  speeds.
+  speeds. Branch-free min/max evaluation can leave negative roundoff residues;
+  the HLLE routines floor those residues at zero within their tolerance.
 
 The kernels call `ghl_compute_h_and_cs2` for both reconstructed states. That
 function pointer is declared in
@@ -53,7 +54,7 @@ Keep EOS behavior routed through EOS pages; this page only records that the
 speed kernels depend on `h` and `cs2`.
 
 The primitive pointers are intentionally non-`const`. The production tabulated
-enthalpy/sound-speed implementation clamps `rho`, `Y_e`, and `temperature` and
+enthalpy/sound-speed implementation limits `rho`, `Y_e`, and `temperature` to table bounds and
 recomputes `press` and `eps` in place. Checked speed routines return the exact
 `ghl_error_codes_t` from either callback and leave both speed outputs unchanged
 on failure; legacy wrappers abort instead. A successful first callback may mutate its primitive before a
@@ -101,7 +102,7 @@ passes production characteristic-speed outputs into an Induction HLL routine.
   stored speed arrays.
 - **Production-EOS evidence:** `unit_test_tabulated_eos_compose` checks an
   analytic magnetized speed bound in every direction and the tabulated
-  clamp/mutation behavior. The oracle is implemented separately but uses the
+  table-bound/mutation behavior. The oracle is implemented separately but uses the
   same magnetosonic model as the kernel.
 - **Focused errors:** `unit_test_hybrid_flux` injects first- and second-callback
   failures into every checked direction and verifies unchanged outputs.

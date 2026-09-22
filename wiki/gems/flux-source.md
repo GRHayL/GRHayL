@@ -31,6 +31,8 @@ Key public surface:
 - `ghl_calculate_HLLE_fluxes_dirn*_hybrid_entropy`
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated`
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy`
+- the matching `*_checked` name for each routine above, returning
+  `ghl_error_codes_t`
 
 Direct suffixed HLLE functions are the supported callable routes. Deprecated
 generic direction globals remain exported but unwired for compatibility. Route

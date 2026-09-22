@@ -42,7 +42,7 @@ not zero or initialize the complete conservative struct.
 The checked kernel calls `ghl_compute_h_and_cs2(eos, prims, &h, &cs2)` before
 building the source terms; `cs2` is unused. Its `prims` argument is mutable:
 production tabulated dispatch
-clamps `rho`, `Y_e`, and `temperature`, then recomputes `press` and `eps` in
+limits `rho`, `Y_e`, and `temperature` to table bounds, then recomputes `press` and `eps` in
 place. The checked routine returns the callback's exact error and leaves `cons`
 unchanged on failure; the legacy `void` wrapper aborts on that error. Callback
 mutation of `prims` is not rolled back. Callers

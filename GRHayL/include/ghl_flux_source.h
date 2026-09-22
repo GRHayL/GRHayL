@@ -4,8 +4,6 @@
 #include "ghl.h"
 #include <float.h>
 
-static const double TINYDOUBLE = 1e-100;
-
 /* GRHayL primitive magnetic fields already include the 1/sqrt(4 pi) rescaling. */
 static const double SQRT_4_PI = 1;
 
@@ -76,9 +74,10 @@ void ghl_calculate_characteristic_speed_dirn2(
  *
  * `cmin_dirn0` and `cmax_dirn0` are nonnegative wave-speed magnitudes.
  * Negative algebraic residue within `DBL_EPSILON` times the larger of one and
- * both magnitudes is clamped to zero. Larger negative values are rejected.
- * The clamped sum must be finite and positive, and the clamped product must be
- * representable. The EOS callback may update either primitive state. On
+ * both magnitudes is floored at zero. Larger negative values are rejected.
+ * The floored sum must be finite and at least `1/DBL_MAX`, and the floored
+ * product must not overflow; the overflow test is exact only to within one
+ * rounding. The EOS callback may update either primitive state. On
  * failure, `cons` is unchanged; the checked counterpart returns the error and
  * this legacy entry point aborts. On success, the
  * routine writes `rho`, `tau`, and all three `SD` components. Magnetic fields

@@ -12,21 +12,18 @@ if(!isfinite(cmin_dirn1) || !isfinite(cmax_dirn1) ||
    cmin_dirn1 < -DBL_EPSILON*wavespeed_scale ||
    cmax_dirn1 < -DBL_EPSILON*wavespeed_scale)
   return ghl_error_invalid_hlle_wavespeeds;
-const double cmin_clamped = fmax(cmin_dirn1, 0.0);
-const double cmax_clamped = fmax(cmax_dirn1, 0.0);
-if(cmin_clamped > DBL_MAX - cmax_clamped ||
-   (cmin_clamped > 1.0 && cmax_clamped > DBL_MAX/cmin_clamped))
+const double cmin_floored = fmax(cmin_dirn1, 0.0);
+const double cmax_floored = fmax(cmax_dirn1, 0.0);
+if(cmin_floored > DBL_MAX - cmax_floored ||
+   (cmin_floored > 1.0 && cmax_floored > DBL_MAX/cmin_floored))
   return ghl_error_invalid_hlle_wavespeeds;
-const double wavespeed_sum = cmin_clamped + cmax_clamped;
+const double wavespeed_sum = cmin_floored + cmax_floored;
 if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0/DBL_MAX)
   return ghl_error_invalid_hlle_wavespeeds;
-const double wavespeed_product = cmin_clamped*cmax_clamped;
-if(cmin_clamped > 0.0 && cmax_clamped > 0.0 && wavespeed_product == 0.0)
-  return ghl_error_invalid_hlle_wavespeeds;
-const double cmin_weight = cmin_clamped/wavespeed_sum;
-const double cmax_weight = cmax_clamped/wavespeed_sum;
+const double cmin_weight = cmin_floored/wavespeed_sum;
+const double cmax_weight = cmax_floored/wavespeed_sum;
 const double dissipation_speed =
-      wavespeed_product/wavespeed_sum;
+      cmin_floored*cmax_floored/wavespeed_sum;
 
 double h_r, h_l, cs2_r, cs2_l;
 

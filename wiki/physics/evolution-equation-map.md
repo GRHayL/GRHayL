@@ -55,9 +55,11 @@ Code map:
 
 Availability boundary:
 
-- Direction/EOS-specific direct HLLE functions are current callable routes.
-- Family-specific direct HLLE functions are the only public flux entry points;
-  EOS initialization does not select a generic HLLE dispatch.
+- Family-specific direct HLLE functions, legacy `void` names and their
+  `_checked` counterparts, are the only callable public HLLE routes. Deprecated
+  generic `ghl_calculate_HLLE_fluxes_dirn0/1/2` pointers remain declared in
+  `GRHayL/include/ghl_eos_functions.h` and exported, but EOS initialization
+  never assigns them.
 - No-HDF5 builds retain the direct tabulated HLLE definitions; their
   table-dependent tests and generators remain excluded.
 - Reconstruction is built public caller API, but no production source caller is
@@ -65,13 +67,15 @@ Availability boundary:
   assertion/generator limits; they do not prove an evolution integration.
 
 Tests:
-- `Unit_Tests/unit_test_HLL_flux.c`
 - `Unit_Tests/unit_test_hybrid_flux.c`
 - `Unit_Tests/unit_test_tabulated_flux.c`
-- `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`
-- `Unit_Tests/data_gen/unit_test_data_HLL_flux.c`
+- `Unit_Tests/unit_test_ET_Legacy_flux_source.c`
+- `Unit_Tests/unit_test_tabulated_eos_compose.c`
 - `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`
 - `Unit_Tests/data_gen/unit_test_data_tabulated_flux.c`
+
+Induction HLL tests (`unit_test_HLL_flux.c`, `unit_test_ET_Legacy_HLL_flux.c`)
+route through the Induction section below, not Flux_Source HLLE coverage.
 
 Existing flux tests cover wave-bound and callback-error contracts. `make tests`
 compilation or workflow selection alone is not runtime proof.
@@ -117,6 +121,9 @@ Tests:
 - `Unit_Tests/unit_test_induction_ccc_BSSN.c`
 - `Unit_Tests/unit_test_induction_vvv_ADM.c`
 - `Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c`
+- `Unit_Tests/unit_test_HLL_flux.c`
+- `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`
+- `Unit_Tests/data_gen/unit_test_data_HLL_flux.c`
 - `Unit_Tests/compute_A_flux_with_B.c`
 - `Unit_Tests/compute_A_flux_with_Btilde.c`
 - `Unit_Tests/data_gen/unit_test_data_induction_interpolation.c`
