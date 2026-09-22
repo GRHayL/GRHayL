@@ -1,3 +1,4 @@
+#include "ghl_test_helpers.h"
 #include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
@@ -5,10 +6,9 @@ int main(int argc, char **argv) {
   FILE* infile = fopen_with_check("HLL_flux_input.bin", "rb");
 
   int dirlength;
-  int key = fread(&dirlength, sizeof(int), 1, infile);
-  if(key != 1 || dirlength != 20)
-    ghl_error("Invalid HLL_flux_input.bin dimension (expected 20)\n");
-  const int arraylength = dirlength*dirlength*dirlength;
+  const size_t arraylength
+        = ghl_test_read_grid_size(infile, "HLL_flux_input.bin", 5, &dirlength);
+  size_t key;
 
   double *phi_bssn = (double*) malloc(sizeof(double)*arraylength);
 

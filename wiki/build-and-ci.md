@@ -77,8 +77,6 @@ It finds every path containing `make.code.defn`, excludes paths matching
 This script is not the same path as `configure`. A clean disposable-tree
 reproduction currently:
 
-- turns comment words in `GRHayL/Induction/make.code.defn` into source/object
-  targets;
 - includes `implementations/GRHayLib/src/initialize_and_shutdown.c` because it
   scans manifests outside `GRHayL/`;
 - emits `-I./include`, although public headers live under `GRHayL/include/` in

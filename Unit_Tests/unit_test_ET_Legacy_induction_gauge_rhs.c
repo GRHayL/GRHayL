@@ -1,15 +1,13 @@
+#include "ghl_test_helpers.h"
 #include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
   FILE* infile = fopen_with_check("ET_Legacy_induction_gauge_rhs_input.bin","rb");
 
   int dirlength;
-  int key = fread(&dirlength, sizeof(int), 1, infile);
-  if( key != 1 || dirlength != 21 )
-    ghl_error("An error has occured with reading the grid size. "
-                 "Please check that ET_Legacy_induction_gauge_rhs_input.bin"
-                 "is up-to-date with current test version.\n");
-  const int arraylength = dirlength*dirlength*dirlength;
+  const size_t arraylength = ghl_test_read_grid_size(
+        infile, "ET_Legacy_induction_gauge_rhs_input.bin", 7, &dirlength);
+  size_t key;
 
   const double dX[3] = {0.1, 0.1, 0.1};
 

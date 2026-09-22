@@ -68,13 +68,13 @@ typedef struct ghl_HLL_vars {
  * user as desired.
  */
 typedef struct ghl_induction_interp_vars {
-  /** Interpolated lapse \f$ \alpha \f$ */
+  /** Interpolated lapse \f$ \alpha \f$ (cell-centered wrappers only) */
   double alpha;
   /** Interpolated quantity \f$ \alpha \Phi - \beta^j A_j \f$ */
   double alpha_Phi_minus_betaj_A_j;
   /** Interpolated quantity \f$ \alpha\sqrt{\gamma} A^i = \sqrt{-g} A^i \f$ */
   double sqrtg_Ai[3];
-  /** Interpolated shift \f$ \beta^i \f$ */
+  /** Interpolated shift \f$ \beta^i \f$ (cell-centered wrappers only) */
   double betai[3];
 } ghl_induction_interp_vars;
 
