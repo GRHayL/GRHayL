@@ -24,8 +24,8 @@ Status vocabulary on this page:
 | Test | Main evidence | Fixture files read | Notes |
 | --- | --- | --- | --- |
 | Hybrid HLLE flux replay | [Unit_Tests/unit_test_hybrid_flux.c](../../../Unit_Tests/unit_test_hybrid_flux.c) | `hybrid_flux_input.bin`, `hybrid_flux_output.bin`, `hybrid_flux_output_pert.bin` | Direct replay of hybrid and hybrid-entropy variants, all three directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. Speeds are fixture inputs, not recomputed. Stored outputs predate roundoff-negative speed clamping; affected cases use a finite-aware relative/absolute compatibility comparison, while nonnegative-speed cases retain perturbation replay. |
-| Tabulated HLLE flux replay | [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Direct replay of tabulated and tabulated-entropy variants, all directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. It initializes LS220, then uses `ghl_test_compute_h`. Stored outputs have the same pre-clamp compatibility boundary as the hybrid fixtures. |
-| ET Legacy flux/source replay | [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../../Unit_Tests/unit_test_ET_Legacy_flux_source.c) | `ET_Legacy_flux_source_input.bin`, `ET_Legacy_flux_source_output.bin`, `ET_Legacy_flux_source_output_pert.bin` | Direct combined replay: all speed directions, non-entropy hybrid fluxes, flux divergence, and source terms. It installs separate test-local enthalpy and enthalpy/sound-speed callbacks. |
+| Tabulated HLLE flux replay | [Unit_Tests/unit_test_tabulated_flux.c](../../../Unit_Tests/unit_test_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Direct replay of tabulated and tabulated-entropy variants, all directions. Also checks wave-bound/error contracts and independent asymmetric fixed-bound HLLE algebra. It initializes LS220, then uses `ghl_test_compute_h_and_cs2`. Stored outputs have the same pre-clamp compatibility boundary as the hybrid fixtures. |
+| ET Legacy flux/source replay | [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../../Unit_Tests/unit_test_ET_Legacy_flux_source.c) | `ET_Legacy_flux_source_input.bin`, `ET_Legacy_flux_source_output.bin`, `ET_Legacy_flux_source_output_pert.bin` | Direct combined replay: all speed directions, non-entropy hybrid fluxes, flux divergence, and source terms. It installs one test-local combined enthalpy/sound-speed callback. |
 | CompOSE production-EOS integration | [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c) | Caller-supplied HDF5 path; Ubuntu-GCC builds `compose-test-table.h5` in the workspace root and passes it to the test. | Analytic asymmetric magnetized characteristic-speed expectations in all directions, production tabulated clamp/mutation, identical-state HLLE/entropy flux, and source-term checks. This focused execution exists only in the Ubuntu-GCC `compose-regularized-eos` job. |
 
 Related contract routes:
@@ -40,7 +40,7 @@ Related contract routes:
 | Generator | Files it writes | Fixture role |
 | --- | --- | --- |
 | [Unit_Tests/data_gen/unit_test_data_hybrid_flux.c](../../../Unit_Tests/data_gen/unit_test_data_hybrid_flux.c) | `hybrid_flux_input.bin`, `hybrid_flux_output.bin`, `hybrid_flux_output_pert.bin` | Generates hybrid face data, calls all speed and direct HLLE variants, then writes outputs. Producer and consumer use the same kernels, so outputs are regression references, not an independent oracle. |
-| [Unit_Tests/data_gen/unit_test_data_tabulated_flux.c](../../../Unit_Tests/data_gen/unit_test_data_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Initializes LS220, replaces production enthalpy dispatch with the test helper, calls all speed and direct tabulated HLLE variants, and writes same-kernel regression references. |
+| [Unit_Tests/data_gen/unit_test_data_tabulated_flux.c](../../../Unit_Tests/data_gen/unit_test_data_tabulated_flux.c) | `tabulated_flux_input.bin`, `tabulated_flux_output.bin`, `tabulated_flux_output_pert.bin` | Initializes LS220, replaces production combined enthalpy/sound-speed dispatch with `ghl_test_compute_h_and_cs2`, calls all speed and direct tabulated HLLE variants, and writes same-kernel regression references. |
 | [Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c](../../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c) | `ET_Legacy_flux_source_input.bin`, `ET_Legacy_flux_source_input_pert.bin` | Generates local ET Legacy input-side fixtures for metric, curvature, primitives, and face states. The test consumes downloaded trusted output and perturbed-output fixtures. |
 
 Generator source presence does not mean CI regenerates trusted data. The
@@ -58,8 +58,11 @@ checking HLLE output. The ET Legacy flux/source test instead computes `cmin` and
 
 Neither ordinary flux replay recomputes characteristic speeds. ET Legacy does,
 but against its test-local EOS callback. The CompOSE integration test separately
-covers production tabulated speed dispatch and clamp/mutation behavior. No
-committed check injects a characteristic-speed callback error.
+covers production tabulated speed dispatch and clamp/mutation behavior.
+`unit_test_hybrid_flux` injects errors at both callback positions in all three
+checked characteristic-speed directions and checks that both outputs stay
+unchanged. No committed check injects a failure into the production tabulated
+callback during a characteristic-speed call.
 
 Do not duplicate speed equations in this page. Public behavior and formula
 routes belong to [characteristic-speeds-contract.md](characteristic-speeds-contract.md),
@@ -89,7 +92,8 @@ routes belong to [characteristic-speeds-contract.md](characteristic-speeds-contr
   `./test/unit_test_tabulated_flux`.
 - The runner downloads Flux fixtures from the immutable TestData reference
   recorded in `.github/et-legacy-testdata-ref`. Its exit trap removes only
-  files created or decompressed by that run and preserves preexisting paths.
+  run-created paths, including its private expected-error work directory, and
+  preserves preexisting paths.
 - The workflow files under [.github/workflows/](../../../.github/workflows/)
   have a `flux` job matrix for `hybrid_flux` and `tabulated_flux`. The shared
   compile action builds `make tests datagen`, but test execution still uses

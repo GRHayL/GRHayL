@@ -160,8 +160,8 @@ from generated docs.
 Local evidence:
 
 - `GRHayL/Flux_Source/GRHayL_rhs.py` resolves its NRPy imports relative to the
-  script, requires an explicit new or empty staging directory outside the
-  source tree, and generates the complete output set.
+  script, requires an explicit new or empty staging directory outside
+  `GRHayL/Flux_Source`, and generates the complete output set.
 - `GRHayL/Flux_Source/IGM_Characteristic_Speeds.py` contains code paths that
   write `ghl_calculate_characteristic_speed_dirn*.c`.
 - `GRHayL/Flux_Source/IGM_All_fluxes.py` contains code paths that write
@@ -184,8 +184,9 @@ Generated or derived C files confirmed by local generator paths:
 From the repository root, first install
 `GRHayL/Flux_Source/requirements.txt` in a disposable Python environment, then
 use `python3 GRHayL/Flux_Source/GRHayL_rhs.py <empty-staging-directory>`. The
-script enforces the pinned SymPy version, rejects source-tree and nonempty
-destinations, and checks its output set against the root and variant `make.code.defn`
-manifests. The pin stabilizes symbolic simplification and CSE ordering; the
-source-term generator explicitly normalizes its known square-root printer form.
+script enforces the pinned SymPy version, rejects destinations inside
+`GRHayL/Flux_Source` and nonempty destinations, and checks its output set
+against the root and variant `make.code.defn` manifests. The pin stabilizes
+symbolic simplification and CSE ordering; the source-term generator explicitly
+normalizes its known square-root printer form.
 Review and verify staged output before replacing checked-in C.

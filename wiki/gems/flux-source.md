@@ -32,9 +32,9 @@ Key public surface:
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated`
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy`
 
-Direct suffixed HLLE functions are the public call surface. The former unwired
-generic direction globals have been removed. Route details to the
-[HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
+Direct suffixed HLLE functions are the supported callable routes. Deprecated
+generic direction globals remain exported but unwired for compatibility. Route
+details to the [HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
 
 ## Implementation Paths
 

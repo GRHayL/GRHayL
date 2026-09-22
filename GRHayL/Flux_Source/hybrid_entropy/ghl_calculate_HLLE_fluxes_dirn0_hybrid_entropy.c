@@ -20,10 +20,13 @@ if(cmin_clamped > DBL_MAX - cmax_clamped ||
 const double wavespeed_sum = cmin_clamped + cmax_clamped;
 if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0/DBL_MAX)
   return ghl_error_invalid_hlle_wavespeeds;
+const double wavespeed_product = cmin_clamped*cmax_clamped;
+if(cmin_clamped > 0.0 && cmax_clamped > 0.0 && wavespeed_product == 0.0)
+  return ghl_error_invalid_hlle_wavespeeds;
 const double cmin_weight = cmin_clamped/wavespeed_sum;
 const double cmax_weight = cmax_clamped/wavespeed_sum;
 const double dissipation_speed =
-      cmin_clamped*cmax_clamped/wavespeed_sum;
+      wavespeed_product/wavespeed_sum;
 
 double h_r, h_l, cs2_r, cs2_l;
 

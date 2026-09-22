@@ -4,6 +4,8 @@
 #include "ghl.h"
 #include <float.h>
 
+static const double TINYDOUBLE = 1e-100;
+
 /* GRHayL primitive magnetic fields already include the 1/sqrt(4 pi) rescaling. */
 static const double SQRT_4_PI = 1;
 

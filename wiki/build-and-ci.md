@@ -254,15 +254,16 @@ workflow matrix and not a fixture generator:
    where needed, decompressing `*.bz2` files.
 6. Runs the compiled tests under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Runs `unit_test_code_error` over error-code keys `0` through `87`, expecting
+7. Runs `unit_test_code_error` over error-code keys `0` through `88`, expecting
    each invocation to fail at process level.
 8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
    `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;
    this records only the visible runner/workflow setup command for NN-enabled
    tabulated replay.
 9. Continues selected compiled-test runs.
-10. An `EXIT` trap removes only paths downloaded or decompressed by that run;
-    preexisting files are preserved, including on early failure.
+10. An `EXIT` trap removes only paths created by that run, including downloaded
+    or decompressed files and its private expected-error work directory;
+    preexisting paths are preserved, including on early failure.
 
 The runner directly invokes every configured default test binary except
 `unit_test_WENOZ_reconstruction` (workflow matrices invoke it),
