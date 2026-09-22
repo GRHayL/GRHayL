@@ -909,11 +909,11 @@ TEXEOBJS = ${texeobjs}
 ${LINKEXE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) \$(TOBJS) $< -o \$@ \$(LD_FLAGS) -L\$(BUILDDIR)/lib -l${libname}
 
-\$(TOBJS): \$(BUILDDIR)/%.o: %.c \$(INC)
+\$(TOBJS): \$(BUILDDIR)/%.o: %.c \$(INC) \$(wildcard Unit_Tests/*.h)
 ${COMPILE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) -c $< -o \$@
 
-\$(TEXEOBJS): \$(BUILDDIR)/%.o: %.c \$(INC)
+\$(TEXEOBJS): \$(BUILDDIR)/%.o: %.c \$(INC) \$(wildcard Unit_Tests/*.h)
 ${COMPILE_MESSAGE}
 ${TAB}${SILENT}\$(CCOMPILEOMP) -c $< -o \$@
 "
