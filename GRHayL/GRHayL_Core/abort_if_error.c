@@ -104,11 +104,14 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
     GHL_CASE_ERROR(
           ghl_error_nrpyleakage_nonfinite_output,
           "NRPyLeakage replaced one or more non-finite outputs.\n");
-    GHL_CASE_ERROR(ghl_error_invalid_neos,
-                   "Hybrid EOS piece count is outside the supported range.\n");
-    GHL_CASE_ERROR(ghl_error_invalid_eos_parameters,
-                   "EOS parameters are invalid or produce non-finite state.\n");
-    GHL_CASE_ERROR(ghl_error_invalid_eos_table,
-                   "EOS table dimensions, grid, or derived data are invalid.\n");
+    GHL_CASE_ERROR(
+          ghl_error_invalid_neos,
+          "Hybrid EOS piece count is outside the supported range.\n");
+    GHL_CASE_ERROR(
+          ghl_error_invalid_eos_parameters,
+          "EOS parameters are invalid or produce non-finite state.\n");
+    GHL_CASE_ERROR(
+          ghl_error_invalid_eos_table,
+          "EOS table dimensions, grid, or derived data are invalid.\n");
   }
 }

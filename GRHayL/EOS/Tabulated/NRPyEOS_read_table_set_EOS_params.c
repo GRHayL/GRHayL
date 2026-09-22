@@ -58,9 +58,9 @@ static ghl_error_codes_t validate_biased_axis(
   const double x0 = axis[0];
   const double values[2] = {
     (axis[0] - x0 - 1.0e-10) * inverse_spacing,
-    (axis[n-1] - x0 - 1.0e-10) * inverse_spacing,
+    (axis[n - 1] - x0 - 1.0e-10) * inverse_spacing,
   };
-  for(int i=0; i<2; i++) {
+  for(int i = 0; i < 2; i++) {
     if(!isfinite(values[i]) || values[i] < (double)INT_MIN
        || values[i] > (double)(INT_MAX - 1)) {
       return ghl_error_invalid_eos_table;
@@ -95,7 +95,6 @@ ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(
   }
 
   if(err != ghl_success) {
-    NRPyEOS_free_memory(eos);
     return err;
   }
 
@@ -121,23 +120,27 @@ ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(
   if(!isfinite(eos->table_rho_min) || eos->table_rho_min <= 0.0
      || !isfinite(eos->table_rho_max) || eos->table_rho_max <= 0.0
      || !isfinite(eos->table_T_min) || eos->table_T_min <= 0.0
-     || !isfinite(eos->table_T_max) || eos->table_T_max <= 0.0
-     || !isfinite(eos->dtempi) || eos->dtempi <= 0.0
-     || !isfinite(eos->drhoi) || eos->drhoi <= 0.0
-     || !isfinite(eos->dyei) || eos->dyei <= 0.0
-     || !isfinite(eos->drhotempi) || eos->drhotempi <= 0.0
-     || !isfinite(eos->drhoyei) || eos->drhoyei <= 0.0
-     || !isfinite(eos->dtempyei) || eos->dtempyei <= 0.0
-     || !isfinite(eos->drhotempyei) || eos->drhotempyei <= 0.0) {
+     || !isfinite(eos->table_T_max) || eos->table_T_max <= 0.0 || !isfinite(eos->dtempi)
+     || eos->dtempi <= 0.0 || !isfinite(eos->drhoi) || eos->drhoi <= 0.0
+     || !isfinite(eos->dyei) || eos->dyei <= 0.0 || !isfinite(eos->drhotempi)
+     || eos->drhotempi <= 0.0 || !isfinite(eos->drhoyei) || eos->drhoyei <= 0.0
+     || !isfinite(eos->dtempyei) || eos->dtempyei <= 0.0 || !isfinite(eos->drhotempyei)
+     || eos->drhotempyei <= 0.0) {
     err = ghl_error_invalid_eos_table;
     goto cleanup;
   }
   err = validate_biased_axis(eos->table_logrho, eos->N_rho, eos->drhoi);
-  if(err != ghl_success) goto cleanup;
+  if(err != ghl_success) {
+    goto cleanup;
+  }
   err = validate_biased_axis(eos->table_logT, eos->N_T, eos->dtempi);
-  if(err != ghl_success) goto cleanup;
+  if(err != ghl_success) {
+    goto cleanup;
+  }
   err = validate_biased_axis(eos->table_Y_e, eos->N_Ye, eos->dyei);
-  if(err != ghl_success) goto cleanup;
+  if(err != ghl_success) {
+    goto cleanup;
+  }
 
   const int npoints = eos->N_rho * eos->N_T * eos->N_Ye;
   for(int i = 0; i < npoints; i++) {
@@ -162,8 +165,10 @@ ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(
     eos->table_all[idx] *= CGS_TO_CODE_PRESSURE / CGS_TO_CODE_ENERGY;
   }
 
-  err = NRPyEOS_tabulate_enthalpy(eos);
-  if(err != ghl_success) goto cleanup;
+  err = NRPyEOS_tabulate_enthalpy_checked(eos);
+  if(err != ghl_success) {
+    goto cleanup;
+  }
   NRPyEOS_tabulated_adjust_sound_speed(eos, cs2_is_relativistic);
 
   eos->table_P_min = exp(get_EOS_table_min(eos, NRPyEOS_press_key));

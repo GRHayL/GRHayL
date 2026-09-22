@@ -17,11 +17,13 @@ ghl_error_codes_t NRPyEOS_stellarcollapse_check_dimensions(
 
   size_t limit = (size_t)INT_MAX / NRPyEOS_ntablekeys;
   const size_t allocation_limit = SIZE_MAX / sizeof(double) / NRPyEOS_ntablekeys;
-  if(allocation_limit < limit) limit = allocation_limit;
+  if(allocation_limit < limit) {
+    limit = allocation_limit;
+  }
 
-  const int dimensions[3] = {n_rho, n_temperature, n_ye};
+  const int dimensions[3] = { n_rho, n_temperature, n_ye };
   size_t product = 1;
-  for(int i=0; i<3; i++) {
+  for(int i = 0; i < 3; i++) {
     if(product > limit / (size_t)dimensions[i]) {
       return ghl_error_invalid_eos_table;
     }
@@ -50,9 +52,11 @@ static ghl_error_codes_t table_has_rel_cs2(hid_t file, bool *has_rel_cs2) {
   *has_rel_cs2 = false;
   if(H5Lexists(file, "have_rel_cs2", H5P_DEFAULT) > 0) {
     int *flag = NULL;
-    const ghl_error_codes_t error = NRPyEOS_hdf5_read_int_dataset(
-          file, "have_rel_cs2", 1, (void **)&flag);
-    if(error != ghl_success) return error;
+    const ghl_error_codes_t error
+          = NRPyEOS_hdf5_read_int_dataset(file, "have_rel_cs2", 1, (void **)&flag);
+    if(error != ghl_success) {
+      return error;
+    }
     *has_rel_cs2 = (*flag != 0);
     free(flag);
   }
@@ -80,13 +84,12 @@ static ghl_error_codes_t check_axis(
 
   double previous_x = x0;
   double previous_y = y0;
-  for(int i=0; i<n; i++) {
+  for(int i = 0; i < n; i++) {
     const double x = axis[i];
     const double y = x * scale + offset;
-    if(!isfinite(x) || (i > 0 && x <= previous_x)
-       || !isfinite((x - x0) * dxi)
-       || fabs((x - x0) * dxi - (double)i) > 1.0e-8
-       || !isfinite(y) || (i > 0 && y <= previous_y)
+    if(!isfinite(x) || (i > 0 && x <= previous_x) || !isfinite((x - x0) * dxi)
+       || fabs((x - x0) * dxi - (double)i) > 1.0e-8 || !isfinite(y)
+       || (i > 0 && y <= previous_y)
        || (transform_changes_values
            && (!isfinite((y - y0) * dyi)
                || fabs((y - y0) * dyi - (double)i) > 1.0e-8))) {
@@ -128,8 +131,7 @@ ghl_error_codes_t NRPyEOS_stellarcollapse_read_table(
     return ghl_error_out_of_memory;
   }
 
-  ghl_error_codes_t err = table_has_rel_cs2(
-        file_id, &table->cs2_is_relativistic);
+  ghl_error_codes_t err = table_has_rel_cs2(file_id, &table->cs2_is_relativistic);
   if(err != ghl_success) {
     free(table);
     H5Fclose(file_id);
@@ -166,13 +168,13 @@ ghl_error_codes_t NRPyEOS_stellarcollapse_read_table(
 
   const double log10_to_ln = log(10.0);
   GHL_GOTO_CLEANUP_IF_ERROR(check_axis(
-        table->log10_rho, table->n_rho, log10_to_ln,
-        log(CGS_TO_CODE_DENSITY), "density"));
+        table->log10_rho, table->n_rho, log10_to_ln, log(CGS_TO_CODE_DENSITY),
+        "density"));
   GHL_GOTO_CLEANUP_IF_ERROR(check_axis(
-        table->log10_temperature, table->n_temperature,
-        log10_to_ln, 0.0, "temperature"));
-  GHL_GOTO_CLEANUP_IF_ERROR(check_axis(
-        table->ye, table->n_ye, 1.0, 0.0, "electron-fraction"));
+        table->log10_temperature, table->n_temperature, log10_to_ln, 0.0,
+        "temperature"));
+  GHL_GOTO_CLEANUP_IF_ERROR(
+        check_axis(table->ye, table->n_ye, 1.0, 0.0, "electron-fraction"));
 
   // Tabulated data
   for(int n = 0; n < NRPyEOS_sc_n_quantities; n++) {

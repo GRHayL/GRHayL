@@ -50,9 +50,9 @@
  * Source clients migrating to this interface must remove calls to the former
  * prototype-only `NRPyEOS_tabulated_get_index_rho` and
  * `NRPyEOS_tabulated_get_index_Ye` names and use the supported interpolation
- * routes instead. `NRPyEOS_tabulate_enthalpy` now returns a
- * `ghl_error_codes_t`; callers must check that status and rebuild against the
- * updated installed header.
+ * routes instead. `NRPyEOS_tabulate_enthalpy` retains its original `void`
+ * function type; the table loader uses `NRPyEOS_tabulate_enthalpy_checked` to
+ * reject invalid derived enthalpy.
  */
 
 /**

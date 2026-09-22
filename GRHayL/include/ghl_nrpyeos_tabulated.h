@@ -57,8 +57,10 @@ typedef enum {
 extern "C" {
 #endif
 
-// The reader requires a zero-initialized or previously cleaned non-owning EOS
-// object. On failure, newly allocated table pointers are released and null.
+// Calls that reach conversion require a zero-initialized or previously cleaned
+// non-owning EOS object. Failures before conversion preserve existing fields.
+// Conversion-allocation and later validation failures release and null table
+// pointers; scalar fields may change.
 ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(
       const char *nuceos_table_name,
       ghl_eos_parameters *restrict eos_params);
@@ -363,7 +365,10 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_deps_dP_from_rho(
       double *restrict deps_dP);
 
 // Returns ghl_error_invalid_eos_table before storing a non-finite log(h).
-ghl_error_codes_t NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos);
+ghl_error_codes_t NRPyEOS_tabulate_enthalpy_checked(ghl_eos_parameters *restrict eos);
+
+// Compatibility wrapper for callers that use the original public function type.
+void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_tabulated_adjust_sound_speed(ghl_eos_parameters *restrict eos, bool cs2_is_relativistic);
 

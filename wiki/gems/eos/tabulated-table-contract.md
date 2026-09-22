@@ -62,7 +62,7 @@ to
 6. Post-read processing: `NRPyEOS_read_table_set_EOS_params` validates derived
    physical bounds, interpolation strides/products, and biased index
    representability; converts pressure, energy, sound-speed, and derivative
-   units; fills `table_eps`; checks `NRPyEOS_tabulate_enthalpy`; calls
+   units; fills `table_eps`; checks `NRPyEOS_tabulate_enthalpy_checked`; calls
    `NRPyEOS_tabulated_adjust_sound_speed`; and computes table bounds.
 7. Cleanup: the temporary stellar-collapse table is freed after conversion, and
    GRHayL table memory is later released through `NRPyEOS_free_memory`; see
@@ -99,8 +99,10 @@ arrays, cached beta-equilibrium arrays, and the NN model. Cleanup is repeatable
 for successful, failed-empty, previously cleaned, or properly zero-initialized
 objects; it does not free the outer struct or make arbitrary uninitialized
 storage safe. The direct low-level reader has the corresponding configured-empty
-precondition and releases newly owned table state on failure. Disabled-HDF5
-initialization allocates nothing and requires no cleanup.
+precondition for calls that reach conversion. Failures before conversion preserve
+pre-call fields. Conversion-allocation and later validation failures release and
+null table pointers; scalar fields need not roll back. Disabled-HDF5 initialization
+allocates nothing and requires no cleanup.
 
 ## Units And Energy Shift
 

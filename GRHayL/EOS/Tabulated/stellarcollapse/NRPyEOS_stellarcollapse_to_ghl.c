@@ -8,7 +8,9 @@ ghl_error_codes_t NRPyEOS_stellarcollapse_to_ghl(
   size_t checked_npoints;
   ghl_error_codes_t err = NRPyEOS_stellarcollapse_check_dimensions(
         sc->n_rho, sc->n_temperature, sc->n_ye, &checked_npoints);
-  if(err != ghl_success) return err;
+  if(err != ghl_success) {
+    return err;
+  }
 
   eos->N_rho = sc->n_rho;
   eos->N_T = sc->n_temperature;

@@ -1,7 +1,7 @@
 #include "ghl_con2prim.h"
+#include "ghl_eos_functions_declaration.h"
 #include "ghl_nrpyeos_hybrid.h"
 #include "ghl_nrpyeos_tabulated.h"
-#include "ghl_eos_functions_declaration.h"
 #include <float.h>
 
 #define init_common_eos_quantities \
@@ -65,12 +65,17 @@ ghl_error_codes_t ghl_initialize_simple_eos(
       const double Gamma,
       ghl_eos_parameters *eos) {
 
-  if(eos == NULL) return ghl_error_eos_struct_is_null;
-  if(!isfinite(rho_atm) || rho_atm <= 0.0) return ghl_error_invalid_rho_atm;
-  if(!isfinite(press_atm) || press_atm < 0.0) return ghl_error_invalid_press_atm;
-  if(!isfinite(rho_min) || !isfinite(rho_max)
-     || !isfinite(press_min) || !isfinite(press_max)
-     || !isfinite(Gamma) || Gamma == 0.0 || Gamma == 1.0) {
+  if(eos == NULL) {
+    return ghl_error_eos_struct_is_null;
+  }
+  if(!isfinite(rho_atm) || rho_atm <= 0.0) {
+    return ghl_error_invalid_rho_atm;
+  }
+  if(!isfinite(press_atm) || press_atm < 0.0) {
+    return ghl_error_invalid_press_atm;
+  }
+  if(!isfinite(rho_min) || !isfinite(rho_max) || !isfinite(press_min)
+     || !isfinite(press_max) || !isfinite(Gamma) || Gamma == 0.0 || Gamma == 1.0) {
     return ghl_error_invalid_eos_parameters;
   }
 
@@ -83,7 +88,9 @@ ghl_error_codes_t ghl_initialize_simple_eos(
     ghl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
     rho_max = 1e300;
   }
-  if(rho_max <= 0.0) return ghl_error_invalid_eos_parameters;
+  if(rho_max <= 0.0) {
+    return ghl_error_invalid_eos_parameters;
+  }
   if(rho_min > rho_max) return ghl_error_rho_min_gt_rho_max;
 
   if(press_min < 0) {
@@ -96,7 +103,7 @@ ghl_error_codes_t ghl_initialize_simple_eos(
   }
   if(press_min > press_max) return ghl_error_press_min_gt_press_max;
 
-  ghl_eos_parameters candidate = {0};
+  ghl_eos_parameters candidate = { 0 };
   ghl_eos_parameters *const output = eos;
   eos = &candidate;
 
@@ -128,18 +135,22 @@ ghl_error_codes_t ghl_initialize_simple_eos(
   if(eos->rho_max == 1e300 || eos->press_max == 1e300) {
     eos->eps_max = DBL_MAX;
     eos->entropy_max = DBL_MAX;
-  } else {
-    eos->eps_max = eos->press_max/(eos->rho_max*Gm1);
-    eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+  }
+  else {
+    eos->eps_max = eos->press_max / (eos->rho_max * Gm1);
+    eos->entropy_max
+          = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
   }
 
   // --------------- Floors ---------------
   if(eos->rho_min == 0.0) {
     eos->eps_min = -DBL_MAX;
     eos->entropy_min = -DBL_MAX;
-  } else {
-    eos->eps_min = eos->press_min/(eos->rho_min*Gm1);
-    eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  }
+  else {
+    eos->eps_min = eos->press_min / (eos->rho_min * Gm1);
+    eos->entropy_min
+          = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
   }
 
   // --------- Atmospheric values ---------
@@ -151,9 +162,10 @@ ghl_error_codes_t ghl_initialize_simple_eos(
   // --------------------------------------
 
   if(!isfinite(eos->rho_atm) || !isfinite(eos->rho_min) || !isfinite(eos->rho_max)
-     || !isfinite(eos->press_atm) || !isfinite(eos->press_min) || !isfinite(eos->press_max)
-     || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min) || !isfinite(eos->eps_max)
-     || !isfinite(eos->entropy_atm) || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
+     || !isfinite(eos->press_atm) || !isfinite(eos->press_min)
+     || !isfinite(eos->press_max) || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min)
+     || !isfinite(eos->eps_max) || !isfinite(eos->entropy_atm)
+     || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
      || !isfinite(eos->tau_atm)) {
     return ghl_error_invalid_eos_parameters;
   }
@@ -176,23 +188,28 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
       const double Gamma_th,
       ghl_eos_parameters *eos) {
 
-  if(eos == NULL) return ghl_error_eos_struct_is_null;
-  if(neos < 1 || neos > MAX_EOS_PARAMS) return ghl_error_invalid_neos;
-  if(!isfinite(rho_atm) || rho_atm <= 0.0) return ghl_error_invalid_rho_atm;
-  if(!isfinite(rho_min) || !isfinite(rho_max)
-     || !isfinite(K_ppoly0) || K_ppoly0 == 0.0
-     || !isfinite(Gamma_th) || Gamma_th == 1.0
-     || Gamma_ppoly == NULL || (neos > 1 && rho_ppoly == NULL)) {
+  if(eos == NULL) {
+    return ghl_error_eos_struct_is_null;
+  }
+  if(neos < 1 || neos > MAX_EOS_PARAMS) {
+    return ghl_error_invalid_neos;
+  }
+  if(!isfinite(rho_atm) || rho_atm <= 0.0) {
+    return ghl_error_invalid_rho_atm;
+  }
+  if(!isfinite(rho_min) || !isfinite(rho_max) || !isfinite(K_ppoly0) || K_ppoly0 == 0.0
+     || !isfinite(Gamma_th) || Gamma_th == 1.0 || Gamma_ppoly == NULL
+     || (neos > 1 && rho_ppoly == NULL)) {
     return ghl_error_invalid_eos_parameters;
   }
-  for(int j=0; j<neos; j++) {
+  for(int j = 0; j < neos; j++) {
     if(!isfinite(Gamma_ppoly[j]) || Gamma_ppoly[j] == 0.0 || Gamma_ppoly[j] == 1.0) {
       return ghl_error_invalid_eos_parameters;
     }
   }
-  for(int j=0; j<neos-1; j++) {
+  for(int j = 0; j < neos - 1; j++) {
     if(!isfinite(rho_ppoly[j]) || rho_ppoly[j] <= 0.0
-       || (j > 0 && rho_ppoly[j] <= rho_ppoly[j-1])) {
+       || (j > 0 && rho_ppoly[j] <= rho_ppoly[j - 1])) {
       return ghl_error_invalid_eos_parameters;
     }
   }
@@ -206,10 +223,12 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
     ghl_warn("Maximum density not provided. Disabling density ceiling (rho_max = 1e300)\n");
     rho_max = 1e300;
   }
-  if(rho_max <= 0.0) return ghl_error_invalid_eos_parameters;
+  if(rho_max <= 0.0) {
+    return ghl_error_invalid_eos_parameters;
+  }
   if(rho_min > rho_max) return ghl_error_rho_min_gt_rho_max;
 
-  ghl_eos_parameters candidate = {0};
+  ghl_eos_parameters candidate = { 0 };
   ghl_eos_parameters *const output = eos;
   eos = &candidate;
 
@@ -223,12 +242,16 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   eos->neos = neos;
   eos->Gamma_th = Gamma_th;
   eos->K_ppoly[0] = K_ppoly0;
-  for(int j=0; j<neos-1; j++) eos->rho_ppoly[j] = rho_ppoly[j];
-  for(int j=0; j<neos; j++) eos->Gamma_ppoly[j] = Gamma_ppoly[j];
+  for(int j = 0; j < neos - 1; j++) {
+    eos->rho_ppoly[j] = rho_ppoly[j];
+  }
+  for(int j = 0; j < neos; j++) {
+    eos->Gamma_ppoly[j] = Gamma_ppoly[j];
+  }
 
   // Step 4: Initialize {K_{j}}, j>=1, and {eps_integ_const_{j}}
   ghl_hybrid_set_K_ppoly_and_eps_integ_consts(eos);
-  for(int j=0; j<neos; j++) {
+  for(int j = 0; j < neos; j++) {
     if(!isfinite(eos->K_ppoly[j]) || eos->K_ppoly[j] == 0.0
        || !isfinite(eos->eps_integ_const[j])) {
       return ghl_error_invalid_eos_parameters;
@@ -236,11 +259,13 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   }
 
   // Initialize pressure breakpoints after the piece coefficients.
-  for(int j=0; j<eos->neos-1; j++) {
+  for(int j = 0; j < eos->neos - 1; j++) {
     double P, eps;
     ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_ppoly[j], &P, &eps);
     eos->p_ppoly[j] = P;
-    if(!isfinite(eos->p_ppoly[j])) return ghl_error_invalid_eos_parameters;
+    if(!isfinite(eos->p_ppoly[j])) {
+      return ghl_error_invalid_eos_parameters;
+    }
   }
 
   // -------------- Ceilings --------------
@@ -248,9 +273,12 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
     eos->press_max = DBL_MAX;
     eos->eps_max = DBL_MAX;
     eos->entropy_max = DBL_MAX;
-  } else {
-    ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_max, &eos->press_max, &eos->eps_max);
-    eos->entropy_max = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+  }
+  else {
+    ghl_hybrid_compute_P_cold_and_eps_cold(
+          eos, eos->rho_max, &eos->press_max, &eos->eps_max);
+    eos->entropy_max
+          = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
   }
   // --------------------------------------
 
@@ -259,9 +287,12 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
     eos->press_min = -DBL_MAX;
     eos->eps_min = -DBL_MAX;
     eos->entropy_min = -DBL_MAX;
-  } else {
-    ghl_hybrid_compute_P_cold_and_eps_cold(eos, eos->rho_min, &eos->press_min, &eos->eps_min);
-    eos->entropy_min = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
+  }
+  else {
+    ghl_hybrid_compute_P_cold_and_eps_cold(
+          eos, eos->rho_min, &eos->press_min, &eos->eps_min);
+    eos->entropy_min
+          = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
   }
   // --------------------------------------
 
@@ -280,9 +311,10 @@ ghl_error_codes_t ghl_initialize_hybrid_eos(
   eos->T_atm = 0.0;
 
   if(!isfinite(eos->rho_atm) || !isfinite(eos->rho_min) || !isfinite(eos->rho_max)
-     || !isfinite(eos->press_atm) || !isfinite(eos->press_min) || !isfinite(eos->press_max)
-     || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min) || !isfinite(eos->eps_max)
-     || !isfinite(eos->entropy_atm) || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
+     || !isfinite(eos->press_atm) || !isfinite(eos->press_min)
+     || !isfinite(eos->press_max) || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min)
+     || !isfinite(eos->eps_max) || !isfinite(eos->entropy_atm)
+     || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
      || !isfinite(eos->tau_atm)) {
     return ghl_error_invalid_eos_parameters;
   }
@@ -310,12 +342,14 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
       double T_max,
       ghl_eos_parameters *eos) {
 
-  if(eos == NULL) return ghl_error_eos_struct_is_null;
+  if(eos == NULL) {
+    return ghl_error_eos_struct_is_null;
+  }
 #ifdef GHL_DISABLE_HDF5
-  *eos = (ghl_eos_parameters){.eos_type = ghl_eos_tabulated};
+  *eos = (ghl_eos_parameters){ .eos_type = ghl_eos_tabulated };
   return ghl_error_used_disabled_hdf5;
 #else
-  ghl_eos_parameters candidate = {0};
+  ghl_eos_parameters candidate = { 0 };
   ghl_eos_parameters *const output = eos;
   eos = &candidate;
 
@@ -328,9 +362,9 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
 
   ghl_error_codes_t err;
 
-  if(!isfinite(rho_atm) || !isfinite(rho_min) || !isfinite(rho_max)
-     || !isfinite(Y_e_atm) || !isfinite(Y_e_min) || !isfinite(Y_e_max)
-     || !isfinite(T_atm) || !isfinite(T_min) || !isfinite(T_max)) {
+  if(!isfinite(rho_atm) || !isfinite(rho_min) || !isfinite(rho_max) || !isfinite(Y_e_atm)
+     || !isfinite(Y_e_min) || !isfinite(Y_e_max) || !isfinite(T_atm) || !isfinite(T_min)
+     || !isfinite(T_max)) {
     err = ghl_error_invalid_eos_parameters;
     goto cleanup;
   }
@@ -449,9 +483,10 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
   if(!isfinite(eos->rho_atm) || !isfinite(eos->rho_min) || !isfinite(eos->rho_max)
      || !isfinite(eos->Y_e_atm) || !isfinite(eos->Y_e_min) || !isfinite(eos->Y_e_max)
      || !isfinite(eos->T_atm) || !isfinite(eos->T_min) || !isfinite(eos->T_max)
-     || !isfinite(eos->press_atm) || !isfinite(eos->press_min) || !isfinite(eos->press_max)
-     || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min) || !isfinite(eos->eps_max)
-     || !isfinite(eos->entropy_atm) || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
+     || !isfinite(eos->press_atm) || !isfinite(eos->press_min)
+     || !isfinite(eos->press_max) || !isfinite(eos->eps_atm) || !isfinite(eos->eps_min)
+     || !isfinite(eos->eps_max) || !isfinite(eos->entropy_atm)
+     || !isfinite(eos->entropy_min) || !isfinite(eos->entropy_max)
      || !isfinite(eos->tau_atm)) {
     err = ghl_error_invalid_eos_parameters;
     goto cleanup;
@@ -461,7 +496,7 @@ ghl_error_codes_t ghl_initialize_tabulated_eos(
 
 cleanup:
   ghl_tabulated_free_memory(&candidate);
-  *output = (ghl_eos_parameters){.eos_type = ghl_eos_tabulated};
+  *output = (ghl_eos_parameters){ .eos_type = ghl_eos_tabulated };
   return err;
 #endif
 }
@@ -529,9 +564,11 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
       const double T_max,
       ghl_eos_parameters *restrict eos) {
 
-  if(eos == NULL) return ghl_error_eos_struct_is_null;
+  if(eos == NULL) {
+    return ghl_error_eos_struct_is_null;
+  }
 #ifdef GHL_DISABLE_HDF5
-  *eos = (ghl_eos_parameters){.eos_type = ghl_eos_tabulated};
+  *eos = (ghl_eos_parameters){ .eos_type = ghl_eos_tabulated };
   return ghl_error_used_disabled_hdf5;
 #else
   // FIXME: these are hard-coded default values for now

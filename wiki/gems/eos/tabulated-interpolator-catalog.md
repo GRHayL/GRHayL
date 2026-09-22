@@ -126,10 +126,10 @@ cache fields is outside the implemented contract.
 Derived enthalpy tabulation is owned by
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c).
 It fills the enthalpy table slot and `table_logh` using already converted table
-state and the stored energy shift. Non-positive or non-finite enthalpy returns
+state and the stored energy shift. `NRPyEOS_tabulate_enthalpy_checked` returns
 `ghl_error_invalid_eos_table` before evaluating or storing `log(h)`; the owning
-loader then discards the table. This return-type correction requires clients
-with typed declarations or function pointers to rebuild.
+loader then discards the table. The original `void NRPyEOS_tabulate_enthalpy`
+function remains as a source-compatible wrapper for direct callers.
 
 Sound-speed normalization and optional cleaning are owned by
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c).
