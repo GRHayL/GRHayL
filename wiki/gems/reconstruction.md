@@ -63,10 +63,8 @@ Key public surface:
   gems as intended consumers; do not turn that architecture statement into an
   in-tree caller claim.
 
-`docs/raw/Reconstruction.dox` also says the current method categories are only
-PLM and PPM, then defines a WENO group. The manifest, header, source, direct
-test, and every compiler workflow matrix contain WENOZ. Treat the two-category
-sentence as stale Doxygen evidence, not current support truth.
+`docs/raw/Reconstruction.dox` lists PLM, PPM, and WENO methods. The manifest,
+header, source, direct test, and every compiler workflow matrix contain WENOZ.
 
 ## Common Edit Routes
 
@@ -81,8 +79,9 @@ sentence as stale Doxygen evidence, not current support truth.
 - PPM parameter changes in `ghl_parameters` affect initialization and downstream GRHayLib parameters.
 - New source subdirectories require GRHayLib build-list coordination.
 - Reconstruction replay tests branch on `ghl_pert_test_fail`, so numerical
-  mismatches can fail them. Their generators still have boundary-safety gaps
-  documented in [Tests and fixtures](reconstruction/tests-and-fixtures.md).
+  mismatches can fail them. Their generators serialize deterministic zero
+  placeholders outside valid stencil intervals; see
+  [Tests and fixtures](reconstruction/tests-and-fixtures.md).
 
 ## Do Not Duplicate
 

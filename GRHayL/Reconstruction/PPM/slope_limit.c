@@ -67,7 +67,7 @@ double ghl_slope_limit(
       const double dUp1) {
 
 #define SLOPE_LIMITER_COEFF 2.0
-  if(dU*dUp1 > 0.0) {
+  if((dU > 0.0 && dUp1 > 0.0) || (dU < 0.0 && dUp1 < 0.0)) {
     const double delta_m_U = 0.5*(dU + dUp1);
     // In short, sign_delta_a_j = sign(delta_m_U) = (0.0 < delta_m_U) - (delta_m_U < 0.0).
     //    If delta_m_U>0, then (0.0 < delta_m_U)==1, and (delta_m_U < 0.0)==0, so sign_delta_a_j=+1

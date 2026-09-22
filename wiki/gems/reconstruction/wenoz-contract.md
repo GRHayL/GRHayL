@@ -50,10 +50,15 @@ helper fixes linear weights to `{0.1, 0.6, 0.3}`, regularization epsilon to
 `1e-100`, and MC fallback coefficient to `2.0` in source. Any change to these
 is an implementation change, not runtime configuration.
 
-`docs/raw/Reconstruction.dox` defines a WENO group and says only WENO-z is
-supported, but an earlier sentence says current categories are only PLM and
-PPM. Header, manifest, source files, direct test, and workflows resolve
-that wording conflict in favor of current WENOZ build/test membership.
+`docs/raw/Reconstruction.dox` lists WENO among the current method families and
+says only WENO-z is supported. Header, manifest, source files, direct test, and
+workflows agree with that WENOZ build/test membership.
+
+The fixed regularization and unscaled double-precision weight ratios do not
+guarantee finite output for every finite stencil. Extreme smoothness contrasts
+can overflow the weights; for example, `{0, 0, 0, 1e105, 1e105}` can produce
+nonfinite face values. No occurrence at ordinary simulation scales has been
+established, but callers choose units and the API enforces no amplitude bound.
 
 ## Build And Coverage
 
@@ -71,10 +76,11 @@ WENOZ fixture generation is in
 The generator writes `WENOZ_reconstruction` input, output, and perturbed output
 fixtures using `ghl_wenoz_reconstruction`.
 
-The generator initializes wrapper outputs only for indices `3` through
-`arraylength-3`, then writes full allocated arrays. Replay reads full arrays but
-compares only that valid interior range. Boundary fixture values are therefore
-indeterminate and untested. No test calls the 5-point helper directly.
+The generator evaluates wrapper outputs only for indices `3` through
+`arraylength-3`, then writes full allocated arrays. It initializes unused
+boundary slots to deterministic zero placeholders. Replay reads full arrays but
+compares only the valid interior range. No test calls the 5-point helper
+directly.
 
 CI nuance: standalone reconstruction workflow jobs run `WENOZ_reconstruction`
 through the matrix in

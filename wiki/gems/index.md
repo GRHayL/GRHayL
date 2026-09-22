@@ -162,8 +162,7 @@ source, headers, tests, and common edit routes before wider search.
   [verification workflows](induction/verification-workflows.md) for targeted
   run guidance.
 - Drift/contract notes: staggered-grid assumptions are public caller contracts.
-  Keep docs, stencil shapes, and tests synchronized. Current `Az` helper comment
-  conflicts with arithmetic/test face mapping.
+  Keep docs, stencil shapes, and tests synchronized.
 
 ## Neutrinos
 
@@ -227,5 +226,5 @@ source, headers, tests, and common edit routes before wider search.
 - Drift/contract notes: PPM parameters live in `ghl_parameters`; stencil sizes,
   face orientation, and left/right naming are external caller contracts.
   Coverage gap: no dedicated PPM unit test file is obvious in `Unit_Tests/`.
-  Built routines have no production source caller in this repo; generator
-  bounds, PPM face comments, and Doxygen category wording remain defective.
+  Built routines have no production source caller in this repo. Generator
+  boundary placeholders are serialized but ignored by replay.

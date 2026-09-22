@@ -4,8 +4,8 @@
 /**
  * @ingroup ppm
  * @brief Reconstructs variables at the points
- * @sp10 \f$ Ur(i) = U \left(i-\frac{1}{2} + \epsilon \right) \f$
- * @sp10 \f$ Ul(i) = U \left(i+\frac{1}{2} - \epsilon \right) \f$
+ * @sp10 \f$ Ur(i) = U \left(i+\frac{1}{2} - \epsilon \right) \f$
+ * @sp10 \f$ Ul(i) = U \left(i-\frac{1}{2} + \epsilon \right) \f$
  *
  * @details
  * This function computes the right and left face values of a cell for a
@@ -61,19 +61,19 @@ void ghl_ppm_compute_for_cell_with_steepening(
   Ul = U0*ftilde + Ul*(1.0 - ftilde);
 
   // Then monotonize all variables
-  if ( (Ur - U0)*(U0 - Ul) <= 0.0) {
+  if ( (Ur <= U0 && Ul <= U0) || (Ur >= U0 && Ul >= U0) ) {
     *Ur_ptr = U0;
     *Ul_ptr = U0;
     return;
   }
 
   const double dU = Ur - Ul;
-  const double Utmp = dU*( U0 - 0.5*(Ur + Ul) );
+  const double Utmp = ( U0 - 0.5*(Ur + Ul) )/dU;
 
-  if ( Utmp > (1.0/6.0)*(dU*dU)) {
+  if ( Utmp > 1.0/6.0) {
     *Ur_ptr = Ur;
     *Ul_ptr = 3.0*U0 - 2.0*Ur;
-  } else if ( Utmp < -(1.0/6.0)*(dU*dU)) {
+  } else if ( Utmp < -1.0/6.0) {
     *Ur_ptr = 3.0*U0 - 2.0*Ul;
     *Ul_ptr = Ul;
   } else {
