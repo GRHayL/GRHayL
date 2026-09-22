@@ -32,9 +32,9 @@ jobs:
       - name: Copy test data to working directory
         run: |
           testdata_ref=$(cat .github/et-legacy-testdata-ref)
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_input.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/ET_Legacy/ET_Legacy_${{ matrix.test-function }}_output_pert.bin
       - name: Run ET IllinoisGRMHD unit test for ET_Legacy_${{ matrix.test-function }}
         run: ./test/unit_test_ET_Legacy_${{ matrix.test-function }}
       - name: Generate coverage report
@@ -63,10 +63,10 @@ jobs:
       - name: Copy test data to working directory
         run: |
           testdata_ref=$(cat .github/con2prim-testdata-ref)
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/metric_Bfield_initial_data.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_output_pert.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/metric_Bfield_initial_data.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_input.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_output.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/${testdata_ref}/con2prim/${{ matrix.test-function }}_output_pert.bin
       - name: Run con2prim unit test for ${{ matrix.test-function }} functions
         run: ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
@@ -117,7 +117,7 @@ jobs:
         with:
           compiler: 'gcc'
       - name: Copy test data to working directory
-        run: curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/EOS/simple_table.h5
+        run: curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/EOS/simple_table.h5
       - name: Run tabulated EOS unit test
         run: ./test/unit_test_tabulated_eos simple_table.h5
       - name: Generate coverage report
@@ -168,7 +168,7 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/grhayl_core/grhayl_core_test_suite_input.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/grhayl_core/grhayl_core_test_suite_input.bin
       - name: Run GRHayL_Core unit test
         run: ./test/unit_test_grhayl_core_test_suite
       - name: Generate coverage report
@@ -196,10 +196,10 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output_pert.bin
-          curl -O https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2 && bunzip2 LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_input.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/flux_source/${{ matrix.test-function }}_output_pert.bin
+          curl -f --retry 5 -O https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2 && bunzip2 LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2
       - name: Run flux unit test for ${{ matrix.test-function }} function
         run: ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
@@ -227,9 +227,9 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/reconstruction/${{ matrix.test-function }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/reconstruction/${{ matrix.test-function }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/reconstruction/${{ matrix.test-function }}_output_pert.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/reconstruction/${{ matrix.test-function }}_input.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/reconstruction/${{ matrix.test-function }}_output.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/reconstruction/${{ matrix.test-function }}_output_pert.bin
       - name: Run reconstruction unit test for ${{ matrix.test-function }} function
         run: ./test/unit_test_${{ matrix.test-function }}
       - name: Generate coverage report
@@ -262,9 +262,9 @@ jobs:
           ./test/unit_test_nrpyleakage_classifier_fallback
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_perturbed.bin
-          curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/Neutrinos/${{ matrix.test-function }}_perturbed.bin
+          curl -f --retry 5 -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run neutrinos unit test for ${{ matrix.test-function }} function
         run: ./test/unit_test_${{ matrix.test-function }} SLy4_3335_rho391_temp163_ye66.h5 1
       - name: Generate coverage report
@@ -295,27 +295,27 @@ jobs:
           python3 -m pip install pyghl==0.4.0
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_unperturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_perturbed.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
-          curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Palenzuela1D_entropy_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Newman1D_entropy_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_unperturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_rho_vs_T_perturbed.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/con2prim/con2prim_tabulated_Noble2D_Pmag_vs_Wm1_perturbed.bin
+          curl -f --retry 5 -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
           pyghl append SLy4_3335_rho391_temp163_ye66.h5
       - name: Run unit test for tabulated EOS Con2Prim routines
         run: ./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1
@@ -343,7 +343,7 @@ jobs:
           compiler: 'gcc'
       - name: Copy EOS table to working directory
         run: |
-          curl -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
+          curl -f --retry 5 -O https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2 && bunzip2 SLy4_3335_rho391_temp163_ye66.h5.bz2
       - name: Run unit test for error-catching
         run: |
           for i in {0..87}; do
@@ -383,10 +383,10 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.metric }}_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output_pert.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_input.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.metric }}_input.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/induction_interpolation_${{ matrix.centering }}_${{ matrix.metric }}_output_pert.bin
       - name: Run interpolation test using ${{ matrix.metric }} metric with ${{ matrix.centering }}-centering
         run: |
           ./test/unit_test_induction_${{ matrix.centering }}_${{ matrix.metric }}
@@ -414,11 +414,11 @@ jobs:
           compiler: 'gcc'
       - name: Copy test data to working directory
         run: |
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_input.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_B_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_B_output_pert.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_Btilde_output.bin
-          curl -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_Btilde_output_pert.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_input.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_B_output.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_B_output_pert.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_Btilde_output.bin
+          curl -f --retry 5 -O https://raw.githubusercontent.com/GRHayL/TestData/main/induction/HLL_flux_with_Btilde_output_pert.bin
       - name: Run test of HLL flux functions
         run: |
           ./test/unit_test_HLL_flux

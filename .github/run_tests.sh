@@ -28,7 +28,7 @@ download_file() {
     fi
   fi
 
-  curl -O "$url"
+  curl -f --retry 5 -O "$url"
 }
 
 et_legacy_testdata_ref=$(cat .github/et-legacy-testdata-ref)
