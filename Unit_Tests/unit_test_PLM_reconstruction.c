@@ -5,33 +5,40 @@ int main(int argc, char **argv) {
   FILE* infile = fopen_with_check("PLM_reconstruction_input.bin", "rb");
 
   int arraylength;
-  if(fread(&arraylength, sizeof(int), 1, infile) != 1)
-    ghl_error("An error has occured with reading the array length. Please check that data\n"
-                 "is up-to-date with current test version.\n");
-  if(arraylength < 4)
+  if(fread(&arraylength, sizeof(int), 1, infile) != 1) {
+    ghl_error(
+          "An error has occurred with reading the array length. Please check that data\n"
+          "is up-to-date with current test version.\n");
+  }
+  if(arraylength < 4) {
     ghl_error("The PLM reconstruction data must contain at least 4 points.\n");
+  }
 
   const size_t count = (size_t)arraylength;
-  if(count > SIZE_MAX/sizeof(double))
+  if(count > SIZE_MAX / sizeof(double)) {
     ghl_error("The PLM reconstruction data is too large to allocate safely.\n");
+  }
 
-  double *var = (double*) malloc(sizeof(double)*count);
+  double *var = (double *)malloc(sizeof(double) * count);
 
-  double *varr_trusted = (double*) malloc(sizeof(double)*count);
-  double *varl_trusted = (double*) malloc(sizeof(double)*count);
-  double *varr_pert    = (double*) malloc(sizeof(double)*count);
-  double *varl_pert    = (double*) malloc(sizeof(double)*count);
+  double *varr_trusted = (double *)malloc(sizeof(double) * count);
+  double *varl_trusted = (double *)malloc(sizeof(double) * count);
+  double *varr_pert = (double *)malloc(sizeof(double) * count);
+  double *varl_pert = (double *)malloc(sizeof(double) * count);
 
-  if(var == NULL || varr_trusted == NULL || varl_trusted == NULL
-      || varr_pert == NULL || varl_pert == NULL)
+  if(var == NULL || varr_trusted == NULL || varl_trusted == NULL || varr_pert == NULL
+     || varl_pert == NULL) {
     ghl_error("Failed to allocate PLM reconstruction test data.\n");
+  }
 
   const size_t items_read = fread(var, sizeof(double), count, infile);
   fclose(infile);
 
-  if(items_read != count)
-    ghl_error("An error has occured with reading in initial data. Please check that data\n"
-                 "is up-to-date with current test version.\n");
+  if(items_read != count) {
+    ghl_error(
+          "An error has occured with reading in initial data. Please check that data\n"
+          "is up-to-date with current test version.\n");
+  }
 
   infile = fopen_with_check("PLM_reconstruction_output.bin","rb");
   FILE* inpert = fopen_with_check("PLM_reconstruction_output_pert.bin","rb");
@@ -55,15 +62,19 @@ int main(int argc, char **argv) {
     }
 
     if(fread(varr_trusted, sizeof(double), count, infile) != count
-        || fread(varl_trusted, sizeof(double), count, infile) != count)
-      ghl_error("An error has occured with reading in trusted data. Please check that data\n"
-                   "is up-to-date with current test version.\n");
-
+       || fread(varl_trusted, sizeof(double), count, infile) != count) {
+      ghl_error(
+            "An error has occured with reading in trusted data. Please check that data\n"
+            "is up-to-date with current test version.\n");
+    }
 
     if(fread(varr_pert, sizeof(double), count, inpert) != count
-        || fread(varl_pert, sizeof(double), count, inpert) != count)
-      ghl_error("An error has occured with reading in perturbed data. Please check that data\n"
-                   "is up-to-date with current test version.\n");
+       || fread(varl_pert, sizeof(double), count, inpert) != count) {
+      ghl_error(
+            "An error has occured with reading in perturbed data. Please check that "
+            "data\n"
+            "is up-to-date with current test version.\n");
+    }
 
     // These are set up to match the loops in the ET version of IllinoisGRMHD.
     for(int index=2; index<arraylength-1; index++) {

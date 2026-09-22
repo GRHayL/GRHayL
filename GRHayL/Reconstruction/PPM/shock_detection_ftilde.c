@@ -110,15 +110,15 @@ double ghl_shock_detection_ftilde(
   const double q1 = (dP1_over_dP2 - params->ppm_flattening_omega1) * params->ppm_flattening_omega2;
   const double q2 = fabs(dP1)/fmin(P[PLUS_1], P[MINUS1]);
   const double velocity_difference = v_flux_dirn[MINUS1] - v_flux_dirn[PLUS_1];
-  const bool compression_check =
-      (q2 > 0.0 && velocity_difference > 0.0)
-      || (q2 < 0.0 && velocity_difference < 0.0);
+  const bool compression_check = (q2 > 0.0 && velocity_difference > 0.0)
+                                 || (q2 < 0.0 && velocity_difference < 0.0);
 
   // this if statement is equivalent to the w_j variable in the original Colella and Woodward paper
-  if (q2 > params->ppm_flattening_epsilon && compression_check) {
+  if(q2 > params->ppm_flattening_epsilon && compression_check) {
     // inside a shock
     return fmin(1.0, fmax(0.0, q1));
-  } else {
+  }
+  else {
     // Not inside a shock
     return 0.0;
   }
