@@ -142,9 +142,9 @@ enthalpy/sound-speed routing. Use
 exact registry seam.
 
 Concrete Flux_Source routines are split into hybrid, hybrid-entropy,
-tabulated, and tabulated-entropy families. The unusable unsuffixed generic HLLE
-globals have been removed; callers select a direct family/direction/entropy
-variant. Route flux questions to [Flux Source](../flux-source.md) and
+tabulated, and tabulated-entropy families. Unsuffixed generic HLLE globals
+remain only as uninitialized compatibility storage; new callers select a direct
+family/direction/entropy variant. Route flux questions to [Flux Source](../flux-source.md) and
 `GRHayL/include/ghl_flux_source.h`.
 
 Sources: `GRHayL/GRHayL_Core/initialize_eos.c`,

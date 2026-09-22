@@ -32,11 +32,12 @@ Key public surface:
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated`
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy`
 
-Direct suffixed HLLE functions are the supported call surface. The unusable
-unsuffixed `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals were removed. Callers
-select direction, EOS family, and entropy mode explicitly; primitive arguments
-remain mutable because tabulated callbacks may clamp them. Route details and
-migration guidance to the [HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
+Direct suffixed HLLE functions are the supported call surface. The unsuffixed
+`ghl_calculate_HLLE_fluxes_dirn0/1/2` globals remain only as uninitialized
+compatibility storage. New callers select direction, EOS family, and entropy
+mode explicitly; primitive arguments remain mutable because tabulated callbacks
+may clamp them. Route details to the
+[HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
 
 ## Implementation Paths
 

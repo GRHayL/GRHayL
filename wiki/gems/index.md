@@ -130,9 +130,9 @@ source, headers, tests, and common edit routes before wider search.
 - Common edit routes: change generated equations or C kernels together; update
   EOS-specific flux variants, function-pointer setup, tests, and Doxygen.
 - Drift/contract notes: flux inputs expect reconstructed face primitives.
-  Entropy and tabulated variants must match EOS initialization choices. The
-  former generic HLLE pointer globals were removed; callers select the direct
-  family/direction/entropy variants. Source-term regeneration is probe-verified but drifted;
+  Entropy and tabulated variants must match EOS initialization choices. Legacy
+  generic HLLE pointer globals remain as uninitialized compatibility storage;
+  new callers select direct family/direction/entropy variants. Source-term regeneration is probe-verified but drifted;
   speed/HLLE regeneration commands remain unknown.
 
 ## Induction

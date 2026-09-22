@@ -94,9 +94,10 @@ mode-dependent partial dispatch state
 ([`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c)).
 
 Tabulated initialization assigns `ghl_tabulated_free_beq_quantities` to the
-concrete cleanup implementation. The three never-initialized generic
-`ghl_calculate_HLLE_fluxes_dirn*` pointer globals were removed; callers choose
-direct named Flux_Source variants by family, direction, and entropy mode.
+concrete cleanup implementation. The three generic
+`ghl_calculate_HLLE_fluxes_dirn*` pointer globals remain as zero-initialized
+compatibility storage. Core never assigns them; new callers choose direct named
+Flux_Source variants by family, direction, and entropy mode.
 
 ## Ordering, Mutation, And Failure
 

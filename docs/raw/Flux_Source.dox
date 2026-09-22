@@ -29,8 +29,9 @@
  * Directions one and two follow the same naming pattern. Primitive inputs are
  * mutable because tabulated thermodynamic callbacks can clamp them; callers
  * that need the original values must provide copies. EOS global callbacks
- * must be initialized before calling a direct kernel. The former unsuffixed
- * `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals were removed because they were
- * never initialized; source clients that referenced or manually assigned
- * them must migrate to the direct variants and rebuild.
+ * must be initialized before calling a direct kernel. The unsuffixed
+ * `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals remain only for source and
+ * binary compatibility. GRHayL never initializes them, and their `const`
+ * primitive signatures are incompatible with the direct routines. New code
+ * must use the direct variants.
  */

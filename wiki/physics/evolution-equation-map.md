@@ -56,8 +56,8 @@ Code map:
 Availability boundary:
 
 - Direction/EOS-specific direct HLLE functions are current callable routes.
-- The former unwired generic HLLE pointer globals were removed; select the
-  direct direction/family/entropy variant explicitly.
+- Unwired generic HLLE pointer globals remain only as compatibility storage;
+  new code selects the direct direction/family/entropy variant explicitly.
 - No-HDF5 builds retain the direct tabulated HLLE definitions; their
   table-dependent tests and generators remain excluded.
 - Reconstruction is built public caller API, but no production source caller is

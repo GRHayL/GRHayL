@@ -36,13 +36,13 @@ Variant build lists:
 
 ## Direct Functions And Pointer Surface
 
-The direct variant functions above are the public calls. Tests may select them
-through test-local function pointers by EOS family, entropy mode, and flux
-direction. The former unsuffixed generic globals
-`ghl_calculate_HLLE_fluxes_dirn0/1/2` were removed because they were never
-initialized and had incompatible `const` primitive signatures. Source clients
-that referenced or manually assigned those globals must select a direct
-variant and rebuild.
+The direct variant functions above are the supported public calls. Tests may
+select them through test-local function pointers by EOS family, entropy mode,
+and flux direction. The unsuffixed generic globals
+`ghl_calculate_HLLE_fluxes_dirn0/1/2` remain as deprecated compatibility
+storage. GRHayL never initializes them, and their `const` primitive signatures
+are incompatible with the direct routines. New code must select a direct
+variant; existing manual assignments require an exact-signature callback.
 
 For direction `d`, simple/hybrid callers choose
 `ghl_calculate_HLLE_fluxes_dirn<d>_hybrid` or its `_entropy` form; tabulated
@@ -121,6 +121,8 @@ Python source together when formulas, variables, or output fields change.
 - **Fixture-generation:** matching data generators call every row/direction,
   but generated outputs use the same implementation and are not an independent
   oracle.
-- **Coverage gaps:** ignored EOS error returns; primitive mutation; and zero
-  `cmin + cmax` have no focused tests. The
+- **Coverage gaps:** legacy generic compatibility pointer globals have no
+  focused repository test and Core never assigns them. Ignored EOS error
+  returns, primitive mutation, and zero `cmin + cmax` also have no focused
+  tests. The
   no-HDF5 matrix variant link-checks the retained algebraic tabulated symbols.
