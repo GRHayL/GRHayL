@@ -1,0 +1,32 @@
+# Scoped Radiation M1 Unit_Tests inventory.
+#
+# The top-level configure script discovers the complete Unit_Tests directory
+# independently.  This manifest is the intentionally smaller M1 execution
+# inventory consumed by run_m1_tests.sh and by the M1 documentation.  It is
+# not a source of trusted reference values and it does not add the live
+# THC_M1 or discrete-operator workflows to the ordinary unit-test run.
+#
+# Stored replay owners (repository-local, offline fixtures):
+#   unit_test_m1_neutrino_seeded_invariants
+#   unit_test_m1_neutrino_rusanov_flux
+#   unit_test_m1_thcm1_blended_rusanov
+#   unit_test_rusanov_flux
+#
+# Local analytic, invariant, transactional, and provider checks:
+#   unit_test_m1_closure_fallback
+#   unit_test_m1_diffusion_flux
+#   unit_test_m1_error_handling
+#   unit_test_m1_fd_jacobian
+#   unit_test_m1_neutrino_source_update
+#   unit_test_m1_rate_provider
+#
+SRCS = unit_test_m1_closure_fallback.c \
+       unit_test_m1_diffusion_flux.c \
+       unit_test_m1_error_handling.c \
+       unit_test_m1_fd_jacobian.c \
+       unit_test_m1_neutrino_rusanov_flux.c \
+       unit_test_m1_neutrino_seeded_invariants.c \
+       unit_test_m1_neutrino_source_update.c \
+       unit_test_m1_rate_provider.c \
+       unit_test_m1_thcm1_blended_rusanov.c \
+       unit_test_rusanov_flux.c

@@ -22,16 +22,44 @@ case $3 in
     headers) out=$($1 -f scripts/match_all.awk \
                       -v re_start="^#! *INCS" \
                       -v re_end="^ *$" \
-                      -v re_in="[a-zA-Z0-9_.]*\\\\.h" \
+                      -v re_in="[a-zA-Z0-9_./-]*\\\\.h" \
                       -v set_path=1 \
                       $2);;
 
     install_headers) out=$($1 -f scripts/match_all.awk \
                                 -v re_start="^#! *install_headers" \
                                 -v re_end="^ *$" \
-                                -v re_in="[a-zA-Z0-9_.]*\\\\.h" \
+                                -v re_in="[a-zA-Z0-9_./-]*\\\\.h" \
                                 -v set_path=1 \
                                 $2);;
 esac
 
-echo $out
+# match_all.awk prefixes every header token with the directory containing its
+# make.code.defn.  Normalize that prefix so an explicit cross-gem token such as
+# ../../Neutrinos/NRPyLeakage/foo.h becomes the canonical repository path in
+# the generated Makefile prerequisite list.
+$1 'BEGIN { OFS=" " }
+  function normalize(path, parts, stack, n, i, top, result) {
+    n = split(path, parts, "/")
+    top = 0
+    for(i = 1; i <= n; ++i) {
+      if(parts[i] == "" || parts[i] == ".") continue
+      if(parts[i] == ".." && top > 0 && stack[top] != "..") {
+        --top
+      } else {
+        stack[++top] = parts[i]
+      }
+    }
+    result = ""
+    for(i = 1; i <= top; ++i)
+      result = result (i == 1 ? "" : "/") stack[i]
+    return result
+  }
+  {
+    normalized = ""
+    for(i = 1; i <= NF; ++i)
+      if($i != "") normalized = normalized normalize($i) " "
+    print normalized
+  }' <<EOF
+$out
+EOF

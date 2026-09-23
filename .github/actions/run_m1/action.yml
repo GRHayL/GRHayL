@@ -1,0 +1,49 @@
+name: Radiation M1 tests
+description: Build and run only the existing Radiation test targets
+inputs:
+  compiler:
+    description: Compiler family selected by the workflow
+    required: true
+  hdf5:
+    description: Whether HDF5 is enabled
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Configure and run Radiation tests
+      shell: bash
+      env:
+        M1_COMPILER: ${{ inputs.compiler }}
+        M1_HDF5: ${{ inputs.hdf5 }}
+      run: |
+        configure_args=(--noomp --prefix="$PWD")
+        case "$M1_HDF5" in
+          disabled) configure_args+=(--disable-hdf5) ;;
+          enabled) ;;
+          *) echo "Unsupported HDF5 mode: $M1_HDF5" >&2; exit 1 ;;
+        esac
+        case "$M1_COMPILER" in
+          gcc) export CC=gcc ;;
+          clang) export CC=clang ;;
+          intel)
+            source /opt/intel/oneapi/setvars.sh
+            export CC=icx
+            ;;
+          *) echo "Unsupported compiler: $M1_COMPILER" >&2; exit 1 ;;
+        esac
+        if [[ "$RUNNER_OS" == macOS ]]; then
+          if [[ "$M1_COMPILER" == gcc ]]; then
+            gcc_prefix=$(brew --prefix gcc)
+            compilers=("$gcc_prefix"/bin/gcc-[0-9]*)
+            if [[ ! -x "${compilers[0]}" ]]; then
+              echo "Could not find a Homebrew GCC compiler" >&2
+              exit 1
+            fi
+            export CC="${compilers[0]}"
+          else
+            export CC="$(brew --prefix llvm)/bin/clang"
+          fi
+          configure_args+=(--hdf5dir="$(brew --prefix hdf5)")
+        fi
+        ./configure "${configure_args[@]}"
+        bash Unit_Tests/run_m1_tests.sh --build

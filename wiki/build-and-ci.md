@@ -23,6 +23,7 @@ Common flags visible in `configure`:
 | `-s`, `--silent` | Generate less verbose Makefile command output. |
 | `--noomp` | Disable OpenMP flags when linking unit tests. |
 | `--disable-hdf5` | Disable HDF5 and omit tabulated sources/tests selected by the script. |
+| `--enable-m1-debug` | Define `GRHAYL_M1_DEBUG`, compiling the additional expensive M1 runtime-parameter validation. Off by default, and orthogonal to `--buildtype`. |
 | `--prefix=<dir>` | Installation prefix. |
 | `--builddir=<dir>` | Build directory; default is `build`. |
 | `--buildtype=<type>` | Compiler flag preset. Current help and parser disagree: help advertises `nocflags`, but the parser rejects it; the parser accepts undocumented `plain`, which supplies no preset flags. |
@@ -246,15 +247,20 @@ workflow matrix and not a fixture generator:
 1. Runs `./configure -r`.
 2. Runs `make tests datagen` (data generators are compiled, not executed).
 3. Exports `LD_LIBRARY_PATH` with `build/lib`.
-4. Downloads binary fixtures from the repo-visible `GRHayL/TestData` raw URL
+4. Runs `bash Unit_Tests/run_m1_tests.sh`, the scoped Radiation M1 runner. That
+   runner owns its own expected inventory and compares it against
+   `Unit_Tests/make.code.defn` in both directions, so an omitted or unowned M1
+   test is a hard failure rather than silently reduced coverage. It replays only
+   repository-local fixtures and never invokes a generator.
+5. Downloads binary fixtures from the repo-visible `GRHayL/TestData` raw URL
    base.
-5. Downloads EOS tables from the repo-visible `stellarcollapse.org/EOS` URLs
+6. Downloads EOS tables from the repo-visible `stellarcollapse.org/EOS` URLs
    where needed, decompressing `*.bz2` files.
-6. Runs the compiled tests under `test/`, including the direct
+7. Runs the compiled tests under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
 7. Runs `unit_test_code_error` over error-code keys `0` through `88`, expecting
    each invocation to fail at process level.
-8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
+9. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
    `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;
    this records only the visible runner/workflow setup command for NN-enabled
    tabulated replay.

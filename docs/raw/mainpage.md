@@ -16,6 +16,7 @@ currently include
 - @ref Flux_Source
 - @ref Induction
 - @ref Neutrinos
+- @ref Radiation
 - @ref Reconstruction
 
 Each gem implements infrastructure-agnostic functions for computing quantities

@@ -1,0 +1,30 @@
+name: Radiation M1 documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m1-documentation.yml'
+      - 'GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md'
+      - 'Unit_Tests/README.m1.md'
+      - 'Unit_Tests/data/m1_thcm1/**'
+      - 'wiki/gems/radiation-m1/**'
+      - 'wiki/lint/CHECKS.md'
+      - 'tools/check_m1_documentation.py'
+  pull_request:
+    paths:
+      - '.github/workflows/m1-documentation.yml'
+      - 'GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md'
+      - 'Unit_Tests/README.m1.md'
+      - 'Unit_Tests/data/m1_thcm1/**'
+      - 'wiki/gems/radiation-m1/**'
+      - 'wiki/lint/CHECKS.md'
+      - 'tools/check_m1_documentation.py'
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check repository-relative M1 documentation links
+        run: python3 tools/check_m1_documentation.py

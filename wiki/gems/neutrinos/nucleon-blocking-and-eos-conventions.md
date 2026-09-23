@@ -185,12 +185,14 @@ about `280 MeV`, and the missing dense-matter information leaves about
 
 The widened scratch-only BNS_NURATES integration changed the reported channels
 by at most `6.4e-6` relative from 96 to 128 nodes. This numerical uncertainty
-is far below the dense physical disagreement. Published M1 Eddington factors
-classify A--D as diffusion-like and E--F as transitioning, but the six states
-do not provide leakage optical depths. Diffusion can suppress sensitivity to
-free emission while the opacity still controls diffusion and integrated
-optical depth. An optical-depth-aware comparison is therefore needed before
-deciding the effect on a full leakage evolution.
+is far below the dense physical disagreement. The external comparison also
+reports M1 Eddington factors that classify A--D as diffusion-like and E--F as
+transitioning, but those factors and the six states are not stored in this
+checkout and are not GRHayL M1 fixture evidence. The six states also do not
+provide leakage optical depths. Diffusion can suppress sensitivity to free
+emission while the opacity still controls diffusion and integrated optical
+depth. An optical-depth-aware comparison is therefore needed before deciding
+the effect on a full leakage evolution.
 
 ## Acceptance Status
 

@@ -34,8 +34,9 @@ test-only, and unwired names stay qualified below.
 - `GRHayL/include/ghl.h` includes `GRHayL/include/ghl_io.h` and
   `GRHayL/include/ghl_metric_helpers.h`, then later includes EOS function
   pointer declarations and debug helpers.
-- `GRHayL/include/ghl_radiation.h` includes
-  `GRHayL/include/ghl_nrpyleakage.h` after defining radiation structs.
+- `GRHayL/include/ghl_radiation.h` includes `ghl.h`, `ghl_m1.h`, and
+  `ghl_neutrino_rate_provider.h` before its legacy radiation structs, then
+  includes `ghl_nrpyleakage.h`.
 - `GRHayL/include/ghl_unit_tests.h` aggregates module headers for tests and is
   intentionally excluded from generated Doxygen API pages.
 - Caveat: struct doc comments in `GRHayL/include/ghl.h` link an external

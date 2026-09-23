@@ -16,3 +16,7 @@ __pycache__/
 */__pycache__/
 */*/__pycache__/
 */*/*/__pycache__/
+
+# M1 THC_M1 fixture payloads are hosted in GRHayL/TestData (Radiation/)
+Unit_Tests/data/m1_thcm1/*.dat
+Unit_Tests/data/m1_thcm1/*.m1

@@ -3,6 +3,16 @@
 These checks help maintain the GRHayL agent KB. Run them from repo root. They
 are shell examples only, not a maintained script.
 
+The maintained check for the Radiation M1 documentation subset is:
+
+```bash
+python3 tools/check_m1_documentation.py
+```
+
+The dedicated M1 documentation workflow runs this check for changes to the
+M1 contract, test/fixture documentation, and M1 wiki pages. The broader checks
+below remain manual KB maintenance checks.
+
 ## Broken Repo-Relative Markdown Links
 
 This dependency-free check resolves `../` links relative to each page, rejects
