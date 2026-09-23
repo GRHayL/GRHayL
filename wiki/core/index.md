@@ -17,7 +17,7 @@ trust the underlying repo files and update the KB route.
 | [Velocity/u0 contract](velocity-u0-contract.md) | Core `ghl_limit_v_and_compute_u0`, velocity limiting, `u0`, and singular-`u0` error routing. |
 | [Stress-energy/smallb contract](stress-energy-smallb-contract.md) | `smallb`, `b2`, stress-energy packing, and `Tmunu` compute/return helpers. |
 | [EOS dispatch contract](eos-dispatch-contract.md) | Core EOS wrappers, process-wide pointer storage/assignment lifecycle, direct HLLE routing, and HDF5-disabled tabulated routes. |
-| [Errors/IO/debug/utilities](errors-io-debug-utilities.md) | Core return-code termination, logging, min/max/clamp preconditions, and current debug-print output hazards. |
+| [Errors/IO/debug/utilities](errors-io-debug-utilities.md) | Core return-code termination, logging, min/max/clamp preconditions, and debug-print output behavior. |
 | [Tests and fixtures](tests-and-fixtures.md) | Core unit suite, fixture generation, perturbation checks, and adjacent Con2Prim/stress-energy tests. |
 
 ## Source Inventory

@@ -90,8 +90,7 @@ input. No helper checks pointers, dimensions, finiteness, or metric validity
 - No direct fixed-array test for `ghl_compute_vec2_from_vec3D` appears in the
   Core suite; route new direct 3D-helper tests to
   `Unit_Tests/unit_test_grhayl_core_test_suite.c`.
-- Fixture naming drift is source/test-confirmed: the generator opens
-  `grhayL_core_test_suite_input.bin`, while the suite reads
+- The Core generator and suite both use
   `grhayl_core_test_suite_input.bin`
   (`Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c`;
   `Unit_Tests/unit_test_grhayl_core_test_suite.c`).

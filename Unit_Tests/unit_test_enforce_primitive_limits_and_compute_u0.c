@@ -1,5 +1,40 @@
 #include "ghl_unit_tests.h"
 
+static double compute_speed_squared(
+      const ghl_metric_quantities *restrict metric,
+      const ghl_primitive_quantities *restrict prims) {
+
+  const double shifted_vU[3]
+        = { prims->vU[0] + metric->betaU[0], prims->vU[1] + metric->betaU[1],
+            prims->vU[2] + metric->betaU[2] };
+  return ghl_compute_vec2_from_vec3D(metric->gammaDD, shifted_vU) * metric->lapseinv2;
+}
+
+static void check_limiter_success(
+      const char *restrict context,
+      const ghl_parameters *restrict params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_primitive_quantities *restrict prims,
+      const bool speed_limited,
+      const bool expected_limited) {
+
+  const double achieved_speed = compute_speed_squared(metric, prims);
+  const double achieved_W = 1.0 / sqrt(1.0 - achieved_speed);
+  const double alpha_u0 = prims->u0 / metric->lapseinv;
+  const double normalization = alpha_u0 * alpha_u0 * (1.0 - achieved_speed);
+  if(!isfinite(achieved_speed) || achieved_speed >= 1.0
+     || 1.0 - achieved_speed < params->inv_sq_max_Lorentz_factor || !isfinite(achieved_W)
+     || achieved_W > params->max_Lorentz_factor || !isfinite(prims->u0)
+     || !isfinite(normalization) || relative_error(normalization, 1.0) > 1e-14
+     || speed_limited != expected_limited) {
+    ghl_error(
+          "%s returned an invalid successful limiter result: "
+          "speed %.17e, 1-speed %.17e, W %.17e, u0 %.17e, norm %.17e.\n",
+          context, achieved_speed, 1.0 - achieved_speed, achieved_W, prims->u0,
+          normalization);
+  }
+}
+
 int main(int argc, char **argv) {
 
   FILE* infile = fopen_with_check("metric_Bfield_initial_data.bin","rb");
@@ -287,30 +322,115 @@ int main(int argc, char **argv) {
   ghl_initialize_primitives(
         1.0, 1.0, 1.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
   speed_limited = false;
-  error = ghl_enforce_primitive_limits_and_compute_u0(
-        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  error = ghl_limit_v_and_compute_u0(
+        &limiting_params, &metric_adm, &prims, &speed_limited);
   ghl_abort_if_error(error);
-  if(!speed_limited) {
-    ghl_error("speed-limit diagnostic did not report a real limit\n");
-  }
+  check_limiter_success(
+        "ordinary cap", &limiting_params, &metric_adm, &prims, speed_limited, true);
 
   ghl_initialize_primitives(
         1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
   speed_limited = false;
-  error = ghl_enforce_primitive_limits_and_compute_u0(
-        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  error = ghl_limit_v_and_compute_u0(
+        &limiting_params, &metric_adm, &prims, &speed_limited);
   ghl_abort_if_error(error);
-  if(speed_limited) {
-    ghl_error("speed-limit diagnostic reported a non-limiting call\n");
-  }
+  check_limiter_success(
+        "ordinary no-limit", &limiting_params, &metric_adm, &prims, speed_limited,
+        false);
 
   speed_limited = true;
-  error = ghl_enforce_primitive_limits_and_compute_u0(
-        &limiting_params, &simple_eos, &metric_adm, &prims, &speed_limited);
+  error = ghl_limit_v_and_compute_u0(
+        &limiting_params, &metric_adm, &prims, &speed_limited);
   ghl_abort_if_error(error);
   if(!speed_limited) {
     ghl_error("speed-limit diagnostic did not preserve incoming true\n");
   }
+
+  ghl_metric_quantities shifted_metric;
+  ghl_initialize_metric(
+        1.0, 0.60110565395107551, -0.2905985149354946, 0.39986207445943411, 1.0, 0.0,
+        0.0, 1.0, 0.0, 1.0, &shifted_metric);
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, -1.7648921792623411, -0.078576608759423738, -0.45413137379056634,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_limit_v_and_compute_u0(&params, &shifted_metric, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  check_limiter_success(
+        "default cap with shift", &params, &shifted_metric, &prims, speed_limited, true);
+
+  ghl_parameters extreme_params = params;
+  extreme_params.max_Lorentz_factor = 1e9;
+  extreme_params.inv_sq_max_Lorentz_factor = 1.0 / (1e9 * 1e9);
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_limit_v_and_compute_u0(
+        &extreme_params, &metric_adm, &prims, &speed_limited);
+  if(error != ghl_error_u0_singular || prims.vU[0] != 2.0 || prims.vU[1] != 0.0
+     || prims.vU[2] != 0.0) {
+    ghl_error("Unrepresentable W_max did not fail before velocity mutation.\n");
+  }
+
+  extreme_params.max_Lorentz_factor = 6.5e7;
+  extreme_params.inv_sq_max_Lorentz_factor = 1.0 / (6.5e7 * 6.5e7);
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_limit_v_and_compute_u0(
+        &extreme_params, &metric_adm, &prims, &speed_limited);
+  if(error == ghl_success) {
+    check_limiter_success(
+          "below-threshold rounding", &extreme_params, &metric_adm, &prims,
+          speed_limited, true);
+  }
+  else if(error != ghl_error_u0_singular) {
+    ghl_error("Below-threshold rounding returned unexpected error %d.\n", error);
+  }
+
+  extreme_params.max_Lorentz_factor = 5e7;
+  extreme_params.inv_sq_max_Lorentz_factor = 1.0 / (5e7 * 5e7);
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 1.000045000045, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_limit_v_and_compute_u0(
+        &extreme_params, &metric_adm, &prims, &speed_limited);
+  if(error == ghl_success) {
+    check_limiter_success(
+          "finite over-cap rounding", &extreme_params, &metric_adm, &prims,
+          speed_limited, true);
+  }
+  else if(error != ghl_error_u0_singular) {
+    ghl_error("Finite over-cap rounding returned unexpected error %d.\n", error);
+  }
+
+  extreme_params.max_Lorentz_factor = 6.5e7;
+  extreme_params.inv_sq_max_Lorentz_factor = 1.0 / (6.5e7 * 6.5e7);
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_limit_v_and_compute_u0(
+        &extreme_params, &metric_adm, &prims, &speed_limited);
+  if(error == ghl_success) {
+    check_limiter_success(
+          "rounded-bound equality", &extreme_params, &metric_adm, &prims, speed_limited,
+          true);
+  }
+  else if(error != ghl_error_u0_singular) {
+    ghl_error("Rounded-bound equality returned unexpected error %d.\n", error);
+  }
+
+  extreme_params.max_Lorentz_factor = 1e9;
+  extreme_params.inv_sq_max_Lorentz_factor = 1.0 / (1e9 * 1e9);
+  ghl_initialize_primitives(
+        1.0, 1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, &prims);
+  speed_limited = false;
+  error = ghl_limit_v_and_compute_u0(
+        &extreme_params, &metric_adm, &prims, &speed_limited);
+  ghl_abort_if_error(error);
+  check_limiter_success(
+        "extreme cap without limiting", &extreme_params, &metric_adm, &prims,
+        speed_limited, false);
 
   ghl_info("ghl_enforce_primitive_limits_and_compute_u0 function test has passed!\n");
   free(lapse);

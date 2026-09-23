@@ -52,7 +52,8 @@ piecewise-polytrope fields:
 - `p_ppoly`: pressure breakpoints computed after `K_ppoly` and
   `eps_integ_const` are ready, using
   `ghl_hybrid_compute_P_cold_and_eps_cold` on each positive `rho_ppoly`
-  breakpoint.
+  breakpoint. Only `neos - 1` entries are transitions; the unused active slot
+  `p_ppoly[neos-1]` is initialized to zero.
 - `Gamma_th`: thermal adiabatic index copied from initializer input.
 
 After piece setup, the hybrid initializer computes pressure, internal-energy,
@@ -157,9 +158,10 @@ route for the `ghl_hybrid_set_K_ppoly_and_eps_integ_consts` function pointer
 (`GRHayL/include/ghl_eos_functions.h`), whose installed implementation is
 `NRPyEOS_set_K_ppoly_and_eps_integ_consts` from the Helper Map above.
 
-That test checks only `K_ppoly[1..3]` and `eps_integ_const[1..3]`. It does not
-check the initializer return code or exercise `p_ppoly` and validation failure
-statuses. Treat those as coverage gaps.
+The test checks the initializer return code, all three four-piece pressure
+transitions against independent adjacent-piece formulas, and compact one- and
+two-piece cases with exact transition extents. Invalid `neos`, breakpoint
+ordering, and gamma-domain failures remain coverage gaps.
 
 `Unit_Tests/test_compute_h_and_cs2.c` provides a small test helper for
 `ghl_compute_h_and_cs2` call sites; it is not the direct piecewise-polytrope

@@ -402,7 +402,10 @@ ghl_error_codes_t ghl_initialize_tabulated_eos_functions_and_params(
 //---- Basic struct packing/unpacking functions ----
 /**
  * Pack GRHayL parameters. max_Lorentz_factor must be finite and at least one;
- * this function does not validate that precondition.
+ * this function does not validate that precondition. For velocity-limited
+ * states, the relative accuracy of u0 is about DBL_EPSILON*max_Lorentz_factor^2.
+ * From caps near 5e7, limited results can be superluminal in exact arithmetic;
+ * above about 1.34e8, limiting returns ghl_error_u0_singular.
  */
 void ghl_initialize_params(
       const ghl_con2prim_id_t main_routine,
@@ -533,6 +536,8 @@ void ghl_return_stress_energy(
 /**
  * Limit velocity and compute u0. speed_limited is an initialized [in,out]
  * OR accumulator: incoming true is preserved; start each logical group false.
+ * Returns ghl_error_u0_singular if a required speed limit is not representable,
+ * or if the achieved speed or u0 is non-finite, luminal, or above the cap.
  */
 ghl_error_codes_t ghl_limit_v_and_compute_u0(
       const ghl_parameters *restrict params,

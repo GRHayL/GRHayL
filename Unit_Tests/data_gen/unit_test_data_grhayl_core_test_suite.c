@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
         &gxx[i], &gxy[i], &gxz[i],
         &gyy[i], &gyz[i], &gzz[i]);
 
-  FILE* infile = fopen_with_check("grhayL_core_test_suite_input.bin", "wb");
+  FILE *infile = fopen_with_check("grhayl_core_test_suite_input.bin", "wb");
 
   fwrite(&arraylength, sizeof(int), 1, infile);
 

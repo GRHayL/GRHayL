@@ -13,10 +13,12 @@ int main(int argc, char **argv) {
   const double k_ppoly0 = 6.80110e-9;
 
   ghl_eos_parameters eos = { 0 };
-  ghl_initialize_hybrid_eos_functions_and_params(
-        rho_b_min, rho_b_min, rho_b_max,
-        neos, rho_ppoly, Gamma_ppoly,
-        k_ppoly0, Gamma_th, &eos);
+  ghl_error_codes_t error = ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max, neos, rho_ppoly, Gamma_ppoly, k_ppoly0,
+        Gamma_th, &eos);
+  if(error != ghl_success) {
+    ghl_error("Four-piece EOS initialization failed with error %d.\n", error);
+  }
 
   // Expected output values taken from NRPyEOS python code
   double k_comp[4] = {6.8010999999999996e-09, 1.0618444833278535e-06, 5.3275084583961501e+01, 3.9992069172431910e-08};
@@ -39,5 +41,46 @@ int main(int argc, char **argv) {
                    "For index %d, expected %e, computed %e, perturbed %e\n"
                    "relative error: %e\n", i, eps_comp[i], eos.eps_integ_const[i], eps_pert[i],
                            ghl_pert_test_fail(eps_comp[i], eos.eps_integ_const[i], eps_pert[i]));
+  }
+
+  for(int i = 0; i < neos - 1; i++) {
+    const double expected_left = k_comp[i] * pow(rho_ppoly[i], Gamma_ppoly[i]);
+    const double expected_right = k_comp[i + 1] * pow(rho_ppoly[i], Gamma_ppoly[i + 1]);
+    if(!isfinite(eos.p_ppoly[i]) || relative_error(expected_left, eos.p_ppoly[i]) > 1e-14
+       || relative_error(expected_left, expected_right) > 1e-14) {
+      ghl_error(
+            "Pressure transition %d is invalid: expected %.15e, got %.15e, adjacent "
+            "%.15e.\n",
+            i, expected_left, eos.p_ppoly[i], expected_right);
+    }
+  }
+  if(eos.p_ppoly[neos - 1] != 0.0) {
+    ghl_error("Unused four-piece pressure slot is not zero.\n");
+  }
+
+  const double one_rho_ppoly[1] = { 0.0 };
+  const double one_Gamma_ppoly[1] = { 2.0 };
+  ghl_eos_parameters one_piece_eos = { 0 };
+  error = ghl_initialize_hybrid_eos_functions_and_params(
+        1.0, 0.0, 100.0, 1, one_rho_ppoly, one_Gamma_ppoly, 1.0, 2.0, &one_piece_eos);
+  if(error != ghl_success || !isfinite(one_piece_eos.p_ppoly[0])
+     || one_piece_eos.p_ppoly[0] != 0.0) {
+    ghl_error("One-piece EOS pressure sentinel was not initialized to zero.\n");
+  }
+
+  const double two_rho_ppoly[1] = { 2.0 };
+  const double two_Gamma_ppoly[2] = { 2.0, 3.0 };
+  ghl_eos_parameters two_piece_eos = { 0 };
+  error = ghl_initialize_hybrid_eos_functions_and_params(
+        1.0, 0.0, 100.0, 2, two_rho_ppoly, two_Gamma_ppoly, 1.0, 2.0, &two_piece_eos);
+  const double expected_left = pow(two_rho_ppoly[0], two_Gamma_ppoly[0]);
+  const double expected_K1
+        = pow(two_rho_ppoly[0], two_Gamma_ppoly[0] - two_Gamma_ppoly[1]);
+  const double expected_right = expected_K1 * pow(two_rho_ppoly[0], two_Gamma_ppoly[1]);
+  if(error != ghl_success || !isfinite(two_piece_eos.p_ppoly[0])
+     || relative_error(expected_left, two_piece_eos.p_ppoly[0]) > 1e-14
+     || relative_error(expected_left, expected_right) > 1e-14
+     || two_piece_eos.p_ppoly[1] != 0.0) {
+    ghl_error("Two-piece EOS pressure transition is invalid.\n");
   }
 }

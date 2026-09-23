@@ -158,7 +158,13 @@ Simple and hybrid setup reject null output, nonfinite scalar inputs, nonpositive
 atmosphere density, singular cold gamma values, and invalid bound ordering.
 Hybrid setup also validates `neos`, used gamma/coefficient values, and strictly
 increasing positive density breakpoints. A disabled density floor still
-normalizes to zero metadata.
+normalizes `rho_min` to zero.
+
+For supported `Gamma > 1`, simple setup derives rectangular-domain epsilon and
+entropy extrema from opposite density endpoints: minima pair `press_min` with
+`rho_max`, while maxima pair `press_max` with `rho_min`. A zero density floor
+or the `1e300` pressure-ceiling marker makes positive-pressure maxima the finite
+`DBL_MAX` sentinel; a zero pressure ceiling gives zero maxima.
 
 Tabulated EOS initialization validates `rho_atm`, `Y_e_atm`, and `T_atm`,
 clamps requested `rho`, `Y_e`, and `T` min/max values to table bounds, checks
@@ -179,9 +185,11 @@ equivalent; intended tabulated semantics need maintainer resolution
 
 ## Tests And Coverage
 
-The Core suite tests simple EOS default density/pressure floor and ceiling
-behavior, initializes hybrid EOS atmosphere data, and checks
-`ghl_set_prims_to_constant_atm` for simple and hybrid EOS cases. Source:
+The Core suite tests simple EOS rectangular extrema and explicit/default zero
+floors, hybrid zero-floor metadata, and simple EOS default density/pressure
+floor and ceiling behavior. It initializes hybrid EOS atmosphere data and
+checks `ghl_set_prims_to_constant_atm` for simple and hybrid EOS cases. Finite
+outputs are rejected before tolerance comparisons. Source:
 [`Unit_Tests/unit_test_grhayl_core_test_suite.c`](../../Unit_Tests/unit_test_grhayl_core_test_suite.c).
 
 Do not claim tabulated default or tabulated atmosphere reset coverage from the

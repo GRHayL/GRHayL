@@ -1,4 +1,5 @@
 #include "ghl_unit_tests.h"
+#include <float.h>
 
 int main(int argc, char **argv) {
 
@@ -15,10 +16,11 @@ int main(int argc, char **argv) {
   // Checking that warnings trigger
   const double press_min = 1e-20;
   ghl_eos_parameters simple_eos;
-  ghl_initialize_simple_eos_functions_and_params(
-      rho_b_min, -1, -1,
-      press_min, -1, -1,
-      Gamma_th, &simple_eos);
+  ghl_error_codes_t error = ghl_initialize_simple_eos_functions_and_params(
+        rho_b_min, -1, -1, press_min, -1, -1, Gamma_th, &simple_eos);
+  if(error != ghl_success) {
+    ghl_error("Simple EOS initialization failed with error %d.\n", error);
+  }
   if(simple_eos.rho_min > 1e-50)
     ghl_error("Simple EOS failed to set default rho_min");
   if(simple_eos.rho_max < 9e299)
@@ -27,13 +29,70 @@ int main(int argc, char **argv) {
     ghl_error("Simple EOS failed to set default press_min");
   if(simple_eos.press_max < 9e299)
     ghl_error("Simple EOS failed to set default press_max");
+  if(!isfinite(simple_eos.rho_atm) || !isfinite(simple_eos.rho_min)
+     || !isfinite(simple_eos.rho_max) || !isfinite(simple_eos.press_atm)
+     || !isfinite(simple_eos.press_min) || !isfinite(simple_eos.press_max)
+     || !isfinite(simple_eos.eps_min) || !isfinite(simple_eos.entropy_min)
+     || !isfinite(simple_eos.eps_atm) || !isfinite(simple_eos.entropy_atm)
+     || simple_eos.eps_min != 0.0 || simple_eos.entropy_min != 0.0
+     || simple_eos.eps_max != DBL_MAX || simple_eos.entropy_max != DBL_MAX) {
+    ghl_error("Simple EOS default bounds contain invalid derived values.\n");
+  }
+
+  ghl_eos_parameters rectangular_eos;
+  error = ghl_initialize_simple_eos_functions_and_params(
+        1.0, 1.0, 100.0, 10.0, 10.0, 20.0, 2.0, &rectangular_eos);
+  if(error != ghl_success || !isfinite(rectangular_eos.eps_min)
+     || !isfinite(rectangular_eos.eps_max) || !isfinite(rectangular_eos.entropy_min)
+     || !isfinite(rectangular_eos.entropy_max)
+     || relative_error(rectangular_eos.eps_min, 0.1) > rel_tol
+     || relative_error(rectangular_eos.eps_max, 20.0) > rel_tol
+     || relative_error(rectangular_eos.entropy_min, 0.1) > rel_tol
+     || relative_error(rectangular_eos.entropy_max, 20.0) > rel_tol) {
+    ghl_error("Simple EOS rectangular-domain extrema are invalid.\n");
+  }
+
+  ghl_eos_parameters simple_zero_eos;
+  error = ghl_initialize_simple_eos_functions_and_params(
+        1.0, 0.0, 100.0, 1.0, 0.0, 20.0, 2.0, &simple_zero_eos);
+  if(error != ghl_success || !isfinite(simple_zero_eos.eps_min)
+     || !isfinite(simple_zero_eos.entropy_min) || simple_zero_eos.eps_min != 0.0
+     || simple_zero_eos.entropy_min != 0.0 || simple_zero_eos.eps_max != DBL_MAX
+     || simple_zero_eos.entropy_max != DBL_MAX) {
+    ghl_error("Simple EOS explicit zero-density floor is invalid.\n");
+  }
 
   ghl_eos_parameters hybrid_eos;
-  ghl_initialize_hybrid_eos_functions_and_params(
-      rho_b_min, rho_b_min, rho_b_max,
-      neos, rho_ppoly, Gamma_ppoly,
-      k_ppoly0, Gamma_th,
-      &hybrid_eos);
+  error = ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, rho_b_min, rho_b_max, neos, rho_ppoly, Gamma_ppoly, k_ppoly0,
+        Gamma_th, &hybrid_eos);
+  if(error != ghl_success) {
+    ghl_error("Hybrid EOS initialization failed with error %d.\n", error);
+  }
+
+  ghl_eos_parameters hybrid_zero_eos;
+  error = ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, 0.0, 100.0, neos, rho_ppoly, Gamma_ppoly, k_ppoly0, Gamma_th,
+        &hybrid_zero_eos);
+  if(error != ghl_success || !isfinite(hybrid_zero_eos.press_min)
+     || !isfinite(hybrid_zero_eos.eps_min) || !isfinite(hybrid_zero_eos.entropy_min)
+     || hybrid_zero_eos.press_min != -DBL_MAX || hybrid_zero_eos.eps_min != -DBL_MAX
+     || hybrid_zero_eos.entropy_min != -DBL_MAX) {
+    ghl_error("Hybrid EOS explicit zero-density floor is invalid.\n");
+  }
+
+  ghl_eos_parameters hybrid_default_zero_eos;
+  error = ghl_initialize_hybrid_eos_functions_and_params(
+        rho_b_min, -1.0, 100.0, neos, rho_ppoly, Gamma_ppoly, k_ppoly0, Gamma_th,
+        &hybrid_default_zero_eos);
+  if(error != ghl_success || !isfinite(hybrid_default_zero_eos.press_min)
+     || !isfinite(hybrid_default_zero_eos.eps_min)
+     || !isfinite(hybrid_default_zero_eos.entropy_min)
+     || hybrid_default_zero_eos.press_min != -DBL_MAX
+     || hybrid_default_zero_eos.eps_min != -DBL_MAX
+     || hybrid_default_zero_eos.entropy_min != -DBL_MAX) {
+    ghl_error("Hybrid EOS default zero-density floor is invalid.\n");
+  }
 
   //const double Ye_atm = 1e-12;
   //const double T_atm = 1e300;
@@ -86,18 +145,21 @@ int main(int argc, char **argv) {
 
     ghl_set_prims_to_constant_atm(&eos, &prims);
 
-    bool check1 = (fabs(prims.rho     - eos.rho_atm) > 1e-50
-                || fabs(prims.press   - eos.press_atm) > 1e-50
-                || fabs(prims.vU[0]) > 1e-50
-                || fabs(prims.vU[1]) > 1e-50
-                || fabs(prims.vU[2]) > 1e-50
-                || fabs(prims.eps     - eos.eps_atm) > 1e-50
-                || fabs(prims.entropy - eos.entropy_atm) > 1e-50);
+    bool check1
+          = (!isfinite(prims.rho) || !isfinite(prims.press) || !isfinite(prims.vU[0])
+             || !isfinite(prims.vU[1]) || !isfinite(prims.vU[2]) || !isfinite(prims.eps)
+             || !isfinite(prims.entropy) || fabs(prims.rho - eos.rho_atm) > 1e-50
+             || fabs(prims.press - eos.press_atm) > 1e-50 || fabs(prims.vU[0]) > 1e-50
+             || fabs(prims.vU[1]) > 1e-50 || fabs(prims.vU[2]) > 1e-50
+             || fabs(prims.eps - eos.eps_atm) > 1e-50
+             || fabs(prims.entropy - eos.entropy_atm) > 1e-50);
 
     bool check2 = false;
     if(eos_type ==2)
-      check2 = (fabs(prims.Y_e         - eos.Y_e_atm) > 1e-50
-             || fabs(prims.temperature - eos.T_atm) > 1e-50);
+      check2
+            = (!isfinite(prims.Y_e) || !isfinite(prims.temperature)
+               || fabs(prims.Y_e - eos.Y_e_atm) > 1e-50
+               || fabs(prims.temperature - eos.T_atm) > 1e-50);
 
     if(check1 || check2)
       ghl_error("grhayl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with %s EOS.\n"
@@ -127,17 +189,22 @@ int main(int argc, char **argv) {
   const double vec[4] = {-1.0, 2.0, -3.0, 4.0};
 
   const double v2 = ghl_compute_vec2_from_vec4D(g4, vec);
-  if(relative_error(v2, 55.0) > rel_tol)
-    ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_compute_vec2_from_vec4D().\n"
-              "  Expected result is 55, but computed value is %e.\n",
-              v2);
+  if(!isfinite(v2) || relative_error(v2, 55.0) > rel_tol) {
+    ghl_error(
+          "unit_test_grhayl_core_test_suite has failed for "
+          "ghl_compute_vec2_from_vec4D().\n"
+          "  Expected result is 55, but computed value is %e.\n",
+          v2);
+  }
 
   double vec_inv[4];
   ghl_raise_lower_vector_4D(g4, vec, vec_inv);
-  const bool check_inverse = (relative_error(vec_inv[0], 10.0) > rel_tol
-                           || relative_error(vec_inv[1], 18.0) > rel_tol
-                           || relative_error(vec_inv[2], 21.0) > rel_tol
-                           || relative_error(vec_inv[3], 23.0) > rel_tol);
+  const bool check_inverse
+        = (!isfinite(vec_inv[0]) || !isfinite(vec_inv[1]) || !isfinite(vec_inv[2])
+           || !isfinite(vec_inv[3]) || relative_error(vec_inv[0], 10.0) > rel_tol
+           || relative_error(vec_inv[1], 18.0) > rel_tol
+           || relative_error(vec_inv[2], 21.0) > rel_tol
+           || relative_error(vec_inv[3], 23.0) > rel_tol);
   if(check_inverse)
     ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_raise_lower_vector_4D().\n"
               "  Expected values are 10, 18, 21, 23. Computed values are %e %e %e %e.\n",
@@ -190,55 +257,67 @@ int main(int argc, char **argv) {
         gyy[i], gyz[i], gzz[i],
         &new_metric);
 
-  if(relative_error(lapse[i], new_metric.lapse) > rel_tol
-  || relative_error(betax[i], new_metric.betaU[0]) > rel_tol
-  || relative_error(betay[i], new_metric.betaU[1]) > rel_tol
-  || relative_error(betaz[i], new_metric.betaU[2]) > rel_tol
-  || relative_error(gxx[i],   new_metric.gammaDD[0][0]) > rel_tol
-  || relative_error(gxy[i],   new_metric.gammaDD[0][1]) > rel_tol
-  || relative_error(gxz[i],   new_metric.gammaDD[0][2]) > rel_tol
-  || relative_error(gyy[i],   new_metric.gammaDD[1][1]) > rel_tol
-  || relative_error(gyz[i],   new_metric.gammaDD[1][2]) > rel_tol
-  || relative_error(gzz[i],   new_metric.gammaDD[2][2]) > rel_tol)
-    ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
-              "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
-              "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
-              lapse[i], betax[i], betay[i], betaz[i],
-              gxx[i], gxy[i], gxz[i], gyy[i], gyz[i], gzz[i],
-              new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1], new_metric.betaU[2],
-              new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
-              new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
-
+    if(!isfinite(new_metric.lapse) || !isfinite(new_metric.betaU[0])
+       || !isfinite(new_metric.betaU[1]) || !isfinite(new_metric.betaU[2])
+       || !isfinite(new_metric.gammaDD[0][0]) || !isfinite(new_metric.gammaDD[0][1])
+       || !isfinite(new_metric.gammaDD[0][2]) || !isfinite(new_metric.gammaDD[1][1])
+       || !isfinite(new_metric.gammaDD[1][2]) || !isfinite(new_metric.gammaDD[2][2])
+       || relative_error(lapse[i], new_metric.lapse) > rel_tol
+       || relative_error(betax[i], new_metric.betaU[0]) > rel_tol
+       || relative_error(betay[i], new_metric.betaU[1]) > rel_tol
+       || relative_error(betaz[i], new_metric.betaU[2]) > rel_tol
+       || relative_error(gxx[i], new_metric.gammaDD[0][0]) > rel_tol
+       || relative_error(gxy[i], new_metric.gammaDD[0][1]) > rel_tol
+       || relative_error(gxz[i], new_metric.gammaDD[0][2]) > rel_tol
+       || relative_error(gyy[i], new_metric.gammaDD[1][1]) > rel_tol
+       || relative_error(gyz[i], new_metric.gammaDD[1][2]) > rel_tol
+       || relative_error(gzz[i], new_metric.gammaDD[2][2]) > rel_tol) {
+      ghl_error(
+            "unit_test_grhayl_core_test_suite has failed for "
+            "ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
+            "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
+            "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
+            lapse[i], betax[i], betay[i], betaz[i], gxx[i], gxy[i], gxz[i], gyy[i],
+            gyz[i], gzz[i], new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1],
+            new_metric.betaU[2], new_metric.gammaDD[0][0], new_metric.gammaDD[0][1],
+            new_metric.gammaDD[0][2], new_metric.gammaDD[1][1], new_metric.gammaDD[1][2],
+            new_metric.gammaDD[2][2]);
+    }
   }
 
   // For a final test, we trigger the -detg warning
   gxy[0] += 10.0;
 
-    ghl_enforce_detgtij_and_initialize_ADM_metric(
-        lapse[0],
-        betax[0], betay[0], betaz[0],
-        gxx[0], gxy[0], gxz[0],
-        gyy[0], gyz[0], gzz[0],
-        &new_metric);
+  ghl_enforce_detgtij_and_initialize_ADM_metric(
+        lapse[0], betax[0], betay[0], betaz[0], gxx[0], gxy[0], gxz[0], gyy[0], gyz[0],
+        gzz[0], &new_metric);
 
-  if(relative_error(lapse[0], new_metric.lapse) > rel_tol
-  || relative_error(betax[0], new_metric.betaU[0]) > rel_tol
-  || relative_error(betay[0], new_metric.betaU[1]) > rel_tol
-  || relative_error(betaz[0], new_metric.betaU[2]) > rel_tol
-  || relative_error(gxx[0],   new_metric.gammaDD[0][0]) > rel_tol
-  || relative_error(gxy[0],   new_metric.gammaDD[0][1]) > rel_tol
-  || relative_error(gxz[0],   new_metric.gammaDD[0][2]) > rel_tol
-  || relative_error(gyy[0],   new_metric.gammaDD[1][1]) > rel_tol
-  || relative_error(gyz[0],   new_metric.gammaDD[1][2]) > rel_tol
-  || relative_error(gzz[0],   new_metric.gammaDD[2][2]) > rel_tol)
-    ghl_error("unit_test_grhayl_core_test_suite has failed for ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
-              "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
-              "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
-              lapse[0], betax[0], betay[0], betaz[0],
-              gxx[0], gxy[0], gxz[0], gyy[0], gyz[0], gzz[0],
-              new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1], new_metric.betaU[2],
-              new_metric.gammaDD[0][0], new_metric.gammaDD[0][1], new_metric.gammaDD[0][2],
-              new_metric.gammaDD[1][1], new_metric.gammaDD[1][2], new_metric.gammaDD[2][2]);
+  if(!isfinite(new_metric.lapse) || !isfinite(new_metric.betaU[0])
+     || !isfinite(new_metric.betaU[1]) || !isfinite(new_metric.betaU[2])
+     || !isfinite(new_metric.gammaDD[0][0]) || !isfinite(new_metric.gammaDD[0][1])
+     || !isfinite(new_metric.gammaDD[0][2]) || !isfinite(new_metric.gammaDD[1][1])
+     || !isfinite(new_metric.gammaDD[1][2]) || !isfinite(new_metric.gammaDD[2][2])
+     || relative_error(lapse[0], new_metric.lapse) > rel_tol
+     || relative_error(betax[0], new_metric.betaU[0]) > rel_tol
+     || relative_error(betay[0], new_metric.betaU[1]) > rel_tol
+     || relative_error(betaz[0], new_metric.betaU[2]) > rel_tol
+     || relative_error(gxx[0], new_metric.gammaDD[0][0]) > rel_tol
+     || relative_error(gxy[0], new_metric.gammaDD[0][1]) > rel_tol
+     || relative_error(gxz[0], new_metric.gammaDD[0][2]) > rel_tol
+     || relative_error(gyy[0], new_metric.gammaDD[1][1]) > rel_tol
+     || relative_error(gyz[0], new_metric.gammaDD[1][2]) > rel_tol
+     || relative_error(gzz[0], new_metric.gammaDD[2][2]) > rel_tol) {
+    ghl_error(
+          "unit_test_grhayl_core_test_suite has failed for "
+          "ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
+          "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
+          "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
+          lapse[0], betax[0], betay[0], betaz[0], gxx[0], gxy[0], gxz[0], gyy[0], gyz[0],
+          gzz[0], new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1],
+          new_metric.betaU[2], new_metric.gammaDD[0][0], new_metric.gammaDD[0][1],
+          new_metric.gammaDD[0][2], new_metric.gammaDD[1][1], new_metric.gammaDD[1][2],
+          new_metric.gammaDD[2][2]);
+  }
 
   char *valid_char[12];
   valid_char[0] = "None";

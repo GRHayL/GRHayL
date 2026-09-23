@@ -117,6 +117,24 @@ int main(int argc, char **argv) {
           gyy[index], gyz[index], gzz[index],
           &metric_adm);
 
+    // Keep flux face states away from the W_max=10 branch decision.
+    // Sweep moderately relativistic states while retaining random directions.
+    const double W_test = 1.2 + (5.0 - 1.2) * index / (arraylength - 1);
+    const double q_target = 1.0 - 1.0 / (W_test * W_test);
+    double *face_vU[2][3] = { { &vx_r[index], &vy_r[index], &vz_r[index] },
+                              { &vx_l[index], &vy_l[index], &vz_l[index] } };
+    for(int face = 0; face < 2; face++) {
+      const double utU[3] = { *face_vU[face][0] + metric_adm.betaU[0],
+                              *face_vU[face][1] + metric_adm.betaU[1],
+                              *face_vU[face][2] + metric_adm.betaU[2] };
+      const double q = ghl_compute_vec2_from_vec3D(metric_adm.gammaDD, utU)
+                       * metric_adm.lapseinv2;
+      const double velocity_scale = sqrt(q_target / q);
+      for(int i = 0; i < 3; i++) {
+        *face_vU[face][i] = utU[i] * velocity_scale - metric_adm.betaU[i];
+      }
+    }
+
     ghl_primitive_quantities prims_r, prims_l;
     ghl_initialize_primitives(
           rho_r[index], press_r[index], poison,

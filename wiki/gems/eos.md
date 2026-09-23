@@ -78,7 +78,9 @@ Focused routes:
 
 - `ghl_eos_parameters` stores EOS type, table type, atmosphere values, bounds, hybrid pieces, and tabulated table state.
 - Initialize EOS through core initialization helpers so function pointers match EOS type.
-- Hybrid EOS splits cold and thermal behavior; tabulated EOS interpolates table quantities and enforces table bounds.
+- Hybrid EOS splits cold and thermal behavior and uses `neos - 1` density and
+  pressure transitions; tabulated EOS interpolates table quantities and
+  enforces table bounds.
 - Tabulated EOS runtime table support depends on HDF5-enabled builds.
 - `rho`, pressure, internal energy, entropy, temperature, and `Y_e` bounds must stay consistent with primitive and conservative limiters.
 
