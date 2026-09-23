@@ -6,7 +6,7 @@
 static double eos_Gamma_eff(const ghl_eos_parameters *restrict eos, const double rho_in, const double press_in);
 
 int main(int argc, char **argv) {
-  const double poison = 1e300;
+  const double dummy_density = 1.0;
 
   const ghl_con2prim_id_t None = ghl_con2prim_id_None;
   const ghl_con2prim_id_t backups[3] = {None, None, None};
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
-        poison, poison, poison,
+        dummy_density, dummy_density, dummy_density,
         neos, rho_ppoly_in, Gamma_ppoly_in,
         k_ppoly0, Gamma_th, &eos);
 

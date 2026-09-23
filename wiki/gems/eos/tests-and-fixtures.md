@@ -123,9 +123,14 @@ Dependent tests are impact signals for EOS changes, not primary EOS contracts:
   tabulated Atmosphere branch is commented out, and the file has a TODO to add
   table-based default checks before extending the loop. For simple/hybrid it
   does not assert `Y_e` or temperature, even though constant Atmosphere copies
-  `eos.Y_e_atm` and `eos.T_atm` and those initializers do not set the fields.
+  `eos.Y_e_atm` and `eos.T_atm`; the initializers now set both placeholders to
+  zero.
   Its simple-EOS default-floor check also does not assert `eps_min` or
   `entropy_min` after both density and pressure minima default to zero.
+- Existing tests do not directly exercise malformed table dimensions or axes,
+  tabulated final-state finiteness rejection, invalid derived enthalpy rejection,
+  or Con2Prim propagation of tabulated interpolation failures. These remain
+  coverage gaps.
 - Con2Prim tabulated tests route through
   [Con2Prim tests and fixtures](../con2prim/tests-and-fixtures.md).
 - Neutrinos table-backed tests route through

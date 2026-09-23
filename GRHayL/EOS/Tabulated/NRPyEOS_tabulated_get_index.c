@@ -3,6 +3,9 @@
 int NRPyEOS_tabulated_get_index_T(
     const ghl_eos_parameters *restrict eos,
     const double T) {
+  if(!isfinite(T) || T <= 0.0) {
+    return -1;
+  }
   const double lt = log(T);
   const double ltmin = eos->table_logT[0];
   const double ltmax = eos->table_logT[eos->N_T - 1];

@@ -297,6 +297,9 @@ extern ghl_error_codes_t (*ghl_tabulated_compute_eps_from_rho)(
 extern void (*ghl_tabulated_free_beq_quantities)(
       ghl_eos_parameters *restrict eos);
 
+/** @deprecated Compatibility storage only: GRHayL never assigns this pointer,
+ *  and its const-primitive signature is incompatible with the direct routines.
+ *  Call ghl_calculate_HLLE_fluxes_dirn0_{hybrid,tabulated}[_entropy]. */
 extern void (*ghl_calculate_HLLE_fluxes_dirn0)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,
@@ -306,6 +309,9 @@ extern void (*ghl_calculate_HLLE_fluxes_dirn0)(
       const double cmax,
       ghl_conservative_quantities *restrict cons_fluxes);
 
+/** @deprecated Compatibility storage only: GRHayL never assigns this pointer,
+ *  and its const-primitive signature is incompatible with the direct routines.
+ *  Call ghl_calculate_HLLE_fluxes_dirn1_{hybrid,tabulated}[_entropy]. */
 extern void (*ghl_calculate_HLLE_fluxes_dirn1)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,
@@ -315,6 +321,9 @@ extern void (*ghl_calculate_HLLE_fluxes_dirn1)(
       const double cmax,
       ghl_conservative_quantities *restrict cons_fluxes);
 
+/** @deprecated Compatibility storage only: GRHayL never assigns this pointer,
+ *  and its const-primitive signature is incompatible with the direct routines.
+ *  Call ghl_calculate_HLLE_fluxes_dirn2_{hybrid,tabulated}[_entropy]. */
 extern void (*ghl_calculate_HLLE_fluxes_dirn2)(
       const ghl_primitive_quantities *restrict prims_r,
       const ghl_primitive_quantities *restrict prims_l,

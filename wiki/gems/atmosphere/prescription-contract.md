@@ -59,12 +59,10 @@ atmosphere thermodynamic/composition fields listed above, regardless of
 For simple and hybrid EOS setup,
 [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)
 populates `rho_atm`, `press_atm`, `eps_atm`, and `entropy_atm` but does not
-populate `Y_e_atm` or `T_atm`. Because constant reset still reads those two
-fields, callers must initialize them separately (or zero-initialize the full
-EOS struct before setup). Zero-initialization makes the values defined as zero;
-it does not establish that zero has valid physical meaning for the caller.
-This is a current contract gap, not evidence that the fields are intentionally
-irrelevant to simple/hybrid callers.
+derive physical composition or temperature. It explicitly stores zero in
+`Y_e_atm` and `T_atm` as deterministic unused-family placeholders. Callers may
+override those fields after successful EOS initialization when another value is
+needed.
 
 ## Unsupported Radial Falloff
 
@@ -110,12 +108,12 @@ copies into primitives.
   stores them on `ghl_eos_parameters`, then derives `eps_atm`,
   `entropy_atm`, and `tau_atm` from the one-piece ideal-fluid setup in
   [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
-  It does not initialize `Y_e_atm` or `T_atm`.
+  It initializes `Y_e_atm` and `T_atm` to zero placeholders.
 - Hybrid EOS: `ghl_initialize_hybrid_eos` accepts `rho_atm`, stores it, then
   computes `press_atm`, `eps_atm`, `entropy_atm`, and `tau_atm` through the
   hybrid cold-pressure/entropy helpers in
   [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
-  It does not initialize `Y_e_atm` or `T_atm`.
+  It initializes `Y_e_atm` and `T_atm` to zero placeholders.
 - Tabulated EOS: `ghl_initialize_tabulated_eos` accepts `rho_atm`, `Y_e_atm`,
   and `T_atm`, clamps min/max bounds against table bounds, stores the
   atmosphere values on `ghl_eos_parameters`, and computes `press_atm`,
@@ -135,9 +133,8 @@ That test poisons primitive fields, calls `ghl_set_prims_to_constant_atm`, and
 checks density, pressure, epsilon, entropy, and zero velocity for simple and
 hybrid EOS cases. Its `Y_e` and temperature assertions are inside an
 `eos_type == 2` branch, but the loop stops before that value; those assignments
-are not directly checked. The simple/hybrid EOS locals are not zero-initialized,
-so their setup does not establish the two values before constant reset reads
-them.
+are not directly checked. Simple/hybrid setup establishes zero placeholders,
+but this test does not verify that constant reset copies them.
 
 Do not claim direct tabulated Atmosphere test coverage from that file. Its
 tabulated setup branch is commented out, includes a TODO about adding

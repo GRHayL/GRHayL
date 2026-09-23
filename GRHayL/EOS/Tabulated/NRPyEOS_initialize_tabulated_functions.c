@@ -37,6 +37,7 @@ void NRPyEOS_initialize_tabulated_functions() {
   ghl_tabulated_compute_eps_from_rho                   = &NRPyEOS_tabulated_compute_eps_from_rho;
   ghl_tabulated_compute_Ye_of_rho_beq_constant_T       = &NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T;
   ghl_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T = &NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T;
+  ghl_tabulated_free_beq_quantities                    = &NRPyEOS_tabulated_free_beq_quantities;
   ghl_tabulated_get_index_T                            = &NRPyEOS_tabulated_get_index_T;
   ghl_compute_h_and_cs2                                = &NRPyEOS_tabulated_compute_enthalpy_and_cs2;
   ghl_tabulated_enforce_bounds_rho_Ye_T                = &NRPyEOS_enforce_table_bounds_rho_Ye_T;

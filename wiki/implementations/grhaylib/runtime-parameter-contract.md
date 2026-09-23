@@ -39,10 +39,10 @@ Con2Prim/EOS compatibility, and entropy-gated methods.
 7. Initializes EOS parameters and EOS-dependent dispatch for `EOS_type`.
 
 Both allocations use unchecked `malloc`, not zero-initializing allocation.
-There is no local rollback path if setup later errors. Tabulated initialization
-can itself leave partial table state on several failures; see the
-[tabulated table contract](../../gems/eos/tabulated-table-contract.md). Treat
-successful initialization as a precondition for consumers and termination.
+There is no GRHayLib-local rollback path if setup later errors. Core tabulated
+initialization accepts fresh uninitialized storage and publishes an empty tagged
+aggregate after failure; see the [tabulated table contract](../../gems/eos/tabulated-table-contract.md).
+Treat successful initialization as a precondition for consumers.
 
 `GRHayLib_terminate` owns shutdown:
 
@@ -131,9 +131,8 @@ PPM behavior there; this page only records GRHayLib parameter plumbing.
 - Core wrapper installs EOS function pointers through
   `ghl_initialize_eos_functions(ghl_eos_hybrid)`, then calls
   `ghl_initialize_hybrid_eos`.
-- Current upstream hybrid initialization can read `rho_ppoly[neos-1]` after
-  copying only `neos-1` breakpoints. GRHayLib's CCL bound on `neos` does not
-  resolve that upstream source defect.
+- Core validates the CCL-bounded piece count and consumes exactly `neos-1`
+  density breakpoints and `neos` gamma values.
 
 `EOS_type = "Tabulated"`:
 
@@ -177,11 +176,19 @@ Optional limits:
 - Simple: `rho_b_min`, `rho_b_max`, `P_min`, and `P_max` may stay `-1`; Core
   defaults density and pressure floors to `0.0` and ceilings to `1e300`.
 - Hybrid: `rho_b_min` and `rho_b_max` may stay `-1`; Core defaults density
-  floor to `0.0` and ceiling to `1e300`. Pressure, epsilon, entropy, and tau
-  bounds are computed from hybrid EOS data.
+  floor to `0.0` and ceiling to `1e300`. Pressure, epsilon, and entropy
+  bounds are computed from hybrid EOS data only for enabled density bounds; a
+  disabled floor maps them to `-DBL_MAX` and a disabled ceiling to `DBL_MAX`.
 - Tabulated: `rho_b_min`, `rho_b_max`, `Y_e_min`, `Y_e_max`, `T_min`, and
   `T_max` are clamped or defaulted against table bounds after table read.
   Pressure, epsilon, and entropy bounds come from table metadata.
+
+Core rejects some values that `param.ccl` ranges and `GRHayLib_paramcheck`
+still admit: simple or hybrid `rho_b_atm = 0`, `Gamma` or any used
+`Gamma_ppoly_in` equal to 0 or 1, `Gamma_th = 1`, and nonpositive or
+nonincreasing used `rho_ppoly_in`. Such runs stop at initialization through
+`ghl_abort_if_error`. Aligning the downstream parameter checks needs
+downstream coordination.
 
 ## Con2Prim Routing
 
@@ -248,10 +255,8 @@ source changes:
 - `schedule.ccl` conditionally skips initialization for
   `ID_converter_ILGRMHD` but always schedules termination. Local files do not
   establish alternate allocation ownership or a safe terminate precondition.
-- Simple/hybrid upstream EOS initialization does not set `Y_e_atm` or `T_atm`,
-  while the built constant-atmosphere routine copies both fields. GRHayLib does
-  not seed the allocations before EOS setup, so those two fields remain
-  indeterminate on its simple/hybrid path before atmosphere reset.
+- Simple/hybrid Core EOS initialization sets `Y_e_atm` and `T_atm` to zero
+  placeholders before the built constant-atmosphere routine can copy them.
 - `GRHayLib_terminate` calls tabulated cleanup only after successful state is
   assumed; neither global-pointer null checks nor partial-initialization guards
   are present.
