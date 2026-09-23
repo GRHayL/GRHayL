@@ -44,11 +44,13 @@ ghl_error_codes_t ghl_limit_v_and_compute_u0(
           = ghl_compute_vec2_from_vec3D(metric_adm->gammaDD, limited_utU)
             * metric_adm->lapseinv2;
 
-    // Retry at most 16 times, doubling the inward margin to overcome roundoff
-    // in the shift subtraction and the recomputed metric norm.
+    // Retry at most 64 times, doubling the inward margin to overcome roundoff
+    // in the shift subtraction and the recomputed metric norm. At small lapse,
+    // storing v^i near -beta^i can quantize the speed coarsely. The margin spans
+    // the whole bound within 54 doublings, reaching v^i = -beta^i at worst.
     double inward_bound = one_minus_one_over_W_max_squared;
     double inward_step = inward_bound - nextafter(inward_bound, 0.0);
-    for(int retry = 0; retry < 16 && isfinite(one_minus_one_over_alpha_u0_squared)
+    for(int retry = 0; retry < 64 && isfinite(one_minus_one_over_alpha_u0_squared)
                        && one_minus_one_over_alpha_u0_squared > 0.0
                        && (one_minus_one_over_alpha_u0_squared >= 1.0
                            || 1.0 - one_minus_one_over_alpha_u0_squared

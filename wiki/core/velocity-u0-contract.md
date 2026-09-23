@@ -46,7 +46,11 @@ Outputs and mutation:
   mutation if the requested squared-speed bound is nonfinite or not strictly
   subluminal. After rescaling, it recomputes the achieved metric speed. If
   finite rounding leaves it above the cap, it retries inward rescaling up to
-  16 times with a doubling inward margin and a strictly inward-rounded scale.
+  64 times with a doubling inward margin and a strictly inward-rounded scale.
+  The margin spans the whole bound within 54 doublings, so finite achieved
+  speeds end inside the cap. At very small lapse, storing `v^i` near
+  `-beta^i` quantizes the speed coarsely, so the accepted speed can lie well
+  inside the cap; at the extreme it is `v^i = -beta^i` with `u0 = 1/alpha`.
   It returns the same error if the achieved speed remains nonfinite,
   luminal/superluminal, or above the stored inverse-square Lorentz cap.
 - It returns `ghl_error_u0_singular` for any nonfinite computed `u0`; otherwise
@@ -58,7 +62,15 @@ Outputs and mutation:
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 
 An already subluminal state that does not require limiting retains its measured
-speed; an extreme stored cap alone does not force failure. Checked failure
+speed; an extreme stored cap alone does not force failure.
+
+The cap and `u0` checks hold in double precision. For a limited state, the
+relative accuracy of `u0` is about `DBL_EPSILON * max_Lorentz_factor^2`, which
+is about `2e-6` at a cap of `1e5` and `2e-2` at `1e7`. From caps near `5e7`, a
+successful limited result can be superluminal in exact arithmetic. Above about
+`1.34e8`, `1 - inv_sq_max_Lorentz_factor` rounds to one, so any state that needs
+limiting returns `ghl_error_u0_singular`. The supported cap range is therefore
+the range where this `u0` accuracy is acceptable to the caller. Checked failure
 behavior otherwise remains narrow. The routine does not validate pointers,
 metric signature/invertibility, lapse, or every parameter domain; the formulas
 assume a finite positive lapse and a positive-definite spatial metric. Invalid

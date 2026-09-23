@@ -134,21 +134,20 @@ int main(int argc, char **argv) {
 
       // Keep the legacy comparison away from the W_max=10 branch decision.
       // Sweep moderately relativistic states while retaining random directions.
-      const double W_test = 1.2 + (5.0 - 1.2)*i/(npoints-1);
-      const double utU[3] = {
-        vx[index] + metric_adm.betaU[0],
-        vy[index] + metric_adm.betaU[1],
-        vz[index] + metric_adm.betaU[2]
-      };
+      const double W_test = 1.2 + (5.0 - 1.2) * i / (npoints - 1);
+      const double utU[3]
+            = { vx[index] + metric_adm.betaU[0], vy[index] + metric_adm.betaU[1],
+                vz[index] + metric_adm.betaU[2] };
       const double q = ghl_compute_vec2_from_vec3D(metric_adm.gammaDD, utU)
-                     * metric_adm.lapseinv2;
-      if(!isfinite(q) || q <= 0.0)
+                       * metric_adm.lapseinv2;
+      if(!isfinite(q) || q <= 0.0) {
         ghl_error("Invalid randomized velocity norm in ET-Legacy conservs generator.\n");
-      const double q_target = 1.0 - 1.0/(W_test*W_test);
-      const double velocity_scale = sqrt(q_target/q);
-      vx[index] = utU[0]*velocity_scale - metric_adm.betaU[0];
-      vy[index] = utU[1]*velocity_scale - metric_adm.betaU[1];
-      vz[index] = utU[2]*velocity_scale - metric_adm.betaU[2];
+      }
+      const double q_target = 1.0 - 1.0 / (W_test * W_test);
+      const double velocity_scale = sqrt(q_target / q);
+      vx[index] = utU[0] * velocity_scale - metric_adm.betaU[0];
+      vy[index] = utU[1] * velocity_scale - metric_adm.betaU[1];
+      vz[index] = utU[2] * velocity_scale - metric_adm.betaU[2];
 
       ghl_initialize_primitives(
             rho_b[index], press[index], eps[index],
@@ -161,8 +160,9 @@ int main(int argc, char **argv) {
       ghl_error_codes_t error = ghl_limit_v_and_compute_u0(
             &params, &metric_adm, &prims, &speed_limit);
       ghl_abort_if_error(error);
-      if(speed_limit)
+      if(speed_limit) {
         ghl_error("ET-Legacy conservs input reached the velocity cap.\n");
+      }
 
       // Compute conservatives based on these primitives
       ghl_compute_conservs_and_Tmunu(&metric_adm, &metric_aux, &prims, &cons, &Tmunu);
