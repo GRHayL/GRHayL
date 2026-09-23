@@ -1,4 +1,5 @@
 #include "NRPyEOS_hdf5_helpers.h"
+#include <stdint.h>
 
 #ifndef GHL_DISABLE_HDF5
 
@@ -37,8 +38,8 @@ ghl_error_codes_t NRPyEOS_hdf5_read_dataset(
     goto cleanup_and_return;
   }
 
-  size_t total_size = 1;
-  if(ndims > 0) {
+  size_t total_size = H5Sget_simple_extent_type(dataspace_id) == H5S_NULL ? 0 : 1;
+  if(total_size != 0 && ndims > 0) {
     hsize_t dims[ndims];
 
     if(H5Sget_simple_extent_dims(dataspace_id, dims, NULL) < 0) {
@@ -47,7 +48,12 @@ ghl_error_codes_t NRPyEOS_hdf5_read_dataset(
     }
 
     for(int i = 0; i < ndims; i++) {
-      total_size *= dims[i];
+      if(dims[i] == 0 || expected_size == 0 || dims[i] > (hsize_t)SIZE_MAX
+         || total_size > expected_size / (size_t)dims[i]) {
+        error = ghl_error_hdf5_dataset_size_mismatch;
+        goto cleanup_and_return;
+      }
+      total_size *= (size_t)dims[i];
     }
   }
 
@@ -56,6 +62,10 @@ ghl_error_codes_t NRPyEOS_hdf5_read_dataset(
     goto cleanup_and_return;
   }
 
+  if(total_size > SIZE_MAX / dtype_size[dtype]) {
+    error = ghl_error_hdf5_dataset_size_mismatch;
+    goto cleanup_and_return;
+  }
   array = malloc(total_size * dtype_size[dtype]);
   if(array == NULL) {
     error = ghl_error_out_of_memory;

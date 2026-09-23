@@ -36,30 +36,20 @@ Variant build lists:
 
 ## Direct Functions And Pointer Surface
 
-The direct variant functions above are source-backed public calls. Tests select
-them through test-local function pointers by EOS family, entropy mode, and flux
-direction; those local pointers are not the generic globals below.
+The direct variant functions above are the supported public calls. Tests may
+select them through test-local function pointers by EOS family, entropy mode,
+and flux direction. The unsuffixed generic globals
+`ghl_calculate_HLLE_fluxes_dirn0/1/2` remain as deprecated compatibility
+storage. GRHayL never initializes them, and their `const` primitive signatures
+are incompatible with the direct routines. New code must select a direct
+variant; existing manual assignments require an exact-signature callback.
 
-[GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h)
-and
-[GRHayL/include/ghl_eos_functions_declaration.h](../../../GRHayL/include/ghl_eos_functions_declaration.h)
-also declare generic function pointers named
-`ghl_calculate_HLLE_fluxes_dirn0`, `ghl_calculate_HLLE_fluxes_dirn1`, and
-`ghl_calculate_HLLE_fluxes_dirn2`. Source review of
-[GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)
-shows EOS initialization assigning `ghl_compute_h_and_cs2` and
-`ghl_con2prim_multi_method`; no GRHayL-local assignment to the generic HLLE
-flux pointers is present in the checked-in `GRHayL/` tree. The non-`extern`
-declarations in `ghl_eos_functions_declaration.h`, included once by
-`initialize_eos.c`, provide zero-initialized storage, but repo-wide search finds
-no assignment, call, or test. Their signatures also take `const` primitive
-pointers while direct definitions take mutable primitive pointers, so direct
-functions cannot be assigned without an incompatible function-pointer type.
-
-Status: **declared and stored, but unwired and untested**. Do not call these
-generic globals. This contradicts the Doxygen claim that Core EOS
-initialization automatically selects HLLE pointers; maintainer intent is
-unknown. Direct variant symbols are the only repo-proven callable route.
+For direction `d`, simple/hybrid callers choose
+`ghl_calculate_HLLE_fluxes_dirn<d>_hybrid` or its `_entropy` form; tabulated
+callers choose the corresponding `_tabulated` or `_tabulated_entropy` form.
+Primitive inputs remain mutable because tabulated thermodynamic callbacks can
+clamp them. Supply copies when original face states must be preserved, and
+initialize the EOS global callbacks before a direct kernel call.
 
 ## Caller Contract
 
@@ -131,6 +121,8 @@ Python source together when formulas, variables, or output fields change.
 - **Fixture-generation:** matching data generators call every row/direction,
   but generated outputs use the same implementation and are not an independent
   oracle.
-- **Coverage gaps:** generic pointer globals; ignored EOS error returns;
-  primitive mutation; and zero `cmin + cmax` have no focused tests. The
+- **Coverage gaps:** legacy generic compatibility pointer globals have no
+  focused repository test and Core never assigns them. Ignored EOS error
+  returns, primitive mutation, and zero `cmin + cmax` also have no focused
+  tests. The
   no-HDF5 matrix variant link-checks the retained algebraic tabulated symbols.

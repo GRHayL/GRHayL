@@ -1,4 +1,5 @@
 #include "ghl_unit_tests.h"
+#include <float.h>
 
 int main(int argc, char **argv) {
 
@@ -34,8 +35,7 @@ int main(int argc, char **argv) {
      || !isfinite(simple_eos.eps_min) || !isfinite(simple_eos.entropy_min)
      || !isfinite(simple_eos.eps_atm) || !isfinite(simple_eos.entropy_atm)
      || simple_eos.eps_min != 0.0 || simple_eos.entropy_min != 0.0
-     || !isinf(simple_eos.eps_max) || simple_eos.eps_max < 0.0
-     || !isinf(simple_eos.entropy_max) || simple_eos.entropy_max < 0.0) {
+     || simple_eos.eps_max != DBL_MAX || simple_eos.entropy_max != DBL_MAX) {
     ghl_error("Simple EOS default bounds contain invalid derived values.\n");
   }
 
@@ -57,9 +57,8 @@ int main(int argc, char **argv) {
         1.0, 0.0, 100.0, 1.0, 0.0, 20.0, 2.0, &simple_zero_eos);
   if(error != ghl_success || !isfinite(simple_zero_eos.eps_min)
      || !isfinite(simple_zero_eos.entropy_min) || simple_zero_eos.eps_min != 0.0
-     || simple_zero_eos.entropy_min != 0.0 || !isinf(simple_zero_eos.eps_max)
-     || simple_zero_eos.eps_max < 0.0 || !isinf(simple_zero_eos.entropy_max)
-     || simple_zero_eos.entropy_max < 0.0) {
+     || simple_zero_eos.entropy_min != 0.0 || simple_zero_eos.eps_max != DBL_MAX
+     || simple_zero_eos.entropy_max != DBL_MAX) {
     ghl_error("Simple EOS explicit zero-density floor is invalid.\n");
   }
 
@@ -77,8 +76,8 @@ int main(int argc, char **argv) {
         &hybrid_zero_eos);
   if(error != ghl_success || !isfinite(hybrid_zero_eos.press_min)
      || !isfinite(hybrid_zero_eos.eps_min) || !isfinite(hybrid_zero_eos.entropy_min)
-     || hybrid_zero_eos.press_min != 0.0 || hybrid_zero_eos.eps_min != 0.0
-     || hybrid_zero_eos.entropy_min != 0.0) {
+     || hybrid_zero_eos.press_min != -DBL_MAX || hybrid_zero_eos.eps_min != -DBL_MAX
+     || hybrid_zero_eos.entropy_min != -DBL_MAX) {
     ghl_error("Hybrid EOS explicit zero-density floor is invalid.\n");
   }
 
@@ -89,9 +88,9 @@ int main(int argc, char **argv) {
   if(error != ghl_success || !isfinite(hybrid_default_zero_eos.press_min)
      || !isfinite(hybrid_default_zero_eos.eps_min)
      || !isfinite(hybrid_default_zero_eos.entropy_min)
-     || hybrid_default_zero_eos.press_min != 0.0
-     || hybrid_default_zero_eos.eps_min != 0.0
-     || hybrid_default_zero_eos.entropy_min != 0.0) {
+     || hybrid_default_zero_eos.press_min != -DBL_MAX
+     || hybrid_default_zero_eos.eps_min != -DBL_MAX
+     || hybrid_default_zero_eos.entropy_min != -DBL_MAX) {
     ghl_error("Hybrid EOS default zero-density floor is invalid.\n");
   }
 

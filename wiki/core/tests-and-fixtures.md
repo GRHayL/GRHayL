@@ -31,9 +31,8 @@ fixture contents or metadata forbidden by the
 - Its simple/hybrid Atmosphere checks assert density, pressure, epsilon,
   entropy, and zero velocity. The `Y_e` and temperature assertions are guarded
   by `eos_type == 2`, which the loop never reaches, so this suite does not
-  directly validate those two assignments for any EOS family. Its simple and
-  hybrid EOS structs are not zero-initialized, and their initializers do not set
-  those fields before the Atmosphere call reads them.
+  directly validate those two assignments for any EOS family. The initializers
+  set deterministic zero placeholders, but the suite does not assert them.
 
 ### Core fixture generator
 
@@ -178,8 +177,8 @@ fixture contents or metadata forbidden by the
   pointer before initialization, asserts all pointer targets after each EOS
   selection, or checks an invalid `ghl_eos_t` passed to the `void`
   `ghl_initialize_eos_functions` entry point.
-- Invalid simple EOS gamma domains such as `Gamma == 1` remain outside direct
-  Core-suite coverage and initializer validation.
+- Singular simple EOS gamma rejection (`Gamma == 1`) remains outside direct
+  Core-suite coverage.
 - Clamp helpers: no direct Core clamp test is visible in the listed ground
   truth. Keep `ghl_imin`, `ghl_imax`, `ghl_iclamp`, and `ghl_clamp` coverage as
   weak unless a direct test is added or found elsewhere in the repo.

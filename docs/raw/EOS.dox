@@ -16,16 +16,48 @@
  * Setting up the EOS using @grhayl consists of two steps. First, a
  * ghl_eos_parameters struct should be declared once per simulation (the
  * specifics of this depend on the infrastructure). For long simulations
- * with checkpoint/restart, simply re-initializing the struct on restart is
- * generally the best solution. This struct can then be initialized by using
- * one of these functions:
+ * with checkpoint/restart, reconstruct a fresh struct or first free any live
+ * tabulated allocations before reusing its storage. The struct can then be
+ * initialized by using one of these functions:
  *
  * - @ref ghl_initialize_simple_eos_functions_and_params
  * - @ref ghl_initialize_hybrid_eos_functions_and_params
  * - @ref ghl_initialize_tabulated_eos_functions_and_params
  *
- * which will properly set up all the function pointers and struct parameters
- * for the chosen EOS.
+ * which will properly set up the function pointers and struct parameters
+ * for the chosen EOS. The deprecated generic
+ * `ghl_calculate_HLLE_fluxes_dirn0/1/2` pointers are never assigned. Simple
+ * and hybrid parameter initialization publishes a completed object only on
+ * success. Their density atmosphere must be finite
+ * and positive. For supported `Gamma > 1`, simple derived energy and entropy
+ * minima pair `press_min` with `rho_max`, and maxima pair `press_max` with
+ * `rho_min`. Simple maxima use `DBL_MAX` for a zero density floor or the `1e300`
+ * pressure-ceiling marker, and zero for a zero pressure ceiling.
+ * Hybrid derived minima use `-DBL_MAX` when the density floor is disabled, and
+ * hybrid derived maxima use `DBL_MAX` when the density ceiling is disabled.
+ * Unused atmosphere composition and temperature are set to zero.
+ *
+ * Tabulated initialization requires a fresh object with no live owned
+ * allocations. On failure it releases candidate allocations and returns an
+ * empty object tagged `ghl_eos_tabulated`. In HDF5-enabled builds, call
+ * `ghl_tabulated_free_memory` before reinitializing a live table or switching
+ * its EOS family; cleanup is repeatable for successful, failed-empty,
+ * previously cleaned, and properly zero-initialized objects. Disabled-HDF5
+ * initialization allocates nothing, returns an empty object, and requires no
+ * cleanup.
+ *
+ * Hybrid callers provide `neos` gamma values and `neos - 1` strictly
+ * increasing positive density breakpoints. The breakpoint pointer may be
+ * NULL when `neos` is one.
+ *
+ * Source clients migrating to this interface must remove calls to the former
+ * prototype-only `NRPyEOS_tabulated_get_index_rho` and
+ * `NRPyEOS_tabulated_get_index_Ye` names and use the supported interpolation
+ * routes instead. `NRPyEOS_tabulate_enthalpy` retains its original `void`
+ * function type but warns and stops at the first invalid point without
+ * returning a status, leaving that and later entries unchanged; the table
+ * loader uses `NRPyEOS_tabulate_enthalpy_checked` to reject invalid derived
+ * enthalpy.
  */
 
 /**

@@ -18,12 +18,20 @@
  * While most of the functions in this gem are independent of EOS, the actual
  * HLLE flux calculations are not. Depending on EOS and whether the entropy
  * is being evolved, additional fluxes need to be computed by the function.
- * The EOS function pointers are automatically set to the correct function by
- * the @ref GRHayL_Core EOS initialization functions, but the public HLLE flux
- * entry points can also be directly accessed by using e.g.
+ * Callers select a direct routine by direction, EOS family, and whether
+ * entropy is evolved. For direction zero, the choices are:
  *
  * - @ref ghl_calculate_HLLE_fluxes_dirn0_hybrid
  * - @ref ghl_calculate_HLLE_fluxes_dirn0_hybrid_entropy
  * - @ref ghl_calculate_HLLE_fluxes_dirn0_tabulated
  * - @ref ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy
+ *
+ * Directions one and two follow the same naming pattern. Primitive inputs are
+ * mutable because tabulated thermodynamic callbacks can clamp them; callers
+ * that need the original values must provide copies. EOS global callbacks
+ * must be initialized before calling a direct kernel. The unsuffixed
+ * `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals remain only for source and
+ * binary compatibility. GRHayL never initializes them, and their `const`
+ * primitive signatures are incompatible with the direct routines. New code
+ * must use the direct variants.
  */

@@ -46,8 +46,8 @@ piecewise-polytrope fields:
 - `Gamma_ppoly`: per-piece adiabatic indices copied from initializer input.
 - `K_ppoly`: `K_ppoly[0]` comes from initializer input; later entries are
   filled by `ghl_hybrid_set_K_ppoly_and_eps_integ_consts`.
-- `eps_integ_const`: initialized with `eps_integ_const[0] = 0.0` for one-piece
-  setup and filled for all pieces by
+- `eps_integ_const`: filled for all used pieces, including
+  `eps_integ_const[0] = 0.0`, by
   `ghl_hybrid_set_K_ppoly_and_eps_integ_consts`.
 - `p_ppoly`: pressure breakpoints computed after `K_ppoly` and
   `eps_integ_const` are ready, using
@@ -96,7 +96,9 @@ for `neos`, `rho_ppoly`, `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`,
   `GRHayL/GRHayL_Core/initialize_eos.c`).
 - Rho from pressure: `NRPyEOS_hybrid_compute_rho_cold_from_P_cold` selects the
   pressure piece from `p_ppoly`, computes the corresponding cold density, then
-  enforces rho bounds (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c`).
+  enforces rho bounds. It requires a nonzero `K_ppoly` in the selected piece;
+  an identically zero cold-pressure curve has no unique density inverse
+  (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c`).
 - Rho bounds: `NRPyEOS_hybrid_enforce_bounds__rho` clamps to `rho_min` and
   `rho_max` and reports whether input was already in range
   (`GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c`).
@@ -132,19 +134,20 @@ cleaning.
 `ghl_eos_parameters.rho_ppoly` has `MAX_EOS_PARAMS - 1` entries, and the piece
 lookup/set-constant helpers consume `neos - 1` density breakpoints. Callers
 therefore supply one `Gamma_ppoly` per piece and one fewer density breakpoint
-for multi-piece EOSs. Source does not validate `1 <= neos <= MAX_EOS_PARAMS`,
-pointer lengths, increasing breakpoints, or gamma/constant domains; invalid
-inputs can reach array indexing, `pow`, and division by `Gamma - 1`.
+for multi-piece EOSs; the breakpoint pointer may be `NULL` for one piece.
+Initialization enforces `1 <= neos <= MAX_EOS_PARAMS`, non-null required
+arrays, finite `Gamma_ppoly` values unequal to zero and one, finite `Gamma_th`
+unequal to one, finite coefficients, and finite, positive, strictly increasing
+breakpoints. A zero `K_ppoly0` intentionally defines a zero cold-pressure
+curve; when `K_ppoly0` is nonzero, every constructed `K_ppoly` must remain
+nonzero. Successful initialization does not exclude consumer-specific
+singularities such as Noble recovery with `Gamma_th = 0`. C callers remain
+responsible for supplying arrays of the documented lengths.
 
-`ghl_initialize_hybrid_eos` copies and consumes `rho_ppoly[0..neos-2]` and
-computes the matching `p_ppoly[0..neos-2]` transitions. It does not require or
-read `rho_ppoly[neos-1]`. A one-piece EOS retains its established one-element
-sentinel input, and the unused `p_ppoly[0]` sentinel remains zero.
-
-For a zero density floor with supported `Gamma_ppoly[0] > 1`, initialization
-sets zero cold pressure and entropy and uses `eps_integ_const[0]` for the cold
-specific-energy limit. It does not call density-dividing cold/entropy helpers
-at that endpoint.
+`ghl_initialize_hybrid_eos` copies and computes pressure breakpoints only for
+`rho_ppoly[0..neos-2]`. It never reads a one-piece breakpoint or an unused
+terminal breakpoint. The pressure-piece lookup consumes the same `neos - 1`
+extent.
 
 ## Test Coverage
 

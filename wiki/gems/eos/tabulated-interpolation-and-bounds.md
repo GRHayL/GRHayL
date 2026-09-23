@@ -57,8 +57,9 @@ interpolator source list for these wrapper families.
 
 The live StellarCollapse path stores coordinate arrays as `logrho`, `logtemp`,
 and `ye`. For current interpolation to be correct, each stored coordinate
-array must be uniformly linearly spaced, strictly increasing, and contain at
-least two points. The physical density and temperature values must be
+array is validated as uniformly linearly spaced, strictly increasing, finite,
+and containing at least two points before bulk table data is read. The physical
+density and temperature endpoints must be finite and
 positive, so uniform spacing in `logrho` and `logtemp` means logarithmically
 spaced physical `rho` and `T`; `ye` is uniformly spaced directly.
 
@@ -67,6 +68,8 @@ and last array entries and derives each inverse spacing from the first
 interval. `NRPyEOS_tabulated_helpers.h` then uses those values to select an
 adjacent cell and perform eight-point trilinear interpolation. The current
 path does not recover a nonuniform grid from all coordinate entries.
+Setup also rejects nonrepresentable inverse-spacing products and biased cell
+coordinates before interpolation can use them.
 
 For CompOSE conversion-specific consequences, including the density and
 charge-coordinate maps, read the

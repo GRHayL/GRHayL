@@ -21,9 +21,8 @@ Contracts:
 - `vU` is the transport velocity used in evolution fluxes.
 - `BU` follows GRHayL's rescaled magnetic-field convention.
 - Primitive bounds come from `ghl_eos_parameters` and `ghl_parameters`.
-- Constant atmosphere copies all scalar composition fields, but simple/hybrid
-  EOS initialization does not set `Y_e_atm` or `T_atm`; these are unresolved
-  initialization preconditions outside tabulated EOS.
+- Constant atmosphere copies all scalar composition fields. Simple/hybrid EOS
+  initialization defines the unused `Y_e_atm` and `T_atm` placeholders as zero.
 
 ## Conservative Variables
 
@@ -128,6 +127,6 @@ Contracts:
 - Entropy evolution is controlled by `ghl_parameters::evolve_entropy`.
 - Temperature evolution is controlled by `ghl_parameters::evolve_temp`.
 - `Y_e`, temperature, and entropy are especially coupled between tabulated EOS, Con2Prim, flux entropy variants, and neutrino leakage.
-- Function-pointer declaration/storage does not establish initialization:
-  `ghl_tabulated_free_beq_quantities` is unassigned; use concrete built cleanup
-  as documented by EOS owner page.
+- Function-pointer declaration/storage does not by itself establish
+  initialization; tabulated dispatch setup assigns
+  `ghl_tabulated_free_beq_quantities` to the concrete cleanup implementation.

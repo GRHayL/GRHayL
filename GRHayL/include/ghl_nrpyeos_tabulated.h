@@ -57,11 +57,17 @@ typedef enum {
 extern "C" {
 #endif
 
-// Function prototypes
+// Calls that reach conversion require a zero-initialized or previously cleaned
+// non-owning EOS object. Failures before conversion preserve existing fields.
+// Conversion-allocation and later validation failures release and null table
+// pointers; scalar fields may change.
 ghl_error_codes_t NRPyEOS_read_table_set_EOS_params(
       const char *nuceos_table_name,
       ghl_eos_parameters *restrict eos_params);
 
+// In HDF5-enabled builds, cleanup is repeatable for successful, failed-empty,
+// cleaned, or properly zero-initialized objects. It does not free the outer
+// struct. Disabled-HDF5 initialization allocates nothing and needs no cleanup.
 void NRPyEOS_free_memory(ghl_eos_parameters *restrict eos_params);
 
 ghl_error_codes_t NRPyEOS_P_from_rho_Ye_T(
@@ -290,17 +296,9 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_enthalpy_and_cs2(
       double *restrict enthalpy_ptr,
       double *restrict cs2_ptr);
 
-int NRPyEOS_tabulated_get_index_rho(
-      const ghl_eos_parameters *restrict eos,
-      const double rho);
-
 int NRPyEOS_tabulated_get_index_T(
       const ghl_eos_parameters *restrict eos,
       const double T);
-
-int NRPyEOS_tabulated_get_index_Ye(
-      const ghl_eos_parameters *restrict eos,
-      const double Ye);
 
 ghl_error_codes_t NRPyEOS_tabulated_compute_Ye_of_rho_beq_constant_T(
       const double T,
@@ -331,8 +329,6 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_eps_from_rho(
       const ghl_eos_parameters *restrict eos,
       const double rho,
       double *restrict eps);
-
-void NRPyEOS_tabulated_free_beq_quantities(ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_enforce_table_bounds_rho_Ye_T(
       const ghl_eos_parameters *restrict eos,
@@ -368,6 +364,12 @@ ghl_error_codes_t NRPyEOS_tabulated_compute_deps_dP_from_rho(
       const double rho,
       double *restrict deps_dP);
 
+// Returns ghl_error_invalid_eos_table before storing a non-finite log(h).
+ghl_error_codes_t NRPyEOS_tabulate_enthalpy_checked(ghl_eos_parameters *restrict eos);
+
+// Compatibility wrapper for callers that use the original public function type.
+// It discards the status and stops at the first invalid point, leaving that
+// and later entries unchanged; use NRPyEOS_tabulate_enthalpy_checked instead.
 void NRPyEOS_tabulate_enthalpy(ghl_eos_parameters *restrict eos);
 
 void NRPyEOS_tabulated_adjust_sound_speed(ghl_eos_parameters *restrict eos, bool cs2_is_relativistic);

@@ -51,46 +51,59 @@ to
    `ghl_eos_table_stellarcollapse` through the stellar-collapse reader in
    [`GRHayL/EOS/Tabulated/NRPyEOS_read_table_set_EOS_params.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_read_table_set_EOS_params.c).
 4. HDF5 adapter: `NRPyEOS_stellarcollapse_read_table` opens the HDF5 file,
-   reads scalar dimensions, `energy_shift`, grid arrays, table-backed
-   quantities, and `have_rel_cs2` when present; HDF5 dataset helpers live in
+   reads scalar dimensions and `energy_shift`, validates checked counts, reads
+   and validates uniform increasing grid arrays, then reads table-backed
+   quantities; it also reads `have_rel_cs2` when present. HDF5 dataset helpers live in
    [`GRHayL/EOS/Tabulated/NRPyEOS_hdf5_helpers.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_hdf5_helpers.c)
    and
    [`GRHayL/EOS/Tabulated/NRPyEOS_hdf5_helpers.h`](../../../GRHayL/EOS/Tabulated/NRPyEOS_hdf5_helpers.h).
 5. Conversion: `NRPyEOS_stellarcollapse_to_ghl` allocates `ghl_eos_parameters`
    table arrays, converts grid units, copies mapped table quantities, and stores
    the converted energy shift.
-6. Post-read processing: `NRPyEOS_read_table_set_EOS_params` converts pressure,
-   energy, sound-speed, and derivative units; fills `table_eps`; calls
-   `NRPyEOS_tabulate_enthalpy`; calls
-   `NRPyEOS_tabulated_adjust_sound_speed`; computes interpolation stride
-   inverses and table bounds.
+6. Post-read processing: `NRPyEOS_read_table_set_EOS_params` validates derived
+   physical bounds, interpolation strides/products, and biased index
+   representability; converts pressure, energy, sound-speed, and derivative
+   units; fills `table_eps`; checks `NRPyEOS_tabulate_enthalpy_checked`; calls
+   `NRPyEOS_tabulated_adjust_sound_speed`; and computes table bounds.
 7. Cleanup: the temporary stellar-collapse table is freed after conversion, and
    GRHayL table memory is later released through `NRPyEOS_free_memory`; see
    [`GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_free_memory.c).
 
+## Loader Acceptance Boundary
+
+- Each grid dimension must be at least two. The checked point product must fit
+  both `INT_MAX / NRPyEOS_ntablekeys` and
+  `SIZE_MAX / sizeof(double) / NRPyEOS_ntablekeys`.
+- Every HDF5 read must have exactly its expected element count. Scalar
+  dimensions, `energy_shift`, and the optional `have_rel_cs2` flag each require
+  one element; expected table and axis datasets must be nonempty.
+- Stored axes and their code-unit transforms must be finite and strictly
+  increasing. Each axis must be uniform within `1e-8` cell-index units relative
+  to the spacing between its first two nodes.
+- Derived physical endpoints, inverse spacings, products, and biased integer
+  index expressions must remain finite and representable before publication.
+
+These are structural and interpolation-domain checks, not physical
+certification of all table values.
+
 ## Success And Failure Ownership
 
-After successful initialization, caller owns table arrays and optional NN
-model in `ghl_eos_parameters` and should call `ghl_tabulated_free_memory`
-exactly once. `NRPyEOS_free_memory` frees table arrays, cached beta-equilibrium
-arrays, and NN model; it nulls beta-equilibrium and NN pointers, but does not
-null main table-array pointers.
+Fresh tabulated initialization requires a writable destination with no live
+owned allocations; its bytes need not be pre-zeroed. Success transfers all
+table and optional NN ownership. Any failure releases the local candidate and
+publishes an empty aggregate tagged `ghl_eos_tabulated` with null owned pointers
+and zero dimensions. A live table must be cleaned before reinitialization or an
+EOS-family switch.
 
-Initialization does not provide one transactional rollback path:
-
-- table-reader/adapter failures clean temporary adapter allocation;
-- NN-model load failure calls full table cleanup;
-- atmosphere/bounds validation and atmosphere-interpolation failures occurring
-  after successful table read return without full cleanup;
-- beta-equilibrium cache pointers and `c2p_nn` are initialized to `NULL` before
-  table read or NN loading, so cleanup cannot free uninitialized values from
-  those fields on an early failure;
-- conversion allocation failure frees allocated table arrays but does not reset
-  their fields to `NULL`.
-
-Callers should provide valid, in-table initialization inputs and treat failed
-initialization as partial state whose cleanup needs source-aware handling. This
-documents current behavior; uniform rollback remains a product handoff.
+In HDF5-enabled builds, `NRPyEOS_free_memory` frees and nulls all six table
+arrays, cached beta-equilibrium arrays, and the NN model. Cleanup is repeatable
+for successful, failed-empty, previously cleaned, or properly zero-initialized
+objects; it does not free the outer struct or make arbitrary uninitialized
+storage safe. The direct low-level reader has the corresponding configured-empty
+precondition for calls that reach conversion. Failures before conversion preserve
+pre-call fields. Conversion-allocation and later validation failures release and
+null table pointers; scalar fields need not roll back. Disabled-HDF5 initialization
+allocates nothing and requires no cleanup.
 
 ## Units And Energy Shift
 
@@ -133,7 +146,8 @@ build behavior is routed through [`configure`](../../../configure) and
 [`README.md`](../../../README.md). Under `GHL_DISABLE_HDF5`, HDF5-backed entry
 points return or raise disabled-HDF5 errors instead of loading tables. Header
 declarations alone do not prove a concrete tabulated EOS symbol was linked in
-this mode.
+this mode. Process-wide tabulated callback storage remains present but is not
+assigned callable tabulated implementations.
 
 ## Tests And Fixtures
 
