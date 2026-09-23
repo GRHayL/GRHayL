@@ -116,7 +116,7 @@ CCTK_BOOLEAN evolve_entropy "Do we want to evolve the entropy?"
 # Ideal Fluid EOS parameters
 CCTK_REAL Gamma "Gamma parameter"
 {
- 0:* :: "Physical values"
+ 1:* :: "> 1; GRHayLib_paramcheck rejects 1 and non-finite values."
 -1   :: "forbidden value to make sure it is explicitly set in the parfile"
 } -1
 

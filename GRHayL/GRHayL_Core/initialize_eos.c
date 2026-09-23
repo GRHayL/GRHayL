@@ -131,27 +131,24 @@ ghl_error_codes_t ghl_initialize_simple_eos(
   eos->T_atm = 0.0;
 
   const double Gm1 = Gamma - 1.0;
+  // For Gamma > 1, eps and entropy decrease with density at fixed pressure,
+  // so the maxima pair press_max with rho_min and the minima press_min with
+  // rho_max.
   // -------------- Ceilings --------------
-  if(eos->rho_max == 1e300 || eos->press_max == 1e300) {
-    eos->eps_max = DBL_MAX;
-    eos->entropy_max = DBL_MAX;
+  if(eos->rho_min == 0.0 || eos->press_max == 1e300) {
+    eos->eps_max = eos->press_max > 0.0 ? DBL_MAX : 0.0;
+    eos->entropy_max = eos->press_max > 0.0 ? DBL_MAX : 0.0;
   }
   else {
-    eos->eps_max = eos->press_max / (eos->rho_max * Gm1);
+    eos->eps_max = eos->press_max / (eos->rho_min * Gm1);
     eos->entropy_max
-          = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_max);
+          = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_max);
   }
 
   // --------------- Floors ---------------
-  if(eos->rho_min == 0.0) {
-    eos->eps_min = -DBL_MAX;
-    eos->entropy_min = -DBL_MAX;
-  }
-  else {
-    eos->eps_min = eos->press_min / (eos->rho_min * Gm1);
-    eos->entropy_min
-          = ghl_hybrid_compute_entropy_function(eos, eos->rho_min, eos->press_min);
-  }
+  eos->eps_min = eos->press_min / (eos->rho_max * Gm1);
+  eos->entropy_min
+        = ghl_hybrid_compute_entropy_function(eos, eos->rho_max, eos->press_min);
 
   // --------- Atmospheric values ---------
   eos->eps_atm = eos->press_atm/(eos->rho_atm*Gm1);

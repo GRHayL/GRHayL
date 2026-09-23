@@ -29,9 +29,10 @@
  * `ghl_calculate_HLLE_fluxes_dirn0/1/2` pointers are never assigned. Simple
  * and hybrid parameter initialization publishes a completed object only on
  * success. Their density atmosphere must be finite
- * and positive. For a disabled simple floor, pressure remains independently
- * configured while derived energy and entropy minima use `-DBL_MAX`; disabled
- * simple ceilings use `DBL_MAX` when either density or pressure is unbounded.
+ * and positive. For supported `Gamma > 1`, simple derived energy and entropy
+ * minima pair `press_min` with `rho_max`, and maxima pair `press_max` with
+ * `rho_min`. Simple maxima use `DBL_MAX` for a zero density floor or the `1e300`
+ * pressure-ceiling marker, and zero for a zero pressure ceiling.
  * Hybrid derived minima use `-DBL_MAX` when the density floor is disabled, and
  * hybrid derived maxima use `DBL_MAX` when the density ceiling is disabled.
  * Unused atmosphere composition and temperature are set to zero.

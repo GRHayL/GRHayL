@@ -44,7 +44,11 @@ ideal-fluid setup. `ghl_initialize_simple_eos` sets `eos_type` to
 `Gamma_th` and `Gamma_ppoly[0]`, sets one-piece hybrid constants, stores
 pressure atmosphere/floor/ceiling values from inputs or defaults, computes
 epsilon values from the ideal-fluid pressure relation, computes entropy through
-the hybrid entropy helper, and sets `tau_atm = rho_atm * eps_atm`.
+the hybrid entropy helper, and sets `tau_atm = rho_atm * eps_atm`. For the
+supported `Gamma > 1` domain, minimum epsilon/entropy use maximum density and
+maximum epsilon/entropy use minimum density. A zero density floor or the
+pressure-ceiling marker gives the finite `DBL_MAX` upper sentinel instead of
+evaluating a zero denominator; a zero pressure ceiling gives zero.
 
 Simple and hybrid initializers set the unused-family `Y_e_atm` and `T_atm`
 placeholders to zero. `ghl_set_prims_to_constant_atm` therefore copies defined
@@ -54,14 +58,17 @@ callers may still override them afterward.
 Hybrid EOS setup sets `eos_type` to `ghl_eos_hybrid`, stores the requested
 piece count and piece arrays, computes derived `K_ppoly`,
 `eps_integ_const`, `p_ppoly`, atmosphere values, floors, and ceilings through
-hybrid helpers.
+hybrid helpers. It computes only the `neos - 1` real pressure transitions and
+leaves the unused active slot `p_ppoly[neos-1]` at the candidate's zero
+initialization. Its zero density floor reports `-DBL_MAX` minima.
 
 Tabulated EOS setup sets `eos_type` to `ghl_eos_tabulated`, stores
-`table_type` and `clean_sound_speed`, reads the table, clamps requested
+`table_type` and `clean_sound_speed`, initializes beta-equilibrium and NN
+cleanup-owned pointers to `NULL` before any fallible table or model operation,
+reads the table, clamps requested
 `rho`, `Y_e`, and `T` bounds to table bounds, initializes atmosphere pressure,
 energy, and entropy through tabulated interpolation, sets table-derived
-pressure/energy/entropy bounds, initializes beta-equilibrium arrays to `NULL`,
-and sets `root_finding_precision = 1e-10`.
+pressure/energy/entropy bounds, and sets `root_finding_precision = 1e-10`.
 
 Simple and hybrid setup construct a local candidate and leave the destination
 unchanged on error. Tabulated setup instead requires a destination with no live
@@ -86,12 +93,15 @@ calling `ghl_initialize_tabulated_eos`.
   derived atmosphere/bound fields must be finite. Cold-piece gamma values reject
   exact `0` and `1`; thermal gamma rejects exact `1`. Other finite sub-unity and
   negative values remain permitted by the Core API.
-- Negative density minima normalize to zero. Simple keeps its independently
-  configured pressure floor and uses `-DBL_MAX` for energy/entropy minima at a
-  zero density floor. Hybrid uses `-DBL_MAX` for pressure, energy, and entropy
-  minima there. Negative density or simple-pressure maxima normalize to the
-  `1e300` disabled marker; simple derived maxima use `DBL_MAX` if either marker
-  is present, while hybrid uses `DBL_MAX` when density is unbounded.
+- Negative density minima normalize to zero, and negative density or
+  simple-pressure maxima normalize to the `1e300` disabled marker. For
+  supported `Gamma > 1`, simple derived extrema use opposite density
+  endpoints: energy/entropy minima pair `press_min` with `rho_max`, and maxima
+  pair `press_max` with `rho_min`. Simple derived maxima use `DBL_MAX` at a
+  zero density floor or the pressure-ceiling marker, or zero for a zero
+  pressure ceiling. Hybrid uses `-DBL_MAX` for pressure, energy, and entropy
+  minima at a zero density floor and `DBL_MAX` for its maxima when density is
+  unbounded.
 - Hybrid setup enforces `1 <= neos <= MAX_EOS_PARAMS`, requires one finite
   nonsingular gamma per piece, and requires `neos - 1` finite, positive,
   strictly increasing breakpoints. The breakpoint pointer may be `NULL` for a

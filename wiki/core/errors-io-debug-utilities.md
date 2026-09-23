@@ -78,18 +78,16 @@ line. Source: [`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h).
 Installed public header routing is listed in
 [`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn).
 
-Current debug output has two bounded hazards:
+Current debug output has one bounded omission:
 
 - `ghl_debug_print_prims` omits `u0`; it prints thermodynamic fields,
   `vU[0..2]`, and `BU[0..2]` only.
-- `ghl_debug_print_cons` labels its first five columns `D`, `tau`, `SD0`,
-  `SD1`, `SD2`, but passes values in the order `tau`, `SD0`, `SD1`, `SD2`,
-  `rho`. Do not use those labels as trustworthy field identification until
-  source is corrected.
+- `ghl_debug_print_cons` prints values in its label order: `D`/`rho`, `tau`,
+  `SD0`, `SD1`, `SD2`, entropy, and `Y_e`.
 
 `Unit_Tests/unit_test_con2prim_debug.c` calls both inline printers for manual
-diagnostic output but does not assert column labels or values. No focused debug
-format test is visible in the listed Core evidence.
+diagnostic output but does not assert column labels or values. No persistent
+focused debug-format assertion is visible in the listed Core evidence.
 
 ## Min, Max, And Clamp Utilities
 

@@ -46,6 +46,14 @@ Generator source presence does not mean CI regenerates trusted data. The
 ordinary runner downloads trusted fixtures before running tests, and workflow
 test jobs also download fixture files before execution.
 
+The hybrid and tabulated generators rescale each face velocity to an ADM
+Lorentz factor from 1.2 through 5, well below their `W_max=10` cap, while
+keeping its random direction. Replay therefore calls
+`ghl_limit_v_and_compute_u0` without reaching its cap branch, so the stored
+references do not depend on limiter rounding. The direct Core limiter tests in
+the [velocity/u0 contract](../../core/velocity-u0-contract.md#tests) own
+cap-boundary coverage.
+
 ## Characteristic-Speed Evidence
 
 Characteristic speeds are fixture evidence here. The hybrid and tabulated data

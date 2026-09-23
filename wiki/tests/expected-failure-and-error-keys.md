@@ -26,6 +26,13 @@ specific library error code. The test body must first compare returned code
 with `expected_error_code(...)`; preserve captured output when distinguishing an
 expected harness exit from an unrelated crash or setup failure.
 
+`pass_test(...)` exits nonzero after an intended expected-error or skip path.
+`fail_test(...)` exits zero for unexpected internal failures so the outer
+runner rejects the key. Common hybrid-EOS setup failure, an unexpected string
+from the key-33 invalid-name call, and key 80's prerequisite pressure failure
+all use this failure-of-test convention rather than accidentally satisfying the
+outer expected-failure status check.
+
 Keys `86` and `87` directly supply the expected NRPyLeakage blocking and
 nonfinite-output enum values. They cover message mapping and termination in
 `ghl_abort_if_error`; the NRPyLeakage physics test covers producer returns.

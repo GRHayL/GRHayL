@@ -98,7 +98,7 @@ file, not aggregate target success.
 
 | Owner | Fixture families | Notes |
 | --- | --- | --- |
-| Core/chalice | `grhayl_core_test_suite_input.bin` | Generator spelling drift with `grhayL_core_test_suite_input.bin` routes to [contradictions.md](../contradictions.md). |
+| Core/chalice | `grhayl_core_test_suite_input.bin` | Generator, consumer, runner, and workflows use the same lowercase name. |
 | Con2Prim/Core shared | `metric_Bfield_initial_data.bin`, `apply_conservative_limits_*`, `con2prim_multi_method_hybrid_*`, `enforce_primitive_limits_and_compute_u0_*`, `compute_conservs_and_Tmunu_*` | `metric_Bfield_initial_data.bin` is shared by multiple tests; changing it has broad blast radius across limit, recovery, `u0`, conservative, and stress-energy checks. |
 | Con2Prim tabulated | `con2prim_tabulated_*_unperturbed.bin`, `con2prim_tabulated_*_perturbed.bin` | HDF5-table-backed replay/generation modes route through Con2Prim/EOS pages. |
 | EOS | `simple_table.h5`, checked-in sample-table assets | Table lifecycle routes through EOS test docs. |
@@ -118,5 +118,3 @@ field-by-field layout tables.
   [contradictions.md](../contradictions.md).
 - Fixed perturbation wording vs test-specific perturbation behavior routes to
   [contradictions.md](../contradictions.md).
-- `grhayL_core_test_suite_input.bin` vs `grhayl_core_test_suite_input.bin`
-  fixture spelling routes to [contradictions.md](../contradictions.md).

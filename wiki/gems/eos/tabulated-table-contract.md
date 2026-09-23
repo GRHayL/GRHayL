@@ -43,8 +43,9 @@ to
    low-level initializer in
    [`GRHayL/GRHayL_Core/initialize_eos.c`](../../../GRHayL/GRHayL_Core/initialize_eos.c).
 2. Low-level init: `ghl_initialize_tabulated_eos` records EOS type, table type,
-   and `clean_sound_speed`, then calls the table read function and derives EOS
-   atmosphere, floor, ceiling, and root-finding state.
+   and `clean_sound_speed`; initializes beta-equilibrium cache pointers and the
+   optional NN-model pointer to `NULL`; then calls the table read function and
+   derives EOS atmosphere, floor, ceiling, and root-finding state.
 3. Table read: `NRPyEOS_read_table_set_EOS_params` validates `ghl_eos_tabulated`,
    dispatches on `eos->table_type`, and currently routes
    `ghl_eos_table_stellarcollapse` through the stellar-collapse reader in

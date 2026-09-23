@@ -28,6 +28,11 @@ The test sources read downloaded trusted output and perturbed output, compute
 current GRHayL results, then compare with `ghl_pert_test_fail` or related helper
 wrappers. Exact binary ordering stays in paired test/generator source files.
 
+The conservs input generator targets ADM Lorentz factors from 1.2 through 5,
+well below its `W_max=10` cap, and rejects a generated row if speed limiting
+fires. This keeps the IllinoisGRMHD compatibility comparison off the limiter
+branch decision; the direct Core limiter tests retain cap-boundary coverage.
+
 The primitives replay retains the legacy outputs unchanged. Its narrow
 velocity-limiter compatibility path uses a fixed bound derived from the old
 limiter interval; it does not rescale expected values using the recovered
