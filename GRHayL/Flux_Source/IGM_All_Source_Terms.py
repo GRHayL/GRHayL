@@ -76,11 +76,12 @@ def Cfunction__GRMHD_SourceTerms(Ccodesdir, includes=None, formalism="ADM", outC
     prims_GRHayL = ["u0", "vU[0]*u4U0", "vU[1]*u4U0", "vU[2]*u4U0", "BU[0]", "BU[1]", "BU[2]", "press", "rho"]
 
     prestring = r"""
-double h, cs2;
+  double h, cs2;
 
-const ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
-if(error != ghl_success)
-  return error;
+  const ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
+  if(error != ghl_success) {
+    return error;
+  }
 """
 
     for i in range(len(prims_NRPy)):

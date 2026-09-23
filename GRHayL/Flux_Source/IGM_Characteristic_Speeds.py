@@ -161,14 +161,16 @@ def Cfunction__GRMHD_characteristic_speeds(Ccodesdir, includes=None, formalism="
     prims_GRHayL = ["u0", "vU[0]", "vU[1]", "vU[2]", "BU[0]", "BU[1]", "BU[2]", "rho"]
 
     prestring = r"""
-double h_r, h_l, cs2_r, cs2_l;
+  double h_r, h_l, cs2_r, cs2_l;
 
-ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-if(error != ghl_success)
-  return error;
-error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
-if(error != ghl_success)
-  return error;
+  ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
+  if(error != ghl_success) {
+    return error;
+  }
+  error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+  if(error != ghl_success) {
+    return error;
+  }
 """
 
     for i in range(len(prims_NRPy_r)):

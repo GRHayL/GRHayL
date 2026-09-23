@@ -261,14 +261,16 @@ def Cfunction__GRMHD_fluxes(Ccodesdir, variant, formalism="ADM", includes=None, 
         prims_GRHayL += ["Y_e"]
 
     prestring = r"""
-double h_r, h_l, cs2_r, cs2_l;
+  double h_r, h_l, cs2_r, cs2_l;
 
-ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-if(error != ghl_success)
-  return error;
-error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
-if(error != ghl_success)
-  return error;
+  ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
+  if(error != ghl_success) {
+    return error;
+  }
+  error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+  if(error != ghl_success) {
+    return error;
+  }
 """
 
     for i in range(len(prims_NRPy_r)):
@@ -368,24 +370,25 @@ if(error != ghl_success)
             vars_rhs += [Y_e_star_HLLE_flux]
 
         speed_guard = f"""
-const double wavespeed_scale =
-      fmax(1.0, fmax(fabs({cmins[flux_dirn]}), fabs({cmaxs[flux_dirn]})));
-if(!isfinite({cmins[flux_dirn]}) || !isfinite({cmaxs[flux_dirn]}) ||
-   {cmins[flux_dirn]} < -DBL_EPSILON*wavespeed_scale ||
-   {cmaxs[flux_dirn]} < -DBL_EPSILON*wavespeed_scale)
-  return ghl_error_invalid_hlle_wavespeeds;
-const double cmin_floored = fmax({cmins[flux_dirn]}, 0.0);
-const double cmax_floored = fmax({cmaxs[flux_dirn]}, 0.0);
-if(cmin_floored > DBL_MAX - cmax_floored ||
-   (cmin_floored > 1.0 && cmax_floored > DBL_MAX/cmin_floored))
-  return ghl_error_invalid_hlle_wavespeeds;
-const double wavespeed_sum = cmin_floored + cmax_floored;
-if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0/DBL_MAX)
-  return ghl_error_invalid_hlle_wavespeeds;
-const double cmin_weight = cmin_floored/wavespeed_sum;
-const double cmax_weight = cmax_floored/wavespeed_sum;
-const double dissipation_speed =
-      cmin_floored*cmax_floored/wavespeed_sum;
+  const double wavespeed_scale = fmax(1.0, fmax(fabs({cmins[flux_dirn]}), fabs({cmaxs[flux_dirn]})));
+  if(!isfinite({cmins[flux_dirn]}) || !isfinite({cmaxs[flux_dirn]})
+     || {cmins[flux_dirn]} < -DBL_EPSILON * wavespeed_scale
+     || {cmaxs[flux_dirn]} < -DBL_EPSILON * wavespeed_scale) {{
+    return ghl_error_invalid_hlle_wavespeeds;
+  }}
+  const double cmin_floored = fmax({cmins[flux_dirn]}, 0.0);
+  const double cmax_floored = fmax({cmaxs[flux_dirn]}, 0.0);
+  if(cmin_floored > DBL_MAX - cmax_floored
+     || (cmin_floored > 1.0 && cmax_floored > DBL_MAX / cmin_floored)) {{
+    return ghl_error_invalid_hlle_wavespeeds;
+  }}
+  const double wavespeed_sum = cmin_floored + cmax_floored;
+  if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0 / DBL_MAX) {{
+    return ghl_error_invalid_hlle_wavespeeds;
+  }}
+  const double cmin_weight = cmin_floored / wavespeed_sum;
+  const double cmax_weight = cmax_floored / wavespeed_sum;
+  const double dissipation_speed = cmin_floored * cmax_floored / wavespeed_sum;
 """
         body = outputC(vars_rhs, vars_to_write, params=outCparams,
                    filename="returnstring", prestring=speed_guard+prestring)
