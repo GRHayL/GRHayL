@@ -5,11 +5,18 @@ ghl_error_codes_t NRPyEOS_stellarcollapse_to_ghl(
       NRPyEOS_stellarcollapse_t *restrict sc,
       ghl_eos_parameters *restrict eos) {
 
+  size_t checked_npoints;
+  ghl_error_codes_t err = NRPyEOS_stellarcollapse_check_dimensions(
+        sc->n_rho, sc->n_temperature, sc->n_ye, &checked_npoints);
+  if(err != ghl_success) {
+    return err;
+  }
+
   eos->N_rho = sc->n_rho;
   eos->N_T = sc->n_temperature;
   eos->N_Ye = sc->n_ye;
 
-  const int npoints = eos->N_rho * eos->N_T * eos->N_Ye;
+  const int npoints = (int)checked_npoints;
 
   eos->table_logrho = (double *)malloc(sizeof(double) * eos->N_rho);
   eos->table_logT = (double *)malloc(sizeof(double) * eos->N_T);
@@ -21,11 +28,17 @@ ghl_error_codes_t NRPyEOS_stellarcollapse_to_ghl(
   if(eos->table_logrho == NULL || eos->table_logT == NULL || eos->table_Y_e == NULL
      || eos->table_all == NULL || eos->table_eps == NULL || eos->table_logh == NULL) {
     free(eos->table_logrho);
+    eos->table_logrho = NULL;
     free(eos->table_logT);
+    eos->table_logT = NULL;
     free(eos->table_Y_e);
+    eos->table_Y_e = NULL;
     free(eos->table_all);
+    eos->table_all = NULL;
     free(eos->table_eps);
+    eos->table_eps = NULL;
     free(eos->table_logh);
+    eos->table_logh = NULL;
     return ghl_error_out_of_memory;
   }
 

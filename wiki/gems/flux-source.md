@@ -34,9 +34,13 @@ Key public surface:
 - the matching `*_checked` name for each routine above, returning
   `ghl_error_codes_t`
 
-Direct suffixed HLLE functions are the supported callable routes. Deprecated
-generic direction globals remain exported but unwired for compatibility. Route
-details to the [HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
+Direct suffixed HLLE functions, legacy `void` names and their `_checked`
+counterparts, are the supported call surface. The unsuffixed
+`ghl_calculate_HLLE_fluxes_dirn0/1/2` globals remain only as uninitialized
+compatibility storage. New callers select direction, EOS family, and entropy
+mode explicitly; primitive arguments remain mutable because tabulated callbacks
+may limit them to table bounds. Route details to the
+[HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
 
 ## Implementation Paths
 

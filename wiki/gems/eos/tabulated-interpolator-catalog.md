@@ -18,17 +18,15 @@ Assignments from public pointers to NRPyEOS implementations are in
 
 | Seam | Current evidence | Classification |
 | --- | --- | --- |
-| Public tabulated pointer declarations | 38 `ghl_tabulated_*` pointer names in `ghl_eos_functions.h` | Declared |
-| Pointer storage | Same 38 names in `ghl_eos_functions_declaration.h` | Defined global storage |
-| Initializer assignments | 37 names in `NRPyEOS_initialize_tabulated_functions.c` | Assigned when HDF5 enabled |
-| Missing assignment | `ghl_tabulated_free_beq_quantities` has declaration/storage but no initializer assignment | Declared/defined, not initialized; global storage remains null unless another owner assigns it |
-| Direct cleanup implementation | `NRPyEOS_tabulated_free_beq_quantities` is built and called directly by `NRPyEOS_free_memory` | Internal callable implementation; not evidence that the public pointer is usable |
-| Duplicate prototype | `ghl_nrpyeos_tabulated.h` declares `NRPyEOS_tabulated_free_beq_quantities` twice | Header duplication |
-| Index prototypes | Header declares rho, temperature, and electron-fraction NRPyEOS index functions | Temperature alone has definition/build/pointer-assignment evidence; rho and electron-fraction are prototype-only |
+| Public tabulated pointer declarations | `ghl_tabulated_*` pointer names in `ghl_eos_functions.h` | Declared |
+| Pointer storage | Matching names in `ghl_eos_functions_declaration.h` | Defined global storage |
+| Initializer assignments | Includes `ghl_tabulated_free_beq_quantities` | Assigned when HDF5 enabled |
+| Direct cleanup implementation | `NRPyEOS_tabulated_free_beq_quantities` is built, assigned to the public slot, and called by `NRPyEOS_free_memory` | Supported cleanup path |
+| Index helper | Header retains only the implemented `NRPyEOS_tabulated_get_index_T` helper | Defined, built, and assigned |
 
-No absent seam establishes maintainer intent. Do not call the unassigned
-public free pointer or the prototype-only rho/electron-fraction index names as
-if they were supported symbols.
+The former prototype-only rho/electron-fraction index declarations and the
+duplicate cleanup prototype were removed. Rebuild source clients against the
+corrected installed header.
 
 ## Built Wrapper Groups
 
@@ -82,21 +80,18 @@ The direct helper is
 [`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c`](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_T_interpolate_n_quantities.c).
 The auxiliary-input helper is
 [`GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c`](../../../GRHayL/EOS/Tabulated/interpolators/NRPyEOS_from_rho_Ye_aux_find_T_and_interpolate_n_quantities.c).
+After temperature recovery it returns the final direct-interpolation status;
+callers therefore see a final bounds/interpolation failure instead of success.
 
 Table index routing currently exposes `ghl_tabulated_get_index_T`, assigned to
 `NRPyEOS_tabulated_get_index_T` in
 [`GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c).
 The target implementation is
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_get_index.c).
-Header prototypes for `NRPyEOS_tabulated_get_index_rho` and
-`NRPyEOS_tabulated_get_index_Ye` exist, but repo-local source currently shows
-only the `NRPyEOS_tabulated_get_index_T` implementation. Treat this as
-prototype-only API drift, not a new page.
-
-The implemented temperature index takes `log(T)`, rejects values outside the
-stored log-temperature endpoints with `-1`, and computes an integer bin using
-the first grid spacing. It therefore relies on positive input and a uniform
-log-temperature grid; the function itself does not validate either condition.
+The temperature index rejects non-finite and non-positive inputs before
+`log(T)`, rejects values outside stored log-temperature endpoints with `-1`,
+and computes an integer bin using the first grid spacing. Successful table load
+establishes the uniform-grid precondition.
 
 Bounds enforcement helpers live in
 [`GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_enforce_table_bounds.c).
@@ -117,9 +112,9 @@ constant temperature. `NRPyEOS_tabulated_compute_Ye_P_eps_of_rho_beq_constant_T`
 extends that cache with `lp_of_lr`, `le_of_lr`, and `lh_of_lr`. Consumer routes
 include `Ye_of_rho`, `P_from_rho`, `rho_from_P`, `eps_from_rho`,
 `dP_drho_from_rho`, and `deps_dP_from_rho`. Memory cleanup is
-`NRPyEOS_tabulated_free_beq_quantities`. The similarly named public pointer
-`ghl_tabulated_free_beq_quantities` is not assigned; full table cleanup calls
-the concrete NRPyEOS routine directly.
+`NRPyEOS_tabulated_free_beq_quantities`; the tabulated registry assigns the
+public `ghl_tabulated_free_beq_quantities` slot to it. Full table cleanup also
+calls the concrete routine.
 
 Cache consumers do not allocate on demand. Call the `Ye_of_rho` builder before
 `Ye_from_rho`; call the combined `Ye_P_eps_of_rho` builder before pressure,
@@ -131,7 +126,12 @@ cache fields is outside the implemented contract.
 Derived enthalpy tabulation is owned by
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulate_enthalpy.c).
 It fills the enthalpy table slot and `table_logh` using already converted table
-state and the stored energy shift.
+state and the stored energy shift. `NRPyEOS_tabulate_enthalpy_checked` returns
+`ghl_error_invalid_eos_table` before evaluating or storing `log(h)`; the owning
+loader then discards the table. The original `void NRPyEOS_tabulate_enthalpy`
+function remains as a source-compatible wrapper for direct callers; it discards
+the status and stops at the first invalid point, leaving that and later entries
+unchanged.
 
 Sound-speed normalization and optional cleaning are owned by
 [`GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c`](../../../GRHayL/EOS/Tabulated/NRPyEOS_tabulated_adjust_sound_speed.c).
@@ -151,7 +151,7 @@ wrappers, but source search finds no direct public-pointer call for
 `ghl_tabulated_compute_P_S_T_from_eps`, either enthalpy-input wrapper,
 `ghl_tabulated_compute_Ye_of_rho_beq_constant_T`, the `T`/`eps`/`S`
 bound-enforcement pointers, `ghl_tabulated_get_index_T`,
-`ghl_tabulated_read_table_set_EOS_params`, or the unassigned
+`ghl_tabulated_read_table_set_EOS_params`, or the assigned
 free-beta-equilibrium pointer. Some are exercised indirectly by initialization
 or other calls; direct-call absence remains a coverage distinction, not
 evidence of failure.

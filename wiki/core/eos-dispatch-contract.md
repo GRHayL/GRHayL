@@ -92,10 +92,11 @@ implementation in an HDF5 build. The function returns `void` with this
 mode-dependent partial dispatch state
 ([`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c)).
 
-Repository-wide assignment/call search finds no assignment or call for
-`ghl_tabulated_free_beq_quantities`; its declaration and Core storage make a
-symbol available, but current repo evidence does not establish supported
-dispatch through it. Flux_Source instead exposes direct family-specific APIs.
+Tabulated initialization assigns `ghl_tabulated_free_beq_quantities` to the
+concrete cleanup implementation. The three generic
+`ghl_calculate_HLLE_fluxes_dirn*` pointer globals remain as zero-initialized
+compatibility storage. Core never assigns them; new callers choose direct named
+Flux_Source variants by family, direction, and entropy mode.
 
 ## Ordering, Mutation, And Failure
 
@@ -109,9 +110,10 @@ zero-initialized pointer storage is not a checked error path.
 Wrappers install global dispatch before parameter validation. If simple or
 hybrid parameter initialization returns an error, the process-wide pointers
 remain assigned; there is no rollback. Tabulated initialization also mutates
-the EOS struct and can allocate/read table state before later atmosphere/bound
-validation returns an error. Review table cleanup with the EOS lifecycle owner;
-the Core wrapper is not transactional.
+global dispatch before parameter validation, so that process-wide selection is
+not rolled back. Its object construction is transactional: failure frees the
+candidate and publishes an empty tagged aggregate. A live table must be cleaned
+before reinitialization or switching families.
 
 The tabulated convenience wrapper hard-codes
 `ghl_eos_table_stellarcollapse`, `clean_sound_speed = false`, and neural-network
@@ -123,6 +125,8 @@ direct API is required for other supported option values.
 With `GHL_DISABLE_HDF5`, `ghl_initialize_tabulated_eos` and
 `ghl_initialize_tabulated_eos_functions_and_params` return
 `ghl_error_used_disabled_hdf5`.
+For a valid non-owning destination they also publish an empty aggregate tagged
+`ghl_eos_tabulated`.
 Source:
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
 
@@ -150,12 +154,11 @@ initialization validates density atmosphere/min/max inputs and computes
 pressure/energy/entropy atmosphere and bounds through hybrid helpers. Source:
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
 
-Those checks are not complete domain validation. Simple setup accepts zero
-`rho_atm`, zero floors, and any `Gamma`; later divisions by density and
-`Gamma-1` can therefore produce non-finite `eps` fields. Hybrid setup does not
-validate `neos` against `1..MAX_EOS_PARAMS`, the input array extents, EOS
-coefficients, or output pointer. These are unchecked caller preconditions, not
-documented error-return paths.
+Simple and hybrid setup reject null output, nonfinite scalar inputs, nonpositive
+atmosphere density, singular cold gamma values, and invalid bound ordering.
+Hybrid setup also validates `neos`, used gamma/coefficient values, and strictly
+increasing positive density breakpoints. A disabled density floor still
+normalizes to zero metadata.
 
 Tabulated EOS initialization validates `rho_atm`, `Y_e_atm`, and `T_atm`,
 clamps requested `rho`, `Y_e`, and `T` min/max values to table bounds, checks

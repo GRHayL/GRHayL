@@ -39,11 +39,19 @@ Variant build lists:
 Each direct variant has a legacy `void` entry point and a matching `_checked`
 entry point that returns `ghl_error_codes_t`. The legacy wrapper aborts on a
 checked error. Tests may select checked variants through test-local function
-pointers by EOS family, entropy mode, and direction. Deprecated generic
-direction globals remain exported for compatibility, but EOS initialization
-does not assign them or select an HLLE family. Their declared signatures take
-`const ghl_primitive_quantities *`, so the direct variants, which may update
-primitives, are not assignment-compatible with them.
+pointers by EOS family, entropy mode, and direction. The unsuffixed generic
+globals `ghl_calculate_HLLE_fluxes_dirn0/1/2` remain as deprecated
+compatibility storage. GRHayL never initializes them, and their `const`
+primitive signatures are incompatible with the direct routines, which may
+update primitives. New code must select a direct variant; existing manual
+assignments require an exact-signature callback.
+
+For direction `d`, simple/hybrid callers choose
+`ghl_calculate_HLLE_fluxes_dirn<d>_hybrid` or its `_entropy` form; tabulated
+callers choose the corresponding `_tabulated` or `_tabulated_entropy` form.
+Primitive inputs remain mutable because tabulated thermodynamic callbacks can
+limit them to table bounds. Supply copies when original face states must be
+preserved, and initialize the EOS global callbacks before a direct kernel call.
 
 ## Caller Contract
 
@@ -132,5 +140,7 @@ Python source together when formulas, variables, or output fields change.
   independent asymmetric fixed-bound HLLE algebra in every variant and
   direction.
 - **Coverage gaps:** focused analytic HLLE checks use zero magnetic field, and
-  no committed production-tabulated HLLE check verifies callback mutation.
+  no committed production-tabulated HLLE check verifies callback mutation. The
+  legacy generic compatibility pointer globals have no focused repository test,
+  and Core never assigns them.
 - **No-HDF5:** the matrix variant link-checks retained algebraic tabulated symbols.

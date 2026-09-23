@@ -1,7 +1,7 @@
 #include "ghl_unit_tests.h"
 
 int main(int argc, char **argv) {
-  const double poison = 1e200;
+  const double dummy_density = 1.0;
 
   const int neos = 1;
   const double rho_ppoly[1] = {0.0};
@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 
   ghl_eos_parameters eos = { 0 };
   ghl_initialize_hybrid_eos_functions_and_params(
-        poison, poison, poison,
+        dummy_density, dummy_density, dummy_density,
         neos, rho_ppoly, Gamma_ppoly,
         k_ppoly0, Gamma_th, &eos);
 

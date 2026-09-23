@@ -144,6 +144,11 @@ hydrodynamic `unit_test_hybrid_flux`, `unit_test_tabulated_flux`, and
   self-check, not by an anisotropic replay.
 - Production tabulated mutation is checked for characteristic speeds, not for
   an HLLE call.
+- Legacy generic `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals have storage but
+  no Core assignment or repository Unit Test call.
+- No focused test checks that successful HLLE or source-term calls leave
+  non-output conservative fields unchanged; failure-path tests check that all
+  fields stay unchanged.
 - No direct test connects Flux_Source characteristic-speed output to Induction
   HLL input.
 

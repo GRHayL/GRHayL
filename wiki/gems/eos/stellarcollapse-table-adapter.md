@@ -33,12 +33,18 @@ read either integer or double data, and close HDF5 handles on the way out. They
 do not know stellar-collapse quantity semantics; callers own dataset names,
 expected sizes, and mapping into EOS fields.
 
+Exact dimension, dataset-size, axis-uniformity, and index-representability
+requirements are owned by the
+[loader acceptance boundary](tabulated-table-contract.md#loader-acceptance-boundary).
+
 The stellar-collapse reader in
 [`GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.c`](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.c)
 owns those semantics. It opens the HDF5 file, reads scalar grid dimensions and
-`energy_shift`, reads grid arrays, reads the stellar-collapse quantity datasets,
-and checks `have_rel_cs2` when present. The exact dataset-name list is source
-owned by that file, while the adapter struct and stellar-collapse quantity enum
+`energy_shift`, validates checked dimensions/counts, reads and validates the
+three uniform increasing grid arrays, then reads the stellar-collapse quantity
+datasets. It also reads `have_rel_cs2` through the checked one-element dataset
+path when present. The exact dataset-name list is source owned by that file,
+while the adapter struct and stellar-collapse quantity enum
 are declared in
 [`GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.h`](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse.h).
 
@@ -52,11 +58,11 @@ after
 [`GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c`](../../../GRHayL/EOS/Tabulated/stellarcollapse/NRPyEOS_stellarcollapse_to_ghl.c)
 allocates `ghl_eos_parameters` arrays.
 
-The reader uses zero-initialized temporary storage and frees all successfully
-read datasets on a read error. Conversion separately allocates six GRHayL
-arrays. On conversion allocation failure it frees those allocations and
-returns `ghl_error_out_of_memory`, but does not reset corresponding EOS fields
-to `NULL`; this is partial-state evidence, not a safe retry/cleanup contract.
+The reader initializes its output to `NULL`, uses zero-initialized temporary
+storage, and frees all successfully read datasets on error. Conversion first
+rechecks dimension/count representability, then allocates six GRHayL arrays.
+Allocation failure frees and nulls all six fields, so cleanup/retry is safe
+under the configured-empty reader precondition.
 
 Conversion responsibilities split this way:
 
@@ -66,10 +72,10 @@ Conversion responsibilities split this way:
   energy-shift units, and maps stellar-collapse quantity slots into
   `NRPyEOS_keys`.
 - `NRPyEOS_read_table_set_EOS_params` applies the remaining post-read code-unit
-  conversions for pressure, internal energy, sound speed, and derivative slots;
-  fills `table_eps`; builds derived enthalpy; adjusts sound speed; computes
-  interpolation stride inverses; and stores table min/max bounds on
-  `ghl_eos_parameters`.
+  conversions for pressure, internal energy, sound speed, and derivative slots.
+  Before those conversions it validates transformed bounds, strides/products,
+  and the biased integer-index domain. It then fills `table_eps`, builds checked
+  positive finite enthalpy, adjusts sound speed, and stores table min/max bounds.
 
 Do not duplicate unit constants or dataset maps in KB pages. Use
 [`GRHayL/include/ghl_nrpyeos_tabulated.h`](../../../GRHayL/include/ghl_nrpyeos_tabulated.h)

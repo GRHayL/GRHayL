@@ -41,7 +41,7 @@ Some installed-header cases need narrower labels:
   [`ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h),
   but pointer values are zero-initialized until an initializer or caller
   assigns them; use the [EOS dispatch contract](eos-dispatch-contract.md) for
-  lifecycle and known unassigned entries.
+  lifecycle and assignment requirements.
 - [`GRHayL/include/ghl_unit_tests.h`](../../GRHayL/include/ghl_unit_tests.h) is
   source-tree-only. Its non-inline helper definitions live under
   [`Unit_Tests/`](../../Unit_Tests/), not in the Core or gem library manifests,
@@ -136,12 +136,11 @@ Core EOS setup entry points are declared in
 [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) and implemented in
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
 They initialize family-relevant subsets, not every byte/field of the public
-struct. In particular, simple/hybrid setup does not set `Y_e_atm` or `T_atm`,
-though the constant Atmosphere routine reads them. Callers must initialize
-cross-family fields they later consume; use the
+struct. Simple/hybrid setup explicitly defines the cross-family `Y_e_atm` and
+`T_atm` placeholders as zero because constant Atmosphere reads them. Use the
 [Atmosphere prescription contract](../gems/atmosphere/prescription-contract.md)
-for that gap and the [EOS dispatch contract](eos-dispatch-contract.md) for
-ordering and partial-failure behavior.
+for reset semantics and the [EOS dispatch contract](eos-dispatch-contract.md)
+for initialization ordering and failure behavior.
 
 ## Shared Struct Routes
 

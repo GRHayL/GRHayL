@@ -40,8 +40,8 @@ source, headers, tests, and common edit routes before wider search.
   then update docs.
 - Drift/contract notes: atmosphere values live in `ghl_eos_parameters`; changes
   can affect primitive-limit behavior and downstream setup. Constant atmosphere
-  is built; radial is declaration/incomplete-source only. Simple/hybrid EOS do
-  not initialize composition fields copied by constant reset.
+  is built; radial is declaration/incomplete-source only. Simple/hybrid EOS
+  initialize unused `Y_e_atm` and `T_atm` to zero placeholders.
 
 ## Con2Prim
 
@@ -102,10 +102,10 @@ source, headers, tests, and common edit routes before wider search.
 - Common edit routes: hybrid changes touch `GRHayL/EOS/Hybrid/`, hybrid header,
   and piecewise-polytrope tests; tabulated changes touch `GRHayL/EOS/Tabulated/`,
   HDF5 build setup, tabulated tests, and Neutrinos/Con2Prim callers.
-- Drift/contract notes: `GHL_DISABLE_HDF5`, exact mode filtering, partial table
-  lifecycle, hybrid breakpoint bounds, and function-pointer initialization
-  must stay consistent. One tabulated cleanup pointer is unassigned and two
-  index prototypes are definition-free.
+- Drift/contract notes: `GHL_DISABLE_HDF5`, exact mode filtering, fresh-object
+  table lifecycle, hybrid breakpoint bounds, and function-pointer initialization
+  must stay consistent. Beta cleanup is assigned; only the implemented
+  temperature index remains in the installed table header.
 
 ## Flux_Source
 
@@ -131,8 +131,9 @@ source, headers, tests, and common edit routes before wider search.
   EOS-specific flux variants, tests, and Doxygen.
 - Drift/contract notes: flux inputs expect reconstructed face primitives.
   Entropy and tabulated variants must match EOS initialization choices. Direct
-  family-specific variants are the owner routes. The staging generator emits
-  source, characteristic-speed, and all four HLLE families.
+  family-specific variants are the owner routes; legacy generic HLLE pointer
+  globals remain as uninitialized compatibility storage. The staging generator
+  emits source, characteristic-speed, and all four HLLE families.
 
 ## Induction
 

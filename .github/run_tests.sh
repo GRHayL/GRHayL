@@ -42,7 +42,7 @@ download_file() {
   fi
 
   created_paths+=("$filename")
-  curl -fLO "$url"
+  curl -fL --retry 5 -O "$url"
 }
 
 decompress_bz2() {

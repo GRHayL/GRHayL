@@ -58,6 +58,14 @@ typedef struct {
   double *data[NRPyEOS_sc_n_quantities]; ///< Tabulated data.
 } NRPyEOS_stellarcollapse_t;
 
+#ifndef GHL_DISABLE_HDF5
+ghl_error_codes_t NRPyEOS_stellarcollapse_check_dimensions(
+      int n_rho,
+      int n_temperature,
+      int n_ye,
+      size_t *npoints);
+#endif
+
 /**
  * @brief Reads a stellar collapse EOS table from a file.
  *
@@ -67,6 +75,7 @@ typedef struct {
  * @param[in] filepath Path to the EOS table file (HDF5 format).
  *
  * @param[out] sc Pointer-to-pointer to NRPyEOS_stellarcollapse_t structure.
+ *                It is set to NULL on failure.
  *
  * @return Return code, indicating success or failure.
  * @retval ghl_success Success.

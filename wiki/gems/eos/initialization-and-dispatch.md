@@ -20,6 +20,8 @@ low-level parameter initializer. The low-level functions
 `ghl_initialize_simple_eos`, `ghl_initialize_hybrid_eos`, and
 `ghl_initialize_tabulated_eos` populate `ghl_eos_parameters` fields but do not,
 by themselves, install the global function-pointer dispatch layer.
+Low-level callers must therefore install the matching dispatch family first;
+parameter construction and tabulated rollback use those callbacks.
 
 Function-pointer dispatch is process-wide global state defined through
 `GRHayL/include/ghl_eos_functions_declaration.h`; it is not stored per EOS
@@ -44,12 +46,10 @@ pressure atmosphere/floor/ceiling values from inputs or defaults, computes
 epsilon values from the ideal-fluid pressure relation, computes entropy through
 the hybrid entropy helper, and sets `tau_atm = rho_atm * eps_atm`.
 
-Simple and hybrid initializers do not assign tabulated-only `Y_e_atm` or
-`T_atm`. Built `ghl_set_prims_to_constant_atm` nevertheless copies both fields
-for every EOS type. The Core test uses non-zero-initialized simple/hybrid EOS
-objects and does not assert those two outputs for those families. Callers that
-need deterministic atmosphere composition/temperature with simple or hybrid
-EOS must initialize/own those fields; current wrappers do not.
+Simple and hybrid initializers set the unused-family `Y_e_atm` and `T_atm`
+placeholders to zero. `ghl_set_prims_to_constant_atm` therefore copies defined
+composition and temperature values for every successfully initialized family;
+callers may still override them afterward.
 
 Hybrid EOS setup sets `eos_type` to `ghl_eos_hybrid`, stores the requested
 piece count and piece arrays, computes derived `K_ppoly`,
@@ -63,6 +63,13 @@ energy, and entropy through tabulated interpolation, sets table-derived
 pressure/energy/entropy bounds, initializes beta-equilibrium arrays to `NULL`,
 and sets `root_finding_precision = 1e-10`.
 
+Simple and hybrid setup construct a local candidate and leave the destination
+unchanged on error. Tabulated setup instead requires a destination with no live
+owned allocations: success transfers the completed candidate; failure releases
+it and publishes an empty aggregate tagged `ghl_eos_tabulated`. A live table
+must be cleaned before reinitialization or an EOS-family switch. Global dispatch
+selection is process-wide and is not rolled back when parameter setup fails.
+
 Tabulated initialization sets `tau_atm = rho_min * eps_min`, unlike the
 simple/hybrid `rho_atm * eps_atm` assignment. `ghl.h` describes `_atm` fields
 as atmosphere values and Con2Prim consumes `tau_atm` as a floor, but repo-local
@@ -74,23 +81,31 @@ calling `ghl_initialize_tabulated_eos`.
 
 ## Caller-Visible Validation Boundary
 
-- Simple initialization validates atmosphere density/pressure and min/max
-  ordering. Negative minima become zero and negative maxima become `1e300`.
-  It does not validate `Gamma`; formulas divide by `Gamma - 1` and by density.
-  If both minima use negative/default sentinels, the resulting zero density and
-  zero pressure feed `eps_min = press_min/(rho_min*(Gamma-1))` and the entropy
-  formula, so derived minima can be non-finite even though initialization
-  returns success.
-- Hybrid initialization validates only atmosphere density and density min/max
-  ordering. It does not validate `neos`, input pointers/lengths, breakpoint
-  ordering, `Gamma_ppoly`, `K_ppoly0`, or `Gamma_th`. See
-  [hybrid piecewise-polytrope EOS](hybrid-piecewise-polytrope.md) for the
-  current breakpoint-read contradiction. Its negative/default density minimum
-  also becomes zero before cold-energy/entropy helpers divide by density.
-- Tabulated initialization reads/allocates the table before validating
-  atmosphere and requested bounds. Requested min/max values are clamped to
+- Simple/hybrid atmosphere density must be finite and positive. Simple
+  atmosphere pressure must be finite and nonnegative. Scalar inputs and used
+  derived atmosphere/bound fields must be finite. Cold-piece gamma values reject
+  exact `0` and `1`; thermal gamma rejects exact `1`. Other finite sub-unity and
+  negative values remain permitted by the Core API.
+- Negative density minima normalize to zero. Simple keeps its independently
+  configured pressure floor and uses `-DBL_MAX` for energy/entropy minima at a
+  zero density floor. Hybrid uses `-DBL_MAX` for pressure, energy, and entropy
+  minima there. Negative density or simple-pressure maxima normalize to the
+  `1e300` disabled marker; simple derived maxima use `DBL_MAX` if either marker
+  is present, while hybrid uses `DBL_MAX` when density is unbounded.
+- Hybrid setup enforces `1 <= neos <= MAX_EOS_PARAMS`, requires one finite
+  nonsingular gamma per piece, and requires `neos - 1` finite, positive,
+  strictly increasing breakpoints. The breakpoint pointer may be `NULL` for a
+  one-piece EOS. Constructed `K_ppoly` values and integration constants must be
+  finite. A zero `K_ppoly0` intentionally produces a zero cold-pressure curve;
+  otherwise every constructed `K_ppoly` must remain nonzero. The zero curve has
+  no unique cold-pressure density inverse. Consumed pressure breakpoints must
+  be finite.
+- Tabulated initialization rejects nonfinite atmosphere and requested bounds
+  before reading the table. Requested min/max values are then clamped to
   table bounds, but atmosphere `(rho,Y_e,T)` is not clamped before its direct
-  interpolation call and therefore must already lie inside table bounds.
+  interpolation call and therefore must already lie inside table bounds. A
+  final finite-state gate covers published atmosphere values, bounds, derived
+  extrema, and `tau_atm`.
 - `ghl_initialize_eos_functions` returns `void` and has no final unknown-type
   branch. Pass only a declared `ghl_eos_t`; an invalid value still installs the
   hybrid helper family, leaves `ghl_con2prim_multi_method` at its prior value,
@@ -123,16 +138,16 @@ The hybrid pointer initializer installs the hybrid helper family used for
 piece lookup, cold pressure and energy, entropy, epsilon, rho bounds, and
 enthalpy/sound-speed routing. The tabulated pointer initializer installs the
 table read/free routines, interpolation families, table-bound enforcement,
-beta-equilibrium rho-map helpers, and tabulated enthalpy/sound-speed routing.
-One declared tabulated pointer,
-`ghl_tabulated_free_beq_quantities`, is not assigned by the current tabulated
-initializer; use [tabulated interpolator catalog](tabulated-interpolator-catalog.md)
-for the exact registry seam.
+beta-equilibrium rho-map helpers, beta-equilibrium cleanup, and tabulated
+enthalpy/sound-speed routing. Use
+[tabulated interpolator catalog](tabulated-interpolator-catalog.md) for the
+exact registry seam.
 
-Flux_Source routines are direct family-specific APIs split into hybrid,
-hybrid-entropy, tabulated, and tabulated-entropy families. Core EOS
-initialization selects the shared thermodynamic callback, not an HLLE function.
-Route flux questions to [Flux Source](../flux-source.md) and
+Concrete Flux_Source routines are split into hybrid, hybrid-entropy,
+tabulated, and tabulated-entropy families. Unsuffixed generic HLLE globals
+remain only as uninitialized compatibility storage; new callers select a direct
+family/direction/entropy variant. Core EOS initialization selects the shared
+thermodynamic callback, not an HLLE function. Route flux questions to [Flux Source](../flux-source.md) and
 `GRHayL/include/ghl_flux_source.h`.
 
 Sources: `GRHayL/GRHayL_Core/initialize_eos.c`,
@@ -156,7 +171,8 @@ every path containing `Tabulated` disappears.
 When `GHL_DISABLE_HDF5` is defined, tabulated EOS runtime paths are disabled.
 `ghl_initialize_tabulated_eos` and
 `ghl_initialize_tabulated_eos_functions_and_params` return
-`ghl_error_used_disabled_hdf5`; `ghl_initialize_eos_functions` on
+`ghl_error_used_disabled_hdf5` and publish an empty tagged aggregate for a
+valid destination; `ghl_initialize_eos_functions` on
 `ghl_eos_tabulated` calls the disabled-HDF5 error macro; HDF5-only code-error
 tests are skipped in no-HDF5 builds.
 
