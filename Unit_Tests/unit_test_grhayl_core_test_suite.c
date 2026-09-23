@@ -219,6 +219,9 @@ int main(int argc, char **argv) {
 
   int arraylength;
   int key = fread(&arraylength, sizeof(int), 1, infile);
+  if(key != 1 || arraylength != 100) {
+    ghl_error("Invalid grhayl_core_test_suite_input.bin length (expected 100)\n");
+  }
 
   double *lapse = (double*) malloc(sizeof(double)*arraylength);
   double *betax = (double*) malloc(sizeof(double)*arraylength);

@@ -13,6 +13,46 @@
  * can be computed in whatever way is most natural to the surrounding code
  * and provided as input to those functions.
  *
+ * For flux direction \f$i\f$, each face state uses
+ * \f$v_A^2 = b^2/(\rho_b h + b^2)\f$ and \f$v_0^2 = v_A^2 + c_s^2(1 - v_A^2)\f$.
+ * Its speeds \f$c_+ \ge c_-\f$ are the roots of
+ * \f$\mathcal{A}c^2 + \mathcal{B}c + \mathcal{C} = 0\f$, with
+ * \f[
+ * \mathcal{A} = (1 - v_0^2)(u^0)^2 - v_0^2 g^{00},\quad
+ * \mathcal{B} = 2v_0^2 g^{i0} - 2u^i u^0 (1 - v_0^2),\quad
+ * \mathcal{C} = (1 - v_0^2)(u^i)^2 - v_0^2 g^{ii},
+ * \f]
+ * where a negative discriminant is replaced by zero. Here \f$g^{\mu\nu}\f$ is
+ * the inverse face 4-metric, \f$u^\mu\f$ the 4-velocity,
+ * \f$b^2 = b^\mu b_\mu\f$ in GRHayL's rescaled magnetic units, the spatial
+ * index is \f$i = \mathrm{dirn}+1\f$, and \f$c = dx^i/dt\f$ is a coordinate
+ * speed. The direction-specific
+ * characteristic-speed routines return
+ * \f$c_{\max} = \max(0, c_+^R, c_+^L)\f$ and
+ * \f$c_{\min} = -\min(0, c_-^R, c_-^L)\f$: `cmax` bounds right-going signal
+ * speeds and `cmin` bounds the magnitude of left-going signal speeds. Both are
+ * nonnegative up to roundoff; branch-free min/max evaluation can leave small
+ * negative residues, which the HLLE routines floor at zero. The direct HLLE
+ * routines use
+ * \f[
+ * F_{\mathrm{HLLE}} =
+ * \frac{c_{\min}F_R+c_{\max}F_L-c_{\min}c_{\max}(U_R-U_L)}
+ *      {c_{\min}+c_{\max}}.
+ * \f]
+ * Both inputs must therefore be finite and nonnegative. Negative algebraic
+ * residue within `DBL_EPSILON` times the larger of one and both magnitudes is
+ * floored at zero; larger negative values are rejected. The floored values
+ * must have a finite sum of at least `1/DBL_MAX` and a product that does not
+ * overflow; the overflow test is exact only to within one rounding. Invalid
+ * bounds return
+ * `ghl_error_invalid_hlle_wavespeeds` without changing the output. EOS errors
+ * are returned unchanged by the `_checked` entry points. The legacy names
+ * preserve their `void` ABI and abort on those errors. See @ref derivation for
+ * the conservative-variable, flux, source, and magnetic-field conventions.
+ *
+ * HLLE, source-term, and characteristic-speed routines dispatch through
+ * `ghl_compute_h_and_cs2`.
+ *
  * # EOS-specific functions
  *
  * While most of the functions in this gem are independent of EOS, the actual
@@ -27,11 +67,11 @@
  * - @ref ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy
  *
  * Directions one and two follow the same naming pattern. Primitive inputs are
- * mutable because tabulated thermodynamic callbacks can clamp them; callers
- * that need the original values must provide copies. EOS global callbacks
- * must be initialized before calling a direct kernel. The unsuffixed
- * `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals remain only for source and
- * binary compatibility. GRHayL never initializes them, and their `const`
+ * mutable because tabulated thermodynamic callbacks can limit them to table
+ * bounds; callers that need the original values must provide copies. EOS
+ * global callbacks must be initialized before calling a direct kernel. The
+ * unsuffixed `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals remain only for
+ * source and binary compatibility. GRHayL never initializes them, and their `const`
  * primitive signatures are incompatible with the direct routines. New code
  * must use the direct variants.
  */

@@ -2,13 +2,16 @@
 /*
  * Add source terms for Stilde and tau_tilde
  */
-void ghl_calculate_source_terms(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {
+ghl_error_codes_t ghl_calculate_source_terms_checked(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {
 
 {
 
-double h, cs2;
+  double h, cs2;
 
-ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
+  const ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
+  if(error != ghl_success) {
+    return error;
+  }
 const double u4U0 = prims->u0;
 const double u4U1 = prims->vU[0]*u4U0;
 const double u4U2 = prims->vU[1]*u4U0;
@@ -133,4 +136,9 @@ const double gammaDD_dD222 = metric_derivs_z->gammaDD[2][2];
   cons->SD[2] = _Rational_1_2*(gammaDD_dD002*tmp_55 + gammaDD_dD112*tmp_58 + gammaDD_dD222*tmp_61 + tmp_64*(-alpha_dD2*tmp_62 + betaU0*tmp_68 + betaU1*tmp_69 + betaU2*tmp_70 + betaU_dD02*tmp_1 + betaU_dD12*tmp_2 + betaU_dD22*tmp_3)) + gammaDD_dD012*tmp_48 + gammaDD_dD022*tmp_50 + gammaDD_dD122*tmp_52 + tmp_37*tmp_68 + tmp_41*tmp_69 + tmp_44*tmp_70;
   cons->tau = alpha_dD0*tmp_36*(-tmp_31 - tmp_71) + alpha_dD1*tmp_36*(-betaU1*tmp_63 - tmp_40) + alpha_dD2*tmp_36*(-betaU2*tmp_63 - tmp_43) + tmp_36*(KDD00*(((betaU0)*(betaU0))*tmp_63 + tmp_31*tmp_73 + tmp_54) + KDD01*(tmp_40*tmp_73 + tmp_76) + KDD01*(_Integer_2*betaU1*tmp_31 + tmp_76) + KDD02*(tmp_43*tmp_73 + tmp_78) + KDD02*(_Integer_2*betaU2*tmp_31 + tmp_78) + KDD11*(_Integer_2*betaU1*tmp_40 + ((betaU1)*(betaU1))*tmp_63 + tmp_57) + KDD12*(_Integer_2*betaU1*tmp_43 + tmp_79) + KDD12*(_Integer_2*betaU2*tmp_40 + tmp_79) + KDD22*(_Integer_2*betaU2*tmp_43 + ((betaU2)*(betaU2))*tmp_63 + tmp_60));
 }
+return ghl_success;
+}
+
+void ghl_calculate_source_terms(const ghl_eos_parameters *restrict eos, ghl_primitive_quantities *restrict prims, const ghl_metric_quantities *restrict metric, const ghl_metric_quantities *restrict metric_derivs_x, const ghl_metric_quantities *restrict metric_derivs_y, const ghl_metric_quantities *restrict metric_derivs_z, const ghl_extrinsic_curvature *restrict curv, ghl_conservative_quantities *restrict cons) {
+  ghl_abort_if_error(ghl_calculate_source_terms_checked(eos, prims, metric, metric_derivs_x, metric_derivs_y, metric_derivs_z, curv, cons));
 }

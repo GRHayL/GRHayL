@@ -78,6 +78,7 @@ typedef enum {
   ghl_error_invalid_neos,
   ghl_error_invalid_eos_parameters,
   ghl_error_invalid_eos_table,
+  ghl_error_invalid_hlle_wavespeeds,
 } ghl_error_codes_t;
 
 typedef enum {

@@ -31,12 +31,15 @@ Key public surface:
 - `ghl_calculate_HLLE_fluxes_dirn*_hybrid_entropy`
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated`
 - `ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy`
+- the matching `*_checked` name for each routine above, returning
+  `ghl_error_codes_t`
 
-Direct suffixed HLLE functions are the supported call surface. The unsuffixed
+Direct suffixed HLLE functions, legacy `void` names and their `_checked`
+counterparts, are the supported call surface. The unsuffixed
 `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals remain only as uninitialized
 compatibility storage. New callers select direction, EOS family, and entropy
 mode explicitly; primitive arguments remain mutable because tabulated callbacks
-may clamp them. Route details to the
+may limit them to table bounds. Route details to the
 [HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
 
 ## Implementation Paths
@@ -81,8 +84,9 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
   symbols.
 - Source terms require metric derivatives provided by caller-side infrastructure.
 - Characteristic speeds are shared by hydrodynamic flux work and induction HLL flux setup.
-- Flux and speed routines discard EOS callback errors; production tabulated
-  dispatch can mutate face primitives. Owner pages state exact preconditions.
+- Checked flux, speed, and source routines return EOS callback errors; legacy
+  `void` wrappers abort on them. Production tabulated dispatch can mutate face
+  primitives. Owner pages state exact output and mutation contracts.
 
 ## Common Edit Routes
 
@@ -96,8 +100,9 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
 - Direction-specific files can diverge when only one axis is edited.
 - Entropy and non-entropy flux variants must stay consistent in conservative field ordering.
 - Generated or NRPy-derived expressions can drift from checked-in C if both are not updated together.
-- Only source-term NRPy command is verified; speed/HLLE regeneration support is
-  unknown. Use [generated boundary](flux-source/generated-nrpy-boundary.md).
+- The staging generator emits source, speed, and all four HLLE families and
+  checks its output set against build manifests. Use the
+  [generated boundary](flux-source/generated-nrpy-boundary.md).
 - GRHayLib compiles Flux_Source subdirectories directly; new directories require downstream coordination.
 
 ## Do Not Duplicate

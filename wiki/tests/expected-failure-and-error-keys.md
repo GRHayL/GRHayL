@@ -15,16 +15,18 @@ Read with [Core tests and fixtures](../core/tests-and-fixtures.md),
 
 ## Harness Contract
 
-The full runner invokes `./test/unit_test_code_error "$i"` for keys `0..87`.
+The full runner invokes `$repo_root/test/unit_test_code_error` for keys
+`0..88` from its private `code_error_workdir`.
 Each key is treated as an expected-error case: if the executable exits
 successfully, `.github/run_tests.sh` prints `Failed to fail!` and fails the
 runner; if the executable exits nonzero, the runner treats that as the expected
 failure and continues.
 
 Therefore process exit alone is inverted harness evidence, not proof of the
-specific library error code. The test body must first compare returned code
-with `expected_error_code(...)`; preserve captured output when distinguishing an
-expected harness exit from an unrelated crash or setup failure.
+specific library error code. For active error-code keys, the test body compares
+the supplied code with `expected_error_code(...)`. Preserve captured output
+when distinguishing an expected harness exit from an unrelated crash or setup
+failure.
 
 `pass_test(...)` exits nonzero after an intended expected-error or skip path.
 `fail_test(...)` exits zero for unexpected internal failures so the outer
@@ -34,11 +36,14 @@ all use this failure-of-test convention rather than accidentally satisfying the
 outer expected-failure status check.
 
 Keys `86` and `87` directly supply the expected NRPyLeakage blocking and
-nonfinite-output enum values. They cover message mapping and termination in
-`ghl_abort_if_error`; the NRPyLeakage physics test covers producer returns.
+nonfinite-output enum values. They exercise `ghl_abort_if_error` and process
+termination; the NRPyLeakage physics test covers producer returns. Key `88`
+directly supplies `ghl_error_invalid_hlle_wavespeeds` to exercise the same
+abort path and termination; it does not call an HLLE kernel to check error
+production. The harness does not assert emitted message text.
 
-Inside `unit_test_code_error.c`, `expect_error_code(...)` checks that a call
-returned the expected GRHayL error code, then routes through
+Inside `unit_test_code_error.c`, `expect_error_code(...)` compares the supplied
+GRHayL error code with the expected mapping, then routes through
 `ghl_abort_if_error(error)` so the process exits as the expected-error harness
 requires. Key `33` is a special invalid-name route: it expects
 `ghl_get_con2prim_routine_name` to return `NULL` and exits nonzero through the
@@ -87,9 +92,11 @@ helpers, disabled direct-C2P stubs, and real tabulated flux kernels.
   malformed `test.h5` files to cover dataset-open, dataset-rank, and
   dataset-read failures. Successful expected-error handling exits the process
   before a post-test removal, so an individual key invocation can leave
-  root-level `test.h5`; the full runner removes it only if final cleanup is
-  reached. Route table-shape and HDF5 questions to EOS tests and HDF5 sample
-  table routing.
+  `test.h5` in its current working directory. Standalone and workflow
+  invocations use their current directory. The full runner invokes every key
+  inside a private `code_error_workdir` and removes that directory through an
+  `EXIT` trap on success or failure. Route table-shape and HDF5 questions to
+  EOS tests and HDF5 sample table routing.
 - Invalid tabulated EOS/table state: keys `75..77` cover null EOS parameter
   struct, non-tabulated EOS type, and invalid table type before or during table
   setup. Route to EOS initialization and Core shared parameter pages.
@@ -103,6 +110,10 @@ helpers, disabled direct-C2P stubs, and real tabulated flux kernels.
   `enable_neural_net_c2p` true while the table has no embedded
   `grhayl_nn_c2p` group. Route runtime replay coverage to Con2Prim tests and
   initialization behavior to EOS/Core initialization pages.
+- Flux_Source invalid-wave-speed error: key `88` checks
+  `ghl_error_invalid_hlle_wavespeeds` handling in `ghl_abort_if_error`.
+  Direct checked HLLE input validation belongs to
+  [Flux_Source HLLE flux variants](../gems/flux-source/hlle-flux-variant-matrix.md).
 
 ## Ownership Routes
 
@@ -121,6 +132,8 @@ helpers, disabled direct-C2P stubs, and real tabulated flux kernels.
   initialization.
 - Neutrinos owns `Fermi` invalid-key coverage and NRPyLeakage fixture routes.
   Start with [Neutrinos tests and fixtures](../gems/neutrinos/tests-and-fixtures.md).
+- Flux_Source owns invalid HLLE wave-speed returns. Start with
+  [Flux_Source HLLE flux variants](../gems/flux-source/hlle-flux-variant-matrix.md).
 
 ## Repo-Local References
 

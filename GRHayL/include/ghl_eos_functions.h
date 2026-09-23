@@ -1,6 +1,8 @@
 #ifndef GHL_EOS_FUNCTIONS_H_
 #define GHL_EOS_FUNCTIONS_H_
 
+#include "ghl.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

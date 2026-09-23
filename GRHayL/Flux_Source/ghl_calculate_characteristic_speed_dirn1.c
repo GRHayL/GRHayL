@@ -2,14 +2,20 @@
 /*
  * Compute the characteristic speeds in direction 1
  */
-void ghl_calculate_characteristic_speed_dirn1(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, double *cmin_dirn1, double *cmax_dirn1) {
+ghl_error_codes_t ghl_calculate_characteristic_speed_dirn1_checked(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, double *cmin_dirn1, double *cmax_dirn1) {
 
 {
 
-double h_r, h_l, cs2_r, cs2_l;
+  double h_r, h_l, cs2_r, cs2_l;
 
-ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+  ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
+  if(error != ghl_success) {
+    return error;
+  }
+  error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+  if(error != ghl_success) {
+    return error;
+  }
 const double u4rU0 = prims_r->u0;
 const double u4lU0 = prims_l->u0;
 const double u4rU1 = prims_r->vU[0]*u4rU0;
@@ -93,4 +99,9 @@ const double gamma_faceDD22 = metric_face->gammaDD[2][2];
   *cmin_dirn1 = _Integer_2*_Rational_1_16*tmp_47 + _Rational_1_2*fabs(-_Rational_1_2*tmp_61 - _Rational_1_4*tmp_57 + _Rational_1_8*tmp_62) + _Rational_1_4*tmp_61 + _Rational_1_8*tmp_57;
   *cmax_dirn1 = _Rational_1_16*tmp_62 + _Rational_1_2*fabs(_Rational_1_2*tmp_64 + _Rational_1_4*tmp_57 + _Rational_1_8*tmp_62) + _Rational_1_4*tmp_64 + _Rational_1_8*tmp_57;
 }
+return ghl_success;
+}
+
+void ghl_calculate_characteristic_speed_dirn1(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, double *cmin_dirn1, double *cmax_dirn1) {
+  ghl_abort_if_error(ghl_calculate_characteristic_speed_dirn1_checked(prims_r, prims_l, eos, metric_face, cmin_dirn1, cmax_dirn1));
 }

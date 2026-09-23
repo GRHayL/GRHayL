@@ -30,7 +30,7 @@ trust the underlying repo files and update the KB route.
 | [`GRHayL/include/ghl_io.h`](../../GRHayL/include/ghl_io.h) | Logging/error macros and `ghl_Warn_Error` API. |
 | [`GRHayL/include/ghl_debug.h`](../../GRHayL/include/ghl_debug.h) | Header-only primitive/conservative debug printing helpers. |
 | [`GRHayL/include/ghl_eos_functions.h`](../../GRHayL/include/ghl_eos_functions.h) | External declarations for EOS function pointers. |
-| [`GRHayL/include/ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h) | Storage definitions for EOS function pointers. |
+| [`GRHayL/include/ghl_eos_functions_declaration.h`](../../GRHayL/include/ghl_eos_functions_declaration.h) | Internal storage definitions for EOS and deprecated generic HLLE function pointers. |
 | [`GRHayL/include/make.code.defn`](../../GRHayL/include/make.code.defn) | Public header install/build availability list. |
 
 Related routers: [KB index](../index.md), [catalog](../catalog.md),
@@ -39,7 +39,7 @@ Related routers: [KB index](../index.md), [catalog](../catalog.md),
 ## Current Status Boundaries
 
 - Header installation, library definition, and runtime initialization are
-  separate evidence. Installed test-support declarations and zero-initialized
+  separate evidence. Test-support declarations and zero-initialized
   function-pointer storage are not automatically linkable/callable behavior.
 - Core numeric helpers largely return `void` and assume valid metric,
   thermodynamic, pointer, and representation inputs. Focused pages name the

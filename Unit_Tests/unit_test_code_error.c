@@ -53,6 +53,11 @@ int main(int argc, char **argv) {
           ghl_error_nrpyleakage_nonfinite_output, test_key,
           "NRPyLeakage nonfinite-output fallback");
   }
+  if(test_key == 88) {
+    expect_error_code(
+          ghl_error_invalid_hlle_wavespeeds, test_key,
+          "invalid HLLE wave speeds");
+  }
 
   ghl_error_codes_t error = ghl_success;
 
@@ -757,6 +762,8 @@ static ghl_error_codes_t expected_error_code(const int test_key) {
     case 85: return ghl_error_hdf5_dataset_could_not_open;
     case 86: return ghl_error_nrpyleakage_blocking;
     case 87: return ghl_error_nrpyleakage_nonfinite_output;
+    case 88:
+      return ghl_error_invalid_hlle_wavespeeds;
     case 78:
     case 79:
     case 80:

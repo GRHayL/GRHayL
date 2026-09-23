@@ -45,13 +45,9 @@ do not replace the scalar relative floor or derive expectations from the
 result under test. The stress-energy absolute cutoff applies to the
 difference, not to the computed value alone.
 
-[GRHayL/include/make.code.defn](../../GRHayL/include/make.code.defn) installs
-`ghl_unit_tests.h`, but library
-manifests do not compile the non-inline helpers it declares. Existing
-definitions live in `Unit_Tests/` helper files, while the declared binary
-read/write family and `ghl_initial_random_data` have no visible definition.
-Classify these as test-only or unresolved surface; installation alone does not
-make them linkable production API.
+`ghl_unit_tests.h` is a source-tree test-only header and is excluded from the
+installed public header set. Its non-inline helper definitions live under
+`Unit_Tests/`.
 
 ## Helper-Only Files
 

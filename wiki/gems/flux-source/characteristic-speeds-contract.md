@@ -22,11 +22,13 @@ The parent build list
 [GRHayL/Flux_Source/make.code.defn](../../../GRHayL/Flux_Source/make.code.defn)
 compiles the `dirn0`, `dirn1`, and `dirn2` files.
 
-Every row has the same surface status: public declaration, checked-in
-definition, normal and `--disable-hdf5` build membership, direct calls from the
-hybrid and tabulated data generators, and direct replay calls from the ET
-Legacy flux/source test. The ordinary hybrid and tabulated flux tests do **not**
-call these routines; they read precomputed speed arrays from their fixtures.
+Every row has a legacy `void` entry point and a matching `_checked` entry point
+returning `ghl_error_codes_t`; the legacy wrapper aborts on a checked error.
+Both are declared publicly and share a checked-in definition file. The files
+have normal and `--disable-hdf5` build membership. Data generators call checked
+entry points, while the ET Legacy replay exercises legacy wrappers. The
+ordinary hybrid and tabulated flux tests do **not** call these routines; they
+read precomputed speed arrays from their fixtures.
 
 ## Caller Contract
 
@@ -40,8 +42,8 @@ Each direction function takes:
   non-negative left-going and right-going speed magnitudes used by the HLL
   formulas. Despite the names, `cmin` is not a signed minimum eigenvalue: the
   generator defines it as the negated minimum of zero and the two left-going
-  speeds. Both outputs can be zero, but downstream HLL formulas divide by
-  `cmin + cmax` and do not guard a zero sum.
+  speeds. Branch-free min/max evaluation can leave negative roundoff residues;
+  the HLLE routines floor those residues at zero within their tolerance.
 
 The kernels call `ghl_compute_h_and_cs2` for both reconstructed states. That
 function pointer is declared in
@@ -52,12 +54,12 @@ Keep EOS behavior routed through EOS pages; this page only records that the
 speed kernels depend on `h` and `cs2`.
 
 The primitive pointers are intentionally non-`const`. The production tabulated
-enthalpy/sound-speed implementation clamps `rho`, `Y_e`, and `temperature` and
-recomputes `press` and `eps` in place. The three `void` speed routines discard
-the `ghl_error_codes_t` returned by `ghl_compute_h_and_cs2`; callers cannot
-recover an EOS failure from these APIs. Callers needing unchanged face states
-must pass copies, and must validate EOS initialization and table-domain inputs
-before the call.
+enthalpy/sound-speed implementation limits `rho`, `Y_e`, and `temperature` to table bounds and
+recomputes `press` and `eps` in place. Checked speed routines return the exact
+`ghl_error_codes_t` from either callback and leave both speed outputs unchanged
+on failure; legacy wrappers abort instead. A successful first callback may mutate its primitive before a
+failing second callback; rollback is not promised. Callers needing unchanged
+face states must pass copies.
 
 The outputs are direction-specific `cmin` and `cmax` speeds. HLLE flux kernels
 consume these same values through their `cmin_dirn*` and `cmax_dirn*`
@@ -98,8 +100,13 @@ passes production characteristic-speed outputs into an Induction HLL routine.
   listed function; normal test jobs download rather than regenerate those fixtures.
 - **Replay only:** `unit_test_hybrid_flux` and `unit_test_tabulated_flux` consume
   stored speed arrays.
-- **Coverage gap:** no standalone error/mutation test, no direct production
-  tabulated-dispatch test here, and no Flux_Source-to-Induction end-to-end test.
+- **Production-EOS evidence:** `unit_test_tabulated_eos_compose` checks an
+  analytic magnetized speed bound in every direction and the tabulated
+  table-bound/mutation behavior. The oracle is implemented separately but uses the
+  same magnetosonic model as the kernel.
+- **Focused errors:** `unit_test_hybrid_flux` injects first- and second-callback
+  failures into every checked direction and verifies unchanged outputs.
+- **Coverage gap:** no Flux_Source-to-Induction end-to-end test.
 
 ## Evidence Links
 

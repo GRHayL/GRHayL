@@ -25,7 +25,9 @@
  * - @ref ghl_initialize_tabulated_eos_functions_and_params
  *
  * which will properly set up the function pointers and struct parameters
- * for the chosen EOS. The deprecated generic
+ * for the chosen EOS. Flux, source, and characteristic-speed routines use
+ * `ghl_compute_h_and_cs2`; custom dispatch users need replace only that
+ * combined callback. The deprecated generic
  * `ghl_calculate_HLLE_fluxes_dirn0/1/2` pointers are never assigned. Simple
  * and hybrid parameter initialization publishes a completed object only on
  * success. Their density atmosphere must be finite

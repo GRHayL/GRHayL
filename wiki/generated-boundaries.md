@@ -118,12 +118,9 @@ running tests. Downloaded file classes include:
 - `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2`;
 - `SLy4_3335_rho391_temp163_ye66.h5.bz2`.
 
-The script decompresses downloaded `*.bz2` EOS tables and removes root-level
-`*.bin`, `*.h5`, and `*.bz2` files at the end. If a test run stops early,
-these downloaded root-level fixtures may remain as local artifacts. If it
-reaches cleanup, the globs also remove pre-existing matching files even when a
-download was skipped; the full runner therefore belongs only in a disposable
-checkout.
+The script decompresses downloaded `*.bz2` EOS tables and records every path it
+creates. An `EXIT` trap removes only those paths on success or failure and
+preserves preexisting root-level files.
 
 `unit_test_c2p_nn_guess` separately creates a unique private temporary directory
 in HDF5 mode. It writes only its fixed model basenames there and removes those
@@ -162,8 +159,9 @@ from generated docs.
 
 Local evidence:
 
-- `GRHayL/Flux_Source/GRHayL_rhs.py` imports NRPy support modules and calls
-  `Cfunction__GRMHD_SourceTerms(".", includes)`.
+- `GRHayL/Flux_Source/GRHayL_rhs.py` resolves its NRPy imports relative to the
+  script, requires an explicit new or empty staging directory outside
+  `GRHayL/Flux_Source`, and generates the complete output set.
 - `GRHayL/Flux_Source/IGM_Characteristic_Speeds.py` contains code paths that
   write `ghl_calculate_characteristic_speed_dirn*.c`.
 - `GRHayL/Flux_Source/IGM_All_fluxes.py` contains code paths that write
@@ -176,13 +174,19 @@ Generated or derived C files confirmed by local generator paths:
 
 | C output | Local generator evidence | Notes |
 | --- | --- | --- |
-| `GRHayL/Flux_Source/ghl_calculate_source_terms.c` | `GRHayL_rhs.py` calls source-term C generation into `.`. | Current script path has source-term generation active. |
-| `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c` through `dirn2.c` | `IGM_Characteristic_Speeds.py` writes these names. | Call is commented in `GRHayL_rhs.py`; exact regeneration command/status: Unknown / needs maintainer confirmation. |
-| `GRHayL/Flux_Source/hybrid/ghl_calculate_HLLE_fluxes_dirn*_hybrid.c` | `IGM_All_fluxes.py` writes names matching variant directories. | Calls are commented in `GRHayL_rhs.py`; exact regeneration command/status: Unknown / needs maintainer confirmation. |
-| `GRHayL/Flux_Source/hybrid_entropy/ghl_calculate_HLLE_fluxes_dirn*_hybrid_entropy.c` | Same generator naming path. | Unknown / needs maintainer confirmation. |
-| `GRHayL/Flux_Source/tabulated/ghl_calculate_HLLE_fluxes_dirn*_tabulated.c` | Same generator naming path. | Unknown / needs maintainer confirmation. |
-| `GRHayL/Flux_Source/tabulated_entropy/ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy.c` | Same generator naming path. | Unknown / needs maintainer confirmation. |
+| `GRHayL/Flux_Source/ghl_calculate_source_terms.c` | `GRHayL_rhs.py` calls source-term generation. | Generated into the requested staging root. |
+| `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c` through `dirn2.c` | `GRHayL_rhs.py` calls `IGM_Characteristic_Speeds.py`. | Generated into the requested staging root. |
+| `GRHayL/Flux_Source/hybrid/ghl_calculate_HLLE_fluxes_dirn*_hybrid.c` | `GRHayL_rhs.py` calls `IGM_All_fluxes.py` with the explicit `hybrid` variant. | Generated under the matching staging subdirectory. |
+| `GRHayL/Flux_Source/hybrid_entropy/ghl_calculate_HLLE_fluxes_dirn*_hybrid_entropy.c` | Same generator with the explicit `hybrid_entropy` variant. | Generated under the matching staging subdirectory. |
+| `GRHayL/Flux_Source/tabulated/ghl_calculate_HLLE_fluxes_dirn*_tabulated.c` | Same generator with the explicit `tabulated` variant. | Generated under the matching staging subdirectory. |
+| `GRHayL/Flux_Source/tabulated_entropy/ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy.c` | Same generator with the explicit `tabulated_entropy` variant. | Generated under the matching staging subdirectory. |
 
-If a generated C file needs regeneration, do not invent a command from memory.
-Use the local Python scripts and ask a maintainer to confirm the intended
-entry point if `GRHayL_rhs.py` comments do not match the desired output set.
+From the repository root, first install
+`GRHayL/Flux_Source/requirements.txt` in a disposable Python environment, then
+use `python3 GRHayL/Flux_Source/GRHayL_rhs.py <empty-staging-directory>`. The
+script enforces the pinned SymPy version, rejects destinations inside
+`GRHayL/Flux_Source` and nonempty destinations, and checks its output set
+against the root and variant `make.code.defn` manifests. The pin stabilizes
+symbolic simplification and CSE ordering; the source-term generator explicitly
+normalizes its known square-root printer form.
+Review and verify staged output before replacing checked-in C.

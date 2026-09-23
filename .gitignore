@@ -2,6 +2,7 @@
 Makefile
 *.asc
 *.txt
+!GRHayL/Flux_Source/requirements.txt
 *.bin
 *.h5
 *.o

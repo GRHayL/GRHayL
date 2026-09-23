@@ -203,10 +203,22 @@ void run_unit_test(
     FILE *fp_pert = fopen(filename, "rb");
 
     int n1, n2;
-    if(fread(&n1, sizeof(int), 1, fp_unpert) != 1 ) ghl_error("Failed to read from file\n");;
-    if(fread(&n2, sizeof(int), 1, fp_pert  ) != 1 ) ghl_error("Failed to read from file\n");;
-    if( n1 != n2 )
-      ghl_error("Problem reading input data files (%d != %d)\n", n1, n2);
+    if(fread(&n1, sizeof(int), 1, fp_unpert) != 1) {
+      ghl_error(
+            "Failed to read con2prim_tabulated_%s_%s_unperturbed.bin\n", routine,
+            vars_string);
+    }
+    if(fread(&n2, sizeof(int), 1, fp_pert) != 1) {
+      ghl_error(
+            "Failed to read con2prim_tabulated_%s_%s_perturbed.bin\n", routine,
+            vars_string);
+    }
+    if(n1 != 32 || n2 != 32) {
+      ghl_error(
+            "Invalid con2prim_tabulated_%s_%s_{unperturbed,perturbed}.bin dimensions "
+            "(%d, %d; expected 32)\n",
+            routine, vars_string, n1, n2);
+    }
 
     const int npoints = n1;
     ghl_metric_quantities metric_adm;

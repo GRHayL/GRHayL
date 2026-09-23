@@ -12,10 +12,12 @@ int main(int argc, char **argv) {
 
   int npoints;
   int key = fread(&npoints, sizeof(int), 1, input);
-  if( key != 1 || npoints < 1 )
-    ghl_error("An error has occured with reading the grid size. "
-                 "Please check that Noble2D_initial_data.bin"
-                 "is up-to-date with current test version.\n");
+  if(key != 1 || npoints != 80) {
+    ghl_error(
+          "An error has occured with reading the grid size. "
+          "Please check that ET_Legacy_conservs_input.bin"
+          "is up-to-date with current test version.\n");
+  }
   const int arraylength = npoints*npoints;
 
   const double poison = 1e300;

@@ -1,13 +1,79 @@
+#include <float.h>
+
 #include "ghl_unit_tests.h"
+
+static int current_sample = -1;
+static int current_direction = -1;
+
+static inline bool
+checked_product(const double a, const double b, double *restrict result) {
+  if(!isfinite(a) || !isfinite(b) || (a != 0.0 && fabs(b) > DBL_MAX / fabs(a))) {
+    return false;
+  }
+  *result = a * b;
+  return isfinite(*result);
+}
+
+static inline bool checked_quotient(
+      const double numerator,
+      const double denominator,
+      double *restrict result) {
+  if(!isfinite(numerator) || !isfinite(denominator) || denominator == 0.0
+     || (numerator != 0.0 && fabs(denominator) < fabs(numerator) / DBL_MAX)) {
+    return false;
+  }
+  *result = numerator / denominator;
+  return isfinite(*result);
+}
+
+static inline void checked_multiply_divide(
+      const double a,
+      const double b,
+      const double denominator,
+      const char *restrict quantity,
+      double *restrict result) {
+  double product;
+  if(!checked_product(a, b, &product)
+     || !checked_quotient(product, denominator, result)) {
+    ghl_error(
+          "Invalid ET Legacy %s arithmetic at sample %d, direction %d\n", quantity,
+          current_sample, current_direction);
+  }
+}
 
 static inline ghl_error_codes_t compute_h_and_cs2(const ghl_eos_parameters *restrict eos,
                                      ghl_primitive_quantities *restrict prims,
                                      double *restrict h,
                                      double *restrict cs2) {
 
-  *h = prims->press*prims->vU[0] / prims->vU[2];
-  *cs2 = prims->rho*prims->vU[2]*(*h)/1e4;
+  checked_multiply_divide(prims->press, prims->vU[0], prims->vU[2], "enthalpy", h);
+  double rho_vz, rho_vz_h;
+  if(!checked_product(prims->rho, prims->vU[2], &rho_vz)
+     || !checked_product(rho_vz, *h, &rho_vz_h)
+     || !checked_quotient(rho_vz_h, 1e4, cs2)) {
+    ghl_error(
+          "Invalid ET Legacy sound-speed arithmetic at sample %d, direction %d\n",
+          current_sample, current_direction);
+  }
   return ghl_success;
+}
+
+static inline double inverse_spacing_for_direction(
+      const int flux_dirn,
+      const double invdx,
+      const double invdy,
+      const double invdz) {
+  switch(flux_dirn) {
+    case 0:
+      return invdx;
+    case 1:
+      return invdy;
+    case 2:
+      return invdz;
+    default:
+      ghl_error("Invalid flux direction %d\n", flux_dirn);
+  }
+  return 0.0;
 }
 
 #define AM2 -0.0625
@@ -49,11 +115,19 @@ int main(int argc, char **argv) {
 
   int dirlength;
   int key = fread(&dirlength, sizeof(int), 1, infile);
+  if(key != 1 || dirlength != 20) {
+    ghl_error("Invalid ET_Legacy_flux_source_input.bin dimension (expected 20)\n");
+  }
   const int ghostzone = 3;
   const int arraylength = dirlength*dirlength*dirlength;
   const double invdx = 1.0/0.1;
   const double invdy = 1.0/0.1;
   const double invdz = 1.0/0.1;
+  if(inverse_spacing_for_direction(0, 2.0, 3.0, 5.0) != 2.0
+     || inverse_spacing_for_direction(1, 2.0, 3.0, 5.0) != 3.0
+     || inverse_spacing_for_direction(2, 2.0, 3.0, 5.0) != 5.0) {
+    ghl_error("Directional inverse-spacing selection failed\n");
+  }
 
   const double poison = 1e300;
 
@@ -192,6 +266,7 @@ int main(int argc, char **argv) {
     const int xdir = (flux_dirn == 0);
     const int ydir = (flux_dirn == 1);
     const int zdir = (flux_dirn == 2);
+    const double invd = inverse_spacing_for_direction(flux_dirn, invdx, invdy, invdz);
 
     // Set function pointer to specific function for a given direction
     switch(flux_dirn) {
@@ -275,8 +350,12 @@ int main(int argc, char **argv) {
                 &prims_l);
 
           // Generate randomized u^0
-          prims_r.u0 = rho_r[index]*Bx_r[index]/vy_r[index];
-          prims_l.u0 = rho_l[index]*Bx_l[index]/vy_l[index];
+          current_sample = index;
+          current_direction = flux_dirn;
+          checked_multiply_divide(
+                rho_r[index], Bx_r[index], vy_r[index], "right u0", &prims_r.u0);
+          checked_multiply_divide(
+                rho_l[index], Bx_l[index], vy_l[index], "left u0", &prims_l.u0);
 
           double cmin, cmax;
           calculate_characteristic_speed(
@@ -302,11 +381,11 @@ int main(int argc, char **argv) {
           const int index  = indexf(dirlength, i, j ,k);
           const int indp1  = indexf(dirlength, i+xdir, j+ydir, k+zdir);
 
-          rho_star_rhs[index] += invdx*(rho_star_flux[index] - rho_star_flux[indp1]);
-          tau_rhs[index] += invdx*(tau_flux[index] - tau_flux[indp1]);
-          S_x_rhs[index] += invdx*(S_x_flux[index] - S_x_flux[indp1]);
-          S_y_rhs[index] += invdx*(S_y_flux[index] - S_y_flux[indp1]);
-          S_z_rhs[index] += invdx*(S_z_flux[index] - S_z_flux[indp1]);
+          rho_star_rhs[index] += invd * (rho_star_flux[index] - rho_star_flux[indp1]);
+          tau_rhs[index] += invd * (tau_flux[index] - tau_flux[indp1]);
+          S_x_rhs[index] += invd * (S_x_flux[index] - S_x_flux[indp1]);
+          S_y_rhs[index] += invd * (S_y_flux[index] - S_y_flux[indp1]);
+          S_z_rhs[index] += invd * (S_z_flux[index] - S_z_flux[indp1]);
     }
   }
 
@@ -375,7 +454,10 @@ int main(int argc, char **argv) {
               ONE_OVER_SQRT_4PI*Bx[index], ONE_OVER_SQRT_4PI*By[index], ONE_OVER_SQRT_4PI*Bz[index],
               poison, poison, poison, // entropy, Y_e, temp
               &prims);
-        prims.u0  = rho[index]*Bx[index] / vy[index];
+        current_sample = index;
+        current_direction = 3;
+        checked_multiply_divide(
+              rho[index], Bx[index], vy[index], "source u0", &prims.u0);
 
         ghl_conservative_quantities cons_sources;
         ghl_calculate_source_terms(

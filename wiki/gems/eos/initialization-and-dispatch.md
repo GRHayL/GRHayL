@@ -156,7 +156,8 @@ exact registry seam.
 Concrete Flux_Source routines are split into hybrid, hybrid-entropy,
 tabulated, and tabulated-entropy families. Unsuffixed generic HLLE globals
 remain only as uninitialized compatibility storage; new callers select a direct
-family/direction/entropy variant. Route flux questions to [Flux Source](../flux-source.md) and
+family/direction/entropy variant. Core EOS initialization selects the shared
+thermodynamic callback, not an HLLE function. Route flux questions to [Flux Source](../flux-source.md) and
 `GRHayL/include/ghl_flux_source.h`.
 
 Sources: `GRHayL/GRHayL_Core/initialize_eos.c`,

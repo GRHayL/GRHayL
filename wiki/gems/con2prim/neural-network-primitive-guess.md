@@ -110,7 +110,7 @@ directory on normal or handled failure exit.
 
 [Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c) covers NN-related expected-failure keys `83`, `84`, and `85`: null EOS pointer for `ghl_c2p_nn_load_hdf5`, empty NN filepath for `ghl_c2p_nn_load_hdf5`, and NN-enabled tabulated EOS initialization against a table without embedded `grhayl_nn_c2p`.
 
-[.github/run_tests.sh](../../../.github/run_tests.sh) runs `./test/unit_test_c2p_nn_guess`, loops `unit_test_code_error` over `0..87`, and runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before tabulated Con2Prim replay. The workflow files in [.github/workflows/](../../../.github/workflows/) include `c2p_nn_guess` in the failure-test matrix, run the same `pyghl append` command, and loop error keys over `0..87`. This page treats `pyghl append` only as visible test setup evidence; it does not document `pyghl` internals.
+[.github/run_tests.sh](../../../.github/run_tests.sh) runs `./test/unit_test_c2p_nn_guess`, loops `unit_test_code_error` over `0..88`, and runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before tabulated Con2Prim replay. The workflow files in [.github/workflows/](../../../.github/workflows/) include `c2p_nn_guess` in the failure-test matrix, run the same `pyghl append` command, and loop error keys over `0..88`. This page treats `pyghl append` only as visible test setup evidence; it does not document `pyghl` internals.
 
 ## Downstream Flag
 

@@ -1,11 +1,14 @@
 # Step 0: Add NRPy's directory to the path
 # https://stackoverflow.com/questions/16780014/import-file-from-parent-directory
 import os,sys
-import GRMHD_equations_new_version as GRMHD    # NRPy+: Generate general relativistic magnetohydrodynamics equations
+from pathlib import Path
 
-nrpy_dir_path = os.path.join("nrpy/")
+script_dir = Path(__file__).resolve().parent
+nrpy_dir_path = str(script_dir / "nrpy")
 if nrpy_dir_path not in sys.path:
-    sys.path.append(nrpy_dir_path)
+    sys.path.insert(0, nrpy_dir_path)
+
+import GRMHD_equations_new_version as GRMHD    # NRPy+: Generate general relativistic magnetohydrodynamics equations
 
 from outputC import outputC, outCfunction # NRPy+: Core C code output module
 import sympy as sp               # SymPy: The Python computer algebra package upon which NRPy+ depends
@@ -90,7 +93,10 @@ def HLLE_solver(cmax, cmin, Fr, Fl, Ur, Ul):
     # flux StildeD in the flux_dirn direction.
 
     # st_j_flux = (c_\min f_R + c_\max f_L - c_\min c_\max ( st_j_r - st_j_l )) / (c_\min + c_\max)
-    return (cmin*Fr + cmax*Fl - cmin*cmax*(Ur-Ul) )/(cmax + cmin)
+    cmin_weight, cmax_weight, dissipation_speed = sp.symbols(
+        "cmin_weight cmax_weight dissipation_speed")
+    return (cmin_weight*Fr + cmax_weight*Fl
+            - dissipation_speed*(Ur-Ul))
 
 
 
@@ -177,7 +183,7 @@ def calculate_HLLE_fluxes(formalism, flux_dirn, alpha_face, gamma_faceDD, beta_f
                                       U_S_tilde_r, U_S_tilde_l)
 
 
-def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, tabulated=False, entropy=False,
+def Cfunction__GRMHD_fluxes(Ccodesdir, variant, formalism="ADM", includes=None, tabulated=False, entropy=False,
                             outCparams = "outCverbose=False,CSE_sorting=True"):
 
     sqrt4pi = sp.symbols("SQRT_4_PI")
@@ -255,10 +261,16 @@ def Cfunction__GRMHD_fluxes(Ccodesdir, formalism="ADM", includes=None, tabulated
         prims_GRHayL += ["Y_e"]
 
     prestring = r"""
-double h_r, h_l, cs2_r, cs2_l;
+  double h_r, h_l, cs2_r, cs2_l;
 
-ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+  ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
+  if(error != ghl_success) {
+    return error;
+  }
+  error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
+  if(error != ghl_success) {
+    return error;
+  }
 """
 
     for i in range(len(prims_NRPy_r)):
@@ -323,12 +335,12 @@ ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
     if tabulated:
         vars_to_write += ["cons->Y_e"]
 
-    c_type = "void"
+    c_type = "ghl_error_codes_t"
 
-    params  =  "const primitive_quantities *restrict prims_r, "
-    params  += "const primitive_quantities *restrict prims_l, "
-    params  += "const eos_parameters *restrict eos, "
-    params  += "const metric_quantities *restrict metric_face, "
+    params  =  "ghl_primitive_quantities *restrict prims_r, "
+    params  += "ghl_primitive_quantities *restrict prims_l, "
+    params  += "const ghl_eos_parameters *restrict eos, "
+    params  += "const ghl_metric_quantities *restrict metric_face, "
 
     for flux_dirn in range(3):
         cmin_cmax_str = "const double "+str(cmins[flux_dirn])+", const double "+str(cmaxs[flux_dirn])+", "
@@ -357,21 +369,52 @@ ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
         if tabulated:
             vars_rhs += [Y_e_star_HLLE_flux]
 
+        speed_guard = f"""
+  const double wavespeed_scale = fmax(1.0, fmax(fabs({cmins[flux_dirn]}), fabs({cmaxs[flux_dirn]})));
+  if(!isfinite({cmins[flux_dirn]}) || !isfinite({cmaxs[flux_dirn]})
+     || {cmins[flux_dirn]} < -DBL_EPSILON * wavespeed_scale
+     || {cmaxs[flux_dirn]} < -DBL_EPSILON * wavespeed_scale) {{
+    return ghl_error_invalid_hlle_wavespeeds;
+  }}
+  const double cmin_floored = fmax({cmins[flux_dirn]}, 0.0);
+  const double cmax_floored = fmax({cmaxs[flux_dirn]}, 0.0);
+  if(cmin_floored > DBL_MAX - cmax_floored
+     || (cmin_floored > 1.0 && cmax_floored > DBL_MAX / cmin_floored)) {{
+    return ghl_error_invalid_hlle_wavespeeds;
+  }}
+  const double wavespeed_sum = cmin_floored + cmax_floored;
+  if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0 / DBL_MAX) {{
+    return ghl_error_invalid_hlle_wavespeeds;
+  }}
+  const double cmin_weight = cmin_floored / wavespeed_sum;
+  const double cmax_weight = cmax_floored / wavespeed_sum;
+  const double dissipation_speed = cmin_floored * cmax_floored / wavespeed_sum;
+"""
         body = outputC(vars_rhs, vars_to_write, params=outCparams,
-                   filename="returnstring", prestring=prestring)
+                   filename="returnstring", prestring=speed_guard+prestring)
+        body += "return ghl_success;\n"
 
     #     prestring=(cmin_cmax_str+ calc_char_speeds_func_str+
     #                                calc_char_speeds_params_str+";\n\n"+
     #                                prestring)
 
-        desc = "Compute the HLLE-derived fluxes on the left face in the " + str(flux_dirn) + "direction for all components."
-        name = "ghl_calculate_HLLE_fluxes_dirn" + str(flux_dirn) + "_" + Ccodesdir
+        desc = "Compute the HLLE-derived fluxes on the left face in direction " + str(flux_dirn) + " for all components."
+        legacy_name = "ghl_calculate_HLLE_fluxes_dirn" + str(flux_dirn) + "_" + variant
+        name = legacy_name + "_checked"
 
         outCfunction(
-            outfile=os.path.join(Ccodesdir,name+".c"),
+            outfile=os.path.join(Ccodesdir,legacy_name+".c"),
             includes=includes,
             desc=desc,
+            c_type=c_type,
             name=name,
-            params=params+cmin_cmax_str+"conservative_quantities *restrict cons",
+            params=params+cmin_cmax_str+"ghl_conservative_quantities *restrict cons",
             body= body,
             enableCparameters=False)
+
+        with open(os.path.join(Ccodesdir, legacy_name+".c"), "a") as output_file:
+            output_file.write(f"""
+void {legacy_name}(ghl_primitive_quantities *restrict prims_r, ghl_primitive_quantities *restrict prims_l, const ghl_eos_parameters *restrict eos, const ghl_metric_quantities *restrict metric_face, const double {cmins[flux_dirn]}, const double {cmaxs[flux_dirn]}, ghl_conservative_quantities *restrict cons) {{
+  ghl_abort_if_error({name}(prims_r, prims_l, eos, metric_face, {cmins[flux_dirn]}, {cmaxs[flux_dirn]}, cons));
+}}
+""")

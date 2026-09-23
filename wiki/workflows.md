@@ -58,7 +58,8 @@ Read first:
 
 Edit paths:
 - Core source: `GRHayL/GRHayL_Core/`
-- Shared public headers: `GRHayL/include/ghl.h`, `GRHayL/include/ghl_metric_helpers.h`, `GRHayL/include/ghl_io.h`, `GRHayL/include/ghl_debug.h`, `GRHayL/include/ghl_eos_functions.h`, `GRHayL/include/ghl_eos_functions_declaration.h`
+- Shared public headers: `GRHayL/include/ghl.h`, `GRHayL/include/ghl_metric_helpers.h`, `GRHayL/include/ghl_io.h`, `GRHayL/include/ghl_debug.h`, `GRHayL/include/ghl_eos_functions.h`
+- Internal EOS pointer storage: `GRHayL/include/ghl_eos_functions_declaration.h`
 - Public header install list: `GRHayL/include/make.code.defn`
 - Core build list: `GRHayL/GRHayL_Core/make.code.defn`
 - Downstream integration only with owner coordination: `implementations/GRHayLib/`

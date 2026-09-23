@@ -114,5 +114,6 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
     GHL_CASE_ERROR(
           ghl_error_invalid_eos_table,
           "EOS table dimensions, grid, or derived data are invalid.\n");
+    GHL_CASE_ERROR(ghl_error_invalid_hlle_wavespeeds, "Invalid HLLE wave speeds.\n");
   }
 }

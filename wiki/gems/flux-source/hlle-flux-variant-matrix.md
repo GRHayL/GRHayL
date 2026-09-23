@@ -34,22 +34,24 @@ Variant build lists:
 - [GRHayL/Flux_Source/tabulated/make.code.defn](../../../GRHayL/Flux_Source/tabulated/make.code.defn)
 - [GRHayL/Flux_Source/tabulated_entropy/make.code.defn](../../../GRHayL/Flux_Source/tabulated_entropy/make.code.defn)
 
-## Direct Functions And Pointer Surface
+## Direct Functions
 
-The direct variant functions above are the supported public calls. Tests may
-select them through test-local function pointers by EOS family, entropy mode,
-and flux direction. The unsuffixed generic globals
-`ghl_calculate_HLLE_fluxes_dirn0/1/2` remain as deprecated compatibility
-storage. GRHayL never initializes them, and their `const` primitive signatures
-are incompatible with the direct routines. New code must select a direct
-variant; existing manual assignments require an exact-signature callback.
+Each direct variant has a legacy `void` entry point and a matching `_checked`
+entry point that returns `ghl_error_codes_t`. The legacy wrapper aborts on a
+checked error. Tests may select checked variants through test-local function
+pointers by EOS family, entropy mode, and direction. The unsuffixed generic
+globals `ghl_calculate_HLLE_fluxes_dirn0/1/2` remain as deprecated
+compatibility storage. GRHayL never initializes them, and their `const`
+primitive signatures are incompatible with the direct routines, which may
+update primitives. New code must select a direct variant; existing manual
+assignments require an exact-signature callback.
 
 For direction `d`, simple/hybrid callers choose
 `ghl_calculate_HLLE_fluxes_dirn<d>_hybrid` or its `_entropy` form; tabulated
 callers choose the corresponding `_tabulated` or `_tabulated_entropy` form.
 Primitive inputs remain mutable because tabulated thermodynamic callbacks can
-clamp them. Supply copies when original face states must be preserved, and
-initialize the EOS global callbacks before a direct kernel call.
+limit them to table bounds. Supply copies when original face states must be
+preserved, and initialize the EOS global callbacks before a direct kernel call.
 
 ## Caller Contract
 
@@ -62,8 +64,13 @@ HLLE flux callers must supply:
   function pointer.
 - `metric_face`: face-centered ADM metric.
 - `cmin_dirn*` and `cmax_dirn*`: characteristic speeds computed for the same
-  direction and face. They are non-negative magnitudes; each kernel divides by
-  `cmin + cmax` without a zero-denominator check.
+  direction and face. Negative algebraic residue within `DBL_EPSILON` times
+  the larger of one and both magnitudes is floored at zero. Larger negative
+  values are rejected. The floored values must have a finite sum of at least
+  `1/DBL_MAX` and a product that does not overflow; the overflow test is exact
+  only to within one rounding. Invalid bounds return
+  `ghl_error_invalid_hlle_wavespeeds` from checked entry points before EOS
+  calls or output writes; legacy wrappers abort on that error.
 - `cons`: caller-owned conservative output receiving flux components.
 
 Entropy variants read `prims_r->entropy` and `prims_l->entropy` and write
@@ -74,11 +81,18 @@ momentum, and energy fields look valid.
 Only fields listed in the matrix are written. Other members of `cons` retain
 their prior value; these routines do not initialize the whole struct.
 
-All 12 routines call `ghl_compute_h_and_cs2` twice and discard its returned
-error code. Primitive arguments are mutable: production tabulated dispatch
-clamps `rho`, `Y_e`, and `temperature`, then overwrites `press` and `eps`.
-Callers needing immutable reconstructed states must pass copies and validate
-EOS/table inputs before calling.
+All 12 checked routines call `ghl_compute_h_and_cs2` twice and return either
+callback's exact error before writing output. Primitive arguments are mutable: production
+tabulated dispatch limits `rho`, `Y_e`, and `temperature` to table bounds, then overwrites
+`press` and `eps`. If the second callback fails, mutation performed by the
+successful first callback is retained. Callers needing immutable reconstructed
+states must pass copies.
+
+Characteristic-speed and source-term routines use the same combined callback,
+so a custom EOS dispatch needs install only `ghl_compute_h_and_cs2`.
+HLLE and source-term kernels request `cs2` but do not use it. No enthalpy-only
+callback is offered, because existing custom EOS integrations assign only
+`ghl_compute_h_and_cs2` and would otherwise mix EOS models or call a null pointer.
 
 ## Tabulated And HDF5 Boundary
 
@@ -87,7 +101,7 @@ tests and generators are filtered. Tabulated EOS initialization is separately
 guarded by `GHL_DISABLE_HDF5` in
 [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c).
 Link visibility is not runtime support: these real kernels call the global
-`ghl_compute_h_and_cs2` dispatch and discard its error code. A no-HDF5 build
+`ghl_compute_h_and_cs2` dispatch. A no-HDF5 build
 cannot initialize compatible tabulated EOS dispatch, so callers must not invoke
 the tabulated variants there; a hybrid or unset global dispatch can otherwise
 produce the wrong EOS calculation or a null call.
@@ -121,8 +135,12 @@ Python source together when formulas, variables, or output fields change.
 - **Fixture-generation:** matching data generators call every row/direction,
   but generated outputs use the same implementation and are not an independent
   oracle.
-- **Coverage gaps:** legacy generic compatibility pointer globals have no
-  focused repository test and Core never assigns them. Ignored EOS error
-  returns, primitive mutation, and zero `cmin + cmax` also have no focused
-  tests. The
-  no-HDF5 matrix variant link-checks the retained algebraic tabulated symbols.
+- **Focused contracts:** the hybrid and tabulated replay tests check invalid
+  and one-sided wave bounds, callback errors, unchanged outputs on failure, and
+  independent asymmetric fixed-bound HLLE algebra in every variant and
+  direction.
+- **Coverage gaps:** focused analytic HLLE checks use zero magnetic field, and
+  no committed production-tabulated HLLE check verifies callback mutation. The
+  legacy generic compatibility pointer globals have no focused repository test,
+  and Core never assigns them.
+- **No-HDF5:** the matrix variant link-checks retained algebraic tabulated symbols.
