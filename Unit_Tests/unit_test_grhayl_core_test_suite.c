@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
 
     if(check1 || check2)
       ghl_error("grhayl_core_test_suite has failed for ghl_set_prims_to_constant_atm() with %s EOS.\n"
-                   "  rho_b, pressure, vx, vy, vz, epsilon, entropy, Y_e, temperature\n"
+                   "  rho_b, pressure, vx, vy, vz, epsilon, entropy\n"
                    "  Struct output: %e %e %e %e %e %e %e %e %e\n"
                    "  EOS atm data:  %e %e %e %e %e %e %e %e %e\n",
                    eos_name, prims.rho, prims.press, prims.vU[0], prims.vU[1], prims.vU[2],

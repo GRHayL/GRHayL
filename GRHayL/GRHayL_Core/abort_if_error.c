@@ -1,9 +1,6 @@
 #include "ghl.h"
 
-#define GHL_CASE_ERROR(code, msg) \
-  case code:                      \
-    ghl_Error(code, msg);         \
-    break;
+#define GHL_CASE_ERROR(code, msg) case code: ghl_Error(code, msg); break;
 
 void ghl_abort_if_error(const ghl_error_codes_t error) {
   switch(error) {

@@ -180,7 +180,7 @@ static bool same_nrpyleakage_raw_rates(
 }
 
 static double nrpyleakage_fraction_roundoff_envelope(void) {
-  /* Keep this oracle identical to NRPyLeakage_normalize_nucleon_fractions(). */
+  /* Keep this oracle identical to ghl_m1_nrpyleakage_normalize_nucleon_fractions(). */
   const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
   return 27.0 * gamma_64;
 }

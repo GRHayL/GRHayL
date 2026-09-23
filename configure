@@ -1000,7 +1000,7 @@ ${Makefile_datagen_targets}
 
 clean:
 ${CLEAN_MESSAGE}
-${TAB}${SILENT}rm -rf \$(OBJ) \$(TEXES) \$(TEXEOBJS) \$(TOBJS) \$(DGEXES) \$(DGEXEOBJS) \$(BUILDLIBSO) \$(BUILDLIBSOV)
+${TAB}${SILENT}rm -rf \$(OBJ) \$(TEXES) \$(TOBJS) \$(BUILDLIBSO) \$(BUILDLIBSOV)
 
 realclean: clean
 ${REALCLEAN_MESSAGE}
