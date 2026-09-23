@@ -61,31 +61,6 @@ static bool flux_value_mismatch(const double expected, const double actual) {
              && fabs(expected - actual) > rtol * fmax(fabs(expected), fabs(actual)));
 }
 
-static bool legacy_floor_mismatch(const double expected, const double actual) {
-  // Compatibility envelope for trusted outputs generated before wave-speed flooring.
-  const double rtol = 8.0e-14;
-  const double atol = 16.0 * DBL_EPSILON;
-  return !isfinite(expected) || !isfinite(actual)
-         || (fabs(expected - actual) > atol
-             && fabs(expected - actual) > rtol * fmax(fabs(expected), fabs(actual)));
-}
-
-static bool flux_fixture_mismatch(
-      const double expected,
-      const double actual,
-      const double perturbed,
-      const double cmin,
-      const double cmax) {
-  if(!isfinite(expected) || !isfinite(actual) || !isfinite(perturbed)) {
-    return true;
-  }
-  // The pinned fixtures predate flooring roundoff-negative wave speeds at zero.
-  if(cmin < 0.0 || cmax < 0.0) {
-    return legacy_floor_mismatch(expected, actual);
-  }
-  return ghl_pert_test_fail(expected, actual, perturbed);
-}
-
 static void check_hybrid_flux_contract(const ghl_eos_parameters *restrict eos) {
   const flux_function functions[2][3]
         = { { ghl_calculate_HLLE_fluxes_dirn0_hybrid_checked,
@@ -514,9 +489,9 @@ int main(int argc, char **argv) {
               &cons_fluxes);
         ghl_abort_if_error(error);
 
-        if(flux_fixture_mismatch(
+        if(ghl_pert_test_fail(
                  trusted_rho_star_flux[index], cons_fluxes.rho,
-                 pert_rho_star_flux[index], cmin[index], cmax[index])) {
+                 pert_rho_star_flux[index])) {
           ghl_error(
                 "Test unit_test_hybrid_flux has failed for variable rho_star_flux.\n"
                 "  rho_star_flux trusted %.14e computed %.14e perturbed %.14e\n"
@@ -526,9 +501,8 @@ int main(int argc, char **argv) {
                 relative_error(trusted_rho_star_flux[index], pert_rho_star_flux[index]));
         }
 
-        if(flux_fixture_mismatch(
-                 trusted_tau_flux[index], cons_fluxes.tau, pert_tau_flux[index],
-                 cmin[index], cmax[index])) {
+        if(ghl_pert_test_fail(
+                 trusted_tau_flux[index], cons_fluxes.tau, pert_tau_flux[index])) {
           ghl_error(
                 "Test unit_test_hybrid_flux has failed for variable tau_flux.\n"
                 "  tau_flux trusted %.14e computed %.14e perturbed %.14e\n"
@@ -538,9 +512,8 @@ int main(int argc, char **argv) {
                 relative_error(trusted_tau_flux[index], pert_tau_flux[index]));
         }
 
-        if(flux_fixture_mismatch(
-                 trusted_S_x_flux[index], cons_fluxes.SD[0], pert_S_x_flux[index],
-                 cmin[index], cmax[index])) {
+        if(ghl_pert_test_fail(
+                 trusted_S_x_flux[index], cons_fluxes.SD[0], pert_S_x_flux[index])) {
           ghl_error(
                 "Test unit_test_hybrid_flux has failed for variable S_x_flux.\n"
                 "  S_x_flux trusted %.14e computed %.14e perturbed %.14e\n"
@@ -550,9 +523,8 @@ int main(int argc, char **argv) {
                 relative_error(trusted_S_x_flux[index], pert_S_x_flux[index]));
         }
 
-        if(flux_fixture_mismatch(
-                 trusted_S_y_flux[index], cons_fluxes.SD[1], pert_S_y_flux[index],
-                 cmin[index], cmax[index])) {
+        if(ghl_pert_test_fail(
+                 trusted_S_y_flux[index], cons_fluxes.SD[1], pert_S_y_flux[index])) {
           ghl_error(
                 "Test unit_test_hybrid_flux has failed for variable S_y_flux.\n"
                 "  S_y_flux trusted %.14e computed %.14e perturbed %.14e\n"
@@ -562,9 +534,8 @@ int main(int argc, char **argv) {
                 relative_error(trusted_S_y_flux[index], pert_S_y_flux[index]));
         }
 
-        if(flux_fixture_mismatch(
-                 trusted_S_z_flux[index], cons_fluxes.SD[2], pert_S_z_flux[index],
-                 cmin[index], cmax[index])) {
+        if(ghl_pert_test_fail(
+                 trusted_S_z_flux[index], cons_fluxes.SD[2], pert_S_z_flux[index])) {
           ghl_error(
                 "Test unit_test_hybrid_flux has failed for variable S_z_flux.\n"
                 "  S_z_flux trusted %.14e computed %.14e perturbed %.14e\n"
@@ -575,9 +546,8 @@ int main(int argc, char **argv) {
         }
 
         if(entropy
-           && flux_fixture_mismatch(
-                 trusted_ent_flux[index], cons_fluxes.entropy, pert_ent_flux[index],
-                 cmin[index], cmax[index])) {
+           && ghl_pert_test_fail(
+                 trusted_ent_flux[index], cons_fluxes.entropy, pert_ent_flux[index])) {
           ghl_error(
                 "Test unit_test_hybrid_flux has failed for variable ent_flux.\n"
                 "  ent_flux trusted %.14e computed %.14e perturbed %.14e\n"
