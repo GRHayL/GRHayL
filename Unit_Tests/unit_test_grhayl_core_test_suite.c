@@ -285,39 +285,36 @@ int main(int argc, char **argv) {
   // For a final test, we trigger the -detg warning
   gxy[0] += 10.0;
 
-    ghl_enforce_detgtij_and_initialize_ADM_metric(
-        lapse[0],
-        betax[0], betay[0], betaz[0],
-        gxx[0], gxy[0], gxz[0],
-        gyy[0], gyz[0], gzz[0],
-        &new_metric);
+  ghl_enforce_detgtij_and_initialize_ADM_metric(
+        lapse[0], betax[0], betay[0], betaz[0], gxx[0], gxy[0], gxz[0], gyy[0], gyz[0],
+        gzz[0], &new_metric);
 
-    if(!isfinite(new_metric.lapse) || !isfinite(new_metric.betaU[0])
-       || !isfinite(new_metric.betaU[1]) || !isfinite(new_metric.betaU[2])
-       || !isfinite(new_metric.gammaDD[0][0]) || !isfinite(new_metric.gammaDD[0][1])
-       || !isfinite(new_metric.gammaDD[0][2]) || !isfinite(new_metric.gammaDD[1][1])
-       || !isfinite(new_metric.gammaDD[1][2]) || !isfinite(new_metric.gammaDD[2][2])
-       || relative_error(lapse[0], new_metric.lapse) > rel_tol
-       || relative_error(betax[0], new_metric.betaU[0]) > rel_tol
-       || relative_error(betay[0], new_metric.betaU[1]) > rel_tol
-       || relative_error(betaz[0], new_metric.betaU[2]) > rel_tol
-       || relative_error(gxx[0], new_metric.gammaDD[0][0]) > rel_tol
-       || relative_error(gxy[0], new_metric.gammaDD[0][1]) > rel_tol
-       || relative_error(gxz[0], new_metric.gammaDD[0][2]) > rel_tol
-       || relative_error(gyy[0], new_metric.gammaDD[1][1]) > rel_tol
-       || relative_error(gyz[0], new_metric.gammaDD[1][2]) > rel_tol
-       || relative_error(gzz[0], new_metric.gammaDD[2][2]) > rel_tol) {
-      ghl_error(
-            "unit_test_grhayl_core_test_suite has failed for "
-            "ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
-            "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
-            "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
-            lapse[0], betax[0], betay[0], betaz[0], gxx[0], gxy[0], gxz[0], gyy[0],
-            gyz[0], gzz[0], new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1],
-            new_metric.betaU[2], new_metric.gammaDD[0][0], new_metric.gammaDD[0][1],
-            new_metric.gammaDD[0][2], new_metric.gammaDD[1][1], new_metric.gammaDD[1][2],
-            new_metric.gammaDD[2][2]);
-    }
+  if(!isfinite(new_metric.lapse) || !isfinite(new_metric.betaU[0])
+     || !isfinite(new_metric.betaU[1]) || !isfinite(new_metric.betaU[2])
+     || !isfinite(new_metric.gammaDD[0][0]) || !isfinite(new_metric.gammaDD[0][1])
+     || !isfinite(new_metric.gammaDD[0][2]) || !isfinite(new_metric.gammaDD[1][1])
+     || !isfinite(new_metric.gammaDD[1][2]) || !isfinite(new_metric.gammaDD[2][2])
+     || relative_error(lapse[0], new_metric.lapse) > rel_tol
+     || relative_error(betax[0], new_metric.betaU[0]) > rel_tol
+     || relative_error(betay[0], new_metric.betaU[1]) > rel_tol
+     || relative_error(betaz[0], new_metric.betaU[2]) > rel_tol
+     || relative_error(gxx[0], new_metric.gammaDD[0][0]) > rel_tol
+     || relative_error(gxy[0], new_metric.gammaDD[0][1]) > rel_tol
+     || relative_error(gxz[0], new_metric.gammaDD[0][2]) > rel_tol
+     || relative_error(gyy[0], new_metric.gammaDD[1][1]) > rel_tol
+     || relative_error(gyz[0], new_metric.gammaDD[1][2]) > rel_tol
+     || relative_error(gzz[0], new_metric.gammaDD[2][2]) > rel_tol) {
+    ghl_error(
+          "unit_test_grhayl_core_test_suite has failed for "
+          "ghl_enforce_detgtij_and_initialize_ADM_metric().\n"
+          "  input metric:  %e %e %e %e %e %e %e %e %e %e\n"
+          "  output metric: %e %e %e %e %e %e %e %e %e %e\n",
+          lapse[0], betax[0], betay[0], betaz[0], gxx[0], gxy[0], gxz[0], gyy[0], gyz[0],
+          gzz[0], new_metric.lapse, new_metric.betaU[0], new_metric.betaU[1],
+          new_metric.betaU[2], new_metric.gammaDD[0][0], new_metric.gammaDD[0][1],
+          new_metric.gammaDD[0][2], new_metric.gammaDD[1][1], new_metric.gammaDD[1][2],
+          new_metric.gammaDD[2][2]);
+  }
 
   char *valid_char[12];
   valid_char[0] = "None";
