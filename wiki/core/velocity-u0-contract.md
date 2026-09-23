@@ -104,7 +104,8 @@ as focused coverage for the Core limiter, not full coverage of all Core inputs.
 Hybrid and tabulated flux tests also call the Core routine,
 but their assertions target flux behavior rather than a complete standalone
 limiter contract (`Unit_Tests/unit_test_hybrid_flux.c` and
-`Unit_Tests/unit_test_tabulated_flux.c`).
+`Unit_Tests/unit_test_tabulated_flux.c`). Their generators keep face states
+below the cap, so they do not exercise the cap branch.
 
 Error-path routing: `Unit_Tests/unit_test_code_error.c` initializes metric data,
 sets primitive velocities to `NaN`, calls `ghl_limit_v_and_compute_u0`

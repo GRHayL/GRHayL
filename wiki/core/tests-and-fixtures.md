@@ -119,7 +119,8 @@ fixture contents or metadata forbidden by the
 - [Unit_Tests/unit_test_hybrid_flux.c](../../Unit_Tests/unit_test_hybrid_flux.c)
   and [Unit_Tests/unit_test_tabulated_flux.c](../../Unit_Tests/unit_test_tabulated_flux.c)
   use Core metric, primitive initialization, and `ghl_limit_v_and_compute_u0`
-  while testing flux behavior.
+  while testing flux behavior. Their generated face states stay below the
+  Lorentz cap, so they do not cover the limiter's cap branch.
 - [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../Unit_Tests/unit_test_ET_Legacy_flux_source.c)
   uses Core metric, extrinsic-curvature, and primitive initialization in a
   Flux_Source legacy comparison path.
