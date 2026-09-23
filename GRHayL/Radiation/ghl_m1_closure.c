@@ -423,8 +423,9 @@ static ghl_error_codes_t evaluate_minerbo(
     }
     H2_ld -= Hn_ld * Hn_ld;
     H2 = (double)H2_ld;
-    scale = ghl_m1_max(
-          energy_scale * energy_scale, ghl_m1_max(J * J * xi * xi, fabs(H2)));
+    /* The residual J^2 xi^2 - H^2 is bounded by J^2 (H <= J), and J can be
+     * far below E for flux along a fast flow, so J^2 is the natural scale. */
+    scale = ghl_m1_max(J * J, fabs(H2));
   }
   else {
     /* The comoving consistency equation is homogeneous in radiation energy.
@@ -467,14 +468,14 @@ static ghl_error_codes_t evaluate_minerbo(
     }
     H2_over_E2_ld -= Hn_over_E_ld * Hn_over_E_ld;
     H2 = (double)H2_over_E2_ld;
-    scale = ghl_m1_max(1.0, ghl_m1_max(J * J * xi * xi, fabs(H2)));
+    scale = ghl_m1_max(J * J, fabs(H2));
   }
   if(!isfinite(J) || J <= 0.0) {
     record_closure_failure_stage(ghl_m1_closure_failure_comoving_energy);
     return ghl_error_m1_invalid_state;
   }
   const double h2_tolerance = 1024.0 * DBL_EPSILON * scale;
-  if(!isfinite(H2) || H2 < -h2_tolerance || !isfinite(scale) || scale <= 0.0) {
+  if(!isfinite(H2) || H2 < -h2_tolerance) {
     record_closure_failure_stage(ghl_m1_closure_failure_comoving_flux_norm);
     return ghl_error_m1_invalid_state;
   }
@@ -494,6 +495,26 @@ static ghl_error_codes_t evaluate_minerbo(
       }
     }
   }
+  /* The thick tensor cancels O(W^2 E) terms to produce its O(E) trace, so
+   * its rounding error in gamma_ij P^ij grows like W^2.  Inside that rounding
+   * envelope, restore the exact trace with an isotropic correction; a larger
+   * discrepancy is left for the tensor validator to reject. */
+  long double trace_ld = 0.0L;
+  for(int i = 0; i < 3; ++i) {
+    for(int j = 0; j < 3; ++j) {
+      trace_ld += (long double)ws->metric->gammaDD[i][j] * P[i][j];
+    }
+  }
+  const double trace_error = (double)((long double)energy_scale - trace_ld);
+  const double trace_envelope = 256.0 * DBL_EPSILON * (1.0 + 4.0 * ws->W * ws->W)
+                                * ghl_m1_max(fabs((double)trace_ld), energy_scale);
+  if(fabs(trace_error) <= trace_envelope) {
+    for(int i = 0; i < 3; ++i) {
+      for(int j = 0; j < 3; ++j) {
+        P[i][j] += (trace_error / 3.0) * ws->metric->gammaUU[i][j];
+      }
+    }
+  }
   for(int i = 0; i < 3; ++i) {
     for(int j = i + 1; j < 3; ++j) {
       const double symmetric = 0.5 * (P[i][j] + P[j][i]);
@@ -501,7 +522,8 @@ static ghl_error_codes_t evaluate_minerbo(
       P[j][i] = symmetric;
     }
   }
-  if(!isfinite(*normalized_residual) || !isfinite(*physical_xi_out)) {
+  if(!isfinite(scale) || !(scale > 0.0) || !isfinite(*normalized_residual)
+     || !isfinite(*physical_xi_out)) {
     record_closure_failure_stage(ghl_m1_closure_failure_residual);
     return ghl_error_m1_invalid_state;
   }
@@ -739,7 +761,6 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
     return error;
   }
 
-  const bool scaled_energy = rad_state->E > sqrt(DBL_MAX);
   double Ptmp[3][3], chi0, chi1, g0, g1, nr0, nr1, physical_xi;
   error = evaluate_minerbo(&ws, 0.0, Ptmp, &chi0, &g0, &nr0, &physical_xi);
   if(error == ghl_success) {
@@ -753,15 +774,10 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
   double xi = 0.0;
   int iterations = 0;
   ghl_m1_closure_solve_status_t status;
-  const double endpoint_roundoff
-        = scaled_energy ? 1024.0 * DBL_EPSILON
-                        : 1024.0 * DBL_EPSILON * ws.rad_state->E * ws.rad_state->E;
-  if(g0 == 0.0 || g1 == 0.0 || fabs(g0) <= endpoint_roundoff
-     || fabs(g1) <= endpoint_roundoff) {
-    xi = g0 == 0.0 ? 0.0 : 1.0;
-    if(fabs(g0) <= endpoint_roundoff) {
-      xi = 0.0;
-    }
+  /* Endpoint roots are judged on the J^2-normalized residual. */
+  const double endpoint_roundoff = 1024.0 * DBL_EPSILON;
+  if(nr0 <= endpoint_roundoff || nr1 <= endpoint_roundoff) {
+    xi = nr0 <= endpoint_roundoff ? 0.0 : 1.0;
     status = ghl_m1_closure_solve_converged;
   }
   else if(signbit(g0) == signbit(g1)) {
