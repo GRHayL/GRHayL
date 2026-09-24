@@ -7,24 +7,32 @@ ghl_error_codes_t ghl_calculate_HLLE_fluxes_dirn2_tabulated_checked(ghl_primitiv
   const double wavespeed_scale = fmax(1.0, fmax(fabs(cmin_dirn2), fabs(cmax_dirn2)));
   if(!isfinite(cmin_dirn2) || !isfinite(cmax_dirn2)
      || cmin_dirn2 < -DBL_EPSILON * wavespeed_scale
-     || cmax_dirn2 < -DBL_EPSILON * wavespeed_scale) return ghl_error_invalid_hlle_wavespeeds;
+     || cmax_dirn2 < -DBL_EPSILON * wavespeed_scale) {
+    return ghl_error_invalid_hlle_wavespeeds;
+  }
   const double cmin_floored = fmax(cmin_dirn2, 0.0);
   const double cmax_floored = fmax(cmax_dirn2, 0.0);
   if(cmin_floored > DBL_MAX - cmax_floored
-     || (cmin_floored > 1.0 && cmax_floored > DBL_MAX / cmin_floored))
+     || (cmin_floored > 1.0 && cmax_floored > DBL_MAX / cmin_floored)) {
     return ghl_error_invalid_hlle_wavespeeds;
+  }
   const double wavespeed_sum = cmin_floored + cmax_floored;
-  if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0 / DBL_MAX)
+  if(wavespeed_sum <= 0.0 || wavespeed_sum < 1.0 / DBL_MAX) {
     return ghl_error_invalid_hlle_wavespeeds;
+  }
   const double cmin_weight = cmin_floored / wavespeed_sum;
   const double cmax_weight = cmax_floored / wavespeed_sum;
   const double dissipation_speed = cmin_floored * cmax_floored / wavespeed_sum;
   // The EOS may update both face states before the NRPy equations read them.
   double h_r, h_l, cs2_r, cs2_l;
   ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-  if(error != ghl_success) return error;
+  if(error != ghl_success) {
+    return error;
+  }
   error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
-  if(error != ghl_success) return error;
+  if(error != ghl_success) {
+    return error;
+  }
   const double u4rU0 = prims_r->u0;
   const double u4rU1 = prims_r->vU[0]*u4rU0;
   const double u4rU2 = prims_r->vU[1]*u4rU0;

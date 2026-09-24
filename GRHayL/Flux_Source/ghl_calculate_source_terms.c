@@ -6,7 +6,9 @@ ghl_error_codes_t ghl_calculate_source_terms_checked(const ghl_eos_parameters *r
   // The EOS may update the cell state before the source equations read it.
   double h, cs2;
   const ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims, &h, &cs2);
-  if(error != ghl_success) return error;
+  if(error != ghl_success) {
+    return error;
+  }
   const double u4U0 = prims->u0;
   const double u4U1 = prims->vU[0]*u4U0;
   const double u4U2 = prims->vU[1]*u4U0;

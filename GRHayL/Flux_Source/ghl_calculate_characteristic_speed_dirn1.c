@@ -6,9 +6,13 @@ ghl_error_codes_t ghl_calculate_characteristic_speed_dirn1_checked(ghl_primitive
   // The EOS may update both face states before the NRPy equations read them.
   double h_r, h_l, cs2_r, cs2_l;
   ghl_error_codes_t error = ghl_compute_h_and_cs2(eos, prims_r, &h_r, &cs2_r);
-  if(error != ghl_success) return error;
+  if(error != ghl_success) {
+    return error;
+  }
   error = ghl_compute_h_and_cs2(eos, prims_l, &h_l, &cs2_l);
-  if(error != ghl_success) return error;
+  if(error != ghl_success) {
+    return error;
+  }
   const double u4rU0 = prims_r->u0;
   const double u4rU1 = prims_r->vU[0]*u4rU0;
   const double u4rU2 = prims_r->vU[1]*u4rU0;
