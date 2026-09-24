@@ -221,7 +221,8 @@ Edit paths:
 - Hybrid entropy HLLE: `GRHayL/Flux_Source/hybrid_entropy/`
 - Tabulated HLLE: `GRHayL/Flux_Source/tabulated/`
 - Tabulated entropy HLLE: `GRHayL/Flux_Source/tabulated_entropy/`
-- NRPy generation/support code: `GRHayL/Flux_Source/*.py`, `GRHayL/Flux_Source/nrpy/`
+- NRPy 2 generation: `GRHayL/Flux_Source/generate_flux_source.sh` and
+  `GRHayL/Flux_Source/generate_flux_source.py`
 - Public declarations: `GRHayL/include/ghl_flux_source.h`
 
 Tests/data generators:
