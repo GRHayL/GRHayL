@@ -166,12 +166,13 @@ covariant stress-energy corpus. The runner validates the retained package with
 
 ## CI
 
-`.github/run_tests.sh` invokes the M1 runner. The existing compiler/OS workflows
-also select dedicated Radiation jobs through `.github/actions/run_m1`; these
-configure the selected compiler and HDF5 mode, then build and execute the same
-scoped M1 targets. The Ubuntu GCC Radiation jobs compile with gcov flags and
-invoke the shared GRHayL coverage action after the scoped run, in both HDF5
-modes. That action uploads a gcovr Cobertura report filtered to
-`GRHayL/Radiation/`. The `radiation_m1` Codecov component has a 100% project
-coverage target for that path. The M1 action defines no changed-path gate.
-Workflow selection is not a claim that a remote CI run has already passed.
+The broad `.github/run_tests.sh` runner does not invoke the scoped M1 suite.
+The compiler/OS workflows select dedicated Radiation jobs through
+`.github/actions/run_m1`; these configure the selected compiler and HDF5 mode,
+then build and execute the same scoped M1 targets. The Ubuntu GCC Radiation
+jobs compile with gcov flags and invoke the shared GRHayL coverage action after
+the scoped run in both HDF5 modes. That action uploads a gcovr Cobertura report
+filtered to `GRHayL/Radiation/`. The `radiation_m1` Codecov component has a
+100% project coverage target for that path. The M1 action defines no
+changed-path gate. Workflow selection is not a claim that a remote CI run has
+already passed.

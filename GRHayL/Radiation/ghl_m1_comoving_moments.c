@@ -69,7 +69,29 @@ static ghl_error_codes_t ghl_m1_compute_comoving_moments_internal(
                      + P_DD[1][2] * V_con[1] * V_con[2]);
 
   ghl_m1_comoving candidate = { 0 };
-  const double J = SQR(W) * (rad_state->E - 2.0 * FdotV + PVV);
+  double J = SQR(W) * (rad_state->E - 2.0 * FdotV + PVV);
+  if(!isfinite(J)) {
+    /* Evaluate the same contraction in units of its largest input. The
+     * unscaled 2*FdotV can overflow even when the signed sum is finite. */
+    double scale = fabs(rad_state->E);
+    for(int i = 0; i < 3; ++i) {
+      scale = fmax(scale, fabs(rad_state->F[i]));
+      for(int j = 0; j < 3; ++j) {
+        scale = fmax(scale, fabs(P_DD[i][j]));
+      }
+    }
+    if(isfinite(scale) && scale > 0.0) {
+      double scaled_FdotV = 0.0, scaled_PVV = 0.0;
+      for(int i = 0; i < 3; ++i) {
+        scaled_FdotV += (rad_state->F[i] / scale) * V_con[i];
+        for(int j = 0; j < 3; ++j) {
+          scaled_PVV += (P_DD[i][j] / scale) * V_con[i] * V_con[j];
+        }
+      }
+      const double scaled_J = (rad_state->E / scale - 2.0 * scaled_FdotV) + scaled_PVV;
+      J = (scaled_J * W) * W * scale;
+    }
+  }
   // Keep this admissibility guard in all builds: negative/non-finite comoving
   // energy density is unphysical and must be rejected deterministically.
   if(!isfinite(J) || J < 0.0) {

@@ -107,6 +107,16 @@ static void check_shared_rusanov_boundaries(void) {
     fail_case("shared Rusanov candidate overflow was published", 405);
   }
 
+  const double smallest_speed = nextafter(0.0, 1.0);
+  huge_state_R[0] = 1.0e308;
+  if(ghl_calculate_Rusanov_flux(
+           huge_state_L, huge_state_R, zero_flux_L, zero_flux_R, 1, smallest_speed,
+           rejected)
+           != ghl_success
+     || rejected[0] != -smallest_speed * (0.5 * huge_state_R[0])) {
+    fail_case("subnormal Rusanov speed lost finite dissipation", 405);
+  }
+
   if(ghl_calculate_Rusanov_flux(state_L, state_R, flux_L, flux_R, 3, 0.5, output)
      != ghl_success) {
     fail_case("shared Rusanov finite boundary case failed", 406);
@@ -314,6 +324,12 @@ static void check_m1_rusanov_boundaries(
      || number_flux != 181.0) {
     fail_case("scalar M1 Rusanov candidate overflow was published", 425);
   }
+  if(ghl_m1_compute_number_rusanov_flux(
+           0.0, 1.0e308, 0.0, 0.0, nextafter(0.0, 1.0), &number_flux)
+           != ghl_success
+     || number_flux != -nextafter(0.0, 1.0) * (0.5 * 1.0e308)) {
+    fail_case("scalar M1 Rusanov lost subnormal-speed dissipation", 425);
+  }
 }
 
 static void check_physical_flux(
@@ -343,6 +359,24 @@ static void check_physical_flux(
     }
     const double expected_F = metric->lapse * P_mixed - metric->betaU[d] * state->F[i];
     check_close(actual_F[i], expected_F, "physical momentum flux mismatch", case_index);
+  }
+}
+
+static void check_cancelled_physical_flux(void) {
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  metric.lapse = 4.0;
+  metric.betaU[0] = 2.0;
+  const ghl_m1_rad_state state = { .E = 1.0e308, .F = { 5.0e307, 0.0, 0.0 } };
+  const ghl_m1_closure closure = { .P = { { 1.0e308 / 3.0, 0.0, 0.0 },
+                                          { 0.0, 1.0e308 / 3.0, 0.0 },
+                                          { 0.0, 0.0, 1.0e308 / 3.0 } } };
+  double energy_flux = 17.0, momentum_flux[3] = { 18.0, 19.0, 20.0 };
+  if(ghl_m1_compute_physical_flux(
+           &metric, ghl_m1_dirn0, &state, &closure, &energy_flux, momentum_flux)
+           != ghl_success
+     || energy_flux != 0.0 || !isfinite(momentum_flux[0])) {
+    fail_case("finite cancelled physical energy flux was rejected", 430);
   }
 }
 
@@ -514,6 +548,7 @@ int main(int argc, char **argv) {
   check_case(&m1_params, &curved_metric, &curved_prims, &curved_L, &curved_R, 1);
 
   check_shared_rusanov_boundaries();
+  check_cancelled_physical_flux();
   check_m1_rusanov_boundaries(&m1_params, &flat_metric, &flat_prims);
 
   if(ghl_m1_compute_rusanov_flux(

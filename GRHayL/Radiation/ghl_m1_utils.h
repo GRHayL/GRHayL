@@ -24,6 +24,33 @@ static inline double ghl_m1_min(const double A, const double B) { return A < B ?
 
 static inline double ghl_m1_max(const double A, const double B) { return A > B ? A : B; }
 
+/* Preserve cancellation when the two individual products overflow double.
+ * The fast path retains ordinary rounding; the fallback aligns binary
+ * exponents before multiplying and restores the scale after subtraction. */
+static inline double ghl_m1_difference_of_products(
+      const double a,
+      const double b,
+      const double c,
+      const double d) {
+  const double direct = a * b - c * d;
+  if(isfinite(direct) || !isfinite(a) || !isfinite(b) || !isfinite(c) || !isfinite(d)) {
+    return direct;
+  }
+  int ea, eb, ec, ed;
+  const double ma = frexp(a, &ea), mb = frexp(b, &eb);
+  const double mc = frexp(c, &ec), md = frexp(d, &ed);
+  const int exponent_ab = ea + eb, exponent_cd = ec + ed;
+  const int exponent = exponent_ab > exponent_cd ? exponent_ab : exponent_cd;
+  const double product_ab = ma * mb, product_cd = mc * md;
+  const double low_ab = fma(ma, mb, -product_ab);
+  const double low_cd = fma(mc, md, -product_cd);
+  const double high = scalbn(product_ab, exponent_ab - exponent)
+                      - scalbn(product_cd, exponent_cd - exponent);
+  const double low = scalbn(low_ab, exponent_ab - exponent)
+                     - scalbn(low_cd, exponent_cd - exponent);
+  return scalbn(high + low, exponent);
+}
+
 bool ghl_m1_metric_is_symmetric_spd(const ghl_metric_quantities *restrict metric);
 
 /* Private cross-translation-unit observability hook. */

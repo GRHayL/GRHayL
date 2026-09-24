@@ -4,6 +4,7 @@
 #include "m1_thcm1_source_fixture.h"
 #include "m1_thcm1_stress_energy_fixture.h"
 
+#include <float.h>
 #include <string.h>
 
 /*
@@ -1167,10 +1168,11 @@ static void check_closure_arithmetic_boundaries(void) {
              * the checked workspace arithmetic. */
             { sqrt(DBL_MAX), 1.0e100, 0.0, 0.0, ghl_error_m1_invalid_state,
               ghl_m1_closure_failure_workspace },
-            /* A subluminal moving state at that energy boundary reaches a checked
-             * non-finite residual operation. */
+            /* At this energy boundary, binary64 long double overflows the
+             * comoving-flux square; wider long double reaches the residual. */
             { sqrt(DBL_MAX), 1.0, 0.0, 0.8, ghl_error_m1_invalid_state,
-              ghl_m1_closure_failure_residual },
+              LDBL_MAX_EXP == DBL_MAX_EXP ? ghl_m1_closure_failure_comoving_flux_norm
+                                          : ghl_m1_closure_failure_residual },
             /* Near-light motion makes the checked comoving-flux-square value
              * non-finite when converted back from long double to binary64. */
             { sqrt(DBL_MAX), 1.0, 0.0, 0x1.fffffffffffffp-1, ghl_error_m1_invalid_state,
@@ -1466,6 +1468,47 @@ static void check_inline_wrapper_boundaries(void) {
 #undef RHS
 }
 
+static void check_large_cancelled_comoving_energy(void) {
+  ghl_m1_parameters params = { 0 };
+  require_condition(
+        ghl_m1_initialize(
+              1.0e-10, 1.0e-12, 1.0e-8, 1.0e-6, 1.0e-12, 20, 1.0e-10, &params)
+              == ghl_success,
+        "large comoving test initialization", -1, -1);
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  ghl_primitive_quantities prims = { .u0 = 1.0, .vU = { 0.99, 0.0, 0.0 } };
+  const ghl_m1_rad_state large
+        = { .E = 1.0e308, .F = { 9.949498756312655e307, 0.0, 0.0 } };
+  const ghl_m1_closure large_closure = { .P = { { 9.900002512499685e307, 0.0, 0.0 },
+                                                { 0.0, 4.999874375015711e305, 0.0 },
+                                                { 0.0, 0.0, 4.999874375015711e305 } } };
+  ghl_m1_rad_state small = large;
+  ghl_m1_closure small_closure = large_closure;
+  small.E *= 0.1;
+  for(int i = 0; i < 3; ++i) {
+    small.F[i] *= 0.1;
+    for(int j = 0; j < 3; ++j) {
+      small_closure.P[i][j] *= 0.1;
+    }
+  }
+  ghl_m1_comoving large_result = { 0 }, small_result = { 0 };
+  require_condition(
+        ghl_m1_compute_comoving_moments(
+              &params, &metric, &prims, &small, &small_closure, &small_result)
+              == ghl_success,
+        "scaled comoving reference", -1, -1);
+  require_condition(
+        ghl_m1_compute_comoving_moments(
+              &params, &metric, &prims, &large, &large_closure, &large_result)
+              == ghl_success,
+        "finite large cancelled comoving energy", -1, -1);
+  require_condition(
+        isfinite(large_result.J) && large_result.J > 0.0
+              && m1_nearly_equal(large_result.J, 10.0 * small_result.J, 2.0e-12, 0.0),
+        "large comoving energy disagrees with scaled reference", -1, -1);
+}
+
 int main(int argc, char **argv) {
   const char *fixture_dir = "Unit_Tests/data/m1_thcm1";
   if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0) {
@@ -1479,6 +1522,7 @@ int main(int argc, char **argv) {
   check_near_zero_flux_closure();
   check_nonzero_flux_admissibility_fallback();
   check_closure_arithmetic_boundaries();
+  check_large_cancelled_comoving_energy();
   check_supplied_closure_psd_range();
   check_inline_wrapper_boundaries();
   check_pointwise_fixtures(fixture_dir);

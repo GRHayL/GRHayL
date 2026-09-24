@@ -863,7 +863,7 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
         /* Endpoints were accepted before Brent's in-bracket evaluation. Keep
          * the defensive return for floating-point failures at an interior xi. */
         increment_counter(3); /* GCOVR_EXCL_LINE -- defensive interior failure */
-        return error;          /* GCOVR_EXCL_LINE -- defensive interior failure */
+        return error;         /* GCOVR_EXCL_LINE -- defensive interior failure */
       }
       fb = gm;
     }

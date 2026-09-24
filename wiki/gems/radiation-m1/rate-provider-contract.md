@@ -98,6 +98,12 @@ the active thermal or charged-current mask.
 
 Channel toggles are deterministic and are part of provider state. Radiation
 does not inspect the channel mask; it only sees the final frozen rates.
+The production raw kernel evaluates only enabled channel rates, while it keeps
+the equilibrium Fermi moments and electron-flavor beta/Kirchhoff consistency
+diagnostics independent of the mask. Consequently, an empty mask publishes
+finite equilibrium targets with zero interaction coefficients and pair-process
+emissivities. A disabled channel's unused Fermi integral cannot fail the
+provider call.
 
 ## Table Bounds And Table-Free Mode
 

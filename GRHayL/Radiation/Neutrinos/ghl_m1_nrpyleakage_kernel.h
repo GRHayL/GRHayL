@@ -103,9 +103,20 @@ ghl_error_codes_t ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
       double X_p,
       ghl_m1_nrpyleakage_thermo_state *restrict thermo);
 
+/* Strict raw calculation with every channel enabled. */
 ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
       const ghl_m1_nrpyleakage_thermo_state *restrict thermo,
       const double neutrino_degeneracy[ghl_m1_nrpyleakage_species_count],
+      ghl_m1_nrpyleakage_raw_rates *restrict raw);
+
+/* Provider-only variant. Pair, plasmon, bremsstrahlung, and scattering raw
+ * calculations are performed only for enabled channels; equilibrium moments
+ * and beta/Kirchhoff diagnostics remain available independently of the mask.
+ * Disabled thermal-channel and scattering fields are zero. */
+ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+      const ghl_m1_nrpyleakage_thermo_state *restrict thermo,
+      const double neutrino_degeneracy[ghl_m1_nrpyleakage_species_count],
+      int channel_mask,
       ghl_m1_nrpyleakage_raw_rates *restrict raw);
 
 #endif

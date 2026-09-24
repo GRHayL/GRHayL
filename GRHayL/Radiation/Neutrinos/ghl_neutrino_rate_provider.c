@@ -325,11 +325,10 @@ static ghl_error_codes_t validate_inputs(
   const double rho_hi = eos->table_rho_max > 0.0 ? eos->table_rho_max : eos->rho_max;
   const double T_lo = eos->table_T_min > 0.0 ? eos->table_T_min : eos->T_min;
   const double T_hi = eos->table_T_max > 0.0 ? eos->table_T_max : eos->T_max;
-  const double Ye_lo
-        = (eos->table_Y_e_min > 0.0
-           || (eos->table_Y_e_min == 0.0 && eos->table_Y_e_max > 0.0))
-                ? eos->table_Y_e_min
-                : eos->Y_e_min;
+  const double Ye_lo = (eos->table_Y_e_min > 0.0
+                        || (eos->table_Y_e_min == 0.0 && eos->table_Y_e_max > 0.0))
+                             ? eos->table_Y_e_min
+                             : eos->Y_e_min;
   const double Ye_hi = eos->table_Y_e_max > 0.0 ? eos->table_Y_e_max : eos->Y_e_max;
 
   if(!isfinite(rho_lo) || !isfinite(rho_hi) || rho_lo <= 0.0 || rho_lo >= rho_hi
@@ -525,7 +524,8 @@ static ghl_error_codes_t assemble_nrpyleakage_rates(
   const double eta[ghl_m1_nrpyleakage_species_count]
         = { (mu_e - muhat) / T, -(mu_e - muhat) / T, 0.0 };
   ghl_m1_nrpyleakage_raw_rates raw;
-  err = ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(&thermo, eta, &raw);
+  err = ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+        &thermo, eta, provider->channel_mask, &raw);
   if(err != ghl_success) {
     return err;
   }

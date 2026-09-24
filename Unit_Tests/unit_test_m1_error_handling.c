@@ -1253,15 +1253,22 @@ static void check_shared_numeric_contracts(void) {
     fail_test("extreme repair did not publish a finite repaired state");
   }
 
-  /* Positive finite opacities whose reciprocal overflows are rejected before
-   * publication; the output sentinel verifies the transactional boundary. */
+  /* An overflowing individual reciprocal can still give a finite harmonic
+   * face coefficient when the other opacity is ordinary. */
   double diffusion = 23.0;
   require_error_code(
         ghl_m1_compute_harmonic_diffusion_coefficient(true_min, 1.0, &diffusion),
+        ghl_success, "harmonic coefficient rejected a finite endpoint");
+  if(!m1_nearly_equal(diffusion, 2.0 / 3.0, 2.0e-15, 0.0)) {
+    fail_test("harmonic coefficient finite endpoint mismatch");
+  }
+  diffusion = 23.0;
+  require_error_code(
+        ghl_m1_compute_harmonic_diffusion_coefficient(true_min, true_min, &diffusion),
         ghl_error_m1_invalid_state,
-        "harmonic coefficient accepted an overflowing reciprocal");
+        "harmonic coefficient accepted a nonrepresentable endpoint");
   if(diffusion != 23.0) {
-    fail_test("harmonic coefficient changed output after rejection");
+    fail_test("harmonic coefficient changed output after nonrepresentable endpoint");
   }
 }
 
@@ -1445,8 +1452,8 @@ static void check_caller_state_matrix(void) {
 
 static void check_remaining_range_and_axis_failures(void) {
   const double tiny = nextafter(0.0, 1.0);
-  /* Each pair reaches a distinct reciprocal, sum, or final-product failure;
-   * the public inputs themselves are finite and positive. */
+  /* These finite endpoints formerly failed because an intermediate
+   * reciprocal, opacity sum, or product exceeded range. */
   const double opacity_pairs[][2] = { { 1.0, tiny },
                                       { 0.5 / DBL_MAX, 0.5 / DBL_MAX },
                                       { DBL_MAX, DBL_MAX },
@@ -1457,7 +1464,17 @@ static void check_remaining_range_and_axis_failures(void) {
     require_error_code(
           ghl_m1_compute_harmonic_diffusion_coefficient(
                 opacity_pairs[i][0], opacity_pairs[i][1], &value),
-          ghl_error_m1_invalid_state, "harmonic unrepresentable result accepted");
+          ghl_success, "harmonic finite endpoint rejected");
+    if(!isfinite(value) || value <= 0.0) {
+      fail_test("harmonic finite endpoint is invalid");
+    }
+  }
+  value = 29.0;
+  require_error_code(
+        ghl_m1_compute_harmonic_diffusion_coefficient(tiny, tiny, &value),
+        ghl_error_m1_invalid_state, "harmonic nonrepresentable endpoint accepted");
+  if(value != 29.0) {
+    fail_test("harmonic nonrepresentable endpoint changed output");
   }
   require_error_code(
         ghl_m1_compute_harmonic_diffusion_coefficient(1.0, NAN, &value),

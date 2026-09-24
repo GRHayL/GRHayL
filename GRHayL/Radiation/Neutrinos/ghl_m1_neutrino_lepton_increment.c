@@ -102,8 +102,8 @@ ghl_error_codes_t ghl_m1_neutrino_charged_current_lepton_delta(
   if(rates == NULL || dL_rad_cc == NULL) {
     return ghl_error_m1_null_pointer;
   }
-  if(!isfinite(number_initial) || number_initial < 0.0
-     || !isfinite(dt_alpha) || dt_alpha < 0.0 || !isfinite(physical_number_endpoint)
+  if(!isfinite(number_initial) || number_initial < 0.0 || !isfinite(dt_alpha)
+     || dt_alpha < 0.0 || !isfinite(physical_number_endpoint)
      || physical_number_endpoint < 0.0 || !isfinite(physical_number_gamma)
      || physical_number_gamma <= 0.0) {
     return ghl_error_m1_invalid_state;
@@ -118,9 +118,13 @@ ghl_error_codes_t ghl_m1_neutrino_charged_current_lepton_delta(
   double dN_cc = 0.0;
   if(rates->lepton_weight != 0.0) {
     if(number_projected) {
-      dN_cc = dt_alpha
-              * (rates->eta_N_cc
-                 - rates->kappa_a_N_cc * physical_number_endpoint / physical_number_gamma);
+      double absorption_number = 0.0;
+      if(!ghl_m1_neutrino_scaled_absorption_number(
+               rates->kappa_a_N_cc, physical_number_endpoint, physical_number_gamma,
+               &absorption_number)) {
+        return ghl_error_m1_invalid_state;
+      }
+      dN_cc = dt_alpha * (rates->eta_N_cc - absorption_number);
     }
     else {
       dN_cc = physical_number_endpoint - number_initial;

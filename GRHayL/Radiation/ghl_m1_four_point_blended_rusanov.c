@@ -17,15 +17,18 @@ static double ghl_m1_average_finite(const double left, const double right) {
 }
 
 static double ghl_m1_half_scaled_rusanov_candidate(
-      const double physical_flux_L, const double physical_flux_R,
-      const double speed, const double jump, const double jump_low,
+      const double physical_flux_L,
+      const double physical_flux_R,
+      const double speed,
+      const double jump,
+      const double jump_low,
       const bool jump_is_half) {
   const double quarter_L = 0.25 * physical_flux_L;
   const double quarter_R = 0.25 * physical_flux_R;
   const double half_average = quarter_L + quarter_R;
   const double average_part = half_average - quarter_L;
-  const double average_low = (quarter_L - (half_average - average_part))
-                             + (quarter_R - average_part);
+  const double average_low
+        = (quarter_L - (half_average - average_part)) + (quarter_R - average_part);
 
   const double coefficient = jump_is_half ? -0.5 * speed : -0.25 * speed;
   const double half_product = coefficient * jump;
@@ -35,36 +38,40 @@ static double ghl_m1_half_scaled_rusanov_candidate(
   const double product_low = fma(coefficient, jump, -half_product);
   const double half_sum = half_product + half_average;
   const double sum_part = half_sum - half_product;
-  const double sum_low = (half_product - (half_sum - sum_part))
-                         + (half_average - sum_part);
+  const double sum_low
+        = (half_product - (half_sum - sum_part)) + (half_average - sum_part);
   const double jump_low_product = coefficient * jump_low;
-  return 2.0 * (half_sum + (((sum_low + average_low) + product_low)
-                            + jump_low_product));
+  return 2.0 * (half_sum + (((sum_low + average_low) + product_low) + jump_low_product));
 }
 
 static double ghl_m1_rusanov_candidate_finite(
-      const double state_L, const double state_R,
-      const double physical_flux_L, const double physical_flux_R,
+      const double state_L,
+      const double state_R,
+      const double physical_flux_L,
+      const double physical_flux_R,
       const double speed) {
   const double average = ghl_m1_average_finite(physical_flux_L, physical_flux_R);
   const double jump = state_R - state_L;
   if(isfinite(jump)) {
+    if(speed > 0.0 && 0.5 * speed == 0.0) {
+      return fma(-speed, 0.5 * jump, average);
+    }
     const double candidate = average - 0.5 * speed * jump;
     if(isfinite(candidate)) {
       return candidate;
     }
     const double fused = fma(-0.5 * speed, jump, average);
-    return isfinite(fused) ? fused
-                           : ghl_m1_half_scaled_rusanov_candidate(
-                                   physical_flux_L, physical_flux_R, speed,
-                                   jump, 0.0, false);
+    return isfinite(fused)
+                 ? fused
+                 : ghl_m1_half_scaled_rusanov_candidate(
+                         physical_flux_L, physical_flux_R, speed, jump, 0.0, false);
   }
   const double half_R = 0.5 * state_R;
   const double minus_half_L = -0.5 * state_L;
   const double half_jump = half_R + minus_half_L;
   const double rounded_part = half_jump - half_R;
-  const double low_part = (half_R - (half_jump - rounded_part))
-                          + (minus_half_L - rounded_part);
+  const double low_part
+        = (half_R - (half_jump - rounded_part)) + (minus_half_L - rounded_part);
   const double candidate = fma(-speed, half_jump, average);
   const double corrected = fma(-speed, low_part, candidate);
   if(isfinite(corrected)) {
@@ -81,8 +88,8 @@ typedef struct {
 
 /* Represent every stencil slope at the same half scale. frexp retains the
  * sign of a small slope even when a different slope exceeds double range. */
-static ghl_m1_half_slope ghl_m1_scaled_half_slope(
-      const double left, const double right) {
+static ghl_m1_half_slope
+ghl_m1_scaled_half_slope(const double left, const double right) {
   ghl_m1_half_slope slope;
   const double difference = right - left;
   if(isfinite(difference)) {
@@ -97,16 +104,21 @@ static ghl_m1_half_slope ghl_m1_scaled_half_slope(
 }
 
 static double ghl_m1_half_slope_ratio(
-      const ghl_m1_half_slope numerator, const ghl_m1_half_slope denominator) {
-  return scalbn(numerator.mantissa / denominator.mantissa,
-                numerator.exponent - denominator.exponent);
+      const ghl_m1_half_slope numerator,
+      const ghl_m1_half_slope denominator) {
+  return scalbn(
+        numerator.mantissa / denominator.mantissa,
+        numerator.exponent - denominator.exponent);
 }
 
 static ghl_error_codes_t ghl_m1_compute_overflowing_stencil_limiter(
       const ghl_m1_parameters *restrict m1_params,
-      const double state_0, const double state_1,
-      const double state_2, const double state_3,
-      double *restrict phi, bool *restrict sawtooth) {
+      const double state_0,
+      const double state_1,
+      const double state_2,
+      const double state_3,
+      double *restrict phi,
+      bool *restrict sawtooth) {
   if(!isfinite(m1_params->minmod_theta) || m1_params->minmod_theta < 0.0
      || m1_params->minmod_theta > 2.0) {
     return ghl_error_m1_invalid_state;
@@ -122,12 +134,14 @@ static ghl_error_codes_t ghl_m1_compute_overflowing_stencil_limiter(
     if(m1_params->minmod_theta != 0.0) {
       const double ratio_left = ghl_m1_half_slope_ratio(dum, duc);
       const double ratio_right = ghl_m1_half_slope_ratio(dup, duc);
-      candidate_phi = fmin(1.0, fmin(m1_params->minmod_theta * ratio_left,
-                                     m1_params->minmod_theta * ratio_right));
+      candidate_phi = fmin(
+            1.0, fmin(m1_params->minmod_theta * ratio_left,
+                      m1_params->minmod_theta * ratio_right));
     }
   }
-  else if(ghl_m1_opposite_nonzero_sign(dup.mantissa, duc.mantissa)
-          && ghl_m1_opposite_nonzero_sign(dum.mantissa, duc.mantissa)) {
+  else if(
+        ghl_m1_opposite_nonzero_sign(dup.mantissa, duc.mantissa)
+        && ghl_m1_opposite_nonzero_sign(dum.mantissa, duc.mantissa)) {
     candidate_sawtooth = true;
   }
   *phi = candidate_phi;
@@ -390,15 +404,13 @@ static ghl_error_codes_t ghl_m1_compute_neutrino_four_point_transport_core(
     else {
       error = ghl_m1_compute_overflowing_stencil_limiter(
             m1_params, state_stencil[0][component], state_stencil[1][component],
-            state_stencil[2][component], state_stencil[3][component], &phi,
-            &sawtooth);
+            state_stencil[2][component], state_stencil[3][component], &phi, &sawtooth);
     }
     if(error != ghl_success) {
       return error;
     }
 
-    const double flux_high
-          = ghl_m1_average_finite(flux_L[component], flux_R[component]);
+    const double flux_high = ghl_m1_average_finite(flux_L[component], flux_R[component]);
     if(!isfinite(flux_high)) {
       return ghl_error_m1_invalid_state;
     }

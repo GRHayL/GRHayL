@@ -95,6 +95,53 @@ ghl_error_codes_t ghl_m1_newton_project_admissible(
   return ghl_success;
 }
 
+static ghl_error_codes_t ghl_m1_newton_check_admissible(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_metric_quantities *restrict metric,
+      const double U[4]) {
+
+  if(m1_params == NULL || metric == NULL || U == NULL) {
+    return ghl_error_m1_null_pointer;
+  }
+  if(!isfinite(metric->sqrt_detgamma) || metric->sqrt_detgamma <= 0.0) {
+    return ghl_error_m1_invalid_metric;
+  }
+  const ghl_error_codes_t configuration_error
+        = ghl_m1_validate_configuration(m1_params, metric);
+  if(configuration_error != ghl_success) {
+    return configuration_error;
+  }
+  for(int i = 0; i < 4; ++i) {
+    if(!isfinite(U[i])) {
+      return ghl_error_m1_implicit_admissibility;
+    }
+  }
+
+  const double densitized_energy_floor = metric->sqrt_detgamma * m1_params->E_floor;
+  if(!isfinite(densitized_energy_floor) || U[0] < densitized_energy_floor) {
+    return ghl_error_m1_implicit_admissibility;
+  }
+
+  const ghl_m1_rad_state state
+        = { .E = U[0] / metric->sqrt_detgamma,
+            .F = { U[1] / metric->sqrt_detgamma, U[2] / metric->sqrt_detgamma,
+                   U[3] / metric->sqrt_detgamma } };
+  ghl_m1_rad_state validated_state = state;
+  if(validated_state.E < m1_params->E_floor) {
+    /* A densitized value at or above the rounded floor can divide to one
+     * representable energy below E_floor. Admit only that round-trip case. */
+    const double one_step_below_floor = nextafter(m1_params->E_floor, 0.0);
+    if(validated_state.E <= 0.0 || validated_state.E < one_step_below_floor) {
+      return ghl_error_m1_implicit_admissibility;
+    }
+    validated_state.E = m1_params->E_floor;
+  }
+  const ghl_error_codes_t error = ghl_m1_validate_realizability(
+        m1_params, metric, &validated_state, 128.0, NULL);
+  return error == ghl_error_m1_invalid_state ? ghl_error_m1_implicit_admissibility
+                                             : error;
+}
+
 static bool ghl_m1_newton_solve_linear_4x4(
       const double matrix_in[4][4],
       const double rhs_in[4],
@@ -257,6 +304,13 @@ ghl_error_codes_t ghl_m1_newton_solve_4d_with_initial_guess(
           iter, backtracks, used_projection, residual_norm, merit, diagnostics);
 
     if(merit <= 1.0) {
+      error = ghl_m1_newton_check_admissible(m1_params, metric, U);
+      if(error != ghl_success) {
+        ghl_m1_newton_notify(
+              callbacks, ghl_m1_solver_stage_completed_solve, error, U, residual,
+              diagnostics);
+        return error;
+      }
       for(int i = 0; i < 4; i++) {
         U_out[i] = U[i];
       }
@@ -336,10 +390,20 @@ ghl_error_codes_t ghl_m1_newton_solve_4d_with_initial_guess(
       }
 
       if(error == ghl_success) {
+        const ghl_error_codes_t admissibility_error
+              = ghl_m1_newton_check_admissible(m1_params, metric, trial_U);
+        if(admissibility_error != ghl_success
+           && admissibility_error != ghl_error_m1_implicit_admissibility) {
+          ghl_m1_newton_notify(
+                callbacks, ghl_m1_solver_stage_completed_solve, admissibility_error, U,
+                residual, diagnostics);
+          return admissibility_error;
+        }
         const double trial_norm = ghl_m1_newton_residual_max_norm(trial_residual);
         const double trial_merit = ghl_m1_newton_weighted_merit(
               m1_params, metric, trial_U, U_base, trial_residual);
-        if(trial_merit < merit || trial_merit <= 1.0) {
+        if(admissibility_error == ghl_success
+           && (trial_merit < merit || trial_merit <= 1.0)) {
           for(int i = 0; i < 4; i++) {
             U[i] = trial_U[i];
             residual[i] = trial_residual[i];

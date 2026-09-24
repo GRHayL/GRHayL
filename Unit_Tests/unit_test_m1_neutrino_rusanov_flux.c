@@ -420,6 +420,22 @@ static void check_neutrino_number_transport_boundaries(
     fail_case("overflowing physical number flux was accepted", 342);
   }
 
+  ghl_metric_quantities shifted_metric = *metric;
+  shifted_metric.lapse = 4.0;
+  shifted_metric.betaU[0] = 2.0;
+  const ghl_m1_neutrino_state large_number_state = { .N = 1.0e308, .E = 1.0 };
+  const ghl_m1_neutrino_current large_number_current
+        = { .number_flux = { 5.0e307, 0.0, 0.0 },
+            .number_transport_velocity = { 0.5, 0.0, 0.0 } };
+  physical_number = 119.0;
+  if(ghl_m1_neutrino_physical_number_flux_from_current(
+           &shifted_metric, &large_number_state, &large_number_current, ghl_m1_dirn0,
+           &physical_number)
+           != ghl_success
+     || physical_number != 0.0) {
+    fail_case("finite cancelled physical number flux was rejected", 342);
+  }
+
   double public_number_flux[3] = { 121.0, 122.0, 123.0 };
   double public_number_flux_before[3] = { 121.0, 122.0, 123.0 };
   if(ghl_m1_compute_neutrino_number_flux_from_closure(

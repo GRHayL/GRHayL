@@ -1018,6 +1018,19 @@ typedef struct {
   int calls;
 } scripted_newton_context;
 
+static ghl_error_codes_t zero_residual_for_any_state(
+      const void *restrict context,
+      const double U[4],
+      double residual[4]) {
+  (void)U;
+  scripted_newton_context *const scripted = (scripted_newton_context *)context;
+  scripted->calls++;
+  for(int component = 0; component < 4; ++component) {
+    residual[component] = 0.0;
+  }
+  return ghl_success;
+}
+
 static ghl_error_codes_t scripted_newton_residual(
       const void *restrict context,
       const double U[4],
@@ -1324,8 +1337,8 @@ static void test_newton_retry_boundaries(
   memcpy(output, unchanged_output, sizeof(output));
   require_error(
         ghl_m1_newton_solve_4d(
-              m1_params, metric, &small_step_error_callbacks,
-              &small_step_error_context, base_state, output, &diagnostics),
+              m1_params, metric, &small_step_error_callbacks, &small_step_error_context,
+              base_state, output, &diagnostics),
         ghl_error_m1_invalid_state, "Newton small-step residual callback failure", 777);
   require_condition(
         small_step_error_context.calls == 2
@@ -1370,6 +1383,72 @@ static void test_newton_retry_boundaries(
         memcmp(output, unchanged_output, sizeof(output)) == 0
               && diagnostics.residual_weighted_merit > 1.0,
         "Newton inadmissible small trial published false convergence", 779);
+
+  /* A callback may succeed without checking the physical state domain. The
+   * driver must not publish a zero-merit iterate below E_floor or one whose
+   * components are nonfinite. */
+  const ghl_m1_newton_callbacks zero_residual_callbacks
+        = { .residual = zero_residual_for_any_state,
+            .jacobian = scripted_identity_jacobian,
+            .observer = NULL,
+            .observer_context = NULL };
+  const double valid_base[4] = { 1.0, 0.0, 0.0, 0.0 };
+  const double invalid_initials[2][4]
+        = { { 0.0, 0.0, 0.0, 0.0 }, { NAN, 0.0, 0.0, 0.0 } };
+  const char *const invalid_initial_names[2] = { "Newton zero-energy converged iterate",
+                                                 "Newton nonfinite converged iterate" };
+  for(int invalid_case = 0; invalid_case < 2; ++invalid_case) {
+    scripted_newton_context invalid_iterate_context = { 0 };
+    memcpy(output, unchanged_output, sizeof(output));
+    require_error(
+          ghl_m1_newton_solve_4d_with_initial_guess(
+                m1_params, metric, &zero_residual_callbacks, &invalid_iterate_context,
+                valid_base, invalid_initials[invalid_case], output, &diagnostics),
+          ghl_error_m1_implicit_admissibility, invalid_initial_names[invalid_case],
+          780 + invalid_case);
+    require_condition(
+          invalid_iterate_context.calls == 1
+                && memcmp(output, unchanged_output, sizeof(output)) == 0,
+          "Newton invalid converged iterate was published", 780 + invalid_case);
+  }
+
+  ghl_m1_parameters roundtrip_params = *m1_params;
+  roundtrip_params.E_floor = 1000.0;
+  ghl_metric_quantities roundtrip_metric;
+  ghl_initialize_metric(
+        1.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 3.0, 0.0, 1.0, &roundtrip_metric);
+  volatile double densitized_floor
+        = roundtrip_params.E_floor * roundtrip_metric.sqrt_detgamma;
+  const double roundtrip_energy = densitized_floor / roundtrip_metric.sqrt_detgamma;
+  require_condition(
+        roundtrip_energy < roundtrip_params.E_floor,
+        "Newton floor round-trip fixture did not cross E_floor", 782);
+  const double floor_base[4] = { densitized_floor, 0.0, 0.0, 0.0 };
+  const double floor_initial[4] = { densitized_floor, 0.0, 0.0, 0.0 };
+  scripted_newton_context roundtrip_context = { 0 };
+  memcpy(output, unchanged_output, sizeof(output));
+  require_error(
+        ghl_m1_newton_solve_4d_with_initial_guess(
+              &roundtrip_params, &roundtrip_metric, &zero_residual_callbacks,
+              &roundtrip_context, floor_base, floor_initial, output, &diagnostics),
+        ghl_success, "Newton densitized E_floor round-trip", 782);
+  require_condition(
+        memcmp(output, floor_initial, sizeof(output)) == 0
+              && roundtrip_context.calls == 1,
+        "Newton rejected or changed the densitized floor round-trip", 782);
+
+  const double subfloor_state[4] = { nextafter(densitized_floor, 0.0), 0.0, 0.0, 0.0 };
+  scripted_newton_context subfloor_context = { 0 };
+  memcpy(output, unchanged_output, sizeof(output));
+  require_error(
+        ghl_m1_newton_solve_4d_with_initial_guess(
+              &roundtrip_params, &roundtrip_metric, &zero_residual_callbacks,
+              &subfloor_context, floor_base, subfloor_state, output, &diagnostics),
+        ghl_error_m1_implicit_admissibility, "Newton genuinely subfloor iterate", 783);
+  require_condition(
+        memcmp(output, unchanged_output, sizeof(output)) == 0
+              && subfloor_context.calls == 1,
+        "Newton published the genuinely subfloor iterate", 783);
 }
 
 static void test_newton_coverage_boundaries(

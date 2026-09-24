@@ -891,7 +891,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
       error = ghl_m1_neutrino_apply_ye_policy(
             selected.ye_policy, rates, n_b_cons, exchange);
       if(error != ghl_success) {
-        *neutrino_diagnostics = candidate_neutrino_diagnostics; /* GCOVR_EXCL_LINE -- defensive */
+        *neutrino_diagnostics
+              = candidate_neutrino_diagnostics; /* GCOVR_EXCL_LINE -- defensive */
         return ghl_m1_neutrino_publish_dispatch_failure( /* GCOVR_EXCL_LINE -- defensive */
               error, state_transport, state_out, exchange, diagnostics,
               diagnostics->closure_fallback_used, neutrino_diagnostics, true); /* GCOVR_EXCL_LINE -- defensive */

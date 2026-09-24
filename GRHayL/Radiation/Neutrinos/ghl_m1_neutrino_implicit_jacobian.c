@@ -52,6 +52,9 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_core(
 
     double U_perturbed[4] = { U[0], U[1], U[2], U[3] };
     U_perturbed[n] = U[n] + delta;
+    if(U_perturbed[n] == U[n]) {
+      U_perturbed[n] = nextafter(U[n], INFINITY);
+    }
 
     double residual_perturbed[4] = { 0.0, 0.0, 0.0, 0.0 };
     ghl_error_codes_t fd_error
@@ -62,7 +65,7 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_core(
                   : ghl_m1_neutrino_compute_implicit_residual_validated(
                           context, dt, U_base, U_perturbed, NULL, residual_perturbed);
 
-    double used_delta = delta;
+    double used_delta = U_perturbed[n] - U[n];
     if(fd_error != ghl_success) {
       if(!ghl_m1_fd_error_allows_one_sided_fallback(fd_error)) {
         return fd_error;
@@ -71,6 +74,9 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_core(
       /* One-sided backward difference when the forward perturbation leaves the
        * admissible domain. */
       U_perturbed[n] = U[n] - delta;
+      if(U_perturbed[n] == U[n]) {
+        U_perturbed[n] = nextafter(U[n], -INFINITY);
+      }
       fd_error
             = use_checked_residual
                     ? ghl_m1_neutrino_compute_implicit_residual_with_base(
@@ -78,13 +84,17 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_core(
                             U_base, U_perturbed, residual_perturbed)
                     : ghl_m1_neutrino_compute_implicit_residual_validated(
                             context, dt, U_base, U_perturbed, NULL, residual_perturbed);
-      used_delta = -delta;
+      used_delta = U_perturbed[n] - U[n];
       if(fd_error != ghl_success) {
         if(ghl_m1_fd_error_allows_one_sided_fallback(fd_error)) {
           return ghl_error_m1_invalid_implicit_jacobian;
         }
         return fd_error;
       }
+    }
+
+    if(!isfinite(used_delta) || used_delta == 0.0) {
+      return ghl_error_m1_invalid_implicit_jacobian;
     }
 
     for(int i = 0; i < 4; i++) {

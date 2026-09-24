@@ -666,6 +666,16 @@ int main(int argc, char **argv) {
     fail_test("harmonic diffusion coefficient failed");
   }
   check_close(D_face, 2.0 / 9.0, "harmonic diffusion coefficient mismatch");
+  if(ghl_m1_compute_harmonic_diffusion_coefficient(DBL_MAX, DBL_MAX, &D_face)
+           != ghl_success
+     || D_face != (1.0 / 3.0) / DBL_MAX) {
+    fail_test("representable harmonic coefficient was rejected at DBL_MAX opacity");
+  }
+  if(ghl_m1_compute_harmonic_diffusion_coefficient(1.0e-200, 1.0e-200, &D_face)
+           != ghl_success
+     || !m1_nearly_equal(D_face, 1.0 / (3.0e-200), 3.0e-12, 0.0)) {
+    fail_test("harmonic coefficient overflowed before finite division");
+  }
   D_face = 17.0;
   if(ghl_m1_compute_harmonic_diffusion_coefficient(0.0, 2.0, &D_face)
            != ghl_error_m1_invalid_state

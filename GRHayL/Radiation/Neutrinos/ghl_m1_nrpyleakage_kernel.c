@@ -1,5 +1,7 @@
 #include "ghl_m1_nrpyleakage_kernel.h"
 
+#include "ghl_neutrino_rate_provider.h"
+
 #include "../../Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h"
 #include "../../Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h"
 
@@ -200,9 +202,17 @@ ghl_error_codes_t ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
 static ghl_error_codes_t compute_kernel(
       const ghl_m1_nrpyleakage_thermo_state *restrict thermo,
       const double eta[ghl_m1_nrpyleakage_species_count],
+      const int channel_mask,
       ghl_m1_nrpyleakage_kernel_result *restrict result) {
   if((thermo == NULL) || (eta == NULL) || (result == NULL)) {
     return ghl_error_m1_null_pointer;
+  }
+  const int valid_channels
+        = ghl_neutrino_rate_channel_charged_current
+          | ghl_neutrino_rate_channel_nucleon_scattering | ghl_neutrino_rate_channel_pair
+          | ghl_neutrino_rate_channel_bremsstrahlung | ghl_neutrino_rate_channel_plasmon;
+  if((channel_mask & ~valid_channels) != 0) {
+    return ghl_error_m1_microphysics_failure;
   }
   bool rate_failure = false;
   for(int s = 0; s < ghl_m1_nrpyleakage_species_count; ++s) {
@@ -228,19 +238,27 @@ static ghl_error_codes_t compute_kernel(
   ghl_m1_nrpyleakage_kernel_result candidate = { 0 };
   candidate.raw.nux_single_species_multiplicity = 1;
 
-  const double tmp_0 = (1.0 / (T));
-  const double tmp_1 = mu_e * tmp_0;
-  double tmp_2_fd, tmp_16_fd, tmp_18_fd, tmp_19_fd;
+  const bool compute_pair = (channel_mask & ghl_neutrino_rate_channel_pair) != 0;
+  const bool compute_plasmon = (channel_mask & ghl_neutrino_rate_channel_plasmon) != 0;
+  const bool compute_bremsstrahlung
+        = (channel_mask & ghl_neutrino_rate_channel_bremsstrahlung) != 0;
+  const bool compute_scattering
+        = (channel_mask & ghl_neutrino_rate_channel_nucleon_scattering) != 0;
+
+  double tmp_2_fd = 0.0, tmp_16_fd = 0.0, tmp_18_fd = 0.0, tmp_19_fd = 0.0;
   bool helper_failure = false;
-  EvaluateFermiDirac(tmp_2_fd, 4, tmp_1);
-  EvaluateFermiDirac(tmp_16_fd, 3, tmp_1);
-  EvaluateFermiDirac(tmp_18_fd, 4, -tmp_1);
-  EvaluateFermiDirac(tmp_19_fd, 3, -tmp_1);
-  if(helper_failure) {
-    return ghl_error_m1_microphysics_failure;
+  if(compute_pair) {
+    const double tmp_0 = (1.0 / T);
+    const double tmp_1 = mu_e * tmp_0;
+    EvaluateFermiDirac(tmp_2_fd, 4, tmp_1);
+    EvaluateFermiDirac(tmp_16_fd, 3, tmp_1);
+    EvaluateFermiDirac(tmp_18_fd, 4, -tmp_1);
+    EvaluateFermiDirac(tmp_19_fd, 3, -tmp_1);
+    if(helper_failure) {
+      return ghl_error_m1_microphysics_failure;
+    }
   }
   helper_failure = false;
-  const double tmp_2 = tmp_2_fd;
   const double tmp_6 = eta[ghl_m1_nrpyleakage_nue];
   const double tmp_15 = eta[ghl_m1_nrpyleakage_anue];
   const double tmp_7 = ((NRPyLeakage_alpha) * (NRPyLeakage_alpha));
@@ -276,82 +294,114 @@ static ghl_error_codes_t compute_kernel(
   }
   const double tmp_11 = NRPyLeakage_enable_beta_nue
                         * EnsureFinite(Y_pn * tmp_10 * beta_nue_emission.number);
-  const double tmp_12
-        = NRPyLeakage_enable_brems_nui_anui
-          * EnsureFinite(nrpyl_bremsstrahlung_number_rate(T, rho_cgs, X_n, X_p));
-  const double tmp_16 = tmp_16_fd;
-  const double tmp_17 = (1.0 / (tmp_16));
-  const double tmp_18 = tmp_18_fd;
-  const double tmp_19 = tmp_19_fd;
-  const double tmp_20 = (1.0 / (tmp_19));
-  const double tmp_21 = -1.0 / 2.0 * tmp_17 * tmp_2 - 1.0 / 2.0 * tmp_18 * tmp_20;
+  const double tmp_12 = compute_bremsstrahlung
+                              ? NRPyLeakage_enable_brems_nui_anui
+                                      * EnsureFinite(nrpyl_bremsstrahlung_number_rate(
+                                            T, rho_cgs, X_n, X_p))
+                              : 0.0;
   const double tmp_22 = ((M_PI) * (M_PI));
   const double tmp_24 = (1.0 / ((NRPyLeakage_hc3) * (NRPyLeakage_hc3)));
-  const double tmp_25 = tmp_16 * tmp_22 * tmp_24;
-  const double tmp_26 = pow(T, 8);
-  const double tmp_28 = (16.0 / 9.0) * NRPyLeakage_beta * tmp_19 * tmp_25 * tmp_26;
-  double tmp_29_factor_anue, tmp_29_factor_nue;
-  double tmp_37_factor_anue, tmp_37_factor_nue;
-  double pair_N_nux_factor, plasmon_N_nux_factor;
-  EvaluateFermiFactor(tmp_29_factor_anue, tmp_15 + tmp_21);
-  EvaluateFermiFactor(tmp_29_factor_nue, tmp_21 + tmp_6);
-  const double tmp_29 = NRPyLeakage_enable_pair_nue_anue
-                        * EnsureFinite(
-                              NRPyLeakage_C1pC2_nue_anue * tmp_28 * tmp_29_factor_anue
-                              * tmp_29_factor_nue);
-  const double tmp_31 = (1.0 / 3.0) * tmp_22 + ((mu_e) * (mu_e)) / ((T) * (T));
-  const double tmp_32 = NRPyLeakage_gamma_0 * sqrt(tmp_31);
-  const double tmp_34
-        = ((NRPyLeakage_gamma_0) * (NRPyLeakage_gamma_0)) * tmp_31 / (tmp_32 + 1);
-  const double tmp_35 = -1.0 / 2.0 * tmp_34 - 1;
-  const double tmp_36 = (1.0 / 3.0) * ((M_PI) * (M_PI) * (M_PI)) * NRPyLeakage_beta
-                        * pow(NRPyLeakage_gamma_0, 6) * tmp_24 * tmp_26
-                        * ((tmp_31) * (tmp_31) * (tmp_31)) * (tmp_32 + 1) * exp(-tmp_32)
-                        / NRPyLeakage_alpha_fs;
-  EvaluateFermiFactor(tmp_37_factor_anue, tmp_15 + tmp_35);
-  EvaluateFermiFactor(tmp_37_factor_nue, tmp_35 + tmp_6);
-  EvaluateFermiFactor(pair_N_nux_factor, tmp_21);
-  EvaluateFermiFactor(plasmon_N_nux_factor, tmp_35);
-  if(helper_failure) {
-    return ghl_error_m1_microphysics_failure;
+  const double tmp_26 = (compute_pair || compute_plasmon) ? pow(T, 8) : 0.0;
+  const double tmp_47 = ((NRPyLeakage_C_V - 1) * (NRPyLeakage_C_V - 1));
+  double tmp_29 = 0.0, pair_N_nux_factor = 0.0, pair_N_nux = 0.0;
+  double pair_energy_coefficient = 0.0;
+  double tmp_37 = 0.0, plasmon_N_nux_factor = 0.0, plasmon_N_nux = 0.0;
+  double plasmon_energy_coefficient = 0.0;
+  if(compute_pair) {
+    const double tmp_2 = tmp_2_fd;
+    const double tmp_16 = tmp_16_fd;
+    const double tmp_17 = 1.0 / tmp_16;
+    const double tmp_18 = tmp_18_fd;
+    const double tmp_19 = tmp_19_fd;
+    const double tmp_20 = 1.0 / tmp_19;
+    const double tmp_21 = -0.5 * tmp_17 * tmp_2 - 0.5 * tmp_18 * tmp_20;
+    const double tmp_25 = tmp_16 * tmp_22 * tmp_24;
+    const double tmp_28 = (16.0 / 9.0) * NRPyLeakage_beta * tmp_19 * tmp_25 * tmp_26;
+    double tmp_29_factor_anue, tmp_29_factor_nue;
+    EvaluateFermiFactor(tmp_29_factor_anue, tmp_15 + tmp_21);
+    EvaluateFermiFactor(tmp_29_factor_nue, tmp_21 + tmp_6);
+    EvaluateFermiFactor(pair_N_nux_factor, tmp_21);
+    if(helper_failure) {
+      return ghl_error_m1_microphysics_failure;
+    }
+    helper_failure = false;
+    const double tmp_67 = 32 * pow(T, 9);
+    pair_energy_coefficient
+          = (1.0 / 64.0) * ((NRPyLeakage_hc3) * (NRPyLeakage_hc3)) * tmp_17 * tmp_20
+            * (tmp_18 * tmp_25 * tmp_67 + tmp_19 * tmp_2 * tmp_22 * tmp_24 * tmp_67)
+            / (tmp_22 * tmp_26);
+    tmp_29 = NRPyLeakage_enable_pair_nue_anue
+             * EnsureFinite(
+                   NRPyLeakage_C1pC2_nue_anue * tmp_28 * tmp_29_factor_anue
+                   * tmp_29_factor_nue);
+    pair_N_nux = NRPyLeakage_enable_pair_nux_anux
+                 * EnsureFinite(
+                       NRPyLeakage_C1pC2_nux_anux * tmp_28 * pair_N_nux_factor
+                       * pair_N_nux_factor);
   }
-  helper_failure = false;
-  const double tmp_37 = NRPyLeakage_enable_plasmon_nue_anue
-                        * EnsureFinite(
-                              ((NRPyLeakage_C_V) * (NRPyLeakage_C_V)) * tmp_36
-                              * tmp_37_factor_anue * tmp_37_factor_nue);
+
+  if(compute_plasmon) {
+    const double tmp_31 = (1.0 / 3.0) * tmp_22 + (mu_e * mu_e) / (T * T);
+    const double tmp_32 = NRPyLeakage_gamma_0 * sqrt(tmp_31);
+    const double tmp_34
+          = NRPyLeakage_gamma_0 * NRPyLeakage_gamma_0 * tmp_31 / (tmp_32 + 1);
+    const double tmp_35 = -0.5 * tmp_34 - 1;
+    const double tmp_36 = (1.0 / 3.0) * (M_PI * M_PI * M_PI) * NRPyLeakage_beta
+                          * pow(NRPyLeakage_gamma_0, 6) * tmp_24 * tmp_26
+                          * (tmp_31 * tmp_31 * tmp_31) * (tmp_32 + 1) * exp(-tmp_32)
+                          / NRPyLeakage_alpha_fs;
+    plasmon_energy_coefficient = 0.5 * T * (tmp_34 + 2);
+    double tmp_37_factor_anue, tmp_37_factor_nue;
+    EvaluateFermiFactor(tmp_37_factor_anue, tmp_15 + tmp_35);
+    EvaluateFermiFactor(tmp_37_factor_nue, tmp_35 + tmp_6);
+    EvaluateFermiFactor(plasmon_N_nux_factor, tmp_35);
+    if(helper_failure) {
+      return ghl_error_m1_microphysics_failure;
+    }
+    helper_failure = false;
+    tmp_37 = NRPyLeakage_enable_plasmon_nue_anue
+             * EnsureFinite(
+                   ((NRPyLeakage_C_V) * (NRPyLeakage_C_V)) * tmp_36 * tmp_37_factor_anue
+                   * tmp_37_factor_nue);
+    plasmon_N_nux = NRPyLeakage_enable_plasmon_nux_anux
+                    * EnsureFinite(
+                          tmp_36 * tmp_47 * plasmon_N_nux_factor * plasmon_N_nux_factor);
+  }
   const double tmp_38 = tmp_12 + tmp_29 + tmp_37;
   const double tmp_41 = B_n * ((5.0 / 24.0) * tmp_7 + 1.0 / 24.0);
   const double tmp_42 = NRPyLeakage_N_A * NRPyLeakage_sigma_0 * ((T) * (T)) * rho_cgs
                         / ((NRPyLeakage_m_e_c2) * (NRPyLeakage_m_e_c2));
-  double tmp_43_fd, tmp_44_fd, tmp_51_fd, tmp_60_fd, tmp_61_fd, tmp_63_fd, tmp_70_fd,
-        tmp_71_fd, tmp_78_fd, tmp_83_fd, tmp_87_fd4, tmp_87_fd2;
+  double tmp_43_fd = 0.0, tmp_44_fd = 0.0, tmp_51_fd = 0.0, tmp_60_fd = 0.0,
+         tmp_61_fd = 0.0, tmp_63_fd = 0.0, tmp_70_fd, tmp_71_fd = 0.0, tmp_78_fd,
+         tmp_83_fd, tmp_87_fd4 = 0.0, tmp_87_fd2;
   EvaluateFermiDirac(tmp_43_fd, 2, tmp_6);
-  EvaluateFermiDirac(tmp_44_fd, 4, tmp_6);
-  EvaluateFermiDirac(tmp_51_fd, 5, tmp_6);
   EvaluateFermiDirac(tmp_60_fd, 2, tmp_15);
-  EvaluateFermiDirac(tmp_61_fd, 4, tmp_15);
-  EvaluateFermiDirac(tmp_63_fd, 5, tmp_15);
   EvaluateFermiDirac(tmp_70_fd, 3, 0);
-  EvaluateFermiDirac(tmp_71_fd, 5, 0);
   EvaluateFermiDirac(tmp_78_fd, 3, tmp_6);
   EvaluateFermiDirac(tmp_83_fd, 3, tmp_15);
-  EvaluateFermiDirac(tmp_87_fd4, 4, 0);
   EvaluateFermiDirac(tmp_87_fd2, 2, 0);
+  if(compute_scattering) {
+    EvaluateFermiDirac(tmp_44_fd, 4, tmp_6);
+    EvaluateFermiDirac(tmp_51_fd, 5, tmp_6);
+    EvaluateFermiDirac(tmp_61_fd, 4, tmp_15);
+    EvaluateFermiDirac(tmp_63_fd, 5, tmp_15);
+    EvaluateFermiDirac(tmp_71_fd, 5, 0);
+    EvaluateFermiDirac(tmp_87_fd4, 4, 0);
+  }
   if(helper_failure) {
     return ghl_error_m1_microphysics_failure;
   }
   helper_failure = false;
   const double tmp_43 = tmp_43_fd;
   const double tmp_44 = tmp_44_fd;
-  const double tmp_45 = tmp_44 / tmp_43;
-  const double tmp_47 = ((NRPyLeakage_C_V - 1) * (NRPyLeakage_C_V - 1));
+  const double tmp_45 = compute_scattering ? tmp_44_fd / tmp_43 : 0.0;
   const double tmp_48 = B_p * ((1.0 / 6.0) * tmp_47 + (5.0 / 24.0) * tmp_7);
   const double tmp_49 = tmp_42 * tmp_48;
   const double tmp_50 = (3.0 / 4.0) * tmp_7 + 1.0 / 4.0;
   const double tmp_51 = tmp_51_fd;
-  const double nue_N_p = EnsureFinite(tmp_45 * tmp_49);
-  const double nue_N_n = EnsureFinite(tmp_41 * tmp_42 * tmp_45);
+  const double nue_N_p = compute_scattering ? EnsureFinite(tmp_45 * tmp_49) : 0.0;
+  const double nue_N_n
+        = compute_scattering ? EnsureFinite(tmp_41 * tmp_42 * tmp_45) : 0.0;
   const double nue_N_cc
         = EnsureFinite(tmp_42 * Y_np * tmp_50 * beta_nue_absorption.number);
   const double tmp_53 = nue_N_p + nue_N_n + nue_N_cc;
@@ -360,36 +410,36 @@ static ghl_error_codes_t compute_kernel(
                         * EnsureFinite(Y_np * tmp_10 * beta_anue_emission.number);
   const double tmp_60 = tmp_60_fd;
   const double tmp_61 = tmp_61_fd;
-  const double tmp_62 = tmp_42 * tmp_61 / tmp_60;
+  const double tmp_62 = compute_scattering ? tmp_42 * tmp_61_fd / tmp_60_fd : 0.0;
   const double tmp_63 = tmp_63_fd;
-  const double anue_N_n = EnsureFinite(tmp_41 * tmp_62);
-  const double anue_N_p = EnsureFinite(tmp_48 * tmp_62);
+  const double anue_N_n = compute_scattering ? EnsureFinite(tmp_41 * tmp_62) : 0.0;
+  const double anue_N_p = compute_scattering ? EnsureFinite(tmp_48 * tmp_62) : 0.0;
   const double anue_N_cc
         = EnsureFinite(tmp_42 * Y_pn * tmp_50 * beta_anue_absorption.number);
   const double tmp_65 = anue_N_n + anue_N_p + anue_N_cc;
-  const double tmp_66 = EnsureFinite(nrpyl_bremsstrahlung_energy_rate(T, tmp_12));
-  const double tmp_67 = 32 * pow(T, 9);
-  const double tmp_68
-        = (1.0 / 64.0) * ((NRPyLeakage_hc3) * (NRPyLeakage_hc3)) * tmp_17 * tmp_20
-          * (tmp_18 * tmp_25 * tmp_67 + tmp_19 * tmp_2 * tmp_22 * tmp_24 * tmp_67)
-          / (tmp_22 * tmp_26);
-  const double tmp_69 = (1.0 / 2.0) * T * (tmp_34 + 2);
+  const double tmp_66 = compute_bremsstrahlung
+                              ? EnsureFinite(nrpyl_bremsstrahlung_energy_rate(T, tmp_12))
+                              : 0.0;
   const double tmp_70 = tmp_70_fd;
-  const double tmp_71 = tmp_71_fd / tmp_70;
-  const double nux_E_p = EnsureFinite(tmp_49 * tmp_71);
-  const double nux_E_n = EnsureFinite(tmp_41 * tmp_42 * tmp_71);
+  const double tmp_71 = compute_scattering ? tmp_71_fd / tmp_70_fd : 0.0;
+  const double nux_E_p = compute_scattering ? EnsureFinite(tmp_49 * tmp_71) : 0.0;
+  const double nux_E_n
+        = compute_scattering ? EnsureFinite(tmp_41 * tmp_42 * tmp_71) : 0.0;
   const double tmp_73 = nux_E_p + nux_E_n;
   const double tmp_74 = 4 * ((T) * (T) * (T) * (T)) * tmp_8;
-  const double pair_E = EnsureFinite(tmp_29 * tmp_68);
-  const double plasmon_E = EnsureFinite(tmp_37 * tmp_69);
+  const double pair_E
+        = compute_pair ? EnsureFinite(tmp_29 * pair_energy_coefficient) : 0.0;
+  const double plasmon_E
+        = compute_plasmon ? EnsureFinite(tmp_37 * plasmon_energy_coefficient) : 0.0;
   const double tmp_75 = tmp_66 + pair_E + plasmon_E;
   const double beta_E_nue = NRPyLeakage_enable_beta_nue
                             * EnsureFinite(T * Y_pn * tmp_10 * beta_nue_emission.energy);
   const double tmp_76 = tmp_75 + beta_E_nue;
   const double tmp_78 = tmp_78_fd;
-  const double tmp_79 = tmp_51 / tmp_78;
-  const double nue_E_p = EnsureFinite(tmp_49 * tmp_79);
-  const double nue_E_n = EnsureFinite(tmp_41 * tmp_42 * tmp_79);
+  const double tmp_79 = compute_scattering ? tmp_51_fd / tmp_78_fd : 0.0;
+  const double nue_E_p = compute_scattering ? EnsureFinite(tmp_49 * tmp_79) : 0.0;
+  const double nue_E_n
+        = compute_scattering ? EnsureFinite(tmp_41 * tmp_42 * tmp_79) : 0.0;
   const double nue_E_cc
         = EnsureFinite(tmp_42 * Y_np * tmp_50 * beta_nue_absorption.energy);
   const double tmp_81 = nue_E_p + nue_E_n + nue_E_cc;
@@ -398,25 +448,23 @@ static ghl_error_codes_t compute_kernel(
           * EnsureFinite(T * Y_np * tmp_10 * beta_anue_emission.energy);
   const double tmp_82 = tmp_75 + beta_E_anue;
   const double tmp_83 = tmp_83_fd;
-  const double tmp_84 = tmp_63 / tmp_83;
-  const double anue_E_p = EnsureFinite(tmp_49 * tmp_84);
-  const double anue_E_n = EnsureFinite(tmp_41 * tmp_42 * tmp_84);
+  const double tmp_84 = compute_scattering ? tmp_63_fd / tmp_83_fd : 0.0;
+  const double anue_E_p = compute_scattering ? EnsureFinite(tmp_49 * tmp_84) : 0.0;
+  const double anue_E_n
+        = compute_scattering ? EnsureFinite(tmp_41 * tmp_42 * tmp_84) : 0.0;
   const double anue_E_cc
         = EnsureFinite(tmp_42 * Y_pn * tmp_50 * beta_anue_absorption.energy);
   const double tmp_86 = anue_E_p + anue_E_n + anue_E_cc;
-  const double tmp_87 = tmp_87_fd4 / tmp_87_fd2;
-  const double nux_N_p = EnsureFinite(tmp_49 * tmp_87);
-  const double nux_N_n = EnsureFinite(tmp_41 * tmp_42 * tmp_87);
+  const double tmp_87 = compute_scattering ? tmp_87_fd4 / tmp_87_fd2 : 0.0;
+  const double nux_N_p = compute_scattering ? EnsureFinite(tmp_49 * tmp_87) : 0.0;
+  const double nux_N_n
+        = compute_scattering ? EnsureFinite(tmp_41 * tmp_42 * tmp_87) : 0.0;
   const double nux_N = nux_N_p + nux_N_n;
-  const double pair_N_nux = NRPyLeakage_enable_pair_nux_anux
-                            * EnsureFinite(
-                                  NRPyLeakage_C1pC2_nux_anux * tmp_28 * pair_N_nux_factor
-                                  * pair_N_nux_factor);
-  const double plasmon_N_nux
-        = NRPyLeakage_enable_plasmon_nux_anux
-          * EnsureFinite(tmp_36 * tmp_47 * plasmon_N_nux_factor * plasmon_N_nux_factor);
-  const double pair_E_nux = EnsureFinite(tmp_68 * pair_N_nux);
-  const double plasmon_E_nux = EnsureFinite(tmp_69 * plasmon_N_nux);
+  const double pair_E_nux
+        = compute_pair ? EnsureFinite(pair_energy_coefficient * pair_N_nux) : 0.0;
+  const double plasmon_E_nux
+        = compute_plasmon ? EnsureFinite(plasmon_energy_coefficient * plasmon_N_nux)
+                          : 0.0;
   const double eta_E_nux = tmp_66 + pair_E_nux + plasmon_E_nux;
 
   ghl_m1_nrpyleakage_species_raw_rates *const nue = &candidate.raw.species[0];
@@ -500,16 +548,17 @@ static ghl_error_codes_t compute_kernel(
 #undef EvaluateFermiDirac
 #undef EvaluateFermiFactor
 
-ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
       const ghl_m1_nrpyleakage_thermo_state *restrict thermo,
       const double eta[ghl_m1_nrpyleakage_species_count],
+      const int channel_mask,
       ghl_m1_nrpyleakage_raw_rates *restrict raw) {
   ghl_m1_nrpyleakage_kernel_result result;
   if(raw == NULL) {
-    return compute_kernel(thermo, eta, NULL);
+    return compute_kernel(thermo, eta, channel_mask, NULL);
   }
   if((thermo == NULL) || (eta == NULL)) {
-    return compute_kernel(thermo, eta, &result);
+    return compute_kernel(thermo, eta, channel_mask, &result);
   }
   const double state_values[]
         = { thermo->rho,  thermo->T,    thermo->Ye,  thermo->muhat, thermo->mu_e,
@@ -524,11 +573,23 @@ ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
   if(invalid_state) {
     return ghl_error_m1_microphysics_failure;
   }
-  ghl_error_codes_t err = compute_kernel(thermo, eta, &result);
+  ghl_error_codes_t err = compute_kernel(thermo, eta, channel_mask, &result);
   if(err != ghl_success) {
     return err;
   }
-  /* Strict kernel evaluation already validates every raw species. */
+  /* Kernel evaluation validates every published raw species. */
   *raw = result.raw;
   return ghl_success;
+}
+
+ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+      const ghl_m1_nrpyleakage_thermo_state *restrict thermo,
+      const double eta[ghl_m1_nrpyleakage_species_count],
+      ghl_m1_nrpyleakage_raw_rates *restrict raw) {
+  const int all_channels
+        = ghl_neutrino_rate_channel_charged_current
+          | ghl_neutrino_rate_channel_nucleon_scattering | ghl_neutrino_rate_channel_pair
+          | ghl_neutrino_rate_channel_bremsstrahlung | ghl_neutrino_rate_channel_plasmon;
+  return ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+        thermo, eta, all_channels, raw);
 }

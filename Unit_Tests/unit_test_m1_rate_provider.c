@@ -330,7 +330,10 @@ static bool write_provider_fixture_table(
 /* This is the small authenticated StellarCollapse fixture used by the
  * offline provider campaign, kept test-local so table coverage has no /work
  * or external-file dependency. */
-static bool create_provider_fixture(char *restrict path, const size_t path_size) {
+static bool create_provider_fixture(
+      char *restrict path,
+      const size_t path_size,
+      const bool cold_degenerate_fixture) {
   const int characters = snprintf(
         path, path_size, "/tmp/ghl_m1_rate_provider_fixture_%ld.h5", (long)getpid());
   if(characters < 0 || (size_t)characters >= path_size) {
@@ -338,7 +341,10 @@ static bool create_provider_fixture(char *restrict path, const size_t path_size)
   }
 
   const double logrho[PROVIDER_FIXTURE_NRHO] = { 10.0, 11.0, 12.0 };
-  const double logtemp[PROVIDER_FIXTURE_NTEMP] = { 0.0, 0.5, 1.0 };
+  const double logtemp[PROVIDER_FIXTURE_NTEMP]
+        = { cold_degenerate_fixture ? log10(0.05) : 0.0,
+            cold_degenerate_fixture ? log10(0.1) : 0.5,
+            cold_degenerate_fixture ? log10(0.2) : 1.0 };
   const double ye[PROVIDER_FIXTURE_NYE] = { 0.1, 0.5, 0.9 };
   double abar[PROVIDER_FIXTURE_CELL_COUNT], xa[PROVIDER_FIXTURE_CELL_COUNT];
   double xh[PROVIDER_FIXTURE_CELL_COUNT], xn[PROVIDER_FIXTURE_CELL_COUNT];
@@ -372,9 +378,12 @@ static bool create_provider_fixture(char *restrict path, const size_t path_size)
         gamma[index] = 1.5 + 0.01 * variation;
         logenergy[index] = 18.0 + 0.01 * variation;
         logpress[index] = 25.0 + 0.01 * variation;
-        mu_e[index] = 3.0 + 0.20 * ir + 0.30 * it + 0.40 * iy;
-        mu_n[index] = 1.0 + 0.10 * ir + 0.12 * it + 0.15 * iy;
-        mu_p[index] = 0.2 + 0.05 * ir + 0.06 * it + 0.08 * iy;
+        mu_e[index]
+              = cold_degenerate_fixture ? 40.0 : 3.0 + 0.20 * ir + 0.30 * it + 0.40 * iy;
+        mu_n[index]
+              = cold_degenerate_fixture ? 40.0 : 1.0 + 0.10 * ir + 0.12 * it + 0.15 * iy;
+        mu_p[index]
+              = cold_degenerate_fixture ? 0.0 : 0.2 + 0.05 * ir + 0.06 * it + 0.08 * iy;
         muhat[index] = mu_n[index] - mu_p[index];
         munu[index] = 0.1 + 0.02 * ir + 0.03 * it + 0.04 * iy;
       }
@@ -1043,6 +1052,55 @@ static void test_nrpyleakage_rate_overflow(void) {
 }
 
 static void test_nrpyleakage_kernel_representability_edges(void) {
+  /* With mu_e/T = 800, the disabled pair-channel F3(-mu_e/T) tail is below
+   * binary64 range. The full raw interface still rejects that requested
+   * channel set, while a zero mask needs only the finite equilibrium moments
+   * and unmasked beta/Kirchhoff diagnostics. */
+  ghl_m1_nrpyleakage_thermo_state cold_degenerate_thermo;
+  require_error(
+        ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
+              1.0e-4, 0.50, 0.05, 40.0, 40.0, 0.0, 40.0, 0.50, 0.50,
+              &cold_degenerate_thermo),
+        ghl_success, "cold degenerate NRPyLeakage thermodynamic state", 3128);
+  const double cold_degenerate_eta[ghl_m1_nrpyleakage_species_count] = { 0.0, 0.0, 0.0 };
+  const ghl_m1_nrpyleakage_raw_rates cold_degenerate_untouched
+        = { .nux_single_species_multiplicity = 47 };
+  ghl_m1_nrpyleakage_raw_rates cold_full = cold_degenerate_untouched;
+  require_error(
+        ghl_m1_nrpyleakage_compute_raw_rates_from_thermo(
+              &cold_degenerate_thermo, cold_degenerate_eta, &cold_full),
+        ghl_error_m1_microphysics_failure, "enabled cold pair-channel tail", 3128);
+  require_condition(
+        memcmp(&cold_full, &cold_degenerate_untouched, sizeof(cold_full)) == 0,
+        "enabled cold pair-channel failure changed raw output", 3128);
+
+  ghl_m1_nrpyleakage_raw_rates cold_masked = cold_degenerate_untouched;
+  require_error(
+        ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+              &cold_degenerate_thermo, cold_degenerate_eta, 0, &cold_masked),
+        ghl_success, "zero-mask cold degenerate raw rates", 3128);
+  require_condition(
+        cold_masked.nux_single_species_multiplicity == 1,
+        "zero-mask cold raw multiplicity changed", 3128);
+  for(int species = 0; species < ghl_m1_nrpyleakage_species_count; ++species) {
+    const ghl_m1_nrpyleakage_species_raw_rates *const rate
+          = &cold_masked.species[species];
+    require_condition(
+          isfinite(rate->n_eq_cgs) && rate->n_eq_cgs > 0.0
+                && isfinite(rate->J_eq_mev_cgs) && rate->J_eq_mev_cgs > 0.0
+                && isfinite(rate->mean_energy_mev) && rate->mean_energy_mev > 0.0,
+          "zero-mask cold equilibrium moments are invalid", 3128);
+    require_condition(
+          rate->eta_N_pair_cgs == 0.0 && rate->eta_E_pair_mev_cgs == 0.0
+                && rate->eta_N_plasmon_cgs == 0.0 && rate->eta_E_plasmon_mev_cgs == 0.0
+                && rate->eta_N_brems_cgs == 0.0 && rate->eta_E_brems_mev_cgs == 0.0
+                && rate->kappa_s_N_neutron_cgs == 0.0
+                && rate->kappa_s_N_proton_cgs == 0.0
+                && rate->kappa_s_E_neutron_cgs == 0.0
+                && rate->kappa_s_E_proton_cgs == 0.0,
+          "zero-mask cold raw channel fields are nonzero", 3128);
+  }
+
   /* The public state remains finite, but the cgs density conversion can
    * overflow before the canonical blocking helper is entered. */
   ghl_m1_nrpyleakage_thermo_state blocking_failure_thermo;
@@ -2466,8 +2524,8 @@ static void test_reference_table_eos_validation(
         "reference table provider initialization", 3600);
   provider.use_tabulated_eos = true;
 
-  static const char *const labels[] = { "reference table hybrid EOS",
-                                        "reference table unknown type" };
+  static const char *const labels[]
+        = { "reference table hybrid EOS", "reference table unknown type" };
   const int variant_count = (int)(sizeof(labels) / sizeof(labels[0]));
   for(int variant = 0; variant < variant_count; ++variant) {
     ghl_eos_parameters bad_eos = *eos;
@@ -2777,6 +2835,85 @@ static void test_production_equilibrium_moments(
   }
 }
 
+static void test_production_zero_mask_cold_table(void) {
+  char fixture_path[128] = { 0 };
+  require_condition(
+        create_provider_fixture(fixture_path, sizeof(fixture_path), true),
+        "could not create cold degenerate provider fixture", 3129);
+
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.clean_sound_speed = true;
+  require_error(
+        ghl_initialize_tabulated_eos_functions_and_params(
+              fixture_path, 1.0e-7, -1.0, -1.0, 0.5, -1.0, -1.0, 0.1, -1.0, -1.0, &eos),
+        ghl_success, "cold degenerate EOS fixture initialization", 3129);
+  require_condition(
+        provider_values_close(eos.table_T_min, 0.05),
+        "cold degenerate fixture does not begin at 0.05 MeV", 3129);
+
+  ghl_neutrino_rate_provider_context provider;
+  require_error(
+        ghl_neutrino_rate_provider_initialize_nrpyleakage(&provider), ghl_success,
+        "cold table production provider initialization", 3129);
+  provider.channel_mask = 0;
+  ghl_primitive_quantities prims = { 0 };
+  prims.rho = sqrt(eos.table_rho_min * eos.table_rho_max);
+  prims.temperature = 0.05;
+  prims.Y_e = 0.5;
+  prims.eps = 1.0;
+
+  ghl_neutrino_rate_provider_cache cache;
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
+  ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+  initialize_sentinel_rates(rates);
+  require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+              &provider, &cache, &diagnostics, &eos, &prims, rates),
+        ghl_success, "cold degenerate zero-mask EOS-backed provider call", 3129);
+  validate_rate_bundle(rates, 3129);
+  require_condition(
+        cache.thermo_valid && cache.rates_valid
+              && provider_values_close(cache.mu_e, 40.0)
+              && provider_values_close(cache.muhat, 40.0),
+        "cold provider fixture did not reproduce mu_e=muhat=40 MeV", 3129);
+  require_condition(
+        diagnostics.active_channel_mask == 0
+              && diagnostics.beta_kirchhoff_mismatch_valid[ghl_m1_neutrino_nue]
+              && diagnostics.beta_kirchhoff_mismatch_valid[ghl_m1_neutrino_anue]
+              && !diagnostics.beta_kirchhoff_mismatch_valid[ghl_m1_neutrino_nux]
+              && isfinite(
+                    diagnostics.beta_kirchhoff_relative_mismatch[ghl_m1_neutrino_nue])
+              && isfinite(
+                    diagnostics.beta_kirchhoff_relative_mismatch[ghl_m1_neutrino_anue]),
+        "zero-mask production call lost beta/Kirchhoff diagnostics", 3129);
+  for(int species = 0; species < ghl_m1_neutrino_species_count; ++species) {
+    require_condition(
+          isfinite(rates[species].n_eq) && rates[species].n_eq > 0.0
+                && isfinite(rates[species].J_eq) && rates[species].J_eq > 0.0
+                && isfinite(rates[species].mean_energy)
+                && rates[species].mean_energy > 0.0,
+          "zero-mask production equilibrium targets are invalid", 3129);
+    require_condition(
+          rates[species].eta_N == 0.0 && rates[species].eta_E == 0.0
+                && rates[species].kappa_a_N == 0.0 && rates[species].kappa_a_E == 0.0
+                && rates[species].kappa_a_N_cc == 0.0 && rates[species].kappa_s == 0.0
+                && rates[species].kappa_tr == 0.0 && rates[species].eta_N_cc == 0.0,
+          "zero-mask production call published a channel rate", 3129);
+    for(int process = 0; process < ghl_m1_neutrino_pair_process_count; ++process) {
+      require_condition(
+            rates[species].eta_N_pair[process] == 0.0
+                  && rates[species].eta_E_pair[process] == 0.0,
+            "zero-mask production call published a pair-process rate", 3129);
+    }
+  }
+
+  ghl_tabulated_free_memory(&eos);
+  remove(fixture_path);
+}
+
 static void test_production_representability_transaction(
       const ghl_neutrino_rate_provider_context *restrict provider) {
   /* Bypass EOS interpolation through a valid cached thermodynamic record so
@@ -2852,6 +2989,7 @@ static void test_production_provider_regressions(void) {
         ghl_neutrino_rate_provider_initialize_nrpyleakage(&provider), ghl_success,
         "unconditional production provider initialization", 3049);
   test_production_equilibrium_moments(&provider);
+  test_production_zero_mask_cold_table();
   test_production_representability_transaction(&provider);
 }
 
@@ -3558,7 +3696,7 @@ int main(int argc, char **argv) {
     const char *table_path = argv[1];
     if(strcmp(argv[1], "--generated-fixture") == 0) {
       if(!create_provider_fixture(
-               generated_fixture_path, sizeof(generated_fixture_path))) {
+               generated_fixture_path, sizeof(generated_fixture_path), false)) {
         ghl_error("Could not create the generated provider EOS fixture\n");
       }
       table_path = generated_fixture_path;

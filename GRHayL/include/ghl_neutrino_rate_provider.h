@@ -65,6 +65,11 @@ typedef enum {
 typedef struct {
   /** Either backend requires a Stellarcollapse tabulated EOS when enabled. */
   bool use_tabulated_eos;
+  /**
+   * Enabled weak-interaction channels. Production equilibrium moments and
+   * beta/Kirchhoff diagnostics are computed independently of this mask;
+   * disabled channels contribute zero rates.
+   */
   int channel_mask;
   ghl_neutrino_rate_failure_policy_t failure_policy;
   ghl_neutrino_rate_table_bounds_policy_t table_bounds_policy;

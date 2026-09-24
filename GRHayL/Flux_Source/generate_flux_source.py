@@ -699,7 +699,7 @@ def generate_fluxes(destination: Path, face: FaceSymbols) -> None:
 
 
 def manifest_outputs() -> Set[Path]:
-    """Read names of generated C files from the Flux_Source build manifests.
+    """Read generator-owned C names from the Flux_Source build manifests.
 
     :return: C paths relative to ``GRHayL/Flux_Source``.
     """
@@ -710,6 +710,8 @@ def manifest_outputs() -> Set[Path]:
             (directory.relative_to(SOURCE_DIR) / name)
             for name in re.findall(r"\b[A-Za-z0-9_]+\.c\b", manifest)
         )
+    # The root manifest also compiles this hand-written M1 flux helper.
+    paths.discard(Path("ghl_calculate_Rusanov_flux.c"))
     return paths
 
 

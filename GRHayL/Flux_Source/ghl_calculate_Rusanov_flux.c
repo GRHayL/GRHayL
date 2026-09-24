@@ -44,6 +44,10 @@ static double rusanov_candidate_finite(const double state_L, const double state_
   const double average = rusanov_average_finite(physical_flux_L, physical_flux_R);
   const double jump = state_R - state_L;
   if(isfinite(jump)) {
+    /* Halve the jump when halving a subnormal speed would round to zero. */
+    if(speed > 0.0 && 0.5 * speed == 0.0) {
+      return fma(-speed, 0.5 * jump, average);
+    }
     const double candidate = average - 0.5 * speed * jump;
     /* A fused product and sum can remain finite when the product overflows. */
     if(isfinite(candidate)) {

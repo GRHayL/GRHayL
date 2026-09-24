@@ -816,13 +816,12 @@ test_stiff_branch_arithmetic_boundaries(const ghl_m1_parameters *restrict m1_par
   const long double W_squared = 1.0L / (1.0L - velocity * velocity);
   const long double isotropic_boost_factor
         = W_squared * (1.0L + velocity * velocity / 3.0L);
-  const long double J_transport = isotropic_boost_factor * (0.5L * (long double)DBL_MAX);
+  const long double J_transport_over_max = 0.5L * isotropic_boost_factor;
   const long double dtau = 4.0L / 5.0L;
-  const long double J_endpoint
-        = (J_transport + dtau * (long double)DBL_MAX) / (1.0L + dtau);
-  const long double E_endpoint = isotropic_boost_factor * J_endpoint;
+  const long double J_endpoint_over_max = (J_transport_over_max + dtau) / (1.0L + dtau);
+  const long double E_endpoint_over_max = isotropic_boost_factor * J_endpoint_over_max;
   require_condition(
-        E_endpoint > 1.5L * (long double)DBL_MAX,
+        E_endpoint_over_max > 1.5L,
         "nonrepresentable endpoint oracle is not above DBL_MAX", 1295);
 
   ghl_m1_neutrino_rates nonrepresentable_rates;
@@ -1806,7 +1805,10 @@ static double pair_oracle_number_root(
   const long double H = (long double)h * (long double)q;
   const long double D = (long double)n_eq_e * (long double)n_eq_a;
   const long double B = D / H + (long double)N_e + (long double)N_a;
-  const long double C = (long double)N_e * (long double)N_a - D;
+  /* Preserve an exact zero at equilibrium even when multiply-add is fused. */
+  const long double delta_e = (long double)N_e - (long double)n_eq_e;
+  const long double delta_a = (long double)N_a - (long double)n_eq_a;
+  const long double C = delta_e * (long double)N_a + (long double)n_eq_e * delta_a;
   const long double discriminant = B * B - 4.0L * C;
   require_condition(
         isfinite((double)discriminant) && discriminant >= 0.0L,
@@ -3546,11 +3548,33 @@ static void test_direct_neutrino_validation_boundaries(
   require_error(
         ghl_m1_update_neutrino_number_backward_euler(
               &nu_params, &candidate, DBL_MAX, 1.0, 1.0, &N_update),
-        ghl_error_m1_invalid_state, "overflowed BE denominator", 4110);
+        ghl_success, "scaled BE denominator", 4110);
+  require_close(N_update, 1.0, 2.0e-15, 0.0, "scaled BE denominator endpoint", 4110);
   require_error(
         ghl_m1_update_neutrino_number_backward_euler(
               &nu_params, &candidate, 1.0, 1.0, DBL_MAX, &N_update),
-        ghl_error_m1_invalid_state, "overflowed BE numerator", 4111);
+        ghl_success, "scaled BE numerator", 4111);
+  require_close(N_update, 2.0, 2.0e-15, 0.0, "scaled BE numerator endpoint", 4111);
+
+  /* dt_alpha*kappa overflows before division by Gamma_N although the
+   * endpoint is finite and close to the equilibrium value eta/kappa = 0.01. */
+  make_rates(ghl_m1_neutrino_nue, 1.0e150, 0.0, 0.0, 0.01, 1.0, 0.0, 0.0, &candidate);
+  require_error(
+        ghl_m1_validate_neutrino_rates(&candidate, NULL), ghl_success,
+        "large finite BE rate bundle", 4113);
+  require_error(
+        ghl_m1_update_neutrino_number_backward_euler(
+              &nu_params, &candidate, 1.0e159, 100.0, 1.0, &N_update),
+        ghl_success, "BE division after overflowing product", 4113);
+  require_close(N_update, 1.0, 2.0e-15, 0.0, "scaled finite BE endpoint", 4113);
+
+  /* Scaled evaluation must still reject an endpoint whose mathematical value
+   * exceeds binary64. Here the stiff limit is Gamma_N*n_eq = 2*DBL_MAX. */
+  make_rates(ghl_m1_neutrino_nue, 1.0, 0.0, 0.0, DBL_MAX, 1.0, 0.0, 0.0, &candidate);
+  require_error(
+        ghl_m1_update_neutrino_number_backward_euler(
+              &nu_params, &candidate, DBL_MAX, 2.0, 0.0, &N_update),
+        ghl_error_m1_invalid_state, "nonrepresentable BE endpoint", 4114);
   candidate = rates;
   require_error(
         ghl_m1_update_neutrino_number_backward_euler(
@@ -4363,8 +4387,9 @@ test_endpoint_failure_transactions(const ghl_m1_parameters *restrict m1_params) 
   make_neutrino_parameters(&nu_params);
   const ghl_m1_neutrino_state input = { .N = 1.0, .E = 1.0 };
 
-  /* Transparent E/F isolates number-denominator and exchange-normalization
-   * overflow; an absorbing E/F endpoint isolates the current-floor check. */
+  /* Transparent E/F isolates the finite number endpoint from a genuinely
+   * overflowing exchange normalization. An absorbing E/F endpoint isolates
+   * the current-floor check. */
   const double number_opacity[] = { DBL_MAX, 1.0, 0.0 };
   const double energy_opacity[] = { 0.0, 0.0, 1.0 };
   const double equilibrium_number[] = { 1.0, 16.0, 0.1 };
@@ -4387,12 +4412,26 @@ test_endpoint_failure_transactions(const ghl_m1_parameters *restrict m1_params) 
     ghl_m1_initialize_implicit_solve_diagnostics(&solve_diagnostics);
     ghl_m1_neutrino_diagnostics nd;
     ghl_m1_neutrino_diagnostics_initialize(&nd);
-    require_error(
-          ghl_m1_solve_neutrino_implicit_homogeneous_update(
+    const ghl_error_codes_t endpoint_error
+          = ghl_m1_solve_neutrino_implicit_homogeneous_update(
                 m1_params, &endpoint_params, &metric, &prims, &rates, timestep[scenario],
                 baryon_number[scenario], &input, &output, &exchange, &solve_diagnostics,
-                &nd),
-          ghl_error_m1_invalid_state, "implicit endpoint rejection", 4600 + scenario);
+                &nd);
+    if(scenario == 0) {
+      require_error(
+            endpoint_error, ghl_success, "finite implicit number endpoint", 4600);
+      require_close(output.N, 1.0, 2.0e-15, 0.0, "finite implicit number", 4600);
+      require_close(
+            output.E, input.E, 2.0e-15, 0.0, "transparent implicit energy", 4600);
+      require_zero_exchange(&exchange, "finite endpoint exchange", 4600);
+      require_condition(
+            nd.source_failures == 0 && nd.source_converged == 1,
+            "finite endpoint diagnostics", 4600);
+      continue;
+    }
+    require_error(
+          endpoint_error, ghl_error_m1_invalid_state, "implicit endpoint rejection",
+          4600 + scenario);
     require_condition(
           memcmp(&input, &output, sizeof(input)) == 0, "endpoint failure changed state",
           4600 + scenario);
@@ -4828,8 +4867,8 @@ test_number_endpoint_and_policy_overflow(const ghl_m1_parameters *restrict m1_pa
   require_zero_exchange(&exchange, "implicit lepton-policy failure exchange", 4609);
 }
 
-static void test_projected_charged_current_overflow(
-      const ghl_m1_parameters *restrict m1_params) {
+static void
+test_projected_charged_current_overflow(const ghl_m1_parameters *restrict m1_params) {
   ghl_metric_quantities metric;
   ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
   ghl_primitive_quantities prims;
@@ -4854,15 +4893,95 @@ static void test_projected_charged_current_overflow(
   ghl_m1_neutrino_diagnostics_initialize(&nd);
   require_error(
         ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_policy(
-              m1_params, &nu_params, &metric, &prims, &rates, 1.0, 1.0, 0.0,
-              &input, &output, &exchange, &solve_diagnostics, &nd),
+              m1_params, &nu_params, &metric, &prims, &rates, 1.0, 1.0, 0.0, &input,
+              &output, &exchange, &solve_diagnostics, &nd),
         ghl_error_m1_invalid_state, "projected charged-current overflow", 4613);
   require_condition(
         memcmp(&output, &input, sizeof(output)) == 0 && nd.source_failures == 1
               && nd.source_converged == 0,
         "projected charged-current failure changed state or counters", 4613);
-  require_zero_exchange(
-        &exchange, "projected charged-current overflow exchange", 4613);
+  require_zero_exchange(&exchange, "projected charged-current overflow exchange", 4613);
+}
+
+static void
+test_overflow_safe_number_source_terms(const ghl_m1_parameters *restrict m1_params) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  prims.vU[0] = 0.9;
+  prims.u0 = 1.0 / sqrt(1.0 - prims.vU[0] * prims.vU[0]);
+  ghl_m1_neutrino_parameters nu_params;
+  make_neutrino_parameters(&nu_params);
+  ghl_m1_neutrino_state state = { .N = 1.0, .E = 1.0, .F = { 0.99, 0.0, 0.0 } };
+  ghl_m1_neutrino_current current;
+  require_error(
+        ghl_m1_neutrino_derive_current(
+              m1_params, &nu_params, &metric, &prims, &state, &current),
+        ghl_success, "overflow-safe number source current", 4614);
+  state.N = current.Gamma_N;
+
+  ghl_m1_neutrino_rates rates;
+  make_rates(ghl_m1_neutrino_nue, 1.0e308, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, &rates);
+  require_error(
+        ghl_m1_validate_neutrino_rates(&rates, NULL), ghl_success,
+        "overflow-safe number source rates", 4614);
+
+  ghl_m1_sources sources = { 0 };
+  double number_source = NAN;
+  require_error(
+        ghl_m1_compute_neutrino_interaction_sources(
+              m1_params, &nu_params, &metric, &prims, &state, &rates, &sources,
+              &number_source),
+        ghl_success, "overflow-safe interaction number source", 4614);
+  require_close(
+        number_source, 0.0, 0.0, 0.0, "cancelled interaction number source", 4614);
+
+  /* The projected charged-current source evaluates the same kappa*N/Gamma
+   * form. endpoint=Gamma=2 makes the exact source zero although the raw
+   * kappa*endpoint intermediate overflows. */
+  double dL_rad_cc = -17.0;
+  require_error(
+        ghl_m1_neutrino_charged_current_lepton_delta(
+              &rates, 1.0, 0.0, true, 2.0, 2.0, &dL_rad_cc),
+        ghl_success, "overflow-safe projected charged-current source", 4615);
+  require_close(
+        dL_rad_cc, 0.0, 0.0, 0.0, "cancelled projected charged-current source", 4615);
+
+  /* Keep the legacy underflow-to-zero result for physically valid tiny rates:
+   * both the source absorption product and the BE timestep products round to
+   * zero in binary64, and the old direct expressions accepted those results. */
+  const double true_min = nextafter(0.0, 1.0);
+  nu_params.N_floor = 0.0;
+  state.N = true_min;
+  make_rates(ghl_m1_neutrino_nue, true_min, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, &rates);
+  require_error(
+        ghl_m1_validate_neutrino_rates(&rates, NULL), ghl_success,
+        "tiny valid number source rates", 4616);
+  number_source = NAN;
+  require_error(
+        ghl_m1_compute_neutrino_interaction_sources(
+              m1_params, &nu_params, &metric, &prims, &state, &rates, &sources,
+              &number_source),
+        ghl_success, "tiny absorption source underflow", 4616);
+  require_condition(
+        number_source == true_min,
+        "tiny absorption source lost its legacy underflow result", 4616);
+  dL_rad_cc = -17.0;
+  require_error(
+        ghl_m1_neutrino_charged_current_lepton_delta(
+              &rates, 1.0, 0.0, true, true_min, 1.0, &dL_rad_cc),
+        ghl_success, "tiny projected absorption underflow", 4617);
+  require_condition(
+        dL_rad_cc == true_min, "tiny projected source lost its legacy underflow result",
+        4617);
+  double tiny_endpoint = -1.0;
+  require_error(
+        ghl_m1_update_neutrino_number_backward_euler(
+              &nu_params, &rates, true_min, 1.0, 0.0, &tiny_endpoint),
+        ghl_success, "tiny BE products underflow", 4618);
+  require_condition(
+        tiny_endpoint == 0.0, "tiny BE endpoint changed its legacy rounded value", 4618);
 }
 
 static void initialize_pair_boundary_inputs(
@@ -5294,6 +5413,7 @@ int main(void) {
   test_late_closure_fallback_transaction(&m1_params);
   test_pair_roundtrip_energy_floor(&m1_params);
   test_number_endpoint_and_policy_overflow(&m1_params);
+  test_overflow_safe_number_source_terms(&m1_params);
   test_projected_charged_current_overflow(&m1_params);
   test_pair_dispatcher_boundaries(&m1_params, &rng);
   test_m1_configuration_field_boundaries(&m1_params, &rng);

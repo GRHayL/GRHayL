@@ -48,8 +48,9 @@ ghl_error_codes_t ghl_m1_compute_physical_flux_validated(
   double F_faceU[3];
   ghl_raise_lower_vector_3D(metric_face->gammaUU, rad_state->F, F_faceU);
 
-  const double candidate_E = metric_face->lapse * F_faceU[direction]
-                             - metric_face->betaU[direction] * rad_state->E;
+  const double candidate_E = ghl_m1_difference_of_products(
+        metric_face->lapse, F_faceU[direction], metric_face->betaU[direction],
+        rad_state->E);
   if(!isfinite(candidate_E)) {
     return ghl_error_m1_invalid_state;
   }
@@ -61,8 +62,8 @@ ghl_error_codes_t ghl_m1_compute_physical_flux_validated(
       P_mixed += closure->P[direction][k] * metric_face->gammaDD[k][i];
     }
 
-    candidate_F[i] = metric_face->lapse * P_mixed
-                     - metric_face->betaU[direction] * rad_state->F[i];
+    candidate_F[i] = ghl_m1_difference_of_products(
+          metric_face->lapse, P_mixed, metric_face->betaU[direction], rad_state->F[i]);
     if(!isfinite(candidate_F[i])) {
       return ghl_error_m1_invalid_state;
     }

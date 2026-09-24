@@ -233,7 +233,8 @@ static inline bool ghl_m1_scaled_positive_sqrt(
     return false;
   }
   if(value->mantissa == 0.0) {
-    *root = (ghl_m1_scaled_positive){ .mantissa = 0.0, /* GCOVR_EXCL_LINE -- zero product */
+    *root = (ghl_m1_scaled_positive){ .mantissa
+                                      = 0.0, /* GCOVR_EXCL_LINE -- zero product */
                                       .exponent
                                       = 0 }; /* GCOVR_EXCL_LINE -- zero product */
     return true;                             /* GCOVR_EXCL_LINE -- zero product */
@@ -282,6 +283,44 @@ static inline bool ghl_m1_neutrino_scaled_ratio_of_products(
     return false;
   }
   *quotient = candidate;
+  return true;
+}
+
+/* Evaluate kappa*N/Gamma_N without losing a finite result to the product
+ * kappa*N. Preserve the legacy left-to-right expression whenever its
+ * intermediates are representable, then use the scaled product-ratio path for
+ * range failures. The factors are nonnegative and Gamma_N is positive at the
+ * caller's validation boundary. */
+static inline bool ghl_m1_neutrino_scaled_absorption_number(
+      const double kappa,
+      const double number,
+      const double Gamma_N,
+      double *restrict absorption) {
+  if(absorption == NULL || !isfinite(kappa) || kappa < 0.0 || !isfinite(number)
+     || number < 0.0 || !isfinite(Gamma_N) || Gamma_N <= 0.0) {
+    return false;
+  }
+  const double product = kappa * number;
+  const double direct = product / Gamma_N;
+  if(isfinite(product) && isfinite(direct)
+     && (product != 0.0 || kappa == 0.0 || number == 0.0)
+     && (direct != 0.0 || kappa == 0.0 || number == 0.0)) {
+    *absorption = direct;
+    return true;
+  }
+  const double numerator_values[2] = { kappa, number };
+  const double denominator_values[1] = { Gamma_N };
+  ghl_m1_scaled_positive numerator;
+  ghl_m1_scaled_positive denominator;
+  double candidate = 0.0;
+  if(!ghl_m1_scaled_positive_product(numerator_values, 2, &numerator)
+     || !ghl_m1_scaled_positive_product(denominator_values, 1, &denominator)
+     || !ghl_m1_scaled_positive_divide(&numerator, &denominator, &candidate)) {
+    return false;
+  }
+  /* Preserve the legacy IEEE result when a positive absorption rounds to
+   * zero. The source equations historically accepted that underflow result. */
+  *absorption = candidate;
   return true;
 }
 

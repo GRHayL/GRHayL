@@ -192,8 +192,9 @@ ghl_error_codes_t ghl_m1_neutrino_physical_number_flux_from_current(
   if(velocity_error != ghl_success) {
     return velocity_error;
   }
-  const double candidate = metric->lapse * current->number_flux[direction]
-                           - metric->betaU[direction] * state->N;
+  const double candidate = ghl_m1_difference_of_products(
+        metric->lapse, current->number_flux[direction], metric->betaU[direction],
+        state->N);
   if(!isfinite(candidate)) {
     return ghl_error_m1_invalid_state;
   }

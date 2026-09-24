@@ -3,6 +3,66 @@
 #include "ghl_m1_neutrino_implicit.h"
 #include <float.h>
 
+static bool scaled_positive_divide_to_scaled(
+      const ghl_m1_scaled_positive *restrict numerator,
+      const ghl_m1_scaled_positive *restrict denominator,
+      ghl_m1_scaled_positive *restrict quotient) {
+  if(numerator == NULL || denominator == NULL || quotient == NULL
+     || denominator->mantissa == 0.0) {
+    return false;
+  }
+  if(numerator->mantissa == 0.0) {
+    *quotient = (ghl_m1_scaled_positive){ .mantissa = 0.0, .exponent = 0 };
+    return true;
+  }
+  int normalization = 0;
+  quotient->mantissa
+        = frexp(numerator->mantissa / denominator->mantissa, &normalization);
+  quotient->exponent = numerator->exponent - denominator->exponent + normalization;
+  return true;
+}
+
+/* Compute the complete positive BE ratio without materializing any
+ * range-limited product or sum. The ordinary input path keeps the established
+ * direct expression in ghl_m1_update_neutrino_number_backward_euler. */
+static bool scaled_backward_euler_number_endpoint(
+      const double dt_alpha,
+      const double kappa_a_N,
+      const double eta_N,
+      const double Gamma_N,
+      const double N_in,
+      double *restrict N_out) {
+  if(N_out == NULL || N_in < 0.0) {
+    return false;
+  }
+
+  const double emission_factors[2] = { dt_alpha, eta_N };
+  const double absorption_factors[2] = { dt_alpha, kappa_a_N };
+  ghl_m1_scaled_positive initial_number;
+  ghl_m1_scaled_positive emission;
+  ghl_m1_scaled_positive numerator;
+  ghl_m1_scaled_positive absorption_product;
+  ghl_m1_scaled_positive gamma;
+  ghl_m1_scaled_positive absorption_term;
+  ghl_m1_scaled_positive one;
+  ghl_m1_scaled_positive denominator;
+  double candidate = 0.0;
+  if(!ghl_m1_scaled_positive_from_double(N_in, &initial_number)
+     || !ghl_m1_scaled_positive_product(emission_factors, 2, &emission)
+     || !ghl_m1_scaled_positive_add(&initial_number, &emission, &numerator)
+     || !ghl_m1_scaled_positive_product(absorption_factors, 2, &absorption_product)
+     || !ghl_m1_scaled_positive_from_double(Gamma_N, &gamma)
+     || !scaled_positive_divide_to_scaled(&absorption_product, &gamma, &absorption_term)
+     || !ghl_m1_scaled_positive_from_double(1.0, &one)
+     || !ghl_m1_scaled_positive_add(&one, &absorption_term, &denominator)
+     || !ghl_m1_scaled_positive_divide(&numerator, &denominator, &candidate)
+     || !isfinite(candidate) || candidate < 0.0) {
+    return false;
+  }
+  *N_out = candidate;
+  return true;
+}
+
 /*
  * Aggregate neutrino E/F_i and N interaction sources plus the shared
  * endpoint-number policy (ordinary endpoint-Gamma_N backward Euler or the
@@ -109,8 +169,12 @@ static ghl_error_codes_t compute_interaction_sources_from_closure(
   if(error != ghl_success) {
     return error;
   }
-  const double candidate_N
-        = rates->eta_N - rates->kappa_a_N * state->N / current.Gamma_N;
+  double absorption_number = 0.0;
+  if(!ghl_m1_neutrino_scaled_absorption_number(
+           rates->kappa_a_N, state->N, current.Gamma_N, &absorption_number)) {
+    return ghl_error_m1_invalid_state;
+  }
+  const double candidate_N = rates->eta_N - absorption_number;
   if(!isfinite(candidate_N)) {
     return ghl_error_m1_invalid_state;
   }
@@ -291,18 +355,25 @@ ghl_error_codes_t ghl_m1_update_neutrino_number_backward_euler(
 
   /* Endpoint-Gamma_N backward-Euler discretization of
    * dN/dt = eta_N - kappa_a_N*N/Gamma_N. */
-  const double denom = 1.0 + dt_alpha * rates->kappa_a_N / Gamma_N;
-  if(!isfinite(denom) || denom <= 0.0) {
-    return ghl_error_m1_invalid_state;
+  const double absorption_product = dt_alpha * rates->kappa_a_N;
+  const double absorption_term = absorption_product / Gamma_N;
+  const double denom = 1.0 + absorption_term;
+  const double emission = dt_alpha * rates->eta_N;
+  const double numer = N_in + emission;
+  const double direct_candidate = numer / denom;
+  const bool absorption_underflow
+        = dt_alpha > 0.0 && rates->kappa_a_N > 0.0 && absorption_term == 0.0;
+  const bool emission_underflow
+        = dt_alpha > 0.0 && rates->eta_N > 0.0 && emission == 0.0;
+  double candidate_N_out = 0.0;
+  if(isfinite(absorption_product) && isfinite(absorption_term) && isfinite(denom)
+     && denom > 0.0 && isfinite(emission) && isfinite(numer)
+     && isfinite(direct_candidate) && !absorption_underflow && !emission_underflow) {
+    candidate_N_out = direct_candidate;
   }
-
-  const double numer = N_in + dt_alpha * rates->eta_N;
-  if(!isfinite(numer)) {
-    return ghl_error_m1_invalid_state;
-  }
-
-  const double candidate_N_out = numer / denom;
-  if(!isfinite(candidate_N_out)) {
+  else if(!scaled_backward_euler_number_endpoint(
+                dt_alpha, rates->kappa_a_N, rates->eta_N, Gamma_N, N_in,
+                &candidate_N_out)) {
     return ghl_error_m1_invalid_state;
   }
 

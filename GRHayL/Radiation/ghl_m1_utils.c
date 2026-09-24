@@ -289,13 +289,20 @@ ghl_error_codes_t ghl_m1_compute_harmonic_diffusion_coefficient(
   const double D_L = 1.0 / (3.0 * chi_tr_L);
   const double D_R = 1.0 / (3.0 * chi_tr_R);
   const double denom = D_L + D_R;
-  if(!isfinite(D_L) || !isfinite(D_R) || !isfinite(denom) || denom <= 0.0) {
+  double candidate = NAN;
+  if(isfinite(D_L) && isfinite(D_R) && isfinite(denom) && denom > 0.0) {
+    candidate = 2.0 * D_L * D_R / denom;
+  }
+  if(!isfinite(candidate) || candidate <= 0.0) {
+    /* The harmonic mean simplifies to 2/[3*(chi_L+chi_R)]. Scale the
+     * opacity sum so its intermediate cannot overflow. */
+    const double scale = fmax(chi_tr_L, chi_tr_R);
+    const double ratio = fmin(chi_tr_L, chi_tr_R) / scale;
+    candidate = (2.0 / (3.0 * (1.0 + ratio))) / scale;
+  }
+  if(!isfinite(candidate) || candidate <= 0.0) {
     return ghl_error_m1_invalid_state;
   }
-
-  *D_face = 2.0 * D_L * D_R / denom;
-  if(!isfinite(*D_face) || *D_face <= 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  *D_face = candidate;
   return ghl_success;
 }
