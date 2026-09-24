@@ -17,14 +17,12 @@ static ghl_error_codes_t ghl_m1_validate_inputs(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
       const ghl_m1_rad_state *restrict rad_state,
-      const ghl_m1_closure *restrict closure) {
-
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
-    return ghl_error_m1_invalid_metric;
-  }
+      const ghl_m1_closure *restrict closure,
+      double *restrict flux_factor_sq) {
 
   ghl_error_codes_t error
-        = ghl_m1_validate_realizability(m1_params, metric, rad_state, 64.0, NULL);
+        = ghl_m1_validate_realizability(
+              m1_params, metric, rad_state, 64.0, flux_factor_sq);
   if(error != ghl_success) {
     return error;
   }
@@ -58,23 +56,18 @@ ghl_error_codes_t ghl_m1_compute_diagnostics(
     return ghl_error_m1_null_pointer;
   }
 
-  ghl_error_codes_t error
-        = ghl_m1_validate_inputs(m1_params, metric, rad_state, closure);
+  double r_from_state;
+  const ghl_error_codes_t error
+        = ghl_m1_validate_inputs(m1_params, metric, rad_state, closure, &r_from_state);
   if(error != ghl_success) {
     return error;
   }
 
-  double flux_factor;
-  error = ghl_m1_scaled_covector_norm_ratio(
-        metric->gammaUU, rad_state->F, rad_state->E, &flux_factor);
-  if(error != ghl_success) {
-    return error;
-  }
-  const double r_from_state = flux_factor * flux_factor;
   /* r is the squared reduced-flux magnitude, so its admissible limit is
    * 1 - epsilon_c. */
   const double r_limit = 1.0 - m1_params->epsilon_c;
-  const double r_diag = ghl_m1_min(ghl_m1_max(r_from_state, 0.0), r_limit);
+  /* Realizability returns a squared norm, which cannot be negative. */
+  const double r_diag = ghl_m1_min(r_from_state, r_limit);
   diagnostics->closure_xi = closure->xi;
   diagnostics->closure_root_residual = closure->root_residual;
   diagnostics->closure_root_iterations = closure->root_iterations;

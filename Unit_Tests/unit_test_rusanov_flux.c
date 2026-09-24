@@ -138,6 +138,55 @@ static void check_shared_rusanov_boundaries(void) {
      || !isfinite(large_flux_output[0]) || large_flux_output[0] != large_flux_L[0]) {
     fail_case("shared Rusanov rejected representable large flux", 408);
   }
+  const double opposite_state_L[1] = { -DBL_MAX };
+  const double opposite_state_R[1] = { DBL_MAX };
+  if(ghl_calculate_Rusanov_flux(
+           opposite_state_L, opposite_state_R, zero_flux_L, zero_flux_R, 1, 1.0,
+           large_flux_output)
+           != ghl_success
+     || large_flux_output[0] != -DBL_MAX) {
+    fail_case("shared Rusanov lost a finite overflowing-jump result", 409);
+  }
+  large_flux_output[0] = 156.0;
+  if(ghl_calculate_Rusanov_flux(
+           opposite_state_L, opposite_state_R, zero_flux_L, zero_flux_R, 1, 2.0,
+           large_flux_output)
+           != ghl_error_flux_source_invalid_input
+     || large_flux_output[0] != 156.0) {
+    fail_case("shared Rusanov published an overflowing-jump result", 409);
+  }
+  const double finite_jump_L[1] = { 0.0 };
+  if(ghl_calculate_Rusanov_flux(
+           finite_jump_L, opposite_state_R, zero_flux_L, zero_flux_R, 1, 3.0,
+           large_flux_output)
+           != ghl_error_flux_source_invalid_input
+     || large_flux_output[0] != 156.0) {
+    fail_case("shared Rusanov published an overflowing finite jump", 409);
+  }
+  /* The dissipation product overflows while the fused expression is finite. */
+  const double product_state_L[1] = { 0.0 };
+  const double product_state_R[1] = { 1.0e308 };
+  const double product_flux[1] = { 1.7e308 };
+  if(ghl_calculate_Rusanov_flux(
+           product_state_L, product_state_R, product_flux, product_flux, 1, 4.0,
+           large_flux_output)
+           != ghl_success
+     || large_flux_output[0] != fma(-2.0, 1.0e308, 1.7e308)) {
+    fail_case("shared Rusanov lost a fused overflowing-product result", 426);
+  }
+  /* The rounded physical-flux average makes the fused result overflow; the
+   * exact result rounds to DBL_MAX and the half-scaled retry recovers it. */
+  const double rounded_state_L[1] = { 0x1p1023 };
+  const double rounded_state_R[1] = { 0.0 };
+  const double rounded_flux_L[1] = { DBL_MAX };
+  const double rounded_flux_R[1] = { -0x1p969 };
+  if(ghl_calculate_Rusanov_flux(
+           rounded_state_L, rounded_state_R, rounded_flux_L, rounded_flux_R, 1, 2.0,
+           large_flux_output)
+           != ghl_success
+     || large_flux_output[0] != DBL_MAX) {
+    fail_case("shared Rusanov lost a half-scaled finite-jump result", 427);
+  }
   (void)output_before;
 }
 

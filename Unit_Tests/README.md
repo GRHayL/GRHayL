@@ -18,13 +18,13 @@ it is not an independent cross-code reference.
 
 The current scoped runner has these local-only owners:
 
-- `unit_test_m1_diffusion_flux`
+- `unit_test_m1_closure_fallback`
 - `unit_test_m1_error_handling`
 - `unit_test_m1_fd_jacobian`
 - `unit_test_m1_neutrino_source_update`
 - `unit_test_m1_rate_provider`
 
-The four stored-reference owners also retain local checks around their replay.
+The five stored-reference owners also retain local checks around their replay.
 Those local checks remain local evidence even when the same executable consumes
 a stored fixture.
 
@@ -35,22 +35,26 @@ output and does not establish a provider or rate cross-code claim.
 ### Offline stored THC_M1 replays
 
 The repository-local package is
-[`data/m1_thcm1/`](data/m1_thcm1/). The current stored-reference owners are:
+[`data/m1_thcm1/`](data/m1_thcm1/), and the standalone `Jthick` fixture is
+[`data/jthick_thcm1.fixture`](data/jthick_thcm1.fixture). The current
+stored-reference owners are:
 
 | Owner | Stored operation families | Claim boundary |
 | --- | --- | --- |
-| `unit_test_m1_neutrino_seeded_invariants` | Pointwise closure/moments/stress/geometry/speeds and instantaneous frozen-rate sources | The documented pointwise and source operations, including their named local-policy exceptions. |
+| `unit_test_m1_neutrino_seeded_invariants` | Pointwise closure/moments/stress/geometry/speeds, instantaneous frozen-rate sources, and the stress-energy tensor | The documented pointwise, source, and stress-energy operations, including their named local-policy exceptions. |
 | `unit_test_m1_neutrino_rusanov_flux` | Neutrino and number-current Rusanov fixtures | The Rusanov operation with the caller-prepared operands recorded by the fixture. |
 | `unit_test_m1_thcm1_blended_rusanov` | Constant-volume and variable-volume four-point transport | The corresponding pointwise or prepared-face discrete transport operation, including paired baseline/perturbed response. |
 | `unit_test_rusanov_flux` | Generic Rusanov fixture | The generic Rusanov operation with its supplied E/F operands. |
+| `unit_test_m1_diffusion_flux` | Standalone thick-limit `Jthick` fixture | The `Jthick` operation at the six stored baseline/perturbed pairs. |
 
 Each stored record retains a baseline/perturbed input pair and the associated
-THC_M1 outputs. Pointwise, source, Rusanov, and stress-energy adapters evaluate
-current GRHayL at the baseline input, compare that output with the retained
-baseline, and use the retained perturbation response as the error envelope.
-The prepared-transport adapter evaluates current GRHayL at both inputs and
-compares its baseline/perturbed response with the retained THC response. The
-named local two-state policy records are the other exceptions. A replay
+THC_M1 outputs. Rusanov adapters evaluate current GRHayL at the baseline input,
+compare that output with the retained baseline, and use the retained
+perturbation response as the error envelope. Pointwise, instantaneous-source,
+stress-energy, and prepared-transport adapters evaluate current GRHayL at both
+paired inputs and compare the current baseline/perturbed response with the
+retained THC response. The named local two-state policy records are local
+policy checks rather than THC agreement claims. A replay
 therefore proves only the named library operation and its serialized input
 convention; it does not validate upstream preparation that the fixture stores
 as caller input.

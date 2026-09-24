@@ -29,8 +29,8 @@ or a continuum error estimate. The implementation is
 ## Closure and diffusion diagnostics
 
 The shared `ghl_m1_diagnostics` record can carry the closure reduced flux,
-root residual, root iteration count and status, Eulerian flux factor, Minerbo
-factor, realizability-repair flag, `Jthick` validity, and optional diffusion
+root residual, root iteration count and status, squared Eulerian flux factor,
+Minerbo factor, realizability-repair flag, `Jthick` validity, and optional diffusion
 blend factors. A closure's `four_point_compatibility` field distinguishes the
 primary full four-dimensional tensor from the finite admissibility fallback;
 it is diagnostic metadata, not a runtime method selector.

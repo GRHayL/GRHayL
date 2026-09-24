@@ -14,9 +14,10 @@ say otherwise.
   four-point blended Rusanov transport without a separate diffusion correction.
   Finite non-PSD closure candidates use a flagged Eulerian Minerbo
   admissibility fallback; this is not a user-selectable alternative.
-- The existing finite-difference/Newton source solver remains in use; any
-  source-regime handling is internal rather than a user-selected alternative
-  solver.
+- The default source policy uses the existing finite-difference/Newton solver.
+  A caller can opt into the branched compatibility policy, which can select
+  explicit thin, thick-equilibrium, or scattering-dominated source updates,
+  or use the implicit solver when those branches do not apply.
 - Host loops, stage sequencing, matter recovery, and the coupled limiter stay
   outside the library.
 

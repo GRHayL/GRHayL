@@ -47,10 +47,16 @@ compiler/HDF5 combination and runs the same `--build` route. The normal
 `.github/run_tests.sh` path does not select this scoped runner. The dedicated
 action compiles with gcov flags for Ubuntu GCC, where its workflow invokes the
 shared GRHayL coverage action after the scoped run in both HDF5 modes. The
-upload is a gcovr Cobertura report filtered to `GRHayL/Radiation/`. It
-feeds the `radiation_m1` Codecov component, whose project coverage target is
-100%. Workflow presence is configured-execution evidence; an observed run must
-still be reported separately.
+upload is a gcovr Cobertura report for `GRHayL/Radiation/` and the M1 changes
+in the public header, Core error mapping, and shared Rusanov flux. The separate
+[coverage action](../../../.github/actions/code-coverage/action.yml) checks
+100% executable-line coverage for Radiation, pins gcovr 8.6 to validate
+explicit branch exclusions, and prints a separate branch report. Its upload
+includes branch conditions, so partially covered lines remain visible in
+Codecov patch coverage; the line target does not assert 100% branch coverage.
+It feeds the `radiation_m1` Codecov component, whose project coverage target
+is 100%. Workflow presence is configured-execution evidence; an observed run
+must still be reported separately.
 
 ### Evidence vocabulary
 

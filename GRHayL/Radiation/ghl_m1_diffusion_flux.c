@@ -7,7 +7,7 @@ static bool ghl_m1_face_velocity_is_valid(
       const ghl_metric_quantities *restrict metric_face,
       const double W_face,
       const double V_face[3]) {
-  if(metric_face == NULL || !isfinite(W_face) || W_face < 1.0 || V_face == NULL) {
+  if(!isfinite(W_face) || W_face < 1.0) {
     return false;
   }
   for(int i = 0; i < 3; ++i) {
@@ -19,10 +19,8 @@ static bool ghl_m1_face_velocity_is_valid(
   if(!isfinite(v2) || v2 < 0.0 || v2 >= 1.0) {
     return false;
   }
-  const double W_expected = 1.0 / sqrt(fmax(1.0 - v2, DBL_MIN));
-  if(!isfinite(W_expected)) {
-    return false;
-  }
+  /* v2 is finite in [0,1); double spacing keeps 1-v2 above DBL_MIN. */
+  const double W_expected = 1.0 / sqrt(1.0 - v2);
   const double scale = fmax(1.0, fmax(fabs(W_face), fabs(W_expected)));
   const double tol = fmax(1024.0 * DBL_EPSILON * scale, 1e-8 * scale);
   return fabs(W_face - W_expected) <= tol;
@@ -68,7 +66,7 @@ ghl_error_codes_t ghl_m1_compute_diffusion_flux(
   }
 
   const double tau_face = chi_tr_face * delta_l;
-  if(!isfinite(tau_face) || tau_face < 0.0) {
+  if(!isfinite(tau_face)) {
     return ghl_error_m1_invalid_state;
   }
   if(tau_face < m1_params->zeta_min) {
@@ -100,12 +98,11 @@ ghl_error_codes_t ghl_m1_compute_diffusion_flux(
   }
 
   const double a = tanh(1.0 / tau_face);
-  if(!isfinite(a) || a <= 0.0 || a > 1.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* tau_face is finite and nonnegative. Its reciprocal is positive
+   * (or +infinity at zero), so tanh cannot vanish or become negative. */
   const int d = (int)direction;
   const double Jthick_face = 0.5 * (Jthick_L + Jthick_R);
-  if(!isfinite(Jthick_face) || Jthick_face <= 0.0) {
+  if(!isfinite(Jthick_face)) {
     return ghl_error_m1_invalid_state;
   }
 

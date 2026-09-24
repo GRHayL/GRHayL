@@ -1029,6 +1029,54 @@ static void test_nrpyleakage_boundary_paths(void) {
         "out-of-range raw composition changed output", 3105);
 }
 
+static void test_masked_kernel_validation(void) {
+  const double eta[] = { 0.0, 0.0, 0.0 };
+  ghl_m1_nrpyleakage_thermo_state thermo = {
+    .rho = 1.e-4, .T = 8.0, .Ye = 0.5, .X_n = 1.0, .X_p = 0.0
+  };
+  ghl_m1_nrpyleakage_raw_rates raw = { .nux_single_species_multiplicity = 29 };
+  const ghl_m1_nrpyleakage_raw_rates before = raw;
+  require_error(ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+        NULL, eta, 0, &raw), ghl_error_m1_null_pointer, "masked NULL thermo", 3800);
+  require_error(ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+        &thermo, NULL, 0, &raw), ghl_error_m1_null_pointer, "masked NULL eta", 3801);
+  require_error(ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+        &thermo, eta, 0, NULL), ghl_error_m1_null_pointer, "masked NULL raw", 3802);
+  require_error(ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+        &thermo, eta, -1, &raw), ghl_error_m1_microphysics_failure,
+        "unknown raw channels", 3803);
+  const double invalid_states[][3] = {
+    {0.0, 8.0, 0.5}, {1.e-4, 0.0, 0.5},
+    {1.e-4, 8.0, -0.1}, {1.e-4, 8.0, 1.1}
+  };
+  for(size_t i = 0; i < sizeof(invalid_states)/sizeof(invalid_states[0]); ++i) {
+    ghl_m1_nrpyleakage_thermo_state bad = thermo;
+    bad.rho = invalid_states[i][0]; bad.T = invalid_states[i][1]; bad.Ye = invalid_states[i][2];
+    require_error(ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+          &bad, eta, 0, &raw), ghl_error_m1_microphysics_failure,
+          "invalid masked thermodynamics", 3806 + (int)i);
+  }
+  /* With beta endpoint populations, density can be tiny while the positive
+   * FD equilibrium moments overflow independently of every channel rate. */
+  const double large_eta[] = {1.e44, 1.e15};
+  for(size_t i = 0; i < sizeof(large_eta)/sizeof(large_eta[0]); ++i) {
+    ghl_m1_nrpyleakage_thermo_state hot = thermo;
+    hot.rho = 1.e-300; hot.T = 1.e60;
+    const double hot_eta[] = {large_eta[i], 0.0, 0.0};
+    require_error(ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+          &hot, hot_eta, 0, &raw), ghl_error_m1_microphysics_failure,
+          "overflowing FD equilibrium moment", 3810 + (int)i);
+  }
+  /* A finite electron potential can overflow its squared plasmon argument.
+   * The pure-neutron endpoint avoids an unrelated beta shift failure. */
+  thermo.mu_e = DBL_MAX;
+  require_error(ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+        &thermo, eta, ghl_neutrino_rate_channel_plasmon, &raw),
+        ghl_error_m1_microphysics_failure, "nonfinite plasmon factor", 3804);
+  require_condition(memcmp(&raw, &before, sizeof(raw)) == 0,
+        "masked input failure changed output", 3804);
+}
+
 static void test_nrpyleakage_rate_overflow(void) {
   /* The strict raw interface must reject an intermediate rate overflow and
    * leave its caller-owned record untouched. */
@@ -1162,6 +1210,20 @@ static void test_nrpyleakage_kernel_representability_edges(void) {
   require_condition(
         memcmp(&late_fd_staged, &cold_untouched, sizeof(late_fd_staged)) == 0,
         "later nonpositive FD moment changed raw output", 3126);
+
+  /* The pair channel is disabled, leaving the plasmon Fermi factor as the
+   * first unrepresentable helper result for this finite degeneracy. */
+  const double plasmon_tail_eta[ghl_m1_nrpyleakage_species_count]
+        = { 800.0, 0.0, 0.0 };
+  ghl_m1_nrpyleakage_raw_rates plasmon_staged = cold_untouched;
+  require_error(
+        ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
+              &late_fd_thermo, plasmon_tail_eta,
+              ghl_neutrino_rate_channel_plasmon, &plasmon_staged),
+        ghl_error_m1_microphysics_failure, "plasmon Fermi tail underflow", 3129);
+  require_condition(
+        memcmp(&plasmon_staged, &cold_untouched, sizeof(plasmon_staged)) == 0,
+        "plasmon helper failure changed raw output", 3129);
 
   /* These are finite caller-owned thermo states.  The first case makes the
    * generated FD polynomial overflow; the strict wrapper must report that
@@ -2675,6 +2737,53 @@ static void test_production_provider_context_validation(
   }
 }
 
+static void test_production_conversion_boundaries(void) {
+  ghl_neutrino_rate_provider_context provider;
+  require_error(ghl_neutrino_rate_provider_initialize_nrpyleakage(&provider),
+        ghl_success, "conversion provider initialization", 3820);
+  provider.channel_mask = 0;
+  ghl_eos_parameters eos = {0};
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.table_rho_min = 1.e-301; eos.table_rho_max = 1.;
+  eos.table_T_min = 1.e-120; eos.table_T_max = 1.e61;
+  eos.table_Y_e_min = 0.; eos.table_Y_e_max = 1.;
+  const double temperatures[] = {1.e-110, 1.e-80, 8., 1.e60, 1.e-70};
+  for(size_t i = 0; i < sizeof(temperatures)/sizeof(temperatures[0]); ++i) {
+    ghl_primitive_quantities prims = {0};
+    prims.rho = 1.e-300; prims.temperature = temperatures[i]; prims.Y_e = 0.5;
+    ghl_neutrino_rate_provider_cache cache = {0};
+    cache.thermo_valid = true;
+    cache.thermo_rho = prims.rho; cache.thermo_T = prims.temperature;
+    cache.thermo_Ye = prims.Y_e; cache.X_n = 1.; cache.X_p = 0.;
+    cache.provider_snapshot = provider; cache.eos_snapshot = &eos;
+    /* Public cached thermodynamics are validated again at the raw boundary. */
+    if(i == 2) cache.mu_e = NAN;
+    if(i == 3) cache.mu_e = 700.0 * prims.temperature;
+    const ghl_neutrino_rate_provider_cache before = cache;
+    ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(rates);
+    ghl_m1_neutrino_rates unchanged[ghl_m1_neutrino_species_count];
+    memcpy(unchanged, rates, sizeof(rates));
+    require_error(ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, NULL, &eos, &prims, rates),
+          i < 3 ? ghl_error_m1_microphysics_failure : ghl_success,
+          "converted equilibrium representability", 3821 + (int)i);
+    if(i < 3) {
+      require_condition(memcmp(&cache, &before, sizeof(cache)) == 0
+            && same_rate_bundle(rates, unchanged), "conversion failure changed outputs", 3821 + (int)i);
+    }
+    else {
+      validate_rate_bundle(rates, 3821 + (int)i);
+      for(int species = 0; species < ghl_m1_neutrino_species_count; ++species) {
+        require_condition(rates[species].n_eq > 0.0 && rates[species].J_eq > 0.0
+              && isfinite(rates[species].mean_energy) && rates[species].mean_energy > 0.0,
+              "extreme equilibrium moment is not representable", 3821 + (int)i);
+      }
+    }
+  }
+}
+
 static void test_production_equilibrium_moments(
       const ghl_neutrino_rate_provider_context *restrict provider) {
   /* Keep this regression independent of the optional table's temperature
@@ -3127,12 +3236,16 @@ static void test_table_provider(const char *restrict table_path) {
    * corners in memory, assert the rejected provider call is transactional, and
    * restore every authenticated fixture value before the next witness. */
   const int malformed_table_keys[]
-        = { NRPyEOS_mu_e_key, NRPyEOS_X_n_key, NRPyEOS_X_p_key };
-  const double malformed_table_values[] = { NAN, -1.0e-6, 1.0 + 1.0e-6 };
+        = { NRPyEOS_mu_e_key, NRPyEOS_X_n_key, NRPyEOS_X_p_key,
+            NRPyEOS_mu_p_key, NRPyEOS_mu_n_key, NRPyEOS_X_n_key, NRPyEOS_X_p_key };
+  const double malformed_table_values[] = { NAN, -1.0e-6, 1.0 + 1.0e-6,
+                                            NAN, NAN, NAN, NAN };
   const char *const malformed_table_names[]
         = { "table NaN chemical potential", "table negative neutron fraction",
-            "table super-unit proton fraction" };
-  for(int malformed = 0; malformed < 3; ++malformed) {
+            "table super-unit proton fraction", "table NaN proton potential",
+            "table NaN neutron potential", "table NaN neutron fraction",
+            "table NaN proton fraction" };
+  for(size_t malformed = 0; malformed < sizeof(malformed_table_keys) / sizeof(malformed_table_keys[0]); ++malformed) {
     double saved_table_corners[8];
     provider_set_table_corners(
           &eos, malformed_table_keys[malformed], malformed_table_values[malformed],
@@ -3332,9 +3445,21 @@ static void test_table_provider(const char *restrict table_path) {
               &provider, &cache, &diagnostics, &eos, &recovered_temperature, rates),
         ghl_success, "table temperature recovery", 3044);
   validate_rate_bundle(rates, 3044);
+  recovered_temperature.temperature = 0.0;
+  require_error(ghl_neutrino_rate_provider_compute_cell(
+        &provider, NULL, NULL, &eos, &recovered_temperature, rates),
+        ghl_success, "zero table temperature recovery", 3812);
   require_condition(
         cache.thermo_valid && isfinite(cache.thermo_T) && cache.thermo_T > 0.0,
         "table temperature recovery did not publish thermodynamics", 3044);
+
+  ghl_eos_parameters missing_ye_bounds = eos;
+  missing_ye_bounds.table_Y_e_min = 0.0;
+  missing_ye_bounds.table_Y_e_max = 0.0;
+  missing_ye_bounds.Y_e_min = NAN;
+  require_error(ghl_neutrino_rate_provider_compute_cell(
+        &provider, NULL, NULL, &missing_ye_bounds, &cached_prims, rates),
+        ghl_error_m1_microphysics_failure, "missing zero-based Ye table bounds", 3824);
 
   /* The legacy bound fields are a supported fallback when table-specific
    * bounds are absent.  Use the authenticated table limits as the fallback
@@ -3350,7 +3475,7 @@ static void test_table_provider(const char *restrict table_path) {
   fallback_bounds.table_rho_max = 0.0;
   fallback_bounds.table_T_min = 0.0;
   fallback_bounds.table_T_max = 0.0;
-  fallback_bounds.table_Y_e_min = 0.0;
+  fallback_bounds.table_Y_e_min = -1.0;
   fallback_bounds.table_Y_e_max = 0.0;
   ghl_neutrino_rate_provider_cache_initialize(&cache);
   const ghl_neutrino_rate_provider_cache fallback_cache_before = cache;
@@ -3663,10 +3788,34 @@ static void test_table_provider(const char *restrict table_path) {
               &provider, &cache, NULL, &eos, &null_diagnostics_input, rates),
         ghl_success, "clamped table bounds without diagnostics", 3049);
   validate_rate_bundle(rates, 3049);
+  ghl_m1_neutrino_rates cached_rates[ghl_m1_neutrino_species_count];
+  require_error(ghl_neutrino_rate_provider_compute_cell(
+        &provider, &cache, NULL, &eos, &null_diagnostics_input, cached_rates),
+        ghl_success, "cache hit without diagnostics", 3805);
+  require_condition(same_rate_bundle(rates, cached_rates),
+        "cache hit without diagnostics changed rates", 3805);
 
   ghl_tabulated_free_memory(&eos);
 }
 #endif
+
+static void test_reference_cache_without_diagnostics(void) {
+  ghl_neutrino_rate_provider_context provider;
+  require_error(ghl_neutrino_rate_provider_initialize_default(&provider),
+        ghl_success, "reference cache initialization", 3830);
+  ghl_neutrino_rate_provider_cache cache = {0};
+  ghl_primitive_quantities prims = { .rho = 1.e-4, .temperature = 1., .Y_e = 0.5 };
+  ghl_m1_neutrino_rates first[ghl_m1_neutrino_species_count];
+  ghl_m1_neutrino_rates second[ghl_m1_neutrino_species_count];
+  require_error(ghl_neutrino_rate_provider_compute_cell(
+        &provider, &cache, NULL, NULL, &prims, first),
+        ghl_success, "reference cache seed without diagnostics", 3830);
+  require_error(ghl_neutrino_rate_provider_compute_cell(
+        &provider, &cache, NULL, NULL, &prims, second),
+        ghl_success, "reference cache hit without diagnostics", 3830);
+  require_condition(same_rate_bundle(first, second),
+        "reference cache without diagnostics changed rates", 3830);
+}
 
 int main(int argc, char **argv) {
   if(argc > 2) {
@@ -3675,6 +3824,8 @@ int main(int argc, char **argv) {
   }
 
   provider_rng rng = { .state = UINT64_C(0x4d3150524f564944) };
+  test_reference_cache_without_diagnostics();
+  test_masked_kernel_validation();
   test_nrpyleakage_raw_kernel();
   test_nrpyleakage_boundary_paths();
   test_nrpyleakage_supported_thermo_boundaries();
@@ -3688,8 +3839,17 @@ int main(int argc, char **argv) {
   test_recovery_and_transactional_failures();
   test_recovery_publication_and_post_thermo_failures();
   test_temperature_recovery();
+  ghl_neutrino_rate_provider_context bad_context;
+  (void)ghl_neutrino_rate_provider_initialize_default(&bad_context);
+  bad_context.nu_x_multiplicity = 0.0;
+  ghl_primitive_quantities prim = {0};
+  ghl_m1_neutrino_rates untouched_rates[ghl_m1_neutrino_species_count];
+  require_error(ghl_neutrino_rate_provider_compute_cell(
+        &bad_context, NULL, NULL, NULL, &prim, untouched_rates),
+        ghl_error_m1_microphysics_failure, "invalid context without diagnostics", 3813);
 
 #ifndef GHL_DISABLE_HDF5
+  test_production_conversion_boundaries();
   test_production_provider_regressions();
   if(argc == 2) {
     char generated_fixture_path[128] = { 0 };

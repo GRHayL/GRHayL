@@ -5,7 +5,7 @@ local E/F-plus-number update order. It uses the provider’s frozen rate bundle;
 it does not define weak-interaction microphysics. The relevant implementation
 is [ghl_m1_neutrino_sources.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c)
 and the public declarations are in
-[ghl_m1.h](../../../GRHayL/include/ghl_m1.h#L1315).
+[ghl_m1.h](../../../GRHayL/include/ghl_m1.h).
 
 ## Frozen rate fields
 
@@ -23,7 +23,7 @@ mean-energy diagnostic, and charged-current subset fields
 does not perform EOS lookup, weak-equilibrium calculations, unit conversion, or
 rate refresh inside the local source solve; see the
 [rate-provider contract](rate-provider-contract.md) and
-[provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h#L14).
+[provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h).
 
 `eta_N`, `eta_E`, and the absorption/scattering coefficients are nonnegative.
 The validator enforces the provider’s aggregate and charged-current
@@ -58,7 +58,7 @@ $$
 
 Here `H_n = -V_i H^i`, and `H_i` is covariant. The source implementation
 uses `V_cov[i]` and `HD[i]` exactly for these lower-index terms; see
-[ghl_m1_neutrino_sources.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c#L25).
+[ghl_m1_neutrino_sources.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c).
 Scattering contributes to \(\kappa_{\rm tr}\) and damps the comoving flux;
 it does not appear in the number reaction below.
 
@@ -102,7 +102,7 @@ emissivity identity is enforced by the rate bundle.
 The formula does not apply `N_floor` internally. Number-floor repair is a
 separate explicit operation, and an undesired floor mutation is rejected by
 the conserving paired source path. See
-[ghl_m1_neutrino_sources.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c#L237)
+[ghl_m1_neutrino_sources.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c)
 and [number-current definitions](m1-number-current-and-transport.md).
 
 ## Implicit E/F residual
@@ -135,13 +135,13 @@ the trial closure, comoving moments, and E/F source are reevaluated. `N` and
 the number source are intentionally absent from this four-variable residual.
 Repair is not applied inside the residual; admissibility is enforced by trial
 checks and safeguarded Newton steps. See
-[ghl_m1_neutrino_implicit_residual.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit_residual.c#L6).
+[ghl_m1_neutrino_implicit_residual.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit_residual.c).
 
 The Jacobian is a deterministic 4x4 finite difference of this residual. A
 forward perturbation is used normally; a backward one-sided perturbation is
 allowed when the forward trial fails only the admissibility check. Other hard
 errors propagate. This is documented in
-[ghl_m1_neutrino_implicit_jacobian.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit_jacobian.c#L5).
+[ghl_m1_neutrino_implicit_jacobian.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit_jacobian.c).
 
 ## Local update order and compatibility branches
 
@@ -171,7 +171,7 @@ $$
 then use the \(\chi=1/3\) isotropic boost predictor before the same endpoint
 number/current/exchange checks. These are internal source branches, not
 alternative transport or closure methods. The dispatch and transaction rules
-are in [ghl_m1_neutrino_source_update.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c#L612).
+are in [ghl_m1_neutrino_source_update.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
 
 ## Photon and obsolete-method boundary
 

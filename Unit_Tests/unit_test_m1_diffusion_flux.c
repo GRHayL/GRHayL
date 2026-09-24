@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "m1_test_utils.h"
+#include "../GRHayL/Radiation/ghl_m1_utils.h"
 #include "m1_thcm1_fixture_utils.h"
 
 /*
@@ -80,6 +81,52 @@ static void check_diffusion_transport_boundaries(
       const ghl_metric_quantities *restrict metric,
       const ghl_primitive_quantities *restrict prims,
       const ghl_m1_rad_state *restrict state) {
+  ghl_m1_closure closure = {0};
+  closure.P[0][0] = closure.P[1][1] = closure.P[2][2] = state->E / 3.0;
+  double flux_E, flux_F[3], V_con[3], V_cov[3], W;
+  ghl_m1_comoving comoving;
+  for(int argument = 0; argument < 5; ++argument) {
+    if(ghl_m1_compute_physical_flux_validated(
+          argument == 0 ? NULL : metric, ghl_m1_dirn0,
+          argument == 1 ? NULL : state, argument == 2 ? NULL : &closure,
+          argument == 3 ? NULL : &flux_E, argument == 4 ? NULL : flux_F)
+       != ghl_error_m1_null_pointer)
+      fail_test("validated physical flux NULL argument accepted");
+  }
+  if(ghl_m1_compute_physical_flux_validated(
+       metric, (ghl_m1_direction_t)-1, state, &closure, &flux_E, flux_F)
+     != ghl_error_m1_invalid_state)
+    fail_test("validated physical flux invalid direction accepted");
+  for(int argument = 0; argument < 3; ++argument) {
+    if(ghl_m1_compute_comoving_moments_with_velocity(
+          params, metric, prims, state, &closure, &comoving,
+          argument == 0 ? NULL : V_con, argument == 1 ? NULL : V_cov,
+          argument == 2 ? NULL : &W) != ghl_error_m1_null_pointer)
+      fail_test("comoving velocity NULL output accepted");
+  }
+
+  double thin[3][3], thick[3][3];
+  for(int argument = 0; argument < 6; ++argument) {
+    if(ghl_m1_compute_minerbo_decomposition(
+          argument == 0 ? NULL : params, argument == 1 ? NULL : metric,
+          argument == 2 ? NULL : prims, argument == 3 ? NULL : state,
+          argument == 4 ? NULL : thin, argument == 5 ? NULL : thick)
+       != ghl_error_m1_null_pointer)
+      fail_test("Minerbo decomposition NULL argument accepted");
+  }
+  ghl_m1_rad_state bad_decomposition_state = *state;
+  bad_decomposition_state.E = -1.0;
+  if(ghl_m1_compute_minerbo_decomposition(
+       params, metric, prims, &bad_decomposition_state, thin, thick)
+     != ghl_error_m1_invalid_state)
+    fail_test("Minerbo decomposition invalid state accepted");
+  ghl_primitive_quantities bad_decomposition_prims = *prims;
+  bad_decomposition_prims.vU[0] = NAN;
+  if(ghl_m1_compute_minerbo_decomposition(
+       params, metric, &bad_decomposition_prims, state, thin, thick)
+     != ghl_error_m1_invalid_state)
+    fail_test("Minerbo decomposition invalid velocity accepted");
+
   double Jthick = 31.0;
   bool valid = true;
   if(ghl_m1_compute_Jthick(NULL, metric, prims, state, &Jthick, &valid)
@@ -353,6 +400,18 @@ static void check_diffusion_transport_boundaries(
                 != ghl_success
        || corrected != 0.4 || a_face != 1.0) {
       fail_test("invalid Jthick validity did not take the no-op path");
+    }
+  }
+
+  /* Each early successful return also supports an omitted blend output. */
+  for(int no_op = 0; no_op < 3; ++no_op) {
+    corrected = 17.0;
+    if(ghl_m1_compute_diffusion_flux(
+           params, metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, no_op != 1,
+           1.0, true, grad, no_op == 2 ? NAN : valid_W, V,
+           no_op == 0 ? 0.0 : 1.0, 0.2, 1.0, &corrected, NULL) != ghl_success
+       || corrected != 0.4) {
+      fail_test("diffusion no-op requires optional blend output");
     }
   }
 

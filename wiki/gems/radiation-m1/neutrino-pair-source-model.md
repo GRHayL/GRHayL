@@ -6,7 +6,7 @@ Electron-flavor pair, plasmon, and bremsstrahlung emission is a coupled
 the implementation is
 [`ghl_m1_neutrino_pair_source.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_pair_source.c).
 This leaf explains the physical ownership and approximation; the public API
-signatures remain in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L1771-L1807).
+signatures remain in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h).
 
 ## Which rates belong to the pair operator
 
@@ -28,17 +28,17 @@ eta_E_pair[c] / eta_N_pair[c] = J_eq / n_eq.
 That difference matters because number and energy are separate grey moments.
 Absent channels must be represented by zero process fields in the complete
 rate struct. The provider-side mapping is in
-[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c#L561-L595),
+[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c),
 and the field contract is in
-[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L930-L984).
+[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h).
 
 The scalar electron-flavor `kappa_tr` contains the independent absorption and
 scattering contribution. It is not overwritten with a partner-dependent pair
 opacity. For `nu_x`, the process arrays are zero in the public bundle and its
 already-summed pair/plasmon/bremsstrahlung content is represented by aggregate
 scalar rates; the heavy-flavor multiplicity is already applied. See the
-[provider boundary](../../../GRHayL/include/ghl_neutrino_rate_provider.h#L14-L27)
-and [rate validation](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c#L133-L145).
+[provider boundary](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
+and [rate validation](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c).
 
 ## Shared number reaction
 
@@ -76,7 +76,7 @@ violations reject the candidate; the operation does not inject a floor.
 These equations and the numerical stabilization are specified in
 [`PAIR_SOURCE_MODEL.md`](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md#shared-number-reaction)
 and implemented at
-[`ghl_m1_neutrino_pair_source.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_pair_source.c#L58-L156).
+[`ghl_m1_neutrino_pair_source.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_pair_source.c).
 
 ## Energy and momentum after number
 
@@ -134,7 +134,7 @@ zeroes both exchange packets.
 
 The public implementation is therefore not a pair of independent one-species
 calls. Single-species source operations reject separated electron pair fields;
-use [`ghl_m1_solve_neutrino_pair_source_update`](../../../GRHayL/include/ghl_m1.h#L1807-L1820)
+use [`ghl_m1_solve_neutrino_pair_source_update`](../../../GRHayL/include/ghl_m1.h)
 for the coupled case.
 
 ## Approximation boundary
@@ -152,7 +152,7 @@ M1 pair operator still applies the grey model above.
 ## Evidence
 
 The coupled pair tests in
-[`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c#L934-L1565)
+[`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c)
 check equal number increments, an independent quadratic oracle, inactive-pair
 delegation, endpoint bounds, and transactional failures. The current source
 and pair ownership boundary is also summarized in

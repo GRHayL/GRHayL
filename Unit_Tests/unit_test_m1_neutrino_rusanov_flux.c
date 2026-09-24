@@ -907,6 +907,56 @@ static void check_neutrino_rusanov_boundaries(
   }
 }
 
+
+static void check_rusanov_arithmetic_boundaries(const ghl_m1_parameters *params) {
+  for(int scenario=0; scenario<7; ++scenario) {
+    ghl_metric_quantities metric;
+    m1_setup_flat_metric(&metric);
+    ghl_m1_neutrino_parameters nu = {.N_floor=0};
+    ghl_m1_neutrino_state state[2] = {{.N=1, .E=1}, {.N=1, .E=1}};
+    ghl_m1_closure closure[2] = {
+      {.chi=1.0/3, .P={{1.0/3,0,0},{0,1.0/3,0},{0,0,1.0/3}}},
+      {.chi=1.0/3, .P={{1.0/3,0,0},{0,1.0/3,0},{0,0,1.0/3}}}
+    };
+    double number[2][3]={{0}}, velocity[2][3]={{0}};
+    double speed=1;
+    if(scenario==0) {state[1].N=0; number[1][0]=1;}
+    if(scenario==1) {velocity[1][0]=0.5; number[1][0]=0.25;}
+    if(scenario==2 || scenario==3) {
+      /* E/F physical flux overflows on exactly one side, while N flux is zero. */
+      const int side=scenario-2;
+      metric.lapse=DBL_MAX;
+      state[side].E=8;
+      for(int i=0;i<3;++i) closure[side].P[i][i]=8.0/3;
+    }
+    if(scenario==4) {state[1].N=DBL_MAX; speed=4;}
+    if(scenario==5) {
+      /* Each physical flux is finite; densitization alone overflows. */
+      metric.gammaDD[0][0]=metric.gammaDD[1][1]=metric.gammaDD[2][2]=4;
+      metric.gammaUU[0][0]=metric.gammaUU[1][1]=metric.gammaUU[2][2]=0.25;
+      metric.detgamma=64; metric.sqrt_detgamma=8;
+      for(int side=0;side<2;++side)
+        for(int i=0;i<3;++i) closure[side].P[i][i]=1.0/12;
+      state[1].N=DBL_MAX;
+    }
+    if(scenario==6) {
+      /* A rounded supplied current above the product is still within tolerance. */
+      velocity[1][0]=0.5; number[1][0]=nextafter(0.5,1.0);
+    }
+    double N=-1, E=-2, F[3]={-3,-4,-5};
+    ghl_error_codes_t error=ghl_m1_compute_neutrino_rusanov_flux(
+          params,&nu,&metric,ghl_m1_dirn0,&state[0],&state[1],&closure[0],&closure[1],
+          number[0],number[1],velocity[0],velocity[1],speed,&N,&E,F);
+    if(scenario==6) {
+      if(error!=ghl_success) fail_case("roundoff-sized current discrepancy rejected",scenario);
+      check_close(N,0.25,"rounded current flux mismatch",scenario);
+    } else if(error!=ghl_error_m1_invalid_state || N!=-1 || E!=-2
+              || F[0]!=-3 || F[1]!=-4 || F[2]!=-5) {
+      fail_case("Rusanov arithmetic failure was not transactional",scenario);
+    }
+  }
+}
+
 int main(int argc, char **argv) {
   const char *fixture_dir = "Unit_Tests/data/m1_thcm1";
   if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0) {
@@ -925,6 +975,7 @@ int main(int argc, char **argv) {
   ghl_m1_neutrino_parameters nu_params;
   m1_neutrino_seeded_default_parameters(&nu_params);
   check_number_product_overflow(&m1_params);
+  check_rusanov_arithmetic_boundaries(&m1_params);
   const ghl_m1_neutrino_state *volatile no_state = NULL;
   ghl_m1_closure rejected_closure = { .xi = -1.0 };
   if(ghl_m1_compute_neutrino_closure(&m1_params, NULL, NULL, no_state, &rejected_closure)

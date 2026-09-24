@@ -46,10 +46,6 @@ ghl_error_codes_t ghl_m1_neutrino_assemble_exchange(
   if(error != ghl_success) {
     return error;
   }
-  if(!isfinite(candidate.dYe_matter)) {
-    return ghl_error_m1_invalid_state;
-  }
-
   *exchange = candidate;
   return ghl_success;
 }

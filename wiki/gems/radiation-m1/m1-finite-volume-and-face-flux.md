@@ -92,8 +92,11 @@ factor. The active variable-volume fixture adapter follows exactly this rule;
 see [`README.m1.md`](../../../Unit_Tests/README.m1.md) and
 [`unit_test_m1_thcm1_blended_rusanov.c`](../../../Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c).
 
-When all cell volumes equal the face volume, the prepared path reduces to the
-pointwise arithmetic up to the expected floating-point operation ordering.
+When all cell volume factors equal the face factor, the prepared operands share
+a common volume scale. The prepared result carries that face volume factor,
+while the pointwise result carries `sqrt_detgamma`. Their returned fluxes are
+directly comparable only when those factors match; otherwise convert them to
+the same units first.
 Keeping preparation in the host makes the mesh measure, storage convention,
 and finite-volume update explicit instead of hiding them in a Radiation API.
 

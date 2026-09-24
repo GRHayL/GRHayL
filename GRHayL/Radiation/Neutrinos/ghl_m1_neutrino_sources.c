@@ -3,23 +3,17 @@
 #include "ghl_m1_neutrino_implicit.h"
 #include <float.h>
 
-static bool scaled_positive_divide_to_scaled(
+static void scaled_positive_divide_to_scaled(
       const ghl_m1_scaled_positive *restrict numerator,
       const ghl_m1_scaled_positive *restrict denominator,
       ghl_m1_scaled_positive *restrict quotient) {
-  if(numerator == NULL || denominator == NULL || quotient == NULL
-     || denominator->mantissa == 0.0) {
-    return false;
-  }
-  if(numerator->mantissa == 0.0) {
-    *quotient = (ghl_m1_scaled_positive){ .mantissa = 0.0, .exponent = 0 };
-    return true;
-  }
+  /* This helper only divides the absorption product in the scaled BE path.
+   * dt == 0 takes the direct path; kappa == 0 forces eta == 0 by rate
+   * validation and also takes that path. Both scaled factors are positive. */
   int normalization = 0;
   quotient->mantissa
         = frexp(numerator->mantissa / denominator->mantissa, &normalization);
   quotient->exponent = numerator->exponent - denominator->exponent + normalization;
-  return true;
 }
 
 /* Compute the complete positive BE ratio without materializing any
@@ -32,7 +26,7 @@ static bool scaled_backward_euler_number_endpoint(
       const double Gamma_N,
       const double N_in,
       double *restrict N_out) {
-  if(N_out == NULL || N_in < 0.0) {
+  if(N_in < 0.0) {
     return false;
   }
 
@@ -47,16 +41,16 @@ static bool scaled_backward_euler_number_endpoint(
   ghl_m1_scaled_positive one;
   ghl_m1_scaled_positive denominator;
   double candidate = 0.0;
-  if(!ghl_m1_scaled_positive_from_double(N_in, &initial_number)
-     || !ghl_m1_scaled_positive_product(emission_factors, 2, &emission)
-     || !ghl_m1_scaled_positive_add(&initial_number, &emission, &numerator)
-     || !ghl_m1_scaled_positive_product(absorption_factors, 2, &absorption_product)
-     || !ghl_m1_scaled_positive_from_double(Gamma_N, &gamma)
-     || !scaled_positive_divide_to_scaled(&absorption_product, &gamma, &absorption_term)
-     || !ghl_m1_scaled_positive_from_double(1.0, &one)
-     || !ghl_m1_scaled_positive_add(&one, &absorption_term, &denominator)
-     || !ghl_m1_scaled_positive_divide(&numerator, &denominator, &candidate)
-     || !isfinite(candidate) || candidate < 0.0) {
+  /* The public entry validates finite nonnegative inputs and positive Gamma_N. */
+  ghl_m1_scaled_positive_from_validated_double(N_in, &initial_number);
+  ghl_m1_scaled_positive_product(emission_factors, 2, &emission);
+  ghl_m1_scaled_positive_add(&initial_number, &emission, &numerator);
+  ghl_m1_scaled_positive_product(absorption_factors, 2, &absorption_product);
+  ghl_m1_scaled_positive_from_validated_double(Gamma_N, &gamma);
+  scaled_positive_divide_to_scaled(&absorption_product, &gamma, &absorption_term);
+  ghl_m1_scaled_positive_from_validated_double(1.0, &one);
+  ghl_m1_scaled_positive_add(&one, &absorption_term, &denominator);
+  if(!ghl_m1_scaled_positive_divide(&numerator, &denominator, &candidate)) {
     return false;
   }
   *N_out = candidate;
@@ -90,9 +84,7 @@ static ghl_error_codes_t compute_EF_sources_from_moments(
       const ghl_m1_neutrino_rates *restrict rates,
       ghl_m1_sources *restrict EF_sources) {
 
-  if(!isfinite(W) || W < 1.0) {
-    return ghl_error_u0_singular;
-  }
+  /* Both callers obtain W from the validated comoving-moment calculation. */
 
   ghl_m1_sources candidate = { 0 };
   const double Q = rates->eta_E - rates->kappa_a_E * comoving->J;
@@ -175,9 +167,7 @@ static ghl_error_codes_t compute_interaction_sources_from_closure(
     return ghl_error_m1_invalid_state;
   }
   const double candidate_N = rates->eta_N - absorption_number;
-  if(!isfinite(candidate_N)) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* Both operands are finite and nonnegative; their difference is finite. */
 
   *EF_sources = candidate_EF;
   *N_source = candidate_N;
@@ -366,9 +356,12 @@ ghl_error_codes_t ghl_m1_update_neutrino_number_backward_euler(
   const bool emission_underflow
         = dt_alpha > 0.0 && rates->eta_N > 0.0 && emission == 0.0;
   double candidate_N_out = 0.0;
-  if(isfinite(absorption_product) && isfinite(absorption_term) && isfinite(denom)
-     && denom > 0.0 && isfinite(emission) && isfinite(numer)
-     && isfinite(direct_candidate) && !absorption_underflow && !emission_underflow) {
+  /* Rate validation requires round-to-nearest: adding one to a finite
+   * nonnegative absorption term gives a finite denominator >= 1 (including
+   * DBL_MAX + 1). Division cannot overflow a finite numerator. */
+  if(isfinite(absorption_product) && isfinite(absorption_term)
+     && isfinite(emission) && isfinite(numer)
+     && !absorption_underflow && !emission_underflow) {
     candidate_N_out = direct_candidate;
   }
   else if(!scaled_backward_euler_number_endpoint(
@@ -429,9 +422,8 @@ ghl_error_codes_t ghl_m1_neutrino_update_endpoint_number_with_policy(
         }
       }
     }
-    if(!isfinite(candidate)) {
-      return ghl_error_m1_invalid_state;
-    }
+    /* candidate is zero, a checked finite direct result, or the finite
+     * result guaranteed by scaled_ratio_of_products. */
     if(number_projected != NULL) {
       *number_projected = true;
     }

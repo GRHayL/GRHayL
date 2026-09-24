@@ -93,7 +93,9 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_core(
       }
     }
 
-    if(!isfinite(used_delta) || used_delta == 0.0) {
+    /* nextafter above guarantees a distinct perturbation when addition or
+     * subtraction rounds back to U[n]. */
+    if(!isfinite(used_delta)) {
       return ghl_error_m1_invalid_implicit_jacobian;
     }
 

@@ -4,7 +4,7 @@ The provider exposes five channel selectors, but the channel selector is not
 itself a source equation. It controls which provider physics contributes to a
 frozen rate bundle; the Radiation kernels then consume that bundle. The public
 channel enum and ownership rule are in
-[`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h#L14-L36).
+[`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h).
 
 ## Channel boundary
 
@@ -21,9 +21,9 @@ The current channel set is:
 The table describes the current provider/source contract, not a guarantee that
 every backend call enables every channel. `channel_mask` is provider state;
 Radiation sees only the final validated rates. The production mapping is in
-[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c#L499-L595),
+[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c),
 and the deterministic reference mapping is in the same file
-([`compute_staged_rates`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c#L599-L754)).
+([`compute_staged_rates`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c)).
 
 ## Charged current
 
@@ -39,9 +39,9 @@ reconstructed from the total radiation-number increment when pair channels are
 active. The energy absorption coefficient contributes to the ordinary grey
 energy source; the number absorption coefficient contributes to the number
 source. The current source equations are implemented in
-[`ghl_m1_neutrino_sources.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c#L6-L47)
+[`ghl_m1_neutrino_sources.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c)
 and the subset is validated in
-[`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c#L147-L181).
+[`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c).
 
 The implementation does not expose a separate detailed reaction state for
 each beta process. The provider owns the production weak-rate formulas and
@@ -71,7 +71,7 @@ S_i     = Q W V_i - kappa_tr H_i.
 Here `J`, `H_i`, and `H_n` are the M1 comoving moments; this is a source
 projection, not a claim that scattering changes electron fraction. The source
 implementation is authoritative
-([`ghl_m1_neutrino_sources.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c#L25-L47)).
+([`ghl_m1_neutrino_sources.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c)).
 
 ## Pair, plasmon, and bremsstrahlung emission
 
@@ -97,15 +97,15 @@ bundle, and the host owns preparation of the partner-dependent transport
 opacity and preservation of the validated bundle. The pair kernel does not
 inspect or enforce those caller-prepared face quantities; its equality check
 is in
-[`ghl_m1_neutrino_pair_source.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_pair_source.c#L511).
+[`ghl_m1_neutrino_pair_source.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_pair_source.c).
 
 For the lumped heavy flavor, the provider keeps the process arrays zero and
 maps its already-summed pair/plasmon/bremsstrahlung content into aggregate
 scalar emissivity/absorption coefficients. The heavy-flavor multiplicity is
 applied exactly once. The current public field semantics are documented in
-[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L930-L984), and the production raw
+[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h), and the production raw
 mapping is visible in
-[`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c#L446-L452).
+[`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c).
 
 These channels are grey emission/absorption representations. The provider
 does not deliver an energy-resolved pair spectrum to the M1 source.
@@ -127,7 +127,7 @@ Representational underflow is recorded diagnostically when the correctly
 rounded product is zero; it is not permission to invent a nonzero rate. The
 validator also rejects pair fields in a one-species electron source call and
 rejects nonzero pair fields for `nu_x`. See
-[`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c#L97-L210).
+[`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c).
 
 ## Historical whitepaper status
 
@@ -147,6 +147,6 @@ rejects nonzero pair fields for `nu_x`. See
 ## Evidence
 
 The channel mapping and identities are exercised by
-[`unit_test_m1_rate_provider.c`](../../../Unit_Tests/unit_test_m1_rate_provider.c#L880-L1035).
+[`unit_test_m1_rate_provider.c`](../../../Unit_Tests/unit_test_m1_rate_provider.c).
 The coupled pair and composition behavior is exercised by
-[`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c#L934-L1288).
+[`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c).

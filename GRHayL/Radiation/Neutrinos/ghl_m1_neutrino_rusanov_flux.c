@@ -113,10 +113,10 @@ ghl_error_codes_t ghl_m1_compute_neutrino_rusanov_flux(
   }
 
   const int d = (int)direction;
-  const double physical_number_flux_L
-        = metric_face->lapse * number_flux_L[d] - metric_face->betaU[d] * state_L->N;
-  const double physical_number_flux_R
-        = metric_face->lapse * number_flux_R[d] - metric_face->betaU[d] * state_R->N;
+  const double physical_number_flux_L = ghl_m1_difference_of_products(
+        metric_face->lapse, number_flux_L[d], metric_face->betaU[d], state_L->N);
+  const double physical_number_flux_R = ghl_m1_difference_of_products(
+        metric_face->lapse, number_flux_R[d], metric_face->betaU[d], state_R->N);
   if(!isfinite(physical_number_flux_L) || !isfinite(physical_number_flux_R)) {
     return ghl_error_m1_invalid_state;
   }

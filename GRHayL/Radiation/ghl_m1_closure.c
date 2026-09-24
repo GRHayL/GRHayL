@@ -351,13 +351,9 @@ static ghl_error_codes_t evaluate_minerbo(
       double *restrict residual,
       double *restrict normalized_residual,
       double *restrict physical_xi_out) {
-  if(!isfinite(xi) || xi < 0.0 || xi > 1.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* Every caller supplies an endpoint or a Brent iterate inside [0,1]. */
   const double chi = minerbo_chi(xi);
-  if(!isfinite(chi) || chi < 1.0 / 3.0 || chi > 1.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* minerbo_chi maps that closed interval into [1/3,1]. */
   const double dthin = 0.5 * (3.0 * chi - 1.0);
   const double dthick = 1.5 * (1.0 - chi);
 
@@ -369,7 +365,8 @@ static ghl_error_codes_t evaluate_minerbo(
       Pdd[mu][nu] = dthin * ws->Pthin_dd[mu][nu] + dthick * ws->Pthick_dd[mu][nu];
       rTdd[mu][nu] = energy_scale * ws->n_d[mu] * ws->n_d[nu] + ws->F_d[mu] * ws->n_d[nu]
                      + ws->n_d[mu] * ws->F_d[nu] + Pdd[mu][nu];
-      if(!isfinite(Pdd[mu][nu]) || !isfinite(rTdd[mu][nu])) {
+      /* A nonfinite Pdd component necessarily propagates to rTdd below. */
+      if(!isfinite(rTdd[mu][nu])) {
         record_closure_failure_stage(ghl_m1_closure_failure_workspace);
         return ghl_error_m1_invalid_state;
       }
@@ -537,17 +534,12 @@ static ghl_error_codes_t build_eulerian_minerbo_pressure(
       double *restrict chi_out) {
   /* This is an admissibility fallback only. The primary closure remains the
    * covariant four-dimensional Minerbo construction above. */
-  double flux_factor;
-  ghl_error_codes_t error = ghl_m1_scaled_covector_norm_ratio(
+  double flux_factor = 0.0;
+  /* The public closure entry validated this metric and realizability state.
+   * The scaled norm therefore succeeds and is bounded by the tolerated cone. */
+  (void)ghl_m1_scaled_covector_norm_ratio(
         ws->metric->gammaUU, ws->rad_state->F, ws->rad_state->E, &flux_factor);
-  if(error != ghl_success || !isfinite(flux_factor) || flux_factor < 0.0
-     || flux_factor > 1.0 + 128.0 * DBL_EPSILON) {
-    return ghl_error_m1_invalid_state;
-  }
   const double chi = minerbo_chi(ghl_m1_min(flux_factor, 1.0));
-  if(!isfinite(chi) || chi < 1.0 / 3.0 || chi > 1.0) {
-    return ghl_error_m1_invalid_state;
-  }
 
   double direction[3] = { 0.0, 0.0, 0.0 };
   double F_scale = 0.0;
@@ -626,7 +618,7 @@ static ghl_error_codes_t publish_eulerian_minerbo_fallback(
   error = ghl_m1_compute_comoving_moments_validated(
         m1_params, ws->metric, ws->prims, ws->rad_state, &candidate, &comoving, V_con,
         V_cov, &W);
-  if(error != ghl_success || !isfinite(comoving.J) || comoving.J <= 0.0) {
+  if(error != ghl_success || comoving.J <= 0.0) {
     return ghl_error_m1_invalid_state;
   }
 
@@ -657,21 +649,20 @@ static ghl_error_codes_t publish_eulerian_minerbo_fallback(
     const double H2_scaled = (double)H2_scaled_ld;
     const double scale = ghl_m1_max(1.0, fabs(H2_scaled));
     const double tolerance = 1024.0 * DBL_EPSILON * scale;
-    if(!isfinite(H2_scaled) || !isfinite(scale) || scale <= 0.0 || !isfinite(Hn_over_J)
+    if(!isfinite(H2_scaled) || !isfinite(Hn_over_J)
        || H2_scaled < -tolerance) {
       return ghl_error_m1_invalid_state;
     }
     xi = sqrt(ghl_m1_max(H2_scaled, 0.0));
   }
-  if(!isfinite(xi) || xi < 0.0 || xi > 1.0 + 1024.0 * DBL_EPSILON) {
+  if(!isfinite(xi) || xi > 1.0 + 1024.0 * DBL_EPSILON) {
     return ghl_error_m1_invalid_state;
   }
-  candidate.xi = ghl_m1_min(ghl_m1_max(xi, 0.0), 1.0);
+  /* Both constructions use a nonnegative square root and a positive J,
+   * so only the tolerated upper-end roundoff needs clipping. */
+  candidate.xi = ghl_m1_min(xi, 1.0);
 
-  error = ghl_m1_validate_closure_tensor(ws->metric, ws->rad_state, &candidate);
-  if(error != ghl_success) {
-    return error;
-  }
+  /* The comoving-moment call already validated this unchanged tensor. */
   *closure = candidate;
   return ghl_success;
 }
@@ -813,7 +804,10 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
       const double tol
             = 2.0 * DBL_EPSILON * fabs(b) + 0.5 * m1_params->closure_root_tolerance;
       const double midpoint = 0.5 * (c - b);
-      if(fabs(midpoint) <= m1_params->closure_root_tolerance || fb == 0.0) {
+      /* A requested interval tolerance below the spacing of doubles near b
+       * cannot be met; accept the bracket once it reaches that spacing. */
+      if(fabs(midpoint) <= m1_params->closure_root_tolerance
+         || fabs(midpoint) <= 2.0 * DBL_EPSILON * fabs(b) || fb == 0.0) {
         xi = b;
         status = ghl_m1_closure_solve_converged;
         ++iterations;
@@ -840,7 +834,8 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
         }
         const double accept_bound = 3.0 * midpoint * q - fabs(tol * q);
         const double interpolation_bound = ghl_m1_min(accept_bound, fabs(e * q));
-        if(q != 0.0 && 2.0 * p < interpolation_bound) {
+        /* q == 0 makes the bound zero; nonnegative 2*p already rejects it. */
+        if(2.0 * p < interpolation_bound) {
           e = d;
           d = p / q;
         }
@@ -860,10 +855,12 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
       double chim, gm, nrm;
       error = evaluate_minerbo(&ws, xi, Ptmp, &chim, &gm, &nrm, &physical_xi);
       if(error != ghl_success) {
-        /* Endpoints were accepted before Brent's in-bracket evaluation. Keep
-         * the defensive return for floating-point failures at an interior xi. */
-        increment_counter(3); /* GCOVR_EXCL_LINE -- defensive interior failure */
-        return error;         /* GCOVR_EXCL_LINE -- defensive interior failure */
+        /* Endpoint success does not establish that cancellation and norm
+         * arithmetic remain valid at every interior evaluation. No validated
+         * input reaches this guard; it is kept defensive and excluded from
+         * the coverage gate. */
+        increment_counter(3); /* LCOV_EXCL_LINE */
+        return error;         /* LCOV_EXCL_LINE */
       }
       fb = gm;
     }

@@ -6,7 +6,7 @@ second copy of the energy flux: current GRHayL derives it from the E/F closure,
 comoving moments, and fluid velocity. The implementation is
 [ghl_m1_neutrino_number_flux.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c),
 with the state and public functions declared in
-[ghl_m1.h](../../../GRHayL/include/ghl_m1.h#L1440).
+[ghl_m1.h](../../../GRHayL/include/ghl_m1.h).
 
 ## State and notation
 
@@ -91,7 +91,7 @@ coordinate flux only. It does not apply a numerical Rusanov flux or a metric
 factor. The five-component Rusanov helper uses the same supplied nonnegative
 speed for `{N,E,Fx,Fy,Fz}`; the canonical four-point operation then applies
 its componentwise blend and performs the one final face densitization. See
-[the current flux declarations](../../../GRHayL/include/ghl_m1.h#L1440) and
+[the current flux declarations](../../../GRHayL/include/ghl_m1.h) and
 [the four-point transport contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#transport).
 
 ## Floors and admissibility

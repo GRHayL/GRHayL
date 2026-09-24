@@ -39,14 +39,15 @@ provider, rate validation, repair, number flux, pointwise five-component
 Rusanov wrapper, source, lepton-exchange, and local implicit-solve files.
 
 The canonical four-point/prepared-face transport implementation, including
-both four-point APIs and their component-wise low-flux arithmetic, is compiled
-by the shared Radiation manifest from
-`GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c`. Its private low-flux
-helper remains local because the prepared volume-weighted operands have units
-distinct from the public generic helper contract. The generic
-`GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c` is compiled separately by the
-Flux_Source manifest and is used by pointwise Rusanov wrappers, not by the
-four-point/prepared operation.
+both four-point APIs and its private five-component low-flux wrapper, is
+compiled by the shared Radiation manifest from
+`GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c`. That wrapper accepts
+the prepared volume-weighted operands and retains M1 error and publication
+behavior. It calls the unit-agnostic scalar arithmetic in
+`GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c` through the private
+`GRHayL/Flux_Source/ghl_rusanov_private.h` declaration. The Flux_Source
+manifest compiles that arithmetic along with the public generic wrapper,
+which accepts undensitized operands for pointwise callers.
 
 The Radiation/Neutrinos manifest includes the private
 `ghl_m1_nrpyleakage_kernel.c` adapter. It provides the EOS-to-thermodynamic-
@@ -101,6 +102,7 @@ additional private M1 header is installed for these routes.
 - `GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rusanov_flux.c`
 - `GRHayL/Flux_Source/make.code.defn`
 - `GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c`
+- `GRHayL/Flux_Source/ghl_rusanov_private.h`
 - `GRHayL/Neutrinos/NRPyLeakage/make.code.defn`
 - `GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c`
 - `GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.h`

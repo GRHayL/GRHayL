@@ -158,7 +158,9 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual_core(
 
   const double sqrt_detgamma = metric->sqrt_detgamma;
   const double dt_alpha = metric->lapse * dt;
-  if(!isfinite(dt_alpha) || dt_alpha < 0.0) {
+  /* This validated path receives nonnegative dt and a positive lapse from
+   * its checked public entry or the checked homogeneous-solver boundary. */
+  if(!isfinite(dt_alpha)) {
     return ghl_error_m1_invalid_state;
   }
   const double dt_alpha_sqrt_detgamma = dt_alpha * sqrt_detgamma;

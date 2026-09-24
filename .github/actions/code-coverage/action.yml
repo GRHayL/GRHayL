@@ -18,18 +18,29 @@ runs:
   steps:
     - if: runner.os == 'Linux' && inputs.compiler == 'gcc'
       run: |
-        sudo apt-get install gcovr
         if [[ -n "$COVERAGE_REPORT_FILE" ]]; then
+          # Branch-only exclusion markers require gcovr >= 8.4. Pin the
+          # version measured by the scoped M1 coverage audit.
+          python3 -m pip install gcovr==8.6
+          gcovr_command=(python3 -m gcovr)
           gcovr_args=(-r . --filter "$COVERAGE_REPORT_FILTER" --xml "$COVERAGE_REPORT_FILE")
         else
-          gcovr_args=(-r . --keep)
+          sudo apt-get install gcovr
+          gcovr_command=(gcovr)
+          # Upload the same gcovr XML format as the scoped M1 jobs. Raw .gcov
+          # auto-discovery reintroduces excluded and non-executable lines.
+          gcovr_args=(-r . --exclude 'GRHayL/(Radiation/|include/ghl_m1\.h$)' --xml coverage.xml)
         fi
         # Newer versions need a new flag; we can get rid of
         # this once we move past Ubuntu 22
         if [ $ImageOS == "ubuntu22" ]; then
-          gcovr "${gcovr_args[@]}"
+          "${gcovr_command[@]}" "${gcovr_args[@]}"
         else
-          gcovr "${gcovr_args[@]}" --gcov-ignore-errors no_working_dir_found
+          "${gcovr_command[@]}" "${gcovr_args[@]}" --gcov-ignore-errors no_working_dir_found
+        fi
+        if [[ -n "$COVERAGE_REPORT_FILE" ]]; then
+          "${gcovr_command[@]}" -r . --filter 'GRHayL/Radiation/' --fail-under-line 100 --txt
+          "${gcovr_command[@]}" -r . --filter 'GRHayL/Radiation/' --txt-metric branch --txt
         fi
       shell: bash
       env:
@@ -46,7 +57,8 @@ runs:
         test -x "$LLVM_COV"
 
         "$LLVM_PROFDATA" merge -sparse default.profraw -o coverage.profdata
-        "$LLVM_COV" export ./build/lib/libghl.so -instr-profile=coverage.profdata -format=lcov > coverage.lcov
+        "$LLVM_COV" export ./build/lib/libghl.so -instr-profile=coverage.profdata -format=lcov \
+          -ignore-filename-regex='GRHayL/(Radiation/|include/ghl_m1\.h$|GRHayL_Core/abort_if_error\.c$|Flux_Source/ghl_calculate_Rusanov_flux\.c$)' > coverage.lcov
       shell: bash
 
     # Try Intel's codecov tool? Not sure if this is compatible with gcovr
@@ -77,6 +89,6 @@ runs:
 
     - uses: codecov/codecov-action@v5
       with:
-        files: ${{ inputs.report_file }}
-        disable_search: ${{ inputs.report_file != '' }}
+        files: ${{ inputs.compiler == 'gcc' && (inputs.report_file || 'coverage.xml') || 'coverage.lcov' }}
+        disable_search: true
         fail_ci_if_error: ${{ inputs.report_file != '' }}

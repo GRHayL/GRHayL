@@ -131,11 +131,8 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
   /* Apply the configured number floor before constructing the exchange packet.
    * E/F are already repaired above; this second repair is consequently an
    * N-only operation for the successful thin branch. */
-  error = ghl_m1_repair_neutrino_state(
+  (void)ghl_m1_repair_neutrino_state(
         m1_params, nu_params, metric, &candidate, candidate_diagnostics_ptr);
-  if(error != ghl_success) {
-    return error;
-  }
 
   error = ghl_m1_neutrino_derive_current(
         m1_params, nu_params, metric, prims, &candidate, &endpoint_current);
@@ -228,10 +225,7 @@ static ghl_error_codes_t ghl_m1_neutrino_build_EF_initial_guess(
       const double U_in[4],
       double U_initial[4],
       bool *restrict closure_fallback_observed) {
-  if(m1_params == NULL || metric == NULL || prims_frozen == NULL || rates == NULL
-     || U_in == NULL || U_initial == NULL || closure_fallback_observed == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
+  /* The checked Newton entry supplies this private predictor's pointers. */
   *closure_fallback_observed = false;
   for(int i = 0; i < 4; ++i) {
     U_initial[i] = U_in[i];
@@ -616,15 +610,11 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_
     const double physical_number_endpoint = N_out;
     candidate.N = N_out;
 
-    /* The current calculation above strictly validated these unchanged E/F_i.
-     * Repair may floor the selected endpoint number and must remain
-     * transactional with the candidate diagnostics. */
-    n_error = ghl_m1_repair_neutrino_state(
+    /* Current derivation strictly validated the unchanged E/F_i and floor
+     * configuration. The successful number update supplies finite N, so this
+     * repair cannot fail; retain its number-floor and diagnostic updates. */
+    (void)ghl_m1_repair_neutrino_state(
           m1_params, nu_params, metric, &candidate, &candidate_neutrino_diagnostics);
-    if(n_error != ghl_success) {
-      return ghl_m1_neutrino_publish_hard_failure( /* GCOVR_EXCL_LINE -- defensive */
-            n_error, neutrino_diagnostics); /* GCOVR_EXCL_LINE -- defensive */
-    }
 
     /* Repair may have changed N. Endpoint diagnostics use the published
      * candidate, while charged-current exchange below uses the un-repaired

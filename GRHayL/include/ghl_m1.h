@@ -51,14 +51,14 @@ typedef struct ghl_m1_closure {
    *
    * Two distinct states reach this path, separated by
    * ghl_m1_closure_counters::admissibility_fallback_psd and
-   * ::admissibility_fallback_zero_flux:
+   * ghl_m1_closure_counters::admissibility_fallback_zero_flux:
    *
    * - An exact-zero Eulerian flux with a moving fluid. The covariant thin
    *   dyad vanishes identically, so the primary candidate can fail the
    *   pressure-trace invariant while the Eulerian tensor remains admissible.
    *   This is expected and carries no admissibility concern.
    * - A finite-flux candidate rejected by the physical PSD check. The
-   *   O(v)-accurate relativistic thick tensor is not positive semidefinite for
+   *   \f$O(v)\f$-accurate relativistic thick tensor is not positive semidefinite for
    *   every realizable state; the primary candidate's smallest eigenvalue can
    *   reach a sizable negative fraction of the tensor norm. Repository
    *   measurements place this regime at an Eulerian flux transverse to the
@@ -66,7 +66,7 @@ typedef struct ghl_m1_closure {
    *   parallel or antiparallel to the velocity does not reach it at any speed
    *   tested up to 0.9c, and no state in the repository validation campaign
    *   reaches it. Hosts operating with fast transverse flows should monitor
-   *   ::admissibility_fallback_psd.
+   *   ghl_m1_closure_counters::admissibility_fallback_psd.
    */
   bool four_point_compatibility;
 } ghl_m1_closure;
@@ -403,8 +403,10 @@ struct ghl_m1_parameters {
   /**
    * Four-point limiter parameter in [0, 2]. The initializer uses the
    * canonical value minmod_theta = 1.0. The value zero is in range and
-   * selects phi = 0 for every stencil, i.e. the fully dissipative low-order
-   * flux.
+   * selects phi = 0 for every stencil. The published flux is then the
+   * low-order flux only where the opacity factor A is 1 or the stencil is a
+   * sawtooth; an optically thick face with A < 1 still blends toward the
+   * high-order flux with weight 1 - A.
    */
   double minmod_theta;
   /**
@@ -1084,8 +1086,16 @@ typedef struct {
  * increments (radiation gets + alpha*sqrt(gamma)*(S_E,S_i); matter gets the
  * negation). dYe_matter is the host-applied Delta Y_e recommendation
  * computed via ghl_m1_compute_neutrino_lepton_increment. The host applies
- * one coupled limiter scalar theta to all six increments together to
- * preserve energy, momentum, and electron-lepton-number conservation.
+ * one coupled limiter scalar theta to all exchange increments together. This
+ * preserves the already-balanced energy and momentum increments. Electron-
+ * lepton balance also requires the matter dYe_matter to match the radiation
+ * dN_rad_total times the species lepton weight under the same baryon
+ * normalization. Under thermalized-number projection, the default
+ * charged-current Y_e policy derives dYe_matter from dL_rad_cc, which can
+ * differ from the actual number change; a common limiter does not remove
+ * the difference. Hosts requiring endpoint-balanced
+ * bookkeeping can select ghl_m1_neutrino_ye_from_signed_total_number, while
+ * dL_rad_cc retains its distinct charged-current diagnostic meaning.
  */
 typedef struct {
   double dN_rad_total;

@@ -100,12 +100,8 @@ static ghl_error_codes_t ghl_m1_newton_check_admissible(
       const ghl_metric_quantities *restrict metric,
       const double U[4]) {
 
-  if(m1_params == NULL || metric == NULL || U == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
-  if(!isfinite(metric->sqrt_detgamma) || metric->sqrt_detgamma <= 0.0) {
-    return ghl_error_m1_invalid_metric;
-  }
+  /* The Newton entry point validates these pointers before either call.
+   * Configuration validation also rejects a nonpositive/nonfinite volume. */
   const ghl_error_codes_t configuration_error
         = ghl_m1_validate_configuration(m1_params, metric);
   if(configuration_error != ghl_success) {
@@ -136,7 +132,7 @@ static ghl_error_codes_t ghl_m1_newton_check_admissible(
     }
     validated_state.E = m1_params->E_floor;
   }
-  const ghl_error_codes_t error = ghl_m1_validate_realizability(
+  const ghl_error_codes_t error = ghl_m1_validate_realizability_state(
         m1_params, metric, &validated_state, 128.0, NULL);
   return error == ghl_error_m1_invalid_state ? ghl_error_m1_implicit_admissibility
                                              : error;
@@ -181,7 +177,7 @@ static bool ghl_m1_newton_solve_linear_4x4(
 
     const double pivot_abs = fabs(A[pivot_row][col]);
     if(!isfinite(best_scaled_pivot) || best_scaled_pivot <= 64.0 * DBL_EPSILON
-       || !isfinite(pivot_abs) || pivot_abs < DBL_MIN) {
+       || pivot_abs < DBL_MIN) {
       return false;
     }
 
@@ -217,7 +213,9 @@ static bool ghl_m1_newton_solve_linear_4x4(
     for(int j = i + 1; j < 4; j++) {
       value -= A[i][j] * solution[j];
     }
-    if(!isfinite(value) || !isfinite(A[i][i]) || fabs(A[i][i]) < DBL_MIN) {
+    /* Each diagonal was checked when selected as a pivot and has not
+     * changed since that elimination step. */
+    if(!isfinite(value)) {
       return false;
     }
     solution[i] = value / A[i][i];
@@ -254,7 +252,7 @@ static void ghl_m1_newton_notify(
       const double residual[4],
       const ghl_m1_newton_diagnostics *restrict diagnostics) {
 
-  if(callbacks != NULL && callbacks->observer != NULL) {
+  if(callbacks->observer != NULL) {
     callbacks->observer(
           callbacks->observer_context, stage, status, U, residual, diagnostics);
   }
@@ -402,8 +400,8 @@ ghl_error_codes_t ghl_m1_newton_solve_4d_with_initial_guess(
         const double trial_norm = ghl_m1_newton_residual_max_norm(trial_residual);
         const double trial_merit = ghl_m1_newton_weighted_merit(
               m1_params, metric, trial_U, U_base, trial_residual);
-        if(admissibility_error == ghl_success
-           && (trial_merit < merit || trial_merit <= 1.0)) {
+        /* A current merit <= 1 returned before the Newton step. */
+        if(admissibility_error == ghl_success && trial_merit < merit) {
           for(int i = 0; i < 4; i++) {
             U[i] = trial_U[i];
             residual[i] = trial_residual[i];

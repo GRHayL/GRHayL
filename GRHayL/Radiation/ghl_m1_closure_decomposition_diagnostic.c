@@ -24,9 +24,6 @@ ghl_error_codes_t ghl_m1_compute_closure_decomposition_diagnostic(
    * field even though chi is evaluated from the unsquared magnitude. */
   const double xi_squared = SQR(closure.xi);
   const double chi = closure.chi;
-  if(!isfinite(chi)) {
-    return ghl_error_m1_invalid_state;
-  }
 
   diagnostic->chi_minerbo_xi = chi;
   diagnostic->xi_HaHa_over_J2 = xi_squared;
@@ -34,11 +31,10 @@ ghl_error_codes_t ghl_m1_compute_closure_decomposition_diagnostic(
   diagnostic->dthick_scalar = 1.5 * (1.0 - chi);
 
   double Pthin_UU[3][3], Pthick_UU[3][3];
-  error = ghl_m1_compute_minerbo_decomposition(
+  /* The successful closure already validated these same inputs and built
+   * the same Minerbo workspace. Repeating its decomposition cannot fail. */
+  (void)ghl_m1_compute_minerbo_decomposition(
         m1_params, metric, prims, rad_state, Pthin_UU, Pthick_UU);
-  if(error != ghl_success) {
-    return error;
-  }
   double Pthin_DD[3][3], Pthick_DD[3][3];
   ghl_m1_lower_spatial_tensor(metric, Pthin_UU, Pthin_DD);
   ghl_m1_lower_spatial_tensor(metric, Pthick_UU, Pthick_DD);

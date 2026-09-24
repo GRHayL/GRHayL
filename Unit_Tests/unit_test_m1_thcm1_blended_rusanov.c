@@ -716,6 +716,51 @@ check_extreme_transport_arithmetic(const ghl_m1_parameters *restrict params) {
   }
 }
 
+/* Exhaust the sign classes, including a zero slope, in both arithmetic
+ * paths. The long-double oracle never overflows on finite double states. */
+static void check_limiter_sign_classes(const ghl_m1_parameters *params) {
+  const double values[] = { -DBL_MAX, -0x1.8p1022, -0x1p1022, -1.0, 0.0,
+                            1.0, 0x1p1022, 0x1.8p1022, DBL_MAX };
+  double stencil[4][ghl_m1_neutrino_transport_component_count] = {{0}};
+  const double physical[ghl_m1_neutrino_transport_component_count] = {0};
+  double output[ghl_m1_neutrino_transport_component_count];
+  ghl_m1_four_point_transport_diagnostics diagnostics;
+  for(size_t a=0; a<sizeof(values)/sizeof(values[0]); ++a)
+    for(size_t b=0; b<sizeof(values)/sizeof(values[0]); ++b)
+      for(size_t c=0; c<sizeof(values)/sizeof(values[0]); ++c)
+        for(size_t d=0; d<sizeof(values)/sizeof(values[0]); ++d) {
+          stencil[0][0]=values[a]; stencil[1][0]=values[b];
+          stencil[2][0]=values[c]; stencil[3][0]=values[d];
+          const long double left=(long double)values[b]-values[a];
+          const long double center=(long double)values[c]-values[b];
+          const long double right=(long double)values[d]-values[c];
+          const bool monotone=(left>0 && center>0 && right>0)
+                              || (left<0 && center<0 && right<0);
+          const bool saw=(left>0 && center<0 && right>0)
+                         || (left<0 && center>0 && right<0);
+          const double theta_values[] = { 0.0, 1.0, 2.0, -1.0, 3.0, NAN };
+          for(size_t t=0; t<sizeof(theta_values)/sizeof(theta_values[0]); ++t) {
+            ghl_m1_parameters controls=*params;
+            controls.minmod_theta=theta_values[t];
+            const bool valid=isfinite(controls.minmod_theta)
+                             && controls.minmod_theta>=0 && controls.minmod_theta<=2;
+            const ghl_error_codes_t error=m1_thcm1_call_volume_weighted_transport(
+              &controls, stencil, physical, physical, 0.0, 0.0, 0.0, 1.0,
+              false, output, &diagnostics);
+            if(error != (valid ? ghl_success : ghl_error_m1_invalid_state))
+              fail_test("limiter sign-class validation failed");
+            if(valid) {
+              const double expected=monotone
+                ? (double)fminl(1.0L,fminl(controls.minmod_theta*left/center,
+                                         controls.minmod_theta*right/center)) : 0.0;
+              if(diagnostics.sawtooth[0]!=saw || output[0]!=0.0)
+                fail_test("limiter sign class changed zero-speed flux");
+              check_close(diagnostics.phi[0],expected,"limiter sign-class phi mismatch");
+            }
+          }
+        }
+}
+
 static const char *m1_thcm1_transport_direction(const char *case_id) {
   if(case_id != NULL && strstr(case_id, "__d0__") != NULL) {
     return "d0";
@@ -1744,6 +1789,7 @@ int main(int argc, char **argv) {
 
   check_four_point_branch_boundaries(&params);
   check_subnormal_speed_dissipation(&params);
+  check_limiter_sign_classes(&params);
   check_full_four_point_operator(&params);
   check_prepared_transport_local_contract();
   check_large_representable_transport(&params);

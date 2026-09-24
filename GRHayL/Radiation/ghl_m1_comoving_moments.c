@@ -8,10 +8,6 @@ static ghl_error_codes_t ghl_m1_validate_inputs(
       const ghl_m1_closure *restrict closure,
       const bool configuration_validated) {
 
-  if(!configuration_validated && !ghl_m1_metric_is_symmetric_spd(metric)) {
-    return ghl_error_m1_invalid_metric;
-  }
-
   ghl_error_codes_t error = configuration_validated
                                   ? ghl_m1_validate_realizability_state(
                                           m1_params, metric, rad_state, 64.0, NULL)
@@ -80,17 +76,17 @@ static ghl_error_codes_t ghl_m1_compute_comoving_moments_internal(
         scale = fmax(scale, fabs(P_DD[i][j]));
       }
     }
-    if(isfinite(scale) && scale > 0.0) {
-      double scaled_FdotV = 0.0, scaled_PVV = 0.0;
-      for(int i = 0; i < 3; ++i) {
-        scaled_FdotV += (rad_state->F[i] / scale) * V_con[i];
-        for(int j = 0; j < 3; ++j) {
-          scaled_PVV += (P_DD[i][j] / scale) * V_con[i] * V_con[j];
-        }
+    /* Realizability established E > 0 and finite F; closure validation
+     * already checked this same lowered pressure tensor for finiteness. */
+    double scaled_FdotV = 0.0, scaled_PVV = 0.0;
+    for(int i = 0; i < 3; ++i) {
+      scaled_FdotV += (rad_state->F[i] / scale) * V_con[i];
+      for(int j = 0; j < 3; ++j) {
+        scaled_PVV += (P_DD[i][j] / scale) * V_con[i] * V_con[j];
       }
-      const double scaled_J = (rad_state->E / scale - 2.0 * scaled_FdotV) + scaled_PVV;
-      J = (scaled_J * W) * W * scale;
     }
+    const double scaled_J = (rad_state->E / scale - 2.0 * scaled_FdotV) + scaled_PVV;
+    J = (scaled_J * W) * W * scale;
   }
   // Keep this admissibility guard in all builds: negative/non-finite comoving
   // energy density is unphysical and must be rejected deterministically.

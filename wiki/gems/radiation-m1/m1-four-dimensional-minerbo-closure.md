@@ -6,7 +6,7 @@ the local metric/fluid velocity to a contravariant spatial pressure tensor
 not the analytic Eulerian-only formula or HLL recipe described in parts of the
 older photon whitepapers. The implementation authority is
 [ghl_m1_closure.c](../../../GRHayL/Radiation/ghl_m1_closure.c), with public
-fields and statuses in [ghl_m1.h](../../../GRHayL/include/ghl_m1.h#L26).
+fields and statuses in [ghl_m1.h](../../../GRHayL/include/ghl_m1.h).
 
 ## Spacetime data used by the closure
 
@@ -91,7 +91,7 @@ $$
 
 `J_thick` is a diffusion-limit diagnostic/helper, not the solved closure
 moment `J` at an arbitrary \(\xi\). See
-[ghl_m1_Jthick.c](../../../GRHayL/Radiation/ghl_m1_Jthick.c#L4).
+[ghl_m1_Jthick.c](../../../GRHayL/Radiation/ghl_m1_Jthick.c).
 
 ## Minerbo interpolation
 
@@ -198,9 +198,9 @@ branches are fail-closed on this fallback unless
 `ghl_m1_neutrino_source_grhayl_implicit` path records the fallback diagnostic
 and can publish a successful solve; it does not enforce
 `allow_closure_fallback`. The relevant validation and fallback code is in
-[ghl_m1_closure.c](../../../GRHayL/Radiation/ghl_m1_closure.c#L563),
-[ghl_m1_utils.h](../../../GRHayL/Radiation/ghl_m1_utils.h#L396), and the
-[neutrino source-update dispatcher](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c#L904).
+[ghl_m1_closure.c](../../../GRHayL/Radiation/ghl_m1_closure.c),
+[ghl_m1_utils.h](../../../GRHayL/Radiation/ghl_m1_utils.h), and the
+[neutrino source-update dispatcher](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
 
 ## Whitepaper boundary
 

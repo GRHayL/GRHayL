@@ -107,17 +107,24 @@ typedef struct {
   int exponent;
 } ghl_m1_scaled_positive;
 
+/* Internal conversion after finite/nonnegative validation; output is nonnull. */
+static inline void ghl_m1_scaled_positive_from_validated_double(
+      const double value,
+      ghl_m1_scaled_positive *restrict scaled) {
+  if(value == 0.0) {
+    *scaled = (ghl_m1_scaled_positive){ .mantissa = 0.0, .exponent = 0 };
+    return;
+  }
+  scaled->mantissa = frexp(value, &scaled->exponent);
+}
+
 static inline bool ghl_m1_scaled_positive_from_double(
       const double value,
       ghl_m1_scaled_positive *restrict scaled) {
   if(scaled == NULL || !isfinite(value) || value < 0.0) {
     return false;
   }
-  if(value == 0.0) {
-    *scaled = (ghl_m1_scaled_positive){ .mantissa = 0.0, .exponent = 0 };
-    return true;
-  }
-  scaled->mantissa = frexp(value, &scaled->exponent);
+  ghl_m1_scaled_positive_from_validated_double(value, scaled);
   return true;
 }
 
@@ -147,8 +154,8 @@ static inline bool ghl_m1_scaled_positive_add(
     return false;
   }
   if(left->mantissa == 0.0) {
-    *sum = *right; /* GCOVR_EXCL_LINE -- unreachable */
-    return true;   /* GCOVR_EXCL_LINE -- unreachable */
+    *sum = *right;
+    return true;
   }
   if(right->mantissa == 0.0) {
     *sum = *left;
@@ -185,7 +192,8 @@ static inline bool ghl_m1_scaled_positive_divide(
   *quotient = scalbn(
         numerator->mantissa / denominator->mantissa,
         numerator->exponent - denominator->exponent);
-  return isfinite(*quotient) && *quotient >= 0.0;
+  /* Normalized scaled-positive operands cannot produce a negative quotient. */
+  return isfinite(*quotient);
 }
 
 static inline int ghl_m1_scaled_positive_compare(
@@ -211,16 +219,14 @@ static inline bool ghl_m1_scaled_positive_product(
   if(values == NULL || value_count <= 0 || product == NULL) {
     return false;
   }
-  if(!ghl_m1_scaled_positive_from_double(1.0, product)) {
-    return false;
-  }
+  ghl_m1_scaled_positive_from_validated_double(1.0, product);
   for(int i = 0; i < value_count; ++i) {
     ghl_m1_scaled_positive factor;
     ghl_m1_scaled_positive next_product;
-    if(!ghl_m1_scaled_positive_from_double(values[i], &factor)
-       || !ghl_m1_scaled_positive_multiply(product, &factor, &next_product)) {
+    if(!ghl_m1_scaled_positive_from_double(values[i], &factor)) {
       return false;
     }
+    ghl_m1_scaled_positive_multiply(product, &factor, &next_product);
     *product = next_product;
   }
   return true;
@@ -233,11 +239,8 @@ static inline bool ghl_m1_scaled_positive_sqrt(
     return false;
   }
   if(value->mantissa == 0.0) {
-    *root = (ghl_m1_scaled_positive){ .mantissa
-                                      = 0.0, /* GCOVR_EXCL_LINE -- zero product */
-                                      .exponent
-                                      = 0 }; /* GCOVR_EXCL_LINE -- zero product */
-    return true;                             /* GCOVR_EXCL_LINE -- zero product */
+    *root = (ghl_m1_scaled_positive){ .mantissa = 0.0, .exponent = 0 };
+    return true;
   }
 
   double mantissa = value->mantissa;
@@ -288,9 +291,9 @@ static inline bool ghl_m1_neutrino_scaled_ratio_of_products(
 
 /* Evaluate kappa*N/Gamma_N without losing a finite result to the product
  * kappa*N. Preserve the legacy left-to-right expression whenever its
- * intermediates are representable, then use the scaled product-ratio path for
- * range failures. The factors are nonnegative and Gamma_N is positive at the
- * caller's validation boundary. */
+ * intermediates are representable. For product overflow, try dividing first;
+ * the scaled product-ratio path handles remaining range failures. The factors
+ * are nonnegative and Gamma_N is positive at the caller's validation boundary. */
 static inline bool ghl_m1_neutrino_scaled_absorption_number(
       const double kappa,
       const double number,
@@ -300,22 +303,38 @@ static inline bool ghl_m1_neutrino_scaled_absorption_number(
      || number < 0.0 || !isfinite(Gamma_N) || Gamma_N <= 0.0) {
     return false;
   }
+  if(kappa == 0.0 || number == 0.0) {
+    *absorption = (kappa * number) / Gamma_N;
+    return true;
+  }
   const double product = kappa * number;
   const double direct = product / Gamma_N;
-  if(isfinite(product) && isfinite(direct)
-     && (product != 0.0 || kappa == 0.0 || number == 0.0)
-     && (direct != 0.0 || kappa == 0.0 || number == 0.0)) {
+  if(isfinite(product) && isfinite(direct) && product != 0.0 && direct != 0.0) {
     *absorption = direct;
     return true;
+  }
+  /* When kappa*number overflows, divide first if the reordered result is
+   * representable. In particular, number == Gamma_N then gives kappa exactly. */
+  if(!isfinite(product)) {
+    const double number_over_gamma = number / Gamma_N;
+    /* Product overflow implies kappa*number > DBL_MAX. With finite
+     * positive kappa and Gamma_N, neither reordered value can underflow. */
+    if(isfinite(number_over_gamma)) {
+      const double reordered = kappa * number_over_gamma;
+      if(isfinite(reordered)) {
+        *absorption = reordered;
+        return true;
+      }
+    }
   }
   const double numerator_values[2] = { kappa, number };
   const double denominator_values[1] = { Gamma_N };
   ghl_m1_scaled_positive numerator;
   ghl_m1_scaled_positive denominator;
   double candidate = 0.0;
-  if(!ghl_m1_scaled_positive_product(numerator_values, 2, &numerator)
-     || !ghl_m1_scaled_positive_product(denominator_values, 1, &denominator)
-     || !ghl_m1_scaled_positive_divide(&numerator, &denominator, &candidate)) {
+  ghl_m1_scaled_positive_product(numerator_values, 2, &numerator);
+  ghl_m1_scaled_positive_product(denominator_values, 1, &denominator);
+  if(!ghl_m1_scaled_positive_divide(&numerator, &denominator, &candidate)) {
     return false;
   }
   /* Preserve the legacy IEEE result when a positive absorption rounds to

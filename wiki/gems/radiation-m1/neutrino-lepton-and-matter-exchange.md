@@ -4,7 +4,7 @@ Radiation and matter exchange different conserved quantities. The current
 implementation keeps total radiation-number change, charged-current
 electron-lepton change, energy/momentum exchange, and `Y_e` bookkeeping as
 separate fields in the exchange packet. The public definitions are in
-[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L986-L1010).
+[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h).
 
 ## Signed species weights
 
@@ -25,22 +25,29 @@ dL_rad_cc,s = lepton_weight_s * dN_cc,s.
 
 The sign belongs to the species, not to the absolute number field. Validation
 rejects a bundle whose weight does not match its species; see
-[`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c#L147-L169).
+[`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c).
 
-The ordinary source path computes the charged-current endpoint increment from
-the endpoint number state:
+For the ordinary backward-Euler source path, the charged-current increment is
+the difference between the physical, un-repaired number endpoint and its source
+base:
 
 ```text
-dN_cc = alpha*dt *
-        (eta_N_cc - kappa_a_N_cc*N_endpoint/Gamma_N_endpoint).
+dN_cc = N_physical_endpoint - N_initial.
 ```
 
-It then applies the validated signed weight. This is intentionally not the
-total `N` change when pair, plasmon, or bremsstrahlung channels are present.
-The implementation is in
-[`ghl_m1_neutrino_implicit_solve.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit_solve.c#L566-L624)
-and the compatibility dispatcher follows the same endpoint rule in
-[`ghl_m1_neutrino_source_update.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c#L103-L152).
+For validated single-species charged-current rates, this equals the endpoint
+source expression in exact arithmetic. Subtracting the number endpoints avoids
+cancellation in the stiff limit. The optional mean-energy number projection
+instead uses `alpha*dt * (eta_N_cc -
+kappa_a_N_cc*N_physical_endpoint/Gamma_N_physical_endpoint)`. The heavy-flavor
+charged-current increment is zero. The source then applies the validated signed
+weight. This increment excludes the subsequent pair, plasmon, or
+bremsstrahlung number change. The branch is implemented in
+[`ghl_m1_neutrino_lepton_increment.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_lepton_increment.c),
+called by
+[`ghl_m1_neutrino_implicit_solve.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit_solve.c)
+and the compatibility dispatcher in
+[`ghl_m1_neutrino_source_update.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
 
 ## Electron-fraction update
 
@@ -65,13 +72,13 @@ are:
 
 The implementation validates a positive baryon normalization and publishes the
 composition increment only after the signed lepton input is valid in
-[`ghl_m1_neutrino_lepton_increment.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_lepton_increment.c#L24-L72).
+[`ghl_m1_neutrino_lepton_increment.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_lepton_increment.c).
 
 The default source policy uses charged-current exchange. An opt-in policy can
 derive a signed total-number composition increment, but that is a caller
 selection and does not redefine the default contract. The policy is declared
-in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L261-L274) and applied in
-[`ghl_m1_neutrino_source_update.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c#L184-L202).
+in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h) and applied in
+[`ghl_m1_neutrino_source_update.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
 
 ## Energy and momentum conservation
 
@@ -92,8 +99,8 @@ dS_matter_i = -sqrt(det(gamma)) * dF_rad_i.
 The source projection that supplies the radiation E/F change carries the
 coordinate-time factor and metric volume in the host/source stage. The exchange
 assembly itself applies the matter negation exactly once; see
-[`ghl_m1_neutrino_exchange.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_exchange.c#L3-L48)
-and the [matter-coupling helper](../../../GRHayL/Radiation/ghl_m1_matter_coupling_sources.c#L4-L32).
+[`ghl_m1_neutrino_exchange.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_exchange.c)
+and the [matter-coupling helper](../../../GRHayL/Radiation/ghl_m1_matter_coupling_sources.c).
 
 `dN_rad_total` is the total radiation-number difference between the output and
 source-base states. It is separate from `dL_rad_cc`, which is the signed
@@ -141,7 +148,7 @@ repair separately and owns any `Y_e` bounds or final coupled limiter.
 ## Evidence
 
 The source-update tests check the lepton identity and exchange signs in
-[`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c#L230-L260),
+[`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c),
 while seeded invariant tests exercise source, matter-coupling, number, and
 lepton paths in
-[`unit_test_m1_neutrino_seeded_invariants.c`](../../../Unit_Tests/unit_test_m1_neutrino_seeded_invariants.c#L1418-L1555).
+[`unit_test_m1_neutrino_seeded_invariants.c`](../../../Unit_Tests/unit_test_m1_neutrino_seeded_invariants.c).

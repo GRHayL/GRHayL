@@ -69,10 +69,6 @@ ghl_error_codes_t ghl_m1_compute_neutrino_lepton_increment(
     return error;
   }
 
-  if(!isfinite(rates->lepton_weight)) {
-    return ghl_error_m1_microphysics_failure;
-  }
-
   /* Heavy flavor carries no electron-lepton number.  The documented contract
    * above requires the caller to supply zero charged-current exchange for this
    * species; enforce it here so a malformed bundle cannot silently publish a

@@ -33,10 +33,6 @@ static void ghl_m1_accumulate_neutrino_repair_magnitudes(
       ghl_m1_neutrino_diagnostics *restrict diagnostics,
       const ghl_m1_neutrino_state *restrict state_before,
       const ghl_m1_neutrino_state *restrict state_after) {
-  if(diagnostics == NULL || state_before == NULL || state_after == NULL) {
-    return;
-  }
-
   /* These fields are magnitudes, not signed conservation deltas. Keep the
    * accumulation in one helper so positive and negative repairs cannot
    * cancel across calls. */
@@ -149,11 +145,8 @@ ghl_error_codes_t ghl_m1_repair_neutrino_state(
   /* N floor */
   bool N_floor_applied;
   double N_floored;
-  ghl_error_codes_t error = ghl_m1_apply_neutrino_number_floor(
+  (void)ghl_m1_apply_neutrino_number_floor(
         nu_params, candidate.N, &N_floored, &N_floor_applied);
-  if(error != ghl_success) {
-    return error;
-  }
   candidate.N = N_floored;
   if(N_floor_applied && candidate_diag != NULL) {
     candidate_diag->N_floor_repairs++;
@@ -162,7 +155,7 @@ ghl_error_codes_t ghl_m1_repair_neutrino_state(
   /* E/F_i repair delegated to the shared M1 realizability repair. */
   ghl_m1_rad_state rad_state = ghl_m1_neutrino_project_rad_state(&candidate);
 
-  error = ghl_m1_realizability_repair(m1_params, metric, &rad_state);
+  const ghl_error_codes_t error = ghl_m1_realizability_repair(m1_params, metric, &rad_state);
   if(error != ghl_success) {
     return error;
   }

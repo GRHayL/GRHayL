@@ -72,7 +72,8 @@ typedef struct {
 /* Current NRPyLeakage keeps this interpolation-boundary normalization inside
  * its blocking evaluator.  The M1 adapter also needs the normalized fractions
  * before caching them and before using them in its separate raw-rate algebra,
- * so retain the same conservative 27*gamma_64 acceptance envelope here. */
+ * so retain the same conservative 27*gamma_64 acceptance envelope here.
+ * Callers validate finiteness first and supply local output addresses. */
 static inline ghl_error_codes_t ghl_m1_nrpyleakage_normalize_nucleon_fractions(
       const double X_n,
       const double X_p,
@@ -80,9 +81,8 @@ static inline ghl_error_codes_t ghl_m1_nrpyleakage_normalize_nucleon_fractions(
       double *restrict normalized_X_p) {
   const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
   const double fraction_roundoff = 27.0 * gamma_64;
-  if(normalized_X_n == NULL || normalized_X_p == NULL || !robust_isfinite(X_n)
-     || X_n < -fraction_roundoff || X_n > 1.0 + fraction_roundoff
-     || !robust_isfinite(X_p) || X_p < -fraction_roundoff
+  if(X_n < -fraction_roundoff || X_n > 1.0 + fraction_roundoff
+     || X_p < -fraction_roundoff
      || X_p > 1.0 + fraction_roundoff) {
     return ghl_error_nrpyleakage_blocking;
   }

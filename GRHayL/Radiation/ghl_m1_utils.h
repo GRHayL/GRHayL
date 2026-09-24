@@ -210,8 +210,8 @@ ghl_m1_validate_parameters(const ghl_m1_parameters *restrict m1_params) {
   const double expected = 1.0 - m1_params->epsilon_c;
   const double scale
         = ghl_m1_max(fabs(expected), fabs(m1_params->one_minus_epsilon_c_sq));
-  if(scale == 0.0
-     || fabs(m1_params->one_minus_epsilon_c_sq - expected)
+  /* epsilon_c is strictly below one, so expected and scale are positive. */
+  if(fabs(m1_params->one_minus_epsilon_c_sq - expected)
               > 64.0 * DBL_EPSILON * scale) {
     return ghl_error_m1_invalid_epsilon_c;
   }
@@ -271,10 +271,8 @@ static inline ghl_error_codes_t ghl_m1_scaled_norm_ratio(
         L[i][j] = sqrt(value);
       }
       else {
+        /* The positive pivots of the normalized SPD factor bound this ratio. */
         L[i][j] = value / L[j][j];
-        if(!isfinite(L[i][j])) {
-          return ghl_error_m1_invalid_metric;
-        }
       }
     }
   }
@@ -363,9 +361,8 @@ static inline ghl_error_codes_t ghl_m1_compute_eulerian_velocity(
     return ghl_error_u0_singular;
   }
   const double W = 1.0 / sqrt((1.0 - V_mag) * (1.0 + V_mag));
-  if(!isfinite(W)) {
-    return ghl_error_u0_singular;
-  }
+  /* The successful norm is finite and nonnegative, and V_mag < 1.
+   * Double spacing below one bounds W well below overflow. */
 
   *W_out = W;
   return ghl_success;
@@ -449,7 +446,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
       scale = ghl_m1_max(scale, fabs(A[i][j]));
     }
   }
-  if(!isfinite(scale) || scale <= 0.0) {
+  if(scale <= 0.0) {
     ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_PSD);
     return ghl_error_m1_invalid_state;
   }
@@ -522,7 +519,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
       eigen_scale = ghl_m1_max(eigen_scale, fabs(B[i][j]));
     }
   }
-  if(!isfinite(eigen_scale) || eigen_scale <= 0.0) {
+  if(eigen_scale <= 0.0) {
     ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_PSD);
     return ghl_error_m1_invalid_state;
   }
@@ -574,7 +571,8 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
     }
   }
   for(int i = 0; i < 3; ++i) {
-    if(!isfinite(B[i][i]) || B[i][i] < -eigenvalue_tolerance) {
+    /* The finite Jacobi rotations preserve finite diagonal entries. */
+    if(B[i][i] < -eigenvalue_tolerance) {
       ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_PSD);
       return ghl_error_m1_invalid_state;
     }

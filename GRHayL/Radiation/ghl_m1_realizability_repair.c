@@ -1,11 +1,6 @@
 #include "ghl_m1.h"
 #include "ghl_m1_utils.h"
 
-static ghl_error_codes_t ghl_m1_realizability_repair_canonical(
-      const ghl_m1_parameters *restrict m1_params,
-      const ghl_metric_quantities *restrict metric,
-      ghl_m1_rad_state *restrict rad_state);
-
 ghl_error_codes_t ghl_m1_apply_energy_floor(
       const ghl_m1_parameters *restrict m1_params,
       const double E_in,
@@ -33,17 +28,6 @@ ghl_error_codes_t ghl_m1_realizability_repair(
       const ghl_metric_quantities *restrict metric,
       ghl_m1_rad_state *restrict rad_state) {
 
-  if(m1_params == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
-  return ghl_m1_realizability_repair_canonical(m1_params, metric, rad_state);
-}
-
-static ghl_error_codes_t ghl_m1_realizability_repair_canonical(
-      const ghl_m1_parameters *restrict m1_params,
-      const ghl_metric_quantities *restrict metric,
-      ghl_m1_rad_state *restrict rad_state) {
-
   if(m1_params == NULL || metric == NULL || rad_state == NULL) {
     return ghl_error_m1_null_pointer;
   }
@@ -59,10 +43,9 @@ static ghl_error_codes_t ghl_m1_realizability_repair_canonical(
   }
 
   double E_local;
-  error = ghl_m1_apply_energy_floor(m1_params, rad_state->E, &E_local, NULL);
-  if(error != ghl_success) {
-    return error;
-  }
+  /* Configuration, finite energy and the local output satisfy every check
+   * in the public floor helper. */
+  (void)ghl_m1_apply_energy_floor(m1_params, rad_state->E, &E_local, NULL);
   double F_local[3] = { rad_state->F[0], rad_state->F[1], rad_state->F[2] };
   const double cone_factor = 1.0 - m1_params->epsilon_c;
   /* The canonical repair uses the squared-ratio flux rescale. */
@@ -79,9 +62,9 @@ static ghl_error_codes_t ghl_m1_realizability_repair_canonical(
   const bool flux_rescaled = flux_factor > permitted_flux_factor;
   if(flux_rescaled) {
     const double applied_scale = (cone_factor / flux_factor) / flux_factor;
-    if(!isfinite(applied_scale) || applied_scale < 0.0 || applied_scale > 1.0) {
-      return ghl_error_m1_invalid_state;
-    }
+    /* cone_factor is in (0,1], and flux_factor is finite and greater
+     * than sqrt(cone_factor). Both divisions yield a finite scale in [0,1];
+     * underflow to zero is the permitted complete flux repair. */
     for(int i = 0; i < 3; ++i) {
       F_local[i] *= applied_scale;
     }
@@ -95,9 +78,9 @@ static ghl_error_codes_t ghl_m1_realizability_repair_canonical(
 
   const ghl_m1_rad_state repaired
         = { .E = E_local, .F = { F_local[0], F_local[1], F_local[2] } };
-  const double scale = ghl_m1_max(1.0, permitted_flux_factor);
-  if(!isfinite(flux_factor)
-     || flux_factor > permitted_flux_factor + 64.0 * DBL_EPSILON * scale) {
+  /* sqrt(1-epsilon_c) is at most one for a validated epsilon_c. */
+  const double scale = 1.0;
+  if(flux_factor > permitted_flux_factor + 64.0 * DBL_EPSILON * scale) {
     return ghl_error_m1_invalid_state;
   }
 

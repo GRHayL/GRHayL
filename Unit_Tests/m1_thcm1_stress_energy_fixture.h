@@ -294,7 +294,7 @@ static inline int m1_thcm1_run_stress_energy_fixtures(
       return 0;
     }
     m1_thcm1_fixture_comparison_report report = { 0 };
-    if(!m1_thcm1_fixture_compare_paired(
+    if(!m1_thcm1_fixture_compare_paired_strict_relative(
              record, normalization, baseline, perturbed, &report, error, error_size)) {
       m1_thcm1_fixture_free(&collection);
       return 0;

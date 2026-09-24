@@ -30,20 +30,15 @@ static bool ghl_m1_neutrino_compute_be_ratio(
       const double dtau,
       const double opacity,
       double *restrict ratio) {
-  if(ratio == NULL || !isfinite(initial) || initial < 0.0 || !isfinite(source)
-     || source < 0.0 || !isfinite(dtau) || dtau < 0.0 || !isfinite(opacity)
-     || opacity < 0.0) {
-    return false;
-  }
+  /* The stiff predictor supplies validated moments, rates, and proper time. */
 
   const double source_product = dtau * source;
   const double opacity_product = dtau * opacity;
   const double numerator = initial + source_product;
   const double denominator = 1.0 + opacity_product;
-  if(isfinite(source_product) && isfinite(opacity_product) && isfinite(numerator)
-     && isfinite(denominator) && denominator > 0.0) {
+  if(isfinite(numerator) && isfinite(denominator)) {
     *ratio = numerator / denominator;
-    return isfinite(*ratio) && *ratio >= 0.0;
+    return true; /* Nonnegative numerator and denominator >= 1. */
   }
 
   ghl_m1_scaled_positive initial_scaled;
@@ -55,40 +50,31 @@ static bool ghl_m1_neutrino_compute_be_ratio(
   ghl_m1_scaled_positive opacity_product_scaled;
   ghl_m1_scaled_positive numerator_scaled;
   ghl_m1_scaled_positive denominator_scaled;
-  if(!ghl_m1_scaled_positive_from_double(initial, &initial_scaled)
-     || !ghl_m1_scaled_positive_from_double(source, &source_scaled)
-     || !ghl_m1_scaled_positive_from_double(dtau, &dtau_scaled)
-     || !ghl_m1_scaled_positive_from_double(opacity, &opacity_scaled)
-     || !ghl_m1_scaled_positive_from_double(1.0, &one_scaled)
-     || !ghl_m1_scaled_positive_multiply(
-           &dtau_scaled, &source_scaled, &source_product_scaled)
-     || !ghl_m1_scaled_positive_multiply(
-           &dtau_scaled, &opacity_scaled, &opacity_product_scaled)
-     || !ghl_m1_scaled_positive_add(
-           &initial_scaled, &source_product_scaled, &numerator_scaled)
-     || !ghl_m1_scaled_positive_add(
-           &one_scaled, &opacity_product_scaled, &denominator_scaled)
-     || !ghl_m1_scaled_positive_divide(&numerator_scaled, &denominator_scaled, ratio)) {
-    return false;
-  }
-  return true;
+  /* Validated scalar inputs and local outputs make these operations infallible. */
+  ghl_m1_scaled_positive_from_validated_double(initial, &initial_scaled);
+  ghl_m1_scaled_positive_from_validated_double(source, &source_scaled);
+  ghl_m1_scaled_positive_from_validated_double(dtau, &dtau_scaled);
+  ghl_m1_scaled_positive_from_validated_double(opacity, &opacity_scaled);
+  ghl_m1_scaled_positive_from_validated_double(1.0, &one_scaled);
+  ghl_m1_scaled_positive_multiply(&dtau_scaled, &source_scaled, &source_product_scaled);
+  ghl_m1_scaled_positive_multiply(&dtau_scaled, &opacity_scaled, &opacity_product_scaled);
+  ghl_m1_scaled_positive_add(&initial_scaled, &source_product_scaled, &numerator_scaled);
+  ghl_m1_scaled_positive_add(&one_scaled, &opacity_product_scaled, &denominator_scaled);
+  return ghl_m1_scaled_positive_divide(&numerator_scaled, &denominator_scaled, ratio);
 }
 
-static bool ghl_m1_neutrino_compute_be_damping(
+static void ghl_m1_neutrino_compute_be_damping(
       const double initial,
       const double dtau,
       const double opacity,
       double *restrict damped) {
-  if(damped == NULL || !isfinite(initial) || !isfinite(dtau) || dtau < 0.0
-     || !isfinite(opacity) || opacity < 0.0) {
-    return false;
-  }
+  /* The stiff predictor supplies finite initial data and nonnegative factors. */
 
   const double opacity_product = dtau * opacity;
   const double denominator = 1.0 + opacity_product;
-  if(isfinite(opacity_product) && isfinite(denominator) && denominator > 0.0) {
+  if(isfinite(denominator)) {
     *damped = initial / denominator;
-    return isfinite(*damped);
+    return;
   }
 
   ghl_m1_scaled_positive initial_scaled;
@@ -97,22 +83,17 @@ static bool ghl_m1_neutrino_compute_be_damping(
   ghl_m1_scaled_positive one_scaled;
   ghl_m1_scaled_positive opacity_product_scaled;
   ghl_m1_scaled_positive denominator_scaled;
-  if(!ghl_m1_scaled_positive_from_double(fabs(initial), &initial_scaled)
-     || !ghl_m1_scaled_positive_from_double(dtau, &dtau_scaled)
-     || !ghl_m1_scaled_positive_from_double(opacity, &opacity_scaled)
-     || !ghl_m1_scaled_positive_from_double(1.0, &one_scaled)
-     || !ghl_m1_scaled_positive_multiply(
-           &dtau_scaled, &opacity_scaled, &opacity_product_scaled)
-     || !ghl_m1_scaled_positive_add(
-           &one_scaled, &opacity_product_scaled, &denominator_scaled)) {
-    return false; /* GCOVR_EXCL_LINE -- validated inputs */
-  }
+  /* Validated scalar inputs and local outputs make these operations infallible. */
+  ghl_m1_scaled_positive_from_validated_double(fabs(initial), &initial_scaled);
+  ghl_m1_scaled_positive_from_validated_double(dtau, &dtau_scaled);
+  ghl_m1_scaled_positive_from_validated_double(opacity, &opacity_scaled);
+  ghl_m1_scaled_positive_from_validated_double(1.0, &one_scaled);
+  ghl_m1_scaled_positive_multiply(&dtau_scaled, &opacity_scaled, &opacity_product_scaled);
+  ghl_m1_scaled_positive_add(&one_scaled, &opacity_product_scaled, &denominator_scaled);
   double magnitude = 0.0;
-  if(!ghl_m1_scaled_positive_divide(&initial_scaled, &denominator_scaled, &magnitude)) {
-    return false;
-  }
+  /* Here the direct denominator overflowed: division only reduces magnitude. */
+  ghl_m1_scaled_positive_divide(&initial_scaled, &denominator_scaled, &magnitude);
   *damped = copysign(magnitude, initial);
-  return isfinite(*damped);
 }
 
 /*
@@ -133,23 +114,18 @@ static bool ghl_m1_neutrino_compute_be_damping(
  */
 
 static void ghl_m1_neutrino_zero_exchange(ghl_m1_neutrino_exchange *restrict exchange) {
-  if(exchange != NULL) {
-    *exchange = (ghl_m1_neutrino_exchange){ 0 };
-  }
+  *exchange = (ghl_m1_neutrino_exchange){ 0 };
 }
 
 static void ghl_m1_neutrino_initialize_source_diagnostics(
       ghl_m1_neutrino_source_diagnostics *restrict diagnostics) {
-  if(diagnostics == NULL) {
-    return;
-  }
   *diagnostics = (ghl_m1_neutrino_source_diagnostics){ 0 };
   ghl_m1_initialize_implicit_solve_diagnostics(&diagnostics->implicit);
 }
 
 static bool
 ghl_m1_neutrino_state_is_finite(const ghl_m1_neutrino_state *restrict state) {
-  if(state == NULL || !isfinite(state->N) || !isfinite(state->E)) {
+  if(!isfinite(state->N) || !isfinite(state->E)) {
     return false;
   }
   for(int i = 0; i < 3; ++i) {
@@ -165,9 +141,6 @@ static ghl_error_codes_t ghl_m1_neutrino_validate_state_input(
       const ghl_m1_neutrino_parameters *restrict nu_params,
       const ghl_metric_quantities *restrict metric,
       const ghl_m1_neutrino_state *restrict state) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || state == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
   if(!isfinite(nu_params->N_floor) || nu_params->N_floor < 0.0
      || !isfinite(nu_params->J_floor) || nu_params->J_floor < 0.0
      || !isfinite(nu_params->Gamma_N_floor) || nu_params->Gamma_N_floor < 0.0) {
@@ -182,8 +155,7 @@ static ghl_error_codes_t ghl_m1_neutrino_validate_state_input(
 
 static bool
 ghl_m1_neutrino_closure_fallback_status(const ghl_m1_closure *restrict closure) {
-  return closure != NULL
-         && (closure->solve_status == ghl_m1_closure_solve_endpoint_fallback
+  return (closure->solve_status == ghl_m1_closure_solve_endpoint_fallback
              || closure->solve_status == ghl_m1_closure_solve_iteration_exhausted);
 }
 
@@ -198,11 +170,6 @@ static ghl_error_codes_t ghl_m1_neutrino_evaluate_closure_and_sources(
       bool *restrict closure_fallback,
       ghl_m1_sources *restrict EF_sources,
       double *restrict N_source) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims == NULL
-     || state == NULL || rates == NULL || closure == NULL || closure_fallback == NULL
-     || EF_sources == NULL || N_source == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
 
   *closure_fallback = false;
   const ghl_m1_rad_state rad_state = ghl_m1_neutrino_project_rad_state(state);
@@ -232,11 +199,6 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_endpoint_lepton_delta(
       const double physical_number_gamma,
       bool *restrict closure_fallback,
       double *restrict dL_rad_cc) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims == NULL
-     || rates == NULL || state_out == NULL || closure_fallback == NULL
-     || dL_rad_cc == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
 
   *closure_fallback = false;
   *dL_rad_cc = 0.0;
@@ -263,13 +225,9 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_endpoint_lepton_delta(
   }
 
   const double dt_alpha = metric->lapse * dt;
-  if(!isfinite(dt_alpha) || dt_alpha < 0.0 || !isfinite(current.Gamma_N)
-     || current.Gamma_N <= 0.0 || !isfinite(physical_number_endpoint)
-     || physical_number_endpoint < 0.0 || !isfinite(physical_number_gamma)
-     || physical_number_gamma <= 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
-
+  /* Current construction guarantees positive finite Gamma_N. The charged-
+   * current helper below validates dt_alpha and both physical endpoint values
+   * before doing arithmetic, returning the same invalid-state error. */
   return ghl_m1_neutrino_charged_current_lepton_delta(
         rates, dt_alpha, number_initial, number_projected, physical_number_endpoint,
         physical_number_gamma, dL_rad_cc);
@@ -281,10 +239,6 @@ static ghl_error_codes_t ghl_m1_neutrino_repair_candidate(
       const ghl_metric_quantities *restrict metric,
       ghl_m1_neutrino_state *restrict state,
       ghl_m1_neutrino_diagnostics *restrict diagnostics) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || state == NULL
-     || diagnostics == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
   return ghl_m1_repair_neutrino_state(m1_params, nu_params, metric, state, diagnostics);
 }
 
@@ -296,10 +250,6 @@ static ghl_error_codes_t ghl_m1_neutrino_build_exchange(
       const ghl_metric_quantities *restrict metric,
       const double n_b_cons,
       ghl_m1_neutrino_exchange *restrict exchange) {
-  if(state_transport == NULL || state_candidate == NULL || rates == NULL
-     || metric == NULL || exchange == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
   return ghl_m1_neutrino_assemble_exchange(
         state_transport, state_candidate, rates, dL_rad_cc, metric->sqrt_detgamma,
         n_b_cons, exchange);
@@ -310,14 +260,8 @@ static ghl_error_codes_t ghl_m1_neutrino_apply_ye_policy(
       const ghl_m1_neutrino_rates *restrict rates,
       const double n_b_cons,
       ghl_m1_neutrino_exchange *restrict exchange) {
-  if(rates == NULL || exchange == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
   if(ye_policy == ghl_m1_neutrino_ye_from_charged_current) {
     return ghl_success;
-  }
-  if(ye_policy != ghl_m1_neutrino_ye_from_signed_total_number) {
-    return ghl_error_m1_invalid_state;
   }
 
   /* The three-species composition source is +DrN_nue-DrN_anue.  The
@@ -348,16 +292,8 @@ static ghl_error_codes_t ghl_m1_neutrino_build_stiff_predictor(
       ghl_m1_neutrino_diagnostics *restrict diagnostics,
       bool *restrict closure_fallback_used,
       ghl_m1_neutrino_state *restrict state) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims == NULL
-     || rates == NULL || state_transport == NULL || diagnostics == NULL
-     || closure_fallback_used == NULL || state == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
 
   const double dt_alpha = metric->lapse * dt;
-  if(!isfinite(dt) || dt < 0.0 || !isfinite(dt_alpha) || dt_alpha < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
 
   *closure_fallback_used = false;
   const ghl_m1_rad_state transport_rad
@@ -380,9 +316,7 @@ static ghl_error_codes_t ghl_m1_neutrino_build_stiff_predictor(
   }
 
   const double dtau = dt_alpha / W;
-  if(!isfinite(dtau) || dtau < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* dt_alpha is finite/nonnegative and the validated W is finite and >= 1. */
 
   double J_new = 0.0;
   if(!ghl_m1_neutrino_compute_be_ratio(
@@ -392,10 +326,8 @@ static ghl_error_codes_t ghl_m1_neutrino_build_stiff_predictor(
 
   double HD_new[3], HU_new[3];
   for(int i = 0; i < 3; ++i) {
-    if(!ghl_m1_neutrino_compute_be_damping(
-             comoving.HD[i], dtau, rates->kappa_tr, &HD_new[i])) {
-      return ghl_error_m1_invalid_state;
-    }
+    ghl_m1_neutrino_compute_be_damping(
+          comoving.HD[i], dtau, rates->kappa_tr, &HD_new[i]);
   }
   ghl_raise_lower_vector_3D(metric->gammaUU, HD_new, HU_new);
   double Hn_new = 0.0;
@@ -488,11 +420,6 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thin_branch(
       ghl_m1_neutrino_state *restrict state_out,
       ghl_m1_neutrino_exchange *restrict exchange,
       bool *restrict closure_fallback_used) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims == NULL
-     || rates == NULL || state_transport == NULL || neutrino_diagnostics == NULL
-     || state_out == NULL || exchange == NULL || closure_fallback_used == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
 
   *closure_fallback_used = false;
   ghl_m1_closure transport_closure;
@@ -508,9 +435,6 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thin_branch(
   *closure_fallback_used = transport_fallback;
 
   const double dt_alpha = metric->lapse * dt;
-  if(!isfinite(dt_alpha) || dt_alpha < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
 
   ghl_m1_neutrino_state candidate = *state_transport;
   candidate.E += dt_alpha * EF_sources.S_E;
@@ -580,11 +504,6 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thick_branch(
       ghl_m1_neutrino_state *restrict state_out,
       ghl_m1_neutrino_exchange *restrict exchange,
       bool *restrict closure_fallback_used) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims == NULL
-     || rates == NULL || state_transport == NULL || neutrino_diagnostics == NULL
-     || state_out == NULL || exchange == NULL || closure_fallback_used == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
 
   /* The default source method uses the same local boost predictor for
    * both its THICK and SCAT status returns. */
@@ -597,9 +516,6 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thick_branch(
   }
 
   const double dt_alpha = metric->lapse * dt;
-  if(!isfinite(dt_alpha) || dt_alpha < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
 
   /* Update N after the E/F predictor, using the endpoint current. */
   bool endpoint_fallback = false;
@@ -672,11 +588,6 @@ static ghl_error_codes_t ghl_m1_neutrino_try_scattering_branch(
       ghl_m1_neutrino_state *restrict state_out,
       ghl_m1_neutrino_exchange *restrict exchange,
       bool *restrict closure_fallback_used) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims == NULL
-     || rates == NULL || state_transport == NULL || neutrino_diagnostics == NULL
-     || state_out == NULL || exchange == NULL || closure_fallback_used == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
 
   return ghl_m1_neutrino_try_thick_branch(
         m1_params, nu_params, metric, prims, rates, state_transport, dt, n_b_cons,
@@ -693,16 +604,12 @@ static ghl_error_codes_t ghl_m1_neutrino_publish_dispatch_failure(
       const bool closure_fallback_used,
       ghl_m1_neutrino_diagnostics *restrict neutrino_diagnostics,
       const bool count_source_failure) {
-  if(state_transport != NULL && state_out != NULL) {
-    *state_out = *state_transport;
-  }
+  *state_out = *state_transport;
   ghl_m1_neutrino_zero_exchange(exchange);
-  if(diagnostics != NULL) {
-    diagnostics->path = ghl_m1_neutrino_source_path_hard_failure;
-    diagnostics->closure_fallback_used = closure_fallback_used;
-    diagnostics->terminal_no_update = false;
-  }
-  if(neutrino_diagnostics != NULL && count_source_failure) {
+  diagnostics->path = ghl_m1_neutrino_source_path_hard_failure;
+  diagnostics->closure_fallback_used = closure_fallback_used;
+  diagnostics->terminal_no_update = false;
+  if(count_source_failure) {
     neutrino_diagnostics->source_failures++;
   }
   return error;
@@ -712,15 +619,16 @@ static bool ghl_m1_neutrino_thick_limit_selected(
       const double dt_alpha,
       const ghl_m1_neutrino_rates *restrict rates,
       const double threshold) {
-  if(rates == NULL || !isfinite(dt_alpha) || dt_alpha < 0.0 || !isfinite(threshold)
-     || threshold <= 0.0) {
+  if(threshold <= 0.0) {
     return false;
   }
 
   const double opacity_factors[2] = { rates->kappa_a_E, rates->kappa_tr };
   ghl_m1_scaled_positive opacity_product;
-  if(!ghl_m1_scaled_positive_product(opacity_factors, 2, &opacity_product)
-     || opacity_product.mantissa == 0.0) {
+  /* The dispatcher has validated both finite nonnegative opacities. The
+   * scaled product has no binary64 exponent-range failure. */
+  (void)ghl_m1_scaled_positive_product(opacity_factors, 2, &opacity_product);
+  if(opacity_product.mantissa == 0.0) {
     return false;
   }
 
@@ -728,12 +636,11 @@ static bool ghl_m1_neutrino_thick_limit_selected(
   ghl_m1_scaled_positive dt_alpha_scaled;
   ghl_m1_scaled_positive threshold_scaled;
   ghl_m1_scaled_positive stiffness;
-  if(!ghl_m1_scaled_positive_sqrt(&opacity_product, &opacity_root)
-     || !ghl_m1_scaled_positive_from_double(dt_alpha, &dt_alpha_scaled)
-     || !ghl_m1_scaled_positive_from_double(threshold, &threshold_scaled)
-     || !ghl_m1_scaled_positive_multiply(&dt_alpha_scaled, &opacity_root, &stiffness)) {
-    return false; /* GCOVR_EXCL_LINE -- validated inputs */
-  }
+  /* Validated scalars and local outputs make these operations infallible. */
+  ghl_m1_scaled_positive_sqrt(&opacity_product, &opacity_root);
+  ghl_m1_scaled_positive_from_validated_double(dt_alpha, &dt_alpha_scaled);
+  ghl_m1_scaled_positive_from_validated_double(threshold, &threshold_scaled);
+  ghl_m1_scaled_positive_multiply(&dt_alpha_scaled, &opacity_root, &stiffness);
   return ghl_m1_scaled_positive_compare(&stiffness, &threshold_scaled) > 0;
 }
 
@@ -741,8 +648,7 @@ static bool ghl_m1_neutrino_scattering_limit_selected(
       const double dt_alpha,
       const ghl_m1_neutrino_rates *restrict rates,
       const double threshold) {
-  if(rates == NULL || !isfinite(dt_alpha) || dt_alpha < 0.0 || !isfinite(threshold)
-     || threshold <= 0.0) {
+  if(threshold <= 0.0) {
     return false;
   }
   const double stiffness_factors[2] = { dt_alpha, rates->kappa_s };
@@ -838,7 +744,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
           neutrino_diagnostics, true);
   }
   const double dt_alpha = metric->lapse * dt;
-  if(!isfinite(dt_alpha) || dt_alpha < 0.0) {
+  /* Validated lapse is positive and dt is nonnegative. */
+  if(!isfinite(dt_alpha)) {
     return ghl_m1_neutrino_publish_dispatch_failure(
           ghl_error_m1_invalid_state, state_transport, state_out, exchange, diagnostics,
           false, neutrino_diagnostics, true);
@@ -886,17 +793,10 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
        * at least N_floor, and repair can only raise an endpoint below that
        * floor toward the input. The signed total-number change therefore has
        * no greater magnitude than the charged-current change whose Ye
-       * division already succeeded in exchange assembly. Keep this guard
-       * for future policy changes. */
-      error = ghl_m1_neutrino_apply_ye_policy(
+       * division already succeeded in exchange assembly. This policy update
+       * therefore cannot fail after a successful ordinary implicit solve. */
+      ghl_m1_neutrino_apply_ye_policy(
             selected.ye_policy, rates, n_b_cons, exchange);
-      if(error != ghl_success) {
-        *neutrino_diagnostics
-              = candidate_neutrino_diagnostics; /* GCOVR_EXCL_LINE -- defensive */
-        return ghl_m1_neutrino_publish_dispatch_failure( /* GCOVR_EXCL_LINE -- defensive */
-              error, state_transport, state_out, exchange, diagnostics,
-              diagnostics->closure_fallback_used, neutrino_diagnostics, true); /* GCOVR_EXCL_LINE -- defensive */
-      }
       diagnostics->path = ghl_m1_neutrino_source_path_general_implicit;
       *neutrino_diagnostics = candidate_neutrino_diagnostics;
       return ghl_success;

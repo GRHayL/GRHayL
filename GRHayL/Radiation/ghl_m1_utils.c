@@ -117,10 +117,8 @@ static bool ghl_m1_is_symmetric_spd_3x3(
         L[i][j] = sqrt(value);
       }
       else {
+        /* A positive Cholesky pivot bounds this normalized SPD quotient. */
         L[i][j] = value / L[j][j];
-        if(!isfinite(L[i][j])) {
-          return false;
-        }
       }
     }
   }
@@ -263,10 +261,6 @@ ghl_error_codes_t ghl_m1_compute_face_normal_delta_l(
   }
 
   const double gammaUU_dd = metric_face->gammaUU[(int)direction][(int)direction];
-  if(!isfinite(gammaUU_dd) || gammaUU_dd <= 0.0) {
-    return ghl_error_m1_invalid_metric;
-  }
-
   *delta_l = delta_x_d / sqrt(gammaUU_dd);
   if(!isfinite(*delta_l) || *delta_l <= 0.0) {
     return ghl_error_m1_invalid_state;

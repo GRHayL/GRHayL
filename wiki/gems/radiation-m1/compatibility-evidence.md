@@ -43,7 +43,9 @@ provide uncapped metric light-cone speeds. The operation does not provide a
 separate diffusion correction. The public diffusion helper is tested
 separately and is not selected by this canonical route. The existing
 finite-difference/Newton source solver remains the local implicit solver.
-Legacy policy fields may remain for
-source or ABI compatibility, but cannot select a different numerical method.
+The public source policy can opt into branched compatibility updates, which
+select explicit thin, thick-equilibrium, or scattering-dominated source
+algorithms when their conditions hold. The default policy uses the implicit
+solver.
 The host must apply one limiter scalar to every coupled species, matter, and
 `Y_e` increment; no host implementation is included here.

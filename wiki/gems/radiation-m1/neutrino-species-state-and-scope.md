@@ -8,7 +8,7 @@ replace either API contract.
 ## Current model
 
 The public model is grey, one-group, and three-species. The enumeration and
-state definition are in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L845-L895):
+state definition are in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h):
 
 | code species | physical content | electron-lepton weight |
 | --- | --- | ---: |
@@ -21,8 +21,8 @@ state definition are in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L845-L895)
 `nu_x_multiplicity == 4` and return that state already summed. A host must not
 multiply it again. This multiplicity is a species-model convention, not a
 fourth evolved state or a caller-selectable flavor resolution; see the
-[provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h#L14-L27)
-and its [provider implementation](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c#L528-L549).
+[provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
+and its [provider implementation](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c).
 
 For each species, the undensitized state is
 
@@ -34,14 +34,14 @@ Here `N` is Eulerian radiation number density, `E` is Eulerian radiation
 energy density, and `F_i` is the covariant Eulerian energy flux. The host may
 store densitized variables, but pointwise Radiation calls receive undensitized
 states; the header documents the required `sqrt(det(gamma))` conversion
-([`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L882-L895)). The fixed transport
+([`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h)). The fixed transport
 component order is also recorded by the
-[neutrino Rusanov implementation](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rusanov_flux.c#L1-L80).
+[neutrino Rusanov implementation](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rusanov_flux.c).
 
 `N` is an independently transported grey moment. It is not reconstructed by
 dividing `E` by a fixed mean energy. Its transport current is derived from the
 M1 E/F closure and comoving moments, with an explicit `N == 0` branch, in
-[`ghl_m1_neutrino_number_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c#L15-L78).
+[`ghl_m1_neutrino_number_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c).
 
 ## What the state can represent
 
@@ -59,7 +59,7 @@ The source kernels consume provider-supplied rates. They do not derive weak
 rates from the EOS themselves. The provider owns EOS/table lookup, unit
 conversion, weak-equilibrium targets, and channel-specific microphysics; the
 boundary is specified in the
-[provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h#L14-L27)
+[provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
 and [integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#ownership-rules).
 
 The library is pointwise and host-neutral. The downstream host owns the mesh,

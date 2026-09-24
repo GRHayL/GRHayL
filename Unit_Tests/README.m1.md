@@ -111,7 +111,7 @@ retain local tests and an explicit comparison limitation. The discrete-operator
 equivalence workflow, live THC_M1 execution, host evolution, and provider/rate
 workflows remain separate claims.
 
-Five of the nine executables replay stored baseline/perturbed THC
+Five of the ten executables replay stored baseline/perturbed THC
 outputs: `unit_test_m1_neutrino_seeded_invariants`,
 `unit_test_m1_neutrino_rusanov_flux`, `unit_test_m1_thcm1_blended_rusanov`, and
 `unit_test_rusanov_flux` use the historical package, while
@@ -172,7 +172,23 @@ The compiler/OS workflows select dedicated Radiation jobs through
 then build and execute the same scoped M1 targets. The Ubuntu GCC Radiation
 jobs compile with gcov flags and invoke the shared GRHayL coverage action after
 the scoped run in both HDF5 modes. That action uploads a gcovr Cobertura report
-filtered to `GRHayL/Radiation/`. The `radiation_m1` Codecov component has a
-100% project coverage target for that path. The M1 action defines no
-changed-path gate. Workflow selection is not a claim that a remote CI run has
-already passed.
+for `GRHayL/Radiation/` and the M1 changes in the public header, Core error
+mapping, and shared Rusanov flux. The M1 action checks 100% executable-line
+coverage in `GRHayL/Radiation/` and uploads line and branch coverage to Codecov. It pins
+gcovr 8.6 to validate branch-only exclusions and prints a separate Radiation
+branch report. Direct unit tests exercise reachable private-helper branches;
+branch-only exclusions require a source-level proof of unreachability. After
+the scoped tests, `python3 -m gcovr -r . --filter 'GRHayL/Radiation/'
+--txt-metric branch --txt` lists branches still uncovered. The `radiation_m1`
+Codecov component has a 100% project coverage target for that path. The M1
+action defines no changed-path gate. Workflow selection is not a claim that a
+remote CI run has already passed.
+
+To close the remaining branch gap, use the branch report from each Ubuntu GCC
+M1 job as the worklist. Add direct assertions for reachable private-helper
+cases and public-input cases, checking their results or failure transactions.
+For a branch that the validated caller cannot reach, document the input proof
+at the source and add a branch-only gcovr marker. The marker's expected branch
+count must match in both HDF5 modes. Once both scoped M1 runs report 100%
+branches, add a `--fail-under-branch 100` gate to the M1 action and check the
+unmodified Cobertura upload against Codecov's patch target.

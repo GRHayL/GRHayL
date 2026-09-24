@@ -5,7 +5,7 @@ realizability cone before closure, transport, or source evaluation. The
 canonical implementation is
 [ghl_m1_realizability_repair.c](../../../GRHayL/Radiation/ghl_m1_realizability_repair.c),
 and the only supported policy is declared in
-[ghl_m1.h](../../../GRHayL/include/ghl_m1.h#L67).
+[ghl_m1.h](../../../GRHayL/include/ghl_m1.h).
 
 ## E/F cone
 

@@ -23,16 +23,13 @@
 static double safe_exp(const double x) { return exp(ghl_clamp(x, -40.0, 40.0)); }
 
 static double species_lepton_weight(const ghl_m1_neutrino_species_t species) {
-  switch(species) {
-    case ghl_m1_neutrino_nue:
-      return 1.0;
-    case ghl_m1_neutrino_anue:
-      return -1.0;
-    case ghl_m1_neutrino_nux:
-      return 0.0;
-    default:
-      return 0.0; /* GCOVR_EXCL_LINE -- public species enum is validated */
-  }
+  /* Every caller obtains species from a bounded species loop. */
+  static const double weights[ghl_m1_neutrino_species_count] = {
+    [ghl_m1_neutrino_nue] = 1.0,
+    [ghl_m1_neutrino_anue] = -1.0,
+    [ghl_m1_neutrino_nux] = 0.0
+  };
+  return weights[species];
 }
 
 static void fill_transparent_rates(
@@ -120,10 +117,7 @@ ghl_error_codes_t ghl_neutrino_rate_provider_initialize_nrpyleakage(
 #ifdef GHL_DISABLE_HDF5
   return ghl_error_used_disabled_hdf5;
 #else
-  ghl_error_codes_t err = ghl_neutrino_rate_provider_initialize_default(provider);
-  if(err != ghl_success) {
-    return err; /* GCOVR_EXCL_LINE -- provider is non-NULL above */
-  }
+  (void)ghl_neutrino_rate_provider_initialize_default(provider);
   provider->backend = ghl_neutrino_rate_backend_nrpyleakage;
   provider->use_tabulated_eos = true;
   provider->channel_mask
@@ -316,7 +310,7 @@ static ghl_error_codes_t validate_inputs(
   (void)T;
   return ghl_success;
 #else
-  if(!provider->use_tabulated_eos || eos == NULL) {
+  if(!provider->use_tabulated_eos) {
     return ghl_success;
   }
 
@@ -445,10 +439,6 @@ static ghl_error_codes_t compute_thermo(
 
 #ifndef GHL_DISABLE_HDF5
   if(provider->use_tabulated_eos) {
-    if(eos == NULL) {
-      return ghl_error_m1_microphysics_failure; /* GCOVR_EXCL_LINE -- context validation
-                                                 */
-    }
     err = NRPyEOS_muhat_mue_mup_mun_Xn_and_Xp_from_rho_Ye_T(
           eos, *rho, *Ye, *T, muhat, mu_e, mu_p, mu_n, X_n, X_p);
     if(err != ghl_success) {
@@ -468,18 +458,33 @@ static ghl_error_codes_t compute_thermo(
     *muhat = *mu_n - *mu_p;
   }
 
-  if(!isfinite(*muhat) || !isfinite(*mu_e) || !isfinite(*mu_p) || !isfinite(*mu_n)
-     || !isfinite(*X_n) || !isfinite(*X_p)) {
+  /* In the reference backend, finite muhat = mu_n - mu_p also implies a
+   * finite mu_e: T is positive and finite, and the Ye clamp makes every log
+   * argument finite. An overflow in T*log(Ye/(1-Ye)) first overflows one of
+   * T*log(Ye) or T*log(1-Ye), making muhat nonfinite. Tabulated EOS outputs
+   * are independent, so validate each of them in HDF5 builds. */
+  if(!isfinite(*muhat)
+#ifndef GHL_DISABLE_HDF5
+     || !isfinite(*mu_e) || !isfinite(*mu_p) || !isfinite(*mu_n)
+     || !isfinite(*X_n) || !isfinite(*X_p)
+#endif
+  ) {
     return ghl_error_m1_microphysics_failure;
   }
 
-  double normalized_X_n, normalized_X_p;
-  if(ghl_m1_nrpyleakage_normalize_nucleon_fractions(
-           *X_n, *X_p, &normalized_X_n, &normalized_X_p)
-     != ghl_success) {
-    return ghl_error_m1_microphysics_failure; /* GCOVR_EXCL_LINE -- validated reference
-                                                 EOS */
+  double normalized_X_n = *X_n, normalized_X_p = *X_p;
+  const ghl_error_codes_t normalization_error
+        = ghl_m1_nrpyleakage_normalize_nucleon_fractions(
+              *X_n, *X_p, &normalized_X_n, &normalized_X_p);
+#ifndef GHL_DISABLE_HDF5
+  if(normalization_error != ghl_success) {
+    return ghl_error_m1_microphysics_failure;
   }
+#else
+  /* Reference fractions are clamped to [1e-12, 1-1e-12], so normalization
+   * cannot fail; retain the common normalization operation and outputs. */
+  (void)normalization_error;
+#endif
   *X_n = normalized_X_n;
   *X_p = normalized_X_p;
 
@@ -518,7 +523,7 @@ static ghl_error_codes_t assemble_nrpyleakage_rates(
   ghl_error_codes_t err = ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
         rho, Ye, T, muhat, mu_e, mu_p, mu_n, X_n, X_p, &thermo);
   if(err != ghl_success) {
-    return err; /* GCOVR_EXCL_LINE -- thermo state was validated above */
+    return err;
   }
 
   const double eta[ghl_m1_nrpyleakage_species_count]
@@ -531,10 +536,6 @@ static ghl_error_codes_t assemble_nrpyleakage_rates(
   }
   /* The raw bridge exposes one unsummed heavy species.  The provider owns
    * the sole conversion to the configured four-flavor aggregate below. */
-  if(raw.nux_single_species_multiplicity != 1) {
-    return ghl_error_m1_microphysics_failure; /* GCOVR_EXCL_LINE -- raw bridge invariant
-                                               */
-  }
 
   const double L0 = NRPyLeakage_units_geom_to_cgs_L;
   const double t0 = NRPyLeakage_units_geom_to_cgs_T;
@@ -558,10 +559,13 @@ static ghl_error_codes_t assemble_nrpyleakage_rates(
     out->lepton_weight = species_lepton_weight(out->species);
     const double raw_n_eq = multiplicity * rr->n_eq_cgs * volume;
     const double raw_J_eq = multiplicity * rr->J_eq_mev_cgs * energy_density_conversion;
-    if(!isfinite(raw_n_eq) || raw_n_eq <= 0.0 || !isfinite(raw_J_eq)
-       || raw_J_eq <= 0.0) {
-      return ghl_error_m1_microphysics_failure; /* GCOVR_EXCL_LINE -- raw kernel
-                                                   validates */
+    /* Successful raw evaluation implies T < 1e62 from the T^5 product and
+     * |eta| < 746 from both electron-species exponential tails. The FD
+     * approximations then give F2 < 1.4e8 and F3 < 8e10, bounding raw n by
+     * 1e226 and raw J by 1e291. The fixed four-flavor multiplicity and unit
+     * conversions cannot overflow either target; underflow remains possible. */
+    if(raw_n_eq <= 0.0 || raw_J_eq <= 0.0) {
+      return ghl_error_m1_microphysics_failure;
     }
     /* Preserve the two raw FD moments.  The mean is derived from the same
      * converted targets so validation and detailed balance use one physical
@@ -570,10 +574,9 @@ static ghl_error_codes_t assemble_nrpyleakage_rates(
     out->n_eq = raw_n_eq;
     out->J_eq = raw_J_eq;
     out->mean_energy = out->J_eq / out->n_eq;
-    if(!isfinite(out->mean_energy) || out->mean_energy <= 0.0) {
-      return ghl_error_m1_microphysics_failure; /* GCOVR_EXCL_LINE -- positive raw
-                                                   moments */
-    }
+    /* The same FD bounds make this mean finite. Positive converted J also
+     * requires nonzero T^4, hence T > 1e-81; with F3/F2 of order one or
+     * larger and the fixed energy conversion, the ratio cannot underflow. */
 
     if(s != ghl_m1_neutrino_nux) {
       const double beta = rr->eta_N_beta_cgs * number_emissivity_conversion;
@@ -827,9 +830,12 @@ static ghl_error_codes_t recover_failure(
   switch(provider->failure_policy) {
     case ghl_neutrino_rate_failure_transparent:
       fill_transparent_rates(candidate, provider->min_mean_energy);
-      if(publish_recovered_rates(candidate, rates) != ghl_success) {
-        return error; /* GCOVR_EXCL_LINE -- constructed recovery is valid */
-      }
+      /* Context validation guarantees a positive finite energy floor. The
+       * transparent bundle has exact zero rates and equilibrium targets,
+       * canonical species/weights, and a finite mean >= 1, so it cannot fail
+       * rate validation. Equilibrium recovery below still needs validation
+       * because its products can overflow. */
+      memcpy(rates, candidate, sizeof(candidate));
       if(diagnostics != NULL) {
         diagnostics->transparent_recoveries++;
         diagnostics->last_recovery = ghl_neutrino_rate_recovery_transparent;

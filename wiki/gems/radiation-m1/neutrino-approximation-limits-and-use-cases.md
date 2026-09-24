@@ -4,8 +4,8 @@ The current Radiation gem is a deliberately bounded grey transport model. Its
 contracts support useful local neutrino number/energy/momentum operations, but
 they do not establish a spectrally complete neutrino-transport calculation or
 a complete downstream evolution framework. The current capability boundary is
-defined by [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L845-L965), the
-[provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h#L14-L27),
+defined by [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h), the
+[provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h),
 and the [integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#current-evidence-boundary).
 
 ## Approximation hierarchy
@@ -48,8 +48,8 @@ Within the above hierarchy, the implementation can provide:
 are active, and the table-free reference backend is a deterministic test model.
 The explicit NRPyLeakage initializer selects the table-backed production
 provider, subject to its EOS/HDF5 requirements. See
-[`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h#L136-L220)
-and [`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c#L756-L936).
+[`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
+and [`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c).
 
 ## Explicit non-claims
 
@@ -85,8 +85,8 @@ with metric light-cone speeds. Older photon-oriented whitepapers describe HLL,
 optical-depth speed caps, and a reduced number current; those are not current
 neutrino behavior. The current transport distinction is recorded in
 [`TRACEABILITY.md`](../../../GRHayL/Radiation/TRACEABILITY.md#claim-boundary),
-[`ghl_m1_four_point_blended_rusanov.c`](../../../GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c#L1-L145),
-and [`ghl_m1_neutrino_number_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c#L15-L78).
+[`ghl_m1_four_point_blended_rusanov.c`](../../../GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c),
+and [`ghl_m1_neutrino_number_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c).
 
 Optional thick-limit/diffusion helpers exist as separate shared operations;
 their presence does not change the canonical four-point neutrino method. They

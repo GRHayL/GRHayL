@@ -1,5 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "ghl_m1.h"
+#include "../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit.h"
+#include "../GRHayL/Radiation/ghl_m1_utils.h"
 #include "m1_test_utils.h"
 #include "m1_thcm1_fixture_utils.h"
 #include "m1_thcm1_transport_fixture.h"
@@ -25,6 +27,8 @@ typedef struct {
 } m1_error_case;
 
 static const m1_error_case m1_error_cases[] = {
+  { ghl_error_u0_singular,
+    "Velocity limiting could not produce a finite, subluminal, within-cap result" },
   { ghl_error_m1_null_pointer, "M1 routine received a NULL pointer" },
   { ghl_error_m1_invalid_epsilon_c,
     "M1 epsilon_c must be finite and strictly between zero and one" },
@@ -1857,7 +1861,320 @@ static void check_comoving_energy_failure(void) {
   }
 }
 
+
+/* Exercise each independent rate invariant with and without diagnostic storage. */
+static void check_neutrino_rate_boundaries(void) {
+  const ghl_m1_neutrino_rates valid = {
+    .species = ghl_m1_neutrino_nue, .lepton_weight = 1.0,
+    .eta_N = 2.0, .eta_E = 6.0, .kappa_a_N = 2.0, .kappa_a_E = 2.0,
+    .kappa_s = 1.0, .kappa_tr = 3.0, .n_eq = 1.0, .J_eq = 3.0,
+    .mean_energy = 3.0, .eta_N_cc = 2.0, .kappa_a_N_cc = 2.0
+  };
+  require_error_code(ghl_m1_validate_neutrino_rates(NULL, NULL),
+        ghl_error_m1_null_pointer, "null rates accepted");
+  ghl_m1_neutrino_rates bad[] = {
+    valid, valid, valid, valid, valid, valid, valid, valid,
+    valid, valid, valid, valid, valid, valid, valid, valid
+  };
+  bad[0].species = (ghl_m1_neutrino_species_t)-1;
+  bad[1].kappa_a_N_cc = NAN;
+  bad[2].eta_E_pair[0] = NAN;
+  bad[3].eta_N_pair[0] = -1.0;
+  bad[4].J_eq = 0.0; bad[4].eta_E_pair[0] = 1.0;
+  bad[5].lepton_weight = 0.0;
+  bad[6].species = ghl_m1_neutrino_nux; bad[6].lepton_weight = 0.0;
+  bad[7].species = ghl_m1_neutrino_nux; bad[7].lepton_weight = 0.0;
+  bad[7].eta_N_cc = 0.0;
+  bad[8].eta_E = 5.0;
+  bad[9].eta_N_cc = 1.0;
+  bad[10].mean_energy = 4.0;
+  bad[11].kappa_tr = 4.0;
+  bad[12].eta_N = 3.0;
+  bad[13].eta_E_pair[0] = -1.0;
+  bad[14].eta_N_pair[0] = 1.0; bad[14].n_eq = 0.0;
+  bad[15].eta_N_cc = 3.0;
+  for(size_t i = 0; i < sizeof(bad)/sizeof(bad[0]); ++i) {
+    for(int with_diagnostics = 0; with_diagnostics <= 1; ++with_diagnostics) {
+      ghl_m1_neutrino_diagnostics diagnostics = {0};
+      require_error_code(ghl_m1_validate_neutrino_rates(
+            &bad[i], with_diagnostics ? &diagnostics : NULL),
+            ghl_error_m1_microphysics_failure, "invalid rate invariant accepted");
+      if(diagnostics.provider_validation_failures != (unsigned)with_diagnostics)
+        fail_test("rate failure diagnostic mismatch");
+    }
+  }
+  /* Valid bundles may still need the paired-species solver. */
+  ghl_m1_neutrino_rates paired[] = {valid, valid, valid};
+  paired[0].eta_N_cc = 0.0; paired[0].kappa_a_N_cc = 0.0;
+  paired[1].n_eq = 0.0; paired[1].J_eq = 0.0;
+  paired[1].eta_N = paired[1].eta_E = paired[1].eta_N_cc = 0.0;
+  paired[1].kappa_a_N_cc = 1.0;
+  paired[2].eta_E_pair[0] = 1.0;
+  for(size_t i = 0; i < sizeof(paired)/sizeof(paired[0]); ++i) {
+    require_error_code(ghl_m1_validate_neutrino_rates(&paired[i], NULL),
+          ghl_success, "valid paired bundle rejected");
+    require_error_code(ghl_m1_neutrino_validate_single_species_rates(&paired[i], NULL),
+          ghl_error_m1_microphysics_failure, "missing partner accepted");
+  }
+}
+
+static void check_neutrino_lepton_boundaries(void) {
+  ghl_m1_neutrino_rates rates = {.species = ghl_m1_neutrino_nue, .lepton_weight = 1.0};
+  double out = 17.0;
+  require_error_code(ghl_m1_neutrino_charged_current_lepton_delta(
+        NULL, 1.0, 1.0, false, 2.0, 1.0, &out),
+        ghl_error_m1_null_pointer, "null charged-current rates accepted");
+  require_error_code(ghl_m1_neutrino_charged_current_lepton_delta(
+        &rates, 1.0, 1.0, false, 2.0, 1.0, NULL),
+        ghl_error_m1_null_pointer, "null charged-current output accepted");
+  const double invalid[][4] = {
+    {NAN, 1, 1, 1}, {-1, 1, 1, 1}, {1, NAN, 1, 1}, {1, -1, 1, 1},
+    {1, 1, NAN, 1}, {1, 1, -1, 1}, {1, 1, 1, NAN}, {1, 1, 1, 0}
+  };
+  for(size_t i=0; i<sizeof(invalid)/sizeof(invalid[0]); ++i) {
+    require_error_code(ghl_m1_neutrino_charged_current_lepton_delta(
+          &rates, invalid[i][1], invalid[i][0], false, invalid[i][2], invalid[i][3], &out),
+          ghl_error_m1_invalid_state, "invalid charged-current argument accepted");
+    if(out != 17.0) fail_test("charged-current failure modified output");
+  }
+  rates.eta_N_cc = DBL_MAX;
+  require_error_code(ghl_m1_neutrino_charged_current_lepton_delta(
+        &rates, 2.0, 0.0, true, 1.0, 1.0, &out),
+        ghl_error_m1_invalid_state, "charged-current overflow accepted");
+  require_error_code(ghl_m1_compute_neutrino_lepton_increment(&rates, 0, NAN, &out),
+        ghl_error_m1_invalid_state, "nonfinite baryon density accepted");
+  rates.species = (ghl_m1_neutrino_species_t)-1;
+  require_error_code(ghl_m1_compute_neutrino_lepton_increment(&rates, 0, 1, &out),
+        ghl_error_m1_microphysics_failure, "unknown lepton species accepted");
+  ghl_m1_neutrino_state state = {.N=1, .E=1};
+  ghl_m1_neutrino_exchange exchange = {.dE_rad=17};
+  require_error_code(ghl_m1_neutrino_assemble_exchange(
+        &state, &state, &rates, 0, NAN, 1, &exchange),
+        ghl_error_m1_invalid_state, "nonfinite volume accepted");
+  if(exchange.dE_rad != 17 || out != 17) fail_test("invalid exchange modified output");
+}
+
+static void check_neutrino_repair_boundaries(void) {
+  ghl_m1_parameters params;
+  require_error_code(ghl_m1_initialize(1e-12, 1e-12, 1e-8, 1e-6, 1e-12, 20, 1e-10, &params),
+        ghl_success, "repair parameters rejected");
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  ghl_m1_neutrino_parameters nu = {.N_floor = -1};
+  double out = 17;
+  require_error_code(ghl_m1_apply_neutrino_number_floor(&nu, 1, &out, NULL),
+        ghl_error_m1_invalid_state, "negative number floor accepted");
+  ghl_m1_neutrino_state state = {.N=1, .E=1};
+  require_error_code(ghl_m1_repair_neutrino_state(&params, &nu, &metric, &state, NULL),
+        ghl_error_m1_invalid_state, "negative repair floor accepted");
+  nu.N_floor = 2;
+  require_error_code(ghl_m1_repair_neutrino_state(&params, &nu, &metric, &state, NULL),
+        ghl_success, "number repair without diagnostics failed");
+  if(state.N != 2 || state.E != 1 || out != 17) fail_test("number floor output mismatch");
+  nu.N_floor=0; nu.enforce_mean_energy_bounds=true;
+  nu.mean_energy_min=1; nu.mean_energy_max=NAN;
+  ghl_m1_neutrino_current current = {.J=1, .Gamma_N=1};
+  require_error_code(ghl_m1_neutrino_check_EN_bounds(&state, &nu, &current),
+        ghl_error_m1_invalid_state, "nonfinite upper mean bound accepted");
+  nu.mean_energy_max=0; nu.mean_energy_min=0.1;
+  require_error_code(ghl_m1_neutrino_check_EN_bounds(&state, &nu, &current),
+        ghl_success, "disabled upper mean bound rejected");
+  current.Gamma_N=NAN;
+  require_error_code(ghl_m1_neutrino_check_EN_bounds(&state, &nu, &current),
+        ghl_error_m1_invalid_state, "nonfinite number gamma accepted");
+  const double V[3]={0};
+  ghl_m1_comoving comoving={.J=1, .Hn=0.5};
+  state.N=DBL_MAX;
+  require_error_code(ghl_m1_neutrino_build_current_from_moments(
+        &metric, &nu, &state, &comoving, V, 1, &current),
+        ghl_error_m1_invalid_state, "overflowing comoving number accepted");
+  state.N=NAN;
+  ghl_primitive_quantities prims={.u0=1};
+  require_error_code(ghl_m1_neutrino_derive_current(&params, &nu, &metric, &prims, &state, &current),
+        ghl_error_m1_invalid_state, "nonfinite number current accepted");
+}
+
+
+static void check_private_norm_boundaries(void) {
+  double A[3][3]={{1,0,0},{0,1,0},{0,0,1}}, x[3]={1,0,0}, out=17;
+  const double denominators[]={NAN,0,-1};
+  for(size_t i=0;i<sizeof(denominators)/sizeof(denominators[0]);++i)
+    require_error_code(ghl_m1_scaled_norm_ratio(A,x,denominators[i],&out),
+          ghl_error_m1_invalid_state,"invalid norm denominator accepted");
+  require_error_code(ghl_m1_scaled_norm_ratio(A,x,1,NULL),
+        ghl_error_m1_invalid_state,"null norm output accepted");
+  x[0]=NAN;
+  require_error_code(ghl_m1_scaled_norm_ratio(A,x,1,&out),
+        ghl_error_m1_invalid_state,"nonfinite norm vector accepted");
+  x[0]=1; A[0][0]=NAN;
+  require_error_code(ghl_m1_scaled_norm_ratio(A,x,1,&out),
+        ghl_error_m1_invalid_metric,"nonfinite norm matrix accepted");
+  memset(A,0,sizeof(A));
+  require_error_code(ghl_m1_scaled_norm_ratio(A,x,1,&out),
+        ghl_error_m1_invalid_metric,"zero norm matrix accepted");
+  A[0][0]=-1; A[1][1]=A[2][2]=1;
+  require_error_code(ghl_m1_scaled_norm_ratio(A,x,1,&out),
+        ghl_error_m1_invalid_metric,"indefinite norm matrix accepted");
+  if(out!=17) fail_test("invalid norm modified output");
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  metric.gammaDD[0][0]=-1;
+  require_error_code(ghl_m1_validate_transport_velocity(&metric,x),
+        ghl_error_m1_invalid_metric,"indefinite velocity norm accepted");
+  ghl_primitive_quantities prims={.vU={1,0,0}};
+  double V[3], W;
+  require_error_code(ghl_m1_compute_eulerian_velocity(&metric,&prims,V,NULL,&W),
+        ghl_error_u0_singular,"invalid velocity metric accepted");
+  m1_setup_flat_metric(&metric);
+  metric.gammaUU[0][0]=-1;
+  ghl_m1_parameters params;
+  require_error_code(ghl_m1_initialize(1e-12,1e-12,1e-8,1e-6,1e-12,20,1e-10,&params),
+        ghl_success,"private norm parameters rejected");
+  const ghl_m1_rad_state rad={.E=1,.F={0.5,0,0}};
+  require_error_code(ghl_m1_validate_realizability_state(&params,&metric,&rad,0,NULL),
+        ghl_error_m1_invalid_metric,"state-only norm error swallowed");
+  /* Each nonfinite operand independently bypasses compensated finite arithmetic. */
+  for(int position=0;position<4;++position) {
+    double v[4]={1,1,1,1}; v[position]=INFINITY;
+    if(!isinf(ghl_m1_difference_of_products(v[0],v[1],v[2],v[3])))
+      fail_test("infinite product difference lost infinity");
+  }
+  m1_setup_flat_metric(&metric);
+  params.E_floor=2; params.fd_epsilon_rel=0.5; params.fd_epsilon_abs=0.25;
+  const double values[][5]={
+    {0,0,0,0,1.5}, {4,0,0,0,2.5}, {0,6,0,0,3.5},
+    {0,0,8,0,4.5}, {0,0,0,10,5.5}
+  };
+  for(size_t i=0;i<sizeof(values)/sizeof(values[0]);++i) {
+    double delta=ghl_m1_compute_fd_delta(&params,&metric,
+          values[i][0],values[i][1],values[i][2],values[i][3]);
+    if(delta!=values[i][4]) fail_test("finite-difference dominant-scale mismatch");
+  }
+}
+
+static void check_private_scalar_helpers_and_diagnostic_clamp(void) {
+  if(ghl_m1_min(1.0, 2.0) != 1.0 || ghl_m1_min(2.0, 1.0) != 1.0
+     || ghl_m1_max(1.0, 2.0) != 2.0 || ghl_m1_max(2.0, 1.0) != 2.0) {
+    fail_test("private min/max comparison changed ordinary ordering");
+  }
+  if(ghl_m1_min(NAN, 1.0) != 1.0 || !isnan(ghl_m1_min(1.0, NAN))
+     || ghl_m1_max(NAN, 1.0) != 1.0 || !isnan(ghl_m1_max(1.0, NAN))) {
+    fail_test("private min/max changed historical NaN operand ordering");
+  }
+  if(!signbit(ghl_m1_min(0.0, -0.0)) || signbit(ghl_m1_max(-0.0, 0.0))) {
+    fail_test("private min/max changed equal signed-zero selection");
+  }
+
+  const ghl_error_codes_t retry_errors[] = {
+    ghl_error_m1_implicit_admissibility,
+    ghl_error_m1_invalid_implicit_jacobian,
+    ghl_error_m1_implicit_solve_failure
+  };
+  for(size_t i = 0; i < sizeof(retry_errors) / sizeof(retry_errors[0]); ++i) {
+    if(!ghl_m1_schedule_error_allows_retry(retry_errors[i])) {
+      fail_test("retryable implicit error was rejected by the private policy");
+    }
+  }
+  if(ghl_m1_schedule_error_allows_retry(ghl_error_m1_invalid_state)) {
+    fail_test("nonretryable error was accepted by the private policy");
+  }
+
+  double identity[3][3] = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } };
+  const double zero[3] = { 0.0, 0.0, 0.0 };
+  double norm = 17.0;
+  require_error_code(ghl_m1_scaled_norm_ratio(identity, zero, 1.0, &norm), ghl_success,
+        "zero vector norm failed");
+  if(norm != 0.0) {
+    fail_test("zero vector norm was not zero");
+  }
+
+  ghl_m1_parameters params;
+  require_error_code(
+        ghl_m1_initialize(0.1, 1.0e-12, 1.0e-8, 1.0e-6, 1.0e-12, 20, 1.0e-10, &params),
+        ghl_success, "diagnostic-clamp parameters were rejected");
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  const double permitted = sqrt(1.0 - params.epsilon_c);
+  ghl_m1_rad_state rad = {
+    .E = 1.0, .F = { permitted * (1.0 + 32.0 * DBL_EPSILON), 0.0, 0.0 }
+  };
+  require_error_code(ghl_m1_validate_realizability_state(&params, &metric, &rad, 64.0, NULL),
+        ghl_success, "roundoff-tolerated realizability state was rejected");
+  ghl_primitive_quantities prims = { .u0 = 1.0 };
+  ghl_m1_closure closure = { 0 };
+  require_error_code(
+        ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, &rad, &closure),
+        ghl_success, "roundoff-tolerated closure state failed");
+  ghl_m1_diagnostics diagnostics;
+  require_error_code(
+        ghl_m1_compute_diagnostics(&params, &metric, &rad, &closure, &diagnostics),
+        ghl_success, "roundoff-tolerated diagnostics failed");
+  if(diagnostics.r != 1.0 - params.epsilon_c) {
+    fail_test("diagnostics did not clamp the tolerated reduced-flux overshoot");
+  }
+
+  rad.F[0] = permitted * (1.0 + 256.0 * DBL_EPSILON);
+  require_error_code(ghl_m1_validate_realizability_state(&params, &metric, &rad, 64.0, NULL),
+        ghl_error_m1_invalid_state, "materially unrealizable flux was accepted");
+}
+
+
+static void check_source_dispatch_failures(void) {
+  ghl_m1_parameters params;
+  require_error_code(ghl_m1_initialize(1e-12,1e-12,1e-8,1e-6,1e-12,20,1e-10,&params),
+        ghl_success,"dispatcher parameters rejected");
+  /* Run failures through both explicit-thin and stiff-predictor dispatch. */
+  for(int stiff=0;stiff<2;++stiff) {
+    for(int scenario=0;scenario<7;++scenario) {
+      ghl_metric_quantities metric;
+      m1_setup_flat_metric(&metric);
+      ghl_primitive_quantities prims={.u0=1};
+      ghl_m1_neutrino_parameters nu={.N_floor=0};
+      ghl_m1_neutrino_source_options options={
+        .policy=ghl_m1_neutrino_source_branched_compatibility,
+        .thick_equilibrium_threshold=0.5, .thermalized_number_threshold=-1,
+        .allow_closure_fallback=true
+      };
+      ghl_m1_neutrino_state state={.N=1,.E=1}, out={0};
+      const double opacity=stiff ? 2 : 0.1;
+      ghl_m1_neutrino_rates rates={.species=ghl_m1_neutrino_nue,.lepton_weight=1,
+        .eta_N=2*opacity,.eta_E=2*opacity,.kappa_a_N=opacity,.kappa_a_E=opacity,
+        .kappa_tr=opacity,.eta_N_cc=2*opacity,.kappa_a_N_cc=opacity,
+        .n_eq=2,.J_eq=2,.mean_energy=1};
+      double dt=1, nb=1;
+      switch(scenario) {
+        case 0: dt=-1; break;
+        case 1: nb=NAN; break;
+        case 2: prims.vU[0]=NAN; break;
+        case 3: nu.J_floor=10; break;
+        case 4: nu.enforce_mean_energy_bounds=true;nu.mean_energy_min=100;break;
+        case 5: nb=nextafter(0,1);break;
+        case 6: nu.Gamma_N_floor=2;break;
+      }
+      ghl_m1_neutrino_exchange exchange={.dE_rad=17};
+      ghl_m1_neutrino_source_diagnostics diagnostics;
+      ghl_m1_neutrino_diagnostics nud={0};
+      ghl_error_codes_t error=ghl_m1_solve_neutrino_source_update(
+            &options,&params,&nu,&metric,&prims,&rates,&state,&state,dt,nb,
+            &out,&exchange,&diagnostics,&nud);
+      if(error==ghl_success || diagnostics.path!=ghl_m1_neutrino_source_path_hard_failure
+         || out.N!=state.N || out.E!=state.E || out.F[0]!=state.F[0]
+         || exchange.dN_rad_total!=0 || exchange.dE_rad!=0 || exchange.dYe_matter!=0
+         || nud.source_failures!=1) {
+        fprintf(stderr,"dispatcher failure scenario %d stiff %d code %d\n",scenario,stiff,error);
+        fail_test("source dispatcher did not roll back a failed candidate");
+      }
+    }
+  }
+}
+
 int main(void) {
+  check_source_dispatch_failures();
+  check_private_norm_boundaries();
+  check_neutrino_rate_boundaries();
+  check_neutrino_lepton_boundaries();
+  check_neutrino_repair_boundaries();
+  check_private_scalar_helpers_and_diagnostic_clamp();
   check_success_returns();
   check_nearly_equal_rejects_nonfinite();
 

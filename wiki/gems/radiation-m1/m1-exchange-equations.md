@@ -5,7 +5,7 @@ energy, momentum, and composition changes consistently. This leaf distinguishes
 instantaneous source right-hand sides from integrated state increments. The
 current assembly is
 [ghl_m1_neutrino_exchange.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_exchange.c),
-with public fields in [ghl_m1.h](../../../GRHayL/include/ghl_m1.h#L986).
+with public fields in [ghl_m1.h](../../../GRHayL/include/ghl_m1.h).
 
 ## Radiation increments
 
@@ -71,21 +71,37 @@ There is no additional lapse or timestep in these increment formulas: those
 factors have already entered the accepted radiation endpoint. If a host is
 assembling instantaneous RHS terms instead, it uses the explicit
 `alpha*sqrt_detgamma` factors shown above. The distinction is implemented by
-[ghl_m1_neutrino_assemble_exchange](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_exchange.c#L3)
-and [the matter coupling helper](../../../GRHayL/Radiation/ghl_m1_matter_coupling_sources.c#L4).
+[ghl_m1_neutrino_assemble_exchange](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_exchange.c)
+and [the matter coupling helper](../../../GRHayL/Radiation/ghl_m1_matter_coupling_sources.c).
 
 ## Charged-current lepton exchange
 
-For an electron-flavor endpoint, the charged-current number increment is formed
-from the endpoint current and frozen charged-current rates:
+For an ordinary backward-Euler electron-flavor update, the charged-current
+number increment uses the physical, un-repaired number endpoint and the source
+base:
+
+$$
+\Delta N_{\rm cc}=N_{\rm phys,out}-N_{\rm base}.
+$$
+
+For validated single-species charged-current rates, this is algebraically
+equivalent to the endpoint source expression below. The implementation uses
+the endpoint difference to avoid cancellation when the source is stiff. When
+the optional mean-energy number projection is selected, it instead evaluates
+that endpoint source expression with the physical projected number and its
+current normalization:
 
 $$
 \Delta N_{\rm cc}=\Delta t_\alpha
 \left(\eta_{N,\rm cc}-\kappa_{a,N,\rm cc}
-\frac{N_{\rm out}}{\Gamma_{N,\rm out}}\right),
+\frac{N_{\rm phys,out}}{\Gamma_{N,\rm phys,out}}\right),
 \qquad
 \Delta t_\alpha=\alpha\,\Delta t.
 $$
+
+The heavy-flavor charged-current increment is zero. The branch selection is
+implemented in
+[ghl_m1_neutrino_lepton_increment.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_lepton_increment.c).
 
 The species-signed radiation lepton increment is
 
@@ -128,7 +144,7 @@ before any host-specific unit normalization. A host that stores a densitized
 baryon variable must convert it before calling the local helper. The minus sign
 means that emitting \(\nu_e\) lowers matter `Y_e`, while absorbing \(\nu_e\)
 raises it; antineutrino exchange has the opposite weight. The implementation
-is [ghl_m1_neutrino_lepton_increment.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_lepton_increment.c#L45).
+is [ghl_m1_neutrino_lepton_increment.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_lepton_increment.c).
 
 An opt-in dispatcher policy can instead use the signed total-number increment,
 

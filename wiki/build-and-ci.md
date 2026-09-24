@@ -269,12 +269,10 @@ The runner omits the scoped [Radiation M1 suite](../Unit_Tests/run_m1_tests.sh),
 `unit_test_tabulated_eos_compose` (the focused CompOSE workflow does), and
 `unit_test_con2prim_debug` (no runner/workflow invocation is visible). Dedicated
 Radiation M1 workflow jobs invoke the [M1 action](../.github/actions/run_m1/action.yml),
-which builds and runs the scoped suite. The composite-action YAML configures
-`tests` and `datagen` compilation, but neither
-that action nor the local runner executes data-generator binaries. Tracked YAML
-therefore establishes a workflow-configured compile route only. After an
-observed successful action or local `make datagen`, those binaries are
-`compiled-unrun` until a separate command executes them.
+which builds and runs only the scoped test targets. Neither that action nor the
+local runner builds or executes data-generator binaries. A separate
+`make datagen` compiles those binaries; they are `compiled-unrun` until a
+separate command executes them.
 
 ## Coverage Caveats
 

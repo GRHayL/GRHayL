@@ -1,4 +1,5 @@
 # Primary make.code.defn for gem Flux_Source
+#! INCS = ghl_rusanov_private.h
 
 # Source files in this directory that need compiled:
 SRCS = ghl_calculate_Rusanov_flux.c \

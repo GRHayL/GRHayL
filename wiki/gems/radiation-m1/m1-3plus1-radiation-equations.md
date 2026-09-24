@@ -44,9 +44,9 @@ Here \(v^i=u^i/u^0\) is the coordinate three-velocity stored in the fluid
 primitive `vU`. The shared velocity helper computes \(V^i\), lowers it with
 \(\gamma_{ij}\), and computes \(W\) from the spatial norm; it rejects a
 non-timelike velocity. See
-[ghl_m1_compute_eulerian_velocity](../../../GRHayL/Radiation/ghl_m1_utils.h#L293)
+[ghl_m1_compute_eulerian_velocity](../../../GRHayL/Radiation/ghl_m1_utils.h)
 and the metric field definitions in
-[ghl.h](../../../GRHayL/include/ghl.h#L163).
+[ghl.h](../../../GRHayL/include/ghl.h).
 
 ## Eulerian radiation moments
 
@@ -132,9 +132,9 @@ $$
 +\frac{\alpha}{2}P^{jk}\partial_i\gamma_{jk}+\alpha S_i\right].
 $$
 
-The first three terms on each right-hand side are geometry sources. Current
-GRHayL computes them as densitized quantities in
-[ghl_m1_sources_geometry.c](../../../GRHayL/Radiation/ghl_m1_sources_geometry.c#L52):
+The energy equation has two geometry terms and the momentum equation has
+three. Current GRHayL computes them as densitized quantities in
+[ghl_m1_sources_geometry.c](../../../GRHayL/Radiation/ghl_m1_sources_geometry.c):
 
 $$
 \widetilde S_E^{\rm geom}=\sqrt{\gamma}
@@ -148,7 +148,7 @@ $$
 $$
 
 Interaction sources are added separately with \(\alpha\sqrt{\gamma}\), as
-shown by [ghl_m1_compute_matter_coupling_sources](../../../GRHayL/Radiation/ghl_m1_matter_coupling_sources.c#L4)
+shown by [ghl_m1_compute_matter_coupling_sources](../../../GRHayL/Radiation/ghl_m1_matter_coupling_sources.c)
 and the neutrino source equations in the companion leaf.
 
 ## Number equation
@@ -184,12 +184,13 @@ copied into the neutrino rule: in particular, the photon equilibrium choice
 \(J_{\rm eq}=a_RT^4\), photon opacity prescriptions, and photon microphysics
 are not supplied by the current Radiation kernels. Neutrino `n_eq`, `J_eq`,
 emissivities, and opacities arrive in a frozen provider bundle; see
-[ghl_m1.h rate fields](../../../GRHayL/include/ghl_m1.h#L930).
+[ghl_m1.h rate fields](../../../GRHayL/include/ghl_m1.h).
 
 The older methods whitepaper's HLL flux is also not implied by these continuum
 equations. The current canonical neutrino face method is four-point blended
-Rusanov; generic HLL helpers do not define that path. The current policy is
-recorded in [TRACEABILITY.md](../../../GRHayL/Radiation/TRACEABILITY.md#L8).
+Rusanov; generic HLL helpers do not define that path. The canonical face
+operation is listed in the production-surface table of
+[TRACEABILITY.md](../../../GRHayL/Radiation/TRACEABILITY.md#production-boundary).
 
 ## Focused evidence
 

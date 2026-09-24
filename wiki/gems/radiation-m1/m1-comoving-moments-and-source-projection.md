@@ -5,7 +5,7 @@ terms and the neutrino number current then require the radiation moments in the
 fluid frame. This leaf gives the current contractions and signs; it does not
 restate the complete public API contract. The implementation is
 [ghl_m1_comoving_moments.c](../../../GRHayL/Radiation/ghl_m1_comoving_moments.c),
-with declarations in [ghl_m1.h](../../../GRHayL/include/ghl_m1.h#L106).
+with declarations in [ghl_m1.h](../../../GRHayL/include/ghl_m1.h).
 
 ## Fluid-frame projector and moments
 
@@ -65,7 +65,7 @@ $$
 
 That last minus sign is important: `Hn` is not \(+V_iH^i\). The implementation
 forms it explicitly after lowering `HU` with `gammaDD`; see
-[ghl_m1_comoving_moments.c](../../../GRHayL/Radiation/ghl_m1_comoving_moments.c#L43).
+[ghl_m1_comoving_moments.c](../../../GRHayL/Radiation/ghl_m1_comoving_moments.c).
 
 ## Radiation-side four-force projection
 
@@ -89,7 +89,7 @@ For neutrinos, \(Q\) and \(\kappa_{\rm tr}\) are supplied by the grey rate
 bundle and are defined in
 [neutrino source equations](m1-neutrino-source-equations.md). The current
 implementation evaluates these projections in
-[ghl_m1_neutrino_sources.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c#L25).
+[ghl_m1_neutrino_sources.c](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c).
 
 The sign convention is that \(G^\mu\) acts on radiation. The matter source is
 the equal-and-opposite conservative contribution, not another application of
@@ -102,8 +102,8 @@ extrinsic curvature generate separate geometry sources in the conservative
 E/F equations. Do not fold those terms into `ghl_m1_sources` and then pass the
 result to the matter-coupling helper as though all terms represented
 radiation-matter exchange. The separation is visible in
-[ghl_m1_sources_geometry.c](../../../GRHayL/Radiation/ghl_m1_sources_geometry.c#L52)
-and [ghl_m1_matter_coupling_sources.c](../../../GRHayL/Radiation/ghl_m1_matter_coupling_sources.c#L4).
+[ghl_m1_sources_geometry.c](../../../GRHayL/Radiation/ghl_m1_sources_geometry.c)
+and [ghl_m1_matter_coupling_sources.c](../../../GRHayL/Radiation/ghl_m1_matter_coupling_sources.c).
 
 ## Validation and numerical meaning
 

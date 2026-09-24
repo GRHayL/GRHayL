@@ -56,12 +56,12 @@ by the Minerbo `chi(xi)` relation that holds for the primary construction.
 
 The two states that reach the fallback are counted separately by
 `ghl_m1_closure_counters::admissibility_fallback_zero_flux` and
-`::admissibility_fallback_psd`. The zero-flux case is an expected consequence
-of the covariant thin dyad vanishing identically at exact zero Eulerian flux
-and carries no admissibility concern. The PSD case reflects the O(v)-accurate
-relativistic thick tensor losing positive semidefiniteness: its smallest
-eigenvalue can reach a sizable negative fraction of the tensor norm, so the
-check is a genuine rejection rather than a tolerance artifact. Repository
+`ghl_m1_closure_counters::admissibility_fallback_psd`. The zero-flux case is an
+expected consequence of the covariant thin dyad vanishing identically at exact
+zero Eulerian flux and carries no admissibility concern. The PSD case reflects
+the \f$O(v)\f$-accurate relativistic thick tensor losing positive semidefiniteness:
+its smallest eigenvalue can reach a sizable negative fraction of the tensor norm,
+so the check is a genuine rejection rather than a tolerance artifact. Repository
 measurement places that regime at an Eulerian flux transverse to the fluid
 velocity with fluid Eulerian speed above roughly 0.5c; flux parallel or
 antiparallel to the velocity does not reach it at any speed tested up to 0.9c,
@@ -176,6 +176,7 @@ implement that boundary in their own projects; GRHayL remains host agnostic.
 
 The checkout ships these focused M1 unit-test sources under `Unit_Tests/`:
 
+- `unit_test_m1_closure_fallback.c`
 - `unit_test_m1_diffusion_flux.c`
 - `unit_test_m1_error_handling.c`
 - `unit_test_m1_fd_jacobian.c`
@@ -189,10 +190,13 @@ The checkout ships these focused M1 unit-test sources under `Unit_Tests/`:
 `configure` discovers `Unit_Tests/unit_test_*.c` for its generated `tests`
 target, subject to its HDF5 filtering, and maps discovered sources to
 `test/unit_test_*` targets. Compilation alone is target-selection evidence.
-`Unit_Tests/run_m1_tests.sh` explicitly runs the listed M1 tests and is invoked by
-`.github/run_tests.sh` and the Radiation jobs in the compiler/OS workflows. The
-runner selects the rate-provider test's generated-table mode in HDF5 builds
-and its available table-free checks without HDF5. See
+The dedicated `.github/actions/run_m1/action.yml` invokes
+`Unit_Tests/run_m1_tests.sh` to build and execute the ten listed tests in the
+Radiation jobs of the compiler/OS workflows. The broad `.github/run_tests.sh`
+invokes `make tests datagen` to compile discovered tests, then executes its
+separate test list; it does not invoke the scoped M1 runner. The M1 runner
+selects the rate-provider test's generated-table mode in HDF5 builds and its
+available table-free checks without HDF5. See
 [the M1 test guide](../../Unit_Tests/README.m1.md)
 for scoped build commands and the stored-reference boundary. CI selection alone
 does not establish a remote pass, measured coverage, complete mesh evolution, or

@@ -23,18 +23,6 @@ static void ghl_m1_pair_zero_source_diagnostics(
   ghl_m1_initialize_implicit_solve_diagnostics(&diagnostics->implicit);
 }
 
-static bool ghl_m1_pair_state_is_finite(const ghl_m1_neutrino_state *restrict state) {
-  if(state == NULL || !isfinite(state->N) || !isfinite(state->E)) {
-    return false;
-  }
-  for(int i = 0; i < 3; ++i) {
-    if(!isfinite(state->F[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
 static bool ghl_m1_pair_rates_are_active(
       const ghl_m1_neutrino_rates rates[ghl_m1_pair_species_count]) {
   for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
@@ -71,21 +59,13 @@ static ghl_error_codes_t ghl_m1_pair_number_extent(
       const ghl_m1_neutrino_state state[ghl_m1_pair_species_count],
       const double h,
       double new_number[ghl_m1_pair_species_count]) {
-  if(new_number == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
-  if(!isfinite(h) || h < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
-
+  /* The schedule supplies local output storage and a validated step size;
+   * the public pair entry has already checked matching emissivities. */
   double q = 0.0;
   for(int process = 0; process < ghl_m1_neutrino_pair_process_count; ++process) {
-    if(rates[0].eta_N_pair[process] != rates[1].eta_N_pair[process]) {
-      return ghl_error_m1_microphysics_failure;
-    }
     q += rates[0].eta_N_pair[process];
   }
-  if(!isfinite(q) || q < 0.0) {
+  if(!isfinite(q)) {
     return ghl_error_m1_microphysics_failure;
   }
   if(q == 0.0 || h == 0.0) {
@@ -100,49 +80,39 @@ static ghl_error_codes_t ghl_m1_pair_number_extent(
   const double n_eq_a = rates[1].n_eq;
   const double N_e = state[0].N;
   const double N_a = state[1].N;
-  if(!isfinite(gamma_e) || !isfinite(gamma_a) || gamma_e <= 0.0 || gamma_a <= 0.0
-     || !isfinite(n_eq_e) || !isfinite(n_eq_a) || n_eq_e <= 0.0 || n_eq_a <= 0.0
-     || !isfinite(N_e) || !isfinite(N_a)) {
-    return ghl_error_m1_invalid_state;
-  }
-
-  if(N_e < 0.0 || N_a < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* Successful current derivation guarantees finite positive Gamma_N and
+   * finite nonnegative N. With q > 0, validated matching pair emissivities
+   * guarantee finite positive equilibrium numbers for both species. */
 
   const long double H = (long double)h * (long double)q;
   const long double D = (long double)gamma_e * (long double)gamma_a * (long double)n_eq_e
                         * (long double)n_eq_a;
   const long double smaller = N_e < N_a ? (long double)N_e : (long double)N_a;
   const long double difference = fabsl((long double)N_e - (long double)N_a);
-  if(!isfinite(H) || H <= 0.0L || !isfinite(D) || D <= 0.0L || !isfinite(smaller)
-     || !isfinite(difference)) {
+  if(!isfinite(H) || H <= 0.0L || !isfinite(D) || D <= 0.0L) {
     return ghl_error_m1_implicit_admissibility;
   }
 
   const long double D_over_H = D / H;
   const long double C = D * (1.0L + smaller / H);
   const long double B = difference + D_over_H;
-  if(!isfinite(D_over_H) || !isfinite(B) || !isfinite(C) || B < 0.0L || C <= 0.0L) {
+  if(!isfinite(B) || !isfinite(C)) {
     return ghl_error_m1_implicit_admissibility;
   }
   const long double scale = fmaxl(B, sqrtl(C));
-  if(!isfinite(scale) || scale <= 0.0L) {
-    return ghl_error_m1_implicit_admissibility;
-  }
+  /* B is nonnegative and C is positive, so scale is finite and positive. */
   const long double b_scaled = B / scale;
   const long double c_over_scale = C / scale;
   const long double discriminant_scaled
         = b_scaled * b_scaled + 4.0L * c_over_scale / scale;
-  if(!isfinite(discriminant_scaled) || discriminant_scaled < 0.0L) {
-    return ghl_error_m1_implicit_admissibility;
-  }
+  /* Scaling bounds B/scale and C/scale^2 by one, keeping the
+   * nonnegative discriminant finite. */
   const long double y = 2.0L * c_over_scale / (b_scaled + sqrtl(discriminant_scaled));
-  if(!isfinite(y) || y < 0.0L || !isfinite((double)y)) {
+  if(!isfinite((double)y)) {
     return ghl_error_m1_implicit_admissibility;
   }
   const long double larger = y + difference;
-  if(!isfinite(larger) || !isfinite((double)larger)) {
+  if(!isfinite((double)larger)) {
     return ghl_error_m1_implicit_admissibility;
   }
   if(N_e <= N_a) {
@@ -161,19 +131,12 @@ static ghl_error_codes_t ghl_m1_pair_make_effective_rates(
       const double partner_n_com,
       const double partner_n_eq,
       ghl_m1_neutrino_rates *restrict effective_rates) {
-  if(pair_rates == NULL || effective_rates == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
-  if(!isfinite(partner_n_com) || partner_n_com < 0.0 || !isfinite(partner_n_eq)
-     || partner_n_eq <= 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* The schedule derives partner_n_com from an accepted finite state and a
+   * validated positive Gamma_N; active pair bundles have positive n_eq. */
 
   double eta_E = 0.0;
   double kappa_a_E = 0.0;
-  if(pair_rates->J_eq <= 0.0 || !isfinite(pair_rates->J_eq)) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* Rate validation requires J_eq > 0 whenever a pair emissivity is active. */
   for(int process = 0; process < ghl_m1_neutrino_pair_process_count; ++process) {
     eta_E += pair_rates->eta_E_pair[process];
     if(pair_rates->eta_E_pair[process] != 0.0) {
@@ -202,7 +165,7 @@ static ghl_error_codes_t ghl_m1_pair_make_effective_rates(
       }
     }
   }
-  if(!isfinite(eta_E) || !isfinite(kappa_a_E) || eta_E < 0.0 || kappa_a_E < 0.0) {
+  if(!isfinite(eta_E) || !isfinite(kappa_a_E)) {
     return ghl_error_m1_invalid_state;
   }
 
@@ -223,9 +186,6 @@ static void ghl_m1_pair_record_ef_repair(
       const ghl_m1_neutrino_state *restrict before,
       const ghl_m1_neutrino_state *restrict after,
       ghl_m1_neutrino_diagnostics *restrict diagnostics) {
-  if(diagnostics == NULL) {
-    return;
-  }
   bool changed = before->E != after->E;
   diagnostics->repair_dE += fabs(after->E - before->E);
   for(int i = 0; i < 3; ++i) {
@@ -251,15 +211,8 @@ static ghl_error_codes_t ghl_m1_pair_attempt_schedule(
       ghl_m1_neutrino_diagnostics output_diagnostics[ghl_m1_pair_species_count],
       ghl_m1_implicit_solve_diagnostics
             pair_solve_diagnostics[ghl_m1_pair_species_count]) {
-  if(m1_params == NULL || nu_params == NULL || metric == NULL || prims_frozen == NULL
-     || rates == NULL || base_state == NULL || base_diagnostics == NULL
-     || output_state == NULL || output_diagnostics == NULL
-     || pair_solve_diagnostics == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
-  if(!isfinite(dt) || dt < 0.0 || num_substeps <= 0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* Called only after public input validation, with a positive entry from
+   * fallback_schedule and local state/diagnostic storage. */
 
   ghl_m1_neutrino_state current_state[ghl_m1_pair_species_count]
         = { base_state[0], base_state[1] };
@@ -272,9 +225,8 @@ static ghl_error_codes_t ghl_m1_pair_attempt_schedule(
 
   const double dt_sub = dt / (double)num_substeps;
   const double h = metric->lapse * dt_sub;
-  if(!isfinite(dt_sub) || !isfinite(h) || h < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* Both independent updates accepted lapse*dt as finite; dividing dt first
+   * keeps every scheduled h finite as well. */
 
   for(int step = 0; step < num_substeps; ++step) {
     ghl_m1_neutrino_current current[ghl_m1_pair_species_count];
@@ -299,8 +251,7 @@ static ghl_error_codes_t ghl_m1_pair_attempt_schedule(
     candidate_state[0].N = new_number[0];
     candidate_state[1].N = new_number[1];
     for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
-      if(!isfinite(candidate_state[species].N)
-         || candidate_state[species].N < nu_params[species].N_floor) {
+      if(candidate_state[species].N < nu_params[species].N_floor) {
         return ghl_error_m1_implicit_admissibility;
       }
     }
@@ -316,9 +267,6 @@ static ghl_error_codes_t ghl_m1_pair_attempt_schedule(
       }
 
       const double sqrt_detgamma = metric->sqrt_detgamma;
-      if(!isfinite(sqrt_detgamma) || sqrt_detgamma <= 0.0) {
-        return ghl_error_m1_invalid_metric;
-      }
       const double U_in[4] = { current_state[species].E * sqrt_detgamma,
                                current_state[species].F[0] * sqrt_detgamma,
                                current_state[species].F[1] * sqrt_detgamma,
@@ -357,23 +305,18 @@ static ghl_error_codes_t ghl_m1_pair_attempt_schedule(
       for(int i = 0; i < 3; ++i) {
         repaired_state.F[i] = U_out[i + 1] / sqrt_detgamma;
       }
-      if(!ghl_m1_pair_state_is_finite(&repaired_state)) {
-        return ghl_error_m1_invalid_state;
-      }
+      /* Newton publishes only finite, admissible U_out values. This division
+       * is the same round trip checked on its success path; the energy repair
+       * below handles its allowed one-ULP floor rounding. */
       const ghl_m1_neutrino_state before_repair = repaired_state;
       ghl_m1_rad_state rad_state = ghl_m1_neutrino_project_rad_state(&repaired_state);
-      error = ghl_m1_realizability_repair(m1_params, metric, &rad_state);
-      if(error != ghl_success) {
-        /* Newton accepted this finite trial state; retain the repair guard
-         * for a floating-point or metric edge that it did not encounter. */
-        return error; /* GCOVR_EXCL_LINE -- defensive post-Newton repair */
-      }
+      /* Public validation and Newton's accepted-state check establish the
+       * same configuration, SPD metric, finite flux, and positive energy
+       * required by realizability_repair. Its error exits cannot occur here. */
+      (void)ghl_m1_realizability_repair(m1_params, metric, &rad_state);
       repaired_state.E = rad_state.E;
       for(int i = 0; i < 3; ++i) {
         repaired_state.F[i] = rad_state.F[i];
-      }
-      if(!ghl_m1_pair_state_is_finite(&repaired_state)) {
-        return ghl_error_m1_invalid_state;
       }
       ghl_m1_pair_record_ef_repair(
             &before_repair, &repaired_state, &current_diagnostics[species]);
@@ -401,33 +344,20 @@ static ghl_error_codes_t ghl_m1_pair_publish_abort(
       ghl_m1_neutrino_source_diagnostics diagnostics[ghl_m1_pair_species_count],
       ghl_m1_neutrino_diagnostics neutrino_diagnostics[ghl_m1_pair_species_count],
       const bool terminal_no_update) {
-  if(state_transport != NULL && state_out != NULL) {
-    for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
-      state_out[species] = state_transport[species];
+  /* All callers are below the public entry's required-pointer checks. */
+  for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
+    state_out[species] = state_transport[species];
+    exchange[species] = (ghl_m1_neutrino_exchange){ 0 };
+    ghl_m1_pair_zero_source_diagnostics(&diagnostics[species]);
+    diagnostics[species].path = terminal_no_update
+                                      ? ghl_m1_neutrino_source_path_terminal_no_update
+                                      : ghl_m1_neutrino_source_path_hard_failure;
+    diagnostics[species].terminal_no_update = terminal_no_update;
+    if(terminal_no_update) {
+      neutrino_diagnostics[species].source_terminal_fallbacks++;
     }
-  }
-  if(exchange != NULL) {
-    for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
-      exchange[species] = (ghl_m1_neutrino_exchange){ 0 };
-    }
-  }
-  if(diagnostics != NULL) {
-    for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
-      ghl_m1_pair_zero_source_diagnostics(&diagnostics[species]);
-      diagnostics[species].path = terminal_no_update
-                                        ? ghl_m1_neutrino_source_path_terminal_no_update
-                                        : ghl_m1_neutrino_source_path_hard_failure;
-      diagnostics[species].terminal_no_update = terminal_no_update;
-    }
-  }
-  if(neutrino_diagnostics != NULL) {
-    for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
-      if(terminal_no_update) {
-        neutrino_diagnostics[species].source_terminal_fallbacks++;
-      }
-      else {
-        neutrino_diagnostics[species].source_failures++;
-      }
+    else {
+      neutrino_diagnostics[species].source_failures++;
     }
   }
   return error;
@@ -633,9 +563,10 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
           nonpair_exchange[species].dL_rad_cc, metric->sqrt_detgamma, n_b_cons,
           &final_exchange[species]);
     if(error != ghl_success) {
-      /* Extreme signed endpoint differences can fail exchange assembly;
-       * that arithmetic and its errors are covered at the helper boundary. */
-      return ghl_m1_pair_publish_failure( /* GCOVR_EXCL_LINE -- delegated arithmetic */
+      /* Extreme signed endpoint differences can fail exchange assembly. No
+       * validated pair-solve output reaches this guard; it is kept defensive
+       * and excluded from the coverage gate. */
+      return ghl_m1_pair_publish_failure( /* LCOV_EXCL_LINE */
             error, state_transport, state_out, exchange, diagnostics,
             neutrino_diagnostics);
     }

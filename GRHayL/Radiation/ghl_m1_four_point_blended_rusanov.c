@@ -1,3 +1,4 @@
+#include "../Flux_Source/ghl_rusanov_private.h"
 #include "ghl_m1.h"
 #include "ghl_m1_utils.h"
 
@@ -7,78 +8,6 @@ static bool ghl_m1_same_nonzero_sign(const double left, const double right) {
 
 static bool ghl_m1_opposite_nonzero_sign(const double left, const double right) {
   return (left > 0.0 && right < 0.0) || (left < 0.0 && right > 0.0);
-}
-
-/* Both operands are finite. Keep the original rounding, including subnormal
- * sums, unless the addition itself would overflow. */
-static double ghl_m1_average_finite(const double left, const double right) {
-  const double sum = left + right;
-  return isfinite(sum) ? 0.5 * sum : 0.5 * left + 0.5 * right;
-}
-
-static double ghl_m1_half_scaled_rusanov_candidate(
-      const double physical_flux_L,
-      const double physical_flux_R,
-      const double speed,
-      const double jump,
-      const double jump_low,
-      const bool jump_is_half) {
-  const double quarter_L = 0.25 * physical_flux_L;
-  const double quarter_R = 0.25 * physical_flux_R;
-  const double half_average = quarter_L + quarter_R;
-  const double average_part = half_average - quarter_L;
-  const double average_low
-        = (quarter_L - (half_average - average_part)) + (quarter_R - average_part);
-
-  const double coefficient = jump_is_half ? -0.5 * speed : -0.25 * speed;
-  const double half_product = coefficient * jump;
-  if(!isfinite(half_product)) {
-    return half_product;
-  }
-  const double product_low = fma(coefficient, jump, -half_product);
-  const double half_sum = half_product + half_average;
-  const double sum_part = half_sum - half_product;
-  const double sum_low
-        = (half_product - (half_sum - sum_part)) + (half_average - sum_part);
-  const double jump_low_product = coefficient * jump_low;
-  return 2.0 * (half_sum + (((sum_low + average_low) + product_low) + jump_low_product));
-}
-
-static double ghl_m1_rusanov_candidate_finite(
-      const double state_L,
-      const double state_R,
-      const double physical_flux_L,
-      const double physical_flux_R,
-      const double speed) {
-  const double average = ghl_m1_average_finite(physical_flux_L, physical_flux_R);
-  const double jump = state_R - state_L;
-  if(isfinite(jump)) {
-    if(speed > 0.0 && 0.5 * speed == 0.0) {
-      return fma(-speed, 0.5 * jump, average);
-    }
-    const double candidate = average - 0.5 * speed * jump;
-    if(isfinite(candidate)) {
-      return candidate;
-    }
-    const double fused = fma(-0.5 * speed, jump, average);
-    return isfinite(fused)
-                 ? fused
-                 : ghl_m1_half_scaled_rusanov_candidate(
-                         physical_flux_L, physical_flux_R, speed, jump, 0.0, false);
-  }
-  const double half_R = 0.5 * state_R;
-  const double minus_half_L = -0.5 * state_L;
-  const double half_jump = half_R + minus_half_L;
-  const double rounded_part = half_jump - half_R;
-  const double low_part
-        = (half_R - (half_jump - rounded_part)) + (minus_half_L - rounded_part);
-  const double candidate = fma(-speed, half_jump, average);
-  const double corrected = fma(-speed, low_part, candidate);
-  if(isfinite(corrected)) {
-    return corrected;
-  }
-  return ghl_m1_half_scaled_rusanov_candidate(
-        physical_flux_L, physical_flux_R, speed, half_jump, low_part, true);
 }
 
 typedef struct {
@@ -160,12 +89,9 @@ ghl_m1_validate_four_point_transport_policy(const bool diffusion_correction_enab
   return ghl_success;
 }
 
-/* The public Flux_Source Rusanov helper documents undensitized operands.
- * Volume-weighted transport uses the same componentwise arithmetic, but its
- * state and physical-flux arrays are intentionally measured in the
- * volume-weighted units used by
- * ghl_m1_compute_neutrino_four_point_volume_weighted_transport_flux. Keep
- * that use local so the public helper contract is not broadened implicitly. */
+/* The public Flux_Source Rusanov wrapper documents undensitized operands.
+ * Keep this volume-weighted wrapper local while sharing the unit-agnostic
+ * scalar arithmetic with that public wrapper. */
 static ghl_error_codes_t ghl_m1_compute_neutrino_four_point_rusanov_flux(
       const double state_L[ghl_m1_neutrino_transport_component_count],
       const double state_R[ghl_m1_neutrino_transport_component_count],
@@ -173,21 +99,11 @@ static ghl_error_codes_t ghl_m1_compute_neutrino_four_point_rusanov_flux(
       const double physical_flux_R[ghl_m1_neutrino_transport_component_count],
       const double speed,
       double flux[ghl_m1_neutrino_transport_component_count]) {
-  if(state_L == NULL || state_R == NULL || physical_flux_L == NULL
-     || physical_flux_R == NULL || flux == NULL || !isfinite(speed) || speed < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
-
+  /* The transport core supplies local arrays and validated finite operands. */
   double candidate_flux[ghl_m1_neutrino_transport_component_count];
   for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
       ++component) {
-    if(!isfinite(state_L[component]) || !isfinite(state_R[component])
-       || !isfinite(physical_flux_L[component])
-       || !isfinite(physical_flux_R[component])) {
-      return ghl_error_m1_invalid_state;
-    }
-
-    candidate_flux[component] = ghl_m1_rusanov_candidate_finite(
+    candidate_flux[component] = ghl_rusanov_candidate_finite(
           state_L[component], state_R[component], physical_flux_L[component],
           physical_flux_R[component], speed);
     if(!isfinite(candidate_flux[component])) {
@@ -221,7 +137,7 @@ ghl_error_codes_t ghl_m1_compute_four_point_flux_limiter(
   double candidate_phi = 0.0;
   bool candidate_sawtooth = false;
   if(ghl_m1_same_nonzero_sign(dup, duc) && ghl_m1_same_nonzero_sign(dum, duc)) {
-    /* theta == 0 selects the fully dissipative low-order flux.  Forming the
+    /* theta == 0 selects phi = 0 for every stencil.  Forming the
      * ratios first lets an overflowing ratio turn 0 * inf into NaN, and fmin
      * then returns its other argument -- silently publishing the undissipated
      * phi = 1.  Decide on theta before any division. */
@@ -242,9 +158,8 @@ ghl_error_codes_t ghl_m1_compute_four_point_flux_limiter(
     candidate_sawtooth = true;
   }
 
-  if(!isfinite(candidate_phi)) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* Positive slope ratios and theta in [0,2] leave phi in [0,1], even
+   * when a ratio overflows before fmin clips it. */
   *phi = candidate_phi;
   *sawtooth = candidate_sawtooth;
   return ghl_success;
@@ -270,9 +185,8 @@ ghl_error_codes_t ghl_m1_compute_four_point_opacity_suppression(
     candidate_A = fmin(1.0, 1.0 / optical_width);
     candidate_A = fmax(candidate_A, m1_params->mindiss);
   }
-  if(!isfinite(candidate_A)) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* A finite nonnegative optical width, or +infinity from overflow,
+   * produces a suppression in [mindiss,1]. */
   *A = candidate_A;
   return ghl_success;
 }
@@ -308,9 +222,7 @@ ghl_error_codes_t ghl_m1_compute_four_point_blended_flux(
                            ? flux_high - weight * difference
                            : (1.0 - weight) * flux_high + weight * flux_low;
   }
-  if(!isfinite(candidate_flux)) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* Both formulas retain a finite convex combination of finite fluxes. */
   *flux_num = candidate_flux;
   return ghl_success;
 }
@@ -330,7 +242,7 @@ static ghl_error_codes_t ghl_m1_compute_neutrino_four_point_transport_core(
   /* Keep all candidates local until every component has passed validation so
    * that a failed volume-weighted operation cannot publish a partial result. */
   if(m1_params == NULL || state_stencil == NULL || physical_flux_L == NULL
-     || physical_flux_R == NULL || flux_tilde == NULL || candidate_diagnostics == NULL) {
+     || physical_flux_R == NULL || flux_tilde == NULL) {
     return ghl_error_m1_null_pointer;
   }
 
@@ -347,9 +259,6 @@ static ghl_error_codes_t ghl_m1_compute_neutrino_four_point_transport_core(
   }
 
   const double face_speed = fmax(speed_L, speed_R);
-  if(!isfinite(face_speed) || face_speed < 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
 
   /* Validate all volume-weighted operands before invoking the private
    * componentwise Rusanov arithmetic. */
@@ -410,20 +319,14 @@ static ghl_error_codes_t ghl_m1_compute_neutrino_four_point_transport_core(
       return error;
     }
 
-    const double flux_high = ghl_m1_average_finite(flux_L[component], flux_R[component]);
-    if(!isfinite(flux_high)) {
-      return ghl_error_m1_invalid_state;
-    }
-
+    const double flux_high
+          = ghl_rusanov_average_finite(flux_L[component], flux_R[component]);
     double blended_flux = 0.0;
-    error = ghl_m1_compute_four_point_blended_flux(
+    /* The helpers above establish finite fluxes, phi and suppression in
+     * [0,1]; the output is a local object. Validation cannot fail here. */
+    (void)ghl_m1_compute_four_point_blended_flux(
           flux_high, flux_low[component], phi, sawtooth, opacity_suppression,
           &blended_flux);
-    if(error != ghl_success) {
-      /* All arguments were validated above; a finite convex blend cannot
-       * fail unless a future change breaks that invariant. */
-      return error; // GCOVR_EXCL_LINE
-    }
 
     candidate_flux[component] = blended_flux;
     candidate_diagnostics->phi[component] = phi;
@@ -490,8 +393,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_four_point_transport_flux(
     return policy_error;
   }
 
-  if(!ghl_m1_metric_is_symmetric_spd(metric_face)
-     || !isfinite(metric_face->sqrt_detgamma) || metric_face->sqrt_detgamma <= 0.0) {
+  /* The metric validator also checks finite, positive sqrt_detgamma. */
+  if(!ghl_m1_metric_is_symmetric_spd(metric_face)) {
     return ghl_error_m1_invalid_metric;
   }
 

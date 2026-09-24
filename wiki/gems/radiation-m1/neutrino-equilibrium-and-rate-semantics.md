@@ -20,8 +20,8 @@ The reference backend converts these degeneracies into its grey equilibrium
 targets. The table-backed NRPyLeakage path receives the EOS chemical-potential
 state and uses the corresponding electron-flavor degeneracy convention in its
 raw-rate adapter. This is provider-side behavior in
-[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c#L599-L627)
-and [`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c#L521-L523),
+[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c)
+and [`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c),
 not a Radiation callback that recomputes chemical equilibrium during a source
 solve.
 
@@ -34,9 +34,9 @@ J_eq = n_eq * mean_energy.
 ```
 
 The exact public field meanings are documented in
-[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h#L930-L965), while provider
+[`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h), while provider
 ownership and backend selection are in
-[`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h#L14-L27).
+[`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h).
 
 The chemical-potential relation is useful physical context from the neutrino
 whitepaper. The current interface does not expose a neutrino chemical
@@ -67,7 +67,7 @@ kappa_tr = kappa_a_E + kappa_s.
 The comparisons use the repository's binary64 validation rules; a product that
 underflows to exactly zero is reported diagnostically rather than replaced by
 an arbitrary floor. See
-[`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c#L49-L181).
+[`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c).
 
 Number and energy therefore do not share a hidden fixed mean-energy closure.
 The number source uses `kappa_a_N` and the endpoint number-current
@@ -90,8 +90,8 @@ N_new = (N_old + alpha*dt*eta_N)
 
 `Gamma_N` is the radiation number-current normalization, not the fluid Lorentz
 factor. The equations and the endpoint update are implemented in
-[`ghl_m1_neutrino_sources.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c#L6-L22)
-and [`ghl_m1_neutrino_number_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c#L15-L78).
+[`ghl_m1_neutrino_sources.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c)
+and [`ghl_m1_neutrino_number_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c).
 
 ## Pair fields are not ordinary one-species rates
 
@@ -112,7 +112,7 @@ eta_E_pair / eta_N_pair = J_eq / n_eq.
 
 The number emissivity is shared by the electron pair, while each species keeps
 its raw energy emissivity. The provider mapping preserves this distinction in
-[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c#L561-L595).
+[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c).
 
 ## What equilibrium means here
 
@@ -148,8 +148,8 @@ grey conditions. The paired equations are specified in
 
 ## Evidence
 
-Use [`unit_test_m1_rate_provider.c`](../../../Unit_Tests/unit_test_m1_rate_provider.c#L880-L1035)
+Use [`unit_test_m1_rate_provider.c`](../../../Unit_Tests/unit_test_m1_rate_provider.c)
 for equilibrium/rate construction and
-[`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c#L1011-L1288)
+[`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c)
 for independent pair source oracles and equilibrium behavior. The scoped test
 entry point is [`run_m1_tests.sh`](../../../Unit_Tests/run_m1_tests.sh).

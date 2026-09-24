@@ -12,6 +12,7 @@
  */
 
 #include <ctype.h>
+#include <float.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -725,6 +726,99 @@ static inline int m1_thcm1_fixture_compare_paired(
                 "reference=%.17g normalization=%.17g",
                 record->case_id, component, gate_names[gate], actual, reference,
                 computed_normalization[component]);
+        }
+        return 0;
+      }
+      if(report != NULL) {
+        report->max_scaled_error = fmax(report->max_scaled_error, scaled_error);
+      }
+    }
+  }
+  return 1;
+}
+
+/* Explicit two-state comparator for the
+ * strict_relative_2e-12_propagated_response_v1 policy.  Stored transport and
+ * stress-energy replay use this stronger current-baseline/current-perturbed
+ * campaign contract.  The producer uses
+ * abs(a-b)/max(1e-300,abs(a),abs(b)) <= 2e-12.
+ * Calling the shared scalar primitive with that denominator, absolute
+ * tolerance 2e-12, zero relative tolerance, and zero floor preserves the
+ * rule including sub-floor and exact-zero cases.
+ * The fixture's input-derived normalization is still checked separately by
+ * the consumer; it is not used as a tolerance knob here. */
+static inline int m1_thcm1_fixture_compare_paired_strict_relative(
+      const m1_thcm1_fixture_record *restrict record,
+      const double *restrict computed_normalization,
+      const double *restrict computed_baseline,
+      const double *restrict computed_perturbed,
+      m1_thcm1_fixture_comparison_report *restrict report,
+      char *restrict error,
+      const size_t error_size) {
+  if(record == NULL || computed_normalization == NULL || computed_baseline == NULL
+     || computed_perturbed == NULL || record->normalization == NULL
+     || record->baseline_output == NULL || record->perturbed_output == NULL
+     || record->output_count == 0) {
+    m1_thcm1_fixture_set_error(
+          error, error_size, "invalid strict paired comparison argument");
+    return 0;
+  }
+  if(report != NULL) {
+    *report = (m1_thcm1_fixture_comparison_report){ .max_scaled_error = 0.0,
+                                                    .component = 0,
+                                                    .gate = "baseline" };
+  }
+  const double *expected[2] = { record->baseline_output, record->perturbed_output };
+  const double *computed[2] = { computed_baseline, computed_perturbed };
+  const char *gate_names[3] = { "baseline", "perturbed", "response" };
+  for(size_t component = 0; component < record->output_count; ++component) {
+    if(!isfinite(computed_normalization[component])
+       || !(computed_normalization[component] > 0.0)
+       || computed_normalization[component] != record->normalization[component]) {
+      if(error != NULL && error_size > 0) {
+        snprintf(
+              error, error_size,
+              "fixture %s component %zu has invalid input normalization",
+              record->case_id, component);
+      }
+      return 0;
+    }
+    for(int gate = 0; gate < 3; ++gate) {
+      const double actual = gate < 2 ? computed[gate][component]
+                                     : computed[1][component] - computed[0][component];
+      const double reference = gate < 2
+                                     ? expected[gate][component]
+                                     : expected[1][component] - expected[0][component];
+      double denominator = fmax(1.0e-300, fmax(fabs(actual), fabs(reference)));
+      double bound = 2.0e-12;
+      if(gate == 2) {
+        /* A difference of nearby outputs must not be tested relative to its
+         * nearly zero value. Propagate the two retained endpoint bounds.
+         * The three double subtractions contribute at most 4*DBL_EPSILON
+         * times the summed endpoint scales (using epsilon conservatively
+         * rather than half-epsilon). This is not independent sensitivity
+         * evidence beyond the endpoint comparisons. */
+        const double baseline_scale = fmax(
+              1.0e-300,
+              fmax(fabs(computed[0][component]), fabs(expected[0][component])));
+        const double perturbed_scale = fmax(
+              1.0e-300,
+              fmax(fabs(computed[1][component]), fabs(expected[1][component])));
+        denominator = baseline_scale + perturbed_scale;
+        bound += 4.0 * DBL_EPSILON;
+      }
+      double scaled_error = 0.0;
+      if(!m1_thcm1_fixture_compare_one(
+               actual, reference, denominator, bound, 0.0, 0.0, &scaled_error)) {
+        if(report != NULL) {
+          report->max_scaled_error = fmax(report->max_scaled_error, scaled_error);
+          report->component = component;
+          report->gate = gate_names[gate];
+        }
+        if(error != NULL && error_size > 0) {
+          snprintf(
+                error, error_size, "fixture %s component %zu %s comparison failed",
+                record->case_id, component, gate_names[gate]);
         }
         return 0;
       }

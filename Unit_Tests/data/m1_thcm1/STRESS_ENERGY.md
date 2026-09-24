@@ -21,8 +21,11 @@ then the test lowers it with the full ADM four-metric before comparison.
 
 Every pair changes only the radiation energy input, records that sensitivity
 as `radiation.E`, and recomputes its positive normalization from the paired
-input energies. The fixture uses the same strict propagated-response policy
-as the other stored M1 operations. It is a discrete stress-energy operation
+input energies. The fixture uses the
+`strict_relative_2e-12_propagated_response_v1` policy shared with the
+prepared-transport fixtures: each current baseline and perturbed output must
+agree with the retained THC value to relative 2e-12, and the response bound
+propagates those endpoint bounds. It is a discrete stress-energy operation
 check, not a full evolution, host-integration, or continuum-equivalence claim.
 
 The campaign producer/exporter lives in the external Verification workspace;

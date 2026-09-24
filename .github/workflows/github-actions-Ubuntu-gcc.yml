@@ -32,7 +32,7 @@ jobs:
         with:
           compiler: 'gcc'
           report_file: m1-coverage.xml
-          report_filter: GRHayL/Radiation/
+          report_filter: 'GRHayL/(Radiation/|include/ghl_m1\.h$|GRHayL_Core/abort_if_error\.c$|Flux_Source/ghl_calculate_Rusanov_flux\.c$)'
 
   ET-Legacy:
     strategy:

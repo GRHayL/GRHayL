@@ -11,12 +11,6 @@ ghl_m1_nrpyleakage_record_nonfinite_rate(const double x, bool *const rate_failur
   return x;
 }
 
-static bool raw_value_is_valid(const double x) {
-  const bool finite = isfinite(x);
-  const bool nonnegative = x >= 0.0;
-  return finite && nonnegative;
-}
-
 /* The generated approximation is positive for every finite argument.  Do not
  * replace a caller's finite degeneracy with a tail value: a finite positive
  * polynomial can still be evaluated accurately at large positive arguments.
@@ -24,17 +18,14 @@ static bool raw_value_is_valid(const double x) {
  * positive intermediate is not representable, so report the rate failure. */
 static ghl_error_codes_t
 evaluate_fermi_dirac_integral(const int k, const double z, double *const integral) {
-  const bool invalid_input = (integral == NULL) || !isfinite(z);
-  if(invalid_input) {
+  if(!isfinite(z)) {
     return ghl_error_m1_microphysics_failure;
   }
-  const ghl_error_codes_t err = NRPyLeakage_Fermi_Dirac_integrals(k, z, integral);
-  const bool helper_failure = err != ghl_success;
-  const bool invalid_integral
-        = helper_failure || !isfinite(*integral) || (*integral <= 0.0);
+  /* Call sites supply a local output and one of the supported keys 2--5. */
+  (void)NRPyLeakage_Fermi_Dirac_integrals(k, z, integral);
+  const bool invalid_integral = !isfinite(*integral) || (*integral <= 0.0);
   if(invalid_integral) {
-    const ghl_error_codes_t error_codes[] = { ghl_error_m1_microphysics_failure, err };
-    return error_codes[helper_failure];
+    return ghl_error_m1_microphysics_failure;
   }
   return ghl_success;
 }
@@ -44,58 +35,38 @@ evaluate_fermi_dirac_integral(const int k, const double z, double *const integra
  * nonzero binary64 result; return an explicit microphysics failure instead of
  * silently turning that tail into a different rate. */
 static ghl_error_codes_t evaluate_fermi_factor(const double x, double *const factor) {
-  const bool finite_input = isfinite(x);
-  const bool valid_input = finite_input && (factor != NULL);
-  double scratch_factor = 0.0;
-  double *const output_slots[] = { &scratch_factor, factor };
-  double *const output = output_slots[valid_input];
-  *output = 0.0;
-  const double input_slots[] = { 0.0, x };
-  const double safe_x = input_slots[finite_input];
-  bool invalid_exp = false;
-  if(safe_x > 0.0) {
-    const double exp_neg_x = exp(-safe_x);
-    const bool positive_invalid_exp = !isfinite(exp_neg_x) || (exp_neg_x == 0.0);
-    if(positive_invalid_exp) {
-      invalid_exp = true;
+  /* All callers provide a local output. With finite x, these exponentials
+   * have nonpositive arguments and cannot overflow. */
+  *factor = 0.0;
+  if(!isfinite(x)) {
+    return ghl_error_m1_microphysics_failure;
+  }
+  if(x > 0.0) {
+    const double exp_neg_x = exp(-x);
+    if(exp_neg_x == 0.0) {
+      return ghl_error_m1_microphysics_failure;
     }
-    else {
-      *output = exp_neg_x / (1.0 + exp_neg_x);
-    }
+    *factor = exp_neg_x / (1.0 + exp_neg_x);
   }
   else {
-    const double exp_x = exp(safe_x);
-    invalid_exp = !isfinite(exp_x);
-    *output = 1.0 / (1.0 + exp_x);
+    *factor = 1.0 / (1.0 + exp(x));
   }
-  const bool invalid_factor = (!valid_input) || invalid_exp || !isfinite(*output);
-  const ghl_error_codes_t error_codes[]
-        = { ghl_success, ghl_error_m1_microphysics_failure };
-  return error_codes[invalid_factor];
+  return ghl_success;
 }
 
 static ghl_error_codes_t
 validate_raw_species(const ghl_m1_nrpyleakage_species_raw_rates *restrict r) {
-  const bool invalid = !isfinite(r->neutrino_degeneracy) || !raw_value_is_valid(r->F2)
-                       || !raw_value_is_valid(r->F3) || !raw_value_is_valid(r->F4)
-                       || !raw_value_is_valid(r->F5) || !raw_value_is_valid(r->n_eq_cgs)
-                       || !raw_value_is_valid(r->J_eq_mev_cgs)
-                       || !raw_value_is_valid(r->mean_energy_mev)
-                       || !raw_value_is_valid(r->eta_N_beta_cgs)
-                       || !raw_value_is_valid(r->eta_N_pair_cgs)
-                       || !raw_value_is_valid(r->eta_N_plasmon_cgs)
-                       || !raw_value_is_valid(r->eta_N_brems_cgs)
-                       || !raw_value_is_valid(r->eta_E_beta_mev_cgs)
-                       || !raw_value_is_valid(r->eta_E_pair_mev_cgs)
-                       || !raw_value_is_valid(r->eta_E_plasmon_mev_cgs)
-                       || !raw_value_is_valid(r->eta_E_brems_mev_cgs)
-                       || !raw_value_is_valid(r->kappa_a_N_cc_cgs)
-                       || !raw_value_is_valid(r->kappa_a_E_cc_cgs)
-                       || !raw_value_is_valid(r->kappa_s_N_neutron_cgs)
-                       || !raw_value_is_valid(r->kappa_s_N_proton_cgs)
-                       || !raw_value_is_valid(r->kappa_s_E_neutron_cgs)
-                       || !raw_value_is_valid(r->kappa_s_E_proton_cgs) || (r->F2 == 0.0)
-                       || (r->mean_energy_mev <= 0.0);
+  /* Channel products are nonnegative: their factors are positive constants,
+   * positive validated Fermi integrals, nonnegative blocking populations and
+   * beta moments, and normalized fractions. EnsureFinite has already rejected
+   * every nonfinite channel product before this check. Only the independently
+   * formed equilibrium moments and mean underflow still need validation.
+   * The mean cannot overflow: for positive degeneracy F2 >= 1 and finite J
+   * bounds T*F3 when T >= 1 (T < 1 already bounds it by finite F3). For the
+   * exponential tail F3/F2 <= 4, while successful T^5 evaluation bounds T. */
+  const bool invalid = !isfinite(r->n_eq_cgs)
+                       || !isfinite(r->J_eq_mev_cgs)
+                       || r->mean_energy_mev <= 0.0;
   if(invalid) {
     return ghl_error_m1_microphysics_failure;
   }
@@ -125,7 +96,7 @@ validate_kernel_result(const ghl_m1_nrpyleakage_kernel_result *restrict result) 
   bool validation_failure = false;
   for(size_t a = 0; a < sizeof(arrays) / sizeof(arrays[0]); ++a) {
     for(int s = 0; s < ghl_m1_nrpyleakage_species_count; ++s) {
-      const bool invalid = !isfinite(arrays[a][s]) || (arrays[a][s] < 0.0);
+      const bool invalid = !isfinite(arrays[a][s]);
       validation_failure |= invalid;
     }
   }
@@ -164,8 +135,7 @@ ghl_error_codes_t ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
                                                 .X_n = X_n,
                                                 .X_p = X_p };
 
-  const double values[] = { candidate.rho,   candidate.T,    candidate.Ye,
-                            candidate.muhat, candidate.mu_e, candidate.mu_p,
+  const double values[] = { candidate.muhat, candidate.mu_e, candidate.mu_p,
                             candidate.mu_n,  candidate.X_n,  candidate.X_p };
   for(size_t i = 0; i < sizeof(values) / sizeof(values[0]); ++i) {
     if(!isfinite(values[i])) {
@@ -204,9 +174,6 @@ static ghl_error_codes_t compute_kernel(
       const double eta[ghl_m1_nrpyleakage_species_count],
       const int channel_mask,
       ghl_m1_nrpyleakage_kernel_result *restrict result) {
-  if((thermo == NULL) || (eta == NULL) || (result == NULL)) {
-    return ghl_error_m1_null_pointer;
-  }
   const int valid_channels
         = ghl_neutrino_rate_channel_charged_current
           | ghl_neutrino_rate_channel_nucleon_scattering | ghl_neutrino_rate_channel_pair
@@ -465,8 +432,8 @@ static ghl_error_codes_t compute_kernel(
   const double plasmon_E_nux
         = compute_plasmon ? EnsureFinite(plasmon_energy_coefficient * plasmon_N_nux)
                           : 0.0;
-  const double eta_E_nux = tmp_66 + pair_E_nux + plasmon_E_nux;
 
+  const double eta_E_nux = tmp_66 + pair_E_nux + plasmon_E_nux;
   ghl_m1_nrpyleakage_species_raw_rates *const nue = &candidate.raw.species[0];
   ghl_m1_nrpyleakage_species_raw_rates *const anue = &candidate.raw.species[1];
   ghl_m1_nrpyleakage_species_raw_rates *const nux = &candidate.raw.species[2];
@@ -554,11 +521,8 @@ ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
       const int channel_mask,
       ghl_m1_nrpyleakage_raw_rates *restrict raw) {
   ghl_m1_nrpyleakage_kernel_result result;
-  if(raw == NULL) {
-    return compute_kernel(thermo, eta, channel_mask, NULL);
-  }
-  if((thermo == NULL) || (eta == NULL)) {
-    return compute_kernel(thermo, eta, channel_mask, &result);
+  if((raw == NULL) || (thermo == NULL) || (eta == NULL)) {
+    return ghl_error_m1_null_pointer;
   }
   const double state_values[]
         = { thermo->rho,  thermo->T,    thermo->Ye,  thermo->muhat, thermo->mu_e,

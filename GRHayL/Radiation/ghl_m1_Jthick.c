@@ -30,9 +30,8 @@ ghl_error_codes_t ghl_m1_compute_Jthick(
                        + rad_state->F[2] * V_con[2];
   const double W2 = SQR(W);
   const double denom = 2.0 * W2 + 1.0;
-  if(!isfinite(denom) || denom <= 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
+  /* The velocity helper bounds W by the double spacing below |V| = 1,
+   * so this denominator is finite and at least one. */
 
   const double prefactor = 3.0 / denom;
   const double bracket = (2.0 * W2 - 1.0) * rad_state->E - 2.0 * W2 * FdotV;

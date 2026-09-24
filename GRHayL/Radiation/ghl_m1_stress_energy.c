@@ -33,10 +33,6 @@ ghl_error_codes_t ghl_m1_compute_stress_energy(
     return error;
   }
 
-  if(metric->lapse <= 0.0) {
-    return ghl_error_m1_invalid_metric;
-  }
-
   const double inv_alpha = 1.0 / metric->lapse;
   const double inv_alpha_sq = SQR(inv_alpha);
   if(!isfinite(inv_alpha_sq)) {

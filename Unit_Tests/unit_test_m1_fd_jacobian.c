@@ -61,6 +61,98 @@ static void require_close(
   }
 }
 
+static void test_scaled_positive_argument_boundaries(void) {
+  ghl_m1_scaled_positive value = { .mantissa = 0.25, .exponent = 2 };
+  require_condition(
+        !ghl_m1_scaled_positive_from_double(1.0, NULL),
+        "scaled-positive conversion accepted a NULL output", 378);
+  require_condition(
+        !ghl_m1_scaled_positive_from_double(NAN, &value),
+        "scaled-positive conversion accepted NaN", 378);
+  require_condition(
+        !ghl_m1_scaled_positive_from_double(INFINITY, &value),
+        "scaled-positive conversion accepted infinity", 378);
+  require_condition(
+        !ghl_m1_scaled_positive_from_double(-1.0, &value),
+        "scaled-positive conversion accepted a negative value", 378);
+  require_condition(
+        ghl_m1_scaled_positive_from_double(0.0, &value) && value.mantissa == 0.0
+              && value.exponent == 0,
+        "scaled-positive conversion mishandled zero", 378);
+
+  const double factor = 2.0;
+  require_condition(
+        !ghl_m1_scaled_positive_product(NULL, 1, &value),
+        "scaled-positive product accepted a NULL input", 379);
+  require_condition(
+        !ghl_m1_scaled_positive_product(&factor, 0, &value),
+        "scaled-positive product accepted an empty input", 379);
+  require_condition(
+        !ghl_m1_scaled_positive_product(&factor, 1, NULL),
+        "scaled-positive product accepted a NULL output", 379);
+  require_condition(
+        ghl_m1_scaled_positive_product(&factor, 1, &value)
+              && value.mantissa == 0.5 && value.exponent == 2,
+        "scaled-positive product returned the wrong value", 379);
+}
+
+static bool check_observer_contract;
+typedef struct {
+  int completed;
+  ghl_error_codes_t result;
+} completion_record;
+
+static void check_completion_event(
+      void *context, const ghl_m1_solver_stage_t stage,
+      const ghl_error_codes_t status, const double U[4], const double residual[4],
+      const ghl_m1_newton_diagnostics *diagnostics) {
+  (void)residual;
+  (void)diagnostics;
+  completion_record *record = context;
+  require_condition(U != NULL, "observer lost current iterate", 780);
+  if(stage == ghl_m1_solver_stage_completed_solve) {
+    record->completed++;
+    record->result = status;
+  }
+}
+
+static ghl_error_codes_t checked_newton_with_initial_guess(
+      const ghl_m1_parameters *params, const ghl_metric_quantities *metric,
+      const ghl_m1_newton_callbacks *callbacks, const void *context,
+      const double base[4], const double initial[4], double output[4],
+      ghl_m1_newton_diagnostics *diagnostics) {
+  completion_record record = {0};
+  ghl_m1_newton_callbacks observed;
+  const bool instrument = check_observer_contract && callbacks != NULL
+                          && callbacks->observer == NULL;
+  if(instrument) {
+    observed = *callbacks;
+    observed.observer = check_completion_event;
+    observed.observer_context = &record;
+    callbacks = &observed;
+  }
+  const ghl_error_codes_t result = ghl_m1_newton_solve_4d_with_initial_guess(
+      params, metric, callbacks, context, base, initial, output, diagnostics);
+  if(instrument && params && metric && callbacks->residual && callbacks->jacobian
+     && base && initial && output) {
+    require_condition(record.completed == 1 && record.result == result,
+                      "observer completion disagrees with solver result", 780);
+  }
+  return result;
+}
+
+static ghl_error_codes_t checked_newton(
+      const ghl_m1_parameters *params, const ghl_metric_quantities *metric,
+      const ghl_m1_newton_callbacks *callbacks, const void *context,
+      const double base[4], double output[4], ghl_m1_newton_diagnostics *diagnostics) {
+  if(!check_observer_contract) {
+    return ghl_m1_newton_solve_4d(
+        params, metric, callbacks, context, base, output, diagnostics);
+  }
+  return checked_newton_with_initial_guess(
+      params, metric, callbacks, context, base, base, output, diagnostics);
+}
+
 static void make_primitives(ghl_primitive_quantities *restrict prims) {
   *prims = (ghl_primitive_quantities){ 0 };
   prims->rho = 1.0;
@@ -209,6 +301,22 @@ static void check_jacobian_against_independent_difference(
           m1_params, nu_params, metric, prims, rates, state_in, dt, U_perturbed,
           residual_perturbed, case_index);
     used_delta = -delta;
+
+    const ghl_m1_neutrino_implicit_context context = {
+      .m1_params = m1_params, .metric = metric, .prims_frozen = prims, .rates = rates
+    };
+    double validated_jacobian[4][4] = { { 0.0 } };
+    require_error(
+          ghl_m1_neutrino_compute_implicit_jacobian_validated(
+                &context, dt, U_base, U, residual_0, validated_jacobian),
+          ghl_success, "validated one-sided implicit Jacobian", case_index);
+    for(int row = 0; row < 4; ++row) {
+      for(int component = 0; component < 4; ++component) {
+        require_close(
+              validated_jacobian[row][component], jacobian[row][component], 0.0, 0.0,
+              "checked/validated one-sided Jacobian", case_index);
+      }
+    }
   }
   else {
     require_error(error, ghl_success, "forward interior residual", case_index);
@@ -425,6 +533,35 @@ static void check_invalid_fd_step_rejection(
               &zero_step_params, metric, prims, rates, 0.5, U, U, residual, jacobian),
         ghl_error_m1_invalid_state, "zero finite-difference step", 380);
 
+  ghl_m1_parameters nonfinite_step_params = *m1_params;
+  nonfinite_step_params.fd_epsilon_rel = INFINITY;
+  nonfinite_step_params.fd_epsilon_abs = 0.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_jacobian_with_base(
+              &nonfinite_step_params, metric, prims, rates, 0.5, U, U, residual, jacobian),
+        ghl_error_m1_invalid_state, "nonfinite finite-difference step", 380);
+
+  ghl_metric_quantities overflow_metric = *metric;
+  overflow_metric.lapse = 2.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual_with_base(
+              m1_params, &overflow_metric, prims, rates, DBL_MAX, U, U, residual),
+        ghl_error_m1_invalid_state, "overflowing dt-lapse product", 380);
+
+  ghl_metric_quantities invalid_volume_metric = *metric;
+  invalid_volume_metric.sqrt_detgamma = 0.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual(
+              m1_params, nu_params, &invalid_volume_metric, prims, rates, state_in, 0.5, U,
+              residual),
+        ghl_error_m1_invalid_metric, "zero public residual volume", 380);
+  invalid_volume_metric.sqrt_detgamma = NAN;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual(
+              m1_params, nu_params, &invalid_volume_metric, prims, rates, state_in, 0.5, U,
+              residual),
+        ghl_error_m1_invalid_metric, "nonfinite public residual volume", 380);
+
   require_error(
         ghl_m1_neutrino_compute_implicit_jacobian_with_base(
               m1_params, metric, prims, rates, -1.0, U, U, residual, jacobian),
@@ -458,6 +595,19 @@ static void check_invalid_fd_step_rejection(
               zero_residual, jacobian),
         ghl_error_m1_microphysics_failure, "backward residual hard-error propagation",
         385);
+
+  /* A positive step below the spacing at DBL_MAX must advance by one ULP.
+   * The forward ULP overflows; the backward ULP remains finite and preserves
+   * the hard error from the frozen rates. */
+  ghl_m1_parameters sub_ulp_params = *m1_params;
+  sub_ulp_params.fd_epsilon_rel = nextafter(0.0, 1.0);
+  sub_ulp_params.fd_epsilon_abs = 0.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_jacobian_with_base(
+              &sub_ulp_params, metric, prims, &invalid_rates, 0.0, large_U, large_U,
+              zero_residual, jacobian),
+        ghl_error_m1_microphysics_failure, "sub-ULP one-sided hard-error propagation",
+        386);
 }
 
 static void check_public_convergence(
@@ -627,7 +777,7 @@ static void expect_solver_failure(
   double U_out[4] = { -1.0, -2.0, -3.0, -4.0 };
   ghl_m1_newton_diagnostics diagnostics;
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &callbacks, context, U_base, U_out, &diagnostics),
         ghl_error_m1_implicit_solve_failure, operation, case_index);
 }
@@ -647,7 +797,7 @@ static void expect_solver_error(
   double U_out[4] = { -1.0, -2.0, -3.0, -4.0 };
   ghl_m1_newton_diagnostics diagnostics;
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &callbacks, context, U_base, U_out, &diagnostics),
         expected, operation, case_index);
 }
@@ -809,6 +959,22 @@ static void test_linear_rejection_boundaries(
       context.jacobian[row][column] = 0.0;
     }
   }
+  /* Finite input entries can overflow during elimination. The scaled-pivot
+   * guard must reject the resulting infinite pivot before back substitution. */
+  context.jacobian[0][0] = 1.0;
+  context.jacobian[0][1] = 1.0;
+  context.jacobian[1][0] = -0x1p971;
+  context.jacobian[1][1] = DBL_MAX;
+  context.jacobian[2][2] = 1.0;
+  context.jacobian[3][3] = 1.0;
+  expect_solver_failure(
+        m1_params, metric, &context, "finite matrix with overflowing Newton pivot", 746);
+
+  for(int row = 0; row < 4; ++row) {
+    for(int column = 0; column < 4; ++column) {
+      context.jacobian[row][column] = 0.0;
+    }
+  }
   affine_newton_context permuted_affine = { .target = { 1.25, 0.10, -0.20, 0.05 } };
   const ghl_m1_newton_callbacks permuted_callbacks
         = { .residual = permuted_affine_newton_residual,
@@ -819,7 +985,7 @@ static void test_linear_rejection_boundaries(
   double permuted_output[4] = { -1.0, -2.0, -3.0, -4.0 };
   ghl_m1_newton_diagnostics permuted_diagnostics;
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &permuted_callbacks, &permuted_affine, permuted_base,
               permuted_output, &permuted_diagnostics),
         ghl_success, "row-swapped Newton matrix solve", 745);
@@ -900,23 +1066,23 @@ static void test_newton_input_boundaries(
   ghl_m1_newton_diagnostics diagnostics;
 
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               NULL, metric, &callbacks, &affine, U_base, U_initial, U_out, &diagnostics),
         ghl_error_m1_null_pointer, "NULL Newton parameters", 750);
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               m1_params, NULL, &callbacks, &affine, U_base, U_initial, U_out,
               &diagnostics),
         ghl_error_m1_null_pointer, "NULL Newton metric", 751);
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               m1_params, metric, NULL, &affine, U_base, U_initial, U_out, &diagnostics),
         ghl_error_m1_null_pointer, "NULL Newton callbacks", 752);
 
   ghl_m1_newton_callbacks null_residual_callbacks = callbacks;
   null_residual_callbacks.residual = NULL;
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               m1_params, metric, &null_residual_callbacks, &affine, U_base, U_initial,
               U_out, &diagnostics),
         ghl_error_m1_null_pointer, "NULL Newton residual callback", 753);
@@ -924,21 +1090,21 @@ static void test_newton_input_boundaries(
   ghl_m1_newton_callbacks null_jacobian_callbacks = callbacks;
   null_jacobian_callbacks.jacobian = NULL;
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               m1_params, metric, &null_jacobian_callbacks, &affine, U_base, U_initial,
               U_out, &diagnostics),
         ghl_error_m1_null_pointer, "NULL Newton Jacobian callback", 754);
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               m1_params, metric, &callbacks, &affine, NULL, U_initial, U_out,
               &diagnostics),
         ghl_error_m1_null_pointer, "NULL Newton base state", 755);
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               m1_params, metric, &callbacks, &affine, U_base, NULL, U_out, &diagnostics),
         ghl_error_m1_null_pointer, "NULL Newton initial state", 756);
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               m1_params, metric, &callbacks, &affine, U_base, U_initial, NULL,
               &diagnostics),
         ghl_error_m1_null_pointer, "NULL Newton output state", 757);
@@ -982,7 +1148,7 @@ static void test_newton_optional_paths(
   const double U_base[4] = { 1.0, 0.0, 0.0, 0.0 };
   double U_out[4] = { -1.0, -2.0, -3.0, -4.0 };
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &callbacks_without_observer, &affine, U_base, U_out,
               NULL),
         ghl_success, "Newton solve without diagnostics", 760);
@@ -1000,7 +1166,7 @@ static void test_newton_optional_paths(
             .observer_context = &observer_context };
   ghl_m1_newton_diagnostics diagnostics;
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &callbacks_with_observer, &affine, U_base, U_out,
               &diagnostics),
         ghl_success, "Newton solve with observer", 761);
@@ -1246,7 +1412,7 @@ static void test_newton_retry_boundaries(
             .observer = NULL,
             .observer_context = NULL };
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               &one_iteration_params, metric, &backtracking_callbacks,
               &backtracking_context, base_state, output, &diagnostics),
         ghl_error_m1_implicit_solve_failure, "Newton backtracking and exhaustion", 770);
@@ -1260,7 +1426,7 @@ static void test_newton_retry_boundaries(
             .observer = NULL,
             .observer_context = NULL };
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &admissible_callbacks, &admissible_context, base_state,
               output, &diagnostics),
         ghl_error_m1_implicit_solve_failure, "Newton admissibility retry exhaustion",
@@ -1270,7 +1436,7 @@ static void test_newton_retry_boundaries(
   invalid_projection_metric.sqrt_detgamma = 0.0;
   scripted_newton_context invalid_projection_context = { 0 };
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, &invalid_projection_metric, &admissible_callbacks,
               &invalid_projection_context, base_state, output, &diagnostics),
         ghl_error_m1_invalid_metric, "Newton projection metric failure", 772);
@@ -1282,7 +1448,7 @@ static void test_newton_retry_boundaries(
             .observer = NULL,
             .observer_context = NULL };
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &post_projection_callbacks, &post_projection_context,
               base_state, output, &diagnostics),
         ghl_error_m1_invalid_state, "Newton post-projection callback failure", 773);
@@ -1294,7 +1460,7 @@ static void test_newton_retry_boundaries(
             .observer = NULL,
             .observer_context = NULL };
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &post_projection_success_callbacks,
               &post_projection_success_context, base_state, output, &diagnostics),
         ghl_success, "Newton successful projected trial", 774);
@@ -1309,7 +1475,7 @@ static void test_newton_retry_boundaries(
             .observer_context = NULL };
   const double overflowing_base_state[4] = { DBL_MAX, 0.0, 0.0, 0.0 };
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &overflow_callbacks, &overflow_context,
               overflowing_base_state, output, &diagnostics),
         ghl_error_m1_implicit_solve_failure, "Newton nonfinite projected trial retry",
@@ -1322,7 +1488,7 @@ static void test_newton_retry_boundaries(
             .observer = NULL,
             .observer_context = NULL };
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &trial_error_callbacks, &trial_error_context,
               base_state, output, &diagnostics),
         ghl_error_m1_invalid_state, "Newton trial residual callback failure", 776);
@@ -1336,7 +1502,7 @@ static void test_newton_retry_boundaries(
   const double unchanged_output[4] = { -1.0, -2.0, -3.0, -4.0 };
   memcpy(output, unchanged_output, sizeof(output));
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &small_step_error_callbacks, &small_step_error_context,
               base_state, output, &diagnostics),
         ghl_error_m1_invalid_state, "Newton small-step residual callback failure", 777);
@@ -1354,7 +1520,7 @@ static void test_newton_retry_boundaries(
             .observer_context = NULL };
   memcpy(output, unchanged_output, sizeof(output));
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               &one_iteration_params, metric, &no_root_callbacks, NULL, base_state,
               output, &diagnostics),
         ghl_error_m1_implicit_solve_failure, "Newton small-step no-root residual", 778);
@@ -1375,7 +1541,7 @@ static void test_newton_retry_boundaries(
             .observer_context = NULL };
   memcpy(output, unchanged_output, sizeof(output));
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               &floor_params, metric, &floor_callbacks, NULL, base_state, output,
               &diagnostics),
         ghl_error_m1_implicit_solve_failure, "Newton inadmissible small trial", 779);
@@ -1401,7 +1567,7 @@ static void test_newton_retry_boundaries(
     scripted_newton_context invalid_iterate_context = { 0 };
     memcpy(output, unchanged_output, sizeof(output));
     require_error(
-          ghl_m1_newton_solve_4d_with_initial_guess(
+          checked_newton_with_initial_guess(
                 m1_params, metric, &zero_residual_callbacks, &invalid_iterate_context,
                 valid_base, invalid_initials[invalid_case], output, &diagnostics),
           ghl_error_m1_implicit_admissibility, invalid_initial_names[invalid_case],
@@ -1428,7 +1594,7 @@ static void test_newton_retry_boundaries(
   scripted_newton_context roundtrip_context = { 0 };
   memcpy(output, unchanged_output, sizeof(output));
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               &roundtrip_params, &roundtrip_metric, &zero_residual_callbacks,
               &roundtrip_context, floor_base, floor_initial, output, &diagnostics),
         ghl_success, "Newton densitized E_floor round-trip", 782);
@@ -1441,7 +1607,7 @@ static void test_newton_retry_boundaries(
   scripted_newton_context subfloor_context = { 0 };
   memcpy(output, unchanged_output, sizeof(output));
   require_error(
-        ghl_m1_newton_solve_4d_with_initial_guess(
+        checked_newton_with_initial_guess(
               &roundtrip_params, &roundtrip_metric, &zero_residual_callbacks,
               &subfloor_context, floor_base, subfloor_state, output, &diagnostics),
         ghl_error_m1_implicit_admissibility, "Newton genuinely subfloor iterate", 783);
@@ -1451,9 +1617,95 @@ static void test_newton_retry_boundaries(
         "Newton published the genuinely subfloor iterate", 783);
 }
 
+/* The public solver does not validate the configuration before iterating. An
+ * invalid repair policy therefore first surfaces at the trial admissibility
+ * check and must abort without publishing. */
+static void test_newton_trial_configuration_failure(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_metric_quantities *restrict metric) {
+  ghl_m1_parameters invalid_params = *m1_params;
+  invalid_params.repair_policy = (ghl_m1_repair_policy_t)12345;
+  const affine_newton_context affine = { .target = { 2.0, 0.1, 0.0, 0.0 } };
+  const ghl_m1_newton_callbacks callbacks = { .residual = affine_newton_residual,
+                                              .jacobian = affine_newton_jacobian,
+                                              .observer = NULL,
+                                              .observer_context = NULL };
+  const double U_base[4] = { 1.0, 0.0, 0.0, 0.0 };
+  const double unchanged[4] = { -1.0, -2.0, -3.0, -4.0 };
+  double U_out[4] = { unchanged[0], unchanged[1], unchanged[2], unchanged[3] };
+  ghl_m1_newton_diagnostics diagnostics;
+  require_error(
+        checked_newton(
+              &invalid_params, metric, &callbacks, &affine, U_base, U_out, &diagnostics),
+        ghl_error_m1_invalid_repair_policy, "Newton trial configuration failure", 776);
+  for(int component = 0; component < 4; ++component) {
+    require_close(
+          U_out[component], unchanged[component], 0.0, 0.0,
+          "Newton trial configuration failure transaction", 776);
+  }
+}
+
+static void test_newton_extreme_admissibility(
+      const ghl_m1_parameters *params, const ghl_metric_quantities *metric) {
+  const affine_newton_context affine = { .target = {1.0, 2.0, 0.0, 0.0} };
+  const ghl_m1_newton_callbacks affine_callbacks = {
+    .residual = affine_newton_residual, .jacobian = affine_newton_jacobian
+  };
+  const double base[4] = {1.0, 0.0, 0.0, 0.0};
+  double output[4] = {-1.0, -2.0, -3.0, -4.0};
+  const double unchanged[4] = {-1.0, -2.0, -3.0, -4.0};
+  require_error(checked_newton(params, metric, &affine_callbacks, &affine,
+                  base, output, NULL),
+                ghl_error_m1_implicit_solve_failure,
+                "unrealizable affine target", 781);
+  require_condition(memcmp(output, unchanged, sizeof(output)) == 0,
+                    "unrealizable Newton target published output", 781);
+
+  /* Densitizing a positive floor can lose more than one ulp when the product
+   * is subnormal. Such a round trip must not be accepted as a floor tie. */
+  const double volumes[] = {0.5, 1.0e-20};
+  const double floors[] = {0x1p-1074, 1.0e-300};
+  for(size_t i = 0; i < sizeof(volumes)/sizeof(volumes[0]); ++i) {
+    ghl_metric_quantities small_metric = *metric;
+    small_metric.sqrt_detgamma = volumes[i];
+    small_metric.detgamma = volumes[i]*volumes[i];
+    small_metric.gammaDD[0][0] = small_metric.detgamma;
+    small_metric.gammaUU[0][0] = 1.0/small_metric.detgamma;
+    ghl_m1_parameters small_params = *params;
+    small_params.E_floor = floors[i];
+    const double initial[4] = {floors[i]*volumes[i], 0.0, 0.0, 0.0};
+    scripted_newton_context context = {0};
+    const ghl_m1_newton_callbacks callbacks = {
+      .residual = zero_residual_for_any_state, .jacobian = scripted_identity_jacobian
+    };
+    require_error(checked_newton(&small_params, &small_metric, &callbacks, &context,
+                                initial, output, NULL),
+                  ghl_error_m1_implicit_admissibility,
+                  "subnormal densitized floor round trip", 782);
+    require_condition(memcmp(output, unchanged, sizeof(output)) == 0,
+                      "subnormal floor rejection published output", 782);
+  }
+
+  ghl_m1_parameters huge_floor = *params;
+  huge_floor.E_floor = DBL_MAX;
+  ghl_metric_quantities volume_metric = *metric;
+  volume_metric.gammaDD[0][0] = volume_metric.detgamma = 4.0;
+  volume_metric.gammaUU[0][0] = 0.25;
+  volume_metric.sqrt_detgamma = 2.0;
+  fixed_newton_context fixed = {
+    .residual = {1.0, 0.0, 0.0, 0.0}, .residual_status = ghl_success,
+    .jacobian_status = ghl_success
+  };
+  set_identity_matrix(fixed.jacobian);
+  expect_solver_failure(&huge_floor, &volume_metric, &fixed,
+                        "overflowing densitized Newton floor", 783);
+}
+
 static void test_newton_coverage_boundaries(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric) {
+  test_newton_extreme_admissibility(m1_params, metric);
+  test_newton_trial_configuration_failure(m1_params, metric);
   test_weighted_merit_boundaries(m1_params, metric);
   test_projection_failure_boundaries(m1_params, metric);
   test_linear_rejection_boundaries(m1_params, metric);
@@ -1474,7 +1726,7 @@ static void test_public_newton_boundaries(
   double U_out[4] = { -1.0, -2.0, -3.0, -4.0 };
   ghl_m1_newton_diagnostics diagnostics;
   require_error(
-        ghl_m1_newton_solve_4d(
+        checked_newton(
               m1_params, metric, &callbacks, &affine, U_base, U_out, &diagnostics),
         ghl_success, "public four-dimensional Newton solve", 700);
   for(int component = 0; component < 4; ++component) {
@@ -1550,6 +1802,12 @@ int main(void) {
   m1_setup_flat_metric(&metric);
   test_public_newton_boundaries(&m1_params, &metric);
   test_newton_coverage_boundaries(&m1_params, &metric);
+  /* Repeat independent scenarios to establish the observer's success and
+   * failure notification contract without changing solver outcomes. */
+  check_observer_contract = true;
+  test_public_newton_boundaries(&m1_params, &metric);
+  test_newton_coverage_boundaries(&m1_params, &metric);
+  check_observer_contract = false;
   ghl_primitive_quantities prims;
   make_primitives(&prims);
   ghl_m1_neutrino_parameters nu_params;
