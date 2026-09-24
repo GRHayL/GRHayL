@@ -17,12 +17,15 @@ destinations. It checks its C output names against the root and variant
 `make.code.defn` files. Review staged C and compile it before copying it into
 the checked-in source tree.
 
-The Python driver uses NRPy 2's ADM metric conversion, GRMHD stress-energy
-tensor, magnetic fast-wave estimate, GRHD characteristic roots, and C code
-generator. GRHayL's magnetic fields are already scaled by `1/sqrt(4 pi)` as
-required by the generated equations. The driver retains the checked C
-interfaces: EOS callback errors propagate, legacy wrappers abort on errors,
-and HLLE wave speeds are checked before any output is written.
+The Python driver uses NRPy 2's ADM metric conversion and comoving magnetic
+norm to form the total GRMHD stress-energy tensor for both source and face
+fluxes. It groups `rho_b*h + b^2` before multiplication by `u^mu*u^nu` to
+preserve precision in small momentum fluxes. NRPy 2 also supplies the magnetic
+fast-wave estimate, GRHD characteristic roots, and C code generator. GRHayL's
+magnetic fields are already scaled by `1/sqrt(4 pi)` as required by the
+generated equations. The driver retains the checked C interfaces: EOS callback
+errors propagate, legacy wrappers abort on errors, and HLLE wave speeds are
+checked before any output is written.
 
 ## Checked-In C Kernels
 

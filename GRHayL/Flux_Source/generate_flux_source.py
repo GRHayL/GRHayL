@@ -2,8 +2,9 @@
 Generate GRHayL GRMHD source terms, characteristic speeds, and HLLE fluxes.
 
 The source terms use the ADM form of the GRMHD evolution equations. Face
-fluxes use the Cartesian NRPy 2 stress-energy tensor and reconstructed face
-states. Run through generate_flux_source.sh to use the pinned NRPy 2 commit.
+fluxes construct the Cartesian GRMHD tensor from NRPy 2 metric and magnetic
+expressions and reconstructed face states. Run through generate_flux_source.sh
+to use the pinned NRPy 2 commit.
 
 Authors: GRHayL contributors
 """
@@ -26,10 +27,7 @@ from nrpy.equations.grhd.characteristic_speeds import (
     find_cmax_cmin as find_grhd_cmax_cmin,
 )
 from nrpy.equations.grmhd.characteristic_speeds import compute_v02
-from nrpy.equations.grmhd.GRMHD_equations import (
-    GRMHD_Equations,
-    compute_smallb2,
-)
+from nrpy.equations.grmhd.GRMHD_equations import compute_smallb2
 
 # Step P1: Confirm the shell script selected the pinned NRPy 2 checkout.
 nrpy_root = os.environ.get("NRPY_ROOT")
@@ -239,6 +237,56 @@ def write_function(
     destination.write_text(content)
 
 
+def grmhd_stress_energy(
+    alpha: sp.Expr,
+    beta: List[sp.Expr],
+    gamma: List[List[sp.Expr]],
+    u: List[sp.Expr],
+    B: List[sp.Expr],
+    density: sp.Expr,
+    pressure: sp.Expr,
+    enthalpy: sp.Expr,
+) -> List[List[sp.Expr]]:
+    """
+    Form the total GRMHD stress-energy tensor in the ADM coordinate basis.
+
+    NRPy 2 supplies the ADM metric and comoving magnetic norm. Combining
+    rho*h with b^2 before multiplication by u^mu*u^nu preserves precision
+    in momentum fluxes where magnetic and fluid terms nearly cancel.
+
+    :param alpha: ADM lapse.
+    :param beta: ADM shift components.
+    :param gamma: Covariant spatial metric components.
+    :param u: Contravariant fluid four-velocity.
+    :param B: Eulerian magnetic field divided by sqrt(4 pi).
+    :param density: Baryon density.
+    :param pressure: Fluid pressure.
+    :param enthalpy: Specific enthalpy.
+    :return: Contravariant total stress-energy tensor.
+    """
+    # Step 1: Contract u_i B^i, grouped by B^i for CSE and C evaluation.
+    g4DD = ADM_to_g4DD(gamma, beta, alpha)
+    u_dot_B = sum(
+        B[i] * sum(g4DD[i + 1][mu] * u[mu] for mu in range(4)) for i in range(3)
+    )
+    # Step 2: Form b^mu and b^2 using the NRPy 2 GRMHD contraction.
+    smallb4U = [u_dot_B / alpha] + [
+        (B[i] + u_dot_B * u[i + 1]) / (alpha * u[0]) for i in range(3)
+    ]
+    smallb2 = compute_smallb2(gamma, beta, alpha, smallb4U)
+    g4UU = ADM_to_g4UU(gamma, beta, alpha)
+    # Step 3: Assemble the fluid and magnetic terms in the Valencia tensor.
+    return [
+        [
+            (density * enthalpy + smallb2) * u[mu] * u[nu]
+            + (pressure + sp.Rational(1, 2) * smallb2) * g4UU[mu][nu]
+            - smallb4U[mu] * smallb4U[nu]
+            for nu in range(4)
+        ]
+        for mu in range(4)
+    ]
+
+
 def source_expressions() -> Tuple[List[sp.Expr], List[str]]:
     """
     Build ADM source terms for S_i and tau from the GRMHD stress tensor.
@@ -263,27 +311,10 @@ def source_expressions() -> Tuple[List[sp.Expr], List[str]]:
     ]
     volume = sp.sqrt(sp.det(sp.Matrix(gamma)))
 
-    # Step 1: Form b^mu and b^2 using NRPy 2 ADM metric conversion and b^2.
-    # Group u_i B^i by B^i so CSE retains one contraction per magnetic component.
-    g4DD = ADM_to_g4DD(gamma, beta, alpha)
-    u_dot_B = sum(
-        B[i] * sum(g4DD[i + 1][mu] * u[mu] for mu in range(4)) for i in range(3)
+    # Step 1: Use the same GRMHD tensor for source and face-flux generation.
+    tensor = grmhd_stress_energy(
+        alpha, beta, gamma, u, B, density, pressure, sp.Symbol("h")
     )
-    smallb4U = [u_dot_B / alpha] + [
-        (B[i] + u_dot_B * u[i + 1]) / (alpha * u[0]) for i in range(3)
-    ]
-    smallb2 = compute_smallb2(gamma, beta, alpha, smallb4U)
-    g4UU = ADM_to_g4UU(gamma, beta, alpha)
-    enthalpy = sp.Symbol("h")
-    tensor = [
-        [
-            (density * enthalpy + smallb2) * u[mu] * u[nu]
-            + (pressure + sp.Rational(1, 2) * smallb2) * g4UU[mu][nu]
-            - smallb4U[mu] * smallb4U[nu]
-            for nu in range(4)
-        ]
-        for mu in range(4)
-    ]
 
     # Step 2: Contract T^{mu nu} with K_ij and partial_i alpha for tau source.
     tau = sum(
@@ -497,7 +528,7 @@ def state_fluxes(direction: int, face: FaceSymbols) -> List[FluxState]:
     """
     Compute U and physical F for each side of one face.
 
-    The NRPy 2 GRMHD tensor includes magnetic stress-energy. Lowering one
+    The total tensor includes NRPy 2 magnetic stress-energy. Lowering one
     index directly from T^{mu nu} avoids extra magnetic contractions and keeps
     generated C speed close to the original GRHayL flux functions.
 
@@ -512,17 +543,10 @@ def state_fluxes(direction: int, face: FaceSymbols) -> List[FluxState]:
         ("r", face.u_r, face.B_r, face.rho_r, face.P_r),
         ("l", face.u_l, face.B_l, face.rho_l, face.P_l),
     ):
-        # Step 1: Build T^{mu nu} for one reconstructed primitive state.
-        equations = GRMHD_Equations(CoordSystem="Cartesian")
-        equations.alpha, equations.betaU, equations.gammaDD = alpha, beta, gamma
-        equations.u4U, equations.BmagU = u, B
-        equations.rho_b, equations.P, equations.h = (
-            density,
-            pressure,
-            sp.Symbol(f"h_{side}"),
+        # Step 1: Use the source-term tensor for each reconstructed face state.
+        tensor = grmhd_stress_energy(
+            alpha, beta, gamma, u, B, density, pressure, sp.Symbol(f"h_{side}")
         )
-        equations.compute_T4UU()
-        tensor = equations.T4UU
         # Step 2: Lower the second index for momentum density and flux.
         g4DD = ADM_to_g4DD(gamma, beta, alpha)
         mixed = [
