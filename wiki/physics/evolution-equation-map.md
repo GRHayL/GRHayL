@@ -92,8 +92,8 @@ Code map:
   route caller-owned metric derivative and extrinsic-curvature contract through
   [Flux_Source source-term contract](../gems/flux-source/source-terms-contract.md)
 - Stress-energy inputs: `GRHayL/GRHayL_Core/compute_TDNmunu.c`, `GRHayL/GRHayL_Core/compute_TUPmunu.c`
-- NRPy source helpers: `GRHayL/Flux_Source/IGM_All_Source_Terms.py`,
-  `GRHayL/Flux_Source/GRHayL_rhs.py`; route generator boundaries through
+- NRPy 2 source generator: `GRHayL/Flux_Source/generate_flux_source.py`;
+  route generation through `GRHayL/Flux_Source/generate_flux_source.sh` and
   [Flux_Source generated NRPy boundary](../gems/flux-source/generated-nrpy-boundary.md)
 
 Tests:
