@@ -77,7 +77,7 @@ route, not a complete workflow matrix:
 5. Decompress downloaded `*.bz2` EOS tables.
 6. Run selected binaries under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Run `unit_test_code_error` keys `0` through `88` as expected process
+7. Run `unit_test_code_error` keys `0` through `90` as expected process
    failures.
 8. Run `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before the tabulated
    C2P replay. This page records only that visible setup command, not `pyghl`

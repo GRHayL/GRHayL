@@ -34,6 +34,8 @@ typedef struct fparams_struct {
   double s;
   /** Auxiliary quantity \f$ \frac{B \cdot S}{D^{3/2}} \f$ */
   double t;
+  /** EOS error code from the most recent evaluation of f(x) */
+  ghl_error_codes_t eos_error;
   /** Function pointer provided by the surrounding functions */
   void (*compute_rho_P_eps_T_W)(
       const double x,

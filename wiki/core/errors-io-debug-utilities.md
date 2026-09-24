@@ -44,7 +44,7 @@ process failure. See [expected-failure and error keys](../tests/expected-failure
 and [`Unit_Tests/unit_test_code_error.c`](../../Unit_Tests/unit_test_code_error.c).
 The test deliberately exits nonzero after a matched error reaches
 `ghl_abort_if_error`; [`.github/run_tests.sh`](../../.github/run_tests.sh)
-loops keys 0 through 88 and treats a zero process status as "Failed to fail."
+loops keys 0 through 90 and treats a zero process status as "Failed to fail."
 This is expected-failure process coverage, not an ordinary success-status test.
 
 ## Return Codes Versus Terminating IO
