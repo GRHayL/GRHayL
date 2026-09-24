@@ -36,6 +36,7 @@ compute_rho_P_eps_T_W_energy(
   compute_rho_W_from_x_and_conservatives(x, params, cons_undens, fparams, &prims->rho, &W);
 
   // Step 2: Now compute P and eps
+  ghl_error_codes_t error;
   if(fparams->evolve_T) {
     const double q = fparams->q;
     const double s = fparams->s;
@@ -45,17 +46,20 @@ compute_rho_P_eps_T_W_energy(
 
     // Enforce limits and call table interpolator
     ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &prims->rho, &prims->Y_e, &prims->eps);
-    ghl_tabulated_compute_P_T_from_eps(eos, prims->rho, prims->Y_e, prims->eps, &prims->press, &prims->temperature);
+    error = ghl_tabulated_compute_P_T_from_eps(eos, prims->rho, prims->Y_e, prims->eps, &prims->press, &prims->temperature);
   }
   else {
     // If the temperature is not evolved, use the input guess to determine
     // the remaining primitives. Note that in this case one must provide
     // the appropriate temperature instead of the default guess T = T_min.
     ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
-    ghl_tabulated_compute_P_eps_from_T(eos, prims->rho, prims->Y_e, prims->temperature, &prims->press, &prims->eps);
+    error = ghl_tabulated_compute_P_eps_from_T(eos, prims->rho, prims->Y_e, prims->temperature, &prims->press, &prims->eps);
   }
 
-  // Step 3: Set the output
+  // Step 3: Store the EOS status of this evaluation for the caller
+  fparams->eos_error = error;
+
+  // Step 4: Set the output
   *W_ptr   = W;
 }
 

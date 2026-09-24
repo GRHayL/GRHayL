@@ -60,15 +60,21 @@ ghl_error_codes_t ghl_enforce_primitive_limits_and_compute_u0(
             eos, &prims->rho, &prims->Y_e, &prims->temperature);
 
       // Additional variables used for the EOS call
-      if(params->evolve_entropy) {
-        ghl_tabulated_compute_P_eps_S_from_T(
-              eos, prims->rho, prims->Y_e, prims->temperature, &prims->press,
-              &prims->eps, &prims->entropy);
-      }
-      else {
-        ghl_tabulated_compute_P_eps_from_T(
-              eos, prims->rho, prims->Y_e, prims->temperature, &prims->press,
-              &prims->eps);
+      {
+        ghl_error_codes_t error;
+        if(params->evolve_entropy) {
+          error = ghl_tabulated_compute_P_eps_S_from_T(
+                eos, prims->rho, prims->Y_e, prims->temperature, &prims->press,
+                &prims->eps, &prims->entropy);
+        }
+        else {
+          error = ghl_tabulated_compute_P_eps_from_T(
+                eos, prims->rho, prims->Y_e, prims->temperature, &prims->press,
+                &prims->eps);
+        }
+        if(error) {
+          return error;
+        }
       }
 #endif
       break;

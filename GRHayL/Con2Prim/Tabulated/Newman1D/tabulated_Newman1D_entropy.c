@@ -79,7 +79,11 @@ static ghl_error_codes_t ghl_newman_entropy(
     double xrho = con->rho*invW;
     double xent = con->entropy*invW;
     ghl_tabulated_enforce_bounds_rho_Ye_S(eos, &xrho, &xye, &xent);
-    ghl_tabulated_compute_P_T_from_S(eos, xrho, xye, xent, &xprs, &xtemp);
+    const ghl_error_codes_t error = ghl_tabulated_compute_P_T_from_S(eos, xrho, xye, xent, &xprs, &xtemp);
+    if(error) {
+      // Stale xprs would equal P_old and pass the convergence test below
+      return error;
+    }
 
     AtStep++;
     AtP[AtStep]=xprs;
@@ -126,10 +130,8 @@ static ghl_error_codes_t ghl_newman_entropy(
   prims->temperature = xtemp;
   ghl_tabulated_enforce_bounds_rho_Ye_T(eos, &prims->rho, &prims->Y_e, &prims->temperature);
   diagnostics->speed_limited = ghl_limit_utilde_and_compute_v(params, metric_adm, utildeU, prims);
-  ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
-                                       &prims->press, &prims->eps, &prims->entropy);
-
-  return ghl_success;
+  return ghl_tabulated_compute_P_eps_S_from_T(eos, prims->rho, prims->Y_e, prims->temperature,
+                                              &prims->press, &prims->eps, &prims->entropy);
 }
 
 ghl_error_codes_t ghl_tabulated_Newman1D_entropy(

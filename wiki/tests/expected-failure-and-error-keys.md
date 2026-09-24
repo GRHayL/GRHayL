@@ -16,7 +16,7 @@ Read with [Core tests and fixtures](../core/tests-and-fixtures.md),
 ## Harness Contract
 
 The full runner invokes `$repo_root/test/unit_test_code_error` for keys
-`0..88` from its private `code_error_workdir`.
+`0..90` from its private `code_error_workdir`.
 Each key is treated as an expected-error case: if the executable exits
 successfully, `.github/run_tests.sh` prints `Failed to fail!` and fails the
 runner; if the executable exits nonzero, the runner treats that as the expected
@@ -59,6 +59,7 @@ these HDF5-only keys:
 - `63`
 - `66`
 - `69..85`
+- `89..90`
 
 Those skipped HDF5-only keys exit as the test harness expects under a no-HDF5
 build. Treat them as expected-skip confirmations for HDF5-only paths, not as
@@ -114,6 +115,12 @@ helpers, disabled direct-C2P stubs, and real tabulated flux kernels.
   `ghl_error_invalid_hlle_wavespeeds` handling in `ghl_abort_if_error`.
   Direct checked HLLE input validation belongs to
   [Flux_Source HLLE flux variants](../gems/flux-source/hlle-flux-variant-matrix.md).
+- Tabulated 1D Con2Prim EOS failures: keys `89` and `90` scale `tau` above the
+  SLy4 table's energy range at the test density, so the temperature inversion
+  fails and `ghl_tabulated_Newman1D_energy` (`89`) and
+  `ghl_tabulated_Palenzuela1D_energy` (`90`) must return
+  `ghl_error_table_bisection` rather than a converged state.
+  Route solver behavior to [Con2Prim recovery flow](../gems/con2prim/recovery-flow.md).
 
 ## Ownership Routes
 

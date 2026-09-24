@@ -252,7 +252,7 @@ workflow matrix and not a fixture generator:
    where needed, decompressing `*.bz2` files.
 6. Runs the compiled tests under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Runs `unit_test_code_error` over error-code keys `0` through `88`, expecting
+7. Runs `unit_test_code_error` over error-code keys `0` through `90`, expecting
    each invocation to fail at process level.
 8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
    `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;
