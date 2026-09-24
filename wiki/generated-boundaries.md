@@ -151,42 +151,35 @@ regenerating an ancestral source; see
 Route Flux_Source-specific generator/script questions through
 [Flux Source generated NRPy boundary](gems/flux-source/generated-nrpy-boundary.md).
 This page keeps repository-wide generated-output boundaries; the child page
-owns Flux_Source generator-script, NRPy support, and checked-in kernel routing.
+owns Flux_Source generation, the pinned NRPy 2 checkout, and checked-in kernel routing.
 
-`GRHayL/Flux_Source/*.py` and `GRHayL/Flux_Source/nrpy/` are source/generator
-inputs for symbolic/NRPy-derived flux-source code. `Doxyfile` excludes `*.py`
-from generated docs.
+`GRHayL/Flux_Source/generate_flux_source.py` is the symbolic source for the
+Flux_Source C kernels. `generate_flux_source.sh` clones its pinned NRPy 2
+commit and runs that driver. `Doxyfile` excludes `*.py` from generated docs.
 
 Local evidence:
 
-- `GRHayL/Flux_Source/GRHayL_rhs.py` resolves its NRPy imports relative to the
-  script, requires an explicit new or empty staging directory outside
-  `GRHayL/Flux_Source`, and generates the complete output set.
-- `GRHayL/Flux_Source/IGM_Characteristic_Speeds.py` contains code paths that
-  write `ghl_calculate_characteristic_speed_dirn*.c`.
-- `GRHayL/Flux_Source/IGM_All_fluxes.py` contains code paths that write
-  `ghl_calculate_HLLE_fluxes_dirn*_<kind>.c` under variant directories.
-- `GRHayL/Flux_Source/nrpy/` is a vendored or copied NRPy support tree by local
-  naming and imports. Exact upstream sync process: Unknown / needs maintainer
-  confirmation.
+- `GRHayL/Flux_Source/generate_flux_source.sh` fetches the NRPy 2 revision and
+  invokes the Python driver in a temporary checkout.
+- `GRHayL/Flux_Source/generate_flux_source.py` requires an explicit new or
+  empty staging directory outside `GRHayL/Flux_Source`, generates the complete
+  output set, and checks it against the build manifests.
 
 Generated or derived C files confirmed by local generator paths:
 
 | C output | Local generator evidence | Notes |
 | --- | --- | --- |
-| `GRHayL/Flux_Source/ghl_calculate_source_terms.c` | `GRHayL_rhs.py` calls source-term generation. | Generated into the requested staging root. |
-| `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c` through `dirn2.c` | `GRHayL_rhs.py` calls `IGM_Characteristic_Speeds.py`. | Generated into the requested staging root. |
-| `GRHayL/Flux_Source/hybrid/ghl_calculate_HLLE_fluxes_dirn*_hybrid.c` | `GRHayL_rhs.py` calls `IGM_All_fluxes.py` with the explicit `hybrid` variant. | Generated under the matching staging subdirectory. |
-| `GRHayL/Flux_Source/hybrid_entropy/ghl_calculate_HLLE_fluxes_dirn*_hybrid_entropy.c` | Same generator with the explicit `hybrid_entropy` variant. | Generated under the matching staging subdirectory. |
-| `GRHayL/Flux_Source/tabulated/ghl_calculate_HLLE_fluxes_dirn*_tabulated.c` | Same generator with the explicit `tabulated` variant. | Generated under the matching staging subdirectory. |
-| `GRHayL/Flux_Source/tabulated_entropy/ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy.c` | Same generator with the explicit `tabulated_entropy` variant. | Generated under the matching staging subdirectory. |
+| `GRHayL/Flux_Source/ghl_calculate_source_terms.c` | `generate_source()` in `generate_flux_source.py`. | Generated into the requested staging root. |
+| `GRHayL/Flux_Source/ghl_calculate_characteristic_speed_dirn0.c` through `dirn2.c` | `generate_speeds()` in the same driver. | Generated into the requested staging root. |
+| `GRHayL/Flux_Source/hybrid/ghl_calculate_HLLE_fluxes_dirn*_hybrid.c` | `generate_fluxes()` in the same driver. | Generated under the matching staging subdirectory. |
+| `GRHayL/Flux_Source/hybrid_entropy/ghl_calculate_HLLE_fluxes_dirn*_hybrid_entropy.c` | Same generation path. | Generated under the matching staging subdirectory. |
+| `GRHayL/Flux_Source/tabulated/ghl_calculate_HLLE_fluxes_dirn*_tabulated.c` | Same generation path. | Generated under the matching staging subdirectory. |
+| `GRHayL/Flux_Source/tabulated_entropy/ghl_calculate_HLLE_fluxes_dirn*_tabulated_entropy.c` | Same generation path. | Generated under the matching staging subdirectory. |
 
-From the repository root, first install
-`GRHayL/Flux_Source/requirements.txt` in a disposable Python environment, then
-use `python3 GRHayL/Flux_Source/GRHayL_rhs.py <empty-staging-directory>`. The
-script enforces the pinned SymPy version, rejects destinations inside
-`GRHayL/Flux_Source` and nonempty destinations, and checks its output set
-against the root and variant `make.code.defn` manifests. The pin stabilizes
-symbolic simplification and CSE ordering; the source-term generator explicitly
-normalizes its known square-root printer form.
+From the repository root, use
+`GRHayL/Flux_Source/generate_flux_source.sh <empty-staging-directory>` with
+NRPy 2's Python dependencies installed. The shell script fetches its pinned
+NRPy 2 revision; the Python driver rejects destinations inside
+`GRHayL/Flux_Source` and nonempty destinations and checks its output set against
+the root and variant `make.code.defn` manifests.
 Review and verify staged output before replacing checked-in C.

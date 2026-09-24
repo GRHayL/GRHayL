@@ -50,8 +50,8 @@ may limit them to table bounds. Route details to the
   through [source-term contract](flux-source/source-terms-contract.md).
 - Hybrid, hybrid entropy, tabulated, and tabulated entropy fluxes: route
   through [HLLE flux variant matrix](flux-source/hlle-flux-variant-matrix.md).
-- NRPy generation/support: `GRHayL/Flux_Source/*.py`,
-  `GRHayL/Flux_Source/nrpy/`; route through
+- NRPy 2 generation: `GRHayL/Flux_Source/generate_flux_source.sh` and
+  `GRHayL/Flux_Source/generate_flux_source.py`; route through
   [generated NRPy boundary](flux-source/generated-nrpy-boundary.md).
 
 ## Test Paths

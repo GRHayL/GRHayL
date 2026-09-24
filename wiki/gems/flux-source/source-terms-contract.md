@@ -64,13 +64,12 @@ long expressions into KB pages.
 
 Local generator provenance:
 
-- [GRHayL/Flux_Source/GRHayL_rhs.py](../../../GRHayL/Flux_Source/GRHayL_rhs.py)
-  generates source-term C into an explicit empty staging directory. See the
-  [generated NRPy boundary](generated-nrpy-boundary.md) for the command.
-- [GRHayL/Flux_Source/IGM_All_Source_Terms.py](../../../GRHayL/Flux_Source/IGM_All_Source_Terms.py)
-  contains the `ghl_calculate_source_terms` generation path.
-- [GRHayL/Flux_Source/nrpy/](../../../GRHayL/Flux_Source/nrpy/) supplies local
-  NRPy support modules used by the generator scripts.
+- [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py)
+  contains the `ghl_calculate_source_terms` equations and writes source-term C
+  into an explicit empty staging directory. The
+  [shell driver](../../../GRHayL/Flux_Source/generate_flux_source.sh) fetches
+  NRPy 2; see the [generated NRPy boundary](generated-nrpy-boundary.md) for
+  the command.
 
 Treat checked-in Python and generated C as coupled source evidence. If source
 terms change, review both the generated kernel and generator path instead of
@@ -99,8 +98,8 @@ verifies untouched output.
 - [GRHayL/include/ghl_flux_source.h](../../../GRHayL/include/ghl_flux_source.h)
 - [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h)
 - [GRHayL/Flux_Source/ghl_calculate_source_terms.c](../../../GRHayL/Flux_Source/ghl_calculate_source_terms.c)
-- [GRHayL/Flux_Source/IGM_All_Source_Terms.py](../../../GRHayL/Flux_Source/IGM_All_Source_Terms.py)
-- [GRHayL/Flux_Source/GRHayL_rhs.py](../../../GRHayL/Flux_Source/GRHayL_rhs.py)
+- [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py)
+- [GRHayL/Flux_Source/generate_flux_source.sh](../../../GRHayL/Flux_Source/generate_flux_source.sh)
 - [GRHayL/Flux_Source/make.code.defn](../../../GRHayL/Flux_Source/make.code.defn)
 - [docs/raw/Flux_Source.dox](../../../docs/raw/Flux_Source.dox)
 - [docs/raw/derivation.md](../../../docs/raw/derivation.md)

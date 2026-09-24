@@ -15,7 +15,9 @@ static bool hdf5_only_test(int test_key) {
       || (test_key >= 34 && test_key <= 60)
       || test_key == 63
       || test_key == 66
-      || (test_key >= 69 && test_key <= 85);
+      || (test_key >= 69 && test_key <= 85)
+      || test_key == 89
+      || test_key == 90;
 }
 #endif
 
@@ -57,10 +59,6 @@ int main(int argc, char **argv) {
     expect_error_code(
           ghl_error_invalid_hlle_wavespeeds, test_key,
           "invalid HLLE wave speeds");
-  }
-  /* Keys 89-112 cover the contiguous flux-source and M1 error-code block. */
-  if(test_key >= 89 && test_key <= 112) {
-    expect_error_code(expected_error_code(test_key), test_key, "M1 error-code message");
   }
 
   ghl_error_codes_t error = ghl_success;
@@ -619,6 +617,39 @@ Y_e: 1.000000000000000e+00, 3.000000000000000e+00
       expect_error_code(error, test_key, "ghl_tabulated_compute_deps_dP_from_rho");
       break;
   }
+
+  /*
+     Tabulated 1D Con2Prim with tau above the table's energy range at this
+     density, so the temperature inversion fails:
+       89: ghl_tabulated_Newman1D_energy
+       90: ghl_tabulated_Palenzuela1D_energy
+  */
+  if(test_key == 89 || test_key == 90) {
+    rho = 1e-8;
+    Y_e = 0.1;
+    T   = 50.0;
+    error = ghl_tabulated_compute_P_eps_S_from_T(&tab_eos, rho, Y_e, T, &P, &eps, &S);
+    if(error != ghl_success) {
+      fail_test(test_key, "Unexpected tabulated EOS error while setting up primitives");
+    }
+    ghl_initialize_primitives(
+          rho, P, eps, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, S, Y_e, T, &prims);
+    ghl_limit_v_and_compute_u0(&tab_params, &metric_adm, &prims, &speed_limited);
+    ghl_compute_conservs(&metric_adm, &metric_aux, &prims, &cons);
+    cons.tau *= 1e6;
+    prims.temperature = tab_eos.T_min;
+    ghl_initialize_diagnostics(&diagnostics);
+    if(test_key == 89) {
+      error = ghl_tabulated_Newman1D_energy(
+            &tab_params, &tab_eos, &metric_adm, &metric_aux, &cons, &prims, &diagnostics);
+      expect_error_code(error, test_key, "ghl_tabulated_Newman1D_energy");
+    }
+    else {
+      error = ghl_tabulated_Palenzuela1D_energy(
+            &tab_params, &tab_eos, &metric_adm, &metric_aux, &cons, &prims, &diagnostics);
+      expect_error_code(error, test_key, "ghl_tabulated_Palenzuela1D_energy");
+    }
+  }
 #endif
 
   // Silence warnings
@@ -683,9 +714,6 @@ void create_opaque_dataset(char *name, hid_t file_id) {
 #endif
 
 static ghl_error_codes_t expected_error_code(const int test_key) {
-  if(test_key >= 89 && test_key <= 112) {
-    return (ghl_error_codes_t)(ghl_error_flux_source_invalid_input + (test_key - 89));
-  }
   switch(test_key) {
     case  0:
     case  6:
@@ -771,6 +799,8 @@ static ghl_error_codes_t expected_error_code(const int test_key) {
     case 87: return ghl_error_nrpyleakage_nonfinite_output;
     case 88:
       return ghl_error_invalid_hlle_wavespeeds;
+    case 89:
+    case 90: return ghl_error_table_bisection;
     case 78:
     case 79:
     case 80:

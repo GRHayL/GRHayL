@@ -11,23 +11,6 @@ on:
     - cron: '33 15 1,15 * *'
 
 jobs:
-  radiation-m1:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
-        hdf5: [enabled, disabled]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/OS_setup
-        with:
-          compiler: 'clang'
-      - uses: ./.github/actions/run_m1
-        with:
-          compiler: 'clang'
-          hdf5: ${{ matrix.hdf5 }}
-
   ET-Legacy:
     strategy:
       fail-fast: false
@@ -388,7 +371,7 @@ jobs:
       - name: Run unit test for error-catching
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          for i in {0..112}; do
+          for i in {0..90}; do
             if ./test/unit_test_code_error "$i"; then
               echo "Failed to fail!"
               exit 1

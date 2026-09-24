@@ -67,8 +67,8 @@ arguments.
 
 ## Generated-Source Boundary
 
-[GRHayL/Flux_Source/IGM_Characteristic_Speeds.py](../../../GRHayL/Flux_Source/IGM_Characteristic_Speeds.py)
-contains the local generator naming path for
+[GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py)
+contains the NRPy 2 generator path for
 `ghl_calculate_characteristic_speed_dirn0`, `dirn1`, and `dirn2`. Treat the
 checked-in C files and the Python source as coupled evidence. Do not copy or
 hand-expand generated formulas into KB pages.
@@ -115,7 +115,7 @@ passes production characteristic-speed outputs into an Induction HLL routine.
 - [GRHayL/include/ghl_induction.h](../../../GRHayL/include/ghl_induction.h)
 - [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)
 - [GRHayL/Flux_Source/make.code.defn](../../../GRHayL/Flux_Source/make.code.defn)
-- [GRHayL/Flux_Source/IGM_Characteristic_Speeds.py](../../../GRHayL/Flux_Source/IGM_Characteristic_Speeds.py)
+- [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py)
 - [Unit_Tests/data_gen/unit_test_data_hybrid_flux.c](../../../Unit_Tests/data_gen/unit_test_data_hybrid_flux.c)
   and
   [Unit_Tests/data_gen/unit_test_data_tabulated_flux.c](../../../Unit_Tests/data_gen/unit_test_data_tabulated_flux.c)

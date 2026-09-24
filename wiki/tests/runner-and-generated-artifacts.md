@@ -77,7 +77,7 @@ route, not a complete workflow matrix:
 5. Decompress downloaded `*.bz2` EOS tables.
 6. Run selected binaries under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Run `unit_test_code_error` keys `0` through `88` as expected process
+7. Run `unit_test_code_error` keys `0` through `90` as expected process
    failures.
 8. Run `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before the tabulated
    C2P replay. This page records only that visible setup command, not `pyghl`
@@ -107,21 +107,17 @@ the workflow `reconstruction` matrices include both `PLM_reconstruction` and
 and [Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c](../../Unit_Tests/data_gen/unit_test_data_WENOZ_reconstruction.c),
 with routing detail in
 [Reconstruction tests and fixtures](../gems/reconstruction/tests-and-fixtures.md).
-The scoped Radiation M1 suite is another separate route:
-`.github/run_tests.sh` compiles its default test targets but does not call
-[`Unit_Tests/run_m1_tests.sh`](../../Unit_Tests/run_m1_tests.sh); the
-[dedicated Radiation M1 action](../../.github/actions/run_m1/action.yml) does.
 
 Treat `.github/run_tests.sh` as one broad local-style driver, not a complete
 enumeration of every workflow job. Treat workflows as CI matrices, not proof
 that normal local runs regenerate trusted fixtures.
 
-Default `configure` discovers the `Unit_Tests/unit_test_*.c` targets, but
-compilation by `.github/run_tests.sh` does not imply direct execution. The
-runner omits the scoped Radiation M1 suite, `unit_test_WENOZ_reconstruction`,
-`unit_test_tabulated_eos_compose`, and `unit_test_con2prim_debug`. Workflows
-select Radiation M1, WENOZ, and the focused CompOSE test; no normal
-runner/workflow invocation for the debug binary is visible.
+Set comparison is exact in current sources: default `configure` targets the
+`Unit_Tests/unit_test_*.c` set, while the runner directly invokes all except
+`unit_test_WENOZ_reconstruction`,
+`unit_test_tabulated_eos_compose`, and `unit_test_con2prim_debug`; workflows
+invoke WENOZ and the focused CompOSE test, while no normal runner/workflow
+invocation for the debug binary is visible.
 
 NN primitive-guess coverage appears in both paths: `.github/run_tests.sh` runs
 `./test/unit_test_c2p_nn_guess`, while workflow `c2p-failure` matrices include

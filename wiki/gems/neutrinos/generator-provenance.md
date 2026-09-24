@@ -148,11 +148,10 @@ beginning at `tmp_0`. The implementation notebook passes the complete output
 set for a kernel to `outputC.outputC`, so repeated algebra is hoisted into
 ordered `const` temporaries before final assignments.
 
-The same defaults are visible repo-locally in
-[`GRHayL/Flux_Source/nrpy/outputC.py`](../../../GRHayL/Flux_Source/nrpy/outputC.py).
-That file is a sibling NRPy+ copy used by another GRHayL module, not the
-identical ancestral `nrpy_core/outputC.py`; it corroborates the CSE defaults
-without replacing the external generator as provenance.
+The external tutorial's `nrpy_core/outputC.py` remains the direct evidence for
+these defaults. Flux_Source now uses NRPy 2 through its separate
+[Python generator](../../../GRHayL/Flux_Source/generate_flux_source.py); its
+temporary names do not establish NRPyLeakage's original generator settings.
 
 The `tmp_*` names therefore have no physics meaning. They are compiler-style
 common subexpressions. Their numbering and grouping depend on symbolic input,
