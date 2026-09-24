@@ -85,8 +85,12 @@ and their existing generic/neutrino Rusanov test owners.
 See [STRESS_ENERGY.md](STRESS_ENERGY.md) for the complete covariant
 stress-energy corpus and its public tensor mapping.
 
-The runner validates this package with [audit_package.py](audit_package.py)
-before replaying its stored inputs.
+The tracked [payload archive](payloads.tar.gz) contains the 13 plaintext
+fixtures listed in [package_manifest.json](package_manifest.json). A clean
+checkout's runner expands it once, then validates package membership, records,
+and payload digests with [audit_package.py](audit_package.py) before replay.
+The expanded `.m1` and `.dat` files are ignored by git. Existing plaintext
+payloads are audited without replacement.
 
 The pointwise producer emits results in consumed-input order, without row IDs.
 The external promotion step binds that order to the recorded input stream.

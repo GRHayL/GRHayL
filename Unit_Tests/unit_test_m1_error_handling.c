@@ -135,6 +135,14 @@ static void check_fatal_error_case(const m1_error_case *restrict error_case) {
 
 static void check_success_returns(void) { ghl_abort_if_error(ghl_success); }
 
+static void check_nearly_equal_rejects_nonfinite(void) {
+  if(m1_nearly_equal(INFINITY, 1.0, 1.0e-12, 1.0e-13)
+     || m1_nearly_equal(1.0, -INFINITY, 1.0e-12, 1.0e-13)
+     || m1_nearly_equal(NAN, 1.0, 1.0e-12, 1.0e-13)) {
+    fail_test("near-equality accepted a nonfinite operand");
+  }
+}
+
 static void check_failed_initializer_stops(void) {
   int output_pipe[2];
   if(pipe(output_pipe) != 0) {
@@ -1834,6 +1842,7 @@ static void check_comoving_energy_failure(void) {
 
 int main(void) {
   check_success_returns();
+  check_nearly_equal_rejects_nonfinite();
 
   for(size_t index = 0; index < sizeof(m1_error_cases) / sizeof(m1_error_cases[0]);
       ++index) {

@@ -116,6 +116,18 @@ static void check_shared_rusanov_boundaries(void) {
           = 0.5 * (flux_L[i] + flux_R[i]) - 0.25 * (state_R[i] - state_L[i]);
     check_close(output[i], expected, "shared Rusanov output mismatch", 407);
   }
+  const double equal_state_L[1] = { 1.0 };
+  const double equal_state_R[1] = { 1.0 };
+  const double large_flux_L[1] = { 1.0e308 };
+  const double large_flux_R[1] = { 1.0e308 };
+  double large_flux_output[1] = { 156.0 };
+  if(ghl_calculate_Rusanov_flux(
+           equal_state_L, equal_state_R, large_flux_L, large_flux_R, 1, 0.5,
+           large_flux_output)
+           != ghl_success
+     || !isfinite(large_flux_output[0]) || large_flux_output[0] != large_flux_L[0]) {
+    fail_case("shared Rusanov rejected representable large flux", 408);
+  }
   (void)output_before;
 }
 

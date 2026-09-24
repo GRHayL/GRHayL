@@ -565,6 +565,160 @@ static void check_prepared_transport_local_contract(void) {
   }
 }
 
+static void check_large_representable_transport(ghl_m1_parameters *restrict params) {
+  double state_stencil[4][ghl_m1_neutrino_transport_component_count] = { { 0.0 } };
+  double physical_flux_L[ghl_m1_neutrino_transport_component_count] = { 0.0 };
+  double physical_flux_R[ghl_m1_neutrino_transport_component_count] = { 0.0 };
+  double prepared_flux[ghl_m1_neutrino_transport_component_count] = { 0.0 };
+  double pointwise_flux[ghl_m1_neutrino_transport_component_count] = { 0.0 };
+  for(int cell = 0; cell < 4; ++cell) {
+    state_stencil[cell][0] = 1.0e308;
+  }
+  physical_flux_L[0] = 1.0e308;
+  physical_flux_R[0] = 1.0e308;
+
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  if(m1_thcm1_call_volume_weighted_transport(
+           params, state_stencil, physical_flux_L, physical_flux_R, 1.0, 1.0, 0.0, 1.0,
+           false, prepared_flux, NULL)
+           != ghl_success
+     || ghl_m1_compute_neutrino_four_point_transport_flux(
+              params, &metric, state_stencil, physical_flux_L, physical_flux_R, 1.0,
+              1.0, 0.0, 1.0, false, pointwise_flux, NULL)
+              != ghl_success
+     || prepared_flux[0] != 1.0e308 || pointwise_flux[0] != 1.0e308) {
+    fail_test("representable large four-point flux was rejected");
+  }
+}
+
+static bool same_transport_diagnostics(
+      const ghl_m1_four_point_transport_diagnostics *restrict actual,
+      const ghl_m1_four_point_transport_diagnostics *restrict expected) {
+  if(actual->opacity_suppression != expected->opacity_suppression
+     || actual->face_speed != expected->face_speed) {
+    return false;
+  }
+  for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
+      ++component) {
+    if(actual->phi[component] != expected->phi[component]
+       || actual->sawtooth[component] != expected->sawtooth[component]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static void check_extreme_transport_arithmetic(const ghl_m1_parameters *restrict params) {
+  ghl_m1_parameters controls = *params;
+  controls.minmod_theta = 1.0;
+  controls.mindiss = 0.0;
+  double stencil[4][ghl_m1_neutrino_transport_component_count] = { { 0.0 } };
+  double flux_L[ghl_m1_neutrino_transport_component_count] = { 0.0 };
+  double flux_R[ghl_m1_neutrino_transport_component_count] = { 0.0 };
+  double output[ghl_m1_neutrino_transport_component_count] = { 17.0 };
+  const double unchanged[ghl_m1_neutrino_transport_component_count] = { 17.0 };
+  ghl_m1_four_point_transport_diagnostics diagnostics
+        = { .phi = { 1.0, 2.0, 3.0, 4.0, 5.0 },
+            .sawtooth = { true, false, true, false, true },
+            .opacity_suppression = -2.0,
+            .face_speed = -1.0 };
+  const ghl_m1_four_point_transport_diagnostics unchanged_diagnostics = diagnostics;
+
+  /* The exact Rusanov result is outside binary64 even though its operands
+   * are finite. The fallback arithmetic must reject without publication. */
+  stencil[2][0] = stencil[3][0] = 4.0;
+  if(m1_thcm1_call_volume_weighted_transport(
+           &controls, stencil, flux_L, flux_R, DBL_MAX, DBL_MAX, 0.0, 1.0,
+           false, output, &diagnostics)
+           != ghl_error_m1_invalid_state
+     || memcmp(output, unchanged, sizeof(output)) != 0
+     || !same_transport_diagnostics(&diagnostics, &unchanged_diagnostics)) {
+    fail_test("unrepresentable finite-jump flux was published");
+  }
+
+  /* The middle state jump overflows, while the exact Rusanov flux is the
+   * representable endpoint -DBL_MAX after low-part cancellation. */
+  const double near_max = DBL_MAX - 3.0 * 0x1p971;
+  stencil[0][0] = stencil[1][0] = -near_max;
+  stencil[2][0] = stencil[3][0] = DBL_MAX;
+  flux_L[0] = flux_R[0] = near_max;
+  if(m1_thcm1_call_volume_weighted_transport(
+           &controls, stencil, flux_L, flux_R, 2.0, 2.0, 0.0, 1.0, false,
+           output, &diagnostics)
+           != ghl_success
+     || output[0] != -DBL_MAX || diagnostics.phi[0] != 0.0
+     || diagnostics.sawtooth[0]) {
+    fail_test("representable overflowing-jump flux was rejected");
+  }
+
+  /* Only the first slope overflows; the finite central and right slopes
+   * have ratio 2, yielding phi=1/2 for theta=1. */
+  stencil[0][0] = -DBL_MAX;
+  stencil[1][0] = 0x1p1022;
+  stencil[2][0] = 0x1.8p1022;
+  stencil[3][0] = 0x1.cp1022;
+  flux_L[0] = flux_R[0] = 0.0;
+  if(m1_thcm1_call_volume_weighted_transport(
+           &controls, stencil, flux_L, flux_R, 1.0, 1.0, 0.0, 1.0, false,
+           output, &diagnostics)
+           != ghl_success
+     || output[0] != -0x1p1019 || diagnostics.phi[0] != 0.5
+     || diagnostics.sawtooth[0]) {
+    fail_test("overflowing monotone stencil limiter changed the face flux");
+  }
+
+  controls.minmod_theta = NAN;
+  memcpy(output, unchanged, sizeof(output));
+  diagnostics = unchanged_diagnostics;
+  if(m1_thcm1_call_volume_weighted_transport(
+           &controls, stencil, flux_L, flux_R, 1.0, 1.0, 0.0, 1.0, false,
+           output, &diagnostics)
+           != ghl_error_m1_invalid_state
+     || memcmp(output, unchanged, sizeof(output)) != 0
+     || !same_transport_diagnostics(&diagnostics, &unchanged_diagnostics)) {
+    fail_test("invalid overflowing-stencil limiter was not transactional");
+  }
+
+  /* Subtracting a positive small flux from the preceding value below
+   * DBL_MAX rounds the threshold upward, although high - low overflows.
+   * The half-weight convex blend still has a finite answer. */
+  controls.minmod_theta = 1.0;
+  const double high = DBL_MAX - 0x1p971;
+  const double small = 0x1.8p971;
+  const double expected_blend = 0.5 * high - 0.5 * small;
+  stencil[0][0] = stencil[1][0] = -small;
+  stencil[2][0] = stencil[3][0] = high;
+  flux_L[0] = flux_R[0] = high;
+  if(m1_thcm1_call_volume_weighted_transport(
+           &controls, stencil, flux_L, flux_R, 2.0, 2.0, 2.0, 1.0, false,
+           output, &diagnostics)
+           != ghl_success
+     || output[0] != expected_blend || diagnostics.phi[0] != 0.0
+     || diagnostics.opacity_suppression != 0.5) {
+    fail_test("finite convex blend was rejected at the overflow tie");
+  }
+
+  double direct_blend = 0.0;
+  if(ghl_m1_compute_four_point_blended_flux(
+           high, -small, 0.0, false, 0.5, &direct_blend)
+           != ghl_success
+     || direct_blend != expected_blend) {
+    fail_test("direct finite convex blend failed at the overflow tie");
+  }
+
+  memset(stencil, 0, sizeof(stencil));
+  flux_L[0] = high;
+  flux_R[0] = small;
+  if(m1_thcm1_call_volume_weighted_transport(
+           &controls, stencil, flux_L, flux_R, 0.0, 0.0, 0.0, 1.0, false,
+           output, NULL)
+           != ghl_success
+     || output[0] != 0.5 * high + 0.5 * small) {
+    fail_test("finite physical-flux average failed at the overflow tie");
+  }
+}
+
 static const char *m1_thcm1_transport_direction(const char *case_id) {
   if(case_id != NULL && strstr(case_id, "__d0__") != NULL) {
     return "d0";
@@ -1229,9 +1383,9 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
     fail_test("invalid blended-flux arguments were accepted");
   }
   if(ghl_m1_compute_four_point_blended_flux(DBL_MAX, -DBL_MAX, 0.0, true, 1.0, &blended)
-           != ghl_error_m1_invalid_state
-     || blended != 43.0) {
-    fail_test("overflowing blended flux was published");
+           != ghl_success
+     || blended != -DBL_MAX) {
+    fail_test("finite low endpoint was rejected by blended flux");
   }
 
   double state_stencil[4][ghl_m1_neutrino_transport_component_count] = { { 0.0 } };
@@ -1243,10 +1397,8 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
         = { 101.0, 102.0, 103.0, 104.0, 105.0 };
   const double speeds[4] = { NAN, -1.0, 0.5, 0.5 };
   const double right_speeds[4] = { 0.5, 0.5, NAN, -1.0 };
-  /* Finite low/high fluxes can still overflow when their difference is
-   * rounded: these binary64 operands make low=high-DBL_MAX finite but
-   * high-low infinite. Check propagation from the final blend, independently
-   * of earlier limiter/Rusanov rejection. */
+  /* Finite low/high fluxes can have an overflowing difference while the
+   * selected low endpoint remains finite. */
   const double high = 0x1.026650c8e9dc3p+1022;
   const double low = high - DBL_MAX;
   if(!isfinite(low) || isfinite(high - low)) {
@@ -1254,12 +1406,13 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
   }
   state_stencil[2][0] = state_stencil[3][0] = DBL_MAX;
   physical_flux_L[0] = 2.0 * high;
+  double large_blend_flux[ghl_m1_neutrino_transport_component_count] = { 0.0 };
   if(m1_thcm1_call_volume_weighted_transport(
            params, state_stencil, physical_flux_L, physical_flux_R, 2.0, 2.0, 0.0, 1.0,
-           false, flux_tilde, NULL)
-           != ghl_error_m1_invalid_state
-     || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
-    fail_test("prepared final-blend overflow was not transactional");
+           false, large_blend_flux, NULL)
+           != ghl_success
+     || large_blend_flux[0] != low) {
+    fail_test("prepared finite low endpoint was rejected");
   }
   memset(state_stencil, 0, sizeof(state_stencil));
   physical_flux_L[0] = 0.0;
@@ -1287,9 +1440,14 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
   if(m1_thcm1_call_volume_weighted_transport(
            params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
            false, flux_tilde, NULL)
-           != ghl_error_m1_invalid_state
-     || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
-    fail_test("prepared limiter-difference overflow was not transactional");
+           != ghl_success) {
+    fail_test("prepared finite flux was rejected after limiter-difference overflow");
+  }
+  for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
+      ++component) {
+    if(flux_tilde[component] != 0.0) {
+      fail_test("prepared limiter-difference overflow changed zero face flux");
+    }
   }
   for(int cell = 0; cell < 4; ++cell) {
     state_stencil[cell][0] = 0.0;
@@ -1385,9 +1543,15 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
   if(m1_thcm1_call_volume_weighted_transport(
            params, state_stencil, physical_flux_L, physical_flux_R, 1.0, 1.0, 0.5, 1.0,
            false, flux_tilde, NULL)
-           != ghl_error_m1_invalid_state
-     || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
-    fail_test("overflowing low-order flux was published");
+           != ghl_success
+     || flux_tilde[0] != DBL_MAX) {
+    fail_test("finite low-order flux was rejected after state-jump overflow");
+  }
+  for(int component = 1; component < ghl_m1_neutrino_transport_component_count;
+      ++component) {
+    if(flux_tilde[component] != 0.0) {
+      fail_test("state-jump overflow changed unrelated flux components");
+    }
   }
   state_stencil[1][0] = 0.0;
   state_stencil[2][0] = 0.0;
@@ -1534,6 +1698,19 @@ int main(int argc, char **argv) {
      || blended != 2.0) {
     fail_test("unit limiter blend failed");
   }
+  if(ghl_m1_compute_four_point_blended_flux(
+           1.0e308, -1.0e308, 1.0, false, 1.0, &blended)
+           != ghl_success
+     || blended != 1.0e308) {
+    fail_test("large zero-weight blend rejected its high endpoint");
+  }
+  if(ghl_m1_compute_four_point_blended_flux(
+           1.0e308, -1.0e308, 0.5, false, 0.5, &blended)
+           != ghl_success
+     || !isfinite(blended)
+     || !m1_nearly_equal(blended, 5.0e307, 2.0e-15, 0.0)) {
+    fail_test("large intermediate-weight blend was rejected");
+  }
 
   /* Each public stage validates before publication. */
   phi = 41.0;
@@ -1559,6 +1736,8 @@ int main(int argc, char **argv) {
   check_four_point_branch_boundaries(&params);
   check_full_four_point_operator(&params);
   check_prepared_transport_local_contract();
+  check_large_representable_transport(&params);
+  check_extreme_transport_arithmetic(&params);
   check_transport_fixtures(fixture_dir);
   check_variable_transport_fixtures(fixture_dir);
 

@@ -485,9 +485,13 @@ static void test_scaled_ratio_of_products(void) {
               tiny_numerator, 1, huge_denominator, 1, &quotient),
         "scaled ratio accepted an underflowing quotient", 1206);
 
+  /* Keep the NULL choice runtime-visible so the optimized build executes the
+   * helper's failure return instead of folding the entire call away. */
+  volatile bool omit_output = true;
+  double *ratio_output = omit_output ? NULL : &quotient;
   require_condition(
         !ghl_m1_neutrino_scaled_ratio_of_products(
-              normal_numerator, 2, normal_denominator, 2, NULL),
+              normal_numerator, 2, normal_denominator, 2, ratio_output),
         "scaled ratio accepted a NULL output", 1207);
 }
 
@@ -1740,6 +1744,45 @@ test_pair_effective_opacity_underflow(const ghl_m1_parameters *restrict m1_param
           "underflowed pair effective opacity changed the balanced endpoint", 2100);
     require_zero_exchange(
           &exchange[species], "underflowed pair effective opacity exchange", 2100);
+  }
+}
+
+static void
+test_pair_effective_opacity_overflow(const ghl_m1_parameters *restrict m1_params) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  ghl_m1_neutrino_parameters nu_params[2];
+  ghl_m1_neutrino_rates rates[2];
+  const ghl_m1_neutrino_state state[2]
+        = { { .N = 1.0, .E = 1.0 }, { .N = 1.0, .E = 1.0 } };
+  for(int species = 0; species < 2; ++species) {
+    make_neutrino_parameters(&nu_params[species]);
+    make_rates(
+          species == 0 ? ghl_m1_neutrino_nue : ghl_m1_neutrino_anue, 0.0, 0.0, 0.0,
+          DBL_MIN, 1.0, 0.0, 1.0, &rates[species]);
+    require_error(
+          ghl_m1_validate_neutrino_rates(&rates[species], NULL), ghl_success,
+          "pair effective-opacity overflow input rates", 2101);
+  }
+  ghl_m1_neutrino_state output[2];
+  ghl_m1_neutrino_exchange exchange[2];
+  ghl_m1_neutrino_source_diagnostics diagnostics[2];
+  ghl_m1_neutrino_diagnostics nd[2] = { { 0 }, { 0 } };
+  require_error(
+        ghl_m1_solve_neutrino_pair_source_update(
+              m1_params, nu_params, &metric, &prims, rates, state, state, 1.0, 1.0,
+              output, exchange, diagnostics, nd),
+        ghl_error_m1_invalid_state, "unrepresentable pair effective opacity", 2101);
+  for(int species = 0; species < 2; ++species) {
+    require_condition(
+          memcmp(&output[species], &state[species], sizeof(output[species])) == 0
+                && diagnostics[species].path == ghl_m1_neutrino_source_path_hard_failure
+                && nd[species].source_failures == 1,
+          "pair effective-opacity failure was not transactional", 2101);
+    require_zero_exchange(
+          &exchange[species], "pair effective-opacity overflow exchange", 2101);
   }
 }
 
@@ -4582,9 +4625,9 @@ test_pair_projected_backtracking(const ghl_m1_parameters *restrict m1_params) {
    * projection and backtracking. The configured mixed tolerance is part of
    * this solve's acceptance contract, checked explicitly below. */
   ghl_m1_parameters parameters = *m1_params;
-  parameters.E_floor = 0.5;
+  parameters.E_floor = 0.3;
   require_error(
-        ghl_m1_set_newton_tolerances(0.1, 0.01, &parameters), ghl_success,
+        ghl_m1_set_newton_tolerances(0.01, 0.001, &parameters), ghl_success,
         "pair projection tolerances", 4610);
   ghl_metric_quantities metric;
   ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.5, &metric);
@@ -4594,8 +4637,8 @@ test_pair_projected_backtracking(const ghl_m1_parameters *restrict m1_params) {
   ghl_m1_neutrino_parameters nu_params[2];
   ghl_m1_neutrino_rates rates[2];
   const ghl_m1_neutrino_state input[2]
-        = { { .N = 1.0, .E = 1.0, .F = { 0.8, 0.0, 0.0 } },
-            { .N = 1.0, .E = 1.0, .F = { 0.8, 0.0, 0.0 } } };
+        = { { .N = 1.0, .E = 1.0, .F = { 0.0, 0.0, 0.0 } },
+            { .N = 1.0, .E = 1.0, .F = { 0.0, 0.0, 0.0 } } };
   for(int species = 0; species < 2; ++species) {
     make_neutrino_parameters(&nu_params[species]);
     make_rates(
@@ -4608,7 +4651,7 @@ test_pair_projected_backtracking(const ghl_m1_parameters *restrict m1_params) {
   ghl_m1_neutrino_diagnostics nd[2] = { { 0 }, { 0 } };
   require_error(
         ghl_m1_solve_neutrino_pair_source_update(
-              &parameters, nu_params, &metric, &prims, rates, input, input, 1.0, 1.0,
+              &parameters, nu_params, &metric, &prims, rates, input, input, 3.0, 1.0,
               output, exchange, diagnostics, nd),
         ghl_success, "projected pair reaction", 4610);
   for(int species = 0; species < 2; ++species) {
@@ -4783,6 +4826,43 @@ test_number_endpoint_and_policy_overflow(const ghl_m1_parameters *restrict m1_pa
               && diagnostics.path == ghl_m1_neutrino_source_path_hard_failure,
         "implicit lepton-policy failure publication", 4609);
   require_zero_exchange(&exchange, "implicit lepton-policy failure exchange", 4609);
+}
+
+static void test_projected_charged_current_overflow(
+      const ghl_m1_parameters *restrict m1_params) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  ghl_m1_neutrino_parameters nu_params;
+  make_neutrino_parameters(&nu_params);
+  ghl_m1_neutrino_rates rates;
+  make_rates(ghl_m1_neutrino_nue, DBL_MAX, 0.0, 0.0, DBL_MIN, 1.0, 0.0, 0.0, &rates);
+  require_error(
+        ghl_m1_validate_neutrino_rates(&rates, NULL), ghl_success,
+        "projected charged-current input rates", 4613);
+
+  /* E/F remain unchanged, while the selected thermalized number N=J=2
+   * makes kappa_a_N_cc*N overflow. The incomplete CC packet must never
+   * escape the implicit solve. */
+  const ghl_m1_neutrino_state input = { .N = 1.0, .E = 2.0 };
+  ghl_m1_neutrino_state output = { .N = -1.0, .E = -2.0 };
+  ghl_m1_neutrino_exchange exchange = { .dN_rad_total = -3.0 };
+  ghl_m1_implicit_solve_diagnostics solve_diagnostics;
+  ghl_m1_initialize_implicit_solve_diagnostics(&solve_diagnostics);
+  ghl_m1_neutrino_diagnostics nd;
+  ghl_m1_neutrino_diagnostics_initialize(&nd);
+  require_error(
+        ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_policy(
+              m1_params, &nu_params, &metric, &prims, &rates, 1.0, 1.0, 0.0,
+              &input, &output, &exchange, &solve_diagnostics, &nd),
+        ghl_error_m1_invalid_state, "projected charged-current overflow", 4613);
+  require_condition(
+        memcmp(&output, &input, sizeof(output)) == 0 && nd.source_failures == 1
+              && nd.source_converged == 0,
+        "projected charged-current failure changed state or counters", 4613);
+  require_zero_exchange(
+        &exchange, "projected charged-current overflow exchange", 4613);
 }
 
 static void initialize_pair_boundary_inputs(
@@ -5193,6 +5273,7 @@ int main(void) {
   test_source_compatibility_and_selector_failures(&m1_params, &selector_boundary_rng);
   test_pair_source_conservation(&m1_params, &rng);
   test_pair_effective_opacity_underflow(&m1_params);
+  test_pair_effective_opacity_overflow(&m1_params);
   test_pair_source_independent_oracle(&m1_params);
   test_pair_final_mean_energy_bounds(&m1_params);
   source_rng pair_inactive_rng = rng;
@@ -5213,6 +5294,7 @@ int main(void) {
   test_late_closure_fallback_transaction(&m1_params);
   test_pair_roundtrip_energy_floor(&m1_params);
   test_number_endpoint_and_policy_overflow(&m1_params);
+  test_projected_charged_current_overflow(&m1_params);
   test_pair_dispatcher_boundaries(&m1_params, &rng);
   test_m1_configuration_field_boundaries(&m1_params, &rng);
 

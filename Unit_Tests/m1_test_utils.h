@@ -93,6 +93,9 @@ static inline int m1_nearly_equal(
       const double rel_tol,
       const double abs_tol) {
 
+  if(!isfinite(a) || !isfinite(b)) {
+    return 0;
+  }
   const double scale = fmax(1.0, fmax(fabs(a), fabs(b)));
   return fabs(a - b) <= fmax(abs_tol, rel_tol * scale);
 }

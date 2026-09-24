@@ -881,13 +881,20 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
                                           & ghl_m1_solution_path_closure_fallback)
                                          != 0u;
     if(error == ghl_success) {
+      /* The default implicit solver uses ordinary backward Euler number
+       * integration. Its physical endpoint N is nonnegative, the input N is
+       * at least N_floor, and repair can only raise an endpoint below that
+       * floor toward the input. The signed total-number change therefore has
+       * no greater magnitude than the charged-current change whose Ye
+       * division already succeeded in exchange assembly. Keep this guard
+       * for future policy changes. */
       error = ghl_m1_neutrino_apply_ye_policy(
             selected.ye_policy, rates, n_b_cons, exchange);
       if(error != ghl_success) {
-        *neutrino_diagnostics = candidate_neutrino_diagnostics;
-        return ghl_m1_neutrino_publish_dispatch_failure(
+        *neutrino_diagnostics = candidate_neutrino_diagnostics; /* GCOVR_EXCL_LINE -- defensive */
+        return ghl_m1_neutrino_publish_dispatch_failure( /* GCOVR_EXCL_LINE -- defensive */
               error, state_transport, state_out, exchange, diagnostics,
-              diagnostics->closure_fallback_used, neutrino_diagnostics, true);
+              diagnostics->closure_fallback_used, neutrino_diagnostics, true); /* GCOVR_EXCL_LINE -- defensive */
       }
       diagnostics->path = ghl_m1_neutrino_source_path_general_implicit;
       *neutrino_diagnostics = candidate_neutrino_diagnostics;

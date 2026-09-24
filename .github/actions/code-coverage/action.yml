@@ -4,6 +4,14 @@ inputs:
   compiler:
     description: compiler for test
     required: true
+  report_file:
+    description: Optional gcovr Cobertura report to upload without auto-discovery
+    required: false
+    default: ''
+  report_filter:
+    description: Source filter for the optional gcovr report
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -11,14 +19,22 @@ runs:
     - if: runner.os == 'Linux' && inputs.compiler == 'gcc'
       run: |
         sudo apt-get install gcovr
+        if [[ -n "$COVERAGE_REPORT_FILE" ]]; then
+          gcovr_args=(-r . --filter "$COVERAGE_REPORT_FILTER" --xml "$COVERAGE_REPORT_FILE")
+        else
+          gcovr_args=(-r . --keep)
+        fi
         # Newer versions need a new flag; we can get rid of
         # this once we move past Ubuntu 22
         if [ $ImageOS == "ubuntu22" ]; then
-          gcovr -r . --keep
+          gcovr "${gcovr_args[@]}"
         else
-          gcovr -r . --keep --gcov-ignore-errors no_working_dir_found
+          gcovr "${gcovr_args[@]}" --gcov-ignore-errors no_working_dir_found
         fi
       shell: bash
+      env:
+        COVERAGE_REPORT_FILE: ${{ inputs.report_file }}
+        COVERAGE_REPORT_FILTER: ${{ inputs.report_filter }}
 
     # This still doesn't generate expected cov. files
     - if: runner.os == 'Linux' && inputs.compiler == 'clang'
@@ -60,3 +76,7 @@ runs:
       shell: bash
 
     - uses: codecov/codecov-action@v5
+      with:
+        files: ${{ inputs.report_file }}
+        disable_search: ${{ inputs.report_file != '' }}
+        fail_ci_if_error: ${{ inputs.report_file != '' }}

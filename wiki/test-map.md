@@ -6,10 +6,11 @@ Repo ground truth: `Unit_Tests/`, `.github/run_tests.sh`, `.github/workflows/`,
 Evidence labels are strict: `configure` selects targets; `make tests` and
 `make datagen` compile/link; only an exact invocation establishes execution.
 Workflow commands are workflow-only evidence, not historical pass results.
-Default configuration selects the unit-test targets; `.github/run_tests.sh`
-directly invokes all except WENOZ reconstruction, Con2Prim debug, and the
-CompOSE integration test. WENOZ and CompOSE are workflow-selected; no normal
-invocation for the debug binary is visible.
+Default configuration selects the unit-test targets, but
+`.github/run_tests.sh` does not invoke the scoped Radiation M1 suite, WENOZ
+reconstruction, Con2Prim debug, or the CompOSE integration test. Radiation M1,
+WENOZ, and CompOSE have dedicated workflow routes; no normal invocation for
+the debug binary is visible.
 
 Core/chalice test selection, fixture naming, helper-only files, and weak
 coverage notes route through [Core tests and fixtures](core/tests-and-fixtures.md).

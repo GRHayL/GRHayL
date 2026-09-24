@@ -202,6 +202,11 @@ static ghl_error_codes_t validate_provider_context(
     return ghl_error_m1_microphysics_failure;
   }
 #else
+  if(provider->use_tabulated_eos
+     && (eos == NULL || eos->eos_type != ghl_eos_tabulated
+         || eos->table_type != ghl_eos_table_stellarcollapse)) {
+    return ghl_error_m1_microphysics_failure;
+  }
   if(provider->backend == ghl_neutrino_rate_backend_reference) {
     if(!isfinite(provider->min_mean_energy) || provider->min_mean_energy <= 0.0
        || provider->rho_code_to_cgs != 1.0 || provider->opacity_cgs_to_code != 1.0
@@ -211,9 +216,7 @@ static ghl_error_codes_t validate_provider_context(
   }
   else {
     if(!isfinite(provider->min_mean_energy) || provider->min_mean_energy != 0.0
-       || !provider->use_tabulated_eos || eos == NULL
-       || eos->eos_type != ghl_eos_tabulated
-       || eos->table_type != ghl_eos_table_stellarcollapse
+       || !provider->use_tabulated_eos
        || provider->rho_code_to_cgs != NRPyLeakage_units_geom_to_cgs_D
        || provider->temperature_code_to_mev != 1.0
        || provider->opacity_cgs_to_code != NRPyLeakage_units_geom_to_cgs_L
@@ -226,9 +229,6 @@ static ghl_error_codes_t validate_provider_context(
        || provider->plasmon_scale != 1.0) {
       return ghl_error_m1_microphysics_failure;
     }
-  }
-  if(provider->use_tabulated_eos && eos == NULL) {
-    return ghl_error_m1_microphysics_failure;
   }
 #endif
   return ghl_success;
@@ -325,7 +325,11 @@ static ghl_error_codes_t validate_inputs(
   const double rho_hi = eos->table_rho_max > 0.0 ? eos->table_rho_max : eos->rho_max;
   const double T_lo = eos->table_T_min > 0.0 ? eos->table_T_min : eos->T_min;
   const double T_hi = eos->table_T_max > 0.0 ? eos->table_T_max : eos->T_max;
-  const double Ye_lo = eos->table_Y_e_min > 0.0 ? eos->table_Y_e_min : eos->Y_e_min;
+  const double Ye_lo
+        = (eos->table_Y_e_min > 0.0
+           || (eos->table_Y_e_min == 0.0 && eos->table_Y_e_max > 0.0))
+                ? eos->table_Y_e_min
+                : eos->Y_e_min;
   const double Ye_hi = eos->table_Y_e_max > 0.0 ? eos->table_Y_e_max : eos->Y_e_max;
 
   if(!isfinite(rho_lo) || !isfinite(rho_hi) || rho_lo <= 0.0 || rho_lo >= rho_hi

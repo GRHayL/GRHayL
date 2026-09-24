@@ -31,6 +31,9 @@ runs:
             ;;
           *) echo "Unsupported compiler: $M1_COMPILER" >&2; exit 1 ;;
         esac
+        if [[ "$RUNNER_OS" == Linux && "$M1_COMPILER" == gcc ]]; then
+          configure_args+=(--cflags='-ftest-coverage -fprofile-arcs')
+        fi
         if [[ "$RUNNER_OS" == macOS ]]; then
           if [[ "$M1_COMPILER" == gcc ]]; then
             gcc_prefix=$(brew --prefix gcc)

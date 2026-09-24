@@ -622,7 +622,7 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_
     n_error = ghl_m1_repair_neutrino_state(
           m1_params, nu_params, metric, &candidate, &candidate_neutrino_diagnostics);
     if(n_error != ghl_success) {
-      return ghl_m1_neutrino_publish_hard_failure(
+      return ghl_m1_neutrino_publish_hard_failure( /* GCOVR_EXCL_LINE -- defensive */
             n_error, neutrino_diagnostics); /* GCOVR_EXCL_LINE -- defensive */
     }
 

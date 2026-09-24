@@ -58,9 +58,11 @@ With `theta = m1_params->minmod_theta`, the limiter is:
 - otherwise set `phi = 0` and leave `sawtooth = false`.
 
 The implementation accepts `0 <= theta <= 2`. `theta = 0` yields `phi = 0`
-for every stencil, selecting the fully dissipative low-order flux; it is
-decided before the ratios are formed, so an overflowing `d_minus/d_center`
-cannot turn `0 * inf` into a `NaN` that `fmin` would resolve to `phi = 1`.
+for every stencil. This selects the low flux when `A = 1` or the stencil is a
+sawtooth; an ordinary optically thick stencil with `A < 1` still blends the
+high and low fluxes. The zero-theta case is decided before the ratios are
+formed, so an overflowing `d_minus/d_center` cannot turn `0 * inf` into a
+`NaN` that `fmin` would resolve to `phi = 1`.
 A zero difference does not qualify as a same-sign or opposite-sign pattern,
 so it takes the zero-limiter case. The decision is made independently for all five components; a sawtooth
 in one component does not change another component's limiter.

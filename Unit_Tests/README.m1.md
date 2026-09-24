@@ -44,6 +44,9 @@ dependencies. It does not build all test executables or an Einstein Toolkit
 configuration. `--build-only` builds the targets without running them. With no
 option, the runner executes already-built tests. It resolves the repository root
 from its location, so it can also be invoked from another working directory.
+On a clean checkout it expands the tracked `data/m1_thcm1/payloads.tar.gz`
+before auditing the retained fixtures. Existing plaintext payloads are audited
+without replacement; no external download is needed.
 
 The runner uses `build/lib` for the current checkout's shared library. It passes
 `--generated-fixture` to the rate-provider test: HDF5 builds create and remove a
@@ -166,8 +169,9 @@ covariant stress-energy corpus. The runner validates the retained package with
 `.github/run_tests.sh` invokes the M1 runner. The existing compiler/OS workflows
 also select dedicated Radiation jobs through `.github/actions/run_m1`; these
 configure the selected compiler and HDF5 mode, then build and execute the same
-scoped M1 targets. The M1 action does not define a separate coverage threshold,
-report, artifact, Codecov submission, or changed-path gate. Any future coverage
-reporting should use the shared GRHayL coverage action and its repository-wide
-expectations. Workflow selection is not a claim that a remote CI run has
-already passed.
+scoped M1 targets. The Ubuntu GCC Radiation jobs compile with gcov flags and
+invoke the shared GRHayL coverage action after the scoped run, in both HDF5
+modes. That action uploads a gcovr Cobertura report filtered to
+`GRHayL/Radiation/`. The `radiation_m1` Codecov component has a 100% project
+coverage target for that path. The M1 action defines no changed-path gate.
+Workflow selection is not a claim that a remote CI run has already passed.

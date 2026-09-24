@@ -364,7 +364,9 @@ static ghl_error_codes_t ghl_m1_pair_attempt_schedule(
       ghl_m1_rad_state rad_state = ghl_m1_neutrino_project_rad_state(&repaired_state);
       error = ghl_m1_realizability_repair(m1_params, metric, &rad_state);
       if(error != ghl_success) {
-        return error;
+        /* Newton accepted this finite trial state; retain the repair guard
+         * for a floating-point or metric edge that it did not encounter. */
+        return error; /* GCOVR_EXCL_LINE -- defensive post-Newton repair */
       }
       repaired_state.E = rad_state.E;
       for(int i = 0; i < 3; ++i) {
@@ -590,11 +592,6 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
       successful_substeps = fallback_schedule[schedule];
       break;
     }
-    if(error == ghl_error_m1_implicit_terminal_fallback) {
-      return ghl_m1_pair_publish_terminal(
-            error, state_transport, state_out, exchange, diagnostics,
-            neutrino_diagnostics);
-    }
     if(!ghl_m1_schedule_error_allows_retry(error)) {
       return ghl_m1_pair_publish_failure(
             error, state_transport, state_out, exchange, diagnostics,
@@ -636,7 +633,9 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
           nonpair_exchange[species].dL_rad_cc, metric->sqrt_detgamma, n_b_cons,
           &final_exchange[species]);
     if(error != ghl_success) {
-      return ghl_m1_pair_publish_failure(
+      /* Extreme signed endpoint differences can fail exchange assembly;
+       * that arithmetic and its errors are covered at the helper boundary. */
+      return ghl_m1_pair_publish_failure( /* GCOVR_EXCL_LINE -- delegated arithmetic */
             error, state_transport, state_out, exchange, diagnostics,
             neutrino_diagnostics);
     }

@@ -213,6 +213,8 @@ typedef struct ghl_m1_newton_diagnostics {
   int backtracks;
   bool used_projection;
   double residual_max_norm;
+  /** Weighted residual merit at the current or published iterate. A
+   * successful solve reports a value no greater than one. */
   double residual_weighted_merit;
 } ghl_m1_newton_diagnostics;
 
@@ -850,6 +852,10 @@ ghl_error_codes_t ghl_m1_compute_diffusion_flux(
  * non-NULL for all normal events; it may be NULL only for terminal failure
  * after the final iteration. The observer is diagnostic-only: it cannot alter
  * a trial state, status, fallback policy, or production result.
+ *
+ * Convergence requires an admissible iterate whose weighted residual merit is
+ * no greater than one. A small Newton correction alone does not satisfy the
+ * convergence criterion.
  */
 ghl_error_codes_t ghl_m1_newton_solve_4d(
       const ghl_m1_parameters *restrict m1_params,

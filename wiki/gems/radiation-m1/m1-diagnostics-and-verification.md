@@ -80,6 +80,7 @@ The scoped M1 runner
 [`run_m1_tests.sh`](../../../Unit_Tests/run_m1_tests.sh) builds or runs these
 focused executables:
 
+- [`unit_test_m1_closure_fallback.c`](../../../Unit_Tests/unit_test_m1_closure_fallback.c)
 - [`unit_test_m1_diffusion_flux.c`](../../../Unit_Tests/unit_test_m1_diffusion_flux.c)
 - [`unit_test_m1_error_handling.c`](../../../Unit_Tests/unit_test_m1_error_handling.c)
 - [`unit_test_m1_fd_jacobian.c`](../../../Unit_Tests/unit_test_m1_fd_jacobian.c)

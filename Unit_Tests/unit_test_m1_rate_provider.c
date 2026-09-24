@@ -2457,6 +2457,64 @@ static void test_recovery_publication_and_post_thermo_failures(void) {
 }
 
 #ifndef GHL_DISABLE_HDF5
+static void test_reference_table_eos_validation(
+      const ghl_eos_parameters *restrict eos,
+      const ghl_primitive_quantities *restrict prims) {
+  ghl_neutrino_rate_provider_context provider;
+  require_error(
+        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        "reference table provider initialization", 3600);
+  provider.use_tabulated_eos = true;
+
+  static const char *const labels[] = { "reference table hybrid EOS",
+                                        "reference table unknown type" };
+  const int variant_count = (int)(sizeof(labels) / sizeof(labels[0]));
+  for(int variant = 0; variant < variant_count; ++variant) {
+    ghl_eos_parameters bad_eos = *eos;
+    if(variant == 0) {
+      bad_eos.eos_type = ghl_eos_hybrid;
+    }
+    else {
+      bad_eos.table_type = ghl_eos_table_unknown;
+    }
+    ghl_neutrino_rate_provider_cache cache;
+    ghl_neutrino_rate_provider_cache_initialize(&cache);
+    const ghl_neutrino_rate_provider_cache cache_before = cache;
+    ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(rates);
+    const ghl_m1_neutrino_rates rates_before[ghl_m1_neutrino_species_count]
+          = { rates[0], rates[1], rates[2] };
+    ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
+    const ghl_error_codes_t error = ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, &diagnostics, &bad_eos, prims, rates);
+    require_error(
+          error, ghl_error_m1_microphysics_failure, labels[variant], 3601 + variant);
+    require_condition(
+          memcmp(&cache, &cache_before, sizeof(cache)) == 0
+                && same_rate_bundle(rates, rates_before) && diagnostics.failures == 1
+                && diagnostics.last_error == error,
+          "reference table EOS rejection changed transactional outputs", 3601 + variant);
+  }
+
+  ghl_neutrino_rate_provider_cache cache;
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
+  ghl_m1_neutrino_rates first[ghl_m1_neutrino_species_count];
+  require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+              &provider, &cache, &diagnostics, eos, prims, first),
+        ghl_success, "valid reference table provider call", 3603);
+  validate_rate_bundle(first, 3603);
+  ghl_m1_neutrino_rates second[ghl_m1_neutrino_species_count];
+  require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+              &provider, &cache, &diagnostics, eos, prims, second),
+        ghl_success, "reference table provider cache hit", 3604);
+  require_condition(
+        diagnostics.cache_hits == 1 && same_rate_bundle(first, second),
+        "reference table cache hit changed rates", 3604);
+}
+
 static void test_production_provider_context_validation(
       const ghl_neutrino_rate_provider_context *restrict baseline,
       const ghl_eos_parameters *restrict eos,
@@ -2824,6 +2882,7 @@ static void test_table_provider(const char *restrict table_path) {
   context_prims.temperature = sqrt(eos.table_T_min * eos.table_T_max);
   context_prims.Y_e = 0.5 * (eos.table_Y_e_min + eos.table_Y_e_max);
   context_prims.eps = 1.0;
+  test_reference_table_eos_validation(&eos, &context_prims);
   test_production_provider_context_validation(&provider, &eos, &context_prims);
   ghl_neutrino_rate_provider_cache cache;
   ghl_neutrino_rate_provider_cache_initialize(&cache);

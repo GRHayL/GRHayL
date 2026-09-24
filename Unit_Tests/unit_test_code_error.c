@@ -58,6 +58,10 @@ int main(int argc, char **argv) {
           ghl_error_invalid_hlle_wavespeeds, test_key,
           "invalid HLLE wave speeds");
   }
+  /* Keys 89-112 cover the contiguous flux-source and M1 error-code block. */
+  if(test_key >= 89 && test_key <= 112) {
+    expect_error_code(expected_error_code(test_key), test_key, "M1 error-code message");
+  }
 
   ghl_error_codes_t error = ghl_success;
 
@@ -679,6 +683,9 @@ void create_opaque_dataset(char *name, hid_t file_id) {
 #endif
 
 static ghl_error_codes_t expected_error_code(const int test_key) {
+  if(test_key >= 89 && test_key <= 112) {
+    return (ghl_error_codes_t)(ghl_error_flux_source_invalid_input + (test_key - 89));
+  }
   switch(test_key) {
     case  0:
     case  6:

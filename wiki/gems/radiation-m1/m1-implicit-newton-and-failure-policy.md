@@ -82,6 +82,12 @@ The shared driver:
 5. optionally projects a trial E/F vector through the shared realizability
    repair before retrying the residual.
 
+A small Newton correction alone does not establish convergence. The published
+iterate must be admissible and its weighted residual merit must be at most one.
+An admissible trial above that threshold can continue Newton iteration if it
+improves the merit. If no trial is accepted, the driver returns a retryable
+solve failure without changing the caller output.
+
 At an exact-zero-flux starting state, the neutrino solver may form an
 admissible explicit E/F predictor as the initial Newton iterate. This is only
 an initial guess; it does not alter the residual base, source formula, or

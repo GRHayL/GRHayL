@@ -27,6 +27,12 @@ jobs:
         with:
           compiler: 'gcc'
           hdf5: ${{ matrix.hdf5 }}
+      - name: Generate Radiation M1 coverage report
+        uses: ./.github/actions/code-coverage
+        with:
+          compiler: 'gcc'
+          report_file: m1-coverage.xml
+          report_filter: GRHayL/Radiation/
 
   ET-Legacy:
     strategy:
@@ -405,7 +411,7 @@ jobs:
       - name: Run unit test for error-catching
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/lib
-          for i in {0..88}; do
+          for i in {0..112}; do
             if ./test/unit_test_code_error "$i"; then
               echo "Failed to fail!"
               exit 1
@@ -542,6 +548,7 @@ jobs:
     name: Codecov final status
     if: ${{ always() }}
     needs:
+      - radiation-m1
       - ET-Legacy
       - c2p-routines
       - c2p-failure

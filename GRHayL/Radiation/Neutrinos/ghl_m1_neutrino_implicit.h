@@ -233,7 +233,7 @@ static inline bool ghl_m1_scaled_positive_sqrt(
     return false;
   }
   if(value->mantissa == 0.0) {
-    *root = (ghl_m1_scaled_positive){ .mantissa = 0.0,
+    *root = (ghl_m1_scaled_positive){ .mantissa = 0.0, /* GCOVR_EXCL_LINE -- zero product */
                                       .exponent
                                       = 0 }; /* GCOVR_EXCL_LINE -- zero product */
     return true;                             /* GCOVR_EXCL_LINE -- zero product */

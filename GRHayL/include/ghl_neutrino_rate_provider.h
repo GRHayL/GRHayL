@@ -63,6 +63,7 @@ typedef enum {
 } ghl_neutrino_rate_backend_t;
 
 typedef struct {
+  /** Either backend requires a Stellarcollapse tabulated EOS when enabled. */
   bool use_tabulated_eos;
   int channel_mask;
   ghl_neutrino_rate_failure_policy_t failure_policy;
@@ -200,9 +201,10 @@ ghl_error_codes_t ghl_neutrino_rate_provider_initialize_nrpyleakage(
  *        reuse; a non-NULL cache must not be shared concurrently.
  * @param diagnostics Optional caller-owned diagnostics record. Counters and
  *        last-call status are updated when non-NULL.
- * @param eos EOS parameters used by the selected backend. The reference
- *        backend may run without an EOS object; the NRPyLeakage backend
- *        requires a compatible tabulated EOS.
+ * @param eos EOS parameters used by the selected backend. A table-free
+ *        reference backend may run without an EOS object. Enabling
+ *        use_tabulated_eos on either backend requires a compatible
+ *        Stellarcollapse tabulated EOS.
  * @param prims Frozen cell primitives. The provider reads density,
  *        temperature, and electron fraction and does not modify them.
  * @param rates Output array indexed by

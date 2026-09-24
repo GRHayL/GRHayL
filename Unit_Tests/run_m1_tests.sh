@@ -11,6 +11,7 @@ m1_fixture_dir="$m1_root/Unit_Tests/data/m1_thcm1"
 m1_jthick_fixture="$m1_root/Unit_Tests/data/jthick_thcm1.fixture"
 m1_manifest="$m1_root/Unit_Tests/make.code.defn"
 m1_fixture_audit="$m1_fixture_dir/audit_package.py"
+m1_fixture_archive="$m1_fixture_dir/payloads.tar.gz"
 cd "$m1_root"
 
 if [[ ! -s "$m1_manifest" ]]; then
@@ -99,6 +100,24 @@ fi
 if [[ ! -s "$m1_fixture_audit" ]]; then
   echo "Missing M1 fixture-package audit: $m1_fixture_audit" >&2
   exit 1
+fi
+
+# Clean checkouts carry the retained payloads in a compressed archive. Expand
+# only when no plaintext payload is present; the audit must catch incomplete or
+# modified local packages rather than silently replacing their contents.
+m1_payload_present=0
+for m1_payload in "$m1_fixture_dir"/*.dat "$m1_fixture_dir"/*.m1; do
+  if [[ -e "$m1_payload" || -L "$m1_payload" ]]; then
+    m1_payload_present=1
+    break
+  fi
+done
+if (( m1_payload_present == 0 )); then
+  if [[ ! -s "$m1_fixture_archive" ]]; then
+    echo "Missing repository-local M1 fixture archive: $m1_fixture_archive" >&2
+    exit 1
+  fi
+  tar -xzf "$m1_fixture_archive" -C "$m1_fixture_dir"
 fi
 python3 "$m1_fixture_audit" --root "$m1_fixture_dir"
 

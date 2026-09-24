@@ -1070,7 +1070,9 @@ static ghl_error_codes_t post_projection_error_residual(
     residual[0] = 1.0;
     return ghl_success;
   }
-  if(scripted->calls == 2) {
+  /* Calls 2-12 are the backtracking ladder (step scales 1 .. 1/1024); only
+   * after every shortened step fails does the driver project the full step. */
+  if(scripted->calls <= 12) {
     return ghl_error_m1_implicit_admissibility;
   }
   return ghl_error_m1_invalid_state;
@@ -1090,7 +1092,9 @@ static ghl_error_codes_t post_projection_success_residual(
     residual[0] = 1.0;
     return ghl_success;
   }
-  if(scripted->calls == 2) {
+  /* Calls 2-12 are the backtracking ladder (step scales 1 .. 1/1024); only
+   * after every shortened step fails does the driver project the full step. */
+  if(scripted->calls <= 12) {
     return ghl_error_m1_implicit_admissibility;
   }
   return ghl_success;
@@ -1152,6 +1156,64 @@ static ghl_error_codes_t backtracking_jacobian(
   (void)residual;
   set_identity_matrix(jacobian);
   jacobian[0][0] = -1.0;
+  return ghl_success;
+}
+
+static ghl_error_codes_t small_step_jacobian(
+      const void *restrict context,
+      const double U[4],
+      const double residual[4],
+      double jacobian[4][4]) {
+  (void)context;
+  (void)U;
+  (void)residual;
+  set_identity_matrix(jacobian);
+  /* Residual 1 needs a 1e-12 correction, inside the configured 1e-10 tolerance. */
+  jacobian[0][0] = 1.0e12;
+  return ghl_success;
+}
+
+static ghl_error_codes_t no_root_small_step_residual(
+      const void *restrict context,
+      const double U[4],
+      double residual[4]) {
+  (void)context;
+  const double t = 1.0e12 * (U[0] - 1.0);
+  residual[0] = 1.0 + t + t * t;
+  for(int i = 1; i < 4; ++i) {
+    residual[i] = U[i];
+  }
+  return ghl_success;
+}
+
+static ghl_error_codes_t no_root_small_step_jacobian(
+      const void *restrict context,
+      const double U[4],
+      const double residual[4],
+      double jacobian[4][4]) {
+  (void)context;
+  (void)residual;
+  set_identity_matrix(jacobian);
+  const double t = 1.0e12 * (U[0] - 1.0);
+  jacobian[0][0] = 1.0e12 * (1.0 + 2.0 * t);
+  return ghl_success;
+}
+
+static ghl_error_codes_t floor_limited_small_step_residual(
+      const void *restrict context,
+      const double U[4],
+      double residual[4]) {
+  (void)context;
+  for(int i = 0; i < 4; ++i) {
+    residual[i] = 0.0;
+  }
+  if(U[0] < 1.0) {
+    return ghl_error_m1_implicit_admissibility;
+  }
+  residual[0] = 1.0 + 1.0e12 * (U[0] - 1.0);
+  for(int i = 1; i < 4; ++i) {
+    residual[i] = U[i];
+  }
   return ghl_success;
 }
 
@@ -1251,6 +1313,63 @@ static void test_newton_retry_boundaries(
               m1_params, metric, &trial_error_callbacks, &trial_error_context,
               base_state, output, &diagnostics),
         ghl_error_m1_invalid_state, "Newton trial residual callback failure", 776);
+
+  scripted_newton_context small_step_error_context = { 0 };
+  const ghl_m1_newton_callbacks small_step_error_callbacks
+        = { .residual = trial_callback_error_residual,
+            .jacobian = small_step_jacobian,
+            .observer = NULL,
+            .observer_context = NULL };
+  const double unchanged_output[4] = { -1.0, -2.0, -3.0, -4.0 };
+  memcpy(output, unchanged_output, sizeof(output));
+  require_error(
+        ghl_m1_newton_solve_4d(
+              m1_params, metric, &small_step_error_callbacks,
+              &small_step_error_context, base_state, output, &diagnostics),
+        ghl_error_m1_invalid_state, "Newton small-step residual callback failure", 777);
+  require_condition(
+        small_step_error_context.calls == 2
+              && memcmp(output, unchanged_output, sizeof(output)) == 0,
+        "Newton small-step callback failure changed the output", 777);
+
+  /* This residual is at least 3/4 for every E, despite its tiny first
+   * Newton correction. A correction-only rule would falsely report success. */
+  const ghl_m1_newton_callbacks no_root_callbacks
+        = { .residual = no_root_small_step_residual,
+            .jacobian = no_root_small_step_jacobian,
+            .observer = NULL,
+            .observer_context = NULL };
+  memcpy(output, unchanged_output, sizeof(output));
+  require_error(
+        ghl_m1_newton_solve_4d(
+              &one_iteration_params, metric, &no_root_callbacks, NULL, base_state,
+              output, &diagnostics),
+        ghl_error_m1_implicit_solve_failure, "Newton small-step no-root residual", 778);
+  require_condition(
+        memcmp(output, unchanged_output, sizeof(output)) == 0
+              && diagnostics.residual_weighted_merit > 1.0,
+        "Newton small-step no-root case published false convergence", 778);
+
+  /* The linear residual has its root below the energy floor. Its full Newton
+   * correction is small, but the trial is inadmissible and projection cannot
+   * lower the residual at the floor. */
+  ghl_m1_parameters floor_params = *m1_params;
+  floor_params.E_floor = 1.0;
+  const ghl_m1_newton_callbacks floor_callbacks
+        = { .residual = floor_limited_small_step_residual,
+            .jacobian = small_step_jacobian,
+            .observer = NULL,
+            .observer_context = NULL };
+  memcpy(output, unchanged_output, sizeof(output));
+  require_error(
+        ghl_m1_newton_solve_4d(
+              &floor_params, metric, &floor_callbacks, NULL, base_state, output,
+              &diagnostics),
+        ghl_error_m1_implicit_solve_failure, "Newton inadmissible small trial", 779);
+  require_condition(
+        memcmp(output, unchanged_output, sizeof(output)) == 0
+              && diagnostics.residual_weighted_merit > 1.0,
+        "Newton inadmissible small trial published false convergence", 779);
 }
 
 static void test_newton_coverage_boundaries(

@@ -376,7 +376,8 @@ static ghl_error_codes_t evaluate_minerbo(
     }
   }
 
-  const bool scaled_energy = energy_scale > sqrt(DBL_MAX);
+  const bool scaled_energy
+        = energy_scale < sqrt(DBL_MIN) || energy_scale > sqrt(DBL_MAX);
   double J = 0.0;
   double H2 = 0.0;
   double scale = 0.0;
@@ -430,7 +431,7 @@ static ghl_error_codes_t evaluate_minerbo(
   else {
     /* The comoving consistency equation is homogeneous in radiation energy.
      * Evaluate it after dividing the stress tensor by E so its residual scale
-     * remains representable when E^2 does not. */
+     * remains representable when E^2 underflows or overflows. */
     for(int i = 0; i < 3; ++i) {
       F_con[i] /= energy_scale;
     }
@@ -630,7 +631,7 @@ static ghl_error_codes_t publish_eulerian_minerbo_fallback(
   }
 
   double xi;
-  if(comoving.J <= sqrt(DBL_MAX)) {
+  if(comoving.J >= sqrt(DBL_MIN) && comoving.J <= sqrt(DBL_MAX)) {
     long double H2_ld = -(long double)comoving.Hn * comoving.Hn;
     for(int i = 0; i < 3; ++i) {
       H2_ld += (long double)comoving.HD[i] * comoving.HU[i];
@@ -645,7 +646,7 @@ static ghl_error_codes_t publish_eulerian_minerbo_fallback(
   }
   else {
     /* The fallback uses the same homogeneous normalization as the primary
-     * residual, avoiding a J^2 overflow in its admissibility check. */
+     * residual, avoiding J^2 underflow or overflow in its admissibility check. */
     const double Hn_over_J = comoving.Hn / comoving.J;
     long double H2_scaled_ld = -(long double)Hn_over_J * Hn_over_J;
     for(int i = 0; i < 3; ++i) {
@@ -859,8 +860,10 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
       double chim, gm, nrm;
       error = evaluate_minerbo(&ws, xi, Ptmp, &chim, &gm, &nrm, &physical_xi);
       if(error != ghl_success) {
-        increment_counter(3);
-        return error;
+        /* Endpoints were accepted before Brent's in-bracket evaluation. Keep
+         * the defensive return for floating-point failures at an interior xi. */
+        increment_counter(3); /* GCOVR_EXCL_LINE -- defensive interior failure */
+        return error;          /* GCOVR_EXCL_LINE -- defensive interior failure */
       }
       fb = gm;
     }

@@ -163,7 +163,7 @@ Workflows live in `.github/workflows/`:
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | 13 existing job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | the Radiation M1 job and 13 other job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML |
 | `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
 | `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | 2 of 13 jobs invoke coverage action |
 | `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
@@ -247,20 +247,15 @@ workflow matrix and not a fixture generator:
 1. Runs `./configure -r`.
 2. Runs `make tests datagen` (data generators are compiled, not executed).
 3. Exports `LD_LIBRARY_PATH` with `build/lib`.
-4. Runs `bash Unit_Tests/run_m1_tests.sh`, the scoped Radiation M1 runner. That
-   runner owns its own expected inventory and compares it against
-   `Unit_Tests/make.code.defn` in both directions, so an omitted or unowned M1
-   test is a hard failure rather than silently reduced coverage. It replays only
-   repository-local fixtures and never invokes a generator.
-5. Downloads binary fixtures from the repo-visible `GRHayL/TestData` raw URL
+4. Downloads binary fixtures from the repo-visible `GRHayL/TestData` raw URL
    base.
-6. Downloads EOS tables from the repo-visible `stellarcollapse.org/EOS` URLs
+5. Downloads EOS tables from the repo-visible `stellarcollapse.org/EOS` URLs
    where needed, decompressing `*.bz2` files.
-7. Runs the compiled tests under `test/`, including the direct
+6. Runs the compiled tests under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
 7. Runs `unit_test_code_error` over error-code keys `0` through `88`, expecting
    each invocation to fail at process level.
-9. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
+8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
    `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;
    this records only the visible runner/workflow setup command for NN-enabled
    tabulated replay.
@@ -269,12 +264,13 @@ workflow matrix and not a fixture generator:
     or decompressed files and its private expected-error work directory;
     preexisting paths are preserved, including on early failure.
 
-The runner directly invokes every configured default test binary except
-`unit_test_WENOZ_reconstruction` (workflow matrices invoke it),
-`unit_test_tabulated_eos_compose` (the focused CompOSE workflow does), or
-`unit_test_con2prim_debug` (no runner/workflow invocation is visible). The
-composite-action YAML configures `tests` and `datagen` compilation, but neither
-that action nor the local runner executes data-generator binaries. Tracked YAML
+The broad runner does not invoke the scoped Radiation M1 suite,
+`unit_test_WENOZ_reconstruction`, `unit_test_tabulated_eos_compose`, or
+`unit_test_con2prim_debug`. Radiation M1 runs through its dedicated action,
+WENOZ through the reconstruction workflow matrix, and CompOSE through its
+focused workflow; no runner/workflow invocation is visible for the debug
+binary. The composite-action YAML configures `tests` and `datagen` compilation,
+but neither that action nor the local runner executes data-generator binaries. Tracked YAML
 therefore establishes a workflow-configured compile route only. After an
 observed successful action or local `make datagen`, those binaries are
 `compiled-unrun` until a separate command executes them.
@@ -285,6 +281,9 @@ Coverage is configured through workflow flags and `.github/actions/code-coverage
 Repo evidence shows these caveats:
 
 - Linux GCC uses `gcovr`; Ubuntu image handling differs for `ubuntu22`.
+- The Ubuntu GCC Radiation M1 jobs upload a gcovr Cobertura report filtered to
+  `GRHayL/Radiation/`, with automatic file search disabled for that upload. The
+  `radiation_m1` Codecov component has a 100% project coverage target.
 - Linux clang uses `llvm-profdata` and `llvm-cov`, with a comment that expected
   coverage files are still not generated.
 - Linux Intel action body is commented, with a note questioning compatibility.
