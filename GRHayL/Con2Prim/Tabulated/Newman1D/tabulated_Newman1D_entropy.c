@@ -79,7 +79,8 @@ static ghl_error_codes_t ghl_newman_entropy(
     double xrho = con->rho*invW;
     double xent = con->entropy*invW;
     ghl_tabulated_enforce_bounds_rho_Ye_S(eos, &xrho, &xye, &xent);
-    const ghl_error_codes_t error = ghl_tabulated_compute_P_T_from_S(eos, xrho, xye, xent, &xprs, &xtemp);
+    const ghl_error_codes_t error
+          = ghl_tabulated_compute_P_T_from_S(eos, xrho, xye, xent, &xprs, &xtemp);
     if(error) {
       // Stale xprs would equal P_old and pass the convergence test below
       return error;

@@ -87,7 +87,8 @@ static ghl_error_codes_t ghl_newman_energy(
     double xeps = - 1.0 + (1.0-W*W)*x*invW
                   + W*( 1.0 + q - s + 0.5*( s*invW*invW + (t*t)/(x*x) ) );
     ghl_tabulated_enforce_bounds_rho_Ye_eps(eos, &xrho, &xye, &xeps);
-    const ghl_error_codes_t error = ghl_tabulated_compute_P_T_from_eps(eos, xrho, xye, xeps, &xprs, &xtemp);
+    const ghl_error_codes_t error
+          = ghl_tabulated_compute_P_T_from_eps(eos, xrho, xye, xeps, &xprs, &xtemp);
     if(error) {
       // Stale xprs would equal P_old and pass the convergence test below
       return error;
