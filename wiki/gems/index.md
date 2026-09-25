@@ -203,6 +203,42 @@ source, headers, tests, and common edit routes before wider search.
   `GRHayL/TestData` fixtures and implementation-derived CompOSE drift goldens reflect the
   selected density-derived blocking implementation.
 
+## Radiation
+
+- Purpose: grey, one-group, three-species neutrino M1 radiation transport:
+  number and energy/momentum moments, the four-dimensional Minerbo closure,
+  symmetric Rusanov and four-point blended face transport, realizability
+  repair, frozen-rate local source/implicit coupling, and lepton-number
+  exchange.
+- KB routes: [hub](radiation-m1.md),
+  [rate provider contract](radiation-m1/rate-provider-contract.md),
+  [four-dimensional Minerbo closure](radiation-m1/m1-four-dimensional-minerbo-closure.md),
+  [number current and transport](radiation-m1/m1-number-current-and-transport.md),
+  [neutrino source equations](radiation-m1/m1-neutrino-source-equations.md),
+  [source update branches and rollback](radiation-m1/m1-source-update-branches-and-rollback.md),
+  [implicit Newton and failure policy](radiation-m1/m1-implicit-newton-and-failure-policy.md),
+  [realizability repair](radiation-m1/m1-realizability-repair.md), and
+  [tests and fixtures](radiation-m1/tests-and-fixtures.md).
+- Docs path: `docs/raw/Radiation.dox`.
+- Source path: `GRHayL/Radiation/`, with the neutrino operators in
+  `GRHayL/Radiation/Neutrinos/`.
+- Primary headers: `GRHayL/include/ghl_m1.h`,
+  `GRHayL/include/ghl_neutrino_rate_provider.h`.
+- Likely tests: the scoped inventory in `Unit_Tests/make.code.defn`, executed by
+  `Unit_Tests/run_m1_tests.sh`; route fixture details through
+  [tests and fixtures](radiation-m1/tests-and-fixtures.md).
+- Common edit routes: add or change M1 operators in `GRHayL/Radiation/`, expose
+  API in `ghl_m1.h`, and keep the scoped runner's expected inventory in step
+  with `Unit_Tests/make.code.defn`. Route provider/microphysics boundaries
+  through [rate provider contract](radiation-m1/rate-provider-contract.md) and
+  equilibrium/rate meanings through
+  [equilibrium and rate semantics](radiation-m1/neutrino-equilibrium-and-rate-semantics.md).
+- Drift/contract notes: Radiation consumes provider-supplied frozen
+  `ghl_m1_neutrino_rates` and validates their contract; it is not itself a
+  production-rate formula source. Stored THC_M1 comparison values come only
+  from the repository-local fixture package, so the scoped runner never invokes
+  a generator.
+
 ## Reconstruction
 
 - Purpose: PLM, PPM, and WENO-z shock-capturing reconstruction routines that

@@ -1,0 +1,23 @@
+# Primary make.code.defn for the shared M1 runtime and neutrino M1.
+# Neutrino-specific sources are grouped in the Neutrinos/ subdirectory.
+#! INCS = ghl_m1_utils.h
+
+# Source files in this directory that need compiled:
+SRCS = ghl_m1_initialize.c \
+       ghl_m1_realizability_repair.c \
+       ghl_m1_closure.c \
+       ghl_m1_closure_decomposition_diagnostic.c \
+       ghl_m1_comoving_moments.c \
+       ghl_m1_matter_coupling_sources.c \
+       ghl_m1_sources_geometry.c \
+       ghl_m1_wavespeeds.c \
+       ghl_m1_rusanov_flux.c \
+       ghl_m1_four_point_blended_rusanov.c \
+       ghl_m1_Jthick.c \
+       ghl_m1_diffusion_flux.c \
+       ghl_m1_newton.c \
+       ghl_m1_stress_energy.c \
+       ghl_m1_diagnostics.c \
+       ghl_m1_utils.c
+
+SUBDIRS = Neutrinos

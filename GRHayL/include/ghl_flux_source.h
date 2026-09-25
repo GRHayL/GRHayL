@@ -21,6 +21,35 @@ extern "C" {
  *  @{
  */
 
+/** Compute a component-wise symmetric Rusanov interface flux.
+ *
+ * The component arrays contain undensitized conserved quantities and their
+ * corresponding physical fluxes on the left and right sides. The same
+ * nonnegative speed is applied to every component. Inputs and candidates are
+ * validated before publication, so an error leaves the output buffer
+ * unchanged.
+ *
+ * @param state_L Undensitized left state with @p component_count components.
+ * @param state_R Undensitized right state with @p component_count components.
+ * @param physical_flux_L Undensitized physical flux corresponding to
+ *        @p state_L.
+ * @param physical_flux_R Undensitized physical flux corresponding to
+ *        @p state_R.
+ * @param component_count Positive number of components in each array.
+ * @param speed Nonnegative interface speed applied componentwise.
+ * @param flux Output numerical flux with @p component_count components. It is
+ *        not densitized by this helper.
+ * @return @c ghl_success on publication; otherwise @p flux is unchanged.
+ */
+ghl_error_codes_t ghl_calculate_Rusanov_flux(
+      const double *restrict state_L,
+      const double *restrict state_R,
+      const double *restrict physical_flux_L,
+      const double *restrict physical_flux_R,
+      const int component_count,
+      const double speed,
+      double *restrict flux);
+
 /** Compute GRMHD source terms.
  *
  * The EOS callback may update `prims`. On failure, `cons` is unchanged; the

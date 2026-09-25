@@ -28,7 +28,11 @@ PROJECT_NAME           = "GRHayL"
 
 # Input control
 CITE_BIB_FILES         = docs/raw/ref.bib
-INPUT                  = GRHayL docs/raw
+INPUT                  = GRHayL docs/raw \
+                         Unit_Tests/README.m1.md \
+                         Unit_Tests/data/m1_thcm1/RUSANOV.md \
+                         Unit_Tests/data/m1_thcm1/STRESS_ENERGY.md \
+                         README.md tools/compose/README.md
 RECURSIVE              = YES
 EXCLUDE                = GRHayL/include/ghl_unit_tests.h \
                          GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc

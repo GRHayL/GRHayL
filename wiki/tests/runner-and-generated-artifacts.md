@@ -112,12 +112,13 @@ Treat `.github/run_tests.sh` as one broad local-style driver, not a complete
 enumeration of every workflow job. Treat workflows as CI matrices, not proof
 that normal local runs regenerate trusted fixtures.
 
-Set comparison is exact in current sources: default `configure` targets the
-`Unit_Tests/unit_test_*.c` set, while the runner directly invokes all except
-`unit_test_WENOZ_reconstruction`,
-`unit_test_tabulated_eos_compose`, and `unit_test_con2prim_debug`; workflows
-invoke WENOZ and the focused CompOSE test, while no normal runner/workflow
-invocation for the debug binary is visible.
+Default `configure` targets the `Unit_Tests/unit_test_*.c` set. The broad runner
+does not invoke the [scoped Radiation M1 suite](../../Unit_Tests/run_m1_tests.sh),
+`unit_test_WENOZ_reconstruction`, `unit_test_tabulated_eos_compose`, or
+`unit_test_con2prim_debug`. Dedicated workflow jobs invoke the
+[Radiation M1 action](../../.github/actions/run_m1/action.yml), WENOZ, and the
+focused CompOSE test; no normal runner/workflow invocation for the debug binary
+is visible.
 
 NN primitive-guess coverage appears in both paths: `.github/run_tests.sh` runs
 `./test/unit_test_c2p_nn_guess`, while workflow `c2p-failure` matrices include

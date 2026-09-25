@@ -115,5 +115,76 @@ void ghl_abort_if_error(const ghl_error_codes_t error) {
           ghl_error_invalid_eos_table,
           "EOS table dimensions, grid, or derived data are invalid.\n");
     GHL_CASE_ERROR(ghl_error_invalid_hlle_wavespeeds, "Invalid HLLE wave speeds.\n");
+    GHL_CASE_ERROR(
+          ghl_error_flux_source_invalid_input,
+          "Flux/source operation received invalid input.\n");
+    GHL_CASE_ERROR(ghl_error_m1_null_pointer, "M1 routine received a NULL pointer.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_epsilon_c,
+          "M1 epsilon_c must be finite and strictly between zero and one.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_E_floor,
+          "M1 E_floor must be finite and strictly positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_zeta_min,
+          "M1 zeta_min must be finite and strictly positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_fd_epsilon_rel,
+          "M1 relative finite-difference epsilon must be finite and strictly "
+          "positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_fd_epsilon_abs,
+          "M1 absolute finite-difference epsilon must be finite and strictly "
+          "positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_newton_max_iterations,
+          "M1 Newton maximum iteration count must be strictly positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_newton_tolerance,
+          "M1 Newton relative tolerance must be finite and strictly positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_metric, "M1 operation received an invalid metric.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_implicit_jacobian,
+          "M1 implicit solve produced an invalid Jacobian.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_state,
+          "M1 operation received an invalid radiation state.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_implicit_admissibility,
+          "M1 implicit trial state is outside the admissible domain.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_implicit_solve_failure,
+          "M1 implicit Newton solve failed to converge.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_implicit_terminal_fallback,
+          "M1 implicit solve exhausted its terminal fallback policy.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_con2prim_failure,
+          "M1 source update failed during conservative-to-primitive recovery.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_microphysics_failure,
+          "M1 neutrino microphysics rate evaluation failed.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_newton_absolute_tolerance,
+          "M1 Newton absolute tolerance must be finite and strictly positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_closure_tolerance,
+          "M1 closure tolerance must be finite and strictly positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_closure_max_iterations,
+          "M1 closure maximum iteration count must be strictly positive.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_invalid_repair_policy,
+          "M1 received an unsupported realizability repair policy.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_closure_residual_too_large,
+          "M1 closure residual exceeded the configured acceptance tolerance.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_incompatible_transport_policy,
+          "M1 transport policy is incompatible with the requested operation.\n");
+    GHL_CASE_ERROR(
+          ghl_error_m1_source_double_application,
+          "M1 source update was applied more than once to the same state.\n");
   }
 }

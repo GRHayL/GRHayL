@@ -77,6 +77,14 @@ component_management:
       name: neutrinos
       paths:
         - GRHayL/Neutrinos/**
+    - component_id: gem_radiation_m1
+      name: radiation_m1
+      paths:
+        - GRHayL/Radiation/**
+      statuses:
+        - type: project
+          target: 100%
+          threshold: 0%
     - component_id: gem_reconstruction
       name: reconstruction
       paths:
