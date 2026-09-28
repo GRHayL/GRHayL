@@ -47,6 +47,20 @@ the face operands and densitization; the
 [source-branch leaf](m1-source-update-branches-and-rollback.md) covers local
 source publication.
 
+For a manual explicit source stage,
+[`ghl_m1_compute_neutrino_explicit_rhs_sources`](../../../GRHayL/include/ghl_m1.h)
+returns densitized cell E/F geometry sources and, when
+`include_interaction_sources` is true, adds
+`alpha * sqrt_detgamma` times the frozen-rate E/F and number interactions.
+The number output is optional, and failure leaves every requested output
+unchanged. The host must assemble and limit the interaction packet before
+publication. In an IMEX stage using local source updates, select the paired or
+single-species operation as described under
+[species and pair scheduling](#species-and-pair-scheduling). Do not add the
+helper's explicit interaction terms to that same stage; the host still owns
+geometry assembly and stage ordering. See the [source equations](m1-neutrino-source-equations.md#explicit-conservative-rhs-sources)
+and [implementation](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c).
+
 ## Pointwise versus prepared faces
 
 Use

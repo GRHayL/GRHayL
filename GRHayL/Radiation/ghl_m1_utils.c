@@ -294,9 +294,93 @@ ghl_error_codes_t ghl_m1_compute_harmonic_diffusion_coefficient(
     const double ratio = fmin(chi_tr_L, chi_tr_R) / scale;
     candidate = (2.0 / (3.0 * (1.0 + ratio))) / scale;
   }
-  if(!isfinite(candidate) || candidate <= 0.0) {
+  /* On the fallback path the numerator is in [1/3, 2/3] and scale is
+   * finite and positive. Even division by DBL_MAX exceeds DBL_TRUE_MIN,
+   * so the result cannot round to zero. The fast path already required a
+   * positive result. Overflow for subnormal opacities is still rejected. */
+  if(!isfinite(candidate)) {
     return ghl_error_m1_invalid_state;
   }
   *D_face = candidate;
+  return ghl_success;
+}
+
+/* The PSD caller supplies a finite symmetric matrix normalized to unit
+ * maximum entry. Keeping one sweep separate makes both the rotation and the
+ * bounded iteration contract independently testable. */
+static bool ghl_m1_jacobi_sweep(void *workspace) {
+  double (*B)[3] = workspace;
+  const double eigen_tolerance = 64.0 * DBL_EPSILON;
+  double offdiag = 0.0;
+  for(int p = 0; p < 3; ++p) {
+    for(int q = p + 1; q < 3; ++q) {
+      offdiag = ghl_m1_max(offdiag, fabs(B[p][q]));
+    }
+  }
+  if(offdiag <= eigen_tolerance) {
+    return true;
+  }
+  for(int p = 0; p < 3; ++p) {
+    for(int q = p + 1; q < 3; ++q) {
+      if(fabs(B[p][q]) <= eigen_tolerance) {
+        continue;
+      }
+      const double tau = (B[q][q] - B[p][p]) / (2.0 * B[p][q]);
+      const double t = copysign(1.0 / (fabs(tau) + sqrt(1.0 + tau * tau)), tau);
+      const double c = 1.0 / sqrt(1.0 + t * t);
+      const double s = t * c;
+      const double Bpp = B[p][p];
+      const double Bqq = B[q][q];
+      B[p][p] = Bpp - t * B[p][q];
+      B[q][q] = Bqq + t * B[p][q];
+      B[p][q] = B[q][p] = 0.0;
+      for(int k = 0; k < 3; ++k) {
+        if(k == p || k == q) {
+          continue;
+        }
+        const double Bkp = B[k][p];
+        const double Bkq = B[k][q];
+        B[k][p] = B[p][k] = c * Bkp - s * Bkq;
+        B[k][q] = B[q][k] = s * Bkp + c * Bkq;
+      }
+    }
+  }
+  return false;
+}
+
+void ghl_m1_jacobi_iteration_driver(void *workspace, bool (*sweep)(void *)) {
+  for(int iteration = 0; iteration < 32; ++iteration) {
+    if(sweep(workspace)) {
+      break;
+    }
+  }
+}
+
+void ghl_m1_jacobi_eigenvalues(double matrix[3][3]) {
+  ghl_m1_jacobi_iteration_driver(matrix, ghl_m1_jacobi_sweep);
+}
+
+ghl_error_codes_t ghl_m1_finish_scaled_norm_ratio(
+      const double x_scale,
+      const double A_scale,
+      const double denom,
+      const double scaled_norm,
+      double *restrict ratio) {
+  if(!isfinite(scaled_norm) || scaled_norm <= 0.0) {
+    return ghl_error_m1_invalid_state;
+  }
+
+  int x_exp, A_exp, denom_exp;
+  const double x_mant = frexp(x_scale, &x_exp);
+  double A_mant = frexp(A_scale, &A_exp);
+  const double denom_mant = frexp(denom, &denom_exp);
+  if((A_exp & 1) != 0) {
+    A_mant *= 2.0;
+    --A_exp;
+  }
+  const double mant = (x_mant / denom_mant) * sqrt(A_mant) * scaled_norm;
+  const int exponent = x_exp - denom_exp + A_exp / 2;
+  const double value = scalbn(mant, exponent);
+  *ratio = isfinite(value) ? value : DBL_MAX;
   return ghl_success;
 }

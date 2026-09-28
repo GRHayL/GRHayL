@@ -89,16 +89,30 @@ static ghl_error_codes_t ghl_m1_pair_number_extent(
                         * (long double)n_eq_a;
   const long double smaller = N_e < N_a ? (long double)N_e : (long double)N_a;
   const long double difference = fabsl((long double)N_e - (long double)N_a);
+  /* Every factor is a positive finite double. On binary implementations,
+   * H is in [2^(2*dmin), 2^(2*dmax)) and D in
+   * [2^(4*dmin), 2^(4*dmax)), where dmin includes double subnormals.
+   * Keep the arithmetic guards on targets whose long-double exponent range
+   * cannot contain these intervals (including long double == double). */
+#if FLT_RADIX != 2 || LDBL_MIN_EXP - 1 > 4 * (DBL_MIN_EXP - DBL_MANT_DIG) \
+      || LDBL_MAX_EXP < 4 * DBL_MAX_EXP
   if(!isfinite(H) || H <= 0.0L || !isfinite(D) || D <= 0.0L) {
     return ghl_error_m1_implicit_admissibility;
   }
+#endif
 
   const long double D_over_H = D / H;
   const long double C = D * (1.0L + smaller / H);
   const long double B = difference + D_over_H;
+  /* D/H < 2^(4*dmax-2*dmin); smaller/H < 2^(dmax-2*dmin).
+   * Adding one and multiplying by D bounds C by
+   * 2^(5*dmax-2*dmin+1), which also bounds B. */
+#if FLT_RADIX != 2 \
+      || LDBL_MAX_EXP < 5 * DBL_MAX_EXP - 2 * (DBL_MIN_EXP - DBL_MANT_DIG) + 1
   if(!isfinite(B) || !isfinite(C)) {
     return ghl_error_m1_implicit_admissibility;
   }
+#endif
   const long double scale = fmaxl(B, sqrtl(C));
   /* B is nonnegative and C is positive, so scale is finite and positive. */
   const long double b_scaled = B / scale;
@@ -562,13 +576,18 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
           &state_transport[species], &final_state[species], &base_rates[species],
           nonpair_exchange[species].dL_rad_cc, metric->sqrt_detgamma, n_b_cons,
           &final_exchange[species]);
-    if(error != ghl_success) {
-      /* Extreme signed endpoint differences can fail exchange assembly. No
-       * validated pair-solve output reaches this guard; it is kept defensive
-       * and excluded from the coverage gate. */
-      return ghl_m1_pair_publish_failure( /* LCOV_EXCL_LINE */
-            error, state_transport, state_out, exchange, diagnostics,
-            neutrino_diagnostics);
+    if(error != ghl_success) { /* GCOVR_EXCL_BR_LINE */
+      /* Only extreme signed endpoint differences can fail exchange assembly.
+       * The lepton increment sees the same rates, dL_rad_cc and n_b_cons as
+       * the independent stage, which succeeded, and sqrt_detgamma is
+       * validated. N and E are finite and nonnegative, so dN, dE and dTau are
+       * finite. Only a flux difference can overflow, and that needs opposite
+       * signs with combined magnitude above DBL_MAX, i.e. E within a factor of
+       * two of DBL_MAX at both ends. No accepted input is known to reach this
+       * guard; it is kept defensive and excluded from the coverage gate. */
+      return ghl_m1_pair_publish_failure(/* LCOV_EXCL_LINE */
+                                         error, state_transport, state_out, exchange,
+                                         diagnostics, neutrino_diagnostics);
     }
   }
   for(int species = 0; species < ghl_m1_pair_species_count; ++species) {

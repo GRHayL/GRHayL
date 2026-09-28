@@ -1,6 +1,12 @@
 #ifndef GHL_M1_UTILS_H
 #define GHL_M1_UTILS_H
 
+#if defined(__clang__)
+/* Keep cancellation-sensitive M1 arithmetic on a consistent operation path
+ * across the translation units that include this private header. */
+#pragma clang fp contract(off)
+#endif
+
 #include "ghl_m1.h"
 #include <float.h>
 
@@ -50,6 +56,11 @@ static inline double ghl_m1_difference_of_products(
                      - scalbn(low_cd, exponent_cd - exponent);
   return scalbn(high + low, exponent);
 }
+
+/* Private Jacobi operations. A sweep reports convergence before rotating;
+ * the driver retains the PSD validator's existing 32-sweep work bound. */
+void ghl_m1_jacobi_iteration_driver(void *workspace, bool (*sweep)(void *));
+void ghl_m1_jacobi_eigenvalues(double matrix[3][3]);
 
 bool ghl_m1_metric_is_symmetric_spd(const ghl_metric_quantities *restrict metric);
 
@@ -113,13 +124,6 @@ static inline void ghl_m1_lower_spatial_tensor(
     }
   }
 }
-
-enum {
-  GHL_M1_CLOSURE_VALIDATION_NONFINITE = 1,
-  GHL_M1_CLOSURE_VALIDATION_TRACE = 2,
-  GHL_M1_CLOSURE_VALIDATION_SYMMETRY = 3,
-  GHL_M1_CLOSURE_VALIDATION_PSD = 4
-};
 
 /* All U values are densitized. Energy resolves source coupling even when
  * the perturbed flux component is zero or much smaller than the energy. */
@@ -211,13 +215,18 @@ ghl_m1_validate_parameters(const ghl_m1_parameters *restrict m1_params) {
   const double scale
         = ghl_m1_max(fabs(expected), fabs(m1_params->one_minus_epsilon_c_sq));
   /* epsilon_c is strictly below one, so expected and scale are positive. */
-  if(fabs(m1_params->one_minus_epsilon_c_sq - expected)
-              > 64.0 * DBL_EPSILON * scale) {
+  if(fabs(m1_params->one_minus_epsilon_c_sq - expected) > 64.0 * DBL_EPSILON * scale) {
     return ghl_error_m1_invalid_epsilon_c;
   }
 
   return ghl_success;
 }
+
+/* Restore a normalized norm with validated positive finite operand scales.
+ * The computed norm remains checked: cancellation or range failures must not
+ * publish an invalid ratio. Results beyond double range saturate at DBL_MAX. */
+ghl_error_codes_t ghl_m1_finish_scaled_norm_ratio(
+      double x_scale, double A_scale, double denom, double scaled_norm, double *ratio);
 
 /* Evaluate sqrt(x^T A x)/denom without materializing an overflow- or
  * underflow-prone quadratic form. A is assumed finite SPD and denom positive. */
@@ -284,23 +293,7 @@ static inline ghl_error_codes_t ghl_m1_scaled_norm_ratio(
     }
   }
   const double scaled_norm = hypot(hypot(LT_x[0], LT_x[1]), LT_x[2]);
-  if(!isfinite(scaled_norm) || scaled_norm <= 0.0) {
-    return ghl_error_m1_invalid_state;
-  }
-
-  int x_exp, A_exp, denom_exp;
-  const double x_mant = frexp(x_scale, &x_exp);
-  double A_mant = frexp(A_scale, &A_exp);
-  const double denom_mant = frexp(denom, &denom_exp);
-  if((A_exp & 1) != 0) {
-    A_mant *= 2.0;
-    --A_exp;
-  }
-  const double mant = (x_mant / denom_mant) * sqrt(A_mant) * scaled_norm;
-  const int exponent = x_exp - denom_exp + A_exp / 2;
-  const double value = scalbn(mant, exponent);
-  *ratio = isfinite(value) ? value : DBL_MAX;
-  return ghl_success;
+  return ghl_m1_finish_scaled_norm_ratio(x_scale, A_scale, denom, scaled_norm, ratio);
 }
 
 static inline ghl_error_codes_t ghl_m1_scaled_covector_norm_ratio(
@@ -440,14 +433,14 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
   for(int i = 0; i < 3; ++i) {
     for(int j = 0; j < 3; ++j) {
       if(!isfinite(A[i][j])) {
-        ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_NONFINITE);
+        ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_nonfinite);
         return ghl_error_m1_invalid_state;
       }
       scale = ghl_m1_max(scale, fabs(A[i][j]));
     }
   }
   if(scale <= 0.0) {
-    ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_PSD);
+    ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
     return ghl_error_m1_invalid_state;
   }
 
@@ -470,7 +463,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
       }
       if(i == j) {
         if(!isfinite(value) || value <= 0.0) {
-          ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_PSD);
+          ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
           return ghl_error_m1_invalid_state;
         }
         L[i][j] = sqrt(value);
@@ -513,14 +506,14 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
     }
     for(int j = 0; j < 3; ++j) {
       if(!isfinite(B[i][j])) {
-        ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_NONFINITE);
+        ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_nonfinite);
         return ghl_error_m1_invalid_state;
       }
       eigen_scale = ghl_m1_max(eigen_scale, fabs(B[i][j]));
     }
   }
   if(eigen_scale <= 0.0) {
-    ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_PSD);
+    ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
     return ghl_error_m1_invalid_state;
   }
   for(int i = 0; i < 3; ++i) {
@@ -532,48 +525,12 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
   /* Eigenvalue tolerances are relative to the tensor, not to an absolute
    * unit-energy scale. This keeps low-energy tensors subject to the same PSD
    * admissibility decision as their normalized counterparts. */
-  const double eigen_tolerance = 64.0 * DBL_EPSILON;
   const double eigenvalue_tolerance = 1024.0 * DBL_EPSILON;
-  for(int sweep = 0; sweep < 32; ++sweep) {
-    double offdiag = 0.0;
-    for(int p = 0; p < 3; ++p) {
-      for(int q = p + 1; q < 3; ++q) {
-        offdiag = ghl_m1_max(offdiag, fabs(B[p][q]));
-      }
-    }
-    if(offdiag <= eigen_tolerance) {
-      break;
-    }
-    for(int p = 0; p < 3; ++p) {
-      for(int q = p + 1; q < 3; ++q) {
-        if(fabs(B[p][q]) <= eigen_tolerance) {
-          continue;
-        }
-        const double tau = (B[q][q] - B[p][p]) / (2.0 * B[p][q]);
-        const double t = copysign(1.0 / (fabs(tau) + sqrt(1.0 + tau * tau)), tau);
-        const double c = 1.0 / sqrt(1.0 + t * t);
-        const double s = t * c;
-        const double Bpp = B[p][p];
-        const double Bqq = B[q][q];
-        B[p][p] = Bpp - t * B[p][q];
-        B[q][q] = Bqq + t * B[p][q];
-        B[p][q] = B[q][p] = 0.0;
-        for(int k = 0; k < 3; ++k) {
-          if(k == p || k == q) {
-            continue;
-          }
-          const double Bkp = B[k][p];
-          const double Bkq = B[k][q];
-          B[k][p] = B[p][k] = c * Bkp - s * Bkq;
-          B[k][q] = B[q][k] = s * Bkp + c * Bkq;
-        }
-      }
-    }
-  }
+  ghl_m1_jacobi_eigenvalues(B);
   for(int i = 0; i < 3; ++i) {
     /* The finite Jacobi rotations preserve finite diagonal entries. */
     if(B[i][i] < -eigenvalue_tolerance) {
-      ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_PSD);
+      ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
       return ghl_error_m1_invalid_state;
     }
   }
@@ -588,7 +545,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor(
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 3; j++) {
       if(!isfinite(closure->P[i][j])) {
-        ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_NONFINITE);
+        ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_nonfinite);
         return ghl_error_m1_invalid_state;
       }
     }
@@ -602,7 +559,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor(
   }
   const long double trace_scale = fmaxl(fabsl(traceP), fabsl(rad_state->E));
   if(fabsl(traceP - rad_state->E) > 128.0L * DBL_EPSILON * trace_scale) {
-    ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_TRACE);
+    ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_trace);
     return ghl_error_m1_invalid_state;
   }
 
@@ -611,7 +568,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor(
       const double pair_scale
             = ghl_m1_max(fabs(closure->P[i][j]), fabs(closure->P[j][i]));
       if(fabs(closure->P[i][j] - closure->P[j][i]) > 64.0 * DBL_EPSILON * pair_scale) {
-        ghl_m1_record_closure_validation_failure(GHL_M1_CLOSURE_VALIDATION_SYMMETRY);
+        ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_symmetry);
         return ghl_error_m1_invalid_state;
       }
     }

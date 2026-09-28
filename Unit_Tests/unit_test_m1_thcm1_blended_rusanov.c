@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "m1_test_prng.h"
 #include "m1_test_utils.h"
 #include "m1_thcm1_transport_fixture.h"
 
@@ -40,28 +41,6 @@ static void check_close(const double actual, const double expected, const char *
   }
 }
 
-typedef struct {
-  uint64_t state;
-} four_point_rng;
-
-static uint64_t four_point_rng_next(four_point_rng *restrict rng) {
-  uint64_t z = (rng->state += UINT64_C(0x9e3779b97f4a7c15));
-  z = (z ^ (z >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
-  z = (z ^ (z >> 27)) * UINT64_C(0x94d049bb133111eb);
-  return z ^ (z >> 31);
-}
-
-static double four_point_rng_unit(four_point_rng *restrict rng) {
-  return (double)(four_point_rng_next(rng) >> 11) * 0x1.0p-53;
-}
-
-static double four_point_rng_between(
-      four_point_rng *restrict rng,
-      const double lower,
-      const double upper) {
-  return lower + (upper - lower) * four_point_rng_unit(rng);
-}
-
 static bool same_nonzero_sign(const double left, const double right) {
   return (left > 0.0 && right > 0.0) || (left < 0.0 && right < 0.0);
 }
@@ -96,7 +75,7 @@ expected_opacity(const double kappa_face, const double delta, const double mindi
 }
 
 static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
-  four_point_rng rng = { .state = UINT64_C(0x4d315f464f4f5552) };
+  m1_test_rng rng = { .state = UINT64_C(0x4d315f464f4f5552) };
 
   for(int case_index = 0; case_index < 128; ++case_index) {
     ghl_metric_quantities metric;
@@ -107,14 +86,14 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
       m1_setup_flat_metric(&metric);
     }
 
-    params->minmod_theta = four_point_rng_between(&rng, 0.35, 1.85);
+    params->minmod_theta = m1_test_rng_between(&rng, 0.35, 1.85);
     params->mindiss
-          = (case_index % 4 == 0) ? 0.0 : four_point_rng_between(&rng, 0.05, 0.35);
+          = (case_index % 4 == 0) ? 0.0 : m1_test_rng_between(&rng, 0.05, 0.35);
     const double kappa_face
           = case_index % 3 == 0 ? 0.2 : (case_index % 3 == 1 ? 4.0 : 100.0);
     const double delta = case_index % 3 == 0 ? 0.5 : 1.0;
-    const double speed_L = four_point_rng_between(&rng, 0.05, 0.9);
-    const double speed_R = four_point_rng_between(&rng, 0.05, 0.9);
+    const double speed_L = m1_test_rng_between(&rng, 0.05, 0.9);
+    const double speed_R = m1_test_rng_between(&rng, 0.05, 0.9);
     const double face_speed = fmax(speed_L, speed_R);
     double state_stencil[4][ghl_m1_neutrino_transport_component_count];
     double physical_flux_L[ghl_m1_neutrino_transport_component_count];
@@ -123,8 +102,8 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
 
     for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
         ++component) {
-      const double base = four_point_rng_between(&rng, -1.0, 1.0);
-      const double scale = four_point_rng_between(&rng, 0.1, 0.9);
+      const double base = m1_test_rng_between(&rng, -1.0, 1.0);
+      const double scale = m1_test_rng_between(&rng, 0.1, 0.9);
       switch((case_index + component) % 4) {
         case 0:
           increments[0] = scale;
@@ -151,8 +130,8 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
       state_stencil[1][component] = base + increments[0];
       state_stencil[2][component] = state_stencil[1][component] + increments[1];
       state_stencil[3][component] = state_stencil[2][component] + increments[2];
-      physical_flux_L[component] = four_point_rng_between(&rng, -2.0, 2.0);
-      physical_flux_R[component] = four_point_rng_between(&rng, -2.0, 2.0);
+      physical_flux_L[component] = m1_test_rng_between(&rng, -2.0, 2.0);
+      physical_flux_R[component] = m1_test_rng_between(&rng, -2.0, 2.0);
     }
 
     double flux_tilde[ghl_m1_neutrino_transport_component_count];
@@ -719,46 +698,58 @@ check_extreme_transport_arithmetic(const ghl_m1_parameters *restrict params) {
 /* Exhaust the sign classes, including a zero slope, in both arithmetic
  * paths. The long-double oracle never overflows on finite double states. */
 static void check_limiter_sign_classes(const ghl_m1_parameters *params) {
-  const double values[] = { -DBL_MAX, -0x1.8p1022, -0x1p1022, -1.0, 0.0,
-                            1.0, 0x1p1022, 0x1.8p1022, DBL_MAX };
-  double stencil[4][ghl_m1_neutrino_transport_component_count] = {{0}};
-  const double physical[ghl_m1_neutrino_transport_component_count] = {0};
+  const double values[] = { -DBL_MAX, -0x1.8p1022, -0x1p1022,  -1.0,   0.0,
+                            1.0,      0x1p1022,    0x1.8p1022, DBL_MAX };
+  double stencil[4][ghl_m1_neutrino_transport_component_count] = { { 0 } };
+  const double physical[ghl_m1_neutrino_transport_component_count] = { 0 };
   double output[ghl_m1_neutrino_transport_component_count];
   ghl_m1_four_point_transport_diagnostics diagnostics;
-  for(size_t a=0; a<sizeof(values)/sizeof(values[0]); ++a)
-    for(size_t b=0; b<sizeof(values)/sizeof(values[0]); ++b)
-      for(size_t c=0; c<sizeof(values)/sizeof(values[0]); ++c)
-        for(size_t d=0; d<sizeof(values)/sizeof(values[0]); ++d) {
-          stencil[0][0]=values[a]; stencil[1][0]=values[b];
-          stencil[2][0]=values[c]; stencil[3][0]=values[d];
-          const long double left=(long double)values[b]-values[a];
-          const long double center=(long double)values[c]-values[b];
-          const long double right=(long double)values[d]-values[c];
-          const bool monotone=(left>0 && center>0 && right>0)
-                              || (left<0 && center<0 && right<0);
-          const bool saw=(left>0 && center<0 && right>0)
-                         || (left<0 && center>0 && right<0);
+  for(size_t a = 0; a < sizeof(values) / sizeof(values[0]); ++a) {
+    for(size_t b = 0; b < sizeof(values) / sizeof(values[0]); ++b) {
+      for(size_t c = 0; c < sizeof(values) / sizeof(values[0]); ++c) {
+        for(size_t d = 0; d < sizeof(values) / sizeof(values[0]); ++d) {
+          stencil[0][0] = values[a];
+          stencil[1][0] = values[b];
+          stencil[2][0] = values[c];
+          stencil[3][0] = values[d];
+          const long double left = (long double)values[b] - values[a];
+          const long double center = (long double)values[c] - values[b];
+          const long double right = (long double)values[d] - values[c];
+          const bool monotone = (left > 0 && center > 0 && right > 0)
+                                || (left < 0 && center < 0 && right < 0);
+          const bool saw = (left > 0 && center < 0 && right > 0)
+                           || (left < 0 && center > 0 && right < 0);
           const double theta_values[] = { 0.0, 1.0, 2.0, -1.0, 3.0, NAN };
-          for(size_t t=0; t<sizeof(theta_values)/sizeof(theta_values[0]); ++t) {
-            ghl_m1_parameters controls=*params;
-            controls.minmod_theta=theta_values[t];
-            const bool valid=isfinite(controls.minmod_theta)
-                             && controls.minmod_theta>=0 && controls.minmod_theta<=2;
-            const ghl_error_codes_t error=m1_thcm1_call_volume_weighted_transport(
-              &controls, stencil, physical, physical, 0.0, 0.0, 0.0, 1.0,
-              false, output, &diagnostics);
-            if(error != (valid ? ghl_success : ghl_error_m1_invalid_state))
+          for(size_t t = 0; t < sizeof(theta_values) / sizeof(theta_values[0]); ++t) {
+            ghl_m1_parameters controls = *params;
+            controls.minmod_theta = theta_values[t];
+            const bool valid = isfinite(controls.minmod_theta)
+                               && controls.minmod_theta >= 0
+                               && controls.minmod_theta <= 2;
+            const ghl_error_codes_t error = m1_thcm1_call_volume_weighted_transport(
+                  &controls, stencil, physical, physical, 0.0, 0.0, 0.0, 1.0, false,
+                  output, &diagnostics);
+            if(error != (valid ? ghl_success : ghl_error_m1_invalid_state)) {
               fail_test("limiter sign-class validation failed");
+            }
             if(valid) {
-              const double expected=monotone
-                ? (double)fminl(1.0L,fminl(controls.minmod_theta*left/center,
-                                         controls.minmod_theta*right/center)) : 0.0;
-              if(diagnostics.sawtooth[0]!=saw || output[0]!=0.0)
+              const double expected
+                    = monotone
+                            ? (double)fminl(
+                                    1.0L, fminl(controls.minmod_theta * left / center,
+                                                controls.minmod_theta * right / center))
+                            : 0.0;
+              if(diagnostics.sawtooth[0] != saw || output[0] != 0.0) {
                 fail_test("limiter sign class changed zero-speed flux");
-              check_close(diagnostics.phi[0],expected,"limiter sign-class phi mismatch");
+              }
+              check_close(
+                    diagnostics.phi[0], expected, "limiter sign-class phi mismatch");
             }
           }
         }
+      }
+    }
+  }
 }
 
 static const char *m1_thcm1_transport_direction(const char *case_id) {
@@ -837,9 +828,8 @@ static void check_variable_transport_fixtures(const char *restrict fixture_dir) 
     free(path);
   }
   if(present_count != shard_count) {
-    fail_test(
-          "variable-volume fixture family is incomplete; no trusted "
-          "outputs were fabricated");
+    fail_test("variable-volume fixture family is incomplete; no trusted "
+              "outputs were fabricated");
     return;
   }
 
@@ -910,9 +900,8 @@ static void check_variable_transport_fixtures(const char *restrict fixture_dir) 
                       != input[M1_THCM1_TRANSPORT_FLUX_R_START + component]) {
             status_ok = 0;
             if(failures == 0) {
-              fail_test(
-                    "variable-volume fixture broke the common physical-"
-                    "flux transform");
+              fail_test("variable-volume fixture broke the common physical-"
+                        "flux transform");
             }
             break;
           }
@@ -996,9 +985,8 @@ static void check_variable_transport_fixtures(const char *restrict fixture_dir) 
         if(changed_consumed_input) {
           status_ok = 0;
           if(failures == 0) {
-            fail_test(
-                  "input-invariant variable control changed a consumed "
-                  "input");
+            fail_test("input-invariant variable control changed a consumed "
+                      "input");
           }
         }
       }
@@ -1304,9 +1292,8 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
            params, 1.0e308, 1.0e-308, 1.0e308, &phi, &sawtooth)
            != ghl_success
      || !m1_nearly_equal(phi, 0.0, 0.0, 0.0) || sawtooth) {
-    fail_test(
-          "zero limiter theta with an overflowing ratio did not select the "
-          "low-order flux");
+    fail_test("zero limiter theta with an overflowing ratio did not select the "
+              "low-order flux");
   }
   {
     double zero_theta_flux = 41.0;
@@ -1797,8 +1784,7 @@ int main(int argc, char **argv) {
   check_transport_fixtures(fixture_dir);
   check_variable_transport_fixtures(fixture_dir);
 
-  ghl_info(
-        "unit_test_m1_thcm1_blended_rusanov: "
-        "limiter/opacity/blend/transport branches passed\n");
+  ghl_info("unit_test_m1_thcm1_blended_rusanov: "
+           "limiter/opacity/blend/transport branches passed\n");
   return 0;
 }

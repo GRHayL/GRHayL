@@ -155,7 +155,8 @@ ghl_error_codes_t ghl_m1_repair_neutrino_state(
   /* E/F_i repair delegated to the shared M1 realizability repair. */
   ghl_m1_rad_state rad_state = ghl_m1_neutrino_project_rad_state(&candidate);
 
-  const ghl_error_codes_t error = ghl_m1_realizability_repair(m1_params, metric, &rad_state);
+  const ghl_error_codes_t error
+        = ghl_m1_realizability_repair(m1_params, metric, &rad_state);
   if(error != ghl_success) {
     return error;
   }

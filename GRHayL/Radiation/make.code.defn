@@ -1,6 +1,6 @@
 # Primary make.code.defn for the shared M1 runtime and neutrino M1.
 # Neutrino-specific sources are grouped in the Neutrinos/ subdirectory.
-#! INCS = ghl_m1_utils.h
+#! INCS = ghl_m1_closure_private.h ghl_m1_utils.h
 
 # Source files in this directory that need compiled:
 SRCS = ghl_m1_initialize.c \

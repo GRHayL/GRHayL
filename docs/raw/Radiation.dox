@@ -55,6 +55,11 @@
  * @ref Flux_Source group; the neutrino face operation uses the M1-specific
  * four-point transport contract described above.
  *
+ * Functional API navigation: @ref m1_closure, @ref m1_transport,
+ * @ref m1_sources, @ref m1_solver, and @ref m1_rates. Optional diffusion and
+ * diagnostic operations are independent facilities; a host integration does
+ * not need to call every group in sequence.
+ *
  * Source callers may enable final comoving mean-energy bounds through
  * @c ghl_m1_neutrino_parameters::enforce_mean_energy_bounds. Positive bounds
  * reject an out-of-range repaired endpoint, nonpositive bounds disable that
@@ -63,4 +68,42 @@
  * a negative value to disable equilibrium number projection; zero selects it
  * even for zero opacity or timestep. That projection remains distinct from
  * backward-Euler number integration and @c N_floor repair.
+ */
+
+/** @defgroup m1_closure M1 Closure and Moments
+ * @ingroup Radiation
+ *
+ * Closure construction, closure validation diagnostics, comoving moments, and
+ * the radiation stress-energy tensor. Decomposition and fallback diagnostics
+ * are optional observability APIs.
+ */
+
+/** @defgroup m1_transport M1 Transport and Diffusion
+ * @ingroup Radiation
+ *
+ * Face fluxes, transport speeds, four-point blending, and the optional
+ * energy-flux diffusion correction. Diffusion is an independent host-selected
+ * correction, not a required step in every transport update.
+ */
+
+/** @defgroup m1_sources M1 Geometry and Matter Sources
+ * @ingroup Radiation
+ *
+ * Geometric and matter-coupling sources, plus the single-species and paired
+ * neutrino source operations. The host chooses which source operations fit its
+ * integration schedule.
+ */
+
+/** @defgroup m1_solver M1 Solver Interfaces and Diagnostics
+ * @ingroup Radiation
+ *
+ * Generic Newton callbacks and controls, solver diagnostics, closure outcome
+ * counters, and neutrino implicit-update diagnostics.
+ */
+
+/** @defgroup m1_rates M1 Neutrino Rate Provider
+ * @ingroup Radiation
+ *
+ * Provider context, cache and diagnostics records, with lifecycle and frozen
+ * rate-computation operations.
  */

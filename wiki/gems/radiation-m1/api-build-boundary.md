@@ -16,8 +16,9 @@ truth.
 | `GRHayL/include/ghl_radiation.h` | Aggregate header for core, M1, provider, and legacy NRPyLeakage radiation declarations. |
 | `GRHayL/include/ghl_nrpyleakage.h` | Legacy leakage data and public leakage routines. The M1 raw-rate adapter is private to Radiation. |
 
-`ghl_m1_utils.h` and `ghl_m1_neutrino_implicit.h` are private build inputs
-listed through `INCS`; they are not installed as public headers.
+`ghl_m1_closure_private.h`, `ghl_m1_utils.h`, and
+`ghl_m1_neutrino_implicit.h` are private build inputs listed through `INCS`;
+they are not installed as public headers.
 
 The installed `ghl_radiation.h` and `ghl_neutrino_rate_provider.h` surfaces do
 not pull in the tabulated-EOS/HDF5 header. External code that needs the

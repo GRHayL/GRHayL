@@ -173,10 +173,10 @@ The Ubuntu-Clang `c2p-failure` matrix configures its Ubuntu 24.04
 uploads coverage for the disabled-feature path; the other variants retain
 HDF5-enabled builds.
 
-Each workflow ignores pushes and pull requests when **all** changed paths match
-its `paths-ignore` list, including `docs/**`, `wiki/**`, and
+Each compiler workflow ignores pushes and pull requests when **all** changed
+paths match its `paths-ignore` list, including `docs/**`, `wiki/**`, and
 Markdown/reStructuredText patterns. The Ubuntu-GCC workflow no longer ignores
-`implementations/**`; the other four compiler workflows still do. A mixed
+`implementations/**`; the other compiler workflows still do. A mixed
 change with any non-ignored path can trigger the workflow; path filters apply
 to `push`/`pull_request`, while the
 separately declared schedule remains eligible independently. These semantics
@@ -191,6 +191,18 @@ An implementation-only change therefore triggers Ubuntu-GCC, but its listed
 test jobs are core `configure`/unit-test jobs, not a GRHayLib Cactus thorn build
 or direct GRHayLib validation. The other compiler workflows remain skipped for
 such a change.
+
+The separate `m1-documentation.yml` workflow runs
+`tools/check_m1_documentation.py` on pushes to `main` and pull requests when
+changed paths match its positive `paths` list. Its M1 wiki selection is
+`wiki/gems/radiation-m1/**`; it also selects the M1 integration contract,
+test guide, THC_M1 fixture tree, `wiki/lint/CHECKS.md`, its workflow file, and
+the checker script. The checker scans Markdown under
+`wiki/gems/radiation-m1/`, the integration contract, test guide, and Markdown
+under the fixture tree for repository-relative links. The M1 hub
+`wiki/gems/radiation-m1.md` is outside both the workflow's paths and the
+checker's `PAGE_ROOTS`. The workflow's selection of `wiki/lint/CHECKS.md`
+does not make it a checked page.
 
 Common job groups across workflows:
 
@@ -290,9 +302,11 @@ Repo evidence shows these caveats:
 - The focused Ubuntu GCC CompOSE job bypasses coverage-file discovery: it
   uploads only `compose-coverage.xml` under the `compose` flag, disables
   search, and fails the job on an upload error.
-- All workflows ignore docs-only pull-request changes. Only Ubuntu-GCC runs its
-  normal GRHayL jobs for implementation-only changes; it does not inspect
-  GRHayLib symlinks or build/test the Cactus thorn.
+- The compiler workflows ignore docs-only pull-request changes; the
+  separate M1 documentation workflow selects its named documentation paths
+  for a link check. Only Ubuntu-GCC runs its normal GRHayL jobs for
+  implementation-only changes; it does not inspect GRHayLib symlinks or
+  build/test the Cactus thorn.
 
 ## Ground Truth References
 

@@ -32,8 +32,8 @@ and carried forward by the [post-phase-1 roadmap](radiation-m1/post-phase1-roadm
   route
 - [`GRHayL/Radiation/TRACEABILITY.md`](../../GRHayL/Radiation/TRACEABILITY.md)
   for the per-family implementation map
-- [M1 tests and fixtures](radiation-m1/tests-and-fixtures.md) for the ten
-  scoped executables, retained fixture families, provider fixture, CI routes,
+- [M1 tests and fixtures](radiation-m1/tests-and-fixtures.md) for the scoped
+  runner, retained fixture families, provider fixture, CI routes,
   and coverage limits
 - [`docs/raw/Radiation.dox`](../../docs/raw/Radiation.dox) for the Doxygen
   group and public behavior summary
@@ -108,6 +108,7 @@ surface):
   `ghl_m1_validate_neutrino_rates`, and
   `ghl_m1_repair_neutrino_state`
 - Neutrino source/update: `ghl_m1_compute_neutrino_interaction_sources`,
+  `ghl_m1_compute_neutrino_explicit_rhs_sources`,
   `ghl_m1_update_neutrino_number_backward_euler`,
   `ghl_m1_try_neutrino_explicit_thin_update`,
   `ghl_m1_solve_neutrino_source_update`,
@@ -118,6 +119,9 @@ surface):
   `ghl_m1_neutrino_compute_implicit_jacobian`,
   `ghl_m1_neutrino_build_trial_state`, and
   `ghl_m1_neutrino_check_trial_admissibility`
+- [Explicit RHS source units and stage use](radiation-m1/m1-neutrino-source-equations.md#explicit-conservative-rhs-sources):
+  densitized geometry with optional frozen-rate interactions; the interaction
+  option belongs to manual host stages, not the normal IMEX source stage.
 - Rate provider: `ghl_neutrino_rate_provider_initialize_default`,
   `ghl_neutrino_rate_provider_cache_initialize`,
   `ghl_neutrino_rate_provider_initialize_nrpyleakage`,

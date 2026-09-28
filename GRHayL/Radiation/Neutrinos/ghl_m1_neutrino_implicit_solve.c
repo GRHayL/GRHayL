@@ -22,6 +22,16 @@ static ghl_error_codes_t ghl_m1_neutrino_publish_hard_failure(
   return error;
 }
 
+bool ghl_m1_scaled_positive_from_double(
+      const double value,
+      ghl_m1_scaled_positive *restrict scaled) {
+  if(scaled == NULL || !isfinite(value) || value < 0.0) {
+    return false;
+  }
+  ghl_m1_scaled_positive_from_validated_double(value, scaled);
+  return true;
+}
+
 ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_m1_neutrino_parameters *restrict nu_params,
@@ -118,7 +128,6 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
     return error;
   }
 
-  const double number_endpoint_gamma = endpoint_current.Gamma_N;
   bool number_projected = false;
   error = ghl_m1_neutrino_update_endpoint_number_with_policy(
         nu_params, rates, dt, dt_alpha, -1.0, state_in, &endpoint_current, &candidate.N,
@@ -147,13 +156,8 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
   /* Use the un-repaired backward-Euler endpoint for charged-current exchange.
    * A number-floor increment is numerical repair bookkeeping and must not be
    * counted again as a physical matter-lepton source. */
-  double dL_rad_cc = 0.0;
-  error = ghl_m1_neutrino_charged_current_lepton_delta(
-        rates, dt_alpha, state_in->N, number_projected, physical_number_endpoint,
-        number_endpoint_gamma, &dL_rad_cc);
-  if(error != ghl_success) {
-    return error;
-  }
+  const double dL_rad_cc = ghl_m1_neutrino_backward_euler_lepton_delta_validated(
+        rates->lepton_weight, state_in->N, physical_number_endpoint);
   error = ghl_m1_neutrino_assemble_exchange(
         state_in, &candidate, rates, dL_rad_cc, metric->sqrt_detgamma, n_b_cons,
         exchange);
@@ -189,7 +193,7 @@ typedef struct {
   ghl_m1_neutrino_implicit_context validated;
   double dt_sub;
   double U_base[4];
-  bool closure_fallback_observed;
+  bool *closure_fallback_observed;
 } ghl_m1_neutrino_newton_context;
 
 static ghl_error_codes_t ghl_m1_neutrino_newton_residual(
@@ -197,11 +201,10 @@ static ghl_error_codes_t ghl_m1_neutrino_newton_residual(
       const double U[4],
       double residual[4]) {
 
-  ghl_m1_neutrino_newton_context *restrict solve_context
-        = (ghl_m1_neutrino_newton_context *)context;
+  const ghl_m1_neutrino_newton_context *restrict solve_context = context;
   return ghl_m1_neutrino_compute_implicit_residual_validated(
         &solve_context->validated, solve_context->dt_sub, solve_context->U_base, U,
-        &solve_context->closure_fallback_observed, residual);
+        solve_context->closure_fallback_observed, residual);
 }
 
 static ghl_error_codes_t ghl_m1_neutrino_newton_jacobian(
@@ -216,7 +219,7 @@ static ghl_error_codes_t ghl_m1_neutrino_newton_jacobian(
         residual, jacobian);
 }
 
-static ghl_error_codes_t ghl_m1_neutrino_build_EF_initial_guess(
+ghl_error_codes_t ghl_m1_neutrino_build_EF_initial_guess(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
       const ghl_primitive_quantities *restrict prims_frozen,
@@ -285,11 +288,12 @@ static ghl_error_codes_t ghl_m1_neutrino_attempt_newton_step_with_initial_guess(
       double U_out[4],
       ghl_m1_newton_diagnostics *restrict diagnostics,
       bool *restrict closure_fallback_observed) {
+  bool solve_closure_fallback_observed = false;
   ghl_m1_neutrino_newton_context solve_context
         = { .validated = *validated_context,
             .dt_sub = dt_sub,
             .U_base = { U_in[0], U_in[1], U_in[2], U_in[3] },
-            .closure_fallback_observed = false };
+            .closure_fallback_observed = &solve_closure_fallback_observed };
   const ghl_m1_newton_callbacks callbacks
         = { .residual = ghl_m1_neutrino_newton_residual,
             .jacobian = ghl_m1_neutrino_newton_jacobian };
@@ -297,7 +301,7 @@ static ghl_error_codes_t ghl_m1_neutrino_attempt_newton_step_with_initial_guess(
         validated_context->m1_params, validated_context->metric, &callbacks,
         &solve_context, U_in, U_initial, U_out, diagnostics);
 
-  *closure_fallback_observed = solve_context.closure_fallback_observed;
+  *closure_fallback_observed = solve_closure_fallback_observed;
   return error;
 }
 
@@ -325,6 +329,108 @@ static ghl_error_codes_t ghl_m1_neutrino_attempt_newton_step(
         &newton_fallback_observed);
   *closure_fallback_observed = predictor_fallback_observed || newton_fallback_observed;
   return error;
+}
+
+static ghl_error_codes_t ghl_m1_neutrino_newton_step_callback(
+      const void *context,
+      const double dt_sub,
+      const double U_in[4],
+      double U_out[4],
+      ghl_m1_newton_diagnostics *diagnostics,
+      bool *closure_fallback_observed) {
+  return ghl_m1_neutrino_attempt_newton_step(
+        context, dt_sub, U_in, U_out, diagnostics, closure_fallback_observed);
+}
+
+ghl_error_codes_t ghl_m1_neutrino_run_step_schedules(
+      const double dt,
+      const double U_in[4],
+      const ghl_m1_neutrino_step_callback step_callback,
+      const void *step_context,
+      ghl_m1_neutrino_schedule_result *result) {
+  if(U_in == NULL || step_callback == NULL || result == NULL) {
+    return ghl_error_m1_null_pointer;
+  }
+
+  const int fallback_schedule[] = { 1, 2, 4, 8, 16 };
+  const int num_schedules
+        = (int)(sizeof(fallback_schedule) / sizeof(fallback_schedule[0]));
+  *result = (ghl_m1_neutrino_schedule_result){
+    .U_final = { U_in[0], U_in[1], U_in[2], U_in[3] },
+    .residual_max_norm = INFINITY,
+    .residual_scaled_norm = INFINITY,
+  };
+
+  bool any_projection = false;
+  bool any_closure_fallback = false;
+  bool any_backtracking = false;
+
+  for(int schedule_idx = 0; schedule_idx < num_schedules; schedule_idx++) {
+    const int num_substeps = fallback_schedule[schedule_idx];
+    result->last_schedule_substeps = num_substeps;
+    const double dt_sub = dt / (double)num_substeps;
+
+    double U_current[4] = { U_in[0], U_in[1], U_in[2], U_in[3] };
+    int step_iterations = 0;
+    int step_backtracks = 0;
+    double step_residual_norm = INFINITY;
+    double step_residual_scaled_norm = INFINITY;
+    bool solve_failed = false;
+
+    for(int step = 0; step < num_substeps; step++) {
+      double U_next[4] = { 0.0, 0.0, 0.0, 0.0 };
+      ghl_m1_newton_diagnostics step_diagnostics = { 0 };
+      bool closure_fallback_used = false;
+      const ghl_error_codes_t error = step_callback(
+            step_context, dt_sub, U_current, U_next, &step_diagnostics,
+            &closure_fallback_used);
+      any_backtracking |= step_diagnostics.backtracks > 0;
+      any_projection |= step_diagnostics.used_projection;
+      any_closure_fallback |= closure_fallback_used;
+      if(error != ghl_success) {
+        if(!ghl_m1_schedule_error_allows_retry(error)) {
+          return error;
+        }
+        solve_failed = true;
+        break;
+      }
+
+      step_iterations += step_diagnostics.iterations;
+      step_backtracks += step_diagnostics.backtracks;
+      step_residual_norm = step_diagnostics.residual_max_norm;
+      step_residual_scaled_norm = step_diagnostics.residual_weighted_merit;
+
+      for(int i = 0; i < 4; i++) {
+        U_current[i] = U_next[i];
+      }
+    }
+
+    if(!solve_failed) {
+      for(int i = 0; i < 4; i++) {
+        result->U_final[i] = U_current[i];
+      }
+      result->total_iterations = step_iterations;
+      result->total_backtracks = step_backtracks;
+      result->residual_max_norm = step_residual_norm;
+      result->residual_scaled_norm = step_residual_scaled_norm;
+      result->successful_substeps = num_substeps;
+      result->solution_path_flags
+            = (num_substeps == 1 ? ghl_m1_solution_path_primary_convergence
+                                 : ghl_m1_solution_path_substepping)
+              | (any_backtracking ? ghl_m1_solution_path_line_search_backtracking : 0u)
+              | (any_projection ? ghl_m1_solution_path_projection : 0u)
+              | (any_closure_fallback ? ghl_m1_solution_path_closure_fallback : 0u)
+              | ghl_m1_solution_path_endpoint_acceptance;
+      return ghl_success;
+    }
+  }
+
+  result->solution_path_flags
+        = ghl_m1_solution_path_substepping | ghl_m1_solution_path_terminal_failure
+          | (any_backtracking ? ghl_m1_solution_path_line_search_backtracking : 0u)
+          | (any_projection ? ghl_m1_solution_path_projection : 0u)
+          | (any_closure_fallback ? ghl_m1_solution_path_closure_fallback : 0u);
+  return ghl_success;
 }
 
 ghl_error_codes_t ghl_m1_neutrino_attempt_EF_newton_step(
@@ -463,7 +569,10 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_
   }
 
   const double dt_alpha = metric->lapse * dt;
-  if(!isfinite(dt_alpha) || dt_alpha < 0.0) {
+  /* dt is finite and nonnegative above; metric validation established a
+   * finite positive lapse. Their product can only be nonfinite here when it
+   * overflows, so retain that distinct validation. */
+  if(!isfinite(dt_alpha)) {
     return ghl_m1_neutrino_publish_hard_failure(
           ghl_error_m1_invalid_state, neutrino_diagnostics);
   }
@@ -513,71 +622,15 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_
     U_in[i + 1] = state_in->F[i] * sqrt_detgamma;
   }
 
-  const int fallback_schedule[] = { 1, 2, 4, 8, 16 };
-  const int num_schedules
-        = (int)(sizeof(fallback_schedule) / sizeof(fallback_schedule[0]));
-
-  double U_final[4] = { U_in[0], U_in[1], U_in[2], U_in[3] };
-  int total_iterations = 0;
-  int total_backtracks = 0;
-  double residual_norm = INFINITY;
-  double residual_scaled_norm = INFINITY;
-  bool any_projection = false;
-  bool any_closure_fallback = false;
-  bool any_backtracking = false;
-  int successful_substeps = 0;
-
-  for(int schedule_idx = 0; schedule_idx < num_schedules; schedule_idx++) {
-    const int num_substeps = fallback_schedule[schedule_idx];
-    const double dt_sub = dt / (double)num_substeps;
-
-    double U_current[4] = { U_in[0], U_in[1], U_in[2], U_in[3] };
-    int step_iterations = 0;
-    int step_backtracks = 0;
-    double step_residual_norm = INFINITY;
-    double step_residual_scaled_norm = INFINITY;
-    bool solve_failed = false;
-
-    for(int step = 0; step < num_substeps; step++) {
-      double U_next[4] = { 0.0, 0.0, 0.0, 0.0 };
-      ghl_m1_newton_diagnostics step_diagnostics;
-      bool closure_fallback_used = false;
-      const ghl_error_codes_t error = ghl_m1_neutrino_attempt_newton_step(
-            &validated_context, dt_sub, U_current, U_next, &step_diagnostics,
-            &closure_fallback_used);
-      any_backtracking = any_backtracking || step_diagnostics.backtracks > 0;
-      any_projection = any_projection || step_diagnostics.used_projection;
-      any_closure_fallback = any_closure_fallback || closure_fallback_used;
-      if(error != ghl_success) {
-        if(!ghl_m1_schedule_error_allows_retry(error)) {
-          return ghl_m1_neutrino_publish_hard_failure(error, neutrino_diagnostics);
-        }
-        solve_failed = true;
-        break;
-      }
-
-      step_iterations += step_diagnostics.iterations;
-      step_backtracks += step_diagnostics.backtracks;
-      step_residual_norm = step_diagnostics.residual_max_norm;
-      step_residual_scaled_norm = step_diagnostics.residual_weighted_merit;
-
-      for(int i = 0; i < 4; i++) {
-        U_current[i] = U_next[i];
-      }
-    }
-
-    if(!solve_failed) {
-      for(int i = 0; i < 4; i++) {
-        U_final[i] = U_current[i];
-      }
-      total_iterations = step_iterations;
-      total_backtracks = step_backtracks;
-      residual_norm = step_residual_norm;
-      residual_scaled_norm = step_residual_scaled_norm;
-      successful_substeps = num_substeps;
-      break;
-    }
+  ghl_m1_neutrino_schedule_result schedule_result;
+  const ghl_error_codes_t schedule_error = ghl_m1_neutrino_run_step_schedules(
+        dt, U_in, ghl_m1_neutrino_newton_step_callback, &validated_context,
+        &schedule_result);
+  if(schedule_error != ghl_success) {
+    return ghl_m1_neutrino_publish_hard_failure(schedule_error, neutrino_diagnostics);
   }
+  const double *U_final = schedule_result.U_final;
+  const int successful_substeps = schedule_result.successful_substeps;
 
   if(successful_substeps > 0) {
     ghl_m1_neutrino_state candidate = *state_in;
@@ -656,19 +709,13 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_
     /* Update diagnostics. */
     candidate_neutrino_diagnostics.source_converged++;
 
-    candidate_solve_diagnostics.newton_iterations = total_iterations;
-    candidate_solve_diagnostics.line_search_backtracks = total_backtracks;
+    candidate_solve_diagnostics.newton_iterations = schedule_result.total_iterations;
+    candidate_solve_diagnostics.line_search_backtracks = schedule_result.total_backtracks;
     candidate_solve_diagnostics.fallback_substeps = successful_substeps;
     candidate_solve_diagnostics.used_fallback_substepping = successful_substeps > 1;
-    candidate_solve_diagnostics.residual_max_norm = residual_norm;
-    candidate_solve_diagnostics.residual_scaled_norm = residual_scaled_norm;
-    candidate_solve_diagnostics.solution_path_flags
-          = (successful_substeps == 1 ? ghl_m1_solution_path_primary_convergence
-                                      : ghl_m1_solution_path_substepping)
-            | (any_backtracking ? ghl_m1_solution_path_line_search_backtracking : 0u)
-            | (any_projection ? ghl_m1_solution_path_projection : 0u)
-            | (any_closure_fallback ? ghl_m1_solution_path_closure_fallback : 0u)
-            | ghl_m1_solution_path_endpoint_acceptance;
+    candidate_solve_diagnostics.residual_max_norm = schedule_result.residual_max_norm;
+    candidate_solve_diagnostics.residual_scaled_norm = schedule_result.residual_scaled_norm;
+    candidate_solve_diagnostics.solution_path_flags = schedule_result.solution_path_flags;
 
     *state_out = candidate;
     *exchange = candidate_exchange;
@@ -680,13 +727,9 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_
   candidate_neutrino_diagnostics.source_terminal_fallbacks++;
   ghl_m1_neutrino_populate_mean_energy_diagnostics(
         state_in, &input_current, nu_params, rates, &candidate_neutrino_diagnostics);
-  candidate_solve_diagnostics.fallback_substeps = fallback_schedule[num_schedules - 1];
+  candidate_solve_diagnostics.fallback_substeps = schedule_result.last_schedule_substeps;
   candidate_solve_diagnostics.used_fallback_substepping = true;
-  candidate_solve_diagnostics.solution_path_flags
-        = ghl_m1_solution_path_substepping | ghl_m1_solution_path_terminal_failure
-          | (any_backtracking ? ghl_m1_solution_path_line_search_backtracking : 0u)
-          | (any_projection ? ghl_m1_solution_path_projection : 0u)
-          | (any_closure_fallback ? ghl_m1_solution_path_closure_fallback : 0u);
+  candidate_solve_diagnostics.solution_path_flags = schedule_result.solution_path_flags;
   *solve_diagnostics = candidate_solve_diagnostics;
   *neutrino_diagnostics = candidate_neutrino_diagnostics;
   return ghl_error_m1_implicit_terminal_fallback;

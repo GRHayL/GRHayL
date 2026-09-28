@@ -53,10 +53,16 @@ ghl_error_codes_t ghl_m1_realizability_repair(
    * repaired state at or below sqrt(cone_factor), not cone_factor itself. */
   const double permitted_flux_factor = sqrt(cone_factor);
 
+  /* validate_configuration factored this same gammaUU with the same scaled
+   * Cholesky, so the ratio's metric and pivot checks pass. F_local is finite,
+   * E_local is finite and positive, and L^T x has a unit-scaled nonzero
+   * component for nonzero F_local, so the norm is finite and positive. The
+   * ratio then cannot fail; the guard is defensive and excluded from the
+   * branch gate. */
   double flux_factor;
   error = ghl_m1_scaled_covector_norm_ratio(
         metric->gammaUU, F_local, E_local, &flux_factor);
-  if(error != ghl_success) {
+  if(error != ghl_success) { /* GCOVR_EXCL_BR_LINE */
     return error;
   }
   const bool flux_rescaled = flux_factor > permitted_flux_factor;
@@ -69,18 +75,28 @@ ghl_error_codes_t ghl_m1_realizability_repair(
       F_local[i] *= applied_scale;
     }
 
+    /* Same metric and energy as above; the rescaled flux is finite because
+     * applied_scale is in [0,1]. Complete underflow gives a zero ratio, which
+     * succeeds, so this guard is unreachable for the reason given above. */
     error = ghl_m1_scaled_covector_norm_ratio(
           metric->gammaUU, F_local, E_local, &flux_factor);
-    if(error != ghl_success) {
+    if(error != ghl_success) { /* GCOVR_EXCL_BR_LINE */
       return error;
     }
   }
 
   const ghl_m1_rad_state repaired
         = { .E = E_local, .F = { F_local[0], F_local[1], F_local[2] } };
-  /* sqrt(1-epsilon_c) is at most one for a validated epsilon_c. */
+  /* sqrt(1-epsilon_c) is at most one for a validated epsilon_c. Without a
+   * rescale the ratio is already at most permitted_flux_factor. After one,
+   * it equals permitted_flux_factor up to the rounding of applied_scale, the
+   * scaled flux and the norm, which is a few epsilon for the metrics accepted
+   * by validation. No input is known to exceed the 64 epsilon allowance (a
+   * 20 million case search of ill-conditioned metrics found none), so the
+   * rejection is defensive and excluded from the branch gate. */
   const double scale = 1.0;
-  if(flux_factor > permitted_flux_factor + 64.0 * DBL_EPSILON * scale) {
+  const double allowed_flux_factor = permitted_flux_factor + 64.0 * DBL_EPSILON * scale;
+  if(flux_factor > allowed_flux_factor) { /* GCOVR_EXCL_BR_LINE */
     return ghl_error_m1_invalid_state;
   }
 

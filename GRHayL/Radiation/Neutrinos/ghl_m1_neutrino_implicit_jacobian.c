@@ -2,6 +2,21 @@
 #include "ghl_m1.h"
 #include "ghl_m1_neutrino_implicit.h"
 
+ghl_error_codes_t ghl_m1_neutrino_finite_difference_delta(
+      const double U,
+      const double U_perturbed,
+      double *restrict used_delta) {
+  if(used_delta == NULL) {
+    return ghl_error_m1_null_pointer;
+  }
+  const double candidate = U_perturbed - U;
+  if(!isfinite(candidate)) {
+    return ghl_error_m1_invalid_implicit_jacobian;
+  }
+  *used_delta = candidate;
+  return ghl_success;
+}
+
 /*
  * Finite-difference Jacobian for the neutrino implicit E/F_i residual.
  * The step-size and one-sided fallback policies are shared by the M1 Jacobian.
@@ -65,7 +80,11 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_core(
                   : ghl_m1_neutrino_compute_implicit_residual_validated(
                           context, dt, U_base, U_perturbed, NULL, residual_perturbed);
 
-    double used_delta = U_perturbed[n] - U[n];
+    double used_delta = 0.0;
+    if(fd_error == ghl_success) {
+      fd_error = ghl_m1_neutrino_finite_difference_delta(
+            U[n], U_perturbed[n], &used_delta);
+    }
     if(fd_error != ghl_success) {
       if(!ghl_m1_fd_error_allows_one_sided_fallback(fd_error)) {
         return fd_error;
@@ -84,19 +103,16 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_core(
                             U_base, U_perturbed, residual_perturbed)
                     : ghl_m1_neutrino_compute_implicit_residual_validated(
                             context, dt, U_base, U_perturbed, NULL, residual_perturbed);
-      used_delta = U_perturbed[n] - U[n];
+      if(fd_error == ghl_success) {
+        fd_error = ghl_m1_neutrino_finite_difference_delta(
+              U[n], U_perturbed[n], &used_delta);
+      }
       if(fd_error != ghl_success) {
         if(ghl_m1_fd_error_allows_one_sided_fallback(fd_error)) {
           return ghl_error_m1_invalid_implicit_jacobian;
         }
         return fd_error;
       }
-    }
-
-    /* nextafter above guarantees a distinct perturbation when addition or
-     * subtraction rounds back to U[n]. */
-    if(!isfinite(used_delta)) {
-      return ghl_error_m1_invalid_implicit_jacobian;
     }
 
     for(int i = 0; i < 4; i++) {

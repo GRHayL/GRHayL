@@ -19,7 +19,7 @@ that path; they do not establish a downstream grid evolution.
 The corresponding implementations are listed in
 [`TRACEABILITY.md`](../../../GRHayL/Radiation/TRACEABILITY.md). The complete
 test, fixture, runner, and CI inventory is in
-[M1 tests and fixtures](tests-and-fixtures.md). `configure` discovers the ten
+[M1 tests and fixtures](tests-and-fixtures.md). `configure` discovers the
 scoped test sources as ordinary `unit_test_*.c` targets, subject to its HDF5
 filtering;
 `Unit_Tests/run_m1_tests.sh` selects and runs them, and the dedicated Radiation
@@ -31,10 +31,14 @@ downstream host or physical-validation evidence.
 
 ## What is not claimed
 
-No external-source comparison, downstream framework run, grid evolution,
-schedule/AMR result, complete evolution equivalence, or physical-validation
-result is established by the listed library operations. A downstream consumer owns
-any such campaign and its reporting.
+Repository-local tests replay retained inputs against THC_M1-produced
+discrete-operation endpoints, as described in
+[M1 tests and fixtures](tests-and-fixtures.md). This establishes a comparison
+with retained external-source outputs, not a live cross-code run. The replay
+does not establish downstream framework execution, grid evolution,
+schedule/AMR behavior, continuum or complete-evolution equivalence, or
+physical validation. A downstream consumer owns any such campaign and its
+reporting.
 
 ## Canonical-method boundary
 

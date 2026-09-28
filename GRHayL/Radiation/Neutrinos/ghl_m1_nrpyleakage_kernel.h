@@ -82,8 +82,7 @@ static inline ghl_error_codes_t ghl_m1_nrpyleakage_normalize_nucleon_fractions(
   const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
   const double fraction_roundoff = 27.0 * gamma_64;
   if(X_n < -fraction_roundoff || X_n > 1.0 + fraction_roundoff
-     || X_p < -fraction_roundoff
-     || X_p > 1.0 + fraction_roundoff) {
+     || X_p < -fraction_roundoff || X_p > 1.0 + fraction_roundoff) {
     return ghl_error_nrpyleakage_blocking;
   }
   *normalized_X_n = fmin(1.0, fmax(0.0, X_n));

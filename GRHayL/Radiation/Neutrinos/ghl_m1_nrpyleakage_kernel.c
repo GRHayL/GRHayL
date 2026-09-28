@@ -64,8 +64,7 @@ validate_raw_species(const ghl_m1_nrpyleakage_species_raw_rates *restrict r) {
    * The mean cannot overflow: for positive degeneracy F2 >= 1 and finite J
    * bounds T*F3 when T >= 1 (T < 1 already bounds it by finite F3). For the
    * exponential tail F3/F2 <= 4, while successful T^5 evaluation bounds T. */
-  const bool invalid = !isfinite(r->n_eq_cgs)
-                       || !isfinite(r->J_eq_mev_cgs)
+  const bool invalid = !isfinite(r->n_eq_cgs) || !isfinite(r->J_eq_mev_cgs)
                        || r->mean_energy_mev <= 0.0;
   if(invalid) {
     return ghl_error_m1_microphysics_failure;

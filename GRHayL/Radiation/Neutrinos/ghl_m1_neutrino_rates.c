@@ -29,13 +29,12 @@ static ghl_error_codes_t ghl_m1_neutrino_check_lepton_weight(
       const double lepton_weight) {
 
   /* The public validator has already checked the species range. */
-  static const double weights[ghl_m1_neutrino_species_count] = {
-    [ghl_m1_neutrino_nue] = 1.0,
-    [ghl_m1_neutrino_anue] = -1.0,
-    [ghl_m1_neutrino_nux] = 0.0
-  };
+  static const double weights[ghl_m1_neutrino_species_count]
+        = { [ghl_m1_neutrino_nue] = 1.0,
+            [ghl_m1_neutrino_anue] = -1.0,
+            [ghl_m1_neutrino_nux] = 0.0 };
   return lepton_weight == weights[species] ? ghl_success
-                                         : ghl_error_m1_microphysics_failure;
+                                           : ghl_error_m1_microphysics_failure;
 }
 
 static bool rate_close(const double x, const double y) {

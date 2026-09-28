@@ -57,7 +57,8 @@ static bool ghl_m1_neutrino_compute_be_ratio(
   ghl_m1_scaled_positive_from_validated_double(opacity, &opacity_scaled);
   ghl_m1_scaled_positive_from_validated_double(1.0, &one_scaled);
   ghl_m1_scaled_positive_multiply(&dtau_scaled, &source_scaled, &source_product_scaled);
-  ghl_m1_scaled_positive_multiply(&dtau_scaled, &opacity_scaled, &opacity_product_scaled);
+  ghl_m1_scaled_positive_multiply(
+        &dtau_scaled, &opacity_scaled, &opacity_product_scaled);
   ghl_m1_scaled_positive_add(&initial_scaled, &source_product_scaled, &numerator_scaled);
   ghl_m1_scaled_positive_add(&one_scaled, &opacity_product_scaled, &denominator_scaled);
   return ghl_m1_scaled_positive_divide(&numerator_scaled, &denominator_scaled, ratio);
@@ -88,7 +89,8 @@ static void ghl_m1_neutrino_compute_be_damping(
   ghl_m1_scaled_positive_from_validated_double(dtau, &dtau_scaled);
   ghl_m1_scaled_positive_from_validated_double(opacity, &opacity_scaled);
   ghl_m1_scaled_positive_from_validated_double(1.0, &one_scaled);
-  ghl_m1_scaled_positive_multiply(&dtau_scaled, &opacity_scaled, &opacity_product_scaled);
+  ghl_m1_scaled_positive_multiply(
+        &dtau_scaled, &opacity_scaled, &opacity_product_scaled);
   ghl_m1_scaled_positive_add(&one_scaled, &opacity_product_scaled, &denominator_scaled);
   double magnitude = 0.0;
   /* Here the direct denominator overflowed: division only reduces magnitude. */
@@ -155,8 +157,9 @@ static ghl_error_codes_t ghl_m1_neutrino_validate_state_input(
 
 static bool
 ghl_m1_neutrino_closure_fallback_status(const ghl_m1_closure *restrict closure) {
-  return (closure->solve_status == ghl_m1_closure_solve_endpoint_fallback
-             || closure->solve_status == ghl_m1_closure_solve_iteration_exhausted);
+  return (
+        closure->solve_status == ghl_m1_closure_solve_endpoint_fallback
+        || closure->solve_status == ghl_m1_closure_solve_iteration_exhausted);
 }
 
 static ghl_error_codes_t ghl_m1_neutrino_evaluate_closure_and_sources(
@@ -795,8 +798,7 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
        * no greater magnitude than the charged-current change whose Ye
        * division already succeeded in exchange assembly. This policy update
        * therefore cannot fail after a successful ordinary implicit solve. */
-      ghl_m1_neutrino_apply_ye_policy(
-            selected.ye_policy, rates, n_b_cons, exchange);
+      ghl_m1_neutrino_apply_ye_policy(selected.ye_policy, rates, n_b_cons, exchange);
       diagnostics->path = ghl_m1_neutrino_source_path_general_implicit;
       *neutrino_diagnostics = candidate_neutrino_diagnostics;
       return ghl_success;
@@ -852,18 +854,16 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
           n_b_cons, selected.thermalized_number_threshold,
           &candidate_neutrino_diagnostics, state_out, exchange, &closure_fallback_used);
   }
-  else if(
-        ghl_m1_neutrino_thick_limit_selected(
-              dt_alpha, rates, selected.thick_equilibrium_threshold)) {
+  else if(ghl_m1_neutrino_thick_limit_selected(
+                dt_alpha, rates, selected.thick_equilibrium_threshold)) {
     path = ghl_m1_neutrino_source_path_thick_equilibrium;
     error = ghl_m1_neutrino_try_thick_branch(
           m1_params, nu_params, metric, prims_frozen, rates, state_transport, dt,
           n_b_cons, selected.thermalized_number_threshold,
           &candidate_neutrino_diagnostics, state_out, exchange, &closure_fallback_used);
   }
-  else if(
-        ghl_m1_neutrino_scattering_limit_selected(
-              dt_alpha, rates, selected.scattering_threshold)) {
+  else if(ghl_m1_neutrino_scattering_limit_selected(
+                dt_alpha, rates, selected.scattering_threshold)) {
     path = ghl_m1_neutrino_source_path_scattering_dominated;
     error = ghl_m1_neutrino_try_scattering_branch(
           m1_params, nu_params, metric, prims_frozen, rates, state_transport, dt,

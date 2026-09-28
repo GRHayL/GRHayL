@@ -62,7 +62,8 @@ typedef enum {
   ghl_neutrino_rate_backend_nrpyleakage = 1
 } ghl_neutrino_rate_backend_t;
 
-typedef struct {
+/** @ingroup m1_rates */
+typedef struct ghl_neutrino_rate_provider_context {
   /** Either backend requires a Stellarcollapse tabulated EOS when enabled. */
   bool use_tabulated_eos;
   /**
@@ -100,7 +101,8 @@ typedef struct {
   double equilibrium_recovery_rate;
 } ghl_neutrino_rate_provider_context;
 
-typedef struct {
+/** @ingroup m1_rates */
+typedef struct ghl_neutrino_rate_provider_cache {
   bool thermo_valid;
   bool rates_valid;
   /* Recovered, validated thermodynamic key. */
@@ -124,7 +126,8 @@ typedef struct {
   bool beta_kirchhoff_mismatch_valid[ghl_m1_neutrino_species_count];
 } ghl_neutrino_rate_provider_cache;
 
-typedef struct {
+/** @ingroup m1_rates */
+typedef struct ghl_neutrino_rate_provider_diagnostics {
   int failures;
   int table_bound_hits;
   int cache_hits;
@@ -142,7 +145,8 @@ typedef struct {
   bool beta_kirchhoff_mismatch_valid[ghl_m1_neutrino_species_count];
 } ghl_neutrino_rate_provider_diagnostics;
 
-/**
+/** @ingroup m1_rates
+ *
  * Initialize the deterministic, table-free reference provider. This choice
  * is independent of whether HDF5 support was compiled in; use the explicit
  * NRPyLeakage initializer for the production, table-backed provider.
@@ -155,7 +159,8 @@ typedef struct {
 ghl_error_codes_t ghl_neutrino_rate_provider_initialize_default(
       ghl_neutrino_rate_provider_context *restrict provider);
 
-/**
+/** @ingroup m1_rates
+ *
  * Initialize a caller-owned provider cache before its first use.
  *
  * The initializer clears all cached state, sets thermo_valid and rates_valid
@@ -172,7 +177,8 @@ ghl_error_codes_t ghl_neutrino_rate_provider_initialize_default(
 void ghl_neutrino_rate_provider_cache_initialize(
       ghl_neutrino_rate_provider_cache *restrict cache);
 
-/**
+/** @ingroup m1_rates
+ *
  * Initialize the production, table-backed NRPyLeakage rate provider.
  *
  * @param provider Caller-owned context to initialize. Existing contents are
@@ -184,7 +190,8 @@ void ghl_neutrino_rate_provider_cache_initialize(
 ghl_error_codes_t ghl_neutrino_rate_provider_initialize_nrpyleakage(
       ghl_neutrino_rate_provider_context *restrict provider);
 
-/**
+/** @ingroup m1_rates
+ *
  * Compute one frozen rate bundle per evolved species.
  *
  * Both built-in backends accept only nu_x_multiplicity == 4 and return an

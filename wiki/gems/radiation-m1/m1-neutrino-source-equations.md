@@ -74,6 +74,29 @@ This is an undensitized local source. In an explicit conservative RHS it is
 multiplied by \(\alpha\sqrt{\gamma}\), just like the E/F interaction
 projections. The number source uses the current `Gamma_N`, not the fluid `W`.
 
+## Explicit conservative RHS sources
+
+[`ghl_m1_compute_neutrino_explicit_rhs_sources`](../../../GRHayL/include/ghl_m1.h)
+combines the already densitized E/F geometry sources with optional frozen-rate
+interactions. With `include_interaction_sources` enabled, the E/F results are
+the geometry sources plus \(\alpha\sqrt{\gamma}(S_E,S_i)\), and the number
+result is \(\alpha\sqrt{\gamma}S_N\). With the flag disabled, it returns
+geometry E/F and zero number source; `prims` and `rates` are then unnecessary.
+`source_tildeN` may be null when the caller does not need the number result. The routine
+validates the complete result before publishing any requested output, leaving
+all outputs unchanged on error; see
+[`ghl_m1_neutrino_sources.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c).
+
+The interaction option is for a host that assembles and limits its own manual
+explicit source packet. In a host IMEX stage using local source updates, do not
+also apply this explicit interaction packet. When electron-flavor pair fields
+are active, update `nue` and `anue` together with
+`ghl_m1_solve_neutrino_pair_source_update`; use
+`ghl_m1_solve_neutrino_source_update` for the already-summed `nux` state.
+Electron flavors may use the single-species path when their pair fields are
+absent and their aggregate number rates equal the charged-current subset. See the
+[host-stage boundary](m1-host-stage-and-volume-weighted-integration.md).
+
 ## Endpoint backward-Euler number update
 
 The public number update uses `dt_alpha = alpha * dt` and an endpoint current
@@ -95,8 +118,10 @@ lepton exchange instead uses the un-repaired physical number endpoint selected
 by the number policy; total-number and E/F exchange deltas are assembled from
 the published candidate relative to the source base. This distinction keeps
 repair-floor mutations out of the physical charged-current exchange. The
-denominator is validated as finite and positive. Scattering-only number
-evolution leaves `N` unchanged because \(\kappa_{a,N}=0\) and the corresponding
+mathematical denominator is positive; scaled arithmetic can still produce a
+finite endpoint when direct binary64 intermediates overflow or underflow.
+Scattering-only number evolution leaves `N` unchanged because
+\(\kappa_{a,N}=0\) and the corresponding
 emissivity identity is enforced by the rate bundle.
 
 The formula does not apply `N_floor` internally. Number-floor repair is a
@@ -190,4 +215,6 @@ must not be substituted for the current Rusanov/full-current implementation.
   covers residual/Jacobian construction, admissibility, Newton safeguarding,
   and rollback paths.
 - [Seeded source/invariant tests](../../../Unit_Tests/unit_test_m1_neutrino_seeded_invariants.c)
-  covers instantaneous source projections and conservation-oriented invariants.
+  cover geometry-only and interaction-enabled explicit RHS composition,
+  optional number output and transactional failures, alongside instantaneous source
+  projections and conservation-oriented invariants.

@@ -309,6 +309,81 @@ ghl_error_codes_t ghl_m1_compute_neutrino_interaction_sources_from_closure(
         EF_sources, N_source);
 }
 
+ghl_error_codes_t ghl_m1_compute_neutrino_explicit_rhs_sources(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_metric_quantities *restrict metric_derivs_x,
+      const ghl_metric_quantities *restrict metric_derivs_y,
+      const ghl_metric_quantities *restrict metric_derivs_z,
+      const ghl_extrinsic_curvature *restrict curv,
+      const ghl_primitive_quantities *restrict prims,
+      const ghl_m1_neutrino_state *restrict state,
+      const ghl_m1_closure *restrict closure,
+      const bool include_interaction_sources,
+      const ghl_m1_neutrino_rates *restrict rates,
+      double *restrict source_tildeE,
+      double source_tildeF[3],
+      double *restrict source_tildeN) {
+  if(state == NULL || source_tildeE == NULL || source_tildeF == NULL) {
+    return ghl_error_m1_null_pointer;
+  }
+  if(include_interaction_sources && (prims == NULL || rates == NULL)) {
+    return ghl_error_m1_null_pointer;
+  }
+
+  ghl_m1_sources geometry_sources = { 0 };
+  ghl_error_codes_t error = ghl_m1_compute_neutrino_geometry_sources(
+        m1_params, metric, metric_derivs_x, metric_derivs_y, metric_derivs_z, curv,
+        state, closure, &geometry_sources);
+  if(error != ghl_success) {
+    return error;
+  }
+
+  double candidate_E = geometry_sources.S_E;
+  double candidate_F[3]
+        = { geometry_sources.S[0], geometry_sources.S[1], geometry_sources.S[2] };
+  double candidate_N = 0.0;
+
+  if(include_interaction_sources) {
+    ghl_m1_sources interaction_sources = { 0 };
+    double N_source = 0.0;
+    error = ghl_m1_compute_neutrino_interaction_sources(
+          m1_params, nu_params, metric, prims, state, rates, &interaction_sources,
+          &N_source);
+    if(error != ghl_success) {
+      return error;
+    }
+    const double alpha_sqrt_detgamma = metric->lapse * metric->sqrt_detgamma;
+    if(!isfinite(alpha_sqrt_detgamma) || alpha_sqrt_detgamma <= 0.0) {
+      return ghl_error_m1_invalid_metric;
+    }
+    candidate_E += alpha_sqrt_detgamma * interaction_sources.S_E;
+    for(int i = 0; i < 3; i++) {
+      candidate_F[i] += alpha_sqrt_detgamma * interaction_sources.S[i];
+    }
+    candidate_N = alpha_sqrt_detgamma * N_source;
+  }
+
+  if(!isfinite(candidate_E) || !isfinite(candidate_N)) {
+    return ghl_error_m1_invalid_state;
+  }
+  for(int i = 0; i < 3; i++) {
+    if(!isfinite(candidate_F[i])) {
+      return ghl_error_m1_invalid_state;
+    }
+  }
+
+  *source_tildeE = candidate_E;
+  for(int i = 0; i < 3; i++) {
+    source_tildeF[i] = candidate_F[i];
+  }
+  if(source_tildeN != NULL) {
+    *source_tildeN = candidate_N;
+  }
+  return ghl_success;
+}
+
 ghl_error_codes_t ghl_m1_update_neutrino_number_backward_euler(
       const ghl_m1_neutrino_parameters *restrict nu_params,
       const ghl_m1_neutrino_rates *restrict rates,
@@ -359,9 +434,8 @@ ghl_error_codes_t ghl_m1_update_neutrino_number_backward_euler(
   /* Rate validation requires round-to-nearest: adding one to a finite
    * nonnegative absorption term gives a finite denominator >= 1 (including
    * DBL_MAX + 1). Division cannot overflow a finite numerator. */
-  if(isfinite(absorption_product) && isfinite(absorption_term)
-     && isfinite(emission) && isfinite(numer)
-     && !absorption_underflow && !emission_underflow) {
+  if(isfinite(absorption_product) && isfinite(absorption_term) && isfinite(emission)
+     && isfinite(numer) && !absorption_underflow && !emission_underflow) {
     candidate_N_out = direct_candidate;
   }
   else if(!scaled_backward_euler_number_endpoint(

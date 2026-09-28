@@ -111,7 +111,7 @@ ghl_error_codes_t ghl_m1_neutrino_charged_current_lepton_delta(
    * its rounded endpoint loses that change in the stiff equilibrium limit.
    * Heavy flavor has no charged-current exchange. The optional mean-energy
    * projection is not backward Euler and retains its endpoint-source rule. */
-  double dN_cc = 0.0;
+  double candidate = 0.0;
   if(rates->lepton_weight != 0.0) {
     if(number_projected) {
       double absorption_number = 0.0;
@@ -120,13 +120,14 @@ ghl_error_codes_t ghl_m1_neutrino_charged_current_lepton_delta(
                &absorption_number)) {
         return ghl_error_m1_invalid_state;
       }
-      dN_cc = dt_alpha * (rates->eta_N_cc - absorption_number);
+      const double dN_cc = dt_alpha * (rates->eta_N_cc - absorption_number);
+      candidate = rates->lepton_weight * dN_cc;
     }
     else {
-      dN_cc = physical_number_endpoint - number_initial;
+      candidate = ghl_m1_neutrino_backward_euler_lepton_delta_validated(
+            rates->lepton_weight, number_initial, physical_number_endpoint);
     }
   }
-  const double candidate = rates->lepton_weight * dN_cc;
   if(!isfinite(candidate)) {
     return ghl_error_m1_invalid_state;
   }

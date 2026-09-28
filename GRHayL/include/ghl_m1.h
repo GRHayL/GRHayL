@@ -11,6 +11,8 @@ extern "C" {
 /** @addtogroup Radiation
  *  @{ */
 
+/** Undensitized Eulerian radiation moments. E is energy density and F_i is
+ * covariant spatial flux; spatial indices 0, 1, 2 denote x, y, z. */
 typedef struct ghl_m1_rad_state {
   double E;
   double F[3];
@@ -23,7 +25,9 @@ typedef enum {
   ghl_m1_closure_solve_invalid
 } ghl_m1_closure_solve_status_t;
 
+/** @ingroup m1_closure */
 typedef struct ghl_m1_closure {
+  /** Contravariant spatial pressure P^{ij}; indices 0, 1, 2 denote x, y, z. */
   double P[3][3];
   /** Eddington factor. */
   double chi;
@@ -71,6 +75,7 @@ typedef struct ghl_m1_closure {
   bool four_point_compatibility;
 } ghl_m1_closure;
 
+/** @ingroup m1_solver */
 typedef struct ghl_m1_closure_counters {
   unsigned long long ordinary_convergence;
   unsigned long long endpoint_fallback;
@@ -97,6 +102,7 @@ typedef struct ghl_m1_closure_counters {
   unsigned long long admissibility_fallback_zero_flux;
 } ghl_m1_closure_counters;
 
+/** @ingroup m1_solver */
 typedef enum {
   ghl_m1_closure_failure_none = 0,
   ghl_m1_closure_failure_workspace = 1,
@@ -107,6 +113,19 @@ typedef enum {
   ghl_m1_closure_failure_tensor_validation = 6
 } ghl_m1_closure_failure_stage_t;
 
+/** @ingroup m1_solver
+ * Reasons recorded in the process-wide latest closure-failure snapshot.
+ * Zero means reset or no recorded tensor-validation failure. A concurrent
+ * closure call may replace the reason; stage and reason getters are separate
+ * atomic loads and do not form a transaction. */
+typedef enum {
+  ghl_m1_closure_validation_none = 0,
+  ghl_m1_closure_validation_nonfinite = 1,
+  ghl_m1_closure_validation_trace = 2,
+  ghl_m1_closure_validation_symmetry = 3,
+  ghl_m1_closure_validation_psd = 4
+} ghl_m1_closure_validation_reason_t;
+
 typedef enum {
   /**
    * Canonical realizability repair: when F^2 > E^2(1-epsilon_c), multiply
@@ -115,32 +134,21 @@ typedef enum {
   ghl_m1_repair_linear_factor_compatibility = 1
 } ghl_m1_repair_policy_t;
 
-typedef enum {
-  ghl_m1_repair_branch_none = 0,
-  ghl_m1_repair_branch_energy_floor = 1,
-  ghl_m1_repair_branch_flux_rescale = 2,
-  ghl_m1_repair_branch_energy_and_flux = 3
-} ghl_m1_repair_branch_t;
-
-typedef struct ghl_m1_repair_diagnostics {
-  /** Always ghl_m1_repair_linear_factor_compatibility. */
-  ghl_m1_repair_policy_t policy;
-  double original_flux_norm;
-  double permitted_flux_norm;
-  double scale;
-  ghl_m1_rad_state repaired_state;
-  ghl_m1_repair_branch_t branch;
-} ghl_m1_repair_diagnostics;
-
+/** @ingroup m1_closure */
 typedef struct ghl_m1_closure_decomposition_diagnostic {
+  /** Covariant spatial thin pressure Pthin_ij, indexed x, y, z. */
   double Pthin_dd[3][3];
+  /** Covariant spatial thick pressure Pthick_ij, indexed x, y, z. */
   double Pthick_dd[3][3];
   double chi_minerbo_xi;
   double xi_HaHa_over_J2;
   double dthin_scalar;
   double dthick_scalar;
+  /** Diagonal Pthick_ii - Pthin_ii, no sum, indexed x, y, z. */
   double Pthick_minus_Pthin_dd[3];
+  /** Spatial contraction gamma^{ij} Pthick_ij / 3. */
   double Pth_dd_3_3_UU;
+  /** First spatial diagonal component Pthick_xx. */
   double Pth_dd_0_0_DD;
 } ghl_m1_closure_decomposition_diagnostic;
 
@@ -189,7 +197,8 @@ typedef struct ghl_m1_implicit_solve_diagnostics {
   unsigned int solution_path_flags;
 } ghl_m1_implicit_solve_diagnostics;
 
-/**
+/** @ingroup m1_solver
+ *
  * Observable stages of the shared four-variable Newton driver.
  *
  * The driver reports only stages it owns. Residual events include the initial
@@ -208,6 +217,7 @@ typedef enum {
   ghl_m1_solver_stage_completed_solve
 } ghl_m1_solver_stage_t;
 
+/** @ingroup m1_solver */
 typedef struct ghl_m1_newton_diagnostics {
   int iterations;
   int backtracks;
@@ -218,7 +228,8 @@ typedef struct ghl_m1_newton_diagnostics {
   double residual_weighted_merit;
 } ghl_m1_newton_diagnostics;
 
-/**
+/** @ingroup m1_solver
+ *
  * Observer used by the public structured Newton diagnostic boundary.
  *
  * The callback is diagnostic-only and must not modify @p U, @p residual, or
@@ -247,7 +258,8 @@ typedef void (*ghl_m1_solver_stage_observer)(
       const double residual[4],
       const ghl_m1_newton_diagnostics *restrict diagnostics);
 
-/**
+/** @ingroup m1_solver
+ *
  * Evaluate the four-component residual at one densitized iterate.
  *
  * @param context Opaque caller context passed through the Newton driver.
@@ -264,7 +276,8 @@ typedef ghl_error_codes_t (*ghl_m1_newton_residual_callback)(
       const double U[4],
       double residual[4]);
 
-/**
+/** @ingroup m1_solver
+ *
  * Evaluate the 4x4 Jacobian at one densitized iterate.
  *
  * @param context Opaque caller context passed through the Newton driver.
@@ -281,7 +294,8 @@ typedef ghl_error_codes_t (*ghl_m1_newton_jacobian_callback)(
       const double residual[4],
       double jacobian[4][4]);
 
-/**
+/** @ingroup m1_solver
+ *
  * Callback bundle for the public structured Newton diagnostic boundary.
  *
  * The @c residual and @c jacobian members are required. The @c observer
@@ -332,7 +346,8 @@ typedef enum {
   ghl_m1_neutrino_source_path_hard_failure
 } ghl_m1_neutrino_source_path_t;
 
-/** Host-supplied controls for the opt-in branched source policy.
+/** @ingroup m1_sources
+ * Host-supplied controls for the opt-in branched source policy.
  * A nonpositive thick or scattering threshold disables that shortcut. For
  * every opt-in branched endpoint-number path (thin, thick, scattering, and the
  * general implicit fallback), a negative thermalized-number threshold disables
@@ -348,7 +363,7 @@ typedef enum {
  * which remains a separate step. The zero-valued Y_e policy preserves
  * GRHayL's charged-current-only contract; the signed-total option is available
  * when signed-total composition bookkeeping is required. */
-typedef struct {
+typedef struct ghl_m1_neutrino_source_options {
   ghl_m1_neutrino_source_policy_t policy;
   double thick_equilibrium_threshold;
   double scattering_threshold;
@@ -366,7 +381,8 @@ typedef struct {
   ghl_m1_neutrino_ye_policy_t ye_policy;
 } ghl_m1_neutrino_source_options;
 
-typedef struct {
+/** @ingroup m1_sources */
+typedef struct ghl_m1_neutrino_source_diagnostics {
   ghl_m1_neutrino_source_path_t path;
   bool closure_fallback_used;
   bool terminal_no_update;
@@ -448,32 +464,43 @@ ghl_error_codes_t ghl_m1_initialize_with_newton_tolerances(
       const double newton_absolute_tolerance,
       ghl_m1_parameters *restrict m1_params);
 
-/** Update the mixed Newton tolerances on an initialized parameter bundle. */
+/** @ingroup m1_solver
+ * Update the mixed Newton tolerances on an initialized parameter bundle. */
 ghl_error_codes_t ghl_m1_set_newton_tolerances(
       const double newton_relative_tolerance,
       const double newton_absolute_tolerance,
       ghl_m1_parameters *restrict m1_params);
 
-/** Set the bracketed scalar Minerbo root-solver controls. */
+/** @ingroup m1_solver
+ * Set the bracketed scalar Minerbo root-solver controls. */
 ghl_error_codes_t ghl_m1_set_closure_solver_controls(
       const double root_interval_tolerance,
       const int root_max_iterations,
       ghl_m1_parameters *restrict m1_params);
 
-/** Set the maximum normalized Minerbo consistency residual that may be
+/** @ingroup m1_solver
+ * Set the maximum normalized Minerbo consistency residual that may be
  * published. Finite candidates above this bound fail transactionally. */
 ghl_error_codes_t ghl_m1_set_closure_residual_tolerance(
       const double max_normalized_residual,
       ghl_m1_parameters *restrict m1_params);
 
-/** Reset and snapshot process-wide closure outcome counters. */
+/** @ingroup m1_solver
+ * Reset and snapshot process-wide closure outcome counters. */
 void ghl_m1_reset_closure_counters(void);
+/** @ingroup m1_solver */
 void ghl_m1_get_closure_counters(ghl_m1_closure_counters *restrict counters);
 
-/** Return the stage at which the most recent closure call failed. */
+/** @ingroup m1_solver
+ * Return the process-wide latest failure stage; NULL output is ignored.
+ * Resetting closure counters also clears this snapshot. */
 void ghl_m1_get_last_closure_failure_stage(
       ghl_m1_closure_failure_stage_t *restrict stage);
 
+/** @ingroup m1_solver
+ * Return the process-wide latest validation reason as the numeric value of
+ * ghl_m1_closure_validation_reason_t. NULL output is ignored. This integer
+ * output preserves the existing installed API. */
 void ghl_m1_get_last_closure_validation_reason(int *restrict reason);
 
 /**
@@ -496,7 +523,8 @@ void ghl_m1_get_last_closure_validation_reason(int *restrict reason);
  *   checks described above.
  */
 
-/**
+/** @ingroup m1_closure
+ *
  * Apply only the scalar radiation-energy floor, without flux repair.
  * floor_applied may be NULL. Outputs are unchanged on error.
  */
@@ -506,13 +534,15 @@ ghl_error_codes_t ghl_m1_apply_energy_floor(
       double *restrict E_out,
       bool *restrict floor_applied);
 
-/** Repair a radiation state using the canonical linear-factor bound. */
+/** @ingroup m1_closure
+ * Repair a radiation state using the canonical linear-factor bound. */
 ghl_error_codes_t ghl_m1_realizability_repair(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
       ghl_m1_rad_state *restrict rad_state);
 
-/** Compute the relativistic Minerbo closure using fluid primitives. */
+/** @ingroup m1_closure
+ * Compute the relativistic Minerbo closure using fluid primitives. */
 ghl_error_codes_t ghl_m1_compute_closure_minerbo(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -520,7 +550,8 @@ ghl_error_codes_t ghl_m1_compute_closure_minerbo(
       const ghl_m1_rad_state *restrict rad_state,
       ghl_m1_closure *restrict closure);
 
-/** Compute the production Minerbo closure. */
+/** @ingroup m1_closure
+ * Compute the production Minerbo closure. */
 ghl_error_codes_t ghl_m1_compute_closure_with_primitives(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -528,7 +559,8 @@ ghl_error_codes_t ghl_m1_compute_closure_with_primitives(
       const ghl_m1_rad_state *restrict rad_state,
       ghl_m1_closure *restrict closure);
 
-/**
+/** @ingroup m1_closure
+ *
  * Compute diagnostic closure-decomposition fields from the public closure path.
  *
  * This routine is diagnostic-only. It reports the production thin and
@@ -541,7 +573,8 @@ ghl_error_codes_t ghl_m1_compute_closure_decomposition_diagnostic(
       const ghl_m1_rad_state *restrict rad_state,
       ghl_m1_closure_decomposition_diagnostic *restrict diagnostic);
 
-/**
+/** @ingroup m1_closure
+ *
  * Compute comoving-frame radiation moments from the Eulerian state and closure.
  */
 ghl_error_codes_t ghl_m1_compute_comoving_moments(
@@ -552,7 +585,8 @@ ghl_error_codes_t ghl_m1_compute_comoving_moments(
       const ghl_m1_closure *restrict closure,
       ghl_m1_comoving *restrict comoving);
 
-/**
+/** @ingroup m1_sources
+ *
  * Compute geometric source terms for the M1 evolution equations.
  *
  * The directional metric derivatives are packed in ghl_metric_quantities as
@@ -569,7 +603,8 @@ ghl_error_codes_t ghl_m1_compute_geometry_sources(
       const ghl_m1_closure *restrict closure,
       ghl_m1_sources *restrict geometry_sources);
 
-/**
+/** @ingroup m1_sources
+ *
  * Convert undensitized radiation interaction sources into equal-and-opposite
  * matter conservative RHS contributions.
  *
@@ -585,7 +620,8 @@ ghl_error_codes_t ghl_m1_compute_matter_coupling_sources(
       double *restrict source_tildetau,
       double source_tildeS[3]);
 
-/**
+/** @ingroup m1_transport
+ *
  * Compute the characteristic wavespeeds used by the M1 transport flux.
  *
  * This routine returns the canonical conservative light-cone speed estimates,
@@ -601,19 +637,22 @@ ghl_error_codes_t ghl_m1_compute_raw_lightcone_speeds(
       double *restrict s_minus_raw,
       double *restrict s_plus_raw);
 
+/** @ingroup m1_transport */
 ghl_error_codes_t ghl_m1_clip_hll_speeds(
       const double s_minus_raw,
       const double s_plus_raw,
       double *restrict s_minus,
       double *restrict s_plus);
 
+/** @ingroup m1_transport */
 ghl_error_codes_t ghl_m1_compute_wavespeeds(
       const ghl_metric_quantities *restrict metric_face,
       const ghl_m1_direction_t direction,
       double *restrict s_minus,
       double *restrict s_plus);
 
-/** Undensitized pointwise physical E/F_i flux in one coordinate direction. */
+/** @ingroup m1_transport
+ * Undensitized pointwise physical E/F_i flux in one coordinate direction. */
 ghl_error_codes_t ghl_m1_compute_physical_flux(
       const ghl_metric_quantities *restrict metric_face,
       const ghl_m1_direction_t direction,
@@ -622,7 +661,8 @@ ghl_error_codes_t ghl_m1_compute_physical_flux(
       double *restrict flux_E,
       double flux_F[3]);
 
-/** Symmetric Rusanov E/F_i flux from caller-supplied physical fluxes. */
+/** @ingroup m1_transport
+ * Symmetric M1 Rusanov E/F_i flux from caller-supplied physical fluxes. */
 ghl_error_codes_t ghl_m1_compute_rusanov_flux(
       const ghl_m1_rad_state *restrict state_L,
       const ghl_m1_rad_state *restrict state_R,
@@ -634,7 +674,8 @@ ghl_error_codes_t ghl_m1_compute_rusanov_flux(
       double *restrict flux_E,
       double flux_F[3]);
 
-/** Scalar symmetric Rusanov flux, used by neutrino number transport. */
+/** @ingroup m1_transport
+ * Scalar symmetric Rusanov flux, used by neutrino number transport. */
 ghl_error_codes_t ghl_m1_compute_number_rusanov_flux(
       const double N_L,
       const double N_R,
@@ -643,7 +684,8 @@ ghl_error_codes_t ghl_m1_compute_number_rusanov_flux(
       const double speed,
       double *restrict number_flux);
 
-/** GRHayL ordering for the five grey-neutrino transport components. */
+/** @ingroup m1_transport
+ * GRHayL ordering for the five grey-neutrino transport components. */
 typedef enum {
   ghl_m1_neutrino_transport_N = 0,
   ghl_m1_neutrino_transport_E,
@@ -653,14 +695,16 @@ typedef enum {
   ghl_m1_neutrino_transport_component_count
 } ghl_m1_neutrino_transport_component_t;
 
-typedef struct {
+/** @ingroup m1_transport */
+typedef struct ghl_m1_four_point_transport_diagnostics {
   double phi[ghl_m1_neutrino_transport_component_count];
   bool sawtooth[ghl_m1_neutrino_transport_component_count];
   double opacity_suppression;
   double face_speed;
 } ghl_m1_four_point_transport_diagnostics;
 
-/** Evaluate one canonical four-point blended face flux.
+/** @ingroup m1_transport
+ * Evaluate one canonical four-point blended face flux.
  *
  * State and physical-flux inputs are undensitized and use
  * {N,E,Fx,Fy,Fz}. The stencil is {j-1,j,j+1,j+2}; physical_flux_L/R and
@@ -708,7 +752,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_four_point_transport_flux(
       double flux_tilde[ghl_m1_neutrino_transport_component_count],
       ghl_m1_four_point_transport_diagnostics *restrict diagnostics);
 
-/** Evaluate a four-point blended face flux from volume-weighted operands.
+/** @ingroup m1_transport
+ * Evaluate a four-point blended face flux from volume-weighted operands.
  *
  * The caller must supply the four stencil states after applying the desired
  * cell-volume factors and both physical face fluxes after applying the
@@ -761,7 +806,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_four_point_volume_weighted_transport_f
       double flux_tilde[ghl_m1_neutrino_transport_component_count],
       ghl_m1_four_point_transport_diagnostics *restrict diagnostics);
 
-/** Componentwise stages exposed for focused diagnostics and testing. */
+/** @ingroup m1_transport
+ * Componentwise stages exposed for focused diagnostics and testing. */
 ghl_error_codes_t ghl_m1_compute_four_point_flux_limiter(
       const ghl_m1_parameters *restrict m1_params,
       const double dum,
@@ -770,12 +816,14 @@ ghl_error_codes_t ghl_m1_compute_four_point_flux_limiter(
       double *restrict phi,
       bool *restrict sawtooth);
 
+/** @ingroup m1_transport */
 ghl_error_codes_t ghl_m1_compute_four_point_opacity_suppression(
       const ghl_m1_parameters *restrict m1_params,
       const double kappa_face,
       const double delta_x,
       double *restrict A);
 
+/** @ingroup m1_transport */
 ghl_error_codes_t ghl_m1_compute_four_point_blended_flux(
       const double flux_high,
       const double flux_low,
@@ -784,7 +832,8 @@ ghl_error_codes_t ghl_m1_compute_four_point_blended_flux(
       const double A,
       double *restrict flux_num);
 
-/**
+/** @ingroup m1_transport
+ *
  * Compute the proper face-normal thickness for a coordinate-direction face.
  *
  * For a face normal to x^d, this returns
@@ -796,7 +845,8 @@ ghl_error_codes_t ghl_m1_compute_face_normal_delta_l(
       const double delta_x_d,
       double *restrict delta_l);
 
-/**
+/** @ingroup m1_transport
+ *
  * Compute the thick-limit comoving radiation energy and validity flag.
  *
  * A return value of @ref ghl_success means that the arithmetic completed;
@@ -813,13 +863,15 @@ ghl_error_codes_t ghl_m1_compute_Jthick(
       double *restrict Jthick,
       bool *restrict Jthick_is_valid);
 
-/** Compute the harmonic face diffusion coefficient from transport opacities. */
+/** @ingroup m1_transport
+ * Compute the harmonic face diffusion coefficient from transport opacities. */
 ghl_error_codes_t ghl_m1_compute_harmonic_diffusion_coefficient(
       const double chi_tr_L,
       const double chi_tr_R,
       double *restrict D_face);
 
-/** Apply the optional Fick diffusion correction to an HLL energy flux.
+/** @ingroup m1_transport
+ * Apply the optional Fick diffusion correction to an HLL energy flux.
  * The caller selects this route explicitly; the ordinary public HLL/Rusanov
  * fluxes remain unchanged. On any non-success return, every non-NULL output
  * argument is left unchanged. A successful no-op publishes the input HLL
@@ -844,7 +896,8 @@ ghl_error_codes_t ghl_m1_compute_diffusion_flux(
       double *restrict corrected_flux_tildeE,
       double *restrict a_face);
 
-/**
+/** @ingroup m1_solver
+ *
  * Run one host-independent four-variable Newton solve through the shared
  * callback boundary.
  *
@@ -868,7 +921,8 @@ ghl_error_codes_t ghl_m1_newton_solve_4d(
       double U_out[4],
       ghl_m1_newton_diagnostics *restrict diagnostics);
 
-/** Evaluate the shared mixed absolute/relative Newton merit. */
+/** @ingroup m1_solver
+ * Evaluate the shared mixed absolute/relative Newton merit. */
 double ghl_m1_newton_weighted_merit(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -876,7 +930,8 @@ double ghl_m1_newton_weighted_merit(
       const double U_base[4],
       const double residual[4]);
 
-/**
+/** @ingroup m1_solver
+ *
  * Project a densitized E/F_i vector into the configured admissible domain.
  *
  * @param m1_params M1 parameters; required.
@@ -892,10 +947,13 @@ ghl_error_codes_t ghl_m1_newton_project_admissible(
       const ghl_metric_quantities *restrict metric,
       double U[4]);
 
-/**
+/** @ingroup m1_closure
+ *
  * Build the radiation stress-energy tensor from a state and its closure.
  *
- * This E/F-only kernel validates non-NULL inputs, the metric, finite E/F_i,
+ * The output is contravariant R^{mu nu} in ghl_stress_energy::T4, with
+ * spacetime indices 0 through 3. This E/F-only kernel validates non-NULL
+ * inputs, the metric, finite E/F_i,
  * m1_params->E_floor, the shared M1 realizability cone, and the locally
  * observable supplied-closure tensor properties. It does not inspect a
  * neutrino number density or N_floor. On every error Rmunu is unchanged.
@@ -941,8 +999,8 @@ ghl_error_codes_t ghl_m1_compute_diagnostics(
 /**
  * Neutrino species enumeration for the grey three-species M1 framework.
  *
- * The naming follows the implementation whitepaper: nu_bar_e is the code-facing
- * name for the electron antineutrino (conceptual paper: anti-nu_e).
+ * ghl_m1_neutrino_anue is the code-facing electron-antineutrino name;
+ * nu_bar_e denotes the same species in the implementation whitepaper.
  */
 typedef enum {
   ghl_m1_neutrino_nue = 0,
@@ -959,7 +1017,8 @@ typedef enum {
   ghl_m1_neutrino_pair_process_count
 } ghl_m1_neutrino_pair_process_t;
 
-/**
+/** @ingroup m1_sources
+ *
  * Per-species neutrino state carried through transport and source solves.
  *
  * N is the Eulerian neutrino number density, E is the Eulerian radiation
@@ -968,7 +1027,7 @@ typedef enum {
  * undensitized by the host with the appropriate cell or face sqrt_detgamma
  * before any Radiation pointwise call.
  */
-typedef struct {
+typedef struct ghl_m1_neutrino_state {
   double N;
   double E;
   double F[3];
@@ -978,7 +1037,8 @@ typedef enum {
   ghl_m1_neutrino_terminal_fallback_no_update_all = 0
 } ghl_m1_neutrino_terminal_fallback_policy_t;
 
-/**
+/** @ingroup m1_sources
+ *
  * Per-species neutrino runtime parameters.
  *
  * Zero initialization permits N == 0, selects strict J > 0, uses
@@ -993,7 +1053,7 @@ typedef enum {
  * the ordinary implicit update, the thin/thick/scattering source paths, and
  * the public thin-update wrappers.
  */
-typedef struct {
+typedef struct ghl_m1_neutrino_parameters {
   /** Nonnegative neutrino-number floor used by state repair. */
   double N_floor;
   /** Positive lower mean-energy bound; nonpositive disables this bound. */
@@ -1002,12 +1062,14 @@ typedef struct {
   double mean_energy_max;
   /** Nonzero enables validation of the positive mean-energy bounds. */
   int enforce_mean_energy_bounds;
-  int terminal_fallback_policy;
+  /** Zero selects the transactional no-update terminal policy. */
+  ghl_m1_neutrino_terminal_fallback_policy_t terminal_fallback_policy;
   double J_floor;
   double Gamma_N_floor;
 } ghl_m1_neutrino_parameters;
 
-/**
+/** @ingroup m1_rates
+ *
  * Provider-supplied frozen neutrino rate bundle for a single cell and species.
  *
  * The provider computes this bundle from EOS state, composition, blocking,
@@ -1053,7 +1115,7 @@ typedef struct {
  * Validation enforces aggregate and charged-current Kirchhoff identities,
  * J_eq = n_eq*mean_energy, and exact species/lepton-weight consistency.
  */
-typedef struct {
+typedef struct ghl_m1_neutrino_rates {
   ghl_m1_neutrino_species_t species;
   double eta_N;
   double eta_E;
@@ -1073,7 +1135,8 @@ typedef struct {
   double eta_E_pair[ghl_m1_neutrino_pair_process_count];
 } ghl_m1_neutrino_rates;
 
-/**
+/** @ingroup m1_sources
+ *
  * Coupled radiation-matter exchange increments reported by the local
  * homogeneous implicit neutrino update.
  *
@@ -1097,7 +1160,7 @@ typedef struct {
  * bookkeeping can select ghl_m1_neutrino_ye_from_signed_total_number, while
  * dL_rad_cc retains its distinct charged-current diagnostic meaning.
  */
-typedef struct {
+typedef struct ghl_m1_neutrino_exchange {
   double dN_rad_total;
   double dL_rad_cc;
   double dE_rad;
@@ -1107,7 +1170,17 @@ typedef struct {
   double dYe_matter;
 } ghl_m1_neutrino_exchange;
 
-/**
+/** @ingroup m1_sources
+ * Named values for the caller-supplied repair_stage diagnostic field. */
+typedef enum {
+  ghl_m1_neutrino_repair_stage_unknown = 0,
+  ghl_m1_neutrino_repair_stage_post_transport = 1,
+  ghl_m1_neutrino_repair_stage_post_source = 2,
+  ghl_m1_neutrino_repair_stage_face_state = 3
+} ghl_m1_neutrino_repair_stage_t;
+
+/** @ingroup m1_sources
+ *
  * Local neutrino diagnostics counters.
  *
  * The comoving mean-energy fields report, per solve, whether
@@ -1130,7 +1203,7 @@ typedef struct {
  * Conservation accounting uses these budgets to ensure that repair leakage is
  * included in the total accounting.
  */
-typedef struct {
+typedef struct ghl_m1_neutrino_diagnostics {
   int provider_validation_failures;
   int source_converged;
   int source_terminal_fallbacks;
@@ -1138,7 +1211,8 @@ typedef struct {
   int N_floor_repairs;
   int EF_repairs;
   int limiter_reductions;
-  /* Comoving mean-energy diagnostics (post-update). */
+  /* Comoving mean-energy diagnostics (post-update). The consistency and
+   * invalid flags publish 0 or 1; int storage preserves rollback sentinels. */
   double mean_energy_diag;
   int mean_energy_consistent;
   int Jeq_over_neq_consistent;
@@ -1149,16 +1223,17 @@ typedef struct {
   double repair_dF[3];
   double repair_dL_e;
   /* Transient inputs set by the host before each repair call.
-   * repair_stage: 0=unknown, 1=post-transport, 2=post-source,
-   *               3=face-state. repair_lepton_weight: the species
-   *               lepton weight used to compute the repair_dL_e magnitude. */
-  int repair_stage;
+   * repair_stage is caller-supplied metadata, not a physics selector.
+   * repair_lepton_weight is the species lepton weight used to compute the
+   * repair_dL_e magnitude. */
+  ghl_m1_neutrino_repair_stage_t repair_stage;
   double repair_lepton_weight;
   /* Accepted positive rate-product identities that rounded to exact zero. */
   int rate_product_underflows;
 } ghl_m1_neutrino_diagnostics;
 
-/**
+/** @ingroup m1_sources
+ *
  * Initialize neutrino diagnostics before their first use.
  *
  * Clears all counters, accumulated repair magnitudes, and transient repair
@@ -1187,7 +1262,8 @@ ghl_error_codes_t ghl_m1_apply_neutrino_number_floor(
       double *restrict N_out,
       bool *restrict floor_applied);
 
-/**
+/** @ingroup m1_rates
+ *
  * Validate a provider-supplied ghl_m1_neutrino_rates bundle.
  *
  * Checks species range, lepton weight matching the species, finiteness and
@@ -1210,7 +1286,8 @@ ghl_error_codes_t ghl_m1_validate_neutrino_rates(
       const ghl_m1_neutrino_rates *restrict rates,
       ghl_m1_neutrino_diagnostics *restrict diagnostics);
 
-/**
+/** @ingroup m1_sources
+ *
  * Repair a single neutrino state so it satisfies the per-species realizability
  * constraints.
  *
@@ -1239,6 +1316,7 @@ ghl_error_codes_t ghl_m1_repair_neutrino_state(
       ghl_m1_neutrino_state *restrict state,
       ghl_m1_neutrino_diagnostics *restrict diagnostics);
 
+/** @ingroup m1_sources */
 static inline ghl_m1_rad_state
 ghl_m1_neutrino_project_rad_state(const ghl_m1_neutrino_state *restrict state) {
   ghl_m1_rad_state rad_state;
@@ -1249,6 +1327,7 @@ ghl_m1_neutrino_project_rad_state(const ghl_m1_neutrino_state *restrict state) {
   return rad_state;
 }
 
+/** @ingroup m1_transport */
 static inline ghl_error_codes_t ghl_m1_compute_neutrino_Jthick(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -1264,7 +1343,8 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_Jthick(
         m1_params, metric, prims, &rad_state, Jthick, Jthick_is_valid);
 }
 
-/** Neutrino-state wrapper for the optional energy-flux diffusion correction.
+/** @ingroup m1_transport
+ * Neutrino-state wrapper for the optional energy-flux diffusion correction.
  * It has the same output contract as ghl_m1_compute_diffusion_flux: every
  * non-NULL output is unchanged on non-success, while successful no-op and
  * active paths publish the corresponding shared-helper results. */
@@ -1287,6 +1367,7 @@ ghl_error_codes_t ghl_m1_compute_neutrino_diffusion_flux(
       double *restrict corrected_flux_tildeE,
       double *restrict a_face);
 
+/** @ingroup m1_closure */
 static inline ghl_error_codes_t ghl_m1_compute_neutrino_closure(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -1301,6 +1382,7 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_closure(
         m1_params, metric, prims, &rad_state, closure);
 }
 
+/** @ingroup m1_closure */
 static inline ghl_error_codes_t ghl_m1_compute_neutrino_comoving_moments(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -1316,6 +1398,7 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_comoving_moments(
         m1_params, metric, prims, &rad_state, closure, comoving);
 }
 
+/** @ingroup m1_transport */
 static inline ghl_error_codes_t ghl_m1_compute_neutrino_wavespeeds(
       const ghl_metric_quantities *restrict metric_face,
       const ghl_m1_direction_t direction,
@@ -1324,6 +1407,7 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_wavespeeds(
   return ghl_m1_compute_wavespeeds(metric_face, direction, s_minus, s_plus);
 }
 
+/** @ingroup m1_closure */
 static inline ghl_error_codes_t ghl_m1_compute_neutrino_stress_energy(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -1337,6 +1421,7 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_stress_energy(
   return ghl_m1_compute_stress_energy(m1_params, metric, &rad_state, closure, Rmunu);
 }
 
+/** @ingroup m1_sources */
 static inline ghl_error_codes_t ghl_m1_compute_neutrino_geometry_sources(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -1356,6 +1441,7 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_geometry_sources(
         &rad_state, closure, geometry_sources);
 }
 
+/** @ingroup m1_sources */
 static inline ghl_error_codes_t ghl_m1_compute_neutrino_matter_coupling_sources(
       const ghl_metric_quantities *restrict metric,
       const ghl_m1_sources *restrict EF_sources,
@@ -1365,7 +1451,8 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_matter_coupling_sources(
         metric, EF_sources, dTau_matter, dS_matter);
 }
 
-/**
+/** @ingroup m1_sources
+ *
  * Compute the E/F_i and N interaction sources from frozen neutrino rates.
  *
  * EF_sources uses provider-supplied eta_E, kappa_a_E, kappa_s, and a fresh shared
@@ -1401,7 +1488,33 @@ ghl_error_codes_t ghl_m1_compute_neutrino_interaction_sources(
       ghl_m1_sources *restrict EF_sources,
       double *restrict N_source);
 
-static inline ghl_error_codes_t ghl_m1_compute_neutrino_explicit_rhs_sources(
+/** @ingroup m1_sources
+ *
+ * Compute and densitize the complete explicit neutrino RHS source packet.
+ *
+ * This operation combines geometric sources with optional frozen-rate
+ * interaction sources and publishes all requested outputs transactionally.
+ * Its interaction sources are for manual-only host stages; the normal
+ * three-species IMEX stage uses the implicit homogeneous update instead.
+ *
+ * @param m1_params Initialized shared M1 parameters.
+ * @param nu_params Neutrino number-current parameters.
+ * @param metric Frozen cell metric.
+ * @param metric_derivs_x Frozen x-direction metric derivatives.
+ * @param metric_derivs_y Frozen y-direction metric derivatives.
+ * @param metric_derivs_z Frozen z-direction metric derivatives.
+ * @param curv Frozen extrinsic curvature.
+ * @param prims Frozen fluid primitives; required when interaction sources are enabled.
+ * @param state Frozen undensitized neutrino state in {N,E,Fx,Fy,Fz} order.
+ * @param closure Frozen closure used for geometric source construction.
+ * @param include_interaction_sources Whether to add provider-rate interaction sources.
+ * @param rates Validated frozen rates; required when interactions are enabled.
+ * @param source_tildeE Output densitized energy source, unchanged on error.
+ * @param source_tildeF Output densitized covariant flux source, unchanged on error.
+ * @param source_tildeN Optional output densitized number source, unchanged on error.
+ * @return @c ghl_success on publication or a validation error with outputs unchanged.
+ */
+ghl_error_codes_t ghl_m1_compute_neutrino_explicit_rhs_sources(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_m1_neutrino_parameters *restrict nu_params,
       const ghl_metric_quantities *restrict metric,
@@ -1416,66 +1529,9 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_explicit_rhs_sources(
       const ghl_m1_neutrino_rates *restrict rates,
       double *restrict source_tildeE,
       double source_tildeF[3],
-      double *restrict source_tildeN) {
-  if(state == NULL || source_tildeE == NULL || source_tildeF == NULL) {
-    return ghl_error_m1_null_pointer;
-  }
-  if(include_interaction_sources && (prims == NULL || rates == NULL)) {
-    return ghl_error_m1_null_pointer;
-  }
+      double *restrict source_tildeN);
 
-  ghl_m1_sources geometry_sources = { 0 };
-  ghl_error_codes_t error = ghl_m1_compute_neutrino_geometry_sources(
-        m1_params, metric, metric_derivs_x, metric_derivs_y, metric_derivs_z, curv,
-        state, closure, &geometry_sources);
-  if(error != ghl_success) {
-    return error;
-  }
-
-  double candidate_E = geometry_sources.S_E;
-  double candidate_F[3]
-        = { geometry_sources.S[0], geometry_sources.S[1], geometry_sources.S[2] };
-  double candidate_N = 0.0;
-
-  if(include_interaction_sources) {
-    ghl_m1_sources interaction_sources = { 0 };
-    double N_source = 0.0;
-    error = ghl_m1_compute_neutrino_interaction_sources(
-          m1_params, nu_params, metric, prims, state, rates, &interaction_sources,
-          &N_source);
-    if(error != ghl_success) {
-      return error;
-    }
-    const double alpha_sqrt_detgamma = metric->lapse * metric->sqrt_detgamma;
-    if(!isfinite(alpha_sqrt_detgamma) || alpha_sqrt_detgamma <= 0.0) {
-      return ghl_error_m1_invalid_metric;
-    }
-    candidate_E += alpha_sqrt_detgamma * interaction_sources.S_E;
-    for(int i = 0; i < 3; i++) {
-      candidate_F[i] += alpha_sqrt_detgamma * interaction_sources.S[i];
-    }
-    candidate_N = alpha_sqrt_detgamma * N_source;
-  }
-
-  if(!isfinite(candidate_E) || !isfinite(candidate_N)) {
-    return ghl_error_m1_invalid_state;
-  }
-  for(int i = 0; i < 3; i++) {
-    if(!isfinite(candidate_F[i])) {
-      return ghl_error_m1_invalid_state;
-    }
-  }
-
-  *source_tildeE = candidate_E;
-  for(int i = 0; i < 3; i++) {
-    source_tildeF[i] = candidate_F[i];
-  }
-  if(source_tildeN != NULL) {
-    *source_tildeN = candidate_N;
-  }
-  return ghl_success;
-}
-
+/** @ingroup m1_sources */
 static inline ghl_error_codes_t ghl_m1_compute_neutrino_diagnostics(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -1489,7 +1545,8 @@ static inline ghl_error_codes_t ghl_m1_compute_neutrino_diagnostics(
   return ghl_m1_compute_diagnostics(m1_params, metric, &rad_state, closure, diagnostics);
 }
 
-/**
+/** @ingroup m1_transport
+ *
  * Compute the spatial contravariant number flux for one neutrino species.
  *
  * A fresh shared closure/current evaluation forms
@@ -1525,7 +1582,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_number_flux(
       double number_flux[3],
       double number_transport_velocity[3]);
 
-/**
+/** @ingroup m1_transport
+ *
  * Compute the spatial number flux from a caller-supplied closure.
  *
  * This is the closure-reuse companion to
@@ -1555,7 +1613,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_number_flux_from_closure(
       double number_flux[3],
       double number_transport_velocity[3]);
 
-/**
+/** @ingroup m1_transport
+ *
  * Compute the undensitized coordinate physical flux of N in one direction.
  *
  * This is the pointwise transport stage
@@ -1572,7 +1631,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_physical_number_flux(
       const ghl_m1_direction_t direction,
       double *restrict physical_number_flux);
 
-/** Closure-reuse companion to
+/** @ingroup m1_transport
+ * Closure-reuse companion to
  * ghl_m1_compute_neutrino_physical_number_flux. */
 ghl_error_codes_t ghl_m1_compute_neutrino_physical_number_flux_from_closure(
       const ghl_m1_parameters *restrict m1_params,
@@ -1584,7 +1644,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_physical_number_flux_from_closure(
       const ghl_m1_direction_t direction,
       double *restrict physical_number_flux);
 
-/**
+/** @ingroup m1_transport
+ *
  * Compute an opt-in combined scalar N and E/F_i symmetric Rusanov flux.
  *
  * The caller supplies one nonnegative, undensitized speed that is applied to
@@ -1635,7 +1696,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_rusanov_flux(
       double *restrict flux_tildeE,
       double flux_tildeF[3]);
 
-/**
+/** @ingroup m1_sources
+ *
  * Compute frozen-rate interaction sources from a caller-supplied closure.
  *
  * The closure must correspond to the supplied metric, primitives, and state.
@@ -1667,7 +1729,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_interaction_sources_from_closure(
       ghl_m1_sources *restrict EF_sources,
       double *restrict N_source);
 
-/**
+/** @ingroup m1_sources
+ *
  * Closed-form backward-Euler update of the neutrino number density.
  *
  * With an endpoint current normalization Gamma_N, the update is
@@ -1701,7 +1764,8 @@ ghl_error_codes_t ghl_m1_update_neutrino_number_backward_euler(
       const double N_in,
       double *restrict N_out);
 
-/**
+/** @ingroup m1_sources
+ *
  * Try the opt-in thin explicit source update for one neutrino species.
  *
  * This validation-boundary helper is opt-in: it reports
@@ -1751,7 +1815,8 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update(
       ghl_m1_neutrino_state *restrict state_out,
       ghl_m1_neutrino_exchange *restrict exchange);
 
-/**
+/** @ingroup m1_sources
+ *
  * Diagnostics-aware form of ghl_m1_try_neutrino_explicit_thin_update.
  *
  * The optional diagnostics record is updated transactionally with the
@@ -1792,7 +1857,8 @@ ghl_error_codes_t ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
       ghl_m1_neutrino_exchange *restrict exchange,
       ghl_m1_neutrino_diagnostics *restrict diagnostics);
 
-/** Transactional pointwise source-policy dispatcher.
+/** @ingroup m1_sources
+ * Transactional pointwise source-policy dispatcher.
  *
  * state_input is the pre-transport stage state and state_transport is the
  * source base. Returned radiation increments are always measured from
@@ -1847,7 +1913,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
       ghl_m1_neutrino_source_diagnostics *restrict diagnostics,
       ghl_m1_neutrino_diagnostics *restrict neutrino_diagnostics);
 
-/**
+/** @ingroup m1_sources
+ *
  * Transactional coupled electron-neutrino pair source update.
  *
  * The two array entries are ordered {ghl_m1_neutrino_nue,
@@ -1898,7 +1965,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
       ghl_m1_neutrino_source_diagnostics diagnostics[2],
       ghl_m1_neutrino_diagnostics neutrino_diagnostics[2]);
 
-/**
+/** @ingroup m1_sources
+ *
  * Compute the matter Delta Y_e recommendation from a radiation number
  * increment and the species lepton weight. The increment passed here must be
  * the charged-current electron-lepton exchange dL_rad_cc, not the total
@@ -1927,7 +1995,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_lepton_increment(
       const double baryon_density_conserved,
       double *restrict dYe_matter);
 
-/**
+/** @ingroup m1_sources
+ *
  * Solve the local homogeneous implicit update for one neutrino species.
  *
  * Uses frozen primitives and frozen rates; does not call Con2Prim and does
@@ -1988,7 +2057,8 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update(
       ghl_m1_implicit_solve_diagnostics *restrict solve_diagnostics,
       ghl_m1_neutrino_diagnostics *restrict neutrino_diagnostics);
 
-/* Debug/public diagnostic neutrino implicit helpers. These declarations expose
+/** @ingroup m1_solver
+ * Debug/public diagnostic neutrino implicit helpers. These declarations expose
  * the testing and source-policy diagnostic anchors without promoting the internal
  * _with_base fallback variants. */
 ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual(
@@ -2002,6 +2072,7 @@ ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual(
       const double U[4],
       double residual[4]);
 
+/** @ingroup m1_solver */
 ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_m1_neutrino_parameters *restrict nu_params,
@@ -2014,11 +2085,13 @@ ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian(
       const double residual_0[4],
       double jacobian[4][4]);
 
+/** @ingroup m1_solver */
 ghl_error_codes_t ghl_m1_neutrino_build_trial_state(
       const ghl_metric_quantities *restrict metric,
       const double U[4],
       ghl_m1_rad_state *restrict rad_state);
 
+/** @ingroup m1_solver */
 ghl_error_codes_t ghl_m1_neutrino_check_trial_admissibility(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,

@@ -32,8 +32,11 @@ repository's normal `.github/run_tests.sh` path does not select the scoped M1
 runner.
 These sources and runner provide library-level test routes; source and runner
 selection alone do not establish a remote pass, downstream host integration,
-or physical validation. No production evolution host is required or selected in
-this checkout, and no external comparison or full-evolution result is claimed.
+or physical validation. The scoped tests replay retained THC_M1
+discrete-operation outputs in repository-local comparisons; see
+[M1 tests and fixtures](tests-and-fixtures.md). No live cross-code run,
+production evolution host, or full-evolution result is established in this
+checkout.
 A downstream project may perform its own composed or multidimensional
 validation without becoming a GRHayL build dependency.
 

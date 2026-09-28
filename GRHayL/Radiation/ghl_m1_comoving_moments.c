@@ -57,12 +57,7 @@ static ghl_error_codes_t ghl_m1_compute_comoving_moments_internal(
 
   double P_DD[3][3];
   ghl_m1_lower_spatial_tensor(metric, closure->P, P_DD);
-  const double PVV
-        = P_DD[0][0] * V_con[0] * V_con[0] + P_DD[1][1] * V_con[1] * V_con[1]
-          + P_DD[2][2] * V_con[2] * V_con[2]
-          + 2.0
-                  * (P_DD[0][1] * V_con[0] * V_con[1] + P_DD[0][2] * V_con[0] * V_con[2]
-                     + P_DD[1][2] * V_con[1] * V_con[2]);
+  const double PVV = ghl_compute_vec2_from_vec3D(P_DD, V_con);
 
   ghl_m1_comoving candidate = { 0 };
   double J = SQR(W) * (rad_state->E - 2.0 * FdotV + PVV);

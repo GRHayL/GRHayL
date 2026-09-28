@@ -24,11 +24,10 @@ static double safe_exp(const double x) { return exp(ghl_clamp(x, -40.0, 40.0)); 
 
 static double species_lepton_weight(const ghl_m1_neutrino_species_t species) {
   /* Every caller obtains species from a bounded species loop. */
-  static const double weights[ghl_m1_neutrino_species_count] = {
-    [ghl_m1_neutrino_nue] = 1.0,
-    [ghl_m1_neutrino_anue] = -1.0,
-    [ghl_m1_neutrino_nux] = 0.0
-  };
+  static const double weights[ghl_m1_neutrino_species_count]
+        = { [ghl_m1_neutrino_nue] = 1.0,
+            [ghl_m1_neutrino_anue] = -1.0,
+            [ghl_m1_neutrino_nux] = 0.0 };
   return weights[species];
 }
 
@@ -465,8 +464,8 @@ static ghl_error_codes_t compute_thermo(
    * are independent, so validate each of them in HDF5 builds. */
   if(!isfinite(*muhat)
 #ifndef GHL_DISABLE_HDF5
-     || !isfinite(*mu_e) || !isfinite(*mu_p) || !isfinite(*mu_n)
-     || !isfinite(*X_n) || !isfinite(*X_p)
+     || !isfinite(*mu_e) || !isfinite(*mu_p) || !isfinite(*mu_n) || !isfinite(*X_n)
+     || !isfinite(*X_p)
 #endif
   ) {
     return ghl_error_m1_microphysics_failure;

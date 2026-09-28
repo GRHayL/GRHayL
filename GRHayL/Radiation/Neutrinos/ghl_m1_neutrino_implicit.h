@@ -118,15 +118,27 @@ static inline void ghl_m1_scaled_positive_from_validated_double(
   scaled->mantissa = frexp(value, &scaled->exponent);
 }
 
-static inline bool ghl_m1_scaled_positive_from_double(
+bool ghl_m1_scaled_positive_from_double(
       const double value,
-      ghl_m1_scaled_positive *restrict scaled) {
-  if(scaled == NULL || !isfinite(value) || value < 0.0) {
-    return false;
-  }
-  ghl_m1_scaled_positive_from_validated_double(value, scaled);
-  return true;
+      ghl_m1_scaled_positive *restrict scaled);
+
+/* Ordinary backward-Euler charged-current exchange is the signed number
+ * change. Its validated caller has finite nonnegative endpoint numbers and a
+ * lepton weight in {-1, 0, +1}, so this operation cannot overflow. The checked
+ * helper and the validated thin-solve path share this exact arithmetic. */
+static inline double ghl_m1_neutrino_backward_euler_lepton_delta_validated(
+      const double lepton_weight,
+      const double number_initial,
+      const double number_endpoint) {
+  return lepton_weight == 0.0 ? 0.0
+                              : lepton_weight * (number_endpoint - number_initial);
 }
+
+/* Return the actual representable finite-difference displacement. */
+ghl_error_codes_t ghl_m1_neutrino_finite_difference_delta(
+      const double U,
+      const double U_perturbed,
+      double *restrict used_delta);
 
 static inline bool ghl_m1_scaled_positive_multiply(
       const ghl_m1_scaled_positive *restrict left,
@@ -497,6 +509,19 @@ ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_validated(
       const double residual_0[4],
       double jacobian[4][4]);
 
+/* Construct the optional isotropic initial guess for one validated E/F
+ * substep. Predictor failures fall back to U_in and do not replace Newton's
+ * own acceptance or failure decision. */
+ghl_error_codes_t ghl_m1_neutrino_build_EF_initial_guess(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_primitive_quantities *restrict prims_frozen,
+      const ghl_m1_neutrino_rates *restrict rates,
+      double dt_sub,
+      const double U_in[4],
+      double U_initial[4],
+      bool *restrict closure_fallback_observed);
+
 /* Run one validated E/F Newton substep. Pair-source code supplies an
  * internally constructed effective rate bundle after validating the original
  * provider rates; this bridge deliberately does not repeat public rate
@@ -519,5 +544,32 @@ void ghl_m1_neutrino_populate_mean_energy_diagnostics(
       const ghl_m1_neutrino_parameters *restrict nu_params,
       const ghl_m1_neutrino_rates *restrict rates,
       ghl_m1_neutrino_diagnostics *restrict neutrino_diagnostics);
+
+/* Private injectable boundary around the production retry schedule. */
+typedef ghl_error_codes_t (*ghl_m1_neutrino_step_callback)(
+      const void *context,
+      double dt_sub,
+      const double U_in[4],
+      double U_out[4],
+      ghl_m1_newton_diagnostics *diagnostics,
+      bool *closure_fallback_observed);
+
+typedef struct {
+  double U_final[4];
+  int successful_substeps;
+  int last_schedule_substeps;
+  int total_iterations;
+  int total_backtracks;
+  double residual_max_norm;
+  double residual_scaled_norm;
+  unsigned int solution_path_flags;
+} ghl_m1_neutrino_schedule_result;
+
+ghl_error_codes_t ghl_m1_neutrino_run_step_schedules(
+      double dt,
+      const double U_in[4],
+      ghl_m1_neutrino_step_callback step_callback,
+      const void *step_context,
+      ghl_m1_neutrino_schedule_result *result);
 
 #endif // GHL_M1_NEUTRINO_IMPLICIT_H

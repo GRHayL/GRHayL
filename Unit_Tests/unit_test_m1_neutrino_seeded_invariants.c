@@ -192,7 +192,7 @@ static void check_closure_decomposition_diagnostic(
         diagnostic->Pth_dd_3_3_UU, "thick decomposition trace is nonfinite", case_index,
         -1);
   require_finite_value(
-        diagnostic->Pth_dd_0_0_DD, "thick decomposition time component is nonfinite",
+        diagnostic->Pth_dd_0_0_DD, "thick decomposition xx component is nonfinite",
         case_index, -1);
   require_condition(
         m1_nearly_equal(diagnostic->Pth_dd_3_3_UU, thick_trace / 3.0, 2.0e-11, 2.0e-13)
@@ -1025,7 +1025,7 @@ static void check_nonzero_flux_admissibility_fallback(void) {
     ghl_m1_get_last_closure_validation_reason(&validation_reason);
     require_condition(
           failure_stage == ghl_m1_closure_failure_none
-                && validation_reason == GHL_M1_CLOSURE_VALIDATION_PSD,
+                && validation_reason == ghl_m1_closure_validation_psd,
           "admissibility fallback lost its PSD diagnostic", -1, -1);
     for(int i = 0; i < 3; ++i) {
       for(int j = 0; j < 3; ++j) {
@@ -1141,7 +1141,7 @@ static void check_closure_arithmetic_boundaries(void) {
   ghl_m1_get_closure_counters(&counters);
   require_condition(
         failure_stage == ghl_m1_closure_failure_tensor_validation
-              && validation_reason == GHL_M1_CLOSURE_VALIDATION_PSD
+              && validation_reason == ghl_m1_closure_validation_psd
               && counters.invalid_state == 1 && counters.endpoint_fallback == 0
               && counters.iteration_exhaustion == 0 && counters.residual_rejection == 0,
         "fallback overflow diagnostic accounting failed", -1, -1);
@@ -1264,7 +1264,7 @@ static void check_closure_arithmetic_boundaries(void) {
   require_condition(
         m1_closure_identical(&closure, &sentinel)
               && failure_stage == ghl_m1_closure_failure_tensor_validation
-              && validation_reason == GHL_M1_CLOSURE_VALIDATION_TRACE
+              && validation_reason == ghl_m1_closure_validation_trace
               && counters.invalid_state == 1 && counters.endpoint_fallback == 0,
         "finite-flux trace rejection output/diagnostic contract", -1, -1);
 }
@@ -1303,8 +1303,8 @@ static void check_supplied_closure_psd_range(void) {
     ghl_m1_get_last_closure_validation_reason(&reason);
     require_condition(
           reason
-                == (i == 0 ? GHL_M1_CLOSURE_VALIDATION_PSD
-                           : GHL_M1_CLOSURE_VALIDATION_NONFINITE),
+                == (i == 0 ? ghl_m1_closure_validation_psd
+                           : ghl_m1_closure_validation_nonfinite),
           "PSD range failure diagnostic", (int)i, -1);
   }
 
@@ -1322,7 +1322,7 @@ static void check_supplied_closure_psd_range(void) {
   int reason;
   ghl_m1_get_last_closure_validation_reason(&reason);
   require_condition(
-        reason == GHL_M1_CLOSURE_VALIDATION_PSD,
+        reason == ghl_m1_closure_validation_psd,
         "PSD helper Cholesky rejection diagnostic", -1, -1);
 
   /* A nonzero antisymmetric tensor has a zero symmetric part. The helper
@@ -1338,7 +1338,7 @@ static void check_supplied_closure_psd_range(void) {
         "PSD helper accepted a zero symmetric tensor", -1, -1);
   ghl_m1_get_last_closure_validation_reason(&reason);
   require_condition(
-        reason == GHL_M1_CLOSURE_VALIDATION_PSD,
+        reason == ghl_m1_closure_validation_psd,
         "PSD helper zero eigen-scale rejection diagnostic", -1, -1);
 }
 
@@ -1575,7 +1575,7 @@ int main(int argc, char **argv) {
   ghl_m1_neutrino_parameters nu_params;
   m1_neutrino_seeded_default_parameters(&nu_params);
 
-  m1_neutrino_seeded_rng rng = { .state = M1_NEUTRINO_SEEDED_PRNG_SEED };
+  m1_test_rng rng = { .state = M1_NEUTRINO_SEEDED_PRNG_SEED };
   unsigned long long cases_run = 0;
   unsigned long long species_runs = 0;
 
@@ -1841,7 +1841,7 @@ int main(int argc, char **argv) {
     const double physical_number_flux_R
           = test_case.metric.lapse * perturbed_number_flux[direction]
             - test_case.metric.betaU[direction] * test_case.perturbed_state.N;
-    const double speed = m1_neutrino_seeded_uniform(&rng, 0.2, 1.1);
+    const double speed = m1_test_rng_between(&rng, 0.2, 1.1);
     double flux_tilde_N = NAN;
     double flux_tilde_E = NAN;
     double flux_tilde_F[3] = { NAN, NAN, NAN };

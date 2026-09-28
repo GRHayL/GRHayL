@@ -9,9 +9,16 @@ The maintained check for the Radiation M1 documentation subset is:
 python3 tools/check_m1_documentation.py
 ```
 
-The dedicated M1 documentation workflow runs this check for changes to the
-M1 contract, test/fixture documentation, and M1 wiki pages. The broader checks
-below remain manual KB maintenance checks.
+The dedicated [M1 documentation workflow](../../.github/workflows/m1-documentation.yml)
+runs this check on pushes to `main` and pull requests when changed paths match
+its list: the M1 integration contract, test guide, THC_M1 fixture tree,
+`wiki/gems/radiation-m1/**`, this page, the workflow file, or the checker
+script. The [checker](../../tools/check_m1_documentation.py) scans
+repository-relative links in the contract, test guide, and Markdown under the
+fixture tree and `wiki/gems/radiation-m1/`. The M1 hub
+`wiki/gems/radiation-m1.md` is in neither the workflow's path list nor the
+checker's `PAGE_ROOTS`; this page triggers the workflow but is not scanned by
+that check. The broader checks below remain manual KB maintenance checks.
 
 ## Broken Repo-Relative Markdown Links
 
@@ -172,9 +179,9 @@ find Unit_Tests -maxdepth 1 -name 'unit_test_*.c' -print | sort
 find Unit_Tests/data_gen -maxdepth 1 -name 'unit_test_data_*.c' -print | sort
 ```
 
-Compare help against `configure`'s build-type `case` manually. Current known
-faults are help-only `nocflags`, parser-only `plain`, and differing production
-flag strings; do not call either spelling supported without reopening source.
+Compare help against `configure`'s build-type `case` manually. The current
+no-flags mismatch is help-only `nocflags`: the parser rejects it and accepts
+undocumented `plain`. The production flag strings match.
 
 Check shell syntax without execution:
 

@@ -20,9 +20,8 @@ static ghl_error_codes_t ghl_m1_validate_inputs(
       const ghl_m1_closure *restrict closure,
       double *restrict flux_factor_sq) {
 
-  ghl_error_codes_t error
-        = ghl_m1_validate_realizability(
-              m1_params, metric, rad_state, 64.0, flux_factor_sq);
+  ghl_error_codes_t error = ghl_m1_validate_realizability(
+        m1_params, metric, rad_state, 64.0, flux_factor_sq);
   if(error != ghl_success) {
     return error;
   }
