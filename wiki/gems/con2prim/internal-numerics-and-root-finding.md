@@ -44,10 +44,11 @@ state and EOS callback pointers; `roots_params` carries root-finder bounds,
 tolerance, maximum iterations, iteration count, root, and residual.
 
 [`GRHayL/Con2Prim/brent.c`](../../../GRHayL/Con2Prim/brent.c) implements
-`ghl_brent`. The helper checks endpoint roots, rejects unbracketed intervals
-with `ghl_error_root_not_bracketed`, records `routine_name`, `a`, and `b` in
-`roots_params`, then iterates by Brent's interpolation/bisection logic until
-success or `ghl_error_c2p_max_iter`.
+`ghl_brent`. The helper first records `routine_name`, `a`, and `b` (the
+caller's bounds, before any endpoint swap) in `roots_params`, so the record
+exists on early returns too. It then checks endpoint roots, rejects unbracketed
+intervals with `ghl_error_root_not_bracketed`, and iterates by Brent's
+interpolation/bisection logic until success or `ghl_error_c2p_max_iter`.
 
 Current built users are the Palenzuela shared solvers:
 [`GRHayL/Con2Prim/Hybrid/Palenzuela1D/hybrid_Palenzuela1D.c`](../../../GRHayL/Con2Prim/Hybrid/Palenzuela1D/hybrid_Palenzuela1D.c)

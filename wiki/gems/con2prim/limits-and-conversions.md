@@ -66,7 +66,7 @@ Contract:
 
 Tests and fixtures:
 - Fixture route: `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`.
-- Recovery tests consuming these fixtures: `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c` and `Unit_Tests/unit_test_hybrid_failure.c`.
+- Recovery test consuming these fixtures: `Unit_Tests/unit_test_con2prim_multi_method_hybrid.c`. `Unit_Tests/unit_test_hybrid_failure.c` uses hard-coded cases and reads no fixture.
 
 ### `ghl_enforce_primitive_limits_and_compute_u0`
 

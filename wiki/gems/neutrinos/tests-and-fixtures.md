@@ -6,8 +6,14 @@ authority.
 
 ## Shared Harness
 
-Every NRPyLeakage unit-test file includes `Unit_Tests/nrpyleakage_main.h`.
-That helper owns the common CLI:
+The three EOS-table NRPyLeakage tests
+(`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
+`Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`, and
+`Unit_Tests/unit_test_nrpyleakage_luminosities.c`) include
+`Unit_Tests/nrpyleakage_main.h`. `unit_test_nrpyleakage_physics.c` and
+`unit_test_nrpyleakage_classifier_fallback.c` define their own `main(void)`,
+take no arguments, and do not include it. For the three EOS-table tests, that
+helper owns the common CLI:
 
 ```sh
 ./test/unit_test_<nrpyleakage test> <EOS table path> <test key>
@@ -159,7 +165,8 @@ runtime acceptance result.
 
 ## HDF5 And EOS Setup
 
-NRPyLeakage tests require an HDF5-backed tabulated EOS path. The repo-local CI
+The three EOS-table NRPyLeakage tests require an HDF5-backed tabulated EOS
+path; the physics and classifier-fallback tests do not. The repo-local CI
 route downloads `SLy4_3335_rho391_temp163_ye66.h5.bz2`, unpacks it to
 `SLy4_3335_rho391_temp163_ye66.h5`, downloads the Neutrinos fixture set,
 then runs:
@@ -319,9 +326,10 @@ commented out for Intel and macOS Clang. Workflow selection makes these
 numerical comparisons run; it does not by itself qualify the downloaded
 fixtures.
 
-The aggregate runner deletes working-directory `*.bin`, `*.h5`, and `*.bz2`
-files at the end. Individual workflow jobs rely on fresh workspaces and do not
-include an explicit Neutrinos cleanup step.
+The aggregate runner's `EXIT` trap removes only the files and temporary
+directories that run created. Pre-existing files with the same names are not
+downloaded again and are not removed. Individual workflow jobs rely on fresh
+workspaces and do not include an explicit Neutrinos cleanup step.
 
 ## Repo-Local References
 
