@@ -165,7 +165,7 @@ Local evidence:
   empty staging directory outside `GRHayL/Flux_Source`, generates the complete
   output set, and checks it against the build manifests.
 
-Generated or derived C files confirmed by local generator paths:
+Generated or derived C files with local generator paths:
 
 | C output | Local generator evidence | Notes |
 | --- | --- | --- |

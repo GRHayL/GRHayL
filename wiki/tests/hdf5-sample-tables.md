@@ -76,7 +76,7 @@ instead.
   is nonzero.
 - `unit_test_con2prim_debug.c` is a manual tabulated debug route that accepts a
   caller-provided EOS table path.
-- The three table-backed `unit_test_nrpyleakage_*.c` replay tests (optically
+- The table-backed `unit_test_nrpyleakage_*.c` replay tests (optically
   thin gas, constant-density sphere, and luminosities) use
   [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h), which
   accepts an EOS table path plus key `0` or `1`. The default runner passes
@@ -102,7 +102,7 @@ No-HDF5 behavior is described only from [configure](../../configure). Passing
 `./configure --disable-hdf5` adds `GHL_DISABLE_HDF5`, filters table-dependent
 tabulated/HDF5 implementation sources while retaining the documented helpers,
 direct-C2P stubs, and tabulated flux kernels, excludes `*tabulated*` unit tests, excludes
-`unit_test_con2prim_debug.c`, excludes the three `unit_test_nrpyleakage_*.c`
+`unit_test_con2prim_debug.c`, excludes the table-backed `unit_test_nrpyleakage_*.c`
 tests, and filters tabulated data generators. `configure` says this disables
 HDF5 and, for now, means no tabulated EOS.
 

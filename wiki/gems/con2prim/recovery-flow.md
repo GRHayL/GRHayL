@@ -117,7 +117,7 @@ Tests: `Unit_Tests/unit_test_c2p_nn_guess.c`,
 
 When built with `GHL_DISABLE_HDF5`, tabulated select and tabulated
 multi-method return `ghl_error_used_disabled_hdf5` before solver dispatch or
-backup behavior. The five public direct tabulated solver symbols remain
+backup behavior. The public direct tabulated solver symbols remain
 link-visible as non-mutating stubs returning the same error. The tabulated branch in
 `ghl_enforce_primitive_limits_and_compute_u0` returns the same error. The
 code-error tests skip HDF5-only cases in no-HDF5 builds.

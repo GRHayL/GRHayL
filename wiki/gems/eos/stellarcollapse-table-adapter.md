@@ -161,7 +161,7 @@ and range failures, no-fallback
 Palenzuela recovery, analytic characteristic-speed, HLLE/entropy-flux, and
 source goldens, all eight combined-leakage outputs against implementation-derived
 regression goldens for the analytic and regularized SRO-141 inputs, and
-cleanup. Those goldens lock the selected implementation after external rate
+cleanup. Those goldens lock the selected implementation with external rate
 and thin-gas qualification; they do not independently qualify its physics.
 The correction uses `rho`, `T`, `Xn`, and `Xp`, rather than raw
 `mu_n` and `mu_p`, because the free fractions determine the available nucleon

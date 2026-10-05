@@ -55,7 +55,7 @@ checked failure mode (`GRHayL/GRHayL_Core/initialize_metric.c`).
 
 ## Inline Helpers
 
-`GRHayL/include/ghl_metric_helpers.h` defines four header-only helpers:
+`GRHayL/include/ghl_metric_helpers.h` defines these header-only helpers:
 
 - `ghl_raise_lower_vector_4D` raises or lowers a 4-vector with caller-provided
   4D metric/inverse metric arrays.
@@ -66,8 +66,8 @@ checked failure mode (`GRHayL/GRHayL_Core/initialize_metric.c`).
 - `ghl_compute_vec2_from_vec3D` computes a 3-vector square from a 3D
   metric/inverse metric array.
 
-All four helpers assume symmetric metric arrays and read the diagonal plus one
-triangle; they do not verify symmetry. Raise/lower outputs must not alias their
+Every helper assumes symmetric metric arrays and reads the diagonal plus one
+triangle; none verifies symmetry. Raise/lower outputs must not alias their
 input vector because assignments occur while later expressions still read the
 input. No helper checks pointers, dimensions, finiteness, or metric validity
 (`GRHayL/include/ghl_metric_helpers.h`).

@@ -86,7 +86,7 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
   produce finite, bounded factors.
   If final output sanitization replaces a nonfinite value, it retains finite
   fallback outputs and returns `ghl_error_nrpyleakage_nonfinite_output`.
-- All three EOS-dependent routines obtain blocking from `rho`, `T`, `Xn`, and
+- All EOS-dependent routines obtain blocking from `rho`, `T`, `Xn`, and
   `Xp`. This avoids using producer-dependent absolute `mu_n` and `mu_p` as
   kinetic occupations. They combine the density-derived kinetic degeneracy
   difference with `muhat` to form one reaction-energy shift, then apply it to
@@ -109,7 +109,7 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
   is a separate authority (currently no dedicated Neutrinos page exists there).
 - Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
 - Keep the shared nucleon-blocking evaluator source-private. Its algebraic
-  density inversion is shared by the three EOS-dependent routines to avoid
+  density inversion is shared by the EOS-dependent routines to avoid
   duplicated corrections and the runtime cost of per-call quadrature or root
   solves; `make.code.defn` tracks it through `#! INCS`.
 - The external notebooks are provenance, not the authority for current GRHayL

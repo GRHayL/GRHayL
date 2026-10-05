@@ -54,7 +54,7 @@ Fixture generation evidence lives in
 [`Unit_Tests/data_gen/unit_test_data_PLM_reconstruction.c`](../../../Unit_Tests/data_gen/unit_test_data_PLM_reconstruction.c).
 The generator writes `PLM_reconstruction_input.bin`,
 `PLM_reconstruction_output.bin`, and `PLM_reconstruction_output_pert.bin` for
-the three PLM methods.
+the PLM methods.
 
 The broader test routing table is [`wiki/test-map.md`](../../test-map.md),
 which records PLM reconstruction as direct Reconstruction/PLM coverage and

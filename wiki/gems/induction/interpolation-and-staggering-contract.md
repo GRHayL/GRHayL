@@ -120,9 +120,10 @@ contract. The same file leaves gauge derivatives disabled and sets
 `phitilde_rhs` to zero, so this development branch is evidence of intended
 centering, not completed runtime validation.
 
-Searches of public GRHayL and GRHayLET trees, GRHayLHD, GRHayLHDX, pyghl,
-and visible GRHayL forks found no other direct downstream call. This bounds
-public evidence; it cannot rule out private or unindexed consumers.
+Before treating `ghl_interpolate_with_vertex_centered_ADM` as unused, search
+public GRHayL and GRHayLET trees, GRHayLHD, GRHayLHDX, pyghl, and visible
+GRHayL forks for other direct downstream calls. Such searches bound public
+evidence only; they cannot rule out private or unindexed consumers.
 
 ## Internal Helpers
 

@@ -46,7 +46,7 @@ These private helper files are not standalone tests:
   supports vertex-centered ADM interpolation fixtures and replay.
 - [Unit_Tests/ghl_test_helpers.c](../../../Unit_Tests/ghl_test_helpers.c) and
   [Unit_Tests/ghl_test_helpers.h](../../../Unit_Tests/ghl_test_helpers.h)
-  provide the private grid-header validator shared by the six Induction replay
+  provide the private grid-header validator shared by the Induction replay
   tests. The source is linked through the existing `TOBJS` helper route.
 
 ## Data Generators

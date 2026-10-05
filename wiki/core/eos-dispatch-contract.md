@@ -134,7 +134,7 @@ By contrast, calling `ghl_initialize_eos_functions(ghl_eos_tabulated)`
 directly in a no-HDF5 build reaches `GHL_HDF5_ERROR_IF_USED`, which expands to
 the terminating `ghl_error` macro. It exits rather than returning
 `ghl_error_used_disabled_hdf5`. Keep this direct-dispatch behavior distinct
-from the two error-returning parameter entry points
+from the error-returning parameter entry points
 ([`GRHayL/include/ghl_nrpyeos_tabulated.h`](../../GRHayL/include/ghl_nrpyeos_tabulated.h),
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c)).
 

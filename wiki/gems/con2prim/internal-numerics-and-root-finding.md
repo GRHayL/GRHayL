@@ -116,7 +116,7 @@ Noble path does not clip conservative energy or impose a tabulated-EOS floor.
 Hybrid Noble 1D residual files live in
 [`GRHayL/Con2Prim/Hybrid/Noble/Noble1D/`](../../../GRHayL/Con2Prim/Hybrid/Noble/Noble1D/):
 `func_1D.c`, `func_Z.c`, `func_rho.c`, and `func_rho2.c`. The manifest builds
-all four plus `hybrid_Noble1D.c`, `hybrid_Noble1D_entropy.c`, and
+all of these plus `hybrid_Noble1D.c`, `hybrid_Noble1D_entropy.c`, and
 `hybrid_Noble1D_entropy2.c`. The entropy2 path solves the momentum equation
 directly for density and rejects EOS metadata unless `neos == 1` and
 `Gamma_th == Gamma_ppoly[0]`, the constant-Gamma domain of its entropy closure.

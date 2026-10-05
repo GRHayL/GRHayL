@@ -100,7 +100,7 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
 - Direction-specific files can diverge when only one axis is edited.
 - Entropy and non-entropy flux variants must stay consistent in conservative field ordering.
 - Generated or NRPy-derived expressions can drift from checked-in C if both are not updated together.
-- The staging generator emits source, speed, and all four HLLE families and
+- The staging generator emits source, speed, and every HLLE family and
   checks its output set against build manifests. Use the
   [generated boundary](flux-source/generated-nrpy-boundary.md).
 - GRHayLib compiles Flux_Source subdirectories directly; new directories require downstream coordination.

@@ -7,8 +7,8 @@ remain authoritative.
 Use this page with [Test Map](../test-map.md),
 [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md), and
 [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md). Do not store copied
-fixture contents or metadata forbidden by the
-[source-tracking metadata policy](../index.md#source-tracking-metadata-policy).
+fixture contents or information forbidden by the
+[volatile information policy](../index.md#volatile-information-policy).
 
 ## Direct Core tests
 

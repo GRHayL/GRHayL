@@ -65,12 +65,12 @@ header rather than individual upstream headers. Route ownership of the upstream
 headers through [Public API Map](../../public-api-map.md); route lifecycle and
 parameter details through [runtime parameter contract](runtime-parameter-contract.md).
 
-Static parity in this checkout: every header named directly by `GRHayLib.h`
-exists under `GRHayL/include/` and appears in the upstream install-header
+Static parity requirement: every header named directly by `GRHayLib.h` must
+exist under `GRHayL/include/` and appear in the upstream install-header
 manifest. `ghl.h` also supplies several transitive Core includes. The tracked
 `implementations/GRHayLib/src/include` symlink points to that upstream header
-tree, so header edits reach the thorn layout directly. This proves path and
-manifest parity, not a Cactus compilation.
+tree, so header edits reach the thorn layout directly. Such parity establishes
+path and manifest agreement, not a Cactus compilation.
 
 ## Thorn Source Registry
 
@@ -84,22 +84,23 @@ It also lists `SUBDIRS` for module paths including `Atmosphere`, `Con2Prim`,
 `Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`, and
 `Reconstruction` variants.
 
-Static registry parity is complete at directory level: tracked symlinks under
+Static registry parity is a directory-level requirement: tracked symlinks under
 `implementations/GRHayLib/src/` expose the upstream module directories and
-headers named by the thorn. Every listed `SUBDIRS` entry therefore resolves to
-an upstream directory, and every upstream source-bearing manifest directory is
-listed; `Con2Prim/Hybrid` is an extra intermediate directory. This proves
-registry/path agreement only. It does not prove that Cactus accepts the thorn,
-links it, or runs it.
+headers named by the thorn. Every listed `SUBDIRS` entry must resolve
+to an upstream directory, and every upstream source-bearing manifest directory
+must be listed; `Con2Prim/Hybrid` is an extra intermediate directory. Parity
+establishes registry/path agreement only. It does not establish that Cactus
+accepts the thorn, links it, or runs it.
 
-## Verification Status
+## Verification Boundary
 
-- Static CCL/header/source-registry parity: checked against this checkout.
-- Local thorn layout: upstream source/header symlinks are present and checked
+- Static CCL/header/source-registry parity: checkable statically with the checks
+  in [verification and drift](verification-and-drift.md).
+- Local thorn layout: upstream source/header symlinks are present and checkable
   statically; no local Cactus compile claim follows.
 - Cactus build, schedule execution, parameter parsing, and runtime cleanup:
-  unverified; require a real Cactus/Einstein Toolkit environment and its
-  owner-provided command.
+  not verified by this repository; they require a real Cactus/Einstein Toolkit
+  environment and its owner-provided command.
 - Core GRHayL and ET_Legacy test results: inapplicable as proof of those thorn
   states.
 

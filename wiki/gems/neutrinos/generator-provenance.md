@@ -9,10 +9,10 @@ evidence relates to current GRHayL. For callable behavior, use the current
 and tests. The external tutorial repository is provenance and derivation
 evidence, not current GRHayL source authority.
 
-External claims below describe the repository and saved notebook contents
-reviewed for this page. The linked `master` branch can move. The durable
-physics and generation facts needed by GRHayL readers are therefore summarized
-locally; recheck upstream contents before attempting regeneration.
+External claims below describe the tutorial repository and its saved notebook
+contents. The linked `master` branch can move. The durable physics and
+generation facts needed by GRHayL readers are therefore summarized locally;
+recheck upstream contents before attempting regeneration.
 
 ## Authority Boundary
 
@@ -35,7 +35,7 @@ Use this authority order:
    current GRHayL files with it or assume rerunning the notebook reproduces
    current files byte-for-byte.
 
-## Four Notebook Roles
+## Notebook Roles
 
 ### Formulation
 
@@ -112,7 +112,7 @@ At initialization, the notebook recursively removes and recreates its selected
 `standalone/<module>` output directory. Run it only in a disposable clone and
 review the selected mode before execution.
 
-The reviewed notebook's final driver invokes generators in this order:
+The notebook's final driver invokes generators in this order:
 
 1. Fermi-Dirac integral function;
 2. low-level combined source-term/opacity functions for NRPy and HARM constant
@@ -124,7 +124,7 @@ The reviewed notebook's final driver invokes generators in this order:
 7. the generated header; and
 8. in Einstein Toolkit mode, parameter, schedule, interface, and build files.
 
-The repository contents reviewed for this page included two checked-in output
+The tutorial repository contains these checked-in output
 families:
 
 - `standalone/NRPyLeakage/` contains the standalone header, Fermi function,
@@ -134,10 +134,10 @@ families:
   including analogous generated kernels, path-of-least-resistance code, and
   luminosity code.
 
-These checked-in directories matter because the reviewed notebook's saved
-output path and checked-in outputs did not form a single turnkey regeneration
-contract. The reviewed contents supplied no pinned Python environment or
-lockfile for the four notebooks. Regeneration can therefore vary with SymPy,
+These checked-in directories matter because the notebook's saved
+output path and checked-in outputs do not form a single turnkey regeneration
+contract. The repository supplies no pinned Python environment or
+lockfile for the notebooks. Regeneration can therefore vary with SymPy,
 Astropy, NRPy+, and notebook state.
 
 ## Why Generated C Uses `tmp_*`
@@ -178,16 +178,15 @@ lists these adapted C files:
 - [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
   preserves a generated formula block visible in the external
   `NRPyLeakageET_compute_neutrino_luminosities_nrpy_constants.c`. No
-  corresponding luminosity generator was found among the notebooks reviewed
-  for this page, so that external C file is the surviving ancestral evidence
-  inspected for this block.
+  corresponding luminosity generator appears among the notebooks, so that
+  external C file is the surviving ancestral evidence for this block.
 - [`NRPyLeakage_optical_depths_PathOfLeastResistance.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_optical_depths_PathOfLeastResistance.c)
   extracts the pointwise face-average, neighbor-candidate, and minimum-path
   calculation seen in the external Einstein Toolkit routine into a
   GRHayL struct-based call.
 - [`NRPyLeakage_nucleon_blocking.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
   is hand-maintained GRHayL code, not output recovered from the ancestral
-  notebooks. All three EOS-dependent routines include it, and the manifest
+  notebooks. Every EOS-dependent routine includes it, and the manifest
   tracks it through `#! INCS`.
 - [`NRPyLeakage_rate_helpers.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h)
   is also hand-maintained. It centralizes corrected bremsstrahlung, diffusion,
@@ -200,7 +199,7 @@ struct writeback, and finite-value handling. Current constants have one
 active NRPy family in
 [`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h). The same
 header also retains dormant `NRPyLeakage_ZL_*` macros, but current leakage C
-does not reference them. By contrast, the reviewed upstream standalone output
+does not reference them. By contrast, the upstream standalone output
 contains paired NRPy/HARM kernel families and a runtime selector. GRHayL has no
 current runtime NRPy/HARM selector. Review exact source before assuming an
 ancestral formula or failure mode survived unchanged.

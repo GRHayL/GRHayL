@@ -46,7 +46,7 @@ Read with the [Reconstruction gem hub](../reconstruction.md).
   `ET_Legacy_reconstruction` fixtures.
 - ET Legacy exercises PPM paths; no dedicated `unit_test_PPM_reconstruction.c` or PPM data generator is visible.
 
-All three replay tests use `ghl_pert_test_fail` in an `if` condition and call
+These replay tests use `ghl_pert_test_fail` in an `if` condition and call
 `ghl_error` on mismatch. Numerical comparisons can therefore fail these test
 binaries. Coverage is still bounded:
 

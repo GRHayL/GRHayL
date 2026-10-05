@@ -133,7 +133,7 @@ source, headers, tests, and common edit routes before wider search.
   Entropy and tabulated variants must match EOS initialization choices. Direct
   family-specific variants are the owner routes; legacy generic HLLE pointer
   globals remain as uninitialized compatibility storage. The staging generator
-  emits source, characteristic-speed, and all four HLLE families.
+  emits source, characteristic-speed, and every HLLE family.
 
 ## Induction
 
@@ -197,7 +197,7 @@ source, headers, tests, and common edit routes before wider search.
   [generator provenance](neutrinos/generator-provenance.md).
 - Drift/contract notes: leakage uses tabulated EOS quantities and table-backed
   test data. HDF5/EOS changes can break Neutrinos even if leakage source is
-  untouched. All 19 fixture-replay results are consumed: optically thin uses
+  untouched. Every fixture-replay result is consumed: optically thin uses
   `ghl_pert_test_fail`; sphere and luminosity use local wrappers around
   `ghl_pert_test_fail_with_tolerance`. A numerical mismatch fails its executable. Published
   `GRHayL/TestData` fixtures and implementation-derived CompOSE drift goldens reflect the

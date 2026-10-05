@@ -57,9 +57,9 @@ Key public surface:
   [Face and stencil contract](reconstruction/face-and-stencil-contract.md).
 - PLM, PPM, and WENO-z have different stencil widths; route by method page before changing callers.
 - PPM steepening depends on pressure, effective Gamma, and PPM parameters in `ghl_parameters`; see [PPM flow](reconstruction/ppm-flow.md).
-- Repo-local searches find Reconstruction calls in unit tests and data
-  generators, but no production call from `GRHayL/Flux_Source/`,
-  `GRHayL/Induction/`, or `implementations/GRHayLib/`. Doxygen describes those
+- Reconstruction calls appear in unit tests and data generators, but there is
+  no production call from `GRHayL/Flux_Source/`, `GRHayL/Induction/`, or
+  `implementations/GRHayLib/`. Doxygen describes those
   gems as intended consumers; do not turn that architecture statement into an
   in-tree caller claim.
 

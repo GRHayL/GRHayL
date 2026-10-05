@@ -67,25 +67,48 @@ distinct. Current unresolved product choices live only in
 | Investigate an unresolved unsafe seam | [Contradictions](contradictions.md), then named owner leaf and both competing source authorities |
 | Maintain the KB | [KB Checks](lint/CHECKS.md), `AGENTS.md` |
 
-## Source-Tracking Metadata Policy
+## Volatile Information Policy
 
-- Do not store source-tracking checksums, hash or digest columns, or values of
-  any kind, including VCS commit or revision identifiers used as pins. Do not
-  hash sources.
-- Do not use file or source counts as KB metadata. Do not count sources or
-  files for tracking, coverage, or freshness.
+Volatile information is FORBIDDEN in the KB. It goes stale without the
+documented behavior changing, or records when or against what something was
+checked. Describe stable contracts and link the owning files; do not snapshot
+repository, review, or environment state. The following are forbidden anywhere
+in the KB, in metadata fields, tables, and prose alike:
+
+- Do not store checksums, hash or digest columns, or values of any kind,
+  including VCS commit or revision identifiers used as pins. Do not hash
+  sources.
+- Do not state counts of repository inventory (files, sources, tests, test
+  cases, pages, workflows, jobs, fixtures, functions, lines), as metadata or in
+  prose. Do not count sources or files for tracking, coverage, or freshness.
+  Write "every", "each", or link the owning file instead of a number.
 - Do not store `mtime` columns or values.
-- Do not store date stamps or timestamps as KB metadata, including fields or
-  values. Do not record access, audit, check, reconciliation,
-  opening, resolution, or validation-run dates. Publication years and
-  date-like source or version identifiers remain allowed; full calendar date
-  stamps do not.
+- Do not store date stamps or timestamps, including fields or values. Do not
+  record access, audit, check, reconciliation, opening, resolution, or
+  validation-run dates. Publication years and date-like source or version
+  identifiers remain allowed; full calendar date stamps do not.
+- Do not cite line numbers or line ranges; cite the file, symbol, or section.
+- Do not record results of a particular run or review (pass/fail outcomes,
+  measured coverage percentages, audit or review verdicts, "as of" statements)
+  or environment or tool-version tuples recording what a check ran on.
 - Do not write KB maintenance notes to a separate maintenance log.
-- Technical, non-source-tracking hash facts remain allowed as reviewed domain
-  facts, but never as stored digest values.
-- Immutable external citation URLs may retain opaque identifiers, including
-  hash-shaped path segments. Preserve the link; do not extract the identifier
-  into source-tracking metadata.
+
+Allowed, because not volatile:
+
+- Values the code, schema, or a cited standard defines as part of a contract (a
+  documented minimum version, tolerance, array extent, or argument count), and
+  valid measurements of the code itself (benchmark timings, memory footprints,
+  accuracy or convergence comparisons).
+- Technical hash facts that describe the code, as reviewed domain facts, but
+  never as stored digest values.
+- Immutable external citation URLs, which may retain opaque identifiers,
+  including hash-shaped path segments. Preserve the link; do not extract the
+  identifier into a stored pin or digest.
+
+Test: if a number or date would need editing while no documented behavior
+changed, it is volatile. When the classification is unclear, keep the item and
+flag it in the report instead of deleting it.
+
 - Use git history as the durable record of when KB content changed and what
   changed. Do not duplicate that record with hashes, counts, or timestamps.
 - Handle source drift by dependency-aware review of changed paths and affected
@@ -100,8 +123,8 @@ Each KB page should:
 - Prefer pointers and concise synthesis over copied Doxygen or source content.
 - Include a `Ground Truth References` section only when external web sources
   were used, with official full URLs.
-- Exclude source-tracking checksums, hashes, digests, VCS revision pins, file or
-  source counts, `mtime`, stored fingerprints, date stamps and timestamps as KB
-  metadata, and separate maintenance logs.
+- Exclude volatile information, as defined in the
+  [Volatile Information Policy](#volatile-information-policy), and separate
+  maintenance logs.
 - Keep links repo-relative and compatible with parallel pages that may be
   created by other agents.

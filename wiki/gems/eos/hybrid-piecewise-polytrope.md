@@ -112,8 +112,8 @@ for `neos`, `rho_ppoly`, `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`,
 to these helpers, and `GRHayL/EOS/Hybrid/make.code.defn` lists the compiled
 hybrid EOS sources.
 
-Registry comparison finds 10 `ghl_hybrid_*` declarations, the same 10 storage
-definitions, and assignments for all 10 in the hybrid initializer. The general
+Every `ghl_hybrid_*` declaration has a matching storage definition and an
+assignment in the hybrid initializer. The general
 `ghl_compute_h_and_cs2` is assigned there too, then selected again by Core
 EOS-family dispatch. Assignment/build agreement does not supply direct
 tests for every helper; coverage below is narrower.

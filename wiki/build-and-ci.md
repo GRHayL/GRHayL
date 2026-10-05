@@ -145,9 +145,9 @@ Manual or downstream no-HDF5 builds must mirror current script behavior: define
 `GHL_DISABLE_HDF5` and reproduce its source-selection predicate. The README
 lists the retained Con2Prim helpers and the exact exclusion patterns. Loader
 entry points become disabled-feature stubs; pure NN inference from an
-independently valid in-memory model does not inherently require HDF5. The five
+independently valid in-memory model does not inherently require HDF5. The
 public direct tabulated solver entry points are non-mutating disabled-feature
-stubs, while the six public direct tabulated HLLE flux variants retain their
+stubs, while the public direct tabulated HLLE flux variants retain their
 real implementations.
 
 GRHayLib is separate implementation-specific build routing. Its Cactus
@@ -162,10 +162,10 @@ Workflows live in `.github/workflows/`:
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | 13 existing job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML |
-| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all 13 jobs invoke coverage action |
-| `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | 2 of 13 jobs invoke coverage action |
-| `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all 13 jobs invoke coverage action; local collection body is commented |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | the existing job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML |
+| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all jobs invoke coverage action |
+| `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | only some jobs invoke coverage action |
+| `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all jobs invoke coverage action; local collection body is commented |
 | `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | no jobs invoke coverage action |
 
 The Ubuntu-Clang `c2p-failure` matrix configures its Ubuntu 24.04
@@ -176,7 +176,7 @@ HDF5-enabled builds.
 Each workflow ignores pushes and pull requests when **all** changed paths match
 its `paths-ignore` list, including `docs/**`, `wiki/**`, and
 Markdown/reStructuredText patterns. The Ubuntu-GCC workflow no longer ignores
-`implementations/**`; the other four compiler workflows still do. A mixed
+`implementations/**`; the other compiler workflows still do. A mixed
 change with any non-ignored path can trigger the workflow; path filters apply
 to `push`/`pull_request`, while the
 separately declared schedule remains eligible independently. These semantics

@@ -39,7 +39,7 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   eight combined-leakage outputs against implementation-derived regression
   goldens for the analytic and regularized SRO-141 inputs, and frees table
   memory. The goldens lock the selected density-derived blocking
-  implementation after its external rate and thin-gas qualification; they are
+  implementation with its external rate and thin-gas qualification; they are
   regression evidence, not an independent physics model. CI selects only the
   analytic table. The full
   SRO-141 replay remains an external manual check.

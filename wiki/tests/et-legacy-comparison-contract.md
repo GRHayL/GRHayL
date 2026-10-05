@@ -41,7 +41,7 @@ not a compiler-roundoff tolerance. Pressure comparisons remain independent.
 Legacy output does not contain an independent epsilon field.
 
 The induction gauge RHS fixture has finite reference values throughout the
-compared interior. An independently validated IllinoisGRMHD producer generates
+compared interior. An independent IllinoisGRMHD producer generates
 these outputs; GRHayL only replays them. The strict scalar helper rejects any
 nonfinite reference, computed, or perturbed value.
 

@@ -123,9 +123,8 @@ standard public left-face wrapper contract.
 
 ## Caller Impact
 
-- In-tree direct callers: exact symbol search finds only Reconstruction tests
-  and data generators. ET Legacy PPM passes six-point arrays filled by
-  `ind-3`; PLM passes `&var[index-2]`; WENOZ passes `&var[index-3]`.
+- In-tree direct callers: only Reconstruction tests and data generators. ET
+  Legacy PPM passes six-point arrays filled by `ind-3`; PLM passes `&var[index-2]`; WENOZ passes `&var[index-3]`.
 - Flux_Source and Induction: `docs/raw/Reconstruction.dox` identifies these as
   consumers of reconstructed states, and the gems expose APIs that accept face
   states, but this repository has no direct production call from either gem to

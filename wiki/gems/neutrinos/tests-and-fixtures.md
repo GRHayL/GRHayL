@@ -6,13 +6,13 @@ authority.
 
 ## Shared Harness
 
-The three EOS-table NRPyLeakage tests
+The EOS-table NRPyLeakage tests
 (`Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c`,
 `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c`, and
 `Unit_Tests/unit_test_nrpyleakage_luminosities.c`) include
 `Unit_Tests/nrpyleakage_main.h`. `unit_test_nrpyleakage_physics.c` and
 `unit_test_nrpyleakage_classifier_fallback.c` define their own `main(void)`,
-take no arguments, and do not include it. For the three EOS-table tests, that
+take no arguments, and do not include it. For the EOS-table tests, that
 helper owns the common CLI:
 
 ```sh
@@ -58,7 +58,8 @@ the test translation units themselves; there are no matching
 The published `GRHayL/TestData` copies contain regenerated outputs for the
 current diffusion-time, bremsstrahlung-density, heavy-species, and
 nucleon-blocking corrections. CI downloads those replacement goldens. Replay
-scenarios remain the established three, but sphere and luminosity comparisons
+scenarios remain optically thin gas, constant-density sphere, and
+luminosities, but sphere and luminosity comparisons
 now use `1024*DBL_EPSILON` with zero absolute tolerance, and the sphere exterior
 temperature respects the EOS-table lower bound. These implementation-generated
 baselines detect drift; they do not independently validate corrected physics.
@@ -101,13 +102,11 @@ floating-point tolerance follows the published Fermi-fit error bound plus an
 allowance for the small fixed operation chain. It runs in no-HDF5 builds and
 once per compiler and OS neutrino CI matrix.
 
-During development, the existing luminosity, optically-thin, and
-constant-density-sphere key-`0` generation scenarios completed with the new
-implementation. Key `0` writes data and is not a fixture replay. The sphere
+Key `0` writes data and is not a fixture replay. The sphere
 generator derives a temperature margin from the table lower bound and its
 existing perturbation amplitude so its exterior sample stays inside the EOS
-domain. The owner accepted the qualification results and authorized regenerated
-replay outputs as the golden baseline for the new blocking model.
+domain. The regenerated replay outputs are the golden baseline for the
+density-derived blocking model.
 
 Independent physical qualification used the beta kernels in
 [BNS_NURATES](https://github.com/RelNucAs/bns_nurates) and the six DD2 merger
@@ -136,16 +135,11 @@ checkout, so this repository cannot reproduce those numerical comparisons.
 This record does not invent a universal physical pass limit. Neither project
 policy, ILEAS, nor BNS_NURATES supplies a per-kernel or one-zone evolution
 tolerance applicable here. ILEAS's scheme-level transport agreement is not such
-a bound. After reviewing the measured discrepancies and uncertainties, the
-owner accepted them for this approximate leakage model and authorized them as
-the golden baseline. This outcome-specific decision retains the dense DD2
-limitation. EOS-consistent effective masses or mean-field shifts remain an
+a bound. The measured discrepancies and uncertainties are therefore evidence,
+not a pass/fail criterion; the regenerated replay outputs are the golden
+baseline for this approximate leakage model, and the dense DD2 limitation
+remains. EOS-consistent effective masses or mean-field shifts remain an
 optional future accuracy improvement.
-
-All established NRPyLeakage replay fixtures were regenerated from the accepted
-model. A second generation using the same implementation produced byte-identical files, and the
-optically thin, constant-density sphere, and luminosity replays passed against
-the installed local `TestData` results.
 
 ### Cost Evidence
 
@@ -165,7 +159,7 @@ runtime acceptance result.
 
 ## HDF5 And EOS Setup
 
-The three EOS-table NRPyLeakage tests require an HDF5-backed tabulated EOS
+The EOS-table NRPyLeakage tests require an HDF5-backed tabulated EOS
 path; the physics and classifier-fallback tests do not. The repo-local CI
 route downloads `SLy4_3335_rho391_temp163_ye66.h5.bz2`, unpacks it to
 `SLy4_3335_rho391_temp163_ye66.h5`, downloads the Neutrinos fixture set,
@@ -200,7 +194,7 @@ and runnable without HDF5.
 
 NRPyLeakage implementation sources remain compiled so their early
 `ghl_error_used_disabled_hdf5` paths exist. The table-free physics test calls
-all three public leakage routines in its no-HDF5 build and checks those return
+every EOS-dependent public leakage routine in its no-HDF5 build and checks those return
 codes directly. `unit_test_code_error` keys `2` and `3` separately cover the
 invalid Fermi keys.
 
@@ -213,7 +207,7 @@ blocking and shifted charged-current algebra without an EOS table or binary
 fixture. Independent blocking reference values include an equal-population
 state, a near-equal state that exercises cancellation handling, a degenerate
 state, and an asymmetric dilute-proton state. High-precision arithmetic
-references cover all four ordinary beta-moment helper paths. Exact checks cover
+references cover every ordinary beta-moment helper path. Exact checks cover
 the stable order-zero Fermi expression, roundoff-sized fraction normalization,
 population bounds, transition normalization, zero-shift recovery, threshold
 orientation, and spectral Kirchhoff pairing for both beta channels. A
@@ -279,7 +273,7 @@ through the generic `1e-30` absolute floor:
 - Luminosity replay fails on `nue`, `anue`, or `nux` mismatch, reporting the
   row index.
 
-All three pass the unperturbed fixture value as `trusted`, the recomputed value
+Each of these tests passes the unperturbed fixture value as `trusted`, the recomputed value
 as `computed`, and the perturbed fixture value as `perturbed`, matching the
 helper contract. The optically thin test propagates every
 `ghl_tabulated_compute_T_from_eps` and `ghl_tabulated_compute_eps_from_T`
@@ -298,9 +292,9 @@ neutral rate/source fallback for every public output, verifies public
 finite-depth heavy-lepton suppression against manufactured regression values,
 reconstructs the public heavy-lepton diffusion limit independently, checks
 both single-species endpoint orientations against the tiny-positive analytic
-limit through all three public APIs, checks the effective-rate
+limit through every EOS-dependent public API, checks the effective-rate
 endpoints and bremsstrahlung energy conversion, and
-verifies all three disabled-HDF5 returns.
+verifies each disabled-HDF5 return.
 
 ## CI Routes
 

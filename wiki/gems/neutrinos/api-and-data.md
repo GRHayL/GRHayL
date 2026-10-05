@@ -44,7 +44,7 @@ radiation types.
 
 ## Public NRPyLeakage Calls
 
-`GRHayL/include/ghl_nrpyleakage.h` declares five public routines:
+`GRHayL/include/ghl_nrpyleakage.h` declares these public routines:
 
 - `NRPyLeakage_Fermi_Dirac_integrals`
 - `NRPyLeakage_compute_neutrino_opacities`
@@ -52,8 +52,8 @@ radiation types.
 - `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`
 - `NRPyLeakage_optical_depths_PathOfLeastResistance`
 
-The first four return `ghl_error_codes_t`. The optical-depth path routine
-returns `void` and writes `ghl_neutrino_optical_depths` output.
+The optical-depth path routine returns `void` and writes
+`ghl_neutrino_optical_depths` output; the others return `ghl_error_codes_t`.
 
 ## Portability Boundary
 
@@ -175,7 +175,7 @@ output value before branch dispatch. Unsupported keys return
 
 ## Nucleon-Blocking Error Behavior
 
-The three EOS-dependent public routines include the source-private
+The EOS-dependent public routines include the source-private
 `NRPyLeakage_nucleon_blocking.h`. Public function signatures and radiation
 structs remain unchanged; the helper is not installed as public API.
 
@@ -195,7 +195,7 @@ rather than an EOS interpolation or generated Fermi-moment key.
 
 ## Nonfinite-Output Error Behavior
 
-After ordinary writeback, all three EOS-dependent routines sanitize their
+After ordinary writeback, every EOS-dependent routine sanitizes its
 public outputs. Nonfinite opacities become one named cgs inverse-length floor
 converted to the public geometrized unit. Nonfinite luminosities and signed
 sources become neutral zero. If any replacement occurs, the routine returns
@@ -216,7 +216,7 @@ Neutrinos source routines use tabulated EOS calls directly:
 - `NRPyLeakage_compute_neutrino_luminosities`
 - `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms`
 
-Those three routines call
+Those routines call
 `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T` to obtain chemical
 potentials and composition. Under `GHL_DISABLE_HDF5`, each returns
 `ghl_error_used_disabled_hdf5` before table access.
@@ -241,7 +241,7 @@ for fixture generation or replay:
   `ghl_tabulated_compute_eps_from_T` and `ghl_tabulated_compute_T_from_eps`
   from `GRHayL/include/ghl_eos_functions.h`.
 
-`configure` adds `GHL_DISABLE_HDF5` and excludes the three table-backed fixture
+`configure` adds `GHL_DISABLE_HDF5` and excludes the table-backed fixture
 tests when HDF5 is disabled. The self-contained
 `unit_test_nrpyleakage_physics.c` remains available. `.github/run_tests.sh`
 downloads the SLy4 EOS table and Neutrinos fixture pairs before running the
@@ -249,8 +249,8 @@ table-backed NRPyLeakage tests with key `1`, and runs the physics executable
 without table arguments.
 
 No-HDF5 builds still compile the guarded NRPyLeakage implementation files; they
-exclude only the three HDF5-dependent unit tests. Current error tests cover
-invalid Fermi keys. The table-free physics test directly checks the three
+exclude only the HDF5-dependent unit tests. Current error tests cover
+invalid Fermi keys. The table-free physics test directly checks the EOS-dependent
 leakage routines' disabled-HDF5 return paths.
 
 For extraction, see [Implementation Flow](implementation-flow.md) for the
