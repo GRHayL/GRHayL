@@ -26,7 +26,7 @@ Declared/source-present but unbuilt surface:
   `GRHayL/include/ghl_atmosphere.h` and has a source file, but
   `GRHayL/Atmosphere/make.code.defn` does not compile it and
   `docs/raw/Atmosphere.dox` says only one prescription is provided. No repo
-  call or test was found. This establishes current manifest absence, not
+  call or test references it. This establishes current manifest absence, not
   intended removal, internal status, or future support. Route radial questions to
   [prescription contract](atmosphere/prescription-contract.md).
 
@@ -45,7 +45,8 @@ separate evidence; only the constant routine currently closes those surfaces.
 
 - Direct constant-atmosphere coverage: `Unit_Tests/unit_test_grhayl_core_test_suite.c`
 - Legacy branch coverage: `Unit_Tests/unit_test_ET_Legacy_primitives.c`
-- Nearby downstream coverage: `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`, `Unit_Tests/unit_test_apply_conservative_limits.c`, `Unit_Tests/unit_test_hybrid_failure.c`
+- Indirect coverage through the Con2Prim tabulated primitive guess: `Unit_Tests/unit_test_c2p_nn_guess.c`
+- Nearby downstream coverage: `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`, `Unit_Tests/unit_test_apply_conservative_limits.c`
 
 ## Key Contracts
 
