@@ -9,8 +9,9 @@ the reaction energy is paired between emission and absorption. The installed
 model answers these questions with a fast ideal-gas approximation. Its density
 inversion and population-overlap algebra are numerically stable and reference-
 invariant; the reaction-energy shift can remain poorly conditioned at large
-finite `|q/T|`. The owner accepted its measured qualification results for
-leakage use while retaining the dense interacting-matter limitation.
+finite `|q/T|`. Measured qualification evidence for its use as an approximate
+leakage model is recorded below, and the dense interacting-matter limitation
+remains.
 
 See the [physics contract](physics-and-eos-contract.md) for species, units, and
 equilibrium conventions, the [table adapter](../eos/stellarcollapse-table-adapter.md#producer-energy-conventions)
@@ -192,27 +193,29 @@ free emission while the opacity still controls diffusion and integrated
 optical depth. An optical-depth-aware comparison is therefore needed before
 deciding the effect on a full leakage evolution.
 
-## Acceptance Status
+## Model Boundary And Evidence
 
-- The evaluator's algebra, endpoint behavior, spectral-parent Kirchhoff
-  pairing, and reported numerical comparisons pass their stated checks.
+- The evaluator's algebra, endpoint behavior, and spectral detailed balance have
+  table-free references in `Unit_Tests/unit_test_nrpyleakage_physics.c`; the
+  reported numerical comparisons are external qualification evidence.
 - Whole-BNS overhead is unmeasured. The earlier `3.43%` whole-process timing
   includes loading an approximately 879 MB EOS table and cannot be treated as
   leakage-local cost or scaled by the user-supplied `35%` leakage share. The
   production evaluator remains algebraic and adds no quadrature, root solve,
   or EOS lookup.
-- The owner accepts the measured dilute rates, thin trajectory, and dense DD2
-  comparison set for this approximate leakage model. Regenerated replay results
-  are the authorized golden baseline.
+- The measured dilute rates, thin trajectory, and dense DD2 comparison set
+  characterize this approximate leakage model. Regenerated replay results are
+  the golden baseline; they are implementation-derived regression goldens, not
+  an independent physics model.
 - Dense DD2 rates and opacities show that the common-bare-mass model does not
-  reproduce mean-field physics. This limits microscopic accuracy claims but
-  does not block the accepted leakage approximation.
+  reproduce mean-field physics. This limits microscopic accuracy claims; the
+  model is an approximate leakage model.
 - The reaction shift is not physically clamped because the current EOS API
   supplies no authoritative mean-field bound. Large finite `|q/T|` remains a
   conditioning limitation; observable nonfinite-output errors do not remove
   that finite-value sensitivity.
 - Scattering uses only the EOS free-neutron and free-proton fractions. Bound
-  nucleons and coherent nuclear scattering are outside the accepted model.
+  nucleons and coherent nuclear scattering are outside the model.
 - Replacing the common-bare-mass inversion or expanding the scattering targets
   requires an owner decision and a richer EOS/API contract. The current EOS
   boundary does not expose the effective masses, mean-field shifts, or bound

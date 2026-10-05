@@ -81,7 +81,7 @@ momentum, and energy fields look valid.
 Only fields listed in the matrix are written. Other members of `cons` retain
 their prior value; these routines do not initialize the whole struct.
 
-All 12 checked routines call `ghl_compute_h_and_cs2` twice and return either
+Every checked routine calls `ghl_compute_h_and_cs2` twice and returns either
 callback's exact error before writing output. Primitive arguments are mutable: production
 tabulated dispatch limits `rho`, `Y_e`, and `temperature` to table bounds, then overwrites
 `press` and `eps`. If the second callback fails, mutation performed by the
@@ -109,8 +109,8 @@ produce the wrong EOS calculation or a null call.
 ## Generated-Source Boundary
 
 [GRHayL/Flux_Source/generate_flux_source.py](../../../GRHayL/Flux_Source/generate_flux_source.py)
-contains the NRPy 2 generator path for all 12
-`ghl_calculate_HLLE_fluxes_dirn*_<variant>.c` files. Review generated C and the
+contains the NRPy 2 generator path for every
+`ghl_calculate_HLLE_fluxes_dirn*_<variant>.c` file. Review generated C and the
 Python source together when formulas, variables, or output fields change.
 
 ## Evidence Links

@@ -109,6 +109,7 @@ global lifecycle.
 - Cactus parameter keywords and parser cases do not prove a Con2Prim method is
   fully supported. Compare against the Con2Prim solver matrix, selector
   dispatch, build lists, and tests.
-- Current checkout proves static CCL/header/source-registry parity. Tracked
-  `src/include` and module symlinks expose the corresponding upstream paths and
-  are checked by Ubuntu-GCC; Cactus compile/runtime remain unverified.
+- Static CCL/header/source-registry parity is a requirement verified by the
+  manual checks in [verification and drift](grhaylib/verification-and-drift.md).
+  Tracked `src/include` and module symlinks expose the corresponding upstream
+  paths; no CI job inspects them, and Cactus compile/runtime remain unverified.

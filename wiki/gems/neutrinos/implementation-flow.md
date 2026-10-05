@@ -27,7 +27,7 @@ extra Neutrinos `.c` file sits outside the manifest.
 The same manifest records `NRPyLeakage_nucleon_blocking.h` and
 `NRPyLeakage_rate_helpers.h` through `#! INCS`. These source-private headers
 are not installed public headers and add no public functions. Both headers
-serve all three EOS-dependent routines.
+serve every EOS-dependent routine.
 
 ## Smallest File Sets And Data Dependencies
 
@@ -61,7 +61,7 @@ The separate
 [Tabulated_EOS_IllinoisGRMHD repository](https://github.com/leowerneck/Tabulated_EOS_IllinoisGRMHD)
 contains NRPy/Python development material absent from this tree.
 [Generator Provenance](generator-provenance.md) preserves the notebook roles,
-output paths, unit construction, `tmp_*` origin, and reviewed generator
+output paths, unit construction, `tmp_*` origin, and generator
 coverage.
 Use it for ancestry only. Current repo-local C, headers, manifests, and tests
 remain authority; generate into a disposable directory, compare formulas and
@@ -70,7 +70,7 @@ adapter before replacing any current file.
 
 ## Shared Failure Boundary
 
-The three EOS-dependent routines return immediately with
+The EOS-dependent routines return immediately with
 `ghl_error_used_disabled_hdf5` in no-HDF5 builds. With HDF5, they return the
 tabulated EOS error unchanged. The blocking helper then validates finite,
 positive cgs density and temperature; finite free fractions in `[0,1]`, apart
@@ -95,7 +95,7 @@ density, temperature, and EOS free-neutron/free-proton fractions. This removes
 dependence on the arbitrary common energy zero of `mu_n` and `mu_p`, avoids
 counting bound nucleons as free targets, and removes the old equal-population
 quotient pole. One private helper keeps opacity, source, and luminosity paths
-on the same blocking model instead of maintaining three copies.
+on the same blocking model instead of maintaining separate copies.
 
 The evaluator uses piecewise rational fits for inverse $F_{1/2}$ and
 $F_{-1/2}$, an `expm1` overlap identity, and an analytic equal-population

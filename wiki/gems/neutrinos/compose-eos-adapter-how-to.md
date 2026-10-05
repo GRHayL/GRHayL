@@ -37,7 +37,7 @@ leakage source consumes those values.
 | Route | Use when | Work required | Main constraint |
 | --- | --- | --- | --- |
 | Convert offline to StellarCollapse HDF5 | Existing GRHayL tabulated-EOS reader should remain unchanged | Generate a compatible regular grid, convert units and chemical-potential zero points, derive or aggregate fields that CompOSE does not provide in the target convention, and write every dataset required by `NRPyEOS_stellarcollapse_read_table` | Current reader requires the complete StellarCollapse dataset family, not only the six leakage fields |
-| Add a native CompOSE-backed GRHayL adapter | GRHayL should own table loading and expose the existing leakage callback | Add table storage/loading, state conversion, interpolation, callback registration, and GRHayL error mapping | Current three leakage entry points retain an HDF5 compile guard even though the physical callback need not use HDF5 |
+| Add a native CompOSE-backed GRHayL adapter | GRHayL should own table loading and expose the existing leakage callback | Add table storage/loading, state conversion, interpolation, callback registration, and GRHayL error mapping | Current EOS-dependent leakage entry points retain an HDF5 compile guard even though the physical callback need not use HDF5 |
 | Port NRPyLeakage into another host | Host already owns GRHD, EOS, table interpolation, and errors | Implement the equivalent six-output EOS adapter and translate GRHayL types, errors, units, and the HDF5 guard | Exact equivalence requires preserving current source formulas and all boundary conventions, including the documented chemical-potential convention seams |
 
 The first route gives closest reuse of current GRHayL. The second avoids
@@ -107,7 +107,7 @@ Requirements depend on the selected route:
   HDF5 library. Build switches and defaults can differ between the served
   manual and current code, so follow the instructions shipped with the chosen
   release rather than copying a switch from another version.
-- The three current EOS-dependent GRHayL leakage entry points require an
+- The current EOS-dependent GRHayL leakage entry points require an
   HDF5-enabled GRHayL build even if a new physical callback does not use HDF5.
   A direct port must instead resolve the equivalent compile-guard boundary
   explicitly. See [Build And CI](../../build-and-ci.md).
@@ -133,7 +133,7 @@ groups of nuclei are defined per table.
 
 ## Acquire And Inspect CompOSE Data
 
-CompOSE documents three supported workflows:
+CompOSE documents these supported workflows:
 
 1. Download original ASCII files and use a project-owned reader.
 2. Download the original files and use the official `compose` routines to
@@ -510,7 +510,7 @@ registration, table read/free/interpolation paths, and `configure` source and
 test filtering; GRHayLib separately requires HDF5. Audit every
 `GHL_DISABLE_HDF5` site through the
 [tabulated table contract](../eos/tabulated-table-contract.md#hdf5-build-gate)
-and [Build And CI](../../build-and-ci.md). Editing the three leakage guards or
+and [Build And CI](../../build-and-ci.md). Editing the leakage guards or
 replacing only the callback is insufficient.
 
 A native GRHayL backend also needs an explicit table-type/dispatch entry,
@@ -592,8 +592,8 @@ For each state:
    separately. Do not infer their coherence from opacity agreement.
 9. After callback validation, compare all six opacity slots, `R_source`,
    `Q_source`, and all three luminosities at zero and nonzero optical depth.
-   Pressure or energy agreement alone does not test this interface. All three
-   EOS-dependent routines consume `X_n` and `X_p` for blocking; the
+   Pressure or energy agreement alone does not test this interface. Every
+   EOS-dependent routine consumes `X_n` and `X_p` for blocking; the
    combined source-term and luminosity routines also use them for
    bremsstrahlung. Validate every path to exercise free-nucleon composition.
 

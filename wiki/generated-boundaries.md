@@ -170,7 +170,7 @@ Local evidence:
   output set, and checks it against generator-owned entries in the build
   manifests. The hand-written Rusanov helper remains in the root manifest.
 
-Generated or derived C files confirmed by local generator paths:
+Generated or derived C files with local generator paths:
 
 | C output | Local generator evidence | Notes |
 | --- | --- | --- |

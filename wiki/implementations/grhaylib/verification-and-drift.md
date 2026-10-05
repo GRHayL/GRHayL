@@ -10,7 +10,7 @@ to replace the implementation files or upstream tests.
 ## Coverage Boundary
 
 Ubuntu-GCC GitHub Actions run for implementation-only source changes;
-documentation-only paths remain ignored, and the other four compiler workflows
+documentation-only paths remain ignored, and the other compiler workflows
 still ignore `implementations/**`. Ubuntu-GCC runs the normal library jobs but
 does not directly verify the tracked GRHayLib source symlinks.
 `.github/run_tests.sh` is a separate scripted test driver. These checks build
@@ -36,15 +36,14 @@ Einstein Toolkit.
    and [src/make.code.defn](../../../implementations/GRHayLib/src/make.code.defn).
 2. Manual repo-relative link check. Verify new wiki links resolve and avoid
    generated docs or external-only paths.
-3. Header aggregation parity check. Current static comparison finds every
-   header directly included by `src/GRHayLib.h` in both `GRHayL/include/` and
-   the upstream install manifest. Recheck after public-header changes. This
-   check also verifies that the tracked `src/include` symlink resolves.
-4. Direct-compile source-list check. Current static comparison finds that every
-   GRHayLib `SUBDIRS` entry names an upstream directory and every upstream
-   source-bearing manifest directory is listed. Tracked symlinks expose those
-   upstream directories below the thorn; this remains registry/path parity,
-   not a successful Cactus build.
+3. Header aggregation parity check. Every header directly included by
+   `src/GRHayLib.h` must exist in both `GRHayL/include/` and the upstream
+   install manifest. Recheck after public-header changes. This check also
+   verifies that the tracked `src/include` symlink resolves.
+4. Direct-compile source-list check. Every GRHayLib `SUBDIRS` entry must name
+   an upstream directory, and every upstream source-bearing manifest directory
+   must be listed. Tracked symlinks expose those upstream directories below the
+   thorn; agreement is registry/path parity, not a successful Cactus build.
 5. Parameter/parser parity check. Compare Cactus keywords in `param.ccl` with
    `parse_C2P_routine_keyword`, `parse_eos_table_type_keyword`,
    `GRHayLib_paramcheck`, and `GRHayLib_initialize` in
@@ -94,15 +93,15 @@ Einstein Toolkit.
   `ID_converter_ILGRMHD` is active; termination is scheduled at
   `CCTK_TERMINATE`. Global-pointer consumers depend on this timing.
 
-## Current Proof State
+## Proof Boundary
 
-| Claim | Current state |
+| Claim | Boundary |
 | --- | --- |
-| CCL/header/source-registry parity | Static source cross-check only; current names agree as bounded above. |
-| Thorn source/header paths resolve locally | True through tracked symlinks; this does not establish Cactus compatibility. |
-| Cactus compile/link | Unverified; no real Cactus build environment or owner command is supplied here. |
-| Schedule/parameter/runtime behavior | Unverified; source describes intended Cactus behavior, but no Cactus execution evidence exists. |
-| ET_Legacy or upstream Unit_Tests prove GRHayLib | False; they test upstream GRHayL behavior, not this thorn integration. |
+| CCL/header/source-registry parity | Static source cross-check only (checks 3 through 5 above). |
+| Thorn source/header paths resolve locally | The tracked symlinks provide this; it does not establish Cactus compatibility. |
+| Cactus compile/link | Not verified by this repository; no real Cactus build environment or owner command is supplied here. |
+| Schedule/parameter/runtime behavior | Not verified by this repository; source describes intended Cactus behavior, but no Cactus execution evidence exists. |
+| ET_Legacy or upstream Unit_Tests prove GRHayLib | They cannot; they test upstream GRHayL behavior, not this thorn integration. |
 
 ## Local Ground Truth
 

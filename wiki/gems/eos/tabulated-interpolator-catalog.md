@@ -147,7 +147,7 @@ computes pressure and internal energy, and returns enthalpy and `cs2`.
 ## Direct Test Evidence
 
 `Unit_Tests/unit_test_tabulated_eos.c` directly calls many assigned public
-wrappers, but source search finds no direct public-pointer call for
+wrappers, but it contains no direct public-pointer call for
 `ghl_tabulated_compute_P_S_T_from_eps`, either enthalpy-input wrapper,
 `ghl_tabulated_compute_Ye_of_rho_beq_constant_T`, the `T`/`eps`/`S`
 bound-enforcement pointers, `ghl_tabulated_get_index_T`,

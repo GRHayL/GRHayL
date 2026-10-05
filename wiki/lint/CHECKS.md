@@ -3,23 +3,6 @@
 These checks help maintain the GRHayL agent KB. Run them from repo root. They
 are shell examples only, not a maintained script.
 
-The maintained check for the Radiation M1 documentation subset is:
-
-```bash
-python3 tools/check_m1_documentation.py
-```
-
-The dedicated [M1 documentation workflow](../../.github/workflows/m1-documentation.yml)
-runs this check on pushes to `main` and pull requests when changed paths match
-its list: the M1 integration contract, test guide, THC_M1 fixture tree,
-`wiki/gems/radiation-m1/**`, this page, the workflow file, or the checker
-script. The [checker](../../tools/check_m1_documentation.py) scans
-repository-relative links in the contract, test guide, and Markdown under the
-fixture tree and `wiki/gems/radiation-m1/`. The M1 hub
-`wiki/gems/radiation-m1.md` is in neither the workflow's path list nor the
-checker's `PAGE_ROOTS`; this page triggers the workflow but is not scanned by
-that check. The broader checks below remain manual KB maintenance checks.
-
 ## Broken Repo-Relative Markdown Links
 
 This dependency-free check resolves `../` links relative to each page, rejects
@@ -63,8 +46,10 @@ definitions, HTML, or titles; do not turn uncertain syntax into a hard failure.
 If KB pages are being authored concurrently, do not fail solely because
 links to in-progress pages are temporarily missing. Report them.
 
-## Forbidden KB Metadata
+## Forbidden Volatile Information
 
+Volatile information is forbidden anywhere in the KB, not only in metadata
+fields; see the [Volatile Information Policy](../index.md#volatile-information-policy).
 Run all scans across `AGENTS.md` and `wiki/`. Mentions are allowed only in
 prohibition or supersession statements, except reviewed technical hash facts.
 Technical hash facts must not include stored digest values.
@@ -84,10 +69,31 @@ Find stored checksum, digest, and VCS revision values:
 rg -n -i -P '((sha(?:-?3)?-?[0-9]+|md-?5|blake-?[0-9a-z]*|xxh[0-9]*|crc-?[0-9]+)\s*[:=]?\s*`?[0-9a-f]{8,}|(checksum|hash|digest)( value)?\s*[:=]\s*`?\S+|(commit|revision)[ _-]?(id|pin|identifier)?\s*[:=]\s*`?\S+|\b(commit|revision)\s+`?[0-9a-f]{7,40}\b|/(commit|blob|tree)/[0-9a-f]{7,40}\b|(?<![0-9a-f])(?:[0-9a-f]{32}|[0-9a-f]{40}|[0-9a-f]{56}|[0-9a-f]{64}|[0-9a-f]{96}|[0-9a-f]{128})(?![0-9a-f]))' AGENTS.md wiki || true
 ```
 
-Find file or source counts used as metadata:
+Find file or source counts used as metadata (broad, noisy; inspect every hit):
 
 ```bash
 rg -n -U -i -P '(?(DEFINE)(?<N>(?:[0-9][0-9,]*|(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|dozen)(?:[ -](?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|dozen))*)))(?:\b(?:file|source)[ _-]?counts?\s*[:=|]\s*(?&N)\b|\b(?:files?|sources?|headers?|directories|dirs|workflows?|binaries|executables|fixtures?|translation[ _-]?units?|manifest[ _-]?entries?|kernels?|subdirs)\s*[:=|]\s*(?&N)\b|\b(?&N)(?:\s*/\s*(?&N))?(?:(?!\n\s*\n|[.!?;:])[\s\S])*?\b(?:files?|headers?|directories|dirs|workflows?|binaries|executables|fixtures?|translation[ _-]?units?|manifest[ _-]?entries?|kernels?|subdirs)\b|\bcount of (?:files|sources)\b|\bnumber of (?:files|sources)\b)' AGENTS.md wiki || true
+```
+
+Find counts of repository inventory in prose or tables. Counts the code or
+schema defines as part of a contract (an array extent, an argument count) are
+allowed; counts of files, tests, jobs, workflows, pages, fixtures, routines,
+entry points, variants, or notebooks are not. The scan is multiline (`-U`) so a
+count split across a wrapped line is found. Expected non-violations are
+contract-defined extents, stencil sizes, direction counts, anaphoric references, and
+version identifiers such as "NRPy 2" and "Ubuntu 24.04"; inspect every hit:
+
+```bash
+N='[0-9]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|hundred'
+NOUN='files?|sources?|tests?|test cases?|cases?|pages?|workflows?|jobs?|fixtures?|checks?|functions?|routines?|wrappers?|helpers?|entry points?|symbols?|declarations?|definitions?|variants?|families|solvers?|notebooks?|copies|kernels?|commits?|binaries|lines|leaves|headers?|entries|results?|APIs?|guards?|scenarios?'
+rg -U -n -i -o -P "\b(?:$N)(?:\s+of\s+(?:$N))?(?:\s+[A-Za-z0-9\`_*./-]+){0,3}\s+(?:$NOUN)\b" AGENTS.md wiki || true
+```
+
+Find line-number citations and recorded run or review results. Inspect every
+hit; the policy's own prohibition statements are the only expected matches:
+
+```bash
+rg -n -i -P '\.(c|h|py|sh|yml|yaml|md|dox|ccl|txt):[0-9]+|\blines? [0-9]+(-[0-9]+)?\b|\bas of\b|\b(all|every) [0-9]+ (tests?|jobs?|cases?) (pass|passed)\b|\b(passed|validated|verified|tested) (on|with|using) |\b(completed|passed|succeeded) (with|against)\b' AGENTS.md wiki || true
 ```
 
 Find full calendar date stamps, timestamps, and maintenance-date fields. Review
@@ -99,8 +105,12 @@ rg -n -i -P '((?<![[:alnum:]_./-])[0-9]{4}[-/.][0-9]{2}[-/.][0-9]{2}([T ][0-9]{2
 
 Policy must remain:
 
-- no source-tracking checksums, hashes, digests, or VCS revision pins
-- no file or source counts for tracking, coverage, or freshness
+- no checksums, hashes, digests, or VCS revision pins
+- no counts of repository inventory (files, sources, tests, test cases, pages,
+  workflows, jobs, fixtures, functions, lines), as metadata or in prose
+- no line numbers or line ranges in citations
+- no recorded run or review results, "as of" statements, or environment or
+  tool-version tuples
 - no `mtime` columns or values
 - no stored fingerprints
 - no timestamps, timestamp fields or values, or KB maintenance/source-tracking date stamps
@@ -179,9 +189,9 @@ find Unit_Tests -maxdepth 1 -name 'unit_test_*.c' -print | sort
 find Unit_Tests/data_gen -maxdepth 1 -name 'unit_test_data_*.c' -print | sort
 ```
 
-Compare help against `configure`'s build-type `case` manually. The current
-no-flags mismatch is help-only `nocflags`: the parser rejects it and accepts
-undocumented `plain`. The production flag strings match.
+Compare help against `configure`'s build-type `case` manually; see the
+build-type row in [Current Contradictions](../contradictions.md). Do not call
+either no-flags spelling supported without reopening source.
 
 Check shell syntax without execution:
 

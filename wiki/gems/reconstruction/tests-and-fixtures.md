@@ -46,7 +46,7 @@ Read with the [Reconstruction gem hub](../reconstruction.md).
   `ET_Legacy_reconstruction` fixtures.
 - ET Legacy exercises PPM paths; no dedicated `unit_test_PPM_reconstruction.c` or PPM data generator is visible.
 
-All three replay tests use `ghl_pert_test_fail` in an `if` condition and call
+These replay tests use `ghl_pert_test_fail` in an `if` condition and call
 `ghl_error` on mismatch. Numerical comparisons can therefore fail these test
 binaries. Coverage is still bounded:
 
@@ -94,9 +94,10 @@ working directory, and run the compiled test executables.
   `reconstruction`.
 
 Thus WENOZ is workflow-only relative to the aggregate local runner, while PPM
-is reached through ET Legacy in both routes. `run_tests.sh` removes downloaded
-`*.bin`, `*.h5`, and `*.bz2` artifacts at its end; individual workflow jobs use
-fresh workspaces and contain no corresponding cleanup step.
+is reached through ET Legacy in both routes. `run_tests.sh` removes only the
+files and temporary directories that run created, through its `EXIT` trap, and
+keeps preexisting files; individual workflow jobs use fresh workspaces and
+contain no corresponding cleanup step.
 
 ## Repo-Local References
 

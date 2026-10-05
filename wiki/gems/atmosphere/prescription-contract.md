@@ -13,7 +13,7 @@ Read with [wiki/gems/atmosphere.md](../atmosphere.md) for the module router.
 
 | Path | Current evidence status |
 | --- | --- |
-| Constant | Public installed-header declaration; manifest-built definition; Doxygen entry; test calls. |
+| Constant | Public installed-header declaration; manifest-built definition; Doxygen entry; test calls; production caller in the Con2Prim tabulated primitive guess. |
 | Radial | Public installed-header declaration and incomplete source; absent from Atmosphere manifest, Doxygen, calls, and tests. |
 | Internal-only | No evidence supports this label for radial: its declaration is installed, but implementation intent remains unknown. |
 | Broken runtime path | Standard manifest does not build radial, so no standard radial runtime path exists; direct/manual compilation exposes the incomplete behavior below. |
@@ -51,7 +51,17 @@ source does not assign either field. Callers that need a complete primitive
 state must preserve magnetic fields separately and compute or refresh `u0`
 through the primitive-limit path.
 
-The routine returns `void`, dereferences both pointers, and performs no null,
+The Con2Prim tabulated primitive guess is a production caller.
+[GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c)
+calls the reset for its atmosphere fallback, then replaces the zero velocities
+with `-betaU` and sets `u0 = lapseinv`. A change to the reset's signature or
+write set therefore also affects tabulated primitive guessing; see the
+"Numerical Contract" section of
+[neural-network primitive guess](../con2prim/neural-network-primitive-guess.md)
+and the `ghl_guess_primitives` section of
+[limits and conversions](../con2prim/limits-and-conversions.md).
+
+The constant routine returns `void`, dereferences both pointers, and performs no null,
 EOS-family, bounds, or finiteness validation. It always reads all six
 atmosphere thermodynamic/composition fields listed above, regardless of
 `eos->eos_type`.
@@ -80,14 +90,14 @@ prescription.
 - It is absent from
   [docs/raw/Atmosphere.dox](../../../docs/raw/Atmosphere.dox), which says only
   one prescription is provided and links only the constant-density routine.
-- Repository declaration/definition/call search finds no call or unit test for
-  the radial name.
+- No call or unit test references the radial name.
 
-This status was reproduced by comparing the two `*.c` basenames in
-`GRHayL/Atmosphere/` with `SRCS` in its manifest: only
-`set_prims_to_radial_falloff_atm.c` remains in the source-minus-manifest set.
-That proves standard manifest absence only; it does not decide whether the
-routine should be completed, internalized, or removed.
+`SRCS` in
+[GRHayL/Atmosphere/make.code.defn](../../../GRHayL/Atmosphere/make.code.defn)
+lists only `set_prims_to_constant_atm.c`, so
+`set_prims_to_radial_falloff_atm.c` is not compiled. That proves standard
+manifest absence only; it does not decide whether the routine should be
+completed, internalized, or removed.
 
 If compiled and called directly, current source does not implement a radial
 thermodynamic falloff: `r` is unused, and `rho`, `press`, and `eps` assignments
@@ -150,6 +160,14 @@ calls constant reset in its negative-conservative-density branch. The source
 contains a TODO to validate that reset explicitly, so treat this as indirect
 legacy-path coverage rather than a focused Atmosphere contract test.
 
+[Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c)
+covers the reset's tabulated output indirectly. Its atmosphere-guess check, on
+a tabulated-type EOS with fake table callbacks, asserts that the fallback
+primitives equal the EOS atmosphere values, including `Y_e` and temperature,
+that `vU` is `-betaU`, that `u0` is `lapseinv`, and that `BU` is unchanged.
+This exercises the `Y_e` and temperature copies for a tabulated-type EOS, but
+as Con2Prim fallback coverage rather than a direct Atmosphere test.
+
 No direct radial test or call is present in repo-local test evidence.
 
 ## Impact Links Only
@@ -174,9 +192,13 @@ Atmosphere prescription contracts:
 - [GRHayL/Atmosphere/set_prims_to_constant_atm.c](../../../GRHayL/Atmosphere/set_prims_to_constant_atm.c)
 - [GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c](../../../GRHayL/Atmosphere/set_prims_to_radial_falloff_atm.c)
 - [GRHayL/Atmosphere/make.code.defn](../../../GRHayL/Atmosphere/make.code.defn)
+- [GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c](../../../GRHayL/Con2Prim/Tabulated/tabulated_primitive_guess_helpers.c)
+- [GRHayL/include/make.code.defn](../../../GRHayL/include/make.code.defn)
 - [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h)
 - [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)
 - [docs/raw/Atmosphere.dox](../../../docs/raw/Atmosphere.dox)
 - [Unit_Tests/unit_test_grhayl_core_test_suite.c](../../../Unit_Tests/unit_test_grhayl_core_test_suite.c)
 - [Unit_Tests/unit_test_tabulated_eos.c](../../../Unit_Tests/unit_test_tabulated_eos.c)
+- [Unit_Tests/unit_test_ET_Legacy_primitives.c](../../../Unit_Tests/unit_test_ET_Legacy_primitives.c)
+- [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c)
 - [Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c](../../../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c)

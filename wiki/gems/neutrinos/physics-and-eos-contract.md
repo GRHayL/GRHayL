@@ -51,7 +51,7 @@ Ground truth:
 
 ## EOS Inputs And Meanings
 
-The three EOS-dependent leakage routines call
+The EOS-dependent leakage routines call
 `ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T(eos, rho, Y_e, T, ...)`.
 After the input arguments, the output-pointer order is `muhat`, `mu_e`,
 `mu_p`, `mu_n`, `X_n`, `X_p`, as declared in
@@ -240,13 +240,13 @@ electron neutrinos and `11` to `26` for electron antineutrinos. The reported
 128-node reference changed by at most `6.4e-6` relative from 96 nodes, so this
 is physical-model disagreement rather than integration noise.
 
-The density-derived model is numerically qualified. After reviewing the named
+The numerical qualification evidence for the density-derived model is the named
 rate and thin-evolution comparisons, their uncertainties, and the dense DD2
-failure, the owner accepted the results for this approximate leakage model and
-authorized them as the golden baseline. This outcome-specific decision does not
-define a transferable per-kernel tolerance or claim dense interacting-EOS
-microscopic accuracy. EOS-consistent effective masses or mean-field shifts
-remain an optional future accuracy improvement. See
+failure. Regenerated replay results are the golden baseline for this
+approximate leakage model. These comparisons do not define a transferable
+per-kernel tolerance or claim dense interacting-EOS microscopic accuracy.
+EOS-consistent effective masses or mean-field shifts remain an optional future
+accuracy improvement. See
 [blocking qualification](tests-and-fixtures.md#blocking-correction-qualification).
 
 Practical adapter validation should compare all six returned quantities,

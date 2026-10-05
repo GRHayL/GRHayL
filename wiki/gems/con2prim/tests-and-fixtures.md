@@ -83,7 +83,7 @@ publish a compatible immutable companion revision before selecting it in the
 consumer workflows. Coordinate ordinary replay downloads with the generator
 replay reference; do not merge incompatible fixtures into a moving default
 branch merely to make them reachable. Local companion validation is not proof
-that remote CI can retrieve the reviewed data.
+that remote CI can retrieve the companion data.
 
 The hybrid generator restores its entropy-evolution setting before producing
 the primitive-limits and forward-conversion fixtures. The primitive-limits

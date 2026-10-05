@@ -147,9 +147,9 @@ compiled with `GHL_DISABLE_HDF5`, HDF5-only error keys are treated as skipped
 passes. That is test-source behavior; the target filtering above is from
 `configure`.
 
-## Test-Specific Evidence Read For This Route
+## Test-Specific Evidence For This Route
 
-These test files were checked to avoid misclassifying generation modes,
+These test files determine the classification of generation modes,
 manual-only tests, HDF5 needs, and expected failures:
 
 - [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h)

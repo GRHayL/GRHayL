@@ -61,7 +61,7 @@ exact clause, distinguish interpretation from requirement, and finish separable 
 
 | Go to | Use it for |
 | --- | --- |
-| [KB Index](wiki/index.md) | Root router for KB pages, source authority, page contracts, and source-tracking metadata policy. |
+| [KB Index](wiki/index.md) | Root router for KB pages, source authority, page contracts, and volatile-information policy. |
 | [KB Catalog](wiki/catalog.md) | Query-routing table for aliases, gems, source paths, docs, and tests. |
 | [Source Map](wiki/source-map.md) | Source tree ownership and dependency routing. |
 | [Workflows](wiki/workflows.md) | Common build, test, docs, and review workflows for agents. |
@@ -107,30 +107,50 @@ exact clause, distinguish interpretation from requirement, and finish separable 
 | Investigate unresolved source/docs/test conflict | [Current Contradictions](wiki/contradictions.md), then exact owner leaf and competing repo files named there |
 | Update documentation pages | [docs/raw](docs/raw/), [Doxyfile](Doxyfile) |
 
-## Source-Tracking Metadata Policy
+## Volatile Information Policy
 
-These rules bind `AGENTS.md`, `wiki/`, and any future GRHayL KB manifest or
-governance pages added to this repository:
+Volatile information is FORBIDDEN in the KB. These rules bind `AGENTS.md`,
+`wiki/`, and any future GRHayL KB manifest or governance pages added to this
+repository.
 
-- No source-tracking checksums, hash or digest columns, or stored values of any
-  kind, including VCS commit or revision identifiers used as pins. Do not hash
-  sources.
-- No file or source counts as KB metadata. Do not count sources or files for
-  tracking, coverage, or freshness.
+Volatile information goes stale without the documented behavior changing, or
+records when or against what something was checked. Describe stable contracts
+and link the owning files; do not snapshot repository, review, or environment
+state. The following are forbidden anywhere in the KB, in metadata fields,
+tables, and prose alike:
+
+- No checksums, hash or digest columns, or stored values of any kind, including
+  VCS commit or revision identifiers used as pins. Do not hash sources.
+- No counts of repository inventory (files, sources, tests, test cases, pages,
+  workflows, jobs, fixtures, functions, lines), as metadata or in prose. Do not
+  count sources or files for tracking, coverage, or freshness. Write "every",
+  "each", or link the owning file instead of a number.
 - No `mtime` columns or values.
-- No date stamps or timestamps as KB metadata, including fields or values. Do
-  not record access, audit, check, reconciliation,
-  opening, resolution, or validation-run dates. Publication years and
-  date-like source or version identifiers remain allowed; full calendar date
-  stamps do not.
+- No date stamps or timestamps, including fields or values. Do not record
+  access, audit, check, reconciliation, opening, resolution, or validation-run
+  dates. Publication years and date-like source or version identifiers remain
+  allowed; full calendar date stamps do not.
+- No line numbers or line ranges in file citations; cite the file, symbol, or
+  section.
+- No recorded results of a particular run or review (pass/fail outcomes,
+  measured coverage percentages, audit or review verdicts, "as of" statements)
+  and no environment or tool-version tuples recording what a check ran on.
 - Do not output KB maintenance notes to a separate maintenance log. This
   repository already lives in git, so commit history records durable operations.
 
-Technical, non-source-tracking hash facts remain allowed as reviewed domain
+Not volatile, so allowed: values the code, schema, or a cited standard defines
+as part of a contract (a documented minimum version, tolerance, array extent,
+or argument count), and valid measurements of the code itself (benchmark
+timings, memory footprints, accuracy or convergence comparisons). Test: if a
+number or date would need editing while no documented behavior changed, it is
+volatile. When the classification is unclear, keep the item and flag it in the
+report instead of deleting it.
+
+Technical hash facts that describe the code remain allowed as reviewed domain
 facts, but never as stored digest values.
 Immutable external citation URLs may retain opaque identifiers, including
 hash-shaped path segments. Preserve the link; do not extract the identifier
-into source-tracking metadata.
+into a stored pin or digest.
 
 Git history already records when KB content changed and what changed. Duplicate
 hashes, counts, and timestamps add maintenance burden without authority.
