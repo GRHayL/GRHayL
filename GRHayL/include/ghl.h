@@ -79,6 +79,7 @@ typedef enum {
   ghl_error_invalid_eos_parameters,
   ghl_error_invalid_eos_table,
   ghl_error_invalid_hlle_wavespeeds,
+  ghl_error_invalid_face_transfer,
 } ghl_error_codes_t;
 
 typedef enum {
@@ -467,6 +468,18 @@ void ghl_return_conservatives(
       double *restrict S_z,
       double *restrict entropy,
       double *restrict Y_e);
+
+/**
+ * Add one integrated face transfer to the cells sharing a face: delta_L -= transfer
+ * and delta_R += transfer in every field. Returns ghl_error_invalid_face_transfer
+ * and changes nothing if the transfer is not finite. The cells must be different.
+ * This is the conservative update of first-order flux correction
+ * (\cite Lemaster_2009; \cite Fields_2025, Sec. 3.3 and the conservation law of Eq. 10).
+ */
+ghl_error_codes_t ghl_accumulate_face_transfer(
+      const ghl_conservative_quantities *restrict transfer,
+      ghl_conservative_quantities *restrict delta_L,
+      ghl_conservative_quantities *restrict delta_R);
 
 void ghl_initialize_metric(
       const double lapse,

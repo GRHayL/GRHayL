@@ -113,6 +113,32 @@ Tests: `Unit_Tests/unit_test_c2p_nn_guess.c`,
   solver files under `GRHayL/Con2Prim/Hybrid/` and
   `GRHayL/Con2Prim/Tabulated/`.
 
+## Candidate Assessment
+
+This is the test step of first-order flux correction (FOFC): estimate the next
+step, flag a cell whose new state requires a floor or fails the
+conserved-to-primitive inversion, and recompute the fluxes of flagged cells with
+first-order reconstruction. The method is that of Lemaster & Stone (2009) as used
+in AthenaK by Fields et al. (2025, Sec. 3.3); see
+[Ground Truth References](#ground-truth-references). The relaxed discrete maximum
+principle of that paper (its Eq. 12) is not applied here.
+
+`ghl_assess_candidate_state` (`GRHayL/Con2Prim/assess_candidate_state.c`) runs the
+flow above on copies of a densitized candidate divided by the cell's
+coordinate volume, with the driver chosen by `eos->eos_type`, and sets a flag when
+the candidate would need a repair: it is not finite, recovery fails numerically,
+`tau_fix`, `Stilde_fix`, or `speed_limited` is set, Font1D succeeds, or closure
+fails. Closure rebuilds the conservatives from the limited primitives and compares
+them with the original candidate, which is how primitive limits and solver clamps
+are seen. `ghl_apply_conservative_limits` is skipped for tabulated EOS, because a
+negative `tau_atm` makes its momentum rescaling take the square root of a negative
+number. Configuration errors are returned and leave the flag unchanged.
+
+Sources: `GRHayL/Con2Prim/assess_candidate_state.c`,
+`GRHayL/Con2Prim/apply_conservative_limits.c`,
+`GRHayL/Con2Prim/con2prim_multi_method.c`.
+Test: `Unit_Tests/unit_test_flux_correction.c`.
+
 ## HDF5-Disabled Tabulated Behavior
 
 When built with `GHL_DISABLE_HDF5`, tabulated select and tabulated
@@ -152,3 +178,19 @@ Sources: `GRHayL/Con2Prim/con2prim_multi_method.c`,
   `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`.
 - Conservative recompute and stress-energy:
   `Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`.
+
+## Ground Truth References
+
+- J. Fields, H. Zhu, D. Radice, J. M. Stone, W. Cook, S. Bernuzzi, and B. Daszuta,
+  "Performance-Portable Binary Neutron Star Mergers with AthenaK", ApJS 276, 35
+  (2025): [arXiv:2409.10384](https://arxiv.org/abs/2409.10384). Sec. 3.3 gives
+  the FOFC procedure and the relaxed discrete maximum principle (Eqs. 10 to 12).
+- M. N. Lemaster and J. M. Stone, "Dissipation and Heating in Supersonic
+  Hydrodynamic and MHD Turbulence", ApJ 691, 1092 (2009):
+  [doi:10.1088/0004-637X/691/2/1092](https://doi.org/10.1088/0004-637X/691/2/1092),
+  the FOFC reference given by Fields et al.
+- J. M. Stone et al., "AthenaK: A Performance-Portable Version of the Athena++ AMR
+  Framework": [arXiv:2409.16053](https://arxiv.org/abs/2409.16053). The AthenaK
+  FOFC implementation is `MHD::FOFC` in `src/mhd/mhd_fofc.cpp` of the
+  [AthenaK repository](https://github.com/IAS-Astrophysics/athenak). No AthenaK
+  source code is included in GRHayL.

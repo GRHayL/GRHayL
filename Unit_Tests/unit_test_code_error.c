@@ -60,6 +60,10 @@ int main(int argc, char **argv) {
           ghl_error_invalid_hlle_wavespeeds, test_key,
           "invalid HLLE wave speeds");
   }
+  if(test_key == 91) {
+    expect_error_code(
+          ghl_error_invalid_face_transfer, test_key, "invalid face transfer");
+  }
 
   ghl_error_codes_t error = ghl_success;
 
@@ -801,6 +805,7 @@ static ghl_error_codes_t expected_error_code(const int test_key) {
       return ghl_error_invalid_hlle_wavespeeds;
     case 89:
     case 90: return ghl_error_table_bisection;
+    case 91: return ghl_error_invalid_face_transfer;
     case 78:
     case 79:
     case 80:

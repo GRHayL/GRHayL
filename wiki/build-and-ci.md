@@ -198,7 +198,7 @@ Common job groups across workflows:
 | --- | --- |
 | `ET-Legacy` | `conservs`, `primitives`, `induction_gauge_rhs`, `HLL_flux`, `reconstruction`, `flux_source` |
 | `c2p-routines` | `apply_conservative_limits`, `con2prim_multi_method_hybrid`, `enforce_primitive_limits_and_compute_u0`, `compute_conservs_and_Tmunu` |
-| `c2p-failure` | `hybrid_failure`, `c2p_nn_guess` |
+| `c2p-failure` | `hybrid_failure`, `c2p_nn_guess`, `flux_correction` |
 | `tabulated-eos` | tabulated EOS table read/interpolation |
 | `piecewise-polytrope-eos` | piecewise-polytrope EOS |
 | `grhayl-core` | core struct/metric/stress-energy suite |
@@ -252,7 +252,7 @@ workflow matrix and not a fixture generator:
    where needed, decompressing `*.bz2` files.
 6. Runs the compiled tests under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Runs `unit_test_code_error` over error-code keys `0` through `90`, expecting
+7. Runs `unit_test_code_error` over error-code keys `0` through `91`, expecting
    each invocation to fail at process level.
 8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
    `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;

@@ -16,8 +16,8 @@ Read with [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md),
 - Checked-in reduced Hempel table:
   [Unit_Tests/sample_table/Hempel_SFHoEOS_rho222_temp180_ye60_version_1.1_20120817_simple.h5](../../Unit_Tests/sample_table/Hempel_SFHoEOS_rho222_temp180_ye60_version_1.1_20120817_simple.h5)
   is a repo-local HDF5 sample table. It is reduced from a larger Hempel SFHo
-  table and is useful as fixture evidence, not as the table used by the default
-  full runner.
+  table. The default full runner does not download it, but
+  `unit_test_flux_correction.c` reads it from the repository root.
 - Generated analytic table:
   [Unit_Tests/sample_table/generate_simple_table.py](../../Unit_Tests/sample_table/generate_simple_table.py)
   writes `simple_table.h5`. The script requires Python `numpy` and `h5py`,
@@ -63,6 +63,9 @@ instead.
   dimensions, `energy_shift`, analytic table quantities, interpolation routes,
   `ghl_compute_h_and_cs2`, bounds, and beta-equilibrium helpers. Its analytic
   expectations are shared with `tabulated_eos_unit_test_helpers.c`.
+- `unit_test_flux_correction.c` reads the checked-in reduced Hempel table by its
+  repository-root-relative path to cover the tabulated branch of
+  `ghl_assess_candidate_state`; without HDF5 it checks the returned error instead.
 - `test_compute_h_and_cs2.c` is helper-only code for tabulated tests. It
   assumes LS220-style table bounds and is not a standalone table contract.
 - `unit_test_tabulated_flux.c` consumes

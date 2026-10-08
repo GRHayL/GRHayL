@@ -38,13 +38,13 @@ the enum returns silently without terminating
 [`GRHayL/GRHayL_Core/info_warn_error.c`](../../GRHayL/GRHayL_Core/info_warn_error.c)).
 
 `Unit_Tests/unit_test_code_error.c` compares producer return codes for most
-configured error cases; keys `86..88` instead supply enum values directly.
+configured error cases; keys `86..88` and `91` instead supply enum values directly.
 Active error-code cases then call `ghl_abort_if_error(error)` for expected
 process failure. See [expected-failure and error keys](../tests/expected-failure-and-error-keys.md)
 and [`Unit_Tests/unit_test_code_error.c`](../../Unit_Tests/unit_test_code_error.c).
 The test deliberately exits nonzero after a matched error reaches
 `ghl_abort_if_error`; [`.github/run_tests.sh`](../../.github/run_tests.sh)
-loops keys 0 through 90 and treats a zero process status as "Failed to fail."
+loops keys 0 through 91 and treats a zero process status as "Failed to fail."
 This is expected-failure process coverage, not an ordinary success-status test.
 
 ## Return Codes Versus Terminating IO

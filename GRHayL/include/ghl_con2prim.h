@@ -114,6 +114,23 @@ void ghl_compute_conservs(
       const ghl_primitive_quantities *restrict prims,
       ghl_conservative_quantities *restrict cons);
 
+/**
+ * Assess on copies whether recovering a candidate state needs a repair; flagged is
+ * set when it does. This is the test step of first-order flux correction
+ * (\cite Lemaster_2009; \cite Fields_2025, Sec. 3.3). cons_candidate is densitized and
+ * already divided by the coordinate volume of the cell, whose metric is passed in.
+ * Returns a configuration error (for example ghl_error_used_disabled_hdf5) and
+ * leaves flagged unchanged; numerical failures set flagged instead.
+ */
+ghl_error_codes_t ghl_assess_candidate_state(
+      const ghl_parameters *restrict params,
+      const ghl_eos_parameters *restrict eos,
+      const ghl_metric_quantities *restrict metric_adm,
+      const ghl_ADM_aux_quantities *restrict metric_aux,
+      const ghl_conservative_quantities *restrict cons_candidate,
+      const ghl_primitive_quantities *restrict prims_guess,
+      bool *restrict flagged);
+
 //-------------- Con2Prim routines -----------------
 ghl_error_codes_t ghl_con2prim_hybrid_multi_method(
       const ghl_parameters *restrict params,

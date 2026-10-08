@@ -2,6 +2,7 @@
 
 # Source files in this directory that need compiled:
 SRCS = abort_if_error.c                           \
+       accumulate_face_transfer.c                 \
        compute_ADM_auxiliaries.c                  \
        compute_smallb_and_b2.c                    \
        compute_TDNmunu.c                          \

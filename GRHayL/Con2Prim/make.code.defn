@@ -3,6 +3,7 @@
 
 # Source files in this directory that need compiled:
 SRCS = apply_conservative_limits.c               \
+       assess_candidate_state.c                  \
        brent.c                                   \
        compute_conservs.c                        \
        compute_conservs_and_Tmunu.c              \
