@@ -117,7 +117,7 @@ helpers, disabled direct-C2P stubs, and real tabulated flux kernels.
   Direct checked HLLE input validation belongs to
   [Flux_Source HLLE flux variants](../gems/flux-source/hlle-flux-variant-matrix.md).
 - Core face-transfer error: key `91` checks `ghl_error_invalid_face_transfer`
-  handling in `ghl_abort_if_error`. Direct input validation is checked by
+  handling in `ghl_abort_if_error`. Direct result validation is checked by
   `Unit_Tests/unit_test_flux_correction.c`.
 - Tabulated 1D Con2Prim EOS failures: keys `89` and `90` scale `tau` above the
   SLy4 table's energy range at the test density, so the temperature inversion

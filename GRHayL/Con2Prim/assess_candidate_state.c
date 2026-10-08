@@ -22,7 +22,9 @@
  * The function runs the ordinary recovery sequence on copies of its inputs and
  * sets flagged when the candidate
  *
- * - is not finite,
+ * - has a \f$ \tilde{D} \f$, \f$ \tilde{\tau} \f$, or \f$ \tilde{S}_i \f$ that is not
+ *   finite, or an entropy that is not finite when ghl_parameters::evolve_entropy is
+ *   true, or is too large for the closure bound below to be formed,
  * - fails recovery numerically,
  * - made @ref ghl_apply_conservative_limits (the floors of \cite Faber_2007 and
  *   \cite Etienne_2012) or a velocity limit act
@@ -40,7 +42,7 @@
  *   for \f$ \tilde{u}_k = \tilde{D}, \tilde{\tau}, \tilde{S}_i \f$ and, for a
  *   tabulated EOS, \f$ \tilde{Y}_e \f$, where \f$ \epsilon_\mathrm{C2P} \f$ is
  *   ghl_parameters::con2prim_solver_tolerance. Primitive limits and solver
- *   clamps act through this comparison.
+ *   clamps above the bound act through this comparison.
  *
  * With \f$ Q^\mathrm{test}_i \f$ the integrated candidate and \f$ V_i \f$ the
  * coordinate volume of the cell, cons_candidate is
@@ -50,16 +52,26 @@
  * is formed once, with metric_adm->sqrt_detgamma, by @ref ghl_undensitize_conservatives.
  * metric_adm and metric_aux describe the cell at the time of the candidate.
  * prims_guess supplies the magnetic field and, when
- * ghl_parameters::calc_prim_guess is false, the initial guess. The sign of
- * \f$ \tilde{\tau} \f$ is never a trigger, because a tabulated EOS defines its
- * zero point through the table. For a tabulated EOS
+ * ghl_parameters::calc_prim_guess is false, the initial guess. A negative
+ * \f$ \tilde{\tau} \f$ is not by itself a trigger for a tabulated EOS, which defines
+ * its zero point through the table. For a tabulated EOS
  * @ref ghl_apply_conservative_limits is not applied, since its \f$ \tau_\mathrm{atm} \f$
  * can be negative, which makes the limiter's momentum rescaling NaN.
  *
- * Closure cannot resolve a change below the closure bound, such as a pressure floor in a
- * nearly cold cell, and the evolved entropy is not compared. A configuration error
- * (unknown or invalid EOS type, invalid solver key, or disabled HDF5) is returned and
- * leaves flagged unchanged.
+ * Closure detects a floor, limit, or clamp only if it changes the state by more than the
+ * closure bound. A smaller one is flagged only if one of the diagnostics listed above
+ * also records it; a primitive floor with no such record, such as a pressure floor in a
+ * nearly cold cell, goes unflagged. The evolved entropy is checked for finiteness but
+ * not compared with the energy, because entropy generation at a shock is not a failure
+ * of the energy recovery. With an entropy-based solver the entropy drives the recovery,
+ * so a disagreement with the energy appears as a closure failure.
+ *
+ * Configuration errors are returned and leave flagged unchanged: disabled HDF5 for a
+ * tabulated EOS, and an unknown or invalid EOS type or an invalid solver key that is the
+ * final result of the recovery sequence. An error that a later backup recovers from is
+ * not reported, a solver the sequence never calls is not checked, and a candidate that
+ * is not finite is flagged before any solver runs, so validate the whole configured
+ * solver list when initializing.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -98,10 +110,13 @@ ghl_error_codes_t ghl_assess_candidate_state(
   }
 #endif
 
-  // An infinite candidate would make the closure bound below infinite.
-  if(!(isfinite(cons_candidate->rho) && isfinite(cons_candidate->tau)
-       && isfinite(cons_candidate->SD[0]) && isfinite(cons_candidate->SD[1])
-       && isfinite(cons_candidate->SD[2]))) {
+  // An infinite candidate, or a sum |D| + |tau| that overflows, would make the closure
+  // bound below infinite. An energy-based recovery would also discard a non-finite
+  // evolved entropy, so it is checked here.
+  const double scale = fabs(cons_candidate->rho) + fabs(cons_candidate->tau);
+  if(!(isfinite(scale) && isfinite(cons_candidate->SD[0])
+       && isfinite(cons_candidate->SD[1]) && isfinite(cons_candidate->SD[2])
+       && (!params->evolve_entropy || isfinite(cons_candidate->entropy)))) {
     *flagged = true;
     return ghl_success;
   }
@@ -149,15 +164,15 @@ ghl_error_codes_t ghl_assess_candidate_state(
   }
 
   // Fields et al. (2025), Sec. 3.3: a cell is flagged if its state requires a floor.
-  // Closure sees every floor, limit, and clamp that recovery applied (the cold-EOS
-  // energy of Font1D, Font et al. 2000, is flagged by name above). Rebuild from the
-  // limited primitives and compare with the
-  // original candidate. tau and S_i are rebuilt from terms of the size of D, so one
-  // scale serves every component.
+  // Closure sees a floor, limit, or clamp that changes the state by more than the bound.
+  // A smaller one is flagged only if a diagnostic below records it (the cold-EOS energy
+  // of Font1D, Font et al. 2000, by name); a primitive floor with no record goes
+  // unflagged. Rebuild from the limited primitives and compare with the original
+  // candidate. tau and S_i are rebuilt from terms of the size of D, so one scale serves
+  // every component.
   ghl_conservative_quantities cons_rebuilt;
   ghl_compute_conservs(metric_adm, metric_aux, &prims, &cons_rebuilt);
-  const double bound = fmax(params->con2prim_solver_tolerance, DBL_EPSILON)
-                       * (fabs(cons_candidate->rho) + fabs(cons_candidate->tau));
+  const double bound = fmax(params->con2prim_solver_tolerance, DBL_EPSILON) * scale;
   const double expected[6]
         = { cons_candidate->rho,   cons_candidate->tau,   cons_candidate->SD[0],
             cons_candidate->SD[1], cons_candidate->SD[2], cons_candidate->Y_e };

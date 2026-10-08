@@ -119,8 +119,10 @@ void ghl_compute_conservs(
  * set when it does. This is the test step of first-order flux correction
  * (\cite Lemaster_2009; \cite Fields_2025, Sec. 3.3). cons_candidate is densitized and
  * already divided by the coordinate volume of the cell, whose metric is passed in.
- * Returns a configuration error (for example ghl_error_used_disabled_hdf5) and
- * leaves flagged unchanged; numerical failures set flagged instead.
+ * Returns a configuration error and leaves flagged unchanged: ghl_error_used_disabled_hdf5
+ * before recovery begins, or an unknown or invalid EOS type or solver key that ends the
+ * recovery. Numerical failures set flagged instead. A solver the recovery never reaches
+ * is not checked, and an error that a later backup recovers from is not reported.
  */
 ghl_error_codes_t ghl_assess_candidate_state(
       const ghl_parameters *restrict params,

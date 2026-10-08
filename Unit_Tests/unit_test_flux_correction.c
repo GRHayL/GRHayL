@@ -76,12 +76,16 @@ static void expect_error(
       const ghl_primitive_quantities *restrict prims_guess,
       const ghl_error_codes_t expected) {
 
-  bool flagged = false;
-  if(ghl_assess_candidate_state(
-           params_in, eos_in, &metric, &metric_aux, cons, prims_guess, &flagged)
-           != expected
-     || flagged) {
-    ghl_error("A configuration error (code %d) was not returned unchanged\n", expected);
+  // The flag is left as it came in, whichever value that was.
+  for(int incoming = 0; incoming < 2; incoming++) {
+    bool flagged = incoming;
+    if(ghl_assess_candidate_state(
+             params_in, eos_in, &metric, &metric_aux, cons, prims_guess, &flagged)
+             != expected
+       || flagged != incoming) {
+      ghl_error(
+            "A configuration error (code %d) was not returned unchanged\n", expected);
+    }
   }
 }
 
@@ -123,6 +127,22 @@ static void test_assess_candidate_state(void) {
     if(!assess(&bad, &prims)) {
       ghl_error("A candidate that is not finite in field %d was not flagged\n", field);
     }
+  }
+
+  // An evolved entropy must be finite. Recovery by energy does not use it, so only the
+  // finiteness screen can flag it, and an entropy that is not evolved is not screened.
+  params.evolve_entropy = true;
+  if(assess(&cons, &prims)) {
+    ghl_error("A healthy candidate was flagged with evolved entropy\n");
+  }
+  bad = cons;
+  bad.entropy = NAN;
+  if(!assess(&bad, &prims)) {
+    ghl_error("A candidate with non-finite evolved entropy was not flagged\n");
+  }
+  params.evolve_entropy = false;
+  if(assess(&bad, &prims)) {
+    ghl_error("A non-finite entropy that is not evolved was flagged\n");
   }
 
   // A primitive limit is seen through closure: the density floor raises the density by
@@ -228,6 +248,38 @@ static void test_assess_tabulated(void) {
   if(!flagged) {
     ghl_error("A tabulated candidate with inconsistent Y_e was not flagged\n");
   }
+
+  // A table can have negative specific energy, so tau_atm and an admissible tau can be
+  // negative. Moving the zero point of eps by a constant leaves the pressure unchanged
+  // and does that. The generic conservative limiter, which is not applied to a
+  // tabulated EOS, would flag a candidate with negative tau at rho_min, so only its
+  // absence keeps this one unflagged. The shift leaves other table-derived values
+  // stale (the enthalpy table, eps_atm, and the table eps bounds), which Palenzuela1D
+  // does not read.
+  const double shift = 0.02;
+  tabulated_eos.energy_shift += shift;
+  tabulated_eos.eps_min -= shift;
+  tabulated_eos.eps_max -= shift;
+  tabulated_eos.tau_atm = tabulated_eos.rho_min * tabulated_eos.eps_min;
+
+  const double T_cold = 1.5 * tabulated_eos.T_min;
+  ghl_abort_if_error(ghl_tabulated_compute_P_eps_from_T(
+        &tabulated_eos, tabulated_eos.rho_min, 0.3, T_cold, &press, &eps));
+  ghl_initialize_primitives(
+        tabulated_eos.rho_min, press, eps, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3,
+        T_cold, &prims);
+  ghl_abort_if_error(
+        ghl_limit_v_and_compute_u0(&tabulated_params, &metric, &prims, &speed_limited));
+  ghl_compute_conservs(&metric, &metric_aux, &prims, &cons);
+  if(!(cons.tau < 0.0)) {
+    ghl_error("The shifted table did not give a candidate with negative tau\n");
+  }
+  ghl_abort_if_error(ghl_assess_candidate_state(
+        &tabulated_params, &tabulated_eos, &metric, &metric_aux, &cons, &prims,
+        &flagged));
+  if(flagged) {
+    ghl_error("A tabulated candidate with admissible negative tau was flagged\n");
+  }
   ghl_tabulated_free_memory(&tabulated_eos);
 #endif
 }
@@ -273,6 +325,32 @@ static void test_accumulate_face_transfer(void) {
        || memcmp(&right, &right_before, sizeof right)) {
       ghl_error("A non-finite face transfer was not rejected cleanly\n");
     }
+  }
+
+  // A finite transfer can still overflow an accumulator, in a late field of one cell
+  // after earlier fields would have been updated, or an accumulator can already be
+  // infinite. Neither cell changes.
+  ghl_conservative_quantities overflow = { 0 };
+  left = (ghl_conservative_quantities){ 0 };
+  right = (ghl_conservative_quantities){ 0 };
+  overflow.rho = 1.0;
+  overflow.SD[2] = DBL_MAX;
+  right.SD[2] = DBL_MAX;
+  const ghl_conservative_quantities zero = { 0 };
+  const ghl_conservative_quantities right_full = right;
+  if(ghl_accumulate_face_transfer(&overflow, &left, &right)
+           != ghl_error_invalid_face_transfer
+     || memcmp(&left, &zero, sizeof left) || memcmp(&right, &right_full, sizeof right)) {
+    ghl_error("A transfer that overflows an accumulator was not rejected cleanly\n");
+  }
+  left.tau = INFINITY;
+  right = zero;
+  const ghl_conservative_quantities left_infinite = left;
+  if(ghl_accumulate_face_transfer(&overflow, &left, &right)
+           != ghl_error_invalid_face_transfer
+     || memcmp(&left, &left_infinite, sizeof left)
+     || memcmp(&right, &zero, sizeof right)) {
+    ghl_error("An accumulator that is not finite was not rejected cleanly\n");
   }
 }
 

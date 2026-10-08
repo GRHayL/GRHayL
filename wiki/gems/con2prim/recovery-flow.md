@@ -126,13 +126,23 @@ principle of that paper (its Eq. 12) is not applied here.
 `ghl_assess_candidate_state` (`GRHayL/Con2Prim/assess_candidate_state.c`) runs the
 flow above on copies of a densitized candidate divided by the cell's
 coordinate volume, with the driver chosen by `eos->eos_type`, and sets a flag when
-the candidate would need a repair: it is not finite, recovery fails numerically,
-`tau_fix`, `Stilde_fix`, or `speed_limited` is set, Font1D succeeds, or closure
-fails. Closure rebuilds the conservatives from the limited primitives and compares
-them with the original candidate, which is how primitive limits and solver clamps
-are seen. `ghl_apply_conservative_limits` is skipped for tabulated EOS, because a
-negative `tau_atm` makes its momentum rescaling take the square root of a negative
-number. Configuration errors are returned and leave the flag unchanged.
+the candidate would need a repair: its `D`, `tau`, or `S_i` is not finite (or its
+entropy, when `evolve_entropy` is set, which an energy-based recovery would
+otherwise discard) or too large to form the closure bound, recovery fails
+numerically, `tau_fix`, `Stilde_fix`, or `speed_limited` is set, Font1D succeeds,
+or closure fails. Closure rebuilds the conservatives from the limited primitives
+and compares them with the original candidate, which is how primitive limits and
+solver clamps larger than the closure bound are seen; a smaller one is flagged
+only if a named diagnostic also records it, and a primitive floor with no record
+goes unflagged. The evolved entropy is not compared with the energy; with an
+entropy-based solver it drives the recovery, so a disagreement appears as a
+closure failure. `ghl_apply_conservative_limits` is skipped for tabulated EOS,
+because a negative `tau_atm` makes its momentum rescaling take the square root
+of a negative number. Configuration errors that are the final result of the
+recovery are returned and leave the flag unchanged; an error that a later
+backup recovers from is not reported, and a solver the sequence never calls is
+not checked, so the caller validates the whole configured solver list at
+initialization.
 
 Sources: `GRHayL/Con2Prim/assess_candidate_state.c`,
 `GRHayL/Con2Prim/apply_conservative_limits.c`,

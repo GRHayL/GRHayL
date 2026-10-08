@@ -472,7 +472,8 @@ void ghl_return_conservatives(
 /**
  * Add one integrated face transfer to the cells sharing a face: delta_L -= transfer
  * and delta_R += transfer in every field. Returns ghl_error_invalid_face_transfer
- * and changes nothing if the transfer is not finite. The cells must be different.
+ * and changes nothing if an updated accumulator would not be finite. The cells must
+ * be different.
  * This is the conservative update of first-order flux correction
  * (\cite Lemaster_2009; \cite Fields_2025, Sec. 3.3 and the conservation law of Eq. 10).
  */

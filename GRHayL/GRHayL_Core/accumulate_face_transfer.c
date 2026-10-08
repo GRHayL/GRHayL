@@ -27,10 +27,12 @@
  *
  * All three arguments are integrated densitized quantities (\f$ Q \f$, not
  * \f$ Q/V \f$), and fields the caller does not evolve must be zero in all of them.
- * The transfer is checked first, so nothing changes if it is not finite. Call this
- * once per face; the two cells must be different objects. A cell that is its own
- * neighbor, as across a periodic boundary one cell wide, has no net change, so the
- * caller skips such a face.
+ * Both updated accumulators are formed first and checked, so neither changes unless
+ * every updated field of both is finite: a transfer that is not finite, an accumulator
+ * that already is not, and a finite transfer that overflows an accumulator are all
+ * rejected. Call this once per face; the two cells must be different objects. A cell
+ * that is its own neighbor, as across a periodic boundary one cell wide, has no net
+ * change, so the caller skips such a face.
  *
  * @param[in] transfer pointer to the integrated transfer \f$ I_f \f$
  *
@@ -38,31 +40,43 @@
  *
  * @param[in,out] delta_R pointer to the accumulator of the cell the face enters
  *
- * @returns ghl_success, or ghl_error_invalid_face_transfer if transfer is not finite
+ * @returns ghl_success, or ghl_error_invalid_face_transfer if an updated accumulator
+ *          would not be finite, which leaves both accumulators unchanged
  */
 ghl_error_codes_t ghl_accumulate_face_transfer(
       const ghl_conservative_quantities *restrict transfer,
       ghl_conservative_quantities *restrict delta_L,
       ghl_conservative_quantities *restrict delta_R) {
 
-  if(!(isfinite(transfer->rho) && isfinite(transfer->tau) && isfinite(transfer->Y_e)
-       && isfinite(transfer->entropy) && isfinite(transfer->SD[0])
-       && isfinite(transfer->SD[1]) && isfinite(transfer->SD[2]))) {
-    return ghl_error_invalid_face_transfer;
+  // Eq. 10 of Fields et al. (2025) in integrated form: one transfer, two cells.
+  ghl_conservative_quantities new_L = *delta_L;
+  ghl_conservative_quantities new_R = *delta_R;
+  new_L.rho -= transfer->rho;
+  new_R.rho += transfer->rho;
+  new_L.tau -= transfer->tau;
+  new_R.tau += transfer->tau;
+  new_L.Y_e -= transfer->Y_e;
+  new_R.Y_e += transfer->Y_e;
+  new_L.entropy -= transfer->entropy;
+  new_R.entropy += transfer->entropy;
+  for(int i = 0; i < 3; i++) {
+    new_L.SD[i] -= transfer->SD[i];
+    new_R.SD[i] += transfer->SD[i];
   }
 
-  // Eq. 10 of Fields et al. (2025) in integrated form: one transfer, two cells.
-  delta_L->rho -= transfer->rho;
-  delta_R->rho += transfer->rho;
-  delta_L->tau -= transfer->tau;
-  delta_R->tau += transfer->tau;
-  delta_L->Y_e -= transfer->Y_e;
-  delta_R->Y_e += transfer->Y_e;
-  delta_L->entropy -= transfer->entropy;
-  delta_R->entropy += transfer->entropy;
-  for(int i = 0; i < 3; i++) {
-    delta_L->SD[i] -= transfer->SD[i];
-    delta_R->SD[i] += transfer->SD[i];
+  // Commit only if both updates are finite. A finite transfer can still overflow an
+  // accumulator, and a transfer or accumulator that is not finite always gives a result
+  // that is not.
+  const ghl_conservative_quantities *const updated[2] = { &new_L, &new_R };
+  for(int k = 0; k < 2; k++) {
+    if(!(isfinite(updated[k]->rho) && isfinite(updated[k]->tau)
+         && isfinite(updated[k]->Y_e) && isfinite(updated[k]->entropy)
+         && isfinite(updated[k]->SD[0]) && isfinite(updated[k]->SD[1])
+         && isfinite(updated[k]->SD[2]))) {
+      return ghl_error_invalid_face_transfer;
+    }
   }
+  *delta_L = new_L;
+  *delta_R = new_R;
   return ghl_success;
 }
