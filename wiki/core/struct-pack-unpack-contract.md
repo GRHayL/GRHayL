@@ -85,6 +85,19 @@ no validation. A null/short backup array, null output, zero or non-finite
 Lorentz-factor input, or unsupported enum is outside its checked contract
 (`GRHayL/include/ghl.h`; `GRHayL/GRHayL_Core/initialize_params.c`).
 
+## Face-Transfer Accumulation
+
+`ghl_accumulate_face_transfer` (`GRHayL/GRHayL_Core/accumulate_face_transfer.c`)
+subtracts one integrated transfer from the left cell's accumulator and adds it to
+the right cell's, in every `ghl_conservative_quantities` field. Unlike the packers
+above it checks the result: both updated accumulators are formed first, and if any
+field of either is not finite (a non-finite transfer or accumulator, or a finite
+transfer that overflows one) it returns `ghl_error_invalid_face_transfer` and
+changes nothing. It is the conservative
+update of first-order flux correction; the method references are listed in
+[Candidate Assessment](../gems/con2prim/recovery-flow.md#candidate-assessment). Test:
+`Unit_Tests/unit_test_flux_correction.c`.
+
 ## Test Routes
 
 - Core suite coverage around Core initialization and public helpers starts in

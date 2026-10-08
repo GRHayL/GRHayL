@@ -17,7 +17,9 @@
  * both @grhayl metric structs and user-defined arrays (so long as they are
  * indexed the same as the @grhayl metric array). Other functions are primarily
  * for convenience and to show how to get the associated variable out of the
- * struct.
+ * struct. ghl_accumulate_face_transfer applies one integrated face transfer to the
+ * two cells that share the face, the conservative update of the first-order flux
+ * correction of \cite Lemaster_2009 and \cite Fields_2025.
  */
 
 /**

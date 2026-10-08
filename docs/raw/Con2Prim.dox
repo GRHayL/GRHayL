@@ -12,6 +12,12 @@
  *
  * The solvers are split by the types of EOS they support, which are detailed
  * more explicitly within the documentation subpages.
+ *
+ * ghl_assess_candidate_state supports the first-order flux correction of
+ * \cite Lemaster_2009 as used in AthenaK (\cite Stone_2024_AthenaK;
+ * \cite Fields_2025). It runs the recovery sequence on copies of an estimated
+ * new state and reports whether that state requires a floor or fails the
+ * conserved-to-primitive inversion.
  */
 
 /**

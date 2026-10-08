@@ -16,7 +16,7 @@ Read with [Core tests and fixtures](../core/tests-and-fixtures.md),
 ## Harness Contract
 
 The full runner invokes `$repo_root/test/unit_test_code_error` for keys
-`0..90` from its private `code_error_workdir`.
+`0..91` from its private `code_error_workdir`.
 Each key is treated as an expected-error case: if the executable exits
 successfully, `.github/run_tests.sh` prints `Failed to fail!` and fails the
 runner; if the executable exits nonzero, the runner treats that as the expected
@@ -40,7 +40,8 @@ nonfinite-output enum values. They exercise `ghl_abort_if_error` and process
 termination; the NRPyLeakage physics test covers producer returns. Key `88`
 directly supplies `ghl_error_invalid_hlle_wavespeeds` to exercise the same
 abort path and termination; it does not call an HLLE kernel to check error
-production. The harness does not assert emitted message text.
+production. Key `91` does the same for
+`ghl_error_invalid_face_transfer`. The harness does not assert emitted message text.
 
 Inside `unit_test_code_error.c`, `expect_error_code(...)` compares the supplied
 GRHayL error code with the expected mapping, then routes through
@@ -115,6 +116,9 @@ helpers, disabled direct-C2P stubs, and real tabulated flux kernels.
   `ghl_error_invalid_hlle_wavespeeds` handling in `ghl_abort_if_error`.
   Direct checked HLLE input validation belongs to
   [Flux_Source HLLE flux variants](../gems/flux-source/hlle-flux-variant-matrix.md).
+- Core face-transfer error: key `91` checks `ghl_error_invalid_face_transfer`
+  handling in `ghl_abort_if_error`. Direct result validation is checked by
+  `Unit_Tests/unit_test_flux_correction.c`.
 - Tabulated 1D Con2Prim EOS failures: keys `89` and `90` scale `tau` above the
   SLy4 table's energy range at the test density, so the temperature inversion
   fails and `ghl_tabulated_Newman1D_energy` (`89`) and

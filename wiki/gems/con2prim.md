@@ -41,6 +41,8 @@ inferring status from any single layer.
   `ghl_undensitize_conservatives`, `ghl_guess_primitives`,
   `ghl_enforce_primitive_limits_and_compute_u0`, `ghl_compute_conservs`,
   `ghl_compute_conservs_and_Tmunu`
+- Candidate assessment: `ghl_assess_candidate_state`; see
+  [recovery flow](con2prim/recovery-flow.md#candidate-assessment)
 - Tabulated NN primitive-guess API: `GHL_NN_C2P_API_VERSION`,
   `ghl_c2p_nn_model`, `ghl_c2p_nn_guess`,
   `ghl_c2p_nn_guess_primitives`, `ghl_c2p_nn_validate_model`,
