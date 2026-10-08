@@ -66,12 +66,13 @@
  * of the energy recovery. With an entropy-based solver the entropy drives the recovery,
  * so a disagreement with the energy appears as a closure failure.
  *
- * Configuration errors are returned and leave flagged unchanged: disabled HDF5 for a
- * tabulated EOS, and an unknown or invalid EOS type or an invalid solver key that is the
- * final result of the recovery sequence. An error that a later backup recovers from is
- * not reported, a solver the sequence never calls is not checked, and a candidate that
- * is not finite is flagged before any solver runs, so validate the whole configured
- * solver list when initializing.
+ * Configuration errors are returned and leave flagged unchanged: an unknown or invalid
+ * EOS type, an invalid solver key, or, for a tabulated EOS, disabled HDF5, each only if
+ * it is the final result of the recovery sequence. An error that a later backup
+ * recovers from is not reported, a solver the sequence never calls is not checked, and
+ * a candidate that is not finite is flagged before any solver runs, so validate the
+ * whole configured solver list, and check the EOS initialization's return value, when
+ * initializing.
  *
  * @param[in] params pointer to ghl_parameters struct
  *
@@ -103,12 +104,6 @@ ghl_error_codes_t ghl_assess_candidate_state(
       bool *restrict flagged) {
 
   const bool tabulated = eos->eos_type == ghl_eos_tabulated;
-  // A tabulated EOS needs HDF5, whatever the candidate.
-#ifdef GHL_DISABLE_HDF5
-  if(tabulated) {
-    return ghl_error_used_disabled_hdf5;
-  }
-#endif
 
   // An infinite candidate, or a sum |D| + |tau| that overflows, would make the closure
   // bound below infinite. An energy-based recovery would also discard a non-finite
@@ -154,8 +149,11 @@ ghl_error_codes_t ghl_assess_candidate_state(
   // Fields et al. (2025), Sec. 3.3: a cell is flagged if the conserved-to-primitive
   // inversion fails. A configuration error is returned instead; any other failure
   // flags the candidate.
-  if(error == ghl_error_unknown_eos_type || error == ghl_error_invalid_c2p_key
-     || error == ghl_error_invalid_eos_type) {
+  // Evaluated without short-circuiting: the disabled-HDF5 error can occur only in a
+  // build without HDF5, so as a || term its true edge could never be taken in the HDF5
+  // builds that run this test.
+  if((error == ghl_error_unknown_eos_type) | (error == ghl_error_invalid_c2p_key)
+     | (error == ghl_error_invalid_eos_type) | (error == ghl_error_used_disabled_hdf5)) {
     return error;
   }
   if(error != ghl_success) {
