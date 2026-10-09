@@ -81,7 +81,8 @@ registry/direct-compile boundary. It lists local `SRCS` as:
 
 It also lists `SUBDIRS` for module paths including `Atmosphere`, `Con2Prim`,
 `Con2Prim/Hybrid`, `Con2Prim/Tabulated`, `EOS/Hybrid`, `EOS/Tabulated`,
-`Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`, and
+`Flux_Source`, `GRHayL_Core`, `Induction`, `Neutrinos/NRPyLeakage`,
+`Radiation`, `Radiation/Neutrinos`, and
 `Reconstruction` variants.
 
 Static registry parity is a directory-level requirement: tracked symlinks under

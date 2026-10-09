@@ -79,8 +79,8 @@ Induction HLL packing uses characteristic speeds produced under the Flux_Source
 direction convention. The coupling is documented in
 [GRHayL/include/ghl_induction.h](../../../GRHayL/include/ghl_induction.h),
 where `ghl_HLL_vars` stores `c1_min`, `c1_max`, `c2_min`, and `c2_max` and
-points readers back to the three `ghl_calculate_characteristic_speed_dirn*`
-functions. Direction or sign changes here can therefore affect hydrodynamic
+points readers back to the `ghl_calculate_characteristic_speed_dirn*`
+family. Direction or sign changes here can therefore affect hydrodynamic
 HLLE fluxes and vector-potential HLL flux setup.
 
 This is a contract coupling, not end-to-end test evidence. The Induction HLL

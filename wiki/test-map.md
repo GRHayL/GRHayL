@@ -6,9 +6,10 @@ Repo ground truth: `Unit_Tests/`, `.github/run_tests.sh`, `.github/workflows/`,
 Evidence labels are strict: `configure` selects targets; `make tests` and
 `make datagen` compile/link; only an exact invocation establishes execution.
 Workflow commands are workflow-only evidence, not historical pass results.
-Default configuration selects the unit-test targets; `.github/run_tests.sh`
-directly invokes all except WENOZ reconstruction, Con2Prim debug, and the
-CompOSE integration test. WENOZ and CompOSE are workflow-selected; no normal
+Default configuration selects the unit-test targets. The ordinary
+`.github/run_tests.sh` invokes the Radiation M1 tests alongside the rest of the
+suite, but does not invoke WENOZ reconstruction, Con2Prim debug, or the CompOSE
+integration test. WENOZ and CompOSE have dedicated workflow routes; no normal
 invocation for the debug binary is visible.
 
 Core/chalice test selection, fixture naming, helper-only files, and weak
@@ -27,6 +28,39 @@ targeted build, run, and CI job guidance routes through [Induction verification 
 Flux_Source-specific hybrid/tabulated HLLE fixtures, ET Legacy flux/source
 replay, characteristic-speed fixture evidence, and the Induction HLL exclusion
 route through [Flux_Source tests and fixtures](gems/flux-source/tests-and-fixtures.md).
+
+Radiation M1 test selection, fixture ownership, and evidence limits route through
+[M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md) and the
+[Radiation M1 hub](gems/radiation-m1.md). The ordinary runner
+[`.github/run_tests.sh`](../.github/run_tests.sh) builds the discovered targets
+and invokes the M1 executables below: every run performs the local checks, and
+retained replay downloads and prepares every pinned `radiation/*.bin.gz`
+member at the `.github/radiation-testdata-ref` revision by default. Setting
+`M1_FIXTURE_DIR` to a raw or
+gzip package instead bypasses downloads and replays the supplied directory. A complete raw `.bin` directory is used directly; `.bin.gz`
+members are restored to raw `.bin` form by
+[`.github/prepare_m1_fixtures.sh`](../.github/prepare_m1_fixtures.sh) in a
+runner-owned temporary directory while caller input is preserved. The runner
+passes `--fixture` with the `jthick_thcm1.bin` member to the diffusion owner
+and `--fixture-dir` to the other stored-reference owners. Build modes and
+evidence boundaries route through the
+[M1 unit-test guide](../docs/raw/Radiation_unit_tests.md); fixture preparation
+and member detail route through the M1 leaf above.
+
+The same runner also takes an `m1` suite argument,
+`.github/run_tests.sh m1 [configure arguments...]`, which builds with
+`make tests` and runs only the Radiation M1 tests. Each compiler workflow in
+[`.github/workflows/`](../.github/workflows/) has a `radiation-m1` job that
+calls the [`run_m1` action](../.github/actions/run_m1/action.yml), which runs
+that mode in each supported HDF5 mode. Only the
+[Ubuntu GCC workflow](../.github/workflows/github-actions-Ubuntu-gcc.yml) job
+builds with gcc coverage flags, and the
+[M1 coverage action](../.github/actions/m1-code-coverage/action.yml) generates
+and uploads its Radiation-filtered gcovr report; the other `radiation-m1` jobs
+are plain test runs. The
+[unit-test guide](../docs/raw/Radiation_unit_tests.md#ci) defines the denominator,
+exemption proofs, and production-versus-reference provider checks. Stored
+replay remains optional for this coverage measurement.
 
 Cross-cutting Unit_Tests routes live under [Unit_Tests Hub](tests/index.md):
 [runner and generated artifacts](tests/runner-and-generated-artifacts.md),
@@ -72,6 +106,16 @@ available. Route that checklist through
 | `Unit_Tests/unit_test_induction_ccc_ADM.c` | `GRHayL/Induction/Interpolators/` | Cell-centered ADM interpolation; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md). | Fixture family `induction_interpolation_*`; details in [Induction tests and fixtures](gems/induction/tests-and-fixtures.md). | Uses helper implementation in `Unit_Tests/compute_ccc_ADM.c`. |
 | `Unit_Tests/unit_test_induction_ccc_BSSN.c` | `GRHayL/Induction/Interpolators/` | Cell-centered BSSN interpolation; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md). | `induction_interpolation_input.bin`, `induction_interpolation_BSSN_input.bin`, `induction_interpolation_ccc_BSSN_output*.bin`; route fixture details through [Induction tests and fixtures](gems/induction/tests-and-fixtures.md). | Uses helper implementation in `Unit_Tests/compute_ccc_BSSN.c`. |
 | `Unit_Tests/unit_test_induction_vvv_ADM.c` | `GRHayL/Induction/Interpolators/` | Vertex-centered ADM interpolation; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md). | `induction_interpolation_input.bin`, `induction_interpolation_ADM_input.bin`, `induction_interpolation_vvv_ADM_output*.bin`; route fixture details through [Induction tests and fixtures](gems/induction/tests-and-fixtures.md). | Uses helper implementation in `Unit_Tests/compute_vvv_ADM.c`. |
+| `Unit_Tests/unit_test_m1_closure_fallback.c` | `GRHayL/Radiation/`, `GRHayL/include/ghl_m1.h` | Eulerian Minerbo admissibility fallback: exact symmetry of every published pressure tensor, separate PSD and zero-flux fallback accounting, and the documented PSD regime boundary; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None. | Local analytic sweep; no external fixture. |
+| `Unit_Tests/unit_test_m1_diffusion_flux.c` | `GRHayL/Radiation/` | M1 `Jthick` and diffusion helper checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None for the mandatory local checks; optional `jthick_thcm1.bin` member from the pinned TestData download or a supplied `M1_FIXTURE_DIR`. | The ordinary runner supplies `--fixture` with the prepared `jthick_thcm1.bin` member by default; executable-level invocation without `--fixture` remains local-only. |
+| `Unit_Tests/unit_test_m1_error_handling.c` | `GRHayL/Radiation/`, `GRHayL/include/ghl_m1.h` | M1 validation and error-handling boundary checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None. | Local boundary cases; no external fixture. |
+| `Unit_Tests/unit_test_m1_fd_jacobian.c` | `GRHayL/Radiation/Neutrinos/` | Finite-difference Jacobian and implicit-solve checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None. | Local solver and transactional checks. |
+| `Unit_Tests/unit_test_m1_neutrino_rusanov_flux.c` | `GRHayL/Radiation/Neutrinos/` | Neutrino and number-current Rusanov flux checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None for the mandatory local checks; optional `rusanov_neutrino.bin` and `rusanov_neutrino_current.bin` members from the pinned TestData download or a supplied `M1_FIXTURE_DIR`. | The ordinary runner supplies `--fixture-dir` with the prepared raw `.bin` directory by default; executable-level invocation without `--fixture-dir` remains local-only. |
+| `Unit_Tests/unit_test_m1_neutrino_seeded_invariants.c` | `GRHayL/Radiation/`, `GRHayL/Radiation/Neutrinos/` | Pointwise closure, moments, stress, geometry, source, and invariant checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None for the mandatory local checks; optional `pointwise_closure_moments.bin`, `stress_energy.bin`, and `m1_thcm1_instantaneous_sources.bin` members from the pinned TestData download or a supplied `M1_FIXTURE_DIR`. | The ordinary runner supplies `--fixture-dir` with the prepared raw `.bin` directory by default; executable-level invocation without `--fixture-dir` remains local-only. |
+| `Unit_Tests/unit_test_m1_neutrino_source_update.c` | `GRHayL/Radiation/Neutrinos/` | Explicit, frozen-rate, pair-source, and transactional source-update checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None. | Local source-update checks. |
+| `Unit_Tests/unit_test_m1_rate_provider.c` | `GRHayL/Radiation/Neutrinos/` | Rate-provider cache, channel, backend, failure, and recovery checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | `--generated-fixture` creates the provider test input. | The generated table is test input, not a retained reference fixture. |
+| `Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c` | `GRHayL/Radiation/` | Four-point blended Rusanov and prepared variable-volume transport checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None for the mandatory local checks; optional constant-volume and variable-volume `transport_four_point_*.bin` members from the pinned TestData download or a supplied `M1_FIXTURE_DIR`. | The ordinary runner supplies `--fixture-dir` with the prepared raw `.bin` directory by default; executable-level invocation without `--fixture-dir` remains local-only. |
+| `Unit_Tests/unit_test_rusanov_flux.c` | `GRHayL/Radiation/` | Shared component-wise Rusanov and M1 flux-boundary checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None for the mandatory local checks; optional `rusanov_generic.bin` member from the pinned TestData download or a supplied `M1_FIXTURE_DIR`. | The ordinary runner supplies `--fixture-dir` with the prepared raw `.bin` directory by default; executable-level invocation without `--fixture-dir` remains local-only. |
 | `Unit_Tests/unit_test_nrpyleakage_constant_density_sphere.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Constant-density sphere opacities and optical-depth iteration; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_constant_density_sphere_{unperturbed,perturbed}.bin`. | Comparison results are enforced in a serial loop with grid-coordinate diagnostics; an asymmetric focused case exercises the sphere caller's own neighbor gather and call setup. |
 | `Unit_Tests/unit_test_nrpyleakage_luminosities.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Fermi-Dirac branch checks and neutrino luminosity replay; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_luminosities_{unperturbed,perturbed}.bin`. | Comparison results are enforced with row diagnostics; generation preserves each base vector, bounds endpoint perturbations, and asserts every matched input component before evaluation. |
 | `Unit_Tests/unit_test_nrpyleakage_optically_thin_gas.c` | `GRHayL/Neutrinos/NRPyLeakage/` | Optically thin gas leakage source evolution; see [tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path plus `nrpyleakage_optically_thin_gas_{unperturbed,perturbed}.bin`. | Comparison results and every EOS lookup status are checked. Failure injection covers the initial energy lookup and all four RK temperature lookups, including RHS counts and preservation of a pre-existing marker file. |
@@ -120,6 +164,8 @@ available. Route that checklist through
 | `Unit_Tests/compute_vvv_ADM.c` | `GRHayL/Induction/Interpolators/` | Vertex-centered ADM interpolation helper; see [Induction interpolation and staggering contract](gems/induction/interpolation-and-staggering-contract.md). | Used by induction interpolation tests. | Helper, not standalone test; route through [Induction tests and fixtures](gems/induction/tests-and-fixtures.md). |
 | `Unit_Tests/ghl_test_helpers.c`, `Unit_Tests/ghl_test_helpers.h` | Induction test harness | Shared grid-header read, minimum-size, and overflow validation. | Used by the local and ET Legacy HLL, interpolation, and ET Legacy gauge replay tests. | Private helper linked through `TOBJS`; not a standalone test or installed production API. |
 | `Unit_Tests/nrpyleakage_main.h` | `GRHayL/Neutrinos/NRPyLeakage/` | Shared main/argument handling for the EOS-table NRPyLeakage replay tests (optically thin gas, constant-density sphere, luminosities); the physics and classifier-fallback tests define their own `main(void)`. See [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md). | CLI EOS table path. | Header helper owns key `0` generation mode and key `1` unit-test mode. |
+| `Unit_Tests/m1_pair_range_tests.h` | `GRHayL/Radiation/Neutrinos/` | Header-included paired pair-source range-rejection cases; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None; local under/overflow inputs. | Helper included by `unit_test_m1_fd_jacobian.c`; not a standalone test. |
+| `Unit_Tests/m1_neutrino_rate_provider_reference.h`, `Unit_Tests/m1_neutrino_rate_provider_reference.inc` | `GRHayL/Radiation/Neutrinos/` | Test-local synthetic reference provider context, cache, and compute kernels for synthetic-model checks; see [M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md). | None. | Helper included by `unit_test_m1_rate_provider.c`; not installed production API. |
 | `Unit_Tests/pert_test_fail_conservatives.c` | test harness | Conservative quantity perturbation-bar comparison. | Called by multiple tests. | Helper, not standalone test. |
 | `Unit_Tests/pert_test_fail_primitives.c` | test harness | Primitive quantity perturbation-bar comparison, including EOS-dependent fields. | Called by multiple tests. | Helper, not standalone test. |
 | `Unit_Tests/pert_test_fail_stress_energy.c` | test harness | Stress-energy perturbation-bar comparison. | Called by stress-energy tests. | Helper, not standalone test. |

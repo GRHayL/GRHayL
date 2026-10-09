@@ -73,7 +73,7 @@ Related routers: [KB index](../index.md), [catalog](../catalog.md),
 
 Every source file listed by
 [`GRHayL/GRHayL_Core/make.code.defn`](../../GRHayL/GRHayL_Core/make.code.defn)
-routes to exactly one focused Core page:
+routes to its focused Core page:
 
 | Core file | Focused node |
 | --- | --- |

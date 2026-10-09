@@ -30,6 +30,8 @@ SUBDIRS = Atmosphere                              \
           Induction                               \
           Induction/Interpolators                 \
           Neutrinos/NRPyLeakage                   \
+          Radiation                               \
+          Radiation/Neutrinos                     \
           Reconstruction/PPM                      \
           Reconstruction/PLM                      \
           Reconstruction/WENOZ

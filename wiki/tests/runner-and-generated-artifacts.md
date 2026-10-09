@@ -29,11 +29,18 @@ library path like:
 export LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 ```
 
-[.github/run_tests.sh](../../.github/run_tests.sh) runs `./configure -r`, then
-`make tests datagen`, then exports `LD_LIBRARY_PATH` with `build/lib` before invoking
-compiled tests. Workflow jobs use the composite compile action, which runs
+[.github/run_tests.sh](../../.github/run_tests.sh) accepts
+`[all|m1] [configure arguments...]` and passes the remaining arguments to
+`./configure -r`. The default `all` suite builds with `make tests datagen`;
+`m1` builds with `make tests`, compiling every configured test target but
+executing only the Radiation M1 tests. Both modes export `LD_LIBRARY_PATH`
+and `DYLD_LIBRARY_PATH` with `build/lib` before invoking compiled tests.
+Workflow jobs using the composite compile action run
 `make tests datagen` and `make install`; jobs then invoke binaries under
 `test/`, often with `LD_LIBRARY_PATH` pointing at the installed `lib/`.
+The `radiation-m1` jobs instead use the
+[run_m1 action](../../.github/actions/run_m1/action.yml), which invokes the
+runner's `m1` mode.
 
 These stages are not interchangeable:
 
@@ -68,11 +75,12 @@ its generation mode. Normal CI replay downloads fixtures and runs test mode.
 ## Runtime Runner
 
 [.github/run_tests.sh](../../.github/run_tests.sh) is the broad local replay
-route, not a complete workflow matrix:
+route, not a complete workflow matrix. The default `all` suite performs the
+following steps:
 
 1. Run `./configure -r`.
 2. Run `make tests datagen`.
-3. Export `LD_LIBRARY_PATH` with `build/lib`.
+3. Export `LD_LIBRARY_PATH` and `DYLD_LIBRARY_PATH` with `build/lib`.
 4. Download root-level `*.bin` fixtures and HDF5/EOS tables.
 5. Decompress downloaded `*.bz2` EOS tables.
 6. Run selected binaries under `test/`, including the direct
@@ -86,7 +94,27 @@ route, not a complete workflow matrix:
 10. Use an `EXIT` trap to remove only files downloaded or decompressed by this
     run and its private expected-error work directory.
 
-Cleanup runs on success or failure and preserves every preexisting path.
+The `m1` suite runs `make tests` and only the Radiation M1 executables, then
+exits before legacy fixture downloads, expected-error-key runs, and `pyghl`
+setup. With `M1_FIXTURE_DIR` unset, the runner downloads every named
+`radiation/*.bin.gz` member at the pinned revision and prepares them in a
+private temporary directory. Supplying `M1_FIXTURE_DIR` with a raw or gzip
+package bypasses downloads; a complete raw `.bin` directory is used directly,
+otherwise [prepare_m1_fixtures.sh](../../.github/prepare_m1_fixtures.sh)
+prepares members in a runner-owned temporary directory. Direct executable
+invocations without fixture arguments remain local-only. The provider test
+uses `--generated-fixture` for its local input. See
+[M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) for replay
+arguments and fixture ownership.
+
+The [Radiation CI action](../../.github/actions/run_m1/action.yml) forwards
+its optional `fixture-dir` input as `M1_FIXTURE_DIR` and invokes the runner's
+`m1` mode. It performs no TestData checkout; the runner retries the pinned
+download by default. The pinned revision must be available from TestData.
+
+Cleanup runs on success or failure, removes run-created paths and private
+temporary directories (including prepared M1 fixtures), and preserves
+preexisting paths.
 `make realclean` separately removes build products such as `build/`, `test/`,
 and the generated `Makefile`.
 
@@ -112,12 +140,21 @@ Treat `.github/run_tests.sh` as one broad local-style driver, not a complete
 enumeration of every workflow job. Treat workflows as CI matrices, not proof
 that normal local runs regenerate trusted fixtures.
 
-Set comparison is exact in current sources: default `configure` targets the
-`Unit_Tests/unit_test_*.c` set, while the runner directly invokes all except
-`unit_test_WENOZ_reconstruction`,
-`unit_test_tabulated_eos_compose`, and `unit_test_con2prim_debug`; workflows
-invoke WENOZ and the focused CompOSE test, while no normal runner/workflow
-invocation for the debug binary is visible.
+Default `configure` targets the `Unit_Tests/unit_test_*.c` set. The ordinary
+runner executes the Radiation M1 tests. WENOZ and the focused CompOSE test have
+separate workflow routes; no normal runner/workflow invocation for the debug
+binary is visible.
+
+The focused CompOSE route is Python-side too: the Ubuntu GCC workflow
+`compose-regularized-eos` job first discovers
+[Unit_Tests/compose](../../Unit_Tests/compose/) with
+`python3 -m unittest discover -s Unit_Tests/compose` under branch coverage for
+the `tools/compose` converter, then builds a synthetic regularized table
+through the suite's `_write_fixture` helper and replays it through
+`test/unit_test_tabulated_eos_compose`. `Unit_Tests/compose` is not a
+`configure`-discovered binary set; the ordinary `.github/run_tests.sh` does
+not execute it. Coverage classification routes through
+[unit-test coverage and gap matrix](unit-test-coverage-and-gap-matrix.md).
 
 NN primitive-guess coverage appears in both paths: `.github/run_tests.sh` runs
 `./test/unit_test_c2p_nn_guess`, while workflow `c2p-failure` matrices include

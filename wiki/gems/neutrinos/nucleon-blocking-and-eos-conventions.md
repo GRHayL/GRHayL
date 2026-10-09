@@ -19,7 +19,7 @@ for producer-specific EOS meanings.
 
 ## Installed Blocking Model
 
-The [private blocking helper](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
+The [shared blocking helper](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
 is shared by standalone opacities, opacities with GRMHD sources, and
 luminosities. It uses the EOS callback's free-neutron and free-proton fractions
 `Xn` and `Xp`. For each free population it inverts the nonrelativistic ideal-gas
@@ -52,7 +52,12 @@ The inverse half-order Fermi integral uses scalar minimax fits from FDINT and
 Fukushima. No numerical quadrature, root iteration, or additional EOS lookup
 runs in the leakage hot path. The source carries the FDINT license and cites
 the original fits. GRHayL's density normalization, overlap identity, endpoint
-handling, and reaction pairing are local adaptations.
+handling, and reaction pairing are local adaptations. Fraction bounding itself
+lives outside this header: the evaluator calls the installed
+`ghl_nrpyleakage_normalize_nucleon_fractions` inline helper in
+[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h), which the M1
+leakage kernel and rate backend reuse so the shared roundoff-envelope check serves
+both consumers.
 
 ## Equilibrium And Reaction-Energy Pairing
 

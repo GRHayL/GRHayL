@@ -175,14 +175,23 @@ output value before branch dispatch. Unsupported keys return
 
 ## Nucleon-Blocking Error Behavior
 
-The EOS-dependent public routines include the source-private
-`NRPyLeakage_nucleon_blocking.h`. Public function signatures and radiation
-structs remain unchanged; the helper is not installed as public API.
+The EOS-dependent public routines include
+[`ghl_nrpyleakage_nucleon_blocking.h`](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h).
+The header is installed: `GRHayL/include/make.code.defn` lists it (and the
+rate-helpers header below) in `#! install_headers`. Its helpers are `static
+inline`, so they compile into each caller and add no separately linked
+symbols; public NRPyLeakage function signatures and radiation structs remain
+unchanged.
 
 After EOS lookup and density conversion, the helper requires finite positive
 cgs density and temperature. It accepts finite `X_n`, `X_p` in `[0,1]` and
+delegates fraction bounding to the installed
+`ghl_nrpyleakage_normalize_nucleon_fractions` inline helper in
+[`ghl_nrpyleakage.h`](../../../GRHayL/include/ghl_nrpyleakage.h), which
 normalizes only endpoint excursions within the forward-error bound of the
-eight-corner interpolation arithmetic. The both-zero composition is a neutral
+eight-corner interpolation arithmetic. The same installed helper is reused by
+the M1 leakage kernel and rate backend, so one bound and clamp convention
+serves both consumers. The both-zero composition is a neutral
 success. For exactly one normalized zero, it returns the exact overlap limit,
 retains occupied-species scattering, and leaves the degeneracy-difference
 placeholder unused while public callers apply the analytic zero limit of every
@@ -204,8 +213,11 @@ Callers can inspect deterministic finite fallback outputs without mistaking
 repaired arithmetic for successful evaluation.
 
 Ports of any opacity, combined source/opacity, or luminosity entry point must
-carry this private header or provide equivalent blocking and error behavior.
-The motivation and equations are in
+carry this installed header and the installed
+[`ghl_nrpyleakage_rate_helpers.h`](../../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h)
+sanitize/rate helpers, or provide equivalent blocking and error behavior; both
+headers are listed in `#! install_headers` yet supply no extra link unit. The
+motivation and equations are in
 [Physics And EOS Contract](physics-and-eos-contract.md).
 
 ## HDF5 And EOS
@@ -230,7 +242,7 @@ initializes outputs on failure.
 
 The optical-depth path routine does not call EOS or HDF5. It consumes local and
 neighbor `ghl_neutrino_opacities`/`ghl_neutrino_optical_depths`, metric stencil
-arrays, and grid spacing, then writes one optical-depth struct.
+arrays, and grid spacing, then writes the output optical-depth struct.
 
 Neutrinos tests use additional EOS setup calls that are test-only dependencies
 for fixture generation or replay:

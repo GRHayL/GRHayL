@@ -699,7 +699,7 @@ def generate_fluxes(destination: Path, face: FaceSymbols) -> None:
 
 
 def manifest_outputs() -> Set[Path]:
-    """Read names of generated C files from the Flux_Source build manifests.
+    """Read generator-owned C names from the Flux_Source build manifests.
 
     :return: C paths relative to ``GRHayL/Flux_Source``.
     """

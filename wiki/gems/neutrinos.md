@@ -34,8 +34,10 @@ Doxygen source.
 ## Ground Truth
 
 - Source: `GRHayL/Neutrinos/NRPyLeakage/`
-- Private blocking evaluator:
-  `GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h`
+- Installed blocking and rate helpers:
+  `GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h` and
+  `GRHayL/include/ghl_nrpyleakage_rate_helpers.h`, selected by
+  `GRHayL/include/make.code.defn`
 - Installed blocking model and qualification:
   [Nucleon Blocking And EOS Conventions](neutrinos/nucleon-blocking-and-eos-conventions.md)
 - Public radiation structs: `GRHayL/include/ghl_radiation.h`
@@ -108,10 +110,20 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
 - Neutrinos KB pages live under `wiki/` only; Doxygen source under `docs/**`
   is a separate authority (currently no dedicated Neutrinos page exists there).
 - Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
-- Keep the shared nucleon-blocking evaluator source-private. Its algebraic
-  density inversion is shared by the EOS-dependent routines to avoid
-  duplicated corrections and the runtime cost of per-call quadrature or root
-  solves; `make.code.defn` tracks it through `#! INCS`.
+- Keep the shared nucleon-blocking evaluator and rate helpers in their
+  installed inline headers under `GRHayL/include/`. Their algebraic density
+  inversion and corrected rate identities are shared by the EOS-dependent
+  routines and the M1 kernel to avoid duplicated corrections and the runtime
+  cost of per-call quadrature or root solves. `GRHayL/include/make.code.defn`
+  installs both headers through `#! install_headers`; the leakage source
+  manifest builds only the C implementations.
+- Keep the fraction-bound normalizer
+  `ghl_nrpyleakage_normalize_nucleon_fractions`, together with the leakage
+  constants and public declarations, in the installed
+  `GRHayL/include/ghl_nrpyleakage.h`. The installed nucleon-blocking evaluator
+  calls it, and the M1 leakage kernel and rate-backend consumers reuse the
+  same installed helper so one bound and clamp convention serves leakage and
+  M1 without a second copy.
 - The external notebooks are provenance, not the authority for current GRHayL
   signatures or behavior. Preserve the durable derivation and interface facts
   in child pages so routine KB use does not depend on that repository remaining

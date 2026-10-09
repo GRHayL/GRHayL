@@ -10,9 +10,13 @@
 #!                   ghl_metric_helpers.h
 #!                   ghl_induction.h
 #!                   ghl_radiation.h
+#!                   ghl_m1.h
+#!                   ghl_neutrino_rate_provider.h
 #!                   ghl_nrpyeos_hybrid.h
 #!                   ghl_nrpyeos_tabulated.h
 #!                   ghl_nrpyleakage.h
+#!                   ghl_nrpyleakage_nucleon_blocking.h
+#!                   ghl_nrpyleakage_rate_helpers.h
 #!                   ghl_reconstruction.h
 
 # Keep source-tree-only headers in the generated dependency list without

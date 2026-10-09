@@ -13,9 +13,9 @@ GRHayL/Flux_Source/generate_flux_source.sh /tmp/grhayl-flux-stage
 ```
 
 The driver rejects output directories inside `GRHayL/Flux_Source` and nonempty
-destinations. It checks its C output names against the root and variant
-`make.code.defn` files. Review staged C and compile it before copying it into
-the checked-in source tree.
+destinations. It checks its C output names against the generator-owned entries
+in the root and variant `make.code.defn` files. Review staged C and compile it
+before copying it into the checked-in source tree.
 
 The Python driver uses NRPy 2's ADM metric conversion and comoving magnetic
 norm to form the total GRMHD stress-energy tensor for both source and face
@@ -29,10 +29,10 @@ checked before any output is written.
 
 ## Checked-In C Kernels
 
-The [root build list](../../../GRHayL/Flux_Source/make.code.defn) compiles the
-source-term and three characteristic-speed kernels. The variant build lists
-compile three directions each of hybrid, hybrid entropy, tabulated, and
-tabulated entropy HLLE fluxes:
+The [root build list](../../../GRHayL/Flux_Source/make.code.defn) owns the
+source-term and directional characteristic-speed kernels. The variant build
+lists own the directional hybrid, hybrid-entropy, tabulated, and
+tabulated-entropy HLLE fluxes:
 
 | Generated C | Python path | Build list |
 | --- | --- | --- |

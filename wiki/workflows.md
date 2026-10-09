@@ -203,7 +203,15 @@ KB routes to update:
   ownership, fixtures, or impact routes change
 
 Pitfalls/contracts:
-- Public reconstruction routines return left/right values for the left face of a cell.
+- The single-face reconstruction wrappers (`ghl_ppm_reconstruction`,
+  `ghl_ppm_reconstruction_with_steepening`, `ghl_wenoz_reconstruction`, and the
+  PLM wrappers) return right/left values at the left face of a cell for their
+  stated stencil alignment. The centered two-face helpers
+  (`ghl_ppm_compute_for_cell`, `ghl_ppm_compute_for_cell_with_steepening`, and
+  `ghl_wenoz_reconstruction_right_left_faces`) instead write the value at the
+  cell's right face to `Ur` and the value at its left face to `Ul`, so their
+  output meanings differ by face rather than following the wrapper convention;
+  see [Face and stencil contract](gems/reconstruction/face-and-stencil-contract.md).
 - PPM steepening uses pressure, effective Gamma, and parameters in `ghl_parameters`; preserve stencil sizes.
 - Reconstruction feeds Flux_Source and Induction face data. Changing output orientation can silently corrupt fluxes.
 
@@ -337,6 +345,50 @@ Pitfalls/contracts:
 - `ghl_neutrino_opacities` stores electron neutrino, electron antineutrino, and heavy-lepton neutrino entries; optical depths reuse the opacity struct type.
 - Units and constants live in `ghl_nrpyleakage.h`; changing them affects all leakage tests.
 
+## Radiation M1 Path
+
+Read first:
+- `wiki/gems/radiation-m1.md`
+- `wiki/gems/radiation-m1/api-build-boundary.md`
+- `wiki/gems/radiation-m1/tests-and-fixtures.md`
+- `docs/raw/Radiation.dox`
+- `docs/raw/Radiation_integration_contract.md`
+- `GRHayL/include/ghl_m1.h`
+- `GRHayL/include/ghl_neutrino_rate_provider.h`
+
+Edit paths:
+- Shared M1 kernels: `GRHayL/Radiation/`
+- Neutrino kernels and rate provider: `GRHayL/Radiation/Neutrinos/`
+- Private component-wise Rusanov helper: `GRHayL/Radiation/ghl_calculate_Rusanov_flux.c` and `GRHayL/Radiation/ghl_m1_rusanov_private.h`
+- Public declarations: `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h`, `GRHayL/include/ghl_radiation.h`
+- Build lists: `GRHayL/Radiation/make.code.defn`, `GRHayL/Radiation/Neutrinos/make.code.defn`, `GRHayL/include/make.code.defn`
+- GRHayLib registration: `implementations/GRHayLib/src/make.code.defn`
+
+Build scope: after `./configure`, build only the named M1 targets as direct
+configured Makefile targets
+(`make test/unit_test_m1_closure_fallback test/unit_test_m1_diffusion_flux test/unit_test_m1_error_handling test/unit_test_m1_fd_jacobian test/unit_test_m1_neutrino_rusanov_flux test/unit_test_m1_neutrino_seeded_invariants test/unit_test_m1_neutrino_source_update test/unit_test_m1_rate_provider test/unit_test_m1_thcm1_blended_rusanov test/unit_test_rusanov_flux`); do not start an Einstein Toolkit
+build. Target compilation is separate from executable invocation: building
+produces the `test/` binaries, while `.github/run_tests.sh` invokes them with
+the pinned TestData fixtures by default. `M1_FIXTURE_DIR` selects a supplied
+raw or gzip package instead of downloads.
+
+Tests/data:
+- `.github/run_tests.sh` and the `Unit_Tests/unit_test_m1_*.c` and `Unit_Tests/unit_test_rusanov_flux.c` sources
+- `Unit_Tests/m1_helpers/` fixture helpers and externally supplied retained data (including `jthick_thcm1.bin`); no retained M1 payload file or archive is present in the working tree
+
+Wiki routes:
+- `wiki/gems/radiation-m1.md` and its leaves
+- `wiki/gems/radiation-m1/rate-provider-contract.md` for provider initializers, failure policy, and recovery
+- `wiki/gems/radiation-m1/tests-and-fixtures.md` for runner, fixtures, and CI selection
+- `wiki/test-map.md`, `wiki/public-api-map.md`, and `wiki/catalog.md` when tests or headers change
+- `docs/raw/Radiation_*.md` and `docs/raw/m1_thcm1/` for the contract, traceability map, pair source model, test guide, and fixture-family documents
+
+Pitfalls/contracts:
+- The installed headers and active manifests define the production surface; files present but unlisted are not production code.
+- `ghl_neutrino_rate_provider_initialize_default` selects the production NRPyLeakage backend (HDF5 required); synthetic reference support is test-local.
+- A recovered provider call returns the original error; check `diagnostics->last_recovery`.
+- The ordinary `.github/run_tests.sh` executes local M1 checks and accepts `M1_FIXTURE_DIR` for historical replay; pinned external delivery needs the actual producer records.
+
 ## Add Unit Test Data
 
 Read first:
@@ -376,6 +428,7 @@ Edit paths:
 - Module pages: `docs/raw/*.dox`
 - Derivation source: `docs/raw/derivation.md`
 - Public API comments: `GRHayL/include/`
+- Gem alias list: `Doxyfile` `ALIASES += g<gem>` lines (Radiation uses `@grad`)
 
 Tests/data generators:
 - Run Doxygen from repo root only with `OUTPUT_DIRECTORY` overridden to a

@@ -29,7 +29,7 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   beta-equilibrium rho-map helpers.
 - [Unit_Tests/unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
   independently reads a converter-produced StellarCollapse file, checks every
-  node of all 19 serialized fields against GRHayL's loader mapping and units,
+  node of every serialized field against GRHayL's loader mapping and units,
   validates derived enthalpy and the relativistic sound-speed route, exercises
   midpoint storage-space interpolation and `eps/P/S/h` inversions from
   distinct valid initial guesses, checks the six-value NRPyLeakage interpolation

@@ -1,0 +1,114 @@
+/**
+ * @defgroup Radiation Neutrino M1 Radiation Gem
+ *
+ * @brief The @grad gem provides grey, one-group, three-species neutrino M1
+ *        radiation transport, source, and rate-provider operations.
+ *
+ * The Radiation contribution documented here is a grey, one-group,
+ * three-species neutrino M1 surface. It provides transported number and
+ * energy/momentum moments, symmetric Rusanov transport, realizability repair,
+ * explicit source helpers, lepton-number exchange, and a frozen-rate local
+ * implicit update.
+ *
+ * The neutrino operators consume provider-supplied
+ * @c ghl_m1_neutrino_rates. The provider owns EOS lookup, unit conversion,
+ * weak-rate channel selection, equilibrium targets, and the production
+ * microphysics boundary. The installed public surface is declared in
+ * @ref ghl_m1.h, @ref ghl_neutrino_rate_provider.h, and
+ * @ref ghl_nrpyleakage.h.
+ *
+ * Electron-flavor pair, plasmon, and bremsstrahlung emissivities are stored
+ * separately in @c ghl_m1_neutrino_rates::eta_N_pair and
+ * @c ghl_m1_neutrino_rates::eta_E_pair. Use
+ * @ref ghl_m1_solve_neutrino_pair_source_update for the two electron species
+ * together. It includes the independent charged-current/scattering update
+ * and the grey paired collision update, conserving the pair number difference
+ * and publishing both species atomically. Single-species source operations
+ * reject electron pair rates. The equations and approximation are documented
+ * in the [pair source model](Radiation_pair_source_model.md).
+ * The closure enforces the radiation trace at zero flux, using its flagged
+ * Eulerian admissibility fallback when necessary. The neutrino Newton solve
+ * can use an admissible source predictor at an exact-zero-flux start without
+ * changing the source base or residual equation.
+ *
+ * The table-backed production provider is initialized by
+ * @ref ghl_neutrino_rate_provider_initialize_default or
+ * @ref ghl_neutrino_rate_provider_initialize_nrpyleakage. Synthetic models are
+ * test-local support and are absent from the installed API. Initialize each
+ * cache with @ref ghl_neutrino_rate_provider_cache_initialize and increment
+ * @c eos_generation after in-place EOS mutation. A transparent or equilibrium
+ * recovery requires valid same-cell thermodynamics and physical equilibrium
+ * moments; it still returns the original error and records @c last_recovery.
+ * A host accepting recovery must check that diagnostic.
+ *
+ * HDF5 is a build-time dependency of tabulated EOS lookup, not of the public
+ * header aggregate. In a @c GHL_DISABLE_HDF5 build the headers remain
+ * includable and the production provider returns
+ * @c ghl_error_used_disabled_hdf5 without publishing rates.
+ *
+ * This group documents library-level neutrino behavior only. The host-neutral
+ * integration boundary is in the
+ * [integration contract](Radiation_integration_contract.md), the per-family
+ * implementation map in the [traceability map](Radiation_traceability.md), and
+ * the unit-test evidence boundary in [Radiation unit tests](Radiation_unit_tests.md).
+ * Source and target-selection evidence do not establish test execution,
+ * downstream host integration, or external physical validation.
+ *
+ * The public declarations in @ref ghl_m1.h and
+ * @ref ghl_neutrino_rate_provider.h are members of this group. The
+ * component-wise Rusanov helper used by the M1 flux functions is declared in
+ * @ref ghl_m1.h and implemented in Radiation; the neutrino face operation uses the M1-specific
+ * four-point transport contract described above.
+ *
+ * Functional API navigation: @ref m1_closure, @ref m1_transport,
+ * @ref m1_sources, @ref m1_solver, and @ref m1_rates. Optional diffusion and
+ * diagnostic operations are independent facilities; a host integration does
+ * not need to call every group in sequence.
+ *
+ * Source callers may enable final comoving mean-energy bounds through
+ * @c ghl_m1_neutrino_parameters::enforce_mean_energy_bounds. Positive bounds
+ * reject an out-of-range repaired endpoint, nonpositive bounds disable that
+ * side, and @c N == 0 retains the ratio-check skip. The branched source
+ * option @c ghl_m1_neutrino_source_options::thermalized_number_threshold uses
+ * a negative value to disable equilibrium number projection; zero selects it
+ * even for zero opacity or timestep. That projection remains distinct from
+ * backward-Euler number integration and @c N_floor repair.
+ */
+
+/** @defgroup m1_closure M1 Closure and Moments
+ * @ingroup Radiation
+ *
+ * Closure construction, closure validation diagnostics, comoving moments, and
+ * the radiation stress-energy tensor. Decomposition and fallback diagnostics
+ * are optional observability APIs.
+ */
+
+/** @defgroup m1_transport M1 Transport and Diffusion
+ * @ingroup Radiation
+ *
+ * Face fluxes, transport speeds, four-point blending, and the optional
+ * energy-flux diffusion correction. Diffusion is an independent host-selected
+ * correction, not a required step in every transport update.
+ */
+
+/** @defgroup m1_sources M1 Geometry and Matter Sources
+ * @ingroup Radiation
+ *
+ * Geometric and matter-coupling sources, plus the single-species and paired
+ * neutrino source operations. The host chooses which source operations fit its
+ * integration schedule.
+ */
+
+/** @defgroup m1_solver M1 Solver Interfaces and Diagnostics
+ * @ingroup Radiation
+ *
+ * Generic Newton callbacks and controls, solver diagnostics, closure outcome
+ * counters, and neutrino implicit-update diagnostics.
+ */
+
+/** @defgroup m1_rates M1 Neutrino Rate Provider
+ * @ingroup Radiation
+ *
+ * Provider context, cache and diagnostics records, with lifecycle and frozen
+ * rate-computation operations.
+ */
