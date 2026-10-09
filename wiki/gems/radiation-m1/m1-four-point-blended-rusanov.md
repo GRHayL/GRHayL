@@ -35,6 +35,20 @@ candidate is the centered physical-flux average; the low candidate adds
 Rusanov dissipation using the state jump. The caller remains responsible for
 computing physical E/F and number fluxes from repaired states and closures.
 
+The low-flux core calls `ghl_rusanov_candidate_finite` in
+[`ghl_calculate_Rusanov_flux.c`](../../../GRHayL/Radiation/ghl_calculate_Rusanov_flux.c),
+also used by the two-state M1/number wrappers. It retains the ordinary finite
+double expression, with explicit FMA and half-scaled retries for overflowing
+intermediates whose final flux is representable. Prepared operands can carry a
+host volume scale, so this shared scalar contract does not impose an artificial
+magnitude cap. Existing finite-jump, overflowing-jump and cancellation endpoints
+are checked in
+[`unit_test_rusanov_flux.c`](../../../Unit_Tests/unit_test_rusanov_flux.c); the
+four-point owner also checks subnormal-speed dissipation. Removing the retry
+would turn established successful finite endpoints into errors. Genuinely
+nonfinite final candidates are rejected before publication; no extended-precision
+arithmetic or relaxed accuracy gate is involved.
+
 ## Componentwise four-point limiter
 
 For each component, form
@@ -113,7 +127,7 @@ componentwise blend on host-prepared operands but performs no metric
 inspection or additional densitization. See the
 [finite-volume boundary](m1-finite-volume-and-face-flux.md).
 
-The canonical operation rejects `diffusion_correction_enabled = true`. It
+The canonical operation carries no diffusion-correction flag. It
 also does not apply an optical-depth wave-speed cap. Metric light-cone speed
 inputs are supplied by the host; see the
 [geometry and speed policy](m1-geometry-and-wave-speed-policy.md). Separate
@@ -122,8 +136,7 @@ diffusion is an explicitly requested helper and is documented in the
 
 The generic two-state Rusanov and HLL-related shared helpers are not a second
 canonical neutrino route. In particular, do not replace this four-point
-operation with a historical photon HLL recipe merely because the older
-methods whitepaper describes one.
+operation with a historical photon HLL recipe.
 
 ## Failure behavior
 
@@ -136,14 +149,15 @@ This matters to hosts that reuse an output buffer across faces.
 Relevant focused evidence is in
 [`unit_test_m1_thcm1_blended_rusanov.c`](../../../Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c),
 [`unit_test_m1_neutrino_rusanov_flux.c`](../../../Unit_Tests/unit_test_m1_neutrino_rusanov_flux.c),
-and the stored transport fixtures under
-[`Unit_Tests/data/m1_thcm1`](../../../Unit_Tests/data/m1_thcm1). The
-[M1 test guide](../../../Unit_Tests/README.m1.md) explains the pointwise and
+and the external retained transport fixtures replayed by the ordinary runner
+by default, as described in the
+[M1 fixture guide](../../../docs/raw/m1_thcm1/README.md). The
+[M1 test guide](../../../docs/raw/Radiation_unit_tests.md) explains the pointwise and
 variable-volume evidence boundary.
 
 ## Source authority
 
-Use the [M1 integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md),
+Use the [M1 integration contract](../../../docs/raw/Radiation_integration_contract.md),
 the [shared build manifest](../../../GRHayL/Radiation/make.code.defn), and the
 [neutrino build manifest](../../../GRHayL/Radiation/Neutrinos/make.code.defn)
-to distinguish compiled current behavior from historical whitepaper plans.
+to distinguish compiled current behavior from uncompiled files.

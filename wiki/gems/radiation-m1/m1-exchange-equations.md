@@ -189,15 +189,15 @@ The paired `{nue, anue}` source operation extends the transaction across both
 species: either both final states and packets publish or both source bases and
 zero packets remain. Pair number increments are equal and therefore preserve
 the pair number difference; pair reactions contribute no `dYe` directly. See
-[PAIR_SOURCE_MODEL.md](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md#composition-exchange-and-failure)
+[Radiation_pair_source_model.md](../../../docs/raw/Radiation_pair_source_model.md#composition-exchange-and-failure)
 for the paired collision details.
 
 ## Photon and obsolete-method boundary
 
-The equal-and-opposite projection is shared radiation/matter mathematics. The
-photon whitepaper’s LTE energy target and photon opacity prescription are not
+The equal-and-opposite projection is shared radiation/matter mathematics. A
+photon LTE energy target and photon opacity prescription are not
 needed to form a neutrino exchange packet. Likewise, an HLL or reduced-number
-current formula from an earlier design does not change the current increment,
+current formula does not change the current increment,
 lepton-weight, or transaction rules.
 
 ## Focused evidence

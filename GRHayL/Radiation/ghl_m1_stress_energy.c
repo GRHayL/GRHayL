@@ -8,7 +8,7 @@ static ghl_error_codes_t ghl_m1_validate_inputs(
       const ghl_m1_closure *restrict closure) {
 
   ghl_error_codes_t error
-        = ghl_m1_validate_realizability(m1_params, metric, rad_state, 64.0, NULL);
+        = ghl_m1_validate_realizability_state(m1_params, metric, rad_state, 64.0, NULL);
   if(error != ghl_success) {
     return error;
   }
@@ -35,7 +35,7 @@ ghl_error_codes_t ghl_m1_compute_stress_energy(
 
   const double inv_alpha = 1.0 / metric->lapse;
   const double inv_alpha_sq = SQR(inv_alpha);
-  if(!isfinite(inv_alpha_sq)) {
+  if(!isfinite(inv_alpha_sq) || !(metric->lapse > 0.0)) {
     return ghl_error_m1_invalid_metric;
   }
 

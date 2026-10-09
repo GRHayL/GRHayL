@@ -13,9 +13,6 @@ ghl_error_codes_t ghl_m1_compute_raw_lightcone_speeds(
   if(error != ghl_success) {
     return error;
   }
-  if(!ghl_m1_metric_is_symmetric_spd(metric_face)) {
-    return ghl_error_m1_invalid_metric;
-  }
   const double scale
         = metric_face->lapse * sqrt(metric_face->gammaUU[direction][direction]);
   if(!isfinite(scale) || scale <= 0.0) {
@@ -42,8 +39,8 @@ ghl_error_codes_t ghl_m1_clip_hll_speeds(
   if(!isfinite(s_minus_raw) || !isfinite(s_plus_raw) || s_minus_raw > s_plus_raw) {
     return ghl_error_m1_invalid_state;
   }
-  *s_minus = ghl_m1_min(0.0, s_minus_raw);
-  *s_plus = ghl_m1_max(0.0, s_plus_raw);
+  *s_minus = fmin(0.0, s_minus_raw);
+  *s_plus = fmax(0.0, s_plus_raw);
   return ghl_success;
 }
 

@@ -4,9 +4,9 @@ This leaf records the shared geometric and conservative mathematics used by
 the current M1 kernels. It is the E/F part of each grey neutrino state; the
 transported neutrino number density `N` has an additional current described in
 [number current and transport](m1-number-current-and-transport.md). The
-installed header, not a whitepaper, is the API authority:
+installed header is the API authority:
 [ghl_m1.h](../../../GRHayL/include/ghl_m1.h),
-[M1_INTEGRATION_CONTRACT.md](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md),
+[Radiation_integration_contract.md](../../../docs/raw/Radiation_integration_contract.md),
 and the active [Radiation build manifest](../../../GRHayL/Radiation/make.code.defn).
 
 ## 3+1 geometry and fluid velocity
@@ -108,7 +108,7 @@ The densitized face object is \(\sqrt{\gamma}\,f^{(d)}\). The pointwise
 neutrino four-point operation performs this final face densitization exactly
 once; callers using prepared volume-weighted operands use its separate
 volume-weighted entry point. These are caller-visible boundaries in the
-[integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#transport).
+[integration contract](../../../docs/raw/Radiation_integration_contract.md#transport).
 
 ## E/F evolution equations
 
@@ -175,22 +175,22 @@ the coordinate flux are given in
 library supplies pointwise local quantities; the host owns reconstruction,
 finite-volume divergence, time integration, boundaries, and mesh traversal.
 
-## Photon-whitepaper boundary
+## Photon-specific boundary
 
 The 3+1 projections, E/F/P decomposition, conservative equations, and metric
 flux factors above are shared M1 mathematics and remain applicable to neutrino
-transport. Photon-only material from the equations whitepaper must not be
-copied into the neutrino rule: in particular, the photon equilibrium choice
+transport. Photon-only material must not be copied into the neutrino rule: in
+particular, the photon equilibrium choice
 \(J_{\rm eq}=a_RT^4\), photon opacity prescriptions, and photon microphysics
 are not supplied by the current Radiation kernels. Neutrino `n_eq`, `J_eq`,
 emissivities, and opacities arrive in a frozen provider bundle; see
 [ghl_m1.h rate fields](../../../GRHayL/include/ghl_m1.h).
 
-The older methods whitepaper's HLL flux is also not implied by these continuum
+An HLL flux is not implied by these continuum
 equations. The current canonical neutrino face method is four-point blended
 Rusanov; generic HLL helpers do not define that path. The canonical face
 operation is listed in the production-surface table of
-[TRACEABILITY.md](../../../GRHayL/Radiation/TRACEABILITY.md#production-boundary).
+[the traceability map](../../../docs/raw/Radiation_traceability.md#production-boundary).
 
 ## Focused evidence
 

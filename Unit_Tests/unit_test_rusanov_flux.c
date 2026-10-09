@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../GRHayL/Radiation/ghl_m1_rusanov_private.h"
 #include "ghl_flux_source.h"
+#include "m1_helpers/m1_thcm1_rusanov_fixture.h"
 #include "m1_test_utils.h"
-#include "m1_thcm1_rusanov_fixture.h"
 
 /*
  * Boundary and reference coverage for shared and typed M1 Rusanov fluxes.
@@ -231,13 +232,6 @@ static void check_m1_rusanov_boundaries(
      != ghl_error_m1_invalid_state) {
     fail_case("M1 physical flux invalid direction was accepted", 412);
   }
-  ghl_metric_quantities bad_metric = *metric;
-  bad_metric.gammaDD[0][0] = -1.0;
-  if(ghl_m1_compute_physical_flux(
-           &bad_metric, ghl_m1_dirn0, &state_L, &closure_L, &physical_E, physical_F)
-     != ghl_error_m1_invalid_metric) {
-    fail_case("M1 physical flux invalid metric was accepted", 413);
-  }
   ghl_m1_closure bad_closure = closure_L;
   bad_closure.P[0][0] = NAN;
   if(ghl_m1_compute_physical_flux(
@@ -411,24 +405,6 @@ static void check_physical_flux(
   }
 }
 
-static void check_cancelled_physical_flux(void) {
-  ghl_metric_quantities metric;
-  m1_setup_flat_metric(&metric);
-  metric.lapse = 4.0;
-  metric.betaU[0] = 2.0;
-  const ghl_m1_rad_state state = { .E = 1.0e308, .F = { 5.0e307, 0.0, 0.0 } };
-  const ghl_m1_closure closure = { .P = { { 1.0e308 / 3.0, 0.0, 0.0 },
-                                          { 0.0, 1.0e308 / 3.0, 0.0 },
-                                          { 0.0, 0.0, 1.0e308 / 3.0 } } };
-  double energy_flux = 17.0, momentum_flux[3] = { 18.0, 19.0, 20.0 };
-  if(ghl_m1_compute_physical_flux(
-           &metric, ghl_m1_dirn0, &state, &closure, &energy_flux, momentum_flux)
-           != ghl_success
-     || energy_flux != 0.0 || !isfinite(momentum_flux[0])) {
-    fail_case("finite cancelled physical energy flux was rejected", 430);
-  }
-}
-
 static void check_case(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -552,12 +528,12 @@ static void check_high_energy_closure(
 }
 
 int main(int argc, char **argv) {
-  const char *fixture_dir = "Unit_Tests/data/m1_thcm1";
-  if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0) {
+  const char *fixture_dir = NULL;
+  if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0 && argv[2][0] != '\0') {
     fixture_dir = argv[2];
   }
   else if(argc != 1) {
-    fail_case("usage: [--fixture-dir PATH]", -1);
+    fail_case("usage: [--fixture-dir DIR]", -1);
     return 1;
   }
   ghl_m1_parameters m1_params = { 0 };
@@ -565,17 +541,6 @@ int main(int argc, char **argv) {
            1.0e-10, 1.0e-12, 1.0e-8, 1.0e-6, 1.0e-12, 20, 1.0e-10, &m1_params)
      != ghl_success) {
     fail_case("M1 initialization failed", -1);
-  }
-  char fixture_error[256] = { 0 };
-  if(!m1_thcm1_rusanov_check_generic_fixture(
-           fixture_dir, fixture_error, sizeof(fixture_error))) {
-    fail_case(
-          fixture_error[0] != '\0' ? fixture_error
-                                   : "generic Rusanov fixture evaluation failed",
-          -2);
-  }
-  else {
-    ghl_info("unit_test_rusanov_flux: 1024 strict generic Rusanov pairs passed\n");
   }
 
   ghl_metric_quantities flat_metric;
@@ -597,7 +562,6 @@ int main(int argc, char **argv) {
   check_case(&m1_params, &curved_metric, &curved_prims, &curved_L, &curved_R, 1);
 
   check_shared_rusanov_boundaries();
-  check_cancelled_physical_flux();
   check_m1_rusanov_boundaries(&m1_params, &flat_metric, &flat_prims);
 
   if(ghl_m1_compute_rusanov_flux(
@@ -605,6 +569,22 @@ int main(int argc, char **argv) {
            (double[3]){ 0.0, 0.0, 0.0 }, 1.0, NULL, NULL)
      != ghl_error_m1_null_pointer) {
     fail_case("NULL typed Rusanov input was not rejected", -1);
+  }
+
+  if(fixture_dir != NULL) {
+    char error[256] = { 0 };
+    if(!m1_thcm1_rusanov_check_generic_fixture(fixture_dir, error, sizeof(error))) {
+      fail_case(error[0] != '\0' ? error : "generic Rusanov fixture replay failed", -1);
+    }
+    if(!m1_thcm1_rusanov_check_fixture_regression(
+             fixture_dir, M1_THCM1_RUSANOV_REGRESSION_PERTURBED_OUTPUT,
+             NULL, NULL, error, sizeof(error))
+       || !m1_thcm1_rusanov_check_fixture_regression(
+             fixture_dir, M1_THCM1_RUSANOV_REGRESSION_SWAPPED_ENDPOINTS,
+             NULL, NULL, error, sizeof(error))) {
+      fail_case(error, -1);
+    }
+    ghl_info("unit_test_rusanov_flux: stored generic Rusanov replay passed\n");
   }
 
   ghl_info("unit_test_rusanov_flux: typed physical/E-F/scalar Rusanov cases passed\n");

@@ -14,9 +14,9 @@ Availability claims are layered: declaration, definition, build inclusion,
 dispatch/initialization, test selection, execution, and downstream proof are
 distinct. Current unresolved product choices live only in
 [Contradictions](contradictions.md); owner leaves state safe observed behavior.
-The current neutrino M1 contribution is library-level; the implementation
-routes below are repository-wide navigation and do not mean that downstream
-GRHayLib or other host integration is part of this contribution.
+The Radiation M1 gem is library-level; the implementation routes below are
+repository-wide navigation and do not mean that downstream GRHayLib or other
+host integration is part of the gem.
 
 ## Router
 
@@ -27,7 +27,7 @@ GRHayLib or other host integration is part of this contribution.
 | [Public API Map](public-api-map.md) | Public headers, structs, function families, and callable surface. | `GRHayL/include/`, `docs/raw/GRHayL_Core.dox` |
 | [Core/Chalice](core/index.md) | Shared Core structs, pack/unpack helpers, metrics, `u0`, stress-energy, EOS dispatch, errors, IO, debug utilities, and Core fixtures. | `GRHayL/GRHayL_Core/`, `GRHayL/include/ghl.h`, `docs/raw/GRHayL_Core.dox`, `Unit_Tests/unit_test_grhayl_core_test_suite.c` |
 | [Neutrinos](gems/neutrinos.md) | NRPyLeakage API, physics/EOS contracts, generated-code provenance, implementation flow, portability, and tests. | `GRHayL/Neutrinos/NRPyLeakage/`, `GRHayL/include/ghl_radiation.h`, `GRHayL/include/ghl_nrpyleakage.h`, `Unit_Tests/unit_test_nrpyleakage_*.c` |
-| [Radiation M1](gems/radiation-m1.md) | Grey one-group, three-species neutrino M1, rate provider, source/implicit coupling, canonical four-point Rusanov transport, optional diffusion helpers, and tests/fixtures. | `GRHayL/Radiation/`, `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h`, `Unit_Tests/run_m1_tests.sh` |
+| [Radiation M1](gems/radiation-m1.md) | Grey one-group, three-species neutrino M1, rate provider, source/implicit coupling, canonical four-point Rusanov transport, optional diffusion helpers, and tests/fixtures. | `GRHayL/Radiation/`, `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h`, `.github/run_tests.sh` |
 | [Gems](gems/index.md) | Gem-by-gem module summaries. | `GRHayL/Atmosphere/`, `GRHayL/Con2Prim/`, `GRHayL/EOS/`, `GRHayL/Flux_Source/`, `GRHayL/Induction/`, `GRHayL/Neutrinos/`, `GRHayL/Radiation/`, `GRHayL/Reconstruction/` |
 | [Implementations](implementations/index.md) | Downstream/direct-compile implementation routers, including the [GRHayLib Cactus thorn](implementations/grhaylib.md). | `implementations/GRHayLib/` |
 | [Build And CI](build-and-ci.md) | Configure, HDF5, Makefile, install, and CI workflow routes. | `README.md`, `configure`, `.github/workflows/`, `.github/run_tests.sh` |
@@ -58,6 +58,7 @@ GRHayLib or other host integration is part of this contribution.
 | Work on vector-potential induction | [Induction hub](gems/induction.md), [Evolution Equation Map](physics/evolution-equation-map.md), `docs/raw/Induction.dox`, `GRHayL/Induction/` |
 | Work on neutrino leakage | [Neutrinos hub](gems/neutrinos.md), [physics and EOS contract](gems/neutrinos/physics-and-eos-contract.md), `GRHayL/Neutrinos/`, `GRHayL/include/ghl_radiation.h` |
 | Work on neutrino M1 transport or its provider boundary | [Radiation M1 hub](gems/radiation-m1.md), [provider contract](gems/radiation-m1/rate-provider-contract.md), [tests and fixtures](gems/radiation-m1/tests-and-fixtures.md), `GRHayL/Radiation/Neutrinos/`, `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h` |
+| Find M1 initialization, solver/closure controls, or the shared public helper surface | [M1 public API quick reference](gems/radiation-m1/m1-public-api-quick-reference.md), [Evolution Equation Map](physics/evolution-equation-map.md), [Public API Map](public-api-map.md), `GRHayL/include/ghl_m1.h` |
 | Understand grey neutrino M1 physics scope, the reuse doctrine, or the post-phase-1 roadmap | [Radiation M1 grey physics scope](gems/radiation-m1/neutrino-grey-physics-scope.md), [neutrino reuse strategy](gems/radiation-m1/neutrino-reuse-strategy.md), [post-phase-1 roadmap](gems/radiation-m1/post-phase1-roadmap.md), `GRHayL/include/ghl_m1.h`, `GRHayL/include/ghl_neutrino_rate_provider.h` |
 | Find NRPyLeakage generators or explain generated `tmp_*` expressions | [NRPyLeakage generator provenance](gems/neutrinos/generator-provenance.md), [Generated Boundaries](generated-boundaries.md) |
 | Port NRPyLeakage without linking the full library | [Neutrinos API and data](gems/neutrinos/api-and-data.md), [implementation flow](gems/neutrinos/implementation-flow.md), [physics and EOS contract](gems/neutrinos/physics-and-eos-contract.md) |

@@ -105,13 +105,6 @@ ghl_error_codes_t ghl_m1_repair_neutrino_state(
     return ghl_error_m1_null_pointer;
   }
 
-  /* Preserve the public error order without performing a throwaway repair. */
-  const ghl_error_codes_t configuration_error
-        = ghl_m1_validate_configuration(m1_params, metric);
-  if(configuration_error != ghl_success) {
-    return configuration_error;
-  }
-
   /* N_floor must be finite and nonnegative. */
   if(!isfinite(nu_params->N_floor) || nu_params->N_floor < 0.0) {
     return ghl_error_m1_invalid_state;

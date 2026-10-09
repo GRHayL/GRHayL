@@ -132,6 +132,21 @@ perturbed input = input X (1 + 1e-14).
 This output serves as error bars for the functions, and the tests validate that the computed output falls
 within this range.
 
+The ordinary `.github/run_tests.sh m1` runner downloads the pinned
+`radiation/*.bin.gz` members from `GRHayL/TestData` at the full commit in
+`.github/radiation-testdata-ref` and runs the full stored replay by default.
+Supplying `M1_FIXTURE_DIR` with a raw or gzip package bypasses downloads and
+requests replay of the supplied package instead; individual executable
+invocations without fixture arguments remain local-only. See the M1 tests and
+fixtures guide in the repository wiki for the exact route and evidence limits.
+
+The Radiation CI action forwards its optional `fixture-dir` input as
+`M1_FIXTURE_DIR` and invokes the runner's `m1` mode, so it retries the pinned
+download by default and performs no TestData checkout of its own. A nonempty
+`fixture-dir` replays the supplied package without downloads. The pinned
+revision must be a full published `GRHayL/TestData` commit; a missing or
+malformed pin fails explicitly rather than skipping replay.
+
 ## Implementations
 
 Most codes will simply link to the compiled library. However, some infrastructures (such as

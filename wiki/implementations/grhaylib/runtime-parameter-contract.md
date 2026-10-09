@@ -67,7 +67,11 @@ GRHayLib maps Cactus controls into `ghl_initialize_params` at routing level:
 - Evolution flags: `evolve_entropy` and `evolve_temperature`.
 - Primitive guess policy: `calc_primitive_guess`.
 - Limit and gauge controls: `Psi6threshold`, `max_Lorentz_factor`, and
-  `Lorenz_damping_factor`.
+  `Lorenz_damping_factor`. The stored `max_Lorentz_factor` feeds the Core
+  speed cap consumed by `ghl_limit_v_and_compute_u0`; see the
+  [Core velocity/u0 contract](../../core/velocity-u0-contract.md) for the
+  pre-mutation singular-`u0` check, the capped inward-rescaling retry loop,
+  and cap-accuracy limits.
 
 Before initialization, `GRHayLib_paramcheck` rejects a
 `max_Lorentz_factor` that is nonfinite or less than `1`. Thus the admitted
@@ -77,11 +81,13 @@ does not guarantee a representable subluminal cap at every extreme magnitude:
 if velocity limiting is required and the requested bound is not strictly
 subluminal, Core returns `ghl_error_u0_singular` before mutation. If storing an
 otherwise representable rescaling rounds the achieved speed over the cap, Core
-may retry inward rescaling up to 64 times before returning that error if the
-achieved speed still fails the final checks. For finite achieved speeds the
-retries end inside the cap, possibly well inside it at very small lapse. The
-owning [velocity/u0 contract](../../core/velocity-u0-contract.md) also gives
-the `u0` accuracy limits for large finite caps.
+may retry inward rescaling up to the Core-defined retry count before returning
+that error if the achieved speed still fails the final checks. The exact retry
+bound, inward-margin doubling, and rounding semantics are owned by the
+[Core velocity/u0 retry contract](../../core/velocity-u0-contract.md), which
+also gives the `u0` accuracy limits for large finite caps. For finite achieved
+speeds the retries end inside the cap, possibly well inside it at very small
+lapse.
 
 The tabulated NN fallback toggle `enable_backup_nn_primitive_guess` is not
 part of `ghl_initialize_params`; GRHayLib passes it to

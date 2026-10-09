@@ -7,8 +7,7 @@ targets, while Radiation validates and applies the grey operator.
 
 ## Provider-side weak equilibrium
 
-For the deterministic reference provider, the weak-equilibrium chemical
-potential convention is
+The production provider uses the weak-equilibrium chemical-potential convention
 
 ```text
 mu_nu_e      = mu_e + mu_p - mu_n
@@ -16,10 +15,9 @@ mu_anti_nu_e = -mu_nu_e
 mu_nu_x      = 0.
 ```
 
-The reference backend converts these degeneracies into its grey equilibrium
-targets. The table-backed NRPyLeakage path receives the EOS chemical-potential
-state and uses the corresponding electron-flavor degeneracy convention in its
-raw-rate adapter. This is provider-side behavior in
+The table-backed NRPyLeakage provider receives the EOS chemical-potential
+state and uses the corresponding electron-flavor degeneracy convention to
+compute its physical Fermi equilibrium targets. This is provider-side behavior in
 [`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c)
 and [`ghl_m1_nrpyleakage_kernel.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c),
 not a Radiation callback that recomputes chemical equilibrium during a source
@@ -38,8 +36,8 @@ The exact public field meanings are documented in
 ownership and backend selection are in
 [`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h).
 
-The chemical-potential relation is useful physical context from the neutrino
-whitepaper. The current interface does not expose a neutrino chemical
+The chemical-potential relation is useful physical context. The current
+interface does not expose a neutrino chemical
 potential field; downstream code should use the validated targets rather than
 re-deriving them from an assumed EOS convention.
 
@@ -101,7 +99,7 @@ single-species source call. The current validator rejects an electron bundle
 with nonzero pair fields when the partner is unavailable. The joint operation
 uses the two electron states and the partner occupancy; see the
 [pair-source leaf](neutrino-pair-source-model.md) and the
-[pair source contract](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md).
+[pair source contract](../../../docs/raw/Radiation_pair_source_model.md).
 
 The separate fields are physically important: the emitted number and energy
 averages may differ. The implementation deliberately does not force
@@ -131,20 +129,7 @@ For paired electron flavors, equilibrium is joint: the number reaction
 vanishes when both partner occupancies match their targets, and the E/F source
 vanishes when the pair energy moments and comoving fluxes satisfy the paired
 grey conditions. The paired equations are specified in
-[`PAIR_SOURCE_MODEL.md`](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md#shared-number-reaction).
-
-## Historical whitepaper status
-
-- **Current:** provider-supplied weak-equilibrium targets, separate number and
-  energy identities, endpoint-`Gamma_N` number update, and pair fields kept
-  separate for electron flavors.
-- **Adaptable context:** the whitepaper explanation of beta equilibrium and
-  Kirchhoff consistency. It is explanatory; current validation and source code
-  decide the exact accepted fields.
-- **Superseded:** photon `J_eq = a_R T^4`, callback-owned photon opacity, and
-  Phase 1's reduced number source/current conventions.
-- **Future/non-claim:** group-resolved spectral equilibrium, inelastic
-  redistribution, and an exact coupled matter/radiation microphysics solve.
+[`Radiation_pair_source_model.md`](../../../docs/raw/Radiation_pair_source_model.md#shared-number-reaction).
 
 ## Evidence
 
@@ -152,4 +137,4 @@ Use [`unit_test_m1_rate_provider.c`](../../../Unit_Tests/unit_test_m1_rate_provi
 for equilibrium/rate construction and
 [`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c)
 for independent pair source oracles and equilibrium behavior. The scoped test
-entry point is [`run_m1_tests.sh`](../../../Unit_Tests/run_m1_tests.sh).
+entry point is [`run_tests.sh`](../../../.github/run_tests.sh).

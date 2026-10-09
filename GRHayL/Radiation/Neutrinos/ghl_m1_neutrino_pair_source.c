@@ -84,58 +84,59 @@ static ghl_error_codes_t ghl_m1_pair_number_extent(
    * finite nonnegative N. With q > 0, validated matching pair emissivities
    * guarantee finite positive equilibrium numbers for both species. */
 
-  const long double H = (long double)h * (long double)q;
-  const long double D = (long double)gamma_e * (long double)gamma_a * (long double)n_eq_e
-                        * (long double)n_eq_a;
-  const long double smaller = N_e < N_a ? (long double)N_e : (long double)N_a;
-  const long double difference = fabsl((long double)N_e - (long double)N_a);
-  /* Every factor is a positive finite double. On binary implementations,
-   * H is in [2^(2*dmin), 2^(2*dmax)) and D in
-   * [2^(4*dmin), 2^(4*dmax)), where dmin includes double subnormals.
-   * Keep the arithmetic guards on targets whose long-double exponent range
-   * cannot contain these intervals (including long double == double). */
-#if FLT_RADIX != 2 || LDBL_MIN_EXP - 1 > 4 * (DBL_MIN_EXP - DBL_MANT_DIG) \
-      || LDBL_MAX_EXP < 4 * DBL_MAX_EXP
-  if(!isfinite(H) || H <= 0.0L || !isfinite(D) || D <= 0.0L) {
+  const double H = h * q;
+  const double D = gamma_e * gamma_a * n_eq_e * n_eq_a;
+  const double smaller = N_e < N_a ? N_e : N_a;
+  const double difference = fabs(N_e - N_a);
+  /* The products can leave double range for extreme factors; reject them
+   * rather than publish an inaccurate endpoint. h*q and
+   * every D factor are validated positive upstream, and any range failure
+   * here is indistinguishable through the public API from the terminal
+   * no-update fallback the pair schedule already publishes for unreachable
+   * endpoints (cases 4830/4831/4833 cover that aggregate endpoint). */
+  if(!isfinite(H) || H <= 0.0 || !isfinite(D) || D <= 0.0) {
     return ghl_error_m1_implicit_admissibility;
   }
-#endif
 
-  const long double D_over_H = D / H;
-  const long double C = D * (1.0L + smaller / H);
-  const long double B = difference + D_over_H;
-  /* D/H < 2^(4*dmax-2*dmin); smaller/H < 2^(dmax-2*dmin).
-   * Adding one and multiplying by D bounds C by
-   * 2^(5*dmax-2*dmin+1), which also bounds B. */
-#if FLT_RADIX != 2 \
-      || LDBL_MAX_EXP < 5 * DBL_MAX_EXP - 2 * (DBL_MIN_EXP - DBL_MANT_DIG) + 1
+  const double D_over_H = D / H;
+  const double C = D * (1.0 + smaller / H);
+  const double B = difference + D_over_H;
   if(!isfinite(B) || !isfinite(C)) {
     return ghl_error_m1_implicit_admissibility;
   }
-#endif
-  const long double scale = fmaxl(B, sqrtl(C));
+  const double scale = fmax(B, sqrt(C));
   /* B is nonnegative and C is positive, so scale is finite and positive. */
-  const long double b_scaled = B / scale;
-  const long double c_over_scale = C / scale;
-  const long double discriminant_scaled
-        = b_scaled * b_scaled + 4.0L * c_over_scale / scale;
+  const double b_scaled = B / scale;
+  const double c_over_scale = C / scale;
+  const double discriminant_scaled = b_scaled * b_scaled + 4.0 * c_over_scale / scale;
   /* Scaling bounds B/scale and C/scale^2 by one, keeping the
    * nonnegative discriminant finite. */
-  const long double y = 2.0L * c_over_scale / (b_scaled + sqrtl(discriminant_scaled));
-  if(!isfinite((double)y)) {
+  const double y = 2.0 * c_over_scale / (b_scaled + sqrt(discriminant_scaled));
+  /* Both validated rate bundles require FE_TONEAREST. Here C is finite
+   * positive and B is finite nonnegative. If scale == B, b_scaled == 1;
+   * otherwise scale == sqrt(C), and (C/scale)/scale is near one, including
+   * subnormal C. Thus the denominator is >= 1 in either case and
+   * c_over_scale < 2^513, so the numerator and y are finite (< 2^515).
+   * Retain the defensive checks, exempt only these invariant guards. */
+  if(!isfinite(y)) { /* GCOVR_EXCL_BR_LINE */
     return ghl_error_m1_implicit_admissibility;
   }
-  const long double larger = y + difference;
-  if(!isfinite((double)larger)) {
+  const double larger = y + difference;
+  /* The difference of two finite nonnegative numbers is <= DBL_MAX.
+   * Adding y < 2^515 cannot overflow it under FE_TONEAREST: at the upper
+   * end the half-ulp overflow distance is 2^970; away from that end there
+   * is still more headroom. No state or rounding-mode mutation occurs
+   * between public rate validation and this private scalar solve. */
+  if(!isfinite(larger)) { /* GCOVR_EXCL_BR_LINE */
     return ghl_error_m1_implicit_admissibility;
   }
   if(N_e <= N_a) {
-    new_number[0] = (double)y;
-    new_number[1] = (double)larger;
+    new_number[0] = y;
+    new_number[1] = larger;
   }
   else {
-    new_number[0] = (double)larger;
-    new_number[1] = (double)y;
+    new_number[0] = larger;
+    new_number[1] = y;
   }
   return ghl_success;
 }
@@ -170,6 +171,12 @@ static ghl_error_codes_t ghl_m1_pair_make_effective_rates(
           const double numerator[2] = { pair_rates->eta_E_pair[process], partner_n_com };
           const double denominator[2] = { pair_rates->J_eq, partner_n_eq };
           double scaled = 0.0;
+          /* The scattering-side zero partner contribution is skipped above;
+           * with a nonzero partner occupancy the direct expression is kept
+           * whenever it is finite and nonzero, and a representable scaled
+           * fallback recovers a quotient lost to subnormal rounding (case
+           * 4846).  Unrepresentable quotients still fail closed through the
+           * accompanying rejection tests. */
           if(!ghl_m1_neutrino_scaled_ratio_of_products(
                    numerator, 2, denominator, 2, &scaled)) {
             return ghl_error_m1_invalid_state;
@@ -440,12 +447,7 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
           diagnostics, neutrino_diagnostics);
   }
 
-  ghl_error_codes_t error = ghl_m1_validate_configuration(m1_params, metric);
-  if(error != ghl_success) {
-    return ghl_m1_pair_publish_failure(
-          error, state_transport, state_out, exchange, diagnostics,
-          neutrino_diagnostics);
-  }
+  ghl_error_codes_t error;
   for(int species = 0; species < ghl_m1_pair_species_count; ++species) {
     error = ghl_m1_validate_neutrino_rates(&rates[species], NULL);
     if(error != ghl_success) {
@@ -576,18 +578,13 @@ ghl_error_codes_t ghl_m1_solve_neutrino_pair_source_update(
           &state_transport[species], &final_state[species], &base_rates[species],
           nonpair_exchange[species].dL_rad_cc, metric->sqrt_detgamma, n_b_cons,
           &final_exchange[species]);
-    if(error != ghl_success) { /* GCOVR_EXCL_BR_LINE */
-      /* Only extreme signed endpoint differences can fail exchange assembly.
-       * The lepton increment sees the same rates, dL_rad_cc and n_b_cons as
-       * the independent stage, which succeeded, and sqrt_detgamma is
-       * validated. N and E are finite and nonnegative, so dN, dE and dTau are
-       * finite. Only a flux difference can overflow, and that needs opposite
-       * signs with combined magnitude above DBL_MAX, i.e. E within a factor of
-       * two of DBL_MAX at both ends. No accepted input is known to reach this
-       * guard; it is kept defensive and excluded from the coverage gate. */
-      return ghl_m1_pair_publish_failure(/* LCOV_EXCL_LINE */
-                                         error, state_transport, state_out, exchange,
-                                         diagnostics, neutrino_diagnostics);
+    if(error != ghl_success) {
+      /* Validated endpoints do not by themselves prove representability of
+       * their differences and densitized exchange. Retain rollback on failure;
+       * this defense remains part of the coverage denominator. */
+      return ghl_m1_pair_publish_failure(
+            error, state_transport, state_out, exchange, diagnostics,
+            neutrino_diagnostics);
     }
   }
   for(int species = 0; species < ghl_m1_pair_species_count; ++species) {

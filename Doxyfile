@@ -28,11 +28,7 @@ PROJECT_NAME           = "GRHayL"
 
 # Input control
 CITE_BIB_FILES         = docs/raw/ref.bib
-INPUT                  = GRHayL docs/raw \
-                         Unit_Tests/README.m1.md \
-                         Unit_Tests/data/m1_thcm1/RUSANOV.md \
-                         Unit_Tests/data/m1_thcm1/STRESS_ENERGY.md \
-                         README.md tools/compose/README.md
+INPUT                  = GRHayL docs/raw
 RECURSIVE              = YES
 EXCLUDE                = GRHayL/include/ghl_unit_tests.h \
                          GRHayL/Con2Prim/Tabulated/con2prim_CerdaDuran3D.cc
@@ -66,6 +62,7 @@ ALIASES += gfs="<code class='highlighted-code'>Flux_Source</code>"
 ALIASES += ginduct="<code class='highlighted-code'>Induction</code>"
 ALIASES += gneut="<code class='highlighted-code'>Neutrinos</code>"
 ALIASES += grecon="<code class='highlighted-code'>Reconstruction</code>"
+ALIASES += grad="<code class='highlighted-code'>Radiation</code>"
 
 # Space formatting aliases for manual space configuring
 ALIASES += "sp2=\htmlonly &nbsp;&nbsp;\endhtmlonly"

@@ -47,6 +47,19 @@ and number-flux construction is implemented in
 The caller must provide a closure consistent with each cell state before it
 constructs the E/F fluxes.
 
+The shared physical-flux kernel uses
+`ghl_m1_difference_of_products` in
+[`ghl_m1_utils.h`](../../../GRHayL/Radiation/ghl_m1_utils.h): it keeps the direct
+double expression when finite, then aligns exponents and retains double product
+residuals only when finite operands overflow during multiplication. Both products
+may overflow while their difference is a representable coordinate flux; the
+public physical-flux regression in `check_private_norm_boundaries` in
+[`unit_test_m1_error_handling.c`](../../../Unit_Tests/unit_test_m1_error_handling.c)
+checks exactly that case. The number-flux callers use the same helper. A
+nonfinite final candidate is still rejected before any output is published.
+This preserves a supported finite endpoint, not a wider metric accuracy domain
+or an extended-precision acceptance gate.
+
 ## Pointwise four-point call
 
 The canonical pointwise operation is
@@ -67,7 +80,7 @@ five-component order. The host, not the kernel, takes the flux divergence.
 
 The operation is pointwise and has no grid loop, reconstruction, ghost-zone,
 boundary, AMR, or time-integrator knowledge. These ownership rules are part of
-the [M1 integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md).
+the [M1 integration contract](../../../docs/raw/Radiation_integration_contract.md).
 
 ## Variable-volume prepared-face call
 
@@ -89,7 +102,7 @@ The host must check that volumes and all products are finite and positive
 where required. It must not pass prepared operands to the pointwise API, and
 must not multiply the returned prepared flux by a second metric or volume
 factor. The active variable-volume fixture adapter follows exactly this rule;
-see [`README.m1.md`](../../../Unit_Tests/README.m1.md) and
+see [`Radiation_unit_tests.md`](../../../docs/raw/Radiation_unit_tests.md) and
 [`unit_test_m1_thcm1_blended_rusanov.c`](../../../Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c).
 
 When all cell volume factors equal the face factor, the prepared operands share
@@ -127,9 +140,9 @@ light-cone speeds. A generic two-state Rusanov helper exists for shared
 callers, and legacy HLL helpers remain part of the shared surface, but neither
 defines the canonical neutrino four-point operation. An optical-depth speed
 cap or separate diffusion correction must not be silently inserted into this
-call. The four-point API rejects its diffusion-policy flag when enabled.
+call. The four-point API has no diffusion-policy flag; optional diffusion is a separate operation.
 
-The [current integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)
+The [current integration contract](../../../docs/raw/Radiation_integration_contract.md)
 and the source implementation
 [`ghl_m1_four_point_blended_rusanov.c`](../../../GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c)
 are authoritative when a historical methods document describes a different

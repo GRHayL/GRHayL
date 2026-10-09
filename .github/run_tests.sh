@@ -2,12 +2,44 @@
 
 set -Eeuxo pipefail
 
-./configure -r
-make tests datagen
+# Usage: .github/run_tests.sh [all|m1] [configure arguments...]
+#   all (default)  build and run every unit test
+#   m1             build and run only the Radiation M1 tests
+# Any remaining arguments are passed to ./configure -r, for example
+# --noomp, --disable-hdf5, or --cflags='-ftest-coverage -fprofile-arcs'.
+# Runtime library paths follow the configured build directory.
+suite=all
+case "${1:-}" in
+  all|m1) suite="$1"; shift ;;
+esac
 
-LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH
 repo_root=$(pwd)
+./configure -r "$@"
+configured_build_dir=$(awk '
+  /^BUILDDIR[[:space:]]*=/ {
+    sub(/^BUILDDIR[[:space:]]*=[[:space:]]*/, "")
+    print
+    exit
+  }
+' Makefile)
+if [[ -z "$configured_build_dir" ]]; then
+  echo "Configured build directory is missing or empty in Makefile" >&2
+  exit 1
+fi
+if [[ "$suite" == m1 ]]; then
+  make tests
+else
+  make tests datagen
+fi
+
+if ! configured_lib_dir=$(cd "$repo_root" && cd -- "$configured_build_dir/lib" && pwd -P); then
+  echo "Configured library directory is unavailable: $configured_build_dir/lib" >&2
+  exit 1
+fi
+LD_LIBRARY_PATH="$configured_lib_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH
+DYLD_LIBRARY_PATH="$configured_lib_dir${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+export DYLD_LIBRARY_PATH
 
 echo $LD_LIBRARY_PATH
 
@@ -45,6 +77,95 @@ download_file() {
   curl -fL --retry 5 -O "$url"
 }
 
+download_test_data() {
+  filepath="$1"
+  url="${test_data_base_url}/${filepath}"
+  download_file "$url"
+}
+
+run_m1_tests() {
+  # Retained fixtures come from pinned TestData downloads unless the caller
+  # supplies a raw or gzip directory. Both downloaded and decompressed data
+  # are runner-owned temporary directories; caller inputs remain untouched.
+  source .github/prepare_m1_fixtures.sh
+
+  m1_fixture_source="${M1_FIXTURE_DIR:-}"
+  m1_fixture_dir=""
+  if [[ -z "$m1_fixture_source" ]]; then
+    local radiation_testdata_ref
+    radiation_testdata_ref=$(cat .github/radiation-testdata-ref)
+    if [[ ! "$radiation_testdata_ref" =~ ^[0-9a-f]{40}$ ]]; then
+      echo "Radiation TestData revision must be a published full commit SHA" >&2
+      exit 1
+    fi
+    local test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/${radiation_testdata_ref}"
+    m1_fixture_source=$(mktemp -d "${TMPDIR:-/tmp}/grhayl_m1_downloads.XXXXXXXX")
+    created_directories+=("$m1_fixture_source")
+    for m1_fixture_member in "${m1_fixture_members[@]}"; do
+      # The parent EXIT trap owns the whole download directory, including any
+      # partial curl output; no subshell-created path needs separate cleanup.
+      (cd "$m1_fixture_source" && download_test_data "radiation/$m1_fixture_member.gz")
+    done
+  fi
+  if [[ -n "$m1_fixture_source" ]]; then
+    if [[ ! -d "$m1_fixture_source" ]]; then
+      echo "M1_FIXTURE_DIR is not a directory: $m1_fixture_source" >&2
+      exit 1
+    fi
+
+    m1_fixture_is_raw=1
+    for m1_fixture_member in "${m1_fixture_members[@]}"; do
+      if [[ ! -f "$m1_fixture_source/$m1_fixture_member" ]]; then
+        m1_fixture_is_raw=0
+        break
+      fi
+    done
+
+    if (( m1_fixture_is_raw )); then
+      # Complete raw input is replayed directly from the supplied directory,
+      # which stays caller-owned and untouched; any .gz counterparts are
+      # redundant because raw members take precedence.
+      m1_fixture_dir="$m1_fixture_source"
+    else
+      # Register the temporary destination with the existing EXIT cleanup
+      # before preparation, and assign m1_fixture_dir only after complete
+      # preparation so no partial directory can be replayed.
+      m1_prepared_fixture_dir=$(mktemp -d "${TMPDIR:-/tmp}/grhayl_m1_fixtures.XXXXXXXX")
+      created_directories+=("$m1_prepared_fixture_dir")
+      prepare_m1_fixtures "$m1_fixture_source" "$m1_prepared_fixture_dir"
+      m1_fixture_dir="$m1_prepared_fixture_dir"
+    fi
+  fi
+
+  run_m1_fixture_test() {
+    local test_executable="$1"
+    local fixture_option="$2"
+    local fixture_path="$3"
+    "$test_executable" "$fixture_option" "$fixture_path"
+  }
+
+  ./test/unit_test_m1_closure_fallback
+  run_m1_fixture_test ./test/unit_test_m1_diffusion_flux --fixture \
+    "$m1_fixture_dir/jthick_thcm1.bin"
+  ./test/unit_test_m1_error_handling
+  ./test/unit_test_m1_fd_jacobian
+  run_m1_fixture_test ./test/unit_test_m1_neutrino_rusanov_flux --fixture-dir \
+    "$m1_fixture_dir"
+  run_m1_fixture_test ./test/unit_test_m1_neutrino_seeded_invariants --fixture-dir \
+    "$m1_fixture_dir"
+  ./test/unit_test_m1_neutrino_source_update
+  ./test/unit_test_m1_rate_provider --generated-fixture
+  run_m1_fixture_test ./test/unit_test_m1_thcm1_blended_rusanov --fixture-dir \
+    "$m1_fixture_dir"
+  run_m1_fixture_test ./test/unit_test_rusanov_flux --fixture-dir \
+    "$m1_fixture_dir"
+}
+
+if [[ "$suite" == m1 ]]; then
+  run_m1_tests
+  exit 0
+fi
+
 decompress_bz2() {
   archive="$1"
   uncompressed="${archive%.bz2}"
@@ -56,12 +177,6 @@ decompress_bz2() {
 
 et_legacy_testdata_ref=$(cat .github/et-legacy-testdata-ref)
 test_data_base_url="https://raw.githubusercontent.com/GRHayL/TestData/${et_legacy_testdata_ref}"
-download_test_data() {
-  filepath="$1"
-  url="${test_data_base_url}/${filepath}"
-  download_file "$url"
-}
-
 download_test_data ET_Legacy/ET_Legacy_conservs_input.bin
 download_test_data ET_Legacy/ET_Legacy_conservs_output.bin
 download_test_data ET_Legacy/ET_Legacy_conservs_output_pert.bin
@@ -236,3 +351,5 @@ download_test_data induction/HLL_flux_with_Btilde_output.bin
 download_test_data induction/HLL_flux_with_Btilde_output_pert.bin
 
 ./test/unit_test_HLL_flux
+
+run_m1_tests

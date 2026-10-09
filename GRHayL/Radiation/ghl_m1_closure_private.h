@@ -25,8 +25,6 @@ typedef ghl_error_codes_t (*ghl_m1_closure_evaluator)(
       double xi,
       ghl_m1_closure_evaluation *evaluation);
 
-typedef void (*ghl_m1_closure_snapshot_interleave)(void *context);
-
 ghl_error_codes_t ghl_m1_closure_private_evaluate_invariant(
       double J,
       double H2,
@@ -39,7 +37,7 @@ ghl_error_codes_t ghl_m1_closure_private_evaluate_invariant(
 
 ghl_error_codes_t ghl_m1_closure_private_finish_evaluation(
       const ghl_metric_quantities *metric,
-      const double Pdd[4][4],
+      const double PDD[4][4],
       double energy_scale,
       double W,
       double J,
@@ -73,9 +71,4 @@ ghl_error_codes_t ghl_m1_closure_private_solve_root(
       void *context,
       ghl_m1_closure_root_result *root);
 
-void ghl_m1_closure_private_record_stage_with_interleave(
-      ghl_m1_closure_failure_stage_t stage,
-      ghl_m1_closure_snapshot_interleave interleave,
-      void *context);
-
-#endif
+#endif // GHL_M1_CLOSURE_PRIVATE_H

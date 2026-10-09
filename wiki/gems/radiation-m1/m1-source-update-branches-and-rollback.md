@@ -40,6 +40,11 @@ are compared in a scaled representation, so finite inputs are not
 misclassified solely because a direct multiplication overflows or underflows.
 This selection protection does not make a final state valid: a genuinely
 nonrepresentable endpoint remains an error and is rolled back.
+The same binary64 mantissa/exponent representation is retained for the
+backward-Euler number fallback and pair-source recovery because their finite
+input products can also exceed the range of an intermediate `double`. These
+helpers do not select platform extended precision; invalid operands and
+nonrepresentable published endpoints continue to fail closed.
 
 The branched policy is fail-closed on a closure fallback unless
 `allow_closure_fallback` is explicitly enabled. That choice affects whether a
@@ -76,7 +81,7 @@ Electron-flavor pair channels cannot be evaluated correctly by a single-species
 call. The paired API
 [`ghl_m1_solve_neutrino_pair_source_update`](../../../GRHayL/include/ghl_m1.h)
 receives `{nue, anue}` together and uses
-[`PAIR_SOURCE_MODEL.md`](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md).
+[`Radiation_pair_source_model.md`](../../../docs/raw/Radiation_pair_source_model.md).
 It first advances independent charged-current/scattering terms into private
 temporary states, then applies the shared pair number reaction and paired grey
 energy/flux update.
@@ -122,10 +127,10 @@ aggregate only after all local results are valid. The host then applies its
 common admissibility limiter to every species and all matter/lepton increments.
 The library does not own that multi-species publication or matter recovery.
 
-The [M1 integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)
+The [M1 integration contract](../../../docs/raw/Radiation_integration_contract.md)
 defines the frozen-input and coupled-limiter boundary. Focused local checks
 are [`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c),
 [`unit_test_m1_error_handling.c`](../../../Unit_Tests/unit_test_m1_error_handling.c),
 and the source fixtures documented in
-[`README.m1.md`](../../../Unit_Tests/README.m1.md). These tests do not prove a
+[`Radiation_unit_tests.md`](../../../docs/raw/Radiation_unit_tests.md). These tests do not prove a
 full three-species host evolution or a continuum pair-transport result.

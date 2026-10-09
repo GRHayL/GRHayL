@@ -53,8 +53,7 @@ R_i+1 = tilde_F_i - U_base[i+1]
 `N`, `Gamma_N`, the number floor, and `N_source` are deliberately absent from
 this residual. The endpoint current and backward-Euler number update occur
 after E/F convergence. This separation is the current implementation
-contract, not the reduced number-current design described in early planning
-whitepapers.
+contract; no reduced number-current construction is used.
 
 ## Finite-difference Jacobian
 
@@ -149,7 +148,7 @@ a pair when deciding whether to publish.
 
 The public source-update declarations and policies are in
 [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h); source ownership is specified
-by the [M1 integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md).
+by the [M1 integration contract](../../../docs/raw/Radiation_integration_contract.md).
 The focused tests are
 [`unit_test_m1_fd_jacobian.c`](../../../Unit_Tests/unit_test_m1_fd_jacobian.c),
 [`unit_test_m1_neutrino_source_update.c`](../../../Unit_Tests/unit_test_m1_neutrino_source_update.c),

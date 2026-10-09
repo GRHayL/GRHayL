@@ -20,9 +20,9 @@ The canonical M1 production surfaces are:
 | `ghl_m1_compute_closure_with_primitives` and its Minerbo helpers | `GRHayL/Radiation/ghl_m1_closure.c` and `GRHayL/Radiation/ghl_m1_utils.h` | Primary direct four-dimensional closure; every published tensor obeys the radiation trace identity. Finite non-PSD candidates and invalid exact-zero-flux tensors use a flagged Eulerian Minerbo admissibility fallback. |
 | `ghl_m1_compute_neutrino_four_point_transport_flux` and its limiter, opacity, and blend helpers | `GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c` | Canonical four-point host-prepared face operation; metric light-cone speeds; `{N,E,Fx,Fy,Fz}`; exactly-once face densitization; no separate diffusion correction. |
 | `ghl_m1_solve_neutrino_source_update` and `ghl_m1_try_neutrino_explicit_thin_update` | `GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c` and the existing neutrino source/implicit files | Frozen-input, transactional source update; transport state is the source base; existing finite-difference/Newton implicit solver; separate total-number and charged-current exchange. |
-| `ghl_m1_solve_neutrino_pair_source_update` | `GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_pair_source.c` | Independent charged-current/scattering stage followed by a shared electron-pair number reaction and grey E/F solve; equal pair number increments, zero pair electron-fraction exchange, and atomic two-species publication. The approximation is specified in `PAIR_SOURCE_MODEL.md`. |
-| `ghl_neutrino_rate_provider_initialize_nrpyleakage` and `ghl_neutrino_rate_provider_compute_cell` | `GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c` and the private `ghl_m1_nrpyleakage_kernel.c` adapter | Production table-backed NRPyLeakage rates with separated electron pair number/energy emissivities, aggregate heavy-flavor rates, stable finite-tail evaluation, positive equilibrium targets before detailed-balance division, and final bundle validation. The adapter consumes the NRPyLeakage-owned source-private blocking, beta-moment, reaction-shift, and bremsstrahlung helpers; it does not copy those formulas or expose them as installed API. |
-| Prepared-transport low-flux wrapper | Private `ghl_m1_compute_neutrino_four_point_rusanov_flux` in `GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c` | Componentwise Rusanov wrapper for the volume-weighted operands of the prepared four-point face operation; it remains private because its operand units differ from the undensitized public helper. It shares the unit-agnostic scalar arithmetic in `GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c` through the private `GRHayL/Flux_Source/ghl_rusanov_private.h` declaration. |
+| `ghl_m1_solve_neutrino_pair_source_update` | `GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_pair_source.c` | Independent charged-current/scattering stage followed by a shared electron-pair number reaction and grey E/F solve; equal pair number increments, zero pair electron-fraction exchange, and atomic two-species publication. The approximation is specified in [the pair source model](Radiation_pair_source_model.md). |
+| `ghl_neutrino_rate_provider_initialize_nrpyleakage` and `ghl_neutrino_rate_provider_compute_cell` | `GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c`, private `ghl_m1_neutrino_rate_backend.c`, and `ghl_m1_nrpyleakage_kernel.c` | Production table-backed NRPyLeakage rates with separated electron pair number/energy emissivities, aggregate heavy-flavor rates, stable finite-tail evaluation, positive equilibrium targets before detailed-balance division, and final bundle validation. The adapter consumes the NRPyLeakage-owned installed inline blocking, beta-moment, reaction-shift, and bremsstrahlung helpers; it does not copy those formulas. |
+| Prepared-transport low-flux wrapper | Private `ghl_m1_compute_neutrino_four_point_rusanov_flux` in `GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c` | Componentwise Rusanov wrapper for the volume-weighted operands of the prepared four-point face operation; it remains private because its operand units differ from the undensitized component-wise helper. It shares the unit-agnostic scalar arithmetic in `GRHayL/Radiation/ghl_calculate_Rusanov_flux.c` declared in `ghl_m1.h`, with inline arithmetic in private `GRHayL/Radiation/ghl_m1_rusanov_private.h`. |
 
 Other source files present under `GRHayL/Radiation/` are not production code
 unless their manifest lists them. In particular, a parked or diagnostic file
@@ -38,17 +38,18 @@ validation; downstream consumers own any such campaign.
 
 ## NRPyLeakage/M1 helper boundary
 
-The private M1 adapter is permitted to include the canonical NRPyLeakage
-source-private helpers directly:
+The private M1 adapter includes the shared NRPyLeakage-owned headers:
 
-- [`NRPyLeakage_nucleon_blocking.h`](../Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
-- [`NRPyLeakage_rate_helpers.h`](../Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h)
-- [`M1 NRPyLeakage manifest`](Neutrinos/make.code.defn)
-- [`M1 NRPyLeakage adapter`](Neutrinos/ghl_m1_nrpyleakage_kernel.c)
+- `GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h`
+- `GRHayL/include/ghl_nrpyleakage_rate_helpers.h`
+- `GRHayL/Radiation/Neutrinos/make.code.defn`
+- `GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c`
 
-This is a tracked cross-gem source dependency, not a new public interface: the
-helpers remain NRPyLeakage-owned, are not duplicated in Radiation, and are not
-installed through `GRHayL/include`. The M1 rate bundle remains tau-free. In
+The helper implementations remain NRPyLeakage-owned and are installed through
+`GRHayL/include/make.code.defn`; Radiation uses that shared header boundary. The shared nucleon-fraction normalizer
+`ghl_nrpyleakage_normalize_nucleon_fractions` is declared in
+`GRHayL/include/ghl_nrpyleakage.h` and is used by both the NRPyLeakage helpers
+and the M1 adapter and provider. The M1 rate bundle remains tau-free. In
 particular, NRPyLeakage optical-depth suppression, leakage luminosity/source
 assembly, and legacy leakage finite-output fallback policies remain outside
 the M1 adapter; M1 retains its own validation and provider recovery contract.

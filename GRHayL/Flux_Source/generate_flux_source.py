@@ -710,8 +710,6 @@ def manifest_outputs() -> Set[Path]:
             (directory.relative_to(SOURCE_DIR) / name)
             for name in re.findall(r"\b[A-Za-z0-9_]+\.c\b", manifest)
         )
-    # The root manifest also compiles this hand-written M1 flux helper.
-    paths.discard(Path("ghl_calculate_Rusanov_flux.c"))
     return paths
 
 

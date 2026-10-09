@@ -12,8 +12,7 @@ ghl_error_codes_t ghl_m1_initialize(
       const double newton_tolerance,
       ghl_m1_parameters *restrict m1_params) {
 
-  const double legacy_absolute_tolerance
-        = ghl_m1_max(E_floor * newton_tolerance, DBL_MIN);
+  const double legacy_absolute_tolerance = fmax(E_floor * newton_tolerance, DBL_MIN);
   return ghl_m1_initialize_with_newton_tolerances(
         epsilon_c, E_floor, zeta_min, fd_epsilon_rel, fd_epsilon_abs,
         newton_max_iterations, newton_tolerance, legacy_absolute_tolerance, m1_params);
@@ -111,11 +110,7 @@ ghl_error_codes_t ghl_m1_initialize_with_newton_tolerances(
   }
 
   m1_params->epsilon_c = epsilon_c;
-  /* Historical field name: this stores the admissible squared reduced-flux
-   * limit r = (F/E)^2 = 1 - epsilon_c. */
-  m1_params->one_minus_epsilon_c_sq = 1.0 - epsilon_c;
   m1_params->E_floor = E_floor;
-  m1_params->repair_policy = ghl_m1_repair_linear_factor_compatibility;
   m1_params->closure_root_tolerance = 1.0e-12;
   m1_params->closure_root_max_iterations = 100;
   m1_params->closure_root_residual_tolerance = 1.0e-10;
@@ -126,13 +121,6 @@ ghl_error_codes_t ghl_m1_initialize_with_newton_tolerances(
   /* Canonical four-point transport controls. */
   m1_params->minmod_theta = 1.0;
   m1_params->mindiss = 0.0;
-
-#ifdef GRHAYL_M1_DEBUG
-  ghl_error_codes_t debug_error = ghl_m1_validate_runtime_params(m1_params);
-  if(debug_error != ghl_success) {
-    return debug_error;
-  }
-#endif
 
   return ghl_success;
 }

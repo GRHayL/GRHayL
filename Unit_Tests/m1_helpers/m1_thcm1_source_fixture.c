@@ -172,7 +172,6 @@ static int m1_thcm1_source_fixture_evaluate_one(
     return 0;
   }
   nu_params.N_floor = M1_THCM1_SOURCE_NUMBER_FLOOR;
-  nu_params.terminal_fallback_policy = ghl_m1_neutrino_terminal_fallback_no_update_all;
 
   if(m1_thcm1_source_fixture_local_policy_case(record->case_id)) {
     const ghl_m1_rad_state radiation
@@ -221,7 +220,7 @@ static int m1_thcm1_source_fixture_evaluate_one(
   }
   double matter_energy = NAN;
   double matter_momentum[3] = { NAN, NAN, NAN };
-  const ghl_error_codes_t matter_error = ghl_m1_compute_neutrino_matter_coupling_sources(
+  const ghl_error_codes_t matter_error = ghl_m1_compute_matter_coupling_sources(
         &metric, &ef_sources, &matter_energy, matter_momentum);
   if(matter_error != ghl_success) {
     if(error != NULL && error_size > 0) {

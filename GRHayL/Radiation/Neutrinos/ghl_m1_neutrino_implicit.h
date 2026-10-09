@@ -7,9 +7,8 @@
  *
  * This header declares helpers used by
  * ghl_m1_solve_neutrino_implicit_homogeneous_update across translation units.
- * Public residual, Jacobian, trial-state, and admissibility declarations live
- * in ghl_m1.h; the explicit-base variants and remaining helpers here remain
- * internal:
+ * The residual, Jacobian, trial-state, and admissibility helpers are private
+ * implementation/test boundaries here, alongside the explicit-base variants:
  *
  *   - The neutrino residual and Jacobian use frozen rates and frozen
  *     primitives.
@@ -23,9 +22,8 @@
 
 #include "ghl_m1.h"
 
-/* The scaled-positive helpers below use frexp, scalbn, sqrt, and isfinite
- * directly, so this header states that dependency rather than relying on a
- * transitive include. */
+/* The helpers below use isfinite directly, so this header states that
+ * dependency rather than relying on a transitive include. */
 #include <math.h>
 
 /* Public single-species source boundaries additionally require that electron
@@ -53,6 +51,41 @@ typedef struct {
   const ghl_primitive_quantities *restrict prims_frozen;
   const ghl_m1_neutrino_rates *restrict rates;
 } ghl_m1_neutrino_implicit_context;
+
+/* Diagnostic helpers that expose internal stages of the neutrino implicit
+ * solve to its focused tests without installing them as public API. */
+ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_primitive_quantities *restrict prims_frozen,
+      const ghl_m1_neutrino_rates *restrict rates,
+      const ghl_m1_neutrino_state *restrict state_in,
+      const double dt,
+      const double U[4],
+      double residual[4]);
+
+ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_primitive_quantities *restrict prims_frozen,
+      const ghl_m1_neutrino_rates *restrict rates,
+      const ghl_m1_neutrino_state *restrict state_in,
+      const double dt,
+      const double U[4],
+      const double residual_0[4],
+      double jacobian[4][4]);
+
+ghl_error_codes_t ghl_m1_neutrino_build_trial_state(
+      const ghl_metric_quantities *restrict metric,
+      const double U[4],
+      ghl_m1_rad_state *restrict rad_state);
+
+ghl_error_codes_t ghl_m1_neutrino_check_trial_admissibility(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_metric_quantities *restrict metric,
+      const ghl_m1_rad_state *restrict rad_state);
 
 /* Build the number current from moments and velocity quantities that have
  * already been evaluated for the same radiation state. */
@@ -100,8 +133,13 @@ ghl_error_codes_t ghl_m1_neutrino_update_endpoint_number_with_policy(
       double *restrict N_out,
       bool *restrict number_projected);
 
-/* A nonnegative finite binary64 value represented without a range-limited
- * exponent.  The mantissa is normalized to [0.5, 1), except for zero. */
+/* A nonnegative product/ratio represented with a double mantissa and a
+ * separate exponent. The mantissa is normalized to [0.5, 1), except for zero.
+ * Backward-Euler endpoints and pair effective opacities can be finite even
+ * when their intermediate products are not; the source-update regressions
+ * exercise those public callers. The same representation compares stiffness
+ * thresholds without materializing their products. This extends intermediate
+ * range, not significand precision; final endpoint checks still apply. */
 typedef struct {
   double mantissa;
   int exponent;
@@ -130,8 +168,7 @@ static inline double ghl_m1_neutrino_backward_euler_lepton_delta_validated(
       const double lepton_weight,
       const double number_initial,
       const double number_endpoint) {
-  return lepton_weight == 0.0 ? 0.0
-                              : lepton_weight * (number_endpoint - number_initial);
+  return lepton_weight == 0.0 ? 0.0 : lepton_weight * (number_endpoint - number_initial);
 }
 
 /* Return the actual representable finite-difference displacement. */
@@ -301,12 +338,11 @@ static inline bool ghl_m1_neutrino_scaled_ratio_of_products(
   return true;
 }
 
-/* Evaluate kappa*N/Gamma_N without losing a finite result to the product
- * kappa*N. Preserve the legacy left-to-right expression whenever its
+/* Evaluate kappa*N/Gamma_N. Preserve the legacy left-to-right expression whenever its
  * intermediates are representable. For product overflow, try dividing first;
  * the scaled product-ratio path handles remaining range failures. The factors
  * are nonnegative and Gamma_N is positive at the caller's validation boundary. */
-static inline bool ghl_m1_neutrino_scaled_absorption_number(
+static inline bool ghl_m1_neutrino_absorption_number(
       const double kappa,
       const double number,
       const double Gamma_N,

@@ -20,7 +20,7 @@ static ghl_error_codes_t ghl_m1_validate_inputs(
       const ghl_m1_closure *restrict closure,
       double *restrict flux_factor_sq) {
 
-  ghl_error_codes_t error = ghl_m1_validate_realizability(
+  ghl_error_codes_t error = ghl_m1_validate_realizability_state(
         m1_params, metric, rad_state, 64.0, flux_factor_sq);
   if(error != ghl_success) {
     return error;
@@ -66,7 +66,7 @@ ghl_error_codes_t ghl_m1_compute_diagnostics(
    * 1 - epsilon_c. */
   const double r_limit = 1.0 - m1_params->epsilon_c;
   /* Realizability returns a squared norm, which cannot be negative. */
-  const double r_diag = ghl_m1_min(r_from_state, r_limit);
+  const double r_diag = fmin(r_from_state, r_limit);
   diagnostics->closure_xi = closure->xi;
   diagnostics->closure_root_residual = closure->root_residual;
   diagnostics->closure_root_iterations = closure->root_iterations;

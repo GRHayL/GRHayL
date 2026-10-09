@@ -2,17 +2,20 @@
 #include "../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit.h"
 #include "../GRHayL/Radiation/ghl_m1_utils.h"
 #include "ghl_m1.h"
+#include "m1_helpers/m1_thcm1_fixture_utils.h"
+#include "m1_helpers/m1_thcm1_transport_fixture.h"
 #include "m1_test_utils.h"
-#include "m1_thcm1_fixture_utils.h"
-#include "m1_thcm1_transport_fixture.h"
 
 #include <errno.h>
-#include <float.h>
+#include <fcntl.h>
 #include <fenv.h>
+#include <float.h>
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -53,8 +56,6 @@ static const fatal_error_case m1_error_cases[] = {
   { ghl_error_m1_implicit_solve_failure, "M1 implicit Newton solve failed to converge" },
   { ghl_error_m1_implicit_terminal_fallback,
     "M1 implicit solve exhausted its terminal fallback policy" },
-  { ghl_error_m1_con2prim_failure,
-    "M1 source update failed during conservative-to-primitive recovery" },
   { ghl_error_m1_microphysics_failure,
     "M1 neutrino microphysics rate evaluation failed" },
   { ghl_error_m1_invalid_newton_absolute_tolerance,
@@ -63,14 +64,10 @@ static const fatal_error_case m1_error_cases[] = {
     "M1 closure tolerance must be finite and strictly positive" },
   { ghl_error_m1_invalid_closure_max_iterations,
     "M1 closure maximum iteration count must be strictly positive" },
-  { ghl_error_m1_invalid_repair_policy,
-    "M1 received an unsupported realizability repair policy" },
   { ghl_error_m1_closure_residual_too_large,
     "M1 closure residual exceeded the configured acceptance tolerance" },
   { ghl_error_flux_source_invalid_input,
     "Flux/source operation received invalid input" },
-  { ghl_error_m1_incompatible_transport_policy,
-    "M1 transport policy is incompatible with the requested operation" },
   { ghl_error_m1_source_double_application,
     "M1 source update was applied more than once to the same state" }
 };
@@ -130,7 +127,34 @@ static const fatal_error_case shared_error_cases[] = {
   { ghl_error_invalid_hlle_wavespeeds, "Invalid HLLE wave speeds" }
 };
 
+static char *active_reader_fixture_directory = NULL;
+static char *active_reader_fixture_path = NULL;
+
+static int cleanup_active_reader_fixture(void) {
+  int ok = 1;
+  if(active_reader_fixture_path != NULL) {
+    if(unlink(active_reader_fixture_path) != 0 && errno != ENOENT) {
+      ok = 0;
+    }
+    else {
+      free(active_reader_fixture_path);
+      active_reader_fixture_path = NULL;
+    }
+  }
+  if(active_reader_fixture_directory != NULL && active_reader_fixture_path == NULL) {
+    if(rmdir(active_reader_fixture_directory) != 0 && errno != ENOENT) {
+      ok = 0;
+    }
+    else {
+      free(active_reader_fixture_directory);
+      active_reader_fixture_directory = NULL;
+    }
+  }
+  return ok;
+}
+
 static void fail_test(const char *message) {
+  (void)cleanup_active_reader_fixture();
   fprintf(stderr, "unit_test_m1_error_handling: %s\n", message);
   exit(EXIT_FAILURE);
 }
@@ -273,6 +297,8 @@ typedef struct {
   int records;
   int available;
   int reference_status;
+  const char *const *case_ids;
+  const char *const *pair_ids;
 } fixture_reader_case;
 
 /* One ID, the message text, and at most one decimal digit per size_t bit. */
@@ -285,49 +311,114 @@ typedef struct {
 static int load_synthetic_fixture(
       const fixture_reader_case *test_case,
       m1_thcm1_fixture_collection *collection) {
-  char path[] = "/tmp/grhayl-m1-reader-XXXXXX";
-  const int fd = mkstemp(path);
+  const char *temporary_root = getenv("TMPDIR");
+  if(temporary_root == NULL || temporary_root[0] == '\0') {
+    temporary_root = "/tmp";
+  }
+  const size_t root_length = strlen(temporary_root);
+  const int separator = temporary_root[root_length - 1] == '/' ? 0 : 1;
+  static const char directory_suffix[] = "grhayl-m1-reader-XXXXXX";
+  if(sizeof(directory_suffix) - 1 > SIZE_MAX - (size_t)separator - 1
+     || root_length
+              > SIZE_MAX - (sizeof(directory_suffix) - 1) - (size_t)separator - 1) {
+    fail_test("temporary fixture directory path is too long");
+  }
+  const size_t directory_size
+        = root_length + (size_t)separator + sizeof(directory_suffix);
+  active_reader_fixture_directory = (char *)malloc(directory_size);
+  if(active_reader_fixture_directory == NULL) {
+    fail_test("could not allocate temporary fixture directory path");
+  }
+  memcpy(active_reader_fixture_directory, temporary_root, root_length);
+  size_t path_offset = root_length;
+  if(separator) {
+    active_reader_fixture_directory[path_offset++] = '/';
+  }
+  memcpy(
+        active_reader_fixture_directory + path_offset, directory_suffix,
+        sizeof(directory_suffix));
+  if(mkdtemp(active_reader_fixture_directory) == NULL) {
+    free(active_reader_fixture_directory);
+    active_reader_fixture_directory = NULL;
+    fail_test("could not create temporary fixture directory");
+  }
+
+  static const char fixture_basename[] = "fixture.m1";
+  const size_t fixture_directory_length = strlen(active_reader_fixture_directory);
+  const int fixture_separator
+        = active_reader_fixture_directory[fixture_directory_length - 1] == '/' ? 0 : 1;
+  if(sizeof(fixture_basename) - 1 > SIZE_MAX - (size_t)fixture_separator - 1
+     || fixture_directory_length > SIZE_MAX - (sizeof(fixture_basename) - 1)
+                                         - (size_t)fixture_separator - 1) {
+    fail_test("temporary fixture path is too long");
+  }
+  const size_t fixture_path_size = fixture_directory_length + (size_t)fixture_separator
+                                   + sizeof(fixture_basename);
+  active_reader_fixture_path = (char *)malloc(fixture_path_size);
+  if(active_reader_fixture_path == NULL) {
+    fail_test("could not allocate temporary fixture path");
+  }
+  memcpy(
+        active_reader_fixture_path, active_reader_fixture_directory,
+        fixture_directory_length);
+  path_offset = fixture_directory_length;
+  if(fixture_separator) {
+    active_reader_fixture_path[path_offset++] = '/';
+  }
+  memcpy(
+        active_reader_fixture_path + path_offset, fixture_basename,
+        sizeof(fixture_basename));
+
+  const int fd = open(
+        active_reader_fixture_path, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
   if(fd < 0) {
-    fail_test("could not create temporary fixture");
+    fail_test("could not reserve temporary fixture file");
   }
   FILE *file = fdopen(fd, "w");
   if(file == NULL) {
     close(fd);
-    unlink(path);
     fail_test("could not open temporary fixture stream");
   }
-  fprintf(
-        file,
-        "M1_THCM1_FIXTURE %d\noperation %s\n"
-        "policy A1_A2\nrecord_count %d\n",
-        test_case->version, test_case->operation, test_case->records);
-  for(int i = 0; i < test_case->records; ++i) {
-    /* Repeated IDs deliberately exercise duplicate-record rejection. */
-    fprintf(
-          file,
-          "record_begin\ncase_id synthetic\npair_id synthetic-pair\n"
-          "origin directed\nseed_id none\nfamily radiation\n"
-          "perturbation radiation\nsensitivity_start 0\nsensitivity_count 1\n"
-          "baseline_input %s\nperturbed_input %s\n"
-          "baseline_output %s\nperturbed_output %s\nnormalization %s\n"
-          "baseline_available %d\nperturbed_available 1\n"
-          "baseline_status 0\nperturbed_status 0\n"
-          "baseline_reference_status %d\nperturbed_reference_status 0\n"
-          "record_end\n",
-          test_case->baseline_input, test_case->perturbed_input,
-          test_case->baseline_output, test_case->perturbed_output,
-          test_case->normalization, test_case->available, test_case->reference_status);
+  int write_ok = fprintf(
+                       file,
+                       "M1_THCM1_FIXTURE %d\noperation %s\n"
+                       "policy A1_A2\nrecord_count %d\n",
+                       test_case->version, test_case->operation, test_case->records)
+                 >= 0;
+  for(int i = 0; write_ok && i < test_case->records; ++i) {
+    write_ok = fprintf(
+                     file,
+                     "record_begin\ncase_id %s\npair_id %s\n"
+                     "origin directed\nseed_id none\nfamily radiation\n"
+                     "perturbation radiation\nsensitivity_start 0\nsensitivity_count 1\n"
+                     "baseline_input %s\nperturbed_input %s\n"
+                     "baseline_output %s\nperturbed_output %s\nnormalization %s\n"
+                     "baseline_available %d\nperturbed_available 1\n"
+                     "baseline_status 0\nperturbed_status 0\n"
+                     "baseline_reference_status %d\nperturbed_reference_status 0\n"
+                     "record_end\n",
+                     test_case->case_ids != NULL ? test_case->case_ids[i] : "synthetic",
+                     test_case->pair_ids != NULL ? test_case->pair_ids[i] : "synthetic-pair",
+                     test_case->baseline_input, test_case->perturbed_input,
+                     test_case->baseline_output, test_case->perturbed_output,
+                     test_case->normalization, test_case->available,
+                     test_case->reference_status)
+               >= 0;
   }
-  fputs(test_case->end, file);
+  if(write_ok) {
+    write_ok = fputs(test_case->end, file) != EOF;
+  }
   if(fclose(file) != 0) {
-    unlink(path);
+    write_ok = 0;
+  }
+  if(!write_ok) {
     fail_test("could not write temporary fixture");
   }
   char error[M1_FIXTURE_ERROR_SIZE];
   const int loaded = m1_thcm1_fixture_load(
-        path, "synthetic", 1, 1, collection, error, sizeof(error));
-  if(unlink(path) != 0) {
-    fail_test("could not remove temporary fixture");
+        active_reader_fixture_path, "synthetic", 1, 1, collection, error, sizeof(error));
+  if(!cleanup_active_reader_fixture()) {
+    fail_test("could not remove temporary fixture and directory");
   }
   return loaded;
 }
@@ -394,6 +485,96 @@ static void check_fixture_reader_and_comparator(void) {
            error, sizeof(error))) {
     fail_test("unsupported envelope policy was accepted");
   }
+
+  m1_thcm1_fixture_record comparison = *record;
+  double comparison_trusted[] = { 1.0 };
+  double comparison_perturbed[] = { 1.1 };
+  double comparison_normalization[] = { 1.0e12 };
+  double comparison_actual[] = { 3.0 };
+  comparison.baseline_output = comparison_trusted;
+  comparison.perturbed_output = comparison_perturbed;
+  comparison.normalization = comparison_normalization;
+  comparison.output_count = 1;
+  comparison.normalization_count = 1;
+  if(!m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "pointwise_a1_a2_v1", comparison_normalization,
+           comparison_actual, &report, error, sizeof(error))) {
+    fail_test("inclusive absolute-tolerance equality was rejected");
+  }
+  comparison_actual[0] = nextafter(3.0, INFINITY);
+  if(m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "pointwise_a1_a2_v1", comparison_normalization,
+           comparison_actual, &report, error, sizeof(error))) {
+    fail_test("value above the inclusive absolute-tolerance boundary was accepted");
+  }
+
+  comparison_trusted[0] = 1.0;
+  comparison_perturbed[0] = 1.25;
+  comparison_normalization[0] = 1.0;
+  comparison_actual[0] = 2.0;
+  if(!m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "pointwise_a1_a2_v1", comparison_normalization,
+           comparison_actual, &report, error, sizeof(error))) {
+    fail_test("equality at the retained response-relative bound was rejected");
+  }
+  comparison_actual[0] = nextafter(2.0, INFINITY);
+  if(m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "pointwise_a1_a2_v1", comparison_normalization,
+           comparison_actual, &report, error, sizeof(error))) {
+    fail_test("nextafter above the retained response-relative bound was accepted");
+  }
+  comparison_trusted[0] = 1.0;
+  comparison_perturbed[0] = DBL_MAX / 2.0;
+  comparison_normalization[0] = 1.0;
+  comparison_actual[0] = 2.0;
+  if(m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "pointwise_a1_a2_v1", comparison_normalization,
+           comparison_actual, &report, error, sizeof(error))) {
+    fail_test("overflowing fourfold response bound was accepted");
+  }
+
+  comparison_trusted[0] = 0.0;
+  comparison_perturbed[0] = 0.5;
+  comparison_normalization[0] = 10.0;
+  comparison_actual[0] = 1.5;
+  if(!m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "pointwise_a1_a2_v1", comparison_normalization,
+           comparison_actual, &report, error, sizeof(error))) {
+    fail_test("zero-trusted normalized response within the envelope was rejected");
+  }
+  comparison_actual[0] = 2.0;
+  if(!m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "pointwise_a1_a2_v1", comparison_normalization,
+           comparison_actual, &report, error, sizeof(error))) {
+    fail_test("equality at the zero-trusted normalized response bound was rejected");
+  }
+  comparison_actual[0] = nextafter(2.0, INFINITY);
+  if(m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "pointwise_a1_a2_v1", comparison_normalization,
+           comparison_actual, &report, error, sizeof(error))) {
+    fail_test("nextafter above the zero-trusted normalized response bound was accepted");
+  }
+
+  comparison_trusted[0] = DBL_MAX;
+  comparison_perturbed[0] = DBL_MAX;
+  comparison_normalization[0] = DBL_MIN;
+  comparison_actual[0] = DBL_MAX;
+  if(!m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "strict_relative_2e-12_propagated_response_v1",
+           comparison_normalization, comparison_actual, &report, error, sizeof(error))) {
+    fail_test("normalization overflow changed an exact trusted match");
+  }
+  const double smallest_positive = nextafter(0.0, 1.0);
+  comparison_trusted[0] = -smallest_positive;
+  comparison_perturbed[0] = -smallest_positive;
+  comparison_normalization[0] = 2.0;
+  comparison_actual[0] = smallest_positive;
+  if(m1_thcm1_fixture_compare_baseline_response(
+           &comparison, "strict_relative_2e-12_propagated_response_v1",
+           comparison_normalization, comparison_actual, &report, error, sizeof(error))) {
+    fail_test("normalization underflow erased a nonzero relative discrepancy");
+  }
+
   double control_baseline_input[] = { 1.0, 1.0 };
   double control_perturbed_input[] = { 1.0, 1.0 };
   double control_perturbed_output[] = { 3.0 };
@@ -551,6 +732,38 @@ static void check_fixture_reader_and_comparator(void) {
     fail_test("changes outside the declared sensitivity span were accepted");
   }
   m1_thcm1_fixture_free(&collection);
+
+  /* Sorting for uniqueness must not reorder the caller-visible records. */
+  const char *const case_ids[] = { "z-case", "a-case", "m-case" };
+  const char *const pair_ids[] = { "a-pair", "z-pair", "m-pair" };
+  fixture_reader_case multiple = valid;
+  multiple.records = 3;
+  multiple.case_ids = case_ids;
+  multiple.pair_ids = pair_ids;
+  if(!load_synthetic_fixture(&multiple, &collection)) {
+    fail_test("shuffled unique fixture IDs were rejected");
+  }
+  for(size_t i = 0; i < collection.record_count; ++i) {
+    if(strcmp(collection.records[i].case_id, case_ids[i]) != 0
+       || strcmp(collection.records[i].pair_id, pair_ids[i]) != 0) {
+      m1_thcm1_fixture_free(&collection);
+      fail_test("fixture ID validation reordered records");
+    }
+  }
+  m1_thcm1_fixture_free(&collection);
+  const char *const duplicate_case_ids[] = { "z-case", "a-case", "z-case" };
+  multiple.case_ids = duplicate_case_ids;
+  if(load_synthetic_fixture(&multiple, &collection)) {
+    m1_thcm1_fixture_free(&collection);
+    fail_test("nonadjacent duplicate case IDs were accepted");
+  }
+  const char *const duplicate_pair_ids[] = { "a-pair", "z-pair", "a-pair" };
+  multiple.case_ids = case_ids;
+  multiple.pair_ids = duplicate_pair_ids;
+  if(load_synthetic_fixture(&multiple, &collection)) {
+    m1_thcm1_fixture_free(&collection);
+    fail_test("nonadjacent duplicate pair IDs were accepted");
+  }
 
   fixture_reader_case invalid = valid;
 #define REJECT_FIXTURE(field, value, message)           \
@@ -738,19 +951,19 @@ static void check_shared_null_and_state_contracts(void) {
         ghl_error_m1_invalid_state, "repair nonfinite energy was accepted");
 
   require_error_code(
-        ghl_m1_compute_closure_minerbo(NULL, &metric, &prims, &rad, &closure),
+        ghl_m1_compute_closure_with_primitives(NULL, &metric, &prims, &rad, &closure),
         ghl_error_m1_null_pointer, "closure NULL parameters were accepted");
   require_error_code(
-        ghl_m1_compute_closure_minerbo(&params, NULL, &prims, &rad, &closure),
+        ghl_m1_compute_closure_with_primitives(&params, NULL, &prims, &rad, &closure),
         ghl_error_m1_null_pointer, "closure NULL metric was accepted");
   require_error_code(
-        ghl_m1_compute_closure_minerbo(&params, &metric, NULL, &rad, &closure),
+        ghl_m1_compute_closure_with_primitives(&params, &metric, NULL, &rad, &closure),
         ghl_error_m1_null_pointer, "closure NULL primitives were accepted");
   require_error_code(
-        ghl_m1_compute_closure_minerbo(&params, &metric, &prims, NULL, &closure),
+        ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, NULL, &closure),
         ghl_error_m1_null_pointer, "closure NULL state was accepted");
   require_error_code(
-        ghl_m1_compute_closure_minerbo(&params, &metric, &prims, &rad, NULL),
+        ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, &rad, NULL),
         ghl_error_m1_null_pointer, "closure NULL output was accepted");
 
   require_error_code(
@@ -884,6 +1097,28 @@ static void check_shared_null_and_state_contracts(void) {
      || source_tilde_S[2] != 18.0) {
     fail_test("invalid metric changed matter-coupling outputs");
   }
+  /* Each remaining lapse/volume reject arm is a separate condition. */
+  const double invalid_matter_metric_values[] = { 0.0, -1.0, INFINITY };
+  for(size_t variant = 0; variant < sizeof(invalid_matter_metric_values)
+                                          / sizeof(invalid_matter_metric_values[0]);
+      ++variant) {
+    bad_matter_metric = metric;
+    bad_matter_metric.lapse = invalid_matter_metric_values[variant];
+    source_tilde_tau = 15.0;
+    source_tilde_S[0] = 16.0;
+    source_tilde_S[1] = 17.0;
+    source_tilde_S[2] = 18.0;
+    require_error_code(
+          ghl_m1_compute_matter_coupling_sources(
+                &bad_matter_metric, &interaction, &source_tilde_tau, source_tilde_S),
+          ghl_error_m1_invalid_metric, "matter coupling accepted an invalid lapse");
+    bad_matter_metric = metric;
+    bad_matter_metric.sqrt_detgamma = invalid_matter_metric_values[variant];
+    require_error_code(
+          ghl_m1_compute_matter_coupling_sources(
+                &bad_matter_metric, &interaction, &source_tilde_tau, source_tilde_S),
+          ghl_error_m1_invalid_metric, "matter coupling accepted an invalid volume");
+  }
   ghl_m1_sources bad_interaction = interaction;
   bad_interaction.S_E = NAN;
   source_tilde_tau = 19.0;
@@ -932,6 +1167,34 @@ static void check_shared_null_and_state_contracts(void) {
   require_error_code(
         ghl_m1_compute_stress_energy(&params, &metric, &rad, &closure, NULL),
         ghl_error_m1_null_pointer, "stress NULL output was accepted");
+  /* The stress-energy helper validates the lapse products itself; each
+   * invalid-lapse arm is a separate condition. Use an independently
+   * constructed admissible state/closure so only the lapse arm fires. */
+  {
+    const ghl_m1_rad_state admissible_rad = { .E = 1.0, .F = { 0.0, 0.0, 0.0 } };
+    ghl_m1_closure isotropic_closure = { 0 };
+    isotropic_closure.P[0][0] = isotropic_closure.P[1][1] = isotropic_closure.P[2][2]
+          = 1.0 / 3.0;
+    isotropic_closure.chi = 1.0 / 3.0;
+    const double invalid_stress_lapses[] = { 0.0, -1.0, NAN };
+    for(size_t variant = 0;
+        variant < sizeof(invalid_stress_lapses) / sizeof(invalid_stress_lapses[0]);
+        ++variant) {
+      ghl_metric_quantities bad_stress_metric;
+      m1_setup_flat_metric(&bad_stress_metric);
+      bad_stress_metric.lapse = invalid_stress_lapses[variant];
+      ghl_stress_energy bad_stress = { 0 };
+      bad_stress.T4[0][0] = 7.0;
+      require_error_code(
+            ghl_m1_compute_stress_energy(
+                  &params, &bad_stress_metric, &admissible_rad, &isotropic_closure,
+                  &bad_stress),
+            ghl_error_m1_invalid_metric, "stress accepted an invalid lapse");
+      if(bad_stress.T4[0][0] != 7.0) {
+        fail_test("invalid stress lapse changed outputs");
+      }
+    }
+  }
 
   require_error_code(
         ghl_m1_compute_diagnostics(NULL, &metric, &rad, &closure, &diagnostics),
@@ -1032,55 +1295,6 @@ static void check_shared_numeric_contracts(void) {
     fail_test("numeric-contract reference closure failed");
   }
 
-  /* Each mutation isolates one metric predicate while keeping the public
-   * face-normal operation's other inputs valid. */
-  ghl_metric_quantities bad_metric;
-  double delta_l = 17.0;
-#define REQUIRE_BAD_METRIC(mutation, message)                                           \
-  do {                                                                                  \
-    bad_metric = metric;                                                                \
-    mutation;                                                                           \
-    delta_l = 17.0;                                                                     \
-    require_error_code(                                                                 \
-          ghl_m1_compute_face_normal_delta_l(&bad_metric, ghl_m1_dirn0, 1.0, &delta_l), \
-          ghl_error_m1_invalid_metric, message);                                        \
-    if(delta_l != 17.0)                                                                 \
-      fail_test("face-normal published after bad metric");                              \
-  } while(0)
-  REQUIRE_BAD_METRIC(bad_metric.lapse = NAN, "nonfinite metric lapse was accepted");
-  REQUIRE_BAD_METRIC(bad_metric.lapse = 0.0, "nonpositive metric lapse was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.detgamma = NAN, "nonfinite metric determinant was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.detgamma = 0.0, "nonpositive metric determinant was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.sqrt_detgamma = NAN,
-        "nonfinite metric square-root determinant was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.sqrt_detgamma = 0.0,
-        "nonpositive metric square-root determinant was accepted");
-  REQUIRE_BAD_METRIC(bad_metric.betaU[0] = NAN, "nonfinite metric shift was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.gammaDD[0][0] = NAN, "nonfinite covariant metric was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.gammaDD[0][0] = 0.0, "non-SPD covariant metric was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.gammaDD[0][1] = 0.25, "nonsymmetric covariant metric was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.gammaUU[0][0] = NAN, "nonfinite inverse metric was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.gammaUU[0][0] = 0.0, "non-SPD inverse metric was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.gammaUU[0][1] = 0.25, "nonsymmetric inverse metric was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.detgamma = 2.0, "inconsistent metric determinant was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.sqrt_detgamma = 2.0, "inconsistent metric square root was accepted");
-  REQUIRE_BAD_METRIC(
-        bad_metric.gammaUU[0][0] = 1.01, "inconsistent inverse metric was accepted");
-#undef REQUIRE_BAD_METRIC
-
-  /* validate_parameters is reached through the public repair operation. */
   ghl_m1_rad_state repair_state;
   ghl_m1_parameters bad_params = params;
   bad_params.E_floor = NAN;
@@ -1088,52 +1302,6 @@ static void check_shared_numeric_contracts(void) {
   require_error_code(
         ghl_m1_realizability_repair(&bad_params, &metric, &repair_state),
         ghl_error_m1_invalid_E_floor, "repair accepted a nonfinite E_floor");
-  bad_params = params;
-  bad_params.repair_policy = (ghl_m1_repair_policy_t)0;
-  repair_state = rad;
-  require_error_code(
-        ghl_m1_realizability_repair(&bad_params, &metric, &repair_state),
-        ghl_error_m1_invalid_repair_policy,
-        "repair accepted an unsupported repair policy");
-  bad_params = params;
-  bad_params.epsilon_c = NAN;
-  repair_state = rad;
-  require_error_code(
-        ghl_m1_realizability_repair(&bad_params, &metric, &repair_state),
-        ghl_error_m1_invalid_epsilon_c, "repair accepted a nonfinite epsilon_c");
-  bad_params = params;
-  bad_params.one_minus_epsilon_c_sq = NAN;
-  repair_state = rad;
-  require_error_code(
-        ghl_m1_realizability_repair(&bad_params, &metric, &repair_state),
-        ghl_error_m1_invalid_epsilon_c, "repair accepted a nonfinite cone limit");
-  bad_params = params;
-  bad_params.one_minus_epsilon_c_sq = 0.25;
-  repair_state = rad;
-  require_error_code(
-        ghl_m1_realizability_repair(&bad_params, &metric, &repair_state),
-        ghl_error_m1_invalid_epsilon_c, "repair accepted an inconsistent cone limit");
-  bad_params = params;
-  bad_params.closure_root_tolerance = NAN;
-  repair_state = rad;
-  require_error_code(
-        ghl_m1_realizability_repair(&bad_params, &metric, &repair_state),
-        ghl_error_m1_invalid_closure_tolerance,
-        "repair accepted a nonfinite closure tolerance");
-  bad_params = params;
-  bad_params.closure_root_max_iterations = 0;
-  repair_state = rad;
-  require_error_code(
-        ghl_m1_realizability_repair(&bad_params, &metric, &repair_state),
-        ghl_error_m1_invalid_closure_max_iterations,
-        "repair accepted zero closure iterations");
-  bad_params = params;
-  bad_params.closure_root_residual_tolerance = NAN;
-  repair_state = rad;
-  require_error_code(
-        ghl_m1_realizability_repair(&bad_params, &metric, &repair_state),
-        ghl_error_m1_invalid_closure_tolerance,
-        "repair accepted a nonfinite residual tolerance");
 
   ghl_m1_rad_state bad_rad = rad;
   bad_rad.E = NAN;
@@ -1185,21 +1353,6 @@ static void check_shared_numeric_contracts(void) {
   require_error_code(
         ghl_m1_compute_stress_energy(&params, &metric, &rad, &bad_closure, &stress),
         ghl_error_m1_invalid_state, "stress accepted an asymmetric tensor");
-  bad_closure = closure;
-  bad_closure.P[0][0] = 1.0;
-  bad_closure.P[1][1] = 1.0;
-  bad_closure.P[2][2] = -1.0;
-  for(int i = 0; i < 3; ++i) {
-    for(int j = 0; j < 3; ++j) {
-      if(i != j) {
-        bad_closure.P[i][j] = 0.0;
-      }
-    }
-  }
-  require_error_code(
-        ghl_m1_compute_stress_energy(&params, &metric, &rad, &bad_closure, &stress),
-        ghl_error_m1_invalid_state, "stress accepted a non-PSD tensor");
-
   bad_closure = closure;
   bad_closure.xi = NAN;
   require_error_code(
@@ -1333,100 +1486,6 @@ static void check_shared_numeric_contracts(void) {
   }
 }
 
-/* Validate the same public parameter contract at each caller boundary. This
- * exercises the independently compiled header validators in those callers;
- * testing only the initializer cannot establish their rejection behavior. */
-static void check_parameter_contract_at_callers(
-      const ghl_m1_parameters *params,
-      const ghl_error_codes_t expected) {
-  ghl_metric_quantities metric;
-  m1_setup_flat_metric(&metric);
-  ghl_primitive_quantities prims = { .u0 = 1.0 };
-  const ghl_m1_rad_state rad = { .E = 1.0 };
-  ghl_m1_rad_state repaired = rad;
-  const ghl_m1_closure closure = {
-    .P = { { 1.0 / 3.0, 0.0, 0.0 }, { 0.0, 1.0 / 3.0, 0.0 }, { 0.0, 0.0, 1.0 / 3.0 } },
-    .chi = 1.0 / 3.0
-  };
-  ghl_m1_closure closure_out = { 0 };
-  ghl_m1_comoving comoving;
-  ghl_m1_closure_decomposition_diagnostic decomposition;
-  ghl_m1_diagnostics diagnostics;
-  ghl_stress_energy stress;
-  ghl_m1_sources sources;
-  const ghl_metric_quantities derivative = { 0 };
-  const ghl_extrinsic_curvature curvature = { 0 };
-  double J = 0.0;
-  bool J_valid = false;
-  const double zero[3] = { 0 };
-  double flux_N, flux_E, flux_F[3], velocity[3];
-  const ghl_m1_neutrino_parameters nu = { .N_floor = 1.0e-12 };
-  const ghl_m1_neutrino_state ns = { .N = 1.0, .E = 1.0 };
-  ghl_m1_neutrino_state ns_repaired = ns;
-#define CHECK_CALL(call) require_error_code((call), expected, #call)
-  CHECK_CALL(ghl_m1_compute_closure_with_primitives(
-        params, &metric, &prims, &rad, &closure_out));
-  CHECK_CALL(ghl_m1_compute_closure_decomposition_diagnostic(
-        params, &metric, &prims, &rad, &decomposition));
-  CHECK_CALL(ghl_m1_compute_comoving_moments(
-        params, &metric, &prims, &rad, &closure, &comoving));
-  CHECK_CALL(ghl_m1_compute_diagnostics(params, &metric, &rad, &closure, &diagnostics));
-  CHECK_CALL(ghl_m1_compute_stress_energy(params, &metric, &rad, &closure, &stress));
-  CHECK_CALL(ghl_m1_compute_geometry_sources(
-        params, &metric, &derivative, &derivative, &derivative, &curvature, &rad,
-        &closure, &sources));
-  CHECK_CALL(ghl_m1_compute_Jthick(params, &metric, &prims, &rad, &J, &J_valid));
-  CHECK_CALL(ghl_m1_realizability_repair(params, &metric, &repaired));
-  CHECK_CALL(ghl_m1_repair_neutrino_state(params, &nu, &metric, &ns_repaired, NULL));
-  CHECK_CALL(ghl_m1_compute_neutrino_number_flux(
-        params, &nu, &metric, &prims, &ns, flux_F, velocity));
-  CHECK_CALL(ghl_m1_compute_neutrino_rusanov_flux(
-        params, &nu, &metric, ghl_m1_dirn0, &ns, &ns, &closure, &closure, zero, zero,
-        zero, zero, 1.0, &flux_N, &flux_E, flux_F));
-#undef CHECK_CALL
-  if(expected != ghl_success
-     && (memcmp(&repaired, &rad, sizeof(rad)) != 0
-         || memcmp(&ns_repaired, &ns, sizeof(ns)) != 0)) {
-    fail_test("parameter rejection changed a repair state");
-  }
-}
-
-static void check_caller_parameter_matrix(void) {
-  ghl_m1_parameters valid;
-  require_error_code(
-        ghl_m1_initialize(0.5, 1.0e-12, 1.0, 1.0e-6, 1.0e-10, 100, 1.0e-10, &valid),
-        ghl_success, "caller matrix initialize");
-  check_parameter_contract_at_callers(&valid, ghl_success);
-#define BAD_PARAMETER(field, value, expected)            \
-  do {                                                   \
-    ghl_m1_parameters bad = valid;                       \
-    bad.field = (value);                                 \
-    check_parameter_contract_at_callers(&bad, expected); \
-  } while(0)
-  BAD_PARAMETER(E_floor, NAN, ghl_error_m1_invalid_E_floor);
-  BAD_PARAMETER(E_floor, 0.0, ghl_error_m1_invalid_E_floor);
-  BAD_PARAMETER(
-        repair_policy, (ghl_m1_repair_policy_t)-1, ghl_error_m1_invalid_repair_policy);
-  BAD_PARAMETER(epsilon_c, NAN, ghl_error_m1_invalid_epsilon_c);
-  BAD_PARAMETER(epsilon_c, 0.0, ghl_error_m1_invalid_epsilon_c);
-  BAD_PARAMETER(epsilon_c, 1.0, ghl_error_m1_invalid_epsilon_c);
-  BAD_PARAMETER(one_minus_epsilon_c_sq, NAN, ghl_error_m1_invalid_epsilon_c);
-  BAD_PARAMETER(one_minus_epsilon_c_sq, 0.25, ghl_error_m1_invalid_epsilon_c);
-  BAD_PARAMETER(one_minus_epsilon_c_sq, 0.75, ghl_error_m1_invalid_epsilon_c);
-  BAD_PARAMETER(closure_root_tolerance, NAN, ghl_error_m1_invalid_closure_tolerance);
-  BAD_PARAMETER(closure_root_tolerance, 0.0, ghl_error_m1_invalid_closure_tolerance);
-  BAD_PARAMETER(
-        closure_root_tolerance, nextafter(1.0, INFINITY),
-        ghl_error_m1_invalid_closure_tolerance);
-  BAD_PARAMETER(
-        closure_root_max_iterations, 0, ghl_error_m1_invalid_closure_max_iterations);
-  BAD_PARAMETER(
-        closure_root_residual_tolerance, NAN, ghl_error_m1_invalid_closure_tolerance);
-  BAD_PARAMETER(
-        closure_root_residual_tolerance, 0.0, ghl_error_m1_invalid_closure_tolerance);
-#undef BAD_PARAMETER
-}
-
 static void check_state_contract_at_callers(
       const ghl_m1_parameters *params,
       const ghl_metric_quantities *metric,
@@ -1476,10 +1535,6 @@ static void check_caller_state_matrix(void) {
     .chi = 1.0 / 3.0
   };
   check_state_contract_at_callers(&params, &metric, &rad, &closure, true, ghl_success);
-  metric.lapse = -1.0;
-  check_state_contract_at_callers(
-        &params, &metric, &rad, &closure, true, ghl_error_m1_invalid_metric);
-  m1_setup_flat_metric(&metric);
   ghl_m1_rad_state bad = rad;
   bad.E = NAN;
   check_state_contract_at_callers(
@@ -1502,11 +1557,6 @@ static void check_caller_state_matrix(void) {
   }
   ghl_m1_closure pressure = closure;
   pressure.P[0][1] = 0.1;
-  check_state_contract_at_callers(
-        &params, &metric, &rad, &pressure, false, ghl_error_m1_invalid_state);
-  pressure = closure;
-  pressure.P[0][0] = -1.0;
-  pressure.P[1][1] = pressure.P[2][2] = 1.0;
   check_state_contract_at_callers(
         &params, &metric, &rad, &pressure, false, ghl_error_m1_invalid_state);
 }
@@ -1549,19 +1599,6 @@ static void check_remaining_range_and_axis_failures(void) {
   require_error_code(
         ghl_m1_compute_face_normal_delta_l(&metric, ghl_m1_dirn0, 0.0, &value),
         ghl_error_m1_invalid_state, "zero coordinate extent");
-  ghl_metric_quantities bad_metric = metric;
-  memset(bad_metric.gammaDD, 0, sizeof(bad_metric.gammaDD));
-  require_error_code(
-        ghl_m1_compute_face_normal_delta_l(&bad_metric, ghl_m1_dirn0, 1.0, &value),
-        ghl_error_m1_invalid_metric,
-        "zero matrix with inconsistent positive determinant accepted");
-  bad_metric = metric;
-  bad_metric.gammaDD[0][0] = tiny;
-  bad_metric.gammaDD[0][1] = bad_metric.gammaDD[1][0] = 1.0;
-  require_error_code(
-        ghl_m1_compute_face_normal_delta_l(&bad_metric, ghl_m1_dirn0, 1.0, &value),
-        ghl_error_m1_invalid_metric,
-        "finite matrix with overflowing Cholesky pivot accepted");
   /* Unit determinant, mutually inverse diagonal tensors. Coordinate extent
    * overflow/underflow is independent of metric admissibility. */
   for(int case_index = 0; case_index < 2; ++case_index) {
@@ -1673,11 +1710,6 @@ static void check_remaining_shared_rejections(void) {
   REJECT_CLOSURE_METADATA(root_iterations, -1);
 #undef REJECT_CLOSURE_METADATA
 
-  ghl_metric_quantities bad_metric = metric;
-  bad_metric.gammaDD[0][0] = -1.0;
-  require_error_code(
-        ghl_m1_compute_diagnostics(&params, &bad_metric, &rad, &closure, &diagnostics),
-        ghl_error_m1_invalid_metric, "diagnostics accepted non-SPD metric");
   ghl_m1_rad_state bad_state = rad;
   bad_state.E = 0.0;
   require_error_code(
@@ -1911,7 +1943,6 @@ static void check_closure_shift_overflow(void) {
   const ghl_m1_closure sentinel = closure;
   rad.E = DBL_MAX;
   rad.F[0] = DBL_MAX / 2.0;
-  ghl_m1_reset_closure_counters();
   /* F_mu n^mu=0 requires F_0=beta^i F_i=2*DBL_MAX. The
    * admissible spatial state therefore fails in workspace construction. */
   require_error_code(
@@ -1919,16 +1950,6 @@ static void check_closure_shift_overflow(void) {
         ghl_error_m1_invalid_state, "overflowing temporal flux accepted");
   if(!m1_closure_identical(&closure, &sentinel)) {
     fail_test("workspace failure published closure");
-  }
-  ghl_m1_closure_failure_stage_t stage;
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  ghl_m1_closure_counters counters;
-  ghl_m1_get_closure_counters(&counters);
-  if(stage != ghl_m1_closure_failure_workspace || counters.invalid_state != 1
-     || counters.ordinary_convergence || counters.endpoint_fallback
-     || counters.iteration_exhaustion || counters.downstream_repair
-     || counters.residual_rejection) {
-    fail_test("workspace overflow diagnostic accounting mismatch");
   }
 }
 
@@ -1949,21 +1970,9 @@ static void check_comoving_energy_failure(void) {
   const ghl_m1_rad_state rad = { .E = 1.0, .F = { 1.0, 0.0, 0.0 } };
   ghl_m1_closure closure = { .xi = -17.0, .chi = -19.0 };
 
-  ghl_m1_reset_closure_counters();
   require_error_code(
         ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, &rad, &closure),
         ghl_error_m1_invalid_state, "comoving-energy boundary was accepted");
-
-  ghl_m1_closure_failure_stage_t stage;
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  ghl_m1_closure_counters counters;
-  ghl_m1_get_closure_counters(&counters);
-  if(stage != ghl_m1_closure_failure_comoving_energy || counters.invalid_state != 1
-     || counters.ordinary_convergence || counters.endpoint_fallback
-     || counters.iteration_exhaustion || counters.downstream_repair
-     || counters.residual_rejection) {
-    fail_test("comoving-energy failure diagnostic accounting mismatch");
-  }
 }
 
 /* Exercise each independent rate invariant with and without diagnostic storage. */
@@ -2139,6 +2148,143 @@ static void check_neutrino_repair_boundaries(void) {
         ghl_error_m1_invalid_state, "nonfinite number current accepted");
 }
 
+/* The canonical repair evaluates its scaled flux norm via the interposable
+ * ghl_m1_finish_scaled_norm_ratio. To exercise its guarded post-repair
+ * rejections without changing accepted-input behavior, this interposer
+ * scripts the second ratio evaluation only. Everything else delegates to
+ * the library under RTLD_NEXT. Linux-only per the ELF interposition
+ * requirement; macOS builds omit these cases and still run the ordinary
+ * repair boundary tests. */
+#if defined(__linux__)
+#include <dlfcn.h>
+
+typedef struct {
+  int calls;
+  int fail_on_call;
+  double return_value;
+  ghl_error_codes_t return_code;
+} scripted_finish_context;
+
+static scripted_finish_context m1_finish_script = { 0, -1, 0.0, ghl_success };
+
+static ghl_error_codes_t (*ghl_m1_real_finish_scaled_norm_ratio)(
+      const double,
+      const double,
+      const double,
+      const double,
+      double *) = NULL;
+
+ghl_error_codes_t ghl_m1_finish_scaled_norm_ratio(
+      const double x_scale,
+      const double A_scale,
+      const double denom,
+      const double scaled_norm,
+      double *restrict ratio) {
+  if(ghl_m1_real_finish_scaled_norm_ratio == NULL) {
+    typedef ghl_error_codes_t (*real_fn)(
+          const double, const double, const double, const double, double *);
+    ghl_m1_real_finish_scaled_norm_ratio
+          = (real_fn)dlsym(RTLD_NEXT, "ghl_m1_finish_scaled_norm_ratio");
+    if(ghl_m1_real_finish_scaled_norm_ratio == NULL) {
+      fail_test("RTLD_NEXT could not resolve ghl_m1_finish_scaled_norm_ratio");
+    }
+  }
+  const int call = m1_finish_script.calls++;
+  if(call == m1_finish_script.fail_on_call) {
+    *ratio = m1_finish_script.return_value;
+    return m1_finish_script.return_code;
+  }
+  return ghl_m1_real_finish_scaled_norm_ratio(
+        x_scale, A_scale, denom, scaled_norm, ratio);
+}
+#endif /* __linux__ */
+
+#if defined(__linux__)
+static void check_repair_post_ratio_contract(void) {
+  ghl_m1_parameters params;
+  require_error_code(
+        ghl_m1_initialize(0.5, 1.0e-12, 1.0, 1.0e-6, 1.0e-10, 100, 1.0e-10, &params),
+        ghl_success, "post-ratio parameters rejected");
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  const double permitted_flux_factor = sqrt(1.0 - params.epsilon_c);
+  const double focus = nextafter(permitted_flux_factor, DBL_MAX);
+
+  /* The first norm evaluation places the flux factor strictly above the
+   * permitted boundary, so the repair rescales and evaluates the norm
+   * again. Scripting the second evaluation to reject exercises the
+   * guarded error return the library publishes in that case. */
+  m1_finish_script
+        = (scripted_finish_context){ .calls = 0,
+                                     .fail_on_call = 1,
+                                     .return_value = NAN,
+                                     .return_code = ghl_error_m1_invalid_state };
+  ghl_m1_rad_state state = { .E = 1.0, .F = { focus, 0.0, 0.0 } };
+  const ghl_m1_rad_state original = state;
+  require_error_code(
+        ghl_m1_realizability_repair(&params, &metric, &state),
+        ghl_error_m1_invalid_state, "repair did not propagate a post-ratio rejection");
+  if(memcmp(&state, &original, sizeof(state)) != 0) {
+    fail_test("post-ratio rejection changed the published state");
+  }
+  if(m1_finish_script.calls != 2) {
+    fail_test("repair skipped a scaled-norm evaluation");
+  }
+
+  /* A finite post-repair ratio strictly above the rounding allowance
+   * publishes an invalid state and leaves the caller state untouched. */
+  m1_finish_script
+        = (scripted_finish_context){ .calls = 0,
+                                     .fail_on_call = 1,
+                                     .return_value = 2.0 * permitted_flux_factor,
+                                     .return_code = ghl_success };
+  state = original;
+  require_error_code(
+        ghl_m1_realizability_repair(&params, &metric, &state),
+        ghl_error_m1_invalid_state, "repair accepted a post-ratio above the allowance");
+  if(memcmp(&state, &original, sizeof(state)) != 0) {
+    fail_test("post-ratio cone rejection changed the published state");
+  }
+  if(m1_finish_script.calls != 2) {
+    fail_test("cone rejection did not reach the second norm evaluation");
+  }
+  m1_finish_script = (scripted_finish_context){ .calls = 0, .fail_on_call = -1 };
+}
+#endif /* __linux__ */
+
+static void check_psd_congruence_overflow(void) {
+  /* The private PSD boundary uses gammaDD and P. Its Cholesky pivots are
+   * positive and every lowered entry is finite, but rounded subnormal
+   * multiplication magnifies A00 before the inverse congruence. The first
+   * B01 term then exceeds DBL_MAX before cancellation with later terms. */
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  metric.gammaDD[0][0] = ldexp(1.0, -1074);
+  metric.gammaDD[0][1] = metric.gammaDD[1][0] = 0.75 * ldexp(1.0, -537);
+  const double L00 = sqrt(metric.gammaDD[0][0]);
+  const double L10 = metric.gammaDD[1][0] / L00;
+  if(L00 <= 0.0 || L10 != 0.75 || 1.0 - L10 * L10 != 7.0 / 16.0) {
+    fail_test("PSD range case did not retain positive Cholesky pivots");
+  }
+  const ghl_m1_closure pressure
+        = { .P = { { 0.0, 0.0, 0.0 }, { 0.0, DBL_MAX, 0.0 }, { 0.0, 0.0, 0.0 } } };
+  double lowered[3][3];
+  ghl_m1_lower_spatial_tensor(&metric, pressure.P, lowered);
+  for(int i = 0; i < 3; ++i) {
+    for(int j = 0; j < 3; ++j) {
+      if(!isfinite(lowered[i][j])) {
+        fail_test("PSD range case failed before inverse congruence");
+      }
+    }
+  }
+  if(lowered[0][0] <= 0.0 || lowered[1][1] != DBL_MAX) {
+    fail_test("PSD range case lost its finite lowered pressure");
+  }
+  require_error_code(
+        ghl_m1_validate_closure_tensor_psd(&metric, &pressure),
+        ghl_error_m1_invalid_state, "nonfinite inverse congruence was accepted");
+}
+
 static void check_private_norm_boundaries(void) {
   const double invalid_norms[] = { NAN, INFINITY, -1.0, 0.0 };
   for(size_t i = 0; i < sizeof(invalid_norms) / sizeof(invalid_norms[0]); ++i) {
@@ -2152,8 +2298,8 @@ static void check_private_norm_boundaries(void) {
   }
   double restored_norm;
   require_error_code(
-        ghl_m1_finish_scaled_norm_ratio(2.0, 9.0, 3.0, 0.5, &restored_norm),
-        ghl_success, "finite norm scale restoration failed");
+        ghl_m1_finish_scaled_norm_ratio(2.0, 9.0, 3.0, 0.5, &restored_norm), ghl_success,
+        "finite norm scale restoration failed");
   if(restored_norm != 1.0) {
     fail_test("finite norm scale restoration mismatch");
   }
@@ -2215,11 +2361,21 @@ static void check_private_norm_boundaries(void) {
   require_error_code(
         ghl_m1_validate_closure_tensor_psd(&metric, &pressure),
         ghl_error_m1_invalid_state, "overflowing PSD factorization accepted");
-  int reason;
-  ghl_m1_get_last_closure_validation_reason(&reason);
-  if(reason != ghl_m1_closure_validation_psd) {
-    fail_test("overflowing PSD factorization reported the wrong failure reason");
-  }
+  /* An all-zero pressure tensor lowers to an all-zero matrix, so the scale
+   * gate must reject it before the eigen walk. */
+  m1_setup_flat_metric(&metric);
+  const ghl_m1_closure zero_pressure = { 0 };
+  require_error_code(
+        ghl_m1_validate_closure_tensor_psd(&metric, &zero_pressure),
+        ghl_error_m1_invalid_state, "zero PSD tensor accepted");
+  /* A metric at the top of double range keeps every lowered entry finite but
+   * overflows the Cholesky-transformed eigen matrix. */
+  metric.gammaDD[0][0] = metric.gammaDD[1][1] = metric.gammaDD[2][2] = 1.0e300;
+  const ghl_m1_closure unit_pressure
+        = { .P = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } } };
+  require_error_code(
+        ghl_m1_validate_closure_tensor_psd(&metric, &unit_pressure),
+        ghl_error_m1_invalid_state, "huge-scale PSD factorization accepted");
   m1_setup_flat_metric(&metric);
   metric.gammaDD[0][0] = -1;
   require_error_code(
@@ -2230,6 +2386,65 @@ static void check_private_norm_boundaries(void) {
   require_error_code(
         ghl_m1_compute_eulerian_velocity(&metric, &prims, V, NULL, &W),
         ghl_error_u0_singular, "invalid velocity metric accepted");
+  /* The Eulerian-velocity guard rejects a nonpositive or nonfinite lapse
+   * before touching the metric walk. */
+  {
+    ghl_metric_quantities lapse_metric;
+    const double invalid_lapses[] = { 0.0, -1.0, NAN, INFINITY };
+    for(size_t i = 0; i < sizeof(invalid_lapses) / sizeof(invalid_lapses[0]); ++i) {
+      m1_setup_flat_metric(&lapse_metric);
+      lapse_metric.lapse = invalid_lapses[i];
+      require_error_code(
+            ghl_m1_compute_eulerian_velocity(&lapse_metric, &prims, V, NULL, &W),
+            ghl_error_m1_invalid_metric, "invalid velocity lapse accepted");
+    }
+  }
+  /* Each nonfinite operand independently bypasses compensated finite arithmetic. */
+  for(int position = 0; position < 4; ++position) {
+    double v[4] = { 1, 1, 1, 1 };
+    v[position] = INFINITY;
+    if(!isinf(ghl_m1_difference_of_products(v[0], v[1], v[2], v[3]))) {
+      fail_test("infinite product difference lost infinity");
+    }
+  }
+  /* Public production-kernel regression: both rounded products overflow, but
+   * the physical flux difference is finite and representable. */
+  {
+    const double big = ldexp(1.0, 512);
+    const double below_big = nextafter(big, 0.0);
+    const double above_big = nextafter(big, INFINITY);
+    const volatile double direct_a = big;
+    const volatile double direct_b = big;
+    const volatile double direct_c = below_big;
+    const volatile double direct_d = above_big;
+    const double overflow_ab = direct_a * direct_b;
+    const double overflow_cd = direct_c * direct_d;
+    if(!isinf(overflow_ab) || !isinf(overflow_cd)) {
+      fail_test("finite operand products unexpectedly stayed finite");
+    }
+    if(isfinite(overflow_ab - overflow_cd)) {
+      fail_test("guard input unexpectedly canceled in binary64");
+    }
+    m1_setup_flat_metric(&metric);
+    metric.lapse = big;
+    metric.betaU[0] = below_big;
+    const ghl_m1_rad_state overflow_state = { .E = above_big, .F = { big, 0.0, 0.0 } };
+    const ghl_m1_closure overflow_closure
+          = { .P = { { above_big, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } } };
+    double flux_E = NAN;
+    double flux_F[3] = { NAN, NAN, NAN };
+    require_error_code(
+          ghl_m1_compute_physical_flux(
+                &metric, ghl_m1_dirn0, &overflow_state, &overflow_closure, &flux_E,
+                flux_F),
+          ghl_success, "finite overflow-cancellation flux rejected");
+    const double expected_E = (big - below_big) * big - below_big * (above_big - big);
+    const double expected_F = big * (above_big - big) + (big - below_big) * big;
+    if(!isfinite(expected_E) || !isfinite(expected_F) || flux_E != expected_E
+       || flux_F[0] != expected_F || flux_F[1] != 0.0 || flux_F[2] != 0.0) {
+      fail_test("physical flux lost finite overflow cancellation");
+    }
+  }
   m1_setup_flat_metric(&metric);
   metric.gammaUU[0][0] = -1;
   ghl_m1_parameters params;
@@ -2240,14 +2455,6 @@ static void check_private_norm_boundaries(void) {
   require_error_code(
         ghl_m1_validate_realizability_state(&params, &metric, &rad, 0, NULL),
         ghl_error_m1_invalid_metric, "state-only norm error swallowed");
-  /* Each nonfinite operand independently bypasses compensated finite arithmetic. */
-  for(int position = 0; position < 4; ++position) {
-    double v[4] = { 1, 1, 1, 1 };
-    v[position] = INFINITY;
-    if(!isinf(ghl_m1_difference_of_products(v[0], v[1], v[2], v[3]))) {
-      fail_test("infinite product difference lost infinity");
-    }
-  }
   m1_setup_flat_metric(&metric);
   params.E_floor = 2;
   params.fd_epsilon_rel = 0.5;
@@ -2267,21 +2474,6 @@ static void check_private_norm_boundaries(void) {
 }
 
 static void check_private_scalar_helpers_and_diagnostic_clamp(void) {
-  volatile double operands[][2] = { { 1.0, 2.0 }, { 2.0, 1.0 } };
-  for(size_t i = 0; i < sizeof(operands) / sizeof(operands[0]); ++i) {
-    if(ghl_m1_min(operands[i][0], operands[i][1]) != 1.0
-       || ghl_m1_max(operands[i][0], operands[i][1]) != 2.0) {
-      fail_test("private min/max comparison changed ordinary ordering");
-    }
-  }
-  if(ghl_m1_min(NAN, 1.0) != 1.0 || !isnan(ghl_m1_min(1.0, NAN))
-     || ghl_m1_max(NAN, 1.0) != 1.0 || !isnan(ghl_m1_max(1.0, NAN))) {
-    fail_test("private min/max changed historical NaN operand ordering");
-  }
-  if(!signbit(ghl_m1_min(0.0, -0.0)) || signbit(ghl_m1_max(-0.0, 0.0))) {
-    fail_test("private min/max changed equal signed-zero selection");
-  }
-
   /* Keep all cases at one runtime call site to check every retry decision. */
   volatile ghl_error_codes_t retry_errors[]
         = { ghl_error_m1_implicit_admissibility, ghl_error_m1_invalid_implicit_jacobian,
@@ -2441,8 +2633,8 @@ static void check_jacobi_iteration_contract(void) {
   double matrix[3][3] = { { 1.0, 0.5, 0.0 }, { 0.5, 1.0, 0.0 }, { 0.0, 0.0, 0.0 } };
   ghl_m1_jacobi_eigenvalues(matrix);
   if(fabs(matrix[0][0] - 0.5) > 64.0 * DBL_EPSILON
-     || fabs(matrix[1][1] - 1.5) > 64.0 * DBL_EPSILON
-     || matrix[2][2] != 0.0 || matrix[0][1] != 0.0 || matrix[1][0] != 0.0) {
+     || fabs(matrix[1][1] - 1.5) > 64.0 * DBL_EPSILON || matrix[2][2] != 0.0
+     || matrix[0][1] != 0.0 || matrix[1][0] != 0.0) {
     fail_test("Jacobi rotation changed known eigenvalues");
   }
 }
@@ -2467,9 +2659,6 @@ static void check_upward_rounding_overflows(void) {
     for(int i = 0; i < 3; ++i) {
       metric.gammaUU[i][i] = 1.0 / metric.gammaDD[i][i];
     }
-    require_error_code(
-          ghl_m1_validate_configuration(&params, &metric), ghl_success,
-          "rounding boundary metric rejected");
     double conserved[4] = { 1e300, 0.0, 0.0, 0.0 };
     conserved[axis + 1] = DBL_MAX;
     double before[4];
@@ -2492,68 +2681,26 @@ static void check_upward_rounding_overflows(void) {
   /* Both finite endpoints equal DBL_MAX. Upward-rounded weighted products
    * and their sum exceed DBL_MAX although the exact convex blend would not. */
   const ghl_error_codes_t error = ghl_m1_compute_diffusion_flux(
-        &params, &metric, ghl_m1_dirn0, DBL_MAX, DBL_MAX, 1.0, true, 1.0, true,
-        zero, 1.0, zero, 2.0, 1.0, 1.0, &corrected, &blend);
+        &params, &metric, ghl_m1_dirn0, DBL_MAX, DBL_MAX, 1.0, true, 1.0, true, zero,
+        1.0, zero, 2.0, 1.0, 1.0, &corrected, &blend);
   if(fesetround(saved_rounding) != 0) {
     fail_test("could not restore rounding after range checks");
   }
-  require_error_code(error, ghl_error_m1_invalid_state,
-                     "upward-rounded diffusion blend overflow accepted");
+  require_error_code(
+        error, ghl_error_m1_invalid_state,
+        "upward-rounded diffusion blend overflow accepted");
   if(corrected != -7.0 || blend != -1.0) {
     fail_test("overflowing diffusion blend modified outputs");
   }
 }
 
-/* The validator sums gammaDD*gammaUU in long double. This fixture's stored
- * inverse is exact only to that accumulation's rounding, so a target whose
- * long double is binary64 (for example arm64 macOS) correctly rejects it. */
-#if LDBL_MANT_DIG > DBL_MANT_DIG
-static void check_diffusion_cancellation_velocity(void) {
-  /* This accepted, ill-conditioned SPD metric has a positive exact norm,
-   * but its raw quadratic contraction rounds negative. The face-velocity
-   * guard must retain the HLL flux instead of constructing an invalid W. */
-  ghl_metric_quantities metric = { 0 };
-  metric.lapse = metric.lapseinv = metric.lapseinv2 = 1.0;
-  metric.gammaDD[0][0] = 0x1.e7baecf506af6p-1;
-  metric.gammaDD[0][1] = metric.gammaDD[1][0] = 0x1.5810a9fedfd54p+0;
-  metric.gammaDD[1][1] = 0x1.e56f819aefc84p+0;
-  metric.gammaDD[2][2] = 1.0;
-  metric.gammaUU[0][0] = 0x1.e56f819aefc84p+56;
-  metric.gammaUU[0][1] = metric.gammaUU[1][0] = -0x1.5810a9fedfd54p+56;
-  metric.gammaUU[1][1] = 0x1.e7baecf506af6p+55;
-  metric.gammaUU[2][2] = 1.0;
-  metric.detgamma = 0x1.ce6cc9f2aa4b9p-52;
-  metric.sqrt_detgamma = 0x1.5810a9fedfd54p-26;
-  const double velocity[3] = { -0x1.692f9fd70092ep+0, 1.0, 0.0 };
-  const double gradient[3] = { 0.0, 0.0, 0.0 };
-  ghl_m1_parameters params;
-  require_error_code(
-        ghl_m1_initialize(1e-12, 1e-12, 1e-8, 1e-6, 1e-12, 20, 1e-10, &params),
-        ghl_success, "diffusion cancellation parameters rejected");
-  require_error_code(
-        ghl_m1_validate_configuration(&params, &metric), ghl_success,
-        "diffusion cancellation metric rejected");
-  if(!(ghl_compute_vec2_from_vec3D(metric.gammaDD, velocity) < 0.0)) {
-    fail_test("diffusion cancellation fixture lost its negative rounded norm");
-  }
-  double corrected = -7.0, blend = -1.0;
-  require_error_code(
-        ghl_m1_compute_diffusion_flux(
-              &params, &metric, ghl_m1_dirn0, 7.0, 1.0, 1.0, true, 1.0, true,
-              gradient, 1.0, velocity, 2.0, 1.0, 1.0, &corrected, &blend),
-        ghl_success, "diffusion cancellation fallback failed");
-  if(corrected != 7.0 || blend != 1.0) {
-    fail_test("negative rounded velocity norm did not retain HLL flux");
-  }
-}
-#endif
-
 int main(void) {
   check_jacobi_iteration_contract();
   check_upward_rounding_overflows();
-#if LDBL_MANT_DIG > DBL_MANT_DIG
-  check_diffusion_cancellation_velocity();
+#if defined(__linux__)
+  check_repair_post_ratio_contract();
 #endif
+  check_psd_congruence_overflow();
   check_source_dispatch_failures();
   check_private_norm_boundaries();
   check_neutrino_rate_boundaries();
@@ -2577,7 +2724,6 @@ int main(void) {
   check_parameter_validation();
   check_shared_null_and_state_contracts();
   check_shared_numeric_contracts();
-  check_caller_parameter_matrix();
   check_caller_state_matrix();
   check_remaining_range_and_axis_failures();
   check_remaining_shared_rejections();
@@ -2587,7 +2733,8 @@ int main(void) {
   check_closure_shift_overflow();
   check_comoving_energy_failure();
 
-  ghl_info("unit_test_m1_error_handling: fatal mappings, fixture rejection, and "
-           "shared M1 validation checks passed\n");
+  ghl_info(
+        "unit_test_m1_error_handling: fatal mappings, fixture rejection, and "
+        "shared M1 validation checks passed\n");
   return 0;
 }

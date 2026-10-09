@@ -23,13 +23,10 @@ host responsibilities. They must not be added to `GRHayL/Radiation`.
 
 ## Current status
 
-The core route and public API are present. Ten focused M1 unit-test sources
+The core route and public API are present. The focused M1 unit-test sources
 are shipped under `Unit_Tests/`, selected by
-[`Unit_Tests/run_m1_tests.sh`](../../../Unit_Tests/run_m1_tests.sh), and
-invoked by the dedicated
-[Radiation CI action](../../../.github/actions/run_m1/action.yml). The
-repository's normal `.github/run_tests.sh` path does not select the scoped M1
-runner.
+[`.github/run_tests.sh`](../../../.github/run_tests.sh), and
+executed by the ordinary test runner used by compiler/OS workflows.
 These sources and runner provide library-level test routes; source and runner
 selection alone do not establish a remote pass, downstream host integration,
 or physical validation. The scoped tests replay retained THC_M1
@@ -40,5 +37,5 @@ checkout.
 A downstream project may perform its own composed or multidimensional
 validation without becoming a GRHayL build dependency.
 
-See [`M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)
+See [`Radiation_integration_contract.md`](../../../docs/raw/Radiation_integration_contract.md)
 and [`host-integration-and-downstream.md`](host-integration-and-downstream.md).

@@ -45,7 +45,7 @@ No heavy-lepton number rate enters the electron-fraction source.
 Ground truth:
 
 - [`GRHayL/include/ghl_radiation.h`](../../../GRHayL/include/ghl_radiation.h)
-- [`NRPyLeakage_nucleon_blocking.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
+- [`ghl_nrpyleakage_nucleon_blocking.h`](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
 - [`NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c)
 - [`NRPyLeakage_compute_neutrino_luminosities.c`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_compute_neutrino_luminosities.c)
 

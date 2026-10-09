@@ -103,7 +103,7 @@ pair reaction. Both number increments from the pair stage are equal; its
 electron-fraction increment is zero. Either both final states and exchange
 packets are published or both source bases are retained with zero packets.
 Number-floor injections are rejected. The
-[pair collision model](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md) defines
+[pair collision model](../../../docs/raw/Radiation_pair_source_model.md) defines
 the grey occupancy approximation and the frozen-normalization split.
 
 Single-species source calls reject separated pair coefficients and legacy
@@ -166,13 +166,13 @@ each local solve. Rates are refreshed only at the declared next stage. The
 host initializes caller-owned `ghl_m1_neutrino_diagnostics` and
 `ghl_neutrino_rate_provider_cache` records before first use and does not share
 either mutable record across concurrent calls without synchronization. The
-default provider is table-free and deterministic; the tabulated NRPyLeakage
-backend is selected explicitly.
+default provider is the table-backed NRPyLeakage provider (HDF5 required). Synthetic models live
+only in test-local support.
 
-## Ground truth
+## Ground Truth
 
 - `GRHayL/include/ghl_m1.h`
-- `GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md`
+- `docs/raw/Radiation_integration_contract.md`
 - `GRHayL/Radiation/make.code.defn`
 - `GRHayL/Radiation/Neutrinos/make.code.defn`
 - `GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c`

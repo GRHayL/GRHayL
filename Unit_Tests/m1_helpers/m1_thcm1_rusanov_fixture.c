@@ -112,6 +112,51 @@ static void m1_thcm1_rusanov_generic_normalization(
   }
 }
 
+/* Evaluate both endpoint roles and run the mandatory baseline-envelope gate
+ * plus the strict paired gate for the operation.  Only the two supported
+ * Rusanov policies reach this point, so the retained corpus always pays for
+ * the strict endpoint/response comparisons after the envelope. */
+static int m1_thcm1_rusanov_eval_and_compare(
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      const int is_neutrino,
+      const m1_thcm1_fixture_record *restrict record,
+      const char *restrict policy,
+      const char *restrict operation,
+      const double *restrict normalization,
+      char *restrict error,
+      const size_t error_size) {
+  double output_baseline[M1_THCM1_RUSANOV_NEUTRINO_OUTPUT_COUNT] = { 0.0 };
+  double output_perturbed[M1_THCM1_RUSANOV_NEUTRINO_OUTPUT_COUNT] = { 0.0 };
+  if(is_neutrino) {
+    if(!m1_thcm1_rusanov_eval_neutrino(m1_params, nu_params, record, 0, output_baseline)
+       || !m1_thcm1_rusanov_eval_neutrino(
+             m1_params, nu_params, record, 1, output_perturbed)) {
+      m1_thcm1_fixture_set_error(
+            error, error_size, "Rusanov fixture evaluator rejected a valid record");
+      return 0;
+    }
+  }
+  else {
+    if(!m1_thcm1_rusanov_eval_generic(record, 0, output_baseline)
+       || !m1_thcm1_rusanov_eval_generic(record, 1, output_perturbed)) {
+      m1_thcm1_fixture_set_error(
+            error, error_size, "Rusanov fixture evaluator rejected a valid record");
+      return 0;
+    }
+  }
+  m1_thcm1_fixture_comparison_report report = { 0 };
+  if(!m1_thcm1_rusanov_compare_baseline_response(
+        record, policy, operation, normalization, output_baseline, &report, error,
+        error_size)
+     || !m1_thcm1_rusanov_compare_paired_strict_relative(
+           record, policy, operation, normalization, output_baseline, output_perturbed,
+           &report, error, error_size)) {
+    return 0;
+  }
+  return 1;
+}
+
 static int m1_thcm1_rusanov_join_path(
       const char *restrict directory,
       const char *restrict name,
@@ -138,7 +183,7 @@ int m1_thcm1_rusanov_check_neutrino_fixture(
       char *restrict error,
       const size_t error_size) {
   char *path = NULL;
-  if(!m1_thcm1_rusanov_join_path(fixture_dir, "rusanov_neutrino.dat", &path)) {
+  if(!m1_thcm1_rusanov_join_path(fixture_dir, "rusanov_neutrino.bin", &path)) {
     m1_thcm1_fixture_set_error(
           error, error_size, "neutrino Rusanov fixture path allocation failed");
     return 0;
@@ -176,16 +221,12 @@ int m1_thcm1_rusanov_check_neutrino_fixture(
     }
     ++direction_counts[(int)record->baseline_input[0]];
     double normalization[5] = { 0.0 };
-    double output[5] = { 0.0 };
     m1_thcm1_rusanov_neutrino_normalization(record, normalization);
-    const int status_ok
-          = m1_thcm1_rusanov_eval_neutrino(m1_params, nu_params, record, 0, output);
-    m1_thcm1_fixture_comparison_report report = { 0 };
     char compare_error[256] = { 0 };
-    if(!status_ok
-       || !m1_thcm1_rusanov_compare_baseline_response(
-             record, collection.policy, "neutrino_rusanov_flux", normalization, output,
-             &report, compare_error, sizeof(compare_error))) {
+    if(!m1_thcm1_rusanov_eval_and_compare(
+          m1_params, nu_params, 1, record, collection.policy,
+          "neutrino_rusanov_flux", normalization, compare_error,
+          sizeof(compare_error))) {
       ++failures;
       if(failures == 1) {
         m1_thcm1_fixture_set_error(
@@ -216,7 +257,7 @@ int m1_thcm1_rusanov_check_current_fixture(
       char *restrict error,
       const size_t error_size) {
   char *path = NULL;
-  if(!m1_thcm1_rusanov_join_path(fixture_dir, "rusanov_neutrino_current.dat", &path)) {
+  if(!m1_thcm1_rusanov_join_path(fixture_dir, "rusanov_neutrino_current.bin", &path)) {
     m1_thcm1_fixture_set_error(
           error, error_size, "current Rusanov fixture path allocation failed");
     return 0;
@@ -274,16 +315,12 @@ int m1_thcm1_rusanov_check_current_fixture(
       ++number_response_cases;
     }
     double normalization[5] = { 0.0 };
-    double output[5] = { 0.0 };
     m1_thcm1_rusanov_neutrino_normalization(record, normalization);
-    const int status_ok
-          = m1_thcm1_rusanov_eval_neutrino(m1_params, nu_params, record, 0, output);
-    m1_thcm1_fixture_comparison_report report = { 0 };
     char compare_error[256] = { 0 };
-    if(!status_ok
-       || !m1_thcm1_rusanov_compare_baseline_response(
-             record, collection.policy, M1_THCM1_RUSANOV_CURRENT_OPERATION,
-             normalization, output, &report, compare_error, sizeof(compare_error))) {
+    if(!m1_thcm1_rusanov_eval_and_compare(
+          m1_params, nu_params, 1, record, collection.policy,
+          M1_THCM1_RUSANOV_CURRENT_OPERATION, normalization, compare_error,
+          sizeof(compare_error))) {
       ++failures;
       if(failures == 1) {
         m1_thcm1_fixture_set_error(
@@ -323,7 +360,7 @@ int m1_thcm1_rusanov_check_generic_fixture(
       char *restrict error,
       const size_t error_size) {
   char *path = NULL;
-  if(!m1_thcm1_rusanov_join_path(fixture_dir, "rusanov_generic.dat", &path)) {
+  if(!m1_thcm1_rusanov_join_path(fixture_dir, "rusanov_generic.bin", &path)) {
     m1_thcm1_fixture_set_error(
           error, error_size, "generic Rusanov fixture path allocation failed");
     return 0;
@@ -356,15 +393,11 @@ int m1_thcm1_rusanov_check_generic_fixture(
       return 0;
     }
     double normalization[4] = { 0.0 };
-    double output[4] = { 0.0 };
     m1_thcm1_rusanov_generic_normalization(record, normalization);
-    const int status_ok = m1_thcm1_rusanov_eval_generic(record, 0, output);
-    m1_thcm1_fixture_comparison_report report = { 0 };
     char compare_error[256] = { 0 };
-    if(!status_ok
-       || !m1_thcm1_rusanov_compare_baseline_response(
-             record, collection.policy, "rusanov_flux", normalization, output, &report,
-             compare_error, sizeof(compare_error))) {
+    if(!m1_thcm1_rusanov_eval_and_compare(
+          NULL, NULL, 0, record, collection.policy, "rusanov_flux", normalization,
+          compare_error, sizeof(compare_error))) {
       ++failures;
       if(failures == 1) {
         m1_thcm1_fixture_set_error(
@@ -376,4 +409,85 @@ int m1_thcm1_rusanov_check_generic_fixture(
   }
   m1_thcm1_fixture_free(&collection);
   return failures == 0;
+}
+
+/* Corrupt only stack-owned copies; the retained package stays untouched.
+ * Return success only when the intended negative assertion rejects its copy. */
+int m1_thcm1_rusanov_check_fixture_regression(
+      const char *restrict fixture_dir,
+      const int mutation_mode,
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_m1_neutrino_parameters *restrict nu_params,
+      char *restrict error,
+      const size_t error_size) {
+  const int current = mutation_mode == M1_THCM1_RUSANOV_REGRESSION_CORRUPTED_CURRENT;
+  if(!current && mutation_mode != M1_THCM1_RUSANOV_REGRESSION_PERTURBED_OUTPUT
+     && mutation_mode != M1_THCM1_RUSANOV_REGRESSION_SWAPPED_ENDPOINTS) {
+    m1_thcm1_fixture_set_error(error, error_size, "invalid Rusanov regression mode");
+    return 0;
+  }
+  const char *operation = current ? M1_THCM1_RUSANOV_CURRENT_OPERATION : "rusanov_flux";
+  const char *policy = current ? M1_THCM1_RUSANOV_CURRENT_POLICY : M1_THCM1_RUSANOV_POLICY;
+  char *path = NULL;
+  if(!m1_thcm1_rusanov_join_path(
+           fixture_dir, current ? "rusanov_neutrino_current.bin" : "rusanov_generic.bin",
+           &path)) {
+    m1_thcm1_fixture_set_error(error, error_size, "Rusanov regression path allocation failed");
+    return 0;
+  }
+  m1_thcm1_fixture_collection collection = { 0 };
+  const int loaded = m1_thcm1_fixture_load(
+        path, operation,
+        current ? M1_THCM1_RUSANOV_NEUTRINO_INPUT_COUNT : M1_THCM1_RUSANOV_GENERIC_INPUT_COUNT,
+        current ? M1_THCM1_RUSANOV_NEUTRINO_OUTPUT_COUNT : M1_THCM1_RUSANOV_GENERIC_OUTPUT_COUNT,
+        &collection, error, error_size);
+  free(path);
+  if(!loaded) {
+    return 0;
+  }
+  int rejected = 0;
+  for(size_t i = 0; i < collection.record_count; ++i) {
+    m1_thcm1_fixture_record record = collection.records[i];
+    if(record.baseline_output[0] == record.perturbed_output[0]) {
+      continue;
+    }
+    double normalization[5] = { 0.0 };
+    double perturbed_input[54];
+    double perturbed_output[5];
+    if(current) {
+      m1_thcm1_rusanov_neutrino_normalization(&record, normalization);
+      memcpy(perturbed_input, record.perturbed_input, sizeof(perturbed_input));
+      perturbed_input[41] *= 2.0;
+      record.perturbed_input = perturbed_input;
+    }
+    else {
+      m1_thcm1_rusanov_generic_normalization(&record, normalization);
+      if(mutation_mode == M1_THCM1_RUSANOV_REGRESSION_PERTURBED_OUTPUT) {
+        memcpy(perturbed_output, record.perturbed_output, 4 * sizeof(double));
+        perturbed_output[0] += fmax(1.0, fabs(perturbed_output[0]));
+        record.perturbed_output = perturbed_output;
+      }
+      else {
+        double *baseline_output = record.baseline_output;
+        record.baseline_output = record.perturbed_output;
+        record.perturbed_output = baseline_output;
+      }
+    }
+    char rejection[256] = { 0 };
+    rejected = !m1_thcm1_rusanov_eval_and_compare(
+          m1_params, nu_params, current, &record, policy, operation, normalization,
+          rejection, sizeof(rejection));
+    if(current) {
+      rejected &= strstr(rejection, "evaluator rejected") != NULL;
+    }
+    else if(mutation_mode == M1_THCM1_RUSANOV_REGRESSION_PERTURBED_OUTPUT) {
+      rejected &= strstr(rejection, "perturbed comparison failed") != NULL;
+    }
+    break;
+  }
+  m1_thcm1_fixture_free(&collection);
+  if(!rejected) {
+    m1_thcm1_fixture_set_error(error, error_size, "Rusanov regression corruption was not rejected");
+  }
+  return rejected;
 }

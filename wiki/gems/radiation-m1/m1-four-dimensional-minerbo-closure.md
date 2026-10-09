@@ -3,8 +3,8 @@
 The current production closure maps an admissible undensitized E/F state and
 the local metric/fluid velocity to a contravariant spatial pressure tensor
 `P^{ij}`. Its primary construction is four-dimensional and covariant; it is
-not the analytic Eulerian-only formula or HLL recipe described in parts of the
-older photon whitepapers. The implementation authority is
+not an analytic Eulerian-only formula or an HLL recipe. The implementation
+authority is
 [ghl_m1_closure.c](../../../GRHayL/Radiation/ghl_m1_closure.c), with public
 fields and statuses in [ghl_m1.h](../../../GRHayL/include/ghl_m1.h).
 
@@ -93,6 +93,22 @@ $$
 moment `J` at an arbitrary \(\xi\). See
 [ghl_m1_Jthick.c](../../../GRHayL/Radiation/ghl_m1_Jthick.c).
 
+For numerical stability, the closure workspace divides the thick equations
+by \(W^2\) before evaluating their differences. With
+\(A=E-F_iV^i\) and \(q=1/W^2\), the equivalent expressions are
+
+$$
+\frac{J_{\rm thick}}{3}=\frac{2A-qE}{2+q},
+\qquad
+\widetilde H_\mu=\frac{F_\mu}{W}
+-Wv_\mu\left(A+\frac{J_{\rm thick}}{3}\right).
+$$
+
+These avoid subtracting intermediate terms of order \(W^2E\). Large-energy
+workspace construction uses the same equations in units of E.
+Here \(\widetilde H_\mu\) denotes the Eulerian-spatial projection of the
+thick-limit comoving flux, not its complete spacetime covector.
+
 ## Minerbo interpolation
 
 The current Eddington factor is the polynomial
@@ -175,6 +191,16 @@ The production path is a bracketed, safeguarded Brent-style scalar solve:
    `closure_root_residual_tolerance`, then validate its finite values, spatial
    trace, symmetry, and positive semidefiniteness before publication.
 
+At \(\xi=0\), the evaluator computes the thick moments directly from E/F,
+using the spatial projection of \(\widetilde H_\mu\) above and subtracting
+the temporal contribution in \(H^2\). It does not boost the rounded pressure
+entries back to obtain this endpoint residual: that operation amplifies
+pressure roundoff by \(W^2\) and can change endpoint selection. The endpoint
+calculation is energy-normalized internally, but its signed residual uses
+the same units as the other trial points in the Brent solve. The endpoint
+gate and preference for the zero endpoint are unchanged. This stabilizes
+the existing selection rule; it does not assume the scalar root is unique.
+
 The public `ghl_m1_closure` record exposes `chi`, the physical reduced flux
 `xi`, root residual, iteration count, solve status, and
 `four_point_compatibility`. `four_point_compatibility` is diagnostic: it is
@@ -202,14 +228,13 @@ and can publish a successful solve; it does not enforce
 [ghl_m1_utils.h](../../../GRHayL/Radiation/ghl_m1_utils.h), and the
 [neutrino source-update dispatcher](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c).
 
-## Whitepaper boundary
+## Closure-method boundary
 
-The equations whitepaper's analytic relation for a radiation-rest-frame boost
-and its Levermore-form rewrite are useful historical background, but they are
-not the current production algorithm. Current GRHayL solves the full
-four-dimensional Minerbo consistency root described above. Likewise, the
-methods whitepaper's HLL signal-speed construction is not a closure rule and
-does not define current neutrino transport.
+An analytic radiation-rest-frame boost relation or its Levermore-form rewrite
+is not the current production algorithm. Current GRHayL solves the full
+four-dimensional Minerbo consistency root described above. An HLL
+signal-speed construction is not a closure rule and does not define current
+neutrino transport.
 
 ## Focused evidence
 

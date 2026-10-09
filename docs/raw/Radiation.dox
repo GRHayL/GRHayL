@@ -1,6 +1,9 @@
 /**
  * @defgroup Radiation Neutrino M1 Radiation Gem
  *
+ * @brief The @grad gem provides grey, one-group, three-species neutrino M1
+ *        radiation transport, source, and rate-provider operations.
+ *
  * The Radiation contribution documented here is a grey, one-group,
  * three-species neutrino M1 surface. It provides transported number and
  * energy/momentum moments, symmetric Rusanov transport, realizability repair,
@@ -22,37 +25,39 @@
  * and the grey paired collision update, conserving the pair number difference
  * and publishing both species atomically. Single-species source operations
  * reject electron pair rates. The equations and approximation are documented
- * in @c GRHayL/Radiation/PAIR_SOURCE_MODEL.md.
+ * in the [pair source model](Radiation_pair_source_model.md).
  * The closure enforces the radiation trace at zero flux, using its flagged
  * Eulerian admissibility fallback when necessary. The neutrino Newton solve
  * can use an admissible source predictor at an exact-zero-flux start without
  * changing the source base or residual equation.
  *
- * The deterministic, table-free provider is initialized by
- * @ref ghl_neutrino_rate_provider_initialize_default; the table-backed
- * provider path is initialized by
- * @ref ghl_neutrino_rate_provider_initialize_nrpyleakage. A caller initializes
- * its cache with @ref ghl_neutrino_rate_provider_cache_initialize and may
- * zero-initialize its diagnostics with
- * @c ghl_neutrino_rate_provider_diagnostics diagnostics = {0}. The caller
- * increments @c eos_generation after mutating an EOS/table object in place so
- * cache reuse and hold-last recovery cannot cross a changed table state.
+ * The table-backed production provider is initialized by
+ * @ref ghl_neutrino_rate_provider_initialize_default or
+ * @ref ghl_neutrino_rate_provider_initialize_nrpyleakage. Synthetic models are
+ * test-local support and are absent from the installed API. Initialize each
+ * cache with @ref ghl_neutrino_rate_provider_cache_initialize and increment
+ * @c eos_generation after in-place EOS mutation. A transparent or equilibrium
+ * recovery requires valid same-cell thermodynamics and physical equilibrium
+ * moments; it still returns the original error and records @c last_recovery.
+ * A host accepting recovery must check that diagnostic.
  *
  * HDF5 is a build-time dependency of tabulated EOS lookup, not of the public
  * header aggregate. In a @c GHL_DISABLE_HDF5 build the headers remain
  * includable and the production provider returns
  * @c ghl_error_used_disabled_hdf5 without publishing rates.
  *
- * This group documents library-level neutrino behavior only. Focused M1 unit
- * test sources are shipped under @c Unit_Tests/ and are discovered by
- * @c configure as ordinary @c unit_test_*.c targets, subject to its HDF5
- * filtering. Source and target-selection evidence do not establish test
- * execution, downstream host integration, or external physical validation.
+ * This group documents library-level neutrino behavior only. The host-neutral
+ * integration boundary is in the
+ * [integration contract](Radiation_integration_contract.md), the per-family
+ * implementation map in the [traceability map](Radiation_traceability.md), and
+ * the unit-test evidence boundary in [Radiation unit tests](Radiation_unit_tests.md).
+ * Source and target-selection evidence do not establish test execution,
+ * downstream host integration, or external physical validation.
  *
  * The public declarations in @ref ghl_m1.h and
- * @ref ghl_neutrino_rate_provider.h are members of this group. The shared
- * component-wise @ref ghl_calculate_Rusanov_flux belongs to the
- * @ref Flux_Source group; the neutrino face operation uses the M1-specific
+ * @ref ghl_neutrino_rate_provider.h are members of this group. The
+ * component-wise Rusanov helper used by the M1 flux functions is declared in
+ * @ref ghl_m1.h and implemented in Radiation; the neutrino face operation uses the M1-specific
  * four-point transport contract described above.
  *
  * Functional API navigation: @ref m1_closure, @ref m1_transport,

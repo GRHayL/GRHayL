@@ -29,7 +29,7 @@ rate refresh inside the local source solve; see the
 The validator enforces the provider’s aggregate and charged-current
 identities. Separated pair/plasmon/bremsstrahlung fields are not valid inputs
 to this single-species equation set; they require the paired operation described
-in [PAIR_SOURCE_MODEL.md](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md).
+in [Radiation_pair_source_model.md](../../../docs/raw/Radiation_pair_source_model.md).
 
 ## Aggregate energy/momentum source
 
@@ -200,10 +200,10 @@ are in [ghl_m1_neutrino_source_update.c](../../../GRHayL/Radiation/Neutrinos/ghl
 
 ## Photon and obsolete-method boundary
 
-The projection structure is shared M1 mathematics. The photon whitepaper’s
-substitution `J_eq = a_R T^4` and photon opacity formulas are not neutrino
+The projection structure is shared M1 mathematics. The photon substitution
+`J_eq = a_R T^4` and photon opacity formulas are not neutrino
 rules; current neutrino equilibrium targets and emissivities come from the
-provider. The older whitepaper’s HLL path and reduced number-current formula
+provider. An HLL path and a reduced number-current formula
 must not be substituted for the current Rusanov/full-current implementation.
 
 ## Focused evidence

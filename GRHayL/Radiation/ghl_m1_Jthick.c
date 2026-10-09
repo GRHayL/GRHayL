@@ -14,7 +14,7 @@ ghl_error_codes_t ghl_m1_compute_Jthick(
   }
 
   ghl_error_codes_t error
-        = ghl_m1_validate_realizability(m1_params, metric, rad_state, 64.0, NULL);
+        = ghl_m1_validate_realizability_state(m1_params, metric, rad_state, 64.0, NULL);
   if(error != ghl_success) {
     return error;
   }

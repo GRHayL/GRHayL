@@ -224,20 +224,19 @@ source, headers, tests, and common edit routes before wider search.
   `GRHayL/Radiation/Neutrinos/`.
 - Primary headers: `GRHayL/include/ghl_m1.h`,
   `GRHayL/include/ghl_neutrino_rate_provider.h`.
-- Likely tests: the scoped inventory in `Unit_Tests/make.code.defn`, executed by
-  `Unit_Tests/run_m1_tests.sh`; route fixture details through
+- Likely tests: ordinary `unit_test_m1_*.c` targets plus generic Rusanov, executed by
+  `.github/run_tests.sh`; route fixture details through
   [tests and fixtures](radiation-m1/tests-and-fixtures.md).
 - Common edit routes: add or change M1 operators in `GRHayL/Radiation/`, expose
-  API in `ghl_m1.h`, and keep the scoped runner's expected inventory in step
-  with `Unit_Tests/make.code.defn`. Route provider/microphysics boundaries
+  API in `ghl_m1.h`, and keep ordinary runner invocations and generated Makefile dependencies
+  aligned with their consumers. Route provider/microphysics boundaries
   through [rate provider contract](radiation-m1/rate-provider-contract.md) and
   equilibrium/rate meanings through
   [equilibrium and rate semantics](radiation-m1/neutrino-equilibrium-and-rate-semantics.md).
 - Drift/contract notes: Radiation consumes provider-supplied frozen
   `ghl_m1_neutrino_rates` and validates their contract; it is not itself a
   production-rate formula source. Stored THC_M1 comparison values come only
-  from the repository-local fixture package, so the scoped runner never invokes
-  a generator.
+  from retained external fixture data; normal tests never invoke a producer.
 
 ## Reconstruction
 

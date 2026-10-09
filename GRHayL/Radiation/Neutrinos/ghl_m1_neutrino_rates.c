@@ -38,7 +38,7 @@ static ghl_error_codes_t ghl_m1_neutrino_check_lepton_weight(
 }
 
 static bool rate_close(const double x, const double y) {
-  return fabs(x - y) <= 128.0 * DBL_EPSILON * ghl_m1_max(fabs(x), fabs(y));
+  return fabs(x - y) <= 128.0 * DBL_EPSILON * fmax(fabs(x), fabs(y));
 }
 
 static bool rate_expected_product(

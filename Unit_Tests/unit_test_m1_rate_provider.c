@@ -1,35 +1,102 @@
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
+#endif
+
+#include "../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rate_backend.h"
 #include "../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.h"
+#include "ghl_neutrino_rate_provider.h"
 #include "ghl_radiation.h"
+#include "m1_neutrino_rate_provider_reference.h"
 #ifndef GHL_DISABLE_HDF5
 #include "ghl_nrpyeos_tabulated.h"
 #include <hdf5.h>
-#include <unistd.h>
 #endif
-#include "../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h"
-#include "../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h"
+#include "ghl_nrpyleakage_nucleon_blocking.h"
+#include "ghl_nrpyleakage_rate_helpers.h"
 #include "m1_test_prng.h"
 
+#include <errno.h>
+#include <fenv.h>
 #include <float.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#define ghl_neutrino_rate_provider_context m1_test_reference_provider_context
+#define ghl_neutrino_rate_provider_cache   m1_test_reference_provider_cache
+#define ghl_neutrino_rate_provider_initialize_reference \
+  m1_test_reference_provider_initialize
+#define ghl_neutrino_rate_provider_cache_initialize \
+  m1_test_reference_provider_cache_initialize
+#define ghl_neutrino_rate_provider_compute_cell m1_test_reference_provider_compute_cell
+#include "m1_neutrino_rate_provider_reference.inc"
+#undef ghl_neutrino_rate_provider_compute_cell
+#undef ghl_neutrino_rate_provider_cache_initialize
+#undef ghl_neutrino_rate_provider_initialize_reference
+#undef ghl_neutrino_rate_provider_cache
+#undef ghl_neutrino_rate_provider_context
 
 /*
  * Deterministic property coverage for the M1 frozen-rate provider boundary.
- * The reference backend is deliberately exercised with generated primitive
+ * The synthetic reference model is deliberately exercised with generated primitive
  * keys, channel masks, cache reuse, context-generation changes, and each
- * recovery policy.  A table path is optional; when supplied in an HDF5 build,
- * the same test also enters the production NRPyLeakage backend.
+ * supported recovery policy.  A table path is optional; when supplied in an
+ * HDF5 build, the same test calls the installed production provider.
  */
 
 enum { PROVIDER_RANDOM_CASES = 128, TABLE_RANDOM_CASES = 32 };
+
+static char *owned_provider_fixture_directory;
+static char *owned_provider_fixture_path;
+#ifndef GHL_DISABLE_HDF5
+static ghl_eos_parameters *active_provider_fixture_eos;
+#endif
+
+static void cleanup_provider_fixture(void) {
+#ifndef GHL_DISABLE_HDF5
+  if(active_provider_fixture_eos != NULL) {
+    ghl_tabulated_free_memory(active_provider_fixture_eos);
+    active_provider_fixture_eos = NULL;
+  }
+#endif
+  if(owned_provider_fixture_path != NULL) {
+    if(remove(owned_provider_fixture_path) == 0 || errno == ENOENT) {
+      free(owned_provider_fixture_path);
+      owned_provider_fixture_path = NULL;
+    }
+    else {
+      fprintf(
+            stderr, "Could not remove provider fixture file %s: %s\n",
+            owned_provider_fixture_path, strerror(errno));
+    }
+  }
+  if(owned_provider_fixture_directory != NULL) {
+    if(rmdir(owned_provider_fixture_directory) == 0 || errno == ENOENT) {
+      free(owned_provider_fixture_directory);
+      owned_provider_fixture_directory = NULL;
+    }
+    else {
+      fprintf(
+            stderr, "Could not remove provider fixture directory %s: %s\n",
+            owned_provider_fixture_directory, strerror(errno));
+    }
+  }
+}
+
+static void provider_test_error(const char *restrict message) {
+  cleanup_provider_fixture();
+  ghl_error("%s\n", message);
+}
 
 static void require_condition(
       const bool condition,
       const char *restrict message,
       const int case_index) {
   if(!condition) {
+    cleanup_provider_fixture();
     ghl_error("M1 rate-provider case %d: %s\n", case_index, message);
   }
 }
@@ -40,6 +107,7 @@ static void require_error(
       const char *restrict operation,
       const int case_index) {
   if(actual != expected) {
+    cleanup_provider_fixture();
     ghl_error(
           "M1 rate-provider case %d: %s returned %d, expected %d\n", case_index,
           operation, (int)actual, (int)expected);
@@ -159,7 +227,7 @@ static bool same_nrpyleakage_raw_rates(
 }
 
 static double nrpyleakage_fraction_roundoff_envelope(void) {
-  /* Keep this oracle identical to ghl_m1_nrpyleakage_normalize_nucleon_fractions(). */
+  /* Keep this oracle identical to ghl_nrpyleakage_normalize_nucleon_fractions(). */
   const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
   return 27.0 * gamma_64;
 }
@@ -177,9 +245,28 @@ enum {
   PROVIDER_FIXTURE_NRHO = 3,
   PROVIDER_FIXTURE_NTEMP = 3,
   PROVIDER_FIXTURE_NYE = 3,
-  PROVIDER_FIXTURE_CELL_COUNT
-  = PROVIDER_FIXTURE_NRHO * PROVIDER_FIXTURE_NTEMP * PROVIDER_FIXTURE_NYE
+  PROVIDER_FIXTURE_CELL_COUNT = PROVIDER_FIXTURE_NRHO * PROVIDER_FIXTURE_NTEMP
+        * PROVIDER_FIXTURE_NYE
 };
+
+/* Match the EOS interpolator's biased cell selection for the midpoint used
+ * by the corruption witnesses below. The first cell is not the midpoint
+ * cell of an arbitrary external table. No private EOS header is needed. */
+static void provider_midpoint_table_cell(
+      const ghl_eos_parameters *restrict eos, int lower[3]) {
+  const double logrho = log(sqrt(eos->table_rho_min * eos->table_rho_max));
+  const double logT = log(sqrt(eos->table_T_min * eos->table_T_max));
+  const double Ye = 0.5 * (eos->table_Y_e_min + eos->table_Y_e_max);
+  lower[0] = ghl_iclamp(
+        1 + (int)((logrho - eos->table_logrho[0] - 1.e-10) * eos->drhoi),
+        1, eos->N_rho - 1) - 1;
+  lower[1] = ghl_iclamp(
+        1 + (int)((logT - eos->table_logT[0] - 1.e-10) * eos->dtempi),
+        1, eos->N_T - 1) - 1;
+  lower[2] = ghl_iclamp(
+        1 + (int)((Ye - eos->table_Y_e[0] - 1.e-10) * eos->dyei),
+        1, eos->N_Ye - 1) - 1;
+}
 
 /* Keep malformed-table witnesses in memory only.  Each witness changes the
  * eight interpolation corners used by the authenticated interior point and
@@ -189,11 +276,14 @@ static void provider_set_table_corners(
       const int key,
       const double replacement,
       double saved[8]) {
+  int lower[3];
+  provider_midpoint_table_cell(eos, lower);
   int corner = 0;
   for(int ir = 0; ir < 2; ++ir) {
     for(int it = 0; it < 2; ++it) {
       for(int iy = 0; iy < 2; ++iy) {
-        const size_t index = (size_t)NRPYEOS_IDX3D(eos, ir, it, iy, key);
+        const size_t index = (size_t)NRPYEOS_IDX3D(
+              eos, lower[0] + ir, lower[1] + it, lower[2] + iy, key);
         saved[corner++] = eos->table_all[index];
         eos->table_all[index] = replacement;
       }
@@ -205,11 +295,14 @@ static void provider_restore_table_corners(
       ghl_eos_parameters *restrict eos,
       const int key,
       const double saved[8]) {
+  int lower[3];
+  provider_midpoint_table_cell(eos, lower);
   int corner = 0;
   for(int ir = 0; ir < 2; ++ir) {
     for(int it = 0; it < 2; ++it) {
       for(int iy = 0; iy < 2; ++iy) {
-        const size_t index = (size_t)NRPYEOS_IDX3D(eos, ir, it, iy, key);
+        const size_t index = (size_t)NRPYEOS_IDX3D(
+              eos, lower[0] + ir, lower[1] + it, lower[2] + iy, key);
         eos->table_all[index] = saved[corner++];
       }
     }
@@ -310,20 +403,60 @@ static bool write_provider_fixture_table(
  * offline provider campaign, kept test-local so table coverage has no /work
  * or external-file dependency. */
 static bool create_provider_fixture(
-      char *restrict path,
-      const size_t path_size,
-      const bool cold_degenerate_fixture) {
-  const int characters = snprintf(
-        path, path_size, "/tmp/ghl_m1_rate_provider_fixture_%ld.h5", (long)getpid());
-  if(characters < 0 || (size_t)characters >= path_size) {
+      const bool cold_degenerate_fixture,
+      const bool high_temperature_fixture) {
+  const char *const tmpdir = getenv("TMPDIR");
+  const char *const base = (tmpdir == NULL || tmpdir[0] == '\0') ? "/tmp" : tmpdir;
+  const size_t base_length = strlen(base);
+  const bool needs_separator = base_length != 0 && base[base_length - 1] != '/';
+  static const char directory_suffix[] = "ghl_m1_rate_provider_fixture.XXXXXX";
+  const size_t separator_length = needs_separator ? 1 : 0;
+  if(base_length > SIZE_MAX - separator_length
+     || base_length + separator_length > SIZE_MAX - sizeof(directory_suffix)) {
+    return false;
+  }
+  const size_t directory_size
+        = base_length + separator_length + sizeof(directory_suffix);
+  owned_provider_fixture_directory = malloc(directory_size);
+  if(owned_provider_fixture_directory == NULL) {
+    return false;
+  }
+  const int directory_characters = snprintf(
+        owned_provider_fixture_directory, directory_size, "%s%s%s", base,
+        needs_separator ? "/" : "", directory_suffix);
+  if(directory_characters < 0 || (size_t)directory_characters >= directory_size
+     || mkdtemp(owned_provider_fixture_directory) == NULL) {
+    free(owned_provider_fixture_directory);
+    owned_provider_fixture_directory = NULL;
+    cleanup_provider_fixture();
+    return false;
+  }
+  const size_t directory_length = strlen(owned_provider_fixture_directory);
+  static const char file_suffix[] = "/table.h5";
+  if(directory_length > SIZE_MAX - sizeof(file_suffix)) {
+    cleanup_provider_fixture();
+    return false;
+  }
+  const size_t path_size = directory_length + sizeof(file_suffix);
+  owned_provider_fixture_path = malloc(path_size);
+  if(owned_provider_fixture_path == NULL) {
+    cleanup_provider_fixture();
+    return false;
+  }
+  const int path_characters = snprintf(
+        owned_provider_fixture_path, path_size, "%s%s", owned_provider_fixture_directory,
+        file_suffix);
+  if(path_characters < 0 || (size_t)path_characters >= path_size) {
+    cleanup_provider_fixture();
     return false;
   }
 
   const double logrho[PROVIDER_FIXTURE_NRHO] = { 10.0, 11.0, 12.0 };
-  const double logtemp[PROVIDER_FIXTURE_NTEMP]
-        = { cold_degenerate_fixture ? log10(0.05) : 0.0,
-            cold_degenerate_fixture ? log10(0.1) : 0.5,
-            cold_degenerate_fixture ? log10(0.2) : 1.0 };
+  const double logtemp[PROVIDER_FIXTURE_NTEMP] = {
+    high_temperature_fixture ? 39.0 : (cold_degenerate_fixture ? log10(0.05) : 0.0),
+    high_temperature_fixture ? 39.5 : (cold_degenerate_fixture ? log10(0.1) : 0.5),
+    high_temperature_fixture ? 40.0 : (cold_degenerate_fixture ? log10(0.2) : 1.0)
+  };
   const double ye[PROVIDER_FIXTURE_NYE] = { 0.1, 0.5, 0.9 };
   double abar[PROVIDER_FIXTURE_CELL_COUNT], xa[PROVIDER_FIXTURE_CELL_COUNT];
   double xh[PROVIDER_FIXTURE_CELL_COUNT], xn[PROVIDER_FIXTURE_CELL_COUNT];
@@ -369,8 +502,10 @@ static bool create_provider_fixture(
     }
   }
 
-  const hid_t file = H5Fcreate(path, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  const hid_t file = H5Fcreate(
+        owned_provider_fixture_path, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   if(file < 0) {
+    cleanup_provider_fixture();
     return false;
   }
   bool ok
@@ -410,9 +545,10 @@ static bool create_provider_fixture(
     ok = false;
   }
   if(!ok) {
-    remove(path);
+    cleanup_provider_fixture();
+    return false;
   }
-  return ok;
+  return true;
 }
 
 #endif
@@ -425,7 +561,7 @@ static void validate_rate_bundle(
           = ghl_m1_validate_neutrino_rates(&rates[species], NULL);
     require_error(error, ghl_success, "published rate validation", case_index);
     require_condition(
-          rates[species].species == species,
+          rates[species].species == (ghl_m1_neutrino_species_t)species,
           "published rate species is not indexed consistently", case_index);
     require_condition(
           isfinite(rates[species].mean_energy) && rates[species].mean_energy > 0.0,
@@ -1350,6 +1486,14 @@ make_primitives(m1_test_rng *restrict rng, ghl_primitive_quantities *restrict pr
   prims->entropy = m1_test_rng_between(rng, 0.05, 2.0);
 }
 
+#define ghl_neutrino_rate_provider_context m1_test_reference_provider_context
+#define ghl_neutrino_rate_provider_cache   m1_test_reference_provider_cache
+#define ghl_neutrino_rate_provider_initialize_reference \
+  m1_test_reference_provider_initialize
+#define ghl_neutrino_rate_provider_cache_initialize \
+  m1_test_reference_provider_cache_initialize
+#define ghl_neutrino_rate_provider_compute_cell m1_test_reference_provider_compute_cell
+
 static double reference_safe_exp(const double x) {
   const double bounded = fmin(40.0, fmax(-40.0, x));
   return exp(bounded);
@@ -1541,16 +1685,11 @@ initialize_sentinel_rates(ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_co
 
 static void
 test_invalid_provider_contexts(const ghl_primitive_quantities *restrict prims) {
-  static const char *const labels[] = { "backend below enum range",
-                                        "backend above enum range",
-                                        "unknown channel bit",
+  static const char *const labels[] = { "unknown channel bit",
                                         "failure policy below enum range",
                                         "failure policy above enum range",
                                         "table policy below enum range",
                                         "table policy above enum range",
-                                        "reference density conversion",
-                                        "reference opacity conversion",
-                                        "reference emissivity conversion",
                                         "nonpositive temperature conversion",
                                         "nonpositive baryon mass",
                                         "negative charged-current scale",
@@ -1559,78 +1698,60 @@ test_invalid_provider_contexts(const ghl_primitive_quantities *restrict prims) {
                                         "negative bremsstrahlung scale",
                                         "negative plasmon scale",
                                         "nonpositive minimum mean energy",
-                                        "nonpositive equilibrium recovery rate",
-                                        "missing configured EOS" };
+                                        "nonpositive equilibrium recovery rate" };
   const int variant_count = (int)(sizeof(labels) / sizeof(labels[0]));
 
   for(int variant = 0; variant < variant_count; ++variant) {
     ghl_neutrino_rate_provider_context provider;
     require_error(
-          ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+          ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
           "invalid-context baseline initialization", 4000 + variant);
     switch(variant) {
       case 0:
-        provider.backend = (ghl_neutrino_rate_backend_t)-1;
-        break;
-      case 1:
-        provider.backend = (ghl_neutrino_rate_backend_t)2;
-        break;
-      case 2:
         provider.channel_mask = 1 << 8;
         break;
-      case 3:
+      case 1:
         provider.failure_policy = (ghl_neutrino_rate_failure_policy_t)-1;
         break;
-      case 4:
+      case 2:
         provider.failure_policy = (ghl_neutrino_rate_failure_policy_t)4;
         break;
-      case 5:
+      case 3:
         provider.table_bounds_policy = (ghl_neutrino_rate_table_bounds_policy_t)-1;
         break;
-      case 6:
+      case 4:
         provider.table_bounds_policy = (ghl_neutrino_rate_table_bounds_policy_t)2;
         break;
-      case 7:
-        provider.rho_code_to_cgs = 2.0;
-        break;
-      case 8:
-        provider.opacity_cgs_to_code = 2.0;
-        break;
-      case 9:
-        provider.emissivity_cgs_to_code = 2.0;
-        break;
-      case 10:
+      case 5:
         provider.temperature_code_to_mev = 0.0;
         break;
-      case 11:
+      case 6:
         provider.baryon_mass_code = 0.0;
         break;
-      case 12:
+      case 7:
         provider.charged_current_scale = -1.0;
         break;
-      case 13:
+      case 8:
         provider.scattering_scale = -1.0;
         break;
-      case 14:
+      case 9:
         provider.pair_scale = -1.0;
         break;
-      case 15:
+      case 10:
         provider.bremsstrahlung_scale = -1.0;
         break;
-      case 16:
+      case 11:
         provider.plasmon_scale = -1.0;
         break;
-      case 17:
+      case 12:
         provider.min_mean_energy = 0.0;
         break;
-      case 18:
+      case 13:
         provider.equilibrium_recovery_rate = 0.0;
         break;
-      case 19:
-        provider.use_tabulated_eos = true;
-        break;
       default:
-        ghl_error("M1 rate-provider invalid-context test has an unknown variant\n");
+        provider_test_error(
+              "M1 rate-provider invalid-context test has an unknown variant");
     }
 
     ghl_neutrino_rate_provider_cache cache;
@@ -1671,7 +1792,7 @@ test_nonfinite_provider_contexts(const ghl_primitive_quantities *restrict prims)
   for(int variant = 0; variant < (int)(sizeof(labels) / sizeof(labels[0])); ++variant) {
     ghl_neutrino_rate_provider_context provider;
     require_error(
-          ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+          ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
           "nonfinite-context baseline initialization", 4050 + variant);
     switch(variant) {
       case 0:
@@ -1705,7 +1826,8 @@ test_nonfinite_provider_contexts(const ghl_primitive_quantities *restrict prims)
         provider.min_mean_energy = NAN;
         break;
       default:
-        ghl_error("M1 rate-provider nonfinite-context test has an unknown variant\n");
+        provider_test_error(
+              "M1 rate-provider nonfinite-context test has an unknown variant");
     }
 
     ghl_neutrino_rate_provider_cache cache;
@@ -1733,7 +1855,7 @@ test_nonfinite_provider_contexts(const ghl_primitive_quantities *restrict prims)
 static void test_invalid_primitive_keys(void) {
   ghl_neutrino_rate_provider_context provider;
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "invalid-key provider initialization", 4100);
   ghl_neutrino_rate_provider_cache cache;
   ghl_neutrino_rate_provider_cache_initialize(&cache);
@@ -1778,7 +1900,7 @@ static void test_invalid_primitive_keys(void) {
 static void test_temperature_recovery(void) {
   ghl_neutrino_rate_provider_context provider;
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "temperature-recovery provider initialization", 4200);
   ghl_primitive_quantities prims = { 0 };
   prims.rho = 0.8;
@@ -1830,10 +1952,10 @@ static void test_temperature_recovery(void) {
 static void test_default_provider(m1_test_rng *restrict rng) {
   ghl_neutrino_rate_provider_context provider;
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "default provider initialization", 0);
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(NULL), ghl_error_m1_null_pointer,
+        ghl_neutrino_rate_provider_initialize_reference(NULL), ghl_error_m1_null_pointer,
         "NULL default provider initialization", 0);
 
   ghl_neutrino_rate_provider_cache cache;
@@ -1882,7 +2004,7 @@ static void test_default_provider(m1_test_rng *restrict rng) {
   /* Repeated identical keys must hit the cache and publish exactly the same
    * frozen bundle; a context generation change must invalidate that hit. */
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "cache test provider initialization", 1000);
   provider.channel_mask
         = ghl_neutrino_rate_channel_charged_current
@@ -1968,7 +2090,7 @@ static void test_provider_cache_provenance(void) {
   for(int variant = 0; variant < (int)(sizeof(labels) / sizeof(labels[0])); ++variant) {
     ghl_neutrino_rate_provider_context provider;
     require_error(
-          ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+          ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
           "cache-provenance provider initialization", 1100 + variant);
     ghl_neutrino_rate_provider_cache cache;
     ghl_neutrino_rate_provider_cache_initialize(&cache);
@@ -2022,7 +2144,8 @@ static void test_provider_cache_provenance(void) {
         provider.equilibrium_recovery_rate = 2.0;
         break;
       default:
-        ghl_error("M1 rate-provider cache-provenance test has an unknown variant\n");
+        provider_test_error(
+              "M1 rate-provider cache-provenance test has an unknown variant");
     }
 
     require_error(
@@ -2042,13 +2165,13 @@ static void test_provider_cache_snapshot_mismatches(void) {
    * snapshot is stale, which lets same_provider_configuration evaluate each
    * field without being stopped by validate_provider_context. */
   static const char *const labels[]
-        = { "cached density conversion mismatch", "cached opacity conversion mismatch",
-            "cached emissivity conversion mismatch", "cached backend mismatch",
+        = { "cached temperature conversion mismatch", "cached baryon mass mismatch",
+            "cached failure policy mismatch", "cached recovery rate mismatch",
             "cached EOS pointer mismatch" };
   for(int variant = 0; variant < (int)(sizeof(labels) / sizeof(labels[0])); ++variant) {
     ghl_neutrino_rate_provider_context provider;
     require_error(
-          ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+          ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
           "snapshot-mismatch provider initialization", 1120 + variant);
     ghl_neutrino_rate_provider_cache cache;
     ghl_neutrino_rate_provider_cache_initialize(&cache);
@@ -2067,16 +2190,16 @@ static void test_provider_cache_snapshot_mismatches(void) {
     const ghl_eos_parameters *eos_argument = NULL;
     ghl_eos_parameters dummy_eos = { 0 };
     if(variant == 0) {
-      cache.provider_snapshot.rho_code_to_cgs = 2.0;
+      cache.provider_snapshot.temperature_code_to_mev = 2.0;
     }
     else if(variant == 1) {
-      cache.provider_snapshot.opacity_cgs_to_code = 2.0;
+      cache.provider_snapshot.baryon_mass_code = 2.0;
     }
     else if(variant == 2) {
-      cache.provider_snapshot.emissivity_cgs_to_code = 2.0;
+      cache.provider_snapshot.failure_policy = ghl_neutrino_rate_failure_transparent;
     }
     else if(variant == 3) {
-      cache.provider_snapshot.backend = ghl_neutrino_rate_backend_nrpyleakage;
+      cache.provider_snapshot.equilibrium_recovery_rate = 2.0;
     }
     else {
       eos_argument = &dummy_eos;
@@ -2104,7 +2227,7 @@ static void test_provider_cache_same_rho_temperature_changed_ye(void) {
    * than one key would return through an earlier short-circuit operand. */
   ghl_neutrino_rate_provider_context provider;
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "same-key provider initialization", 1130);
   ghl_neutrino_rate_provider_cache cache;
   ghl_neutrino_rate_provider_cache_initialize(&cache);
@@ -2137,7 +2260,7 @@ static void test_provider_cache_incomplete_rate_record(void) {
    * must reject only the missing rates_valid flag. */
   ghl_neutrino_rate_provider_context provider;
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "incomplete-cache provider initialization", 1140);
   ghl_neutrino_rate_provider_cache cache;
   ghl_neutrino_rate_provider_cache_initialize(&cache);
@@ -2175,7 +2298,7 @@ static void test_provider_cache_incomplete_rate_record(void) {
 static void test_recovery_and_transactional_failures(void) {
   ghl_neutrino_rate_provider_context provider;
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "recovery provider initialization", 2000);
   ghl_neutrino_rate_provider_cache cache;
   ghl_neutrino_rate_provider_cache_initialize(&cache);
@@ -2206,17 +2329,17 @@ static void test_recovery_and_transactional_failures(void) {
   const ghl_error_codes_t abort_error = ghl_neutrino_rate_provider_compute_cell(
         &provider, &cache, &abort_diagnostics, NULL, &invalid_prims, abort_rates);
   require_error(
-        abort_error, ghl_error_m1_microphysics_failure, "abort-policy invalid primitive",
-        2001);
+        abort_error, ghl_error_m1_microphysics_failure,
+        "return-error-policy invalid primitive", 2001);
   require_condition(
         memcmp(&cache, &cache_before, sizeof(cache)) == 0,
-        "abort-policy failure changed the cache", 2001);
+        "return-error-policy failure changed the cache", 2001);
   require_condition(
         same_rate_bundle(abort_rates, rates_before),
-        "abort-policy failure changed output rates", 2001);
+        "return-error-policy failure changed output rates", 2001);
   require_condition(
         abort_diagnostics.failures == 1 && abort_diagnostics.last_error == abort_error,
-        "abort-policy failure diagnostics are incomplete", 2001);
+        "return-error-policy failure diagnostics are incomplete", 2001);
 
   provider.failure_policy = ghl_neutrino_rate_failure_transparent;
   ghl_neutrino_rate_provider_cache transparent_cache;
@@ -2224,74 +2347,69 @@ static void test_recovery_and_transactional_failures(void) {
   ghl_neutrino_rate_provider_diagnostics transparent_diagnostics = { 0 };
   ghl_m1_neutrino_rates transparent_rates[ghl_m1_neutrino_species_count];
   initialize_sentinel_rates(transparent_rates);
+  const ghl_m1_neutrino_rates transparent_before[ghl_m1_neutrino_species_count]
+        = { transparent_rates[0], transparent_rates[1], transparent_rates[2] };
+  const ghl_neutrino_rate_provider_cache transparent_cache_before = transparent_cache;
   const ghl_error_codes_t transparent_error = ghl_neutrino_rate_provider_compute_cell(
         &provider, &transparent_cache, &transparent_diagnostics, NULL, &invalid_prims,
         transparent_rates);
-  require_error(transparent_error, ghl_success, "transparent recovery", 2002);
-  validate_rate_bundle(transparent_rates, 2002);
+  require_error(
+        transparent_error, ghl_error_m1_microphysics_failure, "transparent recovery",
+        2002);
   require_condition(
-        transparent_diagnostics.last_recovery == ghl_neutrino_rate_recovery_transparent
-              && transparent_diagnostics.transparent_recoveries == 1
-              && !transparent_cache.thermo_valid && !transparent_cache.rates_valid,
-        "transparent recovery did not preserve its transaction", 2002);
+        same_rate_bundle(transparent_rates, transparent_before)
+              && memcmp(
+                       &transparent_cache, &transparent_cache_before,
+                       sizeof(transparent_cache))
+                       == 0
+              && transparent_diagnostics.last_recovery == ghl_neutrino_rate_recovery_none
+              && transparent_diagnostics.transparent_recoveries == 0
+              && transparent_diagnostics.failures == 1
+              && transparent_diagnostics.last_error == transparent_error,
+        "transparent recovery fabricated targets without validated thermo", 2002);
 
   provider.failure_policy = ghl_neutrino_rate_failure_equilibrium;
   ghl_neutrino_rate_provider_diagnostics equilibrium_diagnostics = { 0 };
   ghl_m1_neutrino_rates equilibrium_rates[ghl_m1_neutrino_species_count];
   initialize_sentinel_rates(equilibrium_rates);
+  const ghl_m1_neutrino_rates equilibrium_before[ghl_m1_neutrino_species_count]
+        = { equilibrium_rates[0], equilibrium_rates[1], equilibrium_rates[2] };
   const ghl_error_codes_t equilibrium_error = ghl_neutrino_rate_provider_compute_cell(
         &provider, NULL, &equilibrium_diagnostics, NULL, &invalid_prims,
         equilibrium_rates);
-  require_error(equilibrium_error, ghl_success, "equilibrium recovery", 2003);
-  validate_rate_bundle(equilibrium_rates, 2003);
+  require_error(
+        equilibrium_error, ghl_error_m1_microphysics_failure, "equilibrium recovery",
+        2003);
   require_condition(
-        equilibrium_diagnostics.last_recovery == ghl_neutrino_rate_recovery_equilibrium
-              && equilibrium_diagnostics.equilibrium_recoveries == 1,
-        "equilibrium recovery diagnostics are incomplete", 2003);
+        same_rate_bundle(equilibrium_rates, equilibrium_before)
+              && equilibrium_diagnostics.last_recovery == ghl_neutrino_rate_recovery_none
+              && equilibrium_diagnostics.equilibrium_recoveries == 0
+              && equilibrium_diagnostics.failures == 1
+              && equilibrium_diagnostics.last_error == equilibrium_error,
+        "equilibrium recovery fabricated targets without validated thermo", 2003);
 
   /* The recovery itself must not require diagnostics storage.  This also
    * exercises the successful equilibrium publication path's NULL optional
    * diagnostics arm. */
   ghl_m1_neutrino_rates equilibrium_no_diagnostics[ghl_m1_neutrino_species_count];
   initialize_sentinel_rates(equilibrium_no_diagnostics);
+  const ghl_m1_neutrino_rates
+        equilibrium_no_diagnostics_before[ghl_m1_neutrino_species_count]
+        = { equilibrium_no_diagnostics[0], equilibrium_no_diagnostics[1],
+            equilibrium_no_diagnostics[2] };
   require_error(
         ghl_neutrino_rate_provider_compute_cell(
               &provider, NULL, NULL, NULL, &invalid_prims, equilibrium_no_diagnostics),
-        ghl_success, "equilibrium recovery without diagnostics", 2025);
-  validate_rate_bundle(equilibrium_no_diagnostics, 2025);
-
-  /* Hold-last requires an exact recovered key. An invalid primitive has no
-   * recovered key, so the policy must fail closed and leave both records. */
-  require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
-        "hold-last provider initialization", 2004);
-  provider.failure_policy = ghl_neutrino_rate_failure_hold_last;
-  ghl_neutrino_rate_provider_cache hold_last_cache;
-  ghl_neutrino_rate_provider_cache_initialize(&hold_last_cache);
-  ghl_neutrino_rate_provider_diagnostics hold_last_diagnostics = { 0 };
-  ghl_m1_neutrino_rates hold_last_rates[ghl_m1_neutrino_species_count];
-  const ghl_error_codes_t hold_seed_error = ghl_neutrino_rate_provider_compute_cell(
-        &provider, &hold_last_cache, &hold_last_diagnostics, NULL, &prims,
-        hold_last_rates);
-  require_error(hold_seed_error, ghl_success, "hold-last cache seed", 2004);
-  const ghl_neutrino_rate_provider_cache hold_cache_before = hold_last_cache;
-  const ghl_m1_neutrino_rates hold_rates_before[ghl_m1_neutrino_species_count]
-        = { hold_last_rates[0], hold_last_rates[1], hold_last_rates[2] };
-  const ghl_error_codes_t hold_error = ghl_neutrino_rate_provider_compute_cell(
-        &provider, &hold_last_cache, &hold_last_diagnostics, NULL, &invalid_prims,
-        hold_last_rates);
-  require_error(
-        hold_error, ghl_error_m1_microphysics_failure, "hold-last invalid primitive",
-        2005);
+        ghl_error_m1_microphysics_failure, "equilibrium recovery without diagnostics",
+        2025);
   require_condition(
-        memcmp(&hold_last_cache, &hold_cache_before, sizeof(hold_last_cache)) == 0
-              && same_rate_bundle(hold_last_rates, hold_rates_before),
-        "hold-last rejection changed transactional outputs", 2005);
+        same_rate_bundle(equilibrium_no_diagnostics, equilibrium_no_diagnostics_before),
+        "recovery without physical thermo changed rates", 2025);
 
   /* Provider-context errors are non-recoverable and are checked before cache
    * lookup or any microphysics calculation. */
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "multiplicity provider initialization", 2006);
   provider.nu_x_multiplicity = 3.0;
   ghl_neutrino_rate_provider_cache bad_context_cache;
@@ -2329,74 +2447,6 @@ static void test_recovery_and_transactional_failures(void) {
   test_invalid_provider_contexts(&prims);
   test_nonfinite_provider_contexts(&prims);
   test_invalid_primitive_keys();
-
-  ghl_neutrino_rate_provider_context production = { 0 };
-  require_error(
-        ghl_neutrino_rate_provider_initialize_nrpyleakage(NULL),
-        ghl_error_m1_null_pointer, "NULL production provider initialization", 2011);
-  const ghl_error_codes_t production_init
-        = ghl_neutrino_rate_provider_initialize_nrpyleakage(&production);
-#ifdef GHL_DISABLE_HDF5
-  require_error(
-        production_init, ghl_error_used_disabled_hdf5,
-        "disabled-HDF5 production provider initialization", 2010);
-  ghl_neutrino_rate_provider_context disabled_backend;
-  require_error(
-        ghl_neutrino_rate_provider_initialize_default(&disabled_backend), ghl_success,
-        "disabled-HDF5 backend-gate initialization", 2012);
-  disabled_backend.backend = ghl_neutrino_rate_backend_nrpyleakage;
-  ghl_neutrino_rate_provider_cache disabled_cache;
-  ghl_neutrino_rate_provider_cache_initialize(&disabled_cache);
-  const ghl_neutrino_rate_provider_cache disabled_cache_before = disabled_cache;
-  ghl_m1_neutrino_rates disabled_rates[ghl_m1_neutrino_species_count];
-  initialize_sentinel_rates(disabled_rates);
-  const ghl_m1_neutrino_rates disabled_rates_before[ghl_m1_neutrino_species_count]
-        = { disabled_rates[0], disabled_rates[1], disabled_rates[2] };
-  ghl_neutrino_rate_provider_diagnostics disabled_diagnostics = { 0 };
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &disabled_backend, &disabled_cache, &disabled_diagnostics, NULL, &prims,
-              disabled_rates),
-        ghl_error_used_disabled_hdf5, "disabled-HDF5 NRPyLeakage backend gate", 2012);
-  require_condition(
-        memcmp(&disabled_cache, &disabled_cache_before, sizeof(disabled_cache)) == 0
-              && same_rate_bundle(disabled_rates, disabled_rates_before)
-              && disabled_diagnostics.failures == 1,
-        "disabled-HDF5 backend gate changed transactional outputs", 2012);
-
-  /* A reference context with the tabulated flag set is still a supported
-   * representable context up to the HDF5 feature gate.  Supplying a non-NULL
-   * EOS reaches that build-time gate instead of the earlier NULL-EOS guard. */
-  disabled_backend.backend = ghl_neutrino_rate_backend_reference;
-  disabled_backend.use_tabulated_eos = true;
-  ghl_eos_parameters disabled_eos_argument = { 0 };
-  ghl_neutrino_rate_provider_cache disabled_tabulated_cache;
-  ghl_neutrino_rate_provider_cache_initialize(&disabled_tabulated_cache);
-  ghl_neutrino_rate_provider_diagnostics disabled_tabulated_diagnostics = { 0 };
-  ghl_m1_neutrino_rates disabled_tabulated_rates[ghl_m1_neutrino_species_count];
-  initialize_sentinel_rates(disabled_tabulated_rates);
-  const ghl_m1_neutrino_rates disabled_tabulated_before[ghl_m1_neutrino_species_count]
-        = { disabled_tabulated_rates[0], disabled_tabulated_rates[1],
-            disabled_tabulated_rates[2] };
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &disabled_backend, &disabled_tabulated_cache,
-              &disabled_tabulated_diagnostics, &disabled_eos_argument, &prims,
-              disabled_tabulated_rates),
-        ghl_error_m1_microphysics_failure,
-        "disabled-HDF5 non-NULL tabulated backend gate", 2013);
-  require_condition(
-        same_rate_bundle(disabled_tabulated_rates, disabled_tabulated_before)
-              && disabled_tabulated_diagnostics.failures == 1,
-        "disabled-HDF5 non-NULL backend gate changed rates", 2013);
-#else
-  require_error(
-        production_init, ghl_success, "HDF5 production provider initialization", 2010);
-  require_condition(
-        production.backend == ghl_neutrino_rate_backend_nrpyleakage
-              && production.use_tabulated_eos,
-        "production initializer selected the wrong backend", 2010);
-#endif
 }
 
 static void test_recovery_publication_and_post_thermo_failures(void) {
@@ -2406,307 +2456,162 @@ static void test_recovery_publication_and_post_thermo_failures(void) {
   prims.Y_e = 0.5;
   prims.eps = 1.0;
 
-  /* A failed input with optional diagnostics must still publish a valid
-   * transparent recovery, while no cache is available to update. */
+  /* The synthetic channel scale overflows a rate product after finite
+   * synthetic thermo has been validated. Recovery retains its same-cell
+   * equilibrium moments and removes interactions without changing the error. */
   ghl_neutrino_rate_provider_context transparent_provider;
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&transparent_provider),
-        ghl_success, "optional-diagnostics recovery initialization", 2020);
+        ghl_neutrino_rate_provider_initialize_reference(&transparent_provider),
+        ghl_success, "same-cell transparent recovery initialization", 2020);
+  transparent_provider.channel_mask = ghl_neutrino_rate_channel_charged_current;
+  transparent_provider.charged_current_scale = DBL_MAX;
   transparent_provider.failure_policy = ghl_neutrino_rate_failure_transparent;
-  ghl_primitive_quantities invalid_prims = prims;
-  invalid_prims.rho = NAN;
+  m1_test_reference_provider_context target_provider = transparent_provider;
+  target_provider.channel_mask = 0;
+  ghl_m1_neutrino_rates expected_targets[ghl_m1_neutrino_species_count];
+  compute_expected_reference_rates(&target_provider, &prims, expected_targets);
+
+  m1_test_reference_provider_cache transparent_cache;
+  m1_test_reference_provider_cache_initialize(&transparent_cache);
+  const m1_test_reference_provider_cache transparent_cache_before = transparent_cache;
+  ghl_neutrino_rate_provider_diagnostics transparent_diagnostics = { 0 };
   ghl_m1_neutrino_rates transparent_rates[ghl_m1_neutrino_species_count];
   initialize_sentinel_rates(transparent_rates);
+  const ghl_error_codes_t transparent_error = ghl_neutrino_rate_provider_compute_cell(
+        &transparent_provider, &transparent_cache, &transparent_diagnostics, NULL,
+        &prims, transparent_rates);
   require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &transparent_provider, NULL, NULL, NULL, &invalid_prims,
-              transparent_rates),
-        ghl_success, "optional-diagnostics transparent recovery", 2020);
+        transparent_error, ghl_error_m1_microphysics_failure,
+        "same-cell transparent recovery original error", 2020);
   validate_rate_bundle(transparent_rates, 2020);
+  require_condition(
+        memcmp(&transparent_cache, &transparent_cache_before, sizeof(transparent_cache))
+                    == 0
+              && transparent_diagnostics.failures == 1
+              && transparent_diagnostics.last_error == transparent_error
+              && transparent_diagnostics.transparent_recoveries == 1
+              && transparent_diagnostics.last_recovery
+                       == ghl_neutrino_rate_recovery_transparent,
+        "same-cell transparent recovery did not preserve transaction metadata", 2020);
   for(int species = 0; species < ghl_m1_neutrino_species_count; ++species) {
     require_condition(
-          transparent_rates[species].eta_N == 0.0
+          transparent_rates[species].n_eq == expected_targets[species].n_eq
+                && transparent_rates[species].J_eq == expected_targets[species].J_eq
+                && transparent_rates[species].mean_energy
+                         == expected_targets[species].mean_energy
+                && transparent_rates[species].eta_N == 0.0
                 && transparent_rates[species].eta_E == 0.0
                 && transparent_rates[species].kappa_a_N == 0.0
                 && transparent_rates[species].kappa_a_E == 0.0,
-          "transparent recovery published interaction rates", 2020);
+          "transparent recovery did not retain validated same-cell moments", 2020);
   }
 
-  /* Finite-valued reference inputs can still overflow an aggregate product
-   * after thermodynamic reconstruction.  This is a supported caller path:
-   * hold-last must fail closed when the failed key is not the cached key. */
-  ghl_neutrino_rate_provider_context hold_provider;
+  /* Equilibrium recovery uses the same physical cache targets and applies its
+   * recovery opacity only after reconstructing those targets successfully. */
+  ghl_neutrino_rate_provider_context equilibrium_provider = transparent_provider;
+  equilibrium_provider.failure_policy = ghl_neutrino_rate_failure_equilibrium;
+  equilibrium_provider.equilibrium_recovery_rate = 0.25;
+  m1_test_reference_provider_context equilibrium_target_provider = equilibrium_provider;
+  equilibrium_target_provider.channel_mask = 0;
+  compute_expected_reference_rates(
+        &equilibrium_target_provider, &prims, expected_targets);
+  ghl_neutrino_rate_provider_diagnostics equilibrium_diagnostics = { 0 };
+  ghl_m1_neutrino_rates equilibrium_rates[ghl_m1_neutrino_species_count];
+  initialize_sentinel_rates(equilibrium_rates);
+  const ghl_error_codes_t equilibrium_error = ghl_neutrino_rate_provider_compute_cell(
+        &equilibrium_provider, NULL, &equilibrium_diagnostics, NULL, &prims,
+        equilibrium_rates);
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&hold_provider), ghl_success,
-        "post-thermo hold-last initialization", 2021);
-  hold_provider.failure_policy = ghl_neutrino_rate_failure_hold_last;
-  ghl_neutrino_rate_provider_cache hold_cache;
-  ghl_neutrino_rate_provider_cache_initialize(&hold_cache);
-  ghl_neutrino_rate_provider_diagnostics hold_diagnostics = { 0 };
-  ghl_m1_neutrino_rates hold_rates[ghl_m1_neutrino_species_count];
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &hold_provider, &hold_cache, &hold_diagnostics, NULL, &prims, hold_rates),
-        ghl_success, "post-thermo hold-last seed", 2021);
-  const ghl_neutrino_rate_provider_cache hold_cache_before = hold_cache;
-  ghl_primitive_quantities overflow_prims = prims;
-  overflow_prims.rho = DBL_MAX;
-  initialize_sentinel_rates(hold_rates);
-  const ghl_m1_neutrino_rates hold_rates_before_failure[ghl_m1_neutrino_species_count]
-        = { hold_rates[0], hold_rates[1], hold_rates[2] };
-  const ghl_error_codes_t hold_error = ghl_neutrino_rate_provider_compute_cell(
-        &hold_provider, &hold_cache, &hold_diagnostics, NULL, &overflow_prims,
-        hold_rates);
-  require_error(
-        hold_error, ghl_error_m1_microphysics_failure,
-        "post-thermo hold-last key mismatch", 2022);
+        equilibrium_error, ghl_error_m1_microphysics_failure,
+        "same-cell equilibrium recovery original error", 2021);
+  validate_rate_bundle(equilibrium_rates, 2021);
   require_condition(
-        memcmp(&hold_cache, &hold_cache_before, sizeof(hold_cache)) == 0
-              && same_rate_bundle(hold_rates, hold_rates_before_failure),
-        "post-thermo failure changed transactional outputs", 2022);
-  require_condition(
-        hold_diagnostics.failures == 1 && hold_diagnostics.last_error == hold_error
-              && hold_diagnostics.last_recovery == ghl_neutrino_rate_recovery_none
-              && hold_diagnostics.hold_last_recoveries == 0,
-        "post-thermo hold-last diagnostics are incomplete", 2022);
-
-  /* The reference provider also has a supported pre-cache failure: a finite
-   * DBL_MAX temperature makes its finite composition chemical potentials
-   * overflow, after recovered_key_valid is set.  Keep a matching rates key
-   * while invalidating only thermo_valid to exercise successful hold-last
-   * recovery before the ordinary cache-hit check. */
-  ghl_neutrino_rate_provider_context reference_hold_provider;
-  require_error(
-        ghl_neutrino_rate_provider_initialize_default(&reference_hold_provider),
-        ghl_success, "reference pre-cache hold-last initialization", 2026);
-  reference_hold_provider.failure_policy = ghl_neutrino_rate_failure_hold_last;
-  ghl_neutrino_rate_provider_cache reference_hold_cache;
-  ghl_neutrino_rate_provider_cache_initialize(&reference_hold_cache);
-  ghl_m1_neutrino_rates reference_hold_seed[ghl_m1_neutrino_species_count];
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &reference_hold_provider, &reference_hold_cache, NULL, NULL, &prims,
-              reference_hold_seed),
-        ghl_success, "reference pre-cache hold-last seed", 2026);
-  reference_hold_cache.thermo_valid = false;
-  reference_hold_cache.T = DBL_MAX;
-  ghl_primitive_quantities reference_overflow_prims = prims;
-  reference_overflow_prims.temperature = DBL_MAX;
-  reference_overflow_prims.Y_e = 0.1;
-  reference_hold_cache.Ye = reference_overflow_prims.Y_e;
-  const ghl_neutrino_rate_provider_cache reference_hold_expected = reference_hold_cache;
-  ghl_neutrino_rate_provider_diagnostics reference_hold_diagnostics = { 0 };
-  ghl_m1_neutrino_rates reference_hold_rates[ghl_m1_neutrino_species_count];
-  initialize_sentinel_rates(reference_hold_rates);
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &reference_hold_provider, &reference_hold_cache,
-              &reference_hold_diagnostics, NULL, &reference_overflow_prims,
-              reference_hold_rates),
-        ghl_success, "reference pre-cache hold-last recovery", 2026);
-  require_condition(
-        same_rate_bundle(reference_hold_rates, reference_hold_cache.rates)
-              && reference_hold_diagnostics.failures == 1
-              && reference_hold_diagnostics.last_error
-                       == ghl_error_m1_microphysics_failure
-              && reference_hold_diagnostics.hold_last_recoveries == 1
-              && reference_hold_diagnostics.last_recovery
-                       == ghl_neutrino_rate_recovery_hold_last,
-        "reference pre-cache hold-last recovery was not diagnosed", 2026);
-  require_condition(
-        memcmp(
-              &reference_hold_cache, &reference_hold_expected,
-              sizeof(reference_hold_cache))
-              == 0,
-        "reference pre-cache hold-last changed cache metadata", 2026);
-  initialize_sentinel_rates(reference_hold_rates);
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &reference_hold_provider, &reference_hold_cache, NULL, NULL,
-              &reference_overflow_prims, reference_hold_rates),
-        ghl_success, "reference pre-cache hold-last without diagnostics", 2027);
-  require_condition(
-        same_rate_bundle(reference_hold_rates, reference_hold_cache.rates),
-        "reference pre-cache hold-last without diagnostics changed rates", 2027);
-
-  /* Equilibrium recovery builds finite intermediate fields here, but the
-   * finite recovery rate times finite J_eq is not representable.  The
-   * validation gate must reject publication transactionally and return the
-   * original microphysics failure. */
-  ghl_neutrino_rate_provider_context overflowing_recovery;
-  require_error(
-        ghl_neutrino_rate_provider_initialize_default(&overflowing_recovery),
-        ghl_success, "overflowing recovery initialization", 2023);
-  overflowing_recovery.failure_policy = ghl_neutrino_rate_failure_equilibrium;
-  overflowing_recovery.min_mean_energy = DBL_MAX;
-  overflowing_recovery.equilibrium_recovery_rate = DBL_MAX;
-  ghl_neutrino_rate_provider_cache overflow_cache;
-  ghl_neutrino_rate_provider_cache_initialize(&overflow_cache);
-  const ghl_neutrino_rate_provider_cache overflow_cache_before = overflow_cache;
-  ghl_m1_neutrino_rates overflow_rates[ghl_m1_neutrino_species_count];
-  initialize_sentinel_rates(overflow_rates);
-  const ghl_m1_neutrino_rates overflow_rates_before[ghl_m1_neutrino_species_count]
-        = { overflow_rates[0], overflow_rates[1], overflow_rates[2] };
-  ghl_neutrino_rate_provider_diagnostics overflow_diagnostics = { 0 };
-  const ghl_error_codes_t overflow_error = ghl_neutrino_rate_provider_compute_cell(
-        &overflowing_recovery, &overflow_cache, &overflow_diagnostics, NULL,
-        &invalid_prims, overflow_rates);
-  require_error(
-        overflow_error, ghl_error_m1_microphysics_failure,
-        "equilibrium recovery publication overflow", 2023);
-  require_condition(
-        memcmp(&overflow_cache, &overflow_cache_before, sizeof(overflow_cache)) == 0
-              && same_rate_bundle(overflow_rates, overflow_rates_before),
-        "overflowing equilibrium recovery changed outputs", 2023);
-  require_condition(
-        overflow_diagnostics.failures == 1
-              && overflow_diagnostics.last_error == overflow_error
-              && overflow_diagnostics.equilibrium_recoveries == 0
-              && overflow_diagnostics.last_recovery == ghl_neutrino_rate_recovery_none,
-        "overflowing equilibrium recovery diagnostics are incomplete", 2023);
+        equilibrium_diagnostics.failures == 1
+              && equilibrium_diagnostics.last_error == equilibrium_error
+              && equilibrium_diagnostics.equilibrium_recoveries == 1
+              && equilibrium_diagnostics.last_recovery
+                       == ghl_neutrino_rate_recovery_equilibrium,
+        "same-cell equilibrium recovery was not diagnosed", 2021);
+  for(int species = 0; species < ghl_m1_neutrino_species_count; ++species) {
+    require_condition(
+          equilibrium_rates[species].n_eq == expected_targets[species].n_eq
+                && equilibrium_rates[species].J_eq == expected_targets[species].J_eq
+                && equilibrium_rates[species].mean_energy
+                         == expected_targets[species].mean_energy
+                && equilibrium_rates[species].kappa_a_N == 0.25
+                && equilibrium_rates[species].kappa_a_E == 0.25
+                && equilibrium_rates[species].kappa_tr == 0.25
+                && equilibrium_rates[species].eta_N
+                         == 0.25 * expected_targets[species].n_eq
+                && equilibrium_rates[species].eta_E
+                         == 0.25 * expected_targets[species].J_eq,
+          "equilibrium recovery changed physical targets", 2021);
+  }
 }
+
+#undef ghl_neutrino_rate_provider_compute_cell
+#undef ghl_neutrino_rate_provider_cache_initialize
+#undef ghl_neutrino_rate_provider_initialize_reference
+#undef ghl_neutrino_rate_provider_cache
+#undef ghl_neutrino_rate_provider_context
 
 #ifndef GHL_DISABLE_HDF5
-static void test_reference_table_eos_validation(
-      const ghl_eos_parameters *restrict eos,
-      const ghl_primitive_quantities *restrict prims) {
-  ghl_neutrino_rate_provider_context provider;
-  require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
-        "reference table provider initialization", 3600);
-  provider.use_tabulated_eos = true;
-
-  static const char *const labels[]
-        = { "reference table hybrid EOS", "reference table unknown type" };
-  const int variant_count = (int)(sizeof(labels) / sizeof(labels[0]));
-  for(int variant = 0; variant < variant_count; ++variant) {
-    ghl_eos_parameters bad_eos = *eos;
-    if(variant == 0) {
-      bad_eos.eos_type = ghl_eos_hybrid;
-    }
-    else {
-      bad_eos.table_type = ghl_eos_table_unknown;
-    }
-    ghl_neutrino_rate_provider_cache cache;
-    ghl_neutrino_rate_provider_cache_initialize(&cache);
-    const ghl_neutrino_rate_provider_cache cache_before = cache;
-    ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
-    initialize_sentinel_rates(rates);
-    const ghl_m1_neutrino_rates rates_before[ghl_m1_neutrino_species_count]
-          = { rates[0], rates[1], rates[2] };
-    ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
-    const ghl_error_codes_t error = ghl_neutrino_rate_provider_compute_cell(
-          &provider, &cache, &diagnostics, &bad_eos, prims, rates);
-    require_error(
-          error, ghl_error_m1_microphysics_failure, labels[variant], 3601 + variant);
-    require_condition(
-          memcmp(&cache, &cache_before, sizeof(cache)) == 0
-                && same_rate_bundle(rates, rates_before) && diagnostics.failures == 1
-                && diagnostics.last_error == error,
-          "reference table EOS rejection changed transactional outputs", 3601 + variant);
-  }
-
-  ghl_neutrino_rate_provider_cache cache;
-  ghl_neutrino_rate_provider_cache_initialize(&cache);
-  ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
-  ghl_m1_neutrino_rates first[ghl_m1_neutrino_species_count];
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &provider, &cache, &diagnostics, eos, prims, first),
-        ghl_success, "valid reference table provider call", 3603);
-  validate_rate_bundle(first, 3603);
-  ghl_m1_neutrino_rates second[ghl_m1_neutrino_species_count];
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &provider, &cache, &diagnostics, eos, prims, second),
-        ghl_success, "reference table provider cache hit", 3604);
-  require_condition(
-        diagnostics.cache_hits == 1 && same_rate_bundle(first, second),
-        "reference table cache hit changed rates", 3604);
-}
-
 static void test_production_provider_context_validation(
       const ghl_neutrino_rate_provider_context *restrict baseline,
       const ghl_eos_parameters *restrict eos,
       const ghl_primitive_quantities *restrict prims) {
-  /* Each mutation is a supported provider-boundary input, so a production
-   * context must reject it before table lookup or raw-rate assembly.  Keeping
-   * one mutation per call also identifies every disjunct in the production
-   * unit's conversion and EOS contract. */
-  static const char *const labels[] = { "production NaN minimum energy",
-                                        "production nonzero minimum energy",
-                                        "production reference backend without table EOS",
+  static const char *const labels[] = { "production multiplicity",
+                                        "production unknown channel mask",
+                                        "production failure policy below enum",
+                                        "production failure policy above enum",
+                                        "production table bounds policy below enum",
+                                        "production table bounds policy above enum",
+                                        "production recovery rate zero",
+                                        "production recovery rate NaN",
                                         "production NULL EOS",
-                                        "production non-tabulated EOS type",
-                                        "production non-StellarCollapse table",
-                                        "production density conversion",
-                                        "production temperature conversion",
-                                        "production opacity conversion",
-                                        "production emissivity conversion",
-                                        "production baryon-mass conversion",
-                                        "production charged-current scale",
-                                        "production scattering scale",
-                                        "production pair scale",
-                                        "production bremsstrahlung scale",
-                                        "production plasmon scale" };
-  const int variant_count = (int)(sizeof(labels) / sizeof(labels[0]));
-  for(int variant = 0; variant < variant_count; ++variant) {
+                                        "production hybrid EOS",
+                                        "production unknown table family" };
+  for(int variant = 0; variant < (int)(sizeof(labels) / sizeof(labels[0])); ++variant) {
     ghl_neutrino_rate_provider_context provider = *baseline;
     ghl_eos_parameters bad_eos = *eos;
     const ghl_eos_parameters *eos_argument = &bad_eos;
     switch(variant) {
       case 0:
-        provider.min_mean_energy = NAN;
+        provider.nu_x_multiplicity = 3.0;
         break;
       case 1:
-        provider.min_mean_energy = 1.0;
+        provider.channel_mask |= 1 << 20;
         break;
       case 2:
-        provider.use_tabulated_eos = false;
+        provider.failure_policy = (ghl_neutrino_rate_failure_policy_t)-1;
         break;
       case 3:
-        eos_argument = NULL;
+        provider.failure_policy = (ghl_neutrino_rate_failure_policy_t)3;
         break;
       case 4:
-        bad_eos.eos_type = ghl_eos_hybrid;
+        provider.table_bounds_policy = (ghl_neutrino_rate_table_bounds_policy_t)-1;
         break;
       case 5:
-        bad_eos.table_type = ghl_eos_table_unknown;
+        provider.table_bounds_policy = (ghl_neutrino_rate_table_bounds_policy_t)2;
         break;
       case 6:
-        provider.rho_code_to_cgs *= 2.0;
+        provider.equilibrium_recovery_rate = 0.0;
         break;
       case 7:
-        provider.temperature_code_to_mev = 2.0;
+        provider.equilibrium_recovery_rate = NAN;
         break;
       case 8:
-        provider.opacity_cgs_to_code *= 2.0;
+        eos_argument = NULL;
         break;
       case 9:
-        provider.emissivity_cgs_to_code *= 2.0;
+        bad_eos.eos_type = ghl_eos_hybrid;
         break;
       case 10:
-        provider.baryon_mass_code *= 2.0;
-        break;
-      case 11:
-        provider.charged_current_scale = 2.0;
-        break;
-      case 12:
-        provider.scattering_scale = 2.0;
-        break;
-      case 13:
-        provider.pair_scale = 2.0;
-        break;
-      case 14:
-        provider.bremsstrahlung_scale = 2.0;
-        break;
-      case 15:
-        provider.plasmon_scale = 2.0;
+        bad_eos.table_type = ghl_eos_table_unknown;
         break;
       default:
-        ghl_error("M1 rate-provider production-context test has an unknown variant\n");
+        provider_test_error("Unknown production provider context variant");
     }
-
     ghl_neutrino_rate_provider_cache cache;
     ghl_neutrino_rate_provider_cache_initialize(&cache);
     const ghl_neutrino_rate_provider_cache cache_before = cache;
@@ -2724,6 +2629,128 @@ static void test_production_provider_context_validation(
                 && same_rate_bundle(rates, rates_before) && diagnostics.failures == 1
                 && diagnostics.last_error == error,
           "production context rejection changed transactional outputs", 3060 + variant);
+  }
+}
+
+static void test_production_recovery_publication_overflow(void) {
+  ghl_neutrino_rate_provider_context provider;
+  require_error(
+        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        "overflow recovery provider initialization", 3862);
+  provider.channel_mask = ghl_neutrino_rate_channel_pair;
+  provider.failure_policy = ghl_neutrino_rate_failure_equilibrium;
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.table_rho_min = 1.e-301;
+  eos.table_rho_max = 1.0;
+  eos.table_T_min = 1.e-120;
+  eos.table_T_max = 1.e61;
+  eos.table_Y_e_max = 1.0;
+  const ghl_primitive_quantities prims
+        = { .rho = 1.e-300, .temperature = 1.e60, .Y_e = 0.5 };
+  const double recovery_rates[] = { 1.0, DBL_MAX };
+  for(size_t i = 0; i < sizeof(recovery_rates) / sizeof(recovery_rates[0]); ++i) {
+    provider.equilibrium_recovery_rate = recovery_rates[i];
+    /* Existing public-cache fixture convention: thermodynamics are supplied
+     * independently of table interpolation, while rate assembly is real. */
+    ghl_neutrino_rate_provider_cache cache = { 0 };
+    cache.thermo_valid = true;
+    cache.thermo_rho = prims.rho;
+    cache.thermo_T = prims.temperature;
+    cache.thermo_Ye = prims.Y_e;
+    cache.X_n = 1.0;
+    cache.provider_snapshot = provider;
+    cache.eos_snapshot = &eos;
+    unsigned char cache_before[sizeof(cache)];
+    memcpy(cache_before, &cache, sizeof(cache));
+    ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(rates);
+    unsigned char rates_before[sizeof(rates)];
+    memcpy(rates_before, rates, sizeof(rates));
+    ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, &cache, &diagnostics, &eos, &prims, rates),
+          ghl_error_m1_microphysics_failure, "pair failure with equilibrium recovery",
+          3862);
+    require_condition(
+          memcmp(cache_before, &cache, sizeof(cache)) == 0 && diagnostics.failures == 1
+                && diagnostics.last_error == ghl_error_m1_microphysics_failure,
+          "failed primary assembly committed a cache record", 3862);
+    if(i == 0) {
+      validate_rate_bundle(rates, 3862);
+      require_condition(
+            diagnostics.last_recovery == ghl_neutrino_rate_recovery_equilibrium
+                  && diagnostics.equilibrium_recoveries == 1,
+            "representable equilibrium recovery was not published", 3862);
+    }
+    else {
+      require_condition(
+            memcmp(rates_before, rates, sizeof(rates)) == 0
+                  && diagnostics.last_recovery == ghl_neutrino_rate_recovery_none
+                  && diagnostics.equilibrium_recoveries == 0,
+            "overflowed equilibrium recovery published rates or recovery status", 3862);
+    }
+  }
+}
+
+static void test_production_recovery_validation_failures(void) {
+  ghl_neutrino_rate_provider_context provider;
+  require_error(
+        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        "validation recovery provider initialization", 3863);
+  provider.channel_mask = 0;
+  provider.failure_policy = ghl_neutrino_rate_failure_transparent;
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.table_rho_min = 1.e-301;
+  eos.table_rho_max = 1.0;
+  eos.table_T_min = 1.e-120;
+  eos.table_T_max = 2.0;
+  eos.table_Y_e_max = 1.0;
+  const int saved_rounding = fegetround();
+  /* Tiny T rejects the mask-zero recovery assembly itself. With ordinary T
+   * and upward rounding, real assembly succeeds but the rate validator
+   * rejects the unsupported rounding mode, including its recovery target. */
+  const double temperatures[] = { 1.e-110, 1.0 };
+  for(size_t i = 0; i < sizeof(temperatures) / sizeof(temperatures[0]); ++i) {
+    const ghl_primitive_quantities prims
+          = { .rho = 1.e-300, .temperature = temperatures[i], .Y_e = 0.5 };
+    ghl_neutrino_rate_provider_cache cache = { 0 };
+    cache.thermo_valid = true;
+    cache.thermo_rho = prims.rho;
+    cache.thermo_T = prims.temperature;
+    cache.thermo_Ye = prims.Y_e;
+    cache.X_n = 1.0;
+    cache.provider_snapshot = provider;
+    cache.eos_snapshot = &eos;
+    unsigned char cache_before[sizeof(cache)];
+    memcpy(cache_before, &cache, sizeof(cache));
+    ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(rates);
+    unsigned char rates_before[sizeof(rates)];
+    memcpy(rates_before, rates, sizeof(rates));
+    ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
+    require_condition(
+          fesetround(i == 0 ? FE_TONEAREST : FE_UPWARD) == 0,
+          "could not select provider validation rounding mode", 3863);
+    const ghl_error_codes_t error = ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, &diagnostics, &eos, &prims, rates);
+    require_condition(
+          fesetround(saved_rounding) == 0, "could not restore provider rounding mode",
+          3863);
+    require_error(
+          error, ghl_error_m1_microphysics_failure,
+          "recovery assembly or candidate validation failure", 3863);
+    require_condition(
+          memcmp(cache_before, &cache, sizeof(cache)) == 0
+                && memcmp(rates_before, rates, sizeof(rates)) == 0
+                && diagnostics.failures == 1 && diagnostics.last_error == error
+                && diagnostics.last_recovery == ghl_neutrino_rate_recovery_none
+                && diagnostics.transparent_recoveries == 0,
+          "failed recovery validation published rates, cache or status", 3863);
   }
 }
 
@@ -2884,10 +2911,6 @@ static void test_production_equilibrium_moments(
           diagnostics.cache_misses == 1 && diagnostics.cache_hits == 0
                 && cache.thermo_valid && cache.rates_valid,
           "equilibrium fixture did not preserve its seeded thermodynamics", case_index);
-    require_condition(
-          provider->min_mean_energy == 0.0,
-          "production initializer retained a physical energy floor", case_index);
-
     const int nux = ghl_m1_neutrino_nux;
     const double expected_n
           = provider->nu_x_multiplicity * raw.species[nux].n_eq_cgs * volume;
@@ -2954,18 +2977,19 @@ static void test_production_equilibrium_moments(
 }
 
 static void test_production_zero_mask_cold_table(void) {
-  char fixture_path[128] = { 0 };
   require_condition(
-        create_provider_fixture(fixture_path, sizeof(fixture_path), true),
+        create_provider_fixture(true, false),
         "could not create cold degenerate provider fixture", 3129);
 
   ghl_eos_parameters eos = { 0 };
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
   eos.clean_sound_speed = true;
+  active_provider_fixture_eos = &eos;
   require_error(
         ghl_initialize_tabulated_eos_functions_and_params(
-              fixture_path, 1.0e-7, -1.0, -1.0, 0.5, -1.0, -1.0, 0.1, -1.0, -1.0, &eos),
+              owned_provider_fixture_path, 1.0e-7, -1.0, -1.0, 0.5, -1.0, -1.0, 0.1,
+              -1.0, -1.0, &eos),
         ghl_success, "cold degenerate EOS fixture initialization", 3129);
   require_condition(
         provider_values_close(eos.table_T_min, 0.05),
@@ -3029,7 +3053,147 @@ static void test_production_zero_mask_cold_table(void) {
   }
 
   ghl_tabulated_free_memory(&eos);
-  remove(fixture_path);
+  active_provider_fixture_eos = NULL;
+  cleanup_provider_fixture();
+}
+
+static void test_production_recovery_from_generated_table(void) {
+  require_condition(
+        create_provider_fixture(false, true),
+        "could not create high-temperature recovery fixture", 3130);
+  ghl_eos_parameters eos = { 0 };
+  eos.eos_type = ghl_eos_tabulated;
+  eos.table_type = ghl_eos_table_stellarcollapse;
+  eos.clean_sound_speed = true;
+  active_provider_fixture_eos = &eos;
+  require_error(
+        ghl_initialize_tabulated_eos_functions_and_params(
+              owned_provider_fixture_path, 1.0e-7, -1.0, -1.0, 0.5, -1.0, -1.0, 1.5e39,
+              -1.0, -1.0, &eos),
+        ghl_success, "high-temperature recovery EOS initialization", 3130);
+
+  ghl_primitive_quantities prims = { 0 };
+  prims.rho = sqrt(eos.table_rho_min * eos.table_rho_max);
+  prims.temperature = sqrt(eos.table_T_min * eos.table_T_max);
+  prims.Y_e = 0.5 * (eos.table_Y_e_min + eos.table_Y_e_max);
+  prims.eps = 1.0;
+
+  ghl_neutrino_rate_provider_context provider;
+  require_error(
+        ghl_neutrino_rate_provider_initialize_nrpyleakage(&provider), ghl_success,
+        "generated-table recovery provider initialization", 3130);
+  provider.channel_mask = 0;
+  ghl_neutrino_rate_provider_cache target_cache;
+  ghl_neutrino_rate_provider_cache_initialize(&target_cache);
+  ghl_m1_neutrino_rates physical_targets[ghl_m1_neutrino_species_count];
+  require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+              &provider, &target_cache, NULL, &eos, &prims, physical_targets),
+        ghl_success, "mask-zero generated-table physical targets", 3130);
+  validate_rate_bundle(physical_targets, 3130);
+  for(int species = 0; species < ghl_m1_neutrino_species_count; ++species) {
+    require_condition(
+          physical_targets[species].n_eq > 0.0 && physical_targets[species].J_eq > 0.0,
+          "generated-table physical recovery targets are not positive", 3130);
+  }
+
+  /* A successful recovery publishes rates without a diagnostics output. */
+  {
+    ghl_m1_neutrino_rates silent_recovery[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(silent_recovery);
+    ghl_neutrino_rate_provider_context silent_provider = provider;
+    silent_provider.channel_mask = ghl_neutrino_rate_channel_pair;
+    silent_provider.failure_policy = ghl_neutrino_rate_failure_transparent;
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &silent_provider, NULL, NULL, &eos, &prims, silent_recovery),
+          ghl_error_m1_microphysics_failure,
+          "generated-table recovery without diagnostics", 3134);
+    validate_rate_bundle(silent_recovery, 3134);
+  }
+
+  static const ghl_neutrino_rate_failure_policy_t recovery_policies[]
+        = { ghl_neutrino_rate_failure_transparent,
+            ghl_neutrino_rate_failure_equilibrium };
+  for(size_t policy_index = 0;
+      policy_index < sizeof(recovery_policies) / sizeof(recovery_policies[0]);
+      ++policy_index) {
+    provider.channel_mask = ghl_neutrino_rate_channel_pair;
+    provider.failure_policy = recovery_policies[policy_index];
+    ghl_neutrino_rate_provider_cache cache;
+    ghl_neutrino_rate_provider_cache_initialize(&cache);
+    const ghl_neutrino_rate_provider_cache cache_before = cache;
+    ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
+    ghl_m1_neutrino_rates recovered[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(recovered);
+    const ghl_error_codes_t error = ghl_neutrino_rate_provider_compute_cell(
+          &provider, &cache, &diagnostics, &eos, &prims, recovered);
+    const int case_index = 3131 + (int)policy_index;
+    require_error(
+          error, ghl_error_m1_microphysics_failure,
+          "pair-kernel failure with generated-table recovery", case_index);
+    validate_rate_bundle(recovered, case_index);
+    require_condition(
+          memcmp(&cache, &cache_before, sizeof(cache)) == 0 && diagnostics.failures == 1
+                && diagnostics.last_error == error
+                && diagnostics.last_recovery
+                         == (policy_index == 0 ? ghl_neutrino_rate_recovery_transparent
+                                               : ghl_neutrino_rate_recovery_equilibrium),
+          "generated-table recovery changed cache or error metadata", case_index);
+    if(policy_index == 0) {
+      require_condition(
+            diagnostics.transparent_recoveries == 1
+                  && diagnostics.equilibrium_recoveries == 0,
+            "transparent generated-table recovery was not counted", case_index);
+    }
+    else {
+      require_condition(
+            diagnostics.transparent_recoveries == 0
+                  && diagnostics.equilibrium_recoveries == 1,
+            "equilibrium generated-table recovery was not counted", case_index);
+    }
+    for(int species = 0; species < ghl_m1_neutrino_species_count; ++species) {
+      require_condition(
+            recovered[species].n_eq == physical_targets[species].n_eq
+                  && recovered[species].J_eq == physical_targets[species].J_eq
+                  && recovered[species].mean_energy
+                           == physical_targets[species].mean_energy,
+            "generated-table recovery changed physical equilibrium moments", case_index);
+      if(policy_index == 0) {
+        require_condition(
+              recovered[species].kappa_a_N == 0.0 && recovered[species].kappa_a_E == 0.0
+                    && recovered[species].kappa_s == 0.0
+                    && recovered[species].eta_N == 0.0
+                    && recovered[species].eta_E == 0.0,
+              "transparent generated-table recovery published interactions", case_index);
+      }
+      else {
+        require_condition(
+              recovered[species].kappa_a_N == provider.equilibrium_recovery_rate
+                    && recovered[species].kappa_a_E == provider.equilibrium_recovery_rate
+                    && recovered[species].eta_N
+                             == provider.equilibrium_recovery_rate
+                                      * physical_targets[species].n_eq
+                    && recovered[species].eta_E
+                             == provider.equilibrium_recovery_rate
+                                      * physical_targets[species].J_eq,
+              "equilibrium generated-table recovery lost its physical targets",
+              case_index);
+        if(recovered[species].lepton_weight != 0.0) {
+          require_condition(
+                recovered[species].kappa_a_N_cc == provider.equilibrium_recovery_rate
+                      && recovered[species].eta_N_cc
+                               == provider.equilibrium_recovery_rate
+                                        * physical_targets[species].n_eq,
+                "equilibrium recovery broke electron lepton exchange attribution",
+                case_index);
+        }
+      }
+    }
+  }
+  ghl_tabulated_free_memory(&eos);
+  active_provider_fixture_eos = NULL;
+  cleanup_provider_fixture();
 }
 
 static void test_production_representability_transaction(
@@ -3108,11 +3272,63 @@ static void test_production_provider_regressions(void) {
         "unconditional production provider initialization", 3049);
   test_production_equilibrium_moments(&provider);
   test_production_zero_mask_cold_table();
+  test_production_recovery_from_generated_table();
   test_production_representability_transaction(&provider);
 }
 
+/* This is a sufficient rejection proof, not a model of the rate backend.
+ * For the negative FD branch, F2--F5 contain exp(eta) as their first
+ * factor. A zero exponential therefore makes a required positive moment
+ * unrepresentable, regardless of the enabled interaction channels.
+ * Do not infer expected failures from the provider's return code. Leave the
+ * rounding boundary and any other unexplained failures on the success path.
+ */
+static bool table_fd_tail_unrepresentable(const double eta) {
+  const double zero_rounding_boundary = log(nextafter(0.0, 1.0)) - log(2.0);
+  return isfinite(eta)
+         && eta < nextafter(zero_rounding_boundary, -INFINITY) && exp(eta) == 0.0;
+}
+
+static const char *table_fd_tail_rejection_reason(
+      const double T, const double muhat, const double mu_e, const int channel_mask) {
+  if(table_fd_tail_unrepresentable(-fabs((mu_e - muhat) / T))) {
+    return "neutrino equilibrium FD exponential underflow";
+  }
+  /* The pair kernel evaluates both signs of mu_e*(1/T), independently of
+   * the neutrino degeneracy. Its negative electron/positron moment is also
+   * required, but only when that channel is enabled. */
+  if((channel_mask & ghl_neutrino_rate_channel_pair) != 0
+     && table_fd_tail_unrepresentable(-fabs(mu_e * (1.0 / T)))) {
+    return "pair electron/positron FD exponential underflow";
+  }
+  return NULL;
+}
+
+static void test_table_fd_tail_classifier(void) {
+  const double min_subnormal = nextafter(0.0, 1.0);
+  const double boundary = log(min_subnormal) - log(2.0);
+  require_condition(
+        table_fd_tail_unrepresentable(-818.5536117177104),
+        "SFHo negative equilibrium tail was not classified", 3061);
+  require_condition(
+        !table_fd_tail_unrepresentable(0.0)
+              && !table_fd_tail_unrepresentable(log(min_subnormal))
+              && !table_fd_tail_unrepresentable(boundary)
+              && !table_fd_tail_unrepresentable(nextafter(boundary, -INFINITY))
+              && !table_fd_tail_unrepresentable(NAN),
+        "equilibrium tail classifier excused an unproved rejection", 3061);
+  require_condition(
+        table_fd_tail_rejection_reason(1.0, 940.0, 940.0, ghl_neutrino_rate_channel_pair)
+                    != NULL
+              && table_fd_tail_rejection_reason(1.0, 940.0, 940.0, 0) == NULL
+              && table_fd_tail_rejection_reason(1.0, 818.5536117177104, 0.0, 0) != NULL,
+        "FD tail classifier ignored required-moment channel semantics", 3061);
+}
+
 static void test_table_provider(const char *restrict table_path) {
+  test_table_fd_tail_classifier();
   ghl_eos_parameters eos = { 0 };
+  active_provider_fixture_eos = &eos;
   eos.eos_type = ghl_eos_tabulated;
   eos.table_type = ghl_eos_table_stellarcollapse;
   eos.clean_sound_speed = true;
@@ -3130,20 +3346,383 @@ static void test_table_provider(const char *restrict table_path) {
   require_error(
         ghl_neutrino_rate_provider_initialize_nrpyleakage(&provider), ghl_success,
         "table-backed provider initialization", 3000);
+  ghl_neutrino_rate_provider_context default_provider;
+  require_error(
+        ghl_neutrino_rate_provider_initialize_default(&default_provider), ghl_success,
+        "default production provider initialization", 3000);
   require_condition(
-        provider.min_mean_energy == 0.0,
-        "production initializer selected a physical energy floor", 3000);
+        memcmp(&default_provider, &provider, sizeof(provider)) == 0,
+        "default initializer did not select the installed production provider", 3000);
   ghl_primitive_quantities context_prims = { 0 };
   context_prims.rho = sqrt(eos.table_rho_min * eos.table_rho_max);
   context_prims.temperature = sqrt(eos.table_T_min * eos.table_T_max);
   context_prims.Y_e = 0.5 * (eos.table_Y_e_min + eos.table_Y_e_max);
   context_prims.eps = 1.0;
-  test_reference_table_eos_validation(&eos, &context_prims);
   test_production_provider_context_validation(&provider, &eos, &context_prims);
+
+  /* Production-route input and cache-identity boundaries. */
+  {
+    ghl_m1_neutrino_rates boundary_rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(boundary_rates);
+    const ghl_m1_neutrino_rates boundary_before[ghl_m1_neutrino_species_count]
+          = { boundary_rates[0], boundary_rates[1], boundary_rates[2] };
+
+    /* Optional-output guards accept NULL directly. */
+    ghl_neutrino_rate_provider_cache_initialize(NULL);
+    require_error(
+          ghl_neutrino_rate_provider_initialize_nrpyleakage(NULL),
+          ghl_error_m1_null_pointer, "production NULL provider initialization", 3002);
+
+    /* NULL provider, primitives, and rates arms at the public boundary. */
+    ghl_neutrino_rate_provider_cache boundary_cache;
+    ghl_neutrino_rate_provider_cache_initialize(&boundary_cache);
+    ghl_neutrino_rate_provider_diagnostics boundary_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                NULL, &boundary_cache, &boundary_diagnostics, &eos, &context_prims,
+                boundary_rates),
+          ghl_error_m1_null_pointer, "production NULL provider", 3002);
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, &boundary_cache, &boundary_diagnostics, &eos, NULL,
+                boundary_rates),
+          ghl_error_m1_null_pointer, "production NULL primitives", 3003);
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, &boundary_cache, &boundary_diagnostics, &eos, &context_prims,
+                NULL),
+          ghl_error_m1_null_pointer, "production NULL rates", 3004);
+    require_condition(
+          same_rate_bundle(boundary_rates, boundary_before),
+          "production NULL boundary changed rates", 3004);
+
+    /* A nonfinite nu_x multiplicity fails the context validation arm. */
+    ghl_neutrino_rate_provider_context nan_multiplicity = provider;
+    nan_multiplicity.nu_x_multiplicity = NAN;
+    ghl_neutrino_rate_provider_diagnostics multiplicity_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &nan_multiplicity, &boundary_cache, &multiplicity_diagnostics, &eos,
+                &context_prims, boundary_rates),
+          ghl_error_m1_microphysics_failure, "production NaN multiplicity", 3005);
+
+    /* Every invalid rho/Ye arm is a separate condition of the shared input
+     * validation. */
+    static const struct {
+      double rho;
+      double Ye;
+      const char *label;
+    } invalid_inputs[] = { { NAN, 0.5, "production NaN rho" },
+                           { 0.0, 0.5, "production nonpositive rho" },
+                           { -1.0, 0.5, "production negative rho" },
+                           { 1.0, NAN, "production NaN electron fraction" },
+                           { 1.0, -0.5, "production negative electron fraction" },
+                           { 1.0, 1.5, "production super-unit electron fraction" } };
+    for(size_t variant = 0; variant < sizeof(invalid_inputs) / sizeof(invalid_inputs[0]);
+        ++variant) {
+      ghl_primitive_quantities invalid_prims = context_prims;
+      invalid_prims.rho = invalid_inputs[variant].rho;
+      invalid_prims.Y_e = invalid_inputs[variant].Ye;
+      ghl_neutrino_rate_provider_diagnostics invalid_diagnostics = { 0 };
+      require_error(
+            ghl_neutrino_rate_provider_compute_cell(
+                  &provider, &boundary_cache, &invalid_diagnostics, &eos, &invalid_prims,
+                  boundary_rates),
+            ghl_error_m1_microphysics_failure, invalid_inputs[variant].label,
+            3006 + (int)variant);
+      require_condition(
+            same_rate_bundle(boundary_rates, boundary_before)
+                  && invalid_diagnostics.failures == 1,
+            "production invalid inputs were not transactional", 3006 + (int)variant);
+    }
+
+    /* A productive call without diagnostics or cache exercises the optional
+     * output arms. */
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, NULL, NULL, &eos, &context_prims, boundary_rates),
+          ghl_success, "production diagnostics-free call", 3012);
+    validate_rate_bundle(boundary_rates, 3012);
+
+    /* Additional isolated coverage cases: one differing cached-snapshot field
+     * per variant isolates every same_provider_configuration comparison, and
+     * a coherent cloned cache with only thermo_valid cleared exercises the
+     * thermodynamic-validity operand.  Mutating the passed provider instead
+     * would fail context validation before the cache lookup; reseeding the
+     * same cache would let the refreshed snapshot short-circuit each later
+     * comparison at the first field. */
+    {
+      ghl_neutrino_rate_provider_context seed_provider = provider;
+      ghl_m1_neutrino_rates seed_rates[ghl_m1_neutrino_species_count];
+      static const enum {
+        isolate_channel_mask,
+        isolate_failure_policy,
+        isolate_table_bounds_policy,
+        isolate_nu_x_multiplicity,
+        isolate_eos_generation,
+        isolate_equilibrium_recovery_rate
+      } isolate_kinds[]
+            = { isolate_channel_mask,        isolate_failure_policy,
+                isolate_table_bounds_policy, isolate_nu_x_multiplicity,
+                isolate_eos_generation,      isolate_equilibrium_recovery_rate };
+      for(int variant = 0;
+          variant < (int)(sizeof(isolate_kinds) / sizeof(isolate_kinds[0])); ++variant) {
+        ghl_neutrino_rate_provider_cache isolate_cache;
+        ghl_neutrino_rate_provider_cache_initialize(&isolate_cache);
+        ghl_neutrino_rate_provider_diagnostics isolate_seed_diagnostics = { 0 };
+        require_error(
+              ghl_neutrino_rate_provider_compute_cell(
+                    &seed_provider, &isolate_cache, &isolate_seed_diagnostics, &eos,
+                    &context_prims, seed_rates),
+              ghl_success, "production isolate-field seed", 3030 + variant);
+        switch(isolate_kinds[variant]) {
+          case isolate_channel_mask:
+            isolate_cache.provider_snapshot.channel_mask = 0;
+            break;
+          case isolate_failure_policy:
+            isolate_cache.provider_snapshot.failure_policy
+                  = ghl_neutrino_rate_failure_transparent;
+            break;
+          case isolate_table_bounds_policy:
+            isolate_cache.provider_snapshot.table_bounds_policy
+                  = ghl_neutrino_rate_table_bounds_clamp;
+            break;
+          case isolate_nu_x_multiplicity:
+            isolate_cache.provider_snapshot.nu_x_multiplicity = 2.0;
+            break;
+          case isolate_eos_generation:
+            isolate_cache.provider_snapshot.eos_generation += 1;
+            break;
+          default:
+            isolate_cache.provider_snapshot.equilibrium_recovery_rate = 0.5;
+            break;
+        }
+        ghl_m1_neutrino_rates isolate_rates[ghl_m1_neutrino_species_count];
+        ghl_neutrino_rate_provider_diagnostics isolate_diagnostics = { 0 };
+        require_error(
+              ghl_neutrino_rate_provider_compute_cell(
+                    &seed_provider, &isolate_cache, &isolate_diagnostics, &eos,
+                    &context_prims, isolate_rates),
+              ghl_success, "production isolate-field miss", 3030 + variant);
+        require_condition(
+              isolate_diagnostics.cache_hits == 0
+                    && isolate_diagnostics.cache_misses == 1,
+              "production snapshot-field change reused the cache", 3030 + variant);
+        validate_rate_bundle(isolate_rates, 3030 + variant);
+      }
+
+      /* Only the thermodynamic validity flag is stale; the recomputed record
+       * then matches the unchanged published rates key and is reused. */
+      ghl_neutrino_rate_provider_cache validity_cache;
+      ghl_neutrino_rate_provider_cache_initialize(&validity_cache);
+      ghl_neutrino_rate_provider_diagnostics validity_seed_diagnostics = { 0 };
+      require_error(
+            ghl_neutrino_rate_provider_compute_cell(
+                  &seed_provider, &validity_cache, &validity_seed_diagnostics, &eos,
+                  &context_prims, seed_rates),
+            ghl_success, "production validity-flag seed", 3040);
+      ghl_neutrino_rate_provider_cache stale_thermo_cache = validity_cache;
+      stale_thermo_cache.thermo_valid = false;
+      ghl_m1_neutrino_rates stale_thermo_rates[ghl_m1_neutrino_species_count];
+      ghl_neutrino_rate_provider_diagnostics stale_thermo_diagnostics = { 0 };
+      require_error(
+            ghl_neutrino_rate_provider_compute_cell(
+                  &seed_provider, &stale_thermo_cache, &stale_thermo_diagnostics, &eos,
+                  &context_prims, stale_thermo_rates),
+            ghl_success, "production stale thermo record call", 3041);
+      require_condition(
+            stale_thermo_diagnostics.cache_hits == 1,
+            "production stale thermo record was reused", 3041);
+    }
+
+    /* Trailing electron-fraction operands: seed on one key, then change only
+     * Ye.  The first call evaluates rho and temperature before Ye rejects the
+     * thermodynamic key; after the recomputed record moves the key, the
+     * successful second call evaluates the same leading operands before Ye
+     * rejects the published rates key. */
+    {
+      ghl_neutrino_rate_provider_cache ye_key_cache;
+      ghl_neutrino_rate_provider_cache_initialize(&ye_key_cache);
+      ghl_neutrino_rate_provider_diagnostics ye_seed_diagnostics = { 0 };
+      ghl_neutrino_rate_provider_context ye_seed_provider = provider;
+      ghl_m1_neutrino_rates ye_seed_rates[ghl_m1_neutrino_species_count];
+      require_error(
+            ghl_neutrino_rate_provider_compute_cell(
+                  &ye_seed_provider, &ye_key_cache, &ye_seed_diagnostics, &eos,
+                  &context_prims, ye_seed_rates),
+            ghl_success, "production trailing-Ye seed", 3042);
+      ghl_primitive_quantities changed_ye_prims = context_prims;
+      changed_ye_prims.Y_e = 0.5 * (context_prims.Y_e + eos.table_Y_e_max);
+      ghl_m1_neutrino_rates changed_ye_rates[ghl_m1_neutrino_species_count];
+      ghl_neutrino_rate_provider_diagnostics changed_ye_diagnostics = { 0 };
+      require_error(
+            ghl_neutrino_rate_provider_compute_cell(
+                  &ye_seed_provider, &ye_key_cache, &changed_ye_diagnostics, &eos,
+                  &changed_ye_prims, changed_ye_rates),
+            ghl_success, "production trailing-Ye thermo miss", 3043);
+      require_condition(
+            changed_ye_diagnostics.cache_hits == 0
+                  && changed_ye_diagnostics.cache_misses == 1,
+            "production trailing-Ye call reused the thermo record", 3043);
+      require_error(
+            ghl_neutrino_rate_provider_compute_cell(
+                  &ye_seed_provider, &ye_key_cache, &changed_ye_diagnostics, &eos,
+                  &changed_ye_prims, changed_ye_rates),
+            ghl_success, "production trailing-Ye rates hit", 3044);
+      validate_rate_bundle(changed_ye_rates, 3044);
+    }
+
+    /* Cache-identity false edges: same cache, changed thermodynamics key. */
+    ghl_neutrino_rate_provider_cache identity_cache;
+    ghl_neutrino_rate_provider_cache_initialize(&identity_cache);
+    ghl_m1_neutrino_rates identity_first[ghl_m1_neutrino_species_count];
+    ghl_neutrino_rate_provider_diagnostics identity_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, &identity_cache, &identity_diagnostics, &eos, &context_prims,
+                identity_first),
+          ghl_success, "production identity cache seed", 3013);
+    ghl_primitive_quantities shifted_prims = context_prims;
+    shifted_prims.rho = 0.8 * context_prims.rho;
+    ghl_m1_neutrino_rates identity_second[ghl_m1_neutrino_species_count];
+    ghl_neutrino_rate_provider_diagnostics shifted_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, &identity_cache, &shifted_diagnostics, &eos, &shifted_prims,
+                identity_second),
+          ghl_success, "production identity cache miss", 3013);
+    require_condition(
+          identity_diagnostics.cache_misses == 1 && identity_diagnostics.cache_hits == 0,
+          "production changed-thermo call did not miss the cache", 3013);
+    /* Same rho, changed temperature and electron fraction drive the
+     * thermodynamic-key comparison arms independently. */
+    ghl_primitive_quantities shifted_temperature = context_prims;
+    shifted_temperature.temperature
+          = 0.5 * (context_prims.temperature + eos.table_T_max);
+    ghl_m1_neutrino_rates temperature_rates[ghl_m1_neutrino_species_count];
+    ghl_neutrino_rate_provider_diagnostics temperature_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, &identity_cache, &temperature_diagnostics, &eos,
+                &shifted_temperature, temperature_rates),
+          ghl_success, "production changed-temperature cache miss", 3013);
+    ghl_primitive_quantities shifted_ye = context_prims;
+    shifted_ye.Y_e = 0.5 * (context_prims.Y_e + eos.table_Y_e_max);
+    ghl_m1_neutrino_rates ye_rates[ghl_m1_neutrino_species_count];
+    ghl_neutrino_rate_provider_diagnostics ye_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, &identity_cache, &ye_diagnostics, &eos, &shifted_ye,
+                ye_rates),
+          ghl_success, "production changed-Ye cache miss", 3013);
+
+    /* Each differing provider-configuration field breaks cache provenance on
+     * its own comparison term. */
+    static const struct {
+      const char *label;
+      void (*mutate)(ghl_neutrino_rate_provider_context *restrict);
+    } configuration_variants[] = { { 0 } };
+    (void)configuration_variants;
+    ghl_neutrino_rate_provider_context masked_provider = provider;
+    masked_provider.channel_mask = 0;
+    ghl_m1_neutrino_rates masked_rates[ghl_m1_neutrino_species_count];
+    ghl_neutrino_rate_provider_diagnostics masked_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &masked_provider, &identity_cache, &masked_diagnostics, &eos,
+                &context_prims, masked_rates),
+          ghl_success, "production mask-changed provenance", 3014);
+    require_condition(
+          masked_diagnostics.cache_misses == 1,
+          "production mask-changed call did not miss the cache", 3014);
+    ghl_neutrino_rate_provider_context bounds_provider = provider;
+    bounds_provider.table_bounds_policy = ghl_neutrino_rate_table_bounds_clamp;
+    ghl_m1_neutrino_rates bounds_rates[ghl_m1_neutrino_species_count];
+    ghl_neutrino_rate_provider_diagnostics bounds_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &bounds_provider, &identity_cache, &bounds_diagnostics, &eos,
+                &context_prims, bounds_rates),
+          ghl_success, "production bounds-changed provenance", 3014);
+    ghl_neutrino_rate_provider_context multiplicity_provider = provider;
+    multiplicity_provider.nu_x_multiplicity = 4.0;
+    ghl_neutrino_rate_provider_context policy_provider = provider;
+    policy_provider.failure_policy = ghl_neutrino_rate_failure_transparent;
+    ghl_m1_neutrino_rates policy_rates[ghl_m1_neutrino_species_count];
+    ghl_neutrino_rate_provider_diagnostics policy_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &policy_provider, &identity_cache, &policy_diagnostics, &eos,
+                &context_prims, policy_rates),
+          ghl_success, "production policy-changed provenance", 3014);
+    ghl_neutrino_rate_provider_context recovery_provider = provider;
+    recovery_provider.equilibrium_recovery_rate = 0.5;
+    ghl_m1_neutrino_rates recovery_rates[ghl_m1_neutrino_species_count];
+    ghl_neutrino_rate_provider_diagnostics recovery_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &recovery_provider, &identity_cache, &recovery_diagnostics, &eos,
+                &context_prims, recovery_rates),
+          ghl_success, "production recovery-changed provenance", 3014);
+
+    /* A failed context validation with a NULL diagnostics output still
+     * publishes nothing and fails. */
+    ghl_neutrino_rate_provider_context invalid_context_provider = provider;
+    invalid_context_provider.channel_mask |= 1 << 20;
+    ghl_m1_neutrino_rates invalid_context_rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(invalid_context_rates);
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &invalid_context_provider, &identity_cache, NULL, &eos, &context_prims,
+                invalid_context_rates),
+          ghl_error_m1_microphysics_failure,
+          "production invalid context without diagnostics", 3016);
+  }
+
   ghl_neutrino_rate_provider_cache cache;
   ghl_neutrino_rate_provider_cache_initialize(&cache);
   ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
   ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+  /* Keep a populated cache even when the first random cell is rejected, and
+   * ensure this invocation performs a successful table-backed validation. */
+  require_error(
+        ghl_neutrino_rate_provider_compute_cell(
+              &provider, &cache, &diagnostics, &eos, &context_prims, rates),
+        ghl_success, "random table provider control", 3000);
+  validate_rate_bundle(rates, 3000);
+  /* Exercise both rejection proofs even with the ordinary generated table.
+   * Cached thermodynamics are caller-owned; existing production regressions
+   * use this same seam without adding a fixture or a production hook. */
+  for(int tail_case = 0; tail_case < 2; ++tail_case) {
+    ghl_neutrino_rate_provider_cache tail_cache = cache;
+    tail_cache.rates_valid = false;
+    tail_cache.mu_e = tail_case == 0 ? 0.0 : 940.0 * context_prims.temperature;
+    tail_cache.muhat = tail_case == 0 ? 818.5536117177104 * context_prims.temperature
+                                    : tail_cache.mu_e;
+    const ghl_neutrino_rate_provider_cache tail_cache_before = tail_cache;
+    require_condition(
+          table_fd_tail_rejection_reason(
+                context_prims.temperature, tail_cache.muhat, tail_cache.mu_e,
+                provider.channel_mask) != NULL,
+          "cached FD tail fixture lacks an independent rejection proof", 3062 + tail_case);
+    ghl_m1_neutrino_rates tail_rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(tail_rates);
+    ghl_m1_neutrino_rates tail_rates_before[ghl_m1_neutrino_species_count];
+    memcpy(tail_rates_before, tail_rates, sizeof(tail_rates));
+    ghl_neutrino_rate_provider_diagnostics tail_diagnostics = { 0 };
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                &provider, &tail_cache, &tail_diagnostics, &eos, &context_prims, tail_rates),
+          ghl_error_m1_microphysics_failure, "cached required FD tail rejection",
+          3062 + tail_case);
+    require_condition(
+          memcmp(&tail_cache, &tail_cache_before, sizeof(tail_cache)) == 0
+                && same_rate_bundle(tail_rates, tail_rates_before)
+                && tail_diagnostics.failures == 1
+                && tail_diagnostics.last_error == ghl_error_m1_microphysics_failure
+                && tail_diagnostics.last_recovery == ghl_neutrino_rate_recovery_none,
+          "cached FD tail rejection violated the failure transaction", 3062 + tail_case);
+  }
   m1_test_rng table_rng = { .state = UINT64_C(0x4d315f5441424c45) };
 
   for(int case_index = 0; case_index < TABLE_RANDOM_CASES; ++case_index) {
@@ -3160,9 +3739,44 @@ static void test_table_provider(const char *restrict table_path) {
     prims.Y_e
           = eos.table_Y_e_min + ye_fraction * (eos.table_Y_e_max - eos.table_Y_e_min);
     prims.eps = 1.0;
+    double muhat, mu_e, mu_p, mu_n, X_n, X_p;
+    require_error(
+          ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T(
+                &eos, prims.rho, prims.Y_e, prims.temperature, &muhat, &mu_e,
+                &mu_p, &mu_n, &X_n, &X_p),
+          ghl_success, "random table classifier thermodynamics", 3001 + case_index);
+    const double negative_eta = -fabs((mu_e - muhat) / prims.temperature);
+    const char *const rejection_reason = table_fd_tail_rejection_reason(
+          prims.temperature, muhat, mu_e, provider.channel_mask);
+    const bool expected_rejection = rejection_reason != NULL;
+    initialize_sentinel_rates(rates);
+    ghl_m1_neutrino_rates rates_before[ghl_m1_neutrino_species_count];
+    memcpy(rates_before, rates, sizeof(rates));
+    const ghl_neutrino_rate_provider_cache cache_before = cache;
+    const ghl_neutrino_rate_provider_diagnostics diagnostics_before = diagnostics;
     const ghl_error_codes_t error = ghl_neutrino_rate_provider_compute_cell(
           &provider, &cache, &diagnostics, &eos, &prims, rates);
-    require_error(error, ghl_success, "random table provider call", 3001 + case_index);
+    if(error != (expected_rejection ? ghl_error_m1_microphysics_failure : ghl_success)) {
+      fprintf(stderr,
+              "Table sample %d: rho=%.17g T=%.17g Ye=%.17g eta_tail=%.17g (%s)\n",
+              case_index, prims.rho, prims.temperature, prims.Y_e, negative_eta,
+              expected_rejection ? rejection_reason : "no rejection proof");
+    }
+    require_error(
+          error, expected_rejection ? ghl_error_m1_microphysics_failure : ghl_success,
+          "random table provider call", 3001 + case_index);
+    if(expected_rejection) {
+      require_condition(
+            memcmp(&cache, &cache_before, sizeof(cache)) == 0
+                  && same_rate_bundle(rates, rates_before),
+            "random table rejection changed staged outputs", 3001 + case_index);
+      require_condition(
+            diagnostics.failures == diagnostics_before.failures + 1
+                  && diagnostics.last_error == error
+                  && diagnostics.last_recovery == ghl_neutrino_rate_recovery_none,
+            "random table rejection diagnostics are incomplete", 3001 + case_index);
+      continue;
+    }
     validate_rate_bundle(rates, 3001 + case_index);
     require_condition(
           diagnostics.beta_kirchhoff_mismatch_valid[ghl_m1_neutrino_nue]
@@ -3331,19 +3945,17 @@ static void test_table_provider(const char *restrict table_path) {
   diagnostics = (ghl_neutrino_rate_provider_diagnostics){ 0 };
   ghl_m1_neutrino_rates first[ghl_m1_neutrino_species_count];
   ghl_m1_neutrino_rates second[ghl_m1_neutrino_species_count];
-  double seeded_beta_kirchhoff_relative_mismatch[ghl_m1_neutrino_species_count]
-        = { 0.0 };
-  bool seeded_beta_kirchhoff_mismatch_valid[ghl_m1_neutrino_species_count] = { false };
-  const ghl_neutrino_rate_failure_policy_t saved_table_failure_policy
-        = provider.failure_policy;
-  /* Seed the rates key under the same policy used by the pre-cache witness;
-   * changing provider configuration after seeding would intentionally make
-   * same_rates_key reject the cache as stale. */
-  provider.failure_policy = ghl_neutrino_rate_failure_hold_last;
   require_error(
         ghl_neutrino_rate_provider_compute_cell(
               &provider, &cache, &diagnostics, &eos, &cached_prims, first),
-        ghl_success, "table cache seed", 3040);
+        ghl_success, "table cache seed", 3041);
+  validate_rate_bundle(first, 3041);
+  require_condition(
+        diagnostics.cache_misses == 1 && diagnostics.cache_hits == 0 && cache.rates_valid
+              && cache.thermo_valid,
+        "table cache seed did not publish a complete production record", 3041);
+  double seeded_beta_kirchhoff_relative_mismatch[ghl_m1_neutrino_species_count];
+  bool seeded_beta_kirchhoff_mismatch_valid[ghl_m1_neutrino_species_count];
   memcpy(
         seeded_beta_kirchhoff_relative_mismatch,
         diagnostics.beta_kirchhoff_relative_mismatch,
@@ -3351,84 +3963,7 @@ static void test_table_provider(const char *restrict table_path) {
   memcpy(
         seeded_beta_kirchhoff_mismatch_valid, diagnostics.beta_kirchhoff_mismatch_valid,
         sizeof(seeded_beta_kirchhoff_mismatch_valid));
-  require_condition(
-        memcmp(
-              cache.beta_kirchhoff_relative_mismatch,
-              seeded_beta_kirchhoff_relative_mismatch,
-              sizeof(seeded_beta_kirchhoff_relative_mismatch))
-                    == 0
-              && memcmp(
-                       cache.beta_kirchhoff_mismatch_valid,
-                       seeded_beta_kirchhoff_mismatch_valid,
-                       sizeof(seeded_beta_kirchhoff_mismatch_valid))
-                       == 0,
-        "table cache seed did not retain production diagnostics", 3040);
-
-  /* A failure while refreshing thermodynamics occurs before the ordinary
-   * same-rates cache hit.  Keep a valid rates key but invalidate only the
-   * thermo key, then make the public table interpolator return NaN.  This is
-   * the supported pre-cache route to hold-last recovery; both diagnostics
-   * conventions must preserve the cached bundle and cache metadata. */
-  const ghl_neutrino_rate_provider_cache hold_cache_before = cache;
-  cache.thermo_valid = false;
-  double saved_hold_mu_e_corners[8];
-  provider_set_table_corners(&eos, NRPyEOS_mu_e_key, NAN, saved_hold_mu_e_corners);
-  ghl_neutrino_rate_provider_diagnostics hold_diagnostics = { 0 };
-  ghl_m1_neutrino_rates held_rates[ghl_m1_neutrino_species_count];
-  initialize_sentinel_rates(held_rates);
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &provider, &cache, &hold_diagnostics, &eos, &cached_prims, held_rates),
-        ghl_success, "pre-cache hold-last recovery", 3160);
-  require_condition(
-        same_rate_bundle(held_rates, cache.rates) && hold_diagnostics.failures == 1
-              && hold_diagnostics.last_error == ghl_error_m1_microphysics_failure
-              && hold_diagnostics.hold_last_recoveries == 1
-              && hold_diagnostics.last_recovery == ghl_neutrino_rate_recovery_hold_last
-              && memcmp(
-                       hold_diagnostics.beta_kirchhoff_relative_mismatch,
-                       cache.beta_kirchhoff_relative_mismatch,
-                       sizeof(hold_diagnostics.beta_kirchhoff_relative_mismatch))
-                       == 0
-              && memcmp(
-                       hold_diagnostics.beta_kirchhoff_relative_mismatch,
-                       seeded_beta_kirchhoff_relative_mismatch,
-                       sizeof(seeded_beta_kirchhoff_relative_mismatch))
-                       == 0
-              && memcmp(
-                       hold_diagnostics.beta_kirchhoff_mismatch_valid,
-                       cache.beta_kirchhoff_mismatch_valid,
-                       sizeof(hold_diagnostics.beta_kirchhoff_mismatch_valid))
-                       == 0
-              && memcmp(
-                       hold_diagnostics.beta_kirchhoff_mismatch_valid,
-                       seeded_beta_kirchhoff_mismatch_valid,
-                       sizeof(seeded_beta_kirchhoff_mismatch_valid))
-                       == 0,
-        "pre-cache hold-last recovery was not diagnosed", 3160);
-  require_condition(
-        memcmp(&cache, &hold_cache_before, sizeof(cache)) != 0
-              && cache.thermo_valid == false && cache.rates_valid
-              && same_rate_bundle(cache.rates, first),
-        "pre-cache hold-last did not retain the valid rates key", 3160);
-  /* The only intended difference from the pre-call snapshot is the explicit
-   * caller invalidation of thermo_valid; provider recovery itself is inert. */
-  ghl_neutrino_rate_provider_cache hold_cache_expected = hold_cache_before;
-  hold_cache_expected.thermo_valid = false;
-  require_condition(
-        memcmp(&cache, &hold_cache_expected, sizeof(cache)) == 0,
-        "pre-cache hold-last changed cache metadata", 3160);
-
-  initialize_sentinel_rates(held_rates);
-  require_error(
-        ghl_neutrino_rate_provider_compute_cell(
-              &provider, &cache, NULL, &eos, &cached_prims, held_rates),
-        ghl_success, "pre-cache hold-last without diagnostics", 3161);
-  require_condition(
-        same_rate_bundle(held_rates, cache.rates) && same_rate_bundle(held_rates, first),
-        "pre-cache hold-last without diagnostics changed rates", 3161);
-  provider_restore_table_corners(&eos, NRPyEOS_mu_e_key, saved_hold_mu_e_corners);
-
+  diagnostics = (ghl_neutrino_rate_provider_diagnostics){ 0 };
   require_error(
         ghl_neutrino_rate_provider_compute_cell(
               &provider, &cache, &diagnostics, &eos, &cached_prims, second),
@@ -3436,7 +3971,18 @@ static void test_table_provider(const char *restrict table_path) {
   require_condition(
         diagnostics.cache_hits == 1 && same_rate_bundle(first, second),
         "table cache hit was not exact", 3041);
-  provider.failure_policy = saved_table_failure_policy;
+  require_condition(
+        memcmp(
+              diagnostics.beta_kirchhoff_relative_mismatch,
+              seeded_beta_kirchhoff_relative_mismatch,
+              sizeof(seeded_beta_kirchhoff_relative_mismatch))
+                    == 0
+              && memcmp(
+                       diagnostics.beta_kirchhoff_mismatch_valid,
+                       seeded_beta_kirchhoff_mismatch_valid,
+                       sizeof(seeded_beta_kirchhoff_mismatch_valid))
+                       == 0,
+        "production cache hit did not preserve its table diagnostics", 3041);
 
   /* A missing primitive temperature is recovered through the table's
    * inverse EOS using an independently obtained table-consistent epsilon. */
@@ -3811,13 +4357,332 @@ static void test_table_provider(const char *restrict table_path) {
         "cache hit without diagnostics changed rates", 3805);
 
   ghl_tabulated_free_memory(&eos);
+  active_provider_fixture_eos = NULL;
 }
 #endif
+
+#ifdef GHL_DISABLE_HDF5
+static void require_disabled_provider_failure(
+      const ghl_neutrino_rate_provider_context *provider,
+      const ghl_eos_parameters *eos,
+      const ghl_primitive_quantities *prims,
+      const ghl_error_codes_t expected_error,
+      const int case_index) {
+  /* Exercise every combination of optional cache and diagnostics pointers.
+   * Neither a context error nor unavailable microphysics may publish rates. */
+  for(int use_cache = 0; use_cache <= 1; ++use_cache) {
+    for(int use_diagnostics = 0; use_diagnostics <= 1; ++use_diagnostics) {
+      ghl_neutrino_rate_provider_cache cache;
+      memset(&cache, 0xa5, sizeof(cache));
+      unsigned char cache_before[sizeof(cache)];
+      memcpy(cache_before, &cache, sizeof(cache));
+      ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+      initialize_sentinel_rates(rates);
+      unsigned char rates_before[sizeof(rates)];
+      memcpy(rates_before, rates, sizeof(rates));
+      ghl_neutrino_rate_provider_diagnostics diagnostics
+            = { .failures = 7,
+                .table_bound_hits = 3,
+                .cache_hits = 5,
+                .cache_misses = 9,
+                .clamped_inputs = 4,
+                .transparent_recoveries = 2,
+                .equilibrium_recoveries = 6,
+                .active_channel_mask = ghl_neutrino_rate_channel_pair,
+                .last_error = ghl_error_m1_invalid_state,
+                .last_recovery = ghl_neutrino_rate_recovery_equilibrium,
+                .beta_kirchhoff_relative_mismatch = { 0.25, 0.5, 0.75 },
+                .beta_kirchhoff_mismatch_valid = { true, false, true } };
+      ghl_neutrino_rate_provider_diagnostics expected_diagnostics;
+      memcpy(&expected_diagnostics, &diagnostics, sizeof(diagnostics));
+      expected_diagnostics.failures++;
+      expected_diagnostics.last_error = expected_error;
+      expected_diagnostics.last_recovery = ghl_neutrino_rate_recovery_none;
+      require_error(
+            ghl_neutrino_rate_provider_compute_cell(
+                  provider, use_cache ? &cache : NULL,
+                  use_diagnostics ? &diagnostics : NULL, eos, prims, rates),
+            expected_error, "disabled provider error precedence", case_index);
+      require_condition(
+            memcmp(cache_before, &cache, sizeof(cache)) == 0
+                  && memcmp(rates_before, rates, sizeof(rates)) == 0,
+            "disabled provider published cache or rates", case_index);
+      if(use_diagnostics) {
+        require_condition(
+              memcmp(&expected_diagnostics, &diagnostics, sizeof(diagnostics)) == 0,
+              "disabled provider changed unrelated diagnostics", case_index);
+      }
+    }
+  }
+}
+
+static void test_disabled_provider_contract(void) {
+  require_error(
+        ghl_neutrino_rate_provider_initialize_default(NULL), ghl_error_m1_null_pointer,
+        "disabled default initializer NULL output", 3840);
+  require_error(
+        ghl_neutrino_rate_provider_initialize_nrpyleakage(NULL),
+        ghl_error_m1_null_pointer, "disabled NRPyLeakage initializer NULL output", 3841);
+  ghl_neutrino_rate_provider_cache_initialize(NULL);
+  ghl_neutrino_rate_provider_cache cache;
+  memset(&cache, 0xa5, sizeof(cache));
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  const ghl_m1_neutrino_rates zero_rates[ghl_m1_neutrino_species_count] = { { 0 } };
+  require_condition(
+        !cache.thermo_valid && !cache.rates_valid && cache.eos_snapshot == NULL
+              && cache.thermo_rho == 0.0 && cache.thermo_T == 0.0
+              && cache.thermo_Ye == 0.0 && cache.rho == 0.0 && cache.T == 0.0
+              && cache.Ye == 0.0 && cache.provider_snapshot.eos_generation == 0
+              && same_rate_bundle(cache.rates, zero_rates),
+        "disabled cache initializer did not clear its record", 3842);
+
+  const ghl_neutrino_rate_provider_context valid
+        = { .channel_mask = ghl_neutrino_rate_channel_charged_current,
+            .failure_policy = ghl_neutrino_rate_failure_return_error,
+            .table_bounds_policy = ghl_neutrino_rate_table_bounds_return_error,
+            .nu_x_multiplicity = 4.0,
+            .equilibrium_recovery_rate = 1.0 };
+  const ghl_primitive_quantities prims = { .rho = 1.0, .temperature = 1.0, .Y_e = 0.5 };
+  ghl_neutrino_rate_provider_context invalid[]
+        = { valid, valid, valid, valid, valid, valid, valid, valid, valid };
+  invalid[0].nu_x_multiplicity = NAN;
+  invalid[1].nu_x_multiplicity = 3.0;
+  invalid[2].channel_mask = ~0;
+  invalid[3].failure_policy = (ghl_neutrino_rate_failure_policy_t)-1;
+  invalid[4].failure_policy = ghl_neutrino_rate_failure_equilibrium + 1;
+  invalid[5].table_bounds_policy = (ghl_neutrino_rate_table_bounds_policy_t)-1;
+  invalid[6].table_bounds_policy = ghl_neutrino_rate_table_bounds_clamp + 1;
+  invalid[7].equilibrium_recovery_rate = NAN;
+  invalid[8].equilibrium_recovery_rate = 0.0;
+  for(size_t i = 0; i < sizeof(invalid) / sizeof(invalid[0]); ++i) {
+    require_disabled_provider_failure(
+          &invalid[i], NULL, &prims, ghl_error_m1_microphysics_failure, 3843 + (int)i);
+  }
+  require_disabled_provider_failure(
+        &valid, NULL, &prims, ghl_error_used_disabled_hdf5, 3852);
+  const ghl_primitive_quantities invalid_prims
+        = { .rho = NAN, .temperature = -1.0, .Y_e = NAN };
+  const ghl_eos_parameters invalid_eos = { 0 };
+  require_disabled_provider_failure(
+        &valid, &invalid_eos, &invalid_prims, ghl_error_used_disabled_hdf5, 3853);
+  require_disabled_provider_failure(
+        &invalid[0], &invalid_eos, &invalid_prims, ghl_error_m1_microphysics_failure,
+        3854);
+
+  /* Each required-pointer guard precedes context checking and any diagnostic
+   * mutation, including when other inputs would also be invalid. */
+  for(int missing = 0; missing < 3; ++missing) {
+    ghl_neutrino_rate_provider_diagnostics diagnostics
+          = { .failures = 7,
+              .last_error = ghl_error_m1_invalid_state,
+              .last_recovery = ghl_neutrino_rate_recovery_equilibrium };
+    unsigned char diagnostics_before[sizeof(diagnostics)];
+    memcpy(diagnostics_before, &diagnostics, sizeof(diagnostics));
+    ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+    initialize_sentinel_rates(rates);
+    unsigned char rates_before[sizeof(rates)];
+    memcpy(rates_before, rates, sizeof(rates));
+    unsigned char cache_before[sizeof(cache)];
+    memcpy(cache_before, &cache, sizeof(cache));
+    require_error(
+          ghl_neutrino_rate_provider_compute_cell(
+                missing == 0 ? NULL : &invalid[0], &cache, &diagnostics, &invalid_eos,
+                missing == 1 ? NULL : &invalid_prims, missing == 2 ? NULL : rates),
+          ghl_error_m1_null_pointer, "disabled required pointer precedence", 3855);
+    require_condition(
+          memcmp(diagnostics_before, &diagnostics, sizeof(diagnostics)) == 0
+                && memcmp(cache_before, &cache, sizeof(cache)) == 0
+                && memcmp(rates_before, rates, sizeof(rates)) == 0,
+          "disabled required-pointer rejection changed outputs", 3855);
+  }
+}
+
+static void test_disabled_backend_entrypoints(void) {
+  require_error(
+        ghl_m1_neutrino_rate_backend_initialize(), ghl_error_used_disabled_hdf5,
+        "disabled private backend initializer", 3856);
+  double T = 12.0;
+  require_error(
+        ghl_m1_neutrino_rate_backend_temperature_from_eps(NULL, NAN, NAN, NAN, &T),
+        ghl_error_used_disabled_hdf5, "disabled private temperature lookup", 3857);
+  require_condition(T == 12.0, "disabled temperature lookup changed T", 3857);
+  double thermo[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+  const double thermo_before[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+  require_error(
+        ghl_m1_neutrino_rate_backend_thermo_from_T(
+              NULL, NAN, NAN, NAN, &thermo[0], &thermo[1], &thermo[2], &thermo[3],
+              &thermo[4], &thermo[5]),
+        ghl_error_used_disabled_hdf5, "disabled private thermodynamics lookup", 3858);
+  require_condition(
+        memcmp(thermo, thermo_before, sizeof(thermo)) == 0,
+        "disabled thermodynamics lookup changed outputs", 3858);
+  ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+  initialize_sentinel_rates(rates);
+  unsigned char rates_before[sizeof(rates)];
+  memcpy(rates_before, rates, sizeof(rates));
+  double mismatch[] = { 0.25, 0.5, 0.75 };
+  const double mismatch_before[] = { 0.25, 0.5, 0.75 };
+  bool valid[] = { true, false, true };
+  const bool valid_before[] = { true, false, true };
+  require_error(
+        ghl_m1_neutrino_rate_backend_assemble(
+              0, 4.0, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, rates, mismatch,
+              valid),
+        ghl_error_used_disabled_hdf5, "disabled private rate assembly", 3859);
+  require_condition(
+        memcmp(rates_before, rates, sizeof(rates)) == 0
+              && memcmp(mismatch_before, mismatch, sizeof(mismatch)) == 0
+              && memcmp(valid_before, valid, sizeof(valid)) == 0,
+        "disabled private rate assembly changed outputs", 3859);
+}
+
+static void test_disabled_provider_backend(void) {
+  ghl_neutrino_rate_provider_context provider;
+  memset(&provider, 0xa5, sizeof(provider));
+  const ghl_neutrino_rate_provider_context provider_before = provider;
+  require_error(
+        ghl_neutrino_rate_provider_initialize_default(&provider),
+        ghl_error_used_disabled_hdf5, "disabled default-provider initializer", 3825);
+  require_condition(
+        memcmp(&provider, &provider_before, sizeof(provider)) == 0,
+        "disabled default initializer changed its output", 3825);
+  require_error(
+        ghl_neutrino_rate_provider_initialize_nrpyleakage(&provider),
+        ghl_error_used_disabled_hdf5, "disabled NRPyLeakage initializer", 3826);
+  require_condition(
+        memcmp(&provider, &provider_before, sizeof(provider)) == 0,
+        "disabled NRPyLeakage initializer changed its output", 3826);
+
+  provider = (ghl_neutrino_rate_provider_context){
+    .channel_mask
+    = ghl_neutrino_rate_channel_charged_current
+      | ghl_neutrino_rate_channel_nucleon_scattering | ghl_neutrino_rate_channel_pair
+      | ghl_neutrino_rate_channel_bremsstrahlung | ghl_neutrino_rate_channel_plasmon,
+    .failure_policy = ghl_neutrino_rate_failure_return_error,
+    .table_bounds_policy = ghl_neutrino_rate_table_bounds_return_error,
+    .nu_x_multiplicity = 4.0,
+    .equilibrium_recovery_rate = 1.0
+  };
+  ghl_neutrino_rate_provider_cache cache;
+  ghl_neutrino_rate_provider_cache_initialize(&cache);
+  const ghl_neutrino_rate_provider_cache cache_before = cache;
+  ghl_m1_neutrino_rates rates[ghl_m1_neutrino_species_count];
+  initialize_sentinel_rates(rates);
+  const ghl_m1_neutrino_rates rates_before[ghl_m1_neutrino_species_count]
+        = { rates[0], rates[1], rates[2] };
+  const ghl_primitive_quantities prims = { .rho = 1.0, .temperature = 1.0, .Y_e = 0.5 };
+  ghl_neutrino_rate_provider_diagnostics diagnostics = { 0 };
+  const ghl_error_codes_t error = ghl_neutrino_rate_provider_compute_cell(
+        &provider, &cache, &diagnostics, NULL, &prims, rates);
+  require_error(
+        error, ghl_error_used_disabled_hdf5, "disabled production compute", 3827);
+  require_condition(
+        memcmp(&cache, &cache_before, sizeof(cache)) == 0
+              && same_rate_bundle(rates, rates_before) && diagnostics.failures == 1
+              && diagnostics.last_error == error,
+        "disabled production call changed cache or rates", 3827);
+}
+#endif
+
+#ifndef GHL_DISABLE_HDF5
+/* Use the existing EOS dispatch boundary to inject successful lookups with
+ * invalid results. These are defensive-boundary tests, separate from the
+ * real generated-table production checks; disabled microphysics stays disabled. */
+static ghl_error_codes_t provider_test_temperature_result(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Ye,
+      const double eps,
+      double *restrict T) {
+  (void)eos;
+  (void)rho;
+  (void)Ye;
+  *T = eps;
+  return ghl_success;
+}
+
+static int provider_test_bad_chemical_potential;
+static ghl_error_codes_t provider_test_thermo_result(
+      const ghl_eos_parameters *restrict eos,
+      const double rho,
+      const double Ye,
+      const double T,
+      double *restrict muhat,
+      double *restrict mu_e,
+      double *restrict mu_p,
+      double *restrict mu_n,
+      double *restrict X_n,
+      double *restrict X_p) {
+  (void)eos;
+  (void)rho;
+  (void)Ye;
+  (void)T;
+  double *const chemical_potentials[] = { muhat, mu_e, mu_p, mu_n };
+  for(size_t i = 0; i < sizeof(chemical_potentials) / sizeof(chemical_potentials[0]);
+      ++i) {
+    *chemical_potentials[i] = (int)i == provider_test_bad_chemical_potential ? NAN : 0.0;
+  }
+  *X_n = 0.5;
+  *X_p = 0.5;
+  return ghl_success;
+}
+
+static void test_backend_lookup_postconditions(void) {
+  require_error(
+        ghl_m1_neutrino_rate_backend_initialize(), ghl_success,
+        "enabled private backend initializer", 3860);
+  ghl_error_codes_t (*saved_temperature_lookup)(
+        const ghl_eos_parameters *restrict, const double, const double, const double,
+        double *restrict) = ghl_tabulated_compute_T_from_eps;
+  ghl_tabulated_compute_T_from_eps = provider_test_temperature_result;
+  const double invalid_temperatures[] = { NAN, 0.0, -1.0 };
+  for(size_t i = 0; i < sizeof(invalid_temperatures) / sizeof(invalid_temperatures[0]);
+      ++i) {
+    double T = 12.0;
+    require_error(
+          ghl_m1_neutrino_rate_backend_temperature_from_eps(
+                NULL, 1.0, 0.5, invalid_temperatures[i], &T),
+          ghl_error_m1_microphysics_failure, "invalid successful EOS temperature", 3860);
+    require_condition(T == 12.0, "invalid EOS temperature was published", 3860);
+  }
+  ghl_tabulated_compute_T_from_eps = saved_temperature_lookup;
+
+  ghl_error_codes_t (*saved_thermo_lookup)(
+        const ghl_eos_parameters *restrict, const double, const double, const double,
+        double *restrict, double *restrict, double *restrict, double *restrict,
+        double *restrict, double *restrict)
+        = ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T;
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = provider_test_thermo_result;
+  for(provider_test_bad_chemical_potential = 0; provider_test_bad_chemical_potential < 4;
+      ++provider_test_bad_chemical_potential) {
+    double thermo[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+    const double before[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+    require_error(
+          ghl_m1_neutrino_rate_backend_thermo_from_T(
+                NULL, 1.0, 0.5, 1.0, &thermo[0], &thermo[1], &thermo[2], &thermo[3],
+                &thermo[4], &thermo[5]),
+          ghl_error_m1_microphysics_failure, "invalid successful EOS chemical potential",
+          3861);
+    require_condition(
+          memcmp(thermo, before, sizeof(thermo)) == 0,
+          "invalid EOS chemical potential was published", 3861);
+  }
+  ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T = saved_thermo_lookup;
+}
+#endif
+
+#define ghl_neutrino_rate_provider_context m1_test_reference_provider_context
+#define ghl_neutrino_rate_provider_cache   m1_test_reference_provider_cache
+#define ghl_neutrino_rate_provider_initialize_reference \
+  m1_test_reference_provider_initialize
+#define ghl_neutrino_rate_provider_cache_initialize \
+  m1_test_reference_provider_cache_initialize
+#define ghl_neutrino_rate_provider_compute_cell m1_test_reference_provider_compute_cell
 
 static void test_reference_cache_without_diagnostics(void) {
   ghl_neutrino_rate_provider_context provider;
   require_error(
-        ghl_neutrino_rate_provider_initialize_default(&provider), ghl_success,
+        ghl_neutrino_rate_provider_initialize_reference(&provider), ghl_success,
         "reference cache initialization", 3830);
   ghl_neutrino_rate_provider_cache cache = { 0 };
   ghl_primitive_quantities prims = { .rho = 1.e-4, .temperature = 1., .Y_e = 0.5 };
@@ -3838,6 +4703,7 @@ static void test_reference_cache_without_diagnostics(void) {
 
 int main(int argc, char **argv) {
   if(argc > 2) {
+    cleanup_provider_fixture();
     ghl_error(
           "Usage: %s [StellarCollapse EOS table path|--generated-fixture]\n", argv[0]);
   }
@@ -3859,7 +4725,7 @@ int main(int argc, char **argv) {
   test_recovery_publication_and_post_thermo_failures();
   test_temperature_recovery();
   ghl_neutrino_rate_provider_context bad_context;
-  (void)ghl_neutrino_rate_provider_initialize_default(&bad_context);
+  (void)ghl_neutrino_rate_provider_initialize_reference(&bad_context);
   bad_context.nu_x_multiplicity = 0.0;
   ghl_primitive_quantities prim = { 0 };
   ghl_m1_neutrino_rates untouched_rates[ghl_m1_neutrino_species_count];
@@ -3869,23 +4735,28 @@ int main(int argc, char **argv) {
         ghl_error_m1_microphysics_failure, "invalid context without diagnostics", 3813);
 
 #ifndef GHL_DISABLE_HDF5
+  test_backend_lookup_postconditions();
   test_production_conversion_boundaries();
+  test_production_recovery_publication_overflow();
+  test_production_recovery_validation_failures();
   test_production_provider_regressions();
   if(argc == 2) {
-    char generated_fixture_path[128] = { 0 };
     const char *table_path = argv[1];
     if(strcmp(argv[1], "--generated-fixture") == 0) {
-      if(!create_provider_fixture(
-               generated_fixture_path, sizeof(generated_fixture_path), false)) {
-        ghl_error("Could not create the generated provider EOS fixture\n");
+      if(!create_provider_fixture(false, false)) {
+        provider_test_error("Could not create the generated provider EOS fixture");
       }
-      table_path = generated_fixture_path;
+      table_path = owned_provider_fixture_path;
     }
     test_table_provider(table_path);
-    if(generated_fixture_path[0] != '\0') {
-      remove(generated_fixture_path);
+    if(owned_provider_fixture_path != NULL) {
+      cleanup_provider_fixture();
     }
   }
+#else
+  test_disabled_provider_backend();
+  test_disabled_provider_contract();
+  test_disabled_backend_entrypoints();
 #endif
 
   ghl_info(

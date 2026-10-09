@@ -11,7 +11,8 @@ ghl_error_codes_t ghl_m1_compute_matter_coupling_sources(
     return ghl_error_m1_null_pointer;
   }
 
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
+  if(!isfinite(metric->lapse) || metric->lapse <= 0.0 || !isfinite(metric->sqrt_detgamma)
+     || metric->sqrt_detgamma <= 0.0) {
     return ghl_error_m1_invalid_metric;
   }
   const double alpha_sqrt_detgamma = metric->lapse * metric->sqrt_detgamma;

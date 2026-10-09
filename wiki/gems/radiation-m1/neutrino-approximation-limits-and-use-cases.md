@@ -6,7 +6,7 @@ they do not establish a spectrally complete neutrino-transport calculation or
 a complete downstream evolution framework. The current capability boundary is
 defined by [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h), the
 [provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h),
-and the [integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#current-evidence-boundary).
+and the [integration contract](../../../docs/raw/Radiation_integration_contract.md#current-evidence-boundary).
 
 ## Approximation hierarchy
 
@@ -45,7 +45,7 @@ Within the above hierarchy, the implementation can provide:
   energy-momentum exchange.
 
 “Provider-defined” matters: the channel mask and backend determine which rates
-are active, and the table-free reference backend is a deterministic test model.
+are active, and test-local reference support is a deterministic synthetic model.
 The explicit NRPyLeakage initializer selects the table-backed production
 provider, subject to its EOS/HDF5 requirements. See
 [`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
@@ -67,9 +67,8 @@ The current Radiation M1 surface does not claim to provide:
 - precision CCSN, PNS, disk, or merger predictions merely because the local
   kernels return finite results.
 
-Some of these topics appear in the neutrino whitepaper as interaction
-motivation or future work. They must remain labeled as adaptable context or
-roadmap material unless a current provider, source contract, active manifest,
+Such topics must remain labeled as roadmap material
+unless a current provider, source contract, active manifest,
 and verification path establish them.
 
 ## M1-specific limits
@@ -77,14 +76,14 @@ and verification path establish them.
 M1 evolves only the retained angular moments. Effects that depend on the full
 angular distribution—such as beam crossing, sharp shadows, and detailed
 annihilation angular correlations—are therefore outside what can be inferred
-from the local M1 state. The whitepaper discussion of these effects is useful
-motivation, not a test-backed accuracy guarantee.
+from the local M1 state; this page gives no test-backed accuracy guarantee for
+them.
 
 The current canonical neutrino transport path is four-point blended Rusanov
-with metric light-cone speeds. Older photon-oriented whitepapers describe HLL,
-optical-depth speed caps, and a reduced number current; those are not current
+with metric light-cone speeds. HLL flux, optical-depth speed caps, and a
+reduced number current are not current
 neutrino behavior. The current transport distinction is recorded in
-[`TRACEABILITY.md`](../../../GRHayL/Radiation/TRACEABILITY.md#claim-boundary),
+[`Radiation_traceability.md`](../../../docs/raw/Radiation_traceability.md#claim-boundary),
 [`ghl_m1_four_point_blended_rusanov.c`](../../../GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c),
 and [`ghl_m1_neutrino_number_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_number_flux.c).
 
@@ -107,19 +106,7 @@ The local tests establish selected algebraic and transactional behavior:
   [`unit_test_m1_neutrino_rusanov_flux.c`](../../../Unit_Tests/unit_test_m1_neutrino_rusanov_flux.c)
   and [`unit_test_m1_thcm1_blended_rusanov.c`](../../../Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c).
 
-The [M1 test guide](../../../Unit_Tests/README.m1.md) and
+The [M1 test guide](../../../docs/raw/Radiation_unit_tests.md) and
 [compatibility evidence leaf](compatibility-evidence.md) state the limits of
 that evidence. These tests do not prove a particular host mesh, AMR scheme,
 time integrator, downstream thorn, or full-evolution physical validation.
-
-## Historical status
-
-- **Current:** grey three-species state, M1 closure, provider-selected channels,
-  frozen local rates, joint grey pair model, and source/exchange boundaries.
-- **Adaptable context:** the whitepapers' approximation hierarchy and scenario
-  motivation for exploratory grey transport.
-- **Superseded:** photon LTE, photon callback microphysics, old HLL-centered
-  neutrino transport, and Phase 1's reduced number-current design.
-- **Future:** multigroup transport, richer closure/angle models, inelastic and
-  recoil physics, weak-magnetism/many-body corrections, and more complete
-  downstream verification campaigns.

@@ -83,6 +83,6 @@ schedule-level, AMR, complete-evolution, or physical-validation claim.
 
 ## Local contract sources
 
-- [`M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)
+- [`Radiation_integration_contract.md`](../../../docs/raw/Radiation_integration_contract.md)
 - [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h)
-- [`PAIR_SOURCE_MODEL.md`](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md)
+- [`Radiation_pair_source_model.md`](../../../docs/raw/Radiation_pair_source_model.md)

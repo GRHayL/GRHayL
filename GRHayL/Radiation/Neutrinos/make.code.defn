@@ -3,16 +3,11 @@
 # neutrino code reuses the shared M1 transport kernels in place (no duplication),
 # shares the Radiation build unit, and shares the ghl_m1.h public header.
 #! INCS = ghl_m1_neutrino_implicit.h ghl_m1_nrpyleakage_kernel.h \
-          ../../Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h \
-          ../../Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h
-
-# The canonical NRPyLeakage helper headers are source-private dependencies of
-# this adapter.  They remain owned by the NRPyLeakage manifest and are tracked
-# here as relative prerequisites; they are not copied into Radiation or the
-# installed include surface.
+          ghl_m1_neutrino_rate_backend.h
 
 # Source files in this directory that need compiled:
 SRCS = ghl_m1_nrpyleakage_kernel.c \
+       ghl_m1_neutrino_rate_backend.c \
        ghl_neutrino_rate_provider.c \
        ghl_m1_neutrino_rates.c \
        ghl_m1_neutrino_repair.c \

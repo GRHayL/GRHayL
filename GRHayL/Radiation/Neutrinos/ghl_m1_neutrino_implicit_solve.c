@@ -448,6 +448,10 @@ ghl_error_codes_t ghl_m1_neutrino_attempt_EF_newton_step(
      || closure_fallback_observed == NULL) {
     return ghl_error_m1_null_pointer;
   }
+  if(!isfinite(metric->lapse) || metric->lapse <= 0.0 || !isfinite(metric->sqrt_detgamma)
+     || metric->sqrt_detgamma <= 0.0) {
+    return ghl_error_m1_invalid_metric;
+  }
   const ghl_m1_neutrino_implicit_context context = { .m1_params = m1_params,
                                                      .metric = metric,
                                                      .prims_frozen = prims_frozen,
@@ -557,21 +561,17 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_
     return ghl_m1_neutrino_publish_hard_failure(
           ghl_error_m1_invalid_state, neutrino_diagnostics);
   }
-  if(nu_params->terminal_fallback_policy
-     != ghl_m1_neutrino_terminal_fallback_no_update_all) {
-    return ghl_m1_neutrino_publish_hard_failure(
-          ghl_error_m1_invalid_state, neutrino_diagnostics);
-  }
 
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
+  if(!isfinite(metric->lapse) || metric->lapse <= 0.0 || !isfinite(metric->sqrt_detgamma)
+     || metric->sqrt_detgamma <= 0.0) {
     return ghl_m1_neutrino_publish_hard_failure(
           ghl_error_m1_invalid_metric, neutrino_diagnostics);
   }
 
   const double dt_alpha = metric->lapse * dt;
-  /* dt is finite and nonnegative above; metric validation established a
-   * finite positive lapse. Their product can only be nonfinite here when it
-   * overflows, so retain that distinct validation. */
+  /* dt is finite and nonnegative above and the lapse is finite and positive.
+   * Their product can only be nonfinite here when it overflows, so retain
+   * that distinct validation. */
   if(!isfinite(dt_alpha)) {
     return ghl_m1_neutrino_publish_hard_failure(
           ghl_error_m1_invalid_state, neutrino_diagnostics);
@@ -710,12 +710,15 @@ ghl_error_codes_t ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_
     candidate_neutrino_diagnostics.source_converged++;
 
     candidate_solve_diagnostics.newton_iterations = schedule_result.total_iterations;
-    candidate_solve_diagnostics.line_search_backtracks = schedule_result.total_backtracks;
+    candidate_solve_diagnostics.line_search_backtracks
+          = schedule_result.total_backtracks;
     candidate_solve_diagnostics.fallback_substeps = successful_substeps;
     candidate_solve_diagnostics.used_fallback_substepping = successful_substeps > 1;
     candidate_solve_diagnostics.residual_max_norm = schedule_result.residual_max_norm;
-    candidate_solve_diagnostics.residual_scaled_norm = schedule_result.residual_scaled_norm;
-    candidate_solve_diagnostics.solution_path_flags = schedule_result.solution_path_flags;
+    candidate_solve_diagnostics.residual_scaled_norm
+          = schedule_result.residual_scaled_norm;
+    candidate_solve_diagnostics.solution_path_flags
+          = schedule_result.solution_path_flags;
 
     *state_out = candidate;
     *exchange = candidate_exchange;

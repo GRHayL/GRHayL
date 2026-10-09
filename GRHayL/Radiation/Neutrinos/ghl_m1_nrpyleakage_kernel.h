@@ -69,27 +69,6 @@ typedef struct {
   int nux_single_species_multiplicity;
 } ghl_m1_nrpyleakage_raw_rates;
 
-/* Current NRPyLeakage keeps this interpolation-boundary normalization inside
- * its blocking evaluator.  The M1 adapter also needs the normalized fractions
- * before caching them and before using them in its separate raw-rate algebra,
- * so retain the same conservative 27*gamma_64 acceptance envelope here.
- * Callers validate finiteness first and supply local output addresses. */
-static inline ghl_error_codes_t ghl_m1_nrpyleakage_normalize_nucleon_fractions(
-      const double X_n,
-      const double X_p,
-      double *restrict normalized_X_n,
-      double *restrict normalized_X_p) {
-  const double gamma_64 = 64.0 * DBL_EPSILON / (1.0 - 64.0 * DBL_EPSILON);
-  const double fraction_roundoff = 27.0 * gamma_64;
-  if(X_n < -fraction_roundoff || X_n > 1.0 + fraction_roundoff
-     || X_p < -fraction_roundoff || X_p > 1.0 + fraction_roundoff) {
-    return ghl_error_nrpyleakage_blocking;
-  }
-  *normalized_X_n = fmin(1.0, fmax(0.0, X_n));
-  *normalized_X_p = fmin(1.0, fmax(0.0, X_p));
-  return ghl_success;
-}
-
 ghl_error_codes_t ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
       double rho,
       double Ye,
@@ -118,4 +97,4 @@ ghl_error_codes_t ghl_m1_nrpyleakage_compute_raw_rates_from_thermo_with_mask(
       int channel_mask,
       ghl_m1_nrpyleakage_raw_rates *restrict raw);
 
-#endif
+#endif // GHL_M1_NRPYLEAKAGE_KERNEL_H_

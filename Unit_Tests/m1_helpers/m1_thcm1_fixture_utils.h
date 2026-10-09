@@ -4,11 +4,11 @@
 /*
  * Test-local reader and paired comparator for frozen THC_M1 observations.
  *
- * The format is deliberately a small, versioned token stream.  It has no
- * dependency on THC_M1, Verification/, JSON, native struct layout, or an
- * installed GRHayL test API.  Consumers validate the operation-specific
- * vector counts and then use either the minimal baseline/response comparator
- * or the explicit two-state helper.
+ * External TestData fixtures use a versioned little-endian binary stream.
+ * The original token stream remains readable for local fixtures and parser
+ * rejection checks. Neither format depends on native struct layout or an
+ * installed GRHayL test API. Consumers validate operation-specific vector
+ * counts before comparing the recorded values.
  */
 
 #include <ctype.h>
@@ -153,15 +153,14 @@ int m1_thcm1_fixture_compare_paired(
       const size_t error_size);
 
 /* Explicit two-state comparator for the
- * strict_relative_2e-12_propagated_response_v1 policy.  Stored transport and
- * stress-energy replay use this stronger current-baseline/current-perturbed
- * campaign contract.  The producer uses
- * abs(a-b)/max(1e-300,abs(a),abs(b)) <= 2e-12.
- * Calling the shared scalar primitive with that denominator, absolute
- * tolerance 2e-12, zero relative tolerance, and zero floor preserves the
- * rule including sub-floor and exact-zero cases.
- * The fixture's input-derived normalization is still checked separately by
- * the consumer; it is not used as a tolerance knob here. */
+ * strict_relative_2e-12_propagated_response_v1 policy. Stored transport and
+ * stress-energy replay use this symmetric campaign rule: each endpoint uses
+ * max(1e-300, |actual|, |reference|), and the paired response propagates the
+ * two endpoint scales. The common trusted-baseline helper is asymmetric and
+ * uses the perturbed endpoint as an envelope, so it cannot express this
+ * contract without changing acceptance decisions. The fixture's
+ * input-derived normalization is still checked separately by the consumer;
+ * it is not used as a tolerance knob here. */
 int m1_thcm1_fixture_compare_paired_strict_relative(
       const m1_thcm1_fixture_record *restrict record,
       const double *restrict computed_normalization,

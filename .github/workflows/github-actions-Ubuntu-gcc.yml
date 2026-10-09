@@ -28,11 +28,7 @@ jobs:
           compiler: 'gcc'
           hdf5: ${{ matrix.hdf5 }}
       - name: Generate Radiation M1 coverage report
-        uses: ./.github/actions/code-coverage
-        with:
-          compiler: 'gcc'
-          report_file: m1-coverage.xml
-          report_filter: 'GRHayL/(Radiation/|include/ghl_m1\.h$|GRHayL_Core/abort_if_error\.c$|Flux_Source/ghl_calculate_Rusanov_flux\.c$)'
+        uses: ./.github/actions/m1-code-coverage
 
   ET-Legacy:
     strategy:

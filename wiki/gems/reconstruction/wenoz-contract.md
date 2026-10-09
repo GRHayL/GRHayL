@@ -45,8 +45,8 @@ Source provenance and license details are in
 [`GRHayL/Reconstruction/WENOZ/wenoz_reconstruction_right_left_faces.c`](../../../GRHayL/Reconstruction/WENOZ/wenoz_reconstruction_right_left_faces.c).
 Route readers there instead of duplicating the license block in KB text.
 
-There is one built WENOZ variant and no caller-set WENO parameter object. The
-helper fixes linear weights to `{0.1, 0.6, 0.3}`, regularization epsilon to
+The manifest builds the documented WENOZ implementation, with no caller-set
+WENO parameter object. The helper fixes linear weights to `{0.1, 0.6, 0.3}`, regularization epsilon to
 `1e-100`, and MC fallback coefficient to `2.0` in source. Any change to these
 is an implementation change, not runtime configuration.
 

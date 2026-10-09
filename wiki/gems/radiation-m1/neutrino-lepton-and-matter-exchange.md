@@ -115,14 +115,14 @@ zero-weight heavy-flavor contribution across a coupled matter update. It must
 not apply `nu_x`'s multiplicity a second time and must not count pair number as
 charged-current lepton number. The paired source contract explicitly retains
 the independent charged-current packet and reports no pair `Y_e` increment;
-see [`PAIR_SOURCE_MODEL.md`](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md#composition-exchange-and-failure).
+see [`Radiation_pair_source_model.md`](../../../docs/raw/Radiation_pair_source_model.md#composition-exchange-and-failure).
 
 The host also owns final matter recovery and publication. For the normal
 three-species stage, all species are solved into temporary states and exchange
 packets before the common admissible limiter is applied. This prevents a
 species-by-species limiter from breaking the energy, momentum, or lepton
 bookkeeping. The ownership and common-limiter rule are in
-[`M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#coupled-limiter).
+[`Radiation_integration_contract.md`](../../../docs/raw/Radiation_integration_contract.md#coupled-limiter).
 
 ## Failure and conservation boundary
 
@@ -131,19 +131,6 @@ output at the transport/source base and returns a zero exchange packet; a
 paired failure leaves both species unpublished. No repair-floor injection is
 silently converted into a physical matter source. The host may track input
 repair separately and owns any `Y_e` bounds or final coupled limiter.
-
-## Historical status
-
-- **Current:** signed weights, charged-current-only default `Y_e` exchange,
-  separate total-number diagnostics, equal-and-opposite energy/momentum
-  packets, and pair cancellation in electron lepton number.
-- **Adaptable context:** the whitepapers' conservation argument and sign
-  motivation for electron-neutrino versus antineutrino exchange.
-- **Superseded:** deriving `Y_e` from an unsigned total number increment, using
-  a densitized baryon normalization without conversion, or publishing each
-  species independently before the common limiter.
-- **Future/non-claim:** a fully coupled matter EOS/Con2Prim solve inside the
-  local Radiation kernel; that remains host-owned.
 
 ## Evidence
 

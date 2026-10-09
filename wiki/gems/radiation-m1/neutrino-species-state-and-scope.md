@@ -60,13 +60,13 @@ rates from the EOS themselves. The provider owns EOS/table lookup, unit
 conversion, weak-equilibrium targets, and channel-specific microphysics; the
 boundary is specified in the
 [provider header](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
-and [integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#ownership-rules).
+and [integration contract](../../../docs/raw/Radiation_integration_contract.md#ownership-rules).
 
 The library is pointwise and host-neutral. The downstream host owns the mesh,
 cell storage, reconstruction, flux divergence, Runge--Kutta or other stage
 schedule, boundary conditions, matter recovery, and final publication. The
 current source boundary is summarized in the
-[M1 integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#ownership-rules).
+[M1 integration contract](../../../docs/raw/Radiation_integration_contract.md#ownership-rules).
 
 ## What is not a hidden part of the model
 
@@ -79,23 +79,7 @@ The current production surface is determined by the active shared and
 neutrino manifests, not by every file present in the directory. See the
 [shared manifest](../../../GRHayL/Radiation/make.code.defn),
 [neutrino manifest](../../../GRHayL/Radiation/Neutrinos/make.code.defn), and
-[traceability map](../../../GRHayL/Radiation/TRACEABILITY.md#production-boundary).
-
-## Historical whitepaper status
-
-- **Current:** three grey species, `N/E/F_i`, provider-owned frozen rates, and
-  the distinction between electron-lepton and heavy-lepton content.
-- **Adaptable context:** the neutrino interaction whitepaper's motivation for
-  evolving number as well as energy, and its warning that grey M1 is an
-  approximation. Those papers remain explanatory context, not API authority.
-- **Superseded:** Phase 1's reduced number-current construction and its
-  proposed APIs. The current number current reuses the M1 closure and
-  comoving moments; it is not simply `N F^i/F`.
-- **Future/non-claim:** multigroup spectra, four separately evolved heavy
-  flavors, flavor oscillations, and spectral angular transport.
-
-The [source-level traceability map](../../../GRHayL/Radiation/TRACEABILITY.md)
-is the final check when a whitepaper statement and this summary disagree.
+[traceability map](../../../docs/raw/Radiation_traceability.md#production-boundary).
 
 ## Evidence
 

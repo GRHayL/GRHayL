@@ -20,7 +20,7 @@ metric, direction-specific `cmin`/`cmax`, and a conservative flux output.
 | tabulated | `ghl_calculate_HLLE_fluxes_dirn0_tabulated`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated` | hybrid fields plus `Y_e` | default and no-HDF5 | all three in `unit_test_tabulated_flux` |
 | tabulated entropy | `ghl_calculate_HLLE_fluxes_dirn0_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn1_tabulated_entropy`<br>`ghl_calculate_HLLE_fluxes_dirn2_tabulated_entropy` | hybrid fields plus `Y_e` and `entropy` | default and no-HDF5 | all three in `unit_test_tabulated_flux` |
 
-Every direct symbol has a public declaration, one checked-in definition, and a
+Every direct symbol has a public declaration, a checked-in definition, and a
 variant-manifest entry. [configure](../../../configure) retains the real
 tabulated flux definitions under `--disable-hdf5`, and the Ubuntu-Clang
 `c2p-failure` no-HDF5 variant checks that they remain linkable. The tabulated

@@ -6,7 +6,7 @@ reconstruction, stage order, boundaries, and matter update. The library does
 not ship a three-species grid driver.
 
 The authoritative boundary is
-[`M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md);
+[`Radiation_integration_contract.md`](../../../docs/raw/Radiation_integration_contract.md);
 the public declarations are in
 [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h).
 
@@ -88,7 +88,7 @@ the pointwise API is a double-weighting error.
 The varying-volume fixture adapter demonstrates this preparation in
 [`unit_test_m1_thcm1_blended_rusanov.c`](../../../Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c);
 the input layout and stored-reference boundary are described in
-[`README.m1.md`](../../../Unit_Tests/README.m1.md).
+[`Radiation_unit_tests.md`](../../../docs/raw/Radiation_unit_tests.md).
 
 ## Species and pair scheduling
 
@@ -133,6 +133,4 @@ must record which source, transport, volume, and publication conventions it
 uses.
 
 The implementation and ownership details are maintained in the
-[current integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md),
-not in the historical photon implementation whitepaper's old sixteen-function
-API list.
+[current integration contract](../../../docs/raw/Radiation_integration_contract.md).

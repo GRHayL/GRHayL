@@ -1,5 +1,7 @@
 #include "m1_thcm1_fixture_utils.h"
 
+#include "ghl_unit_tests.h"
+
 static void m1_thcm1_fixture_set_errorf(
       char *restrict error,
       const size_t error_size,
@@ -189,18 +191,207 @@ int m1_thcm1_fixture_record_valid(
   return 1;
 }
 
-static int
-m1_thcm1_fixture_duplicate_ids(const m1_thcm1_fixture_collection *restrict collection) {
-  for(size_t i = 0; i < collection->record_count; ++i) {
-    for(size_t j = i + 1; j < collection->record_count; ++j) {
-      if(strcmp(collection->records[i].case_id, collection->records[j].case_id) == 0
-         || strcmp(collection->records[i].pair_id, collection->records[j].pair_id)
-                  == 0) {
-        return 1;
+static int m1_thcm1_fixture_compare_ids(const void *left, const void *right) {
+  return strcmp(*(const char *const *)left, *(const char *const *)right);
+}
+
+static int m1_thcm1_fixture_unique_ids(
+      const m1_thcm1_fixture_collection *restrict collection,
+      char *restrict error,
+      const size_t error_size) {
+  if(collection->record_count < 2) {
+    return 1;
+  }
+  const char **ids = NULL;
+  if(collection->record_count <= SIZE_MAX / sizeof(*ids)) {
+    ids = (const char **)malloc(collection->record_count * sizeof(*ids));
+  }
+  if(ids == NULL) {
+    m1_thcm1_fixture_set_error(error, error_size, "could not allocate fixture ID index");
+    return 0;
+  }
+  /* Sort borrowed IDs, not records: replay order stays unchanged. */
+  for(int pair_ids = 0; pair_ids < 2; ++pair_ids) {
+    for(size_t i = 0; i < collection->record_count; ++i) {
+      ids[i] = pair_ids ? collection->records[i].pair_id : collection->records[i].case_id;
+    }
+    qsort(ids, collection->record_count, sizeof(*ids), m1_thcm1_fixture_compare_ids);
+    for(size_t i = 1; i < collection->record_count; ++i) {
+      if(strcmp(ids[i - 1], ids[i]) == 0) {
+        free(ids);
+        m1_thcm1_fixture_set_error(
+              error, error_size, pair_ids ? "fixture has duplicate pair IDs"
+                                         : "fixture has duplicate case IDs");
+        return 0;
       }
     }
   }
-  return 0;
+  free(ids);
+  return 1;
+}
+
+/* TestData/radiation/PROVENANCE.md defines this packed, little-endian layout.
+ * Decode integers explicitly so fixture bytes do not depend on host endian or
+ * compiler struct padding. */
+static int m1_thcm1_fixture_read_u64(FILE *restrict file, uint64_t *restrict value) {
+  unsigned char bytes[8];
+  if(fread(bytes, 1, sizeof(bytes), file) != sizeof(bytes)) {
+    return 0;
+  }
+  *value = 0;
+  for(size_t i = 0; i < sizeof(bytes); ++i) {
+    *value |= (uint64_t)bytes[i] << (8 * i);
+  }
+  return 1;
+}
+
+static int m1_thcm1_fixture_read_size(FILE *restrict file, size_t *restrict value) {
+  uint64_t stored = 0;
+  if(!m1_thcm1_fixture_read_u64(file, &stored) || stored > SIZE_MAX) {
+    return 0;
+  }
+  *value = (size_t)stored;
+  return 1;
+}
+
+static int m1_thcm1_fixture_read_string(FILE *restrict file, char **restrict value) {
+  size_t length = 0;
+  if(!m1_thcm1_fixture_read_size(file, &length) || length == 0 || length == SIZE_MAX) {
+    return 0;
+  }
+  char *string = (char *)malloc(length + 1);
+  if(string == NULL) {
+    return 0;
+  }
+  if(fread(string, 1, length, file) != length) {
+    free(string);
+    return 0;
+  }
+  for(size_t i = 0; i < length; ++i) {
+    if(string[i] == '\0' || isspace((unsigned char)string[i])) {
+      free(string);
+      return 0;
+    }
+  }
+  string[length] = '\0';
+  *value = string;
+  return 1;
+}
+
+static int m1_thcm1_fixture_read_vector(
+      FILE *restrict file,
+      double **restrict values,
+      size_t *restrict count) {
+  size_t length = 0;
+  if(!m1_thcm1_fixture_read_size(file, &length) || length == 0
+     || length > SIZE_MAX / sizeof(double)) {
+    return 0;
+  }
+  double *vector = (double *)malloc(length * sizeof(*vector));
+  if(vector == NULL) {
+    return 0;
+  }
+  for(size_t i = 0; i < length; ++i) {
+    uint64_t bits = 0;
+    if(!m1_thcm1_fixture_read_u64(file, &bits)) {
+      free(vector);
+      return 0;
+    }
+    memcpy(&vector[i], &bits, sizeof(bits));
+  }
+  *values = vector;
+  *count = length;
+  return 1;
+}
+
+static int m1_thcm1_fixture_load_binary(
+      FILE *restrict file,
+      const char *restrict operation,
+      const size_t expected_input_count,
+      const size_t expected_output_count,
+      m1_thcm1_fixture_collection *restrict collection,
+      char *restrict error,
+      const size_t error_size) {
+  if(sizeof(double) != sizeof(uint64_t) || DBL_MANT_DIG != 53 || DBL_MAX_EXP != 1024
+     || !m1_thcm1_fixture_read_string(file, &collection->operation)
+     || strcmp(collection->operation, operation) != 0
+     || !m1_thcm1_fixture_read_string(file, &collection->policy)
+     || !m1_thcm1_fixture_read_size(file, &collection->record_count)
+     || collection->record_count == 0
+     || collection->record_count > SIZE_MAX / sizeof(*collection->records)) {
+    m1_thcm1_fixture_set_error(error, error_size, "invalid binary fixture header");
+    m1_thcm1_fixture_free(collection);
+    return 0;
+  }
+  collection->records = (m1_thcm1_fixture_record *)calloc(
+        collection->record_count, sizeof(*collection->records));
+  if(collection->records == NULL) {
+    m1_thcm1_fixture_set_error(
+          error, error_size, "binary fixture record allocation failed");
+    m1_thcm1_fixture_free(collection);
+    return 0;
+  }
+  for(size_t i = 0; i < collection->record_count; ++i) {
+    m1_thcm1_fixture_record *record = &collection->records[i];
+    record->sensitivity_start = SIZE_MAX;
+    size_t baseline_input_count = 0;
+    size_t perturbed_input_count = 0;
+    size_t baseline_output_count = 0;
+    size_t perturbed_output_count = 0;
+    uint64_t status[6] = { 0 };
+    int ok = m1_thcm1_fixture_read_string(file, &record->case_id)
+             && m1_thcm1_fixture_read_string(file, &record->pair_id)
+             && m1_thcm1_fixture_read_string(file, &record->origin)
+             && m1_thcm1_fixture_read_string(file, &record->seed_id)
+             && m1_thcm1_fixture_read_string(file, &record->family)
+             && m1_thcm1_fixture_read_string(file, &record->perturbation)
+             && m1_thcm1_fixture_read_size(file, &record->sensitivity_start)
+             && m1_thcm1_fixture_read_size(file, &record->sensitivity_count)
+             && m1_thcm1_fixture_read_vector(
+                   file, &record->baseline_input, &baseline_input_count)
+             && m1_thcm1_fixture_read_vector(
+                   file, &record->perturbed_input, &perturbed_input_count)
+             && m1_thcm1_fixture_read_vector(
+                   file, &record->baseline_output, &baseline_output_count)
+             && m1_thcm1_fixture_read_vector(
+                   file, &record->perturbed_output, &perturbed_output_count)
+             && m1_thcm1_fixture_read_vector(
+                   file, &record->normalization, &record->normalization_count);
+    for(size_t j = 0; ok && j < sizeof(status) / sizeof(status[0]); ++j) {
+      ok = m1_thcm1_fixture_read_u64(file, &status[j]);
+    }
+    ok = ok && baseline_input_count == perturbed_input_count
+         && baseline_output_count == perturbed_output_count && status[0] == 1
+         && status[1] == 1 && status[2] == 0 && status[3] == 0 && status[4] == 0
+         && status[5] == 0;
+    if(ok) {
+      record->input_count = baseline_input_count;
+      record->output_count = baseline_output_count;
+      record->baseline_available = (int)status[0];
+      record->perturbed_available = (int)status[1];
+      ok = m1_thcm1_fixture_record_valid(
+            record, expected_input_count, expected_output_count);
+    }
+    if(!ok) {
+      m1_thcm1_fixture_set_errorf(
+            error, error_size, "invalid binary fixture record %s at index %zu",
+            record->case_id, i);
+      m1_thcm1_fixture_free(collection);
+      return 0;
+    }
+  }
+  const int valid_end = fgetc(file) == EOF && !ferror(file);
+  if(!valid_end) {
+    m1_thcm1_fixture_set_error(
+          error, error_size, "binary fixture has trailing data or a read error");
+    m1_thcm1_fixture_free(collection);
+    return 0;
+  }
+  if(!m1_thcm1_fixture_unique_ids(collection, error, error_size)) {
+    m1_thcm1_fixture_free(collection);
+    return 0;
+  }
+  return 1;
 }
 
 int m1_thcm1_fixture_load(
@@ -216,9 +407,23 @@ int m1_thcm1_fixture_load(
     return 0;
   }
   *collection = (m1_thcm1_fixture_collection){ 0 };
-  FILE *file = fopen(path, "r");
+  FILE *file = fopen(path, "rb");
   if(file == NULL) {
     m1_thcm1_fixture_set_error(error, error_size, "fixture file could not be opened");
+    return 0;
+  }
+  unsigned char binary_magic[8];
+  if(fread(binary_magic, 1, sizeof(binary_magic), file) == sizeof(binary_magic)
+     && memcmp(binary_magic, "M1THCMB1", sizeof(binary_magic)) == 0) {
+    const int loaded = m1_thcm1_fixture_load_binary(
+          file, operation, expected_input_count, expected_output_count, collection,
+          error, error_size);
+    fclose(file);
+    return loaded;
+  }
+  if(fseek(file, 0, SEEK_SET) != 0) {
+    fclose(file);
+    m1_thcm1_fixture_set_error(error, error_size, "fixture file could not be rewound");
     return 0;
   }
   int version = 0;
@@ -322,18 +527,29 @@ int m1_thcm1_fixture_load(
   char *trailing = NULL;
   const int valid_end = m1_thcm1_fixture_expect(file, "end")
                         && (trailing = m1_thcm1_fixture_read_token(file)) == NULL
-                        && !ferror(file) && !m1_thcm1_fixture_duplicate_ids(collection);
+                        && !ferror(file);
   free(trailing);
   fclose(file);
   if(!valid_end) {
     m1_thcm1_fixture_set_error(
-          error, error_size, "fixture has duplicate IDs or trailing data");
+          error, error_size, "fixture has a missing end marker, trailing data or a read error");
+    m1_thcm1_fixture_free(collection);
+    return 0;
+  }
+  if(!m1_thcm1_fixture_unique_ids(collection, error, error_size)) {
     m1_thcm1_fixture_free(collection);
     return 0;
   }
   return 1;
 }
 
+/* The pointwise and strict-pair fixture policies use an inclusive bound on
+ * error after input-defined normalization. The pointwise policy also adds an
+ * absolute term to a symmetric relative term with a floor. The shared
+ * ghl_pert_test_fail_with_tolerance() uses a strict absolute gate and a
+ * trusted-value-relative response, so it cannot express these policies.
+ * The baseline/response policy below uses that helper where its semantics
+ * match, with a documented range fallback for unrepresentable scaling. */
 static int m1_thcm1_fixture_compare_one(
       const double actual,
       const double expected,
@@ -384,14 +600,11 @@ static int m1_thcm1_fixture_response_relative(
   return isfinite(*response_relative) && *response_relative >= 0.0;
 }
 
-/* Apply the trusted/perturbed response rule without scaling the relative
- * error by the current value.  Scaling by the current value makes a large bad
- * result widen its own acceptance bound.  This is the normalized local
- * equivalent of ghl_pert_test_fail_with_tolerance: the absolute gate is
- * checked first, then the current-versus-trusted relative error is bounded by
- * the larger of the base policy and four times the trusted perturbation
- * response. */
-static int m1_thcm1_fixture_compare_with_response(
+/* This fallback is only for values that cannot be represented after exact
+ * power-of-two normalization: normalization would overflow a value or erase
+ * a nonzero subnormal.  Keep the original arithmetic for those range cases so
+ * that the shared helper never sees collapsed inputs. */
+static int m1_thcm1_fixture_compare_with_response_range_fallback(
       const double actual,
       const double trusted,
       const double perturbed,
@@ -429,6 +642,103 @@ static int m1_thcm1_fixture_compare_with_response(
   const double bound = fmax(4.0 * reference_response, relative_tolerance);
   return isfinite(current_relative) && current_relative >= 0.0 && isfinite(bound)
          && current_relative <= bound;
+}
+
+static int m1_thcm1_fixture_scale_value(
+      const double value,
+      const int normalization_exponent,
+      double *restrict scaled_value) {
+  const double scaled = scalbn(value, -normalization_exponent);
+  if(!isfinite(scaled) || (value != 0.0 && (scaled == 0.0 || fabs(scaled) < DBL_MIN))) {
+    return 0;
+  }
+  *scaled_value = scaled;
+  return 1;
+}
+
+/* Apply the common trusted-baseline response bar through the established
+ * unit-test comparator.  Power-of-two scaling preserves the nonzero relative
+ * comparisons while placing values near the normalization range.  The
+ * shared helper has a strict `<` absolute gate, so its absolute tolerance is
+ * disabled here and the retained inclusive `<=` gate is applied separately.
+ * For a zero trusted value, scale the relative tolerance by the normalized
+ * input scale so the shared helper's absolute zero-reference semantics match
+ * the original normalized response rule. */
+static int m1_thcm1_fixture_compare_with_response(
+      const double actual,
+      const double trusted,
+      const double perturbed,
+      const double normalization,
+      const double absolute_tolerance,
+      const double relative_tolerance,
+      double *restrict scaled_error,
+      double *restrict response_relative) {
+  if(!isfinite(actual) || !isfinite(trusted) || !isfinite(perturbed)
+     || !isfinite(normalization) || !(normalization > 0.0)
+     || !isfinite(absolute_tolerance) || absolute_tolerance < 0.0
+     || !isfinite(relative_tolerance) || relative_tolerance < 0.0) {
+    return 0;
+  }
+
+  const double absolute_error = fabs(actual - trusted) / normalization;
+  if(!isfinite(absolute_error)) {
+    return 0;
+  }
+  if(scaled_error != NULL) {
+    *scaled_error = absolute_error;
+  }
+  double reference_response = 0.0;
+  if(!m1_thcm1_fixture_response_relative(
+           trusted, perturbed, normalization, &reference_response)) {
+    return 0;
+  }
+  if(response_relative != NULL) {
+    *response_relative = reference_response;
+  }
+  if(absolute_error <= absolute_tolerance) {
+    return 1;
+  }
+
+  const double relative_bound = fmax(4.0 * reference_response, relative_tolerance);
+  const double current_relative
+        = trusted != 0.0 ? fabs(1.0 - actual / trusted) : absolute_error;
+  if(!isfinite(relative_bound) || !isfinite(current_relative)
+     || current_relative < 0.0) {
+    return 0;
+  }
+
+  double scaled_actual = 0.0;
+  double scaled_trusted = 0.0;
+  if(trusted == 0.0) {
+    scaled_actual = actual / normalization;
+    if(!isfinite(scaled_actual) || (actual != 0.0 && scaled_actual == 0.0)) {
+      return m1_thcm1_fixture_compare_with_response_range_fallback(
+            actual, trusted, perturbed, normalization, absolute_tolerance,
+            relative_tolerance, scaled_error, response_relative);
+    }
+  }
+  else {
+    int normalization_exponent = 0;
+    (void)frexp(normalization, &normalization_exponent);
+    if(!m1_thcm1_fixture_scale_value(actual, normalization_exponent, &scaled_actual)
+       || !m1_thcm1_fixture_scale_value(
+             trusted, normalization_exponent, &scaled_trusted)) {
+      return m1_thcm1_fixture_compare_with_response_range_fallback(
+            actual, trusted, perturbed, normalization, absolute_tolerance,
+            relative_tolerance, scaled_error, response_relative);
+    }
+  }
+
+  /* The prior policy derives one exact response bound before comparing the
+   * current value. Pass that bound as rel_tol and make the shared helper's
+   * perturbation response zero, avoiding a second relative-response formula
+   * with different rounding. For a zero trusted value, actual is normalized
+   * directly above and the same bound is already in normalized units. */
+  const double scaled_computed = scaled_actual;
+  const double scaled_reference = trusted == 0.0 ? 0.0 : scaled_trusted;
+  const int relative_failure = ghl_pert_test_fail_with_tolerance(
+        scaled_reference, scaled_computed, scaled_reference, relative_bound, 0.0);
+  return !relative_failure;
 }
 
 int m1_thcm1_fixture_compare_baseline_response(

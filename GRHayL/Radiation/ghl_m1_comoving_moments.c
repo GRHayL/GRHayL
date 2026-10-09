@@ -5,14 +5,10 @@ static ghl_error_codes_t ghl_m1_validate_inputs(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
       const ghl_m1_rad_state *restrict rad_state,
-      const ghl_m1_closure *restrict closure,
-      const bool configuration_validated) {
+      const ghl_m1_closure *restrict closure) {
 
-  ghl_error_codes_t error = configuration_validated
-                                  ? ghl_m1_validate_realizability_state(
-                                          m1_params, metric, rad_state, 64.0, NULL)
-                                  : ghl_m1_validate_realizability(
-                                          m1_params, metric, rad_state, 64.0, NULL);
+  ghl_error_codes_t error
+        = ghl_m1_validate_realizability_state(m1_params, metric, rad_state, 64.0, NULL);
   if(error != ghl_success) {
     return error;
   }
@@ -29,15 +25,14 @@ static ghl_error_codes_t ghl_m1_compute_comoving_moments_internal(
       ghl_m1_comoving *restrict comoving,
       double V_con[3],
       double V_cov[3],
-      double *restrict W_out,
-      const bool configuration_validated) {
+      double *restrict W_out) {
   if(m1_params == NULL || metric == NULL || prims == NULL || rad_state == NULL
      || closure == NULL || comoving == NULL || V_con == NULL || V_cov == NULL
      || W_out == NULL) {
     return ghl_error_m1_null_pointer;
   }
-  ghl_error_codes_t error = ghl_m1_validate_inputs(
-        m1_params, metric, rad_state, closure, configuration_validated);
+  ghl_error_codes_t error
+        = ghl_m1_validate_inputs(m1_params, metric, rad_state, closure);
   if(error != ghl_success) {
     return error;
   }
@@ -129,8 +124,7 @@ ghl_error_codes_t ghl_m1_compute_comoving_moments_with_velocity(
       double V_cov[3],
       double *restrict W_out) {
   return ghl_m1_compute_comoving_moments_internal(
-        m1_params, metric, prims, rad_state, closure, comoving, V_con, V_cov, W_out,
-        false);
+        m1_params, metric, prims, rad_state, closure, comoving, V_con, V_cov, W_out);
 }
 
 ghl_error_codes_t ghl_m1_compute_comoving_moments_validated(
@@ -144,8 +138,7 @@ ghl_error_codes_t ghl_m1_compute_comoving_moments_validated(
       double V_cov[3],
       double *restrict W_out) {
   return ghl_m1_compute_comoving_moments_internal(
-        m1_params, metric, prims, rad_state, closure, comoving, V_con, V_cov, W_out,
-        true);
+        m1_params, metric, prims, rad_state, closure, comoving, V_con, V_cov, W_out);
 }
 
 ghl_error_codes_t ghl_m1_compute_comoving_moments(

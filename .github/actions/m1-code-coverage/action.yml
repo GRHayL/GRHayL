@@ -1,0 +1,32 @@
+name: m1-code-coverage
+description: 'Generates the dedicated Radiation M1 coverage report and enforces the 100% line gate'
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        # Branch-only exclusion markers require gcovr >= 8.4. Pin the
+        # version measured by the scoped M1 coverage audit.
+        python3 -m pip install gcovr==8.6
+        gcovr_command=(python3 -m gcovr)
+        # Scoped M1 XML supporting sources: Radiation, ghl_m1.h, and Core
+        # abort_if_error.c. ghl_calculate_Rusanov_flux.c now lives under
+        # Radiation/ and is already included there.
+        gcovr_args=(-r . --filter 'GRHayL/(Radiation/|include/ghl_m1\.h$|GRHayL_Core/abort_if_error\.c$)' --xml m1-coverage.xml)
+        # Newer versions need a new flag; we can get rid of
+        # this once we move past Ubuntu 22
+        if [ $ImageOS == "ubuntu22" ]; then
+          "${gcovr_command[@]}" "${gcovr_args[@]}"
+        else
+          "${gcovr_command[@]}" "${gcovr_args[@]}" --gcov-ignore-errors no_working_dir_found
+        fi
+        "${gcovr_command[@]}" -r . --filter 'GRHayL/Radiation/' --fail-under-line 100 --txt
+        "${gcovr_command[@]}" -r . --filter 'GRHayL/Radiation/' --txt-metric branch --txt
+      shell: bash
+
+    - uses: codecov/codecov-action@v5
+      with:
+        files: m1-coverage.xml
+        flags: m1
+        disable_search: true
+        fail_ci_if_error: true

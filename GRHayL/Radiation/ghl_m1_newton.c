@@ -6,7 +6,10 @@ static double ghl_m1_newton_residual_max_norm(const double residual[4]) {
 
   double norm = 0.0;
   for(int i = 0; i < 4; i++) {
-    norm = ghl_m1_max(norm, fabs(residual[i]));
+    if(!isfinite(residual[i])) {
+      return INFINITY;
+    }
+    norm = fmax(norm, fabs(residual[i]));
   }
   return norm;
 }
@@ -26,28 +29,45 @@ double ghl_m1_newton_weighted_merit(
     return INFINITY;
   }
 
+  /* NaN would evade the fmax accumulation below, so every operand and every
+   * derived scale or tolerance must be rejected before the accumulation. */
+  for(int i = 0; i < 4; i++) {
+    if(!isfinite(U[i]) || !isfinite(U_base[i]) || !isfinite(residual[i])) {
+      return INFINITY;
+    }
+  }
+
   const double energy_floor_tilde = metric->sqrt_detgamma * m1_params->E_floor;
   const double absolute_tolerance_tilde
         = metric->sqrt_detgamma * m1_params->newton_absolute_tolerance;
+  if(!isfinite(energy_floor_tilde) || !isfinite(absolute_tolerance_tilde)) {
+    return INFINITY;
+  }
   const double energy_scale
-        = ghl_m1_max(ghl_m1_max(fabs(U[0]), fabs(U_base[0])), energy_floor_tilde);
+        = fmax(fmax(fabs(U[0]), fabs(U_base[0])), energy_floor_tilde);
+  /* U[0], U_base[0], and energy_floor_tilde are verified finite above, so
+   * their fmax cannot be nonfinite. Retain the defensive check, exempt only
+   * this invariant guard. */
+  if(!isfinite(energy_scale)) { /* GCOVR_EXCL_BR_LINE */
+    return INFINITY;
+  }
 
   double merit = 0.0;
   for(int i = 0; i < 4; i++) {
-    double component_scale = ghl_m1_max(fabs(U[i]), fabs(U_base[i]));
+    double component_scale = fmax(fabs(U[i]), fabs(U_base[i]));
     if(i > 0) {
-      component_scale = ghl_m1_max(component_scale, energy_scale);
+      component_scale = fmax(component_scale, energy_scale);
     }
     else {
-      component_scale = ghl_m1_max(component_scale, energy_floor_tilde);
+      component_scale = fmax(component_scale, energy_floor_tilde);
     }
 
     const double denominator
           = absolute_tolerance_tilde + m1_params->newton_tolerance * component_scale;
-    if(!isfinite(denominator) || denominator <= 0.0 || !isfinite(residual[i])) {
+    if(!isfinite(denominator) || denominator <= 0.0) {
       return INFINITY;
     }
-    merit = ghl_m1_max(merit, fabs(residual[i]) / denominator);
+    merit = fmax(merit, fabs(residual[i]) / denominator);
   }
   return merit;
 }
@@ -100,12 +120,11 @@ static ghl_error_codes_t ghl_m1_newton_check_admissible(
       const ghl_metric_quantities *restrict metric,
       const double U[4]) {
 
-  /* The Newton entry point validates these pointers before either call.
-   * Configuration validation also rejects a nonpositive/nonfinite volume. */
-  const ghl_error_codes_t configuration_error
-        = ghl_m1_validate_configuration(m1_params, metric);
-  if(configuration_error != ghl_success) {
-    return configuration_error;
+  /* The Newton entry point validates these pointers. Generic residual
+   * callbacks need not validate metric volume, so retain this check. */
+  const double admissible_volume = metric->sqrt_detgamma;
+  if(!isfinite(admissible_volume) || admissible_volume <= 0.0) {
+    return ghl_error_m1_invalid_metric;
   }
   for(int i = 0; i < 4; ++i) {
     if(!isfinite(U[i])) {
@@ -157,7 +176,7 @@ static bool ghl_m1_newton_solve_linear_4x4(
       if(!isfinite(A[i][j])) {
         return false;
       }
-      row_scale[i] = ghl_m1_max(row_scale[i], fabs(A[i][j]));
+      row_scale[i] = fmax(row_scale[i], fabs(A[i][j]));
     }
     if(row_scale[i] == 0.0) {
       return false;
@@ -295,6 +314,19 @@ ghl_error_codes_t ghl_m1_newton_solve_4d_with_initial_guess(
       return error;
     }
 
+    /* Preserve the driver's admissibility error for a callback that reports
+     * success at a nonfinite iterate. The merit helper rejects the same input
+     * with INFINITY, which must not turn this established error into a later
+     * linear-solve failure. */
+    for(int i = 0; i < 4; ++i) {
+      if(!isfinite(U[i])) {
+        ghl_m1_newton_notify(
+              callbacks, ghl_m1_solver_stage_completed_solve,
+              ghl_error_m1_implicit_admissibility, U, residual, diagnostics);
+        return ghl_error_m1_implicit_admissibility;
+      }
+    }
+
     const double residual_norm = ghl_m1_newton_residual_max_norm(residual);
     const double merit
           = ghl_m1_newton_weighted_merit(m1_params, metric, U, U_base, residual);
@@ -390,12 +422,16 @@ ghl_error_codes_t ghl_m1_newton_solve_4d_with_initial_guess(
       if(error == ghl_success) {
         const ghl_error_codes_t admissibility_error
               = ghl_m1_newton_check_admissible(m1_params, metric, trial_U);
-        if(admissibility_error != ghl_success
-           && admissibility_error != ghl_error_m1_implicit_admissibility) {
-          ghl_m1_newton_notify(
-                callbacks, ghl_m1_solver_stage_completed_solve, admissibility_error, U,
-                residual, diagnostics);
-          return admissibility_error;
+        /* The driver's own check can reject a metric even when a generic
+         * residual callback accepted the trial. State inadmissibility allows
+         * backtracking; other errors terminate with an observer event. */
+        if(admissibility_error != ghl_success) {
+          if(admissibility_error != ghl_error_m1_implicit_admissibility) {
+            ghl_m1_newton_notify(
+                  callbacks, ghl_m1_solver_stage_completed_solve, admissibility_error, U,
+                  residual, diagnostics);
+            return admissibility_error;
+          }
         }
         const double trial_norm = ghl_m1_newton_residual_max_norm(trial_residual);
         const double trial_merit = ghl_m1_newton_weighted_merit(

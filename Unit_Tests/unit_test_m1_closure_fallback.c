@@ -6,7 +6,6 @@
 
 #include <float.h>
 #include <math.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,8 +16,8 @@
  *
  * Two distinct states publish four_point_compatibility == false: an exact-zero
  * Eulerian flux whose covariant thin dyad vanishes identically, and a
- * finite-flux candidate rejected by the physical PSD check. Both are separately
- * counted by ghl_m1_closure_counters. This test owns three properties:
+ * finite-flux candidate rejected by the physical PSD check. This test owns
+ * three properties:
  *
  *   1. Every published pressure tensor is exactly symmetric, on the fallback
  *      path as well as the primary path. The fallback builds its tensor from a
@@ -58,9 +57,10 @@ typedef struct {
     root_script_default,
     root_script_same_sign,
     root_script_short_interpolation,
-    root_script_right_guard_false
+    root_script_right_guard_false,
+    root_script_subtol_interpolation
   } mode;
-  double xi[8];
+  double xi[16];
   double same_sign_normalized_residual[2];
 } scripted_root_context;
 
@@ -124,6 +124,19 @@ static ghl_error_codes_t scripted_root_evaluate(
       evaluation->normalized_residual = 0.2;
     }
   }
+  else if(context->mode == root_script_subtol_interpolation) {
+    if(call == 0) {
+      evaluation->residual = -1.0;
+      evaluation->normalized_residual = 1.0;
+    }
+    else {
+      /* A tiny positive residual at xi=1 makes the accepted secant step
+       * smaller than the interval tolerance, so the bracket advance must
+       * take its copysign floor instead of the raw step. */
+      evaluation->residual = 2.0e-6;
+      evaluation->normalized_residual = 2.0e-6;
+    }
+  }
   return ghl_success;
 }
 
@@ -145,14 +158,6 @@ static ghl_m1_closure_root_result root_result_sentinel(void) {
   return root;
 }
 
-static void check_invalid_state_counter(const unsigned long long expected) {
-  ghl_m1_closure_counters counters;
-  ghl_m1_get_closure_counters(&counters);
-  if(counters.invalid_state != expected) {
-    fail("private root driver counted an evaluation failure incorrectly");
-  }
-}
-
 static void check_private_root_driver(void) {
   ghl_m1_parameters params;
   setup_parameters(&params);
@@ -162,7 +167,6 @@ static void check_private_root_driver(void) {
     scripted_root_context context
           = { .fail_call = fail_calls[i], .failure = ghl_error_m1_invalid_state };
     ghl_m1_closure_root_result root = root_result_sentinel();
-    ghl_m1_reset_closure_counters();
     const ghl_error_codes_t error = ghl_m1_closure_private_solve_root(
           &params, scripted_root_evaluate, &context, &root);
     if(error != ghl_error_m1_invalid_state || context.calls != expected_calls[i]
@@ -170,7 +174,6 @@ static void check_private_root_driver(void) {
       fail("private root driver did not propagate an endpoint/interior error "
            "atomically");
     }
-    check_invalid_state_counter(1ULL);
   }
 
   scripted_root_context same_sign = { .fail_call = -1,
@@ -192,11 +195,6 @@ static void check_private_root_driver(void) {
               root.evaluation.normalized_residual, 0.05)
               != ghl_error_m1_closure_residual_too_large) {
     fail("selected endpoint did not retain the existing residual publication gate");
-  }
-  ghl_m1_closure_failure_stage_t stage;
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_residual_gate) {
-    fail("endpoint residual rejection did not retain its diagnostic stage");
   }
 
   scripted_root_context same_sign_first
@@ -247,37 +245,37 @@ static void check_private_root_driver(void) {
      || fabs(right_guard.xi[3] - 0.5 * right_guard.xi[2]) > DBL_EPSILON) {
     fail("Brent interpolation did not bisect when the residual ordering rejected it");
   }
-}
 
-static void record_validation_reason_between_snapshot_load_and_cas(void *const opaque) {
-  int *const calls = opaque;
-  ++*calls;
-  ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_symmetry);
-}
-
-static void check_forced_closure_snapshot_retry(void) {
-  int interleave_calls = 0;
-  ghl_m1_reset_closure_counters();
-  ghl_m1_get_closure_counters(NULL);
-  ghl_m1_get_last_closure_failure_stage(NULL);
-  ghl_m1_get_last_closure_validation_reason(NULL);
-  ghl_m1_closure_private_record_stage_with_interleave(
-        ghl_m1_closure_failure_tensor_validation,
-        record_validation_reason_between_snapshot_load_and_cas, &interleave_calls);
-  ghl_m1_closure_failure_stage_t stage;
-  int reason;
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  ghl_m1_get_last_closure_validation_reason(&reason);
-  if(interleave_calls != 1 || stage != ghl_m1_closure_failure_tensor_validation
-     || reason != ghl_m1_closure_validation_symmetry) {
-    fail("stale closure snapshot retry lost the competing stage or reason field");
+  /* A secant step within the interval tolerance must advance the bracket by
+   * the copysign floor instead of the raw step. Run enough iterations that
+   * the schedule contains a below-tolerance accepted step and record every
+   * bracket point; the copysign arm advances by exactly tol. */
+  params.closure_root_tolerance = 1.0e-5;
+  params.closure_root_max_iterations = 6;
+  scripted_root_context subtol
+        = { .fail_call = -1, .mode = root_script_subtol_interpolation };
+  if(ghl_m1_closure_private_solve_root(&params, scripted_root_evaluate, &subtol, &root)
+           != ghl_success
+     || subtol.calls < 3) {
+    fail("sub-tolerance secant case did not run its bracket advance");
+    return;
+  }
+  const double subtol_tol = 2.0 * DBL_EPSILON + 0.5 * params.closure_root_tolerance;
+  bool saw_tol_advance = false;
+  for(int i = 2; i < subtol.calls; ++i) {
+    const double advance = subtol.xi[i] - subtol.xi[i - 1];
+    if(fabs(fabs(advance) - subtol_tol) <= 32.0 * DBL_EPSILON) {
+      saw_tol_advance = true;
+    }
+  }
+  if(!saw_tol_advance) {
+    fail("bracket advance did not take the copysign floor arm");
   }
 }
 
 static void check_private_comoving_invariant(void) {
   double H2_clipped = -4.0, residual = -5.0, normalized_residual = -6.0;
   double physical_xi = -7.0;
-  ghl_m1_reset_closure_counters();
   if(ghl_m1_closure_private_evaluate_invariant(
            2.0, 1.0, 4.0, 0.5, &H2_clipped, &residual, &normalized_residual,
            &physical_xi)
@@ -292,11 +290,6 @@ static void check_private_comoving_invariant(void) {
            &physical_xi)
      != ghl_error_m1_invalid_state) {
     fail("private invariant accepted a nonfinite comoving energy");
-  }
-  ghl_m1_closure_failure_stage_t stage;
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_comoving_energy) {
-    fail("nonfinite comoving energy recorded the wrong failure stage");
   }
   if(ghl_m1_closure_private_evaluate_invariant(
            0.0, 0.0, 1.0, 0.0, &H2_clipped, &residual, &normalized_residual,
@@ -318,10 +311,6 @@ static void check_private_comoving_invariant(void) {
            &normalized_residual, &physical_xi)
      != ghl_error_m1_invalid_state) {
     fail("private invariant accepted a contraction below its tolerance");
-  }
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_comoving_flux_norm) {
-    fail("negative comoving contraction recorded the wrong failure stage");
   }
   if(ghl_m1_closure_private_evaluate_invariant(
            1.0, NAN, 1.0, 0.0, &H2_clipped, &residual, &normalized_residual,
@@ -567,118 +556,102 @@ static void check_private_eulerian_pressure_construction(void) {
   }
 }
 
-typedef struct {
-  pthread_mutex_t mutex;
-  pthread_cond_t condition;
-  int ready;
-  bool start;
+/* A boost of diag(J0,J0/3,J0/3,J0/3) must retain the thick endpoint.
+ * The scalar equation can also have a genuine large-xi root: checking only
+ * its residual or pressure invariants does not establish endpoint recovery. */
+static void check_boosted_isotropic_endpoint(void) {
   ghl_m1_parameters params;
+  setup_parameters(&params);
+  params.E_floor = DBL_MIN;
   ghl_metric_quantities metric;
-  ghl_primitive_quantities prims;
-  ghl_m1_rad_state state;
-} closure_contention_context;
-
-typedef struct {
-  closure_contention_context *context;
-  ghl_error_codes_t result;
-} closure_contention_worker;
-
-static void *record_concurrent_workspace_failure(void *const opaque) {
-  closure_contention_worker *const worker = opaque;
-  closure_contention_context *const context = worker->context;
-  pthread_mutex_lock(&context->mutex);
-  ++context->ready;
-  pthread_cond_broadcast(&context->condition);
-  while(!context->start) {
-    pthread_cond_wait(&context->condition, &context->mutex);
+  m1_setup_flat_metric(&metric);
+  const double J0 = 0.75;
+  /* The last boost distinguishes direct endpoint evaluation from a partial
+   * fix that stabilizes P but still boosts its rounded entries back. */
+  const double speeds[] = { 0.99, 0.999, 0.9995, 0.9998, 0.9999, 0.99995, 0.999999 };
+  const double directions[][3]
+        = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 }, { 0.6, 0.8, 0.0 } };
+  const double scales[] = { 1.0, 0x1p520, 0x1p-520 };
+  for(size_t s = 0; s < sizeof(speeds) / sizeof(speeds[0]); ++s) {
+    const double v = speeds[s];
+    const double W2 = 1.0 / (1.0 - v * v);
+    const double E0 = J0 * (4.0 * W2 - 1.0) / 3.0;
+    /* Tensor rounding followed by a boost amplifies absolute errors by W^2;
+     * allow that conditioning, not a fraction of the wrong branch. The
+     * factor covers the contractions and the existing trace correction. */
+    const double rounding = 128.0 * DBL_EPSILON * W2 * E0;
+    for(size_t d = 0; d < sizeof(directions) / sizeof(directions[0]); ++d) {
+      for(size_t e = 0; e < sizeof(scales) / sizeof(scales[0]); ++e) {
+        ghl_primitive_quantities prims = { 0 };
+        ghl_m1_rad_state state = { .E = scales[e] * E0 };
+        for(int i = 0; i < 3; ++i) {
+          prims.vU[i] = v * directions[d][i];
+          state.F[i] = scales[e] * (4.0 * J0 * W2 * prims.vU[i] / 3.0);
+        }
+        ghl_m1_closure closure;
+        if(ghl_m1_compute_closure_with_primitives(
+                 &params, &metric, &prims, &state, &closure)
+           != ghl_success) {
+          fail("boosted isotropic closure failed to publish");
+          return;
+        }
+        if(closure.chi != 1.0 / 3.0 || closure.root_iterations != 0
+           || closure.solve_status != ghl_m1_closure_solve_converged
+           || !closure.four_point_compatibility
+           || closure.root_residual > 1024.0 * DBL_EPSILON) {
+          fail("boosted isotropic state missed the thick endpoint");
+        }
+        for(int i = 0; i < 3; ++i) {
+          for(int j = 0; j < 3; ++j) {
+            const double expected
+                  = J0 * (4.0 * W2 * prims.vU[i] * prims.vU[j] + (i == j)) / 3.0;
+            if(!isfinite(closure.P[i][j])
+               || fabs(closure.P[i][j] / scales[e] - expected) > rounding) {
+              fail("boosted isotropic state published the wrong pressure");
+            }
+          }
+        }
+        ghl_m1_comoving moments;
+        if(ghl_m1_compute_comoving_moments(
+                 &params, &metric, &prims, &state, &closure, &moments)
+                 != ghl_success
+           || !isfinite(moments.J) || fabs(moments.J / scales[e] - J0) > rounding) {
+          fail("boosted isotropic state did not recover its comoving energy");
+        }
+      }
+    }
   }
-  pthread_mutex_unlock(&context->mutex);
-
-  ghl_m1_closure closure = { 0 };
-  worker->result = ghl_m1_compute_closure_with_primitives(
-        &context->params, &context->metric, &context->prims, &context->state, &closure);
-  return NULL;
 }
 
-/* Two simultaneous workspace failures publish the same stage through the
- * packed snapshot update. This keeps the stage/reason pair valid while
- * exercising the compare-exchange retry when both writers read one snapshot. */
-static void check_concurrent_closure_failure_snapshot(void) {
-  closure_contention_context context = { 0 };
-  setup_parameters(&context.params);
-  m1_setup_flat_metric(&context.metric);
-  /* Keep the metric and state valid while making the lowered closure tensor
-   * unrepresentable. Both threads then fail at the same workspace publication
-   * site after competing to update the packed diagnostic snapshot. */
-  context.metric.gammaDD[0][0] = 1.0e308;
-  context.metric.gammaUU[0][0] = 1.0e-308;
-  context.metric.detgamma = 1.0e308;
-  context.metric.sqrt_detgamma = 1.0e154;
-  context.state.E = 1.0e154;
-  context.state.F[0] = 0.99e308;
-  if(!ghl_m1_metric_is_symmetric_spd(&context.metric)
-     || ghl_m1_validate_realizability_state(
-              &context.params, &context.metric, &context.state, 128.0, NULL)
-              != ghl_success) {
-    fail("closure contention fixture is not a valid metric and radiation state");
-    return;
-  }
-
-  if(pthread_mutex_init(&context.mutex, NULL) != 0) {
-    fail("could not initialize closure contention synchronization");
-    return;
-  }
-  if(pthread_cond_init(&context.condition, NULL) != 0) {
-    pthread_mutex_destroy(&context.mutex);
-    fail("could not initialize closure contention synchronization");
-    return;
-  }
-  pthread_t threads[2];
-  closure_contention_worker workers[2]
-        = { { .context = &context }, { .context = &context } };
-  int created = 0;
-  for(; created < 2; ++created) {
-    if(pthread_create(
-             &threads[created], NULL, record_concurrent_workspace_failure,
-             &workers[created])
-       != 0) {
-      fail("could not start closure contention worker");
-      break;
+static void check_near_isotropic_endpoint_gate(void) {
+  ghl_m1_parameters params;
+  setup_parameters(&params);
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  const double v = 0.9998, J0 = 0.75;
+  const double W2 = 1.0 / (1.0 - v * v);
+  const ghl_primitive_quantities prims = { .vU = { v, 0.0, 0.0 } };
+  /* High-precision evaluation of the original pressure/contraction equations
+   * on these binary64 inputs gives endpoint residuals about 4e-16 and 4e-8,
+   * respectively: on opposite sides of the unchanged 1024-epsilon gate. */
+  const double flux_offsets[] = { 1.0e-8, 1.0e-4 };
+  for(size_t k = 0; k < sizeof(flux_offsets) / sizeof(flux_offsets[0]); ++k) {
+    const ghl_m1_rad_state state
+          = { .E = J0 * (4.0 * W2 - 1.0) / 3.0,
+              .F = { 4.0 * J0 * W2 * v / 3.0 + J0 * flux_offsets[k], 0.0, 0.0 } };
+    ghl_m1_closure closure;
+    if(ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, &state, &closure)
+             != ghl_success
+       || closure.solve_status != ghl_m1_closure_solve_converged
+       || !closure.four_point_compatibility) {
+      fail("near-isotropic closure did not converge on the primary path");
+      return;
+    }
+    if((k == 0 && (closure.chi != 1.0 / 3.0 || closure.root_iterations != 0))
+       || (k == 1 && (closure.chi <= 1.0 / 3.0 || closure.root_iterations == 0))) {
+      fail("near-isotropic closure did not respect the endpoint residual gate");
     }
   }
-  if(created == 2) {
-    pthread_mutex_lock(&context.mutex);
-    while(context.ready != 2) {
-      pthread_cond_wait(&context.condition, &context.mutex);
-    }
-    context.start = true;
-    pthread_cond_broadcast(&context.condition);
-    pthread_mutex_unlock(&context.mutex);
-  }
-  else {
-    pthread_mutex_lock(&context.mutex);
-    context.start = true;
-    pthread_cond_broadcast(&context.condition);
-    pthread_mutex_unlock(&context.mutex);
-  }
-  for(int i = 0; i < created; ++i) {
-    pthread_join(threads[i], NULL);
-  }
-  if(created == 2) {
-    if(workers[0].result != ghl_error_m1_invalid_state
-       || workers[1].result != ghl_error_m1_invalid_state) {
-      fail("concurrent workspace failures returned an unexpected error");
-    }
-    ghl_m1_closure_failure_stage_t stage;
-    int reason;
-    ghl_m1_get_last_closure_failure_stage(&stage);
-    ghl_m1_get_last_closure_validation_reason(&reason);
-    if(stage != ghl_m1_closure_failure_workspace || reason != 0) {
-      fail("concurrent closure writers published a torn stage/reason pair");
-    }
-  }
-  pthread_cond_destroy(&context.condition);
-  pthread_mutex_destroy(&context.mutex);
 }
 
 static void check_both_closure_endpoints(void) {
@@ -745,8 +718,6 @@ static void check_psd_fallback_publishes_symmetric_tensors(void) {
   ghl_primitive_quantities prims;
   setup_velocity(&prims, V);
 
-  ghl_m1_reset_closure_counters();
-
   int sampled = 0;
   int fallbacks = 0;
   for(int step = 0; step < 720; ++step) {
@@ -762,7 +733,7 @@ static void check_psd_fallback_publishes_symmetric_tensors(void) {
 
       ghl_m1_closure closure;
       memset(&closure, 0, sizeof(closure));
-      const ghl_error_codes_t error = ghl_m1_compute_closure_minerbo(
+      const ghl_error_codes_t error = ghl_m1_compute_closure_with_primitives(
             &params, &metric, &prims, &rad_state, &closure);
       if(error != ghl_success) {
         fail("admissible transverse-flux state failed to publish a closure");
@@ -788,20 +759,11 @@ static void check_psd_fallback_publishes_symmetric_tensors(void) {
          "test no longer covers the path it owns");
     return;
   }
-
-  ghl_m1_closure_counters counters;
-  ghl_m1_get_closure_counters(&counters);
-  if(counters.admissibility_fallback_psd != (unsigned long long)fallbacks) {
-    fail("admissibility_fallback_psd does not match the observed substitutions");
-  }
-  if(counters.admissibility_fallback_zero_flux != 0ULL) {
-    fail("finite-flux sweep incremented the zero-flux fallback counter");
-  }
 }
 
 /* An exact-zero Eulerian flux with a moving fluid takes the same fallback for a
- * different, documented reason, and must be accounted separately. */
-static void check_zero_flux_fallback_is_counted_separately(const double energy) {
+ * different, documented reason. */
+static void check_zero_flux_fallback(const double energy) {
   ghl_m1_parameters params;
   setup_parameters(&params);
   params.E_floor = fmin(params.E_floor, energy);
@@ -818,11 +780,10 @@ static void check_zero_flux_fallback_is_counted_separately(const double energy) 
   rad_state.F[1] = 0.0;
   rad_state.F[2] = 0.0;
 
-  ghl_m1_reset_closure_counters();
-
   ghl_m1_closure closure;
   memset(&closure, 0, sizeof(closure));
-  if(ghl_m1_compute_closure_minerbo(&params, &metric, &prims, &rad_state, &closure)
+  if(ghl_m1_compute_closure_with_primitives(
+           &params, &metric, &prims, &rad_state, &closure)
      != ghl_success) {
     fail("exact-zero-flux state failed to publish a closure");
     return;
@@ -834,15 +795,6 @@ static void check_zero_flux_fallback_is_counted_separately(const double energy) 
     fail("exact-zero-flux state with a moving fluid did not take the fallback; "
          "this test no longer covers the path it owns");
     return;
-  }
-
-  ghl_m1_closure_counters counters;
-  ghl_m1_get_closure_counters(&counters);
-  if(counters.admissibility_fallback_zero_flux != 1ULL) {
-    fail("zero-flux fallback was not counted");
-  }
-  if(counters.admissibility_fallback_psd != 0ULL) {
-    fail("zero-flux fallback incremented the PSD fallback counter");
   }
 }
 
@@ -875,7 +827,8 @@ static void check_psd_regime_boundary(void) {
         rad_state.F[2] = 0.0;
         ghl_m1_closure closure;
         memset(&closure, 0, sizeof(closure));
-        if(ghl_m1_compute_closure_minerbo(&params, &metric, &prims, &rad_state, &closure)
+        if(ghl_m1_compute_closure_with_primitives(
+                 &params, &metric, &prims, &rad_state, &closure)
            != ghl_success) {
           fail("aligned-flux state failed to publish a closure");
           return;
@@ -901,7 +854,8 @@ static void check_psd_regime_boundary(void) {
         rad_state.F[2] = 0.0;
         ghl_m1_closure closure;
         memset(&closure, 0, sizeof(closure));
-        if(ghl_m1_compute_closure_minerbo(&params, &metric, &prims, &rad_state, &closure)
+        if(ghl_m1_compute_closure_with_primitives(
+                 &params, &metric, &prims, &rad_state, &closure)
            != ghl_success) {
           fail("transverse-flux state below the onset failed to publish a closure");
           return;
@@ -975,7 +929,7 @@ static void check_sub_ulp_root_tolerance_converges(void) {
     return;
   }
   ghl_m1_closure reference;
-  if(ghl_m1_compute_closure_minerbo(&params, &metric, &prims, &state, &reference)
+  if(ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, &state, &reference)
            != ghl_success
      || reference.solve_status != ghl_m1_closure_solve_converged) {
     fail("reference closure root did not converge");
@@ -990,7 +944,7 @@ static void check_sub_ulp_root_tolerance_converges(void) {
       return;
     }
     ghl_m1_closure closure;
-    if(ghl_m1_compute_closure_minerbo(&params, &metric, &prims, &state, &closure)
+    if(ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, &state, &closure)
        != ghl_success) {
       fail("sub-ulp tolerance closure failed to publish");
       return;
@@ -1028,15 +982,9 @@ static void check_trace_failure_on_each_axis(void) {
     ghl_m1_closure closure = sentinel;
     const ghl_error_codes_t error = ghl_m1_compute_closure_with_primitives(
           &params, &metric, &prims, &state, &closure);
-    ghl_m1_closure_failure_stage_t stage;
-    int reason;
-    ghl_m1_get_last_closure_failure_stage(&stage);
-    ghl_m1_get_last_closure_validation_reason(&reason);
     if(error != ghl_error_m1_invalid_state
-       || stage != ghl_m1_closure_failure_tensor_validation
-       || reason != ghl_m1_closure_validation_trace
        || !m1_closure_identical(&closure, &sentinel)) {
-      fail("axis-permuted trace failure changed its diagnostic or published output");
+      fail("axis-permuted trace failure changed its error or published output");
     }
   }
 }
@@ -1047,19 +995,15 @@ static void check_large_energy_failure_paths(void) {
   const struct {
     double energy, metric_scale, speed, flux_factor;
     ghl_error_codes_t error;
-    ghl_m1_closure_failure_stage_t stage;
   } cases[] = {
     /* The thin dyad is zero; only the covariant thick pressure overflows. */
-    { 0x1p520, 1.0e200, 0.0, 0.0, ghl_error_m1_invalid_state,
-      ghl_m1_closure_failure_workspace },
+    { 0x1p520, 1.0e200, 0.0, 0.0, ghl_error_m1_invalid_state },
     /* Homogeneous normalization must retain the endpoint residual rejection
      * already required for a unit-energy, nearly luminal flow. */
-    { 0x1p520, 1.0, 0x1.fffffffffffffp-1, 0.3, ghl_error_m1_closure_residual_too_large,
-      ghl_m1_closure_failure_residual_gate },
+    { 0x1p520, 1.0, 0x1.fffffffffffffp-1, 0.3, ghl_error_m1_closure_residual_too_large },
     /* The zero-flux fallback pressure is finite, but its comoving energy
      * exceeds DBL_MAX. It must fail atomically instead of publishing. */
-    { DBL_MAX, 1.0, 0.3, 0.0, ghl_error_m1_invalid_state,
-      ghl_m1_closure_failure_tensor_validation }
+    { DBL_MAX, 1.0, 0.3, 0.0, ghl_error_m1_invalid_state }
   };
   for(size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
     ghl_metric_quantities metric;
@@ -1076,11 +1020,8 @@ static void check_large_energy_failure_paths(void) {
     ghl_m1_closure closure = sentinel;
     const ghl_error_codes_t error = ghl_m1_compute_closure_with_primitives(
           &params, &metric, &prims, &state, &closure);
-    ghl_m1_closure_failure_stage_t stage;
-    ghl_m1_get_last_closure_failure_stage(&stage);
-    if(error != cases[i].error || stage != cases[i].stage
-       || !m1_closure_identical(&closure, &sentinel)) {
-      fail("large-energy closure failure changed its stage or published output");
+    if(error != cases[i].error || !m1_closure_identical(&closure, &sentinel)) {
+      fail("large-energy closure failure changed its error or published output");
     }
   }
 }
@@ -1113,11 +1054,6 @@ static void check_workspace_failure_paths(void) {
      || !m1_closure_identical(&closure, &sentinel)) {
     fail("workspace accepted an overflowing time component of the flux covector");
   }
-  ghl_m1_closure_failure_stage_t stage;
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_workspace) {
-    fail("overflowing time flux recorded the wrong failure stage");
-  }
 
   metric.betaU[0] = 1.0e200;
   const ghl_primitive_quantities cancelling_large_shift
@@ -1129,10 +1065,6 @@ static void check_workspace_failure_paths(void) {
      || !m1_closure_identical(&closure, &sentinel)) {
     fail("workspace accepted an overflowing ordinary-range thick pressure");
   }
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_workspace) {
-    fail("ordinary thick-pressure overflow recorded the wrong failure stage");
-  }
 
   const ghl_m1_rad_state large_energy_zero_flux = { .E = 0x1p520 };
   closure = sentinel;
@@ -1141,10 +1073,6 @@ static void check_workspace_failure_paths(void) {
            != ghl_error_m1_invalid_state
      || !m1_closure_identical(&closure, &sentinel)) {
     fail("workspace accepted an overflowing scaled thick pressure");
-  }
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_workspace) {
-    fail("scaled thick-pressure overflow recorded the wrong failure stage");
   }
 
   m1_setup_flat_metric(&metric);
@@ -1162,10 +1090,6 @@ static void check_workspace_failure_paths(void) {
      || !m1_closure_identical(&closure, &sentinel)) {
     fail("workspace accepted an overflowing ordinary-range thin pressure");
   }
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_workspace) {
-    fail("ordinary thin-pressure overflow recorded the wrong failure stage");
-  }
 
   const ghl_m1_rad_state scaled_thin_overflow
         = { .E = 0x1p520, .F = { DBL_MAX, 0.0, 0.0 } };
@@ -1175,10 +1099,6 @@ static void check_workspace_failure_paths(void) {
            != ghl_error_m1_invalid_state
      || !m1_closure_identical(&closure, &sentinel)) {
     fail("workspace accepted an overflowing scaled thin pressure");
-  }
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_workspace) {
-    fail("scaled thin-pressure overflow recorded the wrong failure stage");
   }
 
   m1_setup_flat_metric(&metric);
@@ -1191,14 +1111,9 @@ static void check_workspace_failure_paths(void) {
      || !m1_closure_identical(&closure, &sentinel)) {
     fail("closure evaluation accepted an overflowing stress-energy trace term");
   }
-  ghl_m1_get_last_closure_failure_stage(&stage);
-  if(stage != ghl_m1_closure_failure_workspace) {
-    fail("overflowing stress-energy trace recorded the wrong failure stage");
-  }
 }
 
 int main(void) {
-  check_forced_closure_snapshot_retry();
   check_private_comoving_invariant();
   check_private_fallback_invariants();
   check_private_eulerian_pressure_construction();
@@ -1206,15 +1121,16 @@ int main(void) {
   check_trace_failure_on_each_axis();
   check_large_energy_failure_paths();
   check_workspace_failure_paths();
-  check_concurrent_closure_failure_snapshot();
   check_both_closure_endpoints();
+  check_boosted_isotropic_endpoint();
+  check_near_isotropic_endpoint_gate();
   check_large_energy_scaling();
   check_sub_ulp_root_tolerance_converges();
   check_psd_fallback_publishes_symmetric_tensors();
   /* The fallback's invariant H^2/J^2 must survive both square-range limits. */
-  check_zero_flux_fallback_is_counted_separately(1.0);
-  check_zero_flux_fallback_is_counted_separately(0x1p520);
-  check_zero_flux_fallback_is_counted_separately(0x1p-520);
+  check_zero_flux_fallback(1.0);
+  check_zero_flux_fallback(0x1p520);
+  check_zero_flux_fallback(0x1p-520);
   check_psd_regime_boundary();
 
   if(failures != 0) {

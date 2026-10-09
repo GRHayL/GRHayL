@@ -15,10 +15,9 @@ extern "C" {
  * The provider owns EOS/table lookup and channel-specific microphysics.
  * Radiation consumes frozen ghl_m1_neutrino_rates bundles and validates their
  * contract; it does not treat this interface as a direct production-rate
- * formula source. The default backend is a deterministic reference/test
- * provider. The explicit NRPyLeakage initializer selects the production
- * Ruffert backend. Both accept only nu_x_multiplicity == 4 and return an
- * already-summed nu_x bundle; hosts must not multiply the returned
+ * formula source. Every initializer declared here selects the production
+ * Ruffert backend, and all of them accept only nu_x_multiplicity == 4 and
+ * return an already-summed nu_x bundle; hosts must not multiply the returned
  * heavy-flavor state or exchange a second time. For electron flavors, scalar
  * absorption and emissivity fields contain charged-current contributions only;
  * isoenergetic nucleon scattering is separate in kappa_s, and kappa_tr is the
@@ -27,7 +26,7 @@ extern "C" {
  * ghl_m1_neutrino_rates. For nu_x, the scalar coefficients include the
  * enabled aggregate pair, plasmon, and bremsstrahlung contributions. For
  * electron-flavor face transport, add the partner-dependent inverse pair
- * energy opacity to scalar kappa_tr; see Radiation/PAIR_SOURCE_MODEL.md.
+ * energy opacity to scalar kappa_tr; see docs/raw/Radiation_pair_source_model.md.
  */
 
 typedef enum {
@@ -39,33 +38,24 @@ typedef enum {
 } ghl_neutrino_rate_channel_t;
 
 typedef enum {
-  ghl_neutrino_rate_failure_abort = 0,
+  ghl_neutrino_rate_failure_return_error = 0,
   ghl_neutrino_rate_failure_transparent,
-  ghl_neutrino_rate_failure_equilibrium,
-  ghl_neutrino_rate_failure_hold_last
+  ghl_neutrino_rate_failure_equilibrium
 } ghl_neutrino_rate_failure_policy_t;
 
 typedef enum {
   ghl_neutrino_rate_recovery_none = 0,
   ghl_neutrino_rate_recovery_transparent,
-  ghl_neutrino_rate_recovery_equilibrium,
-  ghl_neutrino_rate_recovery_hold_last
+  ghl_neutrino_rate_recovery_equilibrium
 } ghl_neutrino_rate_recovery_status_t;
 
 typedef enum {
-  ghl_neutrino_rate_table_bounds_abort = 0,
+  ghl_neutrino_rate_table_bounds_return_error = 0,
   ghl_neutrino_rate_table_bounds_clamp
 } ghl_neutrino_rate_table_bounds_policy_t;
 
-typedef enum {
-  ghl_neutrino_rate_backend_reference = 0,
-  ghl_neutrino_rate_backend_nrpyleakage = 1
-} ghl_neutrino_rate_backend_t;
-
 /** @ingroup m1_rates */
 typedef struct ghl_neutrino_rate_provider_context {
-  /** Either backend requires a Stellarcollapse tabulated EOS when enabled. */
-  bool use_tabulated_eos;
   /**
    * Enabled weak-interaction channels. Production equilibrium moments and
    * beta/Kirchhoff diagnostics are computed independently of this mask;
@@ -77,27 +67,11 @@ typedef struct ghl_neutrino_rate_provider_context {
   double nu_x_multiplicity;
   /**
    * Host-managed identity for mutable EOS/table contents.  Initialize this
-   * field through ghl_neutrino_rate_provider_initialize_default() and advance
+   * field through a provider initializer and advance
    * it after every in-place mutation of the EOS object or its table storage.
    */
   uint64_t eos_generation;
-  /* Backend configuration is validated exactly. The reference backend uses
-   * its documented analytic scales; the production backend fixes every scale
-   * to 1 because the raw kernel already supplies physical channel rates. */
-  double rho_code_to_cgs;
-  double temperature_code_to_mev;
-  double opacity_cgs_to_code;
-  double emissivity_cgs_to_code;
-  double baryon_mass_code;
-  double charged_current_scale;
-  double scattering_scale;
-  double pair_scale;
-  double bremsstrahlung_scale;
-  double plasmon_scale;
-  double min_mean_energy;
-  /** Backend selection. */
-  ghl_neutrino_rate_backend_t backend;
-  /** Degraded equilibrium-recovery rate in inverse code-time units. */
+  /** Recovery absorption rate in inverse code-time units. */
   double equilibrium_recovery_rate;
 } ghl_neutrino_rate_provider_context;
 
@@ -135,7 +109,6 @@ typedef struct ghl_neutrino_rate_provider_diagnostics {
   int clamped_inputs;
   int transparent_recoveries;
   int equilibrium_recoveries;
-  int hold_last_recoveries;
   int active_channel_mask;
   ghl_error_codes_t last_error;
   /** Recovery used by the most recent call; none for an ordinary result. */
@@ -147,14 +120,15 @@ typedef struct ghl_neutrino_rate_provider_diagnostics {
 
 /** @ingroup m1_rates
  *
- * Initialize the deterministic, table-free reference provider. This choice
- * is independent of whether HDF5 support was compiled in; use the explicit
- * NRPyLeakage initializer for the production, table-backed provider.
+ * Initialize the default provider, which is the production, table-backed
+ * NRPyLeakage provider; see ghl_neutrino_rate_provider_initialize_nrpyleakage().
+ * It is an error, not a silent substitution, to request it without HDF5.
  *
  * @param provider Caller-owned context to initialize. Existing contents are
  *        replaced on success.
- * @return @c ghl_success on initialization, or
- *         @c ghl_error_m1_null_pointer when @p provider is NULL.
+ * @return @c ghl_success when the table-backed context is available;
+ *         @c ghl_error_m1_null_pointer for NULL @p provider; or
+ *         @c ghl_error_used_disabled_hdf5 when HDF5 support is disabled.
  */
 ghl_error_codes_t ghl_neutrino_rate_provider_initialize_default(
       ghl_neutrino_rate_provider_context *restrict provider);
@@ -194,7 +168,7 @@ ghl_error_codes_t ghl_neutrino_rate_provider_initialize_nrpyleakage(
  *
  * Compute one frozen rate bundle per evolved species.
  *
- * Both built-in backends accept only nu_x_multiplicity == 4 and return an
+ * The production provider accepts only nu_x_multiplicity == 4 and returns an
  * already-summed heavy-lepton bundle. Electron-flavor pair, plasmon, and
  * bremsstrahlung number and energy emissivities are retained independently in
  * the process-indexed fields of each electron-flavor result. Any other finite
@@ -203,30 +177,32 @@ ghl_error_codes_t ghl_neutrino_rate_provider_initialize_nrpyleakage(
  * boundary error.
  *
  * The caller-owned cache is one transactional record with separate recovered
- * thermodynamic and final-rate keys. Cache hits and hold-last recovery require
- * an exact primitive key, complete provider-context snapshot, EOS pointer, and
- * eos_generation match. No validity flag or cached value is committed until a
- * complete rate bundle has passed validation.
+ * thermodynamic and final-rate keys. Cache hits require an exact primitive
+ * key, complete provider-context snapshot, EOS pointer, and eos_generation
+ * match. No validity flag or cached value is committed until a complete rate
+ * bundle has passed validation.
  *
  * @param provider Initialized provider context; it is read-only for this call.
  * @param cache Optional caller-owned cache. Pass NULL to compute without cache
  *        reuse; a non-NULL cache must not be shared concurrently.
  * @param diagnostics Optional caller-owned diagnostics record. Counters and
  *        last-call status are updated when non-NULL.
- * @param eos EOS parameters used by the selected backend. A table-free
- *        reference backend may run without an EOS object. Enabling
- *        use_tabulated_eos on either backend requires a compatible
- *        Stellarcollapse tabulated EOS.
+ * @param eos Tabulated EOS parameters with registered dispatch pointers for
+ *        the configured table type.
  * @param prims Frozen cell primitives. The provider reads density,
  *        temperature, and electron fraction and does not modify them.
  * @param rates Output array indexed by
  *        ghl_m1_neutrino_species_t; all three entries are published only
  *        after the complete bundle passes validation.
- * @return @c ghl_success on a validated bundle or an allowed recovery;
- *         otherwise an error such as @c ghl_error_m1_null_pointer,
+ * @return @c ghl_success only on a validated bundle; otherwise an error such
+ *         as @c ghl_error_m1_null_pointer,
  *         @c ghl_error_m1_microphysics_failure, or
- *         @c ghl_error_used_disabled_hdf5. On an error that does not publish
- *         a recovery, @p rates and cached values remain unchanged.
+ *         @c ghl_error_used_disabled_hdf5. When a recovery policy publishes a
+ *         bundle into @p rates, the original error is still returned and
+ *         diagnostics->last_recovery identifies the recovery; a host that
+ *         accepts recovery must check that field. If physical thermodynamic
+ *         targets are unavailable, @p rates and cached values remain
+ *         unchanged.
  */
 ghl_error_codes_t ghl_neutrino_rate_provider_compute_cell(
       const ghl_neutrino_rate_provider_context *restrict provider,

@@ -112,11 +112,11 @@ static ghl_error_codes_t compute_EF_sources_from_closure(
       const ghl_m1_closure *restrict closure,
       const ghl_m1_neutrino_rates *restrict rates,
       ghl_m1_sources *restrict EF_sources,
-      const bool configuration_validated) {
+      const bool use_private_entry) {
 
   ghl_m1_comoving comoving;
   double V_con[3], V_cov[3], W;
-  const ghl_error_codes_t error = configuration_validated
+  const ghl_error_codes_t error = use_private_entry
                                         ? ghl_m1_compute_comoving_moments_validated(
                                                 m1_params, metric, prims, rad_state,
                                                 closure, &comoving, V_con, V_cov, &W)
@@ -162,7 +162,7 @@ static ghl_error_codes_t compute_interaction_sources_from_closure(
     return error;
   }
   double absorption_number = 0.0;
-  if(!ghl_m1_neutrino_scaled_absorption_number(
+  if(!ghl_m1_neutrino_absorption_number(
            rates->kappa_a_N, state->N, current.Gamma_N, &absorption_number)) {
     return ghl_error_m1_invalid_state;
   }
@@ -490,6 +490,9 @@ ghl_error_codes_t ghl_m1_neutrino_update_endpoint_number_with_policy(
       else {
         const double numerator[2] = { endpoint_current->Gamma_N, endpoint_current->J };
         const double denominator[1] = { rates->mean_energy };
+        /* The FD-Jacobian range regressions exercise this call site's
+         * successful overflow/underflow recovery as well as rejection of
+         * a quotient outside binary64 range. */
         if(!ghl_m1_neutrino_scaled_ratio_of_products(
                  numerator, 2, denominator, 1, &candidate)) {
           return ghl_error_m1_invalid_state;

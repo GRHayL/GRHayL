@@ -1,10 +1,10 @@
 #ifndef GHL_H_
 #define GHL_H_
 
-#include <stdbool.h>
-#include <math.h>
 #include "ghl_io.h"
 #include "ghl_metric_helpers.h"
+#include <math.h>
+#include <stdbool.h>
 
 #ifndef SQR
 #define SQR(x) ((x) * (x))
@@ -94,14 +94,11 @@ typedef enum {
   ghl_error_m1_implicit_admissibility,
   ghl_error_m1_implicit_solve_failure,
   ghl_error_m1_implicit_terminal_fallback,
-  ghl_error_m1_con2prim_failure,
   ghl_error_m1_microphysics_failure,
   ghl_error_m1_invalid_newton_absolute_tolerance,
   ghl_error_m1_invalid_closure_tolerance,
   ghl_error_m1_invalid_closure_max_iterations,
-  ghl_error_m1_invalid_repair_policy,
   ghl_error_m1_closure_residual_too_large,
-  ghl_error_m1_incompatible_transport_policy,
   ghl_error_m1_source_double_application,
 } ghl_error_codes_t;
 
@@ -136,7 +133,7 @@ typedef struct ghl_c2p_nn_model ghl_c2p_nn_model;
  * Struct        : ghl_parameters
  * Description   : stores basic GRHayL parameters
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_parameters
-*/
+ */
 typedef struct ghl_parameters {
   ghl_con2prim_id_t main_routine, backup_routine[3];
   bool evolve_entropy;
@@ -165,7 +162,7 @@ typedef struct ghl_parameters {
  * Struct        : ghl_primitive_quantities
  * Description   : stores pointwise information about the primitive variables
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_primitive_quantities
-*/
+ */
 typedef struct ghl_primitive_quantities {
   double rho, press, eps;
   double u0, vU[3];
@@ -177,7 +174,7 @@ typedef struct ghl_primitive_quantities {
  * Struct        : ghl_conservative_quantities
  * Description   : stores pointwise information about the conservative variables
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_conservative_quantities
-*/
+ */
 typedef struct ghl_conservative_quantities {
   double rho, tau, Y_e;
   double SD[3];
@@ -188,7 +185,7 @@ typedef struct ghl_conservative_quantities {
  * Struct        : ghl_metric_quantities
  * Description   : stores pointwise information about the spacetime
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_metric_quantities
-*/
+ */
 typedef struct ghl_metric_quantities {
   double lapse, lapseinv, lapseinv2;
   double detgamma, sqrt_detgamma;
@@ -201,7 +198,7 @@ typedef struct ghl_metric_quantities {
  * Struct        : ghl_ADM_aux_quantities
  * Description   : stores auxiliary information based on ADM metric quantities
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_ADM_aux_quantities
-*/
+ */
 typedef struct ghl_ADM_aux_quantities {
   double g4DD[4][4], g4UU[4][4];
 } ghl_ADM_aux_quantities;
@@ -210,7 +207,7 @@ typedef struct ghl_ADM_aux_quantities {
  * Struct        : ghl_extrinsic_curvature
  * Description   : stores pointwise information about the extrinsic curvature
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_extrinsic_curvature
-*/
+ */
 typedef struct ghl_extrinsic_curvature {
   double K[3][3];
 } ghl_extrinsic_curvature;
@@ -219,7 +216,7 @@ typedef struct ghl_extrinsic_curvature {
  * Struct        : ghl_stress_energy
  * Description   : stores pointwise information about the stress energy tensor
  * Documentation : https://github.com/GRHayL/GRHayL/wiki/ghl_stress_energy
-*/
+ */
 typedef struct ghl_stress_energy {
   double T4[4][4];
 } ghl_stress_energy;
@@ -332,8 +329,7 @@ typedef struct ghl_eos_parameters {
 
 const char *ghl_get_con2prim_routine_name(const ghl_con2prim_id_t key);
 
-void ghl_initialize_eos_functions(
-    const ghl_eos_t eos_type);
+void ghl_initialize_eos_functions(const ghl_eos_t eos_type);
 
 /* The three low-level parameter initializers below require matching EOS
  * dispatch to be installed first. Prefer a functions-and-params wrapper. */
@@ -611,7 +607,7 @@ double ghl_clamp(double x, double x_min, double x_max);
 }
 #endif
 
-#include "ghl_eos_functions.h"
 #include "ghl_debug.h"
+#include "ghl_eos_functions.h"
 
 #endif // GHL_H

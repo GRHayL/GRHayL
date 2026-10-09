@@ -118,10 +118,10 @@ The contraction is algebraic and pointwise. It does not perform EOS lookup,
 rate evaluation, a grid loop, or time integration. Fluid primitives are frozen
 for the local neutrino source/update call.
 
-## Photon-whitepaper boundary
+## Photon-specific boundary
 
 The projector, moment contractions, and source projection signs are shared
-mathematics. The photon equations whitepaper's special substitution
+mathematics. The photon substitution
 
 $$
 Q=\chi_{\rm abs}(J_{\rm eq}-J),
@@ -130,8 +130,8 @@ $$
 
 is a photon/LTE model and is not a neutrino rule. Current neutrino code instead
 uses \(Q=\eta_E-\kappa_{a,E}J\), with weak-equilibrium targets and frozen
-provider coefficients. Likewise, an old HLL discretization in the methods
-whitepaper is not part of this moment projection.
+provider coefficients. An HLL discretization is not part of this moment
+projection.
 
 ## Focused evidence
 
@@ -143,4 +143,4 @@ whitepaper is not part of this moment projection.
   covers invalid moment/closure inputs and unchanged outputs.
 
 The complete boundary remains in the
-[M1 integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#fixed-m1-method).
+[M1 integration contract](../../../docs/raw/Radiation_integration_contract.md#fixed-m1-method).

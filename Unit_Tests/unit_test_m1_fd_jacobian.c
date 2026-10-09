@@ -142,15 +142,12 @@ static void make_primitives(ghl_primitive_quantities *restrict prims) {
 }
 
 static void make_neutrino_parameters(ghl_m1_neutrino_parameters *restrict nu_params) {
-  *nu_params = (ghl_m1_neutrino_parameters){
-    .N_floor = 1.0e-12,
-    .mean_energy_min = 0.0,
-    .mean_energy_max = 0.0,
-    .enforce_mean_energy_bounds = 0,
-    .terminal_fallback_policy = ghl_m1_neutrino_terminal_fallback_no_update_all,
-    .J_floor = 1.0e-14,
-    .Gamma_N_floor = 1.0e-12
-  };
+  *nu_params = (ghl_m1_neutrino_parameters){ .N_floor = 1.0e-12,
+                                             .mean_energy_min = 0.0,
+                                             .mean_energy_max = 0.0,
+                                             .enforce_mean_energy_bounds = 0,
+                                             .J_floor = 1.0e-14,
+                                             .Gamma_N_floor = 1.0e-12 };
 }
 
 static void
@@ -602,9 +599,6 @@ static void check_finite_trial_displacement_overflow(
   stretched_metric.gammaUU[1][1] = stretched_metric.gammaUU[2][2] = 1.0e-153;
   stretched_metric.detgamma = 6.4e307;
   stretched_metric.sqrt_detgamma = 8.0e153;
-  require_error(
-        ghl_m1_validate_configuration(&step_params, &stretched_metric), ghl_success,
-        "finite-displacement-overflow metric", 387);
   ghl_primitive_quantities rest_prims = *prims;
   for(int i = 0; i < 3; ++i) {
     rest_prims.vU[i] = 0.0;
@@ -628,8 +622,8 @@ static void check_finite_trial_displacement_overflow(
     double residual[4] = { 0.0, 0.0, 0.0, 0.0 };
     require_error(
           ghl_m1_neutrino_compute_implicit_residual_with_base(
-                &step_params, &stretched_metric, &rest_prims, &zero_rates, 0.0, U_base, U,
-                residual),
+                &step_params, &stretched_metric, &rest_prims, &zero_rates, 0.0, U_base,
+                U, residual),
           ghl_success, "finite-displacement-overflow base residual", 387 + backward);
 
     double trial[4] = { U[0], U[1], U[2], U[3] };
@@ -640,15 +634,15 @@ static void check_finite_trial_displacement_overflow(
     double trial_residual[4] = { 0.0, 0.0, 0.0, 0.0 };
     require_error(
           ghl_m1_neutrino_compute_implicit_residual_with_base(
-                &step_params, &stretched_metric, &rest_prims, &zero_rates, 0.0,
-                U_base, trial, trial_residual),
+                &step_params, &stretched_metric, &rest_prims, &zero_rates, 0.0, U_base,
+                trial, trial_residual),
           ghl_success, "finite-displacement-overflow trial residual", 387 + backward);
 
     double jacobian[4][4] = { { 0.0 } };
     require_error(
           ghl_m1_neutrino_compute_implicit_jacobian_with_base(
-                &step_params, &stretched_metric, &rest_prims, &zero_rates, 0.0, U_base, U,
-                residual, jacobian),
+                &step_params, &stretched_metric, &rest_prims, &zero_rates, 0.0, U_base,
+                U, residual, jacobian),
           ghl_error_m1_invalid_implicit_jacobian,
           "finite-displacement-overflow Jacobian", 387 + backward);
   }
@@ -884,6 +878,29 @@ static void test_weighted_merit_boundaries(
         isinf(ghl_m1_newton_weighted_merit(
               m1_params, metric, U, U_base, nonfinite_residual)),
         "nonfinite weighted-merit residual was not rejected", 724);
+
+  /* NaN would evade the fmax accumulation, so a nonfinite state or base
+   * operand must be rejected even when every residual component is zero. */
+  const double nonfinite_U[4] = { 2.0, NAN, 0.0, 0.0 };
+  require_condition(
+        isinf(ghl_m1_newton_weighted_merit(
+              m1_params, metric, nonfinite_U, U_base, residual)),
+        "nonfinite weighted-merit state was not rejected", 726);
+
+  const double nonfinite_U_base[4] = { 1.0, 0.0, NAN, 0.0 };
+  require_condition(
+        isinf(ghl_m1_newton_weighted_merit(
+              m1_params, metric, U, nonfinite_U_base, residual)),
+        "nonfinite weighted-merit base state was not rejected", 727);
+
+  /* Finite inputs whose relative-tolerance term overflows give a nonfinite
+   * denominator, which must not be divided into the residual. */
+  ghl_m1_parameters overflow_tolerance_params = *m1_params;
+  overflow_tolerance_params.newton_tolerance = DBL_MAX;
+  require_condition(
+        isinf(ghl_m1_newton_weighted_merit(
+              &overflow_tolerance_params, metric, U, U_base, residual)),
+        "overflowing weighted-merit denominator was not rejected", 728);
 
   /* This is an exported entry point and must report "no admissible merit"
    * rather than dereferencing a missing operand. */
@@ -1661,34 +1678,6 @@ static void test_newton_retry_boundaries(
         "Newton published the genuinely subfloor iterate", 783);
 }
 
-/* The public solver does not validate the configuration before iterating. An
- * invalid repair policy therefore first surfaces at the trial admissibility
- * check and must abort without publishing. */
-static void test_newton_trial_configuration_failure(
-      const ghl_m1_parameters *restrict m1_params,
-      const ghl_metric_quantities *restrict metric) {
-  ghl_m1_parameters invalid_params = *m1_params;
-  invalid_params.repair_policy = (ghl_m1_repair_policy_t)12345;
-  const affine_newton_context affine = { .target = { 2.0, 0.1, 0.0, 0.0 } };
-  const ghl_m1_newton_callbacks callbacks = { .residual = affine_newton_residual,
-                                              .jacobian = affine_newton_jacobian,
-                                              .observer = NULL,
-                                              .observer_context = NULL };
-  const double U_base[4] = { 1.0, 0.0, 0.0, 0.0 };
-  const double unchanged[4] = { -1.0, -2.0, -3.0, -4.0 };
-  double U_out[4] = { unchanged[0], unchanged[1], unchanged[2], unchanged[3] };
-  ghl_m1_newton_diagnostics diagnostics;
-  require_error(
-        checked_newton(
-              &invalid_params, metric, &callbacks, &affine, U_base, U_out, &diagnostics),
-        ghl_error_m1_invalid_repair_policy, "Newton trial configuration failure", 776);
-  for(int component = 0; component < 4; ++component) {
-    require_close(
-          U_out[component], unchanged[component], 0.0, 0.0,
-          "Newton trial configuration failure transaction", 776);
-  }
-}
-
 static void test_newton_extreme_admissibility(
       const ghl_m1_parameters *params,
       const ghl_metric_quantities *metric) {
@@ -1744,13 +1733,28 @@ static void test_newton_extreme_admissibility(
   set_identity_matrix(fixed.jacobian);
   expect_solver_failure(
         &huge_floor, &volume_metric, &fixed, "overflowing densitized Newton floor", 783);
+
+  /* The residual callback succeeds at every trial, but each correction of the
+   * DBL_MAX iterate overflows to a nonfinite state. The driver's own check must
+   * reject all of them rather than publish one. */
+  const ghl_m1_newton_callbacks fixed_callbacks
+        = { .residual = fixed_newton_residual, .jacobian = fixed_newton_jacobian };
+  const double overflow_base[4] = { DBL_MAX, 0.0, 0.0, 0.0 };
+  fixed.residual[0] = -DBL_MAX;
+  require_error(
+        checked_newton(
+              params, metric, &fixed_callbacks, &fixed, overflow_base, output, NULL),
+        ghl_error_m1_implicit_solve_failure, "succeeding overflowing Newton trials",
+        784);
+  require_condition(
+        memcmp(output, unchanged, sizeof(output)) == 0,
+        "overflowing Newton trial published output", 784);
 }
 
 static void test_newton_coverage_boundaries(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric) {
   test_newton_extreme_admissibility(m1_params, metric);
-  test_newton_trial_configuration_failure(m1_params, metric);
   test_weighted_merit_boundaries(m1_params, metric);
   test_projection_failure_boundaries(m1_params, metric);
   test_linear_rejection_boundaries(m1_params, metric);
@@ -1819,6 +1823,37 @@ static void test_public_newton_boundaries(
         ghl_m1_newton_project_admissible(m1_params, metric, NULL),
         ghl_error_m1_null_pointer, "NULL-output admissibility projection", 709);
 
+  /* Densitizing a finite energy can overflow the projected conservative
+   * vector; the projection must reject it transactionally. */
+  {
+    ghl_metric_quantities overflow_metric = *metric;
+    overflow_metric.sqrt_detgamma = ldexp(1.0, 512);
+    overflow_metric.detgamma
+          = overflow_metric.sqrt_detgamma * overflow_metric.sqrt_detgamma;
+    for(int i = 0; i < 3; ++i) {
+      overflow_metric.gammaDD[i][i] = overflow_metric.detgamma;
+      overflow_metric.gammaUU[i][i] = 1.0 / overflow_metric.detgamma;
+    }
+    ghl_m1_parameters overflow_params = *m1_params;
+    overflow_params.E_floor = ldexp(1.0, 900);
+    projected[0] = 1.0e-20;
+    projected[1] = 0.0;
+    projected[2] = 0.0;
+    projected[3] = 0.0;
+    const double overflow_before[4]
+          = { projected[0], projected[1], projected[2], projected[3] };
+    require_error(
+          ghl_m1_newton_project_admissible(
+                &overflow_params, &overflow_metric, projected),
+          ghl_error_m1_implicit_admissibility, "overflowing admissibility projection",
+          710);
+    for(int component = 0; component < 4; ++component) {
+      require_close(
+            projected[component], overflow_before[component], 0.0, 0.0,
+            "transactional overflow projection", 710);
+    }
+  }
+
   ghl_metric_quantities invalid_metric = *metric;
   invalid_metric.sqrt_detgamma = 0.0;
   projected[0] = unchanged[0];
@@ -1828,6 +1863,24 @@ static void test_public_newton_boundaries(
   require_error(
         ghl_m1_newton_project_admissible(m1_params, &invalid_metric, projected),
         ghl_error_m1_invalid_metric, "invalid-metric admissibility projection", 710);
+  const double invalid_volumes[] = { NAN, -1.0, INFINITY };
+  for(size_t variant = 0; variant < sizeof(invalid_volumes) / sizeof(invalid_volumes[0]);
+      ++variant) {
+    invalid_metric = *metric;
+    invalid_metric.sqrt_detgamma = invalid_volumes[variant];
+    projected[0] = unchanged[0];
+    projected[1] = unchanged[1];
+    projected[2] = unchanged[2];
+    projected[3] = unchanged[3];
+    require_error(
+          ghl_m1_newton_project_admissible(m1_params, &invalid_metric, projected),
+          ghl_error_m1_invalid_metric, "nonfinite admissibility projection volume", 710);
+    for(int component = 0; component < 4; ++component) {
+      require_close(
+            projected[component], unchanged[component], 0.0, 0.0,
+            "transactional admissibility volume", 710);
+    }
+  }
   for(int component = 0; component < 4; ++component) {
     require_close(
           projected[component], unchanged[component], 0.0, 0.0,
@@ -1908,8 +1961,7 @@ static void test_neutrino_schedule_driver(void) {
                            | ghl_m1_solution_path_endpoint_acceptance),
         "primary schedule diagnostics or path flags were wrong", 790);
   require_close(
-        result.U_final[0], U_in[0] + dt, 0.0, 0.0,
-        "primary schedule endpoint", 790);
+        result.U_final[0], U_in[0] + dt, 0.0, 0.0, "primary schedule endpoint", 790);
 
   const ghl_error_codes_t retryable_errors[] = {
     ghl_error_m1_implicit_admissibility,
@@ -1941,16 +1993,17 @@ static void test_neutrino_schedule_driver(void) {
                 && (result.solution_path_flags & ghl_m1_solution_path_closure_fallback)
                 && (result.solution_path_flags
                     & ghl_m1_solution_path_endpoint_acceptance),
-          "retry schedule lost an event or successful-step diagnostic", 791 + (int)retry);
+          "retry schedule lost an event or successful-step diagnostic",
+          791 + (int)retry);
     require_close(
-          result.U_final[0], U_in[0] + dt, 0.0, 8.0e-16,
-          "retry schedule endpoint", 791 + (int)retry);
+          result.U_final[0], U_in[0] + dt, 0.0, 8.0e-16, "retry schedule endpoint",
+          791 + (int)retry);
     require_close(
-          result.residual_max_norm, 13.0, 0.0, 0.0,
-          "retry schedule residual maximum", 791 + (int)retry);
+          result.residual_max_norm, 13.0, 0.0, 0.0, "retry schedule residual maximum",
+          791 + (int)retry);
     require_close(
-          result.residual_scaled_norm, 23.0, 0.0, 0.0,
-          "retry schedule residual merit", 791 + (int)retry);
+          result.residual_scaled_norm, 23.0, 0.0, 0.0, "retry schedule residual merit",
+          791 + (int)retry);
   }
 
   scripted_neutrino_schedule hard_failure = {
@@ -1970,11 +2023,10 @@ static void test_neutrino_schedule_driver(void) {
   scripted_neutrino_schedule terminal = {
     .num_failures = 5,
     .failure_calls = { 1, 3, 7, 15, 31 },
-    .failure_errors = { ghl_error_m1_implicit_admissibility,
-                        ghl_error_m1_invalid_implicit_jacobian,
-                        ghl_error_m1_implicit_solve_failure,
-                        ghl_error_m1_implicit_admissibility,
-                        ghl_error_m1_implicit_solve_failure },
+    .failure_errors
+    = { ghl_error_m1_implicit_admissibility, ghl_error_m1_invalid_implicit_jacobian,
+        ghl_error_m1_implicit_solve_failure, ghl_error_m1_implicit_admissibility,
+        ghl_error_m1_implicit_solve_failure },
     .backtracking_call = 2,
     .projection_call = 3,
     .closure_fallback_call = 4,
@@ -1989,8 +2041,8 @@ static void test_neutrino_schedule_driver(void) {
           | ghl_m1_solution_path_projection | ghl_m1_solution_path_closure_fallback;
   require_condition(
         terminal.calls == 31 && result.successful_substeps == 0
-              && result.last_schedule_substeps == 16
-              && result.total_iterations == 0 && result.total_backtracks == 0
+              && result.last_schedule_substeps == 16 && result.total_iterations == 0
+              && result.total_backtracks == 0
               && result.solution_path_flags == terminal_flags
               && memcmp(result.U_final, U_in, sizeof(U_in)) == 0,
         "exhausted schedule lost diagnostics or changed its input state", 796);
@@ -2009,31 +2061,6 @@ static void test_neutrino_implicit_partial_branches(
   make_rates(1.0, &rates);
   const ghl_m1_neutrino_state state = { .N = 1.0, .E = 1.0 };
 
-  ghl_m1_scaled_positive scaled = { .mantissa = 0.5, .exponent = 2 };
-  ghl_m1_scaled_positive *volatile selected_output = NULL;
-  volatile double selected_value = 1.0;
-  require_condition(
-        !ghl_m1_scaled_positive_from_double(selected_value, selected_output),
-        "scaled conversion accepted null output", 790);
-  const double invalid_values[] = { NAN, INFINITY, -1.0 };
-  for(size_t i = 0; i < sizeof(invalid_values) / sizeof(invalid_values[0]); ++i) {
-    selected_value = invalid_values[i];
-    require_condition(
-          !ghl_m1_scaled_positive_from_double(selected_value, &scaled)
-                && scaled.mantissa == 0.5 && scaled.exponent == 2,
-          "invalid scaled conversion changed output", 790);
-  }
-  selected_value = 0.0;
-  require_condition(
-        ghl_m1_scaled_positive_from_double(selected_value, &scaled)
-              && scaled.mantissa == 0.0 && scaled.exponent == 0,
-        "scaled conversion mishandled zero", 790);
-  selected_value = 1.0;
-  require_condition(
-        ghl_m1_scaled_positive_from_double(selected_value, &scaled)
-              && scaled.mantissa == 0.5 && scaled.exponent == 1,
-        "scaled conversion mishandled a positive value", 790);
-  scaled = (ghl_m1_scaled_positive){ .mantissa = 0.5, .exponent = 2 };
   double used_delta = 7.0;
   require_error(
         ghl_m1_neutrino_finite_difference_delta(-DBL_MAX, DBL_MAX, NULL),
@@ -2043,22 +2070,12 @@ static void test_neutrino_implicit_partial_branches(
         ghl_error_m1_invalid_implicit_jacobian,
         "overflowing finite-difference displacement", 790);
   require_condition(
-        used_delta == 7.0,
-        "invalid finite-difference displacement changed its output", 790);
+        used_delta == 7.0, "invalid finite-difference displacement changed its output",
+        790);
   require_error(
         ghl_m1_neutrino_finite_difference_delta(-0.25, 0.5, &used_delta), ghl_success,
         "finite-difference displacement", 790);
   require_condition(used_delta == 0.75, "finite-difference displacement was wrong", 790);
-  const double factors[] = { 2.0, 3.0 };
-  const double *volatile null_factors = NULL;
-  volatile int no_factors = 0;
-  require_condition(
-        !ghl_m1_scaled_positive_product(null_factors, 2, &scaled)
-              && !ghl_m1_scaled_positive_product(factors, no_factors, &scaled)
-              && !ghl_m1_scaled_positive_product(factors, 2, selected_output)
-              && scaled.mantissa == 0.5 && scaled.exponent == 2,
-        "invalid scaled product accepted or changed output", 791);
-
   /* Each member is an independent public required pointer. */
   for(int missing = 0; missing < 10; ++missing) {
     ghl_m1_neutrino_state output = state;
@@ -2134,8 +2151,10 @@ static void test_neutrino_implicit_partial_branches(
         thin == 1 && output.E == state.E && output.N == state.N
               && output.F[0] == state.F[0] && exchange.dE_rad == 0.0
               && exchange.dYe_matter == 0.0
-              && memcmp(&thin_diagnostics, &thin_diagnostics_before,
-                        sizeof(thin_diagnostics)) == 0,
+              && memcmp(
+                       &thin_diagnostics, &thin_diagnostics_before,
+                       sizeof(thin_diagnostics))
+                       == 0,
         "thin E/F overflow changed state, exchange, or diagnostics", 821);
 
   /* Absorption can leave E/F finite but below the strict J_floor required by
@@ -2160,10 +2179,12 @@ static void test_neutrino_implicit_partial_branches(
               &state, &thin, &output, &exchange, &thin_diagnostics),
         ghl_error_m1_invalid_state, "thin endpoint below J floor", 822);
   require_condition(
-        thin == 1 && output.E == state.E && output.N == state.N
-              && exchange.dE_rad == 0.0 && exchange.dYe_matter == 0.0
-              && memcmp(&thin_diagnostics, &thin_diagnostics_before,
-                        sizeof(thin_diagnostics)) == 0,
+        thin == 1 && output.E == state.E && output.N == state.N && exchange.dE_rad == 0.0
+              && exchange.dYe_matter == 0.0
+              && memcmp(
+                       &thin_diagnostics, &thin_diagnostics_before,
+                       sizeof(thin_diagnostics))
+                       == 0,
         "J-floor current failure changed state, exchange, or diagnostics", 822);
 
   /* Align the fluid velocity with the flux: these lab-frame E/F values are
@@ -2217,8 +2238,10 @@ static void test_neutrino_implicit_partial_branches(
         thin == 1 && output.E == moving_isotropic.E && output.N == moving_isotropic.N
               && output.F[0] == moving_isotropic.F[0] && exchange.dE_rad == 0.0
               && exchange.dYe_matter == 0.0
-              && memcmp(&thin_diagnostics, &thin_diagnostics_before,
-                        sizeof(thin_diagnostics)) == 0,
+              && memcmp(
+                       &thin_diagnostics, &thin_diagnostics_before,
+                       sizeof(thin_diagnostics))
+                       == 0,
         "number endpoint overflow changed state, exchange, or diagnostics", 823);
 
   /* A representable number endpoint may still overflow its coordinate
@@ -2257,8 +2280,10 @@ static void test_neutrino_implicit_partial_branches(
               && output.N == current_overflow_state.N
               && output.F[0] == current_overflow_state.F[0] && exchange.dE_rad == 0.0
               && exchange.dYe_matter == 0.0
-              && memcmp(&thin_diagnostics, &thin_diagnostics_before,
-                        sizeof(thin_diagnostics)) == 0,
+              && memcmp(
+                       &thin_diagnostics, &thin_diagnostics_before,
+                       sizeof(thin_diagnostics))
+                       == 0,
         "endpoint-current overflow changed state, exchange, or diagnostics", 824);
 
   /* Electron charged-current exchange is finite before division by a positive
@@ -2283,14 +2308,15 @@ static void test_neutrino_implicit_partial_branches(
   require_error(
         ghl_m1_try_neutrino_explicit_thin_update_with_diagnostics(
               params, &nu, metric, &rest_prims, &exchange_overflow_rates, 1.0,
-              nextafter(0.0, 1.0), &state, &thin, &output, &exchange,
-              &thin_diagnostics),
+              nextafter(0.0, 1.0), &state, &thin, &output, &exchange, &thin_diagnostics),
         ghl_error_m1_invalid_state, "thin exchange overflow", 825);
   require_condition(
-        thin == 1 && output.E == state.E && output.N == state.N
-              && exchange.dE_rad == 0.0 && exchange.dYe_matter == 0.0
-              && memcmp(&thin_diagnostics, &thin_diagnostics_before,
-                        sizeof(thin_diagnostics)) == 0,
+        thin == 1 && output.E == state.E && output.N == state.N && exchange.dE_rad == 0.0
+              && exchange.dYe_matter == 0.0
+              && memcmp(
+                       &thin_diagnostics, &thin_diagnostics_before,
+                       sizeof(thin_diagnostics))
+                       == 0,
         "exchange overflow changed state, exchange, or diagnostics", 825);
 
   /* The zero-flux predictor forms lapse*dt*sqrt(gamma) before the Newton
@@ -2303,8 +2329,8 @@ static void test_neutrino_implicit_partial_branches(
   bool predictor_fallback = true;
   require_error(
         ghl_m1_neutrino_build_EF_initial_guess(
-              params, &negative_lapse_metric, &rest_prims, &rates, 0.1,
-              predictor_input, predictor_guess, &predictor_fallback),
+              params, &negative_lapse_metric, &rest_prims, &rates, 0.1, predictor_input,
+              predictor_guess, &predictor_fallback),
         ghl_error_m1_invalid_state, "negative predictor lapse product", 826);
   require_condition(
         memcmp(predictor_guess, predictor_input, sizeof(predictor_input)) == 0
@@ -2316,9 +2342,8 @@ static void test_neutrino_implicit_partial_branches(
   ghl_m1_newton_diagnostics newton_diagnostics;
   require_error(
         ghl_m1_neutrino_attempt_EF_newton_step(
-              params, &negative_lapse_metric, &rest_prims, &rates, 0.1,
-              predictor_input, newton_output, &newton_diagnostics,
-              &predictor_fallback),
+              params, &negative_lapse_metric, &rest_prims, &rates, 0.1, predictor_input,
+              newton_output, &newton_diagnostics, &predictor_fallback),
         ghl_error_m1_invalid_metric, "negative metric after predictor rejection", 826);
   require_condition(
         memcmp(newton_output, unchanged_output, sizeof(newton_output)) == 0,
@@ -2350,8 +2375,10 @@ static void test_neutrino_implicit_partial_branches(
               densitized_guess_input, densitized_initial_guess, &predictor_fallback),
         ghl_success, "overflowing undensitized predictor fallback", 827);
   require_condition(
-        memcmp(densitized_initial_guess, densitized_guess_input,
-               sizeof(densitized_guess_input)) == 0
+        memcmp(
+              densitized_initial_guess, densitized_guess_input,
+              sizeof(densitized_guess_input))
+                    == 0
               && !predictor_fallback,
         "overflowing predictor did not restore its finite conserved input", 827);
 
@@ -2369,8 +2396,7 @@ static void test_neutrino_implicit_partial_branches(
         ghl_error_m1_invalid_state, "overflowing finite timestep-lapse product", 828);
   require_condition(
         implicit_output.E == state.E && implicit_output.N == state.N
-              && implicit_exchange.dE_rad == 0.0
-              && implicit_exchange.dYe_matter == 0.0
+              && implicit_exchange.dE_rad == 0.0 && implicit_exchange.dYe_matter == 0.0
               && implicit_diagnostics.source_failures == 5
               && solve_diagnostics.fallback_substeps == 1,
         "overflowing timestep-lapse product published solve outputs", 828);
@@ -2469,6 +2495,43 @@ static void test_neutrino_implicit_partial_branches(
           "invalid predictor published a solution", 811 + invalid);
   }
 
+  /* The predictor validates the immutable metric at its own boundary; each
+   * lapse/volume reject arm is a separate condition. */
+  {
+    const double invalid_predictor_metric[] = { NAN, 0.0, -1.0, INFINITY };
+    const double predictor_base[4] = { 1.0, 0.0, 0.0, 0.0 };
+    const double predictor_unchanged[4] = { -1.0, -2.0, -3.0, -4.0 };
+    for(size_t variant = 0;
+        variant < sizeof(invalid_predictor_metric) / sizeof(invalid_predictor_metric[0]);
+        ++variant) {
+      ghl_metric_quantities bad_predictor_metric = *metric;
+      bad_predictor_metric.lapse = invalid_predictor_metric[variant];
+      double output[4];
+      memcpy(output, predictor_unchanged, sizeof(output));
+      ghl_m1_newton_diagnostics diagnostics;
+      bool fallback = false;
+      require_error(
+            ghl_m1_neutrino_attempt_EF_newton_step(
+                  params, &bad_predictor_metric, &prims, &rates, 0.1, predictor_base,
+                  output, &diagnostics, &fallback),
+            ghl_error_m1_invalid_metric, "invalid predictor lapse", 811);
+      require_condition(
+            memcmp(output, predictor_unchanged, sizeof(output)) == 0,
+            "invalid predictor lapse published a solution", 811);
+      bad_predictor_metric = *metric;
+      bad_predictor_metric.sqrt_detgamma = invalid_predictor_metric[variant];
+      fallback = false;
+      require_error(
+            ghl_m1_neutrino_attempt_EF_newton_step(
+                  params, &bad_predictor_metric, &prims, &rates, 0.1, predictor_base,
+                  output, &diagnostics, &fallback),
+            ghl_error_m1_invalid_metric, "invalid predictor volume", 811);
+      require_condition(
+            memcmp(output, predictor_unchanged, sizeof(output)) == 0,
+            "invalid predictor volume published a solution", 811);
+    }
+  }
+
   ghl_m1_neutrino_current current = { .J = 1.0, .Gamma_N = 1.0 };
   ghl_m1_neutrino_diagnostics diagnostics = { 0 };
   rates.J_eq = 0.0;
@@ -2478,6 +2541,104 @@ static void test_neutrino_implicit_partial_branches(
         diagnostics.mean_energy_diag == 1.0 && diagnostics.mean_energy_consistent
               && !diagnostics.Jeq_over_neq_consistent,
         "zero equilibrium energy reported a consistent ratio", 803);
+}
+
+#include "m1_pair_range_tests.h"
+
+typedef struct {
+  completion_record completion;
+  int inadmissible_trials;
+} trial_admissibility_record;
+
+static void observe_trial_admissibility(
+      void *context,
+      const ghl_m1_solver_stage_t stage,
+      const ghl_error_codes_t status,
+      const double U[4],
+      const double residual[4],
+      const ghl_m1_newton_diagnostics *diagnostics) {
+  trial_admissibility_record *record = context;
+  if(stage == ghl_m1_solver_stage_residual && status == ghl_success && U[0] < 1.0) {
+    record->inadmissible_trials++;
+  }
+  check_completion_event(&record->completion, stage, status, U, residual, diagnostics);
+}
+
+static void test_newton_independent_trial_admissibility(
+      const ghl_m1_parameters *params,
+      const ghl_metric_quantities *metric) {
+  /* A generic residual callback can evaluate an inadmissible trial
+   * successfully. The driver must independently reject it. This affine
+   * equation has its root below the energy floor; every trial lowers E
+   * from the floor and is rejected without asking for projection. */
+  ghl_m1_parameters floor_params = *params;
+  floor_params.E_floor = 1.0;
+  const affine_newton_context context = { .target = { -0.5, 0.0, 0.0, 0.0 } };
+  trial_admissibility_record record = { 0 };
+  const ghl_m1_newton_callbacks callbacks = { .residual = affine_newton_residual,
+                                              .jacobian = affine_newton_jacobian,
+                                              .observer = observe_trial_admissibility,
+                                              .observer_context = &record };
+  const double base[4] = { 1.0, 0.0, 0.0, 0.0 };
+  double output[4] = { -7.0, -8.0, -9.0, -10.0 };
+  double before[4];
+  memcpy(before, output, sizeof(output));
+  ghl_m1_newton_diagnostics diagnostics;
+  require_error(
+        ghl_m1_newton_solve_4d(
+              &floor_params, metric, &callbacks, &context, base, output, &diagnostics),
+        ghl_error_m1_implicit_solve_failure, "independent trial admissibility", 798);
+  require_condition(
+        memcmp(output, before, sizeof(output)) == 0 && record.inadmissible_trials > 0
+              && !diagnostics.used_projection,
+        "inadmissible successful callback published a trial", 798);
+  require_condition(
+        record.completion.completed == 1
+              && record.completion.result == ghl_error_m1_implicit_solve_failure,
+        "inadmissible trial lost completion event", 798);
+}
+
+static void test_newton_callback_metric_rejection(
+      const ghl_m1_parameters *params,
+      const ghl_metric_quantities *metric) {
+  const double invalid_volumes[] = { 0.0, -1.0, NAN, INFINITY };
+  const double base[4] = { 1.0, 0.0, 0.0, 0.0 };
+  for(size_t c = 0; c < sizeof(invalid_volumes) / sizeof(invalid_volumes[0]); ++c) {
+    ghl_metric_quantities invalid_metric = *metric;
+    invalid_metric.sqrt_detgamma = invalid_volumes[c];
+    fixed_newton_context context = { 0 };
+    set_identity_matrix(context.jacobian);
+    /* A finite nonpositive volume reaches the converged-iterate check.
+     * A nonfinite volume gives infinite merit; a successful constant
+     * residual then reaches the trial check and metric-error notification. */
+    context.residual[0] = isfinite(invalid_volumes[c]) ? 0.0 : 1.0;
+    for(int observed = 0; observed < 2; ++observed) {
+      completion_record completion = { 0 };
+      const ghl_m1_newton_callbacks callbacks
+            = { .residual = fixed_newton_residual,
+                .jacobian = fixed_newton_jacobian,
+                .observer = observed ? check_completion_event : NULL,
+                .observer_context = observed ? &completion : NULL };
+      double output[4] = { -7.0, -8.0, -9.0, -10.0 };
+      double before[4];
+      memcpy(before, output, sizeof(output));
+      ghl_m1_newton_diagnostics diagnostics;
+      require_error(
+            ghl_m1_newton_solve_4d(
+                  params, &invalid_metric, &callbacks, &context, base, output,
+                  &diagnostics),
+            ghl_error_m1_invalid_metric, "callback metric rejection", 799);
+      require_condition(
+            memcmp(output, before, sizeof(output)) == 0,
+            "invalid metric published a Newton trial", 799);
+      if(observed) {
+        require_condition(
+              completion.completed == 1
+                    && completion.result == ghl_error_m1_invalid_metric,
+              "metric failure lost completion notification", 799);
+      }
+    }
+  }
 }
 
 int main(void) {
@@ -2490,6 +2651,10 @@ int main(void) {
 
   ghl_metric_quantities metric;
   m1_setup_flat_metric(&metric);
+  test_pair_quadratic_range_rejection(&m1_params);
+  test_projected_number_range_rejection();
+  test_newton_independent_trial_admissibility(&m1_params, &metric);
+  test_newton_callback_metric_rejection(&m1_params, &metric);
   test_neutrino_schedule_driver();
   test_neutrino_implicit_partial_branches(&m1_params, &metric);
   test_public_newton_boundaries(&m1_params, &metric);
@@ -2559,7 +2724,7 @@ int main(void) {
   }
 
   ghl_m1_neutrino_state boundary_state = partial_zero_state;
-  boundary_state.F[0] = sqrt(m1_params.one_minus_epsilon_c_sq) - 1.0e-11;
+  boundary_state.F[0] = sqrt(1.0 - m1_params.epsilon_c) - 1.0e-11;
   check_jacobian_against_independent_difference(
         &m1_params, &nu_params, &metric, &prims, &rates, &boundary_state, 1.0, 1, true,
         500);

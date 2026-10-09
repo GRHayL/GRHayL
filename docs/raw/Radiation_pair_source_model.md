@@ -22,7 +22,7 @@ rate struct's size and requires rebuilding consumers.
 The production provider retains the raw number and energy emissivities. It
 does not force the emitted mean energy `eta_E_pair/eta_N_pair` to equal the
 equilibrium mean energy `J_eq/n_eq`. These are different spectral averages.
-The table-free reference backend supplies synthetic, symmetric pair-number
+Test-local reference support supplies synthetic, symmetric pair-number
 emission and remains a test model, not a weak-interaction prescription.
 
 The lumped heavy-flavor species continues to use its existing aggregate

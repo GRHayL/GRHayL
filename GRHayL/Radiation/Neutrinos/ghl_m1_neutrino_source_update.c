@@ -152,7 +152,7 @@ static ghl_error_codes_t ghl_m1_neutrino_validate_state_input(
     return ghl_error_m1_invalid_state;
   }
   const ghl_m1_rad_state rad_state = ghl_m1_neutrino_project_rad_state(state);
-  return ghl_m1_validate_realizability(m1_params, metric, &rad_state, 128.0, NULL);
+  return ghl_m1_validate_realizability_state(m1_params, metric, &rad_state, 128.0, NULL);
 }
 
 static bool
@@ -486,6 +486,9 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thin_branch(
 
   error = ghl_m1_neutrino_build_exchange(
         state_transport, &candidate, rates, dL_rad_cc, metric, n_b_cons, exchange);
+  /* Keep the exchange failure guard after endpoint validation.
+   * Finite endpoints alone do not prove representable differences or
+   * densitized exchange products. */
   if(error != ghl_success) {
     return error;
   }
@@ -536,6 +539,9 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thick_branch(
   error = ghl_m1_neutrino_derive_current_from_closure(
         m1_params, nu_params, metric, prims, &candidate, &endpoint_closure,
         &endpoint_current);
+  /* Retain validation of the endpoint current after repair and closure.
+   * The source-update test injects failure at this current read (call 1). */
+
   if(error != ghl_success) {
     return error;
   }
@@ -563,6 +569,9 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thick_branch(
         m1_params, nu_params, metric, prims, rates, dt, state_transport->N,
         number_projected, &candidate, physical_number_endpoint, number_endpoint_gamma,
         &lepton_fallback, &dL_rad_cc);
+  /* Retain charged-current increment validation after the number policy.
+   * The source-update test exercises propagation of a failed current read
+   * inside the endpoint lepton calculation (call 2). */
   if(error != ghl_success) {
     return error;
   }
@@ -570,6 +579,8 @@ static ghl_error_codes_t ghl_m1_neutrino_try_thick_branch(
 
   error = ghl_m1_neutrino_build_exchange(
         state_transport, &candidate, rates, dL_rad_cc, metric, n_b_cons, exchange);
+  /* Retain exchange validation and rollback at this endpoint too. */
+
   if(error != ghl_success) {
     return error;
   }
@@ -729,25 +740,15 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
           false, neutrino_diagnostics, true);
   }
 
-  /* The shared terminal-fallback policy must be validated on every route, not
-   * only where the ordinary implicit solver happens to inspect it.  A branched
-   * compatibility branch never reaches that solver, so without this check the
-   * same nu_params is accepted on one route and rejected on the other. */
-  if(nu_params->terminal_fallback_policy
-     != ghl_m1_neutrino_terminal_fallback_no_update_all) {
+  ghl_error_codes_t error = ghl_success;
+  if(!isfinite(metric->lapse) || metric->lapse <= 0.0 || !isfinite(metric->sqrt_detgamma)
+     || metric->sqrt_detgamma <= 0.0) {
     return ghl_m1_neutrino_publish_dispatch_failure(
-          ghl_error_m1_invalid_state, state_transport, state_out, exchange, diagnostics,
+          ghl_error_m1_invalid_metric, state_transport, state_out, exchange, diagnostics,
           false, neutrino_diagnostics, true);
   }
-
-  ghl_error_codes_t error = ghl_m1_validate_configuration(m1_params, metric);
-  if(error != ghl_success) {
-    return ghl_m1_neutrino_publish_dispatch_failure(
-          error, state_transport, state_out, exchange, diagnostics, false,
-          neutrino_diagnostics, true);
-  }
   const double dt_alpha = metric->lapse * dt;
-  /* Validated lapse is positive and dt is nonnegative. */
+  /* The lapse is positive and dt is nonnegative. */
   if(!isfinite(dt_alpha)) {
     return ghl_m1_neutrino_publish_dispatch_failure(
           ghl_error_m1_invalid_state, state_transport, state_out, exchange, diagnostics,
@@ -820,7 +821,7 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
 
   /* Compatibility branches are fail-closed on closure fallback unless
    * the host explicitly opts into the fallback candidate.  The pre-check
-   * catches the input closure; the general path checks the full Newton trace
+   * catches the input closure; implicit routes check the full Newton trace
    * below because trial states can select a different endpoint status. */
   bool preclosure_fallback = false;
   if(!selected.allow_closure_fallback) {
@@ -849,22 +850,51 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
 
   if(thin_selected) {
     path = ghl_m1_neutrino_source_path_thin_explicit;
+  }
+  else if(
+        ghl_m1_neutrino_thick_limit_selected(
+              dt_alpha, rates, selected.thick_equilibrium_threshold)) {
+    path = ghl_m1_neutrino_source_path_thick_equilibrium;
+  }
+  else if(
+        ghl_m1_neutrino_scattering_limit_selected(
+              dt_alpha, rates, selected.scattering_threshold)) {
+    path = ghl_m1_neutrino_source_path_scattering_dominated;
+  }
+
+  bool use_implicit = path == ghl_m1_neutrino_source_path_general_implicit;
+  if(path == ghl_m1_neutrino_source_path_thick_equilibrium
+     || path == ghl_m1_neutrino_source_path_scattering_dominated) {
+    double V_con[3], W;
+    error = ghl_m1_compute_eulerian_velocity(metric, prims_frozen, V_con, NULL, &W);
+    /* Validate velocity before constructing the stiff predictor. The
+     * source-update norm injection exercises the u0_singular failure. */
+    if(error != ghl_success) {
+      return ghl_m1_neutrino_publish_dispatch_failure(
+            error, state_transport, state_out, exchange, diagnostics,
+            closure_fallback_used, neutrino_diagnostics, true);
+    }
+    /* Comoving J/H damping solves the Eulerian source equations only at
+     * exact Eulerian rest. A moving-fluid boost is a predictor, not a finite
+     * source update: pure scattering must preserve E - V^i F_i. Keep the
+     * selected branch label, but solve the physical residual before publishing
+     * either moving-fluid stiff endpoint and retain its Newton diagnostics. */
+    use_implicit = V_con[0] != 0.0 || V_con[1] != 0.0 || V_con[2] != 0.0;
+  }
+
+  if(path == ghl_m1_neutrino_source_path_thin_explicit) {
     error = ghl_m1_neutrino_try_thin_branch(
           m1_params, nu_params, metric, prims_frozen, rates, state_transport, dt,
           n_b_cons, selected.thermalized_number_threshold,
           &candidate_neutrino_diagnostics, state_out, exchange, &closure_fallback_used);
   }
-  else if(ghl_m1_neutrino_thick_limit_selected(
-                dt_alpha, rates, selected.thick_equilibrium_threshold)) {
-    path = ghl_m1_neutrino_source_path_thick_equilibrium;
+  else if(!use_implicit && path == ghl_m1_neutrino_source_path_thick_equilibrium) {
     error = ghl_m1_neutrino_try_thick_branch(
           m1_params, nu_params, metric, prims_frozen, rates, state_transport, dt,
           n_b_cons, selected.thermalized_number_threshold,
           &candidate_neutrino_diagnostics, state_out, exchange, &closure_fallback_used);
   }
-  else if(ghl_m1_neutrino_scattering_limit_selected(
-                dt_alpha, rates, selected.scattering_threshold)) {
-    path = ghl_m1_neutrino_source_path_scattering_dominated;
+  else if(!use_implicit) {
     error = ghl_m1_neutrino_try_scattering_branch(
           m1_params, nu_params, metric, prims_frozen, rates, state_transport, dt,
           n_b_cons, selected.thermalized_number_threshold,
@@ -924,7 +954,7 @@ ghl_error_codes_t ghl_m1_solve_neutrino_source_update(
           closure_fallback_used, neutrino_diagnostics, true);
   }
 
-  if(path != ghl_m1_neutrino_source_path_general_implicit) {
+  if(!use_implicit) {
     candidate_neutrino_diagnostics.source_converged++;
     /* No Newton solve ran on this branch.  Publish a complete "no implicit
      * solve" record instead of leaving the initializer's INFINITY sentinels

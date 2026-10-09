@@ -92,7 +92,7 @@ factor. The five-component Rusanov helper uses the same supplied nonnegative
 speed for `{N,E,Fx,Fy,Fz}`; the canonical four-point operation then applies
 its componentwise blend and performs the one final face densitization. See
 [the current flux declarations](../../../GRHayL/include/ghl_m1.h) and
-[the four-point transport contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md#transport).
+[the four-point transport contract](../../../docs/raw/Radiation_integration_contract.md#transport).
 
 ## Floors and admissibility
 
@@ -102,11 +102,11 @@ neutrino repair helper can apply `N' = max(N,N_floor)` before deriving a
 current, while `J_floor` and `Gamma_N_floor` remain validation controls. The
 E/F cone repair is documented in [M1 realizability repair](m1-realizability-repair.md).
 
-## Superseded reduced-current construction
+## Reduced-current construction is not used
 
-The early implementation whitepaper proposed a reduced number current based on
-an Eulerian energy-flux direction, schematically `N*F^i/Fmag`. That construction
-and its associated number-current HLL description are historical. Current
+A reduced number current based on an Eulerian energy-flux direction,
+schematically `N*F^i/Fmag`, and its associated number-current HLL description
+are not used. Current
 GRHayL uses the full E/F-derived expression for \(\Gamma_N\), \(n_{\rm com}\),
 and \(V_N^i\) above, together with Rusanov transport. Do not reintroduce a
 small-flux direction cutoff or infer `Gamma_N` as `W` for nonzero `N`.

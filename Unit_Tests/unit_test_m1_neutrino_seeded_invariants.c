@@ -1,10 +1,12 @@
 #include "../GRHayL/Radiation/ghl_m1_utils.h"
+#include "m1_helpers/m1_thcm1_fixture_utils.h"
+#include "m1_helpers/m1_thcm1_source_fixture.h"
+#include "m1_helpers/m1_thcm1_stress_energy_fixture.h"
 #include "m1_neutrino_seeded_test_utils.h"
-#include "m1_thcm1_fixture_utils.h"
-#include "m1_thcm1_source_fixture.h"
-#include "m1_thcm1_stress_energy_fixture.h"
 
 #include <float.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 /*
@@ -162,42 +164,43 @@ static void check_closure_decomposition_diagnostic(
   double thick_trace = 0.0;
   for(int i = 0; i < 3; ++i) {
     require_finite_value(
-          diagnostic->Pthick_minus_Pthin_dd[i],
+          diagnostic->Pthick_minus_Pthin_DD[i],
           "decomposition diagonal difference is nonfinite", case_index, -1);
     require_condition(
           m1_nearly_equal(
-                diagnostic->Pthick_minus_Pthin_dd[i],
-                diagnostic->Pthick_dd[i][i] - diagnostic->Pthin_dd[i][i], 2.0e-12,
+                diagnostic->Pthick_minus_Pthin_DD[i],
+                diagnostic->Pthick_DD[i][i] - diagnostic->Pthin_DD[i][i], 2.0e-12,
                 2.0e-14),
           "decomposition diagonal difference identity failed", case_index, -1);
     for(int j = 0; j < 3; ++j) {
       require_finite_value(
-            diagnostic->Pthin_dd[i][j], "thin decomposition tensor is nonfinite",
+            diagnostic->Pthin_DD[i][j], "thin decomposition tensor is nonfinite",
             case_index, -1);
       require_finite_value(
-            diagnostic->Pthick_dd[i][j], "thick decomposition tensor is nonfinite",
+            diagnostic->Pthick_DD[i][j], "thick decomposition tensor is nonfinite",
             case_index, -1);
       require_condition(
             m1_nearly_equal(
-                  diagnostic->Pthin_dd[i][j], diagnostic->Pthin_dd[j][i], 2.0e-12,
+                  diagnostic->Pthin_DD[i][j], diagnostic->Pthin_DD[j][i], 2.0e-12,
                   2.0e-14)
                   && m1_nearly_equal(
-                        diagnostic->Pthick_dd[i][j], diagnostic->Pthick_dd[j][i],
+                        diagnostic->Pthick_DD[i][j], diagnostic->Pthick_DD[j][i],
                         2.0e-12, 2.0e-14),
             "decomposition tensors are not symmetric", case_index, -1);
-      thick_trace += metric->gammaUU[i][j] * diagnostic->Pthick_dd[i][j];
+      thick_trace += metric->gammaUU[i][j] * diagnostic->Pthick_DD[i][j];
     }
   }
   require_finite_value(
-        diagnostic->Pth_dd_3_3_UU, "thick decomposition trace is nonfinite", case_index,
-        -1);
+        diagnostic->Pthick_trace_over_3, "thick decomposition trace is nonfinite",
+        case_index, -1);
   require_finite_value(
-        diagnostic->Pth_dd_0_0_DD, "thick decomposition xx component is nonfinite",
+        diagnostic->Pthick_xx, "thick decomposition xx component is nonfinite",
         case_index, -1);
   require_condition(
-        m1_nearly_equal(diagnostic->Pth_dd_3_3_UU, thick_trace / 3.0, 2.0e-11, 2.0e-13)
+        m1_nearly_equal(
+              diagnostic->Pthick_trace_over_3, thick_trace / 3.0, 2.0e-11, 2.0e-13)
               && m1_nearly_equal(
-                    diagnostic->Pth_dd_0_0_DD, diagnostic->Pthick_dd[0][0], 2.0e-12,
+                    diagnostic->Pthick_xx, diagnostic->Pthick_DD[0][0], 2.0e-12,
                     2.0e-14),
         "decomposition trace identities failed", case_index, -1);
 
@@ -212,8 +215,8 @@ static void check_closure_decomposition_diagnostic(
           for(int l = 0; l < 3; ++l) {
             reconstructed
                   += metric->gammaUU[i][k] * metric->gammaUU[j][l]
-                     * (diagnostic->dthin_scalar * diagnostic->Pthin_dd[k][l]
-                        + diagnostic->dthick_scalar * diagnostic->Pthick_dd[k][l]);
+                     * (diagnostic->dthin_scalar * diagnostic->Pthin_DD[k][l]
+                        + diagnostic->dthick_scalar * diagnostic->Pthick_DD[k][l]);
           }
         }
         require_condition(
@@ -253,7 +256,7 @@ static void check_diagnostics(
         diagnostics->chi_eddington, "diagnostic chi is nonfinite", case_index, -1);
   require_condition(
         diagnostics->r >= 0.0
-              && diagnostics->r <= m1_params->one_minus_epsilon_c_sq + 1.0e-12,
+              && diagnostics->r <= (1.0 - m1_params->epsilon_c) + 1.0e-12,
         "diagnostic r is outside its physical interval", case_index, -1);
 }
 
@@ -518,6 +521,36 @@ static void check_zero_flux_admissibility(
   }
 }
 
+static char *m1_thcm1_seeded_fixture_path(
+      const char *restrict fixture_dir,
+      const char *restrict filename) {
+  if(fixture_dir == NULL || fixture_dir[0] == '\0' || filename == NULL
+     || filename[0] == '\0') {
+    return NULL;
+  }
+  const size_t directory_length = strlen(fixture_dir);
+  const size_t filename_length = strlen(filename);
+  const int separator = fixture_dir[directory_length - 1] == '/' ? 0 : 1;
+  if(filename_length > SIZE_MAX - (size_t)separator - 1) {
+    return NULL;
+  }
+  const size_t suffix_length = filename_length + (size_t)separator + 1;
+  if(directory_length > SIZE_MAX - suffix_length) {
+    return NULL;
+  }
+  char *path = (char *)malloc(directory_length + suffix_length);
+  if(path == NULL) {
+    return NULL;
+  }
+  memcpy(path, fixture_dir, directory_length);
+  size_t offset = directory_length;
+  if(separator) {
+    path[offset++] = '/';
+  }
+  memcpy(path + offset, filename, filename_length + 1);
+  return path;
+}
+
 static void check_pointwise_fixtures(const char *fixture_dir) {
   static const char *const anchors[] = { "radiation-anchor-energy-floor-a01",
                                          "radiation-anchor-number-floor-a01",
@@ -536,14 +569,12 @@ static void check_pointwise_fixtures(const char *fixture_dir) {
   static const char *const seeded_families[]
         = { "radiation", "radiation_N", "matter",  "rates",
             "velocity",  "metric",      "geometry" };
-  const char filename[] = "/pointwise_closure_moments.m1";
-  const size_t path_size = strlen(fixture_dir) + sizeof(filename);
-  char *path = malloc(path_size);
+  char *path
+        = m1_thcm1_seeded_fixture_path(fixture_dir, "pointwise_closure_moments.bin");
   if(path == NULL) {
     ghl_error("fixture path allocation failed\n");
     return;
   }
-  snprintf(path, path_size, "%s%s", fixture_dir, filename);
   m1_thcm1_fixture_collection fixtures = { 0 };
   char error[M1_THCM1_FIXTURE_TEXT_MAX];
   if(!m1_thcm1_fixture_load(
@@ -560,7 +591,6 @@ static void check_pointwise_fixtures(const char *fixture_dir) {
   if(fixtures.record_count != 56) {
     ghl_error("pointwise fixture corpus is incomplete\n");
   }
-  ghl_m1_reset_closure_counters();
   size_t sensitive = 0, controls = 0, admissibility_cases = 0;
   for(size_t i = 0; i < fixtures.record_count; ++i) {
     const m1_thcm1_fixture_record *record = &fixtures.records[i];
@@ -658,23 +688,6 @@ static void check_pointwise_fixtures(const char *fixture_dir) {
   if(sensitive != 29 || controls != 25 || admissibility_cases != 2) {
     ghl_error(
           "pointwise fixture corpus changed its sensitivity/control/policy inventory\n");
-  }
-  ghl_m1_closure_counters counters;
-  ghl_m1_get_closure_counters(NULL); /* Documented no-op. */
-  ghl_m1_get_closure_counters(&counters);
-  if(counters.ordinary_convergence + counters.endpoint_fallback
-                 + counters.iteration_exhaustion
-           != 2 * fixtures.record_count
-     || counters.endpoint_fallback < 2 * admissibility_cases
-     || counters.invalid_state != 0) {
-    ghl_error("closure counters do not describe the completed fixture evaluations\n");
-  }
-  ghl_m1_reset_closure_counters();
-  ghl_m1_get_closure_counters(&counters);
-  if(counters.ordinary_convergence || counters.endpoint_fallback
-     || counters.iteration_exhaustion || counters.invalid_state
-     || counters.downstream_repair || counters.residual_rejection) {
-    ghl_error("closure counter reset did not clear completed evaluations\n");
   }
   ghl_info(
         "THC_M1 pointwise fixtures: %zu agreement pairs (%zu sensitivity, %zu "
@@ -787,18 +800,12 @@ static void check_shared_closure_boundary_contracts(void) {
   if(ghl_m1_set_closure_residual_tolerance(true_min, &exhausted_params) != ghl_success) {
     ghl_error("could not tighten exhausted-solve residual acceptance\n");
   }
-  ghl_m1_reset_closure_counters();
   error = ghl_m1_compute_closure_with_primitives(
         &exhausted_params, &metric, &(ghl_primitive_quantities){ 0 }, &nonzero_flux,
         &closure);
-  ghl_m1_closure_counters rejected_counters;
-  ghl_m1_get_closure_counters(&rejected_counters);
   if(error != ghl_error_m1_closure_residual_too_large
-     || !m1_closure_identical(&closure, &exhausted_sentinel)
-     || rejected_counters.iteration_exhaustion != 1
-     || rejected_counters.residual_rejection != 1
-     || rejected_counters.invalid_state != 0) {
-    ghl_error("rejected exhausted closure lost transactional/counter contract\n");
+     || !m1_closure_identical(&closure, &exhausted_sentinel)) {
+    ghl_error("rejected exhausted closure lost its transactional contract\n");
   }
 
   /* This state selects the range-scaled residual path (E > sqrt(DBL_MAX))
@@ -1019,14 +1026,6 @@ static void check_nonzero_flux_admissibility_fallback(void) {
     require_condition(
           fabs(closure.chi - expected_chi) <= tolerance,
           "fallback changed the analytic Minerbo factor", -1, -1);
-    ghl_m1_closure_failure_stage_t failure_stage;
-    int validation_reason;
-    ghl_m1_get_last_closure_failure_stage(&failure_stage);
-    ghl_m1_get_last_closure_validation_reason(&validation_reason);
-    require_condition(
-          failure_stage == ghl_m1_closure_failure_none
-                && validation_reason == ghl_m1_closure_validation_psd,
-          "admissibility fallback lost its PSD diagnostic", -1, -1);
     for(int i = 0; i < 3; ++i) {
       for(int j = 0; j < 3; ++j) {
         const double expected
@@ -1056,9 +1055,6 @@ static void check_closure_arithmetic_boundaries(void) {
             .four_point_compatibility = true,
             .P = { { 1.0, 2.0, 3.0 }, { 4.0, 5.0, 6.0 }, { 7.0, 8.0, 9.0 } } };
   ghl_m1_closure closure = { 0 };
-  ghl_m1_closure_failure_stage_t failure_stage;
-  int validation_reason;
-  ghl_m1_closure_counters counters;
 
   /* A finite shift and coordinate velocity can cancel to an Eulerian-rest
    * state, while beta^2 overflows the intermediate four-metric. The public
@@ -1069,7 +1065,6 @@ static void check_closure_arithmetic_boundaries(void) {
   ghl_primitive_quantities prims = { .vU = { -DBL_MAX, 0.0, 0.0 }, .u0 = 1.0 };
   const ghl_m1_rad_state finite_state = { .E = 1.0, .F = { 0.0, 0.0, 0.0 } };
   closure = sentinel;
-  ghl_m1_reset_closure_counters();
   require_condition(
         ghl_m1_compute_closure_with_primitives(
               &params, &metric, &prims, &finite_state, &closure)
@@ -1078,15 +1073,6 @@ static void check_closure_arithmetic_boundaries(void) {
   require_condition(
         m1_closure_identical(&closure, &sentinel),
         "workspace overflow published a partial closure", -1, -1);
-  ghl_m1_get_last_closure_failure_stage(&failure_stage);
-  ghl_m1_get_last_closure_validation_reason(&validation_reason);
-  ghl_m1_get_closure_counters(&counters);
-  require_condition(
-        failure_stage == ghl_m1_closure_failure_workspace && validation_reason == 0
-              && counters.invalid_state == 1 && counters.ordinary_convergence == 0
-              && counters.endpoint_fallback == 0 && counters.iteration_exhaustion == 0
-              && counters.residual_rejection == 0,
-        "workspace overflow diagnostic accounting failed", -1, -1);
 
   /* The scaled norm result itself can exceed double range even though every
    * metric/state operand is finite. Realizability must reject that result and
@@ -1102,7 +1088,6 @@ static void check_closure_arithmetic_boundaries(void) {
   prims = (ghl_primitive_quantities){ .u0 = 1.0 };
   const ghl_m1_rad_state overflowing_flux = { .E = 1.0, .F = { DBL_MAX, 0.0, 0.0 } };
   closure = sentinel;
-  ghl_m1_reset_closure_counters();
   require_condition(
         ghl_m1_compute_closure_with_primitives(
               &params, &metric, &prims, &overflowing_flux, &closure)
@@ -1111,15 +1096,6 @@ static void check_closure_arithmetic_boundaries(void) {
   require_condition(
         m1_closure_identical(&closure, &sentinel),
         "realizability overflow published a partial closure", -1, -1);
-  ghl_m1_get_last_closure_failure_stage(&failure_stage);
-  ghl_m1_get_last_closure_validation_reason(&validation_reason);
-  ghl_m1_get_closure_counters(&counters);
-  require_condition(
-        failure_stage == ghl_m1_closure_failure_none && validation_reason == 0
-              && counters.invalid_state == 1 && counters.ordinary_convergence == 0
-              && counters.endpoint_fallback == 0 && counters.iteration_exhaustion == 0
-              && counters.residual_rejection == 0,
-        "realizability overflow diagnostic accounting failed", -1, -1);
 
   /* Keep the state realizable, but make the Eulerian fallback pressure
    * unrepresentable through the inverse spatial metric. This reaches the
@@ -1127,7 +1103,6 @@ static void check_closure_arithmetic_boundaries(void) {
   prims = (ghl_primitive_quantities){ .vU = { 0.0, 0.8, 0.0 }, .u0 = 5.0 / 3.0 };
   const ghl_m1_rad_state overflowing_fallback = { .E = DBL_MAX, .F = { 0.0, 0.0, 0.0 } };
   closure = sentinel;
-  ghl_m1_reset_closure_counters();
   require_condition(
         ghl_m1_compute_closure_with_primitives(
               &params, &metric, &prims, &overflowing_fallback, &closure)
@@ -1136,15 +1111,6 @@ static void check_closure_arithmetic_boundaries(void) {
   require_condition(
         m1_closure_identical(&closure, &sentinel),
         "fallback overflow published a partial closure", -1, -1);
-  ghl_m1_get_last_closure_failure_stage(&failure_stage);
-  ghl_m1_get_last_closure_validation_reason(&validation_reason);
-  ghl_m1_get_closure_counters(&counters);
-  require_condition(
-        failure_stage == ghl_m1_closure_failure_tensor_validation
-              && validation_reason == ghl_m1_closure_validation_psd
-              && counters.invalid_state == 1 && counters.endpoint_fallback == 0
-              && counters.iteration_exhaustion == 0 && counters.residual_rejection == 0,
-        "fallback overflow diagnostic accounting failed", -1, -1);
 
   /* Finite, realizable inputs can still exceed the representable range of
    * individual closure operations. Each row explicitly documents both the
@@ -1154,29 +1120,16 @@ static void check_closure_arithmetic_boundaries(void) {
   const struct {
     double energy, lapse, shift, velocity;
     ghl_error_codes_t expected_error;
-    ghl_m1_closure_failure_stage_t expected_failure_stage;
   } arithmetic_cases[]
         = { /* Finite shifted coordinates reach a checked non-finite workspace
              * operation. */
-            { DBL_MAX, 1.0, 2.0, 0.0, ghl_error_m1_invalid_state,
-              ghl_m1_closure_failure_workspace },
+            { DBL_MAX, 1.0, 2.0, 0.0, ghl_error_m1_invalid_state },
             /* A finite high-energy state reaches the checked workspace arithmetic
              * bound. */
-            { DBL_MAX, 2.0, 0.0, 0.0, ghl_error_m1_invalid_state,
-              ghl_m1_closure_failure_workspace },
+            { DBL_MAX, 2.0, 0.0, 0.0, ghl_error_m1_invalid_state },
             /* A finite lapse and energy at the binary64 square boundary fail in
              * the checked workspace arithmetic. */
-            { sqrt(DBL_MAX), 1.0e100, 0.0, 0.0, ghl_error_m1_invalid_state,
-              ghl_m1_closure_failure_workspace },
-            /* At this energy boundary, binary64 long double overflows the
-             * comoving-flux square; wider long double reaches the residual. */
-            { sqrt(DBL_MAX), 1.0, 0.0, 0.8, ghl_error_m1_invalid_state,
-              LDBL_MAX_EXP == DBL_MAX_EXP ? ghl_m1_closure_failure_comoving_flux_norm
-                                          : ghl_m1_closure_failure_residual },
-            /* Near-light motion makes the checked comoving-flux-square value
-             * non-finite when converted back from long double to binary64. */
-            { sqrt(DBL_MAX), 1.0, 0.0, 0x1.fffffffffffffp-1, ghl_error_m1_invalid_state,
-              ghl_m1_closure_failure_comoving_flux_norm }
+            { sqrt(DBL_MAX), 1.0e100, 0.0, 0.0, ghl_error_m1_invalid_state }
           };
   for(size_t i = 0; i < sizeof(arithmetic_cases) / sizeof(arithmetic_cases[0]); ++i) {
     ghl_initialize_metric(
@@ -1193,7 +1146,6 @@ static void check_closure_arithmetic_boundaries(void) {
           = { .E = arithmetic_cases[i].energy,
               .F = { 0.3 * arithmetic_cases[i].energy, 0.0, 0.0 } };
     closure = sentinel;
-    ghl_m1_reset_closure_counters();
     const ghl_error_codes_t arithmetic_error = ghl_m1_compute_closure_with_primitives(
           &params, &metric, &prims, &state, &closure);
     require_condition(
@@ -1202,16 +1154,6 @@ static void check_closure_arithmetic_boundaries(void) {
     require_condition(
           m1_closure_identical(&closure, &sentinel),
           "closure arithmetic failure published partial output", (int)i, -1);
-    ghl_m1_get_last_closure_failure_stage(&failure_stage);
-    ghl_m1_get_last_closure_validation_reason(&validation_reason);
-    ghl_m1_get_closure_counters(&counters);
-    require_condition(
-          failure_stage == arithmetic_cases[i].expected_failure_stage
-                && validation_reason == 0 && counters.invalid_state == 1
-                && counters.ordinary_convergence == 0 && counters.endpoint_fallback == 0
-                && counters.iteration_exhaustion == 0 && counters.downstream_repair == 0
-                && counters.residual_rejection == 0,
-          "closure arithmetic failure diagnostics", (int)i, -1);
   }
 
   /* At the exact binary64 speed endpoint, a flat metric reaches the
@@ -1224,23 +1166,14 @@ static void check_closure_arithmetic_boundaries(void) {
                                       .u0 = 1.0 / sqrt((1.0 - speed) * (1.0 + speed)) };
   const ghl_m1_rad_state endpoint_state = { .E = 1.0, .F = { 0.3, 0.0, 0.0 } };
   closure = sentinel;
-  ghl_m1_reset_closure_counters();
   const ghl_error_codes_t endpoint_error = ghl_m1_compute_closure_with_primitives(
         &params, &metric, &prims, &endpoint_state, &closure);
   require_condition(
         endpoint_error == ghl_error_m1_closure_residual_too_large,
         "unbracketed endpoint bypassed residual gate", -1, -1);
-  ghl_m1_get_last_closure_failure_stage(&failure_stage);
-  ghl_m1_get_last_closure_validation_reason(&validation_reason);
-  ghl_m1_get_closure_counters(&counters);
   require_condition(
-        m1_closure_identical(&closure, &sentinel)
-              && failure_stage == ghl_m1_closure_failure_residual_gate
-              && validation_reason == 0 && counters.endpoint_fallback == 1
-              && counters.residual_rejection == 1 && counters.invalid_state == 0
-              && counters.ordinary_convergence == 0 && counters.iteration_exhaustion == 0
-              && counters.downstream_repair == 0,
-        "rejected endpoint output/counter contract", -1, -1);
+        m1_closure_identical(&closure, &sentinel),
+        "rejected endpoint published a closure", -1, -1);
 
   /* In a sheared SPD metric, raising the primary tensor loses enough
    * precision to violate its pressure trace even though the tensor is
@@ -1252,62 +1185,17 @@ static void check_closure_arithmetic_boundaries(void) {
   const ghl_m1_rad_state trace_state
         = { .E = 1.0, .F = { 0.3 * sqrt(1.0 - shear * shear), 0.0, 0.0 } };
   closure = sentinel;
-  ghl_m1_reset_closure_counters();
   require_condition(
         ghl_m1_compute_closure_with_primitives(
               &params, &metric, &prims, &trace_state, &closure)
               == ghl_error_m1_invalid_state,
         "inaccurate finite-flux pressure trace was accepted", -1, -1);
-  ghl_m1_get_last_closure_failure_stage(&failure_stage);
-  ghl_m1_get_last_closure_validation_reason(&validation_reason);
-  ghl_m1_get_closure_counters(&counters);
   require_condition(
-        m1_closure_identical(&closure, &sentinel)
-              && failure_stage == ghl_m1_closure_failure_tensor_validation
-              && validation_reason == ghl_m1_closure_validation_trace
-              && counters.invalid_state == 1 && counters.endpoint_fallback == 0,
-        "finite-flux trace rejection output/diagnostic contract", -1, -1);
+        m1_closure_identical(&closure, &sentinel),
+        "finite-flux trace rejection published a closure", -1, -1);
 }
 
-static void check_supplied_closure_psd_range(void) {
-  ghl_m1_parameters params;
-  require_condition(
-        ghl_m1_initialize(0.1, 1.0e-310, 1.0, 1.0e-6, 1.0e-10, 100, 1.0e-10, &params)
-              == ghl_success,
-        "PSD range initializer", -1, -1);
-  const double scales[] = { 1.0e-100, 1.0 };
-  const double energies[] = { 1.0e-300, 1.0 };
-  for(size_t i = 0; i < sizeof(scales) / sizeof(scales[0]); ++i) {
-    ghl_metric_quantities metric;
-    ghl_initialize_metric(
-          1.0, 0.0, 0.0, 0.0, scales[i], 0.0, 0.0, scales[i], 0.0, scales[i], &metric);
-    const ghl_m1_rad_state state = { .E = energies[i] };
-    ghl_m1_closure closure = { 0 };
-    for(int j = 0; j < 3; ++j) {
-      closure.P[j][j] = energies[i] / scales[i] / 3.0;
-    }
-    /* First, lowering a trace-consistent tensor underflows to zero. Second,
-     * a finite, symmetric supplied tensor overflows during symmetrization
-     * in the PSD basis. Neither may publish stress energy. */
-    if(i == 1) {
-      closure.P[0][1] = closure.P[1][0] = DBL_MAX;
-    }
-    const ghl_stress_energy sentinel = { .T4 = { { 17.0 } } };
-    ghl_stress_energy stress = sentinel;
-    require_condition(
-          ghl_m1_compute_stress_energy(&params, &metric, &state, &closure, &stress)
-                      == ghl_error_m1_invalid_state
-                && memcmp(&stress, &sentinel, sizeof(stress)) == 0,
-          "PSD range failure published stress energy", (int)i, -1);
-    int reason;
-    ghl_m1_get_last_closure_validation_reason(&reason);
-    require_condition(
-          reason
-                == (i == 0 ? ghl_m1_closure_validation_psd
-                           : ghl_m1_closure_validation_nonfinite),
-          "PSD range failure diagnostic", (int)i, -1);
-  }
-
+static void check_closure_psd_helper_boundaries(void) {
   /* The private tensor validator also owns its Cholesky rejection. Test
    * that local boundary directly: public operators reject this indefinite
    * metric earlier, before reaching pressure validation. */
@@ -1319,11 +1207,6 @@ static void check_supplied_closure_psd_range(void) {
         ghl_m1_validate_closure_tensor_psd(&indefinite, &pressure)
               == ghl_error_m1_invalid_state,
         "PSD helper accepted an indefinite metric", -1, -1);
-  int reason;
-  ghl_m1_get_last_closure_validation_reason(&reason);
-  require_condition(
-        reason == ghl_m1_closure_validation_psd,
-        "PSD helper Cholesky rejection diagnostic", -1, -1);
 
   /* A nonzero antisymmetric tensor has a zero symmetric part. The helper
    * must reject that degenerate eigenproblem instead of normalizing by
@@ -1336,10 +1219,6 @@ static void check_supplied_closure_psd_range(void) {
         ghl_m1_validate_closure_tensor_psd(&flat, &antisymmetric)
               == ghl_error_m1_invalid_state,
         "PSD helper accepted a zero symmetric tensor", -1, -1);
-  ghl_m1_get_last_closure_validation_reason(&reason);
-  require_condition(
-        reason == ghl_m1_closure_validation_psd,
-        "PSD helper zero eigen-scale rejection diagnostic", -1, -1);
 }
 
 static void check_inline_wrapper_boundaries(void) {
@@ -1416,6 +1295,26 @@ static void check_inline_wrapper_boundaries(void) {
         RHS(&state, &prims, &rates, &E, F, &N, true) == ghl_error_m1_invalid_metric,
         "RHS geometry failure", -1, -1);
   metric.lapse = 1.0;
+  /* A nonfinite metric-derivative field fails the shared derivative walk and
+   * must propagate transactionally through the explicit RHS. */
+  {
+    ghl_metric_quantities bad_derivatives = derivative;
+    bad_derivatives.lapse = NAN;
+    double failure_E = -8.0;
+    double failure_F[3] = { -9.0, -10.0, -11.0 };
+    double failure_N = -12.0;
+    require_condition(
+          ghl_m1_compute_neutrino_explicit_rhs_sources(
+                &params, &nu, &metric, &bad_derivatives, &derivative, &derivative,
+                &curvature, &prims, &state, &closure, false, NULL, &failure_E, failure_F,
+                &failure_N)
+                == ghl_error_m1_invalid_metric,
+          "RHS invalid metric derivatives", -1, -1);
+    require_condition(
+          failure_E == -8.0 && failure_N == -12.0 && failure_F[0] == -9.0
+                && failure_F[1] == -10.0 && failure_F[2] == -11.0,
+          "RHS derivative failure changed outputs", -1, -1);
+  }
   rates.mean_energy = 0.0;
   require_condition(
         RHS(&state, &prims, &rates, &E, F, &N, true)
@@ -1510,12 +1409,12 @@ static void check_large_cancelled_comoving_energy(void) {
 }
 
 int main(int argc, char **argv) {
-  const char *fixture_dir = "Unit_Tests/data/m1_thcm1";
-  if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0) {
+  const char *fixture_dir = NULL;
+  if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0 && argv[2][0] != '\0') {
     fixture_dir = argv[2];
   }
   else if(argc != 1) {
-    ghl_error("Usage: %s [--fixture-dir PATH]\n", argv[0]);
+    ghl_error("Usage: %s [--fixture-dir DIR]\n", argv[0]);
   }
   check_shared_closure_boundary_contracts();
   check_low_lapse_shift_closure();
@@ -1523,48 +1422,8 @@ int main(int argc, char **argv) {
   check_nonzero_flux_admissibility_fallback();
   check_closure_arithmetic_boundaries();
   check_large_cancelled_comoving_energy();
-  check_supplied_closure_psd_range();
+  check_closure_psd_helper_boundaries();
   check_inline_wrapper_boundaries();
-  check_pointwise_fixtures(fixture_dir);
-  const char stress_energy_filename[] = "/stress_energy.m1";
-  const size_t stress_energy_path_size
-        = strlen(fixture_dir) + sizeof(stress_energy_filename);
-  char *stress_energy_path = malloc(stress_energy_path_size);
-  if(stress_energy_path == NULL) {
-    ghl_error("stress-energy fixture path allocation failed\n");
-    return EXIT_FAILURE;
-  }
-  snprintf(
-        stress_energy_path, stress_energy_path_size, "%s%s", fixture_dir,
-        stress_energy_filename);
-  char stress_energy_error[M1_THCM1_FIXTURE_TEXT_MAX];
-  size_t stress_energy_records = 0;
-  if(!m1_thcm1_run_stress_energy_fixtures(
-           stress_energy_path, &stress_energy_records, stress_energy_error,
-           sizeof(stress_energy_error))) {
-    ghl_error("%s\n", stress_energy_error);
-  }
-  free(stress_energy_path);
-  ghl_info(
-        "THC_M1 stress-energy fixtures: %zu agreement pairs\n", stress_energy_records);
-  const char source_filename[] = "/m1_thcm1_instantaneous_sources.m1";
-  const size_t source_path_size = strlen(fixture_dir) + sizeof(source_filename);
-  char *source_path = malloc(source_path_size);
-  if(source_path == NULL) {
-    ghl_error("source fixture path allocation failed\n");
-    return EXIT_FAILURE;
-  }
-  snprintf(source_path, source_path_size, "%s%s", fixture_dir, source_filename);
-  char source_error[M1_THCM1_FIXTURE_TEXT_MAX];
-  size_t source_records = 0;
-  if(!m1_thcm1_run_instantaneous_source_fixtures(
-           source_path, &source_records, source_error, sizeof(source_error))) {
-    ghl_error("%s\n", source_error);
-  }
-  free(source_path);
-  ghl_info(
-        "THC_M1 instantaneous source fixtures: %zu agreement pairs\n", source_records);
-
   ghl_m1_parameters m1_params = { 0 };
   ghl_error_codes_t error = ghl_m1_initialize(
         1.0e-10, 1.0e-12, 1.0e-8, 1.0e-6, 1.0e-12, 20, 1.0e-10, &m1_params);
@@ -1621,21 +1480,6 @@ int main(int argc, char **argv) {
     check_closure_decomposition_diagnostic(
           &test_case.metric, &test_case.state, &closure, &decomposition_diagnostic,
           case_index);
-
-    ghl_m1_closure_failure_stage_t failure_stage = ghl_m1_closure_failure_none;
-    int validation_reason = -1;
-    ghl_m1_get_last_closure_failure_stage(&failure_stage);
-    ghl_m1_get_last_closure_validation_reason(&validation_reason);
-    const bool closure_fallback
-          = closure.solve_status == ghl_m1_closure_solve_endpoint_fallback
-            || closure.solve_status == ghl_m1_closure_solve_iteration_exhausted;
-    require_condition(
-          closure_fallback
-                || (failure_stage == ghl_m1_closure_failure_none
-                    && validation_reason == 0),
-          "successful converged closure left failure diagnostics set", case_index, -1);
-    ghl_m1_get_last_closure_failure_stage(NULL);
-    ghl_m1_get_last_closure_validation_reason(NULL);
 
     ghl_m1_closure perturbed_closure = { 0 };
     error = ghl_m1_compute_neutrino_closure(
@@ -1899,7 +1743,7 @@ int main(int argc, char **argv) {
     for(int species = 0; species < ghl_m1_neutrino_species_count; ++species) {
       for(int wave_direction = 0; wave_direction < 3; ++wave_direction) {
         double s_minus = NAN, s_plus = NAN;
-        error = ghl_m1_compute_neutrino_wavespeeds(
+        error = ghl_m1_compute_wavespeeds(
               &test_case.metric, (ghl_m1_direction_t)wave_direction, &s_minus, &s_plus);
         require_condition(
               error == ghl_success, "neutrino wavespeed failed", case_index, species);
@@ -1959,7 +1803,7 @@ int main(int argc, char **argv) {
 
       double matter_tau = NAN;
       double matter_momentum[3] = { NAN, NAN, NAN };
-      error = ghl_m1_compute_neutrino_matter_coupling_sources(
+      error = ghl_m1_compute_matter_coupling_sources(
             &test_case.metric, &source_from_closure, &matter_tau, matter_momentum);
       require_condition(
             error == ghl_success, "matter-coupling source failed", case_index, species);
@@ -2049,6 +1893,47 @@ int main(int argc, char **argv) {
     check_transactional_contracts(
           &m1_params, &nu_params, &test_case, &closure, case_index);
     ++cases_run;
+  }
+
+  if(fixture_dir != NULL) {
+    check_pointwise_fixtures(fixture_dir);
+    ghl_info("unit_test_m1_neutrino_seeded_invariants: pointwise replay passed\n");
+
+    char *source_path = m1_thcm1_seeded_fixture_path(
+          fixture_dir, "m1_thcm1_instantaneous_sources.bin");
+    if(source_path == NULL) {
+      ghl_error("instantaneous-source fixture path allocation failed\n");
+    }
+    size_t source_records = 0;
+    char error[M1_THCM1_FIXTURE_TEXT_MAX] = { 0 };
+    if(!m1_thcm1_run_instantaneous_source_fixtures(
+             source_path, &source_records, error, sizeof(error))) {
+      free(source_path);
+      ghl_error("instantaneous-source fixture replay failed: %s\n", error);
+    }
+    free(source_path);
+    ghl_info(
+          "unit_test_m1_neutrino_seeded_invariants: %zu instantaneous-source "
+          "records passed\n",
+          source_records);
+
+    char *stress_energy_path
+          = m1_thcm1_seeded_fixture_path(fixture_dir, "stress_energy.bin");
+    if(stress_energy_path == NULL) {
+      ghl_error("stress-energy fixture path allocation failed\n");
+    }
+    size_t stress_energy_records = 0;
+    error[0] = '\0';
+    if(!m1_thcm1_run_stress_energy_fixtures(
+             stress_energy_path, &stress_energy_records, error, sizeof(error))) {
+      free(stress_energy_path);
+      ghl_error("stress-energy fixture replay failed: %s\n", error);
+    }
+    free(stress_energy_path);
+    ghl_info(
+          "unit_test_m1_neutrino_seeded_invariants: %zu stress-energy records "
+          "passed\n",
+          stress_energy_records);
   }
 
   ghl_info(

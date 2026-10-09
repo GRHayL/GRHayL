@@ -1,5 +1,4 @@
-#include "ghl_flux_source.h"
-#include "ghl_rusanov_private.h"
+#include "ghl_m1_rusanov_private.h"
 
 #include <math.h>
 
@@ -9,9 +8,13 @@ double ghl_rusanov_average_finite(const double left, const double right) {
   return isfinite(sum) ? 0.5 * sum : 0.5 * left + 0.5 * right;
 }
 
-/* Retry a nonfinite finite-jump candidate at half scale. The two low parts
- * retain cancellation that a rounded physical-flux average can otherwise
- * lose at the edge of double range. */
+/* The two-state M1/number wrappers and the canonical four-point face core
+ * share this scalar kernel, including volume-prepared operands. Their finite
+ * input contract does not bound magnitudes below double range. Retry a
+ * nonfinite candidate at half scale: the low parts retain cancellation that
+ * a rounded physical-flux average can lose at the range boundary. This is
+ * needed for the finite endpoints in unit_test_rusanov_flux; rejecting the
+ * intermediate instead would change the supported public behavior. */
 static double rusanov_half_scaled_candidate(
       const double physical_flux_L,
       const double physical_flux_R,

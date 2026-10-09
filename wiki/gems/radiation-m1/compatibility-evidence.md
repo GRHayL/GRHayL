@@ -17,25 +17,32 @@ that path; they do not establish a downstream grid evolution.
 - separate total-number and charged-current lepton exchange.
 
 The corresponding implementations are listed in
-[`TRACEABILITY.md`](../../../GRHayL/Radiation/TRACEABILITY.md). The complete
+[`Radiation_traceability.md`](../../../docs/raw/Radiation_traceability.md). The complete
 test, fixture, runner, and CI inventory is in
 [M1 tests and fixtures](tests-and-fixtures.md). `configure` discovers the
 scoped test sources as ordinary `unit_test_*.c` targets, subject to its HDF5
 filtering;
-`Unit_Tests/run_m1_tests.sh` selects and runs them, and the dedicated Radiation
-action invokes that route. The normal `.github/run_tests.sh` path does not
-select the scoped M1 runner. The checked-in fixture package is validated by
-`Unit_Tests/data/m1_thcm1/audit_package.py` before replay.
+The ordinary `.github/run_tests.sh` executes the M1 tests and downloads the
+pinned published fixtures by default; executable-level replay is selected
+through explicit fixture arguments, and the CI action retries the pinned
+download.
+
 Configured execution and a local run remain scoped evidence rather than
 downstream host or physical-validation evidence.
 
 ## What is not claimed
 
-Repository-local tests replay retained inputs against THC_M1-produced
-discrete-operation endpoints, as described in
-[M1 tests and fixtures](tests-and-fixtures.md). This establishes a comparison
-with retained external-source outputs, not a live cross-code run. The replay
-does not establish downstream framework execution, grid evolution,
+Repository-local tests can replay inputs against THC_M1 discrete-operation
+outputs, as described in [M1 tests and fixtures](tests-and-fixtures.md). A
+fresh candidate now has new producer records and consumed inputs for every
+family and is published as TestData members for default replay. The imported
+[`radiation-testdata-ref`](../../../.github/radiation-testdata-ref)
+pin selects the TestData revision for the ordinary download route; that
+revision must be published before either the runner or the action can acquire
+it.
+Replay compares the supplied
+records; it does not execute THC_M1 live. It does not establish downstream
+framework execution, grid evolution,
 schedule/AMR behavior, continuum or complete-evolution equivalence, or
 physical validation. A downstream consumer owns any such campaign and its
 reporting.

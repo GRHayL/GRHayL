@@ -14,7 +14,11 @@ from pathlib import Path
 import re
 
 root = Path.cwd().resolve()
-pages = [Path("AGENTS.md"), *sorted(Path("wiki").rglob("*.md"))]
+pages = [
+    Path("AGENTS.md"),
+    *sorted(Path("wiki").rglob("*.md")),
+    *sorted(Path("docs/raw").rglob("*.md")),
+]
 link = re.compile(r"\[[^]]+\]\(([^)]+)\)")
 for page in pages:
     in_fence = False
@@ -26,7 +30,8 @@ for page in pages:
             continue
         for raw in link.findall(line):
             target = raw.split("#", 1)[0]
-            if not target or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
+            if (not target or target.startswith("@ref ")
+                    or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target)):
                 continue
             candidate = (page.parent / target).resolve()
             try:
@@ -197,8 +202,32 @@ Check shell syntax without execution:
 
 ```bash
 sh -n configure scripts/parser
-bash -n generate_makefile.sh .github/run_tests.sh
+bash -n generate_makefile.sh .github/run_tests.sh .github/prepare_m1_fixtures.sh
 ```
+
+[`.github/run_tests.sh`](../../.github/run_tests.sh) is the single test runner;
+its `m1` mode (`.github/run_tests.sh m1 [configure arguments...]`) builds with
+`make tests` and runs only the Radiation M1 tests. Its owning boundary is the
+[run_m1 action](../../.github/actions/run_m1/action.yml), which each compiler
+workflow's `radiation-m1` job matrix in
+[`.github/workflows/`](../../.github/workflows/) calls (for example
+[github-actions-Ubuntu-gcc.yml](../../.github/workflows/github-actions-Ubuntu-gcc.yml)).
+The action selects the compiler and HDF5 mode, builds the configure arguments
+(`--noomp`, `--disable-hdf5` for the disabled-HDF5 leg, the Homebrew compilers
+on macOS, and gcc coverage flags on Linux gcc), and ends with
+`.github/run_tests.sh m1`. Only the Ubuntu GCC job adds a coverage step, which
+calls the
+[code-coverage action](../../.github/actions/code-coverage/action.yml) for the
+gcovr report filter and gates; the other `radiation-m1` jobs are plain test
+runs. Check the runner, the `run_m1` action, the jobs, and the coverage action
+together: a change to any side of the boundary (runner arguments, the
+configure-argument contract, gate values, or report paths versus the jobs'
+matrix, env, and upload steps) invalidates the other sides' evidence.
+`.github/prepare_m1_fixtures.sh` is invoked by `.github/run_tests.sh` to prepare
+the default pinned M1 downloads or a supplied gzip `M1_FIXTURE_DIR`; a complete
+raw override is used directly. Check it against the runner. Do not record run
+outcomes or environment snapshots from these
+checks.
 
 Parse workflow YAML when PyYAML is available. `BaseLoader` preserves the key
 `on` as text instead of applying YAML 1.1 boolean conversion:
@@ -255,9 +284,12 @@ git diff --name-only | while read -r path; do
     GRHayL/Flux_Source/*) echo "$path -> wiki/physics/evolution-equation-map.md wiki/catalog.md" ;;
     GRHayL/Induction/*) echo "$path -> wiki/physics/evolution-equation-map.md wiki/catalog.md" ;;
     GRHayL/Neutrinos/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
+    GRHayL/Radiation/*) echo "$path -> wiki/gems/radiation-m1.md wiki/catalog.md wiki/source-map.md" ;;
     GRHayL/Reconstruction/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
     Unit_Tests/*) echo "$path -> wiki/test-map.md wiki/catalog.md" ;;
     docs/raw/*) echo "$path -> wiki/index.md wiki/catalog.md affected topic page" ;;
+    .github/run_tests.sh|.github/prepare_m1_fixtures.sh) echo "$path -> wiki/build-and-ci.md wiki/test-map.md wiki/generated-boundaries.md wiki/lint/CHECKS.md" ;;
+    .github/workflows/*|.github/actions/run_m1/*) echo "$path -> wiki/build-and-ci.md wiki/test-map.md wiki/lint/CHECKS.md" ;;
     .github/*|configure|generate_makefile.sh) echo "$path -> wiki/build-and-ci.md wiki/generated-boundaries.md" ;;
   esac
 done

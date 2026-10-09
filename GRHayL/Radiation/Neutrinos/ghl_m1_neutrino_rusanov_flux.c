@@ -1,5 +1,5 @@
+#include "../ghl_m1_rusanov_private.h"
 #include "../ghl_m1_utils.h"
-#include "ghl_flux_source.h"
 #include "ghl_m1.h"
 #include <float.h>
 
@@ -40,7 +40,7 @@ ghl_error_codes_t ghl_m1_compute_neutrino_rusanov_flux(
      || speed < 0.0) {
     return ghl_error_m1_invalid_state;
   }
-  if(!ghl_m1_metric_is_symmetric_spd(metric_face)) {
+  if(!isfinite(metric_face->sqrt_detgamma) || metric_face->sqrt_detgamma <= 0.0) {
     return ghl_error_m1_invalid_metric;
   }
   if(!isfinite(nu_params->N_floor) || nu_params->N_floor < 0.0) {
@@ -49,16 +49,7 @@ ghl_error_codes_t ghl_m1_compute_neutrino_rusanov_flux(
 
   const ghl_m1_rad_state rad_state_L = ghl_m1_neutrino_project_rad_state(state_L);
   const ghl_m1_rad_state rad_state_R = ghl_m1_neutrino_project_rad_state(state_R);
-  /* The face metric was validated once above and does not change across the
-   * two states or the two physical-flux evaluations below. Validate the
-   * immutable M1 parameters once here, then use the state-only realizability
-   * check, which preserves the public error boundary of
-   * ghl_m1_validate_realizability without repeating the metric walk. */
-  ghl_error_codes_t error = ghl_m1_validate_parameters(m1_params);
-  if(error != ghl_success) {
-    return error;
-  }
-  error = ghl_m1_validate_realizability_state(
+  ghl_error_codes_t error = ghl_m1_validate_realizability_state(
         m1_params, metric_face, &rad_state_L, 64.0, NULL);
   if(error != ghl_success) {
     return error;
@@ -99,8 +90,8 @@ ghl_error_codes_t ghl_m1_compute_neutrino_rusanov_flux(
   for(int i = 0; i < 3; ++i) {
     const double expected_L = state_L->N * number_transport_velocity_L[i];
     const double expected_R = state_R->N * number_transport_velocity_R[i];
-    const double scale_L = ghl_m1_max(fabs(number_flux_L[i]), fabs(expected_L));
-    const double scale_R = ghl_m1_max(fabs(number_flux_R[i]), fabs(expected_R));
+    const double scale_L = fmax(fabs(number_flux_L[i]), fabs(expected_L));
+    const double scale_R = fmax(fabs(number_flux_R[i]), fabs(expected_R));
     if(!isfinite(expected_L) || !isfinite(expected_R)
        || (state_L->N == 0.0
                  ? number_flux_L[i] != 0.0

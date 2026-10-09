@@ -4,8 +4,7 @@ The M1 library contains a public thick-limit scalar and an optional
 energy-flux diffusion correction. These helpers are useful for experiments or
 downstream methods that explicitly select them. They are not part of the
 canonical neutrino four-point blended Rusanov route: that route uses metric
-light-cone speeds, does not apply a speed cap, and rejects its diffusion-policy
-flag when enabled.
+light-cone speeds, does not apply a speed cap, and does not expose a diffusion-policy flag.
 
 ## Thick-limit comoving energy
 
@@ -122,13 +121,16 @@ four-point opacity suppression factor.
 
 The focused implementation check is
 [`unit_test_m1_diffusion_flux.c`](../../../Unit_Tests/unit_test_m1_diffusion_flux.c).
-That test replays the six existing seeded radiation baseline/perturbed RNG
-pairs from [`jthick_thcm1.fixture`](../../../Unit_Tests/data/jthick_thcm1.fixture).
-Each endpoint is evaluated by GRHayL and compared directly with the frozen
-THC_M1 `calc_Pthick` result projected to comoving `J`; the paired replay also
-compares `G(x1)-G(x0)` with `T(x1)-T(x0)` using the existing fixture policy.
-This is scalar thick-limit evidence, not evidence for full-grid thick-limit
-convergence. The checked-in replay agrees for all 12 endpoint comparisons and
+The ordinary runner downloads the pinned external fixtures by default, or
+uses a directory supplied through `M1_FIXTURE_DIR`. It passes
+`jthick_thcm1.bin` to that test and it replays the six
+seeded radiation baseline/perturbed RNG pairs from the retained package.
+Each endpoint is evaluated by GRHayL and compared directly with the retained
+values attributed to the THC_M1 `calc_Pthick` result projected to comoving `J`;
+the paired replay also compares `G(x1)-G(x0)` with `T(x1)-T(x0)` using the
+existing fixture policy. This is scalar thick-limit replay, not evidence for
+full-grid thick-limit convergence or verified THC_M1 provenance. The retained
+replay agrees for all 12 endpoint comparisons and
 all 6 paired-response comparisons: six baseline and six perturbed states, using
 the existing `pointwise_a1_a2_v1` policy. The optional
 Fick helper is not cross-code compared because THC_M1 has no one-to-one public
@@ -138,7 +140,7 @@ arithmetic checks remain the appropriate coverage. The shared source and API are
 [`ghl_m1_Jthick.c`](../../../GRHayL/Radiation/ghl_m1_Jthick.c), and
 [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h).
 
-The methods whitepaper's photon-era speed-cap and diffusion discussion is
-valuable background for why these helpers exist, but current neutrino callers
+The photon-era speed-cap and diffusion discussion is background for why these
+helpers exist, but current neutrino callers
 must follow the separate canonical-path restriction in the
-[integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md).
+[integration contract](../../../docs/raw/Radiation_integration_contract.md).

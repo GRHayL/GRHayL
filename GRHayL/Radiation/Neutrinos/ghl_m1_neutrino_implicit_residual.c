@@ -53,7 +53,7 @@ ghl_error_codes_t ghl_m1_neutrino_build_trial_state(
   if(metric == NULL || U == NULL || rad_state == NULL) {
     return ghl_error_m1_null_pointer;
   }
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
+  if(!isfinite(metric->sqrt_detgamma) || metric->sqrt_detgamma <= 0.0) {
     return ghl_error_m1_invalid_metric;
   }
   return ghl_m1_neutrino_build_trial_state_core(metric, U, rad_state);
@@ -82,7 +82,7 @@ ghl_error_codes_t ghl_m1_neutrino_check_trial_admissibility(
   }
 
   const ghl_error_codes_t error
-        = ghl_m1_validate_realizability(m1_params, metric, rad_state, 128.0, NULL);
+        = ghl_m1_validate_realizability_state(m1_params, metric, rad_state, 128.0, NULL);
   if(error == ghl_error_m1_invalid_state) {
     return ghl_error_m1_implicit_admissibility;
   }
@@ -94,7 +94,6 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual_core(
       const double dt,
       const double U_base[4],
       const double U[4],
-      const bool validate_configuration,
       const bool validate_rates,
       bool *restrict closure_fallback_observed,
       double residual[4]) {
@@ -125,14 +124,6 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual_core(
     return error;
   }
 
-  if(validate_configuration) {
-    /* The checked wrapper has already validated the metric. Keep the same
-     * parameter error boundary without performing that metric walk again. */
-    error = ghl_m1_validate_parameters(m1_params);
-    if(error != ghl_success) {
-      return error;
-    }
-  }
   error = ghl_m1_neutrino_check_trial_admissibility_validated(
         m1_params, metric, &rad_state);
   if(error != ghl_success) {
@@ -195,7 +186,7 @@ ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual_validated(
       bool *restrict closure_fallback_observed,
       double residual[4]) {
   return ghl_m1_neutrino_compute_implicit_residual_core(
-        context, dt, U_base, U, false, false, closure_fallback_observed, residual);
+        context, dt, U_base, U, false, closure_fallback_observed, residual);
 }
 
 ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual_with_base(
@@ -232,7 +223,8 @@ ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual_with_base_diagnostic
     return ghl_error_m1_invalid_state;
   }
 
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
+  if(!isfinite(metric->lapse) || metric->lapse <= 0.0 || !isfinite(metric->sqrt_detgamma)
+     || metric->sqrt_detgamma <= 0.0) {
     return ghl_error_m1_invalid_metric;
   }
 
@@ -246,7 +238,7 @@ ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual_with_base_diagnostic
                                                      .prims_frozen = prims_frozen,
                                                      .rates = rates };
   return ghl_m1_neutrino_compute_implicit_residual_core(
-        &context, dt, U_base, U, true, true, closure_fallback_observed, residual);
+        &context, dt, U_base, U, true, closure_fallback_observed, residual);
 }
 
 ghl_error_codes_t ghl_m1_neutrino_compute_implicit_residual(

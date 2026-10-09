@@ -89,6 +89,19 @@ f_E^d   = alpha F^d - beta^d E
 f_F_i^d = alpha P^d_i - beta^d F_i.
 ```
 
+These product differences use a binary64-only compensated fallback when both
+individual products overflow but their difference is representable. Its use is
+bounded to the physical E/F fluxes, the neutrino Rusanov number fluxes, and the
+physical neutrino number flux. Ordinary finite products take the direct path.
+Finite operands that still produce a nonrepresentable result fail closed at
+the owning kernel's existing finiteness check.
+
+The private arithmetic header disables Clang contraction so the overflow
+decision observes the same two rounded products in every translation unit; an
+implicit fused multiply-add could otherwise bypass the fallback. The fallback
+itself uses `frexp`, `scalbn`, and `fma` on `double` values and introduces no
+extended-precision or platform-width branch.
+
 The pointwise four-point operation then multiplies the completed numerical
 flux by `sqrt_detgamma` once. A host using volume-prepared operands follows a
 different contract and must not add this factor in the library; see the
@@ -111,9 +124,9 @@ optional diffusion helper has its own proper-length, face-velocity, and
 thick-limit contract, documented in the
 [thick-limit leaf](m1-thick-limit-and-optional-diffusion.md).
 
-The older photon methods whitepaper discusses capped speeds and HLL-oriented
-choices. Those are historical context only where they conflict with the
-current [M1 integration contract](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md).
+Photon-era capped speeds and HLL-oriented choices do not apply where they
+conflict with the
+[M1 integration contract](../../../docs/raw/Radiation_integration_contract.md).
 
 ## Implementation and evidence
 

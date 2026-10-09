@@ -21,9 +21,8 @@ The current channel set is:
 The table describes the current provider/source contract, not a guarantee that
 every backend call enables every channel. `channel_mask` is provider state;
 Radiation sees only the final validated rates. The production mapping is in
-[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c),
-and the deterministic reference mapping is in the same file
-([`compute_staged_rates`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c)).
+[`ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c) and its private tabulated-rate implementation. Synthetic channel mappings are
+test-local and do not contribute to libghl.
 
 ## Charged current
 
@@ -89,7 +88,7 @@ on the partner occupancy, so the host must include the partner-dependent
 inverse-energy opacity when preparing an electron-flavor transport face. The
 scalar `kappa_tr` in the validated electron bundle is not overwritten with
 that partner-dependent quantity. These rules are specified in
-[`PAIR_SOURCE_MODEL.md`](../../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md#provider-coefficients)
+[`Radiation_pair_source_model.md`](../../../docs/raw/Radiation_pair_source_model.md#provider-coefficients)
 and have separate ownership. The pair kernel enforces the shared
 number-emissivity equality while performing the coupled pair update. The
 provider/rate-validation boundary owns the validity of the supplied rate
@@ -128,21 +127,6 @@ rounded product is zero; it is not permission to invent a nonzero rate. The
 validator also rejects pair fields in a one-species electron source call and
 rejects nonzero pair fields for `nu_x`. See
 [`ghl_m1_neutrino_rates.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rates.c).
-
-## Historical whitepaper status
-
-- **Current:** the five channel names, provider ownership, separate electron
-  pair fields, aggregate `nu_x`, and source-level distinction between
-  charged-current number exchange and scattering.
-- **Adaptable context:** the neutrino interaction whitepaper's inventory of
-  free-nucleon charged current, nucleon scattering, pair annihilation,
-  bremsstrahlung, and plasmon processes.
-- **Superseded:** any Phase 1 design that treated all electron-flavor number
-  emission as a one-species aggregate source when separated pair fields are
-  present.
-- **Future/non-claim:** inelastic redistribution, exact spectral pair
-  kinetics, weak-magnetism/recoil corrections, and many-body or heavy-nucleus
-  enhancements are not implied by this channel enum.
 
 ## Evidence
 

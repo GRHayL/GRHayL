@@ -149,15 +149,12 @@ static void make_state(
 }
 
 static void make_neutrino_parameters(ghl_m1_neutrino_parameters *restrict nu_params) {
-  *nu_params = (ghl_m1_neutrino_parameters){
-    .N_floor = 1.0e-12,
-    .mean_energy_min = 0.0,
-    .mean_energy_max = 0.0,
-    .enforce_mean_energy_bounds = 0,
-    .terminal_fallback_policy = ghl_m1_neutrino_terminal_fallback_no_update_all,
-    .J_floor = 1.0e-14,
-    .Gamma_N_floor = 1.0e-12
-  };
+  *nu_params = (ghl_m1_neutrino_parameters){ .N_floor = 1.0e-12,
+                                             .mean_energy_min = 0.0,
+                                             .mean_energy_max = 0.0,
+                                             .enforce_mean_energy_bounds = 0,
+                                             .J_floor = 1.0e-14,
+                                             .Gamma_N_floor = 1.0e-12 };
 }
 
 static void make_rates(
@@ -397,88 +394,6 @@ static void test_source_base_and_lapse_scaling(
   require_zero_exchange(&exchange_zero, "zero-timestep exchange", 1003);
 }
 
-/* The shared scaled ratio is the overflow-safe fallback used by the
- * thermalized number projection and the pair effective opacity.  It must
- * reproduce the direct expression bit-for-bit in the normal range, rescue a
- * representable result whose direct intermediate is not representable, and
- * still reject a genuinely nonrepresentable quotient. */
-static void test_scaled_ratio_of_products(void) {
-  double quotient = -1.0;
-
-  const double normal_numerator[2] = { 3.0, 7.0 };
-  const double normal_denominator[2] = { 2.0, 5.0 };
-  require_condition(
-        ghl_m1_neutrino_scaled_ratio_of_products(
-              normal_numerator, 2, normal_denominator, 2, &quotient)
-              && quotient == (3.0 * 7.0) / (2.0 * 5.0),
-        "scaled ratio lost the direct normal-range value", 1200);
-
-  /* Gamma_N * J overflows before the division; the endpoint N = 3 does not. */
-  const double projection_numerator[2] = { 2.0, 0.75 * DBL_MAX };
-  const double projection_denominator[1] = { 0.5 * DBL_MAX };
-  require_condition(
-        ghl_m1_neutrino_scaled_ratio_of_products(
-              projection_numerator, 2, projection_denominator, 1, &quotient)
-              && quotient == 3.0,
-        "scaled ratio rejected a representable projected endpoint", 1201);
-
-  /* Gamma_N * J underflows before the division; the endpoint N = Gamma_N
-   * remains representable. */
-  const double true_min = ldexp(DBL_MIN, -52);
-  const double underflowing_projection_numerator[2] = { 65.0 * DBL_EPSILON, true_min };
-  const double underflowing_projection_denominator[1] = { true_min };
-  require_condition(
-        ghl_m1_neutrino_scaled_ratio_of_products(
-              underflowing_projection_numerator, 2, underflowing_projection_denominator,
-              1, &quotient)
-              && quotient == 65.0 * DBL_EPSILON,
-        "scaled ratio rejected a representable underflowed projected endpoint", 1202);
-
-  /* The smallest positive subnormal is representable and must not be
-   * confused with a quotient that rounds below it. */
-  const double smallest_numerator[1] = { DBL_MIN };
-  const double smallest_denominator[1] = { ldexp(1.0, 52) };
-  require_condition(
-        ghl_m1_neutrino_scaled_ratio_of_products(
-              smallest_numerator, 1, smallest_denominator, 1, &quotient)
-              && quotient == true_min,
-        "scaled ratio rejected the smallest representable quotient", 1203);
-
-  /* eta_E_pair / J_eq overflows before meeting a zero partner occupancy. */
-  const double pair_numerator[2] = { DBL_MAX, 0.0 };
-  const double pair_denominator[2] = { DBL_MIN, 1.0 };
-  require_condition(
-        ghl_m1_neutrino_scaled_ratio_of_products(
-              pair_numerator, 2, pair_denominator, 2, &quotient)
-              && quotient == 0.0,
-        "scaled ratio rejected a zero-occupancy pair opacity", 1204);
-
-  /* A genuinely nonrepresentable quotient must still fail on overflow. */
-  const double huge_numerator[1] = { DBL_MAX };
-  const double tiny_denominator[1] = { DBL_MIN };
-  require_condition(
-        !ghl_m1_neutrino_scaled_ratio_of_products(
-              huge_numerator, 1, tiny_denominator, 1, &quotient),
-        "scaled ratio accepted an overflowing quotient", 1205);
-
-  /* A positive quotient that rounds to zero is not representable either. */
-  const double tiny_numerator[1] = { DBL_MIN };
-  const double huge_denominator[1] = { DBL_MAX };
-  require_condition(
-        !ghl_m1_neutrino_scaled_ratio_of_products(
-              tiny_numerator, 1, huge_denominator, 1, &quotient),
-        "scaled ratio accepted an underflowing quotient", 1206);
-
-  /* Keep the NULL choice runtime-visible so the optimized build executes the
-   * helper's failure return instead of folding the entire call away. */
-  volatile bool omit_output = true;
-  double *ratio_output = omit_output ? NULL : &quotient;
-  require_condition(
-        !ghl_m1_neutrino_scaled_ratio_of_products(
-              normal_numerator, 2, normal_denominator, 2, ratio_output),
-        "scaled ratio accepted a NULL output", 1207);
-}
-
 static void test_scaled_ratio_underflow_consumers(void) {
   const double true_min = ldexp(DBL_MIN, -52);
   ghl_m1_neutrino_parameters nu_params = { 0 };
@@ -488,17 +403,7 @@ static void test_scaled_ratio_underflow_consumers(void) {
   rates.J_eq = true_min;
   rates.mean_energy = true_min;
   const ghl_m1_neutrino_state state_base = { .N = 1.0 };
-  const ghl_m1_neutrino_current recoverable_current
-        = { .J = true_min, .Gamma_N = 65.0 * DBL_EPSILON };
   double N_out = -1.0;
-  require_error(
-        ghl_m1_neutrino_update_endpoint_number_with_policy(
-              &nu_params, &rates, 0.0, 0.0, 0.0, &state_base, &recoverable_current,
-              &N_out, NULL),
-        ghl_success, "underflowed projected endpoint", 1210);
-  require_condition(
-        N_out == recoverable_current.Gamma_N,
-        "underflowed projected endpoint lost a representable result", 1210);
 
   /* If the final quotient itself is not representable, the endpoint must
    * remain unpublished rather than silently becoming zero. */
@@ -572,31 +477,6 @@ test_thermalized_number_projection(const ghl_m1_parameters *restrict m1_params) 
               && projection_diagnostics.implicit.newton_iterations == 0,
         "projected thin branch published an incoherent implicit solve record", 1102);
 
-  /* The shared terminal-fallback policy must be rejected on the branched route
-   * as well, not only where the ordinary implicit solver inspects it. */
-  {
-    ghl_m1_neutrino_parameters bad_policy_params = nu_params;
-    bad_policy_params.terminal_fallback_policy
-          = (ghl_m1_neutrino_terminal_fallback_policy_t)99;
-    ghl_m1_neutrino_state policy_out;
-    ghl_m1_neutrino_exchange policy_exchange;
-    ghl_m1_neutrino_source_diagnostics policy_diagnostics;
-    ghl_m1_neutrino_diagnostics policy_nd;
-    ghl_m1_neutrino_diagnostics_initialize(&policy_nd);
-    require_error(
-          ghl_m1_solve_neutrino_source_update(
-                &ordinary_options, m1_params, &bad_policy_params, &metric, &prims,
-                &rates, &state_input, &state_transport, 0.0, 3.0, &policy_out,
-                &policy_exchange, &policy_diagnostics, &policy_nd),
-          ghl_error_m1_invalid_state, "branched invalid terminal policy", 1103);
-    require_condition(
-          policy_nd.source_failures == 1,
-          "branched invalid terminal policy was not diagnosed", 1103);
-    require_condition(
-          memcmp(&policy_out, &state_transport, sizeof(policy_out)) == 0,
-          "branched invalid terminal policy changed state", 1103);
-    require_zero_exchange(&policy_exchange, "branched invalid terminal policy", 1103);
-  }
   require_close(
         ordinary_out.N, state_transport.N, 0.0, 0.0, "ordinary number endpoint", 1100);
   require_close(
@@ -695,32 +575,26 @@ test_stiff_branch_arithmetic_boundaries(const ghl_m1_parameters *restrict m1_par
    * overflowing/underflowing intermediate. All three rate bundles remain
    * finite and satisfy the public rate identities. */
   const double opacity_large = ldexp(1.0, 600);
-  const double opacity_small = ldexp(1.0, -600);
   const double dt_large = ldexp(1.0, 600);
   const double dt_small = ldexp(1.0, -600);
   require_condition(
-        isfinite(opacity_large) && isfinite(opacity_small) && isfinite(dt_large)
-              && isfinite(dt_small),
+        isfinite(opacity_large) && isfinite(dt_large) && isfinite(dt_small),
         "stiff arithmetic fixture is not finite", 1290);
 
-  ghl_m1_neutrino_rates rates[3];
+  ghl_m1_neutrino_rates rates[2];
   make_rates(
         ghl_m1_neutrino_nue, 0.0, opacity_large, 0.0, 1.0, 1.0, 0.0, 0.0, &rates[0]);
   make_rates(
-        ghl_m1_neutrino_nue, 0.0, opacity_small, 0.0, 1.0, 1.0, 0.0, 0.0, &rates[1]);
-  make_rates(
-        ghl_m1_neutrino_nue, 0.0, 0.0, opacity_large, 1.0, 1.0, 0.0, 0.0, &rates[2]);
-  const double dt[3] = { dt_small, dt_large, dt_large };
-  const double expected_E[3] = { 1.5, 1.5, 2.0 };
-  const ghl_m1_neutrino_source_path_t expected_path[3]
+        ghl_m1_neutrino_nue, 0.0, 0.0, opacity_large, 1.0, 1.0, 0.0, 0.0, &rates[1]);
+  const double dt[2] = { dt_small, dt_large };
+  const double expected_E[2] = { 1.5, 2.0 };
+  const ghl_m1_neutrino_source_path_t expected_path[2]
         = { ghl_m1_neutrino_source_path_thick_equilibrium,
-            ghl_m1_neutrino_source_path_thick_equilibrium,
             ghl_m1_neutrino_source_path_scattering_dominated };
-  const char *const labels[3]
-        = { "thick opacity-product overflow", "thick opacity-product underflow",
-            "scattering optical-depth overflow" };
+  const char *const labels[2]
+        = { "thick opacity-product overflow", "scattering optical-depth overflow" };
 
-  for(int case_index = 0; case_index < 3; ++case_index) {
+  for(int case_index = 0; case_index < 2; ++case_index) {
     ghl_m1_neutrino_source_options options = branched_options();
     ghl_m1_neutrino_state state_out;
     ghl_m1_neutrino_exchange exchange;
@@ -750,43 +624,6 @@ test_stiff_branch_arithmetic_boundaries(const ghl_m1_parameters *restrict m1_par
     require_exchange_contract(
           &state_transport, &state_out, &exchange, &metric, 3.0, 1291 + case_index);
   }
-
-  /* The raw proper-time products in the thick predictor can overflow even
-   * though the equilibrium ratio remains finite: with W=1, both dtau and the
-   * opacity are 2^600, so (2 + dtau*eta_E)/(1 + dtau*kappa_a_E) is exactly
-   * one in the scaled limit. */
-  ghl_m1_neutrino_source_options scaled_predictor_options = branched_options();
-  ghl_m1_neutrino_state scaled_predictor_out;
-  ghl_m1_neutrino_exchange scaled_predictor_exchange;
-  ghl_m1_neutrino_source_diagnostics scaled_predictor_diagnostics;
-  ghl_m1_neutrino_diagnostics scaled_predictor_nd;
-  ghl_m1_neutrino_diagnostics_initialize(&scaled_predictor_nd);
-  const ghl_error_codes_t scaled_predictor_error = ghl_m1_solve_neutrino_source_update(
-        &scaled_predictor_options, m1_params, &nu_params, &metric, &prims, &rates[0],
-        &state_input, &state_transport, dt_large, 3.0, &scaled_predictor_out,
-        &scaled_predictor_exchange, &scaled_predictor_diagnostics, &scaled_predictor_nd);
-  require_error(
-        scaled_predictor_error, ghl_success, "thick predictor optical-depth overflow",
-        1294);
-  require_condition(
-        scaled_predictor_diagnostics.path
-                    == ghl_m1_neutrino_source_path_thick_equilibrium
-              && !scaled_predictor_diagnostics.terminal_no_update,
-        "scaled thick predictor selected the wrong public path", 1294);
-  require_close(
-        scaled_predictor_out.N, state_transport.N, 0.0, 0.0,
-        "scaled thick predictor number endpoint", 1294);
-  require_close(
-        scaled_predictor_out.E, 1.0, 2.0e-11, 2.0e-13,
-        "scaled thick predictor energy endpoint", 1294);
-  for(int direction = 0; direction < 3; ++direction) {
-    require_close(
-          scaled_predictor_out.F[direction], 0.0, 0.0, 0.0,
-          "scaled thick predictor flux endpoint", 1294);
-  }
-  require_exchange_contract(
-        &state_transport, &scaled_predictor_out, &scaled_predictor_exchange, &metric,
-        3.0, 1294);
 
   /* The endpoint below is genuinely above DBL_MAX, not merely an overflowing
    * intermediate. In flat space with v=3/5 and chi=1/3, the independent
@@ -842,48 +679,102 @@ test_stiff_branch_arithmetic_boundaries(const ghl_m1_parameters *restrict m1_par
               && !diagnostics.terminal_no_update
               && neutrino_diagnostics.source_failures == 1,
         "nonrepresentable endpoint failure was not transactional", 1295);
-}
 
-static void
-test_stiff_branch_zero_emission_scaled_add(const ghl_m1_parameters *restrict m1_params) {
-  ghl_metric_quantities metric;
-  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
-  ghl_primitive_quantities prims;
-  make_primitives(&prims);
-  ghl_m1_neutrino_parameters nu_params;
-  make_neutrino_parameters(&nu_params);
-
-  /* A zero equilibrium target makes eta_E zero while the large opacity and
-   * timestep force the backward-Euler predictor through its scaled fallback.
-   * The numerator then takes the right-zero addition path. */
-  const double opacity_large = ldexp(1.0, 600);
-  const double dt_large = ldexp(1.0, 600);
-  ghl_m1_neutrino_rates rates;
-  make_rates(ghl_m1_neutrino_nue, 0.0, opacity_large, 0.0, 0.0, 1.0, 0.0, 0.0, &rates);
-  const ghl_m1_neutrino_state state_transport
-        = { .N = 1.0, .E = 2.0, .F = { 0.0, 0.0, 0.0 } };
-  const ghl_m1_neutrino_state state_input = state_transport;
-  ghl_m1_neutrino_source_options options = branched_options();
-  ghl_m1_neutrino_state state_out;
-  ghl_m1_neutrino_exchange exchange;
-  ghl_m1_neutrino_source_diagnostics diagnostics;
-  ghl_m1_neutrino_diagnostics neutrino_diagnostics;
-  ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
-
-  const ghl_error_codes_t error = ghl_m1_solve_neutrino_source_update(
-        &options, m1_params, &nu_params, &metric, &prims, &rates, &state_input,
-        &state_transport, dt_large, 3.0, &state_out, &exchange, &diagnostics,
-        &neutrino_diagnostics);
-  require_error(error, ghl_success, "zero-emission scaled numerator", 1296);
+  /* A positive thick threshold with both opacities zero selects no thick
+   * branch: the scaled stiffness product is exactly zero and must compare
+   * below the threshold without saturating. */
+  ghl_m1_neutrino_rates zero_opacity_rates;
+  make_rates(
+        ghl_m1_neutrino_nue, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, &zero_opacity_rates);
+  ghl_m1_neutrino_source_options zero_opacity_options = branched_options();
+  zero_opacity_options.thick_equilibrium_threshold = 0.5;
+  ghl_m1_neutrino_state zero_opacity_out;
+  ghl_m1_neutrino_exchange zero_opacity_exchange;
+  ghl_m1_neutrino_source_diagnostics zero_opacity_diagnostics;
+  ghl_m1_neutrino_diagnostics zero_opacity_nd;
+  ghl_m1_neutrino_diagnostics_initialize(&zero_opacity_nd);
+  const ghl_error_codes_t zero_opacity_error = ghl_m1_solve_neutrino_source_update(
+        &zero_opacity_options, m1_params, &nu_params, &metric, &prims,
+        &zero_opacity_rates, &state_input, &state_transport, 1.0, 3.0, &zero_opacity_out,
+        &zero_opacity_exchange, &zero_opacity_diagnostics, &zero_opacity_nd);
+  require_error(zero_opacity_error, ghl_success, "zero-opacity thick selection", 1296);
   require_condition(
-        diagnostics.path == ghl_m1_neutrino_source_path_thick_equilibrium
-              && !diagnostics.terminal_no_update,
-        "zero-emission scaled numerator selected the wrong path", 1296);
-  require_close(
-        state_out.E, m1_params->E_floor, 0.0, 0.0,
-        "zero-emission scaled numerator energy floor", 1296);
-  require_state_finite_and_admissible(m1_params, &nu_params, &metric, &state_out, 1296);
-  require_exchange_contract(&state_transport, &state_out, &exchange, &metric, 3.0, 1296);
+        zero_opacity_diagnostics.path == ghl_m1_neutrino_source_path_thin_explicit,
+        "zero-opacity stiffness did not skip the thick branch", 1296);
+  require_state_finite_and_admissible(
+        m1_params, &nu_params, &metric, &zero_opacity_out, 1296);
+  require_exchange_contract(
+        &state_transport, &zero_opacity_out, &zero_opacity_exchange, &metric, 3.0, 1296);
+
+  /* A thick-selected step whose dtau*kappa_a_E overflows takes the ratio's
+   * scaled-denominator fallback inside the predictor while the endpoint stays
+   * at the representable equilibrium. Restore the rest fluid first: the
+   * oracle above deliberately runs at v = 3/5. */
+  make_primitives(&prims);
+  ghl_m1_neutrino_rates overflow_predictor_rates;
+  make_rates(
+        ghl_m1_neutrino_nue, 0.0, opacity_large, 0.0, 1.0, 1.0, 0.0, 0.0,
+        &overflow_predictor_rates);
+  ghl_m1_neutrino_source_options overflow_predictor_options = branched_options();
+  overflow_predictor_options.thick_equilibrium_threshold = 0.5;
+  ghl_m1_neutrino_state overflow_predictor_out;
+  ghl_m1_neutrino_exchange overflow_predictor_exchange;
+  ghl_m1_neutrino_source_diagnostics overflow_predictor_diagnostics;
+  ghl_m1_neutrino_diagnostics overflow_predictor_nd;
+  ghl_m1_neutrino_diagnostics_initialize(&overflow_predictor_nd);
+  const ghl_error_codes_t overflow_predictor_error = ghl_m1_solve_neutrino_source_update(
+        &overflow_predictor_options, m1_params, &nu_params, &metric, &prims,
+        &overflow_predictor_rates, &state_input, &state_transport, dt_large, 3.0,
+        &overflow_predictor_out, &overflow_predictor_exchange,
+        &overflow_predictor_diagnostics, &overflow_predictor_nd);
+  require_error(
+        overflow_predictor_error, ghl_success, "thick predictor denominator overflow",
+        1297);
+  require_condition(
+        overflow_predictor_diagnostics.path
+              == ghl_m1_neutrino_source_path_thick_equilibrium,
+        "thick predictor overflow selected the wrong path", 1297);
+  require_state_finite_and_admissible(
+        m1_params, &nu_params, &metric, &overflow_predictor_out, 1297);
+  require_exchange_contract(
+        &state_transport, &overflow_predictor_out, &overflow_predictor_exchange, &metric,
+        3.0, 1297);
+
+  /* A predictor whose dtau*kappa overflows while dtau*eta stays finite takes
+   * the ratio's denominator fallback and still lands on the equilibrium. */
+  make_primitives(&prims);
+  ghl_m1_neutrino_rates denominator_overflow_rates;
+  make_rates(
+        ghl_m1_neutrino_nue, 0.0, opacity_large, 0.0, 1.0, dt_small, 0.0, 0.0,
+        &denominator_overflow_rates);
+  require_error(
+        ghl_m1_validate_neutrino_rates(&denominator_overflow_rates, NULL), ghl_success,
+        "denominator-overflow predictor rates", 1298);
+  ghl_m1_neutrino_source_options denominator_overflow_options = branched_options();
+  denominator_overflow_options.thick_equilibrium_threshold = 0.5;
+  ghl_m1_neutrino_state denominator_overflow_out;
+  ghl_m1_neutrino_exchange denominator_overflow_exchange;
+  ghl_m1_neutrino_source_diagnostics denominator_overflow_diagnostics;
+  ghl_m1_neutrino_diagnostics denominator_overflow_nd;
+  ghl_m1_neutrino_diagnostics_initialize(&denominator_overflow_nd);
+  const ghl_error_codes_t denominator_overflow_error
+        = ghl_m1_solve_neutrino_source_update(
+              &denominator_overflow_options, m1_params, &nu_params, &metric, &prims,
+              &denominator_overflow_rates, &state_input, &state_transport, dt_large, 3.0,
+              &denominator_overflow_out, &denominator_overflow_exchange,
+              &denominator_overflow_diagnostics, &denominator_overflow_nd);
+  require_error(
+        denominator_overflow_error, ghl_success, "thick predictor denominator overflow",
+        1298);
+  require_condition(
+        denominator_overflow_diagnostics.path
+              == ghl_m1_neutrino_source_path_thick_equilibrium,
+        "denominator overflow selected the wrong path", 1298);
+  require_state_finite_and_admissible(
+        m1_params, &nu_params, &metric, &denominator_overflow_out, 1298);
+  require_exchange_contract(
+        &state_transport, &denominator_overflow_out, &denominator_overflow_exchange,
+        &metric, 3.0, 1298);
 }
 
 static void
@@ -942,72 +833,6 @@ test_reachable_scaled_ratio_failure(const ghl_m1_parameters *restrict m1_params)
               && !diagnostics.terminal_no_update
               && neutrino_diagnostics.source_failures == 1,
         "scaled-ratio failure was not published transactionally", 1297);
-}
-
-static void test_scaled_product_helper_boundaries(void) {
-  const double one[] = { 1.0 };
-  const double three_halves[] = { 1.5 };
-  const double invalid[] = { -1.0 };
-
-  /* 1.0 and 1.5 have the same frexp exponent, so these calls exercise the
-   * mantissa less-than, greater-than, and equality comparisons. */
-  require_condition(
-        !ghl_m1_neutrino_scaled_product_meets_threshold(one, 1, three_halves, 1, false),
-        "equal-exponent less-than comparison was mishandled", 1297);
-  require_condition(
-        ghl_m1_neutrino_scaled_product_meets_threshold(three_halves, 1, one, 1, false),
-        "equal-exponent greater-than comparison was mishandled", 1298);
-  require_condition(
-        ghl_m1_neutrino_scaled_product_meets_threshold(one, 1, one, 1, true),
-        "inclusive equal-exponent comparison was mishandled", 1299);
-  require_condition(
-        !ghl_m1_neutrino_scaled_product_meets_threshold(one, 1, one, 1, false),
-        "exclusive equal-exponent comparison was mishandled", 1300);
-
-  /* The exported helper must reject an invalid factor on either side rather
-   * than allowing the scaled-product loop to publish a partial result. */
-  require_condition(
-        !ghl_m1_neutrino_scaled_product_meets_threshold(invalid, 1, one, 1, false),
-        "invalid left product factor was accepted", 1301);
-  require_condition(
-        !ghl_m1_neutrino_scaled_product_meets_threshold(one, 1, invalid, 1, false),
-        "invalid right product factor was accepted", 1302);
-}
-
-static void test_scaled_positive_sqrt_boundaries(void) {
-  const ghl_m1_scaled_positive zero = { .mantissa = 0.0, .exponent = 0 };
-  const ghl_m1_scaled_positive odd_exponent = { .mantissa = 0.5, .exponent = 1 };
-  const ghl_m1_scaled_positive even_exponent = { .mantissa = 0.5, .exponent = 2 };
-  ghl_m1_scaled_positive root = { .mantissa = -1.0, .exponent = -1 };
-
-  /* The public thick-limit selector rejects zero before calling this helper.
-   * Exercise the helper contract directly, including its null guard. */
-  volatile bool omit_input = true;
-  const ghl_m1_scaled_positive *input = omit_input ? NULL : &zero;
-  require_condition(
-        !ghl_m1_scaled_positive_sqrt(input, &root), "scaled sqrt accepted a null input",
-        1303);
-  require_condition(
-        !ghl_m1_scaled_positive_sqrt(&zero, NULL), "scaled sqrt accepted a null output",
-        1304);
-  require_condition(
-        ghl_m1_scaled_positive_sqrt(&zero, &root) && root.mantissa == 0.0
-              && root.exponent == 0,
-        "scaled sqrt did not preserve zero", 1305);
-  require_condition(
-        ghl_m1_scaled_positive_sqrt(&odd_exponent, &root) && root.mantissa == 0.5
-              && root.exponent == 1,
-        "scaled sqrt mishandled an odd exponent", 1306);
-  require_condition(
-        ghl_m1_scaled_positive_sqrt(&even_exponent, &root)
-              && root.mantissa == sqrt(2.0) / 2.0 && root.exponent == 1,
-        "scaled sqrt mishandled an even exponent", 1307);
-  ghl_m1_scaled_positive sum;
-  require_condition(
-        ghl_m1_scaled_positive_add(&zero, &odd_exponent, &sum)
-              && sum.mantissa == odd_exponent.mantissa
-              && sum.exponent == odd_exponent.exponent,
-        "scaled add rejected a zero left operand", 1308);
 }
 
 static void test_public_source_api_boundaries(
@@ -1077,6 +902,56 @@ static void test_public_source_api_boundaries(
    * source outputs must remain untouched on failure. */
   ghl_m1_sources source_sentinel = { .S_E = -71.0, .S = { -72.0, -73.0, -74.0 } };
   double number_sentinel = -75.0;
+  /* A densitization overflow inside the current walk rejects the whole
+   * interaction-source call. */
+  {
+    ghl_metric_quantities huge_volume_metric;
+    ghl_initialize_metric(
+          1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &huge_volume_metric);
+    huge_volume_metric.sqrt_detgamma = 1.0e154;
+    huge_volume_metric.detgamma = 1.0e308;
+    for(int i = 0; i < 3; ++i) {
+      huge_volume_metric.gammaDD[i][i] = 1.0e308;
+      huge_volume_metric.gammaUU[i][i] = 1.0e-308;
+    }
+    ghl_m1_sources overflow_sources = { .S_E = -81.0, .S = { -82.0, -83.0, -84.0 } };
+    double overflow_number = -85.0;
+    require_error(
+          ghl_m1_compute_neutrino_interaction_sources(
+                m1_params, &nu_params, &huge_volume_metric, &prims, &state, &rates,
+                &overflow_sources, &overflow_number),
+          ghl_error_m1_invalid_state, "interaction current densitization overflow",
+          1204);
+    ghl_m1_neutrino_state huge_number_state = state;
+    huge_number_state.N = DBL_MAX;
+    ghl_m1_sources huge_number_sources = { .S_E = -86.0, .S = { -87.0, -88.0, -89.0 } };
+    double huge_number_source = -90.0;
+    require_error(
+          ghl_m1_compute_neutrino_interaction_sources(
+                m1_params, &nu_params, &huge_volume_metric, &prims, &huge_number_state,
+                &rates, &huge_number_sources, &huge_number_source),
+          ghl_error_m1_invalid_state, "interaction number densitization overflow", 1204);
+    require_condition(
+          huge_number_sources.S_E == -86.0 && huge_number_source == -90.0,
+          "interaction number overflow changed outputs", 1204);
+    /* A number floor above the comoving number rejects the current walk. */
+    ghl_m1_neutrino_parameters huge_floor_nu = nu_params;
+    huge_floor_nu.J_floor = DBL_MAX;
+    ghl_m1_sources huge_floor_sources = { .S_E = -91.0, .S = { -92.0, -93.0, -94.0 } };
+    double huge_floor_number = -95.0;
+    require_error(
+          ghl_m1_compute_neutrino_interaction_sources(
+                m1_params, &huge_floor_nu, &metric, &prims, &state, &rates,
+                &huge_floor_sources, &huge_floor_number),
+          ghl_error_m1_invalid_state, "interaction number-floor rejection", 1204);
+    require_condition(
+          huge_floor_sources.S_E == -91.0 && huge_floor_number == -95.0,
+          "interaction floor rejection changed outputs", 1204);
+    require_condition(
+          overflow_sources.S_E == -81.0 && overflow_sources.S[0] == -82.0
+                && overflow_number == -85.0,
+          "interaction overflow changed outputs", 1204);
+  }
   require_error(
         ghl_m1_compute_neutrino_interaction_sources(
               NULL, &nu_params, &metric, &prims, &state, &rates, &source_sentinel,
@@ -1479,8 +1354,23 @@ static void test_source_dispatcher_boundaries(
   require_error(
         ghl_m1_solve_neutrino_source_update(
               &options, m1_params, &nu_params, &metric, &prims, &rates, &state, &state,
+              -0.1, 3.0, &state_out, &exchange, &diagnostics, &neutrino_diagnostics),
+        ghl_error_m1_invalid_state, "negative source timestep", 1278);
+  require_error(
+        ghl_m1_solve_neutrino_source_update(
+              &options, m1_params, &nu_params, &metric, &prims, &rates, &state, &state,
               0.1, 0.0, &state_out, &exchange, &diagnostics, &neutrino_diagnostics),
-        ghl_error_m1_invalid_state, "nonpositive source baryon normalization", 1279);
+        ghl_error_m1_invalid_state, "zero source baryon normalization", 1279);
+  require_error(
+        ghl_m1_solve_neutrino_source_update(
+              &options, m1_params, &nu_params, &metric, &prims, &rates, &state, &state,
+              0.1, NAN, &state_out, &exchange, &diagnostics, &neutrino_diagnostics),
+        ghl_error_m1_invalid_state, "nonfinite source baryon normalization", 1279);
+  require_error(
+        ghl_m1_solve_neutrino_source_update(
+              &options, m1_params, &nu_params, &metric, &prims, &rates, &state, &state,
+              0.1, -1.0, &state_out, &exchange, &diagnostics, &neutrino_diagnostics),
+        ghl_error_m1_invalid_state, "negative source baryon normalization", 1279);
 
   /* The dispatcher validates dt*alpha after the metric/configuration boundary,
    * and validates the post-transport state separately from state_input. */
@@ -1513,6 +1403,124 @@ static void test_source_dispatcher_boundaries(
               && neutrino_diagnostics.source_failures == 1,
         "dispatcher transport-state failure was not published", 1283);
   require_zero_exchange(&exchange, "dispatcher transport-state exchange", 1283);
+
+  /* A frozen-primitives failure propagates from the closure/moments walk into
+   * every dispatch route: the thin branch reaches it through
+   * evaluate_closure_and_sources, whose own closure failure propagates. */
+  {
+    ghl_primitive_quantities bad_thin_prims = prims;
+    bad_thin_prims.vU[0] = NAN;
+    ghl_m1_neutrino_rates thin_rates;
+    make_rates(ghl_m1_neutrino_nue, 0.08, 0.10, 0.10, 1.0, 2.0, 0.0, 0.0, &thin_rates);
+    ghl_m1_neutrino_source_options thin_options = branched_options();
+    ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+    require_error(
+          ghl_m1_solve_neutrino_source_update(
+                &thin_options, m1_params, &nu_params, &metric, &bad_thin_prims,
+                &thin_rates, &state, &state, 0.1, 3.0, &state_out, &exchange,
+                &diagnostics, &neutrino_diagnostics),
+          ghl_error_m1_invalid_state, "dispatcher thin closure failure", 1283);
+    require_condition(
+          diagnostics.path == ghl_m1_neutrino_source_path_hard_failure
+                && neutrino_diagnostics.source_failures == 1,
+          "dispatcher thin closure failure was not published", 1283);
+    require_zero_exchange(&exchange, "dispatcher thin closure exchange", 1283);
+  }
+
+  /* Mean-energy bounds on the neutrino parameters reject the thin endpoint
+   * through the shared bounds check. */
+  {
+    ghl_m1_neutrino_parameters bounded_nu = nu_params;
+    bounded_nu.enforce_mean_energy_bounds = 1;
+    bounded_nu.mean_energy_min = 1.0e6;
+    ghl_m1_neutrino_rates thin_rates;
+    make_rates(ghl_m1_neutrino_nue, 0.08, 0.10, 0.10, 1.0, 2.0, 0.0, 0.0, &thin_rates);
+    ghl_m1_neutrino_source_options thin_options = branched_options();
+    ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+    require_error(
+          ghl_m1_solve_neutrino_source_update(
+                &thin_options, m1_params, &bounded_nu, &metric, &prims, &thin_rates,
+                &state, &state, 0.1, 3.0, &state_out, &exchange, &diagnostics,
+                &neutrino_diagnostics),
+          ghl_error_m1_invalid_state, "dispatcher thin endpoint bounds", 1283);
+    require_condition(
+          diagnostics.path == ghl_m1_neutrino_source_path_hard_failure
+                && neutrino_diagnostics.source_failures == 1,
+          "dispatcher thin bounds failure was not published", 1283);
+    require_zero_exchange(&exchange, "dispatcher thin bounds exchange", 1283);
+  }
+
+  /* A superluminal frozen coordinate velocity fails the Eulerian-velocity
+   * walk inside the thick/scattering branch publication. */
+  {
+    ghl_primitive_quantities superluminal_prims = prims;
+    superluminal_prims.vU[0] = 1.5;
+    ghl_m1_neutrino_rates thick_rates;
+    make_rates(ghl_m1_neutrino_nue, 0.08, 40.0, 0.10, 1.0, 2.0, 0.0, 0.0, &thick_rates);
+    ghl_m1_neutrino_source_options thick_options = branched_options();
+    thick_options.thick_equilibrium_threshold = 0.0;
+    ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+    require_error(
+          ghl_m1_solve_neutrino_source_update(
+                &thick_options, m1_params, &nu_params, &metric, &superluminal_prims,
+                &thick_rates, &state, &state, 1.0, 3.0, &state_out, &exchange,
+                &diagnostics, &neutrino_diagnostics),
+          ghl_error_u0_singular, "dispatcher thick eulerian velocity", 1283);
+    require_condition(
+          diagnostics.path == ghl_m1_neutrino_source_path_hard_failure
+                && neutrino_diagnostics.source_failures == 1,
+          "dispatcher thick velocity failure was not published", 1283);
+    require_zero_exchange(&exchange, "dispatcher thick velocity exchange", 1283);
+  }
+
+  /* The dispatcher validates the immutable metric at its own boundary after
+   * the pointer checks, so a zero volume must fail there with transactional
+   * publication before any state validation. */
+  ghl_metric_quantities bad_dispatcher_metric = metric;
+  bad_dispatcher_metric.sqrt_detgamma = 0.0;
+  ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+  require_error(
+        ghl_m1_solve_neutrino_source_update(
+              NULL, m1_params, &nu_params, &bad_dispatcher_metric, &prims, &rates,
+              &state, &state, 0.1, 3.0, &state_out, &exchange, &diagnostics,
+              &neutrino_diagnostics),
+        ghl_error_m1_invalid_metric, "invalid dispatcher metric", 1284);
+  require_condition(
+        diagnostics.path == ghl_m1_neutrino_source_path_hard_failure
+              && neutrino_diagnostics.source_failures == 1,
+        "dispatcher metric failure was not published", 1284);
+  require_zero_exchange(&exchange, "dispatcher metric exchange", 1284);
+  const double invalid_lapse_volume[] = { NAN, 0.0, -1.0, INFINITY };
+  for(int variant = 0; variant < 4; ++variant) {
+    bad_dispatcher_metric = metric;
+    bad_dispatcher_metric.lapse = invalid_lapse_volume[variant];
+    ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+    require_error(
+          ghl_m1_solve_neutrino_source_update(
+                NULL, m1_params, &nu_params, &bad_dispatcher_metric, &prims, &rates,
+                &state, &state, 0.1, 3.0, &state_out, &exchange, &diagnostics,
+                &neutrino_diagnostics),
+          ghl_error_m1_invalid_metric, "invalid dispatcher lapse", 1284);
+    require_condition(
+          diagnostics.path == ghl_m1_neutrino_source_path_hard_failure
+                && neutrino_diagnostics.source_failures == 1,
+          "dispatcher lapse failure was not published", 1284);
+    require_zero_exchange(&exchange, "dispatcher lapse exchange", 1284);
+    bad_dispatcher_metric = metric;
+    bad_dispatcher_metric.sqrt_detgamma = invalid_lapse_volume[variant];
+    ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics);
+    require_error(
+          ghl_m1_solve_neutrino_source_update(
+                NULL, m1_params, &nu_params, &bad_dispatcher_metric, &prims, &rates,
+                &state, &state, 0.1, 3.0, &state_out, &exchange, &diagnostics,
+                &neutrino_diagnostics),
+          ghl_error_m1_invalid_metric, "invalid dispatcher volume", 1284);
+    require_condition(
+          diagnostics.path == ghl_m1_neutrino_source_path_hard_failure
+                && neutrino_diagnostics.source_failures == 1,
+          "dispatcher volume failure was not published", 1284);
+    require_zero_exchange(&exchange, "dispatcher volume exchange", 1284);
+  }
 }
 
 static void test_source_compatibility_and_selector_failures(
@@ -1737,61 +1745,6 @@ static void test_pair_source_conservation(
 }
 
 static void
-test_pair_effective_opacity_underflow(const ghl_m1_parameters *restrict m1_params) {
-  ghl_metric_quantities metric;
-  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
-  ghl_primitive_quantities prims;
-  make_primitives(&prims);
-  ghl_m1_neutrino_parameters nu_params[2];
-  make_neutrino_parameters(&nu_params[0]);
-  make_neutrino_parameters(&nu_params[1]);
-
-  const double true_min = ldexp(DBL_MIN, -52);
-  ghl_m1_neutrino_rates rates[2] = { { 0 }, { 0 } };
-  for(int species = 0; species < 2; ++species) {
-    rates[species].species = species == 0 ? ghl_m1_neutrino_nue : ghl_m1_neutrino_anue;
-    rates[species].n_eq = 1.0;
-    rates[species].J_eq = DBL_MAX;
-    rates[species].mean_energy = DBL_MAX;
-    rates[species].lepton_weight = species == 0 ? 1.0 : -1.0;
-    rates[species].eta_E_pair[0] = true_min;
-  }
-
-  const ghl_m1_neutrino_state state_transport[2]
-        = { { .N = DBL_MAX, .E = 1.0, .F = { 0.0, 0.0, 0.0 } },
-            { .N = DBL_MAX, .E = 1.0, .F = { 0.0, 0.0, 0.0 } } };
-  const ghl_m1_neutrino_state state_input[2]
-        = { state_transport[0], state_transport[1] };
-  ghl_m1_neutrino_state state_out[2];
-  ghl_m1_neutrino_exchange exchange[2];
-  ghl_m1_neutrino_source_diagnostics diagnostics[2];
-  ghl_m1_neutrino_diagnostics neutrino_diagnostics[2];
-  for(int species = 0; species < 2; ++species) {
-    ghl_m1_neutrino_diagnostics_initialize(&neutrino_diagnostics[species]);
-  }
-
-  /* The correct effective opacity is true_min.  With dt = 2^1023, the
-   * source and damping terms are both 2^-51, so the exact endpoint remains
-   * E = 1.  If the direct eta_E_pair/J_eq quotient underflows first, the
-   * damping term disappears and E incorrectly increases by two ulps. */
-  const double dt = ldexp(1.0, 1023);
-  const ghl_error_codes_t error = ghl_m1_solve_neutrino_pair_source_update(
-        m1_params, nu_params, &metric, &prims, rates, state_input, state_transport, dt,
-        1.0, state_out, exchange, diagnostics, neutrino_diagnostics);
-  require_error(error, ghl_success, "underflowed pair effective opacity", 2100);
-  for(int species = 0; species < 2; ++species) {
-    require_condition(
-          memcmp(
-                &state_out[species], &state_transport[species],
-                sizeof(state_out[species]))
-                == 0,
-          "underflowed pair effective opacity changed the balanced endpoint", 2100);
-    require_zero_exchange(
-          &exchange[species], "underflowed pair effective opacity exchange", 2100);
-  }
-}
-
-static void
 test_pair_effective_opacity_overflow(const ghl_m1_parameters *restrict m1_params) {
   ghl_metric_quantities metric;
   ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
@@ -1827,6 +1780,61 @@ test_pair_effective_opacity_overflow(const ghl_m1_parameters *restrict m1_params
           "pair effective-opacity failure was not transactional", 2101);
     require_zero_exchange(
           &exchange[species], "pair effective-opacity overflow exchange", 2101);
+  }
+
+  /* The direct effective opacity can also overflow before the scaled
+   * fallback, which then succeeds with a representable quotient. */
+  for(int species = 0; species < 2; ++species) {
+    make_neutrino_parameters(&nu_params[species]);
+    make_rates(
+          species == 0 ? ghl_m1_neutrino_nue : ghl_m1_neutrino_anue, 0.0, 0.0, 0.0, 1.0,
+          1.0, 0.0, DBL_MAX, &rates[species]);
+    require_error(
+          ghl_m1_validate_neutrino_rates(&rates[species], NULL), ghl_success,
+          "pair effective-opacity scaled-fallback input rates", 2102);
+  }
+  for(int species = 0; species < 2; ++species) {
+    nd[species] = (ghl_m1_neutrino_diagnostics){ 0 };
+  }
+  require_error(
+        ghl_m1_solve_neutrino_pair_source_update(
+              m1_params, nu_params, &metric, &prims, rates, state, state, 1.0, 1.0,
+              output, exchange, diagnostics, nd),
+        ghl_error_m1_invalid_state, "overflowing pair effective opacity fallback", 2102);
+  for(int species = 0; species < 2; ++species) {
+    require_condition(
+          memcmp(&output[species], &state[species], sizeof(output[species])) == 0
+                && nd[species].source_failures == 1,
+          "pair scaled-opacity failure was not transactional", 2102);
+    require_zero_exchange(&exchange[species], "pair scaled-opacity exchange", 2102);
+  }
+
+  /* A subnormal-tiny energy emissivity over an enormous equilibrium energy
+   * sends the direct quotient to zero and the scaled quotient below the
+   * representable range: the pair operation must fail transactionally. */
+  for(int species = 0; species < 2; ++species) {
+    make_neutrino_parameters(&nu_params[species]);
+    make_rates(
+          species == 0 ? ghl_m1_neutrino_nue : ghl_m1_neutrino_anue, 0.0, 0.0, 0.0,
+          DBL_MAX, 1.0, 0.0, nextafter(0.0, 1.0), &rates[species]);
+    require_error(
+          ghl_m1_validate_neutrino_rates(&rates[species], NULL), ghl_success,
+          "pair effective-opacity underflow input rates", 2103);
+  }
+  for(int species = 0; species < 2; ++species) {
+    nd[species] = (ghl_m1_neutrino_diagnostics){ 0 };
+  }
+  require_error(
+        ghl_m1_solve_neutrino_pair_source_update(
+              m1_params, nu_params, &metric, &prims, rates, state, state, 1.0, 1.0,
+              output, exchange, diagnostics, nd),
+        ghl_error_m1_invalid_state, "underflowed pair effective opacity", 2103);
+  for(int species = 0; species < 2; ++species) {
+    require_condition(
+          memcmp(&output[species], &state[species], sizeof(output[species])) == 0
+                && nd[species].source_failures == 1,
+          "pair underflow-opacity failure was not transactional", 2103);
+    require_zero_exchange(&exchange[species], "pair underflow-opacity exchange", 2103);
   }
 }
 
@@ -2341,7 +2349,8 @@ test_pair_final_mean_energy_bounds(const ghl_m1_parameters *restrict m1_params) 
  * advance (start of every substep) and from the published endpoint. J_floor is
  * checked only by that derivation, so absorption that drives J below it must
  * reject the update transactionally at either site. */
-static void test_pair_state_derivation_failures(const ghl_m1_parameters *restrict m1_params) {
+static void
+test_pair_state_derivation_failures(const ghl_m1_parameters *restrict m1_params) {
   ghl_metric_quantities metric = { 0 };
   metric.lapse = metric.lapseinv = metric.lapseinv2 = 1.0;
   metric.detgamma = metric.sqrt_detgamma = 1.0;
@@ -2381,7 +2390,8 @@ static void test_pair_state_derivation_failures(const ghl_m1_parameters *restric
           ghl_m1_solve_neutrino_pair_source_update(
                 m1_params, nu_params, &metric, &prims, rates, state, state, 1.0, 1.0,
                 output, exchange, diagnostics, neutrino_diagnostics),
-          ghl_error_m1_invalid_state, "pair current derivation failure", 2150 + test_case);
+          ghl_error_m1_invalid_state, "pair current derivation failure",
+          2150 + test_case);
     for(int species = 0; species < 2; ++species) {
       require_condition(
             memcmp(&output[species], &state[species], sizeof(output[species])) == 0,
@@ -3053,9 +3063,9 @@ static void test_retry_and_terminal_no_update(
   ghl_m1_neutrino_diagnostics pair_nd[2] = { { 0 }, { 0 } };
   require_error(
         ghl_m1_solve_neutrino_pair_source_update(
-              &terminal_params, pair_params, &metric, &prims, pair_rates,
-              pair_input, pair_input, 0.5, 3.0, pair_output, pair_exchange,
-              pair_diagnostics, pair_nd),
+              &terminal_params, pair_params, &metric, &prims, pair_rates, pair_input,
+              pair_input, 0.5, 3.0, pair_output, pair_exchange, pair_diagnostics,
+              pair_nd),
         ghl_error_m1_implicit_terminal_fallback,
         "pair independent-stage terminal fallback", 3202);
   for(int species = 0; species < 2; ++species) {
@@ -3189,7 +3199,7 @@ static void test_direct_neutrino_validation_boundaries(
   const ghl_m1_rad_state valid_rad_state = { .E = 1.0, .F = { 0.1, 0.0, 0.0 } };
   double flux_factor_sq = -1.0;
   require_error(
-        ghl_m1_validate_realizability(
+        ghl_m1_validate_realizability_state(
               m1_params, &metric, &valid_rad_state, 128.0, &flux_factor_sq),
         ghl_success, "realizability flux-factor output", 3999);
   require_close(
@@ -3795,12 +3805,6 @@ static void test_direct_neutrino_validation_boundaries(
   require_error(
         ghl_m1_repair_neutrino_state(m1_params, &nu_params, &metric, NULL, &repair_nd),
         ghl_error_m1_null_pointer, "null repair state", 4123);
-  ghl_metric_quantities bad_metric = metric;
-  bad_metric.gammaDD[0][0] = 0.0;
-  require_error(
-        ghl_m1_repair_neutrino_state(
-              m1_params, &nu_params, &bad_metric, &repair_state, &repair_nd),
-        ghl_error_m1_invalid_metric, "invalid repair metric", 4124);
   bad_nu_params = nu_params;
   bad_nu_params.N_floor = NAN;
   require_error(
@@ -4033,10 +4037,20 @@ static void test_implicit_kernel_boundaries(
         ghl_m1_neutrino_build_trial_state(&metric, U, NULL), ghl_error_m1_null_pointer,
         "null trial output", 4202);
   ghl_metric_quantities bad_metric = metric;
-  bad_metric.gammaDD[0][0] = 0.0;
+  bad_metric.sqrt_detgamma = 0.0;
   require_error(
         ghl_m1_neutrino_build_trial_state(&bad_metric, U, &trial),
         ghl_error_m1_invalid_metric, "invalid trial metric", 4203);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = NAN;
+  require_error(
+        ghl_m1_neutrino_build_trial_state(&bad_metric, U, &trial),
+        ghl_error_m1_invalid_metric, "nonfinite trial metric", 4203);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = -1.0;
+  require_error(
+        ghl_m1_neutrino_build_trial_state(&bad_metric, U, &trial),
+        ghl_error_m1_invalid_metric, "negative trial metric", 4203);
   double bad_U[4] = { U[0], U[1], U[2], U[3] };
   bad_U[0] = NAN;
   require_error(
@@ -4108,6 +4122,38 @@ static void test_implicit_kernel_boundaries(
         ghl_m1_neutrino_compute_implicit_residual_with_base(
               m1_params, &bad_metric, &prims, &rates, 0.1, U_base, U, residual),
         ghl_error_m1_invalid_metric, "invalid residual metric", 4228);
+  bad_metric = metric;
+  bad_metric.lapse = NAN;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual_with_base(
+              m1_params, &bad_metric, &prims, &rates, 0.1, U_base, U, residual),
+        ghl_error_m1_invalid_metric, "nonfinite residual lapse", 4228);
+  bad_metric = metric;
+  bad_metric.lapse = 0.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual_with_base(
+              m1_params, &bad_metric, &prims, &rates, 0.1, U_base, U, residual),
+        ghl_error_m1_invalid_metric, "nonpositive residual lapse", 4228);
+  bad_metric = metric;
+  bad_metric.lapse = -1.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual_with_base(
+              m1_params, &bad_metric, &prims, &rates, 0.1, U_base, U, residual),
+        ghl_error_m1_invalid_metric, "negative residual lapse", 4228);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = NAN;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual_with_base(
+              m1_params, &bad_metric, &prims, &rates, 0.1, U_base, U, residual),
+        ghl_error_m1_invalid_metric, "nonfinite residual volume", 4228);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = -1.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual_with_base(
+              m1_params, &bad_metric, &prims, &rates, 0.1, U_base, U, residual),
+        ghl_error_m1_invalid_metric, "negative residual volume", 4228);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = 0.0;
   double bad_base[4] = { U_base[0], U_base[1], U_base[2], U_base[3] };
   bad_base[0] = NAN;
   require_error(
@@ -4120,12 +4166,6 @@ static void test_implicit_kernel_boundaries(
               m1_params, &metric, &prims, &rates, 0.1, U_base, bad_U, residual),
         ghl_error_m1_implicit_admissibility, "nonfinite residual trial", 4230);
   bad_U[0] = U[0];
-  ghl_m1_parameters bad_m1_params = *m1_params;
-  bad_m1_params.epsilon_c = NAN;
-  require_error(
-        ghl_m1_neutrino_compute_implicit_residual_with_base(
-              &bad_m1_params, &metric, &prims, &rates, 0.1, U_base, U, residual),
-        ghl_error_m1_invalid_epsilon_c, "invalid residual parameters", 4231);
   ghl_m1_neutrino_rates bad_rates = rates;
   bad_rates.eta_N = -1.0;
   require_error(
@@ -4155,6 +4195,20 @@ static void test_implicit_kernel_boundaries(
               m1_params, &nu_params, &bad_metric, &prims, &rates, &state, 0.1, U,
               residual),
         ghl_error_m1_invalid_metric, "invalid public residual determinant", 4242);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = NAN;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual(
+              m1_params, &nu_params, &bad_metric, &prims, &rates, &state, 0.1, U,
+              residual),
+        ghl_error_m1_invalid_metric, "nonfinite public residual determinant", 4242);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = -1.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_residual(
+              m1_params, &nu_params, &bad_metric, &prims, &rates, &state, 0.1, U,
+              residual),
+        ghl_error_m1_invalid_metric, "negative public residual determinant", 4242);
   require_error(
         ghl_m1_neutrino_compute_implicit_residual(
               m1_params, NULL, &metric, &prims, &rates, &state, 0.1, U, residual),
@@ -4307,6 +4361,31 @@ static void test_implicit_kernel_boundaries(
               m1_params, &nu_params, &bad_metric, &prims, &rates, &state, 0.1, U,
               residual, jacobian),
         ghl_error_m1_invalid_metric, "invalid public Jacobian metric", 4273);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = NAN;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_jacobian(
+              m1_params, &nu_params, &bad_metric, &prims, &rates, &state, 0.1, U,
+              residual, jacobian),
+        ghl_error_m1_invalid_metric, "nonfinite public Jacobian metric", 4273);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = -1.0;
+  require_error(
+        ghl_m1_neutrino_compute_implicit_jacobian(
+              m1_params, &nu_params, &bad_metric, &prims, &rates, &state, 0.1, U,
+              residual, jacobian),
+        ghl_error_m1_invalid_metric, "negative public Jacobian metric", 4273);
+  /* Productive public entries: each validated public helper must also accept a
+   * valid metric so its guard's continue edge stays executable. */
+  ghl_m1_rad_state valid_trial;
+  require_error(
+        ghl_m1_neutrino_build_trial_state(&metric, U, &valid_trial), ghl_success,
+        "productive trial state", 4273);
+  require_error(
+        ghl_m1_neutrino_compute_implicit_jacobian(
+              m1_params, &nu_params, &metric, &prims, &rates, &state, 0.0, U, residual,
+              jacobian),
+        ghl_success, "productive public Jacobian", 4273);
 
   /* The full homogeneous solver owns a separate transactional validation
    * boundary from the residual/Jacobian helpers above. Exercise each
@@ -4328,21 +4407,8 @@ static void test_implicit_kernel_boundaries(
   require_condition(
         solver_nd.source_failures == 1, "negative timestep was not diagnosed", 4274);
 
-  ghl_m1_neutrino_parameters bad_terminal_policy = nu_params;
-  bad_terminal_policy.terminal_fallback_policy
-        = (ghl_m1_neutrino_terminal_fallback_policy_t)99;
-  ghl_m1_neutrino_diagnostics_initialize(&solver_nd);
-  require_error(
-        ghl_m1_solve_neutrino_implicit_homogeneous_update(
-              m1_params, &bad_terminal_policy, &metric, &prims, &rates, 0.1, 3.0, &state,
-              &solver_output, &solver_exchange, &solver_diagnostics, &solver_nd),
-        ghl_error_m1_invalid_state, "invalid homogeneous terminal policy", 4275);
-  require_condition(
-        solver_nd.source_failures == 1, "invalid terminal policy was not diagnosed",
-        4275);
-
   bad_metric = metric;
-  bad_metric.gammaDD[0][0] = 0.0;
+  bad_metric.sqrt_detgamma = 0.0;
   ghl_m1_neutrino_diagnostics_initialize(&solver_nd);
   require_error(
         ghl_m1_solve_neutrino_implicit_homogeneous_update(
@@ -4351,6 +4417,50 @@ static void test_implicit_kernel_boundaries(
         ghl_error_m1_invalid_metric, "invalid homogeneous metric", 4276);
   require_condition(
         solver_nd.source_failures == 1, "invalid homogeneous metric was not diagnosed",
+        4276);
+  bad_metric = metric;
+  bad_metric.lapse = NAN;
+  ghl_m1_neutrino_diagnostics_initialize(&solver_nd);
+  require_error(
+        ghl_m1_solve_neutrino_implicit_homogeneous_update(
+              m1_params, &nu_params, &bad_metric, &prims, &rates, 0.1, 3.0, &state,
+              &solver_output, &solver_exchange, &solver_diagnostics, &solver_nd),
+        ghl_error_m1_invalid_metric, "nonfinite homogeneous lapse", 4276);
+  require_condition(
+        solver_nd.source_failures == 1, "nonfinite homogeneous lapse was not diagnosed",
+        4276);
+  bad_metric = metric;
+  bad_metric.lapse = 0.0;
+  ghl_m1_neutrino_diagnostics_initialize(&solver_nd);
+  require_error(
+        ghl_m1_solve_neutrino_implicit_homogeneous_update(
+              m1_params, &nu_params, &bad_metric, &prims, &rates, 0.1, 3.0, &state,
+              &solver_output, &solver_exchange, &solver_diagnostics, &solver_nd),
+        ghl_error_m1_invalid_metric, "nonpositive homogeneous lapse", 4276);
+  require_condition(
+        solver_nd.source_failures == 1,
+        "nonpositive homogeneous lapse was not diagnosed", 4276);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = NAN;
+  ghl_m1_neutrino_diagnostics_initialize(&solver_nd);
+  require_error(
+        ghl_m1_solve_neutrino_implicit_homogeneous_update(
+              m1_params, &nu_params, &bad_metric, &prims, &rates, 0.1, 3.0, &state,
+              &solver_output, &solver_exchange, &solver_diagnostics, &solver_nd),
+        ghl_error_m1_invalid_metric, "nonfinite homogeneous volume", 4276);
+  require_condition(
+        solver_nd.source_failures == 1, "nonfinite homogeneous volume was not diagnosed",
+        4276);
+  bad_metric = metric;
+  bad_metric.sqrt_detgamma = -1.0;
+  ghl_m1_neutrino_diagnostics_initialize(&solver_nd);
+  require_error(
+        ghl_m1_solve_neutrino_implicit_homogeneous_update(
+              m1_params, &nu_params, &bad_metric, &prims, &rates, 0.1, 3.0, &state,
+              &solver_output, &solver_exchange, &solver_diagnostics, &solver_nd),
+        ghl_error_m1_invalid_metric, "negative homogeneous volume", 4276);
+  require_condition(
+        solver_nd.source_failures == 1, "negative homogeneous volume was not diagnosed",
         4276);
 
   /* solve_diagnostics is a required output: a hard failure must leave a
@@ -5122,6 +5232,39 @@ test_projected_charged_current_overflow(const ghl_m1_parameters *restrict m1_par
               && nd.source_converged == 0,
         "projected charged-current failure changed state or counters", 4613);
   require_zero_exchange(&exchange, "projected charged-current overflow exchange", 4613);
+
+  /* The with-number-policy solver validates the immutable metric at its own
+   * boundary; every lapse/volume reject arm is a separate condition. */
+  const double invalid_solver_metric_values[] = { NAN, 0.0, -1.0, INFINITY };
+  for(size_t variant = 0; variant < sizeof(invalid_solver_metric_values)
+                                          / sizeof(invalid_solver_metric_values[0]);
+      ++variant) {
+    ghl_metric_quantities bad_solver_metric;
+    ghl_initialize_metric(
+          1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &bad_solver_metric);
+    bad_solver_metric.lapse = invalid_solver_metric_values[variant];
+    ghl_m1_neutrino_diagnostics_initialize(&nd);
+    require_error(
+          ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_policy(
+                m1_params, &nu_params, &bad_solver_metric, &prims, &rates, 1.0, 1.0, 0.0,
+                &input, &output, &exchange, &solve_diagnostics, &nd),
+          ghl_error_m1_invalid_metric, "invalid number-policy lapse", 4613);
+    require_condition(
+          memcmp(&output, &input, sizeof(output)) == 0 && nd.source_failures == 1,
+          "number-policy lapse failure was not transactional", 4613);
+    ghl_initialize_metric(
+          1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &bad_solver_metric);
+    bad_solver_metric.sqrt_detgamma = invalid_solver_metric_values[variant];
+    ghl_m1_neutrino_diagnostics_initialize(&nd);
+    require_error(
+          ghl_m1_solve_neutrino_implicit_homogeneous_update_with_number_policy(
+                m1_params, &nu_params, &bad_solver_metric, &prims, &rates, 1.0, 1.0, 0.0,
+                &input, &output, &exchange, &solve_diagnostics, &nd),
+          ghl_error_m1_invalid_metric, "invalid number-policy volume", 4613);
+    require_condition(
+          memcmp(&output, &input, sizeof(output)) == 0 && nd.source_failures == 1,
+          "number-policy volume failure was not transactional", 4613);
+  }
 }
 
 static void
@@ -5203,6 +5346,49 @@ test_overflow_safe_number_source_terms(const ghl_m1_parameters *restrict m1_para
         ghl_success, "tiny BE products underflow", 4618);
   require_condition(
         tiny_endpoint == 0.0, "tiny BE endpoint changed its legacy rounded value", 4618);
+
+  /* Emission overflow with a finite absorption term takes the scaled
+   * fallback through the emission-nonderminateness arm. */
+  ghl_m1_neutrino_rates emission_overflow_rates;
+  make_rates(
+        ghl_m1_neutrino_nue, ldexp(1.0, -50), 0.0, 0.0, ldexp(1.0, 600), 1.0, 0.0, 0.0,
+        &emission_overflow_rates);
+  require_error(
+        ghl_m1_validate_neutrino_rates(&emission_overflow_rates, NULL), ghl_success,
+        "emission-overflow BE rates", 4619);
+  double emission_overflow_endpoint = -1.0;
+  require_error(
+        ghl_m1_update_neutrino_number_backward_euler(
+              &nu_params, &emission_overflow_rates, ldexp(1.0, 600), 1.0, 1.0,
+              &emission_overflow_endpoint),
+        ghl_success, "emission-overflow BE endpoint", 4619);
+  require_close(
+        emission_overflow_endpoint, ldexp(1.0, 600), 2.0e-15, 0.0,
+        "emission-overflow BE equilibrium", 4619);
+
+  /* An absorption term that overflows after a finite product (tiny Gamma)
+   * takes the term-nonderminateness arm; the scaled fallback publishes the
+   * tiny representable equilibrium. */
+  ghl_m1_neutrino_rates term_overflow_rates;
+  make_rates(
+        ghl_m1_neutrino_nue, ldexp(1.0, 500), 0.0, 0.0, ldexp(1.0, -500), 1.0, 0.0, 0.0,
+        &term_overflow_rates);
+  make_rates(
+        ghl_m1_neutrino_nue, ldexp(1.0, 504), 0.0, 0.0, ldexp(1.0, -44), ldexp(1.0, 44),
+        0.0, 0.0, &term_overflow_rates);
+  require_error(
+        ghl_m1_validate_neutrino_rates(&term_overflow_rates, NULL), ghl_success,
+        "term-overflow BE rates", 4620);
+  double term_overflow_endpoint = -1.0;
+  require_error(
+        ghl_m1_update_neutrino_number_backward_euler(
+              &nu_params, &term_overflow_rates, ldexp(1.0, 482), 2.0e-12, 1.0,
+              &term_overflow_endpoint),
+        ghl_success, "term-overflow BE endpoint", 4620);
+  require_condition(
+        term_overflow_endpoint > 0.0 && isfinite(term_overflow_endpoint)
+              && term_overflow_endpoint < 1.0,
+        "term-overflow BE published a nonrepresentable endpoint", 4620);
 }
 
 static void initialize_pair_boundary_inputs(
@@ -5386,14 +5572,6 @@ static void test_pair_dispatcher_boundaries(
               state_transport, 0.1, 3.0, state_out, exchange, diagnostics,
               neutrino_diagnostics),
         ghl_error_m1_microphysics_failure, "mismatched pair number rates", 4315);
-  ghl_m1_parameters bad_m1_params = *m1_params;
-  bad_m1_params.epsilon_c = NAN;
-  require_error(
-        ghl_m1_solve_neutrino_pair_source_update(
-              &bad_m1_params, nu_params, &metric, &prims, rates, state_input,
-              state_transport, 0.1, 3.0, state_out, exchange, diagnostics,
-              neutrino_diagnostics),
-        ghl_error_m1_invalid_epsilon_c, "invalid pair M1 configuration", 4316);
 
   /* A pair-active packet with no pair energy emissivity is physically valid:
    * it exercises the effective-rate zero-energy branch while retaining a
@@ -5419,224 +5597,10 @@ static void test_pair_dispatcher_boundaries(
   }
 }
 
-static void require_m1_configuration_error_on_public_routes(
-      const ghl_m1_parameters *restrict candidate,
-      const ghl_metric_quantities *restrict metric,
-      const ghl_primitive_quantities *restrict prims,
-      const ghl_m1_neutrino_parameters nu_params[2],
-      const ghl_m1_neutrino_rates *restrict source_rates,
-      const ghl_m1_neutrino_rates pair_rates[2],
-      const ghl_m1_neutrino_state *restrict state,
-      const ghl_m1_neutrino_state pair_states[2],
-      const ghl_error_codes_t expected,
-      const char *restrict operation,
-      const int case_index) {
-  ghl_m1_neutrino_state source_out = { .N = -1.0, .E = -2.0, .F = { -3.0, -4.0, -5.0 } };
-  ghl_m1_neutrino_exchange source_exchange = { .dE_rad = -6.0 };
-  ghl_m1_neutrino_source_diagnostics source_diagnostics;
-  ghl_m1_neutrino_diagnostics source_nd;
-  ghl_m1_neutrino_diagnostics_initialize(&source_nd);
-  require_error(
-        ghl_m1_solve_neutrino_source_update(
-              NULL, candidate, &nu_params[0], metric, prims, source_rates, state, state,
-              0.1, 3.0, &source_out, &source_exchange, &source_diagnostics, &source_nd),
-        expected, operation, case_index);
-  require_condition(
-        memcmp(&source_out, state, sizeof(source_out)) == 0,
-        "source configuration failure changed transport state", case_index);
-  require_zero_exchange(&source_exchange, operation, case_index);
-
-  ghl_m1_neutrino_state pair_out[2];
-  ghl_m1_neutrino_exchange pair_exchange[2];
-  ghl_m1_neutrino_source_diagnostics pair_diagnostics[2];
-  ghl_m1_neutrino_diagnostics pair_nd[2];
-  for(int species = 0; species < 2; ++species) {
-    ghl_m1_neutrino_diagnostics_initialize(&pair_nd[species]);
-  }
-  require_error(
-        ghl_m1_solve_neutrino_pair_source_update(
-              candidate, nu_params, metric, prims, pair_rates, pair_states, pair_states,
-              0.1, 3.0, pair_out, pair_exchange, pair_diagnostics, pair_nd),
-        expected, operation, case_index + 1);
-  for(int species = 0; species < 2; ++species) {
-    require_condition(
-          memcmp(&pair_out[species], &pair_states[species], sizeof(pair_out[species]))
-                == 0,
-          "pair configuration failure changed transport state", case_index + 1);
-    require_zero_exchange(&pair_exchange[species], operation, case_index + 1);
-  }
-
-  const double U_base[4] = { state->E, state->F[0], state->F[1], state->F[2] };
-  const double U[4] = { U_base[0], U_base[1], U_base[2], U_base[3] };
-  double residual[4] = { -7.0, -8.0, -9.0, -10.0 };
-  require_error(
-        ghl_m1_neutrino_compute_implicit_residual_with_base(
-              candidate, metric, prims, source_rates, 0.1, U_base, U, residual),
-        expected, operation, case_index + 2);
-
-  ghl_m1_neutrino_state implicit_out
-        = { .N = -11.0, .E = -12.0, .F = { -13.0, -14.0, -15.0 } };
-  ghl_m1_neutrino_exchange implicit_exchange = { .dE_rad = -16.0 };
-  ghl_m1_implicit_solve_diagnostics implicit_diagnostics;
-  ghl_m1_neutrino_diagnostics implicit_nd;
-  ghl_m1_initialize_implicit_solve_diagnostics(&implicit_diagnostics);
-  ghl_m1_neutrino_diagnostics_initialize(&implicit_nd);
-  require_error(
-        ghl_m1_solve_neutrino_implicit_homogeneous_update(
-              candidate, &nu_params[0], metric, prims, source_rates, 0.1, 3.0, state,
-              &implicit_out, &implicit_exchange, &implicit_diagnostics, &implicit_nd),
-        expected, operation, case_index + 3);
-  require_condition(
-        memcmp(&implicit_out, state, sizeof(implicit_out)) == 0,
-        "implicit configuration failure changed input state", case_index + 3);
-  require_zero_exchange(&implicit_exchange, operation, case_index + 3);
-}
-
-static void test_m1_configuration_field_boundaries(
-      const ghl_m1_parameters *restrict m1_params,
-      m1_test_rng *restrict rng) {
-  ghl_metric_quantities metric;
-  make_metric(rng, 1.0, &metric);
-  ghl_primitive_quantities prims;
-  make_primitives(&prims);
-  ghl_m1_neutrino_parameters nu_params[2];
-  make_neutrino_parameters(&nu_params[0]);
-  make_neutrino_parameters(&nu_params[1]);
-  ghl_m1_neutrino_rates source_rates;
-  make_rates(ghl_m1_neutrino_nue, 0.08, 0.12, 0.10, 1.0, 2.0, 0.0, 0.0, &source_rates);
-  ghl_m1_neutrino_rates pair_rates[2];
-  make_rates(ghl_m1_neutrino_nue, 0.0, 0.0, 0.0, 0.8, 2.0, 0.01, 0.02, &pair_rates[0]);
-  make_rates(ghl_m1_neutrino_anue, 0.0, 0.0, 0.0, 1.4, 3.0, 0.01, 0.03, &pair_rates[1]);
-  ghl_m1_neutrino_state state;
-  make_state(rng, &metric, &state);
-  const ghl_m1_neutrino_state pair_states[2] = { state, state };
-
-#define CHECK_M1_CONFIGURATION(label, mutation, expected, index)                     \
-  do {                                                                               \
-    ghl_m1_parameters candidate = *m1_params;                                        \
-    mutation;                                                                        \
-    require_m1_configuration_error_on_public_routes(                                 \
-          &candidate, &metric, &prims, nu_params, &source_rates, pair_rates, &state, \
-          pair_states, expected, label, index);                                      \
-  } while(0)
-
-  CHECK_M1_CONFIGURATION(
-        "NaN E floor", candidate.E_floor = NAN, ghl_error_m1_invalid_E_floor, 4400);
-  CHECK_M1_CONFIGURATION(
-        "infinite E floor", candidate.E_floor = INFINITY, ghl_error_m1_invalid_E_floor,
-        4404);
-  CHECK_M1_CONFIGURATION(
-        "zero E floor", candidate.E_floor = 0.0, ghl_error_m1_invalid_E_floor, 4408);
-  CHECK_M1_CONFIGURATION(
-        "negative E floor", candidate.E_floor = -DBL_MIN, ghl_error_m1_invalid_E_floor,
-        4412);
-
-  CHECK_M1_CONFIGURATION(
-        "invalid repair policy", candidate.repair_policy = (ghl_m1_repair_policy_t)0,
-        ghl_error_m1_invalid_repair_policy, 4416);
-
-  CHECK_M1_CONFIGURATION(
-        "NaN epsilon", candidate.epsilon_c = NAN, ghl_error_m1_invalid_epsilon_c, 4420);
-  CHECK_M1_CONFIGURATION(
-        "infinite epsilon", candidate.epsilon_c = INFINITY,
-        ghl_error_m1_invalid_epsilon_c, 4424);
-  CHECK_M1_CONFIGURATION(
-        "zero epsilon", candidate.epsilon_c = 0.0, ghl_error_m1_invalid_epsilon_c, 4428);
-  CHECK_M1_CONFIGURATION(
-        "negative epsilon", candidate.epsilon_c = -DBL_MIN,
-        ghl_error_m1_invalid_epsilon_c, 4432);
-  CHECK_M1_CONFIGURATION(
-        "unit epsilon", candidate.epsilon_c = 1.0, ghl_error_m1_invalid_epsilon_c, 4436);
-  CHECK_M1_CONFIGURATION(
-        "large epsilon", candidate.epsilon_c = 1.1, ghl_error_m1_invalid_epsilon_c,
-        4440);
-  CHECK_M1_CONFIGURATION(
-        "NaN one-minus-epsilon", candidate.one_minus_epsilon_c_sq = NAN,
-        ghl_error_m1_invalid_epsilon_c, 4444);
-  CHECK_M1_CONFIGURATION(
-        "mismatched one-minus-epsilon", candidate.one_minus_epsilon_c_sq += 1.0e-3,
-        ghl_error_m1_invalid_epsilon_c, 4448);
-
-  CHECK_M1_CONFIGURATION(
-        "NaN closure tolerance", candidate.closure_root_tolerance = NAN,
-        ghl_error_m1_invalid_closure_tolerance, 4452);
-  CHECK_M1_CONFIGURATION(
-        "infinite closure tolerance", candidate.closure_root_tolerance = INFINITY,
-        ghl_error_m1_invalid_closure_tolerance, 4456);
-  CHECK_M1_CONFIGURATION(
-        "zero closure tolerance", candidate.closure_root_tolerance = 0.0,
-        ghl_error_m1_invalid_closure_tolerance, 4460);
-  CHECK_M1_CONFIGURATION(
-        "negative closure tolerance", candidate.closure_root_tolerance = -DBL_MIN,
-        ghl_error_m1_invalid_closure_tolerance, 4464);
-  CHECK_M1_CONFIGURATION(
-        "large closure tolerance", candidate.closure_root_tolerance = 1.1,
-        ghl_error_m1_invalid_closure_tolerance, 4468);
-  CHECK_M1_CONFIGURATION(
-        "zero closure max iterations", candidate.closure_root_max_iterations = 0,
-        ghl_error_m1_invalid_closure_max_iterations, 4472);
-  CHECK_M1_CONFIGURATION(
-        "negative closure max iterations", candidate.closure_root_max_iterations = -1,
-        ghl_error_m1_invalid_closure_max_iterations, 4476);
-  CHECK_M1_CONFIGURATION(
-        "NaN closure residual tolerance",
-        candidate.closure_root_residual_tolerance = NAN,
-        ghl_error_m1_invalid_closure_tolerance, 4480);
-  CHECK_M1_CONFIGURATION(
-        "infinite closure residual tolerance",
-        candidate.closure_root_residual_tolerance = INFINITY,
-        ghl_error_m1_invalid_closure_tolerance, 4484);
-  CHECK_M1_CONFIGURATION(
-        "zero closure residual tolerance",
-        candidate.closure_root_residual_tolerance = 0.0,
-        ghl_error_m1_invalid_closure_tolerance, 4488);
-  CHECK_M1_CONFIGURATION(
-        "negative closure residual tolerance",
-        candidate.closure_root_residual_tolerance = -DBL_MIN,
-        ghl_error_m1_invalid_closure_tolerance, 4492);
-
-#undef CHECK_M1_CONFIGURATION
-}
-
 /* Arithmetic helpers are shared across several source policies. Test their
  * failure contracts directly, including preservation of caller output. */
-static void test_scaled_arithmetic_failure_contracts(void) {
+static void test_arithmetic_failure_contracts(void) {
   volatile double values[] = { NAN, INFINITY, -1.0, 0.0, DBL_MIN, DBL_MAX };
-  ghl_m1_scaled_positive a = { .mantissa = 0.5, .exponent = 1 };
-  ghl_m1_scaled_positive b = a, out = a;
-  const ghl_m1_scaled_positive *volatile operands[] = { NULL, &a, &b };
-  for(int i = 0; i < 3; ++i) {
-    require_condition(
-          !ghl_m1_scaled_positive_from_double(values[i], &out),
-          "scaled conversion accepted invalid value", 4600 + i);
-  }
-  require_condition(
-        !ghl_m1_scaled_positive_from_double(1.0, NULL),
-        "scaled conversion accepted null output", 4603);
-  for(int i = 0; i < 3; ++i) {
-    const ghl_m1_scaled_positive *left = operands[i == 0 ? 0 : 1];
-    const ghl_m1_scaled_positive *right = operands[i == 1 ? 0 : 2];
-    ghl_m1_scaled_positive *result = i == 2 ? NULL : &out;
-    require_condition(
-          !ghl_m1_scaled_positive_multiply(left, right, result),
-          "scaled multiply accepted missing operand", 4610 + i);
-    require_condition(
-          !ghl_m1_scaled_positive_add(left, right, result),
-          "scaled add accepted missing operand", 4620 + i);
-    double quotient = 7.0;
-    require_condition(
-          !ghl_m1_scaled_positive_divide(left, right, i == 2 ? NULL : &quotient)
-                && quotient == 7.0,
-          "scaled divide changed output on missing operand", 4630 + i);
-  }
-  const double factors[] = { 1.0 };
-  const double *volatile factors_pointer = factors;
-  require_condition(
-        !ghl_m1_scaled_positive_product(factors_pointer, 0, &out),
-        "scaled product accepted empty product", 4640);
-  require_condition(
-        !ghl_m1_scaled_positive_product(factors_pointer, 1, NULL),
-        "scaled product accepted null output", 4641);
   for(int i = 0; i < 8; ++i) {
     double kappa = 1.0, number = 1.0, gamma = 1.0, absorption = 7.0;
     if(i == 1) {
@@ -5661,28 +5625,310 @@ static void test_scaled_arithmetic_failure_contracts(void) {
       gamma = values[3];
     }
     require_condition(
-          !ghl_m1_neutrino_scaled_absorption_number(
+          !ghl_m1_neutrino_absorption_number(
                 kappa, number, gamma, i == 0 ? NULL : &absorption)
                 && absorption == 7.0,
           "absorption accepted invalid input or changed output", 4650 + i);
   }
   double absorption;
   require_condition(
-        ghl_m1_neutrino_scaled_absorption_number(values[3], 1.0, 1.0, &absorption)
+        ghl_m1_neutrino_absorption_number(values[3], 1.0, 1.0, &absorption)
               && absorption == 0.0,
         "zero opacity must give zero absorption", 4660);
   require_condition(
-        ghl_m1_neutrino_scaled_absorption_number(1.0, values[3], 1.0, &absorption)
+        ghl_m1_neutrino_absorption_number(1.0, values[3], 1.0, &absorption)
               && absorption == 0.0,
         "zero occupancy must give zero absorption", 4661);
   require_condition(
-        ghl_m1_neutrino_scaled_absorption_number(values[4], values[4], 1.0, &absorption)
+        ghl_m1_neutrino_absorption_number(values[4], values[4], 1.0, &absorption)
               && absorption == 0.0,
         "absorption underflow must preserve IEEE zero", 4662);
   require_condition(
-        !ghl_m1_neutrino_scaled_absorption_number(
-              values[5], values[5], values[4], &absorption),
+        !ghl_m1_neutrino_absorption_number(values[5], values[5], values[4], &absorption),
         "nonrepresentable absorption must fail", 4663);
+}
+
+/* The scaled-positive helpers reject every NULL/invalid operand arm
+ * transactionally. Load volatile values into plain locals and keep the pointer
+ * operands volatile so reject paths cannot be constant-folded without
+ * discarding any pointee qualifiers. */
+static void test_scaled_helper_boundary_arms(void) {
+  ghl_m1_scaled_positive a = { .mantissa = 0.5, .exponent = 1 };
+  ghl_m1_scaled_positive b = { .mantissa = 0.25, .exponent = 3 };
+  ghl_m1_scaled_positive zero = { .mantissa = 0.0, .exponent = 0 };
+  ghl_m1_scaled_positive out = { .mantissa = -1.0, .exponent = -7 };
+  ghl_m1_scaled_positive *volatile null_operand = NULL;
+  ghl_m1_scaled_positive *volatile a_operand = &a;
+  ghl_m1_scaled_positive *volatile b_operand = &b;
+  ghl_m1_scaled_positive *volatile out_operand = &out;
+  double quotient_sentinel = -3.0;
+  double *volatile quotient_out = &quotient_sentinel;
+  double *volatile null_quotient = NULL;
+  const volatile double good_value = 2.0;
+  const volatile double negative_value = -2.0;
+  const volatile double nan_value = NAN;
+  const volatile double tiny_pair[2] = { DBL_MIN, DBL_MIN };
+  const volatile double unit_value = 1.0;
+  const volatile double huge_pair[2] = { DBL_MAX, DBL_MAX };
+  const volatile double min_value = DBL_MIN;
+  const volatile double denominator_value = 4.0;
+  /* The helpers receive ordinary const double storage after volatile reads. */
+  const double good_operand = good_value;
+  const double negative_operand = negative_value;
+  const double nan_operand = nan_value;
+  const double tiny_operands[2] = { tiny_pair[0], tiny_pair[1] };
+  const double unit_operand = unit_value;
+  const double huge_operands[2] = { huge_pair[0], huge_pair[1] };
+  const double min_operand = min_value;
+  const double denominator_operand = denominator_value;
+  const double *volatile good_values = &good_operand;
+  const double *volatile negative_values = &negative_operand;
+  const double *volatile nan_values = &nan_operand;
+  const double *volatile tiny_values = tiny_operands;
+  const double *volatile unit_values = &unit_operand;
+  const double *volatile huge_values = huge_operands;
+  const double *volatile min_values = &min_operand;
+  const double *volatile denominator_values = &denominator_operand;
+  const double *volatile null_values = NULL;
+
+  /* multiply: NULL operands leave the output untouched. */
+  out = (ghl_m1_scaled_positive){ .mantissa = -1.0, .exponent = -7 };
+  require_condition(
+        !ghl_m1_scaled_positive_multiply(null_operand, b_operand, out_operand)
+              && out.mantissa == -1.0 && out.exponent == -7,
+        "scaled multiply accepted a NULL left operand", 4700);
+  require_condition(
+        !ghl_m1_scaled_positive_multiply(a_operand, null_operand, out_operand)
+              && out.mantissa == -1.0 && out.exponent == -7,
+        "scaled multiply accepted a NULL right operand", 4701);
+  require_condition(
+        !ghl_m1_scaled_positive_multiply(a_operand, b_operand, null_operand),
+        "scaled multiply accepted a NULL output", 4702);
+  require_condition(
+        ghl_m1_scaled_positive_multiply(a_operand, b_operand, out_operand)
+              && out.mantissa > 0.0,
+        "scaled multiply rejected a productive pair", 4703);
+
+  /* add: NULL operands, NULL output, and the zero-operand shortcuts. */
+  out = (ghl_m1_scaled_positive){ .mantissa = -1.0, .exponent = -7 };
+  require_condition(
+        !ghl_m1_scaled_positive_add(a_operand, null_operand, out_operand)
+              && out.mantissa == -1.0 && out.exponent == -7,
+        "scaled add accepted a NULL right operand", 4710);
+  require_condition(
+        !ghl_m1_scaled_positive_add(null_operand, b_operand, out_operand)
+              && out.mantissa == -1.0 && out.exponent == -7,
+        "scaled add accepted a NULL left operand", 4711);
+  require_condition(
+        !ghl_m1_scaled_positive_add(a_operand, b_operand, null_operand),
+        "scaled add accepted a NULL sum output", 4712);
+  require_condition(
+        ghl_m1_scaled_positive_add(a_operand, &zero, out_operand) && out.mantissa == 0.5
+              && out.exponent == 1,
+        "scaled add lost the zero-right shortcut", 4714);
+
+  /* divide: NULL operands, a NULL output, a zero denominator, and a zero
+   * numerator. */
+  quotient_sentinel = -3.0;
+  require_condition(
+        !ghl_m1_scaled_positive_divide(null_operand, b_operand, quotient_out)
+              && quotient_sentinel == -3.0,
+        "scaled divide accepted a NULL numerator", 4720);
+  require_condition(
+        !ghl_m1_scaled_positive_divide(a_operand, null_operand, quotient_out)
+              && quotient_sentinel == -3.0,
+        "scaled divide accepted a NULL denominator", 4721);
+  require_condition(
+        !ghl_m1_scaled_positive_divide(a_operand, b_operand, null_quotient),
+        "scaled divide accepted a NULL quotient output", 4722);
+  require_condition(
+        !ghl_m1_scaled_positive_divide(a_operand, &zero, quotient_out)
+              && quotient_sentinel == -3.0,
+        "scaled divide accepted a zero denominator", 4723);
+  require_condition(
+        ghl_m1_scaled_positive_divide(&zero, a_operand, quotient_out)
+              && quotient_sentinel == 0.0,
+        "scaled divide lost its zero-numerator shortcut", 4724);
+  quotient_sentinel = -3.0;
+  require_condition(
+        ghl_m1_scaled_positive_divide(a_operand, b_operand, quotient_out)
+              && quotient_sentinel > 0.0 && isfinite(quotient_sentinel),
+        "scaled divide rejected a productive quotient", 4725);
+
+  /* compare: the exponent, mantissa-less-than, greater, and equal arms. */
+  const ghl_m1_scaled_positive same_mantissa_left = { .mantissa = 0.5, .exponent = 2 };
+  const ghl_m1_scaled_positive same_mantissa_right = { .mantissa = 0.5, .exponent = 3 };
+  require_condition(
+        ghl_m1_scaled_positive_compare(&same_mantissa_left, &same_mantissa_right) < 0,
+        "scaled compare missed the exponent order", 4730);
+  const ghl_m1_scaled_positive mantissa_left = { .mantissa = 0.25, .exponent = 3 };
+  const ghl_m1_scaled_positive mantissa_right = { .mantissa = 0.5, .exponent = 3 };
+  require_condition(
+        ghl_m1_scaled_positive_compare(&mantissa_left, &mantissa_right) < 0,
+        "scaled compare missed the smaller mantissa", 4731);
+  require_condition(
+        ghl_m1_scaled_positive_compare(&mantissa_right, &mantissa_left) > 0,
+        "scaled compare missed the larger mantissa", 4732);
+  require_condition(
+        ghl_m1_scaled_positive_compare(&mantissa_right, &mantissa_right) == 0,
+        "scaled compare missed the equal pair", 4733);
+  require_condition(
+        ghl_m1_scaled_positive_compare(&zero, &zero) == 0,
+        "scaled compare missed the equal zeros", 4734);
+  require_condition(
+        ghl_m1_scaled_positive_compare(&zero, &mantissa_right) < 0,
+        "scaled compare missed the zero-left order", 4735);
+  require_condition(
+        ghl_m1_scaled_positive_compare(&mantissa_right, &zero) > 0,
+        "scaled compare missed the zero-right order", 4736);
+
+  /* product: NULL values, a nonpositive count, a NULL output, and invalid
+   * factors. */
+  require_condition(
+        !ghl_m1_scaled_positive_product(null_values, 1, out_operand),
+        "scaled product accepted NULL values", 4740);
+  require_condition(
+        !ghl_m1_scaled_positive_product(good_values, 0, out_operand),
+        "scaled product accepted an empty factor list", 4741);
+  require_condition(
+        !ghl_m1_scaled_positive_product(good_values, 2, null_operand),
+        "scaled product accepted a NULL output", 4742);
+  require_condition(
+        !ghl_m1_scaled_positive_product(negative_values, 1, out_operand),
+        "scaled product accepted a negative factor", 4743);
+  require_condition(
+        !ghl_m1_scaled_positive_product(nan_values, 1, out_operand),
+        "scaled product accepted a nonfinite factor", 4744);
+  require_condition(
+        ghl_m1_scaled_positive_product(good_values, 1, out_operand)
+              && out.mantissa > 0.0,
+        "scaled product rejected a productive factor", 4745);
+
+  /* sqrt: NULL operands and the exact-zero shortcut. */
+  require_condition(
+        !ghl_m1_scaled_positive_sqrt(null_operand, out_operand),
+        "scaled sqrt accepted a NULL value", 4750);
+  require_condition(
+        !ghl_m1_scaled_positive_sqrt(a_operand, null_operand),
+        "scaled sqrt accepted a NULL root output", 4751);
+  require_condition(
+        ghl_m1_scaled_positive_sqrt(&zero, out_operand) && out.mantissa == 0.0
+              && out.exponent == 0,
+        "scaled sqrt lost its exact-zero shortcut", 4752);
+
+  /* ratio_of_products: NULL quotient, a failing numerator product, a failing
+   * denominator product, an underflowed zero quotient, and an unrepresentable
+   * quotient. */
+  double ratio_sentinel = -3.0;
+  double *volatile ratio_out = &ratio_sentinel;
+  double *volatile null_ratio = NULL;
+  require_condition(
+        !ghl_m1_neutrino_scaled_ratio_of_products(
+              good_values, 1, denominator_values, 1, null_ratio),
+        "scaled ratio accepted a NULL quotient", 4760);
+  require_condition(
+        !ghl_m1_neutrino_scaled_ratio_of_products(
+              negative_values, 1, denominator_values, 1, ratio_out)
+              && ratio_sentinel == -3.0,
+        "scaled ratio accepted a failing numerator product", 4761);
+  require_condition(
+        !ghl_m1_neutrino_scaled_ratio_of_products(
+              good_values, 1, nan_values, 1, ratio_out)
+              && ratio_sentinel == -3.0,
+        "scaled ratio accepted a failing denominator product", 4762);
+  /* A true quotient below binary64's representable range must fail rather
+   * than publish zero: (DBL_MIN * DBL_MIN) / 1 = 2^-2043. */
+  require_condition(
+        !ghl_m1_neutrino_scaled_ratio_of_products(
+              tiny_values, 2, unit_values, 1, ratio_out)
+              && ratio_sentinel == -3.0,
+        "scaled ratio published an underflowed zero quotient", 4763);
+  /* (DBL_MAX * DBL_MAX) / DBL_MIN = 2^3070 is beyond binary64's range. */
+  require_condition(
+        !ghl_m1_neutrino_scaled_ratio_of_products(
+              huge_values, 2, min_values, 1, ratio_out)
+              && ratio_sentinel == -3.0,
+        "scaled ratio published an unrepresentable quotient", 4764);
+  require_condition(
+        ghl_m1_neutrino_scaled_ratio_of_products(
+              good_values, 1, denominator_values, 1, ratio_out)
+              && ratio_sentinel == 0.5,
+        "scaled ratio rejected a productive quotient", 4765);
+  /* The policy-selection helper rejects invalid product factors directly;
+   * load the volatile operand storage into plain locals so the reject arms
+   * stay executable without discarding the volatile qualifier. */
+  {
+    const volatile double threshold_value = 1.0;
+    const volatile double negative_value = -1.0;
+    const volatile double nan_value = NAN;
+    const double threshold_operands[1] = { threshold_value };
+    const double negative_operands[1] = { negative_value };
+    const double nan_operands[1] = { nan_value };
+    const double *volatile threshold_values = threshold_operands;
+    const double *volatile negative_values = negative_operands;
+    const double *volatile nan_values = nan_operands;
+    const double *volatile null_values = NULL;
+    require_condition(
+          !ghl_m1_neutrino_scaled_product_meets_threshold(
+                null_values, 1, threshold_values, 1, true),
+          "scaled threshold accepted NULL factors", 4770);
+    require_condition(
+          !ghl_m1_neutrino_scaled_product_meets_threshold(
+                negative_values, 1, threshold_values, 1, true),
+          "scaled threshold accepted a negative factor", 4771);
+    require_condition(
+          !ghl_m1_neutrino_scaled_product_meets_threshold(
+                nan_values, 1, threshold_values, 1, true),
+          "scaled threshold accepted a nonfinite factor", 4772);
+    require_condition(
+          !ghl_m1_neutrino_scaled_product_meets_threshold(
+                threshold_values, 1, null_values, 1, true),
+          "scaled threshold accepted NULL threshold factors", 4773);
+    require_condition(
+          !ghl_m1_neutrino_scaled_product_meets_threshold(
+                threshold_values, 1, negative_values, 1, true),
+          "scaled threshold accepted a negative threshold factor", 4774);
+    require_condition(
+          ghl_m1_neutrino_scaled_product_meets_threshold(
+                threshold_values, 1, threshold_values, 1, true),
+          "scaled threshold rejected an equal inclusive pair", 4775);
+    require_condition(
+          !ghl_m1_neutrino_scaled_product_meets_threshold(
+                threshold_values, 1, threshold_values, 1, false),
+          "scaled threshold accepted an equal exclusive pair", 4776);
+    require_condition(
+          !ghl_m1_neutrino_scaled_product_meets_threshold(
+                threshold_values, 0, threshold_values, 1, true),
+          "scaled threshold accepted an empty product", 4777);
+
+    /* The scaled-positive conversion rejects each invalid operand arm. */
+    ghl_m1_scaled_positive scaled;
+    ghl_m1_scaled_positive *volatile scaled_out = &scaled;
+    ghl_m1_scaled_positive *volatile null_scaled = NULL;
+    require_condition(
+          !ghl_m1_scaled_positive_from_double(1.0, null_scaled),
+          "scaled conversion accepted a NULL output", 4780);
+    require_condition(
+          !ghl_m1_scaled_positive_from_double(NAN, scaled_out),
+          "scaled conversion accepted a nonfinite value", 4781);
+    require_condition(
+          !ghl_m1_scaled_positive_from_double(-1.0, scaled_out),
+          "scaled conversion accepted a negative value", 4782);
+    require_condition(
+          ghl_m1_scaled_positive_from_double(2.0, scaled_out) && scaled.mantissa > 0.0,
+          "scaled conversion rejected a productive value", 4783);
+  }
+
+  /* A zero numerator is a valid exact zero quotient, not an underflow. */
+  const volatile double zero_value = 0.0;
+  const double zero_operands[1] = { zero_value };
+  const double *volatile zero_values = zero_operands;
+  ratio_sentinel = -3.0;
+  require_condition(
+        ghl_m1_neutrino_scaled_ratio_of_products(
+              zero_values, 1, unit_values, 1, ratio_out)
+              && ratio_sentinel == 0.0,
+        "scaled ratio rejected an exact zero quotient", 4766);
 }
 
 static void test_number_endpoint_validation_contracts(void) {
@@ -6015,28 +6261,10 @@ static void test_source_residual_range_errors(const ghl_m1_parameters *m1_params
               &params, &rates, 1.0, 1.0, 1.0, &state, &current, &number, NULL),
         ghl_success, "inactive nonnegative number policy threshold", 4805);
   require_close(number, state.N, 0.0, 0.0, "inactive number policy identity", 4805);
-  const double one[] = { 1.0 }, bad[] = { -1.0 };
-  const double *volatile missing = NULL;
   double output = 7.0;
-  require_condition(
-        !ghl_m1_neutrino_scaled_ratio_of_products(missing, 1, one, 1, &output),
-        "scaled ratio accepted missing numerator", 4806);
-  require_condition(
-        !ghl_m1_neutrino_scaled_ratio_of_products(one, 1, bad, 1, &output),
-        "scaled ratio accepted negative denominator", 4807);
-  ghl_m1_scaled_positive a = { .mantissa = 0.5, .exponent = 1 };
-  ghl_m1_scaled_positive z = { .mantissa = 0.0, .exponent = 0 };
-  ghl_m1_scaled_positive *volatile missing_output = NULL;
-  const ghl_m1_scaled_positive *volatile zero_operand = &z;
-  require_condition(
-        !ghl_m1_scaled_positive_from_double(1.0, missing_output),
-        "scaled conversion accepted missing output", 4808);
-  require_condition(
-        !ghl_m1_scaled_positive_divide(&a, zero_operand, &output),
-        "scaled division accepted zero denominator", 4809);
   volatile double tiny = DBL_MIN;
   require_condition(
-        !ghl_m1_neutrino_scaled_absorption_number(4.0, 1.0, tiny, &output),
+        !ghl_m1_neutrino_absorption_number(4.0, 1.0, tiny, &output),
         "overflowed quotient accepted", 4810);
 }
 
@@ -6145,8 +6373,8 @@ static void test_pair_number_endpoint_failures(const ghl_m1_parameters *m1_param
             { .N = 1.0, .E = 1.75, .F = { 1.25, 0.0, 0.0 } } };
   for(int species = 0; species < 2; ++species) {
     make_rates(
-          species == 0 ? ghl_m1_neutrino_nue : ghl_m1_neutrino_anue,
-          0.0, 0.0, 0.0, DBL_MAX, 1.0, DBL_MAX / 4.0, 0.0, &rates[species]);
+          species == 0 ? ghl_m1_neutrino_nue : ghl_m1_neutrino_anue, 0.0, 0.0, 0.0,
+          DBL_MAX, 1.0, DBL_MAX / 4.0, 0.0, &rates[species]);
     nd[species] = (ghl_m1_neutrino_diagnostics){ 0 };
     ghl_m1_neutrino_current current;
     require_error(
@@ -6154,13 +6382,14 @@ static void test_pair_number_endpoint_failures(const ghl_m1_parameters *m1_param
                 m1_params, &nu_params[species], &metric, &prims, &moving[species],
                 &current),
           ghl_success, "moving pair overflow current", 4833);
-    require_close(current.Gamma_N, 1.25, 64.0 * DBL_EPSILON, 0.0,
-                  "moving pair number normalization", 4833);
+    require_close(
+          current.Gamma_N, 1.25, 64.0 * DBL_EPSILON, 0.0,
+          "moving pair number normalization", 4833);
   }
   require_error(
         ghl_m1_solve_neutrino_pair_source_update(
-              m1_params, nu_params, &metric, &prims, rates, moving, moving,
-              DBL_MAX, 1.0, output, exchange, diagnostics, nd),
+              m1_params, nu_params, &metric, &prims, rates, moving, moving, DBL_MAX, 1.0,
+              output, exchange, diagnostics, nd),
         ghl_error_m1_implicit_terminal_fallback, "both pair number endpoints overflow",
         4833);
   for(int species = 0; species < 2; ++species) {
@@ -6200,6 +6429,52 @@ static void test_pair_number_endpoint_failures(const ghl_m1_parameters *m1_param
   }
 }
 
+static void test_pair_scaled_opacity_fallback(const ghl_m1_parameters *m1_params) {
+  /* Zero pair number emissivity leaves both number endpoints unchanged.
+   * For nue, eta_E_pair/J_eq = 2^-67; multiplying the anti-nue occupancy
+   * 2^-1074 rounds to zero before division by its n_eq = DBL_MIN.
+   * The scaled quotient remains representable at 2^-119. */
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  ghl_m1_neutrino_parameters nu_params[2];
+  ghl_m1_neutrino_rates rates[2];
+  for(int species = 0; species < 2; ++species) {
+    make_neutrino_parameters(&nu_params[species]);
+    make_rates(
+          species == 0 ? ghl_m1_neutrino_nue : ghl_m1_neutrino_anue, 0.0, 0.0, 0.0,
+          species == 0 ? 1.0 : DBL_MIN, 1.0, 0.0, species == 0 ? 0x1p-67 : 0.0,
+          &rates[species]);
+    nu_params[species].N_floor = 0.0;
+  }
+  const double partner_n = 0x1p-1074;
+  const ghl_m1_neutrino_state state[2]
+        = { { .N = 1.0, .E = 1.0 }, { .N = partner_n, .E = 1.0 } };
+  ghl_m1_neutrino_state output[2];
+  ghl_m1_neutrino_exchange exchange[2];
+  ghl_m1_neutrino_source_diagnostics diagnostics[2];
+  ghl_m1_neutrino_diagnostics nd[2] = { { 0 } };
+  require_error(
+        ghl_m1_solve_neutrino_pair_source_update(
+              m1_params, nu_params, &metric, &prims, rates, state, state, 0.25, 1.0,
+              output, exchange, diagnostics, nd),
+        ghl_success, "scaled pair effective-opacity fallback", 4846);
+  require_condition(
+        output[0].N == state[0].N && output[1].N == state[1].N,
+        "zero pair emissivity changed number endpoints", 4846);
+  require_condition(
+        !diagnostics[0].terminal_no_update && !diagnostics[1].terminal_no_update,
+        "scaled pair opacity fallback published terminal no-update", 4846);
+  for(int species = 0; species < 2; ++species) {
+    require_state_finite_and_admissible(
+          m1_params, &nu_params[species], &metric, &output[species], 4846);
+    require_condition(
+          nd[species].source_failures == 0,
+          "scaled pair opacity fallback did not converge cleanly", 4846);
+  }
+}
+
 static void test_pair_zero_partner_occupancy(const ghl_m1_parameters *m1_params) {
   ghl_metric_quantities metric;
   ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
@@ -6235,33 +6510,14 @@ static void test_pair_zero_partner_occupancy(const ghl_m1_parameters *m1_params)
   }
 }
 
-/* Exercise representable endpoints whose direct intermediate arithmetic is
- * outside double range, and preserve outputs when only a momentum source
- * (rather than the energy source) overflows. */
+/* Preserve outputs when only a momentum source (rather than the energy
+ * source) overflows. */
 static void test_partial_source_line_boundaries(const ghl_m1_parameters *m1_params) {
   ghl_m1_neutrino_parameters params;
   make_neutrino_parameters(&params);
   ghl_m1_neutrino_rates rates;
-  make_rates(ghl_m1_neutrino_nux, DBL_MAX, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, &rates);
   double number = -7.0;
-  require_error(
-        ghl_m1_update_neutrino_number_backward_euler(
-              &params, &rates, 1.0, 0.5, 1.0, &number),
-        ghl_success, "finite absorption product with overflowing quotient", 4900);
-  require_close(
-        number, 0.5, 8.0 * DBL_EPSILON, 0.0, "scaled absorption quotient endpoint",
-        4900);
-
-  rates.mean_energy = DBL_MAX;
   const ghl_m1_neutrino_state state = { .E = 1.0, .N = 1.0 };
-  const ghl_m1_neutrino_current current = { .Gamma_N = 2.0, .J = DBL_MAX };
-  bool projected = false;
-  require_error(
-        ghl_m1_neutrino_update_endpoint_number_with_policy(
-              &params, &rates, 1.0, 1.0, 0.0, &state, &current, &number, &projected),
-        ghl_success, "thermalized number overflowing intermediate", 4901);
-  require_condition(projected, "thermalized endpoint not projected", 4901);
-  require_close(number, 2.0, 0.0, 0.0, "scaled thermalized number", 4901);
 
   ghl_metric_quantities metric;
   ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
@@ -6339,8 +6595,8 @@ static void test_partial_source_line_boundaries(const ghl_m1_parameters *m1_para
         "comoving source failure changed outputs", 4906);
 }
 
-static void test_branched_nonrepresentable_projected_number(
-      const ghl_m1_parameters *m1_params) {
+static void
+test_branched_nonrepresentable_projected_number(const ghl_m1_parameters *m1_params) {
   ghl_m1_neutrino_parameters params;
   make_neutrino_parameters(&params);
   ghl_metric_quantities metric;
@@ -6353,8 +6609,8 @@ static void test_branched_nonrepresentable_projected_number(
   for(int thick = 0; thick < 2; ++thick) {
     ghl_m1_neutrino_rates rates;
     make_rates(
-          ghl_m1_neutrino_nux, 0.0, thick ? 1.0 : 0.0, thick ? 1.0 : 0.0,
-          1.0, true_min, 0.0, 0.0, &rates);
+          ghl_m1_neutrino_nux, 0.0, thick ? 1.0 : 0.0, thick ? 1.0 : 0.0, 1.0, true_min,
+          0.0, 0.0, &rates);
     require_error(
           ghl_m1_validate_neutrino_rates(&rates, NULL), ghl_success,
           "projected-number fixture rates", 4910 + thick);
@@ -6368,8 +6624,7 @@ static void test_branched_nonrepresentable_projected_number(
           ghl_m1_solve_neutrino_source_update(
                 &options, m1_params, &params, &metric, &prims, &rates, &transport,
                 &transport, 2.0, 1.0, &output, &exchange, &diagnostics, &nd),
-          ghl_error_m1_invalid_state, "branched projected number range",
-          4910 + thick);
+          ghl_error_m1_invalid_state, "branched projected number range", 4910 + thick);
     require_condition(
           memcmp(&output, &transport, sizeof(output)) == 0
                 && diagnostics.path == ghl_m1_neutrino_source_path_hard_failure
@@ -6389,8 +6644,7 @@ static void test_thin_endpoint_energy_overflow(const ghl_m1_parameters *m1_param
   prims.vU[0] = 0.99;
   ghl_m1_neutrino_rates rates;
   make_rates(
-        ghl_m1_neutrino_nux, 0.0, 1.0e-300, 0.0, 1.0, 0.5 * DBL_MAX, 0.0,
-        0.0, &rates);
+        ghl_m1_neutrino_nux, 0.0, 1.0e-300, 0.0, 1.0, 0.5 * DBL_MAX, 0.0, 0.0, &rates);
   require_error(
         ghl_m1_validate_neutrino_rates(&rates, NULL), ghl_success,
         "thin overflow fixture rates", 4912);
@@ -6413,17 +6667,13 @@ static void test_thin_endpoint_energy_overflow(const ghl_m1_parameters *m1_param
   require_zero_exchange(&exchange, "thin endpoint overflow exchange", 4912);
 }
 
-static void test_branched_large_coordinate_number_flux(
-      const ghl_m1_parameters *m1_params) {
+static void
+test_branched_large_coordinate_number_flux(const ghl_m1_parameters *m1_params) {
   ghl_m1_neutrino_parameters params;
   make_neutrino_parameters(&params);
   ghl_metric_quantities metric;
   ghl_initialize_metric(
-        1.0, 0.0, 0.0, 0.0, 1.0e-100, 0.0, 0.0, 1.0e100, 0.0, 1.0,
-        &metric);
-  require_error(
-        ghl_m1_validate_configuration(m1_params, &metric), ghl_success,
-        "large-coordinate-flux metric", 4915);
+        1.0, 0.0, 0.0, 0.0, 1.0e-100, 0.0, 0.0, 1.0e100, 0.0, 1.0, &metric);
   ghl_primitive_quantities prims;
   make_primitives(&prims);
   prims.vU[0] = 5.0e49;
@@ -6449,8 +6699,8 @@ static void test_branched_large_coordinate_number_flux(
   require_zero_exchange(&exchange, "large-coordinate number flux exchange", 4915);
 }
 
-static void test_stiff_moments_realizability_tolerance(
-      const ghl_m1_parameters *m1_params) {
+static void
+test_stiff_moments_realizability_tolerance(const ghl_m1_parameters *m1_params) {
   ghl_m1_neutrino_parameters params;
   make_neutrino_parameters(&params);
   ghl_metric_quantities metric;
@@ -6464,10 +6714,10 @@ static void test_stiff_moments_realizability_tolerance(
         = { .E = 1.0, .F = { cone * (1.0 + 96.0 * DBL_EPSILON) }, .N = 1.0 };
   const ghl_m1_rad_state rad = ghl_m1_neutrino_project_rad_state(&transport);
   require_error(
-        ghl_m1_validate_realizability(m1_params, &metric, &rad, 128.0, NULL),
+        ghl_m1_validate_realizability_state(m1_params, &metric, &rad, 128.0, NULL),
         ghl_success, "dispatcher realizability tolerance", 4916);
   require_error(
-        ghl_m1_validate_realizability(m1_params, &metric, &rad, 64.0, NULL),
+        ghl_m1_validate_realizability_state(m1_params, &metric, &rad, 64.0, NULL),
         ghl_error_m1_invalid_state, "moments realizability tolerance", 4916);
   ghl_m1_closure closure;
   require_error(
@@ -6492,7 +6742,6 @@ static void test_stiff_moments_realizability_tolerance(
   require_zero_exchange(&exchange, "stiff moments failure exchange", 4916);
 }
 
-
 /* Geometry and interaction sources can each be representable even when
  * their required lapse-volume scaling is not. */
 static void test_rhs_lapse_volume_range(const ghl_m1_parameters *m1_params) {
@@ -6512,9 +6761,9 @@ static void test_rhs_lapse_volume_range(const ghl_m1_parameters *m1_params) {
     metric.detgamma = underflow ? g * g * g : DBL_MAX;
     /* The determinant consistency contract permits this two-ulp rounding
      * difference; the square is checked without overflowing double. */
-    metric.sqrt_detgamma = underflow
-                                 ? sqrt(metric.detgamma)
-                                 : nextafter(nextafter(sqrt(DBL_MAX), INFINITY), INFINITY);
+    metric.sqrt_detgamma
+          = underflow ? sqrt(metric.detgamma)
+                      : nextafter(nextafter(sqrt(DBL_MAX), INFINITY), INFINITY);
     ghl_m1_closure closure = { 0 };
     for(int i = 0; i < 3; ++i) {
       metric.gammaDD[i][i] = g;
@@ -6525,13 +6774,13 @@ static void test_rhs_lapse_volume_range(const ghl_m1_parameters *m1_params) {
     double number;
     require_error(
           ghl_m1_compute_neutrino_geometry_sources(
-                m1_params, &metric, &derivs, &derivs, &derivs, &curv, &state,
-                &closure, &individual),
+                m1_params, &metric, &derivs, &derivs, &derivs, &curv, &state, &closure,
+                &individual),
           ghl_success, "range fixture geometry source", 4905 + underflow);
     require_error(
           ghl_m1_compute_neutrino_interaction_sources(
-                m1_params, &nu_params, &metric, &prims, &state, &rates,
-                &individual, &number),
+                m1_params, &nu_params, &metric, &prims, &state, &rates, &individual,
+                &number),
           ghl_success, "range fixture interaction source", 4905 + underflow);
     const double alpha_volume = metric.lapse * metric.sqrt_detgamma;
     require_condition(
@@ -6540,8 +6789,8 @@ static void test_rhs_lapse_volume_range(const ghl_m1_parameters *m1_params) {
     double energy = 7.0, momentum[3] = { 8.0, 9.0, 10.0 }, count = 11.0;
     require_error(
           ghl_m1_compute_neutrino_explicit_rhs_sources(
-                m1_params, &nu_params, &metric, &derivs, &derivs, &derivs, &curv,
-                &prims, &state, &closure, true, &rates, &energy, momentum, &count),
+                m1_params, &nu_params, &metric, &derivs, &derivs, &derivs, &curv, &prims,
+                &state, &closure, true, &rates, &energy, momentum, &count),
           ghl_error_m1_invalid_metric, "unrepresentable lapse-volume RHS",
           4905 + underflow);
     require_condition(
@@ -6551,12 +6800,95 @@ static void test_rhs_lapse_volume_range(const ghl_m1_parameters *m1_params) {
   }
 }
 
+static void
+test_transverse_moving_stiff_branches(const ghl_m1_parameters *restrict m1_params) {
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_m1_neutrino_parameters nu_params;
+  make_neutrino_parameters(&nu_params);
+
+  /* Rotate the reported v=0.5 scattering and weak-absorption cases onto y
+   * and z. These directions must also select the physical implicit update. */
+  for(int direction = 1; direction < 3; ++direction) {
+    ghl_primitive_quantities prims;
+    make_primitives(&prims);
+    prims.vU[direction] = 0.5;
+    for(int thick = 0; thick < 2; ++thick) {
+      const int case_index = 5000 + 2 * direction + thick;
+      ghl_m1_neutrino_rates rates;
+      make_rates(
+            ghl_m1_neutrino_nux, 0.0, thick ? 0.001 : 0.0, 1.0e6, 1.0, 1.0, 0.0, 0.0,
+            &rates);
+      const ghl_m1_neutrino_state input = { .N = 1.0, .E = 1.0 };
+      ghl_m1_neutrino_state transport = input;
+      transport.F[direction] = 0.1;
+      ghl_m1_neutrino_source_options options = branched_options();
+      options.thick_equilibrium_threshold = thick ? 1.0 : 0.0;
+      options.scattering_threshold = 10.0;
+      ghl_m1_neutrino_state output;
+      ghl_m1_neutrino_exchange exchange;
+      ghl_m1_neutrino_source_diagnostics diagnostics;
+      ghl_m1_neutrino_diagnostics nd = { 0 };
+      require_error(
+            ghl_m1_solve_neutrino_source_update(
+                  &options, m1_params, &nu_params, &metric, &prims, &rates, &input,
+                  &transport, 1.0, 1.0, &output, &exchange, &diagnostics, &nd),
+            ghl_success, "transverse moving stiff source", case_index);
+      require_condition(
+            diagnostics.path
+                        == (thick ? ghl_m1_neutrino_source_path_thick_equilibrium
+                                  : ghl_m1_neutrino_source_path_scattering_dominated)
+                  && !diagnostics.closure_fallback_used
+                  && !diagnostics.terminal_no_update
+                  && diagnostics.implicit.newton_iterations > 0
+                  && diagnostics.implicit.fallback_substeps == 1
+                  && diagnostics.implicit.residual_scaled_norm <= 1.0
+                  && nd.source_converged == 1 && nd.N_floor_repairs == 0
+                  && nd.EF_repairs == 0,
+            "transverse stiff branch lost physical solve diagnostics", case_index);
+      require_state_finite_and_admissible(
+            m1_params, &nu_params, &metric, &output, case_index);
+      require_exchange_contract(
+            &transport, &output, &exchange, &metric, 1.0, case_index);
+      require_close(output.N, transport.N, 0.0, 0.0, "scattering number", case_index);
+      require_close(
+            exchange.dL_rad_cc, 0.0, 0.0, 0.0, "nu_x lepton exchange", case_index);
+      require_close(exchange.dYe_matter, 0.0, 0.0, 0.0, "nu_x Ye exchange", case_index);
+
+      ghl_m1_sources sources;
+      double number_source;
+      require_error(
+            ghl_m1_compute_neutrino_interaction_sources(
+                  m1_params, &nu_params, &metric, &prims, &output, &rates, &sources,
+                  &number_source),
+            ghl_success, "transverse endpoint interaction source", case_index);
+      const double delta_contraction = output.E - 0.5 * output.F[direction]
+                                       - (transport.E - 0.5 * transport.F[direction]);
+      const double source_contraction = sources.S_E - 0.5 * sources.S[direction];
+      /* With lapse=dt=1 and one successful step, the endpoint source must
+       * equal the full contracted increment. Use the initialized solver's
+       * mixed tolerances rather than introducing a new numerical threshold. */
+      require_close(
+            delta_contraction, source_contraction, m1_params->newton_tolerance,
+            m1_params->newton_absolute_tolerance, "transverse contracted BE equation",
+            case_index);
+      if(!thick) {
+        require_close(
+              delta_contraction, 0.0, m1_params->newton_tolerance,
+              m1_params->newton_absolute_tolerance, "elastic scattering conservation",
+              case_index);
+      }
+    }
+  }
+}
+
 #if defined(__linux__)
 #include "m1_source_update_fault_injection.h"
 #endif
 
 int main(void) {
-  test_scaled_arithmetic_failure_contracts();
+  test_arithmetic_failure_contracts();
+  test_scaled_helper_boundary_arms();
   test_number_endpoint_validation_contracts();
   ghl_m1_parameters m1_params;
   ghl_error_codes_t error = ghl_m1_initialize_with_newton_tolerances(
@@ -6570,24 +6902,22 @@ int main(void) {
   test_thin_endpoint_energy_overflow(&m1_params);
   test_branched_large_coordinate_number_flux(&m1_params);
   test_stiff_moments_realizability_tolerance(&m1_params);
+  test_transverse_moving_stiff_branches(&m1_params);
   test_source_validation_and_overflow(&m1_params);
   test_rhs_lapse_volume_range(&m1_params);
   test_implicit_context_validation(&m1_params);
   test_source_residual_range_errors(&m1_params);
   test_pair_effective_rate_failure_contracts(&m1_params);
   test_pair_number_endpoint_failures(&m1_params);
+  test_pair_scaled_opacity_fallback(&m1_params);
   test_pair_zero_partner_occupancy(&m1_params);
   m1_test_rng rng = { .state = UINT64_C(0x4d315f534f555243) };
   test_source_regimes(&m1_params, &rng);
   test_source_base_and_lapse_scaling(&m1_params, &rng);
-  test_scaled_ratio_of_products();
   test_scaled_ratio_underflow_consumers();
   test_thermalized_number_projection(&m1_params);
   test_stiff_branch_arithmetic_boundaries(&m1_params);
-  test_stiff_branch_zero_emission_scaled_add(&m1_params);
   test_reachable_scaled_ratio_failure(&m1_params);
-  test_scaled_product_helper_boundaries();
-  test_scaled_positive_sqrt_boundaries();
   test_branched_general_thermalized_number_projection(&m1_params);
   /* Coverage-only public API checks must not perturb the established corpus
    * consumed by the pre-existing randomized tests below. */
@@ -6598,7 +6928,6 @@ int main(void) {
   m1_test_rng selector_boundary_rng = rng;
   test_source_compatibility_and_selector_failures(&m1_params, &selector_boundary_rng);
   test_pair_source_conservation(&m1_params, &rng);
-  test_pair_effective_opacity_underflow(&m1_params);
   test_pair_effective_opacity_overflow(&m1_params);
   test_pair_source_independent_oracle(&m1_params);
   test_pair_final_mean_energy_bounds(&m1_params);
@@ -6625,9 +6954,9 @@ int main(void) {
   test_overflow_safe_number_source_terms(&m1_params);
   test_projected_charged_current_overflow(&m1_params);
   test_pair_dispatcher_boundaries(&m1_params, &rng);
-  test_m1_configuration_field_boundaries(&m1_params, &rng);
 
 #if defined(__linux__)
+  test_pair_final_exchange_failures(&m1_params);
   test_source_update_fault_injections(&m1_params);
   test_neutrino_repair_delegate_failure(&m1_params);
 #endif

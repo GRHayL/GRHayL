@@ -146,7 +146,7 @@ regularization equations, distortion disclosure, and commands belong to the
 No runtime dispatch or public C surface changes for this route. The output sets
 `have_rel_cs2=1`, so the loader retains its relativistic sound speed; callers
 must leave optional runtime sound-speed cleaning disabled. The reader consumes
-the standard axes, scalars, and 19 fields and ignores the converter's diagnostic
+the standard axes, scalars, and every serialized field and ignores the converter's diagnostic
 `grhayl_compose/manifest_json` group.
 
 Composition mass and charge closure are hard node gates. Independent
@@ -155,7 +155,8 @@ nonlinear heavy-charge product off grid. Current NRPyLeakage calls instead use
 the six-value `muhat,mu_e,mu_p,mu_n,Xn,Xp` wrapper; do not generalize this into
 an off-grid equilibrium-composition claim. The auto-discovered
 [`unit_test_tabulated_eos_compose.c`](../../../Unit_Tests/unit_test_tabulated_eos_compose.c)
-checks every serialized node and all 19 mappings, storage-space interpolation
+checks every serialized node and mapping — enthalpy stays the derived
+in-memory key rather than a serialized field — storage-space interpolation
 and inversions from distinct valid initial guesses, the six-value ABI order
 and range failures, no-fallback
 Palenzuela recovery, analytic characteristic-speed, HLLE/entropy-flux, and

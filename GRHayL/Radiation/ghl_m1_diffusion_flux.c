@@ -61,9 +61,6 @@ ghl_error_codes_t ghl_m1_compute_diffusion_flux(
   if(error != ghl_success) {
     return error;
   }
-  if(!ghl_m1_metric_is_symmetric_spd(metric_face)) {
-    return ghl_error_m1_invalid_metric;
-  }
 
   const double tau_face = chi_tr_face * delta_l;
   if(!isfinite(tau_face)) {

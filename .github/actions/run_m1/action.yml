@@ -7,6 +7,10 @@ inputs:
   hdf5:
     description: Whether HDF5 is enabled
     required: true
+  fixture-dir:
+    description: Optional raw or gzip fixture directory; empty downloads pinned TestData
+    required: false
+    default: ''
 runs:
   using: composite
   steps:
@@ -15,6 +19,7 @@ runs:
       env:
         M1_COMPILER: ${{ inputs.compiler }}
         M1_HDF5: ${{ inputs.hdf5 }}
+        M1_FIXTURE_DIR: ${{ inputs.fixture-dir }}
       run: |
         configure_args=(--noomp --prefix="$PWD")
         case "$M1_HDF5" in
@@ -48,5 +53,4 @@ runs:
           fi
           configure_args+=(--hdf5dir="$(brew --prefix hdf5)")
         fi
-        ./configure "${configure_args[@]}"
-        bash Unit_Tests/run_m1_tests.sh --build
+        .github/run_tests.sh m1 "${configure_args[@]}"

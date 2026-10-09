@@ -63,12 +63,12 @@ Recorded discrepancy (doctrine vs landed):
 - [Post-phase-1 roadmap](post-phase1-roadmap.md) — doctrine applied to later phases.
 - [Radiation M1 gem](../radiation-m1.md) — hub.
 
-## Ground Truth References
+## Ground Truth
 
 - [`GRHayL/include/ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
 - [`GRHayL/Radiation/Neutrinos/make.code.defn`](../../../GRHayL/Radiation/Neutrinos/make.code.defn)
 - [`GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c`](../../../GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c)
 - [`GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rusanov_flux.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rusanov_flux.c)
-- [`GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c`](../../../GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c)
+- [`GRHayL/Radiation/ghl_calculate_Rusanov_flux.c`](../../../GRHayL/Radiation/ghl_calculate_Rusanov_flux.c)
 - [`GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c`](../../../GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c)
-- [`GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)
+- [`docs/raw/Radiation_integration_contract.md`](../../../docs/raw/Radiation_integration_contract.md)

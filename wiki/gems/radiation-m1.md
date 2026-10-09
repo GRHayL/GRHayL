@@ -23,22 +23,25 @@ and carried forward by the [post-phase-1 roadmap](radiation-m1/post-phase1-roadm
 - [Neutrino M1 contract — failure and fallback](radiation-m1/neutrino-m1-contract.md#failure-and-fallback-behavior)
 - [Neutrino M1 contract — transport and rates](radiation-m1/neutrino-m1-contract.md)
 - [Neutrino rate provider](radiation-m1/rate-provider-contract.md)
-- [Grey electron-flavor pair collision model](../../GRHayL/Radiation/PAIR_SOURCE_MODEL.md)
+- [Grey electron-flavor pair collision model](../../docs/raw/Radiation_pair_source_model.md)
+  (`docs/raw/Radiation_pair_source_model.md`)
 - [Neutrino grey physics scope](radiation-m1/neutrino-grey-physics-scope.md)
 - [Neutrino reuse strategy](radiation-m1/neutrino-reuse-strategy.md)
 - [Post-phase-1 roadmap](radiation-m1/post-phase1-roadmap.md)
-- [`GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md`](../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md) for
+- [`docs/raw/Radiation_integration_contract.md`](../../docs/raw/Radiation_integration_contract.md) for
   the transport policy, validation boundary, and configuration/validation
   route
-- [`GRHayL/Radiation/TRACEABILITY.md`](../../GRHayL/Radiation/TRACEABILITY.md)
+- [`docs/raw/Radiation_traceability.md`](../../docs/raw/Radiation_traceability.md)
   for the per-family implementation map
-- [M1 tests and fixtures](radiation-m1/tests-and-fixtures.md) for the scoped
+- [M1 tests and fixtures](radiation-m1/tests-and-fixtures.md) for the
   runner, retained fixture families, provider fixture, CI routes,
   and coverage limits
 - [`docs/raw/Radiation.dox`](../../docs/raw/Radiation.dox) for the Doxygen
   group and public behavior summary
-- [M1 unit-test guide](../../Unit_Tests/README.m1.md) for the scoped runner,
+- [M1 unit-test guide](../../docs/raw/Radiation_unit_tests.md) for scoped build commands,
   frozen THC_M1 comparisons, provenance, and coverage limits
+- [`docs/raw/Radiation_fresh_fixture_production.md`](../../docs/raw/Radiation_fresh_fixture_production.md)
+  for the fresh THC_M1 production record and its publication-deferral decision
 - [`GRHayL/include/ghl_m1.h`](../../GRHayL/include/ghl_m1.h)
 - [`GRHayL/include/ghl_neutrino_rate_provider.h`](../../GRHayL/include/ghl_neutrino_rate_provider.h)
 - [Neutrinos hub](neutrinos.md) for the NRPyLeakage raw-rate bridge and
@@ -89,6 +92,11 @@ and test references:
 - [`GRHayL/include/ghl_nrpyleakage.h`](../../GRHayL/include/ghl_nrpyleakage.h)
 - [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h)
 
+The [M1 public API quick reference](radiation-m1/m1-public-api-quick-reference.md)
+indexes the public initialization, solver/closure controls, and shared
+helper kernels declared in `ghl_m1.h`, with source ownership, prerequisites,
+output/failure boundaries, and test routes.
+
 Both new headers are in the install list in
 `GRHayL/include/make.code.defn`.
 
@@ -114,15 +122,14 @@ surface):
   `ghl_m1_solve_neutrino_source_update`,
   `ghl_m1_solve_neutrino_implicit_homogeneous_update`,
   `ghl_m1_solve_neutrino_pair_source_update`,
-  `ghl_m1_compute_neutrino_lepton_increment`,
-  `ghl_m1_neutrino_compute_implicit_residual`,
-  `ghl_m1_neutrino_compute_implicit_jacobian`,
-  `ghl_m1_neutrino_build_trial_state`, and
-  `ghl_m1_neutrino_check_trial_admissibility`
+  `ghl_m1_compute_neutrino_lepton_increment`
+  (residual/Jacobian/trial/admissibility helpers are declared privately in
+  `ghl_m1_neutrino_implicit.h`)
 - [Explicit RHS source units and stage use](radiation-m1/m1-neutrino-source-equations.md#explicit-conservative-rhs-sources):
   densitized geometry with optional frozen-rate interactions; the interaction
   option belongs to manual host stages, not the normal IMEX source stage.
-- Rate provider: `ghl_neutrino_rate_provider_initialize_default`,
+- Rate provider: `ghl_neutrino_rate_provider_initialize_default` (production
+  NRPyLeakage provider),
   `ghl_neutrino_rate_provider_cache_initialize`,
   `ghl_neutrino_rate_provider_initialize_nrpyleakage`,
   `ghl_neutrino_rate_provider_compute_cell`
@@ -142,27 +149,29 @@ Neutrino species keep the existing leakage naming `nue`, `anue`, `nux`
 - Rate provider: `GRHayL/Radiation/Neutrinos/ghl_neutrino_rate_provider.c`
 - Build manifest: `GRHayL/Radiation/make.code.defn`,
   `GRHayL/Radiation/Neutrinos/make.code.defn`
-- Test runner and fixtures: `Unit_Tests/run_m1_tests.sh`,
-  `Unit_Tests/data/m1_thcm1/`, and `.github/actions/run_m1/action.yml`
+- Ordinary test runner: `.github/run_tests.sh`
+- Fixture formats and historical evidence: `docs/raw/m1_thcm1/`
 
 ## Test Paths
 
-- Scoped runner: `Unit_Tests/run_m1_tests.sh`
 - Test sources: `Unit_Tests/unit_test_m1_*.c` and
   `Unit_Tests/unit_test_rusanov_flux.c`
-- Stored fixture consumers: `Unit_Tests/data/m1_thcm1/`
-- Test guide and fixture-package validation: `Unit_Tests/README.m1.md` and
-  `Unit_Tests/data/m1_thcm1/audit_package.py`
-- Dedicated CI action: `.github/actions/run_m1/action.yml`; the normal
-  `.github/run_tests.sh` route does not select the scoped M1 runner
+- Test-only replay helpers: `Unit_Tests/m1_helpers/`
+- Build, explicit replay arguments and delivery prerequisites:
+  [Radiation unit-test guide](../../docs/raw/Radiation_unit_tests.md)
+- CI selection: ordinary compiler/OS workflows and the shared coverage action
 
 ## Key Contracts
 
 - Native transport uses the four-point blended Rusanov face operation. It
   applies the metric light-cone speed to `{N, E, Fx, Fy, Fz}` and densitizes
   the final face flux once with the face `sqrt_detgamma`.
-- The Induction and Flux_Source HLL/HLLE routines are unrelated to the
-  neutrino M1 transport surface.
+- The shared undensitized helper `ghl_calculate_Rusanov_flux` and the typed
+  M1 wrapper `ghl_m1_compute_rusanov_flux` are Radiation-owned operations
+  declared in `ghl_m1.h`; the Flux_Source HLLE routines are separate
+  Flux_Source-owned GRMHD fluxes and share none of that implementation. See
+  the [API and build boundary](radiation-m1/api-build-boundary.md) for the
+  ownership split.
 - The canonical neutrino transport operation has no separate diffusion
   correction or optical-depth wavespeed cap. Optional public `Jthick` and
   diffusion helpers remain available and are tested separately.
@@ -177,8 +186,15 @@ Neutrino species keep the existing leakage naming `nue`, `anue`, `nux`
   `anue` source update. The provider returns lumped `nu_x` pair channels in
   the already-aggregated scalar bundle with zero pair arrays, so the
   single-species `nu_x` source operation remains valid.
-- In a `--disable-hdf5` build, tabulated-EOS rate recovery returns
-  `ghl_error_used_disabled_hdf5` without publishing output.
+- In a `--disable-hdf5` build, `ghl_neutrino_rate_provider_initialize_default`
+  and tabulated-EOS rate recovery return `ghl_error_used_disabled_hdf5`
+  without publishing output. Synthetic table-free models are test-local.
+- `ghl_neutrino_rate_provider_initialize_default` selects the production
+  NRPyLeakage provider. No synthetic model is installed or built into libghl.
+- `ghl_neutrino_rate_provider_compute_cell` returns `ghl_success` only for a
+  validated bundle. When a transparent or equilibrium policy publishes a recovery bundle,
+  the original error is still returned and `diagnostics->last_recovery`
+  identifies the recovery; a host that accepts recovery must check that field.
 - The neutrino implicit Jacobian uses deterministic finite differences of the
   frozen-rate residual. It does not call Con2Prim, recompute opacities, or
   promise an analytic Jacobian.
@@ -195,7 +211,7 @@ Neutrino species keep the existing leakage naming `nue`, `anue`, `nux`
   `ghl_neutrino_rate_provider.h`, `ghl_nrpyleakage.h`, and the provider tests.
 - Change an M1 test, fixture schema, or CI selection: update
   [M1 tests and fixtures](radiation-m1/tests-and-fixtures.md),
-  `Unit_Tests/README.m1.md`, `Unit_Tests/run_m1_tests.sh`, and the matching
+  `docs/raw/Radiation_unit_tests.md`, `.github/run_tests.sh`, and the matching
   fixture metadata or CI action.
 
 ## Drift Risks

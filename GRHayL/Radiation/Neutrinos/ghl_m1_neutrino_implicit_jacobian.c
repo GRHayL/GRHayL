@@ -82,8 +82,8 @@ static ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian_core(
 
     double used_delta = 0.0;
     if(fd_error == ghl_success) {
-      fd_error = ghl_m1_neutrino_finite_difference_delta(
-            U[n], U_perturbed[n], &used_delta);
+      fd_error
+            = ghl_m1_neutrino_finite_difference_delta(U[n], U_perturbed[n], &used_delta);
     }
     if(fd_error != ghl_success) {
       if(!ghl_m1_fd_error_allows_one_sided_fallback(fd_error)) {
@@ -175,7 +175,7 @@ ghl_error_codes_t ghl_m1_neutrino_compute_implicit_jacobian(
     return ghl_error_m1_null_pointer;
   }
 
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
+  if(!isfinite(metric->sqrt_detgamma) || metric->sqrt_detgamma <= 0.0) {
     return ghl_error_m1_invalid_metric;
   }
 

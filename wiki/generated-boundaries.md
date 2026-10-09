@@ -154,10 +154,7 @@ This page keeps repository-wide generated-output boundaries; the child page
 owns Flux_Source generation, the pinned NRPy 2 checkout, and checked-in kernel routing.
 
 `GRHayL/Flux_Source/generate_flux_source.py` is the symbolic source for the
-generated Flux_Source C kernels. The hand-written
-[Rusanov helper](../GRHayL/Flux_Source/ghl_calculate_Rusanov_flux.c) shares the
-[root build manifest](../GRHayL/Flux_Source/make.code.defn) but is outside the
-generator's output set. `generate_flux_source.sh` clones its
+generated Flux_Source C kernels. `generate_flux_source.sh` clones its
 pinned NRPy 2 commit and runs that driver. `Doxyfile` excludes `*.py` from
 generated docs.
 
@@ -168,7 +165,7 @@ Local evidence:
 - `GRHayL/Flux_Source/generate_flux_source.py` requires an explicit new or
   empty staging directory outside `GRHayL/Flux_Source`, generates its complete
   output set, and checks it against generator-owned entries in the build
-  manifests. The hand-written Rusanov helper remains in the root manifest.
+  manifests.
 
 Generated or derived C files with local generator paths:
 

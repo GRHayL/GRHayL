@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "m1_helpers/m1_thcm1_transport_fixture.h"
 #include "m1_test_prng.h"
 #include "m1_test_utils.h"
-#include "m1_thcm1_transport_fixture.h"
 
 /*
  * Local and retained-reference coverage for the canonical four-point blended
@@ -27,12 +27,11 @@ static ghl_error_codes_t m1_thcm1_call_volume_weighted_transport(
       const double speed_R,
       const double kappa_face,
       const double delta_x,
-      const bool diffusion_correction_enabled,
       double flux_tilde[M1_THCM1_TRANSPORT_OUTPUT_COUNT],
       ghl_m1_four_point_transport_diagnostics *restrict diagnostics) {
   return ghl_m1_compute_neutrino_four_point_volume_weighted_transport_flux(
         m1_params, state_stencil, physical_flux_L, physical_flux_R, speed_L, speed_R,
-        kappa_face, delta_x, diffusion_correction_enabled, flux_tilde, diagnostics);
+        kappa_face, delta_x, flux_tilde, diagnostics);
 }
 
 static void check_close(const double actual, const double expected, const char *label) {
@@ -142,7 +141,7 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
     ghl_m1_four_point_transport_diagnostics diagnostics = { 0 };
     if(ghl_m1_compute_neutrino_four_point_transport_flux(
              params, &metric, state_stencil, physical_flux_L, physical_flux_R, speed_L,
-             speed_R, kappa_face, delta, false, flux_tilde, &diagnostics)
+             speed_R, kappa_face, delta, flux_tilde, &diagnostics)
        != ghl_success) {
       fail_test("randomized four-point transport operation failed");
     }
@@ -184,7 +183,7 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
     double no_diagnostic_flux[ghl_m1_neutrino_transport_component_count];
     if(ghl_m1_compute_neutrino_four_point_transport_flux(
              params, &metric, state_stencil, physical_flux_L, physical_flux_R, speed_L,
-             speed_R, kappa_face, delta, false, no_diagnostic_flux, NULL)
+             speed_R, kappa_face, delta, no_diagnostic_flux, NULL)
        != ghl_success) {
       fail_test("four-point transport rejected NULL diagnostics");
     }
@@ -196,7 +195,7 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
     }
   }
 
-  /* Invalid policy and prepared operands are rejected transactionally. */
+  /* Invalid prepared operands are rejected transactionally. */
   ghl_metric_quantities metric;
   m1_setup_flat_metric(&metric);
   double state_stencil[4][ghl_m1_neutrino_transport_component_count] = { { 0.0 } };
@@ -207,28 +206,6 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
       ++component) {
     flux_tilde[component] = 101.0 + component;
   }
-  const double flux_before[ghl_m1_neutrino_transport_component_count]
-        = { 101.0, 102.0, 103.0, 104.0, 105.0 };
-  ghl_m1_four_point_transport_diagnostics diagnostics
-        = { .opacity_suppression = 201.0, .face_speed = 202.0 };
-  const ghl_m1_four_point_transport_diagnostics diagnostics_before = diagnostics;
-  if(ghl_m1_compute_neutrino_four_point_transport_flux(
-           params, &metric, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.7,
-           1.0, 1.0, true, flux_tilde, &diagnostics)
-     != ghl_error_m1_incompatible_transport_policy) {
-    fail_test("incompatible four-point transport policy was accepted");
-  }
-  for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
-      ++component) {
-    if(flux_tilde[component] != flux_before[component]) {
-      fail_test("policy rejection changed four-point flux");
-    }
-  }
-  if(diagnostics.opacity_suppression != diagnostics_before.opacity_suppression
-     || diagnostics.face_speed != diagnostics_before.face_speed) {
-    fail_test("policy rejection changed four-point diagnostics");
-  }
-
   state_stencil[0][0] = NAN;
   for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
       ++component) {
@@ -236,9 +213,50 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
   }
   if(ghl_m1_compute_neutrino_four_point_transport_flux(
            params, &metric, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.7,
-           1.0, 1.0, false, flux_tilde, NULL)
+           1.0, 1.0, flux_tilde, NULL)
      != ghl_error_m1_invalid_state) {
     fail_test("invalid four-point stencil was accepted");
+  }
+  /* Each stencil slope is a separate reject condition: overflow the backward,
+   * centered, and upward differences in turn with finite stencil entries. */
+  for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
+      ++component) {
+    flux_tilde[component] = 111.0 + component;
+  }
+  state_stencil[0][0] = -DBL_MAX;
+  state_stencil[1][0] = DBL_MAX;
+  state_stencil[2][0] = 0.0;
+  state_stencil[3][0] = 0.0;
+  if(ghl_m1_compute_neutrino_four_point_transport_flux(
+           params, &metric, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.7,
+           1.0, 1.0, flux_tilde, NULL)
+     != ghl_error_m1_invalid_state) {
+    fail_test("overflowing backward four-point slope was accepted");
+  }
+  for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
+      ++component) {
+    flux_tilde[component] = 111.0 + component;
+  }
+  state_stencil[0][0] = 0.0;
+  state_stencil[1][0] = -DBL_MAX;
+  state_stencil[2][0] = DBL_MAX;
+  if(ghl_m1_compute_neutrino_four_point_transport_flux(
+           params, &metric, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.7,
+           1.0, 1.0, flux_tilde, NULL)
+     != ghl_error_m1_invalid_state) {
+    fail_test("overflowing centered four-point slope was accepted");
+  }
+  state_stencil[1][0] = 0.0;
+  state_stencil[2][0] = -DBL_MAX;
+  state_stencil[3][0] = DBL_MAX;
+  if(ghl_m1_compute_neutrino_four_point_transport_flux(
+           params, &metric, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.7,
+           1.0, 1.0, flux_tilde, NULL)
+     != ghl_error_m1_invalid_state) {
+    fail_test("overflowing upward four-point slope was accepted");
+  }
+  for(size_t row = 0; row < sizeof(state_stencil) / sizeof(state_stencil[0]); ++row) {
+    state_stencil[row][0] = 0.0;
   }
   for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
       ++component) {
@@ -255,7 +273,7 @@ static void check_full_four_point_operator(ghl_m1_parameters *restrict params) {
   }
   if(ghl_m1_compute_neutrino_four_point_transport_flux(
            params, &metric, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.7,
-           1.0, 1.0, false, flux_tilde, NULL)
+           1.0, 1.0, flux_tilde, NULL)
      != ghl_error_m1_invalid_metric) {
     fail_test("invalid four-point metric was accepted");
   }
@@ -401,10 +419,10 @@ static void check_prepared_transport_local_contract(void) {
   const ghl_error_codes_t pointwise_status
         = ghl_m1_compute_neutrino_four_point_transport_flux(
               &params, &metric, state, physical_flux_L, physical_flux_R, 0.35, 0.65, 3.0,
-              0.7, false, pointwise_flux, &pointwise_diagnostics);
+              0.7, pointwise_flux, &pointwise_diagnostics);
   const ghl_error_codes_t prepared_status = m1_thcm1_call_volume_weighted_transport(
         &params, weighted_state, weighted_flux_L, weighted_flux_R, 0.35, 0.65, 3.0, 0.7,
-        false, prepared_flux, &prepared_diagnostics);
+        prepared_flux, &prepared_diagnostics);
   if(pointwise_status != ghl_success || prepared_status != ghl_success) {
     ghl_error(
           "unit_test_m1_thcm1_blended_rusanov: constant-volume statuses "
@@ -424,7 +442,7 @@ static void check_prepared_transport_local_contract(void) {
   double double_densitized[M1_THCM1_TRANSPORT_OUTPUT_COUNT];
   if(ghl_m1_compute_neutrino_four_point_transport_flux(
            &params, &metric, weighted_state, weighted_flux_L, weighted_flux_R, 0.35,
-           0.65, 3.0, 0.7, false, double_densitized, NULL)
+           0.65, 3.0, 0.7, double_densitized, NULL)
      != ghl_success) {
     fail_test("double-densitization mutation could not be evaluated");
   }
@@ -455,7 +473,7 @@ static void check_prepared_transport_local_contract(void) {
   const ghl_m1_four_point_transport_diagnostics diagnostics_before = invalid_diagnostics;
   if(m1_thcm1_call_volume_weighted_transport(
            &params, invalid_state, weighted_flux_L, weighted_flux_R, 0.35, 0.65, 3.0,
-           0.7, false, invalid_flux, &invalid_diagnostics)
+           0.7, invalid_flux, &invalid_diagnostics)
      != ghl_error_m1_invalid_state) {
     fail_test("invalid prepared state was accepted");
   }
@@ -486,7 +504,7 @@ static void check_prepared_transport_local_contract(void) {
   double varying_flux[M1_THCM1_TRANSPORT_OUTPUT_COUNT];
   if(m1_thcm1_call_volume_weighted_transport(
            &params, weighted_state, weighted_flux_L, weighted_flux_R, 0.35, 0.65, 3.0,
-           0.7, false, varying_flux, NULL)
+           0.7, varying_flux, NULL)
      != ghl_success) {
     fail_test("varying volume prepared operation failed");
     return;
@@ -504,7 +522,7 @@ static void check_prepared_transport_local_contract(void) {
     double mutated_flux[M1_THCM1_TRANSPORT_OUTPUT_COUNT];
     if(m1_thcm1_call_volume_weighted_transport(
              &params, weighted_state, weighted_flux_L, weighted_flux_R, 0.35, 0.65, 3.0,
-             0.7, false, mutated_flux, NULL)
+             0.7, mutated_flux, NULL)
        != ghl_success) {
       fail_test("volume mutation prepared operation failed");
       return;
@@ -530,7 +548,7 @@ static void check_prepared_transport_local_contract(void) {
   double mutated_face_flux[M1_THCM1_TRANSPORT_OUTPUT_COUNT];
   if(m1_thcm1_call_volume_weighted_transport(
            &params, weighted_state, weighted_flux_L, weighted_flux_R, 0.35, 0.65, 3.0,
-           0.7, false, mutated_face_flux, NULL)
+           0.7, mutated_face_flux, NULL)
      != ghl_success) {
     fail_test("face-volume mutation prepared operation failed");
   }
@@ -560,11 +578,11 @@ static void check_large_representable_transport(ghl_m1_parameters *restrict para
   m1_setup_flat_metric(&metric);
   if(m1_thcm1_call_volume_weighted_transport(
            params, state_stencil, physical_flux_L, physical_flux_R, 1.0, 1.0, 0.0, 1.0,
-           false, prepared_flux, NULL)
+           prepared_flux, NULL)
            != ghl_success
      || ghl_m1_compute_neutrino_four_point_transport_flux(
               params, &metric, state_stencil, physical_flux_L, physical_flux_R, 1.0, 1.0,
-              0.0, 1.0, false, pointwise_flux, NULL)
+              0.0, 1.0, pointwise_flux, NULL)
               != ghl_success
      || prepared_flux[0] != 1.0e308 || pointwise_flux[0] != 1.0e308) {
     fail_test("representable large four-point flux was rejected");
@@ -609,53 +627,12 @@ check_extreme_transport_arithmetic(const ghl_m1_parameters *restrict params) {
    * are finite. The fallback arithmetic must reject without publication. */
   stencil[2][0] = stencil[3][0] = 4.0;
   if(m1_thcm1_call_volume_weighted_transport(
-           &controls, stencil, flux_L, flux_R, DBL_MAX, DBL_MAX, 0.0, 1.0, false, output,
+           &controls, stencil, flux_L, flux_R, DBL_MAX, DBL_MAX, 0.0, 1.0, output,
            &diagnostics)
            != ghl_error_m1_invalid_state
      || memcmp(output, unchanged, sizeof(output)) != 0
      || !same_transport_diagnostics(&diagnostics, &unchanged_diagnostics)) {
     fail_test("unrepresentable finite-jump flux was published");
-  }
-
-  /* The middle state jump overflows, while the exact Rusanov flux is the
-   * representable endpoint -DBL_MAX after low-part cancellation. */
-  const double near_max = DBL_MAX - 3.0 * 0x1p971;
-  stencil[0][0] = stencil[1][0] = -near_max;
-  stencil[2][0] = stencil[3][0] = DBL_MAX;
-  flux_L[0] = flux_R[0] = near_max;
-  if(m1_thcm1_call_volume_weighted_transport(
-           &controls, stencil, flux_L, flux_R, 2.0, 2.0, 0.0, 1.0, false, output,
-           &diagnostics)
-           != ghl_success
-     || output[0] != -DBL_MAX || diagnostics.phi[0] != 0.0 || diagnostics.sawtooth[0]) {
-    fail_test("representable overflowing-jump flux was rejected");
-  }
-
-  /* Only the first slope overflows; the finite central and right slopes
-   * have ratio 2, yielding phi=1/2 for theta=1. */
-  stencil[0][0] = -DBL_MAX;
-  stencil[1][0] = 0x1p1022;
-  stencil[2][0] = 0x1.8p1022;
-  stencil[3][0] = 0x1.cp1022;
-  flux_L[0] = flux_R[0] = 0.0;
-  if(m1_thcm1_call_volume_weighted_transport(
-           &controls, stencil, flux_L, flux_R, 1.0, 1.0, 0.0, 1.0, false, output,
-           &diagnostics)
-           != ghl_success
-     || output[0] != -0x1p1019 || diagnostics.phi[0] != 0.5 || diagnostics.sawtooth[0]) {
-    fail_test("overflowing monotone stencil limiter changed the face flux");
-  }
-
-  controls.minmod_theta = NAN;
-  memcpy(output, unchanged, sizeof(output));
-  diagnostics = unchanged_diagnostics;
-  if(m1_thcm1_call_volume_weighted_transport(
-           &controls, stencil, flux_L, flux_R, 1.0, 1.0, 0.0, 1.0, false, output,
-           &diagnostics)
-           != ghl_error_m1_invalid_state
-     || memcmp(output, unchanged, sizeof(output)) != 0
-     || !same_transport_diagnostics(&diagnostics, &unchanged_diagnostics)) {
-    fail_test("invalid overflowing-stencil limiter was not transactional");
   }
 
   /* Subtracting a positive small flux from the preceding value below
@@ -665,17 +642,6 @@ check_extreme_transport_arithmetic(const ghl_m1_parameters *restrict params) {
   const double high = DBL_MAX - 0x1p971;
   const double small = 0x1.8p971;
   const double expected_blend = 0.5 * high - 0.5 * small;
-  stencil[0][0] = stencil[1][0] = -small;
-  stencil[2][0] = stencil[3][0] = high;
-  flux_L[0] = flux_R[0] = high;
-  if(m1_thcm1_call_volume_weighted_transport(
-           &controls, stencil, flux_L, flux_R, 2.0, 2.0, 2.0, 1.0, false, output,
-           &diagnostics)
-           != ghl_success
-     || output[0] != expected_blend || diagnostics.phi[0] != 0.0
-     || diagnostics.opacity_suppression != 0.5) {
-    fail_test("finite convex blend was rejected at the overflow tie");
-  }
 
   double direct_blend = 0.0;
   if(ghl_m1_compute_four_point_blended_flux(high, -small, 0.0, false, 0.5, &direct_blend)
@@ -688,18 +654,18 @@ check_extreme_transport_arithmetic(const ghl_m1_parameters *restrict params) {
   flux_L[0] = high;
   flux_R[0] = small;
   if(m1_thcm1_call_volume_weighted_transport(
-           &controls, stencil, flux_L, flux_R, 0.0, 0.0, 0.0, 1.0, false, output, NULL)
+           &controls, stencil, flux_L, flux_R, 0.0, 0.0, 0.0, 1.0, output, NULL)
            != ghl_success
      || output[0] != 0.5 * high + 0.5 * small) {
     fail_test("finite physical-flux average failed at the overflow tie");
   }
 }
 
-/* Exhaust the sign classes, including a zero slope, in both arithmetic
- * paths. The long-double oracle never overflows on finite double states. */
+/* Exhaust the sign classes, including a zero slope. Every pairwise slope of
+ * these finite states is representable in double. */
 static void check_limiter_sign_classes(const ghl_m1_parameters *params) {
-  const double values[] = { -DBL_MAX, -0x1.8p1022, -0x1p1022,  -1.0,   0.0,
-                            1.0,      0x1p1022,    0x1.8p1022, DBL_MAX };
+  const double values[]
+        = { -0x1.8p1022, -0x1p1022, -1.0, 0.0, 1.0, 0x1p1022, 0x1.8p1022 };
   double stencil[4][ghl_m1_neutrino_transport_component_count] = { { 0 } };
   const double physical[ghl_m1_neutrino_transport_component_count] = { 0 };
   double output[ghl_m1_neutrino_transport_component_count];
@@ -727,8 +693,8 @@ static void check_limiter_sign_classes(const ghl_m1_parameters *params) {
                                && controls.minmod_theta >= 0
                                && controls.minmod_theta <= 2;
             const ghl_error_codes_t error = m1_thcm1_call_volume_weighted_transport(
-                  &controls, stencil, physical, physical, 0.0, 0.0, 0.0, 1.0, false,
-                  output, &diagnostics);
+                  &controls, stencil, physical, physical, 0.0, 0.0, 0.0, 1.0, output,
+                  &diagnostics);
             if(error != (valid ? ghl_success : ghl_error_m1_invalid_state)) {
               fail_test("limiter sign-class validation failed");
             }
@@ -804,8 +770,8 @@ static int m1_thcm1_load_variable_transport_fixture(
 
 static void check_variable_transport_fixtures(const char *restrict fixture_dir) {
   static const char *const fixture_names[] = {
-    "/transport_four_point_varying_d0.dat", "/transport_four_point_varying_d1.dat",
-    "/transport_four_point_varying_d2.dat", "/transport_four_point_varying_controls.dat"
+    "/transport_four_point_varying_d0.bin", "/transport_four_point_varying_d1.bin",
+    "/transport_four_point_varying_d2.bin", "/transport_four_point_varying_controls.bin"
   };
   const size_t shard_count = sizeof(fixture_names) / sizeof(fixture_names[0]);
   m1_thcm1_fixture_collection collections[4] = { { 0 } };
@@ -828,8 +794,9 @@ static void check_variable_transport_fixtures(const char *restrict fixture_dir) 
     free(path);
   }
   if(present_count != shard_count) {
-    fail_test("variable-volume fixture family is incomplete; no trusted "
-              "outputs were fabricated");
+    fail_test(
+          "variable-volume fixture family is incomplete; no trusted "
+          "outputs were fabricated");
     return;
   }
 
@@ -900,8 +867,9 @@ static void check_variable_transport_fixtures(const char *restrict fixture_dir) 
                       != input[M1_THCM1_TRANSPORT_FLUX_R_START + component]) {
             status_ok = 0;
             if(failures == 0) {
-              fail_test("variable-volume fixture broke the common physical-"
-                        "flux transform");
+              fail_test(
+                    "variable-volume fixture broke the common physical-"
+                    "flux transform");
             }
             break;
           }
@@ -969,8 +937,7 @@ static void check_variable_transport_fixtures(const char *restrict fixture_dir) 
                    weighted_fluxes_R[role], input[M1_THCM1_TRANSPORT_SPEED_INDEX],
                    input[M1_THCM1_TRANSPORT_SPEED_INDEX],
                    input[M1_THCM1_TRANSPORT_KAPPA_INDEX],
-                   input[M1_THCM1_TRANSPORT_DELTA_INDEX], false, outputs[role],
-                   &diagnostics)
+                   input[M1_THCM1_TRANSPORT_DELTA_INDEX], outputs[role], &diagnostics)
                    != ghl_success
              || !isfinite(diagnostics.opacity_suppression)
              || !isfinite(diagnostics.face_speed)) {
@@ -985,8 +952,9 @@ static void check_variable_transport_fixtures(const char *restrict fixture_dir) 
         if(changed_consumed_input) {
           status_ok = 0;
           if(failures == 0) {
-            fail_test("input-invariant variable control changed a consumed "
-                      "input");
+            fail_test(
+                  "input-invariant variable control changed a consumed "
+                  "input");
           }
         }
       }
@@ -1050,8 +1018,8 @@ static void check_variable_transport_fixtures(const char *restrict fixture_dir) 
 
 static void check_transport_fixtures(const char *restrict fixture_dir) {
   static const char *const fixture_names[]
-        = { "/transport_four_point_d0.dat", "/transport_four_point_d1.dat",
-            "/transport_four_point_d2.dat" };
+        = { "/transport_four_point_d0.bin", "/transport_four_point_d1.bin",
+            "/transport_four_point_d2.bin" };
   /* Derived from the retained exporter corpus: all 63,504 constant-volume
    * pairs minus 6,120 exact duplicate input pairs. */
   static const size_t expected_shard_counts[] = { 19128, 19128, 19128 };
@@ -1212,7 +1180,7 @@ static void check_transport_fixtures(const char *restrict fixture_dir) {
         ghl_m1_four_point_transport_diagnostics diagnostics = { 0 };
         if(ghl_m1_compute_neutrino_four_point_transport_flux(
                  &params, &metric, state, physical_left, physical_right, input[1],
-                 input[1], input[2], input[3], false, outputs[role], &diagnostics)
+                 input[1], input[2], input[3], outputs[role], &diagnostics)
                  != ghl_success
            || !isfinite(diagnostics.opacity_suppression)
            || !isfinite(diagnostics.face_speed)) {
@@ -1292,8 +1260,9 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
            params, 1.0e308, 1.0e-308, 1.0e308, &phi, &sawtooth)
            != ghl_success
      || !m1_nearly_equal(phi, 0.0, 0.0, 0.0) || sawtooth) {
-    fail_test("zero limiter theta with an overflowing ratio did not select the "
-              "low-order flux");
+    fail_test(
+          "zero limiter theta with an overflowing ratio did not select the "
+          "low-order flux");
   }
   {
     double zero_theta_flux = 41.0;
@@ -1438,46 +1407,23 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
   double large_blend_flux[ghl_m1_neutrino_transport_component_count] = { 0.0 };
   if(m1_thcm1_call_volume_weighted_transport(
            params, state_stencil, physical_flux_L, physical_flux_R, 2.0, 2.0, 0.0, 1.0,
-           false, large_blend_flux, NULL)
+           large_blend_flux, NULL)
            != ghl_success
      || large_blend_flux[0] != low) {
     fail_test("prepared finite low endpoint was rejected");
   }
   memset(state_stencil, 0, sizeof(state_stencil));
   physical_flux_L[0] = 0.0;
-  /* Reach the core's policy and helper-error propagation via the prepared
-   * API, whose wrapper does not precheck the pointwise policy. */
-  if(m1_thcm1_call_volume_weighted_transport(
-           params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
-           true, flux_tilde, NULL)
-           != ghl_error_m1_incompatible_transport_policy
-     || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
-    fail_test("prepared transport policy failure was not transactional");
-  }
   const double saved_mindiss = params->mindiss;
   params->mindiss = NAN;
   if(m1_thcm1_call_volume_weighted_transport(
            params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
-           false, flux_tilde, NULL)
+           flux_tilde, NULL)
            != ghl_error_m1_invalid_state
      || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
     fail_test("prepared opacity-helper error was not transactional");
   }
   params->mindiss = saved_mindiss;
-  state_stencil[0][0] = -DBL_MAX;
-  state_stencil[1][0] = state_stencil[2][0] = state_stencil[3][0] = DBL_MAX;
-  if(m1_thcm1_call_volume_weighted_transport(
-           params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
-           false, flux_tilde, NULL)
-     != ghl_success) {
-    fail_test("prepared finite flux was rejected after limiter-difference overflow");
-  }
-  for(int component = 0; component < ghl_m1_neutrino_transport_component_count;
-      ++component) {
-    if(flux_tilde[component] != 0.0) {
-      fail_test("prepared limiter-difference overflow changed zero face flux");
-    }
-  }
   for(int cell = 0; cell < 4; ++cell) {
     state_stencil[cell][0] = 0.0;
   }
@@ -1485,7 +1431,7 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
     memcpy(flux_tilde, flux_before, sizeof(flux_tilde));
     if(m1_thcm1_call_volume_weighted_transport(
              params, state_stencil, physical_flux_L, physical_flux_R, speeds[case_index],
-             right_speeds[case_index], 0.5, 1.0, false, flux_tilde, NULL)
+             right_speeds[case_index], 0.5, 1.0, flux_tilde, NULL)
              != ghl_error_m1_invalid_state
        || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
       fail_test("invalid four-point speed was not transactional");
@@ -1496,7 +1442,7 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
     memcpy(flux_tilde, flux_before, sizeof(flux_tilde));
     if(m1_thcm1_call_volume_weighted_transport(
              params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5,
-             kappas[case_index], 1.0, false, flux_tilde, NULL)
+             kappas[case_index], 1.0, flux_tilde, NULL)
              != ghl_error_m1_invalid_state
        || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
       fail_test("invalid four-point opacity was not transactional");
@@ -1507,7 +1453,7 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
     memcpy(flux_tilde, flux_before, sizeof(flux_tilde));
     if(m1_thcm1_call_volume_weighted_transport(
              params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5,
-             deltas[case_index], false, flux_tilde, NULL)
+             deltas[case_index], flux_tilde, NULL)
              != ghl_error_m1_invalid_state
        || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
       fail_test("invalid four-point spacing was not transactional");
@@ -1516,23 +1462,23 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
 
   if(m1_thcm1_call_volume_weighted_transport(
            NULL, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
-           false, flux_tilde, NULL)
+           flux_tilde, NULL)
            != ghl_error_m1_null_pointer
      || m1_thcm1_call_volume_weighted_transport(
-              params, NULL, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0, false,
+              params, NULL, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
               flux_tilde, NULL)
               != ghl_error_m1_null_pointer
      || m1_thcm1_call_volume_weighted_transport(
-              params, state_stencil, NULL, physical_flux_R, 0.5, 0.5, 0.5, 1.0, false,
+              params, state_stencil, NULL, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
               flux_tilde, NULL)
               != ghl_error_m1_null_pointer
      || m1_thcm1_call_volume_weighted_transport(
-              params, state_stencil, physical_flux_L, NULL, 0.5, 0.5, 0.5, 1.0, false,
+              params, state_stencil, physical_flux_L, NULL, 0.5, 0.5, 0.5, 1.0,
               flux_tilde, NULL)
               != ghl_error_m1_null_pointer
      || m1_thcm1_call_volume_weighted_transport(
               params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5,
-              1.0, false, NULL, NULL)
+              1.0, NULL, NULL)
               != ghl_error_m1_null_pointer) {
     fail_test("prepared four-point NULL arguments were not rejected");
   }
@@ -1542,7 +1488,7 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
     memcpy(flux_tilde, flux_before, sizeof(flux_tilde));
     if(m1_thcm1_call_volume_weighted_transport(
              params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
-             false, flux_tilde, NULL)
+             flux_tilde, NULL)
              != ghl_error_m1_invalid_state
        || memcmp(flux_tilde, flux_before, sizeof(flux_tilde)) != 0) {
       fail_test("invalid prepared stencil state was accepted");
@@ -1552,7 +1498,7 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
   physical_flux_L[0] = NAN;
   if(m1_thcm1_call_volume_weighted_transport(
            params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
-           false, flux_tilde, NULL)
+           flux_tilde, NULL)
      != ghl_error_m1_invalid_state) {
     fail_test("invalid left physical flux was accepted");
   }
@@ -1560,30 +1506,11 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
   physical_flux_R[0] = NAN;
   if(m1_thcm1_call_volume_weighted_transport(
            params, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
-           false, flux_tilde, NULL)
+           flux_tilde, NULL)
      != ghl_error_m1_invalid_state) {
     fail_test("invalid right physical flux was accepted");
   }
   physical_flux_R[0] = 0.0;
-
-  state_stencil[1][0] = DBL_MAX;
-  state_stencil[2][0] = -DBL_MAX;
-  memcpy(flux_tilde, flux_before, sizeof(flux_tilde));
-  if(m1_thcm1_call_volume_weighted_transport(
-           params, state_stencil, physical_flux_L, physical_flux_R, 1.0, 1.0, 0.5, 1.0,
-           false, flux_tilde, NULL)
-           != ghl_success
-     || flux_tilde[0] != DBL_MAX) {
-    fail_test("finite low-order flux was rejected after state-jump overflow");
-  }
-  for(int component = 1; component < ghl_m1_neutrino_transport_component_count;
-      ++component) {
-    if(flux_tilde[component] != 0.0) {
-      fail_test("state-jump overflow changed unrelated flux components");
-    }
-  }
-  state_stencil[1][0] = 0.0;
-  state_stencil[2][0] = 0.0;
 
   ghl_metric_quantities metric;
   m1_setup_flat_metric(&metric);
@@ -1593,44 +1520,36 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
         = { 201.0, 202.0, 203.0, 204.0, 205.0 };
   if(ghl_m1_compute_neutrino_four_point_transport_flux(
            NULL, &metric, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5,
-           1.0, false, pointwise_flux, NULL)
+           1.0, pointwise_flux, NULL)
            != ghl_error_m1_null_pointer
      || ghl_m1_compute_neutrino_four_point_transport_flux(
               params, NULL, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5,
-              0.5, 1.0, false, pointwise_flux, NULL)
+              0.5, 1.0, pointwise_flux, NULL)
               != ghl_error_m1_null_pointer
      || ghl_m1_compute_neutrino_four_point_transport_flux(
               params, &metric, NULL, physical_flux_L, physical_flux_R, 0.5, 0.5, 0.5,
-              1.0, false, pointwise_flux, NULL)
+              1.0, pointwise_flux, NULL)
               != ghl_error_m1_null_pointer
      || ghl_m1_compute_neutrino_four_point_transport_flux(
               params, &metric, state_stencil, NULL, physical_flux_R, 0.5, 0.5, 0.5, 1.0,
-              false, pointwise_flux, NULL)
+              pointwise_flux, NULL)
               != ghl_error_m1_null_pointer
      || ghl_m1_compute_neutrino_four_point_transport_flux(
               params, &metric, state_stencil, physical_flux_L, NULL, 0.5, 0.5, 0.5, 1.0,
-              false, pointwise_flux, NULL)
+              pointwise_flux, NULL)
               != ghl_error_m1_null_pointer
      || ghl_m1_compute_neutrino_four_point_transport_flux(
               params, &metric, state_stencil, physical_flux_L, physical_flux_R, 0.5, 0.5,
-              0.5, 1.0, false, NULL, NULL)
+              0.5, 1.0, NULL, NULL)
               != ghl_error_m1_null_pointer) {
     fail_test("pointwise four-point NULL arguments were not rejected");
   }
 
   ghl_metric_quantities invalid_metric = metric;
-  invalid_metric.gammaDD[0][0] = -1.0;
-  if(ghl_m1_compute_neutrino_four_point_transport_flux(
-           params, &invalid_metric, state_stencil, physical_flux_L, physical_flux_R, 0.5,
-           0.5, 0.5, 1.0, false, pointwise_flux, NULL)
-     != ghl_error_m1_invalid_metric) {
-    fail_test("non-SPD four-point metric was accepted");
-  }
-  invalid_metric = metric;
   invalid_metric.sqrt_detgamma = NAN;
   if(ghl_m1_compute_neutrino_four_point_transport_flux(
            params, &invalid_metric, state_stencil, physical_flux_L, physical_flux_R, 0.5,
-           0.5, 0.5, 1.0, false, pointwise_flux, NULL)
+           0.5, 0.5, 1.0, pointwise_flux, NULL)
      != ghl_error_m1_invalid_metric) {
     fail_test("nonfinite four-point volume factor was accepted");
   }
@@ -1649,7 +1568,7 @@ static void check_four_point_branch_boundaries(ghl_m1_parameters *restrict param
   physical_flux_R[0] = 0.0;
   if(ghl_m1_compute_neutrino_four_point_transport_flux(
            params, &large_volume_metric, state_stencil, physical_flux_L, physical_flux_R,
-           0.0, 0.0, 0.5, 1.0, false, pointwise_flux, NULL)
+           0.0, 0.0, 0.5, 1.0, pointwise_flux, NULL)
            != ghl_error_m1_invalid_state
      || memcmp(pointwise_flux, pointwise_flux_before, sizeof(pointwise_flux)) != 0) {
     fail_test("overflowing densitized four-point flux was published");
@@ -1664,7 +1583,7 @@ static void check_subnormal_speed_dissipation(ghl_m1_parameters *restrict params
   stencil[2][0] = stencil[3][0] = 1.0e308;
   const double speed = nextafter(0.0, 1.0);
   if(m1_thcm1_call_volume_weighted_transport(
-           params, stencil, flux_L, flux_R, speed, speed, 0.0, 1.0, false, output, NULL)
+           params, stencil, flux_L, flux_R, speed, speed, 0.0, 1.0, output, NULL)
            != ghl_success
      || output[0] != -speed * (0.5 * 1.0e308)) {
     fail_test("four-point Rusanov lost subnormal-speed dissipation");
@@ -1672,12 +1591,12 @@ static void check_subnormal_speed_dissipation(ghl_m1_parameters *restrict params
 }
 
 int main(int argc, char **argv) {
-  const char *fixture_dir = "Unit_Tests/data/m1_thcm1";
-  if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0) {
+  const char *fixture_dir = NULL;
+  if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0 && argv[2][0] != '\0') {
     fixture_dir = argv[2];
   }
   else if(argc != 1) {
-    fail_test("usage: [--fixture-dir PATH]");
+    fail_test("usage: [--fixture-dir DIR]");
     return 1;
   }
   ghl_m1_parameters params = { 0 };
@@ -1781,10 +1700,14 @@ int main(int argc, char **argv) {
   check_prepared_transport_local_contract();
   check_large_representable_transport(&params);
   check_extreme_transport_arithmetic(&params);
-  check_transport_fixtures(fixture_dir);
-  check_variable_transport_fixtures(fixture_dir);
 
-  ghl_info("unit_test_m1_thcm1_blended_rusanov: "
-           "limiter/opacity/blend/transport branches passed\n");
+  if(fixture_dir != NULL) {
+    check_variable_transport_fixtures(fixture_dir);
+    check_transport_fixtures(fixture_dir);
+  }
+
+  ghl_info(
+        "unit_test_m1_thcm1_blended_rusanov: "
+        "limiter/opacity/blend/transport branches passed\n");
   return 0;
 }

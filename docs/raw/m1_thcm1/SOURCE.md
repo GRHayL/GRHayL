@@ -1,11 +1,13 @@
 # Instantaneous frozen-rate source fixture
 
-`m1_thcm1_instantaneous_sources.m1` is the retained, offline fixture for the
+`m1_thcm1_instantaneous_sources.bin` is the retained, offline fixture for the
 instantaneous frozen-rate interaction-source operation. It contains all 56
 retained baseline/perturbed pairs for all three species: 168 records total.
-The source campaign provenance is maintained in the separate external campaign
-workspace. Its receipt, sidecar, source snapshot, producer command, and raw
-rows are not copied into the public GRHayL repository. Normal tests do not run
+The retained package manifest marks these records historical and not admitted
+for current verification. Older source notes say the campaign receipt,
+sidecar, source snapshot, producer command, and raw rows are held outside the
+GRHayL checkout; those records were not available in the reviewed workspace,
+so the producer-to-payload binding remains unverified. Normal tests do not run
 THC_M1 or require `THCM1_ROOT`.
 
 ## Operation contract
@@ -27,9 +29,9 @@ those fields therefore produce identical consumed inputs and zero sensitivity.
 
 The nine outputs are number source, energy source, three momentum sources,
 matter energy coupling, and three matter momentum couplings. The evaluator
-recomputes normalization from both input vectors and validates the exact
-producer initializer, coordinate-velocity construction, finite `u0`, source
-statuses, IDs, and paired response semantics.
+recomputes normalization from both input vectors and validates the recorded
+initializer and coordinate-velocity conventions, finite `u0`, source statuses,
+IDs, and paired response semantics.
 Normalization products are rounded separately before addition, matching the
 exporter's binary64 arithmetic even when the test compiler contracts other
 expressions into fused multiply-add instructions. This affects test metadata
@@ -49,14 +51,15 @@ The seeded invariant test preserves all 168 records:
   handling select different `Gamma_N` behavior. Any new or changed
   classification fails.
 
-External promotion must fail closed for an incomplete receipt, missing or
-empty selected source list, duplicate or unsafe selected paths, missing
-artifacts, sidecar/result/command binding mismatch, incomplete role/species
-coverage, duplicate IDs, packet/state/volume mismatch, unpublished or
-unsuccessful producer outputs, invalid `Gamma_N`, and any record-count or
-input-schema mismatch. It exports every retained role/species record; it does
-not select only passing rows. The public package receives only the resulting
-portable payload and compact admission metadata.
+Any future exporter used for admission must fail closed for an incomplete
+receipt, missing or empty selected source list, duplicate or unsafe selected
+paths, missing artifacts, sidecar/result/command binding mismatch, incomplete
+role/species coverage, duplicate IDs, packet/state/volume mismatch,
+unpublished or unsuccessful producer outputs, invalid `Gamma_N`, and any
+record-count or input-schema mismatch. It must export every retained
+role/species record rather than selecting only passing rows. A future admitted
+TestData package should contain the portable payload and compact admission
+metadata; no such admitted package is currently pinned.
 
 ## Remaining issue
 

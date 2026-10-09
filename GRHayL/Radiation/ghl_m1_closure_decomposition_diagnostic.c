@@ -41,21 +41,21 @@ ghl_error_codes_t ghl_m1_compute_closure_decomposition_diagnostic(
 
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 3; j++) {
-      diagnostic->Pthin_dd[i][j] = Pthin_DD[i][j];
-      diagnostic->Pthick_dd[i][j] = Pthick_DD[i][j];
+      diagnostic->Pthin_DD[i][j] = Pthin_DD[i][j];
+      diagnostic->Pthick_DD[i][j] = Pthick_DD[i][j];
     }
-    diagnostic->Pthick_minus_Pthin_dd[i]
-          = diagnostic->Pthick_dd[i][i] - diagnostic->Pthin_dd[i][i];
+    diagnostic->Pthick_minus_Pthin_DD[i]
+          = diagnostic->Pthick_DD[i][i] - diagnostic->Pthin_DD[i][i];
   }
 
   double Pthick_UU_trace = 0.0;
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 3; j++) {
-      Pthick_UU_trace += metric->gammaUU[i][j] * diagnostic->Pthick_dd[i][j];
+      Pthick_UU_trace += metric->gammaUU[i][j] * diagnostic->Pthick_DD[i][j];
     }
   }
-  diagnostic->Pth_dd_3_3_UU = Pthick_UU_trace / 3.0;
-  diagnostic->Pth_dd_0_0_DD = diagnostic->Pthick_dd[0][0];
+  diagnostic->Pthick_trace_over_3 = Pthick_UU_trace / 3.0;
+  diagnostic->Pthick_xx = diagnostic->Pthick_DD[0][0];
 
   return ghl_success;
 }

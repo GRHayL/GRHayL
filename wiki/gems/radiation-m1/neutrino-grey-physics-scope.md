@@ -12,7 +12,7 @@ M1 gem; it does not specify file-level API or build truth.
 
 ## Public API
 
-The physics whitepaper names no new API. It scopes the physical meaning of the
+This page names no new API. It scopes the physical meaning of the
 already-installed surface (declared in [`ghl_m1.h`](../../../GRHayL/include/ghl_m1.h)
 and
 [`ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h)):
@@ -66,9 +66,9 @@ Scope and capability summary (distilled, not copied):
   inventory the scope page bounds.
 - [Radiation M1 gem](../radiation-m1.md) — hub.
 
-## Ground Truth References
+## Ground Truth
 
 - [`GRHayL/include/ghl_m1.h`](../../../GRHayL/include/ghl_m1.h)
 - [`GRHayL/include/ghl_neutrino_rate_provider.h`](../../../GRHayL/include/ghl_neutrino_rate_provider.h)
 - [`GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c`](../../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_sources.c)
-- [`GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md`](../../../GRHayL/Radiation/M1_INTEGRATION_CONTRACT.md)
+- [`docs/raw/Radiation_integration_contract.md`](../../../docs/raw/Radiation_integration_contract.md)

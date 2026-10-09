@@ -30,9 +30,6 @@ static ghl_error_codes_t ghl_m1_validate_inputs(
       const ghl_m1_rad_state *restrict rad_state,
       const ghl_m1_closure *restrict closure) {
 
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
-    return ghl_error_m1_invalid_metric;
-  }
   if(!ghl_m1_validate_metric_derivatives(metric_derivs_x)
      || !ghl_m1_validate_metric_derivatives(metric_derivs_y)
      || !ghl_m1_validate_metric_derivatives(metric_derivs_z)) {
@@ -48,7 +45,7 @@ static ghl_error_codes_t ghl_m1_validate_inputs(
   }
 
   ghl_error_codes_t error
-        = ghl_m1_validate_realizability(m1_params, metric, rad_state, 64.0, NULL);
+        = ghl_m1_validate_realizability_state(m1_params, metric, rad_state, 64.0, NULL);
   if(error != ghl_success) {
     return error;
   }

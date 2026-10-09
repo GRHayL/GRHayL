@@ -27,9 +27,8 @@ f^2\le c.
 $$
 
 Thus the permitted norm ratio is \(\sqrt{1-\epsilon_c}\), not
-\(1-\epsilon_c\). The historical parameter member
-`one_minus_epsilon_c_sq` stores the squared bound `1 - epsilon_c`; its name
-does not change this interpretation. The metric is required to be symmetric
+\(1-\epsilon_c\). The squared bound is computed on demand from `epsilon_c`;
+no stored member carries it. The metric is required to be symmetric
 positive-definite and inverse-consistent before the norm is evaluated.
 
 ## Canonical repair map
@@ -58,7 +57,7 @@ $$
 so the squared inequality is satisfied. The factor is the squared-ratio
 rescale `E^2(1-epsilon_c)/F^2` expressed using the post-floor energy and
 metric norm. It is not the linear norm-ratio rescale used by some older
-whitepaper descriptions.
+alternative descriptions.
 
 The operation is component-preserving in direction and changes only the
 energy floor and, when needed, the flux magnitude. It computes the original
@@ -124,7 +123,7 @@ The realizability cone and canonical rescale are shared M1 mathematics. Photon
 equilibrium formulas, photon opacity models, and the old photon HLL/diffusion
 recipe do not alter this neutrino repair map. In particular, do not replace
 the current squared-ratio rule with the obsolete reduced-number-current or
-HLL-era whitepaper behavior.
+HLL-era behavior.
 
 ## Focused evidence
 

@@ -115,7 +115,7 @@ ghl_error_codes_t ghl_m1_neutrino_charged_current_lepton_delta(
   if(rates->lepton_weight != 0.0) {
     if(number_projected) {
       double absorption_number = 0.0;
-      if(!ghl_m1_neutrino_scaled_absorption_number(
+      if(!ghl_m1_neutrino_absorption_number(
                rates->kappa_a_N_cc, physical_number_endpoint, physical_number_gamma,
                &absorption_number)) {
         return ghl_error_m1_invalid_state;

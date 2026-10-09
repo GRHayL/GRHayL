@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "m1_test_utils.h"
+#include "../m1_test_utils.h"
 #include "m1_thcm1_transport_fixture.h"
 
 #define M1_THCM1_RUSANOV_POLICY "strict_relative_2e-12_propagated_response_v1"
@@ -68,6 +68,40 @@ static inline int m1_thcm1_rusanov_compare_baseline_response(
   return m1_thcm1_fixture_compare_baseline_response(
         record, policy, computed_normalization, computed_baseline, report, error,
         error_size);
+}
+
+/* Strict paired replay rule for the retained Rusanov corpora.  Both endpoint
+ * roles and the paired response are compared against the retained values
+ * with the declared strict_relative policy, reusing the shared comparator so
+ * the endpoint scales propagate identically to the transport and
+ * stress-energy owners.  The operation predicate mirrors the baseline
+ * envelope entry. This propagated response rule does not independently test
+ * derivative accuracy. */
+static inline int m1_thcm1_rusanov_compare_paired_strict_relative(
+      const m1_thcm1_fixture_record *restrict record,
+      const char *restrict policy,
+      const char *restrict operation,
+      const double *restrict computed_normalization,
+      const double *restrict computed_baseline,
+      const double *restrict computed_perturbed,
+      m1_thcm1_fixture_comparison_report *restrict report,
+      char *restrict error,
+      const size_t error_size) {
+  const int supported_policy
+        = policy != NULL
+          && (strcmp(policy, M1_THCM1_RUSANOV_POLICY) == 0
+              || strcmp(policy, M1_THCM1_RUSANOV_CURRENT_POLICY) == 0);
+  if(record == NULL || !supported_policy
+     || !m1_thcm1_rusanov_pair_id_matches_operation(record, operation)
+     || computed_normalization == NULL || computed_baseline == NULL
+     || computed_perturbed == NULL) {
+    m1_thcm1_fixture_set_error(
+          error, error_size, "invalid Rusanov strict paired comparison argument");
+    return 0;
+  }
+  return m1_thcm1_fixture_compare_paired_strict_relative(
+        record, computed_normalization, computed_baseline, computed_perturbed, report,
+        error, error_size);
 }
 
 static inline void m1_thcm1_rusanov_metric(
@@ -127,6 +161,21 @@ int m1_thcm1_rusanov_check_current_fixture(
 
 int m1_thcm1_rusanov_check_generic_fixture(
       const char *restrict fixture_dir,
+      char *restrict error,
+      const size_t error_size);
+
+/* Negative assertions use a stack-owned record copy: a generic perturbed
+ * reference defect, reversed generic reference endpoints, or a corrupted
+ * perturbed number-current operand. No payload bytes are rewritten. */
+#define M1_THCM1_RUSANOV_REGRESSION_PERTURBED_OUTPUT 1
+#define M1_THCM1_RUSANOV_REGRESSION_SWAPPED_ENDPOINTS 2
+#define M1_THCM1_RUSANOV_REGRESSION_CORRUPTED_CURRENT 3
+
+int m1_thcm1_rusanov_check_fixture_regression(
+      const char *restrict fixture_dir,
+      const int mutation_mode,
+      const ghl_m1_parameters *restrict m1_params,
+      const ghl_m1_neutrino_parameters *restrict nu_params,
       char *restrict error,
       const size_t error_size);
 

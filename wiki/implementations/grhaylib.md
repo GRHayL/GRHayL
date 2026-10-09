@@ -95,6 +95,9 @@ global lifecycle.
   [Induction hub](../gems/induction.md).
 - Neutrinos and NRPyLeakage behavior:
   [Neutrinos hub](../gems/neutrinos.md).
+- Radiation M1 behavior (installed header aggregate and thorn source
+  registry exposure only, not Cactus build proof):
+  [Radiation M1 hub](../gems/radiation-m1.md).
 - Reconstruction behavior and PPM parameters:
   [Reconstruction hub](../gems/reconstruction.md) and
   [PPM flow](../gems/reconstruction/ppm-flow.md).

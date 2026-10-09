@@ -1,13 +1,16 @@
 # Paired Rusanov fixtures
 
-These files contain the complete retained 1024-face baseline/perturbed corpus
-from the `rusanov_efn_flux_low_matched` producer route:
+The retained sibling package contains a complete 1024-face baseline/perturbed
+corpus. Historical family notes attribute it to the
+`rusanov_efn_flux_low_matched` producer route; the receipt, source snapshot,
+command, and raw outputs needed to verify that attribution were unavailable in
+the reviewed workspace. The package remains historical and unadmitted.
 
-- `rusanov_neutrino.dat`: `neutrino_rusanov_flux`, 54 consumed inputs and five
+- `rusanov_neutrino.bin`: `neutrino_rusanov_flux`, 54 consumed inputs and five
   `{N,E,Fx,Fy,Fz}` outputs.
-- `rusanov_generic.dat`: `rusanov_flux`, 17 consumed inputs and four `{E,Fx,Fy,Fz}`
+- `rusanov_generic.bin`: `rusanov_flux`, 17 consumed inputs and four `{E,Fx,Fy,Fz}`
   outputs.
-- `rusanov_neutrino_current.dat`: `neutrino_rusanov_flux_current_v2`, the same
+- `rusanov_neutrino_current.bin`: `neutrino_rusanov_flux_current_v2`, the same
   54-input/five-output layout with nonzero number-current operands in slots
   41--52.  Slots 41--43 and 44--46 are `N*velocity` for the left and right
   states; slots 47--49 and 50--52 retain the corresponding transport
@@ -37,14 +40,14 @@ against the stored baseline and perturbation response; it is not independent
 validation of closure or physical-flux preparation. The generic fixture
 likewise stores its caller-supplied physical E/F operands.
 
-These payloads are currently retained historical data, not a current admitted
-cross-code result. External campaign generation, admission, receipts, raw
-captures, and source/build context remain outside the public GRHayL checkout.
-When a payload is admitted, only its portable fixture data and compact
-receipt/artifact reference are promoted into this directory. Normal Unit_Tests
+These payloads are retained historical data, not a current admitted cross-code
+result. The producer receipts, raw captures, and source/build context needed
+for admission were not available in the reviewed workspace. Any future
+admitted TestData package should contain only portable fixture data and compact
+admission references. The unit tests read explicitly supplied fixtures and
 never invoke the external campaign or require its checkout.
 
-`Unit_Tests/m1_thcm1_rusanov_fixture.h` exposes the test-local consumers:
+`Unit_Tests/m1_helpers/m1_thcm1_rusanov_fixture.h` exposes the test-local consumers:
 
 ```c
 m1_thcm1_rusanov_check_neutrino_fixture(...)
@@ -55,3 +58,12 @@ m1_thcm1_rusanov_check_generic_fixture(...)
 The two existing Rusanov unit tests invoke these consumers before their
 pre-existing local checks and accept `--fixture-dir PATH`.  THC_M1 is not a
 runtime dependency of either unit test.
+
+Each consumer evaluates both the baseline and perturbed inputs. The original
+baseline-envelope comparison remains required. Both computed endpoints and
+their difference must also pass the shared strict paired comparator under the
+stored policy: endpoint relative tolerance `2e-12` with denominator floor
+`1e-300`, and a response bound propagated from the endpoint scales with the
+binary64 subtraction allowance. This checks endpoint/response consistency;
+it does not establish independent derivative accuracy. Identical-input controls
+are checked by the same paired policy rather than skipped.

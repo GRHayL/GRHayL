@@ -1,5 +1,5 @@
-#include "ghl_flux_source.h"
 #include "ghl_m1.h"
+#include "ghl_m1_rusanov_private.h"
 #include "ghl_m1_utils.h"
 #include <float.h>
 
@@ -17,9 +17,6 @@ ghl_error_codes_t ghl_m1_compute_physical_flux(
   ghl_error_codes_t error = ghl_m1_validate_direction(direction);
   if(error != ghl_success) {
     return error;
-  }
-  if(!ghl_m1_metric_is_symmetric_spd(metric_face)) {
-    return ghl_error_m1_invalid_metric;
   }
   error = ghl_m1_validate_closure_tensor(metric_face, rad_state, closure);
   if(error != ghl_success) {

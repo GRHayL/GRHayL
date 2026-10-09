@@ -2,8 +2,8 @@
 
 #include "ghl_neutrino_rate_provider.h"
 
-#include "../../Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h"
-#include "../../Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h"
+#include "ghl_nrpyleakage_nucleon_blocking.h"
+#include "ghl_nrpyleakage_rate_helpers.h"
 
 static double
 ghl_m1_nrpyleakage_record_nonfinite_rate(const double x, bool *const rate_failure) {
@@ -142,7 +142,7 @@ ghl_error_codes_t ghl_m1_nrpyleakage_build_thermo_state_from_eos_quantities(
     }
   }
   double normalized_X_n, normalized_X_p;
-  if(ghl_m1_nrpyleakage_normalize_nucleon_fractions(
+  if(ghl_nrpyleakage_normalize_nucleon_fractions(
            candidate.X_n, candidate.X_p, &normalized_X_n, &normalized_X_p)
      != ghl_success) {
     return ghl_error_m1_microphysics_failure;
@@ -191,7 +191,7 @@ static ghl_error_codes_t compute_kernel(
   const double mu_e = thermo->mu_e;
   const double rho_cgs = thermo->rho * NRPyLeakage_units_geom_to_cgs_D;
   double X_n, X_p;
-  if(ghl_m1_nrpyleakage_normalize_nucleon_fractions(thermo->X_n, thermo->X_p, &X_n, &X_p)
+  if(ghl_nrpyleakage_normalize_nucleon_fractions(thermo->X_n, thermo->X_p, &X_n, &X_p)
      != ghl_success) {
     return ghl_error_m1_microphysics_failure;
   }

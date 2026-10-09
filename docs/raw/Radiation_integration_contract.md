@@ -33,7 +33,7 @@ final flux divergence.
 When electron pair channels are active, the host includes their
 partner-dependent absorption in the prepared opacity; scalar provider
 `kappa_tr` contains only independent absorption and scattering. See
-[the pair transport-opacity contract](PAIR_SOURCE_MODEL.md#opacity-supplied-to-transport).
+[the pair transport-opacity contract](Radiation_pair_source_model.md#opacity-supplied-to-transport).
 
 ## Fixed M1 method
 
@@ -54,20 +54,22 @@ the published tensor, and `root_residual` is zero because no scalar
 four-dimensional root was solved. Those three fields are therefore not related
 by the Minerbo `chi(xi)` relation that holds for the primary construction.
 
-The two states that reach the fallback are counted separately by
-`ghl_m1_closure_counters::admissibility_fallback_zero_flux` and
-`ghl_m1_closure_counters::admissibility_fallback_psd`. The zero-flux case is an
-expected consequence of the covariant thin dyad vanishing identically at exact
-zero Eulerian flux and carries no admissibility concern. The PSD case reflects
-the \f$O(v)\f$-accurate relativistic thick tensor losing positive semidefiniteness:
-its smallest eigenvalue can reach a sizable negative fraction of the tensor norm,
-so the check is a genuine rejection rather than a tolerance artifact. Repository
-measurement places that regime at an Eulerian flux transverse to the fluid
-velocity with fluid Eulerian speed above roughly 0.5c; flux parallel or
-antiparallel to the velocity does not reach it at any speed tested up to 0.9c,
-and no state in the repository validation campaign reaches it. A host running
-fast transverse flows should monitor `admissibility_fallback_psd` rather than
-assume the primary construction is always published.
+Two distinct states reach the fallback, and the per-call
+`four_point_compatibility=false` indication covers both. The zero-flux case is
+an expected consequence of the covariant thin dyad vanishing identically at
+exact zero Eulerian flux and carries no admissibility concern. The PSD case
+reflects the \f$O(v)\f$-accurate relativistic thick tensor losing positive
+semidefiniteness: its smallest eigenvalue can reach a sizable negative
+fraction of the tensor norm, so the check is a genuine rejection rather than a
+tolerance artifact. Repository measurement places that regime at an Eulerian
+flux transverse to the fluid velocity with fluid Eulerian speed above roughly
+0.5c; flux parallel or antiparallel to the velocity does not reach it at any
+speed tested up to 0.9c, and no state in the repository validation campaign
+reaches it. The library maintains no separate counters for the two causes, and
+`solve_status` reports the solve outcome (`endpoint_fallback` on this path),
+not which cause was taken. A host running fast transverse flows should monitor
+`four_point_compatibility` rather than assume the primary construction is
+always published.
 The local implicit source update uses the existing finite-difference Jacobian
 and Newton solver, including its line search and fallback substepping.
 At an exact-zero-flux start, an admissible source predictor may seed Newton
@@ -89,7 +91,7 @@ The conserving operation composes the independent charged-current/scattering
 update with a joint pair update, then publishes both species and their exchange
 packets together. Its grey collision equations, first-order splitting,
 baryon-number normalization, and rejection behavior are defined in
-[PAIR_SOURCE_MODEL.md](PAIR_SOURCE_MODEL.md). Single-species source operations
+[pair source model](Radiation_pair_source_model.md). Single-species source operations
 reject electron-flavor pair fields and unsupported aggregate non-charged-current
 number rates. Hosts using the default production provider must select the
 paired operation for the electron flavors; the lumped heavy species retains
@@ -108,11 +110,6 @@ its internal thin, thick-equilibrium, scattering-dominated, general implicit,
 and recovery handling, but these branches do not select a different M1
 transport or closure method. It does not own stage counters, matter updates,
 `Con2Prim`, or rate refreshes.
-
-The dispatcher validates the shared `terminal_fallback_policy` on every route,
-not only where the ordinary implicit solver inspects it, so a value other than
-`no_update_all` is rejected identically by the default implicit policy and by
-every opt-in branched compatibility branch.
 
 `dt` is the coordinate-time stage timestep. Every source-update branch uses
 the corresponding `dt_alpha = alpha * dt`, including stiffness thresholds,
@@ -190,17 +187,13 @@ The checkout ships these focused M1 unit-test sources under `Unit_Tests/`:
 `configure` discovers `Unit_Tests/unit_test_*.c` for its generated `tests`
 target, subject to its HDF5 filtering, and maps discovered sources to
 `test/unit_test_*` targets. Compilation alone is target-selection evidence.
-The dedicated `.github/actions/run_m1/action.yml` invokes
-`Unit_Tests/run_m1_tests.sh` to build and execute the ten listed tests in the
-Radiation jobs of the compiler/OS workflows. The broad `.github/run_tests.sh`
-invokes `make tests datagen` to compile discovered tests, then executes its
-separate test list; it does not invoke the scoped M1 runner. The M1 runner
-selects the rate-provider test's generated-table mode in HDF5 builds and its
-available table-free checks without HDF5. See
-[the M1 test guide](../../Unit_Tests/README.m1.md)
-for scoped build commands and the stored-reference boundary. CI selection alone
-does not establish a remote pass, measured coverage, complete mesh evolution, or
-framework integration.
+The ordinary `.github/run_tests.sh` builds and executes these tests alongside
+the existing suite. For M1-only work, build the named `test/unit_test_*`
+targets rather than the aggregate suite. The provider test's
+`--generated-fixture` mode exercises the table-backed provider when HDF5 is
+enabled. See [the M1 test guide](Radiation_unit_tests.md) for scoped commands
+and stored-reference prerequisites. CI selection alone does not establish a
+remote pass, measured coverage, mesh evolution, or framework integration.
 
 The production library boundary remains defined by the installed header
 `GRHayL/include/ghl_m1.h`, the active manifests

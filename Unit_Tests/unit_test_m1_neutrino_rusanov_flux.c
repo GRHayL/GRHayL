@@ -4,8 +4,8 @@
 #include <string.h>
 
 #include "../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit.h"
+#include "m1_helpers/m1_thcm1_rusanov_fixture.h"
 #include "m1_neutrino_seeded_test_utils.h"
-#include "m1_thcm1_rusanov_fixture.h"
 
 /*
  * Boundary and reference coverage for the grey neutrino Rusanov path. The
@@ -287,13 +287,6 @@ static void check_neutrino_number_transport_boundaries(
               != ghl_error_m1_null_pointer) {
     fail_case("derived-current NULL boundary failed", 324);
   }
-  ghl_metric_quantities bad_metric = *metric;
-  bad_metric.gammaDD[0][0] = -1.0;
-  if(ghl_m1_neutrino_derive_current(
-           m1_params, nu_params, &bad_metric, prims, &state, &current)
-     != ghl_error_m1_invalid_metric) {
-    fail_case("derived-current invalid metric was accepted", 325);
-  }
   bad_nu = *nu_params;
   bad_nu.N_floor = NAN;
   if(ghl_m1_neutrino_derive_current(m1_params, &bad_nu, metric, prims, &state, &current)
@@ -377,11 +370,6 @@ static void check_neutrino_number_transport_boundaries(
            metric, &state, &current, (ghl_m1_direction_t)3, &physical_number)
      != ghl_error_m1_invalid_state) {
     fail_case("invalid physical number direction was accepted", 336);
-  }
-  if(ghl_m1_neutrino_physical_number_flux_from_current(
-           &bad_metric, &state, &current, ghl_m1_dirn0, &physical_number)
-     != ghl_error_m1_invalid_metric) {
-    fail_case("invalid physical number metric was accepted", 337);
   }
   bad_state = state;
   bad_state.N = NAN;
@@ -610,14 +598,26 @@ static void check_neutrino_rusanov_boundaries(
               != ghl_error_m1_invalid_state) {
     fail_case("neutrino Rusanov direction/speed validation failed", 352);
   }
-  ghl_metric_quantities bad_metric = *metric;
-  bad_metric.gammaDD[0][0] = -1.0;
-  if(ghl_m1_compute_neutrino_rusanov_flux(
-           m1_params, nu_params, &bad_metric, ghl_m1_dirn0, &state_L, &state_R,
-           &closure_L, &closure_R, number_flux_L, number_flux_R, number_velocity_L,
-           number_velocity_R, 0.5, &flux_N, &flux_E, flux_F)
-     != ghl_error_m1_invalid_metric) {
-    fail_case("neutrino Rusanov invalid metric was accepted", 353);
+  /* The face metric guard rejects a nonpositive or nonfinite volume before
+   * any state walk. */
+  {
+    const double invalid_volumes[] = { NAN, 0.0, -1.0, INFINITY };
+    for(size_t variant = 0;
+        variant < sizeof(invalid_volumes) / sizeof(invalid_volumes[0]); ++variant) {
+      ghl_metric_quantities bad_face_metric = *metric;
+      bad_face_metric.sqrt_detgamma = invalid_volumes[variant];
+      if(ghl_m1_compute_neutrino_rusanov_flux(
+               m1_params, nu_params, &bad_face_metric, ghl_m1_dirn0, &state_L, &state_R,
+               &closure_L, &closure_R, number_flux_L, number_flux_R, number_velocity_L,
+               number_velocity_R, 0.5, &flux_N, &flux_E, flux_F)
+         != ghl_error_m1_invalid_metric) {
+        fail_case("neutrino Rusanov accepted an invalid face volume", 352);
+      }
+      if(flux_N != 131.0 || flux_E != 132.0 || flux_F[0] != 133.0 || flux_F[1] != 134.0
+         || flux_F[2] != 135.0) {
+        fail_case("neutrino Rusanov volume rejection changed outputs", 352);
+      }
+    }
   }
   ghl_m1_neutrino_parameters bad_nu = *nu_params;
   bad_nu.N_floor = NAN;
@@ -978,12 +978,12 @@ static void check_rusanov_arithmetic_boundaries(const ghl_m1_parameters *params)
 }
 
 int main(int argc, char **argv) {
-  const char *fixture_dir = "Unit_Tests/data/m1_thcm1";
-  if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0) {
+  const char *fixture_dir = NULL;
+  if(argc == 3 && strcmp(argv[1], "--fixture-dir") == 0 && argv[2][0] != '\0') {
     fixture_dir = argv[2];
   }
   else if(argc != 1) {
-    fail_case("usage: [--fixture-dir PATH]", -1);
+    fail_case("usage: [--fixture-dir DIR]", -1);
     return 1;
   }
   ghl_m1_parameters m1_params = { 0 };
@@ -994,6 +994,23 @@ int main(int argc, char **argv) {
   }
   ghl_m1_neutrino_parameters nu_params;
   m1_neutrino_seeded_default_parameters(&nu_params);
+  if(fixture_dir != NULL) {
+    char error[256] = { 0 };
+    if(!m1_thcm1_rusanov_check_neutrino_fixture(
+             fixture_dir, &m1_params, &nu_params, error, sizeof(error))) {
+      fail_case(error[0] != '\0' ? error : "neutrino Rusanov fixture replay failed", -1);
+    }
+    if(!m1_thcm1_rusanov_check_current_fixture(
+             fixture_dir, &m1_params, &nu_params, error, sizeof(error))) {
+      fail_case(error[0] != '\0' ? error : "current Rusanov fixture replay failed", -1);
+    }
+    if(!m1_thcm1_rusanov_check_fixture_regression(
+             fixture_dir, M1_THCM1_RUSANOV_REGRESSION_CORRUPTED_CURRENT,
+             &m1_params, &nu_params, error, sizeof(error))) {
+      fail_case(error, -1);
+    }
+    ghl_info("unit_test_m1_neutrino_rusanov_flux: stored Rusanov replays passed\n");
+  }
   check_number_product_overflow(&m1_params);
   check_rusanov_arithmetic_boundaries(&m1_params);
   const ghl_m1_neutrino_state *volatile no_state = NULL;
@@ -1002,27 +1019,6 @@ int main(int argc, char **argv) {
            != ghl_error_m1_null_pointer
      || rejected_closure.xi != -1.0) {
     fail_case("NULL neutrino closure state changed output", -1);
-  }
-  char fixture_error[256] = { 0 };
-  if(!m1_thcm1_rusanov_check_neutrino_fixture(
-           fixture_dir, &m1_params, &nu_params, fixture_error, sizeof(fixture_error))) {
-    fail_case(
-          fixture_error[0] != '\0' ? fixture_error
-                                   : "neutrino Rusanov fixture evaluation failed",
-          -2);
-  }
-  memset(fixture_error, 0, sizeof(fixture_error));
-  if(!m1_thcm1_rusanov_check_current_fixture(
-           fixture_dir, &m1_params, &nu_params, fixture_error, sizeof(fixture_error))) {
-    fail_case(
-          fixture_error[0] != '\0'
-                ? fixture_error
-                : "current neutrino Rusanov fixture evaluation failed",
-          -3);
-  }
-  else {
-    ghl_info("unit_test_m1_neutrino_rusanov_flux: "
-             "1024 strict neutrino Rusanov pairs passed\n");
   }
 
   m1_test_rng rng

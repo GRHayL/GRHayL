@@ -101,6 +101,76 @@ Tests:
 - `Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c`
 - `Unit_Tests/pert_test_fail_conservatives.c`
 
+## Radiation M1 Moments And Neutrino Transport
+
+Concept:
+- The Radiation gem evolves grey, one-group, three-species neutrino number and
+  energy/momentum moments alongside the GRMHD conservative state; it is a
+  library-level gem, not a downstream host evolution route.
+- Equation authority stays in the Radiation leaves and Doxygen source: route
+  the 3+1 radiation equations through
+  [M1 3+1 radiation equations](../gems/radiation-m1/m1-3plus1-radiation-equations.md),
+  the four-dimensional closure through
+  [M1 four-dimensional Minerbo closure](../gems/radiation-m1/m1-four-dimensional-minerbo-closure.md),
+  neutrino number-current and transport terms through
+  [M1 number current and transport](../gems/radiation-m1/m1-number-current-and-transport.md),
+  comoving moments and source projection through
+  [M1 comoving moments and source projection](../gems/radiation-m1/m1-comoving-moments-and-source-projection.md),
+  matter/lepton exchange through
+  [neutrino lepton and matter exchange](../gems/radiation-m1/neutrino-lepton-and-matter-exchange.md),
+  and neutrino source equations through
+  [M1 neutrino source equations](../gems/radiation-m1/m1-neutrino-source-equations.md).
+
+Code map:
+- Public M1 variables, parameters, and operation declarations:
+  `GRHayL/include/ghl_m1.h`; neutrino rate-provider declarations:
+  `GRHayL/include/ghl_neutrino_rate_provider.h`; aggregate include:
+  `GRHayL/include/ghl_radiation.h`. Installed-header ownership routing:
+  [Public API Map](../public-api-map.md) and
+  [Radiation M1 API/build boundary](../gems/radiation-m1/api-build-boundary.md).
+- Initialization and helper-API routing starts at the
+  [M1 public API quick reference](../gems/radiation-m1/m1-public-api-quick-reference.md)
+  leaf, which indexes the installed `ghl_m1.h` initialization, solver/closure
+  control, and shared helper surface; shared kernels live in
+  `GRHayL/Radiation/` with neutrino operations in
+  `GRHayL/Radiation/Neutrinos/`.
+- Face transport: canonical four-point blended Rusanov
+  (`GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c`) and the shared
+  component-wise Rusanov helper declared in `ghl_m1.h`; flux details route
+  through [M1 finite volume and face flux](../gems/radiation-m1/m1-finite-volume-and-face-flux.md)
+  and [M1 four-point blended Rusanov](../gems/radiation-m1/m1-four-point-blended-rusanov.md).
+- Local coupling: explicit/frozen-rate/pair source updates and the implicit
+  solve route through
+  [M1 source update branches and rollback](../gems/radiation-m1/m1-source-update-branches-and-rollback.md)
+  and [M1 implicit Newton and failure policy](../gems/radiation-m1/m1-implicit-newton-and-failure-policy.md).
+- Radiation stress-energy inputs to any host `Tmunu` assembly route through
+  `GRHayL/Radiation/ghl_m1_stress_energy.c`; the host-stage boundary routes
+  through [M1 host stage and volume-weighted integration](../gems/radiation-m1/m1-host-stage-and-volume-weighted-integration.md).
+
+Tests:
+- `Unit_Tests/unit_test_m1_closure_fallback.c`
+- `Unit_Tests/unit_test_m1_diffusion_flux.c`
+- `Unit_Tests/unit_test_m1_error_handling.c`
+- `Unit_Tests/unit_test_m1_fd_jacobian.c`
+- `Unit_Tests/unit_test_m1_neutrino_rusanov_flux.c`
+- `Unit_Tests/unit_test_m1_neutrino_seeded_invariants.c`
+- `Unit_Tests/unit_test_m1_neutrino_source_update.c`
+- `Unit_Tests/unit_test_m1_rate_provider.c`
+- `Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c`
+- `Unit_Tests/unit_test_rusanov_flux.c`
+- Fixture, runner, and coverage routes: [M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md),
+  [Test Map](../test-map.md), and the [M1 unit-test guide](../../docs/raw/Radiation_unit_tests.md).
+
+Availability boundary:
+
+- `configure` builds the M1 targets with the rest of the unit tests; the
+  ordinary `.github/run_tests.sh` invokes them with pinned TestData replay by
+  default; `M1_FIXTURE_DIR` selects a supplied package instead of downloads.
+  The gem is library-level: no host evolution,
+  Cactus build, or physical validation is established by these tests.
+- Radiation is not part of the hydrodynamic Flux_Source HLLE family; do not
+  count its Rusanov helpers as Flux_Source coverage.
+
 ## Induction and Vector Potential
 
 Concept:

@@ -32,10 +32,7 @@ ghl_error_codes_t ghl_m1_realizability_repair(
     return ghl_error_m1_null_pointer;
   }
 
-  ghl_error_codes_t error = ghl_m1_validate_configuration(m1_params, metric);
-  if(error != ghl_success) {
-    return error;
-  }
+  ghl_error_codes_t error;
 
   if(!isfinite(rad_state->E) || !isfinite(rad_state->F[0]) || !isfinite(rad_state->F[1])
      || !isfinite(rad_state->F[2])) {
@@ -43,9 +40,10 @@ ghl_error_codes_t ghl_m1_realizability_repair(
   }
 
   double E_local;
-  /* Configuration, finite energy and the local output satisfy every check
-   * in the public floor helper. */
-  (void)ghl_m1_apply_energy_floor(m1_params, rad_state->E, &E_local, NULL);
+  error = ghl_m1_apply_energy_floor(m1_params, rad_state->E, &E_local, NULL);
+  if(error != ghl_success) {
+    return error;
+  }
   double F_local[3] = { rad_state->F[0], rad_state->F[1], rad_state->F[2] };
   const double cone_factor = 1.0 - m1_params->epsilon_c;
   /* The canonical repair uses the squared-ratio flux rescale. */
@@ -53,16 +51,12 @@ ghl_error_codes_t ghl_m1_realizability_repair(
    * repaired state at or below sqrt(cone_factor), not cone_factor itself. */
   const double permitted_flux_factor = sqrt(cone_factor);
 
-  /* validate_configuration factored this same gammaUU with the same scaled
-   * Cholesky, so the ratio's metric and pivot checks pass. F_local is finite,
-   * E_local is finite and positive, and L^T x has a unit-scaled nonzero
-   * component for nonzero F_local, so the norm is finite and positive. The
-   * ratio then cannot fail; the guard is defensive and excluded from the
-   * branch gate. */
+  /* The ratio rejects a non-finite or non-SPD gammaUU through its own scaled
+   * Cholesky checks. */
   double flux_factor;
   error = ghl_m1_scaled_covector_norm_ratio(
         metric->gammaUU, F_local, E_local, &flux_factor);
-  if(error != ghl_success) { /* GCOVR_EXCL_BR_LINE */
+  if(error != ghl_success) {
     return error;
   }
   const bool flux_rescaled = flux_factor > permitted_flux_factor;
@@ -76,34 +70,26 @@ ghl_error_codes_t ghl_m1_realizability_repair(
     }
 
     /* Same metric and energy as above; the rescaled flux is finite because
-     * applied_scale is in [0,1]. Complete underflow gives a zero ratio, which
-     * succeeds, so this guard is unreachable for the reason given above. */
+     * applied_scale is in [0,1]. Retain the norm recheck after rounding the
+     * scaled components; complete underflow gives a zero ratio. */
     error = ghl_m1_scaled_covector_norm_ratio(
           metric->gammaUU, F_local, E_local, &flux_factor);
-    if(error != ghl_success) { /* GCOVR_EXCL_BR_LINE */
+    if(error != ghl_success) {
       return error;
     }
   }
 
   const ghl_m1_rad_state repaired
         = { .E = E_local, .F = { F_local[0], F_local[1], F_local[2] } };
-  /* sqrt(1-epsilon_c) is at most one for a validated epsilon_c. Without a
-   * rescale the ratio is already at most permitted_flux_factor. After one,
-   * it equals permitted_flux_factor up to the rounding of applied_scale, the
-   * scaled flux and the norm, which is a few epsilon for the metrics accepted
-   * by validation. No input is known to exceed the 64 epsilon allowance (a
-   * 20 million case search of ill-conditioned metrics found none), so the
-   * rejection is defensive and excluded from the branch gate. */
+  /* Retain the post-repair cone check. A complete rounding bound across
+   * accepted ill-conditioned metrics has not been established; this defense
+   * remains part of the coverage denominator. */
   const double scale = 1.0;
   const double allowed_flux_factor = permitted_flux_factor + 64.0 * DBL_EPSILON * scale;
-  if(flux_factor > allowed_flux_factor) { /* GCOVR_EXCL_BR_LINE */
+  if(flux_factor > allowed_flux_factor) {
     return ghl_error_m1_invalid_state;
   }
 
-  if(repaired.E != rad_state->E || repaired.F[0] != rad_state->F[0]
-     || repaired.F[1] != rad_state->F[1] || repaired.F[2] != rad_state->F[2]) {
-    ghl_m1_record_closure_downstream_repair();
-  }
   *rad_state = repaired;
   return ghl_success;
 }

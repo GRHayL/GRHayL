@@ -98,9 +98,6 @@ static ghl_error_codes_t derive_current(
      || state == NULL || current == NULL) {
     return ghl_error_m1_null_pointer;
   }
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
-    return ghl_error_m1_invalid_metric;
-  }
   if(!isfinite(nu_params->N_floor) || nu_params->N_floor < 0.0
      || !isfinite(nu_params->J_floor) || nu_params->J_floor < 0.0
      || !isfinite(nu_params->Gamma_N_floor) || nu_params->Gamma_N_floor < 0.0
@@ -110,7 +107,7 @@ static ghl_error_codes_t derive_current(
 
   const ghl_m1_rad_state rad = ghl_m1_neutrino_project_rad_state(state);
   ghl_error_codes_t error
-        = ghl_m1_validate_realizability(m1_params, metric, &rad, 0.0, NULL);
+        = ghl_m1_validate_realizability_state(m1_params, metric, &rad, 0.0, NULL);
   if(error != ghl_success) {
     return error;
   }
@@ -174,9 +171,6 @@ ghl_error_codes_t ghl_m1_neutrino_physical_number_flux_from_current(
   const ghl_error_codes_t direction_error = ghl_m1_validate_direction(direction);
   if(direction_error != ghl_success) {
     return direction_error;
-  }
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
-    return ghl_error_m1_invalid_metric;
   }
   if(!isfinite(state->N)) {
     return ghl_error_m1_invalid_state;

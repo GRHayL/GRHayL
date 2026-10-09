@@ -76,8 +76,8 @@ the independent single-species route.
 
 ## Local test inventory
 
-The scoped M1 runner
-[`run_m1_tests.sh`](../../../Unit_Tests/run_m1_tests.sh) builds or runs these
+The ordinary test runner
+[`run_tests.sh`](../../../.github/run_tests.sh) builds or runs these
 focused executables:
 
 - [`unit_test_m1_closure_fallback.c`](../../../Unit_Tests/unit_test_m1_closure_fallback.c)
@@ -91,11 +91,13 @@ focused executables:
 - [`unit_test_m1_thcm1_blended_rusanov.c`](../../../Unit_Tests/unit_test_m1_thcm1_blended_rusanov.c)
 - [`unit_test_rusanov_flux.c`](../../../Unit_Tests/unit_test_rusanov_flux.c)
 
-The [M1 test guide](../../../Unit_Tests/README.m1.md) documents the scoped
+The [M1 test guide](../../../docs/raw/Radiation_unit_tests.md) documents the scoped
 build, generated-provider mode, stored fixtures, and current reference
 families. The variable-volume transport fixtures include the prepared-face
-operation; the seeded invariant tests include exact-zero and underflow/overflow
-state cases; source tests include endpoint and transactional checks.
+operation; the seeded invariant tests own the exact-zero and seeded-state
+cases; binary64 provider arithmetic underflow/overflow rejection is owned by
+`unit_test_m1_rate_provider.c`; source tests include endpoint and
+transactional checks.
 
 ## What the evidence establishes
 
@@ -115,10 +117,10 @@ They do not by themselves establish:
 - line/branch coverage without inspecting actual execution artifacts.
 
 The stored-reference boundary is maintained in
-[`README.m1.md`](../../../Unit_Tests/README.m1.md) and the fixture-family
-documents under `Unit_Tests/data/m1_thcm1/`. The package is validated by
-`audit_package.py`, and current reference values are not regenerated from the
-GRHayL output during a test run.
+[`Radiation_unit_tests.md`](../../../docs/raw/Radiation_unit_tests.md) and the fixture-family
+documents under `docs/raw/m1_thcm1/`. Consumers validate requested external
+fixture records; expected values are never regenerated from current GRHayL
+output during a test run.
 
 ## Verification practice for downstream hosts
 

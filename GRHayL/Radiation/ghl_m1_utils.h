@@ -21,18 +21,13 @@ ghl_error_codes_t ghl_m1_newton_solve_4d_with_initial_guess(
       double U_out[4],
       ghl_m1_newton_diagnostics *restrict diagnostics);
 
-/*
- * Keep M1's historical ternary semantics private to the radiation
- * implementation.  In particular, the false branch preserves the second
- * operand for equal values, signed zero, and NaN inputs.
- */
-static inline double ghl_m1_min(const double A, const double B) { return A < B ? A : B; }
-
-static inline double ghl_m1_max(const double A, const double B) { return A > B ? A : B; }
-
-/* Preserve cancellation when the two individual products overflow double.
+/* Physical E/F and number fluxes use alpha*current - beta*state. A finite
+ * coordinate flux can survive overflow of both products; the public
+ * physical-flux regression in unit_test_m1_error_handling exercises this.
  * The fast path retains ordinary rounding; the fallback aligns binary
- * exponents before multiplying and restores the scale after subtraction. */
+ * exponents before multiplying and restores the scale after subtraction.
+ * All mantissas and FMA residuals remain double; callers reject a nonfinite
+ * final flux before publishing any output. */
 static inline double ghl_m1_difference_of_products(
       const double a,
       const double b,
@@ -62,17 +57,10 @@ static inline double ghl_m1_difference_of_products(
 void ghl_m1_jacobi_iteration_driver(void *workspace, bool (*sweep)(void *));
 void ghl_m1_jacobi_eigenvalues(double matrix[3][3]);
 
-bool ghl_m1_metric_is_symmetric_spd(const ghl_metric_quantities *restrict metric);
-
-/* Private cross-translation-unit observability hook. */
-void ghl_m1_record_closure_downstream_repair(void);
-void ghl_m1_record_closure_validation_failure(const int reason);
-
 /* Radiation-private physical-flux variant for a caller that has already
- * validated the face metric and the supplied closure tensor for this state.
- * It performs the same arithmetic and the same finiteness checks as the
- * public entry point, and repeats neither the metric walk nor the closure
- * tensor validation. */
+ * validated the supplied closure tensor for this state. It performs the same
+ * arithmetic and the same finiteness checks as the public entry point, and
+ * does not repeat the closure tensor validation. */
 ghl_error_codes_t ghl_m1_compute_physical_flux_validated(
       const ghl_metric_quantities *restrict metric_face,
       const ghl_m1_direction_t direction,
@@ -94,8 +82,8 @@ ghl_error_codes_t ghl_m1_compute_comoving_moments_with_velocity(
       double V_cov[3],
       double *restrict W);
 
-/* Same transformation for a caller that has already validated the immutable
- * M1 configuration and metric for the current operation. */
+/* Same transformation under a distinct symbol for in-tree callers that must not
+ * go through the interposable entry point above. */
 ghl_error_codes_t ghl_m1_compute_comoving_moments_validated(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
@@ -137,9 +125,8 @@ static inline double ghl_m1_compute_fd_delta(
 
   const double E_floor_scale = metric->sqrt_detgamma * m1_params->E_floor;
   const double energy_scale
-        = ghl_m1_max(ghl_m1_max(fabs(U_energy), fabs(U_energy_base)), E_floor_scale);
-  const double component_scale
-        = ghl_m1_max(ghl_m1_max(fabs(U), fabs(U_base)), energy_scale);
+        = fmax(fmax(fabs(U_energy), fabs(U_energy_base)), E_floor_scale);
+  const double component_scale = fmax(fmax(fabs(U), fabs(U_base)), energy_scale);
   return m1_params->fd_epsilon_rel * component_scale
          + m1_params->fd_epsilon_abs * E_floor_scale;
 }
@@ -169,64 +156,16 @@ static inline void ghl_m1_initialize_implicit_solve_diagnostics(
                                                       .residual_scaled_norm = INFINITY };
 }
 
-static inline ghl_error_codes_t
-ghl_m1_validate_parameters(const ghl_m1_parameters *restrict m1_params);
-
-static inline ghl_error_codes_t ghl_m1_validate_configuration(
-      const ghl_m1_parameters *restrict m1_params,
-      const ghl_metric_quantities *restrict metric) {
-
-  if(!ghl_m1_metric_is_symmetric_spd(metric)) {
-    return ghl_error_m1_invalid_metric;
-  }
-  return ghl_m1_validate_parameters(m1_params);
-}
-
-/* The implicit neutrino solve validates its immutable metric and M1
- * parameters once before Newton iterations. This helper retains the
- * state-dependent half of the public realizability check for each trial. */
-static inline ghl_error_codes_t
-ghl_m1_validate_parameters(const ghl_m1_parameters *restrict m1_params) {
-
-  if(!isfinite(m1_params->E_floor) || m1_params->E_floor <= 0.0) {
-    return ghl_error_m1_invalid_E_floor;
-  }
-  if(m1_params->repair_policy != ghl_m1_repair_linear_factor_compatibility) {
-    return ghl_error_m1_invalid_repair_policy;
-  }
-  if(!isfinite(m1_params->epsilon_c) || m1_params->epsilon_c <= 0.0
-     || m1_params->epsilon_c >= 1.0 || !isfinite(m1_params->one_minus_epsilon_c_sq)) {
-    return ghl_error_m1_invalid_epsilon_c;
-  }
-  if(!isfinite(m1_params->closure_root_tolerance)
-     || m1_params->closure_root_tolerance <= 0.0
-     || m1_params->closure_root_tolerance > 1.0) {
-    return ghl_error_m1_invalid_closure_tolerance;
-  }
-  if(m1_params->closure_root_max_iterations <= 0) {
-    return ghl_error_m1_invalid_closure_max_iterations;
-  }
-  if(!isfinite(m1_params->closure_root_residual_tolerance)
-     || m1_params->closure_root_residual_tolerance <= 0.0) {
-    return ghl_error_m1_invalid_closure_tolerance;
-  }
-
-  const double expected = 1.0 - m1_params->epsilon_c;
-  const double scale
-        = ghl_m1_max(fabs(expected), fabs(m1_params->one_minus_epsilon_c_sq));
-  /* epsilon_c is strictly below one, so expected and scale are positive. */
-  if(fabs(m1_params->one_minus_epsilon_c_sq - expected) > 64.0 * DBL_EPSILON * scale) {
-    return ghl_error_m1_invalid_epsilon_c;
-  }
-
-  return ghl_success;
-}
-
 /* Restore a normalized norm with validated positive finite operand scales.
  * The computed norm remains checked: cancellation or range failures must not
- * publish an invalid ratio. Results beyond double range saturate at DBL_MAX. */
+ * publish an invalid ratio. A result that is not representable in double is
+ * rejected with ghl_error_m1_invalid_state. */
 ghl_error_codes_t ghl_m1_finish_scaled_norm_ratio(
-      double x_scale, double A_scale, double denom, double scaled_norm, double *ratio);
+      double x_scale,
+      double A_scale,
+      double denom,
+      double scaled_norm,
+      double *ratio);
 
 /* Evaluate sqrt(x^T A x)/denom without materializing an overflow- or
  * underflow-prone quadratic form. A is assumed finite SPD and denom positive. */
@@ -246,12 +185,12 @@ static inline ghl_error_codes_t ghl_m1_scaled_norm_ratio(
     if(!isfinite(x[i])) {
       return ghl_error_m1_invalid_state;
     }
-    x_scale = ghl_m1_max(x_scale, fabs(x[i]));
+    x_scale = fmax(x_scale, fabs(x[i]));
     for(int j = 0; j < 3; ++j) {
       if(!isfinite(A[i][j])) {
         return ghl_error_m1_invalid_metric;
       }
-      A_scale = ghl_m1_max(A_scale, fabs(A[i][j]));
+      A_scale = fmax(A_scale, fabs(A[i][j]));
     }
   }
   if(x_scale == 0.0) {
@@ -292,7 +231,10 @@ static inline ghl_error_codes_t ghl_m1_scaled_norm_ratio(
       LT_x[i] += L[j][i] * (x[j] / x_scale);
     }
   }
-  const double scaled_norm = hypot(hypot(LT_x[0], LT_x[1]), LT_x[2]);
+  /* Each normalized component is bounded by the unit-scaled Cholesky factor, so
+   * the sum of squares cannot overflow. */
+  const double scaled_norm
+        = sqrt(LT_x[0] * LT_x[0] + LT_x[1] * LT_x[1] + LT_x[2] * LT_x[2]);
   return ghl_m1_finish_scaled_norm_ratio(x_scale, A_scale, denom, scaled_norm, ratio);
 }
 
@@ -329,6 +271,9 @@ static inline ghl_error_codes_t ghl_m1_compute_eulerian_velocity(
       double *restrict W_out) {
 
   const double alpha = metric->lapse;
+  if(!isfinite(alpha) || alpha <= 0.0) {
+    return ghl_error_m1_invalid_metric;
+  }
   const double inv_alpha = 1.0 / alpha;
 
   for(int i = 0; i < 3; i++) {
@@ -366,28 +311,6 @@ static inline ghl_error_codes_t ghl_m1_validate_realizability_state(
       const ghl_metric_quantities *restrict metric,
       const ghl_m1_rad_state *restrict rad_state,
       const double tol_factor,
-      double *restrict flux_factor_sq_out);
-
-static inline ghl_error_codes_t ghl_m1_validate_realizability(
-      const ghl_m1_parameters *restrict m1_params,
-      const ghl_metric_quantities *restrict metric,
-      const ghl_m1_rad_state *restrict rad_state,
-      const double tol_factor,
-      double *restrict flux_factor_sq_out) {
-
-  ghl_error_codes_t error = ghl_m1_validate_configuration(m1_params, metric);
-  if(error != ghl_success) {
-    return error;
-  }
-  return ghl_m1_validate_realizability_state(
-        m1_params, metric, rad_state, tol_factor, flux_factor_sq_out);
-}
-
-static inline ghl_error_codes_t ghl_m1_validate_realizability_state(
-      const ghl_m1_parameters *restrict m1_params,
-      const ghl_metric_quantities *restrict metric,
-      const ghl_m1_rad_state *restrict rad_state,
-      const double tol_factor,
       double *restrict flux_factor_sq_out) {
 
   if(!isfinite(rad_state->E) || rad_state->E < m1_params->E_floor) {
@@ -407,7 +330,7 @@ static inline ghl_error_codes_t ghl_m1_validate_realizability_state(
   }
   const double cone_factor = 1.0 - m1_params->epsilon_c;
   const double permitted_flux_factor = sqrt(cone_factor);
-  const double scale = ghl_m1_max(flux_factor, permitted_flux_factor);
+  const double scale = fmax(flux_factor, permitted_flux_factor);
   if(flux_factor > permitted_flux_factor
      && flux_factor - permitted_flux_factor > tol_factor * DBL_EPSILON * scale) {
     return ghl_error_m1_invalid_state;
@@ -433,14 +356,12 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
   for(int i = 0; i < 3; ++i) {
     for(int j = 0; j < 3; ++j) {
       if(!isfinite(A[i][j])) {
-        ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_nonfinite);
         return ghl_error_m1_invalid_state;
       }
-      scale = ghl_m1_max(scale, fabs(A[i][j]));
+      scale = fmax(scale, fabs(A[i][j]));
     }
   }
   if(scale <= 0.0) {
-    ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
     return ghl_error_m1_invalid_state;
   }
 
@@ -450,7 +371,7 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
   double gamma_scale = 0.0;
   for(int i = 0; i < 3; ++i) {
     for(int j = 0; j < 3; ++j) {
-      gamma_scale = ghl_m1_max(gamma_scale, fabs(metric->gammaDD[i][j]));
+      gamma_scale = fmax(gamma_scale, fabs(metric->gammaDD[i][j]));
     }
   }
   /* The finite, nonzero lowered tensor above requires a finite, nonzero
@@ -463,7 +384,6 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
       }
       if(i == j) {
         if(!isfinite(value) || value <= 0.0) {
-          ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
           return ghl_error_m1_invalid_state;
         }
         L[i][j] = sqrt(value);
@@ -505,15 +425,17 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
       B[j][i] = symmetric;
     }
     for(int j = 0; j < 3; ++j) {
+      /* B entries are accumulated products of the finite validated A entries
+       * and the inverse Cholesky factors of the same SPD metric.  Products of
+       * finite factors alone do not prove the accumulated B entry stays
+       * representable. Retain this finite guard in the coverage denominator. */
       if(!isfinite(B[i][j])) {
-        ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_nonfinite);
         return ghl_error_m1_invalid_state;
       }
-      eigen_scale = ghl_m1_max(eigen_scale, fabs(B[i][j]));
+      eigen_scale = fmax(eigen_scale, fabs(B[i][j]));
     }
   }
   if(eigen_scale <= 0.0) {
-    ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
     return ghl_error_m1_invalid_state;
   }
   for(int i = 0; i < 3; ++i) {
@@ -530,7 +452,6 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor_psd(
   for(int i = 0; i < 3; ++i) {
     /* The finite Jacobi rotations preserve finite diagonal entries. */
     if(B[i][i] < -eigenvalue_tolerance) {
-      ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
       return ghl_error_m1_invalid_state;
     }
   }
@@ -545,36 +466,32 @@ static inline ghl_error_codes_t ghl_m1_validate_closure_tensor(
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 3; j++) {
       if(!isfinite(closure->P[i][j])) {
-        ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_nonfinite);
         return ghl_error_m1_invalid_state;
       }
     }
   }
 
-  long double traceP = 0.0L;
+  double traceP = 0.0;
   for(int i = 0; i < 3; ++i) {
     for(int j = 0; j < 3; ++j) {
-      traceP += (long double)metric->gammaDD[i][j] * closure->P[i][j];
+      traceP += metric->gammaDD[i][j] * closure->P[i][j];
     }
   }
-  const long double trace_scale = fmaxl(fabsl(traceP), fabsl(rad_state->E));
-  if(fabsl(traceP - rad_state->E) > 128.0L * DBL_EPSILON * trace_scale) {
-    ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_trace);
+  const double trace_scale = fmax(fabs(traceP), fabs(rad_state->E));
+  if(fabs(traceP - rad_state->E) > 128.0 * DBL_EPSILON * trace_scale) {
     return ghl_error_m1_invalid_state;
   }
 
   for(int i = 0; i < 3; ++i) {
     for(int j = i + 1; j < 3; ++j) {
-      const double pair_scale
-            = ghl_m1_max(fabs(closure->P[i][j]), fabs(closure->P[j][i]));
+      const double pair_scale = fmax(fabs(closure->P[i][j]), fabs(closure->P[j][i]));
       if(fabs(closure->P[i][j] - closure->P[j][i]) > 64.0 * DBL_EPSILON * pair_scale) {
-        ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_symmetry);
         return ghl_error_m1_invalid_state;
       }
     }
   }
 
-  return ghl_m1_validate_closure_tensor_psd(metric, closure);
+  return ghl_success;
 }
 
 static inline ghl_error_codes_t ghl_m1_validate_transport_velocity(
@@ -603,23 +520,13 @@ ghl_error_codes_t ghl_m1_compute_minerbo_decomposition(
       double Pthin[3][3],
       double Pthick[3][3]);
 
-/* Compute the configured closure after the caller has validated the
- * immutable M1 configuration and metric for the current operation. */
+/* Same closure under a distinct symbol for in-tree callers that must not go
+ * through the interposable public entry point. */
 ghl_error_codes_t ghl_m1_compute_closure_minerbo_validated(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
       const ghl_primitive_quantities *restrict prims,
       const ghl_m1_rad_state *restrict rad_state,
       ghl_m1_closure *restrict closure);
-
-/**
- * Validate M1 runtime parameters after initialization or debug-time mutation.
- *
- * This is a debug-only internal helper used by initialization and debug tests.
- */
-#ifdef GRHAYL_M1_DEBUG
-ghl_error_codes_t
-ghl_m1_validate_runtime_params(const ghl_m1_parameters *restrict m1_params);
-#endif
 
 #endif // GHL_M1_UTILS_H

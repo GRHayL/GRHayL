@@ -3,134 +3,6 @@
 #include "ghl_m1_utils.h"
 #include <float.h>
 
-typedef enum {
-  ghl_m1_counter_ordinary_convergence = 0,
-  ghl_m1_counter_endpoint_fallback = 1,
-  ghl_m1_counter_iteration_exhaustion = 2,
-  ghl_m1_counter_invalid_state = 3,
-  ghl_m1_counter_downstream_repair = 4,
-  ghl_m1_counter_residual_rejection = 5,
-  ghl_m1_counter_admissibility_fallback_psd = 6,
-  ghl_m1_counter_admissibility_fallback_zero_flux = 7,
-  ghl_m1_counter_count = 8
-} ghl_m1_closure_counter_id_t;
-
-static unsigned long long closure_counters[ghl_m1_counter_count];
-
-/*
- * The low and high 32-bit words hold the failure stage and validation
- * reason, respectively.  Keeping them in one atomic object prevents a
- * getter from observing a torn pair.  Concurrent closure calls may still
- * replace the process-wide diagnostic with one another; the snapshot is
- * therefore a race-free latest-published diagnostic, not per-call state.
- */
-#define CLOSURE_FAILURE_COMPONENT_MASK 0xffffffffULL
-#define CLOSURE_FAILURE_REASON_SHIFT   32
-static unsigned long long closure_failure_snapshot = 0ULL;
-
-static unsigned long long load_closure_failure_snapshot(void) {
-  return __atomic_load_n(&closure_failure_snapshot, __ATOMIC_SEQ_CST);
-}
-
-static void update_closure_failure_snapshot(
-      const bool update_stage,
-      const unsigned int value,
-      ghl_m1_closure_snapshot_interleave interleave,
-      void *context) {
-  unsigned long long observed = load_closure_failure_snapshot();
-  bool interleave_pending = interleave != NULL;
-  do {
-    const unsigned long long value_bits = (unsigned long long)value;
-    const unsigned long long desired
-          = update_stage
-                  ? (observed
-                     & (CLOSURE_FAILURE_COMPONENT_MASK << CLOSURE_FAILURE_REASON_SHIFT))
-                          | value_bits
-                  : (observed & CLOSURE_FAILURE_COMPONENT_MASK)
-                          | (value_bits << CLOSURE_FAILURE_REASON_SHIFT);
-    if(interleave_pending) {
-      interleave_pending = false;
-      interleave(context);
-    }
-    if(__atomic_compare_exchange_n(
-             &closure_failure_snapshot, &observed, desired, false, __ATOMIC_SEQ_CST,
-             __ATOMIC_SEQ_CST)) {
-      return;
-    }
-  } while(true);
-}
-
-static void record_closure_failure_stage(const ghl_m1_closure_failure_stage_t stage) {
-  update_closure_failure_snapshot(true, (unsigned int)stage, NULL, NULL);
-}
-
-void ghl_m1_closure_private_record_stage_with_interleave(
-      const ghl_m1_closure_failure_stage_t stage,
-      const ghl_m1_closure_snapshot_interleave interleave,
-      void *context) {
-  update_closure_failure_snapshot(true, (unsigned int)stage, interleave, context);
-}
-
-static void increment_counter(const ghl_m1_closure_counter_id_t index) {
-  __atomic_fetch_add(&closure_counters[index], 1ULL, __ATOMIC_RELAXED);
-}
-
-void ghl_m1_reset_closure_counters(void) {
-  /* This is not a stop-the-world barrier: a concurrent closure call may
-   * publish a diagnostic after the reset has completed. */
-  for(int i = 0; i < ghl_m1_counter_count; ++i) {
-    __atomic_store_n(&closure_counters[i], 0ULL, __ATOMIC_SEQ_CST);
-  }
-  __atomic_store_n(&closure_failure_snapshot, 0ULL, __ATOMIC_SEQ_CST);
-}
-
-void ghl_m1_get_closure_counters(ghl_m1_closure_counters *restrict counters) {
-  if(counters == NULL) {
-    return;
-  }
-  counters->ordinary_convergence = __atomic_load_n(
-        &closure_counters[ghl_m1_counter_ordinary_convergence], __ATOMIC_SEQ_CST);
-  counters->endpoint_fallback = __atomic_load_n(
-        &closure_counters[ghl_m1_counter_endpoint_fallback], __ATOMIC_SEQ_CST);
-  counters->iteration_exhaustion = __atomic_load_n(
-        &closure_counters[ghl_m1_counter_iteration_exhaustion], __ATOMIC_SEQ_CST);
-  counters->invalid_state = __atomic_load_n(
-        &closure_counters[ghl_m1_counter_invalid_state], __ATOMIC_SEQ_CST);
-  counters->downstream_repair = __atomic_load_n(
-        &closure_counters[ghl_m1_counter_downstream_repair], __ATOMIC_SEQ_CST);
-  counters->residual_rejection = __atomic_load_n(
-        &closure_counters[ghl_m1_counter_residual_rejection], __ATOMIC_SEQ_CST);
-  counters->admissibility_fallback_psd = __atomic_load_n(
-        &closure_counters[ghl_m1_counter_admissibility_fallback_psd], __ATOMIC_SEQ_CST);
-  counters->admissibility_fallback_zero_flux = __atomic_load_n(
-        &closure_counters[ghl_m1_counter_admissibility_fallback_zero_flux],
-        __ATOMIC_SEQ_CST);
-}
-
-void ghl_m1_get_last_closure_failure_stage(
-      ghl_m1_closure_failure_stage_t *restrict stage) {
-  if(stage != NULL) {
-    *stage = (ghl_m1_closure_failure_stage_t)(load_closure_failure_snapshot()
-                                              & CLOSURE_FAILURE_COMPONENT_MASK);
-  }
-}
-
-void ghl_m1_record_closure_validation_failure(const int reason) {
-  update_closure_failure_snapshot(false, (unsigned int)reason, NULL, NULL);
-}
-
-void ghl_m1_get_last_closure_validation_reason(int *restrict reason) {
-  if(reason != NULL) {
-    *reason = (int)(unsigned int)(load_closure_failure_snapshot()
-                                  >> CLOSURE_FAILURE_REASON_SHIFT);
-  }
-}
-
-/* Internal hook used by the realizability repair implementation. */
-void ghl_m1_record_closure_downstream_repair(void) {
-  increment_counter(ghl_m1_counter_downstream_repair);
-}
-
 typedef struct minerbo_workspace {
   const ghl_metric_quantities *metric;
   const ghl_primitive_quantities *prims;
@@ -140,12 +12,12 @@ typedef struct minerbo_workspace {
   double W;
   double Pthin[3][3];
   double Pthick[3][3];
-  double g_dd[4][4];
-  double n_d[4];
-  double v_d[4];
-  double F_d[4];
-  double Pthin_dd[4][4];
-  double Pthick_dd[4][4];
+  double gDD[4][4];
+  double nD[4];
+  double vD[4];
+  double FD[4];
+  double PthinDD[4][4];
+  double PthickDD[4][4];
 } minerbo_workspace;
 
 static double minerbo_chi(const double xi) {
@@ -175,39 +47,38 @@ static ghl_error_codes_t build_minerbo_workspace(
   }
 
   const double alpha = metric->lapse;
-  ws->g_dd[0][0] = -alpha * alpha + beta2;
+  ws->gDD[0][0] = -alpha * alpha + beta2;
   for(int i = 0; i < 3; ++i) {
-    ws->g_dd[0][i + 1] = betaD[i];
-    ws->g_dd[i + 1][0] = betaD[i];
+    ws->gDD[0][i + 1] = betaD[i];
+    ws->gDD[i + 1][0] = betaD[i];
     for(int j = 0; j < 3; ++j) {
-      ws->g_dd[i + 1][j + 1] = metric->gammaDD[i][j];
+      ws->gDD[i + 1][j + 1] = metric->gammaDD[i][j];
     }
   }
 
-  ws->n_d[0] = -alpha;
+  ws->nD[0] = -alpha;
   for(int i = 1; i < 4; ++i) {
-    ws->n_d[i] = 0.0;
+    ws->nD[i] = 0.0;
   }
-  ws->v_d[0] = 0.0;
+  ws->vD[0] = 0.0;
   for(int i = 0; i < 3; ++i) {
-    ws->v_d[i + 1] = ws->VD[i];
-    ws->F_d[i + 1] = rad_state->F[i];
-    ws->v_d[0] += betaD[i] * ws->VU[i];
+    ws->vD[i + 1] = ws->VD[i];
+    ws->FD[i + 1] = rad_state->F[i];
+    ws->vD[0] += betaD[i] * ws->VU[i];
   }
   /* F_mu is Eulerian-spatial, so n^mu F_mu = 0 fixes the time component:
    * F_0 = beta^i F_i.  Establish it before any spacetime norm is formed. */
-  ws->F_d[0] = 0.0;
+  ws->FD[0] = 0.0;
   for(int i = 0; i < 3; ++i) {
-    ws->F_d[0] += metric->betaU[i] * ws->F_d[i + 1];
+    ws->FD[0] += metric->betaU[i] * ws->FD[i + 1];
   }
-  if(!isfinite(ws->F_d[0])) {
-    record_closure_failure_stage(ghl_m1_closure_failure_workspace);
+  if(!isfinite(ws->FD[0])) {
     return ghl_error_m1_invalid_state;
   }
 
   double F_scale = 0.0;
   for(int mu = 0; mu < 4; ++mu) {
-    F_scale = ghl_m1_max(F_scale, fabs(ws->F_d[mu]));
+    F_scale = fmax(F_scale, fabs(ws->FD[mu]));
   }
 
   /* At exact four-dimensional zero flux, the dyadic thin tensor is zero.
@@ -215,7 +86,7 @@ static ghl_error_codes_t build_minerbo_workspace(
   if(F_scale == 0.0) {
     for(int mu = 0; mu < 4; ++mu) {
       for(int nu = 0; nu < 4; ++nu) {
-        ws->Pthin_dd[mu][nu] = 0.0;
+        ws->PthinDD[mu][nu] = 0.0;
       }
     }
   }
@@ -225,59 +96,58 @@ static ghl_error_codes_t build_minerbo_workspace(
      * for otherwise representable pressure tensors. */
     double F_shape[4] = { 0.0 };
     for(int mu = 0; mu < 4; ++mu) {
-      F_shape[mu] = ws->F_d[mu] / F_scale;
+      F_shape[mu] = ws->FD[mu] / F_scale;
     }
     /* F_mu is Eulerian-spatial. Contract only its spatial components with
      * gamma^ij; the equivalent four-dimensional expression subtracts large
      * beta^i beta^j / alpha^2 terms and loses precision at small lapse. */
-    long double F2_shape_ld = 0.0L;
+    double F2_shape_acc = 0.0;
     for(int i = 0; i < 3; ++i) {
       for(int j = 0; j < 3; ++j) {
-        F2_shape_ld
-              += (long double)metric->gammaUU[i][j] * F_shape[i + 1] * F_shape[j + 1];
+        F2_shape_acc += metric->gammaUU[i][j] * F_shape[i + 1] * F_shape[j + 1];
       }
     }
-    const double F2_shape = (double)F2_shape_ld;
+    const double F2_shape = F2_shape_acc;
     /* The validated finite SPD metric and nonzero normalized covector make
      * this quadratic form strictly positive and representable. */
     for(int mu = 0; mu < 4; ++mu) {
       for(int nu = 0; nu < 4; ++nu) {
-        ws->Pthin_dd[mu][nu] = rad_state->E * F_shape[mu] * F_shape[nu] / F2_shape;
+        ws->PthinDD[mu][nu] = rad_state->E * F_shape[mu] * F_shape[nu] / F2_shape;
       }
     }
   }
   for(int mu = 0; mu < 4; ++mu) {
     for(int nu = 0; nu < 4; ++nu) {
-      ws->Pthick_dd[mu][nu] = 0.0;
+      ws->PthickDD[mu][nu] = 0.0;
     }
   }
 
   const double energy_square_limit = sqrt(DBL_MAX);
   if(rad_state->E <= energy_square_limit) {
     /* v_mu F^mu is V^i F_i for Eulerian-spatial v and F. */
-    long double v_dot_F_ld = 0.0L;
+    double v_dot_F_acc = 0.0;
     for(int i = 0; i < 3; ++i) {
-      v_dot_F_ld += (long double)ws->VU[i] * ws->F_d[i + 1];
+      v_dot_F_acc += ws->VU[i] * ws->FD[i + 1];
     }
-    const double v_dot_F = (double)v_dot_F_ld;
+    const double v_dot_F = v_dot_F_acc;
     const double W2 = ws->W * ws->W;
-    const double coef = 1.0 / (2.0 * W2 + 1.0);
-    const double Jo3 = coef * ((2.0 * W2 - 1.0) * rad_state->E - 2.0 * W2 * v_dot_F);
-    double tH_d[4];
+    const double inverse_W2 = 1.0 / W2;
+    const double E_minus_v_dot_F = rad_state->E - v_dot_F;
+    /* Divide the thick equations by W^2 before subtracting. Their original
+     * O(W^2 E) terms cancel even for boosted isotropic radiation. */
+    const double Jo3
+          = (2.0 * E_minus_v_dot_F - inverse_W2 * rad_state->E) / (2.0 + inverse_W2);
+    double tHD[4];
     for(int mu = 0; mu < 4; ++mu) {
-      tH_d[mu] = ws->F_d[mu] / ws->W
-                 + coef * ws->W * ws->v_d[mu]
-                         * ((4.0 * W2 + 1.0) * v_dot_F - 4.0 * W2 * rad_state->E);
+      tHD[mu] = fma(-ws->W * ws->vD[mu], E_minus_v_dot_F + Jo3, ws->FD[mu] / ws->W);
     }
     for(int mu = 0; mu < 4; ++mu) {
       for(int nu = 0; nu < 4; ++nu) {
-        ws->Pthick_dd[mu][nu]
-              = Jo3
-                      * (4.0 * W2 * ws->v_d[mu] * ws->v_d[nu] + ws->g_dd[mu][nu]
-                         + ws->n_d[mu] * ws->n_d[nu])
-                + ws->W * (tH_d[mu] * ws->v_d[nu] + tH_d[nu] * ws->v_d[mu]);
-        if(!isfinite(ws->Pthin_dd[mu][nu]) || !isfinite(ws->Pthick_dd[mu][nu])) {
-          record_closure_failure_stage(ghl_m1_closure_failure_workspace);
+        ws->PthickDD[mu][nu] = Jo3
+                                     * (4.0 * W2 * ws->vD[mu] * ws->vD[nu]
+                                        + ws->gDD[mu][nu] + ws->nD[mu] * ws->nD[nu])
+                               + ws->W * (tHD[mu] * ws->vD[nu] + tHD[nu] * ws->vD[mu]);
+        if(!isfinite(ws->PthinDD[mu][nu]) || !isfinite(ws->PthickDD[mu][nu])) {
           return ghl_error_m1_invalid_state;
         }
       }
@@ -289,35 +159,34 @@ static ghl_error_codes_t build_minerbo_workspace(
      * 4 W^2 E overflowing before they are multiplied by a zero velocity. */
     double F_over_E[4];
     for(int mu = 0; mu < 4; ++mu) {
-      /* F_d is finite and this branch has E > sqrt(DBL_MAX) > 1. */
-      F_over_E[mu] = ws->F_d[mu] / rad_state->E;
+      /* FD is finite and this branch has E > sqrt(DBL_MAX) > 1. */
+      F_over_E[mu] = ws->FD[mu] / rad_state->E;
     }
-    long double v_dot_F_over_E_ld = 0.0L;
+    double v_dot_F_over_E_acc = 0.0;
     for(int i = 0; i < 3; ++i) {
-      v_dot_F_over_E_ld += (long double)ws->VU[i] * F_over_E[i + 1];
+      v_dot_F_over_E_acc += ws->VU[i] * F_over_E[i + 1];
     }
-    const double v_dot_F_over_E = (double)v_dot_F_over_E_ld;
+    const double v_dot_F_over_E = v_dot_F_over_E_acc;
     const double W2 = ws->W * ws->W;
-    const double coef = 1.0 / (2.0 * W2 + 1.0);
-    const double Jo3_over_E = coef * ((2.0 * W2 - 1.0) - 2.0 * W2 * v_dot_F_over_E);
-    double tH_d_over_E[4];
+    const double inverse_W2 = 1.0 / W2;
+    const double E_minus_v_dot_F_over_E = 1.0 - v_dot_F_over_E;
+    const double Jo3_over_E
+          = (2.0 * E_minus_v_dot_F_over_E - inverse_W2) / (2.0 + inverse_W2);
+    double tHD_over_E[4];
     for(int mu = 0; mu < 4; ++mu) {
-      tH_d_over_E[mu] = F_over_E[mu] / ws->W
-                        + coef * ws->W * ws->v_d[mu]
-                                * ((4.0 * W2 + 1.0) * v_dot_F_over_E - 4.0 * W2);
+      tHD_over_E[mu]
+            = fma(-ws->W * ws->vD[mu], E_minus_v_dot_F_over_E + Jo3_over_E,
+                  F_over_E[mu] / ws->W);
     }
     for(int mu = 0; mu < 4; ++mu) {
       for(int nu = 0; nu < 4; ++nu) {
         const double Pthick_over_E
               = Jo3_over_E
-                      * (4.0 * W2 * ws->v_d[mu] * ws->v_d[nu] + ws->g_dd[mu][nu]
-                         + ws->n_d[mu] * ws->n_d[nu])
-                + ws->W
-                        * (tH_d_over_E[mu] * ws->v_d[nu]
-                           + tH_d_over_E[nu] * ws->v_d[mu]);
-        ws->Pthick_dd[mu][nu] = rad_state->E * Pthick_over_E;
-        if(!isfinite(ws->Pthin_dd[mu][nu]) || !isfinite(ws->Pthick_dd[mu][nu])) {
-          record_closure_failure_stage(ghl_m1_closure_failure_workspace);
+                      * (4.0 * W2 * ws->vD[mu] * ws->vD[nu] + ws->gDD[mu][nu]
+                         + ws->nD[mu] * ws->nD[nu])
+                + ws->W * (tHD_over_E[mu] * ws->vD[nu] + tHD_over_E[nu] * ws->vD[mu]);
+        ws->PthickDD[mu][nu] = rad_state->E * Pthick_over_E;
+        if(!isfinite(ws->PthinDD[mu][nu]) || !isfinite(ws->PthickDD[mu][nu])) {
           return ghl_error_m1_invalid_state;
         }
       }
@@ -331,9 +200,9 @@ static ghl_error_codes_t build_minerbo_workspace(
       for(int k = 0; k < 3; ++k) {
         for(int l = 0; l < 3; ++l) {
           ws->Pthin[i][j] += metric->gammaUU[i][k] * metric->gammaUU[j][l]
-                             * ws->Pthin_dd[k + 1][l + 1];
+                             * ws->PthinDD[k + 1][l + 1];
           ws->Pthick[i][j] += metric->gammaUU[i][k] * metric->gammaUU[j][l]
-                              * ws->Pthick_dd[k + 1][l + 1];
+                              * ws->PthickDD[k + 1][l + 1];
         }
       }
     }
@@ -353,7 +222,7 @@ ghl_error_codes_t ghl_m1_compute_minerbo_decomposition(
     return ghl_error_m1_null_pointer;
   }
   ghl_error_codes_t error
-        = ghl_m1_validate_realizability(m1_params, metric, rad_state, 128.0, NULL);
+        = ghl_m1_validate_realizability_state(m1_params, metric, rad_state, 128.0, NULL);
   if(error != ghl_success) {
     return error;
   }
@@ -388,17 +257,14 @@ ghl_error_codes_t ghl_m1_closure_private_evaluate_invariant(
       double *const normalized_residual,
       double *const physical_xi) {
   if(!isfinite(J) || J <= 0.0) {
-    record_closure_failure_stage(ghl_m1_closure_failure_comoving_energy);
     return ghl_error_m1_invalid_state;
   }
   const double h2_tolerance = 1024.0 * DBL_EPSILON * scale;
   if(!isfinite(H2) || H2 < -h2_tolerance) {
-    record_closure_failure_stage(ghl_m1_closure_failure_comoving_flux_norm);
     return ghl_error_m1_invalid_state;
   }
-  const double clipped_H2 = ghl_m1_max(H2, 0.0);
+  const double clipped_H2 = fmax(H2, 0.0);
   if(!isfinite(scale) || !(scale > 0.0)) {
-    record_closure_failure_stage(ghl_m1_closure_failure_residual);
     return ghl_error_m1_invalid_state;
   }
 
@@ -408,7 +274,6 @@ ghl_error_codes_t ghl_m1_closure_private_evaluate_invariant(
   const double candidate_normalized_residual = fabs(candidate_residual) / scale;
   const double candidate_physical_xi = sqrt(clipped_H2) / J;
   if(!isfinite(candidate_physical_xi)) {
-    record_closure_failure_stage(ghl_m1_closure_failure_residual);
     return ghl_error_m1_invalid_state;
   }
   *H2_clipped = clipped_H2;
@@ -420,7 +285,7 @@ ghl_error_codes_t ghl_m1_closure_private_evaluate_invariant(
 
 ghl_error_codes_t ghl_m1_closure_private_finish_evaluation(
       const ghl_metric_quantities *const metric,
-      const double Pdd[4][4],
+      const double PDD[4][4],
       const double energy_scale,
       const double W,
       const double J,
@@ -445,7 +310,7 @@ ghl_error_codes_t ghl_m1_closure_private_finish_evaluation(
       P[i][j] = 0.0;
       for(int k = 0; k < 3; ++k) {
         for(int l = 0; l < 3; ++l) {
-          P[i][j] += metric->gammaUU[i][k] * metric->gammaUU[j][l] * Pdd[k + 1][l + 1];
+          P[i][j] += metric->gammaUU[i][k] * metric->gammaUU[j][l] * PDD[k + 1][l + 1];
         }
       }
     }
@@ -454,15 +319,15 @@ ghl_error_codes_t ghl_m1_closure_private_finish_evaluation(
    * its rounding error in gamma_ij P^ij grows like W^2.  Inside that rounding
    * envelope, restore the exact trace with an isotropic correction; a larger
    * discrepancy is left for the tensor validator to reject. */
-  long double trace_ld = 0.0L;
+  double trace_acc = 0.0;
   for(int i = 0; i < 3; ++i) {
     for(int j = 0; j < 3; ++j) {
-      trace_ld += (long double)metric->gammaDD[i][j] * P[i][j];
+      trace_acc += metric->gammaDD[i][j] * P[i][j];
     }
   }
-  const double trace_error = (double)((long double)energy_scale - trace_ld);
+  const double trace_error = energy_scale - trace_acc;
   const double trace_envelope = 256.0 * DBL_EPSILON * (1.0 + 4.0 * W * W)
-                                * ghl_m1_max(fabs((double)trace_ld), energy_scale);
+                                * fmax(fabs(trace_acc), energy_scale);
   if(fabs(trace_error) <= trace_envelope) {
     for(int i = 0; i < 3; ++i) {
       for(int j = 0; j < 3; ++j) {
@@ -491,17 +356,16 @@ static ghl_error_codes_t evaluate_minerbo(
   const double dthin = 0.5 * (3.0 * chi - 1.0);
   const double dthick = 1.5 * (1.0 - chi);
 
-  double Pdd[4][4] = { { 0.0 } };
-  double rTdd[4][4] = { { 0.0 } };
+  double PDD[4][4] = { { 0.0 } };
+  double rTDD[4][4] = { { 0.0 } };
   const double energy_scale = ws->rad_state->E;
   for(int mu = 0; mu < 4; ++mu) {
     for(int nu = 0; nu < 4; ++nu) {
-      Pdd[mu][nu] = dthin * ws->Pthin_dd[mu][nu] + dthick * ws->Pthick_dd[mu][nu];
-      rTdd[mu][nu] = energy_scale * ws->n_d[mu] * ws->n_d[nu] + ws->F_d[mu] * ws->n_d[nu]
-                     + ws->n_d[mu] * ws->F_d[nu] + Pdd[mu][nu];
-      /* A nonfinite Pdd component necessarily propagates to rTdd below. */
-      if(!isfinite(rTdd[mu][nu])) {
-        record_closure_failure_stage(ghl_m1_closure_failure_workspace);
+      PDD[mu][nu] = dthin * ws->PthinDD[mu][nu] + dthick * ws->PthickDD[mu][nu];
+      rTDD[mu][nu] = energy_scale * ws->nD[mu] * ws->nD[nu] + ws->FD[mu] * ws->nD[nu]
+                     + ws->nD[mu] * ws->FD[nu] + PDD[mu][nu];
+      /* A nonfinite PDD component necessarily propagates to rTDD below. */
+      if(!isfinite(rTDD[mu][nu])) {
         return ghl_error_m1_invalid_state;
       }
     }
@@ -516,48 +380,83 @@ static ghl_error_codes_t evaluate_minerbo(
   double V_cov[3] = { 0.0, 0.0, 0.0 };
   for(int i = 0; i < 3; ++i) {
     for(int j = 0; j < 3; ++j) {
-      F_con[i] += ws->metric->gammaUU[i][j] * ws->F_d[j + 1];
+      F_con[i] += ws->metric->gammaUU[i][j] * ws->FD[j + 1];
       V_cov[i] += ws->metric->gammaDD[i][j] * ws->VU[j];
     }
   }
-  if(!scaled_energy) {
-    long double FdotV_ld = 0.0L;
-    long double PVV_ld = 0.0L;
+  if(xi == 0.0) {
+    /* Recover the thick moments directly from E/F, not by boosting the
+     * rounded pressure back: that contraction amplifies pressure roundoff
+     * by W^2 and can miss an otherwise acceptable zero endpoint. Work in
+     * units of E so both energy-square limits use the same endpoint rule. */
+    double FdotV_over_E = 0.0;
     for(int i = 0; i < 3; ++i) {
-      FdotV_ld += (long double)ws->F_d[i + 1] * ws->VU[i];
+      FdotV_over_E += (ws->FD[i + 1] / energy_scale) * ws->VU[i];
+    }
+    const double inverse_W2 = 1.0 / (ws->W * ws->W);
+    const double E_minus_FdotV_over_E = 1.0 - FdotV_over_E;
+    const double Jo3_over_E
+          = (2.0 * E_minus_FdotV_over_E - inverse_W2) / (2.0 + inverse_W2);
+    J = 3.0 * Jo3_over_E;
+    double HU_over_E[3];
+    for(int i = 0; i < 3; ++i) {
+      HU_over_E[i]
+            = fma(-ws->W * ws->VU[i], E_minus_FdotV_over_E + Jo3_over_E,
+                  F_con[i] / energy_scale / ws->W);
+    }
+    double Hn_over_E = 0.0;
+    for(int i = 0; i < 3; ++i) {
+      Hn_over_E -= V_cov[i] * HU_over_E[i];
       for(int j = 0; j < 3; ++j) {
-        PVV_ld += (long double)Pdd[i + 1][j + 1] * ws->VU[i] * ws->VU[j];
+        H2 += ws->metric->gammaDD[i][j] * HU_over_E[i] * HU_over_E[j];
       }
     }
-    const double FdotV = (double)FdotV_ld;
-    const double PVV = (double)PVV_ld;
+    H2 -= Hn_over_E * Hn_over_E;
+    if(!scaled_energy) {
+      /* Brent compares signed residuals from different trial points. Keep
+       * the same physical units as the non-endpoint evaluations. */
+      J *= energy_scale;
+      H2 = (H2 * energy_scale) * energy_scale;
+    }
+    scale = fmax(J * J, fabs(H2));
+  }
+  else if(!scaled_energy) {
+    double FdotV_acc = 0.0;
+    double PVV_acc = 0.0;
+    for(int i = 0; i < 3; ++i) {
+      FdotV_acc += ws->FD[i + 1] * ws->VU[i];
+      for(int j = 0; j < 3; ++j) {
+        PVV_acc += PDD[i + 1][j + 1] * ws->VU[i] * ws->VU[j];
+      }
+    }
+    const double FdotV = FdotV_acc;
+    const double PVV = PVV_acc;
     const double W2 = ws->W * ws->W;
     J = W2 * (energy_scale - 2.0 * FdotV + PVV);
 
     double HU[3] = { 0.0, 0.0, 0.0 };
     for(int i = 0; i < 3; ++i) {
-      long double PijVj_ld = 0.0L;
+      double PijVj_acc = 0.0;
       for(int j = 0; j < 3; ++j) {
         for(int k = 0; k < 3; ++k) {
-          PijVj_ld += (long double)ws->metric->gammaUU[i][k] * Pdd[k + 1][j + 1]
-                      * ws->VU[j];
+          PijVj_acc += ws->metric->gammaUU[i][k] * PDD[k + 1][j + 1] * ws->VU[j];
         }
       }
-      HU[i] = ws->W * ((double)F_con[i] - (double)PijVj_ld - J * ws->VU[i]);
+      HU[i] = ws->W * (F_con[i] - PijVj_acc - J * ws->VU[i]);
     }
-    long double Hn_ld = 0.0L;
-    long double H2_ld = 0.0L;
+    double Hn_acc = 0.0;
+    double H2_acc = 0.0;
     for(int i = 0; i < 3; ++i) {
-      Hn_ld -= (long double)V_cov[i] * HU[i];
+      Hn_acc -= V_cov[i] * HU[i];
       for(int j = 0; j < 3; ++j) {
-        H2_ld += (long double)ws->metric->gammaDD[i][j] * HU[i] * HU[j];
+        H2_acc += ws->metric->gammaDD[i][j] * HU[i] * HU[j];
       }
     }
-    H2_ld -= Hn_ld * Hn_ld;
-    H2 = (double)H2_ld;
+    H2_acc -= Hn_acc * Hn_acc;
+    H2 = H2_acc;
     /* The residual J^2 xi^2 - H^2 is bounded by J^2 (H <= J), and J can be
      * far below E for flux along a fast flow, so J^2 is the natural scale. */
-    scale = ghl_m1_max(J * J, fabs(H2));
+    scale = fmax(J * J, fabs(H2));
   }
   else {
     /* The comoving consistency equation is homogeneous in radiation energy.
@@ -566,44 +465,42 @@ static ghl_error_codes_t evaluate_minerbo(
     for(int i = 0; i < 3; ++i) {
       F_con[i] /= energy_scale;
     }
-    long double FdotV_over_E_ld = 0.0L;
-    long double PVV_over_E_ld = 0.0L;
+    double FdotV_over_E_acc = 0.0;
+    double PVV_over_E_acc = 0.0;
     for(int i = 0; i < 3; ++i) {
-      FdotV_over_E_ld += (long double)F_con[i] * V_cov[i];
+      FdotV_over_E_acc += F_con[i] * V_cov[i];
       for(int j = 0; j < 3; ++j) {
-        PVV_over_E_ld
-              += (long double)(Pdd[i + 1][j + 1] / energy_scale) * ws->VU[i] * ws->VU[j];
+        PVV_over_E_acc += (PDD[i + 1][j + 1] / energy_scale) * ws->VU[i] * ws->VU[j];
       }
     }
     const double W2 = ws->W * ws->W;
-    J = W2 * (1.0 - 2.0 * (double)FdotV_over_E_ld + (double)PVV_over_E_ld);
+    J = W2 * (1.0 - 2.0 * FdotV_over_E_acc + PVV_over_E_acc);
 
     double HU_over_E[3] = { 0.0, 0.0, 0.0 };
     for(int i = 0; i < 3; ++i) {
-      long double PijVj_over_E_ld = 0.0L;
+      double PijVj_over_E_acc = 0.0;
       for(int j = 0; j < 3; ++j) {
         for(int k = 0; k < 3; ++k) {
-          PijVj_over_E_ld += (long double)ws->metric->gammaUU[i][k]
-                             * (Pdd[k + 1][j + 1] / energy_scale) * ws->VU[j];
+          PijVj_over_E_acc += ws->metric->gammaUU[i][k]
+                              * (PDD[k + 1][j + 1] / energy_scale) * ws->VU[j];
         }
       }
-      HU_over_E[i] = ws->W * (F_con[i] - (double)PijVj_over_E_ld - J * ws->VU[i]);
+      HU_over_E[i] = ws->W * (F_con[i] - PijVj_over_E_acc - J * ws->VU[i]);
     }
-    long double Hn_over_E_ld = 0.0L;
-    long double H2_over_E2_ld = 0.0L;
+    double Hn_over_E_acc = 0.0;
+    double H2_over_E2_acc = 0.0;
     for(int i = 0; i < 3; ++i) {
-      Hn_over_E_ld -= (long double)V_cov[i] * HU_over_E[i];
+      Hn_over_E_acc -= V_cov[i] * HU_over_E[i];
       for(int j = 0; j < 3; ++j) {
-        H2_over_E2_ld
-              += (long double)ws->metric->gammaDD[i][j] * HU_over_E[i] * HU_over_E[j];
+        H2_over_E2_acc += ws->metric->gammaDD[i][j] * HU_over_E[i] * HU_over_E[j];
       }
     }
-    H2_over_E2_ld -= Hn_over_E_ld * Hn_over_E_ld;
-    H2 = (double)H2_over_E2_ld;
-    scale = ghl_m1_max(J * J, fabs(H2));
+    H2_over_E2_acc -= Hn_over_E_acc * Hn_over_E_acc;
+    H2 = H2_over_E2_acc;
+    scale = fmax(J * J, fabs(H2));
   }
   return ghl_m1_closure_private_finish_evaluation(
-        ws->metric, Pdd, energy_scale, ws->W, J, H2, scale, xi, chi, evaluation);
+        ws->metric, PDD, energy_scale, ws->W, J, H2, scale, xi, chi, evaluation);
 }
 
 static ghl_error_codes_t build_eulerian_minerbo_pressure(
@@ -621,7 +518,7 @@ static ghl_error_codes_t build_eulerian_minerbo_pressure(
   double direction[3] = { 0.0, 0.0, 0.0 };
   double F_scale = 0.0;
   for(int i = 0; i < 3; ++i) {
-    F_scale = ghl_m1_max(F_scale, fabs(ws->rad_state->F[i]));
+    F_scale = fmax(F_scale, fabs(ws->rad_state->F[i]));
   }
   if(F_scale > 0.0) {
     double F_scaled[3], F_scaled_con[3];
@@ -629,12 +526,12 @@ static ghl_error_codes_t build_eulerian_minerbo_pressure(
       F_scaled[i] = ws->rad_state->F[i] / F_scale;
     }
     ghl_raise_lower_vector_3D(ws->metric->gammaUU, F_scaled, F_scaled_con);
-    long double scaled_norm_sq = 0.0L;
+    double scaled_norm_sq = 0.0;
     for(int i = 0; i < 3; ++i) {
-      scaled_norm_sq += (long double)F_scaled[i] * F_scaled_con[i];
+      scaled_norm_sq += F_scaled[i] * F_scaled_con[i];
     }
     /* The validated finite SPD metric makes this normalized norm positive. */
-    const double scaled_norm = sqrt((double)scaled_norm_sq);
+    const double scaled_norm = sqrt(scaled_norm_sq);
     for(int i = 0; i < 3; ++i) {
       direction[i] = F_scaled_con[i] / scaled_norm;
     }
@@ -651,7 +548,7 @@ ghl_error_codes_t ghl_m1_closure_private_construct_eulerian_pressure(
       const double direction[3],
       double P[3][3],
       double *const chi_out) {
-  const double chi = minerbo_chi(ghl_m1_min(flux_factor, 1.0));
+  const double chi = minerbo_chi(fmin(flux_factor, 1.0));
   const double dthin = 0.5 * (3.0 * chi - 1.0);
   const double dthick = 1.5 * (1.0 - chi);
   for(int i = 0; i < 3; ++i) {
@@ -694,37 +591,37 @@ ghl_error_codes_t ghl_m1_closure_private_finalize_fallback(
 
   double xi;
   if(comoving->J >= sqrt(DBL_MIN) && comoving->J <= sqrt(DBL_MAX)) {
-    long double H2_ld = -(long double)comoving->Hn * comoving->Hn;
+    double H2_acc = -comoving->Hn * comoving->Hn;
     for(int i = 0; i < 3; ++i) {
-      H2_ld += (long double)comoving->HD[i] * comoving->HU[i];
+      H2_acc += comoving->HD[i] * comoving->HU[i];
     }
-    const double H2 = (double)H2_ld;
-    const double scale = ghl_m1_max(comoving->J * comoving->J, fabs(H2));
+    const double H2 = H2_acc;
+    const double scale = fmax(comoving->J * comoving->J, fabs(H2));
     const double tolerance = 1024.0 * DBL_EPSILON * scale;
     /* The bounded J range and finite H2 imply a finite, positive scale. */
     if(!isfinite(H2) || H2 < -tolerance) {
       return ghl_error_m1_invalid_state;
     }
-    xi = sqrt(ghl_m1_max(H2, 0.0)) / comoving->J;
+    xi = sqrt(fmax(H2, 0.0)) / comoving->J;
   }
   else {
     /* The fallback uses the same homogeneous normalization as the primary
      * residual, avoiding J^2 underflow or overflow in its admissibility check. */
     const double Hn_over_J = comoving->Hn / comoving->J;
-    long double H2_scaled_ld = -(long double)Hn_over_J * Hn_over_J;
+    double H2_scaled_acc = -Hn_over_J * Hn_over_J;
     for(int i = 0; i < 3; ++i) {
       const double HD_over_J = comoving->HD[i] / comoving->J;
       const double HU_over_J = comoving->HU[i] / comoving->J;
-      H2_scaled_ld += (long double)HD_over_J * HU_over_J;
+      H2_scaled_acc += HD_over_J * HU_over_J;
     }
-    const double H2_scaled = (double)H2_scaled_ld;
-    const double scale = ghl_m1_max(1.0, fabs(H2_scaled));
+    const double H2_scaled = H2_scaled_acc;
+    const double scale = fmax(1.0, fabs(H2_scaled));
     const double tolerance = 1024.0 * DBL_EPSILON * scale;
     /* Once H2_scaled is finite, max(1,abs(H2_scaled)) is finite and positive. */
     if(!isfinite(Hn_over_J) || !isfinite(H2_scaled) || H2_scaled < -tolerance) {
       return ghl_error_m1_invalid_state;
     }
-    xi = sqrt(ghl_m1_max(H2_scaled, 0.0));
+    xi = sqrt(fmax(H2_scaled, 0.0));
   }
   /* The two guarded square-root paths produce a finite xi: ordinary J is at
    * least sqrt(DBL_MIN), while scaled xi is the square root of finite H2. */
@@ -734,7 +631,7 @@ ghl_error_codes_t ghl_m1_closure_private_finalize_fallback(
 
   /* Keep failed fallback construction transactional for the public caller. */
   ghl_m1_closure result = *candidate;
-  result.xi = ghl_m1_min(xi, 1.0);
+  result.xi = fmin(xi, 1.0);
   *closure = result;
   return ghl_success;
 }
@@ -770,7 +667,6 @@ ghl_error_codes_t ghl_m1_closure_private_check_residual_gate(
       const double normalized_residual,
       const double residual_tolerance) {
   if(normalized_residual > residual_tolerance) {
-    record_closure_failure_stage(ghl_m1_closure_failure_residual_gate);
     return ghl_error_m1_closure_residual_too_large;
   }
   return ghl_success;
@@ -803,14 +699,7 @@ static ghl_error_codes_t publish_minerbo(
   }
   error = ghl_m1_validate_closure_tensor_psd(ws->metric, &candidate);
   if(error != ghl_success) {
-    ghl_m1_record_closure_validation_failure(ghl_m1_closure_validation_psd);
-    error = publish_eulerian_minerbo_fallback(m1_params, ws, closure);
-    if(error == ghl_success) {
-      increment_counter(ghl_m1_counter_admissibility_fallback_psd);
-      return ghl_success;
-    }
-    record_closure_failure_stage(ghl_m1_closure_failure_tensor_validation);
-    return error;
+    return publish_eulerian_minerbo_fallback(m1_params, ws, closure);
   }
   error = ghl_m1_validate_closure_tensor(ws->metric, ws->rad_state, &candidate);
   if(error != ghl_success) {
@@ -823,11 +712,9 @@ static ghl_error_codes_t publish_minerbo(
        && ws->rad_state->F[2] == 0.0) {
       error = publish_eulerian_minerbo_fallback(m1_params, ws, closure);
       if(error == ghl_success) {
-        increment_counter(ghl_m1_counter_admissibility_fallback_zero_flux);
         return ghl_success;
       }
     }
-    record_closure_failure_stage(ghl_m1_closure_failure_tensor_validation);
     return error;
   }
   *closure = candidate;
@@ -842,12 +729,10 @@ ghl_error_codes_t ghl_m1_closure_private_solve_root(
   ghl_m1_closure_evaluation evaluation0, evaluation1;
   ghl_error_codes_t error = evaluate(context, 0.0, &evaluation0);
   if(error != ghl_success) {
-    increment_counter(ghl_m1_counter_invalid_state);
     return error;
   }
   error = evaluate(context, 1.0, &evaluation1);
   if(error != ghl_success) {
-    increment_counter(ghl_m1_counter_invalid_state);
     return error;
   }
 
@@ -935,7 +820,7 @@ ghl_error_codes_t ghl_m1_closure_private_solve_root(
           p = -p;
         }
         const double accept_bound = 3.0 * midpoint * q - fabs(tol * q);
-        const double interpolation_bound = ghl_m1_min(accept_bound, fabs(e * q));
+        const double interpolation_bound = fmin(accept_bound, fabs(e * q));
         /* q == 0 makes the bound zero; nonnegative 2*p already rejects it. */
         if(2.0 * p < interpolation_bound) {
           e = d;
@@ -953,11 +838,18 @@ ghl_error_codes_t ghl_m1_closure_private_solve_root(
       a = b;
       fa = fb;
       evaluation_a = evaluation_b;
-      b += fabs(d) > tol ? d : copysign(tol, midpoint);
+      /* Splitting the ternary keeps the branch record honest: both arms add
+       * to b in the same order, and the optimized merged ternary edges are
+       * not separately executable. */
+      if(fabs(d) > tol) {
+        b += d;
+      }
+      else {
+        b += copysign(tol, midpoint);
+      }
       ghl_m1_closure_evaluation next_evaluation;
       error = evaluate(context, b, &next_evaluation);
       if(error != ghl_success) {
-        increment_counter(ghl_m1_counter_invalid_state);
         return error;
       }
       evaluation_b = next_evaluation;
@@ -985,27 +877,20 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
       const ghl_metric_quantities *restrict metric,
       const ghl_primitive_quantities *restrict prims,
       const ghl_m1_rad_state *restrict rad_state,
-      ghl_m1_closure *restrict closure,
-      const bool configuration_validated) {
+      ghl_m1_closure *restrict closure) {
   if(m1_params == NULL || metric == NULL || prims == NULL || rad_state == NULL
      || closure == NULL) {
     return ghl_error_m1_null_pointer;
   }
-  __atomic_store_n(&closure_failure_snapshot, 0ULL, __ATOMIC_SEQ_CST);
-  ghl_error_codes_t error = configuration_validated
-                                  ? ghl_m1_validate_realizability_state(
-                                          m1_params, metric, rad_state, 128.0, NULL)
-                                  : ghl_m1_validate_realizability(
-                                          m1_params, metric, rad_state, 128.0, NULL);
+  ghl_error_codes_t error
+        = ghl_m1_validate_realizability_state(m1_params, metric, rad_state, 128.0, NULL);
   if(error != ghl_success) {
-    increment_counter(ghl_m1_counter_invalid_state);
     return error;
   }
 
   minerbo_workspace ws;
   error = build_minerbo_workspace(metric, prims, rad_state, &ws);
   if(error != ghl_success) {
-    increment_counter(ghl_m1_counter_invalid_state);
     return error;
   }
 
@@ -1020,39 +905,19 @@ static ghl_error_codes_t ghl_m1_compute_closure_minerbo_internal(
         m1_params, &ws, &root.evaluation, root.iterations, root.status,
         m1_params->closure_root_residual_tolerance, closure);
   if(error != ghl_success) {
-    if(root.status == ghl_m1_closure_solve_endpoint_fallback) {
-      increment_counter(ghl_m1_counter_endpoint_fallback);
-    }
-    else if(root.status == ghl_m1_closure_solve_iteration_exhausted) {
-      increment_counter(ghl_m1_counter_iteration_exhaustion);
-    }
-    if(error == ghl_error_m1_closure_residual_too_large) {
-      increment_counter(ghl_m1_counter_residual_rejection);
-      return error;
-    }
-    increment_counter(ghl_m1_counter_invalid_state);
     return error;
-  }
-  if(closure->solve_status == ghl_m1_closure_solve_converged) {
-    increment_counter(ghl_m1_counter_ordinary_convergence);
-  }
-  else if(closure->solve_status == ghl_m1_closure_solve_endpoint_fallback) {
-    increment_counter(ghl_m1_counter_endpoint_fallback);
-  }
-  else {
-    increment_counter(ghl_m1_counter_iteration_exhaustion);
   }
   return ghl_success;
 }
 
-ghl_error_codes_t ghl_m1_compute_closure_minerbo(
+ghl_error_codes_t ghl_m1_compute_closure_with_primitives(
       const ghl_m1_parameters *restrict m1_params,
       const ghl_metric_quantities *restrict metric,
       const ghl_primitive_quantities *restrict prims,
       const ghl_m1_rad_state *restrict rad_state,
       ghl_m1_closure *restrict closure) {
   return ghl_m1_compute_closure_minerbo_internal(
-        m1_params, metric, prims, rad_state, closure, false);
+        m1_params, metric, prims, rad_state, closure);
 }
 
 ghl_error_codes_t ghl_m1_compute_closure_minerbo_validated(
@@ -1062,14 +927,5 @@ ghl_error_codes_t ghl_m1_compute_closure_minerbo_validated(
       const ghl_m1_rad_state *restrict rad_state,
       ghl_m1_closure *restrict closure) {
   return ghl_m1_compute_closure_minerbo_internal(
-        m1_params, metric, prims, rad_state, closure, true);
-}
-
-ghl_error_codes_t ghl_m1_compute_closure_with_primitives(
-      const ghl_m1_parameters *restrict m1_params,
-      const ghl_metric_quantities *restrict metric,
-      const ghl_primitive_quantities *restrict prims,
-      const ghl_m1_rad_state *restrict rad_state,
-      ghl_m1_closure *restrict closure) {
-  return ghl_m1_compute_closure_minerbo(m1_params, metric, prims, rad_state, closure);
+        m1_params, metric, prims, rad_state, closure);
 }

@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "../GRHayL/Radiation/ghl_m1_utils.h"
+#include "m1_helpers/m1_thcm1_fixture_utils.h"
 #include "m1_test_utils.h"
-#include "m1_thcm1_fixture_utils.h"
 
 /*
  * Direct property and boundary coverage for the optional M1 diffusion
@@ -186,13 +186,6 @@ static void check_diffusion_transport_boundaries(
     fail_test("raw light-cone speed boundary was not rejected");
   }
   ghl_metric_quantities invalid_metric = *metric;
-  invalid_metric.gammaDD[0][0] = -1.0;
-  if(ghl_m1_compute_raw_lightcone_speeds(
-           &invalid_metric, ghl_m1_dirn0, &raw_minus, &raw_plus)
-     != ghl_error_m1_invalid_metric) {
-    fail_test("non-SPD raw-speed metric was accepted");
-  }
-  invalid_metric = *metric;
   invalid_metric.lapse = NAN;
   if(ghl_m1_compute_raw_lightcone_speeds(
            &invalid_metric, ghl_m1_dirn0, &raw_minus, &raw_plus)
@@ -318,17 +311,6 @@ static void check_diffusion_transport_boundaries(
            != ghl_error_m1_invalid_state
      || corrected != 61.0 || a_face != 62.0) {
     fail_test("invalid diffusion direction changed outputs");
-  }
-  invalid_metric = *metric;
-  invalid_metric.gammaDD[0][0] = -1.0;
-  corrected = 63.0;
-  a_face = 64.0;
-  if(ghl_m1_compute_diffusion_flux(
-           params, &invalid_metric, ghl_m1_dirn0, 0.4, 0.1, 1.0, true, 1.0, true, grad,
-           valid_W, V, 1.0, 0.2, 1.0, &corrected, &a_face)
-           != ghl_error_m1_invalid_metric
-     || corrected != 63.0 || a_face != 64.0) {
-    fail_test("invalid diffusion metric changed outputs");
   }
   corrected = 81.0;
   a_face = 82.0;
@@ -669,8 +651,8 @@ static void check_jthick_thcm1_fixtures(
 }
 
 int main(int argc, char **argv) {
-  const char *jthick_fixture_path = "Unit_Tests/data/jthick_thcm1.fixture";
-  if(argc == 3 && strcmp(argv[1], "--fixture") == 0) {
+  const char *jthick_fixture_path = NULL;
+  if(argc == 3 && strcmp(argv[1], "--fixture") == 0 && argv[2][0] != '\0') {
     jthick_fixture_path = argv[2];
   }
   else if(argc != 1) {
@@ -823,6 +805,18 @@ int main(int argc, char **argv) {
      || corrected != 0.42 || a_face != 1.0) {
     fail_test("invalid face velocity did not take the documented no-op path");
   }
+  /* An indefinite face metric makes the quadratic contraction negative, so
+   * the velocity gate must reject the negative-norm arm. */
+  ghl_metric_quantities indefinite_metric = flat_metric;
+  indefinite_metric.gammaDD[0][0] = -1.0;
+  indefinite_metric.gammaUU[0][0] = -1.0;
+  if(ghl_m1_compute_diffusion_flux(
+           &params, &indefinite_metric, ghl_m1_dirn0, 0.42, 1.0, 0.8, true, 0.9, true,
+           grad, 1.0, invalid_V, 1.0, 0.2, 1.0, &corrected, &a_face)
+           != ghl_success
+     || corrected != 0.42 || a_face != 1.0) {
+    fail_test("indefinite face metric did not take the no-op path");
+  }
 
   ghl_m1_neutrino_rates rates = { 0 };
   rates.kappa_tr = 0.5;
@@ -845,14 +839,17 @@ int main(int argc, char **argv) {
 
   check_diffusion_transport_boundaries(
         &params, &flat_metric, &static_prims, &static_state);
-  ghl_m1_parameters fixture_params = { 0 };
-  if(ghl_m1_initialize(
-           1.0e-10, 1.0e-12, 1.0e-8, 1.0e-6, 1.0e-12, 20, 1.0e-10, &fixture_params)
-     != ghl_success) {
-    fail_test("Jthick fixture parameters failed to initialize");
+  if(jthick_fixture_path != NULL) {
+    ghl_m1_parameters fixture_params = { 0 };
+    if(ghl_m1_initialize(
+             1.0e-10, 1.0e-12, 1.0e-8, 1.0e-6, 1.0e-12, 20, 1.0e-10, &fixture_params)
+       != ghl_success) {
+      fail_test("Jthick fixture parameters failed to initialize");
+    }
+    check_jthick_thcm1_fixtures(&fixture_params, jthick_fixture_path);
   }
-  check_jthick_thcm1_fixtures(&fixture_params, jthick_fixture_path);
 
-  ghl_info("unit_test_m1_diffusion_flux: Jthick/harmonic/diffusion cases passed\n");
+  ghl_info(
+        "unit_test_m1_diffusion_flux: local Jthick/harmonic/diffusion checks passed\n");
   return 0;
 }
