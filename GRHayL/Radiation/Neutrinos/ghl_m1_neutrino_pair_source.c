@@ -116,20 +116,14 @@ static ghl_error_codes_t ghl_m1_pair_number_extent(
    * positive and B is finite nonnegative. If scale == B, b_scaled == 1;
    * otherwise scale == sqrt(C), and (C/scale)/scale is near one, including
    * subnormal C. Thus the denominator is >= 1 in either case and
-   * c_over_scale < 2^513, so the numerator and y are finite (< 2^515).
-   * Retain the defensive checks, exempt only these invariant guards. */
-  if(!isfinite(y)) { /* GCOVR_EXCL_BR_LINE */
-    return ghl_error_m1_implicit_admissibility;
-  }
+   * c_over_scale < 2^513, so the numerator and y are finite (< 2^515). */
   const double larger = y + difference;
   /* The difference of two finite nonnegative numbers is <= DBL_MAX.
    * Adding y < 2^515 cannot overflow it under FE_TONEAREST: at the upper
    * end the half-ulp overflow distance is 2^970; away from that end there
    * is still more headroom. No state or rounding-mode mutation occurs
-   * between public rate validation and this private scalar solve. */
-  if(!isfinite(larger)) { /* GCOVR_EXCL_BR_LINE */
-    return ghl_error_m1_implicit_admissibility;
-  }
+   * between public rate validation and this private scalar solve, so
+   * larger is finite. */
   if(N_e <= N_a) {
     new_number[0] = y;
     new_number[1] = larger;

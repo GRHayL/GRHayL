@@ -76,6 +76,13 @@ static void check_neutrino_number_transport_boundaries(
             .number_flux = { 98.0, 99.0, 100.0 },
             .number_transport_velocity = { 101.0, 102.0, 103.0 } };
 
+  const ghl_m1_neutrino_current current_before = current;
+  if(ghl_m1_neutrino_derive_current(m1_params, nu_params, metric, prims, NULL, &current)
+           != ghl_error_m1_null_pointer
+     || memcmp(&current, &current_before, sizeof(current)) != 0) {
+    fail_case("NULL number-current state changed output", 300);
+  }
+
   if(ghl_m1_neutrino_build_current_from_moments(
            NULL, nu_params, &state, &comoving, V_con, 1.0, &current)
            != ghl_error_m1_null_pointer
@@ -587,6 +594,11 @@ static void check_neutrino_rusanov_boundaries(
            number_velocity_R, 0.5, &flux_N, &flux_E, flux_F)
            != ghl_error_m1_invalid_state
      || ghl_m1_compute_neutrino_rusanov_flux(
+              m1_params, nu_params, metric, (ghl_m1_direction_t)-1, &state_L, &state_R,
+              &closure_L, &closure_R, number_flux_L, number_flux_R, number_velocity_L,
+              number_velocity_R, 0.5, &flux_N, &flux_E, flux_F)
+              != ghl_error_m1_invalid_state
+     || ghl_m1_compute_neutrino_rusanov_flux(
               m1_params, nu_params, metric, ghl_m1_dirn0, &state_L, &state_R, &closure_L,
               &closure_R, number_flux_L, number_flux_R, number_velocity_L,
               number_velocity_R, NAN, &flux_N, &flux_E, flux_F)
@@ -597,6 +609,10 @@ static void check_neutrino_rusanov_boundaries(
               number_velocity_R, -1.0, &flux_N, &flux_E, flux_F)
               != ghl_error_m1_invalid_state) {
     fail_case("neutrino Rusanov direction/speed validation failed", 352);
+  }
+  if(flux_N != 131.0 || flux_E != 132.0 || flux_F[0] != 133.0 || flux_F[1] != 134.0
+     || flux_F[2] != 135.0) {
+    fail_case("neutrino Rusanov direction/speed rejection changed outputs", 352);
   }
   /* The face metric guard rejects a nonpositive or nonfinite volume before
    * any state walk. */
@@ -1005,8 +1021,8 @@ int main(int argc, char **argv) {
       fail_case(error[0] != '\0' ? error : "current Rusanov fixture replay failed", -1);
     }
     if(!m1_thcm1_rusanov_check_fixture_regression(
-             fixture_dir, M1_THCM1_RUSANOV_REGRESSION_CORRUPTED_CURRENT,
-             &m1_params, &nu_params, error, sizeof(error))) {
+             fixture_dir, M1_THCM1_RUSANOV_REGRESSION_CORRUPTED_CURRENT, &m1_params,
+             &nu_params, error, sizeof(error))) {
       fail_case(error, -1);
     }
     ghl_info("unit_test_m1_neutrino_rusanov_flux: stored Rusanov replays passed\n");

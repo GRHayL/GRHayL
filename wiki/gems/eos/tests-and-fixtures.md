@@ -51,6 +51,12 @@ Read with [EOS initialization and dispatch](initialization-and-dispatch.md),
   beta-equilibrium rho-map error paths. Key `85` poisons fresh EOS storage
   before NN-enabled table initialization fails on a missing embedded model,
   exercising the early cleanup-owned pointer invariant.
+- [Unit_Tests/unit_test_coverage_eos.c](../../../Unit_Tests/unit_test_coverage_eos.c)
+  checks hybrid pressure-to-piece and pressure-to-density boundaries, creates
+  private synthetic HDF5 tables for malformed-axis and derived-data rejection,
+  exercises sound-speed cleaning and beta-equilibrium edges, and injects
+  GRHayL-owned allocation failures while checking status, cleanup, and output
+  preservation. Its HDF5 cases compile out when HDF5 support is disabled.
 
 The tabulated test directly calls many, but not all, registered wrappers.
 [Tabulated interpolator catalog](tabulated-interpolator-catalog.md) separates
@@ -130,10 +136,8 @@ Dependent tests are impact signals for EOS changes, not primary EOS contracts:
   does not assert `Y_e` or temperature, even though constant Atmosphere copies
   `eos.Y_e_atm` and `eos.T_atm`; the initializers now set both placeholders to
   zero.
-- Existing tests do not directly exercise malformed table dimensions or axes,
-  tabulated final-state finiteness rejection, invalid derived enthalpy rejection,
-  or Con2Prim propagation of tabulated interpolation failures. These remain
-  coverage gaps.
+- Con2Prim propagation of tabulated interpolation failures remains dependent
+  impact coverage rather than a direct EOS contract.
 - Con2Prim tabulated tests route through
   [Con2Prim tests and fixtures](../con2prim/tests-and-fixtures.md).
 - Neutrinos table-backed tests route through

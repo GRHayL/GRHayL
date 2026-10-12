@@ -1,6 +1,9 @@
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 700
 #endif
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+#define _DARWIN_C_SOURCE
+#endif
 
 #include "../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_rate_backend.h"
 #include "../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.h"
@@ -252,20 +255,23 @@ enum {
 /* Match the EOS interpolator's biased cell selection for the midpoint used
  * by the corruption witnesses below. The first cell is not the midpoint
  * cell of an arbitrary external table. No private EOS header is needed. */
-static void provider_midpoint_table_cell(
-      const ghl_eos_parameters *restrict eos, int lower[3]) {
+static void
+provider_midpoint_table_cell(const ghl_eos_parameters *restrict eos, int lower[3]) {
   const double logrho = log(sqrt(eos->table_rho_min * eos->table_rho_max));
   const double logT = log(sqrt(eos->table_T_min * eos->table_T_max));
   const double Ye = 0.5 * (eos->table_Y_e_min + eos->table_Y_e_max);
   lower[0] = ghl_iclamp(
-        1 + (int)((logrho - eos->table_logrho[0] - 1.e-10) * eos->drhoi),
-        1, eos->N_rho - 1) - 1;
+                   1 + (int)((logrho - eos->table_logrho[0] - 1.e-10) * eos->drhoi), 1,
+                   eos->N_rho - 1)
+             - 1;
   lower[1] = ghl_iclamp(
-        1 + (int)((logT - eos->table_logT[0] - 1.e-10) * eos->dtempi),
-        1, eos->N_T - 1) - 1;
+                   1 + (int)((logT - eos->table_logT[0] - 1.e-10) * eos->dtempi), 1,
+                   eos->N_T - 1)
+             - 1;
   lower[2] = ghl_iclamp(
-        1 + (int)((Ye - eos->table_Y_e[0] - 1.e-10) * eos->dyei),
-        1, eos->N_Ye - 1) - 1;
+                   1 + (int)((Ye - eos->table_Y_e[0] - 1.e-10) * eos->dyei), 1,
+                   eos->N_Ye - 1)
+             - 1;
 }
 
 /* Keep malformed-table witnesses in memory only.  Each witness changes the
@@ -3285,12 +3291,15 @@ static void test_production_provider_regressions(void) {
  */
 static bool table_fd_tail_unrepresentable(const double eta) {
   const double zero_rounding_boundary = log(nextafter(0.0, 1.0)) - log(2.0);
-  return isfinite(eta)
-         && eta < nextafter(zero_rounding_boundary, -INFINITY) && exp(eta) == 0.0;
+  return isfinite(eta) && eta < nextafter(zero_rounding_boundary, -INFINITY)
+         && exp(eta) == 0.0;
 }
 
 static const char *table_fd_tail_rejection_reason(
-      const double T, const double muhat, const double mu_e, const int channel_mask) {
+      const double T,
+      const double muhat,
+      const double mu_e,
+      const int channel_mask) {
   if(table_fd_tail_unrepresentable(-fabs((mu_e - muhat) / T))) {
     return "neutrino equilibrium FD exponential underflow";
   }
@@ -3698,13 +3707,15 @@ static void test_table_provider(const char *restrict table_path) {
     tail_cache.rates_valid = false;
     tail_cache.mu_e = tail_case == 0 ? 0.0 : 940.0 * context_prims.temperature;
     tail_cache.muhat = tail_case == 0 ? 818.5536117177104 * context_prims.temperature
-                                    : tail_cache.mu_e;
+                                      : tail_cache.mu_e;
     const ghl_neutrino_rate_provider_cache tail_cache_before = tail_cache;
     require_condition(
           table_fd_tail_rejection_reason(
                 context_prims.temperature, tail_cache.muhat, tail_cache.mu_e,
-                provider.channel_mask) != NULL,
-          "cached FD tail fixture lacks an independent rejection proof", 3062 + tail_case);
+                provider.channel_mask)
+                != NULL,
+          "cached FD tail fixture lacks an independent rejection proof",
+          3062 + tail_case);
     ghl_m1_neutrino_rates tail_rates[ghl_m1_neutrino_species_count];
     initialize_sentinel_rates(tail_rates);
     ghl_m1_neutrino_rates tail_rates_before[ghl_m1_neutrino_species_count];
@@ -3712,7 +3723,8 @@ static void test_table_provider(const char *restrict table_path) {
     ghl_neutrino_rate_provider_diagnostics tail_diagnostics = { 0 };
     require_error(
           ghl_neutrino_rate_provider_compute_cell(
-                &provider, &tail_cache, &tail_diagnostics, &eos, &context_prims, tail_rates),
+                &provider, &tail_cache, &tail_diagnostics, &eos, &context_prims,
+                tail_rates),
           ghl_error_m1_microphysics_failure, "cached required FD tail rejection",
           3062 + tail_case);
     require_condition(
@@ -3742,8 +3754,8 @@ static void test_table_provider(const char *restrict table_path) {
     double muhat, mu_e, mu_p, mu_n, X_n, X_p;
     require_error(
           ghl_tabulated_compute_muhat_mue_mup_mun_Xn_Xp_from_T(
-                &eos, prims.rho, prims.Y_e, prims.temperature, &muhat, &mu_e,
-                &mu_p, &mu_n, &X_n, &X_p),
+                &eos, prims.rho, prims.Y_e, prims.temperature, &muhat, &mu_e, &mu_p,
+                &mu_n, &X_n, &X_p),
           ghl_success, "random table classifier thermodynamics", 3001 + case_index);
     const double negative_eta = -fabs((mu_e - muhat) / prims.temperature);
     const char *const rejection_reason = table_fd_tail_rejection_reason(
@@ -3757,10 +3769,10 @@ static void test_table_provider(const char *restrict table_path) {
     const ghl_error_codes_t error = ghl_neutrino_rate_provider_compute_cell(
           &provider, &cache, &diagnostics, &eos, &prims, rates);
     if(error != (expected_rejection ? ghl_error_m1_microphysics_failure : ghl_success)) {
-      fprintf(stderr,
-              "Table sample %d: rho=%.17g T=%.17g Ye=%.17g eta_tail=%.17g (%s)\n",
-              case_index, prims.rho, prims.temperature, prims.Y_e, negative_eta,
-              expected_rejection ? rejection_reason : "no rejection proof");
+      fprintf(
+            stderr, "Table sample %d: rho=%.17g T=%.17g Ye=%.17g eta_tail=%.17g (%s)\n",
+            case_index, prims.rho, prims.temperature, prims.Y_e, negative_eta,
+            expected_rejection ? rejection_reason : "no rejection proof");
     }
     require_error(
           error, expected_rejection ? ghl_error_m1_microphysics_failure : ghl_success,

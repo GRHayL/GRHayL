@@ -386,15 +386,17 @@ The other `radiation-m1` jobs are plain test runs without a coverage upload.
 Legacy jobs retain the shared coverage action's existing collection and upload
 discovery, without M1-specific exclusions or gates.
 
-The action's Radiation gate uses the `GRHayL/Radiation/` source filter,
-recursively including `Neutrinos/` and executable private headers, and
-requires 100% executable lines; branch coverage is reported without a gate.
+The action's gates use the report scope: `GRHayL/Radiation/`, recursively
+including `Neutrinos/` and executable private headers, plus `ghl_m1.h` and
+`abort_if_error.c`. Both executable-line and branch coverage must reach 100%.
 Branch coverage resolves partial line coverage; this is not MC/DC or path
 coverage. Functions are reported as supporting evidence without another gate.
-Public inline helpers and Core error mappings are supplemental evidence and do
-not inflate the Radiation denominator. An excluded arm is not an executed arm:
-a passing gate that relies on an exclusion requires an independently checked
-reachability or compiler-accounting proof for that exemption.
+Public inline helpers and Core error mappings are included in the report gates
+and remain separate from the Radiation component denominator. Executable
+Radiation lines and branches are included without coverage exclusions.
+Redundant checks whose failure arms cannot occur after input validation are
+omitted; the source comments retain the invariant reasoning. Reachable
+numerical range failures remain checked and exercised by the tests.
 
 The fixture-integration contract for the `radiation-m1` CI jobs is
 owned by the CI files: the `run_m1` action replays the

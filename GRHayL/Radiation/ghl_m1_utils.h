@@ -256,7 +256,9 @@ static inline ghl_error_codes_t ghl_m1_scaled_vector_norm(
 static inline ghl_error_codes_t
 ghl_m1_validate_direction(const ghl_m1_direction_t direction) {
 
-  if(direction < ghl_m1_dirn0 || direction > ghl_m1_dirn2) {
+  /* The directions are contiguous from zero. Unsigned comparison also
+   * rejects negative casts, regardless of the enum's underlying signedness. */
+  if((unsigned)direction > (unsigned)ghl_m1_dirn2) {
     return ghl_error_m1_invalid_state;
   }
 

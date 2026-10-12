@@ -14,6 +14,18 @@ invocation for the debug binary is visible.
 
 Core/chalice test selection, fixture naming, helper-only files, and weak
 coverage notes route through [Core tests and fixtures](core/tests-and-fixtures.md).
+
+The aggregate runner also executes fixture-independent boundary checks in
+[`unit_test_coverage_core.c`](../Unit_Tests/unit_test_coverage_core.c),
+[`unit_test_coverage_eos.c`](../Unit_Tests/unit_test_coverage_eos.c),
+[`unit_test_coverage_con2prim.c`](../Unit_Tests/unit_test_coverage_con2prim.c),
+[`unit_test_coverage_flux_reconstruction.c`](../Unit_Tests/unit_test_coverage_flux_reconstruction.c),
+and [`unit_test_coverage_leakage.c`](../Unit_Tests/unit_test_coverage_leakage.c).
+These assert analytic stress-energy values, initializer and fatal-error
+contracts, root-finding endpoints, rejected wave-speed output preservation,
+hybrid and tabulated EOS boundaries and allocation failures, reconstruction
+boundaries, and leakage input/output validation. They are not
+part of the scoped `m1` runner.
 Con2Prim-specific test selection, fixture names, HDF5 gates, and debug-test
 caveats route through [Con2Prim tests and fixtures](gems/con2prim/tests-and-fixtures.md).
 EOS-specific direct tests, helper-only files, sample table roles, generated

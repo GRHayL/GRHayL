@@ -38,6 +38,10 @@ Ground truth:
 - `GRHayL/include/ghl_nrpyleakage.h`
 - `GRHayL/include/ghl_radiation.h`
 
+`Unit_Tests/unit_test_coverage_leakage.c` adds fixture-independent boundary
+checks for rejected beta moments, logarithmic populations, and blocking
+outputs. It runs through the aggregate runner with or without HDF5.
+
 ## Fixture Pairs
 
 Fixture names are hard-coded by each test and are downloaded by

@@ -1,4 +1,10 @@
+/* Expose Linux RTLD_NEXT and Darwin mkdtemp before any system headers. */
 #define _POSIX_C_SOURCE 200809L
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#elif defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+#define _DARWIN_C_SOURCE
+#endif
 #include "../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_implicit.h"
 #include "../GRHayL/Radiation/ghl_m1_utils.h"
 #include "ghl_m1.h"
@@ -218,7 +224,13 @@ static void check_fatal_error_case(const fatal_error_case *restrict error_case) 
   }
 }
 
-static void check_success_returns(void) { ghl_abort_if_error(ghl_success); }
+static void check_nonfatal_codes_return(void) {
+  ghl_abort_if_error(ghl_success);
+  /* Unknown codes retain the original switch's no-op behavior. Exercise both
+   * sides of the diagnostic table's index range without indexing outside it. */
+  ghl_abort_if_error((ghl_error_codes_t)-1);
+  ghl_abort_if_error((ghl_error_codes_t)(ghl_error_m1_source_double_application + 1));
+}
 
 static void check_nearly_equal_rejects_nonfinite(void) {
   if(m1_nearly_equal(INFINITY, 1.0, 1.0e-12, 1.0e-13)
@@ -398,7 +410,8 @@ static int load_synthetic_fixture(
                      "baseline_reference_status %d\nperturbed_reference_status 0\n"
                      "record_end\n",
                      test_case->case_ids != NULL ? test_case->case_ids[i] : "synthetic",
-                     test_case->pair_ids != NULL ? test_case->pair_ids[i] : "synthetic-pair",
+                     test_case->pair_ids != NULL ? test_case->pair_ids[i]
+                                                 : "synthetic-pair",
                      test_case->baseline_input, test_case->perturbed_input,
                      test_case->baseline_output, test_case->perturbed_output,
                      test_case->normalization, test_case->available,
@@ -2530,6 +2543,97 @@ static void check_private_scalar_helpers_and_diagnostic_clamp(void) {
         ghl_error_m1_invalid_state, "materially unrealizable flux was accepted");
 }
 
+/* Exercise the private implicit-solve diagnostics initializer: its NULL
+ * early return must leave nothing to write, and a non-NULL call must reset a
+ * dirty payload to its published defaults. */
+static void check_initialize_implicit_solve_diagnostics(void) {
+  ghl_m1_implicit_solve_diagnostics diagnostics = { .newton_iterations = -17,
+                                                    .line_search_backtracks = 19,
+                                                    .fallback_substeps = -23,
+                                                    .used_fallback_substepping = true,
+                                                    .residual_max_norm = -29.0,
+                                                    .residual_scaled_norm = -31.0,
+                                                    .solution_path_flags = 0xdeadbeefu };
+
+  ghl_m1_initialize_implicit_solve_diagnostics(NULL);
+  ghl_m1_initialize_implicit_solve_diagnostics(&diagnostics);
+
+  if(diagnostics.fallback_substeps != 1 || diagnostics.residual_max_norm != INFINITY
+     || diagnostics.residual_scaled_norm != INFINITY) {
+    fail_test("implicit-solve initializer did not reset the documented fields");
+  }
+  if(diagnostics.newton_iterations != 0 || diagnostics.line_search_backtracks != 0
+     || diagnostics.used_fallback_substepping != false
+     || diagnostics.solution_path_flags != 0u) {
+    fail_test("implicit-solve initializer did not zero the remaining fields");
+  }
+}
+
+/* Exercise diagnostics that accept an iteration-exhausted closure and the
+ * neutrino repair that publishes no diagnostics payload. */
+static void check_diagnostics_exhausted_and_repair_noop_diagnostics(void) {
+  ghl_m1_parameters params;
+  require_error_code(
+        ghl_m1_initialize(1e-12, 1e-12, 1e-8, 1e-6, 1e-12, 20, 1e-10, &params),
+        ghl_success, "diagnostics-exhausted parameters rejected");
+  ghl_metric_quantities metric;
+  m1_setup_flat_metric(&metric);
+  ghl_m1_rad_state rad = { .E = 1.0, .F = { 0.4, 0.0, 0.0 } };
+  ghl_primitive_quantities prims = { .u0 = 1.0 };
+  ghl_m1_closure closure = { 0 };
+  require_error_code(
+        ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, &rad, &closure),
+        ghl_success, "diagnostics-exhausted closure failed");
+  closure.solve_status = ghl_m1_closure_solve_iteration_exhausted;
+
+  ghl_m1_diagnostics diagnostics = { .r = -1.0,
+                                     .closure_xi = -2.0,
+                                     .closure_root_residual = -3.0,
+                                     .closure_root_iterations = -4,
+                                     .closure_solve_status = -5,
+                                     .chi_eddington = -6.0,
+                                     .realizability_repaired = true,
+                                     .Jthick = -7.0,
+                                     .Jthick_is_valid = true };
+  require_error_code(
+        ghl_m1_compute_diagnostics(&params, &metric, &rad, &closure, &diagnostics),
+        ghl_success, "diagnostics rejected an iteration-exhausted closure");
+  if(diagnostics.closure_solve_status != ghl_m1_closure_solve_iteration_exhausted
+     || !isfinite(diagnostics.r) || diagnostics.r < 0.0 || diagnostics.r > 1.0
+     || !isfinite(diagnostics.closure_root_residual)
+     || diagnostics.closure_root_iterations < 0) {
+    fail_test("diagnostics for an iteration-exhausted closure were malformed");
+  }
+
+  const ghl_m1_neutrino_parameters nu = { .N_floor = 0.1, .Gamma_N_floor = 0.5 };
+  const ghl_m1_neutrino_state input_state
+        = { .N = 5.0, .E = 0.5, .F = { 1.0, 0.0, 0.0 } };
+  ghl_m1_neutrino_state state = input_state;
+  require_error_code(
+        ghl_m1_repair_neutrino_state(&params, &nu, &metric, &state, NULL), ghl_success,
+        "neutrino repair rejected a valid state without diagnostics");
+  if(state.N != input_state.N) {
+    fail_test("neutrino repair modified N on the no-diagnostics path");
+  }
+
+  /* Mirror the energy-floor + flux-rescale path of ghl_m1_realizability_repair
+   * on the same rad state and require the two paths to agree exactly. */
+  ghl_m1_rad_state rad_expected
+        = { .E = input_state.E,
+            .F = { input_state.F[0], input_state.F[1], input_state.F[2] } };
+  require_error_code(
+        ghl_m1_realizability_repair(&params, &metric, &rad_expected), ghl_success,
+        "baseline realizability repair rejected a valid rad state");
+  if(state.E != rad_expected.E || state.F[0] != rad_expected.F[0]
+     || state.F[1] != rad_expected.F[1] || state.F[2] != rad_expected.F[2]) {
+    fail_test("no-diagnostics neutrino repair published a different rad state");
+  }
+  if(state.E == input_state.E && state.F[0] == input_state.F[0]
+     && state.F[1] == input_state.F[1] && state.F[2] == input_state.F[2]) {
+    fail_test("neutrino repair did not mutate E/F on a repairable state");
+  }
+}
+
 static void check_source_dispatch_failures(void) {
   ghl_m1_parameters params;
   require_error_code(
@@ -2702,12 +2806,14 @@ int main(void) {
 #endif
   check_psd_congruence_overflow();
   check_source_dispatch_failures();
+  check_initialize_implicit_solve_diagnostics();
+  check_diagnostics_exhausted_and_repair_noop_diagnostics();
   check_private_norm_boundaries();
   check_neutrino_rate_boundaries();
   check_neutrino_lepton_boundaries();
   check_neutrino_repair_boundaries();
   check_private_scalar_helpers_and_diagnostic_clamp();
-  check_success_returns();
+  check_nonfatal_codes_return();
   check_nearly_equal_rejects_nonfinite();
 
   for(size_t index = 0; index < sizeof(m1_error_cases) / sizeof(m1_error_cases[0]);

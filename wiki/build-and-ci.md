@@ -223,8 +223,8 @@ provider input. Only the Ubuntu GCC job adds a coverage step: the
 dedicated [M1 coverage action](../.github/actions/m1-code-coverage/action.yml)
 generates a gcovr Cobertura report filtered to the Radiation sources plus
 `ghl_m1.h` and `abort_if_error.c`; the Rusanov source is included under
-Radiation. It enforces 100% Radiation executable-line coverage, reports branch
-coverage without a branch gate, and uploads only that XML under the `m1` flag,
+Radiation. It enforces 100% executable-line and branch coverage across that
+report scope and uploads only that XML under the `m1` flag,
 with discovery disabled and upload errors fatal. The Radiation Codecov
 component selects that flag, preventing unrelated zero-hit reports from
 diluting its coverage. Other `radiation-m1` jobs are plain test runs; legacy
@@ -254,7 +254,7 @@ Composite actions:
   Action invocation is not proof that a usable coverage artifact was
   collected or uploaded.
 - `.github/actions/m1-code-coverage/action.yml` owns the dedicated GCC Radiation
-  report, executable-line gate, branch report, and explicit `m1` upload. It does
+  report, executable-line and branch gates, and explicit `m1` upload. It does
   not change the shared action's legacy collection behavior.
 - `codecov.yml` at repo root configures Codecov report behavior for those
   uploads, including per-gem coverage components and ignored test paths. Its

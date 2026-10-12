@@ -24,6 +24,8 @@ ghl_error_codes_t ghl_neutrino_rate_provider_initialize_nrpyleakage(
         = ghl_neutrino_rate_channel_charged_current
           | ghl_neutrino_rate_channel_nucleon_scattering | ghl_neutrino_rate_channel_pair
           | ghl_neutrino_rate_channel_bremsstrahlung | ghl_neutrino_rate_channel_plasmon;
+  /* Both policies are contiguous from zero. Unsigned bounds reject negative
+   * casts as well as values above the supported policy range. */
   provider->failure_policy = ghl_neutrino_rate_failure_return_error;
   provider->table_bounds_policy = ghl_neutrino_rate_table_bounds_return_error;
   provider->nu_x_multiplicity = 4.0;
@@ -47,10 +49,10 @@ static ghl_error_codes_t validate_provider_context(
           | ghl_neutrino_rate_channel_bremsstrahlung | ghl_neutrino_rate_channel_plasmon;
   if(!isfinite(provider->nu_x_multiplicity) || provider->nu_x_multiplicity != 4.0
      || (provider->channel_mask & ~valid_channels) != 0
-     || provider->failure_policy < ghl_neutrino_rate_failure_return_error
-     || provider->failure_policy > ghl_neutrino_rate_failure_equilibrium
-     || provider->table_bounds_policy < ghl_neutrino_rate_table_bounds_return_error
-     || provider->table_bounds_policy > ghl_neutrino_rate_table_bounds_clamp
+     || (unsigned)provider->failure_policy
+              > (unsigned)ghl_neutrino_rate_failure_equilibrium
+     || (unsigned)provider->table_bounds_policy
+              > (unsigned)ghl_neutrino_rate_table_bounds_clamp
      || !isfinite(provider->equilibrium_recovery_rate)
      || provider->equilibrium_recovery_rate <= 0.0) {
     return ghl_error_m1_microphysics_failure;

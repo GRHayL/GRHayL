@@ -134,11 +134,11 @@ standard public left-face wrapper contract.
   and orientation. PPM paths are exercised through
   [`Unit_Tests/unit_test_ET_Legacy_reconstruction.c`](../../../Unit_Tests/unit_test_ET_Legacy_reconstruction.c),
   which builds 6-point PPM stencils from `i-3` through `i+2`.
-- Helper coverage: no test directly calls either 5-point PPM helper, any PPM
-  shock/steepening helper, or the 5-point WENOZ helper. PPM helpers are
-  exercised transitively by ET Legacy; WENOZ helper is exercised transitively
-  by its wrapper test. This is coverage evidence, not a promise that each
-  helper contract is independently checked.
+- Helper coverage: `Unit_Tests/unit_test_coverage_flux_reconstruction.c`
+  directly checks maxmod and the PPM shock/steepening helpers. The 5-point PPM
+  face helpers are exercised transitively by ET Legacy; the WENOZ face helper
+  is exercised transitively by its wrapper test. Direct boundary checks do not
+  replace the retained face-orientation replay.
 - Public header users: signature, array-width, or output-orientation changes in
   `ghl_reconstruction.h` are public API changes for downstream users and for
   `GRHayL/include/ghl_unit_tests.h`.

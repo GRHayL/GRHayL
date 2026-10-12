@@ -46,11 +46,7 @@ double ghl_m1_newton_weighted_merit(
   const double energy_scale
         = fmax(fmax(fabs(U[0]), fabs(U_base[0])), energy_floor_tilde);
   /* U[0], U_base[0], and energy_floor_tilde are verified finite above, so
-   * their fmax cannot be nonfinite. Retain the defensive check, exempt only
-   * this invariant guard. */
-  if(!isfinite(energy_scale)) { /* GCOVR_EXCL_BR_LINE */
-    return INFINITY;
-  }
+   * their fmax cannot be nonfinite. */
 
   double merit = 0.0;
   for(int i = 0; i < 4; i++) {

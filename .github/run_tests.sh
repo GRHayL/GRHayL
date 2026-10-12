@@ -166,6 +166,11 @@ if [[ "$suite" == m1 ]]; then
   exit 0
 fi
 
+# Local boundary and failure-injection checks do not require replay fixtures.
+for coverage_test in core eos con2prim flux_reconstruction leakage; do
+  "./test/unit_test_coverage_${coverage_test}"
+done
+
 decompress_bz2() {
   archive="$1"
   uncompressed="${archive%.bz2}"

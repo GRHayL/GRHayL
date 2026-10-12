@@ -36,7 +36,7 @@ ghl_error_codes_t ghl_m1_compute_neutrino_rusanov_flux(
     return ghl_error_m1_null_pointer;
   }
 
-  if(direction < ghl_m1_dirn0 || direction > ghl_m1_dirn2 || !isfinite(speed)
+  if(ghl_m1_validate_direction(direction) != ghl_success || !isfinite(speed)
      || speed < 0.0) {
     return ghl_error_m1_invalid_state;
   }

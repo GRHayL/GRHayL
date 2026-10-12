@@ -45,6 +45,10 @@ Read with the [Reconstruction gem hub](../reconstruction.md).
   left/right face values across three flux directions using
   `ET_Legacy_reconstruction` fixtures.
 - ET Legacy exercises PPM paths; no dedicated `unit_test_PPM_reconstruction.c` or PPM data generator is visible.
+- [Unit_Tests/unit_test_coverage_flux_reconstruction.c](../../../Unit_Tests/unit_test_coverage_flux_reconstruction.c)
+  directly checks maxmod endpoints, PPM shock flattening, constant and sharp
+  contacts, rejected contact inputs, and exceptional normalization scales. It
+  needs no replay fixtures and is executed by the aggregate local runner.
 
 These replay tests use `ghl_pert_test_fail` in an `if` condition and call
 `ghl_error` on mismatch. Numerical comparisons can therefore fail these test

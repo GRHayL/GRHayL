@@ -6886,7 +6886,66 @@ test_transverse_moving_stiff_branches(const ghl_m1_parameters *restrict m1_param
 #include "m1_source_update_fault_injection.h"
 #endif
 
+/* Distinguish a quotient underflow from an underflowed product, and an
+ * underflowed emission from an underflowed absorption in the BE endpoint. */
+static void test_number_underflow_operands(void) {
+  const double true_min = nextafter(0.0, 1.0);
+  double absorption = -1.0;
+  require_condition(
+        ghl_m1_neutrino_absorption_number(1.0, true_min, 2.0, &absorption)
+              && absorption == 0.0,
+        "finite absorption product lost its rounded-zero quotient", 4920);
+
+  ghl_m1_neutrino_parameters nu_params;
+  make_neutrino_parameters(&nu_params);
+  ghl_m1_neutrino_rates rates;
+  make_rates(ghl_m1_neutrino_nue, 1.0, 0.0, 0.0, 0.25, 1.0, 0.0, 0.0, &rates);
+  double endpoint = -1.0;
+  require_error(
+        ghl_m1_update_neutrino_number_backward_euler(
+              &nu_params, &rates, true_min, 1.0, 1.0, &endpoint),
+        ghl_success, "emission-only product underflow", 4921);
+  require_close(endpoint, 1.0, 0.0, 0.0, "rounded emission-underflow endpoint", 4921);
+}
+
+/* Interval convergence and residual acceptance are independent controls.
+ * An accepted iteration-exhausted closure must still report its status. */
+static void test_accepted_exhausted_closure_sources(const ghl_m1_parameters *m1_params) {
+  ghl_m1_parameters params = *m1_params;
+  require_error(
+        ghl_m1_set_closure_solver_controls(1.0e-12, 1, &params), ghl_success,
+        "single-iteration closure controls", 4922);
+  require_error(
+        ghl_m1_set_closure_residual_tolerance(1.0, &params), ghl_success,
+        "independent closure residual allowance", 4922);
+  ghl_metric_quantities metric;
+  ghl_initialize_metric(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, &metric);
+  ghl_primitive_quantities prims;
+  make_primitives(&prims);
+  const ghl_m1_rad_state rad = { .E = 1.0, .F = { 0.3, 0.0, 0.0 } };
+  ghl_m1_closure closure;
+  require_error(
+        ghl_m1_compute_closure_with_primitives(&params, &metric, &prims, &rad, &closure),
+        ghl_success, "accepted exhausted closure", 4922);
+  require_condition(
+        closure.solve_status == ghl_m1_closure_solve_iteration_exhausted,
+        "closure did not reach the accepted exhausted status", 4922);
+  ghl_m1_neutrino_rates rates;
+  make_rates(ghl_m1_neutrino_nux, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, &rates);
+  bool observed = false;
+  ghl_m1_sources sources;
+  require_error(
+        ghl_m1_neutrino_compute_EF_interaction_sources_diagnostics(
+              &params, &metric, &prims, &rad, &rates, &observed, &sources),
+        ghl_success, "exhausted closure source observation", 4922);
+  require_condition(
+        observed && sources.S_E == 0.0 && sources.S[0] == 0.0 && sources.S[1] == 0.0
+              && sources.S[2] == 0.0,
+        "exhausted closure status was lost or changed zero interaction sources", 4922);
+}
+
 int main(void) {
+  test_number_underflow_operands();
   test_arithmetic_failure_contracts();
   test_scaled_helper_boundary_arms();
   test_number_endpoint_validation_contracts();
@@ -6897,6 +6956,7 @@ int main(void) {
     ghl_error("ghl_m1_initialize_with_newton_tolerances returned %d\n", (int)error);
   }
 
+  test_accepted_exhausted_closure_sources(&m1_params);
   test_partial_source_line_boundaries(&m1_params);
   test_branched_nonrepresentable_projected_number(&m1_params);
   test_thin_endpoint_energy_overflow(&m1_params);
