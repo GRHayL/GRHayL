@@ -18,7 +18,7 @@ for EOS function-pointer and parameter setup truth.
 ## Runtime Lifecycle
 
 `GRHayLib.h` is the thorn-facing aggregate header. It includes GRHayL public
-headers and exports two global pointers:
+headers and exports these global pointers:
 
 - `ghl_parameters *ghl_params`
 - `ghl_eos_parameters *ghl_eos`
@@ -52,7 +52,7 @@ Treat successful initialization as a precondition for consumers.
 3. Free `ghl_params`.
 4. Set both globals to `NULL`.
 
-No other owner is visible for these two global allocations in GRHayLib source.
+No other owner is visible for these global allocations in GRHayLib source.
 The schedule skips `GRHayLib_initialize` when `ID_converter_ILGRMHD` is active,
 but still schedules `GRHayLib_terminate`; this repository does not contain that
 thorn or prove who initializes these globals on the skipped path. Safe ownership
@@ -194,11 +194,30 @@ Optional limits:
   Pressure, epsilon, and entropy bounds come from table metadata.
 
 Core rejects some values that `param.ccl` ranges and `GRHayLib_paramcheck`
-still admit: simple or hybrid `rho_b_atm = 0`, `Gamma` or any used
+still admit: simple or hybrid `rho_b_atm = 0`, any used
 `Gamma_ppoly_in` equal to 0 or 1, `Gamma_th = 1`, and nonpositive or
 nonincreasing used `rho_ppoly_in`. Such runs stop at initialization through
 `ghl_abort_if_error`. Aligning the downstream parameter checks needs
-downstream coordination.
+downstream coordination. Simple `Gamma` already has a stricter thorn check:
+`GRHayLib_paramcheck` requires it to be finite and greater than `1`.
+
+## Parameter Steering Boundary
+
+`param.ccl` marks selected parameters `STEERABLE=RECOVER`, including solver
+choices, bounds, temperature/guess controls, table path, and PPM controls.
+`GRHayLib_initialize` uses these values to populate `ghl_params` and
+initialize `ghl_eos`; the local schedule supplies no later refresh hook. A change to a Cactus
+parameter is therefore not automatically propagated into these structs.
+Recovery-time ordering requires downstream verification. Re-running
+`GRHayLib_initialize` is not a refresh operation: it overwrites the global
+allocation pointers without first releasing their live allocations.
+See the [ThornGuide steering discussion](../../../implementations/GRHayLib/doc/documentation.tex).
+
+Downstream code that changes stored values must maintain derived fields and
+ownership. In particular, tabulated reinitialization requires releasing the
+owned table/NN allocations first, and EOS dispatch is global state; follow
+the [EOS lifecycle](../../gems/eos/initialization-and-dispatch.md) rather than
+treating a parameter assignment as a complete EOS update.
 
 ## Con2Prim Routing
 

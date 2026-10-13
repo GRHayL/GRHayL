@@ -1,7 +1,7 @@
 # GRHayLib Cactus Build Boundary
 
 Purpose: route Cactus CCL, thorn header, and direct-compile source-list
-questions for `implementations/GRHayLib/`. Use this page for GRHayLib thorn
+questions for [implementations/GRHayLib/](../../../implementations/GRHayLib). Use this page for GRHayLib thorn
 build/interface boundaries; route upstream library build behavior through
 [Build And CI](../../build-and-ci.md), generated-output questions through
 [Generated Boundaries](../../generated-boundaries.md), and public header impact
@@ -13,7 +13,7 @@ Sibling routes: [GRHayLib overview](../grhaylib.md),
 
 ## CCL Boundary
 
-`implementations/GRHayLib/configuration.ccl` is the Cactus configuration
+[implementations/GRHayLib/configuration.ccl](../../../implementations/GRHayLib/configuration.ccl) is the Cactus configuration
 boundary for this thorn. Local source states:
 
 - `PROVIDES GRHayL`
@@ -21,21 +21,21 @@ boundary for this thorn. Local source states:
 
 That `requires HDF5` line is a hard GRHayLib thorn requirement in this local
 implementation. Keep it separate from core GRHayL configured builds: root
-`README.md`, `docs/raw/mainpage.md`, and `wiki/build-and-ci.md` describe core
+`README.md`, [docs/raw/mainpage.md](../../../docs/raw/mainpage.md), and [wiki/build-and-ci.md](../../build-and-ci.md) describe core
 GRHayL `--disable-hdf5` support through `configure`, with source/test filtering
 and `GHL_DISABLE_HDF5`. The Cactus thorn file does not expose that no-HDF5
 configuration path.
 
-`implementations/GRHayLib/interface.ccl` is the Cactus interface boundary.
+[implementations/GRHayLib/interface.ccl](../../../implementations/GRHayLib/interface.ccl) is the Cactus interface boundary.
 Local source states:
 
 - `implements: GRHayLib`
 - `INCLUDE HEADER: GRHayLib.h in GRHayLib.h`
 
 Treat the included `GRHayLib.h` as the public Cactus-facing aggregate header,
-not as a replacement for upstream module ownership in `GRHayL/include/`.
+not as a replacement for upstream module ownership in [GRHayL/include/](../../../GRHayL/include).
 
-`implementations/GRHayLib/schedule.ccl` is the Cactus lifecycle boundary.
+[implementations/GRHayLib/schedule.ccl](../../../implementations/GRHayLib/schedule.ccl) is the Cactus lifecycle boundary.
 Local source schedules:
 
 - `GRHayLib_initialize` at `CCTK_WRAGH`
@@ -53,7 +53,7 @@ for a real Cactus build or scheduled run.
 
 ## Aggregate Header Boundary
 
-`implementations/GRHayLib/src/GRHayLib.h` aggregates public GRHayL headers for
+[implementations/GRHayLib/src/GRHayLib.h](../../../implementations/GRHayLib/src/GRHayLib.h) aggregates public GRHayL headers for
 the thorn and declares the exported global pointers:
 
 - `ghl_eos_parameters *ghl_eos`
@@ -66,15 +66,16 @@ headers through [Public API Map](../../public-api-map.md); route lifecycle and
 parameter details through [runtime parameter contract](runtime-parameter-contract.md).
 
 Static parity requirement: every header named directly by `GRHayLib.h` must
-exist under `GRHayL/include/` and appear in the upstream install-header
-manifest. `ghl.h` also supplies several transitive Core includes. The tracked
-`implementations/GRHayLib/src/include` symlink points to that upstream header
+exist under `GRHayL/include/` and appear in the upstream
+[install-header manifest](../../../GRHayL/include/make.code.defn).
+`ghl.h` also supplies several transitive Core includes. The tracked
+[implementations/GRHayLib/src/include](../../../implementations/GRHayLib/src/include) symlink points to that upstream header
 tree, so header edits reach the thorn layout directly. Such parity establishes
 path and manifest agreement, not a Cactus compilation.
 
 ## Thorn Source Registry
 
-`implementations/GRHayLib/src/make.code.defn` is the GRHayLib thorn source
+[implementations/GRHayLib/src/make.code.defn](../../../implementations/GRHayLib/src/make.code.defn) is the GRHayLib thorn source
 registry/direct-compile boundary. It lists local `SRCS` as:
 
 - `initialize_and_shutdown.c`
@@ -85,7 +86,7 @@ It also lists `SUBDIRS` for module paths including `Atmosphere`, `Con2Prim`,
 `Reconstruction` variants.
 
 Static registry parity is a directory-level requirement: tracked symlinks under
-`implementations/GRHayLib/src/` expose the upstream module directories and
+[implementations/GRHayLib/src/](../../../implementations/GRHayLib/src) expose the upstream module directories and
 headers named by the thorn. Every listed `SUBDIRS` entry must resolve
 to an upstream directory, and every upstream source-bearing manifest directory
 must be listed; `Con2Prim/Hybrid` is an extra intermediate directory. Parity

@@ -16,7 +16,7 @@ keeps only routing notes and short behavior summaries.
 The simple EOS uses the hybrid implementation path with one ideal-fluid piece.
 `ghl_initialize_simple_eos_functions_and_params` first initializes EOS function
 pointers for `ghl_eos_simple`, then calls `ghl_initialize_simple_eos`
-(`GRHayL/GRHayL_Core/initialize_eos.c`).
+([GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c)).
 
 `ghl_initialize_simple_eos` sets:
 
@@ -41,7 +41,7 @@ pointers for `ghl_eos_hybrid`, then calls `ghl_initialize_hybrid_eos`
 piecewise-polytrope fields:
 
 - `neos`: number of polytropic pieces, bounded by `MAX_EOS_PARAMS` in
-  `GRHayL/include/ghl.h`.
+  [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h).
 - `rho_ppoly`: density breakpoints copied from initializer input.
 - `Gamma_ppoly`: per-piece adiabatic indices copied from initializer input.
 - `K_ppoly`: `K_ppoly[0]` comes from initializer input; later entries are
@@ -67,49 +67,49 @@ for `neos`, `rho_ppoly`, `Gamma_ppoly`, `K_ppoly`, `eps_integ_const`,
 
 - Density index lookup: `NRPyEOS_find_polytropic_index` chooses the piece from
   `rho_ppoly` and returns `0` for one-piece EOSs
-  (`GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index.c`).
+  ([GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index.c)).
 - Pressure index lookup: `NRPyEOS_find_polytropic_index_from_P` chooses the
   piece from `p_ppoly` and returns `0` for one-piece EOSs
-  (`GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index_from_P.c`).
+  ([GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index_from_P.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index_from_P.c)).
 - Piece constants lookup: `NRPyEOS_get_K_and_Gamma` uses the density index to
   return the active `K_ppoly` and `Gamma_ppoly`
-  (`GRHayL/EOS/Hybrid/NRPyEOS_get_K_and_gamma.c`).
+  ([GRHayL/EOS/Hybrid/NRPyEOS_get_K_and_gamma.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_get_K_and_gamma.c)).
 - Continuity constants: `NRPyEOS_set_K_ppoly_and_eps_integ_consts` fills
   `K_ppoly` and `eps_integ_const` entries after the initializer supplies
   `K_ppoly[0]`, `rho_ppoly`, and `Gamma_ppoly`
-  (`GRHayL/EOS/Hybrid/NRPyEOS_set_K_ppoly_and_eps_integ_consts.c`).
+  ([GRHayL/EOS/Hybrid/NRPyEOS_set_K_ppoly_and_eps_integ_consts.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_set_K_ppoly_and_eps_integ_consts.c)).
 - Cold pressure: `NRPyEOS_compute_P_cold` uses the active `K_ppoly` and
   `Gamma_ppoly` for a density
-  (`GRHayL/EOS/Hybrid/NRPyEOS_compute_P_cold.c`).
+  ([GRHayL/EOS/Hybrid/NRPyEOS_compute_P_cold.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_compute_P_cold.c)).
 - Cold pressure and cold energy: `NRPyEOS_compute_P_cold_and_eps_cold` first
   clamps density with `NRPyEOS_hybrid_enforce_bounds__rho`, then uses the
   active piece and `eps_integ_const`
-  (`GRHayL/EOS/Hybrid/NRPyEOS_compute_P_cold_and_eps_cold.c`,
-  `GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c`).
+  ([GRHayL/EOS/Hybrid/NRPyEOS_compute_P_cold_and_eps_cold.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_compute_P_cold_and_eps_cold.c),
+  [GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c)).
 - Thermal pressure role: `NRPyEOS_hybrid_compute_epsilon` computes cold
   pressure/energy first, then uses total pressure minus `P_cold` with
   `Gamma_th` to add the thermal contribution
-  (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_epsilon.c`).
+  ([GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_epsilon.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_epsilon.c)).
 - Entropy helper: `NRPyEOS_compute_entropy_function` selects `Gamma_ppoly` by
   density and returns the hybrid entropy function used by initialization
-  (`GRHayL/EOS/Hybrid/NRPyEOS_compute_entropy_function.c`,
+  ([GRHayL/EOS/Hybrid/NRPyEOS_compute_entropy_function.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_compute_entropy_function.c),
   `GRHayL/GRHayL_Core/initialize_eos.c`).
 - Rho from pressure: `NRPyEOS_hybrid_compute_rho_cold_from_P_cold` selects the
   pressure piece from `p_ppoly`, computes the corresponding cold density, then
   enforces rho bounds. It requires a nonzero `K_ppoly` in the selected piece;
   an identically zero cold-pressure curve has no unique density inverse
-  (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c`).
+  ([GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c)).
 - Rho bounds: `NRPyEOS_hybrid_enforce_bounds__rho` clamps to `rho_min` and
   `rho_max` and reports whether input was already in range
   (`GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c`).
 - Enthalpy dispatch: `NRPyEOS_hybrid_compute_enthalpy_and_cs2` backs
   `ghl_compute_h_and_cs2`. It combines cold pressure, cold energy, thermal
   energy, `Gamma_th`, and the active `Gamma_ppoly` and computes sound speed
-  (`GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_enthalpy_and_cs2.c`,
+  ([GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_enthalpy_and_cs2.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_enthalpy_and_cs2.c),
   `GRHayL/GRHayL_Core/initialize_eos.c`).
 
 `NRPyEOS_initialize_hybrid_functions` wires the public hybrid function pointers
-to these helpers, and `GRHayL/EOS/Hybrid/make.code.defn` lists the compiled
+to these helpers, and [GRHayL/EOS/Hybrid/make.code.defn](../../../GRHayL/EOS/Hybrid/make.code.defn) lists the compiled
 hybrid EOS sources.
 
 Every `ghl_hybrid_*` declaration has a matching storage definition and an
@@ -125,9 +125,13 @@ path.
 
 `NRPyEOS_hybrid_compute_enthalpy_and_cs2` returns `ghl_success` unconditionally
 after algebra using primitive density/pressure and EOS coefficients. It does
-not clamp density, validate finiteness, or clean negative/superluminal `cs2`;
-those are caller/EOS-domain preconditions, distinct from tabulated sound-speed
-cleaning.
+not clamp the primitive density field, validate finiteness, or clean
+negative/superluminal `cs2`. Its cold helper evaluates pressure/energy at a
+bounded local density, while piece selection, thermal terms, and denominators
+use the original primitive density. Callers must supply density in the intended
+EOS domain to avoid this mixed evaluation; these preconditions are distinct
+from tabulated sound-speed cleaning. `NRPyEOS_hybrid_compute_epsilon` likewise
+uses bounded cold values but the original density in its thermal denominator.
 
 ## Preconditions And Breakpoint Extent
 
@@ -151,28 +155,28 @@ extent.
 
 ## Test Coverage
 
-`Unit_Tests/unit_test_piecewise_polytrope.c` directly initializes a four-piece
+[Unit_Tests/unit_test_piecewise_polytrope.c](../../../Unit_Tests/unit_test_piecewise_polytrope.c) directly initializes a four-piece
 hybrid EOS and checks computed `K_ppoly` and `eps_integ_const` entries against
 reference values from the NRPyEOS Python path. This is the direct regression
 route for the `ghl_hybrid_set_K_ppoly_and_eps_integ_consts` function pointer
-(`GRHayL/include/ghl_eos_functions.h`), whose installed implementation is
+([GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h)), whose installed implementation is
 `NRPyEOS_set_K_ppoly_and_eps_integ_consts` from the Helper Map above.
 
 The test checks the initializer return code, all three four-piece pressure
-transitions against independent adjacent-piece formulas, and compact one- and
-two-piece cases with exact transition extents. Invalid `neos`, breakpoint
+transitions against independent adjacent-piece formulas, a one-piece pressure
+sentinel, and a two-piece case with exactly the consumed breakpoint extent. Invalid `neos`, breakpoint
 ordering, and gamma-domain failures remain coverage gaps.
 
-`Unit_Tests/test_compute_h_and_cs2.c` provides a small test helper for
+[Unit_Tests/test_compute_h_and_cs2.c](../../../Unit_Tests/test_compute_h_and_cs2.c) provides a small test helper for
 `ghl_compute_h_and_cs2` call sites; it is not the direct piecewise-polytrope
 constant test.
 
 ## Source-of-truth Paths
 
 - `GRHayL/include/ghl.h`
-- `GRHayL/include/ghl_nrpyeos_hybrid.h`
+- [GRHayL/include/ghl_nrpyeos_hybrid.h](../../../GRHayL/include/ghl_nrpyeos_hybrid.h)
 - `GRHayL/GRHayL_Core/initialize_eos.c`
-- `GRHayL/EOS/Hybrid/NRPyEOS_initialize_hybrid_functions.c`
+- [GRHayL/EOS/Hybrid/NRPyEOS_initialize_hybrid_functions.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_initialize_hybrid_functions.c)
 - `GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index.c`
 - `GRHayL/EOS/Hybrid/NRPyEOS_find_polytropic_index_from_P.c`
 - `GRHayL/EOS/Hybrid/NRPyEOS_get_K_and_gamma.c`
@@ -185,6 +189,6 @@ constant test.
 - `GRHayL/EOS/Hybrid/NRPyEOS_enforce_bounds.c`
 - `GRHayL/EOS/Hybrid/NRPyEOS_hybrid_compute_rho_cold_from_P_cold.c`
 - `GRHayL/EOS/Hybrid/make.code.defn`
-- `docs/raw/EOS.dox`
+- [docs/raw/EOS.dox](../../../docs/raw/EOS.dox)
 - `Unit_Tests/unit_test_piecewise_polytrope.c`
 - `Unit_Tests/test_compute_h_and_cs2.c`

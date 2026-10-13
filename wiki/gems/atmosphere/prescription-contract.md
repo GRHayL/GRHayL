@@ -88,8 +88,8 @@ prescription.
   [GRHayL/Atmosphere/make.code.defn](../../../GRHayL/Atmosphere/make.code.defn),
   so the Atmosphere gem build list does not compile it.
 - It is absent from
-  [docs/raw/Atmosphere.dox](../../../docs/raw/Atmosphere.dox), which says only
-  one prescription is provided and links only the constant-density routine.
+  [docs/raw/Atmosphere.dox](../../../docs/raw/Atmosphere.dox), which
+  documents only the constant-density prescription.
 - No call or unit test references the radial name.
 
 `SRCS` in
@@ -156,9 +156,11 @@ covers tabulated EOS initialization and table behavior, not a direct Atmosphere
 reset call.
 
 [Unit_Tests/unit_test_ET_Legacy_primitives.c](../../../Unit_Tests/unit_test_ET_Legacy_primitives.c)
-calls constant reset in its negative-conservative-density branch. The source
-contains a TODO to validate that reset explicitly, so treat this as indirect
-legacy-path coverage rather than a focused Atmosphere contract test.
+calls constant reset when `cons.rho > 0.0` is false. Exercise of this branch
+depends on the supplied fixtures; the call site alone does not establish reset
+coverage. Generic primitive comparisons follow the branch, and the source
+retains a TODO for explicit reset validation. Treat it as a conditional legacy
+call route rather than a focused Atmosphere contract test.
 
 [Unit_Tests/unit_test_c2p_nn_guess.c](../../../Unit_Tests/unit_test_c2p_nn_guess.c)
 covers the reset's tabulated output indirectly. Its atmosphere-guess check, on

@@ -14,8 +14,8 @@ page; source, raw Doxygen, and tests remain authority.
 - Internal numerics and root-finding:
   [internal numerics and root-finding](con2prim/internal-numerics-and-root-finding.md)
 - Tests, fixtures, and HDF5 caveats: [tests and fixtures](con2prim/tests-and-fixtures.md)
-- Public docs: `docs/raw/Con2Prim.dox`
-- Physics background: `docs/raw/derivation.md`
+- Public docs: [docs/raw/Con2Prim.dox](../../docs/raw/Con2Prim.dox)
+- Physics background: [docs/raw/derivation.md](../../docs/raw/derivation.md)
 
 ## Source Authority
 
@@ -32,7 +32,7 @@ inferring status from any single layer.
 
 ## Public Surface
 
-- Headers: `GRHayL/include/ghl_con2prim.h`, `GRHayL/include/ghl.h`
+- Headers: [GRHayL/include/ghl_con2prim.h](../../GRHayL/include/ghl_con2prim.h), [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h)
 - Drivers: `ghl_con2prim_hybrid_multi_method`,
   `ghl_con2prim_tabulated_multi_method`
 - Selectors: `ghl_con2prim_hybrid_select_method`,
@@ -49,26 +49,27 @@ inferring status from any single layer.
 
 ## Source Inventory
 
-- Shared recovery and helper routines: `GRHayL/Con2Prim/`
-- Hybrid solvers: `GRHayL/Con2Prim/Hybrid/`
-- Tabulated solvers: `GRHayL/Con2Prim/Tabulated/`
+- Shared recovery and helper routines: [GRHayL/Con2Prim/](../../GRHayL/Con2Prim)
+- Hybrid solvers: [GRHayL/Con2Prim/Hybrid/](../../GRHayL/Con2Prim/Hybrid)
+- Tabulated solvers: [GRHayL/Con2Prim/Tabulated/](../../GRHayL/Con2Prim/Tabulated)
 - Tabulated NN primitive guesses:
-  `GRHayL/Con2Prim/Tabulated/neural_network_guess/`
+  [GRHayL/Con2Prim/Tabulated/neural_network_guess/](../../GRHayL/Con2Prim/Tabulated/neural_network_guess)
 - Internal Brent/root helpers, Noble/Palenzuela utilities, Font/Newman helper
   paths, and magnetic/momentum contractions route through
   [internal numerics and root-finding](con2prim/internal-numerics-and-root-finding.md).
 - Build lists: `GRHayL/Con2Prim/**/make.code.defn`
 - Tests and data: `Unit_Tests/unit_test_con2prim_*.c`,
-  `Unit_Tests/unit_test_apply_conservative_limits.c`,
-  `Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`,
-  `Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c`,
-  `.github/run_tests.sh`
+  [Unit_Tests/unit_test_apply_conservative_limits.c](../../Unit_Tests/unit_test_apply_conservative_limits.c),
+  [Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c](../../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c),
+  [Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c](../../Unit_Tests/data_gen/unit_test_data_con2prim_multi_method_hybrid.c),
+  [.github/run_tests.sh](../../.github/run_tests.sh)
 
 ## Key Contracts
 
 - Initialize `ghl_con2prim_diagnostics` with `ghl_initialize_diagnostics`.
 - `n_iter` starts at zero. Font1D reports the total iterations for its current
-  invocation; other solvers retain their documented local counters.
+  invocation; other solvers retain their documented local counters, subject to
+  the [Palenzuela early-return limitation](con2prim/internal-numerics-and-root-finding.md#brent-and-root-helper-route).
   `nn_guess_used` records an attempted tabulated NN retry, not success.
 - Track densitized versus undensitized conservative inputs before calling
   selectors or helpers.

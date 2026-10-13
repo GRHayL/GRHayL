@@ -30,7 +30,7 @@ checked before any output is written.
 ## Checked-In C Kernels
 
 The [root build list](../../../GRHayL/Flux_Source/make.code.defn) compiles the
-source-term and three characteristic-speed kernels. The variant build lists
+source-term and direction-specific characteristic-speed kernels. The variant build lists
 compile three directions each of hybrid, hybrid entropy, tabulated, and
 tabulated entropy HLLE fluxes:
 
@@ -45,7 +45,9 @@ tabulated entropy HLLE fluxes:
 
 `configure --disable-hdf5` still compiles the tabulated HLLE kernels; it
 excludes the table-dependent tests and data generators. The Ubuntu-Clang
-`c2p-failure` no-HDF5 job link-checks their public symbols.
+`c2p-failure` no-HDF5 job uses `nm -D --defined-only` to inspect legacy
+tabulated export names. This is symbol-presence evidence, not a consumer link
+or an explicit check of the matching `_checked` names.
 
 ## Review Changes
 

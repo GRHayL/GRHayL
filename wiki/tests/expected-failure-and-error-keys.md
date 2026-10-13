@@ -18,7 +18,7 @@ Read with [Core tests and fixtures](../core/tests-and-fixtures.md),
 The full runner invokes `$repo_root/test/unit_test_code_error` for keys
 `0..90` from its private `code_error_workdir`.
 Each key is treated as an expected-error case: if the executable exits
-successfully, `.github/run_tests.sh` prints `Failed to fail!` and fails the
+successfully, [.github/run_tests.sh](../../.github/run_tests.sh) prints `Failed to fail!` and fails the
 runner; if the executable exits nonzero, the runner treats that as the expected
 failure and continues.
 

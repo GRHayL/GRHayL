@@ -24,7 +24,8 @@ field-by-field binary specification.
 ## Harness Roles
 
 - Trusted data: expected output read from downloaded TestData fixtures or from
-  generated local output files. Tests compare computed values against this data.
+  generated local output files. Tests compare computed values against this data. “Trusted” identifies the
+  comparison reference, not an independently established physics oracle.
 - Computed data: values produced by the test run from GRHayL routines and test
   helper calls.
 - Perturbed data: comparison bar data, usually `*_output_pert.bin` or
@@ -33,13 +34,16 @@ field-by-field binary specification.
 
 Most replay tests use `ghl_pert_test_fail` or wrapper helpers around it. The
 exact relative-error cutoff, absolute cutoff, custom cutoffs, and per-quantity
-exceptions route to `GRHayL/include/ghl_unit_tests.h` plus the Unit_Tests helper
+exceptions route to [GRHayL/include/ghl_unit_tests.h](../../GRHayL/include/ghl_unit_tests.h) plus the Unit_Tests helper
 source above. Wiki pages should describe roles, not duplicate tolerance logic.
 
 The scalar comparison rejects nonfinite trusted, computed, and perturbed
 values. A nonfinite reference is missing numerical evidence, not a passing
-comparison. Vector wrappers use small absolute roundoff allowances based on
-the trusted vector scale; hybrid density recovery also accounts for Lorentz
+comparison. The conservative momentum wrapper and primitive velocity
+comparisons in `ghl_pert_test_fail_primitives_with_cutoffs` use small absolute
+roundoff allowances based on the trusted vector scale. The basic
+`ghl_pert_test_fail_primitives` uses the scalar comparator componentwise
+without those vector-scale allowances. Hybrid density recovery also accounts for Lorentz
 factor conditioning using input mass and trusted density. These allowances
 do not replace the scalar relative floor or derive expectations from the
 result under test. The stress-energy absolute cutoff applies to the
@@ -47,7 +51,7 @@ difference, not to the computed value alone.
 
 `ghl_unit_tests.h` is a source-tree test-only header and is excluded from the
 installed public header set. Its non-inline helper definitions live under
-`Unit_Tests/`.
+[Unit_Tests/](../../Unit_Tests).
 
 ## Helper-Only Files
 
@@ -61,7 +65,7 @@ generators but are not standalone unit tests:
 | `pert_test_fail_stress_energy.c` | Stress-energy tensor comparison wrapper. | [Core tests and fixtures](../core/tests-and-fixtures.md) |
 | `randomize_metric.c` | Random metric setup used by generators/tests. | [Core tests and fixtures](../core/tests-and-fixtures.md) |
 | `randomize_primitives.c` | Random primitive setup used by generators/tests. | [Con2Prim tests and fixtures](../gems/con2prim/tests-and-fixtures.md) |
-| `test_compute_h_and_cs2.c` | EOS enthalpy/sound-speed check helper. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
+| `test_compute_h_and_cs2.c` | Synthetic enthalpy/sound-speed callback shared by tabulated flux replay and its generator; not an EOS-table oracle. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 | `tabulated_eos_unit_test_helpers.c` | Analytic table quantity helper for tabulated EOS checks. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 | `compute_A_flux_with_B.c` | Induction vector-potential HLL helper using `B`. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
 | `compute_A_flux_with_Btilde.c` | Induction vector-potential HLL helper using `Btilde`. | [Induction tests and fixtures](../gems/induction/tests-and-fixtures.md) |
@@ -80,11 +84,16 @@ handling and routes through [Neutrinos tests and fixtures](../gems/neutrinos/tes
 | Generation modes in tests | Some test binaries generate their own `*_unperturbed.bin` and `*_perturbed.bin` families when invoked with a generation key, then replay when invoked with test key. | [NRPyLeakage harness](../../Unit_Tests/nrpyleakage_main.h), [tabulated Con2Prim test](../../Unit_Tests/unit_test_con2prim_tabulated.c) |
 | Downloaded TestData fixtures | Normal CI/script runs download binary fixtures from `GRHayL/TestData` into the repo root before running tests. | [run_tests.sh](../../.github/run_tests.sh), workflows |
 | Downloaded EOS tables | Scripted runs download large HDF5 tables from `stellarcollapse.org/EOS`; these are test inputs, not generated binary bars. | [run_tests.sh](../../.github/run_tests.sh) |
-| Checked-in sample tables | Reduced/analytic sample table assets live under `Unit_Tests/sample_table/`; they are input assets, not replay output bars. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
+| Checked-in sample tables | Reduced/analytic sample table assets live under [Unit_Tests/sample_table/](../../Unit_Tests/sample_table); they are input assets, not replay output bars. | [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md) |
 
 Downloaded `TestData` fixtures and locally generated fixtures may share names.
-Normal runner behavior uses downloads; generator presence does not mean CI
-regenerates trusted data.
+The runner downloads missing files and reuses existing regular files; see
+[reference selection and reuse](runner-and-generated-artifacts.md#fixture-reference-selection).
+Generator presence does not mean CI regenerates trusted data. Current PLM,
+WENOZ, Flux_Source, and local Induction generators call the same routines or
+helpers as replay, so their outputs provide implementation regression evidence.
+Perturbation bars sample input sensitivity; they do not establish convergence
+or independent physical accuracy.
 
 Likewise, `make datagen` compiles generator executables but does not run them.
 Fixture provenance requires an executed producer command plus the produced

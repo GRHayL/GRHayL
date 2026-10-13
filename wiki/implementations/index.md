@@ -11,7 +11,7 @@ readers to implementation sources and Cactus metadata; they do not replace
 ## Scope
 
 - `implementations/*` is the implementation scope for this router.
-- [GRHayLib](grhaylib.md) is currently the only implementation tree present:
+- [GRHayLib](grhaylib.md) routes the Cactus/Einstein Toolkit implementation:
   [`implementations/GRHayLib/`](../../implementations/GRHayLib/).
 - Direct-compile implementation paths are for infrastructures that compile
   GRHayL code inside their own build system. Normal users usually link against

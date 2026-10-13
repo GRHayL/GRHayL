@@ -6,11 +6,11 @@ Induction computes magnetic-vector-potential flux contributions, gauge terms, an
 
 ## Read First
 
-- `docs/raw/Induction.dox` as read-only evidence for KB work
-- `docs/raw/derivation.md`
-- `GRHayL/include/ghl_induction.h`
-- `wiki/physics/variables-and-conventions.md`
-- `wiki/physics/evolution-equation-map.md`
+- [docs/raw/Induction.dox](../../docs/raw/Induction.dox) as read-only evidence for KB work
+- [docs/raw/derivation.md](../../docs/raw/derivation.md)
+- [GRHayL/include/ghl_induction.h](../../GRHayL/include/ghl_induction.h)
+- [wiki/physics/variables-and-conventions.md](../physics/variables-and-conventions.md)
+- [wiki/physics/evolution-equation-map.md](../physics/evolution-equation-map.md)
 
 ## KB Routes
 
@@ -23,7 +23,7 @@ Induction computes magnetic-vector-potential flux contributions, gauge terms, an
 ## Public Headers
 
 - `GRHayL/include/ghl_induction.h`
-- `GRHayL/include/ghl.h`
+- [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h)
 
 Key public surface:
 - `ghl_HLL_flux_with_B`
@@ -42,28 +42,28 @@ an observed pass.
 
 ## Implementation Paths
 
-- Magnetic HLL flux: `GRHayL/Induction/HLL_flux_with_B.c`, `GRHayL/Induction/HLL_flux_with_Btilde.c`
-- Scalar-potential RHS: `GRHayL/Induction/calculate_phitilde_rhs.c`
-- Interpolators: `GRHayL/Induction/Interpolators/`
-- Build lists: `GRHayL/Induction/make.code.defn`, `GRHayL/Induction/Interpolators/make.code.defn`
+- Magnetic HLL flux: [GRHayL/Induction/HLL_flux_with_B.c](../../GRHayL/Induction/HLL_flux_with_B.c), [GRHayL/Induction/HLL_flux_with_Btilde.c](../../GRHayL/Induction/HLL_flux_with_Btilde.c)
+- Scalar-potential RHS: [GRHayL/Induction/calculate_phitilde_rhs.c](../../GRHayL/Induction/calculate_phitilde_rhs.c)
+- Interpolators: [GRHayL/Induction/Interpolators/](../../GRHayL/Induction/Interpolators)
+- Build lists: [GRHayL/Induction/make.code.defn](../../GRHayL/Induction/make.code.defn), [GRHayL/Induction/Interpolators/make.code.defn](../../GRHayL/Induction/Interpolators/make.code.defn)
 
 ## Test Paths
 
-- `Unit_Tests/unit_test_HLL_flux.c`
-- `Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`
-- `Unit_Tests/unit_test_induction_ccc_ADM.c`
-- `Unit_Tests/unit_test_induction_ccc_BSSN.c`
-- `Unit_Tests/unit_test_induction_vvv_ADM.c`
-- `Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c`
-- `Unit_Tests/compute_A_flux_with_B.c`
-- `Unit_Tests/compute_A_flux_with_Btilde.c`
-- `Unit_Tests/compute_ccc_ADM.c`
-- `Unit_Tests/compute_ccc_BSSN.c`
-- `Unit_Tests/compute_vvv_ADM.c`
-- `Unit_Tests/data_gen/unit_test_data_HLL_flux.c`
-- `Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c`
-- `Unit_Tests/data_gen/unit_test_data_induction_interpolation.c`
-- `Unit_Tests/data_gen/unit_test_data_ET_Legacy_induction_gauge_rhs.c`
+- [Unit_Tests/unit_test_HLL_flux.c](../../Unit_Tests/unit_test_HLL_flux.c)
+- [Unit_Tests/unit_test_ET_Legacy_HLL_flux.c](../../Unit_Tests/unit_test_ET_Legacy_HLL_flux.c)
+- [Unit_Tests/unit_test_induction_ccc_ADM.c](../../Unit_Tests/unit_test_induction_ccc_ADM.c)
+- [Unit_Tests/unit_test_induction_ccc_BSSN.c](../../Unit_Tests/unit_test_induction_ccc_BSSN.c)
+- [Unit_Tests/unit_test_induction_vvv_ADM.c](../../Unit_Tests/unit_test_induction_vvv_ADM.c)
+- [Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c](../../Unit_Tests/unit_test_ET_Legacy_induction_gauge_rhs.c)
+- [Unit_Tests/compute_A_flux_with_B.c](../../Unit_Tests/compute_A_flux_with_B.c)
+- [Unit_Tests/compute_A_flux_with_Btilde.c](../../Unit_Tests/compute_A_flux_with_Btilde.c)
+- [Unit_Tests/compute_ccc_ADM.c](../../Unit_Tests/compute_ccc_ADM.c)
+- [Unit_Tests/compute_ccc_BSSN.c](../../Unit_Tests/compute_ccc_BSSN.c)
+- [Unit_Tests/compute_vvv_ADM.c](../../Unit_Tests/compute_vvv_ADM.c)
+- [Unit_Tests/data_gen/unit_test_data_HLL_flux.c](../../Unit_Tests/data_gen/unit_test_data_HLL_flux.c)
+- [Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c](../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_HLL_flux.c)
+- [Unit_Tests/data_gen/unit_test_data_induction_interpolation.c](../../Unit_Tests/data_gen/unit_test_data_induction_interpolation.c)
+- [Unit_Tests/data_gen/unit_test_data_ET_Legacy_induction_gauge_rhs.c](../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_induction_gauge_rhs.c)
 
 ## Key Contracts
 
@@ -72,8 +72,8 @@ an observed pass.
 - `B` may be staggered by direction; GRHayL only sees the stencils passed into its functions.
 - `ghl_HLL_vars` uses cross-product component labels `1` and `2`; do not treat those names as fixed coordinate indices.
 - `ghl_HLL_flux_with_B` needs `psi6`; `ghl_HLL_flux_with_Btilde` expects densitized magnetic input.
-- HLL denominators require nonzero `cmin+cmax`; visible HLL fixtures use random
-  speeds and do not test Flux_Source-to-Induction coupling.
+- HLL denominators require nonzero `cmin+cmax`; the local HLL generator uses
+  random speeds, and replay does not test Flux_Source-to-Induction coupling.
 - `Lorenz_damping_factor` controls scalar-potential damping in `ghl_calculate_phitilde_rhs`.
 - Vertex-centered ADM interpolation intentionally leaves output `alpha` and
   `betai` unwritten; see interpolation contract before unpacking output.

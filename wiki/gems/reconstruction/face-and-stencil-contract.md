@@ -121,11 +121,28 @@ public call surface. The Doxygen/source comments mark `ghl_minmod`,
 helpers are declared, but they expose centered helper behavior rather than the
 standard public left-face wrapper contract.
 
+The internal-purpose designation does not make those declared functions
+source-private: they have global definitions and are exposed through the
+installed header. The static `mc` helper inside the WENOZ implementation is
+source-private. Normal and `--disable-hdf5` builds retain the Reconstruction
+implementations and installed header; see [configure](../../../configure) and
+the [header manifest](../../../GRHayL/include/make.code.defn).
+
 ## Caller Impact
+
+The fixed coefficients in the [PLM](../../../GRHayL/Reconstruction/PLM/),
+[PPM](../../../GRHayL/Reconstruction/PPM/), and
+[WENOZ](../../../GRHayL/Reconstruction/WENOZ/) implementations assume uniform
+spacing in the reconstruction coordinate. Callers provide aligned stencil and
+ghost values. These APIs accept no grid widths, metric, or EOS object; PPM
+steepening receives the caller's `Gamma_eff`. They return no reconstruction
+status. Scalar limiting does not enforce EOS consistency, physical floors, or
+the coupled relativistic velocity bound. Finite inputs alone do not ensure
+representable intermediate arithmetic.
 
 - In-tree direct callers: only Reconstruction tests and data generators. ET
   Legacy PPM passes six-point arrays filled by `ind-3`; PLM passes `&var[index-2]`; WENOZ passes `&var[index-3]`.
-- Flux_Source and Induction: `docs/raw/Reconstruction.dox` identifies these as
+- Flux_Source and Induction: [docs/raw/Reconstruction.dox](../../../docs/raw/Reconstruction.dox) identifies these as
   consumers of reconstructed states, and the gems expose APIs that accept face
   states, but this repository has no direct production call from either gem to
   a Reconstruction symbol. Coordinate orientation changes with downstream
@@ -141,7 +158,7 @@ standard public left-face wrapper contract.
   helper contract is independently checked.
 - Public header users: signature, array-width, or output-orientation changes in
   `ghl_reconstruction.h` are public API changes for downstream users and for
-  `GRHayL/include/ghl_unit_tests.h`.
+  [GRHayL/include/ghl_unit_tests.h](../../../GRHayL/include/ghl_unit_tests.h).
 - Stencil width: changing PLM 4-point, PPM 6-point, WENOZ 6-point, or helper
   5-point expectations changes ghost-zone and caller-packing requirements.
 - Build lists: new or renamed source files must stay in the method-local

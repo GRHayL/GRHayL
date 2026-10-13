@@ -29,9 +29,12 @@ Read with [EOS tests and fixtures](../gems/eos/tests-and-fixtures.md),
   `EOS/simple_table.h5` from the GRHayL TestData route, places it in the repo
   root as `simple_table.h5`, and runs
   `./test/unit_test_tabulated_eos simple_table.h5`. Workflow files mirror this
-  pattern with direct `curl` commands.
+  pattern with direct `curl` commands, but select TestData `main`; the local
+  runner uses [.github/et-legacy-testdata-ref](../../.github/et-legacy-testdata-ref)
+  and reuses existing regular files. See
+  [runner selection](runner-and-generated-artifacts.md#fixture-reference-selection).
 - Stellar-collapse LS220 table:
-  `.github/run_tests.sh` downloads
+  [.github/run_tests.sh](../../.github/run_tests.sh) downloads
   `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2` from
   `https://stellarcollapse.org/EOS/`, unpacks
   `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5`, then runs the tabulated
@@ -63,8 +66,10 @@ instead.
   dimensions, `energy_shift`, analytic table quantities, interpolation routes,
   `ghl_compute_h_and_cs2`, bounds, and beta-equilibrium helpers. Its analytic
   expectations are shared with `tabulated_eos_unit_test_helpers.c`.
-- `test_compute_h_and_cs2.c` is helper-only code for tabulated tests. It
-  assumes LS220-style table bounds and is not a standalone table contract.
+- `test_compute_h_and_cs2.c` supplies the synthetic combined callback shared
+  by tabulated flux replay and its generator. It calculates enthalpy from
+  primitives and sound speed from an LS220-scale formula without consulting
+  the table or asserting results. It is not the tabulated EOS test's oracle.
 - `unit_test_tabulated_flux.c` consumes
   `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5` with downloaded
   `tabulated_flux_*` fixtures.
@@ -92,8 +97,8 @@ instead.
 - `unit_test_c2p_nn_guess.c` creates a unique private temporary directory for
   root, embedded `grhayl_nn_c2p`, legacy, malformed-dataset, and
   failed-load-preservation model files. These are direct test artifacts, not
-  external sample tables or downloaded fixtures. The test removes its fixed
-  basenames and directory on normal or handled failure exit; no-HDF5 builds
+  external sample tables or downloaded fixtures. The test enumerates and unlinks files in its private
+  directory before removing it on normal or handled failure exit; no-HDF5 builds
   skip the temporary setup.
 
 ## No-HDF5 Build Effects
@@ -140,7 +145,8 @@ removed.”
 - [wiki/gems/con2prim/tests-and-fixtures.md](../gems/con2prim/tests-and-fixtures.md)
 - [wiki/gems/neutrinos/tests-and-fixtures.md](../gems/neutrinos/tests-and-fixtures.md)
 - [wiki/core/tests-and-fixtures.md](../core/tests-and-fixtures.md)
-- Repo-local runner/workflow external table URLs:
+- Repo-visible external table URLs (the analytic-table `main` URL belongs to
+  workflows; the local runner uses its selector):
   `https://raw.githubusercontent.com/GRHayL/TestData/main/EOS/simple_table.h5`,
   `https://stellarcollapse.org/EOS/LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2`,
   and `https://stellarcollapse.org/EOS/SLy4_3335_rho391_temp163_ye66.h5.bz2`.
