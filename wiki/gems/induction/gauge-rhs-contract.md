@@ -27,7 +27,8 @@ Signature contract:
   on the `phitilde` grid, ordered from two points behind through two points
   ahead in the matching direction.
 - `sqrtg_Ai_stencil[3][2]`: component-major stencil for interpolated
-  `sqrtg_Ai`; index `[component][0]` is the current point and
+  `sqrtg_Ai = alpha*sqrt(gamma)*A^i`; lapse is already included.
+  Index `[component][0]` is the current point and
   `[component][1]` is the forward neighbor in that component direction.
 - `phitilde_stencil[3][5]`: direction-major `phitilde` stencils; first index is
   x, y, or z direction and second index spans the five-point line stencil.

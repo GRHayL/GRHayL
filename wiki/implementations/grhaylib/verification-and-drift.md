@@ -1,7 +1,7 @@
 # GRHayLib Verification And Drift
 
 This page routes verification for implementation-only changes under
-`implementations/GRHayLib/` and upstream GRHayL changes that can drift the
+[implementations/GRHayLib/](../../../implementations/GRHayLib) and upstream GRHayL changes that can drift the
 GRHayLib Cactus thorn boundary.
 
 Repo-local evidence is the authority here. Use this page to choose checks, not
@@ -9,14 +9,21 @@ to replace the implementation files or upstream tests.
 
 ## Coverage Boundary
 
-Ubuntu-GCC GitHub Actions run for implementation-only source changes;
-documentation-only paths remain ignored, and the other compiler workflows
-still ignore `implementations/**`. Ubuntu-GCC runs the normal library jobs but
+Ubuntu-GCC's [workflow filters](../../../.github/workflows/github-actions-Ubuntu-gcc.yml)
+allow implementation-only source changes to trigger normal library jobs.
+Push triggers are restricted to `main`; pull requests have their own trigger.
+Ignored-only push/PR changes under `docs/**`, `wiki/**`, or matching the
+Markdown/reStructuredText patterns do not trigger them. The implementation's
+extensionless `README` and `doc/documentation.tex` do not match those ignores
+and can trigger Ubuntu-GCC. The other compiler workflows ignore
+`implementations/**`. Ubuntu-GCC runs the normal library jobs but
 does not directly verify the tracked GRHayLib source symlinks.
-`.github/run_tests.sh` is a separate scripted test driver. These checks build
+Scheduled jobs do not use these push/PR path filters, and mixed changes can
+trigger jobs when a changed path is not ignored.
+[.github/run_tests.sh](../../../.github/run_tests.sh) is a separate scripted test driver. These checks build
 and test GRHayL library programs, not a Cactus thorn.
 
-`Unit_Tests/` does not directly cover GRHayLib/Cactus thorn behavior. Its tests
+[Unit_Tests/](../../../Unit_Tests) does not directly cover GRHayLib/Cactus thorn behavior. Its tests
 exercise upstream GRHayL source areas, fixture comparisons, generated data, and
 ET_Legacy comparisons. ET_Legacy tests are related legacy comparisons for
 upstream behavior; they are not proof that `implementations/GRHayLib/` builds,
@@ -37,8 +44,8 @@ Einstein Toolkit.
 2. Manual repo-relative link check. Verify new wiki links resolve and avoid
    generated docs or external-only paths.
 3. Header aggregation parity check. Every header directly included by
-   `src/GRHayLib.h` must exist in both `GRHayL/include/` and the upstream
-   install manifest. Recheck after public-header changes. This check also
+   `src/GRHayLib.h` must exist in both [GRHayL/include/](../../../GRHayL/include) and the upstream
+   [install manifest](../../../GRHayL/include/make.code.defn). Recheck after public-header changes. This check also
    verifies that the tracked `src/include` symlink resolves.
 4. Direct-compile source-list check. Every GRHayLib `SUBDIRS` entry must name
    an upstream directory, and every upstream source-bearing manifest directory
@@ -55,9 +62,11 @@ Einstein Toolkit.
 7. External/manual Cactus or Einstein Toolkit build. When a downstream
    Cactus/Einstein Toolkit checkout is available, perform its build and runtime
    verification there. Do not invent a local Cactus build command in this repo.
-8. Generated-doc guard. `git diff -- docs` and `git diff -- Doxyfile` must be
-   empty for implementation verification work unless a separate task explicitly
-   asks for documentation-source changes.
+8. Generated-doc guard. Compare `docs/` and `Doxyfile` with the task's starting
+   state: implementation verification must introduce no changes there unless
+   documentation-source changes are explicitly authorized. Preserve unrelated
+   preexisting edits; a nonempty `git diff -- docs Doxyfile` alone does not
+   identify which task made them.
 
 ## Drift Checklist
 
@@ -83,7 +92,7 @@ Einstein Toolkit.
   slots, and invalid-key handling.
 - Solver support: Cactus keywords and parser cases do not prove solver support;
   compare against Con2Prim dispatch, build-list evidence, tests, and
-  `wiki/gems/con2prim/solver-matrix.md`.
+  [wiki/gems/con2prim/solver-matrix.md](../../gems/con2prim/solver-matrix.md).
 - PPM fields: `param.ccl` exposes flattening and shock parameters that overwrite
   `ghl_initialize_params` defaults after initialization.
 - Lifecycle: `GRHayLib_initialize` allocates global `ghl_params` and `ghl_eos`;

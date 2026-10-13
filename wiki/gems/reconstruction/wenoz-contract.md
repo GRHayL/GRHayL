@@ -45,20 +45,27 @@ Source provenance and license details are in
 [`GRHayL/Reconstruction/WENOZ/wenoz_reconstruction_right_left_faces.c`](../../../GRHayL/Reconstruction/WENOZ/wenoz_reconstruction_right_left_faces.c).
 Route readers there instead of duplicating the license block in KB text.
 
-There is one built WENOZ variant and no caller-set WENO parameter object. The
+The built WENOZ implementation has no caller-set WENO parameter object. The
 helper fixes linear weights to `{0.1, 0.6, 0.3}`, regularization epsilon to
 `1e-100`, and MC fallback coefficient to `2.0` in source. Any change to these
 is an implementation change, not runtime configuration.
 
-`docs/raw/Reconstruction.dox` lists WENO among the current method families and
+[docs/raw/Reconstruction.dox](../../../docs/raw/Reconstruction.dox) lists WENO among the current method families and
 says only WENO-z is supported. Header, manifest, source files, direct test, and
 workflows agree with that WENOZ build/test membership.
 
 The fixed regularization and unscaled double-precision weight ratios do not
 guarantee finite output for every finite stencil. Extreme smoothness contrasts
 can overflow the weights; for example, `{0, 0, 0, 1e105, 1e105}` can produce
-nonfinite face values. No occurrence at ordinary simulation scales has been
-established, but callers choose units and the API enforces no amplitude bound.
+nonfinite face values. Callers choose units and the API enforces no amplitude
+bound.
+
+The MC blend does not guarantee positivity or keep face values within the
+stencil's local bounds. For example, the strictly positive centered-helper
+stencil `{9,1,1,9,25}` has equal smoothness indicators and linear weights, yet
+its left-face output is approximately `-1/3`. The MC slope is zero, but the
+blend retains the WENO value. Physical floors and coupled primitive-state
+admissibility remain caller responsibilities.
 
 ## Build And Coverage
 

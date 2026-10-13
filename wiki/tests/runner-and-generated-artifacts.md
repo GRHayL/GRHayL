@@ -1,6 +1,6 @@
 # Unit_Tests Runner And Generated Artifacts
 
-This page routes how `Unit_Tests/` binaries are discovered, built, run,
+This page routes how [Unit_Tests/](../../Unit_Tests) binaries are discovered, built, run,
 HDF5-filtered, and cleaned. Repo-local runner/build evidence is authoritative:
 [configure](../../configure), [.github/run_tests.sh](../../.github/run_tests.sh),
 and [.github/workflows](../../.github/workflows/). Unit-test sources explain
@@ -31,7 +31,7 @@ export LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 [.github/run_tests.sh](../../.github/run_tests.sh) runs `./configure -r`, then
 `make tests datagen`, then exports `LD_LIBRARY_PATH` with `build/lib` before invoking
-compiled tests. Workflow jobs use the composite compile action, which runs
+compiled tests. Most workflow jobs use the composite compile action, which runs
 `make tests datagen` and `make install`; jobs then invoke binaries under
 `test/`, often with `LD_LIBRARY_PATH` pointing at the installed `lib/`.
 
@@ -53,10 +53,10 @@ Aggregate `make tests`/`make datagen` success is compile/link evidence only.
 | Class | Normal location | Source evidence | Notes |
 | --- | --- | --- | --- |
 | Build products | `build/`, `build/lib/`, `test/` | `configure` generated Makefile rules | `test/` contains compiled unit-test executables from `make tests`. |
-| Data-generator executables | `test/data_gen/` | `configure` generated Makefile rules | Built by `make datagen`; not run by default by `.github/run_tests.sh`. |
+| Data-generator executables | `test/data_gen/` | `configure` generated Makefile rules | Built by `make datagen`; not run by default by [.github/run_tests.sh](../../.github/run_tests.sh). |
 | Downloaded root-level fixtures | repo root, usually `*.bin`, `*.h5`, `*.bz2` before decompression | `.github/run_tests.sh` and workflows | Runner downloads binary fixtures from the repo-visible `GRHayL/TestData` paths and EOS tables from visible `stellarcollapse.org/EOS` URLs. |
-| Generated root-level fixtures | repo root, names chosen by generator/test source | `Unit_Tests/data_gen/*`, `Unit_Tests/nrpyleakage_main.h`, `Unit_Tests/unit_test_con2prim_tabulated.c` | Data generators and generation-mode tests write local fixture files when invoked manually. |
-| Checked-in sample inputs | `Unit_Tests/sample_table/` | `wiki/test-map.md`, `wiki/generated-boundaries.md`, test sources | The reduced HDF5 sample table and table generator are repo files, not outputs from `configure`. |
+| Generated root-level fixtures | repo root, names chosen by generator/test source | `Unit_Tests/data_gen/*`, [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h), [Unit_Tests/unit_test_con2prim_tabulated.c](../../Unit_Tests/unit_test_con2prim_tabulated.c) | Data generators and generation-mode tests write local fixture files when invoked manually. |
+| Checked-in sample inputs | [Unit_Tests/sample_table/](../../Unit_Tests/sample_table) | [wiki/test-map.md](../test-map.md), [wiki/generated-boundaries.md](../generated-boundaries.md), test sources | The reduced HDF5 sample table and table generator are repo files, not outputs from `configure`. |
 
 Examples of generation-mode tests from repo-local test sources:
 [Unit_Tests/nrpyleakage_main.h](../../Unit_Tests/nrpyleakage_main.h) uses key
@@ -73,7 +73,8 @@ route, not a complete workflow matrix:
 1. Run `./configure -r`.
 2. Run `make tests datagen`.
 3. Export `LD_LIBRARY_PATH` with `build/lib`.
-4. Download root-level `*.bin` fixtures and HDF5/EOS tables.
+4. Download missing root-level `*.bin` fixtures and HDF5/EOS tables, reusing
+   existing regular files.
 5. Decompress downloaded `*.bz2` EOS tables.
 6. Run selected binaries under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
@@ -86,15 +87,42 @@ route, not a complete workflow matrix:
 10. Use an `EXIT` trap to remove only files downloaded or decompressed by this
     run and its private expected-error work directory.
 
-Cleanup runs on success or failure and preserves every preexisting path.
+The cleanup trap runs on success or failure and deletes only its tracked
+paths. Existing regular fixture files (or EOS archives/uncompressed files)
+bypass downloads, so the configured URL does not establish their provenance.
+This cleanup ownership does not promise unchanged contents: configure/build
+steps write artifacts, and `pyghl append` receives the SLy4 table even when it
+preexisted. The optically thin gas test also creates, truncates, and removes
+its fixed marker filename in the current directory. Error key `85` requires that table to lack `grhayl_nn_c2p` before
+the later append step. Use a disposable checkout for the full runner, as in
+[Workflows](../workflows.md); arbitrary path collisions are not a supported
+preservation mechanism.
 `make realclean` separately removes build products such as `build/`, `test/`,
 and the generated `Makefile`.
 
-`make clean` is narrower: current generated rules omit data-generator
-executables and their objects from its removal list. `make realclean` removes
+`make clean` is narrower: generated rules omit individual unit-test objects
+(`TEXEOBJS`), data-generator executables, and data-generator objects from its
+removal list. `make realclean` removes
 their parent `test/` and build directories. In HDF5 mode,
-`unit_test_c2p_nn_guess` owns a unique private temporary directory and removes
-its known model files and directory on normal or handled failure exit.
+`unit_test_c2p_nn_guess` owns a unique private temporary directory and enumerates and unlinks its contents
+before removing the directory on normal or handled failure exit.
+
+## Fixture Reference Selection
+
+The runner reads [.github/con2prim-testdata-ref](../../.github/con2prim-testdata-ref)
+for shared hybrid Con2Prim/Core fixtures and tabulated Con2Prim replay fixtures.
+Its other TestData downloads use
+[.github/et-legacy-testdata-ref](../../.github/et-legacy-testdata-ref), including
+ET Legacy, analytic EOS, Core, Flux_Source, PLM, Neutrinos, and Induction data.
+Link these selector files rather than copying their values into the KB.
+
+Workflow download selection differs: shared hybrid Con2Prim/Core fixtures use
+the Con2Prim selector, and ET Legacy/Flux_Source use the ET Legacy selector.
+Standalone Core, analytic EOS, Reconstruction, Induction, Neutrinos, and
+tabulated Con2Prim jobs download from TestData `main`. Inspect the owning
+[workflow](../../.github/workflows/) for each command. Neither a download
+command nor a current local generator proves how a historical fixture was
+produced; preexisting-file reuse adds another local provenance boundary.
 
 ## Workflow Matrix Differences
 
@@ -132,7 +160,8 @@ generators. With `--disable-hdf5`, `configure` adds `-DGHL_DISABLE_HDF5`,
 applies its exact implementation-source predicate, and changes generated test
 and data-generator target lists. That predicate retains
 `tabulated_primitive_guess_helpers.c` and the
-`Con2Prim/Tabulated/neural_network_guess/` sources despite their paths:
+`Con2Prim/Tabulated/neural_network_guess/` sources, plus the concrete tabulated
+and tabulated-entropy HLLE flux kernels despite their paths. The test filter:
 
 - Excludes `unit_test_*tabulated*.c`.
 - Excludes `unit_test_con2prim_debug.c`.
@@ -141,7 +170,16 @@ and data-generator target lists. That predicate retains
 - Excludes `unit_test_nrpyleakage_optically_thin_gas.c`.
 - Excludes `Unit_Tests/data_gen/*tabulated*`.
 
-`Unit_Tests/unit_test_code_error.c` has a separate no-HDF5 behavior: when
+The table-free NRPyLeakage physics and classifier-fallback tests remain build
+targets, as does `unit_test_c2p_nn_guess` with its HDF5 portions compiled out.
+The focused no-HDF5 `c2p_nn_guess` leg in
+[Ubuntu-Clang](../../.github/workflows/github-actions-Ubuntu-clang.yml) runs
+`make tests install`, inspects the direct tabulated HLLE exported definitions,
+and executes the NN test. This does not execute every compiled test or prove
+an external consumer can link those definitions. The aggregate
+`.github/run_tests.sh` uses default `./configure -r`; it is not a no-HDF5 driver.
+
+[Unit_Tests/unit_test_code_error.c](../../Unit_Tests/unit_test_code_error.c) has a separate no-HDF5 behavior: when
 compiled with `GHL_DISABLE_HDF5`, HDF5-only error keys are treated as skipped
 passes. That is test-source behavior; the target filtering above is from
 `configure`.

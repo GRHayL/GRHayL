@@ -1,8 +1,8 @@
 # Metric/ADM Contract
 
 This page routes Core metric packing, ADM auxiliary construction, and metric
-inline-helper questions. Ground truth is `GRHayL/include/ghl.h`,
-`GRHayL/include/ghl_metric_helpers.h`, the Core metric source files named
+inline-helper questions. Ground truth is [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h),
+[`GRHayL/include/ghl_metric_helpers.h`](../../GRHayL/include/ghl_metric_helpers.h), the Core metric source files named
 below, and the Core test files named below.
 
 ## Metric Packing
@@ -10,12 +10,12 @@ below, and the Core test files named below.
 - `ghl_initialize_metric` copies lapse, shift, and six symmetric 3-metric
   inputs into `ghl_metric_quantities`, then computes `lapseinv`,
   `lapseinv2`, `detgamma`, `sqrt_detgamma`, and `gammaUU`
-  (`GRHayL/GRHayL_Core/initialize_metric.c`).
+  ([`GRHayL/GRHayL_Core/initialize_metric.c`](../../GRHayL/GRHayL_Core/initialize_metric.c)).
 - The determinant stored by `ghl_initialize_metric` is absolute-valued before
   `sqrt_detgamma` is computed (`GRHayL/GRHayL_Core/initialize_metric.c`).
 - Public declarations and the `ghl_metric_quantities` layout live in
   `GRHayL/include/ghl.h`; the Doxygen group route is
-  `docs/raw/GRHayL_Core.dox`.
+  [`docs/raw/GRHayL_Core.dox`](../../docs/raw/GRHayL_Core.dox).
 
 This initializer returns `void` and does not validate inputs. Its direct
 division requires nonzero lapse and nonzero determinant. The cofactor inverse
@@ -28,7 +28,7 @@ checked failure mode (`GRHayL/GRHayL_Core/initialize_metric.c`).
 
 - `ghl_compute_ADM_auxiliaries` builds the covariant 4-metric `g4DD` and
   inverse 4-metric `g4UU` in `ghl_ADM_aux_quantities`
-  (`GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c`).
+  ([`GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c`](../../GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c)).
 - It lowers the shift through `ghl_raise_lower_vector_3D`, then uses the ADM
   lapse, inverse lapse, shift, `gammaDD`, and `gammaUU` to populate the 4D
   metric arrays (`GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c`;
@@ -45,7 +45,7 @@ checked failure mode (`GRHayL/GRHayL_Core/initialize_metric.c`).
   conformal metric components, normalizes the magnitude of the conformal
   determinant, rebuilds the ADM 3-metric, and calls `ghl_initialize_metric`
   again
-  (`GRHayL/GRHayL_Core/enforce_detgij_and_initialize_ADM_metric.c`).
+  ([`GRHayL/GRHayL_Core/enforce_detgij_and_initialize_ADM_metric.c`](../../GRHayL/GRHayL_Core/enforce_detgij_and_initialize_ADM_metric.c)).
 - The ADM-auxiliary result in this routine is local and is not returned; the
   current source computes it but does not subsequently read it.
 - For a negative `gtijdet`, the `fabs(1/cbrt(gtijdet))` factor preserves the
@@ -74,7 +74,7 @@ input. No helper checks pointers, dimensions, finiteness, or metric validity
 
 ## Test Coverage Routes
 
-- `Unit_Tests/unit_test_grhayl_core_test_suite.c` directly checks
+- [`Unit_Tests/unit_test_grhayl_core_test_suite.c`](../../Unit_Tests/unit_test_grhayl_core_test_suite.c) directly checks
   `ghl_compute_vec2_from_vec4D` and `ghl_raise_lower_vector_4D` with fixed
   arrays.
 - The same Core suite checks
@@ -83,14 +83,17 @@ input. No helper checks pointers, dimensions, finiteness, or metric validity
   perturbs a metric to trigger the negative-determinant warning; it does not
   assert a positive conformal determinant or a failure code
   (`Unit_Tests/unit_test_grhayl_core_test_suite.c`).
-- `ghl_raise_lower_vector_3D` is indirectly covered through
-  `ghl_compute_ADM_auxiliaries` because that routine calls the 3D helper before
-  building 4D metric arrays (`GRHayL/GRHayL_Core/compute_ADM_auxiliaries.c`;
-  `Unit_Tests/unit_test_grhayl_core_test_suite.c`).
+- The Core suite reaches `ghl_raise_lower_vector_3D` through
+  `ghl_compute_ADM_auxiliaries`, but the determinant-enforced path discards the
+  auxiliary result; the suite does not validate that helper output
+  (`GRHayL/GRHayL_Core/enforce_detgij_and_initialize_ADM_metric.c`;
+  `Unit_Tests/unit_test_grhayl_core_test_suite.c`). Indirect numerical checks
+  through consumed ADM auxiliaries belong to the stress-energy/conservative
+  test ([`Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`](../../Unit_Tests/unit_test_compute_conservs_and_Tmunu.c)).
 - No direct fixed-array test for `ghl_compute_vec2_from_vec3D` appears in the
   Core suite; route new direct 3D-helper tests to
   `Unit_Tests/unit_test_grhayl_core_test_suite.c`.
 - The Core generator and suite both use
   `grhayl_core_test_suite_input.bin`
-  (`Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c`;
+  ([`Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c`](../../Unit_Tests/data_gen/unit_test_data_grhayl_core_test_suite.c);
   `Unit_Tests/unit_test_grhayl_core_test_suite.c`).

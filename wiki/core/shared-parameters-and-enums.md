@@ -83,8 +83,8 @@ Route fields by ownership:
 - `max_Lorentz_factor` and `inv_sq_max_Lorentz_factor`: route velocity limiting
   to [Core velocity/u0 contract](velocity-u0-contract.md) and primitive-limit
   wrapper behavior to [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
-  Initialization stores the requested maximum Lorentz factor and derives its
-  inverse square, while the limiter rejects a required cap that cannot produce
+  The caller must supply a finite maximum Lorentz factor of at least one.
+  Initialization stores that value and derives its inverse square, while the limiter rejects a required cap that cannot produce
   a representably subluminal, within-cap result.
 - `psi6threshold`: route conservative/floor adjustment behavior to
   [Con2Prim limits and conversions](../gems/con2prim/limits-and-conversions.md).
@@ -138,9 +138,11 @@ Use field groups as routes:
 Core EOS setup entry points are declared in
 [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) and implemented in
 [`GRHayL/GRHayL_Core/initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
-They initialize family-relevant subsets, not every byte/field of the public
-struct. Simple/hybrid setup explicitly defines the cross-family `Y_e_atm` and
-`T_atm` placeholders as zero because constant Atmosphere reads them. Use the
+On success they replace the destination with a zero-initialized aggregate whose
+family-relevant members have been populated; unused members have zero/null
+values. This is a member-value contract, not a guarantee about padding bytes.
+Simple/hybrid setup explicitly defines the cross-family `Y_e_atm` and `T_atm`
+placeholders as zero because constant Atmosphere reads them. Use the
 [Atmosphere prescription contract](../gems/atmosphere/prescription-contract.md)
 for reset semantics and the [EOS dispatch contract](eos-dispatch-contract.md)
 for initialization ordering and failure behavior.

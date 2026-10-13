@@ -191,7 +191,7 @@ lists these adapted C files:
 - [`NRPyLeakage_rate_helpers.h`](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_rate_helpers.h)
   is also hand-maintained. It centralizes corrected bremsstrahlung, diffusion,
   and heavy-lepton source identities so production and the independent
-  analytic checks use one production entry point.
+  analytic checks use the same production helpers.
 
 GRHayL adaptations include different public types and argument shapes,
 tabulated-EOS dispatch, HDF5-disabled returns, propagated Fermi/EOS errors,

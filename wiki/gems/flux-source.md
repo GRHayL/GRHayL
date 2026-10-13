@@ -11,16 +11,16 @@ Flux_Source computes characteristic speeds, HLLE fluxes, and hydrodynamic source
 - [Source-term contract](flux-source/source-terms-contract.md)
 - [Tests and fixtures](flux-source/tests-and-fixtures.md)
 - [Generated NRPy boundary](flux-source/generated-nrpy-boundary.md)
-- `docs/raw/Flux_Source.dox`
-- `docs/raw/derivation.md`
-- `docs/raw/Reconstruction.dox`
-- `GRHayL/include/ghl_flux_source.h`
-- `wiki/physics/evolution-equation-map.md`
+- [docs/raw/Flux_Source.dox](../../docs/raw/Flux_Source.dox)
+- [docs/raw/derivation.md](../../docs/raw/derivation.md)
+- [docs/raw/Reconstruction.dox](../../docs/raw/Reconstruction.dox)
+- [GRHayL/include/ghl_flux_source.h](../../GRHayL/include/ghl_flux_source.h)
+- [wiki/physics/evolution-equation-map.md](../physics/evolution-equation-map.md)
 
 ## Public Headers
 
 - `GRHayL/include/ghl_flux_source.h`
-- `GRHayL/include/ghl.h`
+- [GRHayL/include/ghl.h](../../GRHayL/include/ghl.h)
 
 Key public surface:
 - `ghl_calculate_source_terms`
@@ -39,37 +39,37 @@ counterparts, are the supported call surface. The unsuffixed
 `ghl_calculate_HLLE_fluxes_dirn0/1/2` globals remain only as uninitialized
 compatibility storage. New callers select direction, EOS family, and entropy
 mode explicitly; primitive arguments remain mutable because tabulated callbacks
-may limit them to table bounds. Route details to the
+may limit them to configured EOS bounds. Route details to the
 [HLLE matrix](flux-source/hlle-flux-variant-matrix.md).
 
 ## Implementation Paths
 
-- Shared speeds: `GRHayL/Flux_Source/`; route through
+- Shared speeds: [GRHayL/Flux_Source/](../../GRHayL/Flux_Source); route through
   [characteristic speeds contract](flux-source/characteristic-speeds-contract.md).
-- Source terms: `GRHayL/Flux_Source/ghl_calculate_source_terms.c`; route
+- Source terms: [GRHayL/Flux_Source/ghl_calculate_source_terms.c](../../GRHayL/Flux_Source/ghl_calculate_source_terms.c); route
   through [source-term contract](flux-source/source-terms-contract.md).
 - Hybrid, hybrid entropy, tabulated, and tabulated entropy fluxes: route
   through [HLLE flux variant matrix](flux-source/hlle-flux-variant-matrix.md).
-- NRPy 2 generation: `GRHayL/Flux_Source/generate_flux_source.sh` and
-  `GRHayL/Flux_Source/generate_flux_source.py`; route through
+- NRPy 2 generation: [GRHayL/Flux_Source/generate_flux_source.sh](../../GRHayL/Flux_Source/generate_flux_source.sh) and
+  [GRHayL/Flux_Source/generate_flux_source.py](../../GRHayL/Flux_Source/generate_flux_source.py); route through
   [generated NRPy boundary](flux-source/generated-nrpy-boundary.md).
 
 ## Test Paths
 
-- `Unit_Tests/unit_test_hybrid_flux.c`
-- `Unit_Tests/unit_test_tabulated_flux.c`
-- `Unit_Tests/unit_test_ET_Legacy_flux_source.c`
-- `Unit_Tests/data_gen/unit_test_data_hybrid_flux.c`
-- `Unit_Tests/data_gen/unit_test_data_tabulated_flux.c`
-- `Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c`
+- [Unit_Tests/unit_test_hybrid_flux.c](../../Unit_Tests/unit_test_hybrid_flux.c)
+- [Unit_Tests/unit_test_tabulated_flux.c](../../Unit_Tests/unit_test_tabulated_flux.c)
+- [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../Unit_Tests/unit_test_ET_Legacy_flux_source.c)
+- [Unit_Tests/data_gen/unit_test_data_hybrid_flux.c](../../Unit_Tests/data_gen/unit_test_data_hybrid_flux.c)
+- [Unit_Tests/data_gen/unit_test_data_tabulated_flux.c](../../Unit_Tests/data_gen/unit_test_data_tabulated_flux.c)
+- [Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c](../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c)
 
 Route Flux_Source HLLE fixtures, ET Legacy flux/source replay, HDF5 table
 needs, and characteristic-speed fixture evidence through
 [tests and fixtures](flux-source/tests-and-fixtures.md).
 
-Explicit exclusion: `Unit_Tests/unit_test_HLL_flux.c`,
-`Unit_Tests/unit_test_ET_Legacy_HLL_flux.c`, and
-`Unit_Tests/data_gen/unit_test_data_HLL_flux.c` are Induction
+Explicit exclusion: [Unit_Tests/unit_test_HLL_flux.c](../../Unit_Tests/unit_test_HLL_flux.c),
+[Unit_Tests/unit_test_ET_Legacy_HLL_flux.c](../../Unit_Tests/unit_test_ET_Legacy_HLL_flux.c), and
+[Unit_Tests/data_gen/unit_test_data_HLL_flux.c](../../Unit_Tests/data_gen/unit_test_data_HLL_flux.c) are Induction
 vector-potential HLL evidence, not Flux_Source HLLE coverage. Route them
 through [Induction HLL flux contract](induction/hll-flux-contract.md) and
 [Induction tests and fixtures](induction/tests-and-fixtures.md).
@@ -80,8 +80,9 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
 - HLLE variants are split by direction, EOS family, and entropy evolution.
 - `--disable-hdf5` retains the algebraic tabulated HLLE implementations and
   their declarations. It excludes table-dependent tests and data generators;
-  the Ubuntu-Clang `c2p-failure` no-HDF5 variant link-checks the retained
-  symbols.
+  the Ubuntu-Clang `c2p-failure` no-HDF5 variant inspects the retained legacy tabulated
+  export symbols with `nm`; it does not link a consumer or explicitly check
+  the `_checked` names.
 - Source terms require metric derivatives provided by caller-side infrastructure.
 - Characteristic speeds are shared by hydrodynamic flux work and induction HLL flux setup.
 - Checked flux, speed, and source routines return EOS callback errors; legacy
@@ -93,7 +94,7 @@ through [Induction HLL flux contract](induction/hll-flux-contract.md) and
 - Change characteristic speed: update all affected direction files and tests that cover Flux_Source HLLE fluxes and induction flux inputs.
 - Add EOS-specific flux variant: add direction implementations, declarations, build-list entries, function-pointer wiring if needed, tests, and docs.
 - Change source term: update NRPy source if generated, C output, source tests, and equation map.
-- Change reconstruction assumptions: coordinate with `GRHayL/Reconstruction/` and update docs on face orientation.
+- Change reconstruction assumptions: coordinate with [GRHayL/Reconstruction/](../../GRHayL/Reconstruction) and update docs on face orientation.
 
 ## Drift Risks
 

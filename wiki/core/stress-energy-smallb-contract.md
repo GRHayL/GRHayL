@@ -7,10 +7,10 @@ maps prerequisites, written components, and test routes for
 `ghl_compute_smallb_and_b2`, `ghl_compute_TDNmunu`, `ghl_compute_TUPmunu`,
 `ghl_initialize_stress_energy`, and `ghl_return_stress_energy`; source,
 headers, Doxygen, and tests remain authority
-(`GRHayL/GRHayL_Core/compute_smallb_and_b2.c`,
-`GRHayL/GRHayL_Core/compute_TDNmunu.c`,
-`GRHayL/GRHayL_Core/compute_TUPmunu.c`, `GRHayL/include/ghl.h`,
-`docs/raw/GRHayL_Core.dox`).
+([`GRHayL/GRHayL_Core/compute_smallb_and_b2.c`](../../GRHayL/GRHayL_Core/compute_smallb_and_b2.c),
+[`GRHayL/GRHayL_Core/compute_TDNmunu.c`](../../GRHayL/GRHayL_Core/compute_TDNmunu.c),
+[`GRHayL/GRHayL_Core/compute_TUPmunu.c`](../../GRHayL/GRHayL_Core/compute_TUPmunu.c), [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h),
+[`docs/raw/GRHayL_Core.dox`](../../docs/raw/GRHayL_Core.dox)).
 
 ## Prerequisites
 
@@ -52,12 +52,13 @@ Stress-energy compute paths require initialized primitive and metric state:
 `GRHayL/include/ghl.h` and written by `ghl_compute_smallb_and_b2` in
 `GRHayL/GRHayL_Core/compute_smallb_and_b2.c`.
 
-This helper uses GRHayL's magnetic-field rescaling convention: GRHayL stores
-magnetic quantities rescaled by `sqrt(4*pi)`, documented in
-`docs/raw/derivation.md` and reflected by `ONE_OVER_SQRT_4PI` in
-`GRHayL/include/ghl.h`. The helper comments in
-`GRHayL/GRHayL_Core/compute_smallb_and_b2.c` also call out the same
-normalization relative to the Duez et al. expressions.
+Primitive `BU` must already contain the undensitized Eulerian magnetic field
+divided by `sqrt(4*pi)`. Neither primitive packing nor this helper applies that
+conversion ([`GRHayL/GRHayL_Core/initialize_primitives.c`](../../GRHayL/GRHayL_Core/initialize_primitives.c);
+`GRHayL/GRHayL_Core/compute_smallb_and_b2.c`). The returned `smallb` is the
+correspondingly normalized comoving magnetic four-vector. This convention is
+defined in [`docs/raw/derivation.md`](../../docs/raw/derivation.md); `ONE_OVER_SQRT_4PI` in
+`GRHayL/include/ghl.h` provides the conversion factor.
 
 The helper returns `void`, overwrites all four `smallb` entries and `smallb2`,
 and reports no error for null, non-finite, inconsistent, or singular inputs.
@@ -100,18 +101,18 @@ unpack/reinitialize after computation.
 `ghl_initialize_stress_energy` copies ten component inputs into a
 `ghl_stress_energy` and mirrors off-diagonal entries into both symmetric slots
 (`ghl_initialize_stress_energy` in `GRHayL/include/ghl.h` and
-`GRHayL/GRHayL_Core/initialize_stress_energy.c`). This helper can initialize
+[`GRHayL/GRHayL_Core/initialize_stress_energy.c`](../../GRHayL/GRHayL_Core/initialize_stress_energy.c)). This helper can initialize
 either raised or lowered stress-energy data; the struct itself is just `T4[4][4]`
 (`ghl_stress_energy` in `GRHayL/include/ghl.h`).
 
 `ghl_return_stress_energy` returns the same ten documented components from
 `Tmunu->T4`; it does not return every matrix slot (`ghl_return_stress_energy`
 in `GRHayL/include/ghl.h` and
-`GRHayL/GRHayL_Core/return_stress_energy.c`).
+[`GRHayL/GRHayL_Core/return_stress_energy.c`](../../GRHayL/GRHayL_Core/return_stress_energy.c)).
 
 ## Tests
 
-`Unit_Tests/unit_test_compute_conservs_and_Tmunu.c` stores `u0` as explicit
+[`Unit_Tests/unit_test_compute_conservs_and_Tmunu.c`](../../Unit_Tests/unit_test_compute_conservs_and_Tmunu.c) stores `u0` as explicit
 input, initializes metric and ADM auxiliaries, assigns `prims.u0`, runs the
 combined conservative/stress-energy path, and also calls standalone
 `ghl_compute_TDNmunu` for comparison against fixture data in
@@ -119,12 +120,13 @@ combined conservative/stress-energy path, and also calls standalone
 coverage for returned/stored stress-energy components, not proof that every
 matrix slot is independently written.
 
-`Unit_Tests/pert_test_fail_stress_energy.c` checks the same ten named
+[`Unit_Tests/pert_test_fail_stress_energy.c`](../../Unit_Tests/pert_test_fail_stress_energy.c) checks the same ten named
 components used by the initialize/return contract (`Ttt`, `Ttx`, `Tty`, `Ttz`,
 `Txx`, `Txy`, `Txz`, `Tyy`, `Tyz`, `Tzz`) and reports failures component by
 component (`Unit_Tests/pert_test_fail_stress_energy.c`).
 
 No direct fixture assertion for `ghl_compute_smallb_and_b2` or
-`ghl_compute_TUPmunu` is visible in the listed Core test routes. Their use in
-other computation paths is indirect coverage, not a standalone check of all
-outputs or invalid-input behavior.
+`ghl_compute_TUPmunu` is visible in the listed Core test routes. The smallb
+helper is exercised indirectly through conservative/stress-energy computation;
+the listed tests do not call `ghl_compute_TUPmunu`. Neither has a standalone
+check of all outputs or invalid-input behavior in these test routes.

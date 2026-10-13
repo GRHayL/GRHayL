@@ -19,7 +19,9 @@ thorn checks route through
 
 Normal scripted/workflow runs download `ET_Legacy_*_input.bin`,
 `ET_Legacy_*_output.bin`, and `ET_Legacy_*_output_pert.bin` from TestData before
-running each comparison. Repo-visible generators create input-side files such as
+running each comparison; the local runner reuses preexisting regular files
+as described in [runner selection](runner-and-generated-artifacts.md#fixture-reference-selection).
+Repo-visible generators create input-side files such as
 `ET_Legacy_*_input.bin` and `ET_Legacy_*_input_pert.bin`; they do not create
 trusted output for all ET Legacy families. Do not infer from generator presence
 that normal runs regenerate trusted legacy outputs.
@@ -40,10 +42,12 @@ Lorentz factor. This is an allowance for an intentional behavior change,
 not a compiler-roundoff tolerance. Pressure comparisons remain independent.
 Legacy output does not contain an independent epsilon field.
 
-The induction gauge RHS fixture has finite reference values throughout the
-compared interior. An independent IllinoisGRMHD producer generates
-these outputs; GRHayL only replays them. The strict scalar helper rejects any
-nonfinite reference, computed, or perturbed value.
+The induction gauge RHS replay requires finite reference values throughout
+the compared interior: the strict scalar helper rejects any nonfinite
+reference, computed, or perturbed value. Its local generator writes inputs;
+outputs arrive through the external legacy fixture download route. This
+source contract does not establish historical downloaded contents or an
+independent producer; see [Induction evidence](../gems/induction/tests-and-fixtures.md).
 
 ## Test Families
 
@@ -71,7 +75,7 @@ nonfinite reference, computed, or perturbed value.
 
 ET Legacy tests run GRHayL unit-test binaries. They can support confidence that
 upstream GRHayL behavior still matches legacy comparison fixtures, but they do
-not verify `implementations/GRHayLib/` build lists, Cactus parameter parsing,
+not verify [implementations/GRHayLib/](../../implementations/GRHayLib) build lists, Cactus parameter parsing,
 schedule timing, global lifecycle, or Einstein Toolkit runtime behavior.
 
 ## Naming And Provenance Caveats

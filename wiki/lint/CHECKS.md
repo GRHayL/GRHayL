@@ -28,6 +28,9 @@ for page in pages:
             target = raw.split("#", 1)[0]
             if not target or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
                 continue
+            if Path(target).is_absolute():
+                print(f"{page}:{line_number}: absolute target: {raw}")
+                continue
             candidate = (page.parent / target).resolve()
             try:
                 candidate.relative_to(root)
@@ -42,6 +45,9 @@ PY
 This is a conservative Markdown regex, not a full GitHub-Flavored Markdown
 parser. Manually review links containing escaped/nested parentheses, reference
 definitions, HTML, or titles; do not turn uncertain syntax into a hard failure.
+Fragments are stripped before resolution, so heading anchors need a separate
+check against the target page. This example reports problems; it does not
+set a failing process status.
 
 If KB pages are being authored concurrently, do not fail solely because
 links to in-progress pages are temporarily missing. Report them.
@@ -135,7 +141,8 @@ For each page, verify:
 - repo-relative source/doc/test paths support substantive claims
 - `Ground Truth References` appears only if web facts were used
 - external references, if any, are official full URLs
-- no absolute workspace paths
+- no absolute workspace source/navigation paths; the operational delivery-path
+  exception in [AGENTS.md](../../AGENTS.md#agent-execution-contract) still applies
 - no Doxygen table copied wholesale when a route would suffice
 
 Search for absolute workspace paths:
@@ -165,7 +172,7 @@ KB pages should route to Doxygen source, not duplicate long Doxygen passages.
 Review large pages and repeated Doxygen headings:
 
 ```bash
-wc -l wiki/*.md wiki/lint/*.md 2>/dev/null
+rg --files wiki -g '*.md' | sort
 rg -n 'defgroup|@ingroup|@brief|@details|\\f\\[' wiki || true
 ```
 
@@ -196,8 +203,12 @@ either no-flags spelling supported without reopening source.
 Check shell syntax without execution:
 
 ```bash
-sh -n configure scripts/parser
-bash -n generate_makefile.sh .github/run_tests.sh
+for script in configure scripts/parser; do
+  sh -n "$script" || exit
+done
+for script in generate_makefile.sh .github/run_tests.sh; do
+  bash -n "$script" || exit
+done
 ```
 
 Parse workflow YAML when PyYAML is available. `BaseLoader` preserves the key
@@ -210,18 +221,21 @@ import yaml
 
 for path in sorted(Path(".github/workflows").glob("*.yml")):
     data = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
-    print(path, "events=", sorted(data["on"]), "jobs=", len(data["jobs"]))
+    print(path, "events=", sorted(data["on"]), "jobs=", sorted(data["jobs"]))
 PY
 ```
 
 Workflow/job presence is selection evidence, not execution evidence. Compare
 job commands with `.github/actions/*/action.yml`, `.github/run_tests.sh`, and
 actual generated Makefile targets before claiming compile, run, or coverage.
+YAML parsing does not validate embedded shell commands; inspect those separately.
 
 Run Doxygen only with the unique temporary-output procedure in
 [Generated Boundaries](../generated-boundaries.md). Record `doxygen --version`
-and compare warnings only with the same version/configuration. Confirm no
-generated workspace outputs remain:
+in the task report, not the KB, and compare warnings only with the same
+version/configuration. Compare generated output paths with the task baseline;
+remove only task-owned artifacts and preserve preexisting or concurrent work.
+This listing identifies paths for inspection, not permission to delete them:
 
 ```bash
 find . -maxdepth 2 \( -name Makefile -o -name build -o -name test \
@@ -243,25 +257,11 @@ git status --short
 git diff --name-only
 ```
 
-Map changed paths to KB review targets:
-
-```bash
-git diff --name-only | while read -r path; do
-  case "$path" in
-    GRHayL/include/*) echo "$path -> wiki/public-api-map.md wiki/catalog.md" ;;
-    GRHayL/Atmosphere/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
-    GRHayL/Con2Prim/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
-    GRHayL/EOS/*) echo "$path -> wiki/gems/index.md wiki/catalog.md wiki/build-and-ci.md" ;;
-    GRHayL/Flux_Source/*) echo "$path -> wiki/physics/evolution-equation-map.md wiki/catalog.md" ;;
-    GRHayL/Induction/*) echo "$path -> wiki/physics/evolution-equation-map.md wiki/catalog.md" ;;
-    GRHayL/Neutrinos/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
-    GRHayL/Reconstruction/*) echo "$path -> wiki/gems/index.md wiki/catalog.md" ;;
-    Unit_Tests/*) echo "$path -> wiki/test-map.md wiki/catalog.md" ;;
-    docs/raw/*) echo "$path -> wiki/index.md wiki/catalog.md affected topic page" ;;
-    .github/*|configure|generate_makefile.sh) echo "$path -> wiki/build-and-ci.md wiki/generated-boundaries.md" ;;
-  esac
-done
-```
+Map each changed path through [Change Impact](../change-impact.md),
+[Source Map](../source-map.md), and [Catalog](../catalog.md) to its owner leaf
+and affected companions. Include Core, public headers, build/Doxygen inputs,
+GRHayLib, and CompOSE tooling when those paths change; do not maintain a
+competing partial route table in this check page.
 
 Before editing any KB page, re-open the named source, header, Doxygen source,
 test, or CI file and make the smallest source-backed update.

@@ -5,8 +5,8 @@
 Route Core velocity limiting and `u0` computation. This page separates
 `ghl_limit_v_and_compute_u0` in Core from the Con2Prim primitive-limit wrapper;
 source, headers, Doxygen, and tests remain authority
-(`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`,
-`GRHayL/include/ghl.h`, `docs/raw/GRHayL_Core.dox`).
+([`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`](../../GRHayL/GRHayL_Core/limit_v_and_compute_u0.c),
+[`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h), [`docs/raw/GRHayL_Core.dox`](../../docs/raw/GRHayL_Core.dox)).
 
 ## Core Routine
 
@@ -19,8 +19,9 @@ caller-provided `speed_limited` pointer (`GRHayL/include/ghl.h`).
 (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 
 Inputs expected before call:
-- Initialized parameters from the normal Core parameter path, because the speed
-  cap is read from `params->inv_sq_max_Lorentz_factor`
+- Initialized parameters with a finite `max_Lorentz_factor >= 1`; the parameter
+  packer does not validate this precondition. The speed cap is read from
+  `params->inv_sq_max_Lorentz_factor`
   (`ghl_parameters` in `GRHayL/include/ghl.h` and
   `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 - Initialized ADM metric from the Core metric path, because the routine reads
@@ -31,7 +32,7 @@ Inputs expected before call:
   velocities `v^i = u^i/u^0` stored in `ghl_primitive_quantities`
   (`GRHayL/include/ghl.h` and
   `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`; representation source:
-  `docs/raw/derivation.md`).
+  [`docs/raw/derivation.md`](../../docs/raw/derivation.md)).
 - Caller-initialized `speed_limited`. The routine OR-updates the bool when it
   applies the speed cap; it does not reset the flag to `false`
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
@@ -58,7 +59,7 @@ Outputs and mutation:
   `GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 - The vector norm uses `ghl_compute_vec2_from_vec3D`, whose helper contract is
   the metric-indexed 3-vector square in
-  `GRHayL/include/ghl_metric_helpers.h`
+  [`GRHayL/include/ghl_metric_helpers.h`](../../GRHayL/include/ghl_metric_helpers.h)
   (`GRHayL/GRHayL_Core/limit_v_and_compute_u0.c`).
 
 An already subluminal state that does not require limiting retains its measured
@@ -84,11 +85,11 @@ Core routine. The Con2Prim wrapper applies EOS-specific primitive floors,
 ceilings, pressure/internal-energy updates, and then calls the Core
 `ghl_limit_v_and_compute_u0` as its final velocity/u0 step; keep behavioral
 claims for EOS limiting routed to
-`wiki/gems/con2prim/limits-and-conversions.md` and
-`GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`.
+[`wiki/gems/con2prim/limits-and-conversions.md`](../gems/con2prim/limits-and-conversions.md) and
+[`GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c`](../../GRHayL/Con2Prim/enforce_primitive_limits_and_compute_u0.c).
 The public Core declaration for `ghl_limit_v_and_compute_u0` is in
 `GRHayL/include/ghl.h`; Con2Prim test coverage calls the wrapper by name in
-`Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`.
+[`Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c`](../../Unit_Tests/unit_test_enforce_primitive_limits_and_compute_u0.c).
 
 ## Tests
 
@@ -103,11 +104,11 @@ no-limit case
 as focused coverage for the Core limiter, not full coverage of all Core inputs.
 Hybrid and tabulated flux tests also call the Core routine,
 but their assertions target flux behavior rather than a complete standalone
-limiter contract (`Unit_Tests/unit_test_hybrid_flux.c` and
-`Unit_Tests/unit_test_tabulated_flux.c`). Their generators keep face states
+limiter contract ([`Unit_Tests/unit_test_hybrid_flux.c`](../../Unit_Tests/unit_test_hybrid_flux.c) and
+[`Unit_Tests/unit_test_tabulated_flux.c`](../../Unit_Tests/unit_test_tabulated_flux.c)). Their generators keep face states
 below the cap, so they do not exercise the cap branch.
 
-Error-path routing: `Unit_Tests/unit_test_code_error.c` initializes metric data,
+Error-path routing: [`Unit_Tests/unit_test_code_error.c`](../../Unit_Tests/unit_test_code_error.c) initializes metric data,
 sets primitive velocities to `NaN`, calls `ghl_limit_v_and_compute_u0`
 directly, and maps test key 4 to `ghl_error_u0_singular`
 (`Unit_Tests/unit_test_code_error.c`). This covers one singular-`u0` error route

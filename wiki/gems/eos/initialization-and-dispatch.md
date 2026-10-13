@@ -24,12 +24,12 @@ Low-level callers must therefore install the matching dispatch family first;
 parameter construction and tabulated rollback use those callbacks.
 
 Function-pointer dispatch is process-wide global state defined through
-`GRHayL/include/ghl_eos_functions_declaration.h`; it is not stored per EOS
+[GRHayL/include/ghl_eos_functions_declaration.h](../../../GRHayL/include/ghl_eos_functions_declaration.h); it is not stored per EOS
 object. Initializing a different EOS family replaces general pointers such as
 `ghl_compute_h_and_cs2` and `ghl_con2prim_multi_method` for all callers.
 
-Sources: `GRHayL/GRHayL_Core/initialize_eos.c`, `GRHayL/include/ghl.h`,
-`docs/raw/EOS.dox`, `docs/raw/GRHayL_Core.dox`.
+Sources: [GRHayL/GRHayL_Core/initialize_eos.c](../../../GRHayL/GRHayL_Core/initialize_eos.c), [GRHayL/include/ghl.h](../../../GRHayL/include/ghl.h),
+[docs/raw/EOS.dox](../../../docs/raw/EOS.dox), [docs/raw/GRHayL_Core.dox](../../../docs/raw/GRHayL_Core.dox).
 
 ## EOS Parameter Setup
 
@@ -78,9 +78,12 @@ must be cleaned before reinitialization or an EOS-family switch. Global dispatch
 selection is process-wide and is not rolled back when parameter setup fails.
 
 Tabulated initialization sets `tau_atm = rho_min * eps_min`, unlike the
-simple/hybrid `rho_atm * eps_atm` assignment. `ghl.h` describes `_atm` fields
-as atmosphere values and Con2Prim consumes `tau_atm` as a floor, but repo-local
-evidence does not resolve whether this family difference is intended.
+simple/hybrid `rho_atm * eps_atm` assignment.
+[`ghl.h`](../../../GRHayL/include/ghl.h) explicitly documents family-specific
+floor semantics for this field;
+[`apply_conservative_limits.c`](../../../GRHayL/Con2Prim/apply_conservative_limits.c)
+consumes it as a conservative energy floor. Do not assume the family formulas
+are equivalent.
 
 The current tabulated public wrapper hard-codes `ghl_eos_table_stellarcollapse`
 and both `clean_sound_speed = false` and `enable_neural_net_c2p = false` before
@@ -158,13 +161,13 @@ tabulated, and tabulated-entropy families. Unsuffixed generic HLLE globals
 remain only as uninitialized compatibility storage; new callers select a direct
 family/direction/entropy variant. Core EOS initialization selects the shared
 thermodynamic callback, not an HLLE function. Route flux questions to [Flux Source](../flux-source.md) and
-`GRHayL/include/ghl_flux_source.h`.
+[GRHayL/include/ghl_flux_source.h](../../../GRHayL/include/ghl_flux_source.h).
 
 Sources: `GRHayL/GRHayL_Core/initialize_eos.c`,
-`GRHayL/include/ghl_eos_functions.h`,
+[GRHayL/include/ghl_eos_functions.h](../../../GRHayL/include/ghl_eos_functions.h),
 `GRHayL/include/ghl_eos_functions_declaration.h`,
-`GRHayL/EOS/Hybrid/NRPyEOS_initialize_hybrid_functions.c`,
-`GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c`,
+[GRHayL/EOS/Hybrid/NRPyEOS_initialize_hybrid_functions.c](../../../GRHayL/EOS/Hybrid/NRPyEOS_initialize_hybrid_functions.c),
+[GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c](../../../GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c),
 `GRHayL/include/ghl_flux_source.h`.
 
 ## HDF5 Build And Runtime Contract
@@ -188,8 +191,8 @@ tests are skipped in no-HDF5 builds.
 
 Sources: `README.md`, `configure`,
 `GRHayL/GRHayL_Core/initialize_eos.c`,
-`GRHayL/include/ghl_nrpyeos_tabulated.h`,
-`Unit_Tests/unit_test_code_error.c`.
+[GRHayL/include/ghl_nrpyeos_tabulated.h](../../../GRHayL/include/ghl_nrpyeos_tabulated.h),
+[Unit_Tests/unit_test_code_error.c](../../../Unit_Tests/unit_test_code_error.c).
 
 ## Dependent Areas
 
@@ -200,14 +203,14 @@ Keep dependent content routed, not expanded here:
 - [Flux Source](../flux-source.md) owns characteristic speeds and HLLE flux
   implementations.
 - [Neutrinos](../neutrinos.md) owns tabulated-EOS leakage dependencies.
-- `implementations/GRHayLib/` owns downstream integration details.
+- [implementations/GRHayLib/](../../../implementations/GRHayLib) owns downstream integration details.
 
 ## Source-Of-Truth Paths
 
 - `AGENTS.md`
-- `wiki/index.md`
-- `wiki/catalog.md`
-- `wiki/gems/eos.md`
+- [wiki/index.md](../../index.md)
+- [wiki/catalog.md](../../catalog.md)
+- [wiki/gems/eos.md](../eos.md)
 - `GRHayL/GRHayL_Core/initialize_eos.c`
 - `GRHayL/include/ghl.h`
 - `GRHayL/include/ghl_eos_functions.h`
@@ -216,8 +219,8 @@ Keep dependent content routed, not expanded here:
 - `GRHayL/include/ghl_nrpyeos_tabulated.h`
 - `GRHayL/EOS/Hybrid/NRPyEOS_initialize_hybrid_functions.c`
 - `GRHayL/EOS/Tabulated/NRPyEOS_initialize_tabulated_functions.c`
-- `GRHayL/EOS/Hybrid/make.code.defn`
-- `GRHayL/EOS/Tabulated/make.code.defn`
+- [GRHayL/EOS/Hybrid/make.code.defn](../../../GRHayL/EOS/Hybrid/make.code.defn)
+- [GRHayL/EOS/Tabulated/make.code.defn](../../../GRHayL/EOS/Tabulated/make.code.defn)
 - `README.md`
 - `configure`
 - `docs/raw/EOS.dox`

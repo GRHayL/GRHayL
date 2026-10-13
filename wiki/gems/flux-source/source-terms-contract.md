@@ -36,18 +36,25 @@ The caller supplies:
 - `cons`: caller-owned conservative output. The kernel writes source
   contributions to `cons->SD[0..2]` and `cons->tau`.
 
+Supply finite valid ADM geometry with positive lapse, finite physical primitives
+and derivatives, and initialized `u0` consistent with velocity and the metric.
+The kernel does not normalize velocity or recompute `u0`. `_checked` propagates
+EOS errors but does not validate physical inputs, intermediate arithmetic, or
+final output finiteness. A successful callback must supply usable enthalpy.
+
 `cons->rho`, `cons->Y_e`, and `cons->entropy` are untouched. The routine does
 not zero or initialize the complete conservative struct.
 
 The checked kernel calls `ghl_compute_h_and_cs2(eos, prims, &h, &cs2)` before
 building the source terms; `cs2` is unused. Its `prims` argument is mutable:
 production tabulated dispatch
-limits `rho`, `Y_e`, and `temperature` to table bounds, then recomputes `press` and `eps` in
+limits `rho`, `Y_e`, and `temperature` to configured EOS bounds, then recomputes `press` and `eps` in
 place. The checked routine returns the callback's exact error and leaves `cons`
 unchanged on failure; the legacy `void` wrapper aborts on that error. Callback
 mutation of `prims` is not rolled back. Callers
 needing unchanged primitives must pass a copy. EOS dispatch details otherwise
-belong to EOS/Core routes.
+belong to the [EOS interpolation contract](../eos/tabulated-interpolation-and-bounds.md),
+including the distinction between configured and full table bounds.
 
 Metric derivatives are not computed inside Flux_Source. Callers own their
 discretization, staggering, and consistency with `metric`, `curv`, and
@@ -80,15 +87,16 @@ editing only one expression copy.
 - [Unit_Tests/unit_test_ET_Legacy_flux_source.c](../../../Unit_Tests/unit_test_ET_Legacy_flux_source.c)
   covers ET Legacy flux/source behavior with reference data.
 - [Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c](../../../Unit_Tests/data_gen/unit_test_data_ET_Legacy_flux_source.c)
-  shows fixture packing for primitives, metric, metric_derivs, extrinsic curv,
-  and conservative outputs.
+  writes metric, extrinsic-curvature, primitive, and face-state input fixtures.
+  The replay test constructs metric derivatives and reads externally supplied
+  conservative RHS outputs.
 
 Evidence status: declaration, definition, and normal/no-HDF5 manifest membership
 are present. `unit_test_ET_Legacy_flux_source` directly calls the routine inside
 a combined flux-divergence/source replay. It installs a test-local
 `compute_h_and_cs2` callback, so this is not
 a production EOS-dispatch test. The ordinary runner and all compiler workflows
-configure that replay. `unit_test_tabulated_eos_compose` also covers a
+configure that replay. [unit_test_tabulated_eos_compose.c](../../../Unit_Tests/unit_test_tabulated_eos_compose.c) also covers a
 production tabulated source call in the Ubuntu-GCC `compose-regularized-eos`
 job. `unit_test_hybrid_flux` isolates the checked source callback failure and
 verifies untouched output.

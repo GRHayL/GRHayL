@@ -1,14 +1,14 @@
 # Build And CI
 
 Repo ground truth: `README.md`, `configure`, `generate_makefile.sh`,
-`Doxyfile`, `.github/run_tests.sh`, `.github/actions/*/action.yml`, and
+`Doxyfile`, [.github/run_tests.sh](../.github/run_tests.sh), `.github/actions/*/action.yml`, and
 `.github/workflows/*.yml`.
 
 ## Configure Flow
 
 `configure` is the primary build entry point. It probes host OS, required
-commands, compiler, math library linking, OpenMP support for unit-test links,
-and optional HDF5 support. It then parses `GRHayL/make.code.defn` recursively
+commands, compiler, math library linking, OpenMP support for test/data-generator compilation and linking,
+and optional HDF5 support. It then parses [GRHayL/make.code.defn](../GRHayL/make.code.defn) recursively
 through `scripts/parser`, creates the build tree, symlinks public headers into
 the configured build include area, and writes the top-level `Makefile`.
 
@@ -19,9 +19,9 @@ Common flags visible in `configure`:
 | `-h`, `--help` | Print flag help. |
 | `-u`, `--usage` | Print basic usage, or named examples for `ubuntu`, `mac`, `falcon`, `sawtooth`, or `lemhi`. |
 | `-l`, `--license` | Print `LICENSE`. |
-| `-r`, `--reconfigure` | Overwrite a previous configured build directory. |
+| `-r`, `--reconfigure` | Permit reconfiguration; previous options are not restored and stale objects are not cleaned. |
 | `-s`, `--silent` | Generate less verbose Makefile command output. |
-| `--noomp` | Disable OpenMP flags when linking unit tests. |
+| `--noomp` | Disable OpenMP flags for test/data-generator compilation and linking. |
 | `--disable-hdf5` | Disable HDF5 and omit tabulated sources/tests selected by the script. |
 | `--prefix=<dir>` | Installation prefix. |
 | `--builddir=<dir>` | Build directory; default is `build`. |
@@ -74,19 +74,19 @@ It finds every path containing `make.code.defn`, excludes paths matching
 `ET/`, scans `SRCS` blocks, and writes a top-level `Makefile` intended to build
 `lib/libgrhayl.a`.
 
-This script is not the same path as `configure`. A clean disposable-tree
-reproduction currently:
+This script is not the same path as `configure`. Its source-selection and
+Makefile-writing logic:
 
-- includes `implementations/GRHayLib/src/initialize_and_shutdown.c` because it
-  scans manifests outside `GRHayL/`;
-- emits `-I./include`, although public headers live under `GRHayL/include/` in
+- includes [implementations/GRHayLib/src/initialize_and_shutdown.c](../implementations/GRHayLib/src/initialize_and_shutdown.c) because it
+  scans manifests outside [GRHayL/](../GRHayL);
+- emits `-I./include`, although public headers live under [GRHayL/include/](../GRHayL/include) in
   this checkout;
 - has no shebang while using Bash `[[ ... ]]` syntax, so interpreter selection
   depends on caller-shell fallback; and
 - has no no-HDF5 source filtering.
 
-Generation itself exits successfully, so exit status alone does not validate
-the Makefile. Do not run `make` from this output. Exact repair-versus-retirement
+The script does not validate the selected source roots or emitted include
+path; generation exit status alone cannot validate the Makefile. Do not run `make` from this output. Exact repair-versus-retirement
 intent is unknown and needs maintainer confirmation.
 
 ## `make.code.defn` Inclusion
@@ -99,7 +99,7 @@ directory and links `build/lib/libghl.so` or the host shared-library extension.
 
 During configuration, every `GRHayL/include/*.h` is symlinked into
 `<builddir>/include/ghl`. `make install` instead copies the public headers
-parsed from `GRHayL/include/make.code.defn` into `<prefix>/include/ghl`; it
+parsed from [GRHayL/include/make.code.defn](../GRHayL/include/make.code.defn) into `<prefix>/include/ghl`; it
 excludes `ghl_unit_tests.h` and the internal storage-definition companion
 `ghl_eos_functions_declaration.h`. Installation then copies the versioned
 shared library and symlink into `<prefix>/lib`. Installed presence does not by
@@ -117,10 +117,11 @@ rules under `build/`.
 
 ## HDF5 Contract
 
-Default `configure` builds use HDF5. When HDF5 is enabled, `configure` first
-tries `pkg-config hdf5`; custom include/lib paths can be provided with
-`--hdf5dir` or `--hdf5inc` plus `--hdf5lib`. It also compiles a small HDF5
-probe program.
+Default `configure` builds use HDF5. Without custom paths, it tries
+`pkg-config hdf5` when that command is available. `--hdf5dir` or the paired
+`--hdf5inc`/`--hdf5lib` select custom paths instead; `--hdf5dir` takes
+precedence if both forms are supplied. It compiles and links a
+small HDF5 probe; that probe is not executed and does not read a table.
 
 With `--disable-hdf5`, `configure`:
 
@@ -148,7 +149,10 @@ entry points become disabled-feature stubs; pure NN inference from an
 independently valid in-memory model does not inherently require HDF5. The
 public direct tabulated solver entry points are non-mutating disabled-feature
 stubs, while the public direct tabulated HLLE flux variants retain their
-real implementations.
+real implementations. They still require compatible caller-established EOS
+callbacks: built-in table-backed dispatch cannot be installed in this mode.
+See the [tabulated HLLE boundary](gems/flux-source/hlle-flux-variant-matrix.md)
+for custom callback integration.
 
 GRHayLib is separate implementation-specific build routing. Its Cactus
 `configuration.ccl` hard-codes `requires HDF5`; that thorn requirement is not
@@ -158,7 +162,7 @@ Cactus CCL, aggregate header, and thorn source-registry questions through
 
 ## GitHub Actions Matrix
 
-Workflows live in `.github/workflows/`:
+Workflows live in [.github/workflows/](../.github/workflows):
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
@@ -168,10 +172,19 @@ Workflows live in `.github/workflows/`:
 | `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all jobs invoke coverage action; local collection body is commented |
 | `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | no jobs invoke coverage action |
 
+The compiler labels describe selected action branches, not successful compiler
+setup. In [.github/actions/compile_GRHayL/action.yml](../.github/actions/compile_GRHayL/action.yml),
+the macOS GCC `CC` command substitution contains an unmatched quote in its
+`egrep` expression. The macOS clang branch supplies `--cflags` repeatedly;
+`configure` retains the last value, so the later include flag replaces the
+requested coverage flags. These source defects limit what the declared
+macOS matrix establishes; see [Current Contradictions](contradictions.md).
+
 The Ubuntu-Clang `c2p-failure` matrix configures its Ubuntu 24.04
-`c2p_nn_guess` variant without HDF5. That existing job variant exercises and
-uploads coverage for the disabled-feature path; the other variants retain
-HDF5-enabled builds.
+`c2p_nn_guess` variant without HDF5. That variant selects NN test execution,
+inspects exported tabulated HLLE definitions, and invokes coverage collection
+and upload; it does not execute a tabulated flux test or establish upload
+success. The other variants retain HDF5-enabled builds.
 
 Each workflow ignores pushes and pull requests when **all** changed paths match
 its `paths-ignore` list, including `docs/**`, `wiki/**`, and
@@ -187,12 +200,14 @@ not merely from local YAML key names. Every compiler workflow uses cron
 `pull_request` event has no branch filter in local YAML. Do not infer project
 support beyond the OS/compiler
 pairs encoded in these workflow matrices and the usage examples in `configure`.
-An implementation-only change therefore triggers Ubuntu-GCC, but its listed
-test jobs are core `configure`/unit-test jobs, not a GRHayLib Cactus thorn build
-or direct GRHayLib validation. The other compiler workflows remain skipped for
-such a change.
+An implementation-only change containing a non-ignored path can therefore
+trigger Ubuntu-GCC on an eligible push or pull request. For example, the
+extensionless implementation `README` and `.tex` paths are not ignored there,
+while Markdown-only changes remain ignored. Its listed test jobs use core
+`configure`/unit-test paths; they do not build or validate the GRHayLib Cactus
+thorn. The other compiler workflows ignore implementation-only push/PR changes.
 
-Common job groups across workflows:
+Job routing (CompOSE is Ubuntu-GCC-specific):
 
 | Job | Test scope |
 | --- | --- |
@@ -201,7 +216,7 @@ Common job groups across workflows:
 | `c2p-failure` | `hybrid_failure`, `c2p_nn_guess` |
 | `tabulated-eos` | tabulated EOS table read/interpolation |
 | `piecewise-polytrope-eos` | piecewise-polytrope EOS |
-| `grhayl-core` | core struct/metric/stress-energy suite |
+| `grhayl-core` | Core EOS/default, atmosphere, metric, and routine-name suite; stress-energy fixture validation belongs to `c2p-routines` |
 | `flux` | `hybrid_flux`, `tabulated_flux` |
 | `reconstruction` | `PLM_reconstruction`, `WENOZ_reconstruction` |
 | `neutrinos` | Table-free NRPyLeakage physics checks (blocking, Fermi edges, detailed balance, invalid inputs, asymmetric optical-depth stencil), optically thin gas, constant density sphere, and luminosities; see [Neutrinos tests and fixtures](gems/neutrinos/tests-and-fixtures.md) |
@@ -212,15 +227,15 @@ Common job groups across workflows:
 | `compose-regularized-eos` | 100% Python line/branch coverage, synthetic fixed-profile conversion, and unchanged StellarCollapse C integration |
 
 Flux fixture downloads use the immutable TestData reference recorded in
-`.github/et-legacy-testdata-ref`; only the `tabulated_flux` matrix leg downloads
+[.github/et-legacy-testdata-ref](../.github/et-legacy-testdata-ref); only the `tabulated_flux` matrix leg downloads
 the LS220 EOS table.
 
 Composite actions:
 
-- `.github/actions/OS_setup/action.yml` installs compiler/HDF5 dependencies.
-- `.github/actions/compile_GRHayL/action.yml` runs `configure`, `make tests
+- [.github/actions/OS_setup/action.yml](../.github/actions/OS_setup/action.yml) installs compiler/HDF5 dependencies.
+- [.github/actions/compile_GRHayL/action.yml](../.github/actions/compile_GRHayL/action.yml) runs `configure`, `make tests
   datagen`, and `make install`.
-- `.github/actions/code-coverage/action.yml` selects compiler/OS-specific
+- [.github/actions/code-coverage/action.yml](../.github/actions/code-coverage/action.yml) selects compiler/OS-specific
   collection steps, several of which contain only comments, then invokes
   `codecov/codecov-action@v5` unconditionally when the composite action itself
   is called. Action invocation is not proof that a usable coverage artifact was
@@ -232,10 +247,12 @@ Composite actions:
   The CompOSE flag and component require project and patch coverage of 100%
   with zero threshold; global patch coverage also targets 100%.
 - `codecov.yml` defers Codecov notifications until an explicit final trigger.
-  The `codecov-finalize` job in the Ubuntu GCC workflow waits for every local
-  job and for the macOS GCC, Ubuntu Clang, and Ubuntu Intel coverage workflows
-  for the same source head recorded by the current workflow run, then sends the
-  single final Codecov notification.
+  The Ubuntu GCC `codecov-finalize` job depends on its listed local jobs and
+  uses `always()`. Its API polling waits for returned macOS GCC, Ubuntu Clang,
+  and Ubuntu Intel runs matching the source head, event, and creation window
+  to reach `completed`, then invokes the notification action. It neither
+  requires successful conclusions nor requires each named workflow to appear
+  in the returned API page; missing or unreturned runs do not block it.
   macOS Clang is excluded because its coverage collection steps are disabled.
 
 ## `.github/run_tests.sh`
@@ -259,9 +276,11 @@ workflow matrix and not a fixture generator:
    this records only the visible runner/workflow setup command for NN-enabled
    tabulated replay.
 9. Continues selected compiled-test runs.
-10. An `EXIT` trap removes only paths created by that run, including downloaded
-    or decompressed files and its private expected-error work directory;
-    preexisting paths are preserved, including on early failure.
+10. An `EXIT` trap removes tracked download/decompression paths and its private
+    expected-error directory on success or failure. This does not guarantee
+    unchanged preexisting contents: existing regular fixtures bypass downloads,
+    `pyghl append` receives the reused SLy4 table, and tests can write their
+    own artifacts. See [runner ownership and fixture selection](tests/runner-and-generated-artifacts.md).
 
 The runner directly invokes every configured default test binary except
 `unit_test_WENOZ_reconstruction` (workflow matrices invoke it),
@@ -289,9 +308,10 @@ Repo evidence shows these caveats:
 - The focused Ubuntu GCC CompOSE job bypasses coverage-file discovery: it
   uploads only `compose-coverage.xml` under the `compose` flag, disables
   search, and fails the job on an upload error.
-- All workflows ignore docs-only pull-request changes. Only Ubuntu-GCC runs its
-  normal GRHayL jobs for implementation-only changes; it does not inspect
-  GRHayLib symlinks or build/test the Cactus thorn.
+- All workflows ignore pull requests containing only their ignored documentation
+  patterns. Only Ubuntu-GCC can select its normal jobs for implementation-only
+  changes containing a non-ignored path; it does not inspect GRHayLib symlinks
+  or build/test the Cactus thorn.
 
 ## Ground Truth References
 

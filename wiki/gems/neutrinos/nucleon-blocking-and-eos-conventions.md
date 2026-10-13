@@ -196,7 +196,7 @@ deciding the effect on a full leakage evolution.
 ## Model Boundary And Evidence
 
 - The evaluator's algebra, endpoint behavior, and spectral detailed balance have
-  table-free references in `Unit_Tests/unit_test_nrpyleakage_physics.c`; the
+  table-free references in [Unit_Tests/unit_test_nrpyleakage_physics.c](../../../Unit_Tests/unit_test_nrpyleakage_physics.c); the
   reported numerical comparisons are external qualification evidence.
 - Whole-BNS overhead is unmeasured. The earlier `3.43%` whole-process timing
   includes loading an approximately 879 MB EOS table and cannot be treated as

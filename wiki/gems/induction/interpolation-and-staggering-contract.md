@@ -30,13 +30,22 @@ The public interpolators are:
   [test](../../../Unit_Tests/unit_test_induction_vvv_ADM.c).
 
 The output type `ghl_induction_interp_vars` contains `alpha`,
-`alpha_Phi_minus_betaj_A_j`, `sqrtg_Ai[3]`, and `betai[3]`. Cell-centered
+`alpha_Phi_minus_betaj_A_j`, `sqrtg_Ai[3]`, and `betai[3]`. Each
+`sqrtg_Ai` component represents `alpha*sqrt(gamma)*A^i = sqrt(-g)*A^i`
+at the corresponding staggered `A_i` location; it already includes lapse.
+The gauge scalar stores `alpha*Phi - beta^j*A_j` at the `phitilde` point,
+where `phitilde = sqrt(gamma)*Phi`.
+Cell-centered
 ADM and BSSN wrappers assign every field. The vertex-centered wrapper assigns
 only `sqrtg_Ai[3]` and `alpha_Phi_minus_betaj_A_j`; `alpha` and `betai[3]`
 retain their incoming or uninitialized values. Callers must obtain lapse and
 shift directly from the current vertex when computing a later `phitilde` RHS.
 
 None of these routines returns an error, validates bounds, or checks centering.
+Callers must supply finite, consistent physical geometry with positive ADM
+`sqrt_detgamma` or BSSN `psi`, finite potentials, and representable intermediate
+arithmetic. The ADM helpers divide by `sqrt_detgamma`; BSSN divides by `psi^6`.
+Invalid inputs can therefore produce nonfinite outputs without a status signal.
 
 ## Shared Array Layout
 
@@ -61,8 +70,21 @@ Relative to `tildePhi(i+1/2,j+1/2,k+1/2)`, vector-potential arrays cover:
 
 ADM stencil elements must have `lapse`, `betaU`, `gammaUU`, and
 `sqrt_detgamma` initialized. BSSN callers instead provide conformal
-inverse-metric components in `metric_stencil.gammaUU` and physical `psi`
-separately.
+inverse-metric components `psi^4*gamma^{ij}` in `metric_stencil.gammaUU`,
+initialized `lapse` and `betaU`, and physical `psi` separately. This wrapper
+reads the symmetric upper triangle of `gammaUU` and does not use
+`sqrt_detgamma`. Its powers of `psi` assume a unit-determinant conformal
+metric: generally the physical volume factor is
+`psi^6*sqrt(det(conformal_gamma))`, but the BSSN interpolation does not insert
+that determinant factor. A physical ADM
+inverse metric from `ghl_initialize_metric` needs that conformal conversion
+before the BSSN call.
+
+The ADM helper averages the combined `alpha*sqrt(gamma)*gamma^{ij}`.
+The BSSN helper averages `alpha*psi^2` and the conformal inverse metric
+separately before multiplying. These discretizations need not agree for
+spatially varying geometry, even when their pointwise inputs describe the
+same physical metric.
 
 ## Vertex-Centered ADM Contract
 
@@ -115,8 +137,9 @@ those trees.
 The experimental
 [IllinoisGRMHDX branch](https://github.com/GRHayL/GRHayLET/blob/scupp/GRHayLMHDX/IllinoisGRMHDX/src/evaluate_phitilde_and_A_gauge_rhs.cxx)
 packs the metric over `-1..0`, puts the current vertex at `[1][1][1]`, and
-calls `ghl_interpolate_with_vertex_centered_ADM`. Its packing matches this
-contract. The same file leaves gauge derivatives disabled and sets
+calls `ghl_interpolate_with_vertex_centered_ADM`. Its metric packing matches this
+contract; this alone does not establish compatibility of its vector-potential
+index origins and stencils. The same file leaves gauge derivatives disabled and sets
 `phitilde_rhs` to zero, so this development branch is evidence of intended
 centering, not completed runtime validation.
 
@@ -146,9 +169,10 @@ These are internal machinery. External callers should use public wrappers.
 - The cell-centered ADM and BSSN fixture replays compare lapse, shift,
   `alpha_Phi_minus_betaj_A_j`, and every `sqrtg_Ai` component.
 - The `vvv_ADM` fixture replay packs metric offsets `-1..0` and calls
-  `ghl_interpolate_with_vertex_centered_ADM`. The fixture is a regression
-  reference generated through the same helper and wrapper path, not an
-  independent numerical oracle.
+  `ghl_interpolate_with_vertex_centered_ADM`. The current local generator uses
+  that same helper and wrapper path, so regenerated references are regression
+  checks rather than independent numerical oracles. That source alone does
+  not establish the historical producer of downloaded references.
 - The direct asymmetric affine case calls the same public function. It checks
   every `sqrtg_Ai` component, the gauge scalar, coordinate orientation, and
   that `alpha` and `betai` remain unchanged.

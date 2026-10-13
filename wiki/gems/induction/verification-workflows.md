@@ -99,12 +99,13 @@ triggers remain independent of path filters.
 
 ## Legacy Generator Boundary
 
-The normal build uses `configure` plus `scripts/parser`; that route parses
+The normal build uses [`configure`](../../../configure) plus
+[`scripts/parser`](../../../scripts/parser); that route parses
 Induction manifests correctly. The separate legacy
 [`generate_makefile.sh`](../../../generate_makefile.sh) route remains broken
 for broader scope and include-path reasons. The Induction interpolator manifest
-now terminates its final `SRCS` entry, so it no longer causes parsing to run
-into the next manifest. Do not run `make` from the legacy generated file;
+terminates its final `SRCS` entry without a continuation, keeping the following
+manifest separate. Do not run `make` from the legacy generated file;
 normal `configure` build evidence is separate.
 
 ## HDF5 Note
