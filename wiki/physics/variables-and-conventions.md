@@ -63,6 +63,34 @@ Contracts:
   [`ghl.h`](../../GRHayL/include/ghl.h) and implemented in
   [`initialize_eos.c`](../../GRHayL/GRHayL_Core/initialize_eos.c).
 
+## Radiation Moments And Exchange
+
+[ghl_m1.h](../../GRHayL/include/ghl_m1.h) defines the undensitized Eulerian
+M1 state: energy density `E`, covariant flux `F_i`, and independently transported
+neutrino number density `N`. Species order is `{nue, anue, nux}`; `nux` is the
+already-summed heavy-lepton state. These are separate from
+`ghl_conservative_quantities`; the host owns radiation storage and conversions.
+Route closure and number-current meanings through
+[species and state](../gems/radiation-m1/neutrino-species-state-and-scope.md),
+[comoving moments](../gems/radiation-m1/m1-comoving-moments-and-source-projection.md),
+and [number transport](../gems/radiation-m1/m1-number-current-and-transport.md).
+
+The [four-point pointwise face operation](../../GRHayL/Radiation/ghl_m1_four_point_blended_rusanov.c)
+accepts undensitized operands and applies the face `sqrt_detgamma` once.
+The prepared volume-weighted operation accepts host-weighted operands and
+applies no additional metric factor. Their distinct contracts live in
+[finite-volume and face flux](../gems/radiation-m1/m1-finite-volume-and-face-flux.md).
+
+Radiation exchange increments are undensitized; matter energy/momentum
+increments are densitized. The local baryon normalization is undensitized
+`n_b_cons = W*rho/m_b`, not the densitized host density. Matter `Y_e` exchange
+uses charged-current lepton exchange by default; the single-species dispatcher
+can select signed-total-number bookkeeping. Use the
+[exchange equations](../gems/radiation-m1/m1-exchange-equations.md) and
+[source-policy implementation](../../GRHayL/Radiation/Neutrinos/ghl_m1_neutrino_source_update.c)
+for signs, units, and policy selection. The host aggregates and limits coupled
+increments before publishing matter or radiation updates.
+
 ## Magnetic Field Rescaling
 
 Physics orientation:

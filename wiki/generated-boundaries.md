@@ -118,6 +118,23 @@ running tests. Downloaded file classes include:
 - `LS220_234r_136t_50y_analmu_20091212_SVNr26.h5.bz2`;
 - `SLy4_3335_rho391_temp163_ye66.h5.bz2`.
 
+The Radiation M1 replay route is a separate acquisition class: with
+`M1_FIXTURE_DIR` unset, the runner (both suites) downloads the published
+`radiation/*.bin.gz` members recorded by the
+[`.github/radiation-testdata-ref`](../.github/radiation-testdata-ref)
+selector into a private temporary directory, and
+[`.github/prepare_m1_fixtures.sh`](../.github/prepare_m1_fixtures.sh)
+restores the raw `.bin` layout before replay; caller-supplied fixture
+directories bypass downloads entirely. Expected M1 values are never
+generated from current GRHayL output during a test run; the member
+inventory, binary layout, and producer provenance route through
+[runner ownership](tests/runner-and-generated-artifacts.md) and
+[M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md), with the
+production record in
+[`docs/raw/Radiation_fresh_fixture_production.md`](../docs/raw/Radiation_fresh_fixture_production.md).
+The provider test's `--generated-fixture` table is local generated test
+input, not a retained reference fixture.
+
 The script tracks download/decompression paths and its private expected-error
 directory for `EXIT` cleanup. Existing regular fixtures bypass downloads, but
 this does not ensure unchanged contents or provenance: it still calls

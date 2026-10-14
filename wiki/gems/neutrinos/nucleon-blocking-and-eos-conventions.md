@@ -19,9 +19,10 @@ for producer-specific EOS meanings.
 
 ## Installed Blocking Model
 
-The [private blocking helper](../../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
-is shared by standalone opacities, opacities with GRMHD sources, and
-luminosities. It uses the EOS callback's free-neutron and free-proton fractions
+The installed blocking implementation header
+[GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+provides the shared evaluation used by standalone opacities, opacities with
+GRMHD sources, and luminosities. It uses the EOS callback's free-neutron and free-proton fractions
 `Xn` and `Xp`. For each free population it inverts the nonrelativistic ideal-gas
 density relation with a common bare nucleon mass to obtain a kinetic degeneracy
 `eta_n` or `eta_p`.

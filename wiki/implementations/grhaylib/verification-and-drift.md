@@ -79,6 +79,12 @@ Einstein Toolkit.
 - Source list: `src/make.code.defn` must track upstream direct-compile source
   directories and new module subdirectories; all tracked module/include
   symlinks must continue to resolve.
+- Radiation: [the source registry](../../../implementations/GRHayLib/src/make.code.defn)
+  includes `Radiation` and `Radiation/Neutrinos`; the aggregate radiation header
+  exposes M1 and provider declarations transitively. Check those manifests,
+  installed includes, and the `src/Radiation` symlink when their inputs change.
+  Registry parity does not prove a Cactus neutrino evolution or matter-coupling
+  implementation; use the [M1 host boundary](../../gems/radiation-m1/host-integration-and-downstream.md).
 - EOS signatures: check calls to `ghl_initialize_simple_eos_functions_and_params`,
   `ghl_initialize_hybrid_eos_functions_and_params`,
   `ghl_initialize_eos_functions`, `ghl_initialize_tabulated_eos`, and

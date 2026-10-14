@@ -24,10 +24,13 @@ these source files:
 Every listed name has a matching public declaration in `ghl_nrpyleakage.h`; no
 extra Neutrinos `.c` file sits outside the manifest.
 
-The same manifest records `NRPyLeakage_nucleon_blocking.h` and
-`NRPyLeakage_rate_helpers.h` through `#! INCS`. These source-private headers
-are not installed public headers and add no public functions. Both headers
-serve every EOS-dependent routine.
+The NRPyLeakage manifest above lists only `SRCS`. The EOS-dependent sources
+also include the installed `static inline` implementation headers
+[GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+and
+[GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h)
+by ordinary `#include`; they are not tracked through a manifest `#! INCS`
+entry (this directory's manifest has none) and do not add separately linked library symbols.
 
 ## Smallest File Sets And Data Dependencies
 
@@ -37,10 +40,10 @@ source has these narrower boundaries:
 | Requested operation | Required implementation files | Additional current-GRHayL dependencies | Not required by that entry point |
 | --- | --- | --- | --- |
 | Fermi-Dirac approximation | `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation/leakage headers, GRHayL error enum, math functions | EOS, HDF5, opacity, depth, source, luminosity files |
-| Opacities only | `NRPyLeakage_compute_neutrino_opacities.c`, `NRPyLeakage_nucleon_blocking.h`, `NRPyLeakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, math functions | Combined source/opacity, optical-depth, and luminosity files |
-| GRMHD sources plus opacities | `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`, `NRPyLeakage_nucleon_blocking.h`, `NRPyLeakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Same EOS, type, constant, error/HDF5, and math adapter | Standalone-opacity, optical-depth, and luminosity files |
+| Opacities only | `NRPyLeakage_compute_neutrino_opacities.c`, `ghl_nrpyleakage_nucleon_blocking.h`, `ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, math functions | Combined source/opacity, optical-depth, and luminosity files |
+| GRMHD sources plus opacities | `NRPyLeakage_compute_neutrino_opacities_and_GRMHD_source_terms.c`, `ghl_nrpyleakage_nucleon_blocking.h`, `ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Same EOS, type, constant, error/HDF5, and math adapter | Standalone-opacity, optical-depth, and luminosity files |
 | One path-of-least-resistance depth update | `NRPyLeakage_optical_depths_PathOfLeastResistance.c` | Opacity/depth struct definitions and math functions | EOS, HDF5, Fermi helper, source, standalone-opacity, and luminosity files |
-| Pointwise luminosities | `NRPyLeakage_compute_neutrino_luminosities.c`, `NRPyLeakage_nucleon_blocking.h`, `NRPyLeakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, metric inputs, math functions | Source, standalone-opacity, and optical-depth implementation files |
+| Pointwise luminosities | `NRPyLeakage_compute_neutrino_luminosities.c`, `ghl_nrpyleakage_nucleon_blocking.h`, `ghl_nrpyleakage_rate_helpers.h`, and `NRPyLeakage_Fermi_Dirac_integrals.c` | Radiation structs, leakage constants/macros, tabulated-EOS callback, GRHayL errors/HDF5 guard, metric inputs, math functions | Source, standalone-opacity, and optical-depth implementation files |
 
 These are link and call boundaries, not a complete simulation workflow. The
 optical-depth routine needs opacity and neighbor-depth *data*, but does not
@@ -49,8 +52,11 @@ consume optical-depth data, but do not call the optical-depth implementation.
 The combined routine owns a separate generated opacity write path; it does not
 delegate to `NRPyLeakage_compute_neutrino_opacities`.
 
-For a host with its own EOS and hydrodynamics, retain the private blocking and
-rate headers and the Fermi helper for each EOS-dependent entry point. Port the
+For a host with its own EOS and hydrodynamics, retain the installed blocking
+and rate-helper headers
+([GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h),
+[GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h))
+and the Fermi helper for each EOS-dependent entry point. Port the
 optical-depth file independently if its six-neighbor update is wanted. The
 exact ABI, callback, error, HDF5, and unit substitutions are mapped in
 [API And Data](api-and-data.md).
@@ -97,7 +103,8 @@ outputs remain unchanged. Success alone is not a physical-validity guarantee.
 
 ## Shared Nucleon-Blocking Evaluator
 
-`NRPyLeakage_nucleon_blocking.h` reconstructs kinetic degeneracies from cgs
+[GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+reconstructs kinetic degeneracies from cgs
 density, temperature, and EOS free-neutron/free-proton fractions. This removes
 dependence on the arbitrary common energy zero of `mu_n` and `mu_p`, avoids
 counting bound nucleons as free targets, and removes the old equal-population

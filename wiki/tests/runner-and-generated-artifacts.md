@@ -29,11 +29,18 @@ library path like:
 export LD_LIBRARY_PATH="$(pwd)/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 ```
 
-[.github/run_tests.sh](../../.github/run_tests.sh) runs `./configure -r`, then
-`make tests datagen`, then exports `LD_LIBRARY_PATH` with `build/lib` before invoking
-compiled tests. Most workflow jobs use the composite compile action, which runs
+[.github/run_tests.sh](../../.github/run_tests.sh) accepts
+`[all|m1] [configure arguments...]` and passes the remaining arguments to
+`./configure -r`. The default `all` suite builds with `make tests datagen`;
+`m1` builds with `make tests`, compiling every configured test target but
+executing only the Radiation M1 tests. Both modes export `LD_LIBRARY_PATH`
+and `DYLD_LIBRARY_PATH` with `build/lib` before invoking compiled tests.
+Most workflow jobs use the composite compile action, which runs
 `make tests datagen` and `make install`; jobs then invoke binaries under
 `test/`, often with `LD_LIBRARY_PATH` pointing at the installed `lib/`.
+The `radiation-m1` jobs instead use the
+[run_m1 action](../../.github/actions/run_m1/action.yml), which invokes the
+runner's `m1` mode.
 
 These stages are not interchangeable:
 
@@ -68,27 +75,52 @@ its generation mode. Normal CI replay downloads fixtures and runs test mode.
 ## Runtime Runner
 
 [.github/run_tests.sh](../../.github/run_tests.sh) is the broad local replay
-route, not a complete workflow matrix:
+route, not a complete workflow matrix. The default `all` suite follows this
+sequence:
 
 1. Run `./configure -r`.
 2. Run `make tests datagen`.
-3. Export `LD_LIBRARY_PATH` with `build/lib`.
-4. Download missing root-level `*.bin` fixtures and HDF5/EOS tables, reusing
+3. Export `LD_LIBRARY_PATH` and `DYLD_LIBRARY_PATH` with `build/lib`.
+4. Run the `unit_test_coverage_*` boundary executables selected by the runner.
+5. Download missing root-level `*.bin` fixtures and HDF5/EOS tables, reusing
    existing regular files.
-5. Decompress downloaded `*.bz2` EOS tables.
-6. Run selected binaries under `test/`, including the direct
+6. Decompress downloaded `*.bz2` EOS tables.
+7. Run selected binaries under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Run `unit_test_code_error` keys `0` through `90` as expected process
+8. Run `unit_test_code_error` keys `0` through `90` as expected process
    failures.
-8. Run `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before the tabulated
+9. Run `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before the tabulated
    C2P replay. This page records only that visible setup command, not `pyghl`
    internals.
-9. Continue selected compiled-test runs.
-10. Use an `EXIT` trap to remove only files downloaded or decompressed by this
-    run and its private expected-error work directory.
+10. Continue selected compiled-test runs, then call `run_m1_tests`.
+11. Use an `EXIT` trap to remove tracked download/decompression paths, the
+    expected-error work directory, and runner-owned M1 temporary directories.
+
+The `m1` suite runs `make tests` and only the Radiation M1 executables, then
+exits before legacy fixture downloads, expected-error-key runs, and `pyghl`
+setup. With `M1_FIXTURE_DIR` unset, the runner downloads every named
+`radiation/*.bin.gz` member at the pinned revision recorded in
+[.github/radiation-testdata-ref](../../.github/radiation-testdata-ref) and
+prepares them in a private temporary directory. Supplying `M1_FIXTURE_DIR`
+with a raw or gzip
+package bypasses downloads; a complete raw `.bin` directory is used directly,
+otherwise [prepare_m1_fixtures.sh](../../.github/prepare_m1_fixtures.sh)
+prepares members in a runner-owned temporary directory. Direct executable
+invocations without fixture arguments remain local-only. The provider test
+uses `--generated-fixture` for its local input. See
+[M1 tests and fixtures](../gems/radiation-m1/tests-and-fixtures.md) for replay
+arguments and fixture ownership. These fixture members are published
+`GRHayL/TestData` payloads described by that repository's provenance route;
+replay consumes them and never regenerates expected values locally.
+
+The [Radiation CI action](../../.github/actions/run_m1/action.yml) forwards
+its optional `fixture-dir` input as `M1_FIXTURE_DIR` and invokes the runner's
+`m1` mode. It performs no TestData checkout; the runner retries the pinned
+download by default. The pinned revision must be available from TestData.
 
 The cleanup trap runs on success or failure and deletes only its tracked
-paths. Existing regular fixture files (or EOS archives/uncompressed files)
+paths, including runner-owned M1 download and prepared-fixture temporary
+directories. Existing regular fixture files (or EOS archives/uncompressed files)
 bypass downloads, so the configured URL does not establish their provenance.
 This cleanup ownership does not promise unchanged contents: configure/build
 steps write artifacts, and `pyghl append` receives the SLy4 table even when it
@@ -114,6 +146,9 @@ for shared hybrid Con2Prim/Core fixtures and tabulated Con2Prim replay fixtures.
 Its other TestData downloads use
 [.github/et-legacy-testdata-ref](../../.github/et-legacy-testdata-ref), including
 ET Legacy, analytic EOS, Core, Flux_Source, PLM, Neutrinos, and Induction data.
+The M1 replay route reads the separate
+[.github/radiation-testdata-ref](../../.github/radiation-testdata-ref)
+selector for the published `radiation/*.bin.gz` members.
 Link these selector files rather than copying their values into the KB.
 
 Workflow download selection differs: shared hybrid Con2Prim/Core fixtures use
@@ -143,7 +178,9 @@ that normal local runs regenerate trusted fixtures.
 Set comparison is exact in current sources: default `configure` targets the
 `Unit_Tests/unit_test_*.c` set, while the runner directly invokes all except
 `unit_test_WENOZ_reconstruction`,
-`unit_test_tabulated_eos_compose`, and `unit_test_con2prim_debug`; workflows
+`unit_test_tabulated_eos_compose`, and `unit_test_con2prim_debug` — the `all`
+suite finishes with `run_m1_tests`, so the Radiation M1 executables are part
+of the aggregate default replay; workflows
 invoke WENOZ and the focused CompOSE test, while no normal runner/workflow
 invocation for the debug binary is visible.
 

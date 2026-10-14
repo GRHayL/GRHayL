@@ -34,8 +34,10 @@ Doxygen source.
 ## Ground Truth
 
 - Source: `GRHayL/Neutrinos/NRPyLeakage/`
-- Private blocking evaluator:
-  [GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h](../../GRHayL/Neutrinos/NRPyLeakage/NRPyLeakage_nucleon_blocking.h)
+- Installed shared blocking implementation header:
+  [GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h),
+  with shared rate algebra in
+  [GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h)
 - Installed blocking model and qualification:
   [Nucleon Blocking And EOS Conventions](neutrinos/nucleon-blocking-and-eos-conventions.md)
 - Public radiation structs: [GRHayL/include/ghl_radiation.h](../../GRHayL/include/ghl_radiation.h)
@@ -72,12 +74,22 @@ truth and update the KB.
 The `NRPyLeakage_*` spelling is the exported family; no `ghl_*` wrapper family
 exists for these calls. Radiation container types retain the `ghl_` prefix.
 
+The frozen M1 grey neutrino provider consumes the same NRPyLeakage rate algebra
+through the installed `ghl_neutrino_rate_provider.h` boundary and
+[ghl_m1_nrpyleakage_kernel.c](../../GRHayL/Radiation/Neutrinos/ghl_m1_nrpyleakage_kernel.c);
+route its ownership and caching questions to the
+[radiation-m1 rate-provider contract](radiation-m1/rate-provider-contract.md).
+
 ## Contract Summary
 
 - Radiation struct order is `nue`, `anue`, `nux`; opacity/depth has two slots
   per species. Slot meanings are used differently by number and energy source
   formulas but remain unnamed in the public header, so keep `[0]`/`[1]`
   wording in caller contracts.
+- Endpoint-roundoff normalization of EOS free-nucleon fractions goes through
+  the installed `ghl_nrpyleakage_normalize_nucleon_fractions` in
+  [GRHayL/include/ghl_nrpyleakage.h](../../GRHayL/include/ghl_nrpyleakage.h),
+  shared by the EOS-dependent leakage callers and the M1 provider kernel.
 - EOS-dependent routines require an HDF5-enabled build and an initialized,
   compatible chemistry callback with its required state; the built-in
   StellarCollapse backend requires a loaded table. Inputs include geometric
@@ -110,10 +122,17 @@ exists for these calls. Radiation container types retain the `ghl_` prefix.
 - Neutrinos KB pages live under [wiki/](..) only; Doxygen source under `docs/**`
   is a separate authority (currently no dedicated Neutrinos page exists there).
 - Keep generated formula blocks in `GRHayL/Neutrinos/NRPyLeakage/*.c`.
-- Keep the shared nucleon-blocking evaluator source-private. Its algebraic
-  density inversion is shared by the EOS-dependent routines to avoid
+- The shared nucleon-blocking algebra lives in the installed
+  `static inline` implementation headers
+  [GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h](../../GRHayL/include/ghl_nrpyleakage_nucleon_blocking.h)
+  and
+  [GRHayL/include/ghl_nrpyleakage_rate_helpers.h](../../GRHayL/include/ghl_nrpyleakage_rate_helpers.h).
+  One algebraic density inversion serves every EOS-dependent routine, avoiding
   duplicated corrections and the runtime cost of per-call quadrature or root
-  solves; `make.code.defn` tracks it through `#! INCS`.
+  solves. These headers are caller-compiled by `#include`, not tracked through the
+  NRPyLeakage `make.code.defn` (which lists only `SRCS`), and they do not add
+  separately linked library symbols beyond the installed `NRPyLeakage_*` family.
+
 - The external notebooks are provenance, not the authority for current GRHayL
   signatures or behavior. Preserve the durable derivation and interface facts
   in child pages so routine KB use does not depend on that repository remaining

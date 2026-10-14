@@ -6,4 +6,5 @@ SUBDIRS = Atmosphere     \
           include        \
           Induction      \
           Neutrinos      \
+          Radiation      \
           Reconstruction

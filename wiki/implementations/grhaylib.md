@@ -95,6 +95,9 @@ global lifecycle.
   [Induction hub](../gems/induction.md).
 - Neutrinos and NRPyLeakage behavior:
   [Neutrinos hub](../gems/neutrinos.md).
+- Radiation M1 source and public-header boundary:
+  [Radiation M1 hub](../gems/radiation-m1.md) and
+  [host integration boundary](../gems/radiation-m1/host-integration-and-downstream.md).
 - Reconstruction behavior and PPM parameters:
   [Reconstruction hub](../gems/reconstruction.md) and
   [PPM flow](../gems/reconstruction/ppm-flow.md).

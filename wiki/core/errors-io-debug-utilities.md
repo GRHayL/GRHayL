@@ -20,7 +20,10 @@ and
 `ghl_error_codes_t` lives in
 [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h). Use that enum as the
 authority for available return codes, including EOS, Con2Prim, table, HDF5,
-atmosphere, and utility error keys.
+atmosphere, Radiation M1, and utility error keys. Route M1 validation, closure,
+microphysics, source-policy, and implicit-solve errors through the
+[M1 contract](../gems/radiation-m1/neutrino-m1-contract.md) and
+[diagnostics boundary](../gems/radiation-m1/m1-diagnostics-and-verification.md).
 
 `ghl_abort_if_error` is declared in
 [`GRHayL/include/ghl.h`](../../GRHayL/include/ghl.h) and implemented in
@@ -28,12 +31,11 @@ atmosphere, and utility error keys.
 That source owns the mapping from `ghl_error_codes_t` values to human-readable
 messages; do not copy the full table into KB pages.
 
-Every currently declared `ghl_error_codes_t` value has a switch case, and
-`ghl_success` returns normally. Known non-success values route through
-`ghl_Error(error, ...)`, which calls `exit(error)` because current error codes
-are positive. Despite the helper name, these cases do not use `abort()`.
-There is no `default` switch arm: a cast/out-of-range value not represented by
-the enum returns silently without terminating
+The implementation indexes the `error_messages` table by the error value
+converted to `size_t`. An out-of-range index or a null message returns normally;
+the success entry is null. Entries with a message route through
+`ghl_Error(error, ...)`, which calls `exit(error)` for the positive error codes.
+Despite the helper name, these mapped errors do not use `abort()`
 ([`GRHayL/GRHayL_Core/abort_if_error.c`](../../GRHayL/GRHayL_Core/abort_if_error.c),
 [`GRHayL/GRHayL_Core/info_warn_error.c`](../../GRHayL/GRHayL_Core/info_warn_error.c)).
 

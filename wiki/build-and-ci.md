@@ -166,10 +166,10 @@ Workflows live in [.github/workflows/](../.github/workflows):
 
 | Workflow | Compiler | OS matrix | Coverage step status |
 | --- | --- | --- | --- |
-| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | the existing job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML |
-| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all jobs invoke coverage action |
+| `github-actions-Ubuntu-gcc.yml` | `gcc` | `ubuntu-22.04`, `ubuntu-24.04` | the existing job groups invoke the shared coverage action; the focused CompOSE job uploads only its Python XML; the `radiation-m1` job runs the `run_m1` action in both HDF5 modes and adds its own Radiation-filtered coverage step |
+| `github-actions-Ubuntu-clang.yml` | `clang` | `ubuntu-22.04`, `ubuntu-24.04` | all jobs except `radiation-m1` invoke coverage action |
 | `github-actions-Ubuntu-intel.yml` | `intel` / `icx` | `ubuntu-22.04`, `ubuntu-24.04` | only some jobs invoke coverage action |
-| `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all jobs invoke coverage action; local collection body is commented |
+| `github-actions-MacOS-gcc.yml` | Homebrew GCC | `macos-15`, `macos-26` | all jobs except `radiation-m1` invoke coverage action; local collection body is commented |
 | `github-actions-MacOS-clang.yml` | Homebrew LLVM clang | `macos-15`, `macos-26` | no jobs invoke coverage action |
 
 The compiler labels describe selected action branches, not successful compiler
@@ -211,6 +211,7 @@ Job routing (CompOSE is Ubuntu-GCC-specific):
 
 | Job | Test scope |
 | --- | --- |
+| `radiation-m1` | Radiation M1 tests only, through the `run_m1` action and `.github/run_tests.sh m1`, in HDF5-enabled and disabled builds; see the paragraph after this table |
 | `ET-Legacy` | `conservs`, `primitives`, `induction_gauge_rhs`, `HLL_flux`, `reconstruction`, `flux_source` |
 | `c2p-routines` | `apply_conservative_limits`, `con2prim_multi_method_hybrid`, `enforce_primitive_limits_and_compute_u0`, `compute_conservs_and_Tmunu` |
 | `c2p-failure` | `hybrid_failure`, `c2p_nn_guess` |
@@ -226,6 +227,34 @@ Job routing (CompOSE is Ubuntu-GCC-specific):
 | `induction-flux` | vector-potential HLL flux variants; see [Induction verification workflows](gems/induction/verification-workflows.md) |
 | `compose-regularized-eos` | 100% Python line/branch coverage, synthetic fixed-profile conversion, and unchanged StellarCollapse C integration |
 
+Every compiler workflow has a `radiation-m1` job with an OS and HDF5
+enabled/disabled matrix. The job calls
+[`.github/actions/run_m1/action.yml`](../.github/actions/run_m1/action.yml),
+which selects the compiler, passes `--noomp` (plus `--disable-hdf5` for the
+disabled leg), uses the Homebrew compilers and HDF5 on macOS and the coverage
+flags on Linux gcc, and ends with `.github/run_tests.sh m1`. That mode builds
+with `make tests` and runs only the Radiation M1 tests with the generated
+provider input. Only the Ubuntu GCC job adds a coverage step: the
+dedicated [M1 coverage action](../.github/actions/m1-code-coverage/action.yml)
+generates a gcovr Cobertura report filtered to the Radiation sources plus
+`ghl_m1.h` and `abort_if_error.c`; the Rusanov source is included under
+Radiation. It enforces full executable-line and branch coverage across that
+report scope and uploads only that XML under the `m1` flag,
+with discovery disabled and upload errors fatal. The Radiation Codecov
+component selects that flag, preventing unrelated zero-hit reports from
+diluting its coverage. Other `radiation-m1` jobs are plain test runs; legacy
+jobs keep the shared action's compiler-specific collection and upload
+discovery, but that action removes the Radiation gcov notes and data before
+gcovr or the uploader gather them, and the clang export ignores the files the
+M1 report owns (Radiation, `ghl_m1.h`, `abort_if_error.c`) plus the
+`ghl_nrpyleakage.h` constants header, because llvm-cov lists lines there that
+gcov never treats as executable and no job can hit. The runner acquires the published
+retained fixtures by default; a supplied `M1_FIXTURE_DIR` (or action
+`fixture-dir`) bypasses downloads, and no whole-toolkit build is required.
+See the
+[M1 unit-test guide](../docs/raw/Radiation_unit_tests.md#ci) for exact boundaries;
+local verification and an observed remote CI pass are distinct evidence.
+
 Flux fixture downloads use the immutable TestData reference recorded in
 [.github/et-legacy-testdata-ref](../.github/et-legacy-testdata-ref); only the `tabulated_flux` matrix leg downloads
 the LS220 EOS table.
@@ -235,17 +264,27 @@ Composite actions:
 - [.github/actions/OS_setup/action.yml](../.github/actions/OS_setup/action.yml) installs compiler/HDF5 dependencies.
 - [.github/actions/compile_GRHayL/action.yml](../.github/actions/compile_GRHayL/action.yml) runs `configure`, `make tests
   datagen`, and `make install`.
+- [.github/actions/run_m1/action.yml](../.github/actions/run_m1/action.yml) builds the configure arguments for the
+  selected compiler and HDF5 mode, then runs `.github/run_tests.sh m1`; it does
+  not run coverage reporting itself.
 - [.github/actions/code-coverage/action.yml](../.github/actions/code-coverage/action.yml) selects compiler/OS-specific
   collection steps, several of which contain only comments, then invokes
   `codecov/codecov-action@v5` unconditionally when the composite action itself
-  is called. Action invocation is not proof that a usable coverage artifact was
+  is called with its default discovery/upload behavior. Linux GCC retains
+  gcovr `--keep`; Linux Clang exports LCOV without M1-specific exclusions.
+  Action invocation is not proof that a usable coverage artifact was
   collected or uploaded.
+- [.github/actions/m1-code-coverage/action.yml](../.github/actions/m1-code-coverage/action.yml) owns the dedicated GCC Radiation
+  report, executable-line and branch gates, and explicit `m1` upload. It does
+  not change the shared action's legacy collection behavior.
 - `codecov.yml` at repo root configures Codecov report behavior for those
   uploads, including per-gem coverage components and ignored test paths. Its
   header comment requires validating any change with
   `curl -X POST --data-binary @codecov.yml https://codecov.io/validate`.
   The CompOSE flag and component require project and patch coverage of 100%
   with zero threshold; global patch coverage also targets 100%.
+  The Radiation component requires project coverage of 100% with zero threshold
+  and selects only reports carrying the `m1` flag.
 - `codecov.yml` defers Codecov notifications until an explicit final trigger.
   The Ubuntu GCC `codecov-finalize` job depends on its listed local jobs and
   uses `always()`. Its API polling waits for returned macOS GCC, Ubuntu Clang,
@@ -257,30 +296,54 @@ Composite actions:
 
 ## `.github/run_tests.sh`
 
-`.github/run_tests.sh` is a broad repository replay driver, not a complete
-workflow matrix and not a fixture generator:
+[.github/run_tests.sh](../.github/run_tests.sh), invoked as `[all|m1] [configure arguments...]`, is a broad repository
+replay driver, not a complete workflow matrix and not a fixture generator. The
+default `all` suite performs the steps below and ends by running the Radiation
+M1 tests; `m1` instead runs `make tests` and
+only the Radiation M1 tests, downloading and preparing the pinned
+`radiation/*.bin.gz` members by default unless `M1_FIXTURE_DIR` supplies a
+raw or gzip package prepared by [.github/prepare_m1_fixtures.sh](../.github/prepare_m1_fixtures.sh). The remaining
+arguments are passed to `./configure -r`.
+
+The [Radiation CI action](../.github/actions/run_m1/action.yml) forwards its
+optional `fixture-dir` input as `M1_FIXTURE_DIR` and invokes the runner's `m1`
+mode, so the runner retries the ordinary
+[radiation-testdata-ref](../.github/radiation-testdata-ref) pinned download by
+default with no action-side TestData checkout. The runner requires that selector
+to name a reachable published `GRHayL/TestData` revision; acquisition fails
+rather than skipping replay when it is unavailable.
 
 1. Runs `./configure -r`.
 2. Runs `make tests datagen` (data generators are compiled, not executed).
-3. Exports `LD_LIBRARY_PATH` with `build/lib`.
-4. Downloads binary fixtures from the repo-visible `GRHayL/TestData` raw URL
+3. Exports `LD_LIBRARY_PATH` and `DYLD_LIBRARY_PATH` with `build/lib`.
+4. Runs the fixture-independent boundary-check binaries
+   `unit_test_coverage_{core,eos,con2prim,flux_reconstruction,leakage}`; these
+   need no retained fixture, and the `m1` suite skips this loop entirely.
+5. Downloads binary fixtures from the repo-visible `GRHayL/TestData` raw URL
    base.
-5. Downloads EOS tables from the repo-visible `stellarcollapse.org/EOS` URLs
+6. Downloads EOS tables from the repo-visible `stellarcollapse.org/EOS` URLs
    where needed, decompressing `*.bz2` files.
-6. Runs the compiled tests under `test/`, including the direct
+7. Runs the compiled tests under `test/`, including the direct
    `unit_test_c2p_nn_guess` route.
-7. Runs `unit_test_code_error` over error-code keys `0` through `90`, expecting
+8. Runs `unit_test_code_error` over error-code keys `0` through `90`, expecting
    each invocation to fail at process level.
-8. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
+9. Runs `pyghl append SLy4_3335_rho391_temp163_ye66.h5` before
    `./test/unit_test_con2prim_tabulated SLy4_3335_rho391_temp163_ye66.h5 1`;
    this records only the visible runner/workflow setup command for NN-enabled
    tabulated replay.
-9. Continues selected compiled-test runs.
-10. An `EXIT` trap removes tracked download/decompression paths and its private
+10. Continues selected compiled-test runs.
+11. An `EXIT` trap removes tracked download/decompression paths and its private
     expected-error directory on success or failure. This does not guarantee
     unchanged preexisting contents: existing regular fixtures bypass downloads,
     `pyghl append` receives the reused SLy4 table, and tests can write their
     own artifacts. See [runner ownership and fixture selection](tests/runner-and-generated-artifacts.md).
+
+The `all` suite then runs the Radiation M1 tests through the runner's shared
+`run_m1_tests` block, which performs the pinned fixture acquisition or
+`M1_FIXTURE_DIR` replay described above; the `m1` suite runs only that block
+after `make tests`, skipping `datagen` and the legacy steps. See
+[M1 tests and fixtures](gems/radiation-m1/tests-and-fixtures.md) for the
+per-executable replay arguments.
 
 The runner directly invokes every configured default test binary except
 `unit_test_WENOZ_reconstruction` (workflow matrices invoke it),
@@ -294,7 +357,9 @@ observed successful action or local `make datagen`, those binaries are
 
 ## Coverage Caveats
 
-Coverage is configured through workflow flags and `.github/actions/code-coverage/action.yml`.
+Coverage is configured through workflow flags, the shared
+[.github/actions/code-coverage/action.yml](../.github/actions/code-coverage/action.yml), and the dedicated
+[.github/actions/m1-code-coverage/action.yml](../.github/actions/m1-code-coverage/action.yml).
 Repo evidence shows these caveats:
 
 - Linux GCC uses `gcovr`; Ubuntu image handling differs for `ubuntu22`.
@@ -305,6 +370,9 @@ Repo evidence shows these caveats:
   installed tool versions or `llvm-cov gcov`.
 - Some workflow coverage steps are commented out, especially macOS clang and
   most Ubuntu Intel jobs.
+- Only the Ubuntu GCC `radiation-m1` job collects and uploads the dedicated
+  Radiation M1 coverage report, through the M1 coverage action; the
+  `radiation-m1` jobs in the other workflows are plain test runs.
 - The focused Ubuntu GCC CompOSE job bypasses coverage-file discovery: it
   uploads only `compose-coverage.xml` under the `compose` flag, disables
   search, and fails the job on an upload error.

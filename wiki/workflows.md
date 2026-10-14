@@ -351,6 +351,44 @@ Pitfalls/contracts:
 - `ghl_neutrino_opacities` stores electron neutrino, electron antineutrino, and heavy-lepton neutrino entries; optical depths reuse the opacity struct type.
 - Units and constants live in `ghl_nrpyleakage.h`; changing them affects all leakage tests.
 
+## Radiation M1 Path
+
+Read the [Radiation M1 hub](gems/radiation-m1.md),
+[API/build boundary](gems/radiation-m1/api-build-boundary.md),
+[provider contract](gems/radiation-m1/rate-provider-contract.md), and
+[tests and fixtures](gems/radiation-m1/tests-and-fixtures.md).
+Source authority is [ghl_m1.h](../GRHayL/include/ghl_m1.h),
+[ghl_neutrino_rate_provider.h](../GRHayL/include/ghl_neutrino_rate_provider.h),
+[the integration contract](../docs/raw/Radiation_integration_contract.md), and
+[the Radiation manifests](../GRHayL/Radiation/make.code.defn), including
+[Neutrinos](../GRHayL/Radiation/Neutrinos/make.code.defn).
+
+Shared kernels live in `GRHayL/Radiation/`; neutrino operations, the private
+NRPyLeakage adapter, and the provider live in `GRHayL/Radiation/Neutrinos/`.
+Header changes also reach the [install manifest](../GRHayL/include/make.code.defn)
+and [GRHayLib source registry](../implementations/GRHayLib/src/make.code.defn).
+Keep affected contract leaves and the [traceability map](../docs/raw/Radiation_traceability.md)
+aligned with their source owners.
+
+For authorized execution, [the runner](../.github/run_tests.sh) accepts `m1`
+plus configure arguments, compiles tests without `datagen`, and replays retained
+TestData by default. `M1_FIXTURE_DIR` selects a supplied raw or gzip package.
+Select affected owners from the tests-and-fixtures leaf; build/provider changes
+need the applicable HDF5 modes. These library checks do not establish Cactus
+runtime, host evolution, or physical validation.
+
+Fixture and CI dependencies include [fixture preparation](../.github/prepare_m1_fixtures.sh),
+[the fixture selector](../.github/radiation-testdata-ref),
+[the M1 action](../.github/actions/run_m1/action.yml), and
+[the coverage action](../.github/actions/m1-code-coverage/action.yml).
+Changing tests, fixtures, generators, assertions, or CI test execution requires
+the specific authorization in the [execution contract](../AGENTS.md#agent-execution-contract).
+
+The default provider is the production NRPyLeakage backend. Synthetic reference
+rates are test-local; recovered provider calls still return the original error
+and require inspection of `last_recovery`. Host mesh traversal, source-stage
+scheduling, coupled limiting, and matter recovery remain downstream operations.
+
 ## Add Unit Test Data
 
 Follow [the test-change restriction](../AGENTS.md#agent-execution-contract):

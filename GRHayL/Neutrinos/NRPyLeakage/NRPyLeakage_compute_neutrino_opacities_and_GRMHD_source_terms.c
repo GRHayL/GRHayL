@@ -1,7 +1,8 @@
 #include "ghl_radiation.h"
+
 #include "ghl_nrpyeos_tabulated.h"
-#include "NRPyLeakage_nucleon_blocking.h"
-#include "NRPyLeakage_rate_helpers.h"
+#include "ghl_nrpyleakage_nucleon_blocking.h"
+#include "ghl_nrpyleakage_rate_helpers.h"
 
 /* Preserve the generated expression name while sharing its tested policy. */
 #define EnsureFinite(x) nrpyl_finite_cgs_or_floor(x)
